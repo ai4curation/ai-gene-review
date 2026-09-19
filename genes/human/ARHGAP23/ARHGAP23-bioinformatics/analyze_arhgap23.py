@@ -990,8 +990,6 @@ def muller_specificity() -> dict[str, Any]:
     literature = {
         "groups": groups,
         "empty_by_group": {g: _empty(groups[g]) for g in LITERATURE_GROUPS_REQUIRED},
-        "in_vitro_empty": _empty(groups["in vitro"]),
-        "in_vivo_empty": _empty(groups["in vivo"]),
         # The screen's own three specificity columns are the first such run in the row.
         "screen_calls": _block(2, starts[0]),
     }
@@ -1385,7 +1383,47 @@ def self_test() -> int:
         "conclusion of section 5 has silently inverted"
     )
 
-    # Anchor: the real Supplementary Table 2 parse. Without this the two mutations below
+    # The group-presence guard is exercised on synthetic layouts BEFORE the live parse
+    # below, deliberately. Shrinking LITERATURE_GROUPS_REQUIRED also breaks the live
+    # parse's downstream bookkeeping, and if that ran first the resulting KeyError would
+    # be reported as "caught" while the guard named here quietly rotted. Order is part of
+    # what a mutation test is measuring.
+
+    # Mutation 13: a Supplementary Table 2 layout missing the in-vitro block must abort,
+    # not report an absent column as empty - which would manufacture the review's negative.
+    anchors += 1
+    applied += 1
+    # The synthetic layouts are written out rather than derived from
+    # LITERATURE_GROUPS_REQUIRED: derived, they would shrink in step with the tuple and the
+    # guard would go quiet under exactly the mutation that matters.
+    _expect_raises(
+        lambda: _require_literature_groups(
+            {"integrated": {"RhoA": "+"}, "in vivo": {"RhoA": "+"}, "reference": {"RhoA": "+"}}
+        ),
+        "with no 'in vitro'",
+        "missing literature block",
+    )
+
+    # ... and a group that the report renders but the guard forgot must also abort, which
+    # is the absent-versus-empty confusion one level up.
+    anchors += 1
+    applied += 1
+    _expect_raises(
+        lambda: _require_literature_groups(
+            {"integrated": {}, "in vitro": {}, "in vivo": {}}
+        ),
+        "with no 'reference'",
+        "rendered group missing from the guard",
+    )
+
+    # Negative control: a layout that has every required block must be accepted silently.
+    anchors += 1
+    applied += 1
+    _require_literature_groups(
+        {"integrated": {}, "in vitro": {}, "in vivo": {}, "reference": {}}
+    )
+
+    # Anchor: the real Supplementary Table 2 parse. Without this the mutations around it
     # would be testing a helper nobody calls.
     anchors += 1
     baselines += 1
@@ -1398,6 +1436,11 @@ def self_test() -> int:
     anchors += 1
     baselines += 1
     expected_empty = {"in vitro": True, "in vivo": False, "reference": False}
+    absent = [g for g in expected_empty if g not in lit["empty_by_group"]]
+    assert not absent, (
+        f"empty_by_group is missing {absent}, so the emptiness computation is narrower than "
+        "the pattern the review's prose asserts and part of that prose is unchecked"
+    )
     observed = {g: lit["empty_by_group"][g] for g in expected_empty}
     assert observed == expected_empty, (
         f"Supplementary Table 2 emptiness is {observed}, not {expected_empty}. The review's "
@@ -1412,35 +1455,6 @@ def self_test() -> int:
         v is None or str(v).strip() == ""
         for v in dict(lit["groups"]["in vitro"], RhoA="+").values()
     ), "the emptiness test reports a populated block as empty"
-
-    # Mutation 13: a Supplementary Table 2 layout missing the in-vitro block must abort,
-    # not report an absent column as empty - which would manufacture the review's negative.
-    anchors += 1
-    applied += 1
-    _expect_raises(
-        lambda: _require_literature_groups(
-            {g: {"RhoA": "+"} for g in LITERATURE_GROUPS_REQUIRED if g != "in vitro"}
-        ),
-        "with no 'in vitro'",
-        "missing literature block",
-    )
-
-    # ... and a group that the report renders but the guard forgot must also abort, which
-    # is the absent-versus-empty confusion one level up.
-    anchors += 1
-    applied += 1
-    _expect_raises(
-        lambda: _require_literature_groups(
-            {g: {} for g in LITERATURE_GROUPS_REQUIRED if g != "reference"}
-        ),
-        "with no 'reference'",
-        "rendered group missing from the guard",
-    )
-
-    # Negative control: a layout that has every required block must be accepted silently.
-    anchors += 1
-    applied += 1
-    _require_literature_groups({g: {} for g in LITERATURE_GROUPS_REQUIRED})
 
     # Mutation 14: the screen block must hold the call vocabulary, not the derived flag
     # columns. Asserting the vocabulary rather than one known-wrong triple is what makes the

@@ -30,71 +30,84 @@ SRC = SCRIPT_DIR / "analyze_arhgap23.py"
 # (description, exact source text to replace, replacement). Each anchor must match
 # exactly once: zero matches would "pass" by changing nothing, two would mutate a row
 # nobody intended.
-MUTATIONS: list[tuple[str, str, str]] = [
+MUTATIONS: list[tuple[str, str, str, str]] = [
     (
         "drop the annotated-site requirement from forward_retained",
         'forward_retained = bool(s_res == "R" and lands_on_site)',
         'forward_retained = bool(s_res == "R")',
+        'retained must require the annotated-site condition',
     ),
     (
         "make reciprocal ignore the reverse mapping",
         '"reciprocal": bool(forward_retained and reverse_ok),',
         '"reciprocal": bool(forward_retained),',
+        'reciprocity survived a broken reverse mapping',
     ),
     (
         "let an out-of-register interface projection through",
         "if anchor != subject.finger:",
         "if False:",
+        'interface projection: expected AnalysisError',
     ),
     (
         "weaken the chain-identity proof to accept anything",
         "if identity < min_identity:",
         "if identity < 0.0:",
+        'chain identity proof: expected AnalysisError',
     ),
     (
         "stop refusing a record with no arginine-finger annotation",
         '        if not fingers:\n            raise AnalysisError(\n                f"{self.name} carries no',
         '        if False:\n            raise AnalysisError(\n                f"{self.name} carries no',
+        'annotated arginine fingers',
     ),
     (
         "accept an arginine finger annotated outside its own domain",
         "if not (self.domain_start <= self.finger <= self.domain_end):",
         "if False:",
+        'finger outside the domain: expected AnalysisError',
     ),
     (
         "compare residue numbers across constructs of different length",
         '    length_matches = muller["construct"]["length"] == len(subject.seq)',
         "    length_matches = True",
+        'a length mismatch did not stop the residue comparison',
     ),
     (
         "stop distinguishing the published mutant from the annotated arginine finger",
         '"is_uniprot_annotated_arginine_finger": pos == subject.finger,',
         '"is_uniprot_annotated_arginine_finger": True,',
+        'the conclusion of section 5 has silently inverted',
     ),
     (
         "take every matching column instead of the first run in Supplementary Table 2",
         "            if label in cells:\n                break  # the run has ended and a repeat block has begun",
         "            if False:\n                break  # the run has ended and a repeat block has begun",
+        'outside the +/- call vocabulary',
     ),
     (
         "stop requiring the in-vitro literature block to be found at all",
         "    for needed in LITERATURE_GROUPS_REQUIRED:\n        if needed not in groups:",
         "    for needed in LITERATURE_GROUPS_REQUIRED:\n        if False:",
+        'missing literature block: expected AnalysisError',
     ),
     (
         "compute emptiness for fewer groups than the review's prose asserts",
         '        "empty_by_group": {g: _empty(groups[g]) for g in LITERATURE_GROUPS_REQUIRED},',
         '        "empty_by_group": {"in vitro": _empty(groups["in vitro"])},',
+        "narrower than the pattern the review's prose asserts",
     ),
     (
         "render a literature group the presence guard does not require",
         'LITERATURE_GROUPS_REQUIRED = ("integrated", "in vitro", "in vivo", "reference")',
         'LITERATURE_GROUPS_REQUIRED = ("in vitro", "in vivo")',
+        'rendered group missing from the guard: expected AnalysisError',
     ),
     (
         "resolve an ambiguous supplementary row by picking the first",
         '            f"expected exactly 1 row for {symbol} in the supplementary sheet, found {len(hits)}"',
         '            "an ambiguity that is no longer reported"',
+        'duplicated supplementary row: guard fired with the wrong message',
     ),
 ]
 
@@ -115,32 +128,50 @@ def _write_mutant(target: pathlib.Path, old: str, new: str) -> None:
     target.write_text(text.replace(old, new))
 
 
-def _run_self_test(target: pathlib.Path) -> tuple[int, str]:
+def _run_self_test(target: pathlib.Path) -> tuple[int, str, str]:
+    """Return (exit code, full combined output, last line).
+
+    The full output is returned, not just the exit code, because a non-zero exit only
+    says that *something* failed. Several mutations here can be caught incidentally - a
+    KeyError downstream of the guard they break, for instance - which would let the guard
+    that is supposed to catch them rot unnoticed while the harness still reported "caught".
+    """
     proc = subprocess.run(
         [sys.executable, str(target), "--self-test"],
         cwd=SCRIPT_DIR,
         capture_output=True,
         text=True,
     )
-    combined = (proc.stdout + proc.stderr).strip().splitlines()
-    return proc.returncode, combined[-1] if combined else ""
+    combined = (proc.stdout + proc.stderr).strip()
+    lines = combined.splitlines()
+    return proc.returncode, combined, lines[-1] if lines else ""
 
 
 def main() -> int:
     failures: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
         target = pathlib.Path(tmp) / "analyze_arhgap23.py"
-        for desc, old, new in MUTATIONS:
+        for entry in MUTATIONS:
+            desc, old, new = entry[0], entry[1], entry[2]
+            expect = entry[3] if len(entry) > 3 else None
             _write_mutant(target, old, new)
-            code, last = _run_self_test(target)
+            code, full, last = _run_self_test(target)
             if code == 0:
                 failures.append(f"GUARD HOLE: {desc}")
                 print(f"*** GUARD HOLE: {desc} -- self-test still passed")
+            elif expect is not None and expect not in full:
+                # Caught, but by something other than the guard this mutation targets.
+                failures.append(f"WRONG GUARD: {desc}")
+                print(
+                    f"*** WRONG GUARD: {desc}\n"
+                    f"      expected the failure to mention: {expect!r}\n"
+                    f"      got: {last[:150]}"
+                )
             else:
                 print(f"ok, caught: {desc}\n      -> {last[:150]}")
         for desc, old, new in NEGATIVE_CONTROLS:
             _write_mutant(target, old, new)
-            code, last = _run_self_test(target)
+            code, _full, last = _run_self_test(target)
             if code != 0:
                 failures.append(f"FALSE POSITIVE: {desc}")
                 print(f"*** FALSE POSITIVE: {desc}\n      -> {last[:150]}")
