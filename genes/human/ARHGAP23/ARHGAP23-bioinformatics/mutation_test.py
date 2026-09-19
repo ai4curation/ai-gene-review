@@ -19,13 +19,23 @@ Usage:
 from __future__ import annotations
 
 import pathlib
-import shutil
 import subprocess
 import sys
-import tempfile
 
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
 SRC = SCRIPT_DIR / "analyze_arhgap23.py"
+
+# The mutant is written BESIDE the original, not into a temp directory, and this is
+# load-bearing rather than tidiness. ``analyze_arhgap23.py`` derives ``CACHE_DIR`` and
+# ``REPO = SCRIPT_DIR.parents[3]`` from its own location, so a mutant living in
+# ``/tmp/tmpXXXX`` -- the Linux and CI default -- has only two parents above it and raises
+# ``IndexError`` at import. Every entry would then fail for a reason unrelated to its
+# mutation: before the expected-message check existed this printed "13 guards all caught"
+# off nothing but import errors, and after it every entry reports WRONG GUARD. Beside the
+# original, ``SCRIPT_DIR``, ``CACHE_DIR`` and ``REPO`` resolve identically to the real
+# script's, and the 14 runs share one warm cache instead of re-downloading UniProt, the
+# 1TX4 mmCIF and the Müller workbook each time.
+MUTANT = SCRIPT_DIR / ".mutation_test_subject.py"
 
 # (description, exact source text to replace, replacement). Each anchor must match
 # exactly once: zero matches would "pass" by changing nothing, two would mutate a row
@@ -117,18 +127,25 @@ NEGATIVE_CONTROLS: list[tuple[str, str, str]] = [
         '"""Map 1-based positions of `seq_from` onto 1-based positions of `seq_to`."""',
         '"""Map 1-based positions of seq_from onto 1-based positions of seq_to."""',
     ),
+    (
+        # The shape of an edit this repository actually makes: 14 of these comment labels
+        # were rewritten in one commit and their neutrality rested on inspection alone.
+        "a comment-label edit inside self_test",
+        "    # Case: destroy the arginine the test is looking for.",
+        "    # Case (renamed): destroy the arginine the test is looking for.",
+    ),
 ]
 
 
-def _write_mutant(target: pathlib.Path, old: str, new: str) -> None:
+def _write_mutant(old: str, new: str) -> None:
     text = SRC.read_text()
     n = text.count(old)
     if n != 1:
         raise AssertionError(f"anchor matched {n} times, expected exactly 1: {old!r}")
-    target.write_text(text.replace(old, new))
+    MUTANT.write_text(text.replace(old, new))
 
 
-def _run_self_test(target: pathlib.Path) -> tuple[int, str, str]:
+def _run_self_test() -> tuple[int, str, str]:
     """Return (exit code, full combined output, last line).
 
     The full output is returned, not just the exit code, because a non-zero exit only
@@ -137,7 +154,7 @@ def _run_self_test(target: pathlib.Path) -> tuple[int, str, str]:
     that is supposed to catch them rot unnoticed while the harness still reported "caught".
     """
     proc = subprocess.run(
-        [sys.executable, str(target), "--self-test"],
+        [sys.executable, str(MUTANT), "--self-test"],
         cwd=SCRIPT_DIR,
         capture_output=True,
         text=True,
@@ -149,14 +166,13 @@ def _run_self_test(target: pathlib.Path) -> tuple[int, str, str]:
 
 def main() -> int:
     failures: list[str] = []
-    with tempfile.TemporaryDirectory() as tmp:
-        target = pathlib.Path(tmp) / "analyze_arhgap23.py"
+    try:
         # Unpacked directly, not indexed with a length check: an optional fourth element
         # would let a future three-element entry silently revert to deciding on the exit
         # code alone, which is the behaviour this harness exists to stop.
         for desc, old, new, expect in MUTATIONS:
-            _write_mutant(target, old, new)
-            code, full, last = _run_self_test(target)
+            _write_mutant(old, new)
+            code, full, last = _run_self_test()
             if code == 0:
                 failures.append(f"GUARD HOLE: {desc}")
                 print(f"*** GUARD HOLE: {desc} -- self-test still passed")
@@ -171,13 +187,15 @@ def main() -> int:
             else:
                 print(f"ok, caught: {desc}\n      -> {last[:150]}")
         for desc, old, new in NEGATIVE_CONTROLS:
-            _write_mutant(target, old, new)
-            code, _full, last = _run_self_test(target)
+            _write_mutant(old, new)
+            code, _full, last = _run_self_test()
             if code != 0:
                 failures.append(f"FALSE POSITIVE: {desc}")
                 print(f"*** FALSE POSITIVE: {desc}\n      -> {last[:150]}")
             else:
                 print(f"ok, silent: {desc}")
+    finally:
+        MUTANT.unlink(missing_ok=True)
     print()
     if failures:
         print("MUTATION TEST FAILED:")

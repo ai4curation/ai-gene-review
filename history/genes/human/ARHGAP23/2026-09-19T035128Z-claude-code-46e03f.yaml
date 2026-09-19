@@ -307,3 +307,38 @@ events:
     mutation test 13 guards all caught with the negative control silent;
     check_file_quotes.py clean on 18 quotes; just validate human ARHGAP23 green with zero
     warnings. No curation surface touched.
+- type: EDIT
+  outcome: changed
+  summary: Fix a platform-dependent bug that made the mutation test meaningless on Linux and CI
+  details: |
+    Seventh re-review, CHANGES_REQUESTED on the harness with the curation approved, and the
+    finding was correct and serious: the mutation test was only meaningful on the author's
+    platform.
+
+    mutation_test.py wrote each mutant into tempfile.TemporaryDirectory(), so the mutant's
+    module-level SCRIPT_DIR - and therefore CACHE_DIR and REPO = SCRIPT_DIR.parents[3] -
+    resolved inside the temp directory. On macOS that is /var/folders/... with seven
+    parents and it works. On Linux and in CI it is /tmp/tmpXXXX, which has two, so
+    parents[3] raises IndexError at import and every entry fails for a reason unrelated to
+    its mutation. This was reproduced rather than reasoned about: running the harness with
+    TMPDIR=/tmp printed "got: IndexError: 3" for all thirteen entries. Before the
+    expected-message check added two events ago, that same run would have printed
+    "13 guards all caught" off nothing but import errors - the harness would have been
+    asserting the guards were sound while never once executing them.
+
+    The mutant is now written beside the original as .mutation_test_subject.py
+    (gitignored, unlinked in a finally), so SCRIPT_DIR, CACHE_DIR and REPO resolve exactly
+    as they do for the real script, and the fourteen runs share one warm cache instead of
+    re-downloading the UniProt records, the 1TX4 mmCIF and the Müller workbook and SI PDF
+    each time. The harness now passes under TMPDIR=/tmp, which it did not before.
+
+    Also: removed the shutil import, unused since the mutant stopped being copied, and
+    added a second negative control of the shape the previous commit actually made - a
+    comment-label edit inside self_test - since fourteen such lines changed there and
+    their neutrality had rested on inspection alone. It is silent, as it must be.
+
+    Mutation test now 13 guards all caught with 2 negative controls silent, under both the
+    default TMPDIR and TMPDIR=/tmp; the WRONG GUARD path re-verified against an impossible
+    expectation; self-test 19 mutations across 23 anchors (4 baselines);
+    check_file_quotes.py clean on 18 quotes; just validate human ARHGAP23 green with zero
+    warnings.
