@@ -102,12 +102,26 @@ Two further scripts build on it (see the [failure-modes page](TREEGRAFTER/failur
 mode and writes
 [`treegrafter_failure_modes.tsv`](TREEGRAFTER/treegrafter_failure_modes.tsv).
 
-## Results (current corpus snapshot)
+## Results (frozen corpus snapshot, 2026-09-06)
 
-Scanned **4,540** review files. **898** reviewed TreeGrafter annotations
-(`GO_REF:0000118`) across **510** genes — every `GO_REF:0000118` row in the
-corpus GOA now has a review decision (previous snapshot: 415 annotations /
-202 genes, before the *P. putida* KT2440 batch was reviewed).
+> **Snapshot.** Every number on this page and its sub-page, and every
+> committed sidecar, was generated from the review corpus as of
+> **2026-09-06** (branch commit `49d8cc0b`, on `main` at `b62182cc`) and has
+> been **deliberately frozen** there so that the figures below are the ones
+> that were verified line by line in review. The corpus has since grown: the
+> `main` merged into this branch adds **15 review files / 43 TreeGrafter
+> annotations** not in the tables (HETGA 29 — a mammalian gene set the tables
+> have never seen — PSEPK 12, XENLA 2; none removed) and changes one action
+> (PSEPK `fruA` GO:0090563, `ACCEPT` → `KEEP_AS_NON_CORE`). Re-running
+> `analyze_treegrafter.py` on that tree gives 4,857 files / 941 annotations /
+> 525 proteins and a 42.1% accept rate versus 41.3% here. Regenerate the
+> sidecars only together with a fresh pass over `failure_mode_curated.tsv`.
+
+At the snapshot, **4,540** review files were scanned, yielding **898**
+reviewed TreeGrafter annotations (`GO_REF:0000118`) across **510** genes —
+at that date every `GO_REF:0000118` row in the corpus GOA had a review
+decision (an earlier snapshot, before the *P. putida* KT2440 batch was
+reviewed, had 415 annotations / 202 genes).
 
 | Reviewer action | TreeGrafter (IEA) | | PAINT/IBA *(contrast)* | |
 |---|---:|---:|---:|---:|
@@ -273,16 +287,19 @@ fixes:
 
 ## Caveats
 
-- **Corpus composition.** 898 TreeGrafter annotations across 510 reviewed
-  proteins (510 review files; only 493 distinct gene symbols), but
-  ~70% of them come from the *Pseudomonas putida* KT2440 batch (see the
-  per-taxon table in the summary sidecar), so the rates are largely a
+- **Corpus composition (a snapshot property).** 898 TreeGrafter annotations
+  across 510 reviewed proteins (510 review files; only 493 distinct gene
+  symbols), but ~70% of them come from the *Pseudomonas putida* KT2440 batch
+  (see the per-taxon table in the summary sidecar), so the rates are largely a
   *P. putida* result; the 95% Wald interval on the 41% accept rate is roughly
-  ±3 pp, but the taxon skew matters more than the sampling error. Directional,
+  ±3 pp, but the taxon skew matters more than the sampling error. The skew is
+  a property of the 2026-09-06 snapshot, not a standing one: the 43
+  annotations added since (see the snapshot note above) are mostly the
+  mammalian HETGA set, and the share is ~68% on the merged tree. Directional,
   not a frozen benchmark.
 - The reference standard is the AIGR review corpus, which mixes expert and AI
-  adjudication and is under continuous revision; treat rates as a living
-  snapshot.
+  adjudication and is under continuous revision; the rates drift with it,
+  which is why the tables are pinned to a dated snapshot rather than chased.
 - `KEEP_AS_NON_CORE` is **not** an error — the inference is correct but
   peripheral to the gene's core function. Counting accept + non-core as
   "retained correct" gives ~63% for TreeGrafter vs ~88% for IBA.
@@ -308,6 +325,16 @@ fixes:
 
 ---
 # NOTES
+
+## 2026-09-19
+
+- Froze the sidecars at the 2026-09-06 snapshot (branch `49d8cc0b`, `main`
+  `b62182cc`) and said so on the page: the merged `main` adds 15 review files
+  / 43 `GO_REF:0000118` annotations (HETGA 29, PSEPK 12, XENLA 2) and one
+  action change (PSEPK `fruA` GO:0090563 `ACCEPT` → `KEEP_AS_NON_CORE`) that
+  are not in the tables. The completeness clause is now past tense and
+  scoped to the snapshot; the *P. putida* composition caveat is marked as a
+  snapshot property (~70% then, ~68% on the merged tree). No scripts re-run.
 
 ## 2026-09-07
 
@@ -370,6 +397,10 @@ fixes:
   and `GO_REF:0000120` rows with `original_reference_id` withheld, to separate
   the corroboration effect from the reviewer's visibility of the provenance
   label (see the caveat in the Corroboration section).
-- **Broaden the taxon base.** ~70% of the reviewed TreeGrafter rows are
-  *P. putida* KT2440; a batch of eukaryotic or archaeal non-model genes would
-  tell whether the 41% accept rate travels.
+- **Broaden the taxon base.** ~70% of the reviewed TreeGrafter rows at the
+  snapshot are *P. putida* KT2440; a batch of eukaryotic or archaeal non-model
+  genes would tell whether the 41% accept rate travels. The 29 HETGA rows
+  already in the tree (not yet in the tables) are a first such batch.
+- **Refresh the snapshot** when the next batch lands: re-run the three scripts,
+  classify the new down-grades in `failure_mode_curated.tsv`, and re-pin the
+  date and commit in the Results header.
