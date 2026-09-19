@@ -30,9 +30,43 @@ a missing input is a hard error naming the fix, never a silently dropped section
 
 | file | what it is |
 |---|---|
-| `analyze_arhgap36.py` | the analysis, plus `--self-test` |
+| `analyze_arhgap36.py` | the structural analysis, plus `--self-test` |
 | `RESULTS.md` | generated report |
 | `results.json` | generated machine-readable output |
+| `check_review.py` | checks on the review YAML itself, plus `--self-test` |
+
+## `check_review.py`
+
+```
+uv run --no-project --with "pyyaml>=6.0" python check_review.py
+uv run --no-project --with "pyyaml>=6.0" python check_review.py --self-test
+```
+
+Six checks the schema validator does not make. The one that earns its keep is the
+**residue check**: the review asserts that four specific positions in four proteins hold
+four specific residues, and those assertions are cheap to write and easy to get wrong, so
+every `anchor` and `target` is fetched from UniProt and read off the sequence. The others
+are a strict loader that rejects duplicate YAML keys, GOA reconciliation with an action
+tally derived from the file rather than written beside it, a requirement that any
+demotion of a propagated row carry a `propagation_review`, a refusal to demote
+experimental evidence (vacuous today, since ARHGAP36 has none, and kept for the day it
+stops being), and the folded-scalar reflow guard.
+
+The reflow guard is worth describing because its first version was wrong in a way that
+looked right. `>-` folds a newline into a space, so wrapping `arginine-finger` across two
+lines publishes `arginine- finger`; validation passes and only rendering shows it. The
+first implementation walked indentation by hand and flagged **43 lines on a clean file**,
+because a nested block opener such as `supporting_text: >-` itself ends in a hyphen. It
+now takes block extent from the YAML parser's own scalar events and skips the final body
+line, where a hyphen has nothing to fold into. The self-test keeps a negative control for
+exactly this: a trailing hyphen outside any folded block must stay silent.
+
+`--self-test` asserts 10 propositions — five mutations that must each be caught (a folded
+hyphen break, a residue claim contradicted by the sequence, a demotion stripped of its
+`propagation_review`, a duplicate key, a GOA row renamed out of the review) and three
+negative controls that must stay silent. Every mutation anchor is asserted to match
+**exactly once** before it is applied, so a drifted anchor is an error rather than a
+mutation that silently changes nothing.
 
 ## What it measures
 
