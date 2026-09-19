@@ -176,6 +176,23 @@ to claim exchange activity either. The claim rests on the biochemistry.
   activates RhoA and rescues dnWnt-11, depletion blocks CE and is rescued by
   RhoA/Rok [PMID:18256687]. Human hWGEF mRNA rescues the Xenopus morphant, so the
   human protein is functionally interchangeable in this assay.
+### What the PAINT table actually says
+
+Resolved from `interpro/panther/PTHR12845/PTHR12845-paint.tsv` rather than guessed
+from the family name:
+
+| node | term | taxon | seeds |
+|---|---|---|---|
+| PTN002656129 | GO:0005085 | 2759 (Eukaryota) | mouse Arhgef15 + ARHGEF15, ARHGEF5, ARHGEF16, NGEF |
+| PTN002656129 | GO:0032956 | 2759 (Eukaryota) | ARHGEF15, ARHGEF5, **ARHGEF19 itself** |
+| PTN002656130 | GO:0042060 | 117571 (Euteleostomi) | **mouse Arhgef19 alone** |
+
+Two consequences. The `GO:0032956` IBA includes the target's own accession among
+the seeds, so it and the IGI below it are one piece of evidence, not two. And the
+wound-healing node has a **single seed** — a legitimate call for a 1:1 orthologue,
+but "inferred from biological ancestor" is doing less work than the phrase
+usually implies; it is a mouse-to-human transfer of one experiment.
+
 - **Epidermal wound repair via GRHL3.** "we identified RhoGEF19, a homolog of a
   RhoA activator involved in PCP signaling in Xenopus, as a direct target of
   GRHL3" and "Knockdown of Grhl3 or RhoGEF19 in keratinocytes induced defects in
