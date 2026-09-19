@@ -7,7 +7,7 @@ Three committed, re-runnable checks behind the ARHGAP23 review. `uv sync` first.
 | `uv run python analyze_arhgap23.py` | regenerates `results.json` and `RESULTS.md` |
 | `uv run python analyze_arhgap23.py --self-test` | mutates the inputs and asserts each guard fires with its expected message |
 | `uv run python mutation_test.py` | breaks each guard in a copy of the analysis and asserts the self-test catches it **by its own named guard**, plus no-op negative controls that must stay silent |
-| `uv run python mutation_test.py --self-check` | exercises the harness's own protection layer: creates and modifies files and requires them to be reported with the right verb and repaired byte-for-byte |
+| `uv run python mutation_test.py --self-check` | exercises the harness's own logic: creation, modification **and** deletion must each be reported with the right verb and repaired byte-for-byte, an untouched directory must be silent, and the verdict rule must return all three of its outcomes |
 | `uv run python check_file_quotes.py` | asserts every `file:` and `Reactome:` quote in the review YAML is verbatim in the file it cites — the citations CI does not check |
 | `uv run python check_file_quotes.py --self-test` | fabricates a quote and asserts rejection; rewraps a real one and asserts acceptance |
 | `uv run python check_ontology_claims.py` | re-verifies the four load-bearing ontology claims on **two** services (OLS4 and `api.geneontology.org`); a disagreement between them is a failure |

@@ -214,6 +214,24 @@ def _restore(baseline: dict[str, bytes], label: str, failures: list[str]) -> lis
     return changed
 
 
+GUARD_HOLE, WRONG_GUARD, CAUGHT = "GUARD HOLE", "WRONG GUARD", "caught"
+
+
+def _classify(code: int, full: str, expect: str) -> str:
+    """Decide what one mutation run means. Pure, so --self-check can cover all outcomes.
+
+    Kept out of ``main`` deliberately. ``expect not in full`` is the line that made the
+    Linux ``parents[3]`` bug visible rather than green, and while it lived inline the only
+    evidence it worked was an experiment run once by hand and thrown away -- the same
+    objection this file raises about everything else.
+    """
+    if code == 0:
+        return GUARD_HOLE
+    if expect not in full:
+        return WRONG_GUARD
+    return CAUGHT
+
+
 def _write_mutant(old: str, new: str) -> None:
     text = SRC.read_text()
     n = text.count(old)
@@ -244,12 +262,16 @@ def _run_self_test() -> tuple[int, str, str]:
 def self_check() -> int:
     """Exercise the protection layer's own failure path.
 
-    In a passing run none of ``_restore``'s reporting or repairing branches execute, so the
-    only evidence they work would otherwise be an uncommitted mutant run once by hand -
-    which is precisely the "a check that does not re-run goes stale silently" argument this
-    file makes about everything else. This mode creates a file, modifies an existing one,
-    and requires ``_restore`` to name both with the right verbs and put the directory back
-    byte-for-byte.
+    In a passing run none of ``_restore``'s reporting or repairing branches execute, and
+    ``_classify`` only ever returns ``caught``, so the only evidence any of it works would
+    otherwise be an uncommitted experiment run once by hand - precisely the "a check that
+    does not re-run goes stale silently" argument this file makes about everything else.
+
+    This mode covers all three of ``_restore``'s verbs -- creation, modification and
+    deletion -- requiring each to be named correctly, counted as a failure, and repaired
+    byte-for-byte, with a negative control for an untouched directory; and all three of
+    ``_classify``'s outcomes, including the specific case that made the Linux
+    ``parents[3]`` bug visible rather than green.
     """
     invented = SELF_CHECK_INVENTED
     sentinel = SELF_CHECK_SENTINEL
@@ -293,10 +315,27 @@ def self_check() -> int:
         changed = _restore(with_sentinel, "--self-check deletion", failures)
         assert f"deleted {sentinel}" in changed, f"a deleted file was not reported: {changed}"
         assert failures, "a deletion was repaired but not counted as a failure"
+        # Existence is asserted BEFORE the bytes are read: read_bytes() evaluates first in
+        # an assert, so a broken not-exists repair arm -- the arm this phase exists to
+        # cover -- would die with a bare FileNotFoundError and never print this message.
+        assert (SCRIPT_DIR / sentinel).exists(), (
+            "the deleted file was not recreated at all; the not-exists repair arm is broken"
+        )
         assert (SCRIPT_DIR / sentinel).read_bytes() == b"sentinel for the deletion case", (
-            "the deleted file was not recreated with its original bytes"
+            "the deleted file was recreated with the wrong bytes"
         )
         (SCRIPT_DIR / sentinel).unlink()
+
+        # Phase 3 -- the verdict rule itself, on which the whole harness turns and which
+        # no live run can exercise in all three outcomes.
+        assert _classify(0, "anything at all", "needle") == GUARD_HOLE
+        assert _classify(1, "a failure that mentions nothing relevant", "needle") == WRONG_GUARD
+        assert _classify(2, "a failure that mentions the needle here", "needle") == CAUGHT
+        assert _classify(1, "needle", "needle") == CAUGHT
+        # The specific regression that made the Linux parents[3] bug visible: a non-zero
+        # exit whose output is an unrelated traceback must NOT count as caught.
+        assert _classify(1, "IndexError: 3", "retained must require the annotated-site "
+                         "condition") == WRONG_GUARD
 
         # Negative control: with nothing changed, _restore must be silent and report nothing.
         quiet: list[str] = []
@@ -311,7 +350,8 @@ def self_check() -> int:
                 path.write_bytes(data)
     print(
         "self-check OK: creation, modification and deletion are each reported with the "
-        "right verb and repaired byte-for-byte, and an untouched directory is silent"
+        "right verb and repaired byte-for-byte, an untouched directory is silent, and "
+        "_classify returns all three verdicts including the unrelated-traceback case"
     )
     return 0
 
@@ -332,19 +372,20 @@ def main() -> int:
             # names the file but not the mutation that touched it, and leaves every later
             # entry running against an already-clobbered tree.
             _restore(baseline, desc, failures)
-            if code == 0:
-                failures.append(f"GUARD HOLE: {desc}")
-                print(f"*** GUARD HOLE: {desc} -- self-test still passed")
-            elif expect not in full:
+            verdict = _classify(code, full, expect)
+            if verdict == GUARD_HOLE:
+                failures.append(f"{GUARD_HOLE}: {desc}")
+                print(f"*** {GUARD_HOLE}: {desc} -- self-test still passed")
+            elif verdict == WRONG_GUARD:
                 # Caught, but by something other than the guard this mutation targets.
-                failures.append(f"WRONG GUARD: {desc}")
+                failures.append(f"{WRONG_GUARD}: {desc}")
                 print(
-                    f"*** WRONG GUARD: {desc}\n"
+                    f"*** {WRONG_GUARD}: {desc}\n"
                     f"      expected the failure to mention: {expect!r}\n"
                     f"      got: {last[:150]}"
                 )
             else:
-                print(f"ok, caught: {desc}\n      -> {last[:150]}")
+                print(f"ok, {CAUGHT}: {desc}\n      -> {last[:150]}")
         for desc, old, new in NEGATIVE_CONTROLS:
             _write_mutant(old, new)
             code, _full, last = _run_self_test()
