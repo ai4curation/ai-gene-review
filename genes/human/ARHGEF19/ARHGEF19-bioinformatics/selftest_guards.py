@@ -186,6 +186,20 @@ def quote_checker_cases() -> int:
     doc = yaml.safe_load(vq.REVIEW.read_text(encoding="utf-8"))
     failures = 0
 
+    def ref_index(doc, ref_id: str) -> int:
+        """Locate a reference by id, asserting the anchor matches exactly once.
+
+        Positional anchors go stale silently: inserting one reference shifts
+        every index after it, and a mutation then lands on the wrong row while
+        still 'failing' for the wrong reason. Ask by id, and refuse to guess.
+        """
+        hits = [i for i, r in enumerate(doc["references"]) if r.get("id") == ref_id]
+        if len(hits) != 1:
+            raise AssertionError(
+                f"anchor {ref_id!r} matched {len(hits)} references, expected exactly 1"
+            )
+        return hits[0]
+
     def run(mutated, expect_code, expect_text, name):
         nonlocal failures
         with tempfile.NamedTemporaryFile(
@@ -209,17 +223,19 @@ def quote_checker_cases() -> int:
 
     run(doc, 0, "Every quote is a verbatim substring", "quote checker: unmutated review")
 
+    RESULTS_REF = "file:human/ARHGEF19/ARHGEF19-bioinformatics/RESULTS.md"
+
     # A PMID quote reworded by one word must fail.
     m = _copy.deepcopy(doc)
-    m["references"][3]["findings"][0]["supporting_text"] = (
-        "Expression of hWGEF and XWGEF DECREASED the level of active RhoA"
-    )
+    m["references"][ref_index(m, "PMID:18256687")]["findings"][0][
+        "supporting_text"
+    ] = "Expression of hWGEF and XWGEF DECREASED the level of active RhoA"
     run(m, 1, "quote not found in PMID_18256687.md",
         "quote checker: reworded PMID quote")
 
     # A file: quote -- the class CI never checks -- reworded must also fail.
     m = _copy.deepcopy(doc)
-    m["references"][25]["findings"][0]["supporting_text"] = (
+    m["references"][ref_index(m, RESULTS_REF)]["findings"][0]["supporting_text"] = (
         "25 of the 25 RhoA-contacting positions are present"
     )
     run(m, 1, "quote not found in RESULTS.md",
@@ -227,15 +243,17 @@ def quote_checker_cases() -> int:
 
     # A Reactome quote reworded must fail.
     m = _copy.deepcopy(doc)
-    m["references"][21]["findings"][0]["supporting_text"] = (
-        "Following NGF binding, p75NTR inactivates the RAC GTPase."
-    )
+    m["references"][ref_index(m, "Reactome:R-HSA-205039")]["findings"][0][
+        "supporting_text"
+    ] = "Following NGF binding, p75NTR inactivates the RAC GTPase."
     run(m, 1, "quote not found in R-HSA-205039.md",
         "quote checker: reworded Reactome quote")
 
     # A reference pointing at a file that does not exist must fail.
     m = _copy.deepcopy(doc)
-    m["references"][25]["id"] = "file:human/ARHGEF19/ARHGEF19-bioinformatics/NOPE.md"
+    m["references"][ref_index(m, RESULTS_REF)]["id"] = (
+        "file:human/ARHGEF19/ARHGEF19-bioinformatics/NOPE.md"
+    )
     run(m, 1, "does not exist", "quote checker: missing source file")
 
     return failures

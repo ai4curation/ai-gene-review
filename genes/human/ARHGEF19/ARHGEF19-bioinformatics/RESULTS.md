@@ -150,3 +150,24 @@ autoinhibition mapping (Fig. 6) — none of which reached GO.
 
 This is a coverage problem, not an over-annotation problem. The review's actions
 follow from that: almost nothing to remove, a great deal missing.
+
+### What the deep-research record left out
+
+The same script parses the committed Affinage record for the PMIDs it cites and
+diffs them against the classified list, so "Affinage missed X" is a proposition
+about a file in this repo rather than a recollection. Affinage cites 11 PMIDs,
+all of which resolve to real papers about this gene — its precision is fine, and
+its trust gates passed. Those 11 omit **3 of the 14 primary papers**, plus the
+commentary PMID:21686262, and every miss has the same shape: **the title does not
+name the gene**.
+
+| missed | title | why it matters |
+|---|---|---|
+| PMID:20643356 | *Epidermal wound repair is regulated by the planar cell polarity signaling pathway* | the only paper that has produced an informative GO annotation for this gene in any species |
+| PMID:18537266 | *…regulation of Tim and related Dbl-family proteins* — named for a paralogue | one of only two papers that assay Wgef autoinhibition directly |
+| PMID:34813497 | *ARHGEF19 promotes the growth of breast cancer…* | the third independent MAPK tumour type |
+| PMID:21686262 | *Grhl3 and **GEF19** in the front rho* | the symbol is abbreviated, so no `ARHGEF19` or `WGEF` query returns it |
+
+A clean gate on a record that omits the single most annotation-productive paper
+on the gene is the whole lesson: gates certify the citations given, not the ones
+withheld.

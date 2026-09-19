@@ -26,15 +26,20 @@ Exit codes: 0 = ran and reported; 2 = a service did not answer.
 from __future__ import annotations
 
 import json
+import re
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
+AFFINAGE = (
+    Path(__file__).resolve().parent.parent / "ARHGEF19-deep-research-affinage.md"
+)
 
 GENE = "ARHGEF19"
 GENE_SYNONYMS = {"ARHGEF19", "WGEF", "EPHEXIN-2", "EPHEXIN2", "RHOGEF19", "GEF19"}
@@ -172,6 +177,29 @@ def main() -> int:
           "to anything other than GO:0005515 protein binding: "
           + (", ".join(f"PMID:{r.pmid}" for r in informative) or "none"))
     print()
+
+    print("## What the Affinage record cited, and what it did not")
+    print()
+    if not AFFINAGE.exists():
+        print(f"(no Affinage record at {AFFINAGE}; skipping)")
+    else:
+        cited = set(re.findall(r"PMID:(\d+)", AFFINAGE.read_text(encoding="utf-8")))
+        print(f"Affinage cites {len(cited)} PMIDs. Its trust gates say nothing about "
+              "recall, so the useful number is what it left out.")
+        print()
+        missed_primary = sorted(set(PRIMARY) - cited)
+        missed_other = sorted(set(NOT_PRIMARY) - cited)
+        extra = sorted(cited - classified)
+        print(f"- primary papers NOT cited by Affinage ({len(missed_primary)} of "
+              f"{len(PRIMARY)}): "
+              + (", ".join(f"PMID:{p}" for p in missed_primary) or "none"))
+        for p in missed_primary:
+            print(f"    - PMID:{p}: {PRIMARY[p]}")
+        print(f"- non-primary papers NOT cited ({len(missed_other)}): "
+              + (", ".join(f"PMID:{p}" for p in missed_other) or "none"))
+        print(f"- cited but not in this review's classification ({len(extra)}): "
+              + (", ".join(f"PMID:{p}" for p in extra) or "none"))
+        print()
 
     print("## Excluded from the denominator (not primary work on this gene)")
     print()

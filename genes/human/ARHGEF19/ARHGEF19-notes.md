@@ -27,11 +27,23 @@ functions of Ephexin2 and Ephexin3 remain elusive although they are known to
 activate RhoA (PMID:33597305, full text via PMC7923574 — the locally cached copy
 is abstract-only, so that sentence is not quoted as `supporting_text`).
 
-Retrieval note for whoever revisits this: the paper that established the GRHL3 →
-RhoGEF19 link is commented on in PMID:21686262, *"Grhl3 and GEF19 in the front
-rho"*. No `ARHGEF19` or `WGEF` PubMed query returns it — the title uses `GEF19`.
-Likewise PMID:18537266 is titled for **Tim**, a paralogue, and is nonetheless one
-of only two papers that assay human/mouse Wgef autoinhibition directly.
+### Retrieval: everything affinage missed has the same shape
+
+Affinage's trust gates were clear and all eleven of its citations resolve to real
+papers about this gene — its *precision* is fine. Its eleven citations
+nevertheless omit three of the fourteen primary papers plus one commentary, and
+in every case the title does not name the gene:
+
+| missed | title | why it matters |
+|---|---|---|
+| PMID:20643356 | *"Epidermal wound repair is regulated by the planar cell polarity signaling pathway"* | the **only** paper that has produced an informative GO annotation for this gene in any species |
+| PMID:18537266 | *"...regulation of **Tim** and related Dbl-family proteins"* — a paralogue | one of only two papers that assay Wgef autoinhibition directly |
+| PMID:34813497 | *"ARHGEF19 promotes the growth of breast cancer..."* | the third independent MAPK tumour type |
+| PMID:21686262 | *"Grhl3 and **GEF19** in the front rho"* | no `ARHGEF19` or `WGEF` query returns it — the title abbreviates the symbol |
+
+PMID:20643356 is the sharp one: a clean gate on a record that omits the single
+most annotation-productive paper on the gene. Gates certify the citations given,
+not the ones withheld.
 
 ## Molecular function: RhoA, and specifically not Rac1 or Cdc42
 
