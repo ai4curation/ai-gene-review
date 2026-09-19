@@ -14,6 +14,7 @@ Findings are written up in [`RESULTS.md`](RESULTS.md).
 | `sibling_row_verdicts.py` | `sibling_verdicts.json` | no (reads `genes/**/ *-ai-review.yaml`) |
 | `splicing_factor_eligibility.py` | `splicing_factor_eligibility.json` | yes (QuickGO) |
 | `verify_authored_terms.py` | — (exit status) | yes (QuickGO **and** OLS4) |
+| `verify_quotes.py` | — (exit status) | no (reads the review and `publications/`) |
 | `audit_arglu1_review.py` | — (exit status) | no (reads the review, the GOA tsv and the JSON artefacts) |
 
 ## Running
@@ -50,6 +51,27 @@ Also worth knowing: QuickGO silently resolves merges. `GO:0035257`/`GO:0035258`
 return `GO:0016922`'s record with `isObsolete=False`, where OLS4 reports them
 obsolete-replaced-by. So a QuickGO "not obsolete" can mean either "current" or
 "merged into something else", and the two cannot be told apart from that response.
+
+## `verify_quotes.py` — where the repo's quote gate is weakest
+
+Checks all 61 `supporting_text` values against their cached publications using the
+repo validator's own normalisation (case, whitespace, punctuation, Greek letters
+spelled out), so it neither invents failures the validator would not see nor hides
+ones it would.
+
+It is not redundant with `just validate`. For a reference whose cache is
+**abstract-only**, `src/ai_gene_review/validation/validator.py` downgrades a
+non-matching quote from ERROR to **WARNING** (the
+`declared_unavailable or cache_has_full_text is False` branch). **Six** of this
+review's references are abstract-only — `PMID:21454576`, `PMID:22365833`,
+`PMID:22923044`, `PMID:23602568`, `PMID:36533631`, `PMID:42641889` — so a
+paraphrase against any of them would not fail the build. One of them,
+`PMID:22923044`, carries the quote the whole mitochondrion finding rests on.
+
+`--self-test` corrupts a quote against a full-text source *and* against an
+abstract-only source and asserts both are detected. The abstract-only case is
+tested separately on purpose: it is the case the repo gate weakens on, so it is
+the one whose silent failure would matter most.
 
 ## `audit_arglu1_review.py`
 
