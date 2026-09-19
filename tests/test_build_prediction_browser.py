@@ -7,7 +7,10 @@ import subprocess
 
 import pytest
 
-from ai_gene_review.tools.build_prediction_browser import build_prediction_browser
+from ai_gene_review.tools.build_prediction_browser import (
+    build_prediction_browser,
+    encode_prediction_data_js,
+)
 
 
 def read_browser_payload(path: Path) -> dict:
@@ -15,8 +18,14 @@ def read_browser_payload(path: Path) -> dict:
     node = shutil.which("node")
     if not node:
         pytest.skip("Node is needed to execute the generated browser payload")
-    script = "global.window = {};\n" + path.read_text() + "\nprocess.stdout.write(JSON.stringify(window.predictionData));"
-    result = subprocess.run([node, "-"], input=script, text=True, capture_output=True, check=True)
+    script = (
+        "global.window = {};\n"
+        + path.read_text()
+        + "\nprocess.stdout.write(JSON.stringify(window.predictionData));"
+    )
+    result = subprocess.run(
+        [node, "-"], input=script, text=True, capture_output=True, check=True
+    )
     return json.loads(result.stdout)
 
 
@@ -61,13 +70,23 @@ def test_build_preserves_empty_outputs_and_complete_evidence(tmp_path: Path) -> 
     assert first_build == {path.name: path.read_bytes() for path in output.iterdir()}
 
 
-def test_compact_payload_preserves_values_and_distinguishes_absent_fields(tmp_path: Path) -> None:
+def test_compact_payload_preserves_values_and_distinguishes_absent_fields(
+    tmp_path: Path,
+) -> None:
     """Compact repeated keys without truncating text, changing nulls, or pooling scores."""
-    from ai_gene_review.tools.build_prediction_browser import encode_prediction_data_js
-
     records = [
-        {"gene_symbol": "α-test", "claim_count": 0, "summary": 'Quoted "text"\nnext line', "optional": None},
-        {"gene_symbol": "beta", "claim_count": None, "summary": "full text", "performance_included": False},
+        {
+            "gene_symbol": "α-test",
+            "claim_count": 0,
+            "summary": 'Quoted "text"\nnext line',
+            "optional": None,
+        },
+        {
+            "gene_symbol": "beta",
+            "claim_count": None,
+            "summary": "full text",
+            "performance_included": False,
+        },
     ] * 100
     data = {"sets": records, "claims": [], "metadata": {"schema_version": 1}}
     encoded = encode_prediction_data_js(data)
@@ -75,3 +94,56 @@ def test_compact_payload_preserves_values_and_distinguishes_absent_fields(tmp_pa
     path.write_text(encoded)
     assert read_browser_payload(path) == data
     assert len(encoded) < len(json.dumps(data, separators=(",", ":"))) * 0.7
+
+
+def test_string_dictionary_preserves_nested_values_and_reuses_full_text(
+    tmp_path: Path,
+) -> None:
+    """Repeated evidence, links, and nested values survive dictionary compaction."""
+    evidence = 'Repeated evidence with Unicode α, a "quotation", and a newline.\n' * 20
+    shared_link = "../../genes/DROME/example/example-predictions-review.yaml"
+    row = {
+        "summary": evidence,
+        "source_link": shared_link,
+        "review_score": 2,
+        "claim_count": 0,
+        "ratio": 0.25,
+        "optional": None,
+        "included": False,
+        "reviewed": True,
+        "projects": ["PROJECT", "PROJECT", None, False, 0, {"evidence": evidence}],
+        "details": {"text": evidence, "nested": [[evidence], [], {}], "$string": 0},
+    }
+    data = {
+        "sets": [row, {"summary": evidence}] * 20,
+        "claims": [row] * 20,
+        "metadata": {"description": evidence, "nested": {"source_link": shared_link}},
+    }
+
+    encoded = encode_prediction_data_js(data)
+    path = tmp_path / "data.js"
+    path.write_text(encoded)
+
+    assert read_browser_payload(path) == data
+    assert encoded.count(json.dumps(evidence)) == 1
+    assert encoded.count(json.dumps(shared_link)) == 1
+    assert len(encoded) < len(json.dumps(data, separators=(",", ":"))) * 0.15
+    assert encode_prediction_data_js(data) == encoded
+
+
+@pytest.mark.parametrize(
+    "literal", ["~", "~0", "~999999", "~~literal", "~not-a-number", "\x00", "$ref:0"]
+)
+def test_dictionary_marker_like_strings_remain_literal(
+    tmp_path: Path, literal: str
+) -> None:
+    """Literal reference-like strings work in every nesting position, even once."""
+    data = {
+        "sets": [{"summary": "ordinary text", "unique": literal + "-unique"}],
+        "claims": [{"text": literal, "nested": [literal, {literal: literal}]}],
+        "metadata": {"literal": literal},
+    }
+    path = tmp_path / "data.js"
+    path.write_text(encode_prediction_data_js(data))
+
+    assert read_browser_payload(path) == data
