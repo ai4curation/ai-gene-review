@@ -92,6 +92,18 @@ expressible in GO. The merge was deliberate, so no replacement is proposed and n
 term requested. Substrate identity is recorded in `core_functions[].substrates` and as an
 `RO:0002233 has_input` extension.
 
+**A second absence, established by walking rather than searching.** ARHGAP4's only
+interaction row is `GO:0005515 protein binding` with NCKAP1L (Hem-1), which says nothing
+about function, so a more informative term was looked for. GO search is **token-based** —
+"WAVE complex binding" can never match a term lacking those tokens — and a failed search
+has justified wrong `REMOVE`s in this campaign before. So the branch was enumerated
+instead: all **106** descendants of `GO:0044877 protein-containing complex binding`
+contain exactly **one** actin-machinery term, `GO:0071933 Arp2/3 complex binding`, and
+no term for binding the WAVE/SCAR or Hem-1 complex. `GO:0031209 SCAR complex` exists, but
+as a cellular component rather than as something to bind. The self-test requires the walk
+to find `GO:0071933` (so a zero cannot be a broken query) and requires it *not* to find a
+WAVE/SCAR/Hem binding term.
+
 ## 3. `arginine_finger.py` — the residue is present, and it settles nothing
 
 **The anchor is verified structurally, not assumed.** PDB **1TX4** is the

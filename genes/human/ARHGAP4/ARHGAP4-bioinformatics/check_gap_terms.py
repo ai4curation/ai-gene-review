@@ -156,6 +156,61 @@ def repo_cache(cid: str) -> dict[str, object]:
     return {"present": False, "label": None, "label_marked_obsolete": None}
 
 
+COMPLEX_BINDING_ROOT = "GO:0044877"  # protein-containing complex binding
+COMPLEX_BINDING_TOKENS = (
+    "wave",
+    "scar",
+    "hem",
+    "arp2/3",
+    "actin nucleat",
+    "nucleation-promoting",
+)
+
+
+def descendants(cid: str, depth: int = 0, seen: set[str] | None = None, max_depth: int = 3):
+    """Every asserted descendant of a term, to ``max_depth``.
+
+    Used instead of a text search because **GO search is token-based**: "WAVE complex
+    binding" can never match a term that does not contain those tokens, so a failed
+    search is not evidence that no suitable term exists. Walking the branch is."""
+    seen = seen if seen is not None else set()
+    if cid in seen or depth > max_depth:
+        return []
+    seen.add(cid)
+    enc = urllib.parse.quote(urllib.parse.quote(iri(cid), safe=""), safe="")
+    r = requests.get(f"{OLS4}/{enc}/children", params={"size": 500}, timeout=120)
+    if r.status_code == 404:
+        return []
+    r.raise_for_status()
+    out = []
+    for c in r.json().get("_embedded", {}).get("terms", []):
+        out.append({"id": c["obo_id"], "label": c["label"]})
+        out.extend(descendants(c["obo_id"], depth + 1, seen, max_depth))
+    return out
+
+
+def complex_binding_survey() -> dict[str, object]:
+    """Is there a GO term for binding the WAVE/SCAR or Hem-1 complex?
+
+    ARHGAP4's only interaction annotation is ``GO:0005515 protein binding`` with NCKAP1L
+    (Hem-1), which says nothing about function. Before leaving that row as an
+    uninformative term, the branch it would have to live in is enumerated."""
+    kids = descendants(COMPLEX_BINDING_ROOT)
+    relevant = [
+        k for k in kids if any(t in k["label"].lower() for t in COMPLEX_BINDING_TOKENS)
+    ]
+    return {
+        "root": COMPLEX_BINDING_ROOT,
+        "descendants_walked": len(kids),
+        "actin_machinery_terms_found": relevant,
+        # GO:0031209 SCAR complex exists as a cellular component; the question is
+        # whether a *binding* term for it exists, and it does not.
+        "wave_or_scar_binding_term_exists": any(
+            t in k["label"].lower() for k in relevant for t in ("wave", "scar", "hem")
+        ),
+    }
+
+
 def run() -> dict[str, object]:
     out: dict[str, object] = {"terms": {}}
     for cid, note in CANDIDATES.items():
@@ -223,6 +278,7 @@ def run() -> dict[str, object]:
             cid for cid, v in out["terms"].items() if v["quickgo_masked_the_merge"]
         ),
     }
+    out["complex_binding_survey"] = complex_binding_survey()
     return out
 
 
@@ -303,6 +359,27 @@ def self_test() -> int:
             "PASS" if ols4_direct_children(SURVIVOR) == [] else "FAIL",
         )
     )
+    # 9. The complex-binding branch walk must return a substantial branch and must find
+    #    the one actin-machinery term that does exist. A walk that returned nothing would
+    #    make "no WAVE binding term" a broken query rather than a finding.
+    s = complex_binding_survey()
+    found = {t["id"] for t in s["actin_machinery_terms_found"]}
+    checks.append(
+        (
+            "complex-binding walk finds GO:0071933 Arp2/3 complex binding",
+            "PASS"
+            if s["descendants_walked"] > 50 and "GO:0071933" in found
+            else f"FAIL walked={s['descendants_walked']} found={found}",
+        )
+    )
+    # 10. NEGATIVE CONTROL: and must not find a WAVE/SCAR/Hem binding term, which is the
+    #     claim the review's GO:0005515 row rests on.
+    checks.append(
+        (
+            "negative control: no WAVE/SCAR/Hem complex-binding term exists",
+            "PASS" if not s["wave_or_scar_binding_term_exists"] else f"FAIL {found}",
+        )
+    )
 
     for name, verdict in checks:
         print(
@@ -347,6 +424,13 @@ def main() -> int:
     print("substrate-specific names surviving only as synonyms:")
     for s in c["substrate_specific_names_now_synonyms_of_survivor"]:
         print("   ", s)
+    s = out["complex_binding_survey"]
+    print()
+    print(
+        f"complex-binding branch under {s['root']}: {s['descendants_walked']} descendants walked"
+    )
+    print("  actin-machinery terms:", s["actin_machinery_terms_found"] or "none")
+    print("  WAVE/SCAR/Hem binding term exists:", s["wave_or_scar_binding_term_exists"])
     print(f"\nwrote {dest}")
     return 0
 
