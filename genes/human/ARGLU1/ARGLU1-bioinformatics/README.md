@@ -13,6 +13,7 @@ Findings are written up in [`RESULTS.md`](RESULTS.md).
 | `composition_and_features.py` | `composition.json` | no (reads `../ARGLU1-uniprot.txt`) |
 | `sibling_row_verdicts.py` | `sibling_verdicts.json` | no (reads `genes/**/ *-ai-review.yaml`) |
 | `splicing_factor_eligibility.py` | `splicing_factor_eligibility.json` | yes (QuickGO) |
+| `verify_authored_terms.py` | — (exit status) | yes (QuickGO **and** OLS4) |
 | `audit_arglu1_review.py` | — (exit status) | no (reads the review, the GOA tsv and the JSON artefacts) |
 
 ## Running
@@ -29,6 +30,26 @@ uv run python sibling_row_verdicts.py
 uv run python audit_arglu1_review.py
 uv run python audit_arglu1_review.py --self-test
 ```
+
+## `verify_authored_terms.py` — two services, not two endpoints
+
+Checks every GO id the review **authors** (`core_functions`,
+`proposed_replacement_terms`, and the `term.id` of every `action: NEW` row)
+against **QuickGO and OLS4 independently**, and fails on obsolescence or on a
+disagreement between them. Ids that came from GOA are deliberately not checked —
+per `CLAUDE.md` those are machine-supplied and not the reviewer's to second-guess.
+
+This exists because a single service was a confident outlier twice in this PR's
+history. QuickGO reported `GO:0035259` obsolete and `GO:0016922` childless; the GO
+API, OLS4 and the repository's own `cache/ontologies/go.tsv` all disagreed, and
+QuickGO was wrong on both. The compounding error was that the "two checks" behind
+the claim were QuickGO's `/children` endpoint and QuickGO's text search —
+**two methods against one service is one check.**
+
+Also worth knowing: QuickGO silently resolves merges. `GO:0035257`/`GO:0035258`
+return `GO:0016922`'s record with `isObsolete=False`, where OLS4 reports them
+obsolete-replaced-by. So a QuickGO "not obsolete" can mean either "current" or
+"merged into something else", and the two cannot be told apart from that response.
 
 ## `audit_arglu1_review.py`
 
