@@ -120,7 +120,11 @@ drives cAMP-induced nuclear accumulation [PMID:16467138] (UniProt `MUTAGEN 883`,
 `S->A: Abolishes cAMP-induced nuclear localization.`). PDE3A-containing AKAP
 complexes keep local cAMP low so the GEF stays active [PMID:19332778].
 
-**These two are routinely conflated and the conflation is wrong — see §2.7.**
+**These two are routinely conflated and the conflation is wrong.** They act on
+different axes: Ser-883 phosphorylation plus the `711..715` NLS controls *where the
+protein is* (cAMP-induced nuclear accumulation), while the PDE3A/AKAP arrangement
+controls *whether the GEF is active* by holding local cAMP down. Treating the first
+as evidence about exchange activity reads a localisation control as a catalytic one.
 
 **Traffic step.** Double knockdown of BIG1 and BIG2 in human cells blocks an
 identified retrograde route:
