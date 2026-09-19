@@ -273,15 +273,20 @@ most useful thing a curator could act on from this review after the Reactome con
 
 | action | n | rows |
 |---|---|---|
-| ACCEPT | 12 | both `NOT GO:0005096` IDA rows, `NOT GO:0043547`, `GO:0005759` x2, `GO:0006543`, `GO:0021987` x4, `GO:0035795` |
+| ACCEPT | 11 | both `NOT GO:0005096` IDA rows, `NOT GO:0043547`, `GO:0005759` x2, `GO:0006543`, `GO:0021987` x4, `GO:0035795` |
 | MODIFY | 2 | the two `GO:0005515` rows → `GO:0044325` transmembrane transporter binding |
-| REMOVE | 3 | `GO:0005096` TAS, `GO:0005829` TAS, `GO:0051056` TAS, `GO:0007165` IEA — **four**, see below |
+| REMOVE | 4 | `GO:0005096` TAS, `GO:0005829` TAS, `GO:0051056` TAS, `GO:0007165` IEA |
 | NEW | 1 | `GO:2000179` positive regulation of neural precursor cell proliferation, IMP, PMID:36098218 |
 
-The REMOVE count is **4**, not 3: `GO:0005096` TAS, `GO:0005829` TAS, `GO:0051056` TAS and
-`GO:0007165` IEA. 12 + 2 + 4 = 18 = 17 GOA rows + 1 NEW row. Stated arithmetically because
-an entry count that does not reconcile with the TSV is either missing coverage or a silent
-merge.
+11 + 2 + 4 + 1 = 18 = 17 GOA rows + 1 NEW row.
+
+These counts come from `ARHGAP11B-bioinformatics/check_review_counts.py`, not from counting
+by eye, and writing it immediately earned its keep. My hand tally said **ACCEPT 12** and
+wrote the arithmetic as `12 + 2 + 4 = 18`, which *also* came to 18 — because it had dropped
+the NEW row from the sum at the same time as inflating ACCEPT by one. Two errors cancelling
+into a total that looked reconciled. The row list beside the number was correct all along
+(2 + 1 + 2 + 1 + 4 + 1 = 11); only the number was wrong. The wrong figure had already
+reached the commit message and the PR body before the script was run.
 
 Every REMOVE is non-experimental (three TAS, one IEA). **No experimental annotation was
 removed, modified or demoted anywhere in this review** — the two `GO:0005515` MODIFYs
