@@ -297,4 +297,15 @@ is PMID:35986704.
 | GO:0015629 actin cytoskeleton (IBA, is_active_in) | MARK_AS_OVER_ANNOTATED | four papers localise ARHGAP36 to plasma membrane, endo/lysosomal vesicles, mother centriole and cilium; none to the actin cytoskeleton. Unsupported rather than refuted |
 | GO:0007165 signal transduction (IEA) | MODIFY → GO:0045880 | true but maximally general, and supplied by the signature of the domain that does not work. The specific process is well evidenced |
 | GO:0004862 cAMP-dependent protein kinase inhibitor activity | NEW | in vitro kinase assay on recombinant PKAC + ITC + cellular FRET; the gene otherwise has no correct MF |
-| GO:0005813 centrosome | NEW | PMID:30598432, mother-centriole localisation, Ptc1-dependent, with knockdown control |
+| GO:0005886 plasma membrane | NEW | PMID:27713425, human Q6ZRI8-2, IDA; corroborated across isoforms by PMID:33999959 |
+
+**`GO:0005813 centrosome` was considered and dropped.** An earlier draft of this table
+listed it as a NEW row on the strength of PMID:30598432 — mother-centriole localisation,
+Patched1-dependent, with a knockdown control, which is the best-characterised localisation
+this protein has. It was dropped when the cell systems were checked: that work is in mouse
+cells (`Ptc1 +/−` and `Ptc1 −/−` lines), so an IDA on the *human* gene would assert a human
+experiment that was not performed. `GO:0005886` was proposed instead because PMID:27713425
+states in its methods that the construct is human `Q6ZRI8-2`. The centrosome is raised in
+`suggested_questions` as a candidate for a separate ortholog-based annotation rather than
+asserted here. The row above records the decision actually taken; this paragraph records
+the one that was not, so the table is not read as the outcome.
