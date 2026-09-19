@@ -102,6 +102,39 @@ And a third-party restatement, full-text cached:
 inhibitor but as an inhibitor of PKA signaling by directly binding the catalytic subunit
 of PKA (PKAC) and targeting it for lysosomal degradation."]
 
+### MGI has already said the molecular function is unknown
+
+Checked late, and it should have been checked first. Mouse Arhgap36 (MGI:MGI:1922654,
+UniProtKB:B1AUC7) has seven GO annotations:
+
+| term | evidence | reference |
+|---|---|---|
+| GO:0007224 smoothened signaling pathway | IMP (`acts_upstream_of_or_within`) | PMID:31305241 |
+| GO:0021525 lateral motor column neuron differentiation | IMP | PMID:31305241 |
+| **GO:0003674 molecular_function** | **ND** | **GO_REF:0000015** |
+| GO:0005096 GTPase activator activity | IBA | GO_REF:0000033 |
+| GO:0007015 actin filament organization | IBA | GO_REF:0000033 |
+| GO:0007165 signal transduction | IEA | GO_REF:0000002 |
+| GO:0015629 actin cytoskeleton | IBA | GO_REF:0000033 |
+
+GO_REF:0000015 is "Use of the ND evidence code for Gene Ontology (GO) terms": a direct
+annotation to a root term with ND records that a curator searched and found no data
+supporting anything more specific. So MGI states that Arhgap36's molecular function is
+unknown, in the same annotation set where the phylogenetic pipeline states that it is a
+GTPase activator. The contradiction this review resolves is already visible in GO's own
+data, on the ortholog, and is not a human-specific artefact.
+
+The same table gives the MODIFY its precedent: the ortholog already sits in the
+Smoothened branch by IMP, from the same paper this review cites.
+
+Read 2026-09-19 from **two independent services that agree** — QuickGO
+(`/QuickGO/services/annotation/search?geneProductId=UniProtKB:B1AUC7`) and
+`api.geneontology.org/api/bioentity/gene/MGI:MGI:1922654/function`. An attempt to read
+the MGI marker page through WebFetch returned a GO-slim category list rather than the
+annotations and was discarded; it is the second time in this session that WebFetch
+returned confident, wrong page content (the first was a bibliography for an unrelated
+article), so neither reading is relied on anywhere.
+
 ### The one thing that points the other way
 
 UniProt records `SUBUNIT: May interact (via the Rho-GAP domain) with the active form of
