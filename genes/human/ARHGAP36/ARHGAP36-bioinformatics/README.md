@@ -67,11 +67,20 @@ all-negative, ARHGAP36 among them**. That set is not written here — it is read
 `results.json`, the output of `analyze_arhgap36.py`, and the gene symbols are resolved
 through UniProt rather than guessed.
 
-Column positions are derived from the header, never hardcoded. `--self-test` asserts 9
-propositions, including four mutations that must each be refused — a blanked call cell
+Column positions are derived from the header, never hardcoded. `--self-test` asserts 10
+propositions, including five mutations that must each be refused — a blanked call cell
 (which must not silently read as negative), an all-negative control set, an all-positive
-control set, and a renamed header — and one negative control: editing an unrelated gene's
-row must leave the query's calls untouched.
+control set, a renamed header, and an ARHGAP17 that is no longer all-negative — and one
+negative control: editing an unrelated gene's row must leave the query's calls untouched.
+
+That last mutation exists because of a naming defect a reviewer caught: ARHGAP17 had been
+listed in `POSITIVE_CONTROLS`, which was simply wrong — it scores `−/−/−` here and is the
+screen's *false-negative exemplar*, not a positive control. Listing it there would have let
+the "at least one control is positive" guard be satisfied by a protein that is evidence for
+the opposite point. It is now a separate `FALSE_NEGATIVE_EXEMPLAR` with its own guard: the
+report prints a caveat asserting that this protein is all-negative despite being a
+characterised Cdc42 GAP, so the run fails if that stops being true rather than continuing to
+print it.
 
 ## `check_review.py`
 

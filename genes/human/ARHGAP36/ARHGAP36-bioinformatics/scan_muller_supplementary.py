@@ -4,17 +4,18 @@ PMID:32203420 (Nat Cell Biol 22:498-511) is the primary source of the negative
 functional result on ARHGAP36: a systems-scale screen of every human RhoGEF and RhoGAP
 against RHOA, RAC1 and CDC42. The article is **not open access** -- Europe PMC reports
 no PMC id, ``isOpenAccess: N``, ``inEPMC: N`` -- so the repository's cached record is
-abstract-only and the review quotes the result second-hand, through the verbatim
-sentence in PMID:33999959 that cites it.
+abstract-only. Before this script existed the review could only quote the result
+second-hand, through the verbatim sentence in PMID:33999959 that cites it.
 
 The *supplementary tables are freely downloadable* from Springer even though the article
 text is not. This script fetches them and reads the row directly, so the review's central
-functional claim rests on a number someone can re-derive rather than on a chain of
+functional claim now rests on a number someone can re-derive rather than on a chain of
 citations. It deliberately does **not** produce anything for ``supporting_text``: that
 field is validated as a verbatim substring of the cached publication, the cache is
 abstract-only, and a quote from a supplementary file would be unverifiable there. The
-finding belongs in ``reference_review.review_notes`` and in the annotation's ``reason``,
-which is where the review puts it.
+findings are therefore attached to the PMID:32203420 reference as ``statement``-only
+entries -- they are claims about what that paper contains -- with the provenance in its
+``reference_review.review_notes`` and the argument in the annotation's ``reason``.
 
 Two tables matter:
 
@@ -64,7 +65,18 @@ ESM_URL = (
 QUERY = "ARHGAP36"
 # GAPs the same screen scores positive for at least one GTPase. If these come back all
 # negative, the table has been misread and the query's negative means nothing.
-POSITIVE_CONTROLS = ["ARHGAP35", "ARHGAP1", "ARHGAP17"]
+#
+# ARHGAP17 is deliberately NOT in this list. An earlier version included it, which was
+# simply wrong: ARHGAP17/RICH1 scores negative for all three GTPases here despite being a
+# characterised Cdc42 GAP. It is the screen's false-negative exemplar, not a positive
+# control, and calling it one would have let the "at least one control is positive" guard
+# pass on a protein that is evidence for the opposite point.
+POSITIVE_CONTROLS = ["ARHGAP35", "ARHGAP1"]
+# A GAP with characterised activity that this screen nonetheless scores all-negative. The
+# false-negative caveat in the report is an assertion about this protein, so it is checked
+# rather than narrated: if ARHGAP17 ever stops being all-negative, the caveat is wrong and
+# the run must fail rather than keep printing it.
+FALSE_NEGATIVE_EXEMPLAR = "ARHGAP17"
 GTPASES = ["RhoA", "Rac1", "Cdc42"]
 
 LIBRARY_SHEET = "Supplementary Table 1"
@@ -161,7 +173,16 @@ def run(rows_override: dict[str, list[list[str]]] | None = None) -> dict[str, An
     lib = (rows_override or {}).get(LIBRARY_SHEET) or sheet_rows(path, LIBRARY_SHEET)
 
     cols = specificity_columns(spec)
-    calls = {gene: read_calls(spec, cols, gene) for gene in [QUERY] + POSITIVE_CONTROLS}
+    calls = {gene: read_calls(spec, cols, gene) for gene in [QUERY] + POSITIVE_CONTROLS + [FALSE_NEGATIVE_EXEMPLAR]}
+
+    # The report asserts that this screen has false negatives, naming this protein. Check
+    # it rather than narrate it.
+    if any(v == "+" for v in calls[FALSE_NEGATIVE_EXEMPLAR].values()):
+        raise ScanError(
+            f"{FALSE_NEGATIVE_EXEMPLAR} is not all-negative in this table "
+            f"({calls[FALSE_NEGATIVE_EXEMPLAR]}), so the false-negative caveat the report prints "
+            "about it is no longer true; fix the caveat rather than keep printing it"
+        )
 
     # Controls. Without these the query's negative is worthless.
     any_positive = [g for g in POSITIVE_CONTROLS if "+" in calls[g].values()]
@@ -375,6 +396,23 @@ def self_test() -> int:
     else:
         check("mutation: a changed header is refused rather than guessed around", False, "no error raised")
 
+    # Mutation 5: the false-negative caveat is an assertion about ARHGAP17. If that
+    # protein stops being all-negative the caveat is false, and the run must fail rather
+    # than keep printing it.
+    mutated6 = [list(r) for r in spec]
+    i, _ = find_row(spec, FALSE_NEGATIVE_EXEMPLAR)
+    mutated6[i][base["specificity_columns"]["Cdc42"]] = "+"
+    try:
+        run(rows_override={SPECIFICITY_SHEET: mutated6})
+    except ScanError as exc:
+        check(
+            "mutation: a no-longer-all-negative false-negative exemplar invalidates the caveat",
+            "false-negative caveat" in str(exc),
+            str(exc),
+        )
+    else:
+        check("mutation: a no-longer-all-negative false-negative exemplar invalidates the caveat", False, "no error raised")
+
     # Negative control: an edit to an unrelated row must change nothing.
     mutated5 = [list(r) for r in spec]
     i, _ = find_row(spec, "ARHGAP39")
@@ -403,7 +441,12 @@ def main(argv: list[str] | None = None) -> int:
     print()
     print(f"{SPECIFICITY_SHEET}, RhoGEF/RhoGAP activity screen columns {res['specificity_columns']}:")
     for gene, calls in res["calls"].items():
-        mark = "<-- query" if gene == QUERY else "    control"
+        if gene == QUERY:
+            mark = "<-- query"
+        elif gene == FALSE_NEGATIVE_EXEMPLAR:
+            mark = "    false-negative exemplar (characterised Cdc42 GAP)"
+        else:
+            mark = "    positive control"
         print(f"  {gene:12s} " + "  ".join(f"{g}={v}" for g, v in calls.items()) + f"   {mark}")
     print()
     print(f"{LIBRARY_SHEET}, the construct that was screened:")
@@ -426,6 +469,9 @@ def main(argv: list[str] | None = None) -> int:
     print("  Two independent measurements -- a functional assay and a residue read off a")
     print("  sequence -- agreeing on the same set is what makes one negative call worth")
     print("  something despite the screen's overall false-negative rate.")
+    print("  Not six independent observations, though: OCRL and INPP5B are paralogous")
+    print("  inositol polyphosphate 5-phosphatases, so two of the four agreeing entries are")
+    print("  not independent of each other and the effective n is smaller than the ratio.")
     print()
     print(f"{QUERY} negative for all three GTPases: {res['query_all_negative']}")
     (SCRIPT_DIR / "muller2020_arhgap36.json").write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
