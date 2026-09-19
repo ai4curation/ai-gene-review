@@ -201,8 +201,8 @@ says only "binds something".
 GO search is token-based and "WAVE complex binding" can never match a term lacking those
 tokens. A complete enumeration — unbounded in depth, deduplicated — returns **105**
 distinct descendants of `GO:0044877 protein-containing complex binding`, reached over
-106 parent-child edges and four levels below the root, containing exactly one
-actin-machinery term, `GO:0071933 Arp2/3 complex binding`. `GO:0031209 SCAR
+106 parent-child edges with every descendant within four edges of the root,
+containing exactly one actin-machinery term, `GO:0071933 Arp2/3 complex binding`. `GO:0031209 SCAR
 complex` exists but is a cellular component, not something to bind — and in any case the
 paper describes the ARHGAP4-containing complexes as *biochemically separable* from the
 WAVE2 complex proper, so SCAR-complex membership would be wrong on the biology as well as

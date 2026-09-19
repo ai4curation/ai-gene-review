@@ -167,6 +167,22 @@ COMPLEX_BINDING_TOKENS = (
 )
 
 
+def dedup_holds(edges: int, distinct: int) -> bool:
+    """Did the walk deduplicate?
+
+    In a DAG the number of parent-child edges traversed exceeds the number of distinct
+    terms reached exactly when some term has more than one parent inside the branch. A
+    walk that kept duplicates would return one entry per edge, making the two equal.
+
+    Factored out so the live assertion and its mutation test evaluate the *same*
+    predicate. An earlier attempt inlined the comparison in both places and set the
+    mutated value to the same variable it was compared against, producing ``not (x > x)``
+    -- a constant that no data or code change could make fail. Routing both through here
+    means weakening this to ``>=`` breaks the mutation test rather than silently
+    restoring the hole."""
+    return edges > distinct
+
+
 def direct_children(cid: str) -> list[dict[str, str]]:
     enc = urllib.parse.quote(urllib.parse.quote(iri(cid), safe=""), safe="")
     r = requests.get(f"{OLS4}/{enc}/children", params={"size": 500}, timeout=120)
@@ -207,12 +223,18 @@ def descendants(root: str) -> tuple[dict[str, str], int, int]:
     BFS with a single visited set expands each term exactly once and terminates when the
     frontier is empty, which is what makes the count complete rather than bounded.
 
-    Returns ``(id -> label, max_depth, edges)`` where ``max_depth`` is the number of edges
-    between the root and its deepest descendant -- **not** the number of BFS passes, which
-    is one larger because the loop needs a final pass that discovers nothing in order to
-    terminate. ``edges`` is the count of parent-child relations traversed, and is what
-    makes the deduplication checkable: for a DAG it exceeds the distinct-term count
-    exactly when some term has more than one parent inside the branch."""
+    Returns ``(id -> label, max_depth, edges)``.
+
+    ``max_depth`` is the **BFS first-discovery depth**: the largest, over all descendants,
+    of the *shortest* path from the root. It therefore licenses "every descendant is
+    reachable within ``max_depth`` edges", which is the claim used, and **not** "the
+    deepest descendant is ``max_depth`` edges down" -- in a DAG the longest path can be
+    greater, since BFS records a term at the first depth that reaches it. It is also not
+    the BFS pass count, which is one larger because the loop needs a final pass that
+    discovers nothing in order to terminate.
+
+    ``edges`` is the count of parent-child relations traversed, and is what makes the
+    deduplication checkable -- see ``dedup_holds``."""
     seen = {root}
     frontier = [root]
     found: dict[str, str] = {}
@@ -250,8 +272,9 @@ def complex_binding_survey() -> dict[str, object]:
     return {
         "root": COMPLEX_BINDING_ROOT,
         "distinct_descendants": len(found),
-        # Edges between the root and its deepest descendant. Deliberately not the BFS
-        # pass count, which is one larger and reads a level deeper than the branch is.
+        # BFS first-discovery depth: every descendant is reachable within this many
+        # edges. Not the longest path (a DAG can have one), and not the BFS pass count,
+        # which is one larger and reads a level deeper than the branch is.
         "max_depth": max_depth,
         "edges_traversed": edges,
         # The walk ends when the frontier empties, so the enumeration is complete
@@ -442,7 +465,7 @@ def self_test() -> int:
     #     level deeper than the branch actually is.
     checks.append(
         (
-            "walk reaches the branch's full depth (4 edges below the root)",
+            "every descendant reachable within 4 edges, enumeration complete",
             "PASS"
             if s["max_depth"] >= 4 and s["enumeration_complete"]
             else f"FAIL max_depth={s['max_depth']} complete={s['enumeration_complete']}",
@@ -459,19 +482,23 @@ def self_test() -> int:
         (
             "distinct-term count is below the edge count (dedup is real)",
             "PASS"
-            if s["edges_traversed"] > s["distinct_descendants"]
+            if dedup_holds(s["edges_traversed"], s["distinct_descendants"])
             else f"FAIL edges={s['edges_traversed']} distinct={s['distinct_descendants']}",
         )
     )
-    # 12b. MUTATION TEST of check 12: a walk that does not deduplicate returns one entry
-    #      per edge, so distinct == edges and check 12 must fail. Without this, check 12
-    #      is just another assertion about live data rather than a demonstrated guard.
-    found, _, edges = descendants(COMPLEX_BINDING_ROOT)
-    undeduped = edges  # what len(result) would be if duplicates were kept
+    # 12b. MUTATION TEST of check 12, evaluating the SAME predicate on the counts a
+    #      non-deduplicating walk would have produced: it returns one entry per edge, so
+    #      distinct == edges. The predicate must be False there. Reuses the edge count
+    #      already measured rather than repeating the network walk. Weakening
+    #      dedup_holds to `>=` -- which would restore the unfalsifiable guard -- makes
+    #      this check fail, which is what makes it a test rather than algebra.
+    e = s["edges_traversed"]
     checks.append(
         (
-            "mutation test: a non-deduplicating walk would fail check 12",
-            "PASS" if not (edges > undeduped) else "FAIL (guard would still pass)",
+            "mutation test: the same predicate rejects a non-deduplicating walk",
+            "PASS"
+            if not dedup_holds(e, e)
+            else "FAIL (predicate accepts distinct == edges; guard is unfalsifiable)",
         )
     )
 
