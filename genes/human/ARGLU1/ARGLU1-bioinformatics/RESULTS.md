@@ -11,6 +11,7 @@ hand-written summary of those artefacts, not a generated report.
 | `intact_partner_audit.py` | `intact_partners.json` | Are the four GOA IPI partners canonical, topologically plausible, and independently replicated? |
 | `composition_and_features.py` | `composition.json` | What is actually in the sequence, and what fold evidence exists? |
 | `sibling_row_verdicts.py` | `sibling_verdicts.json` | How did already-merged reviews resolve the rows ARGLU1 shares with them? |
+| `splicing_factor_eligibility.py` | `splicing_factor_eligibility.json` | Which IPI partners qualify for `GO:1990935` splicing factor binding? |
 
 Run any of them with `uv run python <script>.py` from this directory. All but
 `composition_and_features.py` and `sibling_row_verdicts.py` require network
@@ -142,6 +143,48 @@ Results of the three standing checks, including the nulls:
 not as `physical association` but as **`phosphorylation`**, detected by
 `protein kinase assay`, host `In vitro`. ARGLU1 is recorded there as an in vitro
 substrate of SRPK2, not merely a binding partner.
+
+## 3b. A term the review first said did not exist — and who it applies to
+
+`splicing_factor_eligibility.py`. An earlier draft of this review removed all six
+U2AF2 / PUF60 / JMJD6 `GO:0005515` rows on the stated ground that GO had no
+splicing-factor-binding molecular function term. **That was false.**
+`GO:1990935 splicing factor binding` is active, is a molecular function, and is
+defined as *"Binding to a protein involved in the process of removing sections of
+the primary RNA transcript to form the mature form of the RNA."*
+
+The error is instructive rather than careless: the draft searched for
+*"spliceosomal complex binding"*. GO's text search is **token-based**, and
+*spliceosomal complex* shares no token with *splicing factor*, so that query could
+not have returned the term however it was phrased. It was found by walking the
+ontology (children of `GO:0044877`, plus compound-word searches) rather than by
+searching harder.
+
+Whether the recovered term *applies* is then a per-partner question, settled by
+querying GOA for each partner's own annotations under `GO:0008380` RNA splicing:
+
+| partner | accession | annotations under RNA splicing | evidence | verdict |
+|---|---|---|---|---|
+| U2AF2 | `P26368` | 6 | **IDA** (`GO:0000398`), NAS ×2, IC, IBA, IEA | splicing factor — term applies, experimentally grounded |
+| PUF60 | `Q9UHX1` | 2 | IBA ×2 | splicing factor — term applies, but on inferred evidence only |
+| JMJD6 | `Q6NYC1` | **0** | — | **not** a splicing factor — term withheld |
+| SRPK2 | `P78362` | 4 | **IDA ×2** (`GO:0000245`, `GO:0008380`), IBA, IEA | also a splicing factor, but see below |
+
+Consequences for the review:
+
+- U2AF2 (×3 rows) and PUF60 (×2 rows) → `MODIFY` to `GO:1990935`.
+- JMJD6 (×2 rows) → stays `REMOVE`, now on a measured JMJD6-specific ground: an
+  oxygenase that hydroxylates a splicing factor is not itself one, and the term's
+  definition requires the partner be involved in splicing.
+- SRPK2 (×3 rows) → stays `MODIFY` to `GO:0019901` protein kinase binding. SRPK2
+  qualifies under *both* terms, but the in vitro **kinase assay** typed by IntAct
+  as `phosphorylation` is the better-evidenced relationship, and the kinase term
+  carries the mechanistic content.
+
+The general rule this cost a round to relearn: **a failed keyword search is not
+evidence that a term is absent.** Search the compound word as well as the
+fragment, and enumerate children of the plausible parent rather than trusting a
+text query.
 
 ## 4. The composition is a composition, and there is no domain
 

@@ -272,9 +272,32 @@ and the primary papers. Two problems:
   regulation-level parent for this purpose; the expressible claim is
   `GO:0034243` / `GO:0034244` at the elongation level. Recorded as a knowledge
   gap rather than forced.
-- There is **no** "spliceosomal complex binding" MF term (a QuickGO search for it
-  returns only CC and BP terms), so the U2AF2/PUF60/JMJD6 interaction rows have no
-  informative MF to be modified into.
+- **`GO:1990935 splicing factor binding` exists, and an earlier draft of this
+  review wrongly said it did not.** The draft searched for *"spliceosomal complex
+  binding"*, which returns only CC and BP terms, and concluded on that basis that
+  all six U2AF2/PUF60/JMJD6 rows had no informative MF to be modified into. GO's
+  search is **token-based**: *spliceosomal complex* is not a token of *splicing
+  factor*, so that query could never have returned the term no matter how it was
+  phrased. Verified by walking the ontology instead — `GO:1990935` is active, MF,
+  defined as *"Binding to a protein involved in the process of removing sections
+  of the primary RNA transcript to form the mature form of the RNA"*.
+
+  Which partners qualify was then settled by measurement rather than by the
+  partners' reputations — QuickGO annotations under `GO:0008380` RNA splicing:
+
+  | partner | annotations under RNA splicing | verdict |
+  |---|---|---|
+  | U2AF2 `P26368` | **IDA** to `GO:0000398`, plus NAS/IC/IBA/IEA | splicing factor → `GO:1990935` |
+  | PUF60 `Q9UHX1` | 2 × IBA | splicing factor → `GO:1990935` (weaker support, recorded) |
+  | JMJD6 `Q6NYC1` | **zero** | *not* a splicing factor → term withheld, row stays `REMOVE` |
+  | SRPK2 `P78362` | 2 × IDA | also a splicing factor, but the in vitro kinase assay makes `GO:0019901` the better-evidenced call |
+
+  So five rows became `MODIFY` and the two JMJD6 rows keep `REMOVE` — now on a
+  JMJD6-specific measured ground (an oxygenase that hydroxylates a splicing factor
+  is not itself one) rather than on a false general claim. The lesson is the
+  AHSP one and I walked straight into it: **a failed keyword search is not
+  evidence that a term is absent.** Walk the ontology; search the compound word,
+  not only the fragment.
 
 ## 8. Row-count reconciliation
 

@@ -12,6 +12,7 @@ Findings are written up in [`RESULTS.md`](RESULTS.md).
 | `intact_partner_audit.py` | `intact_partners.json` | yes (IntAct, UniProt) |
 | `composition_and_features.py` | `composition.json` | no (reads `../ARGLU1-uniprot.txt`) |
 | `sibling_row_verdicts.py` | `sibling_verdicts.json` | no (reads `genes/**/ *-ai-review.yaml`) |
+| `splicing_factor_eligibility.py` | `splicing_factor_eligibility.json` | yes (QuickGO) |
 | `audit_arglu1_review.py` | — (exit status) | no (reads the review, the GOA tsv and the JSON artefacts) |
 
 ## Running
