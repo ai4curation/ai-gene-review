@@ -54,6 +54,12 @@ MUTANT = SCRIPT_DIR / ".mutation_test_subject.py"
 # newline or encoding normalisation can enter through the restore itself.
 SNAPSHOT_EXCLUDE = {MUTANT.name}
 
+# Throwaway files --self-check creates. Deliberately NOT in SNAPSHOT_EXCLUDE -- the point
+# of the creation case is that the snapshot sees them -- but gitignored, and cleared before
+# the baseline is taken so a crashed run cannot wedge the mode permanently.
+SELF_CHECK_INVENTED = ".self_check_invented.md"
+SELF_CHECK_SENTINEL = ".self_check_sentinel.md"
+
 # (description, exact source text to replace, replacement). Each anchor must match
 # exactly once: zero matches would "pass" by changing nothing, two would mutate a row
 # nobody intended.
@@ -245,10 +251,21 @@ def self_check() -> int:
     and requires ``_restore`` to name both with the right verbs and put the directory back
     byte-for-byte.
     """
+    invented = SELF_CHECK_INVENTED
+    sentinel = SELF_CHECK_SENTINEL
+    # Clear any leftover from a crashed earlier run BEFORE the baseline is taken. Without
+    # this the leftover enters the baseline, the creation assertion fails, the finally
+    # recreates it, and the mode fails identically forever with a message pointing at the
+    # wrong thing. Both names are gitignored so a crash cannot dirty the tree either.
+    for name in (invented, sentinel):
+        (SCRIPT_DIR / name).unlink(missing_ok=True)
+
     baseline = _snapshot()
-    victim = next(n for n in ("RESULTS.md", "results.json") if n in baseline)
-    invented = ".self_check_invented.md"
+    # results.json first: it is cited by nothing, while RESULTS.md is the source for the
+    # review's file: quotes. The crash window belongs on the lower-consequence file.
+    victim = next(n for n in ("results.json", "RESULTS.md") if n in baseline)
     try:
+        # Phase 1 -- creation and modification.
         (SCRIPT_DIR / victim).write_bytes(b"CLOBBERED BY --self-check")
         (SCRIPT_DIR / invented).write_bytes(b"a file the harness invented")
         failures: list[str] = []
@@ -264,19 +281,37 @@ def self_check() -> int:
             f"{sorted(set(after) ^ set(baseline)) or 'contents differ'}"
         )
 
+        # Phase 2 -- deletion, and the repair arm that recreates a missing file. Neither
+        # runs in phase 1, which left the third verb and one of the two repair branches
+        # asserted-but-unchecked. A throwaway sentinel is used rather than a real file so
+        # that a crash mid-phase cannot lose anything.
+        (SCRIPT_DIR / sentinel).write_bytes(b"sentinel for the deletion case")
+        with_sentinel = _snapshot()
+        assert sentinel in with_sentinel, "the sentinel is excluded from the snapshot"
+        (SCRIPT_DIR / sentinel).unlink()
+        failures = []
+        changed = _restore(with_sentinel, "--self-check deletion", failures)
+        assert f"deleted {sentinel}" in changed, f"a deleted file was not reported: {changed}"
+        assert failures, "a deletion was repaired but not counted as a failure"
+        assert (SCRIPT_DIR / sentinel).read_bytes() == b"sentinel for the deletion case", (
+            "the deleted file was not recreated with its original bytes"
+        )
+        (SCRIPT_DIR / sentinel).unlink()
+
         # Negative control: with nothing changed, _restore must be silent and report nothing.
         quiet: list[str] = []
         assert _restore(baseline, "--self-check idle", quiet) == []
         assert not quiet, f"_restore reported a change on an untouched directory: {quiet}"
     finally:
-        (SCRIPT_DIR / invented).unlink(missing_ok=True)
+        for name in (invented, sentinel):
+            (SCRIPT_DIR / name).unlink(missing_ok=True)
         for name, data in baseline.items():
             path = SCRIPT_DIR / name
             if not path.exists() or path.read_bytes() != data:
                 path.write_bytes(data)
     print(
-        "self-check OK: creation and modification are both reported with the right verb, "
-        "repaired byte-for-byte, and an untouched directory is silent"
+        "self-check OK: creation, modification and deletion are each reported with the "
+        "right verb and repaired byte-for-byte, and an untouched directory is silent"
     )
     return 0
 
