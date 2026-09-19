@@ -92,8 +92,26 @@ The mechanism is occlusion of PHB2's import receptors, not a generic tether:
 > [PMID:26052702 "These data indicated that BIG3 may block the KPNAs (KPNA1, KPNA5, and KPNA6) binding region(s) of PHB2, thereby leading to inhibition of KPNAs-mediated PHB2 nuclear translocation in the presence of E2 in breast cancer cells."]
 
 This is `GO:0140311 protein sequestering activity` almost verbatim — GO defines it
-as "Binding to a specific molecule to prevent it from interacting with other partners
-or to inhibit its localization to the area of the cell or complex where it is active."
+as "Binding to a protein to prevent it from interacting with other partners or to
+inhibit its localization to the area of the cell or complex where it is active."
+Both clauses are separately demonstrated here: the localisation clause by knockdown
+and re-expression, the partner-occlusion clause by the karyopherin work.
+
+**Parent vs child, weighed rather than defaulted.** `GO:0140311` is an `is_a` child
+of `GO:0140313 molecular sequestering activity`, carrying the identical definition
+with "a specific molecule" narrowed to "a protein". PHB2 is a protein, so the child
+adds no claim that the ligand's identity does not already fix, and the child is
+correct. This is the opposite situation to the PKA row, where `GO:0034237 protein
+kinase A regulatory subunit binding` **would** add an unproven claim — the
+interaction was measured but the RII-subunit specificity was only predicted in
+silico — so that row deliberately stays at the parent `GO:0051018`. The test is not
+"prefer the child" or "prefer the parent" but **whether the child asserts anything
+the evidence has not already fixed.**
+
+The same test applies to the phosphatase row: `GO:0004865 protein serine/threonine
+phosphatase inhibitor activity` over its parent `GO:0004864`, because PPP1CA is
+`EC 3.1.3.16`, a serine/threonine phosphatase by definition.
+
 The downstream process is `GO:0042308 negative regulation of protein import into
 nucleus`.
 
