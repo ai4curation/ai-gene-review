@@ -75,7 +75,10 @@ study of the family (PMID:27481945) is reported to list ARHGAP23 in its table of
 RhoGAPs without selecting it for purification — that comes from an external full-text check and
 could not be confirmed from the abstract-only cache, so the independently checkable form of the
 claim is the one the review leans on: Müller et al.'s Supplementary Table 2 fills the "in vivo"
-and "reference" columns for ARHGAP23 and leaves the **"in vitro" columns empty**.
+and "reference" columns for ARHGAP23 and leaves the **"in vitro" columns empty**. That substitute
+is parsed by `analyze_arhgap23.py` and printed in `RESULTS.md` §5, with the column groups read
+from the header rows and a hard error if the "in vitro" block is not found — so a missing column
+cannot be reported as an empty one.
 
 ## 3. The catalytic residue — and the published mutant that does not hit it
 

@@ -147,3 +147,40 @@ events:
     After the edits: just validate human ARHGAP23 is green with zero warnings, all
     three committed self-tests still pass, and check_file_quotes.py still resolves all
     18 locally-sourced quotes.
+- type: EDIT
+  outcome: changed
+  summary: Machine-check the one load-bearing claim the pipeline did not verify
+  details: |
+    The re-review on 82bfac26 approved and raised one further non-blocking point that
+    was correct and worth acting on: the substitute claim introduced by the
+    PMID:27481945 downgrade - that Müller et al.'s Supplementary Table 2 leaves its
+    "in vitro" literature columns empty for ARHGAP23 - was presented as the
+    independently verifiable form of "no purified-protein GAP assay exists", but was
+    the only load-bearing assertion in the PR that nothing re-ran. It rested on a
+    one-off manual read of a spreadsheet.
+
+    analyze_arhgap23.py now parses Supplementary Table 2 alongside the tables it
+    already read. The column groups are derived from the two header rows rather than
+    assumed, and each block is the FIRST run of RhoA/Rac1/Cdc42 columns after its
+    label: taking every matching column instead silently swallows the derived
+    single-and-combination flag columns whose labels repeat, and the last value wins,
+    so the table would be misread rather than visibly broken. That is not a
+    hypothetical - the first implementation had exactly this defect and reported the
+    screen's specificity calls as the flag triple (0, 0, 0) instead of (+, +, -).
+
+    The parse confirms the claim: "in vitro" is empty for all three GTPases while
+    "in vivo" is not, and the screen's own calls are RhoA +, Rac1 +, Cdc42 -. Both are
+    now printed in RESULTS.md section 5, and the review's reference_review and the
+    notes say where the check lives instead of asserting the fact bare.
+
+    The group-presence guard was factored into _require_literature_groups so that
+    --self-test can drive it with a synthetic layout; checked inline it could only ever
+    have been exercised by a live table that happens to be correct, which is no test.
+    mutation_test.py caught that: its first attempt at this mutation changed only the
+    error message, the guard still raised, and the self-test passed anyway because it
+    had no coverage for the missing-block case at all. That is the second real hole the
+    mutation test has found in this gene's analysis.
+
+    Self-test now 18 mutations across 21 anchors (3 baselines); mutation test 11 guards
+    all caught with the negative control silent; check_file_quotes.py still clean on 18
+    quotes; just validate human ARHGAP23 green with zero warnings.

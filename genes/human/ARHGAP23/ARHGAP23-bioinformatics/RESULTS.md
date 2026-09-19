@@ -76,6 +76,17 @@ PMID:32203420 (Müller et al. 2020, *Nature Cell Biology*) ran a cellular FRET b
 
 A negative value is a drop in biosensor activity, ie GAP activity toward that GTPase. The screen therefore scores ARHGAP23 as active on RhoA **and** Rac1 to essentially equal degrees and inactive on Cdc42.
 
+Supplementary Table 2 records the same conclusion as explicit calls — RhoA `+`, Rac1 `+`, Cdc42 `-` — and, in the columns that matter for what is *not* known, summarises the prior literature per GTPase:
+
+| literature column | RhoA | Rac1 | Cdc42 |
+|---|---|---|---|
+| integrated | `+` | *(empty)* | *(empty)* |
+| in vitro | *(empty)* | *(empty)* | *(empty)* |
+| in vivo | `+` | *(empty)* | *(empty)* |
+| reference | `+` | *(empty)* | *(empty)* |
+
+The **"in vitro" row is empty for all three GTPases** (confirmed by this parse) while the "in vivo" row is not (populated). That is the machine-checkable form of this review's statement that no purified-protein GAP assay exists for ARHGAP23, and it is checked here rather than asserted because it is otherwise the one load-bearing claim in the review that nothing re-runs.
+
 The same paper's Supplementary Table 4 records the ARHGAP23 localization experiment as "Focal adhesion localization found by TIRF imaging (GAP-deficient arginine finger mutant), pericentric. Weak actin score in Cytochalasin D assay." — ie the imaged construct was a **R986K** arginine-finger mutant. Supplementary Table 1 gives the screened cDNA as NP_001186346.1, 1491 aa, clone MB134.
 
 That construct is the same length as Q9P227 (1491 aa), so the residue numbers are directly comparable — and they do not agree:

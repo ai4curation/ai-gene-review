@@ -864,6 +864,24 @@ def muller_mutant_and_controls() -> dict[str, Any]:
     }
 
 
+LITERATURE_GROUPS_REQUIRED = ("in vitro", "in vivo")
+
+
+def _require_literature_groups(groups: dict[str, Any]) -> None:
+    """Refuse to report on Supplementary Table 2 columns this parse did not find.
+
+    Factored out of ``muller_specificity`` so that ``--self-test`` can drive it with a
+    synthetic layout. Checked inline, it could only ever be exercised by a live table that
+    happens to be correct, which is no test at all.
+    """
+    for needed in LITERATURE_GROUPS_REQUIRED:
+        if needed not in groups:
+            raise AnalysisError(
+                f"Supplementary Table 2 yielded groups {sorted(groups)}, with no {needed!r}; "
+                "refusing to report on columns this parse did not find"
+            )
+
+
 def muller_specificity() -> dict[str, Any]:
     """ARHGAP23's rows in the published screen, read from the publisher's own files."""
     # Source Data for Fig. 1b: three column blocks, one per GTPase. The block layout is
@@ -917,6 +935,63 @@ def muller_specificity() -> dict[str, Any]:
         "clone": c[8],
     }
 
+    # Supplementary Table 2: the specificity calls, and - the reason this table is parsed
+    # at all - the literature-review columns. The review asserts that no in-vitro GAP assay
+    # exists for ARHGAP23; the machine-checkable form of that assertion is that this table's
+    # "in vitro" columns are empty for this gene while its "in vivo" and "reference" columns
+    # are not. Group boundaries are READ from the two header rows, never assumed.
+    t2 = _esm_sheet(*MULLER_TABLES_ESM, "Supplementary Table 2")
+    group_row, gtpase_row = t2[2], t2[3]
+    spec = _row_for(t2, "ARHGAP23")
+    starts = [
+        i
+        for i, v in enumerate(group_row)
+        if isinstance(v, str) and v.strip() and i > 1
+    ]
+    if not starts:
+        raise AnalysisError(
+            "Supplementary Table 2 has no literature-review group labels in its header row; "
+            "the layout has changed and the 'no in-vitro assay' claim cannot be checked here"
+        )
+    # Each block is the FIRST run of RhoA/Rac1/Cdc42 columns after its label. Taking every
+    # matching column instead would silently swallow the derived single/combination flag
+    # columns that follow, whose labels repeat - and the last value would win, so the table
+    # would be misread rather than obviously broken.
+    def _block(start: int, stop: int) -> dict[str, Any]:
+        cells: dict[str, Any] = {}
+        for j in range(start, min(stop, len(spec))):
+            label = gtpase_row[j]
+            if not isinstance(label, str) or label not in ("RhoA", "Rac1", "Cdc42"):
+                continue
+            if label in cells:
+                break  # the run has ended and a repeat block has begun
+            cells[label] = spec[j]
+        return cells
+
+    groups: dict[str, dict[str, Any]] = {}
+    for n, start in enumerate(starts):
+        stop = starts[n + 1] if n + 1 < len(starts) else len(gtpase_row)
+        cells = _block(start, stop)
+        if cells:
+            groups[str(group_row[start]).strip().strip('"')] = cells
+    _require_literature_groups(groups)
+
+    def _empty(cells: dict[str, Any]) -> bool:
+        return all(v is None or str(v).strip() == "" for v in cells.values())
+
+    literature = {
+        "groups": groups,
+        "in_vitro_empty": _empty(groups["in vitro"]),
+        "in_vivo_empty": _empty(groups["in vivo"]),
+        # The screen's own three specificity columns are the first such run in the row.
+        "screen_calls": _block(2, starts[0]),
+    }
+    if set(literature["screen_calls"]) != {"RhoA", "Rac1", "Cdc42"}:
+        raise AnalysisError(
+            f"Supplementary Table 2 screen block parsed as {literature['screen_calls']}, "
+            "which is not the three GTPase columns this analysis expects"
+        )
+
     # Supplementary Table 4: the localization row, which is where the mutant is named.
     t4 = _esm_sheet(*MULLER_TABLES_ESM, "Supplementary Table 4")
     loc = _row_for(t4, "ARHGAP23")
@@ -930,6 +1005,7 @@ def muller_specificity() -> dict[str, Any]:
         "pmid": MULLER_PMID,
         "fig1b_source_data": per_gtpase,
         "construct": construct,
+        "literature_and_screen_calls": literature,
         "localization_note": note,
         **muller_mutant_and_controls(),
     }
@@ -1300,6 +1376,53 @@ def self_test() -> int:
         "conclusion of section 5 has silently inverted"
     )
 
+    # Anchor: the real Supplementary Table 2 parse. Without this the two mutations below
+    # would be testing a helper nobody calls.
+    anchors += 1
+    baselines += 1
+    lit = muller_specificity()["literature_and_screen_calls"]
+    assert set(lit["screen_calls"]) == {"RhoA", "Rac1", "Cdc42"}, lit["screen_calls"]
+    assert lit["in_vitro_empty"], (
+        "the 'no in-vitro assay' claim no longer holds against Supplementary Table 2; the "
+        "review's knowledge gap and suggested experiment both depend on it"
+    )
+    assert not lit["in_vivo_empty"], (
+        "the in-vivo columns are also empty, so 'in vitro is empty' carries no information - "
+        "the parse is probably reading the wrong columns"
+    )
+
+    # Mutation 12: the emptiness test must notice a populated cell.
+    anchors += 1
+    applied += 1
+    assert not all(
+        v is None or str(v).strip() == ""
+        for v in dict(lit["groups"]["in vitro"], RhoA="+").values()
+    ), "the emptiness test reports a populated block as empty"
+
+    # Mutation 13: a Supplementary Table 2 layout missing the in-vitro block must abort,
+    # not report an absent column as empty - which would manufacture the review's negative.
+    anchors += 1
+    applied += 1
+    _expect_raises(
+        lambda: _require_literature_groups({"in vivo": {"RhoA": "+"}}),
+        "with no 'in vitro'",
+        "missing literature block",
+    )
+
+    # Negative control: a layout that has the required blocks must be accepted silently.
+    anchors += 1
+    applied += 1
+    _require_literature_groups({"in vitro": {}, "in vivo": {}, "integrated": {}})
+
+    # Mutation 14: taking every matching column instead of the first run must change the
+    # answer, which is what makes the first-run rule load-bearing rather than decorative.
+    anchors += 1
+    applied += 1
+    assert lit["screen_calls"] != {"RhoA": 0, "Rac1": 0, "Cdc42": 0}, (
+        "the screen block has collapsed onto the derived flag columns; the first-run rule "
+        "in _block is not being applied"
+    )
+
     # Mutation 11: an ambiguous supplementary row must not be resolved by picking one.
     anchors += 1
     applied += 1
@@ -1614,6 +1737,36 @@ def render_markdown(res: dict[str, Any]) -> str:
         "A negative value is a drop in biosensor activity, ie GAP activity toward that GTPase. "
         "The screen therefore scores ARHGAP23 as active on RhoA **and** Rac1 to essentially equal "
         "degrees and inactive on Cdc42."
+    )
+    L.append("")
+    lit = mul["literature_and_screen_calls"]
+    L.append(
+        "Supplementary Table 2 records the same conclusion as explicit calls — "
+        + ", ".join(f"{g} `{v}`" for g, v in lit["screen_calls"].items())
+        + " — and, in the columns that matter for what is *not* known, summarises the prior "
+        "literature per GTPase:"
+    )
+    L.append("")
+    L.append("| literature column | RhoA | Rac1 | Cdc42 |")
+    L.append("|---|---|---|---|")
+    for g in ("integrated", "in vitro", "in vivo", "reference"):
+        cells = lit["groups"].get(g, {})
+        L.append(
+            f"| {g} | "
+            + " | ".join(
+                (f"`{cells.get(k)}`" if str(cells.get(k) or "").strip() else "*(empty)*")
+                for k in ("RhoA", "Rac1", "Cdc42")
+            )
+            + " |"
+        )
+    L.append("")
+    L.append(
+        f"The **\"in vitro\" row is empty for all three GTPases** "
+        f"({'confirmed' if lit['in_vitro_empty'] else 'NOT confirmed'} by this parse) while the "
+        f"\"in vivo\" row is not ({'empty' if lit['in_vivo_empty'] else 'populated'}). That is the "
+        "machine-checkable form of this review's statement that no purified-protein GAP assay "
+        "exists for ARHGAP23, and it is checked here rather than asserted because it is otherwise "
+        "the one load-bearing claim in the review that nothing re-runs."
     )
     L.append("")
     L.append(

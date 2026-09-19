@@ -72,6 +72,16 @@ MUTATIONS: list[tuple[str, str, str]] = [
         '"is_uniprot_annotated_arginine_finger": True,',
     ),
     (
+        "take every matching column instead of the first run in Supplementary Table 2",
+        "            if label in cells:\n                break  # the run has ended and a repeat block has begun",
+        "            if False:\n                break  # the run has ended and a repeat block has begun",
+    ),
+    (
+        "stop requiring the in-vitro literature block to be found at all",
+        "    for needed in LITERATURE_GROUPS_REQUIRED:\n        if needed not in groups:",
+        "    for needed in LITERATURE_GROUPS_REQUIRED:\n        if False:",
+    ),
+    (
         "resolve an ambiguous supplementary row by picking the first",
         '            f"expected exactly 1 row for {symbol} in the supplementary sheet, found {len(hits)}"',
         '            "an ambiguity that is no longer reported"',
