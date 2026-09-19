@@ -1,6 +1,6 @@
 # ARHGAP4 bioinformatics — results
 
-Six rerunnable analyses supporting `genes/human/ARHGAP4/ARHGAP4-ai-review.yaml`. Each
+Seven rerunnable analyses supporting `genes/human/ARHGAP4/ARHGAP4-ai-review.yaml`. Each
 derives the repo root rather than hardcoding a worktree path, and each takes
 `--self-test`, which breaks its input or its anchor on purpose and requires every guard
 to fire, with negative controls that must stay silent.
@@ -11,11 +11,12 @@ uv run --with requests python check_gap_terms.py                     # -> gap_te
 uv run --with requests python reference_coverage.py                  # -> reference_coverage.json
 uv run --with requests python resolve_entities.py                    # -> entities.json
 uv run --with requests python comparator_terms.py                    # -> comparator_terms.json
+uv run --with requests python impc_phenotypes.py                     # -> impc_phenotypes.json
 uv run --with pyyaml python audit_review.py                          # no network
 ```
 
-The first five query live services (UniProt, RCSB, QuickGO, OLS4, the GO API, the
-Alliance), so their JSON outputs are committed as the record of what those services
+The first six query live services (UniProt, RCSB, QuickGO, OLS4, the GO API, the
+Alliance, IMPC), so their JSON outputs are committed as the record of what those services
 returned on the run that produced the numbers quoted below. `audit_review.py` needs no
 network and checks the review document against itself.
 
@@ -210,7 +211,36 @@ ARHGAP17, ARHGAP21, ARHGAP24, SRGAP2, DLC1) before being acted on.
 The query aborts on pagination rather than truncating, because a clipped page turns a
 present term into an absent one; the self-test exercises that on TP53.
 
-## 6. `audit_review.py` — invariants over the review document
+## 6. `impc_phenotypes.py` — a tested absence, not an untested one
+
+Four rows of the review argue that ARHGAP4 is dispensable, and each leans on the mouse
+knockout having no phenotype. Stated as "IMPC reports zero significant phenotypes" that
+claim is unverifiable and, worse, ambiguous: **an untested gene returns exactly the same
+zero.** Two Solr cores separate the cases — `genotype-phenotype` holds one document per
+*significant* association, `statistical-result` one per *test performed*.
+
+| gene | significant | tests | verdict |
+|---|---|---|---|
+| **Arhgap4** | **0** | **413** | tested and clean |
+| Srgap2 | 0 | 46 | tested and clean |
+| Srgap1 | 0 | **0** | **untested** — the zero says nothing |
+| Srgap3 | 0 | **0** | **untested** — the zero says nothing |
+| Lepr *(positive control)* | 105 | 244 | — |
+| Dmd *(positive control)* | 23 | 842 | — |
+| Trp53 *(positive control)* | 6 | 653 | — |
+
+413 tests and nothing significant is a real negative result. Srgap1 and Srgap3 sitting at
+0/0 in the same table is what makes that reading legible rather than assumed, and the
+self-test requires one of them to still be untested — if the paralogs are ever phenotyped
+the guard fails loudly rather than quietly losing its comparator. The run aborts if a
+positive control comes back empty, since that would mean the query shape is wrong and no
+zero in the table could be trusted.
+
+This does not say ARHGAP4 does nothing. It says the knockout was looked at hard, in a
+standardised pipeline, and nothing measurable fell out — which is what a redundancy
+hypothesis predicts, and which is the version of the claim the review makes.
+
+## 7. `audit_review.py` — invariants over the review document
 
 Six checks, none of which the repository validator covers. Current state: **23 GOA data
 rows to 23 non-NEW entries**, **38 quotes verified verbatim** under whitespace

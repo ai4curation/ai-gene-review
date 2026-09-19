@@ -101,8 +101,12 @@ in-vitro assay, and nothing here licenses either "therefore active in human" or
 
 ## Loss of function: unremarkable in both species
 
-- **Mouse.** IMPC reports **0 significant phenotypes** for `Arhgap4`
-  (MGI:2159577); 17 of 24 physiological systems show no significant impact.
+- **Mouse.** IMPC recorded **zero significant genotype-to-phenotype associations** for
+  `Arhgap4` across **413 statistical tests**. The second number is the one that matters:
+  an *untested* gene returns the same zero as a clean one, and in the same query
+  `Srgap1` and `Srgap3` come back 0/0 — never phenotyped — while `Lepr` (105/244),
+  `Dmd` (23/842) and `Trp53` (6/653) confirm the query shape. So this is a tested
+  absence, checkable by `impc_phenotypes.py`.
 - **Human.** Contiguous Xq28 deletions removing *AVPR2* plus all or part of *ARHGAP4*
   cause nephrogenic diabetes insipidus attributable to *AVPR2*
   [PMID:10425039], [PMID:11754100], [PMID:22965914]. The decisive one is Schöneberg
@@ -191,6 +195,7 @@ uv run --with requests python check_gap_terms.py                      # -> gap_t
 uv run --with requests python reference_coverage.py                   # -> reference_coverage.json
 uv run --with requests python resolve_entities.py                     # -> entities.json
 uv run --with requests python comparator_terms.py                     # -> comparator_terms.json
+uv run --with requests python impc_phenotypes.py                      # -> impc_phenotypes.json
 uv run --with pyyaml python audit_review.py                           # invariants, no network
 ```
 
