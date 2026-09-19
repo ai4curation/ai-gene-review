@@ -19,6 +19,8 @@ sidecars:
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
+**[Browse BioReason comparison predictions](../app/predictions/index.html?projects=BIOREASON_COMPARISON)** — filter SFT and GO-GPT term predictions alongside RL narrative reviews, with each assessment scheme kept explicit.
+
 
 Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against agent-adjudicated local AIGR gene reviews.
 
