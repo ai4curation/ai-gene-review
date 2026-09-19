@@ -61,6 +61,21 @@ MUTATIONS: list[tuple[str, str, str]] = [
         "if not (self.domain_start <= self.finger <= self.domain_end):",
         "if False:",
     ),
+    (
+        "compare residue numbers across constructs of different length",
+        '    length_matches = muller["construct"]["length"] == len(subject.seq)',
+        "    length_matches = True",
+    ),
+    (
+        "stop distinguishing the published mutant from the annotated arginine finger",
+        '"is_uniprot_annotated_arginine_finger": pos == subject.finger,',
+        '"is_uniprot_annotated_arginine_finger": True,',
+    ),
+    (
+        "resolve an ambiguous supplementary row by picking the first",
+        '            f"expected exactly 1 row for {symbol} in the supplementary sheet, found {len(hits)}"',
+        '            "an ambiguity that is no longer reported"',
+    ),
 ]
 
 NEGATIVE_CONTROLS: list[tuple[str, str, str]] = [

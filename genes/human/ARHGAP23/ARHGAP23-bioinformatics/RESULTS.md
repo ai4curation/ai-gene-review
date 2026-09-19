@@ -64,10 +64,37 @@ The comparison that does carry information is ARHGAP23 against the positive cont
 
 ARHGAP23's non-conservative differences at interface positions (RHG01_HUMAN → ARHGAP23): E278→T938, R283→V943, S284→P944, A285→G945, T287→N947, Q288→A948, N309→Q972, N399→T1063, A406→D1070, A407→N1071, L410→D1074, I413→T1077.
 
-## 5. What this does and does not license
+## 5. The published specificity screen, and the mutant it calls an arginine finger
+
+PMID:32203420 (Müller et al. 2020, *Nature Cell Biology*) ran a cellular FRET biosensor screen across the human RhoGEF/RhoGAP family. Its main text is paywalled and absent from PMC, but the publisher's Source Data and Supplementary Tables are open, and they are parsed directly here. ARHGAP23's row in the Fig. 1b source data:
+
+| GTPase | norm ΔR/R0 AVG | p-value | authors' significance flag | >20% of main activity |
+|---|---|---|---|---|
+| RhoA | -0.364 | 2.93e-05 | 1 | 1 |
+| Rac1 | -0.372 | 2.92e-06 | 1 | 1 |
+| Cdc42 | +0.197 | *(none)* | 0 | 0 |
+
+A negative value is a drop in biosensor activity, ie GAP activity toward that GTPase. The screen therefore scores ARHGAP23 as active on RhoA **and** Rac1 to essentially equal degrees and inactive on Cdc42.
+
+The same paper's Supplementary Table 4 records the ARHGAP23 localization experiment as "Focal adhesion localization found by TIRF imaging (GAP-deficient arginine finger mutant), pericentric. Weak actin score in Cytochalasin D assay." — ie the imaged construct was a **R986K** arginine-finger mutant. Supplementary Table 1 gives the screened cDNA as NP_001186346.1, 1491 aa, clone MB134.
+
+That construct is the same length as Q9P227 (1491 aa), so the residue numbers are directly comparable — and they do not agree:
+
+- Position 986 of the canonical sequence is **R**, so the mutant names a real arginine (consistent with the mutant string).
+- It is **not** the residue UniProt annotates as the arginine finger, which is 942.
+- It aligns to RHG01_HUMAN 323R, which is NOT that protein's annotated arginine finger (282).
+- In 1TX4, RHG01_HUMAN 323 is part of the GAP:GTPase interface, and does not contact the nucleotide/AlF4/Mg transition-state ligands — which is the defining property of an arginine finger, and which the annotated finger (282) does.
+
+So the only published "GAP-deficient arginine finger mutant" of ARHGAP23 targets a conserved interface arginine that is not the catalytic finger. That mutant was used for TIRF localization imaging, not to validate the activity screen: the supplementary sentence naming the catalytic controls reads *"mutation of critical arginine residues (‘arginine fingers’) abrogated the activity of the RhoGAPs ARHGAP11A, ARHGAP40, ARHGAP4, FAM13A, and SYDE2 (Extended Data Fig. 2h)."*, and ARHGAP23 is not among them.
+
+**No experiment has yet tested whether ARHGAP23's actual arginine finger (942) is required for its measured RhoA/Rac1 activity.** This is a discrepancy in the literature, not a correction of it: one of the two assignments is wrong and only an experiment can say which.
+
+## 6. What this does and does not license
 
 ARHGAP23 **retains** the RhoGAP catalytic arginine: position 942 is an arginine, it is ARHGAP23's own annotated arginine-finger Site, and it is reciprocally in register with RHG01_HUMAN 282, whose role is resolved in a transition-state structure. The same result holds against the closest paralog RHG21_HUMAN. The surrounding catalytic surface is 52.0% identical or conservatively substituted, a number that section 4 shows does not discriminate active from dead in this control set.
 
-The honest reading is asymmetric, and section 3 is the reason. A *lost* arginine would have been a substantive argument against the GAP-activity annotation. A *retained* one is only the absence of that argument: one of the two known GAP-dead controls here passes the same test, and the family-wide census says the same thing at scale. Nothing in this analysis is evidence that ARHGAP23 hydrolyses anything, and no GTPase substrate can be assigned from it — RhoA, RAC1 and CDC42 contacts are not distinguished by this calculation, which uses a single RhoA complex.
+The honest reading is asymmetric, and section 3 is the reason. A *lost* arginine would have been a substantive argument against the GAP-activity annotation. A *retained* one is only the absence of that argument: one of the two known GAP-dead controls here passes the same test, and the family-wide census says the same thing at scale. Nothing in this analysis is by itself evidence that ARHGAP23 hydrolyses anything, and no GTPase substrate can be assigned from it — RhoA, Rac1 and Cdc42 contacts are not distinguished by this calculation, which uses a single RhoA complex. The substrate evidence is the cellular screen in section 5, not the structure.
 
-What would settle it: an in-vitro GAP assay on the isolated ARHGAP23 Rho-GAP domain against RhoA, RAC1 and CDC42, with the arginine-finger mutant as the negative control.
+Put the two together and the position is: the catalytic machinery is intact and indistinguishable from that of an experimentally active close paralog, and a cellular assay reports GAP activity on RhoA and Rac1 — but no purified-protein assay exists, and the one published mutant that would have tied the activity to the catalytic residue mutates a different arginine.
+
+What would settle it: an in-vitro GAP assay on the isolated ARHGAP23 Rho-GAP domain against RhoA, Rac1 and Cdc42, with R942 mutated as the negative control — and, separately, a side-by-side test of R942 against the published 986 position to establish which one the activity depends on.

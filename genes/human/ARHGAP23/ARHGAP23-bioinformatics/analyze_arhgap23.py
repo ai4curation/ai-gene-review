@@ -60,6 +60,24 @@ Analysis 4 -- provenance of the claim being tested.
   "this is asserted by similarity, not measured" is a value read out of the data rather
   than a claim in prose.
 
+Analysis 5 -- the published specificity screen, and the mutant it calls an arginine finger.
+  Müller et al. 2020 (PMID:32203420) ran a cellular FRET-biosensor screen over the whole
+  human RhoGEF/RhoGAP family. Its main text is paywalled and absent from PMC, but the
+  publisher's Source Data and Supplementary Tables are open, so they are PARSED here
+  rather than quoted from memory: ARHGAP23's Fig. 1b row (per-GTPase effect size,
+  p-value and the authors' own significance flags), the cDNA it was screened as, and the
+  localization row that names its point mutant. Three things are then checked that a
+  reader cannot check from the abstract:
+    * the screened construct is the same length as the UniProt canonical sequence, so the
+      residue numbers are comparable at all -- if not, the comparison is refused;
+    * the mutant designation is READ OUT of the supplementary PDF by regex rather than
+      hardcoded here, so the residue number this section turns on cannot be mine;
+    * that mutant position is mapped onto the structural comparator and asked whether it
+      is the annotated arginine finger and whether it contacts the transition-state
+      ligands in 1TX4 -- the property that makes a residue an arginine finger.
+  The sentence naming the proteins whose arginine-finger mutants validated the screen is
+  extracted verbatim, and whether ARHGAP23 is among them is computed, not asserted.
+
 Every number in RESULTS.md is produced by a run of this script; nothing is hardcoded.
 Missing input is a hard error naming the fix, never a silently degraded section.
 ``--self-test`` mutates the inputs and asserts each check flips with its expected
@@ -76,6 +94,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -104,6 +123,23 @@ CONTROL_LOST_ACC = "Q01968"  # OCRL: UniProt states the Rho-GAP domain is inacti
 CONTROL_RETAINED_ACC = "Q3KRB8"  # ARHGAP11B: experimentally GAP-dead, keeps its arginine
 
 RHOA_ACC = "P61586"  # RhoA, the GTPase in the control structure
+
+# Müller et al. 2020, Nat Cell Biol (PMID:32203420, doi 10.1038/s41556-020-0488-x): the
+# FRET-biosensor RhoGEF/RhoGAP specificity screen. The main text is paywalled and absent
+# from PMC, but the publisher's Supplementary Information and Source Data are open, and
+# they are the only place ARHGAP23's substrate specificity and its published "arginine
+# finger mutant" are recorded. Both are parsed here rather than transcribed.
+MULLER_PMID = "32203420"
+MULLER_ESM = (
+    "https://static-content.springer.com/esm/art%3A10.1038%2Fs41556-020-0488-x/"
+    "MediaObjects/41556_2020_488_MOESM{n}_ESM.{ext}"
+)
+MULLER_TABLES_ESM = (3, "xlsx")  # Supplementary Tables 1-4
+MULLER_FIG1B_ESM = (10, "xlsx")  # Source Data for Fig. 1b
+MULLER_SI_PDF = (1, "pdf")  # Supplementary Information (figures + notes)
+# The mutant designation is DERIVED from the SI, not written here, so that a hardcoded
+# residue number can never be the thing this section's conclusion rests on.
+MULLER_MUTANT_RE = re.compile(r"ARHGAP23\s*[-‐-―]?\s*([A-Z])(\d+)([A-Z])")
 
 INTERFACE_PDB = "1TX4"
 GAP_CHAIN = "A"
@@ -573,7 +609,8 @@ def gap_gtpase_interface(gap: Protein, gtpase_ref_seq: str) -> dict[str, Any]:
         gtpase_obs, gtpase_ref_seq, f"{INTERFACE_PDB}:{GTPASE_CHAIN}"
     )
 
-    partner_atoms = [a for r in gtpase_chain for a in r if r.id[0] == " "]
+    protein_atoms = [a for r in gtpase_chain for a in r if r.id[0] == " "]
+    ligand_atoms: list[Any] = []
     ligand_names = set()
     for chain in model:
         for res in chain:
@@ -582,7 +619,7 @@ def gap_gtpase_interface(gap: Protein, gtpase_ref_seq: str) -> dict[str, Any]:
             resname = res.get_resname().strip()
             if resname in TS_LIGANDS:
                 ligand_names.add(resname)
-                partner_atoms.extend(list(res))
+                ligand_atoms.extend(list(res))
     missing = TS_LIGANDS - ligand_names
     if missing:
         raise AnalysisError(
@@ -590,28 +627,49 @@ def gap_gtpase_interface(gap: Protein, gtpase_ref_seq: str) -> dict[str, Any]:
             "this is not the transition-state complex this analysis requires"
         )
 
-    search = NeighborSearch(partner_atoms)
+    # Contacts are split by PARTNER, because that is what separates a catalytic residue
+    # from a binding-surface one: the arginine finger reaches the nucleotide and the
+    # AlF4 transition-state mimic, while most interface residues only touch the GTPase.
+    protein_search = NeighborSearch(protein_atoms)
+    ligand_search = NeighborSearch(ligand_atoms)
     contacts: list[int] = []
+    ligand_contacts: list[int] = []
     for res in gap_chain:
         if res.id[0] != " ":
             continue
-        if any(search.search(atom.coord, CONTACT_CUTOFF_A) for atom in res):
+        touches_protein = any(protein_search.search(a.coord, CONTACT_CUTOFF_A) for a in res)
+        touches_ligand = any(ligand_search.search(a.coord, CONTACT_CUTOFF_A) for a in res)
+        if touches_protein or touches_ligand:
             contacts.append(res.id[1])
+        if touches_ligand:
+            ligand_contacts.append(res.id[1])
 
     # Map the structure's own numbering onto the UniProt sequence by alignment, so no
     # residue number is trusted to be a UniProt number.
     obs_to_ref = align_map(gap_obs, gap.seq)
     num_to_index = {num: i + 1 for i, num in enumerate(gap_nums)}
-    contact_ref: list[int] = []
-    for num in contacts:
-        idx = num_to_index.get(num)
-        if idx is None:
-            continue
-        ref = obs_to_ref.get(idx)
-        if ref is not None:
-            contact_ref.append(ref)
+
+    def _to_reference(nums: list[int]) -> list[int]:
+        out = []
+        for num in nums:
+            idx = num_to_index.get(num)
+            if idx is None:
+                continue
+            ref = obs_to_ref.get(idx)
+            if ref is not None:
+                out.append(ref)
+        return out
+
+    contact_ref = _to_reference(contacts)
+    ligand_contact_ref = _to_reference(ligand_contacts)
     if not contact_ref:
         raise AnalysisError("interface calculation produced no mapped contacts")
+    if gap.finger not in ligand_contact_ref:
+        raise AnalysisError(
+            f"{gap.name}'s annotated arginine finger ({gap.finger}) does not contact the "
+            f"transition-state ligands in {INTERFACE_PDB}. That is the defining property of "
+            "an arginine finger; the geometry or the numbering is wrong."
+        )
 
     recovers_finger = gap.finger in contact_ref
     if not recovers_finger:
@@ -632,6 +690,7 @@ def gap_gtpase_interface(gap: Protein, gtpase_ref_seq: str) -> dict[str, Any]:
         "recovers_control_arginine_finger": recovers_finger,
         "n_contacts": len(set(contact_ref)),
         "contact_positions": sorted(set(contact_ref)),
+        "transition_state_ligand_contacts": sorted(set(ligand_contact_ref)),
         "n_contacts_in_rhogap_domain": len(in_domain),
         "contact_positions_in_rhogap_domain": in_domain,
     }
@@ -705,6 +764,216 @@ def compare_projections(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
             for p in shared
             if ra[p] != rb[p]
         },
+    }
+
+
+# --- analysis 5: the published specificity screen and its "arginine finger" mutant ---
+
+
+def _esm_sheet(n: int, ext: str, sheet: str) -> list[tuple[Any, ...]]:
+    raw = _fetch(MULLER_ESM.format(n=n, ext=ext), CACHE_DIR / f"muller_MOESM{n}.{ext}")
+    import openpyxl
+
+    wb = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+    if sheet not in wb.sheetnames:
+        raise AnalysisError(
+            f"MOESM{n}.{ext} has no sheet {sheet!r} (sheets: {wb.sheetnames}). The "
+            "publisher's supplementary layout has changed; re-check before trusting any "
+            "number parsed from it."
+        )
+    rows = [tuple(r) for r in wb[sheet].iter_rows(values_only=True)]
+    wb.close()
+    return rows
+
+
+def _row_for(rows: list[tuple[Any, ...]], symbol: str, col: int = 0) -> tuple[Any, ...]:
+    hits = [r for r in rows if len(r) > col and r[col] == symbol]
+    if len(hits) != 1:
+        raise AnalysisError(
+            f"expected exactly 1 row for {symbol} in the supplementary sheet, found {len(hits)}"
+        )
+    return hits[0]
+
+
+def _muller_si_text() -> str:
+    raw = _fetch(
+        MULLER_ESM.format(n=MULLER_SI_PDF[0], ext=MULLER_SI_PDF[1]),
+        CACHE_DIR / f"muller_MOESM{MULLER_SI_PDF[0]}.{MULLER_SI_PDF[1]}",
+    )
+    from pypdf import PdfReader
+
+    reader = PdfReader(io.BytesIO(raw))
+    pages = [p.extract_text() or "" for p in reader.pages]
+    # Figure labels are laid out across line breaks ("ARHGAP23-\nR986K"), so collapse all
+    # whitespace before any pattern match rather than matching line by line.
+    return re.sub(r"\s+", " ", " ".join(pages))
+
+
+def muller_mutant_and_controls() -> dict[str, Any]:
+    """Read the mutant designation and the screen's catalytic controls out of the SI."""
+    text = _muller_si_text()
+    compact = text.replace(" ", "")
+    hits = {m.group(0).replace(" ", "") for m in MULLER_MUTANT_RE.finditer(compact)}
+    if len(hits) != 1:
+        raise AnalysisError(
+            f"expected exactly one ARHGAP23 point-mutant designation in the {MULLER_PMID} "
+            f"supplementary, found {sorted(hits) or 'none'}. The section that compares it to the "
+            "UniProt arginine finger cannot proceed on an ambiguous reading."
+        )
+    token = hits.pop()
+    m = MULLER_MUTANT_RE.search(token)
+    assert m is not None
+    wt, pos, mut = m.group(1), int(m.group(2)), m.group(3)
+
+    # The sentence naming the proteins whose arginine-finger mutants validated the FRET
+    # screen. Whether ARHGAP23 is in it is the load-bearing fact, so it is tested here.
+    # Split only where a period is followed by a capital: "Fig. 4c" and "et al. 2020" are
+    # not sentence ends, and splitting on them decapitates the quotation.
+    sentences = [
+        s
+        for s in re.split(r"(?<=[a-z0-9\)])\.\s+(?=[A-Z])", text)
+        if "arginine finger" in s.lower()
+    ]
+    if not sentences:
+        raise AnalysisError(
+            f"no sentence mentioning an arginine finger found in the {MULLER_PMID} supplementary; "
+            "the claim about which proteins served as catalytic controls cannot be checked"
+        )
+    control_sentence = max(sentences, key=len)
+    # Trim to the clause that names the RhoGAP controls: the surrounding sentence also
+    # covers the RhoGEF controls and runs into the next heading. Both anchors are
+    # required, so a re-worded supplementary fails loudly instead of quoting the wrong span.
+    start = control_sentence.lower().find("mutation of")
+    end = control_sentence.find(").", start if start >= 0 else 0)
+    if start < 0 or end < 0:
+        raise AnalysisError(
+            "could not delimit the clause naming the RhoGAP catalytic controls in the "
+            f"{MULLER_PMID} supplementary; refusing to quote an arbitrary span of it"
+        )
+    control_sentence = control_sentence[start : end + 2]
+    if "arginine finger" not in control_sentence.lower():
+        raise AnalysisError(
+            "the delimited clause no longer mentions an arginine finger; the anchors have drifted"
+        )
+    return {
+        "mutant": f"{wt}{pos}{mut}",
+        "mutant_wt_residue": wt,
+        "mutant_position": pos,
+        "catalytic_control_sentence": control_sentence.strip(),
+        "subject_is_a_catalytic_control": "ARHGAP23" in control_sentence,
+    }
+
+
+def muller_specificity() -> dict[str, Any]:
+    """ARHGAP23's rows in the published screen, read from the publisher's own files."""
+    # Source Data for Fig. 1b: three column blocks, one per GTPase. The block layout is
+    # READ from the header rows, never assumed, so a re-laid-out file fails loudly.
+    fig = _esm_sheet(*MULLER_FIG1B_ESM, "Fig. 1b")
+    gtpase_row, field_row = fig[1], fig[2]
+    data = _row_for(fig, "ARHGAP23")
+    per_gtpase: dict[str, dict[str, Any]] = {}
+    for i, field in enumerate(field_row):
+        if field != "RhoGAP":
+            continue
+        gtpase = gtpase_row[i]
+        block = {
+            str(field_row[j]): data[j]
+            for j in range(i, len(field_row))
+            if field_row[j] is not None and (j == i or field_row[j] != "RhoGAP")
+        }
+        # stop the block at the next "RhoGAP" label
+        stop = next((j for j in range(i + 1, len(field_row)) if field_row[j] == "RhoGAP"), None)
+        if stop is not None:
+            block = {str(field_row[j]): data[j] for j in range(i + 1, stop)}
+        else:
+            block = {str(field_row[j]): data[j] for j in range(i + 1, len(field_row))}
+        per_gtpase[str(gtpase)] = {
+            "norm_delR_over_R0_AVG": block.get("norm delR/R0 AVG"),
+            "p_value": block.get("p-value"),
+            "significant_and_below_threshold": block.get(
+                "norm delR/R0 AVG below threshold and significant"
+            ),
+            "above_20pct_of_main_activity": block.get(
+                "norm delR/R0 AVG higher than 20% of the main acitvity"
+            ),
+        }
+    if set(per_gtpase) != {"RhoA", "Rac1", "Cdc42"}:
+        raise AnalysisError(
+            f"Fig. 1b source data yielded GTPase blocks {sorted(per_gtpase)}, expected "
+            "RhoA, Rac1 and Cdc42"
+        )
+
+    # Supplementary Table 1: which sequence the construct actually is. Without this the
+    # residue numbering of the mutant below cannot be compared to UniProt at all.
+    t1 = _esm_sheet(*MULLER_TABLES_ESM, "Supplementary Table 1")
+    c = _row_for(t1, "ARHGAP23")
+    construct = {
+        "alias": c[1],
+        "type": c[2],
+        "ensembl_gene": c[3],
+        "entrez_gene": c[4],
+        "refseq": c[6],
+        "length": c[7],
+        "clone": c[8],
+    }
+
+    # Supplementary Table 4: the localization row, which is where the mutant is named.
+    t4 = _esm_sheet(*MULLER_TABLES_ESM, "Supplementary Table 4")
+    loc = _row_for(t4, "ARHGAP23")
+    note = next((v for v in reversed(loc) if isinstance(v, str) and "arginine finger" in v), None)
+    if note is None:
+        raise AnalysisError(
+            "Supplementary Table 4 no longer describes the ARHGAP23 construct as an "
+            "arginine-finger mutant; the claim built on it below must be re-checked."
+        )
+    return {
+        "pmid": MULLER_PMID,
+        "fig1b_source_data": per_gtpase,
+        "construct": construct,
+        "localization_note": note,
+        **muller_mutant_and_controls(),
+    }
+
+
+def arginine_finger_mutant_check(
+    subject: Protein, gap: Protein, muller: dict[str, Any], interface: dict[str, Any]
+) -> dict[str, Any]:
+    """Does the published GAP-dead mutant hit the residue UniProt calls the finger?"""
+    wt, pos = muller["mutant_wt_residue"], muller["mutant_position"]
+
+    # The comparison is only meaningful if the paper's construct is the same sequence.
+    length_matches = muller["construct"]["length"] == len(subject.seq)
+    if not length_matches:
+        return {
+            "mutant": muller["mutant"],
+            "comparable": False,
+            "reason": (
+                f"the screened construct is {muller['construct']['length']} aa "
+                f"({muller['construct']['refseq']}) but {subject.acc} is {len(subject.seq)} aa, "
+                "so the residue numbers are not on the same sequence"
+            ),
+        }
+    observed = subject.residue(pos)
+    mapping = align_map(subject.domain_seq, gap.domain_seq)
+    local = subject.to_local(pos)
+    hit = mapping.get(local) if local else None
+    gap_pos = gap.to_global(hit) if hit else None
+    return {
+        "mutant": muller["mutant"],
+        "comparable": True,
+        "construct_refseq": muller["construct"]["refseq"],
+        "construct_length": muller["construct"]["length"],
+        "wildtype_residue_expected": wt,
+        "wildtype_residue_observed": observed,
+        "residue_matches": observed == wt,
+        "is_uniprot_annotated_arginine_finger": pos == subject.finger,
+        "uniprot_annotated_arginine_finger": subject.finger,
+        "aligns_to_control_position": gap_pos,
+        "aligns_to_control_residue": gap.residue(gap_pos) if gap_pos else None,
+        "control_position_is_its_arginine_finger": gap_pos == gap.finger,
+        "control_position_contacts_transition_state": gap_pos
+        in interface["transition_state_ligand_contacts"],
+        "control_position_in_interface": gap_pos in interface["contact_positions"],
     }
 
 
@@ -792,6 +1061,9 @@ def run() -> dict[str, Any]:
         if finger_tests[lab]["vs_structural_comparator"]["forward_retained"]
     ]
 
+    muller = muller_specificity()
+    mutant_check = arginine_finger_mutant_check(subject, structural, muller, interface)
+
     # Does the interface-conservation number order these subjects by activity? Computed,
     # not asserted: if the GAP-dead retained control scores at or above the subject, the
     # metric is tracking relatedness to the structural comparator, not catalysis.
@@ -816,6 +1088,8 @@ def run() -> dict[str, Any]:
         "subject_vs_positive_control_interface": compare_projections(
             projections["ARHGAP23"], projections["positive_control"]
         ),
+        "muller_specificity_screen": muller,
+        "published_mutant_check": mutant_check,
         "calibration": {
             "known_gap_dead_controls": len(dead_labels),
             "called_retained_by_residue_test": len(called_retained),
@@ -867,6 +1141,7 @@ class _Mutable(Protein):
 def self_test() -> int:
     applied = 0
     anchors = 0
+    baselines = 0
 
     subject = Protein(SUBJECT_ACC)
     structural = Protein(STRUCTURAL_COMPARATOR)
@@ -874,6 +1149,7 @@ def self_test() -> int:
 
     # Anchor 1: the baseline must be a reciprocal hit, or every mutation below is vacuous.
     anchors += 1
+    baselines += 1
     assert base["reciprocal"], f"baseline is not reciprocal: {base}"
     hit = base["forward_mapped_position"]
     assert hit is not None
@@ -977,6 +1253,63 @@ def self_test() -> int:
         "finger outside the domain",
     )
 
+    # --- analysis 5 guards -------------------------------------------------------
+    interface_stub = {
+        "transition_state_ligand_contacts": [structural.finger],
+        "contact_positions": [structural.finger],
+    }
+    real_muller = {
+        "mutant": "R986K",
+        "mutant_wt_residue": "R",
+        "mutant_position": 986,
+        "construct": {"length": len(subject.seq), "refseq": "NP_001186346.1"},
+    }
+
+    # Anchor: on the real inputs the check must be comparable and self-consistent, or
+    # the two mutations below prove nothing.
+    anchors += 1
+    baselines += 1
+    real = arginine_finger_mutant_check(subject, structural, real_muller, interface_stub)
+    assert real["comparable"], f"baseline mutant check is not comparable: {real}"
+    assert real["residue_matches"], "the published mutant does not name the residue it claims"
+
+    # Mutation 9: a construct of a different length must refuse the comparison outright.
+    anchors += 1
+    applied += 1
+    wrong_len = json.loads(json.dumps(real_muller))
+    wrong_len["construct"]["length"] = len(subject.seq) + 100
+    res = arginine_finger_mutant_check(subject, structural, wrong_len, interface_stub)
+    assert not res["comparable"], "a length mismatch did not stop the residue comparison"
+    assert "not on the same sequence" in res["reason"], res["reason"]
+
+    # Mutation 10: point the mutant AT the annotated finger; the discriminator must flip.
+    anchors += 1
+    applied += 1
+    on_finger = json.loads(json.dumps(real_muller))
+    on_finger["mutant_position"] = subject.finger
+    on_finger["mutant"] = f"R{subject.finger}K"
+    res = arginine_finger_mutant_check(subject, structural, on_finger, interface_stub)
+    assert res["is_uniprot_annotated_arginine_finger"], (
+        "the check does not recognise the annotated finger when the mutant lands on it"
+    )
+    assert res["control_position_is_its_arginine_finger"], (
+        "a mutant on the annotated finger should map onto the control's finger"
+    )
+    assert not real["is_uniprot_annotated_arginine_finger"], (
+        "the published mutant position is being reported as the annotated finger; the "
+        "conclusion of section 5 has silently inverted"
+    )
+
+    # Mutation 11: an ambiguous supplementary row must not be resolved by picking one.
+    anchors += 1
+    applied += 1
+    rows = [("GENE",), ("ARHGAP23", 1), ("ARHGAP23", 2)]
+    _expect_raises(
+        lambda: _row_for(rows, "ARHGAP23"),
+        "expected exactly 1 row",
+        "duplicated supplementary row",
+    )
+
     # Negative control for the constructor guards: an unrelated feature edit must build.
     anchors += 1
     applied += 1
@@ -1009,13 +1342,17 @@ def self_test() -> int:
     res = reciprocal_finger_test(mut, structural)
     assert res["reciprocal"], "adding an unrelated Site changed the verdict"
 
-    if applied != anchors - 1:
-        # anchors counts the baseline assertion, which has no mutation of its own.
+    if applied != anchors - baselines:
+        # `baselines` counts the anchors that assert a starting state and carry no
+        # mutation of their own; every other anchor must have applied exactly one.
         raise AssertionError(
             f"self-test bookkeeping: {applied} mutations applied but {anchors} anchors "
-            "detected; a mutation target has drifted"
+            f"detected with {baselines} baselines; a mutation target has drifted"
         )
-    print(f"self-test OK: {applied} mutations, {anchors} anchors, all guards fired as expected")
+    print(
+        f"self-test OK: {applied} mutations, {anchors} anchors ({baselines} baselines), "
+        "all guards fired as expected"
+    )
     return 0
 
 
@@ -1251,7 +1588,95 @@ def render_markdown(res: dict[str, Any]) -> str:
         )
         L.append("")
 
-    L.append("## 5. What this does and does not license")
+    mul = res["muller_specificity_screen"]
+    mc = res["published_mutant_check"]
+    L.append("## 5. The published specificity screen, and the mutant it calls an arginine finger")
+    L.append("")
+    L.append(
+        f"PMID:{mul['pmid']} (Müller et al. 2020, *Nature Cell Biology*) ran a cellular FRET "
+        "biosensor screen across the human RhoGEF/RhoGAP family. Its main text is paywalled and "
+        "absent from PMC, but the publisher's Source Data and Supplementary Tables are open, and "
+        "they are parsed directly here. ARHGAP23's row in the Fig. 1b source data:"
+    )
+    L.append("")
+    L.append("| GTPase | norm ΔR/R0 AVG | p-value | authors' significance flag | >20% of main activity |")
+    L.append("|---|---|---|---|---|")
+    for g in ("RhoA", "Rac1", "Cdc42"):
+        b = mul["fig1b_source_data"][g]
+        pv = b["p_value"]
+        pv_s = f"{pv:.2e}" if isinstance(pv, (int, float)) else "*(none)*"
+        L.append(
+            f"| {g} | {b['norm_delR_over_R0_AVG']:+.3f} | {pv_s} | "
+            f"{b['significant_and_below_threshold']} | {b['above_20pct_of_main_activity']} |"
+        )
+    L.append("")
+    L.append(
+        "A negative value is a drop in biosensor activity, ie GAP activity toward that GTPase. "
+        "The screen therefore scores ARHGAP23 as active on RhoA **and** Rac1 to essentially equal "
+        "degrees and inactive on Cdc42."
+    )
+    L.append("")
+    L.append(
+        f"The same paper's Supplementary Table 4 records the ARHGAP23 localization experiment as "
+        f'"{mul["localization_note"].strip()}" — ie the imaged construct was a '
+        f"**{mc['mutant']}** arginine-finger mutant. Supplementary Table 1 gives the screened "
+        f"cDNA as {mul['construct']['refseq']}, {mul['construct']['length']} aa, clone "
+        f"{mul['construct']['clone']}."
+    )
+    L.append("")
+    if mc["comparable"]:
+        L.append(
+            f"That construct is the same length as {s['accession']} "
+            f"({mul['construct']['length']} aa), so the residue numbers are directly comparable — "
+            "and they do not agree:"
+        )
+        L.append("")
+        L.append(
+            f"- Position {mc['mutant'][1:-1]} of the canonical sequence is "
+            f"**{mc['wildtype_residue_observed']}**, so the mutant names a real arginine "
+            f"({'consistent' if mc['residue_matches'] else 'INCONSISTENT'} with the mutant string)."
+        )
+        L.append(
+            f"- It is **not** the residue UniProt annotates as the arginine finger, which is "
+            f"{mc['uniprot_annotated_arginine_finger']}."
+        )
+        L.append(
+            f"- It aligns to {struct['entry_name']} "
+            f"{mc['aligns_to_control_position']}{mc['aligns_to_control_residue']}, which is "
+            f"{'also' if mc['control_position_is_its_arginine_finger'] else 'NOT'} that protein's "
+            f"annotated arginine finger ({struct['annotated_arginine_finger']})."
+        )
+        L.append(
+            f"- In {iface['pdb_id']}, {struct['entry_name']} "
+            f"{mc['aligns_to_control_position']} "
+            f"{'is' if mc['control_position_in_interface'] else 'is not'} part of the GAP:GTPase "
+            f"interface, and "
+            f"{'does' if mc['control_position_contacts_transition_state'] else 'does not'} contact "
+            "the nucleotide/AlF4/Mg transition-state ligands — which is the defining property of "
+            "an arginine finger, and which the annotated finger "
+            f"({struct['annotated_arginine_finger']}) does."
+        )
+        L.append("")
+        L.append(
+            'So the only published "GAP-deficient arginine finger mutant" of ARHGAP23 targets a '
+            "conserved interface arginine that is not the catalytic finger. That mutant was used "
+            "for TIRF localization imaging, not to validate the activity screen: the supplementary "
+            "sentence naming the catalytic controls reads "
+            f"*\"{mul['catalytic_control_sentence']}\"*, and ARHGAP23 "
+            f"{'is' if mul['subject_is_a_catalytic_control'] else 'is not'} among them."
+        )
+        L.append("")
+        L.append(
+            "**No experiment has yet tested whether ARHGAP23's actual arginine finger "
+            f"({s['annotated_arginine_finger']}) is required for its measured RhoA/Rac1 activity.** "
+            "This is a discrepancy in the literature, not a correction of it: one of the two "
+            "assignments is wrong and only an experiment can say which."
+        )
+    else:
+        L.append(f"The mutant cannot be compared: {mc['reason']}.")
+    L.append("")
+
+    L.append("## 6. What this does and does not license")
     L.append("")
     t = t_struct
     if t["reciprocal"]:
@@ -1276,14 +1701,26 @@ def render_markdown(res: dict[str, Any]) -> str:
         "have been a substantive argument against the GAP-activity annotation. A *retained* one is "
         "only the absence of that argument: one of the two known GAP-dead controls here passes the "
         "same test, and the family-wide census says the same thing at scale. Nothing in this "
-        "analysis is evidence that ARHGAP23 hydrolyses anything, and no GTPase substrate can be "
-        "assigned from it — RhoA, RAC1 and CDC42 contacts are not distinguished by this calculation, "
-        "which uses a single RhoA complex."
+        "analysis is by itself evidence that ARHGAP23 hydrolyses anything, and no GTPase substrate "
+        "can be assigned from it — RhoA, Rac1 and Cdc42 contacts are not distinguished by this "
+        "calculation, which uses a single RhoA complex. The substrate evidence is the cellular "
+        f"screen in section 5, not the structure."
     )
     L.append("")
     L.append(
-        "What would settle it: an in-vitro GAP assay on the isolated ARHGAP23 Rho-GAP domain "
-        "against RhoA, RAC1 and CDC42, with the arginine-finger mutant as the negative control."
+        "Put the two together and the position is: the catalytic machinery is intact and "
+        "indistinguishable from that of an experimentally active close paralog, and a cellular "
+        "assay reports GAP activity on RhoA and Rac1 — but no purified-protein assay exists, and "
+        "the one published mutant that would have tied the activity to the catalytic residue "
+        "mutates a different arginine."
+    )
+    L.append("")
+    L.append(
+        f"What would settle it: an in-vitro GAP assay on the isolated ARHGAP23 Rho-GAP domain "
+        f"against RhoA, Rac1 and Cdc42, with R{s['annotated_arginine_finger']} mutated as the "
+        f"negative control — and, separately, a side-by-side test of "
+        f"R{s['annotated_arginine_finger']} against the published "
+        f"{mc['mutant'][1:-1]} position to establish which one the activity depends on."
     )
     L.append("")
     return "\n".join(L)
