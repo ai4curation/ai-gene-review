@@ -1,17 +1,93 @@
-# ARHGEF15 bioinformatics: exchange machinery, and what GO can say about the substrate
+# ARHGEF15 bioinformatics: the measured substrate, the exchange machinery, and what GO can say
 
-Two committed, re-runnable checks. Both were written to be able to fail, and both are
-self-tested by breaking their own input on purpose.
+Committed, re-runnable checks. Each was written to be able to fail, and each is self-tested
+by breaking its own input on purpose.
 
 ```
 uv run --no-project python fetch_sequences.py          # panel -> sequences/, panel_identities.json
 uv run --no-project python dh_specificity.py           # -> results.json
 uv run --no-project python dh_specificity.py --self-test
 uv run --no-project python gef_term_availability.py    # -> gef_term_availability.json
+uv run --no-project --with openpyxl python muller2020_specificity.py            # -> muller2020_specificity.json
+uv run --no-project --with openpyxl python muller2020_specificity.py --self-test
+uv run --no-project --with pyyaml python check_quotes.py --self-test
 ```
 
 `dh_specificity.py` needs MAFFT on the path (L-INS-i); it raises rather than degrading
 silently if MAFFT is absent, because a missing aligner is a tooling failure, not a result.
+
+---
+
+## 0. The measured substrate, from a paywalled paper's free supplement
+
+**PMID:32203420** (Müller et al. 2020, Nat Cell Biol) is a family-wide substrate-specificity
+screen of all 145 human RhoGEFs and RhoGAPs. It is the source Reactome cites for placing
+ARHGEF15 in **both** `RHOA GEFs activate RHOA` (R-HSA-8980691) and `CDC42 GEFs activate
+CDC42` (R-HSA-9013159) — and it is **absent from ARHGEF15's GOA entirely**.
+
+The paper is paywalled, Europe PMC reports no PMC record and `isOpenAccess: N`, so the
+cached publication is abstract-only. The **supplementary tables are freely downloadable**
+from Springer, and Supplementary Table 2 carries the per-gene screen result.
+`muller2020_specificity.py` downloads that workbook, locates the gene **by name** (never by
+row number), and maps the columns from the two header rows.
+
+**ARHGEF15 (row 85, "GEF"): RhoA `+`, Rac1 `−`, Cdc42 `+`.**
+Cited PMIDs on the row: 12775584, 23029280, 21029865, 27145964.
+
+### Read-controls on the column mapping
+
+The column mapping is not asserted, it is corroborated — by reading GEFs whose specificity
+is textbook and checking they come out right:
+
+| control | expected | screen says | recovered |
+|---|---|---|---|
+| TIAM1 | Rac1 | Rac1 | yes |
+| ARHGEF1 / p115RhoGEF | RhoA | RhoA | yes |
+| ARHGEF11 / PDZ-RhoGEF | RhoA | RhoA | yes |
+| ARHGEF12 / LARG | RhoA | RhoA | yes |
+| FGD1 | Cdc42 | Cdc42 | yes |
+| **ITSN1** | Cdc42 | **nothing** | **no** |
+
+ITSN1 is kept in the panel precisely because it fails. A textbook Cdc42 GEF scoring negative
+for all three is the screen's own false-negative rate made visible, and it is the reason
+**a `−` in this table is weak evidence while a `+` is a positive detection**. Dropping the
+failing control would have hidden the caveat that governs how the ARHGEF15 row may be read —
+so the Rac1 `−` should be read as "not detected here", not as "does not act on Rac1", even
+though two other papers independently report no Rac1 activity.
+
+The pass criterion was narrowed accordingly, from "every control recovers" to "each GTPase
+column is corroborated by at least one control", because the former conflates a mapping
+error with screen sensitivity. The self-test then proves the narrowed predicate still fails
+when the three screen columns are rotated by one, so the narrowing did not open a hole.
+
+### How this sits with the rest of the literature
+
+| source | system | RhoA | Rac1 | Cdc42 |
+|---|---|---|---|---|
+| PMID:12775584 | human/rat VSMC | + | not reported | not reported |
+| PMID:21029865 | mouse hippocampal neuron | + | − | − |
+| PMID:23029280 | mouse retina EC / HUVEC | not reported | not reported | + |
+| PMID:36929019 (via UniProt) | vascular, disease variants | + | − | − |
+| **PMID:32203420** | **HEK293-based family-wide screen** | **+** | **−** | **+** |
+| PMID:40138406 | mouse brain | + | not reported | + |
+
+RhoA is unanimous. Rac1 is negative wherever tested. Cdc42 splits: positive in the
+endothelial, family-screen and 2025 neuronal work, negative in the 2010 neuronal work and in
+the disease paper. Two of the three Cdc42-positive results are in human cells or on the
+human protein.
+
+### Secondary readouts from the same workbook
+
+Supplementary Table 3 (AP-MS interactome) gives ARHGEF15 eight GOLD-confidence preys, of
+which **three are the ERM family** — EZR, MSN and RDX — each flagged `ActinbindingPrey =
+ACTIN`. Supplementary Table 4 records the localization determined in that study as `actin`,
+with the note "Enrichment on membrane ruffles, likely peripheral actin. Actin association
+confirmed by Cytochalasin D assay. Plasma membrane localization in addition to peripheral
+actin cannot be ruled out." Their Cell Atlas column for this gene reads `Plasma membrane`
+at `Supported` confidence, which is the same evidence stream as GOA's `GO:0005886` HPA IDA
+row. The construct is an overexpressed Citrine fusion and the authors hedge in their own
+note, so this corroborates the existing plasma-membrane row rather than justifying a new
+cortical-actin or ruffle annotation.
 
 ---
 
@@ -116,6 +192,14 @@ Hence the conclusion runs in both directions, and neither direction is decisive 
   do not separate RhoA-GEFs from Cdc42-GEFs here, and the one substrate-selectivity switch
   that *is* experimentally established for this protein is not a DH residue at all but the
   phosphorylation state of Y361/Y353, which sits 60 residues N-terminal of the DH domain.
+
+One tempting over-read has to be named and refused. Human Ephexin5 shares the discriminating
+first residue (L) with FGD1 and ITSN1, and section 0 shows Müller et al. measured Cdc42
+activity for ARHGEF15 and for FGD1. That is a single coincidence on a single column across
+twelve proteins, in the *opposite* direction to the published interpretation of the same
+residues, and the panel contains no design that would have detected it as signal. It is
+recorded here only so that nobody later mistakes it for a prediction; nothing in the review
+rests on it.
 
 ## 2. GO can no longer name the GTPase a GEF acts on
 

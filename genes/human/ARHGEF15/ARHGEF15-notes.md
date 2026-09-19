@@ -23,6 +23,23 @@ literatures run in parallel and must not be used to argue each other:
 | endothelium (mouse retina, HUVEC) | Cdc42, plus potentiated RhoJ inactivation | PMID:23029280 |
 | hippocampal neuron (mouse) | RhoA in 2010; RhoA **and** Cdc42 in 2025 | PMID:21029865, PMID:40138406 |
 | disease, vascular and bone (human variants, mouse knock-in) | RhoA/ROCK2 | PMID:36929019 |
+| family-wide specificity screen (human, HEK-based) | **RhoA + and Cdc42 +, Rac1 −** | PMID:32203420, Supplementary Table 2 |
+
+The last row is the single most decision-relevant measurement for this gene and it is
+**absent from GOA**. Müller et al. 2020 screened all 145 human RhoGEFs/RhoGAPs against RhoA,
+Rac1 and Cdc42; Reactome cites this paper for placing ARHGEF15 in both `RHOA GEFs activate
+RHOA` and `CDC42 GEFs activate CDC42`. The paper is paywalled with no PMC record, but its
+supplementary tables are free, which is how the row was read
+(`ARHGEF15-bioinformatics/muller2020_specificity.py`). Affinage did not return it, and
+neither does a symbol search: its title is
+"Systems analysis of RhoGEF and RhoGAP regulatory proteins reveals spatially organized RAC1 signalling from integrin adhesions"
+[PMID:32203420] — named for RAC1, the one GTPase ARHGEF15 does *not* act on. It surfaced
+only by following Reactome's own citation out of the cached `R-HSA-9013159` entry.
+
+One caveat that the analysis itself produced: ITSN1, a textbook Cdc42 GEF, scores negative
+for all three GTPases in the same screen. So a `−` in that table means "not detected here",
+not "does not act on". The Rac1 `−` for ARHGEF15 is nevertheless corroborated independently
+by PMID:21029865 and by UniProt's reading of PMID:36929019.
 
 ## Existing GO record (31 GOA rows)
 
@@ -200,12 +217,21 @@ caveats that matter here:
   Cdc42.
 - **PMID:28185854** — the paper grounding the mouse postsynapse, glutamatergic synapse and
   regulation-of-postsynapse-assembly rows that Ensembl projects into human.
+- **PMID:32203420** — the family-wide specificity screen that measures the substrate range
+  directly. Titled for RAC1 and integrin adhesions.
 
-All three are reachable by searching the alias `Ephexin5` rather than the HGNC symbol, the
-same recall failure already recorded for ADGB, ADAMTSL1 and ACTG2. What affinage did
-contribute that nothing else surfaced: the endothelial Cdc42/RhoJ literature (PMID:23029280)
-and the Sertoli-cell work, neither of which is in GOA. Its `mechanism_profile` GO grounding
-is empty for molecular activity and localization, so nothing was imported from it.
+The first three are reachable by searching the alias `Ephexin5` rather than the HGNC symbol,
+the same recall failure already recorded for ADGB, ADAMTSL1 and ACTG2. The fourth is not
+reachable by any gene-name search at all, because the gene is named nowhere in the title,
+abstract or PMC-indexed text — only in a supplementary spreadsheet. It was found by
+following a citation out of the **cached Reactome entry** for a GOA TAS row, which is worth
+recording as a retrieval route: the TAS rows other reviews treat as low-value provenance
+were the only pointer to the best measurement available for this gene.
+
+What affinage did contribute that nothing else surfaced: the endothelial Cdc42/RhoJ
+literature (PMID:23029280) and the Sertoli-cell work, neither of which is in GOA. Its
+`mechanism_profile` GO grounding is empty for molecular activity and localization, so nothing
+was imported from it.
 
 ## Decisions taken
 
