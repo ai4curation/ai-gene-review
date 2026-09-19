@@ -1,0 +1,2633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2320 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2320</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KH0" target="_blank" class="term-link">
+                        Q88KH0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2320";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KH0" data-a="DESCRIPTION: PP_2320 is a Sec-exported, periplasmic YkuD-family..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_2320 is a Sec-exported, periplasmic YkuD-family L,D-transpeptidase with LysM and catalytic domains. It is predicted to covalently anchor the major outer-membrane lipoprotein OprI to a peptidoglycan stem, coupling the outer membrane to the cell-wall sacculus.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000270" target="_blank" class="term-link">
+                                    GO:0000270
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0000270" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_2320 modifies a peptidoglycan stem while forming the OprI tether.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The L,D-transpeptidase reaction directly remodels the peptide component of peptidoglycan.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004180" target="_blank" class="term-link">
+                                    GO:0004180
+                                </a>
+                            </span>
+                            <span class="term-label">carboxypeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0004180" data-r="GO_REF:0000117" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> OprI anchoring is an acyl-transfer reaction rather than terminal hydrolysis by a carboxypeptidase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The closely matched ErfK/LdtPae2 subfamily resolves the YkuD reaction as lipoprotein-acceptor L,D-transpeptidation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0005576" data-r="GO_REF:0000118" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The signal peptide exports PP_2320 from the cytoplasm, but its peptidoglycan substrate is in the periplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> In a Gram-negative bacterium, the periplasm is the precise compartment for an enzyme acting on the sacculus beneath the outer membrane.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    outer membrane-bounded periplasmic space
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008360" target="_blank" class="term-link">
+                                    GO:0008360
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell shape</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0008360" data-r="GO_REF:0000104" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Outer-membrane tethering can affect envelope mechanics but does not establish a direct shape-regulatory role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The supported direct process is peptidoglycan-protein cross-linking.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0016740" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The root transferase term is true but uninformative for an L,D-transpeptidase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0071972 already captures the specific catalytic class.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018104" target="_blank" class="term-link">
+                                    GO:0018104
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan-protein cross-linking</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0018104" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_2320 is assigned to covalent OprI anchoring at the peptidoglycan sacculus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its exact PANTHER subfamily matches the experimentally characterized Pseudomonas LdtPae2/ErfK anchoring enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/37255442" target="_blank" class="term-link">
+                                        PMID:37255442
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found that the three P. aeruginosa LDTs catalyze peptidoglycan cross-linking (LdtPae1), the anchoring of lipoprotein OprI to the peptidoglycan (LdtPae2), and the hydrolysis of the resulting peptidoglycan-OprI amide bond (LdtPae3).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0071555" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Covalent coupling of OprI to peptidoglycan organizes the Gram-negative cell envelope.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reaction links an outer-membrane structural protein to the cell-wall scaffold.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071972" target="_blank" class="term-link">
+                                    GO:0071972
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan L,D-transpeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0071972" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_2320 is an intact YkuD-family L,D-transpeptidase specialized for a lipoprotein acceptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The catalytic YkuD domain and exact ErfK-related PANTHER subfamily support this reaction class.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KH0" data-a="GO:0009252" data-r="GO_REF:0000041" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The reaction is a late peptidoglycan-envelope maturation event rather than glycan or stem synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Covalent OprI anchoring modifies an existing sacculus and does not synthesize peptidoglycan glycan or stem material; GO:0018104 captures the direct process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Periplasmic L,D-transpeptidase that covalently anchors the outer-membrane lipoprotein OprI to a peptidoglycan stem.</h3>
+                <span class="vote-buttons" data-g="Q88KH0" data-a="FUNCTION: Periplasmic L,D-transpeptidase that covalently anc..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071972" target="_blank" class="term-link">
+                            peptidoglycan L,D-transpeptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018104" target="_blank" class="term-link">
+                                peptidoglycan-protein cross-linking
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                cell wall organization
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/42100858" target="_blank" class="term-link">
+                                PMID:42100858
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We document that the gene product of PA2854 is the catalyst that performs this transformation between the cell wall and the outer-membrane lipoprotein OprI in live Pseudomonas aeruginosa.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/37255442" target="_blank" class="term-link">
+                                PMID:37255442
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We found that the three P. aeruginosa LDTs catalyze peptidoglycan cross-linking (LdtPae1), the anchoring of lipoprotein OprI to the peptidoglycan (LdtPae2), and the hydrolysis of the resulting peptidoglycan-OprI amide bond (LdtPae3).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2320/PP_2320-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">PP_2320 is the *P. putida* ortholog (76% identity) of PA2854, the OprI-anchoring L,D-transpeptidase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37255442" target="_blank" class="term-link">
+                            PMID:37255442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of Pseudomonas aeruginosa l,d-Transpeptidases and Evaluation of Their Role in Peptidoglycan Adaptation to Biofilm Growth.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pseudomonas L,D-transpeptidase paralogs have experimentally distinct crosslinking, OprI-anchoring, and tether-hydrolysis functions.</div>
+
+                        <div class="finding-text">"We found that the three P. aeruginosa LDTs catalyze peptidoglycan cross-linking (LdtPae1), the anchoring of lipoprotein OprI to the peptidoglycan (LdtPae2), and the hydrolysis of the resulting peptidoglycan-OprI amide bond (LdtPae3)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42100858" target="_blank" class="term-link">
+                            PMID:42100858
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Outer Membrane-Peptidoglycan Anchoring in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PA2854 directly anchors OprI to peptidoglycan in vivo and with purified components in vitro.</div>
+
+                        <div class="finding-text">"We document that the gene product of PA2854 is the catalyst that performs this transformation between the cell wall and the outer-membrane lipoprotein OprI in live Pseudomonas aeruginosa."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PA2854 reaction was reconstituted with purified PA2854, OprI, and synthetic peptidoglycan.</div>
+
+                        <div class="finding-text">"Furthermore, we reconstitute this reaction in vitro with the use of purified recombinant PA2854, OprI, and synthetic samples of the cell-wall peptidoglycan, in each case documenting the attachment of the side-chain ε-amino group of Lys83 of OprI to the peptide stem of the peptidoglycan."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2320/PP_2320-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PSEPK PP_2320 (Q88KH0)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies PP_2320 as the periplasmic ortholog of the OprI-anchoring Pseudomonas L,D-transpeptidase.</div>
+
+                        <div class="finding-text">"PP_2320 is the *P. putida* ortholog (76% identity) of PA2854, the OprI-anchoring L,D-transpeptidase"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> PP_2320 substrate specificity and physiological importance have not been tested directly in KT2440.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> PA2854 OprI anchoring is established in vivo and in vitro, but transfer to the close PP_2320 ortholog remains untested in KT2440.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2320-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KH0" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_2320 (Q88KH0), a YkuD-family L,D-transpeptidase of *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T01:01:24.711884</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2320-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2320-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_2320-q88kh0-a-ykud-family-ld-transpeptidase-of-pseudomonas-putida-kt2440">Functional Annotation of PP_2320 (Q88KH0), a YkuD-family L,D-transpeptidase of <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> PP_2320 (OrderedLocusName; EMBL AAN67933.1) · <strong>UniProt:</strong> Q88KH0 · <strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950) · <strong>Protein:</strong> L,D-transpeptidase (YkuD family), 325 aa</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p><strong>PP_2320 (UniProt Q88KH0) is a periplasmic, Sec-secreted cysteine-active-site L,D-transpeptidase (LDT) of the YkuD family whose primary function is to covalently anchor the major outer-membrane lipoprotein OprI to the peptidoglycan (PG) sacculus, thereby tethering the outer membrane to the cell wall and maintaining envelope integrity.</strong> The enzyme catalyzes an L,D-transpeptidation reaction: its catalytic cysteine (Cys209) attacks a donor PG peptide stem to form a thioacyl-enzyme intermediate, which is then resolved by the ε-amino group of a C-terminal lysine of OprI (Lys83 in the experimentally characterized ortholog), forming an amide (isopeptide) bond that links OprI — and hence the outer membrane — to the cell wall. This is a <strong>protein-anchoring</strong> transpeptidation, mechanistically distinct from the 3-3 (<em>meso</em>-DAP–<em>meso</em>-DAP) peptidoglycan cross-linking performed by other LDTs.</p>
+<p>This functional assignment rests on three converging lines of evidence. First, sequence and domain analysis confirms PP_2320 is a <em>bona fide</em> LDT: it carries an intact catalytic Cys209/His207 dyad within the diagnostic YkuD "S-H-G-C" motif, an N-terminal Sec signal peptide directing it to the periplasm, a LysM peptidoglycan-binding module, and the full YkuD catalytic domain (Pfam PF03734). Second, comparative genomics establishes PP_2320 as the reciprocal-best-hit ortholog (76.3% amino-acid identity) of <em>Pseudomonas aeruginosa</em> PA2854/LdtPae2 — the enzyme experimentally proven, both <em>in vivo</em> and by <em>in vitro</em> reconstitution with solved crystal structures, to perform exactly this OprI-to-peptidoglycan anchoring reaction. Third, the substrate is conserved in <em>P. putida</em>: OprI is encoded in the same genome (PP_2322, Q88KG8), and its C-terminal acceptor lysine (Lys83) is conserved between the two species, supporting direct transfer of the PA2854 substrate specificity to PP_2320.</p>
+<p>The enzyme operates extracytoplasmically, in the periplasm at the peptidoglycan layer, within the cell-wall biogenesis / peptidoglycan-maturation pathway, and performs a non-redundant structural role in envelope architecture. Because PP_2320 has not itself been the subject of a dedicated experimental study, this report is explicit that the assignment is a high-confidence orthology-based inference rather than a direct experimental demonstration in <em>P. putida</em>.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>All mandatory identity checks passed:</p>
+<table>
+<thead>
+<tr>
+<th>Verification item</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88KH0</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td>PP_2320 (OrderedLocusName), <em>Pseudomonas putida</em> KT2440</td>
+</tr>
+<tr>
+<td>Protein length</td>
+<td>325 aa</td>
+</tr>
+<tr>
+<td>Protein description</td>
+<td>L,D-transpeptidase catalytic domain-containing protein</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 — confirmed</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>YkuD family — confirmed (Pfam PF03734)</td>
+</tr>
+<tr>
+<td>Key domains</td>
+<td>LysM (IPR018392) + YkuD/LD_TPept_cat_dom (IPR005490, PF03734) — confirmed</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol, organism, family, and domain architecture from UniProt are internally consistent and consistent with the literature identified. PP_2320 is an ordered-locus identifier unique to <em>P. putida</em> KT2440, so there is no gene-symbol ambiguity. The characterized literature describes the correct protein family (YkuD LDTs) and, critically, the experimentally characterized ortholog PA2854 in the closely related <em>P. aeruginosa</em>. No conflicting literature for a different gene under the same symbol was encountered.</p>
+<hr />
+<h2 id="molecular-identity-and-domain-architecture">Molecular Identity and Domain Architecture</h2>
+<p>Direct analysis of the UniProt Q88KH0 sequence and InterPro/CDD annotation gives the architecture (N→C):</p>
+<table>
+<thead>
+<tr>
+<th>Region (residues)</th>
+<th>Feature</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1–25</td>
+<td><strong>Sec signal peptide</strong> (cleaved; no lipobox — mature protein has only one Cys)</td>
+<td>UniProt feature</td>
+</tr>
+<tr>
+<td>40–86</td>
+<td><strong>LysM domain</strong> (peptidoglycan-binding module; IPR018392)</td>
+<td>InterPro/CDD</td>
+</tr>
+<tr>
+<td>98–233</td>
+<td><strong>YkuD / L,D-transpeptidase catalytic domain</strong> (Pfam PF03734; PROSITE PS52029; Gene3D 2.40.440.10; SUPFAM SSF141523)</td>
+<td>InterPro</td>
+</tr>
+<tr>
+<td>Cys209 (in <strong>S-H-G-C</strong> motif)</td>
+<td><strong>Catalytic nucleophile</strong>, paired with general-base <strong>His207</strong></td>
+<td>Sequence analysis</td>
+</tr>
+</tbody>
+</table>
+<p>The protein contains a <strong>single cysteine (Cys209)</strong>, located in the diagnostic YkuD "SHGC" motif (…GIGMRT<strong>SHGC</strong>FRM…). This is the canonical <strong>Cys/His catalytic dyad</strong> of L,D-transpeptidases — a chemistry mechanistically distinct from the Ser-based D,D-transpeptidases (penicillin-binding proteins, PBPs). The <strong>LysM + YkuD</strong> architecture places PP_2320 in the <strong>lipoprotein-anchoring LDT clade</strong> (equivalent to <em>E. coli</em> LdtA/LdtB/LdtC = ErfK/YbiS/YcfS), as opposed to the Ig-domain–containing 3-3 cross-linking clade (LdtD/LdtE).</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_2320-is-a-sec-secreted-ykud-family-ld-transpeptidase-with-an-intact-catalytic-cys209his207-dyad">Finding 1 — PP_2320 is a Sec-secreted YkuD-family L,D-transpeptidase with an intact catalytic Cys209–His207 dyad</h3>
+<p>PP_2320 encodes a 325-amino-acid protein with the hallmark architecture of an active L,D-transpeptidase. It has an N-terminal Sec signal peptide (residues 1–25, cleavage before Leu26) with <strong>no lipobox</strong> — indeed the entire protein contains only one cysteine — indicating the mature protein is exported as a soluble periplasmic enzyme rather than being lipid-anchored. The YkuD catalytic domain (residues ~98–233) is assigned by Pfam (PF03734), PROSITE (PS52029), Gene3D (2.40.440.10), and SUPFAM (SSF141523).</p>
+<p>The sole cysteine, <strong>Cys209</strong>, sits within the diagnostic YkuD "S-H-G-C" motif and constitutes the catalytic nucleophile, paired with the general-base histidine <strong>His207</strong> to form the canonical Cys/His dyad shared by all L,D-transpeptidases. InterPro assigns the full complement of LDT signatures (IPR005490, IPR038063, IPR050979) plus a <strong>LysM</strong> peptidoglycan-binding module (IPR018392). The presence of the family is directly supported: "<em>Some bacterial peptidoglycans also contain 3-3 cross-links that are formed by another class of enzymes called L,D-transpeptidases which contain a YkuD catalytic domain</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/38006948/">PMID: 38006948</a>. The intact (non-degenerate) catalytic motif indicates PP_2320 is very likely an enzymatically active LDT rather than a pseudo-enzyme.</p>
+<h3 id="finding-2-reaction-class-ld-transpeptidation-of-the-peptidoglycan-stem-with-protein-or-muropeptide-acceptors">Finding 2 — Reaction class: L,D-transpeptidation of the peptidoglycan stem, with protein or muropeptide acceptors</h3>
+<p>At the family level, YkuD L,D-transpeptidases operate by a defined mechanism: they cleave the <em>meso</em>-DAP(position 3)–D-Ala(position 4) bond of a tetrapeptide donor stem, form a covalent thioacyl-enzyme intermediate on the catalytic cysteine, and transfer the <em>meso</em>-DAP(3) carbonyl to an acceptor amine. Two physiological acceptor classes are documented in γ-proteobacteria: (i) the side-chain amine of <em>meso</em>-DAP in an acceptor PG stem, generating <strong>3-3 cross-links</strong>; or (ii) the C-terminal lysine of a <strong>lipoprotein</strong> (classically Braun's lipoprotein, Lpp), producing a covalent outer-membrane–PG tether.</p>
+<p>This duality is directly documented: in <em>E. coli</em>, "<em>Ldt(fm) homologues are responsible for the attachment of the Braun lipoprotein to murein, indicating that evolutionarily related domains have been tailored to use muropeptides or proteins as acyl acceptors in the L,D-transpeptidation reaction</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/17369299/">PMID: 17369299</a>. PP_2320 carries the conserved catalytic Cys209 and the complete YkuD domain required for either reaction; the orthology and substrate analyses below (Findings 4–8) resolve it firmly into the <strong>protein-anchoring</strong> (lipoprotein-acceptor) subclass.</p>
+<h3 id="finding-3-localization-and-pathway-a-periplasmic-cell-envelope-enzyme-acting-independently-of-penicillin-binding-proteins">Finding 3 — Localization and pathway: a periplasmic cell-envelope enzyme acting independently of penicillin-binding proteins</h3>
+<p>The cleaved N-terminal Sec signal peptide without a lipobox indicates the mature enzyme is exported to the <strong>periplasm</strong>, precisely where the PG sacculus resides. UniProt GO assignments are consistent: cellular component "extracellular region" (GO:0005576, reflecting export beyond the cytoplasm); molecular function "peptidoglycan L,D-transpeptidase activity" (GO:0071972); and biological processes "cell wall organization" (GO:0071555), "peptidoglycan-protein cross-linking" (GO:0018104), and "regulation of cell shape" (GO:0008360). UniProt PATHWAY: "Cell wall biogenesis; peptidoglycan biosynthesis."</p>
+<p>Functionally, L,D-transpeptidases use Cys-based chemistry <strong>independent of the D,D-transpeptidase PBPs</strong> and are therefore intrinsically insensitive to most β-lactams: "<em>Penicillin-binding proteins (PBPs) synthesize essential 4-3 cross-links in PG and are inhibited by β-lactam antibiotics</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/30275297/">PMID: 30275297</a>. This contrast frames the PBP-independent pathway in which PP_2320 acts. As an anchoring (not cross-linking) LDT, PP_2320's main contribution is to envelope integrity via OM tethering rather than to β-lactam bypass per se.</p>
+<h3 id="finding-4-pp_2320-is-the-p-putida-ortholog-76-identity-of-pa2854-the-opri-anchoring-ld-transpeptidase">Finding 4 — PP_2320 is the <em>P. putida</em> ortholog (76% identity) of PA2854, the OprI-anchoring L,D-transpeptidase</h3>
+<p>A Needleman–Wunsch global alignment between PP_2320/Q88KH0 (325 aa) and <em>P. aeruginosa</em> PAO1 PA2854/Q9HZZ0 (323 aa) yields <strong>245/321 identical positions = 76.3% identity</strong> (75.4% over the full PP_2320 length). The two proteins share an identical domain architecture (Sec signal → LysM PG-binding domain → YkuD catalytic domain) and a single catalytic cysteine in the SHGC motif (Cys209 in PP_2320; Cys207 in PA2854).</p>
+<p>PA2854 is experimentally characterized: El-Araby et al. (2026) identified it as the catalyst that covalently tethers OprI to peptidoglycan in live <em>P. aeruginosa</em>: "<em>We document that the gene product of PA2854 is the catalyst that performs this transformation between the cell wall and the outer-membrane lipoprotein OprI in live [P. aeruginosa]</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">PMID: 42100858</a>. The <strong>LysM</strong> accessory domain (rather than Ig-like) places both proteins in the lipoprotein-anchoring LDT clade, distinct from the Ig-domain 3-3 cross-linking clade. The broader family context — "<em>l,d-transpeptidases (LDTs), which are dispensable for growth in most bacterial species and whose physiological functions remain elusive</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/37255442/">PMID: 37255442</a> — underscores that individual paralogs carry specialized functions best defined through the closest characterized ortholog.</p>
+<h3 id="finding-5-reciprocal-best-hit-orthology-confirms-pp_2320-pa2854-p-putida-kt2440-has-only-two-ldts">Finding 5 — Reciprocal-best-hit orthology confirms PP_2320 ↔ PA2854; <em>P. putida</em> KT2440 has only two LDTs</h3>
+<p>A genome-wide survey (Pfam PF03734) finds exactly <strong>two</strong> L,D-transpeptidases in <em>P. putida</em> KT2440: <strong>PP_2320</strong> (325 aa) and <strong>PP_1451</strong> (184 aa). <em>P. aeruginosa</em> PAO1 has three: PA3756 (166 aa), PA2854 (323 aa), and PA0732 (347 aa). Pairwise identities resolve the orthology unambiguously:</p>
+<table>
+<thead>
+<tr>
+<th>Query</th>
+<th>vs PA3756 (166 aa)</th>
+<th>vs <strong>PA2854 (323 aa, LdtPae2, OprI anchor)</strong></th>
+<th>vs PA0732 (347 aa)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_2320</strong></td>
+<td>46.4%</td>
+<td><strong>76.3%</strong> ⭐</td>
+<td>30.9%</td>
+</tr>
+<tr>
+<td>PP_1451</td>
+<td>66.3% ⭐</td>
+<td>43.7%</td>
+<td>42.9%</td>
+</tr>
+</tbody>
+</table>
+<p>PP_2320 best-matches PA2854 at 76.3%, and PA2854 best-matches PP_2320 (over PP_1451 at 43.7%) — a clean <strong>reciprocal best hit</strong>. PP_2320 is therefore the dedicated ortholog of the experimentally characterized OprI-anchoring enzyme and the <strong>only long, LysM-containing (lipoprotein-anchoring-clade) LDT in <em>P. putida</em></strong>. PP_1451 is instead the reciprocal ortholog of PA3756 (66.3%), while PA0732 has no <em>P. putida</em> ortholog above ~30%. The two <em>P. putida</em> LDTs thus likely divide labor: PP_2320 = OprI anchoring; PP_1451 = a cross-linking/other LDT. This assignment is consistent with the experimentally validated PA2854 function <a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">PMID: 42100858</a>.</p>
+<h3 id="finding-6-the-opri-substrate-lipoprotein-is-encoded-in-p-putida-kt2440-pp_2322-near-the-pp_2320-gene">Finding 6 — The OprI substrate lipoprotein is encoded in <em>P. putida</em> KT2440 (PP_2322), near the PP_2320 gene</h3>
+<p>For the anchoring function to operate, the substrate must be present. UniProt confirms <em>P. putida</em> KT2440 encodes OprI: <strong>Q88KG8, gene <em>oprI</em> = PP_2322, 83 aa, "Major outer membrane lipoprotein"</strong> (the <em>Pseudomonas</em> analog of Braun's lipoprotein/Lpp), plus the peptidoglycan-associated lipoprotein Pal/OprL (PP_1223). The anchoring enzyme PP_2320 and its substrate <em>oprI</em> (PP_2322) map to the <strong>same local genomic region</strong> (PP_2319 uncharacterized 106 aa; PP_2320 LDT; PP_2321; PP_2322 <em>oprI</em>). This proximity is suggestive of a functional relationship but is <strong>not</strong> conserved in <em>P. aeruginosa</em> (where PA2854 lies distant from <em>oprI</em>, PA0973), so it is corroborative rather than a defined operon.</p>
+<h3 id="finding-7-precise-reaction-pp_2320-links-the-amino-group-of-opri-lys83-to-the-peptidoglycan-peptide-stem-non-redundantly-for-envelope-integrity">Finding 7 — Precise reaction: PP_2320 links the ε-amino group of OprI Lys83 to the peptidoglycan peptide stem, non-redundantly for envelope integrity</h3>
+<p>The definitive mechanistic detail comes from the <em>P. aeruginosa</em> studies. El-Araby et al. (2026, <em>J. Am. Chem. Soc.</em>) reconstituted the reaction <em>in vitro</em> with purified recombinant PA2854, OprI, and synthetic peptidoglycan, and confirmed it in live cells, documenting attachment of the <strong>side-chain ε-amino group of Lys83 of OprI</strong> to the <strong>peptide stem of peptidoglycan</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">PMID: 42100858</a>. The enzyme turns over both non-cross-linked and cross-linked peptidoglycan as substrate. X-ray structures were solved for trimeric OprI (2.1 Å) and PA2854 (2.63 Å; three domains that bind both PG and OprI). The anchoring is <strong>non-redundant</strong>: "<em>anchoring of the outer membrane to the cell wall catalyzed by PA2854 does not appear to be a redundant reaction</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">PMID: 42100858</a>, and its loss yields a weakened envelope prone to disruption.</p>
+<p>The companion study (Hugonneau-Beaufet et al., 2023) assigned the three <em>P. aeruginosa</em> LDTs by gene inactivation: "<em>the three P. aeruginosa LDTs catalyze peptidoglycan cross-linking (LdtPae1), the anchoring of lipoprotein OprI to the peptidoglycan (LdtPae2), and the hydrolysis of the resulting peptidoglycan-OprI amide bond (LdtPae3)</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/37255442/">PMID: 37255442</a>. This places OprI anchoring specifically with <strong>LdtPae2 = PA2854</strong>, the ortholog of PP_2320 — establishing it as the anchoring enzyme, not the cross-linker or the hydrolase. The same study demonstrated the pathway's physiological importance: "<em>deletion of each of the ldt genes impaired biofilm formation and potentiated the bactericidal activity of EDTA</em>" <a href="https://pubmed.ncbi.nlm.nih.gov/37255442/">PMID: 37255442</a>, with anchoring dynamically controlled by opposing LdtPae2/LdtPae3 activities and increasing in biofilm growth.</p>
+<h3 id="finding-8-the-opri-acceptor-lysine-lys83-is-conserved-in-p-putida-supporting-substrate-specificity-transfer">Finding 8 — The OprI acceptor lysine (Lys83) is conserved in <em>P. putida</em>, supporting substrate-specificity transfer</h3>
+<p>Substrate conservation completes the inference chain. <em>P. putida</em> KT2440 OprI (PP_2322, Q88KG8) is 83 aa and terminates in <strong>Lys83</strong> (…ANERALRMLDKASR-<strong>K</strong>); <em>P. aeruginosa</em> OprI (P11221) is likewise 83 aa terminating in <strong>Lys83</strong> (…ANERALRMLEKASR-<strong>K</strong>), with identical lysine positions (6, 25, 51, 61, 79, 83) and a conserved N-terminal lipobox cysteine (residue 20). Because the ε-amino group of OprI Lys83 is the experimentally demonstrated acyl acceptor in <em>P. aeruginosa</em> <a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">PMID: 42100858</a>, and this C-terminal acceptor lysine is conserved in the <em>P. putida</em> substrate, the substrate specificity of the reaction is expected to transfer directly to PP_2320.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Integrating all eight findings produces a coherent model. PP_2320 is synthesized with an N-terminal Sec signal peptide, exported across the inner membrane, and released as a soluble periplasmic protein. Its LysM domain engages the peptidoglycan sacculus and positions the YkuD catalytic domain for reaction. The catalytic Cys209, activated by the general-base His207, attacks the <em>meso</em>-DAP–D-Ala peptide bond of a tetrapeptide PG stem, releasing the terminal D-Ala and forming a thioacyl-enzyme intermediate. The activated <em>meso</em>-DAP carbonyl is then transferred to the acceptor — the ε-amino group of Lys83 at the C-terminus of the outer-membrane lipoprotein OprI — forming a covalent amide (isopeptide) bond that tethers the outer membrane to the cell wall.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">OUTER</span><span class="w"> </span><span class="n">MEMBRANE</span>
+<span class="w">   </span><span class="err">┌─────────────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">OprI</span><span class="w"> </span><span class="p">(</span><span class="n">PP_2322</span><span class="p">,</span><span class="w"> </span><span class="n">lipoprotein</span><span class="p">)</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="n">N</span><span class="o">-</span><span class="n">term</span><span class="w"> </span><span class="n">lipobox</span><span class="w"> </span><span class="n">Cys</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="n">OM</span><span class="w"> </span><span class="n">lipid</span><span class="w"> </span><span class="n">anchor</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">…</span><span class="n">Lys83</span><span class="err">–</span><span class="n">NH2</span><span class="w"> </span><span class="p">(</span><span class="err">ε</span><span class="p">)</span><span class="w">        </span><span class="err">│─────────┐</span>
+<span class="w">   </span><span class="err">└─────────────────────────────┘</span><span class="w">         </span><span class="err">│</span><span class="w">  </span><span class="n">covalent</span><span class="w"> </span><span class="n">amide</span><span class="w"> </span><span class="p">(</span><span class="n">isopeptide</span><span class="p">)</span><span class="w"> </span><span class="n">bond</span>
+<span class="w">                                    </span><span class="err">│</span><span class="w">  </span><span class="n">formed</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="n">PP_2320</span>
+<span class="n">PERIPLASM</span><span class="w">                           </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">┌─────────────────────────────────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">PP_2320</span><span class="w"> </span><span class="p">(</span><span class="n">Q88KH0</span><span class="p">)</span><span class="w">  </span><span class="n">Sec</span><span class="o">-</span><span class="n">exported</span><span class="w"> </span><span class="n">LDT</span><span class="w">              </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="p">[</span><span class="n">LysM</span><span class="w"> </span><span class="n">PG</span><span class="o">-</span><span class="n">binding</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">[</span><span class="n">YkuD</span><span class="w">  </span><span class="n">Cys209</span><span class="o">/</span><span class="n">His207</span><span class="p">]</span><span class="w">      </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w"> </span><span class="n">acyl</span><span class="o">-</span><span class="n">donor</span><span class="p">:</span><span class="w"> </span><span class="n">PG</span><span class="w"> </span><span class="n">meso</span><span class="o">-</span><span class="n">DAP</span><span class="w"> </span><span class="n">stem</span><span class="w">            </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">▼</span><span class="w">                                         </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">PEPTIDOGLYCAN</span><span class="w">  </span><span class="o">...</span><span class="err">–</span><span class="n">meso</span><span class="o">-</span><span class="n">DAP</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="err">–</span><span class="o">|</span><span class="err">–</span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w">        </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">                     </span><span class="p">(</span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span><span class="w"> </span><span class="n">released</span><span class="p">)</span><span class="w">             </span><span class="err">│</span>
+<span class="w">   </span><span class="err">└─────────────────────────────────────────────────┘</span>
+<span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span>
+</code></pre></div>
+
+<p><strong>Reaction:</strong></p>
+<blockquote>
+<p>PG donor stem (…–mDAP³–D-Ala⁴) + OprI(Lys-ε-NH₂) → PG–mDAP³–(ε)Lys-OprI amide + D-Ala⁴</p>
+</blockquote>
+<p>This model differs importantly from the "textbook" LDT function of forming 3-3 peptidoglycan cross-links. PP_2320 belongs to the <strong>protein-anchoring</strong> subclass, using a lipoprotein rather than a muropeptide as the acyl acceptor; the LysM (rather than Ig-like) accessory domain is the structural signature of this clade. The reaction is part of a dynamic, reversible system: in <em>P. aeruginosa</em>, anchoring by LdtPae2 is counteracted by the hydrolase LdtPae3, allowing tuning of OM–PG connectivity by growth state (notably increasing in biofilms). Whether <em>P. putida</em> possesses a dedicated LdtPae3-type hydrolase is unresolved — its second LDT, PP_1451, is the short LdtPae1-clade ortholog, not an LdtPae3 ortholog.</p>
+<p>Physiologically this is a <strong>structural, envelope-stabilizing</strong> role, not a metabolic or signaling one. It parallels the classic Braun's lipoprotein–PG system of <em>E. coli</em> and analogous β-barrel and inner-membrane-protein tethers documented across Gram-negatives, all of which maintain the outer membrane as an impermeable barrier and preserve envelope mechanical integrity.</p>
+<h3 id="confidence-assessment">Confidence assessment</h3>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2320 is an active LDT (Cys/His dyad, YkuD domain)</td>
+<td>Direct sequence/domain analysis</td>
+<td>Very high</td>
+</tr>
+<tr>
+<td>PP_2320 is periplasmic (Sec signal, no lipobox)</td>
+<td>Sequence analysis + GO</td>
+<td>High</td>
+</tr>
+<tr>
+<td>PP_2320 catalyzes L,D-transpeptidation</td>
+<td>Family enzymology + domain</td>
+<td>Very high</td>
+</tr>
+<tr>
+<td>PP_2320 anchors OprI to PG (specific function)</td>
+<td>Orthology (76.3% RBH) to experimentally proven PA2854</td>
+<td>High (inferred)</td>
+</tr>
+<tr>
+<td>Acceptor = OprI Lys83 ε-amino; donor = PG stem</td>
+<td>Experimental in ortholog + substrate conservation</td>
+<td>High (inferred)</td>
+</tr>
+<tr>
+<td>Non-redundant envelope role</td>
+<td>Experimental in ortholog</td>
+<td>Moderate–high (inferred)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">42100858</a></td>
+<td><em>Outer Membrane–Peptidoglycan Anchoring in [Pseudomonas]</em></td>
+<td><strong>Keystone.</strong> Experimentally proves PA2854 (76.3% ortholog of PP_2320) anchors OprI Lys83 ε-amino to the PG stem; provides crystal structures and demonstrates non-redundancy. Basis for Findings 4–8.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37255442/">37255442</a></td>
+<td><em>Characterization of P. aeruginosa l,d-Transpeptidases…biofilm</em></td>
+<td>Assigns the three <em>P. aeruginosa</em> LDTs by gene inactivation; identifies LdtPae2 (=PA2854) as the OprI anchoring enzyme and documents biofilm/EDTA phenotypes. Supports Findings 4 and 7.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17369299/">17369299</a></td>
+<td><em>Identification of the L,D-transpeptidases…Braun lipoprotein to E. coli PG</em></td>
+<td>Establishes that YkuD LDTs can use either muropeptides or lipoproteins as acyl acceptors — the mechanistic precedent for protein anchoring. Supports Finding 2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38006948/">38006948</a></td>
+<td><em>Unusual 1-3 PG cross-links…YkuD domains</em></td>
+<td>Confirms that YkuD-domain enzymes are L,D-transpeptidases acting on peptidoglycan. Supports Findings 1–2.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30275297/">30275297</a></td>
+<td><em>Copper inhibits PG LD-transpeptidases…bypass of PBPs</em></td>
+<td>Frames the PBP-independent (β-lactam-insensitive) nature of the LDT pathway. Supports Finding 3.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40681671/">40681671</a></td>
+<td><em>An inner membrane protein covalently attached to PG in Dickeya dadantii</em></td>
+<td>Broader context: LDTs anchor diverse proteins (not only Lpp) to PG in γ-proteobacteria; anchoring sequences are portable.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33947763/">33947763</a></td>
+<td><em>DpaA Detaches Braun's Lipoprotein from Peptidoglycan</em></td>
+<td>Context for the reversible/dynamic nature of lipoprotein-PG anchoring (hydrolase counterpart).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33139883/">33139883</a> / <a href="https://pubmed.ncbi.nlm.nih.gov/33139884/">33139884</a></td>
+<td><em>β-Barrel proteins tether the OM…</em></td>
+<td>Context: covalent OM–PG tethering is a widespread envelope-integrity strategy.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23123904/">23123904</a></td>
+<td><em>Role of P. aeruginosa PG-associated OM proteins in vesicle formation</em></td>
+<td>Shows OprI tethers OM to PG and influences OM vesicle formation, corroborating OprI's structural anchoring role.</td>
+</tr>
+</tbody>
+</table>
+<p>The evidence base is unusually strong for a "hypothetical" locus because a very recent high-resolution study (<a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">PMID: 42100858</a>) directly characterized the close ortholog PA2854, combined with an earlier genetic study (<a href="https://pubmed.ncbi.nlm.nih.gov/37255442/">PMID: 37255442</a>) that assigned OprI anchoring to that same enzyme. No reviewed paper contradicts the functional assignment. The principal caveat is that all direct experimental data are from <em>P. aeruginosa</em>; transfer to <em>P. putida</em> is by orthology and substrate conservation.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- PP_2320 is a catalytically competent YkuD/L,D-transpeptidase (intact Cys209/His207 dyad). <em>(Sequence/InterPro)</em><br />
+- PP_2320 is the OprI-anchoring LDT of <em>P. putida</em> (ortholog of PA2854/LdtPae2, 76.3% reciprocal best hit). <em>(Orthology + transferred experiment)</em><br />
+- The reaction links a PG peptide stem to the ε-amino group of an OprI C-terminal Lys; the enzyme is periplasmic; its role is OM–PG tethering / envelope integrity. <em>(El-Araby 2026; Hugonneau-Beaufet 2023)</em></p>
+<p><strong>Refuted / de-prioritized</strong><br />
+- PP_2320 is <strong>not</strong> best assigned as a PG <strong>3-3 cross-linker</strong> (that clade carries Ig-like, not LysM, domains; the <em>P. putida</em> cross-linking role more likely falls to PP_1451).<br />
+- PP_2320 is <strong>not</strong> the OprI-<strong>detaching</strong> hydrolase (LdtPae3/DpaA-type).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct experimental study of PP_2320 itself</strong> exists; the functional assignment is a high-confidence orthology-based inference (76.3% RBH to experimentally characterized PA2854/LdtPae2) plus domain architecture — not direct proof in <em>P. putida</em>.</li>
+<li><strong>In vivo confirmation of OprI anchoring in <em>P. putida</em> is lacking.</strong> It remains formally unproven that <em>P. putida</em> OprI is covalently attached to PG, or that PP_2320 is responsible in this organism.</li>
+<li><strong>Acceptor promiscuity not excluded.</strong> LDTs can accept multiple substrates; PP_2320 could in principle also anchor other periplasmic/OM proteins (as OutB is anchored in <em>Dickeya</em> <a href="https://pubmed.ncbi.nlm.nih.gov/40681671/">PMID: 40681671</a>) or contribute minor 3-3 cross-linking.</li>
+<li><strong>No identified hydrolase counterpart in <em>P. putida</em>.</strong> PA0732/LdtPae3 has no clear <em>P. putida</em> ortholog above ~30%; how (or whether) <em>P. putida</em> reverses OprI anchoring is unknown.</li>
+<li><strong>Structural inference only.</strong> PP_2320's own structure is undetermined; domain boundaries and the LysM assignment rest on bioinformatic prediction and homology to PA2854.</li>
+<li><strong>Genomic adjacency of PP_2320 and <em>oprI</em> is not conserved</strong> in <em>P. aeruginosa</em>, so the proximity should not be over-interpreted as regulatory coupling.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Muropeptide / PG–protein linkage analysis in <em>P. putida</em> KT2440.</strong> Isolate PG sacculi and use LC-MS/MS to detect OprI-Lys83–PG amide adducts directly, in wild-type versus a ΔPP_2320 deletion mutant. This is the single most decisive experiment.</li>
+<li><strong>Construct a PP_2320 deletion (and catalytic Cys209→Ala) mutant</strong> and assay for: loss of covalent OprI–PG linkage; envelope-integrity phenotypes (EDTA/detergent/antibiotic sensitivity, OM blebbing/vesiculation); and biofilm formation. Complementation with wild-type but not Cys209Ala confirms catalytic dependence.</li>
+<li><strong>In vitro reconstitution</strong> with purified recombinant PP_2320, <em>P. putida</em> OprI (PP_2322), and native/synthetic PG, mirroring the PA2854 assay <a href="https://pubmed.ncbi.nlm.nih.gov/42100858/">PMID: 42100858</a>, to demonstrate direct catalysis and measure kinetics/specificity.</li>
+<li><strong>Test acceptor promiscuity.</strong> Screen whether PP_2320 can anchor other periplasmic proteins (e.g., an engineered PG-anchoring reporter, as for OutB in <em>Dickeya</em> <a href="https://pubmed.ncbi.nlm.nih.gov/40681671/">PMID: 40681671</a>) and quantify any residual 3-3 cross-linking.</li>
+<li><strong>Search for a hydrolase counterpart</strong> that reverses OprI anchoring (functional analog of LdtPae3/DpaA <a href="https://pubmed.ncbi.nlm.nih.gov/33947763/">PMID: 33947763</a>); test whether anchoring is dynamically regulated with growth phase/biofilm.</li>
+<li><strong>Experimental structure determination</strong> (X-ray or cryo-EM) of PP_2320, ideally as a covalent complex with OprI and a PG-stem mimic.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_2320 (Q88KH0) of <em>Pseudomonas putida</em> KT2440 is a periplasmic, Sec-secreted YkuD-family L,D-transpeptidase with an intact Cys209/His207 catalytic dyad and a LysM peptidoglycan-binding domain. Its primary function is to covalently anchor the major outer-membrane lipoprotein OprI to the peptidoglycan sacculus by transpeptidation — joining a peptidoglycan <em>meso</em>-DAP peptide stem (acyl donor) to the ε-amino group of OprI Lys83 (acyl acceptor) — thereby tethering the outer membrane to the cell wall and maintaining envelope integrity. This assignment is grounded in strong reciprocal-best-hit orthology (76.3% identity) to the experimentally validated <em>P. aeruginosa</em> enzyme PA2854/LdtPae2, together with conservation of the OprI substrate and its acceptor lysine in <em>P. putida</em>. Direct experimental confirmation in <em>P. putida</em> remains the key outstanding step.</p>
+<hr />
+<h2 id="references">References</h2>
+<ul>
+<li>El-Araby AM, <em>et al.</em> <strong>Outer Membrane–Peptidoglycan Anchoring in <em>Pseudomonas aeruginosa</em>.</strong> <em>J Am Chem Soc.</em> 2026. PMID <strong>42100858</strong>.</li>
+<li>Hugonneau-Beaufet I, <em>et al.</em> <strong>Characterization of <em>Pseudomonas aeruginosa</em> l,d-Transpeptidases and Evaluation of Their Role in Peptidoglycan Adaptation to Biofilm Growth.</strong> <em>Microbiol Spectr.</em> 2023. PMID <strong>37255442</strong>.</li>
+<li>Magnet S, <em>et al.</em> <strong>Identification of the L,D-transpeptidases responsible for attachment of the Braun lipoprotein to <em>Escherichia coli</em> peptidoglycan.</strong> <em>J Bacteriol.</em> 2007. PMID <strong>17369299</strong>.</li>
+<li>Peters K, <em>et al.</em> <strong>Copper inhibits peptidoglycan LD-transpeptidases suppressing β-lactam resistance due to bypass of penicillin-binding proteins.</strong> <em>PNAS</em> 2018. PMID <strong>30275297</strong>.</li>
+<li>Alamán-Zárate MG, <em>et al.</em> <strong>Unusual 1-3 peptidoglycan cross-links in Acetobacteraceae are made by L,D-transpeptidases with a catalytic domain distantly related to YkuD domains.</strong> 2024. PMID <strong>38006948</strong>.</li>
+<li><strong>An inner membrane protein is covalently attached to peptidoglycan in the γ-proteobacterium <em>Dickeya dadantii</em>.</strong> 2025. PMID <strong>40681671</strong>.</li>
+<li>Winkle M, <em>et al.</em> <strong>DpaA Detaches Braun's Lipoprotein from Peptidoglycan.</strong> <em>mBio</em> 2021. PMID <strong>33947763</strong>.</li>
+<li>(Databases) UniProt Q88KH0; Q88KG8 (OprI, PP_2322); InterPro IPR005490 / IPR018392 / IPR050979; Pfam PF03734.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_2320-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_2320-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:38006948</li>
+<li>PMID:17369299</li>
+<li>PMID:30275297</li>
+<li>PMID:42100858</li>
+<li>PMID:37255442</li>
+<li>PMID:40681671</li>
+<li>PMID:33947763</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2320-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KH0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_2320-curation-notes">PP_2320 curation notes</h1>
+<h2 id="2026-09-01-evidence-review">2026-09-01 evidence review</h2>
+<p>PP_2320/Q88KH0 is assigned to PTHR30582:SF24 and is a close ortholog of PAO1<br />
+PA2854/Q9HZZ0. PA2854 directly anchors OprI to peptidoglycan in live<br />
+Pseudomonas aeruginosa [PMID:42100858, "We document that the gene product of<br />
+PA2854 is the catalyst that performs this transformation between the cell wall<br />
+and the outer-membrane lipoprotein OprI in live Pseudomonas aeruginosa."]. The<br />
+same reaction was reconstituted with purified PA2854, OprI, and synthetic<br />
+peptidoglycan [PMID:42100858, "Furthermore, we reconstitute this reaction in<br />
+vitro with the use of purified recombinant PA2854, OprI, and synthetic samples<br />
+of the cell-wall peptidoglycan, in each case documenting the attachment of the<br />
+side-chain ε-amino group of Lys83 of OprI to the peptide stem of the<br />
+peptidoglycan."].</p>
+<p>The nearby KT2440 oprI locus PP_2322 is corroborative only. PP_2321 intervenes<br />
+between PP_2320 and oprI, and the species-aware report does not establish a<br />
+defined operon. The function transfer therefore rests primarily on orthology,<br />
+domain architecture, exact PANTHER subfamily, and direct PA2854 experiments,<br />
+not on local gene proximity.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KH0
+gene_symbol: PP_2320
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_2320 is a Sec-exported, periplasmic YkuD-family L,D-transpeptidase with
+  LysM and catalytic domains. It is predicted to covalently anchor the major
+  outer-membrane lipoprotein OprI to a peptidoglycan stem, coupling the outer
+  membrane to the cell-wall sacculus.
+existing_annotations:
+- term:
+    id: GO:0000270
+    label: peptidoglycan metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: PP_2320 modifies a peptidoglycan stem while forming the OprI tether.
+    action: ACCEPT
+    reason: The L,D-transpeptidase reaction directly remodels the peptide component of peptidoglycan.
+- term:
+    id: GO:0004180
+    label: carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: OprI anchoring is an acyl-transfer reaction rather than terminal hydrolysis by a carboxypeptidase.
+    action: REMOVE
+    reason: The closely matched ErfK/LdtPae2 subfamily resolves the YkuD reaction as lipoprotein-acceptor L,D-transpeptidation.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: The signal peptide exports PP_2320 from the cytoplasm, but its peptidoglycan substrate is in the periplasm.
+    action: MODIFY
+    reason: In a Gram-negative bacterium, the periplasm is the precise compartment for an enzyme acting on the sacculus beneath the outer membrane.
+    proposed_replacement_terms:
+    - id: GO:0030288
+      label: outer membrane-bounded periplasmic space
+- term:
+    id: GO:0008360
+    label: regulation of cell shape
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Outer-membrane tethering can affect envelope mechanics but does not establish a direct shape-regulatory role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The supported direct process is peptidoglycan-protein cross-linking.
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The root transferase term is true but uninformative for an L,D-transpeptidase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0071972 already captures the specific catalytic class.
+- term:
+    id: GO:0018104
+    label: peptidoglycan-protein cross-linking
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: PP_2320 is assigned to covalent OprI anchoring at the peptidoglycan sacculus.
+    action: ACCEPT
+    reason: Its exact PANTHER subfamily matches the experimentally characterized Pseudomonas LdtPae2/ErfK anchoring enzyme.
+    supported_by:
+    - reference_id: PMID:37255442
+      supporting_text: We found that the three P. aeruginosa LDTs catalyze peptidoglycan cross-linking (LdtPae1), the anchoring of lipoprotein OprI to the peptidoglycan (LdtPae2), and the hydrolysis of the resulting peptidoglycan-OprI amide bond (LdtPae3).
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: Covalent coupling of OprI to peptidoglycan organizes the Gram-negative cell envelope.
+    action: ACCEPT
+    reason: The reaction links an outer-membrane structural protein to the cell-wall scaffold.
+- term:
+    id: GO:0071972
+    label: peptidoglycan L,D-transpeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: PP_2320 is an intact YkuD-family L,D-transpeptidase specialized for a lipoprotein acceptor.
+    action: ACCEPT
+    reason: The catalytic YkuD domain and exact ErfK-related PANTHER subfamily support this reaction class.
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: The reaction is a late peptidoglycan-envelope maturation event rather than glycan or stem synthesis.
+    action: REMOVE
+    reason: Covalent OprI anchoring modifies an existing sacculus and does not synthesize peptidoglycan glycan or stem material; GO:0018104 captures the direct process.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: PMID:37255442
+  title: Characterization of Pseudomonas aeruginosa l,d-Transpeptidases and Evaluation of Their Role in Peptidoglycan Adaptation to Biofilm Growth.
+  findings:
+  - statement: Pseudomonas L,D-transpeptidase paralogs have experimentally distinct crosslinking, OprI-anchoring, and tether-hydrolysis functions.
+    supporting_text: We found that the three P. aeruginosa LDTs catalyze peptidoglycan cross-linking (LdtPae1), the anchoring of lipoprotein OprI to the peptidoglycan (LdtPae2), and the hydrolysis of the resulting peptidoglycan-OprI amide bond (LdtPae3).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text cached and verified; the PSEPK assignment additionally depends on exact subfamily and orthology evidence.
+- id: PMID:42100858
+  title: Outer Membrane-Peptidoglycan Anchoring in Pseudomonas aeruginosa.
+  findings:
+  - statement: PA2854 directly anchors OprI to peptidoglycan in vivo and with purified components in vitro.
+    supporting_text: We document that the gene product of PA2854 is the catalyst that performs this transformation between the cell wall and the outer-membrane lipoprotein OprI in live Pseudomonas aeruginosa.
+  - statement: The PA2854 reaction was reconstituted with purified PA2854, OprI, and synthetic peptidoglycan.
+    supporting_text: Furthermore, we reconstitute this reaction in vitro with the use of purified recombinant PA2854, OprI, and synthetic samples of the cell-wall peptidoglycan, in each case documenting the attachment of the side-chain ε-amino group of Lys83 of OprI to the peptide stem of the peptidoglycan.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text cached; directly establishes the function of PA2854/Q9HZZ0, the close Pseudomonas ortholog and module exemplar.
+- id: file:PSEPK/PP_2320/PP_2320-deep-research-openscientist.md
+  title: OpenScientist deep research report on PSEPK PP_2320 (Q88KH0)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: The report identifies PP_2320 as the periplasmic ortholog of the OprI-anchoring Pseudomonas L,D-transpeptidase.
+    supporting_text: PP_2320 is the *P. putida* ortholog (76% identity) of PA2854, the OprI-anchoring L,D-transpeptidase
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Used for PP_2320 target sequence, architecture, genomic context, and
+      reciprocal-best-hit analysis. Its separate claim that PP_1451 is an
+      LdtPae1-like crosslinking enzyme is rejected because exact
+      PTHR36699:SF1 placement groups PP_1451 with experimental DpaA/P0AA99;
+      direct KT2440 enzymology remains unavailable.
+core_functions:
+- description: &gt;-
+    Periplasmic L,D-transpeptidase that covalently anchors the outer-membrane
+    lipoprotein OprI to a peptidoglycan stem.
+  molecular_function:
+    id: GO:0071972
+    label: peptidoglycan L,D-transpeptidase activity
+  directly_involved_in:
+  - id: GO:0018104
+    label: peptidoglycan-protein cross-linking
+  - id: GO:0071555
+    label: cell wall organization
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  supported_by:
+  - reference_id: PMID:42100858
+    supporting_text: We document that the gene product of PA2854 is the catalyst that performs this transformation between the cell wall and the outer-membrane lipoprotein OprI in live Pseudomonas aeruginosa.
+  - reference_id: PMID:37255442
+    supporting_text: We found that the three P. aeruginosa LDTs catalyze peptidoglycan cross-linking (LdtPae1), the anchoring of lipoprotein OprI to the peptidoglycan (LdtPae2), and the hydrolysis of the resulting peptidoglycan-OprI amide bond (LdtPae3).
+  - reference_id: file:PSEPK/PP_2320/PP_2320-deep-research-openscientist.md
+    supporting_text: PP_2320 is the *P. putida* ortholog (76% identity) of PA2854, the OprI-anchoring L,D-transpeptidase
+knowledge_gaps:
+- gap_statement: PP_2320 substrate specificity and physiological importance have not been tested directly in KT2440.
+  status: OPEN
+  gap_kind: [BIOLOGY, CURATION]
+  significance: PA2854 OprI anchoring is established in vivo and in vitro, but transfer to the close PP_2320 ortholog remains untested in KT2440.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
