@@ -200,9 +200,9 @@ says only "binds something".
 **Is there a term to move to?** Answered by walking the branch, not by searching, because
 GO search is token-based and "WAVE complex binding" can never match a term lacking those
 tokens. A complete enumeration — unbounded in depth, deduplicated — returns **105**
-distinct descendants of `GO:0044877 protein-containing complex binding` across five
-levels, containing exactly one actin-machinery term, `GO:0071933 Arp2/3 complex
-binding`. `GO:0031209 SCAR
+distinct descendants of `GO:0044877 protein-containing complex binding`, reached over
+106 parent-child edges and four levels below the root, containing exactly one
+actin-machinery term, `GO:0071933 Arp2/3 complex binding`. `GO:0031209 SCAR
 complex` exists but is a cellular component, not something to bind — and in any case the
 paper describes the ARHGAP4-containing complexes as *biochemically separable* from the
 WAVE2 complex proper, so SCAR-complex membership would be wrong on the biology as well as

@@ -102,9 +102,10 @@ about function, so a more informative term was looked for. GO search is **token-
 "WAVE complex binding" can never match a term lacking those tokens — and a failed search
 has justified wrong `REMOVE`s in this campaign before. So the branch was enumerated
 instead, unbounded in depth and deduplicated: the **105** distinct descendants of
-`GO:0044877 protein-containing complex binding`, spanning five levels, contain exactly
-**one** actin-machinery term, `GO:0071933 Arp2/3 complex binding`, and no term for
-binding the WAVE/SCAR or Hem-1 complex. `GO:0031209 SCAR complex` exists, but
+`GO:0044877 protein-containing complex binding` — reached over 106 parent-child edges,
+the deepest four levels below the root — contain exactly **one** actin-machinery term,
+`GO:0071933 Arp2/3 complex binding`, and no term for binding the WAVE/SCAR or Hem-1
+complex. `GO:0031209 SCAR complex` exists, but
 as a cellular component rather than as something to bind. The self-test requires the walk
 to find `GO:0071933` (so a zero cannot be a broken query) and requires it *not* to find a
 WAVE/SCAR/Hem binding term.

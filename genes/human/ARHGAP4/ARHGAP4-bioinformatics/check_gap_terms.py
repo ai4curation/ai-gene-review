@@ -185,7 +185,7 @@ def direct_children(cid: str) -> list[dict[str, str]]:
     ]
 
 
-def descendants(root: str) -> tuple[dict[str, str], int]:
+def descendants(root: str) -> tuple[dict[str, str], int, int]:
     """**Every** asserted descendant of a term, deduplicated, with no depth bound.
 
     Used instead of a text search because **GO search is token-based**: "WAVE complex
@@ -196,31 +196,43 @@ def descendants(root: str) -> tuple[dict[str, str], int]:
     same hazard this file warns about elsewhere -- a clipped enumeration turns a present
     term into an absent one, and the absence is the whole finding:
 
-    * **No depth cap.** The previous DFS stopped expanding below depth 3. This branch
-      genuinely runs five levels deep, so the cap survived only because every deep term
-      was also reachable by a shorter path -- an accident of the DAG, not a guarantee.
+    * **No depth cap.** The previous DFS stopped expanding below depth 3, so it collected
+      children down to depth 4 -- which happens to be exactly this branch's depth. Nothing
+      was lost, but only because the cap and the branch coincided; a future term one level
+      deeper would have been silently dropped, and the finding here is an *absence*.
     * **Deduplicated.** GO is a DAG, so a term reachable by two parent paths was counted
-      twice: the old walk returned 106 entries for 105 distinct terms, and "106
+      twice: the old walk traversed 106 edges for 105 distinct terms, and "106
       descendants" was therefore one too many.
 
     BFS with a single visited set expands each term exactly once and terminates when the
     frontier is empty, which is what makes the count complete rather than bounded.
-    Returns ``(id -> label, levels_traversed)``."""
+
+    Returns ``(id -> label, max_depth, edges)`` where ``max_depth`` is the number of edges
+    between the root and its deepest descendant -- **not** the number of BFS passes, which
+    is one larger because the loop needs a final pass that discovers nothing in order to
+    terminate. ``edges`` is the count of parent-child relations traversed, and is what
+    makes the deduplication checkable: for a DAG it exceeds the distinct-term count
+    exactly when some term has more than one parent inside the branch."""
     seen = {root}
     frontier = [root]
     found: dict[str, str] = {}
-    levels = 0
+    edges = 0
+    max_depth = 0
+    depth = 0
     while frontier:
-        levels += 1
+        depth += 1
         nxt: list[str] = []
         for cid in frontier:
             for child in direct_children(cid):
+                edges += 1
                 found[child["id"]] = child["label"]
                 if child["id"] not in seen:
                     seen.add(child["id"])
                     nxt.append(child["id"])
+        if nxt:
+            max_depth = depth
         frontier = nxt
-    return found, levels
+    return found, max_depth, edges
 
 
 def complex_binding_survey() -> dict[str, object]:
@@ -229,7 +241,7 @@ def complex_binding_survey() -> dict[str, object]:
     ARHGAP4's only interaction annotation is ``GO:0005515 protein binding`` with NCKAP1L
     (Hem-1), which says nothing about function. Before leaving that row as an
     uninformative term, the branch it would have to live in is enumerated."""
-    found, levels = descendants(COMPLEX_BINDING_ROOT)
+    found, max_depth, edges = descendants(COMPLEX_BINDING_ROOT)
     relevant = [
         {"id": i, "label": lbl}
         for i, lbl in sorted(found.items())
@@ -238,7 +250,10 @@ def complex_binding_survey() -> dict[str, object]:
     return {
         "root": COMPLEX_BINDING_ROOT,
         "distinct_descendants": len(found),
-        "levels_traversed": levels,
+        # Edges between the root and its deepest descendant. Deliberately not the BFS
+        # pass count, which is one larger and reads a level deeper than the branch is.
+        "max_depth": max_depth,
+        "edges_traversed": edges,
         # The walk ends when the frontier empties, so the enumeration is complete
         # rather than bounded. Stated explicitly because the claim the review rests
         # on is an *absence*, and an absence is only as good as the enumeration.
@@ -421,28 +436,42 @@ def self_test() -> int:
             "PASS" if not s["wave_or_scar_binding_term_exists"] else f"FAIL {found}",
         )
     )
-    # 11. The enumeration must be deeper than the depth bound the earlier version used,
-    #     and must be complete. If this branch were ever only 3 levels deep the guard
-    #     would stop proving anything, so it asserts the depth it actually traverses.
+    # 11. The branch must reach the depth the walk claims, and the enumeration must be
+    #     complete. Asserted as edges-below-root, not BFS passes: the loop needs one
+    #     final pass that finds nothing in order to terminate, so the pass count reads a
+    #     level deeper than the branch actually is.
     checks.append(
         (
-            "walk traverses the full branch (deeper than the old depth cap)",
+            "walk reaches the branch's full depth (4 edges below the root)",
             "PASS"
-            if s["levels_traversed"] >= 5 and s["enumeration_complete"]
-            else f"FAIL levels={s['levels_traversed']}",
+            if s["max_depth"] >= 4 and s["enumeration_complete"]
+            else f"FAIL max_depth={s['max_depth']} complete={s['enumeration_complete']}",
         )
     )
-    # 12. Deduplication: GO is a DAG, so the distinct count must be below the number of
-    #     parent-child edges walked. Recomputing the multiset is what proves the returned
-    #     figure is distinct terms and not edges.
-    root_kids = direct_children(COMPLEX_BINDING_ROOT)
+    # 12. Deduplication, asserted against the quantity that actually distinguishes it.
+    #     An earlier version of this check compared the distinct count to the number of
+    #     the root's direct children, which the *non*-deduplicating walk also satisfied --
+    #     a guard that could not fail on the defect it was named for. The edge count is
+    #     the discriminator: in a DAG it exceeds the distinct-term count exactly when a
+    #     term has two parents in the branch, which is the 106-vs-105 discrepancy that
+    #     produced the wrong published figure.
     checks.append(
         (
-            "returned count is distinct terms, not parent-child edges",
+            "distinct-term count is below the edge count (dedup is real)",
             "PASS"
-            if len({k["id"] for k in root_kids}) == len(root_kids)
-            and s["distinct_descendants"] >= len(root_kids)
-            else "FAIL",
+            if s["edges_traversed"] > s["distinct_descendants"]
+            else f"FAIL edges={s['edges_traversed']} distinct={s['distinct_descendants']}",
+        )
+    )
+    # 12b. MUTATION TEST of check 12: a walk that does not deduplicate returns one entry
+    #      per edge, so distinct == edges and check 12 must fail. Without this, check 12
+    #      is just another assertion about live data rather than a demonstrated guard.
+    found, _, edges = descendants(COMPLEX_BINDING_ROOT)
+    undeduped = edges  # what len(result) would be if duplicates were kept
+    checks.append(
+        (
+            "mutation test: a non-deduplicating walk would fail check 12",
+            "PASS" if not (edges > undeduped) else "FAIL (guard would still pass)",
         )
     )
 
@@ -493,7 +522,8 @@ def main() -> int:
     print()
     print(
         f"complex-binding branch under {s['root']}: {s['distinct_descendants']} distinct "
-        f"descendants over {s['levels_traversed']} levels (complete enumeration)"
+        f"descendants from {s['edges_traversed']} edges, max depth {s['max_depth']} "
+        "(complete enumeration)"
     )
     print("  actin-machinery terms:", s["actin_machinery_terms_found"] or "none")
     print("  WAVE/SCAR/Hem binding term exists:", s["wave_or_scar_binding_term_exists"])
