@@ -297,6 +297,38 @@ CI does **not** check these (`file` is in `skip_prefixes`), so they are the one
 fabrication surface here, and each is a computed table row chosen so an exact match
 is meaningful.
 
+## The pre-write hook validates against the SHARED checkout, not your worktree
+
+Worth knowing for anyone running agents in isolated worktrees, because it produces
+confident false failures.
+
+`.claude/hooks/validate_ai_review_pretool_hook.py` computes
+`project_root = Path(__file__).parent.parent.parent` and runs the validator with
+`cwd=project_root`. `__file__` is the **shared checkout's** hook, so validation uses
+the shared checkout's schema and its `genes/` tree — not the worktree the edit is
+actually being made in. Two consequences hit this gene:
+
+- The shared checkout sits on `paint/ABHD8` (tip `0e4e91ae55`), which **predates**
+  `4697a4e0c7` "Add FamilyReview schema with machine-checkable residue claims"
+  (#2757). So the hook rejected `residue_claims` as an unknown property even though
+  the slot has been in `PropagationReview` on `main` for some time.
+- `reference_base_dir: genes` resolved against the shared checkout, where
+  `genes/human/ARFGEF3/ARFGEF3-bioinformatics/RESULTS.md` does not exist, so all
+  five `file:` references were reported as pointing at a non-existent file.
+
+**Diagnostic that settles it: run the hook's own procedure on a file you know is
+good.** Copying the *unmodified, committed* review to a temp directory and running
+`uv run ai-gene-review validate --no-goa` on it returns `✓ Valid`. So does
+`just validate human ARFGEF3` in the worktree. Only the hook disagrees, and the
+branch-ancestry check (`git merge-base --is-ancestor 4697a4e0c7 0e4e91ae55` → 1)
+names the reason.
+
+Same shape as the shared-`checkquotes.py`-with-a-hardcoded-root incident: when a
+shared tool suddenly reports failures on work you believe is clean, **suspect the
+tool and check what root it resolved** before changing anything. "Fixing" these
+would have meant deleting two correct `residue_claims` blocks and five correct
+citations. CI is unaffected — it validates against `main`'s schema on real paths.
+
 ## The pre-write hook's failures were mostly collateral — verify before "fixing"
 
 The first write attempt was blocked with a long error list including six
