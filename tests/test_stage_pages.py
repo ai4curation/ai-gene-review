@@ -60,6 +60,35 @@ def test_stage_pages_preserves_urls_and_copies_linked_sources(tmp_path: Path) ->
     assert manifest.linked_source_bytes_not_staged == 0
 
 
+def test_stage_pages_includes_prediction_browser_and_dynamic_sources(tmp_path: Path) -> None:
+    """Sources linked through exported rows survive deployment, not just file://."""
+    _site_fixture(tmp_path)
+    browser = tmp_path / "app/predictions"
+    _write(browser / "index.html", '<script src="data.js"></script><script src="schema.js"></script>')
+    _write(browser / "data.js", "window.predictionData = {sets: [], claims: []};")
+    _write(browser / "schema.js", "window.searchSchema = {};")
+    source = "genes/human/ABC1/ABC1-predictions-review.yaml"
+    _write(tmp_path / source, "predictions: []\n")
+    _write(browser / "source-files.json", json.dumps([source]))
+
+    manifest = stage_pages(tmp_path, tmp_path / "_site")
+
+    assert (tmp_path / "_site/app/predictions/data.js").is_file()
+    assert (tmp_path / "_site" / source).read_text() == "predictions: []\n"
+    assert manifest.broken_local_links == 0
+
+
+@pytest.mark.parametrize("source", ["../outside.txt", ".git/config", "_site/private.txt"])
+def test_prediction_browser_manifest_cannot_publish_private_paths(tmp_path: Path, source: str) -> None:
+    """Treat a generated dependency list with the same boundary as static links."""
+    _site_fixture(tmp_path)
+    for filename in ("index.html", "data.js", "schema.js"):
+        _write(tmp_path / "app/predictions" / filename)
+    _write(tmp_path / "app/predictions/source-files.json", json.dumps([source]))
+    with pytest.raises(ValueError, match="Invalid prediction browser source"):
+        stage_pages(tmp_path, tmp_path / "_site")
+
+
 def test_stage_pages_includes_transitive_publication_dependencies(
     tmp_path: Path,
 ) -> None:
@@ -339,12 +368,12 @@ def test_broken_links_block_deployment(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "size,deployable", [(1_000_000_000, True), (1_000_000_001, False)]
+    "size,deployable", [(1_000_000_001, True), (9_999_999_999, True), (10_000_000_000, False)]
 )
 def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
     _site_fixture(tmp_path)
     manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
-    assert manifest.size_budget_bytes == 1_000_000_000
+    assert manifest.size_budget_bytes == 9_999_999_999
     assert manifest.deployable is deployable
 
 
@@ -367,7 +396,7 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
     )
     manifest = json.loads((tmp_path / "manifest.json").read_text())
     assert manifest["deployable"] is False
-    assert manifest["size_budget_bytes"] == 1_000_000_000
+    assert manifest["size_budget_bytes"] == 9_999_999_999
     assert manifest["broken_local_links"] == 1
     assert manifest["off_base_path_links"] == 0
     assert manifest["off_base_path_urls"] == []
@@ -464,5 +493,5 @@ def test_archive_size_accounts_for_headers_padding_and_hidden_exclusions(tmp_pat
 def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
     _site_fixture(tmp_path)
     manifest = stage_pages(tmp_path, tmp_path / '_site')
-    assert replace(manifest, archive_bytes=1_073_741_824).deployable
-    assert not replace(manifest, archive_bytes=1_073_741_825).deployable
+    assert replace(manifest, archive_bytes=9_999_999_999).deployable
+    assert not replace(manifest, archive_bytes=10_000_000_000).deployable
