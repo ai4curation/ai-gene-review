@@ -221,7 +221,28 @@ def audit(review: dict, notes: str, pdz_src: str,
     # 5. the PDZ script's denominator.
     bad.extend(f"check_pdz_interactome.py: {d}" for d in hardcoded_denominator_defects(pdz_src))
 
+    # 6. The notes quote this script's own summary line as "expected output today".
+    # That is itself a counted claim, so it has to be checked or it silently rots -
+    # which is the failure mode this whole script exists for, and it would be absurd
+    # to reproduce it here.
+    summary = summary_line(review)
+    if summary not in notes:
+        bad.append(
+            "the notes quote an expected output for this script that no longer "
+            f"matches. Notes should contain: {summary!r}"
+        )
+
     return bad
+
+
+def summary_line(review: dict) -> str:
+    n_file_quotes = sum(
+        1 for sb in iter_supporting(review) if sb.get("reference_id", "").startswith("file:")
+    )
+    return (
+        f"consistent: {n_file_quotes} file: quotes verbatim and unambiguous, "
+        f"{len(review.get('references', []))} references adjudicated, counted claims hold"
+    )
 
 
 def self_test(review: dict, notes: str, pdz_src: str) -> int:
@@ -277,6 +298,16 @@ def self_test(review: dict, notes: str, pdz_src: str) -> int:
     m["core_functions"][1]["molecular_function"] = {"id": "GO:0005096", "label": "GTPase activator activity"}
     expect_caught("MF asserted on the actin core function", m, notes, pdz_src,
                   "asserts a molecular function")
+
+    # Mutation 5b: the notes quote this script's summary line as expected output.
+    # If that line goes stale, this script must say so rather than print a number
+    # that silently disagrees with the prose next to it.
+    stale_notes = notes.replace(summary_line(review), "consistent: 1 file: quote, 2 references")
+    if stale_notes == notes:
+        failures.append("could not construct the stale-notes mutation; the summary line is absent")
+    else:
+        expect_caught("notes quote a stale expected output", review, stale_notes, pdz_src,
+                      "no longer matches")
 
     # Mutation 6a: a provider-cited, cached paper is dropped from references. This
     # is the exact defect the check exists for, so it is tested on the derived set
