@@ -9,6 +9,18 @@ Three committed, re-runnable checks behind the ARHGAP23 review. `uv sync` first.
 | `uv run python mutation_test.py` | breaks each guard in a copy of the analysis and asserts the self-test catches it, plus a no-op negative control that must stay silent |
 | `uv run python check_file_quotes.py` | asserts every `file:` and `Reactome:` quote in the review YAML is verbatim in the file it cites — the citations CI does not check |
 | `uv run python check_file_quotes.py --self-test` | fabricates a quote and asserts rejection; rewraps a real one and asserts acceptance |
+| `uv run python check_ontology_claims.py` | re-verifies the four load-bearing ontology claims on **two** services (OLS4 and `api.geneontology.org`); a disagreement between them is a failure |
+| `uv run python check_ontology_claims.py --self-test` | runs each claim predicate against a case whose answer is the opposite, so a pass is evidence of discrimination |
+
+## The ontology claims
+
+`GO:0005100` "Rho GTPase activator activity" is obsolete/merged into `GO:0005096`, which has
+no `is_a` children — that is why the review cannot specialise either Reactome `GO:0005096` row
+and records an ONTOLOGY knowledge gap instead. `GO:0035024` and `GO:0035021` are descendants of
+`GO:0051056` and **not** of `GO:0007165`, which is why the `GO:0007165` row is a branch change
+rather than a specialisation. Two services are used deliberately: they disagree in practice, and
+QuickGO in particular silently resolves merged ids and answers for the surviving term, so it
+cannot be read at face value in either direction.
 
 ## What the analysis answers
 
