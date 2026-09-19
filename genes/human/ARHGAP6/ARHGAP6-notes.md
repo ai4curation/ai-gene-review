@@ -220,7 +220,34 @@ so, rather than sitting in `publications/` unexplained:
 These are the bulk of affinage's dated-findings table, so the decision to exclude them
 is where most of affinage's content ends up — recorded rather than silently dropped.
 
-## 8. Other decisions worth recording
+## 8. Re-running the checks
+
+All four analyses live in `ARHGAP6-bioinformatics/` and each takes `--self-test`,
+which mutation-tests its guards (every guard must fire with its expected message,
+every negative control must stay silent):
+
+```bash
+cd genes/human/ARHGAP6/ARHGAP6-bioinformatics
+uv run check_arginine_finger.py --self-test      && uv run check_arginine_finger.py
+uv run check_goa_uniprot_divergence.py --self-test && uv run check_goa_uniprot_divergence.py
+uv run check_pdz_interactome.py --self-test      && uv run check_pdz_interactome.py
+uv run check_review_consistency.py --self-test   && uv run check_review_consistency.py
+```
+
+The first three regenerate their `RESULTS*.md`. The fourth regenerates nothing: it
+re-tests this review's own claims against the files — in particular that every
+`file:` `supporting_text` occurs verbatim and exactly once in the file it names,
+which the repository's reference validator does **not** check (it validates quotes
+only for `PMID:`/`DOI:` references). It also re-tests the counted claims made in
+this notes file and in the PR, so a sentence here cannot quietly stop being true.
+
+Expected output today:
+
+```
+consistent: 27 file: quotes verbatim and unambiguous, 24 references adjudicated, counted claims hold
+```
+
+## 9. Other decisions worth recording
 
 - `GO:0030041 actin filament polymerization` (NAS, PMID:10699171) →
   `MARK_AS_OVER_ANNOTATED`. The paper shows **recruitment of existing F-actin** into

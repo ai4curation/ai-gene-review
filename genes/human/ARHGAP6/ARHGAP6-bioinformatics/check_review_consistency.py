@@ -54,6 +54,7 @@ from __future__ import annotations
 import argparse
 import ast
 import copy
+import re
 import sys
 from pathlib import Path
 
@@ -67,13 +68,31 @@ REVIEW = GENE_DIR / "ARHGAP6-ai-review.yaml"
 NOTES = GENE_DIR / "ARHGAP6-notes.md"
 PDZ_SCRIPT = HERE / "check_pdz_interactome.py"
 
-# PMIDs cached for this gene. Declared, so that dropping a citation is caught
-# rather than quietly reducing the expected set.
-CACHED_PMIDS = [
-    "PMID:9417914", "PMID:10699171", "PMID:12673365", "PMID:18434237",
-    "PMID:19038263", "PMID:26628301", "PMID:30816546", "PMID:33116826",
-    "PMID:36115835", "PMID:38287795",
-]
+PUBLICATIONS = REPO / "publications"
+PMID_RE = re.compile(r"PMID[:_](\d{6,9})")
+
+
+def provider_cited_and_cached() -> set[str]:
+    """PMIDs the deep-research provider cites that also have a cached publication.
+
+    Derived, not declared. The defect this exists for is the concrete one that
+    occurred: the provider cited a paper, it was fetched into ``publications/``,
+    and it then appeared nowhere in the review -- so a declared literal would have
+    been written *after* the omission and could not have caught it.
+
+    The scope is deliberately the deep-research file rather than the whole gene
+    folder. The notes legitimately discuss third-party PMIDs about *other* proteins
+    (the arginine-finger comparator panel cites ARHGAP11B's NOT annotations, for
+    instance), several of which are cached by unrelated PRs; requiring those in this
+    gene's references would be a false positive. Requiring the provider's own cited
+    papers to be accounted for is the rule that matches the failure.
+    """
+    out: set[str] = set()
+    for f in sorted(GENE_DIR.glob("*-deep-research-*.md")):
+        for pmid in PMID_RE.findall(f.read_text()):
+            if (PUBLICATIONS / f"PMID_{pmid}.md").exists():
+                out.add(f"PMID:{pmid}")
+    return out
 
 EXPECTED_FINDINGS = {"PMID:19038263": 4, "PMID:18434237": 2}
 
@@ -125,7 +144,8 @@ def hardcoded_denominator_defects(src: str) -> list[str]:
     return found
 
 
-def audit(review: dict, notes: str, pdz_src: str) -> list[str]:
+def audit(review: dict, notes: str, pdz_src: str,
+          extra_expected: set[str] | None = None) -> list[str]:
     """Return a list of problems. Empty means the document is self-consistent."""
     bad: list[str] = []
 
@@ -167,7 +187,13 @@ def audit(review: dict, notes: str, pdz_src: str) -> list[str]:
     for rid, r in refs.items():
         if "reference_review" not in r:
             bad.append(f"reference has no reference_review: {rid}")
-    for pmid in CACHED_PMIDS:
+    expected = extra_expected if extra_expected is not None else provider_cited_and_cached()
+    if not expected:
+        bad.append(
+            "no provider-cited, cached PMIDs were found; the coverage check is "
+            "examining nothing"
+        )
+    for pmid in sorted(expected):
         if pmid not in refs:
             bad.append(f"cached publication absent from references: {pmid}")
 
@@ -251,6 +277,35 @@ def self_test(review: dict, notes: str, pdz_src: str) -> int:
     m["core_functions"][1]["molecular_function"] = {"id": "GO:0005096", "label": "GTPase activator activity"}
     expect_caught("MF asserted on the actin core function", m, notes, pdz_src,
                   "asserts a molecular function")
+
+    # Mutation 6a: a provider-cited, cached paper is dropped from references. This
+    # is the exact defect the check exists for, so it is tested on the derived set
+    # rather than on a literal -- a declared list would only ever contain papers
+    # someone already remembered to reference.
+    derived = provider_cited_and_cached()
+    if not derived:
+        failures.append("provider_cited_and_cached() derived nothing; the check is inert")
+    else:
+        victim = sorted(derived)[0]
+        m = copy.deepcopy(review)
+        m["references"] = [r for r in m["references"] if r["id"] != victim]
+        found = audit(m, notes, pdz_src)
+        if any(f"cached publication absent from references: {victim}" in f for f in found):
+            print(f"  ok   dropped provider-cited cached paper: caught ({victim})")
+        else:
+            failures.append(f"dropping {victim} was NOT caught. got {found}")
+        # And the derived set must exclude papers the provider cites but nobody cached,
+        # otherwise the rule would demand references for uncached literature.
+        uncached_but_cited = {
+            f"PMID:{p}"
+            for f in GENE_DIR.glob("*-deep-research-*.md")
+            for p in PMID_RE.findall(f.read_text())
+            if not (PUBLICATIONS / f"PMID_{p}.md").exists()
+        }
+        if uncached_but_cited & derived:
+            failures.append(f"derived set wrongly includes uncached papers: {uncached_but_cited & derived}")
+        else:
+            print(f"  ok   derived set excludes {len(uncached_but_cited)} cited-but-uncached PMIDs")
 
     # Mutation 6: the hardcoded denominator comes back -- and the docstring that
     # merely MENTIONS it must not be enough to trigger the guard.
