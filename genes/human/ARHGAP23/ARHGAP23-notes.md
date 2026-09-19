@@ -70,9 +70,12 @@ MDA-MB-231, biosensor in the screen). Rac1 activity is supported by two independ
 systems (biosensor in CHO.K1, biosensor in the screen) but is *contradicted* by
 PMID:27226243's Rac1 measurement in MDA-MB-231. Cdc42 is scored negative in the only
 experiment that tested it. The honest reading is: RhoA well supported, Rac1 supported but
-cell-type dependent, Cdc42 not supported. All of it is cellular; **no assay on purified
-protein exists** — the one systematic in-vitro study of the family (PMID:27481945) lists
-ARHGAP23 in its table of all 66 human RhoGAPs but did not select it for purification.
+cell-type dependent, Cdc42 not supported. All of it is cellular; **no assay on purified protein exists**. The one systematic in-vitro
+study of the family (PMID:27481945) is reported to list ARHGAP23 in its table of all 66 human
+RhoGAPs without selecting it for purification — that comes from an external full-text check and
+could not be confirmed from the abstract-only cache, so the independently checkable form of the
+claim is the one the review leans on: Müller et al.'s Supplementary Table 2 fills the "in vivo"
+and "reference" columns for ARHGAP23 and leaves the **"in vitro" columns empty**.
 
 ## 3. The catalytic residue — and the published mutant that does not hit it
 
