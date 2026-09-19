@@ -15,8 +15,15 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
 NOTEBOOK_SUFFIXES = {".ipynb"}
+
+
+def has_gene_review(genes_dir: Path, species: str, symbol: str) -> bool:
+    """Only link targets that the gene renderer will actually publish."""
+    return (genes_dir / species / symbol / f'{symbol}-ai-review.yaml').is_file()
 
 
 def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
@@ -40,6 +47,8 @@ def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
     ...     (genes / "human" / "GPX4").mkdir(parents=True)
     ...     (genes / "human" / "TP53").mkdir(parents=True)
     ...     (genes / "mouse" / "Gpx4").mkdir(parents=True)
+    ...     for gene in genes.glob('*/*'):
+    ...         _ = (gene / f'{gene.name}-ai-review.yaml').write_text('gene_symbol: ' + gene.name)
     ...     index = build_symbol_to_species_index(genes)
     ...     sorted(index.keys())
     ['GPX4', 'Gpx4', 'TP53']
@@ -58,7 +67,7 @@ def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
         species = species_dir.name
 
         for gene_dir in species_dir.iterdir():
-            if not gene_dir.is_dir():
+            if not has_gene_review(genes_dir, species, gene_dir.name):
                 continue
 
             symbol = gene_dir.name
@@ -202,14 +211,14 @@ def resolve_frontmatter_gene_links(
 
         if "/" in raw_gene:
             code, candidate_symbol = raw_gene.split("/", 1)
-            if (genes_dir / code / candidate_symbol).is_dir():
+            if has_gene_review(genes_dir, code, candidate_symbol):
                 species = code
                 symbol = candidate_symbol
                 url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
             elif (genes_dir / code).is_dir():
                 warnings.append(
                     f"Frontmatter gene '{raw_gene}' not found "
-                    f"(no genes/{code}/{candidate_symbol})."
+                    f"(no review YAML in genes/{code}/{candidate_symbol})."
                 )
         else:
             species_list = symbol_index.get(raw_gene, [])
@@ -527,8 +536,7 @@ def replace_gene_tags(
         if not label:
             label = symbol
 
-        target_dir = genes_dir / species / symbol
-        if not target_dir.exists():
+        if not has_gene_review(genes_dir, species, symbol):
             warnings.append(
                 f"Gene tag target not found for species='{species}' symbol='{symbol}'"
             )
@@ -563,7 +571,7 @@ def replace_species_qualified_symbols(
     ``CODE`` must be a five-character uppercase UniProt mnemonic (e.g. ``ARATH``,
     ``POPTR``, ``9INFA``) or one of a small set of lowercase model-organism
     directory names (``human``, ``mouse``, ``rat``, ``worm``, ``yeast``). The
-    reference is only linked when ``genes/CODE/symbol/`` actually exists, so the
+    reference is only linked when ``genes/CODE/symbol/symbol-ai-review.yaml`` exists, so the
     regex can stay permissive while precision comes from the filesystem check. A
     ``CODE`` that is itself a known species directory but whose ``symbol`` is
     missing yields a warning (likely a typo); anything else is left untouched.
@@ -573,6 +581,7 @@ def replace_species_qualified_symbols(
     >>> with tempfile.TemporaryDirectory() as tmp:
     ...     g = Path(tmp) / "genes"
     ...     (g / "POPTR" / "CASPL4C1").mkdir(parents=True)
+    ...     _ = (g / "POPTR/CASPL4C1/CASPL4C1-ai-review.yaml").write_text("gene_symbol: CASPL4C1")
     ...     out, warns = replace_species_qualified_symbols(
     ...         "See POPTR/CASPL4C1 for detail.", g)
     ...     ("[POPTR/CASPL4C1](" in out, warns)
@@ -603,7 +612,7 @@ def replace_species_qualified_symbols(
     def replace_match(match: re.Match) -> str:
         code = match.group("code")
         symbol = match.group("symbol")
-        if (genes_dir / code / symbol).is_dir():
+        if has_gene_review(genes_dir, code, symbol):
             url = f"{base_path}/{code}/{symbol}/{symbol}-ai-review.html"
             return f"[{code}/{symbol}]({url})"
         # Only warn when CODE is clearly a species directory we know about, so a
@@ -611,7 +620,7 @@ def replace_species_qualified_symbols(
         if (genes_dir / code).is_dir():
             warnings.append(
                 f"Species-qualified symbol '{code}/{symbol}' not found "
-                f"(no genes/{code}/{symbol})."
+                f"(no review YAML in genes/{code}/{symbol})."
             )
         return match.group(0)
 
@@ -732,6 +741,7 @@ def process_markdown_content(content: str) -> str:
     True
     """
 
+    content = protect_scientific_notation(content)
     # Process mermaid blocks for HTML
     def replace_mermaid(match: re.Match) -> str:
         mermaid_code = match.group(1)
@@ -1283,6 +1293,11 @@ def render_project(
 
     # Create output directory and write file, mirroring subfolder structure
     output_path = output_dir / rel_path.with_suffix(".html")
+    repo_root = projects_dir.resolve().parent if projects_dir is not None else genes_dir.resolve().parent
+    # Bundle assets are copied after rendering; retain their mirrored URLs even
+    # on a clean build where those output files do not exist yet.
+    mirrored_assets = set(referenced_local_assets(md_path, projects_dir)) if projects_dir is not None else set()
+    html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
 

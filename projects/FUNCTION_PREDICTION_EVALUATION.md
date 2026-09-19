@@ -10,6 +10,8 @@ An index to evaluations of computational protein-function predictions, functiona
 summaries, and annotation-transfer methods in AI Gene Review. Each project provides
 its own evidence, review criteria, datasets, and results.
 
+**[Browse all predictions](../app/predictions/index.html)** — a shared faceted catalog of prediction sets and GO/EC claims, including narrative reviews and assessed empty outputs. Filter by method, species, project, cohort, or assessment; share the resulting URL. [Browser guide](../docs/prediction_browser.md).
+
 ## Model and agent evaluations
 
 | Project | What is evaluated | Explore |
