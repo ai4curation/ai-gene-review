@@ -388,8 +388,154 @@ uv run ai-gene-review batch-fetch <input-file>  # Process multiple genes
 ```bash
 just render human BRCA1        # Render single gene to HTML
 just render-all                # Render all gene reviews to HTML
+just stage-pages               # Assemble existing generated output in _site/
+just build-pages               # Render and assemble the complete publication tree
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
+
+`stage-pages` assembles the GitHub Pages publication artifact. It
+preserves current public URL paths, writes an ignored `_site/` directory, and
+reports the uncompressed publication size. Cleanup is restricted to the repository's
+`_site/` directory, and the root is verified with Git before cleanup. The CLI always
+uses `<repo-root>/_site`. Shadow build failures warn
+without blocking regeneration PRs. With Actions deployment enabled, the live site uses the validated artifact built
+from `main`. Regeneration PRs separately maintain the committed HTML.
+
+Staging also follows local links from published HTML and CSS, plus literal
+JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
+their existing paths. Downloaded scientific data and images keep their original bytes.
+Known source-relative HTML links and missing site prefixes are repaired against
+existing files; linked source directories get browsable indexes. In staged gene,
+project, and module HTML, exact static CSS/JavaScript blocks from the maintained
+templates are replaced with relative links to content-addressed shared files in
+`_pages-assets/`. This preserves page URLs, script order, and CSS contents while
+avoiding thousands of identical copies. Source HTML remains standalone and
+unchanged. Unknown/dynamic blocks, URL-relative CSS, and documents with a
+`<base>` element remain inline. The manifest reports net savings as
+`shared_asset_bytes_saved`. Dynamic JavaScript
+URLs still require browser checks. Deleted reviews' orphan HTML remains excluded.
+The manifest's `linked_source_files_not_staged` and corresponding byte count
+specifically report these excluded orphan review pages. Independently linked
+notes, reports, and images remain publishable even without a review YAML; removing
+a review alone is not a request to unpublish its supporting research.
+
+Staged gene HTML is compacted while retaining preformatted text and inline
+spacing. The main review stays ordinary HTML. Supporting research, reference,
+documentation, and raw-YAML panels are stored losslessly in `_pages-content/`
+and restored on page load. Each panel also offers a compressed HTML download
+if JavaScript is unavailable or loading fails. The annotation browser retains
+its `data.js` URL and ready event, with its complete columnar data loaded from
+`data.json.gz`. These features use the browser's native gzip decompressor;
+there is no truncation of research text or annotation rows. Net savings are
+reported as `content_compaction_bytes_saved`. Loaders accept both raw gzip and
+responses already decoded by the HTTP layer. Restoration requires JavaScript
+and `DecompressionStream`; without them, the primary gene review and section
+downloads remain available, but the annotation browser cannot initialize.
+Supporting panels become searchable in-page after loading; crawlers that do not
+execute JavaScript see only the primary HTML and links to the source material.
+Staging audits the emitted asset URLs again after compaction.
+
+Run the real-browser transport regression (with Chromium installed) using:
+`uv run pytest -m integration tests/test_pages_loaders_browser.py`.
+It covers servers both with and without `Content-Encoding: gzip`.
+
+Preview the artifact through HTTP so compressed supporting files can load.
+For example, mount it at its real URL prefix:
+
+```bash
+preview_dir=$(mktemp -d)
+ln -s "$PWD/_site" "$preview_dir/ai-gene-review"
+python3 -m http.server 8000 --directory "$preview_dir"
+# Open http://localhost:8000/ai-gene-review/
+```
+
+Research-provider metadata can reference files that were never archived. These
+are explicitly labelled **not archived**, retaining their descriptions instead
+of presenting broken download/image links. The full list remains visible in
+`unavailable_source_artifact_paths` in the manifest. This is distinct from an
+existing source file omitted from the artifact, which still blocks deployment.
+
+The publication boundary is reachable, non-hidden files inside this repository
+at the existing site paths. Navigation and dependencies are followed transitively,
+without extension filters, depth limits, or per-file truncation that would break
+existing links. Linking a directory publishes its reachable children too; local
+runtime caches are excluded. Oversized artifacts are reported and blocked, not
+silently pruned. If a referenced rendered document is absent but its Markdown
+source exists, the link serves that source rather than a nonexistent HTML page.
+The separate MkDocs build on `gh-pages` is not part of this publication artifact;
+linked docs such as the subtraction report use their repository Markdown source.
+Every rebuilt artifact must meet the budget before publication.
+
+The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
+in repository Actions variables. It requires a successful upload, at most
+site content and a separately measured GNU tar below
+10,000,000,000 bytes (including headers and padding), no excluded orphan review pages, and no missing
+static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
+and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
+`broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
+`/ai-gene-review/` that match a safe repository file (including an existing
+Markdown source for an HTML target); `off_base_path_urls` lists those suspected
+prefix errors. Links to the umbrella homepage (including `/index.html`) are
+allowed. Unmatched URLs outside the site prefix may belong to other
+projects and are not checked. Diagnostic lists are retained in full for machine
+processing rather than truncated; the workflow summary shows only counts.
+This static audit does not guarantee dynamically constructed JavaScript URLs or
+fragment anchors work.
+
+The live site uses **GitHub Actions** as its Pages source and
+`PAGES_ARTIFACT_DEPLOY_ENABLED=true`. **Build and deploy site**
+([generate-pages.yaml](.github/workflows/generate-pages.yaml)) builds and publishes
+from `main`; these settings are required for deployment.
+
+**Deploy existing Pages artifact**
+([deploy-existing-pages.yaml](.github/workflows/deploy-existing-pages.yaml)) is a
+manual shortcut when rendering, validation, and uploads succeeded but deployment
+failed or was skipped, or when intentionally redeploying a known-good build.
+It is not part of normal daily publishing and does not restore lost data.
+Select a completed build run ID and dispatch it on `main`:
+
+```bash
+gh workflow run deploy-existing-pages.yaml --ref main -f source_run_id=RUN_ID
+```
+
+It verifies the original build and artifact, then publishes that exact snapshot,
+not current `main`. Choosing an older run publishes older content. For new
+content, failed validation, or an expired artifact, run **Build and deploy site**
+instead. The Pages archive is retained for **3 days** (diagnostics for 7).
+Only validated default-branch builds are accepted; checks include successful
+rendering and uploads, artifact provenance, publication policy, actual archive
+size, and its recorded SHA-256.
+The former self-imposed 1 GB site / 1 GiB tar gates are removed. Both paths
+retain a strict less-than-10-GB ceiling matching the action's absolute archive
+cutoff. GitHub officially supports only 1 GB sites: larger deployments are an
+explicit temporary operational choice, not a promise of support or scalability.
+When deployment is enabled, a skipped or failed deployment fails the workflow.
+
+To retry a retained build blocked solely by the old 1 GB policy, supply
+`-f legacy_size_sha256=SHA256` to the manual workflow, using the SHA-256 of its
+original downloaded `artifact.tar`. This explicit override rechecks all link,
+completeness, provenance, and actual archive-size gates and verifies the supplied
+checksum. It does not permit failed integrity checks or rebuild the site. The manifest reports estimated `archive_bytes`
+and `archive_size_budget_bytes`. After upload, diagnostics record the actual
+`archive_actual_bytes` and `archive_sha256`; deployment requires that check to
+succeed. Recovery verifies that checksum, not exact equality with the estimate.
+Older validated builds without a checksum declaration remain recoverable using
+the trusted run/artifact provenance and the actual archive size.
+
+Once enabled, the artifact built from the checked-out source on `main` is
+authoritative for the live site. It deploys without waiting for the legacy
+regeneration PR to merge; that PR only commits derived output back to `main`.
+
+The Build and deploy site workflow runs daily at 08:23 UTC and can also be started with
+GitHub Actions' **Run workflow** button. Each run rebuilds the full site; merged
+content appears after the next successful deployment. The generated-files PR
+updates tracked output separately and does not hold up publication.
+Agent cron profiles do not control this publication schedule. Manual runs wait for
+an active build to finish instead of cancelling it. Gene review validation remains
+in PR CI and the weekly full validation workflow.
+
+Module authors: see [the symbol-label rule](docs/module-symbol-labels.md) for
+family representative labels, validation warnings, and accession-based reasoning.
 
 ## Contributing
 

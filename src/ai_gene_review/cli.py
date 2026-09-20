@@ -6,12 +6,11 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import typer
 from typing_extensions import Annotated
-
-from linkml_data_qc.analyzer import ComplianceAnalyzer
 
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
@@ -182,12 +181,23 @@ def fetch_gene(
                 if (
                     result["annotations_added"] > 0
                     or result.get("references_added", 0) > 0
+                    or result.get("qualifiers_backfilled", 0) > 0
+                    or result.get("supporting_entities_backfilled", 0) > 0
                 ):
                     parts = []
                     if result["annotations_added"] > 0:
                         parts.append(f"{result['annotations_added']} annotations")
                     if result.get("references_added", 0) > 0:
                         parts.append(f"{result.get('references_added', 0)} references")
+                    if result.get("qualifiers_backfilled", 0) > 0:
+                        parts.append(
+                            f"qualifiers on {result.get('qualifiers_backfilled', 0)} annotations"
+                        )
+                    if result.get("supporting_entities_backfilled", 0) > 0:
+                        parts.append(
+                            "supporting entities on "
+                            f"{result.get('supporting_entities_backfilled', 0)} annotations"
+                        )
                     typer.echo(
                         f"  - {file_prefix}-ai-review.yaml (added {' and '.join(parts)})"
                     )
@@ -974,8 +984,46 @@ def compliance(
             help="Output compliance results to TSV file (default: stdout)",
         ),
     ] = None,
+    config: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--config", "-c", help="QC policy YAML (defaults to packaged gene policy)"
+        ),
+    ] = None,
+    schema_only: Annotated[
+        bool,
+        typer.Option(help="Use raw schema recommendations without contextual rules"),
+    ] = False,
+    summary_output: Annotated[
+        Optional[Path],
+        typer.Option(help="Write per-file weighted scores and threshold counts as TSV"),
+    ] = None,
+    json_output: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Write complete reports, including applicable denominators, as JSON"
+        ),
+    ] = None,
+    dashboard_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Generate an HTML dashboard from the same contextual reports"
+        ),
+    ] = None,
+    fail_on_threshold: Annotated[
+        bool, typer.Option(help="Exit nonzero when configured thresholds are missed")
+    ] = False,
 ):
-    """Analyze recommended-field compliance using linkml-data-qc."""
+    """Analyze configurable evidence-aware compliance (advisory by default)."""
+    import json
+    from ai_gene_review.compliance import (
+        GeneComplianceAnalyzer,
+        GeneQCConfig,
+        default_config_path,
+    )
+
+    if config is not None and schema_only:
+        raise typer.BadParameter("--config and --schema-only are mutually exclusive")
     all_files: list[Path] = []
     for pattern in yaml_files:
         if "*" in str(pattern):
@@ -993,11 +1041,16 @@ def compliance(
         raise typer.Exit(code=1)
 
     schema_path = schema or get_schema_path()
-    analyzer = ComplianceAnalyzer(str(schema_path))
+    policy_path = config or default_config_path()
+    policy = GeneQCConfig() if schema_only else GeneQCConfig.from_yaml(policy_path)
+    analyzer = GeneComplianceAnalyzer(schema_path, policy)
 
     rows: list[tuple[str, str, str, str]] = []
+    reports = []
     for yaml_file in all_files:
-        report = analyzer.analyze_file(str(yaml_file), "GeneReview")
+        report = analyzer.analyze_file(yaml_file)
+        report.config_path = None if schema_only else str(policy_path)
+        reports.append(report)
         for path_score in report.path_scores:
             for slot_score in path_score.slot_scores:
                 if slot_score.populated == 0:
@@ -1022,6 +1075,28 @@ def compliance(
         tsv_output.write_text("\n".join(output_lines) + "\n")
     else:
         typer.echo("\n".join(output_lines))
+
+    if summary_output:
+        summary_output.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "file_path\tglobal_compliance\tweighted_compliance\ttotal_checks\ttotal_populated\tthreshold_violations"
+        ]
+        lines.extend(
+            f"{r.file_path}\t{r.global_compliance:.2f}\t{r.weighted_compliance:.2f}\t{r.total_checks}\t{r.total_populated}\t{len(r.threshold_violations)}"
+            for r in reports
+        )
+        summary_output.write_text("\n".join(lines) + "\n")
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps([r.model_dump(mode="json") for r in reports], indent=2) + "\n"
+        )
+    if dashboard_dir:
+        from linkml_data_qc.html_dashboard import generate_html_dashboard_multi
+
+        generate_html_dashboard_multi(reports, dashboard_dir)
+    if fail_on_threshold and any(r.threshold_violations for r in reports):
+        raise typer.Exit(code=1)
 
 
 def _print_issue(issue, indent="  "):
@@ -1284,41 +1359,55 @@ def seed_goa(
     # Initialize validator
     validator = GOAValidator()
 
-    # First check what's missing
-    if yaml_file.exists():
-        typer.echo(f"Checking {yaml_file.name} for missing annotations...")
-        result = validator.validate_against_goa(yaml_file, goa_file)
-
-        if not result.missing_in_yaml:
-            typer.echo(
-                "✓ No missing annotations to seed - YAML already contains all GOA annotations"
-            )
-            return
-
-        typer.echo(f"Found {len(result.missing_in_yaml)} missing annotations to seed:")
-        for ann in result.missing_in_yaml[:5]:  # Show first 5
-            typer.echo(f"  - {ann.go_id} ({ann.go_term})")
-        if len(result.missing_in_yaml) > 5:
-            typer.echo(f"  ... and {len(result.missing_in_yaml) - 5} more")
-    else:
-        typer.echo("Creating new YAML file with all GOA annotations...")
-
-    if dry_run:
-        typer.echo("\n--dry-run specified, no changes will be made")
-        return
+    # Validation permits historical source collapse. Always ask the seeder what
+    # needs expansion/backfill instead of treating validation success as a no-op.
+    typer.echo(f"Checking {yaml_file.name} for missing annotations and source metadata...")
 
     # Perform the seeding
     try:
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, output, fetch_titles=fetch_titles
+        if dry_run:
+            with TemporaryDirectory(prefix="aigr-seed-preview-") as preview_dir:
+                added, _, refs, qualifiers, sources = validator.seed_missing_annotations(
+                    yaml_file, goa_file, Path(preview_dir) / "preview.yaml",
+                    fetch_titles=False,
+                )
+            typer.echo(
+                f"Would add {added} annotations and {refs} references; "
+                f"backfill {qualifiers} qualifiers and {sources} supporting-entity lists."
+            )
+            typer.echo("--dry-run specified, no changes will be made")
+            return
+
+        (
+            added_count,
+            output_path,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, output, fetch_titles=fetch_titles
+            )
         )
 
-        if added_count > 0 or refs_added > 0:
+        if (
+            added_count > 0
+            or refs_added > 0
+            or qualifiers_backfilled > 0
+            or supporting_entities_backfilled > 0
+        ):
             parts = []
             if added_count > 0:
                 parts.append(f"{added_count} annotations")
             if refs_added > 0:
                 parts.append(f"{refs_added} references")
+            if qualifiers_backfilled > 0:
+                parts.append(f"qualifiers on {qualifiers_backfilled} annotations")
+            if supporting_entities_backfilled > 0:
+                parts.append(
+                    "supporting entities on "
+                    f"{supporting_entities_backfilled} annotations"
+                )
             typer.echo(f"\n✓ Successfully added {' and '.join(parts)} to {output_path}")
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:
@@ -1722,6 +1811,89 @@ def refresh_publications(
         typer.echo(f"Success rate: {success_rate:.1f}%")
 
     typer.echo("\nRefresh complete!")
+
+
+@app.command()
+def warm_publications(
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum records to attempt this run"),
+    ] = None,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between records in seconds")
+    ] = 0.3,
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="List candidates without network or file changes"),
+    ] = False,
+    providers: Annotated[
+        Optional[str],
+        typer.Option(
+            "--providers",
+            help="Comma-separated full-text provider chain override "
+            "(default: pmc,epmc_preprint,unpaywall,openalex)",
+        ),
+    ] = None,
+    retry_attempted: Annotated[
+        bool,
+        typer.Option(
+            "--retry-attempted",
+            help="Also re-attempt records already tagged full_text_attempted "
+            "(use after the provider chain or acceptance guards improve)",
+        ),
+    ] = False,
+):
+    """Warm the publications cache via the linkml-reference-validator full-text chain.
+
+    Attempts full text for cached publications that lack it, using LRV's
+    provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Unlike
+    refresh-publications, this also covers DOI-only records without a PMC ID,
+    and follows the monarch-initiative/dismech warm-reference-cache tagging
+    convention: every cleanly concluded attempt is durably recorded as
+    ``full_text_attempted: true``, so bounded --limit sweeps drain the backlog
+    incrementally and never re-query the same record.
+
+    Only open-access full text is merged into the shared cache; non-public
+    locations are ignored.
+
+    Examples:
+        ai-gene-review warm-publications --dry-run --limit 20
+        ai-gene-review warm-publications --limit 200
+        ai-gene-review warm-publications --limit 50 --providers unpaywall,openalex
+    """
+    from ai_gene_review.etl.publication_warm import warm_publications as run_warm
+
+    provider_list = (
+        [p.strip() for p in providers.split(",") if p.strip()] if providers else None
+    )
+    stats = run_warm(
+        publications_dir=publications_dir,
+        limit=limit,
+        delay=delay,
+        providers=provider_list,
+        dry_run=dry_run,
+        retry_attempted=retry_attempted,
+    )
+    if dry_run:
+        would_attempt = (
+            stats["candidates"] if limit is None else min(limit, stats["candidates"])
+        )
+        typer.echo(
+            f"Dry run: would attempt {would_attempt} of {stats['candidates']} "
+            "candidates in the backlog"
+        )
+        return
+    typer.echo("=" * 60)
+    typer.echo("WARM SWEEP SUMMARY")
+    typer.echo("=" * 60)
+    typer.echo(f"Candidates in backlog: {stats['candidates']}")
+    typer.echo(f"Processed this run: {stats['processed']}")
+    typer.echo(f"Full text retrieved: {stats['full_text']}")
+    typer.echo(f"Durably attempted (no text found): {stats['attempted']}")
+    typer.echo(f"Transient errors (will retry next run): {stats['transient_error']}")
 
 
 @app.command()
@@ -2912,6 +3084,14 @@ def render_projects(
         Path,
         typer.Option("--genes-dir", "-g", help="Genes directory for symbol index"),
     ] = Path("genes"),
+    source_ref: Annotated[
+        str,
+        typer.Option(
+            "--source-ref",
+            help="Git branch or commit for family catalog source links",
+            envvar="AI_GENE_REVIEW_SOURCE_REF",
+        ),
+    ] = "main",
     all_projects: Annotated[
         bool,
         typer.Option("--all", "-a", help="Render all project files in projects/"),
@@ -2961,6 +3141,7 @@ def render_projects(
             projects_dir=Path("projects"),
             output_dir=output_dir,
             genes_dir=genes_dir,
+            source_ref=source_ref,
         )
 
         if verbose and warnings:
@@ -2982,6 +3163,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    source_ref=source_ref,
                     projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
@@ -3066,9 +3248,22 @@ def render_modules(
         typer.echo(f"\nRendered {len(output_paths)} module page(s) to {output_dir}")
     elif files:
         total_warnings = []
-        for module_file in files:
+        had_errors = False
+        for requested_file in files:
+            module_file = requested_file
+            if not module_file.exists() and module_file.parent == Path("."):
+                filename = (
+                    module_file.name
+                    if module_file.suffix == ".yaml"
+                    else f"{module_file.name}.yaml"
+                )
+                candidate = modules_dir / filename
+                if candidate.exists():
+                    module_file = candidate
+
             if not module_file.exists():
-                typer.echo(f"Error: File not found: {module_file}", err=True)
+                typer.echo(f"Error: File not found: {requested_file}", err=True)
+                had_errors = True
                 continue
 
             try:
@@ -3087,9 +3282,12 @@ def render_modules(
                     typer.echo(f"Rendered {module_file} -> {output_path}")
             except Exception as error:
                 typer.echo(f"Error rendering {module_file}: {error}", err=True)
+                had_errors = True
 
         if total_warnings and not verbose:
             typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+        if had_errors:
+            raise typer.Exit(code=1)
     else:
         typer.echo("Please specify file(s) or use --all to render all modules", err=True)
         raise typer.Exit(code=1)
@@ -3462,7 +3660,7 @@ def fetch_panther_paint(
             "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
             "this downloads/caches PAINT GAFs)..."
         )
-        counts = fetch_all_family_paint(
+        counts, removed = fetch_all_family_paint(
             panther_root, cache_dir=cache, force_download=force_download
         )
         total = sum(counts.values())
@@ -3470,6 +3668,10 @@ def fetch_panther_paint(
             f"✓ Wrote PAINT slices for {len(counts)} family/families "
             f"({total} node-level annotations total)."
         )
+        if removed:
+            typer.echo(
+                f"  Removed {len(removed)} stale slice(s): {', '.join(removed)}"
+            )
         return
 
     if not family:
@@ -3494,6 +3696,10 @@ def fetch_panther_paint(
         extra_uniprot=extra_uniprot,
         force_download=force_download,
     )
+    if tsv_path is None:
+        typer.echo(f"✓ {family}: {len(nodes)} node(s), no node-level annotations")
+        typer.echo("  No PAINT slice retained; any stale slice was removed.")
+        return
     n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
     typer.echo(
         f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
@@ -4055,6 +4261,32 @@ def refresh_panther_members(
         f"{len(accessions)} accessions cited in modules/ "
         f"({len(prose)} of them appearing in prose)"
     )
+
+    # Family reviews name proteins under a declared subfamily -- representative
+    # members and the positive/negative controls that make a residue site
+    # falsifiable. Those are exactly the assertions the member index exists to
+    # check, so they must be indexed too or the check reports UNRESOLVED forever.
+    family_accessions: set[str] = set()
+    for path in sorted((repo_root / "interpro" / "panther").glob("PTHR*/PTHR*-review.yaml")):
+        doc = yaml.safe_load(path.read_text()) or {}
+        for sub in doc.get("subfamilies") or []:
+            for member in sub.get("representative_members") or []:
+                if isinstance(member, dict) and member.get("id"):
+                    family_accessions.add(member["id"].split(":")[-1])
+        for site in doc.get("residue_sites") or []:
+            for key in ("positive_controls", "negative_controls"):
+                for ctl in site.get(key) or []:
+                    if isinstance(ctl, dict) and ctl.get("id"):
+                        family_accessions.add(ctl["id"].split(":")[-1])
+            anchor = site.get("anchor")
+            if isinstance(anchor, dict) and anchor.get("id"):
+                family_accessions.add(anchor["id"].split(":")[-1])
+    if family_accessions:
+        typer.echo(
+            f"{len(family_accessions)} accessions cited in family reviews "
+            f"({len(family_accessions - accessions)} not already covered)"
+        )
+    accessions.update(family_accessions)
 
     paths = []
     for slug in organisms:
