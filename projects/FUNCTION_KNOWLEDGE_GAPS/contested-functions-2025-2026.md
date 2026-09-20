@@ -595,9 +595,16 @@ non-contiguous lines.
 
 The unambiguous subset is the one worth acting on: **970 entries whose "quote" begins with a
 narration word** such as *"Falcon report summarizes..."* or *"Falcon deep research supports..."*.
-These cannot be verbatim source text by construction. Spot-checked: the ABI1 deep-research file
-contains **zero** occurrences of the string "Falcon", yet ABI1's review carries several
-`supporting_text` entries opening with "Falcon report summarizes".
+These cannot be verbatim source text by construction. Spot-checked: the ARATH/BAK1 deep-research
+file contains no occurrence of "Falcon" anywhere in its prose — its only match is its own
+`provider: falcon` frontmatter line — yet BAK1's review carries **53** `supporting_text` entries
+opening with "Falcon report summarizes", and 74 such rows appear across the whole report.
+
+(An earlier version of this paragraph used ARATH/ABI1 as the example. That example went stale in the
+`main` merge: ABI1's review no longer has any such entry and it no longer appears in the report at
+all — it is one of the reviews already corrected on `main`, which is part of why the subset fell from
+1,042 to 970. The old wording was also loose, claiming "zero occurrences of the string Falcon" when
+three case-insensitive matches were present in provider metadata and artifact paths.)
 
 Two things follow. First, extending the reference validator to cover `file:` references would stop
 this recurring — it is the same check that already works for PMIDs. Second, the existing entries
