@@ -39,7 +39,7 @@ def body(p):
         except Exception: cache[p]=None
     return cache[p]
 
-bad=[]; checked=Counter(); badc=Counter(); unresolved=[]
+bad=[]; checked=Counter(); badc=Counter(); unresolved=[]; unreadable=[]
 for f in sorted(glob.glob('genes/*/*/*-ai-review.yaml')):
     try: d=yaml.safe_load(open(f,encoding='utf-8'))
     except Exception: continue
@@ -53,13 +53,19 @@ for f in sorted(glob.glob('genes/*/*/*-ai-review.yaml')):
             # nor counted, so "N checked" reads as if it were the whole population.
             unresolved.append((f,rid)); continue
         kind = 'uniprot' if real.endswith('-uniprot.txt') else ('deep-research' if 'deep-research' in real else ('goa' if real.endswith('.tsv') else 'other-md'))
-        checked[kind]+=1
         b=body(real)
-        if b is not None and norm(txt) not in b:
+        if b is None:
+            # Resolvable but unreadable. Counting it as checked would inflate coverage the
+            # same way an unresolvable path does, just one level down: nothing was compared.
+            unreadable.append((f,rid)); continue
+        checked[kind]+=1
+        if norm(txt) not in b:
             badc[kind]+=1; bad.append((f,rid,kind,(txt or '')[:100]))
 print('checked by type:',dict(checked))
-print('UNRESOLVED file: paths (not checked, not counted above):',len(unresolved))
+print('UNRESOLVED file: paths (path does not exist; not compared, not counted above):',len(unresolved))
 for f,rid in unresolved[:10]: print('   ',f,rid)
+print('UNREADABLE file: paths (path exists but could not be read; likewise not counted):',len(unreadable))
+for f,rid in unreadable[:10]: print('   ',f,rid)
 print('MISMATCH by type:',dict(badc))
 print()
 print('=== deep-research mismatches: how many are narrated paraphrase? ===')
@@ -68,4 +74,11 @@ pat=re.compile(r'^(falcon|the falcon|deep research|this file|the file|synthesis|
 narr=[b for b in dr if pat.match((b[3] or '').strip())]
 print(f'  deep-research mismatches: {len(dr)}; starting with a narration word: {len(narr)}')
 for b in narr[:10]: print('   ',b[0].split("/")[2],'|',b[3][:85])
-json.dump(bad, open('reports/file_supporting_text_mismatches.json','w'), indent=1)
+# Self-describing report: the mismatches plus the two populations that were NOT
+# compared, so a reader cannot mistake "checked" for "every file: quote in the repo".
+json.dump({'checked_by_type': dict(checked),
+           'mismatches_by_type': dict(badc),
+           'unresolved_paths': unresolved,
+           'unreadable_paths': unreadable,
+           'mismatches': bad},
+          open('reports/file_supporting_text_mismatches.json','w'), indent=1)

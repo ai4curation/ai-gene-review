@@ -29,9 +29,9 @@ consistent with the selectivity of the eukaryotic TMEM175."].
 Three groups reported proton conduction:
 [PMID:35750034 "Parkinson's disease-risk protein TMEM175 is a proton-activated proton channel in
 lysosomes."], [PMID:35333573 "pH regulates potassium conductance and drives a constitutive proton
-current in human TMEM175."], and [PMID:37390818 "The molecular identity of the lysosomal protein
-responsible for the proton leak has been elusive until a recent study reported that the
-transmembrane protein 175 (TMEM175) is the bona fide lysosomal proton leak channel"].
+current in human TMEM175."], and [PMID:37390818 "Upon changing the bath pH to acidic
+conditions, TMEM175 becomes a proton-activated proton channel conducting a higher inward proton
+current at lower pH (Figure 2C)."].
 
 This is directly challenged in 2026:
 [PMID:41134537 "Thus, we conclude that the primary function of lysosomal TMEM175 is to conduct K+,
