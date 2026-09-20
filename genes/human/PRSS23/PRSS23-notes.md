@@ -91,9 +91,12 @@ UniProt: signal peptide 1-19, N-glycosylation sequons at Asn93 and Asn207, phosp
 109 by FAM20C (the basis of the Reactome `GO:0005788` ER-lumen row), `SUBCELLULAR
 LOCATION: Secreted`.
 
-- `GO:0005576` extracellular region (IEA, SubCell mapping) — ACCEPT; now directly
-  demonstrated by endogenous tagging. I checked `GO:0005615` "extracellular space" as a
-  more specific replacement and it is **obsolete**, so `GO:0005576` stays.
+- `GO:0005576` extracellular region (IEA, SubCell mapping) — MODIFY to `GO:0005615`
+  "extracellular space"; now directly demonstrated by endogenous tagging, and recovery of
+  the mature fragment from conditioned media places it in extracellular fluid specifically.
+  (An earlier draft of this note claimed `GO:0005615` was obsolete and kept the parent on
+  that basis. That was wrong — the term is live; `cache/go/terms.csv` resolves it and it is
+  in current use across the repo.)
 - `GO:0005788` ER lumen (TAS, Reactome R-HSA-8952289 "FAM20C phosphorylates FAM20C
   substrates") — real but transit-route only; non-core.
 - `GO:0070062` extracellular exosome (HDA, PMID:19199708, parotid-gland exosome MudPIT) —
