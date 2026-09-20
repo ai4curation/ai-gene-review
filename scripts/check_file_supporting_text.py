@@ -39,7 +39,7 @@ def body(p):
         except Exception: cache[p]=None
     return cache[p]
 
-bad=[]; checked=Counter(); badc=Counter()
+bad=[]; checked=Counter(); badc=Counter(); unresolved=[]
 for f in sorted(glob.glob('genes/*/*/*-ai-review.yaml')):
     try: d=yaml.safe_load(open(f,encoding='utf-8'))
     except Exception: continue
@@ -47,13 +47,19 @@ for f in sorted(glob.glob('genes/*/*/*-ai-review.yaml')):
     for rid,txt in pairs:
         if not isinstance(rid,str) or not rid.startswith('file:'): continue
         p=rid[5:]; real=next((c for c in (p,os.path.join('genes',p)) if os.path.exists(c)),None)
-        if real is None: continue
+        if real is None:
+            # A file: reference whose path does not resolve is its own defect, and silently
+            # skipping it also inflates the apparent coverage: the quote is neither checked
+            # nor counted, so "N checked" reads as if it were the whole population.
+            unresolved.append((f,rid)); continue
         kind = 'uniprot' if real.endswith('-uniprot.txt') else ('deep-research' if 'deep-research' in real else ('goa' if real.endswith('.tsv') else 'other-md'))
         checked[kind]+=1
         b=body(real)
         if b is not None and norm(txt) not in b:
             badc[kind]+=1; bad.append((f,rid,kind,(txt or '')[:100]))
 print('checked by type:',dict(checked))
+print('UNRESOLVED file: paths (not checked, not counted above):',len(unresolved))
+for f,rid in unresolved[:10]: print('   ',f,rid)
 print('MISMATCH by type:',dict(badc))
 print()
 print('=== deep-research mismatches: how many are narrated paraphrase? ===')
