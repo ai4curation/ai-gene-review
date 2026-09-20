@@ -232,12 +232,35 @@ Running the project's `NEW` discipline over the candidates:
   as a `suggested_questions` item about whether a "homeoprotein transfer" representation
   exists, than asserted as human involvement.
 - **`GO:0021999 neural plate anterior/posterior regionalization`.** This is the term the
-  new paper is about and it is *not* on OTX2. Comparator check: the term's annotations
-  are dominated by signalling components rather than the regional selector TFs, and
-  OTX2 already carries forebrain/midbrain development. Decided the honest move is to
-  propose it in `proposed_new_terms` with the reasoning exposed, rather than assert it —
-  and to carry the claim in the module instead, where a developmental program is the
-  right unit.
+  new paper is nominally about, and it is *not* on OTX2. Comparator check settles it
+  against proposing: in mammals the term is annotated to CELSR2, NOG and SSBP3 (all IEA),
+  and its experimental annotations are zebrafish `axin1`, `bptf`, `smad2`, `sfpq`,
+  `sbno1` and `gsc` — morphogen and chromatin machinery, not regional selector
+  transcription factors. A systematic absence across species and MODs is a convention, not
+  a gap. The claim belongs in the module, where a developmental program is the right unit.
+- **`GO:0009952 anterior/posterior pattern specification`.** Proposed, then withdrawn. The
+  comparator evidence was good — mouse Otx2 carries it by both IMP and IGI, as do Hoxa1
+  (IMP, IGI) and, via descendants, Gbx2 (`GO:0030917`) and Six3 (`GO:0021797`), while the
+  human orthologues GBX2, SIX3, EN1 and HOXA1 have none, which reads as a species artefact
+  rather than a convention. The redundancy check is what killed it: human OTX2 already
+  carries `GO:0090009 primitive streak formation` by ISS, and `GO:0090009` is a
+  **descendant** of `GO:0009952`. Proposing it would have added an ancestor of an existing
+  annotation, which the project rules reject outright. Worth recording because the
+  justification was otherwise complete and read as convincing — the ancestry check was the
+  only thing standing between it and a redundant assertion.
+- **`GO:0021978 telencephalon regionalization`.** Mouse Otx2 carries it by IMP. Rejected on
+  the same ground: it is a descendant of `GO:0030900 forebrain development`, which human
+  OTX2 already has.
+- **`GO:0030917 midbrain-hindbrain boundary development` — this one survived, and is
+  proposed.** The claim is narrower and better grounded than the AP-patterning one: the
+  organizer forms *at* the OTX2 caudal border, and moving that border with ectopic GBX2
+  moves the organizer [PMID:10490024]. So OTX2 does part of the work of positioning the
+  boundary rather than being merely required nearby. Comparator check is favourable rather
+  than merely neutral — GO:0030917 is annotated across the whole MHB gene set (mouse Gbx2,
+  Fgf8, Wnt1 all by IMP) *and* to an OTX orthologue, zebrafish `otx2a`, by IGI, so GO does
+  not withhold it from this class of gene. Redundancy check passes: GO:0030900 and
+  GO:0030901 are siblings of GO:0030917 under GO:0007420 brain development, not ancestors
+  of it.
 - **Anything medulloblastoma.** Oncogenic re-expression (PMID:21964830, PMID:28213356,
   PMID:32686664, PMID:39025928) is disease biology, not normal gene function. The
   chromatin/enhancer work (PMID:28213356) and the LASR/splicing work (PMID:39025928) are
