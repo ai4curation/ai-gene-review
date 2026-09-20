@@ -31,6 +31,18 @@ def walk(o, out):
 
 cache={}
 def body(p):
+    """Return the normalized text of `p`, or None if it could not be read.
+
+    Note for anyone reading `unreadable_paths` in the report: this opens with
+    errors='replace', so a decoding problem never raises - malformed bytes become
+    U+FFFD and flow through as ordinary text. Only a genuine I/O failure (missing
+    permissions, a file that disappears mid-run) reaches the except branch. So an
+    empty `unreadable_paths` means "nothing failed to open", NOT "every file
+    decoded cleanly"; a lossily-decoded file is counted as checked and, if its
+    mojibake happens to fall inside a quoted span, could even be scored a mismatch.
+    Making that branch diagnostic rather than defensive would mean counting U+FFFD
+    after the read, which is deliberately not done here.
+    """
     if p not in cache:
         try:
             t=open(p,encoding='utf-8',errors='replace').read()
@@ -76,7 +88,10 @@ print(f'  deep-research mismatches: {len(dr)}; starting with a narration word: {
 for b in narr[:10]: print('   ',b[0].split("/")[2],'|',b[3][:85])
 # Self-describing report: the mismatches plus the two populations that were NOT
 # compared, so a reader cannot mistake "checked" for "every file: quote in the repo".
-json.dump({'checked_by_type': dict(checked),
+json.dump({'_note': ("unreadable_paths lists files that failed to OPEN. Reads use "
+                     "errors='replace', so a decoding problem never raises: an empty list "
+                     "does not mean every file decoded cleanly."),
+           'checked_by_type': dict(checked),
            'mismatches_by_type': dict(badc),
            'unresolved_paths': unresolved,
            'unreadable_paths': unreadable,
