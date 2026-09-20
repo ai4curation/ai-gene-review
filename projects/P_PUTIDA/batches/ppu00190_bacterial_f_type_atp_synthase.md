@@ -59,5 +59,14 @@ subunit annotons that directly perform them.
 
 ## Evidence
 
-- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__bacterial-f-type-atp-synthase__ppu00190-deep-research-openscientist.md)
 - `modules/bacterial_f_type_atp_synthase.yaml`
+- Per-gene UniProtKB records and QuickGO snapshots under `genes/PSEPK/atp*/`
+
+No OpenScientist module/pathway/taxon report has been generated for this batch
+yet, so no deep-research link is given. The subunit reviews below rest on the
+reviewed UniProtKB records — all eight are HAMAP-Rule annotated (`MF_01346`
+atpA, `MF_01393` atpB, `MF_00530` atpC, `MF_01347` atpD, `MF_01396` atpE,
+`MF_01398` atpF, `MF_00815` atpG, `MF_01416` atpH) — and on the GOA snapshots;
+none of them cite primary literature.
+Generating the deep research and grounding the mechanistic claims in PMIDs
+remains open work for this batch.
