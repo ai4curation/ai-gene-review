@@ -585,13 +585,15 @@ references.** Quotes attributed to `file:` references — deep-research reports,
 GOA tables — have never been checked at all.
 
 A repo-wide scan (`scripts/check_file_supporting_text.py`, output in
-`reports/file_supporting_text_mismatches.json`) checked **55,433** `file:` supporting_text entries.
+`reports/file_supporting_text_mismatches.json`) checked **59,154** `file:` supporting_text entries
+(re-run after merging `main`; an earlier run over the smaller pre-merge corpus reported 55,433).
+No cited `file:` path failed to resolve.
 Raw mismatch counts overstate the problem and should not be quoted as a fabrication count: UniProt
 `.txt` records carry two-letter line-prefix codes that break substring matching (stripped in the
 script), and genuine benign cases remain — smart quotes, ellipses, quotes stitched across
 non-contiguous lines.
 
-The unambiguous subset is the one worth acting on: **1,042 entries whose "quote" begins with a
+The unambiguous subset is the one worth acting on: **970 entries whose "quote" begins with a
 narration word** such as *"Falcon report summarizes..."* or *"Falcon deep research supports..."*.
 These cannot be verbatim source text by construction. Spot-checked: the ABI1 deep-research file
 contains **zero** occurrences of the string "Falcon", yet ABI1's review carries several
