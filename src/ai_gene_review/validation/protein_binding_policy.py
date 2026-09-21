@@ -34,8 +34,10 @@ PROTEIN_BINDING = "GO:0005515"
 #: ``NEW`` is deliberately absent. Every other flagged action mislabels an annotation GOA
 #: already made; ``NEW`` *proposes a fresh* bare protein-binding annotation, which the root
 #: ``CLAUDE.md`` rules out ("Avoid the term ``protein binding``... Instead find a more
-#: informative MF term"). The legacy-backlog argument does not apply either: three rows
-#: repo-wide do this.
+#: informative MF term"). The legacy-backlog argument does not apply either: ten rows
+#: repo-wide do this (9INFA/M2, ACET2/ancA, ANOGA/D7L2, BACSU/fliK, BACSU/fliW, BACSU/fliY,
+#: CHLRE/LCI5, METTP/gatC, MYCTU/Rv0311, worm/mks-1), counted row-by-row rather than by
+#: grepping files.
 COMPLIANT_ACTIONS = frozenset({"MODIFY", "REMOVE", "UNDECIDED", "PENDING"})
 
 #: Why each non-compliant action is wrong, phrased so the message is actionable.
@@ -114,16 +116,26 @@ def check_protein_binding_policy(data: Dict[str, Any], report) -> None:
     from ai_gene_review.validation.validation_report import ValidationSeverity
 
     for index, action, explanation in iter_protein_binding_violations(data):
-        report.add_issue(
-            ValidationSeverity.WARNING,
-            f"GO:0005515 uses action {action}: {explanation}",
-            path=f"existing_annotations[{index}].review.action",
-            suggestion=(
+        if action == "NEW":
+            # MODIFY/REMOVE/UNDECIDED are all incoherent for a row that proposes a new
+            # annotation; the only coherent remedies are a better term or no row at all.
+            suggestion = (
+                "Propose a specific molecular function the evidence supports instead, or "
+                "drop the proposed row -- a bare protein-binding annotation adds no "
+                "functional information."
+            )
+        else:
+            suggestion = (
                 "Use MODIFY with an evidence-backed replacement term when the cited paper "
                 "supports a more informative molecular function; otherwise REMOVE, noting "
                 "that removal does not mean the interaction is false. Use UNDECIDED when "
                 "the evidence cannot be adjudicated."
-            ),
+            )
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            f"GO:0005515 uses action {action}: {explanation}",
+            path=f"existing_annotations[{index}].review.action",
+            suggestion=suggestion,
             validation_category="BestPractices",
             check_type="protein_binding_policy",
         )

@@ -80,9 +80,21 @@ def test_new_proposing_bare_protein_binding_is_flagged():
     """``NEW`` differs in kind from the others and is still not compliant.
 
     The other flagged actions mislabel an annotation GOA already made; ``NEW`` proposes a
-    *fresh* bare protein-binding annotation, which CLAUDE.md rules out. Only three rows
-    repo-wide do this, so the legacy-backlog argument for leniency does not apply.
+    *fresh* bare protein-binding annotation, which CLAUDE.md rules out. Ten rows repo-wide
+    do this, so the legacy-backlog argument for leniency does not apply.
     """
     (_, action, explanation) = next(iter(iter_protein_binding_violations(doc("NEW"))))
     assert action == "NEW"
     assert "more informative MF term" in explanation
+
+
+def test_new_rows_get_a_coherent_suggestion():
+    """MODIFY/REMOVE/UNDECIDED are meaningless advice for a row that proposes an annotation."""
+    from ai_gene_review.validation.protein_binding_policy import check_protein_binding_policy
+    from ai_gene_review.validation.validation_report import ValidationReport
+
+    report = ValidationReport(file_path="t.yaml", is_valid=True)
+    check_protein_binding_policy(doc("NEW"), report)
+    (issue,) = [i for i in report.issues if i.check_type == "protein_binding_policy"]
+    assert "drop the proposed row" in (issue.suggestion or "")
+    assert "REMOVE" not in (issue.suggestion or "")
