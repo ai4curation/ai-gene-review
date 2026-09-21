@@ -11,6 +11,7 @@ import pytest
 
 from ai_gene_review.validation.folded_scalar import (
     FoldedHyphenSplit,
+    can_precede_hyphen,
     find_folded_hyphen_splits,
 )
 
@@ -111,3 +112,29 @@ def test_multiple_splits_are_all_reported():
         )
     )
     assert [h.intended for h in hits] == ["loss-of-function", "gain-of-function"]
+
+
+@pytest.mark.parametrize(
+    "tail,intended",
+    [
+        ("(Rab GTPase)-", "GTPase)-dependent"),
+        ("24(S)-", "24(S)-dependent"),
+        ("5-fluoro-2'-", "5-fluoro-2'-dependent"),
+    ],
+)
+def test_closing_punctuation_before_the_hyphen_is_still_a_split(tail, intended):
+    """Compounds ending in a bracket or apostrophe were silently dropped.
+
+    ``tail[-2].isalnum()`` excluded em-dashes, which was its documented purpose, but also
+    excluded ``)-``, ``]-`` and ``'-`` -- 16 live sites including VAM10's
+    ``(Rab GTPase)-dependent`` and CYP46A1's ``24(S)-hydroxylation``, both rendering with
+    the spurious space today.
+    """
+    (hit,) = list(find_folded_hyphen_splits(block(f"the {tail}", "dependent step")))
+    assert hit.intended == intended
+
+
+def test_a_hyphen_cannot_precede_the_hyphen():
+    """This is what keeps em-dashes out, and it must stay true."""
+    assert not can_precede_hyphen("-")
+    assert can_precede_hyphen("a") and can_precede_hyphen(")")

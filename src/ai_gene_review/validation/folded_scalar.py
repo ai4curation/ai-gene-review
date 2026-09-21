@@ -15,6 +15,16 @@ across lines and shipped ``A-kinase- anchoring`` to the site. The reflow had bee
 justified as whitespace-only, which is exactly why nobody re-read the prose.
 
 A line ending in ``--`` is an em-dash and folds correctly, so it is excluded.
+
+**Scope.** Only ``>``-style folded scalars are scanned. Plain and double-quoted multi-line
+scalars fold newlines to spaces identically, so the same defect is invisible here -- but
+detecting it means tracking implicit-scalar continuation, which is a different parse
+problem and is left out deliberately rather than overlooked.
+
+Continuations that begin with ``(`` or ``[`` are also left out, because the class is
+genuinely mixed: ``3-`` / ``(methylsulfanyl)propylamine`` is a split, while ``alpha-`` /
+``(Tay-Sachs) or beta- (Sandhoff)`` is deliberate suspended-hyphen style where the space is
+wanted. Reporting both would make the check untrustworthy for the sake of a few true hits.
 """
 
 from __future__ import annotations
@@ -34,6 +44,23 @@ BLOCK_HEAD = re.compile(r"^(\s*(?:-\s+)?)[\w-]+:\s*>[-+]?\s*$")
 #: after the hyphen is intended there. Without this, the check fires on real prose and a
 #: check that cries wolf gets switched off.
 SUSPENDED_HYPHEN_FOLLOWERS = frozenset({"and", "or", "nor", "but", "to", "through", "versus", "vs"})
+
+
+#: Closing punctuation that can end a compound's first half, alongside alphanumerics:
+#: ``(Rab GTPase)-dependent``, ``24(S)-hydroxylation``, ``5-fluoro-2\'-deoxyuridine``.
+CLOSING_PUNCTUATION = ")]}'\u2019"
+
+
+def can_precede_hyphen(ch: str) -> bool:
+    """True when *ch* can legitimately end the first half of a split compound.
+
+    A hyphen is excluded, which is what keeps em-dashes out -- any tail ending ``--`` has
+    a hyphen in this position.
+
+    >>> [can_precede_hyphen(c) for c in "a4)'-"]
+    [True, True, True, True, False]
+    """
+    return ch.isalnum() or ch in CLOSING_PUNCTUATION
 
 
 @dataclass(frozen=True)
@@ -66,9 +93,11 @@ class FoldedHyphenSplit:
 def find_folded_hyphen_splits(text: str) -> Iterator[FoldedHyphenSplit]:
     """Yield every mid-compound fold in *text*.
 
-    A real split needs an alphanumeric immediately before the trailing hyphen and a
-    lowercase word after it -- that combination is a broken compound rather than a list
-    dash or a deliberate trailing hyphen:
+    A real split needs a word character or closing punctuation immediately before the
+    trailing hyphen, and an alphanumeric continuation after it -- that combination is a
+    broken compound rather than a list dash or a deliberate trailing hyphen. The
+    continuation is deliberately *not* required to be lowercase: ``ER-to-`` / ``Golgi``
+    and ``interleukin-`` / ``6`` are both real splits.
 
         >>> list(find_folded_hyphen_splits("a: >-\\n  the loss-of-\\n  function bit\\n"))
         [FoldedHyphenSplit(line=2, tail='loss-of-', next_word='function')]
@@ -115,11 +144,15 @@ def find_folded_hyphen_splits(text: str) -> Iterator[FoldedHyphenSplit]:
         first = following.split()[0] if following.split() else ""
         if first.rstrip(",;:").lower() in SUSPENDED_HYPHEN_FOLLOWERS:
             continue
-        # The alphanumeric test is what excludes em-dashes: any tail ending in "--" has
-        # "-" in that position, so "an aside -- continues" can never be reported. An
-        # explicit endswith("--") guard was removed as dead code once a mutation test
-        # showed deleting it changed no behaviour.
-        if len(tail) > 1 and tail[-2].isalnum() and first[:1].isalnum():
+        # What must NOT precede the hyphen is another hyphen: any tail ending "--" is an
+        # em-dash, which folds correctly. An explicit endswith("--") guard was removed as
+        # dead code once a mutation test showed deleting it changed nothing.
+        #
+        # Alphanumeric alone was too narrow and silently dropped a live class: compounds
+        # ending in a bracket or apostrophe -- "(Rab GTPase)-dependent", "24(S)-hydroxylation",
+        # "5-fluoro-2'-deoxyuridine" -- 16 sites in this corpus, rendering with the
+        # spurious space today.
+        if len(tail) > 1 and can_precede_hyphen(tail[-2]) and first[:1].isalnum():
             yield FoldedHyphenSplit(line=i + 1, tail=tail, next_word=first)
 
 
