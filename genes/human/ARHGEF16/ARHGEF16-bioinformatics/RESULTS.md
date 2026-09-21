@@ -1,6 +1,6 @@
 # ARHGEF16 bioinformatics — results
 
-Four rerunnable analyses supporting `genes/human/ARHGEF16/ARHGEF16-ai-review.yaml`.
+Five rerunnable analyses supporting `genes/human/ARHGEF16/ARHGEF16-ai-review.yaml`.
 Each derives the repo root rather than hardcoding a worktree path, and each takes
 `--self-test`, which breaks its input or its anchor on purpose and requires every
 guard to fire, with negative controls that must stay silent.
@@ -10,13 +10,14 @@ uv run --with requests python gef_term_structure.py                       # -> g
 uv run --with biopython --with requests python dh_exchange_surface.py     # -> dh_exchange_surface.json
 uv run --with biopython --with requests python residue_mapping.py         # -> residue_mapping.json
 uv run --with requests python retrieval_and_coverage.py                   # -> retrieval_and_coverage.json
+uv run --with requests --with pyyaml python pdz_partner_check.py          # -> pdz_partner_check.json
 ```
 
-All four query live services (the GO API, OLS4, QuickGO, UniProt, PDBe/SIFTS,
+All five query live services (the GO API, OLS4, QuickGO, UniProt, PDBe/SIFTS,
 RCSB, PubMed, Reactome), so their JSON outputs are committed as the record of
 what those services returned on the run that produced the numbers below.
 
-Self-tests at time of writing: 6/6, 10/10, 6/6, 7/7.
+Self-tests at time of writing: 6/6, 10/10, 6/6, 7/7, 7/7.
 
 ---
 
@@ -272,3 +273,41 @@ detect for this protein. Only the uncontroversial `cytosol` term reaches GOA, so
 this is recorded as **provenance on the TAS rows**, not as a GO error; but it is
 the same shape as the ARHGAP11B case, and a reader of the Reactome page is told
 ARHGEF16 activates RhoA.
+
+---
+
+## 5. `pdz_partner_check.py` — the 42-row retype, checked rather than asserted
+
+The review converts 42 of the 57 `GO:0005515 protein binding` rows to
+`GO:0030165 PDZ domain binding`, on the argument that they all report one binding
+determinant — ARHGEF16's C-terminal motif — engaging the partner's PDZ domain.
+That is a testable proposition about 42 UniProt records, so it is tested. The
+script reads the **committed review** rather than a hardcoded list, so it cannot
+drift away from the document it defends.
+
+The motif is confirmed first, since the whole argument rests on it: `Q5VV41` is
+709 aa, ends `...ETDV`, and UniProt annotates `MOTIF 707-709 "PDZ-binding motif"`
+— the motif's last residue is the protein's last residue.
+
+| | rows | partners | PDZ domains |
+|---|---|---|---|
+| retyped to `GO:0030165` | 42 | 37 | **146** |
+| not retyped (generic, plus the 7 `GO:0071889` retypes) | 15 | 11 | **0** |
+
+**Every one of the 37 retyped partners carries at least one PDZ domain**, from
+SNTB2 and MAST2 with one to MPDZ with thirteen and PATJ with ten. And **no
+partner outside the retyped set carries one**: HNRNPH1 has three RRMs, LASP1 a LIM
+and an SH3, BOLL an RRM and a DAZ, TFG a PB1, MAGED1 a MAGE, ELMO2 an ELMO and a
+PH, and SFN, YWHAE, YWHAZ and MAPK1IP1L have no annotated domain at all.
+
+The second direction is the load-bearing one. A lazy "retype everything from the
+big PDZ screen" rule would pass the first check and fail the second, and so would
+a review that retyped the PDZ partners but overlooked one sitting in a different
+reference. The self-test injects a violation into each bucket in turn and requires
+the corresponding guard to fire with its own message, then requires the untouched
+review to pass silently.
+
+The 42 rows come from three references — `PMID:36115835` (37), `PMID:32203420` (3)
+and `PMID:30126976` (2) — and DLG1, SCRIB and SNTB2 each appear in more than one,
+which is the point: the set reports one C-terminal determinant measured
+repeatedly, not 42 independent findings.
