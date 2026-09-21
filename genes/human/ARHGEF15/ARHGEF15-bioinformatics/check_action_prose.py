@@ -27,13 +27,25 @@ HERE = pathlib.Path(__file__).parent
 REVIEW = HERE.parent / "ARHGEF15-ai-review.yaml"
 
 # Verbs that assert the annotation is being kept. Matched case-insensitively on word
-# boundaries. 'retained'/'preserved' are included because a REMOVE row saying the annotation
-# is retained is exactly the contradiction this exists to catch.
-RETENTION = r"\b(retain(?:ed|s)?|keep(?:s|ing)?|kept|left as|not removed|stays?|stayed)\b"
+# boundaries.
+#
+# The first version of this list omitted 'remains', 'preserved' and 'untouched' -- which made
+# ALL FOUR entries of RETENTION_EXEMPT below unreachable, since none of the exempt phrases
+# contained any word the alternation matched. The exemptions were inert, and the mutation test
+# that was supposed to prove them ("a REMOVE row using only exempted phrasings is NOT caught")
+# passed vacuously: it passed because nothing in that sentence was a retention verb at all,
+# not because the exemption suppressed anything. A test that would pass with the feature
+# deleted is not testing the feature. `exempt_is_load_bearing` below now asserts the
+# difference directly.
+RETENTION = (
+    r"\b(retain(?:ed|s)?|keep(?:s|ing)?|kept|left as|not removed|stays?|stayed"
+    r"|remain(?:s|ed|ing)?|preserv(?:e|ed|es)|untouched)\b"
+)
 REMOVAL = r"\b(remov(?:e|ed|al)|discard(?:ed|s)?|delet(?:e|ed))\b"
 
 # Phrases that legitimately use a retention verb on a REMOVE row because they are about
-# something other than the annotation. Each must be specific enough not to be a loophole.
+# something other than the annotation. Each must be specific enough not to be a loophole,
+# and each must actually contain a RETENTION match or it is dead weight (asserted below).
 RETENTION_EXEMPT = [
     r"the IntAct record is untouched",
     r"partner identity is preserved",
@@ -121,6 +133,25 @@ def self_test() -> int:
     for name, d, should_fire in cases:
         got = bool(check(d))
         expect(name, got == should_fire, f"fired={got}")
+
+    # Every exemption must be reachable: it has to contain something RETENTION matches, or it
+    # suppresses nothing and is dead weight. This is the check that was missing.
+    dead = [e for e in RETENTION_EXEMPT if not re.search(RETENTION, e, flags=re.I)]
+    expect("every RETENTION_EXEMPT entry is reachable", not dead, str(dead))
+
+    # And each exemption must be load-bearing: the same sentence must fire without it.
+    def fires_without_exemptions(sentence: str) -> bool:
+        scan = sentence
+        return bool(re.search(RETENTION, scan, flags=re.I))
+
+    for e in RETENTION_EXEMPT:
+        sentence = f"Removed. {e.replace(chr(92), '')} and nothing else."
+        suppressed = not bool(check(mutate("REMOVE", "", sentence)))
+        expect(
+            f"exemption is load-bearing: {e[:40]!r} suppresses a match that would otherwise fire",
+            suppressed and fires_without_exemptions(sentence),
+            f"suppressed={suppressed} would_fire={fires_without_exemptions(sentence)}",
+        )
 
     print()
     if failures:
