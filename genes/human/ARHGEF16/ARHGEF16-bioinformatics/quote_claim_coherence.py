@@ -144,8 +144,61 @@ def check(doc: dict) -> dict[str, object]:
     return {"checked": rows, "violations": violations}
 
 
+def file_quotes(doc: dict) -> list[dict]:
+    """Every ``file:`` supporting_text in the review, with its resolved path."""
+    out: list[dict] = []
+
+    def walk(o):
+        if isinstance(o, dict):
+            rid, txt = o.get("reference_id"), o.get("supporting_text")
+            if isinstance(rid, str) and rid.startswith("file:") and txt:
+                out.append({"reference_id": rid, "supporting_text": txt})
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+
+    walk(doc)
+    return out
+
+
+def check_file_quotes(doc: dict) -> dict[str, object]:
+    """Verify ``file:`` quotes against their source. CI never does this.
+
+    ``conf/reference_validator_config.yaml`` lists ``file`` under
+    ``skip_prefixes``, so a ``file:`` ``supporting_text`` is not checked against
+    anything -- a quote from a repo artifact can be paraphrased, stale, or simply
+    invented and every validator here stays green. ``reference_base_dir`` is
+    ``genes``, so ``file:human/X/...`` resolves under ``genes/``.
+    """
+    base = repo_root() / "genes"
+    verified, bad = [], []
+    for q in file_quotes(doc):
+        path = base / q["reference_id"][len("file:"):]
+        if not path.exists():
+            bad.append({**q, "problem": f"no such file: {path}"})
+        elif q["supporting_text"] not in path.read_text():
+            bad.append({**q, "problem": "quote is not a verbatim substring of the file"})
+        else:
+            verified.append(q)
+    return {"n_verified": len(verified), "violations": bad}
+
+
 def run() -> dict[str, object]:
     doc = yaml.safe_load(review_path().read_text())
+
+    fq = check_file_quotes(doc)
+    if not fq["n_verified"]:
+        raise RuntimeError(
+            "no file: quote was verified; the extractor found nothing and would "
+            "pass vacuously"
+        )
+    if fq["violations"]:
+        lines = [f"{v['reference_id']}: {v['problem']} -- {v['supporting_text'][:70]!r}"
+                 for v in fq["violations"]]
+        raise RuntimeError("file: quote not verbatim:\n  " + "\n  ".join(lines))
+
     result = check(doc)
     if not result["checked"]:
         raise RuntimeError(
@@ -162,6 +215,7 @@ def run() -> dict[str, object]:
     return {
         "n_rows_with_a_checkable_gtpase_claim": len(result["checked"]),
         "n_violations": 0,
+        "n_file_quotes_verified_verbatim": fq["n_verified"],
         "rows": result["checked"],
     }
 
@@ -220,6 +274,35 @@ def self_test() -> int:
         checks.append((
             "the same row is clean once the right quote is restored",
             "PASS" if not fired else f"FAIL {fired}",
+        ))
+
+    # 4b. The file: quote verifier must reject a quote that is not in the file,
+    #     and must accept the real ones. CI skips file: entirely, so this guard is
+    #     the only thing standing between a fabricated artifact quote and green.
+    fq = check_file_quotes(doc)
+    checks.append((
+        "every file: quote in the review is verbatim in its source",
+        "PASS" if fq["n_verified"] and not fq["violations"]
+        else f"FAIL {fq['violations'][:2]}",
+    ))
+    tampered = copy.deepcopy(doc)
+    hit = 0
+    for a in tampered.get("existing_annotations") or []:
+        for sb in (a.get("review") or {}).get("supported_by") or []:
+            if str(sb.get("reference_id", "")).startswith("file:"):
+                sb["supporting_text"] = "a sentence that is not in the artifact at all"
+                hit += 1
+                break
+        if hit:
+            break
+    checks.append((
+        "file: tamper anchor matched exactly once",
+        "PASS" if hit == 1 else f"FAIL matched {hit}",
+    ))
+    if hit == 1:
+        checks.append((
+            "a fabricated file: quote is rejected",
+            "PASS" if check_file_quotes(tampered)["violations"] else "FAIL not detected",
         ))
 
     # 5. The word-boundary matcher must not be fooled by lookalikes. "RhoGEF"

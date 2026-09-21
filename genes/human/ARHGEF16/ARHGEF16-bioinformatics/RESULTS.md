@@ -18,7 +18,7 @@ Five of the six query live services (the GO API, OLS4, QuickGO, UniProt, PDBe/SI
 RCSB, PubMed, Reactome), so their JSON outputs are committed as the record of
 what those services returned on the run that produced the numbers below.
 
-Self-tests at time of writing: 6/6, 10/10, 6/6, 7/7, 8/8, 8/8. The last two were
+Self-tests at time of writing: 6/6, 10/10, 6/6, 7/7, 9/9, 11/11. The last two were
 mutation-tested by breaking them on purpose and running the suite; see the final
 section.
 
@@ -292,16 +292,31 @@ The motif is confirmed first, since the whole argument rests on it: `Q5VV41` is
 709 aa, ends `...ETDV`, and UniProt annotates `MOTIF 707-709 "PDZ-binding motif"`
 — the motif's last residue is the protein's last residue.
 
-| | rows | partners | PDZ domains |
-|---|---|---|---|
-| retyped to `GO:0030165` | 42 | 37 | **146** |
-| not retyped (generic, plus the 7 `GO:0071889` retypes) | 15 | 11 | **0** |
+| | rows | accessions | distinct proteins | PDZ domains |
+|---|---|---|---|---|
+| PDZ side: 42 retyped + 1 GOA already types `GO:0030165` | 43 | 38 | 38 | **147** |
+| not on the PDZ side (generic, plus the 7 `GO:0071889` retypes) | 15 | 11 | **10** | **0** |
 
-**Every one of the 37 retyped partners carries at least one PDZ domain**, from
-SNTB2 and MAST2 with one to MPDZ with thirteen and PATJ with ten. And **no
-partner outside the retyped set carries one**: HNRNPH1 has three RRMs, LASP1 a LIM
-and an SH3, BOLL an RRM and a DAZ, TFG a PB1, MAGED1 a MAGE, ELMO2 an ELMO and a
-PH, and SFN, YWHAE, YWHAZ and MAPK1IP1L have no annotated domain at all.
+**Every partner on the PDZ side carries at least one PDZ domain**, from SNTB2 and
+MAST2 with one to MPDZ with thirteen and PATJ with ten. And **no partner outside
+that set carries one**: HNRNPH1 has three RRMs, LASP1 a LIM and an SH3, BOLL an
+RRM and a DAZ, TFG a PB1, MAGED1 a MAGE, ELMO2 an ELMO and a PH, and SFN, YWHAE,
+YWHAZ and MAPK1IP1L have no annotated domain at all.
+
+Two corrections a reviewer prompted, both kept visible because each was a way the
+table could have misled:
+
+- **Accessions are not proteins.** The eleven outside the PDZ side are **ten**
+  distinct proteins: TFG appears twice, as the reviewed `Q92734` and the
+  unreviewed `Q05BK6`. The script now reports both counts and names the
+  duplicated symbol, so "11 partners" cannot be read as eleven proteins.
+- **The panel skipped GOA's own verdict.** The `GO:0030165` row GOA already
+  carries — TAX1BP3, from `PMID:21139582` — was in neither bucket, because the
+  partition only looked at `GO:0005515` rows. That excluded the single partner the
+  ontology has already adjudicated, which is the strongest available positive: if
+  the classifier disagreed with GOA there, the classifier would be what is wrong.
+  TAX1BP3 is now in the panel, carries one PDZ domain, and the self-test asserts
+  its presence so it cannot silently drop out again.
 
 The second direction is the load-bearing one. A lazy "retype everything from the
 big PDZ screen" rule would pass the first check and fail the second, and so would
@@ -371,23 +386,25 @@ the suite, not by reasoning about what would happen. Every mutation anchor was
 asserted to match exactly once, and every restore was verified by SHA-256 against
 the original file.
 
-`pdz_partner_check.py`, baseline 8/8:
+`pdz_partner_check.py`, baseline **9/9**:
 
 | mutation | result | checks that fired |
 |---|---|---|
-| classifier keys on the gene name, not the domain list | 4/8 | name-independence; SCRIB; reverse guard; committed review |
-| classifier always says yes | 3/8 | name-independence; SCRIB; HNRNPH1; forward guard; committed review |
-| drop the reverse guard | 7/8 | PDZ partner outside the retyped set |
-| drop the forward guard | 7/8 | non-PDZ partner inside the retyped set |
+| classifier keys on the gene name, not the domain list | **5/9** | name-independence; SCRIB; reverse guard; committed review |
+| classifier always says yes | **4/9** | name-independence; SCRIB; HNRNPH1; forward guard; committed review |
+| drop the reverse guard | 8/9 | PDZ partner outside the retyped set |
+| drop the forward guard | 8/9 | non-PDZ partner inside the retyped set |
+| revert the partition to skip rows GOA already types `GO:0030165` | 8/9 | TAX1BP3 is inside the panel |
 
-`quote_claim_coherence.py`, baseline 8/8:
+`quote_claim_coherence.py`, baseline **11/11**:
 
 | mutation | result | checks that fired |
 |---|---|---|
-| never record a violation | 7/8 | the original bug is detected when reintroduced |
-| claim extraction returns nothing | 5/8 | extractor finds rows; regression; restored run |
-| `RhoG` matched as a substring, so `RhoGEF` counts | 7/8 | substring-lookalike matcher |
-| drop `has_input` from the claim side | 7/8 | extractor finds rows |
+| never record a violation | 10/11 | the original bug is detected when reintroduced |
+| claim extraction returns nothing | **8/11** | extractor finds rows; regression; restored run |
+| `RhoG` matched as a substring, so `RhoGEF` counts | 10/11 | substring-lookalike matcher |
+| drop `has_input` from the claim side | 10/11 | extractor finds rows |
+| `file:` quote verifier stops comparing against the file | 10/11 | a fabricated `file:` quote is rejected |
 
 One of these is the reason the section-5 self-test was rewritten. Its original
 name-independence check asserted `has_pdz("Q9H5P4") is True` — and PDZD7 is *named*
@@ -395,4 +412,23 @@ for PDZ, so a name-keyed classifier satisfies it too. The check could not fail f
 the reason it was named for. Replacing it with three hand-built records — a
 protein named PDZD99 whose only domain is an RRM, one with a PDZ domain and an
 unrelated name, and one whose PDZ appears under the wrong feature type — is what
-makes the first row of the table above read 4/8 instead of 8/8.
+makes the first row of the table above report a failure at all.
+
+Two further notes on how these numbers were obtained, since a mutation table is
+itself a claim. Each anchor was asserted to match **exactly once** before being
+applied — a zero-match anchor "passes" by changing nothing, and a two-match anchor
+silently mutates the wrong line. And each restore was verified by **SHA-256**
+against the original file rather than by re-reading it, because a verification that
+canonicalises whitespace or line endings cannot see the corruption it may have just
+caused. Both runs ended with the file byte-identical to its starting state.
+
+### The `file:` quote gap
+
+`quote_claim_coherence.py` also verifies something else CI cannot: that every
+`file:` `supporting_text` is a verbatim substring of the artifact it cites.
+`conf/reference_validator_config.yaml` lists `file` under `skip_prefixes`, so those
+quotes are checked against **nothing** — a quote from a repo artifact can be
+paraphrased, stale, or simply invented and every validator in the repository stays
+green. This review carries **47** of them, and all 47 verify. The self-test tampers
+with one and requires the rejection, with the tamper anchor asserted to match
+exactly once.

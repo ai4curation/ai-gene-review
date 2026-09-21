@@ -74,15 +74,27 @@ def partition(doc: dict) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
     retyped: dict[str, list[str]] = {}
     kept: dict[str, list[str]] = {}
     for a in doc.get("existing_annotations") or []:
-        if a.get("term", {}).get("id") != GENERIC_TERM:
-            continue
+        term = a.get("term", {}).get("id")
         review = a.get("review") or {}
-        repl = {t.get("id") for t in (review.get("proposed_replacement_terms") or [])}
         accs = [
             s.split(":", 1)[1].split("-")[0]
             for s in (a.get("supporting_entities") or [])
             if s.startswith("UniProtKB:")
         ]
+        if term == RETYPE_TERM:
+            # Rows GOA ALREADY types as PDZ domain binding. Without these the
+            # panel silently skips the one partner the ontology has already
+            # adjudicated (TAX1BP3), which is the strongest available positive:
+            # if the classifier disagreed with GOA here, it would be the
+            # classifier that is wrong.
+            for acc in accs:
+                retyped.setdefault(acc, []).append(
+                    f"{a.get('original_reference_id', '?')} (already {RETYPE_TERM})"
+                )
+            continue
+        if term != GENERIC_TERM:
+            continue
+        repl = {t.get("id") for t in (review.get("proposed_replacement_terms") or [])}
         bucket = retyped if RETYPE_TERM in repl else kept
         for acc in accs:
             bucket.setdefault(acc, []).append(a.get("original_reference_id", "?"))
@@ -175,12 +187,24 @@ def run() -> dict[str, object]:
     if failures:
         raise RuntimeError("partition failure:\n  " + "\n  ".join(failures))
 
+    # Accessions are not proteins: TFG appears twice outside the retyped set, as
+    # the reviewed Q92734 and the unreviewed Q05BK6. Reporting both counts stops
+    # "11 partners" from being read as eleven distinct proteins.
+    def distinct(bucket: dict[str, list[str]]) -> int:
+        return len({seen[a]["symbol"] for a in bucket})
+
     return {
         "target_motif": motif,
         "n_rows_retyped": sum(len(v) for v in retyped.values()),
         "n_partners_retyped": len(retyped),
+        "n_distinct_proteins_retyped": distinct(retyped),
         "n_rows_not_retyped_to_pdz": sum(len(v) for v in kept.values()),
         "n_partners_not_retyped_to_pdz": len(kept),
+        "n_distinct_proteins_not_retyped_to_pdz": distinct(kept),
+        "duplicate_accessions_outside_retyped_set": sorted(
+            {seen[a]["symbol"] for a in kept
+             if sum(1 for b in kept if seen[b]["symbol"] == seen[a]["symbol"]) > 1}
+        ),
         "retyped_partners": {
             acc: {**seen[acc], "references": sorted(set(refs))} for acc, refs in sorted(retyped.items())
         },
@@ -206,6 +230,15 @@ def self_test() -> int:
         ("partition finds both classes",
          "PASS" if retyped and kept else f"FAIL {len(retyped)}/{len(kept)}")
     )
+
+    # The row GOA ALREADY types as GO:0030165 must be inside the panel, not
+    # skipped. TAX1BP3 is the one partner the ontology has already adjudicated,
+    # so excluding it would mean the check never tests itself against GOA's own
+    # verdict -- and it was excluded until a reviewer pointed it out.
+    checks.append((
+        "GOA's own GO:0030165 partner (TAX1BP3) is inside the panel",
+        "PASS" if "O14907" in retyped else "FAIL O14907 absent from the retyped set",
+    ))
 
     # 1. POSITIVE: a canonical PDZ scaffold must be detected.
     d = has_pdz("Q14160")  # SCRIB
