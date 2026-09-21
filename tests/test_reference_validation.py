@@ -132,8 +132,20 @@ def test_reference_finding_supporting_text_is_validated(tmp_path):
     assert quote_errors[0].path == "references[0].findings[1].supporting_text"
 
 
-def test_abstract_only_finding_mismatch_is_warning(tmp_path):
-    """A quote absent from an abstract-only cache does not block validation."""
+def test_abstract_only_undeclared_finding_mismatch_is_error(tmp_path):
+    """An *undeclared* quote absent from an abstract-only cache now blocks.
+
+    This reverses the prior behaviour, which this test asserted as a WARNING. The
+    reasoning for the change: the old rule made an unverifiable quote indistinguishable
+    from a verified one, and 47% of the publication cache is abstract-only, so the silent
+    case is common rather than marginal.
+
+    The escape hatch is unchanged and is what keeps this fair -- an author who records
+    ``full_text_unavailable: true`` still gets a WARNING, as
+    ``test_full_text_unavailable_flag_downgrades_mismatch`` and
+    ``test_abstract_only_declared_finding_mismatch_stays_warning`` assert. The error fires
+    only when nobody has said the text is uncached.
+    """
     _write_cached_publication(tmp_path, full_text_available=False)
     review_path = tmp_path / "review.yaml"
     review_path.write_text(
@@ -158,7 +170,7 @@ def test_abstract_only_finding_mismatch_is_warning(tmp_path):
         if issue.check_type == "reference_finding_supporting_text"
     ]
     assert len(quote_issues) == 1
-    assert quote_issues[0].severity == ValidationSeverity.WARNING
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
 
 
 @pytest.mark.parametrize("flag_location", ["reference", "finding"])
@@ -220,8 +232,12 @@ def test_legacy_cache_content_type_is_recognized(
     )
 
 
-def test_legacy_doi_abstract_only_mismatch_is_warning(tmp_path):
-    """A DOI quote absent from a legacy abstract-only cache remains advisory."""
+def test_legacy_doi_abstract_only_undeclared_mismatch_is_error(tmp_path):
+    """Same reversal for a legacy DOI-keyed abstract-only cache.
+
+    The reference prefix does not change the argument: an unverifiable quote that nobody
+    has declared unverifiable is indistinguishable from a checked one.
+    """
     reference_id = "DOI:10.1234/example"
     _write_cached_publication(
         tmp_path,
@@ -237,6 +253,40 @@ def test_legacy_doi_abstract_only_mismatch_is_warning(tmp_path):
                     "supporting_text": "A sentence available only in full text.",
                 },
                 reference_id=reference_id,
+            )
+        )
+    )
+
+    report = validate_gene_review(
+        review_path,
+        check_goa=False,
+        publications_dir=tmp_path / "publications",
+    )
+    quote_issues = [
+        issue
+        for issue in report.issues
+        if issue.check_type == "reference_finding_supporting_text"
+    ]
+    assert len(quote_issues) == 1
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
+
+
+def test_abstract_only_declared_finding_mismatch_stays_warning(tmp_path):
+    """Declaring the limitation keeps it advisory, which is what makes the error fair.
+
+    Without this the change would punish an author for cache state they do not control;
+    with it, the error fires only on the silent case and always has a remedy.
+    """
+    _write_cached_publication(tmp_path, full_text_available=False)
+    review_path = tmp_path / "review.yaml"
+    review_path.write_text(
+        yaml.safe_dump(
+            _finding_quote_review(
+                {
+                    "statement": "Full-text result.",
+                    "supporting_text": "A sentence available only in full text.",
+                    "full_text_unavailable": True,
+                }
             )
         )
     )
