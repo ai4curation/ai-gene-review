@@ -189,9 +189,29 @@ IPI from one reference, PMID:36115835 (Gogl et al., a quantitative fragmentomics
 holdup assay). All **22 of 22** partners carry PDZ domains, and ARHGAP6 ends in
 `...LPETLV`, a canonical class I PDZ-binding motif (`-X-S/T-X-Φ`: T at −2, V at 0).
 
-So these are one binding determinant measured once, not 22 independent findings. They
-are real, but `protein binding` is the least informative MF available and the partners
-are scaffolds rather than substrates. All 22 → `KEEP_AS_NON_CORE`.
+So these are one binding determinant measured once, not 22 independent findings.
+
+**Action: all 22 → `MODIFY`, replacement `GO:0030165 PDZ domain binding`.** The
+repository policy (`.claude/skills/annotation-reviewer/SKILL.md`, Quality Standards,
+added 2026-09-12 in `b1cff30014`) is that `GO:0005515` must not simply be kept:
+`MODIFY` when the cited paper supports a more informative molecular function, and
+otherwise `REMOVE`. An earlier version of this review used `KEEP_AS_NON_CORE`, which
+the policy does not offer; that is corrected here.
+
+`MODIFY` rather than `REMOVE` because the cited paper genuinely does support a more
+informative term. See `RESULTS-binding-evidence.md` (`check_binding_evidence.py`):
+IntAct records **all 22 pairs** as `direct interaction`, detected by `holdup assay`
+(MI:2437) — and for MAST2 and SNX27 additionally by `fps` (MI:0053, fluorescence
+polarization spectroscopy). The assay is a recombinant PDZome library against a
+library of C-terminal PDZ-binding motif peptides, so what was measured is binding
+between ARHGAP6's C-terminal motif and a PDZ domain. `GO:0030165` restates that; it
+does not infer a function from the interaction.
+
+Nothing beyond the binding is asserted — no adaptor, scaffolding, localisation or
+signalling role — because interaction evidence alone would not support one, and the
+policy says so explicitly. Worth recording: the cached full text of PMID:36115835
+**never names ARHGAP6** (the pairs are in the supplementary peptide library), so the
+per-pair evidence comes from IntAct's curated record of that paper, not its prose.
 
 ## 7. What was deliberately NOT proposed
 
@@ -222,7 +242,7 @@ is where most of affinage's content ends up — recorded rather than silently dr
 
 ## 8. Re-running the checks
 
-All four analyses live in `ARHGAP6-bioinformatics/` and each takes `--self-test`,
+All five analyses live in `ARHGAP6-bioinformatics/` and each takes `--self-test`,
 which mutation-tests its guards (every guard must fire with its expected message,
 every negative control must stay silent):
 
@@ -231,10 +251,11 @@ cd genes/human/ARHGAP6/ARHGAP6-bioinformatics
 uv run check_arginine_finger.py --self-test      && uv run check_arginine_finger.py
 uv run check_goa_uniprot_divergence.py --self-test && uv run check_goa_uniprot_divergence.py
 uv run check_pdz_interactome.py --self-test      && uv run check_pdz_interactome.py
+uv run check_binding_evidence.py --self-test     && uv run check_binding_evidence.py
 uv run check_review_consistency.py --self-test   && uv run check_review_consistency.py
 ```
 
-The first three regenerate their `RESULTS*.md`. The fourth regenerates nothing: it
+The first four regenerate their `RESULTS*.md`. The last regenerates nothing: it
 re-tests this review's own claims against the files — in particular that every
 `file:` `supporting_text` occurs verbatim and exactly once in the file it names,
 which the repository's reference validator does **not** check (it validates quotes
@@ -244,7 +265,7 @@ this notes file and in the PR, so a sentence here cannot quietly stop being true
 Expected output today:
 
 ```
-consistent: 27 file: quotes verbatim and unambiguous, 24 references adjudicated, counted claims hold
+consistent: 49 file: quotes verbatim and unambiguous, 25 references adjudicated, counted claims hold
 ```
 
 ## 9. Other decisions worth recording
