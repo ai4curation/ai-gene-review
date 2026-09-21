@@ -146,8 +146,12 @@ Of **14 primary experimental papers**:
   (PMID:31469868), and the only published *negative* result (PMID:20810787).
 - **12 have produced no GO annotation of ARHGEF19 in any species.**
 - **1** has produced an ARHGEF19 annotation to anything other than
-  `GO:0005515 protein binding` — PMID:20643356, and that is a mouse genetics
-  paper whose subject is GRHL3.
+  `GO:0005515 protein binding` — PMID:20643356, whose subject is GRHL3 and whose
+  ARHGEF19 annotations are the mouse IMP and the human IGI. Even that paper is
+  under-curated on the human side: its RhoGEF19 knockdown was done in **human**
+  HaCaT keratinocytes, with a scratch-closure readout and a rescue, yet the human
+  gene carries `GO:0042060` only as an IBA projected from the mouse orthologue in
+  the same paper.
 
 The single richest paper on this gene, PMID:18256687 (EMBO J), yielded exactly
 **one** ARHGEF19 annotation: `GO:0005515 protein binding` with RhoA. The same
