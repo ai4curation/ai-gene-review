@@ -27,23 +27,56 @@ functions of Ephexin2 and Ephexin3 remain elusive although they are known to
 activate RhoA (PMID:33597305, full text via PMC7923574 — the locally cached copy
 is abstract-only, so that sentence is not quoted as `supporting_text`).
 
-### Retrieval: everything affinage missed has the same shape
+### Retrieval: what affinage missed, and why
 
 Affinage's trust gates were clear and all eleven of its citations resolve to real
-papers about this gene — its *precision* is fine. Its eleven citations
-nevertheless omit three of the fourteen primary papers plus one commentary, and
-in every case the title does not name the gene:
+papers about this gene — its *precision* is fine. Those eleven nevertheless omit
+three of the fourteen primary papers plus one commentary.
 
-| missed | title | why it matters |
+I first wrote that every miss had the same shape, "the title does not name the
+gene". That is false, and the table I wrote it above contained the counterexample.
+`go_coverage_by_reference.py` now **computes** the answer — it reads each missed
+paper's cached title and matches it against the gene's synonyms — so the claim
+cannot drift again:
+
+| missed | title names the gene? | why it matters |
 |---|---|---|
-| PMID:20643356 | *"Epidermal wound repair is regulated by the planar cell polarity signaling pathway"* | the **only** paper that has produced an informative GO annotation for this gene in any species |
-| PMID:18537266 | *"...regulation of **Tim** and related Dbl-family proteins"* — a paralogue | one of only two papers that assay Wgef autoinhibition directly |
-| PMID:34813497 | *"ARHGEF19 promotes the growth of breast cancer..."* | the third independent MAPK tumour type |
-| PMID:21686262 | *"Grhl3 and **GEF19** in the front rho"* | no `ARHGEF19` or `WGEF` query returns it — the title abbreviates the symbol |
+| PMID:20643356 | **no** — *"Epidermal wound repair is regulated by the planar cell polarity signaling pathway"* | the **only** paper that has produced an informative GO annotation for this gene in any species |
+| PMID:18537266 | **no** — *"...regulation of **Tim** and related Dbl-family proteins"*, a paralogue | one of only two papers that assay Wgef autoinhibition directly |
+| PMID:21686262 | only as `GEF19` — *"Grhl3 and GEF19 in the front rho"* | no `ARHGEF19` or `WGEF` query returns it — the title abbreviates the symbol |
+| PMID:34813497 | **yes** — *"ARHGEF19 promotes the growth of breast cancer in vitro and in vivo by the MAPK pathway"* | the third independent MAPK tumour type — and **no retrieval explanation applies**: the symbol is the first word |
 
-PMID:20643356 is the sharp one: a clean gate on a record that omits the single
-most annotation-productive paper on the gene. Gates certify the citations given,
-not the ones withheld.
+Three of the four have a retrieval story; the fourth does not. That last row is the
+sharper finding rather than a blemish on the generalisation: a record whose gates
+passed omitted a paper whose title begins with the gene symbol, alongside the
+single most annotation-productive paper on the gene. Gates certify the citations
+given, not the ones withheld.
+
+## What the PAINT table actually says
+
+Resolved from `interpro/panther/PTHR12845/PTHR12845-paint.tsv` rather than guessed
+from the family name:
+
+| node | term | taxon | seeds |
+|---|---|---|---|
+| PTN002656129 | GO:0005085 | 2759 (Eukaryota) | mouse Arhgef15 + ARHGEF15, ARHGEF5, ARHGEF16, NGEF |
+| PTN002656129 | GO:0032956 | 2759 (Eukaryota) | ARHGEF15, ARHGEF5, **ARHGEF19 itself** |
+| PTN002656130 | GO:0042060 | 117571 (Euteleostomi) | **mouse Arhgef19 alone** |
+
+Two consequences. The `GO:0032956` IBA includes the target's own accession among
+the seeds — which is the expected shape, not circularity: ARHGEF19's own IGI is
+one of the descendant evidences PAINT used to place the IBD, so it reappears as a
+source of the IBA the gene later receives. It marks that experimental grounding
+exists *on the target*, and the IBA then adds what the IGI cannot — that actin
+regulation is ancestral to PTHR12845 rather than a keratinocyte-specific role
+established once in mouse skin. (CLAUDE.md §propagation is explicit on this:
+*"Never mark such a source `CIRCULAR_OR_REDUNDANT` or describe it as inflating
+support."* An earlier draft of this review did exactly that and was corrected.)
+
+And the wound-healing node has a **single seed** — a legitimate call for a 1:1
+orthologue, and CLAUDE.md is equally explicit that a short donor list is not weak
+support, so this is recorded as a fact about the breadth of the ancestral call
+rather than as a defect.
 
 ## Molecular function: RhoA, and specifically not Rac1 or Cdc42
 
@@ -176,41 +209,35 @@ to claim exchange activity either. The claim rests on the biochemistry.
   activates RhoA and rescues dnWnt-11, depletion blocks CE and is rescued by
   RhoA/Rok [PMID:18256687]. Human hWGEF mRNA rescues the Xenopus morphant, so the
   human protein is functionally interchangeable in this assay.
-### What the PAINT table actually says
 
-Resolved from `interpro/panther/PTHR12845/PTHR12845-paint.tsv` rather than guessed
-from the family name:
+- **Epidermal wound repair via GRHL3 — and it is human.** "we identified RhoGEF19,
+  a homolog of a RhoA activator involved in PCP signaling in Xenopus, as a direct
+  target of GRHL3" [PMID:20643356]. This is the source of the human IGI
+  (`GO:0032956`, with GRHL3) and of the mouse Arhgef19 IMP for `GO:0042060` that
+  the human IBA projects back from — MGI:1925912 is mouse *Arhgef19* itself, so
+  the wound-healing IBA is a one-to-one ortholog transfer, not a paralogue guess.
 
-| node | term | taxon | seeds |
-|---|---|---|---|
-| PTN002656129 | GO:0005085 | 2759 (Eukaryota) | mouse Arhgef15 + ARHGEF15, ARHGEF5, ARHGEF16, NGEF |
-| PTN002656129 | GO:0032956 | 2759 (Eukaryota) | ARHGEF15, ARHGEF5, **ARHGEF19 itself** |
-| PTN002656130 | GO:0042060 | 117571 (Euteleostomi) | **mouse Arhgef19 alone** |
+  **Correction, and a lesson.** An earlier revision of these notes and of the
+  review asserted that no human wound-healing experiment on ARHGEF19 had been
+  published. That was wrong. The cached record was abstract-only, the abstract
+  says "keratinocytes" with no species, and the paper is framed around mouse
+  genetics — so I inferred mouse. The full text (re-fetched from PMC2965174, now
+  cached) says: "we utilized the shRNA lentivirus to target the RhoGEF19
+  transcript in the **human keratinocyte cell line, HaCAT**". In those human
+  cells, RhoGEF19 knockdown leaves the scratch 20% closed "unlike the Scr cells,
+  which migrated to completely close the scratch within 24 hours", activated RhoA
+  falls, "RhoGEF19-kd cells formed only rudimentary stress fibers that showed
+  irregular organization and were not directed towards the scratched area", and
+  "re-expression of RhoGEF19 substantially rescued the wound healing phenotype
+  observed with the Grhl3-kd cells (10% closure versus 73%)". The leading-edge
+  polarity analysis is likewise on "human Grhl3-kd, RhoGEF19-kd, and Scr control
+  keratinocytes".
 
-Two consequences. The `GO:0032956` IBA includes the target's own accession among
-the seeds — which is the expected shape, not circularity: ARHGEF19's own IGI is
-one of the descendant evidences PAINT used to place the IBD, so it reappears as a
-source of the IBA the gene later receives. It marks that experimental grounding
-exists *on the target*, and the IBA then adds what the IGI cannot — that actin
-regulation is ancestral to PTHR12845 rather than a keratinocyte-specific role
-established once in mouse skin. (CLAUDE.md §propagation is explicit on this:
-*"Never mark such a source `CIRCULAR_OR_REDUNDANT` or describe it as inflating
-support."* An earlier draft of this review did exactly that and was corrected.)
-
-And the wound-healing node has a **single seed** — a legitimate call for a 1:1
-orthologue, and CLAUDE.md is equally explicit that a short donor list is not weak
-support, so this is recorded as a fact about the breadth of the ancestral call
-rather than as a defect.
-
-- **Epidermal wound repair via GRHL3.** "we identified RhoGEF19, a homolog of a
-  RhoA activator involved in PCP signaling in Xenopus, as a direct target of
-  GRHL3" and "Knockdown of Grhl3 or RhoGEF19 in keratinocytes induced defects in
-  actin polymerization, cellular polarity, and wound healing, and re-expression of
-  RhoGEF19 rescued these defects in Grhl3-kd cells" [PMID:20643356]. This is the
-  source of the human IGI (`GO:0032956`, with GRHL3) and of the mouse Arhgef19
-  IMP for `GO:0042060` that the human IBA projects back from — MGI:1925912 is
-  mouse *Arhgef19* itself, so the wound-healing IBA is a one-to-one ortholog
-  transfer, not a paralogue guess.
+  This is exactly what CLAUDE.md warns about — reserve confident "this reference
+  is about organism X" claims for cases where the cached abstract says so. It also
+  sharpens the coverage finding rather than softening it: a human knockdown-with-
+  rescue for `GO:0042060` exists, in the very paper GOA cites for the mouse
+  orthologue, and the human gene still carries only an IBA.
 - **Renal ciliogenesis.** "Additionally, the Daam1 partner, ArhGEF19, is also
   required for proper cilia formation in MDCKII cells" [PMID:31469868]. Dog and
   mouse lines; the same paper reports that Xenopus kidney knockdown did *not*

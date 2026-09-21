@@ -120,8 +120,8 @@ All 17 behave as specified.
 The count in that sentence is the one the script prints, and the script derives it
 rather than storing it (`len(CASES) + qc_ran`): an earlier version hardcoded
 `+ 5`, and this document and the review YAML both went stale at 12 the moment the
-quote-checker cases were added. Two of the mutations are anchored by name — module
-attribute for the first group, reference `id` for the second, asserted to match
+quote-checker cases were added. Both groups of mutations are anchored by name —
+module attribute for the first, reference `id` for the second, asserted to match
 exactly once — after an index-anchored mutation silently moved onto the wrong row
 when a reference was inserted ahead of it, and "failed" for the wrong reason.
 
@@ -166,16 +166,23 @@ diffs them against the classified list, so "Affinage missed X" is a proposition
 about a file in this repo rather than a recollection. Affinage cites 11 PMIDs,
 all of which resolve to real papers about this gene — its precision is fine, and
 its trust gates passed. Those 11 omit **3 of the 14 primary papers**, plus the
-commentary PMID:21686262, and every miss has the same shape: **the title does not
-name the gene**.
+commentary PMID:21686262.
 
-| missed | title | why it matters |
+The tempting generalisation is that every miss has an unfindable title. The script
+**computes** that rather than asserting it — it reads each missed paper's cached
+title and matches it against the gene's synonyms — because an earlier revision of
+this document asserted it of all four and the table directly below contained a
+counterexample:
+
+| missed | title names the gene? | why it matters |
 |---|---|---|
-| PMID:20643356 | *Epidermal wound repair is regulated by the planar cell polarity signaling pathway* | the only paper that has produced an informative GO annotation for this gene in any species |
-| PMID:18537266 | *…regulation of Tim and related Dbl-family proteins* — named for a paralogue | one of only two papers that assay Wgef autoinhibition directly |
-| PMID:34813497 | *ARHGEF19 promotes the growth of breast cancer…* | the third independent MAPK tumour type |
-| PMID:21686262 | *Grhl3 and **GEF19** in the front rho* | the symbol is abbreviated, so no `ARHGEF19` or `WGEF` query returns it |
+| PMID:20643356 | **no** — *Epidermal wound repair is regulated by the planar cell polarity signaling pathway* | the only paper that has produced an informative GO annotation for this gene in any species |
+| PMID:18537266 | **no** — *…regulation of Tim and related Dbl-family proteins*, named for a paralogue | one of only two papers that assay Wgef autoinhibition directly |
+| PMID:21686262 | only as `GEF19` — *Grhl3 and GEF19 in the front rho* | the symbol is abbreviated, so no `ARHGEF19` or `WGEF` query returns it |
+| PMID:34813497 | **yes** — *ARHGEF19 promotes the growth of breast cancer in vitro and in vivo by the MAPK pathway* | the third independent MAPK tumour type — **and it has no retrieval explanation**: the symbol is the first word of the title |
 
-A clean gate on a record that omits the single most annotation-productive paper
-on the gene is the whole lesson: gates certify the citations given, not the ones
-withheld.
+So three of the four misses have a retrieval story and one does not. That last row
+is the sharper finding, not a blemish on the generalisation: a record whose trust
+gates passed omitted a paper whose title begins with the gene symbol, alongside
+the single most annotation-productive paper on the gene. Gates certify the
+citations given, not the ones withheld.

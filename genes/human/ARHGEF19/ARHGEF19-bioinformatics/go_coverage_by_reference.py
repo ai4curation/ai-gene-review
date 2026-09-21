@@ -83,6 +83,19 @@ NOT_PRIMARY = {
 }
 
 
+PUBLICATIONS = Path(__file__).resolve().parents[4] / "publications"
+
+
+def cached_title(pmid: str) -> str | None:
+    """Title from the cached publication's YAML frontmatter, or None."""
+    path = PUBLICATIONS / f"PMID_{pmid}.md"
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8")
+    m = re.search(r"^title:\s*(.+?)(?=^\w+:|^---)", text, re.M | re.S)
+    return " ".join(m.group(1).split()) if m else None
+
+
 @dataclass
 class Row:
     pmid: str
@@ -199,6 +212,28 @@ def main() -> int:
               + (", ".join(f"PMID:{p}" for p in missed_other) or "none"))
         print(f"- cited but not in this review's classification ({len(extra)}): "
               + (", ".join(f"PMID:{p}" for p in extra) or "none"))
+        print()
+
+        # Why were they missed? The tempting generalisation is "the title does not
+        # name the gene". That is a claim about titles, so compute it rather than
+        # assert it -- an earlier revision of this review stated it of all four
+        # misses when the table directly below it contained a counterexample.
+        print("Does each missed paper's title name the gene? (titles read from the "
+              "cached publications, symbol match is case-insensitive)")
+        named, unnamed = [], []
+        for p in sorted(set(missed_primary) | set(missed_other)):
+            title = cached_title(p)
+            if title is None:
+                print(f"    - PMID:{p}: NOT CACHED, cannot check")
+                continue
+            hits = sorted(s for s in GENE_SYNONYMS if s in title.upper())
+            (named if hits else unnamed).append(p)
+            verdict = f"names the gene ({', '.join(hits)})" if hits else "does not name the gene"
+            print(f"    - PMID:{p}: {verdict} -- {title}")
+        print(f"  {len(unnamed)} of {len(named) + len(unnamed)} misses have a title "
+              f"that does not name the gene; {len(named)} do name it, so the "
+              "'title does not name the gene' explanation covers "
+              f"{len(unnamed)}, not all.")
         print()
 
     print("## Excluded from the denominator (not primary work on this gene)")
