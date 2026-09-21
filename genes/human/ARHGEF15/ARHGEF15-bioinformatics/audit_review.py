@@ -138,8 +138,22 @@ EXPECTATIONS = [
 ]
 
 
-def prose_number_checks(f: dict) -> list[str]:
-    """Cross-check the specific figures that appear as words/digits in committed prose."""
+def read_controls() -> dict[str, bool] | None:
+    """The recorded read-control outcome, or None if the run has not been made."""
+    muller = HERE / "muller2020_specificity.json"
+    if not muller.exists():
+        return None
+    return json.loads(muller.read_text())["read_controls_ok"]
+
+
+def prose_number_checks(f: dict, controls: dict[str, bool] | None = None) -> list[str]:
+    """Cross-check the specific figures that appear as words/digits in committed prose.
+
+    `controls` is injectable so the mutation test can perturb it **in memory**. An earlier
+    version wrote a mutated copy over the committed JSON and restored it in a `finally`;
+    that dirties a tracked file on every run and makes the restore itself something that can
+    go wrong. A self-test should not need write access to the artifact it is testing.
+    """
     problems = []
     review_text = REVIEW.read_text()
     notes_text = NOTES.read_text() if NOTES.exists() else ""
@@ -165,9 +179,8 @@ def prose_number_checks(f: dict) -> list[str]:
     # The review describes the Mueller read-control outcome in prose; compare it to the
     # recorded result. The first draft said "six textbook-specificity read-controls" were
     # recovered when only five are -- and the sixth failing is the whole point of keeping it.
-    muller = HERE / "muller2020_specificity.json"
-    if muller.exists():
-        ok = json.loads(muller.read_text())["read_controls_ok"]
+    ok = read_controls() if controls is None else controls
+    if ok:
         n_recovered = sum(1 for v in ok.values() if v)
         n_total = len(ok)
         m = re.search(r"(\w+) textbook-specificity read-controls", review_flat)
@@ -268,26 +281,26 @@ def self_test() -> int:
     expect("prose cross-check is silent when they agree", good == [], str(good))
 
     # The read-control branch needs its own mutation: the branch above only exercises the
-    # row counts. Temporarily rewrite the recorded run so every control recovers, and confirm
-    # the review's "of which five recover" sentence is then reported as disagreeing.
-    muller = HERE / "muller2020_specificity.json"
-    if muller.exists():
-        original = muller.read_text()
-        try:
-            doc = json.loads(original)
-            doc["read_controls_ok"] = {k: True for k in doc["read_controls_ok"]}
-            muller.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n")
-            mutated = prose_number_checks(f)
-            expect(
-                "read-control cross-check fires when the recorded run stops matching the prose",
-                any("read-controls recover" in p for p in mutated),
-                str(mutated),
-            )
-        finally:
-            muller.write_text(original)
+    # row counts. Perturb the recorded run IN MEMORY so every control recovers, and confirm
+    # the review's "of which five recover" sentence is then reported as disagreeing. Nothing
+    # on disk is touched, so there is no restore step that can itself fail.
+    ctrl = read_controls()
+    if ctrl:
+        all_pass = prose_number_checks(f, controls={k: True for k in ctrl})
         expect(
-            "the recorded run was restored byte-for-byte",
-            muller.read_text() == original,
+            "read-control cross-check fires when the recorded run stops matching the prose",
+            any("read-controls recover" in p for p in all_pass),
+            str(all_pass),
+        )
+        dropped = prose_number_checks(f, controls={k: True for k in ctrl if k != "ITSN1"})
+        expect(
+            "dropping the failing control is reported too, not silently accepted",
+            any("read-controls" in p for p in dropped),
+            str(dropped),
+        )
+        expect(
+            "the committed run is unchanged (the self-test writes nothing)",
+            read_controls() == ctrl,
         )
 
     print()
