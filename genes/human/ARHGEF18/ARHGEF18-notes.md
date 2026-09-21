@@ -160,6 +160,16 @@ protein, and an entire vertebrate knockout. Meanwhile the *Drosophila* ortholog 
 **is** curated (`GO:0005085` IDA, `GO:0090688` IDA, `GO:1902408` IEP from PMID:36917931),
 annotations that could seed ISS or IBA to the human gene and have not.
 
+And there is no mammalian ortholog record to lean on. The same script audits the
+ortholog records and finds **mouse `Arhgef18` carries 23 GO annotations of which none is
+experimental** — ISO 10, IEA 6, IBA 4, ISS 3, neither set truncated — against 14
+experimental rows on the human record, which is the positive control for the
+evidence-code split. Ten of the mouse rows are ISO *from human*, so a similarity transfer
+back would only recirculate the same four experiments. That matters for PDB 6BCB in
+particular: the 1.4 Å RhoA complex was solved on the **mouse** protein and the mouse
+record does not carry it either, so the proposed `GO:0031267` has no curated source in
+either species and needs creating at the source as well as here.
+
 ## Residue mapping gotcha
 
 Neither loss-of-function paper states its reference sequence, and they do not agree:

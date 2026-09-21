@@ -94,6 +94,18 @@ SCREENS = {
 }
 
 
+# Orthologs worth asking the complementary question of: if the human record is thin,
+# is there an ortholog record to lean on?  ISS and IBA both need a curated source
+# somewhere, so "curate the mouse instead" is only a route if the mouse has experiments.
+ORTHOLOGS = {
+    "UniProtKB:Q6P9R4": "mouse Arhgef18",
+    "UniProtKB:Q6ZSZ5": "human ARHGEF18 (the target, for comparison)",
+}
+
+# GO evidence codes that stand for an experiment someone actually did.
+EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+
+
 def query(pmid: str) -> dict:
     params = {"reference": f"PMID:{pmid}", "limit": str(LIMIT)}
     url = f"{SEARCH}?{urllib.parse.urlencode(params)}"
@@ -139,9 +151,42 @@ def summarise(pmid: str, label: str) -> dict:
     }
 
 
+def ortholog_record(gene_product_id: str, label: str) -> dict:
+    """Split an ortholog's GO record into experimental and derived evidence."""
+    params = {"geneProductId": gene_product_id, "limit": str(LIMIT)}
+    url = f"{SEARCH}?{urllib.parse.urlencode(params)}"
+    req = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "aigr"})
+    with urllib.request.urlopen(req, timeout=120) as fh:
+        d = json.load(fh)
+    n = d.get("numberOfHits", 0)
+    rows = d.get("results", []) or []
+    by_code: dict[str, int] = {}
+    experimental = []
+    for r in rows:
+        code = (r.get("goEvidence") or "?").upper()
+        by_code[code] = by_code.get(code, 0) + 1
+        if code in EXPERIMENTAL:
+            experimental.append(
+                {"go_id": r.get("goId"), "evidence": code, "reference": r.get("reference")}
+            )
+    return {
+        "gene_product": gene_product_id,
+        "label": label,
+        "n_annotations": n,
+        "rows_returned": len(rows),
+        "truncated": n > len(rows),
+        "evidence_codes": dict(sorted(by_code.items())),
+        "n_experimental": len(experimental),
+        "experimental_annotations": experimental,
+        # Only trustworthy when the whole result set was seen.
+        "has_no_experimental_annotation": (len(experimental) == 0) if n <= len(rows) else None,
+    }
+
+
 def build() -> dict:
     primary = [summarise(p, lab) for p, lab in sorted(PRIMARY.items())]
     screens = [summarise(p, lab) for p, lab in sorted(SCREENS.items())]
+    orthologs = [ortholog_record(g, lab) for g, lab in sorted(ORTHOLOGS.items())]
 
     zero_any = [r for r in primary if r["produced_no_annotation_anywhere"]]
     zero_arhgef18 = [r for r in primary if r["produced_no_arhgef18_annotation"] is True]
@@ -157,6 +202,7 @@ def build() -> dict:
         "primary_papers_with_no_arhgef18_annotation": [r["pmid"] for r in zero_arhgef18],
         "primary": primary,
         "screens": screens,
+        "orthologs": orthologs,
     }
 
 
@@ -192,6 +238,22 @@ def self_test(data: dict) -> int:
         ctrl["n_annotations"] == next(r["n_annotations"] for r in data["primary"] if r["pmid"] == "11085924"),
         "re-querying the same PMID gave a different count",
     )
+
+    # POSITIVE CONTROL for the ortholog audit: the human record must come back with a
+    # non-zero experimental count.  If it does not, the evidence-code split is broken and
+    # the mouse zero below would be an artefact rather than a finding.
+    human = next((o for o in data["orthologs"] if o["gene_product"] == "UniProtKB:Q6ZSZ5"), None)
+    check(
+        "ortholog_audit_positive_control",
+        human is not None and human["n_experimental"] > 0,
+        "the human record reports no experimental annotations, so the evidence split is broken",
+    )
+    for o in data["orthologs"]:
+        check(
+            f"ortholog_not_truncated[{o['gene_product']}]",
+            not o["truncated"],
+            "result set exceeded one page, so the experimental count is a floor not a total",
+        )
 
     # The zero/unknown split must be exhaustive: no paper may be silently dropped.
     n = data["n_primary_papers"]

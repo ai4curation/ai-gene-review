@@ -6,7 +6,7 @@ re-running regenerates both files and any number that changes is a real change.
 | script | writes | question |
 |---|---|---|
 | `dh_domain.py` | `dh_domain.json` | Is the DH/PH module competent, and can residues call the substrate? |
-| `reference_coverage.py` | `reference_coverage.json` | Over-annotation, or missing curation? |
+| `reference_coverage.py` | `reference_coverage.json` | Over-annotation, or missing curation? And is there an ortholog record to lean on? |
 
 ```
 uv run python dh_domain.py --self-test
@@ -194,6 +194,26 @@ a real zero rather than an unseen page.
 High-throughput sources, held separately because a zero there means something different:
 PMID:18570454 exosome proteomics (66 annotations, one on ARHGEF18), PMID:35271311
 OpenCell (2876, truncated), PMID:18669648 and PMID:21269460 (0 each).
+
+### There is no ortholog record to lean on
+
+The obvious remedy for a thin human record is to lean on an ortholog — ISS or IBA both
+need a curated source somewhere. So the script asks the complementary question, and the
+answer closes that door:
+
+| gene product | annotations | experimental | evidence codes |
+|---|---|---|---|
+| mouse `Arhgef18` (Q6P9R4) | 23 | **0** | ISO 10, IEA 6, IBA 4, ISS 3 |
+| human `ARHGEF18` (Q6ZSZ5) | 32 | 14 | IDA 7, TAS 8, IEA 6, IBA 4, EXP 2, IMP 2, IPI 2, HDA 1 |
+
+Neither result set was truncated, so both counts are totals rather than floors. The human
+row is the **positive control** for the evidence-code split: if it had come back at zero
+experimental, the mouse zero would be an artefact of the classifier rather than a finding.
+
+The mouse record is not an independent record. Ten of its 23 rows are ISO — projected
+*from* human — so transferring back by similarity would only recirculate the same four
+experiments. And note where that leaves PDB 6BCB: the 1.4 Å RhoA complex was solved on
+the **mouse** protein, and the mouse record does not carry it either.
 
 ### What that means
 
