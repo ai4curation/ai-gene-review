@@ -12,8 +12,10 @@ https://docs.claude.com/en/docs/claude-code/hooks#exit-code-2-behavior
 import sys
 import json
 import subprocess
-import os
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from hook_paths import find_repo_root, hook_script_root  # noqa: E402
 
 
 def main():
@@ -50,9 +52,9 @@ def main():
             cmd,
             capture_output=True,
             text=True,
-            cwd=os.path.dirname(
-                os.path.dirname(os.path.dirname(__file__))
-            ),  # Project root
+            # Root derived from the validated file, so a worktree validates itself
+            # rather than whichever checkout this hook script lives in.
+            cwd=str(find_repo_root(file_path, hook_script_root(__file__))),
         )
 
         # Display the validation output
