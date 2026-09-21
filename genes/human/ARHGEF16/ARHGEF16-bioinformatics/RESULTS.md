@@ -1,6 +1,6 @@
 # ARHGEF16 bioinformatics — results
 
-Five rerunnable analyses supporting `genes/human/ARHGEF16/ARHGEF16-ai-review.yaml`.
+Six rerunnable analyses supporting `genes/human/ARHGEF16/ARHGEF16-ai-review.yaml`.
 Each derives the repo root rather than hardcoding a worktree path, and each takes
 `--self-test`, which breaks its input or its anchor on purpose and requires every
 guard to fire, with negative controls that must stay silent.
@@ -11,13 +11,16 @@ uv run --with biopython --with requests python dh_exchange_surface.py     # -> d
 uv run --with biopython --with requests python residue_mapping.py         # -> residue_mapping.json
 uv run --with requests python retrieval_and_coverage.py                   # -> retrieval_and_coverage.json
 uv run --with requests --with pyyaml python pdz_partner_check.py          # -> pdz_partner_check.json
+uv run --with pyyaml python quote_claim_coherence.py                       # -> quote_claim_coherence.json
 ```
 
-All five query live services (the GO API, OLS4, QuickGO, UniProt, PDBe/SIFTS,
+Five of the six query live services (the GO API, OLS4, QuickGO, UniProt, PDBe/SIFTS,
 RCSB, PubMed, Reactome), so their JSON outputs are committed as the record of
 what those services returned on the run that produced the numbers below.
 
-Self-tests at time of writing: 6/6, 10/10, 6/6, 7/7, 7/7.
+Self-tests at time of writing: 6/6, 10/10, 6/6, 7/7, 8/8, 8/8. The last two were
+mutation-tested by breaking them on purpose and running the suite; see the final
+section.
 
 ---
 
@@ -311,3 +314,85 @@ The 42 rows come from three references — `PMID:36115835` (37), `PMID:32203420`
 and `PMID:30126976` (2) — and DLG1, SCRIB and SNTB2 each appear in more than one,
 which is the point: the set reports one C-terminal determinant measured
 repeatedly, not 42 independent findings.
+
+---
+
+## 6. `quote_claim_coherence.py` — does each quote support the claim it sits under?
+
+This one exists because of a defect in this review, found in PR review and not by
+any validator in the repository.
+
+Two `GO:0005829 cytosol` rows cite Reactome reactions with different asserted
+outputs — `R-HSA-205039` says Rac and Cdc42, `R-HSA-419166` says RhoA/B/C — and
+both were generated from a single loop that attached **the same quote**, the RhoA
+negative, to both. The RhoA row was right. The Rac/Cdc42 row was arguing about
+Rac and Cdc42 while citing evidence about RhoA.
+
+Nothing here catches that. The reference validator checks a `supporting_text`
+against its **source publication** — is this a verbatim substring of PMID X — and
+that quote was a perfectly verbatim substring of exactly the right paper. What is
+never checked is the quote against the **claim it sits under**. A quote can be
+impeccably sourced and still be evidence for a different proposition, and for a
+gene whose entire story is which of five GTPases it acts on, that is the whole
+review.
+
+The guard collects, per annotation, the GTPases named by the **claim** (from
+`RO:0002233 has_input` extensions and the "catalysed output is …" clause of
+`reason`) and by the **union of its quotes**, and requires them to intersect.
+
+| term | reference | claim | quotes | overlap |
+|---|---|---|---|---|
+| `GO:0005085` | PMID:20679435 | RHOG | CDC42, RAC1, RHOA, RHOG | RHOG |
+| `GO:0005096` | PMID:21139582 | CDC42 | CDC42, RAC1, RHOG | CDC42 |
+| `GO:0005829` | R-HSA-205039 | CDC42, RAC1 | CDC42, RAC1 | CDC42, RAC1 |
+| `GO:0005829` | R-HSA-419166 | RHOA, RHOB, RHOC | RHOA | RHOA |
+| `GO:0090630` | PMID:20679435 | RHOG | RAC1, RHOG | RHOG |
+
+**Violations: 0.**
+
+The union is deliberate, and it is where a stricter rule would go wrong. The
+`GO:0005096` row legitimately pairs the Cdc42 exchange result with the Rac1/RhoG
+specificity result, so demanding that *every* quote name the claimed GTPase would
+fire on a correct row. Requiring that *some* quote engages the claim is the
+strongest rule that does not produce false positives here.
+
+The self-test's central check is a **regression**: it reintroduces the exact
+original bug — puts the RhoA quote back under the Rac/Cdc42 row — and requires the
+guard to flag it, then restores the correct quote and requires the same row to go
+clean. The anchor is asserted to match exactly once, since a zero-match anchor
+would "pass" by mutating nothing.
+
+## Mutation testing: what makes these self-tests print FAIL
+
+Self-tests that always pass are worthless, and a check whose construction
+guarantees it agrees with its subject is worse than none. Both guards in sections
+5 and 6 were therefore mutation-tested by breaking them on purpose and **running**
+the suite, not by reasoning about what would happen. Every mutation anchor was
+asserted to match exactly once, and every restore was verified by SHA-256 against
+the original file.
+
+`pdz_partner_check.py`, baseline 8/8:
+
+| mutation | result | checks that fired |
+|---|---|---|
+| classifier keys on the gene name, not the domain list | 4/8 | name-independence; SCRIB; reverse guard; committed review |
+| classifier always says yes | 3/8 | name-independence; SCRIB; HNRNPH1; forward guard; committed review |
+| drop the reverse guard | 7/8 | PDZ partner outside the retyped set |
+| drop the forward guard | 7/8 | non-PDZ partner inside the retyped set |
+
+`quote_claim_coherence.py`, baseline 8/8:
+
+| mutation | result | checks that fired |
+|---|---|---|
+| never record a violation | 7/8 | the original bug is detected when reintroduced |
+| claim extraction returns nothing | 5/8 | extractor finds rows; regression; restored run |
+| `RhoG` matched as a substring, so `RhoGEF` counts | 7/8 | substring-lookalike matcher |
+| drop `has_input` from the claim side | 7/8 | extractor finds rows |
+
+One of these is the reason the section-5 self-test was rewritten. Its original
+name-independence check asserted `has_pdz("Q9H5P4") is True` — and PDZD7 is *named*
+for PDZ, so a name-keyed classifier satisfies it too. The check could not fail for
+the reason it was named for. Replacing it with three hand-built records — a
+protein named PDZD99 whose only domain is an RRM, one with a PDZ domain and an
+unrelated name, and one whose PDZ appears under the wrong feature type — is what
+makes the first row of the table above read 4/8 instead of 8/8.

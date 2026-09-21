@@ -89,22 +89,35 @@ def partition(doc: dict) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
     return retyped, kept
 
 
-def has_pdz(acc: str) -> dict[str, object]:
-    r = requests.get(UNIPROT.format(acc=acc), timeout=TIMEOUT)
-    r.raise_for_status()
-    e = r.json()
+def classify(entry: dict) -> dict[str, object]:
+    """Decide from a UniProt record alone whether the protein has a PDZ domain.
+
+    Deliberately pure, so the self-test can feed it hand-built records instead of
+    only real ones.  That matters for one specific failure: a detector that keyed
+    off the *gene name* rather than the domain list would agree with every real
+    PDZ protein in this panel, because they are mostly called things like PDZD7
+    and MAGI2.  The only input that separates the two implementations is a record
+    whose name says PDZ and whose domains do not, and no such protein is in the
+    panel -- so the self-test constructs one.
+    """
     doms = [
         f.get("description", "").strip()
-        for f in e.get("features", [])
-        if f["type"] == "Domain"
+        for f in entry.get("features", [])
+        if f.get("type") == "Domain"
     ]
     pdz = [d for d in doms if d == "PDZ" or d.startswith("PDZ ")]
     return {
-        "symbol": (e.get("genes") or [{}])[0].get("geneName", {}).get("value"),
+        "symbol": (entry.get("genes") or [{}])[0].get("geneName", {}).get("value"),
         "domains": doms,
         "n_pdz": len(pdz),
         "has_pdz": bool(pdz),
     }
+
+
+def has_pdz(acc: str) -> dict[str, object]:
+    r = requests.get(UNIPROT.format(acc=acc), timeout=TIMEOUT)
+    r.raise_for_status()
+    return classify(r.json())
 
 
 def target_motif() -> dict[str, object]:
@@ -205,15 +218,45 @@ def self_test() -> int:
     checks.append(("HNRNPH1 not detected as a PDZ protein",
                    "PASS" if not d["has_pdz"] else f"FAIL {d}"))
 
-    # 3. The detector must not be fooled by a substring: PDZD7 is named for PDZ
-    #    and does carry the domain, while PDZRN4's name also contains PDZ.
-    #    Both should be positive, but for the domain, not the name.
-    d = has_pdz("Q9H5P4")
-    checks.append(("PDZD7 positive on domain content, not on its name",
-                   "PASS" if d["has_pdz"] else f"FAIL {d}"))
+    # 3. The classifier must read DOMAINS, not the gene NAME.  Every real PDZ
+    #    protein in this panel is *also* named for PDZ (PDZD7, PDZRN4, MAGI2...),
+    #    so a name-keyed detector would agree with checks 1-2 and with the whole
+    #    committed table.  Asserting `has_pdz("Q9H5P4") is True` therefore tests
+    #    nothing: both implementations pass it.  The separating input has to be
+    #    built, because no protein in the panel has it.
+    named_pdz_no_domain = {
+        "genes": [{"geneName": {"value": "PDZD99"}}],
+        "features": [{"type": "Domain", "description": "RRM 1"}],
+    }
+    unnamed_with_domain = {
+        "genes": [{"geneName": {"value": "SOMEGENE"}}],
+        "features": [{"type": "Domain", "description": "PDZ 2"}],
+    }
+    domain_in_wrong_feature_type = {
+        "genes": [{"geneName": {"value": "SOMEGENE"}}],
+        "features": [{"type": "Region", "description": "PDZ"}],
+    }
+    a = classify(named_pdz_no_domain)["has_pdz"]
+    b = classify(unnamed_with_domain)["has_pdz"]
+    c = classify(domain_in_wrong_feature_type)["has_pdz"]
+    checks.append((
+        "classifier keys on the domain list, not the gene name",
+        "PASS" if (a is False and b is True and c is False)
+        else f"FAIL named-no-domain={a} unnamed-with-domain={b} wrong-feature-type={c}",
+    ))
 
     # 4. Injecting a non-PDZ partner into the retyped set must abort the run.
+    #    The injected accession must be ABSENT from that bucket first: if it were
+    #    already there the injection would change nothing, the run would abort for
+    #    a reason that has nothing to do with the mutation, and this check would
+    #    pass while testing nothing.
     real = globals()["partition"]
+    base_retyped, base_kept = real(doc)
+    checks.append((
+        "mutation anchors are absent before injection (zero-match guard)",
+        "PASS" if ("P31943" not in base_retyped and "Q14160" not in base_kept)
+        else f"FAIL P31943 in retyped={('P31943' in base_retyped)} Q14160 in kept={('Q14160' in base_kept)}",
+    ))
     try:
         globals()["partition"] = lambda _doc: (
             {**real(_doc)[0], "P31943": ["PMID:0"]},
