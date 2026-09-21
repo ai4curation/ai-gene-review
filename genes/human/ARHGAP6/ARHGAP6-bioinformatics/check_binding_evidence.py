@@ -155,26 +155,28 @@ def filter_control(items: list[dict], pmid: str) -> tuple[set[str], list[str]]:
     from the data rather than naming a protein, because the fixed version of it
     named RHOA -- absent from the whole record, so the assertion could not fail.
     """
-    all_partners: set[str] = set()
-    for it in items:
-        for k in ("uniqueIdA", "uniqueIdB"):
-            v = it.get(k)
-            if v and v != TARGET:
-                all_partners.add(v)
+    # Both sides use the SAME extraction (partner_records with an empty pmid, which
+    # matches every publication). Two reasons that matters, both from review:
+    #   * a looser "every non-TARGET accession in the response" set would make
+    #     `excluded` non-empty for reasons unrelated to the publication filter,
+    #     so the control would not be testing what it claims to test;
+    #   * an earlier version then asserted on `excluded & in_pub`, which is empty
+    #     for every possible input because `excluded` is `all - in_pub`. That branch
+    #     could never run -- the same "cannot fail" shape this control was written
+    #     to replace, one level down. It is gone rather than repaired.
+    all_partners = set(partner_records(items, ""))
     in_pub = set(partner_records(items, pmid))
     excluded = all_partners - in_pub
     problems: list[str] = []
     if not all_partners:
         problems.append("no partners at all in the IntAct record; the query is broken")
+    elif not in_pub:
+        problems.append(f"no partners at all for PMID:{pmid}; the filter excludes everything")
     elif not excluded:
         problems.append(
             "every IntAct partner of this protein belongs to the cited publication, so "
             "the publication filter is untested by this run and cannot be trusted"
         )
-    else:
-        leaked = excluded & in_pub
-        if leaked:
-            problems.append(f"filter leaked partners it should exclude: {sorted(leaked)[:5]}")
     return excluded, problems
 
 
@@ -250,6 +252,18 @@ def self_test(items: list[dict], partners: list[str]) -> int:
     else:
         print(f"  ok   publication filter excludes {len(excluded)} partner(s) present "
               f"in the wider record, e.g. {sorted(excluded)[0]}")
+
+    # And the control itself must be able to fail: fed records that all carry the
+    # cited publication, it has to report that it cannot test the filter.
+    only_pub = [it for it in items if PMID in " ".join(it.get("publicationIdentifiers") or [])]
+    _, degenerate = filter_control(only_pub, PMID)
+    if any("untested by this run" in p for p in degenerate):
+        print("  ok   filter control reports itself untestable when nothing is excluded")
+    else:
+        failures.append(
+            "filter control stayed silent on input where every partner belongs to the "
+            f"cited publication; it cannot detect its own degenerate case: {degenerate}"
+        )
 
     # The direct-binding whitelist must be anchored to PSI-MI identifiers, not to
     # labels: assert the declared ids agree with IntAct, and that a wrong id is caught.
