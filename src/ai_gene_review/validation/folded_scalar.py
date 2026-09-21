@@ -24,8 +24,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
+from ai_gene_review.validation.validation_report import ValidationReport, ValidationSeverity
+
 #: Matches the opening line of a folded scalar, e.g. ``  reason: >-``.
-BLOCK_HEAD = re.compile(r"^(\s*)[\w-]+:\s*>-?\s*$")
+BLOCK_HEAD = re.compile(r"^(\s*(?:-\s+)?)[\w-]+:\s*>[-+]?\s*$")
 
 #: Words that make a trailing hyphen a **suspended** hyphen rather than a broken compound.
 #: "betaB2- and betaA3-crystallins" is correct English and must not be flagged; the space
@@ -104,7 +106,12 @@ def find_folded_hyphen_splits(text: str) -> Iterator[FoldedHyphenSplit]:
         if not stripped.endswith("-"):
             continue
         tail = stripped.split()[-1]
-        following = lines[i + 1].strip() if i + 1 < len(lines) else ""
+        # The continuation must still be inside this block. Without the indent test the
+        # lookahead reads the next dedented key and reports nonsense like "oyl- action:".
+        nxt = lines[i + 1] if i + 1 < len(lines) else ""
+        if not nxt.strip() or len(nxt) - len(nxt.lstrip()) <= indent:
+            continue
+        following = nxt.strip()
         first = following.split()[0] if following.split() else ""
         if first.rstrip(",;:").lower() in SUSPENDED_HYPHEN_FOLLOWERS:
             continue
@@ -112,19 +119,17 @@ def find_folded_hyphen_splits(text: str) -> Iterator[FoldedHyphenSplit]:
         # "-" in that position, so "an aside -- continues" can never be reported. An
         # explicit endswith("--") guard was removed as dead code once a mutation test
         # showed deleting it changed no behaviour.
-        if len(tail) > 1 and tail[-2].isalnum() and first[:1].islower():
+        if len(tail) > 1 and tail[-2].isalnum() and first[:1].isalnum():
             yield FoldedHyphenSplit(line=i + 1, tail=tail, next_word=first)
 
 
-def check_folded_scalar_hyphens(yaml_file: Path, report) -> None:
+def check_folded_scalar_hyphens(yaml_file: Path, report: ValidationReport) -> None:
     """Add a warning for each mid-compound fold in *yaml_file*.
 
     Reported as a warning rather than an error: the repository carries a large
     pre-existing backlog of these, and blocking on them would fail every run of
     ``validate-all`` before any of them could be fixed.
     """
-    from ai_gene_review.validation.validation_report import ValidationSeverity
-
     try:
         text = yaml_file.read_text(errors="replace")
     except OSError:

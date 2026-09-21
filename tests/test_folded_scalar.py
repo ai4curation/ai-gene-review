@@ -54,9 +54,42 @@ def test_clean_prose_is_silent():
     assert not list(find_folded_hyphen_splits(block("nothing wrong", "at all")))
 
 
-def test_capitalised_next_word_is_not_a_split():
-    """A trailing hyphen before a new sentence is not a broken compound."""
-    assert not list(find_folded_hyphen_splits(block("an aside -", "Then a new sentence")))
+def test_capitalised_continuation_is_still_a_split():
+    """``ER-to-`` / ``Golgi`` renders as ``ER-to- Golgi`` and must be reported.
+
+    An earlier version required a lowercase continuation, which dropped this real
+    published split in LRIT3. The test that justified the gate was vacuous: its tail was a
+    bare ``-``, excluded by ``len(tail) > 1`` before the case test was ever reached, so
+    deleting the gate broke nothing.
+    """
+    (hit,) = list(find_folded_hyphen_splits(block("quantify ER-to-", "Golgi trafficking")))
+    assert hit.rendered == "ER-to- Golgi"
+
+
+def test_numeric_continuation_is_a_split():
+    """``interleukin-`` / ``6`` is the same defect with a digit."""
+    (hit,) = list(find_folded_hyphen_splits(block("the cytokine interleukin-", "6 receptor")))
+    assert hit.intended == "interleukin-6"
+
+
+def test_sequence_item_folded_heads_are_scanned():
+    """``- statement: >-`` is a folded scalar too.
+
+    The original BLOCK_HEAD could not match it, so thousands of blocks went unscanned and
+    real splits in SLC25A24 and SDHB were invisible.
+    """
+    text = "references:\n- id: PMID:1\n  findings:\n  - statement: >-\n      cause Gorlin-\n      Chaudhry-Moss syndrome\n"
+    assert [h.intended for h in find_folded_hyphen_splits(text)] == ["Gorlin-Chaudhry-Moss"]
+
+
+def test_lookahead_stops_at_the_block_boundary():
+    """The continuation must be inside the block.
+
+    Without an indent test the lookahead reads the next dedented key and reports nonsense
+    such as ``renders as 'oyl- action:'``.
+    """
+    text = "reason: >-\n  ends in acyl-\naction: REMOVE\n"
+    assert not list(find_folded_hyphen_splits(text))
 
 
 def test_only_looks_inside_folded_blocks():
