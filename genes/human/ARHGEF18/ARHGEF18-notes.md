@@ -147,7 +147,52 @@ WITH/FROM fields, every token resolved against its own authority:
   paralogs, neither the target nor its ortholog.
 - `PTN002677825` → `GO:0005886`, `taxon:117571`, seeded by `UniProtKB:Q6ZSZ5` and
   `UniProtKB:A0A590UK10`. Both are **the same human gene** (A0A590UK10 is a 1089-aa
-  TrEMBL entry for ARHGEF18). The inference is a round trip.
+  TrEMBL entry for ARHGEF18), so no non-human member of the clade has contributed
+  evidence to this node yet.
+
+### A rule I got wrong on the first pass
+
+I initially marked the target's own accession `CIRCULAR_OR_REDUNDANT` in the `GO:0005085`
+and `GO:0007264` propagation reviews, and described the `GO:0005886` node as a "round
+trip". `CLAUDE.md` prohibits exactly this, and it is right to:
+
+> **The target appearing in its own `WITH/FROM` is correct and expected — not circular.**
+> […] that annotation is one of the descendant evidences the curator used to place the
+> IBD […] **Never** mark such a source `CIRCULAR_OR_REDUNDANT` or describe it as
+> inflating support.
+
+An IBD is a curator's judgment about where in the tree a function arose, made by reading
+the experimental annotations of *all* extant members — so the target's own IDA being in
+the donor list is the marker that experimental grounding exists on the target, and the
+IBA then adds the separate claim that the function is inherited rather than
+lineage-specific. Nor is a short donor list weak support. What is true, and all that is
+true, is that these rows add no evidence the gene did not already have, which makes them
+non-core rather than defective. The reviewer caught this; the `reason` prose had already
+been saying the correct thing while the enum said something else, which is the failure
+mode to watch for, since nothing in the repo validates agreement between the two.
+
+## Which tight-junction term the imaging actually supports
+
+The first draft proposed `GO:0005923` **bicellular** tight junction from Terry's occludin
+overlap. That is one level too specific. Confocal colocalisation along a junctional belt
+does not separate bicellular from tricellular contacts, and occludin is not confined to
+bicellular junctions in any case — PMID:40878853 reports that occludin knockout displaces
+tricellulin from tricellular junctions, i.e. occludin acts at them. `GO:0070160` tight
+junction is the level the experiment supports, and both QuickGO and OLS4 report it
+current.
+
+The term choice also decides whether the companion `GO:0043296` row is informative, which
+is worth recording because it is not obvious:
+
+- `GO:0005923` has **`GO:0043296` among its hierarchical parents** (OLS4 direct parents:
+  `GO:0043296`, `GO:0070160`; QuickGO ancestors include `GO:0043296`). Annotating
+  `located_in GO:0005923` would therefore have *implied* the apical-junction-complex row
+  by propagation, making it redundant.
+- `GO:0070160` does **not** — its only hierarchical parent is `GO:0005911` cell-cell
+  junction, and `GO:0043296` is absent from its QuickGO ancestor list.
+
+So moving to the parent term is what makes the pair genuinely complementary. Checked in
+both services rather than assumed.
 
 ## Coverage, not over-annotation
 

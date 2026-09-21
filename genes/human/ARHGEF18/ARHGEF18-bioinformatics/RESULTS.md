@@ -62,8 +62,9 @@ corroborative by construction.
 
 The other direction is the more useful one. That same tyrosine is equally conserved in
 TIAM1 and TRIO/KALRN DH1 (RAC1-specific) and in ITSN1 (CDC42-specific). It is a
-pan-Dbl-family position. **Retaining it says the domain is of the catalytically competent
-type and says nothing whatever about which GTPase the protein acts on.**
+pan-Dbl-family position.
+
+**Bottom line: Tyr-606 is conserved in all 14 panel members including the Rac- and Cdc42-specific GEFs, so retaining it says the DH domain is of the catalytically competent type and says nothing whatever about which GTPase ARHGEF18 acts on.**
 
 ### 1.3 Can sequence arbitrate the RhoA-versus-Rac1 disagreement? No.
 
@@ -125,7 +126,9 @@ Ten mouse PH residues contact RhoA at 4.0 Å. **All ten are identical in human A
 |---|---|
 | Ile-779, Arg-781, Glu-782, Val-783, Ala-784, Asn-785, Phe-791, Ile-793, Pro-800, Met-802 | Ile-740, Arg-742, Glu-743, Val-744, Ala-745, Asn-746, Phe-752, Ile-754, Pro-761, Met-763 |
 
-All ten lie inside the human PH domain (684–786). The same interface is 90% conserved in
+**Bottom line: all ten RhoA-contacting residues of the mouse PH domain are identical in human ARHGEF18 and all ten lie inside the human PH domain (684-786), so the RhoA-binding interface is conserved without exception across the orthologs.**
+
+The same interface is 90% conserved in
 AKAP13 and 80% in GEF-H1 — the Lbc clade — and 10–30% in TIAM1, TRIO, KALRN and ITSN1.
 The reciprocal test on 6BCA (the AKAP13 PH·RhoA structure from the same paper) puts
 ARHGEF18 at 75%, again well above every Rac/Cdc42 GEF.
