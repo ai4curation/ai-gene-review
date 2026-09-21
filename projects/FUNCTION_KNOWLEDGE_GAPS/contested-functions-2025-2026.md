@@ -585,9 +585,14 @@ references.** Quotes attributed to `file:` references — deep-research reports,
 GOA tables — have never been checked at all.
 
 A repo-wide scan (`scripts/check_file_supporting_text.py`, output in
-`reports/file_supporting_text_mismatches.json`) checked **59,154** `file:` supporting_text entries
-(re-run after merging `main`; an earlier run over the smaller pre-merge corpus reported 55,433).
-No cited `file:` path failed to resolve.
+`reports/file_supporting_text_mismatches.json`) checked **59,253** `file:` supporting_text entries.
+No cited `file:` path failed to resolve, and none that resolved failed to open.
+
+This total is a **dated snapshot and will drift every time `main` is merged in** — earlier runs over
+smaller corpora reported 55,433 and 59,154. The denominator is the unstable part; re-running after
+the most recent sync moved it by 99 entries and changed the mismatch list not at all, so the 99
+`file:` quotes `main` brought with it are all clean. Quote the narration subset below rather than
+this figure if you want the number that means something.
 Raw mismatch counts overstate the problem and should not be quoted as a fabrication count: UniProt
 `.txt` records carry two-letter line-prefix codes that break substring matching (stripped in the
 script), and genuine benign cases remain — smart quotes, ellipses, quotes stitched across
