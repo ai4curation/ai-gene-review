@@ -175,11 +175,18 @@ mode to watch for, since nothing in the repo validates agreement between the two
 
 The first draft proposed `GO:0005923` **bicellular** tight junction from Terry's occludin
 overlap. That is one level too specific. Confocal colocalisation along a junctional belt
-does not separate bicellular from tricellular contacts, and occludin is not confined to
-bicellular junctions in any case — PMID:40878853 reports that occludin knockout displaces
-tricellulin from tricellular junctions, i.e. occludin acts at them. `GO:0070160` tight
-junction is the level the experiment supports, and both QuickGO and OLS4 report it
-current.
+does not separate bicellular from tricellular contacts. `GO:0070160` tight junction is the
+level the experiment supports, and both QuickGO and OLS4 report it current.
+
+The occludin half of the argument needed correcting once I read the source rather than
+citing it. I first wrote that occludin "is not confined to bicellular junctions". What
+PMID:40878853 actually shows is narrower: occludin is a BioID proximity partner of
+tricellulin at cell-cell junctions and its knockout perturbs tricellulin localisation at
+tricellular tight junctions, but "neither one of these other proteins displays similar
+prominent accumulation to tTJs as tricellulin" — so occludin is *predominantly*
+bicellular while still being present and functionally required at tricellular contacts.
+That is enough to say occludin cannot license the bicellular subtype, and not enough to
+say it is indifferent between them. The term choice does not depend on it either way.
 
 The term choice also decides whether the companion `GO:0043296` row is informative, which
 is worth recording because it is not obvious:
