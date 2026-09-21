@@ -43,8 +43,13 @@ def facts(doc: dict) -> dict:
     anns = doc["existing_annotations"]
     actions = collections.Counter(a["review"]["action"] for a in anns)
     pb = [a for a in anns if a["term"]["id"] == "GO:0005515"]
-    demoted = [a for a in pb if a["review"]["action"] == "MARK_AS_OVER_ANNOTATED"]
-    partners = {e for a in demoted for e in (a.get("supporting_entities") or [])}
+    # Policy (.claude/skills/annotation-reviewer/SKILL.md:187-199): a bare GO:0005515 row goes
+    # to MODIFY when the paper supports a better MF term and otherwise to REMOVE.
+    # MARK_AS_OVER_ANNOTATED is forbidden for this term, so it is counted in order to assert
+    # that it is zero rather than left unmeasured.
+    removed = [a for a in pb if a["review"]["action"] == "REMOVE"]
+    forbidden = [a for a in pb if a["review"]["action"] == "MARK_AS_OVER_ANNOTATED"]
+    partners = {e for a in removed for e in (a.get("supporting_entities") or [])}
     neuronal = [a for a in anns if a["term"]["id"] in NEURONAL_TERMS]
     mf = [a for a in anns if a["term"]["id"] == "GO:0005085"]
     ext = [
@@ -56,7 +61,8 @@ def facts(doc: dict) -> dict:
         "n_rows": len(anns),
         "actions": dict(actions),
         "n_protein_binding_rows": len(pb),
-        "n_demoted_screen_rows": len(demoted),
+        "n_removed_screen_rows": len(removed),
+        "n_protein_binding_marked_over_annotated": len(forbidden),
         "n_distinct_screen_partners": len(partners),
         "n_neuronal_rows": len(neuronal),
         "n_neuronal_non_core": sum(
@@ -80,22 +86,27 @@ def facts(doc: dict) -> dict:
 EXPECTATIONS = [
     ("all 31 GOA rows reviewed", lambda f: f["n_rows"] == 31, "31 GOA rows"),
     ("no row left PENDING", lambda f: "PENDING" not in f["actions"], "all adjudicated"),
-    ("zero REMOVE", lambda f: f["n_remove"] == 0, "0 REMOVE"),
     (
-        "seven protein-binding screen rows are demoted",
-        lambda f: f["n_demoted_screen_rows"] == 7,
-        "seven bare screen-hit rows",
+        "every REMOVE is a bare GO:0005515 row, and there are seven",
+        lambda f: f["n_remove"] == 7 and f["n_removed_screen_rows"] == 7,
+        "7 REMOVE, all of them bare protein-binding screen rows",
+    ),
+    (
+        "no GO:0005515 row uses MARK_AS_OVER_ANNOTATED",
+        lambda f: f["n_protein_binding_marked_over_annotated"] == 0,
+        "SKILL.md:187-199 forbids that action for this term",
     ),
     (
         "those seven rows cover five distinct partners",
         lambda f: f["n_distinct_screen_partners"] == 5,
-        "five distinct partners",
+        "five distinct partners: PIN1, LASP1, CEP55, PRKG1, GORASP2",
     ),
     (
-        "exactly one protein-binding row is MODIFY (the EPHA4 one)",
-        lambda f: f["n_protein_binding_rows"] - f["n_demoted_screen_rows"] == 1
+        "eight protein-binding rows: seven REMOVE plus the EPHA4 MODIFY",
+        lambda f: f["n_protein_binding_rows"] == 8
+        and f["n_protein_binding_rows"] - f["n_removed_screen_rows"] == 1
         and f["actions"].get("MODIFY") == 1,
-        "the one interaction with a mechanism",
+        "EPHA4 is the eighth of eight, and the one interaction with a mechanism",
     ),
     (
         "seven neuronal/dendritic rows, all non-core",
@@ -132,15 +143,24 @@ def prose_number_checks(f: dict) -> list[str]:
     review_text = REVIEW.read_text()
     notes_text = NOTES.read_text() if NOTES.exists() else ""
 
-    # "six"/"seven" bare protein-binding screen hits, stated in suggested_questions.
-    m = re.search(r"Of the (\w+) bare protein-binding screen hits", review_text)
+    words = {5: "Five", 6: "Six", 7: "Seven", 8: "Eight"}
+
+    # "Seven bare protein-binding rows in this record" in suggested_questions.
+    m = re.search(r"(\w+) bare protein-binding rows in this record", review_text)
     if m:
-        word = m.group(1)
-        want = {7: "seven", 6: "six", 5: "five"}.get(f["n_demoted_screen_rows"])
-        if word != want:
+        want = words.get(f["n_removed_screen_rows"])
+        if m.group(1).capitalize() != want:
             problems.append(
-                f"review suggested_questions says {word!r} bare protein-binding screen hits, "
-                f"document has {f['n_demoted_screen_rows']} ({want!r})"
+                f"review suggested_questions says {m.group(1)!r} bare protein-binding rows, "
+                f"document removes {f['n_removed_screen_rows']} ({want!r})"
+            )
+
+    # The five partner names must all still appear, since REMOVE discards the rows from GOA.
+    for partner in ("PIN1", "LASP1", "CEP55", "PRKG1", "GORASP2"):
+        if review_text.count(partner) < 2:
+            problems.append(
+                f"partner {partner} of a removed GO:0005515 row appears < 2 times in the "
+                f"review; removals must not lose the partner identity"
             )
 
     # "Seven of the thirty-one GOA rows are neuronal or dendritic"
@@ -208,7 +228,7 @@ def self_test() -> int:
            not unfalsifiable, str(unfalsifiable))
 
     # The prose cross-check must fire on wrong prose, not merely pass on right prose.
-    bad = prose_number_checks(dict(f, n_demoted_screen_rows=6, n_neuronal_rows=6))
+    bad = prose_number_checks(dict(f, n_removed_screen_rows=6, n_neuronal_rows=6))
     expect("prose cross-check reports a mismatch when the counts disagree",
            len(bad) >= 1, str(bad))
     good = prose_number_checks(f)

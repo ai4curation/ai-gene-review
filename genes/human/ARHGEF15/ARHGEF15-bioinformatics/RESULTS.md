@@ -10,7 +10,9 @@ uv run --no-project python dh_specificity.py --self-test
 uv run --no-project python gef_term_availability.py    # -> gef_term_availability.json
 uv run --no-project --with openpyxl python muller2020_specificity.py            # -> muller2020_specificity.json
 uv run --no-project --with openpyxl python muller2020_specificity.py --self-test
+uv run --no-project python comparator_annotations.py   # -> comparator_annotations.json
 uv run --no-project --with pyyaml python check_quotes.py --self-test
+uv run --no-project --with pyyaml python audit_review.py --self-test
 ```
 
 `dh_specificity.py` needs MAFFT on the path (L-INS-i); it raises rather than degrading
@@ -253,3 +255,37 @@ Cdc42 protein signal transduction term, so a GEF shown to activate Cdc42 can onl
 on the unsigned parent. Note also that `GO:0032488` is an `is_a` descendant of `GO:0007266`,
 so the Rho terms do not exclude Cdc42 — `GO:0035025`, which human ARHGEF15 already carries,
 is satisfied by activating either.
+
+## 3. Claims about *other* genes, recorded as query results rather than asserted
+
+The review says things about proteins that have no GOA file in this repository, so they
+cannot be checked from the committed corpus: the comparator behind the `GO:0046875` MODIFY,
+the evidence code and reference behind each PAINT seed's own annotation, and the donor rows
+behind each ISS and Ensembl projection. `comparator_annotations.py` fetches each from QuickGO
+and fails if the observed evidence code or reference does not match what the review claims,
+so a wrong sentence breaks the script rather than sitting there looking specific.
+
+**15/15 verified.**
+
+| claim made in the review | QuickGO |
+|---|---|
+| NGEF/Ephexin1 carries `GO:0046875` — the comparator for the EPHA4 `MODIFY` | **IEA**, `GO_REF:0000107` (Ensembl projection from mouse Ngef, *not* experimental) |
+| NGEF `GO:0005085` | EXP, PMID:15848799 |
+| ARHGEF5 `GO:0005085` | IDA, PMID:15601624 |
+| ARHGEF16 `GO:0005085` | IDA, PMID:20679435 |
+| ARHGEF5 `GO:0032956` | IMP, PMID:14662653 |
+| ARHGEF19 `GO:0032956` | IGI, PMID:20643356 |
+| mouse Arhgef15 `GO:0005085` | IDA, PMID:21029865 |
+| mouse Arhgef15 `GO:2000297` | IMP, PMID:21029865 |
+| mouse Arhgef15 `GO:0030425` | IDA, PMID:21029865 |
+| mouse Arhgef15 `GO:0098794` / `GO:0098978` / `GO:0150052` | IDA **and** IMP, PMID:28185854 |
+| rat Arhgef15 `GO:0005737` / `GO:0051496` | IDA, PMID:12775584 |
+| ARHGEF16 `GO:0032489` — the sibling that already sits on the Cdc42 BP term | IDA, PMID:21139582 |
+
+The first row is the one worth reading twice. The comparator that justifies modifying the
+EPHA4 row to `GO:0046875` is itself an **IEA projection from mouse Ngef**, not an
+experimental annotation. That does not undermine the MODIFY — the ARHGEF15 evidence for
+receptor coupling is the human IPI plus the phosphorylation mechanism in PMID:12775584, and
+the comparator only shows the term is used this way for this protein family — but the review
+now says "albeit by Ensembl projection from mouse Ngef rather than experimentally" rather
+than leaving the reader to assume otherwise.

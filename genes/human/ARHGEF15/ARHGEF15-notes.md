@@ -241,13 +241,19 @@ was imported from it.
   and the exchange machinery is intact. Substrate identity is carried in
   `core_functions[].substrates` and in `RO:0002233 has_input` extensions, because GO's MF
   branch cannot carry it.
-- **`GO:0005515` protein binding.** The seven IPI rows from binary-interactome screens
-  (five distinct partners: PIN1, LASP1, CEP55, PRKG1, GORASP2)
-  (PMID:25416956, PMID:26871637, PMID:32296183) are `MARK_AS_OVER_ANNOTATED` — reproducible
-  screen hits with no biology attached, not refuted findings, and `protein binding` says
-  nothing about function. The one IPI with a mechanism is EPHA4 (PMID:12775584), which is
-  `MODIFY` to `GO:0046875 ephrin receptor binding`: that interaction is the receptor-coupling
-  step, and NGEF/Ephexin1 already carries `GO:0046875` for the same role.
+- **`GO:0005515` protein binding.** Eight IPI rows. Seven come from binary-interactome
+  screens across five distinct partners (PIN1, LASP1, CEP55 x3, PRKG1, GORASP2;
+  PMID:25416956, PMID:26871637, PMID:32296183) and are `REMOVE`. My first pass used
+  `MARK_AS_OVER_ANNOTATED` and argued that a reproducible screen hit is not a refuted
+  finding; `.claude/skills/annotation-reviewer/SKILL.md:187-199` forbids that action for this
+  term and pre-empts that argument in its final clause. The problem with a bare `GO:0005515`
+  is that it carries no functional information, not that it overstates the evidence, so the
+  policy routes to `MODIFY` when the paper supports a better MF and otherwise to `REMOVE` —
+  and removal says the annotation is uninformative, not that the interaction is false. The
+  five partners are named in `suggested_questions` so the removals do not lose them. The
+  eighth row, EPHA4 (PMID:12775584), is the `MODIFY` branch of the same policy:
+  `GO:0046875 ephrin receptor binding`, the receptor-coupling step, a term NGEF/Ephexin1
+  already carries for the same role.
 - **Neuronal rows.** Kept as non-core. Every one traces to a mouse experiment
   (PMID:21029865, PMID:28185854) with no human measurement, while the human tissue evidence is
   vascular and adipose. `KEEP_AS_NON_CORE` is the honest position: the mouse evidence is
