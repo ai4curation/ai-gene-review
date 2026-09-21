@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import json
 import pathlib
 import re
 import sys
@@ -142,11 +143,17 @@ def prose_number_checks(f: dict) -> list[str]:
     problems = []
     review_text = REVIEW.read_text()
     notes_text = NOTES.read_text() if NOTES.exists() else ""
+    # Phrase regexes must run against whitespace-normalised text: the review is a wrapped
+    # YAML document, so any multi-word phrase can be split across a line break. A regex that
+    # never matches also never fires, which is a check that cannot report what it is named
+    # for -- caught here by the mutation test below, not by reasoning about it.
+    review_flat = re.sub(r"\s+", " ", review_text)
+    notes_flat = re.sub(r"\s+", " ", notes_text)
 
     words = {5: "Five", 6: "Six", 7: "Seven", 8: "Eight"}
 
     # "Seven bare protein-binding rows in this record" in suggested_questions.
-    m = re.search(r"(\w+) bare protein-binding rows in this record", review_text)
+    m = re.search(r"(\w+) bare protein-binding rows in this record", review_flat)
     if m:
         want = words.get(f["n_removed_screen_rows"])
         if m.group(1).capitalize() != want:
@@ -155,23 +162,49 @@ def prose_number_checks(f: dict) -> list[str]:
                 f"document removes {f['n_removed_screen_rows']} ({want!r})"
             )
 
+    # The review describes the Mueller read-control outcome in prose; compare it to the
+    # recorded result. The first draft said "six textbook-specificity read-controls" were
+    # recovered when only five are -- and the sixth failing is the whole point of keeping it.
+    muller = HERE / "muller2020_specificity.json"
+    if muller.exists():
+        ok = json.loads(muller.read_text())["read_controls_ok"]
+        n_recovered = sum(1 for v in ok.values() if v)
+        n_total = len(ok)
+        m = re.search(r"(\w+) textbook-specificity read-controls", review_flat)
+        if m and m.group(1) != words.get(n_total, "?").lower():
+            problems.append(
+                f"review says {m.group(1)!r} read-controls; the recorded run has {n_total}"
+            )
+        m = re.search(r"of which (\w+) recover their expected GTPase", review_flat)
+        if m and m.group(1) != words.get(n_recovered, "?").lower():
+            problems.append(
+                f"review says {m.group(1)!r} read-controls recover; the recorded run has "
+                f"{n_recovered} of {n_total}"
+            )
+        failing = [g for g, v in ok.items() if not v]
+        if len(failing) == 1 and failing[0] not in review_flat:
+            problems.append(
+                f"the one failing read-control ({failing[0]}) is not named in the review; "
+                f"its failure is what licenses reading a minus as 'not detected'"
+            )
+
     # The five partner names must all still appear, since REMOVE discards the rows from GOA.
     for partner in ("PIN1", "LASP1", "CEP55", "PRKG1", "GORASP2"):
-        if review_text.count(partner) < 2:
+        if review_flat.count(partner) < 2:
             problems.append(
                 f"partner {partner} of a removed GO:0005515 row appears < 2 times in the "
                 f"review; removals must not lose the partner identity"
             )
 
     # "Seven of the thirty-one GOA rows are neuronal or dendritic"
-    m = re.search(r"(\w+) of the thirty-one GOA rows are neuronal or dendritic", review_text)
+    m = re.search(r"(\w+) of the thirty-one GOA rows are neuronal or dendritic", review_flat)
     if m and m.group(1) != {7: "Seven", 6: "Six"}.get(f["n_neuronal_rows"], "?"):
         problems.append(
             f"review says {m.group(1)!r} neuronal/dendritic rows, document has {f['n_neuronal_rows']}"
         )
 
     # notes: "Existing GO record (31 GOA rows)"
-    m = re.search(r"Existing GO record \((\d+) GOA rows\)", notes_text)
+    m = re.search(r"Existing GO record \((\d+) GOA rows\)", notes_flat)
     if m and int(m.group(1)) != f["n_rows"]:
         problems.append(f"notes says {m.group(1)} GOA rows, document has {f['n_rows']}")
 
@@ -233,6 +266,29 @@ def self_test() -> int:
            len(bad) >= 1, str(bad))
     good = prose_number_checks(f)
     expect("prose cross-check is silent when they agree", good == [], str(good))
+
+    # The read-control branch needs its own mutation: the branch above only exercises the
+    # row counts. Temporarily rewrite the recorded run so every control recovers, and confirm
+    # the review's "of which five recover" sentence is then reported as disagreeing.
+    muller = HERE / "muller2020_specificity.json"
+    if muller.exists():
+        original = muller.read_text()
+        try:
+            doc = json.loads(original)
+            doc["read_controls_ok"] = {k: True for k in doc["read_controls_ok"]}
+            muller.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n")
+            mutated = prose_number_checks(f)
+            expect(
+                "read-control cross-check fires when the recorded run stops matching the prose",
+                any("read-controls recover" in p for p in mutated),
+                str(mutated),
+            )
+        finally:
+            muller.write_text(original)
+        expect(
+            "the recorded run was restored byte-for-byte",
+            muller.read_text() == original,
+        )
 
     print()
     if failures:
