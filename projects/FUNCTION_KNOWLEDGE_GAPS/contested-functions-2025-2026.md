@@ -602,8 +602,10 @@ The unambiguous subset is the one worth acting on: **970 entries whose "quote" b
 narration word** such as *"Falcon report summarizes..."* or *"Falcon deep research supports..."*.
 These cannot be verbatim source text by construction. Spot-checked: the ARATH/BAK1 deep-research
 file contains no occurrence of "Falcon" anywhere in its prose — its only match is its own
-`provider: falcon` frontmatter line — yet BAK1's review carries **53** `supporting_text` entries
-opening with "Falcon report summarizes", and 74 such rows appear across the whole report.
+`provider: falcon` frontmatter line — yet BAK1's review carries **52** `supporting_text` entries
+opening with "Falcon report summarizes", and 74 such rows appear across the whole report. (A plain
+`grep` of that file counts 53; the extra hit is a `findings[].statement`, not a `supporting_text`,
+and the scan only looks at the latter.)
 
 (An earlier version of this paragraph used ARATH/ABI1 as the example. That example went stale in the
 `main` merge: ABI1's review no longer has any such entry and it no longer appears in the report at
