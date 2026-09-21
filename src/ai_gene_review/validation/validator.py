@@ -153,15 +153,33 @@ def validate_reference_finding_supporting_text(
                 severity = ValidationSeverity.WARNING
                 prefix = "Finding supporting text could not be verified"
                 suggestion = "Verify the quote when the publication text is available"
-            elif declared_unavailable or cache_has_full_text is False:
+            elif declared_unavailable:
+                # The author has explicitly recorded that the quoted text is not in the
+                # cache, so this is an acknowledged limitation rather than a silent one.
                 severity = ValidationSeverity.WARNING
                 prefix = (
                     "Finding supporting text is absent from the available "
                     "abstract-only cache"
                 )
                 suggestion = (
-                    "Verify the quote against full text; use full_text_unavailable to "
-                    "record that the quoted source text is not cached"
+                    "Verify the quote against full text when it becomes available"
+                )
+            elif cache_has_full_text is False:
+                # Abstract-only cache and *nothing declared*: the quote cannot be
+                # verified and no one has said so. Previously this was a warning, which
+                # made an unverifiable load-bearing quote indistinguishable from a
+                # verified one. It is an error because the author has two concrete
+                # remedies, not because the cache state is their fault.
+                severity = ValidationSeverity.ERROR
+                prefix = (
+                    "Finding supporting text is absent from the available "
+                    "abstract-only cache and the reference does not declare "
+                    "full_text_unavailable"
+                )
+                suggestion = (
+                    "Either quote a verbatim substring of the cached abstract, or set "
+                    "full_text_unavailable: true on the reference to record that the "
+                    "quoted text is not cached"
                 )
             else:
                 severity = ValidationSeverity.ERROR
