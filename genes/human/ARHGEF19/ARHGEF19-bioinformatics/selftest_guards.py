@@ -185,6 +185,7 @@ def quote_checker_cases() -> int:
 
     doc = yaml.safe_load(vq.REVIEW.read_text(encoding="utf-8"))
     failures = 0
+    ran = 0
 
     def ref_index(doc, ref_id: str) -> int:
         """Locate a reference by id, asserting the anchor matches exactly once.
@@ -201,7 +202,8 @@ def quote_checker_cases() -> int:
         return hits[0]
 
     def run(mutated, expect_code, expect_text, name):
-        nonlocal failures
+        nonlocal failures, ran
+        ran += 1
         with tempfile.NamedTemporaryFile(
             "w", suffix="-ai-review.yaml", delete=False, encoding="utf-8"
         ) as fh:
@@ -256,7 +258,7 @@ def quote_checker_cases() -> int:
     )
     run(m, 1, "does not exist", "quote checker: missing source file")
 
-    return failures
+    return failures, ran
 
 
 def main() -> int:
@@ -282,9 +284,13 @@ def main() -> int:
                     print(f"        {line}")
     restore(snap)
     print()
-    failures += quote_checker_cases()
+    # The count is derived, never written down twice: a hardcoded total drifts
+    # the moment a case is added, and this file's whole point is that a check
+    # which silently disagrees with its own description is not a check.
+    qc_failures, qc_ran = quote_checker_cases()
+    failures += qc_failures
     print()
-    total = len(CASES) + 5
+    total = len(CASES) + qc_ran
     if failures:
         print(f"{failures}/{total} guard(s) did not behave as specified.")
         return 1

@@ -111,11 +111,19 @@ but they agree by coincidence of evidence, not because either implies the other.
 ### Guards
 
 `selftest_guards.py` breaks one thing at a time and asserts the matching guard
-fires with its expected message. 12 cases, including a negative control that must
-stay silent and a duplicate-accession case (FASTA names are the join key for
+fires with its expected message. **17 cases** — 12 against `dh_competence_check.py`
+and 5 against `verify_quotes.py` — including two negative controls that must stay
+silent and a duplicate-accession case (FASTA names are the join key for
 hmmsearch/hmmalign, so a duplicated panel entry would silently merge two rows).
-All 12 behave as specified. Mutation is done by rebinding a named module
-attribute, so each anchor matches exactly once by construction.
+All 17 behave as specified.
+
+The count in that sentence is the one the script prints, and the script derives it
+rather than storing it (`len(CASES) + qc_ran`): an earlier version hardcoded
+`+ 5`, and this document and the review YAML both went stale at 12 the moment the
+quote-checker cases were added. Two of the mutations are anchored by name — module
+attribute for the first group, reference `id` for the second, asserted to match
+exactly once — after an index-anchored mutation silently moved onto the wrong row
+when a reference was inserted ahead of it, and "failed" for the wrong reason.
 
 ---
 

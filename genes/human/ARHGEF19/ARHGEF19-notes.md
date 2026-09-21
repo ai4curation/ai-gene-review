@@ -188,10 +188,19 @@ from the family name:
 | PTN002656130 | GO:0042060 | 117571 (Euteleostomi) | **mouse Arhgef19 alone** |
 
 Two consequences. The `GO:0032956` IBA includes the target's own accession among
-the seeds, so it and the IGI below it are one piece of evidence, not two. And the
-wound-healing node has a **single seed** — a legitimate call for a 1:1 orthologue,
-but "inferred from biological ancestor" is doing less work than the phrase
-usually implies; it is a mouse-to-human transfer of one experiment.
+the seeds — which is the expected shape, not circularity: ARHGEF19's own IGI is
+one of the descendant evidences PAINT used to place the IBD, so it reappears as a
+source of the IBA the gene later receives. It marks that experimental grounding
+exists *on the target*, and the IBA then adds what the IGI cannot — that actin
+regulation is ancestral to PTHR12845 rather than a keratinocyte-specific role
+established once in mouse skin. (CLAUDE.md §propagation is explicit on this:
+*"Never mark such a source `CIRCULAR_OR_REDUNDANT` or describe it as inflating
+support."* An earlier draft of this review did exactly that and was corrected.)
+
+And the wound-healing node has a **single seed** — a legitimate call for a 1:1
+orthologue, and CLAUDE.md is equally explicit that a short donor list is not weak
+support, so this is recorded as a fact about the breadth of the ancestral call
+rather than as a defect.
 
 - **Epidermal wound repair via GRHL3.** "we identified RhoGEF19, a homolog of a
   RhoA activator involved in PCP signaling in Xenopus, as a direct target of
