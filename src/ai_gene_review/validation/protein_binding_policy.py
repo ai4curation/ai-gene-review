@@ -30,7 +30,13 @@ from typing import Any, Dict, Iterator, Tuple
 PROTEIN_BINDING = "GO:0005515"
 
 #: Actions the policy permits on a bare ``GO:0005515`` row.
-COMPLIANT_ACTIONS = frozenset({"MODIFY", "REMOVE", "UNDECIDED", "PENDING", "NEW"})
+#:
+#: ``NEW`` is deliberately absent. Every other flagged action mislabels an annotation GOA
+#: already made; ``NEW`` *proposes a fresh* bare protein-binding annotation, which the root
+#: ``CLAUDE.md`` rules out ("Avoid the term ``protein binding``... Instead find a more
+#: informative MF term"). The legacy-backlog argument does not apply either: three rows
+#: repo-wide do this.
+COMPLIANT_ACTIONS = frozenset({"MODIFY", "REMOVE", "UNDECIDED", "PENDING"})
 
 #: Why each non-compliant action is wrong, phrased so the message is actionable.
 NON_COMPLIANT_REASONS = {
@@ -45,6 +51,10 @@ NON_COMPLIANT_REASONS = {
     "ACCEPT": (
         "accepting a bare protein-binding row endorses an annotation that carries no "
         "functional information"
+    ),
+    "NEW": (
+        "proposing a new bare protein-binding annotation adds one that carries no "
+        "functional information; CLAUDE.md asks for a more informative MF term instead"
     ),
 }
 

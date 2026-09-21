@@ -20,13 +20,13 @@ def doc(*actions: str, term: str = PROTEIN_BINDING) -> dict:
     }
 
 
-@pytest.mark.parametrize("action", ["MODIFY", "REMOVE", "UNDECIDED", "PENDING", "NEW"])
+@pytest.mark.parametrize("action", ["MODIFY", "REMOVE", "UNDECIDED", "PENDING"])
 def test_compliant_actions_pass(action):
     assert not list(iter_protein_binding_violations(doc(action)))
 
 
 @pytest.mark.parametrize(
-    "action", ["MARK_AS_OVER_ANNOTATED", "KEEP_AS_NON_CORE", "ACCEPT"]
+    "action", ["MARK_AS_OVER_ANNOTATED", "KEEP_AS_NON_CORE", "ACCEPT", "NEW"]
 )
 def test_non_compliant_actions_are_reported(action):
     (index, reported, explanation) = next(iter(iter_protein_binding_violations(doc(action))))
@@ -74,3 +74,15 @@ def test_reports_every_offending_row_with_its_index():
 def test_malformed_documents_do_not_raise(malformed):
     """A lint rule must never be the thing that crashes validation."""
     assert list(iter_protein_binding_violations(malformed)) == []
+
+
+def test_new_proposing_bare_protein_binding_is_flagged():
+    """``NEW`` differs in kind from the others and is still not compliant.
+
+    The other flagged actions mislabel an annotation GOA already made; ``NEW`` proposes a
+    *fresh* bare protein-binding annotation, which CLAUDE.md rules out. Only three rows
+    repo-wide do this, so the legacy-backlog argument for leniency does not apply.
+    """
+    (_, action, explanation) = next(iter(iter_protein_binding_violations(doc("NEW"))))
+    assert action == "NEW"
+    assert "more informative MF term" in explanation
