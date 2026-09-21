@@ -41,8 +41,13 @@ Controls
   report when zero GOA partners match, and `--self-test` asserts that the known-bad
   field choice produces zero matches while the correct one does not. A check that
   cannot tell "no data" from "broken query" is worse than no check.
-* **Negative control:** RHOA (P61586), ARHGAP6's own GTPase substrate, has no PDZ
-  domain and must NOT appear among this publication's partners.
+* **Publication-filter control, derived.** The set of IntAct partners for this
+  protein *outside* this publication must be non-empty, and none of them may appear
+  in the filtered result. This replaces an earlier control that asserted RHOA
+  (ARHGAP6's own PDZ-free substrate) was absent from the publication -- which is
+  true, but **vacuously**: RHOA does not appear anywhere in ARHGAP6's IntAct record,
+  so that control would have passed with a completely broken filter. A control that
+  cannot fail is worse than no control, because it prints reassurance.
 * **Positive control:** derived from the response rather than fixed -- at least one
   GOA partner must be present with a detection method.
 
@@ -68,7 +73,6 @@ TARGET = "O43182"
 TARGET_SYMBOL = "ARHGAP6"
 BINDING_TERM = "GO:0005515"
 PMID = "36115835"
-NEGATIVE_CONTROL = ("P61586", "RHOA")
 
 # PSI-MI methods that measure binding directly, rather than inferring it from
 # co-purification of a complex. Declared, and checked against the MI identifiers
@@ -144,6 +148,46 @@ def partner_records(items: list[dict], pmid: str, id_fields=("uniqueIdA", "uniqu
     return out
 
 
+def filter_control(items: list[dict], pmid: str) -> tuple[set[str], list[str]]:
+    """Prove the publication filter actually excludes things.
+
+    Returns (partners excluded by the filter, problems). The control is derived
+    from the data rather than naming a protein, because the fixed version of it
+    named RHOA -- absent from the whole record, so the assertion could not fail.
+    """
+    all_partners: set[str] = set()
+    for it in items:
+        for k in ("uniqueIdA", "uniqueIdB"):
+            v = it.get(k)
+            if v and v != TARGET:
+                all_partners.add(v)
+    in_pub = set(partner_records(items, pmid))
+    excluded = all_partners - in_pub
+    problems: list[str] = []
+    if not all_partners:
+        problems.append("no partners at all in the IntAct record; the query is broken")
+    elif not excluded:
+        problems.append(
+            "every IntAct partner of this protein belongs to the cited publication, so "
+            "the publication filter is untested by this run and cannot be trusted"
+        )
+    else:
+        leaked = excluded & in_pub
+        if leaked:
+            problems.append(f"filter leaked partners it should exclude: {sorted(leaked)[:5]}")
+    return excluded, problems
+
+
+def intact_release(items: list[dict]) -> str:
+    """Latest IntAct release date across the records, as a provenance stamp.
+
+    A run date says when the script executed; this says which snapshot of IntAct it
+    executed against, which is the thing that can change under a re-run.
+    """
+    dates = sorted({it.get("releaseDate") for it in items if it.get("releaseDate")})
+    return dates[-1] if dates else "unreported"
+
+
 def collect_mi_ids(items: list[dict]) -> dict[str, str]:
     """detection method short label -> PSI-MI identifier, as IntAct reports it."""
     out: dict[str, str] = {}
@@ -199,11 +243,13 @@ def self_test(items: list[dict], partners: list[str]) -> int:
     else:
         print("  ok   known-bad id field yields zero matches, as it did in the wild")
 
-    # Negative control: the substrate GTPase must not be a partner here.
-    if NEGATIVE_CONTROL[0] in good:
-        failures.append(f"negative control: {NEGATIVE_CONTROL[1]} appears as a partner")
+    # Publication-filter control, derived so it cannot be vacuous.
+    excluded, problems = filter_control(items, PMID)
+    if problems:
+        failures.extend(problems)
     else:
-        print(f"  ok   negative control: {NEGATIVE_CONTROL[1]} absent from this publication")
+        print(f"  ok   publication filter excludes {len(excluded)} partner(s) present "
+              f"in the wider record, e.g. {sorted(excluded)[0]}")
 
     # The direct-binding whitelist must be anchored to PSI-MI identifiers, not to
     # labels: assert the declared ids agree with IntAct, and that a wrong id is caught.
@@ -239,7 +285,7 @@ def self_test(items: list[dict], partners: list[str]) -> int:
     return 0
 
 
-def render(rows, missing, n_partners) -> str:
+def render(rows, missing, n_partners, release: str) -> str:
     today = date.today().isoformat()
     out: list[str] = []
     A = out.append
@@ -267,7 +313,7 @@ def render(rows, missing, n_partners) -> str:
     A("uv run check_binding_evidence.py --self-test")
     A("```")
     A("")
-    A(f"## Result (run {today})")
+    A(f"## Result (run {today}, IntAct snapshot released {release})")
     A("")
     A("| partner | acc | detection method (PSI-MI) | interaction type |")
     A("|---|---|---|---|")
@@ -355,11 +401,9 @@ def main() -> int:
             f"PMID:{PMID}. That is far more likely a broken query than an absence of "
             "evidence; refusing to report it as a finding."
         )
-    if NEGATIVE_CONTROL[0] in recs:
-        raise SystemExit(
-            f"FAIL: negative control {NEGATIVE_CONTROL[1]} appears among this "
-            "publication's partners; the publication filter is not working."
-        )
+    _, filter_problems = filter_control(items, PMID)
+    if filter_problems:
+        raise SystemExit("FAIL: " + "; ".join(filter_problems))
 
     MI_IDS.update(collect_mi_ids(items))
     bad_mi = mi_mismatches(MI_IDS)
@@ -379,7 +423,7 @@ def main() -> int:
     rows.sort(key=lambda r: r[0])
     missing = [a for a in partners if a not in recs]
 
-    md = render(rows, missing, len(partners))
+    md = render(rows, missing, len(partners), intact_release(items))
     if args.stdout:
         print(md)
     else:

@@ -22,7 +22,7 @@ uv run check_binding_evidence.py
 uv run check_binding_evidence.py --self-test
 ```
 
-## Result (run 2026-09-20)
+## Result (run 2026-09-20, IntAct snapshot released 2025-08-28T14:08:27.479+0000)
 
 | partner | acc | detection method (PSI-MI) | interaction type |
 |---|---|---|---|
