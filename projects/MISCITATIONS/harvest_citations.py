@@ -23,8 +23,8 @@ Nothing about the outcome is hard-coded; if no defects are found the report
 says so.
 
 Usage:
-    uv run python projects/MISCITATION_AUDIT/harvest_citations.py \
-        --genes-dir genes --out-dir projects/MISCITATION_AUDIT/reports
+    uv run python projects/MISCITATIONS/harvest_citations.py \
+        --genes-dir genes --out-dir projects/MISCITATIONS/reports
 """
 from __future__ import annotations
 
@@ -218,7 +218,7 @@ def write_report(out_dir: str, files: int, flags: list[dict], register: list[dic
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--genes-dir", default="genes")
-    ap.add_argument("--out-dir", default="projects/MISCITATION_AUDIT/reports")
+    ap.add_argument("--out-dir", default="projects/MISCITATIONS/reports")
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
 

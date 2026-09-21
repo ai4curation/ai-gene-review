@@ -24,9 +24,9 @@ Neither check asserts that a hit is wrong -- both produce candidates for a human
 to adjudicate. If nothing is found the report says so.
 
 Usage:
-    uv run python projects/MISCITATION_AUDIT/detect_citation_anomalies.py \
+    uv run python projects/MISCITATIONS/detect_citation_anomalies.py \
         --genes-dir genes --publications-dir publications \
-        --out-dir projects/MISCITATION_AUDIT/reports [--check-pubmed]
+        --out-dir projects/MISCITATIONS/reports [--check-pubmed]
 """
 from __future__ import annotations
 
@@ -191,7 +191,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--genes-dir", default="genes")
     ap.add_argument("--publications-dir", default="publications")
-    ap.add_argument("--out-dir", default="projects/MISCITATION_AUDIT/reports")
+    ap.add_argument("--out-dir", default="projects/MISCITATIONS/reports")
     ap.add_argument("--check-pubmed", action="store_true", help="run Check A (needs network)")
     ap.add_argument("--min-family", type=int, default=3)
     ap.add_argument(

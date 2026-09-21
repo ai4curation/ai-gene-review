@@ -283,7 +283,7 @@ Three findings from the pathway set that generalize beyond it:
    that enzyme farnesylates *heme*, not protein; and the row was assigned by MGI against a
    *S. cerevisiae* accession. Marked REMOVE. The `GO:0005739` row from the same reference shares
    the faulty provenance but is factually correct, so it is kept non-core with the problem recorded.
-   This case seeded [MISCITATION_AUDIT.md](MISCITATION_AUDIT.md), which found it is one of 27 such
+   This case seeded [MISCITATIONS.md](MISCITATIONS.md), which found it is one of 27 such
    defects already flagged across the repository — 26 of them GOA-sourced.
 2. **A GFP-library artifact — but only where biology says so.** Nucleus and/or cytoplasm rows
    from the genome-wide C-terminal GFP library
