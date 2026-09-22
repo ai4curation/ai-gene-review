@@ -4,10 +4,17 @@ Module documents describe reusable biological modules: pathways, organelle
 lifecycles, complexes, molecular-function programs, developmental programs, or
 other recursively decomposable biological sketches.
 
-Validate a module document with:
+Validate all module documents, including schema and biological compliance checks:
+
+```bash
+just validate-modules
+```
+
+For one module, run both the schema validator and the module validator:
 
 ```bash
 uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleReview modules/gluconeogenesis.yaml
+uv run python -m ai_gene_review.validation.module_validator modules/gluconeogenesis.yaml
 ```
 
 Run module-focused deep research with:
@@ -40,6 +47,11 @@ Each rendered module page carries a **Derived QC** panel (computed by
   joined against `genes/**/*-ai-review.yaml`: whether the gene has a review,
   whether that review is complete (no PENDING/UNDECIDED annotations), and
   whether it has its own deep research.
+- **Function consistency and core coverage** — compares each asserted GO
+  molecular function with the participant's gene review and, separately,
+  applicable family reviews. Lists core support, retained noncore support,
+  conflicts, and missing coverage per annoton/participant/function. The module
+  validator reports the same warnings and errors; see the details below.
 - **Reaction chaining (advisory)** — for every `PRECEDES` connection, each
   reaction's GO molecular-function term is resolved to RHEA (via the GO→RHEA
   mapping in the local OAK databases) and the upstream reaction's CoA-bearing
@@ -69,6 +81,48 @@ Each rendered module page carries a **Derived QC** panel (computed by
 The module index (`pages/modules/index.html`) surfaces the headline figures
 (reviewed-gene count, leaf-grounding gaps, module deep-research presence) as
 sortable columns.
+
+### Function compliance
+
+Both an annoton's explicit `function` and its participant's `required_function`
+are checked. Checks descend into complex `active_units` and use each unit's own
+assertions; a complex's overall activity is not assigned to all of its subunits.
+
+For concrete UniProt participants and family `representative_members`, the
+checker joins to `genes/**/*-ai-review.yaml`. A matching
+`core_functions[].molecular_function` establishes core coverage. Retained
+annotations and curated replacement terms can support the activity while
+revealing missing core coverage. An intentional `KEEP_AS_NON_CORE` is valid and
+does not request promotion to core functions. Missing gene reviews, missing
+support or core coverage, and functions without GO identifiers produce
+**warnings**, not evidence that the activity is absent. A retained, applicable
+`NOT` annotation contradicting the asserted activity produces an **error**.
+Rejected evidence rows, contribution-only functions, and unresolved isoform or
+annotation-extension context are reported for review without being treated as
+unconditional biological negations.
+
+Term comparisons use exact GO identifiers and **`is_a` relationships only**:
+a reviewed specific activity supports its broader ancestors, while a broad
+annotation cannot establish a more specific activity. Negation applies in the
+opposite direction: exclusion of a broad activity excludes its descendants.
+`part_of` and regulatory relationships do not establish molecular-function
+support. If the ontology cannot be loaded, comparisons fall back to exact IDs.
+
+Family representative checks establish support for the named proteins, not
+conservation throughout a family. Separate checks read structured reviews in
+`interpro/panther/` and `interpro/pfam/`. PANTHER assessments must cover the
+asserted family or subfamily; `SUBFAMILY_ONLY` and `RESIDUE_DETERMINED` restrictions
+remain visible instead of being generalized to every member. An explicitly
+excluded family/subfamily claim is an error. For Pfam, support requires an
+`ACCEPTED` molecular-function annotation with the `enables` relation;
+`PROPOSED`, `contributes_to`, rejected mappings, and missing reviews leave gaps
+or restrictions. Existing family-ID, membership, and PAINT-node validation
+remains separate.
+
+These checks compare structured assertions with current reviews. They do not
+prove the meaning of free text, substrate refinements, reaction chemistry, or
+biological context. A supported GO term can still accompany a more specific
+claim that needs manual review.
 
 Design notes:
 

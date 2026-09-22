@@ -13,6 +13,8 @@ This module computes the derived stats surfaced on rendered module pages:
    has deep research
 5. ``module_deep_research`` -- whether the module document as a whole has an
    associated deep-research report
+6. ``function_conformance`` -- whether annoton molecular functions agree with
+   gene reviews/core functions and curated family-level function assessments
 
 The functions are deliberately pure (apart from the filesystem-scanning helpers)
 so they can be unit-tested directly against the YAML documents in ``modules/``.
@@ -1014,6 +1016,10 @@ def collect_module_qc(
     genes_dir: Path = Path("genes"),
 ) -> dict[str, Any]:
     """Collect all derived QC stats for a module document in one structure."""
+    from ai_gene_review.module_function_conformance import module_function_conformance
+
+    if gene_index is None:
+        gene_index = index_gene_reviews(genes_dir)
     try:
         data_qc = run_data_qc(yaml_path, schema_path=schema_path)
     except Exception as error:  # external tool: degrade gracefully, never crash render
@@ -1030,4 +1036,7 @@ def collect_module_qc(
             data, gene_index=gene_index, genes_dir=genes_dir
         ),
         "module_deep_research": module_deep_research(yaml_path),
+        "function_conformance": module_function_conformance(
+            data, gene_index=gene_index, genes_dir=genes_dir
+        ),
     }

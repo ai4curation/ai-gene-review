@@ -262,6 +262,8 @@ class ModuleValidationResult:
     # the result rather than recomputed by the caller, so there is only one
     # place the definition can live and it cannot drift from the validator's.
     ungrounded_families: int = 0
+    # Structured functional coverage accompanies the blocking/advisory messages.
+    function_conformance: Dict = field(default_factory=dict)
 
     @property
     def is_valid(self) -> bool:
@@ -1660,14 +1662,21 @@ def validate_module_file(
     paint_index: Optional[PaintIndex] = None,
     panther_dir: Optional[Path] = None,
     member_index: Optional[Dict[str, str]] = None,
+    gene_index: Optional[Dict[str, Path]] = None,
+    genes_dir: Optional[Path] = None,
+    family_reviews_dir: Optional[Path] = None,
+    pfam_reviews_dir: Optional[Path] = None,
 ) -> ModuleValidationResult:
-    """Validate term labels in a single module YAML file.
+    """Validate module grounding, structure, evidence, and functional agreement.
 
     ``resolver`` may be injected for testing; otherwise a real OAK-backed
     resolver is built from ``config_path`` (defaults to ``conf/oak_config.yaml``
     relative to the repository root). ``paint_index`` may also be injected for
     PTN tests; otherwise local ``interpro/panther`` TSVs are loaded lazily only
     when a module declares ancestral nodes.
+    ``gene_index`` and review directories select the local curation corpus for
+    function compliance. Missing coverage warns; applicable retained gene NOTs
+    and explicit family exclusions block. Results include structured findings.
     """
     path = Path(path)
     project_root = Path(__file__).resolve().parents[3]
@@ -1749,6 +1758,40 @@ def validate_module_file(
     warnings.extend(validate_chaining(doc))
     warnings.extend(symbol_label_warnings(doc))
 
+    # Compare actual role assertions, not just protein/family membership.
+    # Coverage gaps remain advisory; explicit compatible contradictions block.
+    from ai_gene_review.module_function_conformance import (
+        go_subclass_predicate,
+        module_function_conformance,
+    )
+
+    function_conformance = module_function_conformance(
+        doc,
+        gene_index=gene_index,
+        genes_dir=genes_dir if genes_dir is not None else project_root / "genes",
+        family_reviews_dir=(
+            family_reviews_dir if family_reviews_dir is not None
+            else project_root / "interpro" / "panther"
+        ),
+        pfam_reviews_dir=(
+            pfam_reviews_dir if pfam_reviews_dir is not None
+            else project_root / "interpro" / "pfam"
+        ),
+        subclass_of=go_subclass_predicate(
+            None if resolver_was_injected else adapter_map.get("GO")
+        ),
+    )
+    for finding in function_conformance["rows"]:
+        message = (
+            f"Function conformance [{finding['status']}] {finding['annoton_id']} "
+            f"({finding['participant_id'] or finding['participant_label']}; "
+            f"{finding['function_id'] or 'no GO id'}): {finding['message']}"
+        )
+        if finding["severity"] == "error":
+            errors.append(message)
+        elif finding["severity"] == "warning":
+            warnings.append(message)
+
     # Reference titles: every literature reference (PMID/DOI ``id``/``source_id``
     # paired with a ``title``) must match the fetched/cached publication title
     # (normalized). Mismatches block; unfetchable references degrade to warnings.
@@ -1769,6 +1812,7 @@ def validate_module_file(
         errors=errors,
         warnings=warnings,
         ungrounded_families=count_ungrounded_families(doc),
+        function_conformance=function_conformance,
     )
 
 
@@ -1998,15 +2042,18 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     exit_code = 0
     ungrounded = 0
+    from ai_gene_review.module_qc import index_gene_reviews
+
+    gene_index = index_gene_reviews(Path(__file__).resolve().parents[3] / "genes")
     for path in args.files:
-        result = validate_module_file(path, config_path=args.config)
+        result = validate_module_file(path, config_path=args.config, gene_index=gene_index)
         ungrounded += result.ungrounded_families
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")
         for e in result.errors:
             print(f"❌ ERROR {path}: {e}")
         if result.is_valid:
-            print(f"✅ {path}: term labels OK ({len(result.warnings)} warnings)")
+            print(f"✅ {path}: module checks passed ({len(result.warnings)} warnings)")
         else:
             exit_code = 1
 
