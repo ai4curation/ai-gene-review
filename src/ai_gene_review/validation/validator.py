@@ -24,6 +24,9 @@ import time
 from contextlib import contextmanager
 from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 
+from ai_gene_review.validation.protein_binding_policy import (
+    check_protein_binding_policy,
+)
 from ai_gene_review.validation.validation_report import (
     ValidationReport,
     ValidationSeverity,
@@ -359,6 +362,7 @@ def check_best_practices_rules(
     if check_supporting_text:
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
+    check_protein_binding_policy(data, report)
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):
