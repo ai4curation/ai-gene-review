@@ -989,6 +989,12 @@ validate-deep-research:
 aggregate-knowledge-gaps:
     uv run python scripts/aggregate_knowledge_gaps.py
 
+# Check every PMID cited by the gene reviews against PubMed retraction metadata
+# (projects/RETRACTIONS/retraction-check.tsv/.json + retraction-register.md).
+# Makes ~130 NCBI E-utilities requests; set NCBI_API_KEY to raise the rate limit.
+check-retractions *ARGS:
+    uv run python projects/RETRACTIONS/check_retractions.py {{ARGS}}
+
 # Validate module YAML files: (1) structural schema validation against
 # ModuleReview, and (2) custom module validation: ontology term-label checks,
 # GO branch checks for known F/P/C slots, PANTHER/PAINT PTN checks, and template
