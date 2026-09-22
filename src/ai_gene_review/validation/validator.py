@@ -131,13 +131,19 @@ def validate_reference_finding_supporting_text(
             try:
                 result = validator.validate(supporting_text, reference_id)
             except Exception as exc:  # noqa: BLE001 - external publication cache
+                # A crash while checking is not a pass. Downgrading here would let a
+                # snippet through unverified for reasons that have nothing to do with
+                # whether it is correct, which is precisely the skipping the rule forbids.
                 report.add_issue(
-                    ValidationSeverity.WARNING,
+                    ValidationSeverity.ERROR,
                     (
-                        f"Finding supporting text could not be verified for "
+                        f"Finding supporting text could not be checked for "
                         f"{reference_id}: {type(exc).__name__}: {exc}"
                     ),
                     path=path,
+                    suggestion=(
+                        "Cache the publication so the quote can be verified against it"
+                    ),
                     validation_category="ReferenceValidator",
                     check_type="reference_finding_supporting_text",
                 )
@@ -145,44 +151,31 @@ def validate_reference_finding_supporting_text(
             if result.is_valid:
                 continue
             message = str(getattr(result, "message", "") or "")
-            declared_unavailable = (
-                reference_declares_unavailable
-                or finding.get("full_text_unavailable") is True
-            )
+            # A snippet must be deterministically checkable against the cache, and a
+            # failure to match is an error. There is no downgrade path: every branch that
+            # used to soften this made an unverified quote indistinguishable from a
+            # verified one, which is the only thing this check exists to tell apart.
+            #
+            # full_text_unavailable remains meaningful as *metadata* about the cached
+            # record, but it no longer excuses a mismatch -- declaring that you cannot
+            # check a quote is not the same as checking it.
+            severity = ValidationSeverity.ERROR
             if is_unfetchable(message):
-                severity = ValidationSeverity.WARNING
-                prefix = "Finding supporting text could not be verified"
-                suggestion = "Verify the quote when the publication text is available"
-            elif declared_unavailable:
-                # The author has explicitly recorded that the quoted text is not in the
-                # cache, so this is an acknowledged limitation rather than a silent one.
-                severity = ValidationSeverity.WARNING
+                prefix = "Finding supporting text could not be checked"
+                suggestion = (
+                    "Cache the publication so the quote can be verified, or quote a "
+                    "substring of text that is cached"
+                )
+            elif cache_has_full_text is False:
                 prefix = (
                     "Finding supporting text is absent from the available "
                     "abstract-only cache"
                 )
                 suggestion = (
-                    "Verify the quote against full text when it becomes available"
-                )
-            elif cache_has_full_text is False:
-                # Abstract-only cache and *nothing declared*: the quote cannot be
-                # verified and no one has said so. Previously this was a warning, which
-                # made an unverifiable load-bearing quote indistinguishable from a
-                # verified one. It is an error because the author has two concrete
-                # remedies, not because the cache state is their fault.
-                severity = ValidationSeverity.ERROR
-                prefix = (
-                    "Finding supporting text is absent from the available "
-                    "abstract-only cache and the reference does not declare "
-                    "full_text_unavailable"
-                )
-                suggestion = (
-                    "Either quote a verbatim substring of the cached abstract, or set "
-                    "full_text_unavailable: true on the reference to record that the "
-                    "quoted text is not cached"
+                    "Quote a verbatim substring of the cached abstract, or fetch the "
+                    "full text into the cache so the quote can be verified"
                 )
             else:
-                severity = ValidationSeverity.ERROR
                 prefix = "Finding supporting text is not a verbatim publication substring"
                 suggestion = (
                     "Replace the quote with an exact substring from the cached publication"

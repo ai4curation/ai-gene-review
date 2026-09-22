@@ -1,13 +1,14 @@
-"""An unverifiable quote must not pass silently just because the cache lacks full text.
+"""A snippet must be deterministically checkable against the cache; a mismatch is an error.
 
 ``validate_reference_finding_supporting_text`` used to downgrade a non-matching quote to a
-WARNING on *either* of two conditions: the author declared ``full_text_unavailable``, or
-the cached publication happened to be abstract-only. Those are very different situations.
-The first is an acknowledged limitation. The second is silent -- a load-bearing claim can
-rest on a quote nobody can check, and nothing distinguishes it from a verified one.
+WARNING whenever the author declared ``full_text_unavailable``, whenever the cached record
+was abstract-only, or whenever the check itself raised. Each of those made an *unverified*
+quote indistinguishable from a *verified* one -- which is the only distinction this check
+exists to draw.
 
-Splitting them keeps the warning for the declared case and makes the undeclared case an
-error the author can actually act on: fix the quote, or say the text is not cached.
+There is now no downgrade path. ``full_text_unavailable`` remains meaningful as metadata
+about the cached record, but declaring that you cannot check a quote is not the same as
+checking it, so it no longer excuses a mismatch.
 """
 
 from pathlib import Path
@@ -59,14 +60,38 @@ def test_undeclared_unverifiable_quote_is_an_error(abstract_only_cache):
 
 
 @pytest.mark.parametrize("where", ["reference", "finding"])
-def test_declared_unavailable_stays_a_warning(abstract_only_cache, where):
-    """An acknowledged limitation must not block: the text genuinely is not cached."""
+def test_declaring_unavailable_does_not_excuse_a_mismatch(abstract_only_cache, where):
+    """The escape hatch is gone: a declaration is not a check.
+
+    This reverses the previous behaviour deliberately. Allowing the flag to downgrade a
+    mismatch meant an author could silence the one signal that distinguishes a verified
+    quote from an unverified one, by asserting the very thing that makes it unverifiable.
+    """
     doc = findings_doc(
         "a sentence that is not in the abstract",
         declared_on_reference=(where == "reference"),
         declared_on_finding=(where == "finding"),
     )
-    assert severities(doc, abstract_only_cache) == [ValidationSeverity.WARNING]
+    assert severities(doc, abstract_only_cache) == [ValidationSeverity.ERROR]
+
+
+def test_a_check_that_raises_is_an_error_not_a_pass(abstract_only_cache, monkeypatch):
+    """A crash while checking must not let the snippet through.
+
+    Downgrading here would skip validation for reasons unrelated to whether the quote is
+    correct, which is exactly what the rule forbids.
+    """
+    import ai_gene_review.validation.validator as v
+
+    class Boom:
+        def validate(self, *a, **k):
+            raise RuntimeError("cache unreadable")
+
+    monkeypatch.setattr(
+        v, "build_supporting_text_validator", lambda d=None: (Boom(), abstract_only_cache)
+    )
+    doc = findings_doc("anything at all")
+    assert severities(doc, abstract_only_cache) == [ValidationSeverity.ERROR]
 
 
 def test_a_quote_present_in_the_abstract_is_silent(abstract_only_cache):
@@ -75,12 +100,18 @@ def test_a_quote_present_in_the_abstract_is_silent(abstract_only_cache):
     assert severities(doc, abstract_only_cache) == []
 
 
-def test_error_message_names_the_missing_declaration(abstract_only_cache):
-    """The message has to say which of the two remedies is available."""
+def test_error_message_offers_a_real_remedy(abstract_only_cache):
+    """The remedies must be things that actually make the quote checkable.
+
+    Declaring ``full_text_unavailable`` is no longer one of them, so the message must not
+    suggest it -- that would send an author to a flag that no longer resolves the error.
+    """
     report = ValidationReport(file_path="t.yaml", is_valid=True)
     validate_reference_finding_supporting_text(
         findings_doc("not in the abstract at all"), report, abstract_only_cache
     )
     (issue,) = [i for i in report.issues if i.check_type == "reference_finding_supporting_text"]
-    assert "does not declare" in issue.message
-    assert "full_text_unavailable" in (issue.suggestion or "")
+    suggestion = issue.suggestion or ""
+    assert "abstract-only cache" in issue.message
+    assert "full text into the cache" in suggestion
+    assert "full_text_unavailable" not in suggestion

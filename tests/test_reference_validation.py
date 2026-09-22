@@ -174,10 +174,17 @@ def test_abstract_only_undeclared_finding_mismatch_is_error(tmp_path):
 
 
 @pytest.mark.parametrize("flag_location", ["reference", "finding"])
-def test_full_text_unavailable_flag_downgrades_mismatch(
+def test_full_text_unavailable_flag_no_longer_downgrades_mismatch(
     tmp_path, flag_location
 ):
-    """Reference- and finding-level escape hatches prevent false hard errors."""
+    """The escape hatch is gone: a snippet must be checkable, and a mismatch is an error.
+
+    This test previously asserted the opposite, under the name
+    ``test_full_text_unavailable_flag_downgrades_mismatch``. The flag let an author
+    silence the one signal separating a verified quote from an unverified one, by
+    asserting the very thing that made it unverifiable. It remains meaningful as metadata
+    about the cached record; it just no longer excuses a failure to match.
+    """
     _write_cached_publication(tmp_path, full_text_available=True)
     finding = {
         "statement": "Full-text result.",
@@ -203,7 +210,7 @@ def test_full_text_unavailable_flag_downgrades_mismatch(
         if issue.check_type == "reference_finding_supporting_text"
     ]
     assert len(quote_issues) == 1
-    assert quote_issues[0].severity == ValidationSeverity.WARNING
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
 
 
 @pytest.mark.parametrize(
@@ -271,11 +278,11 @@ def test_legacy_doi_abstract_only_undeclared_mismatch_is_error(tmp_path):
     assert quote_issues[0].severity == ValidationSeverity.ERROR
 
 
-def test_abstract_only_declared_finding_mismatch_stays_warning(tmp_path):
-    """Declaring the limitation keeps it advisory, which is what makes the error fair.
+def test_abstract_only_declared_finding_mismatch_is_still_an_error(tmp_path):
+    """Declaring the limitation does not make the quote checkable.
 
-    Without this the change would punish an author for cache state they do not control;
-    with it, the error fires only on the silent case and always has a remedy.
+    Written while the design still had an escape hatch; kept, inverted, because it is the
+    case most likely to be re-introduced by someone restoring "kindness" to the rule.
     """
     _write_cached_publication(tmp_path, full_text_available=False)
     review_path = tmp_path / "review.yaml"
@@ -302,7 +309,7 @@ def test_abstract_only_declared_finding_mismatch_stays_warning(tmp_path):
         if issue.check_type == "reference_finding_supporting_text"
     ]
     assert len(quote_issues) == 1
-    assert quote_issues[0].severity == ValidationSeverity.WARNING
+    assert quote_issues[0].severity == ValidationSeverity.ERROR
 
 
 def test_invalid_reference_id():
