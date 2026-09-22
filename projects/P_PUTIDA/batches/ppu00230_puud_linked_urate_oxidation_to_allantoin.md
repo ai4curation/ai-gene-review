@@ -15,7 +15,7 @@ downstream allantoin degradation are adjacent but separate pathway modules.
 
 ## Workflow
 
-- [x] Fetch the four gene records needed to establish the module and boundary correction.
+- [x] Fetch the four gene records needed to establish the module and boundary correction (the three module genes plus the PP_3099 boundary case).
 - [x] Complete full OpenScientist research for all four selected/boundary genes.
 - [x] Integrate the completed gene reports after checking claims against primary evidence.
 - [x] Curate all current GOA rows and the missing pathway/process annotations.
@@ -35,18 +35,19 @@ downstream allantoin degradation are adjacent but separate pathway modules.
 
 ## Boundary Correction
 
-`puuD`/PP_3099 (Q88IA0) is reviewed in this batch because its legacy name and
-EC-derived GO:0004846 annotation created a false route assignment. Its
-IPR010269/IPR044031/IPR044032, PF05943/PF18945, and PTHR35565:SF3
-classifications identify a TssC1/VipB type VI secretion sheath protein. It is
-not a member of the urate module. The canonical review in open draft PR #2515
-removes its urate-oxidase annotation and curates its T6SS role; this PR records
-the independently researched pathway-boundary decision without duplicating
-that review.
+`puuD`/PP_3099 (Q88IA0) is examined in this batch as a boundary case, not as a
+member gene, because its legacy name and EC-derived GO:0004846 annotation
+created a false route assignment. Its IPR010269/IPR044031/IPR044032,
+PF05943/PF18945, and PTHR35565:SF3 classifications identify a TssC1/VipB type
+VI secretion sheath protein. It is not a member of the urate module. The
+canonical review removes its urate-oxidase annotation and curates its T6SS
+role; this PR records the independently researched pathway-boundary decision
+without duplicating that review.
 
-The canonical PP_3099 gene review is already owned by the open draft type VI
-secretion apparatus PR
-[#2515](https://github.com/ai4curation/ai-gene-review/pull/2515). This urate PR
+The canonical PP_3099 gene review is owned by the bacterial type VI secretion
+apparatus curation
+([#2515](https://github.com/ai4curation/ai-gene-review/pull/2515)), which is
+where `genes/PSEPK/puuD/puuD-ai-review.yaml` comes from. This urate PR
 does not add a competing copy of that review. It retains the independently
 generated OpenScientist boundary report because that report was commissioned
 for this pathway decision and independently rejects the uricase assignment.

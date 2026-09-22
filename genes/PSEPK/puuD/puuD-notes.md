@@ -21,7 +21,9 @@
   name is specifically a "pre-2017" artifact was not imported because the
   available EMBL provenance establishes the source of the annotation, not that
   date-specific history.
-- The canonical gene review and type VI module ownership remain in open draft
-  PR #2515 (review approved). This urate batch preserves the independent
-  provider report and the pathway-boundary rationale without creating a second
-  competing review.
+- The canonical gene review and type VI module ownership belong to the
+  bacterial type VI secretion apparatus curation, not to this urate batch;
+  `genes/PSEPK/puuD/puuD-ai-review.yaml` is that review, and it removes the
+  urate-oxidase annotation. This urate batch preserves the independent provider
+  report and the pathway-boundary rationale without creating a second competing
+  review.
