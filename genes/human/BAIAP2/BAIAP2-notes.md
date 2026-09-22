@@ -39,23 +39,49 @@ The review was already `status: COMPLETE` from the PAINT no-IBA batch (PR #2956)
 passed validation. Four defect classes were found. All are fixed; the file went from 118
 to 131 annotations and from 2 to 4 core functions.
 
-### 1. Fabricated citations that validation cannot see
+### 1. Fabricated citations that passed validation via an escape hatch
 
 Seven `supported_by` entries cited bare DOIs (`DOI:10.7554/eLife.72316`,
-`DOI:10.1242/jcs.262064`) that appear nowhere in the `references` list. Because a DOI
-reference has no cached publication, the substring validator has nothing to check against
-— so these passed silently. **Six of the seven quotes are verbatim text from
-`BAIAP2-deep-research-falcon.md`, attributed to primary papers they were never taken
-from**; one ("IRSp53 recognizes ~100 nm PM evaginations…") is a paraphrase occurring in no
-source at all. One still carried its bullet label, `"Sites of action: …"`.
+`DOI:10.1242/jcs.262064`) that appear nowhere in the `references` list. **Six of the seven
+quotes are verbatim text from `BAIAP2-deep-research-falcon.md`, attributed to primary
+papers they were never taken from**; one ("IRSp53 recognizes ~100 nm PM evaginations…") is
+a paraphrase occurring in no source at all. One still carried its bullet label,
+`"Sites of action: …"`.
 
-Three of the seven sat on rows GOA has since retired and went away with them. The
-remaining four were re-grounded on primary literature with quotes verified verbatim
-against the cache: GO:0030838 and GO:0007009 → PMID:37747150, GO:0043197 → PMID:24639075,
-GO:0061003 → PMID:15673667.
+**Why they passed is worth recording precisely, because the obvious explanation is wrong.**
+It is not that a DOI citation is unverifiable. `publications/` holds 232 DOI-keyed records,
+`validation/supporting_text.py` resolves `DOI:x/y` to `publications/DOI_x_y.md`, and *both*
+DOIs here were already cached — `DOI_10.7554_eLife.72316.md` is 83 KB of full text,
+committed in the same PR (#2956) that wrote these quotes. The verbatim check also does
+cover annotation-level `supported_by`, not just `references[].findings[]`.
+
+The actual reason is that each of those entries carried `full_text_unavailable: true`, and
+that flag suppresses the substring check outright — irrespective of reference type, and
+irrespective of whether the publication is cached with full text. Verified by injecting
+`"PURPLE ELEPHANTS CATALYSE THE RIBOSOME ON TUESDAYS."` as the `supporting_text` on
+`PMID:37747150` (83 KB of cached full text): caught as `Text part not found as substring`
+without the flag, `✓ Valid` with it. Five of the six original quotes are likewise genuinely
+absent from the cached DOI files, so the fabrication finding stands; the flag is what let
+them through.
+
+The flag therefore does double duty — a legitimate signal on abstract-only records, and a
+blanket verification opt-out — and the two uses are indistinguishable in the file. Anyone
+auditing a review here should treat `full_text_unavailable: true` on a `supported_by` entry
+as "this quote was never checked", not as a property of the cited paper, and should confirm
+the flag against the cached record rather than trusting it.
+
+Three of the seven sat on rows GOA has since retired and went away with them. The remaining
+four were re-grounded on primary literature with quotes verified verbatim against the
+cache: GO:0030838 and GO:0007009 → PMID:37747150, GO:0043197 → PMID:24639075, GO:0061003 →
+PMID:15673667.
 
 The `DOI:10.1242/jcs.262064` citation was doubly wrong: it resolves to PMID:39404604,
 *"HIV-1 assembly — when virology meets biophysics"*, cited in support of adaptor activity.
+
+Where this pass sets `full_text_unavailable: true` itself (on the PMID:19366662 reference,
+whose cached record really is abstract-only and about the paralog), it is set on the
+*reference* entry and the unverifiable quotes were deleted rather than left flagged — so no
+`supporting_text` in this file is exempted from checking.
 
 ### 2. Six IEA calls dismissed on rationales that misstate their provenance
 
