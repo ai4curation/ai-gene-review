@@ -9,9 +9,9 @@ scope, or additional evidence.** It combines gene-level annotation reviews with
 family-level evidence to distinguish functions shared across an InterPro entry
 from functions restricted to particular members.
 
-**The current deliverable contains 25 mapping assessments across nine InterPro
-entries:** four removal proposals, ten proposals to narrow or qualify a mapping,
-and eleven endorsements or additions. These are proposals for curator assessment;
+**The current deliverable contains 29 mapping assessments across twelve InterPro
+entries:** seven removal proposals, ten proposals to narrow or qualify a mapping,
+and twelve endorsements or additions. These are proposals for curator assessment;
 they do not establish that InterPro has adopted the changes.
 
 **Start here:** [Proposed mapping edits](INTERPRO/interpro2go.sssom.yaml) ·
@@ -36,6 +36,9 @@ experimental evidence.
 | IPR007197 — Radical SAM | Diverse reactions can justify a broad family-level molecular-function term. | Retain catalytic activity and iron-sulfur-cluster binding; avoid unsupported specialization across the domain. |
 | IPR020849 — Ras-type small GTPases | The assessment proposes GTPase activity in addition to GTP binding. | Check the proposed addition against family-wide catalytic competence; narrow process and localization assignments where needed. |
 | IPR002100 — MADS-box domain | The assessment distinguishes domain-level DNA binding and dimerization from whole-protein transcription-factor function. | Retain the two domain-level mappings; do not infer transcription-factor activity from the domain alone. |
+| IPR045122 — Calcium permeable stress-gated cation channel 1-like | The entry name says calcium *permeable*, but `GO:0005227` is defined as a channel that opens when calcium binds it — opposite directions of causation. The TMEM63/OSCA members are stretch- and osmolarity-gated. | Remove the calcium-activated mapping; assess mechanosensitive cation-channel and calcium-channel terms in its place. |
+| IPR042371 — Z-binding domain | A catalytic activity is mapped onto a binding domain: the deaminase belongs to ADAR1's separate domain, so ZBP1 inherits an activity it has no domain for. | Remove the deaminase mapping and restrict it to entries carrying the catalytic domain; retain RNA binding. |
+| IPR006935 — Helicase/UvrB, N-terminal | The entry is dominated by DNA-acting enzymes, but the same fold occurs in the RNA-sensing RIG-I-like receptors, so IFIH1 (MDA5) inherits DNA binding. | Remove the DNA-binding mapping; the nucleic-acid substrate is a property of the enzyme, not of the shared fold. ATP binding and hydrolase activity are unaffected. |
 
 A recurring curation question is **whether a function holds across the matched
 entry**, not simply whether it is well established for one member. Conversely, a
@@ -106,8 +109,8 @@ breakdowns, example genes, and affected GO terms.
 
 ## Supporting material
 
-- [Proposed InterPro2GO edits](INTERPRO/interpro2go.sssom.yaml) — 25 mapping assessments
-  dated 2026-06-20, with term identifiers and rationales. In this project's encoding,
+- [Proposed InterPro2GO edits](INTERPRO/interpro2go.sssom.yaml) — 29 mapping assessments,
+  25 dated 2026-06-20 and 4 added 2026-09-17, with term identifiers and rationales. In this project's encoding,
   `exactMatch` endorses or proposes a mapping, `broadMatch` flags a scope or specificity
   issue, and `exactMatch` with `predicate_modifier: Not` proposes removal.
 - [Methods, data, and reproducibility](INTERPRO/README.md) — extraction, family research,

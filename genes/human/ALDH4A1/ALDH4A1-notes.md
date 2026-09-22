@@ -130,5 +130,92 @@ authoritative location.
 2. BP: L-proline catabolic process to L-glutamate (GO:0006562) — 2nd/final step.
 3. BP: trans-4-hydroxy-L-proline catabolic process (GO:0019470) — dual substrate.
 4. CC: mitochondrial matrix (GO:0005759).
-</content>
-</invoke>
+
+---
+
+## 2026-09-17 update: the proposed ALDH4A1-MPC moonlighting role
+
+### The claim
+
+Hsu et al. 2025 (Nat Cell Biol) propose that ALDH4A1 is a third, catalysis-independent
+component of the mitochondrial pyruvate carrier
+[PMID:40355545 "Here we show that ALDH4A1, a proline-metabolizing enzyme localized in
+mitochondria, serves as a previously unrecognized MPC component maintaining pyruvate
+mitochondrial import and the TCA cycle independently of its enzymatic activity."].
+
+Lines of evidence in that paper:
+
+1. Loss-of-function in cells: ALDH4A1 loss impairs pyruvate entry into mitochondria and
+   TCA cycle entry.
+2. Complex formation: co-immunoprecipitation, sequential co-IP and gel filtration are
+   reported to show a trimeric ALDH4A1-MPC1-MPC2 species of ~88-100 kDa.
+3. Reconstitution: 14C-pyruvate transport into proteoliposomes
+   [PMID:40355545 "Remarkably, wild-type ALDH4A1 or ALDH4A1(S352L) could markedly enhance
+   pyruvate transport into proteoliposomes by MPC1–MPC2"].
+4. Catalysis-independence: S352L is the type II hyperprolinemia substitution that
+   abolishes P5C dehydrogenase activity and NAD+ binding (PMID:22516612), and it behaves
+   like wild type in the transport assay. Tumour suppression is likewise enzyme-independent
+   [PMID:40355545 "Collectively, our findings suggest that ALDH4A1 displays
+   tumour-suppressive activity in a manner independent of its enzymatic activity."].
+5. Framing [PMID:40355545 "In summary, our study identifies ALDH4A1 as the third component
+   of MPC complex critical for constituting an active MPC trimeric complex consisting of
+   ALDH4A1, MPC1 and MPC2 for mitochondrial pyruvate import for TCA cycle entry in
+   mammalian cells"].
+
+### The counter-evidence, weighed carefully
+
+Three independent 2025 cryo-EM analyses of human MPC resolve only MPC1 and MPC2:
+
+- Liang et al., Nature [PMID:40101766 "MPC is a heterodimer consisting of MPC1 and MPC2,
+  with the transmembrane domain adopting pseudo-C2 symmetry."] — six structures across
+  IMS-open, occluded and matrix-facing states, i.e. a complete alternating-access cycle.
+- He et al., Nature [PMID:40044865 "Our structures show that MPC1 and MPC2 form a
+  heterodimer with the substrate translocation pathway at the center of the dimer
+  interface, defining the basic functional unit and architecture of this important
+  transporter family."].
+- Sun et al., Nat Commun [PMID:40691140 "Structural analysis shows that the transport
+  channel of MPC is formed by the interaction of transmembrane helix (TM) 1 and TM2 of
+  MPC1 with TM2 and TM1 of MPC2, respectively."].
+
+**Important caveat that limits how much these structures can refute.** All three were
+determined from heterologously co-expressed, tagged MPC1 and MPC2 only
+[PMID:40044865 "We found that co-expressing MPC1 and MPC2 in HEK293 cells yielded the best
+outcome and decided to focus on human MPC, given its direct medical relevance."]
+[PMID:40691140 "We co-expressed the full-length human MPC1 with a C-terminal Flag tag and
+full-length human MPC2 with a C-terminal 6xHis tag in HEK293 GnTI– cells and purified the
+protein complex with anti-Flag affinity resin and size exclusion chromatography (SEC)."].
+ALDH4A1 was therefore never in the sample. Not seeing a subunit you did not put in is not
+evidence that the subunit is absent in vivo. The honest statement of what these structures
+do establish is narrower but still relevant: the pyruvate permeation pathway and its
+conformational cycle are fully contained within the MPC1-MPC2 heterodimer, so ALDH4A1
+cannot be part of the translocation path itself.
+
+Two further points cut against the "third component" framing:
+
+- The long-standing position, restated by He et al., is that MPC1 and MPC2
+  [PMID:40044865 "are essential and sufficient to give rise to MPC activity"].
+- Hsu et al.'s own reconstitution agrees: MPC1 and MPC2 transport pyruvate without ALDH4A1
+  [PMID:40355545 "While MPC1 alone or MPC2 alone displayed basal activity towards pyruvate
+  transport in vitro compared with control empty liposome, adding MPC1 and MPC2 together
+  further enhanced pyruvate transport in proteoliposomes"]. ALDH4A1 raises that activity.
+  An enhancer/stabiliser is a different claim from a constituent subunit.
+- Topology and oligomeric state. MPC1/MPC2 are inner-membrane proteins; ALDH4A1 is a
+  soluble matrix protein whose catalytic form is an obligate domain-swapped homodimer of
+  ~122 kDa [PMID:22516612 "The molar mass is estimated to be 122 kDa"]. A 1:1:1 trimer of
+  ~88-100 kDa implies monomeric ALDH4A1 in the complex, which is not addressed.
+
+### Curation decision
+
+**Recorded, not annotated.** No GO annotation is proposed for the MPC role, for three
+reasons: (i) it is a single-laboratory result with no independent replication; (ii) the
+paper's own data show MPC1+MPC2 transporting without ALDH4A1, so a "component of the
+pyruvate carrier" CC assertion would overstate what was shown; (iii) an `involved_in`
+mitochondrial pyruvate transport BP annotation cannot presently be separated from the
+indirect possibility that losing P5C dehydrogenase from the matrix perturbs pyruvate flux
+metabolically. The claim is instead captured as a `knowledge_gap`, in `suggested_questions`
+and `suggested_experiments`, and in the top-level `description` as a statement about the
+state of the biology; PMID:40355545 is marked `correctness: DISPUTED` with the reasoning
+recorded in `review_notes`.
+
+This should be revisited if the native complex is isolated from mitochondria with a defined
+stoichiometry, or if the proteoliposome stimulation is independently reproduced.
