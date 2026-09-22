@@ -163,10 +163,11 @@ def check_folded_scalar_hyphens(yaml_file: Path, report: ValidationReport) -> No
     pre-existing backlog of these, and blocking on them would fail every run of
     ``validate-all`` before any of them could be fixed.
     """
-    try:
-        text = yaml_file.read_text(errors="replace")
-    except OSError:
-        return
+    # No try/except: validate_gene_review has already opened and parsed this same file two
+    # frames up, so a read failure here is genuinely unexpected and should surface rather
+    # than be swallowed into a silent pass. CLAUDE.md is explicit about not cheating with
+    # try/except in place of understanding the failure.
+    text = yaml_file.read_text(errors="replace")
     for split in find_folded_hyphen_splits(text):
         report.add_issue(
             ValidationSeverity.WARNING,

@@ -12,8 +12,14 @@ import pytest
 from ai_gene_review.validation.folded_scalar import (
     FoldedHyphenSplit,
     can_precede_hyphen,
+    check_folded_scalar_hyphens,
     find_folded_hyphen_splits,
 )
+from ai_gene_review.validation.validation_report import (
+    ValidationReport,
+    ValidationSeverity,
+)
+from ai_gene_review.validation.validator import check_best_practices_rules
 
 
 def block(*body: str) -> str:
@@ -120,6 +126,10 @@ def test_multiple_splits_are_all_reported():
         ("(Rab GTPase)-", "GTPase)-dependent"),
         ("24(S)-", "24(S)-dependent"),
         ("5-fluoro-2'-", "5-fluoro-2'-dependent"),
+        # ']' is live in this corpus: PSEPK/ada has 'methylated-DNA-[protein]-' / 'cysteine'
+        ("methylated-DNA-[protein]-", "methylated-DNA-[protein]-dependent"),
+        ("{beta}-", "{beta}-dependent"),
+        ("2\u2019-", "2\u2019-dependent"),
     ],
 )
 def test_closing_punctuation_before_the_hyphen_is_still_a_split(tail, intended):
@@ -138,3 +148,51 @@ def test_a_hyphen_cannot_precede_the_hyphen():
     """This is what keeps em-dashes out, and it must stay true."""
     assert not can_precede_hyphen("-")
     assert can_precede_hyphen("a") and can_precede_hyphen(")")
+
+
+SPLIT_DOC = (
+    "id: X\n"
+    "gene_symbol: X\n"
+    "existing_annotations: []\n"
+    "description: >-\n"
+    "  carries an A-kinase-\n"
+    "  anchoring region\n"
+)
+
+
+def test_check_reports_a_warning_with_the_documented_keys(tmp_path):
+    """The reported keys are a contract, not decoration.
+
+    ``check_type`` is a **TSV column** -- ``to_tsv_rows`` and ``tsv_header`` in
+    validation_report.py both emit it -- so ``reports/validation-all.tsv`` keys on the
+    literal ``folded_scalar_hyphen``. A typo there degrades silently to a row nobody can
+    filter, which no other test would notice.
+    """
+    f = tmp_path / "X-ai-review.yaml"
+    f.write_text(SPLIT_DOC)
+    report = ValidationReport(file_path=f, is_valid=True)
+    check_folded_scalar_hyphens(f, report)
+
+    issues = [i for i in report.issues if i.check_type == "folded_scalar_hyphen"]
+    assert len(issues) == 1
+    assert issues[0].severity == ValidationSeverity.WARNING
+    assert issues[0].validation_category == "BestPractices"
+    assert "A-kinase- anchoring" in issues[0].message
+    assert report.is_valid is True, "a warning must not invalidate the report"
+
+
+def test_best_practices_rules_actually_reaches_the_check(tmp_path):
+    """The wiring itself, which was the one part no test touched.
+
+    Deleting the call site left all tests passing, so a merge resolution that dropped it
+    -- and one did have to be hand-resolved -- would have been caught by nothing in CI.
+    """
+    f = tmp_path / "X-ai-review.yaml"
+    f.write_text(SPLIT_DOC)
+    import yaml
+
+    report = ValidationReport(file_path=f, is_valid=True)
+    check_best_practices_rules(
+        yaml.safe_load(SPLIT_DOC), report, yaml_file=f, check_supporting_text=False
+    )
+    assert any(i.check_type == "folded_scalar_hyphen" for i in report.issues)
