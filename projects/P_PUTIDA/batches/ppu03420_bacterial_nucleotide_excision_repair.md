@@ -11,8 +11,8 @@ autolink_gene_symbols: false
 - Reusable module: `modules/bacterial_nucleotide_excision_repair.yaml`
 - Correct pathway boundary: UvrABC lesion excision, repair synthesis, and Mfd-dependent transcription coupling
 - KEGG-derived candidates inspected: 10
-- Newly reviewed PSEPK proteins: 5
-- Reused curated reviews present in this PR: 3
+- Newly reviewed PSEPK proteins: 4
+- Reused curated reviews present in this PR: 4
 - Shared-enzyme reviews pending in a sibling module PR: 2
 - Module/pathway/taxon provider: OpenScientist
 
@@ -85,5 +85,5 @@ were used to check exact accessions and distinguish the three non-core candidate
 
 ## Validation
 
-The five new gene reviews, reusable module, and project page are validated and
+The four new gene reviews, reusable module, and project page are validated and
 rendered before publication.
