@@ -6,6 +6,39 @@ autolink_gene_symbols: false
 Historical session notes for the [InterPro mapping review](../INTERPRO.md). These preserve the original chronology and provisional interpretations; consult the project page and linked mapping set for the current summary.
 
 
+## 2026-09-17 — three mappings found gene-first rather than family-first
+
+The contested-function review ([Contested gene functions, 2025-2026](../FUNCTION_KNOWLEDGE_GAPS/contested-functions-2025-2026.md))
+read ~60 human genes one at a time and, as a side effect, caught three InterPro2GO
+mappings the family worklist had not reached. They are in the
+[mapping set](interpro2go.sssom.yaml) (25 -> 29 mappings, nine -> twelve entries) and
+summarized on the [project page](../INTERPRO.md#findings-and-proposed-curation-actions).
+Entry names, types and match counts were verified against the live InterPro API and the
+GO term definitions against QuickGO.
+
+- **`IPR045122` -> `GO:0005227` — REMOVE.** A **name collision**, distinct from the
+  fold-is-not-function pattern that drives the rest of this worklist: the entry is
+  "Calcium permeable stress-gated cation channel 1-like" and the GO term means a channel
+  that opens *when calcium binds it*. The two readings of "calcium ... cation channel"
+  are not distinguishable without reading the term definition. Lands on TMEM63A/B/C.
+- **`IPR042371` -> `GO:0003726` — REMOVE.** A catalytic activity mapped onto a binding
+  domain: the deaminase is in ADAR1's separate domain, so ZBP1 — a Zalpha domain with no
+  deaminase domain — inherits an activity it cannot perform. The entry's `GO:0003723`
+  RNA binding is sound and is recorded as an ACCEPT row.
+- **`IPR006935` -> `GO:0003677` — REMOVE.** The "Helicase/UvrB, N-terminal" entry is
+  dominated by DNA-acting enzymes, but the fold recurs in the RNA-sensing RIG-I-like
+  receptors, so IFIH1 (MDA5), a cytosolic dsRNA sensor, inherits DNA binding. The
+  nucleic-acid substrate is a property of the enzyme, not of the shared fold;
+  `GO:0005524` and `GO:0016787` on the same entry are unaffected.
+
+The methodological point is about intake, not about these three entries. The family
+worklist is ranked by *how many reviewers already flagged an entry*, so it is
+structurally blind to mappings that are wrong but rarely reviewed — `IPR045122` has
+three human members and would never rise up that ranking. Harvesting InterPro defects
+out of deep gene reviews is a complementary intake path, and close to free when the
+gene review is happening anyway.
+
+
 ## Open follow-up
 
 These unfinished tasks are carried forward from the recorded workstreams and research

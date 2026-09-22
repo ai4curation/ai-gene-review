@@ -1365,7 +1365,7 @@ defined molecular function never reaches the leaf.
 
 We quantified this with a generic **evidence-subtraction** tool
 (`ai-gene-review subtraction-report`; see
-[docs](https://ai4curation.io/ai-gene-review/subtraction_report/)). Running it in
+[docs](../docs/subtraction_report.md)). Running it in
 "keep only IBA" mode over the 1015 reviewed human genes — i.e. asking *if IBA
 were the sole evidence, what curated biology would we lose?* — and applying
 ontology closure so that an IBA call to a **more general parent still counts** as

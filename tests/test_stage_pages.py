@@ -60,6 +60,35 @@ def test_stage_pages_preserves_urls_and_copies_linked_sources(tmp_path: Path) ->
     assert manifest.linked_source_bytes_not_staged == 0
 
 
+def test_stage_pages_includes_prediction_browser_and_dynamic_sources(tmp_path: Path) -> None:
+    """Sources linked through exported rows survive deployment, not just file://."""
+    _site_fixture(tmp_path)
+    browser = tmp_path / "app/predictions"
+    _write(browser / "index.html", '<script src="data.js"></script><script src="schema.js"></script>')
+    _write(browser / "data.js", "window.predictionData = {sets: [], claims: []};")
+    _write(browser / "schema.js", "window.searchSchema = {};")
+    source = "genes/human/ABC1/ABC1-predictions-review.yaml"
+    _write(tmp_path / source, "predictions: []\n")
+    _write(browser / "source-files.json", json.dumps([source]))
+
+    manifest = stage_pages(tmp_path, tmp_path / "_site")
+
+    assert (tmp_path / "_site/app/predictions/data.js").is_file()
+    assert (tmp_path / "_site" / source).read_text() == "predictions: []\n"
+    assert manifest.broken_local_links == 0
+
+
+@pytest.mark.parametrize("source", ["../outside.txt", ".git/config", "_site/private.txt"])
+def test_prediction_browser_manifest_cannot_publish_private_paths(tmp_path: Path, source: str) -> None:
+    """Treat a generated dependency list with the same boundary as static links."""
+    _site_fixture(tmp_path)
+    for filename in ("index.html", "data.js", "schema.js"):
+        _write(tmp_path / "app/predictions" / filename)
+    _write(tmp_path / "app/predictions/source-files.json", json.dumps([source]))
+    with pytest.raises(ValueError, match="Invalid prediction browser source"):
+        stage_pages(tmp_path, tmp_path / "_site")
+
+
 def test_stage_pages_includes_transitive_publication_dependencies(
     tmp_path: Path,
 ) -> None:
@@ -113,6 +142,25 @@ def test_stage_pages_includes_transitive_publication_dependencies(
             tmp_path / relative
         ).read_bytes()
     assert manifest.linked_source_files_not_staged == 0
+
+
+def test_linked_project_directories_get_browsable_indexes(tmp_path: Path) -> None:
+    _site_fixture(tmp_path)
+    _write(tmp_path / 'pages/projects/FOO.html', '<a href="FOO/data/">Data</a>')
+    _write(tmp_path / 'projects/FOO/data/result.tsv', 'gene\tvalue\nABC1\t1\n')
+    _write(tmp_path / 'projects/FOO/data/nested/notes.txt', 'Supporting notes')
+    _write(tmp_path / 'projects/FOO/data/.private', 'not public')
+    _write(tmp_path / 'projects/FOO/data/__pycache__/analysis.pyc', 'local bytecode')
+    manifest = stage_pages(tmp_path, tmp_path / '_site')
+    index = tmp_path / '_site/pages/projects/FOO/data/index.html'
+    assert index.is_file()
+    assert 'result.tsv' in index.read_text()
+    assert '.private' not in index.read_text()
+    assert '__pycache__' not in index.read_text()
+    assert not list((tmp_path / '_site').rglob('*.pyc'))
+    assert (tmp_path / '_site/pages/projects/FOO/data/nested/index.html').is_file()
+    assert (tmp_path / '_site/projects/FOO/data/result.tsv').read_text().startswith('gene\t')
+    assert manifest.broken_local_links == 0
 
 
 def test_stage_pages_does_not_follow_private_or_external_dependencies(
@@ -320,12 +368,12 @@ def test_broken_links_block_deployment(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "size,deployable", [(1_000_000_000, True), (1_000_000_001, False)]
+    "size,deployable", [(1_000_000_001, True), (9_999_999_999, True), (10_000_000_000, False)]
 )
 def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
     _site_fixture(tmp_path)
     manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
-    assert manifest.size_budget_bytes == 1_000_000_000
+    assert manifest.size_budget_bytes == 9_999_999_999
     assert manifest.deployable is deployable
 
 
@@ -348,7 +396,7 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
     )
     manifest = json.loads((tmp_path / "manifest.json").read_text())
     assert manifest["deployable"] is False
-    assert manifest["size_budget_bytes"] == 1_000_000_000
+    assert manifest["size_budget_bytes"] == 9_999_999_999
     assert manifest["broken_local_links"] == 1
     assert manifest["off_base_path_links"] == 0
     assert manifest["off_base_path_urls"] == []
@@ -358,7 +406,7 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
 
 def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
-    _write(tmp_path / "index.html", '<a href="/research/report.html">Report</a>')
+    _write(tmp_path / "index.html", '<script>fetch("/research/report.html")</script>')
     _write(tmp_path / "research/report.md")
     manifest = stage_pages(tmp_path, tmp_path / "_site")
     assert not (tmp_path / "_site/research/report.md").exists()
@@ -369,3 +417,81 @@ def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
     ]
     assert manifest.broken_local_links == 0
     assert not manifest.deployable
+
+
+def test_known_off_base_html_link_is_repaired_and_copied(tmp_path: Path) -> None:
+    _site_fixture(tmp_path)
+    _write(tmp_path / "index.html", '<a href="/research/report.html">Report</a>')
+    _write(tmp_path / "research/report.md", 'The existing report')
+    manifest = stage_pages(tmp_path, tmp_path / '_site')
+    assert (tmp_path / '_site/research/report.md').read_text() == 'The existing report'
+    assert 'href="/ai-gene-review/research/report.md"' in (tmp_path / '_site/index.html').read_text()
+    assert manifest.off_base_path_links == 0
+    assert manifest.deployable
+
+
+def test_stage_shares_real_renderer_assets_and_counts_final_bytes(
+    tmp_path: Path,
+) -> None:
+    from ai_gene_review.render import enrich_gene_data, render_html
+
+    _site_fixture(tmp_path)
+    template = (
+        Path(__file__).parents[1] / "src/ai_gene_review/templates/gene_review.html.j2"
+    )
+    html = render_html(enrich_gene_data({"gene_symbol": "ABC1"}), template)
+    source = tmp_path / "genes/human/ABC1/ABC1-ai-review.html"
+    source.write_text(html)
+    _write(tmp_path / "genes/human/DEF1/DEF1-ai-review.yaml")
+    _write(tmp_path / "genes/human/DEF1/DEF1-ai-review.html", html)
+    output = tmp_path / "_site"
+    manifest = stage_pages(tmp_path, output)
+    assert manifest.shared_asset_bytes_saved > 25_000
+    assert manifest.total_bytes == sum(
+        p.stat().st_size for p in output.rglob("*") if p.is_file()
+    )
+    assert source.read_text() == html
+    from lxml import html as html_parser  # type: ignore[import-untyped]
+
+    document = html_parser.fromstring((output / "genes/human/ABC1/ABC1-ai-review.html").read_text())
+    stylesheets = document.xpath('//link[@rel="stylesheet"]/@href')
+    assert any(url.startswith('../../../_pages-assets/') for url in stylesheets)
+    assert all((output / 'genes/human/ABC1' / url).is_file() for url in stylesheets)
+    assert len(list((output / "_pages-assets").iterdir())) == 3
+
+
+def test_compacted_panel_reference_is_audited(tmp_path: Path) -> None:
+    from ai_gene_review.tools.pages_dependencies import DependencyResolver
+
+    target = Path('_pages-content/section.html.gz')
+    links = DependencyResolver(tmp_path).scan(Path('index.html'), f'<div data-pages-content="{target}"></div>')
+    assert target in links.missing
+    _write(tmp_path / target, 'stored content')
+    links = DependencyResolver(tmp_path).scan(Path('index.html'), f'<div data-pages-content="{target}"></div>')
+    assert target in links.existing and not links.missing
+
+
+def test_archive_size_accounts_for_headers_padding_and_hidden_exclusions(tmp_path: Path):
+    import shutil
+    from ai_gene_review.tools.stage_pages import pages_archive_bytes
+
+    tar = shutil.which('gtar') or shutil.which('tar')
+    if not tar or 'GNU tar' not in subprocess.run([tar, '--version'], capture_output=True, text=True, check=True).stdout:
+        pytest.skip('GNU tar oracle runs on Linux CI; this host only has BSD tar')
+    site = tmp_path / 'site'
+    _write(site / 'index.html', 'page')
+    _write(site / ('long-' * 35) / ('λ' * 60 + '.txt'), 'payload' * 100)
+    _write(site / '.hidden/omit.txt', 'private')
+    _write(site / '.nojekyll', '')
+    archive_path = tmp_path / 'actual.tar'
+    subprocess.run([tar, '--dereference', '--hard-dereference', '--directory', str(site),
+                    '-cf', str(archive_path), '--exclude=.git', '--exclude=.github',
+                    '--exclude=.[^/]*', '.'], check=True)
+    assert pages_archive_bytes(site) == archive_path.stat().st_size
+
+
+def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
+    _site_fixture(tmp_path)
+    manifest = stage_pages(tmp_path, tmp_path / '_site')
+    assert replace(manifest, archive_bytes=9_999_999_999).deployable
+    assert not replace(manifest, archive_bytes=10_000_000_000).deployable

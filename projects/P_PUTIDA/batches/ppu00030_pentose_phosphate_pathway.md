@@ -26,8 +26,8 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected first-pass gene review.
 - [x] Validate module and selected gene reviews.
-- [ ] Render module and project pages.
-- [ ] Open one PR for this module/pathway.
+- [x] Render module and project pages.
+- [x] Open one PR for this module/pathway: [PR #2848](https://github.com/ai4curation/ai-gene-review/pull/2848).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Curated Scope
@@ -94,3 +94,10 @@ Generated UTC: 2026-07-15T14:52:59.970771+00:00
 - Reused existing curated `zwf` and `pgl` reviews, then attached completed OpenScientist research to keep this batch consistent.
 - Initial OpenScientist gene-level jobs for `gntZ`, `rpe`, `rpiA`, and `tktA` hit the provider's default 3600 s timeout; they completed after restart with provider parameter `timeout=7200`.
 - The pathway/taxon OpenScientist report supports treating KEGG ppu00030 as over-broad: ED, peripheral glucose oxidation, PRPP synthesis, and gluconeogenic/reductive spillovers should not be counted as PPP holes.
+
+## 2026-09-01 structural repair
+
+- Removed the generic cytosol assertion from module context. The reusable
+  pathway is defined by conserved chemistry across taxa, whereas the deleted
+  location was justified only by the soluble PSEPK exemplars and would not
+  hold for compartmentalized instances such as plastidial PPP chemistry.

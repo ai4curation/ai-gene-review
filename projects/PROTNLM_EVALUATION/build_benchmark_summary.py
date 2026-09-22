@@ -19,19 +19,42 @@ PUBLIC = "https://github.com/ai4curation/ai-gene-review/blob/main/"
 
 
 def collect(root: Path) -> dict[str, Any]:
-    """Collect exact-accession results; overlapping cohorts do not duplicate the total."""
+    """Collect exact-accession results, retaining explicit zero-output review records.
+
+    Overlapping cohorts do not duplicate the total. ``go_review_files`` remains a
+    legacy alias for all ``prediction_review_files``, including empty reviews.
+    """
     base = root / "projects/PROTNLM_EVALUATION"
     scope = list(csv.DictReader((base / "family-curation/scope.csv").open()))
     targets = {r["accession"] for r in scope if r["role"] == "prediction_target"}
     go_counts: Counter[str] = Counter({c: 0 for c in CODES})
     by_accession: dict[str, Counter[str]] = {}
+    zero_go_reviews: list[dict[str, str]] = []
     for path in sorted((root / "genes").glob("*/*/*-protnlm-predictions-review.yaml")):
         doc = yaml.safe_load(path.read_text())
         if doc["id"] not in targets:
             continue
         assert doc["id"] not in by_accession, f"Duplicate prediction review: {path}"
+        predictions = doc.get("predictions")
+        assert isinstance(predictions, list), (
+            f"Explicit predictions list required: {path}"
+        )
+        if not predictions:
+            description = doc.get("description")
+            assert (
+                doc.get("status") == "COMPLETE"
+                and isinstance(description, str)
+                and description.strip()
+            ), f"Completed zero-output review with description required: {path}"
+            zero_go_reviews.append(
+                dict(
+                    gene="/".join(path.parts[-3:-1]),
+                    accession=doc["id"],
+                    review_file=path.relative_to(root).as_posix(),
+                )
+            )
         counts: Counter[str] = Counter()
-        for prediction in doc.get("predictions") or []:
+        for prediction in predictions:
             assert prediction["predicted_term_type"] in ("GO_MF", "GO_BP", "GO_CC")
             category = prediction["review"]["assessment"]
             assert category in CODES
@@ -76,6 +99,10 @@ def collect(root: Path) -> dict[str, Any]:
     cohorts: dict[str, set[str]] = defaultdict(set)
     for row in scope:
         cohorts[row["cohort"]].add(row["accession"])
+    assessed_accessions = {
+        accession for accession, counts in by_accession.items() if counts
+    }
+    zero_go_accessions = {row["accession"] for row in zero_go_reviews}
     cohort_results = []
     for name, accessions in cohorts.items():
         counts: Counter[str] = Counter({c: 0 for c in CODES})
@@ -85,6 +112,8 @@ def collect(root: Path) -> dict[str, Any]:
             dict(
                 cohort=name,
                 records=len(accessions),
+                records_with_go_assessments=len(accessions & assessed_accessions),
+                records_with_zero_go_predictions=len(accessions & zero_go_accessions),
                 go_counts=dict(counts),
                 narrative_records=sum(r["accession"] in accessions for r in narratives),
             )
@@ -93,7 +122,11 @@ def collect(root: Path) -> dict[str, Any]:
         distinct_records=len({r["accession"] for r in scope}),
         prediction_targets=len(targets),
         cohort_memberships=len(scope),
+        prediction_review_files=len(by_accession),
         go_review_files=len(by_accession),
+        records_with_go_assessments=len(assessed_accessions),
+        records_with_zero_go_predictions=len(zero_go_reviews),
+        zero_go_prediction_reviews=zero_go_reviews,
         go_counts=dict(go_counts),
         narrative_counts=dict(narrative_counts),
         narrative_reviews=narratives,
@@ -105,6 +138,10 @@ def write_report(root: Path, data: dict[str, Any]) -> None:
     """Write a linked report with explicit, non-interchangeable denominators."""
     base = root / "projects/PROTNLM_EVALUATION"
     (base / "benchmark-summary.json").write_text(json.dumps(data, indent=2) + "\n")
+    zero_go_count = data["records_with_zero_go_predictions"]
+    zero_go_noun = "record" if zero_go_count == 1 else "records"
+    assessed_count = data["records_with_go_assessments"]
+    assessed_noun = "record" if assessed_count == 1 else "records"
     lines = [
         "---",
         "title: ProtNLM cross-cohort results",
@@ -130,6 +167,27 @@ def write_report(root: Path, data: dict[str, Any]) -> None:
     lines += [f"| {c} | {data['go_counts'][c]} |" for c in CODES]
     lines += [
         f"| **Total** | **{sum(data['go_counts'].values())}** |",
+        "",
+        "## Reviewed records with no GO predictions",
+        "",
+        f"The {data['prediction_review_files']} prediction-review YAML files include "
+        f"{zero_go_count} {zero_go_noun} with zero emitted GO predictions and "
+        f"{assessed_count} {assessed_noun} with GO assessments. Completed `predictions: []` records "
+        "with a summary evaluation document reviewed output absence; a missing review file is not counted as zero output. "
+        "Their descriptions record the available evidence for potential missed functions. "
+        "No VDCL category or confidence score is assigned to an absent prediction, and these records "
+        "do not enter the emitted GO-claim denominator. Zero output alone does not establish a "
+        "biological false negative or a recall estimate.",
+        "",
+        "| Gene | Accession | Summary evaluation |",
+        "|---|---|---|",
+    ]
+    for row in sorted(data["zero_go_prediction_reviews"], key=lambda x: x["gene"]):
+        lines.append(
+            f"| {row['gene']} | {row['accession']} | "
+            f"[Prediction review]({PUBLIC}{row['review_file']}) |"
+        )
+    lines += [
         "",
         "## Narrative function reviews",
         "",
@@ -167,16 +225,22 @@ def write_report(root: Path, data: dict[str, Any]) -> None:
         "Paired reference records provide evidence and contribute no extra prediction assessments. "
         "Use the deduplicated totals above for the combined corpus.",
         "",
-        "| Cohort | Records | GO claims | Narrative review records |",
-        "|---|---:|---:|---:|",
+        "| Cohort | Records | Records with GO assessments | Reviewed zero GO output | GO claims | Narrative review records |",
+        "|---|---:|---:|---:|---:|---:|",
     ]
     for row in data["cohorts"]:
         lines.append(
-            f"| {row['cohort']} | {row['records']} | {sum(row['go_counts'].values())} | {row['narrative_records']} |"
+            f"| {row['cohort']} | {row['records']} | {row['records_with_go_assessments']} | "
+            f"{row['records_with_zero_go_predictions']} | {sum(row['go_counts'].values())} | "
+            f"{row['narrative_records']} |"
         )
     lines += [
         "",
         "## Source metadata",
+        "",
+        "In the JSON summary, `prediction_review_files` counts all review YAML files, including "
+        "explicit empty records. `go_review_files` is retained as a legacy alias for that same "
+        "total; `records_with_go_assessments` counts only records with emitted GO claims.",
         "",
         "`source_method: ProtNLM2` names the model. `source_version` identifies the release, XML artifact "
         "or dated API snapshot. API retrieval timestamps are observation times, not model training dates. "
@@ -196,7 +260,8 @@ if __name__ == "__main__":
             {
                 k: v
                 for k, v in result.items()
-                if k not in ("narrative_reviews", "cohorts")
+                if k
+                not in ("narrative_reviews", "zero_go_prediction_reviews", "cohorts")
             },
             indent=2,
         )

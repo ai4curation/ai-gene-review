@@ -1,5 +1,9 @@
 ---
-name: Generate Pages
+# Normal publication workflow: rebuild main and deploy the validated site daily
+# or on manual dispatch. The generated-files PR also updates tracked HTML, but
+# its merge is not required for publication. To publish a completed build again
+# without rendering, use deploy-existing-pages.yaml.
+name: Build and deploy site
 
 on:
   # Batch the full build once per day; manual dispatch remains available.
@@ -16,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     outputs:
-      deployable: ${{ steps.shadow-upload.outcome == 'success' && steps.shadow-summary.outputs.deployable == 'true' }}
+      deployable: ${{ steps.pages-upload.outcome == 'success' && steps.archive-check.outcome == 'success' && steps.pages-summary.outputs.deployable == 'true' }}
     permissions:
       # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
       # with the ai4c-agent App token below.
@@ -66,27 +70,36 @@ jobs:
       - name: Render project pages
         run: just render-projects
 
+      - name: Render ProtNLM prediction evaluations from all review sidecars
+        run: just render-prediction-eval
+
       - name: Validate module YAML files
         run: just validate-modules
 
       - name: Render module pages
         run: just render-modules
 
+      - name: Render cached rule reviews and index
+        run: just render-rule-pages
+
       - name: Deploy browser app (data.js + index.html)
         run: just deploy-browser
 
+      - name: Build shared predictions browser
+        run: just deploy-predictions-browser
+
       # Build the candidate artifact for inspection. Publication remains opt-in
       # and separately gated on completeness and the supported size budget.
-      # Keep every shadow step non-blocking so failures cannot skip the legacy
+      # Keep every artifact step non-blocking so failures cannot skip the legacy
       # regeneration lane. Only summarize/upload a successfully staged tree.
       - name: Stage GitHub Pages artifact
-        id: shadow-stage
+        id: pages-stage
         continue-on-error: true
         run: just stage-pages
 
       - name: Summarize staged Pages site
-        id: shadow-summary
-        if: steps.shadow-stage.outcome == 'success'
+        id: pages-summary
+        if: steps.pages-stage.outcome == 'success'
         continue-on-error: true
         shell: bash
         env:
@@ -98,13 +111,17 @@ jobs:
             if [ "$PAGES_ARTIFACT_DEPLOY_ENABLED" = "true" ]; then
               echo "Actions deployment is enabled for artifacts that pass the publication checks."
             else
-              echo "This is a shadow artifact; Actions deployment is disabled."
+              echo "Artifact built without publishing; Actions deployment is disabled."
             fi
             echo
             echo "| Metric | Value |"
             echo "|---|---:|"
             echo "| Files | $(jq -r .total_files _site-manifest.json) |"
             echo "| Uncompressed MiB | $(jq -r '.total_bytes / 1048576 | round' _site-manifest.json) |"
+            echo "| Estimated tar archive MiB | $(jq -r '.archive_bytes / 1048576 | round' _site-manifest.json) |"
+            echo "| Shared template savings (MiB) | $(jq -r '.shared_asset_bytes_saved / 1048576 | round' _site-manifest.json) |"
+            echo "| Content compaction savings (MiB) | $(jq -r '.content_compaction_bytes_saved / 1048576 | round' _site-manifest.json) |"
+            echo "| Source artifacts explicitly marked unarchived | $(jq -r '.unavailable_source_artifact_paths | length' _site-manifest.json) |"
             echo "| Gene pages | $(jq -r .gene_pages _site-manifest.json) |"
             echo "| Project pages | $(jq -r .project_pages _site-manifest.json) |"
             echo "| Module pages | $(jq -r .module_pages _site-manifest.json) |"
@@ -112,6 +129,7 @@ jobs:
             echo "| Excluded orphan review MiB | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
             echo "| Likely missing site-prefix links | $(jq -r .off_base_path_links _site-manifest.json) |"
             echo "| Broken local targets | $(jq -r .broken_local_links _site-manifest.json) |"
+            echo "| Archive budget (bytes) | $(jq -r .archive_size_budget_bytes _site-manifest.json) |"
             echo "| Size budget (bytes) | $(jq -r .size_budget_bytes _site-manifest.json) |"
           } >> "$GITHUB_STEP_SUMMARY"
           if jq -e '.deployable == true' _site-manifest.json > /dev/null; then
@@ -121,33 +139,64 @@ jobs:
             echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or has excluded or missing static local targets or likely missing site-prefix links. The existing site will remain deployed."
           fi
 
-      - name: Upload shadow GitHub Pages artifact
-        id: shadow-upload
-        if: steps.shadow-stage.outcome == 'success'
+      - name: Upload GitHub Pages artifact
+        id: pages-upload
+        if: steps.pages-stage.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
           retention-days: 3
 
-      - name: Warn when shadow Pages build fails
+      - name: Record uploaded archive checksum
+        id: archive-check
+        if: steps.pages-upload.outcome == 'success' && steps.pages-summary.outputs.deployable == 'true'
+        continue-on-error: true
+        env:
+          PAGES_ARCHIVE_PATH: ${{ runner.temp }}/artifact.tar
+        run: |
+          set -euo pipefail
+          if [ ! -f "$PAGES_ARCHIVE_PATH" ]; then
+            echo "::error title=Pages archive missing::upload-pages-artifact@v4 did not leave $PAGES_ARCHIVE_PATH; archive checksum verification cannot run."
+            exit 1
+          fi
+          python3 scripts/validate_pages_recovery.py record \
+            --manifest _site-manifest.json --archive "$PAGES_ARCHIVE_PATH"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          echo "- Actual tar bytes: $(jq -r .archive_actual_bytes _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Archive SHA-256: $(jq -r .archive_sha256 _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Pages diagnostics
+        if: steps.pages-stage.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-diagnostics
+          path: _site-manifest.json
+          retention-days: 7
+
+      - name: Warn when Pages artifact build fails
         if: >-
           ${{ !cancelled() &&
-              (steps.shadow-stage.outcome == 'failure' ||
-               steps.shadow-summary.outcome == 'failure' ||
-               steps.shadow-upload.outcome == 'failure') }}
-        run: echo "::warning title=Shadow Pages build failed::Inspect the shadow staging, summary, and upload steps. Legacy regeneration will continue; the live Pages source is unchanged."
+              (steps.pages-stage.outcome == 'failure' ||
+               steps.pages-summary.outcome == 'failure' ||
+               steps.pages-upload.outcome == 'failure' ||
+               steps.archive-check.outcome == 'failure') }}
+        run: echo "::warning title=Pages artifact build failed::Inspect the staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes
         run: |
-          if git diff --quiet \
+          if [ -z "$(git status --porcelain --untracked-files=all -- \
             genes/ \
             app/index.html \
             app/data.js \
             app/schema.js \
+            app/predictions/ \
             pages/ \
-            reports/; then
+            rules/arba/index.html \
+            ":(glob)rules/arba/*/*-review.html" \
+            reports/)" ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
@@ -157,7 +206,10 @@ jobs:
               app/index.html \
               app/data.js \
               app/schema.js \
+              app/predictions/ \
               pages/ \
+              rules/arba/index.html \
+              ":(glob)rules/arba/*/*-review.html" \
               reports/
           fi
 
@@ -219,7 +271,10 @@ jobs:
             app/index.html \
             app/data.js \
             app/schema.js \
+            app/predictions/ \
             pages/ \
+            rules/arba/index.html \
+            ":(glob)rules/arba/*/*-review.html" \
             reports/
 
           # SAFETY GUARD: this automated commit must only ever contain
@@ -227,9 +282,10 @@ jobs:
           # staged (e.g. a gene-review YAML, schema, src/, or projects/*.md
           # source file), abort rather than risk clobbering hand-authored
           # content. Allowed: gene-review HTML, everything under pages/, the
-          # three browser-app files, and reports/.
+          # browser-app files and prediction source manifest, reports/, and
+          # rule-review HTML.
           DISALLOWED="$(git diff --cached --name-only \
-            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/(index\.html|data\.js|schema\.js)|reports/[^[:space:]]+)$' \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/((predictions/)?(index\.html|data\.js|schema\.js)|predictions/source-files\.json)|reports/[^[:space:]]+|rules/arba/index\.html|rules/arba/ARBA[0-9]+/ARBA[0-9]+-review\.html)$' \
             || true)"
           if [ -n "$DISALLOWED" ]; then
             echo "❌ Refusing to commit non-artifact files:"
@@ -299,24 +355,17 @@ jobs:
               >/dev/null
             echo "Updated existing regeneration PR #$PR_NUMBER."
           else
-            gh pr create \
+            PR_URL="$(gh pr create \
               --repo "$GITHUB_REPOSITORY" \
               --base main \
               --head "$BRANCH_NAME" \
               --title "Regenerate pages and browser app" \
-              --body-file "$PR_BODY"
+              --body-file "$PR_BODY")"
+            echo "$PR_URL"
+            # The create response is authoritative; search indexing can lag.
+            PR_NUMBER="${PR_URL##*/}"
 
-            PR_NUMBER="$(gh pr list \
-              --repo "$GITHUB_REPOSITORY" \
-              --head "$BRANCH_NAME" \
-              --base main \
-              --state open \
-              --author app/ai4c-agent \
-              --json number \
-              --limit 1 \
-              --jq '.[0].number // empty')"
-
-            if [ -z "$PR_NUMBER" ]; then
+            if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
               echo "Failed to resolve regeneration PR number for $BRANCH_NAME."
               echo "Compare URL: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH_NAME}?expand=1"
               exit 1
@@ -439,9 +488,11 @@ jobs:
     concurrency:
       group: pages
       cancel-in-progress: false
+    # A legacy regeneration-PR failure must not suppress a validated upload.
     needs: generate-pages
     if: >-
-      ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
+      ${{ always() && !cancelled() &&
+          vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
           needs.generate-pages.outputs.deployable == 'true' }}
     runs-on: ubuntu-latest
     permissions:
@@ -454,3 +505,18 @@ jobs:
       - name: Deploy validated Pages artifact
         id: deployment
         uses: actions/deploy-pages@v4
+
+  publication-status:
+    needs: [generate-pages, deploy-pages]
+    if: ${{ always() && !cancelled() && vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require successful publication
+        env:
+          DEPLOY_RESULT: ${{ needs.deploy-pages.result }}
+        run: |
+          if [ "$DEPLOY_RESULT" != success ]; then
+            echo "::error title=Site was not published::Deployment result: $DEPLOY_RESULT. Inspect build diagnostics and deployment logs. The previous site remains live."
+            exit 1
+          fi
