@@ -114,9 +114,6 @@ def validate_reference_finding_supporting_text(
             continue
         if reference_id.split(":", 1)[0].upper() not in LITERATURE_PREFIXES:
             continue
-        reference_declares_unavailable = (
-            reference.get("full_text_unavailable") is True
-        )
         cache_has_full_text = cached_full_text_available(
             reference_id,
             resolved_publications_dir,

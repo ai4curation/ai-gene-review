@@ -12,6 +12,7 @@ checking it, so it no longer excuses a mismatch.
 """
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -33,18 +34,23 @@ def abstract_only_cache(tmp_path: Path) -> Path:
     return pubs
 
 
-def findings_doc(quote: str, *, declared_on_reference=False, declared_on_finding=False):
-    finding = {"statement": "s", "supporting_text": quote}
+def findings_doc(
+    quote: str,
+    *,
+    declared_on_reference: bool = False,
+    declared_on_finding: bool = False,
+) -> dict[str, Any]:
+    finding: dict[str, Any] = {"statement": "s", "supporting_text": quote}
     if declared_on_finding:
         finding["full_text_unavailable"] = True
-    reference = {"id": "PMID:1", "findings": [finding]}
+    reference: dict[str, Any] = {"id": "PMID:1", "findings": [finding]}
     if declared_on_reference:
         reference["full_text_unavailable"] = True
     return {"references": [reference]}
 
 
-def severities(doc, pubs) -> list[ValidationSeverity]:
-    report = ValidationReport(file_path="t.yaml", is_valid=True)
+def severities(doc: dict[str, Any], pubs: Path) -> list[ValidationSeverity]:
+    report = ValidationReport(file_path=Path("t.yaml"), is_valid=True)
     validate_reference_finding_supporting_text(doc, report, pubs)
     return [
         i.severity
@@ -106,7 +112,7 @@ def test_error_message_offers_a_real_remedy(abstract_only_cache):
     Declaring ``full_text_unavailable`` is no longer one of them, so the message must not
     suggest it -- that would send an author to a flag that no longer resolves the error.
     """
-    report = ValidationReport(file_path="t.yaml", is_valid=True)
+    report = ValidationReport(file_path=Path("t.yaml"), is_valid=True)
     validate_reference_finding_supporting_text(
         findings_doc("not in the abstract at all"), report, abstract_only_cache
     )
