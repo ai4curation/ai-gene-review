@@ -35,7 +35,7 @@ System goals:
 ## Chassis Focus: Methylorubrum extorquens AM1 (METEA)
 
 Mapping below uses locus tags from the METEA gene set. Locus tag format: `MexAM1_META1p####`.
-See METEA-specific notes: [projects/METEA_MLL_CLUSTER.md](projects/METEA_MLL_CLUSTER.md).
+See METEA-specific notes: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 
 ## High-Level Pipeline (Conceptual)
 
@@ -105,7 +105,7 @@ Gene system candidates (examples to validate in chassis):
 - Fe(II) oxidation module for bioleaching: rus operon (cyc2, cyc1, coxBACD, rus)
 
 M. extorquens AM1 locus map (lanthanophore-driven mobilization):
-- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](projects/METEA_MLL_CLUSTER.md).
+- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 - mluA: MexAM1_META1p4129 (mll/lut regulatory/auxiliary system)
 - mluR: MexAM1_META1p4130 (regulatory; mll/lanthanide response)
 - mluI: MexAM1_META1p4131 (auxiliary; mll cluster)
@@ -156,7 +156,7 @@ Gene system candidates (examples to validate in chassis):
 - Manganese uptake: mntH (NRAMP-family importer)
 
 M. extorquens AM1 locus map (lanthanide uptake):
-- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](projects/METEA_MLL_CLUSTER.md).
+- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 - lut cluster: META1_1778 to META1_1787 (lanthanide utilization/transport region)
 - lanM: MexAM1_META1p1786 (lanmodulin; REE-binding protein within lut region)
 - xoxF1: MexAM1_META1p1740 (lanthanide-dependent MDH)

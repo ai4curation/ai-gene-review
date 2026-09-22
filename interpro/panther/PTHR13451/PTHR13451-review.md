@@ -48,15 +48,16 @@ The following IBA (GO_REF:0000033) annotations were propagated to S. pombe mus81
 |-------|-------|--------|------|------------|------------|
 | GO:0008821 | crossover junction DNA endonuclease activity | MF | PTN000335543 | ACCEPT | **Appropriate.** This is the defining catalytic activity of the MUS81 family and is experimentally established for fission yeast Mus81-Eme1. Correct propagation. |
 | GO:0048476 | Holliday junction resolvase complex | CC | PTN000335543 | ACCEPT | **Appropriate.** Mus81 functions as part of a Holliday-junction resolvase (Mus81-Eme1) complex; the `LOCALIZATION` flag is triage only. Consistent with experimental data. |
+| GO:0005634 | nucleus | CC | PTN000335543 | ACCEPT | **Appropriate.** Nuclear localization is directly established for *S. pombe* Mus81-Eme1. The target's own experimental support among the descendants used to place the IBD is expected and not circular. |
 | GO:0000712 | resolution of meiotic recombination intermediates | BP | PTN000335543 | ACCEPT | **Appropriate.** Mus81-Eme1 is the principal meiotic resolvase in *S. pombe*; this propagation captures a well-supported core process. |
 | GO:0031573 | mitotic intra-S DNA damage checkpoint signaling | BP | PTN000335543 | ACCEPT | **Appropriate.** Mus81 acts with the replication checkpoint (Cds1) during S phase; supported in fission yeast. Correct propagation. |
 | GO:0000727 | double-strand break repair via break-induced replication | BP | PTN000335543 | KEEP_AS_NON_CORE | **Appropriate but non-core.** BIR/fork-processing is a genuine but secondary role relative to junction resolution. Propagation valid; downgraded to non-core. |
 
-**Summary:** All five IBA propagations to mus81 are biologically correct. The single shared node (PTN000335543) and the tight, single-function dominant subfamily make these propagations high-confidence. No removals warranted.
+**Summary:** All six IBA propagations to mus81 are biologically correct. The single shared node (PTN000335543) and the tight, single-function dominant subfamily make these propagations high-confidence. No removals warranted.
 
 ## Review Status
 
-- **Date**: 2026-06-07
+- **Date**: 2026-09-01
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER metadata/entries, UniProt, S. pombe mus81 GOA + ai-review, iba_propagation.tsv

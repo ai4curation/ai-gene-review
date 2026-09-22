@@ -1,0 +1,19 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+manifest := "inputs/proteins.tsv"
+raw_uniprot := "outputs/raw/uniprot"
+raw_interpro := "outputs/raw/interpro"
+
+all: download summarize align
+
+download:
+    uv run scripts/download_inputs.py --manifest {{manifest}} --uniprot-dir {{raw_uniprot}} --interpro-dir {{raw_interpro}} --metadata outputs/direct/uniprot_metadata.tsv
+
+summarize: download
+    uv run scripts/analyze_architecture.py --manifest {{manifest}} --uniprot-dir {{raw_uniprot}} --interpro-dir {{raw_interpro}} --output outputs/direct/domain_architecture.tsv --presence-output outputs/direct/target_domain_presence.tsv --regions outputs/direct/domain_regions.fasta --ring-output outputs/direct/ring_ligand_patterns.tsv
+
+align: summarize
+    uv run scripts/align_regions.py --regions outputs/direct/domain_regions.fasta --output outputs/direct/domain_pairwise_identity.tsv
+
+clean:
+    rm -f outputs/direct/*.tsv outputs/direct/*.fasta outputs/raw/uniprot/* outputs/raw/interpro/*

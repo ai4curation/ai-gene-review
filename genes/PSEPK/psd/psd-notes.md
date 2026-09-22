@@ -39,3 +39,11 @@ Normalized exact support used in the YAML:
 - Accept phosphatidylserine decarboxylase activity, phosphatidylethanolamine biosynthesis, and plasma-membrane localization as core.
 - Keep the broad phospholipid biosynthetic process as non-core.
 - Psd must not be conflated with PssA: PssA forms phosphatidylserine; Psd decarboxylates it.
+
+## 2026-09-01 annotation-reviewer pass
+
+All four current GOA rows were re-reviewed against the reviewed UniProt/HAMAP
+record and the existing OpenScientist report. The specific decarboxylase
+activity, plasma-membrane location, and phosphatidylethanolamine biosynthetic
+process remain core; the broader phospholipid biosynthetic process remains
+non-core. No current GOA row is PENDING.

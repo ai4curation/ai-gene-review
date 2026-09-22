@@ -95,3 +95,37 @@ PDB 8J07: cryo-EM structure at 4.10 A resolution. This shows the entire CFAP61 p
 3. No annotation to radial spoke assembly (GO:0062177) despite this being a core function
 4. No annotation to calmodulin-spoke associated complex (no GO term exists for CSC)
 5. The ISS annotations transfer from Chlamydomonas/Tetrahymena orthologs but some are quite appropriate given the high conservation of CSC function
+
+## Finishing pass (2026-09-04, PAINT no-IBA project)
+
+Final quality pass over CFAP61-ai-review.yaml for the PAINT "human no-IBA" project.
+
+- Re-checked every existing_annotations entry against the GOA rows and cached
+  publications; all actions were found justified and were retained unchanged:
+  ACCEPT for the experimental axoneme/sperm flagellum localizations
+  [PMID:36659204 "Cfap61 is initially localized at the neck of sperm, where it
+  potentially functions in flagellum formation, and is later localized to the midpiece
+  of the sperm"], the IMP sperm flagellum assembly / flagellated sperm motility
+  annotations [PMID:34792097 "CFAP61 is required for sperm flagellum formation and male
+  fertility in human and mouse"], both IBAs, and the well-founded ISS transfers from
+  Tetrahymena/Chlamydomonas; MODIFY for the overly general IEA cytoskeleton/cilium
+  terms and ISS cilium organization (proposed: axoneme, motile cilium, radial spoke
+  assembly); NEW for GO:0005200 structural constituent of cytoskeleton (no MF in GOA)
+  and GO:0062177 radial spoke assembly.
+- Validation is clean (0 errors, 0 warnings, verbatim-quote and term checks pass);
+  status advanced IN_PROGRESS -> COMPLETE (the update-status tool only reports
+  mismatches, so the field was set by hand to the tool's expected value).
+- Notable curation finding: the "no-IBA" premise is stale. The cached
+  PTHR21178-paint.tsv now carries IBDs at PTN001080689 (GO:0036126) and PTN001080690
+  (GO:0120316, taxon Eumetazoa), both dated 20250903 and seeded by MGI:1926024 plus
+  Q8NHU2 itself, and the current GOA contains the matching human IBA rows. Both were
+  adjudicated SOUND in the new family review
+  (interpro/panther/PTHR21178/PTHR21178-review.yaml). The remaining PAINT gap is
+  under-assertion, not over-propagation: the family-wide axonemal role (axoneme,
+  cilium movement, radial spoke assembly) is experimentally grounded in Tetrahymena
+  [PMID:25694453 "loss of either FAP61 or FAP251 reduces cell swimming and affects the
+  ciliary waveform and that RS3 is either missing or incomplete, whereas RS1 and RS2
+  are unaffected"] and Chlamydomonas [PMID:21613541 "analysis of both flagellar beating
+  and microtubule sliding in vitro demonstrates that the CSC plays a critical role in
+  modulating dynein activity"] yet unasserted by PAINT; recorded as family-level
+  term_assessments for a future IBD.
