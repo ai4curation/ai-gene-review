@@ -131,7 +131,7 @@ The final TreeGrafter consistency review refined K9IMD0 metal ion binding to fer
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,779 | 852 | 9.6 |
+| Retained/replacement/proposed-new AIGR annotations | 2,782 | 852 | 9.6 |
 | All GO-valued AIGR core-function slots | 1,230 | 354 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
