@@ -195,3 +195,17 @@
 This entry supersedes the earlier exclusive near-native-client and no-membrane-pool claims, plus the unqualified client/pathway and embryonic-essentiality summaries above. All 48 original rows (33 source assertions and 15 authored NEWs) were assessed. The 33 source rows retain every machine field. Protein folding/nucleotide binding/defense and plasma-membrane/perinuclear assertions are restored with direct biochemical evidence and actual PAINT ancestry. Five source protein-interaction rows retain their valid broad term; the previous universal replacement confused HSP90's client/cochaperone partners with the entity that performs chaperoning. The cell-wall HDA is UNDECIDED pending exact peptide/full-text evidence, rather than rejected for absent signal peptide. Two obsolete unfolded-binding rows remain MODIFY for ontology migration, with the biological denial withdrawn.
 
 Primary sources establish direct target foldase/holdase activity (23827697), nuclear ROF1 complex (19366428), POLL and HTD1 interactions, and published ABCB/TWD1 context (41027915). Read AT5G52640-primary-scope.md for primary-clone and mixed-paralog limitations. Retained old nucleus and negative-photomorphogenesis proposals have explicit primary support; the latter combines direct HSP90.1 enhancement of COP1–ELF3 association with combined-paralog physiology and does not assert isolated HSP90.1 necessity. Thirteen old NEWs were withdrawn for redundancy or unresolved role/client/condition scope. These are authored-proposal withdrawals, not deletion of curator source annotations. Exact row outcomes are in projects/IBA_REVIEW/rereview-2026-09-20/chaperone-and-parb-reaction-scope.yaml. No OpenScientist duplicate was launched; the prior Falcon and Perplexity bodies were critically incorporated.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:19366428: ACCEPT -> REMOVE
+- PMID:25358503: ACCEPT -> REMOVE
+- PMID:26230318: ACCEPT -> REMOVE
+- PMID:14504384: ACCEPT -> REMOVE
+- PMID:17148606: ACCEPT -> UNDECIDED
