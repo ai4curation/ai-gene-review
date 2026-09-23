@@ -104,3 +104,13 @@ Calvarial doughnut lesions with bone fragility (CDL, MIM:126550) and CDL + spond
 Restore reverse ceramide synthesis and five functional Golgi rows; preserve CDP-choline correction. Correct two PE-dependent CPE rows to broad phosphotransferase and propose an exact donor-specific ontology term. ER activity unresolved; retain generic interaction non-core and broad pathway as core; correct assay-rate and variant scope.
 
 All 31 source assertions were preserved. See the [primary evidence checks](../../../../projects/IBA_REVIEW/rereview-2026-09-20/sphingolipid-primary-checks.md) and [audit](../../../../projects/IBA_REVIEW/rereview-2026-09-20/sphingolipid-reaction-specificity.yaml). The outstanding question is wild-type-er-activity-and-export-signal.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:32296183: KEEP_AS_NON_CORE -> REMOVE
