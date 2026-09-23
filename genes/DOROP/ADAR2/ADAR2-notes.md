@@ -79,3 +79,8 @@
 - GO:0016556 mRNA modification - captures primary substrate class
 - GO:0008270 zinc ion binding - conserved catalytic zinc coordination
 - GO:1904115 axon cytoplasm - directly demonstrated (PMID:32201888)
+
+
+## 2026-09-20 TreeGrafter re-review
+
+Reviewed all 13 rows, including three earlier NEW proposals. Broad RNA binding and RNA processing now ACCEPT as direct core aspects of dsRNA editing. Retained the tRNA-specific and free-adenosine substrate distinctions. Both existing function reports were incorporated, while correcting Falcon's identification of C1JAR3 as sqADAR2b: the 786-aa cached sequence carries three dsRBDs and matches the sqADAR2a architecture described in PMID:19390115. The primary study explicitly assays both variants. Nucleolar localization remains UNDECIDED, with lack of squid microscopy treated as uncertainty rather than disproof. Existing mRNA-modification, zinc-binding and axon-cytoplasm proposals are retained on substrate, deaminase chemistry and neuronal-localization evidence; the latter observations are from squid ADAR2, not proof of exclusive localization to one splice variant.
