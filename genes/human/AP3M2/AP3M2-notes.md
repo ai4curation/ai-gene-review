@@ -621,3 +621,13 @@ can pick different ones and the matrix is very slightly asymmetric (largest
 cell-vs-transpose difference 0.6 percentage points, none of it in the AP3M2 row the review
 cites). The history record's `details` was rewritten to the final numbers; `docs/history.md`
 freezes only `target.slug` and `target.path`, so `details` is editable in place.
+
+## 2026-09-21 full-gene re-review
+
+All 26 original assertions preserved; one old NEW GABA-secretion row withdrawn. Full15492041 attributes impaired evoked release at least partly to altered VGAT/vesicle biogenesis; AP3M2 performs cargo-sorting work, but this does not establish an additional GABA-release step. ExactGO0061534 comparator queries on same-role human AP3B2/Q13367, AP3D1/O14617, AP3B1/Q92572 and AP3M1/Q9Y2T2 returned zero annotations (snapshot in audit JSON). The phenotype and mechanistic vesicle-budding function remain in references/core prose.
+
+Actual PTHR10529 target leaf PTN002540363 descends from root PTN000055849 through AP3 node PTN002237676. TGN-loss PTN000242370 and transport-loss PTN002575694 are outside the target path. Full15051738 says “AP-3 does localize with clathrin, but to a lesser extent than does AP-1” and records 4% TGN labeling; full39705307 explicitly discusses clathrin-dependent AND independent functions. This overturns the previous categorical exclusions and broadens the standalone description. TGN is retained noncore, Golgi-vacuole transit remains compatible with an endosomal intermediate, and clathrin-associated complex membership is contextual. Exact clathrin-cargo MF scope remains uncertain.
+
+GO0035651 does not restrict binding to external ligands. Mouse donor Q8R2R9 IDA19010779 is real; full assay details remain inaccessible, so the old complex-subunit argument is replaced with UNDECIDED. The general AP-type coat term and cytoplasm/transport/axon-cytoplasm parents are valid core claims. GO0016183 specifically names presynaptic clathrin-pit coating, so the source-supported endosomal-budding replacement is retained without asserting all other capacities absent.
+
+Affinage body read: its mu-2 designation is wrong, and nonhuman findings are not human direct assays. The 9C5B structure is AP3M1, already established by local reproducible mapping; eight of nine cargo contacts are identical in AP3M2. Prior proposed ontology changes based on globally clathrin-free AP3 were withdrawn; non-endocytic signal-recognition vocabulary can be considered independently later. Focused clathrin/Golgi/source-binding report is queued.
