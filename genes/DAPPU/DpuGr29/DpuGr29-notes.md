@@ -2,7 +2,7 @@
 
 ## Full-gene re-review, 2026-09-20
 
-Reviewed all nine input rows (eight source annotations and one authored NEW). Restored three neuronal CC IBAs after removing the requirement for direct target expression. Changed male courtship REMOVE to UNDECIDED: GO does not restrict it to insects, and Daphnia males can inspect mates chemically. Taste MODIFY becomes UNDECIDED because aquatic life does not preclude gustation; modality remains unresolved for the lineage-expanded Gr29 clade. PMID19383158 full text supports exact identity, clade and uncertainty; PMID38573859 supplies BmGr9 pore/gating mechanism as comparative evidence. The unvalidated GO0099094 NEW was withdrawn and moved to questions, and core/description no longer assert target cation selectivity. Root manages the focused clade-function adjudication. All eight actual source rows are preserved.
+Reviewed all nine input rows (eight source annotations and one authored NEW). Restored three neuronal CC IBAs after removing the requirement for direct target expression. Changed male courtship REMOVE to UNDECIDED: GO does not restrict it to insects, and Daphnia males can inspect mates chemically. Taste MODIFY becomes UNDECIDED because aquatic life does not preclude gustation; modality remains unresolved for the lineage-expanded Gr29 clade. PMID:19383158 full text supports exact identity, clade and uncertainty; PMID:38573859 supplies BmGr9 pore/gating mechanism as comparative evidence. The unvalidated GO:0099094 NEW was withdrawn and moved to questions, and core/description no longer assert target cation selectivity. Root manages the focused clade-function adjudication. All eight actual source rows are preserved.
 
 
 ## Focused report incorporation, 2026-09-20
