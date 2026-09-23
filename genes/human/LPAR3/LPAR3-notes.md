@@ -69,3 +69,8 @@ Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
 assertions and supporting evidence are preserved.
 
 - PMID:32296183: KEEP_AS_NON_CORE -> REMOVE
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Restore full forskolin context in the quotation, distinguish external full-text access from the abstract-only cache, and retain branch-specific LPAR2 core terms without redundant NEW assertions beneath existing GPCR signaling.

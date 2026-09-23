@@ -84,3 +84,8 @@ assertions and supporting evidence are preserved.
 - PMID:33961781: KEEP_AS_NON_CORE -> REMOVE
 - PMID:39083597: KEEP_AS_NON_CORE -> REMOVE
 - PMID:19306925: KEEP_AS_NON_CORE -> REMOVE
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Restore full forskolin context in the quotation, distinguish external full-text access from the abstract-only cache, and retain branch-specific LPAR2 core terms without redundant NEW assertions beneath existing GPCR signaling.

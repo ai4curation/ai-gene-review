@@ -361,3 +361,8 @@ the one that was not, so the table is not read as the outcome.
 All six rows reviewed; four original source assertions and two authored NEW rows preserved. Restore actin organization and actin cytoskeleton from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. New accessible primary [PMID:41644816] Fig.8A and supplementary S6-S8 directly establish a contextual actin-associated pool and target-dependent polarized F-actin/pMLC2 distribution. Public primary figures and complete supplementary legends were read; the main text remains embargoed. Loss of catalytic GAP activity does not remove these separate functions or require the same donor mechanism. Details and URLs are in ARHGAP36-primary-evidence.md.
 
 Re-read the existing bioinformatics results and re-executed the primary32203420 workbook parser. Retain catalytic REMOVE based on convergent residue and cellular-screen evidence, while correcting the claim that 15/65 all-negative is a false-negative rate and that an ND root annotation contradicts IBA. Added current sequence versions to the residue claims. Exact target PTN002489201 descends from positive IBD PTN000973894. No wrong-paralog failure is asserted simply from differing subfamilies. Retain the existing signaling refinement and two direct NEW inhibitor/location proposals; no additional NEW rows. Corrected universal isoform-inactivity and no-experiment claims. No focused provider call is needed after the primary supplementary evidence resolves the actin issues; an exact ARHGAP36/Q6ZRI8 global OpenScientist cache search was negative.
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Restore the primary abstract evidence alongside the explicit public-figure access record; distinguish figure interpretation from verbatim publication quotations.

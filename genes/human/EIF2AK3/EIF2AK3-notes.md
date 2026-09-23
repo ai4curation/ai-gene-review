@@ -60,3 +60,8 @@ The generated [OpenScientist report](EIF2AK3-hypotheses/function-hypothesis-go-0
 Direct inspection of [HPA subcellular evidence](https://www.proteinatlas.org/ENSG00000172071-EIF2AK3/subcellular) confirmed nucleoplasm staining with CAB009204 in A-431 and U2OS; U-251MG was cytosolic. The [antibody-validation page](https://www.proteinatlas.org/ENSG00000172071-EIF2AK3/summary/antibody) describes the ICC result as standard Approved and says: “The subcellular location is partly supported by literature or no literature is available.” Enhanced genetic, tagged-protein, or independent-antibody validation is not shown for this ICC signal. This warrants uncertainty about specificity, not a claim that the staining is an established artifact. Failure to recover the known ER compartment is a discrepancy requiring explanation, not a demonstrated refutation.
 
 The nuclear IBA remains UNDECIDED. A specificity-validated endogenous localization assay distinguishing nucleoplasm, nuclear envelope, and perinuclear ER, with characterization of full-length versus processed protein, would settle the remaining target-specific issue. The report was not duplicated and its generated text was preserved unchanged.
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Add explicit support for retained kinase, translation and localization claims, and explain why the GO tyrosine-kinase reaction includes protein autophosphorylation.

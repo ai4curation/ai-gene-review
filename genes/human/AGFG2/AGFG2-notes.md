@@ -420,3 +420,8 @@ The real R75/T89 correspondence is now machine-readable in residue_claims. PMID:
 Both existing NEW process assertions remain: primary AGFG2 trafficking-cofactor participation is distinct from cargo/substrate necessity, same-role GO comparators are saved, and no redundant process ancestor/descendant was found. Full PMID:34369554 narrows the exocytosis mechanism and corrects the claim that every maturation measure is unchanged. Full PMID:25496667 found no significant replication defect, so viral activation is explicitly receptor-removal/cofactor support, not demonstrated enhancement of viral replication. Full PMID:10613896 includes Hrbl reporter experiments but performs detailed localization and NPF mutation on Hrb; reporter enhancement is not direct RNA transport. Affinage's dual Nef/Vpu narrative is retained, its conflicting table, mammal-only claim and assay conflations are documented. Primary-scope and tree/ontology artifacts provide the evidence trail.
 
 The older audit_claims.py H check requires now-removed historical count sentences to appear in the review; those source counts remain in immutable JSON and RESULTS.md, but they are not mandatory biological claims. Current review verification uses schema/best-practice validation, source-field preservation and exact quote checks. The historical script remains available without changing its old tests to force the new narrative to pass.
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Keep the biological description independent of propagation-review workflow.
