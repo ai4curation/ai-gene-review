@@ -124,13 +124,15 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 
 The recovered IBA/TreeGrafter reviews are reflected in the current counts below; the JSON, benchmark sidecars and figure are regenerated together from the same reference files.
 
+The final TreeGrafter consistency review refined K9IMD0 metal ion binding to ferric iron binding and NCGR_LOCUS1270 carbohydrate metabolism to the Calvin cycle. Only K9IMD0 is in this 299-gene comparison: its retained set changes from 22 to 21 terms, with four overlaps unchanged. All raw-GOA and core counts are unchanged by these refinements.
+
 **Table S8.** GO-GPT prediction overlap at three reference levels (299 canonical genes).
 
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,751 | 847 | 9.5 |
-| All GO-valued AIGR core-function slots | 1,224 | 351 | 4.0 |
+| Retained/replacement/proposed-new AIGR annotations | 2,779 | 852 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,230 | 354 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
