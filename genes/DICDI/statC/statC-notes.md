@@ -7,3 +7,8 @@ Read the complete OpenScientist proliferation/defense report, verified new PMID:
 The report expressly admits: "The gap is not that statC was tested and found negative for proliferation" and "Its role (if any) in defense is untested rather than experimentally excluded". Its REFUTED/NOT recommendations therefore exceed its evidence. Live GO:0042127 requires modulation of proliferation, not cytokine/JAK signaling; GO:0006952 requires restriction of damage after foreign-body exposure or injury, not metazoan interferon signaling. The source STATb growth phenotype with noncanonical activation itself disproves the claim that a Dictyostelium STAT cannot regulate growth without JAK. Positive defense effectors are not an exhaustive inventory excluding transcription factors.
 
 PTHR11801 places both processes at PTN000927860, while detailed cytokine terms are separately placed at metazoan nodes. An IBA reflects ancestral-node placement, not a pairwise transfer that becomes erroneous merely because a paralog supplies evidence. Both disputed rows are restored to KEEP_AS_NON_CORE, with exact report caveats and source excerpts. This does not claim a target-specific growth or defense experiment. Oxidative stress is not equated with defense, and differentiation timing is not equated with proliferation. The report is recorded as DISPUTED; no NOT annotation or new process term is manufactured. No duplicate report is needed.
+
+
+## Recovery PR evidence follow-up (2026-09-22)
+
+Anchor the retained STAT defense inference to the actual PAINT IBD row, or remove the unsupported negative ACG/SDF-1 assertion from supporting evidence; keep the report assessment in the reason.

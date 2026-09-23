@@ -35,3 +35,8 @@ The remaining human follow-up is the original concrete question: whether ACG
 recognizes SDF-1 itself or is activated downstream of another receptor. The
 existing report has been fully incorporated with its limitations; another
 identical report would not resolve the missing experiment.
+
+
+## Recovery PR evidence follow-up (2026-09-22)
+
+Anchor the retained STAT defense inference to the actual PAINT IBD row, or remove the unsupported negative ACG/SDF-1 assertion from supporting evidence; keep the report assessment in the reason.
