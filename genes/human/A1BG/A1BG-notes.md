@@ -150,3 +150,8 @@ PMID:39433128 full Results establish selective CRISP2 sterol-binding inhibition 
 The completed [focused report](A1BG-hypotheses/membrane-receptor-and-growth-hormone-capacities/openscientist.md), HTML/PDF and all computational artifacts were assessed independently. No action changes: retain plasma membrane KEEP_AS_NON_CORE and receptor/GH UNDECIDED. The report's categorical negatives exceed its evidence: it misses the explicit mouse outer-surface experiment, uses family membership without tracing the topology, and calls cell-associated NAMPT stabilization extracellular/direct binding. Its canonical hydropathy maximum reproduces (0.9842), but this does not exclude peripheral association or receptor-complex function. The full-GH-paper access claim has no independently verifiable supplied source beyond abstract-derived statements. The GH expression-versus-participation question remains a primary-full-text/curator follow-up, not a reason to launch the same report again.
 
 See [critical assessment](A1BG-report-assessment.md) and [reproducible hydropathy check](A1BG-bioinformatics/RESULTS.md). Findings-specific report reviews cite the correcting primary experiments. The existing CRISP2 sequestration proposal and qualified core remain supported by the full 39433128 assays; no new annotation, negation, source mutation or additional biological exclusivity claim was introduced.
+
+
+## Recovery PR localization follow-up (2026-09-22)
+
+Preserve superseded donor-specific analysis where present, replace rebutted report passages with actual supporting evidence, and clarify location or process scope. PAINT rows support inherited assertions as phylogenetic judgments, not direct target experiments.
