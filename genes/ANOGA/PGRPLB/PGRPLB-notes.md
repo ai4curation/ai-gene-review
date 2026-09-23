@@ -14,3 +14,8 @@ PAINT: {'family': 'PTHR11022', 'node': 'PTN002475783', 'finding': 'Current ances
 All 13 rows were assessed, including experimental, electronic, negated and old proposed entries. All actual GOA rows and source fields remain unchanged. One redundant old reviewer-authored NEW proposal was deleted; the original reviewed-row count includes that proposal. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.
 
 Corrected the source metadata of the remaining old reviewer-authored NEW proposal to ISS/PMID:28494453. Actual GOA rows are unaffected.
+
+
+## Evidence-presentation correction (2026-09-23)
+
+Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
