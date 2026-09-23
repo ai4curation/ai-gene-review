@@ -149,3 +149,11 @@ GOA-annotation evidence):
   source for ATP hydrolysis. LOW–MEDIUM relevance.
 </content>
 </invoke>
+
+## 2026-09-21 full-gene re-review
+
+All21 original assertions preserved. One old NEW folding parent was withdrawn as redundant with existing refolding; function remains in the synthesis. Actual PTHR19375 targetPTN000452754 is below cytoplasmPTN002321897 and BiP nodePTN001834223, which carries ER lumen, nucleus, membrane, ERAD and chaperone-complex inferences. No loss was recovered. Nuclear/membrane donors are BiP-family proteins, not a spurious arbitrary cytosolic-HSP70 transfer. Cytoplasm includes the ER. MembraneGO0016020 includes attached proteins. Nucleus includes nuclear envelope/perinuclear space; donor1373379 explicitly observes BiP in nuclear envelope. Thus cytoplasm/membrane/ERAD restored core, nuclear retained as contextual inference, without asserting worm nucleoplasmic localization.
+
+Falcon narrative/tables read and new primary leads fetched. Full41387410 Results/Methods/Discussion give HSP-3/HSP-4 expression and perturbation phenotypes; Discussion calls canonical HSP-3 refolding a model. There are no purified refolding/ATPase measurements; direct BiP/IRE1/Sec62 co-IP is human A549. Full39134659 shows Hsp-4 RNAi can suppress both paralogs, uses double-mutant dosage to establish redundancy, and directly co-IPs TRA-2 with HSP-4 in HEK293 cells. That is not direct HSP-3 binding or disposal by HSP-3; no new germline process annotation manufactured. Full22546897 says “It is conceivable that HSP-3 has a UPR-independent function outside the ER.” This is a hypothesis, not an observed extra-ER pool; infection phenotypes are retained in the description/references without NEW.
+
+Full27138431 and itsS2 assay caption separate worm-lysate incubation with recombinant FIC-1 from intact-animal evidence. Thr176 modification is established with purified protein, not a demonstrated in-vivo site. The old direct-localization and triple-UPR-sensor-complex claims were background extrapolations; corrected findings/reasons preserve conserved function with honest assay scope. No exact OpenScientist report existed; verified primary and BiP source topology resolved the over-harsh disputed calls, so no overlapping new request was necessary.

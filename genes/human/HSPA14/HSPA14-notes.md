@@ -47,3 +47,13 @@ not a core GO molecular function; not in GOA. Noted, not annotated.
    folding of nascent chains (GO:0044183 protein folding chaperone; process
    GO:0051083 de novo cotranslational protein folding; complex GO:0101031).
 2. ATP binding / ATP hydrolysis (HSP70 NBD), stimulated by DNAJC2.
+
+## 2026-09-21 full-gene re-review
+
+All23 original source assertions preserved. Actual PTHR19375 v19 target leafPTN002500131 is below ATPase/refolding IBDPTN000452648 and nuclear IBDPTN002500132. The SSZ1 loss nodePTN001065099 is outside this path. The frozen plasma-membrane IBA citesPTN002500132 but the current path lacks that assertion; this is a version discrepancy, not a biological negative. Nuclear/PM/refolding exclusions based only on primary cytosol/mRAC specialization were replaced with uncertainty.
+
+Full21245388 Methods/Results/Discussion distinguish ATP binding from catalysis: “the rate of ATP hydrolysis was only 0.01 ATP per min, which is very close to background hydrolysis.” Authors conclude “the question of whether Hsp70L1 can hydrolyze ATP cannot be conclusively answered.” Hydrolysis-site mutants complement yeast; binding-defective LKA does not. mRAC stimulates a separate Hsp70, not demonstrably its own Hsp70L1 subunit. Both ATPase rows now UNDECIDED, and description/core no longer assert the unsupported cycle. Full16002468 establishes the heterodimer and ribosome-associated contribution. Direct HSPA14 nascent-chain binding remains proposed.
+
+All source interactions checked:33961781 includes NFAM1 and DNAJC2,35271311/40205054 include DNAJC2, supporting informative HSP-binding replacements. Bare28514442NFAM1 binding is removed as uninformative, not declared false. Broad foldingNAS restored to core. Generic membraneHDA remains contextual; membrane fraction is not proof of PM activity.
+
+Existing SSZ1 ATPase OpenScientist output was read: its claim that metazoan HSPA14 was untested misses21245388. No target report existed in exact repository/global query checks. A distinct focused request includes this assay, the21231916 HSPA14 refolding figures, and secondary compartments. The author manuscript of21231916 was found at https://www.researchgate.net/publication/49752468_The_diverse_members_of_the_mammalian_HSP70_machine_show_distinct_chaperone-like_activities but its body font encoding and inaccessible PDF prevent reliable figure adjudication here. No NEW assertion added.
