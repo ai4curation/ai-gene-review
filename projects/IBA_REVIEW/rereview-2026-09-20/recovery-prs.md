@@ -1,7 +1,7 @@
 # Recovery and PR batches, 2026-09-22
 
 The interrupted working tree contained 1,679 modified or new files, including
-146 changed gene reviews, 343 publication caches, and 187 history records.
+146 changed gene reviews at the time of recovery, 343 publication caches, and 187 history records.
 The complete recovered state was committed locally as
 `2aa3ece27bb2a68b92629358e3eac23d20ff09b8` on
 `recovery/iba-treegrafter-20260922` before splitting it. A separate local archive
