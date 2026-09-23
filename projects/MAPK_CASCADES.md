@@ -50,6 +50,35 @@ PANTHER subfamilies were not used. The validator suggests them where all listed
 members share one, but they are not clean paralog groups for these kinases:
 `PTHR48013:SF9` is named for MEK5 but also contains yeast Ste7 and plant MKKs.
 
+### PAINT ancestral nodes
+
+Family descriptors also carry PAINT IBD nodes from the local
+`interpro/panther/*/*-paint.tsv` slices, each seeded by the descriptor's own
+representative members:
+
+| Descriptor | PAINT node | Propagated terms |
+|---|---|---|
+| Ras GTPases | PTN000631348, PTN008604616 | GTPase activity; Ras protein signal transduction |
+| RasGAPs | PTN008939999 | GTPase activator activity |
+| SOS | PTN000560991 | guanyl-nucleotide exchange factor activity |
+| RAF | PTN001147804 | MAP kinase kinase kinase activity; MAPK cascade |
+| ASK-subgroup MAP3Ks (p38) | PTN000684847 | MAP kinase kinase kinase activity |
+| MKK3/6, MKK4/7 | PTN000684494 | MAP kinase kinase activity; MAPK cascade |
+| JNK | PTN001171982, PTN000622075 | JUN kinase activity; JNK cascade; plus the MAPK-wide node |
+| ERK1/2, p38, ERK5 | PTN000622075 | MAPK-wide node (Ser/Thr kinase, intracellular signal transduction, nucleus, cytoplasm) |
+
+Not added: MEK1/2 (no PAINT slice for PTHR47448), MEK5 and MEKK2/3 (not seeds of
+a matching node), and Fus3/Kss1 and Hog1 (the yeast seeds are SGD ids that
+cannot be mapped to genes offline). The p38 module previously described
+PTN000684847 as a p38 MAPK node; it is an ASK-subgroup MAP3K node (seeds ASK1,
+MAP3K6, MAP3K15) and the evidence text was corrected.
+
+Inconsistency to check against PANTHER: in the PAINT slices, MEK1 and MEK2 are
+seeds of PTN000684494 (in the PTHR48013 file), and MEKK1/2/3 are seeds of
+PTN004700021 (also in the PTHR48013 file), while the HMM membership index puts
+MAP2K2 in PTHR47448 and MEKK2/3 in PTHR24361. The PAINT tree and the HMM
+classification appear to come from different PANTHER versions.
+
 Open item: MAP2K1, MAPK3, SOS1, RASA1, RAF1, Pbs2, Hog1, Ste11, Ste7 and the
 Sln1/Ypd1/Ssk1 phosphorelay are missing from `panther-members.tsv`. Run
 `just refresh-panther-members` (needs network access) so membership checks can
