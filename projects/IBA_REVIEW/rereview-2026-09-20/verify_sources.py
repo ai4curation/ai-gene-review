@@ -90,7 +90,23 @@ def main():
         for batch in directory.glob("*.yaml"):
             data = yaml.load(batch.read_text(), Loader=yaml.CSafeLoader) or {}
             audited_paths.update(record["gene_file"] for record in data.get("genes", []))
+    manifest = json.loads((HERE / "recovery-batches.json").read_text())
+    packaged_paths = {
+        f"genes/{gene}/{gene.split('/')[-1]}-ai-review.yaml"
+        for batch in manifest["batches"] for gene in batch.get("genes", [])
+    }
+    audited_paths.update(packaged_paths)
     paths = subprocess.check_output(["git", "diff", "--name-only", commit], cwd=ROOT, text=True).splitlines()
+    selected = set(paths) & audited_paths
+    # A standalone tracker/batch checkout cannot reproduce the assembled recovery.
+    # Refuse to replace its preserved report with an empty or partial success.
+    absent = packaged_paths - selected
+    if not selected or absent:
+        raise SystemExit(
+            "Incomplete recovery checkout; preserved report was not overwritten. "
+            f"Expected {len(packaged_paths)} packaged reviews; found {len(selected)}. "
+            f"Missing: {', '.join(sorted(absent))}"
+        )
     results = []
     for path in paths:
         if path not in audited_paths:

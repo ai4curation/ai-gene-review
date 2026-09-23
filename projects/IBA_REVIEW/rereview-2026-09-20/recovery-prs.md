@@ -10,9 +10,9 @@ does not claim completion of the corpus-wide audit.
 
 ## Pull requests
 
-Shared evidence lands first. The gene batches are independent of one another
-and temporarily use the evidence branch as their base; they will target main
-once the evidence PR lands. The tracker is merged after the curation batches.
+Shared evidence PR #3107 has merged. All gene batches now target main and use
+protected auto-merge after independent approval and CI. The tracker is merged
+after the curation batches.
 Each batch retains the relevant gene history, research, hypothesis reports, and
 analytical evidence. Family-review changes travel with the genes they discuss.
 
@@ -31,11 +31,13 @@ analytical evidence. Family-review changes travel with the genes they discuss.
 | signaling-and-pseudoenzymes | 20 | [#3117](https://github.com/ai4curation/ai-gene-review/pull/3117) |
 | localization-and-divergence | 18 | [#3118](https://github.com/ai4curation/ai-gene-review/pull/3118) |
 | fulltext-flags | 5 | [#3119](https://github.com/ai4curation/ai-gene-review/pull/3119) |
-| audit-tracker | 0 | Tracker PR (this change) |
+| audit-tracker | 0 | [#3120](https://github.com/ai4curation/ai-gene-review/pull/3120) |
 
 ## Validation and recovery fixes
 
-- All 146 changed reviews passed source preservation: no original GOA assertion
+- The 146 scientific re-reviews and five additional reference-availability-only
+  edits make 151 changed gene reviews. The latter do not advance scientific audit
+  status. All 151 passed source preservation: no original GOA assertion
   was lost or mutated. CSR-1 is the explicitly registered exception, with the
   original mixed-identity files preserved byte-for-byte and the canonical fetched
   sources and seed checked by SHA-256.
@@ -49,8 +51,14 @@ analytical evidence. Family-review changes travel with the genes they discuss.
   duplicate. The latter is now retained under `focused_followups`; its content is
   identical to the incorporated follow-up. The progress generator succeeds and
   counts each gene once.
-- Strict gene validation, family validation, independent PR review, and CI are
-  tracked on the PRs. A created PR is not evidence that these checks passed.
+- All 146 original scientific re-reviews passed strict local gene validation.
+  All 244 family records passed; the residue audit had 1,411 passes and one
+  pre-existing unresolved negative control. Project frontmatter tests passed
+  (628 tests). Subsequent gene fixes and history additions are validated before
+  completion. Independent approval and CI remain separate PR merge gates.
+- The source checker refuses an incomplete batch checkout before writing its
+  output. Run it on the assembled recovery branch, or main after all gene batches
+  have merged; a tracker-only checkout cannot regenerate the full report.
 
 ## Unfinished scientific work
 
@@ -72,3 +80,26 @@ per-gene audit records, notes, hypothesis directories, and
 `adjudication-requests.yaml` for the actual unresolved questions.
 
 The main IBA and TreeGrafter project findings pages are unchanged by this recovery.
+
+## Second opinions and follow-ups from PR review
+
+- The ATG2A report argues that loss of yeast Nvj1/Vac8 junction machinery
+  excludes nuclear microautophagy. Resolve lysosomal route equivalence and the
+  report's acknowledged orthology limits before changing UNDECIDED.
+- WIPI2's existing report supports shared selective-autophagy machinery but
+  leaves paralog-specific dependence unresolved. Gene reasons now explicitly
+  incorporate this alternative; no new report is needed.
+- A1BG receptor capacity remains unresolved despite supported peripheral
+  membrane association. CDH23 direct catenin binding and indirect complex
+  membership remain separate questions; the report's false no-catenin claim is
+  not supporting evidence.
+- Inspect the donor chemistry in RHEA:36079 versus GO:0002950 before changing
+  projects/RHEA/rhea2go.sssom.yaml or RHEA-GAP-CASES.md. Phosphatidylethanolamine
+  and CDP-ethanolamine donors are chemically different; changing exactMatch to
+  broadMatch alone does not establish a valid mapping.
+- Availability-only edits do not constitute fresh full-text scientific review.
+  Empty findings and abstract-derived findings may merit later enrichment.
+
+Superseded ACTL8 and Pmp20 donor assessments are preserved in explicitly labeled
+comparison artifacts alongside the current gene reviews. They retain the
+historical evidence trail without reinstating unsupported conclusions.
