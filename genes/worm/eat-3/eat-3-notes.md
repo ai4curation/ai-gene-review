@@ -26,3 +26,7 @@ Independent OPA1 reviewer located full PMID:32228866; checked its Introduction, 
 Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.
 
 The same burden-of-proof clarification now applies to both disputed peroxisome-fission and microtubule-binding rows: rejection does not require a negative assay. The reasons preserve the independently verified ancestry and contradicted domain-loss premise, with inheritance/loss unresolved. Opa1 no longer uses the AI report as a supporting quotation for either capacity.
+
+## Final tracking PR evidence follow-up (2026-09-23)
+
+Remove the three AI-report impossibility-hedge supporting quotations from the peroxisome-fission, microtubule and microtubule-binding rows. Retain primary topology/domain quotations, the critically assessed report reference, and all UNDECIDED actions. Remove the negative-assay absence clause from reference review; missing executable artifacts and contradicted ancestry/domain premises remain explicit.
