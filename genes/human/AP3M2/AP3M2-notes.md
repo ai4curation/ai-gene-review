@@ -408,9 +408,9 @@ calibrated on mu1/mu2 and over-reaches to the mu3/mu4 members of the same InterP
 family. → MODIFY to GO:0030123. The other two InterPro2GO terms (GO:0006886,
 GO:0016192) are correct for the whole family and are accepted.
 
-### 4.7 ARBA00026971 (GO:0005737 cytoplasm) cannot be reproduced
+### 4.7 ARBA PMID:00026971 (GO:0005737 cytoplasm) cannot be reproduced
 
-`https://rest.uniprot.org/arba/ARBA00026971` returns a rule with **2,388 condition
+`https://rest.uniprot.org/arba/ARBA PMID:00026971` returns a rule with **2,388 condition
 sets** conferring a single annotation, GO:0005737. Filtering those sets for any of
 AP3M2's seven InterPro signatures (IPR001392, IPR011012, IPR018240, IPR022775,
 IPR028565, IPR036168, IPR050431, confirmed via the InterPro API for P53677) or for
@@ -426,7 +426,7 @@ record returns no meaningful version string, so an earlier revision may have had
 that did fire; the finding is about the rule as it now stands.) The *claim* is
 nonetheless true (AP-3 is a cytosolic coat that cycles on and off membranes), so the
 row is kept as non-core rather than removed, with the provenance defect recorded in
-`propagation_review`. This is the same pattern as the repo's earlier ARBA00027853
+`propagation_review`. This is the same pattern as the repo's earlier ARBA PMID:00027853
 finding.
 
 ---
@@ -621,3 +621,18 @@ can pick different ones and the matrix is very slightly asymmetric (largest
 cell-vs-transpose difference 0.6 percentage points, none of it in the AP3M2 row the review
 cites). The history record's `details` was rewritten to the final numbers; `docs/history.md`
 freezes only `target.slug` and `target.path`, so `details` is editable in place.
+
+## 2026-09-21 full-gene re-review
+
+All 26 original assertions preserved; one old NEW GABA-secretion row withdrawn. Full PMID:15492041 attributes impaired evoked release at least partly to altered VGAT/vesicle biogenesis; AP3M2 performs cargo-sorting work, but this does not establish an additional GABA-release step. Exact GO:0061534 comparator queries on same-role human AP3B2/Q13367, AP3D1/O14617, AP3B1/Q92572 and AP3M1/Q9Y2T2 returned zero annotations (snapshot in audit JSON). The phenotype and mechanistic vesicle-budding function remain in references/core prose.
+
+Actual PTHR10529 target leaf PTN002540363 descends from root PTN000055849 through AP3 node PTN002237676. TGN-loss PTN000242370 and transport-loss PTN002575694 are outside the target path. Full PMID:15051738 says “AP-3 does localize with clathrin, but to a lesser extent than does AP-1” and records 4% TGN labeling; full PMID:39705307 explicitly discusses clathrin-dependent AND independent functions. This overturns the previous categorical exclusions and broadens the standalone description. TGN is retained noncore, Golgi-vacuole transit remains compatible with an endosomal intermediate, and clathrin-associated complex membership is contextual. Exact clathrin-cargo MF scope remains uncertain.
+
+GO:0035651 does not restrict binding to external ligands. Mouse donor Q8R2R9 IDA PMID:19010779 is real; full assay details remain inaccessible, so the old complex-subunit argument is replaced with UNDECIDED. The general AP-type coat term and cytoplasm/transport/axon-cytoplasm parents are valid core claims. GO:0016183 specifically names presynaptic clathrin-pit coating, so the source-supported endosomal-budding replacement is retained without asserting all other capacities absent.
+
+Affinage body read: its mu-2 designation is wrong, and nonhuman findings are not human direct assays. The 9C5B structure is AP3M1, already established by local reproducible mapping; eight of nine cargo contacts are identical in AP3M2. Prior proposed ontology changes based on globally clathrin-free AP3 were withdrawn; non-endocytic signal-recognition vocabulary can be considered independently later. Focused clathrin/Golgi/source-binding report is queued.
+
+
+## Recovery review consistency follow-up (2026-09-22)
+
+Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.

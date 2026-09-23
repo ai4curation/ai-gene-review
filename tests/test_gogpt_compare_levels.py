@@ -116,6 +116,10 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
 
     assert committed == details
     assert len(details) == 299
+    # Recovery of 146 scientific reviews changes 13 of these 299 benchmark genes.
+    # Relative to the pre-recovery snapshot: post-review totals 2759 -> 2783 and
+    # overlap 848 -> 852; core totals 1233 -> 1230 and overlap 351 -> 354.
+    # The committed per-gene report preserves the exact changed term sets.
     assert stats == {
         "goa": {"overlap": 1035, "total": 2954, "pred": 8871},
         # Upstream reviews moved these levels. The HdeB re-review retains
@@ -172,8 +176,8 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # GO:0019521 (D-gluconate metabolic process) from KEEP_AS_NON_CORE to
         # MARK_AS_OVER_ANNOTATED, dropping one post-review term (8 -> 7); it was
         # not a predicted overlap, so no overlap count and no core count changes.
-        "post_review": {"overlap": 848, "total": 2759, "pred": 8871},
-        "core": {"overlap": 351, "total": 1233, "pred": 8871},
+        "post_review": {"overlap": 852, "total": 2783, "pred": 8871},
+        "core": {"overlap": 354, "total": 1230, "pred": 8871},
     }
 
 

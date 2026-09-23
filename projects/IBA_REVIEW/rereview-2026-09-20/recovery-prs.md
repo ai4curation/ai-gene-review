@@ -1,7 +1,7 @@
 # Recovery and PR batches, 2026-09-22
 
 The interrupted working tree contained 1,679 modified or new files, including
-146 changed gene reviews at the time of recovery, 343 publication caches, and 187 history records.
+146 scientific gene re-reviews, 343 publication caches, and 187 history records.
 The complete recovered state was committed locally as
 `2aa3ece27bb2a68b92629358e3eac23d20ff09b8` on
 `recovery/iba-treegrafter-20260922` before splitting it. A separate local archive
@@ -10,9 +10,12 @@ does not claim completion of the corpus-wide audit.
 
 ## Pull requests
 
-Shared evidence PR #3107 has merged. All gene batches now target main and use
-protected auto-merge after independent approval and CI. The tracker is merged
-after the curation batches.
+Ten initial batches merged independently. The remaining curation batches were
+stacked in the order microbial enzymes (#3109), TreeGrafter (#3110), then
+autophagy (#3114), with this tracker (#3120) last. Each returns to main after
+its parent merges; auto-merge is disabled while its base is another recovery
+branch. This preserves one consistent derived GO-GPT report and benchmark
+sidecars at every step, including the article's matching Table S8.
 Each batch retains the relevant gene history, research, hypothesis reports, and
 analytical evidence. Family-review changes travel with the genes they discuss.
 
@@ -54,7 +57,7 @@ analytical evidence. Family-review changes travel with the genes they discuss.
 - All 146 original scientific re-reviews passed strict local gene validation.
   All 244 family records passed; the residue audit had 1,411 passes and one
   pre-existing unresolved negative control. Project frontmatter tests passed
-  (628 tests). Subsequent gene fixes and history additions are validated before
+  (636 tests). Subsequent gene fixes and history additions are validated before
   completion. Independent approval and CI remain separate PR merge gates.
 - The source checker refuses an incomplete batch checkout before writing its
   output. Run it on the assembled recovery branch, or main after all gene batches
@@ -103,3 +106,16 @@ The main IBA and TreeGrafter project findings pages are unchanged by this recove
 Superseded ACTL8 and Pmp20 donor assessments are preserved in explicitly labeled
 comparison artifacts alongside the current gene reviews. They retain the
 historical evidence trail without reinstating unsupported conclusions.
+
+Two initial recovery history filenames retain the scaffolder default claude-code
+actor slug. Their agent metadata correctly identifies Codex; the immutable
+scaffolded session identifiers were retained.
+
+## Completion checks
+
+All 1,679 originally recovered paths are assigned to the batches above, except
+for the intentionally renamed CSR-1 archive whose bytes and hash are preserved.
+The comparison JSON, figure, Table S8 and deterministic benchmark sidecars are
+regenerated together. The full audit remains at 81 reviewed, 65 awaiting
+adjudication and 3,281 unreviewed; publishing these batches does not change that
+scientific-work denominator. Final merge status is recorded on the linked PRs.

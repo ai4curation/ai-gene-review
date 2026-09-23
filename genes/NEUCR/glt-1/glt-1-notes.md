@@ -16,3 +16,9 @@ Primary evidence excerpts
 - [PMID:28115989] “system I is a glucose diffusion system, while system II is an active, H+-co-transport mechanism;”
 
 Provenance: live API snapshot 2026-09-09T03:00:51.831347+00:00. Complete API prediction JSON and all emitted claim IDs, text, and original evidence are preserved in the source and provenance JSON files. Current sequence/annotation data are separate comparison snapshots. Annotation overlap records known biology, not demonstrated training membership. All seven gene-focused Falcon jobs completed; the provider reports were inspected and useful primary leads checked. Publication retrieval used Europe PMC metadata/XML when the canonical PubMed fetch returned HTTP 429.
+
+## 2026-09-20 full-gene reassessment
+
+All eight rows and both primary full texts were assessed. PMID24581151 heterologous expression/uptake identifies NCU01633 as GLT-1. PMID28115989 Figures 2-5 and Methods directly address expression, glucose kinetics, mutants, complementation and eGFP localization (in yeast and Neurospora). The Discussion explicitly says “system I is a glucose diffusion system, while system II is an active, H+-co-transport mechanism”; GLT-1 is mapped to system I from kinetics/expression. These are substantive positive reasons to question coupling, but not a direct GLT-1 proton-flux assay. The Falcon report's evidence table similarly treats facilitated diffusion as less certain than glucose uptake.
+
+Actual PTHR48022 tree places Q1K4S3 leaf PTN002362095 below PTN000627328, which bears membrane, carbohydrate transport and carbohydrate-proton symport IBDs. No negation is present in the recovered lineage. Broad transport/location terms are ACCEPT; coupling and its logical proton-transport derivative are UNDECIDED pending the focused report. The global OpenScientist GLT-1 hit concerns mammalian glutamate transport in Huntington disease and is not relevant to this fungal protein. No NEW assertion is necessary.
