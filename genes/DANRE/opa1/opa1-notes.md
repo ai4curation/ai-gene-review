@@ -26,3 +26,5 @@ Restored readable identifiers in manual prose. Where applicable, reconciled AP3M
 ## Recovery evidence relevance follow-up (2026-09-23)
 
 Removed the physical-interaction quotation from the peroxisome-fission review because it concerns a different capacity. The verified ancestral placement remains documented in `projects/IBA_REVIEW/rereview-2026-09-20/organelle-paint-lineages.json`; the UNDECIDED call does not assert that Opa1 performs peroxisome fission. Mitochondrial topology and specialization are relevant evidence, and rejection need not await a negative experiment, but the shared report's clade-exclusion and GED-loss premises were independently contradicted. Inheritance or loss at the OPA1 branch remains the question requiring adjudication.
+
+The same burden-of-proof clarification now applies to both disputed peroxisome-fission and microtubule-binding rows: rejection does not require a negative assay. The reasons preserve the independently verified ancestry and contradicted domain-loss premise, with inheritance/loss unresolved. Opa1 no longer uses the AI report as a supporting quotation for either capacity.
