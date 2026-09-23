@@ -123,7 +123,7 @@ scientific-work denominator. Final merge status is recorded on the linked PRs.
 
 ## Provenance formatting repairs
 
-The tracking PR also repairs 101 inspected separators/word boundaries across 27 recovered gene
+The tracking PR also repairs 109 inspected separators/word boundaries across 27 recovered gene
 reviews and notes, including already merged batches. This does not add scientific
 re-reviews or change annotation actions. Parsed source fields, term objects and
 verbatim supporting quotations are unchanged; filenames and accession namespaces
