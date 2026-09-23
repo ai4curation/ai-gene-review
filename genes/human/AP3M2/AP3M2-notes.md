@@ -395,7 +395,7 @@ complex. The mouse IDA is abstract-only in our cache (`full_text_available: fals
 I make no claim about what the mouse experiment showed;
 `MARK_AS_OVER_ANNOTATED` applies to the human transfer only.
 
-### 4.6 GO:0030131 clathrin adaptor complex (InterPro2GO) — a real mis-mapping
+### 4.6 Historical GO:0030131 clathrin adaptor complex assessment (superseded)
 
 The InterPro API gives `IPR001392` "Clathrin adaptor, mu subunit" → GO:0006886,
 GO:0016192 and **GO:0030131**. GO:0030131 is "A membrane coat adaptor complex that
@@ -408,9 +408,9 @@ calibrated on mu1/mu2 and over-reaches to the mu3/mu4 members of the same InterP
 family. → MODIFY to GO:0030123. The other two InterPro2GO terms (GO:0006886,
 GO:0016192) are correct for the whole family and are accepted.
 
-### 4.7 ARBA PMID:00026971 (GO:0005737 cytoplasm) cannot be reproduced
+### 4.7 ARBA00026971 (GO:0005737 cytoplasm) cannot be reproduced
 
-`https://rest.uniprot.org/arba/ARBA PMID:00026971` returns a rule with **2,388 condition
+`https://rest.uniprot.org/arba/ARBA00026971` returns a rule with **2,388 condition
 sets** conferring a single annotation, GO:0005737. Filtering those sets for any of
 AP3M2's seven InterPro signatures (IPR001392, IPR011012, IPR018240, IPR022775,
 IPR028565, IPR036168, IPR050431, confirmed via the InterPro API for P53677) or for
@@ -425,13 +425,19 @@ No condition set of the rule as the API serves it is satisfied by this protein. 
 record returns no meaningful version string, so an earlier revision may have had a set
 that did fire; the finding is about the rule as it now stands.) The *claim* is
 nonetheless true (AP-3 is a cytosolic coat that cycles on and off membranes), so the
-row is kept as non-core rather than removed, with the provenance defect recorded in
-`propagation_review`. This is the same pattern as the repo's earlier ARBA PMID:00027853
-finding.
+original row was kept as non-core rather than removed. The recovery reassessment now
+ACCEPTs the location as integral to coat recruitment; the historical rule-reproducibility
+concern remains in `propagation_review`, with the version limitation explicit. It does not
+establish that the original annotation was generated incorrectly. The earlier audit
+compared this with the repo's ARBA00027853 finding.
 
 ---
 
-## 5. Action summary and rationale index
+## 5. Historical action summary and rationale index (superseded by the current YAML)
+
+This table records the earlier audit, not the recovery decisions. In particular, cytoplasm
+is now ACCEPT and clathrin adaptor complex is KEEP_AS_NON_CORE. See the current YAML
+for all final actions. The earlier arguments are retained for traceability.
 
 | # | term | ev | action |
 |---|---|---|---|
@@ -636,3 +642,13 @@ Affinage body read: its mu-2 designation is wrong, and nonhuman findings are not
 ## Recovery review consistency follow-up (2026-09-22)
 
 Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.
+
+
+## Cytoplasm evidence and identifier correction (2026-09-23)
+
+Restored ARBA accessions after an overbroad citation-formatting repair. GO:0005737
+remains ACCEPT: recruitment of the neuronal p47/beta-NAP complex from brain cytosol
+in PMID:9151686 supports a cytoplasmic coat-adaptor role. The delta redistribution
+experiment is complex-level evidence from nonneuronal cells, not a direct AP3M2 assay.
+The original ARBA condition-set analysis is preserved as a historical, version-limited
+provenance concern and no longer confused with the biological action.
