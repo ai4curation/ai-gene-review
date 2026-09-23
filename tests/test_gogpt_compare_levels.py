@@ -116,6 +116,8 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
 
     assert committed == details
     assert len(details) == 299
+    # Snapshot totals include the recovery reviews present in this branch.
+    # Snapshot totals include the recovery reviews present in this branch.
     assert stats == {
         "goa": {"overlap": 1035, "total": 2954, "pred": 8871},
         # Upstream reviews moved these levels. The HdeB re-review retains
@@ -172,8 +174,8 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # GO:0019521 (D-gluconate metabolic process) from KEEP_AS_NON_CORE to
         # MARK_AS_OVER_ANNOTATED, dropping one post-review term (8 -> 7); it was
         # not a predicted overlap, so no overlap count and no core count changes.
-        "post_review": {"overlap": 848, "total": 2759, "pred": 8871},
-        "core": {"overlap": 351, "total": 1233, "pred": 8871},
+        "post_review": {"overlap": 854, "total": 2777, "pred": 8871},
+        "core": {"overlap": 354, "total": 1228, "pred": 8871},
     }
 
 
