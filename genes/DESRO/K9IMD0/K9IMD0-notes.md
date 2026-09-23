@@ -19,3 +19,10 @@ Existing Falcon was read fully and its substantive bilobed iron-binding and anti
 ## Recovery PR specificity follow-up (2026-09-22)
 
 Use ferric iron binding in the core synthesis to match the explicit Fe(3+) ligand evidence; preserve the source metal-ion-binding annotation.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+The broad GO:0046872 row is now MODIFY to GO:0008199 ferric iron binding, matching annotated Fe(3+) sites and the existing core function. Live QuickGO confirms the descendant relationship. No redundant NEW binding annotation was added; DRAFT reflects the completed review with remaining biological questions.

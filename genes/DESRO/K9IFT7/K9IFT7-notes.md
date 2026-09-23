@@ -15,3 +15,8 @@ Reviewed all eight source rows and filled the missing biological description and
 ## Evidence-presentation correction (2026-09-23)
 
 Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
