@@ -96,3 +96,10 @@ Make the molecular work or process role explicit separately for each challenged 
 Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
 
 Zinc support is the electronic UniProt keyword, not the unrelated ADAR overview quotation. Live QuickGO confirms mRNA modification and adenosine-to-inosine editing are not ancestors of one another; see ADAR2-process-ancestry-check.json.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+The proposed zinc annotation now attributes its electronic support to the UniProt file. Proposed mRNA modification cites recombinant sqADAR2 editing K+ channel mRNAs in PMID:19390115 (IDA), not a whole-transcriptome editing count; proposed axoplasm localization uses IDA for PMID:32201888. These are proposal metadata, not alterations of imported GOA rows.

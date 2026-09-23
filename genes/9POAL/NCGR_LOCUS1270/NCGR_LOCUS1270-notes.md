@@ -222,3 +222,10 @@ The full focused report supports chloroplast FBPase identity but overstates a ne
 Actual PANTHER topology resolves the original WITH/FROM PTN004269459 to Sorghum bicolor A0A1B6QP66/SORBI_3001G425400, a terminal reference leaf. UniProt independently calls that protein chloroplast/Calvin-cycle associated. Independent global sequence comparisons give400/413 identical positions to this reference,317/421 to Arabidopsis chloroplast CFBP1 and171/418 to Arabidopsis cytosolic CYFBP. The original claim of a cytosolic-paralog misgraft is therefore unproven; the full query insertion edge was not reconstructed. See NCGR_LOCUS1270-bioinformatics/RESULTS.md and reproducible script/raw records.
 
 The earlier notes and initial re-review's categorical exclusions of cytosol, gluconeogenesis and sucrose pathways are superseded here by UNDECIDED. Targeting/regulation support the primary chloroplast specialization without establishing exclusive localization or loss of every ancestral contribution. Conversely, merely exporting carbon does not prove this enzyme performs a sucrose-biosynthetic step. The accurate catalytic, substrate-specific and Calvin-cycle core remains intact, with no NEW processes. The OpenScientist report is retained as DISPUTED; no duplicate was launched.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+The broad GO:0005975 row is now MODIFY to its descendant GO:0019253, rather than a redundant NEW assertion. The enzyme itself catalyzes the Calvin-cycle hydrolysis step. This makes the process already in core_functions explicit in the action audit; other conditional pathway roles remain separately unresolved.
