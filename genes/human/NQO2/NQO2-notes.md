@@ -97,3 +97,8 @@ primary structural + first-binding source but is absent from NQO2's GOA referenc
 - Contrast with cao-1: there resveratrol is the **substrate** of a stilbenoid dioxygenase; here
   resveratrol is a **high-affinity inhibitor** of a quinone reductase — same molecule, opposite role,
   and a good illustration of why `resveratrol binding` alone (causal-role, ligand-agnostic) underspecifies biology.
+
+
+## Evidence re-review, 2026-09-20
+
+Read all 26 annotation reviews with the primary reference abstracts, available structural/enzymatic evidence and PAINT PTHR10204 (GO:0003955 at PTN000024521). The older notes and existing OpenScientist report overstate the donor exclusion: PMID:35517822 explicitly describes NADH/NADPH usage as extremely inefficient and its Table 1 reports measurable human NADH turnover. Retain the broad NAD(P)H reaction as non-core while NRH-dependent chemistry remains defining. This distinction does not establish efficient cellular NAD(P)H use. The same paper reports that CB1954 activation in its cells required exogenous NRH. PMID:9367528 confirms strong NRH preference and shows that adding the NQO1 C terminus does not erase this preference. Current GO:0009055 includes enzymatic redox transfer; its two IDA rows should be accepted. The existing report was reused and its categorical conclusion flagged as disputed, with its exact recommendation retained for provenance. Generic interaction labels are uninformative; the unresolved HSC20/NQO2-specific binding experiment remains UNDECIDED. New sources: [PMID:35517822](https://pubmed.ncbi.nlm.nih.gov/35517822/), [PMID:9367528](https://pubmed.ncbi.nlm.nih.gov/9367528/).

@@ -119,3 +119,14 @@ for clearly wrong IEA electronic propagations). Experimental/IPI annotations are
 - MF: GO:0005503 all-trans retinal binding (chromophore; more specific than GO:0016918).
 - BP: GO:0106434 retinal isomerization (light-driven all-trans -> 11-cis).
 - BP: GO:0001523 retinoid metabolic process (experimentally supported, IMP PMID:18474598).
+
+
+## Full IBA re-review, 2026-09-20 (supersedes earlier exclusive-location and coupling claims)
+
+All 20 source assertions reviewed with source metadata unchanged. The actual P47804 leaf PTN002517412 is below PTN008398221 in PTHR24240, which carries all five relevant IBAs. Current UniProt P47803 is Bos taurus RGR, not an opsin paralog. PMID:7947717 assays bovine ligand binding alongside human sequence characterization.
+
+PMID:27011730 full Methods/Results directly localize RGR-d to human RPE plasma membrane with DE21 junction-specific antibody. The observed junction GKSGHLQVPALIAK exactly matches deletion211–248 from P47804 sequence version1, corresponding to P47804-3. The TAS located_in row becomes KEEP_AS_NON_CORE. The IBA is_active_in row becomes UNDECIDED: localization is real, but ancestral activity at that site remains unestablished. The 2019 human assay further distinguishes splice-variant localization from retained photoisomerase capacity (see primary-evidence note). No source isoform field was retroactively invented.
+
+PMID:18474598 explicitly leaves G-protein or another signaling mechanism open. Its variant motifs are not a negative assay. Six GPCR signaling/activity rows become UNDECIDED. Phototransduction and visible-light detection have broader definitions than G-protein coupling; three such rows also remain UNDECIDED for a distinct semantic/function adjudication. Broad cellular light response, visual perception and membrane are restored to ACCEPT as core biology, and credible generic KIFBP binding is retained NONCORE. No NEW terms added. The retinal-binding refinement remains but no longer calls the ortholog a paralog or the all-trans preference exclusive.
+
+No existing exact RGR/accession OpenScientist hypothesis was found. A focused request addresses the remaining capacities; the project artifact records live term definitions and exact target lineage. The request is not evidence of completion.
