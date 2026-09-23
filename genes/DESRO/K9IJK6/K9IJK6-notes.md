@@ -13,3 +13,8 @@ All 12 source rows, existing Falcon report, actual reference-tree graft and rele
 PMID:23411029 full transcriptome/proteome methods and plasminogen-activator section identify a truncated DSPA-gamma product containing kringle and protease domains, with abundant salivary-gland expression/protein. UniProt links this study's JAA47048.1 sequence to K9IJK6. The paper states: “Predicted secondary structure of DSPAγ shows that it is a truncated form displaying only the K1, and protease domains”. This supplies context and inferred identity; it is not a purified K9IJK6 reaction assay. The Falcon narrative mixes human tPA and DSPA-alpha1 domain arrangements, clinical trials and fibrin-selectivity values. Those quantitative alpha1 properties are not assigned to this gamma-like sequence.
 
 Actual TreeGrafter source PTN000667065 is the eutherian tPA reference subtree, below PTN002799995 plasminogen activation/smooth-muscle migration and PTN008611606 PDGFR signaling. The exact bat accession is not a reference-tree leaf; source placement is recovered, not a reconstructed target branch. Broad catalytic and extracellular assertions are retained as supported inference. Alternative salivary specialization does not prove loss of every nonproteolytic tPA role; smooth-muscle migration, PDGFR signaling and the ARBA lipid/oxygen-compound responses remain UNDECIDED for human source/mechanism follow-up. No negative response assay was identified.
+
+
+## Recovery PR specificity follow-up (2026-09-22)
+
+Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.

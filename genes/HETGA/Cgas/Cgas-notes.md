@@ -251,3 +251,8 @@ GO:0071360 remains UNDECIDED for a new, specific reason. QuickGO verified on 202
 Source GOA fields and all 14 rows are preserved. The prior notes framing four immune functions as impossible to resolve without a native assay is superseded by this assessment.
 
 Final ontology check: GO:0038001 requires transmission through intercellular fluid. Gap-junction transfer alone (PMID:24077100) is insufficient; added primary PMID:33768207 demonstrating freely soluble extracellular cGAMP export and recipient immune effects, supporting the accepted paracrine role through signal synthesis.
+
+
+## Recovery PR specificity follow-up (2026-09-22)
+
+Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.
