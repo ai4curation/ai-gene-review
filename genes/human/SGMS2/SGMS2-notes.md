@@ -97,3 +97,10 @@ Calvarial doughnut lesions with bone fragility (CDL, MIM:126550) and CDL + spond
   study; KEEP_AS_NON_CORE (downstream physiological role, not molecular core).
 - **GO:0030148 sphingolipid biosynthetic process** (TAS Reactome): correct parent BP; KEEP_AS_NON_CORE
   (GO:0006686 is the more precise term).
+
+
+## 2026-09-20 IBA re-review: reaction chemistry and localization
+
+Restore reverse ceramide synthesis and five functional Golgi rows; preserve CDP-choline correction. Correct two PE-dependent CPE rows to broad phosphotransferase and propose an exact donor-specific ontology term. ER activity unresolved; retain generic interaction non-core and broad pathway as core; correct assay-rate and variant scope.
+
+All 31 source assertions were preserved. See the [primary evidence checks](../../../../projects/IBA_REVIEW/rereview-2026-09-20/sphingolipid-primary-checks.md) and [audit](../../../../projects/IBA_REVIEW/rereview-2026-09-20/sphingolipid-reaction-specificity.yaml). The outstanding question is wild-type-er-activity-and-export-signal.

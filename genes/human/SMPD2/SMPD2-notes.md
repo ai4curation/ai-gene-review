@@ -125,3 +125,10 @@ beyond generic protein binding.
 3. BP: sphingomyelin catabolic process (GO:0006685) / sphingolipid metabolic
    process — the UniProt-stated pathway.
 4. Location: integral membrane protein (ER/Golgi and plasma/cell membrane).
+
+
+## 2026-09-20 IBA re-review: reaction chemistry and localization
+
+Restore conditional human ceramide/signaling, core ER/catabolism and four non-core interaction rows. Preserve broad phosphodiester-hydrolase chemistry; glycerophospholipase core excludes the sphingoid substrate. Caveola and mechanical-response rows unresolved after full primary antigen tracing; independent ceramide evidence retained.
+
+All 30 source assertions were preserved. See the [primary evidence checks](../../../../projects/IBA_REVIEW/rereview-2026-09-20/sphingolipid-primary-checks.md) and [audit](../../../../projects/IBA_REVIEW/rereview-2026-09-20/sphingolipid-reaction-specificity.yaml). The outstanding question is caveola-mechanosignaling-antigen-identity.

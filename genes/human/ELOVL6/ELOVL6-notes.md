@@ -98,3 +98,8 @@ Uninformative:
 
 References that are TAS Reactome (R-HSA-548814, R-HSA-75876, R-HSA-1655835): titles left verbatim.
 R-HSA-1655835 "Expression of ELOVL6" underpins the ER-membrane TAS location (weak; keep).
+
+
+## Full re-review 2026-09-20
+
+All 36 original rows were assessed; no source fields or source files were changed and no NEW annotations were added. See [ELOVL6-primary-assessment.md](ELOVL6-primary-assessment.md) for primary figure/assay access and limitations, and [ELOVL6-source-and-term-check.json](ELOVL6-source-and-term-check.json) for exact PAINT ancestry, term definitions and interaction records. This entry supersedes earlier claims that preferential substrate use excludes other capacities, that only terminal elongases participate in a pathway, or that generic binding is biologically incorrect. VLCFA pathway participation, sphingolipid precursor synthesis, weak experimentally positive PUFA elongation, broad membrane location and broad fatty-acid synthesis were restored. The PMID20937905 partner is CERS2, not CERS6. KAR-complex and mouse thermogenesis claims retain their assay/mechanistic limits.
