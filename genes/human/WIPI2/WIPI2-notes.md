@@ -15,3 +15,8 @@ Reviewed all 45 source rows, preserving both NOT annotations. Current PAINT PTHR
 ## 2026-09-20 recovered pexophagy report and primary check
 
 The shared PIK3C3 report supplied useful complex context but did not settle WIPI paralog usage. A primary search identified PMID:37621214, whose full Fig. EV3B directly measures Keima-SKL pexophagy in HeLa cells and finds complete blockade in WIPI2 knockout after phenanthroline. The IBA is retained as noncore with direct target corroboration. The same paper describes context-dependent initiation order; it does not establish universal dependence on upstream ULK1/VPS34 in every selective-autophagy route. Nucleophagy and glycophagy remain separately unresolved.
+
+
+## Recovery PR evidence follow-up (2026-09-22)
+
+Use location-relevant evidence, correct the glycophagy-specific rationale, and explicitly incorporate the existing OpenScientist alternative without treating shared machinery as proof of every selective route.

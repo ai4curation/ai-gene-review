@@ -52,3 +52,8 @@ Reviewed all 95 source rows and the existing Falcon report, including the PAINT 
 ## 2026-09-20 recovered pexophagy report and primary check
 
 Shared PIK3C3 report incorporation: full PMID:21121900 Fig. 4B supports yeast ATG14-containing complex I in pexophagy, consistent with the known human membrane-targeting cofactor role. This gene has no existing pexophagy assertion. No NEW process was added solely by extending the complex-wide report; the established autophagy core and other pending hypotheses are unchanged.
+
+
+## Recovery PR evidence follow-up (2026-09-22)
+
+Correct the obsolete abstract-only statement while retaining the explicit unresolved early-to-late endosomal evidence scope.

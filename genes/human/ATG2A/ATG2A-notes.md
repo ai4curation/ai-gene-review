@@ -36,3 +36,8 @@ All 31 annotation rows were screened. The selective macroautophagy IBAs for mito
 The PI3P-binding source was recovered directly: QuickGO resolves yeast ATG2/P53855 IDA to PMID:27498190, which assays a phosphoinositide-binding APT1-containing region. WIPI-enhanced recruitment of human ATG2A to PI3P membranes (PMID:31271352) is not proof that ATG2 lacks direct lipid binding, so the IBA is retained. The established core lipid-transfer role now includes ANKFY1-dependent endosomal donor contacts, directly supported by PMID:38622126, as well as ER contacts. The existing NEW ATG2-ATG18-family complex claim is grounded in human ATG2A-WIPI4 assemblies, including PMID:39174844.
 
 Live QuickGO checked 2026-09-20 marks GO:0034045 obsolete and provides GO:7770114 phagophore membrane. Both original source rows are preserved with MODIFY replacements. The earlier 'no destination exists' rationale and redundant proposal for a new phagophore membrane term are superseded. The rim/contact-site proposals remain separate. Generic interaction rows are removed for informativeness, without rejecting their assays.
+
+
+## Recovery PR evidence follow-up (2026-09-22)
+
+Incorporate the existing OpenScientist report and its route-specific divergence argument, recording the remaining lysosome/junction equivalence question for a second opinion.
