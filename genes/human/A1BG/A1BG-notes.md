@@ -135,3 +135,23 @@ simply does not mention them. The IBA root-cause analysis above required going o
 deep-research report, to the GOA WITH/FROM field, the mouse ortholog's own GO record, and
 the source paper. Affinage is useful for establishing what a gene *does*; it does not audit
 what GO already says.
+
+
+## Full IBA re-review, 2026-09-20
+
+All 18 rows (17 source assertions and one pre-existing NEW MF) were re-reviewed. All original source identities, evidence codes and qualifiers are retained. The exact current P04217 leaf PTN002482657 descends from membrane/receptor IBD PTN002621170 and GH IBD PTN000200788 in PTHR11738; extracted lineage and response hash are retained in the project audit.
+
+The previous exclusive-soluble argument missed a direct experiment: [PMID:40270023, Fig. 4D, "A1BG is associated with the outer surface of atrial CMs."]. This is mouse A1BG/tropomyosin co-immunostaining, not a human IDA result, but it removes the supposed impossibility of membrane association. Plasma membrane REMOVE becomes KEEP_AS_NON_CORE; receptor and GH pathway REMOVE become UNDECIDED. No-TM architecture raises a mechanistic question about receptor capacity, not a prohibition of all membrane activity. The full text behind the mouse GH IMP remains unavailable, so its abstract cannot justify SOURCE_BAD. A focused OpenScientist hypothesis was launched after a negative exact-target cache check.
+
+PMID:39433128 full Results establish selective CRISP2 sterol-binding inhibition and >50% reduction of reconstructed yeast sterol export, with preserved fatty-acid activity; A1BG itself does not bind cholesterol sulfate. Retain the existing protein-sequestering MF proposal independently of the receptor judgment. Do not import venom neutralization by opossum proteins as a human core function. PMID:40560034 Fig. 5 concerns cell-associated NAMPT turnover, not specifically secreted NAMPT; co-IP and colocalization are association evidence. Reactome granule and proteomics locations remain curated contextual pools, without speculative contamination claims. The Affinage report was fully read and its omissions are not negative evidence.
+
+## Focused OpenScientist incorporation, 2026-09-20
+
+The completed [focused report](A1BG-hypotheses/membrane-receptor-and-growth-hormone-capacities/openscientist.md), HTML/PDF and all computational artifacts were assessed independently. No action changes: retain plasma membrane KEEP_AS_NON_CORE and receptor/GH UNDECIDED. The report's categorical negatives exceed its evidence: it misses the explicit mouse outer-surface experiment, uses family membership without tracing the topology, and calls cell-associated NAMPT stabilization extracellular/direct binding. Its canonical hydropathy maximum reproduces (0.9842), but this does not exclude peripheral association or receptor-complex function. The full-GH-paper access claim has no independently verifiable supplied source beyond abstract-derived statements. The GH expression-versus-participation question remains a primary-full-text/curator follow-up, not a reason to launch the same report again.
+
+See [critical assessment](A1BG-report-assessment.md) and [reproducible hydropathy check](A1BG-bioinformatics/RESULTS.md). Findings-specific report reviews cite the correcting primary experiments. The existing CRISP2 sequestration proposal and qualified core remain supported by the full 39433128 assays; no new annotation, negation, source mutation or additional biological exclusivity claim was introduced.
+
+
+## Recovery PR localization follow-up (2026-09-22)
+
+Preserve superseded donor-specific analysis where present, replace rebutted report passages with actual supporting evidence, and clarify location or process scope. PAINT rows support inherited assertions as phylogenetic judgments, not direct target experiments.

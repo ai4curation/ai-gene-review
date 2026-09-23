@@ -124,3 +124,14 @@ PMID:18407956, PMID:19779198), supplemented by targeted web/PubMed lookups recor
 - PMID:18407956 — phosphoproteome (Thr194/Ser207/Ser211).
 - PMID:19779198 — Cdk1 substrate phosphosites (Ser207).
 - file: PANTHER PTHR12374 family/subfamily data (interpro/panther/PTHR12374) for subfamily reasoning.
+
+
+## 2026-09-21: full-gene re-review with actual tree and term definitions
+
+All eleven original rows reviewed. Actual PTHR12374 treeinfo lineage places Fun19/P28003 leaf PTN000271934 below both PTN000271860 ancestral nuclear/chromatin/regulatory assertions and fungal PTN000271931 Rpd3L-Expanded assertion. The latter has a separate IRD loss of GO:0070461 SAGA-type complex; there is no corresponding negation of chromatin binding, coactivation or broad Pol-II regulation. Treat that selective loss as a specific evolutionary judgment, not permission to erase every ancestor function.
+
+Current GO:0070210 explicitly describes an S. cerevisiae complex, so the old fission-yeast-only exclusion is false. GO:0006338 describes chromatin reorganization and does not require every participant to contain an ATPase. A SWIRM-bearing structural/regulatory subunit can contribute to a deacetylase/remodeling complex. Restore nucleus, chromatin binding, remodeling, Pol-II regulation, Rpd3L-Expanded membership and the compatible broad gene-expression assertion. Restore coactivator and derived positive-regulation assertions as inherited functions because Ada2 ZZ/SANT/SAGA divergence does not demonstrate loss of every activation mechanism. A neutral focused report is queued to examine directionality and functional interfaces; it does not treat absent target assays or sibling-subfamily donors as refutation.
+
+The 1992 gene-discovery abstract (PMID:1583694) establishes nonessentiality; PMID:16461455 assays Swi3/Rsc8 SWIRM domains, not Fun19; phosphoproteomics establishes expression/modification rather than this regulatory mechanism. All source fields and ND rows are preserved. Core functions explicitly distinguish phylogenetic inference from direct target experimentation. No NEW annotation was needed. Existing notes' categorical rejection statements are superseded by this assessment.
+
+Repository and global OpenScientist cache searches for FUN19, P28003 and YAL034C found no prior report. Tree path, node assertions and current definitions are retained in `projects/IBA_REVIEW/rereview-2026-09-20/ecm30-fun19-paint-and-terms.json`. Independent reviewer reasoning check confirmed that SAGA loss cannot by itself negate coactivation.

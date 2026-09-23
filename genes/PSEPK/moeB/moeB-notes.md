@@ -16,3 +16,13 @@ supported for MoaD C-terminal acyl-adenylation, not the high-energy thiolester
 formation required by that term, so the existing GO:0008641 row remains
 `REMOVE`. Sulfur loading onto MoaD is a separate reaction outside MoeB's direct
 catalytic function.
+
+
+## Full-gene re-review, 2026-09-20
+
+All eight rows and core synthesis reviewed. Restored catalytic activity, nucleotidyltransferase activity, cytoplasm and cytosol as valid core terms; broad ancestors and duplicate compatible locations are not biological errors. Retained three chemistry-specific rejections: target lacks the rhodanese fusion needed for that sulfurtransferase hypothesis, sulfate transfer differs from MoaD adenylation, and live GO:0008641 requires a high-energy thiolester bond whereas classical MoeB forms an acyl-adenylate. Read all OpenScientist findings and caveats; added primary11713534/17223713 comparative mechanism. No native PP_0735 assay is claimed. All source rows preserved; no NEW added.
+
+
+## Recovery PR evidence refinement (2026-09-22)
+
+Refine the catalytic-activity ancestor to the already supported specific reaction. Source GOA assertions are unchanged.

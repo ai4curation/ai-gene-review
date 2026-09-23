@@ -30,3 +30,19 @@ The project deep-research provider was intentionally not run for this phase, as 
 
 - UniProt lists two human splice isoforms, Q9BQK8-1 and Q9BQK8-2; isoform 2 carries the sequence change VSP_036885 (a one-residue insertion near residue 186). This is transcript/sequence evidence only. I found no primary functional comparison establishing different catalytic activity, localization, regulation, or tissue roles for these two LPIN3 products.
 - Important gaps are direct endogenous human LPIN3 localization, quantitative tissue-specific PAP contribution, whether LPIN3 itself coactivates nuclear receptors, endogenous complex stoichiometry, and functional distinctions between Q9BQK8-1 and Q9BQK8-2.
+
+## 2026-09-20 full-gene IBA re-review
+
+Restored nuclear localization, coactivation and PolII activation; retained fatty-acid catabolism as non-core. Insulin response remains unresolved after examining condition- and species-specific results.
+
+The nuclear annotation is judged by biological location, without treating machine-provided relationship wording as a defect. Conserved LXXIL and ancestral coactivation placement are retained as inference, not relabeled direct evidence. Acute phosphorylation and condition-specific mRNA effects address different parts of insulin biology.
+
+- PMID:17158099: Direct recombinant lipin-3 PAP1 activity with magnesium and phosphatidate specificity under tested conditions.
+- PMID:28982975: Full primary paper uses mouse lipin-3: no acute insulin/Torin-dependent phosphorylation, distinct polybasic-domain regulation, not a test excluding all human LPIN3 insulin roles.
+- PMID:18245816: Full primary result: insulin alone did not affect mouse Lpin3 mRNA, but suppressed dex-induced transcript increase. Expression responsiveness alone does not establish participation of the product in an insulin-response process.
+- PMID:19717560: Coactivation experiments concern lipin-1/2; missing LPIN3 assay is not a demonstrated evolutionary loss.
+- PMID:27344312; PMID:24634820; PMID:30507612: Human adipocyte and mouse single/double-knockout evidence supports PAP/glycerolipid functions with compensation and species/paralog limits.
+
+PAINT: {'family': 'PTHR12181', 'nodes': ['PTN000256564', 'PTN000256565', 'PTN000953144'], 'finding': 'Current PAP, nuclear/TAG/FA-catabolism and coactivation/insulin/PolII IBDs persist; no target-specific coactivation loss established.'}
+
+All 12 rows were assessed, including experimental, electronic, negated and old proposed entries. Source annotation fields and row counts remain unchanged. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.

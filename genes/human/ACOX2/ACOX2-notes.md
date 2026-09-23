@@ -77,3 +77,7 @@ via UniProt]. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for 
   IBA over-propagation; mark over-annotated.
 - GO:0006631 fatty acid metabolic process — broad InterPro IEA; accept as broad-but-correct.
 </content>
+
+## 2026-09-20 full-gene re-review
+
+Read every source annotation and relevant evidence, including primary full texts for disputed reactions and the exact PAINT target path. See [ACOX2-primary-source-checks.md](ACOX2-primary-source-checks.md) for assay context, access limits, short exact excerpts, and pending focused adjudication. All original source fields are preserved; no NEW annotation is added. Broad true chemistry and localization are retained separately from exact substrate/reaction conflicts.
