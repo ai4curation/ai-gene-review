@@ -114,3 +114,8 @@ assertions and supporting evidence are preserved.
 
 - PMID:32296183: KEEP_AS_NON_CORE -> REMOVE
 - PMID:20937905: KEEP_AS_NON_CORE -> REMOVE
+
+
+## Recovery PR evidence refinement (2026-09-22)
+
+Retain the measured weak PUFA elongation capacity as non-core; do not confuse low activity with absence. Source GOA assertions are unchanged.
