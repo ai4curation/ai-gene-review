@@ -63,3 +63,10 @@ All 21 seeded references were audited: six GO method references, eight seeded PM
 ## Reference prioritization
 
 The strongest direct sources for later synthesis are PMID:9525886 (human receptor identity, ligand response, Gi/Rho signaling), PMID:9804623 (PLC/IP3/calcium and Gi/Gq), PMID:15143197 (LPAR2-NHERF2-PLCB3 specificity), PMID:16203867 (apical NHERF2-CFTR complex and Gi function), PMID:14688263 (TRIP6), PMID:16904289 (MAGI3), and PMID:19306925 (GRK2-dependent desensitization with strict LPA1/LPAR2 separation).
+
+
+## Full IBA re-review, 2026-09-20
+
+This assessment supersedes earlier universal coupling and membrane-exclusion arguments. All original source rows and qualifiers are preserved. Actual PTHR22750 ancestry places the target below PTN002733616; the target appearing as an IBD source is legitimate experimental grounding. GO cytoplasm includes internal membrane structures, and primary PMID:26473723 demonstrates internalization of human receptor constructs. Conditional cAMP activation from full PMID:10488122 Methods/Results/Fig.7 is retained non-core alongside cell-specific inhibitory responses; a shared focused report is pending. PMID:10727522 provides contrasting assays and human forebrain expression rather than a universal brain absence.
+
+Detailed primary-source access limits, ortholog chains, protein-binding decisions, NEW comparator/ancestor checks and pending questions are in [the shared primary evidence record](../../../../projects/IBA_REVIEW/rereview-2026-09-20/lysophosphatidic-receptor-primary-checks.md). The companion JSON records live ontology, annotation and tree responses. No additional NEW terms were added.

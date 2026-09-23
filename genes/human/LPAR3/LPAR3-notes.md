@@ -52,3 +52,10 @@
 - Trafficking is now experimentally supported: ligand-induced phosphorylation, β-arrestin-2 association, and clathrin-sensitive internalization have direct evidence.
 - Mouse knockout evidence establishes an in vivo role for Lpar3 in implantation timing and embryo spacing, with COX2-prostaglandin signaling accounting for the timing defect but not the spacing defect; transfer to human reproductive physiology requires direct evidence.
 - Do not transfer LPAR1/LPAR2-specific PDZ scaffolds, antagonism, signaling, or tissue phenotypes to LPAR3. Likewise, dual LPAR1/LPAR3 pharmacology cannot establish an LPAR3-specific native phenotype by itself.
+
+
+## Full IBA re-review, 2026-09-20
+
+This assessment supersedes earlier universal coupling and membrane-exclusion arguments. All original source rows and qualifiers are preserved. Actual PTHR22750 ancestry places the target below PTN002733616; the target appearing as an IBD source is legitimate experimental grounding. GO cytoplasm includes internal membrane structures, and primary PMID:26473723 demonstrates internalization of human receptor constructs. Conditional cAMP activation from full PMID:10488122 Methods/Results/Fig.7 is retained non-core alongside cell-specific inhibitory responses; a shared focused report is pending. PMID:10727522 provides contrasting assays and human forebrain expression rather than a universal brain absence.
+
+Detailed primary-source access limits, ortholog chains, protein-binding decisions, NEW comparator/ancestor checks and pending questions are in [the shared primary evidence record](../../../../projects/IBA_REVIEW/rereview-2026-09-20/lysophosphatidic-receptor-primary-checks.md). The companion JSON records live ontology, annotation and tree responses. No additional NEW terms were added.
