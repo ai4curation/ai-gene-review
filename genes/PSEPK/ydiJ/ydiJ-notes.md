@@ -42,3 +42,8 @@ All eight rows, original target PMID31064836 full Results/Methods, and new sourc
 Actual TG node PTN001714929 is a Gammaproteobacteria SF119 subtree containing P77748 and lies below PTN000202298, the broad lactate IBD. The specific donor-subfamily assay plus target metabolic evidence supports retaining the three substrate/process MODIFY decisions. Broad catalysis and both FAD-binding terms restored to ACCEPT. Family name alone is not a propagation mechanism; corrected that prior reference finding.
 
 Read the complete existing OpenScientist report in /Users/cjm/.deep_research_cache/openscientist-commissioned-modulepathwaytaxo-43e91d7b.json, titled Species-Aware Module Review: L-Lysine Catabolism through 5-Aminovalerate in Pseudomonas putida KT2440. Exact excerpt: “with `ydiJ`/PP_4493 handling D-2-HG”. Its four-reaction Dav module ends at glutarate and excludes downstream metabolism. This is a module boundary, not evidence against wider lysine catabolism or a lactate assay. No duplicate report launched.
+
+
+## Recovery PR evidence refinement (2026-09-22)
+
+Refine the catalytic-activity ancestor to the already supported specific reaction. Source GOA assertions are unchanged.
