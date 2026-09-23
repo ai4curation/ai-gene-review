@@ -110,3 +110,14 @@ UNDECIDED, or NEW rows, and COMPLETE status remains justified.
 ## Full-gene specificity re-review, 2026-09-20
 
 All 19 source rows were re-reviewed with the existing focused report, primary Rps3-chaperone evidence (PMID:22570489) and stress/ribosome-biogenesis evidence (PMID:15611164). The specific DNA-binding activator MF remains REMOVE because the small ankyrin-repeat target lacks the APSES DNA-binding architecture of the DNA-binding source activators. This does not establish loss of all transcription regulation or complex membership: Swi6/Cdc10-like regulatory subunits need not carry the DNA-binding domain. The report explicitly leaves open "Whether YAR1 interacts with SWI4/SWI6/MBP1" and did not reconstruct actual PAINT topology. Regulation, MBF and SBF are therefore separately UNDECIDED. PTN000917496 is recovered in current PTHR24198 for the transcription/MBF assertions; older SBF and the provider's family-version differences are recorded without inferring false biology. General acidity is not a universal DNA-binding exclusion test. Dedicated Rps3 carrier activity, ribosome biogenesis and associated stress/export contexts remain supported. Generic protein binding was removed as uninformative without denying the observed interactions.
+
+
+## Recovery PR follow-up (2026-09-22)
+
+Restored readable GO/PMID/PTN identifiers in curation prose. For DCV1, core
+localization cites the recorded UniProt topology and SGD-attributed observation;
+the unrelated Rim101 report sentence no longer supports plasma-membrane location.
+For YAR1, unanswered report questions are not positive evidence. For SSQ1, the
+located Nop1 association remains recorded while its generic binding label is removed.
+The annotation changes apply only to the relevant gene; no inherited location is
+rejected solely from its best-characterized compartment.
