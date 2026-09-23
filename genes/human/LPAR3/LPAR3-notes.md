@@ -59,3 +59,13 @@
 This assessment supersedes earlier universal coupling and membrane-exclusion arguments. All original source rows and qualifiers are preserved. Actual PTHR22750 ancestry places the target below PTN002733616; the target appearing as an IBD source is legitimate experimental grounding. GO cytoplasm includes internal membrane structures, and primary PMID:26473723 demonstrates internalization of human receptor constructs. Conditional cAMP activation from full PMID:10488122 Methods/Results/Fig.7 is retained non-core alongside cell-specific inhibitory responses; a shared focused report is pending. PMID:10727522 provides contrasting assays and human forebrain expression rather than a universal brain absence.
 
 Detailed primary-source access limits, ortholog chains, protein-binding decisions, NEW comparator/ancestor checks and pending questions are in [the shared primary evidence record](../../../../projects/IBA_REVIEW/rereview-2026-09-20/lysophosphatidic-receptor-primary-checks.md). The companion JSON records live ontology, annotation and tree responses. No additional NEW terms were added.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:32296183: KEEP_AS_NON_CORE -> REMOVE

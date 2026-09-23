@@ -155,3 +155,14 @@ The report correctly lists the PMID:9144199 neutral-pH 18-pS channel assay, but 
 The report admits the PAINT placement was "inferred from annotation presence, not from direct inspection of the PANTHER tree." Its annotation-count narrative is not used as a lineage analysis; the independent PTN000135648 check above remains the provenance. Likewise, it reviewed sequence conservation but no mouse functional primary assays, so the mouse reviewer must retain species-specific source assessment. Its recommendation to add IDA annotations for already represented terms is not adopted: no redundant NEW rows.
 
 GO:0046930 pore complex stays UNDECIDED because the report does not identify multimeric assembly or resolve the channel paper's explicit monomer-versus-dimer uncertainty. Channel capacity and a protein-complex location are separate assertions. No action changes were required after report incorporation; the restored NONCORE calls remain grounded in primaries, and the report is marked DISPUTED for these mechanistic and coverage limits. Findings and limitations were shared with the mouse Bcl2 reviewer.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:29849149: ACCEPT -> REMOVE
+- PMID:9463381: ACCEPT -> REMOVE

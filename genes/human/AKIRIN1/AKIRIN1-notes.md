@@ -15,3 +15,13 @@ Seventeen MARK_AS_OVER_ANNOTATED/KEEP_AS_NON_CORE decisions are restored to ACCE
 The actual AKIRIN1-GOPC IntAct binary interaction is verified, but the old GO:0044877 replacement is unsupported. Generic protein binding is retained as KEEP_AS_NON_CORE; its limited mechanistic information is not evidence that the observed interaction is false. No NEW rows were introduced. The core/description now distinguish inherited human capacity, ortholog experiments and direct human nuclear localization. The complete Falcon report and artifact were incorporated with species and condition limits; association findings were not promoted to new functions.
 
 See [primary and phylogeny scope](AKIRIN1-primary-and-phylogeny-scope.md), [actual lineage](AKIRIN1-Q9H9L7-paint-lineage.json), [source and term checks](AKIRIN1-source-and-term-check.json), and [exact interaction records](AKIRIN1-IntAct-PMID25416956.tsv). Existing generated PN notes are left intact; their earlier interpretation is superseded here.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:25416956: KEEP_AS_NON_CORE -> REMOVE
