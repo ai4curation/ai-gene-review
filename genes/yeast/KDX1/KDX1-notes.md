@@ -130,3 +130,13 @@ Asp and HRD Arg are.
 - BP: **GO:0000196** cell integrity MAPK cascade (mentions SLT2 in its definition).
 - (proposed/alt MF: GO:0003713 transcription coactivator activity — definition fits the
   Swi4-binding/DNA-binding-conferring role well.)
+
+## 2026-09-21 full-gene re-review
+
+All 18 rows assessed (17 source rows plus the existing NEW TF-binding proposal). Restored nuclear/cytoplasmic locations and both broad signal-transduction rows to ACCEPT. Kept the supported transcription-factor-binding proposal and withdrew the unnecessary bespoke pseudokinase-scaffold term.
+
+Five kinase activity rows changed OVER to REMOVE: a real kinase fold does not make phosphotransfer activity partly correct. Primary18268013 abstract, full-text20641022 and35420390 consistently describe the catalytically inactive/noncatalytic Kdx1(Mlp1) role. This does not reject cell-cycle participation, ATP binding or complex membership. Three cell-cycle BP rows and CDK-complex membership are now UNDECIDED pending a focused report, rather than rejected from specialization or missing target assays. ATP binding is also UNDECIDED: Kdx1 residues51-55 are VAIRK; the adjacent K55 cannot simply be assumed to be the canonical ATP-site lysine. Reproducible alignment is being preserved separately.
+
+Inspected source GOA nodes and current IBD/target records: target leafPTN000623199 still carries all eight IBA rows. NOT/IRD at a different fungal nodePTN008603245 does not establish Kdx1 ancestry or loss. Nodeplacement remains unverified beyond these records; no donor-count reasoning. Checked exact GO definitions. No existing OpenScientist KDX1/P36005 report was found; requested cell-cycle/complex/ATP hypothesis in the project audit. Primary18268013 fulltext endpoints were inaccessible (PMC challenge; EuropePMC500), so no unseen fulltext was claimed.
+
+Alignment completed and reproduced with an independent SMK1 input: the canonical SLT2 K54 aligns to Kdx1 R54, while adjacent K55 remains. DFG D171 maps to N171; TEY T190 maps to K190, with Y192 retained. This supersedes any earlier statement in these notes that K55 is the invariant catalytic lysine. SLT2 accession is Q00772; P41808 is SMK1. Exact inputs, hashes, complete computed alignments, generic script and dependency provenance are in KDX1-bioinformatics/. ATP binding remains unproven rather than excluded. Independent annotation reviewer concurred with catalytic REMOVE and separate regulatory uncertainty.

@@ -1,219 +1,52 @@
 # PANTHER Family Review: PTHR10574
 
-## Family Overview
+## Family overview
 
-| Property | Value |
-|----------|-------|
-| **Family ID** | PTHR10574 |
-| **Family Name** | Laminin/Netrin Extracellular Matrix |
-| **Short Name** | Laminin/Netrin_ECM |
-| **InterPro Entry** | IPR050440 |
-| **Total Proteins** | 31,327 |
-| **Subfamilies** | 37 |
-| **Taxonomic Breadth** | 4,860 taxa |
-| **Representative Structure** | 5lf2 (Laminin beta2 LE5-LF-LE6) |
+PANTHER's official name for PTHR10574 is **NETRIN/LAMININ-RELATED** (`panther.obo`). The cached InterPro metadata uses the display name “Laminin/Netrin Extracellular Matrix” and links IPR050440. Its counts (31,327 proteins, 4,860 taxa, 37 subfamilies) describe the 2026-02-05 snapshot, not a current census. The metadata description is explicitly marked `llm: true` and `checked: false`; it is orientation, not independent evidence.
 
-## Executive Summary
+The cached member table includes laminin chains and netrins. Human NTN1 (O95631) is assigned to PTHR10574:SF378, **NETRIN-1**, and NTN3 (O00634) to PTHR10574:SF292, **NETRIN-3**. Laminins contribute to basement-membrane structure; netrins can act as receptor ligands in guidance, adhesion and survival. Those distinct roles do not justify assigning every function to every member.
 
-PTHR10574 is a large protein family encoding **extracellular matrix (ECM) proteins** involved in:
-1. **Laminins**: Structural components of basement membranes
-2. **Netrins**: Secreted axon guidance cues
+## Netrin biology and its limits
 
-**CRITICAL**: This family contains **NO transcription factors**. All members are **secreted extracellular proteins** that function outside the cell. Any annotations suggesting nuclear localization or transcription factor activity are **ERRONEOUS**.
+Full-length NTN1 is a secreted ligand whose DCC/UNC5-family interactions control axon responses. Human variants impair secretion and cause congenital mirror movements ([PMID:28945198](https://pubmed.ncbi.nlm.nih.gov/28945198/)). Extracellular matrix association and secretion are compatible: a secreted cue may act as a local adhesive substrate rather than only as a freely diffusible gradient ([PMID:28780049](https://pubmed.ncbi.nlm.nih.gov/28780049/)).
 
-## Subfamily Analysis
+Primary extracellular localization is not exclusivity. Some human cancer cells express an N-terminally truncated NTN1 form from an internal promoter. This form localizes to the nucleolus and associates with ribosomal-gene promoters ([PMID:22871610](https://pubmed.ncbi.nlm.nih.gov/22871610/)). This finding invalidates the previous blanket prohibition on nuclear annotations. Its ribosome-biogenesis context does not establish RNA-polymerase-II-specific transcription-factor activity or sequence recognition.
 
-### Laminins (Basement Membrane Components)
+Human NTN3 was initially characterized as NTN2L by cloning and transcript analysis ([PMID:9143507](https://pubmed.ncbi.nlm.nih.gov/9143507/)). The distinct mouse ortholog study demonstrated binding to DCC, neogenin and UNC5H1/H2/H3, lower affinity for DCC than for the other tested receptors, and axon-outgrowth activity ([PMID:10366627](https://pubmed.ncbi.nlm.nih.gov/10366627/)). The mouse study supports conserved netrin-receptor ligand function; it should not be misidentified as the original human paper or used to claim identical expression in all tissues or species.
 
-Laminins are heterotrimeric glycoproteins composed of α, β, and γ chains. They are major components of basement membranes.
+NTN1 and NTN3 have laminin N-terminal, laminin EGF-like and NTR-domain architecture, rather than the POU-specific DNA-binding architecture of the transcription-factor seeds below. The previous domain table reused one InterPro identifier for three different domains and is withdrawn. The generated member and metadata files are preserved unchanged.
 
-| Subfamily | Representative | Function |
-|-----------|----------------|----------|
-| **SF409** | LAMA1 (Laminin α1) | Basement membrane structure |
-| **SF291** | LAMA2 (Laminin α2) | Muscle basement membrane |
-| **SF406** | LAMA5 (Laminin α5) | Epithelial basement membrane |
-| **SF233** | LAMB1 (Laminin β1) | Basement membrane structure |
-| **SF36** | LAMB2 (Laminin β2) | Neuromuscular junction |
-| **SF279** | LAMB4 (Laminin β4) | Less characterized |
-| **SF270** | LAMC1 (Laminin γ1) | Basement membrane structure |
-| **SF435** | LAMC2 (Laminin γ2) | Anchoring filaments |
+## Disputed POU-seeded annotations
 
-### Netrins (Axon Guidance Cues)
+The historical GOA rows for NTN1/NTN3 cite PTN000180816 and experimentally characterized POU transcription factors. The current cached `PTHR10574-paint.tsv` also contains the POU-seeded IBD rows. Thus, the export contains a real provenance discrepancy that must be traced through the underlying family tree; this review does not establish whether it originated in tree placement, identifier mapping, or export assembly. A short donor list would not weaken an IBD, and donor identity alone is not a biological verdict.
 
-Netrins are secreted proteins that guide axon migration during development. They bind netrin receptors (DCC, UNC5, neogenin).
+| GO term | Current NTN1/NTN3 assessment | Reason |
+|---|---|---|
+| GO:0000981 DNA-binding transcription factor activity, RNA polymerase II-specific | REMOVE | The specific sequence-recognition activity does not follow from the target netrin architecture or an established functional relationship to the POU seeds. |
+| GO:0000978 RNA polymerase II cis-regulatory region sequence-specific DNA binding | REMOVE | The POU-derived DNA-recognition assertion is unsupported for the target netrins; NTN1 ribosomal-promoter association does not establish this Pol II-specific MF. |
+| GO:0006357 regulation of transcription by RNA polymerase II | UNDECIDED | This broader process can involve signaling proteins. Neither the defective trace nor secretion establishes that netrin-specific regulation is impossible. |
 
-| Subfamily | Representative | Function |
-|-----------|----------------|----------|
-| **SF378** | NTN1 (Netrin-1) | Axon guidance, chemoattractant/repellent |
-| **SF292** | NTN3 (Netrin-3) | Axon guidance |
-| **SF** | NTN4 (Netrin-4) | Axon guidance, angiogenesis |
-| **SF262** | NTN5 (Netrin-5) | Less characterized |
-| **SF** | NTNG1 (Netrin-G1) | GPI-anchored, synapse formation |
-| **SF** | NTNG2 (Netrin-G2) | GPI-anchored, synapse formation |
-| **SF365** | UNC-6 (C. elegans) | Prototypical netrin |
+POU5F1 (Q01860) is independently indexed in `panther-members.tsv` under PTHR11636:SF86. That confirms a mismatch for one named source, while the current IBD export still requires upstream inspection. No family assignment is inferred for the other sources from memory.
 
-## Domain Architecture
+The target-specific MF removals are curation recommendations, not experimental NOT annotations. No negative experiment has been supplied that would justify manufacturing a NOT annotation. Likewise, no family-wide “never nuclear” rule is justified.
 
-All family members share characteristic domains:
+## Evidence and citation corrections
 
-| Domain | IPR | Function |
-|--------|-----|----------|
-| **Laminin N-terminal (VI)** | IPR001791 | Polymerization, chain assembly |
-| **Laminin EGF-like** | IPR002049 | Calcium binding, protein interactions |
-| **Laminin G-like** | IPR001791 | Receptor binding (integrins, dystroglycan) |
-| **NTR (Netrin) domain** | IPR001791 | C-terminal domain in netrins |
+| Reference | Verified title and relevant scope |
+|---|---|
+| [PMID:28945198](https://pubmed.ncbi.nlm.nih.gov/28945198/) | *Mutations in the netrin-1 gene cause congenital mirror movements.* Primary human variant/secretion evidence. |
+| [PMID:26190107](https://pubmed.ncbi.nlm.nih.gov/26190107/) | *A Floor-Plate Extracellular Protein-Protein Interaction Screen Identifies Draxin as a Secreted Netrin-1 Antagonist.* Interaction-network evidence. |
+| [PMID:9143507](https://pubmed.ncbi.nlm.nih.gov/9143507/) | *The NTN2L gene encoding a novel human netrin maps to the autosomal dominant polycystic kidney disease region on chromosome 16p13.3.* Human gene characterization. |
+| [PMID:10366627](https://pubmed.ncbi.nlm.nih.gov/10366627/) | *Netrin-3, a mouse homolog of human NTN2L, is highly expressed in sensory ganglia and shows differential binding to netrin receptors.* Mouse ortholog binding/function study. |
+| [PMID:22871610](https://pubmed.ncbi.nlm.nih.gov/22871610/) | *Nucleolar localization of a netrin-1 isoform enhances tumor cell proliferation.* Context-specific intracellular form. |
+| [PMID:28780049](https://pubmed.ncbi.nlm.nih.gov/28780049/) | *Netrin1 establishes multiple boundaries for axon growth in the developing spinal cord.* Local substrate-guidance mechanism. |
 
-**NO DNA-binding domains are present in any family member.**
+The previous generic-review titles attached to the first three PMIDs were incorrect. They have been replaced with the cached primary records. Unverified broad review-title suggestions were removed.
 
-## Functional Diversity
+## Review status
 
-### Core Functions (All Members)
-
-1. **Extracellular localization** - All members are secreted or GPI-anchored
-2. **Protein-protein interactions** - Receptor binding, ECM assembly
-3. **Cell signaling** - Through receptor activation
-
-### Laminin-Specific Functions
-
-- Basement membrane assembly
-- Cell adhesion and migration
-- Tissue organization during development
-
-### Netrin-Specific Functions
-
-- Axon guidance (attraction and repulsion)
-- Neuronal migration
-- Angiogenesis regulation
-- Apoptosis modulation
-
-## CRITICAL ANNOTATION ERROR
-
-### Erroneous IBA Annotations on NTN1 and NTN3
-
-**NTN1 (O95631) and NTN3 (O00634)** have erroneous IBA annotations to transcription factor activity:
-
-| GO Term | Evidence | Status |
-|---------|----------|--------|
-| GO:0000981 (DNA-binding TF activity, RNAP II-specific) | IBA from PTN000180816 | **REMOVE** |
-| GO:0006357 (regulation of transcription by RNAP II) | IBA from PTN000180816 | **REMOVE** |
-| GO:0000978 (cis-regulatory region sequence-specific DNA binding) | IBA from PTN000180816 | **REMOVE** |
-
-### Root Cause
-
-The IBA annotations were propagated from PANTHER node **PTN000180816**, which erroneously grouped netrins with **POU-domain transcription factors** (PTHR11636):
-
-| Evidence Protein | Family | Function |
-|------------------|--------|----------|
-| P14859 (POU2F1/OCT1) | PTHR11636 | POU-domain TF |
-| P28069 (POU1F1/Pit-1) | PTHR11636 | POU-domain TF |
-| Q01860 (POU5F1/OCT4) | PTHR11636 | POU-domain TF |
-
-This is a clear error - PTHR10574 (laminins/netrins) and PTHR11636 (POU TFs) are **unrelated families** with completely different:
-- Domain architecture
-- Subcellular localization
-- Molecular function
-
-### Evidence Against TF Function
-
-1. **Netrins are SECRETED proteins** - they have signal peptides and function extracellularly
-2. **No DNA-binding domains** - Netrins contain laminin/EGF/NTR domains, NOT POU/homeodomain
-3. **Receptor-mediated signaling** - Netrins bind DCC/UNC5 receptors, don't enter the nucleus
-4. **Literature consensus** - PMID:28945198: *"Netrin-1 is a secreted protein that was first identified 20 years ago as an axon guidance molecule"*
-
-## GO Annotation Recommendations
-
-### Core Annotations (Appropriate for ALL Family Members)
-
-| GO Term | GO ID | Aspect | Notes |
-|---------|-------|--------|-------|
-| extracellular region | GO:0005576 | CC | All members are secreted/extracellular |
-| extracellular matrix | GO:0031012 | CC | ECM components |
-| protein binding | GO:0005515 | MF | Receptor/ECM interactions |
-
-### Laminin-Specific Annotations
-
-| GO Term | GO ID | Aspect |
-|---------|-------|--------|
-| basement membrane | GO:0005604 | CC |
-| cell adhesion | GO:0007155 | BP |
-| extracellular matrix organization | GO:0030198 | BP |
-| laminin binding | GO:0043236 | MF |
-| integrin binding | GO:0005178 | MF |
-
-### Netrin-Specific Annotations
-
-| GO Term | GO ID | Aspect |
-|---------|-------|--------|
-| axon guidance | GO:0007411 | BP |
-| netrin receptor binding | GO:1990890 | MF |
-| chemorepulsion of axon | GO:0061643 | BP |
-| positive regulation of axon extension | GO:0045773 | BP |
-| signaling receptor binding | GO:0005102 | MF |
-
-### Annotations to NEVER Apply
-
-| GO Term | GO ID | Reason |
-|---------|-------|--------|
-| DNA-binding transcription factor activity | GO:0003700 | **WRONG** - No DNA binding |
-| nucleus | GO:0005634 | **WRONG** - Extracellular proteins |
-| transcription by RNA polymerase II | GO:0006366 | **WRONG** - Not TFs |
-| sequence-specific DNA binding | GO:0043565 | **WRONG** - No DNA-binding domains |
-
-## Structural Biology
-
-**Representative Structure**: PDB 5lf2
-- Laminin beta2 LE5-LF-LE6 domains
-- Shows characteristic laminin fold
-
-**Additional Structures**:
-- Multiple laminin chain structures available
-- Netrin structures show laminin-like fold
-
-## Key Literature
-
-### Recent Reviews (2024-2025)
-
-| Source | Title | Key Points |
-|--------|-------|------------|
-| J Transl Med 2025 | The role of laminins in cancer pathobiology | Laminin chain diversity, LG domain receptor binding, BM assembly |
-| J Cell Mol Med 2024 | Research progress of netrins and receptors in cancer | NTN1/3/4/5 and netrin-G biology, DCC/UNC5 receptor mechanisms |
-| Curr Opin Neurobiol 2025 | Expanding ligand-receptor interaction networks for axon guidance | Netrin-DCC/UNC5 structural insights, signaling polarity |
-| Biology 2024 | Basement membranes, brittlestar tendons | Three-arm laminin polymerization model |
-
-### Classic References
-
-| PMID | Title | Key Finding |
-|------|-------|-------------|
-| PMID:28945198 | Netrin-1: A multifunctional protein | Comprehensive netrin review |
-| PMID:26190107 | Functions of netrin-1 beyond axon guidance | Netrin signaling pathways |
-| PMID:9143507 | Netrin-3, a mouse homolog of human NTN2L | NTN3 characterization |
-
-## Recommendations for GO Consortium
-
-### 1. Remove Erroneous Annotations
-- NTN1: Remove GO:0000981, GO:0006357, GO:0000978 (IBA)
-- NTN3: Remove GO:0000981, GO:0006357, GO:0000978 (IBA)
-
-### 2. Review PANTHER Node PTN000180816
-- Investigate why netrins were grouped with POU TFs
-- Correct the phylogenetic inference
-
-### 3. Add NOT Annotations (Optional)
-Consider adding explicit NOT annotations to prevent future errors:
-- NTN1: NOT enables GO:0003700 (DNA-binding TF activity)
-
-## Review Status
-
-- **Date**: 2026-02-05
-- **Reviewer**: AI-assisted review
-- **Status**: COMPLETE
-- **Based on**: UniProt, PANTHER, InterPro, GOA, published literature
-- **Deep research**: Falcon (17 citations, 2024-2025 literature)
-
-## Related Files
-
-- `PTHR10574-metadata.yaml` - Family metadata from InterPro
-- `PTHR10574-entries.csv` - 58 reviewed protein members
-- `../../../projects/TRANSCRIPTION_FACTORS/PANTHER-IBA-error-report.md` - Detailed error report
-- `../../../genes/human/NTN1/NTN1-ai-review.yaml` - NTN1 annotation review
-- `../../../genes/human/NTN3/NTN3-ai-review.yaml` - NTN3 annotation review
+- Date: 2026-09-20
+- Reviewer: Codex, AI-assisted evidence re-review
+- Status: DRAFT; specific Pol II regulation and upstream PAINT provenance remain unresolved
+- Gene decisions: [NTN1](../../../genes/human/NTN1/NTN1-ai-review.yaml), [NTN3](../../../genes/human/NTN3/NTN3-ai-review.yaml)
+- Evidence audit: [context-transfer.yaml](../../../projects/IBA_REVIEW/rereview-2026-09-20/context-transfer.yaml)
