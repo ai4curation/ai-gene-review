@@ -13,3 +13,8 @@ Root obtained the nested tree with POST to the PANTHER treeinfo endpoint. The ex
 ## Recovery PR specificity follow-up (2026-09-22)
 
 Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.

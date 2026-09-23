@@ -87,3 +87,8 @@ PMID:16725371 abstract explicitly reports that removal of the cysteine-rich ARV 
 Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
 
 Verified GO_REF titles against https://geneontology.org/GO_REF/0000104, https://geneontology.org/GO_REF/0000117 and https://geneontology.org/GO_REF/0000120: UniRule feature-based transfer, ARBA models and combined automated methods, respectively.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
