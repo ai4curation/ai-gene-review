@@ -32,3 +32,8 @@ The project audit records all changed row indices and decisions in `projects/IBA
 ## 2026-09-20 recovered pexophagy report and primary check
 
 Recovered and assessed the exact OpenScientist final report from a cancelled job via its artifact bundle (see hypothesis recovery-provenance.json). Pexophagy is retained as a conserved conditional process. Catalytic PI3P production is execution work. Full Grunau PMID:21121900 confirms peroxisome association under biogenesis conditions, disproving the report’s proposed cargo-confusion explanation; other locations do not exclude it. Human peroxisome localization remains UNDECIDED, with no further provider job pending. See the primary-check note for methods and limits.
+
+
+## Recovery review consistency follow-up (2026-09-22)
+
+Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.
