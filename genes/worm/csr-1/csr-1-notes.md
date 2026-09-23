@@ -22,3 +22,15 @@ The full cached Falcon report explicitly covers NHR-47/C24G6.4/Q17370, including
 Read the complete corrected-argonaute-mirna-binding-specificity OpenScientist report, both CSV artifacts and corresponding HTML. It confirms H2KZD5/Q27GU1 identity and summarizes 22G-RNA recovery, secondary-siRNA slicing and isoform-specific arginine-methylation-dependent guide preferences. Its REMOVE/NOT lead does not follow from those results: it explicitly admits no direct physical miRNA-binding exclusion and no quantified miRNA fraction in IPs, uses PubMed abstracts, and does not independently inspect the target leaf. Our saved actual tree demonstrates descent from PTN001113179. Absence of a target assay and different predominant guide class cannot themselves refute that inheritance.
 
 Retained GO:0035198 UNDECIDED, now with the substantive report findings and limitations in reference_review and supported_by. Full PMID:34244496 Methods were checked again: RNA polyphosphatase treatment precedes adapter ligation, and genomic feature enrichment defines target sets. This is not a dedicated physical miRNA-loading exclusion assay. The specific follow-up is to inspect mature-miRNA enrichment in existing isoform IP libraries versus input/control IPs, or compare direct guide loading under controlled 5-prime chemistry. No duplicate report is needed. The proposed siRNA-binding NEW remains withdrawn as redundant with source RNA-binding ancestors; tuning does not negate all context-dependent silencing. Canonical and archived identity-source snapshots remain untouched.
+
+
+## Recovery PR identity and specificity follow-up (2026-09-22)
+
+QuickGO confirms GO:0060967 negative regulation of gene silencing by regulatory
+ncRNA and its is_a/part_of ancestry through GO:0010628. Refined the licensing
+proposal to that directional term and removed the redundant author-proposed
+GO:0010628 row; the 21 fetched source assertions are unchanged. P-granule
+assembly is retained as non-core organization evidence. The identity migration
+manifest now explicitly excludes the historical GO-GPT, SFT and RL trace files
+from canonical CSR-1 evaluation as WRONG_INPUT_SEQUENCE, with immutable hashes.
+Their original IDs and output are preserved, not silently relabeled as new predictions.
