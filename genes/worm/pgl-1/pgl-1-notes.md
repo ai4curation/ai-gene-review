@@ -93,3 +93,15 @@ is assessed separately from both export and helicase catalysis.
 scope, and exact remaining curator/experimental questions. The original full-gene
 audit now marks review complete with this focused follow-up recorded. Source-row
 identity and quotation validation are checked again with the new history record.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:11641215: ACCEPT -> REMOVE
+- PMID:14704431: ACCEPT -> UNDECIDED
+- PMID:31283754: ACCEPT -> UNDECIDED

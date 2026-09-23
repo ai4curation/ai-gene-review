@@ -130,3 +130,13 @@ PMID:27011730 full Methods/Results directly localize RGR-d to human RPE plasma m
 PMID:18474598 explicitly leaves G-protein or another signaling mechanism open. Its variant motifs are not a negative assay. Six GPCR signaling/activity rows become UNDECIDED. Phototransduction and visible-light detection have broader definitions than G-protein coupling; three such rows also remain UNDECIDED for a distinct semantic/function adjudication. Broad cellular light response, visual perception and membrane are restored to ACCEPT as core biology, and credible generic KIFBP binding is retained NONCORE. No NEW terms added. The retinal-binding refinement remains but no longer calls the ortholog a paralog or the all-trans preference exclusive.
 
 No existing exact RGR/accession OpenScientist hypothesis was found. A focused request addresses the remaining capacities; the project artifact records live term definitions and exact target lineage. The request is not evidence of completion.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:16189514: KEEP_AS_NON_CORE -> UNDECIDED
