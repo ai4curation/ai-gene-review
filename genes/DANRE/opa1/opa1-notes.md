@@ -22,3 +22,7 @@ Additional full-primary cross-check: PMID:20185555 Fig. 2A tests purified human 
 ## Recovery review consistency follow-up (2026-09-22)
 
 Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.
+
+## Recovery evidence relevance follow-up (2026-09-23)
+
+Removed the physical-interaction quotation from the peroxisome-fission review because it concerns a different capacity. The verified ancestral placement remains documented in `projects/IBA_REVIEW/rereview-2026-09-20/organelle-paint-lineages.json`; the UNDECIDED call does not assert that Opa1 performs peroxisome fission. Mitochondrial topology and specialization are relevant evidence, and rejection need not await a negative experiment, but the shared report's clade-exclusion and GED-loss premises were independently contradicted. Inheritance or loss at the OPA1 branch remains the question requiring adjudication.
