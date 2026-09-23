@@ -18,3 +18,8 @@ Actual TreeGrafter source PTN000667065 is the eutherian tPA reference subtree, b
 ## Recovery PR specificity follow-up (2026-09-22)
 
 Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.
+
+
+## Evidence-presentation correction (2026-09-23)
+
+Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.

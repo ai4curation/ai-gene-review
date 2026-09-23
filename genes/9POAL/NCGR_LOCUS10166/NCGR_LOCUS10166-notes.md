@@ -80,3 +80,10 @@ that this appears to be a gene model error.
 All 17 original assertions reviewed and preserved. The previous universal over-annotation judgment depended on an unproved gene-model error and exclusive localization. See the reproducible bioinformatics RESULTS.md: chromosome-1 adjacency is real (1,050 bases), but the candidate is on chromosome 2; HDH has 460/472 aligned identities and retains E368/H369 plus Q300/H303/D402/H461. The missing-residue warning belongs to ARV rule RU368065. Restored six HDH-function/pathway rows plus broad cytoplasm and membrane; nine ARV/compartment rows remain UNDECIDED pending focused adjudication. No NEW rows. Removed unsupported core sterol-binding assertion.
 
 PMID:16725371 abstract explicitly reports that removal of the cysteine-rich ARV subdomain has no effect on activity; this prevents treating divergent cysteines as proof of loss. Its ER experiment concerns GFP-tagged Arabidopsis homologs in onion cells, not the Miscanthus fusion. Historical manual research is retained but marked DISPUTED. Exact source coordinates, sequence alignments, raw records and limitations are in the bioinformatics folder.
+
+
+## Evidence-presentation correction (2026-09-23)
+
+Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
+
+Verified GO_REF titles against https://geneontology.org/GO_REF/0000104, https://geneontology.org/GO_REF/0000117 and https://geneontology.org/GO_REF/0000120: UniRule feature-based transfer, ARBA models and combined automated methods, respectively.

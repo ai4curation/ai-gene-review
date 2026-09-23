@@ -89,3 +89,10 @@ Reviewed all 13 rows, including three earlier NEW proposals. Broad RNA binding a
 ## Recovery PR specificity follow-up (2026-09-22)
 
 Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.
+
+
+## Evidence-presentation correction (2026-09-23)
+
+Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
+
+Zinc support is the electronic UniProt keyword, not the unrelated ADAR overview quotation. Live QuickGO confirms mRNA modification and adenosine-to-inosine editing are not ancestors of one another; see ADAR2-process-ancestry-check.json.
