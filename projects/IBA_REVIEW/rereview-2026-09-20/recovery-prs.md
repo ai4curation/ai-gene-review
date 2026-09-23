@@ -121,9 +121,9 @@ adjudication and 3,281 unreviewed; publishing these batches does not change that
 scientific-work denominator. Final merge status is recorded on the linked PRs.
 
 
-## Final provenance formatting cleanup
+## Provenance formatting repairs
 
-The tracking PR also repairs 75 missing separators/spaces across 26 recovered gene
+The tracking PR also repairs 101 inspected separators/word boundaries across 27 recovered gene
 reviews and notes, including already merged batches. This does not add scientific
 re-reviews or change annotation actions. Parsed source fields, term objects and
 verbatim supporting quotations are unchanged; filenames and accession namespaces
@@ -132,3 +132,7 @@ are preserved. The exact before/after tokens are recorded in
 citations now have fetched publication caches (PMID:7558035 and PMID:9678974).
 The NCGR_LOCUS1270 identity fractions retain their original digits and gain readable
 spacing. Each changed gene has a matching history record.
+
+The repair map is an explicit, bounded log. It also records the inspected residual
+Bcl2 citations and quantitative/figure spacing; it does not claim that every
+stylistic spacing choice in the corpus was normalized.
