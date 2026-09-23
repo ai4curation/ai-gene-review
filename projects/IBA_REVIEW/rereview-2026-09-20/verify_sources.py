@@ -82,10 +82,18 @@ def verify_identity_migration(path, commit, before, after):
 
 def main():
     commit = json.loads((HERE / "baseline.json").read_text())["commit"]
+    # Main can advance while these independent recovery PRs are reviewed. Limit
+    # this session's check to its explicit audit records, rather than comparing
+    # unrelated new or subsequently curated genes with the old baseline.
+    audited_paths = set()
+    for directory in (HERE, ROOT / "projects/TREEGRAFTER/rereview-2026-09-20"):
+        for batch in directory.glob("*.yaml"):
+            data = yaml.load(batch.read_text(), Loader=yaml.CSafeLoader) or {}
+            audited_paths.update(record["gene_file"] for record in data.get("genes", []))
     paths = subprocess.check_output(["git", "diff", "--name-only", commit], cwd=ROOT, text=True).splitlines()
     results = []
     for path in paths:
-        if not path.endswith("-ai-review.yaml"):
+        if path not in audited_paths:
             continue
         before = yaml.load(subprocess.check_output(["git", "show", f"{commit}:{path}"], cwd=ROOT), Loader=yaml.CSafeLoader)
         after = yaml.load((ROOT / path).read_text(), Loader=yaml.CSafeLoader)

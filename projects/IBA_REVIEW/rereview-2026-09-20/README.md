@@ -42,7 +42,8 @@ Refresh the derived progress report after manual review batches with:
 uv run python projects/IBA_REVIEW/rereview-2026-09-20/inventory.py
 ```
 
-`verify_sources.py` compares every changed review with the frozen Git baseline
+`verify_sources.py` compares every changed review named in the manual audit records
+with the frozen Git baseline (excluding unrelated changes that arrive on main)
 and checks that all original non-NEW source assertions (term, evidence,
 reference, isoform, NOT, and qualifier) survive unchanged. The sole registered
 identity migration is worm/csr-1: its frozen review mixed a deleted LARP-1
@@ -64,3 +65,5 @@ OpenScientist requests are recorded in `adjudication-requests.yaml` and executed
 with the repository's hypothesis runner. Reports are evidence to inspect,
 including their limitations, rather than an automatic authority for changing an
 annotation.
+
+Recovery PRs and remaining work are tracked in [recovery-prs.md](recovery-prs.md).
