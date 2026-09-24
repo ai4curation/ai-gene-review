@@ -120,12 +120,19 @@ No reviews yet. To do: human MAP3K2, MAP3K3, MAP2K5, MAPK7.
 
 ### S. cerevisiae HOG (`scer_hog1_cascade`)
 
-No reviews yet, although the module names these proteins directly. To do: yeast
-SLN1, YPD1, SSK1, SSK2, SSK22, PBS2, HOG1.
+Done (2026-09-24, all COMPLETE): SLN1, YPD1, SSK1, SSK2, SSK22, PBS2, HOG1.
+Follow-ups raised in the reviews: three UniProt-assigned NatB rows on PBS2
+(PMID:12783868) look like a NAT3 mis-attribution and are UNDECIDED; the
+GO:0009927 definition fits Ypd1's relay role better than hybrid kinases such
+as Sln1.
 
 ### S. cerevisiae mating (`scer_mating_fus3_cascade`)
 
-No reviews yet. To do: yeast STE11, STE7, FUS3, KSS1, STE5. Note that
+Done (2026-09-24, all COMPLETE): STE11, STE7, FUS3, KSS1, STE5. STE5 gains
+protein serine/threonine kinase activator activity (Ste7->Fus3 co-catalysis);
+KSS1 gains negative regulation of invasive growth (kinase-independent Ste12
+repression); STE11 raises moving SGD annotations to GO:0062031 filamentous
+growth MAPK cascade. Note that
 `genes/SCHPO/ste11` is an unrelated HMG-box transcription factor; the
 S. pombe relative of budding-yeast STE11 is byr2.
 
@@ -135,8 +142,7 @@ No DUSP reviews in any species. To do: human DUSP1, DUSP4, DUSP6, DUSP10, DUSP16
 
 ## Suggested order
 
-1. Yeast HOG and mating cascades: the modules name specific proteins, so these
-   reviews ground them directly.
+1. ~~Yeast HOG and mating cascades~~ (done 2026-09-24).
 2. The human p38 tier proteins (MAP2K3, MAP2K6, MAPK14) that are the module's
    own representative members.
 3. Human JNK and ERK5 relays.
