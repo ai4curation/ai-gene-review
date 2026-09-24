@@ -106,8 +106,8 @@ annotations actioned and `core_functions` filled.
 | Tier | Done | To do |
 |---|---|---|
 | MAP3K | human MAP3K5, MAP3K20; worm nsy-1 | human MAP3K7 |
-| MAP2K | worm sek-1; S. pombe wis1 (DRAFT) | human MAP2K3, MAP2K6 |
-| MAPK | worm pmk-1; S. pombe sty1 (DRAFT) | human MAPK14, MAPK11, MAPK12, MAPK13 |
+| MAP2K | human MAP2K3, MAP2K6 (2026-09-24); worm sek-1; S. pombe wis1 (DRAFT) | - |
+| MAPK | human MAPK14 (2026-09-24); worm pmk-1; S. pombe sty1 (DRAFT) | human MAPK11, MAPK12, MAPK13 |
 
 ### JNK (`jnk_cascade`)
 
@@ -143,8 +143,7 @@ No DUSP reviews in any species. To do: human DUSP1, DUSP4, DUSP6, DUSP10, DUSP16
 ## Suggested order
 
 1. ~~Yeast HOG and mating cascades~~ (done 2026-09-24).
-2. The human p38 tier proteins (MAP2K3, MAP2K6, MAPK14) that are the module's
-   own representative members.
+2. ~~The human p38 tier proteins (MAP2K3, MAP2K6, MAPK14)~~ (done 2026-09-24).
 3. Human JNK and ERK5 relays.
 4. Remaining ERK gaps (MAP2K1, MAPK3, RAF1, GRB2, SOS1), then DUSPs.
 5. Invertebrate orthologs.
