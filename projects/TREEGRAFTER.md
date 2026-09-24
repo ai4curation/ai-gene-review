@@ -69,26 +69,32 @@ This writes two committed sidecars (no hard-coded numbers):
 
 ## Results (current corpus snapshot)
 
-Scanned **2,775** review files. **415** reviewed TreeGrafter annotations
-(`GO_REF:0000118`) across **202** genes.
+Scanned **4,975** review files. **969** reviewed TreeGrafter annotations
+(`GO_REF:0000118`) across **541** genes. These numbers are *after* the
+2026-09-24 rejection re-review below; the first-pass snapshot (415 rows, 202
+genes, 41% accept, 26% rejected) is preserved in the git history of the
+sidecars.
 
 | Reviewer action | TreeGrafter (IEA) | | PAINT/IBA *(contrast)* | |
 |---|---:|---:|---:|---:|
-| `ACCEPT` | 170 | 41.0% | 4,838 | 73.1% |
-| `KEEP_AS_NON_CORE` | 72 | 17.3% | 989 | 14.9% |
-| `MODIFY` | 52 | 12.5% | 327 | 4.9% |
-| `REMOVE` | 69 | 16.6% | 195 | 2.9% |
-| `MARK_AS_OVER_ANNOTATED` | 38 | 9.2% | 191 | 2.9% |
-| `UNDECIDED` | 10 | 2.4% | 38 | 0.6% |
-| `NEW` / `PENDING` | 4 | 1.0% | 39 | 0.6% |
+| `ACCEPT` | 466 | 48.1% | 8,087 | 73.1% |
+| `KEEP_AS_NON_CORE` | 229 | 23.6% | 1,754 | 15.8% |
+| `MODIFY` | 76 | 7.8% | 458 | 4.1% |
+| `REMOVE` | 88 | 9.1% | 191 | 1.7% |
+| `MARK_AS_OVER_ANNOTATED` | 48 | 5.0% | 329 | 3.0% |
+| `UNDECIDED` | 62 | 6.4% | 217 | 2.0% |
+| `NEW` / `PENDING` | 0 | 0.0% | 33 | 0.3% |
 
-**Headline:** only **~41%** of TreeGrafter inferences are accepted as-is, and
-**~26%** are outright rejected (`REMOVE` + `MARK_AS_OVER_ANNOTATED`), with a
-further ~12.5% needing a better term (`MODIFY`). This is **markedly noisier than
-curated PAINT/IBA** on the same corpus (73% accept, ~6% rejected) — which is
-exactly what you would expect: TreeGrafter is fully automated propagation onto
+**Headline:** **~48%** of TreeGrafter inferences are accepted as-is and a
+further ~24% are correct but peripheral (`KEEP_AS_NON_CORE`), so ~72% are
+retained as correct; **~14%** are rejected (`REMOVE` +
+`MARK_AS_OVER_ANNOTATED`) and ~8% need a better term (`MODIFY`). That is still
+**noisier than curated PAINT/IBA** on the same corpus (73% accept, 89%
+retained, ~5% rejected) — as expected for fully automated propagation onto
 sequences that were *not* curated into the reference tree, with no curator
-checking residue-level evidence at the graft point.
+checking residue-level evidence at the graft point — but the gap is
+substantially smaller than the first pass suggested, because a large share of
+the first-pass rejections did not survive re-examination (see below).
 
 ### Where TreeGrafter inferences fail
 
@@ -112,34 +118,43 @@ The TreeGrafter terms most often down-graded (`REMOVE` / `MODIFY` /
    `triacylglycerol lipase activity` (GO:0004806). TreeGrafter places a sequence
    on a tree node but cannot tell that the catalytic residues, or the whole
    substrate specificity, have changed — the classic paralog over-annotation.
+   This is the failure mode that survives scrutiny intact.
 
-2. **Generic / uninformative localization.** `cytoplasm` (GO:0005737),
-   `cytosol` (GO:0005829), `plasma membrane` (GO:0005886), `membrane`
-   (GO:0016020), `nucleus` (GO:0005634) — low-information CC terms inherited
-   from distant ancestors.
+2. **Whole-complex activity on a single subunit.** `NADH dehydrogenase
+   activity` (GO:0003954) on six complex I subunits that lack the NADH site is
+   now the single most down-graded term; the right fix is `MODIFY` to the
+   complex activity with a `contributes_to` qualifier, not removal.
+
+3. **Generic / uninformative localization** — `cytoplasm` (GO:0005737),
+   `cytosol` (GO:0005829), `membrane` (GO:0016020), `nucleus` (GO:0005634).
+   The re-review found most of these are *true* and had been rejected only for
+   redundancy; they are a real failure only where the location is incompatible
+   with the protein (a secreted or exported product).
 
 There are also organism-mismatched BP propagations (e.g.
 `lipopolysaccharide core region biosynthetic process`,
-`sucrose biosynthetic process`) onto genes whose host lacks the pathway.
+`polysaccharide biosynthetic process` on epimerases that form no glycosidic
+bond) onto genes whose host lacks the pathway or whose product merely feeds it.
 
 These are precisely the cases where automated tree grafting lacks the
 gene-specific evidence (catalytic-residue conservation, substrate assays,
 organism pathway context) that a curator brings — and why PAINT/IBA, where a
-curator made the call, fares so much better.
+curator made the call, fares better.
 
 ## Caveats
 
-- **Small n.** 415 TreeGrafter annotations across 202 genes — directional, not a
-  frozen benchmark. The 95% Wald interval on the 41% accept rate is roughly
-  ±5 pp.
+- **Moderate n.** 969 TreeGrafter annotations across 541 genes — directional,
+  not a frozen benchmark. The 95% Wald interval on the 48% accept rate is
+  roughly ±3 pp.
 - The reference standard is the AIGR review corpus, which mixes expert and AI
   adjudication and is under continuous revision; treat rates as a living
-  snapshot.
+  snapshot. The first-pass reviews over-rejected (see the re-review), so the
+  rates for *unaudited* actions should be read with that bias in mind.
 - `KEEP_AS_NON_CORE` is **not** an error — the inference is correct but
   peripheral to the gene's core function. Counting accept + non-core as
-  "retained correct" gives ~58% for TreeGrafter vs ~88% for IBA.
-- A few annotations are still `PENDING`/`UNREVIEWED` in partially-reviewed
-  genes.
+  "retained correct" gives ~72% for TreeGrafter vs ~89% for IBA.
+- `UNDECIDED` (6%) is honest uncertainty, mostly on proteins with no
+  substrate assay; it counts neither for nor against TreeGrafter.
 
 ## Rejection re-review (2026-09-24)
 
