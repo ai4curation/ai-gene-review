@@ -34,3 +34,16 @@ UniProt: Q88EH0 (D2HDH_PSEPK); locus PP_4493; 1006 aa.
 - GO:0004458 D-lactate dehydrogenase (cytochrome) activity and GO:0008720 D-lactate dehydrogenase (NAD+) activity: TreeGrafter/PANTHER family-based predictions. The protein is a D-2-HG dehydrogenase, not a D-lactate dehydrogenase; these are paralog/family over-annotations and the specific lactate substrate activity is not supported. MODIFY toward the specific D-2-HG dehydrogenase activity (the NAD+ one is additionally wrong on cofactor; this enzyme is FAD-dependent, EC 1.1.99.x uses "other acceptors", not NAD+).
 - GO:1903457 lactate catabolic process: TreeGrafter family transfer; the demonstrated process is lysine catabolism / 2-oxoglutarate metabolism, not lactate catabolism. MODIFY to the lysine catabolic / 2-oxoglutarate metabolic process.
 - 4Fe-4S / metal-ion: UniProt keyword-based GO terms (GO:0051539, GO:0046872) appear in the UniProt cross-references but are NOT in the GOA TSV, so they are not reviewed as existing_annotations here.
+
+## 2026-09-20 full-gene reassessment
+
+All eight rows, original target PMID:31064836 full Results/Methods, and new source PMID:36144368 full assay methods/specificity/phylogeny were read. The latter purified E. coli P77748 and Pantoea YdiJ; PES/DCIP assays found no detectable D-lactate activity at 5-10 mM, not merely lower activity than D-2HG. The target Pseudomonas work establishes genetic/metabolic D-2HG turnover and does not purify PP_4493. Physiological electron acceptor is unknown in the donor paper, so FAD binding alone is not an argument against NAD/cytochrome acceptance.
+
+Actual TG node PTN001714929 is a Gammaproteobacteria SF119 subtree containing P77748 and lies below PTN000202298, the broad lactate IBD. The specific donor-subfamily assay plus target metabolic evidence supports retaining the three substrate/process MODIFY decisions. Broad catalysis and both FAD-binding terms restored to ACCEPT. Family name alone is not a propagation mechanism; corrected that prior reference finding.
+
+Read the complete existing OpenScientist report in /Users/cjm/.deep_research_cache/openscientist-commissioned-modulepathwaytaxo-43e91d7b.json, titled Species-Aware Module Review: L-Lysine Catabolism through 5-Aminovalerate in Pseudomonas putida KT2440. Exact excerpt: “with `ydiJ`/PP_4493 handling D-2-HG”. Its four-reaction Dav module ends at glutarate and excludes downstream metabolism. This is a module boundary, not evidence against wider lysine catabolism or a lactate assay. No duplicate report launched.
+
+
+## Recovery PR evidence refinement (2026-09-22)
+
+Refine the catalytic-activity ancestor to the already supported specific reaction. Source GOA assertions are unchanged.

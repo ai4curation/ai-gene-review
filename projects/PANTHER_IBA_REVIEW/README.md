@@ -17,7 +17,7 @@ propagation — rather than re-judging gene by gene.
   `node_seed_count` (the authoritative canonical seed count curated at the source
   node, vs. the few `n_seeds` echoed into the leaf), `node_evidence`
   (IBD/IRD/IKR), and `node_loss`. New flags: `SINGLE_NODE_SEED` (≤1 canonical
-  seed — weak support), `NODE_LOSS` (an IRD/IKR loss at the source node), and
+  seed — a provenance count, not a measure of evidential strength), `NODE_LOSS` (an IRD/IKR loss at the source node), and
   `NODE_NOT_IN_IBD`; `NONE` denotes a row with no propagation flags.
 - `extract_node_annotations.py` — pulls the **PTN node-level (PAINT) annotations**
   themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR — plus a few IBA-on-node —
@@ -81,3 +81,6 @@ just fetch-panther-paint PTHR10177
 Scope: the 160 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
 locally). Note the cross-subfamily flag is deliberately sensitive and
 over-fires on broadly conserved functions — it is triage, not a verdict.
+One well-characterized descendant can soundly ground an ancestral assertion.
+Review its phylogenetic placement and relevant functional divergence; do not
+infer weak support from a short seed list.
