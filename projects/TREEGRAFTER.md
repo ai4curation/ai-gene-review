@@ -7,6 +7,7 @@ sidecars:
   summary: TREEGRAFTER/treegrafter_summary.tsv
   placement: TREEGRAFTER/treegrafter_placement.tsv
   graft_check: TREEGRAFTER/treegrafter_graft_check.tsv
+  rejection_rereview: TREEGRAFTER/rereview-2026-09-24/summary.tsv
 ---
 
 # TreeGrafter Inference Evaluation
@@ -140,6 +141,72 @@ curator made the call, fares so much better.
 - A few annotations are still `PENDING`/`UNREVIEWED` in partially-reviewed
   genes.
 
+## Rejection re-review (2026-09-24)
+
+The rejection rate above is only meaningful if the rejections themselves hold
+up, so every TreeGrafter row marked `REMOVE` or `MARK_AS_OVER_ANNOTATED` was
+re-examined against a fixed rule set (positive contrary evidence required for
+`REMOVE`; broad-but-true terms are not over-annotations; too-coarse ancestors
+are `MODIFY`, not `REMOVE`; term definitions checked in QuickGO). Records,
+rules, and a generated summary live in
+[`TREEGRAFTER/rereview-2026-09-24/`](TREEGRAFTER/rereview-2026-09-24/README.md);
+the nine genes already re-audited on 2026-09-20 were left as recorded there.
+
+**192 rejected rows across 165 genes: 114 (59%) stand, 78 (41%) were relaxed.**
+
+| Previous → new action | n |
+|---|---:|
+| `REMOVE` → `REMOVE` | 76 |
+| `MARK_AS_OVER_ANNOTATED` → `MARK_AS_OVER_ANNOTATED` | 38 |
+| `MARK_AS_OVER_ANNOTATED` → `ACCEPT` | 30 |
+| `MARK_AS_OVER_ANNOTATED` → `KEEP_AS_NON_CORE` | 25 |
+| `REMOVE` → `MARK_AS_OVER_ANNOTATED` | 7 |
+| `MARK_AS_OVER_ANNOTATED` → `MODIFY` | 6 |
+| `REMOVE` → `UNDECIDED` | 4 |
+| `REMOVE` → `MODIFY` | 3 |
+| `REMOVE` → `KEEP_AS_NON_CORE` / `ACCEPT` | 3 |
+
+The relaxations are concentrated, and they say more about the *first-pass
+reviews* than about TreeGrafter:
+
+- **Redundant locations (24 of 78).** `cytosol`/`cytoplasm` on soluble
+  bacterial enzymes had been marked over-annotated purely because a sibling
+  location row existed. A broad true term is not an error; these are now
+  `ACCEPT` or `KEEP_AS_NON_CORE`. The generic-localization "failure mode"
+  listed above therefore shrinks: it is real only where the location is
+  *incompatible* with the protein (secreted cystatin `cpi-2`, exported
+  flagellar hook `flgE`, periplasmic `alr`), and those rejections stand.
+- **True ancestors of an accepted term (~20).** `oxidoreductase activity` on
+  betA, `glycosyltransferase activity` on murG, `protein transport` on
+  secD/secF, `deaminase activity` on guaD, and the like; verified by QuickGO
+  ancestry and restored. The six complex I subunits carrying `NADH
+  dehydrogenase activity` became `MODIFY` → `GO:0008137` (contributes_to).
+- **Rejections resting only on "no target-specific assay" (~12).** Absence of
+  a target experiment does not refute a supported phylogenetic inference;
+  these moved to `MARK_AS_OVER_ANNOTATED` or, where the substrate is
+  genuinely unknown (ptxD, retS, TFP nucleus), `UNDECIDED`.
+- **Label read instead of definition (1, but instructive).** `GO:0009329
+  "acetate CoA-transferase complex"` on PSEPK/accD was removed as a different
+  enzyme; its definition is the AccA/AccD carboxyltransferase component of
+  acetyl-CoA carboxylase, so the TreeGrafter call was *more* specific than the
+  term the gene already carried. The term's label and its `capable_of` axiom
+  contradict its own definition — worth raising with GO.
+
+The 114 retained rejections all rest on stated chemistry, architecture, or
+organism evidence, and about a third had their `reason` strengthened with the
+specific evidence (EC numbers, PANTHER subfamily vs. graft node, cached
+substrate-panel quotes). That leaves the **paralog / wrong-subfamily
+catalytic-activity transfers as the one failure mode that survives scrutiny
+intact** — e.g. spermidine synthase on the PMT methyltransferases, carotenoid
+dioxygenase on the lignostilbene dioxygenases, lactate dehydrogenase on
+malate dehydrogenases, cysteine synthase vs. O-acetylhomoserine sulfhydrylase.
+
+Follow-ups surfaced by the re-review, not acted on here: benB still carries an
+`IC` annotation to the obsolete `GO:0043640`; `aroQ` and `aroQ-III` are the
+same protein (Q88IJ6) in two folders; a few relaxed ancestors now sit beside
+sibling rows (ubiA `GO:0004659`/`GO:0016765`, zwf `GO:0006098`) that were out
+of scope and may warrant harmonizing.
+
 ## Deeper analyses
 
 - **[Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)** — joins all
@@ -168,4 +235,8 @@ curator made the call, fares so much better.
   the over-specific MF propagations are the single worst category.
 - Cluster failures by PANTHER family/subfamily id (from `WITH/FROM`) to find
   families where TreeGrafter systematically over-reaches — candidate subfamily
-  split / PAINT curation targets to feed upstream.
+  split / PAINT curation targets to feed upstream. The 2026-09-24 re-review
+  narrows this to the retained paralog-transfer set, which is the right input.
+- Harmonize the out-of-scope sibling rows and the two data hygiene items
+  listed under the rejection re-review (benB obsolete `GO:0043640` IC row;
+  duplicate `aroQ` / `aroQ-III` folders).
