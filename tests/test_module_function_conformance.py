@@ -320,6 +320,7 @@ def test_missing_review_is_visible_without_ci_warning(tmp_path):
     )
     assert result.is_valid
     assert result.function_conformance["counts"]["REVIEW_MISSING"] == 1
+    assert result.function_conformance["gaps"] == 1
     assert not any("REVIEW_MISSING" in w for w in result.warnings)
 
 

@@ -450,5 +450,16 @@ def module_function_conformance(
         "total": len(rows),
         "core_supported": sum(row["status"] == "CORE_SUPPORTED" for row in rows),
         "conflicts": sum(row["severity"] == "error" for row in rows),
-        "gaps": sum(row["severity"] == "warning" for row in rows),
+        # Coverage remains a gap in the QC summary even when it is not a CI warning.
+        "gaps": sum(
+            row["severity"] == "warning"
+            or row["status"]
+            in {
+                "REVIEW_MISSING",
+                "FAMILY_REVIEW_MISSING",
+                "FAMILY_ID_MISSING",
+                "PARTICIPANT_ID_MISSING",
+            }
+            for row in rows
+        ),
     }
