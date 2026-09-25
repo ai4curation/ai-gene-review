@@ -55,3 +55,11 @@ N-terminal PB1 domain (~res 18-109) and C-terminal kinase domain.
 - Generic kinase MF terms (protein kinase / tyrosine kinase / serine kinase activity) -> MODIFY to GO:0004708 (consistent with MAP2K3).
 - Signal transduction -> MODIFY to GO:0070375 ERK5 cascade.
 - Did not propose NEW heart development / angiogenesis (necessity evidence from knockouts, not participation) nor MAP kinase scaffold activity (raised as question).
+
+## Audit of inherited review (2026-09-25)
+
+- Re-checked every existing_annotation action and all supported_by quotes against cached files (all verbatim; validator clean).
+- IPI partner mapping verified against GOA WITH/FROM (Q99759 MAP3K3, Q9Y2U5 MAP3K2, Q13164 MAPK7, P08238 HSP90AB1, Q13501 SQSTM1, Q06413 MEF2C, others from binary screens).
+- Rat source of GO:0034392 confirmed via QuickGO as RGD IMP PMID:20724525. Open full text (PMC2992371) read: MEK5 experiments are all in neonatal rat cardiomyocytes / cardiac CA-MEK5alpha transgenic mice; the word "smooth" does not occur. MODIFY to GO:0010667 retained.
+- Spindle (GO:0005819, IEA from mouse IDA PMID:15509711): abstract-only, does not name MEK5, full text not open -> changed MARK_AS_OVER_ANNOTATED to UNDECIDED per "do not overrule curators".
+- Removed cytoplasm (GO:0005737) from core_functions locations: no human CC evidence, rat MEK5alpha is particulate and only MEK5beta is "primarily cytosolic" (PMID:7499418; PMID:16260599), so a location assertion is not well supported. Not proposed as NEW.
