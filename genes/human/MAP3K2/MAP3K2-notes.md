@@ -52,3 +52,14 @@ Ser/Thr kinase domain. Close paralog of MAP3K3/MEKK3 (kinase domains ~94% conser
   ERK5 cascade is sparsely used in GO (7 annotations across human/mouse/rat in QuickGO, 2026-09), so its
   absence on MEKK2/3 is not a curatorial convention; MEKK2 catalyses the MEK5-phosphorylation step, so it
   participates (passes the participation test).
+
+## Audit (second pass)
+
+- Replaced deep-research (secondary) support for the 14-3-3 protein-binding MODIFYs with primary papers:
+  [PMID:23963453 "We have found that MEKK2 is regulated through a phosphorylation-dependent association with 14-3-3"],
+  [PMID:9452471 "14-3-3 proteins also interacted with MEKK1 and MEKK2, but not MEKK4."]. MEKK3 comparison now cites
+  PMID:18308725 (pThr294) and PMID:16407301 (pSer526).
+- Added reference_review to all references; tightened description (Ser519 autophosphorylation, Lad/RIBP, viable knockout
+  [PMID:12138187 "Mekk2(-/-) mice are viable and fertile"]).
+- Suggested question on MEKK2 vs MEKK3 dominance checked against PMID:11073940 abstract (kinase-inactive MEKK3, not
+  MEKK2, blocked EGF/H2O2 ERK5 activation in Cos7/HEK293; reverse in D10 T cells).
