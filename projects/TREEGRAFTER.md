@@ -125,10 +125,11 @@ mode and writes
 > (see *Refresh the snapshot* under Next steps).
 
 At the snapshot, **4,540** review files were scanned, yielding **898**
-reviewed TreeGrafter annotations (`GO_REF:0000118`) across **510** genes —
+reviewed TreeGrafter annotations (`GO_REF:0000118`) across **510** reviewed
+proteins (493 distinct gene symbols) —
 at that date every `GO_REF:0000118` row in the corpus GOA had a review
 decision (an earlier snapshot, before the *P. putida* KT2440 batch was
-reviewed, had 415 annotations / 202 genes).
+reviewed, had 415 annotations / 202 proteins).
 
 | Reviewer action | TreeGrafter (IEA) | | PAINT/IBA *(contrast)* | |
 |---|---:|---:|---:|---:|
