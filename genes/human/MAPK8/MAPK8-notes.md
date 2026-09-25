@@ -80,3 +80,24 @@ subfamily, JNK branch (InterPro IPR008351 MAPK_JNK; PANTHER PTHR24055).
 Most "JNK" literature uses pan-JNK reagents (SP600125, phospho-JNK antibodies). JNK1 and JNK2 are
 redundant for many functions (shared PAINT node PTN001171982), so process annotations based on
 inhibitor data are weak for MAPK8 specifically.
+
+## Review session log (2026-09-25)
+
+Audited the notes above against cached sources (quotes used in the review were checked by the
+reference validator). Final decisions in MAPK8-ai-review.yaml:
+
+- Core: GO:0004707 MAP kinase activity / GO:0004705 JUN kinase activity in GO:0007254 JNK cascade
+  (IBA PTN001171982 accepted; consistent with modules/jnk_cascade.yaml). GO:0106310 and GO:0004674
+  experimental rows accepted (as in MAPK14).
+- GO:0005515 rows: MKK4/MKK7 -> GO:0031434; JIP1/JIP2/JIP-1b -> GO:0097110; DUSP8 -> GO:0019903;
+  JNK2 -> GO:0019901 (MAPK14 convention); c-Jun and HSF1 -> GO:0140297. Removed: MECOM, Pdcd4, CBL,
+  PIK3R1 (x2), APBB1, H2AX, EIF4ENIF1, RPTOR, CLDN6.
+- GO:0120283 (TAK1 row): full text confirms TAK1 = MAP3K7 ("TAK1 is an upstream MAP3 kinase that
+  activates JNK1 and p38"); WITH/FROM P27448 (MARK3/C-TAK1) looks mis-mapped. MODIFY -> GO:0031435.
+- GO:1903749 (obsolete per QuickGO) x2 -> GO:2001244 positive regulation of intrinsic apoptotic
+  signaling pathway.
+- GO:0035033 histone deacetylase regulator activity: MARK_AS_OVER_ANNOTATED (kinase acting on SIRT1).
+- GO:0071260 IEP PMID:19593445 and GO:0009612 IBA (PTN008602925, only descendant = MAPK8 itself):
+  UNDECIDED, same stance as MAP2K4/MAP3K1.
+- Inhibitor/pan-JNK process rows (CD38 cyclase, protein metabolic process, DR5 gene expression) and
+  Reactome cell killing: MARK_AS_OVER_ANNOTATED.
