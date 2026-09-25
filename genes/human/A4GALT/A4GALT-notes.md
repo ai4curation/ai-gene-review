@@ -232,3 +232,7 @@ ontology refinement. The history record passed `just validate-history`, the
 updated review rendered with `just render human A4GALT`, and `git diff --check`
 passed. All 15 source assertion rows remain present; only reviewer-authored
 content changed.
+
+### PR 3127 follow-up, 2026-09-25
+
+The independent reviewer correctly requested structured treatment of the old negative P1 finding. PMID:10747952 now has a per-finding OVERTURNED assessment with PMID:26773500 as superseding evidence and its verbatim quote; the P(k) and p-null findings are not rejected. The three galactosyltransferase rows now consistently refine to the donor-specific GO:0035250, with source-specific summaries. Final decisions: 9 ACCEPT, 5 MODIFY, 1 UNDECIDED. Description wording states N-glycan acceptor capacity directly; experimental scope remains in the reference assessment. The broad membrane refinement remains based on combined curated localization; an abstract-only topology prediction does not establish that the original IDA code is erroneous. No late Falcon report or surviving A4GALT research process was present when checked after the review.
