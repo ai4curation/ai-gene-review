@@ -859,8 +859,8 @@
 
             <div class="info-item">
                 <span class="info-label">Review Status:</span>
-                <span class="status-badge status-in-progress">
-                    IN PROGRESS
+                <span class="status-badge status-complete">
+                    COMPLETE
                 </span>
             </div>
 
@@ -12275,20 +12275,42 @@ are built, and <code>core_functions</code> orders the four entries accordingly.<
 <p>The review was already <code>status: COMPLETE</code> from the PAINT no-IBA batch (PR #2956) and<br />
 passed validation. Four defect classes were found. All are fixed; the file went from 118<br />
 to 131 annotations and from 2 to 4 core functions.</p>
-<h3 id="1-fabricated-citations-that-validation-cannot-see">1. Fabricated citations that validation cannot see</h3>
+<h3 id="1-fabricated-citations-that-passed-validation-via-an-escape-hatch">1. Fabricated citations that passed validation via an escape hatch</h3>
 <p>Seven <code>supported_by</code> entries cited bare DOIs (<code>DOI:10.7554/eLife.72316</code>,<br />
-<code>DOI:10.1242/jcs.262064</code>) that appear nowhere in the <code>references</code> list. Because a DOI<br />
-reference has no cached publication, the substring validator has nothing to check against<br />
-— so these passed silently. <strong>Six of the seven quotes are verbatim text from<br />
-<code>BAIAP2-deep-research-falcon.md</code>, attributed to primary papers they were never taken<br />
-from</strong>; one ("IRSp53 recognizes ~100 nm PM evaginations…") is a paraphrase occurring in no<br />
-source at all. One still carried its bullet label, <code>"Sites of action: …"</code>.</p>
-<p>Three of the seven sat on rows GOA has since retired and went away with them. The<br />
-remaining four were re-grounded on primary literature with quotes verified verbatim<br />
-against the cache: GO:0030838 and GO:0007009 → PMID:37747150, GO:0043197 → PMID:24639075,<br />
-GO:0061003 → PMID:15673667.</p>
+<code>DOI:10.1242/jcs.262064</code>) that appear nowhere in the <code>references</code> list. <strong>Six of the seven<br />
+quotes are verbatim text from <code>BAIAP2-deep-research-falcon.md</code>, attributed to primary<br />
+papers they were never taken from</strong>; one ("IRSp53 recognizes ~100 nm PM evaginations…") is<br />
+a paraphrase occurring in no source at all. One still carried its bullet label,<br />
+<code>"Sites of action: …"</code>.</p>
+<p><strong>Why they passed is worth recording precisely, because the obvious explanation is wrong.</strong><br />
+It is not that a DOI citation is unverifiable. <code>publications/</code> holds 232 DOI-keyed records,<br />
+<code>validation/supporting_text.py</code> resolves <code>DOI:x/y</code> to <code>publications/DOI_x_y.md</code>, and <em>both</em><br />
+DOIs here were already cached — <code>DOI_10.7554_eLife.72316.md</code> is 83 KB of full text,<br />
+committed in the same PR (#2956) that wrote these quotes. The verbatim check also does<br />
+cover annotation-level <code>supported_by</code>, not just <code>references[].findings[]</code>.</p>
+<p>The actual reason is that each of those entries carried <code>full_text_unavailable: true</code>, and<br />
+that flag suppresses the substring check outright — irrespective of reference type, and<br />
+irrespective of whether the publication is cached with full text. Verified by injecting<br />
+<code>"PURPLE ELEPHANTS CATALYSE THE RIBOSOME ON TUESDAYS."</code> as the <code>supporting_text</code> on<br />
+<code>PMID:37747150</code> (83 KB of cached full text): caught as <code>Text part not found as substring</code><br />
+without the flag, <code>✓ Valid</code> with it. Five of the six original quotes are likewise genuinely<br />
+absent from the cached DOI files, so the fabrication finding stands; the flag is what let<br />
+them through.</p>
+<p>The flag therefore does double duty — a legitimate signal on abstract-only records, and a<br />
+blanket verification opt-out — and the two uses are indistinguishable in the file. Anyone<br />
+auditing a review here should treat <code>full_text_unavailable: true</code> on a <code>supported_by</code> entry<br />
+as "this quote was never checked", not as a property of the cited paper, and should confirm<br />
+the flag against the cached record rather than trusting it.</p>
+<p>Three of the seven sat on rows GOA has since retired and went away with them. The remaining<br />
+four were re-grounded on primary literature with quotes verified verbatim against the<br />
+cache: GO:0030838 and GO:0007009 → PMID:37747150, GO:0043197 → PMID:24639075, GO:0061003 →<br />
+PMID:15673667.</p>
 <p>The <code>DOI:10.1242/jcs.262064</code> citation was doubly wrong: it resolves to PMID:39404604,<br />
 <em>"HIV-1 assembly — when virology meets biophysics"</em>, cited in support of adaptor activity.</p>
+<p>Where this pass sets <code>full_text_unavailable: true</code> itself (on the PMID:19366662 reference,<br />
+whose cached record really is abstract-only and about the paralog), it is set on the<br />
+<em>reference</em> entry and the unverifiable quotes were deleted rather than left flagged — so no<br />
+<code>supporting_text</code> in this file is exempted from checking.</p>
 <h3 id="2-six-iea-calls-dismissed-on-rationales-that-misstate-their-provenance">2. Six IEA calls dismissed on rationales that misstate their provenance</h3>
 <p>Every <code>MARK_AS_OVER_ANNOTATED</code> row was justified with some version of "not supported" or<br />
 "may be transferred from ortholog data". Tracing each <code>GO_REF:0000107</code> Ensembl transfer<br />
@@ -12463,7 +12485,7 @@ convention.</p>
                 <pre><code>id: Q9UQB8
 gene_symbol: BAIAP2
 product_type: PROTEIN
-status: IN_PROGRESS
+status: COMPLETE
 taxon:
   id: NCBITaxon:9606
   label: Homo sapiens
