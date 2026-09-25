@@ -111,12 +111,19 @@ annotations actioned and `core_functions` filled.
 
 ### JNK (`jnk_cascade`)
 
-No reviews yet. To do: human MAP3K1, MAP2K4, MAP2K7, MAPK8, MAPK9, MAPK10; fly
-bsk, hep; worm jnk-1, kgb-1.
+Done (2026-09-25, all COMPLETE): human MAP3K1, MAP2K4, MAP2K7, MAPK8. MAP2K4
+and MAP2K7 use GO:0008545 JUN kinase kinase activity as core MF; MAP3K1 gains
+tubulin binding (TOG domain). To do: human MAPK9, MAPK10; fly bsk, hep; worm
+jnk-1, kgb-1. Follow-up: PMID:19593445 (a BAD/prostate cancer paper) is cited
+for IEP "cellular response to mechanical stimulus" on MAP3K1, MAP2K4, MAPK8
+and other genes and looks like a batch mis-citation (rows left UNDECIDED).
 
 ### ERK5 (`erk5_cascade`)
 
-No reviews yet. To do: human MAP3K2, MAP3K3, MAP2K5, MAPK7.
+Done (2026-09-25, all COMPLETE): human MAP3K2, MAP3K3, MAP2K5, MAPK7. MAPK7
+gains transcription coactivator activity (kinase-independent MEF2
+transactivation); MAP3K3 keeps a second core role in canonical NF-kB
+activation.
 
 ### S. cerevisiae HOG (`scer_hog1_cascade`)
 
@@ -144,7 +151,7 @@ No DUSP reviews in any species. To do: human DUSP1, DUSP4, DUSP6, DUSP10, DUSP16
 
 1. ~~Yeast HOG and mating cascades~~ (done 2026-09-24).
 2. ~~The human p38 tier proteins (MAP2K3, MAP2K6, MAPK14)~~ (done 2026-09-24).
-3. Human JNK and ERK5 relays.
+3. ~~Human JNK and ERK5 relays~~ (done 2026-09-25).
 4. Remaining ERK gaps (MAP2K1, MAPK3, RAF1, GRB2, SOS1), then DUSPs.
 5. Invertebrate orthologs.
 
