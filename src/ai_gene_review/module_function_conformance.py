@@ -353,13 +353,13 @@ def gene_function_findings(
             if not curie or not curie.startswith("UniProtKB:"):
                 assessment = (
                     "PARTICIPANT_ID_MISSING",
-                    "warning",
+                    "info",
                     "The participant lacks a UniProt identifier for joining a gene review.",
                 )
             elif review_path is None:
                 assessment = (
                     "REVIEW_MISSING",
-                    "warning",
+                    "info",
                     "No ai-review exists for this protein; its function and core-function coverage cannot yet be checked."
                     + (
                         " The module function also lacks a GO identifier."

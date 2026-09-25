@@ -93,9 +93,11 @@ checker joins to `genes/**/*-ai-review.yaml`. A matching
 `core_functions[].molecular_function` establishes core coverage. Retained
 annotations and curated replacement terms can support the activity while
 revealing missing core coverage. An intentional `KEEP_AS_NON_CORE` is valid and
-does not request promotion to core functions. Missing gene reviews, missing
-support or core coverage, and functions without GO identifiers produce
-**warnings**, not evidence that the activity is absent. A retained, applicable
+does not request promotion to core functions. Missing support or core coverage
+and functions without GO identifiers produce **warnings**, not evidence that the
+activity is absent. Missing gene/family reviews and participant/family identifiers
+are informational coverage notices: they remain in the QC panel and status counts
+but do not flood the validator warning log. A retained, applicable
 `NOT` annotation contradicting a concrete participant activity produces an **error**.
 For a family representative, it produces an advisory warning to review the exemplar
 or family scope; it does not negate the whole family.

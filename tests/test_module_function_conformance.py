@@ -65,7 +65,7 @@ def test_core_supported_and_missing_review_are_separate(tmp_path):
     assert findings(module(), index)[0]["status"] == "CORE_SUPPORTED"
     row = findings(module(), {})[0]
     assert row["status"] == "REVIEW_MISSING"
-    assert row["severity"] == "warning"
+    assert row["severity"] == "info"
 
 
 @pytest.mark.parametrize(
@@ -304,7 +304,7 @@ def test_validator_exposes_function_compliance_and_blocks_applicable_not(tmp_pat
     assert any("CONTRADICTED" in e for e in result.errors)
 
 
-def test_missing_review_is_advisory_in_validator(tmp_path):
+def test_missing_review_is_visible_without_ci_warning(tmp_path):
     from ai_gene_review.validation.module_validator import validate_module_file
 
     path = tmp_path / "module.yaml"
@@ -320,7 +320,7 @@ def test_missing_review_is_advisory_in_validator(tmp_path):
     )
     assert result.is_valid
     assert result.function_conformance["counts"]["REVIEW_MISSING"] == 1
-    assert any("REVIEW_MISSING" in w for w in result.warnings)
+    assert not any("REVIEW_MISSING" in w for w in result.warnings)
 
 
 def test_family_representative_not_is_advisory(tmp_path):
@@ -361,3 +361,17 @@ def test_failed_go_adapter_is_cached_and_reported(tmp_path):
     )
     assert repeated["counts"]["ONTOLOGY_UNAVAILABLE"] == 1
     assert "Ontology unavailable" in repeated["rows"][0]["message"]
+
+
+def test_missing_participant_identifier_is_informational():
+    row = findings(
+        module(
+            participant={
+                "selector_type": "GENE",
+                "gene": {"preferred_term": "unidentified"},
+            }
+        ),
+        {},
+    )[0]
+    assert row["status"] == "PARTICIPANT_ID_MISSING"
+    assert row["severity"] == "info"

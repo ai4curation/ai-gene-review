@@ -102,7 +102,7 @@ def test_missing_grounding_or_review_is_reported(tmp_path, family, function, sta
         _module(family, function), family_reviews_dir=tmp_path
     )
     assert rows[0]["status"] == status
-    assert rows[0]["severity"] == "warning"
+    assert rows[0]["severity"] == ("warning" if status == "NO_FUNCTION_ID" else "info")
 
 
 def test_missing_function_assessment_does_not_inherit_reference_member(tmp_path):

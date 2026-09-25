@@ -303,13 +303,13 @@ def module_family_function_findings(
             elif not family_id:
                 verdict = (
                     "FAMILY_ID_MISSING",
-                    "warning",
+                    "info",
                     "The family has no identifier linking it to a curated family review.",
                 )
             elif path is None or not path.is_file():
                 verdict = (
                     "FAMILY_REVIEW_MISSING",
-                    "warning",
+                    "info",
                     f"No supported structured family review is available for {family_id}.",
                 )
             else:
