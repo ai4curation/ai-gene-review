@@ -215,3 +215,20 @@ P1/paragloboside-specific or general alpha-1,4-galactosyltransferase term.
 GO:0035250 UDP-galactosyltransferase activity was separately definition-checked
 and used for the P1 core reaction and the hexosyltransferase refinement. The
 LacCer-specific GO:0050512 is inappropriate for the paragloboside reaction.
+
+### Automated research execution and validation
+
+`just deep-research-falcon human A4GALT --fallback perplexity-lite` was launched
+concurrently with `just fetch-gene-pmids human A4GALT`, as required by the review
+workflow. An initial environment-install race was retried after installation
+completed. The actual provider run then terminated: Falcon timed out after
+600 seconds, and the automatic perplexity-lite fallback returned HTTP 401
+`insufficient_quota`. No provider research artifact was produced or invented.
+The manual literature synthesis and source checks are documented above; the
+review decisions rely on the primary evidence rather than a generated summary.
+
+`just validate human A4GALT` passed without review warnings after the final
+ontology refinement. The history record passed `just validate-history`, the
+updated review rendered with `just render human A4GALT`, and `git diff --check`
+passed. All 15 source assertion rows remain present; only reviewer-authored
+content changed.
