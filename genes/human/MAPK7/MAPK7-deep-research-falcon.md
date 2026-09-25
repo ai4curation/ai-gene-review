@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-24T03:39:25.036171'
-end_time: '2026-09-24T03:51:46.311699'
-duration_seconds: 741.28
+start_time: '2026-09-24T03:49:58.872295'
+end_time: '2026-09-24T04:01:10.607744'
+duration_seconds: 671.74
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -26,7 +26,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 27
+citation_count: 24
 artifact_count: 1
 artifact_sources:
   edison_answer_artifacts: 1
@@ -149,178 +149,175 @@ Include evidence where possible. We are interested in both experimental evidence
 
 # Human MAPK7/ERK5 (UniProt Q13164): functional-annotation research report
 
-## Executive conclusion
+## Executive summary
 
-The supplied identity is correct and unambiguous: **human MAPK7** encodes **mitogen-activated protein kinase 7**, commonly called **ERK5** or **BMK1**, corresponding to **UniProt Q13164**. The canonical product is an 816-amino-acid, approximately 98–102-kDa CMGC-family MAP kinase. Its defining architecture—an N-terminal protein-kinase domain plus an unusually long C-terminal regulatory/transcriptional region—matches the supplied InterPro kinase, MAPK, ATP-binding and MAPK-signature annotations. No evidence was found that the retrieved literature concerned a different gene or organism. (fernandez2021resumendetesis. pages 64-68, alrumayh2023theroleof pages 49-53)
+The requested identity is unambiguous: **human MAPK7 encodes mitogen-activated protein kinase 7**, conventionally called **ERK5** or **BMK1**, and corresponds to **UniProt Q13164**. The canonical protein is an 816-amino-acid conventional CMGC-family serine/threonine MAP kinase. Its N-terminal catalytic region and activation-loop **TEY** motif align with the supplied kinase-family/domain annotation; its unusually long C-terminal extension adds nuclear-localization/export, regulatory, and transcriptional-transactivation functions not present to the same extent in ERK1/2. No conflicting gene with a similar symbol was used in this report. (fernandez2021resumendetesis. pages 64-68, paudel2021themek5erk5pathway pages 1-2, pearson2018regulationoferk5 pages 9-13)
 
-Functionally, MAPK7 is best understood as a **dual kinase–transcriptional signaling protein**. MAP2K5/MEK5 activates its kinase domain; activated ERK5 phosphorylates protein substrates, particularly MEF2-family transcription factors, and its C-terminal region controls autophosphorylation, nuclear trafficking and transcriptional activation. Its best-established physiological role is mechanochemical and stress-responsive signaling in vascular endothelium, although it also operates in growth-factor responses, tissue development and context-dependent cancer adaptation. (nithianandarajahjones2015theroleand pages 41-44, paudel2021themek5erk5pathway pages 1-2, nithianandarajahjones2014theroleof pages 10-12)
+The best-supported primary annotation is: **MAPK7/ERK5 is a stimulus-regulated, proline-directed protein Ser/Thr kinase and kinase–transcriptional regulator that relays MEKK2/3–MEK5 signals to cytoplasmic and nuclear substrates, especially MEF2-dependent endothelial stress and mechanotransduction programs.** Its clearest indispensable physiological role is maintenance of endothelial survival, vascular development, and adult vascular integrity. (paudel2021themek5erk5pathway pages 1-2, tusa2023pathophysiologicalimpactof pages 4-6, paudel2021themek5erk5pathway pages 3-5)
 
-| Topic | Best-supported conclusion | Evidence type/model | Confidence/caveat |
+| Annotation category | Best-supported conclusion | Key evidence / experimental basis | Confidence or caveat |
 |---|---|---|---|
-| Identity | Human **MAPK7** encodes **ERK5/BMK1**, corresponding to **UniProt Q13164**; the canonical protein is **816 aa** and approximately 98–102 kDa. (fernandez2021resumendetesis. pages 64-68, alrumayh2023theroleof pages 49-53) | Human sequence annotation and literature concordance | **High.** No gene-symbol or organism ambiguity was identified; ERK5 and BMK1 are names for the same gene product. |
-| Catalytic function and specificity | ERK5 is an ATP-dependent protein Ser/Thr kinase: **ATP + protein-OH → ADP + phosphoprotein**. It preferentially phosphorylates Ser/Thr followed by Pro, while docking interactions and cellular context confer physiological specificity. Some reported sites are not Pro-directed. (nithianandarajahjones2015theroleand pages 41-44) | Biochemical classification, substrate studies and MAPK-family inference | **High** for kinase chemistry and Pro-directed preference; **moderate** when assigning individual cellular phosphosites without direct kinase assays. |
-| Activation loop | **MAP2K5/MEK5** is the direct activating MAP2K and dual-phosphorylates the ERK5 **TEY** activation loop. Most sources number the sites **Thr218/Tyr220**, whereas some use **Thr219/Tyr221**. (nithianandarajahjones2015theroleand pages 41-44, paudel2021themek5erk5pathway pages 1-2, fernandez2021resumendetesis. pages 68-72, miller2023modulationoferk5 pages 1-2) | Biochemical and cell-signaling studies; authoritative reviews | **High.** The numbering difference reflects sequence conventions and does not indicate distinct activation sites. |
-| Architecture and localization | ERK5 contains an N-terminal kinase domain, approximately residues 78–406, and an unusually long C-terminal regulatory tail containing proline-rich regions, an NLS, an NES and a transcriptional activation domain. Inactive ERK5 is commonly retained in a closed cytoplasmic state; activation and C-terminal phosphorylation can expose the NLS and promote nuclear entry. (ebri2019theroleof pages 16-20, fernandez2021resumendetesis. pages 64-68, alrumayh2023theroleof pages 49-53) | Domain mapping, mutagenesis and cell-localization studies | **High** for architecture; **high but context-dependent** for trafficking because activated ERK5 can remain cytoplasmic or membrane-associated. |
-| Canonical substrates and outputs | The best-established direct nuclear substrates are **MEF2A, MEF2C and MEF2D**; MEF2C Ser387 phosphorylation increases transcriptional activity. Other reported substrates or outputs include SAP1, c-MYC, c-FOS, SGK and p90RSK, whereas AKT–BCL2–BAD effects may be indirect. (nithianandarajahjones2015theroleand pages 41-44, fernandez2021resumendetesis. pages 72-77, nithianandarajahjones2014theroleof pages 10-12) | In-vitro kinase, reporter, perturbation and cell-signaling studies | **High** for MEF2 proteins; **moderate and context-specific** for the broader list because a downstream effect does not necessarily establish direct phosphorylation by ERK5. |
-| Endothelial shear signaling | Laminar shear can engage **PIEZO1 → Ca²⁺/CaMKII → MEKK3 → MEK5 → ERK5 → MEF2 → KLF2/KLF4**, supporting endothelial quiescence, antioxidant defenses and anti-inflammatory gene expression. (nithianandarajahjones2014theroleof pages 10-12) | Cultured endothelial cells and conditional mouse genetics for upstream mechanosensing components | **High** for the MEK5–ERK5–MEF2–KLF2/4 module; individual upstream connections and outputs may depend on vascular bed and flow pattern. |
-| VEGF non-nuclear branch | In human dermal microvascular endothelial cells, VEGF activated ERK5 without detectable C-terminal phosphorylation or nuclear translocation. ERK5 instead showed cytoplasmic or plasma-membrane localization and supported **AKT activity, survival and tubular morphogenesis**, unlike EGF-stimulated HeLa cells. (mondru2023vegfstimulatesactivation pages 1-2) | 2023 primary study using HDMECs, a HeLa-cell comparison and MEK5/ERK5 inhibitors | **Moderate–high.** The study supports context-dependent compartmentalization, but pharmacological perturbation cannot fully exclude inhibitor off-target effects. |
-| 2024 melanoma evidence | A proteogenomic study profiled **207 specimens**: 28 primary cutaneous, 81 acral, 28 mucosal and 27 metastatic melanomas, plus 43 nevi. In an independent **27-patient** anti-PD-1 cohort with **15 responders and 12 nonresponders**, higher MAPK7 activity was associated with T-cell signatures and response; A375-cell and xenograft experiments provided functional support. (xiang2024proteogenomicinsightsinto pages 20-22, xiang2024proteogenomicinsightsinto pages 1-2) | Human multi-omics and treatment cohorts; melanoma-cell/CD8⁺-T-cell coculture; mouse xenografts | **Moderate.** Human findings are associative and the validation cohort is small; functional models do not establish MAPK7 as a clinically validated predictive biomarker. |
-| Therapeutic status and inhibitor paradox | ERK5 remains a preclinical oncology and inflammation target; kinase inhibitors and bifunctional degraders are under investigation, but no relevant interventional clinical trial was retrieved. ATP-site inhibitors can induce ERK5 conformational opening, nuclear translocation and paradoxical C-terminal transcriptional activity, so kinase inhibition may not phenocopy MAPK7 depletion. (lochhead2020paradoxicalactivationof pages 1-2, miller2023modulationoferk5 pages 1-2) | Medicinal-chemistry review; inhibitor-resistant mutants, localization assays and transcriptional assays | **High** for paradoxical activation as a drug-development risk; **low clinical maturity**. Candidate agents must be evaluated separately for kinase inhibition, localization, TAD activity, degradation and off-target effects. |
+| Identity and architecture | Human **MAPK7** encodes **ERK5/BMK1** (UniProt **Q13164**), an 816-aa CMGC-family MAP kinase with an N-terminal kinase domain and unusually long regulatory C-terminal extension containing docking, nuclear-localization/export, and transcriptional-activation elements. | Concordant human sequence annotation, domain mapping, and biochemical literature; no conflicting same-symbol protein was identified. | **High.** Exact boundaries of some regulatory motifs vary among reports and isoforms. |
+| Catalytic function and specificity | ERK5 catalyzes ATP-dependent transfer of phosphate to serine or threonine residues in protein substrates. Like conventional MAPKs, it preferentially recognizes **proline-directed Ser/Thr-Pro sites**, while docking interactions and cellular localization provide additional specificity. | Protein-kinase family chemistry, ERK5 biochemical assays, conserved MAPK catalytic motifs, and common-docking-region studies. | **High** for kinase chemistry; **moderate** for a universal sequence consensus because docking and context strongly influence substrate selection. |
+| Upstream activation | The core cascade is **MEKK2/MEKK3 → MEK5/MAP2K5 → ERK5**. MEK5 directly activates ERK5 by dual phosphorylation of its activation-loop **TEY motif**; activated ERK5 then autophosphorylates sites in its C-terminal tail. | Kinase assays, phosphosite analysis, dominant-negative/constitutively active constructs, pathway-complex studies, and genetic disruption of MEK5 or MEKK2/3. | **High.** MEK5 is the established direct MAP2K; which MAP3K dominates depends on stimulus and cell type. |
+| Localization and shuttling | Inactive ERK5 is predominantly cytoplasmic and conformationally restrained. TEY phosphorylation and C-terminal autophosphorylation promote an open conformation, release from HSP90–CDC37, exposure of the NLS, and nuclear accumulation; an NES supports return or retention in the cytoplasm. | Fractionation, microscopy, NLS/NES deletion constructs, phosphomutants, inhibitor-binding studies, and analysis of C-terminal truncations. | **Moderate–high.** Localization is dynamic, isoform- and context-dependent; kinase inhibitors can drive nuclear entry without physiological activation. |
+| Direct and established outputs | **MEF2C and MEF2D** are well-supported ERK5-responsive transcription factors. ERK5 also regulates AP-1-associated factors such as c-JUN, c-FOS, and FRA-1, while its C-terminal transactivation domain can enhance transcription independently of substrate phosphorylation. | In-vitro phosphorylation, reporter assays, mutagenesis, nuclear-translocation studies, and genetic/pharmacological perturbation. | **High** for MEF2 regulation; **moderate** for some proposed targets because direct phosphorylation is not always separated from indirect transcriptional effects. |
+| KLF2/KLF4 programs | In endothelial cells, flow-activated ERK5–MEF2 signaling induces **KLF2 and KLF4**, supporting quiescent, anti-inflammatory, anti-apoptotic, barrier-protective, and anti-EndMT programs. | Laminar-flow experiments, MEK5/ERK5 perturbation, MEF2 dependence, KLF-expression assays, and endothelial functional studies. | **High** for pathway-level regulation; these transcription factors should not be labeled direct ERK5 phosphorylation substrates without specific evidence. |
+| Endothelial physiology | ERK5 is a major mechanotransduction and stress-response kinase in vascular endothelium, coupling laminar shear and mitochondrial ROS to survival, antioxidant signaling, reduced permeability, and vascular homeostasis. | Cultured endothelial flow systems, dominant-negative and constitutively active pathway components, apoptosis/barrier assays, and conditional mouse genetics. | **High**, but effects may differ under disturbed flow, disease, or cell-specific conditions. |
+| Knockout phenotypes | Global or endothelial **Erk5** loss in mice disrupts cardiovascular development, vessel maturation, and endothelial integrity, causing embryonic death around **E9.5–E10.5**. Adult endothelial deletion causes leakage, hemorrhage, endothelial apoptosis, and death within approximately **2–4 weeks**; cardiomyocyte-specific loss is much less severe. | Independent germline and conditional knockout studies with developmental, histological, and survival analyses. | **High.** Severe genetic-loss phenotypes need not be reproduced by short-term catalytic inhibition because ERK5 also has noncatalytic functions. |
+| Recent finding: oxidative stress | A 2023 synthesis highlighted ERK5 as a recurring antioxidant-response node linking ROS and shear stress to **KLF2/KLF4 and NRF2**, while emphasizing that its effects can be protective or pathogenic depending on context. | Integration of endothelial, cardiovascular, respiratory, hematopoietic, renal, and nervous-system experiments. | **Moderate–high.** This is a mechanistic literature synthesis rather than a single quantitative clinical study. |
+| Recent finding: pluripotent stem cells | A 2024 human pluripotent-stem-cell study found that ERK5 sustains autocrine **NODAL/TGF-β, WNT, FGF, and BMP** signaling needed for balanced lineage specification. Inhibition or MAPK7 knockdown reduced NANOG-associated programs and biased differentiation toward ectoderm; recombinant NODAL partially rescued selected effects. | H1 human embryonic stem cells, two inhibitors, shRNA, RNA-seq time courses, directed differentiation, rescue experiments, and teratoma assays; most assays used three independent experiments. | **Moderate.** Primarily in-vitro evidence; limited replicate numbers constrain quantitative generalization. |
+| Recent finding: cartilage mechanobiology | A 2024 cultured-chondrocyte study reported that low fluid shear stress (**≤2 dyn/cm²**) protected against IL-1β-induced apoptosis through suppression of miR-143-3p and activation of an **ERK5–KLF4** axis. | Flow cytometry, Hoechst staining, immunoblotting, qPCR, miRNA mimics/inhibitors, ERK5 inhibition, and KLF4 overexpression. | **Moderate.** Directional mechanistic evidence is stronger than quantitative or clinical evidence; in-vivo replication is needed. |
+| Recent finding: cancer systems | Recent work supports context-dependent roles in tumor metabolism, drug adaptation, and immune state, including an ERK5–PFKFB3 glycolytic vulnerability in pediatric diffuse midline glioma and an association of MAPK7–NF-κB signaling with T-cell recruitment and anti-PD-1 sensitivity in a **207-specimen** pan-melanoma study. | Genetic/pharmacological tumor models, metabolic assays, multi-omics profiling, and immunotherapy-cohort analysis. | **Moderate.** These findings support biomarkers and hypotheses, not an approved MAPK7-directed therapy; association does not prove therapeutic benefit from inhibition. |
+| Translational status and inhibitor paradox | MAPK7 is a **preclinical**, not clinically validated, drug target. Research compounds include BIX02188/BIX02189, XMD8-92, ERK5-IN-1, AX15836, JWG-071, and BAY-885. Several ATP-site inhibitors paradoxically expose the NLS, drive nuclear localization, and activate the C-terminal transcriptional domain despite blocking kinase activity. | Target-engagement assays, inhibitor-resistant mutants, structural/conformational studies, transcriptional reporters, and comparisons of chemical inhibition with genetic ablation. | **High** for the paradox; **low clinical maturity**. Off-target activity is common, kinase inhibition may not phenocopy MAPK7 loss, and no confirmed interventional trial directly targeting MAPK7/ERK5 was identified. |
 
 
-*Table: Evidence-tier summary of human MAPK7/ERK5 identity, catalytic function, signaling, localization, recent disease evidence and translational limitations. Caveats distinguish direct biochemical support from context-dependent, preclinical or associative findings.*
+*Table: Compact evidence-based annotation of human MAPK7/ERK5 (Q13164), spanning molecular function, pathway position, localization, physiological roles, recent findings, and translational limitations.*
 
-## 1. Identity, sequence and domain organization
+## 1. Identity, family, and structural organization
 
-Human ERK5 and BMK1 were initially identified independently but were subsequently shown to be the same MAPK7 gene product. The canonical human protein contains **816 residues**, with a predicted mass near **98 kDa** but an often reported apparent mass near **102 kDa**. MAPK7 has six coding exons and an approximately 2,451-bp open reading frame. (fernandez2021resumendetesis. pages 64-68, alrumayh2023theroleof pages 49-53)
+Human MAPK7/ERK5 is reported as an approximately 98–110-kDa, 816-residue protein. Its N-terminal half contains the protein-kinase domain, MEK5-interaction region, oligomerization determinants, MAPK common-docking region, and activation-loop TEY sequence. Reported boundaries vary somewhat by source, but a representative mapping places the kinase region around residues 78–406, the common-docking region around 350–358, and the activation motif around residues 218–221 depending on numbering convention. The important conserved fact is dual phosphorylation of the threonine and tyrosine in the TEY motif. (fernandez2021resumendetesis. pages 64-68, paudel2021themek5erk5pathway pages 1-2, pearson2018regulationoferk5 pages 9-13)
 
-The experimentally and bioinformatically supported architecture is:
+The approximately 400-residue C-terminal extension distinguishes ERK5 from most conventional MAPKs. It contains proline-rich regions, an MEF2-interacting region, a nuclear-localization signal, a nuclear-export element, and a transcriptional activation domain. The tail is both regulatory and functional: it can restrain the kinase in the inactive conformation, becomes autophosphorylated after activation, controls nucleocytoplasmic shuttling, and can stimulate transcription. Thus, MAPK7 is not adequately described as only an ATP-site kinase. (fernandez2021resumendetesis. pages 68-72, pearson2018regulationoferk5 pages 9-13, monti2022clinicalsignificanceand pages 1-2)
 
-- **Residues 1–77:** N-terminal cytoplasmic-targeting region.
-- **Approximately 78–406:** CMGC/MAPK protein-kinase domain, including an MEK5-binding region, oligomerization determinants, the activation-loop **TEY** motif and a common-docking region.
-- **Approximately 434–465 and 578–701:** proline-rich regions that can mediate interactions with SH3-domain proteins.
-- **Approximately 505–539:** nuclear-localization sequence.
-- **Approximately 664–789:** C-terminal transcriptional activation domain.
-- **Approximately 771–816:** nuclear-export region, overlapping the distal regulatory tail. (fernandez2021resumendetesis. pages 64-68, fernandez2021resumendetesis. pages 68-72, alrumayh2023theroleof pages 49-53)
+## 2. Primary molecular function and catalytic reaction
 
-This architecture distinguishes ERK5 from ERK1/2 and most conventional MAPKs: its roughly 400-residue C-terminal extension supplies trafficking, protein-interaction and transcriptional functions in addition to the conserved kinase activity. A 2023 medicinal-chemistry review reported 66% kinase-domain sequence identity with ERK2, while emphasizing the distinctive ERK5 tail. Miller et al., published 1 April 2023, *Journal of Medicinal Chemistry*, DOI: [10.1021/acs.jmedchem.3c00072](https://doi.org/10.1021/acs.jmedchem.3c00072). (miller2023modulationoferk5 pages 1-2)
+### Catalytic activity
 
-## 2. Primary biochemical function
+ERK5 catalyzes the standard protein-kinase reaction:
 
-### 2.1 Catalyzed reaction
+**ATP + protein-L-serine/threonine → ADP + phosphoprotein-L-serine/threonine.**
 
-ERK5 is an ATP-dependent protein serine/threonine kinase, EC 2.7.11.24. Its net reaction is:
+As a conventional MAPK, it preferentially phosphorylates serine or threonine followed by proline, but a short sequence motif is not sufficient to define physiological substrates. Specificity also depends on MAPK docking interactions, scaffolding, stimulus, expression state, and whether ERK5 is cytoplasmic or nuclear. The common-docking region and substrate docking motifs therefore help discriminate physiological partners from peptides that can merely be phosphorylated in vitro. (fernandez2021resumendetesis. pages 64-68, drew2012mek5erk5pathwaythe pages 2-4)
 
-**ATP + protein serine/threonine-OH → ADP + protein serine/threonine-O-phosphate.**
+### Activation pathway
 
-Like other classical MAPKs, ERK5 preferentially phosphorylates **Pro-directed Ser/Thr sites**, minimally represented as S/T-P. However, a short linear motif is insufficient to predict physiological substrates: kinase–substrate docking, localization, scaffold interactions, activation duration and competing pathways determine selectivity in cells. Some ERK5-associated non-Pro-directed phosphosites have been reported, but these require particular caution because another kinase may be responsible. (nithianandarajahjones2015theroleand pages 41-44)
+The core module is:
 
-### 2.2 Activation mechanism
+**MEKK2/MEKK3 → MEK5/MAP2K5 → ERK5/MAPK7.**
 
-The canonical three-tier module is:
+MEK5 is the established direct MAP2K for ERK5. Activated MEK5 phosphorylates both residues of ERK5’s TEY activation loop; this induces full catalytic activation and permits C-terminal autophosphorylation. PB1-domain-mediated assembly contributes to specificity in the upstream MEKK2/3–MEK5 complex. Which MAP3K dominates varies with stimulus and cellular context. Reported activators include EGF and other mitogens, cytokines, oxidative and osmotic stress, and fluid shear stress. Ras participation is context-dependent and should not be treated as universally required. (paudel2021themek5erk5pathway pages 1-2, fernandez2021resumendetesis. pages 68-72, drew2012mek5erk5pathwaythe pages 2-4)
 
-**MEKK2 or MEKK3 → MAP2K5/MEK5 → MAPK7/ERK5.**
+### Substrates and transcriptional outputs
 
-MEKK2/3 phosphorylate MEK5 at Ser311/Thr315, facilitated by pathway-specific PB1-domain interactions. MEK5 is the only firmly established MAP2K that directly and selectively activates ERK5. MEK5 then dual-phosphorylates the ERK5 activation-loop TEY motif. Most human literature numbers these sites **Thr218 and Tyr220**; some publications use **Thr219 and Tyr221**, reflecting sequence-numbering conventions rather than a different motif. Dual phosphorylation is required for full activity; Thr phosphorylation can precede and facilitate Tyr phosphorylation. (nithianandarajahjones2015theroleand pages 41-44, paudel2021themek5erk5pathway pages 1-2, fernandez2021resumendetesis. pages 72-77, fernandez2021resumendetesis. pages 68-72)
+**MEF2C and MEF2D** are among the best-supported ERK5-responsive nuclear factors. ERK5-dependent MEF2 signaling promotes expression of genes such as *KLF2*, *KLF4*, and *JUN* in appropriate contexts. AP-1-associated proteins and transcriptional regulators—including c-JUN, c-FOS, FRA-1, c-MYC, and Sap1a—have also been placed downstream, although the literature does not always distinguish direct ERK5 phosphorylation from indirect transcriptional regulation. KLF2 and KLF4 should consequently be annotated principally as pathway outputs, not automatically as direct phosphosubstrates. (paudel2021themek5erk5pathway pages 3-5, pearson2018regulationoferk5 pages 13-18, drew2012mek5erk5pathwaythe pages 5-7)
 
-Activation-loop phosphorylation induces conformational opening and permits C-terminal autophosphorylation. Reported tail sites include Ser421, Ser433, Ser496, Ser731, Thr733, Thr723 and Ser760/764/766, although site occupancy and function vary by stimulus and model. Tail phosphorylation weakens inhibitory N-/C-terminal interactions, regulates HSP90–CDC37 association, exposes the NLS and enhances transcriptional activity. (paudel2021themek5erk5pathway pages 1-2, fernandez2021resumendetesis. pages 72-77)
+ERK5 also possesses a C-terminal transcriptional activation domain. Consequently, gene regulation can involve both phosphorylation of other transcription factors and kinase-independent or partly kinase-independent action of ERK5’s own tail. This dual activity explains why ATP-site inhibition and complete MAPK7 depletion can produce different phenotypes. (monti2022clinicalsignificanceand pages 1-2, lochhead2020paradoxicalactivationof pages 2-3)
 
-### 2.3 Substrates and specificity of output
+## 3. Subcellular localization
 
-The strongest direct-substrate evidence concerns **MEF2A, MEF2C and MEF2D**. ERK5 phosphorylation of MEF2C at Ser387 increases MEF2 transcriptional activity and can induce genes such as *JUN*. ERK5 also phosphorylates or regulates SAP1a, c-FOS, c-MYC, SGK and p90RSK in particular systems. Reports connecting ERK5 to AKT, BCL2 and BAD should not automatically be interpreted as direct phosphorylation: these frequently describe pathway outputs rather than purified-kinase substrate relationships. (nithianandarajahjones2015theroleand pages 41-44, fernandez2021resumendetesis. pages 72-77, nithianandarajahjones2014theroleof pages 10-12)
+MAPK7 acts in both the **cytoplasm and nucleus**; it is neither secreted nor a membrane transporter. In resting cells, its C-terminal tail folds against the kinase region, and HSP90–CDC37 contributes to cytoplasmic retention. MEK5-dependent TEY phosphorylation and subsequent C-terminal autophosphorylation favor an open conformation, release from chaperones, exposure of the NLS, and nuclear accumulation. The NES supports export or cytoplasmic retention. (paudel2021themek5erk5pathway pages 1-2, fernandez2021resumendetesis. pages 68-72)
 
-Accordingly, the most defensible concise annotation is: **MEK5-activated, Pro-directed Ser/Thr kinase and transcriptional regulator whose primary established nuclear substrates are MEF2-family factors.**
+In the cytoplasm, ERK5 participates in survival and cytoskeletal or adhesion-associated signaling. In the nucleus, it phosphorylates transcriptional regulators and engages its C-terminal transactivation domain. Localization is dynamic and context-dependent; splice isoforms lacking parts of the tail may alter shuttling. Importantly, ATP-site inhibitors can themselves expose the NLS and drive nuclear entry, so nuclear ERK5 is not invariably evidence of normal upstream MEK5 activation. (fernandez2021resumendetesis. pages 64-68, cook2020smallmoleculeerk5 pages 9-11, lochhead2020paradoxicalactivationof pages 1-2)
 
-## 3. Subcellular localization and where function occurs
+## 4. Principal pathway and physiological function
 
-ERK5 is not confined to one compartment. In many unstimulated cells, intramolecular interaction between its N- and C-terminal portions produces a closed conformation in which export/cytoplasmic-retention signals predominate; ERK5 is therefore mainly cytoplasmic and can associate with HSP90–CDC37. MEK5-dependent activation and C-terminal phosphorylation can open ERK5, expose its NLS and promote nuclear import. In the nucleus, ERK5 phosphorylates transcription factors and uses its own C-terminal transactivation domain to regulate gene expression. Dephosphorylation restores the closed/export-competent state; DUSP6/MKP3 has been reported to dephosphorylate ERK5, although phosphatase usage is context-dependent. (ebri2019theroleof pages 16-20, paudel2021themek5erk5pathway pages 1-2, fernandez2021resumendetesis. pages 72-77)
+### Endothelial mechanotransduction and vascular homeostasis
 
-This canonical cytoplasm-to-nucleus model is not universal. In **human dermal microvascular endothelial cells**, VEGF activated the Thr218/Tyr220 kinase loop without detectable C-terminal phosphorylation or nuclear accumulation. Activated ERK5 instead remained more cytoplasmic/plasma-membrane associated and supported AKT activity, survival and tubular morphogenesis. The same study contrasted this response with EGF-treated HeLa cells, where C-terminal phosphorylation and nuclear trafficking were evident. Mondru et al., published 22 March 2023, *Cells* 12:967, DOI: [10.3390/cells12060967](https://doi.org/10.3390/cells12060967). (mondru2023vegfstimulatesactivation pages 1-2)
+The most compelling functional annotation is in vascular endothelium. Laminar shear stress and associated mitochondrial ROS activate MEK5–ERK5. ERK5–MEF2 signaling induces KLF2/KLF4-centered programs that favor endothelial quiescence, antioxidant capacity, apoptosis resistance, barrier integrity, and suppression of inflammatory and endothelial-to-mesenchymal-transition programs. NRF2 is another recurrent antioxidant output. (tusa2023pathophysiologicalimpactof pages 4-6, paudel2021themek5erk5pathway pages 3-5, wen2024boneandextracellular pages 15-16)
 
-Thus, localization is an integral part of functional annotation: **nuclear ERK5 principally regulates transcription, whereas cytoplasmic or membrane-associated ERK5 can organize survival and morphogenetic signaling.** Activation-loop phosphorylation alone does not prove nuclear ERK5 activity.
+Genetics establishes that this role is not merely correlative. Global *Erk5* or *Mek5* knockout in mice disrupts heart and vessel development, angiogenesis, vessel maturation, and endothelial architecture, causing embryonic death at approximately **E9.5–E10.5**, with some reports extending the range to E11.5. Endothelial-selective deletion substantially reproduces the phenotype, whereas cardiomyocyte-selective deletion is much less severe. In adult mice, inducible loss causes vascular leakage, hemorrhage, extensive endothelial apoptosis, and death within approximately **2–4 weeks**. These observations identify the endothelium—not a generic proliferation phenotype—as the strongest site of essential ERK5 function. (paudel2021themek5erk5pathway pages 3-5, wen2024boneandextracellular pages 5-6, drew2012mek5erk5pathwaythe pages 5-7)
 
-## 4. Principal pathways and biological processes
+### Survival, growth, and differentiation
 
-### 4.1 Endothelial mechanotransduction and vascular homeostasis
+ERK5 can phosphorylate or regulate BAD, SGK, FOXO-associated pathways, cyclin D1, and MEF2 programs, thereby influencing survival, cell-cycle entry, migration, and differentiation. However, these effects are conditional: dominant-negative or inhibitor experiments have shown strong effects in some endothelial or cancer models, whereas other fibroblast or KRAS/BRAF-mutant systems show little sustained proliferation dependence. A careful annotation is therefore that ERK5 is a **stress-adaptive and fate-modulating signaling node**, not a universally required mitogenic kinase. (paudel2021themek5erk5pathway pages 3-5, drew2012mek5erk5pathwaythe pages 5-7)
 
-The most coherent physiological pathway is the response to laminar fluid shear stress. A supported mechanistic sequence is:
+### Oxidative stress
 
-**shear stress → PIEZO1 opening → Ca²⁺ influx → CaMKII → MEKK3 → MEK5 → ERK5 → MEF2 → KLF2/KLF4.**
+A 2023 review synthesized evidence that H₂O₂ and other ROS activate ERK5 through mechanisms involving calcium, SRC-family kinases, MEKK2/MEK5, receptor tyrosine kinases, and other context-specific components. ERK5 commonly promotes antioxidant responses through KLF2/KLF4 and NRF2, particularly in mechanically stressed endothelium. Nevertheless, protective versus pathogenic effects depend on tissue, dose, timing, and disease state. **Tusa et al., published April 2023**, DOI: https://doi.org/10.3390/cells12081154. (tusa2023pathophysiologicalimpactof pages 4-6)
 
-KLF2/KLF4 then promote endothelial quiescence and vasoprotection, including increased eNOS and thrombomodulin, suppression of NF-κB-dependent inflammatory programs, and induction of NRF2-associated antioxidant genes such as *HMOX1/HO-1* and *NQO1*. VEGF-A/VEGFR2 also engages endothelial ERK5, but, as noted above, may direct it toward an AKT-survival branch rather than nuclear MEF2 signaling. (nithianandarajahjones2014theroleof pages 10-12, mondru2023vegfstimulatesactivation pages 1-2)
+## 5. Disease relevance and current applications
 
-Genetic disruption of ERK5 or pathway components in mice causes severe cardiovascular-developmental and vascular-integrity defects, supporting a nonredundant in-vivo role. Nevertheless, individual upstream mechanosensors and downstream genes vary by vascular bed, developmental stage and flow regime. The authoritative 2021 review interprets endothelial mechanotransduction as ERK5's best-established physiological function and warns that systemic ERK5 inhibition could compromise protective stress responses. Paudel et al., July 2021, *International Journal of Molecular Sciences* 22:7594, DOI: [10.3390/ijms22147594](https://doi.org/10.3390/ijms22147594). (paudel2021themek5erk5pathway pages 1-2)
+### Cancer
 
-### 4.2 Growth-factor and stress signaling
+ERK5 expression or activity has been associated with proliferation, EMT, invasion, angiogenesis, DNA-damage tolerance, and therapy adaptation in several cancers. In glioblastoma, a kinome-siRNA study identified ERK5 as a determinant of temozolomide response; ERK5 targeting impaired repair/survival after temozolomide, while higher expression correlated with higher tumor grade and poorer survival. This is preclinical target validation, not evidence of clinical efficacy. **Carmell et al., published February 2021**, DOI: https://doi.org/10.3390/cancers13050944. (carmell2021identificationandvalidation pages 7-9)
 
-Documented inputs include EGF, VEGF, FGF, PDGF, neurotrophins, serum, cytokines such as IL-6, high osmolarity, oxidative stress, hypoxia, ischemia and mechanical stress. Upstream routing is stimulus- and cell-specific, but convergence on MEK5 distinguishes canonical ERK5 activation. (nithianandarajahjones2015theroleand pages 41-44, fernandez2021resumendetesis. pages 68-72)
+Evidence is not uniformly oncogenic. Some ERK5-amplified or RAS/RAF-mutant cells are not addicted to ERK5 for baseline proliferation, and transient knockdown effects may reflect adaptation. Open Targets lists literature-supported MAPK7 associations with cancer and breast carcinoma, but the reported aggregate association scores are modest (approximately **0.11–0.14**) and should not be interpreted as clinical actionability. (OpenTargets Search: -MAPK7, paudel2021themek5erk5pathway pages 3-5)
 
-ERK5-dependent KLF2/4 and NRF2 programs frequently support antioxidant adaptation and survival. This can be beneficial in normal vascular, bone, cartilage and muscle tissue exposed to mechanical or oxidative stress, but the same stress-tolerance circuitry may allow cancer cells to survive therapy. Consequently, “ERK5 activation” is not intrinsically beneficial or oncogenic; its significance depends on cell type, compartment, stimulus and duration. (paudel2021themek5erk5pathway pages 1-2)
+### Therapeutic-inhibitor development
 
-### 4.3 Cancer and therapy adaptation
+Common research compounds include MEK5 inhibitors **BIX02188/BIX02189** and ERK5-directed compounds **XMD8-92, ERK5-IN-1/XMD17-109, AX15836, JWG-071, BAY-885**, and related analogues. XMD8-92 has important bromodomain and other off-target activity; other series can affect LRRK2 or additional kinases. These molecules are useful probes only when target engagement, off-targets, and ERK5 transcriptional activity are measured separately. (fernandez2021resumendetesis. pages 77-80, cook2020smallmoleculeerk5 pages 9-11)
 
-ERK5 has been implicated in proliferation, survival, migration, epithelial–mesenchymal transition, angiogenesis and resistance to RAF–MEK–ERK1/2-directed therapy. However, these claims are not equally secure. MAPK7 amplification or pathway activation does not invariably create dependence on ERK5 kinase activity, and selective kinase inhibition often fails to phenocopy MAPK7 depletion. OpenTargets lists literature-supported associations with cancer and breast carcinoma, but the aggregate association scores are modest—approximately 0.11–0.14 in the retrieved records—and do not establish causal oncogenic addiction. (OpenTargets Search: -MAPK7)
+A major expert warning is **paradoxical activation**. Binding of several ATP-site inhibitors—including ERK5-IN-1-related compounds, AX15836, and BAY-885—to the kinase domain can trigger conformational opening, nuclear translocation, and C-terminal transcriptional activation despite suppression of catalytic activity. Selective inhibitors may therefore fail to phenocopy genetic ablation and can potentially stimulate part of the pathway they were intended to block. The authoritative mechanistic study was published in **Nature Communications in March 2020**, DOI: https://doi.org/10.1038/s41467-020-15031-3. (cook2020smallmoleculeerk5 pages 9-11, lochhead2020paradoxicalactivationof pages 2-3, lochhead2020paradoxicalactivationof pages 1-2)
 
-## 5. Recent developments, 2023–2024
+The clinical-trial search retrieved **no relevant interventional study directly targeting MAPK7/ERK5**. TG02 has entered clinical development but is a broad multikinase inhibitor and cannot validate ERK5 as its operative human target. Accordingly, MAPK7 remains a **preclinical therapeutic target**, with no approved MAPK7-selective drug or demonstrated real-world ERK5-directed treatment implementation identified. (fernandez2021resumendetesis. pages 77-80, cook2020smallmoleculeerk5 pages 3-5)
 
-### Compartment-specific endothelial signaling—2023
+## 6. Recent developments, 2023–2024
 
-Mondru et al. refined the canonical model by showing that VEGF-stimulated ERK5 can remain extranuclear and facilitate AKT signaling in HDMECs. This provides a mechanistic explanation for why ERK5 activation-loop phosphorylation can yield different outputs under VEGF and EGF stimulation. It also argues that phospho-TEY immunoblotting alone is an incomplete biomarker: C-terminal phosphorylation, localization and downstream output should also be measured. (mondru2023vegfstimulatesactivation pages 1-2)
+### Human pluripotent stem-cell fate—2024
 
-### Catalytic-independent biology and drug design—2023
+Song et al. used H1 human pluripotent stem cells, two ERK5 inhibitors, MAPK7 shRNA, RNA sequencing, directed differentiation, rescue experiments, and teratoma assays. ERK5 disruption reduced NANOG-associated programs and expression of autocrine NODAL/TGF-β, WNT, FGF, and BMP components, suppressed mesoderm/endoderm specification, and favored ectodermal markers. Recombinant NODAL partially rescued NANOG and selected fate defects. Most reported experiments used **three independent measurements**; more than 90% of cells remained NANOG-positive after two days under maintenance conditions, and treated cultures retained teratoma-forming ability after five passages. These results support a role in balancing autocrine mitogenic signals rather than simply maintaining viability. **Published September 2024**, DOI: https://doi.org/10.1016/j.stemcr.2024.07.007. Limitations include predominantly in-vitro evidence, small replicate numbers, and dependence on pharmacological perturbation despite supporting shRNA experiments. (song2024erk5promotesautocrine pages 2-5, song2024erk5promotesautocrine pages 5-7)
 
-Recent expert analyses emphasize that ERK5 is not merely a kinase. The C-terminal TAD, scaffolding behavior and trafficking can remain biologically active when catalytic activity is inhibited. The 2023 medicinal-chemistry perspective therefore evaluated ATP-site inhibitors alongside bifunctional degraders intended to remove the entire protein. Miller et al., 1 April 2023, DOI: [10.1021/acs.jmedchem.3c00072](https://doi.org/10.1021/acs.jmedchem.3c00072). (miller2023modulationoferk5 pages 1-2)
+### Cartilage mechanobiology—2024
 
-### Melanoma immunobiology—2024
+Cultured chondrocytes exposed to low fluid shear stress (**≤2 dyn/cm²**) were protected from IL-1β-induced apoptosis. miR-143-3p mimics/inhibitors, ERK5 inhibition, and KLF4 overexpression supported a model in which low shear suppresses miR-143-3p and activates an ERK5–KLF4 protective axis. **Published October 2024**, DOI: https://doi.org/10.1186/s13018-024-05140-w. The evidence is mechanistically suggestive but remains cellular; the retrieved report did not provide sufficient sample-size or effect-size detail for clinical extrapolation. (zhao2024lowshearstress pages 1-2)
 
-A 2024 pan-melanoma proteogenomic study analyzed **207 specimens**: 28 primary cutaneous, 81 acral, 28 mucosal and 27 metastatic melanomas plus 43 nevi. Modality-specific datasets included whole-exome sequencing for 188 specimens, transcriptomics for 114, proteomics for all 207 and phosphoproteomics for 139. The study associated increased MAPK7–NF-κB signaling with T-cell recruitment and anti-PD-1 sensitivity. Xiang et al., July 2024, *Cell Discovery*, DOI: [10.1038/s41421-024-00688-7](https://doi.org/10.1038/s41421-024-00688-7). (xiang2024proteogenomicinsightsinto pages 2-4, xiang2024proteogenomicinsightsinto pages 1-2)
+### Melanoma proteogenomics—2024
 
-The independent anti-PD-1 cohort contained **27 stage-IV patients**, including 15 responders and 12 nonresponders. Response was associated with CD4/CD8 signatures, CD8 immunohistochemical enrichment, higher inferred MAPK7 activity and MAPK/NF-κB-associated chemokines. CCL5, CXCL4 and CCL4 correlated with MAPK7 activity and NF-κB2 abundance. In A375 melanoma-cell/CD8 T-cell cocultures, MAPK7 overexpression increased CCL4, CCL8 and CXCL4 and produced stronger CD8 IFNγ activation; MAPK7-knockdown xenografts were insensitive to PD-1 blockade. These experiments provide functional support, but the patient cohort remains small and biomarker performance has not been prospectively validated. (xiang2024proteogenomicinsightsinto pages 20-22)
+A multi-omics study analyzed **207 treatment-naïve specimens**: 28 primary cutaneous melanomas, 81 acral melanomas, 28 mucosal melanomas, 27 metastatic melanomas, and 43 nevi. MAPK7–NF-κB upregulation was associated with increased T-cell recruitment and greater anti-PD-1 sensitivity in an independent treatment cohort. This supports MAPK7 as a potential immune-state biomarker, but does not show that pharmacological ERK5 inhibition would improve immunotherapy; indeed, inhibition could oppose a T-cell-recruiting state. **Published July 2024**, DOI: https://doi.org/10.1038/s41421-024-00688-7.
 
-Importantly, these melanoma findings complicate a simple “inhibit ERK5 in cancer” strategy: in some immune contexts, MAPK7 activity may support lymphocyte recruitment and immunotherapy response. Tumor-intrinsic growth effects and immune-microenvironment effects therefore need separate evaluation.
+### Other emerging directions
 
-## 6. Applications and translational status
+Recent work has explored ERK5-dependent metabolic adaptation in pediatric diffuse midline glioma, computational dual ERK1/ERK5 inhibitors, and network-based breast-cancer drug combinations. These remain preclinical or computational applications. Their principal value is hypothesis generation and identification of combination vulnerabilities, not evidence for an established therapy.
 
-Current applications are primarily **research and preclinical**:
+## 7. Evidence-weighted expert assessment
 
-1. **Mechanotransduction marker and perturbation node:** phospho-ERK5, C-terminal phosphorylation, localization and KLF2/KLF4 output are used to study endothelial responses to flow.
-2. **Cancer resistance research:** ERK5 is investigated as a bypass or stress-adaptation pathway during RAF, MEK or ERK1/2 inhibition.
-3. **Medicinal chemistry:** ATP-competitive ERK5 inhibitors, MEK5 inhibitors and ERK5-targeted degraders are being developed and compared.
-4. **Candidate biomarker development:** MAPK7 activity, localization or pathway signatures are being explored in cancer prognosis and immunotherapy stratification, but none is clinically validated.
+1. **High-confidence annotation:** ATP-dependent, proline-directed Ser/Thr MAP kinase in the MEKK2/3–MEK5–ERK5 cascade, with an unusual C-terminal transcriptional-regulatory tail.
+2. **Best-established direct pathway output:** MEF2-family regulation; KLF2/KLF4 and NRF2 are strong downstream programs, especially under endothelial flow and oxidative stress.
+3. **Primary cellular site of action:** dynamically between cytoplasm and nucleus; the decisive physiological evidence is in vascular endothelial cells.
+4. **Strongest in-vivo function:** cardiovascular development and lifelong endothelial survival/barrier integrity, supported by severe germline and conditional knockout phenotypes.
+5. **Disease interpretation:** cancer roles are real but heterogeneous and often concern stress adaptation, microenvironment, or treatment resistance rather than universal tumor-cell proliferation.
+6. **Translational maturity:** low. Current inhibitors are research-stage, frequently have off-targets, and may paradoxically activate nuclear ERK5 transcription. Complete protein degradation or strategies that inhibit both kinase and C-terminal functions may better reproduce genetic loss, but safety concerns follow from ERK5’s essential vascular role.
 
-The clinical-trial search retrieved no relevant interventional trial of a selective MAPK7/ERK5-directed therapy. Consequently, ERK5 should not presently be described as an established clinical target or a routinely actionable biomarker.
+## Conclusion
 
-## 7. Major controversy: kinase inhibition versus whole-protein function
-
-A decisive mechanistic warning came from Lochhead et al. in *Nature Communications* (March 2020). Using ERK5-IN-1/Compound 26 and kinase-active inhibitor-resistant ERK5 mutants, they demonstrated that direct ATP-site inhibitor binding can induce a conformational change, nuclear translocation and **paradoxical activation of the C-terminal transcriptional domain**. DOI: [10.1038/s41467-020-15031-3](https://doi.org/10.1038/s41467-020-15031-3). (lochhead2020paradoxicalactivationof pages 1-2)
-
-This explains why pharmacological kinase inhibition, catalytic-dead mutation, RNA interference and gene deletion can produce different phenotypes. It also establishes recommended assay practice: an ERK5-directed compound should be evaluated for catalytic inhibition, target engagement, selectivity, C-terminal phosphorylation, nuclear localization, TAD-dependent transcription and total-protein degradation—not simply phospho-substrate reduction. Degraders may theoretically address kinase-independent functions, but their selectivity, tissue effects and vascular safety remain preclinical questions. (lochhead2020paradoxicalactivationof pages 1-2, miller2023modulationoferk5 pages 1-2)
-
-## 8. Evidence-weighted functional annotation
-
-**Recommended primary annotation:** Human MAPK7 encodes ERK5/BMK1, a MEK5-activated CMGC-family MAP kinase that transfers phosphate from ATP to Ser/Thr residues, preferentially at Pro-directed sites. Following activation-loop phosphorylation, ERK5 phosphorylates MEF2-family and other context-specific substrates and can autophosphorylate its long C-terminal tail, thereby controlling nuclear import and intrinsic transcriptional activity.
-
-**Recommended process annotation:** MAPK7 transduces growth-factor, cytokine, oxidative, osmotic and mechanical signals. Its strongest established physiological module is endothelial shear-stress signaling to MEF2–KLF2/KLF4, supporting vascular integrity, anti-inflammatory and antioxidant programs. It also supplies compartment-specific cytoplasmic survival signaling, including VEGF-dependent AKT regulation in microvascular endothelial cells. (nithianandarajahjones2014theroleof pages 10-12, mondru2023vegfstimulatesactivation pages 1-2)
-
-**Recommended localization annotation:** Predominantly cytoplasmic when inactive, but dynamically distributed among cytoplasm, plasma-membrane-associated compartments and nucleus. C-terminal phosphorylation and conformational opening often promote nuclear entry, although activation-loop phosphorylation can remain extranuclear under VEGF signaling. (ebri2019theroleof pages 16-20, mondru2023vegfstimulatesactivation pages 1-2)
-
-**Confidence:** High for identity, domain organization, MEK5-dependent activation, MEF2 phosphorylation and regulated nucleocytoplasmic trafficking; moderate for many broader disease phenotypes and secondary substrate assignments; low-to-moderate for clinical actionability because no selective ERK5 therapy or validated MAPK7 biomarker is currently established.
-
-## Overall assessment
-
-MAPK7 is not simply another ERK-family catalytic domain. Its biological specificity derives from the combination of a conserved Pro-directed kinase, selective activation by MEK5, an extended autoinhibitory/transcriptional tail and regulated compartmentalization. The central functional theme is conversion of extracellular growth, stress and mechanical information into both phosphorylation and transcriptional outputs. Endothelial mechanotransduction is the clearest normal physiological example; cancer adaptation is an important but highly context-dependent application. Future therapeutic work must address the entire ERK5 protein and its tissue-protective roles, not merely inhibit its ATP-binding site.
+MAPK7/Q13164 is correctly identified as human ERK5/BMK1. Its primary function is to convert MEK5-mediated TEY phosphorylation into protein Ser/Thr phosphorylation, C-terminal autophosphorylation, regulated nuclear transport, and transcriptional control. The most defensible functional annotation emphasizes endothelial mechanotransduction and stress adaptation through MEF2–KLF2/KLF4/NRF2 programs, with indispensable roles in vessel development and integrity. Cancer, stem-cell, cartilage, and metabolic studies broaden this biology, but MAPK7-directed therapy remains experimental because catalytic inhibition does not capture all ERK5 functions and can paradoxically activate its transcriptional domain.
 
 References
 
 1. (fernandez2021resumendetesis. pages 64-68): A Sánchez Fernández. Resumen de tesis. the mek5/erk5 pathway in lung and ovarian cancer. Unknown journal, 2021.
 
-2. (alrumayh2023theroleof pages 49-53): AM Alrumayh. The role of erk5 in hela cells and endothelial cells. Text, Jan 2023. URL: https://doi.org/10.17638/03050633, doi:10.17638/03050633. This article has 0 citations and is from a peer-reviewed journal.
+2. (paudel2021themek5erk5pathway pages 1-2): Rupesh Paudel, Lorenza Fusi, and Marc Schmidt. The mek5/erk5 pathway in health and disease. International Journal of Molecular Sciences, 22:7594, Jul 2021. URL: https://doi.org/10.3390/ijms22147594, doi:10.3390/ijms22147594. This article has 118 citations.
 
-3. (nithianandarajahjones2015theroleand pages 41-44): Gopika Nithianandarajah-Jones. The role and regulation of vegf-mediated erk5 activity in endothelial cells. Text, Jan 2015. URL: https://doi.org/10.17638/02008164, doi:10.17638/02008164. This article has 0 citations and is from a peer-reviewed journal.
+3. (pearson2018regulationoferk5 pages 9-13): AJ Pearson. Regulation of erk5 function via its c terminus and its role in her2+ breast cancer. Unknown journal, 2018.
 
-4. (paudel2021themek5erk5pathway pages 1-2): Rupesh Paudel, Lorenza Fusi, and Marc Schmidt. The mek5/erk5 pathway in health and disease. International Journal of Molecular Sciences, 22:7594, Jul 2021. URL: https://doi.org/10.3390/ijms22147594, doi:10.3390/ijms22147594. This article has 118 citations.
+4. (tusa2023pathophysiologicalimpactof pages 4-6): Ignazia Tusa, Alessio Menconi, Alessandro Tubita, and Elisabetta Rovida. Pathophysiological impact of the mek5/erk5 pathway in oxidative stress. Cells, 12:1154, Apr 2023. URL: https://doi.org/10.3390/cells12081154, doi:10.3390/cells12081154. This article has 23 citations.
 
-5. (nithianandarajahjones2014theroleof pages 10-12): Gopika N. Nithianandarajah-Jones, Bettina Wilm, Christopher E.P. Goldring, Jürgen Müller, and Michael J. Cross. The role of erk5 in endothelial cell function. Biochemical Society transactions, 42 6:1584-9, Dec 2014. URL: https://doi.org/10.1042/bst20140276, doi:10.1042/bst20140276. This article has 49 citations and is from a peer-reviewed journal.
+5. (paudel2021themek5erk5pathway pages 3-5): Rupesh Paudel, Lorenza Fusi, and Marc Schmidt. The mek5/erk5 pathway in health and disease. International Journal of Molecular Sciences, 22:7594, Jul 2021. URL: https://doi.org/10.3390/ijms22147594, doi:10.3390/ijms22147594. This article has 118 citations.
 
 6. (fernandez2021resumendetesis. pages 68-72): A Sánchez Fernández. Resumen de tesis. the mek5/erk5 pathway in lung and ovarian cancer. Unknown journal, 2021.
 
-7. (miller2023modulationoferk5 pages 1-2): Duncan C. Miller, Suzannah J. Harnor, Mathew P. Martin, Richard A. Noble, Stephen R. Wedge, and Celine Cano. Modulation of erk5 activity as a therapeutic anti-cancer strategy. Journal of Medicinal Chemistry, 66:4491-4502, Apr 2023. URL: https://doi.org/10.1021/acs.jmedchem.3c00072, doi:10.1021/acs.jmedchem.3c00072. This article has 32 citations and is from a highest quality peer-reviewed journal.
+7. (monti2022clinicalsignificanceand pages 1-2): Matilde Monti, Jacopo Celli, Francesco Missale, Francesca Cersosimo, Mariapia Russo, Elisa Belloni, Anna Di Matteo, Silvia Lonardi, William Vermi, Claudia Ghigna, and Emanuele Giurisato. Clinical significance and regulation of erk5 expression and function in cancer. Cancers, 14:348, Jan 2022. URL: https://doi.org/10.3390/cancers14020348, doi:10.3390/cancers14020348. This article has 37 citations.
 
-8. (ebri2019theroleof pages 16-20): BR Ebrí. The role of erk5 signalling in epithelial tumours. Unknown journal, 2019.
+8. (drew2012mek5erk5pathwaythe pages 2-4): Barbara A. Drew, Matthew E. Burow, and Barbara S. Beckman. Mek5/erk5 pathway: the first fifteen years. Biochimica et biophysica acta, 1825 1:37-48, Jan 2012. URL: https://doi.org/10.1016/j.bbcan.2011.10.002, doi:10.1016/j.bbcan.2011.10.002. This article has 283 citations.
 
-9. (fernandez2021resumendetesis. pages 72-77): A Sánchez Fernández. Resumen de tesis. the mek5/erk5 pathway in lung and ovarian cancer. Unknown journal, 2021.
+9. (pearson2018regulationoferk5 pages 13-18): AJ Pearson. Regulation of erk5 function via its c terminus and its role in her2+ breast cancer. Unknown journal, 2018.
 
-10. (mondru2023vegfstimulatesactivation pages 1-2): Anil Kumar Mondru, Mohammad A. Aljasir, Ahmed Alrumayh, Gopika N. Nithianandarajah, Katie Ahmed, Jurgen Muller, Christopher E. P. Goldring, Bettina Wilm, and Michael J. Cross. Vegf stimulates activation of erk5 in the absence of c-terminal phosphorylation preventing nuclear localization and facilitating akt activation in endothelial cells. Cells, 12:967, Mar 2023. URL: https://doi.org/10.3390/cells12060967, doi:10.3390/cells12060967. This article has 4 citations.
+10. (drew2012mek5erk5pathwaythe pages 5-7): Barbara A. Drew, Matthew E. Burow, and Barbara S. Beckman. Mek5/erk5 pathway: the first fifteen years. Biochimica et biophysica acta, 1825 1:37-48, Jan 2012. URL: https://doi.org/10.1016/j.bbcan.2011.10.002, doi:10.1016/j.bbcan.2011.10.002. This article has 283 citations.
 
-11. (xiang2024proteogenomicinsightsinto pages 20-22): Hang Xiang, Rongkui Luo, Yunzhi Wang, Bing Yang, Sha Xu, Wen Huang, Shaoshuai Tang, Rundong Fang, Lingli Chen, Na Zhu, Zixiang Yu, Sujie Akesu, Chuanyuan Wei, Chen Xu, Yuhong Zhou, Jianying Gu, Jianyuan Zhao, Yingyong Hou, and Chen Ding. Proteogenomic insights into the biology and treatment of pan-melanoma. Cell Discovery, Jul 2024. URL: https://doi.org/10.1038/s41421-024-00688-7, doi:10.1038/s41421-024-00688-7. This article has 12 citations and is from a peer-reviewed journal.
+11. (lochhead2020paradoxicalactivationof pages 2-3): Pamela A. Lochhead, Julie A. Tucker, Natalie J. Tatum, Jinhua Wang, David Oxley, Andrew M. Kidger, Victoria P. Johnson, Megan A. Cassidy, Nathanael S. Gray, Martin E. M. Noble, and Simon J. Cook. Paradoxical activation of the protein kinase-transcription factor erk5 by erk5 kinase inhibitors. Nature Communications, Mar 2020. URL: https://doi.org/10.1038/s41467-020-15031-3, doi:10.1038/s41467-020-15031-3. This article has 63 citations and is from a highest quality peer-reviewed journal.
 
-12. (xiang2024proteogenomicinsightsinto pages 1-2): Hang Xiang, Rongkui Luo, Yunzhi Wang, Bing Yang, Sha Xu, Wen Huang, Shaoshuai Tang, Rundong Fang, Lingli Chen, Na Zhu, Zixiang Yu, Sujie Akesu, Chuanyuan Wei, Chen Xu, Yuhong Zhou, Jianying Gu, Jianyuan Zhao, Yingyong Hou, and Chen Ding. Proteogenomic insights into the biology and treatment of pan-melanoma. Cell Discovery, Jul 2024. URL: https://doi.org/10.1038/s41421-024-00688-7, doi:10.1038/s41421-024-00688-7. This article has 12 citations and is from a peer-reviewed journal.
+12. (cook2020smallmoleculeerk5 pages 9-11): Simon J. Cook, Julie A. Tucker, and Pamela A. Lochhead. Small molecule erk5 kinase inhibitors paradoxically activate erk5 signalling: be careful what you wish for…. Biochemical Society Transactions, 48:1859-1875, Sep 2020. URL: https://doi.org/10.1042/bst20190338, doi:10.1042/bst20190338. This article has 34 citations and is from a peer-reviewed journal.
 
 13. (lochhead2020paradoxicalactivationof pages 1-2): Pamela A. Lochhead, Julie A. Tucker, Natalie J. Tatum, Jinhua Wang, David Oxley, Andrew M. Kidger, Victoria P. Johnson, Megan A. Cassidy, Nathanael S. Gray, Martin E. M. Noble, and Simon J. Cook. Paradoxical activation of the protein kinase-transcription factor erk5 by erk5 kinase inhibitors. Nature Communications, Mar 2020. URL: https://doi.org/10.1038/s41467-020-15031-3, doi:10.1038/s41467-020-15031-3. This article has 63 citations and is from a highest quality peer-reviewed journal.
 
-14. (OpenTargets Search: -MAPK7): Open Targets Query (-MAPK7, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+14. (wen2024boneandextracellular pages 15-16): Lei Wen, Zirui Liu, Libo Zhou, Zhongcheng Liu, Qingda Li, Bin Geng, and Yayi Xia. Bone and extracellular signal-related kinase 5 (erk5). May 2024. URL: https://doi.org/10.3390/biom14050556, doi:10.3390/biom14050556. This article has 5 citations.
 
-15. (xiang2024proteogenomicinsightsinto pages 2-4): Hang Xiang, Rongkui Luo, Yunzhi Wang, Bing Yang, Sha Xu, Wen Huang, Shaoshuai Tang, Rundong Fang, Lingli Chen, Na Zhu, Zixiang Yu, Sujie Akesu, Chuanyuan Wei, Chen Xu, Yuhong Zhou, Jianying Gu, Jianyuan Zhao, Yingyong Hou, and Chen Ding. Proteogenomic insights into the biology and treatment of pan-melanoma. Cell Discovery, Jul 2024. URL: https://doi.org/10.1038/s41421-024-00688-7, doi:10.1038/s41421-024-00688-7. This article has 12 citations and is from a peer-reviewed journal.
+15. (wen2024boneandextracellular pages 5-6): Lei Wen, Zirui Liu, Libo Zhou, Zhongcheng Liu, Qingda Li, Bin Geng, and Yayi Xia. Bone and extracellular signal-related kinase 5 (erk5). May 2024. URL: https://doi.org/10.3390/biom14050556, doi:10.3390/biom14050556. This article has 5 citations.
+
+16. (carmell2021identificationandvalidation pages 7-9): Natasha Carmell, Ola Rominiyi, Katie N. Myers, Connor McGarrity-Cottrell, Aurelie Vanderlinden, Nikita Lad, Eva Perroux-David, Sherif F. El-Khamisy, Malee Fernando, Katherine G. Finegan, Stephen Brown, and Spencer J. Collis. Identification and validation of erk5 as a dna damage modulating drug target in glioblastoma. Cancers, 13:944, Feb 2021. URL: https://doi.org/10.3390/cancers13050944, doi:10.3390/cancers13050944. This article has 17 citations.
+
+17. (OpenTargets Search: -MAPK7): Open Targets Query (-MAPK7, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+
+18. (fernandez2021resumendetesis. pages 77-80): A Sánchez Fernández. Resumen de tesis. the mek5/erk5 pathway in lung and ovarian cancer. Unknown journal, 2021.
+
+19. (cook2020smallmoleculeerk5 pages 3-5): Simon J. Cook, Julie A. Tucker, and Pamela A. Lochhead. Small molecule erk5 kinase inhibitors paradoxically activate erk5 signalling: be careful what you wish for…. Biochemical Society Transactions, 48:1859-1875, Sep 2020. URL: https://doi.org/10.1042/bst20190338, doi:10.1042/bst20190338. This article has 34 citations and is from a peer-reviewed journal.
+
+20. (song2024erk5promotesautocrine pages 2-5): Chengcheng Song, Zhaoying Zhang, Dongliang Leng, Ziqing He, Xuepeng Wang, Weiwei Liu, Wensheng Zhang, Qiang Wu, Qi Zhao, and Guokai Chen. Erk5 promotes autocrine expression to sustain mitogenic balance for cell fate specification in human pluripotent stem cells. Sep 2024. URL: https://doi.org/10.1016/j.stemcr.2024.07.007, doi:10.1016/j.stemcr.2024.07.007. This article has 3 citations and is from a domain leading peer-reviewed journal.
+
+21. (song2024erk5promotesautocrine pages 5-7): Chengcheng Song, Zhaoying Zhang, Dongliang Leng, Ziqing He, Xuepeng Wang, Weiwei Liu, Wensheng Zhang, Qiang Wu, Qi Zhao, and Guokai Chen. Erk5 promotes autocrine expression to sustain mitogenic balance for cell fate specification in human pluripotent stem cells. Sep 2024. URL: https://doi.org/10.1016/j.stemcr.2024.07.007, doi:10.1016/j.stemcr.2024.07.007. This article has 3 citations and is from a domain leading peer-reviewed journal.
+
+22. (zhao2024lowshearstress pages 1-2): Jun Zhao and Yayi Xia. Low shear stress protects chondrocytes from il-1β-induced apoptosis by activating erk5/klf4 signaling and negatively regulating mir-143-3p. Journal of Orthopaedic Surgery and Research, Oct 2024. URL: https://doi.org/10.1186/s13018-024-05140-w, doi:10.1186/s13018-024-05140-w. This article has 7 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
@@ -328,30 +325,27 @@ References
 
 ## Citations
 
-1. nithianandarajahjones2015theroleand pages 41-44
-2. nithianandarajahjones2014theroleof pages 10-12
-3. mondru2023vegfstimulatesactivation pages 1-2
-4. xiang2024proteogenomicinsightsinto pages 20-22
-5. lochhead2020paradoxicalactivationof pages 1-2
-6. alrumayh2023theroleof pages 49-53
-7. ebri2019theroleof pages 16-20
-8. xiang2024proteogenomicinsightsinto pages 1-2
-9. xiang2024proteogenomicinsightsinto pages 2-4
-10. 10.1021/acs.jmedchem.3c00072
-11. 10.3390/cells12060967
-12. 10.3390/ijms22147594
-13. 10.1038/s41421-024-00688-7
-14. 10.1038/s41467-020-15031-3
-15. https://doi.org/10.1021/acs.jmedchem.3c00072
-16. https://doi.org/10.3390/cells12060967
-17. https://doi.org/10.3390/ijms22147594
-18. https://doi.org/10.1038/s41421-024-00688-7
-19. https://doi.org/10.1038/s41467-020-15031-3
-20. https://doi.org/10.17638/03050633,
-21. https://doi.org/10.17638/02008164,
-22. https://doi.org/10.3390/ijms22147594,
-23. https://doi.org/10.1042/bst20140276,
-24. https://doi.org/10.1021/acs.jmedchem.3c00072,
-25. https://doi.org/10.3390/cells12060967,
-26. https://doi.org/10.1038/s41421-024-00688-7,
-27. https://doi.org/10.1038/s41467-020-15031-3,
+1. tusa2023pathophysiologicalimpactof pages 4-6
+2. carmell2021identificationandvalidation pages 7-9
+3. zhao2024lowshearstress pages 1-2
+4. monti2022clinicalsignificanceand pages 1-2
+5. lochhead2020paradoxicalactivationof pages 2-3
+6. lochhead2020paradoxicalactivationof pages 1-2
+7. wen2024boneandextracellular pages 15-16
+8. wen2024boneandextracellular pages 5-6
+9. https://doi.org/10.3390/cells12081154.
+10. https://doi.org/10.3390/cancers13050944.
+11. https://doi.org/10.1038/s41467-020-15031-3.
+12. https://doi.org/10.1016/j.stemcr.2024.07.007.
+13. https://doi.org/10.1186/s13018-024-05140-w.
+14. https://doi.org/10.1038/s41421-024-00688-7.
+15. https://doi.org/10.3390/ijms22147594,
+16. https://doi.org/10.3390/cells12081154,
+17. https://doi.org/10.3390/cancers14020348,
+18. https://doi.org/10.1016/j.bbcan.2011.10.002,
+19. https://doi.org/10.1038/s41467-020-15031-3,
+20. https://doi.org/10.1042/bst20190338,
+21. https://doi.org/10.3390/biom14050556,
+22. https://doi.org/10.3390/cancers13050944,
+23. https://doi.org/10.1016/j.stemcr.2024.07.007,
+24. https://doi.org/10.1186/s13018-024-05140-w,

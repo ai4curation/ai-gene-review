@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-24T03:29:26.221438'
-end_time: '2026-09-24T03:51:31.703723'
-duration_seconds: 1325.48
+start_time: '2026-09-24T03:49:58.872895'
+end_time: '2026-09-24T04:01:10.758111'
+duration_seconds: 671.89
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -28,10 +28,11 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 26
-artifact_count: 1
+citation_count: 28
+artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
+  edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
   path: MAP2K7-deep-research-falcon_artifacts/artifact-00.md
@@ -39,6 +40,14 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-00
+- filename: image-1.png
+  path: MAP2K7-deep-research-falcon_artifacts/image-1.png
+  media_type: image/png
+  source: edison_message_content
+  data_storage_id: null
+  description: '## Context ID: pqac-00000033 Figure 5 illustrates the crystal structure
+    of JNK1 in complex with the MKK7 D2 docking site peptide. It specifically highlights
+    the'
 ---
 
 ## Question
@@ -149,241 +158,230 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Research report: human MAP2K7/MKK7 (UniProt O14733)
+# MAP2K7 (MKK7/MEK7; UniProt O14733) functional-annotation report
 
-## Executive summary
+## Executive conclusion
 
-The requested identity is verified: **MAP2K7** is the human gene encoding **dual-specificity mitogen-activated protein kinase kinase 7**, commonly called **MKK7/MEK7/JNKK2**. The supplied UniProt accession **O14733**, organism (*Homo sapiens*), aliases, and kinase-domain annotation are mutually consistent; no conflicting same-symbol protein was encountered. MAP2K7 is a STE-family MAPK kinase whose principal molecular function is to activate c-Jun N-terminal kinases (**JNK1/2/3**) in stress- and cytokine-responsive signaling.
+The requested target is unambiguously **human MAP2K7**, encoding **dual-specificity mitogen-activated protein kinase kinase 7** (MKK7/MEK7; UniProt **O14733**), not MAP2K4/MKK4 or the unrelated MAP4K4. Its principal molecular function is to receive stress signals from MAP3Ks and activate c-Jun N-terminal kinases (JNK1–3) by ATP-dependent phosphorylation of their activation-loop **Thr-Pro-Tyr (TPY)** motif. MKK7 strongly prefers the threonine site—classically JNK Thr183—whereas MKK4 preferentially phosphorylates Tyr185 and can also activate p38. Thus, MKK7 is best annotated as the relatively JNK-selective MAP2K and an essential, partially nonredundant JNK activator. Evidence for p38 regulation exists in particular in-vivo contexts, but it is not the canonical primary function. (lacorazza2024pharmacologicalinhibitionof pages 1-2, gehi2022intrinsicdisorderin pages 15-17, katzengruber2023mkk4inhibitors—recentdevelopment pages 2-4)
 
-Its core reaction can be summarized as:
-
-**ATP + JNK → ADP + phosphorylated JNK**, with phosphorylation of the JNK activation-loop **Thr-Pro-Tyr** motif—classically Thr183 and Tyr185 in JNK1. MKK7 strongly favors JNK as its protein substrate and preferentially phosphorylates the threonine site, whereas MKK4 favors the tyrosine site and can also activate p38. Thus, “dual specificity” refers to MKK7’s capacity to phosphorylate both threonine and tyrosine, not to broad protein-substrate promiscuity. Efficient cellular JNK activation often reflects complementary action by MKK7 and MKK4. (caliz2022mitogenactivatedproteinkinase pages 1-2, zhao2026targetingthejnk pages 2-4, yu2023componentsofthe pages 1-2)
-
-MAP2K7 is primarily a soluble intracellular kinase. Its function is spatially organized by JIP-family scaffolds, dynamic JNK-docking motifs, and—in neurons—localization and translation of MAP2K7 mRNA in neurites and growth cones. Its most defensible functional annotation is therefore **a spatially regulated, stress-responsive JNK-activating kinase**, rather than a generic regulator of all reported downstream disease phenotypes.
-
-| Topic | Verified annotation/finding | Strongest evidence | Interpretation/caveat |
+| Topic | Current annotation | Strongest evidence/quantitative detail | Confidence/caveat |
 |---|---|---|---|
-| Identity and domains | Human **MAP2K7** encodes MKK7/MEK7, the dual-specificity JNK-pathway MAP2K corresponding to **UniProt O14733**. It contains an intrinsically disordered N-terminal regulatory region with JNK-docking motifs, a central protein-kinase domain, and a C-terminal DVD domain that engages upstream MAP3Ks. | Literature maps O14733 to MAP2K7; structural and 2024 reviews independently describe the kinase and docking architecture. (lacorazza2024pharmacologicalinhibitionof pages 1-2, kragelj2015structureanddynamics pages 1-2) | Matches the supplied STE-family kinase and Dual-spec-MAPK-kinase/protein-kinase domain annotations. No conflicting same-symbol human protein was identified. |
-| Catalytic reaction and substrate specificity | MAP2K7 transfers phosphate from ATP to JNK activation loops, phosphorylating **Thr183 and Tyr185** in the Thr–Pro–Tyr motif and activating JNK1/2/3. It preferentially phosphorylates **Thr183**, whereas MKK4 favors Tyr185; MAP2K7 is strongly JNK-selective. | Biochemical and pathway evidence supports dual Thr/Tyr phosphorylation and complementary MKK7-versus-MKK4 residue preferences. (caliz2022mitogenactivatedproteinkinase pages 1-2, zhao2026targetingthejnk pages 2-4, yu2023componentsofthe pages 1-2) | “Dual specificity” denotes phosphorylation of both threonine and tyrosine, not broad protein-substrate promiscuity. Reports of MKK7-dependent p38 activation may be indirect or context-specific. |
-| Activation mechanism | Upstream MAP3Ks phosphorylate MAP2K7 at **Ser271 and Thr275** in its S-X-A-K-T activation segment; both modifications promote the active conformation and ATP-site accessibility. Inputs include cytokines, LPS, oxidative, genotoxic, osmotic, and UV stress. | The 2024 review diagrams and summarizes MAP3K-dependent Ser271/Thr275 activation. (lacorazza2024pharmacologicalinhibitionof pages 1-2, lacorazza2024pharmacologicalinhibitionof pages 2-4) | Residue numbering can vary among isoforms and experimental constructs. Phosphomimetic substitutions do not necessarily reproduce a fully active conformation. |
-| JNK docking and structure | MAP2K7 is unique among human MKKs in having **three N-terminal JNK-docking motifs, D1–D3**. Each recruits JNK1; constructs with one, two, or three sites form 1:1, 1:2, or 1:3 complexes. Measured dissociation constants were **12 μM for D1, 7.9 μM for D2, and 11 μM for D3**. | NMR, ITC, and crystallography demonstrated multisite binding. A **2.4 Å** JNK1–D2 structure, PDB **4UX9**, revealed two binding modes; the D3 dissociation rate was **707 ± 34 s⁻¹**. (kragelj2015structureanddynamics pages 2-3, kragelj2015structureanddynamics pages 1-2, kragelj2015structureanddynamics pages 4-5, kragelj2015structureanddynamics pages 3-4) | The complex is dynamic rather than rigid. Quantitative measurements primarily used purified proteins or peptides and may not reproduce scaffolded cellular stoichiometry. |
-| Cellular localization | MAP2K7 is principally a soluble **cytosolic** kinase. Neuronal experiments found total MKK7 in soma and neurites but excluded from nuclei. Its mRNA is targeted to growth cones, where local translation produces spatially restricted MKK7–JNK signaling. | FISH, fractionation, translation reporters, and rescue experiments detected neuritic phospho-MKK7 in **84.8% ± 3.1%** of differentiated cells and dual-phosphorylated JNK in growth cones in **82.8% ± 1.7%**. (feltrin2012growthconemkk7 pages 3-6, feltrin2012growthconemkk7 pages 8-10, feltrin2012growthconemkk7 pages 2-3) | Growth-cone localization was established in neuronal models, not comprehensively across human tissues. JIP scaffolds and transcript isoforms influence the precise functional compartment. |
-| Genetic evidence | Complete mouse **Map2k7** deletion is embryonic lethal. Conditional loss impairs JNK activation and produces lymphocyte hyperproliferation, defective neuronal migration and axon development, altered circadian or affective behavior, and reduced cardiomyocyte survival after pressure overload. | Multiple knockout and conditional-Cre models support nonredundant developmental, immune, neural, and cardiac functions. (lacorazza2024pharmacologicalinhibitionof pages 2-4, lacorazza2024pharmacologicalinhibitionof pages 4-5) | Phenotypes are tissue- and context-dependent; combined Map2k4/Map2k7 loss can be more severe than Map2k7 loss alone. These findings warn of neurological, immune, and cardiac risks from systemic inhibition. |
-| 2023 HCC findings | HCC datasets showed increased MKK7/JNK1/JNK2 and reduced MKK4. In HepG2 cells, MKK7 knockdown increased TNF-α/CHX- and TRAIL-induced apoptosis and reduced anchorage-independent colony formation. | The 2023 study integrated TCGA/HPA analyses with RNA interference, immunoblotting, flow cytometry, and soft-agar assays. (yu2023componentsofthe pages 1-2, yu2023componentsofthe pages 9-10, yu2023componentsofthe pages 2-4) | HPA protein comparisons used only **12–23** tumor/non-tumor pairs and found no significant protein-level difference. The results are preclinical and do not demonstrate therapeutic efficacy in patients. |
-| 2024 inhibitor landscape | Reported biochemical potencies include compound 4a at **10 nM**, covalent compounds 1 and 2 at **3 and 0.6 nM**, DK-2403 at **10 nM**, and OTSSP167 at **160 nM**. OTSSP167 killed T-ALL cells at **10–57 nM** and controlled leukemia burden at **10 mg/kg/day** in patient-derived xenografts; DK-2403 cellular cytotoxicity was **1.1–2.9 μM**. | A December 2024 review compared nine reported MAP2K7-modulating molecules and summarized biochemical, cellular, and mouse-model results. (lacorazza2024pharmacologicalinhibitionof pages 8-9, lacorazza2024pharmacologicalinhibitionof pages 6-8) | Development remains **preclinical**; no selective MAP2K7 inhibitor was reported in human trials. Cys218-directed covalent binding can improve potency, but selectivity, pharmacokinetics, systemic toxicity, and context-dependent tumor-suppressor functions remain barriers. |
+| Identity | Human **MAP2K7/MKK7/MEK7**, UniProt **O14733**; dual-specificity MAP kinase kinase in the STE kinase family | O14733 corresponds to a 419-aa human kinase encoded at 19p13.2; it is distinct from MAP2K4/MKK4 and MAP4K4 (gehi2022intrinsicdisorderin pages 17-18, lacorazza2024pharmacologicalinhibitionof pages 1-2) | **High**; identity and organism verified |
+| Architecture and isoforms | N-terminal disordered regulatory region with three JNK-docking motifs, catalytic kinase domain, and C-terminal DVD domain; multiple splice isoforms | Six α/β/γ–1/2 isoforms are reported, spanning approximately 345–467 aa and 38–52 kDa; the O14733 reference protein is 419 aa. A residues 103–419 structure was solved at 2.10 Å (PDB 5B2L) (caliz2022mitogenactivatedproteinkinase pages 2-4, gehi2022intrinsicdisorderin pages 17-18) | **High** for architecture; isoform-specific functions remain incompletely defined |
+| Catalytic reaction | ATP-dependent phosphorylation of protein Ser/Thr and Tyr residues: ATP + JNK → ADP + phospho-JNK | As a dual-specificity MAP2K, MKK7 can phosphorylate both residue classes in the JNK activation-loop TPY motif; “dual specificity” does not imply broad substrate promiscuity (caliz2022mitogenactivatedproteinkinase pages 2-4, lacorazza2024pharmacologicalinhibitionof pages 1-2) | **High** for reaction class; cellular phosphorylation usually cooperates with MKK4 |
+| Canonical substrate specificity versus MKK4 | Canonical substrate is JNK1/2/3; MKK7 preferentially phosphorylates **JNK Thr183**, whereas MKK4 favors **Tyr185** and can also activate p38 | MKK7 deficiency abolishes stress-induced JNK activation in reported mouse comparisons, whereas MKK4 deficiency leaves about 50% activation; p38 regulation by MKK7 is noncanonical/context-dependent (gehi2022intrinsicdisorderin pages 15-17, katzengruber2023mkk4inhibitors—recentdevelopment pages 2-4) | **High** for JNK preference; **moderate** for direct p38 activity |
+| Activation and upstream inputs | MAP3Ks activate MKK7 by phosphorylation of **Ser271 and Thr275** in its SXAKT activation-loop motif | Reported upstream kinases include ASK1–3, TAK1, MEKK1–4, MLK1–4, TAOK1–3, TPL2, DLK, LZK, and ZAK; inputs include inflammatory cytokines, UV/genotoxic, osmotic, metabolic, and oxidative stress (lacorazza2024pharmacologicalinhibitionof pages 1-2, caliz2022mitogenactivatedproteinkinase pages 2-4) | **High** for activation sites and cascade placement; upstream kinase usage is cell- and stimulus-dependent |
+| Docking structural evidence | Three N-terminal D motifs create multivalent, dynamic recognition of JNK1 | ITC gave Kd values of 12 μM (D1), 7.9 μM (D2), and 11 μM (extended D3), with up to 1:3 MKK7:JNK1 stoichiometry. A 2.4-Å D2–JNK1 structure showed two alternative binding modes across three hydrophobic pockets (kragelj2015structureanddynamics pages 2-3, kragelj2015structureanddynamics pages 4-5, kragelj2015structureanddynamics media 67a8813c) | **High**; measurements used purified constructs and may not reproduce scaffold-constrained cellular stoichiometry |
+| Localization and scaffolds | Functions in both cytoplasm and nucleus and within stress-induced signaling complexes | Immunofluorescence detected cytoplasmic and nuclear MKK7, with stress-associated nuclear accumulation. JIP1–4, POSH, and RACK1 assemble MKK7 with MAP3Ks and JNK; neuronal growth cones contain **Mkk7 mRNA**, suggesting local translation (coffey2014nuclearandcytosolic pages 3-4, davis2000signaltransductionby pages 3-4, caliz2022mitogenactivatedproteinkinase pages 2-4) | **Moderate–high**; growth-cone evidence concerns mRNA, not definitive protein localization |
+| Physiological evidence | Required for embryonic hematopoietic/hepatic development and contributes to neural development, inflammation, and injury responses | Constitutive knockout causes embryonic death with anemia and defective hepatogenesis at E11.5–E13.5. After optic-nerve injury, deletion increased retinal ganglion-cell survival from 15.2% to 29.1% (p < 0.001) (caliz2022mitogenactivatedproteinkinase pages 2-4, caliz2022mitogenactivatedproteinkinase pages 5-6) | **High** in genetic mouse models; extrapolation to adult human physiology requires caution |
+| 2023–2024 cancer evidence | MAP2K7/JNK can be tumor-suppressive or tumor-promoting depending on cellular context | In a 2023 HER2/Neu mouse model, mammary epithelial Map2k7 deletion accelerated tumor development (n = 18, p < 0.0002) and reduced UV-induced JNK activation. Other models link elevated MKK7 signaling to leukemia or ovarian-cancer stemness (itah2023her2drivenbreastcancer pages 6-8, lacorazza2024pharmacologicalinhibitionof pages 5-6) | **High** for the HER2 model; directionality is context-dependent, arguing against indication-agnostic inhibition |
+| Inhibitor status | Selective MAP2K7 pharmacology remains preclinical; no MAP2K7-directed approved therapy | Compound 4a inhibits MKK7 at 10 nM through Cys218 but has kinase off-targets. OTSSP167 inhibits purified MKK7 at 160 nM and controlled T-ALL PDX disease at 10 mg/kg but is a pan-kinase compound. DK-2403 shows cellular IC50 values of 1.1–2.9 μM. The 2024 bident ZNL-8162 targets Cys218 and Cys276 (lacorazza2024pharmacologicalinhibitionof pages 6-8, lacorazza2024pharmacologicalinhibitionof pages 8-9, li2024molecularbidentswith pages 1-2) | **Moderate**; potency does not establish target-selective efficacy, and clinical validation is absent |
 
 
-*Table: Compact evidence matrix linking human MAP2K7 identity and molecular mechanism to localization, genetic validation, recent cancer findings, and inhibitor development. Caveats distinguish established biochemical annotation from context-dependent or preclinical observations.*
+*Table: Concise evidence matrix for the identity, biochemical function, localization, physiology, disease relevance, and inhibitor status of human MAP2K7 (UniProt O14733). Confidence notes distinguish established functional annotation from context-dependent or preclinical findings.*
 
-## 1. Identity and annotation verification
+## 1. Identity verification and nomenclature
 
-### 1.1 Correct gene and protein
+The supplied identity is correct. O14733 corresponds to **Homo sapiens MAP2K7**, approved name *mitogen-activated protein kinase kinase 7*; commonly used aliases include **MKK7, MEK7, JNKK2, SKK4, PRKMK7**, and SAPKK4. Open Targets maps human MAP2K7 to ENSG00000076984, while O14733-specific structural literature describes a 419-residue human protein encoded at chromosome 19p13.2. It belongs to the STE/MAP2K branch of the protein-kinase superfamily and has the expected protein-kinase and dual-specificity MAPK-kinase architecture. (OpenTargets Search: -MAP2K7, gehi2022intrinsicdisorderin pages 17-18)
 
-The literature consistently uses **MAP2K7** for the human gene and **MKK7/MEK7** for its protein product. A retrieved indexed source explicitly maps **O14733** to “MAP2K7, dual-specificity mitogen-activated protein kinase kinase 7.” Contemporary reviews identify MAP2K7 as the human gene encoding MKK7 and place it at chromosome 19p13.2. (caliz2022mitogenactivatedproteinkinase pages 1-2)
+This identity must not be confused with:
 
-This identity is distinct from similarly named proteins such as **MAP3K7/TAK1**, which is an upstream MAP kinase kinase kinase. No literature for such a different gene was substituted into this report.
+- **MAP2K4/MKK4/SEK1**, a related MAP2K that activates both JNK and p38 and favors JNK Tyr185.
+- **MAP4K4**, an upstream STE20-family MAP4K and a different gene/protein.
 
-### 1.2 Family and domain architecture
+Results concerning either protein are used below only for explicit mechanistic comparison, not attributed to MAP2K7.
 
-The supplied annotations—protein-kinase superfamily, STE Ser/Thr-kinase branch, protein-kinase domain, and dual-specificity MAPK-kinase domain—agree with experimentally established MKK7 architecture. The protein comprises:
+## 2. Protein architecture and isoforms
 
-1. An **N-terminal, intrinsically disordered regulatory region** containing JNK-docking D motifs.
-2. A central, bilobal **protein-kinase catalytic domain** with the ATP-binding cleft.
-3. A C-terminal **DVD (domain for versatile docking) region**, which participates in recognition by upstream MAP3Ks. (lacorazza2024pharmacologicalinhibitionof pages 1-2, kragelj2015structureanddynamics pages 1-2)
+The reference O14733 protein is 419 amino acids. Its major functional regions are:
 
-Alternative splicing produces six commonly described isoform classes—α1, α2, β1, β2, γ1, and γ2—although nomenclature, exon counts, and residue numbering vary among database records, species, and experimental constructs. The 2024 review emphasizes that α-type MAP2K7 lacks an N-terminal segment present in other forms, with potential consequences for JNK docking and activity. (lacorazza2024pharmacologicalinhibitionof pages 1-2, lacorazza2024pharmacologicalinhibitionof pages 2-4)
+1. An approximately 100-residue, intrinsically disordered **N-terminal regulatory region**, containing three JNK docking motifs (D1–D3) and a coiled-coil-like segment.
+2. A conventional bilobal **protein-kinase domain**, including the ATP pocket and activation loop.
+3. A C-terminal **DVD domain** (*domain for versatile docking*), which helps engage upstream MAP3Ks. (lacorazza2024pharmacologicalinhibitionof pages 1-2, gehi2022intrinsicdisorderin pages 17-18, kragelj2015structureanddynamics pages 1-2)
 
-## 2. Primary biochemical function
+An X-ray structure of residues 103–419 was solved at 2.10 Å (PDB **5B2L**); residues 267–278 and 404–419 were unresolved, consistent with local flexibility. Disorder prediction places most disorder in residues 1–94 and estimates a mean predicted-disordered fraction of 26.7%; the kinase and DVD regions are substantially more ordered. (gehi2022intrinsicdisorderin pages 17-18)
 
-### 2.1 Catalytic reaction
+Alternative splicing produces α-, β-, and γ-N-terminal forms combined with two C-terminal forms, commonly described as six isoforms (α1/α2, β1/β2, γ1/γ2). Reported products span approximately 345–467 residues and 38–52 kDa. The shorter α form lacks an N-terminal extension and has lower basal JNK-activating activity than β/γ forms, consistent with loss of N-terminal docking capacity. The exact physiological division of labor among human isoforms remains incompletely established. (lacorazza2024pharmacologicalinhibitionof pages 1-2, caliz2022mitogenactivatedproteinkinase pages 2-4)
 
-MAP2K7 is an ATP-dependent protein kinase. It transfers the γ-phosphate of ATP to hydroxyl groups on both a threonine and a tyrosine in the JNK activation segment. Dual phosphorylation of the JNK Thr-Pro-Tyr motif produces catalytically active JNK, which can then phosphorylate cytoplasmic proteins and transcription factors such as c-Jun and ATF2. (caliz2022mitogenactivatedproteinkinase pages 1-2, lacorazza2024pharmacologicalinhibitionof pages 2-4)
+## 3. Primary biochemical function
 
-For functional annotation, the most appropriate substrate statement is:
+### Catalytic reaction
 
-> **Primary protein substrates: JNK-family MAP kinases MAPK8/JNK1, MAPK9/JNK2, and MAPK10/JNK3; principal modified motif: activation-loop TPY, with a pronounced preference for its threonine residue.**
+MAP2K7 catalyzes the general protein-kinase reaction:
 
-### 2.2 Specificity relative to MKK4
+**ATP + JNK protein → ADP + phospho-JNK protein**
 
-MKK7 and MKK4 are not simply interchangeable. MKK7 is highly selective for JNK and preferentially phosphorylates JNK Thr183; MKK4 preferentially phosphorylates Tyr185 and has broader MAPK specificity, including p38. Both can modify both JNK sites in vitro, but their residue preferences and stimulus coupling make them complementary in cells. (zhao2026targetingthejnk pages 2-4, yu2023componentsofthe pages 1-2)
+The enzyme is called **dual-specificity** because it can phosphorylate both threonine and tyrosine residues in a MAPK activation-loop TxY motif. This designation concerns phosphoacceptor chemistry; it does not imply broad protein-substrate promiscuity. The best-supported canonical protein substrates are the JNK MAPKs encoded by **MAPK8/JNK1, MAPK9/JNK2, and MAPK10/JNK3**. (caliz2022mitogenactivatedproteinkinase pages 2-4, lacorazza2024pharmacologicalinhibitionof pages 1-2)
 
-Reports that MKK7 is required for full p38 activation in macrophages should not be interpreted automatically as direct p38 phosphorylation. They may reflect pathway coupling, scaffolding, or indirect regulation; the dominant direct-substrate consensus remains JNK. (lacorazza2024pharmacologicalinhibitionof pages 1-2, zhao2026targetingthejnk pages 6-8)
+### Site and substrate specificity
 
-## 3. Activation and structural mechanism
+MKK7 preferentially phosphorylates the **threonine** of the JNK TPY motif—commonly numbered Thr183—whereas MKK4 preferentially phosphorylates Tyr185. Full JNK activation therefore frequently reflects cooperation between MKK7 and MKK4, although MKK7 is the more indispensable component in many stress responses. Comparative knockout evidence summarized in the literature indicates that stress-induced JNK activity is lost with MKK7 deficiency, whereas MKK4 deficiency leaves roughly 50% activity. MKK4 activates both JNK and p38; MKK7 is much more JNK-selective. (gehi2022intrinsicdisorderin pages 17-18, gehi2022intrinsicdisorderin pages 15-17, katzengruber2023mkk4inhibitors—recentdevelopment pages 2-4)
 
-### 3.1 Upstream activation
+Reports that MKK7 affects p38 signaling, particularly in macrophages, warrant a qualified annotation: they support context-dependent cross-talk or noncanonical signaling, not equivalence to MKK4 as a general p38 kinase. JNK should remain the primary substrate in functional annotation. (lacorazza2024pharmacologicalinhibitionof pages 1-2, caliz2022mitogenactivatedproteinkinase pages 2-4)
 
-MAP2K7 occupies the middle tier of a three-kinase module:
+## 4. Activation mechanism and pathway placement
 
-**stress/cytokine input → MAP3K → MAP2K7/MKK7 → JNK → effector phosphorylation**.
+MAP2K7 is the middle tier of the stress-responsive cascade:
 
-Relevant MAP3Ks include TAK1, ASK1, MEKK-family proteins, mixed-lineage kinases and DLK, depending on cell type and stimulus. Inputs include TNF, IL-1, LPS, oxidative and osmotic stress, UV irradiation, metabolic deprivation, DNA damage and neuronal injury. JIP1/2/3 scaffold proteins assemble selected MAP3K–MKK7–JNK combinations, increasing efficiency and spatial restriction. (zhao2026targetingthejnk pages 2-4, lacorazza2024pharmacologicalinhibitionof pages 2-4, lacorazza2024pharmacologicalinhibitionof pages 1-2)
+**stress/receptor input → MAP3K → MAP2K7/MKK7 → JNK → transcriptional and cytoplasmic substrates**.
 
-Upstream MAP3Ks phosphorylate the MKK7 activation segment at **Ser271 and Thr275** in the canonical S-X-A-K-T motif; phosphorylation of both residues supports full activation and increases catalytic-site accessibility. Residue numbers may shift in particular isoforms or truncated constructs, an important caveat when comparing structural papers. (lacorazza2024pharmacologicalinhibitionof pages 1-2, lacorazza2024pharmacologicalinhibitionof pages 2-4)
+Upstream MAP3Ks phosphorylate the MAP2K7 activation-loop **Ser271 and Thr275** in its SXAKT/SXKAT motif, promoting an active conformation and JNK phosphorylation. Reported upstream enzymes include ASK1–3, TAK1, MEKK1–4, MLK1–4, TAOK1–3, TPL2, DLK, LZK, and ZAK. Which MAP3K is used depends on cell type and stimulus. (lacorazza2024pharmacologicalinhibitionof pages 1-2, caliz2022mitogenactivatedproteinkinase pages 2-4)
 
-### 3.2 Dynamic JNK recognition
+Inputs include inflammatory cytokines such as TNF, ultraviolet and genomic damage, oxidative and osmotic stress, and metabolic signals including free fatty acids. Activated JNK then phosphorylates effectors such as c-Jun and ATF2, altering stress-responsive transcription, apoptosis or survival, differentiation, motility, and cytoskeletal behavior. These outcomes are context-dependent properties of the wider JNK network rather than evidence that MKK7 directly phosphorylates every downstream effector. (lacorazza2024pharmacologicalinhibitionof pages 1-2)
 
-A high-quality PNAS study combined NMR, isothermal titration calorimetry, and crystallography to show that MKK7 is unique among human MKKs in carrying **three JNK-docking motifs**, D1–D3, within an approximately 100-residue disordered regulatory region. Removing MKK regulatory domains makes downstream phosphorylation extremely inefficient, demonstrating that docking is central to productive catalysis. (kragelj2015structureanddynamics pages 1-2)
+## 5. Structural basis of JNK recognition
 
-The three motifs bound JNK1 with similar low-micromolar affinities: approximately **12 μM for D1, 7.9 μM for D2, and 11 μM for D3**. Constructs bearing one, two, or three sites could recruit one, two, or three JNK1 molecules, respectively. A 2.4-Å JNK1–D2 peptide crystal structure—**PDB 4UX9**—showed two alternative peptide orientations, while NMR demonstrated motif-specific interaction kinetics; D3 had a measured dissociation rate of **707 ± 34 s⁻¹**. These results support a rapidly exchanging, multivalent recognition mechanism rather than one static MKK7–JNK complex. (kragelj2015structureanddynamics pages 2-3, kragelj2015structureanddynamics pages 4-5, kragelj2015structureanddynamics pages 3-4)
+MKK7 is unusual among human MAP2Ks in possessing **three** N-terminal JNK docking sites. ITC measurements with human JNK1 found low-micromolar affinities: D1, **Kd 12 μM**; D2, **7.9 μM**; and extended D3, **11 μM**. The isolated canonical D3 peptide bound more weakly at **49 μM**, showing that flanking residues contribute. Stoichiometry increased from 1:1 for D1 alone to 1:2 for D1+D2 and 1:3 for the complete regulatory region, demonstrating that purified MKK7 can bind three JNK1 molecules simultaneously. Cellular stoichiometry may be more constrained by scaffolds and local concentration. (kragelj2015structureanddynamics pages 2-3)
 
-## 4. Cellular localization and site of action
+A 2.4-Å JNK1–MKK7 D2 structure showed the peptide occupying three hydrophobic pockets on JNK1. The main mode is anchored by MKK7 Leu43, Leu45, and Leu47; an alternative mode uses Arg40, Pro41, Leu45, and Leu47. NMR detected bound-state exchange on microsecond-to-millisecond timescales, with D2 exchange rates of 70–275 s⁻¹ and D3 at 707 ± 34 s⁻¹. These findings support a dynamic-recognition model in which multivalent, disordered docking motifs confer high pathway specificity without a single rigid interface. (kragelj2015structureanddynamics pages 3-4, kragelj2015structureanddynamics pages 5-6, kragelj2015structureanddynamics pages 4-5)
 
-MAP2K7 is not a secreted, membrane-spanning, or extracellular enzyme. Its core function occurs within the cell, principally in cytosolic signaling complexes. Localization is dynamic and scaffold-dependent, and activated downstream JNK can act in both cytoplasmic and nuclear compartments.
+The inspected structural figure directly shows the D2 peptide, JNK1 hydrophobic pockets, and the NFAT4-like and JIP1-like alternative binding modes. (kragelj2015structureanddynamics media 67a8813c)
 
-The clearest direct localization study comes from neuronal models. Total MKK7 was cytosolic, excluded from the nucleus, and distributed between soma and neurites. In contrast, phosphorylated MKK7 was concentrated in neurites, appearing in **84.8% ± 3.1%** of differentiated cells, and doubly phosphorylated JNK prominently marked growth cones in **82.8% ± 1.7%** of cells. (feltrin2012growthconemkk7 pages 3-6, feltrin2012growthconemkk7 pages 2-3)
+## 6. Cellular localization and signaling assemblies
 
-MAP2K7 transcripts bearing specific 3′-UTRs were transported to growth cones and locally translated. Translation reporters recovered fluorescence within less than one hour after photobleaching; recovery was inhibited by anisomycin. Local MAP2K7 supported a **DLK→MKK7→JNK1→MAP1B** module that phosphorylated MAP1B, bundled microtubules, and enabled neurite elongation. MKK7 knockdown impaired bundling and outgrowth, while appropriately localized, catalytically active MKK7 constructs rescued these phenotypes. (feltrin2012growthconemkk7 pages 13-16, feltrin2012growthconemkk7 pages 10-13, feltrin2012growthconemkk7 pages 8-10)
+Immunofluorescence has detected MKK7 in both **cytoplasm and nucleus**, with reported nuclear accumulation after cellular stress. This supports signaling in both compartments rather than a fixed organelle-specific role. In neurons, **Mkk7 mRNA** is present in growth cones and may undergo local translation during axonal growth; this is evidence for localized RNA, not by itself definitive localization of the mature protein. (coffey2014nuclearandcytosolic pages 3-4, davis2000signaltransductionby pages 3-4)
 
-Thus, the localization annotation should distinguish **bulk cytosolic distribution** from **localized active pools** assembled by scaffolds or local translation.
+Spatial organization depends strongly on protein complexes:
 
-## 5. Biological processes supported by direct evidence
+- **JIP1–4** and **POSH** scaffold MAP3K–MKK7–JNK modules.
+- **RACK1** promotes association between MKK7 and upstream MAP3Ks and enhances MKK7/JNK signaling.
+- **GADD45β** directly binds and inhibits MKK7 catalytic activity; disruption of this complex by DTP3 reactivates MKK7–JNK.
+- **TIPRL** promotes association with PP2A catalytic subunit, limiting prolonged MKK7 activity.
+- **RASSF7** can suppress UV-induced MKK7–JNK signaling. (caliz2022mitogenactivatedproteinkinase pages 2-4)
 
-### Stress and inflammatory signaling
+Accordingly, the most precise localization annotation is **cytoplasmic and nuclear, dynamically recruited into scaffolded stress-signaling complexes**, with specialized local translation/signaling in neuronal projections.
 
-MAP2K7 couples inflammatory cytokines, innate-immune receptors, oxidative stress and other insults to JNK activation. Macrophage studies and genetic models support a nonredundant requirement for MKK7 in LPS-induced JNK activation and cytokine production. However, the biological outcome—survival, apoptosis, inflammatory transcription or adaptation—depends on signal duration, JNK isoform, cell type and scaffold context. (lacorazza2024pharmacologicalinhibitionof pages 2-4, zhao2026targetingthejnk pages 6-8)
+## 7. Biological functions supported by experimental evidence
 
-### Development and nervous system
+### Development
 
-Complete Map2k7 deletion in mice is embryonic lethal. Neural conditional deletion produces defects in axon elongation, radial neuronal migration, retinal organization, circadian or motor phenotypes, and—in some models—depression-like behavior. These observations accord with the local growth-cone mechanism described above but also show that systemic pharmacological inhibition could have neurological liabilities. (lacorazza2024pharmacologicalinhibitionof pages 2-4, lacorazza2024pharmacologicalinhibitionof pages 4-5)
+Constitutive Mkk7 deletion in mice causes embryonic death associated with anemia and abnormal hepatogenesis around embryonic days **E11.5–E13.5**. This demonstrates a nonredundant developmental requirement, especially in hematopoietic and hepatic development, even though MKK4 also activates JNK. (caliz2022mitogenactivatedproteinkinase pages 2-4)
 
-### Immune-cell proliferation
+### Nervous system
 
-Chimeric loss-of-function models showed reduced JNK activation in mast cells and increased antigen-receptor- or growth-factor-driven proliferation of lymphoid/hematopoietic cells. Hyperproliferation was associated with altered JunB, p16 and cyclin-D1 expression. Accordingly, MKK7 is not universally pro-proliferative; in some normal immune contexts it restrains cell-cycle entry. (lacorazza2024pharmacologicalinhibitionof pages 2-4)
+Genetic studies implicate MKK7–JNK signaling in neurite elongation, axon formation, neuronal maintenance, hippocampal organization, and motor/circadian functions. After optic-nerve crush, Mkk7 deletion increased retinal ganglion-cell survival from **15.2% to 29.1%** (*p*<0.001), illustrating that the same pathway required for development can promote injury-associated neuronal death. (caliz2022mitogenactivatedproteinkinase pages 5-6)
 
-### Cardiac stress response
+### Inflammation and stress responses
 
-Cardiomyocyte-specific Map2k7 loss worsened ventricular function after pressure overload and increased apoptosis, extracellular-matrix deposition and hypertrophic remodeling. This is evidence for a protective stress-response role in myocardium and another reason that chronic systemic inhibition requires careful cardiac safety testing. (lacorazza2024pharmacologicalinhibitionof pages 4-5)
+MKK7 organizes cytokine- and stress-induced JNK activation and affects macrophage migration, invasion, and cytokine production. Free-fatty-acid-triggered JNK signaling requires intact JIP1 and MKK7 in reported in-vitro and in-vivo systems. The precise outcome—survival, apoptosis, inflammation, or adaptation—depends on stimulus duration, scaffold composition, and cell type. (caliz2022mitogenactivatedproteinkinase pages 2-4)
 
-## 6. Disease relevance and recent research
+## 8. Disease relevance and current expert interpretation
 
-### 6.1 Context dependence in cancer
+MAP2K7 is not simply an oncogene or tumor suppressor. It can promote stress tolerance, inflammatory signaling, leukemia-cell maintenance, metastatic behavior, or stem-like phenotypes in some settings, but can support p53/JNK-mediated tumor suppression in others. Therefore, disease indication and molecular context must be established before inhibition is rational. (caliz2022mitogenactivatedproteinkinase pages 5-6, lacorazza2024pharmacologicalinhibitionof pages 5-6)
 
-MAP2K7–JNK signaling can be tumor-promoting or tumor-suppressive. Tumor suppression has been observed through p53 stabilization, senescence, DNA-damage responses and restraint of oncogene-driven reprogramming. Conversely, established tumors can exploit MKK7 for proliferation, survival, invasion or therapy resistance. Mouse studies found accelerated KRAS-driven lung tumorigenesis and NeuT-driven mammary tumor onset after Map2k7 loss, while elevated or required MAP2K7 activity has been described in glioblastoma, liver metastasis, prostate cancer and pediatric T-ALL. (lacorazza2024pharmacologicalinhibitionof pages 5-6, lacorazza2024pharmacologicalinhibitionof pages 4-5)
+Open Targets lists associations with neurodegenerative and CNS immune disorders, including Alzheimer and Parkinson diseases, but the displayed association scores are modest—approximately **0.37** for Alzheimer/Parkinson disease and **0.53** for the broad neurodegenerative-disease category—and include literature or screening evidence rather than definitive human causal genetics. These entries are hypothesis-generating, not clinical validation. (OpenTargets Search: -MAP2K7)
 
-Alternative splicing is also relevant: an MBNL1-associated **MAP2K7Δexon2** isoform increased JNK activation and stem/progenitor-like tumor properties, illustrating that total MAP2K7 abundance may be less informative than isoform and pathway activity. (lacorazza2024pharmacologicalinhibitionof pages 5-6)
+## 9. Recent research, 2023–2024
 
-### 6.2 Hepatocellular carcinoma: 2023 primary study
+### HER2-positive breast-cancer genetics (2023)
 
-Yu et al., published online **30 October 2023**, integrated TCGA/Human Protein Atlas analyses with human HCC-cell experiments. JNK1, JNK2 and MKK7 were increased in HCC datasets whereas MKK4 was reduced. In HepG2 cells, MKK7 knockdown increased apoptosis induced by TNF-α/cycloheximide and TRAIL and reduced soft-agar colony formation, leading the authors to propose MKK7 rather than pan-JNK inhibition as a candidate strategy. [DOI: 10.1007/s00432-023-05473-9](https://doi.org/10.1007/s00432-023-05473-9). (yu2023componentsofthe pages 1-2, yu2023componentsofthe pages 2-4)
+A conditional mouse study provided strong evidence that the JNK pathway can suppress HER2/Neu-driven mammary cancer. Mammary epithelial **Map2k7 deletion** accelerated tumor development in MMTV-NIC mice (**n=18 MKK7-knockout mice; p<0.0002** versus control). Primary MKK7-deficient tumor cells had reduced UV-C-induced JNK activation without major changes in ERK or p38 activation, supporting a relatively selective MKK7–JNK defect. This result cautions that systemic MKK7 inhibition could be harmful in tumors where JNK signaling restrains initiation or progression. Published January 2023; DOI: https://doi.org/10.1073/pnas.2218373120. (itah2023her2drivenbreastcancer pages 6-8)
 
-Interpretation should remain cautious: the HPA comparison contained only **12–23 tumor/non-tumor pairs**, protein abundance did not differ significantly in that subset, and knockdown in cultured cells does not establish patient efficacy. (yu2023componentsofthe pages 9-10, yu2023componentsofthe pages 2-4)
+### Dual-covalent “molecular bident” inhibition (2024)
 
-### 6.3 Pediatric T-ALL and pharmacology: 2024 synthesis
+Li and colleagues developed **ZNL-8162**, an ATP-competitive MKK7 inhibitor designed to form covalent bonds with both **Cys218 and Cys276**. The strategy seeks to preserve activity when one target cysteine mutates and potentially improve selectivity and residence time. It is an innovative chemical-probe concept, but no evidence retrieved here establishes clinical efficacy or an approved use. Published in *ACS Central Science* in 2024; DOI: https://doi.org/10.1021/acscentsci.3c01245. (li2024molecularbidentswith pages 1-2)
 
-A review published **9 December 2024** describes KLF4 silencing and elevated total/phosphorylated MAP2K7 in pediatric T-ALL and argues that abnormal MKK7–JNK activity can sustain leukemia-initiating and bulk leukemic cells. [DOI: 10.3389/fonc.2024.1486756](https://doi.org/10.3389/fonc.2024.1486756). (lacorazza2024pharmacologicalinhibitionof pages 1-2, lacorazza2024pharmacologicalinhibitionof pages 5-6)
+### Expanding inhibitor landscape (2024 review)
 
-Selected quantitative preclinical findings include:
+A December 2024 review concluded that MAP2K7 pharmacology remains preclinical and selectivity is the central obstacle. Representative findings include:
 
-- **Compound 4a:** biochemical MAP2K7 inhibition around **10 nM**, but activity against several other cysteine-bearing kinases.
-- **Covalent compounds 1 and 2:** reported biochemical inhibition at approximately **3 nM and 0.6 nM**.
-- **DK-2403:** approximately **10 nM** biochemical inhibition; T-ALL-cell cytotoxicity **1.1–2.9 μM**, reduced phospho-JNK and phospho-ATF2, but not yet tested in leukemia mouse models at the review date.
-- **OTSSP167:** MAP2K7 biochemical IC50 approximately **160 nM**, T-ALL-cell IC50 **10–57 nM**, and control of leukemia burden at **10 mg/kg/day** in patient-derived xenografts; it is nevertheless a multikinase inhibitor rather than a selective MKK7 drug.
-- **5Z-7-oxozeaenol:** T-ALL-cell IC50 approximately **0.2–1.1 μM**, but toxicity prevented adequate exposure and effective leukemia control in xenograft models. (lacorazza2024pharmacologicalinhibitionof pages 8-9, lacorazza2024pharmacologicalinhibitionof pages 6-8)
+- **Compound 4a:** biochemical inhibition around **10 nM**, covalently targeting Cys218, but with off-target activity against BLK, BMX, BTK, ITK, JAK3, mTOR, and S6K.
+- **OTSSP167:** MAP2K7 IC50 **160 nM**; T-ALL-cell activity at **10–57 nM** and disease control in T-ALL PDX mice at **10 mg/kg**, but it is a pan-kinase compound, preventing clean target attribution.
+- **DK-2403:** irreversible Cys218-directed inhibitor; cellular IC50 **1.1–2.9 μM**, with reduced phospho-JNK and phospho-ATF2; no mouse testing was reported in the reviewed evidence.
+- **DTP3:** disrupts the inhibitory GADD45β–MKK7 complex rather than inhibiting the kinase, thereby activating MKK7–JNK; reported interaction IC50 **28 nM** and mouse activity at **14.5 mg/kg**.
+- A 360-compound thermal-shift screen identified type-I and type-II binders, including ibrutinib, OTSSP167, XMD15-46, and TL10-105, with nanomolar binding and full-length-protein IC50 values of approximately **60–160 nM** for selected compounds. (lacorazza2024pharmacologicalinhibitionof pages 6-8, lacorazza2024pharmacologicalinhibitionof pages 8-9, lacorazza2024pharmacologicalinhibitionof pages 5-6)
 
-The frequently exploited selectivity feature is **Cys218** near the ATP-site hinge, which permits irreversible covalent engagement. Yet related kinases can contain analogous reactive cysteines, and potency against recombinant kinase does not guarantee cellular selectivity, exposure, or tolerability. (lacorazza2024pharmacologicalinhibitionof pages 8-9, lacorazza2024pharmacologicalinhibitionof pages 6-8)
+The authoritative interpretation is that these are valuable probes and leads, but biochemical potency alone does not prove that cellular or animal efficacy is caused by MAP2K7. The review was published 9 December 2024; DOI: https://doi.org/10.3389/fonc.2024.1486756. (lacorazza2024pharmacologicalinhibitionof pages 1-2)
 
-## 7. Current applications and implementation status
+## 10. Current applications and translational status
 
-Current real-world uses of MAP2K7 biology are predominantly **research and preclinical**:
+Current real-world uses are principally **research applications**:
 
-1. **Functional pathway readout:** phospho-MKK7, phospho-JNK Thr183/Tyr185, phospho-c-Jun and phospho-ATF2 are used to assess stress-JNK pathway engagement.
-2. **Disease-model perturbation:** RNA interference, CRISPR, conditional knockout, antisense approaches and chemical probes test whether a phenotype specifically depends on MKK7 rather than MKK4 or JNK globally.
-3. **Structure-guided drug discovery:** Cys218-directed covalent inhibitors, reversible ATP-site inhibitors and protein-interaction modulators are being developed.
-4. **Potential biomarker stratification:** active MKK7–JNK signaling, KLF4 repression, MAP2K7 splice isoforms or phospho-JNK may eventually identify tumors more likely to respond, but clinical validation is lacking.
+1. Genetic deletion or knockdown to dissect stress/JNK signaling.
+2. Phospho-JNK, phospho-c-Jun, and phospho-ATF2 readouts to monitor pathway output.
+3. Structural and covalent-chemistry platforms for selective kinase-inhibitor development.
+4. Context-specific cancer models, including T-ALL, multiple myeloma, ovarian cancer stemness, and HER2-positive breast cancer.
 
-The reviewed clinical-trial search did not identify a trial of a selective MAP2K7 inhibitor. The 2024 expert review likewise describes the field as preclinical and calls for pharmacology, toxicology, patient-sample studies and eventual Phase I monitoring of cognition, cardiac function and immunity. (lacorazza2024pharmacologicalinhibitionof pages 8-9, lacorazza2024pharmacologicalinhibitionof pages 1-2)
+No retrieved evidence supports an approved drug whose clinical indication is based on selective MAP2K7 inhibition, and no MAP2K7-directed therapy should be considered clinically validated. Some compounds, notably ibrutinib, are approved for other targets and indications; their experimental MKK7 activity is repurposing evidence, not approval of MAP2K7 as the therapeutic mechanism. The directionally opposite cancer findings further imply that biomarker selection—tumor genotype, MKK7/JNK activation state, splice isoform, and pathway dependence—will be essential. (lacorazza2024pharmacologicalinhibitionof pages 6-8, lacorazza2024pharmacologicalinhibitionof pages 8-9, itah2023her2drivenbreastcancer pages 6-8)
 
-## 8. Expert assessment and evidence limitations
+## Final functional annotation
 
-The strongest conclusion is narrow but well supported: **MAP2K7 is the dedicated stress-responsive MAP2K that docks and activates JNK-family kinases, with preferential phosphorylation of the JNK threonine activation-loop site.** Structure, biochemistry, cellular localization and genetic loss-of-function experiments all support this annotation.
-
-The following claims require more caution:
-
-- Disease associations in Open Targets—including neurodegenerative and CNS-autoimmune categories—have only modest aggregate scores and small evidence counts in the retrieved result; they are useful for hypothesis generation, not proof that MAP2K7 is a validated therapeutic target. (OpenTargets Search: -MAP2K7)
-- “MKK7 inhibition treats cancer” is too broad. Loss can accelerate some KRAS- or NeuT-driven tumors, while inhibition can suppress MKK7-dependent T-ALL, HCC-cell colony formation or other established malignancies. Patient selection and pathway-state biomarkers will be essential.
-- Mouse embryonic lethality and neural, immune and cardiac knockout phenotypes predict a limited therapeutic window for sustained systemic blockade.
-- Many reported compounds are multikinase agents or chemical probes. Nanomolar biochemical potency should not be equated with target-selective clinical efficacy.
-
-## Conclusion
-
-Human MAP2K7/O14733 is correctly identified as MKK7, a cytosolic STE-family dual-specificity MAPK kinase. After activation-loop phosphorylation by stress-responsive MAP3Ks, it uses three dynamic N-terminal docking motifs to recruit JNK1/2/3 and phosphorylates their TPY activation loops, preferentially at threonine. Scaffold-dependent assembly and local mRNA translation create spatially restricted signaling pools, particularly in neuronal growth cones. Genetic evidence establishes indispensable developmental, neural, immune and cardiac functions. Recent 2023–2024 work has strengthened interest in MAP2K7 as a context-specific oncology target and produced potent preclinical inhibitors, but no selective MAP2K7 therapy is clinically established; selectivity, systemic toxicity, pharmacokinetics and the pathway’s context-dependent tumor-suppressor functions remain the principal translational barriers.
+**MAP2K7 encodes a cytoplasmic and nuclear, scaffold-regulated dual-specificity MAP kinase kinase that converts diverse stress inputs into JNK activation. Following activation-loop phosphorylation at Ser271/Thr275 by upstream MAP3Ks, MKK7 binds JNK through three N-terminal docking motifs and preferentially phosphorylates the threonine of JNK’s TPY activation motif. Its canonical role is therefore a relatively selective, partially nonredundant JNK-activating kinase controlling stress-responsive transcription and cytoplasmic signaling. Developmental, neural, inflammatory, and tumor phenotypes derive from this signaling function, but their direction is highly context dependent. MAP2K7 is structurally and pharmacologically tractable, yet selective therapeutic targeting remained preclinical through 2024.**
 
 References
 
-1. (caliz2022mitogenactivatedproteinkinase pages 1-2): Amada D. Caliz, Anastassiia Vertii, Vijay Fisch, Soonsang Yoon, Hyung-Jin Yoo, John F. Keaney, and Shashi Kant. Mitogen-activated protein kinase kinase 7 in inflammatory, cancer, and neurological diseases. Frontiers in Cell and Developmental Biology, Oct 2022. URL: https://doi.org/10.3389/fcell.2022.979673, doi:10.3389/fcell.2022.979673. This article has 20 citations.
+1. (lacorazza2024pharmacologicalinhibitionof pages 1-2): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
 
-2. (zhao2026targetingthejnk pages 2-4): Min Zhao, Baojian Li, Ying Gao, Yan Liang, Nan-Qi Shao, Xin-Bo Shi, and Jie Li. Targeting the jnk gatekeepers: structural evolution and medicinal chemistry of mkk4 and mkk7 inhibitors. Molecules, 31:672, Feb 2026. URL: https://doi.org/10.3390/molecules31040672, doi:10.3390/molecules31040672. This article has 1 citations.
+2. (gehi2022intrinsicdisorderin pages 15-17): Bhuvaneshwari R. Gehi, Kundlik Gadhave, Vladimir N. Uversky, and Rajanish Giri. Intrinsic disorder in proteins associated with oxidative stress-induced jnk signaling. Cellular and Molecular Life Sciences, Mar 2022. URL: https://doi.org/10.1007/s00018-022-04230-4, doi:10.1007/s00018-022-04230-4. This article has 23 citations and is from a domain leading peer-reviewed journal.
 
-3. (yu2023componentsofthe pages 1-2): Jijun Yu, Xinying Li, Junxia Cao, Ting Zhu, Shuifeng Liang, Le Du, Meng Cao, Haitao Wang, Yaolin Zhang, Yinxi Zhou, Beifen Shen, Jiannan Feng, Jiyan Zhang, Jing Wang, and Jianfeng Jin. Components of the jnk–mapk pathway play distinct roles in hepatocellular carcinoma. Journal of Cancer Research and Clinical Oncology, 149:17495-17509, Oct 2023. URL: https://doi.org/10.1007/s00432-023-05473-9, doi:10.1007/s00432-023-05473-9. This article has 25 citations and is from a peer-reviewed journal.
+3. (katzengruber2023mkk4inhibitors—recentdevelopment pages 2-4): Leon Katzengruber, Pascal Sander, and Stefan A. Laufer. Mkk4 inhibitors—recent development status and therapeutic potential. International Journal of Molecular Sciences, 24:7495, Apr 2023. URL: https://doi.org/10.3390/ijms24087495, doi:10.3390/ijms24087495. This article has 26 citations.
 
-4. (lacorazza2024pharmacologicalinhibitionof pages 1-2): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
+4. (gehi2022intrinsicdisorderin pages 17-18): Bhuvaneshwari R. Gehi, Kundlik Gadhave, Vladimir N. Uversky, and Rajanish Giri. Intrinsic disorder in proteins associated with oxidative stress-induced jnk signaling. Cellular and Molecular Life Sciences, Mar 2022. URL: https://doi.org/10.1007/s00018-022-04230-4, doi:10.1007/s00018-022-04230-4. This article has 23 citations and is from a domain leading peer-reviewed journal.
 
-5. (kragelj2015structureanddynamics pages 1-2): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
+5. (caliz2022mitogenactivatedproteinkinase pages 2-4): Amada D. Caliz, Anastassiia Vertii, Vijay Fisch, Soonsang Yoon, Hyung-Jin Yoo, John F. Keaney, and Shashi Kant. Mitogen-activated protein kinase kinase 7 in inflammatory, cancer, and neurological diseases. Frontiers in Cell and Developmental Biology, Oct 2022. URL: https://doi.org/10.3389/fcell.2022.979673, doi:10.3389/fcell.2022.979673. This article has 20 citations.
 
-6. (lacorazza2024pharmacologicalinhibitionof pages 2-4): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
+6. (kragelj2015structureanddynamics pages 2-3): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
 
-7. (kragelj2015structureanddynamics pages 2-3): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
+7. (kragelj2015structureanddynamics pages 4-5): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
 
-8. (kragelj2015structureanddynamics pages 4-5): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
+8. (kragelj2015structureanddynamics media 67a8813c): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
 
-9. (kragelj2015structureanddynamics pages 3-4): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
+9. (coffey2014nuclearandcytosolic pages 3-4): Eleanor T. Coffey. Nuclear and cytosolic jnk signalling in neurons. Nature Reviews Neuroscience, 15:285-299, Apr 2014. URL: https://doi.org/10.1038/nrn3729, doi:10.1038/nrn3729. This article has 424 citations and is from a highest quality peer-reviewed journal.
 
-10. (feltrin2012growthconemkk7 pages 3-6): Daniel Feltrin, Ludovico Fusco, Harald Witte, Francesca Moretti, Katrin Martin, Michel Letzelter, Erika Fluri, Peter Scheiffele, and Olivier Pertz. Growth cone mkk7 mrna targeting regulates map1b-dependent microtubule bundling to control neurite elongation. PLoS Biology, 10:e1001439, Dec 2012. URL: https://doi.org/10.1371/journal.pbio.1001439, doi:10.1371/journal.pbio.1001439. This article has 65 citations and is from a highest quality peer-reviewed journal.
+10. (davis2000signaltransductionby pages 3-4): Roger J Davis. Signal transduction by the jnk group of map kinases. Cell, 103:239-252, Oct 2000. URL: https://doi.org/10.1016/s0092-8674(00)00116-1, doi:10.1016/s0092-8674(00)00116-1. This article has 5924 citations and is from a highest quality peer-reviewed journal.
 
-11. (feltrin2012growthconemkk7 pages 8-10): Daniel Feltrin, Ludovico Fusco, Harald Witte, Francesca Moretti, Katrin Martin, Michel Letzelter, Erika Fluri, Peter Scheiffele, and Olivier Pertz. Growth cone mkk7 mrna targeting regulates map1b-dependent microtubule bundling to control neurite elongation. PLoS Biology, 10:e1001439, Dec 2012. URL: https://doi.org/10.1371/journal.pbio.1001439, doi:10.1371/journal.pbio.1001439. This article has 65 citations and is from a highest quality peer-reviewed journal.
+11. (caliz2022mitogenactivatedproteinkinase pages 5-6): Amada D. Caliz, Anastassiia Vertii, Vijay Fisch, Soonsang Yoon, Hyung-Jin Yoo, John F. Keaney, and Shashi Kant. Mitogen-activated protein kinase kinase 7 in inflammatory, cancer, and neurological diseases. Frontiers in Cell and Developmental Biology, Oct 2022. URL: https://doi.org/10.3389/fcell.2022.979673, doi:10.3389/fcell.2022.979673. This article has 20 citations.
 
-12. (feltrin2012growthconemkk7 pages 2-3): Daniel Feltrin, Ludovico Fusco, Harald Witte, Francesca Moretti, Katrin Martin, Michel Letzelter, Erika Fluri, Peter Scheiffele, and Olivier Pertz. Growth cone mkk7 mrna targeting regulates map1b-dependent microtubule bundling to control neurite elongation. PLoS Biology, 10:e1001439, Dec 2012. URL: https://doi.org/10.1371/journal.pbio.1001439, doi:10.1371/journal.pbio.1001439. This article has 65 citations and is from a highest quality peer-reviewed journal.
+12. (itah2023her2drivenbreastcancer pages 6-8): Zeynep Itah, Shanzah Chaudhry, Sithara Raju Ponny, Ozkan Aydemir, Alexandra Lee, Julie Cavanagh-Kyros, Cathy Tournier, William J. Muller, and Roger J. Davis. Her2-driven breast cancer suppression by the jnk signaling pathway. Proceedings of the National Academy of Sciences of the United States of America, Jan 2023. URL: https://doi.org/10.1073/pnas.2218373120, doi:10.1073/pnas.2218373120. This article has 35 citations and is from a highest quality peer-reviewed journal.
 
-13. (lacorazza2024pharmacologicalinhibitionof pages 4-5): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
+13. (lacorazza2024pharmacologicalinhibitionof pages 5-6): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
 
-14. (yu2023componentsofthe pages 9-10): Jijun Yu, Xinying Li, Junxia Cao, Ting Zhu, Shuifeng Liang, Le Du, Meng Cao, Haitao Wang, Yaolin Zhang, Yinxi Zhou, Beifen Shen, Jiannan Feng, Jiyan Zhang, Jing Wang, and Jianfeng Jin. Components of the jnk–mapk pathway play distinct roles in hepatocellular carcinoma. Journal of Cancer Research and Clinical Oncology, 149:17495-17509, Oct 2023. URL: https://doi.org/10.1007/s00432-023-05473-9, doi:10.1007/s00432-023-05473-9. This article has 25 citations and is from a peer-reviewed journal.
+14. (lacorazza2024pharmacologicalinhibitionof pages 6-8): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
 
-15. (yu2023componentsofthe pages 2-4): Jijun Yu, Xinying Li, Junxia Cao, Ting Zhu, Shuifeng Liang, Le Du, Meng Cao, Haitao Wang, Yaolin Zhang, Yinxi Zhou, Beifen Shen, Jiannan Feng, Jiyan Zhang, Jing Wang, and Jianfeng Jin. Components of the jnk–mapk pathway play distinct roles in hepatocellular carcinoma. Journal of Cancer Research and Clinical Oncology, 149:17495-17509, Oct 2023. URL: https://doi.org/10.1007/s00432-023-05473-9, doi:10.1007/s00432-023-05473-9. This article has 25 citations and is from a peer-reviewed journal.
+15. (lacorazza2024pharmacologicalinhibitionof pages 8-9): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
 
-16. (lacorazza2024pharmacologicalinhibitionof pages 8-9): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
+16. (li2024molecularbidentswith pages 1-2): Zhengnian Li, Jie Jiang, Scott B. Ficarro, Tyler S. Beyett, Ciric To, Isidoro Tavares, Yingde Zhu, Jiaqi Li, Michael J. Eck, Pasi A. Jänne, Jarrod A. Marto, Tinghu Zhang, Jianwei Che, and Nathanael S. Gray. Molecular bidents with two electrophilic warheads as a new pharmacological modality. ACS Central Science, 10:1156-1166, Feb 2024. URL: https://doi.org/10.1021/acscentsci.3c01245, doi:10.1021/acscentsci.3c01245. This article has 21 citations and is from a highest quality peer-reviewed journal.
 
-17. (lacorazza2024pharmacologicalinhibitionof pages 6-8): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
+17. (OpenTargets Search: -MAP2K7): Open Targets Query (-MAP2K7, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-18. (zhao2026targetingthejnk pages 6-8): Min Zhao, Baojian Li, Ying Gao, Yan Liang, Nan-Qi Shao, Xin-Bo Shi, and Jie Li. Targeting the jnk gatekeepers: structural evolution and medicinal chemistry of mkk4 and mkk7 inhibitors. Molecules, 31:672, Feb 2026. URL: https://doi.org/10.3390/molecules31040672, doi:10.3390/molecules31040672. This article has 1 citations.
+18. (kragelj2015structureanddynamics pages 1-2): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
 
-19. (feltrin2012growthconemkk7 pages 13-16): Daniel Feltrin, Ludovico Fusco, Harald Witte, Francesca Moretti, Katrin Martin, Michel Letzelter, Erika Fluri, Peter Scheiffele, and Olivier Pertz. Growth cone mkk7 mrna targeting regulates map1b-dependent microtubule bundling to control neurite elongation. PLoS Biology, 10:e1001439, Dec 2012. URL: https://doi.org/10.1371/journal.pbio.1001439, doi:10.1371/journal.pbio.1001439. This article has 65 citations and is from a highest quality peer-reviewed journal.
+19. (kragelj2015structureanddynamics pages 3-4): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
 
-20. (feltrin2012growthconemkk7 pages 10-13): Daniel Feltrin, Ludovico Fusco, Harald Witte, Francesca Moretti, Katrin Martin, Michel Letzelter, Erika Fluri, Peter Scheiffele, and Olivier Pertz. Growth cone mkk7 mrna targeting regulates map1b-dependent microtubule bundling to control neurite elongation. PLoS Biology, 10:e1001439, Dec 2012. URL: https://doi.org/10.1371/journal.pbio.1001439, doi:10.1371/journal.pbio.1001439. This article has 65 citations and is from a highest quality peer-reviewed journal.
-
-21. (lacorazza2024pharmacologicalinhibitionof pages 5-6): H. Daniel Lacorazza. Pharmacological inhibition of the map2k7 kinase in human disease. Frontiers in Oncology, Dec 2024. URL: https://doi.org/10.3389/fonc.2024.1486756, doi:10.3389/fonc.2024.1486756. This article has 10 citations.
-
-22. (OpenTargets Search: -MAP2K7): Open Targets Query (-MAP2K7, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+20. (kragelj2015structureanddynamics pages 5-6): Jaka Kragelj, Andrés Palencia, Max H. Nanao, Damien Maurin, Guillaume Bouvignies, Martin Blackledge, and Malene Ringkjøbing Jensen. Structure and dynamics of the mkk7–jnk signaling complex. Proceedings of the National Academy of Sciences, 112:3409-3414, Mar 2015. URL: https://doi.org/10.1073/pnas.1419528112, doi:10.1073/pnas.1419528112. This article has 96 citations and is from a highest quality peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](MAP2K7-deep-research-falcon_artifacts/artifact-00.md)
+![## Context ID: pqac-00000033 Figure 5 illustrates the crystal structure of JNK1 in complex with the MKK7 D2 docking site peptide. It specifically highlights the](MAP2K7-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. caliz2022mitogenactivatedproteinkinase pages 1-2
-2. kragelj2015structureanddynamics pages 1-2
-3. lacorazza2024pharmacologicalinhibitionof pages 2-4
-4. lacorazza2024pharmacologicalinhibitionof pages 4-5
-5. lacorazza2024pharmacologicalinhibitionof pages 5-6
-6. zhao2026targetingthejnk pages 2-4
-7. yu2023componentsofthe pages 1-2
-8. lacorazza2024pharmacologicalinhibitionof pages 1-2
-9. kragelj2015structureanddynamics pages 2-3
-10. kragelj2015structureanddynamics pages 4-5
-11. kragelj2015structureanddynamics pages 3-4
-12. yu2023componentsofthe pages 9-10
-13. yu2023componentsofthe pages 2-4
-14. lacorazza2024pharmacologicalinhibitionof pages 8-9
-15. lacorazza2024pharmacologicalinhibitionof pages 6-8
-16. zhao2026targetingthejnk pages 6-8
-17. DOI: 10.1007/s00432-023-05473-9
-18. DOI: 10.3389/fonc.2024.1486756
-19. https://doi.org/10.1007/s00432-023-05473-9
-20. https://doi.org/10.3389/fonc.2024.1486756
-21. https://doi.org/10.3389/fcell.2022.979673,
-22. https://doi.org/10.3390/molecules31040672,
-23. https://doi.org/10.1007/s00432-023-05473-9,
-24. https://doi.org/10.3389/fonc.2024.1486756,
-25. https://doi.org/10.1073/pnas.1419528112,
-26. https://doi.org/10.1371/journal.pbio.1001439,
+1. gehi2022intrinsicdisorderin pages 17-18
+2. lacorazza2024pharmacologicalinhibitionof pages 1-2
+3. kragelj2015structureanddynamics pages 2-3
+4. caliz2022mitogenactivatedproteinkinase pages 2-4
+5. caliz2022mitogenactivatedproteinkinase pages 5-6
+6. li2024molecularbidentswith pages 1-2
+7. gehi2022intrinsicdisorderin pages 15-17
+8. kragelj2015structureanddynamics pages 4-5
+9. coffey2014nuclearandcytosolic pages 3-4
+10. davis2000signaltransductionby pages 3-4
+11. lacorazza2024pharmacologicalinhibitionof pages 5-6
+12. lacorazza2024pharmacologicalinhibitionof pages 6-8
+13. lacorazza2024pharmacologicalinhibitionof pages 8-9
+14. kragelj2015structureanddynamics pages 1-2
+15. kragelj2015structureanddynamics pages 3-4
+16. kragelj2015structureanddynamics pages 5-6
+17. https://doi.org/10.1073/pnas.2218373120.
+18. https://doi.org/10.1021/acscentsci.3c01245.
+19. https://doi.org/10.3389/fonc.2024.1486756.
+20. https://doi.org/10.3389/fonc.2024.1486756,
+21. https://doi.org/10.1007/s00018-022-04230-4,
+22. https://doi.org/10.3390/ijms24087495,
+23. https://doi.org/10.3389/fcell.2022.979673,
+24. https://doi.org/10.1073/pnas.1419528112,
+25. https://doi.org/10.1038/nrn3729,
+26. https://doi.org/10.1016/s0092-8674(00
+27. https://doi.org/10.1073/pnas.2218373120,
+28. https://doi.org/10.1021/acscentsci.3c01245,
