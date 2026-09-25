@@ -42,3 +42,18 @@ that binds CCM2, C-terminal STE11-family Ser/Thr kinase domain. Paralog of MAP3K
 - NEW: GO:0070375 ERK5 cascade (IDA/IMP-type evidence PMID:10593883, PMID:12912994). Term is sparsely
   used (7 annotations total in human/mouse/rat), so the absence is not a convention; MEKK3 performs the MEK5
   phosphorylation step.
+
+## Final decisions (review completed)
+
+- ERK5 cascade (GO:0070375) proposed as the MODIFY replacement for the ARBA intracellular signal transduction IEA
+  rather than as a separate NEW (a NEW would duplicate the replacement). Comparator check: GO:0070375 is carried by
+  MAP2K5 and MAPK7 (the other kinases of the same module); MAP3Ks routinely carry their cascade terms (e.g. JNK/p38
+  cascades). MEKK3 performs the MEK5-phosphorylation step, so it passes the participation test.
+- IDA intracellular signal transduction (PMID:15001576, TRAF7) -> MODIFY to MAPK cascade (AP1 output of MEKK3 runs
+  through SEK/MEK [PMID:9006902]); kept consistent with the IEA row.
+- 14-3-3 IPIs -> GO:0071889 (PMID:16407301, 18308725, 12392720, 9452471); MAP2K5 -> GO:0019901; TRAF7 (RING E3 per
+  UniProt Q6Q0C0) -> GO:0031625; CCM2 (adaptor/scaffold) -> GO:0097110. Mirrors MAP3K2.
+- IEP NF-kappaB (overexpression screen) ACCEPTED on the strength of loss-of-function data [PMID:11429546
+  "MEKK3 plays a critical role in TNF-induced NF-kappaB activation"], [PMID:14661019].
+- Blood vessel development not proposed as NEW for human (mouse Map3k3 carries it via IMP, acts_upstream); raised as a
+  suggested question instead.
