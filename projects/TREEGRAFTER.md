@@ -69,8 +69,8 @@ This writes two committed sidecars (no hard-coded numbers):
 
 ## Results (current corpus snapshot)
 
-Scanned **4,975** review files. **969** reviewed TreeGrafter annotations
-(`GO_REF:0000118`) across **541** genes. These numbers are *after* the
+Scanned **4,974** review files. **968** reviewed TreeGrafter annotations
+(`GO_REF:0000118`) across **540** genes. These numbers are *after* the
 2026-09-24 rejection re-review below; the first-pass snapshot (415 rows, 202
 genes, 41% accept, 26% rejected) is preserved in the git history of the
 sidecars.
@@ -78,10 +78,10 @@ sidecars.
 | Reviewer action | TreeGrafter (IEA) | | PAINT/IBA *(contrast)* | |
 |---|---:|---:|---:|---:|
 | `ACCEPT` | 466 | 48.1% | 8,087 | 73.1% |
-| `KEEP_AS_NON_CORE` | 229 | 23.6% | 1,754 | 15.8% |
-| `MODIFY` | 76 | 7.8% | 458 | 4.1% |
+| `KEEP_AS_NON_CORE` | 229 | 23.7% | 1,754 | 15.8% |
+| `MODIFY` | 76 | 7.9% | 458 | 4.1% |
 | `REMOVE` | 88 | 9.1% | 191 | 1.7% |
-| `MARK_AS_OVER_ANNOTATED` | 48 | 5.0% | 329 | 3.0% |
+| `MARK_AS_OVER_ANNOTATED` | 47 | 4.9% | 329 | 3.0% |
 | `UNDECIDED` | 62 | 6.4% | 217 | 2.0% |
 | `NEW` / `PENDING` | 0 | 0.0% | 33 | 0.3% |
 
@@ -143,7 +143,7 @@ curator made the call, fares better.
 
 ## Caveats
 
-- **Moderate n.** 969 TreeGrafter annotations across 541 genes — directional,
+- **Moderate n.** 968 TreeGrafter annotations across 540 genes — directional,
   not a frozen benchmark. The 95% Wald interval on the 48% accept rate is
   roughly ±3 pp.
 - The reference standard is the AIGR review corpus, which mixes expert and AI
