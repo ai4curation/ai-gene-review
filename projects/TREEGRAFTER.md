@@ -301,10 +301,11 @@ fixes:
   (see the per-taxon table in the summary sidecar), so the rates are largely a
   *P. putida* result; the 95% Wald interval on the 41% accept rate is roughly
   ±3 pp, but the taxon skew matters more than the sampling error. The skew is
-  a property of the 2026-09-06 snapshot, not a standing one: the 43
-  annotations added since (see the snapshot note above) are mostly the
-  mammalian HETGA set, and the share is ~68% on the merged tree. Directional,
-  not a frozen benchmark.
+  a property of the 2026-09-06 snapshot, not a standing one: the ≥63
+  annotations added since (see the snapshot note above) are split between the
+  mammalian HETGA set and further *P. putida* rows, and the share is ~68% on
+  the merged tree (656 of 961 at the `3246edc2` floor, versus 628 of 898
+  here). Directional, not a frozen benchmark.
 - The reference standard is the AIGR review corpus, which mixes expert and AI
   adjudication and is under continuous revision; the rates drift with it,
   which is why the tables are pinned to a dated snapshot rather than chased.
@@ -343,7 +344,10 @@ fixes:
   cross into the down-graded set) so it no longer re-stales on every merge.
   Added a snapshot marker to the failure-modes sub-page and a caveat there
   that `K9IMD0` (draculin) and `mdr` are contested mode-4 calls awaiting a
-  curator. "genes" → "proteins" in the Corroboration table. Doc-only.
+  curator. "genes" → "proteins" in the Corroboration and Results text. The
+  Caveats composition bullet, which still quoted the earlier 43-row delta as
+  "mostly HETGA", was rewritten as the same floor (≥63, HETGA and *P. putida*
+  roughly equal; 656/961 = 68%). Doc-only.
 
 ## 2026-09-19
 
