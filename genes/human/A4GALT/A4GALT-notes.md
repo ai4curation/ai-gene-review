@@ -117,3 +117,101 @@ Biological process:
 3. BP: GO:0006688 glycosphingolipid biosynthetic process (globo-series initiation).
 
 All term ids verified current & non-obsolete via OLS (2026-07).
+
+## 2026-09-25 re-review for CLINGEN_MENDELIAN
+
+This section supersedes the earlier annotation-action summary and its duplicated
+counts. All **15** existing YAML rows were reviewed: **12 ACCEPT, 2 MODIFY,
+1 UNDECIDED**. The source annotation identifiers, evidence codes and reference IDs
+are unchanged. No NEW GO annotation is proposed.
+
+### Mendelian mechanism and acceptor specificity
+
+[ClinGen CCID:008831](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e3a8df0-77f1-4395-b501-63a96016e515-2025-05-30T170000.000Z)
+classifies the A4GALT–A4GALT-congenital disorder of glycosylation association as
+Definitive, autosomal recessive (May 30, 2025). Its phenotype is the **p-null blood
+group**, with variable clinical consequences; this is not evidence that A4GALT
+is an enzyme of the general N-glycan assembly pathway. The primary genetic
+and functional evidence is consistent with loss of enzyme activity:
+[PMID:10993874, *Molecular basis for the p phenotype*, "P251L and M183K mutations
+showed complete loss of enzyme function"]. The ClinGen report was read live on
+2026-09-25.
+
+The **wild-type** enzyme makes both P(k) and P1. The earlier notes correctly
+mention P1 capacity but the old review description was ambiguous about whether
+P1 depended on Q211E. Direct recombinant-enzyme experiments resolve this:
+[PMID:26773500, *Human Gb3/CD77 synthase reveals specificity toward two or four
+different acceptors depending on amino acid at position 211, creating P(k), P1
+and NOR blood group antigens*, "the consensus enzyme synthesizes both the P(k)
+and P1 antigens, while its p.Q211E variant additionally synthesizes the NOR
+antigen"]. P1 synthesis modifies paragloboside in the **neolacto** series; P1 is
+not made by extending Gb3. The two core-function entries now describe distinct
+LacCer-to-Gb3 and paragloboside-to-P1 reactions, rather than repeating the same
+Gb3 reaction as both an activity and a pathway entry.
+
+Q211E is a separate, specificity-broadening mechanism. The original NOR study
+found the mutation in heterozygous NOR-positive donors and demonstrated NOR
+production after transfection [PMID:22965229, *A single point mutation in the
+gene encoding Gb3/CD77 synthase causes a rare inherited polyagglutination
+syndrome*, "Cells transfected with the vector encoding the Gb3/CD77 synthase
+with Glu at position 211 expressed both P1 and NOR antigens."]. It must not be
+conflated with recessive p-null deficiency.
+
+### N-glycan acceptors and toxin receptors
+
+The full text of PMID:33460651 was retrieved by the publication cache and read.
+Purified catalytic domains and transfected CHO-Lec2 cells establish that
+A4GALT can modify complex N-glycan acceptors; CHO-Lec2 cells lack endogenous
+A4GALT and are deficient in CMP-sialic acid transport. The experiments establish
+capacity, while its quantitative endogenous contribution in normal human
+tissues remains a question. [PMID:33460651, *Human Gb3/CD77 synthase produces P1
+glycotope-capped N-glycans, which mediate Shiga toxin 1 but not Shiga toxin 2 cell
+entry*, "both enzymes produce P1 glycotopes on N-glycoproteins, with the mutein
+exhibiting elevated activity."] The receptors are **glycan products** of the
+enzyme, so toxin binding should not be assigned to the enzyme itself.
+
+No new N-glycosylation or toxin-entry process annotation is proposed from this
+study. Its experimentally demonstrated acceptor breadth is stated in the
+biological description and reference findings without asserting that every
+cellular consequence of those glycans is an evolved core A4GALT function.
+
+### Annotation decisions and evidence limits
+
+- GO:0008378 galactosyltransferase activity (three rows) is **ACCEPT**. It
+  describes the core catalytic activity and covers both P(k) and P1 chemistry;
+  a broader valid term is not automatically a peripheral function.
+- GO:0016758 hexosyltransferase activity is **MODIFY** to GO:0035250
+  UDP-galactosyltransferase activity. This specifies the UDP-galactose donor
+  while retaining the demonstrated acceptor breadth.
+- GO:0016020 membrane is **MODIFY** to GO:0000139 Golgi membrane using the
+  combined UniProt and Reactome localization evidence. The original
+  PMID:10748143 topology prediction is not represented as a Golgi imaging assay.
+- All specific Gb3-synthase, glycosphingolipid-biosynthesis and Golgi-membrane
+  rows are **ACCEPT**.
+- GO:0007009 plasma membrane organization is **UNDECIDED**. The PMID:10747952
+  cache is abstract-only. Its abstract establishes P(k) synthesis and surface
+  expression; it does not identify a membrane-organization experiment.
+  PubMed, DOI/publisher retrieval and a full-title web search did not provide
+  usable full text. The previous claim that this is an indirect effect on
+  membrane microdomains was speculation, as was using the source relationship
+  type to justify a decision. The experimental annotation is not rejected on
+  incomplete evidence; a precise follow-up question is recorded in the YAML.
+
+All seven discussed GO definitions were checked through the live QuickGO REST
+API on 2026-09-25 (GO:0050512, GO:0007009, GO:0006688, GO:0000139, GO:0008378,
+GO:0016758, GO:0001576). The existing GO:0006688 remains appropriate;
+GO:0001576 explicitly starts at the tetrasaccharide globoside core and is not
+substituted for A4GALT's Gb3-forming step. Both original Reactome references were
+opened live; R-HSA-9846477 identifies A4GALT as catalyst, LacCer and UDP-Gal as
+inputs, Gb3 as product, and Golgi membrane as the enzyme compartment. Searching
+`gocams/index.tsv` for A4GALT and Q9NPC4 returned no cached model entry.
+
+Primary sources added to the cache: PMID:10993874, PMID:22965229,
+PMID:26773500 (abstracts), and PMID:33460651 (PMC full text). No cached source
+was hand-edited. The original two publications remain abstract-only.
+
+A live QuickGO inspection of all 40 descendants of GO:0008378 found no
+P1/paragloboside-specific or general alpha-1,4-galactosyltransferase term.
+GO:0035250 UDP-galactosyltransferase activity was separately definition-checked
+and used for the P1 core reaction and the hexosyltransferase refinement. The
+LacCer-specific GO:0050512 is inappropriate for the paragloboside reaction.
