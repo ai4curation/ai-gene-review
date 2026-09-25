@@ -119,7 +119,7 @@ advisory warnings remain non-blocking and are unrelated to this batch.
 
 - Added reviewed non-KT2440 exemplars across the pathway so the reusable
   module is not grounded only by the PSEPK instance.
-- Added five activity-specific PAINT IBD nodes whose experimental seed lists
+- Added four activity-specific PAINT IBD nodes whose experimental seed lists
   support the corresponding leaf functions. The IlvH catalytic PAINT
   assertion, the GO:0009099 process assertion at the same node, and the broad
   IlvD lyase node were inspected but deliberately not promoted. For
