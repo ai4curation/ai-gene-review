@@ -47,8 +47,16 @@ def main():
         genes[row["GENE ID (HGNC)"]].append(row)
     hgnc_records = json.loads((HERE / "hgnc-symbols.json").read_text())
     symbols = {r["hgnc_id"]: r["symbol"] for r in hgnc_records["genes"]}
-    assert set(symbols) == set(genes), "HGNC snapshot and ClinGen positive set differ"
-    assert len(set(symbols.values())) == len(genes), "HGNC symbol collision"
+    if set(symbols) != set(genes):
+        raise ValueError("HGNC snapshot and ClinGen positive set differ")
+    if len(set(symbols.values())) != len(genes):
+        raise ValueError("HGNC symbol collision")
+    locus = {r["hgnc_id"]: r for r in hgnc_records["genes"]}
+    rna = {h for h in genes if locus[h]["locus_group"] == "non-coding RNA"}
+    other = {h for h in genes if locus[h]["locus_group"] == "other"}
+    if any(r["locus_group"] not in {"protein-coding gene", "non-coding RNA", "other"}
+           for r in locus.values()):
+        raise ValueError("Unrecognized HGNC locus group")
     strongest = {
         hgnc: min((r["CLASSIFICATION"] for r in rs), key=LEVELS.index)
         for hgnc, rs in genes.items()
@@ -110,6 +118,9 @@ a GO molecular function or participation in a biological process.
 | Nuclear Mendelian genes (AD / AR / XL / SD) | {len(nuclear)} |
 | Additional mitochondrial genes | {len(mitochondrial)} |
 | Additional genes with undetermined inheritance only | {len(undetermined)} |
+| HGNC protein-coding genes (across all inheritance groups) | {len(genes) - len(rna) - len(other)} |
+| Non-coding RNA genes (separate workflow) | {len(rna)} |
+| Other HGNC locus types (separate identifier triage) | {len(other)} |
 
 | ClinGen classification | Source associations | Genes whose strongest positive association is this level |
 |---|---:|---:|''')
@@ -117,8 +128,11 @@ a GO molecular function or participation in a biological process.
     for level in (*LEVELS, "Disputed", "Refuted", "No Known Disease Relationship"):
         print(f"| {level} | {classes[level]} | {counts[level] if level in LEVELS else 'Excluded'} |")
     print('''
-Counts of genes use the strongest classification across qualifying associations;
-each individual association retains its own classification in the checklist.
+The classification table counts all genes, including mitochondrial and
+undetermined inheritance. Inheritance-group and locus-group counts are two
+different partitions of the same inventory. Each individual association retains
+its own classification in the checklist. RNA and other locus types have separate
+checklist sections, so nuclear protein-coding headings exclude those genes.
 
 ## Status
 
@@ -129,8 +143,11 @@ each individual association retains its own classification in the checklist.
 
 All gene checkboxes start unchecked: they track assessment for this project,
 not whether a review happens to exist elsewhere in the repository. The seed step
-does not fetch or complete thousands of individual gene reviews. Noncoding genes
-remain in scope and require a suitable RNA-function review workflow.
+does not fetch or complete thousands of individual gene reviews. The {len(rna)}
+RNA genes remain in scope and use RNA-specific identifiers, sequences, and
+functional literature rather than UniProt-dependent fetching. The {len(other)}
+other HGNC loci (readthrough or immune-receptor genes) require identifier/product
+triage; an HGNC group of "other" does not imply absence of a protein product.
 
 ## Reproducing the seed
 
@@ -141,8 +158,10 @@ python3 projects/CLINGEN_MENDELIAN/seed_project.py > /tmp/CLINGEN_MENDELIAN.md
 diff -u projects/CLINGEN_MENDELIAN.md /tmp/CLINGEN_MENDELIAN.md
 ```
 
-It reproduces the initial page from the archived CSV. Compare before replacing
-the project so later checkbox progress and notes are preserved. For a future
+It generates a fresh seed from the archived CSV and HGNC subset, including locus
+types. Differences in maturity, campaign status, progress links, checkbox states,
+and notes are expected once the campaign starts. Compare before replacing the
+project so that authored campaign state is preserved. For a future
 refresh, download the official CSV again, record its actual retrieval date,
 inspect membership changes, and add a new project history record.
 
@@ -165,12 +184,15 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
                 reports.append(f"[{label}]({r['ONLINE REPORT']}) ({r['DISEASE ID (MONDO)']}; {mode}; {r['CLASSIFICATION']})")
             aliases = sorted({r["GENE SYMBOL"] for r in genes[hgnc]} - {symbol})
             alias_note = f" (ClinGen source symbol: {', '.join(aliases)})" if aliases else ""
-            print(f"- [ ] **{symbol}** — {hgnc}{alias_note}; " + "; ".join(reports) + ".")
+            type_note = f" [{locus[hgnc]['locus_type']}]" if hgnc in rna | other else ""
+            print(f"- [ ] **{symbol}** — {hgnc}{alias_note}{type_note}; " + "; ".join(reports) + ".")
 
     for level in LEVELS:
-        emit({h for h in nuclear if strongest[h] == level}, f"Nuclear Mendelian: {level}")
-    emit(mitochondrial, "Additional mitochondrial disease genes")
-    emit(undetermined, "Follow-up: undetermined inheritance only")
+        emit({h for h in nuclear - rna - other if strongest[h] == level}, f"Nuclear Mendelian protein-coding genes: {level}")
+    emit(mitochondrial - rna - other, "Additional mitochondrial protein-coding disease genes")
+    emit(rna, "RNA genes: dedicated RNA-function review workflow")
+    emit(other, "Other HGNC locus types: identifier and product triage")
+    emit(undetermined - rna - other, "Follow-up: undetermined inheritance only")
     print(f"\n## Notes\n\n### {date}\n\nInitial source-based seed only. No gene-level curation sign-offs were made.\n")
 
 
