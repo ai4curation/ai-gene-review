@@ -91,7 +91,7 @@ uv run --with pyyaml projects/TREEGRAFTER/analyze_treegrafter.py
 This writes three committed sidecars (no hard-coded numbers):
 
 - [`TREEGRAFTER/treegrafter_review.tsv`](TREEGRAFTER/treegrafter_review.tsv) — one row per reviewed TreeGrafter annotation (gene, taxon, term, aspect, action).
-- [`TREEGRAFTER/treegrafter_contrast.tsv`](TREEGRAFTER/treegrafter_contrast.tsv) — one row per reviewed corroborated-PANTHER (`GO_REF:0000120`) and InterPro2GO (`GO_REF:0000002`) annotation on the same genes.
+- [`TREEGRAFTER/treegrafter_contrast.tsv`](TREEGRAFTER/treegrafter_contrast.tsv) — one row per reviewed corroborated-PANTHER (`GO_REF:0000120`) and InterPro2GO (`GO_REF:0000002`) annotation on the same reviewed proteins.
 - [`TREEGRAFTER/treegrafter_summary.tsv`](TREEGRAFTER/treegrafter_summary.tsv) — action counts for all populations, by-aspect and by-taxon breakdowns, and the most frequently down-graded TreeGrafter terms.
 
 Two further scripts build on it (see the [failure-modes page](TREEGRAFTER/failure-modes.md)):
@@ -108,14 +108,21 @@ mode and writes
 > committed sidecar, was generated from the review corpus as of
 > **2026-09-06** (branch commit `49d8cc0b`, on `main` at `b62182cc`) and has
 > been **deliberately frozen** there so that the figures below are the ones
-> that were verified line by line in review. The corpus has since grown: the
-> `main` merged into this branch adds **15 review files / 43 TreeGrafter
-> annotations** not in the tables (HETGA 29 — a mammalian gene set the tables
-> have never seen — PSEPK 12, XENLA 2; none removed) and changes one action
-> (PSEPK `fruA` GO:0090563, `ACCEPT` → `KEEP_AS_NON_CORE`). Re-running
-> `analyze_treegrafter.py` on that tree gives 4,857 files / 941 annotations /
-> 525 proteins and a 42.1% accept rate versus 41.3% here. Regenerate the
-> sidecars only together with a fresh pass over `failure_mode_curated.tsv`.
+> that were verified line by line in review. **The corpus has grown since and
+> keeps growing; the tables were not chased.** As a dated floor: by the
+> branch's merge of `main` at `3246edc2` (2026-09-19) the tree already held at
+> least **63 more `GO_REF:0000118` annotations in 28 more review files** than
+> the tables (HETGA 29 and 9AVES 4 — two species the tables have never seen,
+> the first a mammalian gene set — PSEPK 28, XENLA 2; none removed), and at
+> least **four already-counted actions had changed**: PSEPK `fruA`
+> GO:0090563 and `fabF` GO:0005829 (`ACCEPT` → `KEEP_AS_NON_CORE`), and PSEPK
+> `pgm` GO:0006166 and GO:0008973 (`KEEP_AS_NON_CORE` →
+> `MARK_AS_OVER_ANNOTATED`) — the `pgm` pair being the first post-snapshot
+> changes that move rows *into* the down-graded population the failure-mode
+> analysis is built on. Later merges add more. Current figures come from
+> re-running `analyze_treegrafter.py`, not from this page; regenerate the
+> sidecars only together with a fresh pass over `failure_mode_curated.tsv`
+> (see *Refresh the snapshot* under Next steps).
 
 At the snapshot, **4,540** review files were scanned, yielding **898**
 reviewed TreeGrafter annotations (`GO_REF:0000118`) across **510** genes —
@@ -159,10 +166,10 @@ over-reaches; CC terms are rarely *wrong* but are mostly parked as non-core.
 
 ### Corroboration: TreeGrafter-only vs multi-method vs InterPro2GO-only
 
-On the same 510 genes, the reviewer treatment of the three electronic
+On the same 510 reviewed proteins, the reviewer treatment of the three electronic
 populations defined above:
 
-| Population (same genes) | n | `ACCEPT` | `KEEP_AS_NON_CORE` | down-graded |
+| Population (same proteins) | n | `ACCEPT` | `KEEP_AS_NON_CORE` | down-graded |
 |---|---:|---:|---:|---:|
 | TreeGrafter, **uncorroborated** (`GO_REF:0000118`) | 898 | 41% | 21% | 34% |
 | TreeGrafter **corroborated** by ≥1 other pipeline (`GO_REF:0000120`, `PANTHER:PTN…`) | 637 | **77%** | 9% | **12%** |
@@ -325,6 +332,17 @@ fixes:
 
 ---
 # NOTES
+
+## 2026-09-25
+
+- The snapshot callout's drift note was itself quoting exact merged-tree
+  figures that a second `main` merge (`3246edc2`) had already outdated.
+  Rewrote it as a dated floor (≥63 annotations / 28 files across HETGA,
+  9AVES, PSEPK, XENLA; four changed actions, naming the two `pgm` rows that
+  cross into the down-graded set) so it no longer re-stales on every merge.
+  Added a snapshot marker to the failure-modes sub-page and a caveat there
+  that `K9IMD0` (draculin) and `mdr` are contested mode-4 calls awaiting a
+  curator. "genes" → "proteins" in the Corroboration table. Doc-only.
 
 ## 2026-09-19
 

@@ -6,6 +6,12 @@ autolink_gene_symbols: false
 
 [← back to TreeGrafter Inference Evaluation](../TREEGRAFTER.md)
 
+> **Frozen snapshot (2026-09-06).** Every count on this page comes from the
+> sidecars generated at branch commit `49d8cc0b` (`main` `b62182cc`) and is
+> deliberately not updated as the corpus grows; see the snapshot note at the
+> top of the [main page](../TREEGRAFTER.md#results-frozen-corpus-snapshot-2026-09-06)
+> for what has changed since and how to refresh.
+
 This sub-page drills into the **306 down-graded** TreeGrafter annotations
 (`REMOVE` / `MARK_AS_OVER_ANNOTATED` / `MODIFY` from the
 [main evaluation](../TREEGRAFTER.md)) and asks the question directly: **does it
@@ -110,7 +116,13 @@ co-opted to a non-enzymatic role — something a tree graft cannot detect.
 | A0A8B6GS20 (MTMR9) | `phosphatidylinositol dephosphorylation` (MODIFY), `negative regulation of autophagy` (OVER) | myotubularin-related | **Pseudophosphatase**: lacks the catalytic cysteine; regulates active MTMR partners |
 
 Genuine pseudo-enzymes turn out to be **rare** in this corpus — four
-annotations on two genes. Two cases listed here on the earlier snapshot have
+annotations on two genes — with one open question: two rows currently filed
+as mode 4, `K9IMD0` (draculin, a neofunctionalised lactoferrin homologue on
+the LACTOTRANSFERRIN subfamily) and `mdr` (an Mdl1 family-level term on a
+generic ABC-transporter subfamily), are **contested** — by the operational
+rule below they read as mode 2 and mode 1 respectively — and await a
+curator's call rather than a re-file by hand (the same treatment this page
+gives its 9 mode-0 rows). Two cases listed here on the earlier snapshot have
 been re-filed: TFP's `enzyme regulator activity` is an *outdated node term*
 (specifier proteins are now known to be Fe(II)-dependent C–S lyases; mode 1),
 and IRE1's `unfolded protein binding` is a generic/obsolete binding term on a
@@ -145,7 +157,9 @@ bioinformatic/structural check) would change the call.
 | **ptxD** | `glyoxylate reductase (NADPH)`, `hydroxypyruvate reductase` (REMOVE) | GLYOXYLATE/HYDROXYPYRUVATE REDUCTASE B | **Phosphonate dehydrogenase** (D-2-hydroxyacid DH superfamily) |
 | **mupP** | `phosphoglycolate phosphatase activity`, `DNA repair` (REMOVE) | PHOSPHOGLYCOLATE PHOSPHATASE (PTHR43434) | **MurNAc-6-phosphate phosphatase** (HAD superfamily) |
 | **quiA** | `quinoprotein glucose dehydrogenase activity` (OVER) | QUINOPROTEIN GLUCOSE DEHYDROGENASE | **Quinate dehydrogenase (quinone)** |
-| **kdsC**, **lytN**, **ADAR2**, **pvdD**, **davD**, **lpdV**, **ech**, **galB**, **mdr**, **PP_1257**, **K9IMD0** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; an amidase in a lytic-transglycosylase subfamily; ADAR on the ADAT branch; a pyoverdine NRPS module carrying EntF terms; LPD-val vs LPD-glc across *P. putida* E3 paralogs; … |
+| **kdsC**, **lytN**, **ADAR2**, **pvdD**, **davD**, **lpdV**, **ech**, **galB**, **mdr**†, **PP_1257**, **K9IMD0**† | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; an amidase in a lytic-transglycosylase subfamily; ADAR on the ADAT branch; a pyoverdine NRPS module carrying EntF terms; LPD-val vs LPD-glc across *P. putida* E3 paralogs; … |
+
+† `mdr` and `K9IMD0` are contested mode-4 calls (see the note under mode 2).
 
 Mis-placements are **13% of the down-grades (41 annotations, 27 proteins)** —
 still the minority. This share was previously reported as 19% (58 annotations)
