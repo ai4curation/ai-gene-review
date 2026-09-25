@@ -36,13 +36,13 @@ artifact_sources:
   edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
-  path: aroQ-deep-research-falcon_artifacts/artifact-00.md
+  path: aroQ-III-deep-research-falcon_artifacts/artifact-00.md
   media_type: text/markdown
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-00
 - filename: image-1.png
-  path: aroQ-deep-research-falcon_artifacts/image-1.png
+  path: aroQ-III-deep-research-falcon_artifacts/image-1.png
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
@@ -296,8 +296,8 @@ References
 
 ## Artifacts
 
-- [Edison artifact artifact-00](aroQ-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000014 Figure 2 from the document provides the requested information. Panel A shows pABA titer data (mg/l) for various strains (S1-S16) al](aroQ-deep-research-falcon_artifacts/image-1.png)
+- [Edison artifact artifact-00](aroQ-III-deep-research-falcon_artifacts/artifact-00.md)
+![## Context ID: pqac-00000014 Figure 2 from the document provides the requested information. Panel A shows pABA titer data (mg/l) for various strains (S1-S16) al](aroQ-III-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 

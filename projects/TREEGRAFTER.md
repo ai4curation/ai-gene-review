@@ -216,11 +216,12 @@ intact** — e.g. spermidine synthase on the PMT methyltransferases, carotenoid
 dioxygenase on the lignostilbene dioxygenases, lactate dehydrogenase on
 malate dehydrogenases, cysteine synthase vs. O-acetylhomoserine sulfhydrylase.
 
-Follow-ups surfaced by the re-review, not acted on here: benB still carries an
-`IC` annotation to the obsolete `GO:0043640`; `aroQ` and `aroQ-III` are the
-same protein (Q88IJ6) in two folders; a few relaxed ancestors now sit beside
-sibling rows (ubiA `GO:0004659`/`GO:0016765`, zwf `GO:0006098`) that were out
-of scope and may warrant harmonizing.
+Follow-ups surfaced by the re-review: the duplicate `aroQ` / `aroQ-III`
+folders (both Q88IJ6 / PP_3003) have since been merged into `PSEPK/aroQ-III`,
+the name UniProt gives the locus. Still open — benB carries an `IC`
+annotation to the obsolete `GO:0043640`, and a few relaxed ancestors now sit
+beside sibling rows (ubiA `GO:0004659`/`GO:0016765`, zwf `GO:0006098`) that
+were out of scope and may warrant harmonizing.
 
 ## Deeper analyses
 
@@ -252,6 +253,5 @@ of scope and may warrant harmonizing.
   families where TreeGrafter systematically over-reaches — candidate subfamily
   split / PAINT curation targets to feed upstream. The 2026-09-24 re-review
   narrows this to the retained paralog-transfer set, which is the right input.
-- Harmonize the out-of-scope sibling rows and the two data hygiene items
-  listed under the rejection re-review (benB obsolete `GO:0043640` IC row;
-  duplicate `aroQ` / `aroQ-III` folders).
+- Harmonize the out-of-scope sibling rows and the remaining data hygiene item
+  listed under the rejection re-review (benB obsolete `GO:0043640` IC row).
