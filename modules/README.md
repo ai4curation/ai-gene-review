@@ -96,7 +96,9 @@ revealing missing core coverage. An intentional `KEEP_AS_NON_CORE` is valid and
 does not request promotion to core functions. Missing gene reviews, missing
 support or core coverage, and functions without GO identifiers produce
 **warnings**, not evidence that the activity is absent. A retained, applicable
-`NOT` annotation contradicting the asserted activity produces an **error**.
+`NOT` annotation contradicting a concrete participant activity produces an **error**.
+For a family representative, it produces an advisory warning to review the exemplar
+or family scope; it does not negate the whole family.
 Rejected evidence rows, contribution-only functions, and unresolved isoform or
 annotation-extension context are reported for review without being treated as
 unconditional biological negations.
@@ -106,7 +108,11 @@ a reviewed specific activity supports its broader ancestors, while a broad
 annotation cannot establish a more specific activity. Negation applies in the
 opposite direction: exclusion of a broad activity excludes its descendants.
 `part_of` and regulatory relationships do not establish molecular-function
-support. If the ontology cannot be loaded, comparisons fall back to exact IDs.
+support. If the ontology cannot be loaded or queried, its failure is cached for the run
+and comparisons fall back to exact IDs. Each affected module reports one
+`ONTOLOGY_UNAVAILABLE` warning; its coverage warnings explicitly identify the
+incomplete subsumption check. Functionless annotons assert nothing to compare
+and are skipped on both the gene and family paths.
 
 Family representative checks establish support for the named proteins, not
 conservation throughout a family. Separate checks read structured reviews in

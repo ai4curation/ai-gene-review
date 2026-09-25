@@ -321,3 +321,43 @@ def test_missing_review_is_advisory_in_validator(tmp_path):
     assert result.is_valid
     assert result.function_conformance["counts"]["REVIEW_MISSING"] == 1
     assert any("REVIEW_MISSING" in w for w in result.warnings)
+
+
+def test_family_representative_not_is_advisory(tmp_path):
+    index = write_review(tmp_path, annotations=[annotation("ACCEPT", negated=True)])
+    participant = {
+        "selector_type": "FAMILY",
+        "family": {"representative_members": [{"term": {"id": "UniProtKB:Q0JF02"}}]},
+    }
+    row = findings(module(participant), index)[0]
+    assert row["status"] == "CONTRADICTED"
+    assert row["severity"] == "warning"
+    assert "representative" in row["message"]
+    assert findings(module(), index)[0]["severity"] == "error"
+
+
+def test_failed_go_adapter_is_cached_and_reported(tmp_path):
+    from ai_gene_review.module_function_conformance import (
+        go_subclass_predicate,
+        module_function_conformance,
+    )
+
+    predicate = go_subclass_predicate("unsupported-conformance-test:missing")
+    index = write_review(tmp_path, core=[{"molecular_function": {"id": OTHER}}])
+    result = module_function_conformance(
+        module(), gene_index=index, subclass_of=predicate
+    )
+    assert result["counts"]["ONTOLOGY_UNAVAILABLE"] == 1
+    assert "exact" in result["rows"][-1]["message"]
+    assert (
+        predicate.adapter is None
+    )  # Failed construction is a cached value, not an exception.
+    assert "adapter" in vars(predicate)
+    assert not predicate(PARENT, OTHER)
+    assert predicate(MF, MF)
+    assert predicate.adapter is None
+    repeated = module_function_conformance(
+        module(), gene_index=index, subclass_of=predicate
+    )
+    assert repeated["counts"]["ONTOLOGY_UNAVAILABLE"] == 1
+    assert "Ontology unavailable" in repeated["rows"][0]["message"]

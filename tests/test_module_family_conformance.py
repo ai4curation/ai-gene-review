@@ -382,3 +382,14 @@ def test_real_pgrp_review_distinguishes_catalytic_and_receptor_subfamilies():
         "FAMILY_SUPPORTED",
         "FAMILY_CONFLICT",
     ]
+
+
+def test_functionless_family_annoton_is_not_a_function_gap(tmp_path):
+    doc = _module()
+    del doc["module"]["annotons"][0]["function"]
+    assert module_family_function_findings(doc, family_reviews_dir=tmp_path) == []
+    doc["module"]["annotons"][0]["function"] = {"preferred_term": "unmapped activity"}
+    assert (
+        module_family_function_findings(doc, family_reviews_dir=tmp_path)[0]["status"]
+        == "NO_FUNCTION_ID"
+    )

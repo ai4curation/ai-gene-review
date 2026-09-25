@@ -26,9 +26,7 @@ def _family_claims(data: dict[str, Any]) -> Iterator[tuple[dict, dict]]:
     """Yield asserted and required functions together with their family descriptor."""
     from ai_gene_review.module_qc import as_list, iter_nodes
 
-    def walk(
-        assertion: dict, *, include_unasserted: bool = True
-    ) -> Iterator[tuple[dict, dict]]:
+    def walk(assertion: dict) -> Iterator[tuple[dict, dict]]:
         selector = assertion.get("participant") or {}
         family = selector.get("family")
         if isinstance(family, dict):
@@ -37,7 +35,7 @@ def _family_claims(data: dict[str, Any]) -> Iterator[tuple[dict, dict]]:
                 assertion.get("function"),
                 selector.get("required_function"),
             ):
-                if not isinstance(function, dict):
+                if not isinstance(function, dict) or not function:
                     continue
                 term_id = (function.get("term") or {}).get("id")
                 if any(
@@ -52,14 +50,12 @@ def _family_claims(data: dict[str, Any]) -> Iterator[tuple[dict, dict]]:
                 if index:
                     assertion_id = f"{assertion_id}:required_function"
                 yield {**assertion, "id": assertion_id, "function": function}, family
-            if not functions and include_unasserted:
-                yield assertion, family
         complex_descriptor = selector.get("protein_complex") or {}
         for unit in as_list(complex_descriptor.get("active_units")):
             if isinstance(unit, dict):
                 # A complex's overall activity is not asserted on all subunits.
                 # Still descend to nested units even if this unit has no function.
-                yield from walk(unit, include_unasserted=False)
+                yield from walk(unit)
 
     for node in iter_nodes(data):
         for annoton in as_list(node.get("annotons")):

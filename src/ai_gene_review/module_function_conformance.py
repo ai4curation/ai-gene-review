@@ -11,7 +11,7 @@ from labels. Family representative agreement never establishes family-wide scope
 from __future__ import annotations
 
 from collections import Counter
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from operator import eq
 from pathlib import Path
 from typing import Any, Callable, Iterator
@@ -43,36 +43,49 @@ def _function_id(function: dict[str, Any]) -> str | None:
     return curie if curie and curie.startswith("GO:") else None
 
 
+class GoSubclassPredicate:
+    """Lazy GO is-a lookup with a cached failure and explicit degraded-state report."""
+
+    def __init__(self, adapter_string: str | None):
+        self.adapter_string = adapter_string
+        self.failure: str | None = None
+
+    @cached_property
+    def adapter(self) -> Any:
+        """Cache either the external adapter or its failed construction once."""
+        if self.adapter_string is None:
+            return None
+        from oaklib import get_adapter
+
+        try:
+            return get_adapter(self.adapter_string)
+        except Exception as error:  # External ontology construction can fail.
+            self.failure = f"GO adapter could not be loaded ({type(error).__name__})."
+            return None
+
+    @lru_cache(maxsize=8192)
+    def ancestors(self, curie: str) -> frozenset[str]:
+        """Use only is-a edges; stop remote retries after an external failure."""
+        if self.failure or self.adapter is None:
+            return frozenset()
+        try:
+            return frozenset(
+                self.adapter.ancestors(curie, predicates=["rdfs:subClassOf"])
+            )
+        except Exception as error:  # External ontology queries can also fail.
+            self.failure = f"GO ancestor lookup failed ({type(error).__name__})."
+            return frozenset()
+
+    def __call__(self, child: str, parent: str) -> bool:
+        return child == parent or parent in self.ancestors(child)
+
+
 @lru_cache(maxsize=8)
 def go_subclass_predicate(
     adapter_string: str | None = "sqlite:obo:go",
-) -> SubclassPredicate:
-    """Return a lazy cached GO is-a predicate; unavailable ontology means exact only.
-
-    Only subclass edges are used. Part-of and regulatory relationships must not
-    turn one molecular activity into evidence that a protein enables another.
-    """
-
-    @lru_cache(maxsize=1)
-    def get_go_adapter():
-        from oaklib import get_adapter
-
-        return get_adapter(adapter_string)
-
-    @lru_cache(maxsize=None)
-    def ancestors(curie: str) -> frozenset[str]:
-        if adapter_string is None:
-            return frozenset()
-        try:  # External ontology loading/query can fail; exact comparisons remain valid.
-            adapter = get_go_adapter()
-            return frozenset(adapter.ancestors(curie, predicates=["rdfs:subClassOf"]))
-        except Exception:  # noqa: BLE001
-            return frozenset()
-
-    def subclass(child: str, parent: str) -> bool:
-        return child == parent or parent in ancestors(child)
-
-    return subclass
+) -> GoSubclassPredicate:
+    """Share a lazy GO predicate across modules; failures remain visible and cached."""
+    return GoSubclassPredicate(adapter_string)
 
 
 def _uses(
@@ -370,6 +383,14 @@ def gene_function_findings(
                 assessment = _assess_review(
                     review_cache[path], curie, function_id, subclass_of
                 )
+            if row_scope == "family_representative" and assessment[0] == "CONTRADICTED":
+                assessment = (
+                    "CONTRADICTED",
+                    "warning",
+                    "This representative has a retained NOT for the assigned activity. "
+                    "Review the exemplar selection or family scope; this does not establish "
+                    "that the entire family lacks the function.",
+                )
             row.update(zip(("status", "severity", "message"), assessment))
             if review_path is not None:
                 row["review_path"] = Path(review_path).as_posix()
@@ -382,8 +403,8 @@ def module_function_conformance(
     *,
     gene_index: dict[str, Path] | None = None,
     genes_dir: Path = Path("genes"),
-    family_reviews_dir: Path = Path("interpro/panther"),
-    pfam_reviews_dir: Path = Path("interpro/pfam"),
+    family_reviews_dir: Path = Path(__file__).resolve().parents[2] / "interpro/panther",
+    pfam_reviews_dir: Path = Path(__file__).resolve().parents[2] / "interpro/pfam",
     subclass_of: SubclassPredicate | None = None,
 ) -> dict[str, Any]:
     """Collect gene, representative, and curated family functional compliance."""
@@ -402,6 +423,27 @@ def module_function_conformance(
             subclass_of=subclass_of,
         )
     )
+    if isinstance(subclass_of, GoSubclassPredicate) and subclass_of.failure:
+        for row in rows:
+            if row["severity"] == "warning":
+                row["message"] += (
+                    " Ontology unavailable: non-exact support could not be checked."
+                )
+        rows.append(
+            {
+                "annoton_id": (data.get("module") or {}).get("id") or "module",
+                "participant_id": None,
+                "participant_label": "GO ontology",
+                "function_id": None,
+                "function_label": "GO is-a lookup",
+                "scope": "infrastructure",
+                "status": "ONTOLOGY_UNAVAILABLE",
+                "severity": "warning",
+                "message": subclass_of.failure
+                + " Only exact GO matches were checked after the failure; "
+                "coverage gaps may reflect unavailable subsumption. No further lookup attempts will be made in this run.",
+            }
+        )
     return {
         "rows": rows,
         "counts": dict(Counter(row["status"] for row in rows)),
