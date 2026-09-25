@@ -11,8 +11,8 @@ autolink_gene_symbols: false
 Process the nuclear protein-coding Definitive, Strong, Moderate, and Limited tiers
 in order, alphabetically within each tier, followed by mitochondrial protein genes,
 RNA genes, other HGNC locus types, and undetermined-inheritance follow-ups. Keep
-RNA genes in scope but use an RNA-specific review workflow rather than repeatedly
-attempting UniProt-dependent `fetch-gene`. The archived HGNC subset records both
+RNA genes in scope and use `just fetch-ncrna human SYMBOL` (RNAcentral identifiers)
+before reviewing their functional literature. The archived HGNC subset records both
 `locus_group` and `locus_type`: 2,837 protein-coding genes, 35 non-coding RNAs, and
 4 other loci (readthrough, immunoglobulin, or T-cell receptor genes).
 
@@ -72,11 +72,15 @@ are therefore expected; existing human reviews still link normally.
 |---|---|---|---|---|---|
 | A4GALT | Definitive | INITIALIZED | PR open; CI/review pending | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
 | AARS1 | Definitive | COMPLETE | PR open; CI/review pending | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
-| AARS2 | Definitive | COMPLETE | PR open; CI/review pending | `cmungall/clingen-aars2` | [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128) |
+| AARS2 | Definitive | COMPLETE | Approved; required CI pending | `cmungall/clingen-aars2` | [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128) |
+| AASS | Definitive | INITIALIZED | Audit in progress | `cmungall/clingen-aass` | — |
+| ABCA3 | Definitive | No review | Assigned; primary-source reconnaissance complete | `cmungall/clingen-abca3` | — |
+| ABCA4 | Definitive | No review | Assigned; primary-source reconnaissance complete | `cmungall/clingen-abca4` | — |
 
 Project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The next unassigned gene is **AASS**. No genes are complete for this campaign yet.
+The next unassigned nuclear protein-coding Definitive gene is **ABCB4**. No genes
+are complete for this campaign yet. ABAT is in the Moderate tier.
 
 ## Verification log
 
@@ -94,3 +98,14 @@ The next unassigned gene is **AASS**. No genes are complete for this campaign ye
 - 2026-09-25: AARS1 validation and history checks passed and independent biological
   feedback was addressed. PR #3129 includes a genuine late Falcon report; the
   wrapper had already timed out, and the report remains unverified as direct evidence.
+
+- 2026-09-25: Repository-wide baseline `just validate-all` passed for 4,975 reviews
+  and 54 pathway files. No blocking schema, ontology, reference, or best-practice
+  failures remained; advisory warnings were retained.
+
+- 2026-09-25: AARS2 received approval on commit `3b3d7cd710`. All three nonblocking
+  suggestions were answered with source/schema evidence; required CI remains pending.
+
+- 2026-09-25: Project review caught unexpanded RNA/other-locus count placeholders.
+  Fixed the generator and authored page, checked the complete generated output for
+  unresolved placeholders, and regenerated the affected project pages.

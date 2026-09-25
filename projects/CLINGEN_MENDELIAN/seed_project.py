@@ -127,7 +127,7 @@ a GO molecular function or participation in a biological process.
     counts = Counter(strongest.values())
     for level in (*LEVELS, "Disputed", "Refuted", "No Known Disease Relationship"):
         print(f"| {level} | {classes[level]} | {counts[level] if level in LEVELS else 'Excluded'} |")
-    print('''
+    print(f'''
 The classification table counts all genes, including mitochondrial and
 undetermined inheritance. Inheritance-group and locus-group counts are two
 different partitions of the same inventory. Each individual association retains

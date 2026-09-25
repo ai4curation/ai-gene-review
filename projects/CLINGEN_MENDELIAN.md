@@ -2963,9 +2963,9 @@ each tier. Track assignments, validation, and per-gene PRs in the
 
 All gene checkboxes start unchecked: they track assessment for this project,
 not whether a review happens to exist elsewhere in the repository. The seed step
-does not fetch or complete thousands of individual gene reviews. The {len(rna)}
+does not fetch or complete thousands of individual gene reviews. The 35
 RNA genes remain in scope and use RNA-specific identifiers, sequences, and
-functional literature rather than UniProt-dependent fetching. The {len(other)}
+functional literature rather than UniProt-dependent fetching. The 4
 other HGNC loci (readthrough or immune-receptor genes) require identifier/product
 triage; an HGNC group of "other" does not imply absence of a protein product.
 
