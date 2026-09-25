@@ -7,8 +7,11 @@ project before replacing it, so later review progress and notes are preserved.
 
 import csv
 import hashlib
+import io
 import json
+import sys
 from collections import Counter, defaultdict
+from contextlib import redirect_stdout
 from pathlib import Path
 
 
@@ -197,4 +200,12 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 
 
 if __name__ == "__main__":
-    main()
+    # Validate the complete output before publishing any of it to stdout. Braces
+    # are not part of this Markdown format and usually reveal a missed f-string.
+    output = io.StringIO()
+    with redirect_stdout(output):
+        main()
+    rendered = output.getvalue()
+    if "{" in rendered or "}" in rendered:
+        raise ValueError("Unexpected braces in generated Markdown; check for unexpanded template expressions")
+    sys.stdout.write(rendered)
