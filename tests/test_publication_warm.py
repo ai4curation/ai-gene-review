@@ -739,3 +739,47 @@ def test_a_null_content_type_fails_closed(tmp_path):
     )
     assert convert_doi_publication(src, tmp_path, pmid="999995") is True
     assert "full_text_available: false" in (tmp_path / "PMID_999995.md").read_text()
+
+
+def test_the_converter_puts_full_text_under_full_text_not_abstract(tmp_path):
+    """A converted record must not claim full text and then hide it under `## Abstract`.
+
+    `## Content` is "the text we have"; `content_type` says which kind. Routing it always
+    to `abstract` produced a record that `cached_full_text_available` called complete and
+    `publication_warm` (`bool(flag) and FULL_TEXT_HEADER in body`) called a candidate for
+    re-fetching -- two consumers disagreeing about one record. Found by self-audit.
+    """
+    from ai_gene_review.etl.publication import convert_doi_publication
+    from ai_gene_review.etl.publication_warm import FULL_TEXT_HEADER
+
+    src = tmp_path / "DOI_10.1234_a.md"
+    src.write_text(
+        "---\ndoi: 10.1234/a\npmid: '999994'\ntitle: t\ncontent_type: full_text_pdf\n---\n\n"
+        "## Content\n\nThe complete article text, several paragraphs of it.\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999994") is True
+    out = (tmp_path / "PMID_999994.md").read_text()
+
+    assert "full_text_available: true" in out
+    assert FULL_TEXT_HEADER in out, "a record claiming full text must carry the section"
+    assert "The complete article text" in out.split(FULL_TEXT_HEADER, 1)[1]
+    # and the two consumers now agree
+    body = out.split("---", 2)[-1]
+    assert bool("full_text_available: true" in out) and (FULL_TEXT_HEADER in body)
+
+
+def test_the_converter_keeps_an_abstract_only_record_as_an_abstract(tmp_path):
+    """The other branch: abstract_only content stays in `## Abstract`, no full-text claim."""
+    from ai_gene_review.etl.publication import convert_doi_publication
+    from ai_gene_review.etl.publication_warm import FULL_TEXT_HEADER
+
+    src = tmp_path / "DOI_10.1234_b.md"
+    src.write_text(
+        "---\ndoi: 10.1234/b\npmid: '999993'\ntitle: t\ncontent_type: abstract_only\n---\n\n"
+        "## Content\n\nA short abstract about CheZ.\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999993") is True
+    out = (tmp_path / "PMID_999993.md").read_text()
+    assert "full_text_available: false" in out
+    assert FULL_TEXT_HEADER not in out
+    assert "A short abstract about CheZ." in out

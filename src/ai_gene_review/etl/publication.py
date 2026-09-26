@@ -363,7 +363,7 @@ def convert_doi_publication(
 
     # Extract abstract from body if present
     body = parts[2]
-    abstract = ""
+    content = ""
     if "## Content" in body:
         abstract_section = body.split("## Content", 1)[1].strip()
         # The lift is guarded for the same reason the flag is. `to_markdown` emits this
@@ -374,9 +374,17 @@ def convert_doi_publication(
         # full_text_url and oa_status, so `TY  - JOUR` is the only surviving signal that
         # the body is junk; checking it here is the last chance to notice.
         if abstract_section and not _carries_stub_marker(abstract_section):
-            abstract = abstract_section
-    if not abstract:
-        abstract = "No abstract available."
+            content = abstract_section
+
+    # `## Content` is "the text we have"; `content_type` says which kind it is. Routing it
+    # always to `abstract` produced a record that claimed full_text_available: true, stored
+    # the text under `## Abstract`, and emitted no `## Full Text` -- so
+    # cached_full_text_available called it complete while publication_warm's
+    # `bool(flag) and FULL_TEXT_HEADER in body` called it a candidate for re-fetching. Two
+    # consumers disagreeing about one record. Found by self-audit, not a regression from
+    # this PR; fixed here because this PR has already edited this function twice.
+    full_text = content if (content and full_text_available) else None
+    abstract = "No abstract available." if (full_text or not content) else content
 
     pub = Publication(
         pmid=pmid,
@@ -386,7 +394,11 @@ def convert_doi_publication(
         year=str(frontmatter.get("year", "Unknown")),
         abstract=abstract,
         doi=doi,
+        full_text=full_text,
         full_text_available=full_text_available,
+        full_text_extraction_method=(
+            content_type if isinstance(content_type, str) and full_text else None
+        ),
     )
 
     pmid_file.write_text(pub.to_markdown())
