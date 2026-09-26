@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-25T03:56:34.578816'
-end_time: '2026-09-25T04:16:28.025442'
-duration_seconds: 1193.45
+start_time: '2026-09-25T04:07:03.578423'
+end_time: '2026-09-25T04:19:20.242025'
+duration_seconds: 736.66
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -33,7 +33,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 72
+citation_count: 37
 artifact_count: 1
 artifact_sources:
   edison_answer_artifacts: 1
@@ -154,226 +154,199 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# PIK3CA (human; UniProt P42336): functional-annotation research report
+# PIK3CA (human PI3Kα/p110α): Functional-annotation research report
 
-## Executive summary
+## Executive conclusion
 
-**Identity is verified.** The requested target is unambiguously human **PIK3CA** (*Homo sapiens*), encoding the approximately 110-kDa **p110α catalytic subunit of class IA phosphoinositide 3-kinase (PI3Kα)**; recent structural literature explicitly associates human p110α with **UniProt P42336**. Its conserved adaptor-binding, RAS-binding, C2, helical and kinase domains agree with the supplied PI3/PI4-kinase-family and InterPro annotations. No evidence of symbol confusion with another gene or organism was encountered. (sheng2024molecularbasisof pages 9-11, sheng2024molecularbasisof pages 4-9)
+The requested target is unambiguous. **Human PIK3CA encodes the 1,068-amino-acid p110α catalytic subunit of class IA phosphoinositide 3-kinase (PI3Kα), corresponding to UniProt P42336.** The names, size, class, and architecture reported in the literature match the supplied UniProt description; no conflicting gene or nonhuman protein was encountered. Its principal physiological function is membrane-localized lipid phosphorylation:
 
-The primary physiological function is **membrane lipid phosphorylation**:
+**ATP + phosphatidylinositol-4,5-bisphosphate [PI(4,5)P₂] → ADP + phosphatidylinositol-3,4,5-trisphosphate [PI(3,4,5)P₃].**
 
-**ATP + phosphatidylinositol-4,5-bisphosphate [PI(4,5)P₂; PIP₂] → ADP + phosphatidylinositol-3,4,5-trisphosphate [PI(3,4,5)P₃; PIP₃].**
+PIK3CA therefore acts as a spatially controlled signal-generating enzyme at the cytosolic surface of cellular membranes, principally the plasma membrane. It couples activated receptor tyrosine kinases (RTKs) and RAS to PIP₃-dependent recruitment of PDK1, AKT, and other PH-domain proteins. PTEN terminates this signal by dephosphorylating PIP₃ back to PIP₂. Oncogenic and developmental-disease variants commonly activate p110α by relieving p85-dependent autoinhibition, increasing membrane recruitment, or both. (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 1-2, sheng2024molecularbasisof pages 2-4)
 
-PI3Kα transfers phosphate to the 3-hydroxyl of the inositol ring. PIP₃ is a transient membrane second messenger rather than a soluble product; PTEN reverses the reaction by removing the 3-phosphate. Reported protein-kinase activity is secondary and of uncertain in-vivo importance. (sulaiman2023detectionofphosphorylationa pages 16-21, sulaiman2023detectionofphosphorylationa pages 26-30, nicholas2022characterizationofras pages 20-25)
-
-| Aspect | Evidence-based annotation | Key quantitative/detail |
+| Topic | Current functional annotation/evidence | Key quantitative or translational implication |
 |---|---|---|
-| Identity | Human **PIK3CA** encodes p110α, the catalytic subunit of class IA phosphoinositide 3-kinase α (**PI3Kα**); this matches **UniProt P42336** and is not a different, similarly named protein. (sheng2024molecularbasisof pages 9-11, sheng2024molecularbasisof pages 4-9) | Organism: *Homo sapiens*; protein: p110α/PI3Kα catalytic subunit. |
-| Domain architecture | The N-to-C-terminal organization is adaptor-binding (ABD), RAS-binding (RBD), C2, helical, and kinase domains, consistent with the supplied PI3/PI4-kinase-family and InterPro annotations. (sheng2024molecularbasisof pages 9-11) | ABD **16–105**; RBD **187–289**; C2 **330–487**; helical **517–694**; kinase **765–1051**. |
-| Holoenzyme and regulation | p110α forms an obligate class IA heterodimer with a p85-family regulatory adaptor. The adaptor stabilizes p110α but also imposes basal inhibition through SH2/iSH2 contacts. Partners include p85α, p85β, p55γ, p55α, and p50α. (sheng2024molecularbasisof pages 2-4, sheng2024molecularbasisof pages 4-9) | Regulatory genes include **PIK3R1**, **PIK3R2**, and **PIK3R3**; p55α and p50α are PIK3R1-derived isoforms. |
-| Primary reaction and specificity | PI3Kα transfers the γ-phosphate of ATP to the **3-hydroxyl of the inositol ring** of membrane PI(4,5)P₂, producing the second messenger PI(3,4,5)P₃. PTEN terminates the signal by removing that 3-phosphate. (sulaiman2023detectionofphosphorylationa pages 16-21, nicholas2022characterizationofras pages 71-76, nicholas2022characterizationofras pages 20-25) | **ATP + PI(4,5)P₂ → ADP + PI(3,4,5)P₃**; PTEN: **PIP₃ → PI(4,5)P₂**. Protein-kinase activity has been reported, but its in-vivo significance is much less established. (sulaiman2023detectionofphosphorylationa pages 26-30) |
-| Localization and activation | The inhibited holoenzyme is predominantly cytosolic. Growth-factor-activated RTKs or adaptors present pYXXM phosphotyrosine motifs to p85 SH2 domains, relieving inhibition and recruiting PI3Kα to the cytosolic face of membranes; RAS-GTP and C2/kinase-domain membrane contacts further orient the enzyme toward PIP₂. (sulaiman2023detectionofphosphorylation pages 16-21, nicholas2022characterizationofras pages 29-33, sheng2024molecularbasisof pages 2-4) | Functional catalysis occurs principally at the **inner plasma-membrane leaflet**; activation involves transition from a closed to an open, membrane-engaged conformation. |
-| Major downstream pathway | PIP₃ recruits PH-domain proteins including PDK1 and AKT. PDK1 phosphorylates AKT Thr308 and mTORC2 phosphorylates Ser473; AKT then regulates TSC2, PRAS40, FOXO, GSK3 and mTORC1. (nicholas2022characterizationofras pages 25-29, sulaiman2023detectionofphosphorylationa pages 21-26) | Core axis: **RTK/RAS → PI3Kα → PIP₃ → PDK1/AKT → mTORC1**, controlling growth, metabolism, survival and proliferation. |
-| Hotspot mechanisms | **E542K/E545K** in the helical domain disrupt p110α–p85 nSH2 autoinhibitory contacts and generally retain RAS dependence. **H1047R** in the kinase domain reorganizes the C-terminal region, increases binding to anionic membranes and can signal independently of RAS. (sheng2024molecularbasisof pages 20-23, jenkins2023oncogenicmutationsof pages 1-2) | Double mutations can combine release of autoinhibition with enhanced membrane engagement and produce synergistically greater activity. (jenkins2023oncogenicmutationsof pages 1-2, zhang2021pi3kdrivermutations pages 3-4) |
-| Physiological roles | Genetic and pharmacological evidence assigns p110α major roles in RTK and insulin signaling, glucose/metabolic control, cell growth and survival, endothelial migration, angiogenesis, vascular remodeling and embryonic development. (sulaiman2023detectionofphosphorylationa pages 26-30, sulaiman2023detectionofphosphorylation pages 26-30, daloglu2023phosphoproteomicanalysisof pages 20-24) | Complete deletion or homozygous kinase-dead mutation is embryonically lethal in mice; heterozygous kinase impairment reduces insulin sensitivity. (sulaiman2023detectionofphosphorylationa pages 26-30) |
-| Mutation prevalence | In a pooled analysis of **6,338 breast cancers**, 35.7% carried PIK3CA mutations; prevalence was 42% in HR+/HER2−, 31% in HER2-positive and 16% in triple-negative disease. H1047R, E545K and E542K represented 35%, 17% and 11% of detected variants; 12% of mutant tumors had double mutations. (martinezsaez2020frequencyandspectrum pages 1-2) | A 2023 Taiwanese NGS cohort found mutations in **278/728 (38%)**, with H1047R 41.6%, E545K 18.9% and E542K 10.3% among mutations. (chao2023prevalenceofpik3ca pages 1-2) |
-| Alpelisib—breast cancer | Alpelisib is a direct, α-selective PI3K inhibitor approved with fulvestrant for eligible patients with PIK3CA-mutated HR+/HER2− advanced or metastatic breast cancer after endocrine therapy. (shan2024moleculartargetingof pages 11-12, li2024targetingpi3kfamily pages 10-11) | FDA approval: **24 May 2019**. SOLAR-1 median PFS: **11.0 vs 5.7 months**; HR **0.65** (95% CI 0.50–0.85). Treatment discontinuation due to adverse effects: **25% vs 4.2%**. (shan2024moleculartargetingof pages 11-12) |
-| Alpelisib—PROS | Alpelisib is the first FDA-approved systemic therapy for adults and children aged ≥2 years with severe PIK3CA-related overgrowth spectrum requiring systemic treatment. (singh2024fdaapprovalsummary pages 1-3) | Accelerated approval: **5 April 2022**. EPIK-P1 efficacy population: **37**; confirmed Week-24 volumetric response **27%** (95% CI 14–44), with **60%** of responders maintaining response ≥12 months. (singh2024fdaapprovalsummary pages 1-3) |
-| Inavolisib—breast cancer | Inavolisib is a direct, selective p110α inhibitor that also promotes degradation of mutant p110α; by the end of 2024 it was approved with palbociclib and fulvestrant for PIK3CA-mutated HR+/HER2− advanced breast cancer. (jhaveri2024phaseiibtrial pages 1-2, tomas2025pik3camutationsare pages 10-12) | FDA approval year: **2024**. Early-phase triplets produced confirmed response rates of **52%** with letrozole and **40%** with fulvestrant; these figures are phase I/Ib results, not the phase III approval estimate. (jhaveri2024phaseiibtrial pages 1-2, jhaveri2024phaseiibtrial pages 6-7) |
+| Verified identity | Human **PIK3CA**, UniProt **P42336**, encodes the **1,068-aa p110α catalytic subunit (PI3Kα)**; the literature identity matches the supplied UniProt record, with no gene or organism ambiguity. (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 2-4) | Establishes that the annotation concerns human p110α—not another PI3K isoform or organismal orthologue. |
+| Family and architecture | A **class IA PI3K** catalytic subunit that forms an obligate signaling heterodimer with a p85-family regulatory subunit. Domains are the adaptor-binding domain (**ABD**), RAS-binding domain (**RBD**), membrane-binding **C2**, helical, and bilobal kinase domains. (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 2-4) | Domain interfaces explain p85-dependent inhibition, receptor/RAS activation, membrane binding, oncogenic hotspots, and drug sensitivity. |
+| Primary reaction and substrate | At the cytosolic membrane surface, p110α transfers ATP’s γ-phosphate to the **D3 hydroxyl of phosphatidylinositol-4,5-bisphosphate**: **ATP + PI(4,5)P₂ → ADP + PI(3,4,5)P₃**. PI(4,5)P₂ is the principal physiological class-I lipid substrate. (sheng2024molecularbasisof pages 1-2, sheng2024molecularbasisof pages 2-4) | Defines p110α primarily as a lipid kinase. Reported Ser/Thr protein-kinase activity exists, but its physiological substrate scope is less certain. (rangwala2022kinasesondouble pages 5-7, sulaiman2023detectionofphosphorylation pages 26-30) |
+| Regulation and localization | The p110α–p85 complex is largely cytosolic and autoinhibited. Activated RTK/adaptor **pYXXM** motifs bind p85 SH2 domains, releasing inhibitory contacts; **RAS-GTP** supplies an additional activating/recruitment input. Membrane engagement separates ABD from the catalytic core and C2 from p85 iSH2 and reorients the C terminus, exposing membrane-binding surfaces. (jenkins2023oncogenicmutationsof pages 1-2, jenkins2023oncogenicmutationsof pages 2-3, jenkins2023oncogenicmutationsof pages 7-8) | Catalysis is spatially restricted chiefly to the **cytosolic leaflet of the plasma membrane** near activated receptors and PI(4,5)P₂. |
+| Pathway output and termination | PI(3,4,5)P₃ recruits PH-domain proteins, including PDK1 and AKT, initiating AKT–mTOR signaling that coordinates growth, survival, metabolism, and cell-cycle progression. **PTEN** terminates the signal by converting PI(3,4,5)P₃ back to PI(4,5)P₂. (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 1-2) | Places PIK3CA immediately between RTK/RAS inputs and the PIP₃–AKT–mTOR signaling module; p110α is particularly important downstream of insulin and growth-factor receptors. (sheng2024molecularbasisof pages 19-20) |
+| Oncogenic mechanisms | Helical-domain **E542K/E545K** variants disrupt p85 nSH2-mediated inhibition; kinase-domain **H1047R** remodels the membrane-facing C terminus/WIF region and enhances membrane association. Mutations acting through different steps can occur **in cis** and synergistically increase activity. (jenkins2023oncogenicmutationsof pages 8-9, jenkins2023oncogenicmutationsof pages 2-3, sheng2024molecularbasisof pages 20-23) | Mechanistically distinct conformations support development of mutant-selective inhibitors; H1047R-selective binding has been demonstrated for investigational STX-478. (sheng2024molecularbasisof pages 19-20, sheng2024molecularbasisof pages 20-23) |
+| Cancer prevalence | A 2024 review of approximately **80,000 tumors from 224 studies** reported PIK3CA mutations in **10.2%** of samples, of which **88%** were classified as drivers. Another 2024 synthesis reported **38.35%** in invasive breast carcinoma; rates vary substantially by tumor type and cohort. (sheng2024molecularbasisof pages 19-20, shan2024moleculartargetingof pages 4-6) | PIK3CA is a common actionable oncogene. In a 2023 breast-cancer cohort, mutations occurred in **278/728 patients (38%)**; H1047R, E545K, and E542K comprised 41.6%, 18.9%, and 10.3% of detected mutations, respectively. |
+| Alpelisib in PROS | FDA accelerated approval was granted **5 April 2022** for patients aged ≥2 years with severe PIK3CA-related overgrowth spectrum requiring systemic therapy. In EPIK-P1, the safety and efficacy populations were **57** and **37** patients; confirmed Week-24 volumetric response was **27%** (95% CI 14–44), and **60%** of responders maintained response ≥12 months. Common reactions were diarrhea, stomatitis, and hyperglycemia. (singh2024fdaapprovalsummary pages 1-3, singh2024fdaapprovalsummary pages 4-6, singh2024fdaapprovalsummary pages 3-4) | Demonstrates genotype/pathway-directed treatment beyond cancer. In 2024, alpelisib improved all **25** patients with refractory PIK3CA- or TEK-related capillary-venous malformations; median six-month MRI volume reduction was **33.4%** for PIK3CA lesions. (zerbib2024targetedtherapyfor pages 1-3) |
+| Inavolisib evidence, 2024 | Inavolisib selectively inhibits p110α and promotes degradation of mutant while relatively sparing wild-type p110α. In a phase I/Ib trial of PIK3CA-mutant HR-positive/HER2-negative advanced breast cancer, **53** patients received inavolisib, palbociclib, and letrozole (**n=33**) or fulvestrant (**n=20**). Confirmed response rates were **52%** and **40%**, and median progression-free survival was **23.3** and **35.0 months**, respectively. (jhaveri2024phaseiibtrial pages 1-2, jhaveri2024phaseiibtrial pages 2-4) | All patients experienced treatment-related adverse events; grade ≥3 rates were **87.9%** and **85.0%**. Frequent events included stomatitis, hyperglycemia, diarrhea, and neutropenia; treatment discontinuation due to toxicity occurred in **6.1%** and **10.0%**. (jhaveri2024phaseiibtrial pages 1-2, jhaveri2024phaseiibtrial pages 5-6) |
 
 
-*Table: Compact evidence-based annotation of human PIK3CA/PI3Kα, covering molecular identity, catalytic function, regulation, disease mutations, prevalence, and direct clinical applications through 2024.*
+*Table: Compact evidence-based annotation of human PIK3CA/PI3Kα, spanning molecular identity, membrane-localized catalysis and regulation, oncogenic mechanisms, prevalence, and 2023–2024 translational evidence.*
 
-## 1. Molecular identity, family and structure
+## 1. Mandatory identity verification
 
-PIK3CA/p110α is one of the class IA catalytic isoforms, alongside p110β and p110δ. Its N-to-C-terminal organization is: adaptor-binding domain (**ABD**, residues 16–105), RAS-binding domain (**RBD**, 187–289), C2 domain (330–487), helical domain (517–694) and bilobal kinase domain (765–1051). This architecture explains the supplied annotations: the C2/ARM-like regions organize membrane and protein interactions, whereas the conserved PI3/4-kinase domain supplies the ATP- and lipid-binding catalytic machinery. (sheng2024molecularbasisof pages 9-11, sheng2024molecularbasisof pages 15-16)
+### 1.1 Gene, protein, and organism
 
-p110α normally exists as an obligate heterodimer with a class IA regulatory adaptor—p85α, p85β or p55γ, with p55α and p50α also arising from *PIK3R1*. The ABD binds the adaptor’s inter-SH2 segment, while contacts among p85 nSH2/iSH2 and the p110α C2, helical and kinase regions stabilize the protein but restrain basal activity. Thus, p85 is both a molecular chaperone and an autoinhibitory regulator. (sheng2024molecularbasisof pages 2-4, sheng2024molecularbasisof pages 9-11, sheng2024molecularbasisof pages 12-15)
+The symbol **PIK3CA** matches the supplied protein description: phosphatidylinositol-4,5-bisphosphate 3-kinase catalytic subunit alpha, commonly called **p110α**, **PI3Kα**, or PI3K-alpha. It is a human class IA PI3K catalytic subunit rather than PIK3CB/p110β, PIK3CD/p110δ, or a nonhuman orthologue. The reviewed literature describes p110α as 1,068 amino acids and explicitly assigns it to PIK3CA. (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 2-4)
 
-## 2. Primary biochemical function and substrate specificity
+The domain architecture also aligns with the supplied InterPro annotations. From N to C terminus, p110α contains an **adaptor-binding domain (ABD)**, **RAS-binding domain (RBD)**, membrane-interacting **C2 domain**, **helical domain**, and bilobal **PI3/4-kinase catalytic domain**. The supplied ARM-type-fold annotation is compatible with helical/adaptor-interaction architecture, while the C2 and PI3/4-kinase annotations correspond directly to experimentally characterized structural regions. (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 2-4)
 
-### 2.1 Catalytic reaction
+**Verification decision:** research can proceed on PIK3CA/P42336 with high confidence; there is no symbol ambiguity in this context.
 
-PI3Kα is primarily a **class I phosphoinositide 3-kinase**. It uses ATP to phosphorylate membrane PI(4,5)P₂ at the D3 position, generating PI(3,4,5)P₃. This substrate specificity distinguishes class I enzymes from class II/III PI3Ks, which chiefly generate other 3-phosphorylated phosphoinositides involved in membrane trafficking. In reconstituted assays, p110α–p85α consumes ATP and phosphorylates PIP₂ embedded in vesicles that mimic the inner plasma-membrane leaflet, illustrating that substrate presentation in a lipid bilayer is integral to physiological catalysis. (sulaiman2023detectionofphosphorylationa pages 16-21, nicholas2022characterizationofras pages 71-76, nicholas2022characterizationofras pages 76-80)
+## 2. Primary molecular function and substrate specificity
 
-PTEN terminates the signal by converting PIP₃ back to PI(4,5)P₂; SHIP phosphatases instead remove the 5-phosphate to form PI(3,4)P₂. The balance between PI3Kα and these lipid phosphatases controls the magnitude, location and duration of the signal. (gavgani2018classiphosphoinositide pages 3-5, nicholas2022characterizationofras pages 20-25)
+### 2.1 Physiological lipid-kinase reaction
 
-PI3Kα can also phosphorylate proteins—for example, p85α Ser608 has been reported as a substrate—but the physiological significance of class I PI3K protein-kinase activity remains unresolved. Functional annotation should therefore designate **PIP₂ 3-kinase activity as the primary function**, not serine/threonine protein phosphorylation. (sulaiman2023detectionofphosphorylationa pages 16-21, sulaiman2023detectionofphosphorylationa pages 26-30)
+Class I PI3Ks phosphorylate the D3 hydroxyl of the inositol headgroup. For p110α, the principal physiological membrane substrate is **PI(4,5)P₂**, and the phosphate donor is ATP. The products are **PI(3,4,5)P₃ and ADP**. This distinguishes class I PI3Ks from other PI3K classes with different phosphoinositide preferences. Recombinant p110 catalytic subunits can execute the reaction, but stable, properly regulated physiological signaling requires a regulatory adaptor and upstream inputs. (sheng2024molecularbasisof pages 1-2, sheng2024molecularbasisof pages 2-4)
 
-### 2.2 Activation and localization
+Substrate recognition is inseparable from membrane association: PI(4,5)P₂ is embedded in the bilayer, so productive catalysis requires the catalytic core and membrane-facing motifs to assume an orientation that permits access to the lipid headgroup. HDX-MS and membrane-binding experiments show protection or rearrangement in the C2 domain, ABD–RBD linker, kinase N-lobe, activation loop, and C-terminal kinase region upon binding PIP₂-containing membranes. (jenkins2023oncogenicmutationsof pages 1-2, jenkins2023oncogenicmutationsof pages 4-6)
 
-In unstimulated cells, the inhibited p110α–p85 complex is predominantly cytosolic. Growth-factor or insulin stimulation causes receptor tyrosine kinases—or adaptors such as IRS proteins—to present phosphorylated YXXM motifs. The p85 SH2 domains bind these motifs, recruit the heterodimer to the cytosolic face of the plasma membrane and weaken inhibitory p85–p110α contacts. The complex changes from a closed to an open, membrane-engaged state, bringing the kinase domain into contact with PIP₂. (sulaiman2023detectionofphosphorylation pages 16-21, nicholas2022characterizationofras pages 29-33, sheng2024molecularbasisof pages 2-4)
+### 2.2 Reported protein-kinase activity
 
-Membrane-anchored RAS-GTP supplies a cooperating input through the p110α RBD. RAS contributes recruitment, productive orientation and allosteric changes across the RBD, C2, helical and kinase domains. The C2 domain and C-terminal kinase surface also contact anionic lipids. Accordingly, the biologically meaningful site of catalysis is principally the **inner leaflet of stimulated cellular membranes**, especially the plasma membrane, rather than the bulk cytosol or extracellular space. (nicholas2022characterizationofras pages 25-29, nicholas2022characterizationofras pages 29-33)
+PI3Kα has also been assigned serine/threonine protein-kinase activity, including p110α-dependent phosphorylation of p85α Ser608. However, the physiological substrate spectrum and biological importance of this activity remain substantially less established than the lipid-kinase reaction. Functional annotation should therefore designate p110α primarily as a **phosphoinositide lipid kinase**, with protein-kinase activity treated as secondary and incompletely resolved. (rangwala2022kinasesondouble pages 5-7, sulaiman2023detectionofphosphorylation pages 26-30)
 
-## 3. Pathway position and biological processes
+## 3. Complex assembly, regulation, and activation mechanism
 
-PIP₃ recruits pleckstrin-homology-domain proteins, particularly PDK1 and AKT, to the membrane. PDK1 phosphorylates AKT Thr308; mTORC2 phosphorylates Ser473. Activated AKT regulates TSC2 and PRAS40 to activate mTORC1, and also acts on FOXO transcription factors, GSK3 and other substrates controlling biosynthesis, proliferation, metabolism and survival. The core pathway is therefore:
+### 3.1 The p110α–p85 class IA heterodimer
 
-**RTK/IRS and RAS → p85–p110α → PIP₃ → PDK1/AKT → TSC–mTORC1 and other AKT effectors.** (nicholas2022characterizationofras pages 25-29, sulaiman2023detectionofphosphorylationa pages 21-26, nicholas2022characterizationofras pages 20-25)
+In cells, p110α forms a class IA PI3K heterodimer with a p85-family regulatory adaptor, commonly p85α. The ABD anchors p110α to the p85 inter-SH2 region. Multiple contacts involving p85 nSH2/iSH2 and the p110α C2, helical, kinase, and activation-loop regions hold the complex in a stable, inhibited cytosolic configuration. The regulatory subunit consequently performs two linked functions: it stabilizes p110α and prevents inappropriate catalysis while providing receptor-responsive recruitment machinery. (sheng2024molecularbasisof pages 19-20, sheng2024molecularbasisof pages 2-4, jenkins2023oncogenicmutationsof pages 2-3)
 
-Isoform-specific genetic evidence is strongest for:
+### 3.2 RTK and RAS inputs
 
-* **Insulin and metabolic signaling:** tissue-selective p110α loss impairs insulin-stimulated PIP₃ and AKT signaling in liver and muscle; heterozygous kinase impairment reduces insulin sensitivity. (sulaiman2023detectionofphosphorylationa pages 26-30, daloglu2023phosphoproteomicanalysisof pages 20-24)
-* **Development and growth:** complete deletion or homozygous kinase-dead *Pik3ca* is embryonically lethal in mice, demonstrating that catalytic activity is required for normal development. (sulaiman2023detectionofphosphorylationa pages 26-30, sulaiman2023detectionofphosphorylation pages 26-30)
-* **Angiogenesis:** p110α selectively supports endothelial migration and vascular remodeling, including VEGF-linked signaling. (gavgani2018classiphosphoinositide pages 13-14, daloglu2023phosphoproteomicanalysisof pages 20-24)
-* **Cell growth, survival and differentiation:** loss-of-function experiments impair growth-factor signaling, proliferation, transformation and adipocyte differentiation, while the downstream AKT–mTOR network coordinates anabolic growth and survival. (gavgani2018classiphosphoinositide pages 13-14, daloglu2023phosphoproteomicanalysisof pages 20-24, sulaiman2023detectionofphosphorylationa pages 21-26)
+Upon growth-factor or insulin-receptor signaling, p85 SH2 domains bind phosphorylated **pYXXM** motifs on activated receptors or receptor-associated adaptors. This competitively releases inhibitory SH2 contacts with p110α and changes the complex from a closed to a membrane-competent state. GTP-loaded RAS binds the p110α RBD and provides an additional membrane-recruitment and activation input. The relative contribution of RTK phosphopeptide and RAS inputs depends on cellular context. (jenkins2023oncogenicmutationsof pages 1-2, jenkins2023oncogenicmutationsof pages 7-8)
 
-These processes are not separate enzymatic functions; they are consequences of localized PIP₃ production.
+A mechanistic sequence supported by structural and biochemical studies is: pYXXM binding disengages p85 nSH2; this destabilizes ABD/p85 and C2/iSH2 inhibitory contacts; membrane-binding surfaces on the catalytic core become exposed; RAS can reinforce recruitment; and the p110α C terminus reorients into a catalytically competent membrane-facing configuration. (jenkins2023oncogenicmutationsof pages 1-2, jenkins2023oncogenicmutationsof pages 2-3, jenkins2023oncogenicmutationsof pages 7-8)
 
-## 4. Oncogenic activation and recent structural understanding
+## 4. Cellular localization
 
-PIK3CA is among the most frequently mutated oncogenes in solid tumors. Mutations activate the same lipid-kinase reaction but remove its normal dependence on upstream signals. Importantly, different domains use different mechanisms.
+PIK3CA is not a secreted, transmembrane, or constitutively membrane-embedded protein. The inhibited p110α–p85 complex is largely **cytosolic**, whereas catalysis occurs transiently at the **cytosolic leaflet of membranes**, predominantly the plasma membrane near activated receptors and PI(4,5)P₂. Thus, “cytosol-to-membrane recruitment” is a more accurate annotation than assigning p110α exclusively to either compartment. (sheng2024molecularbasisof pages 1-2, sheng2024molecularbasisof pages 2-4, jenkins2023oncogenicmutationsof pages 1-2)
 
-* **E542K and E545K**, in the helical domain, reverse charge and disrupt inhibitory contacts with p85 nSH2. They mimic phosphotyrosine-mediated release of autoinhibition and generally retain greater dependence on RAS for transformation.
-* **H1047R**, in the kinase domain, remodels the C-terminal membrane-interacting surface, adds favorable electrostatics toward anionic membranes and improves PIP₂ engagement. It can transform with less RAS dependence.
-* C2 mutations such as N345K can weaken C2–iSH2 restraint; ABD mutations perturb ABD–kinase coupling. (sheng2024molecularbasisof pages 20-23, zhang2021pi3kdrivermutations pages 3-4)
+Membrane localization is mechanistically causal rather than merely correlative. Engagement of lipid bilayers disengages the ABD from the catalytic core and the C2 domain from p85 iSH2, while repositioning the C-terminal WIF-containing membrane-interaction region. Oncogenic variants that increase membrane residence can therefore raise lipid phosphorylation even without proportionate changes in solution ATPase activity. (jenkins2023oncogenicmutationsof pages 1-2, jenkins2023oncogenicmutationsof pages 6-7, jenkins2023oncogenicmutationsof pages 4-6)
 
-A 2023 biochemical/HDX-MS study showed that membrane activation entails disengagement of the ABD from the catalytic core, separation of C2 from p85 iSH2 and reorientation of the p110α C terminus. H1047R, M1043I/L, G1049R and other C-terminal mutants enhance membrane recruitment through non-identical mechanisms. This argues against treating every PIK3CA mutation as one structural class. [Jenkins et al., *Nature Communications*, January 2023, DOI URL](https://doi.org/10.1038/s41467-023-35789-6). (jenkins2023oncogenicmutationsof pages 1-2)
+## 5. Signaling pathway and proximal biological processes
 
-Double mutations can combine complementary mechanisms—release of p85 inhibition plus stronger membrane/substrate engagement—and yield synergistically higher activity. Recent expert analysis consequently favors mutation-aware inhibitors rather than assuming that a single ATP-site drug will have an optimal therapeutic window for every variant. The allosteric agent STX-478, for example, has been reported to prefer H1047R over wild-type p110α and E545K, illustrating the feasibility of conformation-selective targeting. [Sheng et al., published December 2024, *Cancers* 17:77, DOI URL](https://doi.org/10.3390/cancers17010077). (sheng2024molecularbasisof pages 20-23, sheng2024molecularbasisof pages 19-20)
+PI3Kα is positioned immediately downstream of RTKs, insulin-family receptors, and RAS. Its PIP₃ product creates a short-lived membrane docking signal for PH-domain proteins. PDK1 and AKT are recruited to this membrane environment, facilitating AKT activation and subsequent signaling to mTOR complexes, GSK3/cyclin machinery, metabolic regulators, and apoptosis-control proteins. The proximal functional outputs are therefore control of nutrient and growth-factor responses, glucose and anabolic metabolism, survival, proliferation, and growth. (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 19-20, sheng2024molecularbasisof pages 1-2)
 
-## 5. Mutation prevalence and diagnostic implementation
+**PTEN** is the direct biochemical antagonist: it removes the D3 phosphate from PIP₃ to regenerate PI(4,5)P₂. Signal amplitude and duration consequently reflect the local balance between PI3Kα and PTEN activities, not PIK3CA activity alone. Feedback through mTORC1/S6K and receptor pathways can further reshape the response, explaining why pathway inhibition often produces compensatory signaling. (rangwala2022kinasesondouble pages 5-7, sulaiman2023detectionofphosphorylation pages 26-30, sheng2024molecularbasisof pages 1-2)
 
-In a pooled analysis of 6,338 breast cancers, 2,261 (**35.7%**) were PIK3CA-mutated. Rates were **42% in HR+/HER2−**, **31% in HER2-positive** and **16% in triple-negative** disease. Five variants comprised 73% of detected mutations: H1047R 35%, E545K 17%, E542K 11%, N345K 6% and H1047L 4%; 12% of mutant tumors carried double mutations. [Martínez-Sáez et al., May 2020, DOI URL](https://doi.org/10.1186/s13058-020-01284-9). (martinezsaez2020frequencyandspectrum pages 1-2)
+Among class I isoforms, p110α is especially important downstream of insulin and many growth-factor RTKs and is broadly expressed. This helps explain both its essential normal metabolic functions and why systemic inhibition commonly causes hyperglycemia. (sheng2024molecularbasisof pages 19-20)
 
-A 2023 Taiwanese NGS cohort found PIK3CA mutations in **278/728 patients (38%)**; among mutations, H1047R represented 41.6%, E545K 18.9% and E542K 10.3%. This broadly confirms hotspot dominance while showing population and subtype variation. [Chao et al., August 2023, DOI URL](https://doi.org/10.3389/fonc.2023.1192946). (chao2023prevalenceofpik3ca pages 1-2)
+## 6. Pathogenic activation and structural evidence
 
-Testing is clinically actionable but method-dependent. A hotspot companion panel was estimated to capture only 72% of all variants and 80% of patients known to be mutation-positive; 28% of variants found by ctDNA in one advanced-disease cohort lay outside the panel. Tissue and plasma assays also differ in sensitivity, tumor fraction and timing. Broad validated NGS can therefore be preferable where available; a negative plasma result may warrant tissue testing when clinical suspicion remains. (martinezsaez2020frequencyandspectrum pages 1-2, anderson2020asystematicreview pages 3-4, anderson2020asystematicreview pages 2-3)
+### 6.1 Canonical hotspots
 
-## 6. Current clinical applications through 2024
+The best-characterized activating hotspots are helical-domain **E542K/E545K** and kinase-domain **H1047R**. E542K/E545K disrupt inhibitory contacts between the helical domain and p85 nSH2, partially reproducing receptor-phosphopeptide-mediated release of autoinhibition. H1047R instead changes the kinase-domain membrane-facing surface, disrupts inhibitory C-terminal packing, reorients the WIF region toward the bilayer, and increases membrane association. (jenkins2023oncogenicmutationsof pages 8-9, jenkins2023oncogenicmutationsof pages 2-3, jenkins2023oncogenicmutationsof pages 7-8)
 
-### 6.1 PIK3CA-mutant breast cancer
+These mechanisms are not interchangeable. Helical-domain mutants retain greater dependence on RAS for transformation, whereas H1047R can increase direct interactions with charged membrane lipids and support more RAS-independent transformation. C2/interface mutations such as N345K or E453Q disrupt p110α–p85 contacts, while E726K changes charge at a membrane-facing surface. (jenkins2023oncogenicmutationsof pages 7-8, sheng2024molecularbasisof pages 20-23)
 
-**Alpelisib** is an ATP-pocket, PI3Kα-selective inhibitor. The FDA approved it on **24 May 2019**, with fulvestrant, for eligible postmenopausal women and men with PIK3CA-mutated HR-positive/HER2-negative advanced or metastatic breast cancer after endocrine therapy. In SOLAR-1, median progression-free survival in the mutant cohort was **11.0 versus 5.7 months** (hazard ratio 0.65, 95% CI 0.50–0.85). However, adverse-event discontinuation was **25% versus 4.2%**, demonstrating a clinically important therapeutic-index limitation. (shan2024moleculartargetingof pages 11-12, browne2024resistancetotargeted pages 4-6)
+### 6.2 2023 membrane-centric model
 
-Biochemically, alpelisib is much more potent against PI3Kα than PI3Kβ (reported IC₅₀ values 4.6 versus 1,156 nM), but it inhibits wild-type as well as mutant PI3Kα. This explains both efficacy and metabolic toxicity. (li2024targetingpi3kfamily pages 10-11)
+Jenkins and colleagues combined biochemical assays with HDX-MS in a January 2023 *Nature Communications* study. They found that H1047R, G1049R, and N1068 frameshift variants significantly increased membrane binding; H1047R and G1049R also increased basal ATPase activity, whereas N1068fs increased membrane recruitment without changing basal ATPase. M1043L primarily elevated basal ATPase with a smaller membrane effect. These results demonstrate that pathogenic variants can increase activity through distinct combinations of conformational opening, catalytic priming, and membrane residence. URL: https://doi.org/10.1038/s41467-023-35789-6. (jenkins2023oncogenicmutationsof pages 8-9, jenkins2023oncogenicmutationsof pages 6-7)
 
-**Inavolisib** is a selective p110α inhibitor that also promotes degradation of mutant p110α. By the end of 2024 it had been approved in combination with palbociclib and fulvestrant for an eligible PIK3CA-mutated HR+/HER2− advanced breast-cancer population. Supporting phase I/Ib work reported confirmed objective responses of **52%** with a letrozole triplet and **40%** with a fulvestrant triplet, with median PFS of 23.3 and 35.0 months, respectively; these uncontrolled early-phase values should not be interpreted as the randomized phase III treatment effect. Stomatitis, hyperglycemia and diarrhea were common. [Jhaveri et al., November 2024, DOI URL](https://doi.org/10.1200/JCO.24.00110). (jhaveri2024phaseiibtrial pages 1-2, jhaveri2024phaseiibtrial pages 6-7, tomas2025pik3camutationsare pages 10-12)
+### 6.3 Double mutations
 
-Capivasertib should be distinguished mechanistically: it is a **downstream pan-AKT inhibitor**, not a direct PIK3CA/p110α inhibitor, although its approved biomarker-defined population can include PIK3CA alterations. (liu2024newemergingtherapies pages 2-4, tomas2025pik3camutationsare pages 10-12)
+Multiple PIK3CA variants frequently occur in cis. Mechanistically distinct pairs can synergize because one mutation relieves p85 autoinhibition while another increases membrane binding or catalytic competence. Reported synergistic combinations include E726K/H1047R, E545K/E726K, E545K/M1043L, and E453Q/H1047R. This provides a structural explanation for increased signaling and, in some settings, enhanced sensitivity to PI3Kα inhibitors in multi-mutant tumors. (sheng2024molecularbasisof pages 20-23, zhang2021pi3kdrivermutations pages 3-4)
 
-### 6.2 PIK3CA-related overgrowth spectrum
+## 7. Disease associations and recent statistics
 
-Postzygotic activating PIK3CA variants cause mosaic PIK3CA-related overgrowth spectrum (PROS), including CLOVES and related vascular/segmental-overgrowth phenotypes. This is the clearest non-oncology demonstration that excess p110α signaling is sufficient to drive human tissue overgrowth. Open Targets independently links PIK3CA strongly to PROS, CLOVES and megalencephaly-capillary malformation syndromes. (OpenTargets Search: -PIK3CA)
+PIK3CA gain-of-function alterations occur in two major biological settings:
 
-On **5 April 2022**, FDA granted accelerated approval to alpelisib (VIJOICE) for adults and children aged at least two years with severe PROS requiring systemic therapy. EPIK-P1 used expanded-access real-world data: 57 patients contributed safety data and 37 formed the efficacy population. Response required at least a 20% reduction in the summed volume of up to three target lesions without progression elsewhere. At week 24, **27%** responded (95% CI 14–44), and **60% of responders** maintained response for at least 12 months. [FDA approval summary, published August 2024, DOI URL](https://doi.org/10.1158/1078-0432.CCR-23-1270). (singh2024fdaapprovalsummary pages 1-3, singh2024fdaapprovalsummary pages 3-4)
+1. **Somatic tumor mutations**, often clonally selected and affecting helical- or kinase-domain hotspots.
+2. **Post-zygotic mosaic mutations**, producing segmental overgrowth and vascular-malformation phenotypes collectively termed PIK3CA-related overgrowth spectrum (PROS).
 
-In EPIK-P1, diarrhea and stomatitis each occurred in 16%, hyperglycemia in 12%, and no grade-5 event occurred; the small, retrospectively monitored cohort limits precision, especially for long-term pediatric growth and metabolic safety. (singh2024fdaapprovalsummary pages 6-8, singh2024fdaapprovalsummary pages 12-13)
+Open Targets independently associates human PIK3CA with breast cancer, PROS, CLOVES syndrome, and megalencephaly-capillary malformation-polymicrogyria syndrome, consistent with the mechanistic and clinical literature. (OpenTargets Search: -PIK3CA)
 
-A 2024 translational study extended implementation to difficult capillary-venous malformations: all 25 treated patients improved clinically, and median MRI lesion volume at six months declined by **33.4% in PIK3CA-mutant** and **27.8% in TEK-mutant** malformations. This is promising real-world evidence but not a randomized estimate. [Zerbib et al., June 2024, DOI URL](https://doi.org/10.1038/s41392-024-01862-9).
+A 2024 structural review analyzing approximately 80,000 tumors from 224 studies reported PIK3CA mutations in **10.2%** of samples, with **88%** classified as drivers. A separate 2024 synthesis reported frequencies of 38.35% in invasive breast carcinoma, 37.03% in cervical cancer, and 30.56% in colorectal cancer, although cross-study values depend strongly on cohort composition and assay. (sheng2024molecularbasisof pages 19-20, shan2024moleculartargetingof pages 4-6)
 
-## 7. Toxicity, resistance and expert interpretation
+Recent breast-cancer data illustrate this variability. A 2023 Taiwanese NGS study found mutations in **278 of 728 patients (38%)**; among detected variants, H1047R accounted for 41.6%, E545K for 18.9%, and E542K for 10.3%. More broadly, PIK3CA mutations can occur in up to approximately half of ER-positive breast cancers, making mutation testing clinically actionable rather than merely prognostic. (shan2024moleculartargetingof pages 4-6)
 
-Authoritative reviews describe the central problem as a **narrow on-target therapeutic window**. p110α is indispensable for normal insulin action; its inhibition reduces peripheral glucose uptake and promotes hepatic glucose output, causing hyperglycemia and compensatory hyperinsulinemia. In SOLAR-1, hyperglycemia occurred in 63.7% overall and at grade 3/4 in 36.6%. Rash, diarrhea and stomatitis reflect additional normal-tissue pathway dependence. (castel2021thepresentand pages 6-7, shan2024moleculartargetingof pages 19-21)
+## 8. Current applications and real-world implementation
 
-Compensatory insulin can reactivate tumor PI3K signaling. Within cancer cells, release of FOXO and mTORC1/S6K feedback induces RTKs such as HER3, IGF-1R and insulin receptor. Crosstalk with RAS–MAPK, NF-κB and Wnt pathways can maintain proliferation. PTEN loss is a clinically important escape route because it shifts PIP₃ production toward PI3Kβ; other mechanisms include mutant-PIK3CA amplification, PIK3CB activation, AKT3 upregulation and PDK1–SGK or PIM signaling. [Li et al., August 2024, DOI URL](https://doi.org/10.1186/s12943-024-02072-1). (li2024targetingpi3kfamily pages 22-24, browne2024resistancetotargeted pages 8-9, castel2021thepresentand pages 10-12)
+### 8.1 Biomarker-directed breast-cancer therapy
 
-Expert priorities are therefore:
+PIK3CA mutation testing in tumor tissue or circulating tumor DNA is used to identify HR-positive/HER2-negative advanced breast cancers for PI3K-pathway-directed therapy. Alpelisib is a PI3Kα-selective inhibitor used with endocrine therapy in this setting. The need for combination treatment reflects pathway crosstalk: estrogen-receptor signaling, RTK feedback, and parallel survival pathways can blunt PI3Kα-inhibitor monotherapy. Hyperglycemia, rash, diarrhea, and stomatitis reflect both on-target metabolic effects and systemic pathway inhibition. (burke2023beyondpi3kstargeting pages 29-30, shan2024moleculartargetingof pages 4-6)
 
-1. **Mutant-selective or allosteric inhibitors** that spare wild-type p110α and reduce metabolic toxicity.
-2. **Drug-induced mutant degradation**, exemplified by inavolisib’s mutant-p110α degradation behavior.
-3. **Rational combinations** with endocrine/CDK4/6, RTK or context-specific parallel-pathway therapy, rather than indiscriminate multi-pathway blockade.
-4. **Metabolic management**—for example metformin or investigation of SGLT2 inhibition—to limit insulin feedback, while recognizing that several proposed strategies remain preclinical.
-5. **Better biomarker resolution**, including mutation class, clonality, PTEN status and co-drivers. (castel2021thepresentand pages 7-9, castel2021thepresentand pages 9-10, castel2021thepresentand pages 6-7)
+### 8.2 PROS: FDA-approved non-oncology application
 
-## 8. Functional-annotation conclusion
+The FDA granted accelerated approval to **alpelisib (VIJOICE) on 5 April 2022** for adults and children aged at least two years with severe PROS requiring systemic therapy. The 2024 FDA approval summary reported a 57-patient safety population and 37-patient efficacy population in EPIK-P1. Confirmed response at Week 24 required at least a 20% reduction in the summed volume of one to three measurable lesions, with no new or progressing lesions. The response rate was **27% (95% CI 14–44)**, and **60% of responders maintained response for at least 12 months**. Common adverse reactions were diarrhea, stomatitis, and hyperglycemia; serious adverse reactions occurred in 12%, but no patient permanently discontinued because of an adverse reaction. Published August 2024; URL: https://doi.org/10.1158/1078-0432.CCR-23-1270. (singh2024fdaapprovalsummary pages 1-3, singh2024fdaapprovalsummary pages 4-6, singh2024fdaapprovalsummary pages 3-4)
 
-The most defensible primary annotation is: **PIK3CA encodes the human p110α catalytic component of class IA PI3Kα, a regulated cytosolic-to-membrane lipid kinase that uses ATP to convert membrane PI(4,5)P₂ into PI(3,4,5)P₃ downstream of receptor phosphotyrosines and RAS.** The resulting localized PIP₃ recruits and activates the PDK1–AKT–mTOR signaling system. Its major physiological specialization is growth-factor/insulin signaling, metabolic control, developmental growth and angiogenesis. Oncogenic variants do not create a new reaction; they uncouple the normal reaction from autoinhibition and upstream control, chiefly by disrupting p85 interfaces or increasing membrane/substrate engagement. (sheng2024molecularbasisof pages 2-4, sheng2024molecularbasisof pages 20-23, sulaiman2023detectionofphosphorylationa pages 26-30)
+FDA reviewers considered the volumetric responses clinically meaningful because untreated PROS lesions generally do not regress and because narratives documented improvements in pain, swelling, bleeding, inflammatory flares, mobility, fatigue, and ocular function, including in some patients below the formal imaging threshold. They nevertheless required postmarketing work on long-term response, mutation/subtype differences, and pediatric growth and development. (singh2024fdaapprovalsummary pages 6-8)
 
-Clinically, the annotation is validated by genotype-directed use of direct PI3Kα inhibitors in PIK3CA-mutant breast cancer and mosaic PROS. The remaining challenge is to suppress mutant signaling without disabling wild-type PI3Kα’s essential metabolic functions or permitting compensatory pathway reactivation. (singh2024fdaapprovalsummary pages 1-3, li2024targetingpi3kfamily pages 22-24, tomas2025pik3camutationsare pages 10-12)
+### 8.3 Vascular malformations
+
+A June 2024 translational study treated 25 patients with refractory capillary-venous malformations—16 PIK3CA-related and 9 TEK-related, including seven children. All improved clinically. At six months, median MRI lesion-volume reductions were **33.4% for PIK3CA-related** and **27.8% for TEK-related** malformations. A matched PIK3CA mouse model showed prevention of lesion formation, improvement of established lesions, and prolonged survival, strengthening the causal interpretation. URL: https://doi.org/10.1038/s41392-024-01862-9. (zerbib2024targetedtherapyfor pages 1-3)
+
+## 9. Recent therapeutic development: inavolisib and mutant selectivity
+
+Inavolisib is a potent selective PI3Kα inhibitor that also promotes degradation of mutant p110α while relatively sparing wild-type protein. This dual inhibition/degradation behavior is conceptually important because mutant-selective suppression could widen the therapeutic window over inhibitors that equally suppress essential wild-type PI3Kα. (jhaveri2024phaseiibtrial pages 1-2, jhaveri2024phaseiibtrial pages 2-4)
+
+A November 2024 phase I/Ib study evaluated inavolisib with palbociclib and endocrine therapy in 53 women with PIK3CA-mutant, HR-positive/HER2-negative locally advanced or metastatic breast cancer. Thirty-three received letrozole and 20 received fulvestrant. Confirmed objective-response rates among patients with measurable disease were **52.0% and 40.0%**, while median progression-free survival was **23.3 and 35.0 months**, respectively. Clinical-benefit rates were 78.8% and 90.0%. Published in *Journal of Clinical Oncology*; URL: https://doi.org/10.1200/JCO.24.00110. (jhaveri2024phaseiibtrial pages 1-2, jhaveri2024phaseiibtrial pages 5-6)
+
+Toxicity remained important: all patients had treatment-related adverse events; grade ≥3 rates were **87.9% and 85.0%**. Frequent events included stomatitis, hyperglycemia, diarrhea, and neutropenia. Discontinuation of any treatment because of treatment-related toxicity occurred in 6.1% and 10.0%. Because this was a small, nonrandomized phase I/Ib study, its efficacy estimates should be viewed as promising rather than definitive. (jhaveri2024phaseiibtrial pages 1-2, jhaveri2024phaseiibtrial pages 5-6)
+
+The structural field is simultaneously moving toward mutation-selective allosteric inhibitors. The investigational compound STX-478 preferentially binds H1047R relative to wild-type or E545K p110α, supporting the expert view that mutation-specific conformations and membrane-engagement states may be exploitable. (sheng2024molecularbasisof pages 19-20, sheng2024molecularbasisof pages 20-23)
+
+## 10. Expert interpretation and unresolved questions
+
+The current consensus is that **PI3Kα activation is a membrane- and conformation-dependent process**, not simply an increase in intrinsic catalytic turnover. This explains why different PIK3CA variants with similar cellular signaling output can act through different molecular mechanisms and respond differently to mutant-selective compounds. The 2023 HDX-MS work and 2024 structural reviews argue for studying intact p110α–p85 complexes on realistic membranes rather than isolated catalytic domains alone. (sheng2024molecularbasisof pages 31-33, jenkins2023oncogenicmutationsof pages 8-9, jenkins2023oncogenicmutationsof pages 6-7)
+
+Three limitations remain important:
+
+- The physiological significance and substrate range of p110α’s reported protein-serine/threonine kinase activity remain unresolved; lipid phosphorylation is the confidently established primary function. (rangwala2022kinasesondouble pages 5-7, sulaiman2023detectionofphosphorylation pages 26-30)
+- Wild-type p110α has essential insulin/metabolic functions, so nonselective or sustained inhibition predictably causes hyperglycemia and constrains dosing. (sheng2024molecularbasisof pages 19-20, singh2024fdaapprovalsummary pages 1-3)
+- Mutation identity alone does not completely predict drug response because allelic configuration, co-mutations, PTEN status, endocrine signaling, RTK feedback, and tissue context modify pathway dependence. Multi-hit mutations may mark stronger PI3Kα dependence, but prospective validation remains necessary. (sheng2024molecularbasisof pages 20-23, zhang2021pi3kdrivermutations pages 3-4)
+
+## Final functional annotation
+
+**PIK3CA/P42336 encodes the human p110α catalytic subunit of class IA PI3K. In a p85-regulated heterodimer, it is recruited from the cytosol to the cytoplasmic face of receptor-activated membranes, where it uses ATP to phosphorylate PI(4,5)P₂ at the inositol D3 position, generating PI(3,4,5)P₃. PIP₃ recruits and activates the PDK1–AKT–mTOR signaling network, while PTEN reverses the lipid signal. The ABD, RBD, C2, helical, and kinase domains integrate p85, RTK, RAS, and membrane inputs. Pathogenic gain-of-function variants activate the enzyme chiefly by releasing p85 autoinhibition and/or increasing membrane engagement, causing cancer or mosaic overgrowth/vascular-malformation disease.** (rangwala2022kinasesondouble pages 5-7, sheng2024molecularbasisof pages 1-2, sheng2024molecularbasisof pages 2-4, jenkins2023oncogenicmutationsof pages 1-2)
 
 References
 
-1. (sheng2024molecularbasisof pages 9-11): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
+1. (rangwala2022kinasesondouble pages 5-7): Aziz M. Rangwala, Victoria R. Mingione, George Georghiou, and Markus A. Seeliger. Kinases on double duty: a review of uniprotkb annotated bifunctionality within the kinome. Biomolecules, 12:685, May 2022. URL: https://doi.org/10.3390/biom12050685, doi:10.3390/biom12050685. This article has 3 citations.
 
-2. (sheng2024molecularbasisof pages 4-9): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
+2. (sheng2024molecularbasisof pages 1-2): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
 
-3. (sulaiman2023detectionofphosphorylationa pages 16-21): M Sulaiman. Detection of phosphorylation signatures specific to cancer-related pi3-kinase isoforms p110α and p110β. Unknown journal, 2023.
+3. (sheng2024molecularbasisof pages 2-4): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
 
-4. (sulaiman2023detectionofphosphorylationa pages 26-30): M Sulaiman. Detection of phosphorylation signatures specific to cancer-related pi3-kinase isoforms p110α and p110β. Unknown journal, 2023.
+4. (sulaiman2023detectionofphosphorylation pages 26-30): M Sulaiman. Detection of phosphorylation signatures specific to cancer-related pi3-kinase isoforms p110α and p110β. Unknown journal, 2023.
 
-5. (nicholas2022characterizationofras pages 20-25): Characterization of RAS Interactions with PI3K This article has 0 citations and is from a peer-reviewed journal.
+5. (jenkins2023oncogenicmutationsof pages 1-2): Meredith L. Jenkins, Harish Ranga-Prasad, Matthew A. H. Parson, Noah J. Harris, Manoj K. Rathinaswamy, and John E. Burke. Oncogenic mutations of pik3ca lead to increased membrane recruitment driven by reorientation of the abd, p85 and c-terminus. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35789-6, doi:10.1038/s41467-023-35789-6. This article has 68 citations and is from a highest quality peer-reviewed journal.
 
-6. (sheng2024molecularbasisof pages 2-4): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
+6. (jenkins2023oncogenicmutationsof pages 2-3): Meredith L. Jenkins, Harish Ranga-Prasad, Matthew A. H. Parson, Noah J. Harris, Manoj K. Rathinaswamy, and John E. Burke. Oncogenic mutations of pik3ca lead to increased membrane recruitment driven by reorientation of the abd, p85 and c-terminus. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35789-6, doi:10.1038/s41467-023-35789-6. This article has 68 citations and is from a highest quality peer-reviewed journal.
 
-7. (nicholas2022characterizationofras pages 71-76): Characterization of RAS Interactions with PI3K This article has 0 citations and is from a peer-reviewed journal.
+7. (jenkins2023oncogenicmutationsof pages 7-8): Meredith L. Jenkins, Harish Ranga-Prasad, Matthew A. H. Parson, Noah J. Harris, Manoj K. Rathinaswamy, and John E. Burke. Oncogenic mutations of pik3ca lead to increased membrane recruitment driven by reorientation of the abd, p85 and c-terminus. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35789-6, doi:10.1038/s41467-023-35789-6. This article has 68 citations and is from a highest quality peer-reviewed journal.
 
-8. (sulaiman2023detectionofphosphorylation pages 16-21): M Sulaiman. Detection of phosphorylation signatures specific to cancer-related pi3-kinase isoforms p110α and p110β. Unknown journal, 2023.
+8. (sheng2024molecularbasisof pages 19-20): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
 
-9. (nicholas2022characterizationofras pages 29-33): Characterization of RAS Interactions with PI3K This article has 0 citations and is from a peer-reviewed journal.
+9. (jenkins2023oncogenicmutationsof pages 8-9): Meredith L. Jenkins, Harish Ranga-Prasad, Matthew A. H. Parson, Noah J. Harris, Manoj K. Rathinaswamy, and John E. Burke. Oncogenic mutations of pik3ca lead to increased membrane recruitment driven by reorientation of the abd, p85 and c-terminus. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35789-6, doi:10.1038/s41467-023-35789-6. This article has 68 citations and is from a highest quality peer-reviewed journal.
 
-10. (nicholas2022characterizationofras pages 25-29): Characterization of RAS Interactions with PI3K This article has 0 citations and is from a peer-reviewed journal.
+10. (sheng2024molecularbasisof pages 20-23): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
 
-11. (sulaiman2023detectionofphosphorylationa pages 21-26): M Sulaiman. Detection of phosphorylation signatures specific to cancer-related pi3-kinase isoforms p110α and p110β. Unknown journal, 2023.
+11. (shan2024moleculartargetingof pages 4-6): Khine S. Shan, Amalia Bonano-Rios, Nyein Wint Yee Theik, Atif Hussein, and Marcelo Blaya. Molecular targeting of the phosphoinositide-3-protein kinase (pi3k) pathway across various cancers. International Journal of Molecular Sciences, 25:1973, Feb 2024. URL: https://doi.org/10.3390/ijms25041973, doi:10.3390/ijms25041973. This article has 35 citations.
 
-12. (sheng2024molecularbasisof pages 20-23): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
+12. (singh2024fdaapprovalsummary pages 1-3): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
 
-13. (jenkins2023oncogenicmutationsof pages 1-2): Meredith L. Jenkins, Harish Ranga-Prasad, Matthew A. H. Parson, Noah J. Harris, Manoj K. Rathinaswamy, and John E. Burke. Oncogenic mutations of pik3ca lead to increased membrane recruitment driven by reorientation of the abd, p85 and c-terminus. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35789-6, doi:10.1038/s41467-023-35789-6. This article has 68 citations and is from a highest quality peer-reviewed journal.
+13. (singh2024fdaapprovalsummary pages 4-6): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
 
-14. (zhang2021pi3kdrivermutations pages 3-4): Mingzhen Zhang, Hyunbum Jang, and Ruth Nussinov. Pi3k driver mutations: a biophysical membrane-centric perspective. Cancer Research, 81:237-247, Jan 2021. URL: https://doi.org/10.1158/0008-5472.can-20-0911, doi:10.1158/0008-5472.can-20-0911. This article has 49 citations and is from a highest quality peer-reviewed journal.
+14. (singh2024fdaapprovalsummary pages 3-4): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
 
-15. (sulaiman2023detectionofphosphorylation pages 26-30): M Sulaiman. Detection of phosphorylation signatures specific to cancer-related pi3-kinase isoforms p110α and p110β. Unknown journal, 2023.
+15. (zerbib2024targetedtherapyfor pages 1-3): Lola Zerbib, Sophia Ladraa, Antoine Fraissenon, Charles Bayard, Marina Firpion, Quitterie Venot, Sanela Protic, Clément Hoguin, Amandine Thomas, Sylvie Fraitag, Jean-Paul Duong, Sophie Kaltenbach, Estelle Balducci, Coline Lefevre, Patrick Villarese, Vahid Asnafi, Christine Broissand, Nicolas Goudin, Ivan Nemazanyy, Gwennhael Autret, Bertrand Tavitian, Christophe Legendre, Nadia Arzouk, Veronique Minard-Colin, Caroline Chopinet, Michael Dussiot, Denise M. Adams, Tristan Mirault, Laurent Guibaud, Paul Isenring, and Guillaume Canaud. Targeted therapy for capillary-venous malformations. Signal Transduction and Targeted Therapy, Jun 2024. URL: https://doi.org/10.1038/s41392-024-01862-9, doi:10.1038/s41392-024-01862-9. This article has 46 citations and is from a peer-reviewed journal.
 
-16. (daloglu2023phosphoproteomicanalysisof pages 20-24): B Daloğlu. Phosphoproteomic analysis of class ia p110β isoform-specific signal transducers upon pi3k pathway activation. Unknown journal, 2023.
+16. (jhaveri2024phaseiibtrial pages 1-2): Komal L. Jhaveri, Melissa K. Accordino, Philippe L. Bedard, Andrés Cervantes, Valentina Gambardella, Erika Hamilton, Antoine Italiano, Kevin Kalinsky, Ian E. Krop, Mafalda Oliveira, Peter Schmid, Cristina Saura, Nicholas C. Turner, Andrea Varga, Sravanthi Cheeti, Stephanie Hilz, Katherine E. Hutchinson, Yanling Jin, Stephanie Royer-Joo, Ubong Peters, Noopur Shankar, Jennifer L. Schutzman, and Dejan Juric. Phase i/ib trial of inavolisib plus palbociclib and endocrine therapy for <i>pik3ca</i> -mutated, hormone receptor–positive, human epidermal growth factor receptor 2–negative advanced or metastatic breast cancer. Journal of Clinical Oncology, 42:3947-3956, Nov 2024. URL: https://doi.org/10.1200/jco.24.00110, doi:10.1200/jco.24.00110. This article has 46 citations and is from a highest quality peer-reviewed journal.
 
-17. (martinezsaez2020frequencyandspectrum pages 1-2): Olga Martínez-Sáez, Nuria Chic, Tomás Pascual, Barbara Adamo, Maria Vidal, Blanca González-Farré, Esther Sanfeliu, Francesco Schettini, Benedetta Conte, Fara Brasó-Maristany, Adela Rodríguez, Débora Martínez, Patricia Galván, Ana Belén Rodríguez, Antonio Martinez, Montserrat Muñoz, and Aleix Prat. Frequency and spectrum of pik3ca somatic mutations in breast cancer. Breast Cancer Research : BCR, May 2020. URL: https://doi.org/10.1186/s13058-020-01284-9, doi:10.1186/s13058-020-01284-9. This article has 498 citations.
+17. (jhaveri2024phaseiibtrial pages 2-4): Komal L. Jhaveri, Melissa K. Accordino, Philippe L. Bedard, Andrés Cervantes, Valentina Gambardella, Erika Hamilton, Antoine Italiano, Kevin Kalinsky, Ian E. Krop, Mafalda Oliveira, Peter Schmid, Cristina Saura, Nicholas C. Turner, Andrea Varga, Sravanthi Cheeti, Stephanie Hilz, Katherine E. Hutchinson, Yanling Jin, Stephanie Royer-Joo, Ubong Peters, Noopur Shankar, Jennifer L. Schutzman, and Dejan Juric. Phase i/ib trial of inavolisib plus palbociclib and endocrine therapy for <i>pik3ca</i> -mutated, hormone receptor–positive, human epidermal growth factor receptor 2–negative advanced or metastatic breast cancer. Journal of Clinical Oncology, 42:3947-3956, Nov 2024. URL: https://doi.org/10.1200/jco.24.00110, doi:10.1200/jco.24.00110. This article has 46 citations and is from a highest quality peer-reviewed journal.
 
-18. (chao2023prevalenceofpik3ca pages 1-2): Ta-Chung Chao, Yi-Fang Tsai, Chun-Yu Liu, Pei-Ju Lien, Yen-Shu Lin, Chin-Jung Feng, Yen-Jen Chen, Jiun-I. Lai, Chih-Yi Hsu, Jiun Jen Lynn, Chi-Cheng Huang, and Ling-Ming Tseng. Prevalence of pik3ca mutations in taiwanese patients with breast cancer: a retrospective next-generation sequencing database analysis. Frontiers in Oncology, Aug 2023. URL: https://doi.org/10.3389/fonc.2023.1192946, doi:10.3389/fonc.2023.1192946. This article has 10 citations.
+18. (jhaveri2024phaseiibtrial pages 5-6): Komal L. Jhaveri, Melissa K. Accordino, Philippe L. Bedard, Andrés Cervantes, Valentina Gambardella, Erika Hamilton, Antoine Italiano, Kevin Kalinsky, Ian E. Krop, Mafalda Oliveira, Peter Schmid, Cristina Saura, Nicholas C. Turner, Andrea Varga, Sravanthi Cheeti, Stephanie Hilz, Katherine E. Hutchinson, Yanling Jin, Stephanie Royer-Joo, Ubong Peters, Noopur Shankar, Jennifer L. Schutzman, and Dejan Juric. Phase i/ib trial of inavolisib plus palbociclib and endocrine therapy for <i>pik3ca</i> -mutated, hormone receptor–positive, human epidermal growth factor receptor 2–negative advanced or metastatic breast cancer. Journal of Clinical Oncology, 42:3947-3956, Nov 2024. URL: https://doi.org/10.1200/jco.24.00110, doi:10.1200/jco.24.00110. This article has 46 citations and is from a highest quality peer-reviewed journal.
 
-19. (shan2024moleculartargetingof pages 11-12): Khine S. Shan, Amalia Bonano-Rios, Nyein Wint Yee Theik, Atif Hussein, and Marcelo Blaya. Molecular targeting of the phosphoinositide-3-protein kinase (pi3k) pathway across various cancers. International Journal of Molecular Sciences, 25:1973, Feb 2024. URL: https://doi.org/10.3390/ijms25041973, doi:10.3390/ijms25041973. This article has 35 citations.
+19. (jenkins2023oncogenicmutationsof pages 4-6): Meredith L. Jenkins, Harish Ranga-Prasad, Matthew A. H. Parson, Noah J. Harris, Manoj K. Rathinaswamy, and John E. Burke. Oncogenic mutations of pik3ca lead to increased membrane recruitment driven by reorientation of the abd, p85 and c-terminus. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35789-6, doi:10.1038/s41467-023-35789-6. This article has 68 citations and is from a highest quality peer-reviewed journal.
 
-20. (li2024targetingpi3kfamily pages 10-11): Hongyao Li, Xiang Wen, Yueting Ren, Zhichao Fan, Jin Zhang, Gu He, and Leilei Fu. Targeting pi3k family with small-molecule inhibitors in cancer therapy: current clinical status and future directions. Molecular Cancer, Aug 2024. URL: https://doi.org/10.1186/s12943-024-02072-1, doi:10.1186/s12943-024-02072-1. This article has 130 citations and is from a highest quality peer-reviewed journal.
+20. (jenkins2023oncogenicmutationsof pages 6-7): Meredith L. Jenkins, Harish Ranga-Prasad, Matthew A. H. Parson, Noah J. Harris, Manoj K. Rathinaswamy, and John E. Burke. Oncogenic mutations of pik3ca lead to increased membrane recruitment driven by reorientation of the abd, p85 and c-terminus. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35789-6, doi:10.1038/s41467-023-35789-6. This article has 68 citations and is from a highest quality peer-reviewed journal.
 
-21. (singh2024fdaapprovalsummary pages 1-3): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
+21. (zhang2021pi3kdrivermutations pages 3-4): Mingzhen Zhang, Hyunbum Jang, and Ruth Nussinov. Pi3k driver mutations: a biophysical membrane-centric perspective. Cancer Research, 81:237-247, Jan 2021. URL: https://doi.org/10.1158/0008-5472.can-20-0911, doi:10.1158/0008-5472.can-20-0911. This article has 49 citations and is from a highest quality peer-reviewed journal.
 
-22. (jhaveri2024phaseiibtrial pages 1-2): Komal L. Jhaveri, Melissa K. Accordino, Philippe L. Bedard, Andrés Cervantes, Valentina Gambardella, Erika Hamilton, Antoine Italiano, Kevin Kalinsky, Ian E. Krop, Mafalda Oliveira, Peter Schmid, Cristina Saura, Nicholas C. Turner, Andrea Varga, Sravanthi Cheeti, Stephanie Hilz, Katherine E. Hutchinson, Yanling Jin, Stephanie Royer-Joo, Ubong Peters, Noopur Shankar, Jennifer L. Schutzman, and Dejan Juric. Phase i/ib trial of inavolisib plus palbociclib and endocrine therapy for <i>pik3ca</i> -mutated, hormone receptor–positive, human epidermal growth factor receptor 2–negative advanced or metastatic breast cancer. Nov 2024. URL: https://doi.org/10.1200/jco.24.00110, doi:10.1200/jco.24.00110. This article has 46 citations and is from a highest quality peer-reviewed journal.
+22. (OpenTargets Search: -PIK3CA): Open Targets Query (-PIK3CA, 21 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-23. (tomas2025pik3camutationsare pages 10-12): Ana Tomás and Marta Pojo. Pik3ca mutations: are they a relevant target in adult diffuse gliomas? International Journal of Molecular Sciences, 26:5276, May 2025. URL: https://doi.org/10.3390/ijms26115276, doi:10.3390/ijms26115276. This article has 7 citations.
+23. (burke2023beyondpi3kstargeting pages 29-30): John E Burke, Joanna Catherine Caprio Triscott, Brooke M Emerling, and Gerald R V Hammond. Beyond pi3ks: targeting phosphoinositide kinases in disease. Nature Reviews. Drug Discovery, 22:357-386, Nov 2023. URL: https://doi.org/10.1038/s41573-022-00582-5, doi:10.1038/s41573-022-00582-5. This article has 189 citations.
 
-24. (jhaveri2024phaseiibtrial pages 6-7): Komal L. Jhaveri, Melissa K. Accordino, Philippe L. Bedard, Andrés Cervantes, Valentina Gambardella, Erika Hamilton, Antoine Italiano, Kevin Kalinsky, Ian E. Krop, Mafalda Oliveira, Peter Schmid, Cristina Saura, Nicholas C. Turner, Andrea Varga, Sravanthi Cheeti, Stephanie Hilz, Katherine E. Hutchinson, Yanling Jin, Stephanie Royer-Joo, Ubong Peters, Noopur Shankar, Jennifer L. Schutzman, and Dejan Juric. Phase i/ib trial of inavolisib plus palbociclib and endocrine therapy for <i>pik3ca</i> -mutated, hormone receptor–positive, human epidermal growth factor receptor 2–negative advanced or metastatic breast cancer. Nov 2024. URL: https://doi.org/10.1200/jco.24.00110, doi:10.1200/jco.24.00110. This article has 46 citations and is from a highest quality peer-reviewed journal.
+24. (singh2024fdaapprovalsummary pages 6-8): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
 
-25. (sheng2024molecularbasisof pages 15-16): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
-
-26. (sheng2024molecularbasisof pages 12-15): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
-
-27. (nicholas2022characterizationofras pages 76-80): Characterization of RAS Interactions with PI3K This article has 0 citations and is from a peer-reviewed journal.
-
-28. (gavgani2018classiphosphoinositide pages 3-5): Fatemeh Mazloumi Gavgani, Victoria Smith Arnesen, Rhîan G. Jacobsen, Camilla Krakstad, Erling A. Hoivik, and Aurélia E. Lewis. Class i phosphoinositide 3-kinase pik3ca/p110α and pik3cb/p110β isoforms in endometrial cancer. International Journal of Molecular Sciences, 19:3931, Dec 2018. URL: https://doi.org/10.3390/ijms19123931, doi:10.3390/ijms19123931. This article has 61 citations.
-
-29. (gavgani2018classiphosphoinositide pages 13-14): Fatemeh Mazloumi Gavgani, Victoria Smith Arnesen, Rhîan G. Jacobsen, Camilla Krakstad, Erling A. Hoivik, and Aurélia E. Lewis. Class i phosphoinositide 3-kinase pik3ca/p110α and pik3cb/p110β isoforms in endometrial cancer. International Journal of Molecular Sciences, 19:3931, Dec 2018. URL: https://doi.org/10.3390/ijms19123931, doi:10.3390/ijms19123931. This article has 61 citations.
-
-30. (sheng2024molecularbasisof pages 19-20): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
-
-31. (anderson2020asystematicreview pages 3-4): Elizabeth J. Anderson, Lea E. Mollon, Joni L. Dean, Terri L. Warholak, Ayal Aizer, Emma A. Platt, Derek H. Tang, and Lisa E. Davis. A systematic review of the prevalence and diagnostic workup of pik3ca mutations in hr+/her2– metastatic breast cancer. International Journal of Breast Cancer, 2020:1-16, Jun 2020. URL: https://doi.org/10.1155/2020/3759179, doi:10.1155/2020/3759179. This article has 123 citations.
-
-32. (anderson2020asystematicreview pages 2-3): Elizabeth J. Anderson, Lea E. Mollon, Joni L. Dean, Terri L. Warholak, Ayal Aizer, Emma A. Platt, Derek H. Tang, and Lisa E. Davis. A systematic review of the prevalence and diagnostic workup of pik3ca mutations in hr+/her2– metastatic breast cancer. International Journal of Breast Cancer, 2020:1-16, Jun 2020. URL: https://doi.org/10.1155/2020/3759179, doi:10.1155/2020/3759179. This article has 123 citations.
-
-33. (browne2024resistancetotargeted pages 4-6): Iseult M. Browne and Alicia F. C. Okines. Resistance to targeted inhibitors of the pi3k/akt/mtor pathway in advanced oestrogen-receptor-positive breast cancer. Jun 2024. URL: https://doi.org/10.3390/cancers16122259, doi:10.3390/cancers16122259. This article has 58 citations.
-
-34. (liu2024newemergingtherapies pages 2-4): Liu Liu, Stephanie L. Graff, and Yihong Wang. New emerging therapies targeting pi3k/akt/mtor/pten pathway in hormonal receptor-positive and her2-negative breast cancer—current state and molecular pathology perspective. Cancers, 17:16, Dec 2024. URL: https://doi.org/10.3390/cancers17010016, doi:10.3390/cancers17010016. This article has 33 citations.
-
-35. (OpenTargets Search: -PIK3CA): Open Targets Query (-PIK3CA, 21 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
-
-36. (singh2024fdaapprovalsummary pages 3-4): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
-
-37. (singh2024fdaapprovalsummary pages 6-8): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
-
-38. (singh2024fdaapprovalsummary pages 12-13): Sonia Singh, Diana Bradford, Xiaoxue Li, Pallavi S. Mishra-Kalyani, Yuan-Li Shen, Lingshan Wang, Hong Zhao, Ye Xiong, Jiang Liu, Rosane Charlab, Jeffrey Kraft, Sachia Khasar, Claudia P. Miller, Donna R. Rivera, Paul G. Kluetz, Richard Pazdur, Julia A. Beaver, Harpreet Singh, and Martha Donoghue. Fda approval summary: alpelisib for pik3ca-related overgrowth spectrum (pros). Clinical cancer research : an official journal of the American Association for Cancer Research, 30:23-28, Aug 2024. URL: https://doi.org/10.1158/1078-0432.ccr-23-1270, doi:10.1158/1078-0432.ccr-23-1270. This article has 72 citations.
-
-39. (castel2021thepresentand pages 6-7): Pau Castel, Eneda Toska, Jeffrey A. Engelman, and Maurizio Scaltriti. The present and future of pi3k inhibitors for cancer therapy. Jun 2021. URL: https://doi.org/10.1038/s43018-021-00218-4, doi:10.1038/s43018-021-00218-4. This article has 232 citations and is from a highest quality peer-reviewed journal.
-
-40. (shan2024moleculartargetingof pages 19-21): Khine S. Shan, Amalia Bonano-Rios, Nyein Wint Yee Theik, Atif Hussein, and Marcelo Blaya. Molecular targeting of the phosphoinositide-3-protein kinase (pi3k) pathway across various cancers. International Journal of Molecular Sciences, 25:1973, Feb 2024. URL: https://doi.org/10.3390/ijms25041973, doi:10.3390/ijms25041973. This article has 35 citations.
-
-41. (li2024targetingpi3kfamily pages 22-24): Hongyao Li, Xiang Wen, Yueting Ren, Zhichao Fan, Jin Zhang, Gu He, and Leilei Fu. Targeting pi3k family with small-molecule inhibitors in cancer therapy: current clinical status and future directions. Molecular Cancer, Aug 2024. URL: https://doi.org/10.1186/s12943-024-02072-1, doi:10.1186/s12943-024-02072-1. This article has 130 citations and is from a highest quality peer-reviewed journal.
-
-42. (browne2024resistancetotargeted pages 8-9): Iseult M. Browne and Alicia F. C. Okines. Resistance to targeted inhibitors of the pi3k/akt/mtor pathway in advanced oestrogen-receptor-positive breast cancer. Jun 2024. URL: https://doi.org/10.3390/cancers16122259, doi:10.3390/cancers16122259. This article has 58 citations.
-
-43. (castel2021thepresentand pages 10-12): Pau Castel, Eneda Toska, Jeffrey A. Engelman, and Maurizio Scaltriti. The present and future of pi3k inhibitors for cancer therapy. Jun 2021. URL: https://doi.org/10.1038/s43018-021-00218-4, doi:10.1038/s43018-021-00218-4. This article has 232 citations and is from a highest quality peer-reviewed journal.
-
-44. (castel2021thepresentand pages 7-9): Pau Castel, Eneda Toska, Jeffrey A. Engelman, and Maurizio Scaltriti. The present and future of pi3k inhibitors for cancer therapy. Jun 2021. URL: https://doi.org/10.1038/s43018-021-00218-4, doi:10.1038/s43018-021-00218-4. This article has 232 citations and is from a highest quality peer-reviewed journal.
-
-45. (castel2021thepresentand pages 9-10): Pau Castel, Eneda Toska, Jeffrey A. Engelman, and Maurizio Scaltriti. The present and future of pi3k inhibitors for cancer therapy. Jun 2021. URL: https://doi.org/10.1038/s43018-021-00218-4, doi:10.1038/s43018-021-00218-4. This article has 232 citations and is from a highest quality peer-reviewed journal.
+25. (sheng2024molecularbasisof pages 31-33): Zhi Sheng, Patrick Beck, Maegan Gabby, Semhar Habte-Mariam, and Katherine Mitkos. Molecular basis of oncogenic pi3k proteins. Cancers, 17:77, Dec 2024. URL: https://doi.org/10.3390/cancers17010077, doi:10.3390/cancers17010077. This article has 10 citations.
 
 ## Artifacts
 
@@ -381,75 +354,40 @@ References
 
 ## Citations
 
-1. sheng2024molecularbasisof pages 9-11
-2. sulaiman2023detectionofphosphorylationa pages 26-30
-3. martinezsaez2020frequencyandspectrum pages 1-2
-4. shan2024moleculartargetingof pages 11-12
-5. singh2024fdaapprovalsummary pages 1-3
-6. jenkins2023oncogenicmutationsof pages 1-2
-7. sheng2024molecularbasisof pages 4-9
-8. sulaiman2023detectionofphosphorylationa pages 16-21
-9. nicholas2022characterizationofras pages 20-25
-10. sheng2024molecularbasisof pages 2-4
-11. nicholas2022characterizationofras pages 71-76
-12. sulaiman2023detectionofphosphorylation pages 16-21
-13. nicholas2022characterizationofras pages 29-33
-14. nicholas2022characterizationofras pages 25-29
-15. sulaiman2023detectionofphosphorylationa pages 21-26
-16. sheng2024molecularbasisof pages 20-23
-17. sulaiman2023detectionofphosphorylation pages 26-30
-18. daloglu2023phosphoproteomicanalysisof pages 20-24
-19. jhaveri2024phaseiibtrial pages 1-2
-20. jhaveri2024phaseiibtrial pages 6-7
-21. sheng2024molecularbasisof pages 15-16
-22. sheng2024molecularbasisof pages 12-15
-23. nicholas2022characterizationofras pages 76-80
-24. gavgani2018classiphosphoinositide pages 3-5
-25. gavgani2018classiphosphoinositide pages 13-14
-26. sheng2024molecularbasisof pages 19-20
-27. anderson2020asystematicreview pages 3-4
-28. anderson2020asystematicreview pages 2-3
-29. browne2024resistancetotargeted pages 4-6
-30. liu2024newemergingtherapies pages 2-4
-31. singh2024fdaapprovalsummary pages 3-4
-32. singh2024fdaapprovalsummary pages 6-8
-33. singh2024fdaapprovalsummary pages 12-13
-34. castel2021thepresentand pages 6-7
-35. shan2024moleculartargetingof pages 19-21
-36. browne2024resistancetotargeted pages 8-9
-37. castel2021thepresentand pages 10-12
-38. castel2021thepresentand pages 7-9
-39. castel2021thepresentand pages 9-10
-40. PI(4,5)P₂; PIP₂
-41. PI(3,4,5)P₃; PIP₃
-42. Jenkins et al., *Nature Communications*, January 2023, DOI URL
-43. Sheng et al., published December 2024, *Cancers* 17:77, DOI URL
-44. Martínez-Sáez et al., May 2020, DOI URL
-45. Chao et al., August 2023, DOI URL
-46. Jhaveri et al., November 2024, DOI URL
-47. FDA approval summary, published August 2024, DOI URL
-48. Zerbib et al., June 2024, DOI URL
-49. Li et al., August 2024, DOI URL
-50. https://doi.org/10.1038/s41467-023-35789-6
-51. https://doi.org/10.3390/cancers17010077
-52. https://doi.org/10.1186/s13058-020-01284-9
-53. https://doi.org/10.3389/fonc.2023.1192946
-54. https://doi.org/10.1200/JCO.24.00110
-55. https://doi.org/10.1158/1078-0432.CCR-23-1270
-56. https://doi.org/10.1038/s41392-024-01862-9
-57. https://doi.org/10.1186/s12943-024-02072-1
-58. https://doi.org/10.3390/cancers17010077,
-59. https://doi.org/10.1038/s41467-023-35789-6,
-60. https://doi.org/10.1158/0008-5472.can-20-0911,
-61. https://doi.org/10.1186/s13058-020-01284-9,
-62. https://doi.org/10.3389/fonc.2023.1192946,
-63. https://doi.org/10.3390/ijms25041973,
-64. https://doi.org/10.1186/s12943-024-02072-1,
-65. https://doi.org/10.1158/1078-0432.ccr-23-1270,
-66. https://doi.org/10.1200/jco.24.00110,
-67. https://doi.org/10.3390/ijms26115276,
-68. https://doi.org/10.3390/ijms19123931,
-69. https://doi.org/10.1155/2020/3759179,
-70. https://doi.org/10.3390/cancers16122259,
-71. https://doi.org/10.3390/cancers17010016,
-72. https://doi.org/10.1038/s43018-021-00218-4,
+1. sheng2024molecularbasisof pages 19-20
+2. zerbib2024targetedtherapyfor pages 1-3
+3. shan2024moleculartargetingof pages 4-6
+4. singh2024fdaapprovalsummary pages 6-8
+5. rangwala2022kinasesondouble pages 5-7
+6. sheng2024molecularbasisof pages 1-2
+7. sheng2024molecularbasisof pages 2-4
+8. sulaiman2023detectionofphosphorylation pages 26-30
+9. jenkins2023oncogenicmutationsof pages 1-2
+10. jenkins2023oncogenicmutationsof pages 2-3
+11. jenkins2023oncogenicmutationsof pages 7-8
+12. jenkins2023oncogenicmutationsof pages 8-9
+13. sheng2024molecularbasisof pages 20-23
+14. singh2024fdaapprovalsummary pages 1-3
+15. singh2024fdaapprovalsummary pages 4-6
+16. singh2024fdaapprovalsummary pages 3-4
+17. jhaveri2024phaseiibtrial pages 1-2
+18. jhaveri2024phaseiibtrial pages 2-4
+19. jhaveri2024phaseiibtrial pages 5-6
+20. jenkins2023oncogenicmutationsof pages 4-6
+21. jenkins2023oncogenicmutationsof pages 6-7
+22. sheng2024molecularbasisof pages 31-33
+23. PI(4,5)P₂
+24. PI(3,4,5)P₃
+25. https://doi.org/10.1038/s41467-023-35789-6.
+26. https://doi.org/10.1158/1078-0432.CCR-23-1270.
+27. https://doi.org/10.1038/s41392-024-01862-9.
+28. https://doi.org/10.1200/JCO.24.00110.
+29. https://doi.org/10.3390/biom12050685,
+30. https://doi.org/10.3390/cancers17010077,
+31. https://doi.org/10.1038/s41467-023-35789-6,
+32. https://doi.org/10.3390/ijms25041973,
+33. https://doi.org/10.1158/1078-0432.ccr-23-1270,
+34. https://doi.org/10.1038/s41392-024-01862-9,
+35. https://doi.org/10.1200/jco.24.00110,
+36. https://doi.org/10.1158/0008-5472.can-20-0911,
+37. https://doi.org/10.1038/s41573-022-00582-5,

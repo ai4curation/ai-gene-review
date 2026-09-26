@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-25T03:56:34.291508'
-end_time: '2026-09-25T04:08:16.534272'
-duration_seconds: 702.24
+start_time: '2026-09-25T04:07:03.465579'
+end_time: '2026-09-25T04:14:32.079415'
+duration_seconds: 448.61
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -28,7 +28,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 54
+citation_count: 43
 artifact_count: 1
 artifact_sources:
   edison_answer_artifacts: 1
@@ -151,163 +151,211 @@ Include evidence where possible. We are interested in both experimental evidence
 
 # Human KIT (UniProt P10721): Functional-Annotation Research Report
 
-## Executive summary and identity verification
+## Executive summary
 
-The requested target is unambiguously **human KIT**, not a similarly named protein from another organism. The supplied UniProt accession **P10721**, gene symbol **KIT** (synonym **SCFR**), and aliases **c-KIT/CD117/mast–stem-cell growth-factor receptor** agree with literature describing a 976-amino-acid, approximately 145-kDa type III receptor tyrosine kinase encoded at human chromosome 4q12. Its five extracellular immunoglobulin-like domains, single transmembrane segment, autoinhibitory juxtamembrane region, split cytoplasmic kinase domain and C-terminal tail match the supplied InterPro Ig-like-domain and tyrosine-kinase annotations. No literature concerning a different “KIT” gene was used. (ledoux2023receptortyrosinekinase pages 1-2, foster2018cd117ckitincancer pages 1-3)
+The requested target is unambiguously **human KIT** (*KIT proto-oncogene, receptor tyrosine kinase*), not another similarly named gene. The supplied identity—**UniProt P10721**, SCFR/c-KIT/CD117, a precursor glycoprotein and tyrosine-protein kinase—is consistent with the literature. Human KIT is described as a **976-amino-acid, approximately 145-kDa type III single-pass receptor tyrosine kinase** with five extracellular immunoglobulin-like domains, one transmembrane helix, an inhibitory juxtamembrane segment, and a split cytoplasmic kinase domain. This architecture agrees with the supplied InterPro Ig-like-domain and kinase-family annotations (katagiri2022mutatedkittyrosine pages 1-2, roskoski2005signalingbykit pages 2-3, cilloni2024detectionofkit pages 2-3).
 
-**Primary functional annotation:** KIT is the cell-surface receptor for **stem cell factor** (SCF, encoded by **KITLG**). SCF-induced receptor dimerization activates KIT’s intrinsic protein-tyrosine kinase, causing reciprocal autophosphorylation and recruitment of signaling proteins. KIT thereby converts an extracellular SCF signal into PI3K–AKT, RAS–MAPK, SRC, PLCγ and JAK–STAT responses controlling survival, proliferation, differentiation and migration in selected progenitor and differentiated lineages. (ledoux2023receptortyrosinekinase pages 1-2, r�nnstrand2004signaltransductionvia pages 1-2, foster2018cd117ckitincancer pages 3-6)
+Its primary function is to receive extracellular **stem cell factor (SCF/KITLG)** signals at the plasma membrane and convert them into intracellular protein-tyrosine phosphorylation. SCF-induced KIT dimerization enables reciprocal receptor phosphorylation and recruitment of effectors controlling survival, proliferation, differentiation, adhesion, chemotaxis, and migration. KIT is particularly important in hematopoietic progenitors and mast cells, melanocytes, germ cells, and gastrointestinal interstitial cells of Cajal. Loss of KIT signaling causes developmental phenotypes such as piebaldism, whereas constitutive activation drives GIST, mastocytosis, and subsets of AML and other cancers (OpenTargets Search: -KIT, krimmer2023cryoemanalysesof pages 1-2, roskoski2005signalingbykit pages 1-2, cilloni2024detectionofkit pages 3-5).
 
-The detailed evidence map is provided below.
-
-| Feature | Precise annotation/evidence | Evidence type | Key source/date/DOI URL |
-|---|---|---|---|
-| Identity, aliases, organism | **Human KIT**, UniProt **P10721**; gene **KIT** (synonym **SCFR**); protein aliases include mast/stem-cell growth-factor receptor, c-KIT, SCFR and **CD117**. Literature independently identifies the same 976-aa KIT/CD117 receptor encoded at 4q12; no conflicting same-symbol protein was used. | Supplied UniProt identity cross-checked against literature | Foster et al., 8 Mar 2018, [doi:10.3390/biomedicines6010031](https://doi.org/10.3390/biomedicines6010031) (foster2018cd117ckitincancer pages 1-3) |
-| Family and architecture | Type III, single-pass receptor tyrosine kinase: N-terminal extracellular region with **five Ig-like domains**, one transmembrane helix, cytosolic juxtamembrane autoinhibitory region, split bilobed kinase domain containing a kinase insert, activation loop and C-terminal tail. Reported cytosolic boundaries include TM L525–Y545, JMR K546–K581, kinase W582–S931 and tail T932–R946. | Sequence/topology annotation, structural literature and molecular modeling | Ledoux et al., Jan 2022, [doi:10.3390/ijms23031589](https://doi.org/10.3390/ijms23031589); Ledoux et al., 25 Sep 2023, [doi:10.3390/kinasesphosphatases1040014](https://doi.org/10.3390/kinasesphosphatases1040014) (ledoux2023receptortyrosinekinase pages 1-2, ledoux2022theinherentcoupling pages 2-4) |
-| Ligand and activation | **Stem cell factor (SCF/KITLG) is the cognate ligand.** Dimeric SCF brings two KIT ectodomains together; receptor contacts stabilize the dimer, displace juxtamembrane/activation-loop autoinhibition and enable reciprocal trans-autophosphorylation. Phosphotyrosines then recruit SH2/PTB-containing effectors. | Biochemical and crystallographic mechanism summarized in authoritative reviews | Rönnstrand, Oct 2004, [doi:10.1007/s00018-004-4189-6](https://doi.org/10.1007/s00018-004-4189-6); Ledoux et al., Sep 2023 (ledoux2023receptortyrosinekinase pages 1-2, r�nnstrand2004signaltransductionvia pages 1-2) |
-| Catalytic reaction and substrate scope | EC **2.7.10.1**, a receptor protein-tyrosine kinase: **ATP + protein-L-tyrosine → ADP + protein-L-tyrosine phosphate**. KIT first phosphorylates tyrosines on the paired receptor and can phosphorylate recruited signaling proteins. It is therefore a protein/peptide-tyrosine kinase—not an enzyme with one unique small-molecule substrate; sequence context, docking and colocalization confer physiological selectivity. | Enzyme-class annotation supported by ligand-induced intrinsic kinase activity and substrate-phosphorylation evidence; no single exclusive protein substrate established | Rönnstrand, Oct 2004; Foster et al., Mar 2018 (r�nnstrand2004signaltransductionvia pages 1-2, foster2018cd117ckitincancer pages 3-6) |
-| pY568 and pY570 | Juxtamembrane sites phosphorylated early after activation; experimentally recognized SH2 docking sites, especially for Src-family kinases. They help release autoinhibition and support migration/chemotaxis signaling. Assignments to every individual Src-family member are cell-context dependent. | In-vivo phosphosite mapping and interaction/function studies summarized in reviews | Ledoux et al., Jan 2022; Foster et al., Mar 2018 (foster2018cd117ckitincancer pages 13-14, ledoux2022theinherentcoupling pages 2-4) |
-| pY703 | Kinase-insert docking site for **GRB2**; couples KIT to SOS–RAS–RAF–MEK–ERK/MAPK signaling. | Reported biochemical interaction summarized in phosphosite review | Ledoux & Tchertanov, Feb 2023, [doi:10.3390/kinasesphosphatases1010005](https://doi.org/10.3390/kinasesphosphatases1010005) (ledoux2023sitespecificphosphorylationof pages 1-2) |
-| pY721 | Principal **PI3K p85** recognition site; activates PI3K–PIP3–AKT signaling. Direct structural evidence is strong: PDB **2IUH**, a 2.0-Å co-crystal of PI3K-p85 SH2 with a KIT pY721 peptide. Full-length KID–SH2 orientations proposed in 2023 remain computational models. | X-ray crystallography plus biochemical studies; full-domain geometry modeled | Ledoux & Tchertanov, Feb 2023, [doi:10.3390/kinasesphosphatases1010005](https://doi.org/10.3390/kinasesphosphatases1010005) (ledoux2023sitespecificphosphorylationof pages 8-10, ledoux2023sitespecificphosphorylationof pages 2-4, ledoux2023sitespecificphosphorylationof pages 25-26) |
-| pY730 | Recognized as a **PLCγ** recruitment site, linking KIT to phosphoinositide hydrolysis, Ca²⁺ mobilization and PKC signaling. A modeled pY721–PI3K complex also predicts a nearby Y730 contact, but that contact is computational and should not be treated as proof that Y730 directly binds PI3K. | Functional interaction assignment from prior experiments/review; adjacent PI3K contact is molecular-modeling inference | Ledoux & Tchertanov, Feb 2023 (ledoux2023sitespecificphosphorylationof pages 1-2, ledoux2023sitespecificphosphorylationof pages 24-25) |
-| pY823 | Activation-loop phosphosite associated with the active kinase conformation. A proposed intramolecular/pseudosubstrate relationship involving D792 is structural/computational inference; a definitive downstream binding partner remains unidentified. | In-vivo phosphosite; mechanistic inference from structure and molecular dynamics | Ledoux et al., Jan 2022 (ledoux2022theinherentcoupling pages 2-4) |
-| pY900 | C-lobe site reported to mediate phosphorylation-dependent **CrkII/c-Crk** association, potentially involving PI3K-p85. Because an indirect bridge is possible, direct one-to-one binding should not be overstated. | Phosphosite and interaction evidence summarized in structural/signaling reviews | Ledoux et al., Jan 2022; Foster et al., Mar 2018 (foster2018cd117ckitincancer pages 13-14, ledoux2022theinherentcoupling pages 2-4) |
-| pY936 | C-terminal docking site associated with **GRB2/GRB7** and RAS–MAPK activation. The exact partner usage varies with cell type and experimental system. | Biochemical association/function studies summarized in reviews | Foster et al., Mar 2018; Ledoux et al., Jan 2022 (foster2018cd117ckitincancer pages 13-14, ledoux2022theinherentcoupling pages 2-4) |
-| Major pathways | Activated KIT engages **PI3K–AKT**, **RAS–RAF–MEK–ERK/MAPK**, Src-family kinases, **PLCγ–Ca²⁺/PKC**, JAK–STAT, RAC/JNK and cytoskeletal signaling. These networks mediate survival, proliferation, differentiation, adhesion and directed migration; PI3K–AKT is a prominent survival arm. | Biochemical pathway studies and authoritative reviews | Foster et al., Mar 2018; Ledoux et al., Sep 2023 (ledoux2023receptortyrosinekinase pages 1-2, foster2018cd117ckitincancer pages 3-6) |
-| Localization and trafficking | Mature KIT functions primarily at the **plasma membrane**, with extracellular SCF recognition and a cytosolic catalytic domain. Ligand stimulation induces internalization and degradation; CBL-family ubiquitin ligases and HSP90-dependent stability regulate receptor abundance. Oncogenic KIT can be retained and signal from intracellular organelles, including Golgi-associated compartments, making trafficking a resistance target. Explicit KIT-specific lysosomal routing is less firmly documented in the retrieved evidence than internalization/degradation. | Membrane topology plus cell-biological and therapeutic-resistance evidence | Zhou et al., Feb 2024, [doi:10.1186/s12964-023-01411-x](https://doi.org/10.1186/s12964-023-01411-x) (zhou2024kitmutationsand pages 12-13, ledoux2022theinherentcoupling pages 2-4) |
-| Physiological roles | SCF–KIT is essential for survival, proliferation, migration and/or differentiation of **hematopoietic stem/progenitor cells, mast cells, melanocytes, germ cells and interstitial cells of Cajal**. Human loss-of-function variants cause pigmentation/developmental phenotypes such as piebaldism, supporting these lineage functions. | Human genetics, cell biology and comparative physiology | Rönnstrand, Oct 2004; Open Targets evidence synthesis (OpenTargets Search: -KIT, r�nnstrand2004signaltransductionvia pages 1-2) |
-| Disease variants | Gain-of-function variants uncouple activity from SCF. Major classes include extracellular variants, juxtamembrane exon 11 variants, ATP-binding-pocket variants and activation-loop variants such as **D816V/D816H**. They drive GIST, systemic mastocytosis and subsets of AML, germ-cell tumors and melanoma; loss-of-function KIT causes piebaldism. | Human tumor sequencing, functional studies and clinical-genetic association | Lennartsson et al., Jan 2005, [doi:10.1634/stemcells.2004-0117](https://doi.org/10.1634/stemcells.2004-0117); Open Targets (OpenTargets Search: -KIT, lennartsson2005normalandoncogenic pages 19-20, r�nnstrand2004signaltransductionvia pages 1-2) |
-| 2023 structural/interactome advances | Long-timescale simulations of the full KIT cytoplasmic domain found that **D816V** reshapes interdomain coupling, conformational disorder and the free-energy landscape, exposing candidate mutant-selective allosteric pockets. Separate 2023 work modeled multisite-phosphorylated kinase-insert conformations; these generate testable interaction hypotheses but are not substitutes for binding experiments. | Molecular dynamics, free-energy analysis, pocket detection and docking | Ledoux et al., 25 Sep 2023, [doi:10.3390/kinasesphosphatases1040014](https://doi.org/10.3390/kinasesphosphatases1040014); Ledoux & Tchertanov, Feb 2023 (ledoux2023receptortyrosinekinase pages 26-28, ledoux2023sitespecificphosphorylationof pages 1-2, ledoux2023sitespecificphosphorylationof pages 24-25) |
-| 2024 GIST statistics | Approximately **80–90%** of treatment-naïve GISTs carry a primary KIT mutation. Acquired resistance commonly appears after **18–24 months** of imatinib, and about **90%** of imatinib resistance in the cited review was attributed to secondary KIT mutations. These figures establish continuing KIT dependence while highlighting intratumoral mutation heterogeneity. | 2024 evidence review synthesizing molecular and clinical studies | Zhou et al., Feb 2024, [doi:10.1186/s12964-023-01411-x](https://doi.org/10.1186/s12964-023-01411-x) (zhou2024kitmutationsand pages 1-2) |
-| Current therapeutic implementation | KIT-directed/multikinase TKIs are routine precision therapy in GIST: **imatinib** is the standard adjuvant and usual first-line agent; **sunitinib**, **regorafenib** and **ripretinib** are established later-line agents. **Avapritinib** has mutation-selective activity against activation-loop targets and an approved GIST role centered on PDGFRA exon 18 disease; it also inhibits KIT D816V and is used in advanced systemic mastocytosis. Genotype—not KIT immunostaining alone—should guide drug selection. | Regulatory/clinical implementation summarized in 2024 treatment reviews | Huang et al., Jan 2024, [doi:10.2174/1567201820666221122120657](https://doi.org/10.2174/1567201820666221122120657); Zhou et al., Feb 2024 (zhou2024kitmutationsand pages 12-13, huang2024drugsinthe pages 7-8, huang2024drugsinthe pages 1-1) |
-| 2024 late-line real-world evidence | In 34 advanced-GIST patients receiving both ripretinib and avapritinib, response rates were **12–18%**. Median TTP was **3.65–4.73 months** for ripretinib and **4.11–5.39 months** for avapritinib; median OS after starting the two-drug sequence was **29.63 vs 33.7 months**. Investigators found no evidence that sequence materially changed efficacy, but the retrospective 17-patient groups limit certainty. | Two-center retrospective clinical cohort | Thirasastr et al., Feb 2024, [doi:10.3390/cancers16050904](https://doi.org/10.3390/cancers16050904) (thirasastr2024outcomesoflateline pages 13-14) |
-| Drug-development landscape | A 2024 analysis of data through 2021 identified **75 drugs**, **225 GIST drug trials** and **57 targets**; KIT was the most frequent target (**25 occurrences**), ahead of PDGFRA (16) and VEGFR2/KDR (13). Five marketed GIST TKIs were identified: imatinib, sunitinib, regorafenib, ripretinib and avapritinib. | Quantitative pipeline/database analysis | Huang et al., Jan 2024, [doi:10.2174/1567201820666221122120657](https://doi.org/10.2174/1567201820666221122120657) (huang2024drugsinthe pages 1-1, huang2024drugsinthe pages 6-7) |
+| Category | Evidence-based annotation | Key evidence/source |
+|---|---|---|
+| Identity, aliases, organism | **Human KIT proto-oncogene receptor tyrosine kinase**, corresponding to **UniProt P10721**; aliases include **SCFR, c-KIT, CD117**, and **p145 c-KIT**. The literature consistently identifies human KIT/CD117 as the stem-cell-factor receptor, so no symbol ambiguity was detected. | Cilloni et al., 2024, DOI: [10.3390/ijms252010885](https://doi.org/10.3390/ijms252010885); Roskoski, 2005, DOI: [10.1016/j.bbrc.2005.08.055](https://doi.org/10.1016/j.bbrc.2005.08.055) (cilloni2024detectionofkit pages 3-5, roskoski2005signalingbykit pages 2-3, cilloni2024detectionofkit pages 2-3) |
+| Molecular class and architecture | A **type III single-pass receptor tyrosine kinase** and approximately **145-kDa glycoprotein** of **976 amino acids**. It contains five extracellular immunoglobulin-like domains (D1–D5), one transmembrane helix, an autoinhibitory juxtamembrane segment, and a split cytoplasmic kinase domain interrupted by a kinase insert. This agrees with the supplied Ig-like-domain and protein-tyrosine-kinase annotations. | Cilloni et al., 2024, DOI: [10.3390/ijms252010885](https://doi.org/10.3390/ijms252010885); Katagiri et al., 2022, DOI: [10.3390/ijms23094694](https://doi.org/10.3390/ijms23094694); Heldin and Lennartsson, 2013, DOI: [10.1101/cshperspect.a009100](https://doi.org/10.1101/cshperspect.a009100) (katagiri2022mutatedkittyrosine pages 1-2, cilloni2024detectionofkit pages 2-3, heldin2013structuralandfunctional pages 7-9) |
+| Ligand and activation | The specific ligand is **stem cell factor (SCF/KITLG)**, which occurs in soluble and membrane-bound forms. One SCF homodimer binds two KIT molecules through D1–D3; D4–D4 and D5–D5 receptor contacts stabilize the dimer. Dimerization relieves juxtamembrane autoinhibition and enables reciprocal trans-autophosphorylation. | Heldin and Lennartsson, 2013, DOI: [10.1101/cshperspect.a009100](https://doi.org/10.1101/cshperspect.a009100); Roskoski, 2005, DOI: [10.1016/j.bbrc.2005.08.055](https://doi.org/10.1016/j.bbrc.2005.08.055); Krimmer et al., 2023, DOI: [10.1073/pnas.2300054120](https://doi.org/10.1073/pnas.2300054120) (roskoski2005signalingbykit pages 1-2, roskoski2005signalingbykit pages 2-3, krimmer2023cryoemanalysesof pages 7-8, heldin2013structuralandfunctional pages 7-9) |
+| Catalytic reaction and substrate specificity | KIT catalyzes ATP-dependent transfer of the gamma phosphate of ATP to protein tyrosine residues: **ATP + protein-L-tyrosine → ADP + protein-L-tyrosine phosphate**. Initial substrates are tyrosines on the paired KIT receptor; the resulting phosphotyrosines recruit signaling proteins. Documented docking sites include Y568/Y570, Y703, Y721, Y730, Y900, and Y936. | Roskoski, 2005, DOI: [10.1016/j.bbrc.2005.08.055](https://doi.org/10.1016/j.bbrc.2005.08.055); Rönnstrand, 2004, DOI: [10.1007/s00018-004-4189-6](https://doi.org/10.1007/s00018-004-4189-6) (r�nnstrand2004signaltransductionvia pages 1-2, roskoski2005signalingbykit pages 1-2, roskoski2005signalingbykit pages 2-3) |
+| Localization and trafficking | Mature KIT functions primarily at the **plasma membrane**, with its ligand-binding region extracellular and kinase region cytosolic. SCF activation promotes internalization; KIT is generally not efficiently recycled but is ubiquitinated after Cbl recruitment and routed toward lysosomal and proteasomal degradation. Mutant GIST-associated KIT can show altered localization and impaired degradation. | Le Gall et al., 2015, DOI: [10.1158/1535-7163.MCT-15-0321](https://doi.org/10.1158/1535-7163.MCT-15-0321); Zhou et al., 2024, DOI: [10.1186/s12964-023-01411-x](https://doi.org/10.1186/s12964-023-01411-x) (gall2015neutralizationofkit pages 10-11, zhou2024kitmutationsand pages 1-2) |
+| Major downstream pathways | Autophosphorylated KIT activates **RAS–RAF–MEK–ERK/MAPK, PI3K–AKT, PLCγ–PKC/Ca²⁺, SRC-family kinase**, and **JAK–STAT** signaling. These pathways principally control survival, proliferation, differentiation, adhesion, chemotaxis, and migration. | Roskoski, 2005, DOI: [10.1016/j.bbrc.2005.08.055](https://doi.org/10.1016/j.bbrc.2005.08.055); Cilloni et al., 2024, DOI: [10.3390/ijms252010885](https://doi.org/10.3390/ijms252010885) (roskoski2005signalingbykit pages 1-2, katagiri2022mutatedkittyrosine pages 1-2, cilloni2024detectionofkit pages 3-5) |
+| Physiological cell types and functions | KIT is prominent in hematopoietic stem/progenitor cells and remains highly expressed by mast cells; expression is also documented in germ cells, melanocytes, interstitial cells of Cajal, NK cells, and dendritic cells. KIT–SCF signaling supports early hematopoiesis, mast-cell development and survival, melanogenesis, gametogenesis, and gastrointestinal pacemaker-cell development. | Krimmer et al., 2023, DOI: [10.1073/pnas.2300054120](https://doi.org/10.1073/pnas.2300054120); Cilloni et al., 2024, DOI: [10.3390/ijms252010885](https://doi.org/10.3390/ijms252010885); Katagiri et al., 2022, DOI: [10.3390/ijms23094694](https://doi.org/10.3390/ijms23094694) (krimmer2023cryoemanalysesof pages 1-2, katagiri2022mutatedkittyrosine pages 1-2, cilloni2024detectionofkit pages 3-5, pardanani2023systemicmastocytosisin pages 1-2) |
+| Loss-of-function phenotypes | Reduced KIT signaling causes **piebaldism or hypopigmentation** through impaired melanocyte development and may produce mast-cell deficiency, anemia or other hematopoietic abnormalities, and impaired fertility. Severe experimental loss of KIT or SCF is lethal, whereas partial loss produces pigmentation and germ-cell phenotypes. | Rönnstrand, 2004, DOI: [10.1007/s00018-004-4189-6](https://doi.org/10.1007/s00018-004-4189-6); Roskoski, 2005, DOI: [10.1016/j.bbrc.2005.08.055](https://doi.org/10.1016/j.bbrc.2005.08.055); Open Targets evidence (OpenTargets Search: -KIT, r�nnstrand2004signaltransductionvia pages 1-2, roskoski2005signalingbykit pages 1-2) |
+| Gain-of-function diseases | Ligand-independent KIT activation drives **GIST, systemic and cutaneous mastocytosis, mast-cell leukemia, subsets of AML, seminoma or germ-cell tumors**, and some melanomas. Primary KIT mutations occur in approximately **80–90% of treatment-naive GIST**, while KIT protein is detected in approximately **95%**. More than **90% of mastocytosis** cases have somatic KIT mutations, most commonly adult D816V; pediatric skin lesions show D816V in about **30%** and extracellular-domain activating variants in about **40%**. | Zhou et al., 2024, DOI: [10.1186/s12964-023-01411-x](https://doi.org/10.1186/s12964-023-01411-x); Cilloni et al., 2024, DOI: [10.3390/ijms252010885](https://doi.org/10.3390/ijms252010885) (cilloni2024detectionofkit pages 3-5, zhou2024kitmutationsand pages 1-2) |
+| Current clinical applications | KIT is used as a **CD117 diagnostic marker**, molecular diagnostic and monitoring target, and drug target. KIT/PDGFRA genotyping guides GIST therapy with imatinib and later-line TKIs such as sunitinib, regorafenib, and ripretinib. In mastocytosis, D816V is generally imatinib-resistant, whereas avapritinib and midostaurin target advanced disease. One systemic-mastocytosis series reported an imatinib response rate of **18% (4/22)**, supporting its restricted use in selected non-D816V or unknown-genotype disease. | Pardanani, 2023, DOI: [10.1002/ajh.26962](https://doi.org/10.1002/ajh.26962); Zhou et al., 2024, DOI: [10.1186/s12964-023-01411-x](https://doi.org/10.1186/s12964-023-01411-x) (zhou2024kitmutationsand pages 1-2, pardanani2023systemicmastocytosisin pages 1-2, pardanani2023systemicmastocytosisin pages 16-16) |
+| 2023–2024 advances | Cryo-EM revealed an asymmetric D5 interface with buried areas of approximately **292 Å²** in wild-type KIT, **479 Å²** in ligand-sensitized DupA502/Y503 KIT, and **1,001 Å²** in ligand-independent T417I/Δ418–419 KIT. The latter mutant's D5 termini were **4.8 Å** apart without SCF versus **15.0 Å** after SCF-induced remodeling; DupA502/Y503 D5 fragments showed **10–20-fold** stronger dimerization. These results identify D4/D5 contacts as therapeutic targets. A 2024 synthesis reported that approximately **90% of imatinib resistance in GIST** is associated with secondary KIT mutations and that resistance commonly emerges after **18–24 months**. | Krimmer et al., 2023, DOI: [10.1073/pnas.2300054120](https://doi.org/10.1073/pnas.2300054120); Zhou et al., 2024, DOI: [10.1186/s12964-023-01411-x](https://doi.org/10.1186/s12964-023-01411-x) (zhou2024kitmutationsand pages 1-2, krimmer2023cryoemanalysesof pages 7-8, krimmer2023cryoemanalysesof pages 1-2, krimmer2023cryoemanalysesof pages 8-10) |
 
 
-*Table: Concise evidence map for human KIT/SCFR/CD117 (UniProt P10721), integrating molecular function, site-specific signaling, localization, disease biology and 2023–2024 clinical developments. Experimental and crystallographic findings are explicitly separated from computational or review-level inference.*
+*Table: Concise evidence-based annotation of human KIT (UniProt P10721), covering molecular mechanism, localization, physiology, disease associations, clinical use, and recent structural findings. Quantitative claims are linked to the supporting literature and available evidence contexts.*
 
-## 1. Molecular function and catalytic activity
+## 1. Identity verification
 
-KIT belongs to the **class III receptor tyrosine kinase** family. The mature receptor is oriented with its ligand-binding Ig-like ectodomain outside the cell, one membrane-spanning helix, and its catalytic apparatus in the cytosol. A structural annotation places the transmembrane segment at approximately residues 525–545, the juxtamembrane region at 546–581, the kinase region at 582–931 and the C-terminal tail at 932–946; minor boundary differences among databases reflect annotation conventions rather than conflicting topology. (ledoux2023receptortyrosinekinase pages 1-2, ledoux2022theinherentcoupling pages 2-4)
+### 1.1 Gene, protein, and organism
 
-As an EC **2.7.10.1 receptor protein-tyrosine kinase**, KIT catalyzes the general reaction:
+The literature identifies **KIT/CD117** as the human stem-cell-factor receptor, also called **SCFR** or **c-KIT**. It is encoded by *KIT* on chromosome 4 and belongs to the type III receptor tyrosine kinase family. The reported 976-residue, approximately 145-kDa glycoprotein is concordant with UniProt P10721 and the historical name p145 c-KIT (katagiri2022mutatedkittyrosine pages 1-2, roskoski2005signalingbykit pages 2-3, cilloni2024detectionofkit pages 2-3).
+
+No conflicting same-symbol protein was encountered. The reviewed work concerns **Homo sapiens KIT**, except where experimental model phenotypes are explicitly used as supporting evidence. The related gene **KITLG** encodes the ligand and must not be confused with the receptor itself.
+
+### 1.2 Domain verification
+
+KIT has five extracellular immunoglobulin-like domains, conventionally designated **D1–D5**. D1–D3 form the principal SCF-binding region, while membrane-proximal D4 and D5 provide receptor–receptor contacts that stabilize and orient the signaling dimer. These are followed by a single transmembrane helix, a cytosolic juxtamembrane regulatory segment, and an intracellular tyrosine-kinase domain interrupted by a kinase insert—hence the characteristic “split kinase” architecture of class III receptors (katagiri2022mutatedkittyrosine pages 1-2, roskoski2005signalingbykit pages 2-3, krimmer2023cryoemanalysesof pages 7-8, heldin2013structuralandfunctional pages 7-9).
+
+## 2. Primary molecular function
+
+### 2.1 Ligand specificity
+
+The physiological ligand is **SCF**, encoded by *KITLG* and also known as mast-cell growth factor or steel factor. SCF exists in membrane-bound and soluble forms and is a noncovalent homodimer. One SCF dimer engages two KIT molecules principally through D1–D3, bringing them together so that D4–D4 and D5–D5 contacts can complete the active receptor assembly (roskoski2005signalingbykit pages 1-2, roskoski2005signalingbykit pages 2-3, krimmer2023cryoemanalysesof pages 7-8, heldin2013structuralandfunctional pages 7-9).
+
+This ligand specificity distinguishes KIT from related class III receptors such as PDGFRA/B, CSF1R, and FLT3. KIT is not a transporter or structural protein; it is a cell-surface signaling enzyme.
+
+### 2.2 Catalytic reaction and substrate specificity
+
+KIT is an ATP-dependent protein-tyrosine kinase (EC 2.7.10.1). Its net catalytic reaction can be represented as:
 
 **ATP + protein-L-tyrosine → ADP + protein-L-tyrosine phosphate.**
 
-Its substrates are tyrosine residues in proteins or peptides, not one exclusive small molecule. The first physiologically decisive substrates are tyrosines on the paired KIT receptor itself; KIT can also phosphorylate recruited signaling proteins. Effective specificity is determined by peptide sequence around the tyrosine, docking interactions, receptor conformation and cellular colocalization. Thus, “protein tyrosine” is the substrate class, whereas autophosphorylation and pathway-protein phosphorylation provide biological selectivity. Ligand-induced intrinsic kinase activation and autophosphorylation are experimentally established, although the retrieved literature does not support defining one unique downstream protein as KIT’s sole substrate. (r�nnstrand2004signaltransductionvia pages 1-2, foster2018cd117ckitincancer pages 3-6)
+Following dimerization, each KIT kinase phosphorylates tyrosines on the opposing receptor—reciprocal **trans-autophosphorylation**—and can subsequently phosphorylate associated signaling proteins. Thus, its substrate class is protein tyrosine residues rather than free tyrosine or a small-molecule metabolite. Autophosphorylation both increases catalytic activity and creates binding sites for proteins containing SH2 or phosphotyrosine-binding domains (r�nnstrand2004signaltransductionvia pages 1-2, roskoski2005signalingbykit pages 1-2, roskoski2005signalingbykit pages 2-3).
 
-## 2. Activation mechanism
+Important receptor phosphotyrosines include Y568/Y570, which recruit Src-family kinases, SHP proteins, SHC, and APS; Y703, associated with GRB2; Y721, a major PI3K-recruitment site; Y730, associated with PLCγ; and C-terminal sites Y900 and Y936, which recruit combinations of PI3K, CRK, GRB2, GRB7, and APS. These sites make KIT a phosphorylation-dependent signaling scaffold as well as an enzyme (roskoski2005signalingbykit pages 1-2).
 
-SCF/KITLG is KIT’s cognate ligand and occurs in membrane-associated and soluble forms. SCF binding assembles and stabilizes a KIT homodimer. In inactive KIT, the cytoplasmic juxtamembrane region restrains the kinase, together with the αC helix and activation loop. Dimerization permits reciprocal phosphorylation—initially including juxtamembrane tyrosines—displacing this inhibitory arrangement and opening access to ATP and protein substrates. Additional phosphorylated tyrosines become docking sites for SH2- or PTB-domain-containing proteins. (ledoux2023receptortyrosinekinase pages 1-2, r�nnstrand2004signaltransductionvia pages 1-2, foster2018cd117ckitincancer pages 3-6)
+### 2.3 Activation and autoinhibition
 
-The principal human phosphosites provide a modular signaling surface:
+In inactive KIT, the juxtamembrane segment inserts between the kinase lobes and restrains catalytic activity. SCF-mediated dimerization permits intermolecular phosphorylation of this regulatory region and other receptor sites, relieving autoinhibition and stabilizing the active state (heldin2013structuralandfunctional pages 7-9).
 
-- **Y568/Y570:** early juxtamembrane phosphosites and SH2 docking sites, prominently coupling KIT to Src-family kinases and migration/chemotaxis signaling; they also participate in release of autoinhibition. (foster2018cd117ckitincancer pages 13-14, ledoux2022theinherentcoupling pages 2-4)
-- **Y703:** GRB2-associated site connecting KIT to SOS–RAS–RAF–MEK–ERK signaling. (ledoux2023sitespecificphosphorylationof pages 1-2)
-- **Y721:** principal PI3K-p85 docking site. This assignment has direct structural support from the 2.0-Å PDB 2IUH structure of a p85 SH2 domain bound to a KIT pY721 peptide. The broader full-length kinase-insert/PI3K geometries proposed in 2023 are computational models, not equivalent to full-receptor crystallographic validation. (ledoux2023sitespecificphosphorylationof pages 8-10, ledoux2023sitespecificphosphorylationof pages 2-4, ledoux2023sitespecificphosphorylationof pages 25-26)
-- **Y730:** associated with PLCγ recruitment and phosphoinositide/Ca²⁺ signaling. A modeled contact involving Y730 in a pY721–PI3K complex remains computational inference. (ledoux2023sitespecificphosphorylationof pages 1-2, ledoux2023sitespecificphosphorylationof pages 24-25)
-- **Y823:** activation-loop phosphosite associated with catalytic activation. Its proposed intramolecular structural role is plausible, but a definitive downstream binding partner has not been established. (ledoux2022theinherentcoupling pages 2-4)
-- **Y900:** supports phosphorylation-dependent Crk/c-Crk association, potentially involving PI3K-p85; indirect complex formation remains possible. (foster2018cd117ckitincancer pages 13-14, ledoux2022theinherentcoupling pages 2-4)
-- **Y936:** C-terminal signaling site associated with GRB2/GRB7 and MAPK activation, with partner usage depending on cellular context. (foster2018cd117ckitincancer pages 13-14, ledoux2022theinherentcoupling pages 2-4)
+Recent cryo-EM work refined this model. SCF organizes interactions across D1–D3, symmetric D4 contacts, and an asymmetric D5 interface that likely constrains the transmembrane and intracellular domains in a productive orientation. Mutation of D5-interface residues F504 or F506 reduced ligand-induced autophosphorylation, and combined R381A/F506A substitution abolished it, functionally connecting the extracellular interface to kinase activation (krimmer2023cryoemanalysesof pages 7-8).
 
-## 3. Pathways and biological consequences
+## 3. Cellular localization and trafficking
 
-The best-supported signaling branches are:
+Mature KIT operates primarily at the **plasma membrane**: its glycosylated Ig-like region faces the extracellular environment, the single transmembrane helix anchors the receptor, and the kinase domain lies in the cytosol. This topology allows extracellular SCF to control cytoplasmic phosphorylation without ligand transport across the membrane (katagiri2022mutatedkittyrosine pages 1-2, cilloni2024detectionofkit pages 2-3).
 
-1. **PI3K–AKT:** PI3K p85 binds pY721, enabling p110-mediated PIP3 production and AKT activation. This is a major survival pathway; AKT suppresses pro-apoptotic machinery such as BAD. Oncogenic D816 variants retain strong PI3K signaling, and disruption of the Y721 interaction reduces mutant KIT-driven growth and tumorigenicity. (lennartsson2005normalandoncogenic pages 19-20, foster2018cd117ckitincancer pages 3-6, ledoux2023sitespecificphosphorylationof pages 8-10)
-2. **RAS–RAF–MEK–ERK/MAPK:** GRB2-associated sites, particularly Y703 and Y936, connect KIT to RAS/MAPK, supporting proliferation and differentiation. Signal magnitude varies with splice isoform and cellular context. (r�nnstrand2004signaltransductionvia pages 1-2, ledoux2023sitespecificphosphorylationof pages 1-2, ledoux2022theinherentcoupling pages 2-4)
-3. **SRC-family signaling:** juxtamembrane pY568/pY570 recruit SRC-family proteins, linking KIT to cytoskeletal remodeling, calcium signaling, adhesion and directional migration. (foster2018cd117ckitincancer pages 13-14)
-4. **PLCγ–Ca²⁺/PKC:** PLCγ recruitment, associated with Y730, promotes phosphoinositide hydrolysis and calcium mobilization. (foster2018cd117ckitincancer pages 3-6, ledoux2023sitespecificphosphorylationof pages 1-2)
-5. **JAK–STAT and auxiliary RAC/JNK pathways:** KIT can activate STAT proteins and stress/cytoskeletal pathways. Constitutively active mutants frequently sustain STAT3, although ERK output can be cell-context dependent. (ledoux2023receptortyrosinekinase pages 1-2, lennartsson2005normalandoncogenic pages 19-20)
+After activation, KIT is internalized. Phosphorylated receptor recruits the Cbl E3 ubiquitin ligase, undergoes ubiquitination, and is directed toward lysosomal and proteasomal degradation; it is generally not efficiently recycled to the cell surface. This trafficking provides negative feedback and limits signal duration. Oncogenic KIT can exhibit altered intracellular localization or impaired degradation, potentially prolonging signaling (gall2015neutralizationofkit pages 10-11, zhou2024kitmutationsand pages 1-2).
 
-These branches explain KIT’s precise signaling role better than a broad list of pleiotropic phenotypes: KIT is a ligand-regulated membrane kinase that builds a phosphotyrosine docking platform and coordinates survival, cell-cycle entry, differentiation, adhesion and motility.
+## 4. Signaling pathways
 
-## 4. Cellular and tissue localization
+KIT autophosphorylation initiates several interacting pathways:
 
-KIT carries out ligand recognition at the **plasma membrane**: SCF binds extracellularly while ATP binding, phosphorylation and effector recruitment occur on the cytoplasmic face. Following activation, receptor internalization and degradation limit signal duration. CBL-family ubiquitin-ligase activity and HSP90-dependent stabilization regulate KIT abundance; HSP90 or HDAC-directed interventions can lower total and phosphorylated KIT. (zhou2024kitmutationsand pages 12-13, ledoux2022theinherentcoupling pages 2-4)
+* **RAS–RAF–MEK–ERK/MAPK:** promotes transcriptional programs, proliferation, and differentiation.
+* **PI3K–AKT:** supports survival, metabolism, and resistance to apoptosis; Y721 is an important receptor docking site.
+* **PLCγ–PKC/Ca²⁺:** links KIT to phosphoinositide hydrolysis, calcium mobilization, and context-dependent proliferation.
+* **SRC-family kinases:** participate in proliferation, survival, adhesion, cytoskeletal regulation, and migration.
+* **JAK–STAT:** contributes to transcriptional responses and hematopoietic differentiation in appropriate cellular contexts (roskoski2005signalingbykit pages 1-2, katagiri2022mutatedkittyrosine pages 1-2, cilloni2024detectionofkit pages 3-5).
 
-Localization is altered in some cancers. Mutant KIT can be retained in intracellular organelles, including Golgi-associated compartments, and remain signaling competent. This has motivated organelle-directed inhibitors and strategies that alter KIT folding, trafficking or degradation. The retrieved KIT-specific evidence supports internalization and degradation, but is less definitive about the exact lysosomal itinerary than the broader receptor-tyrosine-kinase literature; a KIT-specific lysosomal route should therefore not be asserted without qualification. (zhou2024kitmutationsand pages 12-13)
+These pathways overlap with those of other growth-factor receptors. Biological specificity therefore arises not merely from which pathways are present, but from receptor abundance, phosphosite usage, signal amplitude and duration, membrane-bound versus soluble SCF, receptor isoform, and cell-specific effector expression. The alternatively spliced GNNK-negative KIT isoform reportedly phosphorylates and internalizes more rapidly and produces stronger downstream signaling than GNNK-positive KIT (r�nnstrand2004signaltransductionvia pages 1-2, cilloni2024detectionofkit pages 2-3).
 
-Physiologically important KIT-expressing lineages include hematopoietic stem/progenitor cells, mast cells, melanocytes, germ cells and gastrointestinal interstitial cells of Cajal. Human loss-of-function genetics, including piebaldism, supports roles in melanocyte development and migration; gain-of-function genetics demonstrates the receptor’s growth and survival functions in GIST, mastocytosis and subsets of leukemia. (OpenTargets Search: -KIT, r�nnstrand2004signaltransductionvia pages 1-2)
+## 5. Physiological functions and biological processes
 
-## 5. Disease mechanisms and functional genetic evidence
+### Hematopoiesis and mast cells
 
-**Loss-of-function KIT** disrupts SCF-dependent developmental or lineage maintenance programs and can cause piebaldism. **Gain-of-function KIT** bypasses normal ligand control. Juxtamembrane mutations weaken autoinhibition, whereas activation-loop mutations such as **D816V/D816H** stabilize active or signaling-competent conformations and can be relatively insensitive to inhibitors that preferentially bind inactive kinase conformations. (OpenTargets Search: -KIT, lennartsson2005normalandoncogenic pages 19-20, r�nnstrand2004signaltransductionvia pages 1-2)
+KIT is strongly expressed in early hematopoietic stem and progenitor populations and contributes to survival, self-renewal, and myeloid/lymphoid differentiation. Expression usually declines during maturation, but mast cells retain high surface KIT. SCF–KIT signaling is consequently central to mast-cell proliferation, maturation, adhesion, chemotaxis, and survival (katagiri2022mutatedkittyrosine pages 1-2, cilloni2024detectionofkit pages 3-5, pardanani2023systemicmastocytosisin pages 1-2).
 
-Disease associations are strongest for GIST and mastocytosis, with additional involvement in AML, germ-cell tumors and melanoma. Open Targets identifies human KIT, approved name “KIT proto-oncogene, receptor tyrosine kinase,” as strongly associated with GIST, piebaldism, AML and cutaneous mastocytosis, providing orthogonal genetic, literature and clinical evidence that the researched protein is the intended target. (OpenTargets Search: -KIT)
+### Melanocytes
 
-## 6. Developments in 2023–2024
+KIT supports melanocyte development, migration, and survival. Human loss-of-function variants are associated with **piebaldism**, making pigmentation genetics strong in-vivo evidence for the receptor’s developmental role. Open Targets independently identifies a high-confidence KIT–piebaldism association (OpenTargets Search: -KIT, r�nnstrand2004signaltransductionvia pages 1-2).
 
-### Structural and mechanistic research
+### Germ cells and fertility
 
-A September 2023 molecular-dynamics study compared wild-type KIT with KIT D816V across the full cytoplasmic domain. It reported mutation-associated changes in disorder, interdomain coupling and free-energy landscapes and identified candidate mutant-selective allosteric pockets. These results offer hypotheses for inhibitors that discriminate D816V from wild-type KIT, but they are computational and require biochemical and pharmacological validation. [Ledoux et al., published 25 September 2023; DOI/URL: https://doi.org/10.3390/kinasesphosphatases1040014.] (ledoux2023receptortyrosinekinase pages 1-2, ledoux2023receptortyrosinekinase pages 26-28)
+KIT signaling supports germ-cell development and both spermatogenic and oogenic processes. Severe or partial disruption of the KIT–SCF axis produces germ-cell depletion or infertility in experimental genetics, while human loss-of-function syndromes can include reproductive abnormalities (r�nnstrand2004signaltransductionvia pages 1-2, roskoski2005signalingbykit pages 1-2, cilloni2024detectionofkit pages 3-5).
 
-A February 2023 study analyzed phosphorylation-dependent conformations of KIT’s kinase-insert domain and modeled its interaction with PI3K SH2 domains. Its key strength is explicit benchmarking against the experimental pY721 peptide–PI3K crystal structure; proposed full-domain interfaces remain testable models. [Ledoux and Tchertanov, February 2023; https://doi.org/10.3390/kinasesphosphatases1010005.] (ledoux2023sitespecificphosphorylationof pages 1-2, ledoux2023sitespecificphosphorylationof pages 8-10, ledoux2023sitespecificphosphorylationof pages 25-26)
+### Interstitial cells of Cajal
 
-### Current clinical implementation
+KIT is required for development and maintenance of gastrointestinal interstitial cells of Cajal, the pacemaker lineage from which most GISTs are thought to arise. The dependence of both normal Cajal cells and GIST on KIT provides a direct lineage-based explanation for KIT’s central role in this tumor type (krimmer2023cryoemanalysesof pages 1-2, zhou2024kitmutationsand pages 1-2).
 
-KIT inhibition is a real-world standard of care in molecularly selected GIST. Imatinib is the principal adjuvant and usual first-line agent; sunitinib, regorafenib and ripretinib are established later-line therapies. Avapritinib has strong activation-loop activity and an approved GIST role centered on PDGFRA exon 18 disease; it also inhibits KIT D816V and is clinically used in advanced systemic mastocytosis. Therapy should be selected by the precise driver and resistance genotype rather than CD117 immunostaining alone. (zhou2024kitmutationsand pages 12-13, huang2024drugsinthe pages 7-8, huang2024drugsinthe pages 1-1)
+## 6. Genetic and disease evidence
 
-A 2024 pipeline analysis using data through 2021 found **75 drugs**, **225 GIST drug-treatment trials** and **57 therapeutic targets**. KIT was the most frequent target, occurring 25 times, followed by PDGFRA at 16 and VEGFR2/KDR at 13. Five marketed GIST TKIs were identified: imatinib, sunitinib, regorafenib, ripretinib and avapritinib. [Huang et al., January 2024; https://doi.org/10.2174/1567201820666221122120657.] (huang2024drugsinthe pages 1-1, huang2024drugsinthe pages 6-7)
+### 6.1 Loss of function
 
-### Recent quantitative findings
+Partial KIT loss of function causes impaired melanocyte development and piebaldism; experimental reduction also produces mast-cell deficiency, anemia or other hematopoietic defects, and sterility. Complete loss of KIT or SCF activity is lethal in classical genetic models. These concordant phenotypes across pigment, blood, and germ-cell lineages strongly support the normal functional annotation (r�nnstrand2004signaltransductionvia pages 1-2, roskoski2005signalingbykit pages 1-2).
 
-A February 2024 review estimates that **80–90% of treatment-naïve GISTs harbor primary KIT mutations**. Acquired imatinib resistance often develops after **18–24 months**, and approximately **90%** of resistance in the review was attributed to secondary KIT mutations. The authors’ expert interpretation is that GIST commonly remains KIT-dependent after progression; resistance may therefore require simultaneous control of heterogeneous kinase mutations, KIT protein abundance and bypass pathways rather than abandoning KIT as a target. [Zhou et al., February 2024; https://doi.org/10.1186/s12964-023-01411-x.] (zhou2024kitmutationsand pages 12-13, zhou2024kitmutationsand pages 1-2)
+### 6.2 Gain of function
 
-In a two-center retrospective cohort of **34** advanced-GIST patients who received both ripretinib and avapritinib, each treatment sequence contained 17 patients. Response rates were **12–18%**; median time to progression was **3.65–4.73 months** with ripretinib and **4.11–5.39 months** with avapritinib. Median overall survival after sequence initiation was **29.63 versus 33.7 months**. Investigators found no evidence that giving one drug first materially reduced the other’s later activity, but the small retrospective groups limit causal conclusions. [Thirasastr et al., February 2024; https://doi.org/10.3390/cancers16050904.] (thirasastr2024outcomesoflateline pages 13-14)
+Activating mutations bypass the normal requirement for SCF or make the receptor hypersensitive to ligand. Mutation location matters mechanistically:
 
-## 7. Expert assessment and annotation confidence
+* **Extracellular-domain mutations** can strengthen receptor dimerization.
+* **Juxtamembrane mutations**, frequent in GIST, weaken autoinhibition.
+* **Activation-loop/kinase-domain mutations**, particularly D816V in mastocytosis, stabilize active kinase conformations and alter inhibitor sensitivity (r�nnstrand2004signaltransductionvia pages 1-2, pardanani2023systemicmastocytosisin pages 1-2, cilloni2024detectionofkit pages 3-5, krimmer2023cryoemanalysesof pages 8-10).
 
-The highest-confidence annotation is that KIT is an **SCF-activated, plasma-membrane receptor protein-tyrosine kinase** whose central biochemical action is ATP-dependent phosphorylation of receptor and signaling-protein tyrosines. Structural, biochemical, genetic and pharmacological evidence converge on this function. The pY721–PI3K interaction has unusually strong site-specific structural support, while several other phosphosite-partner assignments rely on biochemical studies summarized in reviews and may vary among cell types. (ledoux2023sitespecificphosphorylationof pages 1-2, ledoux2023sitespecificphosphorylationof pages 8-10)
+Recent estimates indicate primary KIT mutations in approximately **80–90% of treatment-naive GIST**, with KIT protein expression in about **95%**. More than **90% of mastocytosis** cases have somatic KIT point mutations, most often D816V in adult systemic disease. In pediatric cutaneous disease, D816V is reported in approximately 30% of biopsies and extracellular-domain activating mutations in approximately 40% (cilloni2024detectionofkit pages 3-5, zhou2024kitmutationsand pages 1-2).
 
-The major translational lesson from 2023–2024 research is that “KIT-positive” is not a single therapeutic state. Juxtamembrane, ATP-pocket and activation-loop variants occupy different conformational ensembles and display different inhibitor sensitivities. Secondary-mutation heterogeneity and altered intracellular trafficking further complicate inhibition. Current expert strategy therefore emphasizes mutation-resolved sequencing, inhibitors covering multiple KIT conformations, degradation or expression-control strategies, and mutant-selective allosteric pockets. (ledoux2023receptortyrosinekinase pages 1-2, zhou2024kitmutationsand pages 12-13, yu2024molecularcharacteristicsand pages 10-11, zhou2024kitmutationsand pages 1-2)
+KIT alterations also occur in subsets of AML—especially core-binding-factor AML—germ-cell tumors/seminoma, melanoma, and mast-cell leukemia. These associations should not be interpreted as equivalent across diseases: the mutation domain, co-mutations, lineage, and receptor localization determine biological behavior and drug sensitivity (krimmer2023cryoemanalysesof pages 1-2, katagiri2022mutatedkittyrosine pages 1-2, cilloni2024detectionofkit pages 3-5).
 
-## Conclusion
+## 7. Current applications and real-world implementation
 
-Human KIT/P10721 is a well-validated class III receptor tyrosine kinase rather than a transporter, structural protein or adaptor. Its extracellular Ig-like region detects SCF, its membrane-spanning architecture transmits ligand-induced dimerization, and its cytoplasmic kinase phosphorylates protein tyrosines to assemble a signaling platform. The receptor acts chiefly at the plasma membrane, with internalization, organelle retention and degradation controlling signal duration and drug response. This mechanism explains its indispensable roles in selected stem/progenitor, mast-cell, melanocyte, germ-cell and interstitial-cell lineages, as well as why activating mutations create therapeutically actionable dependence in GIST and systemic mastocytosis. Recent work is refining KIT annotation from a simple on/off kinase model toward a mutation-, conformation-, phosphosite- and compartment-specific signaling system.
+### Diagnostic use
+
+KIT protein is detected clinically as **CD117** by immunohistochemistry or flow cytometry. It is widely used in the diagnostic work-up of GIST, mast-cell disease, and hematologic neoplasia, although expression alone does not demonstrate an activating mutation. Molecular testing is therefore needed to identify the relevant KIT variant and select therapy.
+
+For mastocytosis, highly sensitive allele-specific quantitative PCR or droplet-digital PCR is important because KIT D816V variant allele fractions can be below ordinary NGS detection thresholds. Peripheral-blood testing can miss low-burden disease; one 2024 review reported that peripheral-blood ddPCR misses more than half of bone-marrow mastocytosis cases, emphasizing that a negative blood test does not exclude disease (cilloni2024detectionofkit pages 2-3).
+
+### GIST therapy
+
+Imatinib is foundational first-line therapy for susceptible KIT-mutant advanced GIST. Subsequent agents include sunitinib, regorafenib, and ripretinib, with selection influenced by the primary and secondary mutation spectrum. Resistance commonly emerges after approximately **18–24 months**, and a 2024 synthesis attributed about **90% of imatinib resistance** to secondary KIT mutations. Individual metastases or tumor subclones can carry different secondary mutations, explaining why later-line inhibitors often suppress only part of the disease (zhou2024kitmutationsand pages 1-2).
+
+This is a canonical precision-oncology implementation: KIT genotyping is predictive, not merely descriptive. Juxtamembrane exon-11 mutants are often imatinib-sensitive, whereas activation-loop variants have different conformational preferences and inhibitor profiles.
+
+### Systemic mastocytosis therapy
+
+The common KIT D816V mutant is generally resistant to imatinib. Imatinib is therefore reserved for unusual imatinib-sensitive variants, such as selected transmembrane or juxtamembrane mutants, or advanced systemic mastocytosis lacking D816V or with unknown KIT status. In one Mayo Clinic series, only 4 of 22 evaluable patients responded—an overall response rate of **18%**—supporting this restricted role (pardanani2023systemicmastocytosisin pages 16-16).
+
+Midostaurin and avapritinib are clinically important inhibitors for advanced systemic mastocytosis. Avapritinib can produce deep biochemical, histological, and molecular responses, although associated myeloid neoplasms containing additional driver mutations may not be fully controlled by KIT inhibition alone. Preliminary phase-2 bezuclastinib data cited in the 2023 update showed greater than 50% serum-tryptase reduction in all 11 reported patients; all eight evaluable after at least two cycles had at least 50% reduction in marrow mast-cell burden, with complete aggregate clearance in six. These early numbers require confirmation in larger and mature datasets (pardanani2023systemicmastocytosisin pages 1-2, pardanani2023systemicmastocytosisin pages 16-16).
+
+## 8. Recent developments, 2023–2024
+
+### 8.1 Structural oncogenic plasticity
+
+Krimmer and colleagues’ March 2023 single-particle cryo-EM analysis examined full-length wild-type KIT and extracellular oncogenic mutants. Although the transmembrane and kinase regions were not resolved, the work directly visualized how extracellular interfaces encode activation. The ligand-sensitized DupA502/Y503 mutant expanded the D5 interface from approximately **292 Å²** in wild type to **479 Å²** and increased isolated D4–D5-fragment dimerization affinity by approximately **10–20-fold** (krimmer2023cryoemanalysesof pages 7-8, krimmer2023cryoemanalysesof pages 1-2).
+
+The ligand-independent T417I/Δ418–419 mutant adopted a V-shaped assembly held by an approximately **1,001 Å²** D5 interface. Its membrane-proximal termini were about **4.8 Å** apart without SCF but **15.0 Å** apart after SCF binding, which restored a more wild-type-like D4/D5 organization. This demonstrates “oncogenic plasticity”: the same mutant receptor can occupy markedly different extracellular arrangements while remaining signaling competent. The authors identify the D4/D5 interface as a potential therapeutic Achilles heel for antibodies, bispecifics, or other binders (krimmer2023cryoemanalysesof pages 7-8, krimmer2023cryoemanalysesof pages 1-2, krimmer2023cryoemanalysesof pages 8-10). Publication: 27 March 2023; DOI: https://doi.org/10.1073/pnas.2300054120.
+
+### 8.2 Resistance-focused functional annotation
+
+The February 2024 review by Zhou and colleagues emphasizes that mutant KIT in GIST differs from wild-type KIT not only by ligand independence but also by altered localization, transcriptional regulation, processing, and degradation. High KIT expression is usually not explained by gene amplification. This broader model helps explain persistent “KIT addiction” and suggests that reducing receptor production, maturation, or stability could complement ATP-site inhibition (zhou2024kitmutationsand pages 1-2). DOI: https://doi.org/10.1186/s12964-023-01411-x.
+
+### 8.3 Mutation detection in mastocytosis
+
+The October 2024 review by Cilloni and colleagues highlights the clinical need for ultrasensitive D816V detection and mutation-specific interpretation. More than 90% of affected patients carry a KIT point mutation, but variant allele fractions may be too low for routine NGS. The review also underscores age-related mutation differences: adult disease is dominated by exon-17 D816V, whereas pediatric cutaneous disease more often includes extracellular mutations (cilloni2024detectionofkit pages 3-5, cilloni2024detectionofkit pages 2-3). DOI: https://doi.org/10.3390/ijms252010885.
+
+## 9. Expert interpretation
+
+The most precise functional description of KIT is: **an SCF-gated plasma-membrane tyrosine kinase that couples extracellular dimer assembly to intracellular phosphotyrosine signaling**. Its essential mechanistic sequence is ligand binding → receptor dimerization and D4/D5 alignment → relief of juxtamembrane inhibition → reciprocal phosphorylation → effector recruitment → pathway activation → internalization and degradation.
+
+Three expert-level qualifications are important:
+
+1. **KIT expression is not equivalent to KIT oncogenic activation.** CD117 positivity can reflect normal lineage biology, whereas mutation and phospho-signaling establish constitutive activation.
+2. **“KIT-mutant” is not one therapeutic category.** Extracellular, juxtamembrane, ATP-pocket, and activation-loop variants differ in conformation and drug sensitivity.
+3. **Resistance is structurally heterogeneous.** In GIST, multiple secondary KIT mutations can coexist across lesions, making a single ATP-site inhibitor unlikely to suppress every clone. Extracellular-interface inhibition, receptor degradation, and rational combinations are therefore attractive research directions (zhou2024kitmutationsand pages 1-2, krimmer2023cryoemanalysesof pages 7-8, krimmer2023cryoemanalysesof pages 8-10).
+
+## 10. Confidence and limitations
+
+Confidence is **high** for identity, domain architecture, SCF specificity, receptor activation, plasma-membrane localization, major signaling pathways, and the core developmental and disease roles; these are supported by convergent structural, biochemical, genetic, and clinical evidence. The catalytic reaction is the standard protein-tyrosine-kinase phosphotransfer reaction; KIT recognizes receptor and protein substrates in a cellular docking context rather than a single small-molecule substrate.
+
+Clinical percentages vary by cohort, assay sensitivity, age, disease classification, and whether only treatment-naive tumors are counted. Older statements that more than 90% of GISTs harbor KIT mutations should therefore be superseded by recent estimates of approximately 80–90%, while recognizing that KIT protein expression is more frequent than mutation. Early bezuclastinib results are promising but preliminary, and the 2023 cryo-EM structures resolved extracellular—not intracellular kinase—organization.
+
+## Selected references
+
+* Krimmer SG et al. **Cryo-EM analyses of KIT and oncogenic mutants reveal structural oncogenic plasticity and a target for therapeutic intervention.** *PNAS*. Published March 2023. https://doi.org/10.1073/pnas.2300054120 (krimmer2023cryoemanalysesof pages 1-2, krimmer2023cryoemanalysesof pages 7-8, krimmer2023cryoemanalysesof pages 8-10)
+* Zhou S et al. **KIT mutations and expression: current knowledge and new insights for overcoming imatinib resistance in GIST.** *Cell Communication and Signaling*. Published February 2024. https://doi.org/10.1186/s12964-023-01411-x (zhou2024kitmutationsand pages 1-2)
+* Cilloni D et al. **Detection of KIT Mutations in Systemic Mastocytosis: How, When, and Why.** *International Journal of Molecular Sciences*. Published October 2024. https://doi.org/10.3390/ijms252010885 (cilloni2024detectionofkit pages 3-5, cilloni2024detectionofkit pages 2-3)
+* Pardanani A. **Systemic mastocytosis in adults: 2023 update on diagnosis, risk stratification and management.** *American Journal of Hematology*. Published May 2023. https://doi.org/10.1002/ajh.26962 (pardanani2023systemicmastocytosisin pages 1-2, pardanani2023systemicmastocytosisin pages 16-16)
+* Heldin C-H, Lennartsson J. **Structural and functional properties of platelet-derived growth factor and stem cell factor receptors.** *Cold Spring Harbor Perspectives in Biology*. Published August 2013. https://doi.org/10.1101/cshperspect.a009100 (heldin2013structuralandfunctional pages 7-9)
+* Roskoski R. **Signaling by Kit protein-tyrosine kinase—the stem cell factor receptor.** *Biochemical and Biophysical Research Communications*. Published November 2005. https://doi.org/10.1016/j.bbrc.2005.08.055 (roskoski2005signalingbykit pages 1-2, roskoski2005signalingbykit pages 2-3)
 
 References
 
-1. (ledoux2023receptortyrosinekinase pages 1-2): Julie Ledoux, Marina Botnari, and Luba Tchertanov. Receptor tyrosine kinase kit: mutation-induced conformational shift promotes alternative allosteric pockets. Kinases and Phosphatases, 1:220-250, Sep 2023. URL: https://doi.org/10.3390/kinasesphosphatases1040014, doi:10.3390/kinasesphosphatases1040014. This article has 4 citations.
+1. (katagiri2022mutatedkittyrosine pages 1-2): Seiichiro Katagiri, SungGi Chi, Yosuke Minami, Kentaro Fukushima, Hirohiko Shibayama, Naoko Hosono, Takahiro Yamauchi, Takanobu Morishita, Takeshi Kondo, Masamitsu Yanada, Kazuhito Yamamoto, Junya Kuroda, Kensuke Usuki, Daigo Akahane, and Akihiko Gotoh. Mutated kit tyrosine kinase as a novel molecular target in acute myeloid leukemia. International Journal of Molecular Sciences, 23:4694, Apr 2022. URL: https://doi.org/10.3390/ijms23094694, doi:10.3390/ijms23094694. This article has 26 citations.
 
-2. (foster2018cd117ckitincancer pages 1-3): Brittni M. Foster, Danish Zaidi, Tyler R. Young, Mary E. Mobley, and Bethany A. Kerr. Cd117/c-kit in cancer stem cell-mediated progression and therapeutic resistance. Biomedicines, Feb 2018. URL: https://doi.org/10.3390/biomedicines6010031, doi:10.3390/biomedicines6010031. This article has 162 citations.
+2. (roskoski2005signalingbykit pages 2-3): Robert Roskoski. Signaling by kit protein-tyrosine kinase—the stem cell factor receptor. Biochemical and Biophysical Research Communications, 337(1):1-13, Nov 2005. URL: https://doi.org/10.1016/j.bbrc.2005.08.055, doi:10.1016/j.bbrc.2005.08.055. This article has 368 citations and is from a peer-reviewed journal.
 
-3. (r�nnstrand2004signaltransductionvia pages 1-2): L. R�nnstrand. Signal transduction via the stem cell factor receptor/c-kit. Cellular and Molecular Life Sciences CMLS, 61:2535-2548, Oct 2004. URL: https://doi.org/10.1007/s00018-004-4189-6, doi:10.1007/s00018-004-4189-6. This article has 643 citations.
+3. (cilloni2024detectionofkit pages 2-3): Daniela Cilloni, Beatrice Maffeo, Arianna Savi, Alice Costanza Danzero, Valentina Bonuomo, and Carmen Fava. Detection of kit mutations in systemic mastocytosis: how, when, and why. Oct 2024. URL: https://doi.org/10.3390/ijms252010885, doi:10.3390/ijms252010885. This article has 24 citations.
 
-4. (foster2018cd117ckitincancer pages 3-6): Brittni M. Foster, Danish Zaidi, Tyler R. Young, Mary E. Mobley, and Bethany A. Kerr. Cd117/c-kit in cancer stem cell-mediated progression and therapeutic resistance. Biomedicines, Feb 2018. URL: https://doi.org/10.3390/biomedicines6010031, doi:10.3390/biomedicines6010031. This article has 162 citations.
+4. (OpenTargets Search: -KIT): Open Targets Query (-KIT, 35 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
 
-5. (ledoux2022theinherentcoupling pages 2-4): Julie Ledoux, Alain Trouvé, and Luba Tchertanov. The inherent coupling of intrinsically disordered regions in the multidomain receptor tyrosine kinase kit. International Journal of Molecular Sciences, 23:1589, Jan 2022. URL: https://doi.org/10.3390/ijms23031589, doi:10.3390/ijms23031589. This article has 10 citations.
+5. (krimmer2023cryoemanalysesof pages 1-2): Stefan G. Krimmer, Nicole Bertoletti, Yoshihisa Suzuki, Luka Katic, Jyotidarsini Mohanty, Sheng Shu, Sangwon Lee, Irit Lax, Wei Mi, and Joseph Schlessinger. Cryo-em analyses of kit and oncogenic mutants reveal structural oncogenic plasticity and a target for therapeutic intervention. Proceedings of the National Academy of Sciences of the United States of America, Mar 2023. URL: https://doi.org/10.1073/pnas.2300054120, doi:10.1073/pnas.2300054120. This article has 27 citations and is from a highest quality peer-reviewed journal.
 
-6. (foster2018cd117ckitincancer pages 13-14): Brittni M. Foster, Danish Zaidi, Tyler R. Young, Mary E. Mobley, and Bethany A. Kerr. Cd117/c-kit in cancer stem cell-mediated progression and therapeutic resistance. Biomedicines, Feb 2018. URL: https://doi.org/10.3390/biomedicines6010031, doi:10.3390/biomedicines6010031. This article has 162 citations.
+6. (roskoski2005signalingbykit pages 1-2): Robert Roskoski. Signaling by kit protein-tyrosine kinase—the stem cell factor receptor. Biochemical and Biophysical Research Communications, 337(1):1-13, Nov 2005. URL: https://doi.org/10.1016/j.bbrc.2005.08.055, doi:10.1016/j.bbrc.2005.08.055. This article has 368 citations and is from a peer-reviewed journal.
 
-7. (ledoux2023sitespecificphosphorylationof pages 1-2): Julie Ledoux and Luba Tchertanov. Site-specific phosphorylation of rtk kit kinase insert domain: interactome landscape perspectives. Kinases and Phosphatases, 1:39-71, Feb 2023. URL: https://doi.org/10.3390/kinasesphosphatases1010005, doi:10.3390/kinasesphosphatases1010005. This article has 1 citations.
+7. (cilloni2024detectionofkit pages 3-5): Daniela Cilloni, Beatrice Maffeo, Arianna Savi, Alice Costanza Danzero, Valentina Bonuomo, and Carmen Fava. Detection of kit mutations in systemic mastocytosis: how, when, and why. Oct 2024. URL: https://doi.org/10.3390/ijms252010885, doi:10.3390/ijms252010885. This article has 24 citations.
 
-8. (ledoux2023sitespecificphosphorylationof pages 8-10): Julie Ledoux and Luba Tchertanov. Site-specific phosphorylation of rtk kit kinase insert domain: interactome landscape perspectives. Kinases and Phosphatases, 1:39-71, Feb 2023. URL: https://doi.org/10.3390/kinasesphosphatases1010005, doi:10.3390/kinasesphosphatases1010005. This article has 1 citations.
+8. (heldin2013structuralandfunctional pages 7-9): C.-H. Heldin and J. Lennartsson. Structural and functional properties of platelet-derived growth factor and stem cell factor receptors. Cold Spring Harbor perspectives in biology, 5 8:a009100, Aug 2013. URL: https://doi.org/10.1101/cshperspect.a009100, doi:10.1101/cshperspect.a009100. This article has 244 citations and is from a peer-reviewed journal.
 
-9. (ledoux2023sitespecificphosphorylationof pages 2-4): Julie Ledoux and Luba Tchertanov. Site-specific phosphorylation of rtk kit kinase insert domain: interactome landscape perspectives. Kinases and Phosphatases, 1:39-71, Feb 2023. URL: https://doi.org/10.3390/kinasesphosphatases1010005, doi:10.3390/kinasesphosphatases1010005. This article has 1 citations.
+9. (krimmer2023cryoemanalysesof pages 7-8): Stefan G. Krimmer, Nicole Bertoletti, Yoshihisa Suzuki, Luka Katic, Jyotidarsini Mohanty, Sheng Shu, Sangwon Lee, Irit Lax, Wei Mi, and Joseph Schlessinger. Cryo-em analyses of kit and oncogenic mutants reveal structural oncogenic plasticity and a target for therapeutic intervention. Proceedings of the National Academy of Sciences of the United States of America, Mar 2023. URL: https://doi.org/10.1073/pnas.2300054120, doi:10.1073/pnas.2300054120. This article has 27 citations and is from a highest quality peer-reviewed journal.
 
-10. (ledoux2023sitespecificphosphorylationof pages 25-26): Julie Ledoux and Luba Tchertanov. Site-specific phosphorylation of rtk kit kinase insert domain: interactome landscape perspectives. Kinases and Phosphatases, 1:39-71, Feb 2023. URL: https://doi.org/10.3390/kinasesphosphatases1010005, doi:10.3390/kinasesphosphatases1010005. This article has 1 citations.
+10. (r�nnstrand2004signaltransductionvia pages 1-2): L. R�nnstrand. Signal transduction via the stem cell factor receptor/c-kit. Cellular and Molecular Life Sciences CMLS, 61:2535-2548, Oct 2004. URL: https://doi.org/10.1007/s00018-004-4189-6, doi:10.1007/s00018-004-4189-6. This article has 643 citations.
 
-11. (ledoux2023sitespecificphosphorylationof pages 24-25): Julie Ledoux and Luba Tchertanov. Site-specific phosphorylation of rtk kit kinase insert domain: interactome landscape perspectives. Kinases and Phosphatases, 1:39-71, Feb 2023. URL: https://doi.org/10.3390/kinasesphosphatases1010005, doi:10.3390/kinasesphosphatases1010005. This article has 1 citations.
+11. (gall2015neutralizationofkit pages 10-11): Marianne Le Gall, Ronan Crépin, Madeline Neiveyans, Christian Auclair, Yongfeng Fan, Yu Zhou, James D. Marks, André Pèlegrin, and Marie-Alix Poul. Neutralization of kit oncogenic signaling in leukemia with antibodies targeting kit membrane proximal domain 5. Molecular Cancer Therapeutics, 14:2595-2605, Nov 2015. URL: https://doi.org/10.1158/1535-7163.mct-15-0321, doi:10.1158/1535-7163.mct-15-0321. This article has 11 citations and is from a peer-reviewed journal.
 
-12. (zhou2024kitmutationsand pages 12-13): Shishan Zhou, Omar Abdihamid, Fengbo Tan, Haiyan Zhou, Heli Liu, Zhi Li, Sheng Xiao, and Bin Li. Kit mutations and expression: current knowledge and new insights for overcoming im resistance in gist. Cell Communication and Signaling : CCS, Feb 2024. URL: https://doi.org/10.1186/s12964-023-01411-x, doi:10.1186/s12964-023-01411-x. This article has 81 citations.
+12. (zhou2024kitmutationsand pages 1-2): Shishan Zhou, Omar Abdihamid, Fengbo Tan, Haiyan Zhou, Heli Liu, Zhi Li, Sheng Xiao, and Bin Li. Kit mutations and expression: current knowledge and new insights for overcoming im resistance in gist. Cell Communication and Signaling : CCS, Feb 2024. URL: https://doi.org/10.1186/s12964-023-01411-x, doi:10.1186/s12964-023-01411-x. This article has 81 citations.
 
-13. (OpenTargets Search: -KIT): Open Targets Query (-KIT, 35 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.
+13. (pardanani2023systemicmastocytosisin pages 1-2): Animesh Pardanani. Systemic mastocytosis in adults: 2023 update on diagnosis, risk stratification and management. American Journal of Hematology, 98:1097-1116, May 2023. URL: https://doi.org/10.1002/ajh.26962, doi:10.1002/ajh.26962. This article has 159 citations and is from a domain leading peer-reviewed journal.
 
-14. (lennartsson2005normalandoncogenic pages 19-20): Johan Lennartsson, Tanya Jelacic, Diana Linnekin, and R. Shivakrupa. Normal and oncogenic forms of the receptor tyrosine kinase kit. STEM CELLS, 23:16-43, Jan 2005. URL: https://doi.org/10.1634/stemcells.2004-0117, doi:10.1634/stemcells.2004-0117. This article has 381 citations and is from a highest quality peer-reviewed journal.
+14. (pardanani2023systemicmastocytosisin pages 16-16): Animesh Pardanani. Systemic mastocytosis in adults: 2023 update on diagnosis, risk stratification and management. American Journal of Hematology, 98:1097-1116, May 2023. URL: https://doi.org/10.1002/ajh.26962, doi:10.1002/ajh.26962. This article has 159 citations and is from a domain leading peer-reviewed journal.
 
-15. (ledoux2023receptortyrosinekinase pages 26-28): Julie Ledoux, Marina Botnari, and Luba Tchertanov. Receptor tyrosine kinase kit: mutation-induced conformational shift promotes alternative allosteric pockets. Kinases and Phosphatases, 1:220-250, Sep 2023. URL: https://doi.org/10.3390/kinasesphosphatases1040014, doi:10.3390/kinasesphosphatases1040014. This article has 4 citations.
-
-16. (zhou2024kitmutationsand pages 1-2): Shishan Zhou, Omar Abdihamid, Fengbo Tan, Haiyan Zhou, Heli Liu, Zhi Li, Sheng Xiao, and Bin Li. Kit mutations and expression: current knowledge and new insights for overcoming im resistance in gist. Cell Communication and Signaling : CCS, Feb 2024. URL: https://doi.org/10.1186/s12964-023-01411-x, doi:10.1186/s12964-023-01411-x. This article has 81 citations.
-
-17. (huang2024drugsinthe pages 7-8): Chen Huang, Xinli Ma, Ming Wang, and Hui Cao. Drugs in the gist field (therapeutic targets and clinical trial staging). Jan 2024. URL: https://doi.org/10.2174/1567201820666221122120657, doi:10.2174/1567201820666221122120657. This article has 5 citations and is from a peer-reviewed journal.
-
-18. (huang2024drugsinthe pages 1-1): Chen Huang, Xinli Ma, Ming Wang, and Hui Cao. Drugs in the gist field (therapeutic targets and clinical trial staging). Jan 2024. URL: https://doi.org/10.2174/1567201820666221122120657, doi:10.2174/1567201820666221122120657. This article has 5 citations and is from a peer-reviewed journal.
-
-19. (thirasastr2024outcomesoflateline pages 13-14): Prapassorn Thirasastr, Thomas L. Sutton, Cissimol P. Joseph, Heather Lin, Behrang Amini, Skye C. Mayo, Dejka Araujo, Robert S. Benjamin, Anthony P. Conley, John A. Livingston, Joseph Ludwig, Shreyaskumar Patel, Ravin Ratan, Vinod Ravi, Maria A. Zarzour, Elise F. Nassif Haddad, Michael S. Nakazawa, Xiao Zhou, Michael C. Heinrich, and Neeta Somaiah. Outcomes of late-line systemic treatment in gist: does sequence matter? Cancers, 16:904, Feb 2024. URL: https://doi.org/10.3390/cancers16050904, doi:10.3390/cancers16050904. This article has 1 citations.
-
-20. (huang2024drugsinthe pages 6-7): Chen Huang, Xinli Ma, Ming Wang, and Hui Cao. Drugs in the gist field (therapeutic targets and clinical trial staging). Jan 2024. URL: https://doi.org/10.2174/1567201820666221122120657, doi:10.2174/1567201820666221122120657. This article has 5 citations and is from a peer-reviewed journal.
-
-21. (yu2024molecularcharacteristicsand pages 10-11): Yang Yu, Mengdie Yu, Lijie Luo, Zijing Zhang, Haiping Zeng, Yan Chen, Zeyu Lin, Mengnan Chen, and Wei Wang. Molecular characteristics and immune microenvironment of gastrointestinal stromal tumours: targets for therapeutic strategies. Frontiers in Oncology, Jul 2024. URL: https://doi.org/10.3389/fonc.2024.1405727, doi:10.3389/fonc.2024.1405727. This article has 4 citations.
+15. (krimmer2023cryoemanalysesof pages 8-10): Stefan G. Krimmer, Nicole Bertoletti, Yoshihisa Suzuki, Luka Katic, Jyotidarsini Mohanty, Sheng Shu, Sangwon Lee, Irit Lax, Wei Mi, and Joseph Schlessinger. Cryo-em analyses of kit and oncogenic mutants reveal structural oncogenic plasticity and a target for therapeutic intervention. Proceedings of the National Academy of Sciences of the United States of America, Mar 2023. URL: https://doi.org/10.1073/pnas.2300054120, doi:10.1073/pnas.2300054120. This article has 27 citations and is from a highest quality peer-reviewed journal.
 
 ## Artifacts
 
@@ -315,57 +363,46 @@ References
 
 ## Citations
 
-1. ledoux2023sitespecificphosphorylationof pages 1-2
-2. ledoux2022theinherentcoupling pages 2-4
-3. zhou2024kitmutationsand pages 1-2
-4. thirasastr2024outcomesoflateline pages 13-14
-5. zhou2024kitmutationsand pages 12-13
-6. ledoux2023receptortyrosinekinase pages 1-2
-7. ledoux2023sitespecificphosphorylationof pages 8-10
-8. ledoux2023sitespecificphosphorylationof pages 2-4
-9. ledoux2023sitespecificphosphorylationof pages 25-26
-10. ledoux2023sitespecificphosphorylationof pages 24-25
-11. lennartsson2005normalandoncogenic pages 19-20
-12. ledoux2023receptortyrosinekinase pages 26-28
-13. huang2024drugsinthe pages 7-8
-14. huang2024drugsinthe pages 1-1
-15. huang2024drugsinthe pages 6-7
-16. yu2024molecularcharacteristicsand pages 10-11
-17. doi:10.3390/biomedicines6010031
-18. doi:10.3390/ijms23031589
-19. doi:10.3390/kinasesphosphatases1040014
-20. doi:10.1007/s00018-004-4189-6
-21. doi:10.3390/kinasesphosphatases1010005
-22. doi:10.1186/s12964-023-01411-x
-23. doi:10.1634/stemcells.2004-0117
-24. doi:10.2174/1567201820666221122120657
-25. doi:10.3390/cancers16050904
-26. Ledoux et al., published 25 September 2023; DOI/URL: https://doi.org/10.3390/kinasesphosphatases1040014.
-27. Ledoux and Tchertanov, February 2023; https://doi.org/10.3390/kinasesphosphatases1010005.
-28. Huang et al., January 2024; https://doi.org/10.2174/1567201820666221122120657.
-29. Zhou et al., February 2024; https://doi.org/10.1186/s12964-023-01411-x.
-30. Thirasastr et al., February 2024; https://doi.org/10.3390/cancers16050904.
-31. https://doi.org/10.3390/biomedicines6010031
-32. https://doi.org/10.3390/ijms23031589
-33. https://doi.org/10.3390/kinasesphosphatases1040014
-34. https://doi.org/10.1007/s00018-004-4189-6
-35. https://doi.org/10.3390/kinasesphosphatases1010005
-36. https://doi.org/10.1186/s12964-023-01411-x
-37. https://doi.org/10.1634/stemcells.2004-0117
-38. https://doi.org/10.2174/1567201820666221122120657
-39. https://doi.org/10.3390/cancers16050904
-40. https://doi.org/10.3390/kinasesphosphatases1040014.]
-41. https://doi.org/10.3390/kinasesphosphatases1010005.]
-42. https://doi.org/10.2174/1567201820666221122120657.]
-43. https://doi.org/10.1186/s12964-023-01411-x.]
-44. https://doi.org/10.3390/cancers16050904.]
-45. https://doi.org/10.3390/kinasesphosphatases1040014,
-46. https://doi.org/10.3390/biomedicines6010031,
-47. https://doi.org/10.1007/s00018-004-4189-6,
-48. https://doi.org/10.3390/ijms23031589,
-49. https://doi.org/10.3390/kinasesphosphatases1010005,
-50. https://doi.org/10.1186/s12964-023-01411-x,
-51. https://doi.org/10.1634/stemcells.2004-0117,
-52. https://doi.org/10.2174/1567201820666221122120657,
-53. https://doi.org/10.3390/cancers16050904,
-54. https://doi.org/10.3389/fonc.2024.1405727,
+1. roskoski2005signalingbykit pages 1-2
+2. heldin2013structuralandfunctional pages 7-9
+3. krimmer2023cryoemanalysesof pages 7-8
+4. cilloni2024detectionofkit pages 2-3
+5. zhou2024kitmutationsand pages 1-2
+6. pardanani2023systemicmastocytosisin pages 16-16
+7. katagiri2022mutatedkittyrosine pages 1-2
+8. roskoski2005signalingbykit pages 2-3
+9. krimmer2023cryoemanalysesof pages 1-2
+10. cilloni2024detectionofkit pages 3-5
+11. gall2015neutralizationofkit pages 10-11
+12. pardanani2023systemicmastocytosisin pages 1-2
+13. krimmer2023cryoemanalysesof pages 8-10
+14. 10.3390/ijms252010885
+15. 10.1016/j.bbrc.2005.08.055
+16. 10.3390/ijms23094694
+17. 10.1101/cshperspect.a009100
+18. 10.1073/pnas.2300054120
+19. 10.1007/s00018-004-4189-6
+20. 10.1158/1535-7163.MCT-15-0321
+21. 10.1186/s12964-023-01411-x
+22. 10.1002/ajh.26962
+23. https://doi.org/10.3390/ijms252010885
+24. https://doi.org/10.1016/j.bbrc.2005.08.055
+25. https://doi.org/10.3390/ijms23094694
+26. https://doi.org/10.1101/cshperspect.a009100
+27. https://doi.org/10.1073/pnas.2300054120
+28. https://doi.org/10.1007/s00018-004-4189-6
+29. https://doi.org/10.1158/1535-7163.MCT-15-0321
+30. https://doi.org/10.1186/s12964-023-01411-x
+31. https://doi.org/10.1002/ajh.26962
+32. https://doi.org/10.1073/pnas.2300054120.
+33. https://doi.org/10.1186/s12964-023-01411-x.
+34. https://doi.org/10.3390/ijms252010885.
+35. https://doi.org/10.3390/ijms23094694,
+36. https://doi.org/10.1016/j.bbrc.2005.08.055,
+37. https://doi.org/10.3390/ijms252010885,
+38. https://doi.org/10.1073/pnas.2300054120,
+39. https://doi.org/10.1101/cshperspect.a009100,
+40. https://doi.org/10.1007/s00018-004-4189-6,
+41. https://doi.org/10.1158/1535-7163.mct-15-0321,
+42. https://doi.org/10.1186/s12964-023-01411-x,
+43. https://doi.org/10.1002/ajh.26962,
