@@ -1,10 +1,25 @@
 ---
 title: "ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
+species: [human, yeast, ARATH]
 ---
 
 # ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)
+
+**Bottom line:** GO has obsoleted the process term GO:0061817
+*endoplasmic reticulum-plasma membrane tethering*, because holding the ER
+against the plasma membrane is a molecular function. Annotations move to the
+function term GO:0160214 *endoplasmic reticulum-plasma membrane adaptor
+activity*, with GO:0051643 *endoplasmic reticulum localization* for any
+process aspect. We recorded the upstream plan, the affected groups (CGD 4,
+PomBase 13, TAIR 2, UniProt 2) and the eight InterPro2GO mappings InterPro has
+already removed, and checked the repo. No review here uses either term, and no
+ER-PM tether (extended synaptotagmins, tricalbins, plant SYTs) has been
+reviewed, so nothing needs refreshing. Scoped, not yet started: the
+obsoletion has since landed (OLS lists GO:0061817 as obsolete), which makes
+this family a timely candidate for new reviews, starting with human ESYT2 and
+yeast TCB3.
 
 ## Overview
 

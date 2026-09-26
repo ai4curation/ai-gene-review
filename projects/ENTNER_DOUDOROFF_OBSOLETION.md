@@ -2,9 +2,24 @@
 title: "Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)"
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
+species: [PSEPK]
+genes: [edd, eda]
 ---
 
 # Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)
+
+**Bottom line:** GO has retired four Entner-Doudoroff (ED) sub-pathway
+terms, GO:0009255, GO:0061679, GO:0061680 and GO:0061681, and folded them
+into the parent GO:0061678 *Entner-Doudoroff pathway*, because MetaCyc-style
+pathway variants are better captured in GO-CAMs than as nested terms. We
+tracked the upstream tickets, the external mappings that fed the old terms,
+and every review in this repo that uses them. Only two reviews do: *P.
+putida* KT2440 *edd* (an accepted IEA row) and *eda* (a proposed NEW row),
+both on GO:0009255 and both in `core_functions`. The obsoletion has now
+landed (OLS lists GO:0009255 as obsolete, pointing to GO:0061678), so the
+"not yet merged" status below is out of date, and both reviews still carry
+the obsolete id. The remaining work is a mechanical term swap in those two
+files; the biology does not change.
 
 ## Overview
 

@@ -1,10 +1,24 @@
 ---
 title: "Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
 ---
 
 # Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion
+
+**Bottom line:** GO has retired the two route-specific children of
+GO:0052699 *ergothioneine biosynthetic process*: the bacterial route
+GO:0052704 (via gamma-glutamyl-hercynylcysteine sulfoxide) and the fungal
+route GO:0140479. Which intermediates a pathway passes through is detail
+GO now leaves to MetaCyc and GO-CAMs, so all annotations move to the
+parent. We checked the affected annotations: four IDA rows, one per enzyme
+of the *Mycolicibacterium smegmatis* *egtBCDE* operon, all from
+PMID:20420449, plus about 2,247 IEA rows that migrate automatically. Both
+children are now obsolete (OLS lists GO:0052704 as obsolete, so the
+"still active" notes below predate that). No review in this repo uses any
+of the three terms, and none of the *egt* genes is reviewed. Scoped, not
+yet started: the four-enzyme operon is a compact batch to add if the repo
+wants mycobacterial pathway coverage.
 
 ## Overview
 

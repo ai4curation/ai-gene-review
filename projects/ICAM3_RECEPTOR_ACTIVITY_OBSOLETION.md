@@ -1,10 +1,27 @@
 ---
 title: "ICAM-3 Receptor Activity — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [human]
 ---
 
 # ICAM-3 Receptor Activity — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted the molecular function term GO:0030369
+*ICAM-3 receptor activity*, because ICAM3 is a ligand for several unrelated
+receptors (the integrins ITGAL:ITGB2 and ITGAD:ITGB2, and C-type lectins
+such as CLEC4M and CD209), so a one-ligand receptor term is more specific
+than any gene product. The proposed home is the parent GO:0004888
+*transmembrane signaling receptor activity*, with the ligand recorded as a
+`has_input` ICAM3 (UniProtKB:P32942) extension. We checked the affected
+annotations: three human rows assigned by UniProt (ITGAL and ITGB2, IMP from
+PMID:19029120; CLEC4M, NAS from PMID:11257134), plus about 155 Ensembl
+Compara IEA projections that follow them. No review in this repo uses the
+term and none of these genes is reviewed. Scoped, not yet started: the
+obsoletion has since landed (OLS lists GO:0030369 as obsolete), so the
+"proposal stage" notes below are out of date. The CLEC4M NAS row is the
+one that most needs a curator's eye, since its ICAM3 binding depends on
+glycans.
 
 ## Overview
 

@@ -1,10 +1,25 @@
 ---
 title: "Hypochlorous Acid Metabolic Process Terms — Obsoletion"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [mouse]
 ---
 
 # Hypochlorous Acid Metabolic Process Terms — Obsoletion
+
+**Bottom line:** GO has obsoleted all three hypochlorous acid (HOCl)
+process terms: the grouping term GO:0002148 went first, and OLS now lists
+the biosynthetic (GO:0002149) and catabolic (GO:0002150) terms as obsolete
+too, on the grounds that each "represents a MF term". HOCl is made in one
+enzymatic step, myeloperoxidase turning H2O2 and chloride into HOCl, so a
+process term adds nothing to the enzyme activity. We inventoried the
+annotations: one mouse Mpo IMP row (MGI, PMID:10085024), one rat Mpo ISO
+row copied from it, and nothing on the catabolic term. No review in this
+repo uses these terms and Mpo is not reviewed. Scoped, not yet started:
+the status notes below predate the obsoletion, and the molecular function
+the page proposes as the anchor needs rechecking, because OLS labels
+GO:0140825 *lactoperoxidase activity*, not an HOCl-forming chloride
+peroxidase activity.
 
 ## Overview
 

@@ -2,9 +2,29 @@
 title: "Protein Localization to ER Exit Site — Obsoletion"
 maturity: IN_PROGRESS
 tags: [OBSOLETION, FLAGSHIP]
+species: [human]
+genes: [LRRK2, BCAP31]
 ---
 
 # Protein Localization to ER Exit Site — Obsoletion
+
+**Bottom line:** GO has obsoleted the process term GO:0070973 *protein
+localization to endoplasmic reticulum exit site*, because curators had used it
+for four different things: COPII coat assembly (SEC16A), ER-to-Golgi transport
+(MIA3, GBF1), regulation of that transport (LRRK2) and ER quality control
+(Bcap29/Bcap31). There is no single replacement, so we mapped each of the 10
+curated annotations to the term the upstream plan proposes (GO:0048208,
+GO:0006888, GO:0060628, GO:0034976, or deletion) and checked which reviews in
+this repo use the term. Two do. Human BCAP31 already marks its IBA row
+MARK_AS_OVER_ANNOTATED, so it needs nothing. Human LRRK2 still ACCEPTs two
+GO:0070973 rows (IEA and IMP, PMID:25201882) and needs a MODIFY to GO:0060628.
+The obsoletion has now landed (OLS lists GO:0070973 as obsolete, with
+context-dependent replacements), so the "OPEN" ticket status below is out of
+date.
+
+The term also carried about 14,400 IEA and IBA annotations driven by one
+UniRule mapping, so the cleanup reaches much further than the curated count
+suggests.
 
 ## Overview
 
