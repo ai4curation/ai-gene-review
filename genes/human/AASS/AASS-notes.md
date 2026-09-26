@@ -263,3 +263,46 @@ annotation tuples are performed in this gene branch; shared project artifacts ar
 owned by the coordinator and are not changed here.
 
 Falcon completed successfully in 546.14 seconds (provider metadata), produced its genuine report and artifact, and did not require fallback. Both files are retained unchanged. The report was read in full; its principal chemistry and animal-versus-human disease distinctions corroborate the independently checked studies. It is marked UNVERIFIED as an evidence source: its unnamed-journal Kopec 2017 report was not resolved to a primary publication; its additional 2000 full-text numerical claims and clinical-trial absence were not independently adopted. It also calls AASA the potentially channeled intermediate between the two AASS active sites, whereas that intermediate is saccharopine. Engineered targeting in worm rescue is not used to prove endogenous human localization. The report is not inserted into annotation supported_by fields merely to suppress the validator advisory.
+
+### PR 3133 follow-up: targeting and transfer checks (2026-09-26 UTC)
+
+The independent review requested donor targeting and fractionation checks. The live
+[UniProt Q9VLX0 record](https://rest.uniprot.org/uniprotkb/Q9VLX0.txt), retrieved
+2026-09-26, carries `Mitochondrion` (ARBA00004173) and the `Transit peptide`
+keyword (ARBA00022946). It has no experimentally mapped transit-peptide cleavage
+feature. These are electronic assertions, not direct fly import experiments;
+critically, absence of a mapped feature is not absence of mitochondrial targeting.
+
+PMID:18695041 Fig. 1F and the corresponding full-text paragraph compare cytoplasmic
+and nuclear fractions, with DRONC/DRICE and HP1-beta controls. They do not separately
+probe a mitochondrial fraction or mitochondrial marker. Tagged localization and
+promoter recruitment provide additional positive source evidence. Neither that
+experiment nor the current record supports treating fly localization as exclusively
+cytosolic/nuclear or inferring a targeting divergence from human AASS. The putative
+export signal and proposed partner-mediated nuclear recruitment remain mechanistic
+questions; mitochondrial targeting does not exclude an additional pool.
+
+The five ISS decisions remain UNDECIDED after these concrete checks. Their source
+comments now distinguish receptor-dependent repression, SDH receptor contact,
+cytoplasmic fractionation, nuclear recruitment, and LKR histone binding. Conserved
+catalytic domains make a transfer plausible but do not establish non-catalytic
+contact conservation; absence of a direct human assay is likewise not evidence of
+loss. The ActionEnum first permits uncertainty about an annotation, then requires
+UNDECIDED for inaccessible publications. The latter is a sufficient reason, not its
+only permitted use. `source_status: UNRESOLVED` records an unclassified transfer,
+whereas SUPPORTS_SOURCE_BUT_NOT_TARGET would assert propagation is unsafe. These
+are completed evidence assessments with explicit remaining biological questions,
+not unreviewed PENDING stubs.
+
+The PMID:463877 mitochondrial EXP row is now ACCEPT by deference to the original
+curator and independent human MitoCoP/matrix evidence. This supersedes the earlier
+access-based abstention above; the full 1979 localization methods remain unavailable
+and are not claimed to have been verified. The same distinction is used for its
+biochemical annotations, independently supported by later human work.
+
+The fly NADH assay shows that NADH works under the tested conditions, not that NADPH
+cannot work. Human NADPH dependence is independently grounded in PMID:36128717,
+including its discussion of mitochondrial NADP deficiency. GO:0004754 MODIFY is an
+instruction to reconcile/retire that redundant row into the existing GO:0047130
+annotation, not add a duplicate. QuickGO's live children endpoint for GO:0004753
+was rechecked: both GO:0047130 and GO:0047131 are `is_a` children.
