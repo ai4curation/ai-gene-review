@@ -70,17 +70,22 @@ are therefore expected; existing human reviews still link normally.
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
-| A4GALT | Definitive | INITIALIZED | Review feedback in progress; CI passed | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
-| AARS1 | Definitive | COMPLETE | Review feedback in progress; CI passed | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
+| A4GALT | Definitive | INITIALIZED | Approved; current-head CI pending | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
+| AARS1 | Definitive | COMPLETE | Biology approved; history wording updated, final checks pending | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
 | AARS2 | Definitive | COMPLETE | Merged; final validation and CI passed | `cmungall/clingen-aars2` | [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128) |
-| AASS | Definitive | INITIALIZED | Audit in progress | `cmungall/clingen-aass` | — |
-| ABCA3 | Definitive | No review | Annotation review in progress | `cmungall/clingen-abca3` | — |
-| ABCA4 | Definitive | No review | Annotation review in progress | `cmungall/clingen-abca4` | — |
+| AASS | Definitive | INITIALIZED | Review and CI pending | `cmungall/clingen-aass` | [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) |
+| ABCA3 | Definitive | No review | Review and CI pending | `cmungall/clingen-abca3` | [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) |
+| ABCA4 | Definitive | No review | Review and CI pending | `cmungall/clingen-abca4` | [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) |
 | ABCB4 | Definitive | No review | Primary evidence and annotation review in progress | `cmungall/clingen-abcb4` | — |
+| ABCC6 | Definitive | No review | Assigned; fetching sources | `cmungall/clingen-abcc6` | — |
+| ABCC8 | Definitive | To audit at initialization | Assigned | `cmungall/clingen-abcc8` | — |
+
+Branches for work without a PR may exist only in a local isolated checkout.
+Check and approval states above were verified at 02:36 UTC; later pushes can reset them.
 
 Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The next unassigned nuclear protein-coding Definitive gene is **ABCC6**. **1 of
+The next unassigned nuclear protein-coding Definitive gene is **ABCC9**. **1 of
 2,876 genes is complete** for this campaign. ABAT is in the Moderate tier.
 
 ## Verification log
@@ -123,3 +128,13 @@ The next unassigned nuclear protein-coding Definitive gene is **ABCC6**. **1 of
   further evidence-framing feedback being addressed; neither is counted complete.
   ABCB4 is now assigned, with 68 source annotations seeded, publication caching
   complete, and a genuine Falcon report available for independent verification.
+
+- 2026-09-26 UTC: AASS, ABCA3, and ABCA4 have dedicated PRs (#3133, #3134,
+  and #3132), with targeted validation, history validation, rendering, and source
+  assertion preservation checks passed. Independent coordinator inspection found
+  no blocking biological issue; external review and current-head CI remain pending.
+  Reserved ABCC6 and ABCC8 for the next reviews. A4GALT is approved on
+  `cc2386416e`; AARS1's biological fixes were approved on `f85785312d`, followed
+  by a history-only wording correction on `f0f9e75cd4`. Neither is counted complete
+  before merge. The earlier "CI passed" status referred to superseded heads and
+  is replaced with current-head pending states.
