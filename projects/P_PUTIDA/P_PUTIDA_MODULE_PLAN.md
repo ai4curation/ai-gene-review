@@ -250,9 +250,51 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleRe
 | 5 | Energy metabolism and respiratory chains | `modules/oxphos.yaml` | Which terminal oxidases, dehydrogenases, and anaerobic respiration modules are encoded? | PSEPK respiratory-chain module coverage; EC7/translocase convention checks |
 | 6 | Cell envelope, secretion, transport, and efflux | possible new modules | Which outer-membrane porins, TonB receptors, RND pumps, secretion systems, and envelope biogenesis pathways need module treatment? | Transport/envelope worklists; scrutiny of generic transporter annotations |
 | 7 | Motility, chemotaxis, pili, biofilm, alginate | possible new modules | Are flagellar assembly, chemotaxis receptors, type IV pilus, alginate, and biofilm regulation wired consistently? | Motility/biofilm modules; gene reviews for receptors/regulators selected by module gaps |
-| 8 | Stress response, DNA repair, and regulatory networks | `modules/two_component_relay.yaml`, `modules/gtpase_switch.yaml` as style references | Which global regulators and repair/stress systems are already reviewed, and which are module-critical gaps? | Regulator module updates; targeted sigma/two-component/DNA-repair reviews |
+| 8 | Stress response, DNA repair, and regulatory networks | `modules/two_component_relay.yaml`, `modules/gtpase_switch.yaml` as style references; concrete two-component instances listed under *Two-component signalling coverage* below | Which global regulators and repair/stress systems are already reviewed, and which are module-critical gaps? | Regulator module updates; targeted sigma/two-component/DNA-repair reviews |
 | 9 | Specialized metabolism and biotechnology traits | possible new PHA, solvent tolerance, olefin, plant-interaction modules | Which KT2440 signature traits are absent from reusable modules? | New modules for PHA, solvent tolerance, olefin biosynthesis, and plant-associated traits |
 | 10 | Dark proteome and orphan enzymes | none | Which high-confidence proteins remain unassigned to any module and which DUFs look curation-relevant? | Prioritized orphan list; optional bioinformatics analyses |
+
+## Two-component signalling coverage
+
+`modules/two_component_relay.yaml` is the gene-free, taxon-neutral His->Asp motif
+(sensor kinase, optional Hpt relay, response regulator). Concrete bacterial
+systems embed it through `conforms_to` on an **inner phosphorelay bundle**, so
+the sensing and phosphotransfer tiers are checked against the template while each
+system's own output stays a free extension outside the conforming core. Simple
+bacterial systems that transfer phosphate straight from sensor to response
+regulator declare `WITH_DEVIATIONS` with the collapsed-Hpt deviation recorded.
+
+| Module | System | Output modelled | Conforming bundle |
+|---|---|---|---|
+| `modules/pseudomonad_gac_lifestyle_phosphorelay.yaml` | GacS/GacA, with RetS as opposing sensor | Adhesin/biofilm transcriptional activation | `gac_phosphorelay` |
+| `modules/bacterial_ntr_nitrogen_regulation.yaml` | NtrB/NtrC, with GlnK PII input | Sigma-54 activation, then AmtB uptake and GlnA assimilation | `ntr_phosphorelay` |
+| `modules/pseudomonad_cbr_crc_catabolite_control.yaml` | CbrA/CbrB | Sigma-54 induction of crcZ/crcY, antagonising Hfq/Crc repression | `cbr_phosphorelay` |
+| `modules/bacterial_kdp_potassium_homeostasis.yaml` | KdpD/KdpE | KdpFABC potassium pump | `kdp_phosphorelay` |
+| `modules/pseudomonad_lanthanide_switch_pqq_alcohol_oxidation.yaml` | PedS2/PedR2 | PedE/PedH lanthanide switch | `ped_phosphorelay` |
+
+Related signalling modules that are deliberately **not** declared as
+two-component instances:
+
+- `modules/bacterial_chemotaxis_signal_transduction.yaml` — CheA and CheY are a
+  histidine kinase and a response regulator, but the module's topology is a
+  densely cross-linked adaptation and motor-switch network rather than a linear
+  relay with a transcriptional output. Declaring conformance would require
+  restructuring a well-developed module for little gain; revisit if the template
+  grows a chemotaxis-shaped variant.
+- `modules/bacterial_nitrogen_regulatory_pts.yaml` — a PEP-dependent PTS
+  phosphorelay (PtsP/NPr/PtsN), not a His->Asp two-component system.
+
+Known gaps, in rough priority order. Each needs at least a sensor-kinase and a
+response-regulator gene review before a module is worth building:
+
+- **ColR/ColS** envelope-stress system. `genes/PSEPK/colR` is reviewed; ColS is
+  not, so the system currently has only one of its two tiers.
+- **PhoR/PhoB** phosphate-starvation system, explicitly scoped out of
+  `modules/bacterial_pst_phosphate_uptake.yaml`.
+- **The Rsm post-transcriptional arm** of the Gac system (RsmA/RsmE and their
+  decoy small RNAs), which carries the Gac signal in other pseudomonads.
+- **FleQ/FleS-FleR** flagellar regulation, **c-di-GMP** turnover, and
+  **quorum-sensing** circuitry, none of which have modules yet.
 
 ## Module curation deliverables
 
