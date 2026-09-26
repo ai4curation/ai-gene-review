@@ -204,3 +204,24 @@ def test_a_full_text_record_gets_the_verbatim_substring_message(tmp_path: Path):
     assert issue.severity == ValidationSeverity.ERROR
     assert "not a verbatim publication substring" in issue.message
     assert "exact substring from the cached publication" in (issue.suggestion or "")
+
+
+def test_an_uncached_reference_does_not_get_impossible_advice(tmp_path: Path):
+    """The impossible advice survived one case over: nothing cached at all.
+
+    The stub branch is gated on ``cache_has_full_text is False``; a missing cache file gives
+    ``None`` and used to fall through to "an exact substring from the cached publication",
+    which is not a thing that exists here.
+    """
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    doc: dict[str, Any] = {
+        "references": [
+            {"id": "PMID:404", "findings": [{"statement": "s", "supporting_text": "anything"}]}
+        ]
+    }
+    issue = _issue(doc, pubs)
+    assert issue.severity == ValidationSeverity.ERROR
+    suggestion = issue.suggestion or ""
+    assert "from the cached publication" not in suggestion, "no cached publication exists"
+    assert "Cache the publication first" in suggestion

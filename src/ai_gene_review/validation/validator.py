@@ -194,6 +194,21 @@ def validate_reference_finding_supporting_text(
                     "Quote a verbatim substring of the cached abstract, or fetch the "
                     "full text into the cache so the quote can be verified"
                 )
+            elif cache_has_full_text is None:
+                # Nothing cached under this identifier, so there is no publication text to
+                # take a substring of. The final branch's advice ("an exact substring from
+                # the cached publication") is impossible here in the same way the
+                # abstract-only advice was impossible for a bodyless stub; whether
+                # is_unfetchable catches this first depends on the matcher's wording, so
+                # this branch closes it regardless.
+                prefix = (
+                    "Finding supporting text cannot be checked: no cached publication for "
+                    "this reference"
+                )
+                suggestion = (
+                    "Cache the publication first (just fetch-gene-pmids, or "
+                    "cache_publication(pmid, force=True)), then quote from it"
+                )
             else:
                 prefix = "Finding supporting text is not a verbatim publication substring"
                 suggestion = (

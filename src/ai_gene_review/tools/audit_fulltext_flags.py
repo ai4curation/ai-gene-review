@@ -312,6 +312,14 @@ def audit(
         for rp, fl in sorted(by_review.items())
     )
     echo(f"removed {total} flag(s)")
+    if unaudited:
+        # --fix does not touch these, so a successful fix run must still fail: reporting
+        # flags by hand and then exiting 0 tells CI everything is clean while naming the
+        # flags that are not.
+        echo(
+            f"{len(unaudited)} flag(s) outside --fix's scope remain; remove them by hand"
+        )
+        return 1
     if total != len(stale):
         # The mutator and the detector must agree on scope; a mismatch means one of them is
         # looking at flags the other cannot see, which is how a nested Finding-level flag was

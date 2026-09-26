@@ -115,19 +115,9 @@ def cached_full_text_available(
     publications_dir: Path,
 ) -> Optional[bool]:
     """Return cached full-text availability, or `None` when not recorded."""
-    prefix, separator, identifier = reference_id.partition(":")
-    if not separator:
+    text = _cached_text(reference_id, publications_dir)
+    if text is None:
         return None
-    if prefix.upper() == "PMID":
-        filename = f"PMID_{identifier}.md"
-    elif prefix.upper() == "DOI":
-        filename = f"DOI_{identifier.replace('/', '_')}.md"
-    else:
-        return None
-    path = publications_dir / filename
-    if not path.exists():
-        return None
-    text = path.read_text()
     if not text.startswith("---"):
         return None
     end = text.find("\n---", 3)

@@ -338,3 +338,37 @@ def test_a_missing_repo_file_is_not_reported(tmp_path, publications):
         "  full_text_unavailable: true\n  findings: []\n",
     )
     assert find_unaudited_flags([review], cached_full_text_availability(publications), tmp_path) == []
+
+
+def test_fix_exits_nonzero_when_unaudited_flags_remain(tmp_path, publications, monkeypatch):
+    """--fix removes what it can and must still fail on what it cannot.
+
+    It previously printed "remove by hand, --fix does not touch these" and then returned 0,
+    so a CI gate reading the exit code saw a clean run while the output named the flags that
+    were not clean.
+    """
+    from ai_gene_review.tools.audit_fulltext_flags import audit
+
+    (tmp_path / "publications").mkdir(exist_ok=True)
+    for src in publications.glob("*.md"):
+        (tmp_path / "publications" / src.name).write_text(src.read_text())
+    genes = tmp_path / "genes" / "yeast" / "X"
+    genes.mkdir(parents=True)
+    (genes / "X-uniprot.txt").write_text("some record text\n")
+    # Both kinds at once. That combination is the failing path: the early return already
+    # gives 1 when there is nothing for --fix to remove, so a test with only an unaudited
+    # flag passes without touching the code under test -- which is how this test first
+    # passed its exit-code assertion while the message assertion failed.
+    (genes / "X-ai-review.yaml").write_text(
+        "references:\n"
+        "- id: PMID:111\n"          # cache says full text -> stale, --fix removes it
+        "  full_text_unavailable: true\n"
+        "  findings: []\n"
+        "- id: file:yeast/X/X-uniprot.txt\n"   # outside --fix's scope
+        "  findings:\n"
+        "  - statement: s\n    full_text_unavailable: true\n"
+    )
+    lines: list[str] = []
+    rc = audit(tmp_path, fix=True, echo=lines.append)
+    assert rc == 1, "a --fix run that leaves flags behind must not report success"
+    assert any("outside --fix's scope remain" in line for line in lines)
