@@ -1,4 +1,5 @@
 # ACADVL (P49748) — Gene Review Notes
+> Historical draft below contains superseded claims. See the 2026-09-26 full source audit appended below for the current evidence and decisions.
 
 Human very-long-chain specific acyl-CoA dehydrogenase (VLCAD), mitochondrial. EC 1.3.8.9 (very-long-chain) / EC 1.3.8.8 (long-chain). HGNC:92. NCBITaxon:9606.
 
@@ -65,3 +66,142 @@ VLCAD catalyzes the first (rate-limiting committed) step of each cycle of mitoch
 1. **Very-long-chain/long-chain acyl-CoA dehydrogenase (EC 1.3.8.9/1.3.8.8)** — FAD-dependent alpha,beta-dehydrogenation of C12-C24 acyl-CoA, first step of FAO; ETF electron acceptor; catalytic Glu, essential FAD. MF GO:0017099; BP GO:0006635; CC GO:0005743.
 2. **FAD binding** as the obligate redox cofactor (GO:0050660).
 3. **Homodimerization on the inner membrane** (GO:0042802 / inner-membrane CC) — quaternary-structure requirement for activity.
+
+## 2026-09-26 full source audit (supersedes earlier decisions)
+
+This audit supersedes the earlier annotation and ortholog interpretations above. In particular,
+**P50544 is mouse Acadvl/VLCAD, not Acadl/LCAD**. The earlier removal recommendations,
+no-cross-linking interpretation, and ACAD9-paper miscitation claim are withdrawn. The opening
+“committed”/“rate-limiting” wording and claim that long-chain activity is a parent of very-long-chain
+activity should also be read as superseded by the definition-based synthesis below.
+
+### Baseline and access provenance
+
+- Main at audit start: `488555581d3642ba24843fc05bcb6d6517dabcd9`; local review matched remote blob
+  `f840362956e5df1b69588af45347a479c287c1a9`. HGNC:92/NCBI Gene37 confirms **ACADVL**; historical
+  aliases include ACAD6, LCACD and VLCAD ([NCBI](https://www.ncbi.nlm.nih.gov/gene/37)).
+- Existing COMPLETE review: 42 source rows, 12 cached PMIDs, no research-provider report.
+  Open-PR searches included symbols and aliases; the apparent matches #3152 and #3105 were
+  inspected for changed paths and contain no ACADVL files. No newer review was overwritten.
+- All 12 cited publication caches were read. Three provide full text (PMIDs 18227065, 32296183,
+  34800366); the remainder are abstract-only locally. The existing cached PMID15639194 was also
+  read and added to references. No publication or machine-generated source cache was edited.
+- A genuine Falcon attempt used the default command, `--fallback perplexity-lite --timeout 1200`,
+  and `/tmp` uv cache/tool directories. Both attempts failed before invoking a provider because
+  `uvx` could not resolve `pypi.org` to install `deep-research-client`. The wrapper exited 1;
+  no provider report was generated and no provider process remained live. Manual primary-source
+  research supplied this audit; no provider-named report was manufactured.
+- Primary full text was separately recovered through Wiley (21492153), author-uploaded articles
+  on ResearchGate (16020546, 18063578), and indexed PMC main text/caption (21237683). These routes
+  do not change the immutable caches' `full_text_available` flags.
+
+### Donor identity and regulatory evidence
+
+[NCBI mouse Acadvl, Gene11370](https://www.ncbi.nlm.nih.gov/gene/11370) links **P50544** to Acadvl
+and MGI:895149. The source GOA identifies P50544, with ENSMUSP00000099634 on Ensembl transfers.
+The [MGI Acadvl graph](https://www.informatics.jax.org/marker/gograph/MGI%3A895149) displays the
+four disputed process terms as mouse IMP assertions with J:95532. This is a graph generated in
+March 2023; its date is recorded rather than represented as a new 2026 annotation release.
+
+[PMID:15639194](https://pubmed.ncbi.nlm.nih.gov/15639194/) directly reports loss of cold tolerance
+in both VLCAD- and LCAD-deficient mice. Temperature-homeostasis transfers are therefore retained
+as non-core organismal consequences of fatty acid oxidation. The same abstract reports increased
+hepatic oxidation-gene expression in both mutants, while its non-fasted lipogenesis discussion
+foregrounds LCAD. Full study results and the exact J:95532-to-PMID mapping could not be recovered.
+The six transfers for negative regulation of fatty acid synthesis, negative regulation of fatty
+acid oxidation and regulation of cholesterol metabolism are **UNDECIDED**. Neither a wrong-paralog
+claim nor the argument that a catalytic enzyme cannot exert indirect negative feedback is valid.
+The original source identifiers remain intact.
+
+### Substrate chemistry and catalytic scope
+
+Live AmiGO definitions distinguish
+[medium-chain GO:0070991](https://amigo.geneontology.org/amigo/term/GO%3A0070991),
+[long-chain GO:0004466](https://amigo.geneontology.org/amigo/term/GO%3A0004466), and
+[very-long-chain GO:0017099](https://amigo.geneontology.org/amigo/term/GO%3A0017099): their aliphatic
+tail ranges are respectively 6–12, 13–22, and greater than 22 carbons. Long-chain and very-long-chain
+activities are sibling specializations of acyl-CoA dehydrogenase activity, not parent/child terms.
+The definitions concern substrate chemistry rather than the historical names MCAD, LCAD or VLCAD.
+
+The human palmitoyl-CoA mutant assays [PMID:9461620], fibroblast flux rescue [PMID:7668252] and patient
+enzyme assays [PMID:8466512] substantiate long-chain catalysis. They do not by themselves establish
+the modern very-long-chain threshold. The original IDA very-long-chain row is retained with curator
+deference rather than rejected from an incomplete abstract. The machine-fetched UniProt record
+separately assigns C24-CoA reaction RHEA:47232 with PMID:21237683, and the human structure explains
+how the cavity accommodates extended chains [PMID:18227065]. Structural cavity capacity is not
+misrepresented as a turnover measurement.
+
+The [primary ACAD10/11 article](https://pmc.ncbi.nlm.nih.gov/articles/PMC3073726/) includes purified
+VLCAD comparators (Figure 4F) and human muscle membrane activity in section 3.7. Its individual
+figure rates were not re-extracted. UniProt's RHEA:47296 dodecanoyl-CoA reaction and the current GO
+medium-chain definition support retention of boundary-range activity as **NON_CORE**, instead of
+calling the Rhea mapping erroneous solely because ACADM is the main medium-chain enzyme.
+
+Four broad catalytic MF rows are refined to the experimentally grounded long-chain reaction. The
+broad energy-derivation process is refined to existing GO:0033539 coverage. That term describes the
+beta-oxidation pathway employing an acyl-CoA dehydrogenase initial step; VLCAD performs that step,
+not every reaction in the pathway. No NEW process annotation is introduced.
+
+PAINT IBDs in `interpro/panther/PTHR43884/PTHR43884-paint.tsv` at PTN000856877 confirm the inherited
+VLCAD-activity and fatty-acyl-CoA-binding assertions. The human descendant evidence is legitimate
+support for node placement. No donor-count or circularity objection is made. InterPro catalytic
+and FAD mappings, ARBA provenance, and Rhea substrate mappings were traced from GOA/UniProt.
+
+### Localization and primary-source corrections
+
+All organelle and mitochondrial-membrane rows retain their source resolution and are **ACCEPT**.
+The [live HPA page](https://www.proteinatlas.org/ENSG00000072778-ACADVL/subcellular) reports supported
+mitochondrial localization (HPA019006/HPA020595); this does not resolve matrix or inner membrane.
+The MitoCoP full main article was inspected, but its individual ACADVL supplementary entry was not
+independently re-extracted; the curated mitochondrial assertion is retained with targeted support.
+
+[PMID16020546, author-uploaded full primary article](https://www.researchgate.net/publication/7723299_Human_Acyl-CoA_Dehydrogenase-9_Plays_a_Novel_Role_in_the_Mitochondrial_-Oxidation_of_Unsaturated_Fatty_Acids)
+Methods and Figure 5 Results directly include VLCAD in human muscle fractionation. VLCAD sediments
+with the membrane fraction. The old MISCITED designation is withdrawn; the paper's ACAD9-focused
+title did not exclude experimental VLCAD controls.
+
+The two Reactome records are distinct: R-HSA-1791069 is an expression event, whereas R-HSA-77299
+is palmitoyl-CoA dehydrogenation. Matrix TAS rows remain contextual/non-core, distinguishing imported
+protein and reaction-compartment placement from mature membrane-associated topology. Matrix is
+not an ancestor of inner membrane. Wild-type membrane-dependent assembly and the soluble-matrix
+S583W mutant are distinguished [PMID:9599005]; the structural analysis supports a matrix-facing
+peripheral enzyme [PMID:18227065].
+
+[PMID18063578, author-uploaded full primary article](https://www.researchgate.net/publication/5783906_The_Layered_Structure_of_Human_Mitochondrial_DNA_Nucleoids)
+Table 1 places ACADVL/NP_000009 in Class I, present in both native and cross-linked preparations.
+Native anti-TFAM/anti-mtSSB peptide counts are 3/0 and cross-linked preparations 1/2 are 3/0. Thus
+the previous review's failure-to-cross-link claim was false. The Methods used HeLa mitochondria,
+formaldehyde cross-linking, gradient purification and peptide identification. Retain nucleoid
+association as non-core without proposing DNA-binding, replication or genome-maintenance functions.
+The [GO nucleoid definition](https://amigo.geneontology.org/amigo/term/GO%3A0042645?relation=regulates)
+is regional; direct DNA contact is not required of every localized protein.
+
+### Expression and interaction evidence
+
+[PMID21492153, full Wiley primary article](https://onlinelibrary.wiley.com/doi/10.1111/j.1440-169X.2011.01258.x)
+Methods compare proliferating and day-17 differentiated Caco-2 cultures. Table 1 identifies ACADVL
+with a 3.25-fold increase; the Discussion interprets lipid-enzyme changes as altered metabolic
+turnover. Keep **MARK_AS_OVER_ANNOTATED** for differentiation participation. This is now based on
+full study inspection; the IEP evidence code correctly records expression-pattern evidence.
+
+The HuRI source [PMID:32296183] includes repeated screens, pair retests and broader validation.
+GOA identifies TAF1B/Q53T94 as the partner; UniProt records three experiments. Remove generic
+protein binding as functionally uninformative, without labeling the interaction an artifact from
+compartment annotations. No unsupported replacement binding function is proposed. Pair-specific
+raw assays were not independently reanalyzed. Homodimerization and substrate binding remain real
+non-core properties, while FAD binding is integrated with the core catalytic mechanism.
+
+### Final synthesis and checks
+
+Two core entries describe the same enzyme's long-chain and very-long-chain substrate ranges,
+with cofactor, homodimer and membrane information integrated rather than adding a separate FAD-only
+physiological function. All 42 source annotation objects remain unchanged outside `review`.
+Final actions: **20 ACCEPT, 9 KEEP_AS_NON_CORE, 6 UNDECIDED, 5 MODIFY, 1 REMOVE,
+1 MARK_AS_OVER_ANNOTATED**. No NEW annotations or proposed ontology terms were added.
+
+Final `just validate human ACADVL` passed without curation warnings; `just render human ACADVL`
+passed. All 42 source-field objects and the GOA/UniProt bytes were verified unchanged. YAML trailing
+spaces were removed with parsed-data equality checked. History validation and final file hashes are
+recorded in `/tmp/ACADVL-audit-manifest.json`. No Git state or shared project file was changed.
+
+Coordinator inspection of all 42 rows and both core entries found no blocking biological issue. Added the exact cached UniProt C24 catalytic reaction and its experimental attribution to the very-long-chain rows/core, distinguishing curated turnover evidence from structural cavity capacity. Abstract-only local PMID caches now carry explicit reference flags; externally accessed full text remains separately described above. Source assertions and action counts are unchanged.
