@@ -1,10 +1,23 @@
 ---
 title: "Plant-Encoded Sense & Response Biosensors"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
+species: [ARATH]
+genes: [FLS2, EFR, CERK1, BAK1, BIK1, RBOHD, MPK6, NPR1, EDS1, PAD4, RPS2, RPM1]
 ---
 
 # Plant-Encoded Sense & Response Biosensors
+
+**Bottom line:** the SEED SFA at ORNL is building plant-encoded biosensors that detect microbes
+through plant immune receptors and report or respond to them. The flagship design is a chitin
+sensor that splits GFP across LYK5 and a kinase-dead CERK1, so chitin-induced receptor pairing
+reconstitutes fluorescence. This page collects notes on that work and lists about 20 receptor,
+signalling and NLR genes worth curating, because an engineered sensor is only as reliable as
+our understanding of the receptors and pathway it borrows. Scoped, not yet started as a
+curation project: none of the TODO items below is done. Twelve of the listed Arabidopsis genes
+(FLS2, EFR, CERK1, BAK1, BIK1, RBOHD, MPK6, NPR1, EDS1, PAD4, RPS2, RPM1) already have reviews
+in `genes/ARATH/` from other work, covering 560 annotations; LYK5, LYK4, PEPR1/2, PBL27, MPK3,
+WRKY33 and RPS4 do not, and the Populus orthologs have not been mapped.
 
 Notes from SEED SFA (Secure Ecosystem Engineering and Design) at ORNL.
 
