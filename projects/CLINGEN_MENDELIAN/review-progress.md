@@ -76,17 +76,20 @@ are therefore expected; existing human reviews still link normally.
 | AASS | Definitive | INITIALIZED | Merged; final validation and CI passed | `cmungall/clingen-aass` | [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) |
 | ABCA3 | Definitive | No review | Merged; final validation and CI passed | `cmungall/clingen-abca3` | [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) |
 | ABCA4 | Definitive | No review | Merged; final validation and CI passed | `cmungall/clingen-abca4` | [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) |
-| ABCB4 | Definitive | No review | Current-head review comment accepts fixes; formal approval pending after reviewer session limit | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
+| ABCB4 | Definitive | No review | Both biliary secretion replacements corrected; current-head review and CI pending | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
 | ABCC6 | Definitive | No review | Merged; final approval and required CI passed | `cmungall/clingen-abcc6` | [#3138](https://github.com/ai4curation/ai-gene-review/pull/3138) |
 | ABCC8 | Definitive | No review | Validated follow-up published as draft; PMID:16924481 cache required | `cmungall/clingen-abcc8` | [#3136](https://github.com/ai4curation/ai-gene-review/pull/3136) |
-| ABCC9 | Definitive | No review | Published; required test passed, formal review pending | `cmungall/clingen-abcc9` | [#3148](https://github.com/ai4curation/ai-gene-review/pull/3148) |
+| ABCC9 | Definitive | No review | Review changes requested on quote scope; follow-up in progress | `cmungall/clingen-abcc9` | [#3148](https://github.com/ai4curation/ai-gene-review/pull/3148) |
 | ABCD1 | Definitive | No review | Published as draft; PMID:16213491 cache required | `cmungall/clingen-abcd1` | [#3150](https://github.com/ai4curation/ai-gene-review/pull/3150) |
-| ACAD8 | Definitive | INITIALIZED | Substantive audit published; local validation and independent inspection passed | `cmungall/clingen-acad8` | [#3151](https://github.com/ai4curation/ai-gene-review/pull/3151) |
-| ACAD9 | Definitive | COMPLETE | Substantive audit published; local validation and independent audit passed | `cmungall/clingen-acad9` | [#3152](https://github.com/ai4curation/ai-gene-review/pull/3152) |
-| ACADM | Definitive | COMPLETE | Audit in progress using existing cached sources | — | — |
-| ACADS | Definitive | COMPLETE | Audit in progress using existing cached sources | — | — |
-| ACADSB | Definitive | INITIALIZED | Audit in progress using existing cached sources | — | — |
+| ACAD8 | Definitive | INITIALIZED | Current-head approval; protected auto-merge awaits required CI | `cmungall/clingen-acad8` | [#3151](https://github.com/ai4curation/ai-gene-review/pull/3151) |
+| ACAD9 | Definitive | COMPLETE | Current-head approval; protected auto-merge awaits required CI | `cmungall/clingen-acad9` | [#3152](https://github.com/ai4curation/ai-gene-review/pull/3152) |
+| ACADM | Definitive | COMPLETE | Audit published as draft; PMID:18459129 cache required | `cmungall/clingen-acadm` | [#3156](https://github.com/ai4curation/ai-gene-review/pull/3156) |
+| ACADS | Definitive | COMPLETE | Review changes requested on matching binding rows; follow-up in progress | `cmungall/clingen-acads` | [#3155](https://github.com/ai4curation/ai-gene-review/pull/3155) |
+| ACADSB | Definitive | INITIALIZED | Review changes requested on chemistry wording and provenance; follow-up in progress | `cmungall/clingen-acadsb` | [#3154](https://github.com/ai4curation/ai-gene-review/pull/3154) |
+| ACADVL | Definitive | COMPLETE | Audit in progress using existing cached sources | — | — |
 | ACAN | Definitive | COMPLETE | Audit published as draft; PMID:11222505 cache required | `cmungall/clingen-acan` | [#3153](https://github.com/ai4curation/ai-gene-review/pull/3153) |
+| ACAT1 | Definitive | COMPLETE | Audit in progress using existing cached sources | — | — |
+| ACOX1 | Definitive | INITIALIZED | Audit in progress using existing cached sources | — | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -101,21 +104,24 @@ The [publication queue](publication-queue.json) records the exact local file set
 and SHA-256 hashes for the separately published gene revisions. Recheck each remote head
 before publishing a follow-up, and keep project tracking in its own PR. ABCC8
 still needs the normal cache fetch for PMID:16924481; ABCD1 needs PMID:16213491.
-ACAN also needs PMID:11222505. Their targeted validators pass with these warnings, but the reference-cache
+ACAN also needs PMID:11222505, and ACADM needs PMID:18459129. Their targeted validators pass with these warnings, but the reference-cache
 requirement remains outstanding. ABCG5 initialization also failed at the normal
 UniProt fetch because DNS access was unavailable; no seed files were invented.
 ABCG5, ABCG8, ABHD12 and ABHD5 remain queued in the normal alphabetical order.
 While those source downloads are unavailable, workers are auditing the next
-available cached reviews: ACAD8, ACAD9, ACADM, ACADS, ACADSB and ACAN. This temporary
-scheduling does not mark the earlier unseeded genes complete. ACAD8's genuine
+available cached reviews, progressing through ACADVL, ACAT1 and ACOX1. This temporary
+scheduling does not mark the earlier unseeded genes complete. The concurrent cached-review batch assigned ACAN before ACADVL; that was a scheduling exception to strict alphabetical order, and ACADVL is now actively being audited. ACAD8's genuine
 Falcon/fallback launch attempts failed at dependency retrieval before provider
 contact; its manual primary-source research is documented without a fabricated report.
 
 The complete log of ABCB4's second review attempt reports the review account's
 session limit, with reset at **2026-09-27 01:00 UTC**. Its earlier current-head
 comment accepted the biological fixes, but the formal approval was never recorded.
-ABCC9's required test passed while formal review remains outstanding. Resume the
-required reviews after the service reset; keep the normal approval and CI gates.
+The subsequent ABCB4 and ABCC9 reviews completed with concrete changes requested. Later ACAD8 and ACAD9 workflow runs completed successful reviews before that reset
+time, demonstrating that the earlier failure was no longer universal. Reran the
+earlier failed ABCB4 and ABCC9 reviews after that new evidence. Keep the normal
+approval and CI gates and inspect each current run rather than assuming a fixed
+outage window.
 
 Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
@@ -270,3 +276,41 @@ The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **7 o
   review gates remain intact. The project branch's sole main-merge conflict is
   its generated inventory HTML; regenerate it from the updated source to retain
   the newly available gene links and the seven confirmed completion checkboxes.
+
+
+- 2026-09-26 UTC: Published ACAD8 feedback commit
+  `acd39fb8cbb021bbee3841ca977b247b8ac3f802`: broad mitochondrial rows retain their
+  original source resolution, the encompassing short-chain GO term is accepted
+  without changing its specific propionyl Rhea reaction, and full-text/pathway
+  wording is corrected. Published ACAD9 feedback commit
+  `53b3e3c398f59a40419f7c080954fd71d2de4b2e`: refine the supported beta-oxidation
+  process, attribute neuronal details to externally read primary text and record
+  the unresolved assembly molecular function. Both targeted validators now pass
+  without warnings; all 23 and 40 source assertions respectively are preserved.
+
+- 2026-09-26 UTC: Published ACADSB #3154 (28 source rows) and ACADS #3155 (30
+  source rows), each with independent biological inspection and clean targeted
+  validation. Published ACADM draft #3156 (50 source rows), whose original mouse
+  process donor was recovered as PMID:18459129; its required normal cache fetch
+  failed DNS. The review distinguishes metabolic repartitioning from a synthesis
+  step and retains unresolved mechanistic evidence. Three further cached reviews
+  are underway: ACADVL, ACAT1 and ACOX1. Review-service retries resumed only after
+  newer workflows demonstrated successful runs; the previous session-limit report
+  is historical evidence rather than a blanket block until its quoted reset time.
+
+- 2026-09-26 UTC: Renewed reviewer feedback identified one remaining ABCB4
+  YAML-alias mismatch. Published `85a037efcedc539102539973d26fbd2ae328133f`
+  with both biliary secretion rows consistently replaced by phospholipid efflux;
+  all 68 source assertions and other decisions are unchanged. ABCC9, ACADSB and
+  ACADS received source-scope or wording feedback and are being revised. ACAD8
+  and ACAD9 received approval on their latest published heads; protected auto-merge
+  is enabled while required tests finish. They are not yet counted complete.
+
+- 2026-09-26 UTC: Project review caught links to four unmerged gene pages in the
+  generated inventory. Regenerated using only gene-review paths present in the
+  project branch's target tree (`c58fcd6b4589c722799c6e39da663420db32dd7c`),
+  so ABCB4, ABCC8, ABCC9 and ABCD1 remain unlinked until merge. The previous
+  conflict-resolution note confused locally available reviews with published
+  pages; this entry corrects that decision. ABCA3, ABCA4 and ABCC6 remain linked
+  because their pages have merged. Future tracking renders must use the target
+  Git tree's gene availability rather than the coordinator's working directories.
