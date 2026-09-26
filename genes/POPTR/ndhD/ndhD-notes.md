@@ -14,3 +14,7 @@ The current exact target lineage is reconstructed in plastid-energy-source-check
 NdhK directly lines the plastoquinone cavity and binds a 4Fe–4S center in the spinach structure; this supports homologous NdhK binding beyond whole-complex substrate reasoning. NdhD is in the antiporter-like arm, so generic quinone binding cannot simply replace its ubiquinone assertion without subunit-specific evidence. Broad light-reaction/plastid/cofactor rows keep legitimate specific replacement recommendations where present. No NEW process assertions, substrate-role inferences or target-specific catalytic-residue claims are added.
 
 The immutable UniProt/GOA files were not edited. Global OpenScientist query-cache exact accession/family and chloroplast-function search returned no matching report before the two shared requests were registered. Audit: projects/IBA_REVIEW/rereview-2026-09-20/plastid-energy-complexes.yaml.
+
+## 2026-09-26 focused OpenScientist follow-up
+
+Read the `chlororespiratory-capacity-and-subunit-quinone-binding` focused report. It keeps the plastid NDH antiporter/proton-pumping model for NdhD, but resolves the two pending rows: GO:0048039 is a wrong-subunit and wrong-quinone transfer because the plastoquinone pocket is in NdhA/H/K, and GO:0009060 overstates NdhD contribution to PTOX-terminated chlororespiration as full aerobic respiration. The missing photosynthesis light-reaction row remains a curator question rather than a new assertion in this follow-up.
