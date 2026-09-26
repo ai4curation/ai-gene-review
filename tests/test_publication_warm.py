@@ -1023,3 +1023,50 @@ def test_the_carry_forward_keeps_the_whole_body(tmp_path):
     assert "Introduction prose." in text
     assert "The results section." in text, "the tail after an inner ## must survive"
     assert "## Results (full text retrieved" in text
+
+
+def test_the_section_finder_ignores_a_deeper_heading(tmp_path):
+    """`body.find("## Full Text")` also matches inside `### Full Text Notes`.
+
+    It lands on the `## Full Text` at offset one, and `apply_full_text` truncates there --
+    destroying everything between that point and the real section. Same
+    substring-for-structure shape as the truncation removed from
+    `_existing_accepted_full_text`; this is the sibling function, which writes the section
+    that one reads. Pre-existing and unreachable from the data today, fixed because it is
+    the same bug one function over in a file this change already touches.
+    """
+    from ai_gene_review.etl.publication_warm import _full_text_section_start
+
+    body = "## Abstract\n\nabs\n\n### Full Text Notes\n\nx\n\n## Full Text\n\nreal body\n"
+    i = _full_text_section_start(body)
+    assert body[i:].startswith("## Full Text\n\nreal body"), "must find the real section"
+    assert "### Full Text Notes" in body[:i], "the deeper heading stays in the kept prefix"
+
+    assert _full_text_section_start("## Full Text\n\nb\n") == 0
+    assert _full_text_section_start("## Abstract\n\na\n") == -1
+
+
+def test_apply_full_text_replaces_only_the_real_section(tmp_path):
+    """End to end: a deeper heading before the section must survive the rewrite."""
+    from ai_gene_review.etl.publication_warm import apply_full_text
+
+    rec = tmp_path / "PMID_11.md"
+    rec.write_text(
+        "---\npmid: '11'\nfull_text_available: false\n---\n\n"
+        "## Abstract\n\nabs\n\n### Full Text Notes\n\nkeep me\n\n"
+        "## Full Text\n\nold body\n"
+    )
+    frontmatter = {"pmid": "11", "full_text_available": False}
+    body = rec.read_text().split("---", 2)[2]
+    apply_full_text(
+        rec,
+        frontmatter,
+        body,
+        text="brand new body text",
+        extraction_method="xml",
+        provider="pmc",
+    )
+    out = rec.read_text()
+    assert "keep me" in out, "content before the section must not be truncated away"
+    assert "brand new body text" in out
+    assert "old body" not in out

@@ -279,6 +279,23 @@ def is_usable_full_text(text: str, body: str) -> bool:
     return True
 
 
+def _full_text_section_start(body: str) -> int:
+    """Index of the ``## Full Text`` heading in *body*, or -1.
+
+    Anchored on a line start, not a bare substring. ``body.find("## Full Text")`` also
+    matches inside ``### Full Text Notes`` -- it lands on the ``## Full Text`` at offset
+    one -- and the caller truncates there, destroying everything between that point and
+    the real section. Same substring-for-structure shape as the truncation removed from
+    ``_existing_accepted_full_text``; this is the sibling function that writes the section
+    the other one reads.
+    """
+    if body.startswith(FULL_TEXT_HEADER):
+        return 0
+    marker = "\n" + FULL_TEXT_HEADER
+    index = body.find(marker)
+    return index + 1 if index != -1 else -1
+
+
 def apply_full_text(
     path: Path,
     frontmatter: Dict[str, Any],
@@ -307,7 +324,7 @@ def apply_full_text(
     # the newly added text is whitespace-cleaned; the existing body is kept
     # verbatim (see _rewrite).
     cleaned = re.sub(r"[ \t]+(?=\r?$)", "", text.strip(), flags=re.MULTILINE)
-    section_start = body.find(FULL_TEXT_HEADER)
+    section_start = _full_text_section_start(body)
     if section_start != -1:
         body = body[:section_start].rstrip("\n") + "\n"
     body = body.rstrip("\n") + f"\n\n{FULL_TEXT_HEADER}\n\n{cleaned}\n"
