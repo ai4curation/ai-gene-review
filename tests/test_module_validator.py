@@ -33,6 +33,7 @@ from ai_gene_review.validation.module_validator import (
     validate_terms,
     validate_module_file,
     load_oak_adapter_map,
+    iter_evidence_go_terms,
     load_term_label_aliases,
 )
 
@@ -145,10 +146,15 @@ def test_iter_taxon_descriptors_finds_taxa_and_taxon_slots():
     doc = {
         "module": {
             "context": {"taxa": [{"preferred_term": "Mammalia"}]},
-            "annotons": [{"participant": {"taxon": {"preferred_term": "Homo sapiens"}}}],
+            "annotons": [
+                {"participant": {"taxon": {"preferred_term": "Homo sapiens"}}}
+            ],
         }
     }
-    found = [(path, descriptor["preferred_term"]) for path, descriptor in iter_taxon_descriptors(doc)]
+    found = [
+        (path, descriptor["preferred_term"])
+        for path, descriptor in iter_taxon_descriptors(doc)
+    ]
     assert found == [
         ("$.module.context.taxa[0]", "Mammalia"),
         ("$.module.annotons[0].participant.taxon", "Homo sapiens"),
@@ -372,7 +378,8 @@ def test_validate_paint_ptns_accepts_a_more_specific_node_term():
     ancestors = {"GO:0004672": {"GO:0004672", "GO:0003674"}}.get
 
     errors, warnings = validate_paint_ptns(
-        list(iter_ancestral_node_uses(doc)), index,
+        list(iter_ancestral_node_uses(doc)),
+        index,
         lambda t: ancestors(t) or {t},
     )
 
@@ -498,6 +505,91 @@ def test_validate_terms_accepts_reviewed_label_alias():
     assert warnings == []
 
 
+def test_validate_terms_reviewed_alias_cannot_bridge_obsoletion():
+    # GO:0006535 sat in a module for months because oak_config.yaml carried its
+    # pre-obsoletion label as a reviewed alias: the alias matched, so the
+    # 'obsolete ' prefix on the ontology label never surfaced.
+    terms = [("GO:0006535", "L-cysteine biosynthetic process from L-serine")]
+    resolver = _resolver_factory(
+        {
+            "GO:0006535": (
+                "obsolete L-cysteine biosynthetic process from L-serine",
+                set(),
+            )
+        }
+    )
+    aliases = {"GO:0006535": {"L-cysteine biosynthetic process from L-serine"}}
+    errors, warnings = validate_terms(
+        terms, {"GO": "real"}, resolver, label_aliases=aliases
+    )
+    assert len(errors) == 1
+    assert "obsolete" in errors[0]
+    assert "cannot bridge" in errors[0]
+    assert warnings == []
+
+
+def test_validate_terms_alias_not_consulted_when_ontology_label_matches():
+    # A module that deliberately cites the retired label verbatim (e.g. to
+    # explain why a distinction cannot be grounded) matches the ontology's own
+    # label, so the alias is never reached and no obsoletion error fires.
+    terms = [
+        ("GO:0046537", "obsolete 2,3-bisphosphoglycerate-independent PGM activity")
+    ]
+    resolver = _resolver_factory(
+        {
+            "GO:0046537": (
+                "obsolete 2,3-bisphosphoglycerate-independent PGM activity",
+                set(),
+            )
+        }
+    )
+    aliases = {"GO:0046537": {"anything"}}
+    errors, warnings = validate_terms(
+        terms, {"GO": "real"}, resolver, label_aliases=aliases
+    )
+    assert errors == []
+
+
+def test_validate_terms_names_the_field_in_mismatch_messages():
+    terms = [("GO:0019288", "stale evidence title")]
+    resolver = _resolver_factory({"GO:0019288": ("current label", set())})
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver, where="evidence title")
+    assert len(errors) == 1
+    assert errors[0].startswith(
+        "Label mismatch for GO:0019288: evidence title says "
+        "'stale evidence title' but ontology label is 'current label'"
+    )
+
+
+def test_iter_evidence_go_terms_collects_titled_go_citations_at_any_depth():
+    doc = {
+        "evidence": [
+            {"source_id": "GO:0019344", "title": "L-cysteine biosynthetic process"},
+            {"source_id": "PMID:1", "title": "a paper"},
+            {"source_id": "GO:0000001"},  # untitled: nothing to compare
+            {"source_id": "file:x.md", "title": "GO:0000002 is not a source_id"},
+        ],
+        "module": {
+            "parts": [
+                {
+                    "node": {
+                        "evidence": [
+                            {
+                                "source_id": "GO:0061678",
+                                "title": " Entner-Doudoroff pathway ",
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+    }
+    assert list(iter_evidence_go_terms(doc)) == [
+        ("GO:0019344", "L-cysteine biosynthetic process"),
+        ("GO:0061678", "Entner-Doudoroff pathway"),
+    ]
+
+
 def test_validate_terms_flags_unresolvable_id():
     terms = [("GO:9999999", "nonexistent")]
     resolver = _resolver_factory({})  # nothing known -> not_found
@@ -598,9 +690,7 @@ def test_load_oak_adapter_map():
 
 def test_load_term_label_aliases():
     aliases = load_term_label_aliases(PROJECT_ROOT / "conf" / "oak_config.yaml")
-    assert aliases["GO:0008883"] == {
-        "glutamyl-tRNA reductase (NADP+) activity"
-    }
+    assert aliases["GO:0008883"] == {"glutamyl-tRNA reductase (NADP+) activity"}
 
 
 # --------------------------------------------------------------------------- #
@@ -724,9 +814,7 @@ def test_validate_supporting_text_fetch_exception_is_an_error(monkeypatch):
     )
     doc = {
         "module": {
-            "evidence": [
-                {"source_id": "PMID:123", "supporting_text": "a real quote"}
-            ]
+            "evidence": [{"source_id": "PMID:123", "supporting_text": "a real quote"}]
         }
     }
     errors, warnings = validate_supporting_text(doc)
@@ -755,9 +843,7 @@ def test_validate_supporting_text_uncached_reference_is_an_error(monkeypatch):
     )
     doc = {
         "module": {
-            "evidence": [
-                {"source_id": "PMID:123", "supporting_text": "a real quote"}
-            ]
+            "evidence": [{"source_id": "PMID:123", "supporting_text": "a real quote"}]
         }
     }
     errors, warnings = validate_supporting_text(doc)
@@ -879,11 +965,7 @@ def test_validate_reference_titles_wrong_title_errors():
     pytest.importorskip("linkml_reference_validator")
     if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
         pytest.skip("cached publication PMID_10049358 not present")
-    doc = {
-        "references": [
-            {"id": "PMID:10049358", "title": "An unrelated wrong title"}
-        ]
-    }
+    doc = {"references": [{"id": "PMID:10049358", "title": "An unrelated wrong title"}]}
     errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
     assert any("title mismatch" in e.lower() for e in errors), errors
 
@@ -913,7 +995,9 @@ def test_iter_family_member_uses_requires_both_family_and_member():
 
     no_family = {
         "family": {
-            "representative_members": [{"term": {"id": "UniProtKB:O14521", "label": "r"}}]
+            "representative_members": [
+                {"term": {"id": "UniProtKB:O14521", "label": "r"}}
+            ]
         }
     }
     assert list(iter_family_member_uses(no_family)) == []
@@ -1011,9 +1095,7 @@ def test_validate_cited_ptn_sources_accepts_goa_attested_node():
     current PAINT snapshot no longer carries it (release skew)."""
     cited = [("$.evidence[0].source_id", "PANTHER:PTN002225929")]
 
-    assert (
-        validate_cited_ptn_sources(cited, {}, {"PANTHER:PTN002225929"}) == []
-    )
+    assert validate_cited_ptn_sources(cited, {}, {"PANTHER:PTN002225929"}) == []
 
 
 def test_load_goa_attested_ptns_reads_with_from_column(tmp_path):
@@ -1054,7 +1136,10 @@ def test_validate_family_members_defers_to_paint_corroboration():
     is corroborated by a second machine source, so it warns rather than fails."""
     doc = {
         "family": {
-            "term": {"id": "PANTHER:PTHR16515", "label": "PR DOMAIN ZINC FINGER PROTEIN"},
+            "term": {
+                "id": "PANTHER:PTHR16515",
+                "label": "PR DOMAIN ZINC FINGER PROTEIN",
+            },
             "representative_members": [
                 {"term": {"id": "UniProtKB:P10069", "label": "BrlA"}}
             ],
@@ -1158,9 +1243,7 @@ def test_count_ungrounded_families_sees_family_terms_only_grounding():
     doc = {
         "family": {
             "family_terms": [{"id": "PANTHER:PTHR38761:SF1", "label": "x"}],
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
 
@@ -1172,9 +1255,7 @@ def test_count_ungrounded_families_treats_non_panther_term_as_grounded():
     doc = {
         "family": {
             "term": {"id": "InterPro:IPR000719", "label": "x"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
 
@@ -1247,7 +1328,10 @@ def test_validate_family_members_advises_subfamily_for_heterogeneous_family():
     """PTHR24416 grounds 13 different receptor kinases; the family says little."""
     doc = {
         "family": {
-            "term": {"id": "PANTHER:PTHR24416", "label": "TYROSINE-PROTEIN KINASE RECEPTOR"},
+            "term": {
+                "id": "PANTHER:PTHR24416",
+                "label": "TYROSINE-PROTEIN KINASE RECEPTOR",
+            },
             "representative_members": [
                 {"term": {"id": "UniProtKB:P00533", "label": "EGFR"}}
             ],
@@ -1269,9 +1353,7 @@ def test_validate_family_members_no_subfamily_advice_for_small_family():
     doc = {
         "family": {
             "term": {"id": "PANTHER:PTHR1", "label": "f"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
     errors, warnings = validate_family_members(
@@ -1316,11 +1398,7 @@ def test_validate_paint_ptns_seed_overlap_is_vacuous_without_uniprot_seeds():
             ],
         },
     }
-    index = {
-        "PANTHER:PTN000000001": [
-            _paint_row(seeds="MGI:MGI:88314|SGD:S000003865")
-        ]
-    }
+    index = {"PANTHER:PTN000000001": [_paint_row(seeds="MGI:MGI:88314|SGD:S000003865")]}
 
     errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
 

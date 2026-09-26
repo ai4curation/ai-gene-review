@@ -229,9 +229,7 @@ GO_BRANCH_CONSTRAINTS: Dict[str, GoBranchConstraint] = {
     "cellular_components": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
-    "source_location": GoBranchConstraint(
-        "GO:0110165", "cellular anatomical entity"
-    ),
+    "source_location": GoBranchConstraint("GO:0110165", "cellular anatomical entity"),
     "destination_location": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
@@ -364,7 +362,9 @@ def iter_typed_go_terms(obj: object, path: str = "$") -> Iterator[TypedGoTerm]:
                     if not isinstance(descriptor, dict):
                         continue
                     descriptor_path = (
-                        f"{child_path}[{index}]" if isinstance(value, list) else child_path
+                        f"{child_path}[{index}]"
+                        if isinstance(value, list)
+                        else child_path
                     )
                     term = descriptor.get("term")
                     if (
@@ -1293,11 +1293,21 @@ def validate_cited_ptn_sources(
 
 
 def compare_label(
-    curie: str, provided: str, primary: Optional[str], aliases: Set[str]
+    curie: str,
+    provided: str,
+    primary: Optional[str],
+    aliases: Set[str],
+    where: str = "module",
 ) -> Optional[str]:
     """Return an error message if ``provided`` does not match the ontology.
 
     A match is exact or case-insensitive against the primary label or any alias.
+    ``where`` names the field the label came from, so the message says which
+    text to fix:
+
+    >>> compare_label("X:1", "wrong", "root", set(), where="evidence title").startswith(
+    ...     "Label mismatch for X:1: evidence title says 'wrong' but ontology label is 'root'")
+    True
 
     >>> compare_label("X:1", "root", "root", set()) is None
     True
@@ -1327,7 +1337,7 @@ def compare_label(
         return None
     shown = primary if primary is not None else "<no label>"
     message = (
-        f"Label mismatch for {curie}: module says '{provided}' "
+        f"Label mismatch for {curie}: {where} says '{provided}' "
         f"but ontology label is '{shown}'"
     )
     # A label that merely restates its own id names no entity, so the
@@ -1368,6 +1378,7 @@ def validate_terms(
     adapter_map: Dict[str, Optional[str]],
     resolver: Resolver,
     label_aliases: Optional[Dict[str, Set[str]]] = None,
+    where: str = "module",
 ) -> Tuple[List[str], List[str]]:
     """Validate a list of ``(id, label)`` terms, returning (errors, warnings).
 
@@ -1375,7 +1386,14 @@ def validate_terms(
     silently), or omits it (skip with a warning). ``resolver`` performs the
     actual ontology lookup for configured prefixes. ``label_aliases`` adds
     explicitly reviewed labels when the configured ontology snapshot lags the
-    authoritative source.
+    authoritative source. A reviewed alias is consulted only when the
+    ontology's own label and synonyms do not match, and it never bridges an
+    obsoletion: an id whose primary label carries GO's ``obsolete `` prefix is
+    an error even when an alias matches, because the alias then hides that the
+    module is grounded on a retired term (this is how GO:0006535 stayed in a
+    module for months after GO retired it). ``where`` names the field the
+    labels came from in messages (``module`` for ``term`` blocks, ``evidence
+    title`` for ``evidence[].source_id`` citations).
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -1409,14 +1427,41 @@ def validate_terms(
         if status == "not_found":
             errors.append(f"Term id {curie} not found in configured ontology")
             continue
-        accepted_aliases = set(aliases)
-        if label_aliases:
-            accepted_aliases.update(label_aliases.get(curie, set()))
-        err = compare_label(curie, label, primary, accepted_aliases)
+        err = compare_label(curie, label, primary, set(aliases), where=where)
+        reviewed = label_aliases.get(curie, set()) if label_aliases else set()
+        if err and reviewed:
+            if is_obsolete_label(primary):
+                errors.append(
+                    f"{curie} is obsolete in the configured ontology "
+                    f"('{primary}'); the reviewed label alias in oak_config.yaml "
+                    f"cannot bridge an obsoletion -- repoint to its replaced_by "
+                    f"term and drop the alias"
+                )
+                continue
+            err = compare_label(
+                curie, label, primary, set(aliases) | reviewed, where=where
+            )
         if err:
             errors.append(err)
 
     return errors, warnings
+
+
+def is_obsolete_label(primary: Optional[str]) -> bool:
+    """True when an ontology's primary label marks the term as retired.
+
+    GO (and the other OBO ontologies) prefix the label of an obsoleted term
+    with ``obsolete ``, which is the only obsoletion signal the label resolver
+    exposes.
+
+    >>> is_obsolete_label("obsolete L-cysteine biosynthetic process from L-serine")
+    True
+    >>> is_obsolete_label("L-cysteine biosynthetic process")
+    False
+    >>> is_obsolete_label(None)
+    False
+    """
+    return primary is not None and primary.lower().startswith("obsolete ")
 
 
 def validate_go_branches(
@@ -1612,9 +1657,7 @@ def _build_go_branch_resolver(adapter_map: Dict[str, Optional[str]]) -> BranchRe
                 return "not_found"
             if curie == root_id:
                 return "not_in_branch"
-            ancestors = set(
-                go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"])
-            )
+            ancestors = set(go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"]))
             return "ok" if root_id in ancestors else "not_in_branch"
         except Exception:  # noqa: BLE001 - external system
             return "unavailable"
@@ -1713,6 +1756,15 @@ def validate_module_file(
 
     terms = list(iter_terms(doc))
     errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
+    evidence_errors, evidence_warnings = validate_terms(
+        list(iter_evidence_go_terms(doc)),
+        adapter_map,
+        resolver,
+        label_aliases,
+        where="evidence title",
+    )
+    errors.extend(evidence_errors)
+    warnings.extend(evidence_warnings)
     errors.extend(member_errors)
     warnings.extend(member_warnings)
     errors.extend(validate_taxon_context(doc))
@@ -1770,11 +1822,13 @@ def validate_module_file(
         gene_index=gene_index,
         genes_dir=genes_dir if genes_dir is not None else project_root / "genes",
         family_reviews_dir=(
-            family_reviews_dir if family_reviews_dir is not None
+            family_reviews_dir
+            if family_reviews_dir is not None
             else project_root / "interpro" / "panther"
         ),
         pfam_reviews_dir=(
-            pfam_reviews_dir if pfam_reviews_dir is not None
+            pfam_reviews_dir
+            if pfam_reviews_dir is not None
             else project_root / "interpro" / "pfam"
         ),
         subclass_of=go_subclass_predicate(
@@ -1845,6 +1899,43 @@ def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
     elif isinstance(obj, list):
         for item in obj:
             yield from iter_evidence_snippets(item)
+
+
+def iter_evidence_go_terms(obj: object) -> Iterator[Tuple[str, str]]:
+    """Yield ``(source_id, title)`` for every GO-cited ``EvidenceItem`` with a title.
+
+    Module-level and nested ``evidence:`` entries may cite a GO term as their
+    ``source_id`` with the term's name as ``title``. Those are ontology labels
+    like any ``term`` block and drift the same way, but they are not reached
+    by :func:`iter_terms` (which only follows ``term`` keys) nor by
+    :func:`iter_reference_titles` (literature only) -- so a refresh that
+    repoints the ``term`` blocks can leave an evidence entry citing the
+    retired id under its pre-obsoletion name. Untitled citations are skipped:
+    there is nothing to compare.
+
+    >>> doc = {"evidence": [{"source_id": "GO:1", "title": "grounding"},
+    ...                     {"source_id": "PMID:1", "title": "A paper"},
+    ...                     {"source_id": "GO:2"}],
+    ...        "module": {"parts": [{"node": {"evidence": [
+    ...            {"source_id": "GO:3", "title": "nested"}]}}]}}
+    >>> list(iter_evidence_go_terms(doc))
+    [('GO:1', 'grounding'), ('GO:3', 'nested')]
+    """
+    if isinstance(obj, dict):
+        source_id = obj.get("source_id")
+        title = obj.get("title")
+        if (
+            isinstance(source_id, str)
+            and source_id.startswith("GO:")
+            and isinstance(title, str)
+            and title.strip()
+        ):
+            yield (source_id, title.strip())
+        for value in obj.values():
+            yield from iter_evidence_go_terms(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from iter_evidence_go_terms(item)
 
 
 def iter_reference_titles(obj: object) -> Iterator[Tuple[str, str]]:
@@ -1937,7 +2028,9 @@ def validate_supporting_text(
             continue
         message = str(getattr(result, "message", "") or "")
         if is_unfetchable(message):
-            errors.append(f"Supporting text could not be checked ({source_id}): {message}")
+            errors.append(
+                f"Supporting text could not be checked ({source_id}): {message}"
+            )
         else:
             errors.append(f"Supporting text mismatch ({source_id}): {message}")
     return errors, warnings
@@ -2061,7 +2154,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     gene_index = index_gene_reviews(Path(__file__).resolve().parents[3] / "genes")
     for path in args.files:
-        result = validate_module_file(path, config_path=args.config, gene_index=gene_index)
+        result = validate_module_file(
+            path, config_path=args.config, gene_index=gene_index
+        )
         ungrounded += result.ungrounded_families
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")

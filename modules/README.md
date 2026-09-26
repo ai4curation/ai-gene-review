@@ -17,6 +17,14 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleRe
 uv run python -m ai_gene_review.validation.module_validator modules/gluconeogenesis.yaml
 ```
 
+The module validator label-checks every ontology `term` block and every
+`evidence[].source_id` that cites a GO term with a `title`, at any depth, against
+the configured ontology. An evidence entry therefore cannot keep citing a retired
+id under its pre-obsoletion name after the `term` blocks have been refreshed.
+Reviewed label aliases in `conf/oak_config.yaml` bridge only a lagging ontology
+snapshot: a term whose ontology label carries GO's `obsolete ` prefix is an error
+even when an alias matches, so an alias can never hide an obsoletion.
+
 Run module-focused deep research with:
 
 ```bash
