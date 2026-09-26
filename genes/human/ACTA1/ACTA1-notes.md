@@ -547,3 +547,44 @@ The description now includes dominant and recessive disease mechanisms, uses pre
 Totals are 51 entries, including 50 unchanged source assertions. The ten UNDECIDED entries are the five extracellular HDA records and five ACTA2-source ISS transfers. All eleven generic-binding rows are removed for lack of functional information; the HBHA human-protein assignment remains unresolved in the source interpretation. All primary quotes were checked against the immutable cache; external full-text evidence is identified by source URL and section. The Figure 5A excerpt uses supporting_text_fulltext, separately checked against the genuine recovered PDF text and not represented as a cached-publication quote. Source comparison and trailing-space removal both assert parsed equality outside authored review fields. The old bioinformatics claim lint encodes earlier action counts and biological conclusions; it is preserved as historical tooling, not used to force the current review back to obsolete judgments.
 
 Verification completed: `just validate human ACTA1` passed with two nonblocking warnings (source-specific cytosol action split and unused provider support). `just validate-history` passed for the newly scaffolded session, and `just render human ACTA1` succeeded. Independent annotation-reviewer consultation read all entries, four cores and 38 references; its two substantive provenance/transfer concerns were resolved and it reported no remaining biological blocker. No Git or remote mutation was performed.
+
+## 2026-09-26 follow-up to PR #3163: transfer scope and evidence attachments
+
+This entry supersedes the preceding cytosol action split and clarifies the five unresolved chicken-source transfers. All 50 seeded assertions and the pre-existing alpha-actinin-binding proposal retain their source fields. The existing computational scripts, JSON outputs, RESULTS.md, publication caches and published history are unchanged.
+
+### Chicken ACTA2 transfer: observations retained, conservation unresolved
+
+The saved `withfrom_resolution.json` identifies P08023 as chicken ACTA2 and traces four IDA annotations (gene-expression regulation, lamellipodium, filopodium and cell body) and the migration IMP to PMID:10633868. The [primary PubMed record](https://pubmed.ncbi.nlm.nih.gov/10633868/) was read again on 2026-09-26; the linked Wiley full paper remained inaccessible. The cached record is abstract-only. Its abstract directly describes punctate SMA in lamellipodia/filopodia and antisense effects on mesenchymal formation and migratory appendages, but does not resolve the full gene-expression or cell-body assays. Each ISS reason now addresses its own donor observation and unresolved transfer mechanism; stress-fiber incorporation is not evidence for filopodia, lamellipodia or mesenchyme migration.
+
+All three arguments in the historical analysis were considered. First, the available chicken ACTA1 ortholog P68139 establishes that P08023 is a paralog source. An ISS asserts sequence-based inference and can cross paralogs; the existence of an ortholog does not by itself demonstrate that the paralog's function was lost in ACTA1. Second, the saved distribution across muscle actins, excluding ACTB/ACTG1, and the high ACTA1/ACTA2 sequence identity are retained observations. They describe the transfer's scope and similarity, but contain no assay of conserved regulation, targeting or migration. They justify examining the transfer closely rather than establishing its biological correctness or failure. These computational observations were not refuted or regenerated; the inference drawn from them is what remains unresolved.
+
+Third, [live AmiGO GO:0044297](https://amigo.geneontology.org/amigo/term/GO:0044297), read on 2026-09-26, defines the nucleus-containing portion of a cell with projections, excluding the projections, and cautions about cells without projections. Mature skeletal-fiber morphology therefore cannot positively support this location. It also cannot exclude ACTA1 in every other cell state. The existing annotation has no mature-fiber restriction, and the full donor assay and relevant conservation evidence are unavailable. The cell-body row therefore remains UNDECIDED without asserting that stress fibers demonstrate a cell body or that the term applies to every cell.
+
+UNDECIDED describes unresolved biology as well as enforcing the mandatory rule for inaccessible relevant publications. A cached abstract is not full access to every assay underlying an annotation. The reasons now state the actual evidence examined and what it fails to resolve; they do not treat all ISS as protected from challenge.
+
+### Extracellular attribution, cytosol and nucleotide evidence
+
+Each of the five HDA rows now cites the existing RESULTS.md numerical peptide analysis: 54 of 63 theoretical mature-chain peptides are shared with another human actin, with 29 shared with ACTB/ACTG1 and three independent distinguishing regions. These are predicted digestion products, not observed peptides from the five studies. The actual supplementary assignments remain unavailable, so the rows remain UNDECIDED without inferring contamination or false isoform attribution.
+
+All eight Reactome cytosol annotations are now ACCEPT. Cytosol is the broad compartment containing ACTA1's core intracellular filament machinery and is explicitly included in the structural core locations. The four adhesion-context rows now attach their own event quotations and the independently recovered wild-type ACTA1 cytoplasmic localization. Acceptance concerns this location; neither generic actin-set membership nor the event title establishes an ACTA1-specific adhesion mechanism. The contractile event chemistry remains assigned to myosin or troponin. Obsolete row-index/action comments were removed.
+
+Both ATP and ADP binding now cite the actual pig skeletal-alpha-actin control in cached full PMID:24743229, including Figure 7's ATP/ADP comparison. The experimental species is explicit and human affinity measurements are not implied. This replaces an EC-only ATP-binding excerpt and restores the absent ADP evidence attachment. Source-species provenance remains in the ATPase knowledge gap rather than its biological description. Thin-filament assembly reasoning now states positive structural participation without rebutting a prior draft.
+
+The two recovered PMID:15198992 excerpts are both exact and occur at distinct places: Results, journal page 1733, says “stress-fibre or diffuse cytoplasmic staining”; Figure 5A's caption, page 1735, says “diffuse cytoplasmic staining or stress-fibre staining for WT-actinEGFP.” Both were checked against `/tmp/ACTA1-PMID15198992.txt`, extracted from the genuine institutional PDF. The YAML uses the caption excerpt; their different order is not a quotation mismatch.
+
+### Checks and historical tooling
+
+The existing `audit_claims.py` was actually run. It fails because it mandates old literal phrasings and repetition across prose surfaces, including numeric sequence-identity wording, a particular distinguishing-peptide sentence, a digit-form region count, a spelled-out shared percentage, the old interaction score, and reviewed-family numerator/denominator mentions in the review YAML. It is **not reported as passing**. The script and its computational inputs remain preserved; no analyses were rerun and no curation narrative was padded to satisfy obsolete literal requirements. The action tally below does reflect the current YAML. The final log is `/tmp/acta1-followup-legacy-lint.log`; standard repository validation and source-preservation checks are reported separately.
+
+| Action | Count |
+|---|---:|
+| ACCEPT | 24 |
+| REMOVE | 11 |
+| KEEP_AS_NON_CORE | 4 |
+| UNDECIDED | 10 |
+| MODIFY | 1 |
+| NEW | 1 |
+
+The only action changes are the four adhesion-context cytosol rows from KEEP_AS_NON_CORE to ACCEPT. The specific pre-existing NEW muscle alpha-actinin binding annotation remains unchanged. No new process, molecular-function or localization annotation is proposed.
+
+Final follow-up checks: `just validate human ACTA1` passes with one existing unused-research-report advisory; the previous cytosol action-split advisory is resolved. `just validate-history` passes for the new codex session and `just render human ACTA1` succeeds. All 51 source objects (including the existing NEW proposal), alternative products, reference identifiers/titles, machine-source files, computational artifacts and prior history are preserved. The final legacy lint reports seven literal-prose requirements, with no remaining action-tally mismatch; this separate historical-tool limitation is disclosed rather than treated as a standard validation failure or silently repaired by rewriting historical artifacts.
