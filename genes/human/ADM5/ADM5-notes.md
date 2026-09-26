@@ -194,3 +194,35 @@ Independent support for the degeneracy story: rodents lack AM5 entirely.
   of action. (Validation also enforces one action per term, so the IEA row moved with it.)
 
 Final: 8 rows, 6 REMOVE / 2 KEEP_AS_NON_CORE. 23 distinct quotes (50 instances) verified.
+
+## Round 3 (review feedback)
+
+Two residual items, both the same class as round 1 and 2 — a claim surviving in one field after
+being retracted in another, and a contrary sentence left out of a paper I mined twice.
+
+1. **The `GO:0007189` summary still asserted the retracted claim.** The `reason` said plainly
+   that "AM5 raises no cAMP" was wrong, and thirty lines above, the `summary` still said the row's
+   defect was that "the mammalian AM5 peptide raised no cAMP through any CLR/CTR-RAMP
+   combination". Two fields disagreeing inside one row, and the summary is what renders. Rewritten.
+
+2. **I mined PMID:22087608 for two findings and omitted the third — the one that cuts against me.**
+   Its Discussion reads:
+   > [PMID:22087608 "Despite continued haemodynamic improvement during HD AM5, cAMP levels rose, suggesting that AM5 did activate this second messenger and may indeed signal via the same receptors as AM and AM2"]
+
+   That is the contrary view on the receptor question, directly against the `GO:1990410` reason's
+   closing claim that even a functional mammalian AM5 should not carry the term. Now recorded on
+   both the reference entry and in the row, with the closing claim withdrawn: **the receptor
+   question is genuinely open**, and the removal never depended on settling it.
+
+Also taken: PMID:21436721's cAMP finding is now on its reference entry (it was used in
+`supported_by` but missing from `findings`); the PMID:16195494 quote extended so it actually
+reaches `CLR1-RAMP3 (AM5)`; the teleost and amphibian papers wired into the `GO:1990410`
+`supported_by`; and a history record added under `history/genes/human/ADM5/`.
+
+**A process note for myself.** My builder scripts accumulate substitutions in memory and write
+once at the end, so when a later substitution fails the earlier ones are silently discarded —
+even though each printed `ok:`. That happened here: the summary fix reported success, was lost,
+and I only caught it because I re-read the *output YAML* rather than trusting the script's log.
+Verify the artifact, not the transcript.
+
+No REMOVE changed in any round. The human-deletion argument was load-bearing throughout.
