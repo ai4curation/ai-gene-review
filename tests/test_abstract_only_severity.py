@@ -243,3 +243,46 @@ def test_an_uncached_reference_does_not_get_impossible_advice(tmp_path: Path, mo
     suggestion = issue.suggestion or ""
     assert "from the cached publication" not in suggestion, "no cached publication exists"
     assert "Cache the publication first" in suggestion
+
+
+def test_clear_publication_caches_clears_all_three(tmp_path: Path):
+    """The documented trap needs a closed loop, not just a note.
+
+    These three predicates are ``lru_cache``d filesystem reads with no invalidation, so a
+    repair workflow that calls ``cache_publication(pmid, force=True)`` and re-validates in
+    the same process reads the pre-repair answer. Exactly that sequence repaired six stub
+    records here and only escaped the trap because the steps ran as separate processes.
+
+    Asserts the helper clears **all three** -- adding a fourth predicate and forgetting it
+    is the obvious next version of this bug.
+    """
+    from ai_gene_review.validation.supporting_text import (
+        cached_full_text_available,
+        cached_record_has_no_body,
+        cached_text_missing,
+        clear_publication_caches,
+    )
+
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_7.md").write_text(
+        "---\npmid: '7'\ntitle: t\nfull_text_available: false\n---\n\n# t\n\n"
+        "## Abstract\n\nCached metadata for local validation.\n"
+    )
+    predicates = (cached_full_text_available, cached_record_has_no_body, cached_text_missing)
+
+    assert cached_full_text_available("PMID:7", pubs) is False
+    assert cached_record_has_no_body("PMID:7", pubs) is True
+    assert cached_text_missing("PMID:7", pubs) is False
+    assert all(f.cache_info().currsize > 0 for f in predicates), "precondition: all warm"
+
+    clear_publication_caches()
+    assert all(f.cache_info().currsize == 0 for f in predicates)
+
+    # and the cleared cache actually re-reads: repair the stub, ask again
+    (pubs / "PMID_7.md").write_text(
+        "---\npmid: '7'\ntitle: t\nfull_text_available: true\n---\n\n# t\n\n"
+        "## Full Text\n\nA real body with enough prose to count as content.\n"
+    )
+    assert cached_full_text_available("PMID:7", pubs) is True, "stale read after clear"
+    assert cached_record_has_no_body("PMID:7", pubs) is False

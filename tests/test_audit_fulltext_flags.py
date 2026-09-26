@@ -459,3 +459,22 @@ def test_a_content_type_only_record_can_make_a_flag_stale(tmp_path, monkeypatch)
     (stale,) = find_stale_flags([review], cached_full_text_availability(pubs))
     assert stale.pmid == "38296963"
     assert stale.suppressed_evidence, "zero findings is the signature the module documents"
+
+
+def test_only_records_with_neither_key_are_absent(tmp_path):
+    """Pin the docstring's contract, which drifted the moment the function widened.
+
+    The opening sentence promised that omitting ``full_text_available`` was enough to be
+    excluded. Widening removed that property and the sentence stayed, fifteen lines above
+    the code contradicting it. Now only a record with neither key is absent, and this test
+    fails if either half changes without the other.
+    """
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_1.md").write_text("---\ntitle: t\nfull_text_available: true\n---\nbody\n")
+    (pubs / "PMID_2.md").write_text("---\ntitle: t\ncontent_type: full_text_xml\n---\nbody\n")
+    (pubs / "PMID_3.md").write_text("---\ntitle: t\n---\nbody\n")
+
+    av = cached_full_text_availability(pubs)
+    assert set(av) == {"1", "2"}, "only the record with neither key is absent"
+    assert "3" not in av

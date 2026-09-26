@@ -54,8 +54,11 @@ class StaleFlag:
 def cached_full_text_availability(publications_dir: Path) -> dict[str, bool]:
     """Map PMID -> whether its cached record reports full text.
 
-    PMIDs whose cache omits ``full_text_available`` are absent from the result, so callers
-    cannot mistake "not recorded" for "not available".
+    Only PMIDs whose cache records **neither** ``full_text_available`` nor ``content_type``
+    are absent from the result, so a caller still cannot mistake "not recorded" for "not
+    available". This sentence used to promise that omitting ``full_text_available`` alone was
+    enough to be excluded; widening the function below removed that property, and the
+    docstring kept promising it fifteen lines above the code that contradicts it.
 
     The key is read from the ``---``-delimited frontmatter block only, because full text can
     quote the string in prose. An earlier version guarded against that by truncating the read at
@@ -64,8 +67,9 @@ def cached_full_text_availability(publications_dir: Path) -> dict[str, bool]:
 
     When ``full_text_available`` is absent, ``content_type`` is consulted through the same
     ``NO_FULL_TEXT_CONTENT_TYPES`` negative list the validator uses. Skipping those records
-    was right while ``content_type`` was unreadable here, but 1138 records omit the key and
-    at least 242 of them name a full-text ``content_type`` -- so the audit and the validator
+    was right while ``content_type`` was unreadable here, but of the 905 ``PMID_*.md``
+    records omitting the key, 903 name a ``content_type`` and **242** of those are a
+    full-text one (661 resolve False, 2 have neither key) -- so the audit and the validator
     disagreed by construction, and the audit's half of the disagreement is the one that
     hides false flags. The live case that forced this: ``PMID:38296963`` is
     ``content_type: full_text_pdf`` with a gold-OA local PDF, and carried the identical
