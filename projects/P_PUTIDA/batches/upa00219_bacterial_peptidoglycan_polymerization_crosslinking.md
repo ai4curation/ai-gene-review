@@ -55,9 +55,16 @@ autolink_gene_symbols: false
   proteolysis.
 - The lateral Rod system, class-A PBP branch, MtgA, and DacA are optional at
   the reusable bacterial boundary even though KT2440 contains all four.
-- PBP4/DacB endopeptidation and YkuD-family L,D-transpeptidation are adjacent
-  crosslink-remodeling systems. They will be curated as a separate reusable
-  module rather than appended as isolated steps here.
+- PBP4/DacB endopeptidation is an adjacent crosslink-remodeling system, curated
+  separately as
+  [low molecular mass PBP peptidoglycan hydrolysis](../../../modules/low_molecular_mass_pbp_peptidoglycan_hydrolysis.yaml)
+  ([#2850](https://github.com/ai4curation/ai-gene-review/pull/2850), merged
+  while this batch was open) rather than appended as isolated steps here. That
+  module also claims pentapeptide stem trimming, with DacB/PBP4 and PbpG/PBP7 as
+  its exemplars and no DacA; the optional DacA step retained here is the same
+  reaction seen from the polymerization boundary, and the overlap is recorded in
+  this module's `notes`.
+- YkuD-family L,D-transpeptidation remains deferred to a future reusable module.
 
 ## Initial Annotation Risks
 
