@@ -689,3 +689,53 @@ def test_the_doi_converter_still_derives_the_flag_when_unstated(tmp_path):
     )
     assert convert_doi_publication(src, tmp_path, pmid="999998") is True
     assert "full_text_available: true" in (tmp_path / "PMID_999998.md").read_text()
+
+
+def test_the_doi_converter_does_not_lift_a_citation_dump_into_the_abstract(tmp_path):
+    """The second harm, named in a commit message and then not fixed.
+
+    `to_markdown` emits the lifted `## Content` as `## Abstract` with no availability test,
+    and for an abstract-only record the validator tells authors to "quote a verbatim
+    substring of the cached abstract" -- so a citation export lifted here becomes quotable
+    and a quote from its `N2  -` line verifies. Conversion also drops `content_type`,
+    `full_text_provider`, `full_text_url` and `oa_status`, so the marker is the last signal
+    left that the body is junk.
+    """
+    from ai_gene_review.etl.publication import convert_doi_publication
+
+    src = tmp_path / "DOI_10.1234_z.md"
+    src.write_text(
+        "---\ndoi: 10.1234/z\npmid: '999997'\ntitle: t\n"
+        "content_type: full_text_html\nfull_text_available: false\n---\n\n"
+        f"## Content\n\n{_LANDING_PAGE_BODY}\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999997") is True
+    out = (tmp_path / "PMID_999997.md").read_text()
+    assert "TY  - JOUR" not in out, "a citation export must not become the abstract"
+    assert "No abstract available." in out
+
+
+def test_the_doi_converter_still_lifts_a_real_abstract(tmp_path):
+    """Narrow: genuine `## Content` prose is still carried across."""
+    from ai_gene_review.etl.publication import convert_doi_publication
+
+    src = tmp_path / "DOI_10.1234_w.md"
+    src.write_text(
+        "---\ndoi: 10.1234/w\npmid: '999996'\ntitle: t\ncontent_type: abstract_only\n---\n\n"
+        "## Content\n\nWe show that CheZ accelerates dephosphorylation of CheY-P.\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999996") is True
+    assert "accelerates dephosphorylation" in (tmp_path / "PMID_999996.md").read_text()
+
+
+def test_a_null_content_type_fails_closed(tmp_path):
+    """`str(None).lower()` is "none", which is not in the negative list -- so it failed open."""
+    from ai_gene_review.etl.publication import convert_doi_publication
+
+    src = tmp_path / "DOI_10.1234_v.md"
+    src.write_text(
+        "---\ndoi: 10.1234/v\npmid: '999995'\ntitle: t\ncontent_type:\n---\n\n"
+        "## Content\n\nSome prose.\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999995") is True
+    assert "full_text_available: false" in (tmp_path / "PMID_999995.md").read_text()

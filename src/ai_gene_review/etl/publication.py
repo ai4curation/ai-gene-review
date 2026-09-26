@@ -48,6 +48,9 @@ import yaml
 from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel
 import fitz  # type: ignore  # PyMuPDF
+
+# No cycle: validation/supporting_text imports only stdlib and yaml.
+from ai_gene_review.validation.supporting_text import NO_FULL_TEXT_CONTENT_TYPES
 from PyPDF2 import PdfReader
 from Bio import Entrez  # type: ignore[import-untyped]
 
@@ -345,21 +348,32 @@ def convert_doi_publication(
     # `NO_FULL_TEXT_CONTENT_TYPES` was authoritative elsewhere, which makes the constant
     # authoritative in name only -- a new value would diverge this converter from both the
     # validator and the flag audit.
-    from ai_gene_review.validation.supporting_text import NO_FULL_TEXT_CONTENT_TYPES
-
     declared = frontmatter.get("full_text_available")
     content_type = frontmatter.get("content_type", "unavailable")
     if isinstance(declared, bool):
         full_text_available = declared
+    elif isinstance(content_type, str):
+        full_text_available = content_type.lower() not in NO_FULL_TEXT_CONTENT_TYPES
     else:
-        full_text_available = str(content_type).lower() not in NO_FULL_TEXT_CONTENT_TYPES
+        # Mirror cached_full_text_available, which returns None for a non-string
+        # content_type. `str(content_type).lower()` turned an explicit `content_type:`
+        # (null) into "none", which is not in the negative list, so the record failed
+        # *open* and was recorded as having full text.
+        full_text_available = False
 
     # Extract abstract from body if present
     body = parts[2]
     abstract = ""
     if "## Content" in body:
         abstract_section = body.split("## Content", 1)[1].strip()
-        if abstract_section:
+        # The lift is guarded for the same reason the flag is. `to_markdown` emits this
+        # as `## Abstract` with no availability test, and for an abstract-only record the
+        # validator tells authors to "quote a verbatim substring of the cached abstract" --
+        # so a citation export lifted here becomes quotable text and a quote from its
+        # `N2  -` line verifies. Conversion also drops content_type, full_text_provider,
+        # full_text_url and oa_status, so `TY  - JOUR` is the only surviving signal that
+        # the body is junk; checking it here is the last chance to notice.
+        if abstract_section and not _carries_stub_marker(abstract_section):
             abstract = abstract_section
     if not abstract:
         abstract = "No abstract available."
@@ -421,6 +435,13 @@ def get_cached_publication(
     # For now, return None to always fetch fresh for full data
     # Could implement full markdown parsing if needed
     return None
+
+
+def _carries_stub_marker(text: str) -> bool:
+    """True when *text* is a paywall stub, landing page or citation export, not prose."""
+    from ai_gene_review.etl.publication_warm import FULL_TEXT_STUB_MARKERS
+
+    return any(marker in text for marker in FULL_TEXT_STUB_MARKERS)
 
 
 def accept_full_text(content: str | None, is_complete: bool, abstract: str) -> bool:
@@ -1037,6 +1058,20 @@ def cache_publication(
     if not publication:
         print(f"Failed to fetch PMID {pmid}")
         return False
+
+    # A forced re-fetch must not destroy good cached full text when the new fetch is
+    # rejected. `force=True` is what the validator's error message recommends, and this PR
+    # ran it over six records; before the acceptance guard a rejected body still produced
+    # `full_text` and the question did not arise, but now it can overwrite a real body with
+    # nothing. Keeping the existing record is the conservative side of a destructive edit.
+    if output_file.exists() and not publication.full_text_available:
+        existing = output_file.read_text()
+        if "\n## Full Text" in existing:
+            print(
+                f"PMID {pmid}: re-fetch returned no usable full text; keeping the "
+                f"existing cached body"
+            )
+            return True
 
     # Write to file
     output_file.write_text(publication.to_markdown())
