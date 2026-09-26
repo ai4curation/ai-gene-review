@@ -125,7 +125,7 @@ def find_warm_candidates(
         if frontmatter.get("full_text_attempted") and not include_attempted:
             continue
         has_full_text = bool(frontmatter.get("full_text_available")) and (
-            FULL_TEXT_HEADER in body
+            _full_text_section_start(body) != -1
         )
         if has_full_text:
             continue
@@ -280,20 +280,22 @@ def is_usable_full_text(text: str, body: str) -> bool:
 
 
 def _full_text_section_start(body: str) -> int:
-    """Index of the ``## Full Text`` heading in *body*, or -1.
+    r"""Index of the ``## Full Text`` heading in *body*, or -1.
 
-    Anchored on a line start, not a bare substring. ``body.find("## Full Text")`` also
-    matches inside ``### Full Text Notes`` -- it lands on the ``## Full Text`` at offset
-    one -- and the caller truncates there, destroying everything between that point and
-    the real section. Same substring-for-structure shape as the truncation removed from
-    ``_existing_accepted_full_text``; this is the sibling function that writes the section
-    the other one reads.
+    Matches a **whole line**, not a bare substring or a line prefix.
+
+    ``body.find("## Full Text")`` also matches inside ``### Full Text Notes`` -- it lands
+    on the ``## Full Text`` at offset one -- and the caller truncates there, destroying
+    everything between that point and the real section. Same substring-for-structure shape
+    as the truncation removed from ``_existing_accepted_full_text``.
+
+    Anchoring only on the left was still not enough for the reader and the writer to agree:
+    the reader requires ``\n## Full Text\n``, so ``## Full Textual analysis`` was a section
+    to this function and invisible to that one. Requiring the line to *end* after the
+    header closes that, and drops a ``startswith`` branch the reader had no equivalent of.
     """
-    if body.startswith(FULL_TEXT_HEADER):
-        return 0
-    marker = "\n" + FULL_TEXT_HEADER
-    index = body.find(marker)
-    return index + 1 if index != -1 else -1
+    match = re.search(rf"^{re.escape(FULL_TEXT_HEADER)}$", body, flags=re.MULTILINE)
+    return match.start() if match else -1
 
 
 def apply_full_text(

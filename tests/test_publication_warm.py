@@ -952,7 +952,6 @@ def test_cache_publication_keeps_a_good_body_when_the_refetch_is_rejected(tmp_pa
     What it does cover, which the earlier helper-level test did not: delete the
     carry-forward block and `"A genuine cached body." in out` fails.
     """
-    from types import SimpleNamespace
     import ai_gene_review.etl.publication as pub
 
     existing = tmp_path / "PMID_3.md"
@@ -1070,3 +1069,59 @@ def test_apply_full_text_replaces_only_the_real_section(tmp_path):
     assert "keep me" in out, "content before the section must not be truncated away"
     assert "brand new body text" in out
     assert "old body" not in out
+
+
+@pytest.mark.parametrize(
+    "label,body,expect_section",
+    [
+        ("deeper heading first", "## Abstract\na\n\n### Full Text Notes\nx\n\n## Full Text\n\nb\n", True),
+        ("longer heading", "## Abstract\na\n\n## Full Textual analysis\n\nprose\n", False),
+        ("real section", "## Abstract\na\n\n## Full Text\n\nb\n", True),
+        ("absent", "## Abstract\na\n", False),
+        # Both reject this, which is the point: the writer was briefly more permissive
+        # than the reader and this case caught it. to_markdown strips trailing
+        # whitespace, so no generated record can carry it.
+        ("trailing spaces on the header", "## Abstract\na\n\n## Full Text  \n\nb\n", False),
+    ],
+)
+def test_the_reader_and_the_writer_agree_on_what_a_heading_is(
+    tmp_path, label, body, expect_section
+):
+    r"""The pair that writes and reads this section must not hold two spellings.
+
+    Anchoring the writer only on the left was not enough: the reader requires
+    `\n## Full Text\n`, so `## Full Textual analysis` was a section to the writer and
+    invisible to the reader. The writer would have truncated there; the reader would have
+    carried nothing forward. Both now match a whole line.
+    """
+    from ai_gene_review.etl.publication_warm import _full_text_section_start
+    from ai_gene_review.etl.publication import _existing_accepted_full_text
+
+    rec = tmp_path / "PMID_1.md"
+    rec.write_text("---\npmid: '1'\nfull_text_available: true\n---\n" + body)
+
+    writer_found = _full_text_section_start(body) != -1
+    reader_found = _existing_accepted_full_text(rec)[0] is not None
+
+    assert writer_found is expect_section, f"writer disagrees on: {label}"
+    assert reader_found is expect_section, f"reader disagrees on: {label}"
+
+
+def test_the_candidate_scans_use_the_structural_finder():
+    """Wiring: all four places that ask "is there a Full Text section" must agree.
+
+    `find_warm_candidates` and `publication_refresh` still tested `"## Full Text" in body`
+    as a bare substring -- the first eleven lines from the helper, in a function whose
+    docstring makes the structural claim it was testing non-structurally.
+    """
+    import inspect
+    from ai_gene_review.etl import publication_warm as warm
+    from ai_gene_review.etl import publication_refresh as refresh
+
+    for fn in (warm.find_warm_candidates, refresh.find_pmc_candidates):
+        src = inspect.getsource(fn)
+        assert "_full_text_section_start" in src, f"{fn.__name__} uses a bare substring"
+        # No negative string assertion here: the first version asserted
+        # `'"## Full Text" in body' not in src` and failed against the explanatory
+        # *comment* naming the old test. A source check that a prose mention can break is
+        # not a check worth having.
