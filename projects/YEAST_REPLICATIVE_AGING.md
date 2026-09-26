@@ -3,9 +3,27 @@ title: "Yeast Replicative Aging & mRNA Processing"
 maturity: COMPLETE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+genes: [SIR2, SIR3, SIR4, HST2, HST3, PNC1, HAP4, SOD2, CAT2, CYC1, LSM1, DBP5, NMD3, SUI2, RAS2, TOR1, RIM15, SPA2, UBP3, ATG7]
 ---
 
 # Yeast Replicative Aging & mRNA Processing
+
+**Bottom line:** a budding yeast mother cell stops dividing after a limited
+number of divisions, and the genes that set this replicative lifespan span
+NAD+/sirtuin silencing, respiration and ROS defence, mRNA decay and
+translation, nutrient signalling, and proteostasis. We reviewed every existing
+GO annotation on 20 *S. cerevisiae* genes chosen across those five areas, to
+check how well GO captures the mechanism of each gene rather than its lifespan
+phenotype. All 20 reviews are complete. The current review files hold 720
+annotation rows: 480 ACCEPT (67%), 85 KEEP_AS_NON_CORE, 68
+MARK_AS_OVER_ANNOTATED, 45 REMOVE, 38 MODIFY and 4 UNDECIDED. None of the 97
+generic `protein binding` rows was accepted, and mechanistically wrong
+electronic terms were removed (SPA2 actomyosin contractile ring, DBP5 protein
+transport, LSM1 mRNA processing) or redirected (RIM15 cell-cycle terms to
+positive regulation of G1 to G0 transition). The phase tallies and notes below
+(842 rows, 510 ACCEPT, "200+" protein binding rows) were recorded during
+curation in December 2025 and do not match the current files; trust the counts
+here.
 
 ## Overview
 
@@ -45,23 +63,23 @@ Last updated: 2025-12-30
 
 ### NAD+/Sirtuin Pathway (Longevity Core)
 - [x] SIR2 - NAD-dependent histone deacetylase (master longevity regulator) ✓ COMPLETED
-- [ ] SIR3 - Component of silent chromatin complexes
-- [ ] SIR4 - Component of silent chromatin complexes
-- [ ] HST2 - Histone deacetylase, mitochondrial sirtuin
-- [ ] HST3 - NAD-dependent deacetylase
+- [x] SIR3 - Component of silent chromatin complexes
+- [x] SIR4 - Component of silent chromatin complexes
+- [x] HST2 - Histone deacetylase, mitochondrial sirtuin
+- [x] HST3 - NAD-dependent deacetylase
 - [x] PNC1 - Nicotinamidase (recycles NAD+) ✓ COMPLETED
 
 ### mRNA Processing & Translation
-- [ ] LSM1 - U6 snRNP-associated protein (mRNA decapping)
-- [ ] DBP5 - RNA helicase (mRNA export)
-- [ ] NMD3 - 60S preribosomal protein (translation)
-- [ ] SUI2 - Eukaryotic initiation factor 2 alpha subunit (translation initiation)
+- [x] LSM1 - U6 snRNP-associated protein (mRNA decapping)
+- [x] DBP5 - RNA helicase (mRNA export)
+- [x] NMD3 - 60S preribosomal protein (translation)
+- [x] SUI2 - Eukaryotic initiation factor 2 alpha subunit (translation initiation)
 
 ### Mitochondrial Function & ROS
-- [ ] HAP4 - Transcriptional activator of respiratory genes
-- [ ] SOD2 - Manganese superoxide dismutase (mitochondrial)
-- [ ] CAT2 - Peroxisomal catalase
-- [ ] CYC1 - Cytochrome c (respiration)
+- [x] HAP4 - Transcriptional activator of respiratory genes
+- [x] SOD2 - Manganese superoxide dismutase (mitochondrial)
+- [x] CAT2 - Peroxisomal catalase
+- [x] CYC1 - Cytochrome c (respiration)
 
 ### Growth Control & Signaling
 - [x] RAS2 - Ras GTPase (regulates lifespan) ✓ COMPLETED
