@@ -160,3 +160,51 @@ for as a class.
 
 Final: 8 rows, 7 ACCEPT / 1 REMOVE. 20 distinct quotes (39 instances) verified, 21 of them
 `file:` instances CI does not check.
+
+## Round 3 (review feedback)
+
+Two items, both small, plus a correction the reviewer made to their own round-1 suggestion.
+
+### The UniProt findings block claimed more than its quote could show
+
+The `references[]` finding said "every subcellular location in the human entry is by similarity to
+the worm protein" and attached it to a quote naming **one** location and carrying **no** ECO code.
+
+The reviewer's explanation of why no quote *can* prove it is worth recording, because it is a
+property of the flat-file format rather than of this entry. UniProt puts each statement's ECO tag
+**after** it, and the block wraps:
+
+```
+CC   -!- SUBCELLULAR LOCATION: Apical cell membrane
+CC       {ECO:0000250|UniProtKB:A0A1C3NSL9}. Cell projection, cilium
+CC       {ECO:0000250|UniProtKB:A0A1C3NSL9}. Cell junction, adherens junction
+CC       {ECO:0000250|UniProtKB:A0A1C3NSL9}.
+```
+
+Every statement is separated from its own tag by a `CC` wrap, and `CC` is a token, not whitespace —
+so **no contiguous substring can carry both a location and its evidence code**. The finding is now
+scoped to what the quote shows; the three-way claim stays in `review_notes`, where it was already
+correct and needs no quote.
+
+Same wording fixed in the cilium row's prose, which said "that line carries
+ECO:0000250|UniProtKB:A0A1C3NSL9" — the line quoted actually carries the *previous* statement's
+tag. And the FUNCTION quote no longer truncates mid-phrase.
+
+### No history record
+
+CLAUDE.md requires one for any PR creating curated content, and `history/genes/human/AJM1/` did
+not exist. Added, covering all three rounds. CI does not enforce this, which is presumably why it
+slipped — worth remembering that "validation passed" does not mean "the conventions were followed".
+
+### The donor snapshot had no references[] entry
+
+It was cited seven times — the most load-bearing evidence in the review — with no
+`reference_review`. Now has one, which also records the caveat the reviewer raised: the
+`supporting_text` values quote the `claims_this_supports` strings rather than the data rows, and
+that is only legitimate because each claim carries a `check` field naming the row that would
+falsify it. If the format spreads, that field must stay mandatory.
+
+**Process note.** The donor reference was added once in round 2 and silently lost — same
+write-at-end bug as the ADM5 summary fix. I have switched to a patch helper that writes and
+verifies after **each** substitution rather than batching, because the "ok:" log line had been
+lying to me twice.
