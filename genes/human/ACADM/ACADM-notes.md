@@ -277,3 +277,7 @@ source; the final validation report must be interpreted with this cache limitati
 Final targeted validation passes with one reference warning: `Could not fetch reference: PMID:18459129`. Rendering completes successfully. This operational limitation remains explicit; there are no schema, ontology, quotation or source-assertion errors.
 
 Final independent signoff found no remaining blocking biological concern across all 50 rows, core functions, reference findings and notes. The missing PMID cache remains the publication limitation.
+
+## PR #3156 participation-test follow-up
+
+The earlier glycogen-biosynthesis OVER_ANNOTATED decision is superseded by REMOVE. This electronic transfer assigns ACADM to glycogen synthesis, whereas the recovered source describes G6P flux repartitioning and no ACADM-performed synthesis step. The reason and ROLE_CONFLATION assessment therefore support removing this process assertion. Regulation of gluconeogenesis remains a separate, context-dependent claim. Final counts are 38 ACCEPT, 6 KEEP_AS_NON_CORE, 4 UNDECIDED, 1 REMOVE and 1 MODIFY; all 50 source assertions are unchanged. PMID:18459129 still requires its normal cache fetch before this draft can become ready.
