@@ -121,3 +121,86 @@ def test_error_message_offers_a_real_remedy(abstract_only_cache):
     assert "abstract-only cache" in issue.message
     assert "full text into the cache" in suggestion
     assert "full_text_unavailable" not in suggestion
+
+
+@pytest.fixture
+def stub_cache(tmp_path: Path) -> Path:
+    """A cached record that has neither full text nor an abstract body.
+
+    Six of these existed in the repository, each written by a failed metadata fetch:
+    ``authors: []`` and a body of "Cached metadata for local validation.". They are not
+    abstract-only papers -- they are broken records.
+    """
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_2.md").write_text(
+        "---\npmid: '2'\ntitle: A stub\nauthors: []\nfull_text_available: false\n"
+        "full_text_attempted: true\n---\n\n# A stub\n\n## Abstract\n\n"
+        "Cached metadata for local validation.\n"
+    )
+    return pubs
+
+
+def _issue(doc, pubs):
+    report = ValidationReport(file_path=Path("t.yaml"), is_valid=True)
+    validate_reference_finding_supporting_text(doc, report, pubs)
+    (issue,) = [
+        i for i in report.issues if i.check_type == "reference_finding_supporting_text"
+    ]
+    return issue
+
+
+def test_a_bodyless_stub_does_not_get_impossible_advice(stub_cache):
+    """"Quote the cached abstract" is not a remedy when there is no abstract.
+
+    The old message sent an author to text that does not exist. The real fault is a failed
+    metadata fetch, and the fix is ``cache_publication(pmid, force=True)`` -- which re-fetches
+    by PMID regardless of ``full_text_attempted``. Doing exactly that to the six stubs in this
+    repository recovered full text for three of them and real abstracts for the rest, which
+    turned two deleted quotes on wspR back into verifiable ones.
+    """
+    doc: dict[str, Any] = {
+        "references": [{"id": "PMID:2", "findings": [{"statement": "s", "supporting_text": "anything"}]}]
+    }
+    issue = _issue(doc, stub_cache)
+    assert issue.severity == ValidationSeverity.ERROR
+    assert "no abstract or full-text body" in issue.message
+    suggestion = issue.suggestion or ""
+    assert "force=True" in suggestion
+    assert "cached abstract" not in suggestion, "the impossible advice must not appear here"
+
+
+def test_an_abstract_only_record_keeps_the_ordinary_advice(abstract_only_cache):
+    """The discriminator has to be narrow: a real abstract still gets the quote-it advice."""
+    doc: dict[str, Any] = {
+        "references": [
+            {"id": "PMID:1", "findings": [{"statement": "s", "supporting_text": "not in there"}]}
+        ]
+    }
+    issue = _issue(doc, abstract_only_cache)
+    assert "abstract-only cache" in issue.message
+    assert "quote a verbatim substring of the cached abstract" in (issue.suggestion or "").lower()
+
+
+def test_a_full_text_record_gets_the_verbatim_substring_message(tmp_path: Path):
+    """The third branch, which no test pinned.
+
+    When the cache *has* full text, a mismatch is neither "unfetchable" nor "abstract-only" --
+    it is simply not a substring, and the message must say so rather than blaming cache state
+    the author could fix.
+    """
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_3.md").write_text(
+        "---\npmid: '3'\ntitle: Full paper\nfull_text_available: true\n---\n\n"
+        "# Full paper\n\n## Full Text\n\nThe protein localises to the nucleus in all conditions.\n"
+    )
+    doc: dict[str, Any] = {
+        "references": [
+            {"id": "PMID:3", "findings": [{"statement": "s", "supporting_text": "a sentence nobody wrote"}]}
+        ]
+    }
+    issue = _issue(doc, pubs)
+    assert issue.severity == ValidationSeverity.ERROR
+    assert "not a verbatim publication substring" in issue.message
+    assert "exact substring from the cached publication" in (issue.suggestion or "")

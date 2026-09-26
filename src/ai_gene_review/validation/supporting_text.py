@@ -4,6 +4,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
+import re
+
 import yaml
 
 
@@ -62,6 +64,52 @@ def is_unfetchable(message: str) -> bool:
 
 
 @lru_cache(maxsize=None)
+def cached_record_has_no_body(
+    reference_id: str,
+    publications_dir: Path,
+) -> bool:
+    """True when the cached record carries no prose worth quoting.
+
+    A record can be cached, report ``full_text_available: false``, and still have nothing in
+    it -- six such stubs existed in this repository, each with ``authors: []`` and a body of
+    ``"Cached metadata for local validation."``. Telling an author to "quote a verbatim
+    substring of the cached abstract" is impossible advice there, and the remedy is different:
+    the metadata fetch failed, so the record needs re-fetching rather than a better quote.
+
+    Deliberately conservative: this keys on the stub's literal signature and on an empty
+    body, not on a length threshold. A first version used ``len(body) < 80`` and immediately
+    misclassified a genuinely short abstract in the test suite as a stub -- short abstracts
+    exist, and telling their authors to re-fetch a perfectly good record is the same class of
+    impossible advice this function was added to remove.
+    """
+    prefix, separator, _ = reference_id.partition(":")
+    if not separator or prefix.upper() not in {"PMID", "DOI"}:
+        return False
+    text = _cached_text(reference_id, publications_dir)
+    if text is None:
+        return False
+    body = text.split("---", 2)[-1]
+    body = re.sub(r"^#.*$", "", body, flags=re.M)          # drop the title heading
+    body = re.sub(r"^##\s*\w[\w \t]*$", "", body, flags=re.M)  # drop section headings
+    body = re.sub(r"\s+", " ", body).strip()
+    return not body or body == "Cached metadata for local validation."
+
+
+def _cached_text(reference_id: str, publications_dir: Path) -> Optional[str]:
+    """Raw text of the cached record for *reference_id*, or None."""
+    prefix, separator, identifier = reference_id.partition(":")
+    if not separator:
+        return None
+    if prefix.upper() == "PMID":
+        filename = f"PMID_{identifier}.md"
+    elif prefix.upper() == "DOI":
+        filename = f"DOI_{identifier.replace('/', '_')}.md"
+    else:
+        return None
+    path = publications_dir / filename
+    return path.read_text() if path.exists() else None
+
+
 def cached_full_text_available(
     reference_id: str,
     publications_dir: Path,

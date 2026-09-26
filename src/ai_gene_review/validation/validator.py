@@ -37,6 +37,7 @@ from ai_gene_review.validation.validation_report import (
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.supporting_text import (
+    cached_record_has_no_body,
     LITERATURE_PREFIXES,
     build_supporting_text_validator,
     cached_full_text_available,
@@ -168,6 +169,21 @@ def validate_reference_finding_supporting_text(
                 suggestion = (
                     "Cache the publication so the quote can be verified, or quote a "
                     "substring of text that is cached"
+                )
+            elif cache_has_full_text is False and cached_record_has_no_body(
+                reference_id, resolved_publications_dir
+            ):
+                # A stub: cached, reports no full text, and has no abstract either. Telling
+                # the author to quote the cached abstract is impossible advice -- there is
+                # no abstract. The metadata fetch failed, so the remedy is to re-fetch.
+                prefix = (
+                    "Finding supporting text cannot be checked: the cached record has no "
+                    "abstract or full-text body"
+                )
+                suggestion = (
+                    "Re-fetch the record with cache_publication(pmid, force=True), which "
+                    "re-downloads by PMID regardless of the full_text_attempted tag, then "
+                    "re-quote from the repaired cache"
                 )
             elif cache_has_full_text is False:
                 prefix = (
