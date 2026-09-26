@@ -226,3 +226,60 @@ and I only caught it because I re-read the *output YAML* rather than trusting th
 Verify the artifact, not the transcript.
 
 No REMOVE changed in any round. The human-deletion argument was load-bearing throughout.
+
+## Round 4 (review feedback)
+
+Two items, and the first is the more serious because it was **self-contradicting structured data**,
+not just prose.
+
+### The shared paralogy paragraph was false on four of six rows
+
+I wrote one preamble asserting that the donor set is "dominated by paralogs rather than by ADM5
+orthologs" and applied it to all six REMOVEs. Checking the actual `supporting_entities`:
+
+| Row | A5LHG2 (true ortholog)? | Q7Z4H4 (ADM2)? | paralogy claim |
+|---|---|---|---|
+| GO:0003073 | **yes** | no | false |
+| GO:0007189 | **yes** | no | false |
+| GO:0010460 | **yes** | no | false |
+| GO:0035809 | **yes** | no | false |
+| GO:0005179 | no | yes | true |
+| GO:1990410 | no | yes | true |
+
+So on four rows the boilerplate contradicted the row's own `propagation_review` — which calls
+A5LHG2 "the true ortholog" — and its own `supporting_entities`, and the donor table in my own PR
+body.
+
+Worse, **`WRONG_ORTHOLOG_OR_PARALOG` was in all six `failure_modes` lists**, and that field feeds
+the IBA audit aggregation. On the four orthologous rows the propagation failed through
+lineage-specific loss in the target, not donor misidentification. Corrected: the preamble is now
+split into `PARALOG` (no ADM5 donor present) and `ORTHOLOG` (donor present, target-side loss),
+and `WRONG_ORTHOLOG_OR_PARALOG` survives only on the two rows where it is true.
+
+**The lesson is about shared preambles.** A paragraph written once and pasted into six rows is
+not checked against any of them. The same structural risk was flagged on AJM1 today, where a
+~160-word preamble repeats across eight rows. There it happens to be true everywhere; here it
+was false in two thirds of its uses.
+
+### The retraction did not reach the fields that render
+
+Third instance of this shape in one PR. `description` still said "so its mammalian receptor is
+unidentified" and a `suggested_question` still said the term "may be wrong for AM5 in every
+mammal" — both stating as settled exactly what the `GO:1990410` reason had just recorded as open.
+Both now say the evidence conflicts and that this review takes no position.
+
+### Suggestions
+
+- **The mirror-image omission.** Having added the heart-failure paper's pro-receptor sentence, I
+  had left out its opposite:
+  > [PMID:22087608 "Although plasma cAMP concentrations tended to increase during the HD AM5 infusion in the present study, levels did not rise significantly above control, and the LD infusion period was characterized by clear-cut reductions in cAMP."]
+
+  Both are now recorded. The paper argues both sides and should be represented as doing so.
+- **The Xenopus quote did not support its statement.** Replaced with the operative result four
+  lines down: [PMID:33711314 "In HEK293T cells expressing clr-ramp3, CRE-Luc reporter activity was increased by the treatment with am2 at the lowest dose, but with am5 and am1 at higher dose."]
+- **"An earlier draft" / "round 2" phrasing removed** from `review.reason` and from the one
+  reference note carrying it. A reason field should read as curation, not as PR history; the
+  round-by-round narrative belongs here and in the history record.
+
+Final: 8 rows, 6 REMOVE / 2 KEEP_AS_NON_CORE, unchanged across four rounds. 26 distinct quotes
+(57 instances) verified.
