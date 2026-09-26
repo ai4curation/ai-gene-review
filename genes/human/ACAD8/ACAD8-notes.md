@@ -168,3 +168,32 @@ Logs are `/tmp/ACAD8-falcon.log`, `/tmp/ACAD8-falcon-writable-runtime.log`,
 independent review and the exact publication manifest are recorded with the new history session.
 
 The coordinator independently read all 23 annotation decisions and the core synthesis, agreeing with the biological judgments. Final citation cleanup grounds the FAD row in the available cached UniProt cofactor/structure record; the unsuccessful structural-paper fetch does not become a claim of additional primary full-text coverage. The manual full-text-unavailable flag on BioPlex reflects the incomplete narrative extraction, without altering its cached metadata.
+
+
+## 2026-09-26 PR #3151 evidence-scope follow-up
+
+The external review identified over-refinement of five mitochondrial-location
+source rows. They now ACCEPT mitochondrion at the original evidence resolution;
+the separately supported mitochondrial-matrix core and five Reactome matrix rows
+remain unchanged. Import assays, MitoCoP and the PAINT mitochondrial node are not
+represented as direct matrix-localization experiments.
+
+Rechecked the [live GO:0016937 hierarchy](https://amigo.geneontology.org/amigo/term/GO%3A0016937):
+GO:0003853 is its direct child. The broad GO activity therefore encompasses ACAD8's
+core isobutyryl reaction and is now ACCEPT, while RHEA:31287 retains its narrower
+propanoyl-to-acryloyl side-reaction provenance. Replacing that source reaction with
+2-methyl chemistry would be incorrect. Independent biological consultation agreed
+that the action should grade the asserted GO term while the reason preserves the
+specific source reaction. Older sibling-review wording that describes these GO
+terms as siblings is not current ontology evidence.
+
+The lipid-to-valine replacement is explicitly a cross-branch pathway correction.
+Removed the full_text_unavailable flag from the BioPlex reference: its missing
+pair-specific supplementary evidence is documented separately from its available
+article narrative. The transcription question now asks for a biological mechanism.
+Uninspected InterPro rule details remain UNRESOLVED: source identifiers and their
+protein-domain labels are recovered, but a sibling review's acceptance is not an
+independent reconstruction of each mapping rule. ARBA predicates remain opaque.
+
+All 23 original source-field sets are unchanged. Final actions: 17 ACCEPT,
+5 MODIFY and 1 REMOVE; no NEW annotations. No cached source or provider file was edited.
