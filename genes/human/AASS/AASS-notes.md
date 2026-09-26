@@ -95,3 +95,171 @@ Tissue: expressed broadly, highest in liver. Induced by starvation (by similarit
 - PMID:34800366 abstract: "mitochondrial high-confidence proteome of >1,100 proteins
   (MitoCoP)".
 - file: UniProt CATALYTIC ACTIVITY / FUNCTION / SUBCELLULAR LOCATION / DOMAIN sections.
+
+## 2026-09-25 evidence-based re-review
+
+This section supersedes the older annotation judgments above where they differ.
+The 23 seeded annotation term/evidence/reference/qualifier tuples were preserved.
+All annotations were reassessed; none was added. The two enzymatic reactions in
+lysine degradation remain the two core functions. The human gene review is now
+complete, with explicit unresolved evidence rather than unreviewed rows.
+
+### Correct the cofactor, not the physiological direction
+
+The old GO:0004754 rationale and proposed GO:0047131 replacement were incorrect.
+QuickGO definitions were retrieved on 2026-09-25:
+
+| Term | Cofactor pair | Products of saccharopine cleavage |
+|---|---|---|
+| GO:0004754 | NAD+/NADH | L-lysine + 2-oxoglutarate |
+| GO:0047130 | NADP+/NADPH | L-lysine + 2-oxoglutarate |
+| GO:0047131 | NAD+/NADH | L-glutamate + allysine |
+
+[PMID:36128717](https://pubmed.ncbi.nlm.nih.gov/36128717/) directly assays human
+full-length AASS expressed in HEK293 cells and isolated LOR domains. Both forward
+and reverse reactions were measured, with the forward reaction faster. The
+paper explicitly distinguishes human NADPH usage from yeast NADH usage. The
+physiological catabolic direction does not invalidate a reversible reaction
+whose GO name is written in the opposite direction. GO:0004754 therefore becomes
+MODIFY to GO:0047130, the NADP-dependent LOR activity, rather than to the different
+C-terminal SDH activity GO:0047131.
+
+The fly source was independently traced in QuickGO: Q9VLX0 has GO:0004754 IDA
+from [PMID:18695041](https://pubmed.ncbi.nlm.nih.gov/18695041/). Its full text
+explicitly describes NADH oxidation by recombinant fly protein with lysine.
+That source is not declared erroneous; its cofactor-specific transfer to human
+is the problem. The donor paper's background statement that mammalian LKR cannot
+run in reverse is superseded by the later direct human measurements. It is not
+used as evidence against the human reverse reaction.
+
+### Fly moonlighting: a supported donor with unresolved transfer
+
+The full PMID:18695041 paper demonstrates fly dLKR/SDH histone H3/H4 binding,
+EcR-B1 recruitment, inhibition of CARMER-mediated H3R17 methylation, promoter
+occupancy, transcriptional repression and dynamic cytosolic/nuclear localization.
+The donor genetic and cell assays are genuine. Its LKR domain supplies the histone
+interaction; its SDH region supplies receptor interaction. Repression is
+separable from metabolic catalysis. This is not histone demethylase activity.
+
+The paper reports 51% sequence identity and 71% similarity to mouse and human
+LKR/SDH. Human AASS retains both domains, so conservation is plausible. However,
+the interaction surfaces were not mapped onto human AASS, the tested recruitment
+context is EcR/Usp, and the donor's targeting mechanism is incompletely defined
+(no nuclear localization signal was identified; partner-dependent shuttling was
+suggested). These are specific unresolved transfer questions, not proof of a
+lineage-specific loss. Human mitochondrial targeting does not exclude a conditional
+nuclear or cytosolic pool. The old claims that these activities are necessarily
+fly-specific or incompatible with mitochondria are withdrawn.
+
+Accordingly, the five ISS annotations for transcriptional repression,
+corepressor activity, histone binding, cytosol and nucleus are UNDECIDED with
+UNRESOLVED propagation/source status. They are not removed or labeled proven
+functional divergence. Their source Q9VLX0 and primary evidence are documented
+separately from the human uncertainty.
+
+### Localization and source tracing
+
+- Cytoplasm GO:0005737 is ACCEPT. QuickGO defines it to include other subcellular
+  structures, so a mitochondrial enzyme has this broader location. Broadness
+  alone does not justify over-annotation. The three IBA rows trace to ancestral
+  nodes PTN000123605 (cytoplasm, saccharopine dehydrogenase parent) and PTN000875308
+  (lysine catabolism), not a count of donor proteins. Human AASS being an
+  experimental descendant of the node is expected and is not circular evidence.
+- The Ensembl matrix transfer traces to mouse Q99K67 and ENSMUSP00000031707.
+  QuickGO gives mouse GO:0005759 IDA from PMID:18936211. Its abstract verifies
+  murine hepatic Aass knockdown and lysine catabolism, but not the detailed
+  localization assay. The curator-supported transfer is accepted in the context
+  of convergent mitochondrial-pathway evidence; the inaccessible assay is stated.
+- UniProt SL-0173 and EC/Rhea mapping sources agree with the accepted location and
+  chemistry. ARBA predicates and the separate Ensembl accession chain were not
+  independently reconstructed and their source statuses explicitly remain
+  UNRESOLVED. All 13 propagation blocks contain actual traced source entities.
+- Reactome R-HSA-70938 and R-HSA-70940 were retrieved with the repository's
+  `cache_reactome_pathway` function. Both human reaction summaries explicitly
+  place the AASS homotetramer in the mitochondrial matrix. The summaries are
+  curated pathway evidence, not new direct human localization experiments.
+- PMID:10567240 is a mouse study; its abstract says the bifunctional protein is
+  *likely* mitochondrial. It also reports mouse starvation induction. The old
+  description's unqualified human starvation-induction claim was removed.
+- Supported full-text fetches for PMID:463877, PMID:10775527 and PMID:10567240
+  were retried. XML access was restricted and HTML/PDF fallbacks did not recover
+  full papers. The 1979 abstract supports human fibroblast enzyme deficiency and
+  partial liver purification but says nothing about mitochondrial localization.
+  Its EXP mitochondrial row is UNDECIDED, without rejecting the established
+  mitochondrial role. Enzymatic rows supported directly in the abstract and by
+  later human biochemistry remain ACCEPT. The validator's differing-action
+  warning for mitochondrion is an intentional evidence-access distinction.
+
+### Independent MitoCoP supplementary verification
+
+The full PMID:34800366 manuscript and its publisher supplement were inspected.
+The workbook was retrieved from:
+
+https://ars.els-cdn.com/content/image/1-s2.0-S1550413121005295-mmc2.xlsx
+
+This is Supplementary Table S1 (linked as mmc2.xlsx by the PMC article XML).
+Downloaded workbook SHA-256:
+`10690847c50567e11055d474fbe265fe5d699384f38437acd95734f0a87a9183`.
+It was opened with `openpyxl.load_workbook(..., read_only=True, data_only=True)`;
+row numbers below are one-based Excel rows, with headings in row 2.
+
+| Sheet | Row | Protein Group ID(s) | Simplified protein IDs | Gene name | MitoCoP |
+|---|---|---|---|---|---|
+| (A) All protein groups | 5 | 11286 | Q9UDR5 | AASS | 1 |
+| (B) MitoCoP (1,134 genes) | 5 | 11286 | Q9UDR5 | AASS | 1 |
+
+Sheet (A) additionally has `Identified in this dataset = 1`, Ensembl gene
+ENSG00000008311 and NCBI gene 10157. Sheet (B) classifies AASS under amino acid
+metabolism. This verifies the specific human HTP target assignment, rather than
+using the abstract's description of the overall dataset as if it named AASS.
+The dataset establishes mitochondrial association; it does not by itself prove
+matrix subcompartment or absence of any other pool. The unmodified 13.9 MB
+workbook was inspected locally and is reproducibly accessible from its primary
+source; it is not duplicated into the repository.
+
+### Disease mechanisms and evidence limits
+
+- Human gene identification (PMID:10775527), the patient series
+  [PMID:23570448](https://pubmed.ncbi.nlm.nih.gov/23570448/) and the screened case
+  [PMID:37927488](https://pubmed.ncbi.nlm.nih.gov/37927488/) establish biochemical
+  hyperlysinemia from biallelic AASS defects. The 2013 series separates a possible
+  PTPRZ1 contribution in a contiguous deletion from AASS biochemical deficiency.
+  The 2023 child was doing well at 11 months: that limited follow-up does not
+  establish lifelong penetrance or make all neurological findings causal.
+- [PMID:30573525](https://pubmed.ncbi.nlm.nih.gov/30573525/) provides full primary
+  worm/mouse evidence distinguishing selective LKR impairment from SDH impairment.
+  Mouse R65Q elevates lysine without the severe phenotype; SDH G489E elevates
+  saccharopine and causes mitochondrial damage, growth impairment and early death.
+  The paper's human-AASS worm rescue used an engineered mitochondrial targeting
+  sequence and is not an endogenous human localization experiment.
+- [PMID:35135854](https://pubmed.ncbi.nlm.nih.gov/35135854/) is available here as an
+  abstract. It reports mouse cerebral saccharopine/GPI-associated toxicity. The
+  model findings contextualize the biochemical block; they do not support new
+  direct human neuronal-development or mitochondrial-dynamics GO functions.
+- [PMID:6434529](https://pubmed.ncbi.nlm.nih.gov/6434529/) is abstract-only. Its
+  purification and tetramer inference concern baboon and bovine liver, not a
+  full-length human structure. The 2022 human LOR structures provide published
+  domain evidence. [PMID:42147163](https://pubmed.ncbi.nlm.nih.gov/42147163/) is
+  explicitly a 2026 Research Square PREPRINT reporting full-length human
+  structures and allostery; its primary text was inspected, but provisional
+  allosteric regulation is not promoted into core physiology or a new GO term.
+- The description now separates often mild biochemical hyperlysinemia from
+  experimentally demonstrated saccharopine toxicity in animal models. It does
+  not label every human saccharopinuria presentation either benign or severe.
+
+### Workflow and verification
+
+The annotation-reviewer and core-function-synthesizer procedures were applied.
+Deep research and original-publication caching were launched concurrently. A fresh
+virtual-environment installation race stopped the first research wrapper before
+provider startup; once installation completed, Falcon was started with a
+1200-second timeout. Perplexity was not retried because the project had already
+observed HTTP 401 `insufficient_quota`. Provider output, if returned, is preserved
+as generated and assessed separately from primary-source verification.
+
+The repository-wide baseline had passed 4,975 gene reviews in the coordinator's
+checkout. Targeted validation and a semantic comparison of the 23 original
+annotation tuples are performed in this gene branch; shared project artifacts are
+owned by the coordinator and are not changed here.
+
+Falcon completed successfully in 546.14 seconds (provider metadata), produced its genuine report and artifact, and did not require fallback. Both files are retained unchanged. The report was read in full; its principal chemistry and animal-versus-human disease distinctions corroborate the independently checked studies. It is marked UNVERIFIED as an evidence source: its unnamed-journal Kopec 2017 report was not resolved to a primary publication; its additional 2000 full-text numerical claims and clinical-trial absence were not independently adopted. It also calls AASA the potentially channeled intermediate between the two AASS active sites, whereas that intermediate is saccharopine. Engineered targeting in worm rescue is not used to prove endogenous human localization. The report is not inserted into annotation supported_by fields merely to suppress the validator advisory.
