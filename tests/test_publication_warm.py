@@ -472,3 +472,88 @@ def test_apply_full_text_normalizes_pmc_url(tmp_path: Path) -> None:
         read_frontmatter(path)["full_text_url"]
         == "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC144183"
     )
+
+
+# --- a repository landing page is not full text -------------------------------------------
+#
+# openalex resolved PMID:12534463 (the P. putida KT2440 genome paper) to a university
+# repository landing page. The "full text" it yielded was that page's header, the abstract
+# as prose, and a RIS citation export repeating the abstract as N2 and AB. It cleared every
+# guard: no paywall marker, longer than the abstract, and the citation metadata supplied
+# enough added characters to pass MIN_FULL_TEXT_CHARS.
+#
+# The cost was not a bad cache entry. `full_text_available` flipped to true, which made
+# twelve accurate `full_text_unavailable` flags across ten reviews look false, and they were
+# deleted on that basis before a reviewer noticed the body was a citation dump.
+
+_LANDING_PAGE_ABSTRACT = (
+    "Pseudomonas putida is a metabolically versatile saprophytic soil bacterium that has "
+    "been certified as a biosafety host for the cloning of foreign genes. Sequence analysis "
+    "of the 6.18 Mb genome of strain KT2440 reveals diverse transport and metabolic systems."
+)
+
+_LANDING_PAGE_BODY = f"""Research output:Contribution to journal›Article›Academic›peer-review
+
+{_LANDING_PAGE_ABSTRACT}
+
+}}
+
+Research output:Contribution to journal›Article›Academic›peer-review
+
+TY  - JOUR
+
+T1  - Complete genome sequence and comparative analysis of the metabolically versatile Pseudomonas putida KT2440
+
+AU  - Nelson, K.E.
+
+AU  - Weinel, C.
+
+JO  - Environmental Microbiology
+
+VL  - 4
+
+SP  - 799
+
+EP  - 808
+
+N2  - {_LANDING_PAGE_ABSTRACT}
+
+AB  - {_LANDING_PAGE_ABSTRACT}
+
+ER  -
+"""
+
+_CACHED_RECORD = f"""---
+pmid: '12534463'
+title: Complete genome sequence and comparative analysis of Pseudomonas putida KT2440.
+full_text_available: false
+---
+
+# Complete genome sequence and comparative analysis of Pseudomonas putida KT2440.
+
+## Abstract
+
+{_LANDING_PAGE_ABSTRACT}
+"""
+
+
+def test_a_repository_landing_page_with_a_ris_dump_is_rejected():
+    """The shape that got through: header + abstract + citation export, no body."""
+    assert is_usable_full_text(_LANDING_PAGE_BODY, _CACHED_RECORD) is False
+
+
+def test_a_bare_ris_export_is_rejected():
+    """`TY  - JOUR` alone is enough to disqualify: RIS is metadata, never body text."""
+    assert is_usable_full_text("TY  - JOUR\n\nAU  - Someone\n\nER  -\n", _CACHED_RECORD) is False
+
+
+def test_genuine_body_text_is_still_accepted():
+    """The guard must stay narrow -- these markers cannot reject a real paper."""
+    real = (
+        "Chemotaxis in KT2440 is mediated by a large complement of methyl-accepting "
+        "proteins. We identified 27 such loci, and disruption of cheZ abolished the "
+        "dephosphorylation of CheY-P in vitro. The shikimate pathway is encoded at "
+        "PP_5078, whose product we assign as 3-dehydroquinate synthase on the basis of "
+        "reciprocal best hits and conserved active-site residues."
+    ) * 4
+    assert is_usable_full_text(real, _CACHED_RECORD) is True

@@ -55,6 +55,15 @@ FULL_TEXT_STUB_MARKERS = (
     "The Full Text of this article is available as a",
     "Subscribe to this journal",
     "access via your institution",
+    # A RIS citation export. `TY  - JOUR` opens one, with the two spaces RIS mandates.
+    # openalex resolved PMID:12534463 to a university repository landing page whose
+    # "full text" was that page's header, the abstract as prose, and a RIS dump repeating
+    # the abstract as N2 and AB. It passed every guard below: no paywall marker, longer
+    # than the abstract, and the citation metadata supplied enough added characters to
+    # clear MIN_FULL_TEXT_CHARS. Bulk without body.
+    "TY  - JOUR",
+    # The Pure repository software's landing-page header, which is what that page was.
+    "Research output:Contribution to journal",
 )
 
 _FRONTMATTER_DELIMITER = re.compile(r"^---[ \t]*$", re.MULTILINE)
