@@ -627,3 +627,65 @@ def test_fetch_pubmed_data_actually_calls_the_guard():
     assert "full_text_available = full_text_result.is_complete" not in src, (
         "the unguarded assignment is back"
     )
+
+
+def test_a_rejected_body_is_not_written_into_the_cache_file():
+    """Judging the flag is not enough -- the rejected text must not reach `## Full Text`.
+
+    `fetch_pubmed_data` assigned `publication.full_text` unconditionally and guarded only
+    the flag, while `to_markdown` emits the section on truthiness. So a rejected fetch
+    recorded `full_text_available: false` *and* wrote the landing page into the body that
+    `supporting_text` quotes are matched against -- a quote lifted from it would verify
+    verbatim. The warm path never had this gap: `apply_full_text` runs only on accept.
+    """
+    import inspect
+    from ai_gene_review.etl import publication as pub
+
+    src = inspect.getsource(pub.fetch_pubmed_data)
+    assert "if accepted:" in src, "full_text must be written only when the guard passes"
+    body = src.split("full_text_result = fetch_pmc_fulltext", 1)[1]
+    guard_at = body.index("if accepted:")
+    assign_at = body.index("publication.full_text = full_text_result.content")
+    assert guard_at < assign_at, "the assignment must sit inside the accept branch"
+
+
+def test_the_doi_converter_respects_an_explicit_false(tmp_path):
+    """The third writer. It derived the flag from content_type and ignored the explicit key.
+
+    Four cached records were marked `full_text_available: false` by hand because their
+    bodies are openalex landing pages plus RIS exports; two are `content_type:
+    full_text_html`, so one `just convert-doi-publications` would have written `true`
+    straight back over that judgement -- and lifted the RIS dump into the new record's
+    `abstract`.
+    """
+    from ai_gene_review.etl.publication import convert_doi_publication
+
+    src = tmp_path / "DOI_10.1234_x.md"
+    src.write_text(
+        "---\ndoi: 10.1234/x\npmid: '999999'\ntitle: t\n"
+        "content_type: full_text_html\nfull_text_available: false\n---\n\n"
+        "## Content\n\nTY  - JOUR\n\nER  -\n"
+    )
+    # pmid passed explicitly so the converter does not need to resolve the DOI over the
+    # network. (An earlier version of this assertion was `is not False or True`, which is
+    # a tautology -- it would have passed however the converter behaved.)
+    assert convert_doi_publication(src, tmp_path, pmid="999999") is True
+
+    out = tmp_path / "PMID_999999.md"
+    assert out.exists(), "converter did not write the PMID record"
+    assert "full_text_available: false" in out.read_text(), (
+        "an explicit false must win over content_type"
+    )
+
+
+def test_the_doi_converter_still_derives_the_flag_when_unstated(tmp_path):
+    """Without an explicit key it falls back to content_type, via the shared constant."""
+    from ai_gene_review.etl.publication import convert_doi_publication
+
+    src = tmp_path / "DOI_10.1234_y.md"
+    src.write_text(
+        "---\ndoi: 10.1234/y\npmid: '999998'\ntitle: t\n"
+        "content_type: full_text_html\n---\n\n## Content\n\nReal body prose here.\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999998") is True
+    assert "full_text_available: true" in (tmp_path / "PMID_999998.md").read_text()

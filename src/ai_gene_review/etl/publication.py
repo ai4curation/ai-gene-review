@@ -332,9 +332,27 @@ def convert_doi_publication(
         print(f"PMID file already exists: {pmid_file.name}, skipping conversion")
         return False
 
-    # Build a Publication in the standard schema
+    # Build a Publication in the standard schema.
+    #
+    # An explicit `full_text_available` wins over `content_type`. Deriving it from
+    # content_type alone made this a third writer that silently overrides a considered
+    # judgement: four cached records were marked `false` by hand because their bodies are
+    # openalex landing pages plus RIS citation exports, and two of those are
+    # `content_type: full_text_html`, so this converter would have written `true` straight
+    # back over them on the next `just convert-doi-publications`.
+    #
+    # The negative list is imported rather than repeated. It was a literal tuple here while
+    # `NO_FULL_TEXT_CONTENT_TYPES` was authoritative elsewhere, which makes the constant
+    # authoritative in name only -- a new value would diverge this converter from both the
+    # validator and the flag audit.
+    from ai_gene_review.validation.supporting_text import NO_FULL_TEXT_CONTENT_TYPES
+
+    declared = frontmatter.get("full_text_available")
     content_type = frontmatter.get("content_type", "unavailable")
-    full_text_available = content_type not in ("unavailable", "abstract_only")
+    if isinstance(declared, bool):
+        full_text_available = declared
+    else:
+        full_text_available = str(content_type).lower() not in NO_FULL_TEXT_CONTENT_TYPES
 
     # Extract abstract from body if present
     body = parts[2]
@@ -544,13 +562,22 @@ def fetch_pubmed_data(
         # Try to fetch full text from PMC if available
         if pmcid:
             full_text_result = fetch_pmc_fulltext(pmcid)
-            publication.full_text = full_text_result.content
-            publication.full_text_available = accept_full_text(
+            accepted = accept_full_text(
                 full_text_result.content,
                 bool(full_text_result.is_complete),
                 abstract or "",
             )
-            publication.full_text_extraction_method = full_text_result.extraction_method
+            # Judge before writing, as publication_warm.apply_full_text already does.
+            # Guarding only the flag left the rejected text in `## Full Text`, which is the
+            # body `supporting_text` quotes are matched against -- so the flag would stop
+            # lying while the cache file started to. A quote lifted from a landing page
+            # would then verify verbatim.
+            if accepted:
+                publication.full_text = full_text_result.content
+                publication.full_text_extraction_method = (
+                    full_text_result.extraction_method
+                )
+            publication.full_text_available = accepted
 
         # Cache the publication if we fetched it
         if use_cache:
