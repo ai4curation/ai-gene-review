@@ -2,9 +2,26 @@
 title: "Peroxisome Targeting Signal Binding — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
+species: [human]
+genes: [PEX5, PEX7, PEX19]
 ---
 
 # Peroxisome Targeting Signal Binding — Obsoletion & Replacement
+
+**Bottom line:** Peroxisomal proteins are imported by cytosolic receptors
+that recognise short targeting signals: PEX5 reads PTS1, PEX7 reads PTS2,
+and PEX19 reads the membrane signal mPTS. GO has obsoleted the three
+signal-specific binding terms (GO:0005052, GO:0005053, GO:0033328) as
+"a specific substrate" and folded them into their parent GO:0000268, now
+named *peroxisome signal sequence receptor activity*. We recorded the
+upstream tickets and listed every review in this repo that uses the old
+terms, so the reviews can be refreshed once GOA catches up. The change
+has landed: OLS now shows all three terms as obsolete, so the "not yet
+applied" status entry below is out of date. Scoped, not yet started on
+the refresh: 18 `existing_annotations` rows still carry the obsolete ids
+(PEX5 10, PEX7 7, PEX19 1), and 17 of them are ACCEPT. The biology does
+not change; the work is a term swap plus a check that the parent term
+still captures each receptor's core function.
 
 ## Overview
 

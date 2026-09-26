@@ -1,10 +1,37 @@
 ---
 title: "Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [human]
+genes: [USO1, STX12]
 ---
 
 # Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)
+
+**Bottom line:** A transport vesicle is first tethered at a distance,
+then docked against its target membrane, then fused. GO has retired the
+whole GO:0048278 *vesicle docking* process subtree (nine terms,
+including the regulation terms) because docking is the binding activity
+of specific proteins, and now asks curators to move annotations to one
+of two minted molecular functions: GO:0160321 *vesicle docking
+activity* or GO:7770062 *vesicle membrane tethering activity*. This is
+the parent tracker for go-annotation#6379; we recorded the upstream
+plan and group tallies, found the affected reviews in this repo, and
+queued canonical docking factors (STX1A, STXBP1, exocyst, NSF) as new
+reviews. The obsoletion has landed: OLS shows GO:0048278 and GO:0048211
+obsolete and both MFs minted, so the "not yet applied" and "placeholder"
+notes below are out of date. Scoped, refresh not started: two human
+reviews still ACCEPT an IBA row on an obsolete docking term, USO1
+(GO:0048211 Golgi vesicle docking) and STX12 (GO:0048278, also listed in
+its `core_functions`); STX12 was reviewed after this page was written.
+
+Sibling trackers split the rest of the refactor:
+[SYNAPTIC_VESICLE_DOCKING_OBSOLETION](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)
+handles the regulation sub-issue (#6415, mouse Camk2a),
+[VESICLE_TETHERING_OBSOLETION](VESICLE_TETHERING_OBSOLETION.md) the
+tethering step (#6375), and
+[VESICLE_TARGETING_OBSOLETION](VESICLE_TARGETING_OBSOLETION.md) the
+targeting terms that fold into transport processes (#6424).
 
 ## Overview
 

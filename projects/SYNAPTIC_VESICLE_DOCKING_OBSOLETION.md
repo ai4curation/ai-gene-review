@@ -1,10 +1,33 @@
 ---
 title: "Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
+species: [mouse, worm]
+genes: [Camk2a, Septin5, tom-1]
 ---
 
 # Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor
+
+**Bottom line:** Before a synaptic vesicle fuses, it docks at the active
+zone, held there by specific binding proteins. GO has retired the whole
+vesicle-docking process subtree and now represents docking as a
+molecular function, GO:0160321 *vesicle docking activity*. This page
+tracks one piece of that change: GO:0099148 *regulation of synaptic
+vesicle docking*, flagged by SynGO (go-annotation#6415), whose
+experimental annotations sit on three genes: mouse Camk2a, mouse
+Septin5 and worm tom-1. We listed those rows and argued that most
+should not become the new MF, because a kinase such as CaMKIIα
+regulates docking without doing it. The obsoletion has now landed:
+OLS shows GO:0099148 obsolete and GO:0160321 minted, so the "not yet
+applied" notes below are out of date. Scoped, refresh not started: the
+mouse Camk2a review still ACCEPTs both GO:0099148 rows (IMP and IDA,
+PMID:17660813), and Septin5 and tom-1 have no review here.
+
+This is the regulation branch of the docking refactor. The parent
+tracker [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md)
+covers the docking terms themselves (#6379), and
+[VESICLE_TETHERING_OBSOLETION](VESICLE_TETHERING_OBSOLETION.md) covers
+the earlier tethering step (#6375).
 
 ## Overview
 

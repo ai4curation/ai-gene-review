@@ -2,9 +2,37 @@
 title: "Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)"
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
+species: [human]
+genes: [TMF1, TRAPPC1, TRAPPC3, TRAPPC4, TRAPPC5, TRAPPC8, TRAPPC11, TRAPPC12, TRAPPC13]
 ---
 
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)
+
+**Bottom line:** Before a vesicle docks and fuses, a tether (a long
+coiled-coil golgin or a multisubunit complex such as TRAPP, COG or the
+exocyst) makes first contact and bridges it to the target membrane. GO
+has obsoleted GO:0099022 *vesicle tethering* and four children because
+tethering is a binding activity, and minted the MF GO:7770062 *vesicle
+membrane tethering activity* in its place; the recommended pattern is
+that MF with a `part_of` link to the transport process it serves. We
+recorded the upstream plan, the InterPro and UniRule mappings already
+removed, and the reviews in this repo that touch the terms. The
+obsoletion has landed: OLS shows GO:0099022 and GO:0099041 obsolete and
+GO:7770062 minted, so the "placeholder" and "not yet applied" notes
+below are out of date. Partly done: eight human TRAPP subunit reviews
+(TRAPPC1, 3, 4, 5, 8, 11, 12, 13), written after this page, already
+MODIFY their NAS row on the obsolete GO:0099022 to GO:0006888 *ER to
+Golgi vesicle-mediated transport*. Still to do: TMF1, whose review
+proposed the tethering MF as a new term, still carries GO:0099041 as a
+NEW row and in `core_functions`, and uses GO:0060090 as a stand-in MF
+that GO:7770062 can now replace.
+
+This is the tethering step of the vesicle refactor. The docking step is
+tracked in [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md)
+(#6379) and its regulation sub-issue in
+[SYNAPTIC_VESICLE_DOCKING_OBSOLETION](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)
+(#6415); the targeting terms that fold into transport processes are in
+[VESICLE_TARGETING_OBSOLETION](VESICLE_TARGETING_OBSOLETION.md) (#6424).
 
 ## Overview
 

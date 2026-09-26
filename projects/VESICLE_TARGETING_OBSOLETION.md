@@ -1,10 +1,38 @@
 ---
 title: "Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
+species: [human, yeast]
+genes: [YKT6, CLASP1, CLASP2, WIPI1, AP1AR, GLTP, SPA2]
 ---
 
 # Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement
+
+**Bottom line:** Vesicles are moved along the cytoskeleton and delivered
+to the right membrane before they tether, dock and fuse. GO has
+obsoleted GO:0006903 *vesicle targeting* and nine descendants because
+the line between vesicle "targeting" and vesicle-mediated "transport"
+was never applied consistently; unlike the sibling tethering and
+docking changes, no new term was minted, and annotations move to
+existing transport processes such as GO:0016192 *vesicle-mediated
+transport* and GO:0006895 *Golgi to endosome transport*. We pulled the
+22 experimental annotations from QuickGO (they fall on 4 of the 10
+terms, 6 of them on human genes), mapped each to its replacement, and
+queued the human trafficking genes (YKT6, CLASP1, CLASP2, WIPI1, AP1AR)
+for new reviews. The obsoletion has now landed: OLS shows GO:0006903
+and GO:0048203 obsolete, so the "still active" notes below are out of
+date. Scoped, not yet started: none of the queued genes has a review
+here. The page's impact scan missed one review: yeast `SPA2` carries a
+ComplexPortal NAS row on GO:0006903 for the polarisome, which its
+review keeps as non-core.
+
+Sibling trackers cover the later steps of vesicle delivery, which GO
+did move to new molecular functions:
+[VESICLE_TETHERING_OBSOLETION](VESICLE_TETHERING_OBSOLETION.md)
+(#6375),
+[VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md) (#6379) and
+[SYNAPTIC_VESICLE_DOCKING_OBSOLETION](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)
+(#6415).
 
 ## Overview
 
