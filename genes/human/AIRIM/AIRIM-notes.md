@@ -216,3 +216,48 @@ draft does.
 
 Final: 190 rows, 166 REMOVE / 13 ACCEPT / 8 MODIFY / 1 KEEP_AS_NON_CORE / 2 NEW.
 29 distinct quotes (370 instances) verified.
+
+## Round 4 (review feedback)
+
+### The retraction had not reached the reference block
+
+I corrected `core_functions` and `suggested_questions` in round 3 but left the error standing in
+`references[PMID:40268917]`, where it did the most damage — a `findings[].statement` asserting as
+a *finding of the paper* the opposite of that paper's own section heading:
+
+> "C1orf109 does not interact with the pre-60S particle directly, **which rules out a
+> substrate-presentation role for AIRIM.**"
+
+and `review_notes` carrying the round-2 conflation in compressed form ("CINP makes both
+interfaces" — those interfaces are with the *particle*, not the substrate) plus "the substrate
+half does not survive", contradicted by this file's own `GO:0060090` row a hundred lines above.
+
+Both corrected, and the adapter/RLP24 conclusion added to that reference's findings, where it had
+been missing despite now grounding a NEW MF row.
+
+**This is the fourth time in this session a retraction has failed to reach every field that
+repeats the claim** (ADM5 summary vs reason; ADM5 description and suggested_questions; here,
+twice). The pattern is consistent enough to name: *a correction is not done when the sentence
+that prompted it is fixed — it is done when every field asserting the claim has been grepped.*
+
+The reviewer offered `finding_review` with `finding_status: OVERTURNED` + `superseded_by` as a
+way to preserve the error. I did not use it, because that mechanism is for **a paper's finding
+being refuted by later work**. Here the paper was right throughout and my statement about it was
+wrong. Marking the paper's finding overturned would misattribute my error to it.
+
+### Smaller items
+
+- `GO:0005198`'s reason said a substrate-gating term "would be better if one existed" — one now
+  does, thirty lines below. Rewritten to point at `GO:0060090` and explain why both are proposed.
+- "Kept alongside" was true of the proposals but not of `core_functions`, where `molecular_function`
+  is single-valued and `GO:0060090` took the slot. Now says so explicitly.
+- Adaptor row evidence code changed **IDA → IPI**: the load-bearing experiment is a physical
+  interaction (the RLP24 fragment pulling down C1orf109), not a direct assay of the activity.
+- Two quotes used **ASCII hyphens where the cached record has en-dashes** (`residues 85–163`,
+  `residues 80–163`). Local validation passed because `normalize_text` strips punctuation, so this
+  was invisible to the gate — but a "verbatim quote" should be verbatim. Fixed to the real
+  characters.
+
+### History record
+
+Added, covering all four rounds. Missing for the same reason as AJM1: CI does not enforce it.
