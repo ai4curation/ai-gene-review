@@ -936,3 +936,56 @@ def test_a_stripped_section_is_abstract_grade_not_full_text(tmp_path):
     assert "## Full Text" not in out
     assert "Real abstract prose about second messengers." in out, "the prose is kept"
     assert "TY  - JOUR" not in out
+
+
+def test_cache_publication_keeps_a_good_body_when_the_refetch_is_rejected(tmp_path, monkeypatch):
+    """Drive `cache_publication`, not the helper -- the helper test could not see this.
+
+    `cache_publication` called `fetch_pubmed_data(pmid)` with no kwargs, whose defaults are
+    `use_cache=True, cache_dir=Path("publications")` -- the same file. So the inner write
+    overwrote the existing record *before* the carry-forward guard read it, and the guard
+    then found `full_text_available: false` and no section and did nothing. Both the
+    888-record fix and the provenance carry-forward were dead on the path
+    `validator.py` recommends.
+
+    The previous test called `_existing_accepted_full_text` directly and so was blind to it
+    -- the fifth "the check passed but did not exercise the thing" on this branch.
+    """
+    from types import SimpleNamespace
+    import ai_gene_review.etl.publication as pub
+
+    existing = tmp_path / "PMID_3.md"
+    existing.write_text(
+        "---\npmid: '3'\ntitle: old\nfull_text_available: true\n"
+        "full_text_extraction_method: xml\nlicense: CC-BY\n---\n\n"
+        "## Abstract\n\nold abstract\n\n## Full Text\n\nA genuine cached body.\n"
+    )
+
+    rejected = pub.Publication(
+        pmid="3", title="refreshed title", authors=["A"], journal="j", year="2020",
+        abstract="refreshed abstract", full_text=None, full_text_available=False,
+    )
+    monkeypatch.setattr(pub, "fetch_pubmed_data", lambda pmid, **kw: rejected, raising=False)
+
+    assert pub.cache_publication("3", output_dir=tmp_path, force=True) is True
+    out = existing.read_text()
+
+    assert "A genuine cached body." in out, "the good body must survive a rejected re-fetch"
+    assert "refreshed title" in out, "and the metadata must still be refreshed"
+    assert "license: CC-BY" in out, "with the body's provenance"
+    assert "full_text_available: true" in out
+
+
+def test_cache_publication_does_not_let_the_fetch_write_the_record(tmp_path):
+    """Wiring: the inner write must stay off, or the guard above is unreachable again.
+
+    Asserted against the source because exercising it needs Entrez; the behavioural test
+    above stubs `fetch_pubmed_data` and so cannot see which kwargs it is called with.
+    """
+    import inspect
+    import ai_gene_review.etl.publication as pub
+
+    src = inspect.getsource(pub.cache_publication)
+    assert "fetch_pubmed_data(pmid, use_cache=False)" in src, (
+        "the inner write would overwrite the record before the carry-forward reads it"
+    )

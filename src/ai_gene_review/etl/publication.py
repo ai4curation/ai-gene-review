@@ -534,7 +534,7 @@ def _existing_accepted_full_text(
 ) -> tuple[Optional[str], Optional[str], Dict[str, Any]]:
     """The cached record's full text, but only if the record itself vouches for it.
 
-    Returns ``(None, None)`` unless the frontmatter says ``full_text_available: true``.
+    Returns ``(None, None, {})`` unless the frontmatter says ``full_text_available: true``.
     Presence of a ``## Full Text`` section is not enough: 888 cached records carry one
     while declaring ``false``, because the body was rejected or is a heading plus the
     abstract (e.g. ``PMID_7262539``).
@@ -1177,7 +1177,15 @@ def cache_publication(
 
     # Fetch publication data
     print(f"Fetching PMID {pmid}...")
-    publication = fetch_pubmed_data(pmid)
+    # use_cache=False, deliberately. Its default is True with cache_dir=Path("publications"),
+    # which is the same file cache_publication is about to write -- so the inner write
+    # overwrote the existing record *before* the carry-forward guard below could read it,
+    # making both the 888-record fix and the provenance carry-forward dead on the path they
+    # were written for. It also caused every call to write the record twice, and to drop a
+    # stray record into ./publications/ relative to CWD whenever output_dir was somewhere
+    # else. Skipping the read is correct too: cache_publication has already returned above
+    # if the file exists and force is not set, so reaching here always means "re-fetch".
+    publication = fetch_pubmed_data(pmid, use_cache=False)
 
     if not publication:
         print(f"Failed to fetch PMID {pmid}")
