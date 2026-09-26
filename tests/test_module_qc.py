@@ -366,6 +366,7 @@ def test_collect_module_qc_smoke():
         "reaction_chaining",
         "gene_reviews",
         "module_deep_research",
+        "function_conformance",
     }
     assert qc["module_deep_research"]["has_deep_research"] is False
 
