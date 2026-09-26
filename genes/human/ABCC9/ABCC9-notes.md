@@ -1,0 +1,69 @@
+# ABCC9 annotation review notes
+
+## Scope and source provenance — 2026-09-26
+
+Created an isolated Orca checkout on `cmungall/clingen-abcc9` from fresh `origin/main` at 2de175d73c. The first Orca create response lost its runtime connection, but subsequent Git and Orca read-only checks confirmed the completed clean checkout; no duplicate checkout was created. No existing ABCC9/SUR2 review or gene-specific open PR was present. NCBI Gene/HGNC confirms ABCC9 (HGNC:60; UniProt O60706), also known as SUR2, ABC37, CANTU, CMD1O, IDMYS and ATFB12.
+
+`just fetch-gene human ABCC9` seeded 53 annotations, preserving two named alternative products: SUR2A (O60706-1) and SUR2B (O60706-2). No annotation row carries an isoform field. All `contributes_to` qualifiers will be preserved. Falcon research was launched with a 1200-second timeout concurrently with `just fetch-gene-pmids human ABCC9`; the project coordinator had established exhausted Perplexity quota, so no duplicate failing fallback was attempted. This is a manual research journal, not a generated provider report.
+
+The ClinGen project snapshot lists autosomal-dominant Cantú syndrome as Definitive and dilated cardiomyopathy 1O as Limited. These classifications should not be conflated. Primary loss-of-function intellectual-disability/myopathy evidence (PMID:31575858) is biologically relevant even though it is not a separate row in that snapshot.
+
+## Initial mechanism audit
+
+SUR2 is the regulatory, nucleotide-sensing subunit of a heteromeric KATP channel. Kir6.1/KCNJ8 and Kir6.2/KCNJ11 form the potassium-conducting pore. SUR2A/SUR2B differ at their C-terminal 42 residues and show different Mg-nucleotide and drug responses (PMID:34711681, PMID:35562524, PMID:37330603). Intrinsic SUR ATPase activity is real and contributes to gating; this is not proof of primary-active potassium pumping. The full human SUR2A comparator experiments are present in PMID:26181369 despite its SUR1-focused title.
+
+Live QuickGO definitions were read for GO:0019829, GO:0031004, GO:0140359, GO:0015272, GO:0008281, GO:0015459, GO:0099104 and GO:1990573. GO:0019829 specifies ATP hydrolysis coupled to cation movement; GO:0031004 describes a potassium-transporting ATPase complex and gives the bacterial Kdp complex as an example. GO:0140359 explicitly requires primary-active transport. These must be distinguished from SUR-regulated passive channel conductance. GO:0015272 has the label ATP-activated inward rectifier potassium channel activity but describes ATP-dependent pore block in its definition; that terminology requires careful handling rather than rejecting the annotation merely because ATP generally inhibits KATP channels.
+
+## Propagation sources recovered
+
+Live QuickGO traces mouse P70170 to cytoplasm IDA/PMID:18434629, mitochondrion IDA+IMP/PMID:19797704 and IMP/PMID:20935152,24648545, sarcomere IDA/PMID:16085792, sarcolemma IDA/PMID:18001767, and protein-containing-complex binding IDA/PMID:11934987. Rat Q63563 sulfonylurea receptor, channel regulator and potassium-import assignments trace to PMID:8630239; its ATPase-cation transporter and potassium-ATPase-complex assignments trace to PMID:28842488. These are source traces, not automatic judgments.
+
+PMID:18434629 explicitly reports a cytoplasmic/Golgi staining pattern for SUR2 in epididymal epithelium and includes human material. PMID:19797704 full text identifies unusual SUR2-55 intraexonic splice variants, distinct from canonical SUR2A/SUR2B, and includes human heart cDNA/RNA work. The mitochondrial assignment must retain that scope. The PMID:11934987 abstract concerns a nuclear Mediator subunit called Sur2 (modern MED23); this suggests a historical-name collision, but the full article and gene identity must be verified before asserting a misattribution.
+
+## Publication access caveat
+
+The pre-existing PMID:30280653 cache was marked full_text_available:true but ended after the Introduction (8887 bytes), with no body or tables. Absence of an ABCC9 mention in that fragment cannot establish absence from the paper. A normal `fetch-pmid --force` retry obtained only the abstract and corrected the generated availability flag; no publication cache was manually edited. Full-paper retrieval remains in progress.
+
+## Completed research and adjudication — 2026-09-26
+
+The genuine Falcon run completed in 569.80 seconds (19:55:21–20:04:51 Pacific), producing the provider report and its two original artifacts. Its nontransporting-channel-regulator synthesis agrees with the primary studies. Its wording that SUR2 does not catalyze a conventional substrate-conversion reaction must not erase experimentally measured ATP hydrolysis. The primary structural papers use rat constructs; their conservation informs human biology but does not make them human-protein experiments. The generated report and artifacts were not edited.
+
+All 53 source annotations have now been reviewed: 32 ACCEPT, 13 MODIFY, 4 KEEP_AS_NON_CORE, 3 UNDECIDED, and 1 MARK_AS_OVER_ANNOTATED. No NEW assertions were introduced. A semantic comparison preserves every source annotation field outside `review`, including identifiers, evidence codes, supporting entities, original references and contributes_to. The two supplied alternative products are unchanged. A single core unit combines direct potassium-channel regulation with contribution to the KATP complex's activity and potassium transmembrane transport.
+
+### Primary mechanism and assay distinctions
+
+- [PMID:9831708, Reconstituted human cardiac KATP channels](https://pubmed.ncbi.nlm.nih.gov/9831708/) explicitly reports human SUR2A/Kir6.2 reconstitution and comparison with native human ventricular sarcolemmal channels. This independently corroborates the source channel, membrane and response-to-nucleotide annotations. Only the abstract was available; no additional experimental detail is inferred.
+- [PMID:26181369, Molecular determinants of ATP-sensitive potassium channel MgATPase activity](https://pmc.ncbi.nlm.nih.gov/articles/PMC4613687/), full Methods and Results: “The full-length human SUR1 and SUR2A DNA constructs were a generous gift”; direct biochemical hydrolysis assays use purified GST–NBD2 dimers and measure ADP formation. Full assembled-channel GTP-response assays are a separate functional readout. The IDA ATPase-coupled transporter row is therefore refined to ATP hydrolysis, and the electronic ATP-hydrolysis annotation is retained.
+- [PMID:26621776, Differential mechanisms of Cantú syndrome-associated gain of function mutations](https://pmc.ncbi.nlm.nih.gov/articles/PMC4664827/) tests human-variant equivalents in rat SUR2A with mouse Kir6.2. Wild-type comparisons distinguish enhanced MgADP activation from reduced ATP inhibition. The ISS assignments preserve that organismal scope.
+- [PMID:34711681](https://pmc.ncbi.nlm.nih.gov/articles/PMC8694068/), full primary structural study, explicitly describes SUR proteins as “nontransporting members of the ABCC subfamily of ABC transporters.” Methods identify rat Kir6.1/SUR2B. This is positive structural/mechanistic evidence for a regulatory specialization, not an inference from lack of a particular donor or from a protein name.
+- [PMID:35562524](https://pmc.ncbi.nlm.nih.gov/articles/PMC9106677/) and [PMID:37330603](https://www.nature.com/articles/s41467-023-39379-4) use rat SUR2A/SUR2B structures and functional experiments to explain drug/nucleotide sensing, the inhibitory R-helix and C-terminal isoform differences. SUR2A and SUR2B remain separate alternative products; no annotation is invented as uniquely isoform-specific.
+
+The ATP-driven cation-transporter, ABC-type transporter and potassium-ATPase-complex terms require correction even though ATP binding and hydrolysis are real. The paired channel-regulator term and Kir6/SUR complex term express the underlying biology. The source PTN009085477 is recorded for the disputed IBA, but its detailed historical PAINT gain/loss reconstruction remains unresolved. The biological challenge is target-specific functional divergence, never the donor count or the presence of the target among descendant evidence. No unsupported ancestral residue-loss claim is made.
+
+### Original-source recovery and unresolved cases
+
+[PMID:20610380](https://pmc.ncbi.nlm.nih.gov/articles/PMC2937900/), Results “Ankyrin-B Forms a Ternary Complex with Kir6.2 and SUR1/SUR2A” and Figure 3, directly includes SUR2A/Kir6.2 coimmunoprecipitation: “anti-Kir6.2 Ig co-immunoprecipitated both SUR1 and SUR2A from cotransfected cells”. The abstract-only cache therefore does not imply that this is a wrong-paralog source. It supports channel-complex membership and binding to the Kir6.2 partner. It does not demonstrate direct SUR2A–ankyrin-B binding; the ternary interaction depends on Kir6.2. The short recovered full-text quote is stored in `supporting_text_fulltext`, with the access route in the reference review.
+
+[PMID:28842488](https://pmc.ncbi.nlm.nih.gov/articles/PMC5655515/), indexed original Results and Figure 5 (also visible in [PubMed figures](https://pubmed.ncbi.nlm.nih.gov/28842488/)), includes wild-type and mutant Kir6.2/SUR2A combinations. The functional readouts are rubidium efflux and channel currents. These support channel contribution/transport and allow the donor ATP-pump interpretations to be distinguished without claiming the paper omitted SUR2A.
+
+The full [PMID:19797704](https://pmc.ncbi.nlm.nih.gov/articles/PMC2988690/) Results identifies 55-kDa intra-exonic splice products and detects corresponding splice junctions in human heart cDNA and RNA, then primarily characterizes mouse variants. Mitochondrial localization is retained as non-core with this specific scope. It is not silently assigned to canonical O60706-1/O60706-2, and neither loss-of-function metabolic phenotypes nor that localization establish a universal mitochondrial KATP composition.
+
+Three decisions remain UNDECIDED:
+
+1. Sarcomere (mouse donor IDA PMID:16085792): publisher preview/PDF searches yielded an abstract and figures without the complete evidence needed to distinguish a contractile sarcomere assignment from a striated sarcolemmal/T-tubular pattern. GO:0030017's contractile-filament definition was checked.
+2. Protein-containing-complex binding (mouse donor IDA PMID:11934987): the accessible abstract concerns Mediator Sur2. The coordinator found additional historical literature that itself used an ABCC9/MGI label for this Mediator component, so this is not safely resolved by modern alias matching. Original full Science text remained unavailable after publisher and indexed-PDF attempts. The annotation and source identity stay unresolved; no source-miscitation verdict is asserted.
+3. Defense response to virus (IMP PMID:18026101): the abstract describes mouse Kcnj8 and fly dSUR perturbations. The complete original study is required to adjudicate the human ABCC9 experimental source and direct-process scope. Survival/vascular homeostasis alone is not expanded into a new antiviral mechanism.
+
+### Blood-brain-barrier source and cache integrity
+
+The actual full [PMID:30280653 article](https://pmc.ncbi.nlm.nih.gov/articles/PMC6335099/?pdf=render) was recovered after the initial cache concern: the request returned complete HTML, not a PDF, and the body was read. The pericyte ion-transport section discusses ABCC9/Kir6.1 expression followed by membrane-potential effects, relaxation/contraction and cerebral blood-flow regulation. It states that these findings support an active role in regulating CBF. This supports neurovascular context but does not establish directed solute passage through the BBB as defined by GO:0150104; the NAS process annotation is marked overannotated on that full-section evidence. No replacement biological process or NEW assertion is added.
+
+When environment permissions changed, the coordinator directed continuation in the writable main workspace. Gene files and only missing publication/Reactome caches were copied from the now read-only sibling checkout. The main-workspace PMID:30280653 cache differed from the sibling's normal-fetch result and was deliberately left unchanged; it still has its misleading full-text flag and truncated Introduction. The external full-section quote is therefore stored as `supporting_text_fulltext` rather than fabricated inside the cache. The copy/conflict manifest is `/private/tmp/ABCC9-copy-manifest.json`.
+
+### Process and direction scope
+
+KATP-complex participation directly contributes machinery to potassium transmembrane transport, so the existing transport-process annotations are retained/refined. The import-specific row is non-core: inward current is possible at appropriate gradients, whereas physiological muscle KATP opening often produces outward potassium current and hyperpolarization. Cardiac conduction remains non-core rather than a standalone molecular activity. No missing-process assertion is inferred from ClinGen disease associations. `gocams/index.tsv` had no ABCC9/O60706 entry in the starting checkout; no new pathway/process assertion was required.
+
+## Final local checks and independent review
+
+The coordinator read all 53 decisions and the core and found no substantive biological blocker. The core ATPase support was strengthened from a construct-provenance sentence to the verbatim NBD2 kinetic result in PMID:26181369. Gene validation and history validation passed; HTML rendering completed. The sole gene-validation warning is advisory: the genuine Falcon report is retained as research provenance, while annotation-level supporting quotes come from primary studies. The failed local extraction `/tmp/abcc9-20610380-fulltext.txt` is zero bytes and is not evidence; the successful recovery was the web-indexed original PMC Results subsection and Figure 3 legend, independently rechecked on 2026-09-26.
