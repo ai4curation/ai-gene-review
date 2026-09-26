@@ -95,3 +95,64 @@ paper) and ADM5 (right papers, wrong framing) earlier in the same session.
 `just validate human AIRIM` → ✓ Valid, no warnings.
 17 distinct supporting_text quotes (358 instances) verified as substrings, including the 2
 `file:` ones CI does not check.
+
+## Round 2 (review feedback)
+
+Two blocking items, both fair, and the first is a pattern I have now hit **three times in one
+session**.
+
+### Three AIRIM-specific papers were in my own diff and uncited
+
+`PMID:40268917`, `PMID:40760247` and `PMID:32761833` — 37, 73 and 105 AIRIM mentions
+respectively — were cached by this PR and cited nowhere. Worse, the description asserted that
+hypomorphic AIRIM variants cause a neurodevelopmental disorder **on the strength of nothing**,
+while the source sat in the same diff:
+
+> [PMID:40760247 "Here we describe variants in the ribosome biogenesis factor AIRIM/C1orf109 that are primarily associated with neurodevelopmental disorders."]
+
+Same shape as the ADIG cold-tolerance claim and the ADM5 heart-failure diuresis claim earlier
+today. The common cause is that I cache papers while researching, use them to form the picture,
+then write the picture without going back to cite what formed it. The three-time recurrence means
+it is a process failure, not a slip.
+
+### "Substrate presentation" was wrong
+
+I wrote that AIRIM's contribution is "structural integrity and substrate presentation". The
+higher-resolution structure says the opposite:
+
+> [PMID:40268917 "CINP contributes to both the interfaces between the SPATA5 complex and the pre-60S particle, while C1orf109 does not interact with the pre-60S particle directly"]
+> [PMID:40268917 "the recognition of the pre-60S particle is mediated by human-specific factor CINP, through two distinct sets of interactions: one with GTPBP4 and the other with ES27A."]
+
+AIRIM makes **no direct pre-60S contact**. The structural-integrity half stands and `GO:0005198`
+is unaffected — the N-terminal ring supports it — but the substrate half is removed, and the
+`suggested_questions` entry that speculated about AIRIM *gating* access to the motor is recast to
+say explicitly that gating is ruled out.
+
+### Stoichiometry
+
+> [PMID:40268917 "Here we reveal that SPATA5 forms a 4:2:2:2 complex with SPATA5L1, C1orf109, and CINP."]
+> [PMID:40268917 "This complex features an N-terminal ring made of C1orf109, CINP and NTDs of SPATA5/SPATA5L1, and two hexameric AAA+ ATPase rings."]
+
+"Heterohexameric" (which I took from UniProt and PMID:38554706) describes the **SPATA5–SPATA5L1
+motor**, not the 4:2:2:2 assembly. Replaced everywhere it described the whole complex; the three
+surviving occurrences are the sentences explaining the distinction. "Funnel" is likewise replaced
+by "N-terminal ring", which is what the structure paper calls it.
+
+### Isoform caveat recorded
+
+`PMID:32761833` is about the **long isoform C1orf109L** binding DHX9 and promoting R-loop
+dependent DNA damage. Recorded as a flagged caveat rather than folded in: it is a different
+activity from the 55LCC roles, no GO annotation on this gene covers it, and it should not be
+assumed to hold for the canonical product.
+
+### Not changed
+
+The six MODIFY rows still propose `GO:1904949`, which the gene already carries. That is
+deliberate — the point of the MODIFY is that these protein-binding rows should *become* the
+complex-membership statement, and duplicates to the same term are explicitly fine per the
+annotation-reviewer guidance. Also unchanged: the NEW row's `file:` evidence leg is skipped by
+the supporting-text validator, which is true of every `file:` quote in this repo; I verify them
+by hand and say so.
+
+Final: 189 rows, 166 REMOVE / 13 ACCEPT / 8 MODIFY / 1 KEEP_AS_NON_CORE / 1 NEW.
+25 distinct quotes (366 instances) verified.
