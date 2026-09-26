@@ -99,8 +99,10 @@ def check(doc: dict, exemptions: list[str] | None = None) -> list[str]:
 
 def self_test() -> int:
     failures = []
+    total = [0]
 
     def expect(name: str, ok: bool, detail: str = "") -> None:
+        total[0] += 1
         print(f"  [{'PASS' if ok else 'FAIL'}] {name} {detail}")
         if not ok:
             failures.append(name)
@@ -187,10 +189,13 @@ def self_test() -> int:
     )
 
     print()
+    # Print the count rather than leaving it to be quoted from memory. A commit message and
+    # a PR comment both claimed "13/13" when the script asserts 15 things; a hand-copied
+    # tally drifts silently because nothing compares it to the script.
     if failures:
-        print(f"SELF-TEST FAILED: {failures}")
+        print(f"SELF-TEST FAILED: {len(failures)}/{total[0]} -- {failures}")
         return 1
-    print("SELF-TEST PASSED")
+    print(f"SELF-TEST PASSED: {total[0]}/{total[0]} assertions")
     return 0
 
 
