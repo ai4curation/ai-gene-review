@@ -48,3 +48,12 @@
 - Added machine-readable NEW proposals for GO:0043022 ribosome binding and
   GO:0022626 cytosolic ribosome, both directly supported by PMID:9670014 and
   consistent with PMID:1394434. These are missing from the current SSB2 GOA set.
+
+
+## Full annotation re-review — 2026-09-20
+
+Re-read all 41 annotation rows, the cited primary literature, UniProt and the Falcon report. Restored broad cytoplasm, nucleotide-binding, hydrolase and protein-folding-chaperone assertions; retained translation and experimentally recorded plasma-membrane association as non-core. The main cytosolic/ribosomal pool does not disprove a smaller peripheral membrane-associated pool. PMID:16622836 explicitly analyzed proteins from a stripped plasma membrane fraction; there is no basis to assert contamination from the abstract alone.
+
+Traced PAINT PTN002500132 (compartments), PTN002321897 (cytoplasm) and PTN000452648 (Hsp70 functions). Current raw IBD.gaf explicitly records NOT/IRD GO:0042026 at fungal PTN001065099, sourced from PTN000452648 and dated 2026-06-16. The same node records generalized GO:0006457, and current SSB2 leaf PTN000453235 carries that protein-folding descent. Therefore the older refolding IBA is generalized to protein folding; this does not establish zero in-vitro refolding capacity. Current PAINT lacks the older plasma-membrane IBD, but this version discrepancy is not biological refutation of the independent HDA annotation.
+
+Read the complete existing SSB1-versus-SSB2 OpenScientist hypothesis report and reused its substantive finding that paralog-specific substrate/mechanistic differences have not been demonstrated. Its caveat is "absence of evidence for divergence is not the same as proof of perfect functional identity". Primary shared nascent-chain/folding studies support the common function; the report does not investigate refolding and is not treated as an adjudication of that term. Root agreed the explicit current fungal IRD supports the broader-process update without a duplicate SSB2 report.

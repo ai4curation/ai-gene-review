@@ -69,3 +69,13 @@
 - Replaced an enzymatic-activity quote attached to the peroxisome annotation with the
   direct CbPmp20 peroxisomal-membrane localization sentence, and accounted for the
   rat mitochondrial donor alongside the human and fly sources.
+
+
+## Full-gene re-review, 2026-09-20
+
+All18 annotations, including both experimental NOT rows, were assessed. The complete original Kim2010 paper was independently obtained from KoreaScience and extracted without editing to pmp20-Kim2010-full-text.txt; URL/date/PDF SHA256 are recorded in pmp20-Kim2010-source.json. On p171, the authors explicitly report negative GSH-dependent peroxidase activity (data not shown), in addition to negative Trx-coupled H2O2 turnover and DTT-MCO protection. Both existing OpenScientist reports incorrectly call GSH untested; those findings are now marked OVERTURNED with primary supporting text. The second report also wrongly treats holdase as untested and uses Prx5/Prx6 terminology loosely. The first report overstates total catalytic exclusion and treats absence from an abstract-only Tpx1 study as exclusionary. The exact experimentally negative peroxidase/H2O2/detox annotations remain REMOVE, and both NOTs remain ACCEPT, with scoped wording. Broader oxidoreductase and redox-homeostasis assertions become UNDECIDED: assays do not exhaust every partner or process route. Broad oxidative-stress response is retained as core inference compatible with holdase, without claiming the thermal assay directly tests oxidative stress in vivo. Peroxisome and mitochondrion become UNDECIDED because missing canonical targeting features are a real transfer caveat but not proof of exclusion. All localization/HDA/holdase rows otherwise remain accepted. No duplicate adjudication was requested; primary/curator follow-up and targeted partner/physiology/localization experiments are the remaining needs.
+
+
+## Recovery PR localization follow-up (2026-09-22)
+
+Preserve superseded donor-specific analysis where present, replace rebutted report passages with actual supporting evidence, and clarify location or process scope. PAINT rows support inherited assertions as phylogenetic judgments, not direct target experiments.

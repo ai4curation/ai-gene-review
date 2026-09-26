@@ -67,3 +67,7 @@
   PMID_28514442/PMID_33961781 (BioPlex AP-MS), and cached Reactome R-HSA-* nodes.
 </content>
 </invoke>
+
+## 2026-09-20 full-gene re-review
+
+Read every source annotation and relevant evidence, including primary full texts for disputed reactions and the exact PAINT target path. See [AKR1D1-primary-source-checks.md](AKR1D1-primary-source-checks.md) for assay context, access limits, short exact excerpts, and pending focused adjudication. All original source fields are preserved; no NEW annotation is added. Broad true chemistry and localization are retained separately from exact substrate/reaction conflicts.

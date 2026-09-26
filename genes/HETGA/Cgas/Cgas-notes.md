@@ -240,3 +240,19 @@ informative than what GOA already carries), and no affinage sentence is used as
    proven, and is flagged as such in RESULTS.md and in the review.
 5. **No full text for any of the four cGAS papers**, so no assay details, cell types or
    residue-level mechanism beyond the abstract were available.
+
+
+## Full-gene re-review, 2026-09-20
+
+Reviewed all 14 rows, the description, two core functions and the authored positive-HR NEW. Restored innate activation, antiviral defense, interferon production and paracrine signaling: conserved machinery and a curated ancestral claim survive a change in nuclear HR regulation. Synthesis of cGAMP is participation in signaling. Retained the specific negative-HR REMOVE and positive-HR NEW from PMID:41066557; the abstract directly reports FANCI/RAD50 recruitment, not merely a requirement phenotype. Full Science text was unavailable (publisher HTTP 403), so residue identities from secondary coverage remain qualified.
+
+GO:0071360 remains UNDECIDED for a new, specific reason. QuickGO verified on 2026-09-20 its dsRNA definition and positive mouse Q8C6L5 rows from 23258413,24077100,28214358,28363908; no NOT qualifier was present. The first full text reports no stimulation by poly(I:C); the second concerns DNA/cGAMP bystander transfer. The last two are abstract-only DNA-domain studies. Absence of direct RNA sensing does not exclude an indirect response BP. Root was asked to cache-check and adjudicate the donor claim. Existing Falcon and human Affinage findings were read; neither resolves this question.
+
+Source GOA fields and all 14 rows are preserved. The prior notes framing four immune functions as impossible to resolve without a native assay is superseded by this assessment.
+
+Final ontology check: GO:0038001 requires transmission through intercellular fluid. Gap-junction transfer alone (PMID:24077100) is insufficient; added primary PMID:33768207 demonstrating freely soluble extracellular cGAMP export and recipient immune effects, supporting the accepted paracrine role through signal synthesis.
+
+
+## Recovery PR specificity follow-up (2026-09-22)
+
+Make the molecular work or process role explicit separately for each challenged term; retain evidence-based core versus peripheral judgments rather than treating ontology breadth as non-coreness.

@@ -162,3 +162,14 @@ the PANTHER PTHR21575 family membership file, QuickGO annotations for the human 
 (Q8IV36), and the human HID1 UniProt FUNCTION/localization. All assertions above carry inline
 provenance. Per project policy, no self-authored content is named as a provider deep-research
 file.
+
+
+## 2026-09-21: full-gene re-review and actual ancestral placement
+
+All nine original rows reviewed. Actual treeinfo lineage places Q06673 leaf PTN001853777 below the eukaryotic PTN000491103 Golgi/membrane/cytosol assertions. The old lack-of-TM and cytoplasm-only arguments do not exclude peripheral association; GO:0016020 explicitly includes attached proteins. The absence of dense-core secretory vesicles does not remove Golgi organization or cisternae. Restore all five inherited annotations to ACCEPT, with direct target measurements distinguished from evolutionary inference.
+
+PMID:40899782 full text provides a new, substantive divergence lead: the budding-yeast Ecm30 sequence is greatly modified, and the organism has unstacked Golgi. Its actual functional experiments assay S. pombe SPAC17A5.16, proposed Hid1/Ftp105; they do not assay Ecm30. Correct the earlier notes' outdated assignment of Hid1 to SPAP27G11.12 (now proposed Hid3). Golgi organization is broader than stacking, so this comparative correlation does not itself establish target functional loss. A neutral focused OpenScientist question is queued after exact repository/global-cache searches found no prior report.
+
+The existing Falcon narrative and artifact were read and their useful primary leads followed. Contrary to the earlier statement that Ecm30 has no validated specific partner, [Benschop et al., PMID:20620961](https://www.sciencedirect.com/science/article/pii/S109727651000417X) includes the Results section “The Ubp15-Ecm30 Ubiquitin Protease Complex Is Involved in Methionine Metabolism” and validates the complex. [Costanzo et al., PMID:20093466](https://csbweb.csb.pitt.edu/Faculty/roth/publications/Costanzo_Science_2010.pdf) directly links deletion to Gap1 sorting/transport defects and describes the complex. The local caches for those two papers are abstract-only; primary publisher/author text was checked separately. No protease activity is attributed to Ecm30, no generic protein-binding annotation is added, and perturbation phenotypes are not used to manufacture additional process annotations.
+
+Actual tree lineages, IBD/IRD rows and GO definitions are retained in `projects/IBA_REVIEW/rereview-2026-09-20/ecm30-fun19-paint-and-terms.json`. The full-gene assessment retains specific experimental questions without treating them as disproof of positive ancestry.
