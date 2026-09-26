@@ -130,3 +130,67 @@ functional. Both are recall/framing problems that the precision gates cannot see
 8 rows: 6 REMOVE, 2 ACCEPT. `just validate human ADM5` passes (1 intentional warning).
 All 16 distinct supporting_text quotes (44 instances) verified as substrings, including the
 19 `file:` instances CI does not check.
+
+## Round 2 (review feedback)
+
+The reviewer found three substantive problems. Two were errors in my reasoning, and the most
+important one I should have caught myself.
+
+### I marked an experimental annotation SOURCE_BAD from an abstract
+
+The pig donor A5LHG2 carries **`GO:0035809` regulation of urine volume with evidence code IDA**
+from PMID:18434369 — checked directly against QuickGO. It also carries an IDA for `GO:0007189`.
+I had marked the urine-volume donor `SOURCE_BAD` on the strength of two negative *abstracts*,
+which is precisely the move CLAUDE.md forbids: the curator read the full text and I did not.
+
+Worse, the heart-failure paper reconciles the apparent contradiction itself:
+
+> [PMID:22087608 "in these studies in normal animals, urine volume and sodium were maintained despite the reductions in BP, suggesting a relative improvement in renal function in normal health also"]
+
+Maintained urine output against falling blood pressure is a renal action, not the absence of one.
+Donor status corrected to `SUPPORTS_SOURCE_BUT_NOT_TARGET`. The REMOVE stands, but now rests
+**only** on the target — human ADM5 cannot make the peptide — not on any claim that the pig
+annotation is wrong.
+
+### The "AM5 raises no cAMP" argument was wrong
+
+I wrote that AM5 produces no cAMP. It does:
+
+> [PMID:21436721 "cyclic adenosine monophosphate (50% increment, P < 0.001) all rose in response to high dose AM-5"]
+
+The negative result is specific to **transfected CLR/CTR+RAMP combinations**, which bears on
+*which receptor* AM5 uses — relevant to `GO:1990410` — not on whether the signalling is
+adenylate-cyclase coupled. Since pig also holds an IDA to `GO:0007189`, the donor is sound there
+too. Rewritten so the receptor-assignment argument stays with `GO:1990410` and `GO:0007189` rests
+on the human deletion alone.
+
+### Four references were cached but uncited
+
+PMID:16195494 (pufferfish CLR-RAMP), PMID:33711314 (Xenopus), PMID:19420012 (central AM5) were
+all doing argumentative work while absent from `references`. PMID:22087608 (heart-failure
+diuresis) was asserted with **no citation and no cached record**, sourced only from the affinage
+record this very review marks DISPUTED — the same failure I flagged in the ADIG review on the
+same day. All four now cached and cited.
+
+One incidental gem from PMID:19420012:
+> [PMID:19420012 "We used porcine AM5 in the present study because rat AM5 has not been detected."]
+
+Independent support for the degeneracy story: rodents lack AM5 entirely.
+
+### Framing improvements taken
+
+- **These seven IBAs are the PAN-GO reference set**, which UniProt itself advertises
+  (`DR PAN-GO; C9JUS6; 7 GO annotations based on evolutionary models`). So this is not a stray
+  pipeline versus a curator — it is two curated resources disagreeing, and the removals are now
+  framed that way.
+- **The node ask is better as "move the IBD down"** than "split the family": PTHR23414 already
+  resolves into subfamilies with ADM5 as SF6 alone, so re-placing the ancestral assertion at
+  subfamily level is the actual fix.
+- **Both `GO:0005576` rows are now `KEEP_AS_NON_CORE`.** The reviewer noted the IBA row's
+  relationship type reads as the product being *active* extracellularly, which contradicts a
+  review that empties `core_functions`. The repo convention is that the qualifier column is inert
+  and not argued from, so the action is not driven by it — but the tension is genuine, and
+  non-core records that the extracellular placement is a routing consequence rather than a site
+  of action. (Validation also enforces one action per term, so the IEA row moved with it.)
+
+Final: 8 rows, 6 REMOVE / 2 KEEP_AS_NON_CORE. 23 distinct quotes (50 instances) verified.
