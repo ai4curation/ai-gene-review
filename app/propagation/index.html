@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+<title>Homology Propagation Browser</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Helvetica Neue', sans-serif;
+         background: #f3f4f6; color: #111827; font-size: 14px; }
+  header { background: linear-gradient(135deg, #0f766e 0%, #115e59 100%); color: #fff; padding: 24px 28px; }
+  header h1 { margin: 0 0 6px; font-size: 1.6rem; }
+  header p { margin: 0; opacity: .92; max-width: 70rem; line-height: 1.45; }
+  nav.links { padding: 8px 28px; background: #fff; border-bottom: 1px solid #e5e7eb; display: flex; gap: 16px; flex-wrap: wrap; }
+  nav.links a { color: #0f766e; }
+  .layout { display: grid; grid-template-columns: 290px 1fr; gap: 0; }
+  aside { background: #fff; border-right: 1px solid #e5e7eb; padding: 12px 14px; height: calc(100vh - 0px); overflow-y: auto; position: sticky; top: 0; }
+  aside h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #4b5563; margin: 14px 0 6px; cursor: pointer; }
+  aside h3 .hint { text-transform: none; font-weight: 400; color: #9ca3af; letter-spacing: 0; }
+  .facet { max-height: 220px; overflow-y: auto; }
+  .facet label { display: flex; gap: 6px; align-items: baseline; padding: 1px 0; cursor: pointer; font-size: .85rem; }
+  .facet label .n { margin-left: auto; color: #6b7280; font-variant-numeric: tabular-nums; }
+  .facet label.zero { color: #9ca3af; }
+  main { padding: 14px 20px; min-width: 0; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .toolbar input[type=search] { flex: 1 1 320px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: .95rem; }
+  .toolbar button { padding: 7px 12px; border: 1px solid #d1d5db; background: #fff; border-radius: 6px; cursor: pointer; }
+  .toolbar .count { color: #374151; font-weight: 600; }
+  .active { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .active span { background: #ccfbf1; color: #134e4a; border-radius: 12px; padding: 2px 10px; font-size: .8rem; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #e5e7eb; }
+  th, td { text-align: left; vertical-align: top; padding: 7px 8px; border-bottom: 1px solid #f1f5f9; }
+  th { background: #f9fafb; font-size: .78rem; text-transform: uppercase; color: #4b5563; position: sticky; top: 0; }
+  td.flow { min-width: 260px; }
+  .muted { color: #6b7280; }
+  .small { font-size: .8rem; }
+  .pill { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: .75rem; font-weight: 600; margin: 1px 2px 1px 0; white-space: nowrap; }
+  .a-ACCEPT { background: #dcfce7; color: #166534; }
+  .a-KEEP_AS_NON_CORE { background: #e0f2fe; color: #075985; }
+  .a-MARK_AS_OVER_ANNOTATED { background: #fef9c3; color: #854d0e; }
+  .a-MODIFY { background: #ede9fe; color: #5b21b6; }
+  .a-REMOVE { background: #fee2e2; color: #991b1b; }
+  .a-UNDECIDED, .a-PENDING, .a-NOT_IN_REVIEW, .a-NO_REVIEW { background: #f3f4f6; color: #374151; }
+  .s-EXPERIMENTAL { background: #dcfce7; color: #166534; }
+  .s-INFERRED_ONLY { background: #fef9c3; color: #854d0e; }
+  .s-ABSENT { background: #fee2e2; color: #991b1b; }
+  .s-NOT_CHECKED { background: #f3f4f6; color: #6b7280; }
+  .m-DIFFERENT_SYMBOL, .m-MIXED { background: #ffedd5; color: #9a3412; }
+  .donor { display: block; }
+  .arrow { color: #0f766e; font-weight: 700; }
+  details summary { cursor: pointer; color: #0f766e; }
+  .pager { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
+  .note { background: #fff; border: 1px solid #e5e7eb; padding: 10px 12px; margin-bottom: 10px; border-radius: 6px; line-height: 1.45; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } aside { position: static; height: auto; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Homology Propagation Browser</h1>
+  <p>GO annotations transferred to a gene from other gene products — by orthology (ISO), sequence similarity
+     (ISS/ISA), phylogenetic inference (IBA) or electronic orthology pipelines. Each row reads
+     <b>donor(s) → intermediate → target</b>, with what the donor carries today, what else the target carries,
+     and the gene review's verdict.</p>
+</header>
+<nav class="links">
+  <a href="../../pages/projects/HOMOLOGY_PROPAGATION.html">Propagation by homology (project index)</a>
+  <a href="../../pages/projects/ISO.html">ISO review</a>
+  <a href="../../pages/projects/IBA_REVIEW.html">IBA review</a>
+  <a href="../../docs/propagation_browser.md">Browser guide</a>
+  <span class="muted small" id="meta"></span>
+</nav>
+<div class="layout">
+  <aside id="facets"></aside>
+  <main>
+    <div class="note small">
+      <b>Donor support</b> is what the donor gene product carries <i>now</i> for the exact term (QuickGO, at the
+      cache date): EXPERIMENTAL, INFERRED_ONLY (e.g. itself ISO/IBA/IEA — a transfer of a transfer), ABSENT
+      (checked, term no longer on the donor) or NOT_CHECKED. <b>Symbol match</b> compares donor and target gene
+      symbols; a different symbol (e.g. rat Calm1 → mouse Calm3) flags paralog sourcing for a closer look — it is
+      not a verdict. <b>IBA on target / experimental on target</b>: SAME term, a MORE_SPECIFIC one (which already
+      entails this row), a MORE_GENERAL one, or NONE — i.e. how much this transfer adds.
+    </div>
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Search gene, term, GO id, donor symbol or id, review text…">
+      <span class="count" id="count"></span>
+      <button id="clear">Clear filters</button>
+      <button id="tsv">Download TSV</button>
+    </div>
+    <div class="active" id="active"></div>
+    <div class="pager" id="pager-top"></div>
+    <table>
+      <thead><tr><th>Target</th><th>Term</th><th>Donor(s) → intermediate</th><th>Donor support</th><th>Target also has</th><th>Review</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="pager" id="pager-bottom"></div>
+  </main>
+</div>
+<script src="data.js"></script>
+<script>
+(() => {
+  const P = window.propagationPayload;
+  const S = P.strings;
+  const DF = P.donor_fields;
+  const donors = P.donors.map(d => Object.fromEntries(DF.map((f, i) => [f, d[i] == null ? "" : S[d[i]]])));
+  const rows = P.rows.map(r => {
+    const o = {};
+    P.fields.forEach((f, i) => {
+      const v = r[i];
+      if (v == null) return;
+      if (f === "donors") o[f] = v.map(j => donors[j]);
+      else if (Array.isArray(v)) o[f] = v.map(j => S[j]);
+      else if (f === "donor_count") o[f] = v;
+      else o[f] = S[v];
+    });
+    return o;
+  });
+  const REPO = "../../";
+  document.getElementById("meta").textContent =
+    `${rows.length.toLocaleString()} rows · built ${P.metadata.built}` +
+    (P.metadata.donor_cache && P.metadata.donor_cache.refreshed ? ` · donor cache ${P.metadata.donor_cache.refreshed}` : "");
+
+  const FACETS = [
+    ["method_class", "Propagation class"],
+    ["method", "Method"],
+    ["evidence", "Evidence code"],
+    ["target_species", "Target species"],
+    ["donor_species", "Donor species", true],
+    ["donor_support", "Donor support"],
+    ["symbol_match", "Donor vs target symbol"],
+    ["iba_on_target", "IBA on target"],
+    ["experimental_on_target", "Experimental on target"],
+    ["action", "Review action"],
+    ["root_cause", "Root cause"],
+    ["failure_modes", "Failure mode", true],
+    ["aspect", "Aspect"],
+    ["qualifier", "Qualifier"],
+  ];
+  const multi = new Set(["donor_species", "failure_modes"]);
+  const vals = (r, k) => { const v = r[k]; if (v == null || v === "") return ["(none)"]; return Array.isArray(v) ? (v.length ? v : ["(none)"]) : [v]; };
+
+  const state = { q: "", page: 0, sel: {} };
+  const params = new URLSearchParams(location.search);
+  FACETS.forEach(([k]) => { const v = params.getAll(k); if (v.length) state.sel[k] = new Set(v); });
+  state.q = params.get("q") || "";
+  document.getElementById("q").value = state.q;
+
+  const hay = rows.map(r => [r.target, r.target_id, r.term_id, r.term_label, r.summary, r.reason,
+    ...(r.nodes || []), ...(r.donors || []).map(d => `${d.id} ${d.symbol || ""}`)].join(" ").toLowerCase());
+
+  function passes(r, i, skip) {
+    if (state.q && !hay[i].includes(state.q.toLowerCase())) return false;
+    for (const [k, set] of Object.entries(state.sel)) {
+      if (k === skip || !set.size) continue;
+      if (!vals(r, k).some(v => set.has(v))) return false;
+    }
+    return true;
+  }
+  function syncUrl() {
+    const p = new URLSearchParams();
+    if (state.q) p.set("q", state.q);
+    for (const [k, set] of Object.entries(state.sel)) set.forEach(v => p.append(k, v));
+    history.replaceState(null, "", "?" + p.toString());
+  }
+  const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  function renderFacets() {
+    const el = document.getElementById("facets");
+    el.innerHTML = FACETS.map(([k, label]) => {
+      const counts = new Map();
+      rows.forEach((r, i) => { if (passes(r, i, k)) vals(r, k).forEach(v => counts.set(v, (counts.get(v) || 0) + 1)); });
+      const sel = state.sel[k] || new Set();
+      sel.forEach(v => { if (!counts.has(v)) counts.set(v, 0); });
+      const items = [...counts.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(b[0]));
+      return `<h3>${esc(label)}${multi.has(k) ? ' <span class="hint">(any)</span>' : ""}</h3><div class="facet">` +
+        items.map(([v, n]) => `<label class="${n ? "" : "zero"}"><input type="checkbox" data-k="${k}" value="${esc(v)}" ${sel.has(v) ? "checked" : ""}>${esc(v)}<span class="n">${n.toLocaleString()}</span></label>`).join("") +
+        `</div>`;
+    }).join("");
+    el.querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", () => {
+      const k = cb.dataset.k; state.sel[k] = state.sel[k] || new Set();
+      cb.checked ? state.sel[k].add(cb.value) : state.sel[k].delete(cb.value);
+      state.page = 0; update();
+    }));
+  }
+
+  function donorHtml(r) {
+    const ds = r.donors || [];
+    let out = "";
+    if (r.evidence === "IBA" || r.method_class === "ELECTRONIC_PHYLOGENETIC") {
+      const species = (r.donor_species || []).join(", ");
+      out += `<span class="muted small">${r.donor_count || ds.length} PAINT seed(s)${species ? " incl. " + esc(species) : ""}</span>`;
+      if (ds.length) out += `<details class="small"><summary>seeds</summary>${ds.map(d => esc(d.id)).join(", ")}</details>`;
+    } else {
+      out += ds.map(d => `<span class="donor">${d.symbol ? `<b>${esc(d.symbol)}</b> ` : ""}<span class="muted small">${esc(d.organism || "")}</span> <span class="small">${esc(d.id)}</span>` +
+        ` <span class="pill s-${esc(d.support)}" title="${esc(d.codes)}">${esc(d.support)}${d.codes ? ": " + esc(d.codes) : ""}</span></span>`).join("") || '<span class="muted small">no donor recorded</span>';
+    }
+    if (r.nodes && r.nodes.length) out += `<div class="small"><span class="arrow">→</span> ${r.nodes.map(esc).join(", ")}</div>`;
+    out += `<div class="small"><span class="arrow">→</span> ${esc(r.target)} <span class="muted">(${esc(r.method)}, ${esc(r.reference)})</span></div>`;
+    return out;
+  }
+
+  function rowHtml(r) {
+    const gene = r.review_link ? `<a href="${REPO}${esc(r.review_link)}">${esc(r.target)}</a>` : esc(r.target);
+    const review = `<span class="pill a-${esc(r.action)}">${esc(r.action)}</span>` +
+      (r.root_cause ? `<span class="pill">${esc(r.root_cause)}</span>` : "") +
+      (r.failure_modes || []).map(m => `<span class="pill">${esc(m)}</span>`).join("") +
+      (r.summary || r.reason ? `<details class="small"><summary>${esc((r.summary || r.reason).slice(0, 90))}${(r.summary || r.reason).length > 90 ? "…" : ""}</summary>${r.summary ? `<p>${esc(r.summary)}</p>` : ""}${r.reason ? `<p><i>Reason:</i> ${esc(r.reason)}</p>` : ""}</details>` : "");
+    const also = [];
+    if (r.iba_on_target) also.push(`IBA: <b>${esc(r.iba_on_target)}</b>`);
+    also.push(`Exp: <b>${esc(r.experimental_on_target)}</b>`);
+    return `<tr>
+      <td>${gene}<div class="muted small">${esc(r.target_species)}</div><div class="small">${esc(r.target_id)}</div></td>
+      <td><a href="https://www.ebi.ac.uk/QuickGO/term/${esc(r.term_id)}" target="_blank" rel="noopener">${esc(r.term_id)}</a> ${esc(r.term_label)}
+          <div class="muted small">${esc(r.qualifier)} · ${esc(r.evidence)}</div></td>
+      <td class="flow">${donorHtml(r)}</td>
+      <td>${r.donor_support ? `<span class="pill s-${esc(r.donor_support)}">${esc(r.donor_support)}</span>` : '<span class="muted small">n/a (node)</span>'}
+          ${r.symbol_match ? `<div><span class="pill m-${esc(r.symbol_match)}">${esc(r.symbol_match)}</span></div>` : ""}</td>
+      <td class="small">${also.join("<br>")}</td>
+      <td>${review}</td>
+    </tr>`;
+  }
+
+  let filtered = [];
+  const PAGE = 100;
+  function renderPager(id) {
+    const pages = Math.max(1, Math.ceil(filtered.length / PAGE));
+    const el = document.getElementById(id);
+    el.innerHTML = `<button ${state.page ? "" : "disabled"} data-d="-1">‹ Prev</button> page ${state.page + 1} / ${pages} <button ${state.page + 1 < pages ? "" : "disabled"} data-d="1">Next ›</button>`;
+    el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { state.page += +b.dataset.d; renderRows(); window.scrollTo(0, 0); }));
+  }
+  function renderRows() {
+    document.getElementById("rows").innerHTML = filtered.slice(state.page * PAGE, (state.page + 1) * PAGE).map(rowHtml).join("");
+    renderPager("pager-top"); renderPager("pager-bottom");
+  }
+  function update() {
+    filtered = rows.filter((r, i) => passes(r, i, null));
+    document.getElementById("count").textContent = `${filtered.length.toLocaleString()} of ${rows.length.toLocaleString()} rows`;
+    const act = [];
+    for (const [k, set] of Object.entries(state.sel)) set.forEach(v => act.push(`<span data-k="${k}" data-v="${esc(v)}">${esc(k)}: ${esc(v)} ✕</span>`));
+    const a = document.getElementById("active"); a.innerHTML = act.join("");
+    a.querySelectorAll("span").forEach(s => s.addEventListener("click", () => { state.sel[s.dataset.k].delete(s.dataset.v); state.page = 0; update(); }));
+    renderFacets(); renderRows(); syncUrl();
+  }
+  let timer;
+  document.getElementById("q").addEventListener("input", e => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value.trim(); state.page = 0; update(); }, 200); });
+  document.getElementById("clear").addEventListener("click", () => { state.sel = {}; state.q = ""; document.getElementById("q").value = ""; state.page = 0; update(); });
+  document.getElementById("tsv").addEventListener("click", () => {
+    const cols = ["target", "target_id", "target_species", "term_id", "term_label", "qualifier", "evidence", "reference", "method",
+      "nodes", "donors", "donor_support", "symbol_match", "iba_on_target", "experimental_on_target", "action", "root_cause", "failure_modes", "summary", "reason"];
+    const cell = (r, c) => {
+      const v = r[c];
+      if (c === "donors") return (v || []).map(d => [d.id, d.symbol, d.support].filter(Boolean).join("/")).join("; ");
+      return Array.isArray(v) ? v.join("; ") : (v == null ? "" : String(v));
+    };
+    const lines = [cols.join("\t"), ...filtered.map(r => cols.map(c => cell(r, c).replace(/[\t\n]/g, " ")).join("\t"))];
+    const blob = new Blob([lines.join("\n") + "\n"], { type: "text/tab-separated-values" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "homology-propagation.tsv"; a.click();
+  });
+  update();
+})();
+</script>
+</body>
+</html>
