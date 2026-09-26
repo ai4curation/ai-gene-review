@@ -42,6 +42,8 @@ are facet counts in the browser. Useful starting views:
 [DeepECTF claims](../app/predictions/index.html?dataset=claims&source_method=DeepECTF), and the
 [GO-GPT three-level overlap](../app/predictions/index.html?dataset=overlap), which is fixed at the review snapshot.
 
+**[Cross-project review (2026-09-26)](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md)** — consistency, independence, and reproducibility audit of the evaluations below, with prioritized fixes.
+
 ## Model and agent evaluations
 
 | Project | What is evaluated | Explore |
