@@ -39,19 +39,19 @@ or substrate has ever been reported for ABHD8. UniProt's own EC number is the ma
 uninformative one — [file:human/ABHD8/ABHD8-uniprot.txt "DE            EC=3.-.-.-;"] — which is
 the signature of a protein placed in an enzyme family with nothing measured.
 
-All six are `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`, and it took a bioinformatics check
-to establish that this is the right call rather than a hedge. `ABHD8-bioinformatics/`
-resolves all seven distinct WITH/FROM accessions against UniProt and queries each one's own GO
-evidence via QuickGO, at run time
+None of these rows is a clean `REMOVE`, and it took a bioinformatics check to establish that
+this is evidence-sensitive rather than a hedge. `ABHD8-bioinformatics/` resolves all seven
+distinct WITH/FROM accessions against UniProt and queries each one's own GO evidence via QuickGO,
+at run time
 ([file:human/ABHD8/ABHD8-bioinformatics/RESULTS.md]).
 
 **The single most important result: 6 of the 7 sources carry their own experimental evidence**
 for at least one propagated term — only the PANTHER node does not. These IBAs are propagating
-from genuinely characterised enzymes, not from a family-level guess. That is what makes
-over-annotation the right verdict and `REMOVE` the wrong one — and it is also why the
-`propagation_review` `root_cause` on every row is **`PROPAGATION_BAD`** ("the source annotation
-is sound, but the term should not propagate to this target") rather than any `SOURCE_*` value.
-Classifying these as weak sources would now contradict the evidence table.
+from genuinely characterised enzymes, not from a family-level guess. That source evidence is
+why the hydrolase rows are `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`, while the LPAAT and
+phosphatidic-acid rows remain `UNDECIDED`: the contested ABHD5, plant CGI-58 and yeast Ict1
+source activities still have to be separated from ABHD8-specific target uncertainty. Classifying
+all of the inherited lipid rows as weak-source transfers would now contradict the evidence table.
 
 **Evidence provenance and name provenance are different questions, and only one is settled for
 all six.** The Drosophila source has no reviewed UniProt entry, and its FlyBase id maps to **four**
@@ -195,3 +195,8 @@ No direct target assay alone does not refute an IBD, and an adaptor function can
 PAINT: {'family': 'PTHR42886', 'node': 'PTN008676419', 'finding': 'Fetched actual family membership and PAINT slice. Current hydrolase, LPAAT, PA-biosynthesis and homeostasis IBDs were checked. Human ABHD5/yeast Ict1/plant CGI-58 evidence is distinguished from mouse Abhd4/yeast Cld1 hydrolase evidence.'}
 
 All 16 rows were assessed, including experimental, electronic, negated and old proposed entries. All actual GOA rows and source fields remain unchanged. One redundant old reviewer-authored NEW proposal was deleted; the original reviewed-row count includes that proposal. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.
+
+## 2026-09-26 OpenScientist lipid-catalysis follow-up
+
+- Critically evaluated `genes/human/ABHD8/ABHD8-hypotheses/lipid-catalysis-versus-inflammasome-adaptor/openscientist.md`, the coordinated report requested for the five lipid IBA rows at `PTN008676419`. The report agreed that ABHD8 retains a complete predicted Ser/Asp/His catalytic triad, but found no ABHD8-specific lipid substrate assay [file:human/ABHD8/ABHD8-hypotheses/lipid-catalysis-versus-inflammasome-adaptor/openscientist.md "no ABHD8-specific biochemical assay demonstrates any lipid substrate"].
+- Changed the specific `GO:0004620` glycerophospholipase and `GO:0052689` carboxylic-ester hydrolase IBAs from `ACCEPT` to `MARK_AS_OVER_ANNOTATED`: the broad `GO:0003824` catalytic activity row remains acceptable as catalytic potential, while specific hydrolase substrates are unproven. `GO:0042171` LPA acyltransferase and `GO:0006654` phosphatidic-acid biosynthesis remain `UNDECIDED` because the OpenScientist "likely incorrect" lead strengthens the target-side concern but does not resolve the already documented source-side conflicts.
