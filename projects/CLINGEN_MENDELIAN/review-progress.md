@@ -70,22 +70,24 @@ are therefore expected; existing human reviews still link normally.
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
-| A4GALT | Definitive | INITIALIZED | Approved; current-head CI pending | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
-| AARS1 | Definitive | COMPLETE | Biology approved; history wording updated, final checks pending | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
+| A4GALT | Definitive | INITIALIZED | Merged; final validation and CI passed | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
+| AARS1 | Definitive | COMPLETE | Merged; final validation and CI passed | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
 | AARS2 | Definitive | COMPLETE | Merged; final validation and CI passed | `cmungall/clingen-aars2` | [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128) |
-| AASS | Definitive | INITIALIZED | Review and CI pending | `cmungall/clingen-aass` | [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) |
-| ABCA3 | Definitive | No review | Review and CI pending | `cmungall/clingen-abca3` | [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) |
+| AASS | Definitive | INITIALIZED | Approved; required checks pending | `cmungall/clingen-aass` | [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) |
+| ABCA3 | Definitive | No review | Approved; required checks pending | `cmungall/clingen-abca3` | [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) |
 | ABCA4 | Definitive | No review | Review and CI pending | `cmungall/clingen-abca4` | [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) |
-| ABCB4 | Definitive | No review | Primary evidence and annotation review in progress | `cmungall/clingen-abcb4` | — |
-| ABCC6 | Definitive | No review | Assigned; fetching sources | `cmungall/clingen-abcc6` | — |
-| ABCC8 | Definitive | To audit at initialization | Assigned | `cmungall/clingen-abcc8` | — |
+| ABCB4 | Definitive | No review | Review and CI pending | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
+| ABCC6 | Definitive | No review | Annotation review and source audit in progress | `cmungall/clingen-abcc6` | — |
+| ABCC8 | Definitive | No review | Annotation review in progress | `cmungall/clingen-abcc8` | — |
+| ABCC9 | Definitive | No review | Fetching sources and research | `cmungall/clingen-abcc9` | — |
+| ABCD1 | Definitive | No review | Seeded 135 assertions; research in progress | `cmungall/clingen-abcd1` | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
-Check and approval states above were verified at 02:36 UTC; later pushes can reset them.
+Check and approval states above were verified at 02:58 UTC; later pushes can reset them.
 
 Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The next unassigned nuclear protein-coding Definitive gene is **ABCC9**. **1 of
+The next unassigned nuclear protein-coding Definitive gene is **ABCG5**. **3 of
 2,876 genes is complete** for this campaign. ABAT is in the Moderate tier.
 
 ## Verification log
@@ -138,3 +140,18 @@ The next unassigned nuclear protein-coding Definitive gene is **ABCC9**. **1 of
   by a history-only wording correction on `f0f9e75cd4`. Neither is counted complete
   before merge. The earlier "CI passed" status referred to superseded heads and
   is replaced with current-head pending states.
+
+- 2026-09-26 UTC: A4GALT PR #3127 merged at 02:50:20 UTC as
+  `2de175d73c1746bedc98d758d5932643af176805`; AARS1 PR #3129 merged at
+  02:54:38 UTC as `5b2c8193f4bc9875f17b0845e5f3165680e0c697`. Both had
+  approval on their final heads and successful required CI, with targeted gene
+  and history validation already passed. Their two inventory checkboxes are now
+  complete, bringing the campaign total to three.
+
+- 2026-09-26 UTC: ABCB4 PR #3135 contains 68 adjudicated assertions and 23
+  propagation assessments, preserving both NOT flags. Targeted validation,
+  history validation, rendering and source-object comparison pass; three evidence
+  questions remain explicitly UNDECIDED. AASS and ABCA3 follow-ups were approved
+  and await required checks. ABCC6/ABCC8 reviews are underway, ABCC9 is assigned,
+  and ABCD1 has been initialized after checking its former symbol ALD and alias
+  ALDP for existing reviews. The next unassigned Definitive gene is ABCG5.
