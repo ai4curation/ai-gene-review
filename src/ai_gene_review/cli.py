@@ -3356,6 +3356,86 @@ def render_module_notation(
 
 
 @app.command()
+def module_to_bnet(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to translate into a Boolean network"),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Write <stem>.bnet per module here; if omitted, print to stdout",
+        ),
+    ] = None,
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Translate all module YAML files in modules/"),
+    ] = False,
+    input_mode: Annotated[
+        str,
+        typer.Option(
+            "--input-mode",
+            help="How to write inputs: 'identity' (x, x; BoolNet convention) or 'free' (omitted)",
+        ),
+    ] = "identity",
+    logic: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--logic",
+            help="YAML mapping variable -> bnet expression overriding the default rule",
+        ),
+    ] = None,
+):
+    """Translate module YAML into a Boolean network (BoolNet .bnet format).
+
+    Every connection endpoint becomes a variable; container nodes are flattened
+    to their entry/exit tiers; the default update rule is the CaSQ convention
+    (OR of activators AND NOT the inhibitors). Elements with no incoming edge are
+    inputs. See projects/BOOLEAN_MODELS.md.
+
+    Examples:
+        ai-gene-review module-to-bnet modules/erk_cascade.yaml
+        ai-gene-review module-to-bnet --all -o projects/BOOLEAN_MODELS/out
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.module_boolean import module_file_to_boolean
+
+    if all_modules:
+        targets = sorted(modules_dir.glob("*.yaml"))
+    elif files:
+        targets = list(files)
+    else:
+        typer.echo("Please specify file(s) or use --all", err=True)
+        raise typer.Exit(code=1)
+
+    overrides = _yaml.safe_load(logic.read_text()) if logic else None
+    for module_file in targets:
+        if not module_file.exists():
+            typer.echo(f"Error: File not found: {module_file}", err=True)
+            continue
+        model = module_file_to_boolean(module_file, overrides)
+        if not model.variables:
+            typer.echo(f"# {module_file}: no connections; nothing to translate", err=True)
+            continue
+        text = model.to_bnet(input_mode=input_mode)
+        if output_dir is None:
+            typer.echo(f"# {module_file} ({len(model.variables)} variables, inputs: {', '.join(model.inputs)})")
+            typer.echo(text)
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            out_path = output_dir / f"{module_file.stem}.bnet"
+            out_path.write_text(text + "\n")
+            typer.echo(f"Wrote {module_file} -> {out_path}")
+
+
+@app.command()
 def compare_module_regulation(
     module_file: Annotated[
         Path, typer.Argument(help="Curated module YAML (e.g. modules/methionine_cycle.yaml)")
