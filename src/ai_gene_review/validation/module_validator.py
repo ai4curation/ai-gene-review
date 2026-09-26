@@ -1847,8 +1847,16 @@ def validate_supporting_text(
 
     - a quote that is not a substring of the fetched/cached publication is an
       **error** (blocks validation);
-    - a reference that cannot be fetched or is not cached is a **warning**
-      (advisory, so offline/rate-limited runs do not hard-fail).
+    - a quote that *cannot be checked* -- uncached, unfetchable, or a crash in the
+      checker -- is now also an **error**. It was previously a warning, "advisory so
+      offline runs do not hard-fail", but that made an unverified quote
+      indistinguishable from a verified one, which is the only distinction this check
+      draws. The gene-review side made the same change in
+      ``validate_reference_finding_supporting_text``.
+
+    The second element of the tuple is therefore always empty today. It is kept so the
+    ``(errors, warnings)`` shape matches the sibling validators and callers that unpack
+    it, not because a warning case is expected.
 
     The check is a no-op (returns empty) when the reference validator is not
     installed, so it degrades gracefully.
@@ -1865,12 +1873,19 @@ def validate_supporting_text(
 
     errors: List[str] = []
     warnings: List[str] = []
+    # A snippet must be deterministically checkable against the cache, and a failure to
+    # match is an error -- the same rule the gene-review validator applies in
+    # validate_reference_finding_supporting_text. Both paths used to downgrade the
+    # uncheckable cases to warnings, which made an unverified quote indistinguishable
+    # from a verified one; that is the only distinction either check exists to draw.
+    # A crash while checking is likewise not a pass: it skips validation for reasons
+    # unrelated to whether the quote is correct.
     for source_id, supporting_text in snippets:
         try:
             result = validator.validate(supporting_text, source_id)
         except Exception as exc:  # noqa: BLE001 - external publication service
-            warnings.append(
-                f"Supporting text unverified ({source_id}): fetch failed: "
+            errors.append(
+                f"Supporting text could not be checked ({source_id}): fetch failed: "
                 f"{type(exc).__name__}: {exc}"
             )
             continue
@@ -1878,7 +1893,7 @@ def validate_supporting_text(
             continue
         message = str(getattr(result, "message", "") or "")
         if is_unfetchable(message):
-            warnings.append(f"Supporting text unverified ({source_id}): {message}")
+            errors.append(f"Supporting text could not be checked ({source_id}): {message}")
         else:
             errors.append(f"Supporting text mismatch ({source_id}): {message}")
     return errors, warnings

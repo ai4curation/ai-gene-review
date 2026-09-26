@@ -8,6 +8,8 @@ committed nicotine module.
 
 from pathlib import Path
 
+from types import SimpleNamespace
+
 import pytest
 import yaml
 
@@ -702,7 +704,16 @@ def test_validate_supporting_text_no_literature_is_noop():
     assert errors == [] and warnings == []
 
 
-def test_validate_supporting_text_fetch_exception_is_warning(monkeypatch):
+def test_validate_supporting_text_fetch_exception_is_an_error(monkeypatch):
+    """A crash while checking a snippet is an error, not a pass.
+
+    This reverses the previous assertion, which required a WARNING and named the failure
+    "transient". Downgrading here skips validation for a reason that has nothing to do
+    with whether the quote is correct, which leaves an unverified snippet looking exactly
+    like a verified one. The gene-review validator made the same change; this is the
+    module-document half of it.
+    """
+
     class RaisingValidator:
         def validate(self, supporting_text, source_id):
             raise RuntimeError("transient fetch failure")
@@ -719,8 +730,39 @@ def test_validate_supporting_text_fetch_exception_is_warning(monkeypatch):
         }
     }
     errors, warnings = validate_supporting_text(doc)
-    assert errors == []
-    assert any("transient fetch failure" in warning for warning in warnings)
+    assert warnings == []
+    assert any("transient fetch failure" in error for error in errors)
+    assert any("could not be checked" in error for error in errors)
+
+
+def test_validate_supporting_text_uncached_reference_is_an_error(monkeypatch):
+    """An uncheckable-because-uncached snippet is an error too.
+
+    The unfetchable branch was the other downgrade path in this function, and it is the
+    common one: an author can add a quote for a reference that was never cached and, under
+    the old rule, see only an advisory warning.
+    """
+
+    class Unfetchable:
+        def validate(self, supporting_text, source_id):
+            return SimpleNamespace(
+                is_valid=False, message="Could not fetch publication PMID:123"
+            )
+
+    monkeypatch.setattr(
+        "ai_gene_review.validation.module_validator.build_supporting_text_validator",
+        lambda publications_dir: (Unfetchable(), None),
+    )
+    doc = {
+        "module": {
+            "evidence": [
+                {"source_id": "PMID:123", "supporting_text": "a real quote"}
+            ]
+        }
+    }
+    errors, warnings = validate_supporting_text(doc)
+    assert warnings == []
+    assert any("could not be checked" in error for error in errors)
 
 
 @pytest.mark.integration

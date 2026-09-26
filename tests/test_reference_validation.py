@@ -140,11 +140,12 @@ def test_abstract_only_undeclared_finding_mismatch_is_error(tmp_path):
     from a verified one, and 47% of the publication cache is abstract-only, so the silent
     case is common rather than marginal.
 
-    The escape hatch is unchanged and is what keeps this fair -- an author who records
-    ``full_text_unavailable: true`` still gets a WARNING, as
-    ``test_full_text_unavailable_flag_downgrades_mismatch`` and
-    ``test_abstract_only_declared_finding_mismatch_stays_warning`` assert. The error fires
-    only when nobody has said the text is uncached.
+    There is no longer an escape hatch, so "undeclared" in this test's name describes the
+    fixture, not a condition of the error: declaring ``full_text_unavailable: true`` gets
+    the same ERROR, which is what
+    ``test_full_text_unavailable_flag_no_longer_downgrades_mismatch`` asserts for both
+    placements of the flag. An earlier version of this docstring said the hatch was
+    "unchanged" and named two tests that assert the opposite or do not exist.
     """
     _write_cached_publication(tmp_path, full_text_available=False)
     review_path = tmp_path / "review.yaml"
