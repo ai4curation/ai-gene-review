@@ -173,6 +173,12 @@ class Publication:
     doi: Optional[str] = None
     keywords: Optional[List[str]] = None
     pubmed_publication_types: Optional[List[str]] = None  # raw PubMed PT list
+    #: Frontmatter keys this dataclass has no field for, preserved verbatim on write.
+    #: publication_warm writes full_text_provider, full_text_url, oa_status, license and
+    #: full_text_attempted straight into frontmatter, so a rewrite through Publication
+    #: silently dropped them -- including `license`, which governs redistribution of the
+    #: very text a carry-forward is preserving.
+    extra_frontmatter: Optional[Dict[str, Any]] = None
 
     @property
     def publication_type(self) -> Optional[str]:
@@ -200,6 +206,8 @@ class Publication:
         }
         if self.full_text_extraction_method:
             data["full_text_extraction_method"] = self.full_text_extraction_method
+        for key, value in (self.extra_frontmatter or {}).items():
+            data.setdefault(key, value)
         if self.pmcid:
             data["pmcid"] = self.pmcid
         if self.doi:
@@ -367,6 +375,7 @@ def convert_doi_publication(
     # Extract abstract from body if present
     body = parts[2]
     content = ""
+    needed_stripping = False
     if "## Content" in body:
         abstract_section = body.split("## Content", 1)[1].strip()
         # The lift is guarded for the same reason the flag is. `to_markdown` emits this
@@ -377,9 +386,10 @@ def convert_doi_publication(
         # full_text_url and oa_status, so `TY  - JOUR` is the only surviving signal that
         # the body is junk; checking it here is the last chance to notice.
         if abstract_section:
+            needed_stripping = _carries_stub_marker(abstract_section)
             content = (
                 _strip_stub_lines(abstract_section)
-                if _carries_stub_marker(abstract_section)
+                if needed_stripping
                 else abstract_section
             )
 
@@ -390,12 +400,19 @@ def convert_doi_publication(
     # `bool(flag) and FULL_TEXT_HEADER in body` called it a candidate for re-fetching. Two
     # consumers disagreeing about one record. Found by self-audit, not a regression from
     # this PR; fixed here because this PR has already edited this function twice.
-    if not content:
-        # Nothing survived. The record's only content was junk, so a flag derived from
-        # content_type is now false -- otherwise the reject path produces exactly the
-        # record the accept path was fixed to stop producing: flag true, no `## Full Text`,
-        # and "No abstract available." as the body. cached_record_has_no_body cannot see
-        # that either, since the body is neither empty nor the literal stub signature.
+    # A section that needed stripping was a landing page, so whatever survived is at best
+    # abstract-grade -- on the live records the residue IS the abstract. Promoting it to
+    # `full_text` would be bulk without body one writer over.
+    #
+    # `is_usable_full_text` has three rejection criteria and this converter can only apply
+    # the first: the marker list. The other two -- "contained in the already-cached
+    # abstract" and "adds less than MIN_FULL_TEXT_CHARS beyond it" -- are exactly what a
+    # stripped landing page fails, and there is no separately cached abstract here to
+    # compare against. So the conservative reading of a stripped section is the honest one.
+    #
+    # Gating the revision below on `if not content` alone made it unreachable whenever any
+    # prose survived, which is the strip's whole purpose.
+    if not content or needed_stripping:
         # An explicit `full_text_available` in the source still wins; only a derived one
         # is revised.
         if not isinstance(declared, bool):
@@ -503,7 +520,18 @@ def _strip_stub_lines(text: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
 
 
-def _existing_accepted_full_text(path: Path) -> tuple[Optional[str], Optional[str]]:
+PROVENANCE_KEYS = (
+    "full_text_provider",
+    "full_text_url",
+    "oa_status",
+    "license",
+    "full_text_attempted",
+)
+
+
+def _existing_accepted_full_text(
+    path: Path,
+) -> tuple[Optional[str], Optional[str], Dict[str, Any]]:
     """The cached record's full text, but only if the record itself vouches for it.
 
     Returns ``(None, None)`` unless the frontmatter says ``full_text_available: true``.
@@ -511,28 +539,32 @@ def _existing_accepted_full_text(path: Path) -> tuple[Optional[str], Optional[st
     while declaring ``false``, because the body was rejected or is a heading plus the
     abstract (e.g. ``PMID_7262539``).
     """
+    # A fourth hand-rolled parse of this format. The duplication is forced, not careless:
+    # importing linkml_reference_validator's parser would drag that dependency into this
+    # module, and validator.py treats it as optional.
     text = path.read_text()
     if not text.startswith("---"):
-        return None, None
+        return None, None, {}
     end = text.find("\n---", 3)
     if end == -1:
-        return None, None
+        return None, None, {}
     frontmatter = yaml.safe_load(text[3:end])
     if not isinstance(frontmatter, dict) or not frontmatter.get("full_text_available"):
-        return None, None
+        return None, None, {}
     body = text[end + 4 :]
     marker = "\n## Full Text\n"
     if marker not in body:
-        return None, None
+        return None, None, {}
     section = body.split(marker, 1)[1]
     next_heading = section.find("\n## ")
     if next_heading != -1:
         section = section[:next_heading]
     section = section.strip()
     if not section:
-        return None, None
+        return None, None, {}
     method = frontmatter.get("full_text_extraction_method")
-    return section, method if isinstance(method, str) else None
+    provenance = {k: frontmatter[k] for k in PROVENANCE_KEYS if k in frontmatter}
+    return section, method if isinstance(method, str) else None, provenance
 
 
 def accept_full_text(content: str | None, is_complete: bool, abstract: str) -> bool:
@@ -1163,7 +1195,9 @@ def cache_publication(
     # Gate on the existing record's own verdict instead, and carry its body forward rather
     # than declining to write.
     if output_file.exists() and not publication.full_text_available:
-        kept_text, kept_method = _existing_accepted_full_text(output_file)
+        kept_text, kept_method, kept_provenance = _existing_accepted_full_text(
+            output_file
+        )
         if kept_text:
             print(
                 f"PMID {pmid}: re-fetch returned no usable full text; keeping the "
@@ -1172,6 +1206,10 @@ def cache_publication(
             publication.full_text = kept_text
             publication.full_text_available = True
             publication.full_text_extraction_method = kept_method
+            # Keep the body's provenance with the body. `license` governs redistribution
+            # of the very text being preserved, and the previous skip-the-write behaviour
+            # kept it by accident.
+            publication.extra_frontmatter = kept_provenance
 
     # Write to file
     output_file.write_text(publication.to_markdown())

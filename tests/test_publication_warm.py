@@ -888,11 +888,19 @@ def test_a_forced_refetch_refreshes_metadata_and_keeps_a_vouched_body(tmp_path):
 
     good = tmp_path / "PMID_1.md"
     good.write_text(
-        "---\npmid: '1'\nfull_text_available: true\nfull_text_extraction_method: xml\n---\n\n"
+        "---\npmid: '1'\nfull_text_available: true\nfull_text_extraction_method: xml\n"
+        "full_text_provider: pmc\noa_status: gold\nlicense: CC-BY\n---\n\n"
         "## Abstract\n\na\n\n## Full Text\n\nA genuine body.\n"
     )
-    text, method = _existing_accepted_full_text(good)
+    text, method, provenance = _existing_accepted_full_text(good)
     assert text == "A genuine body." and method == "xml"
+    # the body's provenance travels with it -- `license` governs redistribution of the
+    # very text being preserved, and the previous skip-the-write kept it by accident.
+    assert provenance == {
+        "full_text_provider": "pmc",
+        "oa_status": "gold",
+        "license": "CC-BY",
+    }
 
     # the 888 shape: a section present, but the record does not vouch for it
     rejected = tmp_path / "PMID_2.md"
@@ -900,4 +908,31 @@ def test_a_forced_refetch_refreshes_metadata_and_keeps_a_vouched_body(tmp_path):
         "---\npmid: '2'\nfull_text_available: false\n---\n\n"
         "## Abstract\n\na\n\n## Full Text\n\nAbstract\n\na\n"
     )
-    assert _existing_accepted_full_text(rejected) == (None, None)
+    assert _existing_accepted_full_text(rejected) == (None, None, {})
+
+
+def test_a_stripped_section_is_abstract_grade_not_full_text(tmp_path):
+    """The strip's survivor must not be promoted to `full_text`.
+
+    Revising the derived flag only `if not content` made the revision unreachable whenever
+    prose survived -- which is the strip's entire purpose. A section that needed stripping
+    was a landing page, so its residue is at best abstract-grade; on the live records the
+    residue IS the abstract. `is_usable_full_text` has three rejection criteria and this
+    converter can apply only the marker list; "contained in the cached abstract" and "adds
+    less than MIN_FULL_TEXT_CHARS" are exactly what a stripped landing page fails.
+    """
+    from ai_gene_review.etl.publication import convert_doi_publication
+
+    src = tmp_path / "DOI_10.1234_d.md"
+    src.write_text(
+        "---\ndoi: 10.1234/d\npmid: '999991'\ntitle: t\ncontent_type: full_text_html\n---\n\n"
+        "## Content\n\nSUMMARY\nReal abstract prose about second messengers.\n\n"
+        "Research output:Contribution to journal\n\nTY  - JOUR\n\nER  -\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999991") is True
+    out = (tmp_path / "PMID_999991.md").read_text()
+
+    assert "full_text_available: false" in out, "a stripped landing page is not full text"
+    assert "## Full Text" not in out
+    assert "Real abstract prose about second messengers." in out, "the prose is kept"
+    assert "TY  - JOUR" not in out
