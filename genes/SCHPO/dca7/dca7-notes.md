@@ -129,3 +129,7 @@ interaction table.
   its domain architecture, its verified localization, and its conservation — without asserting a
   proven function.
 - `knowledge_gaps` (REQUIRED): the MF is genuinely unknown (BIOLOGY gap, WHOLLY_DARK / MF_DARK).
+
+## 2026-09-26 focused OpenScientist follow-up
+
+Read two focused reports on the Dca7 kinase-scaffold and CRL4-substrate-receptor hypotheses. They support the existing conservative interpretation: the Dca7-Ppk15 edge is a promising kinase-scaffold lead but not enough to override PomBase MF/BP ND, while the Cul4-RING component row remains an ISS name/orthology transfer with no local CRL4-core evidence and should stay MARK_AS_OVER_ANNOTATED rather than become a core CRL4 molecular-function assertion.

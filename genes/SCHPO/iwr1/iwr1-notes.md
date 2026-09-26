@@ -88,3 +88,7 @@ The pombe annotations transfer from experimentally characterized S. cerevisiae I
   no-data placeholder rather than a negative assertion. Propose `GO:0000993` as NEW with ISS,
   consistent with the orthology evidence and without implying direct S. pombe experimentation.
 - Never REMOVE the ISO/IBA import annotation: it is a defensible orthology transfer from an experimentally solid budding-yeast function; the family signature (Pfam Iwr1) directly supports it.
+
+## 2026-09-26 focused OpenScientist follow-up
+
+Read the focused OpenScientist report on the Iwr1 Pol II nuclear-import adaptor hypothesis. It supports the review's orthology-based ACCEPT calls for protein import into nucleus and its proposed GO:0000993 RNA polymerase II complex binding row, while reinforcing that GO:0030674 protein-macromolecule adaptor activity and direct fission-yeast Pol II import tests belong in follow-up rather than as additional NEW assertions.
