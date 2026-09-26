@@ -1,12 +1,29 @@
 ---
 title: "Human BBSome Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [BBS1, BBS2, ARL6, BBS4, BBS5, MKKS, BBS7, TTC8, BBS9, BBS10, BBS12, LZTFL1, BBIP1, CCDC28B]
 ---
 
 # Human BBSome Project
+
+**Bottom line:** the BBSome is the eight-subunit coat that sorts signalling
+receptors into and out of the primary cilium, and its loss causes Bardet–Biedl
+syndrome. We reviewed every existing GO annotation for the 14 BBS-associated
+human genes (the eight core subunits, the ARL6 recruiter, the LZTFL1 and
+CCDC28B regulators, and the MKKS/BBS10/BBS12 assembly chaperonins) and built a
+reusable [BBSome module](../modules/bbsome.html). All 14 reviews and the module
+validate. The main corrections were demoting the pervasive `protein binding`
+IPI rows in favour of BBSome membership (GO:0034464) or specific MF terms,
+treating the three chaperonin-like BBS proteins as assembly factors rather than
+subunits, and removing two over-propagated BBS2 IEA localizations.
+
+We did this because the BBSome is a well-bounded complex with a strong
+structural literature, which makes it a clean test of whether per-gene review
+recovers the division of labour inside a complex (cargo recognition,
+membrane recruitment, assembly) instead of copying one generic
+"cilium" story onto every subunit.
 
 ## Overview
 
