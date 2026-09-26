@@ -68,7 +68,7 @@ def _action_breakdown(rows: list[dict[str, Any]], key: Callable[[dict], str],
         c = Counter(r["action"] for r in reviewed)
         out.append([k, len(g), len(reviewed), *(c.get(a, 0) for a in ACTIONS),
                     _pct(sum(c[a] for a in NEGATIVE), len(reviewed))])
-    return _table([label, "Rows", "Reviewed", *ACTIONS, "REMOVE/OVER/MODIFY"], out)
+    return _table([label, "Annotations", "Reviewed", *ACTIONS, "REMOVE/OVER/MODIFY"], out)
 
 
 def species_pair(row: dict[str, Any]) -> str:
@@ -99,23 +99,28 @@ def annotation_units(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
     Pipelines such as GO_REF:0000096 emit one GOA line per donor, and all of
     them join to the same review entry. Statistics count annotations, so rows
-    sharing (gene, term, qualifier, evidence, reference) are merged: donor
-    species are unioned, donor support takes the strongest value, and symbol
-    matches combine (a same-symbol plus a different-symbol donor is MIXED).
+    sharing the review join key -- (gene, term, evidence, reference, negated),
+    as in ``load_reviews`` -- are merged. Lines that differ only in a
+    non-negating qualifier (``located_in`` vs ``is_active_in``) also join one
+    review entry, so they merge too. Donors and donor species are unioned,
+    donor support takes the strongest value, and symbol matches combine (a
+    same-symbol plus a different-symbol donor is MIXED).
     """
     groups: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
     for r in rows:
-        key = (r["species_dir"], r["gene_dir"], r["term_id"], r["qualifier"],
-               r["evidence"], r["reference"])
+        key = (r["species_dir"], r["gene_dir"], r["term_id"], r["evidence"],
+               r["reference"], r["qualifier"].startswith("NOT"))
         groups[key].append(r)
     units = []
     for group in groups.values():
         unit = dict(group[0])
         unit["donor_lines"] = len(group)
-        species = sorted({s for r in group for s in r.get("donor_species", [])})
-        if len(species) > 1:
-            species = [s for s in species if s != "unresolved"]
-        unit["donor_species"] = species
+        unit["donors"] = list({d["id"]: d for r in group for d in r.get("donors", [])}.values())
+        if "donor_species" in unit:
+            species = sorted({s for r in group for s in r.get("donor_species", [])})
+            if len(species) > 1:
+                species = [s for s in species if s != "unresolved"]
+            unit["donor_species"] = species
         if "donor_support" in unit:
             unit["donor_support"] = min((r["donor_support"] for r in group),
                                         key=SUPPORT_ORDER.index)
@@ -139,8 +144,9 @@ def render(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> str:
         f"Generated {metadata['generated']} by `just propagation-stats` from the cached GOA",
         f"files under `genes/` (donor cache refreshed {metadata.get('donor_cache', '–')}).",
         "Counts cover every gene with a cached GOA file. The unit is one annotation",
-        "(gene, term, qualifier, evidence, reference): pipelines that emit one GOA line",
-        f"per donor are merged ({donor_line_count:,} GOA lines → {len(rows):,} annotations).",
+        "(gene, term, evidence, reference, negation): pipelines that emit one GOA line",
+        "per donor, or split one annotation across qualifiers, are merged",
+        f"({donor_line_count:,} GOA lines → {len(rows):,} annotations).",
         "*Reviewed* annotations are those matched to an `existing_annotations` entry",
         "with a final review action.",
         "These numbers are regenerated; do not copy them into project prose.",
@@ -203,11 +209,11 @@ def render(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> str:
               "Structured `review.propagation_review` classifications (all methods).", ""]
     rc = Counter(r["root_cause"] for r in rows if r.get("root_cause"))
     fm = Counter(m for r in rows for m in r.get("failure_modes", []))
-    parts.append(_table(["Root cause", "Rows"], rc.most_common()) if rc else "_None recorded._")
-    parts += ["", _table(["Failure mode", "Rows"], fm.most_common()) if fm else "", ""]
+    parts.append(_table(["Root cause", "Annotations"], rc.most_common()) if rc else "_None recorded._")
+    parts += ["", _table(["Failure mode", "Annotations"], fm.most_common()) if fm else "", ""]
     parts += ["## Donor coverage", "",
               f"{sum(1 for r in donor_rows if r.get('donor_support') != 'NOT_CHECKED'):,} of "
-              f"{len(donor_rows):,} donor-based rows have at least one donor checked.", ""]
+              f"{len(donor_rows):,} donor-based annotations have at least one donor checked.", ""]
     return "\n".join(parts)
 
 

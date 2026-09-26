@@ -157,14 +157,18 @@ def test_stats_render_sections(repo: Path) -> None:
 
 
 def test_stats_count_annotations_not_donor_lines(repo: Path) -> None:
-    """One annotation with a namesake and a paralog donor is one MIXED unit."""
+    """Donor lines that join one review entry are one MIXED annotation.
+
+    The second line differs only in a non-negating qualifier, which
+    ``load_reviews`` ignores, so it must not become a separate unit.
+    """
     from ai_gene_review.tools.propagation_stats import annotation_units
 
     goa = repo / "genes" / "mouse" / "Calm3" / "Calm3-goa.tsv"
     goa.write_text(_goa(
         ("located_in", "GO:0000785", "chromatin", "cellular_component",
          "ISO", "GO_REF:0000096", "RGD:2257"),
-        ("located_in", "GO:0000785", "chromatin", "cellular_component",
+        ("is_active_in", "GO:0000785", "chromatin", "cellular_component",
          "ISO", "GO_REF:0000096", "RGD:2259"),
     ))
     data = repo / "projects" / "HOMOLOGY_PROPAGATION" / "data"
@@ -176,6 +180,8 @@ def test_stats_count_annotations_not_donor_lines(repo: Path) -> None:
     assert len(units) == 1
     assert units[0]["symbol_match"] == "MIXED"
     assert units[0]["donor_lines"] == 2
+    # Both lines join one review entry, so both donors belong to the unit.
+    assert [d["id"] for d in units[0]["donors"]] == ["RGD:2257", "RGD:2259"]
     assert units[0]["donor_species"] == ["Rattus norvegicus"]
     text = render(rows, {"generated": "2026-01-01"})
     assert "2 GOA lines → 1 annotations" in text
