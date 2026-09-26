@@ -1,6 +1,6 @@
 ---
 title: "Behaviour Annotation Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [mouse, human, rat, worm, yeast, DANRE, DROME, DAPPU]
 genes: [App, STAT3, nphp-1, Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, Tuba1a, Agtr1a, Mtor, Fyn]
@@ -8,10 +8,22 @@ genes: [App, STAT3, nphp-1, Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, T
 
 # Behaviour Annotation Project
 
-**When a knockout changes how an animal behaves, the gene gets annotated to
-`behavior` (GO:0007610) — even when its molecular function lives many causal
-steps upstream. This is a textbook over-annotation scenario, and this project
-characterises it across the review corpus.**
+**Bottom line:** when a knockout changes how an animal behaves, the gene
+gets annotated to `behavior` (GO:0007610) or a child term, even when its
+molecular function sits many causal steps upstream. We mined every GOA file
+and every review in the corpus for behaviour terms, wrote a four-step rubric
+(remove if contradicted, accept if the gene acts in the circuit, keep as
+non-core if distal, mark over-annotated if uselessly broad), spot-checked
+every accepted row, and mapped 16 standardized behavioural assays (15 IMPReSS
+types plus the Morris water maze) to the GO terms they can support. We did this because behaviour is the most distal and
+most convergent readout there is, so it is the cleanest test of how reviewers
+handle phenotype-driven annotations. A re-run of the miner in September 2026
+finds 216 behaviour annotations in reviews, of which 197 were adjudicated as
+core or not: 169 (86%) were downgraded and 28 accepted, mostly sensory
+channels and receptors acting in the relevant neurons (worm lov-1, pkd-2,
+tax-4), plus the fly clock protein CRY and the satiety hormone GCG. The counts further down (146 adjudicated,
+87%) come from the June report, before the corpus grew; the conclusion is
+unchanged, and `reports/REPORT.md` should be regenerated.
 
 ## Motivation
 

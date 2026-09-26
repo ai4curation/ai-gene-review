@@ -1,10 +1,28 @@
 ---
 title: "Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [mouse, human, rat]
 ---
 
 # Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation
+
+**Bottom line:** "neuroblast" means a postmitotic neuron precursor in
+vertebrates but a dividing, self-renewing neural stem cell in flies, and GO's
+neuroblast proliferation and division terms were written for the fly sense.
+We parsed the QuickGO export attached to upstream issue
+geneontology/go-annotation#6393 and found that all 42 annotations to the six
+affected terms are on vertebrate genes (35 mouse, 4 human, 3 rat), so each
+one describes a stem-cell behaviour the vertebrate cell does not have. The
+plan is a per-gene review that moves these rows to GO:0061351 *neural
+precursor cell proliferation* or a more specific child, and we scoped it
+because upstream is still deciding how to split the terms and annotation-level
+evidence can inform that decision now. Scoped, not yet started: none of the
+ten candidate genes has a review under this project. Four repo reviews made
+for other reasons touch the affected terms on vertebrate genes (human FGFR2,
+SHH and TP53, mouse Ctnnb1), and all four kept the row as `KEEP_AS_NON_CORE`
+rather than applying the `MODIFY` rule proposed here, while the fly gene insc
+correctly keeps GO:0055059 as `ACCEPT`.
 
 ## Overview
 

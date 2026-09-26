@@ -1,10 +1,34 @@
 ---
 title: "Neural and Glial Cell Fate Determination Project"
-maturity: MATURE
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
+genes: [ASCL1, NEUROG1, NEUROG2, NEUROD1, OLIG2, SOX9, NFIA, STAT3, NOTCH1, HES1, PAX6, SOX2, DLX1]
 ---
 
 # Neural and Glial Cell Fate Determination Project
+
+**Bottom line:** neural progenitors choose between neuron and glial fates
+through proneural bHLH factors, Notch-driven lateral inhibition and gliogenic
+factors, and GO describes these choices with a ladder of specification,
+determination and commitment terms inherited from classical embryology. We
+reviewed the GO annotations of the transcription factors and signalling genes
+that drive this choice, asking whether each fate-stage term is supported by
+the kind of evidence it implies. We did this because the specification versus
+commitment distinction is hard to establish experimentally and single-cell
+data suggest continuous trajectories, so these terms are a likely source of
+over-precise annotation. So far 13 of the 38 planned human genes are reviewed
+(all 12 Priority 1 master regulators plus DLX1), covering 1,652 annotations:
+960 accepted, 486 kept as non-core, 138 removed, 30 marked over-annotated,
+11 modified, 22 undecided and 5 new. Most removals (129 of 138) are generic
+`protein binding` rows; the fate-stage terms themselves were mostly accepted,
+and the other 25 genes (Priorities 2 to 4) are not started here; SHH has a
+separate review from the cerebellum work.
+
+This matters because neuron versus glia is the clearest binary fate decision
+in development, which makes it the right place to test whether GO's
+commitment terms still earn their place before applying the same question to
+less discrete lineages.
 
 ## Overview
 
