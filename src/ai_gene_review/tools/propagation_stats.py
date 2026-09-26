@@ -15,7 +15,11 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Callable, Iterable, Sequence
 
-from ai_gene_review.export.propagation_export import DEFAULT_DATA_DIR, collect_propagation_data
+from ai_gene_review.export.propagation_export import (
+    DEFAULT_DATA_DIR,
+    SUPPORT_ORDER,
+    collect_propagation_data,
+)
 
 ACTIONS = ["ACCEPT", "KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "MODIFY",
            "REMOVE", "UNDECIDED"]
@@ -72,8 +76,58 @@ def species_pair(row: dict[str, Any]) -> str:
     return f"{' + '.join(donors)} → {row['target_species']}"
 
 
+def _merge_symbol_match(values: set[str]) -> str:
+    """Combine per-donor symbol matches for one annotation.
+
+    >>> _merge_symbol_match({"SAME_SYMBOL", "DIFFERENT_SYMBOL"})
+    'MIXED'
+    >>> _merge_symbol_match({"DIFFERENT_SYMBOL", "UNRESOLVED"})
+    'DIFFERENT_SYMBOL'
+    """
+    resolved = values - {"UNRESOLVED"}
+    if not resolved:
+        return "UNRESOLVED"
+    if resolved <= {"SAME_SYMBOL"}:
+        return "SAME_SYMBOL"
+    if resolved <= {"DIFFERENT_SYMBOL"}:
+        return "DIFFERENT_SYMBOL"
+    return "MIXED"
+
+
+def annotation_units(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Collapse per-donor GOA rows into one record per annotation.
+
+    Pipelines such as GO_REF:0000096 emit one GOA line per donor, and all of
+    them join to the same review entry. Statistics count annotations, so rows
+    sharing (gene, term, qualifier, evidence, reference) are merged: donor
+    species are unioned, donor support takes the strongest value, and symbol
+    matches combine (a same-symbol plus a different-symbol donor is MIXED).
+    """
+    groups: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
+    for r in rows:
+        key = (r["species_dir"], r["gene_dir"], r["term_id"], r["qualifier"],
+               r["evidence"], r["reference"])
+        groups[key].append(r)
+    units = []
+    for group in groups.values():
+        unit = dict(group[0])
+        unit["donor_lines"] = len(group)
+        species = sorted({s for r in group for s in r.get("donor_species", [])})
+        if len(species) > 1:
+            species = [s for s in species if s != "unresolved"]
+        unit["donor_species"] = species
+        if "donor_support" in unit:
+            unit["donor_support"] = min((r["donor_support"] for r in group),
+                                        key=SUPPORT_ORDER.index)
+            unit["symbol_match"] = _merge_symbol_match({r["symbol_match"] for r in group})
+        units.append(unit)
+    return units
+
+
 def render(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> str:
-    """Render the statistics markdown."""
+    """Render the statistics markdown from per-donor browser rows."""
+    donor_line_count = len(rows)
+    rows = annotation_units(rows)
     iso = [r for r in rows if r["evidence"] == "ISO"]
     donor_rows = [r for r in rows if "donor_support" in r]
     parts = [
@@ -84,8 +138,11 @@ def render(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> str:
         "",
         f"Generated {metadata['generated']} by `just propagation-stats` from the cached GOA",
         f"files under `genes/` (donor cache refreshed {metadata.get('donor_cache', '–')}).",
-        "Counts cover every gene with a cached GOA file; *reviewed* counts are rows",
-        "matched to an `existing_annotations` entry with a final review action.",
+        "Counts cover every gene with a cached GOA file. The unit is one annotation",
+        "(gene, term, qualifier, evidence, reference): pipelines that emit one GOA line",
+        f"per donor are merged ({donor_line_count:,} GOA lines → {len(rows):,} annotations).",
+        "*Reviewed* annotations are those matched to an `existing_annotations` entry",
+        "with a final review action.",
         "These numbers are regenerated; do not copy them into project prose.",
         "Browse the rows in the [propagation browser](../../app/propagation/index.html).",
         "",
@@ -111,7 +168,8 @@ def render(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> str:
         "## ISO: donor symbol vs target symbol",
         "",
         "A different donor symbol flags paralog or multi-locus sourcing (for example rat",
-        "Calm1/Calm2 as donors for mouse Calm3). It prompts a check; it is not a verdict.",
+        "Calm1/Calm2 as donors for mouse Calm3). `MIXED` means the annotation has both a",
+        "namesake donor and a differently named one. It prompts a check; it is not a verdict.",
         "",
         _action_breakdown(iso, lambda r: r.get("symbol_match", "UNRESOLVED"),
                           order=["SAME_SYMBOL", "MIXED", "DIFFERENT_SYMBOL", "UNRESOLVED"],
@@ -165,9 +223,10 @@ def main() -> None:
     donor_meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     text = render(rows, {"generated": datetime.date.today().isoformat(),
                          "donor_cache": donor_meta.get("refreshed", "never")})
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(text + "\n", encoding="utf-8")
-    print(f"wrote {args.output} ({len(rows)} rows)")
+    output = args.output if args.output.is_absolute() else args.root / args.output
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(text + "\n", encoding="utf-8")
+    print(f"wrote {output} ({len(rows)} GOA lines)")
 
 
 if __name__ == "__main__":

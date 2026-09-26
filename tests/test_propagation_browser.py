@@ -107,7 +107,7 @@ def test_iba_row_keeps_node_and_seed_species(repo: Path) -> None:
     row = _by_term(collect_propagation_data(repo)["rows"])[("GO:0099999", "IBA")]
     assert row["nodes"] == ["PANTHER:PTN000549682"]
     assert row["donor_count"] == 2
-    assert row["donor_species"] == ["Drosophila melanogaster"]
+    assert "donor_species" not in row
     assert "donor_support" not in row
 
 
@@ -154,3 +154,28 @@ def test_stats_render_sections(repo: Path) -> None:
     assert "## What does ISO add on top of IBA?" in text
     assert "Homo sapiens → Mus musculus" in text
     assert "Rattus norvegicus → Mus musculus" in text
+
+
+def test_stats_count_annotations_not_donor_lines(repo: Path) -> None:
+    """One annotation with a namesake and a paralog donor is one MIXED unit."""
+    from ai_gene_review.tools.propagation_stats import annotation_units
+
+    goa = repo / "genes" / "mouse" / "Calm3" / "Calm3-goa.tsv"
+    goa.write_text(_goa(
+        ("located_in", "GO:0000785", "chromatin", "cellular_component",
+         "ISO", "GO_REF:0000096", "RGD:2257"),
+        ("located_in", "GO:0000785", "chromatin", "cellular_component",
+         "ISO", "GO_REF:0000096", "RGD:2259"),
+    ))
+    data = repo / "projects" / "HOMOLOGY_PROPAGATION" / "data"
+    with (data / "donor-entities.tsv").open("a") as handle:
+        handle.write("RGD:2259\tP0DP31\tCalm3\t10116\tRattus norvegicus (Rat)\ttrue\n")
+    rows = collect_propagation_data(repo)["rows"]
+    assert len(rows) == 2
+    units = annotation_units(rows)
+    assert len(units) == 1
+    assert units[0]["symbol_match"] == "MIXED"
+    assert units[0]["donor_lines"] == 2
+    assert units[0]["donor_species"] == ["Rattus norvegicus"]
+    text = render(rows, {"generated": "2026-01-01"})
+    assert "2 GOA lines → 1 annotations" in text

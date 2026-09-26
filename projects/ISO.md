@@ -68,7 +68,9 @@ CALM2→Calm2, CALM3→Calm3), while mouse↔rat (GO_REF:0000096) donates from a
 three rat loci to each mouse locus, so rat Calm3 also donates to mouse Calm1 and
 Calm2 ([browse](../app/propagation/index.html?evidence=ISO&symbol_match=DIFFERENT_SYMBOL&q=calm)).
 Five Calm3 terms, including chromatin, are donated by rat Calm1 alone. Here it
-is harmless for protein-level terms: Calm1, Calm2, and Calm3 encode identical protein sequences in many mammals but differ in UTR regulation, tissue expression patterns, and potentially in interaction partners.
+is harmless for protein-level terms: Calm1, Calm2, and Calm3 encode identical
+proteins in mouse, rat, and human, and differ only at the locus level (UTR
+regulation and tissue expression).
 The donors all still carry their terms experimentally. What does not transfer
 is locus-level biology — Calm3's Stau2-dependent dendritic mRNA localization is
 Calm3-specific — so synaptic, cardiac, spindle, and sarcomere rows are kept as
@@ -140,9 +142,10 @@ verdict:
 - **Context, not function.** Most ISO rows are true but contextual — the
   common outcome is `KEEP_AS_NON_CORE`, not `REMOVE`. The risk is that a cloud
   of true-but-contextual rows hides the few real defects.
-- **Donor is not the namesake.** ISO rows whose donor has a different gene
-  symbol from the target (paralogs, expanded families) are rejected or reduced
-  at roughly twice the rate of namesake donors (see statistics).
+- **Donor is not the namesake.** ISO annotations whose donors all have a
+  different gene symbol from the target (paralogs, expanded families) are
+  rejected or reduced about three times as often as annotations with a
+  namesake donor (see statistics).
 - **Stale source.** The donor no longer carries the term. The row outlives the
   evidence that justified it.
 - **Transfer of a transfer.** The donor's own support is inferred.

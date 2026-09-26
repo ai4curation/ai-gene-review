@@ -15,12 +15,19 @@ One row per GOA annotation whose evidence is a transfer:
 | Phylogenetic inference | IBA (GO_REF:0000033) |
 | Electronic orthology | IEA via Ensembl Compara (GO_REF:0000107), TreeGrafter (GO_REF:0000118), and Combined IEA (GO_REF:0000120) rows whose WITH/FROM carries an Ensembl or PANTHER source |
 
+Combined IEA WITH/FROM is the union of every pipeline that produced the same
+annotation, so an included GO_REF:0000120 row had an orthology contributor but may
+also (or mainly) come from InterPro2GO, ARBA or another component; its donor
+support is computed against the UniProt donors listed, which may not be the
+source of the term.
+
 Each row is read as **donor(s) → intermediate → target**:
 
 - **Donor** — the gene product(s) named in WITH/FROM. For ISO/ISS/ISA and
   Compara the donor is resolved to a symbol and species (UniProt, or RGD's own
   API for non-rat RGD genes). For IBA the donors are the PAINT seed genes; they
-  are listed but not individually resolved.
+  are listed but not resolved, so IBA rows have no donor species and appear as
+  `(none)` in the donor-species facet.
 - **Intermediate** — the PANTHER node (`PTN…`) for IBA and TreeGrafter; for
   the other methods the orthology call itself, named by the method.
 - **Target** — the annotated gene, linked to its review page.
@@ -43,7 +50,7 @@ Each row is read as **donor(s) → intermediate → target**:
 - **Review** — the matching `existing_annotations` entry's action, summary,
   reason, and any `propagation_review` root cause and failure modes.
 
-Search, filters, and page state are kept in the URL, so a selection can be
+Search and filters are kept in the URL, so a selection can be
 linked from a project page. Examples:
 
 - [ISO rows sourced from a differently named donor](../app/propagation/index.html?evidence=ISO&symbol_match=DIFFERENT_SYMBOL)

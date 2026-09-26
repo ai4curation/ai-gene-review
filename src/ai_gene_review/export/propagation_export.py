@@ -221,10 +221,10 @@ def _row(r: PropagatedRow, cache: DonorCache, reviews: dict, iba: set[str],
         row["symbol_match"] = symbol_match(r.target_symbol, donors)
     else:
         # IBA/TreeGrafter: the donors are the PAINT seed genes behind a node.
+        # Seeds are not resolved, so no donor_species: a partial list from MOD
+        # prefixes would make the species facet look complete when it is not.
         row["donors"] = [{"id": x} for x in r.donors]
         row["donor_count"] = len(r.donors)
-        row["donor_species"] = sorted({PREFIX_SPECIES[x.split(":", 1)[0]] for x in r.donors
-                                       if x.split(":", 1)[0] in PREFIX_SPECIES})
     if r.evidence != "IBA":
         row["iba_on_target"] = _coverage(cache, r.term_id, iba)
     row["experimental_on_target"] = _coverage(cache, r.term_id, exp)
