@@ -1,12 +1,31 @@
 ---
 title: "EVIDENCE_SOURCE_SUFFICIENCY"
-maturity: MATURE
+maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 ---
 
 # EVIDENCE_SOURCE_SUFFICIENCY
 
-**Which lower-effort evidence sources are *sufficient* to support an ACCEPT decision for an existing GO annotation — review papers, abstracts alone, or deep-research reports?**
+**Bottom line:** reviewing a GO annotation costs as much as the document
+the reviewer has to read, so we asked which cheap sources (an abstract, a
+review article, a deep-research report) are enough to support ACCEPT, the
+most common action. We added a `publication_type` field and an
+`analyze-evidence-sources` census, then ran a pilot on 484 ACCEPT
+annotations from 30 human genes: an automatic pass that finds where each
+cited justifying quote sits, and a blind ablation in which a separate agent
+saw only one restricted source per annotation (29 annotations per bundle).
+Among 212 ACCEPT annotations citing a full-text-cached paper, the quote was
+in the abstract or title 90.6% of the time. In the blind test, when the
+source existed, the abstract alone supported ACCEPT for 18 of 21
+annotations (85.7%, no rejections), a deep-research report for 8 of 20
+(40%, with 6 rejections), and a review for 1 of 7 (14.3%); most genes had
+no review to offer. These are pilot numbers with wide intervals, and the
+full-text pass that would test narrative sections, better review
+detection, and a larger sample are still open.
+
+This matters because, if an abstract usually suffices for ACCEPT, full-text
+reading can be reserved for REMOVE and MODIFY calls, which in the census
+lean on primary research (REMOVE support is 92.8% primary research).
 
 ## Motivation
 

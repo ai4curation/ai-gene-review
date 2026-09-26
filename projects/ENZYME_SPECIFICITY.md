@@ -3,9 +3,34 @@ title: "Enzyme Specificity Project"
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
 species: [CANAL, human, SACEN]
+genes: [LPL1, GND1, PHYKPL, eryCIII, ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2]
 ---
 
 # Enzyme Specificity Project
+
+**Bottom line:** a GO molecular-function term can name the right kind of
+enzyme and still get the substrate, the cofactor or the reaction wrong, and
+those errors spread through pathway reconstruction and IBA. We reviewed 14
+genes chosen to show each kind of error: four single-gene exemplars (LPL1 and
+GND1 from *C. albicans*, human PHYKPL, EryCIII from *Saccharopolyspora
+erythraea*) and all ten human mitochondrial fatty acid β-oxidation enzymes,
+a paralog set where chain-length specificity decides the term. The errors
+caught include a too-narrow substrate (LPL1 `GO:0004622` MODIFY to
+phospholipase B `GO:0102545`), a wrong reaction from family membership
+(PHYKPL `transaminase activity` REMOVE), a wrong sugar donor (EryCIII
+`UDP-glycosyltransferase activity` REMOVE), a wrong chain length (HADH
+long-chain `GO:0016509` MARK_AS_OVER_ANNOTATED), a thiolase activity on the
+wrong subunit (HADHA `GO:0003985` REMOVE) and a nickname collision (ACAT1
+`cholesterol O-acyltransferase activity` REMOVE). GND1 served as a negative
+control: a coenzyme-motif script confirmed its NADP+-specific term. All 14
+reviews exist and the project is complete; two details below differ from the
+review files, which record LPL1 `monoacylglycerol lipase activity` as REMOVE
+(not KEEP_AS_NON_CORE) and EryCIII `GO:0008194` as REMOVE because
+`GO:0016758` hexosyltransferase activity is already present (not MODIFY).
+
+We did this because specificity is where family-based annotation is most
+confidently wrong: the fold and even the enzyme class are right, so nothing
+looks amiss until someone checks the substrate, cofactor or subunit.
 
 ## Overview
 

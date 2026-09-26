@@ -1,10 +1,30 @@
 ---
 title: "Ad-Hoc Bioinformatics Analysis Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 ---
 
 # Ad-Hoc Bioinformatics Analysis Project
+
+**Bottom line:** many GO annotations are inferred from a domain or family
+match, and the fastest way to test one is often a small computation: check
+whether the catalytic residues are still there, whether a "transmembrane"
+segment makes sense, or whether a family member really has the family's
+substrate. This page catalogues four early cases where the review agent did
+that kind of ad-hoc analysis, one per analysis type. Epe1 (*S. pombe*) is the
+worked example: its JmjC domain carried seven catalytic or metal-binding
+annotations, and all seven are REMOVE in the review, while PHYKPL lost its IEA
+`transaminase activity` and *C. albicans* LPL1 lost its IEA `membrane` row.
+Only Epe1 has a scripted `-bioinformatics/` folder; PHYKPL and LPL1 were
+argued inside the review, and AcrF8 has no analysis folder. The catalogue
+below stopped in January 2026, while the repository now holds 237
+`genes/*/*/*-bioinformatics/` folders (116 human, 40 HORSE, 24 DROME), so the
+table is a sample, not an inventory; see [BIOINFORMATICS](BIOINFORMATICS.md)
+for the reproducible-workflow standard.
+
+We did this because a domain hit says what a protein's ancestors did, not what
+it does, and a residue-level check is cheap evidence that can stop a wrong
+enzymatic annotation from propagating to orthologs.
 
 ## Overview
 
@@ -30,7 +50,12 @@ The agentic AI system can:
 - Analysis revealed: HVD instead of canonical HXD motif
 - Missing Fe(II)-binding histidine residues
 - **Conclusion**: Pseudo-enzyme lacking catalytic activity
-- **Location**: `genes/pombe/Epe1/Epe1-bioinformatics/`
+- **Location**: `genes/SCHPO/Epe1/Epe1-bioinformatics/`
+- **Later refinement (2026-07)**: HVD itself fits the HXD pattern. A blinded
+  OpenScientist run on the demethylase hypothesis
+  (`genes/SCHPO/Epe1/Epe1-hypotheses/function-hypothesis-go-0032452/openscientist.md`)
+  places the defect at the third Fe(II) ligand, where Epe1 has Tyr370 instead of
+  His, the same substitution seen in catalytically dead human PHF2.
 
 ### 2. Domain Architecture Analysis
 
@@ -125,7 +150,7 @@ Consider computational analysis when:
 - [x] CANAL/LPL1 - Localization prediction
 
 ## Bioinformatics Folders
-- [x] genes/pombe/Epe1/Epe1-bioinformatics/
+- [x] genes/SCHPO/Epe1/Epe1-bioinformatics/
 - [ ] genes/human/PHYKPL/PHYKPL-bioinformatics/ (to be created)
 - [ ] genes/CANAL/LPL1/LPL1-bioinformatics/ (to be created)
 
