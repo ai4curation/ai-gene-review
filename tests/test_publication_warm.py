@@ -712,7 +712,11 @@ def test_the_doi_converter_does_not_lift_a_citation_dump_into_the_abstract(tmp_p
     assert convert_doi_publication(src, tmp_path, pmid="999997") is True
     out = (tmp_path / "PMID_999997.md").read_text()
     assert "TY  - JOUR" not in out, "a citation export must not become the abstract"
-    assert "No abstract available." in out
+    assert "Research output:Contribution to journal" not in out
+    # The strip is partial, not all-or-nothing: this fixture's landing page carries the
+    # paper's real abstract alongside the junk, and keeping the paper's own words is
+    # strictly better than discarding the section. What must not survive is the export.
+    assert "metabolically versatile saprophytic soil bacterium" in out
 
 
 def test_the_doi_converter_still_lifts_a_real_abstract(tmp_path):
@@ -823,7 +827,77 @@ def test_every_publications_writer_invalidates():
 
     # _rewrite is publication_warm's single write point; mark_attempted and
     # apply_full_text both go through it.
-    for fn in (pub.cache_publication, pub.convert_doi_publication, warm._rewrite):
+    for fn in (
+        pub.fetch_pubmed_data,  # an independent write site, reached through none of the others
+        pub.cache_publication,
+        pub.convert_doi_publication,
+        warm._rewrite,
+    ):
         assert "clear_publication_caches()" in inspect.getsource(fn), (
             f"{fn.__name__} writes a publications/ record without invalidating"
         )
+
+
+def test_the_converter_reject_path_does_not_claim_full_text(tmp_path):
+    """The defect fixed on the accept path was still live on the reject path.
+
+    `full_text_available` is decided from `content_type` before the lift is inspected and
+    was never revised, so a rejected `## Content` left the flag `true`, `full_text` unset
+    and the abstract as "No abstract available." -- bit-for-bit the record the previous
+    commit set out to eliminate, except with no text at all. `cached_record_has_no_body`
+    cannot see it either: that body is neither empty nor the literal stub signature.
+    """
+    from ai_gene_review.etl.publication import convert_doi_publication
+
+    src = tmp_path / "DOI_10.1234_c.md"
+    src.write_text(
+        "---\ndoi: 10.1234/c\npmid: '999992'\ntitle: t\ncontent_type: full_text_html\n---\n\n"
+        "## Content\n\nTY  - JOUR\n\nAU  - Someone\n\nER  -\n"
+    )
+    assert convert_doi_publication(src, tmp_path, pmid="999992") is True
+    out = (tmp_path / "PMID_999992.md").read_text()
+    assert "full_text_available: false" in out, (
+        "nothing survived the strip, so the record has no full text"
+    )
+    assert "## Full Text" not in out
+
+
+def test_the_strip_keeps_the_papers_own_abstract(tmp_path):
+    """All-or-nothing rejection discarded genuine prose sitting beside the junk."""
+    from ai_gene_review.etl.publication import _strip_stub_lines, _carries_stub_marker
+
+    mixed = (
+        "SUMMARY\nNucleotide-derived second messengers are present in all domains of life.\n\n"
+        "Research output:Contribution to journal\u203aArticle\n\n}\n\n"
+        "TY  - JOUR\n\nAU  - Someone\n\nER  -\n"
+    )
+    kept = _strip_stub_lines(mixed)
+    assert "Nucleotide-derived second messengers" in kept
+    assert not _carries_stub_marker(kept)
+    assert "TY  - JOUR" not in kept and "}" not in kept
+
+
+def test_a_forced_refetch_refreshes_metadata_and_keeps_a_vouched_body(tmp_path):
+    """The skip was keyed on presence, not quality, so 888 records could never refresh.
+
+    Those records are `full_text_available: false` while carrying a `## Full Text`
+    section; a forced re-fetch wrote nothing at all for them -- not the body and not the
+    metadata -- while returning True. Gate on the record's own verdict instead.
+    """
+    from ai_gene_review.etl.publication import _existing_accepted_full_text
+
+    good = tmp_path / "PMID_1.md"
+    good.write_text(
+        "---\npmid: '1'\nfull_text_available: true\nfull_text_extraction_method: xml\n---\n\n"
+        "## Abstract\n\na\n\n## Full Text\n\nA genuine body.\n"
+    )
+    text, method = _existing_accepted_full_text(good)
+    assert text == "A genuine body." and method == "xml"
+
+    # the 888 shape: a section present, but the record does not vouch for it
+    rejected = tmp_path / "PMID_2.md"
+    rejected.write_text(
+        "---\npmid: '2'\nfull_text_available: false\n---\n\n"
+        "## Abstract\n\na\n\n## Full Text\n\nAbstract\n\na\n"
+    )
+    assert _existing_accepted_full_text(rejected) == (None, None)

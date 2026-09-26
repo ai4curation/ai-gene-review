@@ -376,8 +376,12 @@ def convert_doi_publication(
         # `N2  -` line verifies. Conversion also drops content_type, full_text_provider,
         # full_text_url and oa_status, so `TY  - JOUR` is the only surviving signal that
         # the body is junk; checking it here is the last chance to notice.
-        if abstract_section and not _carries_stub_marker(abstract_section):
-            content = abstract_section
+        if abstract_section:
+            content = (
+                _strip_stub_lines(abstract_section)
+                if _carries_stub_marker(abstract_section)
+                else abstract_section
+            )
 
     # `## Content` is "the text we have"; `content_type` says which kind it is. Routing it
     # always to `abstract` produced a record that claimed full_text_available: true, stored
@@ -386,6 +390,17 @@ def convert_doi_publication(
     # `bool(flag) and FULL_TEXT_HEADER in body` called it a candidate for re-fetching. Two
     # consumers disagreeing about one record. Found by self-audit, not a regression from
     # this PR; fixed here because this PR has already edited this function twice.
+    if not content:
+        # Nothing survived. The record's only content was junk, so a flag derived from
+        # content_type is now false -- otherwise the reject path produces exactly the
+        # record the accept path was fixed to stop producing: flag true, no `## Full Text`,
+        # and "No abstract available." as the body. cached_record_has_no_body cannot see
+        # that either, since the body is neither empty nor the literal stub signature.
+        # An explicit `full_text_available` in the source still wins; only a derived one
+        # is revised.
+        if not isinstance(declared, bool):
+            full_text_available = False
+
     full_text = content if (content and full_text_available) else None
     abstract = "No abstract available." if (full_text or not content) else content
 
@@ -400,7 +415,9 @@ def convert_doi_publication(
         full_text=full_text,
         full_text_available=full_text_available,
         full_text_extraction_method=(
-            content_type if isinstance(content_type, str) and full_text else None
+            content_type.removeprefix("full_text_")
+            if isinstance(content_type, str) and full_text
+            else None
         ),
     )
 
@@ -458,6 +475,64 @@ def _carries_stub_marker(text: str) -> bool:
     from ai_gene_review.etl.publication_warm import FULL_TEXT_STUB_MARKERS
 
     return any(marker in text for marker in FULL_TEXT_STUB_MARKERS)
+
+
+def _strip_stub_lines(text: str) -> str:
+    """Drop the landing-page and citation-export lines, keep the paper's own prose.
+
+    Rejecting the whole section was all-or-nothing and threw away real content: both DOI
+    records this guards carry the paper's genuine abstract alongside the junk --
+    `mmbr.00181-23` opens with ~1,500 characters of real SUMMARY before the
+    `Research output` header and the RIS block, and `j.str.2024.02.015` has the marker
+    first and the abstract after. Keeping the prose is equally safe, since what survives
+    is the paper's own words.
+
+    A RIS record is line-oriented (`TY  - JOUR`, `AU  - ...`, `ER  -`), so dropping tagged
+    lines and marker lines leaves the prose paragraphs intact.
+    """
+    from ai_gene_review.etl.publication_warm import FULL_TEXT_STUB_MARKERS
+
+    ris_tag = re.compile(r"^[A-Z][A-Z0-9]\s{2}-\s?")
+    kept = [
+        line
+        for line in text.splitlines()
+        if not ris_tag.match(line.strip())
+        and not any(marker in line for marker in FULL_TEXT_STUB_MARKERS)
+        and line.strip() != "}"
+    ]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+
+
+def _existing_accepted_full_text(path: Path) -> tuple[Optional[str], Optional[str]]:
+    """The cached record's full text, but only if the record itself vouches for it.
+
+    Returns ``(None, None)`` unless the frontmatter says ``full_text_available: true``.
+    Presence of a ``## Full Text`` section is not enough: 888 cached records carry one
+    while declaring ``false``, because the body was rejected or is a heading plus the
+    abstract (e.g. ``PMID_7262539``).
+    """
+    text = path.read_text()
+    if not text.startswith("---"):
+        return None, None
+    end = text.find("\n---", 3)
+    if end == -1:
+        return None, None
+    frontmatter = yaml.safe_load(text[3:end])
+    if not isinstance(frontmatter, dict) or not frontmatter.get("full_text_available"):
+        return None, None
+    body = text[end + 4 :]
+    marker = "\n## Full Text\n"
+    if marker not in body:
+        return None, None
+    section = body.split(marker, 1)[1]
+    next_heading = section.find("\n## ")
+    if next_heading != -1:
+        section = section[:next_heading]
+    section = section.strip()
+    if not section:
+        return None, None
+    method = frontmatter.get("full_text_extraction_method")
+    return section, method if isinstance(method, str) else None
 
 
 def accept_full_text(content: str | None, is_complete: bool, abstract: str) -> bool:
@@ -1077,18 +1152,26 @@ def cache_publication(
         return False
 
     # A forced re-fetch must not destroy good cached full text when the new fetch is
-    # rejected. `force=True` is what the validator's error message recommends, and this PR
-    # ran it over six records; before the acceptance guard a rejected body still produced
-    # `full_text` and the question did not arise, but now it can overwrite a real body with
-    # nothing. Keeping the existing record is the conservative side of a destructive edit.
+    # rejected -- `force=True` is what the validator's error message recommends. But
+    # skipping the whole write was the wrong remedy: it keyed on the *presence* of a
+    # `## Full Text` section rather than on whether that text is good, and 888 cached
+    # records are `full_text_available: false` while carrying one. For every one of those,
+    # a forced re-fetch wrote nothing at all -- not the body, and not a refreshed title,
+    # authors, journal, year, pmcid, doi or abstract -- while returning True. That is the
+    # `full_text_attempted` trap with a different key.
+    #
+    # Gate on the existing record's own verdict instead, and carry its body forward rather
+    # than declining to write.
     if output_file.exists() and not publication.full_text_available:
-        existing = output_file.read_text()
-        if "\n## Full Text" in existing:
+        kept_text, kept_method = _existing_accepted_full_text(output_file)
+        if kept_text:
             print(
                 f"PMID {pmid}: re-fetch returned no usable full text; keeping the "
-                f"existing cached body"
+                f"cached body and refreshing the metadata"
             )
-            return True
+            publication.full_text = kept_text
+            publication.full_text_available = True
+            publication.full_text_extraction_method = kept_method
 
     # Write to file
     output_file.write_text(publication.to_markdown())
