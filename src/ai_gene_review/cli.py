@@ -2021,11 +2021,19 @@ def refresh_publications_active(
             elif force:
                 stubs.append(pmid)
             else:
-                content = pub_file.read_text()
-                if "full_text_available: false" in content or "full_text_available: true" not in content:
-                    stubs.append(pmid)
-                else:
+                # Use the shared predicate rather than substring-matching the whole file.
+                # The old test classed any record without an explicit
+                # `full_text_available: true` as a stub, which is 905 records -- 242 of them
+                # carrying full text under a `content_type` key -- and it matched the string
+                # anywhere in the file, including inside quoted full text.
+                from ai_gene_review.validation.supporting_text import (
+                    cached_full_text_available,
+                )
+
+                if cached_full_text_available(f"PMID:{pmid}", publications_dir):
                     cached.append(pmid)
+                else:
+                    stubs.append(pmid)
 
         typer.echo(f"\n  Missing (need fetch): {len(missing)}")
         typer.echo(f"  Stubs (need refresh): {len(stubs)}")

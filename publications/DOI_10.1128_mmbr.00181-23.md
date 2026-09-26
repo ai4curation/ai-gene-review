@@ -9,6 +9,7 @@ journal: Microbiology and Molecular Biology Reviews
 year: '2024'
 doi: 10.1128/mmbr.00181-23
 content_type: full_text_html
+full_text_available: false
 full_text_attempted: true
 full_text_provider: openalex
 full_text_url: "https://research.rug.nl/en/publications/603c9aa6-ddc1-4a13-b42d-fd4b4f46a74e"
