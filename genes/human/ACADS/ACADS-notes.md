@@ -1,5 +1,7 @@
 # ACADS (human) review notes
 
+> Historical notes before the 2026-09-26 audit are superseded by that audit and the PR #3155 follow-up below. In particular, earlier contamination, broad-term and generic-binding judgments are not current recommendations.
+
 UniProt: P16219 (ACADS_HUMAN). Short-chain specific acyl-CoA dehydrogenase, mitochondrial; SCAD; Butyryl-CoA dehydrogenase; EC 1.3.8.1. 412 aa precursor, mitochondrial transit peptide 1-24, mature chain 25-412. HGNC:90, gene on chr 12. NCBITaxon:9606.
 
 ## Core function
@@ -114,3 +116,30 @@ PMID:11134486 reports a selected set of ten patients with ethylmalonic aciduria 
 `just validate human ACADS` passes with no curation warnings; `just render human ACADS` succeeds. Every source annotation field was compared with the saved baseline and is unchanged. YAML trailing whitespace was removed with parsed-YAML equality checked. The append-only history record was scaffolded with codex/gpt-6 metadata; parent independent review was requested before publication. Final publication scope is the review YAML, derived HTML, notes and this new history record only.
 
 Parent independent review requested preserving the original evidence resolution of all five mitochondrial rows. This correction is incorporated above and in every affected row/reference assessment: these are ACCEPT, the two propagation assessments are NO_FAILURE_CORE, and the separate matrix annotations/core remain unchanged. Final action counts are 18 ACCEPT, 8 MODIFY, 1 KEEP_AS_NON_CORE, 1 REMOVE and 2 UNDECIDED.
+
+## 2026-09-26 PR #3155 follow-up — current interaction decisions
+
+Reviewed the feedback at head `85dcaab9ecc6c31d419fd03526d29bbf4d26a150`. The remote
+ACADS YAML blob `63d3f4ca4ed326ef3e1619b9e676760b4d5c7460` matched the local
+baseline before these edits. All 30 source assertions remain unchanged.
+
+Both DPEP1 protein-binding rows now use REMOVE. Their source-specific access differs,
+but the pair-specific records were not independently reanalyzed for either, and that
+difference does not justify opposing functional judgments. UniProt records the association;
+the available evidence supports no more informative molecular function. Removal records
+the lack of functional information in the generic GO term and does not deny interaction.
+This supersedes the earlier BioPlex 3.0 UNDECIDED paragraph and both previous action tallies.
+Current tally: 18 ACCEPT, 8 MODIFY, 1 KEEP_AS_NON_CORE, 2 REMOVE, 1 UNDECIDED. Nuclear
+localization remains UNDECIDED.
+
+The PMID:21237683 EXP rationale now relies on the checkable UniProt experimental
+EC cross-reference, curator deference and independent purified human SCAD evidence.
+The partial indexed-text observations recorded earlier are not required to justify the
+annotation and no detailed comparator assay is asserted in the revised rationale.
+
+All reference assessments and findings were reread for consistency. VERIFIED for
+PMID:33961781 denotes identifier/title and AP-MS study scope; for PMID:21630459 it
+denotes identifier/title and the abstract's explicit nuclear-isolation controls. Neither
+label asserts independent verification of an unavailable ACADS-specific supplementary
+record. Those limits are now explicit in each reference_review. No source cache,
+provider file, shared tracker or Git state was changed.
