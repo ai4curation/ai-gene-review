@@ -42,7 +42,7 @@ Live QuickGO definitions were read for NRPE/PE flippase, retinal/retinoid metabo
 
 **GO:0140347 definition issue:** the live term label is “N-retinylidene-phosphatidylethanolamine flippase activity”, but its text definition names “N-retinylidene-N-retinylphosphatidylethanolamine”. The latter appears to name the doubly retinylated bisretinoid rather than NRPE. The official label and direct ABCA4 annotations identify the intended function. The review preserves the official ID and label and raises an explicit expert question; it does not silently rewrite ontology text or assert transport of the bisretinoid.
 
-The broad visual-perception electronic annotation is kept non-core. PMID:9425888 has no accessible abstract or full text, and PMID:9202155 is abstract-only with only a proposed photoresponse role. Their precise sensory-process assertions remain UNDECIDED. The live visible-light phototransduction definition describes conversion of absorbed photons to molecular signal; retinoid clearance is not sufficient evidence to assume direct participation in that conversion.
+The broad visual-perception electronic annotation is kept non-core. PMID:9425888 has no accessible abstract or full text, and PMID:9202155 is abstract-only with only a proposed photoresponse role. Both were initially UNDECIDED; the PMID:9202155 decision is resolved by the later full-text recovery recorded below. The live visible-light phototransduction definition describes conversion of absorbed photons to molecular signal; retinoid clearance is not sufficient evidence to assume direct participation in that conversion.
 
 No ABCA4/P78363 entry was found in `gocams/index.tsv`. No NEW process annotation is proposed. Existing transport assertions already cover the actual steps performed by the protein.
 
@@ -68,3 +68,14 @@ The reviewer also suggested changing phototransduction TAS/PMID:9202155 to over-
 Updated decisions: 36 ACCEPT, 13 KEEP_AS_NON_CORE, 8 MODIFY, 2 UNDECIDED. No NEW annotations.
 
 Follow-up validation passes. The two remaining advisory warnings are the intentional visual-perception action difference and the absence of a deep-research-file quotation in annotation support. The authentic report remains retained and discussed as research provenance; primary evidence supports the decisions. Source assertion comparison, history validation, rendering and diff checks pass.
+
+
+## Recovery of the original phototransduction source — 2026-09-26
+
+After the first reviewer-response commit, the complete original [PMID:9202155 Wiley article](https://febs.onlinelibrary.wiley.com/doi/10.1016/S0014-5793(97)00517-6) became accessible through the HTML route, despite the mirror PDF continuing to time out. I read its methods, results and discussion. The experiments identify and characterize the rim protein; the discussion treats calcium-handling and light-stimulated ATPase roles as hypotheses and explicitly leaves function unresolved: “The function of RmP in photoreceptors remains a critical open question.” It also considers retinoid transport less likely, a historical interpretation superseded by the direct NRPE/PE transport experiments.
+
+This changes the evidentiary premise of the previous UNDECIDED decision. GO:0007603 now receives MARK_AS_OVER_ANNOTATED: the original source does not establish phototransduction, and modern primary evidence supports retinoid clearance rather than direct conversion of photons to a molecular signal. The full text was read on the publisher website; the cached publication remains unchanged and abstract-only. The schema's supporting_text_fulltext field records the short exact discussion quote transparently. The inaccessible PMID:9425888 visual-perception row remains UNDECIDED.
+
+Current decisions: 36 ACCEPT, 13 KEEP_AS_NON_CORE, 8 MODIFY, 1 MARK_AS_OVER_ANNOTATED, 1 UNDECIDED. No source assertion fields or core functions changed in this follow-up.
+
+Full-text follow-up validation passes with the same two documented advisory warnings. History validation, rendering, source assertion comparison and diff checks pass.
