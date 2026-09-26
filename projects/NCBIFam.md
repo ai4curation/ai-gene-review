@@ -1,10 +1,29 @@
 ---
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
+
+**Bottom line:** NCBIFAM (the PGAP/TIGRFAM HMM collection) and CDD reach GO only
+through InterPro2GO, so GOA hides which member database fired and drops every
+signature InterPro has not integrated (60% of NCBIFAM models, 75% of CDD). We
+measured both sides. Forward, NCBIFAM backs 705 (13%) of the 5,549 InterPro2GO
+rows in this repo and is the only integrating signature for 250 of them. Reverse,
+NCBIFAM's own curated metadata puts GO terms on 11,228 of 34,351 models that GO
+never ingests, while CDD-proper has no GO of its own. We built a validated
+250-row `ncbifam2go` SSSOM seed, a 2,455-model EC-bridge candidate set, and
+checked four high-gain rows structurally with OpenScientist. The gain is real
+but lands mostly in TrEMBL (a 60-model sample: 19 reviewed vs 26,578 UniProtKB
+entries), and per-entry checks showed only one of five reviewed "gaps" (VirB5)
+is a clean fill. The status section below still says SCOPING; the frontmatter
+now reads IN_PROGRESS to match the delivered seed.
+
+We did this because NCBIFAM is a large curated source of family-level function
+for prokaryotic proteins that GO does not use directly, and because its
+contribution to existing annotations is invisible without re-joining GOA to
+InterPro member integration.
 
 ## The value question, answered first: yes — and here are the mappings
 

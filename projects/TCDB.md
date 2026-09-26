@@ -1,11 +1,29 @@
 ---
 title: "TCDB → GO Transporter-Activity Mapping & Gap Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [ARATH, human]
 ---
 
 # TCDB → GO Transporter-Activity Mapping & Gap Project
+
+**Bottom line:** the Transporter Classification Database (TCDB) gives each
+transport system a TC number, the transport analogue of an EC number, and GO
+curators have already attached TC references to 170 molecular-function terms.
+But GO has no `tc2go` annotation pipeline, so a protein's TC number never
+becomes a GO annotation: half of the reviewed Swiss-Prot transporters with a TCDB
+cross-reference (4,431 of 8,758) carry no transporter-activity term. We
+extracted GO's 194 TC-to-GO leads and scored each against the reviewed proteins
+that carry the TC id. 80 are safe to propagate, almost all at the level of a
+single TC system; 18 would over-propagate at the family level; 67 point to
+specific systems whose members lack the specific term. We also filtered TCDB's
+own noisy GO dump into 477 machine-derived candidate rows and hand-backed eight
+exemplar mappings. All four SSSOM sets validate; the status section's SCOPING
+label predates this work, and the frontmatter now reads IN_PROGRESS.
+
+We did this because EC and RHEA each turn a classification into GO annotations
+through a pipeline, and transporters have no equivalent. The evidence-scored
+leads are a ready starter set for proposing a `tc2go` pipeline to GO.
 
 ## Overview
 
