@@ -149,8 +149,11 @@ screened partners mediates that phenotype.
 The remaining 17 partners have only zero composite pKd entries among the
 assayed domains. The study explicitly distinguishes measurable affinity from
 values below quantification, and finite domain coverage cannot exclude binding
-by an untested domain or in another context. These are **UNDECIDED**, not
-universal negative-binding assertions and not a generic-term penalty.
+by an untested domain or in another context. These generic GO:0005515 rows are
+**REMOVE** because they do not identify an informative molecular function, as
+required by the annotation-reviewer policy. Removal does not assert nonbinding.
+The initial UNDECIDED interpretation is superseded: affinity/export uncertainty
+remains an evidence question, but does not prevent removing the generic term.
 
 For comparison, the IntAct PSICQUIC primary export was retrieved on 2026-09-26:
 https://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/query/id:O95255?format=tab27
@@ -204,3 +207,33 @@ without denying their well-supported mineralization phenotype; the initial calci
 NON_CORE assessment is superseded. Source explanations were also tightened so ARA
 partial-sequence, PAINT and mutant-Reactome caveats appear only on their relevant
 rows.
+
+### External review follow-up at a04de35
+
+The [PR review](https://github.com/ai4curation/ai-gene-review/pull/3138) was read
+through the public web reader after command-line network access became
+unavailable. Its generic-binding policy distinction is accepted: 17
+GO:0005515 rows now REMOVE for lack of informative molecular-function content,
+without treating zero pKd or the 10-molar export representation as proof that
+the proteins do not bind. The five directly quantified PDZ-domain bindings
+remain MODIFY to GO:0030165. All original partner tuples, workbook rows,
+checksums and IntAct/IMEx identifiers are unchanged. The matching WHRN affinity
+supports the interpretation that the placeholders correspond to unquantified
+results, but the exact export semantics and finite domain coverage still do
+not establish universal nonbinding; the source-reconciliation question remains.
+
+The two ATP-transport BP rows now KEEP_AS_NON_CORE. PMID:24277820's accessible
+abstract reports release after human/rat ABCC6 expression but separates that
+cellular outcome from direct NTP transport. Full PMID:24969777 directly measures
+ATP appearance in the rat-ABCC6 expression system and allows an indirect
+vesicular/channel route. Those positive release results justify retaining the
+curated cellular association, while the unknown translocation mechanism keeps
+it outside the defined core transport activity. No ATP-transporter MF or ATP
+substrate assertion is added, and the biological importance of nucleotide
+release to extracellular PPi supply is retained.
+
+The extracellular-compartment rationale now describes the plasma-membrane site
+of ABCC6 activity without invoking or changing the seeded qualifier. The broad
+transmembrane-transport BP was removed from the core summary because the
+specific ABC transporter MF already supplies that information; the core
+anti-mineralization BP remains. No source annotation was deleted.
