@@ -555,11 +555,15 @@ def _existing_accepted_full_text(
     marker = "\n## Full Text\n"
     if marker not in body:
         return None, None, {}
-    section = body.split(marker, 1)[1]
-    next_heading = section.find("\n## ")
-    if next_heading != -1:
-        section = section[:next_heading]
-    section = section.strip()
+    # No truncation at the next `## `. Both writers of this file append `## Full Text`
+    # LAST -- `to_markdown` emits Abstract then Full Text and stops, and `apply_full_text`
+    # rstrips the body and appends -- so every `## ` line inside the section is content,
+    # not a sibling heading. Cutting there dropped 61% of PMID_26063905 (at the
+    # extractor's own `## Results (full text retrieved from PMC HTML, ...)` label) and 62%
+    # of PMID_37865089 (at a `## Splitting 50 PDBs...` shell comment in a code listing),
+    # in a function whose entire purpose is to preserve that body. Substring-for-structure,
+    # the same shape as the `"\n## Full Text" in existing` test this replaced.
+    section = body.split(marker, 1)[1].strip()
     if not section:
         return None, None, {}
     method = frontmatter.get("full_text_extraction_method")

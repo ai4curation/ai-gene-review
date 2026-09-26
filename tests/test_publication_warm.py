@@ -939,17 +939,18 @@ def test_a_stripped_section_is_abstract_grade_not_full_text(tmp_path):
 
 
 def test_cache_publication_keeps_a_good_body_when_the_refetch_is_rejected(tmp_path, monkeypatch):
-    """Drive `cache_publication`, not the helper -- the helper test could not see this.
+    """Pin the carry-forward end to end: body kept, metadata refreshed, provenance carried.
 
-    `cache_publication` called `fetch_pubmed_data(pmid)` with no kwargs, whose defaults are
-    `use_cache=True, cache_dir=Path("publications")` -- the same file. So the inner write
-    overwrote the existing record *before* the carry-forward guard read it, and the guard
-    then found `full_text_available: false` and no section and did nothing. Both the
-    888-record fix and the provenance carry-forward were dead on the path
-    `validator.py` recommends.
+    What this test does **not** cover, stated plainly because an earlier version of this
+    docstring claimed otherwise: it cannot see the `use_cache` collision that made the
+    carry-forward dead in production. It monkeypatches `fetch_pubmed_data`, so no inner
+    write happens whichever kwargs the call site passes -- restore
+    `fetch_pubmed_data(pmid)` and all four assertions below still pass. Only
+    `test_cache_publication_does_not_let_the_fetch_write_the_record` fails on that
+    mutation, and the two tests are only jointly sufficient.
 
-    The previous test called `_existing_accepted_full_text` directly and so was blind to it
-    -- the fifth "the check passed but did not exercise the thing" on this branch.
+    What it does cover, which the earlier helper-level test did not: delete the
+    carry-forward block and `"A genuine cached body." in out` fails.
     """
     from types import SimpleNamespace
     import ai_gene_review.etl.publication as pub
@@ -979,8 +980,16 @@ def test_cache_publication_keeps_a_good_body_when_the_refetch_is_rejected(tmp_pa
 def test_cache_publication_does_not_let_the_fetch_write_the_record(tmp_path):
     """Wiring: the inner write must stay off, or the guard above is unreachable again.
 
-    Asserted against the source because exercising it needs Entrez; the behavioural test
-    above stubs `fetch_pubmed_data` and so cannot see which kwargs it is called with.
+    This is the **only** test that catches the collision. `fetch_pubmed_data` defaults to
+    `use_cache=True, cache_dir=Path("publications")` -- the same file `cache_publication`
+    is about to write -- so calling it without the kwarg overwrote the record before the
+    carry-forward guard could read it, making two commits' worth of fixes inert on the
+    path `validator.py` recommends.
+
+    Asserted against the source because exercising it needs Entrez, and because the
+    behavioural test above stubs `fetch_pubmed_data` and therefore cannot observe which
+    kwargs it receives. If this assertion is ever deleted as brittle, the collision
+    becomes silently reintroducible -- nothing else would notice.
     """
     import inspect
     import ai_gene_review.etl.publication as pub
@@ -989,3 +998,28 @@ def test_cache_publication_does_not_let_the_fetch_write_the_record(tmp_path):
     assert "fetch_pubmed_data(pmid, use_cache=False)" in src, (
         "the inner write would overwrite the record before the carry-forward reads it"
     )
+
+
+def test_the_carry_forward_keeps_the_whole_body(tmp_path):
+    """No truncation at the next `## ` -- every such line inside the section is content.
+
+    Both writers append `## Full Text` LAST (`to_markdown` emits Abstract then Full Text
+    and stops; `apply_full_text` rstrips and appends), so a `## ` inside it is never a
+    sibling heading. Cutting there dropped 61% of `PMID_26063905` at the extractor's own
+    `## Results (full text retrieved from PMC HTML, ...)` label and 62% of
+    `PMID_37865089` at a `## Splitting 50 PDBs...` shell comment in a code listing -- in
+    the function whose entire purpose is preserving that body.
+    """
+    from ai_gene_review.etl.publication import _existing_accepted_full_text
+
+    rec = tmp_path / "PMID_9.md"
+    rec.write_text(
+        "---\npmid: '9'\nfull_text_available: true\n---\n\n"
+        "## Abstract\n\nabs\n\n"
+        "## Full Text\n\nIntroduction prose.\n\n"
+        "## Results (full text retrieved from PMC HTML, PMC1)\n\nThe results section.\n"
+    )
+    text, _, _ = _existing_accepted_full_text(rec)
+    assert "Introduction prose." in text
+    assert "The results section." in text, "the tail after an inner ## must survive"
+    assert "## Results (full text retrieved" in text
