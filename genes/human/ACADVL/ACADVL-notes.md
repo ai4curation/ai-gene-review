@@ -205,3 +205,30 @@ spaces were removed with parsed-data equality checked. History validation and fi
 recorded in `/tmp/ACADVL-audit-manifest.json`. No Git state or shared project file was changed.
 
 Coordinator inspection of all 42 rows and both core entries found no blocking biological issue. Added the exact cached UniProt C24 catalytic reaction and its experimental attribution to the very-long-chain rows/core, distinguishing curated turnover evidence from structural cavity capacity. Abstract-only local PMID caches now carry explicit reference flags; externally accessed full text remains separately described above. Source assertions and action counts are unchanged.
+
+
+## 2026-09-26: PR #3157 evidence-scope follow-up
+
+This append-only entry supersedes the earlier final action count and energy-process refinement above. It also makes the nucleoid evidence explicit; the prior phrase “both native and cross-linked preparations” meant preparation categories, not every experiment. The current YAML reasons and biological questions now stand independently of the earlier draft. The history of the P50544/paralog and paper-attribution corrections remains in this journal.
+
+### Nucleoid source and exact table interpretation
+
+Independently re-read the [author-uploaded full primary article, PMID:18063578](https://www.researchgate.net/publication/5783906_The_Layered_Structure_of_Human_Mitochondrial_DNA_Nucleoids), Table 1 and its legend, Results, and Discussion. The table is legible in the indexed full article. The row is `Acyl-CoA dehydrogenase,VLC ACADVL NP_000009 3 0 3 0`. Its columns are:
+
+| Preparation | Native, anti-TFAM | Native, anti-mtSSB | Cross-linked, preparation 1 | Cross-linked, preparation 2 |
+| --- | ---: | ---: | ---: | ---: |
+| Independent ACADVL peptides | 3 | 0 | 3 | 0 |
+
+The legend defines these as independent LC-MS/MS peptide identifications with confidence above 90%. They are not abundance measurements. Detection occurred in one native preparation and one cross-linked preparation; the two zero columns preclude claiming identification in every preparation. Class I is the paper's operational core-nucleoid group and includes metabolic enzymes. Class II contains the native-only set, including ATAD3, discussed in the abstract. Thus the abstract does not assign all metabolic enzymes to the native-only set. Cross-linking can capture indirect contacts, and neither the table nor the classification establishes an ACADVL DNA-binding or genome-maintenance activity. The nucleoid row remains KEEP_AS_NON_CORE with this bounded biochemical support.
+
+The exact table row is now quoted in `supporting_text_fulltext`; the generic abstract set-level quote was removed from this annotation. The immutable local cache is abstract-only, so `full_text_unavailable: true` remains correct. No cache was altered.
+
+### Other source and ontology refinements
+
+Re-read [PMID:16020546, full original Figure 5 Results and caption](https://www.researchgate.net/publication/7723299_Human_Acyl-CoA_Dehydrogenase-9_Plays_a_Novel_Role_in_the_Mitochondrial_-Oxidation_of_Unsaturated_Fatty_Acids). Human muscle mitochondrial matrix and membrane fractions were immunoblotted using anti-VLCAD, with purified enzyme controls. The result states that VLCAD pelleted with the membrane fraction; a short direct excerpt is now recorded in `supporting_text_fulltext`. The local cache remains abstract-only. This assay supports membrane-level localization; separate assembly and structural sources provide the finer inner-membrane context.
+
+The [live AmiGO GO:0033539 page](https://amigo.geneontology.org/amigo/term/GO%3A0033539) and [GO:0006635 page](https://amigo.geneontology.org/amigo/term/GO%3A0006635), viewed 2026-09-26, display an inferred `is_a` ancestry through fatty acid oxidation/catabolism without GO:0015980. The [energy derivation page](https://amigo.geneontology.org/amigo/term/GO%3A0015980) places that process under GO:0006091. This checks the displayed `is_a` relationship, not an exhaustive assertion that no other relation can connect these processes. QuickGO/OLS API requests were unavailable. PMID:7479827 explicitly links VLCAD deficiency to diminished myocardial oxidation and energy production. Accordingly, retain GO:0015980 as KEEP_AS_NON_CORE; replacing it with already-present GO:0033539 would lose a supported distinct assertion.
+
+The MitoCoP finding now quotes an actual cached dataset statement, while explicitly recording that the ACADVL supplementary identification was not independently re-extracted. Core descriptions positively distinguish C16-based long-chain activity from the C24 reaction and extended binding cavity. Both describe the same FAD-dependent membrane-associated homodimer. EC 1.3.8.9 and EC 1.3.8.8 match the fetched UniProt record; the membrane-associated architecture is distinguished from the soluble matrix tetramers SCAD, MCAD and LCAD.
+
+Final actions are **20 ACCEPT, 10 KEEP_AS_NON_CORE, 6 UNDECIDED, 4 MODIFY, 1 REMOVE, 1 MARK_AS_OVER_ANNOTATED**. Only the energy row action changed in this follow-up. All 42 source assertions and all fetched GOA/UniProt/cache artifacts remain unchanged. Targeted validation, rendering, new history validation, and byte-based publication hashes are recorded in the follow-up manifest supplied to the coordinator. No Git or remote mutation was performed.
