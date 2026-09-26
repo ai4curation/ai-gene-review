@@ -1,6 +1,6 @@
 ---
 title: "TreeGrafter Inference Evaluation"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [EVALUATION, PIPELINE]
 # Bare symbols here span many species (aprA is Desulfovibrio, pepV is P. putida,
 # "FAS"/"ArgE" are family names), so prose auto-linking mis-targets; keep it off.
@@ -17,6 +17,27 @@ sidecars:
 ---
 
 # TreeGrafter Inference Evaluation
+
+**Bottom line:** TreeGrafter grafts a protein that is not in a PANTHER reference
+tree onto the best-matching node and copies that node's GO terms to it as IEA
+annotations (`GO_REF:0000118`), with no curator in the loop. We took every such
+annotation in the review corpus at a frozen 2026-09-06 snapshot (898 annotations
+on 510 reviewed proteins) and tallied how reviewers treated them, alongside the
+curated PAINT/IBA set as a contrast. Reviewers accepted 41% of TreeGrafter
+annotations as-is and rejected 26% (`REMOVE` or `MARK_AS_OVER_ANNOTATED`), against
+72% accepted for PAINT/IBA; molecular-function terms fared worst, with 52%
+down-graded. When another pipeline reproduced the same TreeGrafter call
+(`GO_REF:0000120`) acceptance rose to 77%, though reviewers could see that label.
+In five of six down-graded cases the tree placement was sound and the inherited
+term was the problem (too coarse, a sibling term, or a generic localization). The
+errors cluster by family: 29 of the 63 PANTHER families with at least four
+reviewed annotations had half or more of their terms down-graded.
+
+We did this because TreeGrafter output is routinely conflated with curated
+PAINT/IBA, and knowing where automated grafting over-reaches gives PANTHER and
+PAINT curators concrete families to fix. About 70% of the rows come from the
+*Pseudomonas putida* KT2440 batch, so the rates are directional; the corpus has
+grown since the snapshot and the tables were deliberately not chased.
 
 ## Overview
 

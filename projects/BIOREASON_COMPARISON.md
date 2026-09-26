@@ -1,7 +1,7 @@
 ---
 title: "BioReason-Pro Comparison Project"
-maturity: IN_PROGRESS
-tags: [PIPELINE, FLAGSHIP]
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
@@ -17,14 +17,29 @@ sidecars:
 ---
 # BioReason-Pro Comparison Project
 
+**Bottom line:** BioReason-Pro (Fallahpour et al. 2026,
+[doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) is a
+reasoning LLM that turns GO-GPT term predictions, InterPro domains and organism
+context into a written functional summary. We collected its web reports for 139
+genes from 14 organisms (ARGO139) and had an agent score each summary against
+our local gene review, then assessed all 955 SFT GO-term predictions for a 95-gene
+subset (ARGO95) with the COR/CNN/LSP/UNC/PLI/NPI/REP taxonomy. On the 138-gene
+performance set (the wrong-input `csr-1` export is excluded) mean correctness is
+4.0/5 but completeness only 2.9/5, and most summaries restate what InterPro domain
+labels already say. The model fails systematically on localization, pseudoenzymes,
+paralogs and organism-specific biology. Of the 955 SFT terms, 682 (71%) were correct
+but already known and only 23 were correct novel predictions. A blinded second rater
+on 20 genes agreed closely on correctness (weighted kappa 0.95). The GO-GPT leaf-term
+review of ARGO139 is still pending (137 of 139 files are `DRAFT`).
+
+We did this to answer the question a database curator actually faces: are a new
+method's predictions good enough to import, and where do they break? The work was
+presented at ISMB 2026 and is written up as a manuscript.
+
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
 **[Browse BioReason comparison predictions](../app/predictions/index.html?projects=BIOREASON_COMPARISON)** — filter SFT and GO-GPT term predictions alongside RL narrative reviews, with each assessment scheme kept explicit.
 
-
-Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against agent-adjudicated local AIGR gene reviews.
-
-**Bottom line:** across the ARGO139 collected cohort, BioReason-Pro's functional summaries mostly restate what InterPro domain labels already say. The model-performance denominator excludes the wrong-input `csr-1` case (n=138) and separately flags seven sequence-truncated cases. It adds real value mainly for proteins with distinctive multi-domain architectures, and fails systematically on localization, pseudoenzymes, paralogs, and organism-specific biology.
 
 📄 **[Read the manuscript (PDF)](BIOREASON_COMPARISON/article/manuscript.pdf)** &nbsp;·&nbsp; 🖥 **[View the slide deck](BIOREASON_COMPARISON/article/slides.html)** &nbsp;·&nbsp; 📝 [Abstract](BIOREASON_COMPARISON/article/abstract.md)
 

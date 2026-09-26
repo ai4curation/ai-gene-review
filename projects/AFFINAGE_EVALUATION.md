@@ -1,6 +1,6 @@
 ---
 title: "Affinage Evaluation Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [PIPELINE, EVALUATION]
 species: [human]
 sidecars:
@@ -26,6 +26,25 @@ sidecars:
   paint_campaign_summary_md: AFFINAGE_EVALUATION/results/paint-campaign/summary.md
 ---
 # Affinage Evaluation Project
+
+**Bottom line:** Affinage (Cheeseman Lab) writes a literature-grounded mechanism
+narrative for every human protein-coding gene and then maps its findings onto GO
+and Reactome terms. We compared its output with our agent-adjudicated gene reviews
+in four GO-layer cohorts (42 human genes), a forward test on the 22 Fanconi anemia
+genes, and a retrieval test on 91 genes from the PAINT campaign. The GO layer
+almost never reaches the specific curated function: it captured the primary
+molecular function for 1 of 42 genes (KRAS `GTPase activity`), usually stopping at
+a generic parent such as `oxidoreductase activity` and sometimes landing on the
+wrong catalytic branch. The narrative is much stronger: in the Fanconi cohort it
+contributed 59 primary papers and 13 new GO annotations across 10 genes without
+reversing any existing curation decision. As a literature search it supplied 52%
+of the 718 references the 91 reviews had to find, and its `gates_passed` flag
+checks precision only.
+
+We did this to decide whether Affinage could serve AIGR as a GO-grounding source,
+a deep-research input, or a literature search. The answer so far: use the
+narrative as a deep-research input, ignore the GO layer, and search partners,
+complexes and paralogs independently.
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 

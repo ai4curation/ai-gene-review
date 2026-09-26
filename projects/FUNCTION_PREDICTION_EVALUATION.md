@@ -6,9 +6,19 @@ autolink_gene_symbols: false
 ---
 # Function Prediction Evaluation
 
-An index to evaluations of computational protein-function predictions, functional
-summaries, and annotation-transfer methods in AI Gene Review. Each project provides
-its own evidence, review criteria, datasets, and results.
+**Bottom line:** new protein-function predictors appear faster than curators can
+judge them, and aggregate benchmarks do not say whether a given method's
+predictions are safe to import. This page indexes the AI Gene Review projects
+that test such predictions claim by claim against agent-adjudicated gene
+reviews, scoring GO terms with the COR/CNN/LSP/UNC/PLI/NPI/REP taxonomy from de
+Crécy-Lagard et al. 2025 (PMID:40703034). Across projects the errors concentrate
+in specificity, paralogs, pseudoenzymes and organism context, and in the larger
+model benchmarks most correct predictions were already known: 682 of 955
+BioReason-Pro SFT terms were correct but not novel and 23 were correct and novel
+(ProtNLM2's purposive cohorts give 53 COR and 32 CNN of 288 GO terms). Affinage's GO layer reached
+the specific curated function for 1 of 42 genes, and reviewers accepted 41% of uncorroborated TreeGrafter inferences
+against 72% of curated PAINT/IBA ones. Each project below has its own cohorts,
+methods and denominators.
 
 **[Browse all predictions](../app/predictions/index.html)** — a shared faceted catalog of prediction sets and GO/EC claims, including narrative reviews and assessed empty outputs. Filter by method, species, project, cohort, or assessment; share the resulting URL. [Browser guide](../docs/prediction_browser.md).
 

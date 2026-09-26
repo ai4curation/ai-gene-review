@@ -1,11 +1,31 @@
 ---
 title: "Validating E. coli ML Predictions"
-maturity: IN_PROGRESS
-tags: [PIPELINE, FLAGSHIP]
+maturity: COMPLETE
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [ECOLI]
+genes: [ygfF, yciO, yegV, yjhQ, yrhB, yjdM, fepE]
 ---
 
 # Validating E. coli ML Predictions
+
+**Bottom line:** de Crécy-Lagard et al. (2025, PMID:40703034) had experts assess
+453 DeepECTransformer EC-number predictions for *E. coli* proteins of unknown
+function and found that the model mostly failed to make novel predictions (only
+3 were correct and novel) and made basic logic errors such as paralog confusion
+and ignoring pathway context. We picked one or two genes from five of the paper's
+seven categories (7 genes: ygfF, yciO, yegV, yjhQ, yrhB, yjdM, fepE), wrote a full GO annotation review for each, and recorded
+the DeepECTF prediction in a structured `*-det-predictions-review.yaml` file. All 7
+reviews are complete and our assessments agree with the paper's categories: COR
+for ygfF, PLI for yciO and yegV, NPI for yjhQ and yrhB, UNC for yjdM and REP for
+fepE. The same logic errors also appear in existing GO annotations: the yciO
+threonylcarbamoyladenylate synthase rows (GO:0061710) and a fepE tyrosine-kinase
+IBA row (GO:0004713) were marked REMOVE, and the yjdM phosphonoacetate hydrolase
+rows (GO:0047400) were marked over-annotated.
+
+We did this to check whether an agentic gene review reproduces expert judgments
+on ML predictions, and whether the errors those experts found in the model also
+exist in GOA. The UniProt and b-number columns in the tables below were corrected
+on 2026-09-26 to match the review files.
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
@@ -41,29 +61,29 @@ Sampling across the error taxonomy to evaluate existing GO annotations in contex
 ### Correct Novel (COR)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| ygfF | b2878 | P76626 | EC 1.1.1.47 (glucose 1-dehydrogenase) | COR (CS=2) - validated | COMPLETE |
+| ygfF | b2902 | P52037 | EC 1.1.1.47 (glucose 1-dehydrogenase) | COR (CS=2) - validated | COMPLETE |
 
 ### Paralog Incorrect (PLI)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| yciO | b1282 | P0AB18 | EC 2.7.7.87 (threonylcarbamoyladenylate synthase) | PLI (CS=0) - paralog of TsaC, different function | COMPLETE |
-| yegV | b2100 | P0A8A8 | EC 2.7.1.92 (dehydro-2-deoxygluconokinase) | PLI (CS=0) - correct first 3 digits, wrong substrate | COMPLETE |
+| yciO | b1267 | P0AFR4 | EC 2.7.7.87 (threonylcarbamoyladenylate synthase) | PLI (CS=0) - paralog of TsaC, different function | COMPLETE |
+| yegV | b2100 | P76419 | EC 2.7.1.92 (dehydro-2-deoxygluconokinase) | PLI (CS=0) - correct first 3 digits, wrong substrate | COMPLETE |
 
 ### Non-Paralog Incorrect (NPI)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| yjhQ | b4307 | P39358 | EC 2.3.1.189 (mycothiol synthase) | NPI (CS=0) - mycothiol pathway absent in E. coli | COMPLETE |
-| yrhB | b3446 | P0AES2 | EC 4.1.2.50 (6-carboxytetrahydropterin synthase) | NPI (CS=0) - activity already encoded by QueD | COMPLETE |
+| yjhQ | b4307 | P39368 | EC 2.3.1.189 (mycothiol synthase) | NPI (CS=0) - mycothiol pathway absent in E. coli | COMPLETE |
+| yrhB | b3446 | P46857 | EC 4.1.2.50 (6-carboxytetrahydropterin synthase) | NPI (CS=0) - activity already encoded by QueD | COMPLETE |
 
 ### Uncertain
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| yjdM | b4108 | P39330 | EC 3.11.1.2 (phosphonoacetate hydrolase) | UNC (CS=1) - in vitro activity not supported in vivo | COMPLETE |
+| yjdM | b4108 | P0AFJ1 | EC 3.11.1.2 (phosphonoacetate hydrolase) | UNC (CS=1) - in vitro activity not supported in vivo | COMPLETE |
 
 ### Repetition Error (REP)
 | Gene | b-number | UniProt | DeepECTF Prediction | Paper Assessment | Status |
 |------|----------|---------|-------------------|-----------------|--------|
-| fepE | b0587 | P24079 | EC 2.7.13.3 (histidine kinase) | REP (CS=0) - no similarity to HK family | COMPLETE |
+| fepE | b0587 | P26266 | EC 2.7.13.3 (histidine kinase) | REP (CS=0) - no similarity to HK family | COMPLETE |
 
 ## Key Questions
 
