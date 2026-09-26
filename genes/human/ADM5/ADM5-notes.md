@@ -283,3 +283,40 @@ Both now say the evidence conflicts and that this review takes no position.
 
 Final: 8 rows, 6 REMOVE / 2 KEEP_AS_NON_CORE, unchanged across four rounds. 26 distinct quotes
 (57 instances) verified.
+
+## Round 5 (review feedback)
+
+One residual, and it is the same mechanism as the thing it was fixing: **splitting a six-row
+falsehood produced a two-row one.** My new `PARALOG` variant named pig ADM (P53366) as a donor.
+That is true for `GO:0005179` but not for `GO:1990410`, whose WITH/FROM is only the node, P35318
+and Q7Z4H4 — so the reason again disagreed with the `source_entities` beside it.
+
+Fixed by removing accession enumeration from the shared preamble entirely. Per-row donors live in
+`source_entities`, which is generated from the data and cannot drift. **A shared preamble should
+carry no row-specific facts at all** — that is the generalisable form of this lesson, arrived at
+the hard way twice.
+
+### One reviewer claim I checked and did not accept
+
+The review said the `ORTHOLOG` variant's "present and sound" holds firmly "only for the two rows
+with QuickGO IDAs". It is four, not two. Pig ADM5 (A5LHG2) holds experimental IDAs for
+**GO:0003073, GO:0007189, GO:0010460 and GO:0035809** — every term whose human row lists it as a
+donor — all from PMID:18434369.
+
+Rather than assert that back, I committed `ADM5-donor-goa-check.json` so it is checkable:
+
+> [file:genes/human/ADM5/ADM5-donor-goa-check.json "pig ADM5 holds experimental IDAs for all four of the terms whose human rows list it as a donor"]
+
+The snapshot was worth making regardless — several rounds of this review turned on which evidence
+codes that donor holds, and those facts had lived only in prose. It also confirms the converse
+cleanly: pig ADM5 has *no* experimental annotation for GO:1990410, consistent with that row having
+no ADM5 donor at all.
+
+### History churn
+
+Round 4 rewrote the two earlier history events from block literals to quoted folded scalars — text
+unchanged, 60 lines of diff in a record that is supposed to be append-only. Cause: I round-tripped
+the file through `yaml.dump` to append an event. Restored from the round-3 blob and the new event
+appended as text, so the diff against round 3 is now 38 insertions and zero deletions.
+
+Final: 8 rows, 6 REMOVE / 2 KEEP_AS_NON_CORE — unchanged across five rounds.
