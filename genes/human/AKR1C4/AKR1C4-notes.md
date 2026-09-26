@@ -49,3 +49,9 @@
 ## 2026-09-20 full-gene re-review
 
 Read every source annotation and relevant evidence, including primary full texts for disputed reactions and the exact PAINT target path. See [AKR1C4-primary-source-checks.md](AKR1C4-primary-source-checks.md) for assay context, access limits, short exact excerpts, and pending focused adjudication. All original source fields are preserved; no NEW annotation is added. Broad true chemistry and localization are retained separately from exact substrate/reaction conflicts.
+
+## OpenScientist follow-up (2026-09-26)
+
+Evaluated the focused OpenScientist report at [AKR1C4-hypotheses/aldose-prostaglandin-monooxygenase-and-bile-transport-scope/openscientist.md](AKR1C4-hypotheses/aldose-prostaglandin-monooxygenase-and-bile-transport-scope/openscientist.md). It reinforced the same concerns around ancestral aldose reduction, inherited prostaglandin metabolism, the GO:0047086 oxygen-insertion chemistry, and historical bile-acid-binder/transport carry-over from DD2 versus DD4 clone nomenclature.
+
+I did not adopt the report's removal recommendations wholesale. It did not locate a direct AKR1C4 aldose-reduction null assay, did not close the full-text gap for the monooxygenase source PMID:21232532, and did not obtain the scanned full text of PMID:8172617 behind the legacy bile-acid transport assertions. The report is now cited on the still-unresolved rows so the added scrutiny is preserved without converting absence of a located assay into a hard REMOVE decision.

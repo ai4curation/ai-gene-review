@@ -71,3 +71,9 @@
 ## 2026-09-20 full-gene re-review
 
 Read every source annotation and relevant evidence, including primary full texts for disputed reactions and the exact PAINT target path. See [AKR1D1-primary-source-checks.md](AKR1D1-primary-source-checks.md) for assay context, access limits, short exact excerpts, and pending focused adjudication. All original source fields are preserved; no NEW annotation is added. Broad true chemistry and localization are retained separately from exact substrate/reaction conflicts.
+
+## OpenScientist follow-up (2026-09-26)
+
+Evaluated the focused OpenScientist report at [AKR1D1-hypotheses/aldose-monooxygenase-and-alcohol-reduction-specificity/openscientist.md](AKR1D1-hypotheses/aldose-monooxygenase-and-alcohol-reduction-specificity/openscientist.md). It usefully strengthened the mechanistic case that AKR1D1 is a specialist Delta4-3-oxosteroid 5beta-reductase: Glu120 replaces the catalytic histidine of general carbonyl-reducing AKRs, the established Reactome bile-acid reactions are Delta4 double-bond reductions rather than C-OH alcohol-dehydrogenase steps, and GO:0047086 remains an oxygenase reaction unlike canonical AKR1D1 chemistry.
+
+The report's hard-removal leads were kept as scrutiny rather than final actions for the remaining unresolved rows. PMID:21232532 still needs the full AKR1C source context for monooxygenase, and PMID:11342103 still needs a full read before deciding whether the UniProt/Rhea 17beta-HSD reaction reflects intrinsic purified AKR1D1 activity or an intact-cell/coupled transformation.
