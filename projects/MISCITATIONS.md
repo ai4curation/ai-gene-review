@@ -1,12 +1,30 @@
 ---
 title: "Miscitation Review Project"
-maturity: SCOPING
-tags: [PIPELINE]
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
 species: [human]
 genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39]
 ---
 
 # Miscitation Review Project
+
+**Bottom line:** a miscitation is a citation that passes every mechanical check and is
+still wrong: the identifier resolves, but to the wrong paper, or to the right paper used
+for a claim it does not make. We built an aggregator over every `reference_review` block
+in the gene reviews and re-verified six seed cases (NLRP3, ZBP1, GRID1, PEX39, SULT1B1,
+PNPLA3) against live QuickGO, NCBI, EuropePMC and UniProt. We did this because the
+validators check only internal consistency, and reviewer judgements about bad citations
+were buried one gene at a time. The register covers 14,559 adjudicated references in
+2,074 of 4,513 reviews and flags 559 (3.8%, an enriched sample rather than an error
+rate); all six seed cases stand. The main finding is structural: four of the six are
+defects in how a source database attached a correct paper (a wrong `WITH/FROM`
+interactor, an experimental code on a meeting report, a missing `NOT`), and the schema
+has no field for that yet. Most defects live in GOA, IntAct or UniProt rather than in
+this repo, and nothing has been reported upstream.
+
+The sibling [Miscitation Audit](MISCITATION_AUDIT.md) keys the same flags on the
+citation to find bad PMIDs copied across genes; its counts differ slightly because it
+counts gene-by-citation rows from a different run.
 
 ## Overview
 

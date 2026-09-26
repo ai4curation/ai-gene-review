@@ -1,19 +1,31 @@
 ---
 title: "Miscitation Audit"
 maturity: IN_PROGRESS
-tags: [PIPELINE]
+tags: [PIPELINE, EVALUATION]
 autolink_gene_symbols: false
 ---
 
 # Miscitation Audit
 
-**A cited identifier that resolves to a different paper cannot support the annotation
-it is attached to. Reviewers here have flagged 27 such rows — 20 distinct citations —
-one gene at a time over the life of the repository, alongside a softer class of 257
-`MISCITED` rows where the paper is right but does not support the claim. None of it has
-ever been aggregated. This project collects both, keys them on the *citation* rather
-than the gene, and separates the ones we can fix from the ones only the assigning group
-can.**
+**Bottom line:** a citation whose identifier resolves to a different paper cannot
+support the annotation attached to it, and reviewers here had been flagging such
+cases one gene at a time without anyone aggregating them. We wrote
+`harvest_citations.py`, which collects every `reference_review.correctness` defect
+flag across the 4,467 review files and keys it on the citation rather than the gene,
+and `detect_citation_anomalies.py`, which looks for defects nobody has flagged yet. We
+keyed on the citation because one bad PMID is usually copied across paralogs or complex
+partners, so one correction clears several genes and one discovery says where else to
+look. The current register ([REPORT.md](MISCITATION_AUDIT/reports/REPORT.md)) holds 28
+`WRONG_IDENTIFIER` rows on 21 distinct citations, 7 of which span more than one gene,
+plus 257 `MISCITED` rows (215 citations) that have not been sampled for precision; the
+prose below was written at 27 rows / 20 citations, one flag earlier. Most of the defects
+came from GOA (233 of 285 flagged citations), so the main deliverable is a bug report to
+the assigning groups, and those reports have not been filed yet.
+
+We did this because the existing validators only check internal consistency (the title
+matches the PMID, the quote is in the paper), and a wrong PMID imported together with its
+own title passes both. The unresolvable-identifier check found exactly one dead PMID
+across 24,436 cited; the paralog-mismatch check was measured and does not work.
 
 The two classes are not interchangeable and this page keeps them apart throughout:
 **`WRONG_IDENTIFIER` (27 rows / 20 citations)** is mechanically checkable and is the

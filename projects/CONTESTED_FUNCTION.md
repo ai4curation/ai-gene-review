@@ -2,9 +2,25 @@
 title: "Contested Function Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
+species: [SCHPO, SACEN, PSEAE, STRCO]
+genes: [Epe1, eryCII, pqsB, actI-ORF2]
 ---
 
 # Contested Function Project
+
+**Bottom line:** some proteins keep an enzyme family's domain but have lost the
+activity, so homology-based IBA and IEA annotations, and occasionally an experimental
+one, assign them a catalytic function that biochemistry contradicts. This project
+collects such pseudo-enzyme cases and reviews them in depth, weighing domain homology
+against assays, catalytic-site mutants and the protein's actual mechanism. We did this
+because these cases need several evidence types synthesised at once, which makes them a
+demanding test for AI-assisted curation, and because a wrong catalytic term on a
+pseudo-enzyme keeps being re-propagated. Four reviews are complete: fission yeast Epe1,
+whose seven demethylase, oxidoreductase, dioxygenase and metal-binding rows (including
+IDA and EXP rows) are all REMOVE in favour of histone-binding terms, and three
+biosynthetic-cluster proteins without active sites (eryCII, pqsB, actI-ORF2). Finding
+further candidates has not started; the [Top-Nots](TOP_NOTS.md) candidate list is the
+natural source.
 
 ## Overview
 
@@ -124,7 +140,7 @@ Last updated: 2026-01-22
 Created project to document genes with contested molecular functions, starting with Epe1 from the GO Consortium 2025 presentation slides.
 
 **Epe1 Summary**:
-- Full review in `genes/pombe/Epe1/Epe1-ai-review.yaml`
+- Full review in `genes/SCHPO/Epe1/Epe1-ai-review.yaml`
 - 5 enzymatic annotations marked REMOVE:
   - `GO:0032452` histone demethylase activity (IBA)
   - `GO:0032454` histone H3K9 demethylase activity (IDA x2)
