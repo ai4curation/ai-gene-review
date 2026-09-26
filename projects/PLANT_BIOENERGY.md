@@ -8,6 +8,19 @@ autolink_gene_symbols: false
 
 # Plant Bioenergy Modules
 
+**Bottom line:** biofuels from plants depend on how hard the cell wall is to
+digest (set by lignin, xylan acetylation and cellulose crystallinity) and, for
+oilseeds, on how much triacylglycerol the seed makes and packages. We curated
+three new taxon-neutral `ModuleReview` modules for these levers (lignin/monolignol
+biosynthesis, xylan biosynthesis and seed triacylglycerol biosynthesis, PR #2066)
+and grouped them with the existing cellulose and photosynthesis modules. We did
+this so that later gene reviews in feedstock species such as poplar and sorghum
+have a shared, verified map of the enzymes and steps to anchor to. All five
+modules validate and are rendered; each is status DRAFT, and together they
+ground 48 distinct UniProt exemplars (mostly Arabidopsis) where the identifiers
+were verified. Grass-specific wall modules, suberin/cutin and per-gene reviews of
+feedstock orthologs have not started.
+
 ## Overview
 
 Plant biomass is the largest renewable feedstock for liquid fuels and

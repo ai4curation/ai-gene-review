@@ -8,6 +8,23 @@ genes: [CASPL1B1, CASPL1B2, CASPL1C1, CASPL1C2, CASPL1C3, CASPL1D1, CASPL1D2, CA
 
 # CASP-like (CASPL) family curation
 
+**Bottom line:** CASP-like (CASPL) proteins are small four-span plasma-membrane
+scaffolds; the five true CASPs build the root Casparian strip, but most CASPLs
+are uncharacterized. We reviewed 21 *Populus trichocarpa* CASPLs and five
+characterized Arabidopsis orthologs (CASPL1B1, 1B2, 1D1, 1D2, 4C1), wrote
+descriptions for the two PANTHER families (PTHR33573, PTHR36488), and ran
+reproducible orthology and expression analyses. We did this to test whether
+functions from the few characterized Arabidopsis members can be transferred to
+poplar. The answer is yes at group level: for all 20 poplar CASPLs in the
+analysis, the best Arabidopsis hit is in the same Roppolo group (12 are
+reciprocal best hits). Expression data support the transfer: poplar CASPL1B1 is
+root-specific and CASPL4C1 is the most stress-responsive member. The GO
+annotations themselves are sparse. Each poplar gene has one IEA plasma-membrane
+row (all accepted), and the 21 Arabidopsis rows gave 13 ACCEPT, 1
+KEEP_AS_NON_CORE, 2 REMOVE (ISM *extracellular region* and *nucleus*) and 5
+UNDECIDED (HDA Golgi/endosome rows on CASPL1D1). The component list below says
+20 poplar genes; the repo also has a 21st, CASPL2A1, from the same batch.
+
 Cross-cutting curation of the plant **CASP / CASP-like (CASPL)** membrane-scaffold family,
 extending the *Populus trichocarpa* CASPL gene-review batch to its Arabidopsis orthologs,
 the underlying PANTHER families, and a reproducible orthology analysis.

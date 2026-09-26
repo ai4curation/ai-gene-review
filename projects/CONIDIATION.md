@@ -6,9 +6,30 @@ description: >-
   repressive gating, spore maturation, and structural output.
 autolink_gene_symbols: false
 maturity: MATURE
+tags: [BIOLOGY_DOMAIN]
+species: [EMENI, NEUCR]
+genes: [brlA, abaA, wetA, vosA, velB, veA, laeA, fluG, flbB, flbC, flbD, flbE, sfgA, fadA, sfaD, gpgA, flbA, rodA, dewA, wA, yA, wc-1, wc-2, frq, fl, eas, con-6, con-10, acon-2, acon-3]
 ---
 
 # Conidiation regulatory cascade — module design proposal
+
+**Bottom line:** filamentous fungi make asexual spores (conidia) through a
+transcription-factor relay; in *Aspergillus nidulans* FluG and the Flb factors
+switch on BrlA, which drives AbaA and then WetA and the velvet proteins, while a
+G-protein/PKA pathway damped by FlbA holds the program back. We designed and
+built a reusable, ABSTRACT conidiation module
+(`modules/conidiation_regulatory_cascade.yaml`, status DRAFT) with two taxon
+variants, the *Aspergillus* cascade and the largely non-orthologous
+*Neurospora* macroconidiation program (White Collar light and FRQ clock gating,
+the FL master regulator, ACON-2 and ACON-3). We did this because conidiation is
+one of the best-dissected fungal developmental programs and tests whether a
+module can represent the same developmental logic built from different genes.
+All 30 member genes now have reviews (21 in `genes/EMENI/`, 9 in
+`genes/NEUCR/`), covering 382 existing annotations: 288 accepted, 63 kept as
+non-core, 25 marked over-annotated, 1 modified and 5 removed. The removals are
+four plant-specific ARBA propagations on FlbD (e.g. stomatal patterning) and a
+laccase activity row on the polyketide synthase wA whose cited paper assigns the
+laccase to yA. Conserved-role annotons are grounded to PANTHER PTN ancestral nodes.
 
 **Status:** reusable ABSTRACT module implemented. `modules/conidiation_regulatory_cascade.yaml`
 (rendered: `pages/modules/conidiation_regulatory_cascade.html`) is now an **ABSTRACT**

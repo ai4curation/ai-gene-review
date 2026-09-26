@@ -2,9 +2,27 @@
 title: "Photosynthesis Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
+species: [CHLRE, ARATH]
 ---
 
 # Photosynthesis Project
+
+**Bottom line:** oxygenic photosynthesis uses light to move electrons from
+water through photosystem II, the cytochrome b6f complex and photosystem I to
+NADP+, and spends the resulting NADPH and ATP fixing CO2 in the
+Calvin-Benson-Bassham cycle. This first pass wrote the concept notes
+(`terms/photosynthesis/photosynthesis-notes.md`), ran falcon deep research, built
+a taxon-neutral [photosynthesis module](../modules/photosynthesis.html)
+(`modules/photosynthesis.yaml`, status DRAFT) and drew up a candidate-gene
+checklist across seven functional modules. We did this to fix the GO
+representation and the component list before reviewing genes, so that each
+review can choose the best-characterized ortholog (Synechocystis for the
+reaction centres, Chlamydomonas for the CBB cycle and CO2-concentrating
+mechanism, Arabidopsis for antenna and photoprotection). Gene reviews have not
+started beyond three Chlamydomonas genes that were already in the repo: psaC
+(COMPLETE; 9 annotations, 2 removed), CP12 (DRAFT; three `protein binding` rows
+modified to enzyme binding) and LCI5 (no GOA annotations; 7 proposed). The
+remaining candidates in modules A to G are open.
 
 ## Overview
 

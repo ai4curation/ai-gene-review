@@ -1,11 +1,33 @@
 ---
 title: "Arabidopsis Heat Stress Gene Curation Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [ARATH]
+genes: [AT4G17750, AT5G16820, AT1G32330, AT3G02990, AT2G26150, AT1G74310, AT5G02500, AT5G52640, AT5G05410, AT5G03720]
 ---
 
 # Arabidopsis Heat Stress Gene Curation Project
+
+**Bottom line:** Arabidopsis survives heat through a transcriptional cascade in
+which the HSFA1 master regulators switch on amplifiers (HSFA2, DREB2A, HSFA3)
+and the chaperones (HSP101, HSC70-1, HSP90.1) that protect proteins and feed
+back on the HSFs. We reviewed every existing GO annotation on these 10 genes,
+which live in the repo under their locus folders (e.g. `genes/ARATH/AT4G17750/`
+for HSFA1A). All 10 reviews are done: 266 annotations were assessed, with 183
+accepted, 36 kept as non-core, 24 modified, 12 marked over-annotated, 9 removed
+and 2 left undecided, plus 10 new annotations proposed. The main corrections
+were replacing `protein binding` rows with specific partner terms (heat shock
+protein binding, Hsp90 binding, transcription factor binding), removing
+chloroplast localizations for the cytosolic chaperones HSP101 and HSC70-1, and
+sharpening the HSFA3 and DREB2A process and DNA-binding terms. The per-gene
+counts in the tables below date from November 2025; the review files have been
+revised since (for example HSFA2 now has 27 ACCEPT and 14 KEEP_AS_NON_CORE), and
+the counts in this paragraph are taken from the current files.
+
+We did this because the heat stress network is a well-studied regulatory
+hierarchy with strong genetic evidence, which makes it a good test of whether
+per-gene review keeps master regulators, amplifiers, chaperones and negative
+regulators distinct instead of labelling every gene "response to heat".
 
 **Project Start Date:** 2025-11-07
 **Organism:** *Arabidopsis thaliana* (ARATH)
