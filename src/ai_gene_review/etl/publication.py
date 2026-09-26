@@ -50,7 +50,10 @@ from pydantic import BaseModel
 import fitz  # type: ignore  # PyMuPDF
 
 # No cycle: validation/supporting_text imports only stdlib and yaml.
-from ai_gene_review.validation.supporting_text import NO_FULL_TEXT_CONTENT_TYPES
+from ai_gene_review.validation.supporting_text import (
+    NO_FULL_TEXT_CONTENT_TYPES,
+    clear_publication_caches,
+)
 from PyPDF2 import PdfReader
 from Bio import Entrez  # type: ignore[import-untyped]
 
@@ -403,6 +406,7 @@ def convert_doi_publication(
 
     pmid_file.write_text(pub.to_markdown())
     doi_file.unlink()
+    clear_publication_caches()
     print(f"Converted {doi_file.name} -> {pmid_file.name}")
     return True
 
@@ -618,6 +622,7 @@ def fetch_pubmed_data(
             cache_file = cache_dir / f"PMID_{pmid}.md"
             try:
                 cache_file.write_text(publication.to_markdown())
+                clear_publication_caches()
             except Exception:
                 # Silently fail on cache write errors
                 pass
@@ -1087,6 +1092,7 @@ def cache_publication(
 
     # Write to file
     output_file.write_text(publication.to_markdown())
+    clear_publication_caches()
 
     if publication.full_text_available and publication.full_text:
         print(f"Cached PMID {pmid} with full text from PMC")

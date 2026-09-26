@@ -35,6 +35,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+from ai_gene_review.validation.supporting_text import clear_publication_caches
+
 from linkml_reference_validator.etl.fulltext.base import FullTextProviderRegistry
 from linkml_reference_validator.etl.reference_fetcher import (
     MIN_FULL_TEXT_CHARS,
@@ -173,6 +175,10 @@ def _rewrite(path: Path, frontmatter: Dict[str, Any], body: str) -> None:
     if not markdown.endswith("\n"):
         markdown += "\n"
     path.write_text(markdown)
+    # The validation-side reads of this directory are lru_cached with no invalidation, so
+    # a sweep that repairs a record and then validates in the same process would otherwise
+    # see the pre-repair answer.
+    clear_publication_caches()
 
 
 def mark_attempted(path: Path, frontmatter: Dict[str, Any], body: str) -> None:

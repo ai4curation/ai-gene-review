@@ -783,3 +783,47 @@ def test_the_converter_keeps_an_abstract_only_record_as_an_abstract(tmp_path):
     assert "full_text_available: false" in out
     assert FULL_TEXT_HEADER not in out
     assert "A short abstract about CheZ." in out
+
+
+def test_writing_a_record_invalidates_the_memoised_reads(tmp_path):
+    """The hazard closed end to end, not just "the helper exists".
+
+    The validation-side predicates are lru_cached filesystem reads with no invalidation,
+    so repairing a record and re-validating in the same process returned the pre-repair
+    answer. That is exactly the sequence this PR ran over six stub records; it escaped only
+    because the steps happened to be separate processes. Every writer of a publications/
+    record now invalidates.
+    """
+    from ai_gene_review.etl.publication_warm import _rewrite
+    from ai_gene_review.validation.supporting_text import (
+        cached_full_text_available,
+        clear_publication_caches,
+    )
+
+    clear_publication_caches()
+    pubs = tmp_path
+    rec = pubs / "PMID_5.md"
+    rec.write_text("---\npmid: '5'\ntitle: t\nfull_text_available: false\n---\n\n## Abstract\n\na\n")
+
+    assert cached_full_text_available("PMID:5", pubs) is False  # warms the cache
+
+    _rewrite(rec, {"pmid": "5", "title": "t", "full_text_available": True},
+             "\n\n## Abstract\n\na\n\n## Full Text\n\nreal body\n")
+
+    assert cached_full_text_available("PMID:5", pubs) is True, (
+        "a repaired record must be visible to the very next read in the same process"
+    )
+
+
+def test_every_publications_writer_invalidates():
+    """Wiring, which the behavioural test above cannot see for the other three sites."""
+    import inspect
+    from ai_gene_review.etl import publication as pub
+    from ai_gene_review.etl import publication_warm as warm
+
+    # _rewrite is publication_warm's single write point; mark_attempted and
+    # apply_full_text both go through it.
+    for fn in (pub.cache_publication, pub.convert_doi_publication, warm._rewrite):
+        assert "clear_publication_caches()" in inspect.getsource(fn), (
+            f"{fn.__name__} writes a publications/ record without invalidating"
+        )
