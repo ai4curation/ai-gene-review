@@ -175,7 +175,8 @@ reviewed, had 415 annotations / 202 proteins).
 | `NEW` / `PENDING` | 3 | 0.3% | 36 | 0.4% |
 
 **Headline:** only **~41%** of TreeGrafter inferences are accepted as-is, and
-**~26%** are outright rejected (`REMOVE` + `MARK_AS_OVER_ANNOTATED`), with a
+**~26%** are rejected or flagged as over-annotations (`REMOVE` + `MARK_AS_OVER_ANNOTATED`;
+`REMOVE` alone is 13.4%), with a
 further ~8% needing a better term (`MODIFY`). The accept rate was 41.0% at the
 previous 415-annotation snapshot, so it has been stable while the corpus more
 than doubled. This is **markedly noisier than curated PAINT/IBA** on the same
@@ -200,10 +201,11 @@ over-reaches; CC terms are rarely *wrong* but are mostly parked as non-core.
 
 ### Corroboration: TreeGrafter-only vs multi-method vs InterPro2GO-only
 
-On the same 510 reviewed proteins, the reviewer treatment of the three electronic
+Within the 510 reviewed proteins (each population covers the subset of those
+proteins that carry it), the reviewer treatment of the three electronic
 populations defined above:
 
-| Population (same proteins) | n | `ACCEPT` | `KEEP_AS_NON_CORE` | down-graded |
+| Population | n | `ACCEPT` | `KEEP_AS_NON_CORE` | down-graded |
 |---|---:|---:|---:|---:|
 | TreeGrafter, **uncorroborated** (`GO_REF:0000118`) | 898 | 41% | 21% | 34% |
 | TreeGrafter **corroborated** by ≥1 other pipeline (`GO_REF:0000120`, `PANTHER:PTN…`) | 637 | **77%** | 9% | **12%** |
@@ -352,7 +354,7 @@ fixes:
 
 - **[Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)** — joins all
   306 down-graded annotations to their PANTHER graft point, plus a lightweight
-  PANTHER-vs-InterPro [graft check](TREEGRAFTER/graft_check.py) on five
+  PANTHER-vs-InterPro [graft check](TREEGRAFTER/graft_check.py) on ten
   exemplars. Key result: the placement is usually sound; the error is the GO term
   attached to the graft node, and **InterPro often resolves the protein better
   than PANTHER** (e.g. `IPR011803 AprA`, `IPR003083 S-crystallin`).

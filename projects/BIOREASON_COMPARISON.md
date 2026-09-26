@@ -69,7 +69,7 @@ the dated figures, which are recorded in [`benchmark-metrics.json`](BIOREASON_CO
 - [BioReason-Pro SFT evaluation](BIOREASON_COMPARISON/sft-eval.html) — ARGO95 primary cohort: 95 genes, 955 predictions; the browser also includes supplemental source cohorts
 - [GO-GPT leaf evaluation](BIOREASON_COMPARISON/gogpt-eval.html) — ARGO139 collected cohort; unresolved terms are explicitly pending
 - [GO-GPT leaf adjudication (OpenScientist)](BIOREASON_COMPARISON/gogpt-leaf-adjudication.md) — expert overlay: 7 specific-MF calls blind-tested; **0/7 novel-correct** — GO-GPT mirrors GOA
-- [DeepECTF evaluation (ESR-ECOLI-DET-Mini)](BIOREASON_COMPARISON/deepectf-eval.html) — 7 E. coli genes
+- [DeepECTransformer blinded recapitulation (ESR-ECOLI-DET-Mini)](BIOREASON_COMPARISON/deepectf-eval.html) — 7 E. coli genes; 4/7 match the published expert labels. The project's own calls are in the [E. coli project table](VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html).
 
 <details>
 <summary>Data, benchmarks, and reproducibility</summary>
@@ -467,7 +467,7 @@ protein scored 5/5 on either axis.
 
 3. **Organism-specific biology usually absent**. Most reviews found no organism-specific insight beyond domain architecture. Mosquito eye pigmentation, Mtb drug targets, yeast cell wall biology, worm body size regulation, and plant cold stress were missed; `fen1` is a counterexample where the review credits a zebrafish retinal-phenotype link.
 
-4. **Inverse quality vs characterization**. Proteins with 0-3 GOA annotations (where BioReason could add most value) consistently score 0-1/5. Well-characterized proteins (where BioReason scores 4/5) already have extensive annotations making the narrative redundant.
+4. **Inverse quality vs characterization**. The orphan examples with 0-3 GOA annotations (mbiA, MJ1511, YGR117C; where BioReason could add most value) all score at the floor of the 1-5 scale. mbiA was recorded as 0/5 in the source evaluation, below the rubric range, and is counted as 1 in the table above. Well-characterized proteins (where BioReason scores 4/5) already have extensive annotations making the narrative redundant.
 
 5. **Hallucinated GO IDs**. BioReason cites specific GO IDs that map to completely different terms (e.g. GO:0047554 cited as caffeoyl-CoA O-methyltransferase, actually 2-pyrone-4,6-dicarboxylate lactonase).
 

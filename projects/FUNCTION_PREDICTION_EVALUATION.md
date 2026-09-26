@@ -50,14 +50,16 @@ are facet counts in the browser. Useful starting views:
 |---------|-------------------|---------|
 | **[ProtNLM2](PROTNLM_EVALUATION.md)** | GO predictions across a taxonomically diverse protein benchmark, assessed for biological support, specificity, and overlap with existing annotations. | [Prediction reviews](PROTNLM_EVALUATION/protnlm-eval.html) |
 | **[BioReason-Pro and GO-GPT](BIOREASON_COMPARISON.md)** | BioReason-Pro functional summaries and reasoning traces, its SFT GO predictions, and the separate upstream GO-GPT term predictions. | [SFT reviews](BIOREASON_COMPARISON/sft-eval.html) · [GO-GPT reviews](BIOREASON_COMPARISON/gogpt-eval.html) · [Manuscript](BIOREASON_COMPARISON/article/manuscript.pdf) |
-| **[DeepECTransformer / E. coli](VALIDATING_ECOLI_PREDICTIONS.md)** | Enzyme-function predictions for selected E. coli proteins, with attention to substrate specificity, paralogs, and physiological context. | [Prediction reviews](BIOREASON_COMPARISON/deepectf-eval.html) · [Recapitulation experiment](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md) |
+| **[DeepECTransformer / E. coli](VALIDATING_ECOLI_PREDICTIONS.md)** | Enzyme-function predictions for selected E. coli proteins, with attention to substrate specificity, paralogs, and physiological context. | [Prediction reviews](VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html) · [Blinded recapitulation](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md) ([table](BIOREASON_COMPARISON/deepectf-eval.html); 4/7 match) |
 | **[Affinage](AFFINAGE_EVALUATION.md)** | Literature-derived functional narratives, GO grounding, and retrieval of relevant publications. | [Pilot results](AFFINAGE_EVALUATION/results/summary.md) · [Narrative versus GO analysis](AFFINAGE_EVALUATION/results/narrative-vs-go.md) · [Project findings](AFFINAGE_EVALUATION.md) |
 
 BioReason-Pro SFT, RL narratives, and upstream GO-GPT outputs are separate
 evaluation targets. The GO-GPT review includes unresolved predictions; its table
-is a review workspace as well as a results browser. The DeepECTransformer table
-is hosted with the BioReason comparison material and is also accessible through
-the E. coli project.
+is a review workspace as well as a results browser. DeepECTransformer has two
+tables: the project's own calls (rendered from `genes/ECOLI/*/*-det-predictions-review.yaml`,
+the same records shown in the prediction browser) and a blinded recapitulation run,
+hosted with the BioReason comparison material, whose calls match the published
+expert labels for only 4 of the 7 genes.
 
 ## Annotation-transfer and rule reviews
 
