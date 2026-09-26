@@ -73,22 +73,38 @@ are therefore expected; existing human reviews still link normally.
 | A4GALT | Definitive | INITIALIZED | Merged; final validation and CI passed | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
 | AARS1 | Definitive | COMPLETE | Merged; final validation and CI passed | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
 | AARS2 | Definitive | COMPLETE | Merged; final validation and CI passed | `cmungall/clingen-aars2` | [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128) |
-| AASS | Definitive | INITIALIZED | Approved; required checks pending | `cmungall/clingen-aass` | [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) |
-| ABCA3 | Definitive | No review | Approved; required checks pending | `cmungall/clingen-abca3` | [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) |
-| ABCA4 | Definitive | No review | Review and CI pending | `cmungall/clingen-abca4` | [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) |
-| ABCB4 | Definitive | No review | Review and CI pending | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
-| ABCC6 | Definitive | No review | Annotation review and source audit in progress | `cmungall/clingen-abcc6` | — |
-| ABCC8 | Definitive | No review | Annotation review in progress | `cmungall/clingen-abcc8` | — |
-| ABCC9 | Definitive | No review | Fetching sources and research | `cmungall/clingen-abcc9` | — |
-| ABCD1 | Definitive | No review | Seeded 135 assertions; research in progress | `cmungall/clingen-abcd1` | — |
+| AASS | Definitive | INITIALIZED | Merged; final validation and CI passed | `cmungall/clingen-aass` | [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) |
+| ABCA3 | Definitive | No review | Merged; final validation and CI passed | `cmungall/clingen-abca3` | [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) |
+| ABCA4 | Definitive | No review | Merged; final validation and CI passed | `cmungall/clingen-abca4` | [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) |
+| ABCB4 | Definitive | No review | Validated follow-up published; renewed review and CI pending | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
+| ABCC6 | Definitive | No review | Validated follow-up published; renewed review and CI pending | `cmungall/clingen-abcc6` | [#3138](https://github.com/ai4curation/ai-gene-review/pull/3138) |
+| ABCC8 | Definitive | No review | Review follow-up validated locally; one reference cache and publication pending | `cmungall/clingen-abcc8` | [#3136](https://github.com/ai4curation/ai-gene-review/pull/3136) |
+| ABCC9 | Definitive | No review | Local review of 53 assertions validated; dedicated PR pending | `cmungall/clingen-abcc9` | — |
+| ABCD1 | Definitive | No review | Local review of 135 assertions validated; one reference cache and dedicated PR pending | `cmungall/clingen-abcd1` | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
-Check and approval states above were verified at 02:58 UTC; later pushes can reset them.
+Published check and approval states are the last verified states from this session,
+not a live dashboard. AASS, ABCA3 and ABCA4 subsequently merged through protected
+auto-merge; their checkboxes are now complete. Publication resumed through the
+GitHub API on 2026-09-26: the ABCB4 and ABCC6 follow-ups are published. A separate
+checkout inside the writable workspace supports local Git commits while the
+original worktree's shared Git metadata remains read-only. Direct Git transport
+and normal publication-source downloads still encounter DNS failures. No local
+draft is counted as merged or complete.
+
+The [publication queue](publication-queue.json) records the exact local file sets
+and SHA-256 hashes for five separate gene revisions, including publication receipts
+for the two published follow-ups. Recheck each remote head
+before publishing a follow-up, and keep project tracking in its own PR. ABCC8
+still needs the normal cache fetch for PMID:16924481; ABCD1 needs PMID:16213491.
+Their targeted validators pass with these warnings, but the reference-cache
+requirement remains outstanding. ABCG5 initialization also failed at the normal
+UniProt fetch because DNS access was unavailable; no seed files were invented.
 
 Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The next unassigned nuclear protein-coding Definitive gene is **ABCG5**. **3 of
-2,876 genes is complete** for this campaign. ABAT is in the Moderate tier.
+The next unassigned nuclear protein-coding Definitive gene is **ABCG5**. **6 of
+2,876 genes are complete** for this campaign. ABAT is in the Moderate tier.
 
 ## Verification log
 
@@ -155,3 +171,55 @@ The next unassigned nuclear protein-coding Definitive gene is **ABCG5**. **3 of
   and await required checks. ABCC6/ABCC8 reviews are underway, ABCC9 is assigned,
   and ABCD1 has been initialized after checking its former symbol ALD and alias
   ALDP for existing reviews. The next unassigned Definitive gene is ABCG5.
+
+- 2026-09-26 UTC: Opened progress PR [#3137](https://github.com/ai4curation/ai-gene-review/pull/3137)
+  for the three confirmed completions. ABCC8 PR #3136 reviews 64 source assertions
+  with 44 propagation assessments; ABCC6 PR #3138 reviews 69 assertions. The
+  ABCC6 follow-up distinguishes mineral-deposition assays from ion-homeostasis
+  evidence. ABCB4's local follow-up preserves all 68 assertions and both NOT
+  flags, leaves clathrin-vesicle localization unresolved, and supplies the
+  condition-specific cholesterol evidence from its original reference. Gene,
+  history and rendering checks passed for ABCB4; the revision remains unpublished.
+
+- 2026-09-26 UTC: Completed independent audits and local revisions for ABCB4,
+  ABCC6 and ABCC8 after changes were requested on their published PRs. All 68,
+  69 and 64 source assertions respectively remain intact. ABCC6 now removes
+  uninformative generic binding terms without asserting absence of interaction,
+  and distinguishes cellular ATP release from proven direct ATP cargo transport.
+  ABCC8 now incorporates the mouse GO-CAM insulin-secretion evidence and direct
+  SUR1 ATPase results, with PMID:16924481 still awaiting its normal cache fetch.
+  Targeted gene and history validation and rendering pass for all three local
+  follow-ups; publication remains pending.
+
+- 2026-09-26 UTC: ABCC9's 53 annotations and ABCD1's 135 annotations received
+  complete local reviews and independent biological audits. All seeded fields
+  were preserved; gene validation, history validation and rendering pass. ABCD1
+  retains eight evidence-limited UNDECIDED decisions and documents the missing
+  PMID:16213491 cache. Neither gene has a published PR yet. The earlier ABCC8
+  starting-state placeholder was resolved by checking for an existing human
+  review before seeding: none was present, so its baseline is "No review".
+
+- 2026-09-26 UTC: Public GitHub PR, commit and test pages confirm three further
+  merges, all dated September 26 (exact clock times were not exposed): AASS
+  [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) as
+  `5f44a3fc98ffd3fa68a8ded0105cf83803e030b5`; ABCA3
+  [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) as
+  `52382b633dc98f8f5b12d5f35c3cf3761343d359`; and ABCA4
+  [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) as
+  `cbb8c133015f10ed37968a1ca71207c95dbd11b7`. Approval and successful current-head
+  tests were verified for each. Their inventory checkboxes are now complete,
+  bringing the campaign total to six. Tracking PR
+  [#3137](https://github.com/ai4curation/ai-gene-review/pull/3137) is approved with
+  its test passed but remains open; these newer local tracking updates have not
+  been published to it.
+
+- 2026-09-26 UTC: Recovered local Git operations in an independent checkout at
+  the ignored workspace path `tmp/clingen-git`; the original Orca worktree and
+  source files were preserved. Both follow-ups were committed locally and then
+  published through GitHub's API with expected-head checks: ABCB4 #3135 at
+  `5fa6ee26208562402e4295703a80ea7cf569b0e2` and ABCC6 #3138 at
+  `681dc1cf8acc6a0487294b8841b0479b617e5fac`. GitHub tree hashes exactly match the
+  corresponding validated local commit trees. Updated both PR descriptions.
+  Direct Git HTTPS transport still cannot resolve its host; GitHub API access
+  works. Normal fetches of PMID:16924481 and PMID:16213491 were retried once each
+  and still failed DNS resolution, so their cache requirements remain open.
