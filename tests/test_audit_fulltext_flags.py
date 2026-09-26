@@ -478,3 +478,51 @@ def test_only_records_with_neither_key_are_absent(tmp_path):
     av = cached_full_text_availability(pubs)
     assert set(av) == {"1", "2"}, "only the record with neither key is absent"
     assert "3" not in av
+
+
+def test_a_supported_by_flag_is_reported(tmp_path, publications):
+    """The third blind spot: ``core_functions[].supported_by[]``.
+
+    ``full_text_unavailable`` is a slot on ``SupportingTextInReference``, so it is legal
+    wherever that class appears. Both earlier detectors were positional -- one read the
+    reference's own key, the other added ``references[].findings[]`` -- and three flags
+    invalidated by a cache re-fetch sat in ``core_functions`` and were invisible to both.
+    """
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n- id: PMID:222\n  findings: []\n"
+        "core_functions:\n"
+        "- description: d\n"
+        "  supported_by:\n"
+        "  - reference_id: PMID:111\n"
+        "    supporting_text: t\n"
+        "    full_text_unavailable: true\n",
+    )
+    av = cached_full_text_availability(publications)
+    assert find_stale_flags([review], av) == [], "precondition: reference-level audit is blind"
+    (flag,) = find_unaudited_flags([review], av, tmp_path)
+    assert flag.reference_id == "PMID:111"
+    assert "core_functions[0].supported_by[0]" in flag.reason
+
+
+def test_an_accurate_supported_by_flag_is_not_reported(tmp_path, publications):
+    """Same narrowness as the finding-level rule: only demonstrably false flags."""
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n- id: PMID:222\n  findings: []\n"
+        "core_functions:\n- description: d\n  supported_by:\n"
+        "  - reference_id: PMID:222\n    supporting_text: t\n    full_text_unavailable: true\n",
+    )
+    assert find_unaudited_flags([review], cached_full_text_availability(publications), tmp_path) == []
+
+
+def test_a_reference_level_flag_is_not_double_reported(tmp_path, publications):
+    """The walker sees everything, so it must not duplicate what the scoped pass reports."""
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n- id: PMID:111\n  full_text_unavailable: true\n  findings:\n"
+        "  - statement: s\n    full_text_unavailable: true\n",
+    )
+    flags = find_unaudited_flags([review], cached_full_text_availability(publications), tmp_path)
+    # one finding-level hit; the reference-level one belongs to find_stale_flags
+    assert [f.finding_index for f in flags] == [0], [f.reason for f in flags]

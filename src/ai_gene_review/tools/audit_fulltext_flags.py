@@ -165,6 +165,35 @@ def _repo_file_for(reference_id: str, repo_root: Path) -> Path | None:
     return None
 
 
+def _iter_flagged(node: object, path: str, inherited: str | None):
+    """Yield ``(path, reference_id)`` for every mapping carrying the flag, anywhere.
+
+    ``full_text_unavailable`` is a slot on ``SupportingTextInReference``, so the schema
+    allows it wherever that class appears: ``core_functions[].supported_by[]``,
+    ``existing_annotations[].review.supported_by[]``, ``finding_review.supported_by[]``,
+    ``proposed_new_terms[].supported_by[]`` -- not only on a reference or its findings.
+
+    Both earlier detectors were positional: one read the reference's own key, the other
+    added ``references[].findings[]`` and stopped. Three flags invalidated by this PR's own
+    re-fetch sat in ``core_functions[].supported_by[]`` and were invisible to both. Walking
+    the document is what makes "a re-fetch is a cross-file edit" checkable rather than
+    something a reviewer has to remember.
+
+    An entry's own ``reference_id`` wins; otherwise the nearest enclosing ``id``/
+    ``reference_id`` is inherited, which is how a finding resolves to its parent reference.
+    """
+    if isinstance(node, dict):
+        own = node.get("reference_id") or node.get("id")
+        current = own if isinstance(own, str) else inherited
+        if node.get("full_text_unavailable") is True:
+            yield path, current
+        for key, value in node.items():
+            yield from _iter_flagged(value, f"{path}.{key}", current)
+    elif isinstance(node, list):
+        for i, value in enumerate(node):
+            yield from _iter_flagged(value, f"{path}[{i}]", inherited)
+
+
 def find_unaudited_flags(
     review_paths: list[Path], availability: dict[str, bool], repo_root: Path
 ) -> list[UnauditedFlag]:
@@ -207,6 +236,32 @@ def find_unaudited_flags(
                 elif cached:
                     out.append(UnauditedFlag(review_path, identifier, index,
                                              "cached publication reports full text"))
+
+        # Everything the reference-scoped pass above cannot reach. Deduplicated against it
+        # by (reference, level), since a reference-level or findings[] flag is reported
+        # there with a more precise index.
+        seen = {(f.reference_id, f.finding_index) for f in out if f.review_path == review_path}
+        for location, reference_id in _iter_flagged(doc, "", None):
+            if not isinstance(reference_id, str):
+                continue
+            if re.fullmatch(r"\.references\[\d+\](\.findings\[\d+\])?", location):
+                continue  # already covered, and covered more precisely
+            pmid = (
+                reference_id.split(":", 1)[1]
+                if reference_id.startswith("PMID:")
+                else None
+            )
+            source = _repo_file_for(reference_id, repo_root)
+            if source and source.read_text().strip():
+                reason = f"source file is in the repo: {source}"
+            elif pmid and availability.get(pmid):
+                reason = "cached publication reports full text"
+            else:
+                continue
+            if (reference_id, None) in seen:
+                continue
+            out.append(UnauditedFlag(review_path, reference_id, None,
+                                     f"{reason} [at {location}]"))
     return out
 
 
