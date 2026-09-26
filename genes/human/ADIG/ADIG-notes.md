@@ -18,7 +18,8 @@ work, is listed with `PMIDs: —` and journal `bioRxiv`:
 
 > [file:genes/human/ADIG/ADIG-deep-research-affinage.md "Adig directly interacts with seipin to form a rigid complex"]
 
-That preprint (PMID:39211078, bioRxiv 2024-07-26) **published in Science on 2025-11-06** as
+That preprint (PMID:39211078, bioRxiv 2024-07-26 — resolved via NCBI esearch and now cached, so
+the identifier is checkable rather than asserted) **published in Science on 2025-11-06** as
 PMID:41196993, doi 10.1126/science.adr9755 — resolved via the NCBI esearch API, not from
 memory. Note the dates: the affinage record's own `affinage_run_date` is 2026-06-09, seven
 months *after* the Science paper appeared, so this is not a stale-snapshot problem — the
@@ -120,3 +121,53 @@ reason the ISS transfers are worth making rather than leaving the human gene bar
 ## Outcome
 
 19 rows: 11 ACCEPT, 3 MODIFY, 3 NEW, 2 REMOVE. `just validate human ADIG` passes.
+
+
+## Round 2 (review feedback)
+
+The PR reviewer found two provenance defects that no validator could catch, and both were mine:
+
+1. **An unsourced phenotype.** I wrote "blunts cold tolerance" into `description` and
+   `core_functions`. PMID:41196993's cached full text contains **zero** occurrences of "cold" or
+   "thermogen" — I checked, and the reviewer was right. The claim came from the affinage summary
+   of the bioRxiv row, i.e. from the very preprint this review argues is superseded. Having just
+   criticised affinage for framing non-primate biology as human, I imported one of its uncited
+   claims myself.
+
+   The interesting part: the claim **is** real, but only in the preprint —
+   [PMID:39211078 "It also elevates thermogenesis during cold exposure."] and
+   [PMID:39211078 "In contrast, inducible adipocyte-specific Adig knockout mice manifest aberrant lipid droplet formation in brown adipose tissues and impaired cold tolerance."]
+   Neither survives into the published Science paper. A claim dropped between preprint and
+   publication should not be curated as established, so it is out of `description` and
+   `core_functions` and recorded instead as a provenance note on the preprint reference plus a
+   suggested question.
+
+2. **An identifier without provenance.** PMID:39211078 was asserted with no cached record. Now
+   cached; its title confirms it is the same work.
+
+Other changes from the review:
+
+- **GO:0031334 → GO:0065003.** My `reason` argued *participation* while the term said
+  *regulation* — the enum-drifts-from-prose pattern again. The source says Adig is "actively
+  participating in the assembly", and a regulator acts on an assembly it is not part of, whereas
+  ADIG is a constituent of the product. Switched to the participation term.
+- **"defined stoichiometry" was wrong**, and it was load-bearing for the proposed complex term.
+  The paper says the opposite: [PMID:41196993 "the complex might be heterogeneous with respect to seipin:Adig stoichiometry."]
+  and enumerates coexisting species. A dynamically exchanging, variable-occupancy subunit is a
+  *harder* case for a complex term. The justification now says so and argues anyway.
+- **A question I posed was already answered** in a paper I had cited and cached:
+  [PMID:33691105 "these observations can be reconciled by the timing of the initiation of Adig KD, as we clearly show that early KD significantly impairs lipid accumulation in 3T3-L1 adipocytes"]
+  and [PMID:33691105 "whereas late (day 5 onward) KD in 3T3-L1 cells does not clearly impair differentiation"].
+  Folded into the GO:0019915 reason instead of being asked.
+- **The GO:0140042 reason omitted the sign asymmetry** the description got right. ADIG *suppresses*
+  nucleation and makes droplets fewer and larger; a curator reads the reason, not the description.
+- **GO:0050821 was defended with its weakest evidence** (co-overexpression gel filtration — the
+  same class this review discounts elsewhere). Re-anchored on the MD result
+  [PMID:41196993 "We observed that the Root Mean Square Fluctuation (RMSF) for the seipin-Adig structure was lower compared to the Adig-free seipin dodecameric structure, suggesting that Adig suppresses dynamic and thermal fluctuations, thereby stabilizing the seipin complex"],
+  noting stabilization is mutual.
+- **core_functions[1] said of itself that it was not a separate function.** Folded into one entry.
+- Added the three cached-but-uncited references (PMID:37249025, PMID:27766294, PMID:42005040).
+- Added a sentence reconciling "binds a complex" (GO:0044877) with "is a subunit of one": the
+  association is dynamic, with FRAP exchange on a ~10 s timescale.
+
+Final: 19 rows, 11 ACCEPT / 3 MODIFY / 3 NEW / 2 REMOVE. 33 distinct quotes (91 instances) verified.
