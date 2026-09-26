@@ -52,8 +52,10 @@ via UniProt]. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for 
 ## Molecular function GO landscape
 
 - GO:0003997 acyl-CoA oxidase activity — parent MF; core (EC 1.3.3.6). Best single MF.
-- GO:0033791 THCA-CoA 24-hydroxylase activity — the bile-acid-specific reaction, IDA in
-  [PMID:27884763]; also directly matches Rhea:46728 in UniProt. Core bile-acid MF.
+- GO:0033791 THCA-CoA 24-hydroxylase activity — legacy bile-acid-specific term that
+  captured the right enzyme and pathway step but now names the wrong live chemistry:
+  hydroxylation rather than the RHEA:46728 FAD-dependent 24E-enoyl-CoA-forming oxidase
+  reaction. MODIFY to GO:0003997 until GO has an exact RHEA:46728 molecular-function term.
 - GO:0016402 pristanoyl-CoA oxidase activity — BCFA reaction; UniProt Rhea:40459
   (PubMed:29287774). Valid but redundant with ACOX3.
 - GO:0120523 / GO:0120524 medium-/long-chain fatty acyl-CoA oxidase activity — RHEA IEA
@@ -73,7 +75,7 @@ via UniProt]. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for 
 - GO:0033540 fatty acid beta-oxidation using acyl-CoA oxidase — the precise BP; IDA/IMP core.
 - GO:0006635 fatty acid beta-oxidation — parent BP; accept.
 - GO:0000038 very long-chain fatty acid metabolic process (IBA) — ACOX2 handles
-  branched-chain and C27 bile-acid substrates, not straight VLCFA (that is ACOX1). Likely
+  branched-chain and C27 bile-acid substrates, not straight VLCFA (that is ACOX1).
   IBA over-propagation; mark over-annotated.
 - GO:0006631 fatty acid metabolic process — broad InterPro IEA; accept as broad-but-correct.
 </content>
@@ -81,3 +83,8 @@ via UniProt]. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for 
 ## 2026-09-20 full-gene re-review
 
 Read every source annotation and relevant evidence, including primary full texts for disputed reactions and the exact PAINT target path. See [ACOX2-primary-source-checks.md](ACOX2-primary-source-checks.md) for assay context, access limits, short exact excerpts, and pending focused adjudication. All original source fields are preserved; no NEW annotation is added. Broad true chemistry and localization are retained separately from exact substrate/reaction conflicts.
+
+## 2026-09-26 OpenScientist substrate/hydroxylase follow-up
+
+- Critically evaluated `genes/human/ACOX2/ACOX2-hypotheses/substrate-chain-length-binding-and-hydroxylase-chemistry/openscientist.md`, which resolved the pending free-fatty-acid-binding, VLCFA-process, and GO:0033791 hydroxylase questions. The report found the GO:0033791 issue is a term-definition/mapping defect, not loss of ACOX2 bile-acid oxidase activity [file:human/ACOX2/ACOX2-hypotheses/substrate-chain-length-binding-and-hydroxylase-chemistry/openscientist.md "GO:0033791 problem is a **term-definition/annotation-mapping defect, not an absence of activity**"].
+- Changed `GO:0005504` and `GO:0000038` from `UNDECIDED` to `MARK_AS_OVER_ANNOTATED`, and changed the IBA, IDA, and ISS `GO:0033791` rows from `UNDECIDED` to `MODIFY` with `GO:0003997 acyl-CoA oxidase activity` as the replacement. `GO:0033791` had captured the right enzyme class historically, but its live EC/RHEA mapping now describes hydroxylation chemistry performed downstream by DBP/HSD17B4 rather than ACOX2's FAD/O2-dependent enoyl-CoA-forming reaction.
