@@ -122,13 +122,17 @@ The ARGO139 web-export leaf review is explicitly pending rather than a completed
 
 A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
+The recovered IBA/TreeGrafter reviews are reflected in the current counts below; the JSON, benchmark sidecars and figure are regenerated together from the same reference files.
+
+The final TreeGrafter consistency review refined K9IMD0 metal ion binding to ferric iron binding and NCGR_LOCUS1270 carbohydrate metabolism to the Calvin cycle. Only K9IMD0 is in this 299-gene comparison: its retained set changes from 22 to 21 terms, with four overlaps unchanged. All raw-GOA and core counts are unchanged by these refinements.
+
 **Table S8.** GO-GPT prediction overlap at three reference levels (299 canonical genes).
 
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,759 | 848 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,233 | 351 | 4.0 |
+| Retained/replacement/proposed-new AIGR annotations | 2,782 | 852 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,230 | 354 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general

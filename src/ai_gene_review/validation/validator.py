@@ -24,6 +24,9 @@ import time
 from contextlib import contextmanager
 from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 
+from ai_gene_review.validation.folded_scalar import (
+    check_folded_scalar_hyphens,
+)
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
@@ -363,6 +366,11 @@ def check_best_practices_rules(
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
     check_protein_binding_policy(data, report)
+    if yaml_file is not None:
+        # Source-level check: a folded scalar turns a newline into a space, so a
+        # hyphenated compound split across lines renders as two words. Invisible to
+        # anything that inspects the parsed document, because both forms parse fine.
+        check_folded_scalar_hyphens(Path(yaml_file), report)
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):

@@ -24,3 +24,10 @@
 ## Missing Ontology Coverage
 
 - GO has `pyoverdine biosynthetic process` but lacks a pyoverdine-specific synthetase complex term; this absence likely drives over-transfer to `enterobactin synthetase complex`.
+
+
+## Full-gene re-review, 2026-09-20
+
+Reviewed all ten source rows and both core functions. Restored catalytic activity, cytoplasm, phosphopantetheine binding, core amino-acid activation and secondary-metabolite biosynthesis. Kept the specific enterobactin/DHB-serine/complex corrections, but removed unverified transfer of P. aeruginosa threonine-module assignments to the three-module KT2440 target. Read the complete Falcon report and incorporated its target-versus-comparator limitations. GO:0072330 remains UNDECIDED pending chemical-structure review: a pyoverdine name alone does not exclude a monocarboxylic acid. Source rows unchanged and no NEW added.
+
+PMID:25895945 specifically establishes three KT2440 structures (Asp-Orn-OHAsp-Dab-Gly-Ser-cOHOrn), two with cyclization and succinate/succinamide side-chain differences. PMID:28631237 also examines KT2440, but its three *new* structures are from P. taiwanensis VLB120; those must not be imported as target chemistry. Root independently found the cyclic hydroxyAsp-Dab pair in the full text of PMID:31451546 and could not access a molecular figure to count free carboxyls. This supports UNDECIDED pending a focused chemistry/ontology report, rather than asserting either mono- or polycarboxylate class.

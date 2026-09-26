@@ -65,3 +65,12 @@
   retained at core or non-core scope as appropriate. Cytosol is retained as the
   broad core compartment, while all still-broader cytoplasm rows are consistently
   non-core.
+
+
+## Full annotation re-review — 2026-09-20
+
+Re-read all 31 annotation rows, primary sources and the Falcon report, and critically incorporated the complete existing ATPase OpenScientist investigation. Newly cached PMID:17901048 directly states "We now find that Ssz1 is not an ATPase in vitro". This supports rejecting inherited ATPase activity at PTN000452648 while retaining ATP binding. Dispensability for growth is not proof that an activity is absent; the report's suggestions based on that inference are not adopted.
+
+Newly cached full primary PMID:32198371 directly demonstrates short nascent-chain contacts in Saccharomyces cerevisiae and describes "Ssz1 is an active chaperone optimized for transient, low-affinity substrate binding". The chaperone review, obsolete unfolded-binding replacement, description and core function now include this relay mechanism. The ATPase report identified this lead but did not independently adjudicate refolding or secondary nucleus/plasma-membrane localization.
+
+The old refolding IBA is generalized to protein folding because current PAINT explicitly places a NOT/IRD at fungal PTN001065099 below PTN000452648 and current SSZ1 leaf PTN000453341 carries generalized GO:0006457 through these nodes. This curation revision is not proof of universal absent refolding capacity. Nucleus/plasma-membrane rows are UNDECIDED rather than removed merely because RAC primarily functions on cytosolic ribosomes. The coordinated new focused report will independently evaluate these questions; it has not yet been incorporated here.
