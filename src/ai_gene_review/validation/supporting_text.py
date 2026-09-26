@@ -63,6 +63,23 @@ def is_unfetchable(message: str) -> bool:
     return "could not fetch" in lowered or "no records found" in lowered
 
 
+def clear_publication_caches() -> None:
+    """Drop the memoised reads of the publication cache.
+
+    ``cached_full_text_available``, ``cached_record_has_no_body`` and
+    ``cached_text_missing`` are ``lru_cache``d filesystem reads with no invalidation, which
+    is fine for a validation run (nothing writes) and a trap for a repair workflow: call
+    ``cache_publication(pmid, force=True)`` and re-validate **in the same process** and you
+    get the pre-repair answer. Exactly that sequence repaired six stub records in this
+    repository; it only escaped the trap because the steps ran as separate processes.
+
+    Call this after any write to ``publications/``.
+    """
+    cached_full_text_available.cache_clear()
+    cached_record_has_no_body.cache_clear()
+    cached_text_missing.cache_clear()
+
+
 #: ``content_type`` values that mean the record carries no full text. A negative list,
 #: matching ``etl/publication.py``: any other value (``full_text_xml``, ``full_text_html``,
 #: ``full_text_pdf``, ``url``, ...) means full text is present.
@@ -101,6 +118,7 @@ def cached_record_has_no_body(
     return not body or body == "Cached metadata for local validation."
 
 
+@lru_cache(maxsize=None)
 def cached_text_missing(reference_id: str, publications_dir: Path) -> bool:
     """True when no cached record exists for *reference_id* at all.
 

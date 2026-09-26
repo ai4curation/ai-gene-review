@@ -407,3 +407,55 @@ def test_scope_mismatch_is_still_reported_when_unaudited_flags_exist(tmp_path, p
         "the scope guard must report even when unaudited flags are also present"
     )
     assert any("outside --fix's scope remain" in line for line in lines)
+
+
+def test_availability_falls_back_to_content_type(tmp_path):
+    """The audit and the validator must agree about what "has full text" means.
+
+    The audit used to skip any record lacking ``full_text_available`` -- 1138 of them, at
+    least 242 naming a full-text ``content_type`` -- so it and ``supporting_text`` disagreed
+    by construction, and the audit's half is the one that hides a false flag. The live case:
+    ``PMID:38296963`` (``content_type: full_text_pdf``, gold OA) carried the identical
+    reference-level flag on ARL8A and ARL8B; the ARL8B one was removed by hand as the "one
+    genuinely false declaration" and the ARL8A one was invisible here.
+    """
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_1.md").write_text("---\ntitle: t\ncontent_type: full_text_pdf\n---\nbody\n")
+    (pubs / "PMID_2.md").write_text("---\ntitle: t\ncontent_type: abstract_only\n---\nbody\n")
+    (pubs / "PMID_3.md").write_text("---\ntitle: t\ncontent_type: full_text_xml\n---\nbody\n")
+    (pubs / "PMID_4.md").write_text("---\ntitle: t\n---\nbody\n")  # neither key
+
+    av = cached_full_text_availability(pubs)
+    assert av["1"] is True, "full_text_pdf means full text"
+    assert av["2"] is False
+    assert av["3"] is True, "full_text_xml was the value the old allow-list dropped"
+    assert "4" not in av, "no signal at all must still be absent, not guessed"
+
+
+def test_explicit_full_text_available_wins_over_content_type(tmp_path):
+    """The explicit key is authoritative; the fallback only applies when it is absent."""
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_1.md").write_text(
+        "---\ntitle: t\nfull_text_available: false\ncontent_type: full_text_pdf\n---\nbody\n"
+    )
+    assert cached_full_text_availability(pubs)["1"] is False
+
+
+def test_a_content_type_only_record_can_make_a_flag_stale(tmp_path, monkeypatch):
+    """End to end: the ARL8A shape is now reported."""
+    pubs = tmp_path / "publications"
+    pubs.mkdir()
+    (pubs / "PMID_38296963.md").write_text(
+        "---\ntitle: t\ncontent_type: full_text_pdf\noa_status: gold\n---\nbody\n"
+    )
+    genes = tmp_path / "genes" / "human" / "X"
+    genes.mkdir(parents=True)
+    review = genes / "X-ai-review.yaml"
+    review.write_text(
+        "references:\n- id: PMID:38296963\n  full_text_unavailable: true\n  findings: []\n"
+    )
+    (stale,) = find_stale_flags([review], cached_full_text_availability(pubs))
+    assert stale.pmid == "38296963"
+    assert stale.suppressed_evidence, "zero findings is the signature the module documents"

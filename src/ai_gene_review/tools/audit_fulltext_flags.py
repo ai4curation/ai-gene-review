@@ -32,6 +32,8 @@ from pathlib import Path
 import typer
 import yaml
 
+from ai_gene_review.validation.supporting_text import NO_FULL_TEXT_CONTENT_TYPES
+
 app = typer.Typer(help=__doc__)
 
 
@@ -59,15 +61,29 @@ def cached_full_text_availability(publications_dir: Path) -> dict[str, bool]:
     quote the string in prose. An earlier version guarded against that by truncating the read at
     a fixed byte count, which would silently miss the key in any record whose frontmatter grew
     past it; parsing the actual block has no such cliff.
+
+    When ``full_text_available`` is absent, ``content_type`` is consulted through the same
+    ``NO_FULL_TEXT_CONTENT_TYPES`` negative list the validator uses. Skipping those records
+    was right while ``content_type`` was unreadable here, but 1138 records omit the key and
+    at least 242 of them name a full-text ``content_type`` -- so the audit and the validator
+    disagreed by construction, and the audit's half of the disagreement is the one that
+    hides false flags. The live case that forced this: ``PMID:38296963`` is
+    ``content_type: full_text_pdf`` with a gold-OA local PDF, and carried the identical
+    reference-level flag on both ARL8A and ARL8B. The ARL8B one was removed by hand as "the
+    one genuinely false declaration"; the ARL8A one was invisible to this function.
     """
     availability: dict[str, bool] = {}
     for path in publications_dir.glob("PMID_*.md"):
         frontmatter = _frontmatter(path)
-        if frontmatter is None or "full_text_available" not in frontmatter:
+        if frontmatter is None:
             continue
-        availability[path.stem.split("_", 1)[1]] = bool(
-            frontmatter["full_text_available"]
-        )
+        pmid = path.stem.split("_", 1)[1]
+        if "full_text_available" in frontmatter:
+            availability[pmid] = bool(frontmatter["full_text_available"])
+            continue
+        content_type = frontmatter.get("content_type")
+        if isinstance(content_type, str):
+            availability[pmid] = content_type.lower() not in NO_FULL_TEXT_CONTENT_TYPES
     return availability
 
 
