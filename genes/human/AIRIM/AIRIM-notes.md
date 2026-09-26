@@ -156,3 +156,63 @@ by hand and say so.
 
 Final: 189 rows, 166 REMOVE / 13 ACCEPT / 8 MODIFY / 1 KEEP_AS_NON_CORE / 1 NEW.
 25 distinct quotes (366 instances) verified.
+
+## Round 3 — I over-corrected on round-2 feedback, and the reviewer caught their own error
+
+Round 2's reviewer told me PMID:40268917 refuted "substrate presentation", citing *"C1orf109 does
+not interact with the pre-60S particle directly"*. I removed the claim. In round 3 the same
+reviewer retracted that: **the sentence is about the docking platform, not the substrate.**
+
+I verified the retraction rather than accepting it on the rebound, and it is right. The AAA+
+substrate is **RLP24**, and on that the paper concludes the opposite of what I had written:
+
+> [PMID:40268917 "these data collectively support that CINP and C1orf109 are adapter proteins to mediate the interaction between the SPATA5 complex and its substrate RLP24"]
+
+It is not a structural inference alone — there is co-IP:
+
+> [PMID:40268917 "our immunoprecipitation experiments show that a fragment (residues 85-163) of RLP24 was indeed able to immunoprecipitate both CINP and C1orf109"]
+
+and the structure names the binding element:
+
+> [PMID:40268917 "the last two helices (residues 80-163) of RLP24 are able to bind to both CINP and C1orf109"]
+
+with AIRIM forming the surface it binds against:
+
+> [PMID:40268917 "the helical bundles of CINP and C1orf109 constitute the inner wall of the funnel"]
+
+**The accurate distinction is narrow:** AIRIM binds the *substrate* RLP24 inside the funnel, but
+makes no direct contact with the *pre-60S particle* the substrate sits on — docking onto the
+particle is CINP's job. My round-2 text collapsed those two into "AIRIM does not present
+substrate", which is false.
+
+### Consequence: a better molecular function
+
+The paper calls C1orf109 an **adapter protein** outright, so `GO:0060090 molecular adaptor
+activity` is directly supported — "bringing together two or more molecules through a selective,
+non-covalent interaction, permitting those molecules to function in a coordinated way" is exactly
+the RLP24/motor relationship. Added as a second `NEW` row and promoted to
+`core_functions.molecular_function`.
+
+`GO:0005198` stays alongside rather than being replaced: holding the NTD ring together and
+delivering the substrate are separable claims, and either could be true without the other.
+
+### Also
+
+- **RLP24 was named nowhere** in the review despite being the substrate the whole complex acts
+  on. Now named 13 times.
+- **Review-process commentary removed** from `core_functions` ("an earlier draft…", "is avoided
+  here"). Same fix as ADM5 round 4 — a curation field should read as curation.
+- **"Funnel" restored.** I had replaced it with "N-terminal ring" thinking it was loose language;
+  both papers use "funnel", and the structure paper's own phrase is "the inner wall of the
+  funnel".
+
+### The lesson
+
+Round 2's correction was made on a reviewer's citation without my re-reading the surrounding
+passage. The citation was real and the inference from it was wrong, and I propagated that into
+two fields. **A quote handed to me needs the same context check as a quote I find myself** —
+arguably more, because an authoritative-sounding correction invites less scrutiny than my own
+draft does.
+
+Final: 190 rows, 166 REMOVE / 13 ACCEPT / 8 MODIFY / 1 KEEP_AS_NON_CORE / 2 NEW.
+29 distinct quotes (370 instances) verified.
