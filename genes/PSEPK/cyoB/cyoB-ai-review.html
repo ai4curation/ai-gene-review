@@ -1,0 +1,2366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cyoB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cyoB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88PN6" target="_blank" class="term-link">
+                        Q88PN6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cyoB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88PN6" data-a="DESCRIPTION: cyoB encodes the cytochrome bo3 ubiquinol oxidase ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>cyoB encodes the cytochrome bo3 ubiquinol oxidase catalytic subunit I containing the heme-copper oxygen-reduction center in Pseudomonas putida KT2440. The protein acts in a plasma-membrane terminal oxidase branch that reduces oxygen to water and supports aerobic respiratory energy conservation. Its subunit-specific role is distinguished from the emergent catalytic activity of the assembled oxidase complex.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004129" target="_blank" class="term-link">
+                                    GO:0004129
+                                </a>
+                            </span>
+                            <span class="term-label">cytochrome-c oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0004129" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cytochrome-c oxidase activity: Wrong electron donor. cyoB is subunit I of the cytochrome bo3 ubiquinol oxidase (EC 7.1.1.3), which receives electrons from ubiquinol and lacks the CuA center; GO:0004129 is the EC 7.1.1.9 cytochrome c reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a wrong-donor IEA mapping rather than an over-annotation of degree. UniProt assigns cyoB EC 7.1.1.3 (ubiquinol oxidase), whereas GO:0004129 is defined as the cytochrome c reaction (EC 7.1.1.9). Metal analysis of the complex shows heme b plus heme o3 and a single copper (CuB) with no CuA center, so there is no cytochrome c docking site and a bound ubiquinone-8 substitutes for CuA as the fourth-electron donor. GO:0009486 remains as the branch-correct activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/cyoB/cyoB-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE            EC=7.1.1.3 {ECO:0000256|ARBA:ARBA00012941};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/cyoB/cyoB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">CyoB is **not** a cytochrome *c* oxidase (no Cu_A; electrons enter from ubiquinol, not cytochrome *c*).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> plasma membrane: Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0009060" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> aerobic respiration: Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009486" target="_blank" class="term-link">
+                                    GO:0009486
+                                </a>
+                            </span>
+                            <span class="term-label">cytochrome bo3 ubiquinol oxidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0009486" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cytochrome bo3 ubiquinol oxidase activity: The complete oxygen-reduction reaction is an emergent activity of the assembled terminal oxidase; this individual subunit contributes but does not independently enable the full reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The complete oxygen-reduction reaction is an emergent activity of the assembled terminal oxidase; this individual subunit contributes but does not independently enable the full reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015990" target="_blank" class="term-link">
+                                    GO:0015990
+                                </a>
+                            </span>
+                            <span class="term-label">electron transport coupled proton transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0015990" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> electron transport coupled proton transport: Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> membrane: Generic membrane localization is redundant with the more precise plasma membrane annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic membrane localization is redundant with the more precise plasma membrane annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016682" target="_blank" class="term-link">
+                                    GO:0016682
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on diphenols and related substances as donors, oxygen as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0016682" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> oxidoreductase activity, acting on diphenols and related substances as donors, oxygen as acceptor: The complete oxygen-reduction reaction is an emergent activity of the assembled terminal oxidase; this individual subunit contributes but does not independently enable the full reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The complete oxygen-reduction reaction is an emergent activity of the assembled terminal oxidase; this individual subunit contributes but does not independently enable the full reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                                    GO:0020037
+                                </a>
+                            </span>
+                            <span class="term-label">heme binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0020037" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> heme binding: The cofactor-binding role is supported by the conserved family architecture and UniProt record.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cofactor-binding role is supported by the conserved family architecture and UniProt record.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022904" target="_blank" class="term-link">
+                                    GO:0022904
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory electron transport chain</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88PN6" data-a="GO:0022904" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> respiratory electron transport chain: Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the conserved membrane terminal-oxidase role and local operon assignment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts as the cytochrome bo3 ubiquinol oxidase catalytic subunit I containing the heme-copper oxygen-reduction center, contributing to the assembled terminal-oxidase reaction.</h3>
+                <span class="vote-buttons" data-g="Q88PN6" data-a="FUNCTION: Acts as the cytochrome bo3 ubiquinol oxidase catal..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0020037" target="_blank" class="term-link">
+                            heme binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022904" target="_blank" class="term-link">
+                                respiratory electron transport chain
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009319" target="_blank" class="term-link">
+                            cytochrome o ubiquinol oxidase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/cyoB/cyoB-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   RecName: Full=Cytochrome bo(3) ubiquinol oxidase subunit 1 {ECO:0000256|ARBA:ARBA00014691};</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/cyoB/cyoB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for cyoB</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cytochrome bo3 lacks the CuA center and takes electrons from the ubiquinol pool rather than from cytochrome c, so the cytochrome-c oxidase activity mapping is a wrong-donor annotation for cyoB.</div>
+
+                        <div class="finding-text">"CyoB is **not** a cytochrome *c* oxidase (no Cu_A; electrons enter from ubiquinol, not cytochrome *c*)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under which oxygen, carbon-source, or inhibitor conditions is the terminal-oxidase branch containing cyoB preferentially used in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PN6" data-a="Q: Under which oxygen, carbon-source, or inhibitor co..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Delete or conditionally deplete cyoB and measure branch-specific oxygen-consumption kinetics, respiratory growth, inhibitor sensitivity, and proton-motive force.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88PN6" data-a="EXPERIMENT: Delete or conditionally deplete cyoB and measure b..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cyoB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88PN6" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *cyoB* (PP_0813, UniProt Q88PN6)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-11T00:34:19.178048</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="cyoB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="cyoB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-cyob-pp_0813-uniprot-q88pn6">Functional Annotation Report: <em>cyoB</em> (PP_0813, UniProt Q88PN6)</h1>
+<h3 id="cytochrome-bo3-ubiquinol-oxidase-subunit-i-pseudomonas-putida-kt2440">Cytochrome <em>bo</em>₃ ubiquinol oxidase subunit I — <em>Pseudomonas putida</em> KT2440</h3>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>cyoB</strong> (locus <strong>PP_0813</strong>, UniProt <strong>Q88PN6</strong>) encodes <strong>subunit I of the cytochrome <em>bo<em>₃ ubiquinol oxidase</em><em> (EC 7.1.1.3), a member of the heme–copper respiratory oxidase superfamily. This subunit is the </em><em>catalytic core</em><em> of a terminal oxidase of the aerobic respiratory chain. It binds all of the enzyme's redox-active metal centers — a </em><em>low-spin heme </em>b</em></strong> and the <strong>high-spin heme <em>o</em>₃–Cu_B binuclear center</strong> — and there it carries out the enzyme's primary chemistry: <strong>oxidation of ubiquinol (2 e⁻) coupled to the four-electron reduction of molecular O₂ to water</strong>, using the released free energy to <strong>pump protons across the cytoplasmic (inner) membrane</strong> and generate proton-motive force. In <em>P. putida</em> KT2440 the enzyme (Cyo) is the <strong>dominant terminal oxidase during aerobic exponential growth</strong> and additionally acts as a <strong>respiratory redox sensor</strong> that feeds into global metabolic gene regulation.</p>
+<p>The target identity is unambiguous and fully consistent with the UniProt record: gene symbol, EC number, protein family, and InterPro domains all match the primary literature on cytochrome <em>bo</em>₃/<em>cyo</em>.</p>
+<hr />
+<h2 id="2-target-identity-verification">2. Target Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>UniProt record</th>
+<th>Verified in this study</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><em>cyoB</em></td>
+<td>✔ Matches subunit I of <em>cyo</em> operon</td>
+</tr>
+<tr>
+<td>Locus</td>
+<td>PP_0813</td>
+<td>✔ Confirmed within PP_0812–PP_0816 <em>cyoABCDE</em> cluster</td>
+</tr>
+<tr>
+<td>Product</td>
+<td>Cytochrome <em>bo</em>(3) ubiquinol oxidase subunit 1</td>
+<td>✔ Consistent with all literature</td>
+</tr>
+<tr>
+<td>EC</td>
+<td>7.1.1.3</td>
+<td>✔ Ubiquinol:O₂ oxidoreductase (proton-pumping)</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>Heme–copper respiratory oxidase</td>
+<td>✔ A-type oxygen reductase</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>P. putida</em> KT2440 (taxid 160488)</td>
+<td>✔</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Bioinformatic confirmation.</strong> A Needleman–Wunsch alignment of Q88PN6 (672 aa) against <em>E. coli</em> CyoB (P0ABI8) gave <strong>69.1 % amino-acid identity</strong>, and <strong>all six catalytic metal-ligand histidines were strictly conserved at identical positions</strong>: His106/His421 (low-spin heme <em>b</em>), His419 (high-spin heme <em>o</em>₃), and His284/His333/His334 (Cu_B). The <strong>D-channel proton-pumping glutamate Glu286</strong> was likewise strictly conserved, as were the <strong>active-site cross-linked tyrosine Tyr288</strong> (covalently linked to the Cu_B ligand His284; supplies the fourth electron/proton for O–O bond scission) and the <strong>K-pathway lysine Lys362</strong> — i.e., the entire canonical A-type catalytic and proton-input apparatus is intact in the <em>P. putida</em> protein. UniProt predicts <strong>14 transmembrane helices</strong> and a "Cytochrome oxidase subunit I profile" domain (res 39–559), matching the polytopic subunit-I fold. This conservation licenses transfer of the detailed, experimentally derived <em>E. coli</em> mechanism to the <em>P. putida</em> protein.</p>
+<blockquote>
+<p>The gene symbol <em>cyoB</em> is <strong>not</strong> ambiguous here; abundant primary literature on cytochrome <em>bo</em>₃ (chiefly from <em>E. coli</em>, plus <em>P. putida</em>-specific studies) directly describes this exact protein.</p>
+</blockquote>
+<hr />
+<h2 id="3-primary-function-the-catalyzed-reaction-and-substrate-specificity">3. Primary Function: The Catalyzed Reaction and Substrate Specificity</h2>
+<h3 id="31-reaction">3.1 Reaction</h3>
+<p>Cytochrome <em>bo</em>₃ catalyzes the <strong>two-electron oxidation of ubiquinol and the reduction of molecular oxygen to water</strong> [Welter et al. 1994, PMID 7961841]:</p>
+<blockquote>
+<p>2 ubiquinol + O₂ (+ 8 H⁺_in) → 2 ubiquinone + 2 H₂O (+ 4 H⁺_out)</p>
+</blockquote>
+<p>i.e., four electrons drawn from two ubiquinol molecules fully reduce O₂ to two H₂O, while additional protons are vectorially translocated (see §4). Subunit I (CyoB) is where the O₂ chemistry occurs: <strong>"subunit I contains the binuclear center where oxygen is reduced to water"</strong> [Park et al. 2002, PMID 12080058]. The center comprises <strong>heme B at the low-spin site and heme O at the high-spin site of the binuclear center</strong> [Uchida et al. 2000, PMID 11132640].</p>
+<h3 id="32-substrate-specificity">3.2 Substrate specificity</h3>
+<p>The physiological electron-donating substrate is <strong>ubiquinol</strong> — the reduced form of the membrane isoprenoid quinone pool (ubiquinol-8 in <em>E. coli</em>; <em>Pseudomonas</em> species use ubiquinone-9 as their major quinone). The enzyme also harbors a <strong>single, tightly bound high-affinity ubiquinone-8</strong> that is a genuine redox cofactor: because cytochrome <em>bo</em>₃ <strong>lacks the Cu_A center</strong> of cytochrome <em>c</em> oxidases, this bound quinone acts as the <strong>"fourth electron" donor (a Cu_A substitute)</strong> that rapidly re-reduces low-spin heme <em>b</em> and lets the O₂ reaction run to completion instead of stalling at the ferryl intermediate; reconstitution with ubiquinone-8 converts monophasic to multiphasic kinetics [Puustinen et al. 1996, PMID 8643669]. Thus there are effectively two quinone-binding sites (high- and low-affinity) [Musser &amp; Chan 1998, PMID 9545462], and photoaffinity labelling with azido-ubiquinone localizes quinol binding to the subunit I/II region [Welter et al. 1994, PMID 7961841; Abramson et al. 2000, PMID 11017202].</p>
+<h3 id="33-structural-basis-of-the-active-site">3.3 Structural basis of the active site</h3>
+<p>The first structure of a ubiquinol oxidase — <em>E. coli</em> cytochrome <em>bo</em>₃ — revealed that <strong>the membrane-spanning region of subunit I contains a cluster of polar residues exposed to the lipid bilayer that forms a quinone-binding site</strong>, and mutagenesis supports specific roles for these residues in electron/proton transfer [Abramson et al. 2000, PMID 11017202]. The metal centers all reside in subunit I, the <strong>common functional core</strong> shared with cytochrome <em>c</em> oxidases [Gohlke et al. 1997, PMID 9135135].</p>
+<hr />
+<h2 id="4-mechanism-proton-pumping-and-energy-conservation">4. Mechanism: Proton Pumping and Energy Conservation</h2>
+<p>Cytochrome <em>bo</em>₃ is an <strong>A-type heme–copper oxygen reductase</strong>. Proton transfer to the catalytic site uses <strong>two well-defined pathways, the D- and K-pathways</strong> [Lee et al. 2012, PMID 22056517]. The <strong>D-pathway terminates at the strictly conserved Glu286</strong> (helix VI of subunit I), which controls proton delivery <strong>both to the active site for O₂ chemistry and to a proton-loading site for pumping</strong>; mutation of E286 blocks proton flux and abolishes turnover, exclusively by inhibiting proton transfer in the <em>bo</em>₃ enzyme [Egawa et al. 2011, PMID 21684251; Svensson-Ek et al. 1996, PMID 8885847]. Time-resolved FTIR shows redox-linked perturbation of E286 during the catalytic cycle, implicating it directly in proton pumping [Bailey et al. 2002, PMID 11851414].</p>
+<p>The net result is an <strong>electrogenic, redox-driven proton pump</strong>: electrons flow from ubiquinol through heme <em>b</em> to the heme <em>o</em>₃–Cu_B center to reduce O₂, while protons are pumped from the cytoplasm to the periplasm, contributing to the proton-motive force that powers ATP synthesis, transport, and motility. A quinol (Q-loop) contribution from the two quinone sites adds further charge separation unique to quinol oxidases [Musser &amp; Chan 1998, PMID 9545462].</p>
+<hr />
+<h2 id="5-holoenzyme-architecture-and-cofactor-biosynthesis">5. Holoenzyme Architecture and Cofactor Biosynthesis</h2>
+<p>CyoB is subunit I of a <strong>four-subunit complex</strong>. Partial sequencing of the purified <em>E. coli</em> enzyme identified subunits I, II and III as the <strong>cyoB, cyoA and cyoC gene products</strong> (~58, 33, 22 kDa), plus subunit IV (cyoD, ~17 kDa) [Minghetti et al. 1992, PMID 1322173]. Metal analysis shows <strong>2 equivalents of iron (heme <em>b</em> + heme <em>o</em>₃) but only 1 equivalent of copper (Cu_B); the Cu_A center is absent</strong> [Minghetti et al. 1992, PMID 1322173]. Accessory-subunit studies show <strong>subunit IV (CyoD) is required for Cu_B insertion into subunit I</strong>, acting as a domain-specific assembly chaperone that contacts helices VII/VIII (the Cu_B-binding region) of subunit I [Saiki et al. 1997, PMID 9169436].</p>
+<p><strong>Operon and cofactor supply (bioinformatic, <em>P. putida</em>-specific).</strong> A UniProt query of <em>P. putida</em> KT2440 resolves a <strong>syntenic <em>cyoABCDE</em> operon</strong>: PP_0812 <em>cyoA</em> (subunit II, Q88PN7) – <strong>PP_0813 <em>cyoB</em> (subunit I, Q88PN6)</strong> – PP_0814 <em>cyoC</em> (subunit III, Q88PN5) – PP_0815 <em>cyoD</em> (subunit IV, Q88PN4) – PP_0816 <em>cyoE2</em> (<strong>protoheme IX farnesyltransferase / heme-O synthase</strong>, Q88PN3). CyoE converts protoheme IX to <strong>heme O</strong>, the cofactor inserted into subunit I's high-spin (o₃) site [Minghetti et al. 1992, PMID 1322173]. The operon organization matches the <em>E. coli</em> prototype, corroborating that CyoB assembles and functions identically.</p>
+<hr />
+<h2 id="6-localization">6. Localization</h2>
+<p>CyoB carries out its function <strong>embedded in the cytoplasmic (inner) membrane</strong>. UniProt predicts <strong>14 helical transmembrane spans</strong> (res 16–604), consistent with a deeply membrane-embedded catalytic subunit. The cytochrome <em>bo</em>₃ complex is an inner-membrane protein assembly: its subunit II (CyoA) is integrated/translocated across the <em>E. coli</em> inner membrane via the <strong>YidC and SecYEG</strong> pathways [van Bloois et al. 2006, PMID 16481320; Celebi et al. 2008, PMID 18155041]. The hemes and Cu_B of subunit I lie within the membrane; ubiquinol (a lipid-soluble substrate) is oxidized at a membrane-buried Q-site, and protons are translocated vectorially across the same membrane (cytoplasm → periplasm).</p>
+<hr />
+<h2 id="7-biological-process-pathway-context-in-p-putida-kt2440">7. Biological Process / Pathway Context in <em>P. putida</em> KT2440</h2>
+<p><em>P. putida</em> KT2440 has a <strong>branched aerobic respiratory chain with multiple terminal oxidases</strong> — Cyo (<em>bo</em>₃), CIO (cyanide-insensitive), cbb₃-1, cbb₃-2 and aa₃ — whose relative use varies with O₂ and growth phase [Morales et al. 2006, PMID 16958757; Ugidos et al. 2008, PMID 18341582]. Functional assays show <strong>Cyo has a leading role during aerobic exponential growth</strong>, while cbb₃-1 dominates in stationary phase/low O₂ [Ugidos et al. 2008, PMID 18341582]. Expression is oxygen-responsive and coordinated by the <strong>ANR global regulator</strong>, which binds the <em>cyo</em> promoter [Ugidos et al. 2008, PMID 18341582].</p>
+<p>Beyond bioenergetics, the Cyo oxidase acts as a <strong>respiratory signal transmitter</strong>: inactivation of <em>cyo</em> has little effect on growth rate but <strong>broadly remodels the transcriptome and relieves the global (catabolite) control that represses alkane-degradation genes</strong>, identifying <em>cyo</em> specifically as <strong>"the oxidase that transmits a regulatory signal related to the activity of the electron transport chain"</strong>; loss of <em>cyo</em> is compensated by up-regulation of the CIO and cbb₃-1 oxidases [Morales et al. 2006, PMID 16958757]. This links CyoB's catalytic (electron-transport) activity to metabolic gene regulation in this environmentally and biotechnologically important soil bacterium.</p>
+<hr />
+<h2 id="8-evidence-summary">8. Evidence Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Evidence type</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Subunit I holds the O₂-reducing binuclear center</td>
+<td>Biochemistry / two-hybrid</td>
+<td>PMID 12080058</td>
+</tr>
+<tr>
+<td>Cofactors: low-spin heme <em>b</em> + high-spin heme <em>o</em>₃</td>
+<td>EPR / Raman</td>
+<td>PMID 11132640</td>
+</tr>
+<tr>
+<td>Reaction: 2e⁻ ubiquinol oxidation + O₂→H₂O</td>
+<td>Enzymology</td>
+<td>PMID 7961841</td>
+</tr>
+<tr>
+<td>Quinone-binding site in subunit I</td>
+<td>X-ray structure + mutagenesis</td>
+<td>PMID 11017202</td>
+</tr>
+<tr>
+<td>Bound Q8 substitutes for Cu_A</td>
+<td>Flow-flash kinetics</td>
+<td>PMID 8643669</td>
+</tr>
+<tr>
+<td>Glu286 required for proton transfer/pumping</td>
+<td>Mutagenesis / FTIR</td>
+<td>PMID 8885847, 21684251, 11851414</td>
+</tr>
+<tr>
+<td>A-type oxidase; D-/K-pathways</td>
+<td>Review</td>
+<td>PMID 22056517</td>
+</tr>
+<tr>
+<td>Six conserved His in subunit I</td>
+<td>Comparative / structural</td>
+<td>PMID 9545462; this study (69.1 % id, all 6 His conserved)</td>
+</tr>
+<tr>
+<td>Active-site Tyr288 + K-pathway Lys362 conserved</td>
+<td>Sequence alignment</td>
+<td>This study</td>
+</tr>
+<tr>
+<td>2 Fe + 1 Cu, no Cu_A; four subunits = cyoBAC(D)</td>
+<td>Metal analysis / sequencing</td>
+<td>PMID 1322173</td>
+</tr>
+<tr>
+<td>CyoD chaperones Cu_B insertion</td>
+<td>Mutagenesis</td>
+<td>PMID 9169436</td>
+</tr>
+<tr>
+<td>Inner-membrane localization</td>
+<td>Biogenesis studies</td>
+<td>PMID 16481320, 18155041</td>
+</tr>
+<tr>
+<td>Dominant oxidase in aerobic exponential growth (<em>P. putida</em>)</td>
+<td>Functional assays</td>
+<td>PMID 18341582</td>
+</tr>
+<tr>
+<td>Respiratory signalling role (<em>P. putida</em>)</td>
+<td>Microarray / RT-PCR</td>
+<td>PMID 16958757</td>
+</tr>
+<tr>
+<td>cyoABCDE operon = PP_0812–0816</td>
+<td>Genomic query</td>
+<td>This study (UniProt)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="9-supported-and-refuted-hypotheses">9. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- CyoB is the catalytic subunit I of cytochrome <em>bo</em>₃ ubiquinol oxidase (identity confirmed by annotation, 69.1 % identity to <em>E. coli</em> CyoB, and strict conservation of all six metal ligands + Glu286).<br />
+- Primary function = ubiquinol:O₂ oxidoreductase that reduces O₂ to water and pumps protons.<br />
+- Localizes to and functions within the inner membrane.<br />
+- In <em>P. putida</em>, it is the principal aerobic-growth terminal oxidase and a respiratory regulatory sensor.</p>
+<p><strong>Refuted / excluded</strong><br />
+- CyoB is <strong>not</strong> a cytochrome <em>c</em> oxidase (no Cu_A; electrons enter from ubiquinol, not cytochrome <em>c</em>).<br />
+- The gene is <strong>not</strong> ambiguous or mis-assigned; no competing gene with the same symbol confounds the annotation.</p>
+<hr />
+<h2 id="10-limitations-and-future-directions">10. Limitations and Future Directions</h2>
+<ul>
+<li>Most mechanistic/structural data derive from the orthologous <em>E. coli</em> enzyme; no <em>P. putida</em> CyoB crystal/cryo-EM structure or direct enzymology was found. The very high conservation makes transfer of mechanism robust, but organism-specific kinetic parameters (e.g., quinol specificity for ubiquinol-9, O₂ affinity) remain to be measured directly.</li>
+<li>The precise molecular link between Cyo electron-transport activity and the alkane-degradation regulatory signal in <em>P. putida</em> is phenomenological; the downstream signalling components are not fully defined.</li>
+<li>Proton-pumping stoichiometry (H⁺/e⁻) was not directly quantified here; the A-type consensus (~1 pumped H⁺ per electron, plus scalar/chemical protons) is inferred from the superfamily.</li>
+</ul>
+<hr />
+<p><em>Report compiled from primary literature and bioinformatic analysis (sequence alignment and genome operon mapping). All quantitative sequence claims were computed in this study against UniProt reference sequences Q88PN6 and P0ABI8.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="cyoB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="cyoB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88PN6
+gene_symbol: cyoB
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB
+    11950 / KT2440)
+description: cyoB encodes the cytochrome bo3 ubiquinol oxidase catalytic subunit
+  I containing the heme-copper oxygen-reduction center in Pseudomonas putida
+  KT2440. The protein acts in a plasma-membrane terminal oxidase branch that
+  reduces oxygen to water and supports aerobic respiratory energy conservation.
+  Its subunit-specific role is distinguished from the emergent catalytic
+  activity of the assembled oxidase complex.
+existing_annotations:
+- term:
+    id: GO:0004129
+    label: cytochrome-c oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &#39;cytochrome-c oxidase activity: Wrong electron donor. cyoB is subunit
+      I of the cytochrome bo3 ubiquinol oxidase (EC 7.1.1.3), which receives electrons
+      from ubiquinol and lacks the CuA center; GO:0004129 is the EC 7.1.1.9 cytochrome
+      c reaction.&#39;
+    action: REMOVE
+    reason: This is a wrong-donor IEA mapping rather than an over-annotation of
+      degree. UniProt assigns cyoB EC 7.1.1.3 (ubiquinol oxidase), whereas
+      GO:0004129 is defined as the cytochrome c reaction (EC 7.1.1.9). Metal
+      analysis of the complex shows heme b plus heme o3 and a single copper
+      (CuB) with no CuA center, so there is no cytochrome c docking site and a
+      bound ubiquinone-8 substitutes for CuA as the fourth-electron donor.
+      GO:0009486 remains as the branch-correct activity.
+    supported_by:
+    - reference_id: file:PSEPK/cyoB/cyoB-uniprot.txt
+      supporting_text: &#39;DE            EC=7.1.1.3 {ECO:0000256|ARBA:ARBA00012941};&#39;
+    - reference_id: file:PSEPK/cyoB/cyoB-deep-research-openscientist.md
+      supporting_text: CyoB is **not** a cytochrome *c* oxidase (no Cu_A; electrons
+        enter from ubiquinol, not cytochrome *c*).
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &#39;plasma membrane: Consistent with the conserved membrane terminal-oxidase
+      role and local operon assignment.&#39;
+    action: ACCEPT
+    reason: Consistent with the conserved membrane terminal-oxidase role and
+      local operon assignment.
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &#39;aerobic respiration: Consistent with the conserved membrane terminal-oxidase
+      role and local operon assignment.&#39;
+    action: ACCEPT
+    reason: Consistent with the conserved membrane terminal-oxidase role and
+      local operon assignment.
+- term:
+    id: GO:0009486
+    label: cytochrome bo3 ubiquinol oxidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &#39;cytochrome bo3 ubiquinol oxidase activity: The complete oxygen-reduction
+      reaction is an emergent activity of the assembled terminal oxidase; this individual
+      subunit contributes but does not independently enable the full reaction.&#39;
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The complete oxygen-reduction reaction is an emergent activity of
+      the assembled terminal oxidase; this individual subunit contributes but
+      does not independently enable the full reaction.
+- term:
+    id: GO:0015990
+    label: electron transport coupled proton transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: &#39;electron transport coupled proton transport: Consistent with the conserved
+      membrane terminal-oxidase role and local operon assignment.&#39;
+    action: ACCEPT
+    reason: Consistent with the conserved membrane terminal-oxidase role and
+      local operon assignment.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &#39;membrane: Generic membrane localization is redundant with the more precise
+      plasma membrane annotation.&#39;
+    action: REMOVE
+    reason: Generic membrane localization is redundant with the more precise
+      plasma membrane annotation.
+- term:
+    id: GO:0016682
+    label: oxidoreductase activity, acting on diphenols and related substances
+      as donors, oxygen as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &#39;oxidoreductase activity, acting on diphenols and related substances
+      as donors, oxygen as acceptor: The complete oxygen-reduction reaction is an
+      emergent activity of the assembled terminal oxidase; this individual subunit
+      contributes but does not independently enable the full reaction.&#39;
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The complete oxygen-reduction reaction is an emergent activity of
+      the assembled terminal oxidase; this individual subunit contributes but
+      does not independently enable the full reaction.
+- term:
+    id: GO:0020037
+    label: heme binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &#39;heme binding: The cofactor-binding role is supported by the conserved
+      family architecture and UniProt record.&#39;
+    action: ACCEPT
+    reason: The cofactor-binding role is supported by the conserved family
+      architecture and UniProt record.
+- term:
+    id: GO:0022904
+    label: respiratory electron transport chain
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: &#39;respiratory electron transport chain: Consistent with the conserved
+      membrane terminal-oxidase role and local operon assignment.&#39;
+    action: ACCEPT
+    reason: Consistent with the conserved membrane terminal-oxidase role and
+      local operon assignment.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with
+    GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/cyoB/cyoB-deep-research-openscientist.md
+  title: OpenScientist gene research for cyoB
+  findings:
+  - statement: Cytochrome bo3 lacks the CuA center and takes electrons from the
+      ubiquinol pool rather than from cytochrome c, so the cytochrome-c oxidase
+      activity mapping is a wrong-donor annotation for cyoB.
+    supporting_text: CyoB is **not** a cytochrome *c* oxidase (no Cu_A; electrons
+      enter from ubiquinol, not cytochrome *c*).
+core_functions:
+- description: Acts as the cytochrome bo3 ubiquinol oxidase catalytic subunit I
+    containing the heme-copper oxygen-reduction center, contributing to the
+    assembled terminal-oxidase reaction.
+  contributes_to_molecular_function:
+    id: GO:0009486
+    label: cytochrome bo3 ubiquinol oxidase activity
+  directly_involved_in:
+  - id: GO:0022904
+    label: respiratory electron transport chain
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  in_complex:
+    id: GO:0009319
+    label: cytochrome o ubiquinol oxidase complex
+  supported_by:
+  - reference_id: file:PSEPK/cyoB/cyoB-uniprot.txt
+    supporting_text: &#39;DE   RecName: Full=Cytochrome bo(3) ubiquinol oxidase subunit
+      1 {ECO:0000256|ARBA:ARBA00014691};&#39;
+  molecular_function:
+    id: GO:0020037
+    label: heme binding
+suggested_questions:
+- question: Under which oxygen, carbon-source, or inhibitor conditions is the
+    terminal-oxidase branch containing cyoB preferentially used in KT2440?
+suggested_experiments:
+- description: Delete or conditionally deplete cyoB and measure branch-specific
+    oxygen-consumption kinetics, respiratory growth, inhibitor sensitivity, and
+    proton-motive force.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
