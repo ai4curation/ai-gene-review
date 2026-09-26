@@ -1,4 +1,4 @@
-"""Post-enrichment analysis for ARBA and UniRule rules.
+"""Post-enrichment analysis for ARBA rules.
 
 This module provides deterministic analysis of UniProt rules including:
 - Fetching InterPro2GO mappings from GO Consortium
@@ -1056,7 +1056,9 @@ def analyze_rule_post_enrichment(
         Complete analysis dict suitable for adding to enriched JSON
 
     Raises:
-        ValueError: If rule has more than max_condition_sets condition sets
+        TypeError: If rule is not an ARBARule instance
+        ValueError: If rule does not have an ARBA######## identifier, or has more than
+            max_condition_sets condition sets
 
     Example:
         >>> from ai_gene_review.etl.arba import ARBAClient # doctest: +SKIP
@@ -1067,6 +1069,19 @@ def analyze_rule_post_enrichment(
         >>> "rule_id" in analysis and "ipr2go_redundancy" in analysis # doctest: +SKIP
         True
     """
+    if not isinstance(rule, ARBARule):
+        raise TypeError(
+            "analyze_rule_post_enrichment() requires an ARBARule instance; "
+            f"got {type(rule).__name__}"
+        )
+
+    rule_id = rule.uni_rule_id
+    if not isinstance(rule_id, str) or re.fullmatch(r"ARBA[0-9]{8}", rule_id) is None:
+        raise ValueError(
+            f"unsupported rule ID {rule_id!r}; post-enrichment analysis "
+            "currently supports ARBA######## IDs only"
+        )
+
     # Check condition set limit
     num_condition_sets = len(rule.condition_sets)
     if num_condition_sets > max_condition_sets:
@@ -1760,6 +1775,30 @@ def render_rule_review_html(
     with open(review_yaml_path, 'r') as f:
         rule_data = yaml.safe_load(f)
 
+    conditions = rule_data.get('rule', {}).get('condition_sets', [])
+    if not isinstance(conditions, list):
+        raise TypeError(f"{review_yaml_path}: condition_sets must be a list")
+
+    # Cached analysis is not always committed. Never destroy the only retained
+    # rendering of that evidence during an offline site build.
+    existing_output = output_path or rule_dir / f"{rule_id}-review.html"
+    if existing_output.exists():
+        existing_html = existing_output.read_text(encoding='utf-8')
+        missing_analysis = (
+            'Domain Overlap Analysis Table' in existing_html
+            and not (rule_dir / f"{rule_id}-analysis.json").exists()
+        )
+        missing_mappings = (
+            'External Mappings (ipr2go)' in existing_html
+            and (
+                not (rule_dir / f"{rule_id}.enriched.json").exists()
+                or not (rule_dir / f"{rule_id}-analysis.json").exists()
+            )
+        )
+        if missing_analysis or missing_mappings:
+            print(f"Preserving {existing_output}: analysis cache unavailable")
+            return existing_output
+
     # Read raw YAML content for preview
     with open(review_yaml_path, 'r') as f:
         yaml_content = f.read()
@@ -1851,7 +1890,7 @@ def render_rule_review_html(
 
     # Write output
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(html)
+        f.write("\n".join(line.rstrip() for line in html.splitlines()) + "\n")
 
     print(f"HTML review rendered to {output_path}")
     return output_path

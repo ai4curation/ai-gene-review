@@ -56,6 +56,9 @@ SCREEN: dict[str, tuple[str, ...]] = {
                              "dhe", "rogfp", "hyper", "amplex"),
     "APOPTOSIS_CASPASE": ("cellevent", "caspase", "annexin", "tunel", "parp",
                           "devd"),
+    "BEHAVIORAL_ASSAY": ("maze", "mwm", "field", "rota", "swim", "suspension",
+                          "conditioning", "recognition", "light", "startle",
+                          "beam", "grip"),
     "AUTOPHAGY_FLUX": ("lc3", "autophag", "p62", "sqstm1"),
     "MITO_MEMBRANE_POTENTIAL": ("tmrm", "tmre", "jc-1",
                                 "mitochondrial membrane potential",
@@ -257,6 +260,11 @@ def load_catalog(path: Path) -> dict[str, dict[str, Any]]:
     return catalog
 
 
+def normalize_match_text(value: str) -> str:
+    """Collapse regex-matched whitespace for single-line TSV fields."""
+    return re.sub(r"\s+", " ", value).strip()
+
+
 def build_aspect_map(genes_dir: Path) -> dict[str, str]:
     """Map GO id -> aspect (MF/BP/CC) by scanning every *-goa.tsv once."""
     aspect: dict[str, str] = {}
@@ -316,8 +324,13 @@ class PubCache:
                     classes.add(name)
                     # record the distinct matched substrings for QC (cheap: only
                     # runs on the rare screen-passing papers)
+                    seen_matches: set[str] = set()
                     for mm in rx.finditer(text):
-                        self.matched_counts[name][mm.group(0).lower()] += 1
+                        matched = normalize_match_text(mm.group(0)).lower()
+                        if matched in seen_matches:
+                            continue
+                        seen_matches.add(matched)
+                        self.matched_counts[name][matched] += 1
         result = (classes, "full_text_available: true" in low)
         self._cache[pmid] = result
         return result
@@ -425,9 +438,9 @@ def main() -> None:
             any_resolved = True
             cls, ft = det
             full_text = full_text or ft
-            for c in cls:
-                if c not in class_src:
-                    class_src[c] = (pm, role)
+            for name in catalog:
+                if name in cls and name not in class_src:
+                    class_src[name] = (pm, role)
         if not any_resolved:
             continue
         n_resolved += 1
@@ -439,8 +452,11 @@ def main() -> None:
         go_label = term.get("label", "") or ""
         aspect = aspect_map.get(go_id, "?")
 
-        for name, (pmid, role) in class_src.items():
-            spec = catalog[name]
+        for name, spec in catalog.items():
+            source = class_src.get(name)
+            if source is None:
+                continue
+            pmid, role = source
             aligned = bool(
                 go_id in spec["_overmapped"]
                 or (spec["_aligned"] and spec["_aligned"].search(go_label))

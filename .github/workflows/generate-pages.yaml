@@ -1,39 +1,26 @@
 ---
-name: Generate Pages
+# Normal publication workflow: rebuild main and deploy the validated site daily
+# or on manual dispatch. The generated-files PR also updates tracked HTML, but
+# its merge is not required for publication. To publish a completed build again
+# without rendering, use deploy-existing-pages.yaml.
+name: Build and deploy site
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'genes/**/*.yaml'
-      - 'src/ai_gene_review/schema/**'
-      - 'src/ai_gene_review/templates/**'
-      - 'src/ai_gene_review/render.py'
-      - 'src/ai_gene_review/render_projects.py'
-      - 'src/ai_gene_review/render_modules.py'
-      - 'src/ai_gene_review/export/**'
-      - 'src/ai_gene_review/browser/**'
-      - 'src/ai_gene_review/tools/minify_linkml_browser_data.py'
-      - 'projects/*.md'
-      - 'projects/**/*.md'
-      - 'modules/**/*.yaml'
-      - 'project.justfile'
-      - '.github/workflows/generate-pages.yaml'
+  # Batch the full build once per day; manual dispatch remains available.
+  schedule:
+    - cron: '23 8 * * *'  # Daily at 08:23 UTC.
   workflow_dispatch:
-    inputs:
-      force:
-        description: 'Force run even if already ran today'
-        type: boolean
-        default: false
 
 concurrency:
   group: generate-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   generate-pages:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    outputs:
+      deployable: ${{ steps.pages-upload.outcome == 'success' && steps.archive-check.outcome == 'success' && steps.pages-summary.outputs.deployable == 'true' }}
     permissions:
       # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
       # with the ai4c-agent App token below.
@@ -43,6 +30,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          # A manual dispatch may select any workflow ref. Generated artifacts
+          # must nevertheless always be built from the trusted default branch.
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -71,42 +61,17 @@ jobs:
       - name: Install project
         run: uv sync --dev
 
-      - name: Get changed files
-        id: changed
-        run: |
-          # Get YAML files changed in the triggering commit(s)
-          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'genes/**/*-ai-review.yaml' 'rules/**/*-review.yaml' 2>/dev/null || echo "")
-          echo "files<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          echo "Changed YAML files: $(echo "$CHANGED" | grep -c '.' || echo 0)"
-
-      - name: Validate changed gene reviews
-        run: |
-          ERRORS=0
-          while IFS= read -r f; do
-            [ -z "$f" ] && continue
-            [ ! -f "$f" ] && continue
-            if [[ "$f" == genes/*/*/*-ai-review.yaml ]]; then
-              ORG=$(echo "$f" | cut -d/ -f2)
-              GENE=$(echo "$f" | cut -d/ -f3)
-              echo "=== Validating $ORG/$GENE ==="
-              if ! just validate "$ORG" "$GENE"; then
-                ERRORS=$((ERRORS + 1))
-              fi
-            fi
-          done <<< "${{ steps.changed.outputs.files }}"
-          if [ $ERRORS -gt 0 ]; then
-            echo "❌ $ERRORS validation errors"
-            exit 1
-          fi
-          echo "✅ All changed files valid"
-
+      # Gene review validation belongs to main.yaml: changed reviews are checked
+      # on PRs, with a weekly full validate-all safety net. A last-commit diff
+      # here would miss most merges included in the daily regeneration.
       - name: Render all gene review HTML pages
         run: just render-all
 
       - name: Render project pages
         run: just render-projects
+
+      - name: Render ProtNLM prediction evaluations from all review sidecars
+        run: just render-prediction-eval
 
       - name: Validate module YAML files
         run: just validate-modules
@@ -114,19 +79,124 @@ jobs:
       - name: Render module pages
         run: just render-modules
 
+      - name: Render cached rule reviews and index
+        run: just render-rule-pages
+
       - name: Deploy browser app (data.js + index.html)
         run: just deploy-browser
+
+      - name: Build shared predictions browser
+        run: just deploy-predictions-browser
+
+      # Build the candidate artifact for inspection. Publication remains opt-in
+      # and separately gated on completeness and the supported size budget.
+      # Keep every artifact step non-blocking so failures cannot skip the legacy
+      # regeneration lane. Only summarize/upload a successfully staged tree.
+      - name: Stage GitHub Pages artifact
+        id: pages-stage
+        continue-on-error: true
+        run: just stage-pages
+
+      - name: Summarize staged Pages site
+        id: pages-summary
+        if: steps.pages-stage.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          PAGES_ARTIFACT_DEPLOY_ENABLED: ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED }}
+        run: |
+          {
+            echo "## Shadow GitHub Pages artifact"
+            echo
+            if [ "$PAGES_ARTIFACT_DEPLOY_ENABLED" = "true" ]; then
+              echo "Actions deployment is enabled for artifacts that pass the publication checks."
+            else
+              echo "Artifact built without publishing; Actions deployment is disabled."
+            fi
+            echo
+            echo "| Metric | Value |"
+            echo "|---|---:|"
+            echo "| Files | $(jq -r .total_files _site-manifest.json) |"
+            echo "| Uncompressed MiB | $(jq -r '.total_bytes / 1048576 | round' _site-manifest.json) |"
+            echo "| Estimated tar archive MiB | $(jq -r '.archive_bytes / 1048576 | round' _site-manifest.json) |"
+            echo "| Shared template savings (MiB) | $(jq -r '.shared_asset_bytes_saved / 1048576 | round' _site-manifest.json) |"
+            echo "| Content compaction savings (MiB) | $(jq -r '.content_compaction_bytes_saved / 1048576 | round' _site-manifest.json) |"
+            echo "| Source artifacts explicitly marked unarchived | $(jq -r '.unavailable_source_artifact_paths | length' _site-manifest.json) |"
+            echo "| Gene pages | $(jq -r .gene_pages _site-manifest.json) |"
+            echo "| Project pages | $(jq -r .project_pages _site-manifest.json) |"
+            echo "| Module pages | $(jq -r .module_pages _site-manifest.json) |"
+            echo "| Excluded orphan review pages | $(jq -r .linked_source_files_not_staged _site-manifest.json) |"
+            echo "| Excluded orphan review MiB | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
+            echo "| Likely missing site-prefix links | $(jq -r .off_base_path_links _site-manifest.json) |"
+            echo "| Broken local targets | $(jq -r .broken_local_links _site-manifest.json) |"
+            echo "| Archive budget (bytes) | $(jq -r .archive_size_budget_bytes _site-manifest.json) |"
+            echo "| Size budget (bytes) | $(jq -r .size_budget_bytes _site-manifest.json) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if jq -e '.deployable == true' _site-manifest.json > /dev/null; then
+            echo "deployable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deployable=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or has excluded or missing static local targets or likely missing site-prefix links. The existing site will remain deployed."
+          fi
+
+      - name: Upload GitHub Pages artifact
+        id: pages-upload
+        if: steps.pages-stage.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+          retention-days: 3
+
+      - name: Record uploaded archive checksum
+        id: archive-check
+        if: steps.pages-upload.outcome == 'success' && steps.pages-summary.outputs.deployable == 'true'
+        continue-on-error: true
+        env:
+          PAGES_ARCHIVE_PATH: ${{ runner.temp }}/artifact.tar
+        run: |
+          set -euo pipefail
+          if [ ! -f "$PAGES_ARCHIVE_PATH" ]; then
+            echo "::error title=Pages archive missing::upload-pages-artifact@v4 did not leave $PAGES_ARCHIVE_PATH; archive checksum verification cannot run."
+            exit 1
+          fi
+          python3 scripts/validate_pages_recovery.py record \
+            --manifest _site-manifest.json --archive "$PAGES_ARCHIVE_PATH"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          echo "- Actual tar bytes: $(jq -r .archive_actual_bytes _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Archive SHA-256: $(jq -r .archive_sha256 _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Pages diagnostics
+        if: steps.pages-stage.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-diagnostics
+          path: _site-manifest.json
+          retention-days: 7
+
+      - name: Warn when Pages artifact build fails
+        if: >-
+          ${{ !cancelled() &&
+              (steps.pages-stage.outcome == 'failure' ||
+               steps.pages-summary.outcome == 'failure' ||
+               steps.pages-upload.outcome == 'failure' ||
+               steps.archive-check.outcome == 'failure') }}
+        run: echo "::warning title=Pages artifact build failed::Inspect the staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes
         run: |
-          if git diff --quiet \
+          if [ -z "$(git status --porcelain --untracked-files=all -- \
             genes/ \
             app/index.html \
             app/data.js \
             app/schema.js \
+            app/predictions/ \
             pages/ \
-            reports/; then
+            rules/arba/index.html \
+            ":(glob)rules/arba/*/*-review.html" \
+            reports/)" ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
@@ -136,7 +206,10 @@ jobs:
               app/index.html \
               app/data.js \
               app/schema.js \
+              app/predictions/ \
               pages/ \
+              rules/arba/index.html \
+              ":(glob)rules/arba/*/*-review.html" \
               reports/
           fi
 
@@ -175,6 +248,7 @@ jobs:
           private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
 
       - name: Create or update regeneration PR
+        id: regen-pr
         if: steps.check-changes.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
@@ -197,7 +271,10 @@ jobs:
             app/index.html \
             app/data.js \
             app/schema.js \
+            app/predictions/ \
             pages/ \
+            rules/arba/index.html \
+            ":(glob)rules/arba/*/*-review.html" \
             reports/
 
           # SAFETY GUARD: this automated commit must only ever contain
@@ -205,9 +282,10 @@ jobs:
           # staged (e.g. a gene-review YAML, schema, src/, or projects/*.md
           # source file), abort rather than risk clobbering hand-authored
           # content. Allowed: gene-review HTML, everything under pages/, the
-          # three browser-app files, and reports/.
+          # browser-app files and prediction source manifest, reports/, and
+          # rule-review HTML.
           DISALLOWED="$(git diff --cached --name-only \
-            | grep -vE '^(genes/[^[:space:]]+\.html|pages/|app/(index\.html|data\.js|schema\.js)$|reports/)' \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/((predictions/)?(index\.html|data\.js|schema\.js)|predictions/source-files\.json)|reports/[^[:space:]]+|rules/arba/index\.html|rules/arba/ARBA[0-9]+/ARBA[0-9]+-review\.html)$' \
             || true)"
           if [ -n "$DISALLOWED" ]; then
             echo "❌ Refusing to commit non-artifact files:"
@@ -249,19 +327,7 @@ jobs:
             echo
             echo "## Trigger"
             echo
-            echo "This PR was triggered by changes to:"
-            echo "- genes/**/*.yaml - gene review data files"
-            echo "- src/ai_gene_review/schema/** - LinkML schema files"
-            echo "- src/ai_gene_review/templates/** - Jinja2 templates"
-            echo "- src/ai_gene_review/render.py - rendering code"
-            echo "- src/ai_gene_review/render_modules.py - module rendering code"
-            echo "- src/ai_gene_review/export/** - export code"
-            echo "- src/ai_gene_review/browser/** - browser app assets"
-            echo "- src/ai_gene_review/tools/minify_linkml_browser_data.py - browser data compaction"
-            echo "- projects/*.md - project definitions"
-            echo "- modules/**/*.yaml - module definitions"
-            echo "- project.justfile - just recipes used by CI"
-            echo "- .github/workflows/generate-pages.yaml - workflow definition"
+            echo "Daily scheduled or manually requested regeneration."
             echo
             echo "## Review"
             echo
@@ -274,7 +340,9 @@ jobs:
           PR_NUMBER="$(gh pr list \
             --repo "$GITHUB_REPOSITORY" \
             --head "$BRANCH_NAME" \
+            --base main \
             --state open \
+            --author app/ai4c-agent \
             --json number \
             --limit 1 \
             --jq '.[0].number // empty')"
@@ -287,22 +355,17 @@ jobs:
               >/dev/null
             echo "Updated existing regeneration PR #$PR_NUMBER."
           else
-            gh pr create \
+            PR_URL="$(gh pr create \
               --repo "$GITHUB_REPOSITORY" \
               --base main \
               --head "$BRANCH_NAME" \
               --title "Regenerate pages and browser app" \
-              --body-file "$PR_BODY"
+              --body-file "$PR_BODY")"
+            echo "$PR_URL"
+            # The create response is authoritative; search indexing can lag.
+            PR_NUMBER="${PR_URL##*/}"
 
-            PR_NUMBER="$(gh pr list \
-              --repo "$GITHUB_REPOSITORY" \
-              --head "$BRANCH_NAME" \
-              --state open \
-              --json number \
-              --limit 1 \
-              --jq '.[0].number // empty')"
-
-            if [ -z "$PR_NUMBER" ]; then
+            if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
               echo "Failed to resolve regeneration PR number for $BRANCH_NAME."
               echo "Compare URL: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH_NAME}?expand=1"
               exit 1
@@ -310,26 +373,150 @@ jobs:
             echo "Created regeneration PR #$PR_NUMBER."
           fi
 
-          merge_state="$(gh pr view "$PR_NUMBER" \
-            --repo "$GITHUB_REPOSITORY" \
-            --json mergeStateStatus \
-            --jq '.mergeStateStatus')"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-          if [ "$merge_state" = "CLEAN" ]; then
-            echo "Regeneration PR #$PR_NUMBER is clean; merging generated artifacts directly."
-            gh pr merge "$PR_NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --squash
-          else
-            # Publish automatically: enable auto-merge so the regeneration PR
-            # lands on main once required checks or reviews pass, instead of
-            # sitting unmerged. The PR only contains generated artifacts
-            # (enforced by the safety guard above), so merging it cannot clobber
-            # source files. Non-fatal if the repo does not allow auto-merge -- in
-            # that case the PR simply stays open for a maintainer to merge.
-            gh pr merge "$PR_NUMBER" \
-              --repo "$GITHUB_REPOSITORY" \
-              --auto \
-              --squash \
-              || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+      - name: Approve exact generated commit
+        id: approve-generated
+        if: steps.check-changes.outputs.has_changes == 'true'
+        # Approval is a fail-safe convenience after the expensive render and
+        # push. The later step will not arm auto-merge when the reviewer App is
+        # unavailable, so preserve the artifacts and emit a loud warning below.
+        continue-on-error: true
+        uses: ./.github/actions/approve-regen-pr
+        with:
+          pr-number: ${{ steps.regen-pr.outputs.pr_number }}
+          branch-name: auto/generate-pages
+          base-branch: main
+          expected-author: app/ai4c-agent
+          app-id: ${{ secrets.AI4C_REVIEWER_APP_ID }}
+          private-key: ${{ secrets.AI4C_REVIEWER_PRIVATE_KEY }}
+
+      - name: Warn when generated approval is unavailable
+        if: >-
+          ${{ always() &&
+              steps.check-changes.outputs.has_changes == 'true' &&
+              steps.approve-generated.outcome == 'failure' }}
+        env:
+          PR_NUMBER: ${{ steps.regen-pr.outputs.pr_number }}
+        shell: bash
+        run: |
+          echo "::warning title=Generated PR approval unavailable::The exact-head approval for regeneration PR #${PR_NUMBER:-unknown} failed. Generated artifacts were already pushed; the later step will not arm auto-merge. Retry the workflow or inspect the ai4c-reviewer App."
+
+      # Approval is deliberately a separate, earlier step. A protection-read or
+      # rollout-guard failure below must never prevent the independent reviewer
+      # App from recording its exact-head decision on the generated PR.
+      - name: Validate protection and arm generated auto-merge
+        if: >-
+          ${{ !cancelled() &&
+              steps.check-changes.outputs.has_changes == 'true' &&
+              steps.regen-pr.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          MERGE_ENABLED: ${{ vars.PR_SHEPHERD_MERGE_ENABLED }}
+          PR_NUMBER: ${{ steps.regen-pr.outputs.pr_number }}
+          EXPECTED_HEAD: ${{ steps.regen-pr.outputs.head_sha }}
+          APPROVAL_OUTCOME: ${{ steps.approve-generated.outcome }}
+        shell: bash
+        run: |
+          # Share the Shepherd rollout flag as the generated lane's kill switch.
+          # Flag-off still leaves the already-created and reviewed PR open.
+          if [ "$MERGE_ENABLED" != "true" ]; then
+            echo "Auto-merge is rollout-disabled; PR #$PR_NUMBER remains open."
+            exit 0
+          fi
+
+          # The generated PR and approval action both use literal base `main`.
+          # Refuse a renamed/default-branch mismatch rather than checking one
+          # branch and arming auto-merge against another.
+          if [ "$DEFAULT_BRANCH" != "main" ]; then
+            echo "::error title=Generated auto-merge base mismatch::Repository default branch is $DEFAULT_BRANCH, but the generated lane targets literal base main. Refusing to arm auto-merge."
+            exit 1
+          fi
+          pr_base=""
+          if ! pr_base="$(gh pr view "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json baseRefName \
+            --jq '.baseRefName')"; then
+            echo "::error title=Generated auto-merge base check failed::Could not read the current base for PR #$PR_NUMBER; refusing to arm auto-merge."
+            exit 1
+          fi
+          if [ "$pr_base" != "main" ]; then
+            echo "::error title=Generated auto-merge base mismatch::PR #$PR_NUMBER targets $pr_base, not literal base main. Refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Mirror the Shepherd's protected-branch existence smoke check with
+          # the current App token. This intentionally does not claim to verify
+          # the exact classic-protection settings in the rollout checklist.
+          protected=""
+          if ! protected="$(gh api \
+            "repos/$GITHUB_REPOSITORY/branches/main" \
+            --jq '.protected')"; then
+            echo "::error title=Generated auto-merge protection check failed::Could not read protection for literal base main; refusing to arm auto-merge."
+            exit 1
+          fi
+          if [ "$protected" != "true" ]; then
+            echo "::error title=Generated auto-merge requires protected main::Literal base main reports protected=$protected; refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Do not arm a PR whose independent exact-head approval was not
+          # recorded. The warning step above reports the fail-safe outcome.
+          if [ "$APPROVAL_OUTCOME" != "success" ]; then
+            echo "Auto-merge was not armed because exact-head approval is unavailable."
+            exit 0
+          fi
+          if [ -z "$EXPECTED_HEAD" ]; then
+            echo "::error title=Generated auto-merge head pin missing::The generated head SHA is empty; refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Arm auto-merge rather than issue a direct merge. Protected main must
+          # enforce the exact-head reviewer approval and required test check.
+          # The staged-path allowlist guarantees derived artifacts only.
+          echo "Arming auto-merge for regeneration PR #$PR_NUMBER."
+          gh pr merge "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --auto \
+            --squash \
+            --match-head-commit "$EXPECTED_HEAD" \
+            || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+
+  deploy-pages:
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    # A legacy regeneration-PR failure must not suppress a validated upload.
+    needs: generate-pages
+    if: >-
+      ${{ always() && !cancelled() &&
+          vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
+          needs.generate-pages.outputs.deployable == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy validated Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  publication-status:
+    needs: [generate-pages, deploy-pages]
+    if: ${{ always() && !cancelled() && vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require successful publication
+        env:
+          DEPLOY_RESULT: ${{ needs.deploy-pages.result }}
+        run: |
+          if [ "$DEPLOY_RESULT" != success ]; then
+            echo "::error title=Site was not published::Deployment result: $DEPLOY_RESULT. Inspect build diagnostics and deployment logs. The previous site remains live."
+            exit 1
           fi

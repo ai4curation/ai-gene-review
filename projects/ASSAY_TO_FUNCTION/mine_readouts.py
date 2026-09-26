@@ -65,6 +65,11 @@ def evidence_text(review: dict[str, Any]) -> str:
     return "\n".join(parts)
 
 
+def normalize_match_text(value: str) -> str:
+    """Collapse regex-matched whitespace for single-line TSV fields."""
+    return re.sub(r"\s+", " ", value).strip()
+
+
 def snippet_around(text: str, match: re.Match, width: int = 80) -> str:
     start = max(0, match.start() - width)
     end = min(len(text), match.end() + width)
@@ -140,7 +145,7 @@ def main() -> None:
                             "readout_class": readout_name,
                             "proximity": spec.get("proximity", ""),
                             "convergence": spec.get("convergence", ""),
-                            "matched": m.group(0),
+                            "matched": normalize_match_text(m.group(0)),
                             "snippet": snippet_around(text, m),
                             "file": str(path),
                         }

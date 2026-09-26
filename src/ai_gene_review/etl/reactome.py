@@ -1,5 +1,6 @@
 """ETL for fetching and caching Reactome pathway information."""
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -62,7 +63,10 @@ class ReactomePathway:
         if self.summary:
             body_parts.append(f"\n## Summary\n\n{self.summary}\n")
 
-        return f"---\n{frontmatter}---\n\n{''.join(body_parts)}"
+        markdown = f"---\n{frontmatter}---\n\n{''.join(body_parts)}"
+        # Reactome summaries are API text, not authored Markdown: discard
+        # spaces/tabs before line endings while preserving indentation.
+        return re.sub(r"[ \t]+(?=\r?$)", "", markdown, flags=re.MULTILINE)
 
 
 def extract_reactome_id(reactome_str: str) -> str:

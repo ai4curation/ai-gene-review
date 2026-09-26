@@ -256,21 +256,36 @@ routine event in the repo into a red X.
 
 ## Known gaps
 
-- **`ai4c-reviewer` has `Contents: read`.** GitHub ties "this approval counts
-  toward branch protection" to *write* access, which for an App is governed by
-  the Contents permission — so its approvals render as *"approved with read-only
-  permissions."* `main` has no branch protection today, so nothing is blocked.
-  If required-approval rules are ever enabled, raise the App to
-  `Contents: write` first (an App-settings change plus accepting the permission
-  bump on the org installation).
-- **A stale `dragon-ai-agent` collaborator entry remains** on the repo. The
-  account itself is deleted (`GET /users/dragon-ai-agent` 404s) so it grants
-  nothing, but the entry should be removed — that is a settings click, not a
-  code change. The recipes that re-added it, and that re-installed `PAT_FOR_PR`,
-  were removed in the cleanup PR; before that, a single `just gh-add-secrets`
-  would have reinstalled the exposed credential and undone this migration.
-  Worth remembering that a revoked token is not a revoked account, and a deleted
-  account is not a removed collaborator.
+- **`ai4c-reviewer` approvals are currently excluded from GitHub's required-
+  review decision while its installation has Contents read.** The deterministic
+  Shepherd follows DisMech's aggregate `APPROVED` policy rather than requiring
+  that identity, so this does not block ordinary closing passes. It still
+  affects the generated-page lane, whose independent approval is deliberately
+  tied to `ai4c-reviewer`.
+- **`dragon-ai-agent` holds `admin` on this repository**, and is an active
+  `ai4curation` organization owner. This entry was described here as "stale" and
+  the account as "deleted"; both were wrong. In July the account was *suspended*
+  — `GET /users/dragon-ai-agent` 404s for a suspended account, which is easy to
+  misread as deletion, but the membership API returns `state: active` and a
+  deleted account would have lost that membership. It was then **unsuspended on
+  2026-08-05** and is operating again. So the grant is live, not vestigial:
+
+  ```
+  GET /repos/ai4curation/ai-gene-review/collaborators/dragon-ai-agent/permission
+      -> permission: admin
+  ```
+
+  No workflow here needs it — that is the point of this migration — so the
+  privilege is unearned. Reducing it is a settings change, not a code one.
+  The recipes that re-added the account and re-installed `PAT_FOR_PR` were
+  removed in the cleanup PR; before that, a single `just gh-add-secrets` would
+  have reinstalled the exposed credential and undone this migration.
+
+  Worth stating plainly, since it has now been misread in both directions: a
+  revoked token is not a revoked account, a suspended account is not a deleted
+  one, a deleted account is not a removed collaborator, and unsuspension
+  silently restores every privilege the account held. Membership and permission
+  endpoints are authoritative; `GET /users/:login` is not.
 - **The `PAT_FOR_PR` secret still exists**, though nothing references it — the
   only mentions left in the tree are two do-not-reintroduce comments
   (`justfile:180`, `ai.yml:187`) and this document. It
@@ -307,3 +322,274 @@ less literature mining and more scanning of GO repositories, which its own
 `go-annotation-scanner`, `arba-issue-monitor` and `litscan-module-member` cover.
 `post-review-agent` (turns human review comments into suggested changes) and
 `auto-merge-compliance` are still open candidates.
+
+## Deterministic PR Shepherd closing pass
+
+The Shepherd's closing decision is code, not an LLM judgment. The agentic job
+may update a branch or repair review feedback, but it cannot approve, merge, or
+enable auto-merge. A separate `merge-ready` job starts on a fresh runner and
+re-reads GitHub state before it will squash-merge anything.
+
+Manual dispatch exposes three independent controls:
+
+- `run_agent=false` skips the LLM job, which permits a deterministic-only run;
+- `merge_mode=audit|execute|off` selects the closing pass.
+- `include_drafts=true` includes otherwise eligible approved drafts. Audit mode
+  only reports them; execute mode marks each verified draft ready, re-reads all
+  merge guards, and only then performs the head-pinned merge. If any later
+  guard or the merge fails, it restores the PR to draft state.
+
+Schedules audit by default. They execute only while the repository variable
+`PR_SHEPHERD_MERGE_ENABLED` is exactly `true`. Manual execute also requires that
+flag and must be dispatched from the default branch. The execute preflight
+checks that the default branch reports as protected before it mints a write
+token.
+
+The deterministic closing pass intentionally has a broader ingress and
+authorship scope than the agentic tending job. It considers an otherwise
+eligible PR regardless of whether a bot or a human authored it, and it does not
+itself reject fork heads. Author login, head repository, and agent-style head
+prefixes are not trust signals for this pass; only `auto/generate-*` is excluded
+for its separate lifecycle. Automatic agentic review remains limited to
+same-repository PRs, but the closing pass uses GitHub's aggregate `APPROVED`
+decision just as DisMech does. With stale-review dismissal enabled, a head push
+invalidates that approval; unrelated movement on `main` does not. An optional
+Bot-identity allowlist remains available to manual controller invocations
+through `--trusted-reviewer`, but the production workflow does not enable it.
+The exact-head binding itself is always enforced: at least one approval must
+refer to the precise PR commit that the controller is about to merge.
+
+The production closing pass has no file-path allowlist. An approved, green,
+conflict-free PR is not blocked because it changes caches, history, code,
+workflows, or documentation. Regenerating a cache during conflict repair is a
+separate concern from deciding whether a conflict-free PR can merge.
+The optional `--allowed-path-prefix` argument restricts an explicitly scoped
+manual invocation; it is not enabled by the production workflow. Each prefix
+must be a normalized directory ending in `/`, so `src/` cannot accidentally
+authorize a sibling such as `src_generated/`.
+
+The controller requires all of these at fresh reads immediately before merge:
+
+- open, unassigned, old enough by PR creation time, and targeting `main`;
+- non-draft unless a manual run explicitly sets `include_drafts=true`;
+- no `shepherd:hold` label and no `auto/generate-*` head branch;
+- GitHub's aggregate review decision is `APPROVED`;
+- at least one approval is bound to the exact current PR head;
+- GitHub reports mergeable and clean;
+- all reported checks are complete/non-failing, and `test (3.12)` is explicitly
+  successful.
+
+The path inventory is fetched from the paginated REST endpoint on both fresh
+verification passes, matched against the PR API's total `changedFiles` count,
+and rejected above GitHub's 3,000-file REST completeness cap. Rename source
+paths are checked as well as destinations. The controller re-reads the head
+after each file inventory, and the final merge remains pinned to that head.
+
+The age gate intentionally measures `createdAt`, not the latest push, approval,
+or branch update. It is a backlog-age threshold, not a soak period for the
+current content. Consequently, fresh commits pushed to an old PR can merge as
+soon as that exact new head receives approval, passes CI, and meets the
+remaining guards. Unrelated changes on `main` do not force a rebase,
+CI rerun, or new review; GitHub still rejects current conflicts. This keeps old
+approved work moving, but it also means operators must use draft state,
+assignment, or `shepherd:hold` when fresh content needs additional observation
+time.
+
+Reads use the built-in read-only token. A separately scoped ai4c-agent token
+(Contents write + pull-request write, matching DisMech) is supplied only to the
+head-pinned merge and best-effort courtesy-comment subprocesses. API uncertainty
+fails an execute run red. A positively observed head movement is instead a
+benign skip: concurrent automation changed the candidate, so its new state must
+pass a later sweep. The separate ai4c-reviewer credential is explicitly scoped to
+pull-request write only; it can record the approval but cannot push content.
+
+The feature flag and execute preflight are not substitutes for protection. The
+preflight's `GET branches/main` / `.protected == true` read is deliberately only
+an existence smoke test available to the read-only workflow token; a weak rule
+also satisfies it. It does **not** verify any of the settings below. This rollout
+requires a classic branch-protection rule on the literal `main` branch. Classic
+protection is confirmed to make `.protected` true; a repository-ruleset-only
+configuration is not supported by this preflight and must not be substituted
+without a ruleset-aware implementation and tests.
+
+Before setting `PR_SHEPHERD_MERGE_ENABLED=true`, manually verify the classic
+rule in repository settings or with
+`GET /repos/ai4curation/ai-gene-review/branches/main/protection`:
+
+- required status checks are non-strict (a PR need not be rebased after
+  unrelated `main` changes) and contain exactly `test (3.12)` from the GitHub
+  Actions App (`app_id: 15368`);
+- one approving review is required and stale approvals are dismissed; requiring
+  a separate approval for the latest push is disabled, matching DisMech;
+- the approval policy intentionally accepts bot-only approval on infrastructure
+  paths as well as curation paths, per the maintainer's direction for PR #3041.
+  An AI-approved PR may therefore update the automation's own merge policy.
+  There is no additional human or CODEOWNERS gate for `.github/`, `scripts/`,
+  or `src/`; do not infer one from `.protected`. The same current-head approval,
+  CI, conflict, hold, and age checks apply to all files;
+- the ai4c-agent App installation grants Contents and Pull requests write, the
+  two permissions requested by DisMech's merge token and this workflow. The
+  separate reviewer token remains scoped to Pull requests write only;
+- unresolved review conversations block merging;
+- the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
+  while force pushes and branch deletion remain disabled;
+- on a green, conflict-free PR whose recorded base is older than `main`,
+  `gh pr view N --json reviewDecision,mergeStateStatus` reports `APPROVED` and
+  `CLEAN` rather than `REVIEW_REQUIRED`, `BEHIND`, or `BLOCKED`;
+- `GET branches/main` returns `.protected: true`, the `shepherd:hold` label
+  exists, and the feature flag remains false until an audit and controlled
+  execute smoke test complete.
+
+If any setting is weakened later, set the flag false and cancel any in-flight
+Shepherd run.
+
+During the PR #3041 review, the live merge flag was already `true` (set August
+10), and `main` required one review with stale-review dismissal and no CODEOWNERS
+requirement. The ai4c-agent App and its ai4curation installation both lacked
+Workflows write. The review follow-up added a request for that ungranted
+permission, which would make token creation fail before any PR could be processed
+in execute mode. That request has been removed to match DisMech's two-permission
+merge token; no App permission upgrade is a prerequisite for this workflow.
+The controller still applies no file-path veto, and reports GitHub merge errors
+per PR while continuing to process other candidates.
+
+DisMech currently uses a merge queue; this repository does not. DisMech uses the
+same scoped token for both enqueueing and its direct-merge fallback. The latter
+uses `gh pr merge --squash --match-head-commit`, as this controller does. Matching
+the token scope does not establish that GitHub accepts every workflow-changing
+direct merge: any such rejection needs evidence from that specific operation,
+not an unconditional permission request that blocks all candidates at token
+creation.
+
+Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
+proves the commit contains derived artifacts only and always builds from the
+default branch. After pushing, it first asks ai4c-reviewer for an approval
+anchored to the exact generated commit; rollout or protection-check failures
+therefore cannot suppress the independent review. A later step enables
+auto-merge only under the shared feature flag, only when that approval step
+succeeded, and only with the exact generated head pin. The general Shepherd
+controller and agent both exclude this lane. Before calling
+`gh pr merge --auto`, the generated lane also requires the repository default
+and literal PR base to both be `main`, then reads `branches/main` with its
+current ai4c-agent token and fails without arming if `.protected` is false or
+unreadable. Like the Shepherd preflight, this is only a protection-existence
+smoke check; the exact settings still require the manual checklist above. If
+the reviewer App is temporarily unavailable after a long render, the approval
+step emits a loud warning but does not discard the already-pushed artifacts or
+red-X the job; the later step refuses to arm auto-merge until approval is
+retried.
+
+## Recommended follow-up: append-only curation history
+
+DisMech's `history/` system is worth reusing, but its target model should be
+adapted rather than copied literally. It stores one schema-validated,
+append-only YAML record per curation/review/audit session, outside the curated
+object; provides a `just new-history` scaffolder; validates records in CI; and
+gives an advisory warning when a curated object changes without a matching new
+record. This is useful provenance and is intentionally distinct from GitHub's
+commit/PR history and from workflow run summaries.
+
+The ai-gene-review version should use a standalone history schema (not add
+workflow metadata to `gene_review.yaml`) and a species-aware layout so symbols
+that occur in more than one organism cannot collide:
+
+```text
+history/genes/<organism>/<gene>/<timestamp>-<actor>-<shortid>.yaml
+history/projects/<project>/<timestamp>-<actor>-<shortid>.yaml
+history/modules/<module>/<timestamp>-<actor>-<shortid>.yaml
+history/schema/<target>/<timestamp>-<actor>-<shortid>.yaml
+```
+
+The target should record `kind`, repository-relative `path`, and—for gene
+targets—both `organism` and `gene_symbol`. Preserve DisMech's session actors,
+model/tool/version, issue/PR links, event vocabulary
+(`CREATE|EDIT|REVIEW|AUDIT|GENERAL`), outcome, sections, summary, details, and
+supersession mechanism. Add `gene_review`, `prediction_review`, `project`,
+`module`, `schema`, and `other` target kinds.
+
+Adopt it as a separate PR after the Shepherd cutover: add the schema,
+scaffolder, `just` recipes, layout/schema tests, documentation and AGENTS/agent
+instructions, then an advisory-only CI coverage check for changed
+`*-ai-review.yaml` and `*-predictions-review.yaml` files. Do not backfill a
+synthetic record for every existing review, and do not make history coverage a
+merge requirement until normal human and agent curation paths reliably emit
+records. Rendering per-gene history on the site can follow once real records
+exist.
+
+## September 2026: stalled PRs and independent review recovery
+
+[PR #2804](https://github.com/ai4curation/ai-gene-review/pull/2804) was formally
+approved on August 31 against its current head, `80209fb14c296fba3484e600c6bced5f91a00e9a`.
+Its September 12 stall was after review: the
+[closing pass](https://github.com/ai4curation/ai-gene-review/actions/runs/34724996466/job/103637476941)
+reported `changed files outside the allowed path scope: cache/go/terms.csv`.
+Six other PRs had the same cache-file exclusion, and two were excluded for
+curation history. The default file-path veto is removed entirely: a conflict-free
+PR does not need a filename exception once review and checks pass. An explicit
+manual `--allowed-path-prefix` restriction remains available. Approval,
+current-head binding, CI, and branch-protection requirements still apply.
+
+DisMech's separate `retry-reviews` job is ported here as
+`scripts/retry_failed_reviews.py`. It retries existing failed or timed-out review
+jobs without waiting for the agent's shortlist or the merge controller. Each
+job has its own concurrency group. The retry job uses a read token for discovery
+and a separate App token with only Actions write permission for rerun requests;
+it never pushes, merges, or posts PR comments.
+
+Scheduled retry passes execute with a default budget of five PRs. Manual runs
+default to `review_retry_mode=audit`; `execute` enables reruns and `off` disables
+the lane. `max_review_retries=0` also disables recovery without minting a writer
+token. `review_retry_delay_hours` defaults to one; successive attempts back off
+to six and then 24 hours. `pr_number` narrows recovery to a specific PR.
+Standalone script invocations also default to audit; live operation requires
+both `--execute` and `GH_RETRY_TOKEN`.
+Set the repository variable `PR_SHEPHERD_RETRY_ENABLED=false` to switch scheduled
+recovery to audit without minting a writer token; an unset or other value keeps
+the live schedule. Manual `review_retry_mode` remains independent. This switch
+does not cancel requests accepted by previous sweeps.
+
+The retry sweep checks the current PR and attempt again before acting, skips
+superseded commits, completed formal verdicts, generated-page branches, and
+already running or newer reviews, and reports actions and deferrals in the
+Actions summary. Draft state, author identity, assignment, PR age, and merge
+eligibility do not suppress recovery of an already-triggered review. GitHub's
+[rerun limits](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs)
+restrict this lane to runs less than 30 days old and below the attempt limit.
+Missing/cancelled reviews, successful runs without a verdict, and expired or
+exhausted failures still need a new dispatch from the tending agent.
+
+A live dry run exposed an additional global stall in the copied recovery logic:
+[run 32212423440](https://github.com/ai4curation/ai-gene-review/actions/runs/32212423440)
+had been marked queued since August 19, with no jobs and no API PR association.
+The original unresolved-active-run guard made that one record veto every retry.
+Recovery now reports an unassociated queue record as a diagnostic when a fresh
+read confirms it is still queued, has no jobs, and has had no updates for at
+least 24 hours. It does not cancel or restart that record. Fresh queues, other
+active states, nonempty job lists, and uncertain reads still defer recovery.
+This is a liveness policy for duplicate-review prevention, not a claim that the
+old run is terminal; a dormant run could theoretically start later.
+
+The tending prompt now recognizes maintainer-created `codex/` branches and
+requests an explicit large PR inventory instead of the CLI's first page. It
+respects assignments and holds. Review runs have a numeric PR run name for
+recovery, and real review triggers share one concurrency lane per PR. Ordinary
+comments use a separate lane so a skipped comment event cannot cancel a review.
+Reopening a PR or marking it ready also triggers review.
+
+These changes do not require merge queues. DisMech's queue enqueueing and
+deterministic candidate-selection policy have not been ported: AIGR retains its
+protected direct-merge policy. The LLM still selects which branches to tend;
+this port makes failed review recovery independent, rather than replacing all
+tending with a deterministic shortlist.
+
+Read-only verification after these changes found #2804 eligible under the full
+closing predicate, including its 41 paths, formal approval, current head,
+mergeability, and CI. A one-day retry audit with a two-PR budget selected #3006
+and #3005, deferred #3008 and #3007 at the budget, and reported no errors. Neither
+audit issued GitHub writes.
+
+Per-PR API errors deliberately make the retry job red after it writes its full
+summary and processes the other candidates. This keeps failures visible while
+isolating malformed payloads and transient errors to the affected PR. Red does
+not mean that earlier retry requests were rolled back; the summary identifies
+the accepted requests and failures separately.

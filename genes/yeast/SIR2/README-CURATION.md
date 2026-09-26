@@ -121,11 +121,11 @@ Removing these improves annotation quality without losing information, since SIR
 
 ### Supporting Code
 
-6. **generate_sir2_review.py**
-   - Python script to generate structured review YAML
-   - Data structure with all 58 unique annotations
-   - Includes all reference citations
-   - Can be run to regenerate SIR2-ai-review.yaml
+None. An earlier `generate_sir2_review.py` wholesale generator was removed: it
+had drifted from the hand-curated `SIR2-ai-review.yaml` (58 annotation dicts
+against 67 curated annotations, and stale summaries/citations), so re-running it
+would have silently reverted curation. `SIR2-ai-review.yaml` is now maintained by
+hand and validated with `just validate yeast SIR2`.
 
 ---
 

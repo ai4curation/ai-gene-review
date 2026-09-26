@@ -1,0 +1,10 @@
+# PP_3394 curation notes
+
+- UniProt evidence: The fetched UniProt record contains an alpha-isopropylmalate/homocitrate-synthase signature, in conflict with its electronic HMG-CoA lyase assignment. [file:PSEPK/PP_3394/PP_3394-uniprot.txt "InterPro; IPR002034; AIPM/Hcit_synth_CS."].
+- The same record contains an HMGL-like family assignment but, unlike MvaB, has the AIPM/homocitrate-synthase PROSITE signature rather than the HMG-CoA-lyase signature. [file:PSEPK/PP_3394/PP_3394-uniprot.txt "PROSITE; PS00815; AIPM_HOMOCIT_SYNTH_1; 1."].
+- OpenScientist reports 78.6% identity for MvaB versus characterized P. aeruginosa LiuE and 41.8% for MvaB versus PP_3394. It does not report direct PP_3394-versus-LiuE identity, and the provider alignments were not independently reproduced. [file:PSEPK/mvaB/mvaB-deep-research-openscientist.md "| mvaB (PP_3540) vs. *P. aeruginosa* LiuE/PA2011 (characterized HMG-CoA lyase) | **78.6%** |"] [file:PSEPK/mvaB/mvaB-deep-research-openscientist.md "| mvaB vs. KT2440 paralog PP_3394 | 41.8% |"].
+- These comparisons strengthen MvaB as the terminal-step exemplar but do not resolve PP_3394's substrate. The substrate-specific molecular-function and leucine-pathway annotations therefore remain UNDECIDED pending direct biochemistry.
+
+## Full-gene metabolic-scope re-review, 2026-09-20
+
+Catalytic activity is retained: uncertainty between HMGL-like and synthase-family reaction assignments does not establish loss of catalysis. Oxo-acid lyase is separately UNDECIDED because its definition specifies C-C cleavage of a 3-hydroxy acid, not any DRE-TIM reaction. The existing mvaB report and the actual BCAA module report both leave PP_3394 unresolved. The latter explicitly states: "Both are candidates for the displaced leucine terminal step; choice is **unresolved** and should be flagged." TreeGrafter PTN000031316 supports the original HMG-CoA-lyase/leucine/ketone annotations, but the target-specific reaction is not settled by a paralog comparison. A focused reaction adjudication is coordinated by the parent reviewer; no duplicate was launched.
