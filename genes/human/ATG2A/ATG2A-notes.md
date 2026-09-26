@@ -28,3 +28,16 @@ Synthesis of the Falcon (Edison Scientific) report against the existing COMPLETE
 - PMID verification (2026-06-07, PubMed ID-converter): DOI 10.1038/s41421-024-00659-y -> PMID:38622126 (ANKFY1/Wei 2024); DOI 10.1080/15548627.2023.2275905 -> PMID:37938170 (ATG9B/Chiduza 2024); DOI 10.1083/jcb.202303078 -> PMID:37796195 (CASM/Cross 2023); DOI 10.1242/jcs.261081 -> PMID:38294121 (van Vliet 2024). All four already-or-now present in references are confirmed correct; no guessed PMIDs.
 
 - Disease/physiology: no ATG2A-specific Mendelian disease established in the retrieved evidence; relevance is mechanistic (autophagy/lipid homeostasis, neurodegeneration context) [doi:10.1038/s41576-022-00562-w Yamamoto et al. 2023 Nat Rev Genet review, general]. No new disease annotation warranted.
+
+## Full-gene IBA re-review, 2026-09-20
+
+All 31 annotation rows were screened. The selective macroautophagy IBAs for mitophagy, pexophagy, glycophagy and reticulophagy are retained as non-core contexts: ATG2A performs membrane-supply work and need not recognize each cargo itself. Cached PTHR13190 places these assertions at PTN000324023. Nuclear microautophagy is separately UNDECIDED because conservation of that particular route remains unresolved; a focused OpenScientist assessment is queued.
+
+The PI3P-binding source was recovered directly: QuickGO resolves yeast ATG2/P53855 IDA to PMID:27498190, which assays a phosphoinositide-binding APT1-containing region. WIPI-enhanced recruitment of human ATG2A to PI3P membranes (PMID:31271352) is not proof that ATG2 lacks direct lipid binding, so the IBA is retained. The established core lipid-transfer role now includes ANKFY1-dependent endosomal donor contacts, directly supported by PMID:38622126, as well as ER contacts. The existing NEW ATG2-ATG18-family complex claim is grounded in human ATG2A-WIPI4 assemblies, including PMID:39174844.
+
+Live QuickGO checked 2026-09-20 marks GO:0034045 obsolete and provides GO:7770114 phagophore membrane. Both original source rows are preserved with MODIFY replacements. The earlier 'no destination exists' rationale and redundant proposal for a new phagophore membrane term are superseded. The rim/contact-site proposals remain separate. Generic interaction rows are removed for informativeness, without rejecting their assays.
+
+
+## Recovery PR evidence follow-up (2026-09-22)
+
+Incorporate the existing OpenScientist report and its route-specific divergence argument, recording the remaining lysosome/junction equivalence question for a second opinion.

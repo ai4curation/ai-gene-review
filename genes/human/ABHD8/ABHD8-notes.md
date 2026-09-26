@@ -180,3 +180,18 @@ Recorded here rather than left in PR comments, because these recur.
   review was checked with a local script that applies the same whitespace normalisation
   (36 quotes, 0 problems). UniProt quotes in particular must stay inside a single physical
   line, or they pick up the `CC   ` continuation prefix and stop being verbatim.
+
+## 2026-09-20 full-gene IBA re-review
+
+Restored broad catalytic/hydrolase inferences and retained lipid homeostasis as non-core. PA biosynthesis/LPAAT remain unresolved due to verified source conflicts. Preserved NLRP3 adaptor function; corrected generic binding and exosome treatment.
+
+No direct target assay alone does not refute an IBD, and an adaptor function can coexist with catalytic functions. Source ABHD5 LPAAT is genuinely contested, not an established function merely missing in ABHD8. The existing bioinformatics report is flagged DISPUTED with exact primary counterevidence. The redundant old NEW adaptor proposal is removed while its row-10 replacement and core function remain.
+
+- PMID:39225180: Full primary text establishes ABHD8 recruitment of ZDHHC12 to NLRP3 and absence of the HXXXXD acyltransferase motif. It does not assay and exclude all lipid hydrolase chemistry.
+- PMID:24879803: Controlled assays attribute CGI-58 LPAAT signal to E. coli PlsC contamination; human CGI-58 expressed in yeast also lacks LPAAT. Contradicts the previous analysis calling human ABHD5 activity established.
+- PMID:26745266: Reassessment refutes proposed plant CGI-58 acyltransferase and TAG/PC hydrolase activities, while cellular phosphatidylglycerol effects and known homeostasis roles remain. Source activity and source process are not equivalent.
+- PMID:18570454: Retained curated neural-stem-cell exosome proteomic detection as non-core; no effector role is required for localization.
+
+PAINT: {'family': 'PTHR42886', 'node': 'PTN008676419', 'finding': 'Fetched actual family membership and PAINT slice. Current hydrolase, LPAAT, PA-biosynthesis and homeostasis IBDs were checked. Human ABHD5/yeast Ict1/plant CGI-58 evidence is distinguished from mouse Abhd4/yeast Cld1 hydrolase evidence.'}
+
+All 16 rows were assessed, including experimental, electronic, negated and old proposed entries. All actual GOA rows and source fields remain unchanged. One redundant old reviewer-authored NEW proposal was deleted; the original reviewed-row count includes that proposal. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.
