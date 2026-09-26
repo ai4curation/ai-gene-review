@@ -1,11 +1,30 @@
 ---
 title: "Oxidative Phosphorylation (OXPHOS) Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 ---
 
 # Oxidative Phosphorylation (OXPHOS) Project
+
+**Bottom line:** oxidative phosphorylation makes most cellular ATP through four
+electron-transport complexes, two mobile carriers and the ATP synthase, built
+from about 90 subunits plus dozens of assembly factors. We prioritized 38 human
+nuclear-encoded genes across all five complexes, the carriers and CoQ/ETF
+entry points, and reviewed every existing GO annotation on them; 36 now have
+reviews in the repo (1,329 annotations: 866 accepted, 201 kept as non-core, 155
+marked over-annotated, 33 modified, 51 removed, 17 NEW). The reviews apply one
+pattern throughout: catalytic subunits enable their own activity and
+`contributes_to` the complex activity, non-catalytic subunits only contribute,
+and assembly factors (SURF1, SCO1/SCO2, COX10, COX15) are annotated to assembly
+or cofactor biosynthesis rather than to the oxidase itself. Typical removals
+were whole-complex activity on an assembly factor (SURF1 cytochrome-c oxidase
+activity) and a wrong-reaction MF (COX10 `GO:0004311`). A taxon-neutral
+[OXPHOS module](../modules/oxphos.yaml) models each complex as one catalytic
+node with its subunits as active units. The STATUS list below predates reviews
+of NDUFS2, NDUFS4, SDHC, SDHD, UQCRC1, BCS1L, ACAD9, ATP5F1A, SDHAF2, COQ8A and
+ETFDH that were done under other projects and modules; only COX7A2L and HCCS
+remain unreviewed.
 
 ## Overview
 

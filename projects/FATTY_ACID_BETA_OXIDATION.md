@@ -8,6 +8,24 @@ genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2, Ac
 
 # Mitochondrial Fatty Acid β-Oxidation (cross-species)
 
+**Bottom line:** mitochondrial β-oxidation breaks fatty acyl-CoA down two
+carbons at a time through a four-step spiral, and each step is run by a set of
+chain-length-specific enzymes. We reviewed every existing GO annotation on the
+full enzyme complement in human (10 genes) and Drosophila (16 genes, including
+scully for step ③ and the unsaturated-FAO auxiliary isomerases), plus mouse
+LCAD, and tied them together in the cross-species
+[`fatty_acid_beta_oxidation` module](../modules/fatty_acid_beta_oxidation.html).
+We chose this pathway because it concentrates recurring curation problems:
+chain-length specificity, paralog cross-transfer, moonlighting, mitochondrion
+versus peroxisome, and GO↔RHEA mapping. Across the 27 reviews (714 annotations),
+360 were accepted, 278 kept as non-core, 43 marked over-annotated, 13 modified
+and 18 removed; the removals include 8 LCAD-derived rows on ACADVL and
+SOAT-derived cholesterol acyltransferase rows on ACAT1. Six blinded
+OpenScientist runs on organelle and chain-length questions all agreed with the
+reviews. Open work: the remaining mouse orthologs, a fly DECR1 ortholog that no
+resource can assign, and a schema gap for negating an existing positive
+annotation.
+
 ## Overview
 
 A cross-species curation of the **mitochondrial fatty acid β-oxidation (FAO)
