@@ -1,5 +1,6 @@
 # ACTA1 (P68133) — review notes
 
+> Historical review journal: the 2026-09-26 source and annotation re-audit at the end supersedes earlier judgments, including stress-fiber, interaction-screen and HDA interpretations.
 Skeletal muscle α-actin. 377 aa, PANTHER PTHR11937, `PE 1: Evidence at protein level`.
 Reviewed as part of the PAINT + affinage campaign, after ten actin-family siblings
 (ACTL7A/7B, ACTL8, ACTL10, ACTR1A/1B, ACTR5, ACTR8, ACTR10, ACTRT3).
@@ -470,3 +471,79 @@ Every headline number survived all of this unchanged: 63 peptides, 9 distinguish
 
 Counts are read off the finished YAML, not tallied by hand; 50 non-`NEW` rows against 50 GOA
 rows, asserted by `build_source_entities.py`.
+
+## 2026-09-26 source and annotation re-audit
+
+This section supersedes the earlier annotation judgments and biological interpretations in this journal. The earlier record is retained as provenance, including decisions now corrected. The saved bioinformatics outputs remain historical computational results, not evidence that a particular experiment observed a shared peptide or that an interaction was false.
+
+### Baseline, scope and research access
+
+- HGNC-approved ACTA1, HGNC:129, human UniProt P68133; previous ACTA and disease aliases were checked against the [NCBI gene record](https://www.ncbi.nlm.nih.gov/gene/58) and [MedlinePlus Genetics](https://medlineplus.gov/genetics/gene/acta1/). Main baseline was `ef291d796fd8ca62db39b3549293d06e61c1004e`. Local review blob `3ae32010957cd680759886b5e3ded0359cd040ff` and the other five top-level source/render files matched GitHub's authoritative contents response. ACTA1-specific open-PR search found none; broader alias searching returned only an unrelated PSEPK PR.
+- Audited all 51 existing entries: 50 seeded source assertions plus the already-proposed muscle alpha-actinin binding entry. Original term, evidence, reference, qualifier and supporting-entity fields are unchanged. No new process or additional annotation was introduced. All 38 references and four core functions were read. All 23 PMIDs cited in the YAML and notes have genuine existing publication caches.
+- Publication caching ran alongside the research launch and confirmed 23/23 already cached. An initial offline tool-resolution failure was followed by one genuine online Falcon launch with the requested 1200-second timeout and Perplexity-lite fallback, using supported writable per-process uv directories. Both failed before provider execution because `deep-research-client` could not be resolved from PyPI (DNS after retries). There is no new provider report. The existing genuine Affinage report was read and preserved; primary evidence supplies the decisions.
+- The local cache has 15 abstract-only PMID records. Their `full_text_unavailable: true` flags are now explicit even when an external original article was read. No publication, GOA, UniProt, provider or saved bioinformatics source was hand-edited.
+
+### Primary recovery changed the stress-fiber judgment
+
+PMID:15198992, Ilkovski et al., was retrieved as the original published paper from the [University of Geneva archive](https://access.archive-ouverte.unige.ch/access/metadata/91b5d40c-2de4-4ba3-9c5d-9dea570bbc60/download), DOI `10.1093/hmg/ddh185`. The successful normal curl download is `/tmp/ACTA1-PMID15198992.pdf`; `pdftotext -layout` produced `/tmp/ACTA1-PMID15198992.txt`. The web reader initially exposed the article but later timed out; the complete local PDF recovery resolved that limitation.
+
+Results, journal page 1733, and Figure 5A show wild-type ACTA1-EGFP in C2C12 myoblast stress fibers: “stress-fibre or diffuse cytoplasmic staining”. Figure 5B(viii) and page 1734 show striated incorporation after differentiation. Thus both existing stress-fiber annotations are retained as `KEEP_AS_NON_CORE`, reflecting the observed culture context relative to mature sarcomeric function. Ectopic expression does not itself make a localization experiment IMP rather than IDA. The earlier abstract-based rejection and claim that stress-fiber incorporation was only mutant behavior were unsupported. Patient-muscle fractionation also supports the cytoskeleton and thin-filament assertions, while its insoluble fraction need not consist exclusively of normal sarcomeric filaments.
+
+### Interaction evidence and the generic-binding policy
+
+PMID:32814053 was retrieved as the [original full published article from the MDC repository](https://edoc.mdc-berlin.de/id/eprint/19322/1/19322oa.pdf), DOI `10.1016/j.celrep.2020.108050`. Genuine artifacts: `/tmp/ACTA1-PMID32814053.pdf` and `/tmp/ACTA1-PMID32814053.txt`. Results pages 2–4 report four independent screens, pairwise retesting and DULIP validation of a subset. The prior claim that three interaction-method labels established one experiment counted three times is withdrawn. This recovery does not establish whether any particular ACTA1 pair was included in the DULIP subset.
+
+The seven source pairs (ZNF20, INCA1, ASCL4, LIAT1 isoform 4, PNMA5, SYNC and CAMK2A) remain intact. Their `GO:0005515` rows now use `REMOVE` because the term supplies no informative molecular function; the physical-interaction reports are not declared false. The same policy applies to the two ANXA8 BioPlex rows (PMID:28514442, PMID:33961781) and the genuine DNase I affinity-purification interaction (PMID:12849983). Neither a non-muscle cell line nor a hypothetical actin carry-over establishes contamination. Binding to DNase I does not by itself demonstrate inhibition, so no inhibitor activity is added.
+
+PMID:18835984 differs because the exact gene-product assignment remains unresolved. The [original PMC article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2583614/), Methods, preparation of actin-modified surfaces, specifies bovine-muscle actin. This positively supports the reported HBHA interaction with muscle actin but does not establish a direct human ACTA1 assay. Because the full source is available, the generic-binding specificity policy can be applied: the human IPI row is `REMOVE` solely for being uninformative, while its direct human attribution remains explicitly unresolved. This is not a declaration that the underlying binding is false, and no specific ACTA1 activity is invented. The zero-evidence assumption from the old abstract-only reading is replaced by the actual reagent provenance.
+
+PMID:10958653 is left `UNVERIFIED` for its ACTA1-specific interaction interpretation: the cached abstract describes myotilin and alpha-actinin. UniProt's ACTA1 interaction statement alone does not demonstrate that curators deliberately omitted a reciprocal annotation. PMID:16501887 does explicitly identify ACTA1 among USP25m-associated proteins; no USP25 catalytic or proteolysis activity is transferred to its binding partner.
+
+### Extracellular HDA assignments remain unresolved
+
+The five original HDA records concern prostatic-secretions/urine exosomes (PMID:23533145), plasma microvesicles (PMID:22516433), tears (PMID:23580065), parotid exosomes (PMID:19199708), and trabecular-meshwork exosomes (PMID:21362503). Each is now `UNDECIDED`.
+
+The main text was read for the three full-cache exosome studies. It points to supplementary protein lists; the ACTA1-specific protein/peptide entries were not recovered. The two remaining caches are abstract-only. Attempts to access PMC supplement material encountered browser gating, unavailable downloads or DNS failure. The parotid paper identifies supplementary tables 1 and 2, but the file contents were not inspected; an indexed file name is not peptide evidence. The trabecular-meshwork main list includes other actins, which neither proves nor disproves ACTA1 in the full list.
+
+The preserved peptide analysis establishes that ACTA1 has both shared and distinguishing tryptic peptides. It does not identify which peptides were measured in any of these studies. Tissue enrichment, no classical secretion signal, and possible shared peptides are reasons to inspect source data, not grounds to overrule HDA curators. Likewise, absence of a distinguishing peptide in a future reanalysis would leave ambiguity rather than alone prove that ACTA1 was absent.
+
+### Phylogenetic provenance and source compartment resolution
+
+The cached PAINT table `interpro/panther/PTHR11937/PTHR11937-paint.tsv` was checked for the IBDs at PTN002631484, PTN000940351 and PTN000233075. PTNs are ancestral assertions, not irrelevant entries merely because they are not extant proteins. Their structured status now supports transfer, and IBA source_entities contain only the verified PTN proximate assertions; the extant evidence list remains in the unchanged underlying source records. ACTA1 appearing among experimental descendant sources is expected and is not circular. The retained structural-function IBD and its descendant loss annotations do not license an invented label for the entire clade. No acceptance decision is based on the number of extant donors.
+
+No ACTA1/P68133 entry was found in the local GO-CAM index. The existing source-resolution JSON identifies pig skeletal-actin P68137, mouse Acta1 P68134 and chicken smooth-muscle ACTA2 P08023. The additional Ensembl protein token on the Compara row was preserved as `UNRESOLVED`: its exact cross-reference was not independently recovered, and it is not dismissed as “not a gene product”.
+
+The cytoskeleton IEA now remains `ACCEPT` at the location-mapping source's resolution. The four cytosol TAS records from actual actin-myosin contractile events (R-HSA-390593, R-HSA-390595, R-HSA-390597, R-HSA-390598) also remain `ACCEPT` at the pathway's compartment resolution. The event names identify myosin or troponin chemistry, which is not attributed to actin. The four adhesion-context cytosol records (R-HSA-9914537, R-HSA-9934294, R-HSA-9934410, R-HSA-9934486) remain `KEEP_AS_NON_CORE`: the broad location is compatible, but generic actin-set participation does not establish an ACTA1-specific adhesion mechanism. Thus the differing cytosol actions reflect source context, not an allegation that the compartment is wrong or a rule that every duplicate must be demoted.
+
+The five ISS rows from chicken ACTA2 (P08023) are `UNDECIDED`. PMID:10633868 expressly studies smooth-muscle alpha-actin in chick endocardial mesenchyme. Its source experiment is valid; conservation of these developmental/localization assertions in ACTA1 is unresolved. Independent annotation-reviewer consultation correctly identified that paralogy, tissue context and missing target-specific evidence do not alone demonstrate transfer failure. The recovered non-sarcomeric ACTA1 localization further argues against an absolute compartment-exclusion claim. An ISS may legitimately cross paralogs; positive evidence of conservation or target-specific divergence is needed to settle these rows. Mouse Acta1 developmental rows remain non-core; PMID:2731651 is expression analysis of an actin-gene-pair perturbation, not a targeted Acta1 knockout.
+
+### Ontology and core chemistry
+
+A live QuickGO JSON request succeeded on 2026-09-26; response saved as `/tmp/ACTA1-GO-terms.json`:
+
+`https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0051371,GO:0044297,GO:0001725,GO:0003009,GO:0005200`
+
+- `GO:0051371` muscle alpha-actinin binding: binding muscle actinin isoforms, including the Z-disc proteins. The already-existing specific-binding proposal is retained on the direct human muscle affinity result in PMID:16945537; no specific ACTN accession is guessed. Its 28% mutant biopsy composition limits interpretation of the ten-fold affinity change. Rabbit-derived UniProt contact regions are not independent human mapping experiments.
+- `GO:0001725` describes a contractile actin-filament bundle with alternating polarity, cross-linking and periodic myosin. This is compatible with the reported myoblast stress fibers.
+- `GO:0044297` describes the projection-bearing cell's body, excluding projections. Its listed projection types are examples, not a rule that only neurons can carry the term. The ACTA2 donor context is known, but transfer conservation remains unresolved.
+- `GO:0003009` skeletal muscle contraction names force generation by the actin/myosin apparatus in skeletal muscle. The existing broad contraction row retains its `MODIFY` to this supported subtype; no absolute absence of ACTA1 from heart is asserted.
+- `GO:0005200` describes contribution to cytoskeletal structural integrity, fitting the filament protomer.
+
+PMID:24743229 was read in full. Its canonical biochemical control is endogenous pig skeletal-muscle alpha-actin (Methods), and Figure 6D compares phosphate release. The cached Results state: “As expected, α-actin showed an even lower release of phosphate in the Ca2+-bound compared to the Mg2+-bound form.” The paper cautions that phosphate release can lag ATP cleavage. This result-bearing support replaces the prior title-only core quote. Hydrolysis influences filament dynamics; oriented subunit polymerization establishes structural polarity. The actin ATPase is distinct from the myosin ATPase powering contraction. No claim is made that human ACTA1 kinetics have never been measured anywhere.
+
+The description now includes dominant and recessive disease mechanisms, uses predominant skeletal-muscle expression rather than absolute tissue exclusion, and omits transferred PTM details from its core biological synopsis. PMID:23673617 centers on beta-actin/ALKBH4, and PMID:30626964 concerns SETD3-dependent actin modification; neither makes ACTA1 the modifying enzyme.
+
+### Current action totals and verification
+
+| Action | Entries |
+|---|---:|
+| ACCEPT | 20 |
+| REMOVE | 11 |
+| KEEP_AS_NON_CORE | 8 |
+| UNDECIDED | 10 |
+| MODIFY | 1 |
+| NEW (retained prior proposal) | 1 |
+
+Totals are 51 entries, including 50 unchanged source assertions. The ten UNDECIDED entries are the five extracellular HDA records and five ACTA2-source ISS transfers. All eleven generic-binding rows are removed for lack of functional information; the HBHA human-protein assignment remains unresolved in the source interpretation. All primary quotes were checked against the immutable cache; external full-text evidence is identified by source URL and section. The Figure 5A excerpt uses supporting_text_fulltext, separately checked against the genuine recovered PDF text and not represented as a cached-publication quote. Source comparison and trailing-space removal both assert parsed equality outside authored review fields. The old bioinformatics claim lint encodes earlier action counts and biological conclusions; it is preserved as historical tooling, not used to force the current review back to obsolete judgments.
+
+Verification completed: `just validate human ACTA1` passed with two nonblocking warnings (source-specific cytosol action split and unused provider support). `just validate-history` passed for the newly scaffolded session, and `just render human ACTA1` succeeded. Independent annotation-reviewer consultation read all entries, four cores and 38 references; its two substantive provenance/transfer concerns were resolved and it reported no remaining biological blocker. No Git or remote mutation was performed.
