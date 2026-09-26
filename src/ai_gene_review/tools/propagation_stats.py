@@ -26,7 +26,7 @@ ACTIONS = ["ACCEPT", "KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "MODIFY",
 NEGATIVE = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
 IBA_BUCKETS = [
     ("SAME", "IBA to the same term"),
-    ("MORE_SPECIFIC", "IBA to a more specific term (already entails the ISO row)"),
+    ("MORE_SPECIFIC", "IBA to a more specific term (already entails the ISO annotation)"),
     ("MORE_GENERAL", "IBA only to a more general term (ISO adds specificity)"),
     ("NONE", "No related IBA (ISO adds a new assertion)"),
 ]
@@ -116,6 +116,8 @@ def annotation_units(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         unit = dict(group[0])
         unit["donor_lines"] = len(group)
         unit["donors"] = list({d["id"]: d for r in group for d in r.get("donors", [])}.values())
+        if "donor_count" in unit:
+            unit["donor_count"] = len(unit["donors"])
         if "donor_species" in unit:
             species = sorted({s for r in group for s in r.get("donor_species", [])})
             if len(species) > 1:
@@ -183,8 +185,8 @@ def render(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> str:
         "",
         "## What does ISO add on top of IBA?",
         "",
-        "For each ISO row, the closest IBA annotation on the same target (GO is_a/part_of",
-        "closure). Rows in the first two buckets are already implied by PAINT; the last two",
+        "For each ISO annotation, the closest IBA annotation on the same target (GO is_a/part_of",
+        "closure). Annotations in the first two buckets are already implied by PAINT; the last two",
         "are what ISO contributes beyond IBA.",
         "",
     ]
@@ -197,10 +199,10 @@ def render(rows: list[dict[str, Any]], metadata: dict[str, Any]) -> str:
         ["IBA on target", *aspects, "All ISO", "Share"],
         [[label, *(by_aspect[a][k] for a in aspects), total[k], _pct(total[k], len(iso))]
          for k, label in IBA_BUCKETS]))
-    parts += ["", "Review outcome by IBA coverage (reviewed ISO rows):", "",
+    parts += ["", "Review outcome by IBA coverage (reviewed ISO annotations):", "",
               _action_breakdown(iso, lambda r: r.get("iba_on_target", "NONE"),
                                 order=[k for k, _ in IBA_BUCKETS], label="IBA on target"),
-              "", "ISO rows not implied by IBA, split by the target's own experimental evidence:", ""]
+              "", "ISO annotations not implied by IBA, split by the target's own experimental evidence:", ""]
     beyond = [r for r in iso if r.get("iba_on_target") in {"MORE_GENERAL", "NONE"}]
     parts.append(_action_breakdown(beyond, lambda r: r["experimental_on_target"],
                                    order=[k for k, _ in OTHER_EVIDENCE],

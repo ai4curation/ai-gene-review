@@ -96,18 +96,18 @@ namesake donor and a differently named one. It prompts a check; it is not a verd
 
 ## What does ISO add on top of IBA?
 
-For each ISO row, the closest IBA annotation on the same target (GO is_a/part_of
-closure). Rows in the first two buckets are already implied by PAINT; the last two
+For each ISO annotation, the closest IBA annotation on the same target (GO is_a/part_of
+closure). Annotations in the first two buckets are already implied by PAINT; the last two
 are what ISO contributes beyond IBA.
 
 | IBA on target | biological_process | cellular_component | molecular_function | All ISO | Share |
 |---|---:|---:|---:|---:|---:|
 | IBA to the same term | 190 | 197 | 199 | 586 | 14% |
-| IBA to a more specific term (already entails the ISO row) | 95 | 81 | 88 | 264 | 6% |
+| IBA to a more specific term (already entails the ISO annotation) | 95 | 81 | 88 | 264 | 6% |
 | IBA only to a more general term (ISO adds specificity) | 144 | 174 | 64 | 382 | 9% |
 | No related IBA (ISO adds a new assertion) | 1825 | 552 | 623 | 3000 | 71% |
 
-Review outcome by IBA coverage (reviewed ISO rows):
+Review outcome by IBA coverage (reviewed ISO annotations):
 
 | IBA on target | Annotations | Reviewed | ACCEPT | KEEP_AS_NON_CORE | MARK_AS_OVER_ANNOTATED | MODIFY | REMOVE | UNDECIDED | REMOVE/OVER/MODIFY |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -116,7 +116,7 @@ Review outcome by IBA coverage (reviewed ISO rows):
 | MORE_GENERAL | 382 | 382 | 153 | 193 | 23 | 9 | 4 | 0 | 9% |
 | NONE | 3000 | 3000 | 678 | 1690 | 378 | 58 | 162 | 34 | 20% |
 
-ISO rows not implied by IBA, split by the target's own experimental evidence:
+ISO annotations not implied by IBA, split by the target's own experimental evidence:
 
 | Experimental on target | Annotations | Reviewed | ACCEPT | KEEP_AS_NON_CORE | MARK_AS_OVER_ANNOTATED | MODIFY | REMOVE | UNDECIDED | REMOVE/OVER/MODIFY |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
