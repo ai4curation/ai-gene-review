@@ -1,11 +1,31 @@
 ---
 title: "Yeast Epigenetics & Histone Inheritance"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+genes: [GCN5, ESA1, SAS2, SAS3, RPD3, HDA1, HST1, HST2, SIR2, SIR3, SIR4, ORC1, SET1, DOT1, SPT16, POB3, ASF1, RTT109, SWI1, SWI2, SWI3, SNF5, CHD1, RCO1, PHD1]
 ---
 
 # Yeast Epigenetics & Histone Inheritance
+
+**Bottom line:** budding yeast keeps silent and active chromatin states
+through cell division with a small set of histone writers, erasers, readers,
+chaperones and remodelers. We planned reviews of 27 *S. cerevisiae* genes in
+those classes (acetyltransferases, deacetylases, SIR silencing proteins,
+methyltransferases, FACT and other chaperones, SWI/SNF and CHD1, and two
+readers) to test how well GO captures their chromatin functions. The repo now
+has a review folder for 26 of the 27 symbols, covering 1,297 existing
+annotations: 796 ACCEPT, 290 KEEP_AS_NON_CORE, 148 REMOVE, 32 MARK_AS_OVER_ANNOTATED, 15
+MODIFY and 16 UNDECIDED. Most removals (126 of 148) are generic
+`protein binding` (GO:0005515) rows; the substantive corrections were the
+SAS2 and SAS3 substrate specificities and a mis-filed HST1 review that was in
+fact ZDS1. Two gaps remain: `genes/yeast/CAF1/` holds the POP2 deadenylase
+rather than the chromatin assembly factor, and CLR4 is a fission yeast gene
+with no *S. cerevisiae* review.
+
+The "29 genes" and per-phase counts in the Progress section below come from
+the December 2025 run and predate later re-reviews; the numbers above are
+recounted from the current review files.
 
 ## Overview
 

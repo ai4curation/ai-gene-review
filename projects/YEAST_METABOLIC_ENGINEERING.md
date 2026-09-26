@@ -3,9 +3,23 @@ title: "Yeast Metabolic Engineering & Bioproduction"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+genes: [PDC1, ADH1, ADH2, GPD1, GPD2, HXK1, PFK1, PYC1, TDH1, ZWF1]
 ---
 
 # Yeast Metabolic Engineering & Bioproduction
+
+**Bottom line:** scoped, not yet started. Industrial *S. cerevisiae*
+strains are engineered by redirecting flux through glycolysis and ethanol
+fermentation, cutting the glycerol byproduct and balancing NADH and NADPH.
+This project picked 10 central-carbon genes that engineers commonly target
+(PDC1, ADH1, ADH2, GPD1, GPD2, HXK1, PFK1, PYC1, TDH1, ZWF1) to check that
+their GO annotations are accurate and complete enough to support pathway
+design. None of the 10 has a review folder under `genes/yeast/` yet, and the
+repo glycolysis and pentose phosphate modules do not cite these yeast
+proteins. Before starting,
+the list is worth one check: on glucose, HXK2 rather than HXK1 is the main
+hexokinase and TDH3 the main GAPDH isoform, so the paralog pairs may be
+better reviewed together.
 
 ## Overview
 

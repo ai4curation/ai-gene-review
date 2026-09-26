@@ -1,11 +1,31 @@
 ---
 title: "Yeast DNA Repair & Chromatin Dynamics"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
 ---
 
 # Yeast DNA Repair & Chromatin Dynamics
+
+**Bottom line:** in progress, with only the chromatin arm started. Budding yeast
+repairs DNA through checkpoint signalling, homologous recombination, mismatch
+repair and damage-tolerant polymerases, and every one of these steps has to
+open and then restore chromatin. This project plans to review the GO
+annotations of 27 distinct *S. cerevisiae* genes across those pathways
+(DUN1 appears twice in the 28-line checklist). We picked the set to find where
+DNA repair and chromatin handling meet, especially the FACT histone chaperone
+and the remodelers. Four of the 27 now have reviews in the repo: SPT16 (54
+annotations), POB3 (32), CHD1 (65) and SWI1 (41), with almost every row
+accepted or kept as non-core and four removals in total. None of the
+recombination, checkpoint, mismatch-repair or ribonucleotide-reductase genes
+has a review folder, so the checklist below (0 of 28) is out of date only for
+the chromatin genes.
+
+Before the recombination work starts, several checklist labels need
+correcting: in budding yeast the 9-1-1 clamp is Ddc1-Rad17-Mec3 and RAD9 is a
+checkpoint adaptor, CHK1 is not the Rad53 homologue, and RAD3 (nucleotide
+excision repair) and REV3 (translesion synthesis) are not base-excision-repair
+genes.
 
 ## Overview
 
