@@ -1,10 +1,29 @@
 ---
 title: "Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement"
-maturity: IN_PROGRESS
-tags: [OBSOLETION, FLAGSHIP]
+maturity: SCOPING
+tags: [OBSOLETION]
+species: [human, yeast, worm]
+genes: [TOMM20, TOMM22, TOMM40, TOMM70, TIMM50, TIMM22, TIM22, TOM22, ACL4, tomm-22]
 ---
 
 # Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement
+
+**Bottom line:** Most mitochondrial proteins are imported by receptors of the
+TOM and TIM complexes that recognise an N-terminal targeting presequence. GO
+has obsoleted the generic binding term GO:0030943 *mitochondrion targeting
+sequence binding* "in favor of more specific molecular functions", and the
+receptor term the project was waiting for now exists as GO:0140436
+*mitochondrial signal sequence receptor activity* (OLS, checked 2026-09-26).
+We listed the 18 curated annotations on the old term and sorted them into
+classes, because only the TOM receptors (and probably TIM50) are true
+presequence receptors: the TIM23 and TIM22 channels, a plant phosphatase and
+the TIM23 complex records need individual decisions, so upstream ruled out a
+blanket `replaced_by`. In this repo, 10 reviews touch GO:0030943 (more than
+the eight listed below), five of them in `core_functions` (human TOMM20,
+TOMM22, TIMM50; worm tomm-22; yeast TOM22), and none uses GO:0140436 yet.
+Scoped, not yet started: the MODIFY pass is now unblocked but has not been
+done. The impact table below predates later edits; yeast ACL4's row is now
+UNDECIDED, not REMOVE.
 
 ## Overview
 
@@ -224,3 +243,10 @@ obsoletions, but no curator group is blocked waiting on AI Gene Review.
   key open dependency. Eight existing repo reviews already touch GO:0030943 and
   will need a MODIFY pass once the new term exists. No InterPro2GO / UniRule /
   UniProt-Keyword mappings to GO:0030943 were listed by upstream.
+- 2026-09-26 — OLS lists GO:0030943 as obsolete, and the replacement
+  GO:0140436 `mitochondrial signal sequence receptor activity` is live. Ten
+  repo reviews touch GO:0030943: human TOMM20, TOMM22, TOMM40, TOMM70, TIMM50,
+  TIMM22; yeast TIM22, TOM22, ACL4; worm tomm-22. Five list it in
+  `core_functions` (TOMM20, TOMM22, TIMM50, tomm-22, TOM22). The local
+  `cache/ontologies/go.tsv` still records GO:0030943 as live, so validation
+  does not flag these yet. None of the reviews uses GO:0140436.
