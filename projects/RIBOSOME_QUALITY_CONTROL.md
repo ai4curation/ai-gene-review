@@ -1,11 +1,27 @@
 ---
 title: "Ribosome Quality Control (RQC) Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [ZNF598, EDF1, GIGYF2, PELO, HBS1L, ABCE1, NEMF, LTN1, TCF25, ANKZF1, ASCC3, ASCC2, VCP]
 ---
 
 # Ribosome Quality Control (RQC) Project
+
+**Bottom line:** ribosome quality control detects stalled and colliding
+ribosomes, splits them, and destroys the incomplete nascent chain: ZNF598 and
+EDF1 sense collisions, PELO-HBS1L and ABCE1 split the ribosome, and the NEMF-LTN1
+RQC complex ubiquitinates the chain left on the 60S subunit. All 13 candidate
+genes on this page now have complete gene reviews, made during the Proteostasis
+batches (whose co-translational QC selection covers RQC) rather than under this
+project; the "Stub" status line at the bottom predates them. Across the 12 RQC
+genes (VCP excluded) the reviews assess 430 GOA rows: 276 ACCEPT, 95
+KEEP_AS_NON_CORE, 20 REMOVE, 18 MARK_AS_OVER_ANNOTATED, 17 MODIFY and 4 NEW.
+The 97 rows that use RQC-specific terms, such as `rescue of stalled cytosolic
+ribosome` (GO:0072344) and `RQC complex` (GO:1990112), were all accepted or
+added; the corrections fall on generic `protein binding` rows and on off-pathway
+terms such as DNA replication for ASCC2/ASCC3. No RQC module has been built yet,
+although six production GO-CAMs in `gocams/` already model parts of the pathway.
 
 ## Overview
 

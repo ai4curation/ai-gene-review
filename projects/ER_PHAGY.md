@@ -3,9 +3,22 @@ title: "ER-phagy (Selective ER Autophagy) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [RETREG1, RTN3, SEC62, CCPG1, TEX264, ATL3, MAP1LC3B, GABARAP, ULK1, ATG9A, ERN1, EIF2AK3]
 ---
 
 # ER-phagy (Selective ER Autophagy) Project
+
+**Bottom line:** scoped, not yet started as a project. ER-phagy is the selective
+autophagy of endoplasmic reticulum, carried out by ER-membrane receptors
+(FAM134B/RETREG1, RTN3, SEC62, CCPG1, TEX264, ATL3) that bind ATG8-family
+proteins such as LC3B and GABARAP. This page lists 12 candidate human genes but
+no ER-phagy-specific work has been done: there is no module and no gene review
+made for this project. Five candidates were reviewed for other projects (SEC62
+and ATL3 for Proteostasis, ULK1 and ATG9A for the CONDENSATES phagophore audit,
+EIF2AK3 as a Proteostasis review). Of those, SEC62 keeps its IMP `reticulophagy`
+(GO:0061709) annotation as non-core, and the ATL3 review declined to add
+reticulophagy without better evidence. The receptors that define the field,
+RETREG1, RTN3, CCPG1 and TEX264, have no review yet.
 
 ## Overview
 

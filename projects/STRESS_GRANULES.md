@@ -3,9 +3,25 @@ title: "Stress Granule Assembly Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [G3BP1, G3BP2, TIA1, TIAL1, CAPRIN1, USP10, TARDBP, FUS, HNRNPA1, HNRNPA2B1, ATXN2, VCP, PABPC1, FMR1, EIF2S1, EIF4G1]
 ---
 
 # Stress Granule Assembly Project
+
+**Bottom line:** scoped, not yet started as a project. Stress granules are
+membraneless RNA-protein condensates that form when translation initiation
+stalls under stress; G3BP1/G3BP2 and TIA1/TIAL1 nucleate them, and several
+ALS/FTD proteins (TDP-43, FUS, hnRNPA1/A2B1, ATXN2) partition into them. This
+page lists 16 candidate human genes, but there is no stress granule module and
+the core nucleators G3BP1 and G3BP2 have not been reviewed. Six candidates
+already have reviews made for other projects (TIA1, TIAL1, USP10, TARDBP,
+HNRNPA2B1, VCP). The stress-granule rows were accepted for TIA1 (8 rows,
+including `stress granule assembly`, GO:0034063), TIAL1 (with `stress granule
+assembly` added as NEW), TARDBP, and VCP (including `stress granule
+disassembly`, GO:0035617). USP10's three `negative regulation of stress granule
+assembly` rows were kept as non-core. Ten candidates, including CAPRIN1,
+FUS, HNRNPA1, ATXN2 and PABPC1, are unreviewed. The related [CONDENSATES](CONDENSATES.md) project
+covers how GO should represent condensates in general.
 
 ## Overview
 

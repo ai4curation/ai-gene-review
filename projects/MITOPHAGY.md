@@ -3,9 +3,23 @@ title: "PINK1-Parkin Mitophagy Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [PINK1, PRKN, OPTN, CALCOCO2, SQSTM1, TAX1BP1, NBR1, TBK1, BNIP3, BNIP3L, FUNDC1, PHB2, VCP, MFN2]
 ---
 
 # PINK1-Parkin Mitophagy Project
+
+**Bottom line:** scoped, not yet started as a project. In PINK1-Parkin
+mitophagy, the PINK1 kinase accumulates on damaged mitochondria and makes
+phospho-ubiquitin, which activates the Parkin (PRKN) E3 ligase; ubiquitin-binding
+receptors (OPTN, CALCOCO2, SQSTM1, TAX1BP1, NBR1) then link the organelle to
+the autophagosome. This page lists about 18 candidate human genes, but there is
+no mitophagy module and PINK1 and PRKN themselves have not been reviewed. Eight
+candidates already have reviews made for Proteostasis and other projects (OPTN,
+CALCOCO2, SQSTM1, TAX1BP1, NBR1, TBK1, BNIP3L, VCP). In those reviews mitophagy
+is a core function of OPTN (`type 2 mitophagy`, GO:0061734), CALCOCO2 and
+BNIP3L, and a non-core role of SQSTM1. BNIP3, FUNDC1, PHB2 and MFN2 are also
+unreviewed. The worm counterpart, [CAEEL_MITOPHAGY](CAEEL_MITOPHAGY.md), is
+much further along.
 
 ## Overview
 
