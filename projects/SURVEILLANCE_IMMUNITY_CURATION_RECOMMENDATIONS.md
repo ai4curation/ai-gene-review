@@ -1,11 +1,25 @@
 ---
 title: "CAEEL Surveillance Immunity Project - Comprehensive Curation Recommendations"
 maturity: COMPLETE
-tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [pmk-1, sek-1, nsy-1, tir-1, atf-7, skn-1, zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1, daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
 ---
 
 # CAEEL Surveillance Immunity Project - Comprehensive Curation Recommendations
+
+**Bottom line:** this is the consolidated recommendation list for all 18
+genes of the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md) project, organised by priority tier and by curation action
+(ACCEPT, REMOVE, MODIFY, NEW, KEEP_AS_NON_CORE, MARK_AS_OVER_ANNOTATED). It
+judged the six p38 MAPK genes ready as they stood, proposed protein-binding
+consolidation and generic-term demotion for the Priority 2 transcription
+factors, and flagged NIPI-3, LYS-7, CLEC-60 and FSHR-1 for validation. Its
+summary estimated 66-80 changes across "549+" annotations. The final YAML
+files hold 680 GOA rows plus 11 NEW rows, with 580 ACCEPT, 58
+KEEP_AS_NON_CORE, 21 MODIFY, 13 MARK_AS_OVER_ANNOTATED, 7 REMOVE and 1
+UNDECIDED, so several recommendations here (for example the ELT-2 and
+HLH-30 over-annotation calls) were not adopted. Some UniProt accessions
+below (irg-1, fshr-1, lys-7, clec-60) differ from those in the gene files.
 
 ## Overview
 

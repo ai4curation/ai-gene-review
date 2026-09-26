@@ -1,11 +1,27 @@
 ---
 title: "Parasites"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [STECR, 9BILA, BRUMA]
+species: [STECR, BRUMA]
+genes: [nas-8, cpi-2, far-1, dpy-31, gp29, mf1]
 ---
 
 # Parasites
+
+**Bottom line:** parasites have gene biology that free-living models lack:
+host invasion, immune evasion and nutrient theft at the host interface.
+This umbrella project collects GO reviews of such genes. Because parasite
+species have very few reviewed UniProt entries, we anchored it on the one
+Swiss-Prot entry in the genus *Steinernema* (the *S. carpocapsae* astacin
+nas-8) and on five secreted or surface proteins of the filarial nematode
+*Brugia malayi* (cpi-2, far-1, dpy-31, gp29, mf1). All six have completed
+reviews covering 35 GOA rows (21 ACCEPT, 6 KEEP_AS_NON_CORE, 4
+MARK_AS_OVER_ANNOTATED, 3 MODIFY, 1 REMOVE), although the gene list and
+status below still call them PENDING. The most substantive correction is on
+the CPI-2 cystatin, where an IDA *aspartic-type endopeptidase inhibitor
+activity* row was changed to cysteine-type, because the inhibited enzyme
+(asparaginyl endopeptidase, legumain) is a cysteine protease. No gene has
+deep research or notes yet, and *S. hermaphroditum* has not been started.
 
 ## Overview
 
