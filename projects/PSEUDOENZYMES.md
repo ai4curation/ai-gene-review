@@ -2,9 +2,34 @@
 title: "Pseudoenzymes Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [RAMVA, SCHPO, SACEN, PSEAE, STRCO]
+genes: [RvY_13070, RvY_00650, RvY_03757, RvY_17310, RvY_15948, Epe1, eryCII, pqsB, actI-ORF2]
 ---
 
 # Pseudoenzymes Project
+
+**Bottom line:** pseudoenzymes keep an enzyme's fold but have lost its
+catalysis, and automated pipelines (InterPro2GO, EC2GO, UniRule, ARBA, IBA)
+still give them the family's catalytic activity and the processes that follow
+from it. This project catalogs the pseudoenzymes found during gene review,
+the checks used to detect them (catalytic-residue conservation, PROSITE motif
+context, M-CSA and HMM scoring, structures), and the annotation errors they
+cause. Nine reviewed genes carry the analysis: five Cu/Zn-SOD paralogs in the
+tardigrade *R. varieornatus*, the fission yeast JmjC "reader" Epe1, the
+P450-like glycosyltransferase activator EryCII, and the non-catalytic
+condensing-enzyme subunits PqsB and ActI-ORF2. In those reviews, Epe1's
+histone demethylase rows and EryCII's monooxygenase and heme rows are
+REMOVE; the SOD activity rows on RvY_13070 (RvSOD15), RvY_00650 and RvY_03757
+and the acyltransferase rows on PqsB and ActI-ORF2 are MARK_AS_OVER_ANNOTATED.
+Two gene reviews are more cautious than the prose below: RvY_17310's SOD rows
+are UNDECIDED, and the CCS-like RvY_15948 keeps superoxide metabolic process
+as non-core rather than removing it.
+
+We did this because family-based propagation never checks whether the
+catalytic residues survive, so pseudoenzymes are a systematic, predictable
+source of false enzyme annotations. The case list is still small; a
+systematic screen across existing reviews and the human pseudokinome is the
+main open task.
 
 **Project Start Date:** 2026-04-09
 **Focus:** Identification, annotation, and curation of catalytically inactive enzyme homologs

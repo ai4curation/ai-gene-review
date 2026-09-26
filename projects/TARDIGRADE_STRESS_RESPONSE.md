@@ -1,11 +1,33 @@
 ---
 title: "Tardigrade Stress Response Protein Curation Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [RAMVA]
+genes: [Dsup, CAHS1, CAHS2, CAHS3, SAHS1, SAHS2, MAHS, RvLEAM, RvY_00650, RvY_00651, RvY_01767, RvY_03754, RvY_03757, RvY_09480, RvY_10893, RvY_13070, RvY_15948, RvY_17310]
 ---
 
 # Tardigrade Stress Response Protein Curation Project
+
+**Bottom line:** *Ramazzottius varieornatus* survives near-total desiccation,
+and with it radiation, vacuum and extreme temperature, using a set of
+intrinsically disordered proteins that each protect a different cellular
+compartment, plus a much-expanded superoxide dismutase family. We reviewed all
+18 of its curated proteins: the chromatin shield Dsup, the cytosolic CAHS,
+secretory SAHS and mitochondrial MAHS families, the LEA protein RvLEAM, the Mn-SOD
+RvY_01767, and all 10 Cu/Zn-SOD paralogs. Across 84 annotation rows the actions
+were 38 ACCEPT, 18 NEW, 11 KEEP_AS_NON_CORE, 10 MARK_AS_OVER_ANNOTATED, 3 MODIFY,
+3 UNDECIDED and 1 REMOVE. Two results stand out: `GO:0009269` response to
+desiccation was missing from every disordered protectant and was proposed as
+NEW on seven genes, and a sequence plus PROSITE analysis of the SOD family
+(`genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/`) found one structurally
+confirmed pseudoenzyme, three probably impaired paralogs, one copper chaperone
+and four likely functional enzymes.
+
+We did this because the organism is both biologically unusual and almost
+entirely electronically annotated, which makes it a good place to see what
+family-based propagation gets wrong. The SOD result is the sharp case: about
+half of an expanded antioxidant family may not be catalytic, so "more gene
+copies means more antioxidant capacity" does not hold as stated.
 
 **Project Start Date:** 2026-04-09
 **Organism:** *Ramazzottius varieornatus* (RAMVA)

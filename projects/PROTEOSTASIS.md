@@ -1,6 +1,6 @@
 ---
 title: Human Proteostasis Network
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 priority: high
@@ -97,32 +97,27 @@ review_batches:
 ---
 # Human Proteostasis Network Project
 
-## Bottom line
+**Bottom line:** the Human Proteostasis Network (PN) Annotation 4.3.11
+workbook assigns 3,123 human genes to 4,000 roles across 9 branches of protein
+synthesis, folding, trafficking and degradation, but it contains no GO IDs and
+its taxonomy overlaps GO inconsistently. We use it as a scaffold,
+prioritization layer and QA source for GO curation, not as an annotation set to
+import. We built a curated PN→GO mapping for the 2026-04-17 release in which
+every source code resolves to `mapped`, `context_only` or `no_mapping`, and
+projected it against human GOA to get 1,093 candidate GO additions. PN-guided
+batches have produced reviews for all 371 genes listed in
+[review_batches.tsv](PROTEOSTASIS/review_batches.tsv) across nine batches
+(chaperones, co-translational QC, ER proteostasis, UPS Cullin-RING ligases,
+autophagy receptors); the batch table below still marks batch 2 as in
+progress, but every one of its 50 review files now exists. The reviews turned
+up concrete fixes: wrong localizations, pseudoenzyme miscalls, F-box adaptors
+annotated as catalytic ligases, and ontology gaps.
 
-We are using the **Human Proteostasis Network (PN) Annotation 4.3.11** workbook
-(3,123 genes, 4,000 role assignments across 9 branches) as a **scaffold,
-prioritization layer, and QA source** for GO curation — not as an annotation set
-to import. The workbook contains **no GO IDs**; it is a PN-native
-Branch/Class/Group/Type/Subtype taxonomy that overlaps GO inconsistently.
-
-So far the project has:
-
-- **Reviewed 320+ human genes** across the PN branches (chaperones,
-  translation/ribosome-QC, ER proteostasis, the UPS Cullin-RING ligases, and the
-  autophagy-lysosome receptors) — eight completed batches, with a ninth ~50-gene
-  batch in progress. See the [batch table](#review-progress).
-- **Built a complete curated PN→GO mapping** for the 2026-04-17 release: every
-  source code now resolves to `mapped`, `context_only`, or (most often)
-  `no_mapping`. See [mapping status](#current-mapping-completion-status).
-- **Projected mappings against human GOA**, yielding **1,093 candidate GO
-  additions** that feed manual rereview queues.
-- **Surfaced concrete curation fixes** — wrong localizations, pseudoenzyme
-  miscalls, adaptor-vs-catalyst corrections, and ontology gaps — that PN
-  prioritization led us to (see [Highlights](#highlights)).
-
-The deliverable is a **PN→GO bridge contract** (below): every PN row classified
-as GO-actionable, explicitly non-actionable, or queued as an ontology/evidence
-problem.
+We did this because PN is the most complete expert map of human proteostasis
+genes, which makes it a good way to find genes whose GO annotations are stale
+or over-propagated. The planned deliverable is a PN→GO bridge contract (below)
+that classifies every PN row as GO-actionable, explicitly non-actionable, or
+queued as an ontology or evidence problem.
 
 ## Highlights
 

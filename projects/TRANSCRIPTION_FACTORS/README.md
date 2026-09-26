@@ -4,6 +4,27 @@ title: "Transcription Factor Annotation Review Project"
 
 # Transcription Factor Annotation Review Project
 
+**Bottom line:** having a DNA-binding domain does not make a protein a
+transcription factor, and GO's dbTF annotations (`GO:0003700` and descendants)
+are the place where that confusion shows up. We compared the 1,448 human
+Swiss-Prot dbTF annotations against InterPro domains, the UniProt KW-0805
+keyword set (2,376 proteins) and the GREEKC consortium's curated dbTF target
+set (1,449 proteins), then reviewed the proteins where the sets disagreed. GOA
+and GREEKC agree on 1,385 proteins, 95.6%. Seven of the 62 GOA-only proteins
+were reviewed in detail and all seven were over-annotated: the netrins NTN1
+and NTN3 had dbTF activity and cis-regulatory DNA binding REMOVEd, HDAC4, RPS3
+and RFXAP were MODIFYed to `GO:0003713` transcription coactivator activity,
+RFXANK's DNA-binding row was REMOVEd, and NME2's activator row was kept as
+non-core. The netrin case traced to a single PAINT node, PTN000180816, which
+grouped the netrin/laminin family PTHR10574 with the POU domain family
+PTHR11636; a family review for PTHR10574 records the root cause.
+
+The false-negative direction came out clean. Homeobox-fold ceramide synthases,
+the bHLH inhibitors ID1-4 that lack a basic region, and the NCOA coactivators
+are all correctly excluded from dbTF. The planned ML second pass has not been
+run: 945 IEA-only dbTF annotations are still waiting for DeepTFactor
+validation, and 50 GREEKC-only proteins are unreviewed.
+
 ## Objective
 
 Use AI/ML tools as a **second-pass review** to validate, challenge, and enhance existing GO annotations for transcription factors and transcriptional regulators. This addresses the gap between traditional homology-based annotation and modern deep learning approaches.
