@@ -69,10 +69,10 @@ purified transbilayer transport of those substrates.
   lipid release with taurocholate and ATP-coupling mutants. PC availability also
   facilitates cholesterol diffusion; this supports a non-core positive effect
   on cholesterol transport, not direct cholesterol-transporter activity.
-- [PMID:24045840](https://pmc.ncbi.nlm.nih.gov/articles/PMC3992575/) distinguishes
-  reduced PC secretion from preserved expression and targeting. Taurocholate-
-  stimulated cholesterol release increases in mutant cells, particularly Y403H;
-  a blanket statement that all lipid export decreases would misstate the result.
+- [PMID:24045840](https://pmc.ncbi.nlm.nih.gov/articles/PMC3992575/), full Discussion:
+  mutant cholesterol efflux is lower at absent/low taurocholate and higher at
+  high taurocholate. KEEP_AS_NON_CORE is supported within this paper, with
+  condition dependence; the abstract emphasizes only the latter result.
 - GO:0061092 and GO:2001140 are refined to direct phospholipid translocation.
   ABCB4 executes the step; the studies do not establish a separate regulator
   acting on another phospholipid translocator.
@@ -80,8 +80,8 @@ purified transbilayer transport of those substrates.
   [PMID:8106172](https://pubmed.ncbi.nlm.nih.gov/8106172/). Its verified primary
   result is loss of biliary phospholipids. GO:0032782 specifically names bile-acid
   secretion. Human ABCB4's direct PC movement supports replacing the transferred
-  process with GO:0045332 without asserting that the mouse paper contains no
-  secondary bile-acid phenotype.
+  process with GO:0033700 phospholipid efflux, preserving the biliary-release
+  context. GO:0045332 already represents the transbilayer step separately.
 - Fenofibrate-response transfers trace to mouse IDA
   [PMID:8615769](https://pubmed.ncbi.nlm.nih.gov/8615769/), with independent human
   induction in [PMID:24122873](https://pmc.ncbi.nlm.nih.gov/articles/PMC4049334/).
@@ -116,9 +116,9 @@ The SL-0070 clathrin-vesicle mapping traces through rat Abcb4 **Q08201** to
 BSEP, but the original full Results, "Distribution of HAX-1 in Rat Liver
 Subcellular Fractions," explicitly includes MDR2 in the enriched clathrin-vesicle
 fraction. The [indexed original article mirror](https://www.researchgate.net/publication/8547779_Identification_of_HAX-1_as_a_Protein_That_Binds_Bile_Salt_Export_Protein_and_Regulates_Its_Abundance_in_the_Apical_Membrane_of_Madin-Darby_Canine_Kidney_Cells)
-made that section accessible. This resolves the initial access uncertainty and
-supports a non-core trafficking location in the human ortholog. The antibody
-C219 detects MDR1/MDR2; no human-specific fractionation is claimed.
+made that section accessible. C219 detects both MDR1 and MDR2, leaving the
+donor-specific assignment unresolved despite the authors' attribution.
+The annotation and transfer assessment are UNDECIDED/UNRESOLVED.
 
 [PMID:19674157](https://pubmed.ncbi.nlm.nih.gov/19674157/) reports RACK1 binding
 to the ABCB4 linker in two-hybrid/pulldown experiments, but unsuccessful full-length
@@ -163,9 +163,9 @@ valid context for the corresponding normal membrane location and activity.
 transport and narrower substrate terms already cover the direct function;
 downstream disease phenotypes are not manufactured into additional processes.
 
-Final draft counts: 44 ACCEPT, 12 KEEP_AS_NON_CORE, 8 MODIFY, 3 UNDECIDED,
-1 REMOVE. The three unresolved rows are the two NOT ceramide assertions and the
-exosome proteomic assignment. Validation and PR follow-up are recorded below.
+Current counts: 44 ACCEPT, 11 KEEP_AS_NON_CORE, 8 MODIFY, 4 UNDECIDED,
+1 REMOVE. Unresolved rows are the two NOT ceramide assertions, the exosome
+proteomic assignment, and clathrin-vesicle localization.
 
 ## Validation — 2026-09-26 UTC
 
@@ -178,3 +178,10 @@ NOT flags, are unchanged; all 23 inferred rows have propagation assessments.
 The independent annotation reviewer inspected the completed draft and found no
 blocking biological issue. No whole-repository validation rerun was needed for
 this isolated content change beyond the campaign baseline and required PR CI.
+
+## PR follow-up — 2026-09-26 UTC
+
+Review #3135 prompted a donor-specific antibody assessment and a fuller account
+of the cholesterol assay conditions, reflected above. The source assertion
+objects remain unchanged. The original history records the pre-PR draft;
+a separate history record documents these follow-up decisions.
