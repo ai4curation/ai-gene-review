@@ -84,6 +84,22 @@ Notes on two of these:
   true-but-non-core and the core function records the step SdhE actually performs
   (`GO:0018293` protein-FAD linkage) rather than the pathway it enables.
 
+- **Why the core MF is `GO:0050660`, not `GO:0044183` protein folding chaperone.** An earlier
+  draft assigned `GO:0044183` ("Binding to a protein ... to assist in protein folding"),
+  presumably prompted by the UniProt `KW Chaperone` line. That term contradicts the evidence
+  read above: McNeil reports that SdhE is "required ... for the function, but not stability, of
+  succinate dehydrogenase" and that "The absence of FAD, however, did not prevent correct
+  assembly of SDH." SdhE is a *cofactor* chaperone, and the only chaperone-like language in the
+  source is explicitly about cofactor delivery — [PMID:22474332 "SdhE might have co-factor
+  chaperone-like functions to assist FAD incorporation into other flavoproteins."]. None of the
+  cited evidence speaks to folding or holdase activity. The human `SDHAF2` precedent does not
+  transfer either, because there `GO:0044183` rests on an IDA structure showing SDHAF2 engaging
+  the SDHA flavin and capping domains, whereas the bacterial interaction is reported as "weak
+  and/or transient". The MF is therefore `GO:0050660` flavin adenine dinucleotide binding, which
+  the primary result states directly — [PMID:22474332 "SdhE interacted with the flavoprotein
+  SdhA, directly bound the flavin adenine dinucleotide co-factor, and was required for the
+  flavinylation of SdhA."] — with `GO:0018293` retained in `directly_involved_in`.
+
 ## Open questions
 
 - Has P. putida SdhE been shown to flavinylate any substrate other than SdhA? The UniProt
