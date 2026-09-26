@@ -236,3 +236,7 @@ content changed.
 ### PR 3127 follow-up, 2026-09-25
 
 The independent reviewer correctly requested structured treatment of the old negative P1 finding. PMID:10747952 now has a per-finding OVERTURNED assessment with PMID:26773500 as superseding evidence and its verbatim quote; the P(k) and p-null findings are not rejected. The three galactosyltransferase rows now consistently refine to the donor-specific GO:0035250, with source-specific summaries. Final decisions: 9 ACCEPT, 5 MODIFY, 1 UNDECIDED. Description wording states N-glycan acceptor capacity directly; experimental scope remains in the reference assessment. The broad membrane refinement remains based on combined curated localization; an abstract-only topology prediction does not establish that the original IDA code is erroneous. No late Falcon report or surviving A4GALT research process was present when checked after the review.
+
+### Second independent review follow-up
+
+Split the original PMID:10747952 composite finding into separate P(k) restoration, M183K association, and negative P1-capacity claims. Only the negative P1 claim has the structured OVERTURNED assessment. Retained the three correct galactosyltransferase assertions as ACCEPT; the donor-specific child GO:0035250 is real, but does not fill the distinct P1 acceptor gap. Added a proposed paragloboside 4-alpha-galactosyltransferase term with a chemical definition, parent, and direct primary evidence. Final decisions return to 12 ACCEPT, 2 MODIFY, 1 UNDECIDED.
