@@ -185,3 +185,15 @@ Review #3135 prompted a donor-specific antibody assessment and a fuller account
 of the cholesterol assay conditions, reflected above. The source assertion
 objects remain unchanged. The original history records the pre-PR draft;
 a separate history record documents these follow-up decisions.
+
+
+## 2026-09-26 PR #3135 second follow-up
+
+The renewed review caught an incomplete application of the previous replacement:
+the IEA bile-acid-secretion row proposed phospholipid efflux (GO:0033700), but the
+ISS row still aliased phospholipid translocation (GO:0045332). Both derive from
+the same mouse Abcb4 evidence for loss of biliary phospholipids. The ISS row now
+uses an independent explicit GO:0033700 replacement and the same source-specific
+reason as its IEA counterpart. Existing GO:0045332 annotations and all other
+replacement references retain their original values. All 68 source assertions,
+both NOT flags and the action tally are unchanged.
