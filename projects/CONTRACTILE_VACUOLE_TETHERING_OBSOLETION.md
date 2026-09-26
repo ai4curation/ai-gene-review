@@ -1,10 +1,29 @@
 ---
 title: "Contractile Vacuole Tethering — Obsoletion & Replacement (GO:0140025)"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [DICDI]
 ---
 
 # Contractile Vacuole Tethering — Obsoletion & Replacement (GO:0140025)
+
+**Bottom line:** GO has obsoleted the process term GO:0140025
+*contractile vacuole tethering involved in discharge* because it described
+a molecular function, and replaced it with the new MF GO:7770067
+*contractile vacuole-plasma membrane tether activity* (a child of
+GO:0140177 *membrane-membrane adaptor activity*). OLS shows the old term
+obsolete and the new term live as of 2026-09-26. Only two annotations are
+affected, both IMP in *Dictyostelium discoideum*: rab8A (PMID:22323285, the
+paper that anchors the new term's definition) and p2xA (PMID:24335649). We
+recorded the change, checked the repo, and queued both genes for review,
+with p2xA flagged because a P2X cation channel is an unusual tether.
+Scoped, not yet started: neither gene is reviewed here, and no review in
+`genes/` uses either term (the "3 existing reviews" count for
+*D. discoideum* below is out of date; `genes/DICDI/` now holds 56). This is the contractile-vacuole member of the
+membrane-tether obsoletions that also include
+[ER-PM](ER_PM_TETHERING_OBSOLETION.md),
+[mito-ER](MITO_ER_TETHERING_OBSOLETION.md) and
+[vesicle tethering](VESICLE_TETHERING_OBSOLETION.md).
 
 ## Overview
 

@@ -1,10 +1,28 @@
 ---
 title: "Ciliary Basal Body-Plasma Membrane Docking — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [human]
 ---
 
 # Ciliary Basal Body-Plasma Membrane Docking — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted two ciliogenesis process terms,
+GO:0097711 *ciliary basal body-plasma membrane docking* and GO:1905353
+*ciliary transition fiber assembly*, because both are redundant with
+GO:1905349 *ciliary transition zone assembly*: docking of the mother
+centriole to vesicles and membrane is the first step of building the
+transition zone. OLS shows both terms obsolete as of 2026-09-26. We
+recorded the seven experimental annotations to GO:0097711 (two already
+removed by FlyBase, the other five moving to GO:1905349), checked the repo
+for affected reviews, and queued CEP290 and RAB3IP as the candidate
+reviews. Scoped, not yet started: no gene directly annotated to either
+obsolete term is reviewed here, and no review in `genes/` uses them. The
+only repo contact is two worm reviews, `mks-1` and `mks-3`, which propose
+GO:1905349 as a NEW annotation for the MKS transition-zone module. The
+status notes below predate the obsoletion landing, and the vesicle-tether
+MF they anticipate now exists as GO:7770062 *vesicle membrane tethering
+activity* (see the sibling [vesicle tethering project](VESICLE_TETHERING_OBSOLETION.md)).
 
 ## Overview
 

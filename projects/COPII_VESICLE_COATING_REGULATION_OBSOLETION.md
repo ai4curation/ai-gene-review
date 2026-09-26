@@ -1,10 +1,26 @@
 ---
 title: "Regulation of COPII Vesicle Coating — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [human, yeast]
 ---
 
 # Regulation of COPII Vesicle Coating — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted GO:0003400 *regulation of COPII vesicle
+coating* because the proteins annotated to it (SAR1, SEC12, SEC23, SEC16,
+SED4, PEF1, PREB) are parts of COPII coat assembly, not upstream
+regulators of it, and their annotations move to GO:0048208, now labelled
+*COPII vesicle coat assembly*. OLS shows GO:0003400 obsolete as of
+2026-09-26, and GOA rows in recent reviews already carry the new label. We
+recorded the 11 experimental annotations (8 SGD, 3 UniProt), including one
+disputed human MAPK15 row slated for removal, and the UniRule UR001628761
+mapping that needs redirecting. Scoped, not yet started: none of the 11
+affected genes is reviewed here, and no review uses GO:0003400. Nine human
+reviews do touch the replacement term: seven TRAPP subunits MODIFY a NAS
+GO:0048208 row to GO:0006888 *ER to Golgi vesicle-mediated transport*, and
+CUL3 and CSNK1D keep theirs as non-core. The proposed first reviews are
+human SAR1A and SEC23A.
 
 ## Overview
 
