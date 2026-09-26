@@ -110,6 +110,86 @@ def find_stale_flags(
     return stale
 
 
+@dataclass(frozen=True)
+class UnauditedFlag:
+    """A ``full_text_unavailable`` flag that :func:`find_stale_flags` cannot see.
+
+    Two kinds, both observed live:
+
+    * **finding-level** -- the flag sits on a ``findings[]`` entry rather than on the
+      reference. ``find_stale_flags`` only reads reference-level keys, so these were
+      invisible to every audit.
+    * **``file:`` reference** -- the flag claims the source text is not cached, about a file
+      that is checked into this repository. ``cached_full_text_availability`` is keyed on
+      PMIDs, and ``cached_full_text_available`` returns ``None`` (not ``False``) for a
+      non-literature prefix, so such a flag scored as "not recorded" and passed.
+
+    Found on ``genes/yeast/ESL1``: two finding-level flags under
+    ``file:yeast/ESL1/ESL1-uniprot.txt``, both quotes verbatim in that very file.
+    """
+
+    review_path: Path
+    reference_id: str
+    finding_index: int | None
+    reason: str
+
+
+def _repo_file_for(reference_id: str, repo_root: Path) -> Path | None:
+    """Resolve a ``file:`` reference to a path in the repo, or None."""
+    if not reference_id.startswith("file:"):
+        return None
+    rel = reference_id.split(":", 1)[1]
+    for candidate in (repo_root / rel, repo_root / "genes" / rel):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def find_unaudited_flags(
+    review_paths: list[Path], availability: dict[str, bool], repo_root: Path
+) -> list[UnauditedFlag]:
+    """Collect ``full_text_unavailable`` flags the reference-level PMID audit cannot reach.
+
+    Reported separately from :func:`find_stale_flags` rather than merged into it, because
+    ``--fix`` removes only reference-level PMID flags and :func:`audit` asserts that the
+    detector and the mutator agree on scope. Folding these in would trip that guard on every
+    run; the point of the guard is that a flag must not be stripped without being reported.
+    """
+    out: list[UnauditedFlag] = []
+    for review_path in review_paths:
+        doc = yaml.safe_load(review_path.read_text())
+        if not isinstance(doc, dict):
+            continue
+        for reference in doc.get("references") or []:
+            if not isinstance(reference, dict):
+                continue
+            identifier = str(reference.get("id") or "")
+            source = _repo_file_for(identifier, repo_root)
+            has_text = bool(source and source.read_text().strip())
+            pmid = identifier.split(":", 1)[1] if identifier.startswith("PMID:") else None
+            cached = availability.get(pmid) if pmid else None
+
+            if reference.get("full_text_unavailable") is True and has_text:
+                out.append(UnauditedFlag(review_path, identifier, None,
+                                         f"source file is in the repo: {source}"))
+            for index, finding in enumerate(reference.get("findings") or []):
+                if not isinstance(finding, dict):
+                    continue
+                if finding.get("full_text_unavailable") is not True:
+                    continue
+                # Only demonstrably FALSE flags are reported. A finding-level flag on a
+                # genuinely abstract-only record is accurate and common -- 30 of them in one
+                # PR's changed files -- and reporting those as suspect would make the audit
+                # noise, which is how a check stops being read.
+                if has_text:
+                    out.append(UnauditedFlag(review_path, identifier, index,
+                                             f"source file is in the repo: {source}"))
+                elif cached:
+                    out.append(UnauditedFlag(review_path, identifier, index,
+                                             "cached publication reports full text"))
+    return out
+
+
 def remove_stale_flags(review_path: Path, pmids: set[str]) -> int:
     """Delete the reference-level ``full_text_unavailable`` key for the named PMIDs, in place.
 
@@ -177,12 +257,37 @@ def audit(
         review_paths = sorted((repo_root / "genes").glob("*/*/*-ai-review.yaml"))
 
     stale = find_stale_flags(review_paths, availability)
+    unaudited = find_unaudited_flags(review_paths, availability, repo_root)
     echo(
         f"scanned {len(review_paths)} reviews against {len(availability)} cached publications"
     )
+    if unaudited:
+        # Reported whether or not there are stale reference-level flags: these are the ones
+        # no previous audit could see, so "no stale flags" was never the same as "no false
+        # flags". --fix does not touch them; the scope guard below depends on that.
+        by_path: dict[Path, list[UnauditedFlag]] = {}
+        for unaudited_flag in unaudited:
+            by_path.setdefault(unaudited_flag.review_path, []).append(unaudited_flag)
+        echo(
+            f"{len(unaudited)} flag(s) outside the reference-level PMID audit, in "
+            f"{len(by_path)} review(s) - remove by hand, --fix does not touch these:"
+        )
+        for unaudited_path, unaudited_flags in sorted(by_path.items()):
+            for unaudited_flag in unaudited_flags:
+                where = (
+                    "reference"
+                    if unaudited_flag.finding_index is None
+                    else f"findings[{unaudited_flag.finding_index}]"
+                )
+                echo(
+                    f"       {unaudited_path}: {unaudited_flag.reference_id} "
+                    f"({where}) - {unaudited_flag.reason}"
+                )
     if not stale:
-        echo("no stale full_text_unavailable flags")
-        return 0
+        if not unaudited:
+            echo("no stale full_text_unavailable flags")
+            return 0
+        return 1
 
     by_review: dict[Path, list[StaleFlag]] = {}
     for flag in stale:

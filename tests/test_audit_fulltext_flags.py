@@ -7,6 +7,7 @@ import pytest
 from ai_gene_review.tools.audit_fulltext_flags import (
     cached_full_text_availability,
     find_stale_flags,
+    find_unaudited_flags,
     remove_stale_flags,
 )
 
@@ -246,3 +247,94 @@ def test_frontmatter_key_found_beyond_a_fixed_byte_window(tmp_path):
         f"---\ntitle: t\n{padding}\nfull_text_available: true\n---\nbody\n"
     )
     assert cached_full_text_availability(pubs) == {"555": True}
+
+
+# --- flags the reference-level PMID audit cannot see -------------------------------------
+#
+# ESL1 carried two finding-level flags under `file:yeast/ESL1/ESL1-uniprot.txt`, both quotes
+# verbatim in that very file. `find_stale_flags` reads reference-level keys on `PMID:` ids
+# only, so it scored them as clean; `cached_full_text_available` returns None (not False)
+# for a non-literature prefix, so a separate audit scored them as accurate too.
+
+
+def _unaudited_review(tmp_path, body: str):
+    d = tmp_path / "genes" / "yeast" / "X"
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / "X-ai-review.yaml"
+    f.write_text(body)
+    return f
+
+
+def test_finding_level_flag_on_a_repo_file_is_reported(tmp_path, publications):
+    """The ESL1 shape: flag on a findings[] entry, source checked into the repo."""
+    src = tmp_path / "genes" / "yeast" / "X" / "X-uniprot.txt"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text("Present with 504 molecules/cell in log phase SD medium.\n")
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n"
+        "- id: file:yeast/X/X-uniprot.txt\n"
+        "  findings:\n"
+        "  - statement: s\n"
+        "    supporting_text: Present with 504 molecules/cell in log phase SD medium.\n"
+        "    full_text_unavailable: true\n",
+    )
+    availability = cached_full_text_availability(publications)
+    assert find_stale_flags([review], availability) == [], "precondition: the old audit is blind to it"
+
+    (flag,) = find_unaudited_flags([review], availability, tmp_path)
+    assert flag.finding_index == 0
+    assert flag.reference_id == "file:yeast/X/X-uniprot.txt"
+    assert "source file is in the repo" in flag.reason
+
+
+def test_finding_level_flag_contradicted_by_the_cache_is_reported(tmp_path, publications):
+    """Same blind spot, literature reference: the cache says full text is there."""
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n- id: PMID:111\n  findings:\n  - statement: s\n"
+        "    full_text_unavailable: true\n",
+    )
+    availability = cached_full_text_availability(publications)
+    assert find_stale_flags([review], availability) == []
+    (flag,) = find_unaudited_flags([review], availability, tmp_path)
+    assert flag.finding_index == 0
+    assert "cached publication reports full text" in flag.reason
+
+
+def test_an_accurate_finding_level_flag_is_not_reported(tmp_path, publications):
+    """A flag on a genuinely abstract-only record is correct and must stay quiet.
+
+    This is what keeps the check readable: 30 such flags sit in one PR's changed files, and
+    an audit that reports all of them is an audit nobody reads.
+    """
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n- id: PMID:222\n  findings:\n  - statement: s\n"
+        "    full_text_unavailable: true\n",
+    )
+    assert find_unaudited_flags([review], cached_full_text_availability(publications), tmp_path) == []
+
+
+def test_reference_level_file_flag_is_reported(tmp_path, publications):
+    """The reference-level half of the same gap."""
+    src = tmp_path / "genes" / "yeast" / "X" / "X-uniprot.txt"
+    src.parent.mkdir(parents=True, exist_ok=True)
+    src.write_text("some record text\n")
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n- id: file:yeast/X/X-uniprot.txt\n"
+        "  full_text_unavailable: true\n  findings: []\n",
+    )
+    (flag,) = find_unaudited_flags([review], cached_full_text_availability(publications), tmp_path)
+    assert flag.finding_index is None
+
+
+def test_a_missing_repo_file_is_not_reported(tmp_path, publications):
+    """A file: reference whose source is absent is genuinely uncached -- the flag is true."""
+    review = _unaudited_review(
+        tmp_path,
+        "references:\n- id: file:yeast/X/does-not-exist.txt\n"
+        "  full_text_unavailable: true\n  findings: []\n",
+    )
+    assert find_unaudited_flags([review], cached_full_text_availability(publications), tmp_path) == []
