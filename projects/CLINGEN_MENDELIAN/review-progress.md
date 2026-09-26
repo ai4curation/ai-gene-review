@@ -66,21 +66,22 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Active batch — 2026-09-25
+## Campaign status — 2026-09-26 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
-| A4GALT | Definitive | INITIALIZED | PR open; CI/review pending | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
-| AARS1 | Definitive | COMPLETE | PR open; CI/review pending | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
-| AARS2 | Definitive | COMPLETE | Approved; required CI pending | `cmungall/clingen-aars2` | [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128) |
+| A4GALT | Definitive | INITIALIZED | Review feedback in progress; CI passed | `cmungall/clingen-a4galt` | [#3127](https://github.com/ai4curation/ai-gene-review/pull/3127) |
+| AARS1 | Definitive | COMPLETE | Review feedback in progress; CI passed | `cmungall/clingen-aars1` | [#3129](https://github.com/ai4curation/ai-gene-review/pull/3129) |
+| AARS2 | Definitive | COMPLETE | Merged; final validation and CI passed | `cmungall/clingen-aars2` | [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128) |
 | AASS | Definitive | INITIALIZED | Audit in progress | `cmungall/clingen-aass` | — |
-| ABCA3 | Definitive | No review | Assigned; primary-source reconnaissance complete | `cmungall/clingen-abca3` | — |
-| ABCA4 | Definitive | No review | Assigned; primary-source reconnaissance complete | `cmungall/clingen-abca4` | — |
+| ABCA3 | Definitive | No review | Annotation review in progress | `cmungall/clingen-abca3` | — |
+| ABCA4 | Definitive | No review | Annotation review in progress | `cmungall/clingen-abca4` | — |
+| ABCB4 | Definitive | No review | Primary evidence and annotation review in progress | `cmungall/clingen-abcb4` | — |
 
-Project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
+Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The next unassigned nuclear protein-coding Definitive gene is **ABCB4**. No genes
-are complete for this campaign yet. ABAT is in the Moderate tier.
+The next unassigned nuclear protein-coding Definitive gene is **ABCC6**. **1 of
+2,876 genes is complete** for this campaign. ABAT is in the Moderate tier.
 
 ## Verification log
 
@@ -109,3 +110,16 @@ are complete for this campaign yet. ABAT is in the Moderate tier.
 - 2026-09-25: Project review caught unexpanded RNA/other-locus count placeholders.
   Fixed the generator and authored page, checked the complete generated output for
   unresolved placeholders, and regenerated the affected project pages.
+
+- 2026-09-26 UTC: Verified AARS2 PR [#3128](https://github.com/ai4curation/ai-gene-review/pull/3128)
+  merged on 2026-09-25 at 22:40:15 UTC as `66219c3f16cd45254d0ed751869341c1f0047855`.
+  The final gene and history validations passed, reviewer approval covered the final
+  head, all actionable feedback was answered, and required CI passed. Checked its
+  inventory row complete; the gene review's remaining evidence limitations are
+  documented rather than treated as unsupported annotations.
+
+- 2026-09-26 UTC: Project setup PR #3126 passed review and required CI and merged
+  as `2bbd35ae337fbd15918289caa9e7ddc78c4b1eb8`. A4GALT and AARS1 remain open with
+  further evidence-framing feedback being addressed; neither is counted complete.
+  ABCB4 is now assigned, with 68 source annotations seeded, publication caching
+  complete, and a genuine Falcon report available for independent verification.
