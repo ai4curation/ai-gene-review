@@ -3,7 +3,7 @@ title: "Miscitation Review Project"
 maturity: SCOPING
 tags: [PIPELINE]
 species: [human]
-genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39]
+genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, FAS, GADD45A, TNFRSF1A, MAP3K1, MAP3K2, MAP2K4, MAPK8]
 ---
 
 # Miscitation Review Project
@@ -109,7 +109,7 @@ defect is fixed by reporting it upstream.
 
 ## Seed cases
 
-Six cases surfaced during the contested-functions review. Each was re-verified here
+Six cases surfaced during the contested-functions review; a seventh, a batch case, came from the MAPK cascades review. Each was re-verified here
 against the local GOA/UniProt files and, where possible, a live query (QuickGO,
 NCBI E-utilities, EuropePMC, UniProt REST). **All six are confirmed**, in the sense
 that the factual claim in the last column was checked, not taken on report.
@@ -122,6 +122,7 @@ that the factual claim in the last column was checked, not taken on report.
 | PEX39 | UniProt `FUNCTION` for Q5I0X4 cites `PMID:37160800` with `ECO:0000269` | that PMID is a 2023 multi-author **meeting report**, not primary evidence | attachment | UniProt |
 | SULT1B1 | `PMID:23207770` IDA for `GO:0006068` ethanol catabolic process | the paper names four ethanol-sulfating SULTs and **SULT1B1 is not one of them** | `MISCITED` | GOA |
 | PNPLA3 | `PMID:21878620` as `EXP` for `GO:0003841`, no `NOT` | that paper reports **no detectable** LPAAT activity for purified PNPLA3 | attachment | GOA |
+| 36 human genes (FAS, MAPK8, MAP2K4, TLR4, CASP8, ...) | `PMID:19593445` as IEP for `GO:0071260` cellular response to mechanical stimulus | a paper on **BAD in prostate cancer**; no mechanical-stimulation experiment, none of the 36 genes mentioned | `MISCITED` (batch) | UniProt |
 
 ### NLRP3 — a dropped digit
 
@@ -220,6 +221,37 @@ impeccable.
 LPAAT activity that `PMID:21878620` could not find. The PNPLA3 review grades that pair
 `DISPUTED`. The `EXP`/`21878620` row is a miscitation *regardless* of how the dispute
 resolves.)
+
+### PMID:19593445 — one wrong PMID, thirty-six genes
+
+Found while reviewing the human JNK relay (MAP3K1, MAP2K4, MAPK8) for the
+[MAPK cascades project](MAPK_CASCADES.md). A live QuickGO query for
+`reference=PMID:19593445` returns 37 annotations, all `assignedBy: UniProt`, all dated
+2011-03-15. Thirty-six are the same row, `GO:0071260` cellular response to mechanical
+stimulus with evidence `IEP`, spread across 36 human genes that read like an
+apoptosis/inflammation expression panel:
+
+> TLR3, TLR4, TLR5, TLR7, TLR8, MYD88, IRF1, NFKB1, CD40, IL1B, TNFRSF1A, TNFRSF8,
+> TNFRSF10A, TNFRSF10B, TNFSF14, LTBR, FAS, FADD, CRADD, CASP1, CASP2, CASP5, CASP8,
+> CASP8AP2, BAK1, BAD, BNIP3, BCL10, GADD45A, CHEK1, MAP3K1, MAP3K2, MAP3K14, MAP2K4,
+> MAPK3, MAPK8
+
+The paper is *"Expression of the Bcl-2 protein BAD promotes prostate cancer growth"*.
+Its cached full text contains no mechanical-stimulation experiment and mentions none
+of these genes except BAD (total ERK appears only as a western-blot loading control). The one annotation that does match its content is the
+37th: BAD, `GO:0050679` positive regulation of epithelial cell proliferation, `IMP`.
+The pattern points to a batch import in which a mechanical-stretch expression dataset
+was filed under the wrong PMID. The intended paper has not been identified.
+
+This case also shows how a miscitation spreads inside the repo. Three earlier reviews
+(FAS, GADD45A, TNFRSF1A) kept the row as non-core and wrote summaries that described
+the paper as showing a mechanical-stimulus response, quoting only its title. On
+2026-09-26 those rows were changed to `UNDECIDED` and the reference was flagged
+`MISCITED` in all seven reviewed genes that carry it (FAS, GADD45A, TNFRSF1A, MAP3K1,
+MAP3K2, MAP2K4, MAPK8). `UNDECIDED` rather than `REMOVE`, because an expression
+change under stretch is plausible and the real source may exist. The other 29 genes
+should be flagged the same way when they are reviewed; the row is a candidate for a
+report to UniProt.
 
 ## Current state of the evidence
 
