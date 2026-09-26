@@ -58,7 +58,15 @@ def rows(doc: dict) -> list[tuple[int, dict]]:
     return list(enumerate(doc["existing_annotations"]))
 
 
-def check(doc: dict) -> list[str]:
+def check(doc: dict, exemptions: list[str] | None = None) -> list[str]:
+    """`exemptions` is injectable so the load-bearing test can withhold one entry at a time.
+
+    Computing suppression with the *whole* list, as the first version did, cannot distinguish
+    an exemption that does work from one subsumed by a neighbour: remove either and the other
+    still suppresses the probe, so both look load-bearing. Passing `RETENTION_EXEMPT` minus
+    the entry under test is what makes the assertion mean what its name says.
+    """
+    exempt = RETENTION_EXEMPT if exemptions is None else exemptions
     problems = []
     for i, a in rows(doc):
         rev = a.get("review") or {}
@@ -69,7 +77,7 @@ def check(doc: dict) -> list[str]:
 
         if action == "REMOVE":
             scan = prose
-            for ex in RETENTION_EXEMPT:
+            for ex in exempt:
                 scan = re.sub(ex, "", scan, flags=re.I)
             for m in re.finditer(RETENTION, scan, flags=re.I):
                 ctx = scan[max(0, m.start() - 60) : m.end() + 60]
@@ -91,8 +99,10 @@ def check(doc: dict) -> list[str]:
 
 def self_test() -> int:
     failures = []
+    total = [0]
 
     def expect(name: str, ok: bool, detail: str = "") -> None:
+        total[0] += 1
         print(f"  [{'PASS' if ok else 'FAIL'}] {name} {detail}")
         if not ok:
             failures.append(name)
@@ -139,25 +149,53 @@ def self_test() -> int:
     dead = [e for e in RETENTION_EXEMPT if not re.search(RETENTION, e, flags=re.I)]
     expect("every RETENTION_EXEMPT entry is reachable", not dead, str(dead))
 
-    # And each exemption must be load-bearing: the same sentence must fire without it.
-    def fires_without_exemptions(sentence: str) -> bool:
-        scan = sentence
-        return bool(re.search(RETENTION, scan, flags=re.I))
-
+    # And each exemption must be load-bearing *on its own*: with that one entry withheld and
+    # all the others still active, the probe must fire. Testing against the full list cannot
+    # tell a working exemption from one subsumed by a neighbour.
+    #
+    # `e.replace(chr(92), "")` strips backslashes so the pattern can be used as literal prose.
+    # It is deliberate that this is lossy: if an exemption ever contains a real regex
+    # metacharacter, the probe sentence stops matching the pattern, `without` fires, `with`
+    # also fires, and the assertion FAILS loudly rather than silently passing.
     for e in RETENTION_EXEMPT:
         sentence = f"Removed. {e.replace(chr(92), '')} and nothing else."
-        suppressed = not bool(check(mutate("REMOVE", "", sentence)))
+        doc_probe = mutate("REMOVE", "", sentence)
+        with_all = bool(check(doc_probe))
+        without_this = bool(check(doc_probe, exemptions=[x for x in RETENTION_EXEMPT if x != e]))
         expect(
-            f"exemption is load-bearing: {e[:40]!r} suppresses a match that would otherwise fire",
-            suppressed and fires_without_exemptions(sentence),
-            f"suppressed={suppressed} would_fire={fires_without_exemptions(sentence)}",
+            f"exemption is load-bearing on its own: {e[:38]!r}",
+            (not with_all) and without_this,
+            f"suppressed_with_full_list={not with_all} fires_without_this_entry={without_this}",
         )
 
+    # Prove the load-bearing predicate can fail. A SUBSUMED entry is one whose matches are
+    # already covered by another entry, so withholding it changes nothing and it does no work.
+    # Bare `untouched` is subsumed by `the IntAct record is untouched`, so on a sentence the
+    # broader entry also matches, withholding the narrow one leaves the probe suppressed --
+    # which is exactly the state the load-bearing assertion must refuse.
+    #
+    # The first version of this probe used a sentence the broader entry did NOT match, so
+    # nothing suppressed it and the assertion failed for the wrong reason. Caught by running
+    # it rather than by reasoning about it.
+    narrow = r"untouched"
+    probe = mutate("REMOVE", "", "Removed. the IntAct record is untouched and nothing else.")
+    with_narrow_withheld = not bool(
+        check(probe, exemptions=[x for x in RETENTION_EXEMPT + [narrow] if x != narrow])
+    )
+    expect(
+        "a subsumed exemption is detected, i.e. the load-bearing test is falsifiable",
+        with_narrow_withheld,
+        f"withholding the subsumed entry still suppressed={with_narrow_withheld}",
+    )
+
     print()
+    # Print the count rather than leaving it to be quoted from memory. A commit message and
+    # a PR comment both claimed "13/13" when the script asserts 15 things; a hand-copied
+    # tally drifts silently because nothing compares it to the script.
     if failures:
-        print(f"SELF-TEST FAILED: {failures}")
+        print(f"SELF-TEST FAILED: {len(failures)}/{total[0]} -- {failures}")
         return 1
-    print("SELF-TEST PASSED")
+    print(f"SELF-TEST PASSED: {total[0]}/{total[0]} assertions")
     return 0
 
 
