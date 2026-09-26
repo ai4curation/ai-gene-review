@@ -1,10 +1,31 @@
 ---
 title: "UniProt Proteome Removal Impact Assessment"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+species: [9INFA, PSEAI, ACEPA, RUMJO, ECO57, ANOGA, NITRP, CERSP, PSEEN, CLOCL, 9CAUD]
+genes: [M2, merB, xdhB, fae1A, stx2A, PGRPS3, PGRPS2, amoA, dorR, Q1IFG0, Q6DTY2, Q9RGE6, Q9RGE7, Q9RGE8, darB]
 ---
 
 # UniProt Proteome Removal Impact Assessment
+
+**Bottom line:** UniProt planned to drop about 58M unreviewed (TrEMBL)
+entries from redundant and non-reference proteomes by release 2026_02,
+archiving them in UniParc, which would leave any gene review keyed on one of
+those accessions pointing at an entry that no longer exists. We downloaded
+UniProt's explicit removal list and on 2026-02-03 checked all 896 UniProt
+IDs then in the repo against it:
+15 reviews, all non-model microbes, phage, influenza and mosquito proteins,
+were on the list. None of the 15 has been fixed or archived yet. A lookup
+against the UniProt REST API on 2026-09-26 shows five of them are now
+deleted from UniProtKB (PSEAI merB, ACEPA xdhB, RUMJO fae1A, ECO57 stx2A,
+PSEEN Q1IFG0) and the other ten are still live. The repo has since grown to
+about 4,990 gene folders, so the February scan no longer covers it and
+should be re-run; the `just` targets listed under Tooling are not in the
+current justfiles and would need to be restored first.
+
+We did this because a review's primary key is its UniProt accession: when
+the entry disappears, `just fetch-gene` and the validators can no longer
+refresh the review, and the curated judgement is stranded.
 
 ## Overview
 

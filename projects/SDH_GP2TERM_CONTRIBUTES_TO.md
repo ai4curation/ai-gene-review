@@ -1,10 +1,30 @@
 ---
 title: "Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [PIPELINE, FLAGSHIP]
+species: [human, 9POAL]
+genes: [SDHA, SDHB, SDHC, SDHD, NCGR_LOCUS67308]
 ---
 
 # Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)
+
+**Bottom line:** succinate dehydrogenase (respiratory complex II) is a
+four-subunit enzyme, and no single subunit carries out the whole
+succinate-to-quinone reaction (GO:0008177). GO has agreed
+(go-annotation#6414) that each subunit should link to that activity with
+`contributes_to` rather than `enables`. We audited the repo and found five
+reviews carrying GO:0008177: human SDHA, SDHB, SDHC, SDHD and one plant SDH2
+ortholog (9POAL NCGR_LOCUS67308). All five argue for `contributes_to` in
+prose, but only SDHC and one SDHA row carry the structured
+`qualifier: contributes_to` field. Scoped, not yet started: as of
+2026-09-26 no review has been edited, and the SDHB (three rows) and SDHD
+(one row) fixes are still open. PSEPK sdhA and sdhB reviews added later
+also carry GO:0008177 rows with `enables` and are not yet in the table below.
+
+The fix matters because a qualifier that lives only in prose is invisible to
+any tool that reads the YAML, and SDHA needs a real judgement: its
+flavoprotein subunit can run the succinate half-reaction alone, so `enables`
+on the parent GO:0000104 may be correct for it.
 
 ## Overview
 
