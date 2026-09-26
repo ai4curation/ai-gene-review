@@ -2,12 +2,14 @@
 title: "ISOFORMS: Genes with Clear Functional Differences Between Isoforms"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
-genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, FGFR2, PKM]
+genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, TPM3, DSCAM, FGFR2, PKM, STAT3]
 species: [human, mouse, rat, DROME]
 sidecars:
   genes: ISOFORMS/genes.csv
 ---
 # ISOFORMS: Genes with Clear Functional Differences Between Isoforms
+
+**Bottom line:** most GO annotations are made at the gene level, but alternative splicing and proteolytic cleavage can give one gene products with opposite functions, such as anti-apoptotic Bcl-xL and pro-apoptotic Bcl-xS, or neuroprotective sAPPalpha and neurotoxic amyloid-beta from APP. We reviewed every existing GO annotation on 16 paradigm genes (13 splicing cases in three tiers, plus the POMC and APP/App polyproteins), 2,774 annotation rows in all, and extended the data model to record which isoform an annotation was made on (`isoform`), NOT annotations (`negated`), and curator-defined functionally distinct products (`functional_isoforms`). We did this to measure how often gene-level annotation merges functions that belong to different products, and to give reviewers a way to say so. The conflation pattern holds across the set: 246 rows were marked over-annotated, often because one isoform's function was attached to the whole gene (8 in BCL2L1 for pro/anti-apoptotic conflation; 21 in VEGFA, whose VEGF165B isoform is anti-angiogenic; 63 in mouse App, where the page's notes attribute them to amyloid-beta-specific terms). Thirteen of the 16 reviews are marked COMPLETE; WT1 and VEGFA are still IN_PROGRESS and DSCAM is a DRAFT, and PTBP1/2 and MST1R have not been started. The checkboxes under Priority Genes predate the status section below.
 
 ## Overview
 

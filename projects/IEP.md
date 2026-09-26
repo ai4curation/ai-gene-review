@@ -1,7 +1,7 @@
 ---
 title: "Inferred from Expression Pattern (IEP) Evidence Code Review"
-maturity: IN_PROGRESS
-tags: [PIPELINE]
+maturity: MATURE
+tags: [PIPELINE, EVALUATION]
 species: [rat, ARATH, human, worm, DICDI, ECOLI, ORYSJ, MEDTR, mouse, yeast, DROME]
 genes:
   - Hmgcs2
@@ -71,6 +71,10 @@ genes:
 ---
 
 # Inferred from Expression Pattern (IEP) Evidence Code Review
+
+**Bottom line:** IEP is the experimental evidence code that infers a gene's role in a process from a change in its own expression, so every IEP row carries a leap from "its abundance moved" to "it takes part". We surveyed all 25,401 IEP annotations in UniProt-GOA and reviewed the 550 IEP rows on 221 genes in this repo, including a tiered cohort of five miRNAs from one 130-gene batch. We did this to measure whether that leap holds, and to name the ways it fails. The characteristic IEP row is true but peripheral: reviewers accepted only 22.5% of IEP rows (the lowest of any code except IPI) and kept 55.6% as non-core, while 16.7% were flagged as over-annotated, modified or removed. Seven failure patterns recur, led by inducible bystanders (a detox enzyme collecting one `response to X` term per induction paper) and developmental time-courses read as tissue-building roles. Globally, 1,110 of the 1,147 cellular-component IEP rows that break GORULE:0000006 trace to a single ECO class (ECO:0000279) and could be cleared by one mapping change.
+
+The dispositions come from this repository's own AI reviews, so the rates measure one primed reviewer population. The worked examples below carry the argument, and the open action items (a developmental cohort, the *E. coli* DNA-damage batch, independent disposition data) are listed at the foot of the page.
 
 ## Overview
 

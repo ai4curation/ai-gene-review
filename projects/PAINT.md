@@ -1,11 +1,15 @@
 ---
 title: "PAINT Human No-IBA Gene Review Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
 ---
 
 # PAINT Human No-IBA Gene Review Project
+
+**Bottom line:** PAINT curators annotate ancestral nodes in PANTHER trees, and those calls reach human genes as IBA annotations; human genes with no IBA at all may be poorly characterized, divergent, or lack orthologs with experimental evidence. This project works through a list of 7,593 such genes (7,524 distinct symbols), giving each two deep research reports and a full AI-assisted review of its existing GO annotations. We did this to find where phylogenetic annotation has a gap or a wrong node, and to see what the literature supports for genes that inherit nothing. As of 2026-09-26, 715 of the listed genes have a completed review (not all written under this project), covering 24,409 annotation decisions: 11,926 ACCEPT, 5,786 KEEP_AS_NON_CORE, 2,778 MARK_AS_OVER_ANNOTATED, 1,475 MODIFY, 1,338 REMOVE, 902 NEW and 204 UNDECIDED. The status section below (635 genes, 2026-09-04) predates this count.
+
+The headline lessons are that the no-IBA list is stale (most genes in the 2026-09-04 batch now receive IBAs), that the recurring real gap is families with no molecular-function IBD at all, and that gene names mislead: PLD3 and PLD4, named as phospholipases D, are 5'-3' exonucleases, and PLD5 is catalytically inactive. The 2026-09-04 batch added structured PANTHER FamilyReviews for all 19 of its families; one of them (PTHR48178, PEX2) found an IBD placed on a PEX2/PAF1 name confusion.
 
 ## Overview
 
