@@ -76,20 +76,24 @@ are therefore expected; existing human reviews still link normally.
 | AASS | Definitive | INITIALIZED | Merged; final validation and CI passed | `cmungall/clingen-aass` | [#3133](https://github.com/ai4curation/ai-gene-review/pull/3133) |
 | ABCA3 | Definitive | No review | Merged; final validation and CI passed | `cmungall/clingen-abca3` | [#3134](https://github.com/ai4curation/ai-gene-review/pull/3134) |
 | ABCA4 | Definitive | No review | Merged; final validation and CI passed | `cmungall/clingen-abca4` | [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) |
-| ABCB4 | Definitive | No review | Both biliary secretion replacements corrected; current-head review and CI pending | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
+| ABCB4 | Definitive | No review | Merged; final approval and required CI passed | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
 | ABCC6 | Definitive | No review | Merged; final approval and required CI passed | `cmungall/clingen-abcc6` | [#3138](https://github.com/ai4curation/ai-gene-review/pull/3138) |
-| ABCC8 | Definitive | No review | Validated follow-up published as draft; PMID:16924481 cache required | `cmungall/clingen-abcc8` | [#3136](https://github.com/ai4curation/ai-gene-review/pull/3136) |
-| ABCC9 | Definitive | No review | Review changes requested on quote scope; follow-up in progress | `cmungall/clingen-abcc9` | [#3148](https://github.com/ai4curation/ai-gene-review/pull/3148) |
-| ABCD1 | Definitive | No review | Published as draft; PMID:16213491 cache required | `cmungall/clingen-abcd1` | [#3150](https://github.com/ai4curation/ai-gene-review/pull/3150) |
-| ACAD8 | Definitive | INITIALIZED | Current-head approval; protected auto-merge awaits required CI | `cmungall/clingen-acad8` | [#3151](https://github.com/ai4curation/ai-gene-review/pull/3151) |
-| ACAD9 | Definitive | COMPLETE | Current-head approval; protected auto-merge awaits required CI | `cmungall/clingen-acad9` | [#3152](https://github.com/ai4curation/ai-gene-review/pull/3152) |
-| ACADM | Definitive | COMPLETE | Audit published as draft; PMID:18459129 cache required | `cmungall/clingen-acadm` | [#3156](https://github.com/ai4curation/ai-gene-review/pull/3156) |
-| ACADS | Definitive | COMPLETE | Review changes requested on matching binding rows; follow-up in progress | `cmungall/clingen-acads` | [#3155](https://github.com/ai4curation/ai-gene-review/pull/3155) |
-| ACADSB | Definitive | INITIALIZED | Review changes requested on chemistry wording and provenance; follow-up in progress | `cmungall/clingen-acadsb` | [#3154](https://github.com/ai4curation/ai-gene-review/pull/3154) |
-| ACADVL | Definitive | COMPLETE | Audit in progress using existing cached sources | — | — |
-| ACAN | Definitive | COMPLETE | Audit published as draft; PMID:11222505 cache required | `cmungall/clingen-acan` | [#3153](https://github.com/ai4curation/ai-gene-review/pull/3153) |
-| ACAT1 | Definitive | COMPLETE | Audit in progress using existing cached sources | — | — |
-| ACOX1 | Definitive | INITIALIZED | Audit in progress using existing cached sources | — | — |
+| ABCC8 | Definitive | No review | Draft; biological feedback resolved and identifier correction published; PMID:16924481 cache required | `cmungall/clingen-abcc8` | [#3136](https://github.com/ai4curation/ai-gene-review/pull/3136) |
+| ABCC9 | Definitive | No review | Merged; final approval and required CI passed | `cmungall/clingen-abcc9` | [#3148](https://github.com/ai4curation/ai-gene-review/pull/3148) |
+| ABCD1 | Definitive | No review | Draft; elongation follow-up published; re-review pending and PMID:16213491 cache required | `cmungall/clingen-abcd1` | [#3150](https://github.com/ai4curation/ai-gene-review/pull/3150) |
+| ACAD8 | Definitive | INITIALIZED | Merged; final approval and required CI passed | `cmungall/clingen-acad8` | [#3151](https://github.com/ai4curation/ai-gene-review/pull/3151) |
+| ACAD9 | Definitive | COMPLETE | Merged; final approval and required CI passed | `cmungall/clingen-acad9` | [#3152](https://github.com/ai4curation/ai-gene-review/pull/3152) |
+| ACADM | Definitive | COMPLETE | Draft; biological blocker resolved; PMID:18459129 cache required | `cmungall/clingen-acadm` | [#3156](https://github.com/ai4curation/ai-gene-review/pull/3156) |
+| ACADS | Definitive | COMPLETE | Merged; final approval and required CI passed | `cmungall/clingen-acads` | [#3155](https://github.com/ai4curation/ai-gene-review/pull/3155) |
+| ACADSB | Definitive | INITIALIZED | Merged; final approval and required CI passed | `cmungall/clingen-acadsb` | [#3154](https://github.com/ai4curation/ai-gene-review/pull/3154) |
+| ACADVL | Definitive | COMPLETE | Nucleoid and narrative follow-up published; current-head review and CI pending | `cmungall/clingen-acadvl` | [#3157](https://github.com/ai4curation/ai-gene-review/pull/3157) |
+| ACAN | Definitive | COMPLETE | Draft; all biological blockers resolved; PMID:11222505 cache required | `cmungall/clingen-acan` | [#3153](https://github.com/ai4curation/ai-gene-review/pull/3153) |
+| ACAT1 | Definitive | COMPLETE | Draft; catalytic-attribution follow-up published; re-review and eight donor caches pending | `cmungall/clingen-acat1` | [#3158](https://github.com/ai4curation/ai-gene-review/pull/3158) |
+| ACOX1 | Definitive | INITIALIZED | Draft; source-provenance follow-up published; re-review and PMID:16672280 cache pending | `cmungall/clingen-acox1` | [#3159](https://github.com/ai4curation/ai-gene-review/pull/3159) |
+| ACOX2 | Definitive | INITIALIZED | Draft; new audit published; six notes-inclusive publication caches required | `cmungall/clingen-acox2` | [#3161](https://github.com/ai4curation/ai-gene-review/pull/3161) |
+| ACSL4 | Definitive | COMPLETE | Draft; new audit published; notes-only PMID:23766516 cache required | `cmungall/clingen-acsl4` | [#3160](https://github.com/ai4curation/ai-gene-review/pull/3160) |
+| ACTA1 | Definitive | COMPLETE | Substantive audit in progress | — | — |
+| ACTA2 | Definitive | COMPLETE | Substantive audit in progress | — | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -109,14 +113,13 @@ requirement remains outstanding. ABCG5 initialization also failed at the normal
 UniProt fetch because DNS access was unavailable; no seed files were invented.
 ABCG5, ABCG8, ABHD12 and ABHD5 remain queued in the normal alphabetical order.
 While those source downloads are unavailable, workers are auditing the next
-available cached reviews, progressing through ACADVL, ACAT1 and ACOX1. This temporary
-scheduling does not mark the earlier unseeded genes complete. The concurrent cached-review batch assigned ACAN before ACADVL; that was a scheduling exception to strict alphabetical order, and ACADVL is now actively being audited. ACAD8's genuine
+available cached reviews, now reaching ACTA1 and ACTA2. This temporary
+scheduling does not mark the earlier unseeded genes complete. The concurrent cached-review batch assigned ACAN before ACADVL; that was a scheduling exception to strict alphabetical order, and ACADVL has a dedicated audit PR with a published follow-up. ACAD8's genuine
 Falcon/fallback launch attempts failed at dependency retrieval before provider
 contact; its manual primary-source research is documented without a fabricated report.
 
 The complete log of ABCB4's second review attempt reports the review account's
-session limit, with reset at **2026-09-27 01:00 UTC**. Its earlier current-head
-comment accepted the biological fixes, but the formal approval was never recorded.
+session limit, with reset at **2026-09-27 01:00 UTC**. That earlier comment accepted the biological fixes, but did not record formal approval at the time. ABCB4 later received current-head approval and merged.
 The subsequent ABCB4 and ABCC9 reviews completed with concrete changes requested. Later ACAD8 and ACAD9 workflow runs completed successful reviews before that reset
 time, demonstrating that the earlier failure was no longer universal. Reran the
 earlier failed ABCB4 and ABCC9 reviews after that new evidence. Keep the normal
@@ -125,7 +128,7 @@ outage window.
 
 Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **7 of
+The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **13 of
 2,876 genes are complete** for this campaign. ABAT is in the Moderate tier.
 
 ## Verification log
@@ -314,3 +317,44 @@ The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **7 o
   pages; this entry corrects that decision. ABCA3, ABCA4 and ABCC6 remain linked
   because their pages have merged. Future tracking renders must use the target
   Git tree's gene availability rather than the coordinator's working directories.
+
+- 2026-09-26 22:38 UTC: Confirmed ACAD8 #3151 merged at 22:20:09 UTC as
+  `9e34ed516aaa199a283a5042f6adf3b60ae45d54` and ACAD9 #3152 merged at 22:25:09
+  as `e0d565bddebefd72f7c1c32562b588f75a893f69`; both final heads were approved
+  and required CI succeeded. Checked their inventory rows complete: nine total.
+  Published ACADVL #3157 (42 source rows, clean validation) and ACAT1 draft #3158
+  (49 source rows, eight missing donor caches listed). Published quote-scope
+  corrections for ABCC9, matching binding judgments for ACADS, chemistry/provenance
+  corrections for ACADSB, and the glycogen participation correction for ACADM.
+  The queue now records thirteen latest revisions and 84 hashes, verified against
+  their recorded Git trees. ABCC9's latest four-file follow-up replaces its earlier
+  34-file initial manifest; historical commits retain the earlier snapshot.
+  Receipts identify published trees, not necessarily each PR's live head.
+
+- 2026-09-26 22:38 UTC: Reviewed feedback on drafts as well as ready PRs. ABCC8
+  needs a cache-availability flag correction; ABCD1 needs its elongation actions
+  reconciled with source evidence; ACAN needs binding, localization, qualifier and
+  narrative corrections. All retain required missing-cache gates. ACADM's biological
+  blocker is resolved; its missing PMID:18459129 cache still blocks readiness.
+  ACOX2 research is preserved while ACAN feedback takes priority. Targeted fetches
+  and a read-only search of available local checkouts and current main found none
+  of the missing publication caches; no replacements were invented.
+
+- 2026-09-26 23:10 UTC: Confirmed four further completed genes: ABCB4 #3135 at 22:41:04,
+  ACADS #3155 at 22:46:40, ABCC9 #3148 at 22:49:06, and ACADSB #3154 at
+  22:57:39 UTC. Each final head was approved and required CI passed. The inventory
+  now checks 13 of 2,876 genes complete. Project progress PR #3137 also merged;
+  this is a separate tracking snapshot. Published ACOX1 #3159, ACSL4 #3160 and
+  ACOX2 #3161 as drafts with explicit required-cache gates. Updated ACAN, ABCC8,
+  ABCD1, ACAT1 and ACADVL follow-ups. The queue records 16 latest revisions and
+  64 file hashes, all checked against their immutable published Git trees.
+  Earlier larger manifests remain recoverable through their publication receipts.
+
+- 2026-09-26 23:10 UTC: ACAN and ABCC8 re-reviews accepted the biological fixes
+  and clarified that citation verification and cache availability are separate.
+  Missing caches still prevent undrafting. ABCC8 identifier-spacing feedback is
+  corrected in current prose and a new history record; published history remains
+  unchanged. Notes-inclusive citation checks also identified ACSL4 PMID:23766516
+  and six ACOX2 missing records, now explicit in their draft gates. Ordinary PubMed
+  endpoint and fetch retries still failed DNS despite an unrelated institutional
+  PDF download succeeding. No source or research report was fabricated.
