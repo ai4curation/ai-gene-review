@@ -405,6 +405,28 @@ def get_cached_publication(
     return None
 
 
+def accept_full_text(content: str | None, is_complete: bool, abstract: str) -> bool:
+    """Whether fetched PMC text may be recorded as ``full_text_available``.
+
+    ``FullTextResult.is_complete`` reports what the provider *claimed*, not what it
+    returned. ``fetch_pmc_fulltext``'s HTML and PDF fallbacks can yield a repository
+    landing page or a citation export that satisfies it, and this path used to set the
+    flag straight from it -- which is how a RIS dump became "full text" for PMID:12534463
+    and cost twelve accurate ``full_text_unavailable`` flags across ten reviews. The warm
+    sweep already applied a content guard; this writer did not, and it is the path
+    ``cache_publication(force=True)`` uses and the validator's error message recommends.
+
+    Split out as a named function rather than left inline so it can be tested without
+    faking Entrez. A first attempt monkeypatched a function that does not exist, so the
+    stub was inert and the test passed with the guard deleted.
+    """
+    if not is_complete or not content:
+        return False
+    from ai_gene_review.etl.publication_warm import is_usable_full_text_for_abstract
+
+    return is_usable_full_text_for_abstract(content, abstract)
+
+
 def fetch_pubmed_data(
     pmid: str, use_cache: bool = True, cache_dir: Path = Path("publications")
 ) -> Optional[Publication]:
@@ -523,8 +545,11 @@ def fetch_pubmed_data(
         if pmcid:
             full_text_result = fetch_pmc_fulltext(pmcid)
             publication.full_text = full_text_result.content
-            # Only mark as available if we got the complete article, not just abstract
-            publication.full_text_available = full_text_result.is_complete
+            publication.full_text_available = accept_full_text(
+                full_text_result.content,
+                bool(full_text_result.is_complete),
+                abstract or "",
+            )
             publication.full_text_extraction_method = full_text_result.extraction_method
 
         # Cache the publication if we fetched it

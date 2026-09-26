@@ -557,3 +557,73 @@ def test_genuine_body_text_is_still_accepted():
         "reciprocal best hits and conserved active-site residues."
     ) * 4
     assert is_usable_full_text(real, _CACHED_RECORD) is True
+
+
+def test_the_abstract_wrapper_matches_the_body_based_guard():
+    """``cache_publication`` holds an abstract, not a cache-file body -- same verdict either way."""
+    from ai_gene_review.etl.publication_warm import is_usable_full_text_for_abstract
+
+    assert is_usable_full_text_for_abstract(_LANDING_PAGE_BODY, _LANDING_PAGE_ABSTRACT) is False
+    real = (
+        "Chemotaxis in KT2440 is mediated by methyl-accepting proteins; disruption of cheZ "
+        "abolished dephosphorylation of CheY-P in vitro, and PP_5078 encodes the "
+        "3-dehydroquinate synthase of the shikimate pathway."
+    ) * 4
+    assert is_usable_full_text_for_abstract(real, _LANDING_PAGE_ABSTRACT) is True
+
+
+def test_accept_full_text_rejects_a_citation_dump():
+    """The writer that caused the incident, now guarded and reachable by a test.
+
+    ``fetch_pubmed_data`` set ``full_text_available`` straight from
+    ``FullTextResult.is_complete``, which reports what the provider *claimed*. The warm
+    sweep had a content guard; this path had none -- and it is the path
+    ``cache_publication(force=True)`` uses and the validator's error message recommends.
+
+    Two earlier attempts at this test were worthless: one patched ``fetch_pubmed_data``
+    itself, bypassing the guard entirely, and one patched a function name I had invented,
+    so the stub was inert. Both passed with the guard deleted. Extracting the decision as
+    ``accept_full_text`` is what makes it testable without faking Entrez.
+    """
+    from ai_gene_review.etl.publication import accept_full_text
+
+    assert accept_full_text(_LANDING_PAGE_BODY, True, _LANDING_PAGE_ABSTRACT) is False
+
+
+def test_accept_full_text_keeps_genuine_body_text():
+    """Narrow: a real paper body is still accepted."""
+    from ai_gene_review.etl.publication import accept_full_text
+
+    real = (
+        "Chemotaxis in KT2440 is mediated by methyl-accepting proteins; disruption of cheZ "
+        "abolished dephosphorylation of CheY-P in vitro, and PP_5078 encodes the "
+        "3-dehydroquinate synthase of the shikimate pathway."
+    ) * 4
+    assert accept_full_text(real, True, _LANDING_PAGE_ABSTRACT) is True
+
+
+def test_accept_full_text_requires_the_provider_claim_too():
+    """A provider that did not claim completeness is still not full text."""
+    from ai_gene_review.etl.publication import accept_full_text
+
+    real = "Genuine body prose about chemotaxis and the shikimate pathway. " * 20
+    assert accept_full_text(real, False, _LANDING_PAGE_ABSTRACT) is False
+    assert accept_full_text(None, True, _LANDING_PAGE_ABSTRACT) is False
+
+
+def test_fetch_pubmed_data_actually_calls_the_guard():
+    """The wiring, which the value tests above cannot see.
+
+    Deleting the call site and setting ``full_text_available = is_complete`` again leaves
+    every ``accept_full_text`` test passing -- the exact shape that let a dropped call site
+    through earlier in this PR. ``fetch_pubmed_data`` needs Entrez to run, so the wiring is
+    asserted against its source instead.
+    """
+    import inspect
+    from ai_gene_review.etl import publication as pub
+
+    src = inspect.getsource(pub.fetch_pubmed_data)
+    assert "accept_full_text(" in src, "fetch_pubmed_data no longer routes through the guard"
+    assert "full_text_available = full_text_result.is_complete" not in src, (
+        "the unguarded assignment is back"
+    )

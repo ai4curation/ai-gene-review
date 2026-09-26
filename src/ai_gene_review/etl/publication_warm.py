@@ -208,6 +208,19 @@ def _abstract_text(body: str) -> str:
     return section.strip()
 
 
+def is_usable_full_text_for_abstract(text: str, abstract: str) -> bool:
+    """``is_usable_full_text`` for a caller that already holds the abstract.
+
+    ``cache_publication`` fetches and has the abstract in hand, rather than a cache-file
+    body to parse it out of. It previously applied no content check at all -- it set
+    ``full_text_available`` straight from ``FullTextResult.is_complete`` -- which is how a
+    repository landing page and a RIS citation export became "full text" for PMID:12534463
+    and cost twelve accurate flags. That path is the one this repo's own error message now
+    tells authors to use, so it needs the same guard as the warm sweep.
+    """
+    return is_usable_full_text(text, f"{ABSTRACT_HEADER}{abstract}\n")
+
+
 def is_usable_full_text(text: str, body: str) -> bool:
     """Return True if retrieved text is genuine body text for this record.
 
