@@ -2,9 +2,29 @@
 title: "UniPathway Unique Terms Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [human, PSEPK, RHOPA, CUPNH, FERPA, 9ARCH, DESPS, POLH7, BRADI]
 ---
 
 # UniPathway Unique Terms Project
+
+**Bottom line:** UniPathway is an archived pathway vocabulary whose mapping
+(`GO_REF:0000041`) still supplies biological-process annotations in GOA. We
+asked where it is the only source for a gene-term pair, after removing rows that
+another source already supports at the same term or a more specific descendant.
+That closure filter cuts human UniPathway rows from 1,129 to 247, and we ran the
+same scan across 13 single-species databases and 6 clade aggregates. We then
+reviewed 32 exemplar genes across 9 organisms, from human E3 ligase adaptors to
+bacterial denitrification enzymes and Brachypodium cell-wall enzymes. Of the 32
+UniPathway rows reviewed, 24 were accepted as they stand; the errors are specific: UBA7
+is an ISG15 enzyme swept into `protein ubiquitination` (MODIFY), nrfA is a
+dissimilatory nitrite reductase mapped to nitrate assimilation (REMOVE), and the
+NorR regulators were attached to denitrification as if they were enzymes
+(MARK_AS_OVER_ANNOTATED).
+
+We did this to decide whether a legacy, unmaintained source should be trusted,
+cleaned, or retired. The answer so far is that UniPathway is a net positive gap
+filler, and the risk sits in broad pathway buckets rather than in wholesale
+process conflation as seen with SPKW.
 
 ## Overview
 

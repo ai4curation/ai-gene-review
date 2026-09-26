@@ -1,10 +1,32 @@
 ---
 title: "SwissProt Keywords (SPKW) Unique Terms Project"
-maturity: MATURE
-tags: [PIPELINE, FLAGSHIP]
+maturity: COMPLETE
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
+species: [human, SCHPO, ANOGA, DROME, PSEPK, ARATH, BPT4, ECO57]
 ---
 
 # SwissProt Keywords (SPKW) Unique Terms Project
+
+**Bottom line:** UniProt keywords were mapped to GO terms (`GO_REF:0000043`),
+and for many genes a keyword was the only source of an annotation. We reviewed
+genes whose annotation rested solely on such a keyword, in 12 subprojects that
+cover human apoptosis, rhythm and autophagy terms, five model or vector
+organisms, phages, viruses and non-Arabidopsis plants (137 genes by the results
+table below; the status list says 133). Eukaryotic process keywords were the
+problem: 79 to 100% of reviewed apoptosis, autophagy, rhythm and *S. pombe*
+meiosis rows were over-annotations, mostly because a gene that regulates or is
+merely active during a process was annotated as participating in it. Bacterial
+keyword rows were mostly sound (one of four *P. putida* cases flagged). GOA
+retired the SPKW pipeline for all cellular organisms around April 2026, so this
+work is now retrospective. The plant subproject shows the cost of that blanket
+removal: only about 15% of plant SPKW-unique terms carried real over-annotation
+risk, and correct facts such as DELLA gibberellin signaling (RHT1) and patatin
+storage activity (PATB1) were lost with the bad ones.
+
+We did this to find which keyword-to-GO mappings are systematically unsafe and
+why, so that the same checks can be applied to other mapping sources (the
+UniPathway project reuses its closure filter), and to give GOA evidence about
+what its retirement discarded.
 
 ## Overview
 

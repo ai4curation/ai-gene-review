@@ -2,9 +2,35 @@
 title: "UniProt CAUTION Note Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [human]
+genes: [RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2, DPYSL2, DPYSL3, DPYSL4, CRMP1, ILK, ROR1, CASP12, AZIN2]
 ---
 
 # UniProt CAUTION Note Project
+
+**Bottom line:** UniProt curators attach free-text CAUTION comments when a
+function is contested, was reclassified, rests on a retracted paper, or belongs
+to a domain that has lost its catalytic residues. Those are the cases where
+automated GO annotation is most likely to be wrong, so we used CAUTION notes as
+a worklist. A survey of reviewed UniProt found 14,830 CAUTION notes on 14,513
+entries, and two queries turned them into over-annotation flags: a positive
+parent MF term sitting above a `NOT`-ed child (Query A), and a CAUTION-cited
+paper used for a positive annotation that is never negated (Query B). Run
+against genes already curated here, the strong Query A flags matched the
+curators' decisions in 8 of 11 cases. Run across all of UniProt, they
+rediscovered known pseudoenzyme families (the CRMP/DPYSL proteins, ILK, ROR1,
+CASP12, AZIN2) that still carry electronic catalytic terms. We reviewed 13
+human genes from this worklist. Nine are pseudoenzymes that kept an inferred (IEA or IBA)
+catalytic term (DPYSL5, DPYSL2, DPYSL3, DPYSL4, CRMP1, ILK, ROR1, CASP12,
+AZIN2); each review removes at least one of these catalytic rows, while
+DPYSL4 leaves its broad hydrolase row UNDECIDED because of a reported
+deacetylation activity in mouse CRMP3. The Pending list below
+still names UniProt-wide scaling, which is done.
+
+We did this because a curator's written warning is a cheap, precise pointer to
+annotations that deserve scrutiny, and because the GO `NOT` qualifier turns out
+to be its curated counterpart: the highest-value targets are CAUTIONs with no
+matching `NOT`.
 
 ## Overview
 

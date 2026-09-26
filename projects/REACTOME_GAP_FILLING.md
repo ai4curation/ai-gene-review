@@ -1,10 +1,31 @@
 ---
 title: "Reactome Black Box Event Gap-Filling"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [PIPELINE]
+species: [human]
+genes: [ABCD3]
 ---
 
 # Reactome Black Box Event Gap-Filling
+
+**Bottom line:** Reactome has "black box events": reactions that must happen,
+often transport across an organelle membrane, but whose catalyst or transporter
+is not assigned. With Reactome curators, we are testing whether gene reviews can
+supply those missing proteins. One pilot is done: the review of human ABCD3
+(PMP70), which assessed 81 GO annotations and proposed a NEW
+`GO:0015125` bile acid transmembrane transporter activity, making ABCD3 the
+candidate for importing C27 bile-acid CoA esters (DHCA-CoA, THCA-CoA) into the
+peroxisome. That call rests on three independent lines of evidence: a deficient
+patient who accumulates C27 intermediates, knockout mice, and cryo-EM
+structures with the bile-acid substrates bound. Beyond this pilot the project
+is scoped, not started: no systematic Reactome query for black box events is recorded,
+and the remaining bile acid gaps (mitochondrial and peroxisomal export) have no
+candidate reviewed yet.
+
+We are doing this because many such gaps have stayed open for decades while
+structural and genetic data that could close them accumulated, and a
+systematic review can gather that evidence faster than case-by-case literature
+searching.
 
 ## Overview
 

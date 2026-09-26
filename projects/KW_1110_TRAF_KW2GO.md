@@ -1,10 +1,27 @@
 ---
 title: "KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping"
-maturity: SCOPING
+maturity: COMPLETE
 tags: [PIPELINE, OBSOLETION]
 ---
 
 # KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping
+
+**Bottom line:** UniProt keyword KW-1110 "Inhibition of host TRAFs by virus"
+was mapped to GO:0039527, a process term GO has now obsoleted because
+"TRAF-mediated signal transduction" is not a single pathway: TRAFs act in RLR,
+TLR, TNFR and cGAS-STING signaling. The mapping has been repointed to
+GO:0140476, which ties TRAF inhibition to cytoplasmic pattern recognition
+receptor (RLR) signaling and matches the parent keyword KW-1113. As of
+2026-09-26, OLS resolves GO:0140476 and marks GO:0039527 obsolete (suggesting
+GO:0140476 or the TLR sibling GO:0140470), and the GO `uniprotkb_kw2go` file
+(version date 2026/07/06) maps KW-1110 to GO:0140476. This page was a
+watch-list entry, not a review project, and no gene review in this repository
+carries GO:0039527, GO:0140476 or KW-1110, so nothing needs rework. The
+"blocker" in the status section below predates these upstream changes.
+
+We track it so that any viral or bacterial TRAF-interfering effector reviewed
+later is moved to the right pathway-specific term rather than to the obsolete
+parent.
 
 ## Overview
 
@@ -98,5 +115,9 @@ existing rework.
 
 - **Created:** 2026-07-04
 - **Blocker:** GO:0140476 not yet minted; KW2GO deployment blocked on that.
+- **Update 2026-09-26:** OLS shows GO:0140476 minted and GO:0039527 obsolete
+  (consider GO:0140476 or GO:0140470). Re-ran the three greps: still no matches in
+  `genes/`. The GO `external2go/uniprotkb_kw2go` file (version date 2026/07/06)
+  maps KW-1110 to GO:0140476, so the mapping change has shipped.
 - **Action needed here:** none until upstream ships. This page is a watch-list
   entry so the mapping change is not silently missed when it lands.
