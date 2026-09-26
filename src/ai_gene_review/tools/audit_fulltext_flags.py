@@ -312,14 +312,12 @@ def audit(
         for rp, fl in sorted(by_review.items())
     )
     echo(f"removed {total} flag(s)")
-    if unaudited:
-        # --fix does not touch these, so a successful fix run must still fail: reporting
-        # flags by hand and then exiting 0 tells CI everything is clean while naming the
-        # flags that are not.
-        echo(
-            f"{len(unaudited)} flag(s) outside --fix's scope remain; remove them by hand"
-        )
-        return 1
+    # Every check runs and reports before anything returns. A first version returned as soon
+    # as `unaudited` was non-empty -- which is the normal state, and the reason the detector
+    # exists -- so a --fix run that over- or under-removed exited 1 with the right code and
+    # *no ERROR line*, short-circuiting the very guard whose comment below explains why
+    # silent stripping must never happen.
+    failed = False
     if total != len(stale):
         # The mutator and the detector must agree on scope; a mismatch means one of them is
         # looking at flags the other cannot see, which is how a nested Finding-level flag was
@@ -327,9 +325,19 @@ def audit(
         echo(
             f"ERROR: detected {len(stale)} flag(s) but removed {total} - scope mismatch"
         )
-        return 1
+        failed = True
     if find_stale_flags(sorted(by_review), availability):
         echo("ERROR: stale flags survived the fix")
+        failed = True
+    if unaudited:
+        # --fix does not touch these, so a run that removed everything it could must still
+        # fail: reporting flags by hand and then exiting 0 tells CI everything is clean
+        # while naming the flags that are not.
+        echo(
+            f"{len(unaudited)} flag(s) outside --fix's scope remain; remove them by hand"
+        )
+        failed = True
+    if failed:
         return 1
     echo("verified: no stale flags remain in the edited reviews")
     return 0

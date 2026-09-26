@@ -14,6 +14,8 @@ checking it, so it no longer excuses a mismatch.
 from pathlib import Path
 from typing import Any
 
+from types import SimpleNamespace
+
 import pytest
 
 from ai_gene_review.validation.validation_report import ValidationReport, ValidationSeverity
@@ -206,22 +208,38 @@ def test_a_full_text_record_gets_the_verbatim_substring_message(tmp_path: Path):
     assert "exact substring from the cached publication" in (issue.suggestion or "")
 
 
-def test_an_uncached_reference_does_not_get_impossible_advice(tmp_path: Path):
+def test_an_uncached_reference_does_not_get_impossible_advice(tmp_path: Path, monkeypatch):
     """The impossible advice survived one case over: nothing cached at all.
 
-    The stub branch is gated on ``cache_has_full_text is False``; a missing cache file gives
-    ``None`` and used to fall through to "an exact substring from the cached publication",
-    which is not a thing that exists here.
+    A missing cache file used to fall through to "an exact substring from the cached
+    publication", which is not a thing that exists here.
+
+    The validator is stubbed rather than real, for two reasons found the hard way. The first
+    version of this test used ``PMID:404`` against an empty directory -- and PMID:404 is a
+    real 1975 PubMed record, so the live validator **fetched and cached it**, leaving the
+    reference cached, the branch unreached and the test asserting nothing. It also made a
+    network call from a unit test. A stub makes the uncached state actually hold.
     """
+    import ai_gene_review.validation.validator as v
+
     pubs = tmp_path / "publications"
     pubs.mkdir()
+
+    class Mismatch:
+        def validate(self, supporting_text, reference_id):
+            return SimpleNamespace(
+                is_valid=False, message="Text part not found as substring: 'anything'"
+            )
+
+    monkeypatch.setattr(v, "build_supporting_text_validator", lambda d=None: (Mismatch(), pubs))
     doc: dict[str, Any] = {
         "references": [
-            {"id": "PMID:404", "findings": [{"statement": "s", "supporting_text": "anything"}]}
+            {"id": "PMID:99999999", "findings": [{"statement": "s", "supporting_text": "anything"}]}
         ]
     }
     issue = _issue(doc, pubs)
     assert issue.severity == ValidationSeverity.ERROR
+    assert "no cached publication" in issue.message
     suggestion = issue.suggestion or ""
     assert "from the cached publication" not in suggestion, "no cached publication exists"
     assert "Cache the publication first" in suggestion

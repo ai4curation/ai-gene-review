@@ -38,6 +38,7 @@ from ai_gene_review.validation.validation_report import (
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.supporting_text import (
     cached_record_has_no_body,
+    cached_text_missing,
     LITERATURE_PREFIXES,
     build_supporting_text_validator,
     cached_full_text_available,
@@ -194,13 +195,17 @@ def validate_reference_finding_supporting_text(
                     "Quote a verbatim substring of the cached abstract, or fetch the "
                     "full text into the cache so the quote can be verified"
                 )
-            elif cache_has_full_text is None:
+            elif cached_text_missing(reference_id, resolved_publications_dir):
                 # Nothing cached under this identifier, so there is no publication text to
                 # take a substring of. The final branch's advice ("an exact substring from
                 # the cached publication") is impossible here in the same way the
-                # abstract-only advice was impossible for a bodyless stub; whether
-                # is_unfetchable catches this first depends on the matcher's wording, so
-                # this branch closes it regardless.
+                # abstract-only advice was impossible for a bodyless stub.
+                #
+                # Gated on the absence of the FILE, not on cache_has_full_text is None.
+                # None means "not recorded", which is a different thing: 90 cached records
+                # carrying a full PMC body resolved to None under the old content_type
+                # allow-list, and this branch would have told their authors to go cache a
+                # record that is already there.
                 prefix = (
                     "Finding supporting text cannot be checked: no cached publication for "
                     "this reference"

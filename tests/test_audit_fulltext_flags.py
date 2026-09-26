@@ -372,3 +372,38 @@ def test_fix_exits_nonzero_when_unaudited_flags_remain(tmp_path, publications, m
     rc = audit(tmp_path, fix=True, echo=lines.append)
     assert rc == 1, "a --fix run that leaves flags behind must not report success"
     assert any("outside --fix's scope remain" in line for line in lines)
+
+
+def test_scope_mismatch_is_still_reported_when_unaudited_flags_exist(tmp_path, publications, monkeypatch):
+    """The scope guard must print even when --fix has flags outside its scope.
+
+    The first version of the unaudited block returned as soon as `unaudited` was non-empty,
+    which is the normal state. A --fix run that under-removed then exited 1 -- the right code
+    -- with no ERROR line, silently skipping the guard whose whole purpose is to catch a flag
+    being stripped without being reported. The previous test could not see this: its fixture
+    removed exactly the one stale flag it created, so both guards would have passed anyway.
+    """
+    from ai_gene_review.tools import audit_fulltext_flags as mod
+
+    (tmp_path / "publications").mkdir(exist_ok=True)
+    for src in publications.glob("*.md"):
+        (tmp_path / "publications" / src.name).write_text(src.read_text())
+    genes = tmp_path / "genes" / "yeast" / "X"
+    genes.mkdir(parents=True)
+    (genes / "X-uniprot.txt").write_text("some record text\n")
+    (genes / "X-ai-review.yaml").write_text(
+        "references:\n"
+        "- id: PMID:111\n  full_text_unavailable: true\n  findings: []\n"
+        "- id: file:yeast/X/X-uniprot.txt\n  findings:\n"
+        "  - statement: s\n    full_text_unavailable: true\n"
+    )
+    # Force the mutator to under-remove, which is exactly what the scope guard exists for.
+    monkeypatch.setattr(mod, "remove_stale_flags", lambda review_path, pmids: 0)
+
+    lines: list[str] = []
+    rc = mod.audit(tmp_path, fix=True, echo=lines.append)
+    assert rc == 1
+    assert any("scope mismatch" in line for line in lines), (
+        "the scope guard must report even when unaudited flags are also present"
+    )
+    assert any("outside --fix's scope remain" in line for line in lines)

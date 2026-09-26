@@ -63,6 +63,12 @@ def is_unfetchable(message: str) -> bool:
     return "could not fetch" in lowered or "no records found" in lowered
 
 
+#: ``content_type`` values that mean the record carries no full text. A negative list,
+#: matching ``etl/publication.py``: any other value (``full_text_xml``, ``full_text_html``,
+#: ``full_text_pdf``, ``url``, ...) means full text is present.
+NO_FULL_TEXT_CONTENT_TYPES = frozenset({"abstract_only", "unavailable"})
+
+
 @lru_cache(maxsize=None)
 def cached_record_has_no_body(
     reference_id: str,
@@ -95,6 +101,16 @@ def cached_record_has_no_body(
     return not body or body == "Cached metadata for local validation."
 
 
+def cached_text_missing(reference_id: str, publications_dir: Path) -> bool:
+    """True when no cached record exists for *reference_id* at all.
+
+    Distinct from ``cached_full_text_available(...) is None``, which means "availability is
+    not recorded" and is true of plenty of records that are cached and have a full body.
+    Conflating the two is what this predicate exists to prevent.
+    """
+    return _cached_text(reference_id, publications_dir) is None
+
+
 def _cached_text(reference_id: str, publications_dir: Path) -> Optional[str]:
     """Raw text of the cached record for *reference_id*, or None."""
     prefix, separator, identifier = reference_id.partition(":")
@@ -110,6 +126,7 @@ def _cached_text(reference_id: str, publications_dir: Path) -> Optional[str]:
     return path.read_text() if path.exists() else None
 
 
+@lru_cache(maxsize=None)
 def cached_full_text_available(
     reference_id: str,
     publications_dir: Path,
@@ -131,9 +148,13 @@ def cached_full_text_available(
     content_type = frontmatter.get("content_type")
     if not isinstance(content_type, str):
         return None
+    # Mirror the authoritative mapping in etl/publication.py, which is a NEGATIVE list:
+    #   full_text_available = content_type not in ("unavailable", "abstract_only")
+    # An earlier positive allow-list here named only full_text_html and full_text_pdf, so
+    # every full_text_xml record -- 90 of them, including PMC-sourced green-OA bodies --
+    # resolved to None. None here means "not recorded", and a caller that reads it as "not
+    # cached" then tells the author to go cache a record that is already there.
     normalized_content_type = content_type.lower()
-    if normalized_content_type in {"abstract_only", "unavailable"}:
+    if normalized_content_type in NO_FULL_TEXT_CONTENT_TYPES:
         return False
-    if normalized_content_type in {"full_text_html", "full_text_pdf"}:
-        return True
-    return None
+    return True
