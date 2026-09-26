@@ -63,7 +63,7 @@ QuickGO donor tracing of mouse Q9R1S7 recovered:
 | Intracellular phosphate homeostasis | PMID:24277820 IMP | Relevant full-text experiment inaccessible; UNDECIDED |
 | Response to magnesium / sodium phosphate | PMID:24732453 | Combined dietary challenge; contextual phenotype |
 | Phosphate homeostasis | PMIDs 28652107, 28701330 plus human-derived 28592560 | PPi/mineralization is not a measured phosphate-ion steady state |
-| Calcium homeostasis | PMIDs 24732453, 28701330, 28592560 | Broad deposition phenotype, kept outside core |
+| Calcium homeostasis | PMIDs 24732453, 28701330, 28592560 | Deposition phenotype does not separately establish calcium-ion steady state |
 | Inhibition of non-skeletal mineralization | PMIDs 24732453, 28652107 | Conserved central physiological role |
 
 [PMID:28701330](https://pubmed.ncbi.nlm.nih.gov/28701330/) directly studies oral
@@ -73,9 +73,7 @@ of PPi. The propagated PPi-transport row therefore has a source-level role
 conflation. [PMID:24732453](https://pubmed.ncbi.nlm.nih.gov/24732453/) uses a diet
 simultaneously enriched in phosphate and reduced in magnesium. Its compared
 groups have unchanged serum calcium, phosphate and PPi despite substantial
-nephrocalcinosis; this is not a direct ABCC6 ion-transport assay. Calcium
-homeostasis is retained as a broad non-core deposition phenotype, whereas the
-phosphate-ion term is over-specific for the actual PPi evidence.
+nephrocalcinosis; this is not a direct ABCC6 ion-transport assay. Both calcium-ion and phosphate-ion homeostasis are marked as over-annotated: deposition/PPi readouts do not separately establish a free-ion steady-state mechanism.
 
 [PMID:28652107](https://pubmed.ncbi.nlm.nih.gov/28652107/) shows that human ENPP1
 expression normalizes the Enpp1 mouse phenotype but does not completely rescue
@@ -192,3 +190,17 @@ The publisher's [December 2022 correction](https://www.nature.com/articles/s4146
 was also inspected. It repairs omitted or misplaced figure labels/legends in
 Figures 2, 4 and 5; it does not report a replacement of the affinity workbook
 or resolve the zero-affinity export issue described above.
+
+### Independent review follow-up
+
+The coordinator independently inspected all 69 decisions and flagged the initial
+asymmetry between non-core calcium homeostasis and over-annotated phosphate
+homeostasis. Reinspection of the full PMID:28592560 source recovered calcification,
+micro-CT and calcium-phosphate deposition endpoints, not a distinct free-Ca-ion
+steady-state measurement. PMID:24732453 measures acid-extracted deposited calcium
+and unchanged serum Ca/Pi. Live GO:0055074 and GO:0055062 have parallel steady-state
+ion definitions. Both calcium rows are therefore now MARK_AS_OVER_ANNOTATED,
+without denying their well-supported mineralization phenotype; the initial calcium
+NON_CORE assessment is superseded. Source explanations were also tightened so ARA
+partial-sequence, PAINT and mutant-Reactome caveats appear only on their relevant
+rows.
