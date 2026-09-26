@@ -7,6 +7,21 @@ species: [human]
 
 # Integrated Stress Response (ISR) Project
 
+**Bottom line:** in the integrated stress response, four kinases (HRI, PKR,
+PERK and GCN2) each sense a different stress and phosphorylate eIF2α, which
+blocks the eIF2B exchange factor, dampens global translation and lets ATF4 be
+translated. Scoped, not yet started as a project: this page lists about 18
+candidate human genes, including the DELE1-OMA1 route from mitochondrial stress
+to HRI, but no project-specific review work has been done. Five candidates
+already have reviews from other work: EIF2AK3 (PERK), ATF4, ATF3 and EIF2B4 are
+COMPLETE and OMA1 is IN_PROGRESS, 490 annotations between them. Thirteen have
+no gene folder, including the hub EIF2S1 (eIF2α), three of the four kinases,
+DELE1 and four of the five eIF2B subunits. There is no ISR module yet.
+
+We scoped this because the ISR is a drug target (ISRIB), eIF2B mutations cause
+vanishing white matter disease, and the DELE1-HRI branch was only described in
+2020, so current GO annotation may not reflect it.
+
 ## Overview
 
 The Integrated Stress Response (ISR) is a conserved signaling pathway that responds to diverse cellular stresses by phosphorylating eIF2α, leading to global translation attenuation and selective translation of stress-response genes like ATF4. Recent discoveries include the DELE1-HRI mitochondrial stress pathway.

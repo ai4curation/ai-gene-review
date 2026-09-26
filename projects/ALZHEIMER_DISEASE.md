@@ -1,12 +1,33 @@
 ---
 title: "Alzheimer Disease Gene Review Project"
-maturity: SCOPING
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [APP, PSEN1, PSEN2, APOE, TREM2, SORL1, ABCA7, ADAM10, BACE1, NCSTN, APH1A, APH1B, PSENEN, CLU, BIN1, PICALM, CD33, CR1, CD2AP, INPP5D, PLCG2, ABI3, SPI1, MS4A4A, MS4A6A, EPHA1, FERMT2, CASS4, MAPT, GSK3B, CDK5, CDK5R1, LRP1, ABCA1]
 ---
 
 # Alzheimer Disease Gene Review Project
+
+**Bottom line:** Alzheimer disease genetics points at a handful of mechanisms:
+amyloid precursor protein (APP) processing by the beta- and gamma-secretases,
+tau, lipid and apolipoprotein transport, endocytosis, and microglial innate
+immunity. We reviewed every existing GO annotation on a 34-gene human seed set
+spanning those mechanisms, from the familial genes (APP, PSEN1, PSEN2) through
+GWAS and rare-variant risk genes (APOE, TREM2, SORL1, PLCG2, ABI3) to the
+pathway genes needed for module curation. All 34 reviews are marked COMPLETE
+and cover 4,336 annotations: 2,362 ACCEPT, 1,178 KEEP_AS_NON_CORE, 630
+MARK_AS_OVER_ANNOTATED, 124 MODIFY, 4 REMOVE, 34 UNDECIDED and 4 NEW. The low
+REMOVE count reflects a deliberate choice to leave abstract-only experimental
+rows UNDECIDED rather than overrule curators. The reusable normal-biology
+modules proposed below (APP processing, gamma-secretase proteolysis, tau
+microtubule biology and others) have not been built yet. A few per-gene action
+counts in the dated notes below differ slightly from the current review files,
+which were edited after the notes were written.
+
+We did this because AD genes carry some of the largest annotation sets in
+human GO (APP alone has 429 rows, GSK3B 390), so a disease-anchored gene set
+tests whether review can separate each gene's core molecular function from its
+pleiotropic and disease-context annotations.
 
 ## Overview
 

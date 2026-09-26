@@ -7,6 +7,21 @@ species: [human]
 
 # cGAS-STING Cytosolic DNA Sensing Project
 
+**Bottom line:** cGAS senses DNA in the cytosol and makes the second messenger
+2'3'-cGAMP, which activates the ER adaptor STING1; STING1 then recruits TBK1 to
+phosphorylate IRF3 and switch on type I interferon. Scoped, not yet started as
+a project: this page lists ten candidate human genes and the pathway
+architecture, but no project-specific review work has been done. Three
+candidates already have complete reviews from other projects (STING1, TBK1 and
+IFI16, 529 annotations between them). The other seven, including the sensor
+CGAS itself, have no gene folder. The next step is `just fetch-gene human
+<GENE>` for CGAS, IRF3, TREX1, ENPP1, SAMHD1, IRF7 and IFNB1, then review.
+
+We scoped this because the pathway links innate immunity to autoimmune disease
+(AGS, SAVI, lupus), cancer immunotherapy and senescence, and many of its
+regulators were described after 2020, so existing GO annotation is likely to lag
+the literature.
+
 ## Overview
 
 The cGAS-STING pathway is a critical innate immune signaling system that detects cytosolic DNA (from pathogens, damaged mitochondria, or genomic instability) and triggers type I interferon responses. Many regulators and disease connections have been discovered 2020+.

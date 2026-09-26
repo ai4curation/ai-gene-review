@@ -3,9 +3,32 @@ title: "Autoimmune Genetics - Greatest Hits"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+genes: [PTPN22, CTLA4, IL2RA, IL4, STAT4, IL13, IL23R, IL7R, ORMDL3, TNFAIP3, TNFRSF1A, EGR2, BACH2, IRF4, STAT3, IKZF1, CD28, GATA3, SMAD3, IL10]
 ---
 
 # Autoimmune Genetics - Greatest Hits
+
+**Bottom line:** GWAS and functional studies have converged on a small set of
+immune-regulation genes whose variants raise risk for several autoimmune
+diseases at once (type 1 diabetes, rheumatoid arthritis, multiple sclerosis,
+inflammatory bowel disease, lupus). We reviewed every existing GO annotation on
+20 of the best-replicated of these human genes, covering T cell
+co-stimulation and inhibition, cytokine receptors, Th1/Th2/Th17 transcription
+factors and NF-kB control. All 20 reviews exist, have every row actioned and
+validate: 2,291 annotations, with 1,464 ACCEPT, 390 KEEP_AS_NON_CORE, 142
+MARK_AS_OVER_ANNOTATED, 94 MODIFY, 174 REMOVE, 11 UNDECIDED and 16 NEW. Most
+removals (144 of 174) are generic `protein binding` IPI rows, 134 of them on
+STAT3 and SMAD3; others are propagation errors such as prolactin receptor
+activity on IL23R. The per-gene review files are not uniformly finalised (9
+COMPLETE, 6 DRAFT, 5 IN_PROGRESS), and the supporting-text warnings listed
+below remain open; the STAT3 deep-research item is stale, since
+`genes/human/STAT3/STAT3-deep-research-falcon.md` now exists. The STATUS
+section says 19 unique genes; the tables list 20.
+
+We did this because these genes are shared across many autoimmune diseases and
+are among the most heavily annotated immune genes (STAT3 456 rows, SMAD3 349,
+GATA3 258), so they test whether review can find the core immune-regulatory
+function under a large body of interaction and propagated annotations.
 
 ## Overview
 

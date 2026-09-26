@@ -2885,6 +2885,20 @@ genes:
 
 # ClinGen Mendelian Disease Genes
 
+**Bottom line:** ClinGen's Gene–Disease Validity curations grade the evidence
+that a gene causes an inherited disease. We seeded a review campaign from the
+2026-09-25 export: every gene with at least one Definitive, Strong, Moderate or
+Limited association, 2,876 genes in all (2,836 nuclear Mendelian, 37
+mitochondrial, 3 undetermined-inheritance follow-ups), each with its disease
+links preserved in the checklist below. Each review assesses the gene product's
+molecular function and GO annotations; a disease link alone does not establish
+a function. Reviews run one gene per PR in evidence-priority order, and existing
+reviews get a fresh audit (716 of the 2,876 genes now have a human review in the
+repo, mostly from earlier projects). As of 2026-09-26, seven gene PRs have
+merged (A4GALT, AARS1, AARS2, AASS, ABCA3, ABCA4, ABCC6; 323 annotations
+reviewed), but only AARS2 is ticked below, because the coordinator ticks a gene
+only after verifying its merge, and the progress log has not caught up.
+
 ## Overview
 
 Seed a human gene-function review project from ClinGen's published Gene–Disease
