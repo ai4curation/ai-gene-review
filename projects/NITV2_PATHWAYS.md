@@ -3,9 +3,32 @@ title: "Nitratidesulfovibrio vulgaris Pathways Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [DESVH]
+genes: [Q72DT3, Q72DT2, Q72DT1, Q72DT0, Q72DS9, Q72FD5, Q72BM9, Q725U0, Q725T9, Q725T8, Q725T7, Q72F06, Q72F05, Q72BQ0, Q72BK7, Q72B50, Q727C6, Q726C4, P07598, Q72AS3, Q72AS0, Q72EY4, Q729Q8]
 ---
 
 # Nitratidesulfovibrio vulgaris Pathways Project
+
+**Bottom line:** *Nitratidesulfovibrio* (formerly *Desulfovibrio*) *vulgaris*
+Hildenborough is the model sulfate-reducing bacterium, and its genes are
+annotated almost entirely by electronic pipelines. We reviewed genes in four
+pathways: sulfate reduction (6), potassium transport (7), sigma factors (5)
+and hydrogen metabolism (5 representative hydrogenase subunits). Twenty of
+the 23 reviews are done, covering 180 annotation rows: 80 accepted, 32
+modified, 15 removed, 11 marked over-annotated, 5 kept as non-core and 37
+proposed as `NEW`. The hysA, echA and cooH reviews are stubs with all rows
+still `PENDING`; hydA and hynA1 are reviewed, although the status checklist
+below leaves all five hydrogenases unticked. The main corrections split
+catalytic from accessory subunits: AprB and KdpC lose catalytic terms in
+favour of electron transfer and ATPase activator activity, the TrkA-type RCK
+proteins become potassium channel regulators rather than transporters, sigma
+factors get `sigma factor activity` instead of DNA-binding transcription
+factor activity, and DVU3336 turns out to carry only the KdpD sensor domain,
+with the histidine kinase on the neighbouring DVU3335. The input list also
+put rpoC, an RNA polymerase core subunit, among the sigma factors. One claim
+needs re-checking: the DVU0848 and DVU0849 reviews reassign those genes from
+QmoA/QmoB to the Flx–Hdr bifurcating complex, but the adjacent DVU0850 carries
+the NCBIfam `qmoC` family and the DVU0848 deep research never discusses Qmo,
+so the conventional QmoABC assignment has not actually been ruled out.
 
 ## Overview
 

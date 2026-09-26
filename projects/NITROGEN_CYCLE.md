@@ -7,6 +7,23 @@ autolink_gene_symbols: false
 
 # Nitrogen Cycle Module
 
+**Bottom line:** scoped, with no gene reviews started. The nitrogen cycle is
+the set of microbial redox reactions that move nitrogen between N₂, ammonia,
+nitrite, nitrate and the gaseous intermediates, and almost every dissimilatory
+step is carried out by bacteria or archaea. This project picked canonical
+marker enzymes for each arm (fixation, nitrification, denitrification, DNRA,
+anammox, assimilation, ammonification): 27 reviewed Swiss-Prot accessions,
+checked against UniProt on 2026-06-20, plus nitrite oxidoreductase (`nxrA`),
+which has no reviewed entry. It also drafted a taxon-neutral module,
+[`modules/nitrogen_cycle.yaml`](../modules/nitrogen_cycle.html) (status
+DRAFT), with one part per arm, variant sets for convergent chemistries such as
+cd₁ versus copper nitrite reductase, and those exemplars as grounding. The aim
+is to have a mechanistically organised picture to review these enzymes'
+annotations against, and to supply the specific pathway terms that
+annotations on the grouping term GO:0071941 should move to (see the companion
+obsoletion project). None of the 27 accessions has a gene review in the repo
+yet.
+
 ## Overview
 
 The biological nitrogen cycle is the set of microbially driven redox
