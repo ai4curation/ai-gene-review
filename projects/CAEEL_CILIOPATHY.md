@@ -3,9 +3,36 @@ title: "C. elegans Ciliopathy/IFT Pathway Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
+genes: [daf-19, osm-3, osm-5, che-2, che-3, bbs-1, bbs-8, mks-3, nphp-1, nphp-4, mks-1, mks-5, mks-6, mksr-2, bbs-2, bbs-5, bbs-7, lov-1, pkd-2, pef-1]
 ---
 
 # C. elegans Ciliopathy/IFT Pathway Project
+
+**Bottom line:** the 60 ciliated sensory neurons of *C. elegans* carry
+non-motile cilia built by the same machinery that fails in human
+ciliopathies: the DAF-19 transcription factor, kinesin-2 and dynein IFT
+motors, IFT-B and IFT-A trains, the BBSome, the MKS/NPHP transition zone,
+and the LOV-1/PKD-2 polycystin channel. We reviewed every existing GO
+annotation on 20 of these genes, wrote a pathway summary and a gene-by-gene
+[curation recommendations](CAEEL_CILIOPATHY/CAEEL_CILIOPATHY_CURATION_RECOMMENDATIONS.md)
+document. All 20 reviews are complete: the review files now hold 482 rows,
+of which 366 are ACCEPT, 40 KEEP_AS_NON_CORE, 15 MARK_AS_OVER_ANNOTATED,
+29 MODIFY, 8 REMOVE, 3 UNDECIDED and 21 NEW proposals (the 2025-12-29
+status section below, with 477 rows and 368 ACCEPT, predates small later
+edits). The main corrections sharpen generic IFT and localization terms
+into anterograde/retrograde intraciliary transport, ciliary basal body and
+ciliary transition zone, and remove motile-cilium IBA rows from the
+dynein CHE-3 and propagated Hedgehog-binding rows from BBS-1, since worms
+have neither motile cilia nor a canonical Hedgehog pathway. Eight further
+IFT genes listed below (daf-10, che-11, dyf-2, che-13, xbx-1, dyf-1, osm-6,
+klp-11) also have completed reviews in `genes/worm/` but are not yet counted
+in this project.
+
+We did this because the worm is the main genetic model for ciliopathy gene
+function, so its GO annotations feed orthology-based inference for human
+disease genes. Most worm cilia annotations turned out to be sound; the errors
+were concentrated in over-general terms and in propagation from vertebrate
+motile-cilium biology.
 
 ## Overview
 

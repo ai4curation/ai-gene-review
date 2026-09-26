@@ -3,9 +3,32 @@ title: "C. elegans Proteostasis Network Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
+genes: [hsf-1, hsp-1, hsp-16.2, hsp-90, daf-21, hsp-4, cdc-48, bec-1, lgg-1, rpn-10, ufd-1, atg-18, daf-16, daf-2, skn-1, sir-2.1, aak-2, hlh-30]
 ---
 
 # C. elegans Proteostasis Network Project
+
+**Bottom line:** the proteostasis network folds proteins, holds them
+soluble and clears them when they fail, and in *C. elegans* its capacity
+falls with age under control of the insulin/FOXO longevity pathway. We
+reviewed every existing GO annotation on 18 genes in three tiers: the heat
+shock response and chaperones (HSF-1, HSP70s, HSP90, a small HSP), the
+degradation systems (CDC-48, proteasome, autophagy) and the longevity
+regulators (DAF-2, DAF-16, SKN-1, SIR-2.1, AAK-2, HLH-30). All 18 reviews
+are complete: 823 rows, 628 ACCEPT, 102 KEEP_AS_NON_CORE, 9
+MARK_AS_OVER_ANNOTATED, 67 MODIFY, 4 REMOVE, 3 UNDECIDED and 10 NEW. Most
+changes replace generic `protein binding` with specific terms, above all
+Hsp90 protein binding (GO:0051879) for HSP-90 co-chaperone partners; the
+removals include *protein refolding* on the HSP-16.2 holdase and *GABA
+receptor binding* on LGG-1. The hsp-90 and daf-21 folders review the same
+protein (Q18688, DAF-21 is HSP-90), so the set covers 17 distinct proteins;
+the status section below treats them as paralogs and its totals (868 rows,
+626 ACCEPT) predate later edits.
+
+We did this because the worm is the main model for how proteostasis decline
+drives age-related protein aggregation, and a network review tests whether
+chaperone, degradation and longevity annotations stay mechanistically
+precise, for example separating holdase from foldase activity.
 
 ## Overview
 

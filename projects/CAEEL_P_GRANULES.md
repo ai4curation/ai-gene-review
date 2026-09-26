@@ -1,11 +1,36 @@
 ---
 title: "C. elegans P Granule/Germ Granule Dynamics Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
+genes: [pgl-1, pgl-2, pgl-3, glh-1, glh-4, meg-3, meg-4, prg-1, csr-1, deps-1, wago-1, znfx-1, mut-16, meg-1, meg-2, mbk-2, mex-5, car-1, cgh-1]
 ---
 
 # C. elegans P Granule/Germ Granule Dynamics Project
+
+**Bottom line:** P granules are the liquid-like RNA-protein condensates of
+the *C. elegans* germline, built on PGL and MEG scaffolds and GLH helicases
+and loaded with Argonaute small-RNA machinery that guards germline identity.
+We reviewed every existing GO annotation on 19 genes: the core scaffolds and
+helicases, the Piwi/Argonaute and Z granule and Mutator foci components, and
+the regulators that dissolve granules in the embryo. All 19 reviews are
+complete: 393 rows, 274 ACCEPT, 20 MODIFY, 14 REMOVE, 12 UNDECIDED and 39
+NEW proposals. Because the existing annotations are sparse for these
+worm-specific proteins, the review mostly adds terms: molecular condensate
+scaffold activity (GO:0140693) for MEG-3, MEG-4, MEG-2, DEPS-1 and PGL-2,
+P granule assembly for GLH-1, GLH-4, DEPS-1, MEG-1, MEG-2 and PGL-3, and
+Z granule for ZNFX-1. Removals target propagated nuclear and catalytic
+rows, such as RNA endonuclease activity on WAGO-1, which lacks the
+catalytic residues. The csr-1 review was later re-fetched under the correct
+accession (H2KZD5); the Q21992 accession and the "wrong gene" note below
+are out of date. Four more genes from the pathway list (glh-2, mex-6,
+rde-2, wago-4) have reviews in `genes/worm/` but are not counted here;
+prg-2, npp-10, par-1 and pab-1 are not yet reviewed.
+
+We did this because P granules are a founding example of biomolecular
+condensates, which makes them a test of whether GO can describe
+phase-separation scaffolds and condensate membership instead of relying on
+`protein binding`.
 
 ## Overview
 
