@@ -121,3 +121,7 @@ may be added as gene reviews accrue.
   nematodes overlap with this project).
 - [CEPHALOPOD](CEPHALOPOD.md), [TARDIGRADE_STRESS_RESPONSE](TARDIGRADE_STRESS_RESPONSE.md)
   — other non-MOD organism gene-review collections.
+
+## Slides
+
+- [Slides](SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.html) (Marp source: [SATELLITE_MODEL_ORGANISMS-slides.md](SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.md)) — AI generated

@@ -337,3 +337,7 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
   annotated to GO:0140355 today, so the obsoletion strands nothing; but the
   2019 curation problem that motivated it ("we don't have an activity for
   this") is not solved by the obsoletion either.
+
+## Slides
+
+- [Slides](CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION/slides/CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION-slides.html) (Marp source: [CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION-slides.md](CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION/slides/CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION-slides.md)) — AI generated

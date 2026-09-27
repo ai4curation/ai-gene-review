@@ -164,3 +164,7 @@ the p2xA tether call before it propagates further.
   has been obsoleted (PR #31950) per upstream comments by raymond91125;
   dictyBase migration of the two IMP annotations is the remaining upstream
   step. No gene reviews started in this repo yet.
+
+## Slides
+
+- [Slides](CONTRACTILE_VACUOLE_TETHERING_OBSOLETION/slides/CONTRACTILE_VACUOLE_TETHERING_OBSOLETION-slides.html) (Marp source: [CONTRACTILE_VACUOLE_TETHERING_OBSOLETION-slides.md](CONTRACTILE_VACUOLE_TETHERING_OBSOLETION/slides/CONTRACTILE_VACUOLE_TETHERING_OBSOLETION-slides.md)) — AI generated

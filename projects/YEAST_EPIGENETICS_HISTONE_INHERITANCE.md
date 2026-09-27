@@ -320,3 +320,7 @@ Last updated: 2026-08-12
 - Selected 29 genes spanning HATs, HDACs, SIR proteins, histone methyltransferases, and histone chaperones
 - Emphasis on FACT complex dynamics and structural biology of histone inheritance
 - Ready to begin gene review workflow
+
+## Slides
+
+- [Slides](YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.html) (Marp source: [YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.md](YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.md)) — AI generated

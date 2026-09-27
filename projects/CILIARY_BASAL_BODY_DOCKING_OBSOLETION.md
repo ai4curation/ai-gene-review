@@ -190,3 +190,7 @@ this a natural moment to tackle it.
   already removed; Reactome RAB3IP fix scheduled for June 2026 release;
   MGI/UniProt/Xenbase/ZFIN direct annotations still pending. No gene reviews
   started yet in this repo.
+
+## Slides
+
+- [Slides](CILIARY_BASAL_BODY_DOCKING_OBSOLETION/slides/CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.html) (Marp source: [CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.md](CILIARY_BASAL_BODY_DOCKING_OBSOLETION/slides/CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.md)) — AI generated

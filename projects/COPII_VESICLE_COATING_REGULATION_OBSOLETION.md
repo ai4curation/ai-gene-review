@@ -234,3 +234,7 @@ so the obsoletion is a reasonable trigger to start that coverage.
   verified UniRule UR001628761 (PTHR23284, mammalian/Arabidopsis/Ascomycota
   scope) live in UniProt REST on 2026-05-24. No gene reviews started yet
   in this repo; none of the 11 affected genes are present under `genes/`.
+
+## Slides
+
+- [Slides](COPII_VESICLE_COATING_REGULATION_OBSOLETION/slides/COPII_VESICLE_COATING_REGULATION_OBSOLETION-slides.html) (Marp source: [COPII_VESICLE_COATING_REGULATION_OBSOLETION-slides.md](COPII_VESICLE_COATING_REGULATION_OBSOLETION/slides/COPII_VESICLE_COATING_REGULATION_OBSOLETION-slides.md)) — AI generated
