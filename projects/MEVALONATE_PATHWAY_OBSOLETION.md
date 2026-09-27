@@ -126,11 +126,12 @@ Listed in priority order. Each should be set up with
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land before bulk-rewriting.** GO ontology
-   ticket #32082 is still under discussion. AI Gene Review reviews can
-   proceed on the underlying biology now and record the currently-live
-   term ID; the action codes (ACCEPT vs MODIFY vs REMOVE) are independent
-   of whether the obsoletion has merged.
+1. **The obsoletion has landed** (GO:0010142 is obsolete in the GO release
+   2026-07-26). GOA-sourced term ids are never rewritten; record the
+   obsoletion in `action`/`reason` and, where a replacement applies,
+   `proposed_replacement_terms`. Where the correct replacement is already
+   annotated to the gene, prefer `REMOVE` over a duplicate `MODIFY`
+   (as done for yeast ERG19 in PR #3232).
 2. **Group the review by replacement target, not by the obsoleting term.**
    Genes whose experimental evidence supports the upper half of the
    pathway (mevalonate → IPP) want `GO:0019287`; genes covering the lower
@@ -161,3 +162,10 @@ HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
   (opened 2026-05-28) and companion issue #6439. Obsoletion not yet
   applied. No reviews started; the rat HMGCS2 entry is the only gene in
   this repo currently carrying an annotation to either obsoleting term.
+- 2026-09-27 — Obsoletion is in the GO release 2026-07-26. PR #3232
+  applied it: rat Hmgcs2 (two `UNDECIDED` GO:0010142 rows) now records the
+  obsoletion in `reason` without proposing a replacement, since native
+  mevalonate-pathway participation is unresolved; yeast ERG19's GO:0010142
+  RCA row is `REMOVE`, because its only applicable replacement
+  (GO:0019287) is already an `ACCEPT`ed row. No other review carries a
+  GO:0010142 GOA row.
