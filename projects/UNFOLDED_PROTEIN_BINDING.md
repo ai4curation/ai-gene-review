@@ -24,6 +24,10 @@ sidecars:
 > [#30552](https://github.com/geneontology/go-ontology/issues/30552)) rather than resolving gene-by-gene.
 > Until then these genes retain GO:0051082 as an interim annotation with `proposed_replacement_terms: [id: NTR]`.
 >
+> **Superseded pattern (2026-09):** the "retain GO:0051082 until NTR created" advice in this page is being retired.
+> Holdase genes now record the missing term in `core_functions[].proposed_molecular_function` ("holdase chaperone activity",
+> schema PR #3254) instead of keeping the obsolete id as a core MF; see PR #3261 (ARATH/ECOLI/PSEPK/RAMVA/SULAC) and #3260.
+>
 > **One detail below has drifted:** this page states that `holdase` is a **BROAD** synonym on GO:0140309.
 > [QuickGO](https://www.ebi.ac.uk/QuickGO/term/GO:0140309), rechecked 2026-08-29, reports all three synonyms (`holdase`, `unfolded protein carrier activity`,
 > `holdase-carrier chaperone`) as **exact**, and `holdase` has been promoted to GO:0140309's **primary
