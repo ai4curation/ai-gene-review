@@ -193,7 +193,7 @@ Immediately diagnostic to a reader of the narrative.
 > <span class="bad">✗</span> Actually the primary activator of the **cAMP/PKA** pathway.
 
 > **Epe1** *(S. pombe, 1/5)* — "a nuclear **histone demethylase** … JmjC oxygenase core"
-> <span class="bad">✗</span> A **pseudoenzyme** (HVD not HXD); anti-silencing factor via HP1/Swi6.
+> <span class="bad">✗</span> A **pseudoenzyme** (Fe(II) triad H297-E299-Y370: Tyr in place of the third His); anti-silencing factor via HP1/Swi6.
 
 > **TOR1** *(yeast, 4/4)* — "PIKK serine/threonine kinase … HEAT repeats scaffold regulatory assemblies … integrates nutrient & stress cues"
 > <span class="good">✓</span> Correct — the **FRB + multi-domain architecture** enabled pathway-level inference.

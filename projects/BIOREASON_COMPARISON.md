@@ -229,7 +229,7 @@ term) leave no discordant term to tag and are recorded only in the RL narrative 
 BioReason assumes catalytic activity from conserved domains without checking whether catalytic residues are intact. This is a systematic failure for proteins that retain an ancestral fold but have lost enzymatic activity.
 
 **Examples:**
-- **Epe1** (SCHPO, 1/5): BioReason claims *"JmjC catalytic center dictates a lysine demethylase mechanism"* but Epe1 has degenerate active site residues (HVD instead of HXD, Tyr307 instead of catalytic His). No detectable demethylase activity in mass spec assays. Functions as anti-silencing factor through HP1/Swi6 binding.
+- **Epe1** (SCHPO, 1/5): BioReason claims *"JmjC catalytic center dictates a lysine demethylase mechanism"* but Epe1 has a degenerate Fe(II)-binding triad (H297-E299-Y370, with Tyr370 in place of the third iron-ligand His). No detectable demethylase activity in mass spec assays. Functions as anti-silencing factor through HP1/Swi6 binding.
 - **cts2** (SCHPO, 2/5): Called an active chitinase, but the protein lacks the essential catalytic glutamate and is likely catalytically dead.
 - **pmp20** (SCHPO, 1/5): Predicted as an active peroxidase, but this 1-Cys family member was directly assayed as peroxidase-inactive and functions as a molecular chaperone; absence of a resolving cysteine is not itself the mechanistic defect.
 
