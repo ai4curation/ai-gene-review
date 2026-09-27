@@ -1,5 +1,6 @@
 ---
 title: "PAINT Human No-IBA Gene Review Project"
+collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human]

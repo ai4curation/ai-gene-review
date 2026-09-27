@@ -3,9 +3,24 @@ title: "GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunit
 maturity: COMPLETE
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
 ---
 
 # GO Annotation Review Summary: C. elegans Priority 3 Surveillance Immunity Genes
+
+**Bottom line:** this is the detailed gene-by-gene analysis behind the
+Priority 3 review in the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md) project: daf-16, dbl-1, sta-2, nipi-3, lys-7
+and clec-60, 238 GOA rows as counted on 2025-12-29. For each gene it lists
+numbered issues with suggested actions: DAF-16 protein-binding,
+lifespan-redundancy and developmental rows; DBL-1 growth versus immune
+roles; STA-2 IBA JAK-STAT and hemidesmosome rows; NIPI-3 pseudokinase
+activity rows; LYS-7 enzymatic and signal-transduction rows; and the
+single-row CLEC-60. It closes with eight cross-gene patterns, the most
+important being that domain-based inference misassigns catalytic activity
+to inactive proteins and that IBA transfers must fit worm biology. The
+companion [findings summary](SURVEILLANCE_IMMUNITY_CURATION_FINDINGS.md)
+and [checklist](SURVEILLANCE_IMMUNITY_CURATION_CHECKLIST.md) condense this
+document; the gene YAML files hold the final decisions.
 
 **Date:** 2025-12-29
 **Reviewer:** AI Gene Review Curator
