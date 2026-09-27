@@ -116,7 +116,7 @@ At least **4 of 9** Cu/Zn-SOD-family paralogs appear to have lost/impaired canon
 - Crystal structure (PMID:37358501) shows **Val87 replaces the catalytic His** copper ligand
 - Confirmed structurally → its **4 SOD-activity annotations are OVER-ANNOTATED**
 - Three more paralogs keep all four catalytic Cu histidines at the residue level, **yet fail PROSITE PS00087** (N-terminal Cu coordination signature)
-- By analogy with the failed V87H rescue in RvSOD15 (loop dynamics), these are likely impaired too
+- By analogy with the V87H mutant structure of RvSOD15 (a flexible loop can destabilize Cu coordination of the restored His87), these are likely impaired too
 - Validates Sim & Inoue (2023): "some other RvSODs are also unusual SODs" — now with a precise count
 
 ---

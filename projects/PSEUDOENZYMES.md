@@ -276,12 +276,12 @@ well-documented alternative function.
 |---------|---------|
 | **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
 | **Defect** | Degenerate Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution) |
-| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
+| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
 | **Actual function** | Anti-silencing factor; recruits SAGA histone acetyltransferase and Bdf2 bromodomain protein to heterochromatin boundaries; promotes nucleosome turnover; functions as H3K9me **reader**, not eraser |
 | **Type** | Type 5 (reader/recognition without modification) |
-| **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0051213 (dioxygenase activity), GO:0005506 (iron ion binding), GO:0070076 (histone lysine demethylation) |
-| **Annotations added** | GO:0042393 (histone binding), GO:0140030 (modification-dependent protein binding) |
-| **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Audergon 2015 (PMID:25838386); Epe1 gene review at `genes/SCHPO/Epe1/` |
+| **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0032454 (histone H3K9 demethylase activity; IDA and EXP rows), GO:0140680 (histone H3K36me/H3K36me2 demethylase activity), GO:0051213 (dioxygenase activity), GO:0016491 (oxidoreductase activity), GO:0046872 (metal ion binding). Open PR #3229 proposes UNDECIDED rather than REMOVE for the two experimental GO:0032454 rows |
+| **Annotations added** | NEW rows: GO:0140030 (modification-dependent protein binding), GO:0031452 (negative regulation of heterochromatin formation), GO:0006473 (protein acetylation); GO:0042393 (histone binding) enters as the proposed replacement for the MODIFY on protein binding and as a core-function MF, not as a NEW row |
+| **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Sorida 2019 (PMID:31206516); Epe1 gene review at `genes/SCHPO/Epe1/` |
 
 **Key insight:** Epe1 is a paradigm for the Type 5 (reader) pseudoenzyme.
 Its JmjC domain retains substrate recognition capability (binds H3K9me) but
@@ -497,6 +497,9 @@ Good template for families where the pseudoenzyme has neofunctionalized
 - **Bao et al. 2019** - Epe1 recruits SAGA; overexpressed Epe1-H297A still
   disrupts silencing, SAGA-dependently (the paper notes that endogenous-level
   H297A resembles epe1Δ)
+- **Sorida et al. 2019** - single-copy Epe1-H297A suppresses ectopic
+  heterochromatin formation but fails to remove established ectopic
+  heterochromatin (PMID:31206516)
 - **Manning et al. 2002** - Original identification of ~10% of human kinome
   as pseudokinases *Cell*
 

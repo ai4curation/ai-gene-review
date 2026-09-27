@@ -21,7 +21,8 @@ desiccation was missing from every disordered protectant and was proposed as
 NEW on seven genes, and a sequence plus PROSITE analysis of the SOD family
 (`genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/`) found one pseudoenzyme
 (RvSOD15, whose Val87 in place of a copper-ligand histidine is confirmed by
-crystal structure, PMID:37358501, though no activity assay exists), three
+crystal structure, PMID:37358501; the cached record, which holds only the
+abstract and introduction, reports no activity measurement), three
 probably impaired paralogs, one copper chaperone and four likely functional
 enzymes.
 
@@ -79,11 +80,11 @@ The TDP families partition by cellular compartment:
 
 ### ROS Scavenging - Cu/Zn Superoxide Dismutase Paralog Family
 
-R. varieornatus has an expanded family of ~10 Cu/Zn SOD paralogs in UniProt
+R. varieornatus has an expanded family of 9 Cu/Zn SOD paralogs in UniProt
 (plus 1 Mn/Fe-SOD, RvY_01767). Sim & Inoue (2023) identified RvSOD15 as a
 likely pseudoenzyme and noted that "some other RvSODs" may also have lost
 function. We applied bioinformatic analysis (sequence conservation + PROSITE
-motif matching + Pfam membership) to all 10 paralogs to assess catalytic
+motif matching + Pfam membership) to all 9 Cu/Zn paralogs plus the Mn/Fe-SOD to assess catalytic
 capability. Details: `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/RESULTS.md`
 
 | Gene Symbol | UniProt | Status | Verdict | Notes |
@@ -127,7 +128,7 @@ The most consistent gap is the absence of **GO:0009269 (response to desiccation)
 
 ### RvSOD15 is a confirmed pseudoenzyme - and it's not alone
 The crystal structure (PMID:37358501) revealed that Val87 replaces a critical
-histidine copper ligand in RvSOD15. We extended this analysis to all 10
+histidine copper ligand in RvSOD15. We extended this analysis to all 9
 Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
 (see `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/RESULTS.md`):
 
@@ -136,9 +137,9 @@ Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
   All four catalytic Cu histidines preserved at the residue level, BUT all three
   fail PROSITE PS00087 (the N-terminal Cu coordination signature), indicating
   divergence in flanking residues that maintain the structural geometry of the
-  Cu site. By analogy with the V87H rescue failure in RvSOD15 (where restoring
-  the missing histidine did NOT restore stable Cu coordination, because a
-  flexible loop destabilizes it; PMID:37358501), these
+  Cu site. By analogy with the V87H mutant structure of RvSOD15 (where a
+  nearby flexible loop can destabilize coordination of the restored His87 to
+  the Cu atom; PMID:37358501), these
   paralogs likely have impaired catalytic function.
 - **1 copper chaperone** (RvY_15948, CCS homolog): correctly lacks SOD activity
   annotation in GOA - automated pipelines got this one right
@@ -147,7 +148,7 @@ Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
 
 This validates Sim & Inoue's claim that "some other RvSODs are also unusual
 SODs" and provides a more precise count: at least 4 of 9 Cu/Zn-SOD-family
-paralogs (excluding the chaperone) appear to have lost or impaired canonical
+paralogs appear to have lost or impaired canonical
 SOD activity. The picture of "gene duplication = more antioxidant capacity"
 is only partially correct - roughly half the expanded SOD repertoire may be
 non-catalytic.
