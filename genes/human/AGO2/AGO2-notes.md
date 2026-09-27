@@ -170,3 +170,25 @@ artifact citations. Source receipts are
 SHA-256 is `0876942c72b2e537e858e8af7cd3c79d34b97c2169490e3d883c6f00884e2965`.
 Only the nine exact required recovered records accompany this gene's
 manifest. No cache, Git state or remote state was edited.
+
+## 2026-09-27 remaining provider references after PR 3264 merge
+
+The merged review at main `d35dcc30b44924f79c0510b281ae824aa536848a`
+was rechecked against every local gene file before this follow-up. The two
+provider-only citations, PMID:15105377 and PMID:23746446, now have verified,
+unchanged normal-fetch caches from source4 run 36294925088, artifact 10925791130
+(ZIP SHA256 `26ba088d1d78146c81fd744fc68aa532f4a9eb2c3dfc4b96cd647fd74624ac81`).
+Both include full text; their abstracts and relevant experimental passages
+were read. The 2004 paper characterizes cleavage chemistry in affinity-purified
+minimal RISC from human HeLa extract, without identifying a purified AGO2
+polypeptide as the sole catalytic component in that experiment. The 2013 paper
+studies engineered human AGO1/AGO3, with AGO2 structural and domain comparators.
+These source scopes are preserved; neither cache creates a new AGO2 assertion.
+
+The prior DNS and missing-record statements above are historical. A fresh
+recursive census now finds all 92 cited PMIDs and all cited Reactome records.
+The full review YAML, all 267 seeded assertions, actions, five cores, reference
+identities, quotations, alternative products and raw/provider files remain
+unchanged. This follow-up adds only the two exact caches, provenance notes,
+their rendering and a scaffolded history record. Intentional validation
+advisories remain separate from the now-closed source gaps.
