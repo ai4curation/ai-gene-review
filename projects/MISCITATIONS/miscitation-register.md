@@ -9,30 +9,30 @@ autolink_gene_symbols: false
 
 This register is rendered directly from the `references[].reference_review` blocks curated in the gene-review YAML (see the [Reference schema class](../../src/ai_gene_review/schema/gene_review.yaml)). It is the structured, queryable counterpart to the worked cases on the [parent project page](../MISCITATIONS.md).
 
-**19530 adjudicated reference(s)** across **2434** of **5023** reviewed gene files.
+**19746 adjudicated reference(s)** across **2459** of **5049** reviewed gene files.
 
-- **Flagged as a citation problem** (WRONG_IDENTIFIER / MISCITED / DISPUTED / LOW_QUALITY): **812 (4.2%)**
-- **Not yet checked** (UNVERIFIED): 797
+- **Flagged as a citation problem** (WRONG_IDENTIFIER / MISCITED / DISPUTED / LOW_QUALITY): **815 (4.1%)**
+- **Not yet checked** (UNVERIFIED): 805
 
 ## By correctness
 
 | Correctness | Count | Share |
 |---|---:|---:|
-| WRONG_IDENTIFIER | 35 | 0.2% |
-| MISCITED | 325 | 1.7% |
+| WRONG_IDENTIFIER | 36 | 0.2% |
+| MISCITED | 325 | 1.6% |
 | DISPUTED | 282 | 1.4% |
-| LOW_QUALITY | 170 | 0.9% |
-| UNVERIFIED | 797 | 4.1% |
-| VERIFIED | 17916 | 91.7% |
+| LOW_QUALITY | 172 | 0.9% |
+| UNVERIFIED | 805 | 4.1% |
+| VERIFIED | 18121 | 91.8% |
 
 ## By relevance
 
 | Relevance | Count |
 |---|---:|
-| HIGH | 9897 |
-| MEDIUM | 5467 |
-| LOW | 4084 |
-| NONE | 80 |
+| HIGH | 10003 |
+| MEDIUM | 5523 |
+| LOW | 4137 |
+| NONE | 81 |
 
 ## By organism
 
@@ -40,17 +40,17 @@ Organisms with at least one adjudicated reference, ranked by the number of flagg
 
 | Organism | Adjudicated | Flagged | WRONG_IDENTIFIER | MISCITED | DISPUTED | LOW_QUALITY | UNVERIFIED |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| human | 15712 | 625 | 26 | 252 | 210 | 137 | 465 |
+| human | 15760 | 627 | 26 | 252 | 210 | 139 | 465 |
 | PSEPK | 926 | 49 | 0 | 27 | 5 | 17 | 157 |
-| yeast | 508 | 24 | 4 | 4 | 13 | 3 | 48 |
+| yeast | 530 | 24 | 4 | 4 | 13 | 3 | 49 |
 | DICDI | 458 | 19 | 1 | 9 | 9 | 0 | 17 |
-| SCHPO | 193 | 14 | 1 | 3 | 9 | 1 | 6 |
-| worm | 349 | 9 | 0 | 0 | 6 | 3 | 11 |
+| SCHPO | 207 | 14 | 1 | 3 | 9 | 1 | 6 |
+| worm | 398 | 9 | 0 | 0 | 6 | 3 | 11 |
 | mouse | 61 | 9 | 0 | 8 | 1 | 0 | 16 |
-| DROME | 159 | 8 | 1 | 5 | 2 | 0 | 12 |
+| DROME | 197 | 8 | 1 | 5 | 2 | 0 | 19 |
+| ARATH | 347 | 7 | 2 | 1 | 4 | 0 | 17 |
 | HETGA | 123 | 7 | 0 | 1 | 1 | 5 | 1 |
 | rat | 28 | 7 | 0 | 4 | 2 | 1 | 0 |
-| ARATH | 314 | 6 | 1 | 1 | 4 | 0 | 17 |
 | POPTR | 47 | 4 | 0 | 0 | 4 | 0 | 0 |
 | NICAT | 9 | 4 | 0 | 0 | 4 | 0 | 2 |
 | XENTR | 15 | 3 | 0 | 1 | 0 | 2 | 0 |
@@ -61,7 +61,7 @@ Organisms with at least one adjudicated reference, ranked by the number of flagg
 | NOVAD | 5 | 2 | 0 | 2 | 0 | 0 | 0 |
 | PYROR | 4 | 2 | 1 | 0 | 1 | 0 | 0 |
 | ECOLI | 116 | 1 | 0 | 1 | 0 | 0 | 9 |
-| EMENI | 42 | 1 | 0 | 1 | 0 | 0 | 0 |
+| EMENI | 54 | 1 | 0 | 1 | 0 | 0 | 0 |
 | SACEN | 36 | 1 | 0 | 0 | 1 | 0 | 13 |
 | WHEAT | 16 | 1 | 0 | 0 | 1 | 0 | 0 |
 | NEUCR | 13 | 1 | 0 | 1 | 0 | 0 | 0 |
@@ -124,11 +124,12 @@ Organisms with at least one adjudicated reference, ranked by the number of flagg
 
 Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e. every reference a reviewer has positively judged to be a citation or soundness problem. Notes are truncated at 400 characters; the full text is in the source YAML and in `reports/miscitations.tsv`.
 
-### WRONG_IDENTIFIER (35)
+### WRONG_IDENTIFIER (36)
 
 | Organism | Gene | Reference | Title | Rel. | Notes |
 |---|---|---|---|---|---|
 | ARATH | GL1 | PMID:3793867 | Cytotoxic and enterotoxic activities of Campylobacter jejuni are not specified by tetracycline resistance plasmids pMAK… | NONE | The cached abstract explicitly assays Campylobacter plasmids in Vero and Chinese hamster ovary cells. The intended Arabidopsis paper is unknown; biological assessment remains UNDECIDED. |
+| ARATH | WIP1 | PMID:20579133 | A laboratory evaluation of the physical and mechanical properties of selected root canal sealers. | NONE | Resolves (PubMed record cached) to 'A laboratory evaluation of the physical and mechanical properties of selected root canal sealers' (Int Endod J 2010), unrelated to WIP1. Live QuickGO (2026-09-27) still lists the IntAct WIP1-RANGAP1 IPI with this PMID. IntAct PSICQUIC shows the source record IMEx IM-19345 labelled 'Xu et al. (2007)', which suggests the WIP discovery paper (PMID:17600715, Xu, Me… |
 | DICDI | gbpC | PMID:18673369 | The Legionella pneumophila phosphatidylinositol-4 phosphate-binding type IV substrate SidC recruits endoplasmic reticul… | NONE | This PMID is a Legionella pneumophila SidC effector study with no relation to GbpC or cGMP binding. It is cited in GOA as the reference for GbpC cGMP binding (IDA) and regulation of chemotaxis (IMP); those functions are genuine but the identifier is mis-attributed. The correct GbpC references are PMID:12011437, PMID:18703517 and PMID:15827084. |
 | DROME | insc | PMID:10973066 | Genetics of heart development. | NONE | Cited (TAS) for insc sensory organ development, but this is a review of cardiac/heart development in zebrafish and Drosophila; the abstract does not mention inscuteable or sensory organs. Appears to be a wrong/mis-applied citation for this annotation; the sensory-organ-development role itself is real but should be sourced to a primary pI/SOP study (e.g. PMID:12526793). |
 | PYROR | PoMZ_10221 | file:PYROR/PoMZ_10221/PoMZ_10221-deep-research-openai.md | Deep research on PoMZ_10221 function | NONE | Report describes a mitochondrial dihydroorotate dehydrogenase/PoPYR4, whereas F8U970 is the AEH41994.1 UDP-rhamnose epimerase/reductase characterized in PMID:22102281. Do not use its pyrimidine or localization claims. |
@@ -781,7 +782,7 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | yeast | SSQ1 | file:yeast/SSQ1/SSQ1-deep-research-falcon.md | Falcon (Edison) deep research report: SSQ1 (Q05931), mitochondrial Hsp70 chaperone for Fe-S cluster biogenesis | HIGH | Report and evidence table read in full and checked against primary sources. Core ISC-transfer synthesis is supported. Quantitative claim of full rescue requiring 1000-2000-fold Ssc1 overexpression is misleading: PMID:10779357 measured twofold Ssc1 increase, approximately 2000-fold relative to baseline Ssq1, with only partial rescue. Narrow native specificity does not negate the observed in-vitro… |
 | yeast | YAR1 | file:yeast/YAR1/YAR1-hypotheses/function-hypothesis-go-0001228/openscientist.md | OpenScientist hypothesis review of YAR1 GO:0001228 | HIGH | The domain distinction informs GO:0001228, but blanket removal of regulation/MBF/SBF does not follow: non-DNA-binding subunits need not carry APSES. Bulk acidity is not a sufficient exclusion test, and actual PAINT topology was not recovered. |
 
-### LOW_QUALITY (170)
+### LOW_QUALITY (172)
 
 | Organism | Gene | Reference | Title | Rel. | Notes |
 |---|---|---|---|---|---|
@@ -916,6 +917,7 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | human | GALK1 | PMID:19946888 | Defining the membrane proteome of NK cells. | LOW | High-throughput NK-cell membrane proteome. The resulting "membrane" localization is a proteomic co-purification and is directly contradicted by the curated NOT\|located_in membrane IDA (PMID:8908517). |
 | human | GCSH | PMID:16189514 | Towards a proteome-scale map of the human protein-protein interaction network. | LOW | Large-scale yeast two-hybrid interactome (CCSB-HI1). Source of a bare protein binding IPI; the interactor is not a GCS/lipoylation partner and does not inform GCSH function. |
 | human | GCSH | PMID:32296183 | A reference map of the human binary protein interactome. | LOW | HuRI binary interactome map. Source of multiple bare protein binding IPIs (NMI, MAGEA6/11, MED11, MIS18A, RHBDD2); none are GCS or lipoylation-pathway partners, so they do not inform GCSH molecular function. |
+| human | KASH5 | PMID:26842404 | Depletion of the LINC complex disrupts cytoskeleton dynamics and meiotic resumption in mouse oocytes. | MEDIUM | Mouse oocyte siRNA/morpholino knockdown only; spindle and F-actin phenotypes are indirect; likely source of oocyte-specific IBA/IEA terms. |
 | human | LRCH2 | PMID:35351988 | Novel genes bearing mutations in rare cases of early-onset ataxia with cerebellar hypoplasia. | MEDIUM | PubMed metadata and full cached article were checked. This is a single-family candidate-gene report supported by conservation and expression analyses, without segregation across multiple families or direct functional validation of p.Lys258Glu. It informs tissue and disease hypotheses, not normal molecular function or definitive gene-disease causality. |
 | human | NAT10 | PMID:19946888 | Defining the membrane proteome of NK cells. | LOW | Membrane-fraction proteomics; the resulting GO:0016020 annotation for a soluble nucleolar protein is best read as co-fractionation. |
 | human | NDUFA11 | PMID:32296183 | A reference map of the human binary protein interactome. | LOW | Genome-wide binary Y2H interactome (HuRI); source of the bare "protein binding" IPI. NDUFA11 is not discussed individually (one PPI among >50,000); the reported partner MEOX2 is not a plausible functional partner for a Complex I membrane subunit. Uninformative for molecular function. |
@@ -942,6 +944,7 @@ Every reference whose `correctness` is not `VERIFIED` and not `UNVERIFIED`, i.e.
 | human | SLC45A4 | PMID:25164149 | Proton-associated sucrose transport of mammalian solute carrier family 45: an analysis in Saccharomyces cerevisiae. | HIGH | PubMed-verified: Bartolke et al., Biochem J 464(2):193-201, 2014. Correctly cited and not retracted, but methodologically weak as the sole basis of a molecular-function call: sucrose uptake was measured only in Saccharomyces cerevisiae heterologously expressing mouse SLC45A2/3/4, with Km around 5 mM. It is the seed for every sucrose annotation in this family, including the mouse IDAs that the hum… |
 | human | SLCO5A1 | PMID:42231149 | Deorphanisation and functional characterisation of OATP5A1 as transport protein for amino acids and vitamins. | HIGH | PubMed-verified: Kohlmann et al., Cell Mol Biol Lett 31(1):75, 2026 (Jun 2), PMC13231527. Full text available and read. The sole source for every substrate claim about OATP5A1, and correctly cited for all of them. Marked LOW_QUALITY not because the work is poorly done - the controls (4 degree Celsius counter-controls, saturation kinetics with six biological replicates, inhibitor panels, thiamine… |
 | human | STING1 | PMID:40861013 | Beyond interferons: Non-canonical roles of MITA/STING. | LOW | PubMed-verified: Yang Y et al. (Cell Insight 2025), 'Beyond interferons: Non-canonical roles of MITA/STING', doi 10.1016/j.cellin.2025.100266. A review, and the sole support for four NAS annotations (GO:0006914, GO:0045820, GO:0055088, GO:0090398). Correctly cited, but review prose is weak evidence for process annotations; two of the four (glycolysis, lipid homeostasis) are marked as over-annotat… |
+| human | SUN5 | PMID:31144711 | SPAG4L/SPAG4Lβ interacts with Nesprin2 to participate in the meiosis of spermatogenesis. | LOW | Abstract only; claims SPAG4L/Nesprin2 LINC complexes in meiosis from co-IP/IF; contrasts with normal meiosis in Sun5-null mice. |
 | human | TCN1 | PMID:32814053 | Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregatio… | LOW | Large-scale yeast two-hybrid interactome screen; the single TCN1-JPH3 interaction underlies only an uninformative "protein binding" IPI with no functional follow-up. |
 | human | TNFRSF21 | PMID:22761420 | Death receptor 6 induces apoptosis not through type I or type II pathways, but via a unique mitochondria-dependent path… | MEDIUM | PubMed-verified (J Biol Chem 2012). Correctly cited, but the apoptosis it reports depends on ectopic overexpression of a death-domain receptor, which is weak evidence for a physiological role; hence KEEP_AS_NON_CORE for the apoptotic process annotation. |
 | human | TRAF3 | PMID:11279055 | A diverse family of proteins containing tumor necrosis factor receptor-associated factor domains. | LOW | PubMed-verified and correctly cited, but the interaction it supports is non-selective: isolated TRAF domains of MUL/TRIM37 and USP7 bound all six TRAF proteins in vitro. Weak basis for the GO:0031625 and GO:0031996 IPI rows, which are consequently kept only as non-core. Abstract-only in cache. |

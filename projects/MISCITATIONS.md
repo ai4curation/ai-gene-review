@@ -2,8 +2,8 @@
 title: "Miscitation Review Project"
 maturity: SCOPING
 tags: [PIPELINE]
-species: [human]
-genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9]
+species: [human, ARATH]
+genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1]
 ---
 
 # Miscitation Review Project
@@ -176,6 +176,25 @@ MYH9's review records `correctness: WRONG_IDENTIFIER` with a `replacement` to
 `PMID:27325790` (`reason: WRONG_IDENTIFIER`). RAB3A, SYTL4 and RAB10 have no reviews
 in this repo yet, so their seven rows are not in the register. That is a concrete
 case where the register under-counts a complex-partner spread.
+
+### ARATH/WIP1 — an IntAct interaction citing a dental paper
+
+Found on 2026-09-27 while reviewing Arabidopsis WIP1 for the
+[LINC complex module](../modules/linc_complex.yaml). A live QuickGO query returns
+**2 annotations** citing `PMID:20579133`: the reciprocal `GO:0005515` IPI pair
+WIP1 (Q8GXA4) with RANGAP1 (Q9LE82), `assigned_by` IntAct on 2026-07-25.
+PubMed resolves `20579133` to *"A laboratory evaluation of the physical and
+mechanical properties of selected root canal sealers"* (Int Endod J, 2010).
+
+This is not a dropped digit. The IntAct record behind the rows (IMEx
+IM-19345) credits "Xu et al. (2007)", which points to `PMID:17600715`,
+*"Anchorage of plant RanGAP to the nuclear envelope involves novel
+nuclear-pore-associated proteins"* (Curr Biol, 2007). That is the paper that
+characterized the WIP1-RanGAP1 interaction. But `PMID:17600715` carries its own
+IMEx id (IM-19776), so the intended reference is not certain. WIP1's review
+records `correctness: WRONG_IDENTIFIER` without a `replacement`. This is the first
+IntAct-sourced `WRONG_IDENTIFIER` in the project, and the error sits in the
+publication identifier of the IMEx record, not in a GO curation step.
 
 ### ZBP1 and GRID1 — the interactor, not the paper
 
@@ -374,6 +393,9 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
 - [x] MYH9 `PMID:2732579` → `PMID:27325790` (dropped digit) recorded; live GOA shows
       the same defect on RAB3A, SYTL4 and RAB10 (11 rows total)
 - [ ] Record the RAB3A / SYTL4 / RAB10 rows when those genes are reviewed
+- [x] ARATH/WIP1 `PMID:20579133` (dental paper) on the WIP1-RANGAP1 IntAct pair
+      recorded; the intended paper is probably `PMID:17600715`, but that is
+      unconfirmed (IMEx IM-19345)
 - [ ] Decide what, if anything, to report upstream to GOA / UniProt / IntAct, and in
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
@@ -384,6 +406,14 @@ Last updated: 2026-09-27
 # NOTES
 
 ## 2026-09-27
+
+**WIP1 IntAct wrong identifier.** Found while reviewing Arabidopsis WIP1 for the
+LINC complex module. IntAct's WIP1-RANGAP1 IPI pair cites `PMID:20579133`, a
+2010 root canal sealer study. Checked at NCBI E-utilities and in live QuickGO
+(2 rows). The IMEx record credits Xu et al. 2007 (`PMID:17600715`), but no
+replacement is asserted because that paper has a separate IMEx record. This
+kind of error should be reported to IntAct rather than GOA.
+
 
 **MYH9 dropped digit, spread across a complex.** Found while reviewing MYH9 for the
 nucleokinesis module. `PMID:2732579` (a 1989 hypoparathyroidism case report) stands in
