@@ -12,9 +12,29 @@ genes:
   - Scn9a
   - Trpv1
   - Tac1
+sidecars:
+  slide_figures:
+    - NAKED_MOLE_RAT/slides/cgas-hyal2-failures.svg
+    - NAKED_MOLE_RAT/slides/cgas-review-table.jpg
+    - NAKED_MOLE_RAT/slides/projection-outcomes.svg
 ---
 
 # Naked Mole Rat (HETGA) Annotation Review
+
+**Bottom line:** of about 335,000 GO annotations on naked mole rat proteins, exactly one is
+experimental; everything else is projected from mouse, human or rat orthologs or from
+sequence models. We reviewed all 169 existing annotations on eight landmark genes (the hyaluronan
+axis `Has2`, `Hyal2`, `Cd44`; the pain pathway `Scn9a`, `Ntrk1`, `Trpv1`, `Tac1`; and
+`Cgas`), testing each projection against the species' own literature. We chose this species
+because it is one of the few non-model animals where that literature exists, and it exists
+because these proteins diverged. Projection turned out to be mostly correct but unfocused:
+only 4 rows were removed, while 84 were demoted to non-core or over-annotated, and 11 new
+annotations were proposed. The removals include a sign reversal (`Cgas` promotes rather than
+suppresses homologous recombination in this species) and a `Hyal2` virus-receptor term
+propagated from a donor set that contains a curated NOT for the same term. Batch 1 is
+complete; no further batches have started. The action table below predates a later
+re-review of the TreeGrafter rows, and the repo now counts 58 ACCEPT, 57 KEEP_AS_NON_CORE
+and 1 UNDECIDED.
 
 The naked mole rat (*Heterocephalus glaber*, UniProt code `HETGA`, NCBI taxon 10181) is one
 of the most intensively studied non-model mammals in ageing and sensory biology. It is
@@ -175,3 +195,7 @@ not for either hyaluronidase. Search partners, paralogs and the pathway, not jus
 
 Several key papers are abstract-only in the cache, including all four cGAS papers and the
 primary NaV1.7 acid-insensitivity paper. Quote only what those abstracts state.
+
+## Slides
+
+- [Slides](NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.html) (Marp source: [NAKED_MOLE_RAT-slides.md](NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.md)) — AI generated
