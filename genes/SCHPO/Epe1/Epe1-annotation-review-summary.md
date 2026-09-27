@@ -7,7 +7,7 @@ Completed comprehensive review of 32 existing GO annotations for S. pombe Epe1 p
 
 ### Incorrect Annotations Removed (10 annotations)
 1. **GO:0032452** (histone demethylase activity) - REMOVE
-2. **GO:0032454** (histone H3K9 demethylase activity) x2 - REMOVE 
+2. **GO:0032454** (histone H3K9 demethylase activity) x2 - UNDECIDED (IDA/EXP from PMID:25838386; in vivo genetic evidence, catalysis disputed; not removed)
 3. **GO:0140680** (histone H3K36me/H3K36me2 demethylase activity) - REMOVE
 4. **GO:0016491** (oxidoreductase activity) - REMOVE
 5. **GO:0051213** (dioxygenase activity) - REMOVE
@@ -16,7 +16,7 @@ Completed comprehensive review of 32 existing GO annotations for S. pombe Epe1 p
 **Rationale**: Extensive biochemical evidence shows Epe1 lacks enzymatic activity:
 - No demethylase activity detected in vitro (Raiymbek 2020, PMID:32433969)
 - Lacks a critical Fe(II) ligand: the JmjC triad is H297-E299-Y370, with Tyr370 in place of the third (His) iron ligand of canonical HX(D/E)...H demethylases
-- H297A catalytic mutant retains anti-silencing function (Bao 2019, PMID:30531922)
+- The H297A Fe(II)-site mutant does not settle the question, and its phenotype depends on the assay: at endogenous levels it behaves like epe1Δ in erasing tethering-induced H3K9me (Audergon 2015, PMID:25838386) and fails to remove established ectopic heterochromatin while still suppressing variegation (Sorida 2019, PMID:31206516); only when overexpressed does it still disrupt pericentric silencing, in a SAGA-dependent way (Bao 2019, PMID:30573453)
 - C-terminus alone (without JmjC) can disrupt heterochromatin
 
 ### Annotations Modified for Specificity (3 annotations)
