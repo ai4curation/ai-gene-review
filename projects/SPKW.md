@@ -12,7 +12,7 @@ and for many genes a keyword was the only source of an annotation. We reviewed
 genes whose annotation rested solely on such a keyword, in 12 subprojects that
 cover human apoptosis, rhythm and autophagy terms, five model or vector
 organisms, phages, viruses and non-Arabidopsis plants (137 genes by the results
-table below; the status list says 133). Eukaryotic process keywords were the
+table below). Eukaryotic process keywords were the
 problem: 79 to 100% of reviewed apoptosis, autophagy, rhythm and *S. pombe*
 meiosis rows were over-annotations, mostly because a gene that regulates or is
 merely active during a process was annotated as participating in it. Bacterial
@@ -99,7 +99,7 @@ Not all SPKW-unique annotations are over-annotations:
 
 - **Started**: 2025-12-23
 - **Last updated**: 2026-05-30
-- **Total genes reviewed**: 133 across 11 subprojects
+- **Total genes reviewed**: 137 across 12 subprojects (sum of the results table above)
 - **Compiled data**: `spkw_reviewed_genes.csv` was not archived in this repository; the reviewed-gene summary is retained below.
 
 ### Phase 1 (Original)

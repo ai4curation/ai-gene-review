@@ -51,12 +51,14 @@ keyword's biology.
 |---|---|
 | GO:0140476 | symbiont-mediated suppression of host cytoplasmic pattern recognition receptor signaling pathway via inhibition of TRAF activity |
 
-- **The GO:0140476 term ID does not yet resolve in OLS** (verified 2026-07-04).
-  Per the annotation tracker discussion, this term still needs to be created in
-  the ontology before the KW-1110 mapping can be repointed at it. The
-  annotation tracker ticket is waiting on confirmation before deleting the
-  existing mapping and adding the new one (the deletion is reversible if the
-  new term is delayed).
+- **Superseded (2026-09-26):** GO:0140476 now resolves in OLS and the GO
+  `uniprotkb_kw2go` file maps KW-1110 to it (see the bottom line above). The
+  rest of this item is the historical record: on 2026-07-04 the term ID did not
+  yet resolve in OLS, and per the annotation tracker discussion, the term still needed to be created in
+  the ontology before the KW-1110 mapping could be repointed at it. The
+  annotation tracker ticket was waiting on confirmation before deleting the
+  existing mapping and adding the new one (the deletion was reversible if the
+  new term was delayed).
 
 ### Nature of the change
 

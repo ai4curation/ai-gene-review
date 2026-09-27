@@ -1,6 +1,6 @@
 ---
 title: "Reactome Black Box Event Gap-Filling"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human]
 genes: [ABCD3]
