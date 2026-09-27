@@ -312,7 +312,7 @@ def test_pages_deployment_requires_opt_in_and_publishable_artifact():
     assert ".deployable == true" in summary
     assert ".broken_local_links" in summary
     assert ".off_base_path_links" in summary
-    assert "likely missing site-prefix links" in summary
+    assert "absolute deployment size ceiling" in summary
     assert deploy["concurrency"] == {"group": "pages", "cancel-in-progress": False}
     assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
     assert deploy["environment"]["name"] == "github-pages"
@@ -484,3 +484,11 @@ def test_propagation_failure_blocks_publication_but_preserves_regeneration():
     for name in ("Check for changes", "Create or update regeneration PR"):
         assert 'app/propagation/' in _step(job, name)['run']
     assert "steps.propagation-build.outcome == 'failure'" in _step(job, "Warn when Pages artifact build fails")['if']
+
+
+def test_publication_does_not_run_biological_validation():
+    workflow = _workflow(GENERATE_PAGES)
+    assert not any('validate-modules' in step.get('run', '') for step in workflow['jobs']['generate-pages']['steps'])
+    assert 'validate-modules' not in (ROOT / 'project.justfile').read_text().split('build-pages:', 1)[1].splitlines()[0]
+    ci = _workflow(ROOT / '.github/workflows/main.yaml')
+    assert _step(ci['jobs']['test'], 'Validate modules (scoped)')['run'] == 'just validate-modules'

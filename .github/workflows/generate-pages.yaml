@@ -73,8 +73,8 @@ jobs:
       - name: Render ProtNLM prediction evaluations from all review sidecars
         run: just render-prediction-eval
 
-      - name: Validate module YAML files
-        run: just validate-modules
+      # Biological validation runs independently in main.yaml (PRs and weekly).
+      # Publication renders the accepted contents of main without revalidating GO.
 
       - name: Render module pages
         run: just render-modules
@@ -112,7 +112,7 @@ jobs:
           PAGES_ARTIFACT_DEPLOY_ENABLED: ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED }}
         run: |
           {
-            echo "## Shadow GitHub Pages artifact"
+            echo "## GitHub Pages artifact"
             echo
             if [ "$PAGES_ARTIFACT_DEPLOY_ENABLED" = "true" ]; then
               echo "Actions deployment is enabled for artifacts that pass the publication checks."
@@ -137,12 +137,14 @@ jobs:
             echo "| Broken local targets | $(jq -r .broken_local_links _site-manifest.json) |"
             echo "| Archive budget (bytes) | $(jq -r .archive_size_budget_bytes _site-manifest.json) |"
             echo "| Size budget (bytes) | $(jq -r .size_budget_bytes _site-manifest.json) |"
+            echo
+            echo "Link-quality findings above are advisory; they do not block publication."
           } >> "$GITHUB_STEP_SUMMARY"
           if jq -e '.deployable == true' _site-manifest.json > /dev/null; then
             echo "deployable=true" >> "$GITHUB_OUTPUT"
           else
             echo "deployable=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or has excluded or missing static local targets or likely missing site-prefix links. The existing site will remain deployed."
+            echo "::warning title=Pages deployment blocked::The artifact is empty or exceeds the absolute deployment size ceiling. The existing site will remain deployed."
           fi
 
       - name: Upload GitHub Pages artifact
