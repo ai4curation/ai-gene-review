@@ -108,3 +108,52 @@ The coordinator independently read all 19 annotation decisions, all 13 reference
 `just validate human ALG1` passed with no reported warnings; `just render human ALG1` succeeded. All 41 supporting quotations were independently checked as exact whitespace-normalized substrings of their cited canonical files. All 19 seeded source objects, both alternative products, the original 12 reference ID/title pairs and immutable UniProt/GOA bytes were preserved. The four YAML PMID references have canonical caches and cache-consistent full-text flags. History is scaffolded with actor `codex`, tool `codex`, model `gpt-6` and checked separately.
 
 Both additional normal retrieval processes terminated with exit code 1: the historical-source request cached 0/2, and the recent-source request cached 0/2. The notes-inclusive census therefore still has exactly four absent records: PMID:14709599, PMID:14973782, PMID:40328714 and PMID:40980150. The targeted validator did not report these historical/research-notes gaps; the independent notes-inclusive census did. Status remains DRAFT and publication readiness is contingent on their recovery. No new canonical cache or provider artifact was created, and no Git or remote mutation was performed by this reviewer.
+
+
+## 2026-09-27 — source7 cache closure
+
+The four previously missing, notes-cited publications are now present as exact
+normal-fetch outputs from [recovery run36299519155](https://github.com/ai4curation/ai-gene-review/actions/runs/36299519155),
+source commit `583c2ac3b65ce1f7f9808c7b10c53e25f322129a`, artifact10927941174
+(235,928 bytes; SHA256 `a07af3765c6f8fa1aea780c1a6a4a6f71a561a75d1a29b6c9d334018618fa4b3`).
+The verified import preserved the original record bytes. The earlier failed local
+retrievals remain historical facts; their missing-cache gate is now closed.
+
+- [PMID:14709599](https://pubmed.ncbi.nlm.nih.gov/14709599/) is abstract-only locally.
+  The patient lipid-linked precursor profile and human-allele complementation in
+  yeast support the original discovery context. This is not a purified human
+  enzyme assay or native human topology experiment.
+- [PMID:14973782](https://pubmed.ncbi.nlm.nih.gov/14973782/) is also abstract-only
+  locally. It reports affected human patients, reduced enzyme activity, and
+  human wild-type versus patient-allele rescue in yeast. Its severe infantile
+  presentation is source-specific, consistent with the broader phenotypic
+  variability already described above. Both discovery-paper identities and
+  abstracts were checked against the official PubMed records.
+- [PMID:40328714](https://pubmed.ncbi.nlm.nih.gov/40328714/) remains abstract-only
+  locally. The recovered English abstract and independently indexed primary
+  record confirm the previously described human constructs expressed in E. coli,
+  substrate-dependent LC-MS assay and partial membrane-component restoration.
+  The [original publisher page](https://cjb.ijournals.cn/html/cjbcn/2025/4/24240834.htm)
+  additionally exposes indexed Methods section1.2.7: DPGn2 acceptor and GDP-Man
+  donor are incubated with recombinant protein before LC-MS product analysis.
+  This further supports the construct-specific assay scope; it does not turn the
+  local cache into a full-text record or establish native ER topology.
+- [PMID:40980150](https://www.spandidos-publications.com/10.3892/ol.2025.15263)
+  now has an extracted full-text cache. The recovered Methods, Results and
+  Discussion were read, including the human primary carcinoma-cell cultures,
+  ALG1 knockdown/overexpression, antibody-based co-immunoprecipitation, and
+  migration, viability, apoptosis and EMT-marker assays. These results agree
+  with the bounded research assessment above. Co-immunoprecipitation from cell
+  lysate establishes association but does not isolate a purified binary binding
+  mechanism; docking is computational. The discussion explicitly identifies
+  downstream signaling mechanisms as future work. No new tumor-process or
+  binding annotation is justified merely by closing this source-access gap.
+
+The recursive authored-file citation census contains eight PMIDs and three
+Reactome records, all cached. The three explicit DOI links and two PMC identifiers
+resolve to publications already in that census. No provider report or raw provider
+attachment exists for this gene, and unasserted UniProt bibliography is not added
+as a new citation requirement. All 19 annotation/source objects, their decisions,
+the integrated core, both alternative products, all 13 reference assessments and
+all supporting quotations are unchanged. Status becomes COMPLETE after source
+closure and targeted validation; no new biological assertion is introduced.
