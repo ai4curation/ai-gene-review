@@ -25,4 +25,9 @@ Use ferric iron binding in the core synthesis to match the explicit Fe(3+) ligan
 
 Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
 
-The broad GO:0046872 row is now MODIFY to GO:0008199 ferric iron binding, matching annotated Fe(3+) sites and the existing core function. Live QuickGO confirms the descendant relationship. No redundant NEW binding annotation was added; DRAFT reflects the completed review with remaining biological questions.
+The broad GO:0046872 row is now MODIFY to GO:0008199 ferric iron binding, reflecting the conserved N-lobe Fe(3+) site while explicitly caveating the broken C-lobe iron site. Live QuickGO confirms the descendant relationship. No redundant NEW binding annotation was added; DRAFT reflects the completed review with remaining biological questions.
+
+
+## Focused OpenScientist lactotransferrin follow-up
+
+The focused report resolved the pending receptor-trafficking, iron-transport and protease carry-overs. Draculin retains enough of the lactotransferrin scaffold to keep metal-ion binding and serine-type peptidase activity as caveated, non-core inferences, but the C-lobe iron site and the lactoferrin protease dyad are partly degraded. Membrane/endosome locations, ion transport and broad proteolysis/hydrolase parents are now treated as over-annotations, while antibacterial and immune rows are retained as non-core family-level inferences rather than as demonstrated draculin functions.

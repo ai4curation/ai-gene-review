@@ -1,19 +1,30 @@
 ---
 title: "Chimeric mRNA Trans-Fusions in Immunity"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, mouse]
 genes: [GSDMD, TMEM106A]
+sidecars:
+  slide_figures:
+    - CHIMERIC_MRNA_IMMUNITY/slides/attribution.svg
+    - CHIMERIC_MRNA_IMMUNITY/slides/trans-splicing-mechanism.svg
 ---
 
 # Chimeric mRNA Trans-Fusions in Immunity
 
-> A **chimeric trans-fusion** transcript joins exons from **two separate genes** — often on
-> **different chromosomes** — into a single mRNA via **RNA-level trans-splicing**, without any
-> underlying DNA rearrangement. When such a transcript is translated it can produce a **hybrid
-> protein with its own function**, distinct from either parent. This project tracks the
-> curation questions these raise for gene-function review, using the immune effector
-> **GSDMD:TMEM106A** as the anchoring example.
+**Bottom line:** a chimeric trans-fusion transcript joins exons from two separate genes,
+often on different chromosomes, into one mRNA by RNA trans-splicing with no DNA
+rearrangement, and its translation can yield a hybrid protein with its own function. A 2026
+Nature study (PMID:42686912) showed that inflammation in mouse macrophages produces a
+GSDMD:TMEM106A chimera whose TMEM106A part is read out of frame, and that the chimeric protein
+binds canonical GSDMD N-termini to speed pore formation and IL-1β release. We reviewed the two
+human parent genes, GSDMD (77 annotations) and TMEM106A (10), both now COMPLETE, and recorded
+the chimera in each review's `knowledge_gaps` and questions rather than as an annotation of
+either parent. We did this because GO assumes one gene gives one set of products, and a
+chimera breaks that: its function belongs to neither parent, the TMEM106A contribution is not
+the canonical protein, and no human chimera has yet been shown. No chimera-level annotation
+exists and none is proposed; what remains is the set of open questions at the end of this
+page.
 
 ## Why this matters for gene-function curation
 
@@ -131,3 +142,7 @@ whereas many catalogued chimeras are cancer-associated or of unproven function.
 - **PMID:42686912** — Venezia O, Kane H, et al. (senior author R. Jackson). *Functional
   chimeric mRNAs encode proteins in mammalian immunity.* Nature, 2 Sep 2026.
   DOI: 10.1038/s41586-026-10982-x. (Primary source; PubMed-verified.)
+
+## Slides
+
+- [Slides](CHIMERIC_MRNA_IMMUNITY/slides/CHIMERIC_MRNA_IMMUNITY-slides.html) (Marp source: [CHIMERIC_MRNA_IMMUNITY-slides.md](CHIMERIC_MRNA_IMMUNITY/slides/CHIMERIC_MRNA_IMMUNITY-slides.md)) — AI generated
