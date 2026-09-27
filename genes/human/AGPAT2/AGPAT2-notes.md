@@ -250,7 +250,7 @@ was hand-written. All original PMID and Reactome caches remain unmodified.
 ### Newer primary evidence: PA supply and ER tubulation
 
 **PMID:41387688**, [official PubMed](https://pubmed.ncbi.nlm.nih.gov/41387688/)
-and [full primary Nature article](https://www.nature.com/articles/s41467-025-66474-5)
+and [full primary Nature Communications article](https://www.nature.com/articles/s41467-025-66474-5)
 ([PMC12749901](https://pmc.ncbi.nlm.nih.gov/articles/PMC12749901/)), verified as
 *AGPAT2 acts at the crossroads of lipid biosynthesis and DRP1-mediated ER
 morphogenesis*. Read Results/Figures 1, 7-8, Discussion and relevant Methods.
@@ -284,3 +284,26 @@ warnings. The five missing publication caches recorded above remain unresolved.
 All 31 annotation judgments, source assertions, reference identities and the
 single catalytic core are unchanged. This corrects the status label without
 claiming that the missing source material has been recovered.
+
+
+## 2026-09-27: PR 3208 quotation and source-access follow-up
+
+Confirmed canonical files match published head `be63dced1ece9f5f5f2e06a97abf7496f1b12bfc` before editing. All 31 source assertions and 23 reference identities remain unchanged. Actions remain **24 ACCEPT, 1 MODIFY, 6 UNDECIDED**; one integrated core and no NEW.
+
+The reviewer correctly identified a paraphrase presented as a quotation for **PMID:34824276**. Reopened the [official PubMed abstract](https://pubmed.ncbi.nlm.nih.gov/34824276/) and [primary Nature Communications article](https://www.nature.com/articles/s41467-021-27279-4). Two annotation supports and the core now use exact short abstract fragments in ordinary `supporting_text`, not the fulltext exception. These passages describe AGPAT2/CDS interaction and PA metabolism along the CDP-DAG branch. The article is open access; normal-cache recovery remains a DRAFT gate. The reference finding retains the measured complex/flux result and separates it from proposed direct substrate channeling.
+
+For **PMID:19075029**, the original [PMC2666181 article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2666181/) was recovered by indexed query `"PMC2666181" "TC116102"`. Methods subsection *In vitro acyltransferase activity assays* contains the existing HEK293/transfected-construct quotation verbatim. Human AGPAT2 cDNA is TC116102 in *Plasmid construction*; Figure2 documents separate substrate assays. The fragment is Methods text, not a reconstructed caption. Local cache remains abstract-only.
+
+The [primary Nature Communications paper for PMID:41387688](https://www.nature.com/articles/s41467-025-66474-5) was reopened, including Results/Figures1,8,9. It reports human U2OS knockdown and HEK293T interaction assays alongside mouse-MEF experiments. The mechanism remains PA production by AGPAT2 and PA-dependent DRP1 action; no autonomous AGPAT2 membrane-sculpting or GTPase function is added. Indexed [official PubMed](https://pubmed.ncbi.nlm.nih.gov/41387688/) confirms PMID, title, DOI and PMC12749901. Corrected the journal name to Nature Communications.
+
+VERIFIED is retained for those checked primary sources and [11967537](https://pubmed.ncbi.nlm.nih.gov/11967537/), [16150824](https://pubmed.ncbi.nlm.nih.gov/16150824/) and [19346281](https://pubmed.ncbi.nlm.nih.gov/19346281/). This denotes identity and bounded content checked independently, not successful cache retrieval or proof that every human GO annotation is supported.
+
+The broad membrane and phospholipid biosynthesis/metabolism assertions describe source-supported location or direct PA-producing chemistry. Core membership does not require the same broad term to be duplicated in a separate core entry. The specific acyltransferase MF refinement remains. Core prose now includes the DAG/TAG branch, consistent with cached human catalytic evidence, UniProt and previously inspected mouse GO-CAM activities. Downstream PA phosphatases, CDS and DGAT enzymes retain their own chemistry; no additional NEW human process is inferred from adjacency.
+
+Rat Ensembl Compara rows remain UNDECIDED because exact donor-reference linkage and human conservation are unresolved, not because experimental-curator protection applies to IEA. Rechecked [original JLR fetal-skin Results/Figures3-4](https://www.jlr.org/article/S0022-2275%2820%2932883-2/fulltext): Agpat2 transcript changes are distinguished from total multi-isoform activity. The [live GO:0009410 definition](https://amigo.geneontology.org/amigo/term/GO:0009410) includes enzyme-production/expression changes, so the paroxetine-associated spot does not imply a nonexistent detoxification activity. Plausible but unresolved donor context does not establish a demonstrably excessive human transfer.
+
+Cached Reactome6799350 lacks the AGPAT2 participant list. Prior positive identity verification used live sets and the AGPAT2 entity documented above; this distinction is now explicit. Both neutrophil-specific locations remain UNDECIDED while primary AGPAT2 supplementary assignments are unresolved.
+
+All five required missing normal caches remain gates: **11967537,16150824,19346281,34824276,41387688**. No reference or note citation was removed to evade the requirement. Status stays DRAFT. No source cache, provider output, published history, Git state or shared project file was manually altered.
+
+Follow-up normal `fetch-pmid` attempt completed: **Cached 0/5**, with DNS resolution errors for every requested PMID. No publication file was generated. The execution log is `/tmp/AGPAT2-followup-fetch.log`.
