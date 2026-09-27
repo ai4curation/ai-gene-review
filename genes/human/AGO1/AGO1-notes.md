@@ -270,3 +270,7 @@ available provider report. The latter is intentional: annotations use checked pr
 sources. `just validate-history` and `just render human AGO1` pass. YAML is alias-free
 and has no trailing whitespace. No source caches, provider artifacts, Git state or
 shared project files were edited.
+
+## Status correction, 2026-09-26
+
+Changed the authored review status from COMPLETE to **DRAFT** to match the schema and the publication gate already documented for missing PMID:26764146 and PMID:40500329 caches. All 113 annotation decisions, source fields, reference assessments and the integrated core are unchanged. The YAML's only parsed change is the status value. The published baseline is `e47a3fa018bcdc23d4a26f5ff367771f8385b5c1`; its three gene-file blobs were independently confirmed by the coordinator and matched locally before editing. Targeted validation, regenerated rendering and a new append-only session record accompany this correction. The external cache requirement remains open; this status change makes no new biological claim.
