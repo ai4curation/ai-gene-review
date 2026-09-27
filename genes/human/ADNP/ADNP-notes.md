@@ -505,3 +505,118 @@ intentional provider-quotation advisory. The source harness reconciled all 53
 GOA rows, 26 donor rows and 130 case-sensitive whitespace-normalized quotes.
 Its 14 offline test directions, the analyzer's 10 classifier/motif directions
 and snapshot-render equality check passed.
+
+
+## 2026-09-27 source8/9 provider-inclusive closure
+
+The approved revision at `1c3873ad506c83afc650b15a89840a7b9c697d58`
+was checked against all 14 local gene/history baseline files before editing.
+The latest exact-head formal review (5329130918) approved the source-driven
+harness and retained peptide-transfer uncertainty. Its nonblocking suggestions
+do not require additional annotation assertions. The historical classifier JSON,
+provider report, machine records and all published history remain unchanged.
+
+This entry supersedes the earlier **cache census**, not the scope of the
+previously read experiments. Recursive typed-citation scanning of the YAML,
+notes, genuine Affinage report and bioinformatics source/report files finds
+**57 distinct PMIDs and seven Reactome records**, all now present. The
+notes-only DOI and PMC links resolve to records already in that set:
+`10.1371/journal.pone.0015894`/PMC3022755 is PMID:21267468,
+PMC1502393 is PMID:16845437, and PMC10982698 is PMID:38479840.
+The Affinage report has no additional DOI-only or linked raw PDF/HTML
+bibliography. Unused UniProt bibliographic entries are not new authored
+citations. This census does not recursively turn every bibliography of every
+primary paper into a new review dependency.
+
+Source9 supplied the 21 previously absent provider PMIDs and three broad
+Reactome records; source8 supplied the other three broad Reactome records.
+All 27 exact normal-fetch records are absent from the current PR base and
+match the coordinator's immutable canonical-import receipts. Source9 run
+36302278898 used head `cbe06b74dfe671a5e741f9f9baa04743a9b1f3dd`
+and artifact ZIP SHA-256
+`7bca7e6cddc4f37ab6c1b3b6e682c9914a0614dc01f0a6efcec5666c8cba5a65`.
+Source8 run 36301782511 used head
+`2be3635f79c080562d2ee255725fc8061d0fed47` and artifact ZIP SHA-256
+`2ebb896c12cced8cdd2dd2da38a87766e636bc503fcd633967e54d021b0f1fdd`.
+The earlier ordinary local source9 attempts failed DNS and wrote no records;
+the remote standard fetcher subsequently succeeded. No cached text was edited,
+manufactured or overwritten, and no redundant local retry was needed.
+
+The new PMID records comprise **13 recovered bodies and eight abstract-only
+records**. Access labels below reflect the actual local record. Body review
+focused on the relevant Methods, Results, figure captions and limitations;
+it is not a claim that all supplementary data or every interaction was
+independently reproduced. A listed PMCID alone does not change an abstract-only
+cache into a full-text record.
+
+| Primary source | Local access and sections inspected | Source-specific judgment |
+| --- | --- | --- |
+| [PMID:16564114] | Abstract only; Cached PubMed abstract | PACAP38 stimulates ADNP mRNA in mouse neuron-glia co-cultures, with receptor/inhibitor effects. ADNP is the regulated gene in this experiment; this does not demonstrate that ADNP itself is the PACAP receptor or performs the upstream signaling step. |
+| [PMID:18286385] | Abstract only; Cached PubMed abstract | P19 differentiation, ADNP distribution and shRNA phenotypes support developmental and cytoplasmic context. The abstract does not resolve every brain specimen's species; no human neuron-specific localization or direct neurite-building mechanism is inferred from the P19 model alone. |
+| [PMID:23272107] | Body; PMC3522725 Methods, Results and Figures 1-6 | Administered NAP alters microtubule dynamics in rat PC12, cortical astrocytes and neurons, with NIH3T3 comparisons. The soluble/polymerized assay is nonsignificant at two hours but modestly positive at four hours. These are peptide-treatment experiments, not direct native human full-length ADNP assays. |
+| [PMID:24489906] | Body; PMC3906161 Methods and Results/Figure 5 | Mouse brain nuclear extracts show ADNP immunoreactivity co-precipitating with BRM and PSF, with antibody-free controls and tissue/age-dependent limitations. Tau-isoform expression correlations and the proposed splicing model do not independently demonstrate direct ADNP splice-site catalysis or a general splicing activity. |
+| [PMID:25169753] | Body; PMC4195434 clinical presentation and ADNP-in-nBAF sections | The paper combines clinical/genetic analysis, including an additional patient, with discussion of prior BAF interaction work. Its BAF interaction paragraph cites earlier experiments; it is not a newly purified ChAHP composition experiment. The machine PRIMARY_RESEARCH label does not make every mechanistic statement an original assay. |
+| [PMID:25646590] | Body; PMC4445743 Methods and Results/Figure 3 | Mouse hippocampal ADNP/eIF4E co-immunoprecipitation, predicted binding motifs and sex/genotype-dependent eIF4E expression are positive observations. They do not by themselves measure an ADNP-catalyzed translation-initiation reaction. Human postmortem expression is a separate observational arm. |
+| [PMID:28115743] | Abstract only; Cached PubMed abstract | NAP changes EB comets, EB3 homodimers and EB-Tau association in cell models; NIH3T3 protection requires introduced Tau. Preserve peptide and model scope. The study's proposed endogenous ADNP mechanism is not equivalent to a direct full-length human-protein assay in the accessible abstract. |
+| [PMID:28219017] | Abstract only; Cached PubMed abstract | The abstract reports FMDV leader protease interaction with ADNP, ADNP recruitment to IFN-alpha promoters and a BRG1-containing complex. These support a virus-associated transcriptional context. The abstract does not identify all construct/host species, so no human-specific antiviral chemistry is assigned. |
+| [PMID:29911927] | Abstract only; Cached PubMed abstract | GFP-tagged ADNP variants in HEK293T cells alter nuclear localization, heterochromatin enrichment and stability; MG132 rescues selected truncated forms. Mutant trafficking and degradation are distinguished from wild-type localization and from ADNP being a proteasomal enzyme. The local cache remains abstract-only despite a listed PMCID. |
+| [PMID:33967268] | Abstract only; Cached PubMed abstract | The source describes ADNP-SIRT1 associations, correlated expression and histone/microtubule contexts. Exact domain contacts and every model's species cannot be reconstructed from the abstract; association does not confer SIRT1 deacetylase chemistry on ADNP. |
+| [PMID:35538192] | Abstract only; Cached PubMed abstract | ADNP mutant/live-cell microtubule effects and mouse brain actin co-immunoprecipitation are distinct from predicted SH3/actin motifs and NAP rescue in Shank3-mutant mice. The abstract reports motif perturbation, but this does not independently establish an isolated human ADNP actin-binding domain assay. |
+| [PMID:35775424] | Abstract only; Cached PubMed abstract | Human postmortem ADNP/POGZ expression and viral knockdown in mouse prefrontal cortex are separate arms. Neuroinflammatory, microglial and synaptic outcomes do not demonstrate that ADNP directly transports neurotransmitters or catalyzes inflammatory chemistry. Local cache remains abstract-only. |
+| [PMID:36230962] | Body; PMC9563912 Methods and Results | CRISPR-edited mouse N1E-115 cells express GFP-Adnp under its endogenous murine promoter, including Pro403* and Tyr718* counterparts of human mutations. Morphology, survival and nuclear/cytoplasmic distribution differ between variants and respond to NAP. Human plasmid results discussed in the introduction are prior studies, not the species of the current edited clones. |
+| [PMID:37285842] | Body; PMC10501989 Methods, Results and Figures 5-7 | Primary mouse Th2 cells show endogenous ADNP association with CHD4, BRG1 and BATF plus ADNP-dependent chromatin recruitment of remodelers. GATA3/AP-1 binding persists without ADNP; HP1gamma does not colocalize at the activating loci. This is positive recruitment/scaffold evidence, distinct from the HP1-containing repressive ChAHP complex and from a purified direct GATA3-ADNP binding assay. |
+| [PMID:37365244] | Body; PMC10618100 Methods and Results/Figures 1 and 5 | Adnp exon-5 heterozygous deletion in mice produces age-dependent excitability and synaptic phenotypes. Juvenile excitation/inhibition changes differ from adult basal transmission; adult LTP responds to CaMKII inhibition. The source explicitly leaves the cause of CaMKII hyperphosphorylation unresolved, so it does not establish ADNP kinase activity or a uniform synaptic-transmission direction. |
+| [PMID:37759476] | Body; PMC10527813 Methods and Results sections 3.1-3.7 | Cy5-NAP enters nuclei of edited mouse neuroblastoma clones and improves mutant-associated distribution defects. Ketamine-ADNP and NAP-zinc-finger contacts are docking predictions, separate from imaging and fractionation. Neither predicted contact is treated as a measured binding activity. |
+| [PMID:39715923] | Body; PMC12092271 Methods and Results/Figure 4 | Mouse models combine BrdU labeling, hippocampal transcriptomics and NAP treatment. MitoTracker colocalization uses edited mouse GFP-Adnp neuroblastoma cells; human targeting-sequence structure is modeled. Colocalization does not resolve an intramitochondrial subcompartment or prove direct mitochondrial transcription catalysis. |
+| [PMID:39808658] | Body; PMC11760920 Methods, Results/Figure 7 and Discussion | Mouse telencephalon-specific Adnp/Chd4 knockouts, co-immunoprecipitation and CUT&RUN show ADNP-dependent CHD4 recruitment and cortical-growth gene regulation. Effects involve active regulatory elements and differ from embryonic-stem-cell repression. The authors bound inference from strong conditional knockouts to heterozygous human disease; Chd4's enzymatic activity is not reassigned to ADNP. |
+| [PMID:40188316] | Body; PMC12339388 Methods and Results/Figures 3-6 | Human iPSC-derived microglia show ADNP-dependent synaptic-material uptake, acidification and motility phenotypes, and ADNP colocalizes with early endocytic markers. No change in bulk dextran endocytic load was observed. A direct trafficking role is suggested, while necessity, localization and proteome changes do not identify a specific catalytic or structural endocytic step for a NEW assertion. |
+| [PMID:40498903] | Body; PMC12677912 Methods, Results/Figures 6-7 and Discussion; live PubMed identity | In human iPSC-derived NPCs, ADNP is a POU3F2 target and interacting partner. ADNP overexpression leaves baseline Wnt output unchanged and reduces Wnt3a responsiveness; SOX13 is the principal positive effector. This refines the existing context-dependent Wnt explanation without reversing the original positive mouse neural-differentiation result. |
+| [PMID:40536108] | Body; PMC12257630 Methods and Results/Figures 1-7 | A heterozygous mouse C-terminal frameshift reduces full-length Adnp and excitatory/inhibitory PFC transmission; LSD1 inhibition rescues several outcomes, with sex differences. The study explicitly allows different mechanisms for mutation and inhibitor effects and no baseline difference in four tested histone marks. It does not confer LSD1 histone-demethylase chemistry on ADNP. |
+
+The six recovered provider Reactome citations are broad pathway summaries:
+R-HSA-112316 (Neuronal System), R-HSA-1266738 (Developmental Biology),
+R-HSA-162582 (Signal Transduction), R-HSA-168256 (Immune System),
+R-HSA-4839726 (Chromatin organization) and R-HSA-74160
+(Gene expression (Transcription)). Their identities and summaries were read,
+but these records do not identify an ADNP-specific catalyst, physical component
+or reaction. They are kept as the report's contextual citations, distinct from
+the existing specific ChAHP formation event R-HSA-9940477. Their availability
+does not validate every provider-predicted pathway assignment.
+
+Two recovered mechanistic distinctions matter to this review. First,
+PMID:37285842 demonstrates ADNP-dependent CHD4/BRG1 recruitment in mouse
+Th2 cells, with pioneer-factor occupancy maintained in ADNP-deficient cells.
+The activating assembly is not evidence that BRG1 replaces HP1 in canonical
+ChAHP. The provider's incorrect ChAHP composition remains explicitly flagged.
+Second, PMID:40498903 supplies direct human NPC evidence that the direction
+of Wnt regulation varies by cellular context. Its Results state:
+“ADNP overexpression did not affect baseline Wnt signalling (Fig. 7E) but
+significantly reduced Wnt3a responsiveness in both genotypes (Fig. 7F).”
+The cached full source and Figure 7 were read, and its title/DOI/PMID were
+independently checked at PubMed. This evidence is attached to the existing
+Wnt row and existing question. The positive mouse-neural-differentiation
+experiment in PMID:32533114 remains valid; neither result is asserted as a
+universal direction across cells or species.
+
+All **53 seeded source assertions and actions**, all **three complete cores**,
+and all **43 original reference identities** are preserved. One primary
+reference, PMID:40498903, is added to support the bounded Wnt context;
+there are now 44 top-level references. The Wnt reason, its donor explanation
+and the existing Wnt question gain that limitation. The provider assessment
+records the recovered primary corrections. No NEW row or new core process
+is introduced. Human microglial endosomal localization and perturbation
+phenotypes in PMID:40188316 are recorded as a scoped lead, without guessing
+which endocytic step ADNP performs. NAP/cGMP/NO transfer uncertainties are not
+resolved by unrelated chromatin or synaptic studies.
+
+Source closure is separate from the intentional provider-quotation advisory.
+YAML remains DRAFT if that advisory is emitted; with no missing required
+source, the PR may receive a fresh current-head review. Validation, history,
+rendering, exact case-sensitive quote checks, immutable-source comparisons and
+final file hashes are recorded in the closure manifest.
+
+Independent read-only peer consultation confirmed the mouse Th2 Methods and
+Figures 5-7 in PMID:37285842: endogenous association plus ADNP-dependent
+remodeler recruitment supports a distinct activating assembly, without a
+purified fixed-stoichiometry bridge or human Th2 assay. No source or annotation
+changes were made by that consultation.
