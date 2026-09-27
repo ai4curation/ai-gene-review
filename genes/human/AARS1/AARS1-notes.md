@@ -94,3 +94,51 @@ The last paper's non-rescue result is not discarded: it supports a construct-dep
 The recursive audit includes the YAML, these notes, the genuine Falcon report and its nested artifact, normalizing escaped and URL-encoded DOIs and matching actual cached PMID/DOI metadata. The quoted `10.1172/JCI174587DS1` is a supplementary-link context within PMID:38512451, not a separate paper assigned an invented PMID; complete supplementary recovery is not claimed. All five added titles retain exact machine metadata. Final census, validation, unchanged-source/quotation checks, history and rendering are captured in the manifest. No fresh fetch was needed for records already recovered normally.
 
 The recursive audit also found an older uncached citation, [PMID:2040280](https://pubmed.ncbi.nlm.nih.gov/2040280/), in five unchanged rat-donor propagation comments. Its primary PubMed identity and abstract were verified by indexed primary access on 2026-09-27: the 1991 Dignam study compares bacterial, insect and rat-liver alanyl-tRNA synthetases using aminoacylation, pyrophosphate exchange and limited proteolysis. The abstract supports this source context but does not expose every binding assay underlying the donor annotations; no full body was recovered or read in this follow-up. One normal `fetch-pmid 2040280` attempt ended with exit 1, cached 0/1 and DNS failure (`/tmp/AARS1-donor2040280-fetch.log`). The source remains a required cache gate. This closure therefore supplies the five recovered provider records, not complete closure of every citation: the recursive census contains 29 PMIDs and two cached Reactome records, with PMID:2040280 still missing. DRAFT and a draft publication recommendation are retained. The existing donor judgments and all annotation actions remain unchanged.
+
+
+## 2026-09-27 source17 legacy donor closure and review follow-up
+
+The exact open PR #3301 head `67b7d2872fc611269fd60ff5f64500f82a647fce`
+was verified before editing, including every canonical gene/provider file and
+published history. Formal review 5330279421 and comment 5855778122 approved
+the prior source assessments and offered three non-blocking suggestions.
+
+The coordinator imported the exact normally fetched [PMID:2040280] record from
+source17, run 36315912888, head `a50f934ce43976a6dc79ec6b21bd1e0ce8b99042`.
+Its immutable cache SHA-256 is
+`02c5eecf8e1a9baf5fa58ada15580c986d63529c3cc6331c24bc7eed6da8c4a7`;
+the import receipt is `tmp/source17-canonical-import-receipt.json`.
+The [primary PubMed record](https://pubmed.ncbi.nlm.nih.gov/2040280/) and recovered
+abstract were read separately. Bacterial, silkworm and rat-liver enzymes were
+compared; this is not a human AARS1 experiment. The abstract reports loss of
+charging after proteolysis with retained pyrophosphate exchange and joint
+alanine/ATP protection. Detailed donor binding assays remain outside the
+available abstract. No full body was recovered or read. A structured reference
+now records this scope without changing any of the five donor comments or
+their independent human support.
+
+This entry supersedes the preceding missing-cache status. The earlier gate
+was the campaign's recursive citation requirement, not a warning emitted by
+the gene validator for a PMID appearing only in prose comments. The newly
+structured reference is now subject to ordinary reference validation. The
+recursive authored/provider census, including the genuine nested Falcon
+artifact and decoded DOI/PMCID links, contains 29 PMIDs and two Reactome
+records, all cached. The JCI supplementary DOI suffix remains a documented
+supplementary link rather than a new article identifier.
+
+The relevance of [PMID:41639505] changes from LOW to MEDIUM because it is an
+AARS1-focused secondary review. Its DISPUTED correctness and specific
+ALSP-nomenclature/mechanism caveats remain unchanged; relevance is not a
+quality score. The suggestion to cite Falcon as core evidence was considered.
+It remains a research aid, while independently checked primary studies support
+the biological assertions; no provider quotation is added solely to remove
+the advisory. YAML remains DRAFT under the warning-free COMPLETE convention,
+while the recovered source closes the citation gate for normal PR review.
+
+All 50 annotation objects/actions, three core functions, two alternative
+products, description, existing primary-reference identities, immutable
+machine/provider bytes and published histories are preserved. This follow-up
+changes only the one relevance rating, adds the donor reference assessment,
+appends these notes and a scaffolded session record, and refreshes rendering.
+Targeted validation, history and render outcomes and exact hashes are recorded
+in the follow-up manifest. No cache, Git or remote state was edited.
