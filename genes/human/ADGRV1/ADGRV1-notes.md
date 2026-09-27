@@ -375,3 +375,40 @@ record this remaining limitation rather than treating field conversion as a
 successful source fetch.
 
 Validation outcome (2026-09-27 UTC): the existing standard `just validate human ADGRV1` run completed successfully, with two warning groups: unavailable publication caches and unused Falcon evidence. The normal retry recovered no caches. All five missing PMID cache gates therefore remain open, and the review remains DRAFT. Rendering, history validation, source-object and reference-identity preservation checks passed. The coordinator independently accepted the complete biological delta.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+All five required records are recovered. PMID:35630584 (PMC9146371) and
+PMID:36139365 (PMC9496679) contain XML full text; their local
+`full_text_unavailable` flags are now false. Relevant construct Methods and
+signaling or fractionation Results agree with the previously inspected primary
+articles. Human VLGR1a and engineered CTF remain distinct from intact VLGR1b;
+transfected human CTF localization remains distinct from endogenous retinal
+experiments in other species. Existing full-text quotations for these two papers
+are present in the caches.
+
+PMID:22419726, PMID:24191038 and PMID:24962568 are abstract-only locally,
+so their flags remain true. The bone-density abstract does not newly resolve
+positive mineral deposition. The two signaling papers had previously been
+read in full externally, and that provenance remains explicit. Their ordinary
+supporting_text snippets that came from external Results are now replaced by
+exact cached abstract sentences supporting the same Gi coupling, Gs/Gq-linked
+calcium response and MAG stability claims. The external construct/assay details
+remain in the unchanged reasons with access provenance in the source assessments.
+No full-text exception field or fabricated cache was used.
+
+The exact cache records originate from normal fetch output in Actions run
+36286975328, head 5946477c8ac79ade0709264c775ea1262b108438, artifact
+10920674630. The verified ZIP SHA-256 is
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`;
+`tmp/verified-reference-records/local-import-receipt.json` records per-file
+hashes. Only these five gene-required caches enter the closure manifest.
+
+All 65 original source assertions, annotation actions and reasons, core
+functions and their biological descriptions, 26 reference identities,
+machine/provider files and previous history are preserved. Only evidence
+attachments, source-access notes and status metadata are updated. This entry
+supersedes earlier missing-cache status. Targeted validation, rendering and
+history checks determine the final status and are recorded in the manifest;
+any remaining advisory is distinguished from the now-closed cache gate.
