@@ -1,5 +1,6 @@
 ---
 title: ProtNLM2 Evaluation
+collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags:
 - EVALUATION
@@ -343,6 +344,26 @@ genes:
 ---
 # ProtNLM2 Evaluation
 
+**Bottom line:** ProtNLM2 is Google DeepMind's sequence-to-text model that
+writes protein names, GO terms and function paragraphs straight from sequence,
+and UniProt ships its output on unreviewed entries. We assessed it the way a
+curator would, protein by protein, using the COR/CNN/LSP/UNC/NPI/PLI/REP
+categories of de Crécy-Lagard et al. 2025 (PMID:40703034): 282 protein records,
+242 of them prediction targets, giving 288 GO-term assessments and 57 narrative
+function reviews. Across all cohorts the GO claims split 53 COR, 32 CNN, 83
+LSP, 103 UNC and 17 NPI, with no PLI or REP. On the original stratified
+ARGO-ProtNLM-50 subset (77 GO claims) the split is 51.9% supported, 39.0%
+uncertain and 9.1% contradicted. Narrative text behaves differently from GO
+terms: 13 of the 57 function reviews contain a paralog-confusion judgment,
+a category that never appears among the GO claims.
+
+The recurring failure is not a wrong family but a claim pitched above what the
+sequence supports: a catalytic activity where the deposited sequence lacks the
+catalytic region (wheat patatin A0A3B6GK97, Arabidopsis LRR F4JLB7), or a
+localization that cannot exist in the organism (neuron projection in wheat
+F6LAX4). The most common single verdict is uncertain, which is the honest
+result for TrEMBL proteins with no direct characterization.
+
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
 **[Browse all ProtNLM predictions](../app/predictions/index.html?source_method=ProtNLM2)** — filter prediction sets, narrative reviews, and individual GO claims by species, cohort, and assessment. [Fly records](../app/predictions/index.html?source_method=ProtNLM2&species=DROME) include reviewed empty GO outputs.
@@ -504,7 +525,7 @@ COR and CNN distinguish absence versus presence of an equivalent annotation in t
 | [REST API fetch pipeline](PROTNLM_EVALUATION/fetch_protnlm_api.py) | Retrieval of raw prediction and corroboration records |
 | [Exploratory notebook](PROTNLM_EVALUATION/protnlm_summary.ipynb) | Dataset exploration |
 | [Benchmark notebook](PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb) | Benchmark overlap analysis |
-| [Slide deck](PROTNLM_EVALUATION/protnlm_evaluation_slides.md) | Exploratory presentation; assessment totals and case judgments on this page reflect the current reviews |
+| [Slide deck](PROTNLM_EVALUATION/protnlm_evaluation_slides.html) (Marp source: [protnlm_evaluation_slides.md](PROTNLM_EVALUATION/protnlm_evaluation_slides.md)) — AI generated | Exploratory presentation; assessment totals and case judgments on this page reflect the current reviews |
 | [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) | Focused investigations integrating multiple lines of evidence to inform prediction assessments |
 | [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) | Domain-to-GO mapping coverage across the benchmark |
 | [Data history](PROTNLM_EVALUATION/data_history.md) | XML/API source provenance |

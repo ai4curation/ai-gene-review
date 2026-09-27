@@ -1,10 +1,28 @@
 ---
 title: "ICAM-3 Receptor Activity — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [human]
 ---
 
 # ICAM-3 Receptor Activity — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted the molecular function term GO:0030369
+*ICAM-3 receptor activity*, because ICAM3 is a ligand for several unrelated
+receptors (the integrins ITGAL:ITGB2 and ITGAD:ITGB2, and C-type lectins
+such as CLEC4M and CD209), and one ligand-named term fits none of them
+precisely: it lumps biochemically distinct receptors together and names the
+ligand rather than the activity. The proposed home is the parent GO:0004888
+*transmembrane signaling receptor activity*, with the ligand recorded as a
+`has_input` ICAM3 (UniProtKB:P32942) extension. We checked the affected
+annotations: three human rows assigned by UniProt (ITGAL and ITGB2, IMP from
+PMID:19029120; CLEC4M, NAS from PMID:11257134), plus about 155 Ensembl
+Compara IEA projections that follow them. No review in this repo uses the
+term and none of these genes is reviewed. Scoped, not yet started: the
+obsoletion has since landed (OLS lists GO:0030369 as obsolete), so the
+"proposal stage" notes below are out of date. The CLEC4M NAS row is the
+one that most needs a curator's eye, since its ICAM3 binding depends on
+glycans.
 
 ## Overview
 
@@ -97,14 +115,15 @@ this would be the entry point for that area of immunology.
   signaling-receptor sub-branch under GO:0038023 signaling receptor
   activity, so parent classifications upstream of GO:0030369 are
   preserved.
-- **Type of fix**: terminological — annotated proteins genuinely are
-  transmembrane signaling receptors that bind ICAM-3; the obsoletion just
-  records the ligand via `has_input` rather than via a ligand-specific MF
-  term. The biology of LFA-1 and DC-SIGNR is well established, so reviews
-  can typically ACCEPT GO:0004888 (with the ICAM3 `has_input` extension)
-  as a contributing MF term, while the core MF for LFA-1 is integrin /
-  ICAM-binding adhesion (e.g. GO:0050839 cell adhesion molecule binding)
-  and for DC-SIGNR is C-type lectin / mannose-binding
+- **Type of fix**: terminological upstream — the obsoletion records the
+  ligand via `has_input` rather than via a ligand-specific MF term. Whether
+  GO:0004888 *transmembrane signaling receptor activity* fits each
+  annotated protein is left to the gene reviews. It is debatable for the
+  LFA-1 heterodimer (ITGAL:ITGB2), whose ICAM engagement is chiefly
+  adhesive; the ITGAL/ITGB2 reviews should weigh it against an adhesion MF
+  (e.g. GO:0050839 cell adhesion molecule binding) rather than accept it
+  by default. For DC-SIGNR the likely core MF is C-type lectin /
+  mannose-binding
   (GO:0005537 D-mannose binding, GO:0038023 signaling receptor activity
   with `has_input` ICAM3 and other ligands).
 - **Special case (CLEC4M NAS annotation)**: the CLEC4M GO:0030369 entry
@@ -220,3 +239,7 @@ may not match the literal "ICAM-3 receptor" framing.
   No gene reviews started yet in this repo; none of the affected genes
   (ITGAL, ITGB2, CLEC4M, CD209, ICAM3, ITGAD) are present under
   `genes/`.
+
+## Slides
+
+- [Slides](ICAM3_RECEPTOR_ACTIVITY_OBSOLETION/slides/ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.html) (Marp source: [ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.md](ICAM3_RECEPTOR_ACTIVITY_OBSOLETION/slides/ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.md)) — AI generated

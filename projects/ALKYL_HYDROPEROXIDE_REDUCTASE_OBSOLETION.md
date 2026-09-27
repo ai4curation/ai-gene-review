@@ -1,10 +1,25 @@
 ---
 title: "Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [ECOLI, PSEAE]
 ---
 
 # Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted the molecular function term GO:0008785
+*alkyl hydroperoxide reductase activity*, whose definition fixed a single
+substrate (octane hydroperoxide) that no known enzyme is specific for, and
+merged it into GO:0102039 *NADH-dependent peroxiredoxin activity*
+(EC 1.11.1.26). The ontology change is merged upstream
+(geneontology/go-ontology#32015); what remains is moving two experimental
+annotations, E. coli AhpF (IGI) and P. aeruginosa PA3529 (IDA), to the new
+term. This page records that impact and queues both genes for review.
+Scoped, not yet started: neither gene has a review in this repo, so no
+existing review needs refreshing. The only repo review touching the
+replacement term is P. putida *ahpC*, which carries an IEA row for
+GO:0102039 that its review modifies to the single-subunit GO:0051920
+*peroxiredoxin activity*.
 
 ## Overview
 
@@ -154,3 +169,7 @@ review is blocked.
   #6396 still open (no comments). Ontology obsoletion PR
   geneontology/go-ontology#32015 already merged. No gene reviews
   started in this repo.
+
+## Slides
+
+- [Slides](ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.html) (Marp source: [ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.md](ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.md)) — AI generated

@@ -1,5 +1,6 @@
 ---
 title: "BioReason-Pro Comparison Project"
+collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
