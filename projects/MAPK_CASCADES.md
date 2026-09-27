@@ -92,13 +92,13 @@ annotations actioned and `core_functions` filled.
 
 | Tier | Done | To do |
 |---|---|---|
-| Adaptor | mouse Grb2 | human GRB2, SHC1 |
-| Ras GEF | - | human SOS1, SOS2 |
+| Adaptor | human GRB2, SHC1 (2026-09-27); mouse Grb2 | - |
+| Ras GEF | human SOS1, SOS2 (2026-09-27) | - |
 | Ras | human HRAS, KRAS, NRAS; mouse Kras, Hras | finish human HRAS, NRAS (status INITIALIZED); deep research for NRAS |
 | RasGAP | human NF1, RASA1 | - |
-| RAF (MAP3K) | human BRAF | human RAF1, ARAF |
-| MEK (MAP2K) | human MAP2K2, horse MAP2K2 (IN_PROGRESS) | human MAP2K1 |
-| ERK (MAPK) | human MAPK1; mouse Mapk1, Mapk3; rat Mapk1 | human MAPK3 |
+| RAF (MAP3K) | human BRAF; RAF1, ARAF (2026-09-27) | - |
+| MEK (MAP2K) | human MAP2K1 (2026-09-27), MAP2K2 (IN_PROGRESS); horse MAP2K2 | finish human MAP2K2 |
+| ERK (MAPK) | human MAPK1, MAPK3 (2026-09-27); mouse Mapk1, Mapk3; rat Mapk1 | - |
 | Invertebrates | - | fly rl, Dsor1, phl; worm mpk-1, mek-2, lin-45, let-60, sem-5 |
 
 ### p38 (`p38_cascade`)
@@ -152,7 +152,7 @@ No DUSP reviews in any species. To do: human DUSP1, DUSP4, DUSP6, DUSP10, DUSP16
 1. ~~Yeast HOG and mating cascades~~ (done 2026-09-24).
 2. ~~The human p38 tier proteins (MAP2K3, MAP2K6, MAPK14)~~ (done 2026-09-24).
 3. ~~Human JNK and ERK5 relays~~ (done 2026-09-25).
-4. Remaining ERK gaps (MAP2K1, MAPK3, RAF1, GRB2, SOS1), then DUSPs.
+4. ~~Remaining ERK gaps (MAP2K1, MAPK3, RAF1, ARAF, GRB2, SHC1, SOS1, SOS2)~~ (done 2026-09-27); then DUSPs.
 5. Invertebrate orthologs.
 
 Gene reviews need `just fetch-gene`, which needs network access to UniProt,
