@@ -34,6 +34,7 @@ Cells show `evidence:action`. `—` means the copy has no annotation to that exa
 | GO:0030318 melanocyte differentiation | IBA:ACCEPT<br>IGI:ACCEPT<br>IMP:ACCEPT | IBA:KEEP_AS_NON_CORE<br>IGI:KEEP_AS_NON_CORE |
 | GO:0043473 pigmentation | IGI:KEEP_AS_NON_CORE<br>IMP:KEEP_AS_NON_CORE | — |
 | GO:0045636 positive regulation of melanocyte differentiation | IMP:ACCEPT | — |
+| GO:0050936 xanthophore differentiation | IGI:NEW | IGI:NEW |
 | GO:0061386 closure of optic fissure | IGI:KEEP_AS_NON_CORE | — |
 | GO:0071228 cellular response to tumor cell | IMP:REMOVE | — |
 
@@ -44,12 +45,6 @@ Cells show `evidence:action`. `—` means the copy has no annotation to that exa
 | GO:0005634 nucleus | IBA:ACCEPT<br>IEA:ACCEPT | IBA:ACCEPT<br>IEA:ACCEPT |
 | GO:0005654 nucleoplasm | IC:ACCEPT | IC:ACCEPT |
 | GO:0005737 cytoplasm | IEA:KEEP_AS_NON_CORE | IEA:KEEP_AS_NON_CORE |
-
-### ?
-
-| Term | mitfa | mitfb |
-|---|---|---|
-| GO:0050936 xanthophore differentiation | IGI:NEW | IGI:NEW |
 
 ## Core molecular functions
 

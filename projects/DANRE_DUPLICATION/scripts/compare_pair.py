@@ -6,6 +6,8 @@ Reports, as markdown:
      from the cached UniProt records;
   2. existing GO annotations of each copy, grouped by term, with evidence codes
      and review actions, so asymmetries between the copies are visible;
+  2b. terms missing from both GOA files (e.g. proposed NEW terms) get their
+     aspect from the QuickGO API;
   3. the molecular functions each review lists under core_functions.
 
 Usage (from repo root):
@@ -14,7 +16,9 @@ Usage (from repo root):
 """
 
 import csv
+import json
 import sys
+import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
@@ -64,6 +68,17 @@ def aspects(gene: str) -> dict[str, str]:
     return out
 
 
+def quickgo_aspect(term_id: str) -> str:
+    """Aspect for a term not in either GOA file (e.g. a proposed NEW term)."""
+    url = f"https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{term_id}"
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            aspect = json.load(resp)["results"][0]["aspect"]
+    except Exception:
+        return "?"
+    return {"biological_process": "BP", "molecular_function": "MF", "cellular_component": "CC"}.get(aspect, "?")
+
+
 def load_review(gene: str) -> dict:
     return yaml.safe_load((GENES / gene / f"{gene}-ai-review.yaml").open())
 
@@ -90,6 +105,9 @@ def main(a: str, b: str) -> None:
             action = (ann.get("review") or {}).get("action", "PENDING")
             table[(term["id"], term.get("label", ""))][gene].append(
                 f"{neg}{ann.get('evidence_type', '?')}:{action}")
+    for tid, _ in table:
+        if tid not in asp:
+            asp[tid] = quickgo_aspect(tid)
     print("## Existing annotations by term\n")
     print("Cells show `evidence:action`. `—` means the copy has no annotation to that exact term "
           "(it may still have a parent or child term).\n")

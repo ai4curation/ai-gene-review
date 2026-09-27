@@ -26,20 +26,15 @@ Cells show `evidence:action`. `—` means the copy has no annotation to that exa
 
 | Term | elna | elnb |
 |---|---|---|
+| GO:0003232 bulbus arteriosus development | — | IMP:NEW |
 | GO:0008150 biological_process | ND:REMOVE | ND:REMOVE |
+| GO:0048251 elastic fiber assembly | IMP:NEW | IMP:NEW |
 
 ### CC
 
 | Term | elna | elnb |
 |---|---|---|
 | GO:0031012 extracellular matrix | IEA:ACCEPT | IEA:ACCEPT |
-
-### ?
-
-| Term | elna | elnb |
-|---|---|---|
-| GO:0003232 bulbus arteriosus development | — | IMP:NEW |
-| GO:0048251 elastic fiber assembly | IMP:NEW | IMP:NEW |
 | GO:0071953 elastic fiber | IDA:NEW | IDA:NEW |
 
 ## Core molecular functions
