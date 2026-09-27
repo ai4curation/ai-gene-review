@@ -1,7 +1,7 @@
 ---
 title: "Affinage Evaluation Project"
 collections: [FUNCTION_PREDICTION]
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [PIPELINE, EVALUATION]
 species: [human]
 sidecars:
@@ -25,8 +25,33 @@ sidecars:
   paint_campaign_summary: AFFINAGE_EVALUATION/results/paint-campaign.md
   paint_campaign_per_gene: AFFINAGE_EVALUATION/results/paint-campaign/per-gene.json
   paint_campaign_summary_md: AFFINAGE_EVALUATION/results/paint-campaign/summary.md
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - AFFINAGE_EVALUATION/slides/affinage-pipeline.svg
+    - AFFINAGE_EVALUATION/slides/affinage-results.svg
+    - AFFINAGE_EVALUATION/slides/go-downcast.svg
 ---
 # Affinage Evaluation Project
+
+**Bottom line:** Affinage (Cheeseman Lab) writes a literature-grounded mechanism
+narrative for every human protein-coding gene and then maps its findings onto GO
+and Reactome terms. We compared its output with our agent-adjudicated gene reviews
+in four GO-layer cohorts (42 human genes), a forward test on the 22 Fanconi anemia
+genes, and a retrieval test on 91 genes from the PAINT campaign. The GO layer
+almost never reaches the specific curated function: it captured the primary
+molecular function for 1 of 42 genes (KRAS `GTPase activity`), usually stopping at
+a generic parent such as `oxidoreductase activity` and sometimes landing on the
+wrong catalytic branch. The narrative is much stronger: in the Fanconi cohort it
+contributed 59 primary papers and 13 new GO annotations across 10 genes without
+reversing any existing curation decision. As a literature search it supplied 52%
+of the 718 references the 91 reviews had to find, an upper bound because 56 of
+those reviews were written with the Affinage report in hand, and its
+`gates_passed` flag checks precision only.
+
+We did this to decide whether Affinage could serve AIGR as a GO-grounding source,
+a deep-research input, or a literature search. The answer so far: use the
+narrative as a deep-research input, ignore the GO layer, and search partners,
+complexes and paralogs independently.
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
@@ -81,7 +106,7 @@ ground truth.
 
 Separately from the GO layer, [**Retrieval recall at scale**](#retrieval-recall-at-scale-paint-campaign-n91)
 (n=91) measures what Affinage *finds* rather than what it says: it supplies **52%** of the
-references a review has to go locate, uniformly across dark and well-studied genes, and its
+references a review has to go locate (an upper bound; see the campaign's limits section), uniformly across dark and well-studied genes, and its
 `gates_passed` flag certifies precision only — there is no recall gate, and six reports returned
 zero citations without being flagged.
 
@@ -430,3 +455,7 @@ weak dark-gene prioritization signal. Full argument in
    perspective, human-only). Only worth revisiting as a free first-pass for the human
    backlog, or if a targeted test shows its retrieval recovers primary core-function
    evidence our pipeline systematically misses (raw citation count does not show this).
+
+## Slides
+
+- [Slides](AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.html) (Marp source: [AFFINAGE_EVALUATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.md)) — AI generated

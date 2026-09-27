@@ -3,12 +3,27 @@ title: "Function Prediction Evaluation"
 maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE, FLAGSHIP]
 autolink_gene_symbols: false
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - FUNCTION_PREDICTION_EVALUATION/slides/evaluation-loop.svg
+    - FUNCTION_PREDICTION_EVALUATION/slides/prediction-results.svg
 ---
 # Function Prediction Evaluation
 
-An index to evaluations of computational protein-function predictions, functional
-summaries, and annotation-transfer methods in AI Gene Review. Each project provides
-its own evidence, review criteria, datasets, and results.
+**Bottom line:** new protein-function predictors appear faster than curators can
+judge them, and aggregate benchmarks do not say whether a given method's
+predictions are safe to import. This page indexes the AI Gene Review projects
+that test such predictions claim by claim against agent-adjudicated gene
+reviews, scoring GO terms with the COR/CNN/LSP/UNC/PLI/NPI/REP taxonomy from de
+Crécy-Lagard et al. 2025 (PMID:40703034). Across projects the errors concentrate
+in specificity, paralogs, pseudoenzymes and organism context, and in the larger
+model benchmarks most correct predictions were already known: 682 of 955
+BioReason-Pro SFT terms were correct but not novel and 23 were correct and novel
+(ProtNLM2's purposive cohorts invert this, 53 COR against 32 CNN of 288 GO terms, because they were selected for likely-novel targets). Affinage's GO layer reached
+the specific curated function for 1 of 42 genes, and reviewers accepted 41% of uncorroborated TreeGrafter inferences
+against 72% of curated PAINT/IBA ones. Each project below has its own cohorts,
+methods and denominators.
 
 **[Browse all predictions](../app/predictions/index.html)** — a shared faceted catalog of prediction sets and GO/EC claims, including narrative reviews and assessed empty outputs. Filter by method, species, project, cohort, or assessment; share the resulting URL. [Browser guide](../docs/prediction_browser.md).
 
@@ -55,3 +70,7 @@ For the shared approach to term-level review, see the
 [evidence standards](PROTNLM_EVALUATION.md#evidence-standards). For narrative
 correctness and completeness, see the
 [BioReason evaluation rubric](BIOREASON_COMPARISON.md#evaluation-rubric).
+
+## Slides
+
+- [Slides](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html) (Marp source: [FUNCTION_PREDICTION_EVALUATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.md)) — AI generated
