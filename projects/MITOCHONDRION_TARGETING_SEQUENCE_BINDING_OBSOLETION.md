@@ -18,14 +18,15 @@ We listed the 18 curated annotations on the old term and sorted them into
 classes, because only the TOM receptors (and probably TIM50) are true
 presequence receptors: the TIM23 and TIM22 channels, a plant phosphatase and
 the TIM23 complex records need individual decisions, so upstream ruled out a
-blanket `replaced_by`. In this repo, 10 reviews touch GO:0030943 (more than
-the eight listed below), five of them in `core_functions` (human TOMM20,
-TOMM22, TIMM50; worm tomm-22; yeast TOM22), and none uses GO:0140436 yet.
-Human TOMM20 also names GO:0030943 as the proposed replacement for its
-obsolete GO:0051082 row, so one obsolete term currently replaces another;
-that replacement must be re-pointed to GO:0140436 too. Scoped, not yet started: the MODIFY pass is now unblocked but has not been
-done. The impact table below predates later edits; yeast ACL4's row is now
-UNDECIDED, not REMOVE.
+blanket `replaced_by`. In this repo, 10 reviews touch GO:0030943, five of them in
+`core_functions`. The MODIFY pass is fixed in #3234 (open): the receptors
+(TOMM20, TOMM22, TOMM70) move their GOA rows to GO:0140436, the channels
+(TOMM40, yeast TIM22) move to GO:0008320 *transmembrane protein transporter
+activity*, every author-supplied use (including TOMM20's replacement for its
+obsolete GO:0051082 row) now points to GO:0140436, and TIMM22 and ACL4 keep
+their actions with an obsoletion note. The impact table below records the
+outcome; the upstream triage of plant PAP2 and the TIM23 complex records is
+not repo work.
 
 ## Overview
 
@@ -155,21 +156,22 @@ true presequence *receptors*:
 Several affected gene products — or their human orthologs — already have
 `*-ai-review.yaml` files that annotate `GO:0030943` (verified 2026-05-28):
 
-| Gene | Path | Relation to affected set | Current handling of GO:0030943 |
+| Gene | Path | Relation to affected set | Handling of GO:0030943 (fixed in #3234, open) |
 |---|---|---|---|
-| TOMM20 (human, Q15388) | `genes/human/TOMM20` | Directly affected (rows 10–11) | `ACCEPT` (core MF — presequence receptor) |
-| TOMM22 (human, Q9NS69) | `genes/human/TOMM22` | Directly affected (row 12) | present (IDA + IBA) |
-| TIM22 (yeast, Q12328) | `genes/yeast/TIM22` | Directly affected (row 9) | retained as "best available", with a caveat that the term is broader than the internal-signal binding it actually does |
-| TOMM70 (human) | `genes/human/TOMM70` | Ortholog of affected yeast TOM70 | present (IBA) |
-| TOMM40 (human) | `genes/human/TOMM40` | TOM channel; carries term via IBA | present (IBA) |
-| TIMM50 (human) | `genes/human/TIMM50` | Ortholog of affected yeast TIM50 | present |
-| TIMM22 (human) | `genes/human/TIMM22` | Ortholog of affected yeast TIM22 | present |
-| ACL4 (yeast) | `genes/yeast/ACL4` | Not in curated set; IBA over-propagation | already `REMOVE` (Acl4 is an Rpl4 chaperone; no MTS binding) — a worked example of the IBA fallout |
+| TOMM20 (human, Q15388) | `genes/human/TOMM20` | Directly affected (rows 10–11) | IBA + IDA rows ACCEPT → MODIFY to GO:0140436; core MF and the MODIFY target of the obsolete GO:0051082 row → GO:0140436 |
+| TOMM22 (human, Q9NS69) | `genes/human/TOMM22` | Directly affected (row 12) | IDA row ACCEPT → MODIFY to GO:0140436; core MF → GO:0140436 |
+| TOMM70 (human) | `genes/human/TOMM70` | Ortholog of affected yeast TOM70 | IBA + ISS rows ACCEPT → MODIFY to GO:0140436 |
+| TOMM40 (human) | `genes/human/TOMM40` | TOM channel; carries term via IBA | IBA row ACCEPT → MODIFY to GO:0008320 (channel, not receptor) |
+| TIM22 (yeast, Q12328) | `genes/yeast/TIM22` | Directly affected (row 9) | IBA + IDA rows ACCEPT → MODIFY to GO:0008320 (carrier-pathway channel, not a presequence receptor); "best available" prose updated |
+| TOM22 (yeast) | `genes/yeast/TOM22` | Ortholog of human TOMM22 | core MF → GO:0140436 |
+| TIMM50 (human) | `genes/human/TIMM50` | Ortholog of affected yeast TIM50 | NEW row and core MF → GO:0140436 |
+| tomm-22 (worm) | `genes/worm/tomm-22` | Ortholog of human TOMM22 | NEW row and core MF → GO:0140436 |
+| TIMM22 (human) | `genes/human/TIMM22` | Ortholog of affected yeast TIM22 | IBA row stays `MARK_AS_OVER_ANNOTATED`; obsoletion noted, no replacement |
+| ACL4 (yeast) | `genes/yeast/ACL4` | Not in curated set; IBA over-propagation | IBA row stays `UNDECIDED` (unresolved PAINT inference); obsoletion noted, no replacement |
 
-When the obsoletion + NTR land, these reviews will need a `MODIFY` pass:
-remap the TOM-receptor annotations to the new
-`mitochondrial signal sequence receptor activity` MF, and handle TIM22 and any
-complex/plant cases per the considerations above.
+The receptor/channel split follows the classes above: GO:0140436 only for
+the TOM presequence receptors and TIM50, GO:0008320 for the TOM40 and TIM22
+channels.
 
 ## Scope
 
@@ -255,6 +257,13 @@ obsoletions, but no curator group is blocked waiting on AI Gene Review.
   uses GO:0030943 as the `proposed_replacement_terms` target of its obsolete
   GO:0051082 (unfolded protein binding) row, so that replacement must also
   move to GO:0140436.
+- 2026-09-26 (later) — The MODIFY pass is fixed in #3234 (open) across all
+  ten reviews: eight GOA rows go ACCEPT → MODIFY (TOMM20 IBA/IDA, TOMM22 IDA
+  and TOMM70 IBA/ISS to GO:0140436; TOMM40 IBA and yeast TIM22 IBA/IDA to
+  GO:0008320), and every author-supplied GO:0030943 (TOMM20, TOMM22, TOM22,
+  TIMM50, tomm-22) now points to GO:0140436, so TOMM20 no longer proposes the
+  obsolete id. Human TIMM22 (MARK_AS_OVER_ANNOTATED) and yeast ACL4
+  (UNDECIDED) keep their action with an obsoletion note.
 
 ## Slides
 

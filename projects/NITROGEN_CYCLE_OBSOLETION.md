@@ -20,8 +20,11 @@ papers, which we recommend removing, and one is a bacterial periplasmic
 nitrate reductase (napA) that should move to GO:0019333 *denitrification
 pathway*. Scoped, not yet started: none of those genes has a review that
 carries the term. The one in-repo hit is *A. vinelandii* nifA, whose review
-uses the now-obsolete GO:1903316 as a MODIFY target, a NEW row and a
-`core_functions` term, and needs a live replacement.
+used the now-obsolete GO:1903316 as a MODIFY target, a NEW row and a
+`core_functions` term. That is fixed in #3235 (open): the MODIFY target of
+the GO:0009399 row is now GO:0045893 *positive regulation of DNA-templated
+transcription* (NifA's role as the σ54 activator of the nif operons), and the
+NEW row and the `core_functions` entry are removed as redundant with it.
 
 ## Overview
 
@@ -201,6 +204,12 @@ genes (see `projects/OVER_ANNOTATION_PATTERNS.md`).
   three places (MODIFY target for GO:0009399, a NEW row, and
   `core_functions`); the local `cache/ontologies/go.tsv` still lists it as
   live, so validation does not flag it.
+- 2026-09-26 (later) — nifA fixed in #3235 (open): the GO:0009399 row stays
+  MODIFY with its target moved from GO:1903316 to GO:0045893; the GO:1903316
+  NEW row and `core_functions` entry are removed, since GO:0045893 already
+  covers them. GO has no "regulation of nitrogen fixation" term, so the
+  review adds a suggested question on capturing nif-operon specificity. The
+  six GO:0071941 annotations remain unreviewed here.
 
 ## Slides
 

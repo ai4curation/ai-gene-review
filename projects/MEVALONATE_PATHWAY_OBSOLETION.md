@@ -21,9 +21,12 @@ not a relabel. The repo has moved past the Impact and Candidate sections
 below: the human mevalonate enzymes HMGCS1, HMGCR, MVK, PMVK, MVD, IDI1 and
 FDPS are now reviewed (PRs #1998, #2153) with `mevalonate_pathway` and
 `isoprenoid_diphosphate_biosynthesis` modules, and MVK, PMVK and MVD accept
-GO:0019287 while FDPS accepts GO:0045337. Two reviews still carry an
-obsolete-term row: rat Hmgcs2 (two GO:0010142 rows, UNDECIDED) and yeast
-ERG19 (one GO:0010142 RCA row, KEEP_AS_NON_CORE).
+GO:0019287 while FDPS accepts GO:0045337. The last two reviews with an
+obsolete-term row are fixed in #3232 (open): yeast ERG19's GO:0010142 RCA row
+moves from KEEP_AS_NON_CORE to MODIFY → GO:0019287 (ERG19 makes IPP; the FPP
+steps belong to IDI1 and ERG20), and rat Hmgcs2's two GO:0010142 rows (IBA,
+IEA) stay UNDECIDED with the obsoletion noted, because whether mitochondrial
+HMGCS2 feeds the mevalonate pathway at all is the open question.
 
 ## Overview
 
@@ -185,6 +188,11 @@ HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
   (PR #1998) and FDPS, IDI1 (PR #2153) are reviewed. Rows on the obsolete
   terms remain in rat Hmgcs2 (IBA + IEA, UNDECIDED) and yeast ERG19 (RCA,
   KEEP_AS_NON_CORE).
+- 2026-09-26 (later) — Fixed in #3232 (open): ERG19's GO:0010142 RCA row
+  goes KEEP_AS_NON_CORE → MODIFY to GO:0019287 (it duplicates the ERG19 IEA
+  row already ACCEPTed on GO:0019287); rat Hmgcs2's IBA and IEA rows stay
+  UNDECIDED, with the obsoletion recorded in `review.reason` and no
+  replacement asserted.
 
 ## Slides
 

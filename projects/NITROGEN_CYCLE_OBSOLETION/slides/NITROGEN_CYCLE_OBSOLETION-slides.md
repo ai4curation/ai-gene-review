@@ -38,7 +38,7 @@ GO:0071941 → annotate its child pathways · GO:1903314/5/6 obsolete
 
 - GO:0071941 is an **ecosystem grouping term**; its three **regulation children are now obsolete** and the parent is proposed as `do_not_annotate`.
 - Of **6 experimental rows**, **5 are mouse kidney/liver genes** we recommend removing; **napA** should move to **GO:0019333** denitrification pathway.
-- **Scoped, not yet started.** The one in-repo hit is **A. vinelandii nifA**, whose review relies on the now-obsolete **GO:1903316**.
+- **Scoped.** The one in-repo hit, **A. vinelandii nifA**, used the now-obsolete **GO:1903316**; fixed in #3235 (open).
 
 ---
 
@@ -68,11 +68,11 @@ GO:0071941 → annotate its child pathways · GO:1903314/5/6 obsolete
 
 | Review | Relation | State |
 |---|---|---|
-| `genes/AZOVI/nifA` | uses **GO:1903316** (obsolete) | MODIFY target for GO:0009399, a NEW row, and `core_functions` |
+| `genes/AZOVI/nifA` | used **GO:1903316** (obsolete) | fixed in #3235 (open): GO:0009399 row now MODIFY → **GO:0045893**; NEW row and `core_functions` entry removed |
 | `genes/human/SEC63` | ortholog of affected mouse Sec63 | reviewed; no GO:0071941 row in its GOA file |
 | mouse Pkd1, Prkcsh, Apc, Sec63; napA | affected upstream | not reviewed |
 
-The local `cache/ontologies/go.tsv` still lists GO:1903316 as live, so nifA validates.
+GO has no "regulation of nitrogen fixation" term; GO:0045893 is NifA's σ54 activator role on the nif operons.
 
 ---
 
@@ -80,7 +80,8 @@ The local `cache/ontologies/go.tsv` still lists GO:1903316 as live, so nifA vali
 
 - **2026-05-13:** project created; 6 rows matched the upstream count.
 - **2026-09-26:** OLS lists GO:1903314/5/6 obsolete; GO:0071941 still live.
-- Next: give **nifA** a live term in place of GO:1903316; review human **PKD1, PRKCSH, APC** and flag the mouse rows; add the pattern to `projects/OVER_ANNOTATION_PATTERNS.md`.
+- **2026-09-26 (later):** nifA fixed in #3235 (open).
+- Next: review human **PKD1, PRKCSH, APC** and flag the mouse rows; add the pattern to `projects/OVER_ANNOTATION_PATTERNS.md`.
 
 **Upstream:** go-annotation#6411 · go-ontology#27220
 **Read more:** `projects/NITROGEN_CYCLE_OBSOLETION.md`

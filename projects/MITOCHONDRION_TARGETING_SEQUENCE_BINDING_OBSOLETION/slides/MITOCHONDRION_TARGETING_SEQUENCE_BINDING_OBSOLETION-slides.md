@@ -38,7 +38,7 @@ GO:0030943 → GO:0140436 mitochondrial signal sequence receptor activity, row b
 
 - GO **obsoleted GO:0030943**; the receptor term the project waited for now exists as **GO:0140436** (OLS, 2026-09-26).
 - Only some of the **18 curated rows** are true presequence receptors (TOM20/22, likely TIM50); channels, a plant protein and the TIM23 complex need individual calls.
-- **Scoped, not yet started:** **10 reviews** here touch the old term, **5 in `core_functions`**, and none uses GO:0140436 yet.
+- **10 reviews** here touch the old term, **5 in `core_functions`**. All fixed in **#3234 (open)**: receptors → **GO:0140436**, channels TOMM40 and TIM22 → **GO:0008320**.
 
 ---
 
@@ -65,19 +65,20 @@ GO:0030943 → GO:0140436 mitochondrial signal sequence receptor activity, row b
 
 ---
 
-## The 10 reviews that touch GO:0030943
+## The 10 reviews that touch GO:0030943 (fixed in #3234, open)
 
-| Review | Rows | Current action | core_functions |
+| Review | Rows on GO:0030943 | Action before → after #3234 (open) | core_functions |
 |---|---|---|---|
-| human TOMM20 | IDA, IBA; replacement target | ACCEPT | yes |
-| human TOMM22 | IDA | ACCEPT | yes |
-| human TIMM50 | NAS | NEW | yes |
-| worm tomm-22 | ISS | NEW | yes |
-| yeast TOM22 | none | | yes |
-| human TOMM40, TOMM70 | IBA (+ ISS) | ACCEPT | no |
-| yeast TIM22 | IDA, IBA | ACCEPT | no |
-| human TIMM22 | IBA | MARK_AS_OVER_ANNOTATED | no |
-| yeast ACL4 | IBA | UNDECIDED | no |
+| human TOMM20 | IDA, IBA; replacement target | ACCEPT → MODIFY to GO:0140436 | → GO:0140436 |
+| human TOMM22 | IDA | ACCEPT → MODIFY to GO:0140436 | → GO:0140436 |
+| human TOMM70 | IBA, ISS | ACCEPT → MODIFY to GO:0140436 | no |
+| human TIMM50 | NAS | NEW row → GO:0140436 | → GO:0140436 |
+| worm tomm-22 | ISS | NEW row → GO:0140436 | → GO:0140436 |
+| yeast TOM22 | none | | → GO:0140436 |
+| human TOMM40 | IBA | ACCEPT → MODIFY to GO:0008320 (channel) | no |
+| yeast TIM22 | IDA, IBA | ACCEPT → MODIFY to GO:0008320 (channel) | no |
+| human TIMM22 | IBA | MARK_AS_OVER_ANNOTATED (kept, note added) | no |
+| yeast ACL4 | IBA | UNDECIDED (kept, note added) | no |
 
 ---
 
@@ -85,8 +86,8 @@ GO:0030943 → GO:0140436 mitochondrial signal sequence receptor activity, row b
 
 - **2026-05-28:** project created; the replacement term was not yet in OLS.
 - **2026-09-26:** GO:0030943 obsolete, **GO:0140436 live**. Local `cache/ontologies/go.tsv` still lists the old term as live, so validation is quiet.
-- **TOMM20** also proposes GO:0030943 as the replacement for its obsolete GO:0051082 row: one obsolete term replacing another. Re-point it to GO:0140436.
-- Next: move TOMM20, TOMM22, tomm-22, TOM22 and TIMM50 to **GO:0140436** (MODIFY or re-proposed NEW rows, and `core_functions`); then decide TIM22, TIMM22, TOMM40 and ACL4 on their own merits.
+- **2026-09-26 (later):** MODIFY pass fixed in **#3234 (open)**: 8 GOA rows ACCEPT → MODIFY; every author-supplied GO:0030943 now GO:0140436, so **TOMM20** no longer proposes the obsolete id for its GO:0051082 row. TIMM22 and ACL4 keep their actions with a note.
+- Next: merge #3234; upstream PAP2 and TIM23-complex rows are for GO curators.
 - Coordinate with the **MITOCHONDRIAL_IMPORT_PATHWAYS** project.
 
 **Upstream:** go-annotation#6437 · go-ontology#32142 · #31711
