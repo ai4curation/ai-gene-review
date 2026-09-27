@@ -136,3 +136,27 @@ unchanged. The missing-source follow-up remains open; merge does not resolve it.
 The YAML status is now DRAFT under the literal status enum: the missing publication
 and documented validation advisories prevent a COMPLETE label. This status
 correction does not change the adjudicated biological content.
+
+
+## 2026-09-27 postmerge source-cache closure
+
+PMID:16924481 is now present as exact normal-fetch output. Its abstract confirms
+the previously verified distinction between complete mouse SUR1 loss, reduced
+glucose-stimulated insulin secretion, and heterozygous loss with increased
+secretion and shifted calcium oscillation glucose dependence. It does not
+provide the full experimental paper, so full_text_unavailable remains true.
+Citation verification and the cached mouse GO-CAM donor trace remain intact.
+No annotation action, propagation assessment or core interpretation changes.
+
+The source is normal fetch Actions run 36286975328, head
+5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630. Verified ZIP
+SHA-256: `c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`.
+The per-file import receipt is
+`tmp/verified-reference-records/local-import-receipt.json`. This dated note
+supersedes the earlier missing-cache status without rewriting published history.
+The follow-up belongs to PR 3211, branch `cmungall/clingen-abcc8-postmerge`,
+with reviewed baseline head e263bb7090179ffd4e37951646c8467bbe02231f.
+All 64 source assertions and reviews, two cores, 43 reference identities and
+protected machine/provider artifacts are preserved. The exact cache remains
+unedited. Validation, rendering and history checks are recorded in the closure
+manifest; COMPLETE is used only if gene validation reports zero warnings.
