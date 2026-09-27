@@ -4,6 +4,10 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [ARATH]
 genes: [FLS2, EFR, CERK1, BAK1, BIK1, RBOHD, MPK6, NPR1, EDS1, PAD4, RPS2, RPM1]
+sidecars:
+  slide_figures:
+    - BIOSENSORS/slides/chitin-split-gfp.svg
+    - BIOSENSORS/slides/sense-response-coverage.svg
 ---
 
 # Plant-Encoded Sense & Response Biosensors
@@ -423,3 +427,7 @@ RNA biosensors detect stress ~100-200 hours earlier than visible phenotypes (sto
 - [ ] Add GO annotations for pathway components
 - [ ] Cross-reference with Arabidopsis defense pathway annotations
 - [ ] Identify orthologs in Populus trichocarpa
+
+## Slides
+
+- [Slides](BIOSENSORS/slides/BIOSENSORS-slides.html) (Marp source: [BIOSENSORS-slides.md](BIOSENSORS/slides/BIOSENSORS-slides.md)) — AI generated

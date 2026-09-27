@@ -4,6 +4,11 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [FELCA, CANLF, HORSE, BOVIN, DERPT, BETPN, mouse, rat, human]
 genes: [CH1, CH2, ALB, CSTA, Feld4, Feld7, Feld8, Canf1, Canf2, Canf6, Equc1, Equc2, Equc4, Bosd2, Musm1, Ratn1, Derp1, Derp2, Derp23, Betv1, Betv2, Scgb1a1]
+sidecars:
+  slide_figures:
+    - ALLERGENS/slides/ch1-review-table.jpg
+    - ALLERGENS/slides/priority-quadrant.svg
+    - ALLERGENS/slides/triage-pipeline.svg
 ---
 
 # Allergens Project
@@ -16,8 +21,8 @@ stay on native function. We built an allergen-to-UniProt index (32 genes, 31 mol
 registry snapshot and worklist from UniProt's Allergen keyword (1,020 reviewed entries), and
 an IEDB epitope ETL, then ranked targets by epitope load times function uncertainty. So far 24
 genes are reviewed (the full cat set, dog, horse, cow, mouse, rat, house dust mite and birch
-allergens, plus the uteroglobin comparator Scgb1a1): 237 annotations, none removed, 62 marked
-over-annotated (40 of them, mostly ISS metabolic and insulin-signalling terms, on the mouse and rat MUPs) and 18 new terms
+allergens, plus the uteroglobin comparator Scgb1a1): 219 existing annotations, none removed, 62 marked
+over-annotated (40 of them, mostly ISS metabolic and insulin-signalling terms, on the mouse and rat MUPs) plus 18 new terms
 proposed. The headline is that the top-priority allergens (Bet v 1, Fel d 1, Can f 1) are
 heavily IgE-targeted and still have no known native function. Coverage of the registry is
 small and the reviews are still marked DRAFT; the status list at the end has the most current
@@ -312,3 +317,7 @@ and matches the allergen designation by **regex** so embedded IEDB names
   binding is correctly a negated GOA annotation.
 - Next: extend the IEDB name-join to protein-name-labelled allergens (human `Hom s …`),
   then continue the backlog (other pollens, foods, molds, insects) by priority.
+
+## Slides
+
+- [Slides](ALLERGENS/slides/ALLERGENS-slides.html) (Marp source: [ALLERGENS-slides.md](ALLERGENS/slides/ALLERGENS-slides.md)) — AI generated

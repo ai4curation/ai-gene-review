@@ -12,13 +12,18 @@ genes:
   - Scn9a
   - Trpv1
   - Tac1
+sidecars:
+  slide_figures:
+    - NAKED_MOLE_RAT/slides/cgas-hyal2-failures.svg
+    - NAKED_MOLE_RAT/slides/cgas-review-table.jpg
+    - NAKED_MOLE_RAT/slides/projection-outcomes.svg
 ---
 
 # Naked Mole Rat (HETGA) Annotation Review
 
 **Bottom line:** of about 335,000 GO annotations on naked mole rat proteins, exactly one is
 experimental; everything else is projected from mouse, human or rat orthologs or from
-sequence models. We reviewed all 180 annotations on eight landmark genes (the hyaluronan
+sequence models. We reviewed all 169 existing annotations on eight landmark genes (the hyaluronan
 axis `Has2`, `Hyal2`, `Cd44`; the pain pathway `Scn9a`, `Ntrk1`, `Trpv1`, `Tac1`; and
 `Cgas`), testing each projection against the species' own literature. We chose this species
 because it is one of the few non-model animals where that literature exists, and it exists
@@ -190,3 +195,7 @@ not for either hyaluronidase. Search partners, paralogs and the pathway, not jus
 
 Several key papers are abstract-only in the cache, including all four cGAS papers and the
 primary NaV1.7 acid-insensitivity paper. Quote only what those abstracts state.
+
+## Slides
+
+- [Slides](NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.html) (Marp source: [NAKED_MOLE_RAT-slides.md](NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.md)) — AI generated

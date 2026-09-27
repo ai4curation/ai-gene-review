@@ -8,6 +8,10 @@ sidecars:
   genes: MIRNA_DEGRADATION/genes.csv
   fetch_queue: MIRNA_DEGRADATION/fetch_queue.csv
   sources: MIRNA_DEGRADATION/sources.md
+  slide_figures:
+    - MIRNA_DEGRADATION/slides/actions-per-gene.svg
+    - MIRNA_DEGRADATION/slides/tdmd-ligase.svg
+    - MIRNA_DEGRADATION/slides/zswim8-review-table.jpg
 ---
 # MicroRNA Degradation / TDMD Project
 
@@ -138,3 +142,7 @@ That file is the place to append new papers from Chris before the project expand
 - Chris seed source integrated: Farnung et al. 2026 sharpened the decision to treat TDMD as the phase-1 scope.
 - Trigger RNAs and trigger-bearing transcripts are explicitly tracked, but are not automatically phase-1 review jobs because the ai-gene-review pipeline is protein and GO centric.
 - The first pass stays human-centered for review jobs. Comparative fly, mouse, and worm layers can be added after the core machinery reviews exist.
+
+## Slides
+
+- [Slides](MIRNA_DEGRADATION/slides/MIRNA_DEGRADATION-slides.html) (Marp source: [MIRNA_DEGRADATION-slides.md](MIRNA_DEGRADATION/slides/MIRNA_DEGRADATION-slides.md)) — AI generated

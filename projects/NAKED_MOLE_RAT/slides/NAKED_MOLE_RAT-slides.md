@@ -37,7 +37,7 @@ Testing ortholog-projected GO annotations against a species that diverged
 ## Bottom line
 
 - Of ~335,000 GO annotations on naked mole rat proteins, **exactly one is experimental**; the rest are projected from orthologs or sequence models.
-- We reviewed **all 180 annotations on 8 landmark genes** against the species' own literature (37 papers).
+- We reviewed **all 169 existing annotations on 8 landmark genes** (180 rows with the 11 NEW) against the species' own literature (37 papers).
 - Projection is **mostly correct but unfocused**: 4 removed, 84 demoted, 11 new. The removals include a **sign reversal in Cgas** and a **Hyal2 term propagated past a curated NOT**.
 
 ---
