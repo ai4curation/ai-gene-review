@@ -394,3 +394,41 @@ verification. The existing GO:2001069 refinements retain the specific positive
 human binding evidence. Glycogen binding is described as substrate positioning
 in the biological summary; the two catalytic cores already describe the enzyme's
 primary work, so a third binding core or redundant NEW row is unnecessary.
+
+## 2026-09-27 verified source-cache closure
+
+Direct GitHub API preflight confirmed PR #3197 remains open at
+`424da07bc76d3b0324eea1e87ab7c1b01ec2fb3c`; all five canonical gene blobs and
+the prior follow-up history matched the published bytes. Four genuine batch1
+PMID records and **seven** source2 Reactome records now match their import
+receipts by SHA-256. PMID:40593796 has full extracted text; PMID:120213,
+PMID:1413626 and PMID:15180797 have abstracts only. Reactome records are
+R-HSA-6800431, R-HSA-6800970, R-HSA-6806481, R-HSA-6806526, R-HSA-70221,
+R-HSA-71552 and R-HSA-71593. This entry supersedes historical missing-cache
+statements, not the documented limits of prior source access.
+
+The recovered full human study [PMID:40593796] confirms full-length human
+P35573 expression in HEK293F cells, purification, ConA-glycogen pull-down,
+separate transferase and glucosidase assays, and monomer/dimer structures.
+The previously external pull-down and assembly snippets now have ordinary
+cache-validated supporting-text fields. No annotation or core change is needed.
+The three rat abstracts preserve the distinction between endocrine regulation,
+biogenic-amine effects and SR-associated enzyme/activity. They do not recover
+the complete donor experiments or resolve human physiological transfer.
+
+The three reaction/pathway summaries confirm cytosolic glycogen breakdown,
+three-glucose segment transfer and branch hydrolysis/free glucose production.
+The four granule/extracellular set records contain **identifier, title and
+species only**, with no membership export. Therefore, the earlier direct
+primary-page verification of AGL membership remains the evidence for those
+specific set claims; existence of these headers is not presented as a new
+local membership assay. The underlying proteomic source limitations remain.
+
+All 35 source assertions/actions, core functions, original reference identities,
+machine files and published histories are unchanged. Eleven cache gates are
+closed. Exact source provenance is recorded in
+`tmp/verified-reference-records/local-import-receipt.json` and
+`tmp/verified-reference-records2/local-import-receipt.json`; the latter artifact
+SHA-256 is `0876942c72b2e537e858e8af7cd3c79d34b97c2169490e3d883c6f00884e2965`.
+No cache bytes, Git state or remote state were edited. Validation, rendered
+output and separate append-only cache-session history are included in the manifest.
