@@ -65,3 +65,11 @@ These are all real but represent context-dependent or downstream effects rather 
 
 ## References
 All PMIDs referenced are from the GOA file and UniProt record.
+
+## 2026-09-27: merged the duplicate P93002 review into NPR1
+
+The notes above were written for the duplicate review in `genes/ARATH/P93002/`, which covered the same protein (P93002). That folder has been retired and the review now lives here. After the merge, some of the notes' earlier framing no longer holds:
+
+- **SA binding is not treated as core.** The notes above describe NPR1 as an "SA-binding transcription cofactor", and P93002 had salicylic acid binding as ACCEPT and core. The merged review keeps NPR1's MARK_AS_OVER_ANNOTATED instead. NPR1 binds SA only weakly [PMID:32788727 "despite the two proteins sharing nearly identical hormone-binding residues, NPR1 displays minimal SA-binding activity compared to NPR4."], and the receptor role belongs to NPR3/NPR4.
+- **Protein binding rows are split by partner.** Rows whose partner is a TGA factor are MODIFY → transcription coregulator activity. Rows whose partner is not a TGA factor are REMOVE under the GO:0005515 policy: NIMINs, NPR2/3/4, CUL3A, SUMO3, WRKY70, and interactome hits.
+- **Negative regulation of defense response (IMP, PMID:16732289) is UNDECIDED.** The cached record is abstract-only.
