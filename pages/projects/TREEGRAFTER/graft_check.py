@@ -20,12 +20,18 @@ database resolves its specific substrate.
 
 Network: UniProt REST (https://rest.uniprot.org). Honors HTTPS_PROXY.
 
+The ``review_action`` column is not hard-coded: it is read from
+``treegrafter_review.tsv`` (regenerate that first with analyze_treegrafter.py).
+``--refresh-actions`` updates just that column of the committed TSV offline.
+
 Run:
-  uv run --with requests projects/TREEGRAFTER/graft_check.py
+  python3 projects/TREEGRAFTER/graft_check.py [--out-dir DIR]     # network
+  python3 projects/TREEGRAFTER/graft_check.py --refresh-actions   # offline
 Output: treegrafter_graft_check.tsv
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import os
 import sys
@@ -34,32 +40,58 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
-# (gene, organism, uniprot_acc, propagated_term, propagated_id, review_action,
-#  expected_function)
+# (gene, organism, uniprot_acc, propagated_term, propagated_id, expected_function)
+# The reviewer action is NOT stored here: it is looked up at run time from
+# treegrafter_review.tsv (see review_actions()), so it cannot go stale.
 EXEMPLARS = [
     ("aprA", "DESVH", "Q72DT2", "succinate dehydrogenase activity", "GO:0000104",
-     "REMOVE", "adenylylsulfate (APS) reductase alpha (EC 1.8.99.2)"),
+     "adenylylsulfate (APS) reductase alpha (EC 1.8.99.2)"),
     ("fcs", "PSEPK", "Q88HK0", "medium-chain fatty acid-CoA ligase activity",
-     "GO:0031956", "MODIFY", "feruloyl-CoA synthetase (EC 6.2.1.34)"),
+     "GO:0031956", "feruloyl-CoA synthetase (EC 6.2.1.34)"),
     ("OCTS1", "OCTVU", "P27013", "glutathione transferase activity", "GO:0004364",
-     "MARK_AS_OVER_ANNOTATED", "S-crystallin / lens structural protein (GST fold, ~no activity)"),
+     "S-crystallin / lens structural protein (GST fold, ~no activity)"),
     ("eryAIII", "SACEN", "A4F7P1", "fatty acid synthase activity", "GO:0004312",
-     "MODIFY", "erythromycin polyketide synthase module (PKS)"),
+     "erythromycin polyketide synthase module (PKS)"),
     ("mcr-1", "ECOLX", "A0A0R6L508", "phosphotransferase activity, phosphate group as acceptor",
-     "GO:0016776", "MODIFY", "phosphoethanolamine transferase (lipid A modification)"),
+     "GO:0016776", "phosphoethanolamine transferase (lipid A modification)"),
     # --- second batch (distinct enzyme families) ---
     ("NaPMT3", "NICAT", "A0A314LG79", "spermidine synthase activity", "GO:0004766",
-     "REMOVE", "putrescine N-methyltransferase (PMT, neofunctionalized from spermidine synthase)"),
+     "putrescine N-methyltransferase (PMT, neofunctionalized from spermidine synthase)"),
     ("ADAR2", "DOROP", "C1JAR3", "tRNA-specific adenosine deaminase activity", "GO:0008251",
-     "REMOVE", "double-stranded RNA / mRNA adenosine deaminase (ADAR, not tRNA-specific ADAT)"),
+     "double-stranded RNA / mRNA adenosine deaminase (ADAR, not tRNA-specific ADAT)"),
     ("NaUGT1_candidate_UGT85A2_0", "NICAT", "A0A2H4GSI3",
      "quercetin 3-O-glucosyltransferase activity", "GO:0080043",
-     "REMOVE", "UDP-glucuronosyltransferase / UGT family (specific flavonoid substrate unproven)"),
+     "UDP-glucuronosyltransferase / UGT family (specific flavonoid substrate unproven)"),
     ("aceK", "PSEPK", "Q88EA1", "phosphoprotein phosphatase activity", "GO:0004721",
-     "MODIFY", "isocitrate dehydrogenase kinase/phosphatase (bifunctional, atypical)"),
+     "isocitrate dehydrogenase kinase/phosphatase (bifunctional, atypical)"),
     ("ahpC", "PSEPK", "Q88K52", "thioredoxin peroxidase activity", "GO:0008379",
-     "MODIFY", "alkyl hydroperoxide reductase / 2-Cys peroxiredoxin (AhpC)"),
+     "alkyl hydroperoxide reductase / 2-Cys peroxiredoxin (AhpC)"),
 ]
+
+REVIEW_TSV = os.path.join(HERE, "treegrafter_review.tsv")
+FIELDS = ["gene", "organism", "uniprot", "review_action", "propagated_term",
+          "expected_function", "panther_family", "panther_subfamily", "pfam",
+          "interpro_specific_entries", "interpro_all"]
+
+
+def review_actions(path: str = REVIEW_TSV) -> dict:
+    """{(organism, gene, term_id): action} from treegrafter_review.tsv.
+
+    The review file path is ``genes/<ORG>/<gene-dir>/...``; exemplars are keyed
+    on the directory name (UniProt accession for aprA, whose dir is Q72DT2)."""
+    out = {}
+    with open(path) as fh:
+        for r in csv.DictReader(fh, delimiter="\t"):
+            parts = r["file"].split("/")
+            if len(parts) >= 3:
+                out[(parts[1], parts[2], r["term_id"])] = r["action"]
+                out[(parts[1], r["gene"], r["term_id"])] = r["action"]
+    return out
+
+
+def action_for(actions: dict, gene: str, org: str, acc: str, term_id: str) -> str:
+    return (actions.get((org, gene, term_id)) or actions.get((org, acc, term_id))
+            or "NOT_IN_REVIEW_TSV")
 
 
 def fetch_uniprot(acc: str) -> str:
@@ -106,34 +138,49 @@ def interpro_is_more_specific(interpro, expected: str) -> str:
 
 
 def main() -> None:
-    rows = []
-    for gene, org, acc, term, term_id, action, expected in EXEMPLARS:
-        try:
-            text = fetch_uniprot(acc)
-        except Exception as exc:  # noqa: BLE001
-            print(f"WARN: fetch failed for {gene} ({acc}): {exc}", file=sys.stderr)
-            continue
-        fam, sub, interpro, pfam = parse_xrefs(text)
-        rows.append({
-            "gene": gene,
-            "organism": org,
-            "uniprot": acc,
-            "review_action": action,
-            "propagated_term": f"{term} ({term_id})",
-            "expected_function": expected,
-            "panther_family": fam,
-            "panther_subfamily": sub,
-            "pfam": ",".join(pfam),
-            "interpro_specific_entries": interpro_is_more_specific(interpro, expected),
-            "interpro_all": " | ".join(f"{i}:{n}" for i, n in interpro),
-        })
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--out-dir", default=HERE,
+                    help="directory for treegrafter_graft_check.tsv (default: next to this script)")
+    ap.add_argument("--refresh-actions", action="store_true",
+                    help="offline: rewrite only the review_action column of the existing "
+                         "treegrafter_graft_check.tsv from treegrafter_review.tsv (no network)")
+    args = ap.parse_args()
+    out = os.path.join(os.path.abspath(args.out_dir), "treegrafter_graft_check.tsv")
+    actions = review_actions()
+    by_acc = {acc: (gene, org, term_id) for gene, org, acc, _t, term_id, _e in EXEMPLARS}
 
-    out = os.path.join(HERE, "treegrafter_graft_check.tsv")
-    fields = ["gene", "organism", "uniprot", "review_action", "propagated_term",
-              "expected_function", "panther_family", "panther_subfamily", "pfam",
-              "interpro_specific_entries", "interpro_all"]
+    if args.refresh_actions:
+        with open(os.path.join(HERE, "treegrafter_graft_check.tsv")) as fh:
+            rows = list(csv.DictReader(fh, delimiter="\t"))
+        for r in rows:
+            gene, org, term_id = by_acc[r["uniprot"]]
+            r["review_action"] = action_for(actions, gene, org, r["uniprot"], term_id)
+    else:
+        rows = []
+        for gene, org, acc, term, term_id, expected in EXEMPLARS:
+            try:
+                text = fetch_uniprot(acc)
+            except Exception as exc:  # noqa: BLE001
+                print(f"WARN: fetch failed for {gene} ({acc}): {exc}", file=sys.stderr)
+                continue
+            fam, sub, interpro, pfam = parse_xrefs(text)
+            rows.append({
+                "gene": gene,
+                "organism": org,
+                "uniprot": acc,
+                "review_action": action_for(actions, gene, org, acc, term_id),
+                "propagated_term": f"{term} ({term_id})",
+                "expected_function": expected,
+                "panther_family": fam,
+                "panther_subfamily": sub,
+                "pfam": ",".join(pfam),
+                "interpro_specific_entries": interpro_is_more_specific(interpro, expected),
+                "interpro_all": " | ".join(f"{i}:{n}" for i, n in interpro),
+            })
+
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t")
         w.writeheader()
         w.writerows(rows)
 

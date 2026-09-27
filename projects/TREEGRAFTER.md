@@ -15,6 +15,8 @@ sidecars:
   family_hotspots: TREEGRAFTER/treegrafter_family_hotspots.tsv
   failure_modes: TREEGRAFTER/treegrafter_failure_modes.tsv
   failure_mode_curated: TREEGRAFTER/failure_mode_curated.tsv
+  snapshot_drift: TREEGRAFTER/treegrafter_snapshot_drift.tsv
+  exemplar_independence: TREEGRAFTER/exemplar_independence.tsv
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
   slide_images:
     - TREEGRAFTER/slides/treegrafter-graft.svg
@@ -83,9 +85,11 @@ identical annotations from multiple electronic pipelines, including UniRule,
 ARBA, InterPro2GO, TreeGrafter2GO (GO_REF:0000118), RHEA2GO, KeyWord2GO,
 SubCellular2GO, EC2GO and EnsEMBL Compara", listing the contributing pipelines
 pipe-separated in `WITH/FROM`. In this corpus **every** `GO_REF:0000120` row
-with a `PANTHER:PTN…` in `WITH/FROM` (891 rows) also lists at least one other
-pipeline (InterPro in most cases), and **no gene has the same term under both
-`GO_REF:0000118` and `GO_REF:0000002`**. So the three electronic references
+with a `PANTHER:PTN…` in `WITH/FROM` (960 rows in the cached GOA files at
+`fff7793a6`; 891 at the 2026-09-06 snapshot) also lists at least one other
+pipeline (InterPro in most cases), and **no reviewed protein has the same term
+under both `GO_REF:0000118` and `GO_REF:0000002`** (0 shared pairs in the
+summary sidecar). So the three electronic references
 partition the predictions by corroboration:
 
 | Reference | What the row means |
@@ -108,189 +112,238 @@ Each `genes/*/*/*-ai-review.yaml` records, per existing annotation, an
 `evidence_type`, an `original_reference_id`, and a reviewer `action` from the
 AIGR action enum (`ACCEPT`, `KEEP_AS_NON_CORE`, `MODIFY`,
 `MARK_AS_OVER_ANNOTATED`, `REMOVE`, `UNDECIDED`, …). We treat the AIGR
-adjudication as the reference judgement and ask how the annotations with
+adjudication as the reference judgement (see
+[Reference independence](#reference-independence) for what that reference is
+and is not independent of) and ask how the annotations with
 `evidence_type: IEA` and `original_reference_id: GO_REF:0000118` (TreeGrafter)
 were treated. The PAINT/IBA set (`GO_REF:0000033`) is reported alongside purely
-as a **contrast** — it is a different, curator-driven pipeline.
+as a **contrast** — it is a different, curator-driven pipeline, on a largely
+different set of genes.
 
-Reproduce with:
+Reproduce everything on this page (about three minutes; only `graft_check.py`
+needs the network):
 
 ```bash
-python3 projects/TREEGRAFTER/analyze_treegrafter.py
-# or, hermetically:
-uv run --with pyyaml projects/TREEGRAFTER/analyze_treegrafter.py
+uv run --with pyyaml projects/TREEGRAFTER/analyze_treegrafter.py   # review/contrast/summary
+python3 projects/TREEGRAFTER/analyze_placement.py                   # placement + family hotspots
+uv run --with pyyaml projects/TREEGRAFTER/classify_failure_modes.py # failure modes
+python3 projects/TREEGRAFTER/snapshot_drift.py                      # drift vs the 2026-09-06 snapshot
+uv run --with pyyaml projects/TREEGRAFTER/exemplar_independence.py  # exemplar citation check
+python3 projects/TREEGRAFTER/graft_check.py                         # live UniProt; or --refresh-actions offline
 ```
 
-This writes three committed sidecars (no hard-coded numbers):
+`analyze_treegrafter.py --out-dir DIR` writes its three sidecars elsewhere, so
+the numbers can be checked against a newer tree without touching the committed
+files. It writes:
 
 - [`TREEGRAFTER/treegrafter_review.tsv`](TREEGRAFTER/treegrafter_review.tsv) — one row per reviewed TreeGrafter annotation (gene, taxon, term, aspect, action).
-- [`TREEGRAFTER/treegrafter_contrast.tsv`](TREEGRAFTER/treegrafter_contrast.tsv) — one row per reviewed corroborated-PANTHER (`GO_REF:0000120`) and InterPro2GO (`GO_REF:0000002`) annotation on the same reviewed proteins.
-- [`TREEGRAFTER/treegrafter_summary.tsv`](TREEGRAFTER/treegrafter_summary.tsv) — action counts for all populations, by-aspect and by-taxon breakdowns, and the most frequently down-graded TreeGrafter terms.
+- [`TREEGRAFTER/treegrafter_contrast.tsv`](TREEGRAFTER/treegrafter_contrast.tsv) — one row per reviewed corroborated-PANTHER (`GO_REF:0000120`) and InterPro2GO (`GO_REF:0000002`) annotation on the review files that carry TreeGrafter rows.
+- [`TREEGRAFTER/treegrafter_summary.tsv`](TREEGRAFTER/treegrafter_summary.tsv) — action counts for all populations; a *headline rates* block (accept, retained, `REMOVE`-only, `MODIFY`, `MARK_AS_OVER_ANNOTATED`, down-graded) per population and per aspect; per-taxon breakdown; most frequently down-graded terms.
 
-Two further scripts build on it (see the [failure-modes page](TREEGRAFTER/failure-modes.md)):
 `analyze_placement.py` joins each annotation to its PANTHER family / subfamily
 / graft node and writes
 [`treegrafter_family_hotspots.tsv`](TREEGRAFTER/treegrafter_family_hotspots.tsv);
 `classify_failure_modes.py` assigns every down-graded annotation a failure
 mode and writes
-[`treegrafter_failure_modes.tsv`](TREEGRAFTER/treegrafter_failure_modes.tsv).
+[`treegrafter_failure_modes.tsv`](TREEGRAFTER/treegrafter_failure_modes.tsv)
+(see the [failure-modes page](TREEGRAFTER/failure-modes.md)).
 
-## Results (frozen corpus snapshot, 2026-09-06)
+## Results (computed at commit `fff7793a6`, 2026-09-27)
 
-> **Snapshot.** Every number on this page and its sub-page, and every
-> committed sidecar, was generated from the review corpus as of
-> **2026-09-06** (branch commit `49d8cc0b`, on `main` at `b62182cc`) and has
-> been **deliberately frozen** there so that the figures below are the ones
-> that were verified line by line in review. **The corpus has grown since and
-> keeps growing; the tables were not chased.** As a dated floor: by the
-> branch's merge of `main` at `3246edc2` (2026-09-19) the tree already held at
-> least **63 more `GO_REF:0000118` annotations in 28 more review files** than
-> the tables (HETGA 29 and 9AVES 4 — two species the tables have never seen,
-> the first a mammalian gene set — PSEPK 28, XENLA 2; none removed), and at
-> least **four already-counted actions had changed**: PSEPK `fruA`
-> GO:0090563 and `fabF` GO:0005829 (`ACCEPT` → `KEEP_AS_NON_CORE`), and PSEPK
-> `pgm` GO:0006166 and GO:0008973 (`KEEP_AS_NON_CORE` →
-> `MARK_AS_OVER_ANNOTATED`) — the `pgm` pair being the first post-snapshot
-> changes that move rows *into* the down-graded population the failure-mode
-> analysis is built on. Later merges add more. Current figures come from
-> re-running `analyze_treegrafter.py`, not from this page; regenerate the
-> sidecars only together with a fresh pass over `failure_mode_curated.tsv`
-> (see *Refresh the snapshot* under Next steps).
+> **Provenance.** Every number on this page and its sub-page comes from the
+> sidecars regenerated on 2026-09-27 at commit **`fff7793a6`** with the
+> commands above (the `genes/` tree was clean at that commit). The corpus keeps
+> growing; re-run the commands rather than trusting these figures on a later
+> tree, and re-curate `failure_mode_curated.tsv` whenever rows cross into or out
+> of the down-graded set.
 
-At the snapshot, **4,540** review files were scanned, yielding **898**
-reviewed TreeGrafter annotations (`GO_REF:0000118`) across **510** reviewed
-proteins (493 distinct gene symbols) —
-at that date every `GO_REF:0000118` row in the corpus GOA had a review
-decision (an earlier snapshot, before the *P. putida* KT2440 batch was
-reviewed, had 415 annotations / 202 proteins).
+**4,999** review files were scanned, yielding **983** reviewed TreeGrafter
+annotations (`GO_REF:0000118`) across **550** review files (533 distinct gene
+symbols). No row is `PENDING`/`NEW`.
 
-| Reviewer action | TreeGrafter (IEA) | | PAINT/IBA *(contrast)* | |
+### Drift since the 2026-09-06 snapshot
+
+The previous version of this page was frozen at a 2026-09-06 snapshot (898
+annotations / 510 files, on `main` at `e3350f43d`).
+[`snapshot_drift.py`](TREEGRAFTER/snapshot_drift.py) diffs the two
+([`treegrafter_snapshot_drift.tsv`](TREEGRAFTER/treegrafter_snapshot_drift.tsv)):
+
+| | count |
+|---|---:|
+| annotations added (PSEPK 50, HETGA 29, 9AVES 4, XENLA 2) | 85 |
+| annotations dropped | 0 |
+| actions changed on already-counted annotations | 63 |
+| down-graded (`REMOVE`+`MODIFY`+`OVER`) set | 306 → **279** |
+| … rows that **left** the down-graded set | 48 (26 → `UNDECIDED`, 19 → `ACCEPT`, 3 → `KEEP_AS_NON_CORE`) |
+| … rows that **entered** it | 21 (19 newly added, 2 changed: PSEPK `pgm`) |
+
+The drift is almost entirely one event: the **2026-09-20 full-gene re-review**
+recorded in [`TREEGRAFTER/rereview-2026-09-20/`](#re-review-of-2026-09-20)
+(below). 56 of the 63 changed actions, and 46 of the 48 rows that left the
+down-graded set, are on genes in that folder. The largest single transition
+is `REMOVE` → `UNDECIDED` (19 rows); in the records, e.g. `fogD`, the
+re-reviewer declined to reject a propagated term on pathway-context grounds
+alone without target-specific evidence against it.
+
+### Headline
+
+| Reviewer action | TreeGrafter (IEA) | | PAINT/IBA *(corpus-wide contrast; different genes)* | |
 |---|---:|---:|---:|---:|
-| `ACCEPT` | 371 | 41.3% | 7,286 | 71.7% |
-| `KEEP_AS_NON_CORE` | 192 | 21.4% | 1,611 | 15.9% |
-| `MODIFY` | 73 | 8.1% | 478 | 4.7% |
-| `REMOVE` | 120 | 13.4% | 276 | 2.7% |
-| `MARK_AS_OVER_ANNOTATED` | 113 | 12.6% | 432 | 4.3% |
-| `UNDECIDED` | 26 | 2.9% | 45 | 0.4% |
-| `NEW` / `PENDING` | 3 | 0.3% | 36 | 0.4% |
+| `ACCEPT` | 443 | 45.1% | 8,130 | 73.1% |
+| `KEEP_AS_NON_CORE` | 202 | 20.5% | 1,746 | 15.7% |
+| `MODIFY` | 69 | 7.0% | 467 | 4.2% |
+| `REMOVE` | 106 | 10.8% | 197 | 1.8% |
+| `MARK_AS_OVER_ANNOTATED` | 104 | 10.6% | 324 | 2.9% |
+| `UNDECIDED` | 59 | 6.0% | 218 | 2.0% |
+| `NEW` / `PENDING` | 0 | 0% | 33 | 0.3% |
+| *n* (review files) | 983 (550) | | 11,115 (2,953) | |
 
-**Headline:** only **~41%** of TreeGrafter inferences are accepted as-is, and
-**~26%** are rejected or flagged as over-annotations (`REMOVE` + `MARK_AS_OVER_ANNOTATED`;
-`REMOVE` alone is 13.4%), with a
-further ~8% needing a better term (`MODIFY`). The accept rate was 41.0% at the
-previous 415-annotation snapshot, so it has been stable while the corpus more
-than doubled. This is **markedly noisier than curated PAINT/IBA** on the same
-corpus (72% accept, ~7% rejected) — which is
-exactly what you would expect: TreeGrafter is fully automated propagation onto
-sequences that were *not* curated into the reference tree, with no curator
-checking residue-level evidence at the graft point.
+Three rates, reported side by side because they answer different questions
+(all from the *headline rates* block of the summary sidecar):
+
+| Rate | Definition | TreeGrafter | PAINT/IBA (corpus-wide) |
+|---|---|---:|---:|
+| accepted | `ACCEPT` | 45.1% | 73.1% |
+| **retained** | `ACCEPT` + `KEEP_AS_NON_CORE` + `MARK_AS_OVER_ANNOTATED` — the term stays, possibly flagged | **76.2%** | 91.8% |
+| **rejected** | `REMOVE` only | **10.8%** | 1.8% |
+| down-graded | `REMOVE` + `MODIFY` + `MARK_AS_OVER_ANNOTATED` | 28.4% | 8.9% |
+
+`MARK_AS_OVER_ANNOTATED` sits in both *retained* and *down-graded* on
+purpose: the term is not wrong, but it is flagged as over-reaching. Read
+together: roughly one TreeGrafter inference in ten is judged wrong outright,
+about three in four survive in some form, and fewer than half are accepted
+as-is. The accept rate was 41.0% at an earlier 415-annotation snapshot and
+41.3% at the 2026-09-06 snapshot; the rise to 45.1% is mostly the 2026-09-20
+re-review above, not new data.
+
+**The PAINT/IBA column is not a like-for-like comparison.** It is every IBA row
+in the corpus (2,953 review files, dominated by human and model-organism
+genes), while TreeGrafter by construction annotates sequences that are *not*
+in the PANTHER reference tree — so the two populations barely share genes.
+Restricted to the same 550 review files, there are only **20** IBA rows on 9
+files (16 `ACCEPT`, 3 `KEEP_AS_NON_CORE`, 1 `UNDECIDED`): too few to say
+anything. The contrast shows that curated IBA on well-studied genes fares
+better than automated grafting on non-model genes; it does not isolate the
+effect of the pipeline from the effect of the gene set. The
+[corroboration contrast](#corroboration-treegrafter-only-vs-multi-method-vs-interpro2go-only)
+below, which *is* on the same files, is the better-controlled comparison.
 
 ### By GO aspect
 
-The summary sidecar also breaks the TreeGrafter set down by aspect (taken
-from the `GO ASPECT` column of each gene's cached GOA). Molecular-function
-propagations are the worst category by a wide margin, confirming the
-hypothesis that catalysis-implying MF terms are where tree grafting
-over-reaches; CC terms are rarely *wrong* but are mostly parked as non-core.
+Molecular-function propagations are the worst category by a wide margin (one
+in five MF rows is removed outright); CC terms are rarely *wrong* but are
+often parked as non-core.
 
-| Aspect | n | `ACCEPT` | `KEEP_AS_NON_CORE` | down-graded (`REMOVE`+`MODIFY`+`OVER`) |
-|---|---:|---:|---:|---:|
-| Molecular function | 238 | 30% | 13% | **52%** |
-| Biological process | 318 | 41% | 17% | 38% |
-| Cellular component | 342 | 49% | 31% | 18% |
+| Aspect | n | `ACCEPT` | `KEEP_AS_NON_CORE` | `REMOVE` | down-graded (`REMOVE`+`MODIFY`+`OVER`) | retained |
+|---|---:|---:|---:|---:|---:|---:|
+| Molecular function | 264 | 32.6% | 13.3% | 20.1% | **47.7%** | 59.5% |
+| Biological process | 354 | 46.9% | 16.1% | 10.5% | 29.7% | 74.6% |
+| Cellular component | 365 | 52.3% | 30.1% | 4.4% | 13.2% | 89.9% |
 
 ### Corroboration: TreeGrafter-only vs multi-method vs InterPro2GO-only
 
-Within the 510 reviewed proteins (each population covers the subset of those
-proteins that carry it), the reviewer treatment of the three electronic
-populations defined above:
+Each population below is restricted to the 550 review files that carry
+TreeGrafter rows, but covers only the subset of those files that carry it
+(399 and 384 files respectively), so the three are close to — not exactly —
+the same proteins:
 
-| Population | n | `ACCEPT` | `KEEP_AS_NON_CORE` | down-graded |
-|---|---:|---:|---:|---:|
-| TreeGrafter, **uncorroborated** (`GO_REF:0000118`) | 898 | 41% | 21% | 34% |
-| TreeGrafter **corroborated** by ≥1 other pipeline (`GO_REF:0000120`, `PANTHER:PTN…`) | 637 | **77%** | 9% | **12%** |
-| InterPro2GO, **uncorroborated** (`GO_REF:0000002`) | 698 | 26% | 20% | **53%** |
+| Population | n (files) | `ACCEPT` | `KEEP_AS_NON_CORE` | `REMOVE` | down-graded | retained |
+|---|---:|---:|---:|---:|---:|---:|
+| TreeGrafter, **uncorroborated** (`GO_REF:0000118`) | 983 (550) | 45% | 21% | 10.8% | 28% | 76% |
+| TreeGrafter **corroborated** by ≥1 other pipeline (`GO_REF:0000120`, `PANTHER:PTN…`) | 690 (399) | **78%** | 9% | 0.7% | **11%** | 92% |
+| InterPro2GO, **uncorroborated** (`GO_REF:0000002`) | 759 (384) | 28% | 19% | 5.9% | **51%** | 79% |
 
 Three things follow:
 
 1. **Corroboration is the strongest single predictor of a good TreeGrafter
-   call.** The same algorithm's output is accepted 77% of the time when another
-   pipeline reproduces it and 41% when none does — the corroborated set is
-   accepted at a higher rate than curated PAINT/IBA on the whole corpus (72%).
-   UniProt's `GO_REF:0000120` merge is, in effect, already a QC gate, and the
-   `GO_REF:0000118` residue is the part that failed it.
+   call.** The same algorithm's output is accepted 78% of the time when another
+   pipeline reproduces it and 45% when none does. UniProt's `GO_REF:0000120`
+   merge is, in effect, already a QC gate, and the `GO_REF:0000118` residue is
+   the part that failed it.
 
    > **Caveat — the reviewers were not blind to the label.** `original_reference_id`
    > is visible in the review YAML while the annotation is being adjudicated, and
    > "combined multiple IEA methods" (`GO_REF:0000120`) reads as visibly stronger
-   > provenance than a lone `GO_REF:0000118`. So the 77%-vs-41% gap may be partly
+   > provenance than a lone `GO_REF:0000118`. So the 78%-vs-45% gap may be partly
    > *caused by* the label rather than only *predicted* by it. The direction of the
    > effect is very likely real — corroboration by an independent pipeline is
-   > genuine evidence, and this is the same reasoning the repo's IBA guidance
-   > applies to propagation provenance — but the magnitude should not be taken at
-   > face value from this corpus. Separating the two requires the held-out,
-   > provenance-blinded test in the next-steps list below; until that is run, treat
-   > 77% vs 41% as an upper bound on the true effect.
-2. **Uncorroborated InterPro2GO is worse than uncorroborated TreeGrafter**, not
-   better: 53% down-graded, 58% for MF. Its rejected terms are dominated by
-   coarse ancestors — `catalytic activity` (47), `oxidoreductase activity` (21),
-   `membrane` (17), `nucleotide binding` (15). This qualifies the graft-check
-   hypothesis on the failure-modes page: InterPro *does* out-resolve PANTHER for
-   particular proteins (AprA, S-crystallin, Mcr1), but the InterPro2GO rows that
-   TreeGrafter fails to corroborate are mostly low-information, and the
-   informative InterPro2GO calls have already been merged into `GO_REF:0000120`.
-3. The **taxon skew cuts both ways**: TreeGrafter is down-graded 31% on the
-   *P. putida* rows and 42% elsewhere, while InterPro2GO is down-graded 58% on
-   *P. putida* and 37% elsewhere (the *P. putida* reviews were strict about
-   generic MF terms).
+   > genuine evidence — but the magnitude should not be taken at face value from
+   > this corpus; treat it as an upper bound until the provenance-blinded test in
+   > Next steps is run.
+2. **Uncorroborated InterPro2GO is down-graded more often than uncorroborated
+   TreeGrafter** — 51% (56% for MF) — but mostly by `MARK_AS_OVER_ANNOTATED`
+   (32%); its `REMOVE` rate (5.9%) is *lower* than TreeGrafter's (10.8%), and
+   its retained rate is similar (79% vs 76%). Its down-graded terms are
+   dominated by coarse ancestors — `catalytic activity` (45), `membrane` (23),
+   `oxidoreductase activity` (21), `nucleotide binding` (15). So InterPro2GO's
+   uncorroborated residue is mostly *uninformative*, while TreeGrafter's is
+   more often *wrong*. This qualifies the graft-check hypothesis on the
+   failure-modes page: InterPro *does* out-resolve PANTHER for particular
+   proteins (AprA, S-crystallin, Mcr1), but the informative InterPro2GO calls
+   have mostly already been merged into `GO_REF:0000120`.
+3. **Taxon composition.** TreeGrafter's down-grade rate is now similar on the
+   *P. putida* KT2440 rows (29.2%, 198/678) and elsewhere (26.6%, 81/305);
+   at the 2026-09-06 snapshot it was 31% vs 42%. InterPro2GO is down-graded
+   56.3% on *P. putida* and 34.6% elsewhere (the *P. putida* reviews were
+   strict about generic MF terms). Computed from the `taxon` column of the
+   review and contrast sidecars.
 
 ### Where TreeGrafter inferences fail
 
 > **Deep dive:** [Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)
 > joins every down-graded annotation to the PANTHER family/subfamily it was
 > grafted onto (and the ancestral `PTN` graft node), and assigns each one a
-> failure mode. **Short answer: in five cases out of six the placement is
-> fine and the inherited term is the problem** — too coarse or a sibling term
-> from the family node (47%), or a generic / out-of-context localization or
-> process (36%). About one in eight (41 annotations on 27 proteins, e.g. `aprA`,
-> `fcs`, `mdh`, `mqo1–3`, `dapE`) is a true within-superfamily mis-placement,
-> and genuine pseudo-enzymes are rare (4 annotations, 2 proteins).
+> failure mode. **Short answer: in about four cases out of five the placement
+> is fine and the inherited term is the problem** — too coarse or a sibling
+> term from the family node (49%), or a generic / out-of-context localization
+> or process (31%). About one in eight (37 annotations on 24 proteins, e.g.
+> `aprA`, `fcs`, `mdh`, `mqo1–3`, `dapE`) is a within-superfamily
+> mis-placement, and genuine pseudo-enzymes are rare (4 annotations, 2
+> proteins).
 
 | Failure mode | annotations | share | proteins |
 |---|---:|---:|---:|
-| 1 Granularity — right subfamily, family/node-level or sibling term | 143 | 47% | 109 |
-| 3 Generic / out-of-context CC, binding or process term | 109 | 36% | 94 |
-| 4 Within-superfamily mis-placement | 41 | 13% | 27 |
-| 0 Unclassified — heuristic declines to guess (curation queue) | 9 | 3% | 8 |
+| 1 Granularity — right subfamily, family/node-level or sibling term | 138 | 49% | 114 |
+| 3 Generic / out-of-context CC, binding or process term *(informativeness policy)* | 86 | 31% | 83 |
+| 4 Within-superfamily mis-placement | 37 | 13% | 24 |
+| 0 Unclassified — heuristic declines to guess (curation queue) | 14 | 5% | 13 |
 | 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 |
+| *total down-graded* | *279* | | |
 
-Protein counts are distinct **review files**, not gene symbols — the corpus has
-510 files but only 493 symbols (`mdh`, `ALB`, `dapF` and seven other symbols
-span more than one file), so a symbol-keyed count under-reports modes 3 and 4
-as 92 and 26.
+**Mode 3 is not a grafting error.** It records a reviewer *informativeness
+policy* — generic CC terms (`cytosol`, `cytoplasm`, `membrane`), uninformative
+binding terms and out-of-context process terms are down-graded because the
+review standard prefers specific, core terms, not because the graft landed in
+the wrong place or the term is false. 47 of the 86 are cellular-component rows
+assigned by aspect alone. A different review policy would move most of mode 3
+into *retained*; read the mode-1/2/4 counts (179 annotations, 64% of the
+down-grades) as the grafting-attributable part.
 
-The TreeGrafter terms most often down-graded (`REMOVE` / `MODIFY` /
-`MARK_AS_OVER_ANNOTATED`) cluster in two failure modes:
+Protein counts are distinct **review files**, not gene symbols — 550 files
+carry only 533 symbols (`mdh`, `ALB`, `dapF` and others span more than one
+file), so a symbol-keyed count reads modes 3 and 4 as 81 and 23.
+
+The TreeGrafter terms most often down-graded cluster in two patterns:
 
 1. **Over-specific catalytic activity propagated to the wrong paralog/subfamily.**
    The grafting node carries a precise enzymatic MF that the query has diverged
-   away from: `NADH dehydrogenase activity` (GO:0003954),
-   `fatty acid synthase activity` (GO:0004312),
-   `spermidine synthase activity` (GO:0004766),
-   `phosphotransferase activity` (GO:0016776),
-   `carotenoid dioxygenase activity` (GO:0010436),
-   `(S)-2-hydroxyglutarate dehydrogenase activity` (GO:0047545),
-   `triacylglycerol lipase activity` (GO:0004806). TreeGrafter places a sequence
-   on a tree node but cannot tell that the catalytic residues, or the whole
-   substrate specificity, have changed — the classic paralog over-annotation.
+   away from: `NADH dehydrogenase activity` (GO:0003954, 6),
+   `fatty acid synthase activity` (GO:0004312, 4),
+   `phosphotransferase activity, phosphate group as acceptor` (GO:0016776, 4),
+   `carotenoid dioxygenase activity` (GO:0010436, 4),
+   `spermidine synthase activity` (GO:0004766, 3),
+   `(S)-2-hydroxyglutarate dehydrogenase activity` (GO:0047545, 3).
+   TreeGrafter places a sequence on a tree node but cannot tell that the
+   catalytic residues, or the whole substrate specificity, have changed.
+   (`triacylglycerol lipase activity` on `fogD`, listed here on the previous
+   snapshot, was re-reviewed to `UNDECIDED` on 2026-09-20 — the re-review found
+   that the family source Ayr1 does have lipase activity — and is no longer
+   down-graded.)
 
-2. **Generic / uninformative localization.** `cytoplasm` (GO:0005737),
-   `cytosol` (GO:0005829), `plasma membrane` (GO:0005886), `membrane`
-   (GO:0016020), `nucleus` (GO:0005634) — low-information CC terms inherited
-   from distant ancestors. `cytosol` and `cytoplasm` alone are the two most
-   frequently down-graded TreeGrafter terms in the corpus. The MF analogue is
-   `identical protein binding` (GO:0042802), an uninformative
-   "it oligomerises" term propagated from the tree.
+2. **Generic / uninformative localization.** `cytosol` (GO:0005829, 18) and
+   `cytoplasm` (GO:0005737, 9) are the two most frequently down-graded
+   TreeGrafter terms; `membrane`, `nucleus` and `plasma membrane` follow. The
+   MF analogue is `identical protein binding` (GO:0042802, 5).
 
 There are also process-level mis-propagations of two kinds: a mechanistically
 wrong sibling process (`lipopolysaccharide core region biosynthetic process`
@@ -298,66 +351,119 @@ on the `mcr` phosphoethanolamine transferases, which modify lipid A, not the
 core oligosaccharide), and pathway terms propagated onto hosts that lack the
 pathway (`sucrose biosynthetic process` on *P. putida* `fbp`).
 
-These are precisely the cases where automated tree grafting lacks the
-gene-specific evidence (catalytic-residue conservation, substrate assays,
-organism pathway context) that a curator brings — and why PAINT/IBA, where a
-curator made the call, fares so much better.
-
 ### Family hotspots (upstream targets)
 
 [`treegrafter_family_hotspots.tsv`](TREEGRAFTER/treegrafter_family_hotspots.tsv)
-aggregates the reviewer outcome over *all* 898 TreeGrafter annotations per
-PANTHER family, subfamily and graft node. Of the 63 families with at least
-four reviewed annotations, **29 have half or more of their propagated terms
-down-graded** and 19 have none — the errors are concentrated, not diffuse.
-The worst families are candidate PAINT subfamily-annotation or node-term
-fixes:
+aggregates the reviewer outcome over *all* 983 TreeGrafter annotations per
+PANTHER family, subfamily and graft node. Of the **71** families with at least
+four reviewed annotations, **24 have half or more of their propagated terms
+down-graded** and 25 have none — the errors are concentrated, not diffuse.
+Families with ≥60% down-graded (modes counted from
+`treegrafter_failure_modes.tsv`):
 
-| Family | n | proteins | down-graded | Failure | Example genes |
+| Family | n | proteins | down-graded | modes of the down-graded rows | Example genes |
 |---|---:|---:|---:|---|---|
-| PTHR10543 beta-carotene dioxygenase | 8 | 4 | 100% | stilbene/lignostilbene dioxygenases grafted onto the carotenoid-cleavage subfamily (mode 4) | Q53353, Saro_0802, Saro_2809, lsdB |
-| PTHR30443 "inner membrane protein" (EptA) | 8 | 4 | 100% | EptA node carries `LPS core` and `phosphotransferase` instead of pEtN transferase (mode 1) | mcr-1, mcr2, mcr-3, mcr-4 |
-| PTHR44169 acyl-DHAP reductase | 6 | 1 | 100% | lipid-enzyme family terms on a secondary-metabolite SDR (mode 1) | fogD |
-| PTHR48078 threonine dehydratase | 6 | 2 | 100% | serine-deaminase sibling terms on biosynthetic IlvA (mode 1) | ilvA-I, ilvA-II |
-| PTHR11556 FBPase-related | 11 | 2 | 64% | plant cytosolic-isoform processes on chloroplast/bacterial FBPases (mode 4/3) | NCGR_LOCUS1270, fbp |
-| PTHR11558 spermidine synthase | 9 | 3 | 67% | family-level spermidine terms on the PMT subfamily (mode 1) | NaPMT3, PMT1, PMT2 |
-| PTHR21047 dTDP-sugar epimerase | 10 | 3 | 60% | generic polysaccharide / epimerase parents (mode 1) | eryBVII, rfbC, rmlC |
-| PTHR11632 SDH flavoprotein | 7 | 2 | 71% | SDH/FRD/APS-reductase heterogeneity (modes 1 and 4) | aprA, sdhA |
-| PTHR43775 fatty acid synthase | 4 | 4 | 100% | family-level FAS term on PKS subfamilies (mode 1) | eryAI–III, Pks1 |
-| PTHR43128 L-2-hydroxycarboxylate DH | 4 | 2 | 100% | MDH grafted onto the L-LDH subfamily (mode 4) | METEA/mdh, PSEPK/mdh |
-| PTHR21272 catabolic 3-dehydroquinase | 4 | 4 | 100% | catabolic process on biosynthetic type-II DHQases (mode 4) | aroQ, aroQ1, aroQ2, aroQ-III |
-| PTHR43808 acetylornithine deacetylase (M20A) | 5 | 3 | 80% | DapE / PepV grafted onto the ArgE branch (mode 4) | dapE, pepV |
+| PTHR10543 beta-carotene dioxygenase | 8 | 4 | 100% | 4 ×8 — stilbene dioxygenases on the carotenoid-cleavage subfamily | Q53353, Saro_0802, Saro_2809, lsdB |
+| PTHR30443 "inner membrane protein" (EptA) | 8 | 4 | 100% | 1 ×8 — EptA node carries `LPS core` and `phosphotransferase` | mcr-1, mcr2, mcr-3, mcr-4 |
+| PTHR21272 catabolic 3-dehydroquinase | 4 | 4 | 100% | 1 ×4 | aroQ, aroQ1, aroQ2, aroQ-III |
+| PTHR42995 acetyl-CoA carboxylase carboxyl transferase | 4 | 2 | 100% | 1 ×3, 3 ×1 | accD, mdcD |
+| PTHR43128 L-2-hydroxycarboxylate DH | 4 | 2 | 100% | 4 ×4 — MDH on the L-LDH subfamily | METEA/mdh, PSEPK/mdh |
+| PTHR43775 fatty acid synthase | 4 | 4 | 100% | 1 ×4 — family-level FAS term on PKS subfamilies | eryAI–III, Pks1 |
+| PTHR43808 acetylornithine deacetylase (M20A) | 5 | 3 | 80% | 4 ×4 | dapE, pepV |
+| PTHR30435 flagellar protein | 4 | 2 | 75% | 3 ×2, 0 ×1 | flgE, flgG |
+| PTHR11558 spermidine synthase | 9 | 3 | 67% | 1 ×6 — spermidine terms on the PMT subfamily | NaPMT3, PMT1, PMT2 |
+| PTHR24241 neuropeptide receptor-related GPCR | 6 | 3 | 67% | 1 ×4 (heuristic) | CTR1, CTR2, OPR |
+| PTHR21047 dTDP-sugar epimerase | 10 | 3 | 60% | 1 ×6 | eryBVII, rfbC, rmlC |
+| PTHR11271 guanine deaminase | 5 | 2 | 60% | 1 ×3 | guaD, hutF |
+| PTHR22960 molybdopterin cofactor synthesis | 5 | 3 | 60% | 1 ×3 | PP_1969, PP_2482, moaA |
+| PTHR45527 nonribosomal peptide synthetase | 5 | 1 | 60% | 4 ×3 — EntF terms on the PvdD NRPS | pvdD |
+
+Four families in the previous table are **no longer hotspots**: PTHR44169
+(`fogD`, 6/6 → 0/6 down-graded) and PTHR48078 (`ilvA-I`/`ilvA-II`, 6/6 → 0/6)
+after the 2026-09-20 re-review; PTHR11556 (FBPase, 7/11 → 1/11) and
+PTHR11632 (SDH flavoprotein, 71% → 43%, `aprA` electron-transfer and
+plasma-membrane rows now `ACCEPT`). Note that the `fogD` re-review is still
+`awaiting_adjudication`.
+
+### Re-review of 2026-09-20
+
+[`TREEGRAFTER/rereview-2026-09-20/`](https://github.com/ai4curation/ai-gene-review/tree/main/projects/TREEGRAFTER/rereview-2026-09-20)
+holds the audit records of a full-gene re-review of **29** genes carrying
+TreeGrafter rows (28 of them in the current TreeGrafter set), done by agent
+reviewers (three of the seven records name Codex; the others name no
+reviewer), which re-examined every annotation on each gene (not only the
+`GO_REF:0000118` rows) and wrote the new actions into the gene review YAMLs:
+
+| Record | Genes | Status |
+|---|---|---|
+| `exemplars.yaml`, `exemplars-2.yaml` | the ten OpenScientist/Falcon exemplars plus `NCGR_LOCUS1270` | all `reviewed` |
+| `fogd.yaml` | `fogD` | `awaiting_adjudication` |
+| `metabolic-scope.yaml` | `PP_3394`; `alg8`, `purM`, `ilvA-I`, `ilvA-II` | 1 awaiting; 4 reviewed |
+| `enzyme-substrate-transfer.yaml` | `K9IJK6`, `mdr`; `ydiJ`, `PoMZ_10221` | 2 awaiting; 2 reviewed |
+| `substrate-and-lineage.yaml` | `Cgas`, `K9IFT7`, `K9IMD0`, `pvdD`; `moeB`, `mdcD` | 4 awaiting; 2 reviewed |
+| `fusion-and-toll-scope.yaml` | `NCGR_LOCUS10166`, `TOLL9` | both awaiting |
+
+In total 19 genes are `reviewed` and **10 are `awaiting_adjudication`**. The
+awaiting genes' new actions are already in the YAMLs and therefore in every
+table above: 22 of the 48 rows that left the down-graded set (16 now
+`UNDECIDED`, 6 `ACCEPT`) are on awaiting genes, so those rows are
+**provisional** until a curator adjudicates. The `cache-reports/` subfolder
+preserves six OpenScientist reports reused as evidence in that pass (see its
+README; they are evidence inputs, not accepted conclusions).
+
+### Reference independence
+
+- **What the reference is.** The ground truth is the AIGR gene reviews —
+  predominantly agent (LLM) reviews written under the repository's curation
+  guidelines. There is no separately human-rated subset, so agreement with
+  expert curators cannot be quoted.
+- **Label visibility.** Reviewers saw `original_reference_id` (and hence
+  whether a row was TreeGrafter, corroborated or InterPro2GO) while deciding.
+  This affects the corroboration contrast (see the caveat there) and possibly
+  the TreeGrafter-vs-IBA contrast.
+- **Tool outputs inside the reference.** 183 of the 983 reviewed TreeGrafter
+  annotations (55 of the 279 down-graded) cite an OpenScientist or Falcon file
+  (blinded hypothesis report or Falcon deep research) in their own
+  `review.supported_by`
+  ([`exemplar_independence.py`](TREEGRAFTER/exemplar_independence.py)). For
+  the ten exemplars used to evaluate the blinded OpenScientist/Falcon check, 9
+  of 10 exemplar annotations cite the very report being evaluated
+  ([`exemplar_independence.tsv`](TREEGRAFTER/exemplar_independence.tsv));
+  only `NaUGT1` does not. Agreement between those verdicts and the
+  "held-out" reviewer action is therefore partly by construction, and the
+  exemplar comparison on the [failure-modes page](TREEGRAFTER/failure-modes.md#openscientist-blinded-verification)
+  is reported as illustrative, not as a validation.
+- **Selection.** The exemplars were all drawn from down-graded rows; there are
+  no accepted negative controls, so the check's false-positive rate is
+  unknown.
+- **Drift.** The reference changes under the evaluation (63 actions in three
+  weeks), which is why results are pinned to a commit.
 
 ## Caveats
 
-- **Corpus composition (a snapshot property).** 898 TreeGrafter annotations
-  across 510 reviewed proteins (510 review files; only 493 distinct gene
-  symbols), but ~70% of them come from the *Pseudomonas putida* KT2440 batch
-  (see the per-taxon table in the summary sidecar), so the rates are largely a
-  *P. putida* result; the 95% Wald interval on the 41% accept rate is roughly
-  ±3 pp, but the taxon skew matters more than the sampling error. The skew is
-  a property of the 2026-09-06 snapshot, not a standing one: the ≥63
-  annotations added since (see the snapshot note above) are split between the
-  mammalian HETGA set and further *P. putida* rows, and the share is ~68% on
-  the merged tree (656 of 961 at the `3246edc2` floor, versus 628 of 898
-  here). Directional, not a frozen benchmark.
-- The reference standard is the AIGR review corpus, which mixes expert and AI
-  adjudication and is under continuous revision; the rates drift with it,
-  which is why the tables are pinned to a dated snapshot rather than chased.
+- **Corpus composition.** 69% of the TreeGrafter rows (678 of 983, under two
+  taxon labels for KT2440) come from *Pseudomonas putida* KT2440, so the rates
+  are largely a *P. putida* result. The 95% Wald interval on the 45% accept
+  rate is roughly ±3 pp, but the taxon skew and reference drift matter more
+  than the sampling error. Directional, not a frozen benchmark.
+- The reference standard is the AIGR review corpus, which is agent-generated,
+  partly informed by the tools being evaluated, and under continuous revision
+  (see [Reference independence](#reference-independence)).
 - `KEEP_AS_NON_CORE` is **not** an error — the inference is correct but
-  peripheral to the gene's core function. Counting accept + non-core as
-  "retained correct" gives ~63% for TreeGrafter vs ~88% for IBA.
-- A few annotations are still `PENDING`/`UNREVIEWED` in partially-reviewed
-  genes.
+  peripheral. Accept + non-core is 65.6% for TreeGrafter vs 88.8% for
+  corpus-wide IBA; adding `MARK_AS_OVER_ANNOTATED` gives the *retained* rates
+  in the headline table.
+- 59 TreeGrafter rows (6%) are `UNDECIDED`, 21 of them on genes still
+  `awaiting_adjudication` in the 2026-09-20 re-review.
 
 ## Deeper analyses
 
 - **[Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)** — joins all
-  306 down-graded annotations to their PANTHER graft point, plus a lightweight
+  279 down-graded annotations to their PANTHER graft point, plus a lightweight
   PANTHER-vs-InterPro [graft check](TREEGRAFTER/graft_check.py) on ten
   exemplars. Key result: the placement is usually sound; the error is the GO term
-  attached to the graft node, and **InterPro often resolves the protein better
-  than PANTHER** (e.g. `IPR011803 AprA`, `IPR003083 S-crystallin`).
+  attached to the graft node, and InterPro sometimes resolves the protein better
+  than PANTHER (e.g. `IPR011803 AprA`, `IPR003083 S-crystallin`).
 - **[ATP-synthase terms on flagellar/T3SS export ATPases](TREEGRAFTER/rotary-atpase-leak.md)**
   — a case study of **inherited PAINT over-placement**. The `GO:0046933` /
   `GO:0045259` IBD sits on the duplication node `PTN008558586` in PTHR15184, above
@@ -371,16 +477,47 @@ fixes:
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
   which frames each propagated term as a blinded "GENE has *<term>*" hypothesis
-  and instructs the agent to actively test the three failure modes
+  and instructs the agent to actively test the failure modes
   (granularity, pseudo-enzyme, mis-placement). Run via
   `gene-hypothesis-research openscientist <org> <gene> --annotation-term-id <GO>
   --as-function-hypothesis --template templates/treegrafter_function_hypothesis.md`.
+  See [Reference independence](#reference-independence) for why the ten
+  existing runs cannot be scored against the current reviews.
 
 ---
 # NOTES
 
 ## 2026-09-27
 
+- Acted on the TreeGrafter section of
+  [REVIEW-2026-09-26](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md).
+  Retired the frozen 2026-09-06 snapshot: re-ran `analyze_treegrafter.py`,
+  `analyze_placement.py`, `classify_failure_modes.py` and `graft_check.py` at
+  `fff7793a6` and rewrote every number on both pages from the sidecars
+  (898 → 983 annotations, 510 → 550 files, 306 → 279 down-grades, accept
+  41.3% → 45.1%). New `snapshot_drift.py` records the drift (85 added, 63
+  changed actions, 48 rows out of / 21 into the down-graded set; 56 of the
+  63 changes are the 2026-09-20 re-review), and the page now links and
+  summarises `rereview-2026-09-20/` (19 genes reviewed, 10
+  `awaiting_adjudication`).
+- `failure_mode_curated.tsv` gained a `status` column: 25 overrides whose
+  annotation is no longer down-graded are kept but marked `superseded` (the
+  classifier ignores them); ADAR2 GO:0008251 re-filed 4 → 1 (its graft node
+  PTN000098697 also supplied the accepted ADAR terms); 9 newly down-graded
+  PSEPK rows curated to mode 1 from the reviewer's reason. The other 12 new
+  down-grades are left to the heuristic or mode 0 (14 mode-0 rows now).
+- Reporting: added *retained* and `REMOVE`-only rates next to down-graded
+  (summary sidecar *headline rates* block), relabelled mode 3 as an
+  informativeness policy, said explicitly that the IBA contrast is
+  corpus-wide on different genes and reported the same-file IBA set (20 rows
+  on 9 files — too small to use). Added a Reference-independence section; new
+  `exemplar_independence.py` shows 9/10 exemplar annotations cite the
+  OpenScientist/Falcon report they are scored against, so the exemplar
+  agreement claims on the failure-modes page were withdrawn.
+- Script hygiene: `analyze_treegrafter.py` docstring no longer contradicts
+  itself on `GO_REF:0000120`, and gains `--out-dir` for dry runs;
+  `graft_check.py` reads `review_action` from `treegrafter_review.tsv`
+  instead of hard-coding it (`--refresh-actions` updates it offline).
 - Added the [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case study.
   It began as a first-principles completeness test (F-type ATP synthase across
   15,525 bacterial reference proteomes), whose false positives turned out to be
@@ -450,33 +587,29 @@ fixes:
 
 ## Next steps
 
-- **Feed the hotspot list upstream.** The twelve families above are concrete
-  PAINT / PANTHER tickets: a stilbene-dioxygenase subfamily split in
-  PTHR10543, the EptA node term in PTHR30443, the PMT subfamily in PTHR11558,
-  PKS-vs-FAS in PTHR43775, the M20A subfamilies in PTHR43808, and the
-  MDH/LDH node in PTHR43128.
-- **Test corroboration as a QC gate on a held-out corpus.** Here the
-  `GO_REF:0000120` merge predicts acceptance (77% vs 41%); check whether the
-  same holds on a non-*P. putida* gene set, and whether family heterogeneity
-  (the Falcon family verdicts) predicts *which* TreeGrafter calls fail to be
-  corroborated.
-- **Second-pass the heuristic failure-mode assignments.** 134 of the 306
-  down-grades carry a keyword-derived mode. 68 of those are decided *by
-  construction* rather than by reading the reviewer — 61 cellular-component
-  rows (mode 3 by aspect) and 7 rows on the low-information binding allowlist —
-  leaving **66 genuinely keyword-placed MF/BP rows** that deserve the same
-  per-row curation the other 163 received (`failure_mode_curated.tsv`). The
-  9 mode-0 rows (`acoA`, `benB`, `davA`, `groES`, `nuoM`, `PP_0094`, `I7J3R9`,
-  `NCGR_LOCUS1270` ×2) are the head of that queue: the heuristic deliberately
-  declines them rather than guessing.
+- **Adjudicate the ten `awaiting_adjudication` genes** of the 2026-09-20
+  re-review (`fogD`, `PP_3394`, `K9IJK6`, `mdr`, `Cgas`, `K9IFT7`, `K9IMD0`,
+  `pvdD`, `NCGR_LOCUS10166`, `TOLL9`); 22 of the 48 rows that left the
+  down-graded set are on them, so the current rates are provisional there.
+- **Independent exemplars.** Re-run the blinded OpenScientist/Falcon check on
+  a fresh sample that (a) includes accepted TreeGrafter rows as negative
+  controls and (b) is scored against reviews that do not cite the reports;
+  only then quote a sensitivity/specificity.
 - **Blind the corroboration test.** Re-adjudicate a sample of `GO_REF:0000118`
   and `GO_REF:0000120` rows with `original_reference_id` withheld, to separate
-  the corroboration effect from the reviewer's visibility of the provenance
-  label (see the caveat in the Corroboration section).
-- **Broaden the taxon base.** ~70% of the reviewed TreeGrafter rows at the
-  snapshot are *P. putida* KT2440; a batch of eukaryotic or archaeal non-model
-  genes would tell whether the 41% accept rate travels. The 29 HETGA rows
-  already in the tree (not yet in the tables) are a first such batch.
-- **Refresh the snapshot** when the next batch lands: re-run the three scripts,
-  classify the new down-grades in `failure_mode_curated.tsv`, and re-pin the
-  date and commit in the Results header.
+  the corroboration effect from the reviewer's visibility of the label.
+- **Second-pass the heuristic failure-mode assignments.** 118 of the 279
+  down-grades carry a heuristic mode; 54 of those are decided by construction
+  (47 CC rows, 7 low-information binding terms), leaving **64 keyword-placed
+  MF/BP rows**, plus the **14 mode-0 rows** (`acoA`, `ahpC`, `benB`,
+  `cbcW` ×2, `Cgas`, `davA`, `flgG`, `groES`, `I7J3R9`, `mfd`, `nuoM`,
+  `PP_0094`, `PP_0301`).
+- **Feed the hotspot list upstream.** Concrete PAINT / PANTHER tickets: a
+  stilbene-dioxygenase subfamily in PTHR10543, the EptA node term in
+  PTHR30443, the PMT subfamily in PTHR11558, PKS-vs-FAS in PTHR43775, the
+  M20A subfamilies in PTHR43808, and the MDH/LDH node in PTHR43128.
+- **Human-rated anchor.** Have a curator rate a small shared subset so that
+  agreement between the agent reviews and expert judgement can be quoted.
+- **Broaden the taxon base.** 69% of the rows are *P. putida* KT2440; the 29
+  HETGA rows (76% accepted) are a first mammalian batch, too small to
+  generalise from.

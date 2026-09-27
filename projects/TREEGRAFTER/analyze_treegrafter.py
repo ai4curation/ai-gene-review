@@ -16,21 +16,30 @@ annotations of the grafting node. Crucially, this is distinct from PAINT/IBA:
 
 This script evaluates the TreeGrafter set (GO_REF:0000118). For contrast it
 also reports the PAINT/IBA set (GO_REF:0000033), but that is a *different*
-pipeline and is labelled as such. ``GO_REF:0000120`` is UniProt's "combined
-multiple IEA methods" reference (InterPro/ARBA/RHEA/...) and is NOT TreeGrafter,
-so it is excluded.
+pipeline, curated on a different (largely non-overlapping) set of genes, and is
+labelled as such; a same-file PAINT/IBA contrast restricted to the review files
+that also carry TreeGrafter rows is reported alongside the corpus-wide one.
 
-Two further electronic populations are reported as contrasts on the *same
-genes* that carry TreeGrafter rows:
+``GO_REF:0000120`` is UniProt's "Combined Automated Annotation using Multiple
+IEA Methods": it merges identical predictions from several electronic
+pipelines (UniRule, ARBA, InterPro2GO, TreeGrafter2GO, RHEA2GO, ...), listing
+the contributors in ``WITH/FROM``. It is therefore NOT counted as TreeGrafter
+output in the main population, but its rows whose ``WITH/FROM`` includes a
+``PANTHER:PTN...`` node are TreeGrafter predictions *corroborated* by at least
+one other pipeline, and are reported as a contrast (below). ``GO_REF:0000118``
+rows are the TreeGrafter predictions that no other pipeline reproduced.
 
-  * ``GO_REF:0000120`` / IEA / UniProt rows whose GOA ``WITH/FROM`` is a
-    ``PANTHER:PTN...`` node — PANTHER-tree inferences relayed by UniProt's
-    "combined IEA methods" reference (almost certainly TreeGrafter output under
-    a different label).
+Contrast populations, restricted to the review files that carry TreeGrafter
+rows:
+
+  * ``GO_REF:0000120`` / IEA rows whose GOA ``WITH/FROM`` contains a
+    ``PANTHER:PTN...`` node — corroborated TreeGrafter predictions.
   * ``GO_REF:0000002`` / IEA / InterPro rows — InterPro2GO signature-based
     transfer, the natural non-phylogenetic comparator.
+  * ``GO_REF:0000033`` / IBA rows on the same files — same-gene PAINT/IBA.
 
-Outputs (written next to this script):
+Outputs (written next to this script by default; ``--out-dir DIR`` writes
+them elsewhere, e.g. for a dry run that leaves the committed sidecars alone):
   - treegrafter_review.tsv     one row per reviewed TreeGrafter (GO_REF:0000118) annotation
   - treegrafter_contrast.tsv   one row per reviewed UniProt-relayed-PANTHER / InterPro2GO
                                annotation on the TreeGrafter genes (``set`` column)
@@ -39,12 +48,13 @@ Outputs (written next to this script):
                                TreeGrafter-vs-InterPro2GO head-to-head
 
 Run:
-  uv run --with pyyaml projects/TREEGRAFTER/analyze_treegrafter.py
+  uv run --with pyyaml projects/TREEGRAFTER/analyze_treegrafter.py [--out-dir DIR]
 or:
-  python3 projects/TREEGRAFTER/analyze_treegrafter.py
+  python3 projects/TREEGRAFTER/analyze_treegrafter.py [--out-dir DIR]
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import glob
 import os
@@ -64,6 +74,26 @@ PAINT_REF = "GO_REF:0000033"        # IBA / GO_Central — contrast only, NOT Tr
 UNIPROT_IEA_REF = "GO_REF:0000120"  # IEA / UniProt combined methods; PANTHER subset only
 INTERPRO2GO_REF = "GO_REF:0000002"  # IEA / InterPro signature -> GO transfer
 PROBLEM_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
+# "Retained" = the annotation stays in some form without a term change.
+# MARK_AS_OVER_ANNOTATED is in BOTH this set and PROBLEM_ACTIONS on purpose: the
+# term is not wrong, but it is flagged. Report the two rates side by side.
+RETAINED_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED"}
+
+
+def rate_row(label: str, rows) -> list:
+    """[population, n, files, accept%, retained%, remove%, modify%, over%, downgraded%]."""
+    n = len(rows)
+
+    def pct(pred) -> str:
+        return f"{100 * sum(1 for r in rows if pred(r['action'])) / n:.1f}" if n else ""
+
+    return [label, n, len({r["file"] for r in rows}),
+            pct(lambda a: a == "ACCEPT"),
+            pct(lambda a: a in RETAINED_ACTIONS),
+            pct(lambda a: a == "REMOVE"),
+            pct(lambda a: a == "MODIFY"),
+            pct(lambda a: a == "MARK_AS_OVER_ANNOTATED"),
+            pct(lambda a: a in PROBLEM_ACTIONS)]
 
 
 def annotations(doc: dict):
@@ -171,6 +201,11 @@ def goa_with_from(review_rel_path: str, term_id: str, ref: str) -> str:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--out-dir", default=HERE,
+                    help="directory for the output TSVs (default: next to this script)")
+    out_dir = os.path.abspath(ap.parse_args().out_dir)
+    os.makedirs(out_dir, exist_ok=True)
     files = sorted(glob.glob(os.path.join(ROOT, "genes", "**", "*-ai-review.yaml"),
                              recursive=True))
 
@@ -183,9 +218,12 @@ def main() -> None:
                        if r["file"] in tg_genes]
     ip2go_rows = [r for r in collect(files, INTERPRO2GO_REF, "IEA")
                   if r["file"] in tg_genes]
+    # Same-file PAINT/IBA: the corpus-wide IBA set is mostly *other* genes
+    # (human/model organisms); this restricts it to the TreeGrafter review files.
+    paint_same_rows = [r for r in paint_rows if r["file"] in tg_genes]
 
     # Per-annotation TSV for the TreeGrafter set.
-    out_rows = os.path.join(HERE, "treegrafter_review.tsv")
+    out_rows = os.path.join(out_dir, "treegrafter_review.tsv")
     fields = ["gene", "taxon", "term_id", "term_label", "action", "negated",
               "has_replacement", "aspect", "file"]
     with open(out_rows, "w", newline="") as fh:
@@ -193,7 +231,7 @@ def main() -> None:
         w.writeheader()
         w.writerows(tg_rows)
 
-    out_contrast = os.path.join(HERE, "treegrafter_contrast.tsv")
+    out_contrast = os.path.join(out_dir, "treegrafter_contrast.tsv")
     with open(out_contrast, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=["set"] + fields, delimiter="\t")
         w.writeheader()
@@ -221,7 +259,7 @@ def main() -> None:
         if r["action"] in problem_actions
     )
 
-    out_sum = os.path.join(HERE, "treegrafter_summary.tsv")
+    out_sum = os.path.join(out_dir, "treegrafter_summary.tsv")
     with open(out_sum, "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["metric", "value"])
@@ -234,6 +272,26 @@ def main() -> None:
                     "with/from; same genes; contrast)", len(up_panther_rows)])
         w.writerow(["interpro2go_annotations (GO_REF:0000002 IEA; same genes; contrast)",
                     len(ip2go_rows)])
+        w.writerow(["paint_iba_annotations_same_files (GO_REF:0000033, IBA, on review files "
+                    "that also carry TreeGrafter rows)", len(paint_same_rows)])
+        w.writerow([])
+        w.writerow(["headline rates by population", "n", "review_files", "accept_pct",
+                    "retained_pct (ACCEPT+KEEP_AS_NON_CORE+MARK_AS_OVER_ANNOTATED)",
+                    "remove_pct", "modify_pct", "over_annotated_pct",
+                    "downgraded_pct (REMOVE+MODIFY+OVER)"])
+        w.writerow(rate_row("rate: TreeGrafter (GO_REF:0000118)", tg_rows))
+        w.writerow(rate_row("rate: corroborated PANTHER (GO_REF:0000120, PANTHER:PTN; same files)",
+                            up_panther_rows))
+        w.writerow(rate_row("rate: InterPro2GO (GO_REF:0000002; same files)", ip2go_rows))
+        w.writerow(rate_row("rate: PAINT/IBA (GO_REF:0000033; corpus-wide, different genes)",
+                            paint_rows))
+        w.writerow(rate_row("rate: PAINT/IBA (GO_REF:0000033; same files as TreeGrafter)",
+                            paint_same_rows))
+        tg_by_aspect = {}
+        for r in tg_rows:
+            tg_by_aspect.setdefault(r["aspect"] or "unknown", []).append(r)
+        for aspect in sorted(tg_by_aspect):
+            w.writerow(rate_row(f"rate: TreeGrafter {aspect}", tg_by_aspect[aspect]))
         w.writerow([])
         w.writerow(["TreeGrafter action", "count"])
         for action, n in tg_actions.most_common():
@@ -297,6 +355,8 @@ def main() -> None:
     report("TreeGrafter (GO_REF:0000118, IEA)", tg_rows, tg_actions)
     report("PAINT/IBA (GO_REF:0000033, IBA) — contrast, NOT TreeGrafter",
            paint_rows, paint_actions)
+    report("PAINT/IBA (GO_REF:0000033, IBA) — same review files as TreeGrafter",
+           paint_same_rows, action_counter(paint_same_rows))
     report("UniProt-relayed PANTHER (GO_REF:0000120, PANTHER with/from) — same genes",
            up_panther_rows, up_actions)
     report("InterPro2GO (GO_REF:0000002) — same genes", ip2go_rows, ip_actions)

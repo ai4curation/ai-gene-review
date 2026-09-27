@@ -16,7 +16,10 @@ Two layers:
   * a keyword heuristic over the GO aspect and the reviewer's ``review.reason``
     / ``review.summary`` text (``mode_source = heuristic``), and
   * a curated override table, ``failure_mode_curated.tsv`` (file, gene,
-    term_id, mode, note), which always wins (``mode_source = curated``). Rows
+    term_id, mode, note, status), which always wins (``mode_source =
+    curated``). Only rows with ``status`` ``current`` (or blank) are applied;
+    rows marked ``superseded`` are kept in the file as a record of an earlier
+    call on an annotation that is no longer down-graded, and are ignored. Rows
     the heuristic cannot place are written with mode 0 (UNCLASSIFIED) so they
     are visible rather than silently binned.
 
@@ -150,6 +153,8 @@ def main() -> None:
     if os.path.exists(CURATED):
         with open(CURATED) as fh:
             for r in csv.DictReader(fh, delimiter="\t"):
+                if (r.get("status") or "current").strip() != "current":
+                    continue
                 curated[(r["file"], r["term_id"])] = (int(r["mode"]), r.get("note", ""))
     reasons = load_reasons()
     aspect_for = {}
@@ -199,6 +204,17 @@ def main() -> None:
     for (m, a), n in sorted(Counter((r["mode_label"], r["action"]) for r in rows).items()):
         print(f"  {m:16s} {a:24s} {n}")
     print(f"\nby source: {dict(Counter(r['mode_source'] for r in rows))}")
+    print("heuristic rows by rule:")
+    for rule, n in Counter(r["mode_note"] for r in rows
+                           if r["mode_source"] == "heuristic").most_common():
+        print(f"  {rule:34s} {n}")
+    print("\nmode x aspect (annotations / distinct review files):")
+    for m in sorted({r["mode"] for r in rows}):
+        sub = [r for r in rows if r["mode"] == m]
+        asp = Counter(r["aspect"] for r in sub)
+        print(f"  {m} {MODES[m]:16s} n={len(sub):4d} files={len({r['file'] for r in sub}):4d} "
+              f"MF={asp['molecular_function']} BP={asp['biological_process']} "
+              f"CC={asp['cellular_component']}")
     print(f"Wrote {os.path.relpath(OUT, ROOT)}")
 
 
