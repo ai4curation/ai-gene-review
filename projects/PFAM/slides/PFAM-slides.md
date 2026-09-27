@@ -67,7 +67,7 @@ Testing Pfam's GO mapping against InterPro2GO, and where new mappings could help
 | DISJOINT, genuine | 1 | 1 |
 | DISJOINT, release skew | 25 | 13 |
 
-<span class="small">The one genuine difference runs the other way: PF08214 has GO:0004402 while its entry IPR016849 has the more specific GO:0010484. Skew: InterPro 109.0 membership vs a 28 Apr 2026 GO mapping snapshot.</span>
+<span class="small">The one specificity difference (MORE_GENERAL) runs the other way: PF08214 has GO:0004402 while its entry IPR016849 has the more specific GO:0010484. The genuine DISJOINT row is PF08214 → GO:0006355 (regulation of transcription). Skew: InterPro 109.0 membership vs a 28 Apr 2026 GO mapping snapshot.</span>
 
 ---
 

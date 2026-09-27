@@ -2,6 +2,10 @@
 title: "InterPro Mapping Review Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - INTERPRO/slides/interpro-pipeline.svg
+    - INTERPRO/slides/interpro-review-actions.svg
 ---
 
 # InterPro Mapping Review Project
@@ -129,3 +133,4 @@ breakdowns, example genes, and affected GO terms.
   workstream checklists, and session chronology.
 - [Protein families](FAMILIES.md) · [IBA annotation review](IBA_REVIEW.md) ·
   [Over-annotation patterns](OVER_ANNOTATION_PATTERNS.html) — related collections.
+- [Slides](INTERPRO/slides/INTERPRO-slides.html) (Marp source: [INTERPRO-slides.md](INTERPRO/slides/INTERPRO-slides.md)) — AI generated

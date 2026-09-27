@@ -2,6 +2,10 @@
 title: "RHEA → GO Contribution & Gap Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - RHEA/slides/rhea-ec-masking.svg
+    - RHEA/slides/rhea-gap-pilot.svg
 ---
 
 # RHEA → GO Contribution & Gap Project
@@ -191,7 +195,7 @@ term — are recorded in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), the sa
 ([RHEA-MAPPING-REVIEWS.md](RHEA/RHEA-MAPPING-REVIEWS.md)). The predicate encodes
 the specificity finding:
 
-- **`skos:exactMatch`** (111 rows) — the GO term *is* the reaction's activity;
+- **`skos:exactMatch`** (110 rows) — the GO term *is* the reaction's activity;
   ready-to-add `rhea2go` entries. Most are **EC-bridge supported**: `ec2go` maps
   the reaction's EC to this exact GO term and `rhea2ec` maps the reaction to that
   EC. Backed by enzymes such as biotinidase (BTD, biotinidase deficiency), TPMT
@@ -201,7 +205,7 @@ the specificity finding:
   names the narrower GO term to request (PHYKPL→`lyase activity`; B3GALNT2→
   `acetylgalactosaminyltransferase activity`; SULT6B1→`aryl sulfotransferase
   activity`; DPEP2→`dipeptidase activity`).
-- **`sssom:NoTermFound`** (17 rows) — **new GO term suggestions**: reactions where
+- **`sssom:NoTermFound`** (18 rows) — **new GO term suggestions**: reactions where
   QuickGO returns no specific MF term at all (hppE fosfomycin epoxidase; a
   trimethylaminoethylphosphonate dioxygenase; cellobionic-acid phosphorylase;
   1,4-β-mannosyl-GlcNAc phosphorylase) — GO new-term-request candidates.
@@ -285,7 +289,7 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
 ## Project Status
 
 - **Started**: 2026-06-20
-- **Maturity**: SCOPING — pipeline identified, mapping characterised, reverse-gap
+- **Maturity**: IN_PROGRESS — pipeline identified, mapping characterised, reverse-gap
   probe working with live pilot results; forward cross-organism scan staged
   pending go-db access.
 - **Computed live**: `GO_REF:0000116` identification (assigned_by=RHEA, MF, IEA);
@@ -306,3 +310,7 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
   most valuable contribution to this project is the **reverse direction** —
   surfacing UniProt-annotated enzyme activities that never propagate to GO — once
   exact-match gaps are corrected by ontology-closure filtering.
+
+## Slides
+
+- [Slides](RHEA/slides/RHEA-slides.html) (Marp source: [RHEA-slides.md](RHEA/slides/RHEA-slides.md)) — AI generated

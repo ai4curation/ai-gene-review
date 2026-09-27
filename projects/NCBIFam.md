@@ -2,6 +2,10 @@
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - NCBIFam/slides/ncbifam-flow.svg
+    - NCBIFam/slides/ncbifam-gain.svg
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
@@ -17,8 +21,7 @@ never ingests, while CDD-proper has no GO of its own. We built a validated
 checked four high-gain rows structurally with OpenScientist. The gain is real
 but lands mostly in TrEMBL (a 60-model sample: 19 reviewed vs 26,578 UniProtKB
 entries), and per-entry checks showed only one of five reviewed "gaps" (VirB5)
-is a clean fill. The status section below still says SCOPING; the frontmatter
-now reads IN_PROGRESS to match the delivered seed.
+is a clean fill.
 
 We did this because NCBIFAM is a large curated source of family-level function
 for prokaryotic proteins that GO does not use directly, and because its
@@ -554,7 +557,7 @@ over-annotation.
 ## Project Status
 
 - **Started**: 2026-06-20
-- **Maturity**: SCOPING — pipeline identified, masking demonstrated on the repo
+- **Maturity**: IN_PROGRESS — pipeline identified, masking demonstrated on the repo
   gene set, NCBIFAM GO/EC source and the integration coverage gap characterised
   live, CDD-own-GO question resolved, annotation gain measured, a **validated
   250-row `ncbifam2go` seed** in place, a **2,455-model EC-bridge candidate set**
@@ -592,3 +595,7 @@ over-annotation.
   curated `equivalog` GO via the `ncbifam2go` SSSOM mapping (seeded here) — the
   RHEA pattern applied to a family resource; the gain is large but TrEMBL-weighted,
   concentrated in mobile-element/defense/secretion biology.
+
+## Slides
+
+- [Slides](NCBIFam/slides/NCBIFam-slides.html) (Marp source: [NCBIFam-slides.md](NCBIFam/slides/NCBIFam-slides.md)) — AI generated

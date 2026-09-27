@@ -2,6 +2,10 @@
 title: "Pfam → GO Mapping: A Precision Gap-Filling Experiment"
 maturity: MATURE
 tags: [PIPELINE, EVALUATION]
+sidecars:
+  slide_charts:
+    - PFAM/slides/pfam-coverage.svg
+    - PFAM/slides/pfam-hypothesis.svg
 ---
 
 # Pfam → GO Mapping: A Precision Gap-Filling Experiment
@@ -98,12 +102,14 @@ Pfam-specific GO curation was discontinued; modern `pfam2go` is a **derived
 projection** of `interpro2go` down to member signatures. ~99.7% of its assertions
 are byte-identical to the parent entry's terms; the rest are explained by:
 
-- **The one genuine difference runs the *other* way.** For `PF08214` (HAT_KAT11,
+- **The one specificity difference (MORE_GENERAL) runs the *other* way.** For `PF08214` (HAT_KAT11,
   sole member of `IPR016849` *Histone acetyltransferase Rtt109*), `interpro2go` is
   **more** precise — it has *histone **H3** acetyltransferase activity*
   (GO:0010484) where `pfam2go` only has the parent *histone acetyltransferase
   activity* (GO:0004402). The InterPro curator added specificity the Pfam mapping
-  lacks. This is the opposite of the hypothesis.
+  lacks. This is the opposite of the hypothesis. The one genuine `DISJOINT` row
+  is the same family's `pfam2go` process term *regulation of DNA-templated
+  transcription* (GO:0006355), which is unrelated to the entry's terms.
 - **Release skew, not signal.** The 25 remaining "disjoint" assertions (13
   families) all map to brand-new InterPro entries (`IPR06xxxx`) that carry *no*
   GO at all. Cause: the membership file is InterPro **release 109.0 (11 Jun 2026)**
@@ -292,3 +298,7 @@ Outputs (committed):
 
 The scripts hardcode no results and fabricate no mappings; if an input is missing
 they error out rather than guessing.
+
+## Slides
+
+- [Slides](PFAM/slides/PFAM-slides.html) (Marp source: [PFAM-slides.md](PFAM/slides/PFAM-slides.md)) — AI generated

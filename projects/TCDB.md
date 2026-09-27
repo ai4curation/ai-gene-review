@@ -3,6 +3,10 @@ title: "TCDB → GO Transporter-Activity Mapping & Gap Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [ARATH, human]
+sidecars:
+  slide_charts:
+    - TCDB/slides/tcdb-missing-pipeline.svg
+    - TCDB/slides/tcdb-propagation-verdicts.svg
 ---
 
 # TCDB → GO Transporter-Activity Mapping & Gap Project
@@ -16,10 +20,11 @@ cross-reference (4,431 of 8,758) carry no transporter-activity term. We
 extracted GO's 194 TC-to-GO leads and scored each against the reviewed proteins
 that carry the TC id. 80 are safe to propagate, almost all at the level of a
 single TC system; 18 would over-propagate at the family level; 67 point to
-specific systems whose members lack the specific term. We also filtered TCDB's
+specific systems whose members lack the specific term; the other 29 are
+whole-class leads (12), leads with no reviewed member (10) or uncertain (7). We
+also filtered TCDB's
 own noisy GO dump into 477 machine-derived candidate rows and hand-backed eight
-exemplar mappings. All four SSSOM sets validate; the status section's SCOPING
-label predates this work, and the frontmatter now reads IN_PROGRESS.
+exemplar mappings. All four SSSOM sets validate.
 
 We did this because EC and RHEA each turn a classification into GO annotations
 through a pipeline, and transporters have no equivalent. The evidence-scored
@@ -375,7 +380,7 @@ over-generality problem (prefer the subfamily-specific child term).
 ## Project Status
 
 - **Started**: 2026-07-18
-- **Maturity**: SCOPING — GO's neglected TC term-xrefs extracted (194 leads) and
+- **Maturity**: IN_PROGRESS — GO's neglected TC term-xrefs extracted (194 leads) and
   **every one scored for propagation against UniProt evidence** (80 JUSTIFIED / 67
   gap-candidate / 18 narrow / 12 class-level / 17 other); the missing piece identified as the *annotation
   pipeline*, not the mapping; TCDB's `go.py` dump characterised as a noisy second
@@ -409,3 +414,7 @@ over-generality problem (prefer the subfamily-specific child term).
   transport MF term. The high-value deliverable is a **`tc2go` pipeline built on
   per-entry propagation curation** (which TC level safely inherits which GO term),
   seeded by GO's xrefs plus reviewed extensions.
+
+## Slides
+
+- [Slides](TCDB/slides/TCDB-slides.html) (Marp source: [TCDB-slides.md](TCDB/slides/TCDB-slides.md)) — AI generated
