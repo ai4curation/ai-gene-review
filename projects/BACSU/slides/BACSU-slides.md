@@ -37,7 +37,7 @@ Reviewing GO annotations on 29 genes of the model Gram-positive bacterium
 ## Bottom line
 
 - We reviewed **every GO annotation on 29 genes** in three rounds: CACAO-curated genes, key functional genes, and the **sporulation sigma cascade** plus industrial enzymes.
-- **343 rows**: 200 accepted, 45 modified, 44 NEW, 14 removed, 10 over-annotated, 2 undecided.
+- **343 rows**: 200 accepted, 28 kept as non-core, 45 modified, 44 NEW, 14 removed, 10 over-annotated, 2 undecided.
 - Recurring fixes: **sigma factors are not RNA polymerases**, a fold-based **acyltransferase** call on spoVAD removed, rows citing a paper that never mentions the gene removed.
 
 ---

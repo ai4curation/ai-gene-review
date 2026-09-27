@@ -4,6 +4,10 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [PSEAE, STRCO, SACEN]
 genes: [pqsB, pqsC, actI-ORF1, actI-ORF2, eryCII, eryCIII]
+sidecars:
+  slide_assets:
+    - BGC/slides/complex-pairs.svg
+    - BGC/slides/eryCII-review-table.jpg
 ---
 
 # Biosynthetic Gene Cluster (BGC) Enzyme Complexes Project
@@ -23,13 +27,13 @@ from their fold, and a pseudoenzyme (EryCII, a heme-less P450 homologue)
 inherits a full P450 cofactor set, all four rows of which were removed.
 Catalytic KAS-fold partners also inherit fatty-acid synthesis terms that do
 not fit a polyketide or quinolone pathway. The nosiheptide and pyoluteorin pairs are
-still queued. The "Seeding" line and the queued "ActVA" and "DEBS" rows in the
-status table below predate this work: those two candidates share their MIBiG
+still queued. The queued "ActVA" and "DEBS" rows in the status table below predate
+this work: those two candidates share their MIBiG
 and PDB entries (1TQY, 2YJN) with the reviewed KS-CLF and EryCII/EryCIII
 pairs.
 
 **Project type:** Gene curation (exemplar enzymes from microbial natural-product gene clusters)
-**Status:** Seeding — exemplar genes selected, curation queued
+**Status:** In progress — three of five exemplar pairs reviewed; nosiheptide and pyoluteorin pairs queued
 
 ## Overview
 
@@ -243,3 +247,7 @@ UniProt carries a "lacks the ... binding sites" CAUTION.
   `projects/ENZYME_SPECIFICITY.md` (EryCIII TDP-vs-UDP donor),
   `projects/STRUCTURE_FUNCTION.md` (catalytic-residue presence/absence calls),
   `projects/TOP_NOTS.md` (NOT candidates: heme-less P450, active-site-less condensing folds).
+
+## Slides
+
+- [Slides](BGC/slides/BGC-slides.html) (Marp source: [BGC-slides.md](BGC/slides/BGC-slides.md)) — AI generated

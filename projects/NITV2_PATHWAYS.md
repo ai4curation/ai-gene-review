@@ -4,6 +4,11 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [DESVH]
 genes: [Q72DT3, Q72DT2, Q72DT1, Q72DT0, Q72DS9, Q72FD5, Q72BM9, Q725U0, Q725T9, Q725T8, Q725T7, Q72F06, Q72F05, Q72BQ0, Q72BK7, Q72B50, Q727C6, Q726C4, P07598, Q72AS3, Q72AS0, Q72EY4, Q729Q8]
+sidecars:
+  slide_assets:
+    - NITV2_PATHWAYS/slides/actions-bar.svg
+    - NITV2_PATHWAYS/slides/kdpC-review-table.jpg
+    - NITV2_PATHWAYS/slides/potassium-systems.svg
 ---
 
 # Nitratidesulfovibrio vulgaris Pathways Project
@@ -249,3 +254,7 @@ Key findings from annotation reviews:
 
 4. **c-di-AMP signaling**:
    - The second messenger c-di-AMP binds to RCK regulatory subunits to modulate K+ uptake capacity, linking potassium homeostasis to broader cellular signaling networks.
+
+## Slides
+
+- [Slides](NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.html) (Marp source: [NITV2_PATHWAYS-slides.md](NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.md)) — AI generated

@@ -3,6 +3,10 @@ title: "Nitrogen Cycle Module"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 autolink_gene_symbols: false
+sidecars:
+  slide_assets:
+    - NITROGEN_CYCLE/slides/nitrogen-cycle-module-page.jpg
+    - NITROGEN_CYCLE/slides/nitrogen-cycle.svg
 ---
 
 # Nitrogen Cycle Module
@@ -213,3 +217,7 @@ annotation-by-annotation plan):
   on this date. The one unresolved marker is NOB nitrite oxidoreductase
   (`nxrA`), which has no reviewed entry and is flagged for accession resolution.
   No gene reviews started yet.
+
+## Slides
+
+- [Slides](NITROGEN_CYCLE/slides/NITROGEN_CYCLE-slides.html) (Marp source: [NITROGEN_CYCLE-slides.md](NITROGEN_CYCLE/slides/NITROGEN_CYCLE-slides.md)) — AI generated

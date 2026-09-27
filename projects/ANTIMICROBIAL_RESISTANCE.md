@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [ECOLX, ECO8N, ENTCL, SALSP, AERME, KLEPN, AERER, BACFG, BACAN, BACSP, STAAU, BACSU, PSEAI, PRORE, ACIBZ, ACIBA, SPHSM, STAAT, MYCSM, STAHA, STAWA]
 genes: [mphA, mphB, mcr-1, aac6-Ib, mcr2, mcr-4, mcr-3, rmtE, rmtD, rmtF, ermA, ermF, ermJ, knt, ant, aadK, hph, strB, apmA, fosA5, fosA3, blaOXA-418, blaOXA-400, blaOXA-480, tetX, fosB, arr, ereB, lnuA, cfr]
+sidecars:
+  slide_assets:
+    - ANTIMICROBIAL_RESISTANCE/slides/aro2go-pipeline.svg
+    - ANTIMICROBIAL_RESISTANCE/slides/aro2go-table.jpg
+    - ANTIMICROBIAL_RESISTANCE/slides/candidates-by-term.svg
+    - ANTIMICROBIAL_RESISTANCE/slides/cfr-review-table.jpg
 ---
 
 # Antimicrobial Resistance (AMR) Project
@@ -345,3 +351,7 @@ A working pipeline applies the ARO→GO mapping to UniProt records: `projects/AN
 **Source**: AI Gene Review project, [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review). CARD/ARO are products of the Comprehensive Antibiotic Resistance Database (card.mcmaster.ca), CC-BY 4.0.
 </content>
 </invoke>
+
+## Slides
+
+- [Slides](ANTIMICROBIAL_RESISTANCE/slides/ANTIMICROBIAL_RESISTANCE-slides.html) (Marp source: [ANTIMICROBIAL_RESISTANCE-slides.md](ANTIMICROBIAL_RESISTANCE/slides/ANTIMICROBIAL_RESISTANCE-slides.md)) — AI generated

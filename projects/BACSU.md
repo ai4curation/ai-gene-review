@@ -3,7 +3,12 @@ title: "Bacillus subtilis project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [BACSU]
-genes: [fliH, fliK, fliW, fliY, gerD, spo0J, spoVAD, swrD, yddE, spo0A, sigF, ftsZ, divIVA, comK, aprE, amyE, sacB, secA, minC, sigE, sigG, sigK, spoIIE, minD, nprE, lipA, secY, comGA, spoIIGA]
+genes: [fliH, fliK, fliW, fliY, gerD, spo0J, spoVAD, swrD, yddE, spo0A, sigF, ftsZ, divIVA, comK, aprE, amyE, sacB, secA, minC, sigE, sigG, sigK, spoIIE, minD, nprE, lipA, secY, comGA, spoIIGA, spoIIAA, spoIIAB, spoIIB, spoIIR, spoVD, yciC]
+sidecars:
+  slide_assets:
+    - BACSU/slides/actions-bar.svg
+    - BACSU/slides/sigG-review-table.jpg
+    - BACSU/slides/sporulation-cascade.svg
 ---
 
 # Bacillus subtilis project
@@ -13,8 +18,8 @@ sporulation, competence, cell division and protein secretion. We reviewed every
 existing GO annotation on 29 of its genes in three rounds: nine genes where
 CACAO student curation had contributed heavily, ten key functional genes, and
 ten more that complete the sporulation sigma cascade and the industrial
-enzymes. That covers 343 annotation rows: 200 accepted, 45 modified, 14
-removed, 10 marked over-annotated, 44 proposed as `NEW`, and 2 left
+enzymes. That covers 343 annotation rows: 200 accepted, 28 kept as non-core,
+45 modified, 14 removed, 10 marked over-annotated, 44 proposed as `NEW`, and 2 left
 `UNDECIDED` (fliH, where the cited paper does not mention the gene). The
 recurring corrections were removing `RNA polymerase activity` from sigma
 factors, removing a fold-based acyltransferase call on spoVAD, and removing
@@ -24,7 +29,9 @@ examine those genes. All
 `BACSU/`. Most review files still carry `status: DRAFT` although the checklist
 below says COMPLETE, and several UniProt IDs in the tables below differ from
 the accessions the reviews use (the lipA review covers lipoyl synthase
-O32129, not lipase A).
+O32129, not lipase A). Six further *B. subtilis* reviews made outside these
+rounds (spoIIAA, spoIIAB, spoIIB, spoIIR, spoVD, yciC; 53 rows) are listed
+in the frontmatter but not counted above.
 
 Use uniprot code BACSU
 
@@ -236,3 +243,7 @@ Starting BACSU project review. fliW was already reviewed and validated - it has 
 1. PMID:25313396 erroneously cited for swrD (and fliH, fliY, fliW) - paper doesn't mention these genes
 2. spoVAD incorrectly annotated as acyltransferase based on thiolase-like fold
 3. yddE is well-characterized as ConE but labeled "uncharacterized" in UniProt
+
+## Slides
+
+- [Slides](BACSU/slides/BACSU-slides.html) (Marp source: [BACSU-slides.md](BACSU/slides/BACSU-slides.md)) — AI generated

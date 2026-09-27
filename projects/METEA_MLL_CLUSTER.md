@@ -4,6 +4,10 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [METEA]
 genes: [mllA, mllBC, mllDE, mllF, mllG, mllH, mllJ, mluA, mluI, mluR]
+sidecars:
+  slide_assets:
+    - METEA_MLL_CLUSTER/slides/lanthanophore-system.svg
+    - METEA_MLL_CLUSTER/slides/mluA-review-table.jpg
 ---
 
 # Methylorubrum extorquens MLL Cluster Curation Project
@@ -347,3 +351,7 @@ The MLL cluster is functionally coupled to the XoxF methanol dehydrogenase syste
 **Project Status:** ✅ COMPLETE (10/10 genes fully curated)
 **Documentation Date:** 2025-11-08
 **Last Validation:** 2025-11-08
+
+## Slides
+
+- [Slides](METEA_MLL_CLUSTER/slides/METEA_MLL_CLUSTER-slides.html) (Marp source: [METEA_MLL_CLUSTER-slides.md](METEA_MLL_CLUSTER/slides/METEA_MLL_CLUSTER-slides.md)) — AI generated

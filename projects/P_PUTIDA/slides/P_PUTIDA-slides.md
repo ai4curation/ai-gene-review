@@ -38,7 +38,7 @@ Module-first GO review of a whole bacterial proteome
 
 - KT2440 is a versatile soil bacterium whose GO annotation is **almost entirely automated**.
 - Since July 2026 we review it **pathway by pathway**: start from a curated module, ask which steps KT2440 can satisfy, review only the genes each step needs.
-- Now **921 PSEPK reviews** (5,324 rows) and **138 batch pages**; unresolved steps are kept as **explicit holes**.
+- September 2026 snapshot: **921 PSEPK reviews** (5,324 rows) and **138 batch pages**, still growing; unresolved steps are kept as **explicit holes**.
 
 ---
 
