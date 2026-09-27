@@ -50,3 +50,10 @@ and catalytic core of the complex.
   (uninformative; underlying interactions are real: PDHB/E1, PDK2/PDK3, SIRT4). identical protein
   binding IPIs (GO:0042802, PMID:18184587/18184588) capture DLAT self-assembly into the homomeric
   core — informative → ACCEPT (KEEP_AS_NON_CORE structural).
+
+## 2026-09: GO:0005515 rows re-actioned under the protein-binding policy
+This section supersedes the earlier MARK_AS_OVER_ANNOTATED plan for protein binding written above. The repo policy excludes that action for GO:0005515. A row goes to MODIFY where the paper supports a more informative MF, and otherwise to REMOVE. Removal does not mean the interaction is false.
+- PMID:15861126 and PMID:17683942 (PDK3): MODIFY to GO:0030295 protein kinase activator activity. The inner lipoyl domain L2 binds PDK3 and stimulates it (PMID:15861126 "L2 binding stimulates PDK3 activity"; PMID:17683942 "scaffold-free PDK3 activity, similar to the inner lipoyl domain").
+- PMID:18206651 (PDHB): REMOVE. This is an E1-E2 assembly contact, already captured by the PDH complex CC terms.
+- PMID:25525879 (SIRT4): REMOVE. DLAT is the substrate of the SIRT4 lipoamidase.
+- PMID:28514442 and PMID:33961781: REMOVE. Both are proteome-scale screens.
