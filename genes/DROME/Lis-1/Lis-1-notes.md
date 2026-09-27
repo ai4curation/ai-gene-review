@@ -22,3 +22,9 @@ Deep research (falcon) was not yet available when this review was written.
 - dynein complex / dynactin complex (part_of) -> MODIFY to GO:0005875 microtubule associated complex: LIS1 is a transient regulator, not a stoichiometric subunit; association captured by GO:0070840.
 - Muscle cell cellular homeostasis (PMID:21256839): UNDECIDED; abstract-only and does not mention Lis1.
 - Developmental processes (oogenesis, fusome, dendrite, border cell migration, GSC) kept as non-core.
+
+## 2026-09-27 — Falcon deep research incorporated
+
+- Read `Lis-1-deep-research-falcon.md`. It agrees with the review: Lis-1 is a non-catalytic, context-dependent dynein-dynactin regulator/assembly factor; fly phenotypes (oogenesis, neuroblast mitosis, spermatogenesis, mRNA transport, border cells) are downstream of dynein regulation.
+- Its fly-specific claims map onto already-cached primary papers (PMID:16107559, 22764052, 23918939, 22808215, 10498683/10559989); mechanistic 2024 claims (Singh et al. Science 2024; Kusakci et al. 2024) are non-fly and were not cached or cited as primary evidence.
+- Added the report as retrieval support for the NEW GO:0140659 row and the core function (regulator parent term rather than inhibitor/activator). No actions changed; no new PMIDs.
