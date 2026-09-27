@@ -44,7 +44,7 @@ EPEC EscN.
   `projects/TREEGRAFTER/rotary_atpase/node_placement.tsv` shows PTN008558586 is a DUPLICATION node with two
   children: PTN008558588 (the ATP synthase beta subfamilies, SF51/74/75/76/80/82/83/85) and PTN000390097
   (the bacterial export ATPases, PTHR15184:SF62 SPI-2 T3SS ATPase = this protein, SF9 SPI-1, SF81 flagellar).
-  So the IBD sits one node *above* the duplication that separated F1-beta from the export ATPases; every seed
+  So the IBD sits *on* the duplication node that separated F1-beta from the export ATPases; every seed
   lies in the sister child. The node placement, not the donor list, is the problem: the correct placement is
   PTN008558588 (or an IRD/NOT at PTN000390097).
 - InterPro2GO from IPR013380 (T3SS ATPase SctN) currently yields GO:0046961 (rotational proton-transporting
