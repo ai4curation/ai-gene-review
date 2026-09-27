@@ -1,5 +1,6 @@
 ---
 title: ProtNLM2 Evaluation
+collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags:
 - EVALUATION
