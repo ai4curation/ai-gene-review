@@ -1519,7 +1519,7 @@ stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
 # Build the complete disposable publication tree used by the Pages migration.
-build-pages: render-all render-projects render-prediction-eval validate-modules render-modules deploy-browser deploy-predictions-browser stage-pages
+build-pages: render-all render-projects render-prediction-eval validate-modules render-modules deploy-browser deploy-predictions-browser deploy-propagation-browser stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
@@ -1861,6 +1861,20 @@ deploy-browser: export-annotations-json
 # Build the shared prediction-set and claim browser, including narrative reviews.
 deploy-predictions-browser:
     uv run python -m ai_gene_review.tools.build_prediction_browser
+
+# Refresh the donor cache for the homology-propagation browser (network:
+# UniProt donor identities, QuickGO donor annotations, GO is_a/part_of closure).
+[positional-arguments]
+refresh-propagation-sources *ARGS:
+    uv run python -m ai_gene_review.tools.refresh_propagation_sources "$@"
+
+# Build the homology-propagation browser (app/propagation/) from cached files.
+deploy-propagation-browser:
+    uv run python -m ai_gene_review.tools.build_propagation_browser
+
+# Regenerate projects/HOMOLOGY_PROPAGATION/propagation-stats.md.
+propagation-stats:
+    uv run python -m ai_gene_review.tools.propagation_stats
 
 # Serve the linkml-browser app locally  
 serve-browser:

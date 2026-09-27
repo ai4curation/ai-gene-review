@@ -1,5 +1,6 @@
 ---
 title: "Affinage Evaluation Project"
+collections: [FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human]
