@@ -19,7 +19,7 @@ are complete: 773 rows, 597 ACCEPT, 94 KEEP_AS_NON_CORE, 9
 MARK_AS_OVER_ANNOTATED, 56 MODIFY, 4 REMOVE, 3 UNDECIDED and 10 NEW. Most
 changes replace generic `protein binding` with more specific terms. One
 set of these is itself wrong and is still to be corrected: nine IPI rows on
-HSP-90 (partners UNC-45, STI-1, DAF-1, LET-756 and MYO-3) propose Hsp90
+HSP-90 (partners include UNC-45, STI-1, FKB-6, DAF-1 and EBAX-1) propose Hsp90
 protein binding (GO:0051879), but that term means binding *to* an Hsp90
 and belongs on the partners, not on HSP-90. For HSP-90 itself,
 protein-folding chaperone binding (GO:0051087) fits the co-chaperone rows
@@ -198,7 +198,7 @@ Transgenic models:
 
 All 18 C. elegans proteostasis genes have been comprehensively reviewed and documented.
 
-> **Correction (2026-09):** this log counts daf-21 as a separate gene. It is not: daf-21 is the historical mutant name of hsp-90 (UniProt Q18688; `GN Name=hsp-90; Synonyms=daf-21`), and the accession P41887 given for it below is the *S. pombe* HSP90 Swo1. The project has 17 genes; PR #3225 retires the duplicate daf-21 review. The Priority 1 and total figures in this log double-count Q18688; current totals are in the bottom line at the top of this page.
+> **Correction (2026-09):** this log counts daf-21 as a separate gene. It is not: daf-21 is the historical mutant name of hsp-90 (UniProt Q18688; `GN Name=hsp-90; Synonyms=daf-21`), and the accession P41887 given for it below is the *S. pombe* HSP90 Swo1. The project has 17 genes; PR #3225 retires the duplicate daf-21 review. The Priority 1 and total figures in this log double-count Q18688, and the per-gene figures (e.g. hsp-90 "52 annotations, 28 ACCEPT, 10 MODIFY"; the review now has 51 rows, 31 ACCEPT, 11 MODIFY) are a dated snapshot; current totals are in the bottom line at the top of this page.
 
 ### Priority 1: Heat Shock Response (6/6 COMPLETE)
 
