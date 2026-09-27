@@ -187,7 +187,7 @@ block for the first time, adding four GO-valued core slots of which one
 post-review in favour of the narrower thylakoid-lumen term, dropping one predicted
 post-review overlap without changing the post-review total.
 
-Most recently, OpenScientist follow-up reviews of four benchmark genes removed 14
+Later, OpenScientist follow-up reviews of four benchmark genes removed 14
 post-review terms without changing any post-review overlap: `DESRO/K9IMD0` 21 to 14
 and `DESRO/K9IJK6` 12 to 8 (#3198), `HYPJE/IRE1` 17 to 15 (#3199) and
 `ANOGA/PGRPLB` 11 to 10 (#3201). K9IMD0 also lost its antimicrobial core function,
