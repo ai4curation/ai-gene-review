@@ -2,9 +2,28 @@
 title: "Sulfide Oxidation Children — Obsoletion & Replacement"
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
+species: [human]
+genes: [SQOR, TSTD1, SLC25A10]
 ---
 
 # Sulfide Oxidation Children — Obsoletion & Replacement
+
+**Bottom line:** Mitochondria detoxify hydrogen sulfide by oxidising it to
+sulfite and sulfate, starting with sulfide:quinone oxidoreductase (SQOR).
+GO has obsoleted three children of GO:0019418 *sulfide oxidation* that
+named the enzyme used (GO:0070221 via SQOR, GO:0070222 via sulfide
+dehydrogenase, GO:0070223 via sulfur dioxygenase), because they were
+more specific than any known gene product and two had no annotations.
+All three ontology PRs are merged, so annotations now belong on the
+parent. We recorded the upstream changes, listed the direct annotations
+that must move (human SQOR IDA, TSTD1 TAS, SLC25A10 TAS, plus rodent
+Sqor ISS/ISO rows), and queued SQOR, the one well-characterised enzyme
+on the list, for review. Partly done: `human/SLC25A10` has since been
+reviewed in another workstream, which the impact section below
+predates; its GOA file already carries the Reactome row on GO:0019418,
+and the review marks it MARK_AS_OVER_ANNOTATED because the carrier
+exports sulfate but does not oxidise sulfide. SQOR and TSTD1 are still
+unreviewed.
 
 ## Overview
 
@@ -201,3 +220,7 @@ human entries (TSTD1, SLC25A10) are TAS-only and lower value.
   obsoletion PRs are merged (#31949, #32025, #32068) and the
   parent ontology ticket #31842 is closed. No gene reviews started
   in this repo for SQOR/TSTD1/SLC25A10.
+
+## Slides
+
+- [Slides](SULFIDE_OXIDATION_OBSOLETION/slides/SULFIDE_OXIDATION_OBSOLETION-slides.html) (Marp source: [SULFIDE_OXIDATION_OBSOLETION-slides.md](SULFIDE_OXIDATION_OBSOLETION/slides/SULFIDE_OXIDATION_OBSOLETION-slides.md)) — AI generated
