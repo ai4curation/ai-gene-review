@@ -33,6 +33,8 @@ style: |
 
 # Evaluating ProtNLM2 Predictions Against Curated GO Annotations
 
+> **Dated snapshot, not current results (note added 2026-09-27).** This deck records the early exploratory closure-based analysis. Several of its case judgments were later revised. For example, the wheat patatin A0A3B6GK97 "trivially correct" case is now NPI for lipase activity (the catalytic-serine region is missing) and UNC for lipid catabolic process. Current calls are in the per-gene reviews and on the ProtNLM2 Evaluation page.
+
 **Preliminary analysis of 28,553 proteins across 440 species**
 
 Using ontology closure-based comparison against GOA

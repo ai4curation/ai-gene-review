@@ -7,6 +7,8 @@ title: ProtNLM cross-cohort results
 
 Counts are a dated snapshot: as of 2026-09-27 (commit `c7551cb3db`). The scope contains **282 distinct protein records**, including **242 prediction targets** and 40 paired human reference records. Overlapping selections are counted once in the combined totals. These purposive, retrospective cohorts test informative biological distinctions; their proportions do not estimate proteome-wide accuracy.
 
+**186 of the 242 prediction targets have been assessed** at the time of this build: 162 have a GO prediction-review YAML (including 17 reviewed empty GO outputs) and 24 have only a narrative function review. The remaining 56 are selected but not yet reviewed and contribute nothing to any count below.
+
 ## GO-term assessments
 
 Each row counted here is one emitted GO term. Narrative functions, protein names and SL localization outputs are excluded. Zero GO PLI or REP judgments does not imply the absence of narrative errors.
@@ -21,6 +23,23 @@ Each row counted here is one emitted GO term. Narrative functions, protein names
 | PLI | 2 |
 | REP | 0 |
 | **Total** | **288** |
+
+### GO assessments by cohort
+
+**COR here means "biologically supported and absent from the target's cached GOA/UniProt record"**, not novelty with respect to the model's training data (the VDCL sense). COR is only available when the target record lacks the term, so a cohort's COR rate reflects its records' existing annotation, which terms its predictions emit, and how its reviewers drew the LSP/COR line, as much as the model. Model-organism cohorts, where a supported prediction is usually already present (CNN) or less specific than an existing annotation (LSP), have almost no COR. Annotation density alone does not explain the split (compare the median GOA column), so per-cohort COR rates should not be read as a property of the model. Cohort rows overlap, so they are not summed. The median cached-GOA column counts non-NOT rows in each GO-assessed target's `*-goa.tsv`.
+
+Latest annotation date in each target's cached GOA file (a lower bound on when the file was fetched): 2006: 2, 2022: 1, 2023: 1, 2026: 134, no annotations: 24. ProtNLM2 was trained on UniProt 2023_04, so COR/CNN are judged against a GOA state that post-dates training, and a COR term may still have been learnable from annotated orthologs in the training release.
+
+| Cohort | GO claims | COR | CNN | LSP | UNC | NPI | PLI | REP | COR share | Median cached GOA rows per target |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| ARGO50 | 77 | 19 | 8 | 13 | 30 | 7 | 0 | 0 | 25% | 4 |
+| HORSE40 | 89 | 33 | 8 | 5 | 42 | 1 | 0 | 0 | 37% | 6 |
+| FLY41 | 50 | 1 | 11 | 16 | 15 | 7 | 0 | 0 | 2% | 9 |
+| POMBE20 | 32 | 0 | 2 | 27 | 3 | 0 | 0 | 0 | 0% | 12.5 |
+| NEUROSPORA20 | 21 | 0 | 1 | 19 | 1 | 0 | 0 | 0 | 0% | 8.5 |
+| MOD_EVOLUTION20 | 19 | 0 | 2 | 3 | 12 | 2 | 0 | 0 | 0% | 1 |
+
+A mechanical is_a/part_of check of all 53 COR calls against each target's cached GOA ([`cor_goa_entailment.py`](cor_goa_entailment.py), [TSV](cor-goa-entailment.tsv)) finds ANCESTOR_SAME_ASPECT: 3, DESCENDANT: 5, NONE: 45. 3 COR calls are entailed by an existing target annotation and are candidates for LSP/CNN re-review (HORSE/WDPCP cytoplasm via axoneme; HORSE/WDPCP cilium via axoneme; HORSE/WDPCP cytoskeleton via axoneme). Entailment by an existing MF through relations outside go-basic, or by an InterPro2GO domain mapping, is not checked.
 
 ## Reviewed records with no GO predictions
 
@@ -129,18 +148,20 @@ SUPPORTED records contain an explicitly supported claim whose review does not as
 
 The cohort rows retain overlapping selections, including six fly targets selected twice. Paired reference records provide evidence and contribute no extra prediction assessments. Use the deduplicated totals above for the combined corpus.
 
-| Cohort | Records | Records with GO assessments | Reviewed zero GO output | GO claims | Narrative review records |
-|---|---:|---:|---:|---:|---:|
-| ARGO50 | 50 | 41 | 9 | 77 | 0 |
-| HORSE40 | 40 | 27 | 0 | 89 | 17 |
-| HORSE40_HUMAN_PAIR | 40 | 0 | 0 | 0 | 0 |
-| FLY41 | 41 | 33 | 8 | 50 | 13 |
-| FLY_LOCATION_KEYWORD | 29 | 0 | 0 | 0 | 0 |
-| FLY_NEXT20 | 20 | 0 | 0 | 0 | 0 |
-| POMBE20 | 20 | 18 | 0 | 32 | 10 |
-| POMBE_REMAINING8 | 8 | 0 | 0 | 0 | 0 |
-| NEUROSPORA20 | 20 | 16 | 0 | 21 | 3 |
-| MOD_EVOLUTION20 | 20 | 10 | 0 | 19 | 14 |
+| Cohort | Records | Records with GO assessments | Reviewed zero GO output | Narrative review only | Not yet reviewed | GO claims | Narrative review records |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| ARGO50 | 50 | 41 | 9 | 0 | 0 | 77 | 0 |
+| HORSE40 | 40 | 27 | 0 | 13 | 0 | 89 | 17 |
+| HORSE40_HUMAN_PAIR | 40 | 0 | 0 | 0 | 0 | 0 | 0 |
+| FLY41 | 41 | 33 | 8 | 0 | 0 | 50 | 13 |
+| FLY_LOCATION_KEYWORD | 29 | 0 | 0 | 0 | 29 | 0 | 0 |
+| FLY_NEXT20 | 20 | 0 | 0 | 0 | 20 | 0 | 0 |
+| POMBE20 | 20 | 18 | 0 | 2 | 0 | 32 | 10 |
+| POMBE_REMAINING8 | 8 | 0 | 0 | 0 | 8 | 0 | 0 |
+| NEUROSPORA20 | 20 | 16 | 0 | 0 | 4 | 21 | 3 |
+| MOD_EVOLUTION20 | 20 | 10 | 0 | 9 | 1 | 19 | 14 |
+
+Reference-pair rows (HORSE40_HUMAN_PAIR) are evidence records, not prediction targets, so their "not yet reviewed" count is zero by construction.
 
 ## Source metadata
 

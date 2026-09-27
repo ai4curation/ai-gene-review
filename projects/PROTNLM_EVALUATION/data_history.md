@@ -46,3 +46,37 @@ Each prediction has a model score (0–1, threshold 0.05) and post-hoc corrobora
 | `predictions.tsv` | One row per GO/function/location prediction |
 | `evidence.tsv` | One row per evidence block (scores, provenance) |
 | `taxonomy.tsv` | Accession -> species mapping from UniProt |
+
+## Change log
+
+### 2026-09-27 — reporting fixes from the function-prediction review
+
+These changes follow the ProtNLM2 section of
+[REVIEW-2026-09-26](../FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md). No assessment in any
+`*-protnlm-predictions-review.yaml` was changed.
+
+- **OpenScientist reconciliation.** Added `reconcile_openscientist.py`, a transcription of the
+  adjudication report's per-term verdicts (`openscientist-reconciliation/openscientist-verdicts.tsv`),
+  and verbatim rationale excerpts from the current YAMLs (`override-rationale.tsv`). The generated
+  output is `openscientist-reconciliation.md`/`.tsv`. Of 31 terms in 21 genes: 8 agree, 4 differ
+  within the same polarity group, 18 are overridden by the current YAML, and 1 has no verdict.
+  The adjudication report's "wired into per-gene YAMLs" statement is corrected, and the main page
+  no longer says OpenScientist "carries substantial weight".
+- **Per-cohort assessments.** `build_benchmark_summary.py` now also reports:
+  - assessed vs unreviewed targets: 186 of 242 assessed, 56 with no review;
+  - per-cohort category counts with COR share;
+  - median cached GOA rows per target;
+  - the latest-annotation-date distribution of the cached GOA files.
+- **COR entailment check.** Added `cor_goa_entailment.py`. It uses the pinned go-basic 2026-03-25
+  release through `ai_gene_review.bioreason_ontology`. It checks all 53 COR calls against the
+  target's cached GOA with is_a/part_of closure. Three calls (HORSE/WDPCP) are generalisations of
+  an existing annotation.
+- **Archive.** Moved `generate_prediction_reviews.py` and `bench50_novel_review.csv` to `archive/`
+  as superseded. The script now refuses to run.
+- **Other fixes.**
+  - Corrected stale table descriptions.
+  - Added the PLI/NPI rule and the known UBE2F/NCU04302 inconsistency.
+  - Added the fragment caveat and the reference-independence notes.
+  - Updated the horse and fly OpenScientist selection pages: 8/8 horse and 3/4 fly reports have
+    been downloaded; CG5611 finished without a report.
+  - Marked the slide deck as a dated snapshot.
