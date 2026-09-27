@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ai_gene_review.render_projects import (
     build_symbol_to_species_index,
+    copy_referenced_assets,
     is_slides_markdown,
     link_uniprot_code_spans,
     parse_frontmatter,
@@ -1216,3 +1217,38 @@ def test_projects_table_has_collection_filter(tmp_path):
     html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
     assert 'data-filter="collection"' in html
     assert 'data-collections="HOMOLOGY"' in html
+
+
+def test_linked_deck_pulls_in_its_images(tmp_path):
+    """A deck linked from a project page deploys with the figures it references.
+
+    The page links only the deck HTML; the deck's own <img> references (and
+    nothing outside projects/) must be copied alongside it.
+    """
+    projects_dir = tmp_path / "projects"
+    slides = projects_dir / "FOO" / "slides"
+    slides.mkdir(parents=True)
+    (projects_dir / "FOO.md").write_text(
+        "# Foo\n\n- [Slides](FOO/slides/FOO-slides.html)\n"
+    )
+    (slides / "FOO-slides.html").write_text(
+        '<img src="diagram.svg"><img src="shots/review.jpg">'
+        '<img src="https://cdn.example.org/emoji.svg">'
+        '<img src="../../../outside.png">'
+    )
+    (slides / "diagram.svg").write_text("<svg/>")
+    (slides / "shots").mkdir()
+    (slides / "shots" / "review.jpg").write_bytes(b"jpg")
+    (tmp_path / "outside.png").write_bytes(b"png")
+
+    output_dir = tmp_path / "pages" / "projects"
+    copied = copy_referenced_assets([projects_dir / "FOO.md"], output_dir, projects_dir)
+
+    out = output_dir / "FOO" / "slides"
+    assert sorted(p.relative_to(output_dir).as_posix() for p in copied) == [
+        "FOO/slides/FOO-slides.html",
+        "FOO/slides/diagram.svg",
+        "FOO/slides/shots/review.jpg",
+    ]
+    assert (out / "diagram.svg").read_text() == "<svg/>"
+    assert not (tmp_path / "pages" / "outside.png").exists()
