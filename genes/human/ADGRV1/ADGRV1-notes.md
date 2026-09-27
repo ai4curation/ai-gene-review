@@ -287,3 +287,14 @@ all cached title/quotation checks, annotation-source integrity, history validati
 rendering passed. Final actions: 41 ACCEPT, 11 KEEP_AS_NON_CORE, 8 MODIFY, 3 UNDECIDED,
 1 MARK_AS_OVER_ANNOTATED and the retained structural NEW. The five missing caches remain
 the draft gate; final file hashes and validation logs are in `/tmp/ADGRV1-audit-manifest.json`.
+
+### 2026-09-27 — CI reference-title metadata correction
+
+The CI reference fetch for PMID:36139365 recovered the machine title with
+`Ca(2+)`, whereas the visible PubMed/publisher title renders a superscript.
+Matched the YAML title exactly to the machine-fetched title reported by
+CI run 36282024981; this changes neither the identifier nor any biological
+assessment. PubMed confirms the same article and DOI (10.3390/cells11182790).
+Normal local fetching still fails DNS, so the five required cache gaps remain
+draft gates. CI also reported publisher-PDF HTTP 403 responses; external PDF
+reading recorded above is separate from successful normal cache creation.
