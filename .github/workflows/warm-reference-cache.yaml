@@ -1,155 +1,234 @@
----
-name: Warm reference cache
-
-# Keeps the committed reference cache (publications/) complete so the full
-# `just validate-all` reference phase stays cache-bound instead of re-fetching
-# references from PubMed/providers on every run. Runs weekly (newly-added
-# references are fetched; an unchanged cache is a no-op) and on demand.
-
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 1"  # Mondays 04:00 UTC, ahead of the weekly validate-all
-  workflow_dispatch:
-
+name: ClinGen reference recovery batch 21
+run-name: Reference recovery batch 21 at ${{ github.ref_name }} (${{ github.sha }})
+"on":
+  workflow_dispatch: null
+permissions:
+  contents: read
 concurrency:
-  group: warm-reference-cache
-  cancel-in-progress: true
-
+  group: clingen-reference-recovery21-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  warm-reference-cache:
+  recover:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'ai4curation/ai-gene-review' &&
+      github.ref == 'refs/heads/cmungall/clingen-reference-fetch21-20260927'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    permissions:
-      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
-      # with the ai4c-agent App token below.
-      contents: read
-
+    timeout-minutes: 33
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    - name: Checkout the dispatched commit
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ github.sha }}
+        fetch-depth: 1
+        persist-credentials: false
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - name: Set isolated runtime paths after runner initialization
+      run: |
+        python - <<'PYENV'
+        from pathlib import Path
+        import os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery21'
+        with Path(os.environ['GITHUB_ENV']).open('a') as out:
+            out.write('UV_CACHE_DIR='+str(root/'uv-cache')+'\n')
+            out.write('UV_PROJECT_ENVIRONMENT='+str(root/'venv')+'\n')
+        PYENV
+    - name: Initialize fixed source requests and provenance
+      run: |
+        python - <<'PYINIT'
+        from pathlib import Path
+        import json, os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery21'/'artifact'
+        root.mkdir(parents=True)
+        requests_text = '[\n  {\n    "kind": "pmid",\n    "id": "8653788",\n    "mode": "fetch_missing",\n    "genes": [\n      "AGRN"\n    ],\n    "citations": [\n      {\n        "type": "verified_authored_citation",\n        "path": "tmp/reference-cache-batch21-design/citation-snapshots/AGRN/AGRN-ai-review.yaml",\n        "line": 3512,\n        "text": "- id: PMID:8653788",\n        "mapped_pmid": "8653788",\n        "title": "Defective neuromuscular synaptogenesis in agrin-deficient mutant mice.",\n        "doi": "10.1016/S0092-8674(00)81253-2",\n        "primary_url": "https://pubmed.ncbi.nlm.nih.gov/8653788/",\n        "reviewed_source_scope": "Primary PubMed identity and abstract independently verified at https://pubmed.ncbi.nlm.nih.gov/8653788/ on 2026-09-27. Historical MGI mouse GO:0007268 IDA points to J:33098; MGI allele/expression records resolve it to this paper. The primary abstract reports reduced postsynaptic AChR aggregates and abnormal nerve branching/presynaptic differentiation in agrin-deficient mice, while explicitly leaving distinct agrin action versus defective retrograde signaling open. It does not specify the exact chemical-transmission assay used by the GO curator. Full text not recovered or read. A normal cache request was attempted separately; local availability is not asserted by this verification.",\n        "provenance_boundary": "Primary PubMed identities and historical mouse donor citation chains were manually verified in the frozen audit. Abstract access does not establish an unread full-paper assay; this recovery makes no new annotation or biological assertion."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "14622576",\n    "mode": "fetch_missing",\n    "genes": [\n      "AGRN"\n    ],\n    "citations": [\n      {\n        "type": "verified_authored_citation",\n        "path": "tmp/reference-cache-batch21-design/citation-snapshots/AGRN/AGRN-ai-review.yaml",\n        "line": 3499,\n        "text": "- id: PMID:14622576",\n        "mapped_pmid": "14622576",\n        "title": "Implication of geranylgeranyltransferase I in synapse formation.",\n        "doi": "10.1016/S0896-6273(03)00695-0",\n        "primary_url": "https://pubmed.ncbi.nlm.nih.gov/14622576/",\n        "reviewed_source_scope": "Primary PubMed identity and abstract independently verified at https://pubmed.ncbi.nlm.nih.gov/14622576/ on 2026-09-27. Historical MGI mouse GO:0030548 IDA points to J:86639; MouseMine maps that record to this paper. The primary abstract reports agrin-induced GGT phosphorylation/activity, inhibitor or expression-perturbation effects on muscle-cell AChR clustering and spinal-neuron/muscle cocultures, plus mutant-alpha(G/F) transgenic mouse NMJ phenotypes. These are positive pathway observations; neither the active AChR fraction nor every agrin construct species is resolved by the abstract. Full text not recovered or read. A normal cache request was attempted separately; local availability is not asserted by this verification.",\n        "provenance_boundary": "Primary PubMed identities and historical mouse donor citation chains were manually verified in the frozen audit. Abstract access does not establish an unread full-paper assay; this recovery makes no new annotation or biological assertion."\n      }\n    ]\n  }\n]\n'
+        provenance_text = '{\n  "collected_utc": "2026-09-27T14:24:53.286734+00:00",\n  "base_main": "ba3ff58d7d2de76dbe3c24b16e05e12369f463fc",\n  "base_workflow_blob_sha": "3b7b98db5c90e0cad98cf0100894b393bc5ca712",\n  "current_absence": {\n    "status": "fresh_primary_api_verified",\n    "main": "a696f55ba2de663da35d6dafd4b1303062f548ec",\n    "response": {\n      "path": "tmp/reference-cache-batch21-design/fresh-main-response.json",\n      "bytes": 140,\n      "sha256": "70196335eff45752398703f2fb385a3d02c98b90baf7d276576ff7e2cc8a6a2a",\n      "git_blob_sha": "d6a327e63a4c6b2524f683fe5f383fabb219a5ae"\n    },\n    "query": {\n      "path": "tmp/reference-cache-batch21-design/fresh-main-query.graphql",\n      "bytes": 375,\n      "sha256": "c6712678de5849404dd45847eeed806e7ccd02762166dcce515741c9fa2726a4",\n      "git_blob_sha": "fea0745465311304b1cbb32a0a80dd0536184fa0"\n    }\n  },\n  "method": "Two missing-only normal PMID requests after one genuine terminal local fetch invocation. Exclusive frozen citation snapshots insulate this inventory from later gene authoring. No source authoring, refresh, seeding, provider execution or runtime expansion.",\n  "requested_count": 2,\n  "pmid_count": 2,\n  "reactome_count": 0,\n  "frozen_manifests": [\n    {\n      "path": "tmp/AGRN-source19-manifest.json",\n      "bytes": 54060,\n      "sha256": "918700e6cd37096d29dbec52bfbf2e025f1ea12181b48515baecca038d5ca28a",\n      "git_blob_sha": "bed7a7d389bec0cb721b7eb2a72913b444f3bb53"\n    }\n  ],\n  "published_gene_receipts": [],\n  "publication_baseline_note": "Prior AGRN published head a7c2beb6c328edb5567de76e6ded89af6ce088d5. These citation snapshots are the author-frozen follow-up pinned by its exact manifest, without asserting publication of that follow-up.",\n  "canonical_inputs": [\n    {\n      "path": "tmp/reference-cache-batch21-design/citation-snapshots/AGRN/AGRN-ai-review.yaml",\n      "bytes": 200132,\n      "sha256": "61903c4471fdf1a4c27ceac75f19108f208a61ba100714fb68a80a60c6f0599b",\n      "git_blob_sha": "4cf65efc4909366823e50eb37392eb6d0dff792f"\n    },\n    {\n      "path": "tmp/reference-cache-batch21-design/citation-snapshots/AGRN/AGRN-notes.md",\n      "bytes": 52085,\n      "sha256": "bd0f3c979af8468a0e76cb79724a92cad7fc8ac1ccdb2cfb330cb12afccd4425",\n      "git_blob_sha": "671663a6140fa193566af2100e8c18d404f99ee3"\n    }\n  ],\n  "citation_snapshots": [\n    {\n      "gene": "AGRN",\n      "original_path": "genes/human/AGRN/AGRN-ai-review.yaml",\n      "snapshot": {\n        "path": "tmp/reference-cache-batch21-design/citation-snapshots/AGRN/AGRN-ai-review.yaml",\n        "bytes": 200132,\n        "sha256": "61903c4471fdf1a4c27ceac75f19108f208a61ba100714fb68a80a60c6f0599b",\n        "git_blob_sha": "4cf65efc4909366823e50eb37392eb6d0dff792f"\n      },\n      "scope": "Exact author-frozen source19 follow-up; not a claim that the new revision is already published."\n    },\n    {\n      "gene": "AGRN",\n      "original_path": "genes/human/AGRN/AGRN-notes.md",\n      "snapshot": {\n        "path": "tmp/reference-cache-batch21-design/citation-snapshots/AGRN/AGRN-notes.md",\n        "bytes": 52085,\n        "sha256": "bd0f3c979af8468a0e76cb79724a92cad7fc8ac1ccdb2cfb330cb12afccd4425",\n        "git_blob_sha": "671663a6140fa193566af2100e8c18d404f99ee3"\n      },\n      "scope": "Exact author-frozen source19 follow-up; not a claim that the new revision is already published."\n    }\n  ],\n  "normal_fetch": [\n    {\n      "gene": "AGRN",\n      "ids": [\n        "14622576",\n        "8653788"\n      ],\n      "log": "/Users/cjm/orca/workspaces/ai-gene-review/aigr-mendelian/tmp/AGRN-source19-followup/donor-fetch.log",\n      "log_receipt": {\n        "path": "tmp/AGRN-source19-followup/donor-fetch.log",\n        "bytes": 822,\n        "sha256": "0c4027201bd509d284b986fb91b42f2b916180ea633048773d6754c2900b8f2a",\n        "git_blob_sha": "e9fa9851236d787e8aa75c24f3d8a34d3ce5e320"\n      },\n      "evidence_kind": "raw_stdout_stderr",\n      "process_state": {\n        "status": "terminal",\n        "exit_code": 1,\n        "recovered": 0,\n        "requested": 2\n      },\n      "outputs": [],\n      "limitation": "Durable redirected stdout/stderr from the one normal local invocation, reaped with exit 1; DNS failed before source retrieval."\n    }\n  ],\n  "audit_files": [\n    {\n      "path": "tmp/AGRN-source19-followup/normal-fetch-receipt.json",\n      "bytes": 975,\n      "sha256": "ab7c89d39495dba02087f97507aeb8955e37511b777e1023021b7dd6a27b616c",\n      "git_blob_sha": "13763794beb16b4384cda6716166b43816961da1"\n    },\n    {\n      "path": "tmp/AGRN-source19-followup/integrity.json",\n      "bytes": 56795,\n      "sha256": "86ebb2a351c91ff907bc6e0ecdbbb9f1e84abfa33bca45098777826d7e93cad8",\n      "git_blob_sha": "69403dc1974b94d06b187114f8b71344193557ae"\n    },\n    {\n      "path": "tmp/continuation-preflight49.json",\n      "bytes": 405,\n      "sha256": "a68a2761fc6ab3ba734b78410e41024eb004dde276c72b67e9667370123ce00e",\n      "git_blob_sha": "766b54bf4a38a023076054cb7b6235b05da5e83c"\n    }\n  ],\n  "exclusions": {\n    "request_inventories": [\n      {\n        "path": "tmp/verified-reference-records/requested-pmids.json",\n        "bytes": 916,\n        "sha256": "7d4cd2fded0fbabedd2fb48f19cfe977a6ea3cbcefbc3a8c2695138749d05575",\n        "git_blob_sha": "d759709e6a790852d675c92c2668e0b5fc9f42f1"\n      },\n      {\n        "path": "tmp/reference-cache-batch2-design/requests.json",\n        "bytes": 77982,\n        "sha256": "0ed90cbfb768c0ae6d5e367a84f9cfd4dc307f9740786a2f5127e2b3b0718d52",\n        "git_blob_sha": "42746d9a2e12217741b012226dca3912574f788f"\n      },\n      {\n        "path": "tmp/source-seed-recovery3-design/requests.json",\n        "bytes": 4543,\n        "sha256": "a380cc2dddfd1b84ddca63d163d00b4f4de8c4d369c81d45c4203f1eb7b2bb15",\n        "git_blob_sha": "eb41009f697e32f4f4b1fea556d043b38d86d0c9"\n      },\n      {\n        "path": "tmp/reference-cache-batch4-design/requests.json",\n        "bytes": 17868,\n        "sha256": "5a9799ea4427a00cf0e4a1d551bd8c65e5ff562d5e8501baef2925bf9b9ac1b8",\n        "git_blob_sha": "30505b90ae6d2af852094cfcc149ed97262522ca"\n      },\n      {\n        "path": "tmp/reference-cache-batch5-design/requests.json",\n        "bytes": 9517,\n        "sha256": "f2885fdc4e951ff24d99dd016efd75d3eb3eae9c7ec699736fe17ccccc89b5e8",\n        "git_blob_sha": "3e25eeb8a4756de49e9c1583b9ecf494502965f3"\n      },\n      {\n        "path": "tmp/reference-cache-batch6-design/requests.json",\n        "bytes": 6984,\n        "sha256": "25a2e4c646dbee687e03acf60d0c08a9417ad30f4748fabaa1bd34e7252ac2f8",\n        "git_blob_sha": "5a8bfd9a781651deb11d9328f610b57b5556dfbf"\n      },\n      {\n        "path": "tmp/reference-cache-batch7-design/requests.json",\n        "bytes": 16758,\n        "sha256": "a645f5c19a9323033a28c1e1e7ac24f8312bae9db3af9425310f0273c92fef65",\n        "git_blob_sha": "3d8ae046907196a6d44c6ea786aacacb968b8660"\n      },\n      {\n        "path": "tmp/reference-cache-batch8-design/requests.json",\n        "bytes": 109154,\n        "sha256": "2e7d5ea42fb7aafee67915350801486127069e87f87fb0767f322284e8db3dcf",\n        "git_blob_sha": "aa5afae364a489882ef37cbd48721e23b303006f"\n      },\n      {\n        "path": "tmp/reference-cache-batch9-design/requests.json",\n        "bytes": 43721,\n        "sha256": "806e3caf1ad67557c30a54122d86d5283492216a67cc2183568049cff2b02309",\n        "git_blob_sha": "c28d40a41d13ee519bb7dabd3f13655d1afe6292"\n      },\n      {\n        "path": "tmp/reference-cache-batch10-design/requests.json",\n        "bytes": 34856,\n        "sha256": "0a56da65fa07e52cd001a74b948862c9c0520b0d2af35af088f4d6030a1a1f94",\n        "git_blob_sha": "13433f9afbb717bd7399551b3c05e3bb70b45044"\n      },\n      {\n        "path": "tmp/reference-cache-batch11-design/requests.json",\n        "bytes": 43315,\n        "sha256": "9a42a6bee7381c9df3c084f070f83be0b2471574cb504385f819a1971873d758",\n        "git_blob_sha": "84677740d178666e717b202c8d393ee7bd615d55"\n      },\n      {\n        "path": "tmp/reference-cache-batch12-design/requests.json",\n        "bytes": 232668,\n        "sha256": "5afa8231fd90b0eded5a9724347bf82b699dc57f579689261ecfb5dea3063f1b",\n        "git_blob_sha": "50f56585a933e1fec76462544aedf8905806cf8d"\n      },\n      {\n        "path": "tmp/reference-cache-batch13-design/requests.json",\n        "bytes": 104692,\n        "sha256": "1b8e5dbeb33ab5f34ff9c764c31856601db6069ff397aac442792f7d05ae7ca6",\n        "git_blob_sha": "9770273ddf4cb02a6c3380439127864004d79f0b"\n      },\n      {\n        "path": "tmp/reference-cache-batch14-design/requests.json",\n        "bytes": 11009,\n        "sha256": "5e7462aae922f2c1c427e2796f420ae63d9f35950221fdc926c22f8170b040f4",\n        "git_blob_sha": "22b19dfe0c6a73dc269b60f87d6eff705384762a"\n      },\n      {\n        "path": "tmp/reference-cache-batch15-design/requests.json",\n        "bytes": 141882,\n        "sha256": "15b839588425fd5718e2e9a8e355a43acbf75d151ba721788effac38133c50dd",\n        "git_blob_sha": "33322010cc963a71d90122e60e2d5148c8302c99"\n      },\n      {\n        "path": "tmp/reference-cache-batch16-design/requests.json",\n        "bytes": 9691,\n        "sha256": "5c10a399a586a51485f7219ce10f1890879e8bc5a0ce56e79cada6ff73ff5726",\n        "git_blob_sha": "cf473ec47c7a127d7879a0bd0b1270c99f61a9e6"\n      },\n      {\n        "path": "tmp/reference-cache-batch17-design/requests.json",\n        "bytes": 5944,\n        "sha256": "aa308f9906b1ba9108f7b046c10bbde61536a4d69feb553907547404c9ecaa64",\n        "git_blob_sha": "94947230e4adf3c31ad63a35e0de3a9e7953d0d6"\n      },\n      {\n        "path": "tmp/reference-cache-batch18-design/requests.json",\n        "bytes": 9286,\n        "sha256": "c7721ec5ddf774de6b8ce809120bd017a1496b2098ef55dc0b0d50ebe06b52c8",\n        "git_blob_sha": "9bdfe222469f92951cf03eaeb1318407fa2480c2"\n      },\n      {\n        "path": "tmp/reference-cache-batch19-design/requests.json",\n        "bytes": 76806,\n        "sha256": "f977c89769421e28f6a4204f6301da47db14029ea31f1cde12edec212280621c",\n        "git_blob_sha": "df2f47f06219b45eb51ad328b590e0b316b60171"\n      },\n      {\n        "path": "tmp/reference-cache-batch20-design/requests.json",\n        "bytes": 5850,\n        "sha256": "1563a380b8a33b0bb00510b9c51d06ffe83b7784e040bdf6ce0c06de9dbdc618",\n        "git_blob_sha": "15e21d627fea7ffb58333b589bc47316d4d012e1"\n      }\n    ],\n    "source1_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "120213"\n      },\n      {\n        "kind": "pmid",\n        "id": "690130"\n      },\n      {\n        "kind": "pmid",\n        "id": "718989"\n      },\n      {\n        "kind": "pmid",\n        "id": "1413626"\n      },\n      {\n        "kind": "pmid",\n        "id": "1672610"\n      },\n      {\n        "kind": "pmid",\n        "id": "1684101"\n      },\n      {\n        "kind": "pmid",\n        "id": "2866764"\n      },\n      {\n        "kind": "pmid",\n        "id": "2985752"\n      },\n      {\n        "kind": "pmid",\n        "id": "3689310"\n      },\n      {\n        "kind": "pmid",\n        "id": "3777158"\n      },\n      {\n        "kind": "pmid",\n        "id": "5166591"\n      },\n      {\n        "kind": "pmid",\n        "id": "6144148"\n      },\n      {\n        "kind": "pmid",\n        "id": "6480832"\n      },\n      {\n        "kind": "pmid",\n        "id": "7128902"\n      },\n      {\n        "kind": "pmid",\n        "id": "7733320"\n      },\n      {\n        "kind": "pmid",\n        "id": "8026493"\n      },\n      {\n        "kind": "pmid",\n        "id": "8064675"\n      },\n      {\n        "kind": "pmid",\n        "id": "8387517"\n      },\n      {\n        "kind": "pmid",\n        "id": "8654595"\n      },\n      {\n        "kind": "pmid",\n        "id": "8887278"\n      },\n      {\n        "kind": "pmid",\n        "id": "9218493"\n      },\n      {\n        "kind": "pmid",\n        "id": "9845365"\n      },\n      {\n        "kind": "pmid",\n        "id": "10692424"\n      },\n      {\n        "kind": "pmid",\n        "id": "10720488"\n      },\n      {\n        "kind": "pmid",\n        "id": "11222505"\n      },\n      {\n        "kind": "pmid",\n        "id": "11967537"\n      },\n      {\n        "kind": "pmid",\n        "id": "11988101"\n      },\n      {\n        "kind": "pmid",\n        "id": "12499231"\n      },\n      {\n        "kind": "pmid",\n        "id": "15180797"\n      },\n      {\n        "kind": "pmid",\n        "id": "15252046"\n      },\n      {\n        "kind": "pmid",\n        "id": "16150824"\n      },\n      {\n        "kind": "pmid",\n        "id": "16213491"\n      },\n      {\n        "kind": "pmid",\n        "id": "16221767"\n      },\n      {\n        "kind": "pmid",\n        "id": "16672280"\n      },\n      {\n        "kind": "pmid",\n        "id": "16742956"\n      },\n      {\n        "kind": "pmid",\n        "id": "16924481"\n      },\n      {\n        "kind": "pmid",\n        "id": "18459129"\n      },\n      {\n        "kind": "pmid",\n        "id": "19159466"\n      },\n      {\n        "kind": "pmid",\n        "id": "19346281"\n      },\n      {\n        "kind": "pmid",\n        "id": "19656850"\n      },\n      {\n        "kind": "pmid",\n        "id": "20473314"\n      },\n      {\n        "kind": "pmid",\n        "id": "21267468"\n      },\n      {\n        "kind": "pmid",\n        "id": "21475248"\n      },\n      {\n        "kind": "pmid",\n        "id": "21990100"\n      },\n      {\n        "kind": "pmid",\n        "id": "22419726"\n      },\n      {\n        "kind": "pmid",\n        "id": "23112191"\n      },\n      {\n        "kind": "pmid",\n        "id": "23766516"\n      },\n      {\n        "kind": "pmid",\n        "id": "24191038"\n      },\n      {\n        "kind": "pmid",\n        "id": "24962568"\n      },\n      {\n        "kind": "pmid",\n        "id": "25002142"\n      },\n      {\n        "kind": "pmid",\n        "id": "25681585"\n      },\n      {\n        "kind": "pmid",\n        "id": "26764146"\n      },\n      {\n        "kind": "pmid",\n        "id": "27647924"\n      },\n      {\n        "kind": "pmid",\n        "id": "29925947"\n      },\n      {\n        "kind": "pmid",\n        "id": "32439803"\n      },\n      {\n        "kind": "pmid",\n        "id": "33199684"\n      },\n      {\n        "kind": "pmid",\n        "id": "34824276"\n      },\n      {\n        "kind": "pmid",\n        "id": "35630584"\n      },\n      {\n        "kind": "pmid",\n        "id": "36139365"\n      },\n      {\n        "kind": "pmid",\n        "id": "38479840"\n      },\n      {\n        "kind": "pmid",\n        "id": "40033100"\n      },\n      {\n        "kind": "pmid",\n        "id": "40500329"\n      },\n      {\n        "kind": "pmid",\n        "id": "40593796"\n      },\n      {\n        "kind": "pmid",\n        "id": "40930611"\n      },\n      {\n        "kind": "pmid",\n        "id": "41387688"\n      },\n      {\n        "kind": "pmid",\n        "id": "16713557"\n      },\n      {\n        "kind": "pmid",\n        "id": "36194562"\n      }\n    ],\n    "source2_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "18083100"\n      },\n      {\n        "kind": "pmid",\n        "id": "20424607"\n      },\n      {\n        "kind": "pmid",\n        "id": "20448148"\n      },\n      {\n        "kind": "pmid",\n        "id": "28118669"\n      },\n      {\n        "kind": "pmid",\n        "id": "28442542"\n      },\n      {\n        "kind": "pmid",\n        "id": "25616960"\n      },\n      {\n        "kind": "pmid",\n        "id": "18636121"\n      },\n      {\n        "kind": "pmid",\n        "id": "30252181"\n      },\n      {\n        "kind": "pmid",\n        "id": "36126419"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9734745"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9748784"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9754964"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6800431"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6800970"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6806481"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6806526"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-70221"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-71552"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-71593"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-203862"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-198270"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-198599"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-198609"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-198611"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-198613"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-199425"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-199443"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-199839"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-199863"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-200143"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-211163"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2219536"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2243937"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2243942"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2262752"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2317314"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2317332"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399941"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399969"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399977"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399981"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399982"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399988"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399997"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2399999"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2400001"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-2400010"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-3769394"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-389756"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-390329"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-432110"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-450385"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-450490"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-450499"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-450604"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6804758"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6804759"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6805785"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-6811504"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-8848751"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-8848758"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-8933446"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-8948757"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9603279"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9604328"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9607240"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9624526"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9699579"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9841244"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9841265"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9856530"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9860759"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-NUL-3139045"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-NUL-8939977"\n      }\n    ],\n    "source3_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "7929456"\n      },\n      {\n        "kind": "pmid",\n        "id": "9586999"\n      },\n      {\n        "kind": "pmid",\n        "id": "12590576"\n      },\n      {\n        "kind": "pmid",\n        "id": "12773545"\n      },\n      {\n        "kind": "pmid",\n        "id": "15024124"\n      },\n      {\n        "kind": "pmid",\n        "id": "15769750"\n      },\n      {\n        "kind": "pmid",\n        "id": "17649979"\n      },\n      {\n        "kind": "pmid",\n        "id": "19177456"\n      },\n      {\n        "kind": "pmid",\n        "id": "26290588"\n      },\n      {\n        "kind": "pmid",\n        "id": "33328229"\n      },\n      {\n        "kind": "pmid",\n        "id": "33790472"\n      },\n      {\n        "kind": "pmid",\n        "id": "35267011"\n      },\n      {\n        "kind": "pmid",\n        "id": "36423325"\n      },\n      {\n        "kind": "pmid",\n        "id": "41549122"\n      }\n    ],\n    "source4_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10358004"\n      },\n      {\n        "kind": "pmid",\n        "id": "11854172"\n      },\n      {\n        "kind": "pmid",\n        "id": "12237313"\n      },\n      {\n        "kind": "pmid",\n        "id": "14734522"\n      },\n      {\n        "kind": "pmid",\n        "id": "15105377"\n      },\n      {\n        "kind": "pmid",\n        "id": "15150263"\n      },\n      {\n        "kind": "pmid",\n        "id": "15649436"\n      },\n      {\n        "kind": "pmid",\n        "id": "15649886"\n      },\n      {\n        "kind": "pmid",\n        "id": "17001013"\n      },\n      {\n        "kind": "pmid",\n        "id": "17525271"\n      },\n      {\n        "kind": "pmid",\n        "id": "19015306"\n      },\n      {\n        "kind": "pmid",\n        "id": "19923453"\n      },\n      {\n        "kind": "pmid",\n        "id": "22310661"\n      },\n      {\n        "kind": "pmid",\n        "id": "23746446"\n      },\n      {\n        "kind": "pmid",\n        "id": "23993652"\n      },\n      {\n        "kind": "pmid",\n        "id": "25288775"\n      },\n      {\n        "kind": "pmid",\n        "id": "29379495"\n      },\n      {\n        "kind": "pmid",\n        "id": "34523057"\n      },\n      {\n        "kind": "pmid",\n        "id": "35133502"\n      },\n      {\n        "kind": "pmid",\n        "id": "35546148"\n      },\n      {\n        "kind": "pmid",\n        "id": "38260362"\n      },\n      {\n        "kind": "pmid",\n        "id": "38480882"\n      },\n      {\n        "kind": "pmid",\n        "id": "38662103"\n      },\n      {\n        "kind": "pmid",\n        "id": "39026984"\n      },\n      {\n        "kind": "pmid",\n        "id": "39169234"\n      },\n      {\n        "kind": "pmid",\n        "id": "39542129"\n      },\n      {\n        "kind": "pmid",\n        "id": "42719951"\n      }\n    ],\n    "source5_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "6131890"\n      },\n      {\n        "kind": "pmid",\n        "id": "9446639"\n      },\n      {\n        "kind": "pmid",\n        "id": "10037775"\n      },\n      {\n        "kind": "pmid",\n        "id": "10562540"\n      },\n      {\n        "kind": "pmid",\n        "id": "18478038"\n      },\n      {\n        "kind": "pmid",\n        "id": "22170564"\n      },\n      {\n        "kind": "pmid",\n        "id": "24767728"\n      },\n      {\n        "kind": "pmid",\n        "id": "26026163"\n      },\n      {\n        "kind": "pmid",\n        "id": "26418565"\n      },\n      {\n        "kind": "pmid",\n        "id": "30254413"\n      },\n      {\n        "kind": "pmid",\n        "id": "31337596"\n      },\n      {\n        "kind": "pmid",\n        "id": "36739965"\n      },\n      {\n        "kind": "pmid",\n        "id": "38034430"\n      },\n      {\n        "kind": "pmid",\n        "id": "39506109"\n      },\n      {\n        "kind": "pmid",\n        "id": "41387259"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-193755"\n      }\n    ],\n    "source6_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "9700195"\n      },\n      {\n        "kind": "pmid",\n        "id": "11544478"\n      },\n      {\n        "kind": "pmid",\n        "id": "12065715"\n      },\n      {\n        "kind": "pmid",\n        "id": "17854388"\n      },\n      {\n        "kind": "pmid",\n        "id": "25637246"\n      },\n      {\n        "kind": "pmid",\n        "id": "29533924"\n      },\n      {\n        "kind": "pmid",\n        "id": "4343087"\n      },\n      {\n        "kind": "pmid",\n        "id": "41188550"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-5656438"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-70342"\n      }\n    ],\n    "source7_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "14709599"\n      },\n      {\n        "kind": "pmid",\n        "id": "14973782"\n      },\n      {\n        "kind": "pmid",\n        "id": "15840742"\n      },\n      {\n        "kind": "pmid",\n        "id": "23934111"\n      },\n      {\n        "kind": "pmid",\n        "id": "26138355"\n      },\n      {\n        "kind": "pmid",\n        "id": "30192950"\n      },\n      {\n        "kind": "pmid",\n        "id": "38597022"\n      },\n      {\n        "kind": "pmid",\n        "id": "40328714"\n      },\n      {\n        "kind": "pmid",\n        "id": "40789468"\n      },\n      {\n        "kind": "pmid",\n        "id": "40980150"\n      },\n      {\n        "kind": "pmid",\n        "id": "41807832"\n      }\n    ],\n    "source8_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "7619516"\n      },\n      {\n        "kind": "pmid",\n        "id": "7852425"\n      },\n      {\n        "kind": "pmid",\n        "id": "8227074"\n      },\n      {\n        "kind": "pmid",\n        "id": "8398142"\n      },\n      {\n        "kind": "pmid",\n        "id": "10328953"\n      },\n      {\n        "kind": "pmid",\n        "id": "12186888"\n      },\n      {\n        "kind": "pmid",\n        "id": "12208867"\n      },\n      {\n        "kind": "pmid",\n        "id": "12621054"\n      },\n      {\n        "kind": "pmid",\n        "id": "15322546"\n      },\n      {\n        "kind": "pmid",\n        "id": "15467982"\n      },\n      {\n        "kind": "pmid",\n        "id": "15710224"\n      },\n      {\n        "kind": "pmid",\n        "id": "16061370"\n      },\n      {\n        "kind": "pmid",\n        "id": "16630822"\n      },\n      {\n        "kind": "pmid",\n        "id": "16867993"\n      },\n      {\n        "kind": "pmid",\n        "id": "17109865"\n      },\n      {\n        "kind": "pmid",\n        "id": "17132608"\n      },\n      {\n        "kind": "pmid",\n        "id": "18402465"\n      },\n      {\n        "kind": "pmid",\n        "id": "18785627"\n      },\n      {\n        "kind": "pmid",\n        "id": "19211505"\n      },\n      {\n        "kind": "pmid",\n        "id": "19307424"\n      },\n      {\n        "kind": "pmid",\n        "id": "20797687"\n      },\n      {\n        "kind": "pmid",\n        "id": "21209088"\n      },\n      {\n        "kind": "pmid",\n        "id": "22123816"\n      },\n      {\n        "kind": "pmid",\n        "id": "22302937"\n      },\n      {\n        "kind": "pmid",\n        "id": "22632720"\n      },\n      {\n        "kind": "pmid",\n        "id": "23117815"\n      },\n      {\n        "kind": "pmid",\n        "id": "23297193"\n      },\n      {\n        "kind": "pmid",\n        "id": "23658157"\n      },\n      {\n        "kind": "pmid",\n        "id": "25263431"\n      },\n      {\n        "kind": "pmid",\n        "id": "25580854"\n      },\n      {\n        "kind": "pmid",\n        "id": "25612518"\n      },\n      {\n        "kind": "pmid",\n        "id": "26610917"\n      },\n      {\n        "kind": "pmid",\n        "id": "27307232"\n      },\n      {\n        "kind": "pmid",\n        "id": "29449373"\n      },\n      {\n        "kind": "pmid",\n        "id": "30420694"\n      },\n      {\n        "kind": "pmid",\n        "id": "30949029"\n      },\n      {\n        "kind": "pmid",\n        "id": "31062249"\n      },\n      {\n        "kind": "pmid",\n        "id": "33571455"\n      },\n      {\n        "kind": "pmid",\n        "id": "33782379"\n      },\n      {\n        "kind": "pmid",\n        "id": "34218273"\n      },\n      {\n        "kind": "pmid",\n        "id": "34404721"\n      },\n      {\n        "kind": "pmid",\n        "id": "34714331"\n      },\n      {\n        "kind": "pmid",\n        "id": "35643536"\n      },\n      {\n        "kind": "pmid",\n        "id": "35948834"\n      },\n      {\n        "kind": "pmid",\n        "id": "36609795"\n      },\n      {\n        "kind": "pmid",\n        "id": "36691038"\n      },\n      {\n        "kind": "pmid",\n        "id": "37321467"\n      },\n      {\n        "kind": "pmid",\n        "id": "40496808"\n      },\n      {\n        "kind": "pmid",\n        "id": "41983263"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-1266738"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-162582"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-168256"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-392499"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9609507"\n      }\n    ],\n    "source9_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10850427"\n      },\n      {\n        "kind": "pmid",\n        "id": "16564114"\n      },\n      {\n        "kind": "pmid",\n        "id": "18286385"\n      },\n      {\n        "kind": "pmid",\n        "id": "23272107"\n      },\n      {\n        "kind": "pmid",\n        "id": "24489906"\n      },\n      {\n        "kind": "pmid",\n        "id": "25169753"\n      },\n      {\n        "kind": "pmid",\n        "id": "25646590"\n      },\n      {\n        "kind": "pmid",\n        "id": "28115743"\n      },\n      {\n        "kind": "pmid",\n        "id": "28219017"\n      },\n      {\n        "kind": "pmid",\n        "id": "29911927"\n      },\n      {\n        "kind": "pmid",\n        "id": "33967268"\n      },\n      {\n        "kind": "pmid",\n        "id": "35538192"\n      },\n      {\n        "kind": "pmid",\n        "id": "35775424"\n      },\n      {\n        "kind": "pmid",\n        "id": "36230962"\n      },\n      {\n        "kind": "pmid",\n        "id": "37285842"\n      },\n      {\n        "kind": "pmid",\n        "id": "37365244"\n      },\n      {\n        "kind": "pmid",\n        "id": "37759476"\n      },\n      {\n        "kind": "pmid",\n        "id": "39715923"\n      },\n      {\n        "kind": "pmid",\n        "id": "39808658"\n      },\n      {\n        "kind": "pmid",\n        "id": "40188316"\n      },\n      {\n        "kind": "pmid",\n        "id": "40498903"\n      },\n      {\n        "kind": "pmid",\n        "id": "40536108"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-112316"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-4839726"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-74160"\n      }\n    ],\n    "source10_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10373455"\n      },\n      {\n        "kind": "pmid",\n        "id": "12651944"\n      },\n      {\n        "kind": "pmid",\n        "id": "19188259"\n      },\n      {\n        "kind": "pmid",\n        "id": "23341589"\n      },\n      {\n        "kind": "pmid",\n        "id": "25315780"\n      },\n      {\n        "kind": "pmid",\n        "id": "25957684"\n      },\n      {\n        "kind": "pmid",\n        "id": "28757211"\n      },\n      {\n        "kind": "pmid",\n        "id": "30361410"\n      },\n      {\n        "kind": "pmid",\n        "id": "31742248"\n      },\n      {\n        "kind": "pmid",\n        "id": "37087101"\n      },\n      {\n        "kind": "pmid",\n        "id": "40818613"\n      }\n    ],\n    "source11_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "11884758"\n      },\n      {\n        "kind": "pmid",\n        "id": "16465590"\n      },\n      {\n        "kind": "pmid",\n        "id": "20620870"\n      },\n      {\n        "kind": "pmid",\n        "id": "21074048"\n      },\n      {\n        "kind": "pmid",\n        "id": "23242554"\n      },\n      {\n        "kind": "pmid",\n        "id": "24022482"\n      },\n      {\n        "kind": "pmid",\n        "id": "25320310"\n      },\n      {\n        "kind": "pmid",\n        "id": "26325028"\n      },\n      {\n        "kind": "pmid",\n        "id": "29593216"\n      },\n      {\n        "kind": "pmid",\n        "id": "30337352"\n      },\n      {\n        "kind": "pmid",\n        "id": "30420557"\n      },\n      {\n        "kind": "pmid",\n        "id": "37621215"\n      },\n      {\n        "kind": "pmid",\n        "id": "37933844"\n      },\n      {\n        "kind": "pmid",\n        "id": "38029964"\n      },\n      {\n        "kind": "pmid",\n        "id": "38172953"\n      },\n      {\n        "kind": "pmid",\n        "id": "38224449"\n      },\n      {\n        "kind": "pmid",\n        "id": "38448799"\n      },\n      {\n        "kind": "pmid",\n        "id": "38835119"\n      },\n      {\n        "kind": "pmid",\n        "id": "38892257"\n      },\n      {\n        "kind": "pmid",\n        "id": "38939184"\n      },\n      {\n        "kind": "pmid",\n        "id": "38945214"\n      },\n      {\n        "kind": "pmid",\n        "id": "38975338"\n      },\n      {\n        "kind": "pmid",\n        "id": "39075051"\n      },\n      {\n        "kind": "pmid",\n        "id": "39188988"\n      },\n      {\n        "kind": "pmid",\n        "id": "39494335"\n      },\n      {\n        "kind": "pmid",\n        "id": "39499674"\n      }\n    ],\n    "source12_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "11416185"\n      },\n      {\n        "kind": "pmid",\n        "id": "18611112"\n      },\n      {\n        "kind": "pmid",\n        "id": "21900491"\n      },\n      {\n        "kind": "pmid",\n        "id": "23180093"\n      },\n      {\n        "kind": "pmid",\n        "id": "23266196"\n      },\n      {\n        "kind": "pmid",\n        "id": "30663059"\n      },\n      {\n        "kind": "pmid",\n        "id": "32202634"\n      },\n      {\n        "kind": "pmid",\n        "id": "32956737"\n      },\n      {\n        "kind": "pmid",\n        "id": "33851099"\n      },\n      {\n        "kind": "pmid",\n        "id": "34138754"\n      },\n      {\n        "kind": "pmid",\n        "id": "34331125"\n      },\n      {\n        "kind": "pmid",\n        "id": "34446925"\n      },\n      {\n        "kind": "pmid",\n        "id": "34475390"\n      },\n      {\n        "kind": "pmid",\n        "id": "34486492"\n      },\n      {\n        "kind": "pmid",\n        "id": "34948281"\n      },\n      {\n        "kind": "pmid",\n        "id": "35353227"\n      },\n      {\n        "kind": "pmid",\n        "id": "36301938"\n      },\n      {\n        "kind": "pmid",\n        "id": "36878704"\n      },\n      {\n        "kind": "pmid",\n        "id": "37002809"\n      },\n      {\n        "kind": "pmid",\n        "id": "37066388"\n      },\n      {\n        "kind": "pmid",\n        "id": "37127773"\n      },\n      {\n        "kind": "pmid",\n        "id": "37228182"\n      },\n      {\n        "kind": "pmid",\n        "id": "37371069"\n      },\n      {\n        "kind": "pmid",\n        "id": "37422204"\n      },\n      {\n        "kind": "pmid",\n        "id": "37632366"\n      },\n      {\n        "kind": "pmid",\n        "id": "37804316"\n      },\n      {\n        "kind": "pmid",\n        "id": "37893031"\n      },\n      {\n        "kind": "pmid",\n        "id": "38012514"\n      },\n      {\n        "kind": "pmid",\n        "id": "38390227"\n      },\n      {\n        "kind": "pmid",\n        "id": "38412125"\n      },\n      {\n        "kind": "pmid",\n        "id": "38419708"\n      },\n      {\n        "kind": "pmid",\n        "id": "38750021"\n      },\n      {\n        "kind": "pmid",\n        "id": "38867273"\n      },\n      {\n        "kind": "pmid",\n        "id": "38995884"\n      },\n      {\n        "kind": "pmid",\n        "id": "39329078"\n      },\n      {\n        "kind": "pmid",\n        "id": "39457367"\n      },\n      {\n        "kind": "pmid",\n        "id": "39763688"\n      },\n      {\n        "kind": "pmid",\n        "id": "39769373"\n      },\n      {\n        "kind": "pmid",\n        "id": "40156251"\n      },\n      {\n        "kind": "pmid",\n        "id": "40217438"\n      },\n      {\n        "kind": "pmid",\n        "id": "40863728"\n      },\n      {\n        "kind": "pmid",\n        "id": "41008630"\n      },\n      {\n        "kind": "pmid",\n        "id": "41154621"\n      },\n      {\n        "kind": "pmid",\n        "id": "41639505"\n      },\n      {\n        "kind": "pmid",\n        "id": "41695748"\n      },\n      {\n        "kind": "pmid",\n        "id": "41952148"\n      }\n    ],\n    "source13_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "17039367"\n      },\n      {\n        "kind": "pmid",\n        "id": "20711710"\n      },\n      {\n        "kind": "pmid",\n        "id": "22068586"\n      },\n      {\n        "kind": "pmid",\n        "id": "26295388"\n      },\n      {\n        "kind": "pmid",\n        "id": "29685928"\n      },\n      {\n        "kind": "pmid",\n        "id": "31343405"\n      },\n      {\n        "kind": "pmid",\n        "id": "31821855"\n      },\n      {\n        "kind": "pmid",\n        "id": "34158497"\n      },\n      {\n        "kind": "pmid",\n        "id": "34625547"\n      },\n      {\n        "kind": "pmid",\n        "id": "36170658"\n      },\n      {\n        "kind": "pmid",\n        "id": "36374178"\n      },\n      {\n        "kind": "pmid",\n        "id": "36808083"\n      },\n      {\n        "kind": "pmid",\n        "id": "36810450"\n      },\n      {\n        "kind": "pmid",\n        "id": "37138705"\n      },\n      {\n        "kind": "pmid",\n        "id": "37834872"\n      },\n      {\n        "kind": "pmid",\n        "id": "37940365"\n      },\n      {\n        "kind": "pmid",\n        "id": "38004502"\n      },\n      {\n        "kind": "pmid",\n        "id": "38203821"\n      },\n      {\n        "kind": "pmid",\n        "id": "38408297"\n      },\n      {\n        "kind": "pmid",\n        "id": "38489043"\n      },\n      {\n        "kind": "pmid",\n        "id": "38763511"\n      },\n      {\n        "kind": "pmid",\n        "id": "38791571"\n      },\n      {\n        "kind": "pmid",\n        "id": "39056013"\n      },\n      {\n        "kind": "pmid",\n        "id": "39192869"\n      },\n      {\n        "kind": "pmid",\n        "id": "39201545"\n      },\n      {\n        "kind": "pmid",\n        "id": "39222682"\n      },\n      {\n        "kind": "pmid",\n        "id": "39529100"\n      },\n      {\n        "kind": "pmid",\n        "id": "39810751"\n      },\n      {\n        "kind": "pmid",\n        "id": "40302972"\n      },\n      {\n        "kind": "pmid",\n        "id": "40428412"\n      },\n      {\n        "kind": "pmid",\n        "id": "41373793"\n      }\n    ],\n    "source14_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10218571"\n      },\n      {\n        "kind": "pmid",\n        "id": "10914684"\n      },\n      {\n        "kind": "pmid",\n        "id": "16790685"\n      },\n      {\n        "kind": "pmid",\n        "id": "17952061"\n      },\n      {\n        "kind": "pmid",\n        "id": "18056262"\n      },\n      {\n        "kind": "pmid",\n        "id": "19043416"\n      },\n      {\n        "kind": "pmid",\n        "id": "19418225"\n      },\n      {\n        "kind": "pmid",\n        "id": "21467298"\n      },\n      {\n        "kind": "pmid",\n        "id": "24548998"\n      },\n      {\n        "kind": "pmid",\n        "id": "32103179"\n      },\n      {\n        "kind": "pmid",\n        "id": "39378586"\n      },\n      {\n        "kind": "pmid",\n        "id": "39979311"\n      }\n    ],\n    "source15_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "17110164"\n      },\n      {\n        "kind": "pmid",\n        "id": "17259370"\n      },\n      {\n        "kind": "pmid",\n        "id": "17379924"\n      },\n      {\n        "kind": "pmid",\n        "id": "20186809"\n      },\n      {\n        "kind": "pmid",\n        "id": "21085606"\n      },\n      {\n        "kind": "pmid",\n        "id": "21184843"\n      },\n      {\n        "kind": "pmid",\n        "id": "22482801"\n      },\n      {\n        "kind": "pmid",\n        "id": "23354024"\n      },\n      {\n        "kind": "pmid",\n        "id": "23520119"\n      },\n      {\n        "kind": "pmid",\n        "id": "27375556"\n      },\n      {\n        "kind": "pmid",\n        "id": "27842066"\n      },\n      {\n        "kind": "pmid",\n        "id": "33340617"\n      },\n      {\n        "kind": "pmid",\n        "id": "33634130"\n      },\n      {\n        "kind": "pmid",\n        "id": "34095144"\n      },\n      {\n        "kind": "pmid",\n        "id": "34924561"\n      },\n      {\n        "kind": "pmid",\n        "id": "35910359"\n      },\n      {\n        "kind": "pmid",\n        "id": "36269835"\n      },\n      {\n        "kind": "pmid",\n        "id": "36581060"\n      },\n      {\n        "kind": "pmid",\n        "id": "36899378"\n      },\n      {\n        "kind": "pmid",\n        "id": "36909239"\n      },\n      {\n        "kind": "pmid",\n        "id": "37166352"\n      },\n      {\n        "kind": "pmid",\n        "id": "37223023"\n      },\n      {\n        "kind": "pmid",\n        "id": "37372148"\n      },\n      {\n        "kind": "pmid",\n        "id": "37373168"\n      },\n      {\n        "kind": "pmid",\n        "id": "37442770"\n      },\n      {\n        "kind": "pmid",\n        "id": "37675456"\n      },\n      {\n        "kind": "pmid",\n        "id": "37884942"\n      },\n      {\n        "kind": "pmid",\n        "id": "38471082"\n      },\n      {\n        "kind": "pmid",\n        "id": "38552012"\n      },\n      {\n        "kind": "pmid",\n        "id": "39247444"\n      },\n      {\n        "kind": "pmid",\n        "id": "39496916"\n      },\n      {\n        "kind": "pmid",\n        "id": "40766753"\n      },\n      {\n        "kind": "pmid",\n        "id": "40932861"\n      },\n      {\n        "kind": "pmid",\n        "id": "41288931"\n      },\n      {\n        "kind": "pmid",\n        "id": "41383617"\n      },\n      {\n        "kind": "pmid",\n        "id": "41425599"\n      }\n    ],\n    "source16_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "12030331"\n      },\n      {\n        "kind": "pmid",\n        "id": "16859551"\n      },\n      {\n        "kind": "pmid",\n        "id": "25966638"\n      },\n      {\n        "kind": "pmid",\n        "id": "28375157"\n      },\n      {\n        "kind": "pmid",\n        "id": "39875610"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-5694474"\n      }\n    ],\n    "source17_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "2040280"\n      }\n    ],\n    "source18_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "28862642"\n      },\n      {\n        "kind": "pmid",\n        "id": "35095101"\n      },\n      {\n        "kind": "pmid",\n        "id": "39896654"\n      }\n    ],\n    "source19_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "8603924"\n      },\n      {\n        "kind": "pmid",\n        "id": "8625852"\n      },\n      {\n        "kind": "pmid",\n        "id": "8989521"\n      },\n      {\n        "kind": "pmid",\n        "id": "9430625"\n      },\n      {\n        "kind": "pmid",\n        "id": "10366602"\n      },\n      {\n        "kind": "pmid",\n        "id": "10414969"\n      },\n      {\n        "kind": "pmid",\n        "id": "10581249"\n      },\n      {\n        "kind": "pmid",\n        "id": "11018052"\n      },\n      {\n        "kind": "pmid",\n        "id": "11493710"\n      },\n      {\n        "kind": "pmid",\n        "id": "11742983"\n      },\n      {\n        "kind": "pmid",\n        "id": "13165697"\n      },\n      {\n        "kind": "pmid",\n        "id": "13165698"\n      },\n      {\n        "kind": "pmid",\n        "id": "17298982"\n      },\n      {\n        "kind": "pmid",\n        "id": "19940118"\n      },\n      {\n        "kind": "pmid",\n        "id": "20566625"\n      },\n      {\n        "kind": "pmid",\n        "id": "21327778"\n      },\n      {\n        "kind": "pmid",\n        "id": "24137544"\n      },\n      {\n        "kind": "pmid",\n        "id": "28123368"\n      },\n      {\n        "kind": "pmid",\n        "id": "29295889"\n      },\n      {\n        "kind": "pmid",\n        "id": "30611609"\n      },\n      {\n        "kind": "pmid",\n        "id": "32271162"\n      },\n      {\n        "kind": "pmid",\n        "id": "32328026"\n      },\n      {\n        "kind": "pmid",\n        "id": "36248738"\n      },\n      {\n        "kind": "pmid",\n        "id": "38390858"\n      },\n      {\n        "kind": "pmid",\n        "id": "39301653"\n      },\n      {\n        "kind": "pmid",\n        "id": "39923120"\n      },\n      {\n        "kind": "pmid",\n        "id": "40290048"\n      }\n    ],\n    "source20_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "37108718"\n      },\n      {\n        "kind": "pmid",\n        "id": "37175887"\n      },\n      {\n        "kind": "pmid",\n        "id": "40037841"\n      },\n      {\n        "kind": "pmid",\n        "id": "42002803"\n      }\n    ],\n    "seed4": {\n      "path": "tmp/source-seed-recovery4-design/requests.json",\n      "bytes": 931,\n      "sha256": "6b9ee8bd63964f99498d43da782f5992339e7d250b73f64d66eb7ff68ceaccd3",\n      "git_blob_sha": "549b15d5781d30ebde0cc32dae0db4d09f885f5d"\n    },\n    "nonrequests": "Exactly the two settled AGRN mouse donor PMIDs. No DOI-only correction, dissertation, preprint, Reactome endpoint, seed, provider run, refresh or additional citation request."\n  }\n}\n'
+        (root/'requests.json').write_text(requests_text)
+        (root/'source-list-provenance.json').write_text(provenance_text)
+        receipt={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+        receipt.update(status='initialized_before_dependency_install',scope='2 fixed normal PMID requests; no gene seeding, provider run or source authoring')
+        (root/'run-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+        (root/'fetch-report.json').write_text(json.dumps(dict(receipt,entries=[]),indent=2)+'\n')
+        PYINIT
+    - name: Install uv without a shared dependency cache
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: false
+    - name: Install the locked normal project runtime
+      timeout-minutes: 15
+      run: uv sync --frozen --no-dev --no-editable
+    - name: Run normal source fetchers in isolated temporary directories
+      id: fetch
+      continue-on-error: true
+      timeout-minutes: 13
+      run: |
+        uv run --no-sync python - <<'PYFETCH'
+        """Retrieve a fixed PMID/Reactome inventory with the normal CLI; never author source records."""
+        from pathlib import Path
+        from datetime import datetime, timezone
+        from importlib.metadata import version
+        import hashlib,json,os,re,signal,subprocess,time,yaml
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
+        BRANCH='refs/heads/cmungall/clingen-reference-fetch21-20260927'
+        REPOSITORY='ai4curation/ai-gene-review'
+        ROOT_NAME='clingen-reference-recovery21'
+        REQUEST_SHA256='fa01ab4f02e13bc5f313b36f9374a5f91a9a20d57119a0e9b71dddd269544ee0'
+        PMIDS={'8653788','14622576'}
+        REACTOME_IDS=set()
+        PER_PMID_SECONDS=180
+        PER_REACTOME_SECONDS=60
+        TOTAL_SECONDS=8*60
+        REACTOME_CALL='''from pathlib import Path
+        import sys
+        from ai_gene_review.etl.reactome import cache_reactome_pathway
+        raise SystemExit(0 if cache_reactome_pathway(sys.argv[1], output_dir=Path(sys.argv[2]), force=False) else 1)
+        '''
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+        def digest(data):
+         return {'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'git_blob_sha':hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()}
 
-      - name: Install just
-        run: uv tool install rust-just
+        def validate_requests(raw):
+         if hashlib.sha256(raw).hexdigest()!=REQUEST_SHA256:raise ValueError('Requests differ from the fixed approved bytes')
+         data=json.loads(raw);allowed={('pmid',x) for x in PMIDS}|{('reactome',x) for x in REACTOME_IDS}
+         if not isinstance(data,list) or len(data)!=len(allowed):raise ValueError('Wrong finite inventory size')
+         if {(r['kind'],r['id']) for r in data}!=allowed:raise ValueError('Wrong fixed source inventory')
+         for r in data:
+          if set(r)!={'kind','id','mode','genes','citations'} or r['mode']!='fetch_missing':raise ValueError('Unsupported request shape or mode')
+          pattern={'pmid':r'[1-9][0-9]{0,8}','reactome':r'R-[A-Z]{3}-[1-9][0-9]{0,8}'}.get(r['kind'])
+          if not pattern or not re.fullmatch(pattern,r['id']):raise ValueError('Invalid source identifier')
+          if not r['genes'] or not r['citations']:raise ValueError('Missing source provenance')
+         return data
 
-      - name: Install project
-        run: uv sync --dev
+        def inspect_publication(raw,pmid):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal publication frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or str(meta.get('pmid'))!=pmid:raise ValueError('Wrong publication identifier')
+         if not isinstance(meta.get('title'),str) or not meta['title'].strip():raise ValueError('Missing publication title')
+         if not isinstance(meta.get('full_text_available'),bool):raise ValueError('Missing normal availability metadata')
+         if not parts[2].strip():raise ValueError('Empty publication body')
+         return {**digest(raw),'frontmatter':meta,'has_abstract_section':'## Abstract' in parts[2],'has_full_text_section':'## Full Text' in parts[2]}
 
-      - name: Warm the reference cache
-        run: just warm-references
+        def inspect_reactome(raw,identifier):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal Reactome frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or meta.get('stable_id')!=identifier:raise ValueError('Wrong Reactome identifier')
+         if not isinstance(meta.get('display_name'),str) or not meta['display_name'].strip() or meta['display_name']=='Unknown pathway':raise ValueError('Missing Reactome title')
+         if not parts[2].strip():raise ValueError('Empty Reactome body')
+         return {**digest(raw),'frontmatter':meta,'has_summary':bool(meta.get('summary')),'has_summary_section':'## Summary' in parts[2]}
 
-      - name: Check for cache changes
-        id: check-changes
-        run: |
-          if git diff --quiet publications/; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Reference cache already complete; nothing to commit."
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff --stat publications/ | tail -1
-          fi
+        def inspect_source(raw,kind,identifier):
+         if kind=='pmid':return inspect_publication(raw,identifier)
+         if kind=='reactome':return inspect_reactome(raw,identifier)
+         raise ValueError('Wrong source kind')
 
-      - name: Compute metadata
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: metadata
-        run: |
-          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
-          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
-          {
-            echo "branch=auto/warm-reference-cache"
-            echo "changed=$CHANGED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
+        def relative_cache_path(kind,identifier):
+         if kind=='pmid' and identifier in PMIDS:return Path('publications',f'PMID_{identifier}.md')
+         if kind=='reactome' and identifier in REACTOME_IDS:return Path('reactome',identifier+'.md')
+         raise ValueError('Unapproved source/path')
 
-      # Minted here rather than at job start, for the same reason as
-      # generate-pages: the cache warm needs no credentials, only the push does,
-      # and a token minted at job start burns its 60-minute life on the fetch.
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+        def write_raw(destination,data):
+         destination.parent.mkdir(parents=True,exist_ok=True)
+         with destination.open('xb') as handle:handle.write(data)
+         if destination.read_bytes()!=data:raise ValueError('Raw byte-copy mismatch')
 
-      - name: Create or update warm-cache PR
-        if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
-        shell: bash
-        run: |
-          # Commit as the ai4c-agent App bot and serve the short-lived token to git
-          # through the gh credential helper, instead of persisting it in .git/config.
-          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          gh auth setup-git
+        def copy_raw_tree(source,destination):
+         records=[]
+         for path in sorted(source.rglob('*')):
+          if path.is_symlink():raise ValueError('Generated symlink requires inspection')
+          if not path.is_file():continue
+          rel=path.relative_to(source);data=path.read_bytes();write_raw(destination/rel,data);records.append({'path':str(rel),**digest(data)})
+         return records
 
-          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
-          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
-          git checkout -B "$BRANCH_NAME"
+        def command_for(kind,identifier,runtime,work):
+         relative=relative_cache_path(kind,identifier);output=work/relative.parent
+         if kind=='pmid':return [str(runtime/'bin/ai-gene-review'),'fetch-pmid',identifier,'--output-dir',str(output),'--delay','1.0']
+         return [str(runtime/'bin/python'),'-c',REACTOME_CALL,identifier,str(output)]
 
-          git add publications/
-          git commit -m "$(cat <<EOF
-          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
+        def run_command(command,work,logpath,timeout):
+         with logpath.open('w') as log:
+          proc=subprocess.Popen(command,cwd=work,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+          try:return {'returncode':proc.wait(timeout=timeout),'timed_out':False}
+          except subprocess.TimeoutExpired:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();return {'returncode':proc.returncode,'timed_out':True}
+          except BaseException:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();raise
 
-          Automated weekly warm so validate-all reads cached references instead of
-          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
-          EOF
-          )"
-
-          git push --force-with-lease origin "$BRANCH_NAME"
-
-          PR_BODY="$(mktemp)"
-          {
-            echo "## Summary"
-            echo
-            echo "Automated weekly warm of the reference cache (\`publications/\`)."
-            echo "Fetches references that are new or lack full text so the full"
-            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
-            echo
-            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
-            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
-            echo
-            echo "Cache data only — no functional review needed; merge when convenient."
-            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
-          } > "$PR_BODY"
-
-          EXISTING_PR_NUMBER="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --limit 1 \
-            --jq '.[0].number // empty')"
-
-          if [ -n "$EXISTING_PR_NUMBER" ]; then
-            gh api \
-              --method PATCH \
-              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
-              -f body="$(cat "$PR_BODY")" \
-              >/dev/null
-            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
-            exit 0
-          fi
-
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Warm reference cache" \
-            --body-file "$PR_BODY"
-
-          echo "Created warm-cache PR."
+        def main():
+         if os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or os.environ.get('GITHUB_REF')!=BRANCH or os.environ.get('GITHUB_REPOSITORY')!=REPOSITORY:raise ValueError('Wrong event, task branch or repository')
+         repo=Path(os.environ['GITHUB_WORKSPACE']).resolve();runner=Path(os.environ['RUNNER_TEMP']).resolve();root=runner/ROOT_NAME
+         runtime=Path(os.environ['UV_PROJECT_ENVIRONMENT']).resolve()
+         if not runtime.is_relative_to(root) or root.is_relative_to(repo):raise ValueError('Runtime/output path outside isolated runner temp')
+         artifact=root/'artifact';workroot=root/'fetch-work';workroot.mkdir(parents=True);logs=artifact/'logs';logs.mkdir()
+         requests=validate_requests((artifact/'requests.json').read_bytes())
+         report={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+         report.update(started_utc=datetime.now(timezone.utc).isoformat(),entries=[],request_digest=digest((artifact/'requests.json').read_bytes()),provenance_digest=digest((artifact/'source-list-provenance.json').read_bytes()),versions={},source_code={},scope='Raw normal publication and Reactome outputs only. Metadata checks do not establish scientific support or complete article access. No source authoring, review, gene seeding, import, refresh or remote mutation.')
+         def save():(artifact/'fetch-report.json').write_text(json.dumps(report,indent=2)+'\n')
+         save();deadline=time.monotonic()+TOTAL_SECONDS
+         try:
+          for name in ['ai-gene-review','linkml-reference-validator','PyYAML']:report['versions'][name]=version(name)
+          for name in ['src/ai_gene_review/cli.py','src/ai_gene_review/etl/publication.py','src/ai_gene_review/etl/reactome.py','uv.lock','.github/workflows/warm-reference-cache.yaml']:report['source_code'][name]=digest((repo/name).read_bytes())
+          save()
+          for request in requests:
+           kind=request['kind'];identifier=request['id'];key=kind+'_'+identifier;entry={'kind':kind,'id':identifier,'status':'pending'};report['entries'].append(entry);save()
+           relative=relative_cache_path(kind,identifier);existing=repo/relative
+           if existing.exists():
+            try:entry.update(inspect_source(existing.read_bytes(),kind,identifier),status='already_present')
+            except Exception as exc:entry.update(status='existing_needs_inspection',error=str(exc),existing_digest=digest(existing.read_bytes()))
+            save();continue
+           remaining=deadline-time.monotonic()
+           if remaining<=0:entry['status']='not_attempted_budget';save();continue
+           work=workroot/key;work.mkdir();command=command_for(kind,identifier,runtime,work);entry.update(status='fetching',command=command,started_utc=datetime.now(timezone.utc).isoformat());save()
+           try:
+            entry.update(run_command(command,work,logs/(key+'.log'),min(PER_PMID_SECONDS if kind=='pmid' else PER_REACTOME_SECONDS,remaining)))
+            generated=work/relative
+            if entry['returncode']!=0:raise ValueError('Normal fetch failed or timed out')
+            if generated.is_symlink():raise ValueError('Symlink publication output')
+            raw=generated.read_bytes();entry.update(inspect_source(raw,kind,identifier))
+            entry['raw_outputs']=copy_raw_tree(work,artifact/'raw_outputs'/key)
+            write_raw(artifact/relative,raw);entry.update(status='recovered',artifact_path=str(relative))
+           except Exception as exc:
+            entry.update(status='needs_inspection',error=str(exc))
+            try:entry['quarantined_outputs']=copy_raw_tree(work,artifact/'quarantine'/key)
+            except Exception as copy_error:entry['quarantine_error']=str(copy_error)
+           save()
+         except Exception as exc:
+          report['fatal_error']=str(exc)
+         finally:
+          attempted={(r['kind'],r['id']) for r in report['entries']}
+          report['entries'] += [{'kind':r['kind'],'id':r['id'],'status':'not_attempted_after_failure'} for r in requests if (r['kind'],r['id']) not in attempted]
+          report['finished_utc']=datetime.now(timezone.utc).isoformat();report['unresolved_sources']=[r['kind']+':'+r['id'] for r in report['entries'] if r['status'] not in {'recovered','already_present'}];report['recovered_count']=sum(r['status']=='recovered' for r in report['entries']);save()
+         with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:summary.write(f"Recovered {report['recovered_count']} normal source caches; {len(report['unresolved_sources'])} unresolved. All outputs require independent identity/content checks before import.\n")
+         return int(bool(report['unresolved_sources']) or 'fatal_error' in report)
+        if __name__=='__main__':raise SystemExit(main())
+        PYFETCH
+    - name: Verify the checked-out repository is unchanged
+      id: unchanged
+      if: ${{ always() }}
+      run: |
+        git diff --exit-code
+        git diff --cached --exit-code
+        test -z "$(git ls-files --others --exclude-standard)"
+    - name: Upload raw normal sources and partial reports
+      id: artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: clingen-reference-recovery21-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/clingen-reference-recovery21/artifact/
+        if-no-files-found: error
+        retention-days: 7
+        include-hidden-files: false
+        overwrite: false
+    - name: Report incomplete recovery after preserving outputs
+      if: ${{ always() && (steps.fetch.outcome != 'success' || steps.unchanged.outcome != 'success' ||
+        steps.artifact.outcome != 'success') }}
+      run: exit 1
