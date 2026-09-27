@@ -30,3 +30,13 @@ Decisions summary
 - ACE shedding (membrane protein ectodomain proteolysis) -> MODIFY to negative regulation (GO:0051045).
 - Exosome/RNA-binding/COP9/cadherin HDA rows -> MARK_AS_OVER_ANNOTATED.
 - Nucleus (PMID:14508515) -> UNDECIDED (abstract-only, cannot see nuclear data).
+
+## 2026-09-27 update: Falcon deep research incorporated
+
+- MYH9-deep-research-falcon.md arrived after the first pass. It is review-based (Brito & Sousa 2020; Asensio-Juarez 2020;
+  Feroz 2024 and others; no new primary PMIDs) and agrees with the review: core = actin-activated Mg-ATPase motor forming
+  bipolar minifilaments; MYH9-RD; megakaryocytes express only NMIIA.
+- Used as retrieval support only: added to the platelet formation row (non-core, unchanged) and to the leukocyte-migration
+  core function, for its caveat "many pharmacologic studies inhibit all NMII isoforms, whereas MYH9-specific knockout,
+  knockdown or mutation gives stronger isoform-level evidence". This matches the nucleokinesis paralog question.
+- No action changes: nothing in the report contradicts a decision or adds new primary evidence for any row.
