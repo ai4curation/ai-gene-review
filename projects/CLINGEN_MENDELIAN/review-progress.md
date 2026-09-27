@@ -121,7 +121,12 @@ are therefore expected; existing human reviews still link normally.
 | ALDH18A1 | Definitive | INITIALIZED | Draft #3269; independent full audit published; validation, history, rendering and source-preservation checks passed; 7 publication and 0 Reactome caches remain | `cmungall/clingen-aldh18a1` | [#3269](https://github.com/ai4curation/ai-gene-review/pull/3269) |
 | ALDH4A1 | Definitive | COMPLETE | Draft #3271; independent full audit published; validation, history, rendering and source-preservation checks passed; 1 publication and 0 Reactome caches remain | `cmungall/clingen-aldh4a1` | [#3271](https://github.com/ai4curation/ai-gene-review/pull/3271) |
 | ALDH5A1 | Definitive | INITIALIZED | Draft #3268; independent full audit published; validation, history, rendering and source-preservation checks passed; 3 publication and 0 Reactome caches remain | `cmungall/clingen-aldh5a1` | [#3268](https://github.com/ai4curation/ai-gene-review/pull/3268) |
-| ALDH7A1 | Definitive | IN_PROGRESS | Full audit in progress; exact main baseline and canonical/alias overlap verified | — | — |
+| ALDH7A1 | Definitive | IN_PROGRESS | Ready #3277; independent full audit and local checks passed; all required sources cached; current-head review and required CI pending | `cmungall/clingen-aldh7a1` | [#3277](https://github.com/ai4curation/ai-gene-review/pull/3277) |
+| ALDOB | Definitive | INITIALIZED | Draft #3279; independent full audit and local checks passed; 4 publication and 2 Reactome caches remain | `cmungall/clingen-aldob` | [#3279](https://github.com/ai4curation/ai-gene-review/pull/3279) |
+| ALG1 | Definitive | INITIALIZED | Draft #3280; independent full audit and local checks passed; 4 publication and 0 Reactome caches remain | `cmungall/clingen-alg1` | [#3280](https://github.com/ai4curation/ai-gene-review/pull/3280) |
+| ALG12 | Definitive | INITIALIZED | Draft #3281; independent full audit and local checks passed; 1 publication and 0 Reactome caches remain | `cmungall/clingen-alg12` | [#3281](https://github.com/ai4curation/ai-gene-review/pull/3281) |
+| ALG13 | Definitive | INITIALIZED | Full audit in progress; canonical and alias overlap checked | — | — |
+| ALG3 | Definitive | INITIALIZED | Full audit in progress; canonical and alias overlap checked | — | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -145,16 +150,19 @@ The second bounded read-only source recovery imported eight publication records
 and 65 Reactome records after artifact and individual hash checks. AKT1's full-text
 candidate was subsequently assessed against the primary source and published in
 its gene PR. [Exact second-batch import receipt](reference-recovery2.json).
-The third recovery remains queued for 14 PMIDs and eight initial gene seeds:
-ABCG5, ABCG8, ABHD12, ABHD5, AICDA, AGTPBP1, AIFM1 and AK2 remain unseeded until
-actual results are verified. The fourth recovery is queued for 27 PMIDs needed by
-AIMP1, AIMP2, AIPL1, AGO2 and AIRE. The fifth is queued for 15 PMIDs and one
-Reactome record needed by AKR1D1, ALAS2 and ALDH18A1. No retrieval success is assumed.
+The third source-fetch run succeeded for its fixed request set; its artifact
+metadata is verified and transport is queued. ABCG5, ABCG8, ABHD12, ABHD5, AICDA,
+AGTPBP1, AIFM1 and AK2 remain unseeded locally until actual candidate bytes, source
+identities and current-main overlap checks pass. The fourth recovery remains queued
+for 27 PMIDs, the fifth for 15 PMIDs and one Reactome record, and the sixth for
+eight PMIDs and two Reactome records needed by ALDH4A1, ALDH5A1 and ALDOB. ALG1
+and ALG12 have five additional distinct publication gaps for a future batch.
+No source-cache gate is cleared merely from a successful run status.
 
 New full audits and the next active reviews are recorded in the table above.
 AKT1's Limited-tier audit remains an explicit scheduling exception; it does not
 change tier order or complete earlier unavailable genes. Failed provider attempts
-remain documented without invented reports. AGRN and AHCY's review service runs
+remain documented without invented reports. AGRN, AHCY, ACSL4, ACOX2, ACAT1 and ADSL review-service runs
 reported a session limit, with reset at 06:00 UTC; those runs submitted no reviews.
 Local review and validation continue while their normal approval gates remain open.
 
@@ -526,3 +534,6 @@ The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **27 
 - 2026-09-27: ABCC8 follow-up #3211 and AHDC1 #3213 completed current-head-approved, required-CI-green protected merges at 04:47 UTC. Campaign completion is 27 of 2,876, with 32 original gene PRs merged and five still requiring follow-ups.
   Published AKR1D1 #3266, ALAS2 #3267, ALDH18A1 #3269, ALDH4A1 #3271, ALDH5A1 #3268. There are 51 dedicated gene audit PRs. Draft source gaps remain explicit. Batch5 run 36295820535 is queued, as are batches3 and4; queued jobs are not successful recoveries.
   Verified 45 latest receipts / 273 hashes, 59 historical receipts / 317 hashes, and 7 post-merge revision receipts / 61 hashes. Every prior receipt chain and original merge is preserved. Rendering uses the exact imported AHDC1 merge snapshot.
+
+- 2026-09-27 05:50 UTC: Published ALDH7A1 #3277, ALDOB #3279, ALG1 #3280 and ALG12 #3281 after independent biological review and local checks. There are 55 dedicated gene audit PRs; completion remains 27 of 2,876. Source gaps and current-head approval/test gates remain explicit. ALG13 and ALG3 full audits continue.
+  Verified 49 latest receipts / 289 hashes, 59 historical receipts / 317 hashes and 7 post-merge revision receipts / 61 hashes. All previous gene receipt chains and merge records are unchanged. Source3 succeeded but awaits verified import; source4/5/6 and source3 transport are queued. The six identified review-service failures submitted no reviews. Rendering remains tied to the exact imported ba3ff58d snapshot.
