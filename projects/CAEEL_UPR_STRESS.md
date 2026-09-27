@@ -183,7 +183,7 @@ Convergent signaling:
 - dve-1: 31 annotations reviewed; works with UBL-5 for chromatin remodeling
 - ubl-5: 11 annotations reviewed; **CRITICAL FIX**: Removed protein tag activity (GO:0031386) - UBL-5 lacks C-terminal di-Gly motif required for covalent conjugation; functions via non-covalent interactions
 - hsp-6: 19 annotations reviewed; mtHSP70, standard UPR-mt marker
-- hsp-60: 21 annotations reviewed; **ERROR CORRECTED**: Removed GO:0061629 (TF binding) - paper described DVE-1 binding hsp-60 PROMOTER, not HSP-60 protein
+- hsp-60: 21 annotations reviewed; GO:0061629 (TF binding, IPI, PMID:17925224) is UNDECIDED, not removed: WormBase curated the reciprocal row (dve-1 protein-folding chaperone binding, IPI WITH hsp-60), so a physical interaction was recorded, but the assay cannot be checked from the cached abstract
 - clpp-1: 16 annotations (ALL ACCEPT); ClpXP protease generates UPR-mt signaling peptides
 
 **Priority 3 - Regulators (6 genes):**
