@@ -15,3 +15,7 @@ Decisions of note:
 - Behavioural/synaptic IMP/ISS rows from patient-mutation and Lis1+/- mouse papers marked over-annotated (indirect consequences of migration defects).
 - Heparin binding (ISS from bovine IDA, PMID:8028668): UNDECIDED; abstract silent, likely purification behaviour.
 - nuclear migration IEA: MODIFY to nuclear migration along microtubule + interkinetic nuclear migration.
+
+## Deep research (Falcon) incorporated
+
+PAFAH1B1-deep-research-falcon.md arrived after the first pass. It agrees with the review: [file:human/PAFAH1B1/PAFAH1B1-deep-research-falcon.md "LIS1 acts upstream and during this assembly process rather than functioning as a permanent cargo adaptor."] and [ "LIS1 regulates or scaffolds the complex but is unnecessary for the chemical hydrolysis step"]. It also reports (via reviews, not verified here) that disrupting both PAF-AH catalytic subunits does not reproduce the LIS1 brain phenotype, consistent with treating the PAF-AH role as non-core for neuronal migration. It leans toward "activation factor"; retained the regulator parent (GO:0140659) and raised activator (GO:0140660) as a suggested question.
