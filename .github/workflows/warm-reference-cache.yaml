@@ -1,155 +1,190 @@
 ---
-name: Warm reference cache
+name: ClinGen pinned artifact transport
+run-name: Pinned artifact 10928904664 at ${{ github.ref_name }} (${{ github.sha }})
 
-# Keeps the committed reference cache (publications/) complete so the full
-# `just validate-all` reference phase stays cache-bound instead of re-fetching
-# references from PubMed/providers on every run. Runs weekly (newly-added
-# references are fetched; an unchanged cache is a no-op) and on demand.
-
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 1"  # Mondays 04:00 UTC, ahead of the weekly validate-all
+# Temporary task-branch replacement of this registered workflow only.
+# No default-branch modification, checkout, fetching, or publication.
+'on':
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: read
+
 concurrency:
-  group: warm-reference-cache
-  cancel-in-progress: true
+  group: clingen-pinned-artifact-transport-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  warm-reference-cache:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    permissions:
-      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
-      # with the ai4c-agent App token below.
-      contents: read
-
+  transport:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'ai4curation/ai-gene-review' && github.ref == 'refs/heads/cmungall/clingen-seed4-artifact-transport-20260927'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-
-      - name: Install just
-        run: uv tool install rust-just
-
-      - name: Install project
-        run: uv sync --dev
-
-      - name: Warm the reference cache
-        run: just warm-references
-
-      - name: Check for cache changes
-        id: check-changes
-        run: |
-          if git diff --quiet publications/; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Reference cache already complete; nothing to commit."
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff --stat publications/ | tail -1
-          fi
-
-      - name: Compute metadata
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: metadata
-        run: |
-          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
-          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
-          {
-            echo "branch=auto/warm-reference-cache"
-            echo "changed=$CHANGED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
-
-      # Minted here rather than at job start, for the same reason as
-      # generate-pages: the cache warm needs no credentials, only the push does,
-      # and a token minted at job start burns its 60-minute life on the fetch.
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
-
-      - name: Create or update warm-cache PR
-        if: steps.check-changes.outputs.has_changes == 'true'
+      - name: Verify and print the pinned ZIP as base64
         env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
+          GH_TOKEN: ${{ github.token }}
+          PYTHONUNBUFFERED: '1'
         shell: bash
         run: |
-          # Commit as the ai4c-agent App bot and serve the short-lived token to git
-          # through the gh credential helper, instead of persisting it in .git/config.
-          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          gh auth setup-git
+          python3 - <<'PY'
+          """Read only the one pinned Actions artifact; emit its exact ZIP as framed base64."""
+          import base64
+          import hashlib
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.parse
+          import urllib.request
 
-          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
-          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
-          git checkout -B "$BRANCH_NAME"
+          REPO = "ai4curation/ai-gene-review"
+          TASK_REF = "refs/heads/cmungall/clingen-seed4-artifact-transport-20260927"
+          SOURCE_BRANCH = "cmungall/clingen-source-seed-fetch4-20260927"
+          RUN_ID = 36309710887
+          HEAD_SHA = "8f71fbb7784d6d4583f6de2d3d3b34d9839804dc"
+          ARTIFACT_ID = 10928904664
+          SOURCE_CONCLUSION = "success"
+          SOURCE_RUN_ATTEMPT = 1
+          ARTIFACT_NAME = "clingen-source-seed-recovery4-36309710887-1"
+          SIZE = 156154
+          SHA256 = "7babcf957cc69bef0f127583d9ceca745cc305e4d3688697a2442fbd097fb416"
+          WORKFLOW_PATH = ".github/workflows/warm-reference-cache.yaml"
+          API = "https://api.github.com"
+          PREFIX = "AIGR_ARTIFACT_ZIP_V1_"
+          CHUNK_SIZE = 8192
 
-          git add publications/
-          git commit -m "$(cat <<EOF
-          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
 
-          Automated weekly warm so validate-all reads cached references instead of
-          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
-          EOF
-          )"
+          class CheckFailed(Exception):
+              pass
 
-          git push --force-with-lease origin "$BRANCH_NAME"
 
-          PR_BODY="$(mktemp)"
-          {
-            echo "## Summary"
-            echo
-            echo "Automated weekly warm of the reference cache (\`publications/\`)."
-            echo "Fetches references that are new or lack full text so the full"
-            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
-            echo
-            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
-            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
-            echo
-            echo "Cache data only — no functional review needed; merge when convenient."
-            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
-          } > "$PR_BODY"
+          def require(ok, message):
+              if not ok:
+                  raise CheckFailed(message)
 
-          EXISTING_PR_NUMBER="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --limit 1 \
-            --jq '.[0].number // empty')"
 
-          if [ -n "$EXISTING_PR_NUMBER" ]; then
-            gh api \
-              --method PATCH \
-              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
-              -f body="$(cat "$PR_BODY")" \
-              >/dev/null
-            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
-            exit 0
-          fi
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
 
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Warm reference cache" \
-            --body-file "$PR_BODY"
 
-          echo "Created warm-cache PR."
+          def check_https(url):
+              parsed = urllib.parse.urlsplit(url)
+              require(parsed.scheme == "https" and parsed.hostname and not parsed.username
+                      and not parsed.password and not parsed.fragment and parsed.port in (None, 443),
+                      "Invalid HTTPS download location")
+
+
+          class HTTPSRedirectOnly(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  check_https(newurl)
+                  return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+          def api_request(path, token):
+              require(path.startswith(f"/repos/{REPO}/actions/"), "Unexpected API path")
+              return urllib.request.Request(API + path, headers={
+                  "Authorization": "Bearer " + token,
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "User-Agent": "aigr-pinned-artifact-transport",
+              }, method="GET")
+
+
+          def api_json(path, token):
+              with urllib.request.build_opener(NoRedirect()).open(api_request(path, token), timeout=30) as response:
+                  data = response.read(1048577)
+                  require(response.status == 200 and len(data) <= 1048576, "Invalid metadata response")
+              return json.loads(data)
+
+
+          def verify_metadata(run, artifact):
+              require(run.get("id") == RUN_ID and run.get("head_sha") == HEAD_SHA,
+                      "Source run id/head mismatch")
+              require(run.get("status") == "completed" and run.get("conclusion") == SOURCE_CONCLUSION,
+                      "Source run status/conclusion differs from pinned recovery")
+              require(run.get("run_attempt") == SOURCE_RUN_ATTEMPT, "Source run attempt mismatch")
+              require(run.get("event") == "workflow_dispatch" and run.get("head_branch") == SOURCE_BRANCH,
+                      "Source run event/branch mismatch")
+              require(run.get("path") == WORKFLOW_PATH, "Source workflow path mismatch")
+              require(run.get("repository", {}).get("full_name") == REPO
+                      and run.get("head_repository", {}).get("full_name") == REPO,
+                      "Source run repository mismatch")
+              require(artifact.get("id") == ARTIFACT_ID and artifact.get("expired") is False,
+                      "Artifact id/expiry mismatch")
+              require(artifact.get("size_in_bytes") == SIZE and artifact.get("digest") == "sha256:" + SHA256,
+                      "Artifact size/digest metadata mismatch")
+              require(artifact.get("name") == ARTIFACT_NAME, "Artifact name mismatch")
+              source = artifact.get("workflow_run", {})
+              require(source.get("id") == RUN_ID and source.get("head_sha") == HEAD_SHA,
+                      "Artifact source run id/head mismatch")
+              require(source.get("repository_id") == run["repository"].get("id")
+                      and source.get("head_repository_id") == run["repository"].get("id"),
+                      "Artifact repository id mismatch")
+
+
+          def download_exact(token):
+              path = f"/repos/{REPO}/actions/artifacts/{ARTIFACT_ID}/zip"
+              try:
+                  urllib.request.build_opener(NoRedirect()).open(api_request(path, token), timeout=30)
+              except urllib.error.HTTPError as exc:
+                  require(exc.code == 302, "Artifact API did not provide its expected redirect")
+                  location = exc.headers.get("Location", "")
+                  exc.close()
+              else:
+                  raise CheckFailed("Artifact API did not provide its expected redirect")
+              check_https(location)
+              # A fresh request deliberately omits the GitHub token on the signed URL.
+              request = urllib.request.Request(location, headers={"User-Agent": "aigr-pinned-artifact-transport"}, method="GET")
+              with urllib.request.build_opener(HTTPSRedirectOnly()).open(request, timeout=60) as response:
+                  require(response.status == 200, "Artifact download did not return HTTP 200")
+                  data = response.read(SIZE + 1)
+              require(len(data) == SIZE, "Downloaded ZIP size mismatch")
+              require(hashlib.sha256(data).hexdigest() == SHA256, "Downloaded ZIP digest mismatch")
+              return data
+
+
+          def make_frame(data, transport_head, transport_run):
+              require(len(data) == SIZE and hashlib.sha256(data).hexdigest() == SHA256,
+                      "Refusing to frame unverified ZIP bytes")
+              encoded = base64.b64encode(data).decode("ascii")
+              chunks = [encoded[i:i + CHUNK_SIZE] for i in range(0, len(encoded), CHUNK_SIZE)]
+              receipt = {"repository": REPO, "artifact_id": ARTIFACT_ID, "source_run_id": RUN_ID,
+                         "source_head_sha": HEAD_SHA, "size_bytes": SIZE, "sha256": SHA256,
+                         "base64_length": len(encoded), "chunk_size": CHUNK_SIZE, "chunk_count": len(chunks),
+                         "transport_head_sha": transport_head, "transport_run_id": transport_run}
+              lines = [PREFIX + "BEGIN", PREFIX + "META " + json.dumps(receipt, sort_keys=True, separators=(",", ":"))]
+              lines += [f"{PREFIX}DATA {i:04d}/{len(chunks):04d} {chunk}" for i, chunk in enumerate(chunks, 1)]
+              lines += [PREFIX + "END"]
+              frame = "\n".join(lines) + "\n"
+              require(len(frame.encode("ascii")) < 250000, "Framed output exceeded transport bound")
+              return frame
+
+
+          def main():
+              require(os.environ.get("GITHUB_REPOSITORY") == REPO
+                      and os.environ.get("GITHUB_REF") == TASK_REF
+                      and os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch", "Dispatch scope mismatch")
+              token = os.environ.get("GH_TOKEN", "")
+              require(bool(token), "Missing read-only runtime token")
+              run = api_json(f"/repos/{REPO}/actions/runs/{RUN_ID}", token)
+              artifact = api_json(f"/repos/{REPO}/actions/artifacts/{ARTIFACT_ID}", token)
+              verify_metadata(run, artifact)
+              data = download_exact(token)
+              frame = make_frame(data, os.environ["GITHUB_SHA"], os.environ["GITHUB_RUN_ID"])
+              sys.stdout.write(frame)
+              sys.stdout.flush()
+
+
+          if __name__ == "__main__":
+              try:
+                  main()
+              except CheckFailed as exc:
+                  print("TRANSPORT_FAILED: " + str(exc), file=sys.stderr)
+                  raise SystemExit(1)
+              except Exception as exc:
+                  # Do not expose token-bearing headers, signed URLs, or HTTP response bodies.
+                  print("TRANSPORT_FAILED: " + type(exc).__name__, file=sys.stderr)
+                  raise SystemExit(1)
+          PY
