@@ -1,9 +1,34 @@
 ---
 title: "PDB: Deposited Structures as Functional-Insight Evidence"
 maturity: MATURE
-tags: [PIPELINE]
+tags: [PIPELINE, EVALUATION]
+species: [METAC, BACSU, PSEAI, METEA, human]
+sidecars:
+  slide_charts:
+    - PDB/slides/pdb-citation-gap.svg
+    - PDB/slides/pdb-three-layers.svg
 ---
 # PDB: Deposited Structures as Functional-Insight Evidence
+
+**Bottom line:** a deposited structure that captures a bound cofactor, ligand or
+partner is direct experimental evidence for molecular function and complex
+membership. We inventoried the PDB cross-references of every gene in the
+pipeline (949 of 2,529 genes, 13,415 entries), ranked candidates by structure
+richness times annotation sparsity, and measured how often structure papers
+enter the GO evidence trail: only 15% of 737 structure-paper and gene pairs are
+cited in GOA. We then tested whether structures fill gaps that ordinary papers
+would not. They reliably give under-curated proteins their first
+experimental-grade evidence (about 12 annotations in round 2, and four `NEW`
+annotations across mcrA, secA and HSPB3), but new informative function is rare:
+two structure-unique annotations, both on merA, and one clear gain in six when
+scoring the papers' headline hypotheses. A first batch of six eukaryotic reviews
+and four frontier reviews (merA, mcrA, secA, mxaI) used structure evidence; the
+ranked worklist in `PDB/GAP_WORKLIST.md` is the next step.
+
+We did this because structures are an under-used evidence source for GO, and we
+wanted to know where structure-informed review pays off before spending effort
+on it. The main limits turned out to be subunit mismatch (the paper is about a
+partner) and GO expressivity (no term for the function the paper shows).
 
 ## Goal
 
@@ -143,7 +168,8 @@ cofactor/active-site pocket is actually present. **Two distinct cases (don't con
 - **Genuinely-wrong specific** activity marked `REMOVE` (e.g. ARATH **HEN1** "peptidyl-prolyl
   isomerase" — but bound **SAH** argues for its real RNA-methyltransferase activity; human
   **CASP3** tagged "aspartic-type endopeptidase" when it is a cysteine protease; **BRCA2**
-  "histone acetyltransferase"): the structure/cofactor adjudicates against the wrong call.
+  "histone acetyltransferase", where the review keeps GOA's `NOT` annotation and leaves the
+  positive H3/H4 claims `UNDECIDED`): the structure/cofactor adjudicates against the wrong call.
 
 | Gene | Org | disputed catalytic MF | action | cofactor present? | paper |
 |------|-----|-----------------------|--------|:-----------------:|-------|
@@ -151,11 +177,18 @@ cofactor/active-site pocket is actually present. **Two distinct cases (don't con
 | CASP3 | human | aspartic-type endopeptidase | REMOVE | (cysteine protease) | — |
 | mcrA | METAC | transferase activity (generic) | REMOVE | F430,SAM,Fe-S | PMID:39772843 |
 | APEX1 | human | deoxyribonuclease (pyrimidine dimer) | REMOVE | Mn (AP endonuclease) | PMID:25251148 |
-| BRCA2 | human | histone acetyltransferase | REMOVE | ATP | PMID:40441151 |
+| BRCA2 | human | histone acetyltransferase | UNDECIDED (H3/H4); `NOT` GO:0004402 accepted | ATP | PMID:40441151 |
 | DOT1 | yeast | methyltransferase activity (generic) | over-annotated | SAM/SAH | PMID:33479126 |
 | SIRT2 | human | transferase activity (generic) | over-annotated | NAD,Zn | PMID:28286128 |
 | pcaF | PSEPK | acyltransferase activity (generic) | over-annotated | CoA | PMID:32647822 |
 | XYL1 | PICST | oxidoreductase activity (generic) | REMOVE | NADP | PMID:30487522 |
+
+The BRCA2 row misstates the review. The current BRCA2 review does not assert
+intrinsic HAT activity: it accepts GOA's negated annotation `NOT|enables`
+GO:0004402 (histone acetyltransferase activity, IDA, PMID:9824164), which records
+that the activity comes from associated P/CAF, and it marks the positive H3/H4 HAT
+claims (GO:0010484/GO:0010485, IDA, PMID:9619837) `UNDECIDED` rather than `REMOVE`.
+The `REMOVE` in `pdb_gene_enriched.tsv` predates the current review.
 
 Full list with all disputed terms per gene: `pdb_gene_enriched.tsv` (`candidate_reason`
 contains `contested`; `contested_cat_mf` lists the term/label/action). **As always, the
@@ -258,3 +291,7 @@ uncited structures, collapsed to one row per gene (the review unit). Top targets
 - [ ] Replace each peripheral RCSB auto-citation with the definitive structure/function paper
       (see the caveat above) as genes go to review.
 - [ ] Consider adding a PDB-evidence field to the review schema (per `ALPHAFOLD.md` action items).
+
+## Slides
+
+- [Slides](PDB/slides/PDB-slides.html) (Marp source: [PDB-slides.md](PDB/slides/PDB-slides.md)) — AI generated

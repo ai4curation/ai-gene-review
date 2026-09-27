@@ -1,10 +1,32 @@
 ---
 title: "AlphaFold Database Integration for Gene Annotation Review"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - ALPHAFOLD/slides/afdb-workflow.svg
+    - ALPHAFOLD/slides/bgc-iptm.svg
 ---
 
 # AlphaFold Database Integration for Gene Annotation Review
+
+**Bottom line:** Scoped, not yet started as a pipeline. The AlphaFold Database
+now holds predicted protein complexes as well as monomers, which could serve as
+computational evidence when reviewing GO annotations and ARBA rules: checking
+whether a claimed binding pocket, active site, transmembrane segment or complex
+interface is actually present. This page sets out five use cases and a
+four-step workflow (fetch the model by UniProt accession, extract features,
+compare with the GO terms, flag mismatches). None of the six action items is
+done: there is no AFDB fetch step in the review pipeline and no schema field for
+structural evidence. The one worked use is in the [BGC project](BGC.md), where
+predicted complexes from a published AF3 screen corroborated three
+experimentally known enzyme complexes; AlphaFold models also appear ad hoc in a
+few per-gene bioinformatics analyses.
+
+We want this because predicted structures could test annotation claims on the
+genes that have no experimental structure (1,580 of 2,529 pipeline genes in the
+PDB inventory); see the [PDB project](PDB.md) for the
+experimental-structure counterpart.
 
 ## Overview
 
@@ -113,3 +135,7 @@ AFDB-derived evidence would be classified as:
 - [ ] Explore using AFDB quaternary structures for complex membership validation
 - [ ] Evaluate whether pLDDT-based disorder prediction adds value for flagging incorrect domain annotations
 - [ ] Consider adding structural evidence as a field in the gene review YAML schema
+
+## Slides
+
+- [Slides](ALPHAFOLD/slides/ALPHAFOLD-slides.html) (Marp source: [ALPHAFOLD-slides.md](ALPHAFOLD/slides/ALPHAFOLD-slides.md)) — AI generated

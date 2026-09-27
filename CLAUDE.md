@@ -573,6 +573,15 @@ from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the pat
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
 
+**Collections.** Related projects are grouped under an index page by listing a
+collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys
+are registered in `projects/collections.yaml` (title + index page slug); the
+index page gets an auto-generated member table, members get a link back to it,
+and the all-projects table gains a Collection filter. Current collections:
+`FUNCTION_PREDICTION` (index `FUNCTION_PREDICTION_EVALUATION`) and
+`HOMOLOGY_PROPAGATION` (index `HOMOLOGY_PROPAGATION`, with the propagation
+browser at `app/propagation/`).
+
 **Manual reviews.** A project page may record reviewer sign-offs in frontmatter
 under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if
 given) must be `READY` or `CHANGES_REQUESTED`; `date` is `YYYY-MM-DD`; `notes` is
