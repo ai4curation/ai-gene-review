@@ -61,7 +61,7 @@ metabolic process (GO:1902224, IC) [GOA / UniProt GO xrefs].
 
 ## Isoleucine catabolism + 3-ketothiolase / beta-ketothiolase deficiency (3KTD)
 
-T2 catalyzes the final thiolytic step of isoleucine catabolism (2-methylacetoacetyl-CoA -> 
+T2 catalyzes the final thiolytic step of isoleucine catabolism (2-methylacetoacetyl-CoA ->
 propionyl-CoA + acetyl-CoA). Loss causes "beta-ketothiolase deficiency" / 3KTD (MIM:203750).
 - PMID:9744475 (Fukao et al. 1998): "Mitochondrial acetoacetyl-CoA thiolase (T2) deficiency is an
   inborn error of ketone body and isoleucine catabolisms." [PMID:9744475 abstract].
@@ -445,3 +445,14 @@ Targeted `just validate human ACAT1` passed with zero gene-validation warnings;
 publication-cache gate closed and no validation warnings. All 19 PMID citations
 in the review and notes have local records; abstract-only availability is preserved.
 The generated HTML was refreshed after these final notes.
+
+
+## 2026-09-27 — PR #3250 recovered-source follow-up
+
+Read formal review 5329543865 and detailed comment 5854249827 at the exact published head 4c29b5ebfa2088dcbb6580d6a8af1b3ff1786f49, and verified all five canonical gene-file blobs before editing. The recovered PMID:5166591 abstract is now attached directly to GO:0001889 and receives a reference assessment. It measures developmental **enzyme activity**, not directly expression abundance or a liver-development mechanism. Both rat-source comments now describe the positive activity profile. UNDECIDED remains appropriate because the full source interpretation and transfer of a developmental process role to human ACAT1 remain unresolved. The earlier notes' unavailable-source statements describe historical access and are superseded by this recovery.
+
+The optional evidence refinements are also incorporated: PMID:1684101 confines co-purification of the glutamate-dehydrogenase partner to CoA-modified thiolase; PMID:1672610 describes transient acid-stable, thiol-labile CoA modification of partially active rat forms, distinct from the independently supported human reversible cosubstrate interaction. The latter abstract now has an exact supporting quote and reference assessment. The PMID:6144148 quote is extended to a complete sentence and both donor comments explicitly describe the null thiolase-activity readout alongside increases in other enzymes.
+
+The UNRESOLVED propagation statuses are retained: the donor identities and reported experiments are established, but the full source interpretation and human transfer are not settled. One null abstract readout does not demonstrate absence of every hormone-response role, and a modification-dependent rat interaction does not establish either presence or loss of that interaction in human ACAT1. No action, core function, source object, machine cache, or published history record is changed. The two added reference assessments verify the intended primary records and bounded abstract-level support, without claiming full-text access.
+
+Full targeted validation passed without review warnings. All 49 source objects and actions, the cores and 28 previous reference objects are preserved; the two new reference identities/titles and all four touched cached excerpts were checked. History validation, HTML rendering and exact manifest checks also passed.
