@@ -248,3 +248,74 @@ GOA bytes passed preservation checks; this notes file retains its original
 content as an unchanged prefix. All five baseline blobs also match current main
 `d2d8c9043b082a62378eff620ec0122d4118173b`. The final four-file publication manifest
 is `/tmp/AHCY-local-manifest.json`; no Git or remote mutation was performed.
+
+
+## 2026-09-27 — source3 cache closure at published PR #3244
+
+The four published curation files, two protected machine records and 14 existing
+publication caches match the frozen receipt for head
+`eed05cf5717858dbd26c89caa783d36125f12241`. The six missing records are now
+present as exact normal-fetch bytes from Actions run 36292249952, source head
+`3f234ebd4b540057fb287b27efc11341cfb102b1`, artifact 10924402765, ZIP SHA-256
+`d8908403ad407495b26d23af7007ee4da1fc643ebd61728d99ce9755bcfacdc2`.
+`tmp/source3-canonical-import-receipt.json` records the import. All six paths are
+absent at the exact PR base; no existing source or history was overwritten.
+
+Three records are abstract-only: PMID:9586999, PMID:12590576 and PMID:15024124.
+Their recovered abstracts were read. The first describes an inhibitor-bound
+hydrolase structure and intersubunit cofactor contacts; the second explicitly
+reports four subunits with bound NADH in the trapped catalytic conformation.
+The clinical report documents low human enzyme activity and methionine-cycle
+metabolite abnormalities, including hypermethylated leukocyte DNA. It does not
+justify a universal prediction that every methylation endpoint decreases when
+AHCY is deficient. Their full-paper Methods were not newly recovered.
+
+PMID:19177456 now has full XML-derived text. Its Methods and Results directly
+compare recombinant human WT, R49C and D86G proteins expressed in E. coli,
+including tagged/shorter-tag preparations, hydrolytic activity, bound cofactor,
+native PAGE and gel filtration. R49C can form tetramers under the specified
+reducing/temperature conditions while displaying much lower catalytic activity;
+D86G has solubility/aggregation limitations. Those observations support the
+existing catalytic, assembly and variant context without turning conditional
+mutant behavior into a new normal-human function.
+
+PMID:33328229 now has full XML-derived text, including Results, figure legends
+and Methods. Mouse liver/MEF experiments establish endogenous nuclear/chromatin
+association and BMAL1-linked methylation/transcription effects. Methods explicitly
+identify mouse GFP-AHCY and mouse WT/K186N rescue constructs. A human 293T host
+therefore does not by itself establish a human AHCY construct. The human U2OS
+experiment uses three siRNAs against endogenous AHCY and a circadian reporter.
+These distinctions agree with the earlier functional nuclear interpretation;
+AHCY hydrolyzes SAH rather than catalyzing histone methylation itself.
+
+PMID:41549122 now has full XML-derived text. The read Results and Methods identify
+recombinant human AHCY and FTO, purified binding and FTO demethylation assays,
+GST removal before oligomer separation, and D245A/Y193H controls that retain
+hydrolase activity while impairing the reported FTO-dependent effect. These
+experiments support the tumor-model mechanism already described in the review.
+They do not establish an intrinsic methyltransferase reaction or a universal
+replacement of the canonical tetrameric hydrolase role. The
+[publisher change history](https://www.nature.com/articles/s41422-025-01213-5)
+was independently rechecked: incorrect supplementary S4/S7 files were replaced
+on 2026-09-10. The corrected panels were not independently compared; the text
+cache does not resolve that quantitative image-level limitation.
+
+Only the two top-level references with newly available full text have their
+availability flags changed to false and their access/scope notes updated.
+All 26 annotation objects (25 seeded and the existing IC NEW), annotation actions,
+the integrated core, 23 reference identities, correctness/relevance judgments,
+original quotations, alternative products and biological description remain
+unchanged. No new source reference, annotation or core process is introduced.
+The notes-inclusive census contains 20 distinct PMIDs and two Reactome records,
+all cached. Historical DNS-failure entries remain as provenance and are superseded
+by this recovery. YAML DRAFT remains appropriate for the intentional source-specific
+exosome-action advisory; the source-access publication gates are closed.
+
+Final targeted validation passed with exactly one curation warning: GO:0070062
+has NON_CORE for the recovered urinary-exosome identification and UNDECIDED for
+the two unresolved preparations. This preserves source-specific evidence rather
+than forcing uniform decisions. There are no missing-reference warnings. History
+validation and rendering passed; all reference-level full-text flags match local
+metadata. The `pkg_resources` notice is a runtime dependency deprecation.
+The frozen incremental manifest contains four curation files and six exact new
+source caches, with no Git or remote mutations by this author.
