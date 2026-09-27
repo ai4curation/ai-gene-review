@@ -38,7 +38,7 @@ GO:0061817 (process) → GO:0160214 adaptor activity (function)
 
 - GO **obsoleted GO:0061817** because tethering the ER to the plasma membrane is a **molecular function**, now **GO:0160214**.
 - **21 upstream annotations** (PomBase 13 done, CGD 4, TAIR 2, UniProt 2) move; InterPro already dropped **8 mappings**.
-- **Scoped, not yet started:** no review here uses either term and no ER-PM tether gene is reviewed yet.
+- **Scoped, not yet started:** no review YAML uses either term and no dedicated ER-PM tether is reviewed; reviewed **VAPA** carries GO:0061817 (IDA) in its cached UniProt record.
 
 ---
 
@@ -65,9 +65,10 @@ GO:0061817 (process) → GO:0160214 adaptor activity (function)
 
 ## Next steps
 
-1. Anchor reviews: **ESYT2** (human) and **TCB3** (yeast) via `just fetch-gene`; check the new MF term against the literature.
-2. Then the rest as one batch: ESYT1, ESYT3, TCB1, TCB2.
-3. Plant SYT1/SYT5 (ARATH) last; separate stress phenotypes from the core contact-site function.
+1. **VAPA** (already reviewed): decide whether GO:0160214 applies alongside its core MF GO:0043495.
+2. Anchor reviews: **ESYT2** (human) and **TCB3** (yeast) via `just fetch-gene`; check the new MF term against the literature.
+3. Then the rest as one batch: ESYT1, ESYT3, TCB1, TCB2.
+4. Plant SYT1/SYT5 (ARATH) last; separate stress phenotypes from the core contact-site function.
 
 **Upstream:** go-annotation#6383 · go-ontology#31873
 **Read more:** `projects/ER_PM_TETHERING_OBSOLETION.md`

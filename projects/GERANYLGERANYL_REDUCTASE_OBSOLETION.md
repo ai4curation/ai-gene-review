@@ -174,3 +174,7 @@ term).
 - 2026-05-08 — Verified Q9ZS34 organism via UniProt REST as Nicotiana tabacum
   (taxon 4097), verified GO:0045550 and GO:0102067 labels via OLS, and
   verified UniRule:UR001995838 via UniProt REST.
+
+## Slides
+
+- [Slides](GERANYLGERANYL_REDUCTASE_OBSOLETION/slides/GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.html) (Marp source: [GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.md](GERANYLGERANYL_REDUCTASE_OBSOLETION/slides/GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.md)) — AI generated

@@ -3,6 +3,7 @@ title: "ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)
 maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast, ARATH]
+genes: [VAPA]
 ---
 
 # ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)
@@ -14,12 +15,15 @@ function term GO:0160214 *endoplasmic reticulum-plasma membrane adaptor
 activity*, with GO:0051643 *endoplasmic reticulum localization* for any
 process aspect. We recorded the upstream plan, the affected groups (CGD 4,
 PomBase 13, TAIR 2, UniProt 2) and the eight InterPro2GO mappings InterPro has
-already removed, and checked the repo. No review here uses either term, and no
-ER-PM tether (extended synaptotagmins, tricalbins, plant SYTs) has been
-reviewed, so nothing needs refreshing. Scoped, not yet started: the
-obsoletion has since landed (OLS lists GO:0061817 as obsolete), which makes
-this family a timely candidate for new reviews, starting with human ESYT2 and
-yeast TCB3.
+already removed, and checked the repo (`grep -rl` over all files under
+`genes/`). No review YAML or GOA file uses either term, and no dedicated ER-PM
+tether (extended synaptotagmins, tricalbins, plant SYTs) has been reviewed.
+One reviewed gene is affected indirectly: human VAPA, a broad ER contact-site
+adaptor, carries GO:0061817 (IDA:UniProtKB) in its cached UniProt record,
+though not in its GOA file or review, so it is the first place to check
+whether GO:0160214 applies. Scoped, not yet started: the obsoletion has since
+landed (OLS lists GO:0061817 as obsolete), which makes this family a timely
+candidate for new reviews, starting with VAPA, then human ESYT2 and yeast TCB3.
 
 ## Overview
 
@@ -73,10 +77,20 @@ the mapping removed (will appear in InterPro release 109.0):
 ## Impact on this repo
 
 No genes in the ER–PM tether family are currently reviewed. A search for ESYT,
-TCB, tricalbin, or synaptotagmin under `genes/` returned no matches. This means
-**no existing reviews need refresh** for the obsoletion itself, but the family
-is well-characterized in the literature and represents a coherent candidate set
-for proactive review.
+TCB, tricalbin, or synaptotagmin under `genes/` returned no matches, and no
+`*-ai-review.yaml` or `*-goa.tsv` file contains GO:0061817 or GO:0160214.
+
+A search across **all** file types (`grep -rl GO:0061817 genes/`) finds one
+hit: `genes/human/VAPA/VAPA-uniprot.txt:505`, a cached UniProt DR line
+`GO:0061817 endoplasmic reticulum-plasma membrane tethering; IDA:UniProtKB`.
+VAPA's GOA file has no such row, so its review (status IN_PROGRESS) does not
+assess it. VAPA is an ER-resident FFAT-motif adaptor whose review describes it
+as organizing contact sites with endosomes, Golgi and plasma membrane, with
+core molecular function GO:0043495 *protein-membrane adaptor activity*. It is
+therefore the one repo gene where the question "does GO:0160214 apply?" is
+already live. No other review needs refresh for the obsoletion itself; the
+tether family proper is well-characterized in the literature and represents a
+coherent candidate set for proactive review.
 
 ## Scope
 
@@ -137,12 +151,16 @@ add files without confirming the UniProt accession from the UniProt API.
    should propose this MF and either GO:0051643 (ER localization) or a more
    informative BP child term (membrane contact site organization etc.) for
    process-level annotation.
-3. **Begin with ESYT2 + TCB3** as anchor reviews — these are the most
+3. **Check VAPA first.** Its cached UniProt record carries GO:0061817 by IDA;
+   decide whether GO:0160214 is warranted alongside its current core MF
+   GO:0043495, or whether VAPA's contact-site role is too general for the
+   ER-PM-specific term.
+4. **Begin with ESYT2 + TCB3** as anchor reviews — these are the most
    structurally and biochemically characterized members and have the cleanest
    literature support for the adaptor/tether MF call.
-4. **Use the family as a coherent batch** — once one member is reviewed, the
+5. **Use the family as a coherent batch** — once one member is reviewed, the
    others can leverage shared references and core-function language.
-5. **For TAIR plant SYTs**, defer until ESYT/TCB reviews establish the
+6. **For TAIR plant SYTs**, defer until ESYT/TCB reviews establish the
    template; plant annotations also require careful handling of stress/drought
    phenotypes vs. core MCS function.
 
@@ -158,3 +176,7 @@ membrane contact site (MCS) area has been growing in interest.
 - 2026-05-04 — Project file created. Tracking upstream issue #6383 (last
   active 2026-05-01). Obsoletion not yet applied but InterPro2GO mappings have
   been removed by InterPro per Sara's comment. No gene reviews started yet.
+
+## Slides
+
+- [Slides](ER_PM_TETHERING_OBSOLETION/slides/ER_PM_TETHERING_OBSOLETION-slides.html) (Marp source: [ER_PM_TETHERING_OBSOLETION-slides.md](ER_PM_TETHERING_OBSOLETION/slides/ER_PM_TETHERING_OBSOLETION-slides.md)) — AI generated

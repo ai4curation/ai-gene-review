@@ -206,3 +206,7 @@ the repo wants to extend *Mycolicibacterium* coverage.
   migration of 4 UniProt experimental annotations + ~2,247 IEA to the
   parent GO:0052699. No gene reviews started in this repo for the
   *M. smegmatis* egtB/egtC/egtD/egtE operon.
+
+## Slides
+
+- [Slides](ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION/slides/ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION-slides.html) (Marp source: [ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION-slides.md](ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION/slides/ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION-slides.md)) — AI generated

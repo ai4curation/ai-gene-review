@@ -17,9 +17,9 @@ annotations: one mouse Mpo IMP row (MGI, PMID:10085024), one rat Mpo ISO
 row copied from it, and nothing on the catabolic term. No review in this
 repo uses these terms and Mpo is not reviewed. Scoped, not yet started:
 the status notes below predate the obsoletion, and the molecular function
-the page proposes as the anchor needs rechecking, because OLS labels
-GO:0140825 *lactoperoxidase activity*, not an HOCl-forming chloride
-peroxidase activity.
+an earlier draft proposed as the anchor was wrong: OLS labels GO:0140825
+*lactoperoxidase activity*, not an HOCl-forming chloride peroxidase
+activity (corrected in the body below).
 
 ## Overview
 
@@ -67,10 +67,15 @@ terminological.
 
 Single concrete gene: **mouse myeloperoxidase (Mpo, P11247)**. Myeloperoxidase
 is the textbook HOCl-generating enzyme of neutrophils (RHEA:43232,
-EC 1.11.2.2; H2O2 + Cl- + H+ → HOCl + H2O). The molecular function
-already has a precise MF term —
-**GO:0140825 chloride peroxidase activity (HOCl-forming)** —
-and the enzyme catalyzes one well-defined reaction whose product is HOCl.
+EC 1.11.2.2; H2O2 + Cl- + H+ → HOCl + H2O). The enzyme catalyzes one well-defined reaction whose product is HOCl.
+An earlier draft of this page named **GO:0140825** as the precise MF term
+for it, but OLS labels GO:0140825 *lactoperoxidase activity* ("2 a phenolic
+donor + H2O2 = 2 a phenolic radical donor + 2 H2O"), which is not the
+HOCl-forming reaction. The nearest GO term found by name,
+GO:0016691 *chloride peroxidase activity*, is defined as organic
+chlorination ("2 R-H + 2 chloride + H2O2 = 2 R-Cl + 2 H2O"), so whether GO
+has an MF term matching RHEA:43232 still needs checking (checked in OLS,
+2026-09-26).
 The pending obsoletion is therefore a clean Type B refresh:
 
 - Migrate the IMP annotation away from the soon-to-be-obsolete BP term to
@@ -121,10 +126,11 @@ so this remains passive tracking until the upstream decision lands.
    `/review` — Mpo is a high-yield review target regardless of the
    obsoletion (peroxidase MF, neutrophil/granule CC, immune-defense BP,
    well-cited literature).
-3. **Cross-reference GO:0140825** *chloride peroxidase activity
-   (HOCl-forming)* — this MF is the precise activity catalyzed by Mpo
-   and should appear in the `core_functions` section. The pending BP
-   obsoletion does not affect this MF term.
+3. **Identify the MF term for HOCl formation** (RHEA:43232, EC 1.11.2.2)
+   for Mpo's `core_functions`. Do not use GO:0140825, which is
+   *lactoperoxidase activity*; check whether GO:0016691 *chloride
+   peroxidase activity* (defined as organic chlorination) fits, or whether
+   a new term is needed.
 4. **Defer the rat ISO row** — it will follow the mouse migration
    automatically through the standard ISO pipeline.
 
@@ -144,3 +150,7 @@ review is blocked.
   go-ontology#30524 (closed). Two child BP terms (GO:0002149,
   GO:0002150) still active. No replacement target chosen upstream. No
   reviews started in this repo.
+
+## Slides
+
+- [Slides](HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.html) (Marp source: [HYPOCHLOROUS_ACID_OBSOLETION-slides.md](HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.md)) — AI generated

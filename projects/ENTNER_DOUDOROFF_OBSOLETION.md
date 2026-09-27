@@ -19,7 +19,12 @@ both on GO:0009255 and both in `core_functions`. The obsoletion has now
 landed (OLS lists GO:0009255 as obsolete, pointing to GO:0061678), so the
 "not yet merged" status below is out of date, and both reviews still carry
 the obsolete id. The remaining work is a mechanical term swap in those two
-files; the biology does not change.
+files; the biology does not change. The repo's
+`modules/entner_doudoroff_and_gluconeogenesis.yaml` already records the
+obsoletion (GO release 2026-07-26) and grounds itself in GO:0061678. One
+related term outside this page's four, GO:0061688 *glycolytic process via
+Entner-Doudoroff Pathway* (obsoleted in the same release, replaced by
+GO:0006096), is still proposed by the *P. putida* *glk* review.
 
 ## Overview
 
@@ -87,6 +92,21 @@ entries point to **GO:0061678** instead of GO:0009255. The biology is
 unchanged — Edd (phosphogluconate dehydratase) and Eda (KDPG aldolase) are
 the canonical ED-pathway enzymes in P. putida KT2440.
 
+The pathway modules are already updated.
+`modules/entner_doudoroff_and_gluconeogenesis.yaml` (evidence block for
+GO:0061678) records that GO:0009255 was obsoleted in GO release 2026-07-26 with
+`replaced_by GO:0061678`, and is itself grounded in GO:0061678
+(`modules/emp_glycolysis.yaml` cites it too), so the replacement term is in use
+at module level though not yet in any gene review.
+
+**Sibling term outside this page's scope.** The same modules record that
+GO:0061688 *glycolytic process via Entner-Doudoroff Pathway* was obsoleted in
+that release (`replaced_by GO:0006096`). `genes/PSEPK/glk/glk-ai-review.yaml`
+still proposes GO:0061688 as a `MODIFY` replacement (line 137) and lists it in
+`core_functions[].directly_involved_in` (line 267), so glk needs the same kind
+of term refresh. (`genes/PSEPK/pgi2` mentions GO:0061688 only in prose, to
+reject it.)
+
 ## Scope
 
 - **Organisms**: bacteria (E. coli, Pseudomonas spp., other ED-using
@@ -108,20 +128,24 @@ ortholog reviews would round out coverage of the canonical ED pathway.
    `core_functions[].directly_involved_in` block.
 2. **eda (PSEPK)** — `genes/PSEPK/eda/eda-ai-review.yaml`. Same edit pattern
    as edd.
+3. **glk (PSEPK)** — `genes/PSEPK/glk/glk-ai-review.yaml`. Replace the
+   obsolete GO:0061688 (proposed replacement and `core_functions`) with a live
+   term; GO:0061688's `replaced_by` is GO:0006096 *glycolytic process*, but
+   GO:0061678 may be the better fit for glk's ED-routed role.
 
 ### New ortholog reviews (proactive)
 
 Verify each with `just fetch-gene <organism> <gene>` before starting; do not
 add files without confirming the UniProt accession from the UniProt API.
 
-3. **edd (E. coli K-12)** — phosphogluconate dehydratase; the founding
+4. **edd (E. coli K-12)** — phosphogluconate dehydratase; the founding
    organism for the ED pathway and likely the EcoCyc-affected entry upstream.
-4. **eda (E. coli K-12)** — KDPG aldolase; companion to E. coli edd,
+5. **eda (E. coli K-12)** — KDPG aldolase; companion to E. coli edd,
    completes the two-enzyme ED core.
-5. **zwf (PSEPK)** — glucose-6-phosphate 1-dehydrogenase, the entry step into
+6. **zwf (PSEPK)** — glucose-6-phosphate 1-dehydrogenase, the entry step into
    the ED pathway via 6-phosphogluconate. Already partially covered in the
    PSEPK gene set per `projects/SPKW/SPKW-PSEPK.md`; verify status before adding.
-6. **gnd / 6PGD homologs** — the diversion point between ED and the pentose
+7. **gnd / 6PGD homologs** — the diversion point between ED and the pentose
    phosphate pathway; a clean review here clarifies why annotations should
    sit at GO:0061678 rather than a sub-variant.
 
@@ -159,3 +183,7 @@ reviews, but those are independent of the obsoletion itself.
 - 2026-05-10 — Project file created. Tracking upstream issue #6390 (last
   active 2026-05-01). Obsoletion not yet merged. Two existing PSEPK reviews
   (edd, eda) flagged for term-ID update once the obsoletion ships.
+
+## Slides
+
+- [Slides](ENTNER_DOUDOROFF_OBSOLETION/slides/ENTNER_DOUDOROFF_OBSOLETION-slides.html) (Marp source: [ENTNER_DOUDOROFF_OBSOLETION-slides.md](ENTNER_DOUDOROFF_OBSOLETION/slides/ENTNER_DOUDOROFF_OBSOLETION-slides.md)) — AI generated

@@ -38,7 +38,7 @@ GO:0070973 → five destinations, chosen per annotation
 
 - GO **obsoleted GO:0070973** because curators used it for four different roles; there is **no single replacement**.
 - The **10 curated annotations** each get their own term: COPII coat assembly, ER→Golgi transport, its regulation, ER stress, or deletion.
-- In this repo, **BCAP31 is already aligned**; **LRRK2 still ACCEPTs two rows** and needs a MODIFY to GO:0060628.
+- In this repo, **BCAP31 is already aligned** and yeast **YET2** only has the same IBA in its cached UniProt record; **LRRK2 still ACCEPTs two rows** and needs a MODIFY to GO:0060628.
 
 ---
 
@@ -83,6 +83,7 @@ GO:0070973 → five destinations, chosen per annotation
 |---|---|---|---|
 | `genes/human/LRRK2` | IEA (GO_REF:0000120), IMP (PMID:25201882) | ACCEPT, ACCEPT | **MODIFY → GO:0060628** |
 | `genes/human/BCAP31` | IBA (GO_REF:0000033) | MARK_AS_OVER_ANNOTATED | none |
+| `genes/yeast/YET2` | IBA, cached UniProt record only (not in GOA file) | not reviewed | none; same PTN000294723 node |
 
 - SEC16A, MIA3 and GBF1 have **no review** here yet.
 

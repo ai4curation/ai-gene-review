@@ -79,7 +79,8 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 | PSEPK **eda** | proposed, from UniProt pathway line | NEW | `core_functions.directly_involved_in` |
 
 - No review uses GO:0061679, GO:0061680 or GO:0061681.
-- No review yet uses the replacement GO:0061678.
+- No gene review yet uses the replacement GO:0061678; the ED **module** is already grounded in it.
+- Sibling term GO:0061688 (obsoleted in the same GO release) is still proposed by PSEPK **glk**.
 - Upstream: EcoCyc 1 and UniProt 3 annotations, plus 7 external mappings, to move.
 
 ---
@@ -87,8 +88,9 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 ## Next steps
 
 1. Swap GO:0009255 → **GO:0061678** in `genes/PSEPK/edd/edd-ai-review.yaml` and `genes/PSEPK/eda/eda-ai-review.yaml` (rows and `core_functions`); update eda's summary wording.
-2. `just validate PSEPK edd` and `just validate PSEPK eda`.
-3. Later, as one batch: E. coli **edd** and **eda** (not yet in the repo), and a pass over gnd.
+2. Replace the obsolete GO:0061688 in `genes/PSEPK/glk/glk-ai-review.yaml`.
+3. `just validate PSEPK edd`, `eda` and `glk`.
+4. Later, as one batch: E. coli **edd** and **eda** (not yet in the repo), and a pass over gnd.
 
 **Upstream:** go-annotation#6390 · go-ontology#31916
 **Read more:** `projects/ENTNER_DOUDOROFF_OBSOLETION.md`
