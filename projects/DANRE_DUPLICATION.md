@@ -93,48 +93,96 @@ ways:
 
 ### Tools
 
-- `scripts/tgd_paralogs.py` queries Ensembl Compara for within-species paralogs of
-  the reviewed zebrafish genes whose duplication node is at a teleost level
-  (Clupeocephala / Osteoglossocephalai). Output:
-  `DANRE_DUPLICATION/reviewed_gene_tgd_paralogs.tsv`. The list is a **candidate**
-  list only. Compara node placement needs checking against synteny.
+- `scripts/panther_tgd_pairs.py` finds zebrafish TGD pairs from **PANTHER v19**
+  gene trees. It uses PANTHER's `AllParalogs` and `AllOrthologs` downloads, plus
+  ZFIN and HGNC files for gene symbols; downloads are cached in `.cache/`, which
+  is gitignored. Outputs:
+  - `DANRE_DUPLICATION/panther_tgd_pairs.tsv`: candidate pairs with the evidence
+    for each call.
+  - `DANRE_DUPLICATION/panther_paralog_branch_counts.tsv`: zebrafish–zebrafish
+    paralog pairs per duplication branch.
 - `scripts/check_quotes.py` checks that every `[PMID:N "quote"]` in the project
   notes is verbatim in the cached publication (ignoring whitespace differences).
 
+### How TGD pairs are called from PANTHER
+
+PANTHER trees contain zebrafish, medaka, and spotted gar (the unduplicated
+outgroup). For every paralog pair, PANTHER reports the tree branch that carries
+the duplication, as `parent|child`. The calls, from strongest to weakest:
+
+| Call | Rule | 1:1 pairs | All pairs |
+|---|---|---|---|
+| `TGD_tree` | Duplication on `Neopterygii|Teleostei`: after the gar split, before the zebrafish–medaka split. This is the TGD | 778 | 3,210 |
+| `TGD_tree_no_gar` | Duplication on another branch ending at `Teleostei` (mostly `Euteleostomi|Teleostei`); no gar gene in the tree | 93 | 610 |
+| `TGD_likely_parallel` | Duplication on `Teleostei|DANRE`, but both copies share one gar co-ortholog, and their medaka co-orthologs were also duplicated (`Teleostei|ORYLA`) | 1,062 | (1:1 only) |
+| `TGD_or_lineage` | Duplication on `Teleostei|DANRE`, one shared gar co-ortholog, a single medaka co-ortholog. Either TGD with loss of one medaka copy, or a zebrafish-only duplication | 1,107 | (1:1 only) |
+| `unresolved` | Duplication on `Teleostei|DANRE` without that gar/medaka pattern | 363 | (1:1 only) |
+
+*1:1* means each gene has exactly one partner on that branch, i.e. a clean
+ohnolog pair. From `Teleostei|DANRE` only 1:1 pairs are kept, because that branch
+also holds large zebrafish-specific family expansions (40,822 pairs in all).
+
+**Why `Teleostei|DANRE` pairs are included.** Many textbook TGD pairs are placed
+there, not on the TGD branch: mitfa/b and pax6a/b come out as
+`TGD_likely_parallel`, and sox9a/b as `TGD_or_lineage`. This happens because the
+zebrafish and medaka copies do not group as ((zfA, medA), (zfB, medB)). That is
+the gene-tree signature expected from lineage-specific resolution after delayed
+rediploidization (PMID:35961774), or from poorly resolved trees. So strict
+`TGD_tree` placement is conservative: it has high specificity and low
+sensitivity.
+
+**Total.** About 1,900 clean 1:1 pairs have tree-level support (`TGD_tree`,
+`TGD_tree_no_gar` and `TGD_likely_parallel`), and 1,100 more are possible. That is
+the same order as the 3,440 ohnolog pairs from synteny in Howe et al. 2013
+(PMID:23594743).
+
+**Caveats**
+
+- *multi* pairs on the TGD branch include some implausible ones. For example,
+  vegfaa is paired with vegfba and vegfbb, which come from an older vertebrate
+  duplication. Treat multi pairs as family-level signals and check the tree.
+- Some known pairs are absent. alcama/alcamb is placed at
+  `Euteleostomi|DANRE`, and fabp1b does not appear in the PANTHER tables. The
+  table is a PANTHER view, not a complete ohnolog catalogue.
+- PANTHER places duplications by tree reconciliation. Synteny (ZFIN/Ensembl, or
+  the gar bridge) remains the independent check for `TGD_or_lineage` and
+  `unresolved` pairs.
+
 ## Candidate pairs
 
-### From genes already reviewed in `genes/DANRE/`
+### Pairs involving genes already reviewed in `genes/DANRE/`
 
-These come from Ensembl Compara (Ensembl REST, queried 2026-09-27). Each needs a
-synteny check before it counts as a TGD pair.
+From `panther_tgd_pairs.tsv`:
 
-| Reviewed gene | Paralog | Compara node | Partner reviewed? | Notes |
+| Pair | PANTHER call | Pair class | Partner reviewed? | Notes |
 |---|---|---|---|---|
-| cryaba | cryabb | Clupeocephala | yes | Best first pair: both copies already reviewed |
-| hs6st3b | hs6st3a | Clupeocephala | no | Heparan sulfate 6-O-sulfotransferase |
-| mfsd2aa | mfsd2ab | Osteoglossocephalai | no | LPC transporter; human MFSD2A |
-| flvcr2a | flvcr2b | Osteoglossocephalai | no | Heme/choline transporter family |
-| grk7b | grk7a | Osteoglossocephalai | no | Cone opsin kinase; possible photoreceptor-type partition |
-| glceb | glcea | Osteoglossocephalai | no | Heparan sulfate C5-epimerase |
-| rpe65a | rpe65b, rpe65c | Osteoglossocephalai | no | Three copies; the c copy may be a younger duplicate. Check |
-| coq8a | coq8ab | Osteoglossocephalai | no | Check ZFIN symbol for the reviewed copy |
-| tdp2 | tdp2a | Osteoglossocephalai | no | |
-| hes6 | her13 | Osteoglossocephalai | no | Doubtful as a TGD pair; her genes have a complex history |
-| gpat3 | agpat9l | Osteoglossocephalai | no | Doubtful; check synteny |
+| cryaba / cryabb | TGD_or_lineage | 1:1 | yes | Pilot pair: both copies already reviewed; medaka has one co-ortholog |
+| mfsd2aa / mfsd2ab | TGD_likely_parallel | 1:1 | no | LPC transporter (human MFSD2A) |
+| flvcr2a / flvcr2b | TGD_likely_parallel | 1:1 | no | Human FLVCR2 |
+| hs6st3a / hs6st3b | TGD_likely_parallel | 1:1 | no | Heparan sulfate 6-O-sulfotransferase 3 |
+| he1.2 / he1.3 | TGD_likely_parallel | 1:1 | no | Hatching enzymes; also he1.2 / npsn as TGD_tree (multi) |
+| spns1 / spns3 | TGD_tree_no_gar | 1:1 | no | Check: human has both SPNS1 and SPNS3, so this may be an older duplication |
+| crppa / ispd | TGD_or_lineage | 1:1 | no | Check the symbols: ispd is a former name of CRPPA |
+| rpe65a / rpe65b, rpe65c | TGD_tree | multi | no | Three copies |
+| sult1st2 / sult1st5, sult1st6 | TGD_tree_no_gar | multi | no | Family expansion; weak candidate |
 
 ### Pairs with published comparative work
 
 These pairs come from the background research.
 
-| Pair | Published fate | Reference |
-|---|---|---|
-| mitfa / mitfb | Expression partition; proteins interchangeable in rescue | PMID:11543618 |
-| pax6a / pax6b | cis-regulatory subfunctionalization (pancreas enhancer kept only at pax6b) | PMID:18282108 |
-| sox9a / sox9b | Subfunctionalization, partly lineage-specific | PMID:14579386 |
-| elna / elnb | Subfunctionalization then neofunctionalization (bulbus arteriosus) | PMID:26783159 |
-| fabp1a / fabp1b | Hierarchical subfunctionalization of expression | PMID:16857010 |
-| vegfaa / vegfab, hbegfa / hbegfb, alcama / alcamb | Paralog upregulation in PTC mutants (compensation) | PMID:30944477 |
-| gpr22 ohnologs | Clear subfunctionalization (brain vs heart), judged against gar | PMID:28944589 |
+| Pair | Published fate | PANTHER call | Reference |
+|---|---|---|---|
+| mitfa / mitfb | Expression partition; proteins interchangeable in rescue | TGD_likely_parallel | PMID:11543618 |
+| pax6a / pax6b | cis-regulatory subfunctionalization (pancreas enhancer kept only at pax6b) | TGD_likely_parallel | PMID:18282108 |
+| sox9a / sox9b | Subfunctionalization, partly lineage-specific | TGD_or_lineage | PMID:14579386 |
+| elna / elnb | Subfunctionalization then neofunctionalization (bulbus arteriosus) | unresolved (no gar eln in tree) | PMID:26783159 |
+| fabp1a / fabp1b | Hierarchical subfunctionalization of expression | not in PANTHER table | PMID:16857010 |
+| vegfaa / vegfab | Paralog upregulation in PTC mutants (compensation) | TGD_tree (multi) | PMID:30944477 |
+| hbegfa / hbegfb | Paralog upregulation in PTC mutants (compensation) | TGD_or_lineage | PMID:30944477 |
+| vcla / vclb | Paralog upregulation in PTC mutants (compensation) | TGD_tree | PMID:30944477 |
+| alcama / alcamb | Paralog upregulation in PTC mutants (compensation) | not called (Euteleostomi|DANRE) | PMID:30944477 |
+| gpr22a / gpr22b | Clear subfunctionalization (brain vs heart), judged against gar | TGD_likely_parallel | PMID:28944589 |
+| grk7a / grk7b | Not yet reviewed; cone photoreceptor kinases | TGD_tree | |
 
 ---
 
@@ -146,10 +194,12 @@ These pairs come from the background research.
 - [x] Background research on the TGD and fates of duplicates
   ([background](DANRE_DUPLICATION/DANRE_DUPLICATION-background.md); 36 publications
   cached, 85 quotes verified)
-- [x] Candidate-pair script (Ensembl Compara) run on the reviewed zebrafish genes
-- [ ] Decide the pair-selection strategy (targeted list, or a random sample of
-  ohnologs, e.g. drawn from the Howe 2013 or Parey 2022 ohnolog sets)
-- [ ] Confirm TGD origin (synteny or gar bridge) for the candidate pairs
+- [x] Genome-wide TGD pair calls from PANTHER v19 trees
+  (`panther_tgd_pairs.tsv`; replaces the earlier Ensembl Compara script)
+- [ ] Decide the pair-selection strategy: a targeted list, or a random sample of
+  1:1 `TGD_tree` / `TGD_likely_parallel` pairs from `panther_tgd_pairs.tsv`
+- [ ] Synteny check for `TGD_or_lineage` pairs chosen for review (including
+  cryaba/cryabb)
 - [ ] Pilot pair: cryaba / cryabb, side-by-side comparison of the existing reviews
 - [ ] Define a pair-comparison template (markdown, or a schema extension)
 - [ ] Review 5–10 further pairs across the expected fates
@@ -174,3 +224,10 @@ These pairs come from the background research.
   `Osteoglossocephalai` node rather than `Clupeocephala`. Both are plausibly TGD
   nodes, but hes6/her13 and gpat3/agpat9l look like older or unrelated paralogs.
   Synteny confirmation is needed before a pair is used.
+- **Switched pair calling to PANTHER** (v19 `AllParalogs`/`AllOrthologs`). The
+  trees include medaka and spotted gar, so the TGD branch
+  (`Neopterygii|Teleostei`) can be read directly. Result: 778 clean 1:1 pairs on
+  that branch, 93 more on teleost-stem branches in trees without gar, and 1,062
+  "parallel duplication" pairs. Most literature pairs (mitfa/b, pax6a/b, gpr22a/b)
+  fall in the last group, so strict branch placement alone would miss them. The
+  Ensembl Compara script and its table were removed.
