@@ -390,6 +390,26 @@ and existing assessments remain intact. This is partial cache closure; the revie
 remains DRAFT. Final validation, quote/source preservation and rendering results
 are recorded in the follow-up manifest.
 
+### 2026-09-27 final correction-record cache closure
+
+The normal source3 fetch recovered PMID:33790472, PMID:35267011 and
+PMID:36423325. Their exact generated records were imported after ZIP, per-file
+hash, source identity and current-main checks. Each cache contains bibliographic
+and correction-link information with `full_text_available: false`; none contains
+the notice body. The previously inspected external notices remain the basis for
+the correction assessments above. The Nature lane-label correction and the
+publisher-provided ZNRF2 notice were independently rechecked; the latter also
+states that its separate phosphorylation-site evidence remains sound.
+
+All 164 PMIDs in the finalized review/notes/provider census and all 78 cited
+Reactome records are now cached. This closes the machine-cache gaps without
+claiming full-text availability for every reference. All 445 annotation decisions,
+250 reference entries, two core functions and alternative products remain exactly
+as published at `66515f4a322aa8ba282b70c9abdbd6c2cd8022eb`. The review remains
+DRAFT because its seven explained validation advisories remain; the PR can enter
+normal substantive review with no missing source-cache gate. Current-head review
+and required tests still govern merging.
+
 Follow-up `just validate human AKT1` passed with the same seven explained
 source-specific/action and provider-quotation advisories. A separate check finds
 94/94 ordinary supporting-text occurrences in their exact local sources using
