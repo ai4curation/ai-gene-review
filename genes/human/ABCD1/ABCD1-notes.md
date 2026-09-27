@@ -78,3 +78,12 @@ Two nonblocking suggestions were addressed in place: the GO:0005324 EXP rational
 All 135 seeded annotation field sets were compared with the exact reviewed head and are unchanged outside `review`. This follow-up changes two actions (MODIFY to UNDECIDED); final counts are 58 ACCEPT, 34 MODIFY, 27 KEEP_AS_NON_CORE, 10 UNDECIDED and 6 MARK_AS_OVER_ANNOTATED. No provider or machine source artifact was edited. YAML trailing whitespace was stripped with parsed equality asserted. The append-only follow-up history and four-file manifest record validation and rendering separately from the still-open cache requirement.
 
 Follow-up local checks passed: `just validate human ABCD1` (three warnings: missing PMID:16213491 plus the two explicitly justified source/action differences), `just validate-history history/genes/human/ABCD1/2026-09-26T225206Z-codex-14ada9.yaml`, and `just render human ABCD1`. The cache was checked explicitly after validation and remains absent. The exact four-file follow-up manifest is `/tmp/ABCD1-followup-manifest.json`; the coordinator holds publication responsibility.
+
+
+## 2026-09-27: Required publication cache recovered
+
+Recovered required PMID:16213491 through standard fetch-pmid in read-only Actions run 36286975328 (job 108529455048, artifact 10920674630), transported unchanged by read-only run 36288441414. Verified artifact SHA256 c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713 and every record SHA256/Git blob before importing. Re-read this abstract, confirmed exact citation title and retained full_text_unavailable=true. All annotation decisions, source objects, core functions, reference identities and alternative products remain unchanged from c92b5fa7c6c563f00c7a67d1fb7c24815426df88. Targeted validation passed with 2 warnings; YAML status is DRAFT. The machine cache requirement is satisfied; source-limited UNDECIDED judgments remain explicit.
+
+This supersedes the earlier missing-cache publication gate. The recovered record is abstract-only; neither its presence nor successful validation establishes access to the full paper. The remaining advisories are intentional, documented source/action distinctions; they keep the YAML DRAFT under its literal zero-warning definition, while the PR can proceed to review.
+
+Final checks: `just validate human ABCD1`, `just render human ABCD1` and the new history validation all passed. The parsed review differs only in source-access notes and, where applicable, status; every biological decision and source field is preserved.
