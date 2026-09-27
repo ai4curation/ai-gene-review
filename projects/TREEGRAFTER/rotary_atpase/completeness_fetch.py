@@ -1,5 +1,14 @@
-"""Fetch bacterial reference proteomes and ATP-synthase family/GO members from UniProt REST."""
+"""Fetch bacterial reference proteomes and F-type/V-type rotary ATPase family members from UniProt REST.
+
+Writes large TSVs to ./cache (git-ignored). Run:
+  uv run --with requests projects/TREEGRAFTER/rotary_atpase/completeness_fetch.py
+"""
 import csv, gzip, io, sys, requests
+import os, pathlib
+
+CACHE = pathlib.Path(__file__).resolve().parent / "cache"
+CACHE.mkdir(exist_ok=True)
+os.chdir(CACHE)
 
 BASE = "https://rest.uniprot.org"
 def stream(endpoint, query, fields, out):
@@ -8,7 +17,7 @@ def stream(endpoint, query, fields, out):
     open(out, "wb").write(gzip.decompress(r.content))
     print(out, sum(1 for _ in open(out)) - 1, file=sys.stderr)
 
-#stream("proteomes", "reference:true AND taxonomy_id:2", "upid,organism,organism_id,protein_count,busco,lineage", "proteomes.tsv")
+stream("proteomes", "reference:true AND taxonomy_id:2", "upid,organism,organism_id,protein_count,busco,lineage", "proteomes.tsv")
 
 FAMS = {  # F-type subunits (InterPro families, checked against E. coli atp operon entries)
     "alpha": "IPR005294", "beta": "IPR005722", "gamma": "IPR000131", "delta": "IPR000711",
