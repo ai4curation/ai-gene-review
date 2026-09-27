@@ -336,13 +336,12 @@ this table equals the computed counts and fails if they drift.
 
 | action | rows |
 |---|---|
-| ACCEPT | 14 |
-| KEEP_AS_NON_CORE | 9 |
-| MARK_AS_OVER_ANNOTATED | 8 |
-| MODIFY | 15 |
-| NEW | 2 |
-| REMOVE | 7 |
-| **total** | **55** |
+| ACCEPT | 18 |
+| KEEP_AS_NON_CORE | 7 |
+| MODIFY | 14 |
+| REMOVE | 1 |
+| UNDECIDED | 13 |
+| **total** | **53** |
 
 <!-- verdict-counts:end -->
 
@@ -447,3 +446,62 @@ in earlier dated notes. Targeted validation, render and history checks are
 recorded in the closure manifest. The existing provider-quotation advisory,
 if still emitted, keeps the YAML DRAFT under the zero-warning COMPLETE rule,
 separately from the now-closed publication-cache gate.
+
+
+## 2026-09-27 current-head review follow-up
+
+This entry supersedes historical audit claims and counts in earlier sections;
+the generated verdict table above now describes the current 53-row review.
+All actions, source assertions and three cores remain unchanged: 18 ACCEPT,
+14 MODIFY, 13 UNDECIDED, 7 KEEP_AS_NON_CORE and 1 REMOVE; no NEW rows.
+
+The source-audit harness now reconciles each saved Compara GO/donor pair with
+its unchanged source assertion, propagation source and donor PMID(s). It also
+recomputes the peptide/protein indexes from the saved per-entry classifications.
+It no longer requires a particular action or SOURCE_BAD root cause from an
+abstract classifier. Offline mutation checks exercise lost donor references and
+index drift. The quote check now preserves case and normalizes whitespace only.
+The notes tally includes a checked total. The analyzer's new offline
+`--render-snapshot` mode regenerates RESULTS.md from the unchanged results.json;
+it makes no network or fresh retraction-check claim. Its motif interpretation
+separates sequence statistics from experimentally established binding. The
+historical JSON interpretation is retained as raw provenance, not endorsed as
+the current literature conclusion.
+
+The two rat NAP-treatment projections GO:0046068 and GO:0080164 remain
+UNDECIDED after explicit reconsideration of their IEA status. The accessible
+[original PubMed abstract for PMID:11438390](https://pubmed.ncbi.nlm.nih.gov/11438390/)
+and [author institutional record](https://cris.tau.ac.il/en/publications/vasoactive-intestinal-peptide-and-related-molecules-induce-nitrit/)
+report positive peptide concentration-response experiments in rat cortical
+cultures. They do not establish the endogenous human-protein link; complete
+Methods/Results were not recovered. This uncertainty concerns the human transfer,
+not an assertion that the rat experiment is wrong. The distinction from
+GO:0010629 is positive evidence: independent ChAHP experiments establish
+ADNP-dependent repression, without validating that row's original NAP donor
+chain. Those experiments do not independently contradict cGMP or NO regulation.
+Lack of a corresponding native-protein assay does not itself supply that
+contradiction. The peer source consultation recovered no additional full
+PMID:11438390 experiments and agreed with this bounded uncertainty.
+
+All chromoshadow-domain refinements now quote the recovered primary
+PMID:21267468 Results directly: “Yet, recruitment of ADNP to H3K9me3 was severely
+impaired in presence of the mutant HP1β W170A protein compared to the wild type
+HP1β protein.” The tested ADNP is mouse and the reciprocal HP1 mutant is human;
+the original domain-mapping reference assessment retains the V821E/V821A
+reporting discrepancy. These experiments complement the human interaction
+records and later ADNP-mutant work; they do not turn each screen into a
+contact-mapping assay. The standalone description now states the mouse
+embryonic-cell biology directly rather than discussing study provenance.
+The IBA propagation source blocks remain PTN-only as required by the annotation
+reviewer instructions; descendant evidence remains intact in supporting_entities.
+
+All 35 notes-inclusive PMIDs remain cached; no new reference or cache is added.
+The existing provider-quotation advisory is independent of this closed cache
+gate, so status remains DRAFT. Validation, rendering and exact file hashes are
+recorded in the follow-up manifest.
+
+Follow-up validation completed: `just validate human ADNP` passed with only the
+intentional provider-quotation advisory. The source harness reconciled all 53
+GOA rows, 26 donor rows and 130 case-sensitive whitespace-normalized quotes.
+Its 14 offline test directions, the analyzer's 10 classifier/motif directions
+and snapshot-render equality check passed.
