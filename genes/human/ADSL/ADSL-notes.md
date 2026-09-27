@@ -310,3 +310,12 @@ All original source fields, reference identifiers/titles, alternative products,
 and machine-generated gene source files are preserved. The handoff manifest
 records validation results, generated history, file hashes, and the explicit
 cache gate. No Git, remote PR, shared-project, or source-cache edits were made.
+
+## 2026-09-27 review-status correction
+
+Set the YAML status to DRAFT under the literal GeneReviewStatusEnum, which
+reserves COMPLETE for reviews without validation warnings. The already documented
+source-cache warnings remain unresolved. All biological judgments, source
+assertions, reference assessments and core functions are unchanged. This status
+label correction does not imply that source retrieval or automated review has
+subsequently succeeded.
