@@ -3,6 +3,10 @@ title: "Phosphorylation Annotation Refactor Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human, mouse]
+sidecars:
+  slide_figures:
+    - PHOSPHORYLATION_REFACTOR/slides/phospho-results.svg
+    - PHOSPHORYLATION_REFACTOR/slides/who-does-the-step.svg
 ---
 
 # Phosphorylation Annotation Refactor Project
@@ -2005,3 +2009,7 @@ mouse/human. The errors mirror those found in the source databases (MGI, GOA).
 - **GOOD**: FlyBase (~3 errors), TAIR (~7-10 confirmed)
 - **MODERATE**: RGD (11 errors, mostly ISS transfers)
 - **NEEDS REVIEW**: MGI (~20 errors), GOA (~45 errors)
+
+## Slides
+
+- [Slides](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html) (Marp source: [PHOSPHORYLATION_REFACTOR-slides.md](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.md)) — AI generated

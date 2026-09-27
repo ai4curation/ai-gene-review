@@ -65,9 +65,9 @@ A relation fix for succinate dehydrogenase subunits
 
 ## Status and next steps
 
-- ⬜ **Tier 1:** add `qualifier: contributes_to` to SDHB (3 rows) and SDHD (1 row), matching SDHC; `just validate human SDHB`.
+- ⬜ **Tier 1:** SDHB (3 rows) and SDHD (1 row) should end up `contributes_to`. The qualifier mirrors GOA (SDHC's comes from `SDHC-goa.tsv`), so record the intent in `review` now and re-fetch once GOA reflects #6414.
 - ⬜ **Tier 2:** decide SDHA GO:0000104 vs GO:0008177; decide 9POAL NCGR_LOCUS67308 (MODIFY → GO:0009055 or keep with qualifier).
 - ⬜ PSEPK **sdhA / sdhB** reviews (added later) carry GO:0008177 with `enables`; add to scope.
-- Waiting on GOA to reflect #6414 before re-fetching.
+- Order: note intent in `review` → wait for GOA → `just fetch-gene` → `just validate`.
 
 **Read more:** `projects/SDH_GP2TERM_CONTRIBUTES_TO.md`

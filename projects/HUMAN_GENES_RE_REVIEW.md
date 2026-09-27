@@ -1,10 +1,14 @@
 ---
 title: Human Genes Annotation Re-Review
-maturity: COMPLETE
+maturity: MATURE
 tags: [EVALUATION]
 autolink_gene_symbols: true
 species:
   - human
+sidecars:
+  slide_figures:
+    - HUMAN_GENES_RE_REVIEW/slides/not-audit.svg
+    - HUMAN_GENES_RE_REVIEW/slides/sweep-funnel.svg
 ---
 
 # Human Genes Annotation Re-Review
@@ -295,3 +299,7 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
   dependent activator function (heterodimers with c-Jun). Removing the activator IDA
   annotations may lose real biology; verify the source papers. Guideline-preferred
   fallback: UNDECIDED / KEEP_AS_NON_CORE rather than REMOVE.
+
+## Slides
+
+- [Slides](HUMAN_GENES_RE_REVIEW/slides/HUMAN_GENES_RE_REVIEW-slides.html) (Marp source: [HUMAN_GENES_RE_REVIEW-slides.md](HUMAN_GENES_RE_REVIEW/slides/HUMAN_GENES_RE_REVIEW-slides.md)) — AI generated

@@ -3,6 +3,13 @@ title: "Pathway satisfiability: context-resolved module logic"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 autolink_gene_symbols: false
+sidecars:
+  slide_figures:
+    - PATHWAY_SATISFIABILITY/slides/fig-abduction.svg
+    - PATHWAY_SATISFIABILITY/slides/fig-genomes.svg
+    - PATHWAY_SATISFIABILITY/slides/fig-lobule.svg
+    - PATHWAY_SATISFIABILITY/slides/fig-tissues.svg
+    - PATHWAY_SATISFIABILITY/slides/module-circuit.svg
 ---
 
 # Pathway satisfiability
@@ -216,3 +223,7 @@ exact commands to reproduce every result above are in the companion notebook:
 - Apply the engine to additional curated modules (it is module-agnostic).
 - Promote the resolvers from `modules/experimental/` into a small CLI once the oracle
   interfaces stabilise.
+
+## Slides
+
+- [Slides](PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.html) (Marp source: [PATHWAY_SATISFIABILITY-slides.md](PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.md)) — AI generated

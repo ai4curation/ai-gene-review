@@ -4,6 +4,10 @@ maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [9INFA, PSEAI, ACEPA, RUMJO, ECO57, ANOGA, NITRP, CERSP, PSEEN, CLOCL, 9CAUD]
 genes: [M2, merB, xdhB, fae1A, stx2A, PGRPS3, PGRPS2, amoA, dorR, Q1IFG0, Q6DTY2, Q9RGE6, Q9RGE7, Q9RGE8, darB]
+sidecars:
+  slide_figures:
+    - PROTEOME_REMOVAL/slides/removal-flow.svg
+    - PROTEOME_REMOVAL/slides/removal-status.svg
 ---
 
 # UniProt Proteome Removal Impact Assessment
@@ -137,3 +141,7 @@ Entries being removed from UniProtKB:
 
 Summary: 15 will be removed, 881 safe
 ```
+
+## Slides
+
+- [Slides](PROTEOME_REMOVAL/slides/PROTEOME_REMOVAL-slides.html) (Marp source: [PROTEOME_REMOVAL-slides.md](PROTEOME_REMOVAL/slides/PROTEOME_REMOVAL-slides.md)) — AI generated

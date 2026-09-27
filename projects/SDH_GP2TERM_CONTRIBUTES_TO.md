@@ -4,6 +4,10 @@ maturity: SCOPING
 tags: [PIPELINE, FLAGSHIP]
 species: [human, 9POAL]
 genes: [SDHA, SDHB, SDHC, SDHD, NCGR_LOCUS67308]
+sidecars:
+  slide_figures:
+    - SDH_GP2TERM_CONTRIBUTES_TO/slides/complex-ii-relations.svg
+    - SDH_GP2TERM_CONTRIBUTES_TO/slides/qualifier-audit.svg
 ---
 
 # Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)
@@ -13,13 +17,17 @@ four-subunit enzyme, and no single subunit carries out the whole
 succinate-to-quinone reaction (GO:0008177). GO has agreed
 (go-annotation#6414) that each subunit should link to that activity with
 `contributes_to` rather than `enables`. We audited the repo and found five
-reviews carrying GO:0008177: human SDHA, SDHB, SDHC, SDHD and one plant SDH2
-ortholog (9POAL NCGR_LOCUS67308). All five argue for `contributes_to` in
-prose, but only SDHC and one SDHA row carry the structured
-`qualifier: contributes_to` field. Scoped, not yet started: as of
+reviews carrying GO:0008177: human SDHA, SDHB, SDHC, SDHD and one plant
+iron-sulfur-subunit ortholog (9POAL/NCGR_LOCUS67308). All five argue for
+`contributes_to` in prose, but only SDHC and one SDHA row carry the
+structured `qualifier: contributes_to` field, and in both cases that
+qualifier comes from GOA itself, not from a curation edit. Scoped, not yet started: as of
 2026-09-26 no review has been edited, and the SDHB (three rows) and SDHD
 (one row) fixes are still open. PSEPK sdhA and sdhB reviews added later
-also carry GO:0008177 rows with `enables` and are not yet in the table below.
+also carry GO:0008177 rows with `enables` and are not yet in the table below
+(PSEPK sdhC and sdhD mention GO:0008177 only under
+`core_functions.contributes_to_molecular_function`, already modelled
+correctly, so a plain grep returns nine files, not seven).
 
 The fix matters because a qualifier that lives only in prose is invisible to
 any tool that reads the YAML, and SDHA needs a real judgement: its
@@ -131,6 +139,12 @@ have propagated to GOA: `just fetch-gene human SDHB` etc.
 2. **SDHD** (human, O14521) — same fix; GOA currently has `enables`,
    prose already argues for `contributes_to`.
 
+Note: `qualifier` on an existing annotation mirrors the GOA row
+(`SDHC-goa.tsv` itself ships `contributes_to`; `SDHB-goa.tsv` and
+`SDHD-goa.tsv` ship `enables`), so a hand edit would be overwritten by
+`just fetch-gene`. Until GOA reflects #6414, record the intended
+`contributes_to` in each row's `review`, then re-fetch once GOA changes.
+
 ### Tier 2 — verify / nuance
 
 3. **SDHA** (human, P31040) — re-examine the GO:0000104-vs-GO:0008177
@@ -186,3 +200,7 @@ upstream qualifier change propagates.
   qualifier present on SDHC (and one SDHA entry) but missing on
   SDHB/SDHD — held as a tracking project with a defined Tier 1/Tier 2
   consistency pass. No gene reviews edited yet.
+
+## Slides
+
+- [Slides](SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.html) (Marp source: [SDH_GP2TERM_CONTRIBUTES_TO-slides.md](SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.md)) — AI generated
