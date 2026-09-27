@@ -1,5 +1,7 @@
 # ADNP (human, Q9H2P0) — review notes
 
+> The historical notes below are retained as a journal. The [2026-09-26 re-review](#2026-09-26-clingen-mendelian-re-review) supersedes the earlier action tally and the categorical peptide, extracellular-localization, unmapped-HP1-interface and disputed-Wnt conclusions in sections 2, 4–7 and 10. Current decisions are in the review YAML.
+
 Working journal for the PAINT + affinage review. Provenance is inline as
 `[PMID:xxxx "verbatim quote"]`.
 
@@ -349,3 +351,55 @@ six actions** (MODIFY, KEEP_AS_NON_CORE and ACCEPT). REMOVE and MARK_AS_OVER_ANN
 that carry the argument, happened to be right — which is exactly why the error survived a
 read-through. Check I exists because of it: anything countable should be counted, and then
 compared against what was written.
+
+## 2026-09-26 ClinGen Mendelian re-review
+
+Identity and scope: human **ADNP**, HGNC:15766, UniProt Q9H2P0; synonyms ADNP1 and KIAA0784. The cached UniProt identity agrees with [HGNC-sourced Ensembl](https://grch37.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000101126) and the [ENCODE gene record](https://www.encodeproject.org/genes/23394/). ADNP2 is a distinct paralog. The parent independently verified all five baseline blobs on main `62134e998e0e4fbda34cc79564fb081e8dbbd951` and found no overlapping open ADNP PR. This session changes only the review, these notes, the rendered page and a newly scaffolded history record. It preserves the 53 original annotation objects, all machine sources and the historical bioinformatics outputs.
+
+### Chromatin mechanism and source corrections
+
+The old assertion that ADNP motif mutagenesis had never been performed is false. [PMID:21267468, primary PLOS paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0015894) Figure 5 and Methods test the ADNP motif and the reciprocal HP1beta interface. Constructs use mouse Adnp cDNA and human HP1 proteins. Results/Figure report V821E, while Methods says V821A; this internal discrepancy and species-specific numbering should remain explicit. A peer independently confirmed these details. The normal PMID cache fetch failed; external reading is documented without creating a substitute cache.
+
+The full cached PMID:38960717 independently contains **ADNP** experiments, not merely ADNP2 experiments: “To do this, we generated ADNPPxVxL motif point mutants (Supplemental Fig. S6B) and performed ChIP-seq.” ADNP loss from HP1-dependent H3K9me3 repeats and increased SINE binding after interface perturbation demonstrate complementary targeting modes. The human generic HP1-binding rows therefore retain their CSD-specific replacements, supported by additional mechanism rather than by pretending each proteomic screen mapped the interface. Three different HP1 partners across experiments do not imply simultaneous occupancy of one complex by all three.
+
+PMID:29795351 establishes sequence recognition, stable ADNP-CHD4-HP1 assembly and regulation of lineage genes; PMID:31491387 adds CTCF motif competition. PMID:42413491 separates CHD4 remodeling from targeting and finds HP1 dispensable for specified mouse ESC outputs. That is compatible with HP1-dependent targeting in a different chromatin context. PMID:42413492 directly addresses **Pol III** SINE repression, so its process is assigned to a chromatin-recruitment core rather than coupled to a Pol II-specific molecular function. The three core entries distinguish DNA-binding transcription-factor activity, chromatin-protein recruitment and HP1-domain interaction.
+
+The two pre-existing NEW rows are withdrawn as redundant descendants: GO:0001227 is within the existing Pol II transcription-factor activity branch, and [GO:0010526](https://amigo.geneontology.org/amigo/term/GO:0010526) is a child of the existing GO:0010629 negative regulation of gene expression. Their biology remains in the synthesis. No replacement NEW process is proposed. GO:0070087 was checked against [AmiGO](https://amigo.geneontology.org/amigo/term/GO:0070087); GO:0140463 against the [FlyBase ontology report](https://flybase.org/cgi-bin/cvreport.pl?cvterm=GO%3A0140463&rel=is_a). The stored GO-CAM index had no match for the human accession or the named mouse/rat donor IDs. No claimed missing pathway annotation is inferred from that absence.
+
+### Native protein, NAP and localization
+
+The preserved donor table is useful provenance: 26 Compara rows, with mouse Q9Z103 and rat Q9JKL8 and their Ensembl protein identifiers. Its `PEPTIDE_ONLY` classifier reads abstracts, not complete Methods, and cannot prove that a paper contains no native ADNP experiment. The present review does not label those curated donor records wrong solely from the classifier. Each propagated annotation now records source entities and its own support or unresolved boundary. The two IBA blocks use the ancestral PTN rather than treating its descendants as pairwise donors; target self-inclusion is valid.
+
+Thirteen annotations are now UNDECIDED because full source or native-product linkage remains unresolved. The available assays are still stated explicitly: NAP/amyloid binding, cGMP/nitrite responses, behavioral treatment results, synaptophysin, neurite outgrowth and D-NAP/ethanol effects. This is not a universal assertion that synthetic fragments can never inform a gene function. It distinguishes a positive treatment result from the particular endogenous-product claim under review.
+
+Specific corrections to the historical notes:
+
+- PMID:14706557 is indexed for copper metabolism in [primary PubMed](https://pubmed.ncbi.nlm.nih.gov/14706557/). No copper sentence in an abstract is not evidence that the curator's copper assay does not exist. Copper and peptide-binding rows remain unresolved until their full experimental scope is read.
+- PMID:16938277 separates NAP-only, ADNF-9-only and combined treatment groups. PMID:15800376 also describes effects of the separate peptides. The NAP effect is not dismissed as an effect of the other protein's peptide.
+- PMID:19047645 has local abstract/Discussion text, including NAP-dependent Fyn signaling, but the extracted file lacks complete Methods/Results. The described siRNA is Fyn-directed; that does not justify claiming all full-paper ADNP experiments are absent.
+- PMID:19130308 supports positive native-protein expression/localization observations. Its carbohydrate stimulus remains unresolved, and IEP is not rejected as categorically incapable of supporting a response annotation.
+- PMID:36631597 establishes context-dependent native ADNP/14-3-3 and morphology findings. A knockdown that increases axon length in one system does not universally refute positive neurite regulation elsewhere.
+
+Extracellular localization changes to KEEP_AS_NON_CORE. The [primary indexed PMC Methods/Results/Discussion for PMID:16845437](https://pmc.ncbi.nlm.nih.gov/articles/PMC1502393/) provide antibody-competition controls and size-resolved intracellular ADNP detection, alongside positive conditioned-medium immunoreactivity. These support the reported native-protein study; they do not fully resolve release mechanism or every extracellular molecular form. A missing signal peptide or a modest fold increase does not refute location. Direct PMC opening returned a browser challenge, while indexed primary sections were readable; the local cache remains abstract-only. Rat neuronal axon/dendrite/cell-body distributions are retained with source-resolution limits and curator deference.
+
+The estrous-cycle human transfer remains REMOVE on the [actual GO:0044849 definition](https://amigo.geneontology.org/amigo/term/GO:0044849): a cycle involving endometrial resorption does not describe human menstruation. The rat transcript observation is valid in its species, and the human rejection does not depend on declaring IEP invalid.
+
+### Other source judgments and cache availability
+
+PMID:32533114 full Results/Methods support endogenous beta-catenin association, domain mapping, in-vitro-translated protein interaction and neural differentiation with rescue. PMID:27903678 supports WNT repression in colorectal-cancer models. These are distinct contexts; neither is marked DISPUTED merely because the directions differ. The developmental interaction/process rows remain non-core, and neuronal differentiation can be a genuine regulatory role rather than merely a phenotype.
+
+PMID:25178163 explicitly reports native ADNP interactions with EB proteins as well as NAP experiments. The source is not exclusively peptide pharmacology. PMID:41174994 reports activity in ADNP-containing immunoprecipitates; intrinsic methyltransferase catalysis remains UNVERIFIED, without asserting contamination or broadly low-quality work. The 2014 disease paper PMID:24531329 is used for human genetic context, not as a direct molecular-function assay.
+
+All original references and their empty findings lists were inspected; manual judgments now match the annotation decisions. Source titles are preserved. `full_text_unavailable` reflects the **local cache**, not external reading: it is false for the seven records with extracted full-text sections (PMID:19047645, PMID:24531329, PMID:32533114, PMID:33961781, PMID:35271311, PMID:36950384 and PMID:38960717). The first, BioPlex and OpenCell files are explicitly partial. It is true for abstract-only records and the absent new cache. Full source tables were not inferred from generic study abstracts: the specific human IPI records are retained with curator deference and independently corroborated mechanism.
+
+The genuine Affinage report is unchanged. Its ChAHP composition error is marked in its reference review. The historical bioinformatics report is also unchanged; its claim that no ADNP point mutant was tested is superseded here and in its reference review. Neither is used as a substitute for primary evidence, and no fresh network/retraction sweep is claimed.
+
+### Research attempts and draft gates
+
+Required Falcon research and publication caching were launched concurrently. The normal Falcon wrapper with a 1200-second timeout failed before provider execution: `deep-research-client` dependency retrieval from PyPI failed DNS after three retries (4.8 seconds). Perplexity-lite fallback encountered the same dependency DNS failure (7.7 seconds). No provider output was created or fabricated. The existing genuine Affinage report was read, and this section records the manual review.
+
+The original 33 PMID records were already cached. A notes-inclusive census found the historical lead PMID:38479840 was missing; the additional mechanism paper PMID:21267468 is also absent. One normal fetch for each failed DNS, with zero cached publications. **Keep the publication draft until these two required caches are normally recovered.** The older PMID:38479840 lead is not newly used to support a changed biological judgment.
+
+Current tally: 53 original rows retained; 18 ACCEPT, 14 MODIFY, 13 UNDECIDED, 7 KEEP_AS_NON_CORE and 1 REMOVE. Two redundant prior NEW rows were withdrawn. All source assertions, provider files, publication caches, UniProt, GOA and existing bioinformatics files remain unchanged. Validation, history and rendering results are recorded below when complete.
+
+Validation completed: `just validate human ADNP` passed with two warnings: the missing PMID:21267468 cache and intentional non-use of the faulty provider report as annotation evidence. The history validator and `just render human ADNP` passed. A separate notes-inclusive census found 35 cited PMIDs, 33 cached and the two missing records listed above. All 53 original source objects and 42 original reference ID/title pairs compare equal to baseline; UniProt and GOA are byte-identical. The YAML has no anchors, aliases or trailing whitespace. The generated HTML was checked for the revised action tally and evidence-boundary text. Exact byte counts, SHA256 hashes and base Git blobs are in `/tmp/ADNP-local-manifest.json` for parent publication.
