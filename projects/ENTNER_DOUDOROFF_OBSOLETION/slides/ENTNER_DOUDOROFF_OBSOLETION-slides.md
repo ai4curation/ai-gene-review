@@ -38,7 +38,7 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 
 - GO **obsoleted four ED sub-pathway terms** (GO:0009255, GO:0061679, GO:0061680, GO:0061681) and folded them into **GO:0061678**.
 - Only **two repo reviews** use them: *P. putida* **edd** (IEA row) and **eda** (proposed NEW), both on GO:0009255.
-- The obsoletion **has landed** (OLS marks GO:0009255 obsolete); both reviews are **fixed in #3232 (open)**: edd ACCEPT → MODIFY → GO:0061678, eda NEW → GO:0061678.
+- The obsoletion **has landed** (OLS marks GO:0009255 obsolete); both reviews are **fixed in #3232**: edd ACCEPT → MODIFY → GO:0061678, eda NEW → GO:0061678.
 
 ---
 
