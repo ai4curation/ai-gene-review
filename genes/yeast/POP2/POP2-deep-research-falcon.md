@@ -31,7 +31,7 @@ artifact_sources:
   edison_answer_artifacts: 1
 artifacts:
 - filename: artifact-00.md
-  path: CAF1-deep-research-falcon_artifacts/artifact-00.md
+  path: POP2-deep-research-falcon_artifacts/artifact-00.md
   media_type: text/markdown
   source: edison_answer_artifacts
   data_storage_id: null
@@ -295,7 +295,7 @@ References
 
 ## Artifacts
 
-- [Edison artifact artifact-00](CAF1-deep-research-falcon_artifacts/artifact-00.md)
+- [Edison artifact artifact-00](POP2-deep-research-falcon_artifacts/artifact-00.md)
 
 ## Citations
 
