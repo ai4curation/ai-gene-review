@@ -112,8 +112,9 @@ Retain broad secondary-metabolite participation and a conservative SDR-derived o
 Assessed `fogD-hypotheses/sdr-lipid-functions-and-polyketide-release/openscientist.md`.
 The report validated the concern that GO:0000140, GO:0004806, GO:0005783,
 GO:0005811, GO:0006654 and GO:0019433 are Ayr1-seeded TreeGrafter transfers
-without FogD-specific evidence. Updated the acyl-DHAP reductase row to
-`MODIFY` toward the broad `GO:0016491` oxidoreductase proposal, and marked the
-other five lipid activity/location/process rows as over-annotated. The stronger
-OpenScientist lead of `GO:0016616` was not adopted because the exact purified
-FogD reaction, carrier state and cofactor remain unresolved.
+without FogD-specific evidence. Updated the acyl-DHAP reductase row to `MODIFY`
+toward `GO:0016616`, because UniProt's `EC=1.1.1.-` placement supports CH-OH
+donor/NAD(P) acceptor oxidoreductase chemistry but not the Ayr1-specific
+acyl-DHAP substrate. The other Ayr1 lipid activity, location and process rows
+remain non-core or over-annotated rather than reverting to the earlier REMOVE
+decisions because the source Ayr1 annotations are experimentally supported.
