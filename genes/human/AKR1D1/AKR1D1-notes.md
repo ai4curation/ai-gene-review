@@ -109,3 +109,115 @@ The genuine prior OpenScientist report and PDF/HTML/citation artifacts were read
 Parallel normal caching found all seven existing review PMIDs cached. Six missing records in preserved provider artifacts were requested normally: PMID:26418565, PMID:30254413, PMID:31337596, PMID:36739965, PMID:38034430 and PMID:41387259. All six attempts failed DNS and produced no cache (`/tmp/AKR1D1-fetch-provider-citations.log`). Several identities were independently verified through primary PubMed; these clinical/mutant leads are not substituted for the decisive substrate assays. Reactome:R-HSA-193755 remains absent after standard `cache_reactome_pathway` retrieval (`/tmp/AKR1D1-fetch-reactome.log`). DRAFT is retained for these notes/provider-inclusive source gates. Local full-text flags reflect cache metadata/content, not external reading. Final checks and independent review are recorded in the handoff manifest.
 
 Final independent parent review read all 41 decisions, 25 reference assessments, the integrated core, questions and saved human Reactome equation; no biological change was requested. Targeted validation, history validation and rendering pass. The sole advisory reflects the deliberate GO:0008106 distinction between six resolved Reactome mapping corrections and the unresolved independent ARBA side activity. All 57 supporting snippets match their cached sources exactly after case-sensitive whitespace normalization. All source objects, three isoforms, reference identities and eight protected artifacts are unchanged. The final citation census separates the six notes/provider gaps from unused bibliography-only entries in the immutable UniProt record.
+
+
+## 2026-09-27 — source5 recovery and PR #3266 follow-up
+
+The live PR remained draft at `4e543bbf4191a0a39ee6edfccd2d042ad1c6f6dd` before
+editing. All 11 canonical gene/artifact files and the published history matched
+that exact head. The 41 source assertions, three isoforms, original reference
+identities, all action decisions and the single core are preserved. Seven
+reference assessments are added: six previously cited provider records and the
+reviewer's already-cached mechanistic source, PMID:20522910.
+
+The [normal source5 recovery run](https://github.com/ai4curation/ai-gene-review/actions/runs/36295820535)
+ran at `60c5e96f8317dd1e7d8325242d8037b81e272c59`. Artifact 10926007634 has ZIP
+SHA256 `cd022c3e045b00798f8e29ff86904be885a4ed9e8b539ba11d44f6b954149400`.
+The independently verified import copied these records unchanged:
+
+- PMID:26418565: SHA256 `736edb02fc30da0e99d9100edf54a014ebe0c64d5eb41d08ab45ef212bf6dc81`.
+- PMID:30254413: SHA256 `e0277829914bf18588b0e7db2953dac76696540a2a59ca3760e1a404ecd575dd`.
+- PMID:31337596: SHA256 `ef5c0c8295e51bb7d45637a47bbddae5e2769e69ad198e2cdb40813efd153594`.
+- PMID:36739965: SHA256 `17dc234a6a4ba2fcb89f459ecc52c35e1a62544f2f3c5e41573b7de40ccef74c`.
+- PMID:38034430: SHA256 `171a5fed7afadd595fa550d1e580c25ab375d33f05c0087531d149f83187d28e`.
+- PMID:41387259: SHA256 `27012c7018585e3c846c00dbbdc4f00cfb73cbc4b73e487449fd8d71d85d076a`.
+
+### Recovered evidence and limits
+
+PMID:26418565 has extracted full Methods, Results and Discussion. Human WT and
+P133R proteins were expressed in E. coli and purified using affinity plus Blue
+chromatography. Cortisone and 7alpha-hydroxycholest-4-en-3-one assays, cofactor
+fluorescence/chase measurements and steroid-binding titrations show diminished
+P133R chemistry and cofactor affinity. The numerical effects depend on buffer,
+substrate and cofactor occupancy. This source explicitly corrects the earlier
+PMID:20522910 conclusion of unchanged cofactor affinity: substantial bound
+NADP+ in the older WT preparation obscured the comparison. The later cofactor-
+free preparations reveal the affinity difference. The narrow historical finding
+is now machine-readably OVERTURNED with exact later-source support. The older
+study still supports reduced mutant protein/activity; purified P133R results
+are not generalized to every mutant. Neither study resolves the aldose,
+monooxygenase or C17-side-activity source gaps.
+
+PMID:30254413 has extracted full clinical case/discussion text. Genetic findings
+and urinary profiles support disease context, but the R307C structural model
+is predictive and the first urine profile was obtained after treatment. It
+provides no purified variant-specific catalytic measurement. PMID:38034430 has
+full case-series Methods/Results/Discussion: three of five patients lacked liver
+dysfunction despite variants/atypical bile acids. The proposed MRP3 compensation
+is explicitly a hypothesis; short follow-up and absent follow-up biopsy limit
+clinical conclusions. Neither observation negates AKR1D1's established reaction.
+
+The other three recovered records are abstract-only. PMID:31337596 distinguishes
+three AKR1D1 cases from three CYP7B1 cases; the CYP7B1 allele-frequency and CDCA
+response results are not assigned to AKR1D1. PMID:36739965 supports an RNA/splicing
+mechanism from liver RNA and a minigene experiment, not a purified catalytic
+assay. PMID:41387259 reports one fatal infant case with biochemical/genetic
+support; its screening suggestion is an author proposal. The three full-body
+records have `full_text_unavailable: false`; these three abstracts and the
+existing abstract-only PMID:20522910 have `full_text_unavailable: true`.
+
+### Current review suggestions
+
+[Review comment 5853621026](https://github.com/ai4curation/ai-gene-review/pull/3266#issuecomment-5853621026)
+approved the biology and offered optional refinements. PMID:20522910 is now
+explicitly assessed, with the later cofactor correction recorded rather than
+repeated as a current fact. The aldose reason explicitly acknowledges the
+C5-oriented hydride-transfer geometry in full PMID:18407998. That positive
+structural explanation supports steroid specialization but does not replace a
+substrate-specific negative assay or resolve the inherited donor evidence.
+Likewise, the known NADPH reductase mechanism does not independently adjudicate
+the unread oxygen-insertion experiment. UNDECIDED is retained for those rows.
+
+The steroid-dehydrogenase IBA retains its informative ancestral steroid-substrate
+class; the generic oxidoreductase signature lacks that substrate restriction.
+The exact 5beta reaction remains separately represented. Monocarboxylic-acid
+metabolism remains core pathway participation: AKR1D1 performs a chemical step
+in making monocarboxylic bile acids, and its immediate substrate need not already
+carry the product's acid group. The number of non-core decisions in other gene
+reviews is not biological evidence for changing this process judgment.
+
+### Remaining source gate and recursive census
+
+Reactome:R-HSA-193755 was not recovered: the local attempt failed DNS, and the
+hosted source5 normal call returned 1 without an output record. A direct page
+404 does not prove that the event never existed or establish a replacement ID.
+The original GOA identifier and machine-fetched title placeholder are retained.
+The earlier indexed primary **human** page explicitly identifies the reaction
+of 4-cholesten-7alpha,12alpha,24(S)-triol-3-one with NADPH to yield the corresponding
+5beta steroid and NADP+, and identifies AKR1D1 in cytosol. This retained-carbonyl
+equation supports the existing reaction-specific MODIFY; its indexed primary
+verification is separate from cache availability. The absent cache remains a
+draft gate. No authored Reactome substitute is created.
+
+The recursive census includes YAML, both source-note files, PAINT JSON and all
+unchanged OpenScientist Markdown/citation/HTML/PDF artifacts. URL/HTML decoding,
+Markdown escape normalization and PDF text extraction find no additional
+DOI-only work in those retained artifacts. With PMID:20522910, all 14 cited
+PMIDs are cached; eight of the nine Reactome records are cached, leaving only
+R-HSA-193755. The immutable UniProt bibliography is distinguished from the
+review/provider citations. The preserved hypothesis report's stronger chemical
+exclusions are not adopted, and none of its sequence analysis is represented
+as newly rerun.
+
+Final checks for this follow-up passed: targeted validation exited 0 with the
+existing evidence-specific GO:0008106 action advisory; history validation and
+rendering passed. The independent integrity check confirms all 41 source
+objects/actions, three isoforms, the core, 25 original reference identities,
+eight protected artifacts and both published history records unchanged. All
+60 quoted snippets match actual cached text after case-sensitive whitespace
+normalization. The PDF census additionally examines all 33 annotation URI
+links and both pypdf and pdftotext extraction, and the HTML scan includes raw
+link targets. Exact current-main cache metadata and blob checks distinguish
+the six new source5 records from already published sources. These checks do
+not resolve the remaining Reactome cache gate or the source-specific biological
+uncertainties retained in the annotations.
