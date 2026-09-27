@@ -6,7 +6,7 @@ species: [human, mouse, rat]
 ---
 # Inferred from Sequence Orthology (ISO) Evidence Code Review
 
-**Bottom line:** ISO transfers a GO annotation from a gene to its ortholog in another species, so an ISO row can fail because the source annotation is weak or because the term should not cross that orthology edge. We read the ISO rows in existing gene reviews, worked through three contrasting cases in depth (mouse Calm3, Ghr and Ang2), and built a failure taxonomy that separates source defects from propagation defects, now recorded in the structured `review.propagation_review` field. We did this so that reviewers stop treating ISO as either trustworthy or garbage and instead say where each defect lives. As of 2026-09-26 the repo holds 4,345 reviewed ISO rows in 201 gene reviews (3,258 mouse, 962 rat): 1,456 ACCEPT, 2,073 KEEP_AS_NON_CORE, 435 MARK_AS_OVER_ANNOTATED, 179 REMOVE, 111 MODIFY, 35 UNDECIDED, plus 56 NEW. The usual problem is a cloud of true but contextual transfers; outright failures cluster in cases like Ang2, a divergent angiogenin paralog where 41 of 46 ISO rows were removed. The corpus snapshot below (2026-06-29) predates these counts.
+**Bottom line:** ISO transfers a GO annotation from a gene to its ortholog in another species, so an ISO row can fail because the source annotation is weak or because the term should not cross that orthology edge. We read the ISO rows in existing gene reviews, worked through three contrasting cases in depth (mouse Calm3, Ghr and Ang2), and built a failure taxonomy that separates source defects from propagation defects, now recorded in the structured `review.propagation_review` field. We did this so that reviewers stop treating ISO as either trustworthy or garbage and instead say where each defect lives. As of 2026-09-26 the repo holds 4,345 reviewed ISO rows in 201 gene reviews (3,258 mouse, 962 rat, and 125 in human, fission yeast and bacterial reviews): 1,456 ACCEPT, 2,073 KEEP_AS_NON_CORE, 435 MARK_AS_OVER_ANNOTATED, 179 REMOVE, 111 MODIFY, 35 UNDECIDED, plus 56 NEW. The usual problem is a cloud of true but contextual transfers; outright failures cluster in cases like Ang2, a divergent angiogenin paralog where 41 of 46 ISO rows were removed. The corpus snapshot below (2026-06-29) predates these counts.
 
 Of the 304 ISO rows that already carry a structured `propagation_review`, the commonest root causes are `PROPAGATION_BAD` (119) and `TERM_SCOPING_PROBLEM` (101), and the commonest subtype is `CONTEXT_OR_TISSUE_MISMATCH` (113). One action item remains: a reusable donor-trace script.
 
@@ -262,3 +262,7 @@ Use this checklist before making a strong `REMOVE` call on ISO or IBA.
       and per-source entity comments.
 - [ ] Add a reusable ISO donor-trace script that handles multiple source entities
       and writes the same source-status fields used in the Ang2 trace.
+
+## Slides
+
+- [Slides](ISO/slides/ISO-slides.html) (Marp source: [ISO-slides.md](ISO/slides/ISO-slides.md)) — AI generated

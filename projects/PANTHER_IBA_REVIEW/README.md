@@ -104,3 +104,7 @@ over-fires on broadly conserved functions — it is triage, not a verdict.
 One well-characterized descendant can soundly ground an ancestral assertion.
 Review its phylogenetic placement and relevant functional divergence; do not
 infer weak support from a short seed list.
+
+## Slides
+
+- [Slides](slides/PANTHER_IBA_REVIEW-slides.html) (Marp source: [PANTHER_IBA_REVIEW-slides.md](slides/PANTHER_IBA_REVIEW-slides.md)) — AI generated

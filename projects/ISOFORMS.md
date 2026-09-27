@@ -123,7 +123,7 @@ Key reviews and resources:
 ### Tier 2 Genes
 - [x] FN1 - **COMPLETE** - 193 annotations | EDA/EDB domain developmental splicing
 - [x] TPM1 - **COMPLETE** - 55 annotations | 9 OVER_ANNOTATED (muscle vs cytoskeletal isoforms)
-- [x] TPM3 - **COMPLETE** - 39 annotations | 16 OVER_ANNOTATED (slow muscle vs TM30nm cytoskeletal)
+- [x] TPM3 - **COMPLETE** - 39 annotations | 17 OVER_ANNOTATED (slow muscle vs TM30nm cytoskeletal)
 - [x] DSCAM - **COMPLETE** - 50 annotations | 4 OVER_ANNOTATED (human has only 2 isoforms, not 38,016!)
 
 ### Tier 3 Genes
@@ -249,14 +249,14 @@ Remaining: PTBP1/2 (splicing regulators - different focus), RON/MST1R
 |------|-------|--------|----------|----------------|-------------|
 | FN1 | 193 | 62 | 39 | 0 | EDA/EDB developmental splicing |
 | TPM1 | 55 | 34 | 12 | 9 | Muscle vs cytoskeletal isoforms |
-| TPM3 | 39 | 19 | 4 | 16 | Slow muscle vs TM30nm cytoskeletal |
+| TPM3 | 39 | 7 | 14 | 17 | Slow muscle vs TM30nm cytoskeletal |
 | DSCAM | 50 | 42 | 3 | 4 | Only 2 isoforms (not like Drosophila!) |
 
 **Key Tier 2 Findings:**
 
 1. **FN1**: 17 isoforms with EDA/EDB domain variation. Plasma FN (hepatocyte) vs cellular FN (fibroblast). EDA/EDB+ isoforms are oncofetal antigens used in cancer imaging.
 
-2. **TPM1/TPM3**: Tissue-specific tropomyosin isoforms - skeletal muscle, smooth muscle, cardiac, and cytoskeletal variants. Annotations for "muscle contraction" often apply only to muscle isoforms. TPM3 had highest over-annotation rate (16/39).
+2. **TPM1/TPM3**: Tissue-specific tropomyosin isoforms - skeletal muscle, smooth muscle, cardiac, and cytoskeletal variants. Annotations for "muscle contraction" often apply only to muscle isoforms. TPM3 had highest over-annotation rate (17/39).
 
 3. **DSCAM**: CRITICAL CAVEAT - Human DSCAM has only 2 isoforms, NOT the 38,016 of Drosophila Dscam1! Vertebrates use protocadherins instead. Some IBA annotations may be inappropriately extrapolated from fly.
 
@@ -410,3 +410,7 @@ Initial project creation. Research conducted on classic isoform cases:
 **Decision on DSCAM**: Include with caveats - human DSCAM does NOT have the 38,016 isoform diversity of *Drosophila* Dscam1. The vertebrate equivalent is clustered protocadherins. Still worth reviewing but with lower priority.
 
 **Next steps**: Begin with AGRN as it has clear, well-documented isoform-specific functions with clinical relevance.
+
+## Slides
+
+- [Slides](ISOFORMS/slides/ISOFORMS-slides.html) (Marp source: [ISOFORMS-slides.md](ISOFORMS/slides/ISOFORMS-slides.md)) — AI generated
