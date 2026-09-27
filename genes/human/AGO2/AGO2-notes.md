@@ -200,17 +200,69 @@ The preceding all-cached census counted explicit PMID citations but missed refer
 
 | PMID and primary record | Normalized DOI | Provider location |
 |---|---|---|
-| [PMID:38448799](https://pubmed.ncbi.nlm.nih.gov/38448799/), *Target-directed microRNA degradation: Mechanisms, significance, and functional implications* | 10.1002/wrna.1832 | AGO2-deep-research-falcon.md, line 262 |
-| [PMID:38029964](https://pubmed.ncbi.nlm.nih.gov/38029964/), *When Argonaute takes out the ribonuclease sword* | 10.1016/j.jbc.2023.105499 | AGO2-deep-research-falcon.md, line 260 |
-| [PMID:39499674](https://pubmed.ncbi.nlm.nih.gov/39499674/), *Technologies for Targeted RNA Degradation and Induced RNA Decay* | 10.1021/acs.chemrev.4c00472 | AGO2-deep-research-falcon.md, line 263 |
-| [PMID:38224449](https://pubmed.ncbi.nlm.nih.gov/38224449/), *To kill a microRNA: emerging concepts in target-directed microRNA degradation* | 10.1093/nar/gkae003 | AGO2-deep-research-falcon.md, line 261 |
-| [PMID:37621215](https://pubmed.ncbi.nlm.nih.gov/37621215/), *The EDC4-XRN1 interaction controls P-body dynamics to link mRNA decapping with decay* | 10.15252/embj.2023113933 | AGO2-deep-research-falcon.md, line 265 |
-| [PMID:38939184](https://pubmed.ncbi.nlm.nih.gov/38939184/), *Principle, application and challenges of development siRNA-based therapeutics against bacterial and viral infections: a comprehensive review* | 10.3389/fmicb.2024.1393646 | AGO2-deep-research-falcon.md, line 313 |
-| [PMID:38892257](https://pubmed.ncbi.nlm.nih.gov/38892257/), *Nuclear miRNAs: Gene Regulation Activities* | 10.3390/ijms25116066 | AGO2-deep-research-falcon.md, line 264 |
-| [PMID:39188988](https://pubmed.ncbi.nlm.nih.gov/39188988/), *RNA interference therapy in cardiology: will new targets improve therapeutic goals?* | 10.7573/dic.2024-3-1 | AGO2-deep-research-falcon.md, line 303 |
+| [PMID:38448799], *Target-directed microRNA degradation: Mechanisms, significance, and functional implications* | 10.1002/wrna.1832 | AGO2-deep-research-falcon.md, line 262 |
+| [PMID:38029964], *When Argonaute takes out the ribonuclease sword* | 10.1016/j.jbc.2023.105499 | AGO2-deep-research-falcon.md, line 260 |
+| [PMID:39499674], *Technologies for Targeted RNA Degradation and Induced RNA Decay* | 10.1021/acs.chemrev.4c00472 | AGO2-deep-research-falcon.md, line 263 |
+| [PMID:38224449], *To kill a microRNA: emerging concepts in target-directed microRNA degradation* | 10.1093/nar/gkae003 | AGO2-deep-research-falcon.md, line 261 |
+| [PMID:37621215], *The EDC4-XRN1 interaction controls P-body dynamics to link mRNA decapping with decay* | 10.15252/embj.2023113933 | AGO2-deep-research-falcon.md, line 265 |
+| [PMID:38939184], *Principle, application and challenges of development siRNA-based therapeutics against bacterial and viral infections: a comprehensive review* | 10.3389/fmicb.2024.1393646 | AGO2-deep-research-falcon.md, line 313 |
+| [PMID:38892257], *Nuclear miRNAs: Gene Regulation Activities* | 10.3390/ijms25116066 | AGO2-deep-research-falcon.md, line 264 |
+| [PMID:39188988], *RNA interference therapy in cardiology: will new targets improve therapeutic goals?* | 10.7573/dic.2024-3-1 | AGO2-deep-research-falcon.md, line 303 |
 
 These eight DOI references support the provider narrative or its background bibliography; their inclusion here does not certify each generated claim or create a new annotation. The separate DOI 10.1016/j.isci.2024.109151 maps to already-cached PMID:38384836 and is not a new gap.
 
 One ordinary 13-record fetch ended naturally with exit 1 and cached 0/13 because DNS resolution failed. The newly decoded BMB source received a separate first attempt, also exit 1 and cached 0/1. No cache was created or edited. Exact DOI strings, titles, primary URLs, provider file/line context, protected hashes and terminal logs are recorded in `tmp/AGO2-AIMP2-doi-audit/`; the fixed source11 proposal reserves the missing records without changing earlier dispatched batches.
 
 The review YAML, all original annotation assertions and decisions, reference assessments, core functions, alternative products, raw source files and generated provider reports are byte-identical to published head `6da6488244749c9c71b3eba85534a53653be6a33`. This follow-up changes only append-only notes and session provenance and regenerates the derived HTML. The PR remains draft until the 8 required DOI-derived caches are recovered through the normal fetcher; prior validation advisories remain separate from this source gate.
+
+## 2026-09-27 source11 recovery and current-head review response
+
+All six local gene files were verified byte-for-byte against published PR #3288 head
+`3fdc436a4b115fee2be80cb880180081d0606a99` before this follow-up. The eight DOI-derived
+records above now have unchanged normal-fetch caches from source11 run 36304820186;
+the exact run, artifact, byte digests and canonical import are bound by
+`tmp/source11-canonical-import-receipt.json` and this session's publication manifest.
+The prior DNS/missing-source account is historical, and the eight-source cache gate is closed.
+All eight records contain actual full-text sections. Primary title/DOI identities were verified
+separately from content interpretation; metadata availability is not a scientific endorsement.
+
+The abstracts and relevant full-text sections were read with the following scope:
+
+| Recovered source | Evidence assessment for AGO2 |
+|---|---|
+| [PMID:37621215] | Primary human HeLa reporter, RNA-stability and P-body experiments perturb EDC4/XRN1 interaction or abundance. They connect downstream decapping machinery to miRNA-target repression and storage. They do not independently assign EDC4/XRN1 catalytic chemistry or a new P-body assembly function to AGO2. |
+| [PMID:38029964] | Review of Argonaute slicing, domain organization and two-metal catalysis, including human AGO2 and guide-dependent human AGO3 activation. It corroborates the general mechanism while preserving the distinction between organisms, paralogs and biochemical conditions; it is not a new human AGO2 experiment. |
+| [PMID:38224449] | Review of target-directed miRNA degradation. ZSWIM8 recognizes a trigger-induced AGO state and promotes AGO proteolysis, exposing the guide to decay. AGO's role as the degraded protective carrier is distinguished from catalyzing guide degradation; no NEW degradation process is inferred from necessity alone. |
+| [PMID:38448799] | Independent review of the same TDMD mechanism and its biological consequences. Its species-specific examples and upstream trigger/ubiquitin-ligase roles remain distinct from AGO2 target-RNA slicing. It does not justify automatic transfer of every developmental phenotype to human AGO2. |
+| [PMID:38892257] | Review of nuclear miRNA activities, including reported nuclear AGO2/TNRC6 complexes and trafficking. It supplies discovery/context, without establishing intrinsic sequence-specific DNA recognition or transferring every miRNA-linked transcriptional effect to AGO2. Original experiment-specific annotation judgments remain unchanged. |
+| [PMID:38939184] | Broad review of siRNA delivery and anti-infective applications, with a mechanism section describing AGO2 passenger-strand cleavage and target recognition. Therapeutic target suppression does not establish an endogenous AGO2 role in each treated infection or disease. |
+| [PMID:39188988] | Clinical-development review of siRNA therapies in cardiology. Its introductory molecular account is imprecise, including a statement that RNA-induced silencing prevents mRNA transcription. It is retained as historical application context, not an authority for AGO2 cleavage chemistry, transcriptional activity or current drug-approval counts. |
+| [PMID:39499674] | Review of multiple RNA-degradation technologies; the RNAi section distinguishes guide-loaded AGO2 cleavage from RNase H and other platforms. Its sentence describing one aspartate and two glutamates in AGO2 is not adopted as the catalytic-residue composition; the established DEDH mechanism in the underlying primary evidence remains the basis for the existing review. |
+
+This assessment does not promote the provider bibliography to new annotation-level evidence.
+The review YAML remains byte-identical, including all 267 seeded assertions, qualifiers,
+isoforms, existing reference assessments, actions and five cores. No molecular-function or
+process assertion is added, and no generated provider or machine cache is edited.
+
+The current-head formal review (5329776864; detailed comment 5854700212) correctly identified
+eight doubled PubMed URL suffixes in the rendered DOI table. The eight notes citations now use
+the repository's bare `[PMID:…]` convention, letting the renderer generate one link each.
+This is the only alteration to preceding notes; this evidence section is appended. The
+reviewer's optional history suggestions are recorded here without rewriting published history.
+Its suggestion to waive provider-source retrieval is moot because all eight records are now
+recovered and assessed. Intentional review-action and unused-provider validation advisories
+remain separate from the closed source gate; DRAFT review status is retained.
+
+The final census also normalized DOI links in the authored review and notes, beyond the
+provider bibliography. It resolved the already-discussed Nature correction
+DOI:10.1038/s41586-024-08559-7 to [PMID:39875610], *Author Correction: An RNA-dependent
+RNA polymerase formed by TERT and the RMRP RNA*. The primary PubMed record and
+[full publisher notice](https://www.nature.com/articles/s41586-024-08559-7) were independently
+read. The prior interpretation remains accurate: the correction replaces the Figure 5b
+MCF7 beta-actin/Dicer images and fixes a lane label, with unchanged conclusions according to
+the authors; it is not a retraction or an AGO2 RNA-polymerase experiment. This DOI was already
+used in the assessment of original PMID:19701182 and is a substantive required source.
+It is absent from the current PR head and freshly checked main, and one normal fetch ended
+with exit 1, 0/1 cached, DNS failure (`/tmp/AGO2-correction-fetch.log`). Thus the eight
+source11 gaps are closed, but **PMID:39875610 remains the sole required cache gate**.
+The DOI was neither silently exempted nor added to a previously frozen recovery batch.
