@@ -233,3 +233,37 @@ def test_project_manual_reviews_are_well_formed(md_path: Path) -> None:
             assert isinstance(notes, str), (
                 f"{rel} manual_reviews[{i}] 'notes' must be a string."
             )
+
+
+#: Registry of project collections (key -> title/index/description).
+COLLECTIONS = yaml.safe_load((PROJECTS_DIR / "collections.yaml").read_text()) or {}
+
+
+@pytest.mark.parametrize("key", sorted(COLLECTIONS))
+def test_collection_index_page_exists(key: str) -> None:
+    """Every registered collection names an existing top-level index page."""
+    index = COLLECTIONS[key].get("index")
+    assert index, f"collection {key} must declare an 'index' project slug"
+    assert (PROJECTS_DIR / f"{index}.md").is_file(), (
+        f"collection {key} index projects/{index}.md does not exist"
+    )
+
+
+@pytest.mark.parametrize(
+    "md_path",
+    _project_markdown_files(),
+    ids=lambda p: str(p.relative_to(PROJECTS_DIR)),
+)
+def test_project_collections_are_registered(md_path: Path) -> None:
+    """``collections`` must be a list of keys from ``projects/collections.yaml``."""
+    fm = _parse_frontmatter(md_path.read_text())
+    collections = fm.get("collections")
+    if collections is None:
+        return
+    rel = md_path.relative_to(PROJECTS_DIR)
+    assert isinstance(collections, list), f"{rel} 'collections' must be a list."
+    unknown = sorted(set(map(str, collections)) - set(COLLECTIONS))
+    assert not unknown, (
+        f"{rel} has unregistered collection(s) {unknown}; "
+        f"register them in projects/collections.yaml ({sorted(COLLECTIONS)})."
+    )
