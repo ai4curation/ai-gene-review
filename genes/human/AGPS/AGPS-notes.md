@@ -90,3 +90,33 @@ PMID:10415121's abstract distinguishes the **human precursor**, **guinea-pig liv
 Normal caches remain required for **PMID:10692424** (notes), **PMID:21990100**, and **PMID:23112191**. DRAFT and all citation gates remain. No source cache, provider output, published history, Git state or shared project file was manually edited.
 
 Follow-up normal `fetch-pmid` attempt completed: **Cached 0/3**, with DNS resolution errors for every requested PMID. No publication file was generated. The execution log is `/tmp/AGPS-followup-fetch.log`.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+The two YAML reference gaps (PMID:23112191 and PMID:21990100), plus the
+notes-cited mechanistic predecessor PMID:10692424, now have normal fetched
+publication records. All three are **abstract-only**. Local
+`full_text_unavailable` flags therefore remain true; previously documented
+external full-source reading of PMID:23112191 remains separate. Its cached
+abstract directly contains the core's chemical-trap quotation. PMID:21990100
+still describes substrate channeling as a proposal rather than a separately
+established activity. The older PMID:10692424 abstract proposes a redox
+intermediate; that historical model remains distinguished from the later
+covalent-catalysis evidence and does not change the synthesized mechanism.
+
+These exact records were recovered from standard fetch output in Actions run
+36286975328, head 5946477c8ac79ade0709264c775ea1262b108438, artifact
+10920674630. The transported ZIP SHA-256 is
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`;
+`tmp/verified-reference-records/local-import-receipt.json` records the
+per-file hashes. No record was rewritten. The publication manifest includes
+only these three AGPS-required cache additions.
+
+All 33 source assertions, all annotation decisions, the integrated core, 23
+reference identifiers/titles, downloaded gene sources and prior history are
+unchanged. Missing-source status in earlier dated notes is superseded by this
+entry. Source availability does not itself establish biological support or
+resolve the mitochondrial localization uncertainty. Targeted validation,
+rendering and new history validation are recorded in the closure manifest;
+COMPLETE requires zero gene validation warnings.
