@@ -20,3 +20,11 @@ Decisions
 - Protein binding (NudF) removed as uninformative.
 
 Deep research: no falcon report present at time of review.
+
+## 2026-09-27 falcon deep research incorporated (claude-code)
+
+- Read nudE-deep-research-falcon.md. It agrees that NudE is a NudF-binding coiled-coil accessory regulator, secondary to NudF; no action changed.
+- Verified in cached PMID:10931877 and added: extra nudE copies also partially suppress the nudA1 dynein heavy-chain conidiation defect (supports pathway membership; added to the nuclear migration IMP row).
+- The report's mention of NudE/NudF binding dynein/dynactin subunits and tubulins derives from the RETRACTED PMID:11509576; excluded.
+- The report calls NudE's early-endosome role unproven; this is incomplete retrieval - PMID:31562232 shows early endosomes accumulate at the hyphal tip in DeltanudE, so the IBA GO:0047496 ACCEPT stands.
+- Deep-research quote added to the core function.

@@ -24,3 +24,10 @@ Decisions
 - Microtubule binding IDA (abstract-only paper, localization data) kept non-core, deferring to curator.
 
 Deep research: no falcon report present at time of review.
+
+## 2026-09-27 falcon deep research incorporated (claude-code)
+
+- Read nudF-deep-research-falcon.md. Its core model (noncatalytic LIS1-family dynein regulator acting at transport initiation; plus-end comets and SPBs; NudE/NudC/BnfA partners) agrees with the review; no action changed.
+- New primary paper found via the report and verified at PubMed: PMID:34428469 (Qiu et al. 2021 Curr Biol, AAA3 nucleotide state). Cached; supports NudF bypass by the wB-AAA3 dynein mutation ["Importantly, the wB-AAA3 mutation suppressed the colony growth defect of the ΔnudF mutant"]. Added to the NEW GO:0140659 row and core function 1.
+- Added PMID:22711696 quote that Lis1 is absent from moving cargo to the GO:0072382 row; deep-research quote added to core function 1.
+- Not used: 2024 mammalian/yeast structural and force papers (Singh 2024, Kusakci 2024) - cross-species context only.
