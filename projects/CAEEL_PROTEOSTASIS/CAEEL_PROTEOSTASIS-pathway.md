@@ -154,6 +154,7 @@ HSP90 has specialized roles distinct from general-purpose chaperones:
 
 #### Key Curation Decision
 - **MODIFY**: 10 generic "protein binding" annotations → GO:0051879 "Hsp90 protein binding" (specific, mechanistic)
+  - **Correction (2026-09):** this direction is wrong. GO:0051879 means binding *to* an Hsp90 and belongs on HSP-90's partners, not on HSP-90; the current review has nine such rows, to be re-targeted to protein-folding chaperone binding (GO:0051087) for co-chaperone rows, with chaperone activity covering the client rows. See the bottom line of [CAEEL_PROTEOSTASIS](../CAEEL_PROTEOSTASIS.md).
 
 #### Key Evidence
 - **IBA evidence**: Phylogenetic conservation across eukaryotes with experimental validation
