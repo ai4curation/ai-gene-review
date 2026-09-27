@@ -194,3 +194,55 @@ citation gaps remain; passing YAML checks is not a claim of directory-wide cache
 completion. The final manifest records all 40 unchanged source assertions and
 annotation reviews, both unchanged cores, 22 unchanged reference identities,
 all protected artifacts and all four append-only published histories.
+
+
+## 2026-09-27 — complete the hypothesis-source cache closure
+
+This bounded follow-up starts from PR #3248 head
+`f0fa38d08c79573176858f128210e75e2fe7adba`. The published YAML, notes,
+render, six previously recovered publication records, protected source artifacts,
+and all five existing history records matched their recorded hashes before edits.
+The remaining two hypothesis-artifact citations now have real normal-fetch caches.
+Both canonical files are byte-identical to the source3 import receipt
+`tmp/source3-canonical-import-receipt.json`: Actions run 36292249952, source head
+`3f234ebd4b540057fb287b27efc11341cfb102b1`, artifact 10924402765, ZIP SHA-256
+`d8908403ad407495b26d23af7007ee4da1fc643ebd61728d99ce9755bcfacdc2`.
+Neither record existed at the exact PR base. Their source bytes and metadata remain
+unchanged; both records are abstract-only.
+
+The recovered [PMID:7929456](https://pubmed.ncbi.nlm.nih.gov/7929456/) abstract
+separates the first oxidase step from the third dehydrogenase step of peroxisomal
+beta-oxidation. Its experiments purify rat-liver 3-hydroxyacyl-CoA dehydrogenases;
+this is pathway context, not a direct human ACOX2 substrate or product assay.
+The recovered [PMID:15769750](https://pubmed.ncbi.nlm.nih.gov/15769750/) abstract
+examines L- and D-bifunctional-protein knockout mice and identifies DBP with the
+second and third steps. It explicitly reports an oxidase import defect in the
+double knockout, which prevents a firm conclusion about the proposed alternative
+LBP pathway. That confound is retained when interpreting the study. The primary
+PubMed-indexed identifiers, titles and abstracts were also checked independently.
+No full-paper access is claimed for either recovered record.
+
+These sources support pathway-step distinctions without turning the immutable
+provider report's stronger verdicts into independent human reaction measurements.
+The review's existing human and rabbit chemistry assessments, source-specific
+uncertainties, all 40 annotation decisions, both cores, 22 reference identities and
+all reference assessments remain unchanged. The two artifact sources are not added
+to the top-level reference list because they do not supply a new review assertion.
+
+The final census covers the review YAML, append-only notes, primary-source notes,
+provider Markdown and citation list, hypothesis CSV/HTML/PDF, and rendered review.
+All 15 distinct cited PMIDs and five cited Reactome records are cached. The PDF's
+explicit citations were checked through text extraction and introduce no extra
+source gap. Unused bibliography and pathway cross-references inside the immutable
+UniProt record were inventoried separately; they are not authored or provider
+citations. Historical cache-failure entries above remain as provenance, superseded
+by this successful recovery. Status is now COMPLETE, subject to the final targeted
+validator and history checks recorded with the frozen manifest. No biological
+assertion, quotation or original source field changed.
+
+Final targeted gene validation passed with zero curation warnings; the emitted
+`pkg_resources` deprecation notice is a runtime dependency warning. History
+validation and rendering also passed. The parsed YAML delta is exactly the status
+change; there are no annotation, reference, core, description, isoform or quotation
+changes. The incremental six-file manifest records the two exact new source
+records, YAML, notes, rendered HTML and the newly scaffolded history.
