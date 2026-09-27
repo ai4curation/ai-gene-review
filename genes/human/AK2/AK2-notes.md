@@ -164,3 +164,102 @@ The recursive authored citation census is 12 PMIDs and three Reactome records;
 all DOI occurrences map to those same records, and no provider artifact exists.
 Exact hashes, existing-base reuse and five missing-base immutable source3
 publication/Reactome dependencies are listed in the frozen manifest.
+
+## 2026-09-27 — source14 recovery and PR #3297 follow-up
+
+The current draft PR head was independently checked as
+`df920d43fa4a890d1ddaec0510c7aef78b1ab0b1`; all five canonical gene files
+matched its exact blobs before editing. The full formal review 5329953434 and
+detailed comment 5855075916 accept the biological decisions and identify the
+six missing records as the only blocking issue. The coordinator imported the
+normal source14 records verbatim, with receipt
+`tmp/source14-canonical-import-receipt.json` (SHA256
+`45e4e452e6eaad0c359bc0ff3d8ba2006bde464894cd5dd3cc2af5c073a5b74e`).
+The source run is 36308419697 at commit
+`4d08457ceb0e3ce1277c73f918c0746b65866ab5`; the artifact SHA256 is
+`aaefb946ed96a34eda5f323f7b71d8c7fb1c6e233d3b1f1ecaf46c65cc5b94d9`.
+The earlier missing-cache statements above describe the original session and
+are superseded by this dated recovery record, without rewriting its history.
+
+All six actual records were read with their available scope:
+
+- PMID:10218571 is abstract-only. It distinguishes apoptosis-associated AK2
+  release into cytosol from unchanged AK1 and matrix AK3. The abstract does not
+  specify every experimental species or isoform; it cannot supply a direct
+  human isoform-localization assay or constitutive core cytosol assertion.
+- PMID:16790685 is abstract-only. Its mouse sperm result directly states that
+  AK2 localizes to the mitochondrial sheath in the midpiece, while AK1 is
+  associated with different structures. The two retained non-core human rows
+  remain explicit ortholog inferences. Both now carry an exact cached excerpt;
+  no human motility or axonemal structural function was inferred.
+- PMID:17952061 is abstract-only. Human-cell knockdown, stress-triggered
+  translocation, AK2-FADD-caspase-10 complex association, and purified-protein
+  addition to extracts are positive observations. This signaling complex is
+  distinct from AK2-DUSP26. Unread construct/control details still limit any
+  further molecular-function or biological-process proposal.
+- PMID:19043416 now has extracted Results, Methods and figure legends. Figure 3
+  rescues differentiation in patient bone-marrow CD34-positive cells with
+  human AK2A/B lentiviral constructs; knockdown also uses human CD34-positive
+  cells. Figure 4 inner-ear immunolocalization instead uses mice and places AK2
+  in postnatal stria-vascularis capillary lumens. The proposed ecto-enzyme role
+  is a discussion interpretation, not a measured human extracellular reaction.
+  These species and necessity-versus-step boundaries are explicit in its
+  updated reference assessment.
+- PMID:24548998 now has extracted Results, Methods and figure legends. Human
+  AK2 purified from bacteria has no phosphatase activity by itself in the tested
+  assays. Purified DUSP26 hydrolyzes pNPP and dephosphorylates Plk-treated FADD;
+  AK2 increases this activity, AK3/FADD controls do not, and AK2 K28E retains
+  activation. Tagged-protein association and gel filtration support a complex
+  without defining a fixed native stoichiometry. Human-cell assays, human-cell
+  xenografts in mice and heterozygous mouse fibroblasts remain distinct. The
+  retained GO:0072542 NEW gains direct cached human-protein and K28E excerpts;
+  DUSP26, not AK2, performs dephosphorylation. No new process was added.
+- PMID:39378586 remains abstract-only even though the record has a PMC ID. Its
+  abstract identifies patient single-cell transcriptomics and a CRISPR model
+  in primary human hematopoietic stem cells, with stage-dependent metabolic
+  responses. The earlier indexed external Results reading is separately
+  documented above; this record does not make that full text locally available.
+
+The seven optional review suggestions were assessed. The correct PAINT file
+is `interpro/panther/PTHR23359/PTHR23359-paint.tsv`, superseding the shortened
+historical filename above. Its actual GO:0004017 IRD records occur at
+PTN000599579, PTN002764060 and PTN002764136. The TSV has assertions and taxon
+labels, but no full tree or alignment: no independent target-lineage topology
+reconstruction is claimed from those labels. Current IBA prose emphasizes
+positive human evidence and the inspected IBDs, while this note records the
+bounded IRD check. The previous named internal peer identifier denotes an
+independent peer review and is not a biological source.
+
+The description now states AK2's biology directly; isoform and experimental
+scope remain in the annotation reasons, references and questions. The existing
+GO:0055086 refinement already explicitly says that the specific interconversion
+term is represented by the Reactome row; source-level duplicates are allowed,
+and no additional NEW term is being proposed. Broad cytoplasm remains correct
+at the source's resolution. All eight generic-binding removals now also quote
+the cached PMID:32814053 description of the systematic human interaction
+network, alongside their distinct UniProt pair evidence. That network-level
+excerpt is not represented as a reanalysis of individual supplementary pairs.
+
+All 30 seeded assertions, the one prior authored NEW, every action, six
+alternative products, and the integrated catalytic core remain unchanged.
+The recovered records keep their exact normal-fetched bytes and titles.
+Validation, the final recursive decoded PMID/DOI/PMC/Reactome census and the
+explicit publication manifest are completed separately after this source read.
+
+Final checks passed: all 48 supporting-text occurrences match their immutable
+local sources; all 31 source objects/actions, six products, reference identities
+and the catalytic core are preserved. The recursive authored Markdown/YAML
+census finds 12 PMIDs, four paper DOIs, two PMC identifiers and three Reactome
+records, with no missing source or genuine provider artifact. The legacy JBC
+DOI already cited above maps to PMID:6182143 despite the cache lacking a DOI
+field: fresh [PubMed](https://pubmed.ncbi.nlm.nih.gov/6182143/) links to the
+exact Elsevier PII S0021-9258(18)33631-7, matching the original article's DOI,
+title, authors and bibliographic coordinates. The cache remains unchanged.
+The initial census check stopped at this absent metadata field; its explicit
+primary-verified mapping resolved the check without inventing a new record.
+
+Full `just validate human AK2` passed again with no curation warnings after the
+status changed to COMPLETE. The runtime's unrelated dependency-deprecation
+notice is not a review-validation warning. History validation and HTML rendering
+are recorded in the frozen publication manifest. This session closes the source
+gate and leaves PR approval and publication to the coordinator.
