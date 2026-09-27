@@ -90,3 +90,61 @@ AK4P3-specific paper.
 
 10 distinct supporting_text quotes (83 instances), all verified, 63 of the instances being `file:`
 ones CI does not check. Ran my cached-PMIDs-vs-`references[]` guard over the staged diff: clean.
+
+## Round 2 (review feedback)
+
+### I used a schema slot to mean something it doesn't mean
+
+I put AMP kinase activity in `contributes_to_molecular_function` to signal "unmeasured". That
+slot means **"contributes to as part of a complex"** — it is for accessory and structural subunits
+(Complex I, ATP synthase, the ribosome), and repo-wide usage across 414 files matches that.
+AK3/AK4-family adenylate kinases are **monomeric**, so what I wrote asserted, machine-readably,
+that AK4P3 is an accessory subunit of something. That is a different and false claim.
+
+Worse, it was inconsistent with itself: if catalysis were too unmeasured for `molecular_function`,
+then `directly_involved_in: GO:0046033` and `locations: GO:0005759` had no business being there
+either, since both entail it.
+
+Fixed the way the schema intends:
+
+- `molecular_function: GO:0004017` AMP kinase activity, asserted at the same confidence as the
+  process and location — the entry is now internally consistent, everything projected from AK4.
+- The hedge moved to **`knowledge_gaps`**, which is the purpose-built slot and was empty despite
+  this being close to the textbook case. Two gaps recorded: one `BIOLOGY`/`MF_DARK` (is the
+  protein made, and does it work — with the boundary stating what *is* established, so the gap is
+  sharply delimited), and one `CURATION`/`MF_DARK` (is PE=1 attributable — resolvable from
+  existing PeptideAtlas data rather than new experiments).
+
+The general lesson: **a hedge belongs in the slot built for hedging, not smuggled into a slot
+that means something else.** Putting it in the wrong slot does not merely fail to communicate the
+caveat — it emits a positive false claim.
+
+### Four process rows carried a molecular-function caveat
+
+`GO:0006172`, `GO:0009142`, `GO:0046034` and `GO:0046039` are process terms but got the boilerplate
+sentence "This row asserts a specific catalytic activity". I had already written the correct
+process-row wording on the `GO:0046033` IBA row and simply failed to apply it. Now there is a
+separate `PROCESS` variant saying these presuppose the catalysis asserted elsewhere and inherit
+its caveat.
+
+That is the shared-preamble hazard again, in its other form: not a false fact this time, but the
+wrong template applied to a third of the rows.
+
+### Two non-blocking notes, both taken
+
+- **The P-loop `file:` quote transliterated an em dash to a hyphen**, so it was not byte-verbatim.
+  Nothing catches this — `file:` refs are existence-checked only (`validator.py:458`). I added a
+  **byte-verbatim** check to my own verification pass rather than the normalized one I had been
+  using, and it immediately found a second instance: the Troskie quote had `5'` where the source
+  has a prime character `5′`. Both fixed; all 10 distinct quotes are now byte-exact.
+- The 1,500-character preamble repeated 19 times does bury the row-specific sentence. Flagged for
+  the third time across this campaign. Left as is here because each row must read standalone, but
+  the accumulating evidence says the shared-context pattern needs rethinking rather than
+  re-defending — noted for the next gene rather than refactored mid-review.
+
+### Agreed and unchanged
+
+The reviewer independently verified the biology and the 19 ACCEPT judgment, and checked the
+nearest repo precedent: **LPAL2** went `MARK_AS_OVER_ANNOTATED`, but on a PE=5 entry with a
+frameshift and premature stops — a genuinely decayed relic, unlike this one. So the precedent
+does not cut against ACCEPT here.
