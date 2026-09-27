@@ -92,3 +92,15 @@ Verified GO_REF titles against https://geneontology.org/GO_REF/0000104, https://
 ## Final evidence and annotation-action reconciliation (2026-09-23)
 
 Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+
+## OpenScientist HDH-ARV follow-up (2026-09-27)
+
+Assessed `NCGR_LOCUS10166-hypotheses/fusion-model-arv-function-and-targeting/openscientist.md`.
+The report supports the prior HDH-positive interpretation and adds the missing ARV scope
+check: PMID:23668914 directly found ER-plasma membrane sterol transport intact in yeast
+arv1 mutants, while ARV1 loss alters cortical ER organization and plasma membrane lipid
+homeostasis. This resolves GO:0032366 as an over-specific ARV-family propagation
+rather than a merely unresolved row. GO:0097036, sphingolipid/sterol metabolism and
+ER/plastid targeting stay unresolved because the candidate still contains an ARV-like
+region and the HDH-ARV transcript itself remains unverified.
