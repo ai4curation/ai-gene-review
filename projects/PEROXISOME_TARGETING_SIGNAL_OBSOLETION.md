@@ -33,7 +33,7 @@ Four terms obsoleted, each with `replaced_by: GO:0000268` (checked against OLS4,
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
-| peroxisome matrix targeting signal-1 binding | GO:0005052 | parent of "peroxisome targeting sequence binding", to be renamed "peroxisome signal sequence receptor activity" |
+| peroxisome matrix targeting signal-1 binding | GO:0005052 | GO:0000268, formerly "peroxisome targeting sequence binding", renamed "peroxisome signal sequence receptor activity" |
 | peroxisome matrix targeting signal-2 binding | GO:0005053 | same parent |
 | peroxisome membrane targeting sequence binding | GO:0033328 | same parent |
 | peroxisome membrane class-1 targeting sequence binding | GO:0036105 | same parent (was a child of GO:0033328) |
@@ -69,7 +69,7 @@ These genes are already part of the broader [PEROXISOME](PEROXISOME.md) project.
 ## Genes refreshed
 
 Initial set — genes already reviewed in this repo whose annotations cite one of
-the three to-be-obsoleted terms:
+the four obsoleted terms:
 
 1. PEX5 (human) — done (PR #3233). GO:0005052 rows → MODIFY to GO:0000268 (already held by IDA); GO:0033328 IPI row kept UNDECIDED.
 2. PEX7 (human) — done (PR #3233). GO:0005053 rows → MODIFY to GO:0000268.
