@@ -412,3 +412,38 @@ source-cache warnings remain unresolved. All biological judgments, source
 assertions, reference assessments and core functions are unchanged. This status
 label correction does not imply that source retrieval or automated review has
 subsequently succeeded.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+Both required records now contain normally fetched XML full text.
+PMID:21267468 (PMC3022755) is a YAML reference; its local
+`full_text_unavailable` flag is now false. Recovered Methods and Figure 5
+agree with the previous external reading: mouse Adnp cDNA NM_009628, human
+HP1 constructs, reciprocal HP1beta W170A and ADNP motif perturbation. The
+Results/Figure V821E versus Methods V821A discrepancy is retained, without
+changing it to a human residue coordinate or claiming direct H3K9me3 binding.
+The existing specific domain-binding judgments need no change.
+
+The historical notes-only lead PMID:38479840 (PMC10982698) also has cached
+full text. Its mouse preimplantation CUT&RUN and zygotic Adnp knockout
+experiments concern SINE B2-derived CTCF-binding sites, with altered
+heterochromatin marking and transcription during blastocyst formation. The
+recovered Results retain this species and developmental scope. This cache
+closure does not convert the historical lead into a new human process assertion
+or add it as a supporting reference for an unchanged annotation.
+
+The exact records originate from standard fetch output in Actions run
+36286975328, head 5946477c8ac79ade0709264c775ea1262b108438, artifact
+10920674630. The transported ZIP SHA-256 is
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`;
+`tmp/verified-reference-records/local-import-receipt.json` records per-file
+hashes. Only these two ADNP-required cache records enter this manifest.
+
+All 53 source assertions and reviews, three cores, 43 reference identities,
+machine sources, genuine provider output, historical bioinformatics files and
+prior history are preserved. This entry supersedes the missing-cache status
+in earlier dated notes. Targeted validation, render and history checks are
+recorded in the closure manifest. The existing provider-quotation advisory,
+if still emitted, keeps the YAML DRAFT under the zero-warning COMPLETE rule,
+separately from the now-closed publication-cache gate.
