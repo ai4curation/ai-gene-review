@@ -1,7 +1,7 @@
 ---
 title: "Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)"
 maturity: SCOPING
-tags: [OBSOLETION]
+tags: [OBSOLETION, FLAGSHIP]
 species: [human, mouse]
 genes: [VMP1, CALM1, Calm1, Calm2, Calm3]
 ---

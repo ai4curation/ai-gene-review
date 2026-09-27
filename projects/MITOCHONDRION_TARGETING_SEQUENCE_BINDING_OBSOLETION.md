@@ -1,7 +1,7 @@
 ---
 title: "Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement"
 maturity: SCOPING
-tags: [OBSOLETION]
+tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast, worm]
 genes: [TOMM20, TOMM22, TOMM40, TOMM70, TIMM50, TIMM22, TIM22, TOM22, ACL4, tomm-22]
 ---

@@ -1,7 +1,7 @@
 ---
 title: "Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement"
 maturity: SCOPING
-tags: [OBSOLETION]
+tags: [OBSOLETION, FLAGSHIP]
 species: [ARATH, ORYSJ]
 ---
 
