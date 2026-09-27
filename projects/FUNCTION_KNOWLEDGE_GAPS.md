@@ -2,9 +2,31 @@
 title: "Function Knowledge Gaps"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+sidecars:
+  slide_figures:
+    - FUNCTION_KNOWLEDGE_GAPS/slides/dark-score-decomposed.svg
+    - FUNCTION_KNOWLEDGE_GAPS/slides/gap-anatomy.svg
+    - FUNCTION_KNOWLEDGE_GAPS/slides/gap-register-counts.svg
 ---
 
 # Function Knowledge Gaps
+
+**Bottom line:** about a fifth of the proteins in well-studied organisms
+still have no informative functional description, and many are conserved
+from yeast to human. This project records what is *not* known about a gene
+product as a curated, sourced statement, with the same evidentiary discipline
+the rest of the repo applies to what is known. We first tested a metric for
+"darkness" and found that most genes it flagged were structural subunits GO
+cannot describe or plain curation gaps, so a gap is now a judgement made by
+reading. We wrote 23 worked prose entries spanning biology, curation and
+ontology gaps, added a fourth kind (contested functions), and made
+`KnowledgeGap` a schema class that can sit on a gene, annotation, core
+function, module or module step. Reviews have since adopted it widely: on
+2026-09-26 the YAMLs hold 1,461 structured gaps in 535 gene and module files
+(1,117 OPEN, 59 NARROWING), more than the 1,073 in the last generated
+[register](FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md). Open items are a
+deep-research PMID validator, a fourth read-list batch and curating the
+contested-function candidates.
 
 What does biology genuinely *not* know about how a gene works — and how do we state it
 rigorously enough that someone could close it?
@@ -983,3 +1005,7 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
   unlocatable KCTD14 CUL3-non-binding claim was dropped. General principle adopted: **provenance for
   a gap must be a verified primary source or a checkable repo fact (GOA evidence codes), never an
   unverified deep-research summary** — see the new "Reviewing deep-research output" section.
+
+## Slides
+
+- [Slides](FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.html) (Marp source: [FUNCTION_KNOWLEDGE_GAPS-slides.md](FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.md)) — AI generated
