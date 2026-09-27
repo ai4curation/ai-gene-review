@@ -246,5 +246,7 @@ def test_content_quality_diagnostics_do_not_block_valid_archive(tmp_path):
 
 def test_source_validation_is_independent_of_biological_validation():
     run, jobs, artifacts = source_inputs()
+    jobs['jobs'][0]['steps'] = [step for step in jobs['jobs'][0]['steps']
+                                 if step['name'] != 'Validate module YAML files']
     jobs['jobs'][0]['steps'].append({'name': 'Validate module YAML files', 'conclusion': 'failure'})
     assert validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)['github-pages'] == 2

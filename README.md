@@ -469,6 +469,9 @@ Every rebuilt artifact must meet the budget before publication.
 Publication assumes the contents of `main` are accepted. Biological validation
 (including module GO labels and obsoletion checks) runs independently in PR CI
 and the weekly validation workflow, not in `build-pages` or daily publication.
+Upstream ontology drift with no repository changes is therefore detected weekly,
+not daily. This is an accepted tradeoff: publishing updates does not wait for
+biological revalidation; an independent validation run can be dispatched when needed.
 Missing supporting links, suspected site-prefix errors, and links to orphaned
 review HTML remain warnings with full diagnostic lists in `pages-diagnostics`;
 they do not freeze the whole site. Rendering failures, missing required build
@@ -509,7 +512,8 @@ gh workflow run deploy-existing-pages.yaml --ref main -f source_run_id=RUN_ID
 
 It verifies the original build and artifact, then publishes that exact snapshot,
 not current `main`. Choosing an older run publishes older content. For new
-content, failed builds, or an expired artifact, run **Build and deploy site**
+content, failed builds, an expired artifact, or an older manifest marked
+nondeployable under the former link policy, run **Build and deploy site**
 instead. The Pages archive is retained for **3 days** (diagnostics for 7).
 Only validated default-branch builds are accepted; checks include successful
 rendering and uploads, artifact provenance, actual archive size, and its recorded SHA-256.
