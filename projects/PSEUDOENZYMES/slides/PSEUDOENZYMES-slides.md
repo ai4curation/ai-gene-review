@@ -104,7 +104,7 @@ Outcome: over-annotated catalytic terms → MARK_AS_OVER_ANNOTATED / REMOVE; rea
 
 *S. pombe* Epe1 (UniProt O94603) — confirmed JmjC pseudo-demethylase.
 
-- **Defect:** degenerate Fe(II) motif (HVD instead of HxD); missing catalytic residues.
+- **Defect:** degenerate Fe(II) triad: H297-E299-**Y370**, with Tyr in place of the third His ligand of canonical HX(D/E)...H JmjC demethylases.
 - **Biochemistry:** no detectable H3K9me removal; H297A "catalytic" mutant still works.
 - **Actual function:** anti-silencing factor — recruits SAGA / Bdf2 to heterochromatin boundaries; reads H3K9me, does not erase it.
 - **Removed:** GO:0032452 (demethylase), GO:0051213 (dioxygenase), GO:0005506 (iron binding), GO:0070076 (demethylation).
