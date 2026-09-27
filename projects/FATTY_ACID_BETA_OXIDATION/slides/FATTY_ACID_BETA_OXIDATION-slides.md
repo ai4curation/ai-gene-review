@@ -37,8 +37,8 @@ Reviewing the GO annotations of the whole enzyme spiral in human, fly and mouse
 ## Bottom line
 
 - β-oxidation strips **two carbons per turn** through four steps, each run by **chain-length-specific** enzymes.
-- We reviewed **714 GO annotations on 27 genes** (10 human, 16 fly, mouse LCAD) and built a **cross-species module**.
-- **360 accepted, 278 non-core, 43 over-annotated, 13 modified, 18 removed**. Six blinded OpenScientist runs **agreed** with the reviews.
+- We reviewed **713 GO annotations on 27 genes** (10 human, 16 fly, mouse LCAD) and built a **cross-species module**.
+- **389 accepted, 237 non-core, 23 over-annotated, 30 modified, 14 removed, 20 undecided**. Six blinded OpenScientist runs **agreed** with the reviews.
 
 ---
 
@@ -52,7 +52,7 @@ Reviewing the GO annotations of the whole enzyme spiral in human, fly and mouse
 
 - One short, well-understood cycle that still concentrates **five recurring curation problems**:
   - **chain-length specificity**: use the specific MF where GO has one (VLCAD `GO:0017099`, MCAD `GO:0070991`, SCAD `GO:0016937`)
-  - **paralog cross-transfer**: mouse LCAD rows on ACADVL
+  - **cross-gene transfer**: SOAT cholesterol-esterification rows on the ACAT1 thiolase
   - **moonlighting**: HADH inhibits GLUD1; HADHA remodels cardiolipin
   - **organelle**: mitochondrion vs peroxisome
   - **GO↔RHEA mapping**: `GO:0004300` maps to the (3E) reaction, not the (2E) crotonase
@@ -63,20 +63,20 @@ Reviewing the GO annotations of the whole enzyme spiral in human, fly and mouse
 
 ![h:450](acadvl-review-table.jpg)
 
-<span class="small">ACADVL review page. The IBA very-long-chain ACAD activity is accepted; substrate binding is kept as non-core. Eight LCAD-derived IEA/ISS rows on this gene were removed.</span>
+<span class="small">ACADVL review page. The IBA very-long-chain ACAD activity is accepted; substrate binding is kept as non-core. Six IEA/ISS lipid-regulation rows transferred from mouse <em>Acadvl</em> (the true ortholog, not LCAD) are left undecided pending the mouse knockout evidence.</span>
 
 ---
 
 ## Results
 
-| Set | Genes | Ann. | ACCEPT | Non-core | Over-ann. | MODIFY | REMOVE |
-|---|---|---|---|---|---|---|---|
-| Human core spiral | 10 | 443 | 222 | 165 | 30 | 7 | 18 |
-| Fly spiral + scully | 11 | 196 | 92 | 88 | 9 | 6 | 0 |
-| Fly auxiliary isomerases | 5 | 33 | 24 | 8 | 1 | 0 | 0 |
-| Mouse Acadl (LCAD) | 1 | 42 | 22 | 17 | 3 | 0 | 0 |
+| Set | Genes | Ann. | ACCEPT | Non-core | Over-ann. | MODIFY | REMOVE | UNDECIDED |
+|---|---|---|---|---|---|---|---|---|
+| Human core spiral | 10 | 442 | 251 | 124 | 10 | 24 | 14 | 19 |
+| Fly spiral + scully | 11 | 196 | 92 | 88 | 9 | 6 | 0 | 1 |
+| Fly auxiliary isomerases | 5 | 33 | 24 | 8 | 1 | 0 | 0 | 0 |
+| Mouse Acadl (LCAD) | 1 | 42 | 22 | 17 | 3 | 0 | 0 | 0 |
 
-<span class="small">Counts from the review YAMLs. One UNDECIDED (fly Egm) and one NEW (ACAD9) not shown.</span>
+<span class="small">Counts from the review YAMLs. Human UNDECIDED: ACADVL 6, ACAT1 6, ACADM 4, ACAD9 2, ACADS 1; fly: Egm. No NEW annotations.</span>
 
 ---
 

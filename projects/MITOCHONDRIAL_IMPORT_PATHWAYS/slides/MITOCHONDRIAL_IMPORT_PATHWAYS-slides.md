@@ -37,8 +37,8 @@ One GO process term per import route, and a review of the human import machinery
 ## Bottom line
 
 - Mitochondrial proteins reach their compartment by **six import routes**, but GO grouped them inconsistently; **GO issue #31711** proposed one term per route.
-- GO has **added the route terms** (`GO:7770058`–`GO:7770063`) and reworded `GO:0030150` and `GO:0160203`.
-- We reviewed **670 annotations on 23 human genes** of the machinery; only **MTCH2** yet carries a new route term.
+- GO has **added the route terms** (`GO:7770058`, `GO:7770059`, `GO:7770060`, `GO:7770061`, `GO:7770063`) and reworded `GO:0030150` and `GO:0160203`.
+- We reviewed **670 annotations on 23 human genes** of the machinery; among them only **MTCH2** yet carries a new route term (MTCH1 and yeast MIM1 also do, outside the set).
 
 ---
 

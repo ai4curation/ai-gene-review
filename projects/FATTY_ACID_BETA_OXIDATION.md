@@ -3,7 +3,7 @@ title: "Mitochondrial Fatty Acid β-Oxidation (cross-species)"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, DROME, mouse]
-genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2, Acadl, scu, Dci, Ech1, CG4592, CG4594, CG4598]
+genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2, Acadl, Acadvl, Egm, Mcad, Arc42, CG4860, Mtpalpha, Echs1, scu, Mtpbeta, Acaa, Acat1, Dci, Ech1, CG4592, CG4594, CG4598]
 ---
 
 # Mitochondrial Fatty Acid β-Oxidation (cross-species)
@@ -16,11 +16,13 @@ scully for step ③ and the unsaturated-FAO auxiliary isomerases), plus mouse
 LCAD, and tied them together in the cross-species
 [`fatty_acid_beta_oxidation` module](../modules/fatty_acid_beta_oxidation.html).
 We chose this pathway because it concentrates recurring curation problems:
-chain-length specificity, paralog cross-transfer, moonlighting, mitochondrion
-versus peroxisome, and GO↔RHEA mapping. Across the 27 reviews (714 annotations),
-360 were accepted, 278 kept as non-core, 43 marked over-annotated, 13 modified
-and 18 removed; the removals include 8 LCAD-derived rows on ACADVL and
-SOAT-derived cholesterol acyltransferase rows on ACAT1. Six blinded
+chain-length specificity, cross-gene mis-annotation, moonlighting, mitochondrion
+versus peroxisome, and GO↔RHEA mapping. Across the 27 reviews (713 annotations),
+389 were accepted, 237 kept as non-core, 23 marked over-annotated, 30 modified,
+14 removed and 20 left undecided; the removals include SOAT-derived cholesterol
+acyltransferase rows on ACAT1. On ACADVL, six IEA/ISS lipid-regulation rows
+transferred from mouse *Acadvl* (P50544, the true ortholog) are left undecided
+because the underlying mouse knockout result could not be verified in full. Six blinded
 OpenScientist runs on organelle and chain-length questions all agreed with the
 reviews. Open work: the remaining mouse orthologs, a fly DECR1 ortholog that no
 resource can assign, and a schema gap for negating an existing positive
@@ -110,9 +112,13 @@ and the straight-chain thiolases (`GO:0003988`). See the flagship
 [Enzyme Specificity](ENZYME_SPECIFICITY.html) project for the worked table.
 
 ### Cross-paralog and cross-gene mis-annotation
-- **ACADVL** ← mouse LCAD (*Acadl*, P50544): 8 IEA/ISS annotations were
-  cross-transferred from the paralog, including a self-contradictory "negative
-  regulation of fatty acid oxidation" — removed.
+- **ACADVL** ← mouse *Acadvl* (P50544, MGI:895149): six IEA/ISS rows
+  (negative regulation of fatty acid biosynthesis and of fatty acid oxidation,
+  regulation of cholesterol metabolism) are transferred from the true mouse
+  ortholog, not from LCAD. An earlier pass treated them as LCAD cross-transfers
+  and removed them; the current review corrects the donor identity and leaves
+  them `UNDECIDED`, because the MGI knockout result (J:95532) behind them could
+  not be verified in full.
 - **ACAT1** ← SOAT1/SOAT2 name collision: cholesterol O-acyltransferase +
   ER-localization annotations (from a SARS-CoV-2/CH25H paper about the ER
   acyl-CoA:cholesterol acyltransferase) were mis-attributed to the mitochondrial
@@ -295,7 +301,7 @@ represented directly. Flagged here as a candidate improvement.
 - [x] OpenScientist chain-length/substrate specificity runs (ACAD9, CG4860, Mcad, Echs1) — all confirmed our reviews; see [Chain-length specificity](#chain-length-specificity--openscientist-structural-verdicts)
 - [x] Fly step-3 ortholog resolved + reviewed: `DROME/scu` (scully, HSD17B10 type-II); no classical HADH1 ortholog in fly
 - [x] Pathway-level Reactome cross-check ([sub-page](FATTY_ACID_BETA_OXIDATION/reactome-comparison.md))
-- [x] Mouse arm started: `mouse/Acadl` (LCAD) — homes the ACADVL cross-paralog cleanup
+- [x] Mouse arm started: `mouse/Acadl` (LCAD)
 - [x] Unsaturated-FAO auxiliary-enzyme cassette curated: `DROME/Dci`, `DROME/Ech1`, `DROME/CG4592`, `DROME/CG4594`, `DROME/CG4598`
 
 ## In progress / open

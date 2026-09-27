@@ -37,7 +37,7 @@ Reviewing GO annotations across the five respiratory complexes, their carriers a
 ## Bottom line
 
 - OXPHOS makes most cellular ATP: **four electron-transport complexes, two carriers, one ATP synthase**, about 90 subunits plus assembly factors.
-- **36 of 38** prioritized human genes are reviewed: **1,329 annotations**, 866 accepted, 155 over-annotated, 51 removed, 17 NEW.
+- **36 of 38** prioritized human genes are reviewed: **1,330 annotations**, 861 accepted, 152 over-annotated, 52 removed, 18 NEW.
 - One pattern throughout: subunits **`contributes_to`** the complex activity; **assembly factors are not the enzyme**.
 
 ---
@@ -80,14 +80,14 @@ Reviewing GO annotations across the five respiratory complexes, their carriers a
 
 | Complex | Genes | Ann. | ACCEPT | Non-core | Over-ann. | MODIFY | REMOVE | NEW |
 |---|---|---|---|---|---|---|---|---|
-| I | 5 | 253 | 188 | 38 | 18 | 3 | 3 | 3 |
-| II | 5 | 194 | 139 | 29 | 12 | 5 | 6 | 3 |
+| I | 5 | 252 | 187 | 38 | 15 | 4 | 4 | 2 |
+| II | 5 | 196 | 135 | 29 | 12 | 9 | 6 | 5 |
 | III | 4 | 112 | 66 | 9 | 27 | 3 | 5 | 2 |
 | IV | 12 | 334 | 202 | 47 | 44 | 12 | 24 | 5 |
 | V | 7 | 322 | 202 | 55 | 39 | 6 | 13 | 1 |
 | Carriers / CoQ / ETF | 3 | 114 | 69 | 23 | 15 | 4 | 0 | 3 |
 
-<span class="small">Counts from the 36 review YAMLs; 6 UNDECIDED (ATP5F1B, ATP5IF1) not shown. Complex IV includes its assembly factors and LRPPRC.</span>
+<span class="small">Counts from the 36 review YAMLs; 8 UNDECIDED (ATP5F1B 3, ATP5IF1 3, ACAD9 2) not shown. Complex IV includes its assembly factors and LRPPRC.</span>
 
 ---
 
@@ -104,6 +104,6 @@ Reviewing GO annotations across the five respiratory complexes, their carriers a
 - ✅ 36/38 prioritized genes reviewed; taxon-neutral OXPHOS module built.
 - ✅ Per-complex modules exist too (`mitochondrial_complex_i_core` … `mitochondrial_complex_iv`, ETF, CoQ10).
 - ⬜ **COX7A2L** (supercomplex factor, contested) and **HCCS** (cytochrome c heme lyase) not yet reviewed.
-- ⬜ The project page's STATUS checklist predates 11 reviews done elsewhere.
+- ✅ STATUS checklist updated for the 11 reviews done under other projects.
 
 **Read more:** `projects/OXPHOS.md` · `modules/oxphos.yaml` · `genes/human/<GENE>/`

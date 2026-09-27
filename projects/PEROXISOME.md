@@ -3,6 +3,7 @@ title: "Peroxisome Biogenesis Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+genes: [PEX1, PEX2, PEX3, PEX5, PEX6, PEX7, PEX10, PEX11A, PEX11B, PEX11G, PEX12, PEX13, PEX14, PEX16, PEX19, PEX26]
 ---
 
 # Peroxisome Biogenesis Project
@@ -14,7 +15,9 @@ Zellweger spectrum disorders. We reviewed every existing GO annotation on the
 16 human peroxins, in three phases: import and recycling, the RING ligases and
 docking complex, then membrane biogenesis and proliferation. All 16 reviews
 are in the repo (828 annotations: 579 accepted, 51 kept as non-core, 93 marked
-over-annotated, 28 modified, 64 removed, 11 NEW). Generic `protein binding` was
+over-annotated, 28 modified, 64 removed, 11 NEW, 2 undecided). PEX39, a
+recently characterized PTS2-import factor that binds PEX7, has its own review
+but is outside this set. Generic `protein binding` was
 the dominant problem: 35 of PEX19's 37 removals and 17 of PEX5's 19
 over-annotations are `protein binding` IPI rows. The other recurring pattern
 was guilt by cargo or phenotype, where a peroxin is annotated to the metabolic
