@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — 2026-09-26 UTC
+## Campaign status — 2026-09-27 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -90,12 +90,15 @@ are therefore expected; existing human reviews still link normally.
 | ACAN | Definitive | COMPLETE | Draft; biological feedback resolved; PMID:11222505 cache required | `cmungall/clingen-acan` | [#3153](https://github.com/ai4curation/ai-gene-review/pull/3153) |
 | ACAT1 | Definitive | COMPLETE | Draft; current head approved; eight donor caches required | `cmungall/clingen-acat1` | [#3158](https://github.com/ai4curation/ai-gene-review/pull/3158) |
 | ACOX1 | Definitive | INITIALIZED | Draft; all biological feedback resolved; PMID:16672280 cache required | `cmungall/clingen-acox1` | [#3159](https://github.com/ai4curation/ai-gene-review/pull/3159) |
-| ACOX2 | Definitive | INITIALIZED | Draft; reaction and preparation-scope follow-up published; re-review and six caches pending | `cmungall/clingen-acox2` | [#3161](https://github.com/ai4curation/ai-gene-review/pull/3161) |
+| ACOX2 | Definitive | INITIALIZED | Draft; current head approved; six required publication caches pending | `cmungall/clingen-acox2` | [#3161](https://github.com/ai4curation/ai-gene-review/pull/3161) |
 | ACSL4 | Definitive | COMPLETE | Draft; current head approved; notes-only PMID:23766516 cache required | `cmungall/clingen-acsl4` | [#3160](https://github.com/ai4curation/ai-gene-review/pull/3160) |
-| ACTA1 | Definitive | COMPLETE | Published; review follow-up in progress | `cmungall/clingen-acta1` | [#3163](https://github.com/ai4curation/ai-gene-review/pull/3163) |
-| ACTA2 | Definitive | COMPLETE | Published; current-head review and CI pending | `cmungall/clingen-acta2` | [#3164](https://github.com/ai4curation/ai-gene-review/pull/3164) |
-| ACTB | Definitive | COMPLETE | Substantive audit in progress | — | — |
-| ADA | Definitive | INITIALIZED | Substantive audit in progress | — | — |
+| ACTA1 | Definitive | COMPLETE | Approved; protected auto-merge enabled; required CI pending | `cmungall/clingen-acta1` | [#3163](https://github.com/ai4curation/ai-gene-review/pull/3163) |
+| ACTA2 | Definitive | COMPLETE | Published; follow-up validated locally; automated re-review retry queued | `cmungall/clingen-acta2` | [#3164](https://github.com/ai4curation/ai-gene-review/pull/3164) |
+| ACTB | Definitive | COMPLETE | Draft; independent audit and validation passed; two required publication caches pending | `cmungall/clingen-actb` | [#3184](https://github.com/ai4curation/ai-gene-review/pull/3184) |
+| ADA | Definitive | INITIALIZED | Draft; independent audit and validation passed; six PMID and three Reactome caches pending | `cmungall/clingen-ada` | [#3179](https://github.com/ai4curation/ai-gene-review/pull/3179) |
+| ADGRV1 | Definitive | COMPLETE | Substantive audit in progress | — | — |
+| ADNP | Definitive | COMPLETE | Substantive audit in progress | — | — |
+| ADSL | Definitive | INITIALIZED | Substantive audit in progress | — | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -389,3 +392,14 @@ The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **14 
   18 latest revisions and 71 file hashes; 8 of these PRs are merged, while the first
   6 campaign completions predate this queue. Correctly scaffolded history links this
   snapshot to PR #3162 and preserves the earlier generated actor-token record.
+
+- 2026-09-27 00:05 UTC: Project #3162 merged as `62134e998e0e4fbda34cc79564fb081e8dbbd951`.
+  Published ACTB #3184 and ADA #3179 as drafts after independent audits and targeted
+  validation; their required source-cache gaps remain explicit. ACOX2 received final-head
+  approval after restoring the exact upstream publication title. ACTA1 final head is
+  approved with protected auto-merge enabled. ACTA2 follow-up is published; its automated
+  reviewer failed before substantive execution, and one retry is queued. Gene and history
+  steps in ACTA1 CI have passed while the remaining workflow runs. ADGRV1, ADNP and ADSL
+  are under audit under the documented cached-gene scheduling exception.
+  The local queue snapshot now records 20 latest revisions / 79 hashes and 20
+  historical revisions / 142 hashes, with exact trees and parent continuity checked.
