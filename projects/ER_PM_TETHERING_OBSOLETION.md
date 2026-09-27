@@ -18,12 +18,16 @@ PomBase 13, TAIR 2, UniProt 2) and the eight InterPro2GO mappings InterPro has
 already removed, and checked the repo (`grep -rl` over all files under
 `genes/`). No review YAML or GOA file uses either term, and no dedicated ER-PM
 tether (extended synaptotagmins, tricalbins, plant SYTs) has been reviewed.
-One reviewed gene is affected indirectly: human VAPA, a broad ER contact-site
-adaptor, carries GO:0061817 (IDA:UniProtKB) in its cached UniProt record,
-though not in its GOA file or review, so it is the first place to check
-whether GO:0160214 applies. Scoped, not yet started: the obsoletion has since
-landed (OLS lists GO:0061817 as obsolete), which makes this family a timely
-candidate for new reviews, starting with VAPA, then human ESYT2 and yeast TCB3.
+Human VAPA, a broad ER contact-site adaptor, never carried GO:0061817 as a
+GO annotation here: the term is absent from its GOA file (in every committed
+version) and its review. It appears only as a cross-reference line
+(IDA:UniProtKB) in the cached UniProt flat file. VAPA has now been assessed for
+GO:0160214 and not annotated ([PR #3220](https://github.com/ai4curation/ai-gene-review/pull/3220)). The term's definition requires the adaptor
+itself to bind plasma-membrane lipids, and at VAPA contacts that is done by the
+partner's PH domain (e.g. ORP3). Scoped, not yet started for the tethers
+proper: the obsoletion has since landed (OLS lists GO:0061817 as obsolete),
+which makes this family a timely candidate for new reviews, starting with human
+ESYT2 and yeast TCB3.
 
 ## Overview
 
@@ -81,14 +85,28 @@ TCB, tricalbin, or synaptotagmin under `genes/` returned no matches, and no
 `*-ai-review.yaml` or `*-goa.tsv` file contains GO:0061817 or GO:0160214.
 
 A search across **all** file types (`grep -rl GO:0061817 genes/`) finds one
-hit: `genes/human/VAPA/VAPA-uniprot.txt:505`, a cached UniProt DR line
+hit: `genes/human/VAPA/VAPA-uniprot.txt:505`, a DR line in the cached UniProt
+flat file (entry version 220, 2026-09-02)
 `GO:0061817 endoplasmic reticulum-plasma membrane tethering; IDA:UniProtKB`.
-VAPA's GOA file has no such row, so its review (status IN_PROGRESS) does not
-assess it. VAPA is an ER-resident FFAT-motif adaptor whose review describes it
-as organizing contact sites with endosomes, Golgi and plasma membrane, with
-core molecular function GO:0043495 *protein-membrane adaptor activity*. It is
-therefore the one repo gene where the question "does GO:0160214 apply?" is
-already live. No other review needs refresh for the obsoletion itself; the
+That line is UniProt's own cross-reference, not a GOA row. `VAPA-goa.tsv` has
+no GO:0061817 row in any committed version, and the review has never used the
+term, so no VAPA annotation needs repair for the obsoletion. The two
+statements that VAPA "carries GO:0061817 in its cached UniProt record" and
+"carries no GO:0061817 annotation in GOA" (the VAPA notes in [PR #3220](https://github.com/ai4curation/ai-gene-review/pull/3220)) are
+both true; they describe different files.
+
+VAPA is an ER-resident FFAT-motif adaptor whose review describes it as
+organizing contact sites with endosomes, Golgi and plasma membrane, with core
+molecular function GO:0043495 *protein-membrane adaptor activity*. It was the
+one repo gene where "does GO:0160214 apply?" was already live, and [PR #3220](https://github.com/ai4curation/ai-gene-review/pull/3220)
+answers it: **not annotated**. GO:0160214 is defined as bringing the plasma
+membrane and ER membrane together "via membrane lipid binding". At
+VAPA-dependent ER-PM contacts the plasma-membrane lipid binding is done by the
+FFAT partner (e.g. the ORP3 PH domain binding PI(4,5)P2), while VAPA is the
+ER-anchored FFAT receptor, already captured by GO:0043495. PomBase does annotate
+the fission-yeast VAP orthologs scs2 and scs22 to GO:0160214, and UniProt
+transfers it to human VAPB (ISS), so the review records this as a
+`suggested_questions` entry rather than settling it. No other review needs refresh for the obsoletion itself; the
 tether family proper is well-characterized in the literature and represents a
 coherent candidate set for proactive review.
 
@@ -151,10 +169,10 @@ add files without confirming the UniProt accession from the UniProt API.
    should propose this MF and either GO:0051643 (ER localization) or a more
    informative BP child term (membrane contact site organization etc.) for
    process-level annotation.
-3. **Check VAPA first.** Its cached UniProt record carries GO:0061817 by IDA;
-   decide whether GO:0160214 is warranted alongside its current core MF
-   GO:0043495, or whether VAPA's contact-site role is too general for the
-   ER-PM-specific term.
+3. **VAPA: done ([PR #3220](https://github.com/ai4curation/ai-gene-review/pull/3220)).** Assessed for GO:0160214 and not annotated,
+   because the PM lipid binding at VAPA contacts is the partner's. Whether
+   the term should cover ER-anchored FFAT receptors (the PomBase scs2/scs22
+   and UniProt VAPB precedent) is raised as a suggested question.
 4. **Begin with ESYT2 + TCB3** as anchor reviews — these are the most
    structurally and biochemically characterized members and have the cleanest
    literature support for the adaptor/tether MF call.
@@ -176,6 +194,10 @@ membrane contact site (MCS) area has been growing in interest.
 - 2026-05-04 — Project file created. Tracking upstream issue #6383 (last
   active 2026-05-01). Obsoletion not yet applied but InterPro2GO mappings have
   been removed by InterPro per Sara's comment. No gene reviews started yet.
+- 2026-09-26 — VAPA assessed for GO:0160214 in [PR #3220](https://github.com/ai4curation/ai-gene-review/pull/3220): not annotated
+  (definition requires PM lipid binding by the adaptor; at VAPA contacts the
+  partner's PH domain does it). VAPA never had GO:0061817 in GOA or its
+  review; the only occurrence is a UniProt DR line in `VAPA-uniprot.txt`.
 
 ## Slides
 
