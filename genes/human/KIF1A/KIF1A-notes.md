@@ -10,3 +10,7 @@ Sources: UniProt Q12756, cached GOA publications, plus newly cached PMID:9548721
 - Interkinetic nuclear migration: [PMID:21037580 "An RNAi screen of kinesin genes identified Kif1a, a member of the kinesin-3 family, as the motor for basally directed nuclear movement"]; rescued by human KIF1A. Rat Kif1a (F1M4A4) carries GO:0022027 IMP from this paper; human lacked it, so added NEW (ISS). KIF1A performs the step, so the participation test is met.
 - All six PMID:32814053 protein-binding rows REMOVE (HTP interactome, uninformative).
 - Retrograde DCV transport (IBA/ISS) kept as non-core: KIF1A is a plus-end motor.
+
+## Deep research (Falcon) incorporated
+
+KIF1A-deep-research-falcon.md arrived after the first pass and agrees with the review (plus-end kinesin-3; SVP and DCV cargo): [file:human/KIF1A/KIF1A-deep-research-falcon.md "These findings establish that the motor is not merely associated with SVPs but is required for their physiologically effective delivery."]. It does not mention interkinetic nuclear migration; that NEW row rests on PMID:21037580.
