@@ -1,4 +1,4 @@
-# Curation notes: *Pseudomonas putida* KT2440 fadA (Q88L01, PP_2136)
+# Curation notes: *Pseudomonas putida* KT2440 fadA (Q88L01, PP_2137)
 
 These notes record the reasoning behind the two non-routine curation actions in
 `fadA__Q88L01-ai-review.yaml`: the `REMOVE` of GO:0010124 and the `NEW`
@@ -42,20 +42,31 @@ in this repository:
 | paaH | Q88HS1 | PP_3282 | 3-hydroxyadipyl-CoA dehydrogenase (EC 1.1.1.35) | InterPro2GO, `InterPro:IPR011967` |
 | paaF | Q88HR9 | PP_3284 | Enoyl-CoA hydratase-isomerase (EC 4.2.1.17) | — (carries GO:0006635 only) |
 
-Two points follow. First, the thiolase step of the phenylacetate route is already
-carried out by a different protein: paaJ/PP_3280 is a distinct gene product with
-its own EC number and its own beta-oxidation-like chemistry on the ring-cleavage
-intermediates. Second, and more telling, paaJ receives GO:0010124 from a
-**different TreeGrafter node** (`PTN001291485`) than the one that put the term on
-fadA (`PTN002466592`). The phenylacetate term therefore reaches fadA through
-thiolase-fold propagation rather than through the node that represents the
-phenylacetate pathway itself.
+The load-bearing point is that **the thiolase step of the phenylacetate route is
+already carried out by a different protein**, and fadA's own typing excludes it
+from that route: paaJ/PP_3280 is a distinct gene product with its own EC number
+(2.3.1.174) acting on the ring-cleavage intermediates, while Q88L01 is assigned to
+the FadA-specific subfamily `PTHR43853:SF11` and typed by HAMAP rule `MF_01620`,
+both of which confine it to fatty acid beta-oxidation. Under the repository's
+guidance that is an over-propagated electronic inference that can be argued
+against on biological grounds.
 
-Taken together: the dedicated *paa* route thiolase exists and is separately
-annotated, fadA's own subfamily assignment is the FadA beta-oxidation subfamily,
-and its HAMAP rule confines it to fatty acid beta-oxidation. GO:0010124 on fadA is
-family-wide electronic propagation across the thiolase fold and should be removed
-rather than merely flagged.
+A secondary, non-decisive observation is that paaJ receives GO:0010124 from a
+different TreeGrafter node (`PTN001291485`) than the one that put the term on fadA
+(`PTN002466592`). This is consistent with the term reaching fadA by thiolase-fold
+propagation, but it does not settle the matter on its own: two nodes could in
+principle both legitimately carry GO:0010124 if two thiolase clades each act in
+phenylacetate catabolism. It is recorded as corroboration, not as the argument.
+
+Note for coherence with the neighbouring `ACCEPT`: `PTN002466592` is also among
+the sources of the GO:0006635 fatty acid beta-oxidation annotation this review
+accepts, where it is joined by `UniRule:UR000080052` and `UniPathway:UPA00659`
+[file:PSEPK/fadA__Q88L01/fadA__Q88L01-goa.tsv]. The node itself is a
+beta-oxidation node; it is the phenylacetate term sitting on it that is the
+anomaly, so removing GO:0010124 does not undercut GO:0006635.
+
+Taken together, GO:0010124 on fadA is family-wide electronic propagation across
+the thiolase fold and should be removed rather than merely flagged.
 
 The paralog context matters for the same reason and is recorded here for
 auditability: thiolase-fold propagation of pathway-specific terms is expected to

@@ -38,7 +38,7 @@ KT2440.
 - [x] Create a reusable four-reaction bacterial module with exact PSEPK exemplars.
 - [ ] Complete OpenScientist gene-level research for FadE and FadA (FadE complete; FadA running).
 - [x] Validate the module and focused gene reviews.
-- [ ] Render the gene reviews and batch page.
+- [x] Render the gene reviews and batch page.
 - [ ] Open one PR for this module and shepherd review and CI.
 
 ## Focused Genes
