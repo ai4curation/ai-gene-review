@@ -100,7 +100,7 @@ Assessed `NCGR_LOCUS10166-hypotheses/fusion-model-arv-function-and-targeting/ope
 The report supports the prior HDH-positive interpretation and adds the missing ARV scope
 check: PMID:23668914 directly found ER-plasma membrane sterol transport intact in yeast
 arv1 mutants, while ARV1 loss alters cortical ER organization and plasma membrane lipid
-homeostasis. This resolves GO:0032366 and GO:0097036 as over-specific ARV-family
-propagations rather than merely unresolved rows. Sphingolipid/sterol metabolism and
+homeostasis. This resolves GO:0032366 as an over-specific ARV-family propagation
+rather than a merely unresolved row. GO:0097036, sphingolipid/sterol metabolism and
 ER/plastid targeting stay unresolved because the candidate still contains an ARV-like
 region and the HDH-ARV transcript itself remains unverified.
