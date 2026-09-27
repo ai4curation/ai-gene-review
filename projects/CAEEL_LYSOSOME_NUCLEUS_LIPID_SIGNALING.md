@@ -13,8 +13,8 @@ oleoylethanolamide (OEA), the lipid chaperone LBP-8 carries it to the
 nucleus, and the nuclear receptor NHR-80, with its partner NHR-49, switches
 on fatty acid desaturase and beta-oxidation genes to extend lifespan
 (PMID:25554789). We reviewed every existing GO annotation on these four
-genes. All four reviews are done: 74 rows, 60 of them ACCEPT, 6 MODIFY and
-4 NEW proposals. The corrections make the mechanism explicit: LBP-8's
+genes. All four reviews are done: 74 rows: 60 ACCEPT, 3 KEEP_AS_NON_CORE, 1
+MARK_AS_OVER_ANNOTATED, 6 MODIFY and 4 NEW proposals. The corrections make the mechanism explicit: LBP-8's
 *long-chain fatty acid transmembrane transporter activity* becomes lipid
 transfer activity, NHR-80's generic DNA-binding transcription factor row
 becomes ligand-modulated transcription factor activity, and NHR-49's four
@@ -94,3 +94,7 @@ Lysosome                        Cytoplasm                   Nucleus
 
 - Longevity/aging overlap with genes in multiple existing projects (daf-16, hlh-30)
 - Autophagy connection via omega-6 PUFA signaling (see CAEEL_PROTEOSTASIS)
+
+## Slides
+
+- [Slides](CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING/slides/CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.html) (Marp source: [CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.md](CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING/slides/CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.md)) — AI generated

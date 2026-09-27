@@ -299,3 +299,7 @@ Bardet-Biedl syndrome proteins:
 - CAEEL_PROTEOSTASIS (18 genes, not started)
 
 ---
+
+## Slides
+
+- [Slides](CAEEL_CILIOPATHY/slides/CAEEL_CILIOPATHY-slides.html) (Marp source: [CAEEL_CILIOPATHY-slides.md](CAEEL_CILIOPATHY/slides/CAEEL_CILIOPATHY-slides.md)) — AI generated

@@ -38,7 +38,7 @@ Reviewing GO annotations for 18 genes of the ER and mitochondrial stress respons
 
 - ER stress is sensed by **IRE-1, PEK-1 and ATF-6**; mitochondrial stress by **ATFS-1** with DVE-1, UBL-5 and chromatin regulators.
 - We reviewed **every GO annotation on 18 genes**: **421 rows**, 344 ACCEPT, 13 MODIFY, 5 REMOVE, 21 NEW.
-- The five removals each fix a **specific error**, e.g. protein tag activity on UBL-5, which cannot be conjugated.
+- Four of the five removals fix a **specific error**, e.g. protein tag activity on UBL-5, which cannot be conjugated; the HSP-60 one overrules an IPI row from an abstract only and is tentative.
 
 ---
 
@@ -68,7 +68,7 @@ Reviewing GO annotations for 18 genes of the ER and mitochondrial stress respons
 | Gene | Term | Evidence | Why |
 |---|---|---|---|
 | ubl-5 | protein tag activity | IBA | no C-terminal di-Gly; acts non-covalently |
-| hsp-60 | RNA Pol II TF binding | IPI | paper showed DVE-1 on the *hsp-60* promoter |
+| hsp-60 | RNA Pol II TF binding | IPI | abstract shows DVE-1 on the *hsp-60* promoter; full text unseen, so tentative |
 | jmjd-3.1 | RNA Pol II cis-regulatory DNA binding | IBA | no intrinsic DNA-binding domain |
 | met-2 | histone H3K36 methyltransferase activity | IMP | SETDB1-family enzymes are H3K9-specific |
 | ire-1 | unfolded protein binding | IBA | obsolete term; sensing is not chaperone binding |

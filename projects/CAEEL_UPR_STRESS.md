@@ -17,11 +17,14 @@ covering the three ER branches, the mitochondrial UPR and its chromatin
 regulators, and the integrated stress response and neuronal signalling.
 All 18 reviews are complete: 421 rows, 344 ACCEPT, 29 KEEP_AS_NON_CORE, 6
 MARK_AS_OVER_ANNOTATED, 13 MODIFY, 5 REMOVE, 3 UNDECIDED and 21 NEW. The
-removals correct specific errors: protein tag activity on UBL-5, which
-lacks the C-terminal di-glycine needed for conjugation; transcription
-factor binding on HSP-60, which came from a paper about DVE-1 binding the
-*hsp-60* promoter; DNA binding on JMJD-3.1; and H3K36 methyltransferase
-activity on MET-2, which gains H3K9 dimethyltransferase activity instead.
+removals target specific errors: protein tag activity on UBL-5, which
+lacks the C-terminal di-glycine needed for conjugation; DNA binding on
+JMJD-3.1; and H3K36 methyltransferase activity on MET-2, which gains H3K9
+dimethyltransferase activity instead. The REMOVE of an experimental (IPI)
+transcription factor binding row on HSP-60 is less secure: it rests on
+the abstract of PMID:17925224 (DVE-1 binding the *hsp-60* promoter), the
+full text was not available, and it should probably be UNDECIDED pending
+a curator check.
 atfs-1 and hsp-4 are shared with the mitophagy and proteostasis projects.
 
 We did this because the worm is where non-cell-autonomous UPR signalling
@@ -221,3 +224,7 @@ Convergent signaling:
 3. JMJD-3.1 acts locus-specifically in stress response (unlike UTX-1 global developmental regulator)
 4. OCR-2 requires OSM-9 heteromerization for polymodal sensory function
 5. MET-2/LIN-65 complex establishes H3K9me2 marks for transgenerational UPR-mt inheritance
+
+## Slides
+
+- [Slides](CAEEL_UPR_STRESS/slides/CAEEL_UPR_STRESS-slides.html) (Marp source: [CAEEL_UPR_STRESS-slides.md](CAEEL_UPR_STRESS/slides/CAEEL_UPR_STRESS-slides.md)) — AI generated

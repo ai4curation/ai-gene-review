@@ -99,6 +99,7 @@ Reviewing GO annotations for 17 genes of mitochondrial quality control
 
 - ✅ 17/17 gene reviews and the pathway summary.
 - ⬜ Status notes on the project page (Dec 2025) predate the 2026 re-review; the BLUF gives current counts.
-- ⬜ fundc-1: listed, but no clear worm ortholog in UniProt.
+- ⬜ fundc-1 (Q22252, FUNDC1 ortholog): reviewed separately, also proposes GO:0140580; not yet counted in these totals.
+- ⬜ Six genes are shared with the proteostasis and UPR projects; do not sum totals across projects.
 
 **Read more:** `projects/CAEEL_MITOPHAGY.md` · `projects/CAEEL_MITOPHAGY/CAEEL_MITOPHAGY-pathway.md` · `genes/worm/<gene>/`

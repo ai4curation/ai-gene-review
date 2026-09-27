@@ -382,3 +382,7 @@ Completed comprehensive review of all 18 C. elegans proteostasis genes across 3 
 - Annotation review: 8-10 hours (using annotation-reviewer agent)
 - Pathway integration: 3-4 hours
 - Total: 13-16 hours for comprehensive systematic review
+
+## Slides
+
+- [Slides](CAEEL_PROTEOSTASIS/slides/CAEEL_PROTEOSTASIS-slides.html) (Marp source: [CAEEL_PROTEOSTASIS-slides.md](CAEEL_PROTEOSTASIS/slides/CAEEL_PROTEOSTASIS-slides.md)) — AI generated
