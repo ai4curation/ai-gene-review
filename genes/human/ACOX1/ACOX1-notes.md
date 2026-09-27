@@ -190,3 +190,12 @@ The [live GO:0006635 displayed is_a ancestry](https://amigo.geneontology.org/ami
 The R-HSA-9033236 cytosol row now carries its own exact cached docking-event quote. The membrane HDA remains UNDECIDED: the abstract's aggregate proportions and proposed transient associations do not identify ACOX1's treatment-dependent fraction, peptide evidence or localization controls. Calling the ACOX1 hit an over-annotation solely from those aggregate statistics would exceed the accessible evidence. The current reason explicitly distinguishes this unresolved experiment from the established matrix role.
 
 Final actions are **36 ACCEPT, 6 KEEP_AS_NON_CORE, 4 MODIFY, 2 UNDECIDED and 1 REMOVE**. Only row 45 changed action in this follow-up. All 49 source assertion objects and three alternative products remain unchanged. Prior notes are retained verbatim before this dated entry. Targeted checks, render, append-only history validation and exact four-file publication hashes are supplied in the follow-up manifest; the missing PMID cache remains a blocker even if schema validation otherwise passes.
+
+
+## 2026-09-27: Required publication cache recovered
+
+Recovered required PMID:16672280 through standard fetch-pmid in read-only Actions run 36286975328 (job 108529455048, artifact 10920674630), transported unchanged by read-only run 36288441414. Verified artifact SHA256 c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713 and every record SHA256/Git blob before importing. Re-read this abstract, confirmed exact citation title and retained full_text_unavailable=true. All annotation decisions, source objects, core functions, reference identities and alternative products remain unchanged from a6069e17b0055b08fea3eba788d759c16318e8a0. Targeted validation passed with 0 warnings; YAML status is COMPLETE. The machine cache requirement is satisfied; source-limited UNDECIDED judgments remain explicit.
+
+This supersedes the earlier missing-cache publication gate. The recovered record is abstract-only; neither its presence nor successful validation establishes access to the full paper. Zero remaining validation warnings permit COMPLETE status and a ready PR.
+
+Final checks: `just validate human ACOX1`, `just render human ACOX1` and the new history validation all passed. The parsed review differs only in source-access notes and, where applicable, status; every biological decision and source field is preserved.
