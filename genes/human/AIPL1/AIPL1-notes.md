@@ -209,3 +209,44 @@ farnesyl-processing experiments agreed that the exact affected processing step
 is unresolved. Final targeted validation passed with two intentional advisories
 (unreferenced historical provider report and core protein-maturation coverage);
 history validation and normal rendering passed.
+
+
+## 2026-09-27 PR feedback: processing scope and localization trail
+
+The [current review](https://github.com/ai4curation/ai-gene-review/pull/3257#issuecomment-5853253376)
+was checked against the original sources and live GO definitions. The
+[2003 study](https://pmc.ncbi.nlm.nih.gov/articles/PMC240669/) uses human AIPL1 and
+human DNAJA2 constructs. Its mobility assay and mutant controls establish increased
+client processing, while the exact affected CAAX-processing step is unresolved.
+The corresponding assertion now uses MODIFY to [protein maturation](https://amigo.geneontology.org/amigo/term/GO:0051604),
+which accommodates the measured assistance without choosing a specific chemical
+step. The source IDA and acts_upstream_of_or_within qualifier remain unchanged.
+This also provides an actionable counterpart for the existing maturation core.
+No new annotation is added. Visual perception is retained as a supported non-core
+physiological consequence; the direct core process is client maturation.
+
+The [original localization Results and Figure 6](https://pmc.ncbi.nlm.nih.gov/articles/PMC2585502/)
+were recovered and checked for human fetal, child and adult retinal material.
+The nuclear and inner-segment rows now separate their external compartment-specific
+Results from the abstract-only local record. Their short external quotations are
+marked supporting_text_fulltext; the actual local availability flag stays true.
+Exact UniProt GO lines supply explicitly identified database corroboration, not
+additional primary experiments. File quotations were manually substring-checked;
+the standard validator does not validate file-reference quotations. Actions for
+these location rows are unchanged, and curator evidence is retained.
+
+The co-chaperone activity remains explicit in positive biological prose. A new
+question distinguishes active protein-folding assistance from generic unfolded-
+protein binding and holdase activity before proposing an additional human MF.
+The existing HSP90-binding term remains grounded in the direct human experiments;
+no complex identifier or autonomous folding activity was inferred from a binding
+result alone. Historical UniProt-only GO terms are outside the preserved GOA seed
+and are not silently added. The two notes-only source4 cache gates remain pending;
+removing their provenance or treating an earlier COMPLETE status as proof of the
+current review's completion would not resolve those access limits.
+
+A bounded independent peer read found no biological blocker in these changes.
+Targeted validation passes with one intentional unused-provider advisory; the
+previous core-process-coverage advisory is resolved. History, rendering and
+source/isoform/reference preservation checks pass. The source4 cache gates
+remain PMID:38662103 and PMID:39026984.
