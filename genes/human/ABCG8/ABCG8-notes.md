@@ -82,7 +82,7 @@ PMID:34404721 now has a genuine full main-article cache. Human G5/G8 cDNAs were 
 
 Every other recovered record remains abstract-only locally. PMID:16867993 uses recombinant **mouse** proteins in Sf9 membranes, not purified human transporter. Prior external full-text reads remain explicitly separate access routes. The recovered abstracts corroborate the recorded assay/organism boundaries, rather than supplying unseen full experiments.
 
-The rat response sources remain abstract-only. Their positive diet, drug, exercise and radiation expression findings are retained. Cache recovery does not resolve the complete source-specific experiments or conserved effector role in humans, so the existing UNDECIDED judgments remain. An IEP annotation is not rejected merely because it is expression-based, and lack of a human assay alone does not refute orthology transfer. Resolving these judgments requires the actual full experiments and a justified transfer of that particular response context. The established human sterol-export and homeostasis judgments remain supported independently.
+The rat response sources remain abstract-only. Their positive diet, drug and exercise expression findings are retained. Cache recovery does not resolve the complete source-specific experiments or conserved effector role in humans, so the existing UNDECIDED judgments remain. An IEP annotation is not rejected merely because it is expression-based, and lack of a human assay alone does not refute orthology transfer. Resolving these judgments requires the actual full experiments and a justified transfer of that particular response context. The established human sterol-export and homeostasis judgments remain supported independently.
 
 ### Feedback adjudication
 
@@ -97,3 +97,24 @@ The existing sterol-transport core covers neutral-sterol export, including chole
 The final action totals are **30 ACCEPT, 10 MODIFY, 5 UNDECIDED and 2 REMOVE**, with zero PENDING and zero NEW. One integrated core remains. The recursive authored/provider census contains **13 distinct PMIDs and four Reactome records**, all locally present. All DOI and PMC identifiers in authored notes resolve to those same primary cache identities; no separate DOI-only or preprint gate was found. No provider, raw provider HTML or provider PDF was generated. Immutable UniProt bibliography alone is not expanded into new citations. Final validation, source-object and case-sensitive quote checks, append-only history and rendering are recorded in the follow-up manifest. Local cache closure does not imply that the unresolved rat assays are now full-text verified.
 
 Full targeted validation exited 0 with no review warnings after source recovery. All 96 ordinary supporting excerpts match canonical text case-sensitively after whitespace normalization; no quote requires case folding. The local citation census has zero missing PMID/Reactome records. Status is therefore COMPLETE; the 5 deliberately unresolved response judgments remain transparent and do not become positive biological assertions. The final status change is revalidated below the same scoped workflow; PR publication and review/CI decisions remain with the coordinator.
+
+
+## 2026-09-27 approved-head prose correction
+
+The full review comment [5855590827](https://github.com/ai4curation/ai-gene-review/pull/3284#issuecomment-5855590827)
+was read against exact head `8794cd312df2cdbae3dbb40b071696d5e0c627a3`.
+The stray radiation-response word in the earlier source-closure paragraph was
+removed: the cited rat studies concern diet, drug and exercise-related
+expression contexts, not an identified radiation experiment. This correction
+does not alter any annotation or imply a new source finding. Five repeated
+cache-recovery paragraphs in reference assessments were shortened to their
+actual access state. Each study's organism, experiment, uncertainty and primary
+verification URL is retained, including the separate external full-text route
+for PMID:16867993. The source-closure receipts remain in the existing notes.
+
+All 47 complete annotation objects and actions, the complete integrated core,
+all 25 reference identities, cached quotes and source access flags remain
+unchanged. There are no new annotations or source dependencies. Validation,
+rendering, fresh append-only history and exact source preservation are recorded
+in the follow-up manifest. This revision requires its own current-head review;
+the approval of the preceding head is not represented as approval of new bytes.
