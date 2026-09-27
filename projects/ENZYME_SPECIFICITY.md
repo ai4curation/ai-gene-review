@@ -3,9 +3,31 @@ title: "Enzyme Specificity Project"
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
 species: [CANAL, human, SACEN]
+genes: [LPL1, GND1, PHYKPL, eryCIII, ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2]
 ---
 
 # Enzyme Specificity Project
+
+**Bottom line:** a GO molecular-function term can name the right kind of
+enzyme and still get the substrate, the cofactor or the reaction wrong, and
+those errors spread through pathway reconstruction and IBA. We reviewed 14
+genes chosen to show each kind of error: four single-gene exemplars (LPL1 and
+GND1 from *C. albicans*, human PHYKPL, EryCIII from *Saccharopolyspora
+erythraea*) and all ten human mitochondrial fatty acid β-oxidation enzymes,
+a paralog set where chain-length specificity decides the term. The errors
+caught include a too-narrow substrate (LPL1 `GO:0004622` MODIFY to
+phospholipase B `GO:0102545`), a wrong reaction from family membership
+(PHYKPL `transaminase activity` REMOVE), a wrong sugar donor (EryCIII
+`UDP-glycosyltransferase activity` REMOVE), a wrong chain length (HADH
+long-chain `GO:0016509` MARK_AS_OVER_ANNOTATED), a thiolase activity on the
+wrong subunit (HADHA `GO:0003985` REMOVE) and a nickname collision (ACAT1
+`cholesterol O-acyltransferase activity` REMOVE). GND1 served as a negative
+control: a coenzyme-motif script confirmed its NADP+-specific term. All 14
+reviews exist and the project is complete.
+
+We did this because specificity is where family-based annotation is most
+confidently wrong: the fold and even the enzyme class are right, so nothing
+looks amiss until someone checks the substrate, cofactor or subunit.
 
 ## Overview
 
@@ -76,8 +98,8 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 - Enzyme acts on ALL glycerophospholipids, not just PC
 - Has three distinct activities (hydrolase, lysophospholipase, transacylase)
 
-**Also**: `GO:0047372` (monoacylglycerol lipase activity) marked KEEP_AS_NON_CORE
-- Likely substrate promiscuity, not primary function
+**Also**: `GO:0047372` (monoacylglycerol lipase activity, IBA) marked REMOVE
+- Wrong-paralog transfer: the IBA source is S. cerevisiae ROG1 (`PANTHER:PTN000773837`), a monoacylglycerol lipase, while Candida LPL1 sits in the LPL1 phospholipase B branch
 
 ### PHYKPL (Homo sapiens)
 
@@ -191,8 +213,9 @@ chemistry is correct; the gap is in the **GO:0004300 → RHEA** mapping. See
 
 **eryCIII (cofactor/donor specificity error, BGC project):** the desosaminyl transferase
 EryCIII (EC 2.4.1.278) was IEA-annotated `GO:0008194` UDP-glycosyltransferase activity, but it
-transfers **TDP-D-desosamine** (a dTDP-sugar), not a UDP-sugar (PMID:15303858). MODIFY to the
-accurate, IDA-supported `GO:0016758` hexosyltransferase activity. See `genes/SACEN/eryCIII/`.
+transfers **TDP-D-desosamine** (a dTDP-sugar), not a UDP-sugar (PMID:15303858). REMOVE: the
+accurate `GO:0016758` hexosyltransferase activity is already annotated (IEA + IDA), so a MODIFY
+would only duplicate it. See `genes/SACEN/eryCIII/`.
 
 ### Priority 1: Completed — fatty acid β-oxidation (acyl-chain-length specificity)
 | Gene | Species | Issue | Status |
@@ -309,3 +332,7 @@ GO→RHEA chaining check (now generalized into the module tooling) surface a
 reaction-specificity mapping gap — `GO:0004300` maps to RHEA:20724 (the (3E)
 variant) rather than the canonical (2E) crotonase RHEA:16105. Logged for the
 RHEA project (`projects/RHEA/RHEA-EC-SPECIFICITY.md`).
+
+## Slides
+
+- [Slides](ENZYME_SPECIFICITY/slides/ENZYME_SPECIFICITY-slides.html) (Marp source: [ENZYME_SPECIFICITY-slides.md](ENZYME_SPECIFICITY/slides/ENZYME_SPECIFICITY-slides.md)) — AI generated

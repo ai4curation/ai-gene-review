@@ -1,18 +1,33 @@
 ---
 title: "InterPro Mapping Review Project"
-maturity: SCOPING
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - INTERPRO/slides/interpro-pipeline.svg
+    - INTERPRO/slides/interpro-review-actions.svg
 ---
 
-**This project identifies InterPro-to-GO mappings that need correction, narrower
-scope, or additional evidence.** It combines gene-level annotation reviews with
-family-level evidence to distinguish functions shared across an InterPro entry
-from functions restricted to particular members.
+# InterPro Mapping Review Project
 
-**The current deliverable contains 29 mapping assessments across twelve InterPro
-entries:** seven removal proposals, ten proposals to narrow or qualify a mapping,
-and twelve endorsements or additions. These are proposals for curator assessment;
-they do not establish that InterPro has adopted the changes.
+**Bottom line:** InterPro2GO (GO_REF:0000002) attaches GO terms to every protein
+that matches an InterPro entry, so a term that holds for only some members of a
+family is copied onto all of them. We harvested every InterPro2GO annotation our
+gene reviews had already judged (3,652 records on 1,706 genes, joined to 1,826
+source entries), ranked the entries by how often reviewers flagged them, and ran
+family-level deep research on the top of that list. The result so far is a set of
+29 proposed mapping edits across twelve entries: seven removals (for example ATP
+binding and protein phosphorylation on the protein kinase domain, IPR000719), ten
+proposals to narrow or qualify a mapping, and twelve endorsements. These are
+proposals for InterPro curators, not changes InterPro has adopted, and the
+worklist below the first dozen entries is not yet assessed.
+
+We did this because a wrong InterPro2GO mapping is a single error that repeats
+across every matched gene, so one fix at the mapping level is worth many
+gene-level corrections. Gene reviews also catch mappings the ranked worklist
+never reaches: three of the twelve entries came from reading human genes one at
+a time.
 
 **Start here:** [Proposed mapping edits](INTERPRO/interpro2go.sssom.yaml) ·
 [Prioritized entry worklist](INTERPRO/interpro_family_priorities.tsv) ·
@@ -119,3 +134,4 @@ breakdowns, example genes, and affected GO terms.
   workstream checklists, and session chronology.
 - [Protein families](FAMILIES.md) · [IBA annotation review](IBA_REVIEW.md) ·
   [Over-annotation patterns](OVER_ANNOTATION_PATTERNS.html) — related collections.
+- [Slides](INTERPRO/slides/INTERPRO-slides.html) (Marp source: [INTERPRO-slides.md](INTERPRO/slides/INTERPRO-slides.md)) — AI generated

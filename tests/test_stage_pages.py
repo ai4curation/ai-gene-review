@@ -495,3 +495,16 @@ def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
     manifest = stage_pages(tmp_path, tmp_path / '_site')
     assert replace(manifest, archive_bytes=9_999_999_999).deployable
     assert not replace(manifest, archive_bytes=10_000_000_000).deployable
+
+
+def test_stage_pages_includes_propagation_browser_rows(tmp_path: Path) -> None:
+    """The propagation browser and the review pages its rows link to are staged."""
+    _site_fixture(tmp_path)
+    for filename in ("index.html", "data.js"):
+        _write(tmp_path / "app/propagation" / filename)
+    review = "genes/mouse/Calm3/Calm3-ai-review.html"
+    _write(tmp_path / review)
+    _write(tmp_path / "app/propagation/source-files.json", json.dumps([review]))
+    stage_pages(tmp_path, tmp_path / "_site")
+    assert (tmp_path / "_site/app/propagation/data.js").is_file()
+    assert (tmp_path / "_site" / review).is_file()

@@ -37,6 +37,8 @@ from ai_gene_review.validation.validation_report import (
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.supporting_text import (
+    cached_record_has_no_body,
+    cached_text_missing,
     LITERATURE_PREFIXES,
     build_supporting_text_validator,
     cached_full_text_available,
@@ -120,9 +122,6 @@ def validate_reference_finding_supporting_text(
             continue
         if reference_id.split(":", 1)[0].upper() not in LITERATURE_PREFIXES:
             continue
-        reference_declares_unavailable = (
-            reference.get("full_text_unavailable") is True
-        )
         cache_has_full_text = cached_full_text_available(
             reference_id,
             resolved_publications_dir,
@@ -137,13 +136,19 @@ def validate_reference_finding_supporting_text(
             try:
                 result = validator.validate(supporting_text, reference_id)
             except Exception as exc:  # noqa: BLE001 - external publication cache
+                # A crash while checking is not a pass. Downgrading here would let a
+                # snippet through unverified for reasons that have nothing to do with
+                # whether it is correct, which is precisely the skipping the rule forbids.
                 report.add_issue(
-                    ValidationSeverity.WARNING,
+                    ValidationSeverity.ERROR,
                     (
-                        f"Finding supporting text could not be verified for "
+                        f"Finding supporting text could not be checked for "
                         f"{reference_id}: {type(exc).__name__}: {exc}"
                     ),
                     path=path,
+                    suggestion=(
+                        "Cache the publication so the quote can be verified against it"
+                    ),
                     validation_category="ReferenceValidator",
                     check_type="reference_finding_supporting_text",
                 )
@@ -151,26 +156,65 @@ def validate_reference_finding_supporting_text(
             if result.is_valid:
                 continue
             message = str(getattr(result, "message", "") or "")
-            declared_unavailable = (
-                reference_declares_unavailable
-                or finding.get("full_text_unavailable") is True
-            )
+            # A snippet must be deterministically checkable against the cache, and a
+            # failure to match is an error. There is no downgrade path: every branch that
+            # used to soften this made an unverified quote indistinguishable from a
+            # verified one, which is the only thing this check exists to tell apart.
+            #
+            # full_text_unavailable remains meaningful as *metadata* about the cached
+            # record, but it no longer excuses a mismatch -- declaring that you cannot
+            # check a quote is not the same as checking it.
+            severity = ValidationSeverity.ERROR
             if is_unfetchable(message):
-                severity = ValidationSeverity.WARNING
-                prefix = "Finding supporting text could not be verified"
-                suggestion = "Verify the quote when the publication text is available"
-            elif declared_unavailable or cache_has_full_text is False:
-                severity = ValidationSeverity.WARNING
+                prefix = "Finding supporting text could not be checked"
+                suggestion = (
+                    "Cache the publication so the quote can be verified, or quote a "
+                    "substring of text that is cached"
+                )
+            elif cache_has_full_text is False and cached_record_has_no_body(
+                reference_id, resolved_publications_dir
+            ):
+                # A stub: cached, reports no full text, and has no abstract either. Telling
+                # the author to quote the cached abstract is impossible advice -- there is
+                # no abstract. The metadata fetch failed, so the remedy is to re-fetch.
+                prefix = (
+                    "Finding supporting text cannot be checked: the cached record has no "
+                    "abstract or full-text body"
+                )
+                suggestion = (
+                    "Re-fetch the record with cache_publication(pmid, force=True), which "
+                    "re-downloads by PMID regardless of the full_text_attempted tag, then "
+                    "re-quote from the repaired cache"
+                )
+            elif cache_has_full_text is False:
                 prefix = (
                     "Finding supporting text is absent from the available "
                     "abstract-only cache"
                 )
                 suggestion = (
-                    "Verify the quote against full text; use full_text_unavailable to "
-                    "record that the quoted source text is not cached"
+                    "Quote a verbatim substring of the cached abstract, or fetch the "
+                    "full text into the cache so the quote can be verified"
+                )
+            elif cached_text_missing(reference_id, resolved_publications_dir):
+                # Nothing cached under this identifier, so there is no publication text to
+                # take a substring of. The final branch's advice ("an exact substring from
+                # the cached publication") is impossible here in the same way the
+                # abstract-only advice was impossible for a bodyless stub.
+                #
+                # Gated on the absence of the FILE, not on cache_has_full_text is None.
+                # None means "not recorded", which is a different thing: 90 cached records
+                # carrying a full PMC body resolved to None under the old content_type
+                # allow-list, and this branch would have told their authors to go cache a
+                # record that is already there.
+                prefix = (
+                    "Finding supporting text cannot be checked: no cached publication for "
+                    "this reference"
+                )
+                suggestion = (
+                    "Cache the publication first (just fetch-gene-pmids, or "
+                    "cache_publication(pmid, force=True)), then quote from it"
                 )
             else:
-                severity = ValidationSeverity.ERROR
                 prefix = "Finding supporting text is not a verbatim publication substring"
                 suggestion = (
                     "Replace the quote with an exact substring from the cached publication"

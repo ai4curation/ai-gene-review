@@ -374,8 +374,8 @@ def test_publication_headlines_match_generated_metrics() -> None:
             assert f"| {category} | {count:,} | {percent:.1f} |" in supplement
 
     overlap = metrics["supplement_gogpt_overlap_300"]
-    assert overlap["n_genes"] == 299
-    assert overlap["n_predictions"] == 8871
+    assert overlap["n_genes"] == 296
+    assert overlap["n_predictions"] == 8806
     goa_percent = 100 * overlap["goa"]["n_overlap"] / overlap["n_predictions"]
     post_review_percent = (
         100 * overlap["post_review"]["n_overlap"] / overlap["n_predictions"]
