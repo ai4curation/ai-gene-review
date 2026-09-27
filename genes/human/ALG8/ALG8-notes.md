@@ -10,9 +10,9 @@ Applied the review, annotation-reviewer and core-function-synthesizer skills. Th
 
 ALG8 performs the second of three glucose transfers during ER lipid-linked oligosaccharide assembly. The donor is Dol-P-Glc; the acceptor is Glc1Man9GlcNAc2-PP-Dol and the product is the diglucosylated intermediate. This direct catalytic step supports both the specific precursor-synthesis process and its broader N-glycosylation context. One integrated catalytic core replaces two descriptions of the same reaction; its location specifies the lumenal membrane face. Broader seeded membrane annotations retain their source resolution.
 
-[PMID:12480927](https://pubmed.ncbi.nlm.nih.gov/12480927/), DOI [10.1074/jbc.M211950200](https://doi.org/10.1074/jbc.M211950200): read the cached abstract and independently checked PubMed identity. Human patient fibroblasts accumulated Man9-containing LLO, shifting toward Glc1 after castanospermine; the abstract describes low ALG8 transcript abundance, frameshifting alleles and wild-type cDNA complementation. These support the retained IMP activity/process assertions. Original JBC/ScienceDirect full-text attempts did not recover the body; no purified turnover measurement is claimed. Exact result-bearing snippets in the YAML come from the cached abstract, rather than its title or the fragment “which catalyzes this reaction.”
+[PMID:12480927], DOI [10.1074/jbc.M211950200](https://doi.org/10.1074/jbc.M211950200): read the cached abstract and independently checked PubMed identity. Human patient fibroblasts accumulated Man9-containing LLO, shifting toward Glc1 after castanospermine; the abstract describes low ALG8 transcript abundance, frameshifting alleles and wild-type cDNA complementation. These support the retained IMP activity/process assertions. Original JBC/ScienceDirect full-text attempts did not recover the body; no purified turnover measurement is claimed. Exact result-bearing snippets in the YAML come from the cached abstract, rather than its title or the fragment “which catalyzes this reaction.”
 
-[PMID:15235028](https://pubmed.ncbi.nlm.nih.gov/15235028/), DOI [10.1136/jmg.2003.016923](https://doi.org/10.1136/jmg.2003.016923), PMCID PMC1735831: the canonical cache is bibliographic-only, although it has an Abstract heading and an automated COMMENT_EDITORIAL classification. The full original research letter was recovered from the [author-uploaded article](https://www.researchgate.net/publication/8473940_Clinical_and_molecular_features_of_three_patients_with_congenital_disorders_of_glycosylation_type_Ih_CDG-Ih_ALG8_deficiency), J Med Genet 41:550–556. Read Methods, Results, Figure 4 and the topology Discussion. Patient fibroblast glycan profiling complements yeast assays of human constructs. Figure 4 compares wild-type/T47P/G275D complementation in Δalg8 and Δalg8 wbp1–1 backgrounds; Discussion calls the assays nonquantitative. Exact result excerpts and the original source URL are attached to the IGI localization and IMP activity reasons. Topology is predicted, not directly imaged. These distinctions preserve IMP/IGI and the curator's lumenal-side IC while correcting previous isolated-enzyme and abstract-only claims. Local `full_text_unavailable` remains true; external access does not modify machine cache metadata. The title-only support snippets were withdrawn; no external passage is falsely attributed to the cache.
+[PMID:15235028], DOI [10.1136/jmg.2003.016923](https://doi.org/10.1136/jmg.2003.016923), PMCID PMC1735831: the canonical cache is bibliographic-only, although it has an Abstract heading and an automated COMMENT_EDITORIAL classification. The full original research letter was recovered from the [author-uploaded article](https://www.researchgate.net/publication/8473940_Clinical_and_molecular_features_of_three_patients_with_congenital_disorders_of_glycosylation_type_Ih_CDG-Ih_ALG8_deficiency), J Med Genet 41:550–556. Read Methods, Results, Figure 4 and the topology Discussion. Patient fibroblast glycan profiling complements yeast assays of human constructs. Figure 4 compares wild-type/T47P/G275D complementation in Δalg8 and Δalg8 wbp1–1 backgrounds; Discussion calls the assays nonquantitative. Exact result excerpts and the original source URL are attached to the IGI localization and IMP activity reasons. Topology is predicted, not directly imaged. These distinctions preserve IMP/IGI and the curator's lumenal-side IC while correcting previous isolated-enzyme and abstract-only claims. Local `full_text_unavailable` remains true; external access does not modify machine cache metadata. The title-only support snippets were withdrawn; no external passage is falsely attributed to the cache.
 
 [PMID:28375157](https://www.jci.org/articles/view/90129), DOI [10.1172/JCI90129](https://doi.org/10.1172/JCI90129): independently read original Figure 2 and surrounding Results. Human heterozygous loss-of-function genetics informs the polycystic liver disease summary. Mechanistic work used engineered mouse epithelial cells, where Alg8 loss changed PC1 glycosylation, abundance and trafficking, and re-expression rescued the phenotype. Human clinical evidence and mouse cell mechanisms are kept distinct. This does not add a ciliary-localization, protein-folding or trafficking function to ALG8. The normal request for this missing publication terminated with DNS failure (0/1, exit 1; `/tmp/ALG8-new-fetch.log`), leaving an explicit required cache gate.
 
@@ -45,3 +45,71 @@ The finite authored citation census is six PMIDs: 12480927, 15235028, 25910212, 
 Full `just validate human ALG8` completed with exit 0 and one warning: the required PMID:28375157 cache could not be fetched. Render completed successfully. All 42 ordinary supporting snippets pass case-sensitive substring checks after whitespace normalization; none requires case folding. Parsed checks preserve all 24 source objects, 15 original reference identities and both alternative products. There are no YAML anchors/aliases or trailing spaces. Aars1 independently read the full original PMID:15235028 Results/Figure 4 and topology Discussion and confirmed the human-construct/yeast-host and nonquantitative-assay bounds. Root received the stable full draft for independent review; final coordinator signoff is tracked separately.
 
 Root independently read all 24 decisions, all reference assessments, the integrated core and notes and found no biological blocker. At its request, the IGI ER and IMP activity reasons now contain short exact original Results excerpts plus the full primary route. These excerpts are explicitly external; the canonical cache remains bibliographic-only. The specialized `supporting_text_fulltext` field was not used because inability to share the full paper publicly has not been established. The only YAML delta after the full validation was these two reason attachments; source fields, actions and cores are unchanged.
+
+
+## 2026-09-27 source recovery and evidence-attachment follow-up
+
+The normal PMID:28375157 record is now present unchanged from recovery run `36313594604`,
+source commit `408e7c41d93c2fd63f54ac1da5d7201edbc901bb`. Actual contents are an abstract,
+not the full article; the PMC identifier does not alter this distinction. This closes that
+specific cache gate and supersedes the earlier absence statement without rewriting its history.
+The abstract establishes human PCLD gene discovery and cell-model perturbations but does not
+identify every construct or host species. The official [JCI Results and Figure 2](https://www.jci.org/articles/view/90129)
+were reread: CRISPR-inactivated Alg8 in mouse kidney epithelial cells expressing tagged Pkd1,
+re-expression rescue, glycosidase-dependent PC1 migration and ciliary PC1 staining are separate
+from human family genetics. ALG8 supplies glycan-precursor chemistry; those experiments do not
+turn it into a PC1 protease, chaperone or trafficking motor. No new process is proposed.
+
+The imported original record explicitly links a corrigendum, [PMID:28862642], DOI
+[10.1172/JCI96729](https://doi.org/10.1172/JCI96729). The [official notice](https://www.jci.org/articles/view/96729)
+was independently read: the listed RT-PCR primers had been mislabeled as Pkd1, and the notice
+provides the correct Pkd1 quantitative-PCR sequences and points to the separate published Xbp1
+RT-PCR primers. It does not retract the paper, replace an ALG8 activity result or supply a new
+mechanism. The already-completed normal fetch failed DNS (0/1, exit 1; receipt
+`tmp/ALG8-correction-fetch-receipt.json`), and recovery is assigned to fixed source18. There is
+no retry or fabricated cache here. The review and PR remain DRAFT until this required correction
+record is normally recovered.
+
+### Public primary excerpt receipt: PMID:15235028
+
+Canonical identity: Schollen et al., *Clinical and molecular features of three patients with
+congenital disorders of glycosylation type Ih (CDG-Ih) (ALG8 deficiency)*, J Med Genet 41:550–556,
+DOI [10.1136/jmg.2003.016923](https://doi.org/10.1136/jmg.2003.016923),
+[PMC1735831](https://pmc.ncbi.nlm.nih.gov/articles/PMC1735831/).
+The actual successful full-article retrieval was the author-uploaded original linked earlier;
+the canonical links identify the paper without falsely changing which route supplied the body.
+The original Results, p. 553, Figure 4B, include this short excerpt:
+
+> human ALG8 cDNA conferred a marked restoration of the glycosylation
+
+The assay is human ALG8 construct complementation of yeast CPY glycosylation, including
+wild-type versus T47P/G275D comparisons in the stated mutant backgrounds. It supports genetic
+function and compartment context; it is not direct human localization or purified-enzyme
+turnover. This receipt preserves the previously independently read primary excerpt, with
+page and route provenance. It is the same study, not independent evidence. The canonical normal
+PMID cache remains bibliographic-only.
+
+The two annotation reasons point to this source-access receipt. The public excerpt stays in
+these notes with its original primary attribution; it is not attached as a separate notes-file
+evidence reference or validated as an independent primary source.
+The specialized `supporting_text_fulltext` field is deliberately not used: its schema specifies
+full text that cannot be committed/shared publicly, not every publicly accessible passage that
+is absent from a local extraction. No source cache was hand-edited or refetched to satisfy a
+quotation. Access-only primary reference entries remain honest availability records rather
+than being filled with irrelevant or invented excerpts.
+
+The specific UniProt variant-activity, N-linked precursor, ALG6/ALG8-family and multipass
+snippets requested by the reviewer were restored as exact cached quotes. The variant note is
+curated corroboration linked to the same patient study, not a second kinetic experiment. Human
+T47P/G275D identities and the eight HuRI partners are visible in the relevant summaries; no
+interaction is denied by removing an uninformative generic binding label. All 24 original
+source objects and actions, both alternative products, the description and integrated
+core are unchanged. All 16 prior reference identities remain. One reference was
+added for the explicitly uncached correction.
+
+The recursive authored/provider census now requires seven PMIDs (six cached, correction
+28862642 missing) and three cached Reactome entries. There are no provider artifacts. DOI,
+PubMed, PMC and actual author-upload links were reconciled to those same studies; the
+ResearchGate numeric article identifier is not a PMID. An incidental commentary bibliography
+inside the original normal PubMed record is not adopted as evidence for an authored claim.
+Earlier statements identifying PMID:28375157 as the sole missing record are superseded here.
