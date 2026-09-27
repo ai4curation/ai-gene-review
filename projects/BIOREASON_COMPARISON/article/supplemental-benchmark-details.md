@@ -217,7 +217,7 @@ with its GOA overlaps (3) and core counts (4 terms, 0 overlaps) unchanged. The c
 totals are 2,844 GOA terms with 1,020 overlaps, 2,672 post-review terms with 849
 overlaps, and 1,206 core terms with 355 overlaps. Thus the recorded
 denominator changes combine upstream reference
-curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
+curation with four committed-GOA-snapshot refreshes that moved GOA counts (SlyD, CnoX, PHYB and NPR1); the GO-GPT prediction set itself
 did not change apart from the removal of the duplicate genes.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
