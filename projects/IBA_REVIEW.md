@@ -89,8 +89,8 @@ where those transfers go wrong and why: 15 recurring failure patterns (such as
 pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
 wrong-paralog and cross-kingdom transfers), 53 worked cases in the
 table below, and a structured `propagation_review` vocabulary (root cause,
-failure modes, per-source status) that reviews now use; 684 gene reviews
-carry 3,493 such blocks. We did this because an IBA error at a family node
+failure modes, per-source status) that reviews now use; 691 gene reviews
+carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node
 spreads to every descendant, so one bad call can mislabel hundreds of
 proteins. The work covers both directions: in 1,015 reviewed human genes, 511
 curated core molecular functions (across 423 genes) have no IBA support at

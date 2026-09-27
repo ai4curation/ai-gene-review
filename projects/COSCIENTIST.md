@@ -21,11 +21,13 @@ row on CLCN7, which traces to a family-level statement propagated to about
 topology and regulatory questions mostly got reasoning over databases until a
 prompt-template change (tested A/B on CLCN7) made it compute. No hallucinated
 citations were found. The approach is now routine: the repo holds 295
-OpenScientist hypothesis reports for 263 genes (`genes/*/*/*-hypotheses/`),
+finished OpenScientist hypothesis reports (`openscientist.md`) for 263 genes,
+out of 310 run directories under `genes/*/*/*-hypotheses/`,
 far more than the tables below list.
 
-📊 **Slides:** [COSCIENTIST-slides](COSCIENTIST/slides/COSCIENTIST-slides.md)
-(Marp; regenerate the PDF with `just gen-project-slides COSCIENTIST`).
+📊 **Slides:** [COSCIENTIST-slides](COSCIENTIST/slides/COSCIENTIST-slides.html)
+(Marp source: [COSCIENTIST-slides.md](COSCIENTIST/slides/COSCIENTIST-slides.md);
+regenerate the PDF with `just gen-project-slides COSCIENTIST`).
 
 ## Motivation
 

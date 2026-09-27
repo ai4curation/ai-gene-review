@@ -19,8 +19,10 @@ lipoylated targets, and regulators), and a draft
 pathway is young, so its GO annotations are likely incomplete, and it pairs
 with the Ferroptosis project as a second metal-dependent death pathway. Seven
 of the 17 genes (DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH) already have
-completed reviews from other work, none of which mentions cuproptosis; the
-other ten have no gene folder yet.
+reviewed annotations from other work (no pending rows, though DLD, DLAT, PDHA1,
+PDHB and GLS are still flagged `status: INITIALIZED`), none of which mentions
+cuproptosis. Of the other ten, LIPT1 has been fetched but not reviewed and nine
+have no gene folder yet.
 
 ## Overview
 
