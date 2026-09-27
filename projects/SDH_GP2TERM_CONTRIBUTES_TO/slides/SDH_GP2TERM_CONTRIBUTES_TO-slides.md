@@ -38,7 +38,7 @@ A relation fix for succinate dehydrogenase subunits
 
 - No single subunit of **succinate dehydrogenase** performs GO:0008177; GO agreed (go-annotation#6414) that subunits get **`contributes_to`**, not `enables`.
 - **5 repo reviews** carry GO:0008177. All say `contributes_to` in prose; at the audit only **SDHC** and **one SDHA row** had the structured qualifier (both from GOA).
-- **SDHB and SDHD are now edited** (PR #3223): each GOA `enables` row → `MODIFY`, plus a paired `NEW` `contributes_to` row. Open: SDHA, the plant SDH2 ortholog, PSEPK sdhA/sdhB.
+- **SDHB and SDHD are now edited** (PR #3223, merged): GOA `enables` rows → `MODIFY`, plus one paired `NEW` `contributes_to` row per gene. Open: SDHA, the plant SDH2 ortholog, PSEPK sdhA/sdhB.
 
 ---
 
@@ -65,7 +65,7 @@ A relation fix for succinate dehydrogenase subunits
 
 ## Status and next steps
 
-- ✅ **Tier 1 (PR #3223):** SDHB (3 rows) and SDHD (1 row). GOA rows are not hand-edited, since the qualifier mirrors GOA; each `enables` row is `MODIFY` and a paired `NEW` `contributes_to` row (IDA) records the intent. Re-fetch once GOA reflects #6414.
+- ✅ **Tier 1 (PR #3223):** SDHB (3 rows) and SDHD (1 row). The GOA rows keep GOA's own `enables` qualifier (not overridden); each `enables` row is `MODIFY` and a paired `NEW` `contributes_to` row (IDA) records the intent. Re-fetch once GOA reflects #6414.
 - ⬜ **Tier 2:** decide SDHA GO:0000104 vs GO:0008177; decide 9POAL NCGR_LOCUS67308 (MODIFY → GO:0009055 or keep with qualifier).
 - ⬜ PSEPK **sdhA / sdhB** reviews (added later) carry GO:0008177 with `enables`; add to scope.
 - Order: `MODIFY` + paired `NEW` row → wait for GOA → `just fetch-gene` → `just validate`.
