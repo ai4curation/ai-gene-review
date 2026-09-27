@@ -98,7 +98,7 @@ Plus conventional ROS-scavenging enzymes (Cu/Zn-SODs, Mn-SOD).
 
 ## Finding 3: The SOD Paralog Family Is Half Broken
 
-RAMVA has ~10 Cu/Zn-SOD paralogs. Bioinformatic analysis (sequence + PROSITE PS00087 + Pfam):
+We reviewed 9 RAMVA Cu/Zn-SOD paralogs. Bioinformatic analysis (sequence + PROSITE PS00087 + Pfam):
 
 | Verdict | Count | Examples |
 |---------|-------|----------|
@@ -116,7 +116,7 @@ At least **4 of 9** Cu/Zn-SOD-family paralogs appear to have lost/impaired canon
 - Crystal structure (PMID:37358501) shows **Val87 replaces the catalytic His** copper ligand
 - Confirmed structurally → its **4 SOD-activity annotations are OVER-ANNOTATED**
 - Three more paralogs keep all four catalytic Cu histidines at the residue level, **yet fail PROSITE PS00087** (N-terminal Cu coordination signature)
-- By analogy with the failed V87H rescue in RvSOD15 (loop dynamics), these are likely impaired too
+- By analogy with the V87H mutant structure of RvSOD15 (a flexible loop can destabilize Cu coordination of the restored His87), these are likely impaired too
 - Validates Sim & Inoue (2023): "some other RvSODs are also unusual SODs" — now with a precise count
 
 ---
@@ -151,7 +151,7 @@ At least **4 of 9** Cu/Zn-SOD-family paralogs appear to have lost/impaired canon
 
 ## Conclusions & Status
 
-- Full reviewed RAMVA stress proteome curated: **Dsup, 3 CAHS, 2 SAHS, MAHS, RvLEAM, 10 Cu/Zn-SODs, 1 Mn-SOD**
+- Full reviewed RAMVA stress proteome curated: **Dsup, 3 CAHS, 2 SAHS, MAHS, RvLEAM, 9 Cu/Zn-SODs, 1 Mn-SOD**
 - **GO:0009269 (response to desiccation)** proposed as the unifying NEW term across all TDPs
 - A reusable SOD bioinformatics pipeline (`analyze_sods.py`, `check_prosite.py`) revealed ~half the SOD expansion may be non-catalytic
 - "Gene duplication = more antioxidant capacity" is only **partially** correct

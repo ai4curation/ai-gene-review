@@ -1,12 +1,31 @@
 ---
 title: "VAMPIROME"
-maturity: MATURE
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [DESRO]
 genes: [CALCA, K9IFT7, K9IFY6, K9IIP0, K9IJK6, K9IMD0, K9IUF6, K9IWC0, K9IWH5, K9IWR0, K9IWX5, K9IYM3, K9IZA2, K9J287, K9J2R0]
 ---
 
 # VAMPIROME
+
+**Bottom line:** a vampire bat has to keep its prey's blood liquid and its own
+bite unnoticed, and it does so with a salivary secretome of anticoagulants,
+protease inhibitors, vasodilators and immune modulators. Working from the
+Vampirome transcriptome and proteome study, we mapped the reported transcripts
+to UniProt, found that *Desmodus rotundus* has no Swiss-Prot entries at all in
+this set, picked a 13-protein shortlist on hemostasis and immune relevance, and
+reviewed them plus draculin (K9IMD0). Across 14 reviewed proteins there are 136
+annotation rows: 64 ACCEPT, 29 MODIFY, 21 UNDECIDED, 15
+MARK_AS_OVER_ANNOTATED, 4 NEW and 3 REMOVE. The large UNDECIDED share is the
+honest result for an all-electronic, TrEMBL-only species where the underlying
+experiments were done on other mammals. The fifteenth listed gene, CALCA
+(vCGRP), is not yet reviewed: a transcriptome search found no matching peptide.
+
+We did this because saliva proteins of blood-feeding animals are annotated
+almost entirely by homology to their host counterparts, which imports the
+host's biology wholesale. The C1-inhibitor homolog K9IYM3 is the clearest case:
+its serpin ancestry brought peptidase activity and proteolysis, both removed,
+and blood coagulation, hemostasis and fibrinolysis, all marked over-annotated.
 
 ## Overview
 
