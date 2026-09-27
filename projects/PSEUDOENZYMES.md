@@ -275,13 +275,13 @@ well-documented alternative function.
 | Feature | Details |
 |---------|---------|
 | **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
-| **Defect** | Degenerate Fe(II)-binding motif (HVD at position 279-282 instead of canonical HxD); missing key catalytic residues |
-| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays; H297A "catalytic" mutant retains anti-silencing function |
+| **Defect** | Degenerate Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution) |
+| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
 | **Actual function** | Anti-silencing factor; recruits SAGA histone acetyltransferase and Bdf2 bromodomain protein to heterochromatin boundaries; promotes nucleosome turnover; functions as H3K9me **reader**, not eraser |
 | **Type** | Type 5 (reader/recognition without modification) |
 | **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0051213 (dioxygenase activity), GO:0005506 (iron ion binding), GO:0070076 (histone lysine demethylation) |
 | **Annotations added** | GO:0042393 (histone binding), GO:0140030 (modification-dependent protein binding) |
-| **References** | Raiymbek 2020; Bao 2019; Epe1 gene review at `genes/SCHPO/Epe1/` |
+| **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Audergon 2015 (PMID:25838386); Epe1 gene review at `genes/SCHPO/Epe1/` |
 
 **Key insight:** Epe1 is a paradigm for the Type 5 (reader) pseudoenzyme.
 Its JmjC domain retains substrate recognition capability (binds H3K9me) but
@@ -494,8 +494,9 @@ Good template for families where the pseudoenzyme has neofunctionalized
 - **Byrne et al. 2020** - PseudoHunter detection pipeline *Bioinformatics*;
   tool paper
 - **Raiymbek et al. 2020** - Epe1 biochemistry and anti-silencing function
-- **Bao et al. 2019** - Epe1 H297A mutant retains anti-silencing; confirms
-  non-enzymatic mechanism
+- **Bao et al. 2019** - Epe1 recruits SAGA; overexpressed Epe1-H297A still
+  disrupts silencing, SAGA-dependently (the paper notes that endogenous-level
+  H297A resembles epe1Δ)
 - **Manning et al. 2002** - Original identification of ~10% of human kinome
   as pseudokinases *Cell*
 
