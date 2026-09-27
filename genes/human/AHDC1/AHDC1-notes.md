@@ -674,3 +674,33 @@ Final action counts are 5 ACCEPT, 4 KEEP_AS_NON_CORE, 3 MODIFY and 3 REMOVE, wit
 Independent-review correction: the coordinator identified that the epigenetic proposal still overstepped the unresolved direct-versus-indirect mechanism. It and the corresponding core process were withdrawn. All inherited top-level knowledge gaps were rewritten to remove universal literature-absence claims, unverified ontology-obsolescence assertions, and the obsolete request for a second functional study. The new Ewing sarcoma study supplies independent functional evidence. The historical count of one FUNCTION reference describes only the immutable UniProt snapshot, not the literature. The missing-cache flag on PMID:36194562 is true, with its external full-primary access explicitly documented.
 
 Final validation outcome: `just validate human AHDC1` passed with three warning groups: missing PMID:36194562 cache; unused machine Affinage evidence; and the synthesized chromatin core location absent as a standalone annotation. The last advisory is intentional because the redundant NEW was withdrawn while the ChIP-supported core location is retained. Rendering and history validation passed. Independent source-preservation checks confirm all 15 source objects, all 12 original id/title pairs and seven protected machine/bioinformatics artifacts are unchanged. All five preflight blobs also match publication base `9541f70405e9e9bef718106c32ec1a54a8051bda`, advanced from the initially checked `a18dacfd84f4b1a18c864a145a88772e475091bd` by an unrelated ACTA2 change. The notes-inclusive check finds 11 distinct PMIDs and two missing caches, PMID:16713557 and PMID:36194562. The final legacy audit reports eight obsolete phrase/shape failures and is explicitly not passed. No additional full-repository validation or bioinformatics analysis is claimed.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+Both notes-inclusive gaps, PMID:16713557 and PMID:36194562, are now supplied
+by exact normal-fetch records. PMID:16713557 is an abstract-only Cell Preview
+commenting on the ataxia interaction-network paper; it is not a correction
+and supplies no new AHDC1 mechanistic evidence. PMID:36194562 now contains
+XML full text from PMC9531837. Figure 2 co-immunoprecipitation, Figure 3
+transcriptional effects and the Figure S5 ChIP caption corroborate the earlier
+external full-paper reading. Cycloheximide and MG-132 experiments leave open
+proteasomal, lysosomal and post-transcriptional explanations, as the authors
+state. They do not establish a new intrinsic specificity or a resolved protein
+stabilization mechanism. The local full_text_unavailable flag is now false.
+All prior action and core judgments remain unchanged.
+
+The source is normal fetch Actions run 36286975328, head
+5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630. The transported
+ZIP was verified against SHA-256
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`, with
+per-file hashes in `tmp/verified-reference-records/local-import-receipt.json`.
+No cache was authored or modified. This dated note supersedes the missing-cache
+status above; it does not rewrite the prior unsuccessful retrieval history.
+All 15 source assertions and reviews, the core synthesis, 13 reference
+identities and protected source/bioinformatics/provider artifacts are preserved.
+Targeted validation, rendering and history validation are recorded in the
+closure manifest. The existing chromatin-core advisory and unused-provider
+advisory, if emitted, are distinct from the now-closed cache gates and retain
+DRAFT under the zero-warning COMPLETE rule. No obsolete bioinformatics analysis
+was rerun or represented as passing.
