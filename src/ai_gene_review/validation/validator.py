@@ -898,6 +898,22 @@ def check_best_practices_rules(
                             check_type="core_function_molecular_function_not_in_annotations",
                         )
 
+                # proposed_molecular_function must name a proposed_new_terms entry
+                proposed_mf = core_func.get("proposed_molecular_function")
+                if proposed_mf:
+                    proposed_names = {
+                        term.get("proposed_name")
+                        for term in data.get("proposed_new_terms") or []
+                        if isinstance(term, dict)
+                    }
+                    if proposed_mf not in proposed_names:
+                        report.add_issue(
+                            ValidationSeverity.ERROR,
+                            f"Core function proposed_molecular_function '{proposed_mf}' does not match any proposed_new_terms entry",
+                            path=f"core_functions[{i}].proposed_molecular_function",
+                            suggestion="Add a proposed_new_terms entry whose proposed_name matches exactly, with a definition and justification",
+                        )
+
                 # Check locations field (should be CC terms)
                 locations = core_func.get("locations", [])
                 for j, location in enumerate(locations):

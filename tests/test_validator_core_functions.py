@@ -3,6 +3,7 @@
 import tempfile
 from pathlib import Path
 import yaml
+from linkml.validator import validate as linkml_validate
 
 from ai_gene_review.validation import validate_gene_review
 from ai_gene_review.validation.validation_report import ValidationSeverity
@@ -196,3 +197,64 @@ def test_core_function_from_proposed_replacement():
         ), "Should not report error for core function from proposed_replacement_terms"
     finally:
         test_file.unlink()
+
+def _holdase_review(proposed_name: str) -> dict:
+    """A review whose core activity has no GO term yet (in-situ holdase)."""
+    return {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "A test small heat shock protein",
+        "existing_annotations": [
+            {
+                "term": {"id": "GO:0005737", "label": "cytoplasm"},
+                "evidence_type": "IEA",
+                "review": {"action": "ACCEPT", "reason": "Cytosolic chaperone"},
+            }
+        ],
+        "core_functions": [
+            {
+                "description": "Holds unfolded clients in solution without refolding them",
+                "proposed_molecular_function": proposed_name,
+                "locations": [{"id": "GO:0005737", "label": "cytoplasm"}],
+            }
+        ],
+        "proposed_new_terms": [
+            {
+                "proposed_name": "holdase chaperone activity",
+                "proposed_definition": "Binding an unfolded protein to prevent its aggregation without refolding it.",
+            }
+        ],
+    }
+
+
+def _errors(data: dict) -> list:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+        yaml.dump(data, f)
+        path = Path(f.name)
+    try:
+        report = validate_gene_review(path, check_goa=False)
+    finally:
+        path.unlink()
+    return [i for i in report.issues if i.severity == ValidationSeverity.ERROR]
+
+
+def test_proposed_molecular_function_matching_a_proposed_new_term_is_valid():
+    """A core function can carry a not-yet-existing MF by naming a proposed_new_terms entry."""
+    data = _holdase_review("holdase chaperone activity")
+    errors = _errors(data)
+    assert not [e for e in errors if "proposed_molecular_function" in str(e.path)]
+
+    # The slot must also be accepted by the LinkML schema itself.
+    schema = Path(__file__).parent.parent / "src/ai_gene_review/schema/gene_review.yaml"
+    report = linkml_validate(data, str(schema), target_class="GeneReview", strict=True)
+    assert not report.results, [r.message for r in report.results]
+
+
+def test_proposed_molecular_function_must_match_a_proposed_new_term():
+    """A proposed_molecular_function that names no proposed_new_terms entry is an error."""
+    errors = _errors(_holdase_review("holdase activity"))
+    assert any(
+        "proposed_molecular_function" in str(e.path) and "holdase activity" in e.message
+        for e in errors
+    ), errors
