@@ -115,10 +115,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     )
 
     assert committed == details
-    assert len(details) == 299
+    assert len(details) == 298
     # Regenerated from the reviewed actions and core-function slots.
     assert stats == {
-        "goa": {"overlap": 1035, "total": 2954, "pred": 8871},
+        # #3246 merged the duplicate ARATH/AAU94417 review into AT1G06680 (both
+        # Q42029, PSBP1), removing one gene: -36 predictions, -21 GOA terms and
+        # -9 GOA overlaps, -12/-3 post-review, -5/-1 core.
+        "goa": {"overlap": 1026, "total": 2933, "pred": 8835},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -173,8 +176,21 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # GO:0019521 (D-gluconate metabolic process) from KEEP_AS_NON_CORE to
         # MARK_AS_OVER_ANNOTATED, dropping one post-review term (8 -> 7); it was
         # not a predicted overlap, so no overlap count and no core count changes.
-        "post_review": {"overlap": 852, "total": 2782, "pred": 8871},
-        "core": {"overlap": 354, "total": 1230, "pred": 8871},
+        # The OpenScientist follow-up reviews drop 14 post-review terms without
+        # changing the post-review overlap: DESRO K9IMD0 -7 and K9IJK6 -4 (#3198),
+        # HYPJE IRE1 -2 (#3199), ANOGA PGRPLB -1 (#3201). K9IMD0 also loses its
+        # antimicrobial core function (#3198): -3 core terms, -1 core overlap.
+        # Then #3240 (obsolete GO:0005615 -> GO:0005576) and #3226 (DESVH QmoA/QmoB
+        # restored) moved ten benchmark genes: post-review +1 term and +2 overlaps,
+        # core -1 term and +4 overlaps (DESRO K9I* salivary proteins gain the
+        # extracellular-region match; DESVH Q72DT0/Q72DT1 lose Flx-Hdr core terms).
+        # #3246 (AAU94417 merged into AT1G06680): AAU94417's 12/3 post-review and
+        # 5/1 core leave; the merged AT1G06680 gains two post-review terms and one
+        # overlap. #3239 (obsolete author-supplied ids repointed) drops one
+        # post-review term each from ANOGA/PGRPLD and ECOLX/SNIPE and one core
+        # term each from ECOLI SecB and surA, with no overlap change.
+        "post_review": {"overlap": 852, "total": 2757, "pred": 8835},
+        "core": {"overlap": 356, "total": 1219, "pred": 8835},
     }
 
 
