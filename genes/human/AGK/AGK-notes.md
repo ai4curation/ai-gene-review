@@ -218,3 +218,24 @@ The complete recursive census covers authored YAML/notes, PN notes, genuine Falc
 Independent source identity checks are recorded in `tmp/source22-primary-identity-review.json`; actual AGK article/abstract scopes are in `tmp/source22-agk-scientific-review.json`. The five CERK comparator bodies were independently read in `tmp/source22-cerk-scientific-review.json`, including explicit model, construct and pathway limits. Raw sources, genuine provider artifacts and published histories are unchanged. The YAML remains DRAFT for its intentional provider-quotation advisory; that advisory is distinct from the now-closed source-cache gate and does not itself require a draft PR.
 
 Targeted validation passes with the single intentional unused-provider quotation advisory. All 98 existing quotations pass case-sensitive, whitespace-normalized source checks; history and rendering pass, with no doubled PubMed links or new YAML aliases. The independent bounded peer read all 18 added assessments and the appended notes, independently confirmed the 44/3/2 and preceding-reference preservation, and rechecked the MuLK abstract, mouse platelet abstract, oocyte study and GBM treatment-response sections. No material issue was found; the peer did not claim a second complete read of every paper or independently certify the recursive census.
+
+
+## PR review follow-up, 2026-09-27
+
+[Review of PR #3314](https://github.com/ai4curation/ai-gene-review/pull/3314#pullrequestreview-5331255855)
+requested that recovered ortholog evidence be linked directly to the ceramide-kinase decision.
+PMID:22069480 and PMID:18004883 are now cited on that annotation. The PAINT source comment
+names the positive Dmulk result (approximately 3.3-fold increased embryonic C1P on overexpression),
+with an exact cached excerpt. This in-vivo fly lipid result does not isolate human ceramide
+phosphorylation. The human substrate evidence and REMOVE decision remain unchanged; all 44
+annotation actions, original source objects, two products and three core functions are preserved.
+
+A new research question connects mouse platelet PA/LPA measurements [PMID:37051931] and mouse
+oocyte metabolomics [PMID:42026151] to direct catalytic capability, steady-state lipid abundance
+and secondary mitochondrial effects. These findings do not invalidate the human in-vitro MAG/DAG
+activities or establish a new reaction. The fly study is rated MEDIUM for supporting ortholog
+context. Reference assessments use ordinary source-access wording instead of session batch names.
+The five CERK comparator papers remain LOW because they document a specific attribution problem
+in the research summary; that purpose is now explicit. Previously recorded local tmp paths are
+operational journal details, not required scientific sources. The publication caches, annotation
+citations and PR provide the reviewable evidence trail.
