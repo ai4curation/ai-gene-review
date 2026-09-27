@@ -15,7 +15,7 @@ Completed comprehensive review of 32 existing GO annotations for S. pombe Epe1 p
 
 **Rationale**: Extensive biochemical evidence shows Epe1 lacks enzymatic activity:
 - No demethylase activity detected in vitro (Raiymbek 2020, PMID:32433969)
-- Lacks critical catalytic residues (HVD instead of HXD motif)
+- Lacks a critical Fe(II) ligand: the JmjC triad is H297-E299-Y370, with Tyr370 in place of the third (His) iron ligand of canonical HX(D/E)...H demethylases
 - H297A catalytic mutant retains anti-silencing function (Bao 2019, PMID:30531922)
 - C-terminus alone (without JmjC) can disrupt heterochromatin
 

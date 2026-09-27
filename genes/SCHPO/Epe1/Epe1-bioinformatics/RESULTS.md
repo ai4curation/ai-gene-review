@@ -18,6 +18,15 @@ Bioinformatics analysis of Epe1 (O94603) confirms it as a JmjC domain-containing
 - **Coiled-coil regions**: Multiple regions detected (score: 32), suggesting protein-protein interactions
 
 ### 3. JmjC Domain Analysis
+
+> **Correction (2026-09):** the motif scan below matches any `H.[DE]` string and
+> does not identify the Fe(II)-binding site. The "HVD at 279-282" hit is not the
+> iron site and is not by itself a defect (active KDM2A has an FHVD motif). Per the
+> UniProt entry (O94603 BINDING 297, 299; CC note on position 370), Epe1's JmjC
+> Fe(II) triad is H297-E299-Y370: the HX(D/E) pair is intact (the "HIE" hit at
+> 296-299 below) and the third ligand, a His in canonical HX(D/E)...H
+> demethylases, is replaced by Tyr370.
+
 - **Fe(II) binding motifs**: 3 HxD/E motifs detected
   - Position 279-282: HVD
   - Position 296-299: HIE  
