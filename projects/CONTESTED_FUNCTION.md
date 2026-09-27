@@ -17,9 +17,10 @@ because these cases need several evidence types synthesised at once, which makes
 demanding test for AI-assisted curation, and because a wrong catalytic term on a
 pseudo-enzyme keeps being re-propagated. Four reviews are complete: fission yeast Epe1,
 whose five electronic (IBA/IEA) demethylase, oxidoreductase, dioxygenase and metal-binding
-rows are REMOVE in favour of histone-binding terms while the two PomBase experimental
-(IDA/EXP) H3K9 demethylase rows are UNDECIDED (PR #3229), and three
-biosynthetic-cluster proteins without active sites (eryCII, pqsB, actI-ORF2). Finding
+rows are REMOVE in favour of histone-binding terms, and three
+biosynthetic-cluster proteins without active sites (eryCII, pqsB, actI-ORF2). The two
+PomBase experimental (IDA/EXP) H3K9 demethylase rows on Epe1 are also REMOVE in the
+current review; PR #3229, not yet merged, proposes moving them to UNDECIDED. Finding
 further candidates has not started; the [Top-Nots](TOP_NOTS.md) candidate list is the
 natural source.
 
@@ -61,7 +62,7 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 - `GO:0046872` metal ion binding (IEA)
 
 **The Evidence Against**:
-1. Epe1 JmjC Fe(II)-binding triad is H297-E299-Y370 rather than the canonical H-D-H
+1. The Epe1 JmjC Fe(II)-binding triad is H297-E299-Y370: the distal iron-ligating His is replaced by Tyr
 2. The distal iron-ligating histidine is lost (His370 replaced by Tyr; UniProt caution)
 3. Mass spectrometry assays show NO demethylation of H3K9me2/me3 peptides
 4. The H297A Fe(II)-site mutant does not settle it: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing, SAGA-dependently (Bao 2019)
@@ -73,7 +74,7 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 - Promotes nucleosome turnover
 - Functions as chromatin reader, not eraser
 
-**AI Review Action**: REMOVE the IBA/IEA enzymatic activity annotations and propose binding terms; the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence (see PR #3229).
+**AI Review Action**: REMOVE the IBA/IEA enzymatic activity annotations and propose binding terms; the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are REMOVE in the current review, and PR #3229 (not yet merged) proposes UNDECIDED for them, since they rest on in vivo genetic evidence.
 
 **Source**: Presented at Gene Ontology Consortium Meeting, October 2025, Cambridge UK. See [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review).
 
@@ -147,9 +148,9 @@ Created project to document genes with contested molecular functions, starting w
 
 **Epe1 Summary**:
 - Full review in `genes/SCHPO/Epe1/Epe1-ai-review.yaml`
-- 7 enzymatic annotations marked REMOVE:
+- 7 enzymatic annotations marked REMOVE in the current review (5 electronic, 2 experimental):
   - `GO:0032452` histone demethylase activity (IBA)
-  - `GO:0032454` histone H3K9 demethylase activity (IDA, EXP)
+  - `GO:0032454` histone H3K9 demethylase activity (IDA, EXP) - PR #3229 proposes UNDECIDED for these two
   - `GO:0140680` histone H3K36me/H3K36me2 demethylase activity (IEA)
   - `GO:0051213` dioxygenase activity (IEA)
   - `GO:0016491` oxidoreductase activity (IEA)

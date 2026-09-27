@@ -20,7 +20,8 @@ complete (human PHYKPL and UBA7, fission yeast Epe1, *Candida* LPL1, and five
 biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
 recorded actions match the patterns: all ten generic `protein binding` IPI rows on
 PHYKPL and UBA7 are REMOVE, and Epe1's JmjC-domain demethylase, dioxygenase and
-metal-binding rows are REMOVE. The catalogue is qualitative; it does not yet measure how
+metal-binding rows are REMOVE (all seven in the current review; PR #3229, not yet
+merged, proposes UNDECIDED for the two experimental IDA/EXP rows). The catalogue is qualitative; it does not yet measure how
 often each pattern occurs across the repository.
 
 ## Overview

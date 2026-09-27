@@ -37,7 +37,7 @@ A register of GO citations that resolve to the wrong paper, keyed on the citatio
 ## Bottom line
 
 - Reviewers had flagged wrong-paper citations **one gene at a time**; nobody had aggregated them.
-- `harvest_citations.py` now collects every flag across **4,467 reviews**: **28 `WRONG_IDENTIFIER` rows on 21 citations**, 7 citations hit more than one gene, plus **257 `MISCITED`** rows not yet precision-checked.
+- `harvest_citations.py` now collects every flag across **4,467 reviews**: **28 `WRONG_IDENTIFIER` rows on 21 citations**, 6 carry that flag on more than one gene, plus **257 `MISCITED`** rows not yet precision-checked.
 - **233 of 285** flagged citations came from GOA, so the real deliverable is **upstream bug reports**, which are **not filed yet**.
 
 ---
