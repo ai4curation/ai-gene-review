@@ -1,10 +1,31 @@
 ---
 title: "Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [mouse, human, AZOVI]
+genes: [nifA, SEC63]
+sidecars:
+  slide_assets:
+    - NITROGEN_CYCLE_OBSOLETION/slides/n-cycle.svg
+    - NITROGEN_CYCLE_OBSOLETION/slides/term-map.svg
 ---
 
 # Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion
+
+**Bottom line:** GO:0071941 *nitrogen cycle metabolic process* names the
+ecosystem-level nitrogen cycle, whose real pathways (denitrification,
+nitrification, nitrogen fixation, mineralization) are its children. Upstream
+proposed marking it `do_not_annotate` and obsoleting its three regulation
+terms; OLS now lists GO:1903314, GO:1903315 and GO:1903316 as obsolete, while
+GO:0071941 itself stays live (checked 2026-09-26). We checked the six
+experimental annotations on GO:0071941: five are mouse kidney and liver genes
+(Pkd1 twice, Prkcsh, Sec63, Apc) from polycystic-disease and liver-zonation
+papers, which we recommend removing, and one is a bacterial periplasmic
+nitrate reductase (napA) that should move to GO:0019333 *denitrification
+pathway*. Scoped, not yet started: none of those genes has a review that
+carries the term. The one in-repo hit is *A. vinelandii* nifA, whose review
+used the now-obsolete GO:1903316 as a MODIFY target, a NEW row and a
+`core_functions` term. Replacing those is tracked in #3235 (open).
 
 ## Overview
 
@@ -177,3 +198,17 @@ genes (see `projects/OVER_ANNOTATION_PATTERNS.md`).
   cross-checked via the QuickGO REST API (6 hits, matching the upstream
   count). No reviews started; none of the 5 distinct affected genes are in
   the repo yet.
+- 2026-09-26 — OLS lists GO:1903314/1903315/1903316 as obsolete ("regulation
+  at that level is not biologically meaningful at the gene-product level");
+  GO:0071941 is still live. Human SEC63 now has a review, but its GOA file has
+  no GO:0071941 row. `genes/AZOVI/nifA/nifA-ai-review.yaml` uses GO:1903316 in
+  three places (MODIFY target for GO:0009399, a NEW row, and
+  `core_functions`); the local `cache/ontologies/go.tsv` still lists it as
+  live, so validation does not flag it.
+- 2026-09-26 (later) — The nifA GO:1903316 replacement is tracked in #3235
+  (open), which records the per-row outcome in the nifA review. The six
+  GO:0071941 annotations remain unreviewed here.
+
+## Slides
+
+- [Slides](NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.html) (Marp source: [NITROGEN_CYCLE_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.md)) — AI generated

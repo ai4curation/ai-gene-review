@@ -38,7 +38,7 @@ GO:0005052 · GO:0005053 · GO:0033328 · GO:0036105 → GO:0000268 peroxisome s
 
 - GO **obsoleted four signal-specific binding terms** (PTS1, PTS2, mPTS and its class-1 child) and merged them into the renamed parent **GO:0000268**.
 - The change **landed** in GO release 2026-07-26 (OLS shows all four obsolete, `replaced_by` GO:0000268).
-- **Refresh fixed in #3233 (open):** 18 ACCEPT rows in PEX5, PEX7 and PEX19 → MODIFY to GO:0000268; PEX5's mPTS row stays UNDECIDED; two peroxin–peroxin protein-binding rows drop their replacement (PEX5 → MARK_AS_OVER_ANNOTATED, PEX7 → REMOVE), since a peroxin contact is not signal recognition.
+- **Refresh merged in #3233:** 18 ACCEPT rows in PEX5, PEX7 and PEX19 → MODIFY to GO:0000268; PEX5's mPTS row stays UNDECIDED; two peroxin–peroxin protein-binding rows drop their replacement (PEX5 → MARK_AS_OVER_ANNOTATED, PEX7 → REMOVE), since a peroxin contact is not signal recognition.
 
 ---
 
@@ -65,7 +65,7 @@ GO:0005052 · GO:0005053 · GO:0033328 · GO:0036105 → GO:0000268 peroxisome s
 
 ## What is in the repo today
 
-| Gene | Obsolete term | Rows | Actions (#3233, open) |
+| Gene | Obsolete term | Rows | Actions (#3233) |
 |---|---|---|---|
 | PEX5 | GO:0005052 | 9 (6 IDA, IBA, IMP, IPI) | ACCEPT → MODIFY GO:0000268 |
 | PEX5 | GO:0033328 | 1 (IPI) | stays UNDECIDED (not an mPTS receptor) |
@@ -78,7 +78,7 @@ GO:0005052 · GO:0005053 · GO:0033328 · GO:0036105 → GO:0000268 peroxisome s
 
 ## Next steps
 
-1. Merge **#3233**: 3 of 5 replacement terms and the PEX19 core MF point to GO:0000268; the other 2 are dropped.
+1. Done in **#3233** (merged): 3 of 5 replacement terms and the PEX19 core MF point to GO:0000268; the other 2 are dropped.
 2. Re-run `just fetch-gene` once GOA swaps the ids itself.
 3. Note the IPR044536 redirect in the PEX7 review; leave SGD/AspGD orthologs to the broader peroxisome project.
 
