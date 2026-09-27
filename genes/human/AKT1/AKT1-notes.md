@@ -185,6 +185,11 @@ this does not assert that AKT1 can never show such chemistry in another context.
 PMID:23431171 instead directly resolves MOZ Thr369, supporting replacement of
 the source's serine-only assertion by Ser/Thr kinase activity.
 
+**Superseded scope interpretation:** the following two paragraphs read the leaf
+definitions without their inherited non-covalent restriction. The 2026-09-27
+PR #3242 follow-up below corrects this interpretation; the positive kinase
+experiments remain valid.
+
 The literal [GO:0030291 definition](https://amigo.geneontology.org/amigo/term/GO%3A0030291)
 requires binding and reduced Ser/Thr kinase activity; it does not impose a
 noncatalytic or stoichiometric mechanism. The rat Akt1 accession P47196 carries
@@ -416,3 +421,74 @@ source-specific/action and provider-quotation advisories. A separate check finds
 case-sensitive whitespace-only normalization; no full-text escape fields or
 missing quoted sources are present. The notes-inclusive correction-cache gate
 remains separate from this successful validator result.
+
+### 2026-09-27 PR #3242 regulator-term and provenance follow-up
+
+The published baseline was checked at head
+`2ff0f9d187356afe9d801f751bca34948ddd5005`; all seven canonical gene files
+matched the remote blobs. Formal review 5329629755 and detailed comment
+5854292480 were read in full. The three regulator MF judgments are changed from
+KEEP_AS_NON_CORE to MODIFY after checking the actual GO parents, not merely the
+leaf labels. All 445 original source assertions, evidence codes, references,
+qualifiers and isoforms remain intact; the two cores and all other actions are
+unchanged. No NEW annotation is added.
+
+OLS MCP was not exposed in this session. Live official AmiGO pages provided the
+definitions and ancestry instead. [GO:0098772](https://amigo.geneontology.org/amigo/term/GO:0098772)
+restricts molecular-function regulation to “non-covalent binding that does not
+result in covalent modification to the target”. Its comment makes the same
+restriction explicit. [GO:0140678](https://amigo.geneontology.org/amigo/term/GO:0140678)
+inherits and repeats that restriction. The live trees place
+[GO:0030291](https://amigo.geneontology.org/amigo/term/GO:0030291) under the
+inhibitor branch and [GO:0030235](https://amigo.geneontology.org/amigo/term/GO:0030235)
+under enzyme regulator activity and GO:0098772. Thus the earlier leaf-only
+interpretation above is superseded.
+
+The GSK3 evidence remains positive: the cached PMID:9373175 record reports
+PKBalpha-dependent GSK3beta Ser9 phosphorylation, loss of inhibition with Ser9A,
+and reversal by phosphatase. PMID:21711983 supplies the signaling-review context;
+its local abstract does not expose all the reviewed experiments. The traced rat
+P47196 IPI source PMID:8524413 and the human corroboration support conserved
+kinase-mediated inhibition, not proof of a separately measured non-covalent
+inhibitor MF. The complete rat binding assay remains unread, so the donor block
+does not claim that an additional non-covalent function is impossible. Similarly,
+the actual PMID:10376603 abstract establishes eNOS Ser1177 phosphorylation,
+site-mutant failure of activation and a phosphomimetic activity effect. AKT1
+performs the covalent phosphorylation step in both cases.
+
+All three rows recommend the established catalytic MF GO:0004674. The live
+process definitions [GO:0006469](https://amigo.geneontology.org/amigo/term/GO:0006469)
+and [GO:0051000](https://amigo.geneontology.org/amigo/term/GO:0051000) describe the
+inhibitory kinase and activating NOS outcomes, respectively; they are discussed
+as modeling alternatives rather than added as new assertions. Existing kinase
+and nitric-oxide-biosynthesis regulation rows retain the measured chemistry and
+outcome. Neither the kinase MF nor an ancestor/descendant process is duplicated
+with a NEW row.
+
+The MOZ Thr369 replacement stays GO:0004674. Live
+[AmiGO GO:0004674](https://amigo.geneontology.org/amigo/term/GO:0004674) explicitly
+lists GO:0106311 as an alternate ID and threonine kinase activity among its
+synonyms, so the suggested sibling is not a distinct current term in that
+release. The original GOA serine-only assertion remains untouched. The brief
+description now gives lysosomal functions proportionate contextual emphasis;
+TMEM175's supported non-core judgments remain unchanged. Each of the five
+Reactome compartment reasons now names the actual AKT1-containing eNOS complex
+shown on its live event page. These are source-specific plasma-membrane
+assignments, not a denial of AKT1's separately supported cytosolic localization.
+
+Published history record
+`2026-09-27T061646Z-claude-code-6196e6.yaml` is preserved byte-for-byte. Its
+filename/session token says claude-code while its actor fields explicitly say
+codex, gpt-6 and codex; this mismatch is recorded here rather than silently
+rewriting append-only provenance. That record describes closure of 164 PMID
+and 78 Reactome cache requirements, with 445 decisions, 250 references and two
+cores preserved at that earlier step. The new session is scaffolded with
+explicit codex actor/tool and gpt-6 model arguments and identifies the sections
+actually changed in this follow-up. No cached source or provider artifact is
+edited, and this follow-up adds no literature citation or new source-cache gate.
+
+The full targeted validator passes with the same seven explained advisories
+(source-specific action differences and an unused provider quotation). DRAFT
+therefore remains appropriate locally. History validation, rendering, exact
+source preservation and case-sensitive quote checks are captured in the final
+follow-up manifest; current-head CI and independent review remain separate.
