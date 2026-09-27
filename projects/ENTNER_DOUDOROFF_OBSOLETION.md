@@ -18,14 +18,14 @@ putida* KT2440 *edd* (an accepted IEA row) and *eda* (a proposed NEW row),
 both on GO:0009255 and both in `core_functions`. The obsoletion has now
 landed (OLS lists GO:0009255 as obsolete, pointing to GO:0061678), so the
 "not yet merged" status below is out of date. Both reviews are fixed in
-#3232 (open): *edd*'s IEA row changes from ACCEPT to MODIFY → GO:0061678,
+#3232: *edd*'s IEA row changes from ACCEPT to MODIFY → GO:0061678,
 *eda*'s NEW row now proposes GO:0061678, and both `core_functions` point to
 GO:0061678. The biology does not change. The repo's
 `modules/entner_doudoroff_and_gluconeogenesis.yaml` already records the
 obsoletion (GO release 2026-07-26) and grounds itself in GO:0061678. One
 related term outside this page's four, GO:0061688 *glycolytic process via
 Entner-Doudoroff Pathway* (obsoleted in the same release, replaced by
-GO:0006096), was proposed by the *P. putida* *glk* review; #3232 (open)
+GO:0006096), was proposed by the *P. putida* *glk* review; #3232
 drops that MODIFY target, ACCEPTs glk's GOA GO:0006096 *glycolytic process*
 row, and moves its `core_functions` to GO:0006096, because Glk
 phosphorylates glucose upstream and performs no ED step.
@@ -87,12 +87,15 @@ already use GO:0009255 in their `existing_annotations` and `core_functions`:
 
 | Gene | File | Current usage |
 |---|---|---|
-| PSEPK edd | `genes/PSEPK/edd/edd-ai-review.yaml` | IEA from `GO_REF:0000120`, was accepted; also referenced under `core_functions[].directly_involved_in`. Fixed in #3232 (open): row ACCEPT → **MODIFY → GO:0061678**, `core_functions` → GO:0061678 |
-| PSEPK eda | `genes/PSEPK/eda/eda-ai-review.yaml` | `action: NEW` annotation proposal (not in GOA) keyed off the UniProt pathway statement; also referenced under `core_functions[].directly_involved_in`. Fixed in #3232 (open): NEW row and `core_functions` → **GO:0061678** |
+| PSEPK edd | `genes/PSEPK/edd/edd-ai-review.yaml` | IEA from `GO_REF:0000120`, was accepted; also referenced under `core_functions[].directly_involved_in`. Fixed in #3232: row ACCEPT → **MODIFY → GO:0061678**, `core_functions` → GO:0061678 |
+| PSEPK eda | `genes/PSEPK/eda/eda-ai-review.yaml` | `action: NEW` annotation proposal (not in GOA) keyed off the UniProt pathway statement; also referenced under `core_functions[].directly_involved_in`. Fixed in #3232: NEW row and `core_functions` → **GO:0061678** |
 
-Both reviews now point to **GO:0061678** instead of GO:0009255 in #3232
-(open). The GOA `term.id` on edd's IEA row stays GO:0009255, so that row
-is MODIFY rather than ACCEPT. The biology is
+The obsoletion landed in the GO release 2026-07-26 and both reviews were
+refreshed in PR #3232 so that the author-supplied `directly_involved_in`
+references and review actions point to **GO:0061678** instead of
+GO:0009255. GOA-sourced `existing_annotations[].term.id` values are never
+rewritten (see CLAUDE.md); the change is carried in `action` plus
+`proposed_replacement_terms` instead. The biology is
 unchanged — Edd (phosphogluconate dehydratase) and Eda (KDPG aldolase) are
 the canonical ED-pathway enzymes in P. putida KT2440.
 
@@ -101,13 +104,13 @@ The pathway modules are already updated.
 GO:0061678) records that GO:0009255 was obsoleted in GO release 2026-07-26 with
 `replaced_by GO:0061678`, and is itself grounded in GO:0061678
 (`modules/emp_glycolysis.yaml` cites it too), so the replacement term is in use
-at module level and, once #3232 merges, in the edd and eda reviews.
+at module level and, since #3232, in the edd and eda reviews.
 
 **Sibling term outside this page's scope.** The same modules record that
 GO:0061688 *glycolytic process via Entner-Doudoroff Pathway* was obsoleted in
 that release (`replaced_by GO:0006096`). `genes/PSEPK/glk/glk-ai-review.yaml`
 proposed GO:0061688 as a `MODIFY` replacement and listed it in
-`core_functions[].directly_involved_in`. Fixed in #3232 (open): the MODIFY
+`core_functions[].directly_involved_in`. Fixed in #3232: the MODIFY
 target is dropped, the GOA GO:0006096 row is now ACCEPT, and
 `core_functions` uses GO:0006096. GO:0061678 was rejected for glk because
 Glk phosphorylates glucose upstream and performs no ED step.
@@ -134,12 +137,14 @@ only the edd and eda reviews (plus glk's proposed target) are affected.
 The two existing PSEPK reviews are the immediate work items; a small set of
 ortholog reviews would round out coverage of the canonical ED pathway.
 
-### Existing reviews to refresh (post-obsoletion) — all fixed in #3232 (open)
+### Existing reviews refreshed (done in #3232)
 
-1. **edd (PSEPK)** — `genes/PSEPK/edd/edd-ai-review.yaml`. IEA row ACCEPT →
-   MODIFY → GO:0061678; `core_functions[].directly_involved_in` → GO:0061678.
-2. **eda (PSEPK)** — `genes/PSEPK/eda/eda-ai-review.yaml`. NEW row and
-   `core_functions` → GO:0061678.
+1. **edd (PSEPK)** — `genes/PSEPK/edd/edd-ai-review.yaml`. The GOA IEA row
+   keeps its GOA term id GO:0009255 and moves from `ACCEPT` to `MODIFY` with
+   `proposed_replacement_terms` GO:0061678; `core_functions[].directly_involved_in`
+   now uses GO:0061678.
+2. **eda (PSEPK)** — `genes/PSEPK/eda/eda-ai-review.yaml`. The curator-proposed
+   `NEW` row (no GOA row) and `core_functions` now use GO:0061678.
 3. **glk (PSEPK)** — `genes/PSEPK/glk/glk-ai-review.yaml`. Obsolete
    GO:0061688 MODIFY target dropped; GOA GO:0006096 *glycolytic process* row
    now ACCEPT and `core_functions` → GO:0006096. GO:0061678 was considered
@@ -160,32 +165,21 @@ add files without confirming the UniProt accession from the UniProt API.
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land** in a public GO release. The
-   ontology ticket (#31916) has not yet been merged at the time of writing,
-   so refreshing the PSEPK reviews now would need to be redone if labels
-   change.
-2. **Once the obsoletion is in a release**, update the two PSEPK reviews in
-   one PR — the change is mechanical (term ID swap + label update) and the
-   `review.summary` text already justifies pathway-level annotation. The
-   action differs by gene: for **edd** the plan was for the existing IEA to
-   stay `ACCEPT` on the lifted parent term, but because GOA `term.id`s are
-   not rewritten the row keeps GO:0009255 and becomes `MODIFY` →
-   GO:0061678 (done in #3232, open); for **eda** the annotation is
-   a curator-proposed `NEW` (no GOA row) and stays `NEW` on the lifted
-   parent term. The `review.summary` text in eda also references the old
-   label "Entner-Doudoroff pathway through 6-phosphogluconate" and should
-   be updated to "Entner-Doudoroff pathway (GO:0061678)" alongside the
-   term-ID swap.
-3. **Re-run `just validate PSEPK edd` and `just validate PSEPK eda`** after
-   the edits to confirm the schema accepts the new term IDs.
-4. **Defer new ortholog reviews** (E. coli edd/eda, gnd) to a follow-up
+1. **Done (PR #3232):** the obsoletion is in the GO release 2026-07-26 and
+   the two PSEPK reviews were updated in one PR. For **edd** the GOA IEA row
+   keeps its GOA term id (never rewrite GOA ids) and moves from `ACCEPT` to
+   `MODIFY` with `proposed_replacement_terms` GO:0061678; for **eda** the
+   curator-proposed `NEW` row (no GOA row) was repointed to GO:0061678 and
+   its summary relabelled. Author-supplied `core_functions` ids were
+   repointed in both.
+2. **Defer new ortholog reviews** (E. coli edd/eda, gnd) to a follow-up
    batch — the obsoletion does not block them, and they are best done as a
    coherent ED-pathway batch rather than ad hoc.
 
 ## Priority
 
 **Low–Medium.** The obsoletion is mechanical and only two existing reviews
-are affected; both are updated in a single small PR, #3232 (open), now that
+are affected; both are updated in a single small PR, #3232, now that
 the ontology release has shipped. Higher value is in using the moment to add E. coli ED
 reviews, but those are independent of the obsoletion itself.
 
@@ -194,13 +188,12 @@ reviews, but those are independent of the obsoletion itself.
 - 2026-05-10 — Project file created. Tracking upstream issue #6390 (last
   active 2026-05-01). Obsoletion not yet merged. Two existing PSEPK reviews
   (edd, eda) flagged for term-ID update once the obsoletion ships.
-- 2026-09-26 — Refresh fixed in #3232 (open), against GO release 2026-07-26:
-  edd IEA row ACCEPT → MODIFY → GO:0061678 and `core_functions` →
-  GO:0061678; eda NEW row and `core_functions` → GO:0061678; glk's obsolete
-  GO:0061688 MODIFY target dropped, its GOA GO:0006096 row now ACCEPT and
-  `core_functions` → GO:0006096 (Glk does no ED step). Once #3232 merges no
-  review here uses GO:0009255 or GO:0061688. The E. coli edd/eda and gnd ortholog
-  reviews remain as optional follow-up.
+- 2026-09-27 — Obsoletion is in the GO release 2026-07-26. PR #3232
+  applied it: edd GOA row `MODIFY` → GO:0061678, eda `NEW` row and both
+  `core_functions` repointed to GO:0061678. The related obsolete
+  GO:0061688 (glycolytic process via Entner-Doudoroff Pathway, replaced_by
+  GO:0006096) was handled on PSEPK glk, which stays `ACCEPT` on GO:0006096.
+  The E. coli edd/eda and gnd ortholog reviews remain as optional follow-up.
 
 ## Slides
 

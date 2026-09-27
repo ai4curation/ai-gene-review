@@ -38,7 +38,7 @@ GO:1902767 and GO:0010142 → GO:0019287 (to IPP) or GO:0045337 (IPP → FPP)
 
 - GO **obsoleted two overlapping mevalonate-route terms**; each old row must go to **GO:0019287** or **GO:0045337** depending on the step the gene catalyses.
 - The human pathway is now **reviewed here** (HMGCS1, HMGCR, MVK, PMVK, MVD, IDI1, FDPS; PRs #1998, #2153): MVK, PMVK, MVD accept GO:0019287 and FDPS accepts GO:0045337.
-- **3 obsolete-term rows remain:** yeast **ERG19** (1 RCA row, KEEP_AS_NON_CORE) and rat **Hmgcs2** (2 rows, UNDECIDED); their remapping is tracked in #3232 (open).
+- **3 obsolete-term rows resolved in #3232:** yeast **ERG19** (1 RCA row, now REMOVE, since GO:0019287 is already accepted) and rat **Hmgcs2** (2 rows, stay UNDECIDED, obsoletion recorded).
 
 ---
 
@@ -71,8 +71,8 @@ GO:1902767 and GO:0010142 → GO:0019287 (to IPP) or GO:0045337 (IPP → FPP)
 | human MVK, PMVK, MVD | GO:0019287 IBA + IEA | ACCEPT |
 | human FDPS | GO:0045337 IBA + IEA | ACCEPT |
 | human HMGCS1, HMGCR, IDI1 | reviewed; no row on either replacement | – |
-| rat Hmgcs2 | GO:0010142 IBA + IEA | UNDECIDED (tracked in #3232, open) |
-| yeast ERG19 | GO:0010142 RCA; GO:0019287 IEA | KEEP_AS_NON_CORE (tracked in #3232, open); ACCEPT |
+| rat Hmgcs2 | GO:0010142 IBA + IEA | UNDECIDED, obsoletion noted (#3232) |
+| yeast ERG19 | GO:0010142 RCA; GO:0019287 IEA | REMOVE (#3232); ACCEPT |
 
 Modules: `modules/mevalonate_pathway.yaml` (grounded on GO:0019287) and `modules/isoprenoid_diphosphate_biosynthesis.yaml`.
 
@@ -83,7 +83,7 @@ Modules: `modules/mevalonate_pathway.yaml` (grounded on GO:0019287) and `modules
 - **2026-06-06:** project created; only rat Hmgcs2 then carried an obsolete-term row.
 - **2026-07:** human pathway reviews and modules added (PRs #1998, #2153).
 - **2026-09-26:** OLS lists **both terms obsolete**.
-- **2026-09-26 (later):** ERG19 and Hmgcs2 rows tracked in #3232 (open).
+- **2026-09-27:** #3232 applied the obsoletion: ERG19 RCA row REMOVE; Hmgcs2 rows UNDECIDED with the obsoletion in `reason`.
 - Next: identify the remaining EcoCyc row (possibly yajO).
 
 **Upstream:** go-annotation#6440, #6439 · go-ontology#32082
