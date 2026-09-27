@@ -222,3 +222,21 @@ The five UNDECIDED annotations retain their documented evidential limits. YAML
 DRAFT remains appropriate while intentional validation advisories remain; source
 availability no longer imposes a draft-PR gate. Targeted, history, rendering,
 exact-quote and preservation checks are recorded in the frozen follow-up receipt.
+
+## 2026-09-27 — Restore the primary co-immunoprecipitation evidence pointer
+
+Review 5330824470 identified a provenance regression in the preceding update.
+The earlier description of `supporting_text_fulltext` as a private field was
+incorrect: the field stores a short verified excerpt when the full article
+cannot be redistributed in the repository. The [original PMC article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2937900/)
+was rechecked: its copyright notice identifies ASBMB as the rights holder, and
+no license permitting redistribution of the whole article was established.
+Public readability alone does not establish that permission.
+
+The same short Results/Figure 3 excerpt is restored on the original IPI evidence
+entry for transmembrane transporter binding. The normal local cache remains
+abstract-only, and its availability flag remains true. The cached human
+structural evidence, human construct/HEK293 assay context and absence of a
+direct ankyrin-B/SUR1-binding inference are retained. All 64 decisions, two
+core functions, three alternative products and source records are unchanged.
+This correction does not require a new biological annotation or cache rewrite.
