@@ -177,8 +177,12 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # changing the post-review overlap: DESRO K9IMD0 -7 and K9IJK6 -4 (#3198),
         # HYPJE IRE1 -2 (#3199), ANOGA PGRPLB -1 (#3201). K9IMD0 also loses its
         # antimicrobial core function (#3198): -3 core terms, -1 core overlap.
-        "post_review": {"overlap": 852, "total": 2768, "pred": 8871},
-        "core": {"overlap": 353, "total": 1227, "pred": 8871},
+        # Then #3240 (obsolete GO:0005615 -> GO:0005576) and #3226 (DESVH QmoA/QmoB
+        # restored) moved ten benchmark genes: post-review +1 term and +2 overlaps,
+        # core -1 term and +4 overlaps (DESRO K9I* salivary proteins gain the
+        # extracellular-region match; DESVH Q72DT0/Q72DT1 lose Flx-Hdr core terms).
+        "post_review": {"overlap": 854, "total": 2769, "pred": 8871},
+        "core": {"overlap": 357, "total": 1226, "pred": 8871},
     }
 
 

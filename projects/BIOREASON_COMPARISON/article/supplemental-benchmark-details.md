@@ -131,8 +131,8 @@ The final TreeGrafter consistency review refined K9IMD0 metal ion binding to fer
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,768 | 852 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,227 | 353 | 4.0 |
+| Retained/replacement/proposed-new AIGR annotations | 2,769 | 854 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,226 | 357 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
@@ -193,7 +193,12 @@ and `DESRO/K9IJK6` 12 to 8 (#3198), `HYPJE/IRE1` 17 to 15 (#3199) and
 `ANOGA/PGRPLB` 11 to 10 (#3201). K9IMD0 also lost its antimicrobial core function,
 which had been inferred from the lactotransferrin family, taking its core slots from
 6 to 3 and its core overlaps from 3 to 2, so the core totals fell to 1,227 terms and
-353 overlaps. Thus the recorded
+353 overlaps. Two further curation merges then moved ten genes: #3240 replaced the
+obsolete `GO:0005615` extracellular space with `GO:0005576` extracellular region, which
+GO-GPT predicted for several `DESRO` salivary proteins, and #3226 restored
+`DESVH/Q72DT0` and `Q72DT1` as QmoA/QmoB, removing Flx–Hdr core terms. Together they
+took the post-review reference to 2,769 terms and 854 overlaps, and the core reference
+to 1,226 terms and 357 overlaps. Thus the recorded
 denominator changes combine upstream reference
 curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
 did not change.
