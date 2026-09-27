@@ -275,3 +275,12 @@ spaces were stripped with parsed-YAML equality asserted. Coordinator independent
 review confirmed the biological judgments and the recovered human activity and
 CDS-complex sources; its request to retain the broad membrane annotation was
 incorporated. No Git, publication or shared-project changes were made.
+
+### 2026-09-27: align review status with remaining validation warnings
+
+Set `status: DRAFT` after checking `GeneReviewStatusEnum`: `COMPLETE` requires
+no validation warnings, whereas `DRAFT` permits a fully adjudicated review with
+warnings. The five missing publication caches recorded above remain unresolved.
+All 31 annotation judgments, source assertions, reference identities and the
+single catalytic core are unchanged. This corrects the status label without
+claiming that the missing source material has been recovered.
