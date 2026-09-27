@@ -3,9 +3,40 @@ title: "C. elegans Surveillance Immunity Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
+genes: [pmk-1, sek-1, nsy-1, tir-1, atf-7, skn-1, zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1, daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
+sidecars:
+  slide_figures:
+    - CAEEL_SURVEILLANCE_IMMUNITY/slides/surveillance-pathway.svg
+    - CAEEL_SURVEILLANCE_IMMUNITY/slides/actions-by-gene.svg
+    - CAEEL_SURVEILLANCE_IMMUNITY/slides/nipi-3-review-table.jpg
 ---
 
 # C. elegans Surveillance Immunity Project
+
+**Bottom line:** *C. elegans* has no NF-kB, inflammasome or adaptive
+immunity, yet it mounts strong defences by sensing damage to its own core
+processes (translation, mitochondria, proteasome) and relaying that through
+the NSY-1/SEK-1/PMK-1 p38 MAPK cascade, the ZIP-2/CEBP-2 surveillance
+factors and parallel DAF-16, DBL-1 and epidermal STA-2/NIPI-3 pathways. We
+reviewed every existing GO annotation on 18 worm genes spanning these
+pathways and their effectors, and wrote a
+[pathway summary](CAEEL_SURVEILLANCE_IMMUNITY/CAEEL_SURVEILLANCE_IMMUNITY-pathway.md)
+plus six satellite curation documents. All 18 reviews exist and render; they
+hold 680 GOA rows (580 ACCEPT, 58 KEEP_AS_NON_CORE, 21 MODIFY, 13
+MARK_AS_OVER_ANNOTATED, 7 REMOVE, 1 UNDECIDED) and 11 NEW proposals. The
+recurring error is transfer of mammalian biology onto a nematode: an
+adaptive-immunity term on DAF-16, JAK-STAT signalling on STA-2, a TLR
+pathway term on TIR-1, a hormone-receptor term on FSHR-1, and catalytic
+activity on the NIPI-3 pseudokinase and the LYS-7 lysozyme that lacks its
+active site. Several satellite recommendations were not adopted in the
+YAML (for example the ELT-2 and HLH-30 generic transcription terms stayed
+ACCEPT), and the counts and UniProt IDs in the tables below predate the
+final reviews (the per-gene YAML files are authoritative).
+
+We did this because a nematode immune system without pattern recognition
+is where annotations propagated from mammalian orthologs are most likely
+to be wrong, so it is a direct test of whether review catches
+function that the ortholog has and the worm gene does not.
 
 ## Overview
 
@@ -375,3 +406,7 @@ All provide specific, actionable guidance for implementation and quality improve
 - Priority 3 implementation: 25-40 hours (4-8 weeks)
 - Validation and final review: 2-3 hours
 - Total to completion: 31-49 hours
+
+## Slides
+
+- [Slides](CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.html) (Marp source: [CAEEL_SURVEILLANCE_IMMUNITY-slides.md](CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.md)) — AI generated
