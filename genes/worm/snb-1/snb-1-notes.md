@@ -20,3 +20,6 @@
 ## Curation notes
 - Larval development, defecation, pharyngeal pumping and hindgut contraction IMP rows all derive from the phenotypic survey of PMID:9412487 and are downstream consequences of impaired release.
 - Several localisation rows (PMID:10476681, 15254012, 16466809, 17698012) cite papers where SNB-1::GFP is used as a synaptic marker; the abstracts do not always describe the localisation explicitly, but the locations are well established for SNB-1.
+
+## Deep research corroboration
+The falcon report frames the mechanism the same way as the primary literature: "calcium entry and synaptotagmin activation permit SNARE zippering; SNB-1 supplies the vesicular SNARE helix that links the vesicle physically to the target membrane" [file:worm/snb-1/snb-1-deep-research-falcon.md]. On the unresolved residual release in nulls it lists the same candidate explanations considered here: "Residual movement in putative null animals is scientifically important: it indicates that removal of SNB-1 severely reduces but may not abolish every form of membrane fusion or transmitter release. Possible explanations include another vesicular SNARE, SNB-1-independent spontaneous fusion, maternal protein, or residual activity not detected by the genetic lesion." [file:worm/snb-1/snb-1-deep-research-falcon.md]. It adds no worm evidence beyond PMID:9412487.

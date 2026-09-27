@@ -14,4 +14,9 @@
 - All functional rows are inferred (IBA/IEA); the only experimental row is the HEP UPR-expression annotation, which is an over-annotation of involvement.
 
 ## Deep research
-A falcon deep-research run for snap-1 was attempted but the provider timed out (600 s) and produced no report, so this review rests on the cached publications, the UniProt entry, and the family-level PAINT inferences.
+The falcon run overran the wrapper's 600 s client timeout (reported as a failure) but the provider still wrote `snap-1-deep-research-falcon.md` after 615 s, so the report is present and was used. Its worm-specific content, absent from GOA:
+- Identity and essentiality: Published worm literature pairs *snap-1* with the chromosome V lethal locus *let-408* and annotates its product as alpha-soluble NSF attachment protein (α-SNAP). [file:worm/snap-1/snap-1-deep-research-falcon.md]
+- Phenotypes: **snap-1 RNAi** was associated with defective embryonic osmotic integrity; the **tm2068 deletion** is reported as sterile/lethal. [file:worm/snap-1/snap-1-deep-research-falcon.md]
+- Mechanism (family-level, not measured in worm): it recognizes assembled SNARE complexes, recruits/positions NSF, and enables NSF-driven, ATP-dependent SNARE disassembly and recycling. ATP hydrolysis is performed by NSF, not SNAP-1. [file:worm/snap-1/snap-1-deep-research-falcon.md]
+
+The report itself notes that the phenotype summary carries no penetrance, staging or rescue data and that no direct worm trafficking assay exists, and that no 2023-2024 snap-1-specific worm study was found. No new annotation is proposed from it: lethality establishes that SNAP-1 is necessary, not which processes it performs.

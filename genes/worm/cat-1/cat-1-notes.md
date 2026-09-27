@@ -57,3 +57,13 @@
   inferred automatically (GO_REF:0000108) from those symporter terms, and denote movement
   into a cell, which is the plasma-membrane reuptake step; for a vesicular transporter the
   correct process is loading into the synaptic vesicle.
+
+## Deep research
+
+- `cat-1-deep-research-falcon.md` supports the mechanism corrections made here: CAT-1 is the
+  sole worm VMAT, "VMAT then exchanges lumenal protons for cytosolic monoamine, concentrating
+  transmitter inside the vesicle for subsequent regulated exocytosis", and "CAT-1 is not a
+  plasma-membrane dopamine-reuptake transporter and is not an enzyme." It also notes that for
+  CAT-1 specifically, sensitivity to the protonophore FCCP directly supports proton-gradient
+  dependence, while the ~2H+:1 amine stoichiometry is inferred from the conserved SLC18
+  family rather than measured for CAT-1.
