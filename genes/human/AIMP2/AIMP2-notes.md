@@ -300,3 +300,23 @@ to the published baseline. Every citation cache matches the exact current-main
 blob except the five source4 additions, whose hashes match the import receipt.
 History validation and HTML rendering passed. This closure makes no source
 mutation, annotation action change or new biological assertion.
+
+
+## 2026-09-27 DOI-inclusive provider citation census correction
+
+The preceding all-cached census counted explicit PMID citations but missed references expressed only as DOIs in the immutable provider reports. That completeness claim is superseded by this DOI-inclusive audit. All provider DOI strings were decoded and normalized, compared with normal publication-cache metadata, and mapped to primary PubMed title/DOI records. The following cited sources are still missing:
+
+| PMID and primary record | Normalized DOI | Provider location |
+|---|---|---|
+| [PMID:38945214](https://pubmed.ncbi.nlm.nih.gov/38945214/), *AIMP2 restricts EV71 replication by recruiting SMURF2 to promote the degradation of 3D polymerase* | 10.1016/j.virs.2024.06.009 | AIMP2-deep-research-falcon.md, line 171 |
+| [PMID:37933844](https://pubmed.ncbi.nlm.nih.gov/37933844/), *Human lysyl-tRNA synthetase phosphorylation promotes HIV-1 proviral DNA transcription* | 10.1093/nar/gkad941 | AIMP2-deep-research-falcon.md, line 170 |
+| [PMID:25320310](https://pubmed.ncbi.nlm.nih.gov/25320310/), *Interaction of NS2 with AIMP2 facilitates the switch from ubiquitination to SUMOylation of M1 in influenza A virus-infected cells* | 10.1128/jvi.02170-14 | AIMP2-deep-research-perplexity.md, line 299 |
+| [PMID:38172953](https://pubmed.ncbi.nlm.nih.gov/38172953/), *Bi-directional regulation of AIMP2 and its splice variant on PARP-1-dependent neuronal cell death; Therapeutic implication for Parkinson's disease* | 10.1186/s40478-023-01697-5 | AIMP2-deep-research-falcon.md, line 162 |
+| [PMID:26325028](https://pubmed.ncbi.nlm.nih.gov/26325028/), *Stepping Out of the Cytosol: AIMp1/p43 Potentiates the Link Between Innate and Adaptive Immunity* | 10.3109/08830185.2015.1077829 | AIMP2-deep-research-falcon.md, line 197 |
+| [PMID:38835119](https://pubmed.ncbi.nlm.nih.gov/38835119/), *Identification and structure of AIMP2-DX2 for therapeutic perspectives* | 10.5483/bmbrep.2024-0053 | AIMP2-deep-research-perplexity.md, line 282 |
+
+The percent-encoded BMB Reports DOI in Perplexity bibliography item 21 is cited repeatedly in the narrative and maps to PMID:38835119. The JVI URL query tail maps to PMID:25320310, which is genuinely absent; the Cancer Research PDF suffix instead maps to already-cached PMID:27197155. DOI 10.1111/febs.16557 resolves to an unrelated Methanococcus enzyme study, appears only as unused URL item 46, and has no narrative [46] citation. It is recorded as an excluded stray URL rather than a required biological source. The Cyberian DOI 10.1006/geno.1995.9997 belongs to already-cached PMID:8666379; the report's accompanying PMID:8666380 is an identifier mismatch. Those generated reports remain unchanged. The AIMP1-centered review PMID:26325028 is retained because the Falcon narrative cites it for family/scaffold context; it is not treated as a newly demonstrated AIMP2 mechanism.
+
+One ordinary 13-record fetch ended naturally with exit 1 and cached 0/13 because DNS resolution failed. The newly decoded BMB source received a separate first attempt, also exit 1 and cached 0/1. No cache was created or edited. Exact DOI strings, titles, primary URLs, provider file/line context, protected hashes and terminal logs are recorded in `tmp/AGO2-AIMP2-doi-audit/`; the fixed source11 proposal reserves the missing records without changing earlier dispatched batches.
+
+The review YAML, all original annotation assertions and decisions, reference assessments, core functions, alternative products, raw source files and generated provider reports are byte-identical to published head `a4838425ca616cbb37fe3a1771e28d5fc7458626`. This follow-up changes only append-only notes and session provenance and regenerates the derived HTML. The PR remains draft until the 6 required DOI-derived caches are recovered through the normal fetcher; prior validation advisories remain separate from this source gate.
