@@ -268,3 +268,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 - Added [SPKW-VIRUS.md](SPKW/SPKW-VIRUS.md) as the virus-wide and clade-specific counterpart to the organism SPKW subprojects
 - Quantified `virus.ddb`: 180,680 SPKW annotations, 135,117 naive SPKW-unique annotations, and 80,218 closure-filtered SPKW-unique annotations
 - Summarized 11 existing viral gene reviews across phage, anti-CRISPR, influenza, phage quorum-sensing, and DGR cases
+
+## Slides
+
+- [Slides](SPKW/slides/SPKW-slides.html) (Marp source: [SPKW-slides.md](SPKW/slides/SPKW-slides.md)) — AI generated

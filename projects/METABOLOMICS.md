@@ -449,3 +449,7 @@ strategy, phasing, and the KEGG-licensing caveat are in
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,
   multi-omics-compatible alternative/complement to KEGG/SMPDB/mummichog
   enrichment.
+
+## Slides
+
+- [Slides](METABOLOMICS/slides/METABOLOMICS-slides.html) (Marp source: [METABOLOMICS-slides.md](METABOLOMICS/slides/METABOLOMICS-slides.md)) — AI generated

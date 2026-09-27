@@ -789,3 +789,7 @@ Searched all reactions with EC 2.3.1.16 (acetyl-CoA C-acyltransferase / thiolase
 2. HADHB expression data cannot be integrated with FAO flux predictions
 3. MTPD2 (HADHB deficiency, MIM:620300) phenotype cannot be modeled
 4. Drug target analysis for HADHB will predict wrong pathway effects
+
+## Slides
+
+- [Slides](METABOLIC_MODEL_ANALYSIS/slides/METABOLIC_MODEL_ANALYSIS-slides.html) (Marp source: [METABOLIC_MODEL_ANALYSIS-slides.md](METABOLIC_MODEL_ANALYSIS/slides/METABOLIC_MODEL_ANALYSIS-slides.md)) — AI generated
