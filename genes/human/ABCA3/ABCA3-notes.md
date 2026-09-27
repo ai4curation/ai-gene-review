@@ -85,3 +85,81 @@ The public tear-proteomics [Table I](https://www.spandidos-publications.com/10.3
 For [PMID:27352740] and [PMID:28887056], `full_text_unavailable` now reflects their abstract-only normal caches. The original external publisher/full-paper-in-dissertation reads remain explicitly distinguished. The latter paper is reproduced in the previously inspected [Kinting dissertation, pages 71–76](https://edoc.ub.uni-muenchen.de/25392/1/Kinting_Susanna.pdf); that document is an access route to the identified journal paper, not an invented PMID or a newly recovered cache. All original source IDs and fetched titles remain unchanged.
 
 The recursive census includes the YAML, complete notes, genuine Falcon report and its nested artifact, decoded DOI/PMC URLs and title-only bibliography. The provider's repeated bibliography entries resolve to seven distinct journal works and the two LMU dissertations. Its title-only Open Targets platform citation resolves to [the database-methods publication](https://pubmed.ncbi.nlm.nih.gov/39657122/) (DOI 10.1093/nar/gkae1128); it credits the search service and supplies no ABCA3-specific experimental evidence, so it is explicitly excluded from the biological cache requirement. Unused bibliography inside external dissertations and source articles is not recursively promoted into new gene citations. The two component articles above are included because they are the actual works underlying the dissertation's substantive variant/HCQ summaries. At this checkpoint all previously required references are cached, and the only new required PMID gaps are the two failed normal requests. No DOI-only dissertation is represented as a missing PubMed record, and no provider or source file was rewritten.
+
+## 2026-09-27 — PR #3303 evidence-attachment follow-up
+
+The current published head was checked before editing. All 82 source assertions
+and actions, the integrated core and two alternative products are retained.
+This follow-up removes the off-topic pooled-tear sampling quote from the
+[PMID:22664934] annotation while preserving its direct primary reference and
+the explicit externally read identification evidence. The local record contains
+article body sections, but omits the ABCA3 table cell; its general sampling
+sentence cannot substitute for that target-specific result.
+
+A fresh direct read of the [publisher article](https://www.spandidos-publications.com/10.3892/or.2012.1849)
+on 2026-09-27 locates the row in **Table II**, captioned *Proteins identified
+from tear proteomes of CA and CTRL*. It lists `ABCA3_HUMAN`, ATP-binding cassette
+sub-family A member 3, Homo sapiens and ABCA3. The earlier Table I pointer is
+corrected. Detection in pooled tear fluid is retained as evidence; the existing
+`MARK_AS_OVER_ANNOTATED` decision addresses the stronger physiological
+extracellular-location interpretation and does not deny the proteomics hit or
+establish soluble secretion. The earlier note's shorthand about retaining
+non-core detection does not replace that explicit annotation action.
+
+The table is publicly accessible. No public-sharing restriction was established,
+so absence from the normal extraction does not justify repopulating the special
+`supporting_text_fulltext` field. The source is attributed directly to the PMID
+and publisher URL, without using this notes file as an independent evidence
+source. Previously verified identities for [PMID:37108718] and [PMID:37175887]
+remain verified independently of cache presence. Their recovered normal records
+now contain actual Results, Discussion and Methods; those sections were read
+in the verified source20 staging area before import.
+
+
+### Actual recovered variant-study evidence
+
+[PMID:37108718] combines stable HA-tagged WT or patient-associated ABCA3 A549
+experiments with prior heterogeneous assays and clinical data. The Methods
+separate calnexin/CD63 localization, glycosylation and cleavage from vesicle
+volume and lipid labeling. TopF-PC and propargyl-choline follow different
+cellular routes; their accumulation is not a purified, leaflet-resolved flux
+measurement. Earlier ATPase assays contribute to the integrated score. The
+clinical correlation has discordant cases and a composite outcome that treats
+transplantation as death, so no universal residual-function threshold is adopted.
+
+[PMID:37175887] studies WT and 16 mutant ABCA3-HA A549 models with HCQ,
+measuring morphology, cleavage, vesicle volume and lipid accumulation. The
+variant- and concentration-dependent cellular effects are real, but no direct
+HCQ binding to ABCA3 is measured. The 39 retrospective treated cases, a small
+subset of an earlier blinded trial, co-medication and discordant outcomes are
+kept distinct. Summing responses from separate variant cell lines is an
+extrapolation for compound heterozygotes. These findings do not establish
+general therapeutic efficacy or warrant a new molecular function or core.
+
+Both primary PMC pages independently confirm the respective title, PMID and
+DOI. The normal files contain full scientific sections with duplicate flattened
+text; availability is not a claim that every supplementary table or raw dataset
+has been recovered. The two dissertation identities and access boundaries above
+remain unchanged. No source, provider report, source assertion, annotation
+action or core function is rewritten.
+
+### Source20 closure checkpoint
+
+The root's verified source20 import supplied both normal files unchanged;
+canonical bytes match the staged records and import receipt. The required
+recursive census is now **34 PMIDs and four Reactome records, all present**.
+This explicitly supersedes the earlier two-missing-cache checkpoint above.
+The complete YAML, notes, genuine Falcon report and nested artifact were
+rescanned, including decoded DOI/PMC links and the prior title-only bibliography
+resolutions. The two independently identified LMU dissertations retain their own
+access assessments; the unrelated Open Targets infrastructure citation remains
+excluded for the stated reason. The recovered papers add no new annotation or
+core. Published source assertions, actions, reference identities, two alternative
+products, all provider/raw files and earlier history remain unchanged.
+
+Target validation passed with three existing source-specific action advisories
+(plasma membrane, cytoplasmic vesicle membrane and phosphatidylcholine-process
+regulation). Those distinctions retain their evidence/access reasons. YAML
+status remains DRAFT under the schema's no-warning COMPLETE rule; there is no
+remaining required source-cache gate. History, exact cached quotations and
+source preservation are checked separately.
