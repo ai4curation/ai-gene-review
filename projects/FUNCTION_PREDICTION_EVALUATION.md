@@ -20,7 +20,7 @@ Crécy-Lagard et al. 2025 (PMID:40703034). Across projects the errors concentrat
 in specificity, paralogs, pseudoenzymes and organism context, and in the larger
 model benchmarks most correct predictions were already known: 682 of 955
 BioReason-Pro SFT terms were correct but not novel and 23 were correct and novel
-(ProtNLM2's purposive cohorts give 53 COR and 32 CNN of 288 GO terms). Affinage's GO layer reached
+(ProtNLM2's purposive cohorts invert this, 53 COR against 32 CNN of 288 GO terms, because they were selected for likely-novel targets). Affinage's GO layer reached
 the specific curated function for 1 of 42 genes, and reviewers accepted 41% of uncorroborated TreeGrafter inferences
 against 72% of curated PAINT/IBA ones. Each project below has its own cohorts,
 methods and denominators.
@@ -73,4 +73,4 @@ correctness and completeness, see the
 
 ## Slides
 
-- [Slides](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html) (Marp source: [FUNCTION_PREDICTION_EVALUATION-slides.md](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.md)) — AI generated
+- [Slides](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html) (Marp source: [FUNCTION_PREDICTION_EVALUATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.md)) — AI generated

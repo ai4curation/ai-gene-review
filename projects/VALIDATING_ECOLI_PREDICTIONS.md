@@ -119,7 +119,7 @@ Sampling across the error taxonomy to evaluate existing GO annotations in contex
 ## Pending Reviews
 (none)
 
-Last updated: 2026-03-22
+Last updated: 2026-09-26
 
 # NOTES
 
@@ -146,4 +146,4 @@ Selected 7 genes spanning all major error categories in the paper's taxonomy.
 
 ## Slides
 
-- [Slides](VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html) (Marp source: [VALIDATING_ECOLI_PREDICTIONS-slides.md](VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.md)) — AI generated
+- [Slides](VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html) (Marp source: [VALIDATING_ECOLI_PREDICTIONS-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.md)) — AI generated

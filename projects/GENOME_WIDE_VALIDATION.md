@@ -148,4 +148,4 @@ engine is organism-agnostic.
 
 ## Slides
 
-- [Slides](GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.html) (Marp source: [GENOME_WIDE_VALIDATION-slides.md](GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.md)) — AI generated
+- [Slides](GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.html) (Marp source: [GENOME_WIDE_VALIDATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.md)) — AI generated

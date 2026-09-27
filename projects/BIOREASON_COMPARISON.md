@@ -3,7 +3,7 @@ title: "BioReason-Pro Comparison Project"
 collections: [FUNCTION_PREDICTION]
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
-species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE, 9CAUD, AGKCO, ANOGA]
+species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, 9CAUD, AGKCO, ANOGA]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
   argo139_species_counts: BIOREASON_COMPARISON/argo139-species-counts.csv
@@ -30,7 +30,7 @@ performance set (the wrong-input `csr-1` export is excluded) mean correctness is
 labels already say. The model fails systematically on localization, pseudoenzymes,
 paralogs and organism-specific biology. Of the 955 SFT terms, 682 (71%) were correct
 but already known and only 23 were correct novel predictions. A blinded second rater
-on 20 genes agreed closely on correctness (weighted kappa 0.95). The GO-GPT leaf-term
+on 20 genes agreed closely on correctness (weighted kappa 0.95) and less well on completeness (kappa 0.74). The GO-GPT leaf-term
 review of ARGO139 is still pending (137 of 139 files are `DRAFT`).
 
 We did this to answer the question a database curator actually faces: are a new

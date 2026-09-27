@@ -458,4 +458,4 @@ weak dark-gene prioritization signal. Full argument in
 
 ## Slides
 
-- [Slides](AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.html) (Marp source: [AFFINAGE_EVALUATION-slides.md](AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.md)) — AI generated
+- [Slides](AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.html) (Marp source: [AFFINAGE_EVALUATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.md)) — AI generated

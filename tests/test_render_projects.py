@@ -1219,6 +1219,21 @@ def test_projects_table_has_collection_filter(tmp_path):
     assert 'data-collections="HOMOLOGY"' in html
 
 
+@pytest.mark.parametrize(
+    "tag",
+    ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "EVALUATION", "ML_PREDICTIONS", "OBSOLETION"],
+)
+def test_projects_table_offers_every_tag_as_filter_chip(tmp_path, tag):
+    """Each controlled-vocabulary tag in use becomes a Tags filter chip."""
+    from ai_gene_review.render_projects import render_projects_table
+
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "FOO.md").write_text(f"---\ntitle: Foo\ntags: [{tag}]\n---\n# Foo\n")
+    html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
+    assert f'<span class="chip" data-value="{tag}">{tag}</span>' in html
+
+
 def test_linked_deck_pulls_in_its_images(tmp_path):
     """A deck linked from a project page deploys with the figures it references.
 
