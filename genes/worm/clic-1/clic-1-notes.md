@@ -12,3 +12,7 @@
 - All family-level (IBA/IEA) coat, heavy-chain-binding and endocytosis terms are accepted: CLIC-1 is the light-chain component of the clathrin triskelion that coats plasma-membrane pits and TGN/endosomal vesicles.
 - Synaptic vesicle membrane (IBA, rat light chains) is kept as non-core: clathrin light chain rides on coated synaptic-vesicle intermediates rather than being a resident vesicle-membrane protein.
 - The only experimental row (periciliary membrane compartment, IDA) is supported by the abstract and accepted.
+
+## Additional literature surfaced by deep research (see clic-1-deep-research-falcon.md)
+- clic-1 is T05B11.3; loss of clic-1 alone does not abolish viability or endocytosis, but clic-1 RNAi in the chc-1(b1025ts) background is embryonic lethal at permissive temperature, showing the light chain supports heavy-chain function [file:worm/clic-1/clic-1-deep-research-falcon.md "whereas *clic-1* RNAi in a temperature-sensitive *chc-1* background caused embryonic lethality even at the normally permissive temperature"].
+- A che-12-driven CLIC-1::GFP reporter accumulates in the periciliary membrane compartment of amphid and phasmid neurons (Kaplan et al. 2012 full text, via deep research) [file:worm/clic-1/clic-1-deep-research-falcon.md "A che-12-driven CLIC-1::GFP reporter accumulated immediately proximal to amphid and phasmid sensory cilia in the **periciliary membrane compartment (PCMC)**"].
