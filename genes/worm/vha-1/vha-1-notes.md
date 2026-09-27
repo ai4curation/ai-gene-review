@@ -72,3 +72,10 @@
   commonly partition into detergent-resistant fractions, so this is weak evidence for a
   functional raft location.
 - Synaptic vesicles: no vha-1-specific neuronal data in the GOA set; no NEW annotation.
+
+## Deep research
+
+- `vha-1-deep-research-falcon.md` agrees with the review: VHA-1 is a V0 c-ring rotor
+  proteolipid whose transported substrate is H+ ("In cells, the usual outcome is proton
+  movement from cytosol into an organelle lumen"), with no purified-protein kinetics
+  available and several phenotypes attributable to the holoenzyme rather than to vha-1 alone.

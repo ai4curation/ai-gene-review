@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2026-09-27T15:20:28.239988'
-end_time: '2026-09-27T15:26:33.798707'
-duration_seconds: 365.56
+cached: true
+start_time: '2026-09-27T15:43:32.281998'
+end_time: '2026-09-27T15:43:32.284131'
+duration_seconds: 0.0
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: worm

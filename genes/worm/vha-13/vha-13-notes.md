@@ -56,4 +56,10 @@
 
 ## Deep research
 
-- Falcon deep research attempted (see report); file only present if the run succeeded.
+- `vha-13-deep-research-falcon.md` (Edison Scientific Literature) corroborates the review:
+  it assigns VHA-13 the catalytic A subunit role ("It hydrolyzes MgATP within an A3B3
+  catalytic head, and the resulting rotary motion powers V0-mediated proton transport."),
+  notes that no purified Q9XW92 kinetics exist, and adds later work not in the GOA set
+  (miR-1 regulation of vha-13 in muscle proteostasis; V-ATPase association with HDA-1/NuRD
+  during asymmetric division). None of it contradicts the annotation decisions taken here,
+  and none of it is used as the sole basis for an action.
