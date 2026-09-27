@@ -200,9 +200,16 @@ These pairs come from the background research.
   1:1 `TGD_tree` / `TGD_likely_parallel` pairs from `panther_tgd_pairs.tsv`
 - [ ] Synteny check for `TGD_or_lineage` pairs chosen for review (including
   cryaba/cryabb)
-- [ ] Pilot pair: cryaba / cryabb, side-by-side comparison of the existing reviews
-- [ ] Define a pair-comparison template (markdown, or a schema extension)
-- [ ] Review 5–10 further pairs across the expected fates
+- [x] Define a pair-comparison template ([pairs/README.md](DANRE_DUPLICATION/pairs/README.md))
+  and `scripts/compare_pair.py`
+- [x] Batch 1, literature-supported pairs, all reviewed with pair pages:
+  cryaba/cryabb, mitfa/mitfb, pax6a/pax6b, sox9a/sox9b, elna/elnb
+- [ ] Audit UniProt accession choice for each gene: ZFIN experimental annotations
+  can sit on a different (RefSeq-derived TrEMBL) accession than the one reviewed
+  (found for pax6a)
+- [ ] Batch 2: further literature-supported pairs (e.g. vcla/vclb, vegfaa/vegfab,
+  hbegfa/hbegfb, gpr22a/gpr22b, grk7a/grk7b), then a random sample of
+  `TGD_tree` 1:1 pairs
 
 # NOTES
 
@@ -231,3 +238,21 @@ These pairs come from the background research.
   "parallel duplication" pairs. Most literature pairs (mitfa/b, pax6a/b, gpr22a/b)
   fall in the last group, so strict branch placement alone would miss them. The
   Ensembl Compara script and its table were removed.
+
+- **Batch 1 results** (details on each [pair page](DANRE_DUPLICATION/pairs/README.md)).
+  - Three pairs are PARTITION at the expression level with the protein function
+    conserved: mitfa/mitfb, sox9a/sox9b and pax6a/pax6b. For pax6 the partition
+    sits on a dose-sensitive shared core (the eye).
+  - Two pairs are MIXED. elna/elnb adds protein-level innovation in elnb, the one
+    clear neofunctionalization case. In cryaba/cryabb both copies keep chaperone
+    activity at different strengths, with an uneven expression split.
+  - No pair shows pure backup; overlap is limited to shared expression domains.
+  - This matches the genome-wide picture: regulatory divergence is common and
+    protein divergence is rare.
+- **Accession issue.** For pax6a, ZFIN's experimental annotations sit on
+  RefSeq-derived TrEMBL accessions (e.g. A0A8M3AP00), not the Swiss-Prot entry
+  (P26630) that was reviewed. This makes pax6a look less studied than pax6b in
+  GOA. Audit the other genes before interpreting annotation gaps.
+- **Deep research.** falcon ran for mitfa, sox9a/b and elna/b. It failed for mitfb
+  and pax6a/b (Edison 402 Payment Required; OpenAI key invalid), so those
+  literature searches were done by hand, as recorded in the gene notes.

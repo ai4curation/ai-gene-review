@@ -21,11 +21,11 @@ The two gene reviews themselves live as usual in `genes/DANRE/<gene>/`.
 
 | Pair | PANTHER call | Fate (summary) |
 |---|---|---|
-| [cryaba / cryabb](cryaba_cryabb/cryaba_cryabb.md) | TGD_or_lineage | see page |
-| [mitfa / mitfb](mitfa_mitfb/mitfa_mitfb.md) | TGD_likely_parallel | see page |
-| [pax6a / pax6b](pax6a_pax6b/pax6a_pax6b.md) | TGD_likely_parallel | see page |
-| [sox9a / sox9b](sox9a_sox9b/sox9a_sox9b.md) | TGD_or_lineage | see page |
-| [elna / elnb](elna_elnb/elna_elnb.md) | unresolved | see page |
+| [cryaba / cryabb](cryaba_cryabb/cryaba_cryabb.md) | TGD_or_lineage | MIXED: uneven expression split (cryaba lens-restricted in adults, cryabb broad); both keep chaperone activity with different strengths; shared dose-sensitive lens role. TGD origin not settled |
+| [mitfa / mitfb](mitfa_mitfb/mitfa_mitfb.md) | TGD_likely_parallel | PARTITION (expression); protein conserved (mitfb rescues nacre); residual redundancy in xanthophores and RPE; resolved differently in medaka |
+| [pax6a / pax6b](pax6a_pax6b/pax6a_pax6b.md) | TGD_likely_parallel | PARTITION (expression) on a shared dose-sensitive core: pancreas pax6b-only, habenula pax6a-only, eye shared; equal transactivation |
+| [sox9a / sox9b](sox9a_sox9b/sox9a_sox9b.md) | TGD_or_lineage | PARTITION (expression); sox9b-only roles are ancestral SOX9 roles; redundancy only in shared domains |
+| [elna / elnb](elna_elnb/elna_elnb.md) | unresolved (TGD per literature) | MIXED: expression partition plus protein-level innovation in elnb (bulbus arteriosus stiffness; elna and Polypterus eln fail to rescue) |
 
 ## Template
 
