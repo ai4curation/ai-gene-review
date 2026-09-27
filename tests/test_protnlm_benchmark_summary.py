@@ -1,6 +1,7 @@
 """Regression coverage for corpus scope and mixed narrative judgments."""
 
 import importlib.util
+import shutil
 from pathlib import Path
 from types import ModuleType
 
@@ -67,7 +68,7 @@ def test_benchmark_summary_keeps_output_types_and_scopes_separate(
     """Count each exact target once and exclude prose mentions of unrelated GO claims."""
     module = load_summary_module()
     # Pinned at review_snapshot_commit in benchmark-policy.yaml.
-    data = module.collect(review_snapshot_tree(REPO_ROOT))
+    data = module.collect(review_snapshot_tree(REPO_ROOT), WorkingTree(REPO_ROOT))
     assert data["distinct_records"] == 282
     assert data["prediction_targets"] == 242
     assert sum(data["go_counts"].values()) == 288
@@ -85,13 +86,59 @@ def test_benchmark_summary_keeps_output_types_and_scopes_separate(
     assert data["cohort_memberships"] > data["distinct_records"]
 
 
+CONFIG_FILES = (
+    "projects/PROTNLM_EVALUATION/family-curation/scope.csv",
+    "projects/PROTNLM_EVALUATION/narrative-review-index.yaml",
+)
+
+
+@pytest.fixture
+def config_copy(tmp_path: Path) -> Path:
+    """A copy of the working-tree benchmark config, safe to edit."""
+    for name in CONFIG_FILES:
+        (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(REPO_ROOT / name, tmp_path / name)
+    return tmp_path
+
+
+def test_scope_edits_take_effect_without_touching_working_tree_genes(
+    config_copy: Path, forbid_working_tree_genes: None
+) -> None:
+    """Scope is curator config: a new row changes the report even though genes are pinned.
+
+    ``forbid_working_tree_genes`` proves a plain gene-review edit still cannot matter.
+    """
+    scope = config_copy / CONFIG_FILES[0]
+    with scope.open("a", encoding="utf-8") as handle:
+        handle.write("extra,prediction_target,PNEW,DROME,new,,\n")
+    data = load_summary_module().collect(
+        review_snapshot_tree(REPO_ROOT), WorkingTree(config_copy)
+    )
+    assert data["prediction_targets"] == 243
+    assert data["distinct_records"] == 283
+
+
+def test_narrative_index_edit_without_snapshot_refresh_fails_loudly(
+    config_copy: Path, forbid_working_tree_genes: None
+) -> None:
+    """An index hash that no longer matches the snapshot review bytes must fail."""
+    index = config_copy / CONFIG_FILES[1]
+    registry = yaml.safe_load(index.read_text(encoding="utf-8"))
+    registry["reviews"][0]["review_sha256"] = "0" * 64
+    index.write_text(yaml.safe_dump(registry), encoding="utf-8")
+    with pytest.raises(AssertionError, match="Narrative index needs review"):
+        load_summary_module().collect(
+            review_snapshot_tree(REPO_ROOT), WorkingTree(config_copy)
+        )
+
+
 def test_empty_reviews_are_counted_separately_from_emitted_go_claims(
     tmp_path: Path,
 ) -> None:
     """Reviewed zero output is retained without becoming a claim or a missing review."""
     base = write_summary_fixture(tmp_path)
     module = load_summary_module()
-    data = module.collect(WorkingTree(tmp_path))
+    data = module.collect(WorkingTree(tmp_path), WorkingTree(tmp_path))
 
     assert data["prediction_targets"] == 3
     assert data["prediction_review_files"] == data["go_review_files"] == 2
@@ -137,7 +184,7 @@ def test_absent_prediction_list_is_not_a_reviewed_omission(
     path.write_text(yaml.safe_dump(doc))
 
     with pytest.raises(AssertionError, match="Explicit predictions list required"):
-        load_summary_module().collect(WorkingTree(tmp_path))
+        load_summary_module().collect(WorkingTree(tmp_path), WorkingTree(tmp_path))
 
 
 @pytest.mark.parametrize(
@@ -163,4 +210,4 @@ def test_empty_reviews_require_completed_summary(
     with pytest.raises(
         AssertionError, match="Completed zero-output review with description required"
     ):
-        load_summary_module().collect(WorkingTree(tmp_path))
+        load_summary_module().collect(WorkingTree(tmp_path), WorkingTree(tmp_path))

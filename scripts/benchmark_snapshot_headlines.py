@@ -28,6 +28,8 @@ def flatten(value: Any, prefix: str) -> list[str]:
     ['r.a: 1', 'r.b.n: 2']
     >>> flatten([{"cohort": "fly", "records": 3}], "c")
     ['c.fly.records: 3']
+    >>> flatten([{"n": 1}, 7], "x")
+    ['x.0.n: 1', 'x.1: 7']
     """
     if isinstance(value, dict):
         return sorted(
@@ -39,9 +41,14 @@ def flatten(value: Any, prefix: str) -> list[str]:
     if isinstance(value, list):
         return sorted(
             line
-            for item in value
-            for line in flatten(
-                {k: v for k, v in item.items() if k != "cohort"}, f"{prefix}.{item['cohort']}"
+            for index, item in enumerate(value)
+            for line in (
+                flatten(
+                    {k: v for k, v in item.items() if k != "cohort"},
+                    f"{prefix}.{item['cohort']}",
+                )
+                if isinstance(item, dict) and "cohort" in item
+                else flatten(item, f"{prefix}.{index}")
             )
         )
     return [f"{prefix}: {value}"]

@@ -91,8 +91,34 @@ def forbid_working_tree_genes(monkeypatch):
 
         return wrapper
 
-    for name in ("open", "read_text", "read_bytes", "exists", "is_file", "glob", "iterdir"):
+    for name in ("open", "read_text", "read_bytes", "exists", "is_file", "iterdir"):
         monkeypatch.setattr(Path, name, guarded_method(name))
+
+    def guarded_search(name: str):
+        # ``REPO_ROOT.glob("genes/...")`` starts outside genes/, so check every match too.
+        original = getattr(Path, name)
+
+        def wrapper(self, *args, **kwargs):
+            check(self)
+            for match in original(self, *args, **kwargs):
+                check(match)
+                yield match
+
+        return wrapper
+
+    for name in ("glob", "rglob"):
+        monkeypatch.setattr(Path, name, guarded_search(name))
+
+    def guarded_listing(original):
+        def wrapper(path="."):
+            if isinstance(path, (str, os.PathLike)):
+                check(path)
+            return original(path)
+
+        return wrapper
+
+    monkeypatch.setattr(os, "scandir", guarded_listing(os.scandir))
+    monkeypatch.setattr(os, "listdir", guarded_listing(os.listdir))
 
     original_open = builtins.open
 

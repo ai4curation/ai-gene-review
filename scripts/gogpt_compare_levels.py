@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import json
 from collections import defaultdict
 from pathlib import Path
@@ -70,7 +71,7 @@ def get_goa_terms(goa_text: str) -> set[str]:
     """Level 1: exact terms from a committed GOA TSV."""
     return {
         identifier
-        for row in csv.DictReader(goa_text.splitlines(), delimiter="\t")
+        for row in csv.DictReader(io.StringIO(goa_text, newline=""), delimiter="\t")
         if (identifier := str(row.get("GO TERM") or "")).startswith("GO:")
     }
 

@@ -1,9 +1,10 @@
 """Write benchmark cohort sidecars for the BioReason-Pro comparison project.
 
-Gene-level inputs (reviews, predictions, GOA, UniProt, the cohort gene list) are
-read at the policy's ``review_snapshot_commit``; the ARGO95/ARGO139 frozen GOA is
-read at ``baseline_commit``. Neither consults the working tree, so ordinary
-curation cannot stale the sidecars. Refresh with ``just refresh-benchmark-snapshot``.
+Gene-level inputs (reviews, predictions, GOA, UniProt) are read at the policy's
+``review_snapshot_commit``; the ARGO95/ARGO139 frozen GOA is read at
+``baseline_commit``. Neither consults the working-tree ``genes/``, so ordinary
+curation cannot stale the sidecars. Curator-edited config (the policy and the
+cohort gene list ``genes.csv``) is read from the working tree so edits take effect. Refresh with ``just refresh-benchmark-snapshot``.
 """
 from __future__ import annotations
 
@@ -93,8 +94,9 @@ def gene_review_id(organism: str, gene: str) -> str:
 
 def read_rl_gene_list() -> dict[tuple[str, str], dict[str, str]]:
     rows: dict[tuple[str, str], dict[str, str]] = {}
-    gene_list = (PROJECT_DIR / "genes.csv").relative_to(REPO_ROOT).as_posix()
-    for row in csv.DictReader(read_text(gene_list).splitlines()):
+    with (PROJECT_DIR / "genes.csv").open(encoding="utf-8", newline="") as handle:
+        gene_list = list(csv.DictReader(handle))
+    for row in gene_list:
         key = (row["species"], row["symbol"])
         rows[key] = row
     return rows

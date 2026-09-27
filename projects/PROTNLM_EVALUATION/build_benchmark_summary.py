@@ -2,15 +2,18 @@
 
 Narrative categories are manually indexed from the actual reviews, never inferred
 from occurrences of category names in prose. A review can contain multiple categories.
-Inputs (scope, narrative index, gene reviews) are read at the declared benchmark
-``review_snapshot_commit``, not from the working tree, so ordinary curation cannot
-stale the report. Refresh with ``just refresh-benchmark-snapshot``.
+Gene files are read at the declared benchmark ``review_snapshot_commit``, not from
+the working tree, so ordinary curation cannot stale the report. The curator-edited
+config (cohort scope, narrative index) is read from ``config`` -- the working tree
+in production -- so editing it takes effect, and an index hash that no longer
+matches the snapshot review fails loudly. Refresh with ``just refresh-benchmark-snapshot``.
 Run from any directory with ``uv run python path/to/build_benchmark_summary.py``.
 """
 
 from collections import Counter, defaultdict
 import csv
 import hashlib
+import io
 import json
 from pathlib import Path
 from typing import Any
@@ -20,6 +23,7 @@ import yaml
 from ai_gene_review.source_tree import (
     ReviewSnapshot,
     SourceTree,
+    WorkingTree,
     declared_review_snapshot,
     review_snapshot_tree,
 )
@@ -28,15 +32,20 @@ CODES = ("COR", "CNN", "LSP", "UNC", "NPI", "PLI", "REP")
 PUBLIC = "https://github.com/ai4curation/ai-gene-review/blob/main/"
 
 
-def collect(tree: SourceTree) -> dict[str, Any]:
+def collect(tree: SourceTree, config: SourceTree) -> dict[str, Any]:
     """Collect exact-accession results, retaining explicit zero-output review records.
+
+    Gene files come from ``tree`` (the review snapshot); ``scope.csv`` and
+    ``narrative-review-index.yaml`` come from ``config`` (the working tree).
 
     Overlapping cohorts do not duplicate the total. ``go_review_files`` remains a
     legacy alias for all ``prediction_review_files``, including empty reviews.
     """
     base = "projects/PROTNLM_EVALUATION"
     scope = list(
-        csv.DictReader(tree.read_text(f"{base}/family-curation/scope.csv").splitlines())
+        csv.DictReader(
+            io.StringIO(config.read_text(f"{base}/family-curation/scope.csv"), newline="")
+        )
     )
     targets = {r["accession"] for r in scope if r["role"] == "prediction_target"}
     go_counts: Counter[str] = Counter({c: 0 for c in CODES})
@@ -73,7 +82,7 @@ def collect(tree: SourceTree) -> dict[str, Any]:
             counts[category] += 1
         by_accession[doc["id"]] = counts
         go_counts.update(counts)
-    registry = yaml.safe_load(tree.read_text(f"{base}/narrative-review-index.yaml"))
+    registry = yaml.safe_load(config.read_text(f"{base}/narrative-review-index.yaml"))
     narratives = []
     seen: set[str] = set()
     for entry in registry["reviews"]:
@@ -269,7 +278,7 @@ def write_report(root: Path, data: dict[str, Any], snapshot: ReviewSnapshot) -> 
 
 if __name__ == "__main__":
     repository = Path(__file__).resolve().parents[2]
-    result = collect(review_snapshot_tree(repository))
+    result = collect(review_snapshot_tree(repository), WorkingTree(repository))
     write_report(repository, result, declared_review_snapshot(repository))
     print(
         json.dumps(

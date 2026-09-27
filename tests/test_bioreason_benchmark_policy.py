@@ -26,6 +26,14 @@ from ai_gene_review.source_tree import commit_date, declared_review_snapshot
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_DIR = REPO_ROOT / "projects" / "BIOREASON_COMPARISON"
+AS_OF_PROSE_SITES = (
+    "projects/BIOREASON_COMPARISON/article/supplemental-benchmark-details.md",
+    "projects/BIOREASON_COMPARISON.md",
+    "projects/PROTNLM_EVALUATION.md",
+    "projects/BIOREASON_COMPARISON/article/slides.md",
+    "projects/BIOREASON_COMPARISON/article/slides.html",
+    "pages/projects/BIOREASON_COMPARISON/article/slides.html",
+)
 SCORE_RE = re.compile(
     r"\*\*(Correctness|Completeness)\*\*:\s*([1-5])\s*/\s*5",
     re.IGNORECASE,
@@ -234,8 +242,14 @@ def test_review_snapshot_is_dated_and_recorded_in_derived_reports() -> None:
     )
     assert metrics["review_snapshot"] == recorded
     assert protnlm["review_snapshot"] == recorded
-    supplement = (PROJECT_DIR / "article" / "supplemental-benchmark-details.md").read_text()
-    assert f"as of {snapshot.date} (commit `{snapshot.short}`)" in supplement
+    # Hand-maintained prose: wording differs per site, the date and commit may not.
+    marker = re.compile(rf"{re.escape(snapshot.date)}\W{{1,3}}commit\W{{1,3}}{snapshot.short}\b")
+    for site in AS_OF_PROSE_SITES:
+        text = (REPO_ROOT / site).read_text(encoding="utf-8")
+        assert marker.search(text), (
+            f"{site} does not state the review snapshot "
+            f"({snapshot.date}, commit {snapshot.short}); update its 'as of' sentence"
+        )
 
 
 def test_headline_cli_lists_the_snapshot_numbers() -> None:

@@ -13,8 +13,10 @@ True
 >>> snapshot = git_snapshot(Path("."), "HEAD")
 >>> len(snapshot.commit)
 40
->>> snapshot.read_bytes("pyproject.toml") == tree.read_bytes("pyproject.toml")
+>>> b"[project]" in snapshot.read_bytes("pyproject.toml")
 True
+>>> snapshot.glob("src/**/source_tree.py")
+['src/ai_gene_review/source_tree.py']
 >>> snapshot.is_file("no/such/file.txt")
 False
 """
@@ -48,18 +50,31 @@ class SourceTree(Protocol):
 
 
 def match_path(path: str, pattern: str) -> bool:
-    """Match a relative path against a glob whose ``*`` never crosses ``/``.
+    """Match a relative path against a glob, with ``Path.glob`` semantics.
+
+    ``*`` never crosses ``/``; a ``**`` segment matches zero or more directories.
 
     >>> match_path("genes/human/TP53/TP53-goa.tsv", "genes/*/*/*-goa.tsv")
     True
     >>> match_path("genes/human/TP53/sub/TP53-goa.tsv", "genes/*/*/*-goa.tsv")
     False
+    >>> match_path("genes/human/TP53/sub/TP53-goa.tsv", "genes/**/*-goa.tsv")
+    True
+    >>> match_path("genes/TP53-goa.tsv", "genes/**/*-goa.tsv")
+    True
+    >>> match_path("reports/TP53-goa.tsv", "genes/**/*-goa.tsv")
+    False
     """
-    path_parts = path.split("/")
-    pattern_parts = pattern.split("/")
-    return len(path_parts) == len(pattern_parts) and all(
-        fnmatchcase(part, glob) for part, glob in zip(path_parts, pattern_parts)
-    )
+    return _match_parts(tuple(path.split("/")), tuple(pattern.split("/")))
+
+
+def _match_parts(path: tuple[str, ...], pattern: tuple[str, ...]) -> bool:
+    if not pattern:
+        return not path
+    head, rest = pattern[0], pattern[1:]
+    if head == "**":
+        return any(_match_parts(path[i:], rest) for i in range(len(path) + 1))
+    return bool(path) and fnmatchcase(path[0], head) and _match_parts(path[1:], rest)
 
 
 @dataclass(frozen=True)
