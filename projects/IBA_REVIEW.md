@@ -847,7 +847,7 @@ Before a strong `REMOVE` on an IBA row, record that these checks were done:
 **Example - Epe1 (S. pombe)**:
 - IBA annotation: `GO:0032452` (histone demethylase activity)
 - Source: Related JmjC domain proteins with characterized demethylase activity
-- Reality: Epe1 has degenerate active site (HVD vs HXD), no detectable activity
+- Reality: Epe1's Fe(II)-binding triad is H297-E299-Y370 (Tyr370 replaces the third, His, iron ligand), and no demethylase activity is detectable in vitro
 - **Impact**: Misleading annotation propagated via phylogenetic inference
 
 ### 2. Ubiquitin-Like Modifier Specificity: IBA as a Positive Control

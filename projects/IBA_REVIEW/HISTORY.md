@@ -381,3 +381,5 @@ catalytic mutant retains anti-silencing function. So the demethylase IBA
 (`GO:0032452`) should be REMOVE. Recommendation that seeded the project: build a
 pipeline to flag IBA enzymatic annotations on proteins with degenerate active-site
 motifs.
+
+*Correction (2026-09): the "HVD (not HXD)" call came from a regex motif scan and does not hold up, because HVD fits HXD. The real defect is Tyr370 in place of the third iron-ligand His (H297 and E299 are intact; UniProt O94603). The H297A phenotype depends on the assay: at endogenous levels it behaves like epe1Δ (Audergon 2015), and only overexpressed H297A still disrupts silencing (Bao 2019). See PR #3229.*
