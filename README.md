@@ -453,7 +453,7 @@ Research-provider metadata can reference files that were never archived. These
 are explicitly labelled **not archived**, retaining their descriptions instead
 of presenting broken download/image links. The full list remains visible in
 `unavailable_source_artifact_paths` in the manifest. This is distinct from an
-existing source file omitted from the artifact, which still blocks deployment.
+orphaned review HTML omitted from the artifact, which is reported separately.
 
 The publication boundary is reachable, non-hidden files inside this repository
 at the existing site paths. Navigation and dependencies are followed transitively,
@@ -466,11 +466,20 @@ The separate MkDocs build on `gh-pages` is not part of this publication artifact
 linked docs such as the subtraction report use their repository Markdown source.
 Every rebuilt artifact must meet the budget before publication.
 
+Publication assumes the contents of `main` are accepted. Biological validation
+(including module GO labels and obsoletion checks) runs independently in PR CI
+and the weekly validation workflow, not in `build-pages` or daily publication.
+Missing supporting links, suspected site-prefix errors, and links to orphaned
+review HTML remain warnings with full diagnostic lists in `pages-diagnostics`;
+they do not freeze the whole site. Rendering failures, missing required build
+outputs, invalid archives/checksums, and deployment failures remain blocking.
+This change does not add incremental rendering or fallback to older pages.
+
+
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
 site content and a separately measured GNU tar below
-10,000,000,000 bytes (including headers and padding), no excluded orphan review pages, and no missing
-static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
+10,000,000,000 bytes (including headers and padding), and a verified archive checksum. The CLI and CI use the same manifest `deployable` decision
 and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
 `broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
 `/ai-gene-review/` that match a safe repository file (including an existing
@@ -500,11 +509,10 @@ gh workflow run deploy-existing-pages.yaml --ref main -f source_run_id=RUN_ID
 
 It verifies the original build and artifact, then publishes that exact snapshot,
 not current `main`. Choosing an older run publishes older content. For new
-content, failed validation, or an expired artifact, run **Build and deploy site**
+content, failed builds, or an expired artifact, run **Build and deploy site**
 instead. The Pages archive is retained for **3 days** (diagnostics for 7).
 Only validated default-branch builds are accepted; checks include successful
-rendering and uploads, artifact provenance, publication policy, actual archive
-size, and its recorded SHA-256.
+rendering and uploads, artifact provenance, actual archive size, and its recorded SHA-256.
 The former self-imposed 1 GB site / 1 GiB tar gates are removed. Both paths
 retain a strict less-than-10-GB ceiling matching the action's absolute archive
 cutoff. GitHub officially supports only 1 GB sites: larger deployments are an
@@ -513,8 +521,8 @@ When deployment is enabled, a skipped or failed deployment fails the workflow.
 
 To retry a retained build blocked solely by the old 1 GB policy, supply
 `-f legacy_size_sha256=SHA256` to the manual workflow, using the SHA-256 of its
-original downloaded `artifact.tar`. This explicit override rechecks all link,
-completeness, provenance, and actual archive-size gates and verifies the supplied
+original downloaded `artifact.tar`. This explicit override rechecks
+provenance and actual archive-size gates and verifies the supplied
 checksum. It does not permit failed integrity checks or rebuild the site. The manifest reports estimated `archive_bytes`
 and `archive_size_budget_bytes`. After upload, diagnostics record the actual
 `archive_actual_bytes` and `archive_sha256`; deployment requires that check to
