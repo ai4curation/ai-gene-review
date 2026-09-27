@@ -91,3 +91,182 @@ Two pre-existing validator warnings remain (IBA annotations at index 5 and 7 mar
 MARK_AS_OVER_ANNOTATED without structured `propagation_review`). These predate this update
 and are unrelated to it; the PAINT trees were not inspected, and per project rules
 propagation metadata must not be fabricated to silence a warning.
+
+## Full annotation audit, 2026-09-27
+
+This section supersedes the older narrowly scoped review above where it says no reply
+existed, calls the reported readthrough rate probably wrong without discussing the
+response, or says the PAINT review remains unperformed. The older text is retained as
+session history, not the current scientific conclusion.
+
+Identity and baseline: human **AGO1**, UniProt **Q9UL18**, HGNC **3262**; former symbol
+**EIF2C1**, alias **hAGO1**. Current HGNC-derived identity was checked against
+[NCBI Gene 26523](https://www.ncbi.nlm.nih.gov/gene/26523/) and
+[ClinGen](https://search.clinicalgenome.org/kb/genes/HGNC%3A3262).
+The parent independently checked current main
+`795b693f5711c625401d03a755fe937260ae0ac0`: all five review/notes/HTML/UniProt/GOA
+blobs matched the local baseline, and separate AGO1 and EIF2C1 open-PR searches were
+empty. The seeded review contains **113** grouped annotation objects. Every original
+source object, including its NOT flag and any qualifier/isoform field, is preserved.
+The 82 original reference identifiers and titles are also preserved. No NEW annotation
+was added, and no machine source was edited.
+
+A fresh genuine Falcon request with perplexity-lite fallback was launched concurrently
+with publication caching, using the normal research wrapper and task-specific writable
+UV tool/cache directories. Both provider commands failed before research submission:
+`Failed to fetch: https://pypi.org/simple/deep-research-client/`, DNS resolution failure,
+provider exit code 2; the wrapper returned 1. No new provider report exists. The genuine
+May 2026 Falcon report already present in the gene directory remains unchanged. It was
+read as a lead, including its explicit limitation on direct AGO1 nuclear evidence, and
+was replaced as the sole support for the annotation decisions by source-specific
+primary evidence. Publication caching found all **34/34** original YAML PMIDs cached.
+Logs are `/tmp/AGO1-fresh-research.log` and `/tmp/AGO1-fetch-pmids.log`.
+
+### Binding, maturation and target fate
+
+The human protein is directly assayed rather than inferred solely from AGO2:
+
+- [PMID:19966796] separates duplex-containing pre-RISC and single-guide mature RISC
+  for transfected human Ago1 through Ago4. The source states that the upper complex
+  contained small-RNA duplexes and the lower complex contained single-stranded guide
+  RNA annealed to target. This supports **both** dsRNA and ssRNA binding, loading,
+  RISC assembly and late miRNA maturation. It does not give AGO1 ATPase activity merely
+  because ATP facilitates loading in extracts.
+- [PMID:22795694] tests human AGO1 PAZ deletion: “Ago1/3/4-ΔPAZ maintained their ability
+  to physically associate with small-RNA duplexes, but not the ability to unwind and
+  form active RISC.” AGO1 performs part of maturation; absence of Dicer-like precursor
+  cleavage is not a basis for rejecting the process. The live definitions of
+  [GO:0035196](https://amigo.geneontology.org/amigo/term/GO:0035196) and
+  [GO:0031054](https://amigo.geneontology.org/amigo/term/GO:0031054) cover generation
+  of functional/mature miRNA and do not require every participant to be a nuclease.
+- [PMID:23809764] directly solves human AGO1 with guide RNA; the recombinant protein
+  was expressed in insect cells and the recovered guides were predominantly viral.
+  Its broad experimental RNA-binding annotation therefore retains the source's
+  substrate resolution, rather than being relabeled miRNA binding. The wild-type
+  negative slicing assay remains distinct from engineered catalytic-site/channel-loop
+  mutants that partially restore cleavage.
+- [PMID:18771919] directly tests N-HA-tagged Ago1–Ago4 tethered to a 10×boxB reporter in
+  293T cells: “the four tethered proteins caused nearly equal reductions in cytoplasmic
+  mRNA concentration, suggesting that each has a similar capacity to destabilize
+  mRNA.” This is a steady-state reporter abundance result interpreted as destabilization,
+  not a purified nuclease reaction or direct half-life measurement. Alongside
+  AGO1–TNRC6 interactions [PMID:19383768] and AGO1-associated CAF1 in human HEK293
+  cells [PMID:19716330], it supports core participation in mRNA catabolism by effector
+  recruitment. In the latter paper, the principal functional deadenylation experiments
+  use mouse Krebs extract/Ago2; those results are not silently rewritten as direct
+  AGO1 enzyme assays.
+
+Both seeded NOT process annotations are retained. Live AmiGO definitions for
+[GO:0035279](https://amigo.geneontology.org/amigo/term/GO:0035279) and
+[GO:0090625](https://amigo.geneontology.org/amigo/term/GO:0090625) explicitly describe
+small-RNA-directed target **cleavage**, despite the “mRNA destabilization” labels and,
+for the former, deadenylation synonyms. The original abstract [PMID:15260970] directly
+compares human Argonaute complexes and identifies AGO2-specific cleavage. These NOT
+rows must not be read as absence of AGO1-recruited nonendonucleolytic decay. A proposed
+expert question requests definition/name/synonym harmonization; the source terms and
+NOT flags themselves are untouched. The full 2004 paper was not recovered, so no
+additional assay detail beyond the original abstract is claimed.
+
+The precise **RISC-loading complex** assertions remain UNDECIDED. The current
+[GO:0070578 definition](https://amigo.geneontology.org/amigo/term/GO:0070578) describes a
+DICER1–TARBP2–AGO2 trimer. The full [PMID:19966796] explicitly questions whether this
+historical human RLC is the canonical loading intermediate. Human AGO1 pre-RISC and
+AGO1–Dicer association [PMID:12526743] do not alone establish the exact trimeric
+composition. This uncertainty does not deny AGO1 loading/assembly.
+
+### Propagation, localization and nuclear assays
+
+The eight IBA rows were traced to their actual IBDs in
+`interpro/panther/PTHR22891/PTHR22891-paint.tsv`:
+PTN001875625 (nucleus), PTN000527275 (cytoplasm), PTN001113179
+(RISC, cytoplasmic RNP granule, miRNA binding and silencing), PTN000527278
+(pre-miRNA processing), and PTN000527276 (ssRNA binding). Structured sources use the
+PTN ancestors. Human AGO1 among extant evidence seeds is legitimate direct grounding,
+not circularity. The PAINT placement and human primary evidence agree; the tree/MSA
+was not newly reconstructed. ARBA rule identities and combined InterPro/UniProt/Ensembl
+branches were recovered from WITH/FROM, but uninspected rule predicates are explicitly
+UNRESOLVED even where independent human biology supports ACCEPT.
+
+The Ensembl donor is mouse Ago1 **Q8CJG1**, **ENSMUSP00000095498**.
+Final source tracing recovered the [MGI graph](https://www.informatics.jax.org/marker/gograph/MGI:2446630), generated 2023-03-10 (a historical annotation snapshot, not a current experiment). Its promoter GO:0000976 IMP, GO:0000978 IDA and nucleus IDA trace J:197739 = [PMID:22053081, *Upregulation of Cyclin B1 by miRNA and its implications in cancer.*]. The existing full XML cache was read. Endogenous Ago1 knockdowns are in mouse cells; tagged human AGO1 is explicitly used in NIH/3T3 ChIP and compartment-fractionation experiments. Promoter recruitment and nuclear localization are positive results. The discussion considers promoter-derived noncoding RNA targets, so precise DNA contact/sequence recognition remains unresolved; nuclear location is independently supported.
+
+The exact GO:1901224 IMP traces J:233964 = [PMID:26764146, *Argonaute proteins in cardiac tissue contribute to the heart injury during viral myocarditis.*] ([primary PubMed abstract](https://pubmed.ncbi.nlm.nih.gov/26764146/)). This resolves donor identity. The abstract reports AGO1/AGO3 upregulation in CVB3-infected mouse hearts and in-vitro repression of miR-19a/b-targeted TNFAIP3, an NF-kappaB inhibitor. It does not expose the NIK/non-canonical branch assay. Publisher full text returned 403; normal `fetch-pmid 26764146` failed DNS, cached **0/1**, and produced no file. Retain the exact branch UNDECIDED without asserting that an unobserved assay was absent. MouseMine search snippets joined adjacent publication titles, so the paper title was verified directly against PubMed before citation.
+
+Full [PMID:25336585] independently provides human AGO1 ChIP at the IL2 promoter,
+AGO1-dependent let-7i reporter activation, and HA-AGO1 co-immunoprecipitation with Pol II
+and TBP. These support contextual nuclear localization, transcriptional activation and
+Pol II-complex binding. The promoter/guide compensatory sequence mutations principally
+test let-7i recognition. Exact AGO1 sequence-specific DNA recognition remains unresolved
+because promoter occupancy could involve the bound RNA and other protein contacts;
+this is not rejection merely for lacking a purified-protein assay. The Reactome
+nucleoplasmic event R-HSA-5578742 independently describes AGO1-containing chromatin
+complexes. These canonical AGO1 observations do not depend on AGO1x.
+
+Broad cytoplasmic/cytosolic annotations are retained at their actual source resolution.
+All 40 cited Reactome summaries were read, including the transcription-context events
+that generate miRNAs. The review distinguishes the supported AGO1 location from a
+claim that AGO1 is the named transcription factor or was specifically tested in every
+miRNA-target experiment. R-HSA-9925159 contains a miR-140/miR-34a inconsistency in its
+reporter sentence; this does not establish a false AGO1 cytosolic compartment and is
+flagged in reference assessment. HPA and electronic locations have independent human
+AGO1 imaging/mRNP corroboration. The mouse-ZAR1L-titled [PMID:20014101] explicitly
+mentions EIF2C1/AGO1 colocalization, so its title is not used to invent species
+misattribution.
+
+All 21 generic protein-binding rows retain REMOVE under the project specificity policy,
+with source-specific partner/assay explanations. The interactions are not declared
+false. GW182, PRNP, importin, chaperone-client, phosphatase-screen, centrosome and
+APOBEC3 contexts are distinguished. Known Ago2-focused titles that actually include
+AGO1 are explicitly recognized. Partial proteomic caches do not certify every
+supplementary pair record; no specific new MF is manufactured from an interaction alone.
+
+### Readthrough correspondence and reference consistency
+
+A co-published response exists: [PMID:40500329, *Response to Suresh et al.*]
+([PubMed](https://pubmed.ncbi.nlm.nih.gov/40500329/),
+[publisher full text](https://link.springer.com/article/10.1038/s44318-025-00479-0)).
+It contests the reporter design and interpretation and emphasizes orthogonal evidence.
+The two letters leave the quantitative dispute open. The prior “no reply” statement
+and categorical readthrough-rate conclusion are superseded. Neither letter is a
+retraction. The response also disputes the critique's highest-known-human-efficiency
+statement; the review no longer adopts that claim as fact.
+
+The source findings, reference assessments, description, knowledge gap and questions
+were harmonized. The independent [PMID:32812257] paper contains readthrough-specific
+peptide spectra, antibody controls and genomic perturbation in breast-cancer cells;
+it is not simply treated as an unverified identifier because another reporter assay
+is disputed. [PMID:31330067] and [PMID:38499809] report orthogonal assays alongside
+reporters. Their disputed reporter interpretation is scoped separately from all
+proteoform observations. No GOA source object depends on any of these papers, and no
+invented UniProt isoform identifier was added for AGO1x.
+
+A normal `fetch-pmid 40500329` attempt failed DNS resolution and cached **0/1**; no
+publication file was fabricated. The new reference retains
+`full_text_unavailable: true` because no local cache exists, despite external full-text
+access. All other availability flags reflect local cache metadata. HTML extractions
+for broad proteomics studies contain body sections but are partial; their false
+unavailability flags are not a claim that all figures/tables were recovered.
+
+Peer consultation: the annotation-reviewer peer independently checked
+[PMID:18771919]/[PMID:15260970], the live cleavage-process definitions,
+[PMID:19966796] RLC scope and [PMID:25336585] promoter/Pol II assays. The peer agreed
+with the bounded NOT, decay, RLC and promoter-recognition judgments. Parent is
+independently auditing the complete stable draft. No source objects changed during
+these consultations.
+
+Final checks: all **113** original annotation source objects and all **82** original
+reference identifiers/titles are preserved. UniProt and GOA byte hashes match the
+verified main baseline. Final actions are 79 ACCEPT, 7 KEEP_AS_NON_CORE, 6 UNDECIDED
+and 21 REMOVE; no NEW annotations were introduced. The integrated core and 85
+reference assessments were checked for consistent scope. The notes-inclusive census
+contains **38 PMIDs**, with **36 cached** and **PMID:26764146 / PMID:40500329** missing.
+Both normal fetch attempts failed DNS; this is a draft/publication gate.
+
+The parent independently read all 113 decisions, the core and reference assessments
+and found no biological blocker, then received the final bounded donor-provenance
+update for inspection. `just validate human AGO1` passes with only the two reported
+warning categories: missing reference caches and no annotation quote from the
+available provider report. The latter is intentional: annotations use checked primary
+sources. `just validate-history` and `just render human AGO1` pass. YAML is alias-free
+and has no trailing whitespace. No source caches, provider artifacts, Git state or
+shared project files were edited.
