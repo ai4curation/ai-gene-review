@@ -3,9 +3,39 @@ title: "Nitratidesulfovibrio vulgaris Pathways Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [DESVH]
+genes: [Q72DT3, Q72DT2, Q72DT1, Q72DT0, Q72DS9, Q72FD5, Q72BM9, Q725U0, Q725T9, Q725T8, Q725T7, Q72F06, Q72F05, Q72BQ0, Q72BK7, Q72B50, Q727C6, Q726C4, P07598, Q72AS3, Q72AS0, Q72EY4, Q729Q8]
+sidecars:
+  slide_assets:
+    - NITV2_PATHWAYS/slides/actions-bar.svg
+    - NITV2_PATHWAYS/slides/kdpC-review-table.jpg
+    - NITV2_PATHWAYS/slides/potassium-systems.svg
 ---
 
 # Nitratidesulfovibrio vulgaris Pathways Project
+
+**Bottom line:** *Nitratidesulfovibrio* (formerly *Desulfovibrio*) *vulgaris*
+Hildenborough is the model sulfate-reducing bacterium, and its genes are
+annotated almost entirely by electronic pipelines. We reviewed genes in four
+pathways: sulfate reduction (6), potassium transport (7), sigma factors (5)
+and hydrogen metabolism (5 representative hydrogenase subunits). Twenty of
+the 23 reviews are done, covering 180 annotation rows: 80 accepted, 32
+modified, 15 removed, 11 marked over-annotated, 5 kept as non-core and 37
+proposed as `NEW`. The hysA, echA and cooH reviews are stubs with all rows
+still `PENDING`; hydA and hynA1 are reviewed, although the status checklist
+below leaves all five hydrogenases unticked. The main corrections split
+catalytic from accessory subunits: AprB and KdpC lose catalytic terms in
+favour of electron transfer and ATPase activator activity, the TrkA-type RCK
+proteins become potassium channel regulators rather than transporters, sigma
+factors get `sigma factor activity` instead of DNA-binding transcription
+factor activity, and DVU3336 turns out to carry only the KdpD sensor domain,
+with the histidine kinase on the neighbouring DVU3335. The input list also
+put rpoC, an RNA polymerase core subunit, among the sigma factors. An earlier
+reassignment of DVU0848 and DVU0849 from QmoA/QmoB to the Flx–Hdr bifurcating
+complex was wrong and is reverted in
+[PR #3226](https://github.com/ai4curation/ai-gene-review/pull/3226): the genes
+sit in the aprBA–qmoABC cluster (DVU0846–0850), while Flx–Hdr is encoded at
+DVU2399–2405. Once #3226 merges, QmoB loses two unsupported `NEW` rows
+(178 rows, 35 `NEW`).
 
 ## Overview
 
@@ -119,8 +149,8 @@ D. vulgaris Hildenborough possesses multiple hydrogenases for hydrogen cycling, 
 ## Sulfate Reduction Pathway (Priority 1) - COMPLETED
 - [x] aprB (Q72DT3) - APS reductase beta subunit (electron transfer)
 - [x] aprA (Q72DT2) - APS reductase alpha subunit (catalytic FAD-containing)
-- [x] qmoA (Q72DT1) - HdrA-like electron bifurcating subunit (note: NOT QmoA)
-- [x] qmoB (Q72DT0) - HdrA/FAD-containing bifurcating subunit
+- [x] qmoA (Q72DT1) - QmoA, soluble HdrA-like FAD subunit of QmoABC (identity restored in PR #3226)
+- [x] qmoB (Q72DT0) - QmoB, HdrA-like iron-sulfur flavoprotein with an MvhD-like domain (identity restored in PR #3226)
 - [x] qmoC (Q72DS9) - Membrane subunit of QmoABC complex
 - [x] DVU0279 (Q72FD5) - SulP/SLC26 family transporter (likely dicarboxylate, not sulfate)
 
@@ -179,11 +209,11 @@ Key findings from annotation reviews:
    - **aprB (Q72DT3)**: Beta subunit with two [4Fe-4S] clusters. Core function is electron transfer (GO:0009055), not catalytic activity. Modified GO:0009973 (adenylyl-sulfate reductase activity) to electron transfer activity since AprB is the electron relay, not the catalytic subunit.
    - **aprA (Q72DT2)**: Alpha subunit containing FAD. This is the catalytic subunit. Accepted GO:0009973 (adenylyl-sulfate reductase activity). Added GO:0019420 (dissimilatory sulfate reduction).
 
-2. **DVU0848-0850 (NOT QmoABC!)**:
-   - **CRITICAL FINDING**: DVU0848-0850 are actually part of the **FlxABCD-HdrABC electron bifurcating complex**, NOT the QmoABC complex as initially annotated in the input list.
-   - **DVU0848 (Q72DT1)**: HdrA-like protein with FAD/NAD-binding domains. Functions in electron bifurcation, coupling NADH oxidation with ferredoxin reduction. Essential for ethanol metabolism.
-   - **DVU0849 (Q72DT0)**: HdrA/FAD-containing subunit of the Flx-Hdr complex.
-   - **DVU0850 (Q72DS9)**: This IS QmoC - the membrane-integral subunit with heme b groups that transfers electrons from the quinone pool. Part of the actual QmoABC complex.
+2. **DVU0848-0850 (QmoABC)**:
+   - **Correction (2026-09, [PR #3226](https://github.com/ai4curation/ai-gene-review/pull/3226)):** the first reviews reassigned DVU0848 and DVU0849 to the FlxABCD-HdrABC bifurcating complex. That was wrong: DVU0846-0850 is the aprBA-qmoABC cluster, and Flx-Hdr is encoded at DVU2399-2405. The Flx-Hdr claims came from deep-research files and a thesis about the Flx-Hdr complex; #3226 restores QmoA/QmoB and re-grounds the rows in the Qmo literature.
+   - **DVU0848 (Q72DT1)**: QmoA, a soluble HdrA-like FAD protein; the subunit reported to contact AprAB.
+   - **DVU0849 (Q72DT0)**: QmoB, a soluble HdrA-like iron-sulfur flavoprotein with a C-terminal MvhD/FlpD-like domain. Its AP-MS partner Q72DS8 (DVU0851) is QmoD, not HdrC.
+   - **DVU0850 (Q72DS9)**: QmoC, the membrane-integral subunit with heme b groups that exchanges electrons with the menaquinone pool.
 
 3. **DVU0279 (Q72FD5) - Sulfate Permease?**:
    - **ANNOTATION CONCERN**: Despite being annotated as "sulfate permease family protein", the SulP/SLC26 family is functionally diverse. Many members transport dicarboxylates, bicarbonate, or other anions rather than sulfate. The annotation GO:0055085 (transmembrane transport) was accepted but sulfate-specific transport needs experimental verification.
@@ -226,3 +256,7 @@ Key findings from annotation reviews:
 
 4. **c-di-AMP signaling**:
    - The second messenger c-di-AMP binds to RCK regulatory subunits to modulate K+ uptake capacity, linking potassium homeostasis to broader cellular signaling networks.
+
+## Slides
+
+- [Slides](NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.html) (Marp source: [NITV2_PATHWAYS-slides.md](NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.md)) — AI generated
