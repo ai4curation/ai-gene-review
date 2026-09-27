@@ -15,6 +15,7 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.render import normalize_artifact_metadata, resolve_research_artifacts
 from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
 
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
@@ -1315,6 +1316,14 @@ def render_project(
     # Bundle assets are copied after rendering; retain their mirrored URLs even
     # on a clean build where those output files do not exist yet.
     mirrored_assets = set(referenced_local_assets(md_path, projects_dir)) if projects_dir is not None else set()
+    # Provider report exports may list artifacts that were never archived.
+    # Render the same explicit notices as gene research panels, while leaving
+    # undeclared broken links visible to the publication audit.
+    # Keep artifact URLs relative to the source here; the publication rewriter
+    # below maps archived files into their mirrored output locations.
+    html = resolve_research_artifacts(
+        normalize_artifact_metadata(frontmatter), html, md_path, md_path.parent,
+    )
     html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)

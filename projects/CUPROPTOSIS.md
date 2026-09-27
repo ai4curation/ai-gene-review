@@ -3,9 +3,26 @@ title: "Cuproptosis (Copper-Dependent Cell Death) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+genes: [DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH]
 ---
 
 # Cuproptosis (Copper-Dependent Cell Death) Project
+
+**Bottom line:** cuproptosis is a form of regulated cell death, defined in 2022,
+in which copper reduced by the ferredoxin FDX1 binds lipoylated TCA-cycle
+enzymes such as DLAT and makes them aggregate. Scoped, not yet started as a
+review campaign: this page selects 17 human genes in three priority tiers
+(copper handling, the FDX1 trigger, the lipoylation machinery and its
+lipoylated targets, and regulators), and a draft
+[cuproptosis module](../modules/cuproptosis.html) grounded in the GO term
+`GO:0160119` cuproptosis was built alongside it. We chose it because the
+pathway is young, so its GO annotations are likely incomplete, and it pairs
+with the Ferroptosis project as a second metal-dependent death pathway. Seven
+of the 17 genes (DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH) already have
+reviewed annotations from other work (no pending rows, though DLD, DLAT, PDHA1,
+PDHB and GLS are still flagged `status: INITIALIZED`), none of which mentions
+cuproptosis. Of the other ten, LIPT1 has been fetched but not reviewed and nine
+have no gene folder yet.
 
 ## Overview
 

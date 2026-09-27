@@ -1,10 +1,28 @@
 ---
 title: "Over-Annotation Patterns Project"
-maturity: IN_PROGRESS
-tags: [PIPELINE, FLAGSHIP]
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
+species: [human, SCHPO, CANAL, PSEAE, STRCO, SACEN]
+genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII]
 ---
 
 # Over-Annotation Patterns Project
+
+**Bottom line:** many GO annotations are technically defensible but tell a reader almost
+nothing, or assert an activity the protein does not have, because they come from
+high-throughput interactome screens, domain signatures, broad keyword mappings or
+over-generalised family propagation. We catalogued the recurring shapes of this
+over-annotation that surfaced during gene review, eight categories in all, each tied to
+worked examples in real reviews. We did this so that curators and pipeline authors can
+recognise a pattern once rather than rediscovering it gene by gene; the catalogue was
+first presented at the GO Consortium meeting in October 2025. Nine exemplar reviews are
+complete (human PHYKPL and UBA7, fission yeast Epe1, *Candida* LPL1, and five
+biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
+recorded actions match the patterns: all ten generic `protein binding` IPI rows on
+PHYKPL and UBA7 are REMOVE, and Epe1's JmjC-domain demethylase, dioxygenase and
+metal-binding rows are REMOVE (all seven in the current review; PR #3229, not yet
+merged, proposes UNDECIDED for the two experimental IDA/EXP rows). The catalogue is qualitative; it does not yet measure how
+often each pattern occurs across the repository.
 
 ## Overview
 
@@ -152,6 +170,10 @@ These over-annotation patterns:
 - [x] human/UBA7 - protein binding from HTP, generic ligase
 - [x] pombe/Epe1 - pseudo-demethylase
 - [x] CANAL/LPL1 - hydrolase, membrane prediction
+
+## Slides
+
+- [Slides](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html) (Marp source: [OVER_ANNOTATION_PATTERNS-slides.md](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.md)) — AI generated
 
 Last updated: 2026-01-22
 

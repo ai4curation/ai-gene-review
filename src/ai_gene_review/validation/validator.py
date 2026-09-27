@@ -378,6 +378,54 @@ def validate_gene_review(
     return report
 
 
+def _check_proposed_molecular_function(
+    core_func: dict, i: int, proposed_terms_by_name: dict, report: ValidationReport
+) -> None:
+    """Check a core function's proposed_molecular_function.
+
+    It must be a string naming a top-level proposed_new_terms entry, must not be
+    combined with molecular_function (the point of the slot is to stop carrying an
+    obsolete or ill-fitting id), and must be grounded: supported_by on the core
+    function or on the proposed term, since it can never trace to an existing
+    annotation.
+    """
+    path = f"core_functions[{i}].proposed_molecular_function"
+    proposed_mf = core_func.get("proposed_molecular_function")
+    if not isinstance(proposed_mf, str):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"proposed_molecular_function must be a proposed_new_terms name (a string), got {type(proposed_mf).__name__}",
+            path=path,
+            suggestion="Use the proposed_name string, not a {id, label} term",
+        )
+        return
+    if core_func.get("molecular_function"):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Core function sets both molecular_function and proposed_molecular_function '{proposed_mf}'",
+            path=path,
+            suggestion="Drop molecular_function; the proposed term replaces it until GO creates one",
+        )
+    proposed = proposed_terms_by_name.get(proposed_mf)
+    if proposed is None:
+        names = sorted(n for n in proposed_terms_by_name if isinstance(n, str))
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Core function proposed_molecular_function '{proposed_mf}' does not match any proposed_new_terms entry"
+            + (f" (available: {', '.join(repr(n) for n in names)})" if names else " (there are none)"),
+            path=path,
+            suggestion="Add a proposed_new_terms entry whose proposed_name matches exactly, with a definition and justification",
+        )
+        return
+    if not core_func.get("supported_by") and not proposed.get("supported_by"):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Proposed molecular function '{proposed_mf}' has no supported_by on the core function or the proposed term",
+            path=path,
+            suggestion="A proposed activity can never trace to an existing annotation, so it needs its own evidence",
+        )
+
+
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
@@ -853,6 +901,29 @@ def check_best_practices_rules(
                                     modified_terms.add(term_id)
 
         core_function_terms = set()
+        proposed_terms_by_name = {
+            term.get("proposed_name"): term
+            for term in data.get("proposed_new_terms") or []
+            if isinstance(term, dict)
+        }
+
+        # An NTR replacement in a MODIFY should name the same proposed term, so the
+        # MODIFY side and the core-function side point at one proposal.
+        for k, ann in enumerate(data.get("existing_annotations") or []):
+            review = ann.get("review") if isinstance(ann, dict) else None
+            for rt in (review or {}).get("proposed_replacement_terms") or []:
+                if not (isinstance(rt, dict) and rt.get("id") == "NTR"):
+                    continue
+                label = str(rt.get("label") or "")
+                if not any(label.startswith(n) for n in proposed_terms_by_name if isinstance(n, str) and n):
+                    report.add_issue(
+                        ValidationSeverity.WARNING,
+                        f"NTR replacement '{label}' does not start with any proposed_new_terms name",
+                        path=f"existing_annotations[{k}].review.proposed_replacement_terms",
+                        suggestion="Start the NTR label with the proposed_name of a proposed_new_terms entry",
+                        validation_category="BestPractices",
+                        check_type="ntr_replacement_not_in_proposed_new_terms",
+                    )
 
         for i, core_func in enumerate(data["core_functions"]):
             if isinstance(core_func, dict):
@@ -897,6 +968,12 @@ def check_best_practices_rules(
                             validation_category="BestPractices",
                             check_type="core_function_molecular_function_not_in_annotations",
                         )
+
+                # proposed_molecular_function: the core activity when GO has no term yet
+                if "proposed_molecular_function" in core_func:
+                    _check_proposed_molecular_function(
+                        core_func, i, proposed_terms_by_name, report
+                    )
 
                 # Check locations field (should be CC terms)
                 locations = core_func.get("locations", [])

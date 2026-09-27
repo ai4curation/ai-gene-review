@@ -1267,3 +1267,30 @@ def test_linked_deck_pulls_in_its_images(tmp_path):
     ]
     assert (out / "diagram.svg").read_text() == "<svg/>"
     assert not (tmp_path / "pages" / "outside.png").exists()
+
+
+def test_project_provider_artifacts_distinguish_unarchived_from_broken_links(tmp_path):
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    report = projects / "report.md"
+    report.write_text("""---
+title: Provider report
+artifacts:
+- path: final_report.pdf
+  media_type: application/pdf
+- path: archived.pdf
+  media_type: application/pdf
+---
+[Missing provider export](final_report.pdf)
+[Archived export](archived.pdf)
+[Ordinary broken link](typo.pdf)
+""")
+    (projects / "archived.pdf").write_bytes(b"archived report")
+    output, _ = render_project(report, tmp_path / "pages/projects",
+                               genes_dir=tmp_path / "genes", projects_dir=projects)
+    text = output.read_text()
+    assert 'Missing provider export (not archived)' in text
+    assert 'data-unavailable-artifact="final_report.pdf"' in text
+    assert 'href="final_report.pdf"' not in text
+    assert 'href="archived.pdf"' in text
+    assert 'href="typo.pdf"' in text
