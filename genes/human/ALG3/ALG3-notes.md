@@ -41,6 +41,10 @@ Man5GlcNAc2-PP-Dol intermediate and transfer of truncated oligosaccharides
 
 ## Annotation review decisions
 
+**Historical summary, superseded:** the 2026-09-27 substantive review below
+replaces this early action list. Current broad ER and glycoprotein-process rows
+are ACCEPT, and generic binding rows are REMOVE for lack of functional specificity.
+
 GOA MF term = **GO:0052925** (dol-P-Man:Man(5)GlcNAc(2)-PP-Dol alpha-1,3-mannosyltransferase
 activity) — this is the specific, correct current MF; used in IBA, IEA(EC/RHEA), and IDA.
 
@@ -248,3 +252,73 @@ after whitespace normalization. No casefold-only quote passes, YAML anchors or
 aliases, or trailing YAML whitespace remain. The final four-file manifest records
 byte-based Git blob IDs and SHA256 hashes; no protected source, Git or remote
 state was changed.
+
+## 2026-09-27 source7 recovery and PR #3283 feedback
+
+Preflight confirmed all five canonical files against published head
+`92a9f6c44a0b03e01ae2bd1c7ddc9497f5fb8dbf`. The five recovered publication
+paths were absent from main `21364698b8b0c1099c7f26384bfd35b13596d282`.
+The normal fetcher ran in source7 run `36299519155`, and the coordinator imported
+the exact verified artifact bytes. No publication, UniProt, GOA or historical
+record was edited. The earlier failed local-fetch statements above remain a
+chronological record; the five missing-cache gates are now closed.
+
+Actual recovered evidence was read before updating reference assessments:
+
+- PMID:15840742 remains abstract-only. It directly reports wild-type human ALG3
+  lentiviral correction of the patient-fibroblast biochemical defect. Clinical
+  hypoglycemia and islet hyperplasia remain phenotype context.
+- PMID:30192950 remains abstract-only locally. Its positive processing and
+  compartment observations corroborate the prior external full-paper reading;
+  they neither establish a nuclear molecular activity nor experimentally refute
+  mannose transfer. Prior external access remains explicitly distinguished.
+- PMID:38597022 now has substantial full text. Methods/Results/Discussion
+  distinguish nine plasma samples from the single homozygous R266C fibroblast
+  line. XBP1 splicing and ddVenus reporter changes support downstream UPR/ERAD
+  consequences, with ALG9 and NGLY1 controls. The single-line limitation is
+  explicitly attached to the finding. ALG3 is not thereby the stress sensor or
+  degradation machinery.
+- PMID:40789468 now has substantial full text. Human MCF10A and breast-cancer
+  cell results, isolated ALG3/recombinant AKT1 kinase assays and phosphosite
+  substitutions support phosphorylation at Ser11/Ser13 and altered cellular
+  glycoprotein phenotypes. The Limitations section explicitly leaves direct
+  transferase activation, protein turnover and protein folding incompletely
+  tested. ALG3 is the substrate in the kinase assay.
+- PMID:41807832 now has substantial full text. Methods identify yeast ScALG3
+  P38179, human HsALG9 Q9H6U8 isoform 1 and chicken GgALG12 F1P077, expressed
+  in human 293 c18 cells. Wild-type ScALG3 acts on synthetic
+  Dol25-PP-GlcNAc2Man5; low-activity D71N was used to trap the structural
+  complex. The host cell does not change construct species. An independent
+  annotation-reviewer consultation checked these exact Methods/Results and
+  confirmed the ortholog and mutant scope.
+
+All five reference identifiers and titles match the recovered normal records.
+VERIFIED is retained on primary-source identity and supporting content; a failed
+terminal fetch had not invalidated the separately documented primary browser
+reading. Three local full-text flags are now corrected to available; the two
+abstract-only flags remain unavailable. Seven short exact cached findings are
+attached, including the explicit limitations.
+
+For review comment 5854233340, the two annotation rationales now state the
+cached abstract's positive catalytic/orthology or interaction findings. The
+earlier figure-level external readings remain documented above with their actual
+source routes. Generic binding removal does not deny the interactions or
+identify ALG3 as a protease. Broad valid ER and glycoprotein-process assertions
+remain ACCEPT; unresolved historical ARBA matching remains distinguished from
+independently supported target biology. No changes to the 22 source assertions,
+their 14 ACCEPT / 3 MODIFY / 5 REMOVE actions, the two alternative products, the
+integrated core or any reference identity are required. No NEW was added.
+
+The recursive authored-source census includes notes, DOI links, publisher and
+author-uploaded PDF routes: 11 required PMIDs and three Reactome records are
+present. The PDF/publication routes identify the already listed 10581255,
+29547901 and 30192950; no additional DOI-only work was found. There is no
+provider report in the gene directory. Unrelated bibliography entries in the
+protected UniProt source are not promoted to review claims.
+
+Final checks: `just validate human ALG3` passes with zero warnings, as do the
+new history validation and HTML rendering. Status is COMPLETE. All 57 cached
+supporting-text occurrences match case-sensitively after whitespace
+normalization; the 22 assertions and actions, 20 reference identities/titles,
+two alternative products, one core, immutable inputs and published history are
+unchanged. The manifest lists four authored files plus five exact normal caches.
