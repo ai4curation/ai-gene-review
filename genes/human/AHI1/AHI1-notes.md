@@ -745,3 +745,92 @@ records this session. All four notes-inclusive publication cache gates are now
 closed. Status remains DRAFT while the unused-provider validation advisory
 persists; cache availability is not confused with universal full-paper access
 or verification of every donor assertion.
+
+## 2026-09-27 human-construct evidence follow-up to PR #3215
+
+The exact starting head was `6b887c162d6740158c36c518fb65324ed4230db4`.
+A fresh GitHub API read confirmed that open head, and all three local author
+files matched its immutable Git blobs before editing. This entry addresses
+[the current review](https://github.com/ai4curation/ai-gene-review/pull/3215#issuecomment-5853340565).
+All 37 seeded source objects and all 37 actions remain unchanged. No withdrawn
+NEW proposal is reinstated, and no machine-fetched source or prior history is edited.
+
+The recovered primary [PMID:28442542](https://pubmed.ncbi.nlm.nih.gov/28442542/)
+([PMC5574394](https://pmc.ncbi.nlm.nih.gov/articles/PMC5574394/),
+DOI 10.1136/jmedgenet-2016-104200) is now an explicit YAML reference. I read its
+cached cDNA-construct and immunocytochemistry Methods, Results Figures 4–5 and
+Discussion. The synthetic full-length human isoform 1 construct AM393493 was
+adapted to reference NM001134831.1; wild-type and variant sequences were
+Sanger-validated. The human hTERT-RPE1 experiment used N-terminal mRFP fusions;
+full-length expression was checked separately in HEK293T. Thus construct species
+and cellular host are both established rather than inferred from the cell line.
+
+The exact result, “Wild-type mRFP-AHI1 showed a diffused cytoplasmic localisation
+and a strong enrichment at the ciliary base of ciliated hTERT-RPE1 cells”, now
+supports the basal-body IDA judgment, the broader cilium IC judgment, the three
+Reactome cytosol judgments and the integrated ciliary core. The two original
+experimental references retain their own mouse/construct-access limits; the
+human study is independent corroboration, not a rewritten original assay.
+The new study does not establish AHI1 throughout the axoneme or distinguish
+cytosol from every cytoplasmic subcompartment by fractionation.
+
+Tested RP and Joubert WD40 variants both reduce basal-body enrichment; their
+similar localization phenotype does not explain the distinct clinical groups.
+“Neither ciliary frequency nor cilium length varied significantly” applies to
+the RPE1 overexpression comparisons. Patient A-II:1 fibroblasts separately
+retain approximately 90% ciliation, cilium length and the reported IFT-marker
+distribution. These measured limits now support the core's model/allele context.
+The paper's residual-function and tissue-specific mechanistic explanations are
+hypotheses, not new mechanistic annotations.
+
+The three nonblocking suggestions were assessed as follows:
+
+- The Wnt and OTUD1–TYK2 core descriptions retain explicit biological synthesis
+  and knowledge gaps without adding optional GO terms. A core slot is not an
+  evidence-coded annotation, but it is still a human molecular/process assertion.
+  Preserving the direct-human construct and endogenous bridging boundaries is a
+  deliberate conservative representation; the positive mouse mechanism remains
+  fully described. This choice does not imply that an implementable donor
+  annotation is a schema prerequisite for every core function.
+- The three cytosol assertions remain ACCEPT at their curated Reactome
+  participant resolution. A specialized adherens-junction pool being non-core
+  does not make the broader compartment non-core. The human cytoplasmic imaging
+  is attached as corroboration, and cytosol is now included among core locations.
+- The transition-zone NAS row gains the exact cached PMID:25103236 statement,
+  “We show that Cby1, Ofd1, and Ahi1 localize as tightly apposed rings at a similar
+  position along the long axis of the centriole.” The suggested AHI1-specific
+  quotation is not present in the local PMID:22179047 record: that cache is
+  abstract-only and does not name Ahi1. Its MKS-complex rows therefore retain the
+  previously documented author-full-text affinity/co-fractionation evidence and
+  original source coding, without attaching a generic nine-protein or another
+  subunit's knockout quote as if it directly identified Ahi1. The full author
+  route remains recorded above; no source text is fabricated.
+
+No additional publication or Reactome cache is required by this follow-up.
+The existing genuine provider report remains preserved and is not treated as
+primary evidence merely to suppress its unused-provider advisory. Targeted
+validation, rendering, exact-quote/source-preservation checks and a newly
+scaffolded session record are recorded in the accompanying frozen manifest.
+
+### Recursive preserved-report cache census
+
+The current YAML and authored biological notes have no missing source cache.
+A separate recursive check of the immutable genuine affinage report found 14
+older provider-only PMID citations with no cache: PMID:12186888, PMID:15322546,
+PMID:15467982, PMID:18785627, PMID:19211505, PMID:22123816, PMID:23658157,
+PMID:29449373, PMID:30949029, PMID:31062249, PMID:33782379, PMID:34218273,
+PMID:35643536 and PMID:36691038. Its five uncached pathway identifiers are
+Reactome:R-HSA-1266738, Reactome:R-HSA-162582, Reactome:R-HSA-168256,
+Reactome:R-HSA-392499 and Reactome:R-HSA-9609507. These are now explicit
+artifact-source gates; no new biological conclusion was copied from that report.
+The earlier cache-closure entry covered the then-audited YAML/notes citations
+and did not establish this broader preserved-report census.
+
+Ordinary retrieval attempts were initiated on 2026-09-27; their exact outcomes
+are recorded separately in `/tmp/AHI1-provider-citation-fetch.log` and
+`/tmp/AHI1-provider-reactome-fetch.log`. Recovery design source8 is authorized
+to include the finite unresolved set after those attempts finish. The synthetic
+PMID:11111111 in the old bioinformatics script is an invalid-reference test
+fixture, not a citation, and is excluded. No provider file, fixture or cache
+has been rewritten. DRAFT status therefore reflects both the unused-provider
+advisory and these explicitly separated source gates.
