@@ -58,8 +58,7 @@ supplementary target hit was not recovered and is not represented as independent
 
 ### Direct human enzymology and structural context
 
-[PMID:41807832, Structures of ALG3/9/12 reveal the assembly logic of the N-glycan oligomannose
-core](https://pubmed.ncbi.nlm.nih.gov/41807832/) is genuinely cached with full Methods and Results.
+[PMID:41807832] is genuinely cached with full Methods and Results.
 It uses human ALG9 isoform 1 (Q9H6U8), yeast ALG3 (P38179) and chicken ALG12 (F1P077), expressed
 in human 293 c18 cells. Species identity follows the construct, not the host cell. Human ALG9 was
 expressed with an N-terminal FLAG-eYFP-HRV3C construct and purified after tag cleavage.
@@ -162,3 +161,64 @@ exists. Exactly the three historical PMIDs above are missing; PMID:41807832 is a
 previously imported machine cache. The review remains DRAFT while cache warnings remain.
 
 Root independently read all 26 judgments, 17 reference assessments and both cores, and checked the cached 2026 human Results. Two refinements were incorporated: each core retains the narrower LLO process alone, while the original broader N-linked glycosylation annotations remain accepted; the luminal-face IC row now attaches the explicit cached Reactome lumen statement. No original source assertion or action changed in this final refinement.
+
+
+## 2026-09-27 recovered-source and review follow-up
+
+The three missing records listed in the preceding audit are now present as unchanged normal
+fetcher outputs from Actions run `36313594604`, source commit
+`408e7c41d93c2fd63f54ac1da5d7201edbc901bb`. Their exact bytes were independently checked
+against the archived and staged records before canonical import. This section supersedes the
+earlier cache-absence statement; it does not change the historical record of the failed local fetch.
+
+- [PMID:25966638], DOI:10.1038/ejhg.2015.91, is **abstract-only locally** despite its PMC identifier.
+  The abstract reports two unrelated families and three affected fetuses with homozygous
+  c.1173+2T>A, exon 10 skipping and increased monoglycosylated transferrin. Those observations
+  connect severe Gillessen-Kaesbach-Nishimura skeletal dysplasia to ALG9-CDG; they do not assign
+  ALG9 a separate skeletal-development reaction or measure purified enzyme kinetics.
+- [PMID:12030331], DOI:10.1007/s10048-001-0129-x, is **abstract-only locally**. The translocation
+  disrupts historical DIBD1/ALG9 in a small family. The abstract itself says the broader linkage
+  and linkage-disequilibrium results generally did not support susceptibility and ends with the
+  role unconfirmed. It is a historical hypothesis, not a demonstrated psychiatric function.
+- [PMID:16859551], DOI:10.1186/1744-9081-2-25, contains **full Methods, Results and Discussion**.
+  The human family study tested four repeat markers plus V289I by TRANSMIT analyses. Informative
+  transmissions came from 166 NIMH families with 250 affected offspring and 129 PITT families with
+  135 cases. These are the informative subsets, not the total recruited pedigree counts. No tested
+  common allele or haplotype showed significant transmission disequilibrium. The study discusses
+  limited marker/sample coverage and possible rare structural effects; it does not universally
+  refute every ALG9 susceptibility hypothesis. Its historical introductory discussion of uncertain
+  terminal mannose linkage is not substituted for the later direct human enzyme evidence.
+
+The two bipolar papers remain low-relevance references because they substantiate the explicit
+correction of the ancillary Reactome and historical-notes susceptibility language. Their retention
+does not add a disease-process annotation. The clinical paper supports the named severe ALG9-CDG
+presentation in the biological summary. Reference verification reflects actual primary identity
+and scientific scope; prior network failure was an availability gate, not evidence that an
+externally verified identifier was incorrect. Renewed direct PubMed opens during this follow-up
+encountered a browser challenge; the original primary identity verification, independently
+verified import receipt and actual recovered contents remain the evidential record.
+
+All 26 original annotations, their source fields and actions, all four alternative products,
+17 reference identities and both catalytic cores are preserved. The IBA refinement specifies
+the measured human acceptor reactions; it does not claim that the unreconstructed ancestral node
+had both precisely scoped activities. No new annotation is manufactured. Broad membrane HDA
+remains ACCEPT at the source's resolution because independent human structural evidence supports
+membrane association. The unrecovered YTS supplementary hit is still not claimed as independently
+verified, and no narrower compartment is inferred from that screen. Correct broad process and
+component annotations need not be duplicated in the compact core to remain core biology.
+
+The original 2004 genetic assay remains supported by exact cached abstract quotations. Its
+externally inspected full Methods/Results and sensitized yeast assay context remain documented
+above, explicitly distinct from cached full-text availability. Short exact UniProt EC/Rhea
+cross-references now accompany both electronic specific-reaction rows as curated database
+corroboration, alongside the independent human experiments. The description states the enzyme
+family, donor, two EC reactions and disease context; synthetic assay details stay in the evidence
+assessments. The current recursive authored/provider citation census has seven required PMIDs
+and five Reactome records, all cached. No provider report exists, and no new source request is
+introduced by this follow-up.
+
+An independent annotation-reviewer consultation read the recovered common-variant study's
+Methods, Table 1 and Discussion and confirmed the informative-family counts and rare-variant
+limitations. It found no objection to retaining the two bounded historical references or the
+unchanged annotation/core decisions. Targeted validation passed without curation warnings;
+with all required citations cached, the review is now COMPLETE.
