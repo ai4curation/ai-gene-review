@@ -449,6 +449,10 @@ def test_generated_artifact_allowlist_is_fully_anchored():
         "app/predictions/data.js",
         "app/predictions/schema.js",
         "app/predictions/source-files.json",
+        "app/propagation/index.html",
+        "app/propagation/data.js",
+        "app/propagation/schema.js",
+        "app/propagation/source-files.json",
         "rules/arba/index.html",
         "rules/arba/ARBA00000900/ARBA00000900-review.html",
         "reports/validation-all.tsv",
@@ -462,9 +466,21 @@ def test_generated_artifact_allowlist_is_fully_anchored():
         "app/extra.js",
         "app/predictions/source-files.json.bak",
         "app/predictions/curated-review.yaml",
+        "app/propagation/curated-review.yaml",
+        "app/propagation/source-files.json.bak",
         "rules/arba/ARBA00000900/ARBA00000900-review.yaml",
         "rules/arba/ARBA00000900/ARBA00000900-review.html.bak",
         "reports",
         "src/ai_gene_review/render.py",
     ):
         assert not allowed(path), path
+
+
+def test_propagation_failure_blocks_publication_but_preserves_regeneration():
+    job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
+    build = _step(job, "Build homology propagation browser")
+    assert build["continue-on-error"] is True
+    assert _step(job, "Stage GitHub Pages artifact")["if"] == "steps.propagation-build.outcome == 'success'"
+    for name in ("Check for changes", "Create or update regeneration PR"):
+        assert 'app/propagation/' in _step(job, name)['run']
+    assert "steps.propagation-build.outcome == 'failure'" in _step(job, "Warn when Pages artifact build fails")['if']

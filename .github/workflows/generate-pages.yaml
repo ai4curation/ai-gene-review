@@ -89,6 +89,8 @@ jobs:
         run: just deploy-predictions-browser
 
       - name: Build homology propagation browser
+        id: propagation-build
+        continue-on-error: true
         run: just deploy-propagation-browser
 
       # Build the candidate artifact for inspection. Publication remains opt-in
@@ -97,6 +99,7 @@ jobs:
       # regeneration lane. Only summarize/upload a successfully staged tree.
       - name: Stage GitHub Pages artifact
         id: pages-stage
+        if: steps.propagation-build.outcome == 'success'
         continue-on-error: true
         run: just stage-pages
 
@@ -181,11 +184,12 @@ jobs:
       - name: Warn when Pages artifact build fails
         if: >-
           ${{ !cancelled() &&
-              (steps.pages-stage.outcome == 'failure' ||
+              (steps.propagation-build.outcome == 'failure' ||
+               steps.pages-stage.outcome == 'failure' ||
                steps.pages-summary.outcome == 'failure' ||
                steps.pages-upload.outcome == 'failure' ||
                steps.archive-check.outcome == 'failure') }}
-        run: echo "::warning title=Pages artifact build failed::Inspect the staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
+        run: echo "::warning title=Pages artifact build failed::Inspect the propagation build, staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes
@@ -196,6 +200,7 @@ jobs:
             app/data.js \
             app/schema.js \
             app/predictions/ \
+            app/propagation/ \
             pages/ \
             rules/arba/index.html \
             ":(glob)rules/arba/*/*-review.html" \
@@ -210,6 +215,7 @@ jobs:
               app/data.js \
               app/schema.js \
               app/predictions/ \
+              app/propagation/ \
               pages/ \
               rules/arba/index.html \
               ":(glob)rules/arba/*/*-review.html" \
@@ -275,6 +281,7 @@ jobs:
             app/data.js \
             app/schema.js \
             app/predictions/ \
+            app/propagation/ \
             pages/ \
             rules/arba/index.html \
             ":(glob)rules/arba/*/*-review.html" \
@@ -288,7 +295,7 @@ jobs:
           # browser-app files and prediction source manifest, reports/, and
           # rule-review HTML.
           DISALLOWED="$(git diff --cached --name-only \
-            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/((predictions/)?(index\.html|data\.js|schema\.js)|predictions/source-files\.json)|reports/[^[:space:]]+|rules/arba/index\.html|rules/arba/ARBA[0-9]+/ARBA[0-9]+-review\.html)$' \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/(((predictions|propagation)/)?(index\.html|data\.js|schema\.js)|(predictions|propagation)/source-files\.json)|reports/[^[:space:]]+|rules/arba/index\.html|rules/arba/ARBA[0-9]+/ARBA[0-9]+-review\.html)$' \
             || true)"
           if [ -n "$DISALLOWED" ]; then
             echo "❌ Refusing to commit non-artifact files:"
