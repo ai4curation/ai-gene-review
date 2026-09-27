@@ -96,3 +96,42 @@ Supporting snippets in the YAML are exact cached excerpts, checked case-sensitiv
 Independent sibling review of all 53 decisions, description and integrated core found no biological blocker. Its scope refinement was adopted: unresolved human response mechanisms are bounded to the source studies inspected, rather than framed as an exhaustive absence from the literature.
 
 The parent independent read of all 53 reasons and the integrated core found no biological blocker. Validation exposed an object-shape error in the two knowledge-gap entries; these were corrected to schema-defined gap_statement/boundary objects, with an exact existing source quote for the absorption boundary. Final schema, ontology, GOA and best-practice checks pass. The complete targeted reference/markdown validation subsequently exited 0 with all validations passed and one grouped warning for the eleven documented missing publication caches. History validation and rendering also passed; the review remains DRAFT.
+
+
+## 2026-09-27 — source8 closure and current-head review follow-up
+
+This entry supersedes the earlier cache-gate and action totals without rewriting their historical record. The starting canonical review, notes, HTML, GOA, UniProt and published history were byte-for-byte identical to PR #3285 head `dbe5fffaf0a84e03c2f72d6b4d0f74604afd4df8`. Exact copies and hashes are in `tmp/ABCG-pair-followup-baseline/`. The complete formal review and issue comment were read at that head. No source annotation, qualifier, supporting entity, alternative product or reference ID/title is changed.
+
+The previously missing 11 records were produced by the normal fetcher in **source8**, not source9. Root independently validated and imported the artifact without overwriting existing caches. The import receipt `tmp/source8-canonical-import-receipt.json` has SHA-256 `1ebe816a5f570279c1a6fe45f87dbb54841b3827e7ce090a5c53d41df3ba5bce` and source run `36301782511`. Every included publication byte matches that receipt and each added cache path is absent from this exact PR base. No new provider report, authored cache or repeat fetch was used.
+
+### Actual recovered source scope
+
+| PMID | DOI in the normal primary record | Access read in this follow-up |
+|---|---|---|
+| PMID:12208867 | 10.1172/JCI16000 | Substantive primary abstract only |
+| PMID:15710224 | 10.1016/j.jhep.2004.11.032 | Substantive primary abstract only |
+| PMID:16867993 | 10.1074/jbc.M605603200 | Substantive primary abstract only |
+| PMID:17109865 | 10.1016/j.atherosclerosis.2006.09.031 | Substantive primary abstract only |
+| PMID:17132608 | 10.1080/10915810600961317 | Substantive primary abstract only |
+| PMID:18402465 | 10.1021/bi800292v | Substantive primary abstract only |
+| PMID:21209088 | 10.1074/jbc.M110.210880 | Substantive primary abstract only |
+| PMID:23117815 | 10.1007/s00394-012-0459-5 | Substantive primary abstract only |
+| PMID:25263431 | 10.1017/S0007114514002517 | Substantive primary abstract only |
+| PMID:25612518 | 10.1017/S0007114514003717 | Substantive primary abstract only |
+| PMID:34404721 | 10.1073/pnas.2110483118 | Full main article: Results, Methods and captions; some XML sections repeat |
+
+PMID:34404721 now has a genuine full main-article cache. Human G5/G8 cDNAs were expressed in HEK293 cells and Pichia; human WT and mutant adenoviruses were tested in deficient mouse hosts. Figures 1–3 and their Methods support pair ATPase, inhibitory G8-binding Fab2C7, sterol-site mutations, and loss of biliary rescue despite comparable protein maturation. The G8 Walker-containing NBS1 is non-equivalent to the active NBS2, which combines G5 Walker elements with the G8 signature. Its ABCG1 ATP-bound structures, macrophage/HDL context and ABCG1 ATPase kinetics are separate experiments. The cached XML repeats some sections; neither that metadata flag nor this read certifies every supplement or original figure pixel. The corresponding `full_text_unavailable` flag is now false. Primary content was also checked through [PMC8403869](https://pmc.ncbi.nlm.nih.gov/articles/PMC8403869/).
+
+Every other recovered record remains abstract-only locally. PMID:12208867, where cited, explicitly studies epitope-tagged **mouse** proteins in cultured cells; PMID:16867993 uses recombinant **mouse** proteins in Sf9 membranes, whereas PMID:18402465, where cited, purifies native **mouse liver** transporter. None is relabeled as a human purified assay. Prior external full-text reads remain explicitly separate access routes. The recovered abstracts corroborate the recorded assay/organism boundaries, rather than supplying unseen full experiments.
+
+The rat response sources remain abstract-only. Their positive diet, drug, exercise and radiation expression findings are retained. Cache recovery does not resolve the complete source-specific experiments or conserved effector role in humans, so the existing UNDECIDED judgments remain. An IEP annotation is not rejected merely because it is expression-based, and lack of a human assay alone does not refute orthology transfer. Resolving these judgments requires the actual full experiments and a justified transfer of that particular response context. The established human sterol-export and homeostasis judgments remain supported independently.
+
+### Feedback adjudication
+
+The generic GO:0005515 IPI row on PMID:16870176 is now REMOVE because the same paper and the exact same partner are already represented by the retained GO:0046982 heterodimerization row. This is removal of an uninformative term for this verified interaction, not rejection of the interaction or a rule that duplicate GO IDs across independent sources are invalid. The source row and its evidence are preserved. The informative assembly, conserved broad compartment assertions and specific transporter refinements remain unchanged. Broad sterol transport is true at the source's resolved level even where another source supplies a narrower membrane mechanism.
+
+The reviewer proposed changing activity judgments or recommending qualifier edits on the basis of ordinary `enables`. The annotation-reviewer skill explicitly treats ordinary relationship qualifiers as inert in this review workflow: they are preserved, not added, edited or used as the reason for an action. Existing `contributes_to` assertions retain their weaker, biologically meaningful scope, and the integrated core retains contribution to the heterodimer's transport activity. Thus no artificial qualifier-change recommendation is added.
+
+The final action totals are **34 ACCEPT, 11 MODIFY, 6 UNDECIDED and 2 REMOVE**, with zero PENDING and zero NEW. One integrated core remains. The recursive authored/provider census contains **18 distinct PMIDs and four Reactome records**, all locally present. All DOI and PMC identifiers in authored notes resolve to those same primary cache identities; no separate DOI-only or preprint gate was found. No provider, raw provider HTML or provider PDF was generated. Immutable UniProt bibliography alone is not expanded into new citations. Final validation, source-object and case-sensitive quote checks, append-only history and rendering are recorded in the follow-up manifest. Local cache closure does not imply that the unresolved rat assays are now full-text verified.
+
+Full targeted validation exited 0 with no review warnings after source recovery. All 92 ordinary supporting excerpts match canonical text case-sensitively after whitespace normalization; no quote requires case folding. The local citation census has zero missing PMID/Reactome records. Status is therefore COMPLETE; the 6 deliberately unresolved response judgments remain transparent and do not become positive biological assertions. The final status change is revalidated below the same scoped workflow; PR publication and review/CI decisions remain with the coordinator.
