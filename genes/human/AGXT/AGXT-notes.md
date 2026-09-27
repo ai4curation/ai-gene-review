@@ -219,3 +219,62 @@ Status is DRAFT because that validation warning remains. Source-object and
 reference-identity preservation, unchanged UniProt/GOA bytes, alias-free YAML
 and trailing-whitespace checks also passed. The final four-file manifest records
 exact SHA256 and byte-derived Git blob hashes.
+
+## 2026-09-27 — PR #3212 specificity and citation-scope follow-up
+
+This follow-up addresses review comment 5851742948 at published head
+`b365022100517b5bd89492314f912dd1d92b1bb1`. The three curated files and published
+history exactly matched `/tmp/AGXT-local-manifest.json` before edits. All 62
+source assertion objects, 30 reference identifier/title pairs, machine UniProt/GOA
+files and existing history remain unchanged. The earlier journal entries and
+published history are preserved; the decisions below supersede their generic
+transaminase and DRAFT-warning statements.
+
+The two GO:0008483 rows now consistently propose GO:0008453. The change to the
+PMID:18492492 row is an ontology-specificity correction, not a denial of the paper's
+additional chemistry. Its cached abstract explicitly compares side reactions with
+physiological L-alanine transamination; the same source already has a specific
+alanine:glyoxylate annotation. The cached PMID:17696873 kinetic study independently
+establishes that substrate pair. GO:0008483 identifies amino-group transfer without
+encoding cysteine identity or beta-elimination, so it is not a useful placeholder
+for those findings. The separate cysteine catabolic process remains NON_CORE, and
+the unresolved coupled reaction and human physiological flux remain in the question.
+
+Live AmiGO definitions were checked on 2026-09-27. GO:0008453 specifies the alanine,
+glyoxylate, pyruvate and glycine reaction. Its `is_a` lineage reaches GO:0008483
+through GO:0047635 and GO:0140385; the reviewer called the broad term a direct
+parent, but the current hierarchy instead makes it an ancestor. This distinction
+does not change the specificity judgment. This live result also supplements the
+earlier note that did not assume GO:0047635 parentage. GO:0019448 covers reactions
+that break down L-cysteine, so measured direct beta-elimination/half-transamination
+is positive participation evidence even with much lower turnover and unresolved
+hepatic flux. The non-core annotation does not imply a major physiological pathway.
+
+For PMID:20133649, the reason now rests on the actual cached abstract's variant
+catalytic-efficiency result and explicitly separate substrate-pair evidence from
+cached PMID:17696873, with its relevant exact snippet attached. It does not ask the
+reader to treat a missing cached Results section as present. The earlier external
+PMC2840350 access record is retained as provenance; no full-text workaround or
+cache modification is introduced. Likewise, the cached PMID:10347152 abstract
+alone establishes human in-vitro flux and the human/rabbit peroxisomal context,
+while the in-vivo tracer experiment is rabbit only. The second core quote now
+includes that explicit species/localization context.
+
+GO:0016597 amino acid binding remains ACCEPT. Measured substrate recognition is
+part of catalysis, and absence of a separate binding-only entry in `core_functions`
+is not evidence that it is non-core. The first catalytic core now explicitly says
+that amino-acid binding supplies substrate recognition and cites the measured
+affinities. No redundant core or NEW annotation is added.
+
+All 22 PMIDs cited across YAML and notes remain cached; no reference was added.
+The source-scoped differences concern the explanations, not machine annotation
+fields or paper identities. Normal targeted validation, rendering, append-only
+history and exact file-hash checks are recorded in the follow-up manifest. No Git,
+remote comments, shared project edits or cache writes were performed by this author.
+
+Follow-up checks completed: `just validate human AGXT` passed with **zero warnings**;
+rendering and the scaffolded history validation passed. The obsolete action-consistency
+warning is resolved, so the review status is COMPLETE. Final actions are 51 ACCEPT,
+5 MODIFY, 3 KEEP_AS_NON_CORE and 3 REMOVE. All 62 assertions and 30 reference
+identities are preserved; all 22 notes-inclusive PMIDs and three cited Reactome
+entries are cached. The prior published history remains byte-identical.
