@@ -27,3 +27,10 @@ Decisions
 - GO:2000769 (SUN1 only) -> MODIFY to GO:0006997: the paper measures nuclear, not cell, shape/polarity.
 - Spindle HDA (SUN2 only) -> UNDECIDED (abstract-only GFP survey).
 - Complex: GO:0106094 is microtubule-specific; plant bridge is actin/myosin XI-i-linked, so core function uses GO:0106083.
+
+## 2026-09-27 update: Falcon deep research incorporated
+
+- Deep research surfaced Cromer et al. 2024 (PMID:39013853, PubMed-verified via DOI; full text cached).
+  [PMID:39013853 "we observed that telomere association with the NE is rare in sun1 sun2, even if not wholly absent"];
+  rapid prophase chromosome movements abolished in sun1 sun2. Strengthens the GO:0070197 IMP/IEA rows and meiotic core function.
+- Deep research also notes OPENER recruitment by SUN1/2 and CDC48/PUX-regulated SUN1 turnover (not added; not GOA-cited, not verified here).
