@@ -202,3 +202,12 @@ This section supersedes conflicting action counts and recommendations in the pre
 The PAINT source-entity blocks remain ancestral PTN nodes, following the annotation-reviewer instruction for IBA; descendant evidence remains available in the unchanged PAINT/GOA sources. No unverified new cartilage term is reintroduced. The previous history entry is preserved, and this follow-up uses an explicitly named codex actor and tool in a new scaffolded history record.
 
 Follow-up validation: `just validate human ACAN`, `just validate-history`, and `just render human ACAN` pass. Gene validation retains three warnings: missing PMID:11222505, the intentional source-resolution distinction for GO:0005576 (five MODIFY, one KEEP_AS_NON_CORE), and an unused-provider advisory. Final actions across the 40 preserved source rows are 8 ACCEPT, 19 KEEP_AS_NON_CORE, 10 MODIFY, 2 REMOVE and 1 UNDECIDED. Parsed-YAML equality was checked when stripping trailing whitespace. The follow-up manifest is `/tmp/ACAN-3153-followup-manifest.json`.
+
+
+## 2026-09-27: Required publication cache recovered
+
+Recovered required PMID:11222505 through standard fetch-pmid in read-only Actions run 36286975328 (job 108529455048, artifact 10920674630), transported unchanged by read-only run 36288441414. Verified artifact SHA256 c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713 and every record SHA256/Git blob before importing. Re-read this abstract, confirmed exact citation title and retained full_text_unavailable=true. All annotation decisions, source objects, core functions, reference identities and alternative products remain unchanged from 7d334c976aedc1e7b54b1a87c5cc04d05df9fdb6. Targeted validation passed with 2 warnings; YAML status is DRAFT. The machine cache requirement is satisfied; source-limited UNDECIDED judgments remain explicit.
+
+This supersedes the earlier missing-cache publication gate. The recovered record is abstract-only; neither its presence nor successful validation establishes access to the full paper. The remaining advisories are intentional, documented source/action distinctions and an unused-provider advisory; they keep the YAML DRAFT under its literal zero-warning definition, while the PR can proceed to review.
+
+Final checks: `just validate human ACAN`, `just render human ACAN` and the new history validation all passed. The parsed review differs only in source-access notes and, where applicable, status; every biological decision and source field is preserved.
