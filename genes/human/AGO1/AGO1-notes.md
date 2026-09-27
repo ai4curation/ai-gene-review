@@ -274,3 +274,52 @@ shared project files were edited.
 ## Status correction, 2026-09-26
 
 Changed the authored review status from COMPLETE to **DRAFT** to match the schema and the publication gate already documented for missing PMID:26764146 and PMID:40500329 caches. All 113 annotation decisions, source fields, reference assessments and the integrated core are unchanged. The YAML's only parsed change is the status value. The published baseline is `e47a3fa018bcdc23d4a26f5ff367771f8385b5c1`; its three gene-file blobs were independently confirmed by the coordinator and matched locally before editing. Targeted validation, regenerated rendering and a new append-only session record accompany this correction. The external cache requirement remains open; this status change makes no new biological claim.
+
+## PR #3207 source-specific follow-up, 2026-09-27
+
+The published baseline is `5aaf1b1ec8cf9b1383f85350d799148945185bf2`;
+the coordinator verified all three authored file blobs before editing. This section
+supersedes the earlier generic-binding tally and confident acceptance of the two
+negated process annotations. All 113 annotation source objects, 85 reference
+identities, and original negation flags remain unchanged.
+
+For [PMID:18771919], the GO:0035278 support now quotes the translation-specific
+comparison, rather than reusing the mRNA-abundance result. The full cached Results
+separate similar reductions in cytoplasmic mRNA concentration from differing protein
+repression: Ago4 > Ago3 > Ago2 >= Ago1. At low concentrations, Ago4 was approximately
+sixfold more potent than Ago1. The paper attributes the difference mainly to
+translation. This engineered 293T/boxB reporter comparison supports AGO1 activity,
+but not equal paralog potency or a universal quantitative balance between repression
+and decay in endogenous cells. The core and reference assessment now state that scope.
+
+For [PMID:25336585], Figure 1F identifies TBP as the AGO1 co-immunoprecipitation
+partner. Generic protein binding is therefore MODIFY to GO:0017025, TBP-class
+protein binding, at the same association-assay resolution as the retained Pol II
+binding row. The current [AmiGO definition](https://amigo.geneontology.org/amigo/term/GO:0017025)
+and [MGI ontology entry](https://www.informatics.jax.org/vocab/gene_ontology/GO%3A0017025)
+were independently checked; a direct QuickGO endpoint attempt failed. This does not
+assert a purified binary contact or make the contextual nuclear function core.
+
+Live AmiGO checks retain target-cleavage definitions for
+[GO:0035279](https://amigo.geneontology.org/amigo/term/GO:0035279) and
+[GO:0090625](https://amigo.geneontology.org/amigo/term/GO:0090625); GO:0035279 also
+retains deadenylation synonyms. The original [PMID:15260970] abstract and independent
+AGO1 structural/cleavage work [PMID:23809764] support a cleavage-scoped negative.
+They do not show absence of nonendonucleolytic decay recruitment. The original
+publisher full text still returned 403 and its PDF failed to load. Both process NOT
+rows are now UNDECIDED pending intended ontology scope and original assay details,
+without changing the source negation or the accepted NOT RNA-endonuclease MF.
+Read-only comparison found AGO4's explicit scope uncertainty relevant; AGO3's miRNA
+decision rests on later AGO3-specific cleavage experiments and is not evidence for
+human AGO1 slicing. No paralog files were edited.
+
+The cytoplasm and P-body core locations are retained to describe the wider
+cytoplasmic pool and an observed condensate-associated pool, rather than confining
+all AGO1 function to P-bodies. PMID:26764146 remains VERIFIED for the previously
+checked primary abstract, citation identity and broad mechanism; inaccessible
+branch-specific experiments remain explicitly unresolved. Missing local cache
+does not erase that documented source verification. The two missing required
+caches remain PMID:26764146 and PMID:40500329, so status stays DRAFT. No cache,
+provider report, GOA, UniProt, Git state or shared project file was modified.
+
+Final follow-up checks: 77 ACCEPT, 7 KEEP_AS_NON_CORE, 8 UNDECIDED, 20 REMOVE and 1 MODIFY. The coordinator independently read the full delta and checked the two primary assay caches and live ontology terms, finding no biological blocker. Gene validation passes with the same missing-cache and unused-provider-quote warnings; history validation and rendering pass. All source objects/reference identities and immutable source bytes match the published baseline.
