@@ -412,3 +412,61 @@ attachments, source-access notes and status metadata are updated. This entry
 supersedes earlier missing-cache status. Targeted validation, rendering and
 history checks determine the final status and are recorded in the manifest;
 any remaining advisory is distinguished from the now-closed cache gate.
+
+## 2026-09-27 sensory-process follow-up at the reviewed cache-complete head
+
+All seven canonical files matched reviewed head
+`c34c4a5f7eb1051687be087abc31e854c2ff86fc` before editing. This follow-up
+reassesses the four visual/light-perception rows named by the reviewer and
+the additional ARBA light-perception row with the same core-forwarding
+rationale. All five are retained as KEEP_AS_NON_CORE with source-specific
+positive reasons. Their original evidence, references and qualifiers are
+unchanged; none is removed or labeled as a curator error.
+
+The live [visual-perception definition](https://amigo.geneontology.org/amigo/term/GO:0007601)
+and [light-perception definition](https://zfin.org/action/ontology/term/GO:0050953)
+describe stimulus reception, signal conversion and neurological recognition.
+The [photoreceptor-maintenance definition](https://amigo.geneontology.org/amigo/term/GO:0045494)
+describes prevention of photoreceptor degeneration and is part of retina
+homeostasis. These are different process scopes; maintenance is not assumed
+to be a formal subtype of sensory perception. QuickGO's combined endpoint
+failed, but the stated definitions were independently recovered from the
+primary ontology/MOD pages on 2026-09-27.
+
+The full genetic source [PMID:14740321] establishes ADGRV1/VLGR1-related
+USH2C. The cached clinical abstract [PMID:15671307] reports three USH2C
+siblings studied by perimetry, ERG and OCT, with rod/cone dysfunction and
+outer nuclear layer thinning. The latter is positive visual-function
+phenotyping, not an experiment isolating receptor-dependent phototransduction.
+Human PDZ-domain interaction evidence and zebrafish connecting-cilium
+localization/retinal survival data [PMID:20440071] support the periciliary
+complex mechanism. Thus the synthesized retinal core remains photoreceptor
+maintenance, while the wider visual outcome is retained as non-core
+physiological involvement. This distinction is based on the demonstrated
+molecular work and source resolution, not simply on whether a GO label is
+literally repeated in the core table. It does not establish that ADGRV1
+cannot have a direct light-evoked signaling role.
+
+The IBA retains the ancestral assertion with no inferred node-placement
+error; the ISS retains mouse-ortholog involvement and the original
+acts_upstream_of_or_within qualifier; the ARBA internals remain unverified
+while independent human observations support the target-level judgment.
+Each human IMP retains its own clinical evidence and access scope. The
+broader hearing annotations remain ACCEPT because the ankle-link protein
+supplies physical bundle cohesion with measured directional transduction
+phenotypes [PMID:17567809], beyond a generic disease association. The
+core lists GO:0050910 once; the redundant separate GO:0007605 entry was
+removed because the [primary MGI ontology](https://www.informatics.jax.org/vocab/gene_ontology/GO:0050910)
+explicitly places GO:0050910 part_of sensory perception of sound. This
+core simplification does not change any original sound-perception action.
+
+GO:0045184 remains broad establishment of protein localization: physical
+PDZ docking plus loss of partner positioning supports the existing
+source-resolution judgment. No narrower cargo-recognition or motor term
+is newly inferred. All 64 seeded source assertions plus the pre-existing
+structural-molecule NEW proposal, all 26 reference identities/assessments,
+three molecular core units, machine/provider artifacts, exact publication
+caches and published histories remain preserved. Only the five stated
+review actions/reasons and the redundant core process listing change.
+No new citation or cache is needed. Validation, render, new append-only
+history and exact file hashes accompany the follow-up manifest.
