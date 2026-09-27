@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-27T16:40:05.653182'
-end_time: '2026-09-27T16:50:48.504993'
-duration_seconds: 642.85
+start_time: '2026-09-27T16:50:14.449700'
+end_time: '2026-09-27T16:56:27.225993'
+duration_seconds: 372.78
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: ECOLI
@@ -25,7 +25,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 43
+citation_count: 21
 artifact_count: 1
 artifact_sources:
   edison_answer_artifacts: 1
@@ -146,166 +146,158 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Functional annotation report: *Escherichia coli* K-12 **fliI** (UniProt P52612)
+# Functional Annotation Report: *Escherichia coli* K-12 **fliI** (UniProt P52612)
 
 ## Executive conclusion
 
-The specified target is correctly identified as **FliI**, the flagellum-specific ATPase of *Escherichia coli* K-12 (gene **fliI**; ordered loci **b1941/JW1925**; UniProt **P52612**). It is the cytoplasmic/peripheral-inner-membrane ATPase of the flagellar type III secretion system (fT3SS), not a flagellar structural subunit and not the membrane translocation pore itself. Its primary biochemical reaction is Mg²⁺-dependent hydrolysis of ATP:
+The requested identity is verified: **P52612 is the *E. coli* K-12 FliI flagellar type III secretion ATPase**, encoded by **fliI** (ordered locus **b1941/JW1925**; historical aliases **flaAIII/flaC**). Its description, ATPase α/β-chain-family assignment, AAA+-like/Walker ATPase domains, and role in flagellar export are mutually consistent. No literature concerning a different same-symbol gene was incorporated.
+
+FliI catalyzes **Mg²⁺-dependent ATP hydrolysis**:
 
 **ATP + H₂O → ADP + inorganic phosphate.**
 
-Functionally, FliI assembles with FliH and FliJ at the cytoplasmic face of the flagellar basal body. It recruits or delivers selected export substrates, promotes their initial entry into the export gate, and activates the ion-motive-force-driven membrane export machinery. The best current interpretation is therefore **an ATP-dependent substrate-loading and export-gate-activation factor**, rather than an ATPase that supplies one ATP hydrolysis event for every step of polypeptide translocation. Processive movement through the membrane is driven principally by proton motive force in enteric bacteria. (halte2021proteinexportvia pages 4-6, halte2021proteinexportvia pages 6-7, minamino2014thebacterialflagellar pages 1-2, minamino2022insightintodistinct pages 1-2)
+Its primary biological function is not to synthesize ATP and not to form the transmembrane channel. Rather, cytoplasmic FliI assembles with FliH and FliJ into an ATPase complex at the cytoplasmic face of the flagellar basal body. This complex delivers flagellar export substrates, loads them onto the export machinery, and uses nucleotide-dependent conformational changes to activate and regulate the FlhA/FlhB/FliPQR transmembrane export gate. Sustained translocation is normally powered predominantly by ion motive force, particularly proton motive force in enteric bacteria. Thus, ATP hydrolysis facilitates substrate handling and gate activation but is not tightly stoichiometrically coupled to every exported polypeptide segment. Detailed mechanistic evidence comes predominantly from the highly conserved *Salmonella enterica* ortholog and should be treated as strong ortholog inference rather than direct P52612 measurement. (minamino2014thebacterialflagellar pages 1-2, terashima2018invitroreconstitution pages 8-9, minamino2022insightintodistinct pages 1-2)
 
-## 1. Mandatory identity verification
-
-### 1.1 Gene, protein, and organism
-
-The supplied identifiers—**P52612**, **fliI**, **b1941/JW1925**, and *E. coli* strain K-12—are mutually consistent with the flagellar export ATPase. The literature describes FliI as the soluble Walker-type ATPase associated with the flagellar basal body and distinguishes it from the integral-membrane export gate proteins FlhA, FlhB, FliP, FliQ, and FliR. (halte2021proteinexportvia pages 4-6, claret2003oligomerizationandactivation pages 1-2)
-
-The supplied InterPro assignments—AAA+ ATPase, ATPase α/β-chain family, F1/V1/A1-like nucleotide-binding fold, and ATPase_T3SS_FliI/YscN—also align with the experimentally observed architecture. FliI forms a sixfold ATPase ring related structurally to the catalytic rings of rotary ATPases, with FliJ occupying the central cavity as a stalk-like component. This is evolutionary and structural similarity; FliI is not a conventional ATP synthase and does not synthesize ATP. (minamino2022insightintodistinct pages 1-2, minamino2026uncouplingsubstratedelivery pages 1-2, claret2003oligomerizationandactivation pages 1-2, claret2003oligomerizationandactivation pages 2-4)
-
-### 1.2 Ambiguity safeguard
-
-The symbol **fliI** uses a terminal uppercase “I.” It must not be confused with ***E. coli* FliY**, a distinct cysteine/cystine ABC-import substrate-binding protein. No evidence concerning FliY transport activity was used to annotate P52612. Cross-species FliI results below are explicitly labeled, because much of the definitive mechanistic literature uses the very close *Salmonella enterica* homolog rather than native *E. coli* K-12 P52612.
-
-## 2. Primary molecular function and substrate specificity
-
-FliI is an ATP phosphohydrolase associated with flagellar protein export. ATP is the demonstrated small-molecule substrate, with Mg²⁺ used in biochemical assays. Purified enterobacterial FliI displayed positive cooperativity: **K₀.₅ for ATP = 0.65 ± 0.10 mM**, **Vmax = 0.28 ± 0.10 µmol ATP hydrolyzed·min⁻¹·mg⁻¹**, and a **Hill coefficient of 1.92 ± 0.05**. Each monomer contains one ATP-binding motif, while cooperativity arises through protomer interactions during oligomerization. The retrieved literature does not establish a physiologically important alternative nucleotide substrate for native P52612; ATP should therefore be recorded as the supported substrate rather than broadly annotating nonspecific NTPase activity. (claret2003oligomerizationandactivation pages 2-4)
-
-Catalytic evidence from the *Salmonella* homolog identifies Glu-211 as important for positioning/polarizing water for attack on ATP’s γ-phosphate. E211Q abolishes detectable ATPase activity, whereas E211D retains approximately **1/100** of wild-type activity. Because this result is from the conserved *Salmonella* enzyme, it strongly informs the mechanism but should not be presented as a direct kinetic measurement of purified P52612. (minamino2014thebacterialflagellar pages 2-3)
-
-FliI also binds biological macromolecular substrates—flagellar export proteins or their chaperone complexes—but these are **cargo/interaction partners**, not chemical substrates of its phosphohydrolase reaction. Proposed ATP-dependent activities include chaperone–cargo dissociation, partial substrate unfolding, substrate loading, and export-gate activation. Of these, delivery and gate activation have stronger support; a rotary FliJ-driven unfolding mechanism remains a model rather than an established reaction of native *E. coli* FliI. (halte2021proteinexportvia pages 4-6, halte2021proteinexportvia pages 6-7)
-
-## 3. Structure and oligomeric state
-
-Purified soluble FliI is predominantly monomeric, but ATP favors higher-order oligomers and a nonhydrolysable ATP analog stabilizes complete rings. Electron microscopy showed sixfold-symmetric rings approximately **10 nm in external diameter**, with a **2.5–3.0-nm central cavity**. AMP-PNP increased the yield of complete rings by approximately **20-fold**, and ATP-dependent biochemical measurements showed that oligomerization and catalytic activation are coupled. (claret2003oligomerizationandactivation pages 1-2, claret2003oligomerizationandactivation pages 2-4)
-
-The accepted basal-body assembly is **FliH₁₂–FliI₆–FliJ₁**. Six FliI protomers form the catalytic ring, with ATP-hydrolysis sites at protomer interfaces; FliJ lies in its center, while six FliH dimers contact FliI N-terminal domains and form peripheral connections to the flagellar base. This organization resembles the α₃β₃γ/peripheral-stalk architecture of F-type ATP synthase, supporting the supplied ATPase α/β-chain-family annotation. Most high-resolution functional evidence for this stoichiometry is from *Salmonella*, and its transfer to *E. coli* rests on strong conservation rather than a P52612-specific intact-complex structure. (minamino2022insightintodistinct pages 1-2, minamino2026uncouplingsubstratedelivery pages 1-2)
-
-| Topic | Best-supported annotation | Evidence type/species | Quantitative detail | Key source/date/DOI URL |
+| Annotation aspect | Best-supported conclusion | Evidence type/organism | Key quantitative detail | Confidence |
 |---|---|---|---|---|
-| Identity | **FliI (UniProt P52612; b1941/JW1925)** is the *E. coli* K-12 flagellar type III secretion ATPase, not the unrelated cysteine/cystine-binding protein FliY. Its ATPase α/β-chain and FliI/YscN-family assignments agree with a soluble Walker-type export ATPase. | Database identity supplied for *E. coli* K-12; family/function corroborated by conserved flagellar-system literature. | One ATP-binding motif per FliI protomer. | Halte & Erhardt, January 2021, [doi:10.3390/biom11020186](https://doi.org/10.3390/biom11020186) (halte2021proteinexportvia pages 4-6, halte2021proteinexportvia pages 6-7) |
-| Catalyzed reaction and specificity | Mg²⁺-dependent hydrolysis of **ATP + H₂O → ADP + inorganic phosphate**. ATP is the demonstrated nucleotide substrate; the literature reviewed here does not establish a physiologically relevant alternative nucleotide for P52612. | Purified enterobacterial FliI/homolog biochemical assays; general *E. coli*–*Salmonella* relevance rather than a P52612-specific kinetic study. | K₀.₅(ATP) **0.65 ± 0.10 mM**; Vmax **0.28 ± 0.10 μmol ATP·min⁻¹·mg⁻¹**; Hill coefficient **1.92 ± 0.05**. | Claret et al., June 2003, [doi:10.1046/j.1365-2958.2003.03506.x](https://doi.org/10.1046/j.1365-2958.2003.03506.x) (claret2003oligomerizationandactivation pages 1-2, claret2003oligomerizationandactivation pages 2-4) |
-| Structure and stoichiometry | Soluble FliI is predominantly monomeric but ATP/nucleotide and membrane association promote an active **homohexameric ring**. In the basal-body ATPase complex, the consensus stoichiometry is **FliH₁₂–FliI₆–FliJ₁**, architecturally related to F/V/F₁-type ATPases. | Purified enterobacterial FliI plus principally *Salmonella* structural/functional evidence; inferred as conserved for *E. coli* K-12. | Ring diameter **≈10 nm**; central cavity **2.5–3.0 nm**; AMP-PNP increased complete-ring yield **≈20-fold**. | Claret et al., June 2003, [doi:10.1046/j.1365-2958.2003.03506.x](https://doi.org/10.1046/j.1365-2958.2003.03506.x); Minamino et al., May 2022, [doi:10.3389/fmicb.2022.864178](https://doi.org/10.3389/fmicb.2022.864178) (minamino2022insightintodistinct pages 1-2, claret2003oligomerizationandactivation pages 1-2, claret2003oligomerizationandactivation pages 2-4) |
-| Localization | FliI is a soluble/peripheral **cytoplasmic-inner-membrane ATPase** concentrated at the cytoplasmic face of the flagellar basal body; it has no transmembrane segment. Acidic phospholipids can recruit and activate it independently of the completed export apparatus. | Direct physiological fractionation chiefly in *S. Typhimurium*; binding to *E. coli* phospholipids and membrane targeting in heterologous *E. coli* support conservation but are not direct native-P52612 localization measurements. | Acidic phospholipids stimulated basal ATPase activity **≈10-fold**; activity was reported as **≈100-fold** above FliH-bound FliI without phospholipid. | Auvray et al., May 2002, [doi:10.1016/S0022-2836(02)00172-9](https://doi.org/10.1016/S0022-2836(02)00172-9) (auvray2002intrinsicmembranetargeting pages 1-2, auvray2002intrinsicmembranetargeting pages 2-4) |
-| Interaction network and pathway role | Cytosolic FliH₂–FliI complexes capture/deliver selected chaperone–substrate complexes. At the basal body, FliH associates with C-ring proteins FliN/FliM and FlhA; six FliI molecules surround FliJ, whose contact with FlhA helps activate the membrane export gate. FliI therefore promotes substrate delivery, initial gate entry, and efficient export rather than forming the transmembrane channel. | Conserved model derived mainly from *Salmonella* genetics, biochemistry, imaging, and structural work; applicable to the highly conserved *E. coli* fT3SS with species attribution retained. | FliI molecules exchange between basal-body-associated and freely diffusing pools several times per minute; more than six FliI-YFP molecules can associate with a basal body. | Bai et al., October 2014, [doi:10.1038/srep06528](https://doi.org/10.1038/srep06528); Halte & Erhardt, January 2021, [doi:10.3390/biom11020186](https://doi.org/10.3390/biom11020186) (halte2021proteinexportvia pages 4-6, halte2021proteinexportvia pages 6-7) |
-| Energy coupling | ATP hydrolysis improves substrate loading/gate activation, but it is **not tightly stoichiometrically coupled to every translocation step**. The inner-membrane export gate uses proton motive force as the principal energy source for processive protein movement. Proposed FliJ rotation and direct ATP-powered unfolding remain mechanistic models rather than established properties of native P52612. | Strong mutational and physiological evidence from *Salmonella* FliI homolog; conserved-system inference for *E. coli*. | FliI(E211D), with roughly **1/100** wild-type ATPase activity, produced filaments in **>90%** of cells; deleting residues 401–410 retained **≈40%** ATPase activity yet abolished flagellar formation, demonstrating uncoupling of bulk hydrolysis from productive export. | Minamino et al., December 2014, [doi:10.1038/srep07579](https://doi.org/10.1038/srep07579) (minamino2014thebacterialflagellar pages 1-2, minamino2014thebacterialflagellar pages 2-3) |
-| 2024 update: early-substrate targeting | Early rod/hook substrates possess a third, C-terminal export-targeting signal in addition to N-terminal signals. This targeting can occur without the ATPase complex or C ring, showing that FliI is important but not the sole route by which substrates reach the core gate; recognition is sequential. | Primary experiments in *S. Typhimurium*, not direct *E. coli* P52612 evidence. | Early export rate cited at approximately **1,700 amino acids·s⁻¹**; FlgE residues **I376** and **R380** were critical for the C-terminal signal phenotype. | Bryant & Fraser, published February 20, 2024, [doi:10.1128/mbio.03067-23](https://doi.org/10.1128/mbio.03067-23) (bryant2024identificationofa pages 13-15, bryant2024identificationofa pages 1-3) |
-| 2024 update: chaperone delivery | FlgN can bind the N-terminal region of FliI, strengthening the model that export chaperones couple low-abundance late substrates to the ATPase; this expands the conserved interaction model but does not demonstrate the interaction for P52612 directly. | Primary biochemical evidence from ***Helicobacter pylori*** homologs; explicitly not *E. coli*. | FlgN–FlgK stoichiometry **1:1**; FlgN bound FliI or its N-terminal domain with **submicromolar affinity**. | Dhindwal et al., January 2024, [doi:10.1002/pro.4882](https://doi.org/10.1002/pro.4882) (dhindwal2024helicobacterpyloriflgn pages 1-2) |
+| Identity and family | P52612/b1941 is **FliI**, the flagellum-specific ATPase of the *E. coli* K-12 flagellar type III secretion system; it is a Walker-type AAA+ ATPase evolutionarily and structurally related to F₁-ATPase α/β subunits. | Target accession/locus identity; structural and comparative evidence, principally the *Salmonella* ortholog (imada2007structuralsimilaritybetween pages 1-1) | ADP-bound FliI structure solved at **2.4 Å**; three domains include Walker A/B-containing ATPase and C-terminal domains. | High |
+| Catalytic reaction and specificity | FliI catalyzes **ATP + H₂O → ADP + Pi**; Mg²⁺–ATP is the experimentally supported nucleotide substrate. Its physiological protein clients are flagellar export substrates, but these are cargo—not chemical substrates of the ATPase reaction. | Biochemical and reconstitution evidence, principally *Salmonella* ortholog (terashima2018invitroreconstitution pages 8-9, minamino2014thebacterialflagellar pages 2-3) | Reconstituted export used **5 mM ATP**; catalytically inactive E211Q still bound Mg²⁺–ATP but did not support transport. | High for ATPase reaction; moderate for exact *E. coli* kinetics |
+| Oligomeric organization | ATP-bound FliI assembles into a homohexameric ring with six intersubunit catalytic sites; FliJ occupies the central pore and FliH dimers bind the FliI N-terminal domains. | Structural, biochemical, and review synthesis; principally *Salmonella* ortholog (minamino2014thebacterialflagellar pages 1-2, imada2007structuralsimilaritybetween pages 1-1, minamino2022insightintodistinct pages 1-2) | Assembled ATPase complex stoichiometry: **FliH₁₂–FliI₆–FliJ₁**; **six** catalytic sites. | High for conserved architecture |
+| Cellular localization | FliI is a soluble cytoplasmic protein that cycles between a cytoplasmic FliH₂–FliI carrier complex and a basal-body-associated, peripheral-membrane ATPase complex on the cytoplasmic face of the inner membrane; it is not an integral membrane protein. | Localization and interaction evidence, principally *Salmonella* ortholog (minamino2014thebacterialflagellar pages 4-5, halte2021proteinexportvia pages 4-6, minamino2022insightintodistinct pages 1-2) | Cytoplasmic carrier: **FliH₂–FliI₁**; basal complex: **FliH₁₂–FliI₆–FliJ₁**. | High for system-level localization; moderate for direct P52612 measurements |
+| Substrate delivery | Cytoplasmic FliH₂–FliI dynamically delivers selected flagellar proteins and chaperone–cargo complexes to the FlhA docking platform; demonstrated clients include FlgN–FlgK and FliT–FliD, whereas FliC–FliS was not detected as a comparable FliH₂–FliI client in the cited synthesis. | Protein-interaction and mechanistic evidence, largely *Salmonella* ortholog (minamino2014thebacterialflagellar pages 4-5, halte2021proteinexportvia pages 4-6) | Rapid association–dissociation with the basal export platform supports sequential substrate transfer; no universal cargo-binding constant is established. | Moderate–high |
+| Export-gate activation | ATP binding/hydrolysis and conformational cycling of the FliI₆–FliJ complex activate the FlhA-containing transmembrane export gate; FliJ behaves as a central stalk or “ignition key.” FliI therefore facilitates loading and gate activation rather than acting as the membrane translocation channel itself. | Mutational, structural, and reconstitution evidence, principally *Salmonella* ortholog (minamino2014thebacterialflagellar pages 5-7, terashima2018invitroreconstitution pages 8-9, minamino2022insightintodistinct pages 1-2) | ATP binding to E211Q FliI₆ produced an inferred **~80°** FliJ rotation, but hydrolysis-deficient complexes showed severely impaired activation/export. | Moderate–high; rotational model remains mechanistic interpretation |
+| Relationship to proton motive force | FliI ATP hydrolysis promotes efficient gate activation, but sustained export is normally powered chiefly by ion motive force through the membrane export gate. ATPase activity is therefore facilitatory and conditionally bypassable rather than obligatorily coupled one ATP per exported segment. | Genetic and biochemical evidence, principally *Salmonella* ortholog (minamino2014thebacterialflagellar pages 1-2, halte2021proteinexportvia pages 4-6, halte2021proteinexportvia pages 6-7) | Export can remain processive with extremely infrequent hydrolysis; in vitro, ATP hydrolysis alone drove FlgD/FlgE transport without bulk PMF when FliH₂–FliI and FliJ were supplied (terashima2018invitroreconstitution pages 8-9). | High that ATPase and PMF have distinct roles; moderate on exact energy partition in vivo |
+| Catalytic Glu-211 variants | Glu-211 activates water for nucleophilic attack on ATP’s γ-phosphate. E211D hydrolyzes ATP very slowly yet supports appreciable export, whereas E211Q binds ATP and assembles but lacks measurable hydrolysis and strongly impairs export. | Site-directed mutagenesis and export assays, *Salmonella* ortholog (minamino2014thebacterialflagellar pages 1-2, terashima2018invitroreconstitution pages 8-9, minamino2014thebacterialflagellar pages 2-3) | E211D ATPase activity was about **1/100 of wild type**; **>80%** of cells remained motile and swimming speed was about **50%** of wild type in the cited study. | High for *Salmonella*; high-confidence ortholog inference for catalytic role |
+| Residues 401–410 | The C-terminal 401–410 segment is important for coupling catalysis to export-gate activation rather than merely for hexamer formation or ATP turnover. | Deletion-mutant analysis, *Salmonella* ortholog (minamino2014thebacterialflagellar pages 1-2, minamino2014thebacterialflagellar pages 4-5, minamino2014thebacterialflagellar pages 2-3) | Δ401–410 retained normal hexamer formation and approximately **40%** of wild-type ATPase activity but produced little export and no effective flagellar formation. | High for *Salmonella*; moderate–high for conserved *E. coli* role |
+| 2024 ordered-export development | FliH/FliI were shown to help FlhA impose correct temporal order on flagellar export by supporting FlhA-ring remodeling and correction of substrate-recognition errors during the rod/hook-to-filament transition. This is a refinement of FliI’s role beyond generic ATP supply. | 2024 primary study in *Salmonella enterica* serovar Typhimurium; ortholog inference for *E. coli* P52612 (kinoshita2024flihandflii pages 1-2) | Hook completion occurs at approximately **55 nm** before switching toward filament-type substrates; FlhA forms a **nonameric** cytoplasmic ring. | Moderate–high for conserved mechanism; not direct *E. coli* K-12 evidence |
 
 
-*Table: Compact evidence map for *E. coli* K-12 FliI/P52612, separating conserved enterobacterial conclusions from experiments performed in *Salmonella* or *H. pylori*. It summarizes biochemical, structural, localization, pathway, energetic, and 2024 evidence with quantitative results.*
+*Table: Evidence-weighted annotation of *E. coli* K-12 FliI, explicitly distinguishing accession-level identity from detailed mechanistic findings obtained mainly with the closely related *Salmonella* ortholog.*
+
+## 1. Identity verification and domain interpretation
+
+The supplied accession, organism, locus, and product description all converge on the same protein: the flagellar export ATPase FliI of *E. coli* K-12. The reported InterPro assignments—AAA+ ATPase, ATPase α/β chains, F₁/V₁/A₁ nucleotide-binding fold, and T3SS FliI/YscN—fit the experimentally established architecture. FliI has an N-terminal interaction domain, a central nucleotide-binding ATPase domain containing Walker A and Walker B motifs, and a C-terminal domain involved in oligomeric and functional coupling. An ADP-bound FliI structure was determined at **2.4 Å** and showed close structural correspondence to F₁-ATPase α/β subunits. This explains the ATPase α/β-family annotation but does **not** mean FliI is a conventional membrane ATP synthase subunit. (imada2007structuralsimilaritybetween pages 1-1)
+
+The functional analogy extends to higher-order architecture: six FliI molecules form a ring, while FliJ occupies its central pore in a stalk-like position. FliH dimers associate with the FliI N-terminal domains. The basal ATPase assembly is generally represented as **FliH₁₂–FliI₆–FliJ₁**, analogous in broad organization—not identical chemistry—to the soluble catalytic sector of rotary ATPases. Six ATPase active sites occur at FliI–FliI interfaces. (minamino2014thebacterialflagellar pages 1-2, minamino2022insightintodistinct pages 1-2)
+
+## 2. Biochemical reaction and substrate specificity
+
+### Catalytic substrate
+
+The chemical substrate is **ATP**, experimentally used as Mg²⁺–ATP. Hydrolysis produces ADP and phosphate. The catalytic glutamate corresponding to **Glu-211** activates water for attack on ATP’s γ-phosphate. The conservative E211D substitution lowers ATPase activity to approximately **1/100 of wild type**, whereas E211Q can bind Mg²⁺–ATP and assemble into a ring but lacks effective hydrolysis. These results distinguish nucleotide binding and oligomerization from catalysis. (terashima2018invitroreconstitution pages 8-9, minamino2014thebacterialflagellar pages 2-3)
+
+No robust evidence retrieved here establishes physiologically important hydrolysis of another nucleoside triphosphate by *E. coli* P52612. Accordingly, annotation should remain **ATP-specific ATPase** rather than a broad NTPase unless direct P52612 kinetics demonstrate otherwise.
+
+### Protein clients are cargo, not enzymatic substrates
+
+Flagellar proteins are often called FliI “substrates” in secretion literature, but chemically they are **export cargo**, not substrates consumed by the ATPase reaction. FliI participates in handling rod-, hook-, junction-, cap-, and filament-related proteins as they are exported through the flagellar type III secretion system. Documented chaperone–cargo interactions include FlgN–FlgK and FliT–FliD complexes; the same synthesis did not find comparable recruitment of FliC–FliS by soluble FliH₂–FliI. Cargo recognition is therefore selective and distributed among FliI/FliH, FliJ, export chaperones, FlhA, and other export-apparatus components rather than being a simple ATPase active-site specificity. (minamino2014thebacterialflagellar pages 4-5, halte2021proteinexportvia pages 4-6)
+
+## 3. Molecular mechanism
+
+### 3.1 Cytoplasmic carrier state
+
+FliI exists in the cytoplasm as part of a **FliH₂–FliI₁ heterotrimer**. This complex binds selected free export substrates or chaperone–cargo complexes and cycles rapidly between the cytoplasmic pool and the flagellar export platform. It is therefore best viewed as a dynamic substrate-delivery and loading module rather than a permanently fixed motor. (minamino2014thebacterialflagellar pages 4-5, minamino2022insightintodistinct pages 1-2)
+
+### 3.2 Basal-body ATPase state
+
+At the flagellar base, six FliI subunits form a ring with FliJ in the center. FliH connects this assembly to the cytoplasmic C ring through FliN/FliM-associated interactions and also supports association with FlhA. FliI contacts or functionally interacts with FliH, FliJ, the cytoplasmic regions of FlhA and FlhB, and chaperone–cargo complexes. FliI is therefore adjacent to the inner membrane but is **not transmembrane**. (minamino2014thebacterialflagellar pages 4-5, imada2007structuralsimilaritybetween pages 1-1, halte2021proteinexportvia pages 4-6)
+
+### 3.3 Export-gate activation and energy coupling
+
+The current model assigns separable but coordinated functions to FliI:
+
+1. **Cargo delivery/loading:** FliH₂–FliI recruits and transfers export-competent substrates to the FlhA docking platform.
+2. **ATP-dependent conformational cycling:** ATP binding, hydrolysis, and intersubunit cooperativity reorganize the FliI₆ ring.
+3. **FliJ-mediated gate activation:** FliJ behaves as a central stalk or “ignition key”; movement within FliI₆ promotes its productive interaction with FlhA.
+4. **Ion-driven translocation:** the activated membrane gate couples inward ion flow—normally H⁺ in *E. coli* and *Salmonella*—to outward movement of unfolded flagellar proteins into the axial channel. (minamino2014thebacterialflagellar pages 5-7, minamino2014thebacterialflagellar pages 4-5, minamino2022insightintodistinct pages 1-2)
+
+The proposed rotary component is supported by structural analogy and mutational behavior but should not be interpreted as direct proof that FliI performs continuous F₁-like rotation in living *E. coli*. ATP binding to hydrolysis-defective FliI(E211Q) was associated with an inferred FliJ rotation of approximately **80°**, but such events were extremely infrequent without hydrolysis. (minamino2014thebacterialflagellar pages 5-7)
+
+### 3.4 ATP hydrolysis is important but not the sole translocation energy source
+
+Several observations rule out a simple “one ATP drives one translocation step” model. In *Salmonella*, E211D retained very low ATPase activity yet more than **80% of cells were motile**, with swimming speed around **50% of wild type**. Export remained processive despite extremely infrequent ATP hydrolysis. Conversely, deleting FliI residues **401–410** preserved normal hexamer formation and about **40% of ATPase activity** but caused severe export and flagellar-assembly defects. ATP turnover rate alone therefore does not determine export rate; productive coupling to gate activation is crucial. (minamino2014thebacterialflagellar pages 1-2, minamino2014thebacterialflagellar pages 2-3)
+
+Reconstitution experiments add an important qualification. In inverted membrane vesicles, **5 mM ATP**, **1.5 μM FliH₂/FliI**, **0.25 μM FliJ**, and flagellar cargo supported export, and ATP hydrolysis could drive FlgD/FlgE transport even when bulk PMF was dissipated with **10 μM CCCP**. However, under normal cellular conditions the membrane export gate and ion motive force provide the principal sustained translocation engine, with FliI markedly improving initiation, loading, efficiency, and robustness. (terashima2018invitroreconstitution pages 8-9, halte2021proteinexportvia pages 6-7)
 
 ## 4. Cellular localization
 
-FliI lacks an integral transmembrane segment. It occupies two related cellular pools:
+FliI functions on the **cytoplasmic side of the inner membrane at the flagellar basal body**. It has two operational localizations:
 
-1. A soluble cytoplasmic pool, prominently as **FliH₂–FliI heterotrimers**, which can bind cargo/chaperone complexes and cycle onto the export apparatus.
-2. A basal-body-associated pool at the **cytoplasmic face of the inner membrane**, where it forms the FliI hexamer with FliH and FliJ adjacent to the export gate. (halte2021proteinexportvia pages 4-6, minamino2022insightintodistinct pages 1-2)
+- a **soluble cytoplasmic pool**, mainly as FliH₂–FliI, involved in substrate capture and delivery;
+- a **peripheral membrane/basal-body-associated pool**, where FliI₆–FliJ is tethered by FliH to the C ring and export gate.
 
-Physiological fractionation in *S. Typhimurium* localized FliI and FliH predominantly to the inner-membrane fraction. Their targeting persisted without the export gate, basal body, or other flagellar proteins. Purified proteins bound liposomes made from *E. coli* phospholipids, and heterologously expressed FliI also associated with membranes in nonflagellated *E. coli*. These results support intrinsic peripheral-membrane targeting through acidic phospholipids, although the native-cell fractionation was performed principally in *Salmonella*, not K-12 P52612. (auvray2002intrinsicmembranetargeting pages 1-2, auvray2002intrinsicmembranetargeting pages 2-4)
+It is not extracellular, periplasmic, or an integral membrane channel. Cargo accepted by the export apparatus passes from the cytoplasm through the inner-membrane gate and then through the narrow central channel of the growing rod, hook, and filament to assemble at the distal tip. (minamino2014thebacterialflagellar pages 4-5, halte2021proteinexportvia pages 4-6, minamino2022insightintodistinct pages 1-2)
 
-Acidic bacterial phospholipids stimulated basal FliI ATPase activity approximately **tenfold**; activity was reported to be about **100-fold greater** than FliH-bound FliI in the absence of phospholipids. Thus, membrane association is not merely positional: it can promote oligomerization and catalytic activation. (auvray2002intrinsicmembranetargeting pages 1-2, claret2003oligomerizationandactivation pages 2-4)
+## 5. Biological pathway
 
-FliI acts on the cytoplasmic side of the inner membrane. It is not exported into the periplasm, extracellular milieu, hook, or filament.
+FliI belongs to the **flagellar type III secretion/flagellar assembly pathway**, not directly to chemotactic signal transduction. Its immediate pathway context is:
 
-## 5. Pathway and interaction network
+**cytoplasmic flagellar cargo → FliH/FliI/chaperone handling → FlhA docking and FliJ-dependent gate activation → FliP/FliQ/FliR/FlhB/FlhA export gate → axial channel → distal flagellar assembly.**
 
-### 5.1 Flagellar type III secretion pathway
+Loss or severe impairment of FliI reduces efficient export of structural subunits, thereby compromising rod, hook, and filament construction and ultimately motility. The phenotype is downstream of assembly failure rather than evidence that FliI directly senses chemoeffectors or generates flagellar rotation.
 
-The fT3SS exports flagellar axial proteins from the cytoplasm across the inner membrane. These proteins subsequently move through the narrow central channel of the growing rod, hook, and filament and assemble at the distal tip. The membrane gate comprises FlhA, FlhB, and FliPQR, whereas FliI belongs to its associated cytoplasmic ATPase complex. (minamino2014thebacterialflagellar pages 1-2, bryant2024identificationofa pages 1-3)
+## 6. Recent developments, emphasizing 2023–2024
 
-FliI is consequently part of the **flagellar assembly pathway**, not the chemotaxis signaling pathway itself and not the mature flagellar rotary motor’s torque-generating stator. Loss of FliI impairs flagellar assembly and motility because axial subunits are exported inefficiently, not because FliI directly rotates completed flagella.
+### Ordered export and specificity switching—March 2024
 
-### 5.2 Principal interactions
+Kinoshita and colleagues showed in *Salmonella enterica* serovar Typhimurium that FliH/FliI do more than supply ATPase activity: they help the nonameric FlhA cytoplasmic ring impose correct temporal order on exported substrates. Mutations in FlhA’s conserved GYXLI motif indicated that the ATPase complex supports remodeling of FlhA from rod/hook-substrate recognition toward filament-substrate recognition and helps correct recognition errors. The normal transition occurs after completion of an approximately **55-nm hook**. This refines FliI’s annotation to include export-order quality control and specificity-switch assistance. The result is highly relevant to *E. coli* because the apparatus is conserved, but it is ortholog evidence rather than a direct P52612 experiment. Published March 2024: https://doi.org/10.1038/s42003-024-06081-0. (kinoshita2024flihandflii pages 1-2)
 
-- **FliH:** A FliH dimer binds the N-terminal region of FliI, represses free ATPase activity, helps form a soluble substrate-carrier complex, and anchors the assembled ATPase at the flagellar base. The FliH C-terminal half mediates FliI binding, while acidic phospholipids favor activation at the membrane. (auvray2002intrinsicmembranetargeting pages 1-2)
-- **FliJ:** FliJ occupies the center of the FliI hexamer and contacts FlhA. This interaction helps convert the export gate into an efficient ion-driven protein transporter. Proposed ATP-coupled FliJ rotation remains incompletely demonstrated. (halte2021proteinexportvia pages 4-6, minamino2022insightintodistinct pages 1-2)
-- **FliN/FliM C ring:** FliH links the ATPase complex to the cytoplasmic C ring through FliN/FliM. This places FliI directly below the membrane export apparatus. (halte2021proteinexportvia pages 4-6, minamino2026uncouplingsubstratedelivery pages 1-2)
-- **FlhA and FlhB:** FliH/FliI/FliJ communicate with cytoplasmic domains of the export gate. FliI mutants retain detectable interactions with FlhA, FlhB, FliJ, and chaperone–cargo complexes even when catalysis or productive coupling is altered. (minamino2014thebacterialflagellar pages 2-3, claret2003oligomerizationandactivation pages 1-2)
-- **Chaperones and cargo:** Late substrates can be delivered as chaperone–substrate complexes. The FliH₂–FliI carrier and basal FliI ring are interpreted respectively as a dynamic carrier and more static substrate loader. FliI is therefore selective at the level of partner recognition, even though its chemical substrate remains ATP. (halte2021proteinexportvia pages 4-6)
+### Multiple substrate-targeting signals—March 2024
 
-## 6. Energy coupling: what ATP hydrolysis does—and does not do
+Bryant and Fraser identified a C-terminal targeting signal in early flagellar subunits and concluded that this targeting step could occur without the flagellar ATPase and cytoplasmic-ring components. This is conceptually important: not every recognition event is mediated by FliI. Instead, substrates undergo sequential recognition by several parts of the export machinery, with FliI contributing particular delivery, loading, and regulatory steps. Published March 2024: https://doi.org/10.1128/mbio.03067-23.
 
-Earlier models treated FliI as the direct motor powering polypeptide movement. Current evidence supports a more nuanced division of labor. ATP hydrolysis enhances substrate recruitment, initial gate entry, and productive activation of the membrane machinery. The transmembrane gate then uses proton motive force—especially membrane potential under efficient operating conditions—to drive processive export. (halte2021proteinexportvia pages 6-7, minamino2014thebacterialflagellar pages 1-2, minamino2022insightintodistinct pages 1-2)
+### Current expert synthesis—November 2024
 
-The strongest quantitative uncoupling evidence comes from *Salmonella*. FliI(E211D), with approximately **1%** of wild-type ATPase activity, produced filaments in **more than 90% of cells**; cells were over **80% motile** and swam at roughly **50% of wild-type speed**. Conversely, deletion of FliI residues 401–410 abolished flagellar formation despite retaining approximately **40%** ATPase activity and the capacity to form hexamers. ATP-turnover rate therefore does not set the export rate by simple stoichiometric coupling; correct coupling to FliJ/FlhA and substrate entry matters more than bulk hydrolysis alone. (minamino2014thebacterialflagellar pages 1-2, minamino2014thebacterialflagellar pages 2-3)
+A 2024 structural review places FliI within an increasingly high-resolution model of flagellar assembly, emphasizing dynamic interactions among the cytoplasmic ATPase, chaperone–cargo complexes, and membrane export platform. It also identifies the 2024 ordered-export study as a significant refinement of FliH/FliI function. Published November 2024: https://doi.org/10.3390/biom14121488. (nakamura2024structureanddynamics pages 18-19)
 
-Expert reviews accordingly characterize FliI as facilitating efficient secretion rather than being absolutely required for every translocation event. Under bypass conditions with altered FlhB, elevated substrate abundance, or favorable proton motive force, limited secretion can occur without a functional FliH/FliI ATPase complex. This does not make FliI dispensable under normal physiology; it means that the membrane gate contains the core ion-powered translocation capability. (halte2021proteinexportvia pages 6-7, minamino2022insightintodistinct pages 1-2)
+No direct 2023–2024 biochemical characterization specifically of *E. coli* K-12 P52612 was identified. The newest detailed mechanistic work remains dominated by *Salmonella*, whose homologous apparatus is routinely used as the experimentally tractable enteric model.
 
-## 7. Recent developments, 2023–2024
+## 7. Current applications and real-world relevance
 
-Direct 2023–2024 studies devoted specifically to native *E. coli* K-12 P52612 are limited. Recent work mainly refines the conserved pathway using *Salmonella* or other flagellar systems.
+FliI itself is primarily a **research target**, not an approved clinical or industrial product target. Current applications include:
 
-### 7.1 Sequential targeting signals in early substrates
+- **Mechanistic reconstitution:** inverted-membrane-vesicle assays use FliH/FliI/FliJ to quantify export under controlled ATP and PMF conditions, separating ATPase-dependent activation from ion-driven transport. (terashima2018invitroreconstitution pages 8-9)
+- **Synthetic biology and nanomachines:** understanding substrate signals and ATPase-dependent loading informs attempts to redirect T3SS export or engineer bacterial flagella as extracellular assembly systems.
+- **Anti-virulence discovery:** FliI is homologous to injectisome ATPases such as YscN/SctN. Conserved ATPase assembly or ATPase–gate coupling interfaces are candidate inhibitor sites for suppressing motility or type III secretion. Translation requires selectivity because the ATP-binding fold resembles other P-loop/ATPase proteins.
+- **Motility and biofilm research:** perturbing FliI offers a controlled way to block flagellar assembly and test consequences of motility, surface colonization, and community behavior without directly targeting the rotary motor.
 
-A primary study published **20 February 2024** identified a third, C-terminal export signal in early flagellar rod/hook substrates. In *Salmonella* FlgE, residues I376 and R380 were critical for the targeting phenotype. Importantly, targeting through this signal did not require the flagellar ATPase complex or the cytoplasmic C ring. Early substrates therefore interact sequentially with several export components, and FliI is not their only route to the membrane machinery. The study cited early-stage export rates of approximately **1,700 amino acids per second**. [Bryant & Fraser, *mBio* 15, 2024; DOI: https://doi.org/10.1128/mbio.03067-23] (bryant2024identificationofa pages 13-15, bryant2024identificationofa pages 1-3)
+These are active research uses. Evidence retrieved here does not support claiming that an FliI-specific inhibitor has reached routine clinical or field implementation.
 
-This finding narrows FliI’s annotation: it is a major efficiency, loading, and activation factor, but not a universal receptor required for the first targeting event of every early substrate.
+## 8. Evidence limitations and annotation confidence
 
-### 7.2 Chaperone–FliI recognition
+**High-confidence annotation:** P52612 is the *E. coli* K-12 flagellar T3SS ATPase FliI; it hydrolyzes ATP and functions with FliH/FliJ at the cytoplasmic face of the basal export apparatus. Its ATPase-family and F₁-like structural assignments are strongly supported. (imada2007structuralsimilaritybetween pages 1-1, minamino2022insightintodistinct pages 1-2)
 
-A **January 2024** *Helicobacter pylori* study found that FlgN bound FlgK with 1:1 stoichiometry and bound FliI or its N-terminal domain with **submicromolar affinity**. This extends the model in which FliI captures low-abundance, chaperone-bound late substrates. It is compelling conserved-homolog evidence, but it is not a direct interaction measurement for *E. coli* P52612. [Dhindwal et al., *Protein Science* 33, 2024; DOI: https://doi.org/10.1002/pro.4882] (dhindwal2024helicobacterpyloriflgn pages 1-2)
+**High-confidence conserved mechanism:** hexameric FliI, FliJ central-stalk association, FliH tethering, substrate delivery, and export-gate activation are supported by convergent structural, genetic, biochemical, and reconstitution evidence. (minamino2014thebacterialflagellar pages 1-2, terashima2018invitroreconstitution pages 8-9, halte2021proteinexportvia pages 4-6)
 
-### 7.3 Current expert consensus
+**Principal caveat:** many precise residue-level, stoichiometric, and energy-coupling experiments were performed with *Salmonella* FliI. They are persuasive ortholog evidence for *E. coli* P52612 but should not be represented as direct measurements of the K-12 protein’s kinetic constants.
 
-Recent reviews retain the FliH–FliI–FliJ ATPase complex as the cytoplasmic substrate-delivery and gate-activation module while emphasizing that the exact coupling between ATP turnover, hypothetical FliJ rotation, substrate unfolding, and ion-driven export remains unresolved. The principal unresolved question is not whether FliI hydrolyzes ATP, but how individual hydrolysis events reorganize the FliI–FliJ–FlhA machinery to make substrate entry and ion coupling efficient. (halte2021proteinexportvia pages 4-6, halte2021proteinexportvia pages 6-7, nakamura2024structureanddynamics pages 18-19)
+**Best concise functional annotation:**
 
-## 8. Applications and real-world relevance
-
-FliI currently has no approved diagnostic, therapeutic, or industrial application. Its practical importance is chiefly as:
-
-- a mechanistic model for assembly of bacterial surface nanomachines;
-- a genetic handle for controlling flagellar assembly and motility in laboratory strains;
-- a homologous model for virulence-associated injectisome ATPases such as YscN/SctN;
-- a potential anti-virulence target, because inhibiting conserved T3SS ATPase–chaperone or ATPase–gate interactions could reduce motility or secretion without directly inhibiting growth;
-- a component relevant to engineered protein secretion and synthetic nanomachines.
-
-These applications remain research-stage. The ability of ion motive force and bypass mutations to support residual export means that an ATP-competitive FliI inhibitor might reduce efficiency without completely eliminating secretion. Interfaces required for correct oligomerization, cargo recognition, or FliJ/FlhA coupling may therefore be more discriminating targets than the highly conserved nucleotide-binding pocket alone. The 2024 sequential-signal study explicitly notes implications for anti-infective design, but it does not report a validated FliI-directed drug. (bryant2024identificationofa pages 13-15, bryant2024identificationofa pages 1-3)
-
-## 9. Recommended annotation
-
-**Molecular function:** Flagellar type III secretion ATPase; catalyzes Mg²⁺-dependent ATP hydrolysis and couples nucleotide-dependent oligomerization to export-substrate loading and activation of the flagellar protein export gate.
-
-**Biological process:** Flagellum assembly; flagellar type III protein export; delivery and initial entry of rod, hook, junction, cap, and filament components into the export pathway.
-
-**Cellular component/localization:** Cytoplasm and peripheral cytoplasmic face of the inner membrane; concentrated beneath the flagellar basal body as part of the FliH₁₂–FliI₆–FliJ₁ complex.
-
-**Substrate specificity:** ATP is the demonstrated enzymatic substrate. Flagellar proteins and chaperone–substrate complexes are binding/export cargo, not hydrolyzed chemical substrates.
-
-**Functional qualifier:** ATP hydrolysis promotes efficient cargo handling and export-gate activation but is not tightly coupled to every polypeptide-translocation step; proton motive force supplies the principal energy for processive membrane translocation.
-
-**Confidence:** High for identity, ATPase activity, pathway, and conserved interaction architecture; moderate for assigning every detailed *Salmonella*-derived mechanistic feature directly to native *E. coli* K-12 P52612; low-to-moderate for the proposed rotary FliJ/unfoldase mechanism.
+> FliI is a cytoplasmic, basal-body-associated Mg²⁺-ATPase of the *E. coli* flagellar type III secretion system. It cycles between a soluble FliH₂–FliI substrate-delivery complex and a FliH₁₂–FliI₆–FliJ₁ ATPase ring at the flagellar base, where ATP-dependent conformational changes promote cargo loading, FlhA-containing export-gate activation, and correctly ordered export. The membrane gate then uses ion motive force to translocate flagellar structural proteins for distal assembly.
 
 References
 
-1. (halte2021proteinexportvia pages 4-6): Manuel Halte and Marc Erhardt. Protein export via the type iii secretion system of the bacterial flagellum. Biomolecules, 11:186, Jan 2021. URL: https://doi.org/10.3390/biom11020186, doi:10.3390/biom11020186. This article has 60 citations.
+1. (minamino2014thebacterialflagellar pages 1-2): Tohru Minamino, Yusuke V. Morimoto, Miki Kinoshita, Phillip D. Aldridge, and Keiichi Namba. The bacterial flagellar protein export apparatus processively transports flagellar proteins even with extremely infrequent atp hydrolysis. Scientific Reports, Dec 2014. URL: https://doi.org/10.1038/srep07579, doi:10.1038/srep07579. This article has 106 citations and is from a peer-reviewed journal.
 
-2. (halte2021proteinexportvia pages 6-7): Manuel Halte and Marc Erhardt. Protein export via the type iii secretion system of the bacterial flagellum. Biomolecules, 11:186, Jan 2021. URL: https://doi.org/10.3390/biom11020186, doi:10.3390/biom11020186. This article has 60 citations.
+2. (terashima2018invitroreconstitution pages 8-9): Hiroyuki Terashima, Akihiro Kawamoto, Chinatsu Tatsumi, Keiichi Namba, Tohru Minamino, and Katsumi Imada. <i>in vitro</i> reconstitution of functional type iii protein export and insights into flagellar assembly. mBio, Jul 2018. URL: https://doi.org/10.1128/mbio.00988-18, doi:10.1128/mbio.00988-18. This article has 39 citations and is from a domain leading peer-reviewed journal.
 
-3. (minamino2014thebacterialflagellar pages 1-2): Tohru Minamino, Yusuke V. Morimoto, Miki Kinoshita, Phillip D. Aldridge, and Keiichi Namba. The bacterial flagellar protein export apparatus processively transports flagellar proteins even with extremely infrequent atp hydrolysis. Scientific Reports, Dec 2014. URL: https://doi.org/10.1038/srep07579, doi:10.1038/srep07579. This article has 106 citations and is from a peer-reviewed journal.
+3. (minamino2022insightintodistinct pages 1-2): Tohru Minamino, Miki Kinoshita, and Keiichi Namba. Insight into distinct functional roles of the flagellar atpase complex for flagellar assembly in salmonella. Frontiers in Microbiology, May 2022. URL: https://doi.org/10.3389/fmicb.2022.864178, doi:10.3389/fmicb.2022.864178. This article has 41 citations and is from a peer-reviewed journal.
 
-4. (minamino2022insightintodistinct pages 1-2): Tohru Minamino, Miki Kinoshita, and Keiichi Namba. Insight into distinct functional roles of the flagellar atpase complex for flagellar assembly in salmonella. Frontiers in Microbiology, May 2022. URL: https://doi.org/10.3389/fmicb.2022.864178, doi:10.3389/fmicb.2022.864178. This article has 41 citations and is from a peer-reviewed journal.
+4. (imada2007structuralsimilaritybetween pages 1-1): Katsumi Imada, Tohru Minamino, Aiko Tahara, and Keiichi Namba. Structural similarity between the flagellar type iii atpase flii and f1-atpase subunits. Proceedings of the National Academy of Sciences, 104:485-490, Jan 2007. URL: https://doi.org/10.1073/pnas.0608090104, doi:10.1073/pnas.0608090104. This article has 190 citations and is from a highest quality peer-reviewed journal.
 
-5. (claret2003oligomerizationandactivation pages 1-2): Laurent Claret, Susannah R. Calder, Matthew Higgins, and Colin Hughes. Oligomerization and activation of the flii atpase central to bacterial flagellum assembly. Molecular Microbiology, 48:1349-1355, Jun 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03506.x, doi:10.1046/j.1365-2958.2003.03506.x. This article has 137 citations and is from a domain leading peer-reviewed journal.
+5. (minamino2014thebacterialflagellar pages 2-3): Tohru Minamino, Yusuke V. Morimoto, Miki Kinoshita, Phillip D. Aldridge, and Keiichi Namba. The bacterial flagellar protein export apparatus processively transports flagellar proteins even with extremely infrequent atp hydrolysis. Scientific Reports, Dec 2014. URL: https://doi.org/10.1038/srep07579, doi:10.1038/srep07579. This article has 106 citations and is from a peer-reviewed journal.
 
-6. (minamino2026uncouplingsubstratedelivery pages 1-2): Tohru Minamino, Miki Kinoshita, Yuki Tajimi, Takayuki Uchihashi, and Keiichi Namba. Uncoupling substrate delivery from export gate activation reveals distinct roles of the flagellar atpase complex. Frontiers in Microbiology, May 2026. URL: https://doi.org/10.3389/fmicb.2026.1841110, doi:10.3389/fmicb.2026.1841110. This article has 0 citations and is from a peer-reviewed journal.
+6. (minamino2014thebacterialflagellar pages 4-5): Tohru Minamino, Yusuke V. Morimoto, Miki Kinoshita, Phillip D. Aldridge, and Keiichi Namba. The bacterial flagellar protein export apparatus processively transports flagellar proteins even with extremely infrequent atp hydrolysis. Scientific Reports, Dec 2014. URL: https://doi.org/10.1038/srep07579, doi:10.1038/srep07579. This article has 106 citations and is from a peer-reviewed journal.
 
-7. (claret2003oligomerizationandactivation pages 2-4): Laurent Claret, Susannah R. Calder, Matthew Higgins, and Colin Hughes. Oligomerization and activation of the flii atpase central to bacterial flagellum assembly. Molecular Microbiology, 48:1349-1355, Jun 2003. URL: https://doi.org/10.1046/j.1365-2958.2003.03506.x, doi:10.1046/j.1365-2958.2003.03506.x. This article has 137 citations and is from a domain leading peer-reviewed journal.
+7. (halte2021proteinexportvia pages 4-6): Manuel Halte and Marc Erhardt. Protein export via the type iii secretion system of the bacterial flagellum. Biomolecules, 11:186, Jan 2021. URL: https://doi.org/10.3390/biom11020186, doi:10.3390/biom11020186. This article has 60 citations.
 
-8. (minamino2014thebacterialflagellar pages 2-3): Tohru Minamino, Yusuke V. Morimoto, Miki Kinoshita, Phillip D. Aldridge, and Keiichi Namba. The bacterial flagellar protein export apparatus processively transports flagellar proteins even with extremely infrequent atp hydrolysis. Scientific Reports, Dec 2014. URL: https://doi.org/10.1038/srep07579, doi:10.1038/srep07579. This article has 106 citations and is from a peer-reviewed journal.
+8. (minamino2014thebacterialflagellar pages 5-7): Tohru Minamino, Yusuke V. Morimoto, Miki Kinoshita, Phillip D. Aldridge, and Keiichi Namba. The bacterial flagellar protein export apparatus processively transports flagellar proteins even with extremely infrequent atp hydrolysis. Scientific Reports, Dec 2014. URL: https://doi.org/10.1038/srep07579, doi:10.1038/srep07579. This article has 106 citations and is from a peer-reviewed journal.
 
-9. (auvray2002intrinsicmembranetargeting pages 1-2): Frédéric Auvray, Amanda J. Ozin, Laurent Claret, and Colin Hughes. Intrinsic membrane targeting of the flagellar export atpase flii: interaction with acidic phospholipids and flih. Journal of molecular biology, 318 4:941-50, May 2002. URL: https://doi.org/10.1016/s0022-2836(02)00172-9, doi:10.1016/s0022-2836(02)00172-9. This article has 81 citations and is from a domain leading peer-reviewed journal.
+9. (halte2021proteinexportvia pages 6-7): Manuel Halte and Marc Erhardt. Protein export via the type iii secretion system of the bacterial flagellum. Biomolecules, 11:186, Jan 2021. URL: https://doi.org/10.3390/biom11020186, doi:10.3390/biom11020186. This article has 60 citations.
 
-10. (auvray2002intrinsicmembranetargeting pages 2-4): Frédéric Auvray, Amanda J. Ozin, Laurent Claret, and Colin Hughes. Intrinsic membrane targeting of the flagellar export atpase flii: interaction with acidic phospholipids and flih. Journal of molecular biology, 318 4:941-50, May 2002. URL: https://doi.org/10.1016/s0022-2836(02)00172-9, doi:10.1016/s0022-2836(02)00172-9. This article has 81 citations and is from a domain leading peer-reviewed journal.
+10. (kinoshita2024flihandflii pages 1-2): Miki Kinoshita, Tohru Minamino, Takayuki Uchihashi, and Keiichi Namba. Flih and flii help flha bring strict order to flagellar protein export in salmonella. Communications Biology, Mar 2024. URL: https://doi.org/10.1038/s42003-024-06081-0, doi:10.1038/s42003-024-06081-0. This article has 18 citations and is from a peer-reviewed journal.
 
-11. (bryant2024identificationofa pages 13-15): Owain J. Bryant and Gillian M. Fraser. Identification of a new export signal that targets early subunits to the flagellar type iii secretion export machinery. mBio, Mar 2024. URL: https://doi.org/10.1128/mbio.03067-23, doi:10.1128/mbio.03067-23. This article has 1 citations and is from a domain leading peer-reviewed journal.
-
-12. (bryant2024identificationofa pages 1-3): Owain J. Bryant and Gillian M. Fraser. Identification of a new export signal that targets early subunits to the flagellar type iii secretion export machinery. mBio, Mar 2024. URL: https://doi.org/10.1128/mbio.03067-23, doi:10.1128/mbio.03067-23. This article has 1 citations and is from a domain leading peer-reviewed journal.
-
-13. (dhindwal2024helicobacterpyloriflgn pages 1-2): Poonam Dhindwal, Michal T. Boniecki, and Stanley A. Moore. <scp><i>helicobacter pylori</i> flgn</scp> binds its substrate <scp>flgk</scp> and the flagellum <scp>atpase flii</scp> in a similar manner observed for the <scp>flit</scp> chaperone. Jan 2024. URL: https://doi.org/10.1002/pro.4882, doi:10.1002/pro.4882. This article has 1 citations and is from a peer-reviewed journal.
-
-14. (nakamura2024structureanddynamics pages 18-19): Shuichi Nakamura and Tohru Minamino. Structure and dynamics of the bacterial flagellar motor complex. Biomolecules, 14:1488, Nov 2024. URL: https://doi.org/10.3390/biom14121488, doi:10.3390/biom14121488. This article has 32 citations.
+11. (nakamura2024structureanddynamics pages 18-19): Shuichi Nakamura and Tohru Minamino. Structure and dynamics of the bacterial flagellar motor complex. Biomolecules, 14:1488, Nov 2024. URL: https://doi.org/10.3390/biom14121488, doi:10.3390/biom14121488. This article has 32 citations.
 
 ## Artifacts
 
@@ -313,46 +305,24 @@ References
 
 ## Citations
 
-1. claret2003oligomerizationandactivation pages 2-4
-2. minamino2014thebacterialflagellar pages 2-3
-3. dhindwal2024helicobacterpyloriflgn pages 1-2
-4. auvray2002intrinsicmembranetargeting pages 1-2
-5. halte2021proteinexportvia pages 4-6
-6. halte2021proteinexportvia pages 6-7
-7. minamino2014thebacterialflagellar pages 1-2
-8. minamino2022insightintodistinct pages 1-2
-9. claret2003oligomerizationandactivation pages 1-2
-10. minamino2026uncouplingsubstratedelivery pages 1-2
-11. auvray2002intrinsicmembranetargeting pages 2-4
-12. bryant2024identificationofa pages 13-15
-13. bryant2024identificationofa pages 1-3
-14. nakamura2024structureanddynamics pages 18-19
-15. doi:10.3390/biom11020186
-16. doi:10.1046/j.1365-2958.2003.03506.x
-17. doi:10.3389/fmicb.2022.864178
-18. doi:10.1016/S0022-2836(02)00172-9
-19. doi:10.1038/srep06528
-20. doi:10.1038/srep07579
-21. doi:10.1128/mbio.03067-23
-22. doi:10.1002/pro.4882
-23. Bryant & Fraser, *mBio* 15, 2024; DOI: https://doi.org/10.1128/mbio.03067-23
-24. Dhindwal et al., *Protein Science* 33, 2024; DOI: https://doi.org/10.1002/pro.4882
-25. https://doi.org/10.3390/biom11020186
-26. https://doi.org/10.1046/j.1365-2958.2003.03506.x
-27. https://doi.org/10.3389/fmicb.2022.864178
-28. https://doi.org/10.1016/S0022-2836(02
-29. https://doi.org/10.1038/srep06528
-30. https://doi.org/10.1038/srep07579
-31. https://doi.org/10.1128/mbio.03067-23
-32. https://doi.org/10.1002/pro.4882
-33. https://doi.org/10.1128/mbio.03067-23]
-34. https://doi.org/10.1002/pro.4882]
-35. https://doi.org/10.3390/biom11020186,
-36. https://doi.org/10.1038/srep07579,
-37. https://doi.org/10.3389/fmicb.2022.864178,
-38. https://doi.org/10.1046/j.1365-2958.2003.03506.x,
-39. https://doi.org/10.3389/fmicb.2026.1841110,
-40. https://doi.org/10.1016/s0022-2836(02
-41. https://doi.org/10.1128/mbio.03067-23,
-42. https://doi.org/10.1002/pro.4882,
-43. https://doi.org/10.3390/biom14121488,
+1. imada2007structuralsimilaritybetween pages 1-1
+2. terashima2018invitroreconstitution pages 8-9
+3. kinoshita2024flihandflii pages 1-2
+4. minamino2014thebacterialflagellar pages 5-7
+5. nakamura2024structureanddynamics pages 18-19
+6. minamino2014thebacterialflagellar pages 1-2
+7. minamino2022insightintodistinct pages 1-2
+8. minamino2014thebacterialflagellar pages 2-3
+9. minamino2014thebacterialflagellar pages 4-5
+10. halte2021proteinexportvia pages 4-6
+11. halte2021proteinexportvia pages 6-7
+12. https://doi.org/10.1038/s42003-024-06081-0.
+13. https://doi.org/10.1128/mbio.03067-23.
+14. https://doi.org/10.3390/biom14121488.
+15. https://doi.org/10.1038/srep07579,
+16. https://doi.org/10.1128/mbio.00988-18,
+17. https://doi.org/10.3389/fmicb.2022.864178,
+18. https://doi.org/10.1073/pnas.0608090104,
+19. https://doi.org/10.3390/biom11020186,
+20. https://doi.org/10.1038/s42003-024-06081-0,
+21. https://doi.org/10.3390/biom14121488,
