@@ -573,7 +573,7 @@ def test_validate_terms_lets_evidence_quote_a_retired_label_verbatim():
             )
         }
     )
-    errors, _ = validate_terms(
+    errors, warnings = validate_terms(
         terms,
         {"GO": "real"},
         resolver,
@@ -581,6 +581,8 @@ def test_validate_terms_lets_evidence_quote_a_retired_label_verbatim():
         allow_obsolete_citation=True,
     )
     assert errors == []
+    # ...and the benign carve-out is visible rather than silent.
+    assert len(warnings) == 1 and "quotes the retired label verbatim" in warnings[0]
     # ...but a stale pre-obsoletion title on the same id is still an obsoletion.
     stale = [("GO:0046537", "2,3-bisphosphoglycerate-independent PGM activity")]
     errors, _ = validate_terms(

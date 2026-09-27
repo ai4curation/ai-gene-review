@@ -1447,6 +1447,14 @@ def validate_terms(
                 )
             )
             continue
+        if obsolete:
+            # The carve-out fired benignly: say so, so a retired citation is
+            # visible in the log rather than passing in silence.
+            warnings.append(
+                f"{curie} is obsolete in the configured ontology ('{primary}'); "
+                f"the {where} quotes the retired label verbatim, which is "
+                f"allowed when the entry documents the retirement"
+            )
         if err:
             errors.append(err)
 
@@ -1679,7 +1687,8 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
             return ("unavailable", None, set())
 
     def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
-        # One lookup per CURIE per process: a term cited as evidence and
+        # One lookup per CURIE per resolver (i.e. per validated file, since
+        # validate_module_file builds one): a term cited as evidence and
         # asserted as a grounding would otherwise hit the adapter twice and
         # double any "ontology unavailable" warning.
         if curie not in lookups:
