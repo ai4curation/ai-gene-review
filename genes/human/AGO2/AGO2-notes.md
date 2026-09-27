@@ -192,3 +192,25 @@ identities, quotations, alternative products and raw/provider files remain
 unchanged. This follow-up adds only the two exact caches, provenance notes,
 their rendering and a scaffolded history record. Intentional validation
 advisories remain separate from the now-closed source gaps.
+
+
+## 2026-09-27 DOI-inclusive provider citation census correction
+
+The preceding all-cached census counted explicit PMID citations but missed references expressed only as DOIs in the immutable provider reports. That completeness claim is superseded by this DOI-inclusive audit. All provider DOI strings were decoded and normalized, compared with normal publication-cache metadata, and mapped to primary PubMed title/DOI records. The following cited sources are still missing:
+
+| PMID and primary record | Normalized DOI | Provider location |
+|---|---|---|
+| [PMID:38448799](https://pubmed.ncbi.nlm.nih.gov/38448799/), *Target-directed microRNA degradation: Mechanisms, significance, and functional implications* | 10.1002/wrna.1832 | AGO2-deep-research-falcon.md, line 262 |
+| [PMID:38029964](https://pubmed.ncbi.nlm.nih.gov/38029964/), *When Argonaute takes out the ribonuclease sword* | 10.1016/j.jbc.2023.105499 | AGO2-deep-research-falcon.md, line 260 |
+| [PMID:39499674](https://pubmed.ncbi.nlm.nih.gov/39499674/), *Technologies for Targeted RNA Degradation and Induced RNA Decay* | 10.1021/acs.chemrev.4c00472 | AGO2-deep-research-falcon.md, line 263 |
+| [PMID:38224449](https://pubmed.ncbi.nlm.nih.gov/38224449/), *To kill a microRNA: emerging concepts in target-directed microRNA degradation* | 10.1093/nar/gkae003 | AGO2-deep-research-falcon.md, line 261 |
+| [PMID:37621215](https://pubmed.ncbi.nlm.nih.gov/37621215/), *The EDC4-XRN1 interaction controls P-body dynamics to link mRNA decapping with decay* | 10.15252/embj.2023113933 | AGO2-deep-research-falcon.md, line 265 |
+| [PMID:38939184](https://pubmed.ncbi.nlm.nih.gov/38939184/), *Principle, application and challenges of development siRNA-based therapeutics against bacterial and viral infections: a comprehensive review* | 10.3389/fmicb.2024.1393646 | AGO2-deep-research-falcon.md, line 313 |
+| [PMID:38892257](https://pubmed.ncbi.nlm.nih.gov/38892257/), *Nuclear miRNAs: Gene Regulation Activities* | 10.3390/ijms25116066 | AGO2-deep-research-falcon.md, line 264 |
+| [PMID:39188988](https://pubmed.ncbi.nlm.nih.gov/39188988/), *RNA interference therapy in cardiology: will new targets improve therapeutic goals?* | 10.7573/dic.2024-3-1 | AGO2-deep-research-falcon.md, line 303 |
+
+These eight DOI references support the provider narrative or its background bibliography; their inclusion here does not certify each generated claim or create a new annotation. The separate DOI 10.1016/j.isci.2024.109151 maps to already-cached PMID:38384836 and is not a new gap.
+
+One ordinary 13-record fetch ended naturally with exit 1 and cached 0/13 because DNS resolution failed. The newly decoded BMB source received a separate first attempt, also exit 1 and cached 0/1. No cache was created or edited. Exact DOI strings, titles, primary URLs, provider file/line context, protected hashes and terminal logs are recorded in `tmp/AGO2-AIMP2-doi-audit/`; the fixed source11 proposal reserves the missing records without changing earlier dispatched batches.
+
+The review YAML, all original annotation assertions and decisions, reference assessments, core functions, alternative products, raw source files and generated provider reports are byte-identical to published head `6da6488244749c9c71b3eba85534a53653be6a33`. This follow-up changes only append-only notes and session provenance and regenerates the derived HTML. The PR remains draft until the 8 required DOI-derived caches are recovered through the normal fetcher; prior validation advisories remain separate from this source gate.
