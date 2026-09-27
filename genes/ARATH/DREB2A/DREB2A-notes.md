@@ -404,7 +404,7 @@ These notes were written for the duplicate `genes/ARATH/AT5G05410` review of the
 
 ### References
 
-- Deep research: AT5G05410-deep-research-perplexity.md (37 citations)
+- Deep research: DREB2A-deep-research-perplexity.md (37 citations)
 - **Key function**: Cross-stress integrator coordinating drought AND heat responses through post-translational regulation and hierarchical transcriptional cascades
 
 ---
@@ -413,5 +413,15 @@ These notes were written for the duplicate `genes/ARATH/AT5G05410` review of the
 
 - The duplicate folder `genes/ARATH/AT5G05410` (same accession, O82132) was retired in favour of this one. Its perplexity report is kept here as `DREB2A-deep-research-perplexity.md`, and its notes are appended above.
 - `DREB2A-goa.tsv` was refreshed from QuickGO. Seven rows were new to this review: five IBAs from PAINT nodes PTN001261703 and PTN007858567 (GO:0003700, GO:0000976, GO:0005634, GO:0045893, GO:0010286), the DisProt EXP row GO:0001221 (RCD1 binding, PMID:27881680), and an RCD1 protein-binding IPI (PMID:34473923).
-- Heat acclimation (GO:0010286): the IBA row is correct, since DREB2A has its own gain- and loss-of-function thermotolerance data (PMID:17030801) and is one of the IBD seeds. It is kept non-core like the IEP row, because response to heat (GO:0009408) already carries the core heat role.
+- Heat acclimation (GO:0010286): the IBA row is correct, since DREB2A has its own gain- and loss-of-function thermotolerance data (PMID:17030801) and is one of the IBD seeds. It is ACCEPTed and added to the heat-stress core function: it is the more specific child of response to heat (GO:0009408) and its synonym is "thermotolerance", which is what the overexpression and knockout phenotypes measure. The IEP row (PMID:16807682) stays non-core only because it is expression evidence.
 - The new RCD1 protein-binding IPI (PMID:34473923) is marked REMOVE under the GO:0005515 policy. The interaction is real and is represented by the GO:0001221 EXP row.
+
+### Adjudicating the rows where the two reviews disagreed (PR #3231 review)
+
+The retired AT5G05410 review and this one gave different actions on rows still in GOA. Decisions:
+
+- GO:0006355 IEA: now MODIFY to GO:0045893 (as the duplicate had). The term is too general for a demonstrated activator, and GO:0045893 is already on the gene by IDA (PMID:25490919) and IBA.
+- GO:0000976 IBA and the six GO:0000976 IPI rows (PMID:22037706, 25352272, 25533953, 27650334, 30356219, 31806676): kept as reviewed here, not MODIFY to GO:0000987 as the duplicate proposed. The IPI rows come from yeast one-hybrid and large promoter-binding screens that show binding to promoter fragments, not binding to a defined sequence motif, so the sequence-specific child GO:0000987 overstates what each assay showed. The IBA row asserts what PAINT placed at PTN001261703 (GO:0000976). DREB2A's sequence specificity for the DRE/CRT A/GCCGAC core is established by PMID:9707537 and PMID:16617101 and is stated in the core function description.
+- GO:0003700 IDA (PMID:9707537): now MODIFY to GO:0001228. The paper shows DRE-driven reporter activation, and the transactivation domain is mapped in PMID:16617101. The IEA, ISS and IBA GO:0003700 rows stay ACCEPT because their methods only support the general term.
+- core_functions: the molecular function of all three core functions is now GO:0001228 (DNA-binding transcription activator activity, RNA polymerase II-specific), as in the duplicate, replacing GO:0000976 and GO:0003700. DRE/CRT binding is described in the first core function's text.
+- GO:0005515 rows: moved off MARK_AS_OVER_ANNOTATED under the annotation-reviewer policy. DRIP1/DRIP2 (PMID:18552202) become MODIFY to GO:0031625 ubiquitin protein ligase binding. RCD1 (PMID:19548978, 27881680) and MED25 (PMID:21536906, 22447446) become MODIFY to GO:0001221 transcription coregulator binding. DPB3-1 (PMID:25490919) becomes MODIFY to GO:0001223 transcription coactivator binding. The high-throughput interactome row (PMID:32612234) and the second RCD1 row (PMID:34473923) are REMOVE.
