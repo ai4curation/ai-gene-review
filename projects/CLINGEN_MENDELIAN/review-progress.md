@@ -92,7 +92,7 @@ are therefore expected; existing human reviews still link normally.
 | ACOX1 | Definitive | INITIALIZED | Draft; all biological feedback resolved; PMID:16672280 cache required | `cmungall/clingen-acox1` | [#3159](https://github.com/ai4curation/ai-gene-review/pull/3159) |
 | ACOX2 | Definitive | INITIALIZED | Draft; current head approved; six required publication caches pending | `cmungall/clingen-acox2` | [#3161](https://github.com/ai4curation/ai-gene-review/pull/3161) |
 | ACSL4 | Definitive | COMPLETE | Draft; current head approved; notes-only PMID:23766516 cache required | `cmungall/clingen-acsl4` | [#3160](https://github.com/ai4curation/ai-gene-review/pull/3160) |
-| ACTA1 | Definitive | COMPLETE | Approved; protected auto-merge enabled; required CI pending | `cmungall/clingen-acta1` | [#3163](https://github.com/ai4curation/ai-gene-review/pull/3163) |
+| ACTA1 | Definitive | COMPLETE | Merged; final-head approval and required CI passed | `cmungall/clingen-acta1` | [#3163](https://github.com/ai4curation/ai-gene-review/pull/3163) |
 | ACTA2 | Definitive | COMPLETE | Published; follow-up validated locally; automated re-review retry queued | `cmungall/clingen-acta2` | [#3164](https://github.com/ai4curation/ai-gene-review/pull/3164) |
 | ACTB | Definitive | COMPLETE | Draft; independent audit and validation passed; two required publication caches pending | `cmungall/clingen-actb` | [#3184](https://github.com/ai4curation/ai-gene-review/pull/3184) |
 | ADA | Definitive | INITIALIZED | Draft; independent audit and validation passed; six PMID and three Reactome caches pending | `cmungall/clingen-ada` | [#3179](https://github.com/ai4curation/ai-gene-review/pull/3179) |
@@ -133,7 +133,7 @@ outage window.
 
 Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **14 of
+The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **15 of
 2,876 genes are complete** for this campaign. ABAT is in the Moderate tier.
 
 ## Verification log
@@ -403,3 +403,10 @@ The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **14 
   are under audit under the documented cached-gene scheduling exception.
   The local queue snapshot now records 20 latest revisions / 79 hashes and 20
   historical revisions / 142 hashes, with exact trees and parent continuity checked.
+
+- 2026-09-27 00:10 UTC: Confirmed ACTA1 PR #3163 merged at 00:03:02 UTC as
+  `1781be1cfc1f1f9b5e4be645c8fd1bb1ecb9d497` after current-head approval and successful CI.
+  Checked its inventory row complete: 15 of 2,876 genes. This supersedes the earlier
+  queued-auto-merge observation. The 20-entry queue now contains 9 merged PRs plus
+  6 earlier campaign completions outside the queue. Project PR #3191 carries these
+  shared tracking updates; gene-specific review work continues independently.
