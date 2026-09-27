@@ -1,5 +1,6 @@
 ---
 title: "Ortholog Conjecture Project"
+collections: [HOMOLOGY_PROPAGATION]
 maturity: SCOPING
 tags: [EVALUATION]
 ---
