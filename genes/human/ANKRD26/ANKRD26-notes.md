@@ -29,3 +29,30 @@ All six additional normal publication records were recovered by Source29 and imp
 The recovered PMID:33350486 Results support the PIDD1 docking region and separation of ANKRD26 localization from recruitment. PMID:36794499 explicitly leaves direct versus indirect receptor association unresolved; it supports the descriptive receptor-signaling context, not a new intrinsic kinase or receptor-binding activity. PMID:39882846 distinguishes an early ciliation delay from persistent length/ARL13B effects. The membrane-curvature proposal continues to rely on the externally inspected human 45–217 SUV/LUV experiment in PMID:38493476; the cached abstract alone does not establish curvature preference.
 
 Final review preserves all six source assertions and both alternative products: one ACCEPT, two MODIFY and three KEEP_AS_NON_CORE. Two experimentally grounded molecular functions are proposed, with no NEW biological process. The independent prospective and authored-draft consultations approved the eight decisions and two cores. Reference titles and actual availability flags now match normal caches. Final validation and rendering are run after this closure.
+
+
+## PR #3339 follow-up: direct membrane activities and partner classification
+
+The two HMMR/TRIO generic protein-binding rows are now REMOVE under the repository policy: the term supplies no functional mechanism, while the reported fragment interactions remain supported. All six original source objects, both prior NEW assertions, both alternative products, raw files, publication caches and published history are preserved. No new biological process is proposed. The parent agent provided prospective annotation consultation before this revision; final validation follows the authored review.
+
+### CCDC85B partner premise
+
+CCDC85B is a transcriptional coregulator independently of its interaction with ANKRD26: human CCDC85B binds TCF4/TCF7L2 and competes with beta-catenin in the primary study PMID:17873903. The [official UniProt Q15834 record](https://www.uniprot.org/uniprotkb/Q15834/entry) classifies the partner as a transcriptional repressor and cites PMID:17014843; the parent independently inspected this record. The independent primary basis is [Iwai et al., PMID:17873903, DOI:10.1038/sj.onc.1210801](https://www.nature.com/articles/1210801), with its [author-uploaded original article](https://www.researchgate.net/publication/5968868_Coiled-coil_domain_containing_85B_suppresses_the_b-catenin_activity_in_a_p53-dependent_manner). Targeted Results/Figures 2, 4–5 and human-construct Methods expose transcriptional assays, endogenous and recombinant TCF4 interaction, and competition with beta-catenin. These independently establish the partner class; they are not recast as ANKRD26 interaction experiments or a direct DNA-binding function of ANKRD26. The normal PMID:22666460 cache remains unchanged.
+
+### Membrane evidence outside the abstract-only cache
+
+The [original publisher article, PMID:38493476](https://www.sciencedirect.com/science/article/pii/S2211124724002675) and [author-uploaded original](https://www.researchgate.net/publication/379037085_Ankrd26_is_a_retinoic_acid-responsive_plasma_membrane-binding_and_-shaping_protein_critical_for_proper_cell_differentiation) provide the following locators. Direct publisher opening returned 403; indexed publisher sections and the author-uploaded text were readable.
+
+The human 45–217 fragment preferentially binds SUVs over LUVs in Figure 3B–C; this is curvature sensing, distinct from membrane deformation. The publisher Results explicitly state preference “to the more strongly curved SUVs”.
+
+Endogenous ANKRD26 labels the cytoplasmic plasma-membrane face in differentiated human SK-N-SH cells (Figure 1G–J), with E-face and ice controls.
+
+Human constructs derive from NM_014915.2. Purification/tag-cleavage and liposome-shaping Methods accompany Figure 3F–J; mouse supplementary assays are separate. These external observations do not change the normal cache's abstract-only status.
+
+[GO:0180020](https://amigo.geneontology.org/amigo/term/GO:0180020) describes membrane bending and is a molecular-function root child, distinct from [GO:0140090](https://amigo.geneontology.org/amigo/term/GO:0140090) sensing. [GO:0009898](https://amigo.geneontology.org/amigo/term/GO:0009898) includes proteins attached to the cytoplasmic plasma-membrane face. The new cellular-component row makes the existing core location explicit without claiming exclusivity.
+
+### Existing cached mechanistic evidence
+
+The adaptor row/core now quote the actual PMID:33350486 recruitment result. PMID:36794499 now has a finding quoting the human ANKRD26 effect on MPL internalization in the murine host assay, preserving the distinction from human-cell signaling experiments and unresolved binary receptor binding. Reference-review notes now emphasize identity and scientific scope; earlier detailed read limits remain above.
+
+Final follow-up checks: schema, reference and gene validation passed without annotation advisories; rendering passed. All six original source objects, two prior NEW objects, two alternative products, eight publication caches, both raw inputs and the original published history are preserved. The new history record is separately validated.
