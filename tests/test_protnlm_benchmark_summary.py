@@ -64,7 +64,10 @@ def test_benchmark_summary_keeps_output_types_and_scopes_separate() -> None:
     assert data["distinct_records"] == 282
     assert data["prediction_targets"] == 242
     assert sum(data["go_counts"].values()) == 288
-    assert data["go_counts"]["PLI"] == 0
+    # #3205 re-assessed one exact GO target UNC -> PLI after its OpenScientist audit.
+    # #3204 re-assessed three more UNC targets after OpenScientist audits:
+    # ORYSI/B8BAB0 -> PLI, ASPOR/Q2U1U6 and DANRE/A0A8M9QG43 -> NPI.
+    assert data["go_counts"]["PLI"] == 2
     narratives = {r["gene"]: r["categories"] for r in data["narrative_reviews"]}
     assert narratives["human/NARF"] == ["PLI"]
     assert narratives["DANRE/dcxr"] == ["PLI"]

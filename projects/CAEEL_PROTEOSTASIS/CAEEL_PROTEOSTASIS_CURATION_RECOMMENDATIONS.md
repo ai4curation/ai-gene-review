@@ -127,6 +127,7 @@ Transcription factors and signaling kinases linking proteostasis to lifespan ext
 - **HSP-90/DAF-21:** Major co-chaperone
   - Status: ✅ Excellent (54 annotations)
   - Modifications: 12 generic "protein binding" → GO:0051879 (HSP90 protein binding)
+    - **Correction (2026-09): do not apply this.** GO:0051879 means binding *to* an Hsp90 and belongs on HSP-90's partners, not on HSP-90. The current hsp-90 review has nine such rows (not 12); re-target them to protein-folding chaperone binding (GO:0051087) for co-chaperone rows, with chaperone activity covering the client rows. See the bottom line of [CAEEL_PROTEOSTASIS](../CAEEL_PROTEOSTASIS.md).
   - Strength: Comprehensive annotation of molecular chaperone complex functions
   - Note: DAF-21 is alternative gene name, same as HSP-90 (Q18688)
 

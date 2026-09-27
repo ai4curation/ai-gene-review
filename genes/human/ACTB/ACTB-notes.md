@@ -131,3 +131,290 @@ and machine/provider files are preserved. Targeted validation, render, history
 and exact byte checks are recorded in the closure manifest. Status COMPLETE
 requires zero validation warnings; an unused-provider advisory is independent
 of the closed cache gate. No cache content was edited.
+
+## 2026-09-27 post-merge source12 assessment
+
+The full audit merged through PR #3184 as `c7078166039c9abd5c62704489283403eb520007`.
+The last approved review head was `3635743f96850ac6674e5af2983d4d4b123ee7df`.
+Fresh main `587fad096c3c8a338b95465f53bf654968f06a8a` retained the exact eight
+canonical ACTB files; no overlapping open ACTB PR or proposed follow-up branch
+was found. This follow-up preserves all **247 annotation source objects and
+actions**, all three core biological assertions, the original 175 reference
+identities, and every machine/provider file. It adds assessments of nine
+normally recovered publications and five genuine provider-linked sources still
+awaiting a cache, plus a separately identified DOI-only publisher review. Recovery does not turn a provider's interpretation into an
+independent experiment.
+
+The nine records were imported unchanged from source12; the canonical import
+receipt is `tmp/source12-canonical-import-receipt.json`, SHA-256
+`111b2251162b55efec7612ebc869e75650cf6ac69cb26effda29b6e6c2038cee`.
+Their exact bytes, hashes and null publication-base paths are included in this
+follow-up manifest. Source13 adds no ACTB-owned record. Eight of the nine have
+extracted bodies; PMID:11416185 remains abstract-only. Available XML does not
+imply that every supplementary method, figure or identification table was read.
+
+### Actual source scope
+
+- [PMID:21900491] contains mouse whole-body/conditional Actb deletion, primary
+  MEF and CD4-lineage T-cell experiments. Growth, migration and G/F-actin-pool
+  changes corroborate structural participation. The proposed SRF connection
+  does not demonstrate ACTB DNA recognition; beta/gamma colocalization in the
+  tested MEFs also argues against a universal isoform-segregation claim.
+- [PMID:11416185] is a chicken embryo fibroblast zipcode-oligonucleotide
+  experiment. Its abstract distinguishes impaired directionality/net movement
+  from unchanged total path length and protrusion velocity. ACTB mRNA is the
+  regulated object; ACTB protein is not thereby the machinery for localizing
+  its transcript. The primary authors and pages differ from the provider's
+  generated bibliographic details.
+- [PMID:34475390] distinguishes native mouse MEF nuclear co-immunoprecipitation
+  (Figure 1A is labeled a single experiment) from NLS-tagged human beta-actin
+  rescue in mouse Actb-knockout MEFs. The latter gives partial compartment
+  rescue. Chromatin and Hi-C measurements are consistent with a structural
+  contribution, not ACTB supplying the BRG1 motor reaction. A peer independently
+  checked these construct and host distinctions.
+- [PMID:34486492] combines pan-cancer expression/immune correlations with human
+  SCC25/CAL33 ACTB-siRNA migration and invasion experiments. Altered NF-kappaB
+  and Wnt-related transcript levels do not identify an ACTB catalytic signaling
+  activity. The cohort correlations are not direct immune-function assays.
+- [PMID:37228182] supplies free/capped filament-end cryo-EM Results; detailed
+  reagent Methods are delegated to supplementary material. The primary
+  [RCSB 8F8R deposition](https://www.rcsb.org/structure/8F8R), read on 2026-09-27,
+  identifies the free-barbed-end actin as **rabbit alpha-skeletal actin P68135**
+  and links this paper. It is family-level structural corroboration, not a
+  human ACTB structure. [PMID:37632366] is the authors' short explanation of
+  that same study, not an independent replication.
+- [PMID:38750021] uses mouse marrow MSCs, with NIH3T3 cells also described.
+  Actin-modifying drugs and Arp4 knockdown change chromatin accessibility;
+  the nuclear-actin chromobody is an imaging probe. The provider's description
+  of human MSCs is incorrect. These experiments are not a human ACTB rescue
+  or an isolated ACTB remodeling-enzyme assay. The peer read agrees.
+- [PMID:39769373] uses isoform-directed shRNA in human A549 cells, with
+  reciprocal actin-isoform compensation, nuclear/lamina/histone changes and
+  no significant cell-cycle/proliferation change in the measured 4-5-day
+  interval. The histone-mark phenotypes do not make ACTB a histone-modifying
+  enzyme.
+- [PMID:38867273] immunizes mice with human JAM-ICR cells, identifies the 6D6
+  antigen through immunoprecipitation/LC-MS, and examines cell-line/tumor
+  immunoreactivity. This is antigen detection and clinical association,
+  without an ACTB loss/rescue mechanism. It does not establish a receptor
+  function or universal suitability as an expression-normalization control.
+
+Primary PubMed identities, the recovered source records and relevant actual
+Methods/Results were checked separately. The full-record assessments are in
+`references[].reference_review`; exact machine-fetched titles are retained.
+No action or core biological change is justified by these nine sources.
+
+### External evidence attachments and access
+
+The merged review's optional evidence-format concern was reassessed. Nineteen
+`supporting_text_fulltext` attachments represented external passages absent
+from the local extraction, without an established restriction on sharing the
+full text. They have been removed from that special field. Each primary PMID
+remains attached directly to the claim. A relevant ordinary cached quote is
+retained where available; a reference-only attachment is used when the precise
+assay passage is external. Notes are not substituted as the supporting source,
+and no external passage is presented as a cached quote. In particular:
+
+- For [PMID:25255767], the previously read
+  [publisher Results](https://febs.onlinelibrary.wiley.com/doi/10.1111/febs.13068)
+  and Figure 4A establish wild-type filament assembly; Figure 4 measures
+  intrinsic ATP turnover and Figure 6 measures stimulation of myosin-2A.
+  The short repeated fragment “compared with wild-type actin (20.6 ± 2.4 min)”
+  lacked the polymerization-half-time context and is no longer treated as a
+  self-contained quote. The quantitative context and the 5–15% insect-actin
+  preparation limit remain documented above. The precise ATP/myosin results
+  are absent from the local abstract; their reasons and primary reference
+  assessment explicitly identify the external evidence. No licensing claim
+  follows merely from the publisher's Free Access label or failure to find a
+  license. This supersedes the earlier field-choice rationale without altering
+  its historical access record.
+- For [PMID:12368262], the prior external
+  [Results/Figure 3A receipt](https://pmc.ncbi.nlm.nih.gov/articles/PMC187451/)
+  records beta-actin detection in affinity-purified brain and HeLa complexes.
+  The cache retains its true full-text-available metadata, but its extraction
+  omits that Results passage. Its ordinary cached complex context and the
+  independently cached ACTB–ACTL6 structural-module evidence remain attached.
+- For [PMID:30280653], the prior external
+  [junction section/Figure 2 receipt](https://pmc.ncbi.nlm.nih.gov/articles/PMC6335099/)
+  describes actin-linked endothelial junctions. Its extracted Introduction
+  provides barrier context, not an ACTB-specific perturbation. The ordinary
+  contextual quote is labeled accordingly by the reason; the external
+  cytoskeletal passage is not misrepresented as being present in the cache.
+
+### Recursive provider census and five remaining cache requirements
+
+The census includes all authored YAML/Markdown and all three immutable provider
+reports, with HTML/URL decoding, title-only bibliography review and DOI/PMCID
+matching against real metadata. The incorrect provider DOI
+`10.1101/cshperspect.a018218` identifies an unrelated epidermal-barrier paper,
+but its adjacent **PMC5749151** link identifies the genuine Svitkina review
+[PMID:29295889], [DOI 10.1101/cshperspect.a018267](https://doi.org/10.1101/cshperspect.a018267).
+Likewise, DOI `10.1016/j.isci.2022.105181` does not identify the claimed
+actin-processing study, but **PMC9556930** identifies [PMID:36248738],
+[DOI 10.1016/j.isci.2022.105186](https://doi.org/10.1016/j.isci.2022.105186).
+Both primary identities were verified. The latter's accessible summary and
+indexed Results concern actin as an aminopeptidase substrate, not an actin
+processing enzyme; this follow-up did not comprehensively read all its Methods.
+
+The third incorrect DOI `10.1016/j.tibs.2018.12.008` is excluded as an identifier
+mismatch, but the adjacent exact title resolves a real review:
+*Actin Post-translational Modifications: The Cinderella of Cytoskeletal Control*,
+[PMID:30611609], [DOI 10.1016/j.tibs.2018.11.010](https://doi.org/10.1016/j.tibs.2018.11.010).
+Primary PubMed identifies Varland, Vandekerckhove and Drazic as its authors,
+not the generated provider author. Its abstract addresses regulation of actin
+through modifications; it does not establish a new ACTB enzyme activity.
+
+The provider's title-only 1954 pair also identifies real indexed sources:
+[PMID:13165697], [DOI 10.1038/173971a0](https://doi.org/10.1038/173971a0), and
+[PMID:13165698], [DOI 10.1038/173973a0](https://doi.org/10.1038/173973a0).
+PubMed metadata and Nature bibliographic records identify the authors, titles
+and pages. Neither PubMed record has an abstract and the full bodies were not
+read. Historical muscle context is not recast as a human ACTB-specific assay.
+Their citation identities are verified separately from their unassessed
+experimental details.
+
+The provider also mislabels the already cached *Essential nucleotide- and
+protein-dependent functions of Actb/beta-actin*: its correct DOI and PMC6077724
+identify **PMID:30012594**. The adjacent literal **PMID:30012616** identifies an
+unrelated influenza-hemagglutinin simulation paper. That wrong literal is
+retained in the immutable provider but excluded from biological support; no
+additional source retrieval is needed for the correctly identified actin paper.
+
+Falcon's title-only *Housekeeping gene and its internal control* resolves to
+the 2025 Adhikari and colleagues review in *World Journal of Pharmaceutical
+Research* 14(21):558-574, [DOI 10.5281/zenodo.17474289](https://doi.org/10.5281/zenodo.17474289).
+The [publisher abstract](https://www.wjpr.net/abstract_show/31435) and indexed
+[original PDF title page](https://wjpr.s3.ap-south-1.amazonaws.com/article_issue/3d49f662ebf270ae7477d92d27963cfe.pdf)
+were checked on 2026-09-27. Its abstract concerns expression-normalization
+controls and cautions that their stability depends on experimental context;
+it supplies no new ACTB mechanism. No PMID was established, and the full body
+was not assessed. This separate DOI-only source record is not replaced by an
+invented PubMed identifier or manufactured publication cache.
+
+Three finite normal fetches ended with exit 1 and **0/5 cached**, all DNS
+failures: two PMC-resolved sources (`/tmp/ACTB-pmc-corrections-fetch.log`), the
+Cinderella review (`/tmp/ACTB-cinderella-fetch.log`), and the two historical
+papers (`/tmp/ACTB-historical-pair-fetch.log`). Each source was attempted once.
+No source was manufactured or overwritten. This follow-up remains **DRAFT**
+with five PMID cache gates: 13165697, 13165698, 29295889, 30611609 and 36248738.
+These are additional to the nine recovered source12 records. The DOI-only
+publisher record and three incorrect DOI mappings are explicitly separate in
+the census. Provider bytes remain unchanged; erroneous bibliographic details
+and species attributions are not endorsed. The manifest records the complete
+finite census, terminal receipts and exact hashes.
+
+## 2026-09-27 — Source19 evidence and PR #3302 attachment follow-up
+
+This bounded follow-up preserves all 247 original annotation assertions and
+actions, all three core functions, the biological description, raw sources,
+provider reports and published history. The five normally recovered source19
+records were read from the verified staging archive and then compared with
+the coordinator's exact canonical import. The source12 missing-cache statement
+above is historical and is superseded by that verified recovery. No new
+annotation is proposed from these papers.
+
+### Evidence attachments and public primary access
+
+The review correctly identified two off-topic quotations. The general
+endothelial-permeability sentence in [PMID:30280653] does not establish actin's
+contribution to the blood-brain barrier, and the BAF53b assembly sentence in
+[PMID:12368262] does not identify beta-actin. Both quotes are removed while
+their primary reference attachments and annotation judgments are retained.
+The exact existing Reactome R-HSA-9933238 quote naming the ACTB–ACTL6A/B module
+remains attached to bBAF membership.
+
+The actual local records are **partial full-text extractions**, not both
+abstract-only: [PMID:12368262] contains the abstract and Discussion, whereas
+[PMID:30280653] contains the abstract and Introduction. Neither contains the
+target-specific passage at issue. Their retained availability flags report
+these actual partial bodies, with the omitted evidence stated explicitly.
+No cache was edited and no inference is drawn from the missing sections.
+
+Primary access was rechecked on 2026-09-27:
+
+- [PMC187451 Results and Figure 3A](https://pmc.ncbi.nlm.nih.gov/articles/PMC187451/)
+  report beta-actin Western detection in affinity-purified mouse-brain and
+  HeLa complexes. This is positive complex-membership evidence; the proposed
+  developmental interpretation remains separate. The indexed primary Results
+  reproduce the passage cited in the earlier external-access note.
+- [PMC6335099 junction section and Figure 2](https://pmc.ncbi.nlm.nih.gov/articles/PMC6335099/)
+  describe ZO-protein coupling to actin and endothelial cytoskeletal anchoring.
+  This is review-level barrier-maintenance context, not a direct human ACTB
+  transport or signaling experiment.
+- [The original Wiley Results, Figures 4 and 6, and Methods](https://febs.onlinelibrary.wiley.com/doi/10.1111/febs.13068)
+  for [PMID:25255767] distinguish intrinsic filament ATP turnover from
+  actin-stimulated human NM-2A ATPase. Human tag-free beta-actin was produced in
+  Sf9 cells, with reported 5–15% endogenous insect actin. Figure 4 measures
+  WT intrinsic turnover of about 2.1 per hour; Figure 6 reports approximately
+  15-fold NM-2A stimulation by 30 micromolar WT filamentous beta-actin. The
+  latter supports the retained specific myosin-binding refinement. These
+  externally accessible assays are absent from the local abstract.
+- The independently verified [PMID:3672117] abstract supplies an on-topic
+  cached description of ATP hydrolysis after actin polymerization. It is now
+  attached to the two ATP-hydrolysis rows as general actin-family support,
+  with an explicit distinction from the human ACTB kinetic experiment. It
+  is not substituted for the myosin-interaction assay.
+- [RCSB 8F8R](https://www.rcsb.org/structure/8F8R) was independently reopened:
+  the primary entry links [PMID:37228182] and identifies its actin entity as
+  rabbit alpha-skeletal actin, UniProt P68135. This corroborates the existing
+  species limitation without turning the structure into a human ACTB assay.
+
+Public primary evidence remains attributed to the original PMID and primary
+URL. The schema's `supporting_text_fulltext` field is reserved for text that
+cannot be publicly shared or committed; cache absence alone does not meet
+that condition. These accessible passages are therefore documented here and
+in source-specific reasons, without a self-referential notes-file evidence
+proxy. The myosin row retains its direct primary reference and explicit
+external-access scope.
+
+**Count reconciliation:** the preceding source12 note and published history
+correctly describe removal of **nineteen actual full-text fields**, leaving
+zero. Parsing the exact prior YAML finds seventeen annotation attachments and
+two core attachments. The reviewer's text search counts twenty deleted lines
+because it also matches a reference-review sentence mentioning the field name;
+that sentence is not another field. The published history is preserved, and
+this entry records the semantic count without changing any annotation.
+
+### Five recovered records: actual access and experimental scope
+
+| Source | Actual record and bounded assessment |
+| --- | --- |
+| [PMID:13165697] | Bibliographic-only; no abstract exists in PubMed despite the generated Abstract heading. A. F. Huxley and R. Niedergerke's 1954 Nature identity is verified. The original body, organism and ACTB isoform are not established by this record. |
+| [PMID:13165698] | Bibliographic-only; no PubMed abstract. H. Huxley and J. Hanson's paired 1954 Nature identity is verified. This remains historical muscle background, without an invented human ACTB experiment. |
+| [PMID:29295889] | Abstract-only Svitkina review of actin cytoskeleton and motility. The recovered title/DOI/PMCID identify the intended work behind the provider's correct PMC link and incorrect adjacent DOI. No new target-specific assay is claimed. |
+| [PMID:30611609] | Abstract-only Varland, Vandekerckhove and Drazic review of actin modifications. Actin is the regulated substrate; the review does not assign ACTB the enzymes' reactions. The preserved provider's author/DOI mismatch remains explicitly corrected by the primary identity. |
+| [PMID:36248738] | Full extracted Results, Discussion, Limitations and STAR Methods read. Mouse embryonic fibroblasts/tissues, human HAP1 cells and commercial human platelet actin are explicitly separated. The provider's adjacent wrong DOI remains unendorsed. |
+
+In [PMID:36248738], mass spectrometry detects low-abundance N-terminal
+beta-actin Asp removal; the gamma-actin processing pattern differs. Human
+HAP1 DNPEP/ENPEP knockout affects processing, F-actin and cellular morphology,
+but the authors caution that both peptidases have other substrates. Purified
+ENPEP cleaves non-acetylated synthetic actin N-terminal peptides; DNPEP has
+no detectable activity in that particular peptide assay, and neither enzyme
+cleaves the acetylated peptides tested. These assays establish actin as a
+substrate, not the entity performing proteolysis. Relative MS intensity is not
+absolute quantification, and not every cellular phenotype can be assigned
+solely to ACTB processing. No new process or molecular-function assertion is
+added. External supplements were not separately read.
+
+The recursive census retains the earlier explicit wrong-provider-identifier
+exclusions and the separately identified DOI-only housekeeping-gene review.
+All three provider reports remain byte-for-byte unchanged. Recovery of a
+bibliographic record closes its cache-presence requirement without pretending
+that an unavailable original paper was read.
+
+The canonical import receipt `tmp/source19-canonical-import-receipt.json`
+records exact normal-fetch bytes for all five sources; each was independently
+compared with its staged record. The final recursive census finds all **136
+required PMID records and 44 Reactome records present**. Twenty-five resolved
+DOI mappings, three wrong-provider DOI mappings, the one wrong literal PMID,
+and the separately assessed DOI-only review retain their explicit dispositions.
+No additional source was fetched or manufactured in this follow-up.
+
+Source preservation and all 254 cached supporting quotations pass independent
+checks. The coordinator's complete semantic-delta read found no biological
+blocker. Targeted validation passes with the four existing advisories: three
+source-specific action differences and the unused-provider-reference advisory.
+The YAML remains `DRAFT` because advisories persist; the five missing-cache
+gates are closed and no longer require keeping the PR in draft. The new history
+record, rendered page and exact publication manifest are validated separately.

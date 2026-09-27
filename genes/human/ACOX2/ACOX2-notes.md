@@ -48,8 +48,9 @@ catalytic activity.
 autosomal recessive inborn error of bile-acid synthesis. Accumulation of toxic C27
 intermediates (THCA, DHCA), negligible C24 bile acids, persistent hypertransaminasemia /
 liver fibrosis; variable neurological features (ataxia, cognitive impairment). Known
-variants: R225W [PMID:27884763] and a large N-terminal deletion (69-682 del) [PMID:27647924,
-via UniProt]. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for BCFA).
+variants: R225W [PMID:27884763] and premature termination p.Y69* [PMID:27647924].
+The latter corresponds to loss of residues 69–681 in UniProt's protein-consequence
+annotation, not an N-terminal in-frame deletion. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for BCFA).
 
 ## Molecular function GO landscape
 
@@ -147,3 +148,154 @@ The reference reviews were updated to match these judgments, especially the prep
 ## 2026-09-26 — exact PubMed title metadata
 
 CI for head `f47396930afe7737f2eb0149e491b44ca529fb8a` reported a PMID:9218493 title mismatch after the review-requested word-join correction. An independent lookup of the [official PubMed-indexed record](https://pubmed.ncbi.nlm.nih.gov/9218493/) confirms that its title itself contains `chole stanoyl-CoA`; its PMID, authors, year, journal and DOI 10.1074/jbc.272.29.18481 match the intended rabbit paper. Direct page opening encountered a browser challenge, but the indexed primary record exposed the title and abstract. This supersedes the earlier description of the space as a YAML-folding defect. The reference title now preserves that source spelling verbatim, with an explicit reference-review explanation. Scientific prose continues to use cholestanoyl-CoA. No source annotation, action, core function or supporting quotation changes. The six required missing caches and draft status remain unchanged.
+
+## 2026-09-27 post-merge source-cache follow-up
+
+All 12 canonical artifacts and four published history records match main
+`d2d8c9043b082a62378eff620ec0122d4118173b`; none of the previous histories or
+provider artifacts was edited. The six prior review/notes cache gates are now
+recovered: PMID:16672280, PMID:27647924, PMID:8026493, PMID:8387517,
+PMID:8654595 and PMID:9218493. Each publication file is byte-identical to the
+normal-fetch Actions artifact receipt in
+`tmp/verified-reference-records/local-import-receipt.json`: source run
+36286975328, head `5946477c8ac79ade0709264c775ea1262b108438`, artifact
+10920674630, ZIP SHA-256
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`.
+No source text was reconstructed or normalized.
+
+All six recovered records are **abstract-only**. The actual recovered abstracts
+were read; recovery does not imply new full-text verification. The rabbit record's
+exact title contains the literal word break **chole stanoyl**, which remains
+unchanged. The human purification abstract agrees with the original full-paper
+assessment but does not itself resolve the weak C24 preparation result or native
+assembly discrepancy. Rat donor abstracts describe CoA-ester specificity and
+purification, without resolving the exact free-fatty-acid-binding assertion. The
+excluded ACO-II structure remains rat ACOX1 evidence, not human ACOX2 evidence.
+The disease abstract supports the historical p.Y69* context. No annotation
+action, source object, core function or original reference identity changed.
+
+PMID:33961781 full_text_unavailable is corrected to false because the existing
+cache metadata records full text; its incomplete extraction and unresolved
+individual STRN3 pair remain explicit in the reference review. The recovered
+PMID:9218493 and PMID:8387517 availability notes now distinguish their actual
+abstract caches from the prior externally read full sources.
+
+A broader recursive scan found two additional missing citations only in the
+immutable pre-existing openscientist hypothesis report and its companion output:
+PMID:7929456 and PMID:15769750. Neither is a reference in the current biological
+YAML, and neither is used to revise this review. Their artifact-only scope is
+recorded separately from the six now-closed review/notes gates. Normal retrieval
+was attempted once; the outcome and final validation are recorded below.
+
+The normal fetch of those two artifact citations failed DNS, producing zero of
+two files (`/tmp/ACOX2-artifact-only-fetch.log`). Targeted gene validation passes
+with **zero warnings** because all current YAML references are cached and match
+exact generated titles. Status nevertheless remains DRAFT while the two broader
+citation gaps remain; passing YAML checks is not a claim of directory-wide cache
+completion. The final manifest records all 40 unchanged source assertions and
+annotation reviews, both unchanged cores, 22 unchanged reference identities,
+all protected artifacts and all four append-only published histories.
+
+
+## 2026-09-27 — complete the hypothesis-source cache closure
+
+This bounded follow-up starts from PR #3248 head
+`f0fa38d08c79573176858f128210e75e2fe7adba`. The published YAML, notes,
+render, six previously recovered publication records, protected source artifacts,
+and all five existing history records matched their recorded hashes before edits.
+The remaining two hypothesis-artifact citations now have real normal-fetch caches.
+Both canonical files are byte-identical to the source3 import receipt
+`tmp/source3-canonical-import-receipt.json`: Actions run 36292249952, source head
+`3f234ebd4b540057fb287b27efc11341cfb102b1`, artifact 10924402765, ZIP SHA-256
+`d8908403ad407495b26d23af7007ee4da1fc643ebd61728d99ce9755bcfacdc2`.
+Neither record existed at the exact PR base. Their source bytes and metadata remain
+unchanged; both records are abstract-only.
+
+The recovered [PMID:7929456](https://pubmed.ncbi.nlm.nih.gov/7929456/) abstract
+separates the first oxidase step from the third dehydrogenase step of peroxisomal
+beta-oxidation. Its experiments purify rat-liver 3-hydroxyacyl-CoA dehydrogenases;
+this is pathway context, not a direct human ACOX2 substrate or product assay.
+The recovered [PMID:15769750](https://pubmed.ncbi.nlm.nih.gov/15769750/) abstract
+examines L- and D-bifunctional-protein knockout mice and identifies DBP with the
+second and third steps. It explicitly reports an oxidase import defect in the
+double knockout, which prevents a firm conclusion about the proposed alternative
+LBP pathway. That confound is retained when interpreting the study. The primary
+PubMed-indexed identifiers, titles and abstracts were also checked independently.
+No full-paper access is claimed for either recovered record.
+
+These sources support pathway-step distinctions without turning the immutable
+provider report's stronger verdicts into independent human reaction measurements.
+The review's existing human and rabbit chemistry assessments, source-specific
+uncertainties, all 40 annotation decisions, both cores, 22 reference identities and
+all reference assessments remain unchanged. The two artifact sources are not added
+to the top-level reference list because they do not supply a new review assertion.
+
+The final census covers the review YAML, append-only notes, primary-source notes,
+provider Markdown and citation list, hypothesis CSV/HTML/PDF, and rendered review.
+All 15 distinct cited PMIDs and five cited Reactome records are cached. The PDF's
+explicit citations were checked through text extraction and introduce no extra
+source gap. Unused bibliography and pathway cross-references inside the immutable
+UniProt record were inventoried separately; they are not authored or provider
+citations. Historical cache-failure entries above remain as provenance, superseded
+by this successful recovery. Status is now COMPLETE, subject to the final targeted
+validator and history checks recorded with the frozen manifest. No biological
+assertion, quotation or original source field changed.
+
+Final targeted gene validation passed with zero curation warnings; the emitted
+`pkg_resources` deprecation notice is a runtime dependency warning. History
+validation and rendering also passed. The parsed YAML delta is exactly the status
+change; there are no annotation, reference, core, description, isoform or quotation
+changes. The incremental six-file manifest records the two exact new source
+records, YAML, notes, rendered HTML and the newly scaffolded history.
+
+
+## 2026-09-27 — independent human deficiency and family-binding evidence
+
+The [human index report PMID:27647924](https://pubmed.ncbi.nlm.nih.gov/27647924/)
+now explicitly supports the bile-acid annotation and core alongside the independent
+R225W study. Its cached abstract describes p.Y69*, absent liver ACOX2 staining,
+and accumulated upstream bile-acid intermediates. This corroborates pathway
+participation and disease involvement without being an isolated-enzyme chemistry
+assay. The earlier disease paragraph's deletion wording is corrected: p.Y69* is a
+premature stop, and UniProt's missing residues 69–681 describe its consequence.
+
+The [rat structural study PMID:16672280](https://pubmed.ncbi.nlm.nih.gov/16672280/)
+and [original structure 2DDH](https://www.rcsb.org/structure/2DDH) provide positive
+family-level context: rat ACOX1/ACO-II binds a free C12 fatty acid after hydrolysis
+of the cocrystallized CoA ester. That evidence is now stated directly in the
+fatty-acid-binding IBA rationale. It does not resolve the uninspected Acox2/Acox3
+experimental descendants behind the target's PTN000097533 assertion, so its
+UNDECIDED judgment remains. Both newly listed references remain marked as
+abstract-only locally; no recovered full experiment is implied.
+
+Historical local receipt paths above are working audit aids, not tracked public
+source links. The durable recovery records are [source1 run36286975328](https://github.com/ai4curation/ai-gene-review/actions/runs/36286975328)
+and [source3 run36292249952](https://github.com/ai4curation/ai-gene-review/actions/runs/36292249952),
+with their source commits, artifact identifiers and archive hashes already recorded
+above. Existing journal entries remain as provenance. This follow-up adds two
+reference assessments and corroborating quotes; all 40 source assertions/actions,
+both core functions' biological scopes and all 22 original reference identities
+remain unchanged. The complete citation census remains 15 cached PMIDs and five
+cached Reactome records: these two papers were already counted in the notes.
+
+## 2026-09-27 — Stereoselectivity evidence and ligand scope
+
+[PMID:8654595](https://pubmed.ncbi.nlm.nih.gov/8654595/) is now an explicit reference on the three hydroxylase-to-oxidase refinements and the pristanoyl core. Its independently verified PubMed abstract reports **rat-liver** oxidases acting only on the S-isomer of **2-methylpentadecanoyl-CoA**. It also reports desaturation of one THCA-CoA epimer, but the accessible abstract does not name that epimer or the enoyl geometry. The exact human 25S-to-24E statement is therefore supported separately by the cached UniProt RHEA:46728 reaction, now quoted in full; the existing pristanoyl reaction quote remains. This distinguishes the primary comparative stereoselectivity experiment from the curated human reaction, without changing any annotation action or core definition. Processing of both THCA-CoA epimers by whole peroxisomes supports an upstream racemase requirement, not racemase activity of ACOX2. The existing experiment proposal already calls for purified human epimer-specific kinetics and product identification, so no redundant process or research question is added.
+
+The live [RCSB 2DDH entry](https://www.rcsb.org/structure/2DDH), read at its Literature and Macromolecules panels, links **PMID:16672280**, rat **P07872/ACOX1**, an E. coli expression host and ligand HXD, **(3R)-3-hydroxydodecanoic acid**. The abstract describes accommodation of a C12-derived acid after cleavage of cocrystallized dodecanoyl-CoA. This is not an assay supplying free acid as the binding input. The human fatty-acid-binding IBA remains UNDECIDED; the rat ACOX1 comparator is explained in its reason and reference assessment rather than attached as direct target support. Neither the abstract-only cache flag nor the unresolved Acox2/Acox3 ancestral-assay linkage changes.
+
+**Current status supersedes the earlier validation snapshot:** all three GO:0033791 rows use MODIFY, and PMID:9218493/PMID:8387517 are now normally cached. The earlier mixed-action and missing-cache statements remain dated journal history. The [live GO:0033791 definition](https://amigo.geneontology.org/amigo/term/GO:0033791), rechecked here, still specifies 25R hydroxylation with water and an acceptor; it does not specify the oxygen-dependent enoyl-forming reaction. The 40 source assertions and decisions, two core definitions, 24 prior reference identities and raw source files remain unchanged; the reference list now has 26 entries, including the explicit notes receipt described below.
+
+### Public primary-text receipts
+
+These receipts were rechecked against publicly accessible original articles. They preserve access to the original evidence; the notes are not an independent study. The normal publication records remain abstract-only.
+
+- **PMID:8387517, Table III, p. 10343:** “activities were measured on the partially purified enzyme preparations”. The [author-uploaded original](https://www.researchgate.net/publication/14810824_The_CoA_esters_of_2-methyl-branched_chain_fatty_acids_and_of_the_bile_acid_intermediates_Di-_and_trihydroxycoprostanic_acids_are_oxidized_by_one_single_peroxisomal_branched_chain_Acyl-CoA_oxidase_in_h) describes human-liver enzymes separated chromatographically. Its small C24 rate is a preparation-level result; it does not isolate intrinsic ACOX2 turnover.
+- **PMID:8387517, Discussion, p. 10343:** “leaves some doubt about the true molecular mass of the native enzymes”. The same original compares current roughly 70-kDa and earlier larger preparations and considers dissociation. Native homodimerization remains unresolved.
+- **PMID:9218493, Results, p. 18487:** “Formation of 24-OH-THCA is most probably due to the presence of hydratase activity in the COS cells”. The [original public PDF](https://pdfs.semanticscholar.org/25a0/7b6451608e1ad668bdbeb8c04fe2dc8ae4e7.pdf?skipShowableCheck=true), in the product-analysis passage beside Figures 9–10, concerns recombinant rabbit ACOX2 in COS cells. The proposed source of the small hydroxylated product remains probabilistic.
+
+## 2026-09-27 — Direct primary attribution and the 2DDH ligand
+
+The three public passages above were re-read at their original Table III, Discussion and Results locations. Their annotation evidence objects now name the primary PMIDs directly. The normal caches remain abstract-only, so those objects record the access limitation without a cached quote. The excerpts above remain external-reading receipts, not independent evidence or a substitute for validation against an unmodified primary cache. This supersedes the earlier routing of these quotes through the notes file. The schema reserves `supporting_text_fulltext` for text that cannot be shared publicly; these public originals do not establish that condition.
+
+The [2DDH deposition](https://www.rcsb.org/structure/2DDH) again confirms the rat ACOX1/P07872 construct, E. coli expression host and primary citation [PMID:16672280]. Its [HXD chemical component](https://www.rcsb.org/ligand/HXD) is (3R)-3-hydroxydodecanoic acid, C12H24O3. The paper's abstract separately attributes the retained C12 fatty-acid moiety to thioester hydrolysis of dodecanoyl-CoA. Hydrolysis alone would give dodecanoic acid, not introduce a 3-hydroxyl group. The inspected abstract and deposition therefore do not resolve the hydroxyl's origin; no additional in-crystal chemistry is inferred. This clarification supersedes the earlier wording that joined the two accounts without identifying that gap. The observed rat ligand remains family-level accommodation evidence, not a direct human ACOX2 free-acid binding assay.
