@@ -102,3 +102,35 @@ A normal `fetch-pmid 30252181` attempt failed DNS with `nodename nor servname pr
 The HTT generic-binding removal retains its functional-informativeness rationale; the unrelated introductory quotation was deleted. Broad membrane localization remains ACCEPT because membrane anchoring is core biology and is entailed by the finer inner-membrane location, rather than becoming non-core merely through GO granularity. The one integrated protease core retains explicit zinc-dependent endopeptide chemistry. An ontology question now asks how to represent both ATP-coupled translocation and metalloprotease cleavage without duplicating the same activity; short-peptide cleavage and ATP-driven protein degradation have different energetic requirements. The existing generic-binding removals do not deny interactions or pretend unavailable pair assays were read. The source-specific axonogenesis assertion remains UNDECIDED.
 
 Only two action changes were made: the two autoprocessing rows move from KEEP_AS_NON_CORE to ACCEPT. Final counts are 49 ACCEPT, 13 MODIFY, 8 KEEP_AS_NON_CORE, 6 REMOVE and 1 UNDECIDED, with one integrated core and 41 reference assessments. Validation, rendering and exact source preservation are recorded in the follow-up manifest; the only unresolved publication cache is PMID:30252181.
+
+
+## 2026-09-27 second review follow-up: self-maturation and cached support
+
+The two seeded protein-autoprocessing assertions remain ACCEPT. AFG3L2 performs
+the peptide-cleavage step itself; this is direct participation in its own
+maturation, not an inference from being required for another enzyme’s work. The
+mouse donor evidence and independent human-protein experiments remain separate:
+PMID:30252181 expressed human AFG3L2 in m-AAA-deficient yeast, rather than native
+human cells. No source field, annotation action or evidence code changes.
+
+The integrated core now explicitly includes GO:0016540 protein autoprocessing.
+The live [GO autoprocessing record](https://amigo.geneontology.org/amigo/term/GO:0016540)
+and [mitochondrial processing record](https://amigo.geneontology.org/amigo/term/GO:0034982)
+were checked on 2026-09-27: both are separate children of GO:0016485 protein
+processing, and neither is an ancestor of the other. The added synthesis term
+records the already-reviewed self-cleavage mechanism; it creates no NEW row.
+
+Both annotation rows and the integrated core again cite the exact cached UniProt
+PTM passage “autocatalytic proteolytic processing to generate the proteolytically”,
+whose immediately following source line identifies the active mature form and
+attributes it to PMID:30252181. This supplements the independently read primary
+full-paper quotation with a mechanically checkable local source. The full-paper
+quotation retains its explicit external-access field until a normal cache is
+recovered and inspected. The published PR description will report the current
+49 ACCEPT / 8 KEEP_AS_NON_CORE tally and distinguish the already closed mouse
+PMID:19656850 cache gap from the human PMID:30252181 cache requirement.
+
+
+### 2026-09-27: normal human-study cache recovered
+
+Imported the exact normal-fetch abstract for PMID:30252181 from source recovery run 36289953066, artifact 10923045788. The record SHA-256 is `f8b3d9d98413752ea2db983397fe897aaab911db7cf324b08739f2a534a86d73`. The title and identifier match the reviewed study; the abstract supports the yeast functional analysis and patient OPA1/network phenotype. It contains no Figure 3, so the earlier accepted-manuscript assessment remains the source of construct-specific self-maturation details. `full_text_unavailable: true` accurately reflects this normal abstract cache. The exact cached UniProt quote remains the immediately checkable support attached to self-processing decisions and the integrated core. All 77 seeded source objects and action decisions are unchanged. This closes the last normal-cache gate; the source-specific processing-action and unused-provider advisories remain intentional.
