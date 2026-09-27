@@ -80,3 +80,42 @@ The reference findings were reconciled with their sources. **PMID:24793185** rep
 Targeted schema, term, reference-quote and best-practice validation, history validation, rendering, exact imported-source comparison and immutable-source hash checks are required before the final manifest. The review remains DRAFT for the three missing normal caches listed above. The final handoff records actual check outcomes and exact hashes; no Git or remote changes are performed by this author.
 
 Final checks: targeted validation passed with three warning categories: the three missing publication caches; the intentional source-specific Golgi-lumen split (lysosomal HPSE event versus biosynthetic events); and no direct annotation support assigned to the preserved provider reports. Parent independently read all 102 decisions, all three cores and the high-risk/new source assessments and requested no biological changes. The four withdrawn NEW scopes are documented above. Live primary PubMed explicitly reports no abstract for PMID:1966767, confirming that its historical UNVERIFIED content status is distinct from a missing cache. The complete human brain agrin localization result replaced a weaker background quote.
+
+
+## 2026-09-27 source3 reference recovery
+
+The three remaining records were imported unchanged from the verified normal-fetch
+source3 artifact (run 36292249952, artifact 10924402765; ZIP SHA256
+`d8908403ad407495b26d23af7007ee4da1fc643ebd61728d99ce9755bcfacdc2`).
+PMID:12773545 and PMID:17649979 are abstract-only caches: their abstracts were
+read, and the previous external full-paper assessments remain explicitly scoped.
+The former distinguishes covalent proteoglycan attachment from noncovalent
+binding; the latter assays chick G3 carbohydrate/calcium interactions.
+
+PMID:26290588 now includes XML-derived Methods, Results, figure legends and
+Discussion, which were read. Human cartilage expresses the y0,z0 transcript,
+and endogenous human C28-I2 knockdown reduces SOX9, COL2A1, ACAN and matrix GAG
+without a corresponding decrease in DNA content. Gain-of-function experiments
+and LRP4/dystroglycan perturbations use primary bovine chondrocytes; ectopic
+implants combine those cells with agrin-expressing COS7 cells in nude mice.
+The main Methods do not establish the expression construct's species explicitly.
+These experiments support the existing contextual interpretation and do not
+justify treating the experimental host as proof of a human construct.
+
+Only the three reference access notes and the newly recovered full-text flag
+were updated. All 102 seeded annotation decisions, three cores, reference
+identities, quotations, alternative products and biological description are
+unchanged; none of the four withdrawn prior NEW annotations was reinstated.
+The original three genuine provider reports and raw sources remain unchanged.
+Historical retrieval failures above are superseded by this verified recovery.
+
+The expanded census includes citations in all three preserved provider reports:
+47 distinct PMIDs and 40 Reactome records. The 32 review/notes PMIDs and all
+Reactome records are present, but 15 additional provider-only references need
+normal cache recovery: PMID:7619516, PMID:7852425, PMID:8227074, PMID:8398142,
+PMID:10328953, PMID:12621054, PMID:16061370, PMID:16630822, PMID:19307424,
+PMID:22302937, PMID:26610917, PMID:34714331, PMID:35948834, PMID:36609795,
+and PMID:37321467. They are retained as source-report provenance rather than
+adopted as verified biological evidence. The PR remains draft pending this
+recovery. Validation passes with the two explained Golgi-action and uncited-provider
+advisories; no review-reference warnings remain.
