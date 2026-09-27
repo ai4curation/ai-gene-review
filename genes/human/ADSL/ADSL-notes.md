@@ -319,3 +319,38 @@ source-cache warnings remain unresolved. All biological judgments, source
 assertions, reference assessments and core functions are unchanged. This status
 label correction does not imply that source retrieval or automated review has
 subsequently succeeded.
+
+
+## 2026-09-27 PR evidence-scope follow-up
+
+The root catalytic MF is refined to both measured substrate-specific lyase
+activities (GO:0004018 and GO:0070626), preserving both reactions. This is based
+on the human assays, not a blanket rule that all broad annotations are non-core.
+Human tetramer formation is now ACCEPT on both self-association rows and integrated
+into the two enzyme cores: each catalytic site receives residues from three subunits
+[PMID:19405474]. The broad complex CC remains compatible with that functional assembly.
+
+The rat aerobic-respiration transfer is now MARK_AS_OVER_ANNOTATED. The
+[primary rat abstract](https://pubmed.ncbi.nlm.nih.gov/3777158/) proposes that the
+purine nucleotide cycle supplies citric-acid-cycle intermediates. The
+[live GO definition and parents](https://amigo.geneontology.org/amigo/term/GO:0009060)
+describe oxygen-coupled respiratory energy release. The issue is whether the
+purine-cycle reaction is itself in that pathway, not whether ADSL must be a
+respiratory-chain protein or every participant must perform redox chemistry.
+Supplying intermediates supports a metabolic connection without demonstrating
+this pathway assignment. The rat phenotype is not denied; full specificity controls
+remain inaccessible, and no replacement regulation term is invented. Independent
+peer review supported this scope correction and prompted the explicit non-redox caveat.
+
+The reviewer questioned the species of PMID:6480832, but the
+[primary PubMed abstract](https://pubmed.ncbi.nlm.nih.gov/6480832/) explicitly reports
+28 AICAriboside-treated mice and 22 saline controls. That source is correctly mouse;
+the later PMID:3777158 study is rat. Reference notes now name exact primary verification
+routes for all nine missing caches, distinguishing abstract versus full-section access.
+VERIFIED means inspected identifier/content, not a successful normal cache fetch.
+The missing-source requirements remain unchanged. Four IBA source comments are now
+term-specific, and the blood-cell AMP row uses measured activity plus independent
+reaction support instead of an aim-only quotation. All 30 source assertions and 23
+reference identities, downloaded sources and published history remain unchanged.
+
+Peer review also distinguished the dual-substrate assays reported in PMID:10888601 from the reaction descriptions in PMID:19405474, whose measured kinetics concern adenylosuccinate. The two relevant review rows now cite the measured dual-substrate result.
