@@ -30,4 +30,4 @@ Decisions of note:
   process, ventral spinal cord development, NMJ development) marked over-annotated.
 - 43 of 44 protein binding rows REMOVED as uninformative; tau row MODIFIED to tau protein binding.
 
-Deep research: DCTN1-deep-research-falcon.md not present at time of writing.
+Deep research: DCTN1-deep-research-falcon.md arrived after the first pass; it agrees with the review (non-enzymatic dynein activator arm; retrograde axonal transport initiation; caution against assigning complex-level cargo functions to p150 alone). Its pointer to Singh 2024 LIS1-p150 was checked in PMID:38547289 and cited.

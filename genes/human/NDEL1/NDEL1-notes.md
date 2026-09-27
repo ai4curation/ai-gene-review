@@ -7,7 +7,7 @@ Journal for the NDEL1 (Q9GZM8, NudE-like 1, formerly NUDEL) GO annotation review
 - Cached publications (GOA-cited plus additional papers cached for this review after PubMed eutils
   verification: PMID:12556484, PMID:14970193, PMID:16291865, PMID:16203747, PMID:20403325,
   PMID:37730751, PMID:37086789).
-- Deep research (`NDEL1-deep-research-falcon.md`) was not present when the review was written;
+- Deep research (`NDEL1-deep-research-falcon.md`) was not present when the review was first drafted;
   see the end of this file for the final check.
 
 ## Biology summary (with provenance)
@@ -42,7 +42,19 @@ Journal for the NDEL1 (Q9GZM8, NudE-like 1, formerly NUDEL) GO annotation review
   functions (dynein regulation via LIS1 recruitment) are captured by NEW GO:0140659 and core_functions.
 - Kinesin complex (IBA): REMOVE -- NDEL1 is kinesin-1 cargo (via DISC1/14-3-3), not a kinesin subunit.
 - Insulin receptor signaling (IEA) and synaptic vesicle (IEA): MARK_AS_OVER_ANNOTATED.
-- Identical protein binding from structural papers: MODIFY to protein homodimerization activity.
+- Identical protein binding (all 6 rows): MODIFY to protein homodimerization activity (structurally defined coiled-coil homodimer).
 - NEW: GO:0140659 cytoskeletal motor regulator activity (human proteins in vitro, PMID:37086789);
   GO:0030473 nuclear migration along microtubule (comparator: LIS1/PAFAH1B1 carries GO:0007097; NDEL1
-  contributes regulator activity to the dynein step, so passes the participation test).
+  contributes regulator activity to the dynein step, so passes the participation test);
+  GO:0034454 microtubule anchoring at centrosome (human HeLa RNAi, PMID:16291865).
+
+## Deep research check (final)
+- `NDEL1-deep-research-falcon.md` appeared during the review and was read. It agrees with the dynein/LIS1
+  scaffold-regulator model and the handoff model (PMID:37730751). Additions taken up after verification:
+  - Tsai et al. 2024 (PMID:38194050, verified via PubMed, cached full text): de novo mosaic NDEL1 p.R105P in
+    pachygyria/SBH disrupts LIS1 binding and nucleokinesis [PMID:38194050 "Mechanistically, p.R105P disrupted NDEL1
+    binding to the dynein regulator LIS1."]; NDE1 predominates in progenitors, NDEL1 in postmitotic neurons.
+    Used to support NEW GO:0030473 and the radial migration row.
+  - Reported serine oligopeptidase activity (DISC1-inhibited) -- not annotated; raised as a suggested question.
+- Correction to the deep research: it calls Garrott et al. 2023 a preprint; the work is published
+  (PMID:37086789, J Biol Chem 2023).

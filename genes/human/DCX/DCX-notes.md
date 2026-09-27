@@ -7,7 +7,7 @@ Journal for the DCX (O43602, doublecortin) GO annotation review.
 - Cached GOA-cited publications, plus papers cached for this review after PubMed eutils verification:
   PMID:10399933, PMID:10399932, PMID:15200960, PMID:22727374, PMID:14625554, PMID:27238282.
   PMID:15173193 (Tanaka 2004) was already cached (module evidence).
-- Deep research (`DCX-deep-research-falcon.md`) was not present when the review was written; see the end of
+- Deep research (`DCX-deep-research-falcon.md`) was not present when the review was first drafted; see the end of
   this file for the final check.
 
 ## Biology summary (with provenance)
@@ -40,3 +40,11 @@ Journal for the DCX (O43602, doublecortin) GO annotation review.
 - Nucleokinesis module: supports DCX annoton function GO:0008017 microtubule binding. Did not add a NEW nuclear-migration
   process annotation: evidence is mouse-only and DCX acts on the track (MT stabilization), which is captured by the
   MT-stabilization process term; flagged as suggested question.
+
+## Deep research check (final)
+- `DCX-deep-research-falcon.md` appeared after the first draft and was read. It agrees with the MT-nucleating,
+  lattice-stabilizing MAP model (Gleeson 1999, Moores 2004, Manka & Moores 2020), PKA/MARK/CDK5 regulation, and
+  X-linked lissencephaly/SBH genetics. Cited in support of NEW GO:0007026.
+- Not annotated (emerging/indirect): 2023 iPSC preprint on tubulin polyglutamylation and lysosome processivity;
+  kinesin-3 (KIF1A/KIF1C) cargo effects; PKA-Ser47 -> Asef2/Rac1 actin coupling. CDK5 Ser297 control of
+  perinuclear microtubule association raised as a suggested question (relevant to nucleokinesis).
