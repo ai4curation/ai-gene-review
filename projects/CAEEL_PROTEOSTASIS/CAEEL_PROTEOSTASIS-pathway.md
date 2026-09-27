@@ -32,7 +32,7 @@ HSF-1 is the apex transcriptional regulator of the proteostasis network. Under n
 
 1. **Activation mechanism**: Protein misfolding triggers HSF-1 hyperphosphorylation and trimerization
 2. **Localization**: Translocates to nuclear stress granules (distinct subnuclear structures)
-3. **Target genes**: Activates ~100 genes encoding chaperones (hsp-1, hsp-4, hsp-16.2, hsp-90, daf-21), co-chaperones, and disaggregases
+3. **Target genes**: Activates ~100 genes encoding chaperones (hsp-1, hsp-4, hsp-16.2, hsp-90/daf-21), co-chaperones, and disaggregases
 4. **Lifespan effects**: IIS pathway mutations (daf-2(-)) extend HSF-1 activity and longevity
 
 #### Non-Core Functions (KEEP_AS_NON_CORE - 16 annotations)
@@ -164,39 +164,9 @@ HSP90 has specialized roles distinct from general-purpose chaperones:
 
 ---
 
-### 1.5 DAF-21: Second HSP90 Paralog with Specialized Functions (52 annotations)
+### 1.5 DAF-21 is HSP-90 (not a second paralog)
 
-**UniProt**: P41887 | **Human Ortholog**: HSP90AB1 | **Key Function**: Cytoplasmic HSP90
-
-#### Specialized Role Distinct from HSP-90
-C. elegans has two HSP90 genes (hsp-90 and daf-21) with:
-
-1. **Overlapping general chaperone functions**: Both can stabilize general client proteins
-2. **Distinct developmental functions**: DAF-21 has specific role in dauer formation
-3. **Tissue-specific expression**: DAF-21 particularly important in neurons and sensory neurons
-
-#### Core Molecular Functions (ACCEPT - 21 annotations)
-- **ATP hydrolysis activity**: Energy-dependent chaperone
-- **Protein stabilization**: Client protein stabilization
-- **Heat shock response**: HSF-1 inducible
-- **Complex membership**: Part of HSP90-containing molecular machines
-
-#### Developmental Role: Dauer Formation
-DAF-21 specifically regulates dauer formation through:
-
-1. **Dauer decision pathway**: Controls sensory neuron function (OSM-9 channel stabilization)
-2. **Pheromone sensing**: Stabilizes GPCR signaling components
-3. **Nuclear export**: YAP-1 (DAF-16-like TF) regulation via nuclear protein export
-
-#### Non-Core Functions (KEEP_AS_NON_CORE - 9 annotations)
-- Chemotaxis and sensory transduction (cell-nonautonomous)
-- Defense response to bacteria (mediated through transcription factor stabilization)
-- Lifespan determination (longevity extension via HSF-1 activation)
-
-#### Key Curation Decision
-- **MODIFY**: 8 generic "protein binding" → GO:0051879 "Hsp90 protein binding"
-
-**Clinical Relevance**: HSP90AB1 is implicated in cancer; potential target for neurodegenerative disease therapy.
+`daf-21` is a synonym of `hsp-90`: both names refer to one gene, WBGene00000915 (C47E8.5), whose protein is UniProt Q18688 (HSP90_CAEEL, "Heat shock protein 90 (Abnormal dauer formation protein 21)"). The dauer, chemosensory and client-stabilization roles once described here under a separate "DAF-21 paralog" belong to that one protein, and its review is section 1.4 above. An earlier version of this section gave DAF-21 a separate accession, but that accession (P41887) is the fission-yeast HSP90 Swo1, not a worm protein. The only other reviewed (Swiss-Prot) HSP90-family protein in C. elegans is the ER paralog ENPL-1 (endoplasmin, Q22235).
 
 ---
 
@@ -931,7 +901,7 @@ Stress Signal (Heat, misfolded proteins)
   ├─ HSP-1 (cytosolic HSP70)
   ├─ HSP-4 (ER BiP)
   ├─ HSP-16.2 (small HSP)
-  ├─ HSP-90, DAF-21 (HSP90s)
+  ├─ HSP-90/DAF-21 (HSP90)
   └─ Co-chaperones
          ↓
   Rapid protein stabilization
@@ -1040,7 +1010,6 @@ The proteostasis pathway is conserved, enabling disease modeling:
 | Gene | Instances | Replacement Terms |
 |------|-----------|------------------|
 | hsp-90 | 10 | GO:0051879 (Hsp90 protein binding) |
-| daf-21 | 8 | GO:0051879 (Hsp90 protein binding) |
 | cdc-48 | 4 | GO:0031593 (polyubiquitin-dependent binding) |
 | lgg-1 | 4 | GO:0044877 (protein-containing complex binding) |
 

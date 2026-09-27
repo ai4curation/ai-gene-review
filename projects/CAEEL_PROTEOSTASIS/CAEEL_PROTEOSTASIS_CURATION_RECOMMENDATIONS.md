@@ -47,7 +47,7 @@ Transcription factors and signaling kinases linking proteostasis to lifespan ext
 | **hsp-16.2** | P52686 | 12 | 🟡 Review-Ready | Small HSP holdase; 1 MODIFY (mechanistically incorrect refolding), 7 ACCEPT |
 | **hsp-4** | Q9N2B7 | ~32 | 🟡 Review-Ready | ER-resident BiP; strong annotations, 3 clarifications needed |
 | **hsp-90** | Q18688 | 54 | ✅ Excellent | Core chaperone; 12 MODIFY generic binding terms, 42 ACCEPT |
-| **daf-21** | Q18688 | 54 | ✅ Excellent | HSP-90 (same gene); comprehensive, publication-ready |
+| **daf-21** | Q18688 | — | merged | Synonym of hsp-90 (same gene, Q18688); the duplicate `genes/worm/daf-21` review was retired in favour of `genes/worm/hsp-90` |
 | **Priority 1 Total** | | **249** | **5✅ + 1🟡** | **77% publication-ready** |
 
 ### Priority 2: Protein Degradation Systems (6 genes)
