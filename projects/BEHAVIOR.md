@@ -66,12 +66,16 @@ Mined with [`BEHAVIOR/mine_behavior.py`](BEHAVIOR/mine_behavior.py) over every
 decisions). The full tables regenerate into
 [`BEHAVIOR/reports/REPORT.md`](BEHAVIOR/reports/REPORT.md).
 
-**Source surface.** Behaviour terms in the corpus GOA files are overwhelmingly
-phenotype-driven: **IMP + IGI account for the large majority** of behaviour
-annotations, with only a few IDA (direct assay) annotations. The most common
-terms are the broad ones — `locomotory behavior` (GO:0007626) by a wide margin,
-followed by `behavioral response to pain`, `mating behavior`, `social
-behavior`, `circadian behavior`, and `adult locomotory behavior`.
+**Source surface.** Behaviour terms in the corpus GOA files are mostly
+phenotype-driven: **IMP + IGI account for just over half** (114 of 209, 55%)
+of behaviour annotations; most of the rest is electronic or inferred by
+similarity (IEA 39, ISS 26, ISO 14), and only 3 are IDA (direct assay). The
+most common term is the broad `locomotory behavior` (GO:0007626, 26 rows) by a
+wide margin, followed by a cluster of terms at 7–11 rows each: `mating
+behavior`, `social behavior`, `behavioral response to pain`, `drinking
+behavior`, `chemosensory behavior`, `adult locomotory behavior`,
+`thermosensory behavior`, and `circadian behavior` (counts from the September
+2026 re-run of the miner).
 
 **Reviewer decisions.** Of the behaviour annotations reviewers have adjudicated
 as core-vs-not (197 of 216 in the September 2026 re-run, excluding the 10 `NEW`
