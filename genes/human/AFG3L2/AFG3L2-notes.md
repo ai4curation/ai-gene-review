@@ -30,3 +30,107 @@ I did not add `GO:0005759 mitochondrial matrix`. The PN class label "Matrix prot
 Generic proteolysis and protein catabolic process annotations were marked for replacement by `GO:0035694 mitochondrial protein catabolic process`. Broad membrane or mitochondrion cellular component annotations were marked for replacement by `GO:0005743 mitochondrial inner membrane`.
 
 The `protein binding` IPI rows were treated as over-annotations. The reported interactions are real, but the generic MF term does not communicate AFG3L2 function. Where appropriate, the informative biology is captured by `m-AAA complex`, substrate degradation, mitochondrial calcium import regulation, glutathione-response biology, or mitochondrial protein quality control.
+
+## 2026-09-27 — ClinGen Mendelian evidence audit
+
+This audit supersedes the earlier review judgments where explicitly described below; the historical notes, provider report and generated PN notes remain intact. The approved HGNC symbol is AFG3L2 (HGNC:315), with previous symbol SCA28 and alias SPAX5 in the archived official HGNC subset. No historical-symbol gene directories were found. Read-only GitHub checks found no open AFG3L2/SCA28/SPAX5 PR, and all local gene files matched main commit `795b693f5711c625401d03a755fe937260ae0ac0` before editing. The starting review contained 77 machine-seeded assertions plus one prior NEW proposal. All 77 original source objects, including terms, references, evidence types, qualifiers and supporting entities, are preserved. All 39 original reference identifiers/titles remain exact.
+
+Research and source access:
+
+- A genuine fresh Falcon request with a 1200-second timeout and perplexity-lite fallback was launched concurrently with `just fetch-gene-pmids human AFG3L2`. Both research commands failed while installing `deep-research-client` from PyPI because DNS resolution failed, before either provider ran. No report was fabricated or overwritten. The existing genuine Falcon report remains historical context, independently checked against primary evidence.
+- The concurrent publication sweep confirmed all 19 original cited PMIDs were already cached. The additional mouse donor paper PMID:19656850 was verified externally, but the normal `fetch-pmid 19656850` attempt failed DNS and produced no file. The review remains **DRAFT** until that missing cache is obtained. Primary verification and local cache availability are separate facts.
+- Cached full primary papers were read for biochemical activity, complex assembly, quality control, regulatory substrate turnover and source-specific experimental scope. Abstract-only records remain marked accordingly. The partial cache for PMID:22354088 contains genuine full-text sections but omits Results; externally recovered Results are explicitly identified below. Neither a full-text metadata flag nor the existence of a provider report substitutes for access to the relevant experiment.
+
+### Catalytic mechanism, location and maturation
+
+AFG3L2 is a membrane-anchored, matrix-facing protease rather than a soluble matrix protein. PMID:14623864 directly combines mitoplast fractionation, alkaline extraction and reciprocal AFG3L2–SPG7 coimmunoprecipitation in human cells: "Paraplegin and AFG3L2 were recovered from the membrane fraction, indicating that both are integral proteins of the mitochondrial inner membrane". The original broad mitochondrial immunofluorescence assertion in PMID:10395799 remains ACCEPT at its own resolution. HPA/immunofluorescence, mitochondrial HTP, the PINK1 study and InterPro membrane rows also retain their supported broad compartments; separate annotations establish the finer inner-membrane location.
+
+PMID:19748354 measures coordinated ATP hydrolysis in purified human AFG3L2 homo- and SPG7-containing hetero-oligomers expressed in yeast. Walker A and Walker B effects differ. Its MrpL32/Ccp1 processing experiments concern yeast substrates, not native human MRPL32. PMID:29932645 directly tests engineered soluble coiled-coil-hexamerized human AFG3L2, protein degradation, short-peptide cleavage and a recombinant human MRPL32 precursor lacking its first 30 residues. The processed product is characterized by mass spectrometry. Protein unfolding/degradation is ATP-fueled; accessible short-peptide cleavage can occur without ATP. PMID:31327635 resolves a membrane-truncated human catalytic-core homohexamer with ATPase/protease-inactivating mutations, while separate active engineered-enzyme assays establish ATPase and cleavage functions. Inactive trapped structural density is not itself a catalytic turnover assay.
+
+These data support one integrated core activity, ATP-dependent peptidase activity, with ATP-driven unfolding/translocation and zinc-dependent peptide cleavage. Mitochondrial protein quality control, catabolism and productive precursor processing are retained as distinct aspects of that function. This replaces the earlier two core units that separated the motor and cleavage domains of the same machine. No new annotation is proposed.
+
+Live ontology checks on 2026-09-27 confirmed that [GO:0034982](https://amigo.geneontology.org/amigo/term/GO:0034982) is a child of [protein processing, GO:0016485](https://amigo.geneontology.org/amigo/term/GO:0016485), whose definition concerns proteolytic maturation to functional capacity. Consequently the source-specific SLC25A45 processing row is changed to mitochondrial protein catabolism: PMID:41075794 Figure 2 and Figure S6 measure stabilization and slowed turnover after AFG3L2 depletion, not production of a mature SLC25A45 fragment. This does not challenge AFG3L2's separately demonstrated precursor-maturation capacity. In the 2019 structural-source processing row, acceptance explicitly relies on independent 2018 human precursor biochemistry as well as curator judgment, rather than relabeling model-substrate destruction as maturation.
+
+The previous NEW GO:0035694 proposal is withdrawn because several retained MODIFY replacements already cover mitochondrial protein catabolism. Its source assertion was a pre-existing proposal rather than a seeded GOA row. The historical Proteostasis projection files remain unchanged; they are not primary experimental evidence.
+
+### Mouse donor self-processing and propagation
+
+The MGI [Q8JZQ2 sequence record](https://www.informatics.jax.org/sequence/Q8JZQ2) identifies the ISS/Compara donor as mouse Afg3l2. The [comparative GO snapshot](https://www.informatics.jax.org/homology/GOGraph/Afg3l2), generated 2023-03-10, links mouse autoprocessing and protein processing to PMID:19656850. Primary [PubMed](https://pubmed.ncbi.nlm.nih.gov/19656850/) confirms *Autocatalytic processing of m-AAA protease subunits in mitochondria.*, DOI 10.1091/mbc.E09-03-0218. Indexed original [PMC2754935](https://pmc.ncbi.nlm.nih.gov/articles/PMC2754935/) Results and Figures 4–5 were read on 2026-09-27: mouse Afg3l2 undergoes MPP-dependent intermediate formation followed by maturation requiring existing Afg3l1/Afg3l2, examined in yeast and mouse mitochondrial import experiments. This supports a real donor function, not merely a predicted precursor. Conserved human architecture and the curated human processing record support transfer as non-core biogenesis. A full-length human self-cleavage assay was not recovered, and the mouse Afg3l1 contribution is not transferred to human as an active third subunit.
+
+PAINT reviews retain only ancestral PTN nodes as proximate source entities. The human target's presence among descendant experiments is legitimate grounding; donor counts are not used to weaken support. InterPro mappings are assessed against actual human enzyme/topology data. ARBA identifiers are retained, but unrecovered rule internals are explicitly UNRESOLVED. No phylogeny, alignment or current Ensembl tree was reconstructed. These limits do not negate direct human evidence supporting the biochemical judgments.
+
+### Quality control, calcium and metabolite regulation
+
+PMID:26504172 Figures 8–9 establish nascent-chain proteostasis and actinonin responses. Five-day AFG3L2 depletion did not reduce large mitoribosomal-subunit assembly or monosome formation. PMID:30683687 shows delayed ribosomal/membrane consequences and suppression by mitochondrial-translation inhibition, separating primary nascent-chain stress from later phenotypes. PMID:34718584 shows that combined OXA1L/AFG3L2 depletion prevents rapid degradation of newly synthesized MT-ATP6 and MT-CO2 observed after OXA1L depletion. These support direct quality-control participation, not a universal claim that every human phenotype follows MRPL32 maturation failure. OMA1 performs stress-induced OPA1 cleavage; AFG3L2 is not assigned that downstream reaction.
+
+The original PMID:27642048 abstract directly reports mouse neuronal interactome, MAIP1 complex and EMRE turnover context. Full source recovery failed: the publisher PDF was inaccessible, the university archive marked its copy restricted, and ResearchGate offered a request. Exact human pair/construct details and the axonogenesis experiment therefore remain unresolved. The axonogenesis IMP row is UNDECIDED; a general axonal-development sentence in the later structural paper does not replace this original experiment. No wrong-species inference is made from the abstract.
+
+Primary full [PMC5410796](https://pmc.ncbi.nlm.nih.gov/articles/PMC5410796/) for PMID:28396416 was read externally on 2026-09-27, including Figures 1–5. AFG3L2/SPG7 depletion slows degradation of unassembled EMRE in HEK293 cells; independent shRNAs and isolated-mitochondrial ATP-dependence assays reinforce the mechanism. Protease-resistant EMRE deregulates uptake when MICU gatekeeping is limiting, but overexpressed resistant EMRE alone did not yield detectable low-calcium uptake with sufficient MICU1. Source-specific calcium regulation/homeostasis remains NON_CORE. The import row is refined to regulation on mechanistic grounds, not because only channels can participate in transport.
+
+Cached GO-CAM `65c57c3400001115` explicitly models AFG3L2 metalloendopeptidase activity with EMRE as input and negative causal influence on the EMRE-dependent transport machinery; MCU supplies channel activity. Model `65c57c3400001018` similarly separates AFG3L2 proteolysis from SLC25A39 glutathione import/iron-sulfur binding. These support the role distinctions. No NEW process term is needed.
+
+PMID:37917749 and PMID:38157846 establish AFG3L2-dependent SLC25A39 turnover, substrate-loop dependence and responses to GSH/iron status. SPG7 is dispensable for the SLC25A39 control tested in the former paper. The substrate bears the metabolite-responsive features; AFG3L2 supplies proteolysis. PMID:35912435 demonstrates TMBIM5 association/inhibition of AFG3L2 and AFG3L2 contributions to TMBIM5 turnover under hyperpolarization, while allowing other proteases. Neither TMBIM5 calcium/proton exchange nor SLC25A39 transport is reassigned to AFG3L2.
+
+### PINK1, interactions and source-level limits
+
+For PMID:22354088, externally indexed primary [PMC3321149](https://pmc.ncbi.nlm.nih.gov/articles/PMC3321149/) Results/Figures 1–3 were recovered on 2026-09-27 after direct opening challenged. AFG3L2 silencing changes PINK1 cleavage-intermediate/product abundance under membrane-potential controls. The authors infer direct participation, but no purified AFG3L2–PINK1 cleavage reaction or exact AFG3L2 cleavage site is established by those assays. MPP has a distinct upstream processing/import role. The metalloendopeptidase and membrane-protein-proteolysis annotations are retained with those bounds. OMA1 maturation in PMID:29545505 is explicit in the cached abstract; unavailable full details are not invented.
+
+All six generic protein-binding annotations are REMOVE under the repository's functional-informativeness policy. This is not a claim that the interactions are false. PMID:14623864 and PMID:26387735 directly support AFG3L2–SPG7 association; the latter's permeability-transition interpretation is separate from that interaction. PMID:35912435 directly supports TMBIM5 association. The original [author manuscript](https://edoc.mdc-berlin.de/id/eprint/19322/1/19322oa.pdf) for PMID:32814053 was re-read: repeated Y2H screening, pairwise retesting, dataset integration and selected validation preclude describing the work as one unvalidated interaction experiment. The exact AFG3L2–HTT supplementary pair was not recovered. In the two PMID:27642048 binding rows, exact human MAIP1/EMRE pair evidence remains uncertain; missing detail prevents selecting an informative mechanistic replacement, while removal of the generic term leaves no assertion of nonbinding.
+
+All nine cached Reactome summaries were read. The PMPCA/PMPCB event is not relabeled as AFG3L2 transit-peptide cleavage. Matrix substrate access is distinguished from soluble matrix residence. The summary naming MRPL32 among degraded substrates is not used as proof that mature MRPL32 is completely destroyed; primary limited-precursor processing is stated explicitly.
+
+The independent coordinator read all 77 judgments and the integrated core. The resulting refinements preserve broad source-level locations and distinguish generic-term removal from unresolved pair-level evidence. Validation and publication manifests record the final counts and the remaining PMID:19656850 cache gate.
+
+## 2026-09-27 — PR #3196 primary-source follow-up
+
+This section supersedes the earlier statement that a human-protein self-maturation assay was not recovered, the NON_CORE autoprocessing decisions, and the earlier missing-cache status for PMID:19656850. The baseline is published PR head `d81a4c9ba7a837234a0a5e3ce2e05b7b242c6832`. All 77 original source objects and all 40 existing reference identities are unchanged.
+
+### Human-protein maturation evidence
+
+[PMID:30252181](https://pubmed.ncbi.nlm.nih.gov/30252181/) was verified through official PubMed and its linked [accepted manuscript](https://air.unimi.it/retrieve/dfa8b99b-dfba-748b-e053-3a05fe0a3a96/16023842_VERSIONE%20ACCETTATA.pdf). Methods, Results and Discussion were read. Figure 3C compares human AFG3L2 with the E575Q protease-inactive control and disease variants in yeast lacking endogenous m-AAA protease. Precursor accumulation supports self-maturation by human AFG3L2. Figure 3D separately supports AFG3L2-dependent paraplegin maturation; R468C retains complex association despite impaired processing. The Methods identify a Yta10(1–63)-human paraplegin(59–795)-HA targeting fusion, so this is not a direct assay of native human SPG7's MPP cleavage. The two existing autoprocessing assertions are now ACCEPT: AFG3L2 performs the cleavage in an integral enzyme-maturation reaction. This is not substrate-only participation. No NEW annotation is needed.
+
+The core description and relevant mitochondrial-processing reviews now include self- and partner-maturation alongside the independently demonstrated recombinant human MRPL32 reaction. Yeast MrpL32/Ccp1 assays are not relabeled human substrates. Patient fibroblasts retain normal MRPL32 processing; altered OPA1 products do not establish direct AFG3L2 cleavage of OPA1. Native human-cell processing requirements remain appropriately bounded. A sibling's focused conceptual consultation agreed that direct self-cleavage can be core, while explicitly not claiming a new independent full-paper read.
+
+### Cache recovery and remaining gate
+
+The standard reference-recovery workflow produced `publications/PMID_19656850.md`, imported without modification after artifact and per-file hash verification. The record is abstract-only and its title exactly matches the retained reference. Its abstract supports mouse Afg3l2 autoprocessing and paraplegin maturation; earlier externally recovered Results remain separately scoped. It is retained because it grounds the original mouse donor, even with independent human-protein evidence. Provenance: source workflow run `36286975328`, source head `5946477c8ac79ade0709264c775ea1262b108438`, artifact `10920674630`, transport run `36288441414`; the exact receipt is `tmp/verified-reference-records/local-import-receipt.json`. Its bytes are included explicitly in this follow-up's publication manifest.
+
+A normal `fetch-pmid 30252181` attempt failed DNS with `nodename nor servname provided, or not known`, caching 0/1. No publication record or provider report was fabricated. The citation is primary-verified, but its machine cache remains missing; the review stays DRAFT. The new source's local `full_text_unavailable: true` flag does not deny the externally read manuscript. Existing provider artifacts remain unchanged. The notes-inclusive citation census now has 21 distinct PMIDs, with only PMID:30252181 missing.
+
+### Other reviewer points
+
+The HTT generic-binding removal retains its functional-informativeness rationale; the unrelated introductory quotation was deleted. Broad membrane localization remains ACCEPT because membrane anchoring is core biology and is entailed by the finer inner-membrane location, rather than becoming non-core merely through GO granularity. The one integrated protease core retains explicit zinc-dependent endopeptide chemistry. An ontology question now asks how to represent both ATP-coupled translocation and metalloprotease cleavage without duplicating the same activity; short-peptide cleavage and ATP-driven protein degradation have different energetic requirements. The existing generic-binding removals do not deny interactions or pretend unavailable pair assays were read. The source-specific axonogenesis assertion remains UNDECIDED.
+
+Only two action changes were made: the two autoprocessing rows move from KEEP_AS_NON_CORE to ACCEPT. Final counts are 49 ACCEPT, 13 MODIFY, 8 KEEP_AS_NON_CORE, 6 REMOVE and 1 UNDECIDED, with one integrated core and 41 reference assessments. Validation, rendering and exact source preservation are recorded in the follow-up manifest; the only unresolved publication cache is PMID:30252181.
+
+
+## 2026-09-27 second review follow-up: self-maturation and cached support
+
+The two seeded protein-autoprocessing assertions remain ACCEPT. AFG3L2 performs
+the peptide-cleavage step itself; this is direct participation in its own
+maturation, not an inference from being required for another enzyme’s work. The
+mouse donor evidence and independent human-protein experiments remain separate:
+PMID:30252181 expressed human AFG3L2 in m-AAA-deficient yeast, rather than native
+human cells. No source field, annotation action or evidence code changes.
+
+The integrated core now explicitly includes GO:0016540 protein autoprocessing.
+The live [GO autoprocessing record](https://amigo.geneontology.org/amigo/term/GO:0016540)
+and [mitochondrial processing record](https://amigo.geneontology.org/amigo/term/GO:0034982)
+were checked on 2026-09-27: both are separate children of GO:0016485 protein
+processing, and neither is an ancestor of the other. The added synthesis term
+records the already-reviewed self-cleavage mechanism; it creates no NEW row.
+
+Both annotation rows and the integrated core again cite the exact cached UniProt
+PTM passage “autocatalytic proteolytic processing to generate the proteolytically”,
+whose immediately following source line identifies the active mature form and
+attributes it to PMID:30252181. This supplements the independently read primary
+full-paper quotation with a mechanically checkable local source. The full-paper
+quotation retains its explicit external-access field until a normal cache is
+recovered and inspected. The published PR description will report the current
+49 ACCEPT / 8 KEEP_AS_NON_CORE tally and distinguish the already closed mouse
+PMID:19656850 cache gap from the human PMID:30252181 cache requirement.
+
+
+### 2026-09-27: normal human-study cache recovered
+
+Imported the exact normal-fetch abstract for PMID:30252181 from source recovery run 36289953066, artifact 10923045788. The record SHA-256 is `f8b3d9d98413752ea2db983397fe897aaab911db7cf324b08739f2a534a86d73`. The title and identifier match the reviewed study; the abstract supports the yeast functional analysis and patient OPA1/network phenotype. It contains no Figure 3, so the earlier accepted-manuscript assessment remains the source of construct-specific self-maturation details. `full_text_unavailable: true` accurately reflects this normal abstract cache. The exact cached UniProt quote remains the immediately checkable support attached to self-processing decisions and the integrated core. All 77 seeded source objects and action decisions are unchanged. This closes the last normal-cache gate; the source-specific processing-action and unused-provider advisories remain intentional.
