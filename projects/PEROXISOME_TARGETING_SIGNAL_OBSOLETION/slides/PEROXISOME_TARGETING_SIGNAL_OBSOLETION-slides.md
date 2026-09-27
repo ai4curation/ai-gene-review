@@ -38,7 +38,7 @@ GO:0005052 · GO:0005053 · GO:0033328 → GO:0000268 peroxisome signal sequence
 
 - GO **obsoleted three signal-specific binding terms** (PTS1, PTS2, mPTS) and merged them into the renamed parent **GO:0000268**.
 - The change has **landed** (OLS shows all three obsolete); the page's "not yet applied" status is out of date.
-- **Scoped, refresh not started:** 18 rows in the PEX5, PEX7 and PEX19 reviews still use the old ids, 17 of them ACCEPT.
+- **Refresh fixed in #3233 (open):** 18 ACCEPT rows in PEX5, PEX7 and PEX19 → MODIFY to GO:0000268; PEX5's mPTS row stays UNDECIDED.
 
 ---
 
@@ -65,12 +65,12 @@ GO:0005052 · GO:0005053 · GO:0033328 → GO:0000268 peroxisome signal sequence
 
 ## What is in the repo today
 
-| Gene | Obsolete term | Rows | Actions in review |
+| Gene | Obsolete term | Rows | Actions (#3233, open) |
 |---|---|---|---|
-| PEX5 | GO:0005052 | 9 (6 IDA, IBA, IMP, IPI) | all ACCEPT |
-| PEX5 | GO:0033328 | 1 (IPI) | UNDECIDED |
-| PEX7 | GO:0005053 | 7 (5 IDA, IBA, IEA) | all ACCEPT |
-| PEX19 | GO:0033328 | 1 (IBA) | ACCEPT |
+| PEX5 | GO:0005052 | 9 (6 IDA, IBA, IMP, IPI) | ACCEPT → MODIFY GO:0000268 |
+| PEX5 | GO:0033328 | 1 (IPI) | stays UNDECIDED (not an mPTS receptor) |
+| PEX7 | GO:0005053 | 7 (5 IDA, IBA, IEA) | ACCEPT → MODIFY GO:0000268 |
+| PEX19 | GO:0033328, GO:0036105 | 2 (IBA, IDA) | ACCEPT → MODIFY GO:0000268; core MF too |
 
 <span class="small">Already on the parent GO:0000268: PEX5 (IDA, ACCEPT, old label) and PEX39 (IDA, MODIFY: PEX39 is a PTS2 co-receptor that does not bind cargo on its own).</span>
 
@@ -78,8 +78,8 @@ GO:0005052 · GO:0005053 · GO:0033328 → GO:0000268 peroxisome signal sequence
 
 ## Next steps
 
-1. `just fetch-gene human PEX5` (then PEX7, PEX19) to pull GOA with GO:0000268 in place of the children.
-2. Re-review the swapped rows; decide whether GO:0000268 is the right core MF for each receptor.
+1. Merge **#3233**; author-supplied ids (5 replacement terms, PEX19 core MF) already point to GO:0000268.
+2. Re-run `just fetch-gene` once GOA swaps the ids itself.
 3. Note the IPR044536 redirect in the PEX7 review; leave SGD/AspGD orthologs to the broader peroxisome project.
 
 **Upstream:** go-annotation#6401 · go-ontology#31419

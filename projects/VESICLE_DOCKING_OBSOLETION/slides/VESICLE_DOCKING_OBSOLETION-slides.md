@@ -38,7 +38,7 @@ GO:0048278 and 8 related process terms → MFs GO:0160321 docking and GO:7770062
 
 - GO **retired the vesicle docking process subtree** (9 terms) and minted two MFs: **GO:0160321** docking and **GO:7770062** tethering activity.
 - This is the **parent tracker** (#6379): 130 upstream annotations, 96 still pending; siblings cover regulation, tethering and targeting.
-- **Scoped, refresh not started:** **USO1** and **STX12** still ACCEPT IBA rows on obsolete docking terms.
+- **Refresh fixed in #3237 (open):** **USO1** → GO:7770062 tethering; **STX12** → GO:0005484 SNAP receptor activity, obsolete BP out of `core_functions`.
 
 ---
 
@@ -65,21 +65,20 @@ GO:0048278 and 8 related process terms → MFs GO:0160321 docking and GO:7770062
 
 ## State in this repo
 
-| Review | Obsolete term | Row | Action | Likely target |
+| Review | Obsolete term | Row | Action (#3237, open) | New target |
 |---|---|---|---|---|
-| `human/USO1` (p115) | GO:0048211 Golgi vesicle docking | IBA | ACCEPT | GO:7770062 or GO:0160321 |
-| `human/STX12` | GO:0048278 vesicle docking (also in `core_functions`) | IBA | ACCEPT | recheck: a SNARE, MF is SNAP receptor activity |
-| `mouse/Camk2a` | GO:0099148 (sibling tracker) | IMP, IDA | ACCEPT | regulatory BP |
+| `human/USO1` (p115) | GO:0048211 Golgi vesicle docking | IBA | ACCEPT → MODIFY | GO:7770062 vesicle membrane tethering activity |
+| `human/STX12` | GO:0048278 vesicle docking (also in `core_functions`) | IBA | ACCEPT → MODIFY | GO:0005484 SNAP receptor activity; core BP dropped |
+| `mouse/Camk2a` | GO:0099148 (sibling tracker) | IMP, IDA | ACCEPT → MODIFY | GO:0048172 regulation of short-term neuronal synaptic plasticity |
 
-<span class="small">STX12 was reviewed in June 2026 (#1217), after this page's impact scan. `core_functions` ids are strictly validated, so its entry will fail once the validator's GO release includes the obsoletion.</span>
+<span class="small">STX12 was reviewed in June 2026 (#1217), after this page's impact scan. GOA `term.id`s stay as GOA supplies them; only actions and targets change.</span>
 
 ---
 
 ## Next steps
 
-1. Refresh **USO1**: p115 is a Golgi tether, so decide tethering (GO:7770062) versus docking (GO:0160321).
-2. Refresh **STX12**: drop GO:0048278 from `core_functions`; the SNARE MF GO:0005484 already carries its role.
-3. Queue new reviews: **STX1A, STXBP1, EXOC4, EXOC6, NSF**; yeast Uso1 and Sec1 later.
+1. Merge **#3237** (USO1, STX12, plus Camk2a and TMF1 for the sibling trackers).
+2. Queue new reviews: **STX1A, STXBP1, EXOC4, EXOC6, NSF**; yeast Uso1 and Sec1 later.
 
 **Siblings:** `SYNAPTIC_VESICLE_DOCKING_OBSOLETION` (#6415) · `VESICLE_TETHERING_OBSOLETION` (#6375) · `VESICLE_TARGETING_OBSOLETION` (#6424) · ciliary, ER-PM, mito-ER trackers
 **Upstream:** go-annotation#6379 · go-ontology#31880

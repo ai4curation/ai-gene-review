@@ -19,9 +19,12 @@ Septin5 and worm tom-1. We listed those rows and argued that most
 should not become the new MF, because a kinase such as CaMKIIα
 regulates docking without doing it. The obsoletion has now landed:
 OLS shows GO:0099148 obsolete and GO:0160321 minted, so the "not yet
-applied" notes below are out of date. Scoped, refresh not started: the
-mouse Camk2a review still ACCEPTs both GO:0099148 rows (IMP and IDA,
-PMID:17660813), and Septin5 and tom-1 have no review here.
+applied" notes below are out of date. The one affected review is fixed
+in #3237 (open): mouse Camk2a's two GO:0099148 rows (IMP and IDA,
+PMID:17660813) move from ACCEPT to MODIFY → GO:0048172 *regulation of
+short-term neuronal synaptic plasticity*, not the docking MF, because
+the paper shows αCaMKII regulates the number of docked vesicles without
+docking them. Septin5 and tom-1 still have no review here.
 
 This is the regulation branch of the docking refactor. The parent
 tracker [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md)
@@ -111,9 +114,11 @@ in the upstream issue.
 
 **Mouse `Camk2a` is already reviewed here and is directly affected.**
 `genes/mouse/Camk2a/Camk2a-ai-review.yaml` carries two GO:0099148 rows
-(IMP and IDA, both `PMID:17660813`), each currently `action: ACCEPT`. Once the
-obsoletion is applied these become annotations to an obsolete term and the
-review must be refreshed.
+(IMP and IDA, both `PMID:17660813`), each formerly `action: ACCEPT`. Both are
+now `MODIFY` → GO:0048172 regulation of short-term neuronal synaptic
+plasticity, fixed in #3237 (open), which also replaced the supporting text
+with the abstract's sentences on docked-vesicle number and short-term
+presynaptic plasticity. The paragraphs below record the original reasoning.
 
 The refresh is **not** a mechanical relabel. CaMKIIα is a Ser/Thr kinase that
 *regulates* presynaptic vesicle docking; it is not itself a vesicle-docking
@@ -151,8 +156,8 @@ accessions before starting.
 ### Tier 1 — refresh required (already in repo)
 
 1. **Camk2a** (mouse, UniProt **P11798**) — `genes/mouse/Camk2a/`. Two
-   GO:0099148 rows currently `ACCEPT`; must be re-evaluated once the term is
-   obsoleted. Highest priority because an existing review goes stale on
+   GO:0099148 rows were `ACCEPT`; now `MODIFY` → GO:0048172, fixed in
+   #3237 (open). Highest priority because an existing review goes stale on
    obsoletion. Expect `MODIFY` (regulatory kinase, not a docking adaptor),
    not a clean transfer to the new MF.
 
@@ -209,6 +214,12 @@ required.
   GO:0160321 not yet minted. Affected experimental annotations: Camk2a
   (mouse, in repo — needs refresh), Septin5 (mouse, not in repo), tom-1
   (C. elegans, not in repo). No gene reviews started or refreshed yet.
+- 2026-09-26 — Camk2a refresh fixed in #3237 (open): both GO:0099148
+  rows (IMP, IDA; PMID:17660813) ACCEPT → MODIFY to GO:0048172
+  regulation of short-term neuronal synaptic plasticity (regulator, not
+  docker, as this page anticipated); supporting text now quotes the
+  abstract. Septin5 and tom-1 reviews not started, so maturity stays
+  SCOPING.
 
 ## Slides
 

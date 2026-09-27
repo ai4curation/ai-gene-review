@@ -38,7 +38,7 @@ GO:0099022 and 4 children → MF GO:7770062 vesicle membrane tethering activity
 
 - GO **obsoleted vesicle tethering** (5 process terms) and minted **GO:7770062** vesicle membrane tethering activity.
 - **8 TRAPP reviews** already MODIFY their obsolete GO:0099022 row to GO:0006888 ER to Golgi transport.
-- **Still to do: TMF1**, whose own new-term request is now GO:7770062, still uses obsolete GO:0099041 in a row and in `core_functions`.
+- **TMF1 fixed in #3237 (open):** its MF moves to **GO:7770062**, and the obsolete GO:0099041 row, core BP and new-term request are removed.
 
 ---
 
@@ -71,7 +71,7 @@ GO:0099022 and 4 children → MF GO:7770062 vesicle membrane tethering activity
 
 ## Next steps
 
-1. Refresh **TMF1**: replace GO:0099041 in `core_functions`, swap the GO:0060090 stand-in for **GO:7770062**, close its `proposed_new_terms` entry.
+1. Merge **#3237** (TMF1 and USO1 → **GO:7770062**).
 2. New reviews: **EXOC4, EXOC6** (exocyst; InterPro-flagged), then golgins **TRIP11, GOLGA5, GORAB**.
 3. Keep wording consistent with the docking trackers; EXOC4 is shared, host it once.
 

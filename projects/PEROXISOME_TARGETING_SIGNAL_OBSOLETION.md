@@ -17,11 +17,15 @@ named *peroxisome signal sequence receptor activity*. We recorded the
 upstream tickets and listed every review in this repo that uses the old
 terms, so the reviews can be refreshed once GOA catches up. The change
 has landed: OLS now shows all three terms as obsolete, so the "not yet
-applied" status entry below is out of date. Scoped, not yet started on
-the refresh: 18 `existing_annotations` rows still carry the obsolete ids
-(PEX5 10, PEX7 7, PEX19 1), and 17 of them are ACCEPT. The biology does
-not change; the work is a term swap plus a check that the parent term
-still captures each receptor's core function.
+applied" status entry below is out of date. The refresh is fixed in
+#3233 (open). 19 `existing_annotations` rows carry the obsolete ids
+(PEX5 10, PEX7 7, PEX19 2, counting PEX19's GO:0036105 mPTS class-1
+row). The 18 ACCEPT rows among them become MODIFY → GO:0000268 (PEX5 9,
+PEX7 7, PEX19 2), and the PEX5 GO:0033328 IPI row stays UNDECIDED,
+because PEX5 is not an mPTS receptor. Author-supplied ids (five
+`proposed_replacement_terms` in PEX5 and PEX7, and PEX19's
+`core_functions` MF GO:0036105) now point to GO:0000268. The biology
+does not change.
 
 ## Overview
 
@@ -61,7 +65,11 @@ The obsoleted terms appear in three already-reviewed human genes (existing
 |---|---|---|---|---|
 | PEX5 | P50542 | `genes/human/PEX5/PEX5-ai-review.yaml` | GO:0005052 (multiple IDA, IBA), GO:0033328 (IPI) | PTS1 receptor; multiple IDA-supported entries |
 | PEX7 | O00628 | `genes/human/PEX7/PEX7-ai-review.yaml` | GO:0005053 (IDA, IBA, IEA from InterPro IPR044536) | PTS2 receptor; receives the InterPro2GO mapping that also needs redirection |
-| PEX19 | P40855 | `genes/human/PEX19/PEX19-ai-review.yaml` | GO:0033328 (IBA) | Cytosolic PMP receptor/chaperone |
+| PEX19 | P40855 | `genes/human/PEX19/PEX19-ai-review.yaml` | GO:0033328 (IBA), GO:0036105 (IDA; also in `core_functions`) | Cytosolic PMP receptor/chaperone |
+
+All three are fixed in #3233 (open): 18 ACCEPT rows → MODIFY to GO:0000268
+(PEX5 9, PEX7 7, PEX19 2); PEX5 GO:0033328 IPI stays UNDECIDED with an
+obsoletion note. GOA `term.id`s are left as GOA supplies them.
 
 These genes are already part of the broader [PEROXISOME](PEROXISOME.md) project.
 
@@ -125,6 +133,11 @@ mechanical (term ID/label refresh) rather than scientific.
 
 - 2026-05-01 — Project file created, tracking upstream issue #6401 (opened
   same day). Obsoletion not yet applied. No review edits required at this time.
+- 2026-09-26 — Refresh fixed in #3233 (open) for PEX5, PEX7 and PEX19:
+  18 ACCEPT rows → MODIFY to GO:0000268 peroxisome signal sequence
+  receptor activity; PEX5 GO:0033328 stays UNDECIDED; author-supplied
+  ids repointed to GO:0000268. Maturity stays SCOPING until #3233 merges;
+  the yeast/Aspergillus orthologs remain optional.
 
 ## Slides
 
