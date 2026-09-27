@@ -1070,37 +1070,49 @@ def convert_referenced_notebooks(
     return output_paths, warnings
 
 
+HTML_ASSET_SUFFIXES = {".html", ".htm"}
+
+
 def copy_referenced_assets(
     md_files: List[Path],
     output_dir: Path,
     projects_dir: Path,
     rendered_paths: Optional[List[Path]] = None,
 ) -> List[Path]:
-    """Copy local assets referenced by markdown content or sidecar metadata."""
+    """Copy local assets referenced by markdown content or sidecar metadata.
+
+    Copied HTML assets are followed transitively: a linked Marp deck
+    (``FOO/slides/FOO-slides.html``) pulls in the figures it references, so a
+    deck linked from its project page deploys with its images.
+    """
     projects_root = projects_dir.resolve()
     output_root = output_dir.resolve()
     rendered = {path.resolve() for path in (rendered_paths or [])}
     copied: List[Path] = []
     seen_assets: set[Path] = set()
 
+    pending: List[Path] = []
     for md_file in md_files:
-        asset_paths = referenced_local_assets(
-            md_file,
-            projects_dir,
-        ) + referenced_frontmatter_sidecars(md_file, projects_dir)
-        for asset_path in asset_paths:
-            if asset_path in seen_assets:
-                continue
-            seen_assets.add(asset_path)
+        pending.extend(
+            referenced_local_assets(md_file, projects_dir)
+            + referenced_frontmatter_sidecars(md_file, projects_dir)
+        )
+    while pending:
+        asset_path = pending.pop(0)
+        if asset_path in seen_assets:
+            continue
+        seen_assets.add(asset_path)
+        if asset_path.suffix.lower() in HTML_ASSET_SUFFIXES:
+            pending.extend(referenced_local_assets(asset_path, projects_dir))
 
-            rel_path = asset_path.resolve().relative_to(projects_root)
-            output_path = output_root / rel_path
-            if output_path.resolve() in rendered:
-                continue
+        rel_path = asset_path.resolve().relative_to(projects_root)
+        output_path = output_root / rel_path
+        if output_path.resolve() in rendered:
+            continue
 
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(asset_path, output_path)
-            copied.append(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(asset_path, output_path)
+        copied.append(output_path)
 
     return copied
 
