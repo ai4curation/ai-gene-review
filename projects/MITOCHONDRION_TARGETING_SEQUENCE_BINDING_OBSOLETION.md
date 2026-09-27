@@ -63,6 +63,9 @@ Term labels verified in OLS on 2026-05-28:
 - **`mitochondrial signal sequence receptor activity`** — the proposed NTR was
   **not yet present in OLS as of 2026-05-28** (no GO ID minted). This is the
   key open dependency: nothing can be remapped until the new MF is created.
+  *Update 2026-09-26:* resolved. The NTR was minted as `GO:0140436`
+  (`mitochondrial signal sequence receptor activity`, live in OLS) and
+  GO:0030943 is now obsolete; see Status.
 
 ## Affected experimental / curated annotations (18)
 
@@ -143,7 +146,7 @@ Several affected gene products — or their human orthologs — already have
 | TOMM40 (human) | `genes/human/TOMM40` | TOM channel; carries term via IBA | present (IBA) |
 | TIMM50 (human) | `genes/human/TIMM50` | Ortholog of affected yeast TIM50 | present |
 | TIMM22 (human) | `genes/human/TIMM22` | Ortholog of affected yeast TIM22 | present |
-| ACL4 (yeast) | `genes/yeast/ACL4` | Not in curated set; IBA over-propagation | already `REMOVE` (Acl4 is an Rpl4 chaperone; no MTS binding) — a worked example of the IBA fallout |
+| ACL4 (yeast) | `genes/yeast/ACL4` | Not in curated set; IBA over-propagation `UNDECIDED` (revised from an earlier `REMOVE` by the don't-overrule-curators pass: the PAINT IBD at PTN002340064 is not reconstructed or refuted); no replacement proposed |
 
 When the obsoletion + NTR land, these reviews will need a `MODIFY` pass:
 remap the TOM-receptor annotations to the new
@@ -187,10 +190,10 @@ new MF once minted.
 
 ## Proposed approach
 
-1. **Wait for the NTR + obsoletion to land.** The replacement MF
-   (`mitochondrial signal sequence receptor activity`) is not yet minted in GO
-   (OLS, 2026-05-28). go-ontology#32142 is closed but the new GO ID must be
-   confirmed before any remapping.
+1. **Wait for the NTR + obsoletion to land.** *(Done 2026-09-26: minted as
+   `GO:0140436`.)* The replacement MF
+   (`mitochondrial signal sequence receptor activity`) was not yet minted in GO
+   as of 2026-05-28.
 2. **Pre-stage MODIFY proposals** on the existing repo reviews (TOMM20, TOMM22,
    TOMM70, TIMM50, TIMM22, TOMM40), changing `GO:0030943` → the new receptor MF
    for the genuine cytosolic/trans-side receptors.
@@ -199,9 +202,10 @@ new MF once minted.
    the reason upstream avoided a blanket `replaced_by`.
 4. **Note the IBA/IEA fallout** (~12k annotations): once GO:0030943 is
    obsoleted, the GO_Central IBA and TreeGrafter IEA pipelines will need to be
-   reseeded against the new MF. The yeast `ACL4` review (already `REMOVE`) is a
-   concrete example of an IBA that should *not* be carried over to the new
-   receptor term.
+   reseeded against the new MF. The yeast `ACL4` review (now `UNDECIDED`, with
+   no replacement proposed) is a concrete example of an IBA that should not be
+   carried over to the new receptor term without first resolving the PAINT
+   node.
 5. **Coordinate with [[MITOCHONDRIAL_IMPORT_PATHWAYS]]** so MF remapping and the
    BP pathway model stay consistent for shared TOM/TIM genes.
 
@@ -224,3 +228,14 @@ obsoletions, but no curator group is blocked waiting on AI Gene Review.
   key open dependency. Eight existing repo reviews already touch GO:0030943 and
   will need a MODIFY pass once the new term exists. No InterPro2GO / UniRule /
   UniProt-Keyword mappings to GO:0030943 were listed by upstream.
+- 2026-09-26 — GO:0030943 is obsolete and the NTR is minted as `GO:0140436`
+  `mitochondrial signal sequence receptor activity`. PR #3234 remapped the
+  repo reviews. Receptors got `MODIFY` → GO:0140436: human TOMM20 (IDA, IBA),
+  TOMM22 (IDA) and TOMM70 (IBA, ISS). Receptors with no GO:0030943 row got a
+  `NEW` GO:0140436 row backing their core MF: human TIMM50, yeast TOM22 and worm
+  tomm-22. Channels got `MODIFY` → `GO:0008320` protein transmembrane
+  transporter activity, folded into the GO:0008320 annotation each gene already
+  carries: human TOMM40 (IBA), yeast TIM22 (IDA, IBA) and human TIMM22 (IBA,
+  same PTN000364156 node as yeast TIM22). Yeast ACL4 stays `UNDECIDED` with no
+  replacement. This corrects the earlier "already `REMOVE`" description of ACL4.
+  The PAP2 and ComplexPortal TIM23 cases remain open.
