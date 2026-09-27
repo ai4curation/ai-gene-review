@@ -2,6 +2,8 @@
 title: "Ad-Hoc Bioinformatics Analysis Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
+species: [SCHPO, human, CANAL, BPZF4]
+genes: [Epe1, PHYKPL, LPL1, AcrF8]
 ---
 
 # Ad-Hoc Bioinformatics Analysis Project
@@ -47,15 +49,17 @@ The agentic AI system can:
 
 **Example - Epe1 (S. pombe)**:
 - JmjC domain suggests histone demethylase activity
-- Analysis revealed: HVD instead of canonical HXD motif
-- Missing Fe(II)-binding histidine residues
+- Analysis: the Fe(II) facial triad is H297, E299 and **Y370**; the third
+  ligand, which must be histidine for Fe(II) coordination, is tyrosine, the same
+  substitution seen in catalytically dead human PHF2
 - **Conclusion**: Pseudo-enzyme lacking catalytic activity
 - **Location**: `genes/SCHPO/Epe1/Epe1-bioinformatics/`
-- **Later refinement (2026-07)**: HVD itself fits the HXD pattern. A blinded
-  OpenScientist run on the demethylase hypothesis
+- **Provenance of the triad call**: the first Epe1 script reported an "HVD
+  instead of HXD" motif, which does not hold up (HVD fits HXD). The Y370 defect
+  came from a later (2026-07) blinded OpenScientist run on the demethylase
+  hypothesis
   (`genes/SCHPO/Epe1/Epe1-hypotheses/function-hypothesis-go-0032452/openscientist.md`)
-  places the defect at the third Fe(II) ligand, where Epe1 has Tyr370 instead of
-  His, the same substitution seen in catalytically dead human PHF2.
+  and matches the UniProt caution.
 
 ### 2. Domain Architecture Analysis
 
@@ -168,7 +172,11 @@ Documented cases where ad-hoc bioinformatics resolved annotation ambiguities.
 
 **Epe1 Example**:
 - JmjC domain → 7 enzymatic activity annotations
-- Active site analysis → HVD instead of HXD, no Fe(II) binding
+- Active site analysis → HVD instead of HXD, no Fe(II) binding (superseded: the defect is Y370 at the third Fe(II) ligand; see the Epe1 example above)
 - **Result**: All 7 enzymatic annotations marked REMOVE
 
 This demonstrates how computational analysis can systematically identify pseudo-enzymes and prevent annotation errors from propagating.
+
+## Slides
+
+- [Slides](AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.html) (Marp source: [AD_HOC_BIOINFORMATICS-slides.md](AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.md)) — AI generated

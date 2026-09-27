@@ -615,3 +615,7 @@ stays `UNDECIDED` until an expert decides.
   annotations") is the conceptual cousin; this project quantifies the
   assay-specific version of it.
 - `BIOSENSORS.md` — unrelated (plant synthetic-biology biosensors).
+
+## Slides
+
+- [Slides](ASSAY_TO_FUNCTION/slides/ASSAY_TO_FUNCTION-slides.html) (Marp source: [ASSAY_TO_FUNCTION-slides.md](ASSAY_TO_FUNCTION/slides/ASSAY_TO_FUNCTION-slides.md)) — AI generated

@@ -18,11 +18,11 @@ selectivity; the IEA `calcium ion binding` row stays as KEEP_AS_NON_CORE. For
 a DUF4246 protein (A0A2N3VF44) with no sequence-detectable homolog, a
 Foldseek search of its AlphaFold model returned 2OG-Fe(II) oxygenases as all
 top 20 PDB hits at 8–15% identity, reproducing Holm's 2023 DALI assignment.
-Local catalytic-residue checks already decide calls in the pipeline (PqsC
-versus PqsB, EryCII, cds1, PHYKPL). The planned pipeline work has not
+Local catalytic-residue checks already decide calls in the pipeline
+(PSEAE/pqsC versus PSEAE/pqsB, SACEN/eryCII, MYCTU/cds1, human/PHYKPL). The planned pipeline work has not
 started: the `scripts/structural_search.py` prototype and
 `projects/quantum-sensing-bioinformatics/` referenced below do not exist,
-the Foldseek run was not saved, and the cds1 and PHYKPL structural checks
+the Foldseek run was not saved, and the MYCTU/cds1 and human/PHYKPL structural checks
 are still to do.
 
 We did this to know when to reach for structure during review: it pays off
@@ -423,3 +423,7 @@ DUF4246 is not in our current review pipeline, but this demonstrates a generaliz
 - For REE-related proteins (mll cluster, lut cluster, lanM): does structural analysis reveal additional functional sites missed by InterPro?
 - How well do 3Di-based methods handle multi-domain proteins where domain orientation matters?
 - For fold-switching proteins: can we detect these computationally and flag them during review?
+
+## Slides
+
+- [Slides](STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.html) (Marp source: [STRUCTURE_FUNCTION-slides.md](STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.md)) — AI generated

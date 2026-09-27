@@ -83,7 +83,6 @@ Right enzyme class, wrong substrate, cofactor, donor or reaction
 ## Status and next steps
 
 - ✅ 14/14 reviews complete; `MODULE:fatty_acid_beta_oxidation` built.
-- ⬜ Two notes on the page predate the YAML (LPL1 MAG lipase and EryCIII UDP-GT are REMOVE).
 - ⬜ If extended: keyword-derived substrate terms on other PPP enzymes (ZWF1); NAD vs NADP dehydrogenase pairs.
 
 **Read more:** `projects/ENZYME_SPECIFICITY.md` · `modules/fatty_acid_beta_oxidation.yaml` · `projects/RHEA/RHEA-EC-SPECIFICITY.md`

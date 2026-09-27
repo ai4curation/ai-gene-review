@@ -171,3 +171,7 @@ the reproducible stratified sample (30 genes, 484 ACCEPT annotations, seed
   sources* are enough to confirm one.
 - **`AD_HOC_BIOINFORMATICS.md`** — bioinformatics analyses are themselves a
   `publication_type: BIOINFORMATICS` evidence source tracked by this analysis.
+
+## Slides
+
+- [Slides](EVIDENCE_SOURCE_SUFFICIENCY/slides/EVIDENCE_SOURCE_SUFFICIENCY-slides.html) (Marp source: [EVIDENCE_SOURCE_SUFFICIENCY-slides.md](EVIDENCE_SOURCE_SUFFICIENCY/slides/EVIDENCE_SOURCE_SUFFICIENCY-slides.md)) — AI generated
