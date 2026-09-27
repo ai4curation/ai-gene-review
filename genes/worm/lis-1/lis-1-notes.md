@@ -20,3 +20,4 @@ abstract-only for 11685578, 15331665, 16996038, 17922003). Deep research (falcon
 - cytoplasmic dynein complex / dynein complex -> MODIFY to GO:0005875.
 - protein binding (NUD-2) -> REMOVE (no informative MF term; interaction not disputed).
 - ARBA signaling / cell communication -> REMOVE; ARBA phagocytosis and IEA synapse, IMP locomotion -> MARK_AS_OVER_ANNOTATED.
+- Deep research (falcon) arrived 18:11 and agrees: LIS-1 non-catalytic dynein regulator; yolk-granule minus-end transport abolished; not enriched at MT plus ends (supports non-core microtubule sliding). Incorporated as supporting text.
