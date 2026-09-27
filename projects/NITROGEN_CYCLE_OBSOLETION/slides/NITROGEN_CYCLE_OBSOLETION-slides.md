@@ -38,7 +38,7 @@ GO:0071941 → annotate its child pathways · GO:1903314/5/6 obsolete
 
 - GO:0071941 is an **ecosystem grouping term**; its three **regulation children are now obsolete** and the parent is proposed as `do_not_annotate`.
 - Of **6 experimental rows**, **5 are mouse kidney/liver genes** we recommend removing; **napA** should move to **GO:0019333** denitrification pathway.
-- **Scoped.** The one in-repo hit, **A. vinelandii nifA**, used the now-obsolete **GO:1903316**; fixed in #3235 (open).
+- **Scoped.** The one in-repo hit, **A. vinelandii nifA**, used the now-obsolete **GO:1903316**; replacement tracked in #3235 (open).
 
 ---
 
@@ -68,11 +68,11 @@ GO:0071941 → annotate its child pathways · GO:1903314/5/6 obsolete
 
 | Review | Relation | State |
 |---|---|---|
-| `genes/AZOVI/nifA` | used **GO:1903316** (obsolete) | fixed in #3235 (open): GO:0009399 row now MODIFY → **GO:0045893**; NEW row and `core_functions` entry removed |
+| `genes/AZOVI/nifA` | used **GO:1903316** (obsolete) | MODIFY target, NEW row and `core_functions`; replacement tracked in #3235 (open) |
 | `genes/human/SEC63` | ortholog of affected mouse Sec63 | reviewed; no GO:0071941 row in its GOA file |
 | mouse Pkd1, Prkcsh, Apc, Sec63; napA | affected upstream | not reviewed |
 
-GO has no "regulation of nitrogen fixation" term; GO:0045893 is NifA's σ54 activator role on the nif operons.
+GO has no "regulation of nitrogen fixation" term, so a replacement must be chosen per row.
 
 ---
 
@@ -80,7 +80,7 @@ GO has no "regulation of nitrogen fixation" term; GO:0045893 is NifA's σ54 acti
 
 - **2026-05-13:** project created; 6 rows matched the upstream count.
 - **2026-09-26:** OLS lists GO:1903314/5/6 obsolete; GO:0071941 still live.
-- **2026-09-26 (later):** nifA fixed in #3235 (open).
+- **2026-09-26 (later):** nifA replacement tracked in #3235 (open).
 - Next: review human **PKD1, PRKCSH, APC** and flag the mouse rows; add the pattern to `projects/OVER_ANNOTATION_PATTERNS.md`.
 
 **Upstream:** go-annotation#6411 · go-ontology#27220

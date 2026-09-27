@@ -3,6 +3,10 @@ title: "Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
 species: [ARATH, ORYSJ]
+sidecars:
+  slide_assets:
+    - KAURENE_OXIDATION_OBSOLETION/slides/ko-reaction.svg
+    - KAURENE_OXIDATION_OBSOLETION/slides/term-map.svg
 ---
 
 # Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement
@@ -163,4 +167,4 @@ the upstream issue.
 
 ## Slides
 
-- [Slides](KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.html) (Marp source: [KAURENE_OXIDATION_OBSOLETION-slides.md](KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.md)) — AI generated
+- [Slides](KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.html) (Marp source: [KAURENE_OXIDATION_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.md)) — AI generated

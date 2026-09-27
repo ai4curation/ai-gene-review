@@ -3,6 +3,10 @@ title: "Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoyla
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [BACSU, PSEPK, POPTR, METEA, human, mouse, yeast]
+sidecars:
+  slide_assets:
+    - LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/lipoylation-routes.svg
+    - LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/term-map.svg
 ---
 
 # Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoylation
@@ -304,4 +308,4 @@ and only MGI has marked its annotations done upstream.
 
 ## Slides
 
-- [Slides](LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.html) (Marp source: [LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md](LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md)) — AI generated
+- [Slides](LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.html) (Marp source: [LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md)) — AI generated

@@ -3,6 +3,10 @@ title: "Nuclear Localization Sequence Binding — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [human, yeast, rat, DROME, worm, ARATH]
+sidecars:
+  slide_assets:
+    - NLS_BINDING_OBSOLETION/slides/carrier-vs-binder.svg
+    - NLS_BINDING_OBSOLETION/slides/term-map.svg
 ---
 
 # Nuclear Localization Sequence Binding — Obsoletion & Replacement
@@ -424,4 +428,4 @@ reviews) are also good candidates for evidence-code modernization.
 
 ## Slides
 
-- [Slides](NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.html) (Marp source: [NLS_BINDING_OBSOLETION-slides.md](NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.md)) — AI generated
+- [Slides](NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.html) (Marp source: [NLS_BINDING_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.md)) — AI generated

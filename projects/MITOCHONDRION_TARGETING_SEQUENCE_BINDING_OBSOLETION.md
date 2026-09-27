@@ -4,6 +4,10 @@ maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast, worm]
 genes: [TOMM20, TOMM22, TOMM40, TOMM70, TIMM50, TIMM22, TIM22, TOM22, ACL4, tomm-22]
+sidecars:
+  slide_assets:
+    - MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/import-route.svg
+    - MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/term-map.svg
 ---
 
 # Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement
@@ -19,13 +23,10 @@ classes, because only the TOM receptors (and probably TIM50) are true
 presequence receptors: the TIM23 and TIM22 channels, a plant phosphatase and
 the TIM23 complex records need individual decisions, so upstream ruled out a
 blanket `replaced_by`. In this repo, 10 reviews touch GO:0030943, five of them in
-`core_functions`. The MODIFY pass is fixed in #3234 (open): the receptors
-(TOMM20, TOMM22, TOMM70) move their GOA rows to GO:0140436, the channels
-(TOMM40, yeast TIM22) move to GO:0008320 *transmembrane protein transporter
-activity*, every author-supplied use (including TOMM20's replacement for its
-obsolete GO:0051082 row) now points to GO:0140436, and TIMM22 and ACL4 keep
-their actions with an obsoletion note. The impact table below records the
-outcome; the upstream triage of plant PAP2 and the TIM23 complex records is
+`core_functions`. The MODIFY pass is tracked in #3234 (open): receptors
+move to GO:0140436 and the TOM40 and TIM22 channels to GO:0008320 *protein
+transmembrane transporter activity*; that PR records its per-row outcomes on
+this page. The upstream triage of plant PAP2 and the TIM23 complex records is
 not repo work.
 
 ## Overview
@@ -154,20 +155,22 @@ true presequence *receptors*:
 ## Impact on this repo
 
 Several affected gene products — or their human orthologs — already have
-`*-ai-review.yaml` files that annotate `GO:0030943` (verified 2026-05-28):
+`*-ai-review.yaml` files that annotate `GO:0030943` (re-verified 2026-09-27):
 
-| Gene | Path | Relation to affected set | Handling of GO:0030943 (fixed in #3234, open) |
+| Gene | Path | Relation to affected set | Current handling of GO:0030943 (on `main`) |
 |---|---|---|---|
-| TOMM20 (human, Q15388) | `genes/human/TOMM20` | Directly affected (rows 10–11) | IBA + IDA rows ACCEPT → MODIFY to GO:0140436; core MF and the MODIFY target of the obsolete GO:0051082 row → GO:0140436 |
-| TOMM22 (human, Q9NS69) | `genes/human/TOMM22` | Directly affected (row 12) | IDA row ACCEPT → MODIFY to GO:0140436; core MF → GO:0140436 |
-| TOMM70 (human) | `genes/human/TOMM70` | Ortholog of affected yeast TOM70 | IBA + ISS rows ACCEPT → MODIFY to GO:0140436 |
-| TOMM40 (human) | `genes/human/TOMM40` | TOM channel; carries term via IBA | IBA row ACCEPT → MODIFY to GO:0008320 (channel, not receptor) |
-| TIM22 (yeast, Q12328) | `genes/yeast/TIM22` | Directly affected (row 9) | IBA + IDA rows ACCEPT → MODIFY to GO:0008320 (carrier-pathway channel, not a presequence receptor); "best available" prose updated |
-| TOM22 (yeast) | `genes/yeast/TOM22` | Ortholog of human TOMM22 | core MF → GO:0140436 |
-| TIMM50 (human) | `genes/human/TIMM50` | Ortholog of affected yeast TIM50 | NEW row and core MF → GO:0140436 |
-| tomm-22 (worm) | `genes/worm/tomm-22` | Ortholog of human TOMM22 | NEW row and core MF → GO:0140436 |
-| TIMM22 (human) | `genes/human/TIMM22` | Ortholog of affected yeast TIM22 | IBA row stays `MARK_AS_OVER_ANNOTATED`; obsoletion noted, no replacement |
-| ACL4 (yeast) | `genes/yeast/ACL4` | Not in curated set; IBA over-propagation | IBA row stays `UNDECIDED` (unresolved PAINT inference); obsoletion noted, no replacement |
+| TOMM20 (human, Q15388) | `genes/human/TOMM20` | Directly affected (rows 10–11) | IBA + IDA rows `ACCEPT`; core MF; also the `proposed_replacement_terms` target of the obsolete GO:0051082 row |
+| TOMM22 (human, Q9NS69) | `genes/human/TOMM22` | Directly affected (row 12) | IDA row `ACCEPT`; core MF |
+| TOMM70 (human) | `genes/human/TOMM70` | Ortholog of affected yeast TOM70 | IBA + ISS rows `ACCEPT` |
+| TOMM40 (human) | `genes/human/TOMM40` | TOM channel; carries term via IBA | IBA row `ACCEPT` |
+| TIM22 (yeast, Q12328) | `genes/yeast/TIM22` | Directly affected (row 9) | IBA + IDA rows `ACCEPT` |
+| TOM22 (yeast) | `genes/yeast/TOM22` | Ortholog of human TOMM22 | core MF only (no GOA row) |
+| TIMM50 (human) | `genes/human/TIMM50` | Ortholog of affected yeast TIM50 | `NEW` row (NAS); core MF |
+| tomm-22 (worm) | `genes/worm/tomm-22` | Ortholog of human TOMM22 | `NEW` row (ISS); core MF |
+| TIMM22 (human) | `genes/human/TIMM22` | Ortholog of affected yeast TIM22 | IBA row `MARK_AS_OVER_ANNOTATED` |
+| ACL4 (yeast) | `genes/yeast/ACL4` | Not in curated set; IBA over-propagation | IBA row `UNDECIDED` (unresolved PAINT inference) |
+
+The remapping of these rows is tracked in #3234 (open), not decided here.
 
 The receptor/channel split follows the classes above: GO:0140436 only for
 the TOM presequence receptors and TIM50, GO:0008320 for the TOM40 and TIM22
@@ -257,14 +260,9 @@ obsoletions, but no curator group is blocked waiting on AI Gene Review.
   uses GO:0030943 as the `proposed_replacement_terms` target of its obsolete
   GO:0051082 (unfolded protein binding) row, so that replacement must also
   move to GO:0140436.
-- 2026-09-26 (later) — The MODIFY pass is fixed in #3234 (open) across all
-  ten reviews: eight GOA rows go ACCEPT → MODIFY (TOMM20 IBA/IDA, TOMM22 IDA
-  and TOMM70 IBA/ISS to GO:0140436; TOMM40 IBA and yeast TIM22 IBA/IDA to
-  GO:0008320), and every author-supplied GO:0030943 (TOMM20, TOMM22, TOM22,
-  TIMM50, tomm-22) now points to GO:0140436, so TOMM20 no longer proposes the
-  obsolete id. Human TIMM22 (MARK_AS_OVER_ANNOTATED) and yeast ACL4
-  (UNDECIDED) keep their action with an obsoletion note.
+- 2026-09-26 (later) — The MODIFY pass across all ten reviews is tracked in
+  #3234 (open), which appends its own per-row Status entry to this page.
 
 ## Slides
 
-- [Slides](MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.html) (Marp source: [MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md](MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md)) — AI generated
+- [Slides](MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.html) (Marp source: [MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md)) — AI generated

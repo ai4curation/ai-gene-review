@@ -4,6 +4,10 @@ maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, mouse]
 genes: [VMP1, CALM1, Calm1, Calm2, Calm3]
+sidecars:
+  slide_assets:
+    - MITO_ER_TETHERING_OBSOLETION/slides/term-map.svg
+    - MITO_ER_TETHERING_OBSOLETION/slides/tethers.svg
 ---
 
 # Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)
@@ -177,4 +181,4 @@ than to fix outstanding GOA rows.
 
 ## Slides
 
-- [Slides](MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html) (Marp source: [MITO_ER_TETHERING_OBSOLETION-slides.md](MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.md)) — AI generated
+- [Slides](MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html) (Marp source: [MITO_ER_TETHERING_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.md)) — AI generated

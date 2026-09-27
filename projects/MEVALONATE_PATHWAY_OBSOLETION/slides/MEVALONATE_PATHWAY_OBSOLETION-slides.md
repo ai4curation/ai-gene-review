@@ -38,7 +38,7 @@ GO:1902767 and GO:0010142 → GO:0019287 (to IPP) or GO:0045337 (IPP → FPP)
 
 - GO **obsoleted two overlapping mevalonate-route terms**; each old row must go to **GO:0019287** or **GO:0045337** depending on the step the gene catalyses.
 - The human pathway is now **reviewed here** (HMGCS1, HMGCR, MVK, PMVK, MVD, IDI1, FDPS; PRs #1998, #2153): MVK, PMVK, MVD accept GO:0019287 and FDPS accepts GO:0045337.
-- **Last 3 rows fixed in #3232 (open):** yeast **ERG19** (1 RCA row) KEEP_AS_NON_CORE → **MODIFY to GO:0019287**; rat **Hmgcs2** (2 rows) stays **UNDECIDED** with the obsoletion noted.
+- **3 obsolete-term rows remain:** yeast **ERG19** (1 RCA row, KEEP_AS_NON_CORE) and rat **Hmgcs2** (2 rows, UNDECIDED); their remapping is tracked in #3232 (open).
 
 ---
 
@@ -71,8 +71,8 @@ GO:1902767 and GO:0010142 → GO:0019287 (to IPP) or GO:0045337 (IPP → FPP)
 | human MVK, PMVK, MVD | GO:0019287 IBA + IEA | ACCEPT |
 | human FDPS | GO:0045337 IBA + IEA | ACCEPT |
 | human HMGCS1, HMGCR, IDI1 | reviewed; no row on either replacement | – |
-| rat Hmgcs2 | GO:0010142 IBA + IEA | UNDECIDED (obsoletion noted; #3232, open) |
-| yeast ERG19 | GO:0010142 RCA; GO:0019287 IEA | MODIFY → GO:0019287 (#3232, open); ACCEPT |
+| rat Hmgcs2 | GO:0010142 IBA + IEA | UNDECIDED (tracked in #3232, open) |
+| yeast ERG19 | GO:0010142 RCA; GO:0019287 IEA | KEEP_AS_NON_CORE (tracked in #3232, open); ACCEPT |
 
 Modules: `modules/mevalonate_pathway.yaml` (grounded on GO:0019287) and `modules/isoprenoid_diphosphate_biosynthesis.yaml`.
 
@@ -83,7 +83,7 @@ Modules: `modules/mevalonate_pathway.yaml` (grounded on GO:0019287) and `modules
 - **2026-06-06:** project created; only rat Hmgcs2 then carried an obsolete-term row.
 - **2026-07:** human pathway reviews and modules added (PRs #1998, #2153).
 - **2026-09-26:** OLS lists **both terms obsolete**.
-- **2026-09-26 (later):** ERG19 and Hmgcs2 rows settled in #3232 (open).
+- **2026-09-26 (later):** ERG19 and Hmgcs2 rows tracked in #3232 (open).
 - Next: identify the remaining EcoCyc row (possibly yajO).
 
 **Upstream:** go-annotation#6440, #6439 · go-ontology#32082
