@@ -147,3 +147,50 @@ The reference reviews were updated to match these judgments, especially the prep
 ## 2026-09-26 — exact PubMed title metadata
 
 CI for head `f47396930afe7737f2eb0149e491b44ca529fb8a` reported a PMID:9218493 title mismatch after the review-requested word-join correction. An independent lookup of the [official PubMed-indexed record](https://pubmed.ncbi.nlm.nih.gov/9218493/) confirms that its title itself contains `chole stanoyl-CoA`; its PMID, authors, year, journal and DOI 10.1074/jbc.272.29.18481 match the intended rabbit paper. Direct page opening encountered a browser challenge, but the indexed primary record exposed the title and abstract. This supersedes the earlier description of the space as a YAML-folding defect. The reference title now preserves that source spelling verbatim, with an explicit reference-review explanation. Scientific prose continues to use cholestanoyl-CoA. No source annotation, action, core function or supporting quotation changes. The six required missing caches and draft status remain unchanged.
+
+## 2026-09-27 post-merge source-cache follow-up
+
+All 12 canonical artifacts and four published history records match main
+`d2d8c9043b082a62378eff620ec0122d4118173b`; none of the previous histories or
+provider artifacts was edited. The six prior review/notes cache gates are now
+recovered: PMID:16672280, PMID:27647924, PMID:8026493, PMID:8387517,
+PMID:8654595 and PMID:9218493. Each publication file is byte-identical to the
+normal-fetch Actions artifact receipt in
+`tmp/verified-reference-records/local-import-receipt.json`: source run
+36286975328, head `5946477c8ac79ade0709264c775ea1262b108438`, artifact
+10920674630, ZIP SHA-256
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`.
+No source text was reconstructed or normalized.
+
+All six recovered records are **abstract-only**. The actual recovered abstracts
+were read; recovery does not imply new full-text verification. The rabbit record's
+exact title contains the literal word break **chole stanoyl**, which remains
+unchanged. The human purification abstract agrees with the original full-paper
+assessment but does not itself resolve the weak C24 preparation result or native
+assembly discrepancy. Rat donor abstracts describe CoA-ester specificity and
+purification, without resolving the exact free-fatty-acid-binding assertion. The
+excluded ACO-II structure remains rat ACOX1 evidence, not human ACOX2 evidence.
+The disease abstract supports the historical p.Y69* context. No annotation
+action, source object, core function or original reference identity changed.
+
+PMID:33961781 full_text_unavailable is corrected to false because the existing
+cache metadata records full text; its incomplete extraction and unresolved
+individual STRN3 pair remain explicit in the reference review. The recovered
+PMID:9218493 and PMID:8387517 availability notes now distinguish their actual
+abstract caches from the prior externally read full sources.
+
+A broader recursive scan found two additional missing citations only in the
+immutable pre-existing openscientist hypothesis report and its companion output:
+PMID:7929456 and PMID:15769750. Neither is a reference in the current biological
+YAML, and neither is used to revise this review. Their artifact-only scope is
+recorded separately from the six now-closed review/notes gates. Normal retrieval
+was attempted once; the outcome and final validation are recorded below.
+
+The normal fetch of those two artifact citations failed DNS, producing zero of
+two files (`/tmp/ACOX2-artifact-only-fetch.log`). Targeted gene validation passes
+with **zero warnings** because all current YAML references are cached and match
+exact generated titles. Status nevertheless remains DRAFT while the two broader
+citation gaps remain; passing YAML checks is not a claim of directory-wide cache
+completion. The final manifest records all 40 unchanged source assertions and
+annotation reviews, both unchanged cores, 22 unchanged reference identities,
+all protected artifacts and all four append-only published histories.
