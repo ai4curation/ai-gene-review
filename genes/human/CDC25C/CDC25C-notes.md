@@ -65,3 +65,16 @@ human somatic CDC25C → KEEP_AS_NON_CORE (mirrors SCHPO cdc25 exemplar).
 ## Splice isoforms
 Five isoforms; Cdc25Cdm (isoform 5) reported in A431; variants alter N-terminal regulatory
 phospho-sites but retain the catalytic domain. [PMID:11078813; PMID:11139144]
+
+
+## Post-review revisions (PR #3214)
+
+- Dropped the proposed NEW annotation to GO:0010972 negative regulation of G2/M transition and the matching
+  `directly_involved_in` entry in the 14-3-3 core function. CDC25C is the target of the G2 checkpoint
+  inhibition (Ser216 phosphorylation by CHK1/CHK2/MARK3, cytoplasmic sequestration by 14-3-3), not its
+  performer, so it fails the participation test in CLAUDE.md. The checkpoint role lives on CHEK1
+  (GO:0031573), and no comparator phosphatase target carries GO:0010972. Raised as a suggested question.
+- The YWHAB protein-binding MODIFY row from PMID:19470455 no longer quotes that paper: the lenalidomide/MDS
+  abstract sentence is about phosphatase inhibition, not 14-3-3 binding. It now cites PMID:9543386
+  ("Serine 216 phosphorylation mediates the binding of 14-3-3 protein to Cdc25C"), and PMID:19470455 carries a
+  reference_review noting the mismatch.
