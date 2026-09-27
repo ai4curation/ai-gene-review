@@ -124,7 +124,7 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 
 The recovered IBA/TreeGrafter reviews are reflected in the current counts below; the JSON, benchmark sidecars and figure are regenerated together from the same reference files.
 
-The final TreeGrafter consistency review refined K9IMD0 metal ion binding to ferric iron binding and NCGR_LOCUS1270 carbohydrate metabolism to the Calvin cycle. Only K9IMD0 is in this 299-gene comparison: its retained set changes from 22 to 21 terms, with four overlaps unchanged. All raw-GOA and core counts are unchanged by these refinements.
+The final TreeGrafter consistency review refined K9IMD0 metal ion binding to ferric iron binding and NCGR_LOCUS1270 carbohydrate metabolism to the Calvin cycle. Only K9IMD0 is in this 299-gene comparison: that refinement changed its retained set from 22 to 21 terms, with four overlaps unchanged, and left the raw-GOA and core counts unchanged. The later OpenScientist follow-up review (#3198, described below) reduced it further, to 14.
 
 **Table S8.** GO-GPT prediction overlap at three reference levels (299 canonical genes).
 
@@ -181,11 +181,19 @@ core-function slot keyed on the obsolete term was dropped, reducing the GO-value
 total by one. Neither exact-overlap count moved, because `GO:0009107` was never in the
 GO-GPT prediction set.
 
-Most recently, the `ARATH/AT1G06680` (PSBP1) re-review synthesized a core_functions
+The `ARATH/AT1G06680` (PSBP1) re-review then synthesized a core_functions
 block for the first time, adding four GO-valued core slots of which one
 (`GO:0019684`) is a predicted overlap, and stopped retaining `GO:0009535`
 post-review in favour of the narrower thylakoid-lumen term, dropping one predicted
-post-review overlap without changing the post-review total. Thus the recorded
+post-review overlap without changing the post-review total.
+
+Most recently, OpenScientist follow-up reviews of four benchmark genes removed 14
+post-review terms without changing any post-review overlap: `DESRO/K9IMD0` 21 to 14
+and `DESRO/K9IJK6` 12 to 8 (#3198), `HYPJE/IRE1` 17 to 15 (#3199) and
+`ANOGA/PGRPLB` 11 to 10 (#3201). K9IMD0 also lost its antimicrobial core function,
+which had been inferred from the lactotransferrin family, taking its core slots from
+6 to 3 and its core overlaps from 3 to 2, so the core totals fell to 1,227 terms and
+353 overlaps. Thus the recorded
 denominator changes combine upstream reference
 curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
 did not change.
