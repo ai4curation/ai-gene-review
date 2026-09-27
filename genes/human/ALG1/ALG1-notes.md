@@ -119,17 +119,17 @@ source commit `583c2ac3b65ce1f7f9808c7b10c53e25f322129a`, artifact10927941174
 The verified import preserved the original record bytes. The earlier failed local
 retrievals remain historical facts; their missing-cache gate is now closed.
 
-- [PMID:14709599](https://pubmed.ncbi.nlm.nih.gov/14709599/) is abstract-only locally.
+- [PMID:14709599] is abstract-only locally.
   The patient lipid-linked precursor profile and human-allele complementation in
   yeast support the original discovery context. This is not a purified human
   enzyme assay or native human topology experiment.
-- [PMID:14973782](https://pubmed.ncbi.nlm.nih.gov/14973782/) is also abstract-only
+- [PMID:14973782] is also abstract-only
   locally. It reports affected human patients, reduced enzyme activity, and
   human wild-type versus patient-allele rescue in yeast. Its severe infantile
   presentation is source-specific, consistent with the broader phenotypic
   variability already described above. Both discovery-paper identities and
   abstracts were checked against the official PubMed records.
-- [PMID:40328714](https://pubmed.ncbi.nlm.nih.gov/40328714/) remains abstract-only
+- [PMID:40328714] remains abstract-only
   locally. The recovered English abstract and independently indexed primary
   record confirm the previously described human constructs expressed in E. coli,
   substrate-dependent LC-MS assay and partial membrane-component restoration.
@@ -157,3 +157,18 @@ as a new citation requirement. All 19 annotation/source objects, their decisions
 the integrated core, both alternative products, all 13 reference assessments and
 all supporting quotations are unchanged. Status becomes COMPLETE after source
 closure and targeted validation; no new biological assertion is introduced.
+
+
+## 2026-09-27 — recovered enzymology and propagation evidence
+
+This follow-up addresses review 5330000832 at exact PR #3280 head `189f9f47bba8c89e22d83df4987a97217b2d43c4`. All 19 original annotation source objects, actions, two alternative products and the integrated core remain unchanged. The earlier undated MARK_AS_OVER_ANNOTATED guidance for GO:0016757 and GO:0016020 is superseded by the dated full review and this entry: the molecular function is refined to the measured enzyme activity, while the established membrane location remains accepted as core.
+
+Three recovered sources now have explicit reference assessments and support the corresponding annotation claims. [PMID:14709599] provides the independent short-LLO discovery and yeast complementation evidence; [PMID:14973782] provides human-allele rescue in PRY56 yeast; [PMID:40328714] measures recombinant human protein expressed in E. coli and membrane-dependent activity. Their local records are abstract-only. The first two primary PubMed identities were independently rechecked; the third indexed PubMed identity and [official publisher record](https://cjb.ijournals.cn/cjbcn/article/abstract/24240834) match DOI 10.13345/j.cjb.240834. Full article Methods are not claimed. The proposed membrane-reconstitution experiment now explicitly extends the existing study. The already recorded carcinoma study remains contextual and does not generate a new annotation.
+
+The GDP-mannose-dependent sugar transfer and ER membrane location are biological work and location of ALG1's core function. A correct broad process/location does not become non-core because the compact core block uses a narrower term; the corpus frequency of an action is not biological evidence. The membrane proteomics reference is now UNVERIFIED for its individual ALG1 identification, while its bibliographic identity and abstract are verified. The independent human ER reporter supplies positive location evidence; no individual HDA assay is claimed recovered.
+
+The original WITH/FROM sources are explicitly inventoried in all three IBA rows. [NCBI Gene 852407](https://www.ncbi.nlm.nih.gov/gene/852407) identifies SGD:S000000314 as yeast ALG1/YBR110W with the expected ER, enzyme and LLO functions, consistent with the existing P16661 ISS assessment. [Ensembl Plants AT1G16570](https://plants.ensembl.org/Arabidopsis_thaliana/Gene/Summary?g=AT1G16570) verifies the plant locus; its exact PAINT descendant assay remains unreviewed. Q388S6 primary retrieval failed, so no organism or assay identity is invented. Human Q9BT22 self-evidence is legitimate experimental grounding. The PTN assessment remains UNRESOLVED specifically for the uninspected ancestral placement; that is distinct from the positively assessed donor/target function and is not evidence of weak support or loss. The review does not promote a donor identity check into a completed tree/MSA audit.
+
+The original human catalytic activity and both core process terms are unchanged, with no NEW assertion. The existing EC anchor is now quoted directly from the immutable human record. Four existing PubMed links use the renderer's native syntax to avoid doubled URLs. Source caches, raw gene files and prior history remain unchanged. Validation and independent delta review are recorded with this session.
+
+The expanded WITH/FROM inventory in this follow-up supersedes the earlier PTN-only `source_entities` note. Explicit extant-source assessments are retained alongside the PTN assessment: verified source identity or function is distinguished from unresolved descendant assays and unresolved ancestral placement. Independent delta review confirmed the three recovered source scopes and retained biological judgments; the final wording correction specifies GDP-mannose-dependent transfer.
