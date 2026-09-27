@@ -3,9 +3,29 @@ title: "Mitochondrial Import Pathways Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+genes: [TOMM40, TOMM20, TOMM22, TOMM70, TOMM5, TOMM6, TOMM7, SAMM50, MTX1, MTX2, MTCH2, CHCHD4, GFER, TIMM23, TIMM17A, TIMM50, TIMM21, TIMM22, TIMM44, PAM16, HSPA9, PMPCA, PMPCB]
 ---
 
 # Mitochondrial Import Pathways Project
+
+**Bottom line:** almost all mitochondrial proteins are made in the cytosol and
+reach their compartment by one of six routes (TOM-TIM23-PAM to the
+matrix, TIM23-SORT and TIM22 to the inner membrane, SAM and MIM/MTCH to the
+outer membrane, the MIA disulfide relay to the intermembrane space), but GO
+grouped them inconsistently. This project follows GO issue #31711, which
+proposed one GO process term per route, and reviewed the GO annotations of the
+human machinery that runs them. All 23 priority genes (TOM, TIM23, PAM, TIM22,
+SAM, MIA, MTCH2 and the MPP processing peptidase) now have reviews in the repo
+(670 annotations: 319 accepted, 88 kept as non-core, 167 marked over-annotated,
+40 modified, 50 removed, 6 NEW); the checklist below predates most of them.
+GO has since added the proposed terms: the parent
+`GO:7770058` mitochondrial protein import pathway, `GO:7770059` (α-helical
+outer-membrane insertion), `GO:7770060` (TIM23-SORT), `GO:7770061` (TIM22) and
+`GO:7770063` (β-barrel insertion), and reworded `GO:0030150` and `GO:0160203`
+to name their routes. Among the 23 priority genes only MTCH2 carries one of the
+new terms in its review; outside that set, human MTCH1 has an accepted IMP
+annotation to `GO:7770059` and yeast MIM1 is reviewed onto it. The grouping terms proposed for obsoletion, such as `GO:0070585`, are
+still live.
 
 ## Overview
 
@@ -105,3 +125,7 @@ The project should review key components of each import pathway. Priority genes 
   - [x] MTCH2 — metazoan MIM insertase (22 annotations reviewed)
   - [ ] Remaining genes (TIMM23, TIMM22, SAMM50, GFER, TOMM22, TOMM70, etc.)
 - [ ] Propose GO term hierarchy
+
+## Slides
+
+- [Slides](MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.html) (Marp source: [MITOCHONDRIAL_IMPORT_PATHWAYS-slides.md](MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.md)) — AI generated

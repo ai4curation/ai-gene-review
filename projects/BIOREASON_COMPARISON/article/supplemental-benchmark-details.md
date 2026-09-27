@@ -24,7 +24,7 @@ ARGO139 uses agent-adjudicated local AIGR references, not independently expert-s
 | `supplement_sft_narrative_hf` | 45 | - | SFT narrative cross-check |
 | `supplement_sft_terms_hf_catalogue_all` | 154 | 1,358 | Full HF catalogue view |
 | `supplement_sft_terms_union_all` | 198 | 11,100 | ARGO139 plus 59 HF-only genes |
-| `supplement_gogpt_overlap_300` | 299 | 8,871 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
+| `supplement_gogpt_overlap_300` | 296 | 8,806 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
 
 The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue` SFT download contained 95/139 ARGO139 genes. The remaining 44 ARGO139 genes were not present in that download. We do **not** fill those 44 into the primary SFT analysis, because the BioReason-Pro SFT web exports expose a much larger ancestor-rich term panel and are not comparable to the HF catalogue source.
 
@@ -120,19 +120,19 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,897 `CNN`, 124 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
-A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
+A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,806 GO-GPT predictions across 296 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed, to 298 after the duplicate `ARATH/AAU94417` review was merged into `ARATH/AT1G06680` (both PSBP1, Q42029), to 297 after the duplicate `ARATH/P14713` review was merged into `ARATH/PHYB` (both P14713), and to 296 after the duplicate `ARATH/P93002` review was merged into `ARATH/NPR1` (both P93002). It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
 The recovered IBA/TreeGrafter reviews are reflected in the current counts below; the JSON, benchmark sidecars and figure are regenerated together from the same reference files.
 
-The final TreeGrafter consistency review refined K9IMD0 metal ion binding to ferric iron binding and NCGR_LOCUS1270 carbohydrate metabolism to the Calvin cycle. Only K9IMD0 is in this 299-gene comparison: its retained set changes from 22 to 21 terms, with four overlaps unchanged. All raw-GOA and core counts are unchanged by these refinements.
+The final TreeGrafter consistency review refined K9IMD0 metal ion binding to ferric iron binding and NCGR_LOCUS1270 carbohydrate metabolism to the Calvin cycle. Only K9IMD0 is in this 296-gene comparison: that refinement changed its retained set from 22 to 21 terms, with four overlaps unchanged, and left the raw-GOA and core counts unchanged. The later OpenScientist follow-up review (#3198, described below) reduced it further, to 14.
 
-**Table S8.** GO-GPT prediction overlap at three reference levels (299 canonical genes).
+**Table S8.** GO-GPT prediction overlap at three reference levels (296 canonical genes).
 
-| Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
+| Reference level | Terms in reference | Predictions overlapping | % of 8,806 predictions |
 |---|---:|---:|---:|
-| Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,782 | 852 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,230 | 354 | 4.0 |
+| Raw GOA | 2,844 | 1,020 | 11.6 |
+| Retained/replacement/proposed-new AIGR annotations | 2,672 | 849 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,206 | 355 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
@@ -181,18 +181,48 @@ core-function slot keyed on the obsolete term was dropped, reducing the GO-value
 total by one. Neither exact-overlap count moved, because `GO:0009107` was never in the
 GO-GPT prediction set.
 
-Most recently, the `ARATH/AT1G06680` (PSBP1) re-review synthesized a core_functions
+The `ARATH/AT1G06680` (PSBP1) re-review then synthesized a core_functions
 block for the first time, adding four GO-valued core slots of which one
 (`GO:0019684`) is a predicted overlap, and stopped retaining `GO:0009535`
 post-review in favour of the narrower thylakoid-lumen term, dropping one predicted
-post-review overlap without changing the post-review total. Thus the recorded
+post-review overlap without changing the post-review total.
+
+Later, OpenScientist follow-up reviews of four benchmark genes removed 14
+post-review terms without changing any post-review overlap: `DESRO/K9IMD0` 21 to 14
+and `DESRO/K9IJK6` 12 to 8 (#3198), `HYPJE/IRE1` 17 to 15 (#3199) and
+`ANOGA/PGRPLB` 11 to 10 (#3201). K9IMD0 also lost its antimicrobial core function,
+which had been inferred from the lactotransferrin family, taking its core slots from
+6 to 3 and its core overlaps from 3 to 2, so the core totals fell to 1,227 terms and
+353 overlaps. Two further curation merges then moved ten genes: #3240 replaced the
+obsolete `GO:0005615` extracellular space with `GO:0005576` extracellular region, which
+GO-GPT predicted for several `DESRO` salivary proteins, and #3226 restored
+`DESVH/Q72DT0` and `Q72DT1` as QmoA/QmoB, removing Flx–Hdr core terms. Together they
+took the post-review reference to 2,769 terms and 854 overlaps, and the core reference
+to 1,226 terms and 357 overlaps. Finally, #3246 merged the duplicate `ARATH/AAU94417`
+review into `ARATH/AT1G06680`, removing one gene (36 predictions; 21 GOA, 12
+post-review and 5 core terms) while the merged AT1G06680 gained two post-review terms
+and one overlap (the merged record again retains `GO:0009535`, a predicted term), and #3239 repointed obsolete author-supplied ids, removing one
+post-review term each from `ANOGA/PGRPLD` and `ECOLX/SNIPE` and one core term each
+from `ECOLI/SecB` and `ECOLI/surA` without changing any overlap. #3251 then merged the
+duplicate `ARATH/P14713` review into `ARATH/PHYB` (both P14713), removing one gene (13
+predictions; 53 GOA terms with 3 overlaps, 52 post-review with 3, and 12 core with 1),
+while the merged PHYB, on a refreshed GOA snapshot, went from 52 to 51 GOA terms, 49 to
+46 post-review terms and 4 to 7 core terms with all three of its overlap counts unchanged
+(3, 1 and 1). #3253 then merged the duplicate `ARATH/P93002` review into `ARATH/NPR1`
+(both P93002), removing one gene (16 predictions; 32 GOA terms with 3 overlaps, 28
+post-review with 1, and 4 core with 0), while the merged NPR1, on a refreshed GOA
+snapshot, went from 32 to 29 GOA terms and 29 to 27 post-review terms, gaining one
+post-review overlap (1 to 2; `GO:0031348` is now retained alongside `GO:0031347`),
+with its GOA overlaps (3) and core counts (4 terms, 0 overlaps) unchanged. The current
+totals are 2,844 GOA terms with 1,020 overlaps, 2,672 post-review terms with 849
+overlaps, and 1,206 core terms with 355 overlaps. Thus the recorded
 denominator changes combine upstream reference
-curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
-did not change.
+curation with four committed-GOA-snapshot refreshes that moved GOA counts (SlyD, CnoX, PHYB and NPR1); the GO-GPT prediction set itself
+did not change apart from the removal of the duplicate genes.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 4.0%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,806 predictions across 296 canonical genes (mean 29.8 per gene). Raw GOA agreement was 11.6%; exact agreement with all GO-valued AIGR core-function slots was 4.0%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 
