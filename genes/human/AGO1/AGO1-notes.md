@@ -348,3 +348,30 @@ NOT/isoform fields, machine/provider files and prior history are preserved.
 Validation, rendering and history checks are recorded in the closure manifest.
 COMPLETE requires zero validation warnings; source-specific uncertainty and any
 unused-provider advisory are separate from the now-closed cache requirements.
+
+
+## 2026-09-27 current-head access-consistency follow-up
+
+At reviewed head `db1f96f0bbead7b746ad4d1ba71720bec6d9aea2`, the
+GO:1901224 annotation reason retained a historical fetch-failure sentence
+although its reference assessment correctly described the recovered abstract.
+That sentence now states the current limit: the normal PMID:26764146 cache
+contains the abstract, while the full experimental body is unavailable.
+UNDECIDED is unchanged because the abstract does not identify the exact
+NIK/non-canonical branch assay. All 113 source objects/actions, the core,
+85 reference identities and the source-specific donor assessment are unchanged.
+No provider, machine, cache or published history was edited.
+
+The recovered records' integrity can be checked directly from this published
+note, independently of the local import-receipt path:
+
+- [PMID:26764146 cache](../../../publications/PMID_26764146.md): SHA-256 `26231660ee5a88eab7359e14e1967e561b7f73ec1c00f7e3776e6ba7b846168c`.
+- [PMID:40500329 cache](../../../publications/PMID_40500329.md): SHA-256 `a18cef782151c917d87276f6e4e6608fc71e824f6266395b64ffe36af4ad405f`.
+
+The source remains normal fetch run 36286975328 at head
+`5946477c8ac79ade0709264c775ea1262b108438`, artifact 10920674630, with the
+previously recorded ZIP digest. The structured DISPUTED reference judgments
+and explicit competing reporter interpretations are retained; this narrow
+access correction does not choose one experimental estimate as settled.
+Targeted validation, rendering and a new append-only history record accompany
+this follow-up. Status remains DRAFT while validation advisories persist.
