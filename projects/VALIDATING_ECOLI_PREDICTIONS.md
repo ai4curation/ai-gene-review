@@ -1,5 +1,6 @@
 ---
 title: "Validating E. coli ML Predictions"
+collections: [FUNCTION_PREDICTION]
 maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [ECOLI]

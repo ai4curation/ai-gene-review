@@ -45,7 +45,10 @@ the E. coli project.
 ## Annotation-transfer and rule reviews
 
 These projects examine the methods and mappings behind existing annotations and
-provide context for evaluating additional model predictions.
+provide context for evaluating additional model predictions. Transfers by
+orthology, phylogeny, and family membership have their own index,
+[Propagation by Homology](HOMOLOGY_PROPAGATION.md), with a
+[browser of all propagated annotations](../app/propagation/index.html).
 
 | Project | Focus |
 |---------|-------|

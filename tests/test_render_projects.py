@@ -1172,3 +1172,47 @@ Ferroptosis is an iron-dependent form of cell death.
         assert "human/SLC7A11" in html_content
         assert "human/ACSL4" in html_content
         assert warnings == []
+
+
+def _collection_fixture(tmp_path: Path) -> Path:
+    """Projects dir with one collection, its index page, and two members."""
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "collections.yaml").write_text(
+        "HOMOLOGY:\n  title: Propagation by homology\n  index: HUB\n")
+    (projects / "HUB.md").write_text("---\ntitle: Hub\ncollections: [HOMOLOGY]\n---\n# Hub\n")
+    (projects / "ISO.md").write_text(
+        "---\ntitle: ISO review\nmaturity: IN_PROGRESS\ncollections: [HOMOLOGY]\n---\n# ISO\n")
+    (projects / "OTHER.md").write_text("---\ntitle: Unrelated\n---\n# Other\n")
+    (tmp_path / "genes").mkdir()
+    return projects
+
+
+def test_collection_index_lists_members(tmp_path):
+    projects = _collection_fixture(tmp_path)
+    out, _ = render_project(projects / "HUB.md", tmp_path / "pages" / "projects",
+                            tmp_path / "genes", projects_dir=projects)
+    html = out.read_text()
+    assert "All projects in this collection" in html
+    assert 'href="ISO.html">ISO review</a>' in html
+    assert "Unrelated" not in html
+    # The index page does not list or badge itself.
+    assert 'href="HUB.html"' not in html
+
+
+def test_collection_member_links_to_index(tmp_path):
+    projects = _collection_fixture(tmp_path)
+    out, _ = render_project(projects / "ISO.md", tmp_path / "pages" / "projects",
+                            tmp_path / "genes", projects_dir=projects)
+    html = out.read_text()
+    assert '<a href="HUB.html">Propagation by homology</a>' in html
+    assert "All projects in this collection" not in html
+
+
+def test_projects_table_has_collection_filter(tmp_path):
+    from ai_gene_review.render_projects import render_projects_table
+
+    projects = _collection_fixture(tmp_path)
+    html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
+    assert 'data-filter="collection"' in html
+    assert 'data-collections="HOMOLOGY"' in html

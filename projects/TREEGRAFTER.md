@@ -1,5 +1,6 @@
 ---
 title: "TreeGrafter Inference Evaluation"
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: MATURE
 tags: [EVALUATION, PIPELINE]
 # Bare symbols here span many species (aprA is Desulfovibrio, pepV is P. putida,
