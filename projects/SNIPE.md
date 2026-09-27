@@ -1,10 +1,30 @@
 ---
 title: "SNIPE: Membrane-Bound Nuclease Anti-Phage Defence"
-maturity: MATURE
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
+species: [ECOLX]
+genes: [SNIPE]
+sidecars:
+  slide_figures:
+    - SNIPE/slides/go-hierarchy-gap.svg
+    - SNIPE/slides/snipe-mechanism.svg
+    - SNIPE/slides/snipe-proposed-terms.jpg
 ---
 
 # SNIPE: Membrane-Bound Nuclease Anti-Phage Defence
+
+**Bottom line:** SNIPE is a bacterial inner-membrane nuclease that cuts phage DNA while it is
+being injected, using the phage's own tape measure protein to position its GIY-YIG nuclease at
+the injection site (Saxton et al. 2026, Nature). It tells self from non-self by location
+rather than by DNA sequence (CRISPR) or modification (restriction-modification). We wrote a
+full gene review of the *E. coli* protein (A0A8T9CRB7), which had no GO annotations at all,
+and proposed seven annotations from the paper's direct evidence, including DNA endonuclease
+activity and defense response to virus, plus two new process terms. We did this because
+SNIPE homologues occur in about a third of well-sequenced bacterial clades, and existing GO
+cannot place it: the anti-phage nucleic-acid branch is framed as clearance of *intracellular*
+DNA, and neither CRISPR-Cas nor restriction-modification sits under defense response to
+virus. A GO issue making that case is drafted in `SNIPE/` with no filed issue number recorded, the
+review is still DRAFT, and the InterPro2GO and homologue tasks under Pending have not started.
 
 ## Overview
 
@@ -170,3 +190,7 @@ Key observations:
 - SNIPE represents a genuinely novel immune mechanism — not sequence-based (like CRISPR) or modification-based (like R-M), but localization-based.
 - Conceptual parallel to eukaryotic IFITM proteins that block viral entry at membranes.
 - The modular N-terminal diversity across ~500 homologues is an interesting case for studying domain shuffling and functional diversification.
+
+## Slides
+
+- [Slides](SNIPE/slides/SNIPE-slides.html) (Marp source: [SNIPE-slides.md](SNIPE/slides/SNIPE-slides.md)) — AI generated
