@@ -70,7 +70,7 @@ GO:0061753 → the cargo adaptor MF plus one selective-autophagy process per pap
 | `human/RETREG2` | 1 IEA, ACCEPT | yes | GO:0061709 reticulophagy |
 | `human/STBD1` | 1 IEA, ACCEPT | yes | GO:0061723 glycophagy |
 
-- `core_functions` ids are strictly validated, so both reviews **fail validation** once the term is obsoleted.
+- `core_functions` ids are strictly validated, so both reviews will **fail validation** once the validator's GO release includes the obsoletion.
 - The page's impact section predates the STBD1 review and lists RETREG2 only.
 - Not yet reviewed here: TOM1, IRGQ, SMURF1, GABARAPL1.
 

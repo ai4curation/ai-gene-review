@@ -19,7 +19,8 @@ recorded the upstream plan, the InterPro and UniRule mappings already
 removed, and the reviews in this repo that touch the terms. The
 obsoletion has landed: OLS shows GO:0099022 and GO:0099041 obsolete and
 GO:7770062 minted, so the "placeholder" and "not yet applied" notes
-below are out of date. Partly done: eight human TRAPP subunit reviews
+below are out of date, and the "Impact on this repo" table predates and
+omits the eight TRAPP reviews. Partly done: eight human TRAPP subunit reviews
 (TRAPPC1, 3, 4, 5, 8, 11, 12, 13), written after this page, already
 MODIFY their NAS row on the obsolete GO:0099022 to GO:0006888 *ER to
 Golgi vesicle-mediated transport*. Still to do: TMF1, whose review
@@ -266,3 +267,7 @@ trackers.
   **TMF1** (direct GO:0099041 row; review's `proposed_new_terms` already
   references GO:0099022 / GO:7770062). No gene reviews started or refreshed
   yet under this tracker.
+
+## Slides
+
+- [Slides](VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.html) (Marp source: [VESICLE_TETHERING_OBSOLETION-slides.md](VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.md)) — AI generated

@@ -209,3 +209,7 @@ required.
   GO:0160321 not yet minted. Affected experimental annotations: Camk2a
   (mouse, in repo — needs refresh), Septin5 (mouse, not in repo), tom-1
   (C. elegans, not in repo). No gene reviews started or refreshed yet.
+
+## Slides
+
+- [Slides](SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.html) (Marp source: [SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.md](SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.md)) — AI generated

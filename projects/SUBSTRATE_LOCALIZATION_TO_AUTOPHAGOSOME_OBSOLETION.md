@@ -279,3 +279,7 @@ Nothing is broken until the obsoletion is applied.
   all UniProt accessions verified against the UniProt REST API; all fourteen GO
   ids verified in OLS. Two discrepancies found in the upstream table (see above).
   Repo impact: `human/RETREG2` only. No gene reviews started or refreshed yet.
+
+## Slides
+
+- [Slides](SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION/slides/SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.html) (Marp source: [SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.md](SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION/slides/SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.md)) — AI generated

@@ -52,7 +52,7 @@ GO:0048278 and 8 related process terms → MFs GO:0160321 docking and GO:7770062
 
 - Upstream: each term **"represents a molecular function"**, the binding of a protein that attaches the vesicle to its target.
 - The OLS text says annotations go to **GO:0160321 or GO:7770062**, so each row needs a choice between docking and tethering.
-- *Regulation of vesicle docking* terms (GO:0106020-22) have **no MF twin**; they need a regulatory process instead.
+- *Regulation of vesicle docking* terms (GO:0106020-22) are obsolete too, with only a `consider` pointer to GO:0160321, so each regulatory row needs a curator's choice.
 - Do not reuse **GO:0099023** vesicle tethering complex: it is a cellular component.
 
 ---

@@ -220,3 +220,7 @@ human entries (TSTD1, SLC25A10) are TAS-only and lower value.
   obsoletion PRs are merged (#31949, #32025, #32068) and the
   parent ontology ticket #31842 is closed. No gene reviews started
   in this repo for SQOR/TSTD1/SLC25A10.
+
+## Slides
+
+- [Slides](SULFIDE_OXIDATION_OBSOLETION/slides/SULFIDE_OXIDATION_OBSOLETION-slides.html) (Marp source: [SULFIDE_OXIDATION_OBSOLETION-slides.md](SULFIDE_OXIDATION_OBSOLETION/slides/SULFIDE_OXIDATION_OBSOLETION-slides.md)) — AI generated

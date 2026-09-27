@@ -18,9 +18,12 @@ activity* or GO:7770062 *vesicle membrane tethering activity*. This is
 the parent tracker for go-annotation#6379; we recorded the upstream
 plan and group tallies, found the affected reviews in this repo, and
 queued canonical docking factors (STX1A, STXBP1, exocyst, NSF) as new
-reviews. The obsoletion has landed: OLS shows GO:0048278 and GO:0048211
-obsolete and both MFs minted, so the "not yet applied" and "placeholder"
-notes below are out of date. Scoped, refresh not started: two human
+reviews. The obsoletion has landed: OLS shows all nine terms obsolete
+(GO:0048278, GO:0048211, GO:0090384, GO:0006904, GO:0016081, GO:0061790
+and the regulation terms GO:0106020/21/22, which carry only a `consider`
+pointer to GO:0160321) and both MFs minted, so the "not yet applied",
+"placeholder" and "likely retained regulatory BP" notes below are out of
+date. Scoped, refresh not started: two human
 reviews still ACCEPT an IBA row on an obsolete docking term, USO1
 (GO:0048211 Golgi vesicle docking) and STX12 (GO:0048278, also listed in
 its `core_functions`); STX12 was reviewed after this page was written.
@@ -81,9 +84,9 @@ children).
 | vesicle docking | GO:0048278 | MF: GO:0160321 vesicle docking activity (placeholder) |
 | Golgi vesicle docking | GO:0048211 | MF: GO:0160321 |
 | phagosome-lysosome docking | GO:0090384 | MF: GO:0160321 |
-| regulation of vesicle docking | GO:0106020 | (likely retained regulatory BP) |
-| positive regulation of vesicle docking | GO:0106022 | (likely retained regulatory BP) |
-| negative regulation of vesicle docking | GO:0106021 | (likely retained regulatory BP) |
+| regulation of vesicle docking | GO:0106020 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
+| positive regulation of vesicle docking | GO:0106022 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
+| negative regulation of vesicle docking | GO:0106021 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
 | vesicle docking involved in exocytosis | GO:0006904 | MF: GO:0160321 |
 | synaptic vesicle docking | GO:0016081 | MF: GO:0160321 (docking) or the proposed "vesicle tethering activity" MF (not yet minted; see Overview) |
 | dense core granule docking | GO:0061790 | MF: GO:0160321 |
@@ -272,3 +275,7 @@ whereas CaMKIIα is a regulator and forces a harder per-gene judgment.
   OLS; replacement MF **GO:0160321** not yet minted. Affected existing
   reviews: USO1 (human, in repo — needs refresh once obsoletion lands).
   No gene reviews started or refreshed yet under this tracker.
+
+## Slides
+
+- [Slides](VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.html) (Marp source: [VESICLE_DOCKING_OBSOLETION-slides.md](VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.md)) — AI generated

@@ -152,10 +152,9 @@ to add high-value, currently-unreviewed human trafficking genes.
 
 ## Scope
 
-- **Organisms**: human (12 of 22 EXP rows, 6 distinct human genes)
-  and *S. cerevisiae* (8 rows, all the AP-1 / polarisome / MLC1
-  complex annotations) carry essentially all the experimental
-  signal. Rat/mouse/dog/Candida/Arabidopsis rows are orthologs that
+- **Organisms**: human (6 of 22 EXP rows, 6 distinct human genes)
+  and *S. cerevisiae* (7 rows, all the AP-1 / polarisome / MLC1
+  complex annotations) carry most of the experimental signal. Rat/mouse/dog/Candida/Arabidopsis rows are orthologs that
   will largely follow automatically once the model-organism groups
   remap.
 - **GO branches**: BP only — a transport-vs-targeting collapse onto
@@ -232,7 +231,7 @@ UniProt accession before starting. None are currently in the repo.
 
 ## Priority
 
-**Medium.** 22 experimental annotations across 6 organisms — larger
+**Medium.** 22 experimental annotations across 7 organisms — larger
 than most obsoletion trackers in this repo — and several affected
 human genes (YKT6, CLASP1/2, WIPI1) are biologically important
 trafficking proteins with **no review yet in this repo**. The
@@ -248,3 +247,7 @@ until the obsoletion propagates to released annotations.
   affected gene is reviewed in this repo, so nothing needs refresh —
   held as a forward-looking tracking project. No gene reviews
   started.
+
+## Slides
+
+- [Slides](VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.html) (Marp source: [VESICLE_TARGETING_OBSOLETION-slides.md](VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.md)) — AI generated

@@ -125,3 +125,7 @@ mechanical (term ID/label refresh) rather than scientific.
 
 - 2026-05-01 — Project file created, tracking upstream issue #6401 (opened
   same day). Obsoletion not yet applied. No review edits required at this time.
+
+## Slides
+
+- [Slides](PEROXISOME_TARGETING_SIGNAL_OBSOLETION/slides/PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.html) (Marp source: [PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.md](PEROXISOME_TARGETING_SIGNAL_OBSOLETION/slides/PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.md)) — AI generated
