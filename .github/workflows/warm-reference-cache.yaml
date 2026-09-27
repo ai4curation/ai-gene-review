@@ -1,155 +1,234 @@
----
-name: Warm reference cache
-
-# Keeps the committed reference cache (publications/) complete so the full
-# `just validate-all` reference phase stays cache-bound instead of re-fetching
-# references from PubMed/providers on every run. Runs weekly (newly-added
-# references are fetched; an unchanged cache is a no-op) and on demand.
-
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 1"  # Mondays 04:00 UTC, ahead of the weekly validate-all
-  workflow_dispatch:
-
+name: ClinGen reference recovery batch 10
+run-name: Reference recovery batch 10 at ${{ github.ref_name }} (${{ github.sha }})
+"on":
+  workflow_dispatch: null
+permissions:
+  contents: read
 concurrency:
-  group: warm-reference-cache
-  cancel-in-progress: true
-
+  group: clingen-reference-recovery10-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  warm-reference-cache:
+  recover:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'ai4curation/ai-gene-review' &&
+      github.ref == 'refs/heads/cmungall/clingen-reference-fetch10-20260927'
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
-      # with the ai4c-agent App token below.
-      contents: read
-
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    - name: Checkout the dispatched commit
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ github.sha }}
+        fetch-depth: 1
+        persist-credentials: false
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - name: Set isolated runtime paths after runner initialization
+      run: |
+        python - <<'PYENV'
+        from pathlib import Path
+        import os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery10'
+        with Path(os.environ['GITHUB_ENV']).open('a') as out:
+            out.write('UV_CACHE_DIR='+str(root/'uv-cache')+'\n')
+            out.write('UV_PROJECT_ENVIRONMENT='+str(root/'venv')+'\n')
+        PYENV
+    - name: Initialize fixed source requests and provenance
+      run: |
+        python - <<'PYINIT'
+        from pathlib import Path
+        import json, os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery10'/'artifact'
+        root.mkdir(parents=True)
+        requests_text = '[\n  {\n    "kind": "pmid",\n    "id": "10373455",\n    "mode": "fetch_missing",\n    "genes": [\n      "AICDA"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 122,\n        "text": "- PMID:10373455"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 174,\n        "text": "- PMID:10373455"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 184,\n        "text": "comment: Mouse Aicda donor. PMID:10373455 reports purified mouse GST-AID free-cytidine activity,"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1502,\n        "text": "- id: PMID:10373455"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1515,\n        "text": "target. Local ordinary fetch failed DNS. Primary record: https://pubmed.ncbi.nlm.nih.gov/10373455/\'"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 13,\n        "text": "The normal GOA publication-cache command completed with 16/16 records already cached (`/tmp/AICDA-fetch-goa.log`). A normal request for six additional primary sources completed with 0/6 recovered and DNS failures (`/tmp/AICDA-fetch-new-primary.log`). No publication, UniProt, GOA, InterPro or provider file was manually rewritten. The six required cache gates are PMID:10373455, PMID:12651944, PMID:25957684, PMID:28757211, PMID:19188259 and PMID:23341589. They are reserved for a future recovery batch; frozen source9 is unchanged. No other cited source gap or provider-only source exists in this gene directory."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 21,\n        "text": "The live [GO:0004126 record](https://amigo.geneontology.org/amigo/term/GO%3A0004126) formally describes free cytidine/deoxycytidine conversion (EC 3.5.4.5). This is not identical to DNA-cytosine deamination (EC 3.5.4.38, RHEA:50948 in the immutable UniProt record). Nevertheless, free-substrate activity must not be rejected: the original mouse study measures GST-AID activity [PMID:10373455], and the human Ramos-derived preparation in [PMID:12651944](https://pmc.ncbi.nlm.nih.gov/articles/PMC153055/) directly measures both free nucleosides in Figure 4b. Its Methods specify Ramos cDNA, GST fusion and Sf9 expression. It also measures DNA deamination and inhibitory RNA association. One exact Results excerpt is: \\u201cAID is most active when deaminating the free deoxynucleoside, CdR \\u2192 deoxyuridine\\u201d. This is an assay comparison, not a physiological flux claim."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "12651944",\n    "mode": "fetch_missing",\n    "genes": [\n      "AICDA"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 72,\n        "text": "treatment exposes its DNA-deamination activity (PMID:12651944). Mouse switch-RNA experiments further"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 76,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 110,\n        "text": "GST-AID directly converts both free nucleosides in PMID:12651944 Figure 4b, as well as deaminating"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 121,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 142,\n        "text": "deamination. Human Ramos-derived GST-AID directly converts both free nucleosides in PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 152,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 167,\n        "text": "GST-AID directly converts both free nucleosides in PMID:12651944 Figure 4b, as well as deaminating"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 173,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 185,\n        "text": "and PMID:12651944 independently measures the same capacity in a human preparation."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 201,\n        "text": "Human Ramos-derived GST-AID directly converts both free nucleosides in PMID:12651944 Figure 4b,"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 211,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 775,\n        "text": "chelator sensitivity and zinc-associated activity in PMID:12651944, together with human AID structural"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 779,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 828,\n        "text": "independently establish the AID-catalyzed initiating step (PMID:12651944; PMID:11007475)."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 836,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 893,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 920,\n        "text": "reason: Human AID directly hydrolytically deaminates cytosine-containing substrates (PMID:12651944)."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 930,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 955,\n        "text": "reason: Human AID directly hydrolytically deaminates cytosine-containing substrates (PMID:12651944)."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 965,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1003,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1194,\n        "text": "and antibody-diversification studies (PMID:12651944; PMID:18722174). AID creates uracil lesions;"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1203,\n        "text": "- PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1273,\n        "text": "assay. Later PMID:12651944 supplies biochemical support."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1280,\n        "text": "tissue expression. This is a NAS source, not the direct human enzyme assay. Later PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1516,\n        "text": "- id: PMID:12651944"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1531,\n        "text": "under those assay conditions. Local ordinary fetch failed DNS. Primary record: https://pubmed.ncbi.nlm.nih.gov/12651944/\'"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 13,\n        "text": "The normal GOA publication-cache command completed with 16/16 records already cached (`/tmp/AICDA-fetch-goa.log`). A normal request for six additional primary sources completed with 0/6 recovered and DNS failures (`/tmp/AICDA-fetch-new-primary.log`). No publication, UniProt, GOA, InterPro or provider file was manually rewritten. The six required cache gates are PMID:10373455, PMID:12651944, PMID:25957684, PMID:28757211, PMID:19188259 and PMID:23341589. They are reserved for a future recovery batch; frozen source9 is unchanged. No other cited source gap or provider-only source exists in this gene directory."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 19,\n        "text": "The core is zinc-dependent deamination of cytosine in exposed single-stranded DNA, creating uracil lesions that initiate antibody hypermutation and class switching. AID performs the deamination; repair enzymes perform subsequent excision and recombination. Human immunodeficiency and biochemical evidence are complementary, rather than interpreting knockout necessity alone as a process mechanism [PMID:11007475; PMID:18722174; PMID:12651944]."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 21,\n        "text": "The live [GO:0004126 record](https://amigo.geneontology.org/amigo/term/GO%3A0004126) formally describes free cytidine/deoxycytidine conversion (EC 3.5.4.5). This is not identical to DNA-cytosine deamination (EC 3.5.4.38, RHEA:50948 in the immutable UniProt record). Nevertheless, free-substrate activity must not be rejected: the original mouse study measures GST-AID activity [PMID:10373455], and the human Ramos-derived preparation in [PMID:12651944](https://pmc.ncbi.nlm.nih.gov/articles/PMC153055/) directly measures both free nucleosides in Figure 4b. Its Methods specify Ramos cDNA, GST fusion and Sf9 expression. It also measures DNA deamination and inhibitory RNA association. One exact Results excerpt is: \\u201cAID is most active when deaminating the free deoxynucleoside, CdR \\u2192 deoxyuridine\\u201d. This is an assay comparison, not a physiological flux claim."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 27,\n        "text": "RNA binding is independently positive: the human biochemical preparation binds inhibitory RNA, and mouse switch-RNA experiments provide a targeting mechanism [PMID:12651944; [PMID:25957684](https://pmc.ncbi.nlm.nih.gov/articles/PMC4426339/)]. Mouse experiments are not relabeled as direct human experiments, and RNA binding alone is not RNA editing."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "19188259",\n    "mode": "fetch_missing",\n    "genes": [\n      "AICDA"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1121,\n        "text": "restricts L1 and MusD retrotransposition in PMID:19188259, but mobile-element assays do not automatically"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1126,\n        "text": "- PMID:19188259"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1560,\n        "text": "- id: PMID:19188259"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1572,\n        "text": "establish infectious retrovirus restriction. Local ordinary fetch failed DNS. Primary record: https://pubmed.ncbi.nlm.nih.gov/19188259/\'"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 13,\n        "text": "The normal GOA publication-cache command completed with 16/16 records already cached (`/tmp/AICDA-fetch-goa.log`). A normal request for six additional primary sources completed with 0/6 recovered and DNS failures (`/tmp/AICDA-fetch-new-primary.log`). No publication, UniProt, GOA, InterPro or provider file was manually rewritten. The six required cache gates are PMID:10373455, PMID:12651944, PMID:25957684, PMID:28757211, PMID:19188259 and PMID:23341589. They are reserved for a future recovery batch; frozen source9 is unchanged. No other cited source gap or provider-only source exists in this gene directory."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 31,\n        "text": "Broad antiviral defense is retained as non-core using the endogenous human BL2 result and the AID/UNG-dependent HBV cccDNA study [PMID:23341589; PMID:26867650]. The [GO:0045869 definition](https://amigo.geneontology.org/amigo/term/GO%3A0045869) specifically concerns single-stranded viral RNA replication through DNA. HBV is a DNA virus. The [full PMID:19188259 study](https://pmc.ncbi.nlm.nih.gov/articles/PMC2665220/) explicitly tests human AID among eight vertebrate proteins and supports L1/MusD retrotransposition restriction; this does not automatically establish infectious retroviral restriction. The specific IBA remains UNDECIDED pending its IBD evidence and a properly matched assay."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "23341589",\n    "mode": "fetch_missing",\n    "genes": [\n      "AICDA"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 885,\n        "text": "reason: PMID:23341589 introduces the unfused expression construct explicitly as human AID and carries"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 892,\n        "text": "- PMID:23341589"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 900,\n        "text": "HBV RNA-editing experiments in PMID:23341589 corroborate the capacity in a restricted viral"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 903,\n        "text": "- reference_id: PMID:23341589"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 906,\n        "text": "- reference_id: PMID:23341589"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1127,\n        "text": "- PMID:23341589"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1157,\n        "text": "reason: PMID:26867650 links AID-dependent deamination to HBV cccDNA degradation. PMID:23341589 independently"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1168,\n        "text": "- PMID:23341589"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1573,\n        "text": "- id: PMID:23341589"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1591,\n        "text": "RNA target. Local ordinary fetch failed DNS. Primary record: https://pubmed.ncbi.nlm.nih.gov/23341589/\'"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1632,\n        "text": "system in PMID:23341589, and what experimental descendants ground the PTN000355219 ancestral RNA-editing"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 13,\n        "text": "The normal GOA publication-cache command completed with 16/16 records already cached (`/tmp/AICDA-fetch-goa.log`). A normal request for six additional primary sources completed with 0/6 recovered and DNS failures (`/tmp/AICDA-fetch-new-primary.log`). No publication, UniProt, GOA, InterPro or provider file was manually rewritten. The six required cache gates are PMID:10373455, PMID:12651944, PMID:25957684, PMID:28757211, PMID:19188259 and PMID:23341589. They are reserved for a future recovery batch; frozen source9 is unchanged. No other cited source gap or provider-only source exists in this gene directory."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 29,\n        "text": "The [original HBV paper, PMID:23341589](https://pmc.ncbi.nlm.nih.gov/articles/PMC3568302/) reports C-to-U changes in nucleocapsid RNA, with RNase-H-defective polymerase, lamivudine and core immunoprecipitation controls. Human and mouse AID-ER are explicitly compared in separate DNA-hypermutation experiments; endogenous human BL2 AID also reduces viral nucleocapsid DNA. The first Results section explicitly introduces the unfused construct as human AID; subsequent RNA panels continue that AID/GFP comparison without identifying a species change. This resolves the earlier construct-scope concern sufficiently to retain the IBA as non-core with positive human experimental corroboration. The ancestral IBD chain remains uninspected. This is distinct from proving an endogenous immunoglobulin RNA-editing mechanism. Root independently highlighted the first Results sentence, which was then re-read alongside the RNA panels."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 31,\n        "text": "Broad antiviral defense is retained as non-core using the endogenous human BL2 result and the AID/UNG-dependent HBV cccDNA study [PMID:23341589; PMID:26867650]. The [GO:0045869 definition](https://amigo.geneontology.org/amigo/term/GO%3A0045869) specifically concerns single-stranded viral RNA replication through DNA. HBV is a DNA virus. The [full PMID:19188259 study](https://pmc.ncbi.nlm.nih.gov/articles/PMC2665220/) explicitly tests human AID among eight vertebrate proteins and supports L1/MusD retrotransposition restriction; this does not automatically establish infectious retroviral restriction. The specific IBA remains UNDECIDED pending its IBD evidence and a properly matched assay."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "25315780",\n    "mode": "fetch_missing",\n    "genes": [\n      "ABHD5"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 34,\n        "text": "counterexperiments, not an inference from an inaccessible abstract. Later PMID:25315780 reports"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 41,\n        "text": "- PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 79,\n        "text": "later homogenate/LPGAT results in PMID:25315780 do not directly resolve intrinsic human LPAAT."\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 83,\n        "text": "- PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 967,\n        "text": "substrate supply or regulation of endogenous enzymes. The later 293T homogenate observation in PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 973,\n        "text": "- PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1003,\n        "text": "substrate supply or regulation of endogenous enzymes. The later 293T homogenate observation in PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1009,\n        "text": "- PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1140,\n        "text": "- PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1172,\n        "text": "counterexperiments, not an inference from an inaccessible abstract. Later PMID:25315780 reports"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1179,\n        "text": "- PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1500,\n        "text": "- id: PMID:25315780"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 30,\n        "text": "0/4), and PMID:25315780 plus PMID:26745266"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 61,\n        "text": "[PMID:25315780](https://pubmed.ncbi.nlm.nih.gov/25315780/), indexed full"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 186,\n        "text": "PMID:25315780, PMID:30361410, PMID:31742248, PMID:37087101 and PMID:40818613."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "25957684",\n    "mode": "fetch_missing",\n    "genes": [\n      "AICDA"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 73,\n        "text": "show sequence/structure-dependent RNA association and targeting (PMID:25957684). These independent"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 77,\n        "text": "- PMID:25957684"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1532,\n        "text": "- id: PMID:25957684"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1544,\n        "text": "those assays into direct human measurements. Local ordinary fetch failed DNS. Primary record: https://pubmed.ncbi.nlm.nih.gov/25957684/\'"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 13,\n        "text": "The normal GOA publication-cache command completed with 16/16 records already cached (`/tmp/AICDA-fetch-goa.log`). A normal request for six additional primary sources completed with 0/6 recovered and DNS failures (`/tmp/AICDA-fetch-new-primary.log`). No publication, UniProt, GOA, InterPro or provider file was manually rewritten. The six required cache gates are PMID:10373455, PMID:12651944, PMID:25957684, PMID:28757211, PMID:19188259 and PMID:23341589. They are reserved for a future recovery batch; frozen source9 is unchanged. No other cited source gap or provider-only source exists in this gene directory."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 27,\n        "text": "RNA binding is independently positive: the human biochemical preparation binds inhibitory RNA, and mouse switch-RNA experiments provide a targeting mechanism [PMID:12651944; [PMID:25957684](https://pmc.ncbi.nlm.nih.gov/articles/PMC4426339/)]. Mouse experiments are not relabeled as direct human experiments, and RNA binding alone is not RNA editing."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "28757211",\n    "mode": "fetch_missing",\n    "genes": [\n      "AICDA"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 776,\n        "text": "work in PMID:28757211, independently support the catalytic metal. No residue-level evolutionary"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 780,\n        "text": "- PMID:28757211"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1077,\n        "text": "recovered. Independent human AID structural/biochemical work in PMID:28757211 demonstrates oligomerization"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1081,\n        "text": "- PMID:28757211"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1545,\n        "text": "- id: PMID:28757211"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1559,\n        "text": "Local ordinary fetch failed DNS. Primary record: https://pubmed.ncbi.nlm.nih.gov/28757211/\'"\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 13,\n        "text": "The normal GOA publication-cache command completed with 16/16 records already cached (`/tmp/AICDA-fetch-goa.log`). A normal request for six additional primary sources completed with 0/6 recovered and DNS failures (`/tmp/AICDA-fetch-new-primary.log`). No publication, UniProt, GOA, InterPro or provider file was manually rewritten. The six required cache gates are PMID:10373455, PMID:12651944, PMID:25957684, PMID:28757211, PMID:19188259 and PMID:23341589. They are reserved for a future recovery batch; frozen source9 is unchanged. No other cited source gap or provider-only source exists in this gene directory."\n      },\n      {\n        "path": "genes/human/AICDA/AICDA-notes.md",\n        "type": "explicit_source_citation",\n        "line": 23,\n        "text": "Accordingly, the four existing cytidine-deaminase assertions are retained. The core uses verified [GO:0019239 deaminase activity](https://amigo.geneontology.org/amigo/term/GO%3A0019239), with the DNA substrate specified in prose, and the two very broad hydrolase assertions are refined to it. No DNA-specific MF identifier was invented. The remaining ontology question distinguishes the known chemistry from the absence of an adequately specific term found in this search. [PMID:28757211](https://pmc.ncbi.nlm.nih.gov/articles/PMC5771415/) and the [author PDF](https://wulab.tch.harvard.edu/_files/ugd/feeaaa_f8d5b1054d45494f9494cfd5c7918e44.pdf) support engineered human AID recognition of structured DNA, catalytic zinc and substrate-dependent oligomerization. Bound cytidine derivatives in a structure are not used as a turnover assay, nor is an obligatory native homodimer claimed."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "30361410",\n    "mode": "fetch_missing",\n    "genes": [\n      "ABHD5"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1512,\n        "text": "- id: PMID:30361410"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 28,\n        "text": "Normal installed-CLI fetches then attempted PMID:40818613, PMID:30361410,"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 109,\n        "text": "[PMID:30361410](https://pubmed.ncbi.nlm.nih.gov/30361410/), full indexed"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 186,\n        "text": "PMID:25315780, PMID:30361410, PMID:31742248, PMID:37087101 and PMID:40818613."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "31742248",\n    "mode": "fetch_missing",\n    "genes": [\n      "ABHD5"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 172,\n        "text": "- PMID:31742248"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 211,\n        "text": "- PMID:31742248"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1255,\n        "text": "- PMID:31742248"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1549,\n        "text": "- id: PMID:31742248"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 29,\n        "text": "PMID:37087101 and PMID:31742248 (`/tmp/ABHD5-additional-fetch.log`, terminal exit 1,"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 135,\n        "text": "[PMID:31742248](https://pubmed.ncbi.nlm.nih.gov/31742248/), full indexed"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 186,\n        "text": "PMID:25315780, PMID:30361410, PMID:31742248, PMID:37087101 and PMID:40818613."\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "37087101",\n    "mode": "fetch_missing",\n    "genes": [\n      "ABHD5"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1524,\n        "text": "- id: PMID:37087101"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 29,\n        "text": "PMID:37087101 and PMID:31742248 (`/tmp/ABHD5-additional-fetch.log`, terminal exit 1,"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 116,\n        "text": "[PMID:37087101](https://pubmed.ncbi.nlm.nih.gov/37087101/), full indexed"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 186,\n        "text": "PMID:25315780, PMID:30361410, PMID:31742248, PMID:37087101 and PMID:40818613."\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 199,\n        "text": "requested action change. The PMID:37087101 source note was further narrowed to"\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "40818613",\n    "mode": "fetch_missing",\n    "genes": [\n      "ABHD5"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 729,\n        "text": "- PMID:40818613"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 758,\n        "text": "with independent human droplet-localization evidence in PMID:40818613."\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 760,\n        "text": "- PMID:40818613"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 790,\n        "text": "- PMID:40818613"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 841,\n        "text": "- PMID:40818613"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1292,\n        "text": "- PMID:40818613"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1536,\n        "text": "- id: PMID:40818613"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n        "type": "explicit_source_citation",\n        "line": 1617,\n        "text": "- reference_id: PMID:40818613"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 28,\n        "text": "Normal installed-CLI fetches then attempted PMID:40818613, PMID:30361410,"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 123,\n        "text": "[PMID:40818613](https://pubmed.ncbi.nlm.nih.gov/40818613/), full indexed"\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 186,\n        "text": "PMID:25315780, PMID:30361410, PMID:31742248, PMID:37087101 and PMID:40818613."\n      },\n      {\n        "path": "genes/human/ABHD5/ABHD5-notes.md",\n        "type": "explicit_source_citation",\n        "line": 209,\n        "text": "PMID:40818613 remains cache-dependent; it is not presented as a recovered local"\n      }\n    ]\n  }\n]\n'
+        provenance_text = '{\n  "collected_utc": "2026-09-27T07:37:35.774591+00:00",\n  "base_main": "ba3ff58d7d2de76dbe3c24b16e05e12369f463fc",\n  "base_workflow_blob_sha": "3b7b98db5c90e0cad98cf0100894b393bc5ca712",\n  "baseline_scope": "Coordinator-verified imported base and workflow blob reused as instructed. Root must recheck publication base; actual run receipt binds the dispatch commit.",\n  "method": "Fixed coordinator-approved six AICDA and five ABHD5 primary-source cache gates from frozen complete authored manifests. All source3\\u20139 inventories and local caches excluded. No runtime expansion, refresh, gene seeding, provider call or source authoring. Source citations establish retrieval scope, not independent scientific certification.",\n  "gene_sources": {\n    "AICDA": {\n      "manifest_snapshot": {\n        "path": "/tmp/AICDA-local-manifest.json",\n        "bytes": 15925,\n        "sha256": "6c7aea917ac70bbb25f51fd018c8b4165b59a42464b35f2197433e6996dd416c",\n        "git_blob_sha": "d437946e421a66390576ec9dbb5691519841e591"\n      },\n      "source_inventory_status": "Frozen owner draft; all gene file hashes checked against exact manifest. Publication readiness remains separate from retrieval eligibility.",\n      "source_files": [\n        {\n          "path": "genes/human/AICDA/AICDA-ai-review.yaml",\n          "bytes": 83155,\n          "sha256": "5add113adf71751268d4a7e28732c54be9243daa67e20bccc7b6f8be68f705e7",\n          "git_blob_sha": "29ef87f8c08cd763d910ba61641ce0a9cb8a1743"\n        },\n        {\n          "path": "genes/human/AICDA/AICDA-notes.md",\n          "bytes": 11960,\n          "sha256": "a8cd9c01495ac96ada319ca60f368691ad8742cdab6b41e602a7adb3b47b759a",\n          "git_blob_sha": "cd1d8f0e8b20d6b88da5bd6fccedc42a98be25ea"\n        }\n      ],\n      "provider_files": []\n    },\n    "ABHD5": {\n      "manifest_snapshot": {\n        "path": "/tmp/ABHD5-local-manifest.json",\n        "bytes": 16474,\n        "sha256": "73e84a41c53a0bfdf1c129f39ef98af07b7c02721552b54911c9391fafdb0c65",\n        "git_blob_sha": "95f239baa3e12aec3450461c9a7f655b1ba8fb69"\n      },\n      "source_inventory_status": "Frozen owner draft; all gene file hashes checked against exact manifest. Publication readiness remains separate from retrieval eligibility.",\n      "source_files": [\n        {\n          "path": "genes/human/ABHD5/ABHD5-ai-review.yaml",\n          "bytes": 83623,\n          "sha256": "713c6593a516a42a5b9d035ea3fd71e5372602fd9369f5e8540c9edb98b0d431",\n          "git_blob_sha": "8a4d612c42de9de31f5564ea48011f329c43b127"\n        },\n        {\n          "path": "genes/human/ABHD5/ABHD5-notes.md",\n          "bytes": 13712,\n          "sha256": "4301dc9e8e3175309d91d011d3aff83e5ee20f25a04765b64099e9081d617195",\n          "git_blob_sha": "e45f63dde3c16e82e88202203e6226667a36d705"\n        }\n      ],\n      "provider_files": []\n    }\n  },\n  "normal_fetch": {\n    "complete": true,\n    "outcome": "Every requested PMID has a terminal normal-fetch DNS failure. AICDA 0/6; ABHD5 0/4 and one failed new record plus one already-cached record in its 1/2 call. Owners reaped exit 1. Already-cached PMID:26745266 is not requested.",\n    "logs": [\n      {\n        "path": "/tmp/AICDA-fetch-new-primary.log",\n        "bytes": 1453,\n        "sha256": "252875fbd42100ffa24a89a4e6d7a348c677868b562bd72110e21430628b32e5",\n        "git_blob_sha": "95ea56ef1faf52cafe95ae0d4aa68c9a4b13ed9f"\n      },\n      {\n        "path": "/tmp/ABHD5-additional-fetch.log",\n        "bytes": 1088,\n        "sha256": "53c1cb32c1855b5efec83be12527e427d0665812450382211c09ed575b657846",\n        "git_blob_sha": "2ae2c72a6bace6573844f995c7ad48398d23e7a2"\n      },\n      {\n        "path": "/tmp/ABHD5-conflict-fetch.log",\n        "bytes": 678,\n        "sha256": "471e3c4f0e642b3f7573b8150684df505c36ccf6602cc25b9cf5971a8bf509fe",\n        "git_blob_sha": "32daaaa2214ea53a51d7731b2d4c4d244d4aacd0"\n      }\n    ],\n    "terminal_receipt_source": "AICDA owner reaped execution session81069; ABHD5 owner confirmed reaped exit1 calls and supplied frozen manifest/census. No additional retries performed for this design."\n  },\n  "exclusions": {\n    "request_inventories": [\n      {\n        "path": "tmp/source-seed-recovery3-design/requests.json",\n        "bytes": 4543,\n        "sha256": "a380cc2dddfd1b84ddca63d163d00b4f4de8c4d369c81d45c4203f1eb7b2bb15",\n        "git_blob_sha": "eb41009f697e32f4f4b1fea556d043b38d86d0c9"\n      },\n      {\n        "path": "tmp/reference-cache-batch4-design/requests.json",\n        "bytes": 17868,\n        "sha256": "5a9799ea4427a00cf0e4a1d551bd8c65e5ff562d5e8501baef2925bf9b9ac1b8",\n        "git_blob_sha": "30505b90ae6d2af852094cfcc149ed97262522ca"\n      },\n      {\n        "path": "tmp/reference-cache-batch5-design/requests.json",\n        "bytes": 9517,\n        "sha256": "f2885fdc4e951ff24d99dd016efd75d3eb3eae9c7ec699736fe17ccccc89b5e8",\n        "git_blob_sha": "3e25eeb8a4756de49e9c1583b9ecf494502965f3"\n      },\n      {\n        "path": "tmp/reference-cache-batch6-design/requests.json",\n        "bytes": 6984,\n        "sha256": "25a2e4c646dbee687e03acf60d0c08a9417ad30f4748fabaa1bd34e7252ac2f8",\n        "git_blob_sha": "5a8bfd9a781651deb11d9328f610b57b5556dfbf"\n      },\n      {\n        "path": "tmp/reference-cache-batch7-design/requests.json",\n        "bytes": 16758,\n        "sha256": "a645f5c19a9323033a28c1e1e7ac24f8312bae9db3af9425310f0273c92fef65",\n        "git_blob_sha": "3d8ae046907196a6d44c6ea786aacacb968b8660"\n      },\n      {\n        "path": "tmp/reference-cache-batch8-design/requests.json",\n        "bytes": 109154,\n        "sha256": "2e7d5ea42fb7aafee67915350801486127069e87f87fb0767f322284e8db3dcf",\n        "git_blob_sha": "aa5afae364a489882ef37cbd48721e23b303006f"\n      },\n      {\n        "path": "tmp/reference-cache-batch9-design/requests.json",\n        "bytes": 43721,\n        "sha256": "806e3caf1ad67557c30a54122d86d5283492216a67cc2183568049cff2b02309",\n        "git_blob_sha": "c28d40a41d13ee519bb7dabd3f13655d1afe6292"\n      }\n    ],\n    "excluded_requests": [],\n    "existing_cache_policy": "Only locally absent paths requested; hosted runtime skips any newly present checkout record without refresh.",\n    "source3_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "12590576"\n      },\n      {\n        "kind": "pmid",\n        "id": "12773545"\n      },\n      {\n        "kind": "pmid",\n        "id": "15024124"\n      },\n      {\n        "kind": "pmid",\n        "id": "15769750"\n      },\n      {\n        "kind": "pmid",\n        "id": "17649979"\n      },\n      {\n        "kind": "pmid",\n        "id": "19177456"\n      },\n      {\n        "kind": "pmid",\n        "id": "26290588"\n      },\n      {\n        "kind": "pmid",\n        "id": "33328229"\n      },\n      {\n        "kind": "pmid",\n        "id": "33790472"\n      },\n      {\n        "kind": "pmid",\n        "id": "35267011"\n      },\n      {\n        "kind": "pmid",\n        "id": "36423325"\n      },\n      {\n        "kind": "pmid",\n        "id": "41549122"\n      },\n      {\n        "kind": "pmid",\n        "id": "7929456"\n      },\n      {\n        "kind": "pmid",\n        "id": "9586999"\n      }\n    ],\n    "source4_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10358004"\n      },\n      {\n        "kind": "pmid",\n        "id": "11854172"\n      },\n      {\n        "kind": "pmid",\n        "id": "12237313"\n      },\n      {\n        "kind": "pmid",\n        "id": "14734522"\n      },\n      {\n        "kind": "pmid",\n        "id": "15105377"\n      },\n      {\n        "kind": "pmid",\n        "id": "15150263"\n      },\n      {\n        "kind": "pmid",\n        "id": "15649436"\n      },\n      {\n        "kind": "pmid",\n        "id": "15649886"\n      },\n      {\n        "kind": "pmid",\n        "id": "17001013"\n      },\n      {\n        "kind": "pmid",\n        "id": "17525271"\n      },\n      {\n        "kind": "pmid",\n        "id": "19015306"\n      },\n      {\n        "kind": "pmid",\n        "id": "19923453"\n      },\n      {\n        "kind": "pmid",\n        "id": "22310661"\n      },\n      {\n        "kind": "pmid",\n        "id": "23746446"\n      },\n      {\n        "kind": "pmid",\n        "id": "23993652"\n      },\n      {\n        "kind": "pmid",\n        "id": "25288775"\n      },\n      {\n        "kind": "pmid",\n        "id": "29379495"\n      },\n      {\n        "kind": "pmid",\n        "id": "34523057"\n      },\n      {\n        "kind": "pmid",\n        "id": "35133502"\n      },\n      {\n        "kind": "pmid",\n        "id": "35546148"\n      },\n      {\n        "kind": "pmid",\n        "id": "38260362"\n      },\n      {\n        "kind": "pmid",\n        "id": "38480882"\n      },\n      {\n        "kind": "pmid",\n        "id": "38662103"\n      },\n      {\n        "kind": "pmid",\n        "id": "39026984"\n      },\n      {\n        "kind": "pmid",\n        "id": "39169234"\n      },\n      {\n        "kind": "pmid",\n        "id": "39542129"\n      },\n      {\n        "kind": "pmid",\n        "id": "42719951"\n      }\n    ],\n    "source5_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10037775"\n      },\n      {\n        "kind": "pmid",\n        "id": "10562540"\n      },\n      {\n        "kind": "pmid",\n        "id": "18478038"\n      },\n      {\n        "kind": "pmid",\n        "id": "22170564"\n      },\n      {\n        "kind": "pmid",\n        "id": "24767728"\n      },\n      {\n        "kind": "pmid",\n        "id": "26026163"\n      },\n      {\n        "kind": "pmid",\n        "id": "26418565"\n      },\n      {\n        "kind": "pmid",\n        "id": "30254413"\n      },\n      {\n        "kind": "pmid",\n        "id": "31337596"\n      },\n      {\n        "kind": "pmid",\n        "id": "36739965"\n      },\n      {\n        "kind": "pmid",\n        "id": "38034430"\n      },\n      {\n        "kind": "pmid",\n        "id": "39506109"\n      },\n      {\n        "kind": "pmid",\n        "id": "41387259"\n      },\n      {\n        "kind": "pmid",\n        "id": "6131890"\n      },\n      {\n        "kind": "pmid",\n        "id": "9446639"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-193755"\n      }\n    ],\n    "source6_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "11544478"\n      },\n      {\n        "kind": "pmid",\n        "id": "12065715"\n      },\n      {\n        "kind": "pmid",\n        "id": "17854388"\n      },\n      {\n        "kind": "pmid",\n        "id": "25637246"\n      },\n      {\n        "kind": "pmid",\n        "id": "29533924"\n      },\n      {\n        "kind": "pmid",\n        "id": "41188550"\n      },\n      {\n        "kind": "pmid",\n        "id": "4343087"\n      },\n      {\n        "kind": "pmid",\n        "id": "9700195"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-5656438"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-70342"\n      }\n    ],\n    "source7_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "14709599"\n      },\n      {\n        "kind": "pmid",\n        "id": "14973782"\n      },\n      {\n        "kind": "pmid",\n        "id": "15840742"\n      },\n      {\n        "kind": "pmid",\n        "id": "23934111"\n      },\n      {\n        "kind": "pmid",\n        "id": "26138355"\n      },\n      {\n        "kind": "pmid",\n        "id": "30192950"\n      },\n      {\n        "kind": "pmid",\n        "id": "38597022"\n      },\n      {\n        "kind": "pmid",\n        "id": "40328714"\n      },\n      {\n        "kind": "pmid",\n        "id": "40789468"\n      },\n      {\n        "kind": "pmid",\n        "id": "40980150"\n      },\n      {\n        "kind": "pmid",\n        "id": "41807832"\n      }\n    ],\n    "source8_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10328953"\n      },\n      {\n        "kind": "pmid",\n        "id": "12186888"\n      },\n      {\n        "kind": "pmid",\n        "id": "12208867"\n      },\n      {\n        "kind": "pmid",\n        "id": "12621054"\n      },\n      {\n        "kind": "pmid",\n        "id": "15322546"\n      },\n      {\n        "kind": "pmid",\n        "id": "15467982"\n      },\n      {\n        "kind": "pmid",\n        "id": "15710224"\n      },\n      {\n        "kind": "pmid",\n        "id": "16061370"\n      },\n      {\n        "kind": "pmid",\n        "id": "16630822"\n      },\n      {\n        "kind": "pmid",\n        "id": "16867993"\n      },\n      {\n        "kind": "pmid",\n        "id": "17109865"\n      },\n      {\n        "kind": "pmid",\n        "id": "17132608"\n      },\n      {\n        "kind": "pmid",\n        "id": "18402465"\n      },\n      {\n        "kind": "pmid",\n        "id": "18785627"\n      },\n      {\n        "kind": "pmid",\n        "id": "19211505"\n      },\n      {\n        "kind": "pmid",\n        "id": "19307424"\n      },\n      {\n        "kind": "pmid",\n        "id": "20797687"\n      },\n      {\n        "kind": "pmid",\n        "id": "21209088"\n      },\n      {\n        "kind": "pmid",\n        "id": "22123816"\n      },\n      {\n        "kind": "pmid",\n        "id": "22302937"\n      },\n      {\n        "kind": "pmid",\n        "id": "22632720"\n      },\n      {\n        "kind": "pmid",\n        "id": "23117815"\n      },\n      {\n        "kind": "pmid",\n        "id": "23297193"\n      },\n      {\n        "kind": "pmid",\n        "id": "23658157"\n      },\n      {\n        "kind": "pmid",\n        "id": "25263431"\n      },\n      {\n        "kind": "pmid",\n        "id": "25580854"\n      },\n      {\n        "kind": "pmid",\n        "id": "25612518"\n      },\n      {\n        "kind": "pmid",\n        "id": "26610917"\n      },\n      {\n        "kind": "pmid",\n        "id": "27307232"\n      },\n      {\n        "kind": "pmid",\n        "id": "29449373"\n      },\n      {\n        "kind": "pmid",\n        "id": "30420694"\n      },\n      {\n        "kind": "pmid",\n        "id": "30949029"\n      },\n      {\n        "kind": "pmid",\n        "id": "31062249"\n      },\n      {\n        "kind": "pmid",\n        "id": "33571455"\n      },\n      {\n        "kind": "pmid",\n        "id": "33782379"\n      },\n      {\n        "kind": "pmid",\n        "id": "34218273"\n      },\n      {\n        "kind": "pmid",\n        "id": "34404721"\n      },\n      {\n        "kind": "pmid",\n        "id": "34714331"\n      },\n      {\n        "kind": "pmid",\n        "id": "35643536"\n      },\n      {\n        "kind": "pmid",\n        "id": "35948834"\n      },\n      {\n        "kind": "pmid",\n        "id": "36609795"\n      },\n      {\n        "kind": "pmid",\n        "id": "36691038"\n      },\n      {\n        "kind": "pmid",\n        "id": "37321467"\n      },\n      {\n        "kind": "pmid",\n        "id": "40496808"\n      },\n      {\n        "kind": "pmid",\n        "id": "41983263"\n      },\n      {\n        "kind": "pmid",\n        "id": "7619516"\n      },\n      {\n        "kind": "pmid",\n        "id": "7852425"\n      },\n      {\n        "kind": "pmid",\n        "id": "8227074"\n      },\n      {\n        "kind": "pmid",\n        "id": "8398142"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-1266738"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-162582"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-168256"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-392499"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-9609507"\n      }\n    ],\n    "source9_owned_ids": [\n      {\n        "kind": "pmid",\n        "id": "10850427"\n      },\n      {\n        "kind": "pmid",\n        "id": "16564114"\n      },\n      {\n        "kind": "pmid",\n        "id": "18286385"\n      },\n      {\n        "kind": "pmid",\n        "id": "23272107"\n      },\n      {\n        "kind": "pmid",\n        "id": "24489906"\n      },\n      {\n        "kind": "pmid",\n        "id": "25169753"\n      },\n      {\n        "kind": "pmid",\n        "id": "25646590"\n      },\n      {\n        "kind": "pmid",\n        "id": "28115743"\n      },\n      {\n        "kind": "pmid",\n        "id": "28219017"\n      },\n      {\n        "kind": "pmid",\n        "id": "29911927"\n      },\n      {\n        "kind": "pmid",\n        "id": "33967268"\n      },\n      {\n        "kind": "pmid",\n        "id": "35538192"\n      },\n      {\n        "kind": "pmid",\n        "id": "35775424"\n      },\n      {\n        "kind": "pmid",\n        "id": "36230962"\n      },\n      {\n        "kind": "pmid",\n        "id": "37285842"\n      },\n      {\n        "kind": "pmid",\n        "id": "37365244"\n      },\n      {\n        "kind": "pmid",\n        "id": "37759476"\n      },\n      {\n        "kind": "pmid",\n        "id": "39715923"\n      },\n      {\n        "kind": "pmid",\n        "id": "39808658"\n      },\n      {\n        "kind": "pmid",\n        "id": "40188316"\n      },\n      {\n        "kind": "pmid",\n        "id": "40498903"\n      },\n      {\n        "kind": "pmid",\n        "id": "40536108"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-112316"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-4839726"\n      },\n      {\n        "kind": "reactome",\n        "id": "R-HSA-74160"\n      }\n    ]\n  },\n  "requested_count": 11,\n  "pmid_count": 11,\n  "reactome_count": 0\n}\n'
+        (root/'requests.json').write_text(requests_text)
+        (root/'source-list-provenance.json').write_text(provenance_text)
+        receipt={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+        receipt.update(status='initialized_before_dependency_install',scope='11 fixed normal PMID requests; no gene seeding, provider run or source authoring')
+        (root/'run-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+        (root/'fetch-report.json').write_text(json.dumps(dict(receipt,entries=[]),indent=2)+'\n')
+        PYINIT
+    - name: Install uv without a shared dependency cache
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: false
+    - name: Install the locked normal project runtime
+      timeout-minutes: 15
+      run: uv sync --frozen --no-dev --no-editable
+    - name: Run normal source fetchers in isolated temporary directories
+      id: fetch
+      continue-on-error: true
+      timeout-minutes: 40
+      run: |
+        uv run --no-sync python - <<'PYFETCH'
+        """Retrieve a fixed PMID/Reactome inventory with the normal CLI; never author source records."""
+        from pathlib import Path
+        from datetime import datetime, timezone
+        from importlib.metadata import version
+        import hashlib,json,os,re,signal,subprocess,time,yaml
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
+        BRANCH='refs/heads/cmungall/clingen-reference-fetch10-20260927'
+        REPOSITORY='ai4curation/ai-gene-review'
+        ROOT_NAME='clingen-reference-recovery10'
+        REQUEST_SHA256='0a56da65fa07e52cd001a74b948862c9c0520b0d2af35af088f4d6030a1a1f94'
+        PMIDS=set(['10373455', '12651944', '19188259', '23341589', '25315780', '25957684', '28757211', '30361410', '31742248', '37087101', '40818613'])
+        REACTOME_IDS=set()
+        PER_PMID_SECONDS=180
+        PER_REACTOME_SECONDS=60
+        TOTAL_SECONDS=35*60
+        REACTOME_CALL='''from pathlib import Path
+        import sys
+        from ai_gene_review.etl.reactome import cache_reactome_pathway
+        raise SystemExit(0 if cache_reactome_pathway(sys.argv[1], output_dir=Path(sys.argv[2]), force=False) else 1)
+        '''
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+        def digest(data):
+         return {'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'git_blob_sha':hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()}
 
-      - name: Install just
-        run: uv tool install rust-just
+        def validate_requests(raw):
+         if hashlib.sha256(raw).hexdigest()!=REQUEST_SHA256:raise ValueError('Requests differ from the fixed approved bytes')
+         data=json.loads(raw);allowed={('pmid',x) for x in PMIDS}|{('reactome',x) for x in REACTOME_IDS}
+         if not isinstance(data,list) or len(data)!=len(allowed):raise ValueError('Wrong finite inventory size')
+         if {(r['kind'],r['id']) for r in data}!=allowed:raise ValueError('Wrong fixed source inventory')
+         for r in data:
+          if set(r)!={'kind','id','mode','genes','citations'} or r['mode']!='fetch_missing':raise ValueError('Unsupported request shape or mode')
+          pattern={'pmid':r'[1-9][0-9]{0,8}','reactome':r'R-[A-Z]{3}-[1-9][0-9]{0,8}'}.get(r['kind'])
+          if not pattern or not re.fullmatch(pattern,r['id']):raise ValueError('Invalid source identifier')
+          if not r['genes'] or not r['citations']:raise ValueError('Missing source provenance')
+         return data
 
-      - name: Install project
-        run: uv sync --dev
+        def inspect_publication(raw,pmid):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal publication frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or str(meta.get('pmid'))!=pmid:raise ValueError('Wrong publication identifier')
+         if not isinstance(meta.get('title'),str) or not meta['title'].strip():raise ValueError('Missing publication title')
+         if not isinstance(meta.get('full_text_available'),bool):raise ValueError('Missing normal availability metadata')
+         if not parts[2].strip():raise ValueError('Empty publication body')
+         return {**digest(raw),'frontmatter':meta,'has_abstract_section':'## Abstract' in parts[2],'has_full_text_section':'## Full Text' in parts[2]}
 
-      - name: Warm the reference cache
-        run: just warm-references
+        def inspect_reactome(raw,identifier):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal Reactome frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or meta.get('stable_id')!=identifier:raise ValueError('Wrong Reactome identifier')
+         if not isinstance(meta.get('display_name'),str) or not meta['display_name'].strip() or meta['display_name']=='Unknown pathway':raise ValueError('Missing Reactome title')
+         if not parts[2].strip():raise ValueError('Empty Reactome body')
+         return {**digest(raw),'frontmatter':meta,'has_summary':bool(meta.get('summary')),'has_summary_section':'## Summary' in parts[2]}
 
-      - name: Check for cache changes
-        id: check-changes
-        run: |
-          if git diff --quiet publications/; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Reference cache already complete; nothing to commit."
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff --stat publications/ | tail -1
-          fi
+        def inspect_source(raw,kind,identifier):
+         if kind=='pmid':return inspect_publication(raw,identifier)
+         if kind=='reactome':return inspect_reactome(raw,identifier)
+         raise ValueError('Wrong source kind')
 
-      - name: Compute metadata
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: metadata
-        run: |
-          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
-          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
-          {
-            echo "branch=auto/warm-reference-cache"
-            echo "changed=$CHANGED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
+        def relative_cache_path(kind,identifier):
+         if kind=='pmid' and identifier in PMIDS:return Path('publications',f'PMID_{identifier}.md')
+         if kind=='reactome' and identifier in REACTOME_IDS:return Path('reactome',identifier+'.md')
+         raise ValueError('Unapproved source/path')
 
-      # Minted here rather than at job start, for the same reason as
-      # generate-pages: the cache warm needs no credentials, only the push does,
-      # and a token minted at job start burns its 60-minute life on the fetch.
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+        def write_raw(destination,data):
+         destination.parent.mkdir(parents=True,exist_ok=True)
+         with destination.open('xb') as handle:handle.write(data)
+         if destination.read_bytes()!=data:raise ValueError('Raw byte-copy mismatch')
 
-      - name: Create or update warm-cache PR
-        if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
-        shell: bash
-        run: |
-          # Commit as the ai4c-agent App bot and serve the short-lived token to git
-          # through the gh credential helper, instead of persisting it in .git/config.
-          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          gh auth setup-git
+        def copy_raw_tree(source,destination):
+         records=[]
+         for path in sorted(source.rglob('*')):
+          if path.is_symlink():raise ValueError('Generated symlink requires inspection')
+          if not path.is_file():continue
+          rel=path.relative_to(source);data=path.read_bytes();write_raw(destination/rel,data);records.append({'path':str(rel),**digest(data)})
+         return records
 
-          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
-          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
-          git checkout -B "$BRANCH_NAME"
+        def command_for(kind,identifier,runtime,work):
+         relative=relative_cache_path(kind,identifier);output=work/relative.parent
+         if kind=='pmid':return [str(runtime/'bin/ai-gene-review'),'fetch-pmid',identifier,'--output-dir',str(output),'--delay','1.0']
+         return [str(runtime/'bin/python'),'-c',REACTOME_CALL,identifier,str(output)]
 
-          git add publications/
-          git commit -m "$(cat <<EOF
-          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
+        def run_command(command,work,logpath,timeout):
+         with logpath.open('w') as log:
+          proc=subprocess.Popen(command,cwd=work,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+          try:return {'returncode':proc.wait(timeout=timeout),'timed_out':False}
+          except subprocess.TimeoutExpired:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();return {'returncode':proc.returncode,'timed_out':True}
+          except BaseException:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();raise
 
-          Automated weekly warm so validate-all reads cached references instead of
-          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
-          EOF
-          )"
-
-          git push --force-with-lease origin "$BRANCH_NAME"
-
-          PR_BODY="$(mktemp)"
-          {
-            echo "## Summary"
-            echo
-            echo "Automated weekly warm of the reference cache (\`publications/\`)."
-            echo "Fetches references that are new or lack full text so the full"
-            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
-            echo
-            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
-            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
-            echo
-            echo "Cache data only — no functional review needed; merge when convenient."
-            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
-          } > "$PR_BODY"
-
-          EXISTING_PR_NUMBER="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --limit 1 \
-            --jq '.[0].number // empty')"
-
-          if [ -n "$EXISTING_PR_NUMBER" ]; then
-            gh api \
-              --method PATCH \
-              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
-              -f body="$(cat "$PR_BODY")" \
-              >/dev/null
-            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
-            exit 0
-          fi
-
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Warm reference cache" \
-            --body-file "$PR_BODY"
-
-          echo "Created warm-cache PR."
+        def main():
+         if os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or os.environ.get('GITHUB_REF')!=BRANCH or os.environ.get('GITHUB_REPOSITORY')!=REPOSITORY:raise ValueError('Wrong event, task branch or repository')
+         repo=Path(os.environ['GITHUB_WORKSPACE']).resolve();runner=Path(os.environ['RUNNER_TEMP']).resolve();root=runner/ROOT_NAME
+         runtime=Path(os.environ['UV_PROJECT_ENVIRONMENT']).resolve()
+         if not runtime.is_relative_to(root) or root.is_relative_to(repo):raise ValueError('Runtime/output path outside isolated runner temp')
+         artifact=root/'artifact';workroot=root/'fetch-work';workroot.mkdir(parents=True);logs=artifact/'logs';logs.mkdir()
+         requests=validate_requests((artifact/'requests.json').read_bytes())
+         report={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+         report.update(started_utc=datetime.now(timezone.utc).isoformat(),entries=[],request_digest=digest((artifact/'requests.json').read_bytes()),provenance_digest=digest((artifact/'source-list-provenance.json').read_bytes()),versions={},source_code={},scope='Raw normal publication and Reactome outputs only. Metadata checks do not establish scientific support or complete article access. No source authoring, review, gene seeding, import, refresh or remote mutation.')
+         def save():(artifact/'fetch-report.json').write_text(json.dumps(report,indent=2)+'\n')
+         save();deadline=time.monotonic()+TOTAL_SECONDS
+         try:
+          for name in ['ai-gene-review','linkml-reference-validator','PyYAML']:report['versions'][name]=version(name)
+          for name in ['src/ai_gene_review/cli.py','src/ai_gene_review/etl/publication.py','src/ai_gene_review/etl/reactome.py','uv.lock','.github/workflows/warm-reference-cache.yaml']:report['source_code'][name]=digest((repo/name).read_bytes())
+          save()
+          for request in requests:
+           kind=request['kind'];identifier=request['id'];key=kind+'_'+identifier;entry={'kind':kind,'id':identifier,'status':'pending'};report['entries'].append(entry);save()
+           relative=relative_cache_path(kind,identifier);existing=repo/relative
+           if existing.exists():
+            try:entry.update(inspect_source(existing.read_bytes(),kind,identifier),status='already_present')
+            except Exception as exc:entry.update(status='existing_needs_inspection',error=str(exc),existing_digest=digest(existing.read_bytes()))
+            save();continue
+           remaining=deadline-time.monotonic()
+           if remaining<=0:entry['status']='not_attempted_budget';save();continue
+           work=workroot/key;work.mkdir();command=command_for(kind,identifier,runtime,work);entry.update(status='fetching',command=command,started_utc=datetime.now(timezone.utc).isoformat());save()
+           try:
+            entry.update(run_command(command,work,logs/(key+'.log'),min(PER_PMID_SECONDS if kind=='pmid' else PER_REACTOME_SECONDS,remaining)))
+            generated=work/relative
+            if entry['returncode']!=0:raise ValueError('Normal fetch failed or timed out')
+            if generated.is_symlink():raise ValueError('Symlink publication output')
+            raw=generated.read_bytes();entry.update(inspect_source(raw,kind,identifier))
+            entry['raw_outputs']=copy_raw_tree(work,artifact/'raw_outputs'/key)
+            write_raw(artifact/relative,raw);entry.update(status='recovered',artifact_path=str(relative))
+           except Exception as exc:
+            entry.update(status='needs_inspection',error=str(exc))
+            try:entry['quarantined_outputs']=copy_raw_tree(work,artifact/'quarantine'/key)
+            except Exception as copy_error:entry['quarantine_error']=str(copy_error)
+           save()
+         except Exception as exc:
+          report['fatal_error']=str(exc)
+         finally:
+          attempted={(r['kind'],r['id']) for r in report['entries']}
+          report['entries'] += [{'kind':r['kind'],'id':r['id'],'status':'not_attempted_after_failure'} for r in requests if (r['kind'],r['id']) not in attempted]
+          report['finished_utc']=datetime.now(timezone.utc).isoformat();report['unresolved_sources']=[r['kind']+':'+r['id'] for r in report['entries'] if r['status'] not in {'recovered','already_present'}];report['recovered_count']=sum(r['status']=='recovered' for r in report['entries']);save()
+         with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:summary.write(f"Recovered {report['recovered_count']} normal source caches; {len(report['unresolved_sources'])} unresolved. All outputs require independent identity/content checks before import.\n")
+         return int(bool(report['unresolved_sources']) or 'fatal_error' in report)
+        if __name__=='__main__':raise SystemExit(main())
+        PYFETCH
+    - name: Verify the checked-out repository is unchanged
+      id: unchanged
+      if: ${{ always() }}
+      run: |
+        git diff --exit-code
+        git diff --cached --exit-code
+        test -z "$(git ls-files --others --exclude-standard)"
+    - name: Upload raw normal sources and partial reports
+      id: artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: clingen-reference-recovery10-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/clingen-reference-recovery10/artifact/
+        if-no-files-found: error
+        retention-days: 7
+        include-hidden-files: false
+        overwrite: false
+    - name: Report incomplete recovery after preserving outputs
+      if: ${{ always() && (steps.fetch.outcome != 'success' || steps.unchanged.outcome != 'success' ||
+        steps.artifact.outcome != 'success') }}
+      run: exit 1
