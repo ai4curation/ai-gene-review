@@ -2,9 +2,33 @@
 title: "Mevalonate Pathway Term Cleanup — Obsoletion & Replacement"
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
+species: [human, rat, yeast]
+genes: [HMGCS1, HMGCR, MVK, PMVK, MVD, FDPS, IDI1, Hmgcs2, ERG19]
+sidecars:
+  slide_assets:
+    - MEVALONATE_PATHWAY_OBSOLETION/slides/pathway-split.svg
+    - MEVALONATE_PATHWAY_OBSOLETION/slides/term-map.svg
 ---
 
 # Mevalonate Pathway Term Cleanup — Obsoletion & Replacement
+
+**Bottom line:** GO had two overlapping process terms for the route from
+acetyl-CoA through mevalonate to isoprenoid precursors: GO:1902767 *isoprenoid
+biosynthetic process via mevalonate* and GO:0010142 *farnesyl diphosphate
+biosynthetic process, mevalonate pathway*. Both are now obsolete in OLS
+(checked 2026-09-26), with annotations to be redirected to GO:0019287
+*isopentenyl diphosphate biosynthetic process, mevalonate pathway* (the steps
+up to IPP) or GO:0045337 *farnesyl diphosphate biosynthetic process* (IPP to
+FPP). We tracked the upstream lists (2 and 21 experimental annotations) and
+argued that each row needs a per-enzyme choice between the two replacements,
+not a relabel. The repo has moved past the Impact and Candidate sections
+below: the human mevalonate enzymes HMGCS1, HMGCR, MVK, PMVK, MVD, IDI1 and
+FDPS are now reviewed (PRs #1998, #2153) with `mevalonate_pathway` and
+`isoprenoid_diphosphate_biosynthesis` modules, and MVK, PMVK and MVD accept
+GO:0019287 while FDPS accepts GO:0045337. Two reviews still carry
+obsolete-term rows: yeast ERG19 (GO:0010142, RCA, `KEEP_AS_NON_CORE`) and rat
+Hmgcs2 (GO:0010142, IBA and IEA, `UNDECIDED`). Their remapping is tracked in
+#3232 (open), which records its per-row outcome on this page.
 
 ## Overview
 
@@ -161,3 +185,14 @@ HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
   (opened 2026-05-28) and companion issue #6439. Obsoletion not yet
   applied. No reviews started; the rat HMGCS2 entry is the only gene in
   this repo currently carrying an annotation to either obsoleting term.
+- 2026-09-26 — OLS lists both GO:1902767 and GO:0010142 as obsolete, each
+  pointing to GO:0019287 or GO:0045337. Human HMGCS1, HMGCR, MVK, PMVK, MVD
+  (PR #1998) and FDPS, IDI1 (PR #2153) are reviewed. Rows on the obsolete
+  terms remain in rat Hmgcs2 (IBA + IEA, UNDECIDED) and yeast ERG19 (RCA,
+  KEEP_AS_NON_CORE).
+- 2026-09-26 (later) — The ERG19 and Hmgcs2 rows are tracked in #3232
+  (open), which appends its own per-row Status entry to this page.
+
+## Slides
+
+- [Slides](MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.html) (Marp source: [MEVALONATE_PATHWAY_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.md)) — AI generated
