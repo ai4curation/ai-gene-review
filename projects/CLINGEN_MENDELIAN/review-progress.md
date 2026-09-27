@@ -143,9 +143,12 @@ are therefore expected; existing human reviews still link normally.
 | ALMS1 | Definitive | INITIALIZED | Review #3318 merged; current-head approval and required CI passed; all 39 scoped merged blobs verified | `cmungall/clingen-alms1` | [#3318](https://github.com/ai4curation/ai-gene-review/pull/3318) |
 | ALPK1 | Definitive | INITIALIZED | Review #3317 merged; current-head approval and required CI passed; all 29 scoped merged blobs verified | `cmungall/clingen-alpk1` | [#3317](https://github.com/ai4curation/ai-gene-review/pull/3317) |
 | AMT | Definitive | INITIALIZED | Review #3315 merged; current-head approval and required CI passed; all 12 scoped merged blobs verified | `cmungall/clingen-amt` | [#3315](https://github.com/ai4curation/ai-gene-review/pull/3315) |
-| ALPK3 | Definitive | INITIALIZED | Changes requested #3325; source caches closed; evidence and term corrections underway; approval, CI and merge remain pending | `cmungall/clingen-alpk3` | [#3325](https://github.com/ai4curation/ai-gene-review/pull/3325) |
+| ALPK3 | Definitive | INITIALIZED | Review #3325 merged; current-head approval and required CI passed; all 18 scoped merged blobs verified | `cmungall/clingen-alpk3` | [#3325](https://github.com/ai4curation/ai-gene-review/pull/3325) |
 | ALPL | Definitive | COMPLETE | Review #3320 merged; current-head approval and required CI passed; all 47 scoped merged blobs verified | `cmungall/clingen-alpl` | [#3320](https://github.com/ai4curation/ai-gene-review/pull/3320) |
-| ALX3 | Definitive | INITIALIZED | Ready #3324; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-alx3` | [#3324](https://github.com/ai4curation/ai-gene-review/pull/3324) |
+| ALX3 | Definitive | INITIALIZED | Review #3324 merged; current-head approval and required CI passed; all 13 scoped merged blobs verified | `cmungall/clingen-alx3` | [#3324](https://github.com/ai4curation/ai-gene-review/pull/3324) |
+| ALS2 | Definitive | INITIALIZED | Ready #3326; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate; YAML remains DRAFT for documented scientific uncertainties or validator advisories, while the PR is ready and required source caches are closed | `cmungall/clingen-als2` | [#3326](https://github.com/ai4curation/ai-gene-review/pull/3326) |
+| ALX1 | Definitive | INITIALIZED | Ready #3327; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate; YAML remains DRAFT for documented scientific uncertainties or validator advisories, while the PR is ready and required source caches are closed | `cmungall/clingen-alx1` | [#3327](https://github.com/ai4curation/ai-gene-review/pull/3327) |
+| ALX4 | Definitive | INITIALIZED | Ready #3328; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-alx4` | [#3328](https://github.com/ai4curation/ai-gene-review/pull/3328) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -157,16 +160,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-local/published tree checks and append-only receipt chains. **73 of 2,876 genes
-are complete**; 74 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 76 dedicated full-audit PRs.
+local/published tree checks and append-only receipt chains. **75 of 2,876 genes
+are complete**; 76 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 79 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ALPK1, ALK, ALMS1 and ALPL have verified protected merges after their evidence follow-ups. ALX3 and ALPK3 initial full audits are published with source25 cache closure. ALPK3 has current-head changes requested; its YAML remains DRAFT for unresolved catalytic questions and validator advisories. Source24 imports thirteen and source25 fifteen exact normal records. Source26 exact transport and decoding recovered the artifact; strict in-memory checks verified all 21 records and 67 members, with scientific assessment and canonical import still pending at this snapshot. The externally observed AKR1D1 merge remains incomplete because its required Reactome record is still missing.
+ALX3 #3324 and ALPK3 #3325 have verified protected merges after their scoped evidence follow-ups, with 13 and 18 scoped blobs verified. ALS2 #3326, ALX1 #3327 and ALX4 #3328 are published as ready original review PRs; their review, CI and verified merge remain separate. ALS2 and ALX1 retain biological YAML DRAFT for documented scientific uncertainties or validator advisories, with required cache records present; ALX4 is COMPLETE with three explicit UNDECIDED judgments. Source26 imported all twenty-one exact normal records without overwrite. Source27 canonically imported the exact PMID22215675 record after strict staging and primary scientific assessment. AMER1 now has all fourteen PMID and twenty-one Reactome caches, a local COMPLETE review retaining 61 source assertions, and reported full validation PASS; final freeze and publication remain pending. AMER1 contributes neither a published audit PR nor a campaign completion at this snapshot. Six next-gene normal fetches failed DNS resolution before producing seeds; their fixed seed7 recovery workflow is published and dispatched, with run metadata and actual outputs still pending. The externally observed AKR1D1 merge remains incomplete because its required Reactome record is still missing.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -572,3 +575,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-27 checkpoint53: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: AGK, AMT. 69/2,876 complete; 70 original merges; 1 pending source follow-ups; 73 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-27 checkpoint54: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ALPK1, ALK, ALMS1, ALPL. 73/2,876 complete; 74 original merges; 1 pending source follow-ups; 76 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-27 checkpoint55: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ALX3, ALPK3. 75/2,876 complete; 76 original merges; 1 pending source follow-ups; 79 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
