@@ -99,3 +99,74 @@ The normal `just validate human AGO2` completed successfully with three warning 
 Rendering and the scaffolded history validation passed. Exact comparisons confirmed all 267 assertion source objects, both alternative products, all 178 baseline reference identifier/title pairs, the three machine-generated gene artifacts and the published history unchanged. Trailing whitespace introduced by YAML serialization was removed only after asserting parsed-YAML equality; the HTML was rendered from the resulting file.
 
 The notes-inclusive cache audit finds 90 cited PMIDs, 82 cached and eight missing: PMID:18083100, PMID:19159466, PMID:20424607, PMID:20448148, PMID:20473314, PMID:21475248, PMID:33199684 and PMID:40930611. Reactome:R-HSA-203862 is also still missing. DRAFT remains required. The follow-up manifest records exact bytes and baseline blobs; no Git, remote comment or publication operation was performed by the author.
+
+## 2026-09-27 post-merge verified cache closure
+
+The coordinator observed PR #3210 merged at 03:59:52 UTC with reviewed head
+`4171bbc8aad68ab8a734881ca3af70d61174b377` and imported the exact signed main
+snapshot `3e4b386077392a633b451112065243c8577d132b`. Every canonical AGO2
+file was independently matched byte-for-byte to that snapshot before this
+follow-up. A fresh author API read failed connection; this preflight relies
+on the coordinator's live observation and the exact imported objects, not
+an invented later remote-state observation.
+
+Eight normally fetched PMID records and Reactome:R-HSA-203862 now match the
+verified recovery receipts by SHA-256. PMID:19159466, PMID:21475248,
+PMID:20424607, PMID:20448148, PMID:20473314 and PMID:33199684 contain
+extracted full bodies. PMID:18083100 remains abstract-only;
+PMID:40930611 contains the Expression of Concern bibliographic linkage,
+not the body of the notice. These recoveries supersede earlier statements
+that the nine repository records were missing. The distinction between
+external primary access and local body availability remains explicit.
+
+The recovered human precursor-cleavage Results [PMID:20448148] reproduce
+Figure 2B's hAgo2/pre-miR-451 30-nt product and Figure 4D's recombinant
+human engineered-hairpin assay. The existing processing rows and hairpin
+core now carry the exact cached Results sentence. Zebrafish organismal
+experiments, mouse rescue constructs and separate downstream trimming
+remain distinguished. The mouse paper [PMID:20424607] now supplies its full
+Results and Methods Summary, confirming the endogenous catalytic mutant
+and biochemical cleavage; the isolated 293T-complex transgene species is
+not independently resolved from that extraction. This does not change the
+existing comparator or any annotation action. The 2007 ac-pre-miRNA paper
+[PMID:18083100] still supplies only its corroborating abstract.
+
+The two recovered cap papers preserve the assay limits: the structural
+study [PMID:19159466] places one proposed aromatic side chain in the
+hydrophobic core and the other on the surface, whereas the biochemical
+study [PMID:21475248] tests the isolated MID domain and active S34-to-C-
+terminus AGO2 with cap and nonspecific resin controls. Cellular cofactors
+are not excluded. The latter reference's title now exactly matches the
+machine-fetched ASCII apostrophe; its PMID and scientific identity are
+unchanged. Human BE2-M17 Results [PMID:20473314] confirm AGO2-associated
+APP RNA and contextual FMRP-dependent repression without recovering the
+rat donor chain. The human variant study [PMID:33199684] confirms
+mutation-dependent defects, including a distinct severe p.G733R pattern;
+its simulated unwinding mechanism remains qualified. The notice metadata
+[PMID:40930611] establishes the Expression of Concern linkage; detailed
+image-integrity concerns remain based on the previously documented full
+external notice, not a nonexistent local notice abstract. It is not a
+completed retraction.
+
+The recovered Reactome summary explicitly lists DICER1, AGO2 and TARBP2
+in the loading complex and assigns canonical precursor cleavage to
+DICER1. It confirms AGO2 participation in the event but does not export
+compartment metadata. The original cytosol assertion therefore retains
+curator deference and independent human localization support; the summary
+is not represented as a direct localization assay.
+
+All 267 machine-seeded assertions, all review actions and the five core
+biological descriptions/terms are preserved. Existing histories, machine
+files and the provider report are unchanged. All 90 previously cited biological-source PMIDs in the
+review YAML/notes and every cited Reactome identifier now have canonical
+records. The notes-inclusive count becomes 92 after the two artifact-only
+gaps below are explicitly documented. A separate scan of the immutable Falcon report identifies two
+additional artifact-only missing records, PMID:15105377 and PMID:23746446;
+these are disclosed separately rather than counted as recovered. DRAFT
+remains appropriate for unresolved validation advisories and those
+artifact citations. Source receipts are
+`tmp/verified-reference-records/local-import-receipt.json` and
+`tmp/verified-reference-records2/local-import-receipt.json`; source2 artifact
+SHA-256 is `0876942c72b2e537e858e8af7cd3c79d34b97c2169490e3d883c6f00884e2965`.
+Only the nine exact required recovered records accompany this gene's
+manifest. No cache, Git state or remote state was edited.

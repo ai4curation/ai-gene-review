@@ -162,3 +162,47 @@ audit are unchanged, and publication must remain draft pending normal caching.
 No new source identifier is introduced, no cache is hand-authored, and no
 published history record is rewritten. Validation, rendering, source preservation
 and the exact changed-file hashes are recorded in the follow-up manifest.
+
+## 2026-09-27 verified publication and Reactome cache closure
+
+PR #3179 is merged at head `9ad690681775c1f6009f09d1db30363de00834d3`.
+Direct GitHub API checks found the five canonical ADA files unchanged on current
+main `3e4b386077392a633b451112065243c8577d132b`; all published follow-up hashes
+matched locally before this separate post-merge cache update.
+
+This entry supersedes the historical cache-gap statements. Six genuine batch1
+records are now available: PMID:10720488, PMID:12499231, PMID:16221767,
+PMID:16742956, PMID:718989 and PMID:8064675. All six are **abstract-only**.
+Their exact bytes match `tmp/verified-reference-records/local-import-receipt.json`.
+Three source2 Reactome records, R-HSA-9734745, R-HSA-9748784 and R-HSA-9754964,
+match `tmp/verified-reference-records2/local-import-receipt.json`. No cached
+record was edited. Source2 artifact SHA-256 is
+`0876942c72b2e537e858e8af7cd3c79d34b97c2169490e3d883c6f00884e2965`.
+
+The recovered ribavirin summary directly assigns the hydrolytic reaction to ADA
+and describes its limited contribution to ribavirin catabolism. A verbatim
+reaction quote is now attached to the retained non-core generic deaminase row.
+The abstract of PMID:12499231 confirms consecutive viramidine/ribavirin reactions
+but does not replace access to the full kinetic Methods. The defective-ADA
+summary describes three mutant alleles and normal substrate chemistry; it does
+not imply that normal ADA lacks activity. Drug ADME is a broad overview.
+Earlier external inspection of Reactome Participants/Catalyst Activity panels
+remains separately documented: those panels are absent from the newly cached
+summary exports, so availability is not misrepresented as a fuller local export.
+
+The other recovered abstracts preserve their experimental scope. PMID:10720488
+uses mice with trophoblast Ada rescue and reports intestinal purine changes.
+PMID:8064675 measures enzyme activity in mouse embryo extracts. PMID:718989
+compares N4/N4TG neuroblastoma nucleotide flux; the abstract does not establish
+all donor annotation paths. PMID:16742956 distinguishes predominantly soluble
+cytosolic activity from a probably plasma-membrane-associated particulate pool
+in named mouse, hamster and human cell cultures. PMID:16221767 concerns a human
+ADA variant associated with altered slow-wave sleep, consistent with the
+previously noted non-core sleep context. These abstracts do not warrant new
+donor-assay details or changes to the 69 reviewed actions.
+
+All 69 source objects and actions, both cores, 32 reference identities, original
+machine files and published histories are preserved. Nine cache gates are
+closed; the separate scaffolded history and exact manifest record validation
+and rendering. DRAFT remains appropriate while the established action/core
+advisories persist; cache recovery alone does not resolve those advisory scopes.
