@@ -221,3 +221,82 @@ The independent coordinator accepted all 51 decisions and the core/source
 synthesis. Twenty-two supporting quotations match their cached sources. The
 notes/YAML/provider PMID scan has the same five missing records listed above.
 The frozen manifest records exact hashes and the unchanged source objects.
+
+## Source4 cache closure and post-merge review follow-up, 2026-09-27
+
+PR #3256 merged at 2026-09-27 07:13:28 UTC with head
+`30620a9c78b3ae701817d2cfc48aa92bcb5e6e2d`. A fresh API read confirmed that state.
+All nine local gene-directory files matched its exact blobs before editing and
+also match their counterparts on imported main
+`d35dcc30b44924f79c0510b281ae824aa536848a`. This follow-up uses a separate branch,
+`cmungall/clingen-aimp2-source4`; the parent owns Git and publication.
+
+The normal source4 fetch recovered PMID:34523057, PMID:35133502,
+PMID:35546148, PMID:39542129 and PMID:42719951. Their exact bytes match the
+canonical import receipt `tmp/source4-canonical-import-receipt.json`
+(SHA256 `3c32b81b66e9234a64b687be4203965fb8d960bcffdbcfd2f6dc9b335428698b`).
+No record was reconstructed or rewritten. All five exact fetched titles agree
+with the existing reference titles. Only PMID:35546148 has recovered full text;
+the other four are abstract-only, so their full-text-unavailable flags stay true.
+The prior external primary reads remain separately documented above. Different
+network paths explain why those page reads succeeded while normal local CLI
+fetches failed; the successful recovery used the standard fetcher in an Actions
+runner rather than manufacturing caches from browser excerpts.
+
+The four recovered abstracts confirm their previously bounded findings: mouse
+FBD-102b mutant Golgi phenotypes (PMID:34523057), human LysRS stabilization under
+stress (PMID:35133502), structurally characterized leucine-zipper assembly
+(PMID:39542129), and patient fibroblast findings distinct from zebrafish disruption
+(PMID:42719951). Each now has an exact cached supporting excerpt. Abstract
+availability does not establish access to missing full-paper details.
+
+Full PMID:35546148 Results/Figure 1d and Supplementary Figure 1c distinguish DX2
+from full-length AIMP2 in the CCD18CO cellular KRAS-abundance comparison. The
+same Results/Figure 2 and Supplementary Figure 4d report similar purified-protein
+KRAS4B binding by full-length AIMP2 and DX2; Supplementary Figure 4e places AIMP2
+mainly with the MSC/KARS1 pool and DX2 in later free-protein fractions. The review
+therefore keeps the isoform boundary on **cellular stabilization in that assay**,
+not on an alleged inability of AIMP2 to bind KRAS. Independent reviewer
+`annotation_a4galt` read these recovered Results and both new quotes and agreed
+with this distinction. No source assertion, decision or core function changed.
+
+The six nonblocking suggestions in
+[the published review](https://github.com/ai4curation/ai-gene-review/pull/3256#issuecomment-5853250123)
+were assessed individually:
+
+- Register all four genuine provider artifacts as provenance. The three added
+  assessments identify concrete overstatements already resolved by primary
+  evidence, including the direct-JNK claim and the classification of AIMP2/AIMP3
+  as synthetases. The files remain unchanged and are not experimental support.
+- Explain why KARS1 partner identity alone does not establish the scaffold
+  mechanism in the variant-specific PMID:31116475 experiment. Its generic-binding
+  REMOVE remains unchanged; the interaction is not denied.
+- Remove the curatorial closing clause from the biological description.
+- Confirm the five identifiers and exact titles against recovered normal records,
+  with source-access flags reflecting their actual contents.
+- Retain membrane HDA UNDECIDED: the target peptide/fraction controls remain
+  unresolved, and cytosolic abundance does not prove contamination or exclude a
+  membrane-associated pool. No new evidence settles that source.
+- Make the PARP1 question acknowledge positive direct biochemical stimulation;
+  declining an additional NEW assertion here is a scope/term-assessment choice,
+  not a denial of the measured effect or an inference from phenotype alone.
+
+Full targeted validation completed with exit 0. All missing-reference warnings
+are resolved. Its one remaining advisory says no annotation cites a provider
+report; a top-level provenance reference does not satisfy that annotation-level
+rule. Generated text with documented scope errors is not added to annotation
+support merely to silence the advisory. Under the literal zero-warning status
+convention, the YAML remains DRAFT even though the source-cache closure is
+complete. The recursive YAML/notes/four-provider census finds 53 PMIDs and ten
+Reactome IDs, all cached. Final preservation, quote, history and rendering checks
+are recorded in the frozen manifest.
+
+Final integrity checks preserve all 51 source objects and actions, every core
+function and alternative product, and all 67 prior reference id/title pairs.
+The three provider provenance entries bring the reference count to 70. All 32
+supporting-text occurrences match their cached sources after whitespace
+normalization. All six immutable machine/provider files remain byte-identical
+to the published baseline. Every citation cache matches the exact current-main
+blob except the five source4 additions, whose hashes match the import receipt.
+History validation and HTML rendering passed. This closure makes no source
+mutation, annotation action change or new biological assertion.
