@@ -235,3 +235,10 @@ The protein-folding NAS remains UNDECIDED. The [live folding definition](https:/
 Two additional exact findings attach the B-branch prerequisite and acceptor-cavity evidence from [PMID:41807832]. The measured and structurally characterized ALG12 is chicken GgALG12; human 293 c18 cells are the expression host. The ordering statement is pathway context, and the cavity is ortholog structural evidence. No new human structure, folding function, process annotation or complex membership is proposed. The InterPro and IBA molecular-function refinements remain specific to the human target supported by its own chemistry, not changes to all family members or the ancestral assertion.
 
 The recursive authored-source census remains five PMIDs and three Reactome records with no provider artifact or new source gap. All cached source bytes and prior histories are unchanged. Targeted validation, the newly scaffolded history, exact quotes and rendering are checked before freezing this four-file follow-up.
+
+
+## 2026-09-27 citation-status follow-up
+
+Rechecked the primary [PubMed record](https://pubmed.ncbi.nlm.nih.gov/19946888/) for PMID:19946888: the title, authors, DOI 10.1002/jms.1696 and YTS membrane-proteome abstract match the protected cached record. The reference correctness is VERIFIED. The ALG12-specific peptide-table entry was not independently recovered and remains curator-reported; this limitation belongs in the reference assessment prose and does not negate verified bibliographic identity. This corrects the preceding follow-up's use of UNVERIFIED for the individual hit. The cache remains abstract-only, without a claim of newly recovered full text.
+
+The membrane annotation retains its positive ER-enzyme rationale, broad source resolution and curator deference. Removed two review-response sentences from its reason; all 23 source assertions, actions, the complete core, reference identities and evidence snippets are preserved. No new biological assertion or source dependency was added.
