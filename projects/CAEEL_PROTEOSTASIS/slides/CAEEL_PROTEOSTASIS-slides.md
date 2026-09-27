@@ -1,5 +1,5 @@
 ---
-title: "C. elegans proteostasis: reviewing 18 network genes"
+title: "C. elegans proteostasis: reviewing 17 network genes"
 marp: true
 theme: default
 paginate: true
@@ -37,8 +37,8 @@ Reviewing GO annotations for chaperones, degradation machinery and longevity reg
 ## Bottom line
 
 - The network **folds, holds and clears** proteins; in worms its capacity declines with age under insulin/FOXO control.
-- We reviewed **every GO annotation in 18 review files**: **823 rows**, 628 ACCEPT, 67 MODIFY, 4 REMOVE, 10 NEW.
-- Most changes replace `protein binding` with **Hsp90 protein binding** and similar; `hsp-90` and `daf-21` turned out to be **the same protein** reviewed twice.
+- We reviewed **every GO annotation on 17 genes**: **773 rows**, 597 ACCEPT, 56 MODIFY, 4 REMOVE, 10 NEW.
+- Most changes replace `protein binding` with **Hsp90 protein binding** and similar. The worm has **one HSP90, HSP-90** (Q18688); daf-21 is its old mutant name, and a duplicate review under that name was retired.
 
 ---
 
@@ -51,13 +51,13 @@ Reviewing GO annotations for chaperones, degradation machinery and longevity reg
 
 ---
 
-## The network and the 18 genes
+## The network and the 17 genes
 
 ![h:500](proteostasis-network.svg)
 
 ---
 
-## Actions per review file
+## Actions per gene
 
 ![h:500](proteostasis-actions.svg)
 
@@ -73,17 +73,17 @@ Reviewing GO annotations for chaperones, degradation machinery and longevity reg
 
 ## Findings
 
-1. **`protein binding` → Hsp90 protein binding** (GO:0051879): 9 IPI rows each on hsp-90 and daf-21; HSP-1 partners → protein-folding chaperone binding.
+1. **`protein binding` → Hsp90 protein binding** (GO:0051879): 9 IPI rows on hsp-90; HSP-1 partners → protein-folding chaperone binding.
 2. **Holdase vs foldase**: HSP-16.2 *protein refolding* removed.
 3. **Artefacts removed**: LGG-1 *GABA receptor binding* (IBA), AAK-2 *positive regulation of protein secretion*, SKN-1 *regulation of translation*.
-4. **Duplicate review**: `genes/worm/hsp-90/` and `genes/worm/daf-21/` both review Q18688.
+4. **One HSP90, not two**: daf-21 is a synonym of hsp-90 (Q18688), not a paralog; the accession P41887 once given for it is fission-yeast Swo1.
 
 ---
 
 ## Status and next steps
 
-- ✅ 18 review files and the pathway summary complete.
-- ⬜ Merge the hsp-90 and daf-21 reviews into one (same UniProt entry, Q18688).
+- ✅ 17 gene reviews and the pathway summary complete.
+- ✅ Duplicate daf-21 review retired; hsp-90 is the single HSP90 review (PR #3225).
 - ⬜ The status section on the project page (868 rows, 626 ACCEPT) predates later edits.
 - ⬜ Only cct-1, cct-8 and rpn-10 of the chaperonin and proteasome subunits on the page have reviews; the rest are not yet reviewed.
 
