@@ -125,7 +125,7 @@ context, with full construct/control details unresolved.
 
 The cached PMID:19043417 human genetics/zebrafish abstract, primary
 [PMID:19043416 abstract and Figure 3](https://pubmed.ncbi.nlm.nih.gov/19043416/),
-and [PMID:39378586](https://pubmed.ncbi.nlm.nih.gov/39378586/) with indexed full
+and [PMID:39378586] with indexed full
 PMC11830988 establish disease context. Human patient rescue and progenitor
 perturbations link nucleotide imbalance and stage-specific metabolic control to
 reticular dysgenesis. They establish AK2 necessity; no direct developmental
@@ -263,3 +263,8 @@ status changed to COMPLETE. The runtime's unrelated dependency-deprecation
 notice is not a review-validation warning. History validation and HTML rendering
 are recorded in the frozen publication manifest. This session closes the source
 gate and leaves PR approval and publication to the coordinator.
+
+
+## 2026-09-27 compartment-specific evidence clarification
+
+The full Results of [PMID:24548998] distinguish the major mitochondrial AK2 pool from a nuclear-enriched regulatory pool in HeLa cells. Endogenous AK2-DUSP26 interaction is enriched in that fraction, and forcing AK2 into mitochondria with a COX8 targeting sequence fails to reduce p-FADD. The existing phosphatase-activator proposal now states that experimental context and attaches its exact interaction result. DUSP26 remains the phosphatase; no new nucleus, apoptosis or differentiation annotation is introduced. The sperm mitochondrial-sheath row's copied flagellum wording is corrected, with the mouse donor and human-inference limitation unchanged. All 31 decisions and the catalytic core are preserved.
