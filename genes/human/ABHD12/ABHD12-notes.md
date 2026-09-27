@@ -66,3 +66,31 @@ Inflammatory regulation now carries exact cytokine and infection evidence. PMID:
 All **13 cited PMIDs** now have normal caches. There are no provider reports, raw provider HTML/PDF artifacts or DOI-only research citations in this gene directory. Existing institutional PDF links resolve to the already cited PMID:22632720; publication metadata maps the other DOI/PMC identifiers to the same 13 sources. Unused UniProt bibliography is not treated as an authored source dependency.
 
 The notes-inclusive census identified one additional pre-existing source dependency: [Reactome R-HSA-5694474, ABHD12 physical entity](https://reactome.org/content/detail/R-HSA-5694474), used for plasma-membrane placement. Its official page was rechecked for stable ID, human species/Q8N2K0 and Compartment; this is a curated physical-entity assertion, not experimental microscopy. It is now an explicit reference, bringing the list to 23. The initial guessed CLI command `fetch-reactome` was rejected as nonexistent (exit 2; `/tmp/ABHD12-entity-fetch.log`), so no retrieval occurred. The established `cache_reactome_pathway` wrapper was then invoked once with `force=False` and failed DNS resolving reactome.org, exit 1, no file (`/tmp/ABHD12-entity-normal-fetch.log`). It has been handed to the source16 owner; no provider or cache was manufactured. R-HSA-426048 and R-HSA-5694462 remain cached. **R-HSA-5694474 is the sole remaining required cache and the PR remains draft.** A future normal record may contain only identity/display-name metadata; external compartment verification must remain explicitly distinguished from cache contents.
+
+
+## 2026-09-27: physical-entity source closure
+
+The normal Reactome cache for R-HSA-5694474 is now present. Its exact 184 bytes
+contain the stable identifier and display name, **ABHD12 [plasma membrane]**;
+there is no experimental body or explicit compartment field in that cache.
+The [official entity page](https://reactome.org/content/detail/R-HSA-5694474)
+was independently rechecked for human ABHD12, UniProt Q8N2K0 and its
+plasma-membrane compartment. This remains a curated location assertion,
+separate from direct ER-localization experiments. The original cached reaction
+R-HSA-5694462 is listed alongside the entity as pathway context; the entity
+page supplies the compartment claim. None of this establishes a new localization
+experiment or changes the KEEP_AS_NON_CORE judgment.
+
+The current-head review of PR #3286, comment5855488055, was read in full.
+Its topology suggestion is recorded as COMPARTMENT_OR_COMPLEX_MISMATCH on the
+existing protein-depalmitoylase propagation assessment. The positive mouse
+screen and the existing over-annotation decision are preserved; the added
+failure mode records the already stated substrate-access limitation.
+All 37 source assertions/actions, both complete cores, 23 reference identities
+and three alternative products are unchanged. The 13-PMID/three-Reactome census
+has no remaining missing record. The source16 run36313594604 at
+408e7c41d93c2fd63f54ac1da5d7201edbc901bb supplied the exact normal bytes,
+artifact10931450272 SHA2564251efe477f5575fe1f7f86a5b543f3188e81a87fd25fc88e65c47a2af862c01.
+This supersedes the earlier transient retrieval gate. No source cache or
+published history was rewritten. Source closure and warning-free validation
+permit COMPLETE status; the unresolved annotation remains explicit.
