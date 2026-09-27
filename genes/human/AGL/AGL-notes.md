@@ -108,11 +108,12 @@ mice ... causes a reduction in hepatic AGL levels") but not core molecular funct
 ## 2026-09-27 source-specific audit
 
 All 35 seeded annotations were reviewed. Final actions: **16 ACCEPT, 4
-KEEP_AS_NON_CORE, 2 MODIFY, 3 REMOVE, 10 UNDECIDED**, with no NEW annotations.
+KEEP_AS_NON_CORE, 2 MODIFY, 4 REMOVE, 1 MARK_AS_OVER_ANNOTATED, 8 UNDECIDED**, with no NEW annotations (including the PR #3197 follow-up below).
 Two catalytic core functions are retained. All annotation source fields, the 14
 original reference id/title pairs, alternative products, GOA and UniProt records
-are preserved. COMPLETE records completion of the annotation audit; publication
-must remain **DRAFT** pending the missing machine caches listed below.
+are preserved. The review status and publication both remain **DRAFT** pending
+the missing machine caches listed below; the schema reserves COMPLETE for an
+adjudicated review without validation warnings.
 
 ### Identity and baseline
 
@@ -195,7 +196,9 @@ support. Protein loss in patients is not substituted for a direct reaction assay
 
 [PMID:1374391](https://pubmed.ncbi.nlm.nih.gov/1374391/) verifies human-muscle cDNA
 cloning, with porcine peptides used to establish clone identity. The original full
-body was not recovered; specific isoamylase-complex support remains UNDECIDED.
+body was not recovered. The follow-up below marks the specific isoamylase-complex
+annotation overannotated on independently verified catalytic specificity, without
+claiming that the inaccessible paper did not report self-association.
 
 ### Mouse Agl: full source and species boundaries
 
@@ -296,14 +299,16 @@ GO:0019156 isoamylase activity; the substrate definition includes glycogen,
 amylopectin and beta-limit dextrins. This is not interchangeable solely by enzyme
 nickname with AGL's phosphorylase-limit-dextrin glucosidase activity. The live
 [AmiGO isoamylase-activity neighborhood](https://amigo.geneontology.org/amigo/term/GO:0019156)
-also exposes the complex link. Direct complex-page access failed; no claim of a
-plant-only taxon restriction is made.
+also exposes the complex link. Complex-page access was intermittent; the
+capable_of link was recovered from both the activity neighborhood and the complex
+page during follow-up. No plant-only taxon restriction is asserted.
 
 GO:0005978 covers formation of glycogen. InterPro:IPR006421 is the metazoan
 debranching-enzyme family, not a verified plant-isoamylase contamination. The
 mapping's biosynthetic rationale was not recovered. Existing human catalytic work
-and pathway models establish breakdown; they do not alone disprove an additional
-biosynthetic contribution. This row becomes UNDECIDED pending source evidence.
+and pathway models establish breakdown. On follow-up, REMOVE addresses the wrong
+pathway role asserted by this electronic mapping; the possibility of a separate
+biosynthetic role remains a question, rather than grounds to retain the mapping.
 
 PAINT cache interpro/panther/PTHR10569/PTHR10569-paint.tsv places both catalytic
 terms and glycogen catabolism at PTN000060165. All three IBA annotations remain
@@ -326,3 +331,66 @@ rendering and scaffolded history validation are recorded in the final handoff
 manifest. No source cache or provider file was hand-authored. Four missing PMID
 caches and three missing Reactome caches remain explicit retrieval tasks before a
 fully cached ready review. Unresolved source judgments remain visible in the YAML.
+
+
+## PR #3197 follow-up: ontology, topology and draft status
+
+The follow-up starts from published head
+56d3fc5ee8e98abc82392957bc96223edf79327d. All 35 source annotation
+assertions, 21 reference identities and two catalytic cores are preserved.
+The previous published history record is unchanged; this session has a new
+scaffolded record. The actions are now **16 ACCEPT, 4 KEEP_AS_NON_CORE,
+2 MODIFY, 4 REMOVE, 1 MARK_AS_OVER_ANNOTATED and 8 UNDECIDED**.
+
+1. **Glycogen biosynthesis: REMOVE.** The live [GO:0005978 definition and
+   parents](https://amigo.geneontology.org/amigo/term/GO:0005978) concern glycogen
+   formation, under glucan biosynthesis and glycogen metabolism. AGL's two
+   established reactions instead expose and remove branch-point glucose during
+   phosphorylase-dependent degradation. The IPR006421 match identifies the correct
+   metazoan debranching family, but the biosynthetic process mapping assigns the
+   wrong pathway role. The speculative repletion/branching model in the original
+   mouse-Agl discussion does not establish a biosynthetic step performed by AGL.
+   A future positive experiment could change that judgment; possibility alone is
+   not support for the present electronic assertion.
+
+2. **Isoamylase complex: MARK_AS_OVER_ANNOTATED.** Live
+   [GO:0043033](https://amigo.geneontology.org/amigo/term/GO:0043033) is capable_of
+   [GO:0019156](https://amigo.geneontology.org/amigo/term/GO:0019156), whose EC
+   cross-reference is 3.2.1.68. [The primary ENZYME nomenclature entry](https://enzyme.expasy.org/EC/3.2.1.68)
+   specifies glycogen, amylopectin and beta-limit dextrins and states:
+   "Maltose is the smallest sugar it can release from an alpha-(1->6)- linkage."
+   By contrast, [EC 3.2.1.33](https://enzyme.expasy.org/EC/3.2.1.33) hydrolyses
+   the single glucose exposed by the accompanying glucanotransferase in
+   phosphorylase limit dextrin; the entry explicitly lists human P35573.
+   This is a positive distinction between catalytic systems, not a universal
+   monomer claim or a taxonomic exclusion. The old cloning paper's inaccessible
+   body cannot settle all oligomerization details, but is not needed to recognize
+   this term mismatch. Modern human monomer/dimer observations remain valid.
+
+3. **Four granule/extracellular rows: UNDECIDED retained.** Each reason now
+   identifies its exact modeled input or output and distinguishes luminal
+   topology from release. The immutable UniProt record has no SIGNAL or TRANSMEM
+   feature and describes a cytoplasmic pool. Luminal localization would require
+   membrane crossing, and no conventional targeting route is established by
+   these features. Their absence does not exclude unconventional trafficking,
+   however. The actual human fractionation data and explicit Reactome membership
+   warrant resolving the AGL-level supplement or orthogonal localization/release
+   evidence before asserting that the annotation is an artifact. A cytosolic
+   face association, a co-fractionating pool and a luminal pool are distinct
+   possibilities, not conclusions drawn from the current evidence.
+
+4. **Cache and status gate retained.** Normal retrieval failures for four PMIDs
+   and three Reactome entries remain documented above. Nothing was removed from
+   the citations to suppress these requirements, and no cache was hand-written.
+   The YAML status is now DRAFT, matching the schema definition for a review with
+   no PENDING annotations but remaining validation warnings. Independent primary
+   web reading supports the scientific judgments; it does not satisfy the normal
+   machine-cache requirement or make the PR ready for merge.
+
+The three rat response-to-X assertions remain UNDECIDED because their exact
+source/transfer questions have not been resolved by the accessible abstracts.
+Their plausible non-core character is a separate question from evidential
+verification. The existing GO:2001069 refinements retain the specific positive
+human binding evidence. Glycogen binding is described as substrate positioning
+in the biological summary; the two catalytic cores already describe the enzyme's
+primary work, so a third binding core or redundant NEW row is unnecessary.
