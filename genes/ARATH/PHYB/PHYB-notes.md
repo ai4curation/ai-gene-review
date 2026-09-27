@@ -106,3 +106,12 @@ Based on UniProt and structure:
 - PMID:27789797 - Thermosensor function
 - PMID:30635559 - Daytime temperature sensing
 - PMID:22895253 - HEMERA interaction
+
+## 2026-09-27: merged the duplicate P14713 review into PHYB
+
+These notes were written for the duplicate review in `genes/ARATH/P14713/`, which covered the same protein (P14713). That folder has been retired and the review now lives here. The GOA file was refreshed and the conflicting verdicts were reconciled:
+
+- The histidine-kinase rows (GO:0000155 IEA and IBA, GO:0000160 IBA) are now REMOVE. Plant phytochromes carry a histidine kinase-related domain that lacks the residues needed for HK activity [PMID:19286967 "plant phys have unique C termini that contain two PAS domains and a region homologous to two-component histidine kinases but lacking residues critical to HK activity"]. Before the merge, this file had them as ACCEPT and P14713 had them as KEEP_AS_NON_CORE.
+- Plasma membrane (ISM and IBA) is now REMOVE, because PHYB is a soluble protein found in the cytoplasm and nucleus.
+- Response to temperature stimulus is now ACCEPT, and thermosensing has been added as a second core function (P14713's view). The sensing is done by the thermal reversion of PHYB's own Pfr state.
+- Sequence-specific DNA binding stays MODIFY → promoter-specific chromatin binding. P14713's core function built on sequence-specific DNA binding was not carried over.

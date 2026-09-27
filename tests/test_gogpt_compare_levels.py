@@ -115,13 +115,18 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     )
 
     assert committed == details
-    assert len(details) == 298
+    assert len(details) == 297
     # Regenerated from the reviewed actions and core-function slots.
     assert stats == {
         # #3246 merged the duplicate ARATH/AAU94417 review into AT1G06680 (both
         # Q42029, PSBP1), removing one gene: -36 predictions, -21 GOA terms and
         # -9 GOA overlaps, -12/-3 post-review, -5/-1 core.
-        "goa": {"overlap": 1026, "total": 2933, "pred": 8835},
+        # #3251 merged the duplicate ARATH/P14713 review into PHYB (both
+        # P14713), removing one gene: -13 predictions; P14713's 53/3 GOA,
+        # 52/3 post-review and 12/1 core leave. The merged PHYB's refreshed GOA
+        # has 51 terms (-1) and its reconciled review 46 post-review (-3) and 7
+        # core terms (+3), with all three PHYB overlaps unchanged (3/1/1).
+        "goa": {"overlap": 1023, "total": 2879, "pred": 8822},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -189,8 +194,9 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # overlap. #3239 (obsolete author-supplied ids repointed) drops one
         # post-review term each from ANOGA/PGRPLD and ECOLX/SNIPE and one core
         # term each from ECOLI SecB and surA, with no overlap change.
-        "post_review": {"overlap": 852, "total": 2757, "pred": 8835},
-        "core": {"overlap": 356, "total": 1219, "pred": 8835},
+        # #3251 (P14713 merged into PHYB): see the GOA comment above.
+        "post_review": {"overlap": 849, "total": 2702, "pred": 8822},
+        "core": {"overlap": 355, "total": 1210, "pred": 8822},
     }
 
 
