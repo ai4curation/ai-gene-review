@@ -149,22 +149,33 @@ def test_logic_override_and_scenario():
 
 def test_erk_cascade_translation():
     bn = module_file_to_boolean(ERK)
-    assert bn.inputs == [
-        "adaptor_recruitment",
-        "rasgap_step",
-        "mapk_negative_regulation",
-    ]
+    # the GAP tier is the only regulator left as a free input besides the stimulus:
+    # the DUSP step is now induced by ERK output (feedback loop closed)
+    assert bn.inputs == ["adaptor_recruitment", "rasgap_step"]
     assert bn.rules["ras_active"] == "ras_gef_step & !rasgap_step"
     assert bn.rules["erk_mapk"] == "mek_map2k & !mapk_negative_regulation"
-    # the relay is a linear chain: RAF -> MEK -> ERK
+    assert bn.rules["mapk_negative_regulation"] == "erk_output"
+    # the relay is a linear chain RAF -> MEK -> ERK, and ERK still exits the relay
+    # bundle onto the output step although it feeds back onto RAF
     assert SignedEdge("raf_map3k", "mek_map2k", "+") in bn.edges
     assert SignedEdge("mek_map2k", "erk_mapk", "+") in bn.edges
-    # no feedback in the curated module: nothing regulates the adaptor/GEF from downstream
-    assert not any(
-        e.target in {"adaptor_recruitment", "ras_gef_step"}
-        and e.source != "adaptor_recruitment"
-        for e in bn.edges
+    assert SignedEdge("erk_mapk", "erk_output", "+") in bn.edges
+    assert "erk_relay" not in bn.variables
+    # the two calibration feedbacks
+    assert SignedEdge("erk_mapk", "raf_map3k", "-") in bn.edges
+    assert SignedEdge("erk_output", "ras_gef_step", "-") in bn.edges
+    assert bn.rules["raf_map3k"] == "ras_active & !erk_mapk"
+
+
+def test_feedback_edge_does_not_hide_relay_exit():
+    """A last-tier -| first-tier feedback inside a bundle must not turn the bundle itself into a variable."""
+    doc = _toy_module()
+    doc["module"]["connections"].append(
+        {"source": "k2", "target": "k1", "connection_type": "NEGATIVELY_REGULATES"}
     )
+    bn = module_to_boolean(doc)
+    assert "relay" not in bn.variables
+    assert bn.rules["k1"] == "gtpase & !k2"
 
 
 def test_parse_bbm070_signs():
@@ -190,15 +201,22 @@ def test_bbm070_calibration_of_erk_cascade():
     external_map = dict(iter_mapping_pairs(mapping["external"]))
     curated = project_edges(module_file_to_boolean(ERK).edges, module_map)
     external = project_edges(parse_bnet_file(BBM070).edges, external_map)
-    diff = diff_signed_edges(curated.edges, external.edges)
+    erk_symbols = set(module_map.values())
+    ext_edges = {
+        e for e in external.edges if e.source in erk_symbols and e.target in erk_symbols
+    }
+    diff = diff_signed_edges(curated.edges, ext_edges)
     # the kinase relay and Ras switch agree edge-for-edge
     for edge in ["GRB2 -> SOS", "SOS -> RAS", "RAS -> RAF", "RAF -> MEK", "MEK -> ERK"]:
         assert edge in {str(e) for e in diff.agree}
     assert not diff.sign_conflict
-    # feedbacks present in the published model but absent from the curated module
-    right_only = {str(e) for e in diff.right_only}
-    assert "ERK -| RAF" in right_only
-    assert "ERK_OUTPUT -| SOS" in right_only
+    # the two feedbacks the calibration surfaced are now in the curated module
+    agree = {str(e) for e in diff.agree}
+    assert "ERK -| RAF" in agree
+    assert "ERK_OUTPUT -| SOS" in agree
+    assert not diff.right_only
+    # the ERK-induced DUSP loop is module-only (BBM-070 routes DUSP1 via CREB)
+    assert "ERK_OUTPUT -> DUSP" in {str(e) for e in diff.left_only}
     # the module's DUSP -| ERK edge has no counterpart (BBM DUSP1 targets p38/JNK)
     assert "DUSP -| ERK" in {str(e) for e in diff.left_only}
     report = format_signed_diff(diff, "erk_cascade", "BBM-070")

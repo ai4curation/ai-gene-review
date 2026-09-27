@@ -15,7 +15,8 @@ Translation semantics
   the container's **entry** elements (children with no incoming internal
   activating edge, excluding pure inhibitors such as a GAP tier), and an edge out
   of a container originates from its **exit** elements (children with no outgoing
-  internal edge). A node with no internal connections is atomic.
+  internal activating edge, so a feedback inhibition from the last tier does not
+  hide it). A node with no internal connections is atomic.
 * **Sign**: ``CAUSES``, ``PRECEDES``, ``PROVIDES_INPUT_FOR``, ``HAS_INPUT``,
   ``HAS_OUTPUT`` and ``POSITIVELY_REGULATES`` are activating; ``NEGATIVELY_REGULATES``
   is inhibiting; ``PART_OF`` is structural and ignored.
@@ -293,10 +294,18 @@ class _Flattener:
         node = self.index[element]
         children = _children(node)
         internal = self._internal_edges(element)
-        with_outgoing = {s for (s, _, _) in internal}
+        # Only forward (activating) internal edges disqualify an exit: a feedback
+        # inhibition from the last tier back onto an earlier tier must not hide it.
+        # A pure inhibitor tier (only inhibiting edges out, nothing in - e.g. a GAP)
+        # is not an exit either; it is a side input of the bundle.
+        with_outgoing_act = {s for (s, _, sign) in internal if sign == "+"}
+        incoming_act = {t for (_, t, sign) in internal if sign == "+"}
+        outgoing_inh = {s for (s, _, sign) in internal if sign == "-"}
         result: list[str] = []
         for child in children:
-            if child in with_outgoing:
+            if child in with_outgoing_act:
+                continue
+            if child in outgoing_inh and child not in incoming_act:
                 continue
             result.extend(self.exits(child))
         return result or [element]

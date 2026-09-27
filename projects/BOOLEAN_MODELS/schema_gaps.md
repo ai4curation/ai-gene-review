@@ -34,9 +34,17 @@ dynamics, and it is the one the schema currently encourages curators to drop.
 
 **Proposal.** No new slot — a curation convention: a regulatory step that is *induced
 by* the pathway's own output must carry the `CAUSES`/`POSITIVELY_REGULATES` edge from
-the output step, so the loop closes. A module QC check (in `module_qc`) can flag any
-`NEGATIVELY_REGULATES` source with no incoming edge whose `notes`/`description`
-contain "feedback".
+the output step, so the loop closes.
+
+**Status (2026-09-27): done for ERK, p38 and JAK-STAT; check implemented.** The
+loops are now wired in `erk_cascade` (ERK ⊣ RAF, ERK output ⊣ SOS, ERK output → DUSP),
+`p38_cascade` (p38 output → DUSP1) and `jak_stat_signaling` (SOCS ⊣ JAK), each with
+primary evidence; the JNK step was reworded as an external input because its
+phosphatase is p38/ERK-induced, not JNK-induced. `module_qc.feedback_loop_findings`
+flags any `NEGATIVELY_REGULATES` source whose prose asserts feedback or induction
+(negated sentences excluded) but has no upstream activating edge, counting a
+container as closed through its children; it is advisory (a validator warning and a
+"Feedback loops" card on the module page), never an error.
 
 ## 2. No sign on `CAUSES`-family edges, no way to say "no effect on its own"
 

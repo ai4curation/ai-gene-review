@@ -10,7 +10,7 @@ Run from the repository root (biodivine-aeon is installed ephemerally):
 Writes:
     projects/BOOLEAN_MODELS/out/<module>.bnet          translated modules
     projects/BOOLEAN_MODELS/out/erk_cascade.sbml       SBML-qual export (via aeon)
-    projects/BOOLEAN_MODELS/out/erk_cascade_calibrated.bnet
+    projects/BOOLEAN_MODELS/out/erk_cascade_pre_calibration.bnet  counterfactual (loops cut)
     projects/BOOLEAN_MODELS/RESULTS.md                 generated report
 
 Nothing in the report is hand-written: every number is computed here.
@@ -42,16 +42,17 @@ from ai_gene_review.module_boolean import (
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "projects" / "BOOLEAN_MODELS" / "out"
 REPORT = ROOT / "projects" / "BOOLEAN_MODELS" / "RESULTS.md"
-MODULES = ["erk_cascade", "p38_cascade", "jnk_cascade"]
+MODULES = ["erk_cascade", "p38_cascade", "jnk_cascade", "jak_stat_signaling"]
 BBM = ROOT / "models" / "boolean" / "bbm-070-mapk-cancer-cell-fate"
 SIGNOR = ROOT / "models" / "boolean" / "signor"
 
-# Edges the calibration proposes adding to the ERK module (the two feedbacks that
-# BBM-070 and SIGNOR both carry and the curated module lacks). Expressed as
-# logic overrides on the module's own element ids.
-CALIBRATION_LOGIC = {
-    "raf_map3k": "ras_active & !erk_mapk",  # ERK -| RAF (BBM-070; SIGNOR: ERK1/2 -| BRAF)
-    "ras_gef_step": "adaptor_recruitment & !erk_output",  # RSK -| SOS (BBM-070; SIGNOR: ERK1/2 -| SOS1)
+# Counterfactual: the ERK module *before* its feedback loops were closed (the
+# wiring the calibration originally found, PR history). Expressed as logic
+# overrides on the module's own element ids; the DUSP step is additionally
+# reduced to a free input by fixing it in the scenario.
+PRE_CALIBRATION_LOGIC = {
+    "raf_map3k": "ras_active",  # drop ERK -| RAF
+    "ras_gef_step": "adaptor_recruitment",  # drop ERK output -| SOS
 }
 
 
@@ -138,8 +139,17 @@ def calibrate(
             rows.append([f"`{e}`", "agree", ""])
         for le, re_ in sorted(diff.sign_conflict, key=lambda p: str(p[0])):
             rows.append([f"`{le}` vs `{re_}`", "sign conflict", ""])
+        ext_ids_for_symbol: dict[str, set[str]] = {}
+        for ext_id, sym in external_map.items():
+            ext_ids_for_symbol.setdefault(sym, set()).add(ext_id)
+        unmapped_ext = {v for v in ext.unmapped_ids}
         for e in sorted(diff.left_only, key=str):
-            rows.append([f"`{e}`", "module-only", "not in source (see mapping notes)"])
+            reading = "not in source (see mapping notes)"
+            for src in ext_ids_for_symbol.get(e.source, ()):
+                for tgt in ext_ids_for_symbol.get(e.target, ()):
+                    if path_sign(external_edges, src, tgt, unmapped_ext) == e.sign:
+                        reading = "collapsed path in source (source expresses it via intermediates the module does not name)"
+            rows.append([f"`{e}`", "module-only", reading])
         for e in sorted(diff.right_only, key=str):
             rows.append(
                 [
@@ -223,30 +233,27 @@ def dynamics(models: dict[str, BooleanModel]) -> str:
         "mek_map2k",
         "erk_mapk",
         "erk_output",
+        "mapk_negative_regulation",
     ]
     scenarios = {
-        "no stimulus": {
-            "adaptor_recruitment": False,
-            "rasgap_step": False,
-            "mapk_negative_regulation": False,
-        },
-        "adaptor recruited": {
-            "adaptor_recruitment": True,
-            "rasgap_step": False,
-            "mapk_negative_regulation": False,
-        },
-        "adaptor recruited + RasGAP": {
+        "no stimulus": {"adaptor_recruitment": False, "rasgap_step": False},
+        "adaptor recruited": {"adaptor_recruitment": True, "rasgap_step": False},
+        "adaptor recruited + constitutive RasGAP": {
             "adaptor_recruitment": True,
             "rasgap_step": True,
-            "mapk_negative_regulation": False,
         },
-        "adaptor recruited + DUSP": {
+        "adaptor recruited + constitutive DUSP": {
             "adaptor_recruitment": True,
             "rasgap_step": False,
             "mapk_negative_regulation": True,
         },
     }
-    lines.append("### 3a. The curated ERK module as translated (no feedback)")
+    lines.append("### 3a. The curated ERK module as translated (feedback loops closed)")
+    lines.append("")
+    lines.append(
+        "Inputs are the stimulus (adaptor recruitment) and the GAP tier; the DUSP step is ERK-induced, "
+        "so it is a variable here and fixed only in the 'constitutive DUSP' scenario."
+    )
     lines.append("")
     rows = []
     for label, scen in scenarios.items():
@@ -290,20 +297,31 @@ def dynamics(models: dict[str, BooleanModel]) -> str:
     lines.append(md_table(["scenario", "attractor"] + bbm_names, rows))
     lines.append("")
 
-    lines.append("### 3c. The ERK module with the two calibration feedbacks added")
+    lines.append("### 3c. Counterfactual: the ERK module with its feedback loops cut")
     lines.append("")
     lines.append(
-        "Overrides applied (prototype `update_rule` values on the module's own ids):"
+        "This is the wiring the module had before the calibration (no ERK -| RAF, no ERK output -| SOS, "
+        "DUSP as a free input). Overrides applied (prototype `update_rule` values on the module's own ids):"
     )
     lines.append("")
-    for var, rule in CALIBRATION_LOGIC.items():
+    for var, rule in PRE_CALIBRATION_LOGIC.items():
         lines.append(f"- `{var}, {rule}`")
+    lines.append(
+        "- `mapk_negative_regulation` fixed as an input (0, or 1 in the constitutive-DUSP scenario)"
+    )
     lines.append("")
-    calibrated = erk.with_logic(CALIBRATION_LOGIC)
-    (OUT / "erk_cascade_calibrated.bnet").write_text(calibrated.to_bnet() + "\n")
+    pre = erk.with_logic(PRE_CALIBRATION_LOGIC)
+    (OUT / "erk_cascade_pre_calibration.bnet").write_text(pre.to_bnet() + "\n")
+    pre_scenarios = {
+        label: {
+            **scen,
+            "mapk_negative_regulation": scen.get("mapk_negative_regulation", False),
+        }
+        for label, scen in scenarios.items()
+    }
     rows = []
-    for label, scen in scenarios.items():
-        for kind, proj in attractors_of(aeon_from_model(calibrated, scen), names):
+    for label, scen in pre_scenarios.items():
+        for kind, proj in attractors_of(aeon_from_model(pre, scen), names):
             rows.append([label, kind] + [proj[n] for n in names])
     lines.append(md_table(["scenario", "attractor"] + names, rows))
     lines.append("")
