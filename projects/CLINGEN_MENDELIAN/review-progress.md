@@ -93,12 +93,16 @@ are therefore expected; existing human reviews still link normally.
 | ACOX2 | Definitive | INITIALIZED | Draft; current head approved; six required publication caches pending | `cmungall/clingen-acox2` | [#3161](https://github.com/ai4curation/ai-gene-review/pull/3161) |
 | ACSL4 | Definitive | COMPLETE | Draft; current head approved; notes-only PMID:23766516 cache required | `cmungall/clingen-acsl4` | [#3160](https://github.com/ai4curation/ai-gene-review/pull/3160) |
 | ACTA1 | Definitive | COMPLETE | Merged; final-head approval and required CI passed | `cmungall/clingen-acta1` | [#3163](https://github.com/ai4curation/ai-gene-review/pull/3163) |
-| ACTA2 | Definitive | COMPLETE | Published; follow-up validated locally; automated re-review retry queued | `cmungall/clingen-acta2` | [#3164](https://github.com/ai4curation/ai-gene-review/pull/3164) |
-| ACTB | Definitive | COMPLETE | Draft; independent audit and validation passed; two required publication caches pending | `cmungall/clingen-actb` | [#3184](https://github.com/ai4curation/ai-gene-review/pull/3184) |
-| ADA | Definitive | INITIALIZED | Draft; independent audit and validation passed; six PMID and three Reactome caches pending | `cmungall/clingen-ada` | [#3179](https://github.com/ai4curation/ai-gene-review/pull/3179) |
-| ADGRV1 | Definitive | COMPLETE | Substantive audit in progress | — | — |
-| ADNP | Definitive | COMPLETE | Substantive audit in progress | — | — |
-| ADSL | Definitive | INITIALIZED | Substantive audit in progress | — | — |
+| ACTA2 | Definitive | COMPLETE | Published; follow-up validation and CI passed; automated reviewer failed before substantive execution, including one retry | `cmungall/clingen-acta2` | [#3164](https://github.com/ai4curation/ai-gene-review/pull/3164) |
+| ACTB | Definitive | COMPLETE | Draft; independent audit and validation passed; two publication caches pending; automated reviewer failed before substantive execution | `cmungall/clingen-actb` | [#3184](https://github.com/ai4curation/ai-gene-review/pull/3184) |
+| ADA | Definitive | INITIALIZED | Draft; independent audit and validation passed; six PMID and three Reactome caches pending; automated reviewer failed before substantive execution | `cmungall/clingen-ada` | [#3179](https://github.com/ai4curation/ai-gene-review/pull/3179) |
+| ADGRV1 | Definitive | COMPLETE | Draft; independent audit and validation passed; five publication caches pending; automated reviewer failed before substantive execution | `cmungall/clingen-adgrv1` | [#3192](https://github.com/ai4curation/ai-gene-review/pull/3192) |
+| ADNP | Definitive | COMPLETE | Draft; independent audit and validation passed; two publication caches pending; automated reviewer failed before substantive execution | `cmungall/clingen-adnp` | [#3193](https://github.com/ai4curation/ai-gene-review/pull/3193) |
+| ADSL | Definitive | INITIALIZED | Draft; independent audit and validation passed; nine publication caches pending; automated review and CI pending | `cmungall/clingen-adsl` | [#3194](https://github.com/ai4curation/ai-gene-review/pull/3194) |
+| AFG3L2 | Definitive | COMPLETE | Substantive audit in progress | — | — |
+| AGK | Definitive | COMPLETE | Draft; independent audit and validation passed; two publication caches pending; automated review and CI pending | `cmungall/clingen-agk` | [#3195](https://github.com/ai4curation/ai-gene-review/pull/3195) |
+| AGL | Definitive | INITIALIZED | Substantive audit in progress | — | — |
+| AGO1 | Definitive | COMPLETE | Substantive audit in progress | — | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -118,7 +122,7 @@ requirement remains outstanding. ABCG5 initialization also failed at the normal
 UniProt fetch because DNS access was unavailable; no seed files were invented.
 ABCG5, ABCG8, ABHD12 and ABHD5 remain queued in the normal alphabetical order.
 While those source downloads are unavailable, workers are auditing the next
-available cached reviews, now reaching ACTA1 and ACTA2. This temporary
+available cached reviews, now reaching AFG3L2, AGL and AGO1. This temporary
 scheduling does not mark the earlier unseeded genes complete. The concurrent cached-review batch assigned ACAN before ACADVL; that was a scheduling exception to strict alphabetical order, and ACADVL has a dedicated audit PR with a published follow-up. ACAD8's genuine
 Falcon/fallback launch attempts failed at dependency retrieval before provider
 contact; its manual primary-source research is documented without a fabricated report.
@@ -410,3 +414,22 @@ The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **15 
   queued-auto-merge observation. The 20-entry queue now contains 9 merged PRs plus
   6 earlier campaign completions outside the queue. Project PR #3191 carries these
   shared tracking updates; gene-specific review work continues independently.
+
+- 2026-09-27 00:27 UTC: Published ADGRV1 #3192, ADNP #3193 and ADSL #3194 after
+  independent biological review and targeted validation. Required publication-cache
+  gaps keep all three in draft. Current-head automated reviews for ACTA2, ADA, ACTB
+  and ADGRV1 failed before substantive execution; ACTA2 also failed on its single
+  retry. Logs report zero cost and no permission denials, but do not expose the
+  provider reason. No repeated retries are scheduled without new recovery evidence.
+  ACTA2 code validation passed. AFG3L2, AGK and AGL are now under substantive audit.
+  Verified 23 latest receipts / 91 file hashes and 20 historical receipts / 142 hashes,
+  including exact local/published tree equality and continuous follow-up parents.
+  The completion count remains 15 of 2,876; publishing drafts does not advance it.
+
+- 2026-09-27 00:35 UTC: AGK #3195 is published as a draft after independent review
+  and validation; two required publication caches remain. AGO1 is under audit after
+  exact current-main baseline and canonical/alias overlap checks. The queue now
+  includes 24 latest revisions / 95 hashes and 20 historical revisions / 142 hashes.
+  ADNP and project #3191 also encountered the same automated-review startup failure.
+  ADA code validation passed. ADGRV1 CI identified a newly added reference-title
+  format mismatch; its separate gene follow-up is being validated locally.
