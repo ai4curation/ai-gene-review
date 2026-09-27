@@ -266,3 +266,27 @@ It is absent from the current PR head and freshly checked main, and one normal f
 with exit 1, 0/1 cached, DNS failure (`/tmp/AGO2-correction-fetch.log`). Thus the eight
 source11 gaps are closed, but **PMID:39875610 remains the sole required cache gate**.
 The DOI was neither silently exempted nor added to a previously frozen recovery batch.
+
+
+## 2026-09-27: Nature correction source closure
+
+The normal [PMID:39875610] cache now verifies the title, DOI
+10.1038/s41586-024-08559-7 and correction link to original PMID:19701182.
+Although it has an Abstract heading, its contents are bibliographic and
+affiliation metadata only: neither a substantive abstract nor the correction
+body is present. The cache retains `full_text_available: false`. The
+[official publisher notice](https://www.nature.com/articles/s41586-024-08559-7)
+was separately reread. It replaces the MCF7 beta-actin and Dicer images in
+Figure 5b after duplication of the beta-actin blot, and corrects the sh-Dicer lane label; the authors state
+that conclusions are unchanged. This is not a retraction or an AGO2
+RNA-polymerase experiment. The Figure 5c evidence assessment is unchanged.
+
+This closes the sole remaining publication-cache gate. All review YAML bytes,
+annotation actions, five cores and reference objects remain unchanged. The
+current-head approval and full comment 5855518032 were read; its suggested gate
+waiver is unnecessary because the genuine standard-fetch record is now present.
+Source16 run 36313594604, head 408e7c41d93c2fd63f54ac1da5d7201edbc901bb,
+artifact 10931450272 SHA256 4251efe477f5575fe1f7f86a5b543f3188e81a87fd25fc88e65c47a2af862c01
+supplied the exact immutable record. The published project provenance mirrors
+record cache-recovery digests separately from these scientific notes. The PR
+can now receive a fresh review; existing YAML advisories are unchanged.
