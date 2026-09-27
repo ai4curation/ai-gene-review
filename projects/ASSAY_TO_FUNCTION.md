@@ -6,7 +6,28 @@ tags: [PIPELINE]
 
 # ASSAY_TO_FUNCTION
 
-**Which experimental readouts reliably support gene-function annotation, and which drive over-annotation?**
+**Bottom line:** GO evidence codes do not say how close an experiment's
+readout sits to the gene product's own activity, so an IMP from a caspase or
+ROS reporter looks the same as one from a reconstituted enzyme assay. We asked
+which experimental readouts reliably support gene-function annotation and
+which drive over-annotation. We built a catalogue of 60 readout classes, each
+tagged molecular or phenotypic, mined the cached publications behind every
+PMID-backed annotation in the reviewed corpus for those readouts, and joined
+each match to the reviewer's action. Across thematically aligned annotations,
+molecular readouts license a molecular-function term 77% of the time
+(567/738) and phenotypic hubs 8% (90/1,087), and almost all of that 8% is the
+legitimate reporter-for-a-real-TF case. Hub readouts are rarely wrong; their
+failure mode is demotion to KEEP_AS_NON_CORE. The resulting rubric and
+flagger drove six edits to KEEP_AS_NON_CORE in four genes (PDGFB, HMGB1,
+mouse Sirt2, VEGFA), and the two STAT3 migration rows are still UNDECIDED.
+The IL21 rows the page describes as UNDECIDED were later resolved to
+KEEP_AS_NON_CORE (#1558), and the current `flagged_candidates.tsv` holds 443
+candidates (5 Tier 1, 438 Tier 2), more than the 296 quoted below.
+
+This matters because the discriminating signal is the readout, which curators
+see in the methods section but GAF rows do not record. The rubric's rule, that
+a convergent phenotypic readout licenses at most a non-core BP or CC term and
+never a regulatory MF, can be applied at review time.
 
 ## Motivation
 
@@ -594,3 +615,7 @@ stays `UNDECIDED` until an expert decides.
   annotations") is the conceptual cousin; this project quantifies the
   assay-specific version of it.
 - `BIOSENSORS.md` — unrelated (plant synthetic-biology biosensors).
+
+## Slides
+
+- [Slides](ASSAY_TO_FUNCTION/slides/ASSAY_TO_FUNCTION-slides.html) (Marp source: [ASSAY_TO_FUNCTION-slides.md](ASSAY_TO_FUNCTION/slides/ASSAY_TO_FUNCTION-slides.md)) — AI generated
