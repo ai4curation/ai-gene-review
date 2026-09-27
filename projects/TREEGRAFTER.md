@@ -324,6 +324,15 @@ fixes:
   exemplars. Key result: the placement is usually sound; the error is the GO term
   attached to the graft node, and **InterPro often resolves the protein better
   than PANTHER** (e.g. `IPR011803 AprA`, `IPR003083 S-crystallin`).
+- **[ATP-synthase terms on flagellar/T3SS export ATPases](TREEGRAFTER/rotary-atpase-leak.md)**
+  — a case study of **inherited PAINT over-placement**. The `GO:0046933` /
+  `GO:0045259` IBD sits on the duplication node `PTN008558586` in PTHR15184, above
+  both the F1-β and the FliI/SctN clades. PAINT IBA and TreeGrafter then label
+  nearly every FliI/SctN protein an ATP synthase, and InterPro2GO (IPR013380,
+  IPR004100) and `GO_REF:0000108` add further wrong rows. Nine full reviews
+  (FliI in *Caulobacter*, *H. pylori*, *P. putida*, *E. coli* and *Salmonella*;
+  SctN in *Salmonella* ×2, *Yersinia* and *Shigella*) remove 31 of the 35 affected
+  rows and mark the other 4 as over-annotations.
 - **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
@@ -335,6 +344,15 @@ fixes:
 
 ---
 # NOTES
+
+## 2026-09-27
+
+- Added the [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case study.
+  It began as a first-principles completeness test (F-type ATP synthase across
+  15,525 bacterial reference proteomes), whose false positives turned out to be
+  FliI/SctN export ATPases annotated as ATP synthases. The TreeGrafter graft points
+  are correct here; the error is inherited from a PAINT IBD on a duplication node.
+  None of these rows are in the frozen 2026-09-06 tables.
 
 ## 2026-09-25
 
