@@ -115,10 +115,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     )
 
     assert committed == details
-    assert len(details) == 299
+    assert len(details) == 298
     # Regenerated from the reviewed actions and core-function slots.
     assert stats == {
-        "goa": {"overlap": 1035, "total": 2954, "pred": 8871},
+        # #3246 merged the duplicate ARATH/AAU94417 review into AT1G06680 (both
+        # Q42029, PSBP1), removing one gene: -36 predictions, -21 GOA terms and
+        # -9 GOA overlaps, -12/-3 post-review, -5/-1 core.
+        "goa": {"overlap": 1026, "total": 2933, "pred": 8835},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -181,8 +184,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # restored) moved ten benchmark genes: post-review +1 term and +2 overlaps,
         # core -1 term and +4 overlaps (DESRO K9I* salivary proteins gain the
         # extracellular-region match; DESVH Q72DT0/Q72DT1 lose Flx-Hdr core terms).
-        "post_review": {"overlap": 854, "total": 2769, "pred": 8871},
-        "core": {"overlap": 357, "total": 1226, "pred": 8871},
+        # #3246 (AAU94417 merged into AT1G06680): AAU94417's 12/3 post-review and
+        # 5/1 core leave; the merged AT1G06680 gains two post-review terms and one
+        # overlap. #3239 (obsolete author-supplied ids repointed) drops one
+        # post-review term each from ANOGA/PGRPLD and ECOLX/SNIPE and one core
+        # term each from ECOLI SecB and surA, with no overlap change.
+        "post_review": {"overlap": 852, "total": 2757, "pred": 8835},
+        "core": {"overlap": 356, "total": 1219, "pred": 8835},
     }
 
 
