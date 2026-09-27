@@ -28,8 +28,15 @@ contact) becomes MARK_AS_OVER_ANNOTATED and PEX7 PMID:11546814 (PEX5L
 co-receptor contact) becomes REMOVE. PEX19's `core_functions` MF
 GO:0036105 becomes GO:0000268. The body sections below still describe
 the plan as it stood before the obsoletion ("to be obsoleted", "once the
-obsoletion lands"); the obsoletion table has been updated to the four
-applied terms.
+obsoletion lands", "Wait for obsoletion to land", "Do not pre-emptively
+edit reviews"); the obsoletion table has been updated to the four
+applied terms. Their predictions that the refresh would be purely
+mechanical ("the underlying biology is unchanged", "The biological
+conclusion should not change", "mechanical ... rather than scientific")
+held for the 19 rows annotated to the obsoleted terms, but not for the
+two protein-binding rows whose replacements were dropped above: there
+the refresh changed the action, because the contact is not signal
+recognition.
 
 ## Overview
 
