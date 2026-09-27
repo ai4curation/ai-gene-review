@@ -36,9 +36,9 @@ Reviewing GO annotations for the writers, erasers, readers, chaperones and remod
 
 ## Bottom line
 
-- **26 of 27** planned genes have a review: **1,297 existing annotations**, 796 ACCEPT, 290 KEEP_AS_NON_CORE, 148 REMOVE.
-- **126 of the 148 removals** are generic `protein binding` rows. The substantive fixes: SAS2/SAS3 substrates (H4K16 / H3K14), IBA rows that confuse ORC with SIR3, and a mis-filed HST1 review that was ZDS1.
-- **Two gaps:** `genes/yeast/CAF1/` is the POP2 deadenylase, not chromatin assembly factor; CLR4 is a fission yeast gene.
+- **25 genes** reviewed: **1,255 existing annotations**, 778 ACCEPT, 288 KEEP_AS_NON_CORE, 132 REMOVE.
+- **110 of the 132 removals** are generic `protein binding` rows. The substantive fixes: SAS2/SAS3 substrates (H4K16 / H3K14), IBA rows that confuse ORC with SIR3, and a mis-filed HST1 review that was ZDS1.
+- **Two gaps:** the CAF-1 chromatin assembly factor subunits (RLF2/CAC1, CAC2, MSI1) are not yet reviewed; CLR4 is a fission yeast gene.
 
 ---
 
@@ -82,7 +82,7 @@ Reviewing GO annotations for the writers, erasers, readers, chaperones and remod
 ## Status and next steps
 
 - ✅ Reviewed: 25 intended genes in `genes/yeast/` (HATs, HDACs, SIR, HMTs, FACT/ASF1/RTT109, SWI/SNF, CHD1, RCO1, PHD1)
-- ⬜ Chromatin assembly factor CAF-1 (Cac1/Rlf2, Cac2, Msi1) has no review; `genes/yeast/CAF1/` is POP2
+- ⬜ Chromatin assembly factor CAF-1: RLF2 (alias CAC1), CAC2, MSI1 reviews pending. The old `genes/yeast/CAF1/` folder was the CCR4-NOT deadenylase, now renamed POP2 and outside this project
 - ⬜ CLR4: replace with an *S. cerevisiae* gene or drop
 - ⬜ Checklist boxes and per-phase counts on the page predate later re-reviews
 
