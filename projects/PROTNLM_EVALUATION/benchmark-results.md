@@ -5,7 +5,7 @@ title: ProtNLM cross-cohort results
 
 [Project overview](../PROTNLM_EVALUATION.md) · [Source counts](benchmark-summary.json) · [Summary generator](build_benchmark_summary.py) · [Narrative category index](narrative-review-index.yaml)
 
-The scope contains **282 distinct protein records**, including **242 prediction targets** and 40 paired human reference records. Overlapping selections are counted once in the combined totals. These purposive, retrospective cohorts test informative biological distinctions; their proportions do not estimate proteome-wide accuracy.
+Counts are a dated snapshot: as of 2026-09-27 (commit `c7551cb3db`). The scope contains **282 distinct protein records**, including **242 prediction targets** and 40 paired human reference records. Overlapping selections are counted once in the combined totals. These purposive, retrospective cohorts test informative biological distinctions; their proportions do not estimate proteome-wide accuracy.
 
 ## GO-term assessments
 

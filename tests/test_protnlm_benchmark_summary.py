@@ -7,10 +7,14 @@ from types import ModuleType
 import pytest
 import yaml
 
+from ai_gene_review.source_tree import ReviewSnapshot, WorkingTree, review_snapshot_tree
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
 
 def load_summary_module() -> ModuleType:
     """Load the project summary generator without writing repository artifacts."""
-    path = Path("projects/PROTNLM_EVALUATION/build_benchmark_summary.py")
+    path = REPO_ROOT / "projects/PROTNLM_EVALUATION/build_benchmark_summary.py"
     spec = importlib.util.spec_from_file_location("benchmark_summary", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -57,17 +61,19 @@ def write_summary_fixture(root: Path) -> Path:
     return base
 
 
-def test_benchmark_summary_keeps_output_types_and_scopes_separate() -> None:
+def test_benchmark_summary_keeps_output_types_and_scopes_separate(
+    forbid_working_tree_genes: None,
+) -> None:
     """Count each exact target once and exclude prose mentions of unrelated GO claims."""
     module = load_summary_module()
-    data = module.collect(Path.cwd())
+    # Pinned at review_snapshot_commit in benchmark-policy.yaml.
+    data = module.collect(review_snapshot_tree(REPO_ROOT))
     assert data["distinct_records"] == 282
     assert data["prediction_targets"] == 242
     assert sum(data["go_counts"].values()) == 288
-    # #3205 re-assessed one exact GO target UNC -> PLI after its OpenScientist audit.
-    # #3204 re-assessed three more UNC targets after OpenScientist audits:
-    # ORYSI/B8BAB0 -> PLI, ASPOR/Q2U1U6 and DANRE/A0A8M9QG43 -> NPI.
-    assert data["go_counts"]["PLI"] == 2
+    assert data["go_counts"] == {
+        "COR": 52, "CNN": 32, "LSP": 84, "UNC": 98, "NPI": 20, "PLI": 2, "REP": 0
+    }
     narratives = {r["gene"]: r["categories"] for r in data["narrative_reviews"]}
     assert narratives["human/NARF"] == ["PLI"]
     assert narratives["DANRE/dcxr"] == ["PLI"]
@@ -85,7 +91,7 @@ def test_empty_reviews_are_counted_separately_from_emitted_go_claims(
     """Reviewed zero output is retained without becoming a claim or a missing review."""
     base = write_summary_fixture(tmp_path)
     module = load_summary_module()
-    data = module.collect(tmp_path)
+    data = module.collect(WorkingTree(tmp_path))
 
     assert data["prediction_targets"] == 3
     assert data["prediction_review_files"] == data["go_review_files"] == 2
@@ -108,8 +114,9 @@ def test_empty_reviews_are_counted_separately_from_emitted_go_claims(
     assert cohorts["overlap"]["records_with_zero_go_predictions"] == 1
     assert sum(cohorts["overlap"]["go_counts"].values()) == 0
 
-    module.write_report(tmp_path, data)
+    module.write_report(tmp_path, data, ReviewSnapshot("0" * 40, "2026-01-01"))
     report = (base / "benchmark-results.md").read_text()
+    assert "as of 2026-01-01 (commit `0000000000`)" in report
     assert "1 record with zero emitted GO predictions" in report
     assert "| DROME/empty | P2 |" in report
     assert "| **Total** | **2** |" in report
@@ -130,7 +137,7 @@ def test_absent_prediction_list_is_not_a_reviewed_omission(
     path.write_text(yaml.safe_dump(doc))
 
     with pytest.raises(AssertionError, match="Explicit predictions list required"):
-        load_summary_module().collect(tmp_path)
+        load_summary_module().collect(WorkingTree(tmp_path))
 
 
 @pytest.mark.parametrize(
@@ -156,4 +163,4 @@ def test_empty_reviews_require_completed_summary(
     with pytest.raises(
         AssertionError, match="Completed zero-output review with description required"
     ):
-        load_summary_module().collect(tmp_path)
+        load_summary_module().collect(WorkingTree(tmp_path))

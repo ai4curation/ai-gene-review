@@ -1,4 +1,10 @@
-"""Write benchmark cohort sidecars for the BioReason-Pro comparison project."""
+"""Write benchmark cohort sidecars for the BioReason-Pro comparison project.
+
+Gene-level inputs (reviews, predictions, GOA, UniProt, the cohort gene list) are
+read at the policy's ``review_snapshot_commit``; the ARGO95/ARGO139 frozen GOA is
+read at ``baseline_commit``. Neither consults the working tree, so ordinary
+curation cannot stale the sidecars. Refresh with ``just refresh-benchmark-snapshot``.
+"""
 from __future__ import annotations
 
 import csv
@@ -6,7 +12,6 @@ import hashlib
 import json
 import math
 import re
-import subprocess
 from collections import Counter, defaultdict
 from functools import lru_cache
 from pathlib import Path
@@ -14,10 +19,16 @@ from typing import Any
 
 import yaml
 
+from ai_gene_review.source_tree import (
+    GitSnapshot,
+    declared_review_snapshot,
+    git_snapshot,
+    review_snapshot_tree,
+)
+
 
 PROJECT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PROJECT_DIR.parents[1]
-GENES_DIR = REPO_ROOT / "genes"
 REPORTS_DIR = REPO_ROOT / "reports"
 POLICY_PATH = PROJECT_DIR / "benchmark-policy.yaml"
 
@@ -34,41 +45,63 @@ EXPORT_DATE_RE = re.compile(r"^\*Exported on (.+?)\*$", re.MULTILINE)
 REVIEW_STATUS_RE = re.compile(r"^status:\s*([A-Z_]+)\s*$", re.MULTILINE)
 
 
+def snapshot() -> GitSnapshot:
+    """The repository at the declared review snapshot; all gene inputs come from here."""
+    return review_snapshot_tree(REPO_ROOT)
+
+
+def read_text(path: str) -> str:
+    return snapshot().read_text(path)
+
+
 @lru_cache(maxsize=None)
-def read_yaml(path: Path) -> dict[str, Any]:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+def read_yaml(path: str) -> dict[str, Any]:
+    return yaml.safe_load(read_text(path)) or {}
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def read_policy() -> dict[str, Any]:
+    return yaml.safe_load(POLICY_PATH.read_text(encoding="utf-8")) or {}
+
+
+def sha256(path: str) -> str:
+    return hashlib.sha256(snapshot().read_bytes(path)).hexdigest()
 
 
 def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def rel(path: Path) -> str:
-    return str(path.relative_to(REPO_ROOT))
+def gene_file(organism: str, gene: str, suffix: str) -> str:
+    return f"genes/{organism}/{gene}/{gene}{suffix}"
+
+
+def glob_genes(pattern: str) -> list[tuple[str, str, str]]:
+    """Return ``(organism, gene, path)`` for snapshot files matching ``genes/<pattern>``."""
+    return [
+        (parts[1], parts[2], path)
+        for path in snapshot().glob(f"genes/{pattern}")
+        if (parts := path.split("/"))
+    ]
 
 
 def gene_review_id(organism: str, gene: str) -> str:
-    review_path = GENES_DIR / organism / gene / f"{gene}-ai-review.yaml"
-    if not review_path.exists():
+    review_path = gene_file(organism, gene, "-ai-review.yaml")
+    if not snapshot().is_file(review_path):
         return ""
     return str(read_yaml(review_path).get("id") or "")
 
 
 def read_rl_gene_list() -> dict[tuple[str, str], dict[str, str]]:
     rows: dict[tuple[str, str], dict[str, str]] = {}
-    with (PROJECT_DIR / "genes.csv").open(newline="", encoding="utf-8") as handle:
-        for row in csv.DictReader(handle):
-            key = (row["species"], row["symbol"])
-            rows[key] = row
+    gene_list = (PROJECT_DIR / "genes.csv").relative_to(REPO_ROOT).as_posix()
+    for row in csv.DictReader(read_text(gene_list).splitlines()):
+        key = (row["species"], row["symbol"])
+        rows[key] = row
     return rows
 
 
-def parse_scores(path: Path) -> tuple[str, str]:
-    text = path.read_text(encoding="utf-8")
+def parse_scores(path: str) -> tuple[str, str]:
+    text = read_text(path)
     correctness = CORR_RE.search(text)
     completeness = COMPL_RE.search(text)
     return (
@@ -77,31 +110,31 @@ def parse_scores(path: Path) -> tuple[str, str]:
     )
 
 
-def extract_bioreason_sequence(path: Path) -> str:
-    match = BIOREASON_SEQUENCE_RE.search(path.read_text(encoding="utf-8"))
+def extract_bioreason_sequence(path: str) -> str:
+    match = BIOREASON_SEQUENCE_RE.search(read_text(path))
     if not match:
         raise ValueError(f"No BioReason sequence block found in {path}")
     return "".join(match.group(1).split())
 
 
-def extract_export_date(path: Path) -> str:
-    match = EXPORT_DATE_RE.search(path.read_text(encoding="utf-8"))
+def extract_export_date(path: str) -> str:
+    match = EXPORT_DATE_RE.search(read_text(path))
     return match.group(1) if match else ""
 
 
-def extract_markdown_section(path: Path, heading: str) -> str | None:
+def extract_markdown_section(path: str, heading: str) -> str | None:
     pattern = re.compile(
         rf"^### {re.escape(heading)}\s*$\n(.*?)(?=^### |\Z)",
         re.MULTILINE | re.DOTALL,
     )
-    match = pattern.search(path.read_text(encoding="utf-8"))
+    match = pattern.search(read_text(path))
     if not match:
         return None
     return match.group(1).strip() + "\n"
 
 
-def extract_uniprot_record(path: Path) -> tuple[str, str]:
-    text = path.read_text(encoding="utf-8")
+def extract_uniprot_record(path: str) -> tuple[str, str]:
+    text = read_text(path)
     accession = UNIPROT_ACCESSION_RE.search(text)
     sequence = UNIPROT_SEQUENCE_RE.search(text)
     if not accession or not sequence:
@@ -109,8 +142,8 @@ def extract_uniprot_record(path: Path) -> tuple[str, str]:
     return accession.group(1), "".join(re.findall(r"[A-Z]+", sequence.group(1)))
 
 
-def extract_review_status(path: Path) -> str:
-    match = REVIEW_STATUS_RE.search(path.read_text(encoding="utf-8"))
+def extract_review_status(path: str) -> str:
+    match = REVIEW_STATUS_RE.search(read_text(path))
     if not match:
         raise ValueError(f"No review status found in {path}")
     return match.group(1)
@@ -124,15 +157,6 @@ def latest_goa_date_from_text(text: str) -> str:
     return max((date for date in dates if date), default="")
 
 
-def latest_goa_date(path: Path) -> str:
-    return latest_goa_date_from_text(path.read_text(encoding="utf-8"))
-
-
-def goa_ids(path: Path) -> set[str]:
-    """Return exact GO IDs from a committed QuickGO TSV."""
-    return goa_ids_from_text(path.read_text(encoding="utf-8"))
-
-
 def goa_ids_from_text(text: str) -> set[str]:
     """Return exact GO IDs from QuickGO TSV text."""
     return {
@@ -142,23 +166,9 @@ def goa_ids_from_text(text: str) -> set[str]:
     }
 
 
-@lru_cache(maxsize=None)
 def frozen_goa_blob(relative_path: str, baseline_commit: str) -> bytes:
     """Read a GOA file's bytes from the benchmark's declared baseline commit."""
-    result = subprocess.run(
-        ["git", "show", f"{baseline_commit}:{relative_path}"],
-        cwd=REPO_ROOT,
-        check=False,
-        capture_output=True,
-    )
-    if result.returncode:
-        detail = result.stderr.decode("utf-8", errors="replace").strip()
-        detail = detail or "git show returned no diagnostic"
-        raise RuntimeError(
-            f"Cannot read frozen GOA input {relative_path} at {baseline_commit}: "
-            f"{detail}. Ensure the benchmark baseline commit is available locally."
-        )
-    return result.stdout
+    return git_snapshot(REPO_ROOT, baseline_commit).read_bytes(relative_path)
 
 
 @lru_cache(maxsize=None)
@@ -192,12 +202,11 @@ def rl_quality_rows(
     rows: list[dict[str, Any]] = []
 
     for (organism, gene), source_row in sorted(rl_genes.items()):
-        gene_dir = GENES_DIR / organism / gene
-        prediction_path = gene_dir / f"{gene}-bioreason-rl-predictions.md"
-        review_path = gene_dir / f"{gene}-bioreason-rl-review.md"
-        reference_path = gene_dir / f"{gene}-ai-review.yaml"
-        uniprot_path = gene_dir / f"{gene}-uniprot.txt"
-        goa_path = gene_dir / f"{gene}-goa.tsv"
+        prediction_path = gene_file(organism, gene, "-bioreason-rl-predictions.md")
+        review_path = gene_file(organism, gene, "-bioreason-rl-review.md")
+        reference_path = gene_file(organism, gene, "-ai-review.yaml")
+        uniprot_path = gene_file(organism, gene, "-uniprot.txt")
+        goa_path = gene_file(organism, gene, "-goa.tsv")
         baseline_goa_path = frozen_goa_path(organism, gene, policy)
         baseline_goa_blob = frozen_goa_blob(baseline_goa_path, baseline_commit)
         baseline_goa_text = baseline_goa_blob.decode("utf-8")
@@ -234,7 +243,9 @@ def rl_quality_rows(
                 "reference_sequence_length": len(reference_sequence),
                 "model_version": cohort_policy["model_version"],
                 "export_timestamp": extract_export_date(prediction_path),
-                "current_goa_latest_annotation_date": latest_goa_date(goa_path),
+                "current_goa_latest_annotation_date": latest_goa_date_from_text(
+                    read_text(goa_path)
+                ),
                 "frozen_goa_latest_annotation_date": latest_goa_date_from_text(
                     baseline_goa_text
                 ),
@@ -266,8 +277,7 @@ def rl_quality_rows(
 
 def sft_prediction_rows() -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for path in sorted(GENES_DIR.glob("*/*/*-sft-predictions.yaml")):
-        organism, gene = path.parts[-3], path.parts[-2]
+    for organism, gene, path in glob_genes("*/*/*-sft-predictions.yaml"):
         doc = read_yaml(path)
         predictions = doc.get("predictions", []) or []
         source_versions = sorted(
@@ -284,7 +294,7 @@ def sft_prediction_rows() -> list[dict[str, Any]]:
                 "gene": gene,
                 "uniprot_id": doc.get("id") or gene_review_id(organism, gene),
                 "source_version": source_version,
-                "source_file": rel(path),
+                "source_file": path,
                 "n_predictions": len(predictions),
             }
         )
@@ -293,12 +303,11 @@ def sft_prediction_rows() -> list[dict[str, Any]]:
 
 def sft_narrative_rows() -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for path in sorted(GENES_DIR.glob("*/*/*bioreason-sft-review.md")):
-        organism, gene = path.parts[-3], path.parts[-2]
+    for organism, gene, path in glob_genes("*/*/*bioreason-sft-review.md"):
         correctness, completeness = parse_scores(path)
-        pred_path = GENES_DIR / organism / gene / f"{gene}-sft-predictions.yaml"
+        pred_path = gene_file(organism, gene, "-sft-predictions.yaml")
         uniprot_id = ""
-        if pred_path.exists():
+        if snapshot().is_file(pred_path):
             uniprot_id = str(read_yaml(pred_path).get("id") or "")
         rows.append(
             {
@@ -306,7 +315,7 @@ def sft_narrative_rows() -> list[dict[str, Any]]:
                 "gene": gene,
                 "uniprot_id": uniprot_id or gene_review_id(organism, gene),
                 "source_version": "wanglab/protein_catalogue",
-                "source_file": rel(path),
+                "source_file": path,
                 "correctness": correctness,
                 "completeness": completeness,
             }
@@ -327,7 +336,7 @@ def gogpt_overlap_rows() -> list[dict[str, Any]]:
                 "gene": gene,
                 "uniprot_id": gene_review_id(organism, gene),
                 "source_version": "GO-GPT direct run",
-                "source_file": rel(path),
+                "source_file": path.relative_to(REPO_ROOT).as_posix(),
                 "n_predictions": record["preds"],
                 "goa_overlap": record["goa_overlap"],
                 "post_review_overlap": record["post_review_overlap"],
@@ -396,8 +405,7 @@ def assessment_summary(
     assessments: Counter[str] = Counter()
     statuses: Counter[str] = Counter()
     genes: set[tuple[str, str]] = set()
-    for path in sorted(GENES_DIR.glob(pattern)):
-        organism, gene = path.parts[-3], path.parts[-2]
+    for organism, gene, path in glob_genes(pattern):
         if keys is not None and (organism, gene) not in keys:
             continue
         document = read_yaml(path)
@@ -460,8 +468,7 @@ def argo95_exact_goa_summary(
     cnn_exact = 0
     cnn_other_basis = 0
     cor_in_goa = 0
-    for path in sorted(GENES_DIR.glob("*/*/*-sft-predictions.yaml")):
-        organism, gene = path.parts[-3], path.parts[-2]
+    for organism, gene, path in glob_genes("*/*/*-sft-predictions.yaml"):
         if (organism, gene) not in keys:
             continue
         relative_path = frozen_goa_path(organism, gene, policy)
@@ -506,7 +513,7 @@ def build_metrics(
     performance_rows: list[dict[str, Any]] = []
     per_organism: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for organism, gene in sorted(rl_genes):
-        review_path = GENES_DIR / organism / gene / f"{gene}-bioreason-rl-review.md"
+        review_path = gene_file(organism, gene, "-bioreason-rl-review.md")
         correctness, completeness = parse_scores(review_path)
         if not correctness or not completeness:
             raise ValueError(f"Out-of-range or missing narrative score: {review_path}")
@@ -547,7 +554,7 @@ def build_metrics(
     )
 
     sft_narrative_rows: list[dict[str, Any]] = []
-    for path in sorted(GENES_DIR.glob("*/*/*bioreason-sft-review.md")):
+    for _organism, _gene, path in glob_genes("*/*/*bioreason-sft-review.md"):
         correctness, completeness = parse_scores(path)
         if not correctness or not completeness:
             raise ValueError(f"Out-of-range or missing narrative score: {path}")
@@ -563,8 +570,13 @@ def build_metrics(
     argo95_summary.update(argo95_exact_goa_summary(set(rl_genes), policy))
     argo95_summary["ontology_pair_adjudication"] = ontology_pair_audit_summary()
 
+    review_snapshot = declared_review_snapshot(REPO_ROOT)
     return {
-        "policy_release": read_yaml(POLICY_PATH)["benchmark_release"],
+        "policy_release": policy["benchmark_release"],
+        "review_snapshot": {
+            "commit": review_snapshot.commit,
+            "date": review_snapshot.date,
+        },
         "rl_narrative": rl_summary,
         "sft_narrative_supplement": score_summary(sft_narrative_rows),
         "argo95_sft_terms": argo95_summary,
@@ -590,7 +602,7 @@ def build_metrics(
 
 
 def main(output_dir: Path = PROJECT_DIR) -> None:
-    policy = read_yaml(POLICY_PATH)
+    policy = read_policy()
     rl_genes = read_rl_gene_list()
     quality_rows = rl_quality_rows(rl_genes, policy)
     quality_by_key = {
@@ -614,7 +626,7 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
     benchmark_rows: list[dict[str, Any]] = []
 
     for (organism, gene), row in sorted(rl_genes.items()):
-        review_path = GENES_DIR / organism / gene / f"{gene}-bioreason-rl-review.md"
+        review_path = gene_file(organism, gene, "-bioreason-rl-review.md")
         correctness, completeness = parse_scores(review_path)
         quality = quality_by_key[(organism, gene)]
         benchmark_rows.append(
@@ -624,7 +636,7 @@ def main(output_dir: Path = PROJECT_DIR) -> None:
                 "gene": gene,
                 "uniprot_id": row.get("uniprot_id", ""),
                 "source_version": "app.bioreason.net/RL",
-                "source_file": rel(review_path),
+                "source_file": review_path,
                 "reason_included": row.get("reason_included", ""),
                 "correctness": correctness,
                 "completeness": completeness,

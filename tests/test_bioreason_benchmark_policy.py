@@ -5,6 +5,7 @@ import csv
 import importlib.util
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from ai_gene_review.bioreason_ontology import (
     frozen_go_sha256,
     get_go_adapter,
 )
+from ai_gene_review.source_tree import commit_date, declared_review_snapshot
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -98,19 +100,20 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
 
 
-def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> None:
+def test_argo95_exact_goa_reads_the_declared_baseline_commit(
+    forbid_working_tree_genes: None,
+) -> None:
     module = _load_sidecar_module()
     policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
     baseline = policy["baseline_commit"]
 
-    frozen = module.frozen_goa_ids("genes/ECOLI/SlyD/SlyD-goa.tsv", baseline)
+    slyd = "genes/ECOLI/SlyD/SlyD-goa.tsv"
+    frozen = module.frozen_goa_ids(slyd, baseline)
     assert {"GO:0016853", "GO:0046872", "GO:0051082"} <= frozen
+    # The review snapshot's refreshed SlyD GOA dropped these rows, so the
+    # frozen ARGO95 numbers below depend on reading baseline_commit specifically.
+    assert "GO:0051082" not in module.goa_ids_from_text(module.read_text(slyd))
 
-    def reject_working_tree_goa(_path: Path) -> set[str]:
-        raise AssertionError("frozen metric consulted a working-tree GOA snapshot")
-
-    for helper in ("goa_ids", "latest_goa_date", "sha256"):
-        monkeypatch.setattr(module, helper, reject_working_tree_goa)
     summary = module.argo95_exact_goa_summary(
         set(module.read_rl_gene_list()), policy
     )
@@ -203,7 +206,9 @@ def test_argo139_truncated_sequences_are_flagged_not_excluded() -> None:
     )
 
 
-def test_generated_sidecars_match_current_sources(tmp_path: Path) -> None:
+def test_generated_sidecars_match_review_snapshot(
+    tmp_path: Path, forbid_working_tree_genes: None
+) -> None:
     module = _load_sidecar_module()
     module.main(tmp_path)
 
@@ -215,8 +220,37 @@ def test_generated_sidecars_match_current_sources(tmp_path: Path) -> None:
     ):
         assert (tmp_path / filename).read_bytes() == (PROJECT_DIR / filename).read_bytes(), (
             f"{filename} is stale; run "
-            "`just refresh-bioreason-benchmark-sidecars` from the repository root"
+            "`just refresh-benchmark-snapshot` from the repository root"
         )
+
+
+def test_review_snapshot_is_dated_and_recorded_in_derived_reports() -> None:
+    snapshot = declared_review_snapshot(REPO_ROOT)
+    assert snapshot.date == commit_date(REPO_ROOT, snapshot.commit)
+    recorded = {"commit": snapshot.commit, "date": snapshot.date}
+    metrics = json.loads((PROJECT_DIR / "benchmark-metrics.json").read_text())
+    protnlm = json.loads(
+        (REPO_ROOT / "projects/PROTNLM_EVALUATION/benchmark-summary.json").read_text()
+    )
+    assert metrics["review_snapshot"] == recorded
+    assert protnlm["review_snapshot"] == recorded
+    supplement = (PROJECT_DIR / "article" / "supplemental-benchmark-details.md").read_text()
+    assert f"as of {snapshot.date} (commit `{snapshot.short}`)" in supplement
+
+
+def test_headline_cli_lists_the_snapshot_numbers() -> None:
+    result = subprocess.run(
+        [sys.executable, "scripts/benchmark_snapshot_headlines.py", "--repo-root", str(REPO_ROOT)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    lines = result.stdout.splitlines()
+    assert "bioreason.supplement_gogpt_overlap_300.n_genes: 296" in lines
+    assert "bioreason.supplement_gogpt_overlap_300.core.n_overlap: 355" in lines
+    assert "protnlm.go_counts.COR: 52" in lines
+    assert not any("review_snapshot" in line for line in lines)
 
 
 def test_generated_quality_sidecar_has_expected_denominators() -> None:

@@ -3,6 +3,8 @@
 Provides automatic VCR cassette recording/replay for integration tests.
 """
 
+import builtins
+import os
 from pathlib import Path
 
 import pytest
@@ -10,6 +12,7 @@ import vcr
 
 
 CASSETTES_DIR = Path(__file__).parent / "cassettes"
+WORKING_TREE_GENES = Path(__file__).resolve().parents[1] / "genes"
 
 
 def pytest_addoption(parser):
@@ -65,3 +68,37 @@ def _vcr_cassette(request):
 
     with my_vcr.use_cassette(cassette_path):
         yield
+
+
+@pytest.fixture
+def forbid_working_tree_genes(monkeypatch):
+    """Fail if the code under test reads anything under the working-tree ``genes/``.
+
+    Benchmark generators must read gene inputs at the declared review snapshot
+    commit, so an ordinary curation edit to a gene review cannot stale them.
+    """
+
+    def check(path) -> None:
+        if Path(os.path.abspath(os.fspath(path))).is_relative_to(WORKING_TREE_GENES):
+            raise AssertionError(f"working-tree gene file consulted: {path}")
+
+    def guarded_method(name: str):
+        original = getattr(Path, name)
+
+        def wrapper(self, *args, **kwargs):
+            check(self)
+            return original(self, *args, **kwargs)
+
+        return wrapper
+
+    for name in ("open", "read_text", "read_bytes", "exists", "is_file", "glob", "iterdir"):
+        monkeypatch.setattr(Path, name, guarded_method(name))
+
+    original_open = builtins.open
+
+    def guarded_open(file, *args, **kwargs):
+        if isinstance(file, (str, os.PathLike)):
+            check(file)
+        return original_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", guarded_open)

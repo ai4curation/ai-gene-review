@@ -2,6 +2,9 @@
 
 Narrative categories are manually indexed from the actual reviews, never inferred
 from occurrences of category names in prose. A review can contain multiple categories.
+Inputs (scope, narrative index, gene reviews) are read at the declared benchmark
+``review_snapshot_commit``, not from the working tree, so ordinary curation cannot
+stale the report. Refresh with ``just refresh-benchmark-snapshot``.
 Run from any directory with ``uv run python path/to/build_benchmark_summary.py``.
 """
 
@@ -14,24 +17,33 @@ from typing import Any
 
 import yaml
 
+from ai_gene_review.source_tree import (
+    ReviewSnapshot,
+    SourceTree,
+    declared_review_snapshot,
+    review_snapshot_tree,
+)
+
 CODES = ("COR", "CNN", "LSP", "UNC", "NPI", "PLI", "REP")
 PUBLIC = "https://github.com/ai4curation/ai-gene-review/blob/main/"
 
 
-def collect(root: Path) -> dict[str, Any]:
+def collect(tree: SourceTree) -> dict[str, Any]:
     """Collect exact-accession results, retaining explicit zero-output review records.
 
     Overlapping cohorts do not duplicate the total. ``go_review_files`` remains a
     legacy alias for all ``prediction_review_files``, including empty reviews.
     """
-    base = root / "projects/PROTNLM_EVALUATION"
-    scope = list(csv.DictReader((base / "family-curation/scope.csv").open()))
+    base = "projects/PROTNLM_EVALUATION"
+    scope = list(
+        csv.DictReader(tree.read_text(f"{base}/family-curation/scope.csv").splitlines())
+    )
     targets = {r["accession"] for r in scope if r["role"] == "prediction_target"}
     go_counts: Counter[str] = Counter({c: 0 for c in CODES})
     by_accession: dict[str, Counter[str]] = {}
     zero_go_reviews: list[dict[str, str]] = []
-    for path in sorted((root / "genes").glob("*/*/*-protnlm-predictions-review.yaml")):
-        doc = yaml.safe_load(path.read_text())
+    for path in tree.glob("genes/*/*/*-protnlm-predictions-review.yaml"):
+        doc = yaml.safe_load(tree.read_text(path))
         if doc["id"] not in targets:
             continue
         assert doc["id"] not in by_accession, f"Duplicate prediction review: {path}"
@@ -48,9 +60,9 @@ def collect(root: Path) -> dict[str, Any]:
             ), f"Completed zero-output review with description required: {path}"
             zero_go_reviews.append(
                 dict(
-                    gene="/".join(path.parts[-3:-1]),
+                    gene="/".join(path.split("/")[1:3]),
                     accession=doc["id"],
-                    review_file=path.relative_to(root).as_posix(),
+                    review_file=path,
                 )
             )
         counts: Counter[str] = Counter()
@@ -61,16 +73,16 @@ def collect(root: Path) -> dict[str, Any]:
             counts[category] += 1
         by_accession[doc["id"]] = counts
         go_counts.update(counts)
-    registry = yaml.safe_load((base / "narrative-review-index.yaml").read_text())
+    registry = yaml.safe_load(tree.read_text(f"{base}/narrative-review-index.yaml"))
     narratives = []
     seen: set[str] = set()
     for entry in registry["reviews"]:
-        path = root / entry["review_file"]
-        assert path.is_file(), path
+        path = entry["review_file"]
+        assert tree.is_file(path), path
         assert (
-            hashlib.sha256(path.read_bytes()).hexdigest() == entry["review_sha256"]
+            hashlib.sha256(tree.read_bytes(path)).hexdigest() == entry["review_sha256"]
         ), f"Narrative index needs review: {path}"
-        gene = "/".join(path.parts[-3:-1])
+        gene = "/".join(path.split("/")[-3:-1])
         assert gene not in seen, gene
         seen.add(gene)
         accessions = {
@@ -85,8 +97,8 @@ def collect(root: Path) -> dict[str, Any]:
         assert set(categories) <= set(CODES) | {"SUPPORTED"}, gene
         narratives.append(dict(gene=gene, accession=next(iter(accessions)), **entry))
     # A new function sidecar must enter the index; unrelated genes stay out of scope.
-    for path in (root / "genes").glob("*/*/*-protnlm-function-review.md"):
-        gene = "/".join(path.parts[-3:-1])
+    for path in tree.glob("genes/*/*/*-protnlm-function-review.md"):
+        gene = "/".join(path.split("/")[1:3])
         if any(
             r["role"] == "prediction_target"
             and r["species"] + "/" + r["gene_symbol"] == gene
@@ -134,10 +146,13 @@ def collect(root: Path) -> dict[str, Any]:
     )
 
 
-def write_report(root: Path, data: dict[str, Any]) -> None:
+def write_report(root: Path, data: dict[str, Any], snapshot: ReviewSnapshot) -> None:
     """Write a linked report with explicit, non-interchangeable denominators."""
     base = root / "projects/PROTNLM_EVALUATION"
-    (base / "benchmark-summary.json").write_text(json.dumps(data, indent=2) + "\n")
+    summary = {"review_snapshot": {"commit": snapshot.commit, "date": snapshot.date}}
+    (base / "benchmark-summary.json").write_text(
+        json.dumps({**summary, **data}, indent=2) + "\n"
+    )
     zero_go_count = data["records_with_zero_go_predictions"]
     zero_go_noun = "record" if zero_go_count == 1 else "records"
     assessed_count = data["records_with_go_assessments"]
@@ -151,6 +166,7 @@ def write_report(root: Path, data: dict[str, Any]) -> None:
         "[Project overview](../PROTNLM_EVALUATION.md) · [Source counts](benchmark-summary.json) · "
         "[Summary generator](build_benchmark_summary.py) · [Narrative category index](narrative-review-index.yaml)",
         "",
+        f"Counts are a dated snapshot: as of {snapshot.date} (commit `{snapshot.short}`). "
         f"The scope contains **{data['distinct_records']} distinct protein records**, including "
         f"**{data['prediction_targets']} prediction targets** and 40 paired human reference records. "
         "Overlapping selections are counted once in the combined totals. These purposive, retrospective "
@@ -253,8 +269,8 @@ def write_report(root: Path, data: dict[str, Any]) -> None:
 
 if __name__ == "__main__":
     repository = Path(__file__).resolve().parents[2]
-    result = collect(repository)
-    write_report(repository, result)
+    result = collect(review_snapshot_tree(repository))
+    write_report(repository, result, declared_review_snapshot(repository))
     print(
         json.dumps(
             {

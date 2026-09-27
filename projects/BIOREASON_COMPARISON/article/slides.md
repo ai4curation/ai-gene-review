@@ -213,7 +213,7 @@ TOR1 · NOTCH1 · PTEN · EGFR · spo0A · (informative family names: Uggt1, KAR
 
 ## Supplemental review: GOA agreement ≠ biological validity
 
-GO-GPT run directly on 296 canonical genes; overlap measured against three progressively stricter references:
+GO-GPT run directly on 296 canonical genes (as of 2026-09-27, commit c7551cb3db); overlap measured against three progressively stricter references:
 
 ![h:380](figures/three_level_overlap.png)
 
