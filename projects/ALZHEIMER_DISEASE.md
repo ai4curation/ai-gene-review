@@ -667,3 +667,7 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleRe
   processing, gamma-secretase-mediated intramembrane proteolysis,
   apolipoprotein/lipoprotein transport, microglial lipid-debris sensing, tau
   microtubule biology, or endocytic adaptor trafficking.
+
+## Slides
+
+- [Slides](ALZHEIMER_DISEASE/slides/ALZHEIMER_DISEASE-slides.html) (Marp source: [ALZHEIMER_DISEASE-slides.md](ALZHEIMER_DISEASE/slides/ALZHEIMER_DISEASE-slides.md)) — AI generated

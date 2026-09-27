@@ -37,7 +37,7 @@ Reviewing every GO annotation on 20 shared autoimmune risk genes
 ## Bottom line
 
 - 20 immune-regulation genes carry risk variants for **several autoimmune diseases at once** (T1D, RA, MS, IBD, SLE).
-- We reviewed **all 2,291 existing GO annotations**; every row is actioned and all 20 reviews validate.
+- We reviewed **2,291 GO annotation rows** (2,275 existing plus 16 proposed NEW); every row is actioned and all 20 reviews validate.
 - **1,464 accepted**, **174 removed** (144 of them generic `protein binding`, mostly on STAT3 and SMAD3), **16 NEW**. Review files are not all finalised: 9 COMPLETE, 6 DRAFT, 5 IN_PROGRESS.
 
 ---

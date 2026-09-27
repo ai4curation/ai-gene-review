@@ -90,3 +90,7 @@ The cGAS-STING pathway is a critical innate immune signaling system that detects
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
+
+## Slides
+
+- [Slides](CGAS_STING_PATHWAY/slides/CGAS_STING_PATHWAY-slides.html) (Marp source: [CGAS_STING_PATHWAY-slides.md](CGAS_STING_PATHWAY/slides/CGAS_STING_PATHWAY-slides.md)) — AI generated

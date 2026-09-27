@@ -2894,10 +2894,9 @@ links preserved in the checklist below. Each review assesses the gene product's
 molecular function and GO annotations; a disease link alone does not establish
 a function. Reviews run one gene per PR in evidence-priority order, and existing
 reviews get a fresh audit (716 of the 2,876 genes now have a human review in the
-repo, mostly from earlier projects). As of 2026-09-26, seven gene PRs have
-merged (A4GALT, AARS1, AARS2, AASS, ABCA3, ABCA4, ABCC6; 323 annotations
-reviewed), but only AARS2 is ticked below, because the coordinator ticks a gene
-only after verifying its merge, and the progress log has not caught up.
+repo, mostly from earlier projects). The 2026-09-26 progress log records 14
+merged gene PRs (A4GALT through ACADVL; 607 annotations reviewed), each ticked
+in the checklist below; later merges are added there as they are recorded.
 
 ## Overview
 
@@ -5916,3 +5915,7 @@ Initial source-based seed only. No gene-level curation sign-offs were made.
 
 The review campaign started with A4GALT, AARS1, and AARS2. Each gene receives a
 separate PR and remains unchecked until its review and PR follow-up are complete.
+
+## Slides
+
+- [Slides](CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.html) (Marp source: [CLINGEN_MENDELIAN-slides.md](CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.md)) — AI generated

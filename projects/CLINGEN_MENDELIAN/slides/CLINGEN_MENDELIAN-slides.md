@@ -38,7 +38,7 @@ A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
 
 - Seeded from the **2026-09-25 ClinGen Gene–Disease Validity** export: every gene with a Definitive, Strong, Moderate or Limited association, **2,876 genes**.
 - Each gene gets its own PR reviewing its **molecular function and GO annotations**; a disease link alone does not establish a function.
-- **7 gene PRs merged** so far (A4GALT → ABCC6, 323 annotations); the checklist ticks only AARS2 so far because ticking waits for coordinator verification.
+- **14 gene PRs merged** by the 2026-09-26 progress log (A4GALT → ACADVL, 607 annotations), each ticked in the checklist.
 
 ---
 
@@ -56,11 +56,11 @@ A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
 
 ---
 
-## First seven genes: actions
+## First fourteen genes: actions
 
 ![h:470](clingen-actions-chart.svg)
 
-<span class="small">All 18 REMOVEs are generic <code>protein binding</code> (17 on ABCC6, 1 on AARS2). Justified UNDECIDED calls are kept where evidence is inaccessible, e.g. 5 on AASS.</span>
+<span class="small">All 26 REMOVEs are generic <code>protein binding</code> (17 on ABCC6). Justified UNDECIDED calls are kept where evidence is inaccessible, e.g. 5 on AASS and 6 on ACADVL.</span>
 
 ---
 
@@ -75,8 +75,7 @@ A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
 ## Status and next steps
 
 - ✅ Source archived and 2,876-gene inventory seeded (PR #3126).
-- ✅ Merged gene PRs: A4GALT #3127, AARS2 #3128, AARS1 #3129, ABCA4 #3132, AASS #3133, ABCA3 #3134, ABCC6 #3138.
-- ⬜ In progress: ABCB4, ABCC8; next unassigned Definitive gene ABCC9. Three reviewers run concurrently.
-- ⬜ Tick merged genes in the checklist and progress log.
+- ✅ Merged and recorded: A4GALT #3127, AARS2 #3128, AARS1 #3129, ABCA4 #3132, AASS #3133, ABCA3 #3134, ABCB4 #3135, ABCC6 #3138, ABCC9 #3148, ACAD8 #3151, ACAD9 #3152, ACADSB #3154, ACADS #3155, ACADVL #3157.
+- ⬜ Next batch (ABCC8 → ACTA2) is open or awaiting recording; see the progress log for live state.
 
 **Read more:** `projects/CLINGEN_MENDELIAN.md` · `projects/CLINGEN_MENDELIAN/review-progress.md`

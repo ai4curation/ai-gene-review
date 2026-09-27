@@ -37,7 +37,7 @@ Reviewing every GO annotation on 34 human genes behind amyloid, tau, lipid and m
 ## Bottom line
 
 - AD genetics converges on **APP processing**, **tau**, **lipid transport**, **endocytosis** and **microglial immunity**.
-- We reviewed **all 4,336 existing GO annotations** on **34 human genes**; every review is **COMPLETE** and validates.
+- We reviewed **4,336 GO annotation rows** (4,332 existing plus 4 proposed NEW) on **34 human genes**; every review is **COMPLETE** and validates.
 - **54% accepted as core**, 630 rows marked over-annotated, only **4 REMOVE**: abstract-only experimental rows were left **UNDECIDED** (34) rather than overruled. The proposed pathway modules are **not built yet**.
 
 ---

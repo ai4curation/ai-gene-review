@@ -91,3 +91,7 @@ Four kinases sense different stresses:
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
+
+## Slides
+
+- [Slides](INTEGRATED_STRESS_RESPONSE/slides/INTEGRATED_STRESS_RESPONSE-slides.html) (Marp source: [INTEGRATED_STRESS_RESPONSE-slides.md](INTEGRATED_STRESS_RESPONSE/slides/INTEGRATED_STRESS_RESPONSE-slides.md)) — AI generated

@@ -93,3 +93,7 @@ The NLRP3 inflammasome is a multiprotein complex that activates inflammatory cas
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
+
+## Slides
+
+- [Slides](NLRP3_INFLAMMASOME/slides/NLRP3_INFLAMMASOME-slides.html) (Marp source: [NLRP3_INFLAMMASOME-slides.md](NLRP3_INFLAMMASOME/slides/NLRP3_INFLAMMASOME-slides.md)) — AI generated
