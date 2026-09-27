@@ -128,3 +128,33 @@ are the eight known missing publication records (reported repeatedly where cited
 and the intentional unused historical research-report advisory. History validation,
 rendering, source preservation and all 50 cached quote occurrences passed. The
 two external full-text snippets remain explicitly distinguished from local caches.
+
+## 2026-09-27 source4 cache closure
+
+This bounded follow-up starts from PR #3262 head `d942abff69f34812fb01426830a1dfb77384e34e`, confirmed by the live PR API and byte-for-byte comparison of all six gene files. The prior release-evidence and title corrections are retained. All 50 annotation objects, actions and evidence/qualifier fields, the two cores, and all 40 reference identifiers/titles are unchanged. Only seven reference assessments and two local full-text availability flags change. No NEW annotation or new functional assertion is added.
+
+The coordinator imported seven exact normal source4 `fetch-pmid` records after verifying the run/head, artifact hash, raw outputs and source identities. Run `36294925088` and import receipt `tmp/source4-canonical-import-receipt.json` document the recovery; no publication bytes were edited. These seven paths are absent at the exact PR baseline and are included with this follow-up:
+
+| PMID | Recovered local scope | Check and interpretation |
+| --- | --- | --- |
+| 10358004 | Abstract only | Human RARS interaction and reduced apparent tRNA Km with unchanged kcat corroborate substrate recruitment; no aminoacyl-transfer chemistry is assigned to AIMP1. |
+| 12237313 | Abstract only | The normal abstract confirms dose-dependent migration versus apoptosis. Earlier external full Methods/Results supply the bovine recipient, chick CAM and mouse Matrigel boundaries. |
+| 17001013 | Abstract only | The record confirms the hormonal study; earlier external reading establishes the mouse/rodent experimental scope. The PMC link does not mean full text was cached. |
+| 17525271 | Abstract only | The gp96/KDELR1 interaction and retention study is recovered. Earlier external HeLa Figure 2 evidence remains the source for ER/Golgi fractionation and imaging; membrane topology remains unresolved. |
+| 25288775 | Full text | Human subcomplex structure, AIMP1 M1 deletion/M2 helix-swap Results and AIMP2 linkage corroborate scaffold work. The main article directs detailed procedures to supplementary Methods; not every supplementary panel is claimed recovered. |
+| 29379495 | Full text | Mouse BMDC and influenza experiments are now directly readable locally. The Methods specify mouse backgrounds and H3N2 challenge; human TCGA survival associations are a distinct evidence type. The existing rat-source uncertainty remains unresolved. |
+| 39542129 | Abstract only | Human AIMP1/AIMP2/RARS1 leucine-zipper assembly corroborates the scaffold mechanism. Complex-state contacts do not negate free full-length p43 dimerization or impose fixed stoichiometry on every MSC. |
+
+The two full-text records now have `full_text_unavailable: false`; the five abstract-only flags remain true. The prior exact `T(H)1` title correction for 29379495 matches the newly imported normal cache. Existing externally read full-text excerpts remain separately identified; source4 does not convert those other records into full local articles. No recovered evidence contradicts the existing annotation decisions or cores.
+
+The explicit PMID/URL census has 22 records, with PMID:10850427 still pending source9 after the prior terminal failure in `/tmp/AIMP1-10850427-fetch.log`. No duplicate request for that source was launched. A deeper check of the immutable Falcon bibliography found three DOI-only citations that the earlier PMID-only scan missed:
+
+| Provider DOI | Independently verified primary identifier | Scope of this check |
+| --- | --- | --- |
+| 10.1038/s41467-024-50730-1 | [PMID:39075051](https://pubmed.ncbi.nlm.nih.gov/39075051/), *Structural basis of tRNA recognition by the widespread OB fold* | Identity verified; the original publisher Results describe bacterial Trbp111 and yeast Arc1p. The provider's human-AIMP1 framing is not used as direct human structural evidence. |
+| 10.3389/fimmu.2024.1423510 | [PMID:38975338](https://pubmed.ncbi.nlm.nih.gov/38975338/), *The mARS complex: a critical mediator of immune regulation and homeostasis* | Identity verified as a review, rather than a new direct AIMP1 experiment. |
+| 10.7150/ijbs.101127 | [PMID:39494335](https://pubmed.ncbi.nlm.nih.gov/39494335/), *AIMP1-Derived Peptide Secreted from Hair Follicle Stem Cells Promotes Hair Growth by Activating Dermal Papilla Cells* | Identity verified; no new peptide/hair-growth annotation is manufactured during this cache closure. |
+
+Those three normal caches remain absent after one ordinary fetch attempt terminated with DNS failures, cached 0/3 and exit 1 (`/tmp/AIMP1-provider-doi-fetch.log`). The remaining four gates are **10850427, 38975338, 39075051 and 39494335**. Only 10850427 is already owned by source9; the other three require future recovery, without changing an active dispatched request set. The full provider-inclusive census therefore has **25 distinct PMIDs**, not 22. This corrects the earlier census claim without editing the genuine generated report or treating its citations as automatically verified biological assertions. All ten cited Reactome records are present. The review remains DRAFT, with the remaining source gates and final validation, quote, history, rendering and immutable/hash checks recorded in the source4 follow-up manifest.
+
+Full targeted validation exited 0 with all validations passed. Its two warning categories are the unavailable PMID:10850427 cited by the YAML and the intentionally unused genuine Falcon report. The validator scans the curated YAML and pathway Markdown; the separate recursive citation census also includes notes and DOI-only provider citations, so the four-source gate above is broader than the validator warning. The 62 ordinary cached PMID quotation occurrences pass case-sensitive whitespace-normalized substring checks; the three remaining ordinary PMID quotations all cite 10850427 and await its normal cache. The existing two external full-text snippets and the immutable UniProt quote remain unchanged.
