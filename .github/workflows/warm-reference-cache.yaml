@@ -1,155 +1,206 @@
----
-name: Warm reference cache
-
-# Keeps the committed reference cache (publications/) complete so the full
-# `just validate-all` reference phase stays cache-bound instead of re-fetching
-# references from PubMed/providers on every run. Runs weekly (newly-added
-# references are fetched; an unchanged cache is a no-op) and on demand.
-
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 1"  # Mondays 04:00 UTC, ahead of the weekly validate-all
-  workflow_dispatch:
-
+name: ClinGen reference recovery batch 4
+run-name: Reference recovery batch 4 at ${{ github.ref_name }} (${{ github.sha }})
+"on":
+  workflow_dispatch: null
+permissions:
+  contents: read
 concurrency:
-  group: warm-reference-cache
-  cancel-in-progress: true
-
+  group: clingen-reference-recovery4-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  warm-reference-cache:
+  recover:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'ai4curation/ai-gene-review' &&
+      github.ref == 'refs/heads/cmungall/clingen-reference-fetch4-20260927'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    permissions:
-      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
-      # with the ai4c-agent App token below.
-      contents: read
-
+    timeout-minutes: 120
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    - name: Checkout the dispatched commit
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ github.sha }}
+        fetch-depth: 1
+        persist-credentials: false
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - name: Set isolated runtime paths after runner initialization
+      run: |
+        python - <<'PYENV'
+        from pathlib import Path
+        import os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery4'
+        with Path(os.environ['GITHUB_ENV']).open('a') as out:
+            out.write('UV_CACHE_DIR='+str(root/'uv-cache')+'\n')
+            out.write('UV_PROJECT_ENVIRONMENT='+str(root/'venv')+'\n')
+        PYENV
+    - name: Initialize fixed source requests and provenance
+      run: |
+        python - <<'PYINIT'
+        from pathlib import Path
+        import json, os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery4'/'artifact'
+        root.mkdir(parents=True)
+        requests_text = '[\n  {\n    "kind": "pmid",\n    "id": "10358004",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:10358004",\n        "title": "Precursor of pro-apoptotic cytokine modulates aminoacylation activity of tRNA synthetase."\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 15\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "11854172",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:11854172",\n        "title": "Aire deficient mice develop multiple features of APECED phenotype and show altered immune response."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 35\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 41\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "12237313",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:12237313",\n        "title": "Dose-dependent biphasic activity of tRNA synthetase-associating factor, p43, in angiogenesis."\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 41\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "14734522",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:14734522",\n        "title": "AIRE functions as an E3 ubiquitin ligase."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 51\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "15105377",\n    "mode": "fetch_missing",\n    "genes": [\n      "AGO2"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AGO2/AGO2-deep-research-falcon.md",\n        "type": "provider_typed_pubmed_id",\n        "line": 16\n      },\n      {\n        "path": "genes/human/AGO2/AGO2-deep-research-falcon.md",\n        "type": "provider_typed_pubmed_id",\n        "line": 45\n      },\n      {\n        "path": "genes/human/AGO2/AGO2-deep-research-falcon.md",\n        "type": "provider_typed_pubmed_id",\n        "line": 105\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "15150263",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:15150263",\n        "title": "Subcellular expression of autoimmune regulator is organized in a spatiotemporal manner."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 51\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "15649436",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:15649436",\n        "title": "Mapping DNA-binding domains of the autoimmune regulator protein."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 22\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "15649886",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:15649886",\n        "title": "NMR structure of the first PHD finger of autoimmune regulator protein (AIRE1). Insights into autoimmune polyendocrinopathy-candidiasis-ectodermal dystrophy (APECED) disease."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 51\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "17001013",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:17001013",\n        "title": "Hormonal activity of AIMP1/p43 for glucose homeostasis."\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 43\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "17525271",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:17525271",\n        "title": "Aminoacyl-tRNA synthetase-interacting multifunctional protein 1/p43 controls endoplasmic reticulum retention of heat shock protein gp96: its pathological implications in lupus-like autoimmune diseases."\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 31\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "19015306",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:19015306",\n        "title": "Aire controls the differentiation program of thymic epithelial cells in the medulla for the establishment of self-tolerance."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 36\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 45\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "19923453",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:19923453",\n        "title": "Autoimmune regulator deficiency results in decreased expression of CCR4 and CCR7 ligands and in delayed migration of CD4+ thymocytes."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 37\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 45\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "22310661",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:22310661",\n        "title": "Unmodified histone H3K4 and DNA-dependent protein kinase recruit autoimmune regulator to target genes."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 23\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "23746446",\n    "mode": "fetch_missing",\n    "genes": [\n      "AGO2"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AGO2/AGO2-deep-research-falcon.md",\n        "type": "provider_typed_pubmed_id",\n        "line": 16\n      },\n      {\n        "path": "genes/human/AGO2/AGO2-deep-research-falcon.md",\n        "type": "provider_typed_pubmed_id",\n        "line": 45\n      },\n      {\n        "path": "genes/human/AGO2/AGO2-deep-research-falcon.md",\n        "type": "provider_typed_pubmed_id",\n        "line": 105\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "23993652",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:23993652",\n        "title": "Extrathymic Aire-expressing cells are a distinct bone marrow-derived population that induce functional inactivation of CD4+ T cells."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 38\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 43\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "25288775",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:25288775",\n        "title": "Structure of the ArgRS-GlnRS-AIMP1 complex and its implications for mammalian translation."\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 17\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "29379495",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:29379495",\n        "title": "AIMp1 Potentiates TH1 Polarization and Is Critical for Effective Antitumor and Antiviral Immunity."\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 45\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "34523057",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP2"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP2/AIMP2-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:34523057",\n        "title": "Knockdown of Golgi Stress-Responsive Caspase-2 Ameliorates HLD17-Associated AIMP2 Mutant-Mediated Inhibition of Oligodendroglial Cell Morphological Differentiation."\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 35\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 164\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "35133502",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP2"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP2/AIMP2-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:35133502",\n        "title": "Human lysyl-tRNA synthetase evolves a dynamic structure that can be stabilized by forming complex."\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 35\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 91\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "35546148",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP2"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP2/AIMP2-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:35546148",\n        "title": "AIMP2-DX2 provides therapeutic interface to control KRAS-driven tumorigenesis."\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 35\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 153\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "38260362",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:38260362",\n        "title": "A Germinal Center Checkpoint of AIRE in B Cells Limits Antibody Diversification."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 41\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "38480882",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:38480882",\n        "title": "AIRE relies on Z-DNA to flag gene targets for thymic T cell tolerization."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 23\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "38662103",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIPL1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIPL1/AIPL1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 39\n      },\n      {\n        "path": "genes/human/AIPL1/AIPL1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 71\n      },\n      {\n        "path": "genes/human/AIPL1/AIPL1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 74\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "39026984",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIPL1"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIPL1/AIPL1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 39\n      },\n      {\n        "path": "genes/human/AIPL1/AIPL1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 72\n      },\n      {\n        "path": "genes/human/AIPL1/AIPL1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 75\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "39169234",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIRE"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:39169234",\n        "title": "Mechanism for controlled assembly of transcriptional condensates by Aire."\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 23\n      },\n      {\n        "path": "genes/human/AIRE/AIRE-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 59\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "39542129",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP1",\n      "AIMP2"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:39542129",\n        "title": "Assembly of the Human Multi-tRNA Synthetase Complex Through Leucine Zipper Motifs."\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 23\n      },\n      {\n        "path": "genes/human/AIMP1/AIMP1-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 55\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:39542129",\n        "title": "Assembly of the Human Multi-tRNA Synthetase Complex Through Leucine Zipper Motifs."\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 35\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 98\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 100\n      }\n    ]\n  },\n  {\n    "kind": "pmid",\n    "id": "42719951",\n    "mode": "fetch_missing",\n    "genes": [\n      "AIMP2"\n    ],\n    "citations": [\n      {\n        "path": "genes/human/AIMP2/AIMP2-ai-review.yaml",\n        "type": "top_level_reference",\n        "reference_id": "PMID:42719951",\n        "title": "Newly identified human aminoacyl-tRNA synthetase complex interacting multifunctional protein 2 (AIMP2) loss-of-function mutations cause neurodevelopmental defects linked to cell death in a zebrafish model."\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 35\n      },\n      {\n        "path": "genes/human/AIMP2/AIMP2-notes.md",\n        "type": "notes_typed_pmid",\n        "line": 169\n      }\n    ]\n  }\n]\n'
+        provenance_text = '{\n  "collected_utc": "2026-09-27T04:31:13.649543+00:00",\n  "base_main": "3e4b386077392a633b451112065243c8577d132b",\n  "method": "Explicit PMID sets checked against frozen manifest fields and typed citation identities; no free-standing number or Reactome suffix extraction.",\n  "gene_sources": {\n    "AIMP1": {\n      "source_files": [\n        {\n          "path": "genes/human/AIMP1/AIMP1-ai-review.yaml",\n          "bytes": 76507,\n          "sha256": "e0679eb8b046334eeabb3351cf92baf02d0a9ea8ecf8412bf2a4a3cea685d910",\n          "git_blob_sha": "fafc1ebc71aeb3fbcb195c1591e68e4cc0262daa"\n        },\n        {\n          "path": "genes/human/AIMP1/AIMP1-notes.md",\n          "bytes": 14813,\n          "sha256": "953cf46d624599be76882926661fdc69ec8a66a16e254e02d30fb1f9e0f84444",\n          "git_blob_sha": "4a2ea6926b721a30c0b9492b1aa3541ccbdda3c5"\n        }\n      ],\n      "normal_fetch_logs": [\n        {\n          "path": "/tmp/AIMP1-additional-cache-attempt.log",\n          "bytes": 1402,\n          "sha256": "81d3d28041e5712217efd47b2ab598166a84d498419019143448c2fc7e90a956",\n          "git_blob_sha": "d35b416d6075060f9ccf22a85dd3c4cf7324e718"\n        },\n        {\n          "path": "/tmp/AIMP2-2024-source-fetch.log",\n          "bytes": 668,\n          "sha256": "1f988f985e373a59b48e9b11af82b522a6c25f414af08d6a1f6d5313f5fbe138",\n          "git_blob_sha": "9ad54c1f31fbce48dfd31b2c8432715351d76f59"\n        }\n      ],\n      "fetch_status": "documented_normal_fetch_DNS_failures",\n      "citation_scope": "authored review/notes citations",\n      "frozen_manifest": {\n        "path": "/tmp/AIMP1-final-manifest.json",\n        "bytes": 4781,\n        "sha256": "1fad1eb5b97ec5dc633188df7d11cb830557e89575277c43bc050a8830008130",\n        "git_blob_sha": "bd559b42c76747392982a8f7236fcb2feecaca32"\n      }\n    },\n    "AIMP2": {\n      "source_files": [\n        {\n          "path": "genes/human/AIMP2/AIMP2-ai-review.yaml",\n          "bytes": 91539,\n          "sha256": "4584084b10342ad1f5f5ede6fc4a2f0d027e2f6fae3fbbaa8ad50b22218b8a57",\n          "git_blob_sha": "322851f8cd107247347bcd60385937d6b3c5a1a1"\n        },\n        {\n          "path": "genes/human/AIMP2/AIMP2-notes.md",\n          "bytes": 14140,\n          "sha256": "46c66376508dcd2ef1748ef71f90d7177f1009da44e158c51dd0db8c239fa6e1",\n          "git_blob_sha": "3ceb47a7ee7d250d7f3213a7c692bac816de7b4b"\n        }\n      ],\n      "normal_fetch_logs": [\n        {\n          "path": "/tmp/AIMP2-new-source-fetch.log",\n          "bytes": 825,\n          "sha256": "bc75a413659cc236ac8e8c43b52f02fa578945d477a9e4ed850903d37b9cf683",\n          "git_blob_sha": "01479d11625fbdfb7d62c7a7e9bec63533db6e0b"\n        },\n        {\n          "path": "/tmp/AIMP2-additional-source-fetch.log",\n          "bytes": 825,\n          "sha256": "88fe137bf366f1243ee19914e5706d492b1075876d803ec4e995d002e186d202",\n          "git_blob_sha": "2081f56a958fec5cb22fe9bf843679b3e3d14878"\n        },\n        {\n          "path": "/tmp/AIMP2-2024-source-fetch.log",\n          "bytes": 668,\n          "sha256": "1f988f985e373a59b48e9b11af82b522a6c25f414af08d6a1f6d5313f5fbe138",\n          "git_blob_sha": "9ad54c1f31fbce48dfd31b2c8432715351d76f59"\n        }\n      ],\n      "fetch_status": "documented_normal_fetch_DNS_failures",\n      "citation_scope": "authored review/notes citations",\n      "frozen_manifest": {\n        "path": "/tmp/AIMP2-local-manifest.json",\n        "bytes": 4049,\n        "sha256": "683d97e2f694613809e97e9b4c014ec042882cef267968f30e2117facb210f7b",\n        "git_blob_sha": "e93be2fa6ee26471e12e7a406e503d413d49b360"\n      }\n    },\n    "AIPL1": {\n      "source_files": [\n        {\n          "path": "genes/human/AIPL1/AIPL1-ai-review.yaml",\n          "bytes": 40054,\n          "sha256": "b1983ad62aba3decc3ae6e62c14a533239dc30b80a0a1e2516844e7598153554",\n          "git_blob_sha": "b7a44bd3ac0dd1f7a90b797953d2eb58012ee6de"\n        },\n        {\n          "path": "genes/human/AIPL1/AIPL1-notes.md",\n          "bytes": 18625,\n          "sha256": "abdd5ef3a48a2bc9b7271335067d53f09d3dd7282bcc34e011bcf543b7aecf2a",\n          "git_blob_sha": "d7e26345f83bd7ee31652fe5831d30bd68310fbc"\n        }\n      ],\n      "normal_fetch_logs": [\n        {\n          "path": "/tmp/AIPL1-cache-notes.log",\n          "bytes": 774,\n          "sha256": "8ed83ff96663694d7cd0a0031ce2d4945cf83e680fea6cdc22238a6fc3c1d984",\n          "git_blob_sha": "7f599cbc88d09ae068fe0508becb9e4d07a76704"\n        }\n      ],\n      "fetch_status": "documented_normal_fetch_DNS_failures",\n      "citation_scope": "authored review/notes citations",\n      "frozen_manifest": {\n        "path": "/tmp/AIPL1-local-manifest.json",\n        "bytes": 4308,\n        "sha256": "34f0b7f4d97fe313fa812c99ffbe29ae279c2f2feae5f37e8bcd3f4f9ae94473",\n        "git_blob_sha": "3d9ee2923cde110fd926ecec1d37674cb12049a1"\n      }\n    },\n    "AGO2": {\n      "source_files": [\n        {\n          "path": "genes/human/AGO2/AGO2-deep-research-falcon.md",\n          "bytes": 36263,\n          "sha256": "9076681088d07cf953c8a3383aef5641d2f381b96ce34b7c807ba4b70875d1d8",\n          "git_blob_sha": "ea552a151439a92a53b57c93ee6037941688c325"\n        }\n      ],\n      "normal_fetch_logs": [],\n      "fetch_status": "not_individually_attempted_in_this_design",\n      "citation_scope": "immutable provider report only; no assertion of scientific support"\n    },\n    "AIRE": {\n      "source_files": [\n        {\n          "path": "genes/human/AIRE/AIRE-ai-review.yaml",\n          "bytes": 90934,\n          "sha256": "38db8c3ef9a2c23e261c8ce1cdc096b608b8dab3b2864b6726df0e2ac79ad54e",\n          "git_blob_sha": "024c770e341117adf6fba3903ec3729dc301b66f"\n        },\n        {\n          "path": "genes/human/AIRE/AIRE-notes.md",\n          "bytes": 16135,\n          "sha256": "c91dc934b24f8997229fd2a8bbf4b0d8bc9478c02d55a75f5b5d48832b0293ae",\n          "git_blob_sha": "ba5dc1c67e21e23aa57d0c1c9767babc338b7d52"\n        }\n      ],\n      "normal_fetch_logs": [\n        {\n          "path": "/tmp/AIRE-fetch-notes.log",\n          "bytes": 774,\n          "sha256": "ee6ca50f0c91278a3be04a54b0e5ed6e7a129b9c14c75b37c0a7f0b7bbadd38a",\n          "git_blob_sha": "4dc86b0e8411d2b266a9f970e2dd0f305046407b"\n        },\n        {\n          "path": "/tmp/AIRE-fetch-new.log",\n          "bytes": 1873,\n          "sha256": "f44ae2466267d982910663791ca3ae682d3bad2e87fe475b7a2629ae4361aa58",\n          "git_blob_sha": "6212a10e00620642f26e553fc9f661298374ac63"\n        },\n        {\n          "path": "/tmp/AIRE-fetch-e3.log",\n          "bytes": 617,\n          "sha256": "10950f1b235569311e87e8fb6afc58fcc2364932c1f5babbd013a8e741fe7c84",\n          "git_blob_sha": "28797ab8591ca7da6e226c8ac2cefc2fdb582637"\n        }\n      ],\n      "fetch_status": "documented_normal_fetch_DNS_failures",\n      "citation_scope": "authored review/notes citations",\n      "source_census_integrity_report": {\n        "path": "/tmp/AIRE-integrity-report.json",\n        "bytes": 5384,\n        "sha256": "1427c29ce3f707f8b074dddbc47446857bc5617f55bf5b31d7d9bfce7179c909",\n        "git_blob_sha": "aa296cfdd1f7f81e102d4b635ccba05ba2c84fa9"\n      },\n      "source_census_status": "timestamped in-progress AIRE source census; biology/IDs owner-confirmed, full validator still running and final publication manifest not yet available",\n      "owner_confirmed_ids": [\n        "11854172",\n        "14734522",\n        "15150263",\n        "15649436",\n        "15649886",\n        "19015306",\n        "19923453",\n        "22310661",\n        "23993652",\n        "38260362",\n        "38480882",\n        "39169234"\n      ],\n      "owner_confirmation": "annotation_aars2 confirmed final twelve missing top-level reference IDs and three failed normal-fetch logs on 2026-09-27."\n    }\n  },\n  "exclusions": {\n    "source3_owned_pmids": [\n      "7929456",\n      "9586999",\n      "12590576",\n      "12773545",\n      "15024124",\n      "15769750",\n      "17649979",\n      "19177456",\n      "26290588",\n      "33328229",\n      "33790472",\n      "35267011",\n      "36423325",\n      "41549122"\n    ],\n    "successfully_imported_source1_2_pmids": [\n      "120213",\n      "690130",\n      "718989",\n      "1413626",\n      "1672610",\n      "1684101",\n      "2866764",\n      "2985752",\n      "3689310",\n      "3777158",\n      "5166591",\n      "6144148",\n      "6480832",\n      "7128902",\n      "7733320",\n      "8026493",\n      "8064675",\n      "8387517",\n      "8654595",\n      "8887278",\n      "9218493",\n      "9845365",\n      "10692424",\n      "10720488",\n      "11222505",\n      "11967537",\n      "11988101",\n      "12499231",\n      "15180797",\n      "15252046",\n      "16150824",\n      "16213491",\n      "16221767",\n      "16672280",\n      "16713557",\n      "16742956",\n      "16924481",\n      "18083100",\n      "18459129",\n      "18636121",\n      "19159466",\n      "19346281",\n      "19656850",\n      "20424607",\n      "20448148",\n      "20473314",\n      "21267468",\n      "21475248",\n      "21990100",\n      "22419726",\n      "23112191",\n      "23766516",\n      "24191038",\n      "24962568",\n      "25002142",\n      "25616960",\n      "25681585",\n      "26764146",\n      "27647924",\n      "28118669",\n      "28442542",\n      "29925947",\n      "30252181",\n      "32439803",\n      "33199684",\n      "34824276",\n      "35630584",\n      "36139365",\n      "36194562",\n      "38479840",\n      "40033100",\n      "40500329",\n      "40593796",\n      "40930611",\n      "41387688"\n    ],\n    "source3_requests": {\n      "path": "tmp/source-seed-recovery3-design/requests.json",\n      "bytes": 4543,\n      "sha256": "a380cc2dddfd1b84ddca63d163d00b4f4de8c4d369c81d45c4203f1eb7b2bb15",\n      "git_blob_sha": "eb41009f697e32f4f4b1fea556d043b38d86d0c9"\n    },\n    "import_receipts": [\n      {\n        "path": "tmp/verified-reference-records/local-import-receipt.json",\n        "bytes": 14381,\n        "sha256": "aece2fd2a17fe9a0072503c07ade1ea446300055aac438dbd95fac94c8540e72",\n        "git_blob_sha": "083d2d224ff318e1b0dc9936f6975f816a6d331b"\n      },\n      {\n        "path": "tmp/verified-reference-records2/local-import-receipt.json",\n        "bytes": 18444,\n        "sha256": "1f7f6984ef91d66c66cfc1dfd1f56fe2c7deb271fa96f8acfc3d03e148a1e1fe",\n        "git_blob_sha": "7c86468e37e46f8be97b156fb131cbdc3bb7355e"\n      }\n    ]\n  },\n  "missing_attempt_records": [],\n  "excluded_requested_ids": [],\n  "requested_count": 27\n}\n'
+        (root/'requests.json').write_text(requests_text)
+        (root/'source-list-provenance.json').write_text(provenance_text)
+        receipt={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+        receipt.update(status='initialized_before_dependency_install',scope='27 fixed normal fetch-pmid requests; no gene seeding, provider run or source authoring')
+        (root/'run-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+        (root/'fetch-report.json').write_text(json.dumps(dict(receipt,entries=[]),indent=2)+'\n')
+        PYINIT
+    - name: Install uv without a shared dependency cache
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: false
+    - name: Install the locked normal project runtime
+      timeout-minutes: 15
+      run: uv sync --frozen --no-dev --no-editable
+    - name: Run normal PMID fetcher in isolated temporary directories
+      id: fetch
+      continue-on-error: true
+      timeout-minutes: 95
+      run: |
+        uv run --no-sync python - <<'PYFETCH'
+        """Retrieve a fixed PMID-only inventory with the normal CLI; never author source records."""
+        from pathlib import Path
+        from datetime import datetime, timezone
+        from importlib.metadata import version
+        import hashlib,json,os,re,signal,subprocess,time,yaml
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
+        BRANCH='refs/heads/cmungall/clingen-reference-fetch4-20260927'
+        REPOSITORY='ai4curation/ai-gene-review'
+        ROOT_NAME='clingen-reference-recovery4'
+        REQUEST_SHA256='5a9799ea4427a00cf0e4a1d551bd8c65e5ff562d5e8501baef2925bf9b9ac1b8'
+        PMIDS={'10358004','11854172','12237313','14734522','15105377','15150263','15649436','15649886','17001013','17525271','19015306','19923453','22310661','23746446','23993652','25288775','29379495','34523057','35133502','35546148','38260362','38480882','38662103','39026984','39169234','39542129','42719951'}
+        PER_PMID_SECONDS=180
+        TOTAL_SECONDS=90*60
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+        def digest(data):
+         return {'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'git_blob_sha':hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()}
 
-      - name: Install just
-        run: uv tool install rust-just
+        def validate_requests(raw):
+         if hashlib.sha256(raw).hexdigest()!=REQUEST_SHA256:raise ValueError('Requests differ from the fixed approved bytes')
+         data=json.loads(raw)
+         if not isinstance(data,list) or len(data)!=len(PMIDS):raise ValueError('Wrong finite inventory size')
+         if {r['id'] for r in data}!=PMIDS:raise ValueError('Wrong fixed PMID inventory')
+         for r in data:
+          if set(r)!={'kind','id','mode','genes','citations'} or r['kind']!='pmid' or r['mode']!='fetch_missing':raise ValueError('Unsupported request shape or mode')
+          if not re.fullmatch(r'[1-9][0-9]{0,8}',r['id']):raise ValueError('Invalid PMID')
+          if not r['genes'] or not r['citations']:raise ValueError('Missing source provenance')
+         return data
 
-      - name: Install project
-        run: uv sync --dev
+        def inspect_publication(raw,pmid):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal publication frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or str(meta.get('pmid'))!=pmid:raise ValueError('Wrong publication identifier')
+         if not isinstance(meta.get('title'),str) or not meta['title'].strip():raise ValueError('Missing publication title')
+         if not isinstance(meta.get('full_text_available'),bool):raise ValueError('Missing normal availability metadata')
+         if not parts[2].strip():raise ValueError('Empty publication body')
+         return {**digest(raw),'frontmatter':meta,'has_abstract_section':'## Abstract' in parts[2],'has_full_text_section':'## Full Text' in parts[2]}
 
-      - name: Warm the reference cache
-        run: just warm-references
+        def write_raw(destination,data):
+         destination.parent.mkdir(parents=True,exist_ok=True)
+         with destination.open('xb') as handle:handle.write(data)
+         if destination.read_bytes()!=data:raise ValueError('Raw byte-copy mismatch')
 
-      - name: Check for cache changes
-        id: check-changes
-        run: |
-          if git diff --quiet publications/; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Reference cache already complete; nothing to commit."
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff --stat publications/ | tail -1
-          fi
+        def copy_raw_tree(source,destination):
+         records=[]
+         for path in sorted(source.rglob('*')):
+          if path.is_symlink():raise ValueError('Generated symlink requires inspection')
+          if not path.is_file():continue
+          rel=path.relative_to(source);data=path.read_bytes();write_raw(destination/rel,data);records.append({'path':str(rel),**digest(data)})
+         return records
 
-      - name: Compute metadata
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: metadata
-        run: |
-          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
-          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
-          {
-            echo "branch=auto/warm-reference-cache"
-            echo "changed=$CHANGED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
+        def command_for(pmid,runtime,work):
+         if pmid not in PMIDS:raise ValueError('Unapproved command identifier')
+         return [str(runtime/'bin/ai-gene-review'),'fetch-pmid',pmid,'--output-dir',str(work/'publications'),'--delay','1.0']
 
-      # Minted here rather than at job start, for the same reason as
-      # generate-pages: the cache warm needs no credentials, only the push does,
-      # and a token minted at job start burns its 60-minute life on the fetch.
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+        def run_command(command,work,logpath,timeout):
+         with logpath.open('w') as log:
+          proc=subprocess.Popen(command,cwd=work,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+          try:return {'returncode':proc.wait(timeout=timeout),'timed_out':False}
+          except subprocess.TimeoutExpired:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();return {'returncode':proc.returncode,'timed_out':True}
+          except BaseException:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();raise
 
-      - name: Create or update warm-cache PR
-        if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
-        shell: bash
-        run: |
-          # Commit as the ai4c-agent App bot and serve the short-lived token to git
-          # through the gh credential helper, instead of persisting it in .git/config.
-          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          gh auth setup-git
-
-          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
-          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
-          git checkout -B "$BRANCH_NAME"
-
-          git add publications/
-          git commit -m "$(cat <<EOF
-          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
-
-          Automated weekly warm so validate-all reads cached references instead of
-          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
-          EOF
-          )"
-
-          git push --force-with-lease origin "$BRANCH_NAME"
-
-          PR_BODY="$(mktemp)"
-          {
-            echo "## Summary"
-            echo
-            echo "Automated weekly warm of the reference cache (\`publications/\`)."
-            echo "Fetches references that are new or lack full text so the full"
-            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
-            echo
-            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
-            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
-            echo
-            echo "Cache data only — no functional review needed; merge when convenient."
-            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
-          } > "$PR_BODY"
-
-          EXISTING_PR_NUMBER="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --limit 1 \
-            --jq '.[0].number // empty')"
-
-          if [ -n "$EXISTING_PR_NUMBER" ]; then
-            gh api \
-              --method PATCH \
-              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
-              -f body="$(cat "$PR_BODY")" \
-              >/dev/null
-            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
-            exit 0
-          fi
-
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Warm reference cache" \
-            --body-file "$PR_BODY"
-
-          echo "Created warm-cache PR."
+        def main():
+         if os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or os.environ.get('GITHUB_REF')!=BRANCH or os.environ.get('GITHUB_REPOSITORY')!=REPOSITORY:raise ValueError('Wrong event, task branch or repository')
+         repo=Path(os.environ['GITHUB_WORKSPACE']).resolve();runner=Path(os.environ['RUNNER_TEMP']).resolve();root=runner/ROOT_NAME
+         runtime=Path(os.environ['UV_PROJECT_ENVIRONMENT']).resolve()
+         if not runtime.is_relative_to(root) or root.is_relative_to(repo):raise ValueError('Runtime/output path outside isolated runner temp')
+         artifact=root/'artifact';workroot=root/'fetch-work';workroot.mkdir(parents=True);logs=artifact/'logs';logs.mkdir()
+         requests=validate_requests((artifact/'requests.json').read_bytes())
+         report={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+         report.update(started_utc=datetime.now(timezone.utc).isoformat(),entries=[],request_digest=digest((artifact/'requests.json').read_bytes()),provenance_digest=digest((artifact/'source-list-provenance.json').read_bytes()),versions={},source_code={},scope='Raw normal fetch-pmid outputs only. Metadata checks do not establish scientific support or complete article access. No source authoring, review, gene seeding, import or remote mutation.')
+         def save():(artifact/'fetch-report.json').write_text(json.dumps(report,indent=2)+'\n')
+         save();deadline=time.monotonic()+TOTAL_SECONDS
+         try:
+          for name in ['ai-gene-review','linkml-reference-validator','PyYAML']:report['versions'][name]=version(name)
+          for name in ['src/ai_gene_review/cli.py','src/ai_gene_review/etl/publication.py','uv.lock','.github/workflows/warm-reference-cache.yaml']:report['source_code'][name]=digest((repo/name).read_bytes())
+          save()
+          for request in requests:
+           pmid=request['id'];entry={'kind':'pmid','id':pmid,'status':'pending'};report['entries'].append(entry);save()
+           relative=Path('publications',f'PMID_{pmid}.md');existing=repo/relative
+           if existing.exists():
+            try:entry.update(inspect_publication(existing.read_bytes(),pmid),status='already_present')
+            except Exception as exc:entry.update(status='existing_needs_inspection',error=str(exc),existing_digest=digest(existing.read_bytes()))
+            save();continue
+           remaining=deadline-time.monotonic()
+           if remaining<=0:entry['status']='not_attempted_budget';save();continue
+           work=workroot/('pmid_'+pmid);work.mkdir();command=command_for(pmid,runtime,work);entry.update(status='fetching',command=command,started_utc=datetime.now(timezone.utc).isoformat());save()
+           try:
+            entry.update(run_command(command,work,logs/('pmid_'+pmid+'.log'),min(PER_PMID_SECONDS,remaining)))
+            generated=work/relative
+            if entry['returncode']!=0:raise ValueError('Normal fetch failed or timed out')
+            if generated.is_symlink():raise ValueError('Symlink publication output')
+            raw=generated.read_bytes();entry.update(inspect_publication(raw,pmid))
+            entry['raw_outputs']=copy_raw_tree(work,artifact/'raw_outputs'/('pmid_'+pmid))
+            write_raw(artifact/relative,raw);entry.update(status='recovered',artifact_path=str(relative))
+           except Exception as exc:
+            entry.update(status='needs_inspection',error=str(exc))
+            try:entry['quarantined_outputs']=copy_raw_tree(work,artifact/'quarantine'/('pmid_'+pmid))
+            except Exception as copy_error:entry['quarantine_error']=str(copy_error)
+           save()
+         except Exception as exc:
+          report['fatal_error']=str(exc)
+         finally:
+          attempted={r['id'] for r in report['entries']}
+          report['entries'] += [{'kind':'pmid','id':r['id'],'status':'not_attempted_after_failure'} for r in requests if r['id'] not in attempted]
+          report['finished_utc']=datetime.now(timezone.utc).isoformat();report['unresolved_sources']=[r['id'] for r in report['entries'] if r['status'] not in {'recovered','already_present'}];report['recovered_count']=sum(r['status']=='recovered' for r in report['entries']);save()
+         with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:summary.write(f"Recovered {report['recovered_count']} normal publication caches; {len(report['unresolved_sources'])} unresolved. All outputs require independent identity/content checks before import.\n")
+         return int(bool(report['unresolved_sources']) or 'fatal_error' in report)
+        if __name__=='__main__':raise SystemExit(main())
+        PYFETCH
+    - name: Verify the checked-out repository is unchanged
+      id: unchanged
+      if: ${{ always() }}
+      run: |
+        git diff --exit-code
+        git diff --cached --exit-code
+        test -z "$(git ls-files --others --exclude-standard)"
+    - name: Upload raw normal publications and partial reports
+      id: artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: clingen-reference-recovery4-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/clingen-reference-recovery4/artifact/
+        if-no-files-found: error
+        retention-days: 7
+        include-hidden-files: false
+        overwrite: false
+    - name: Report incomplete recovery after preserving outputs
+      if: ${{ always() && (steps.fetch.outcome != 'success' || steps.unchanged.outcome != 'success' ||
+        steps.artifact.outcome != 'success') }}
+      run: exit 1
