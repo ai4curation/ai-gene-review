@@ -79,7 +79,7 @@ Findings emerged from **AI-assisted gene review**, then verified against primary
 
 Catalytic activity transferred to proteins that lost the active site but kept the fold — the **most defensible** REMOVE class (deficiency documented in UniProt).
 
-- **Epe1** (pombe) — `GO:0032452` histone demethylase: Fe(II) triad H297-E299-Y370 (Tyr in place of the third His ligand), no detectable activity
+- **Epe1** (pombe) — `GO:0032452` histone demethylase: degenerate Fe(II) triad H297-E299-Y370 (Tyr in place of the third His ligand), no detectable activity
 - **DPYSL2 / CRMP1 / DPYSL3 / DPYSL4** (human) — `GO:0016812` metallo-hydrolase: UniProt CAUTION "Lacks most of the conserved residues … for binding the metal cofactor"; **MSA confirms** loss of catalytic Lys159
 - **AGO4** (human) — `GO:0004521` RNA endonuclease: "Lacks endonuclease activity"; MSA shows tetrad substitutions D669G, H807R (AGO3 *retains* the tetrad)
 - **AKTIP** — `GO:0061631` E2: lacks catalytic Cys · **CASP12** — "Inactive caspase-12" · **HSP47/Serpinh1** (mouse) — non-inhibitory serpin
