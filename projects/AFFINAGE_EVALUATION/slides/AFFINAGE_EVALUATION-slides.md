@@ -38,7 +38,7 @@ What a literature-first function annotator gets right, and where its GO layer fa
 
 - **GO layer is lossy:** the specific curated molecular function appeared in Affinage's GO profile for **1 of 42** human genes (KRAS `GTPase activity`).
 - **Narrative is useful:** on the 22 Fanconi anemia genes it contributed **59 papers** and **13 new GO annotations** across 10 genes, with **no** curation decision reversed.
-- **Not a literature search:** it supplied **52%** of the 718 references 91 reviews had to find; `gates_passed` checks precision, not recall.
+- **Not a literature search:** it supplied **52%** of the 718 references 91 reviews had to find (an upper bound: 56 reviews were written with its report in hand); `gates_passed` checks precision, not recall.
 
 ---
 

@@ -3,6 +3,11 @@ title: "Genome-wide validation: system-level plausibility of annotation sets"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 autolink_gene_symbols: false
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - GENOME_WIDE_VALIDATION/slides/coherence-check.svg
+    - GENOME_WIDE_VALIDATION/slides/coherence-violations.svg
 ---
 
 # Genome-wide validation
@@ -140,3 +145,7 @@ engine is organism-agnostic.
   genome-scale function annotations.* Briefings in Bioinformatics, 2026, 27(3):bbag336.
   [doi:10.1093/bib/bbag336](https://doi.org/10.1093/bib/bbag336). Software (GAEF):
   <https://github.com/bio-ontology-research-group/GAEF>.
+
+## Slides
+
+- [Slides](GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.html) (Marp source: [GENOME_WIDE_VALIDATION-slides.md](GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.md)) — AI generated

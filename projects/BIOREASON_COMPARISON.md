@@ -2,7 +2,7 @@
 title: "BioReason-Pro Comparison Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
-species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
+species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE, 9CAUD, AGKCO, ANOGA]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
   argo139_species_counts: BIOREASON_COMPARISON/argo139-species-counts.csv

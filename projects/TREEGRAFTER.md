@@ -14,6 +14,10 @@ sidecars:
   family_hotspots: TREEGRAFTER/treegrafter_family_hotspots.tsv
   failure_modes: TREEGRAFTER/treegrafter_failure_modes.tsv
   failure_mode_curated: TREEGRAFTER/failure_mode_curated.tsv
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - TREEGRAFTER/slides/treegrafter-graft.svg
+    - TREEGRAFTER/slides/treegrafter-results.svg
 ---
 
 # TreeGrafter Inference Evaluation
@@ -448,3 +452,7 @@ fixes:
 - **Refresh the snapshot** when the next batch lands: re-run the three scripts,
   classify the new down-grades in `failure_mode_curated.tsv`, and re-pin the
   date and commit in the Results header.
+
+## Slides
+
+- [Slides](TREEGRAFTER/slides/TREEGRAFTER-slides.html) (Marp source: [TREEGRAFTER-slides.md](TREEGRAFTER/slides/TREEGRAFTER-slides.md)) — AI generated

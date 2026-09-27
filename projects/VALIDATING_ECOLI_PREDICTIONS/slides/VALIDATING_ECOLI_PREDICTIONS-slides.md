@@ -62,7 +62,7 @@ Seven gene reviews against an expert audit of DeepECTransformer
 
 ![h:430](yciO-review-table.jpg)
 
-<span class="small">yciO review: the GO:0061710 threonylcarbamoyladenylate synthase row, propagated from the EC number, is marked REMOVE. The IDA row from the DeepECTF validation paper (PMID:37963869) is also REMOVE.</span>
+<span class="small">yciO review, shown: the IEA GO:0061710 threonylcarbamoyladenylate synthase row (GO_REF:0000003, propagated from the EC number) is marked REMOVE. Not in frame: the IDA row for the same term from the DeepECTF validation paper (PMID:37963869) is also REMOVE.</span>
 
 ---
 

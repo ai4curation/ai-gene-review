@@ -2,6 +2,11 @@
 title: "Prokaryotic Immunity Term Prediction"
 maturity: SCOPING
 tags: [PIPELINE]
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/defense-go-flow.svg
+    - PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/defense-go-why.svg
 ---
 
 # Prokaryotic Immunity Term Prediction
@@ -140,3 +145,7 @@ Deferred:
 - export of wrapper output into `PredictionReview` YAML
 - expansion of the registry to more defense families and GO policies
 - support for evidence-code policy and provenance payloads
+
+## Slides
+
+- [Slides](PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.html) (Marp source: [PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.md](PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.md)) — AI generated

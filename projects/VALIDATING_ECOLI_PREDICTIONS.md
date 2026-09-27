@@ -4,6 +4,12 @@ maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [ECOLI]
 genes: [ygfF, yciO, yegV, yjhQ, yrhB, yjdM, fepE]
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - VALIDATING_ECOLI_PREDICTIONS/slides/ecoli-predictions.svg
+    - VALIDATING_ECOLI_PREDICTIONS/slides/ecoli-review-actions.svg
+    - VALIDATING_ECOLI_PREDICTIONS/slides/yciO-review-table.jpg
 ---
 
 # Validating E. coli ML Predictions
@@ -136,3 +142,7 @@ Also created predictions-review.yaml files for all 7 genes with structured error
 
 Created project to validate E. coli gene annotations against findings from de Crecy-Lagard et al. (2025).
 Selected 7 genes spanning all major error categories in the paper's taxonomy.
+
+## Slides
+
+- [Slides](VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html) (Marp source: [VALIDATING_ECOLI_PREDICTIONS-slides.md](VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.md)) — AI generated

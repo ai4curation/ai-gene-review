@@ -3,6 +3,11 @@ title: "Function Prediction Evaluation"
 maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE, FLAGSHIP]
 autolink_gene_symbols: false
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - FUNCTION_PREDICTION_EVALUATION/slides/evaluation-loop.svg
+    - FUNCTION_PREDICTION_EVALUATION/slides/prediction-results.svg
 ---
 # Function Prediction Evaluation
 
@@ -62,3 +67,7 @@ For the shared approach to term-level review, see the
 [evidence standards](PROTNLM_EVALUATION.md#evidence-standards). For narrative
 correctness and completeness, see the
 [BioReason evaluation rubric](BIOREASON_COMPARISON.md#evaluation-rubric).
+
+## Slides
+
+- [Slides](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html) (Marp source: [FUNCTION_PREDICTION_EVALUATION-slides.md](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.md)) — AI generated
