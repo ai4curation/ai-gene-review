@@ -587,3 +587,77 @@ The coordinator independently read the full semantic delta and selected
 primary passages and found no biological blocker. Actual unchanged action
 counts are 36 ACCEPT, 16 KEEP_AS_NON_CORE, 8 MODIFY, 3 UNDECIDED,
 1 MARK_AS_OVER_ANNOTATED and 1 retained NEW. The two cache gates remain open.
+
+
+## 2026-09-27: source20 closure and direct localization-source attachment
+
+This follow-up starts from published PR #3304 head
+`2a38d57ecadfb6ee4cfd65936f5963c827405b14`. The current formal review
+5330605982 and full comment 5856526332 were read independently. All 65
+annotation source objects and actions, the three core functions, four
+alternative products and 37 reference identities are preserved.
+
+### Source recovery and assay scope
+
+Source20 recovered the two previously missing journal records through the
+normal publication fetcher. The strict archive review verified exact bytes,
+source-code and request/provenance pins, logs and raw copies. The coordinator
+imported the records exclusively after independent primary identity/body
+assessment. No cached source or provider artifact was edited.
+
+| Source | Actual recovered access and scientific scope |
+| --- | --- |
+| [PMID:40037841] | Full XML Methods, ADGRV1 Results, Figure 6 and Discussion were inspected. PacBio analysis uses three postmortem human neural-retina samples; ONT uses three independent human retina samples. VLGR1a transcript coverage is complete, while VLGR1b remains incompletely captured. Journal coverage spans exons 3–77 and 80–90, with no exon-77-to-80 junction establishing deletion of exons 78–79. These are transcript observations, not proof of extra functional protein isoforms. The earlier preprint remains separately identified. |
+| [PMID:42002803] | Full XML Methods, Results and Figures 5–9 were inspected and the live publisher version was checked. The physiological experiments use Adgrv1/del7TM mouse hippocampi and primary astrocytes/neurons. RFP-Trap uses human Q8WXG9-1 CTF residues 5891–6306 in HEK293T lysates mixed with mouse astrocyte or hippocampal lysates. One 57-year-old USH2C patient's fibroblast transcriptome, with no reported epilepsy, supplies separate human evidence. GLAST association and Stachel/randomized-peptide/receptor-deficient controls support receptor regulation of glutamate handling, without assigning ADGRV1 transporter chemistry or assuming equivalent human astrocyte physiology. |
+
+Primary identities were independently checked through PubMed, including the
+PMID/DOI/PMCID/title relationships. The full astrocyte article is available
+at the [primary publisher](https://link.springer.com/article/10.1186/s40478-026-02282-2).
+The retinal journal article is indexed at [PMC12047242](https://pmc.ncbi.nlm.nih.gov/articles/PMC12047242/);
+its direct browser page was challenge-limited in this session, while its
+normal XML cache contained the inspected primary sections. Both local
+full_text_unavailable flags are now false. Correct citation identity was
+already VERIFIED; missing local cache availability did not invalidate it.
+
+### Direct Figure 5 evidence and the autophagy boundary
+
+For the cytoplasm IDA originally attributed to [PMID:16434480], the unrelated
+2022 MAM-fraction quote was removed and the original 2006 primary reference
+was restored as the supporting source. The [public author PDF](https://www.ag-wolfrum.bio.uni-mainz.de/files/2019/01/VanWijk_et_al_2006_Whirlin_Usher_Network_HumMolGen.pdf)
+was independently reread: Methods p. 762 specify the human constructs;
+Figure 5, p. 757, shows the 150-residue VLGR1b cytoplasmic tail in COS-1
+cells, including its nucleus/cytoplasm distribution alone, cytoplasmic
+retention with whirlin and loss of that retention after PDZ-binding-motif
+deletion. The exact short caption excerpt already recorded above is now
+attached directly in the annotation reason with the original URL/page.
+The local abstract-only cache remains unchanged. No assumption about a
+private or nonshareable full text is made, and these notes are a receipt
+for the primary source, not an independent experiment. The retained
+KEEP_AS_NON_CORE decision remains specific to the fragment-expression assay.
+
+For [PMID:37002809], upstream receptor signaling can regulate autophagy
+without the receptor being an autophagic enzyme or cargo receptor. The
+reference assessment now states that explicitly and preserves the positive
+human-cell flux/perturbation evidence and separate mouse transcriptomic
+scope. Deferring an additional NEW annotation in this bounded closure does
+not deny the observed regulatory phenotype; its precise receptor-dependent
+step remains a biological question. The local record is still abstract-only,
+and the previously documented external full-source access is not relabeled
+as a recovered local body.
+
+The recursive authored/provider citation census is rechecked against the
+unchanged reports, including DOI and URL citations. Both source20 cache
+gates are now closed; no new paper was requested and no preprint was
+silently remapped to a journal publication. Validation and final integrity
+results are recorded below after the checks finish.
+
+Final checks: full gene validation passed with the single pre-existing
+unused-provider advisory; the YAML stays DRAFT for that intentional advisory,
+while the PR source gates are closed. The complete recursive census is 28
+cached PMIDs and 18 DOI identities, including three explicitly distinct
+preprints. All 81 ordinary cached quotations pass case-sensitive,
+whitespace-normalized substring checks; none relies on case folding. The
+external Figure 5 receipt remains clearly attributed to its primary PDF.
+Source preservation, published-history hashes, append-only notes, rendered
+PMID links, YAML anchors and trailing whitespace were checked. The newly
+scaffolded history and final rendering are validated in the handoff receipt.
