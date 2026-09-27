@@ -51,3 +51,100 @@ The cached GO-CAM index contains no AICDA/Q9GZX7 entry. No process NEW is propos
 The authored draft preserves all original source objects and alternative products by parsed equality, and original reference IDs/titles by ordered equality. UniProt and GOA remain byte-identical to source3. Cached supporting snippets are checked case-sensitively after whitespace normalization. Schema, ontology, references, strict GOA coverage, best practices, history and HTML rendering are checked before the final manifest. Status is DRAFT while the six genuine publication-cache gates remain. No remote action is part of this authored handoff.
 
 Root independently reviewed all 47 decisions, 28 reference assessments, the integrated core and questions, and inspected the human free-nucleoside and HBV RNA primary experiments. The resolved human-vector evidence supports contextual RNA editing. No further biological change was requested. The final exact checks and immutable-byte receipts are recorded in `/tmp/AICDA-local-manifest.json`.
+
+## 2026-09-27 PR #3290 evidence and ontology follow-up
+
+Read the complete comment 5854585122 and formal review 5329725143. All five
+canonical files matched published head `ac32f2e1c60c33487462716d84391df22e2ea74b`
+before edits. The six source10 requests were fixed and pending at the initial
+follow-up checkpoint; their subsequent verified import is recorded below.
+No unchanged local retry was performed. Status remains DRAFT.
+
+Live primary AmiGO records establish that GO:0019239 and GO:0016814 are siblings
+under GO:0016810, and both parent GO:0004126. The two broad InterPro rows remain
+MODIFY but now propose GO:0004126, using the measured free-nucleoside capacity.
+The existing four cytidine-deaminase assertions remain unchanged. The review's
+count of five was not reproduced. These are refinements of existing assertions,
+not NEW rows; the NEW ancestor/descendant prohibition does not require deleting
+valid source assertions. The previous sibling-to-sibling specificity explanation
+was incorrect and is replaced.
+
+The core deliberately retains GO:0019239 with explicit ssDNA chemistry. The
+formal GO:0004126 reaction is free cytidine/deoxycytidine, so substituting it in
+the DNA-substrate core would introduce a different substrate scope. The existing
+GO:0070383 process already makes DNA cytosine deamination machine-readable.
+Primary GO/EBI searches did not establish an appropriate DNA-specific MF; the
+QuickGO API search was inaccessible. This is a bounded search result, not proof
+that no term can exist. The ontology question now names the existing BP coverage.
+
+The original PMID:12651944 Results were recovered again through indexed
+[PMC153055](https://pmc.ncbi.nlm.nih.gov/articles/PMC153055/). Its free-deoxycytidine
+assay is quoted briefly in the six relevant annotation reasons with the public
+URL and external access scope. The normal abstract cache supplies an exact
+ordinary supporting snippet. Public browser text is not placed in
+`supporting_text_fulltext`, which is reserved for non-shareable full text. The
+same correction places the PMID:23341589 human-vector excerpt in its reason
+and attaches the cached abstract's positive HBV RNA-editing result.
+VERIFIED records independently checked primary identity and relevant content;
+local full-text availability is assessed separately.
+
+Three contextual assertions change from ACCEPT to KEEP_AS_NON_CORE:
+
+- B-cell differentiation retains positive terminal antibody-diversification
+  context. AID performs Ig-DNA deamination, but the broad developmental category
+  is not an additional core function. Giant germinal centers do not show that
+  every stage of B-cell differentiation is normal.
+- Protein-containing complex retains the actual PMID:21255825 multistep
+  purification (DNA affinity, size chromatography and affinity purification),
+  RNA-exosome association and functional stimulation. Live GO:0032991 requires
+  more than a simple co-IP; this source supplies additional purification and
+  functional evidence. Indirect contact does not itself disprove assembly
+  membership. Neither a fixed stoichiometry nor a constitutive RNA-exosome
+  core-subunit assignment is asserted.
+- Identical-protein binding retains independent positive human AID evidence in
+  [PMID:28757211](https://pmc.ncbi.nlm.nih.gov/articles/PMC5771415/). Original
+  Results and Methods distinguish engineered soluble proteins, G4-dependent
+  oligomers, and full-length untagged internal mutants assayed in mouse splenic
+  B cells. An exact positive oligomerization quote is attached. The original
+  PMID:19412186 panel remains unrecovered, and no obligatory native homodimer is
+  inferred. Independent positive evidence supports retention rather than an
+  absence-based removal.
+
+The KPNA1 row now quotes its own karyopherin-specific Figure 5 binding result;
+the PMID:21518874 hypermutation row now attaches its BL2 reporter mutation
+result. Both are exact cached snippets and both actions are unchanged. Repeated
+reference-review prose is shortened while retaining the full source-specific
+findings and access limits. No source fields, qualifiers, isoforms, reference
+identities or core objects are changed; no NEW annotation is proposed. Final
+counts are 21 ACCEPT, seven KEEP_AS_NON_CORE, 14 REMOVE, two MODIFY, two
+UNDECIDED and one MARK_AS_OVER_ANNOTATED.
+
+### Verified source10 recovery and final access scope
+
+All six required records were imported by the parent from the pinned normal
+fetch artifact, without alteration or overwrite. Each canonical byte sequence
+was independently compared with the staged file and import receipt
+`tmp/source10-canonical-import-receipt.json` (SHA256
+`18d517caec871b4306b21283bb89204639ecc0b25f6f495802bd664d072c8359`).
+
+PMID:10373455, PMID:12651944 and PMID:23341589 are abstract-only local records.
+PMID:19188259, PMID:25957684 and PMID:28757211 contain substantial extracted
+main text. Their Methods/Results were read; repeated XML-derived sections and
+supplement labels are not treated as proof of complete supplementary coverage.
+The mouse discovery/biochemistry in PMID:10373455 and mouse switch-RNA assays
+in PMID:25957684 remain distinct from human AID experiments. The latter record's
+machine title capitalization is now reproduced exactly. The retrotransposition
+paper identifies human AID among eight vertebrate constructs and does not by
+itself establish infectious-retrovirus restriction. The structured-DNA paper's
+engineered biochemical constructs remain distinct from untagged full-length
+internal mutants used for mouse B-cell rescue.
+
+The cache census covers all authored YAML/notes references and links: 22 PMIDs,
+all present, with no provider artifact, unresolved DOI-only citation or Reactome
+gate. No annotation action changes were needed for the recovered evidence.
+All 47 immutable source assertions, two alternative products and the integrated
+core are preserved. Status remains DRAFT because the deliberately generic
+GO:0019239 core has a validator coverage advisory after the two broad rows are
+refined to free-cytidine activity. A redundant NEW annotation is not introduced
+solely to suppress that advisory. The final validation and exact-file manifest
+record the remaining advisory separately from the now-closed source gates.
