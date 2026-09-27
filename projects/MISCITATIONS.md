@@ -3,7 +3,7 @@ title: "Miscitation Review Project"
 maturity: SCOPING
 tags: [PIPELINE]
 species: [human]
-genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, FAS, GADD45A, TNFRSF1A, MAP3K1, MAP3K2, MAP2K4, MAPK8]
+genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, FAS, GADD45A, TNFRSF1A, MAP3K1, MAP3K2, MAP2K4, MAPK8, MAPK3, MAP2K1, CALR, CANX]
 ---
 
 # Miscitation Review Project
@@ -109,7 +109,7 @@ defect is fixed by reporting it upstream.
 
 ## Seed cases
 
-Six cases surfaced during the contested-functions review; a seventh, a batch case, came from the MAPK cascades review. Each was re-verified here
+Six cases surfaced during the contested-functions review; two batch cases came from the MAPK cascades review. Each was re-verified here
 against the local GOA/UniProt files and, where possible, a live query (QuickGO,
 NCBI E-utilities, EuropePMC, UniProt REST). **All six are confirmed**, in the sense
 that the factual claim in the last column was checked, not taken on report.
@@ -123,6 +123,7 @@ that the factual claim in the last column was checked, not taken on report.
 | SULT1B1 | `PMID:23207770` IDA for `GO:0006068` ethanol catabolic process | the paper names four ethanol-sulfating SULTs and **SULT1B1 is not one of them** | `MISCITED` | GOA |
 | PNPLA3 | `PMID:21878620` as `EXP` for `GO:0003841`, no `NOT` | that paper reports **no detectable** LPAAT activity for purified PNPLA3 | attachment | GOA |
 | 36 human genes (FAS, MAPK8, MAP2K4, TLR4, CASP8, ...) | `PMID:19593445` as IEP for `GO:0071260` cellular response to mechanical stimulus | a paper on **BAD in prostate cancer**; no mechanical-stimulation experiment, none of the 36 genes mentioned | `MISCITED` (batch) | UniProt |
+| MAP2K1, CALR, CANX (+ VRK1/2/3, KSR1, DUSP3, GOLGB1) | `PMID:22572157` for 31 MGI IDA/ISO rows (ER, membrane, protein/kinase binding) | resolves to a **platelet-alloantibody biosensor** paper; `PMID:22752157` (VRK2 anchors KSR1-MEK1 to the ER) matches every row | `WRONG_IDENTIFIER` (batch, 57/75 transposition) | MGI |
 
 ### NLRP3 — a dropped digit
 
@@ -248,10 +249,31 @@ This case also shows how a miscitation spreads inside the repo. Three earlier re
 the paper as showing a mechanical-stimulus response, quoting only its title. On
 2026-09-26 those rows were changed to `UNDECIDED` and the reference was flagged
 `MISCITED` in all seven reviewed genes that carry it (FAS, GADD45A, TNFRSF1A, MAP3K1,
-MAP3K2, MAP2K4, MAPK8). `UNDECIDED` rather than `REMOVE`, because an expression
-change under stretch is plausible and the real source may exist. The other 29 genes
+MAP3K2, MAP2K4, MAPK8; MAPK3 followed on 2026-09-27). `UNDECIDED` rather than `REMOVE`, because an expression
+change under stretch is plausible and the real source may exist. The other 28 genes
 should be flagged the same way when they are reviewed; the row is a candidate for a
 report to UniProt.
+
+### PMID:22572157 — a transposed digit pair, thirty-one annotations
+
+Found while reviewing MAP2K1 for the [MAPK cascades project](MAPK_CASCADES.md). MGI
+cites `PMID:22572157` for two MAP2K1 IDA rows (protein binding, endoplasmic reticulum).
+That PMID is *"Sensitive detection of idiotypic platelet-reactive alloantibodies by an
+electrical protein chip"*. A live QuickGO query returns 31 annotations on it, all MGI,
+dated 2014-11-10 (four `GO:0032991` rows 2018-02-19): VRK1, VRK2, VRK3, KSR1, MAP2K1,
+DUSP3, CALR, CANX and GOLGB1, plus their mouse ISO projections, with terms for ER,
+membrane, Golgi, protein-containing complex and kinase/phosphatase binding.
+
+That is the content of `PMID:22752157`, *"VRK2 anchors KSR1-MEK1 to endoplasmic
+reticulum forming a macromolecular complex that compartmentalizes MAPK signaling"*,
+which differs by swapping the 5 and 7 in the middle. Calnexin, calreticulin and golgin
+fit as the compartment markers of such a study, and its abstract names VHR (DUSP3).
+The mapping is inferred, not confirmed with MGI.
+
+Flagged `WRONG_IDENTIFIER` with `replacement: PMID:22752157` in the MAP2K1, CALR and
+CANX reviews (2026-09-27). The annotation actions were left as they were: calnexin in
+the ER is right on independent grounds, and the CALR membrane row was already marked
+over-annotated. VRK1/2/3, KSR1, DUSP3 and GOLGB1 should get the same flag when reviewed.
 
 ## Current state of the evidence
 
