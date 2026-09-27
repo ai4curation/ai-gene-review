@@ -14,7 +14,8 @@ GO:1905349 *ciliary transition zone assembly*: docking of the mother
 centriole to vesicles and membrane is the first step of building the
 transition zone. OLS shows both terms obsolete as of 2026-09-26. We
 recorded the seven experimental annotations to GO:0097711 (two already
-removed by FlyBase, the other five moving to GO:1905349), checked the repo
+removed by FlyBase, one fixed by Reactome, the other four moving to
+GO:1905349), checked the repo
 for affected reviews, and queued CEP290 and RAB3IP as the candidate
 reviews. Scoped, not yet started: no gene directly annotated to either
 obsolete term is reviewed here, and no review in `genes/` uses them. The
@@ -172,8 +173,9 @@ confirm UniProt accessions. None are currently in the repo.
    ciliary-vesicle-tethering biology that the obsoleted term partially captured
    may be better represented by a prospective "vesicle membrane tethering
    activity" molecular function term (tracked in
-   [geneontology/go-annotation#6381](https://github.com/geneontology/go-annotation/issues/6381);
-   no GO identifier assigned yet) once that is in production.
+   [geneontology/go-annotation#6381](https://github.com/geneontology/go-annotation/issues/6381)),
+   now live as GO:7770062 *vesicle membrane tethering activity* (OLS and GO
+   API, checked 2026-09-27).
 
 ## Priority
 

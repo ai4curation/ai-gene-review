@@ -15,7 +15,7 @@ comparators to a reference model organism; here, the nematodes
 reviewed them to see whether the comparative inference holds up. We reviewed
 11 genes: 10 *C. briggsae* genes (drd-5, the sex-determination set tra-1,
 tra-2, fem-3 and she-1, and five other protein-level entries) and oaz, the only
-Swiss-Prot entry for *P. pacificus*. All 11 reviews are complete. They cover 119
+Swiss-Prot entry for *P. pacificus*. All 11 reviews are complete. They cover 115
 existing annotation rows (52 ACCEPT, 43 KEEP_AS_NON_CORE, 11
 MARK_AS_OVER_ANNOTATED, 6 MODIFY, 3 REMOVE) and propose 4 NEW terms; she-1 had
 no GO annotations and was curated from the literature. The open question is

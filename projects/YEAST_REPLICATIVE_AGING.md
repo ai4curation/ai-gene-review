@@ -65,12 +65,12 @@ Last updated: 2025-12-30
 - [x] SIR2 - NAD-dependent histone deacetylase (master longevity regulator) ✓ COMPLETED
 - [x] SIR3 - Component of silent chromatin complexes
 - [x] SIR4 - Component of silent chromatin complexes
-- [x] HST2 - Histone deacetylase, mitochondrial sirtuin
+- [x] HST2 - NAD-dependent sirtuin deacetylase (mainly cytoplasmic, shuttles to nucleus)
 - [x] HST3 - NAD-dependent deacetylase
 - [x] PNC1 - Nicotinamidase (recycles NAD+) ✓ COMPLETED
 
 ### mRNA Processing & Translation
-- [x] LSM1 - U6 snRNP-associated protein (mRNA decapping)
+- [x] LSM1 - Cytoplasmic Lsm1-7-Pat1 complex (mRNA decapping activator; not the U6 snRNP Lsm2-8 ring)
 - [x] DBP5 - RNA helicase (mRNA export)
 - [x] NMD3 - 60S preribosomal protein (translation)
 - [x] SUI2 - Eukaryotic initiation factor 2 alpha subunit (translation initiation)
@@ -78,7 +78,7 @@ Last updated: 2025-12-30
 ### Mitochondrial Function & ROS
 - [x] HAP4 - Transcriptional activator of respiratory genes
 - [x] SOD2 - Manganese superoxide dismutase (mitochondrial)
-- [x] CAT2 - Peroxisomal catalase
+- [x] CAT2 - Carnitine O-acetyltransferase (mitochondrial and peroxisomal; not a catalase)
 - [x] CYC1 - Cytochrome c (respiration)
 
 ### Growth Control & Signaling
@@ -107,7 +107,7 @@ Last updated: 2025-12-30
 **SIRTUIN COMPLEX (SIR2-SIR3-SIR4):**
 - ✓ SIR2 (79 annotations) - **50 ACCEPT** (63%) | Core: NAD-dependent deacetylase, telomeric silencing
 - ✓ PNC1 (18 annotations) - **14 ACCEPT** (78%) | Core: NAD+ recycling, critical for SIR2 activation
-- ✓ HST2 (25 annotations) - **19 ACCEPT** (76%) | Core: Mitochondrial deacetylase, metabolic coupling
+- ✓ HST2 (25 annotations) - **19 ACCEPT** (76%) | Core: NAD-dependent H4K16 deacetylation, rDNA silencing
 - ✓ HST3 (22 annotations) - **16 ACCEPT** (73%) | Core: H3K56 deacetylation, transcription homeostasis
 - ✓ SIR3 (45 annotations) - **27 ACCEPT** (60%) | Core: Structural scaffolding, chromatin binding
 - ✓ SIR4 (45 annotations) - **38 ACCEPT** (84%) | Core: Adaptor protein, nuclear organization link
@@ -192,7 +192,7 @@ Comprehensive systematic GO annotation curation for 20 genes spanning the molecu
 
 **Comprehensive curation of proteostasis and autophagy machinery:**
 
-1. **UBP3 (P37334)** - Ubiquitin-specific deubiquitinase
+1. **UBP3 (Q01477)** - Ubiquitin-specific deubiquitinase
    - 54 existing GO annotations reviewed
    - 33 ACCEPT (61%), 10 REMOVE, 2 MARK_AS_OVER_ANNOTATED
    - Core functions: Cysteine-type deubiquitinase, ribophagy, protein deubiquitination, ER-Golgi transport regulation
@@ -231,7 +231,7 @@ This project systematically reviewed all molecular mechanisms controlling yeast 
 
 **Phase 1 (Sirtuins & NAD+ Metabolism): Foundation of aging control**
 - SIR2/SIR3/SIR4 silent chromatin complex: master epigenetic aging regulators
-- PNC1/HST2/HST3: NAD+ metabolism and mitochondrial sirtuin functions
+- PNC1/HST2/HST3: NAD+ metabolism and NAD-dependent sirtuin deacetylation
 - Insight: 70% acceptance rate reflects well-characterized aging pathway
 
 **Phase 1b (Respiratory & ROS Defense): Mitochondrial aging**
@@ -289,7 +289,7 @@ All 20 gene YAML files are validated and ready for:
    - Core functions: Serine/threonine kinase, G0/G1 quiescence entry, stress response activation
    - Key insight: Corrected mechanistic directionality - RIM15 promotes G0 (quiescence) not mitotic progression
 
-4. **SPA2 (P09318)** - Cell polarity scaffolding protein
+4. **SPA2 (P23201)** - Cell polarity scaffolding protein
    - 59 existing GO annotations reviewed
    - 43 ACCEPT (73%), 10 KEEP_AS_NON_CORE, 5 REMOVE
    - Core functions: Polarisome scaffolding, actin cable nucleation, bud growth, septin organization
@@ -320,19 +320,19 @@ These four genes form a regulatory network controlling lifespan:
    - Core functions: mRNA binding, deadenylation-dependent decapping (GO:0000290), P-body localization
    - Key insight: Removed incorrect GO:0006397 (mRNA processing) - LSM1 functions in decay, not processing
 
-2. **DBP5 (P23201)** - mRNA export helicase
+2. **DBP5 (P20449)** - mRNA export helicase
    - 44 existing GO annotations reviewed
    - 20 ACCEPT (45.5%), 9 REMOVE, 1 MARK_AS_OVER_ANNOTATED
    - Core functions: ATP-dependent RNA helicase activity, mRNA nuclear export, InsP6-dependent NPC activation
    - Key insight: Removed GO:0015031 (protein transport) - DBP5 transports RNA, not protein
 
-3. **NMD3 (P48164)** - 60S ribosomal export adapter
+3. **NMD3 (P38861)** - 60S ribosomal export adapter
    - 19 existing GO annotations reviewed
    - 15 ACCEPT (79%), 1 MODIFY, 3 MARK_AS_OVER_ANNOTATED
    - Core functions: 60S subunit export from nucleus (GO:0000055), protein-macromolecule adaptor activity, 25S rRNA binding
    - Key insight: Despite its name, NMD3 is NOT involved in nonsense-mediated mRNA decay (per UniProt)
 
-4. **SUI2 (P05990)** - eIF2 alpha subunit
+4. **SUI2 (P20459)** - eIF2 alpha subunit
    - 59 existing GO annotations reviewed
    - 23 ACCEPT (39%), 2 REMOVE, 11 MARK_AS_OVER_ANNOTATED (generic protein binding)
    - Core functions: translation initiation factor activity (GO:0003743), methionyl-tRNA binding, GTP hydrolysis
@@ -370,12 +370,12 @@ Comprehensive systematic review of all components of the SIR2-SIR3-SIR4 silent c
    - Core functions: Nicotinamidase activity, NAD+ recycling, NAD metabolism
    - Critical for caloric restriction-mediated lifespan extension (activates SIR2)
 
-3. **HST2 (P53568)**: Mitochondrial sirtuin
+3. **HST2 (P53686)**: Cytoplasmic/nucleocytoplasmic sirtuin
    - 25 GO annotations reviewed; 19 ACCEPT
    - Core functions: NAD-dependent H4K16 deacetylation, rDNA silencing, metabolic coupling
-   - Links stress response to mitochondrial function
+   - Predominantly cytoplasmic but shuttles into the nucleus (not mitochondrial)
 
-4. **HST3 (P53575)**: S/G2-phase deacetylase
+4. **HST3 (P53687)**: S/G2-phase deacetylase
    - 22 GO annotations reviewed; 16 ACCEPT, 1 REMOVE (transferase activity - mechanistically incorrect)
    - Core functions: H3K56 deacetylation, transcription homeostasis, DSB repair template choice
    - Prevents R-loop formation; ~1000 genes affected by HST3-mediated repression
@@ -385,7 +385,7 @@ Comprehensive systematic review of all components of the SIR2-SIR3-SIR4 silent c
    - Core functions: Nucleosome/DNA binding, heterochromatin formation, complex assembly
    - Key distinction: Structural scaffolding, NOT deacetylase activity
 
-6. **SIR4 (P06702)**: Adaptor bridging telomeres to silencing complex
+6. **SIR4 (P11978)**: Adaptor bridging telomeres to silencing complex
    - 45 GO annotations reviewed; 38 ACCEPT
    - Core functions: RAP1-SIR complex adaptor, heterochromatin formation, nuclear periphery tethering
    - 16 documented protein-protein interactions; abundance-dependent regulator

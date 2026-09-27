@@ -37,7 +37,7 @@ Reviewing GO annotations for nematodes studied as comparators to *C. elegans*
 ## Bottom line
 
 - *C. briggsae* and *P. pacificus* are **comparators** for *C. elegans*; most of their GO annotations come **by orthology**.
-- We reviewed **11 genes** (10 *C. briggsae*, 1 *P. pacificus*): **119 rows**, 52 ACCEPT, 43 non-core, and **4 NEW** terms proposed.
+- We reviewed **11 genes** (10 *C. briggsae*, 1 *P. pacificus*): **115 existing rows**, 52 ACCEPT, 43 non-core, and **4 NEW** terms proposed.
 - **she-1**, a *C. briggsae*-specific F-box gene with **no GO annotations**, was curated from the literature. Next: decide on TrEMBL-only *P. pacificus* genes.
 
 ---
@@ -74,7 +74,7 @@ Reviewing GO annotations for nematodes studied as comparators to *C. elegans*
 | drd-5 | NEW GO:0016229 steroid dehydrogenase activity and GO:0120178 steroid hormone biosynthetic process (ISS) |
 | kin-1 | generic kinase terms MODIFY → GO:0004691 cAMP-dependent protein kinase activity |
 | cep-1 | GO:0003700 MODIFY → GO:0000981 (RNA Pol II-specific TF activity) |
-| she-1 | de-novo core function: ubiquitin-like ligase-substrate adaptor (GO:1990756) |
+| she-1 | de-novo core function: ubiquitin ligase-substrate adaptor activity (GO:1990756) |
 
 ---
 

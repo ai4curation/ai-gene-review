@@ -26,7 +26,7 @@ style: |
 
 # Yeast DNA repair and chromatin
 
-Reviewing GO annotations for 27 *S. cerevisiae* repair and chromatin genes
+Reviewing GO annotations for 26 *S. cerevisiae* repair and chromatin genes
 
 <span class="small">AI Gene Review · projects/YEAST_DNA_REPAIR_CHROMATIN · in progress</span>
 
@@ -36,8 +36,8 @@ Reviewing GO annotations for 27 *S. cerevisiae* repair and chromatin genes
 
 ## Bottom line
 
-- The plan covers **27 genes**: checkpoint signalling, homologous recombination, FACT and remodelers, mismatch repair, translesion synthesis and dNTP supply.
-- **4 of 27 reviewed**, all on the chromatin side: **SPT16, POB3, CHD1, SWI1** (192 annotations).
+- The plan covers **26 genes**: checkpoint signalling, homologous recombination, FACT and remodelers, mismatch repair, translesion synthesis and dNTP supply.
+- **4 of 26 reviewed**, all on the chromatin side: **SPT16, POB3, CHD1, SWI1** (191 existing annotation rows, plus 1 proposed NEW term).
 - Almost every row was accepted or kept as non-core; **4 REMOVE**. The recombination, checkpoint and mismatch-repair genes have **no review yet**.
 
 ---
@@ -82,7 +82,7 @@ Reviewing GO annotations for 27 *S. cerevisiae* repair and chromatin genes
 ## Status and next steps
 
 - ✅ Reviewed: `genes/yeast/{SPT16,POB3,CHD1,SWI1}/`
-- ⬜ 23 genes with no folder: MRX + SAE2, RAD51/52/54/55/57, RAD9, CHK1, DUN1, MSH2/MSH6/MLH1/PMS1, RAD3, REV3, RNR1–4.
+- ⬜ 22 genes with no folder: MRX + SAE2, RAD51/52/54/55/57, RAD9, CHK1, DUN1, MSH2/MSH6/MLH1/PMS1, RAD3, REV3, RNR1–4.
 - Fix checklist labels first: yeast 9-1-1 is **Ddc1–Rad17–Mec3**; RAD3 and REV3 are not base excision repair; DUN1 is listed twice.
 
 **Read more:** `projects/YEAST_DNA_REPAIR_CHROMATIN.md`

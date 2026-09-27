@@ -3,7 +3,7 @@ title: "Yeast Epigenetics & Histone Inheritance"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
-genes: [GCN5, ESA1, SAS2, SAS3, RPD3, HDA1, HST1, HST2, SIR2, SIR3, SIR4, ORC1, SET1, DOT1, SPT16, POB3, ASF1, RTT109, SWI1, SWI2, SWI3, SNF5, CHD1, RCO1, PHD1, RLF2, CAC2, MSI1]
+genes: [GCN5, ESA1, SAS2, SAS3, RPD3, HDA1, HST1, HST2, SIR2, SIR3, SIR4, ORC1, SET1, DOT1, SPT16, POB3, ASF1, RTT109, SWI1, SWI2, SWI3, SNF5, CHD1, RCO1, PHD1]
 ---
 
 # Yeast Epigenetics & Histone Inheritance
@@ -12,8 +12,8 @@ genes: [GCN5, ESA1, SAS2, SAS3, RPD3, HDA1, HST1, HST2, SIR2, SIR3, SIR4, ORC1, 
 through cell division with a small set of histone writers, erasers, readers,
 chaperones and remodelers. We planned reviews of *S. cerevisiae* genes in
 those classes (acetyltransferases, deacetylases, SIR silencing proteins,
-methyltransferases, FACT and other chaperones, SWI/SNF and CHD1, and two
-readers) to test how well GO captures their chromatin functions. 25 of them
+methyltransferases, FACT and other chaperones, SWI/SNF and CHD1, and the
+Rpd3S reader RCO1) to test how well GO captures their chromatin functions. 25 of them
 now have reviews, covering 1,255 existing annotations: 778 ACCEPT, 288
 KEEP_AS_NON_CORE, 132 REMOVE, 30 MARK_AS_OVER_ANNOTATED, 11 MODIFY and 16
 UNDECIDED. Most removals (110 of 132) are generic `protein binding`
@@ -23,7 +23,10 @@ Two gaps remain. The CAF-1 chromatin assembly factor, whose subunits are
 RLF2 (alias CAC1), CAC2 and MSI1, has no reviews yet; these are pending. (A
 folder formerly named `genes/yeast/CAF1/` held the unrelated CCR4-NOT
 deadenylase, now renamed POP2; it is not part of this project.) CLR4 is a
-fission yeast gene with no *S. cerevisiae* review.
+fission yeast gene with no *S. cerevisiae* review. PHD1, filed below as a
+histone reader, is not one: the name means "pseudohyphal determinant", it
+has no PHD finger, and its review describes an APSES-family transcription
+factor that controls pseudohyphal growth.
 
 The "29 genes" and per-phase counts in the Progress section below come from
 the December 2025 run and predate later re-reviews; the numbers above are
@@ -110,7 +113,7 @@ Last updated: 2026-08-12
 
 ### Histone Modifications - Readers & Adaptors
 - [ ] RCO1 - Regulator of chromatin organization (H3K4me3 reader)
-- [ ] PHD1 - Plant homeodomain (histone modification reader)
+- [ ] PHD1 - Pseudohyphal determinant; APSES transcription factor (not a histone reader, despite the name)
 
 ## Progress
 
@@ -177,7 +180,7 @@ Last updated: 2026-08-12
 - Modification: GO:0006357 too broad - should be "chromatin organization" or "antisense regulation"
 - Core: H3K4me3 recognition, Rpd3S complex component, cryptic transcription suppression
 
-**PHD1 (Plant HomeoDomain 1 - H3me reader / transcription factor)**
+**PHD1 (Pseudohyphal Determinant 1 - APSES transcription factor; no PHD finger, not a histone reader)**
 - 13 annotations → 11 ACCEPT (84.6%), 2 KEEP_AS_NON_CORE
 - Excellence: Highest ACCEPT rate in Phase 7, well-characterized master regulator
 - Core: Sequence-specific DNA binding, positive transcription regulation, pseudohyphal growth regulation
