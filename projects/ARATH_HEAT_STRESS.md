@@ -20,9 +20,10 @@ were replacing `protein binding` rows with specific partner terms (heat shock
 protein binding, Hsp90 binding, transcription factor binding), removing
 chloroplast localizations for the cytosolic chaperones HSP101 and HSC70-1, and
 sharpening the HSFA3 and DREB2A process and DNA-binding terms. The per-gene
-counts in the tables below date from November 2025; the review files have been
-revised since (for example HSFA2 now has 27 ACCEPT and 14 KEEP_AS_NON_CORE), and
-the counts in this paragraph are taken from the current files.
+counts in the tables below are taken from the current review files. The
+repo also holds a duplicate DREB2A review under a symbol folder
+(`genes/ARATH/DREB2A/`) alongside the locus folder (`genes/ARATH/AT5G05410/`)
+counted here; the two still need to be reconciled.
 
 We did this because the heat stress network is a well-studied regulatory
 hierarchy with strong genetic evidence, which makes it a good test of whether
@@ -44,25 +45,25 @@ This document tracks the curation of 10 key heat stress response genes in Arabid
 | Gene Symbol | Locus | Status | UniProt Fetched | GOA Fetched | Deep Research | Review Started | Review Completed | Notes |
 |-------------|-------|--------|-----------------|-------------|---------------|----------------|------------------|-------|
 | HSFA1A | AT4G17750 | ✅ COMPLETE | ✅ | ✅ (22 annots) | ✅ (37 cites) | ✅ | ✅ | Master regulator, all 22 annots ACCEPTED |
-| HSFA1B | AT5G16820 | ✅ COMPLETE | ✅ | ✅ (20 annots) | ✅ (42 cites) | ✅ | ✅ | Co-master regulator, 17 ACCEPT, 2 MODIFY, 1 NON-CORE |
+| HSFA1B | AT5G16820 | ✅ COMPLETE | ✅ | ✅ (20 annots) | ✅ (42 cites) | ✅ | ✅ | Co-master regulator, 17 ACCEPT, 2 MODIFY, 1 NON-CORE, 1 NEW |
 | HSFA1D | AT1G32330 | ✅ COMPLETE | ✅ | ✅ (14 annots) | ✅ (40 cites) | ✅ | ✅ | Co-master regulator, 12 ACCEPT, 2 MODIFY |
-| HSFA2 | AT2G26150 | ✅ COMPLETE | ✅ | ✅ (41 annots) | ✅ (42 cites) | ✅ | ✅ | Memory regulator, 23 ACCEPT, 11 NON-CORE |
+| HSFA2 | AT2G26150 | ✅ COMPLETE | ✅ | ✅ (41 annots) | ✅ (42 cites) | ✅ | ✅ | Memory regulator, 27 ACCEPT, 14 NON-CORE, 1 NEW |
 
 ### TIER 2 - Essential Molecular Chaperones
 
 | Gene Symbol | Locus | Status | UniProt Fetched | GOA Fetched | Deep Research | Review Started | Review Completed | Notes |
 |-------------|-------|--------|-----------------|-------------|---------------|----------------|------------------|-------|
-| HSP101 | AT1G74310 | ✅ COMPLETE | ✅ | ✅ (21 annots) | ✅ (53 cites) | ✅ | ✅ | Essential disaggregase, 14 ACCEPT, 3 MODIFY, 3 NEW |
-| HSC70-1 | AT5G02500 | ✅ COMPLETE | ✅ | ✅ (48 annots) | ✅ (56 cites) | ✅ | ✅ | Negative HSF regulator, 30 ACCEPT, 10 NON-CORE |
-| HSP90.1 | AT5G52640 | ✅ COMPLETE | ✅ | ✅ (33 annots) | ✅ (54 cites) | ✅ | ✅ | Signaling protein chaperone, 14 ACCEPT, 7 MODIFY, 8 NON-CORE, 4 REMOVE |
+| HSP101 | AT1G74310 | ✅ COMPLETE | ✅ | ✅ (21 annots) | ✅ (53 cites) | ✅ | ✅ | Essential disaggregase, 13 ACCEPT, 3 MODIFY, 3 NON-CORE, 2 REMOVE, 2 NEW |
+| HSC70-1 | AT5G02500 | ✅ COMPLETE | ✅ | ✅ (48 annots) | ✅ (56 cites) | ✅ | ✅ | Negative HSF regulator, 26 ACCEPT, 12 NON-CORE, 5 OVER-ANNOTATED, 3 REMOVE, 2 MODIFY |
+| HSP90.1 | AT5G52640 | ✅ COMPLETE | ✅ | ✅ (33 annots) | ✅ (54 cites) | ✅ | ✅ | Signaling protein chaperone, 24 ACCEPT, 4 REMOVE, 2 MODIFY, 2 UNDECIDED, 1 NON-CORE, 2 NEW |
 
 ### TIER 3 - Key Transcriptional Integrators
 
 | Gene Symbol | Locus | Status | UniProt Fetched | GOA Fetched | Deep Research | Review Started | Review Completed | Notes |
 |-------------|-------|--------|-----------------|-------------|---------------|----------------|------------------|-------|
-| DREB2A | AT5G05410 | ✅ COMPLETE | ✅ | ✅ (39 annots) | ✅ (37 cites) | ✅ | ✅ | Cross-stress integrator, 15 ACCEPT, 9 MODIFY, 7 OVER-ANNOTATED, 8 NON-CORE |
-| HSFA3 | AT5G03720 | ✅ COMPLETE | ✅ | ✅ (15 annots) | ✅ (36 cites) | ✅ | ✅ | Memory specialist (forgetter3), 11 ACCEPT, 4 MODIFY |
-| HSFA1E | AT3G02990 | ✅ COMPLETE | ✅ | ✅ (13 annots) | ✅ (38 cites) | ✅ | ✅ | Osmotic/salt specialist, 12 ACCEPT, 1 NON-CORE, 4 NEW |
+| DREB2A | AT5G05410 | ✅ COMPLETE | ✅ | ✅ (39 annots) | ✅ (37 cites) | ✅ | ✅ | Cross-stress integrator, 18 ACCEPT, 10 MODIFY, 7 OVER-ANNOTATED, 4 NON-CORE, 3 NEW |
+| HSFA3 | AT5G03720 | ✅ COMPLETE | ✅ | ✅ (15 annots) | ✅ (36 cites) | ✅ | ✅ | Memory specialist (forgetter3), 12 ACCEPT, 3 MODIFY, 1 NEW |
+| HSFA1E | AT3G02990 | ✅ COMPLETE | ✅ | ✅ (13 annots) | ✅ (38 cites) | ✅ | ✅ | Osmotic/salt specialist, 12 ACCEPT, 1 NON-CORE |
 
 ## Scientific Background
 
@@ -132,7 +133,7 @@ Ensure annotations capture:
 
 ## Progress Tracking
 
-**Last Updated:** 2025-11-08
+**Last Updated:** 2026-09-26 (per-gene action counts refreshed from the current review files)
 
 **Overall Progress:** 10/10 genes complete (100%) ✅✅✅
 **Data Collection:** 10/10 genes fetched (100%)
@@ -145,21 +146,21 @@ Ensure annotations capture:
 
 ### TIER 1 - Master Regulators (COMPLETE)
 1. ✅ **HSFA1A** - 22 annotations reviewed (22 ACCEPT)
-2. ✅ **HSFA1B** - 20 annotations reviewed (17 ACCEPT, 2 MODIFY, 1 NON-CORE)
+2. ✅ **HSFA1B** - 20 annotations reviewed (17 ACCEPT, 2 MODIFY, 1 NON-CORE) + 1 NEW
 3. ✅ **HSFA1D** - 14 annotations reviewed (12 ACCEPT, 2 MODIFY)
-4. ✅ **HSFA1E** - 13 annotations reviewed (12 ACCEPT, 1 NON-CORE) + 4 NEW
-5. ✅ **HSFA2** - 41 annotations reviewed (23 ACCEPT, 11 NON-CORE, 3 MODIFY, 4 OVER-ANNOTATED)
+4. ✅ **HSFA1E** - 13 annotations reviewed (12 ACCEPT, 1 NON-CORE)
+5. ✅ **HSFA2** - 41 annotations reviewed (27 ACCEPT, 14 NON-CORE) + 1 NEW
 
 ### TIER 2 - Essential Molecular Chaperones (COMPLETE)
-6. ✅ **HSP101** - 21 annotations reviewed (14 ACCEPT, 3 MODIFY, 2 REMOVE, 2 NON-CORE) + 3 NEW
-7. ✅ **HSC70-1** - 48 annotations reviewed (30 ACCEPT, 10 NON-CORE, 5 OVER-ANNOTATED, 2 MODIFY, 2 REMOVE)
-8. ✅ **HSP90.1** - 33 annotations reviewed (14 ACCEPT, 7 MODIFY, 8 NON-CORE, 4 REMOVE)
+6. ✅ **HSP101** - 21 annotations reviewed (13 ACCEPT, 3 MODIFY, 3 NON-CORE, 2 REMOVE) + 2 NEW
+7. ✅ **HSC70-1** - 48 annotations reviewed (26 ACCEPT, 12 NON-CORE, 5 OVER-ANNOTATED, 3 REMOVE, 2 MODIFY)
+8. ✅ **HSP90.1** - 33 annotations reviewed (24 ACCEPT, 4 REMOVE, 2 MODIFY, 2 UNDECIDED, 1 NON-CORE) + 2 NEW
 
 ### TIER 3 - Key Transcriptional Integrators (COMPLETE)
-9. ✅ **DREB2A** - 39 annotations reviewed (15 ACCEPT, 9 MODIFY, 7 OVER-ANNOTATED, 8 NON-CORE)
-10. ✅ **HSFA3** - 15 annotations reviewed (11 ACCEPT, 4 MODIFY)
+9. ✅ **DREB2A** - 39 annotations reviewed (18 ACCEPT, 10 MODIFY, 7 OVER-ANNOTATED, 4 NON-CORE) + 3 NEW
+10. ✅ **HSFA3** - 15 annotations reviewed (12 ACCEPT, 3 MODIFY) + 1 NEW
 
-**Total Annotations Reviewed:** 266 across all 10 genes
+**Total Annotations Reviewed:** 266 across all 10 genes (183 ACCEPT, 36 NON-CORE, 24 MODIFY, 12 OVER-ANNOTATED, 9 REMOVE, 2 UNDECIDED) + 10 NEW
 **Total Deep Research Citations:** 435 citations
 
 ## Key Achievements
@@ -200,3 +201,7 @@ All four HSFA1 family members fully characterized with functional distinctions:
 - Locus identifiers (AT codes) confirmed via TAIR database
 - Focus on experimentally validated functions
 - Pay special attention to mutant phenotypes (triple KO, hot1-3, hsfa2)
+
+## Slides
+
+- [Slides](ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.html) (Marp source: [ARATH_HEAT_STRESS-slides.md](ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.md)) — AI generated

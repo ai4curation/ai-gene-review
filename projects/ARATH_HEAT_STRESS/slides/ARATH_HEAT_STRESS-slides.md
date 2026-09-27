@@ -87,7 +87,7 @@ Reviewing GO annotations for 10 genes of the heat stress response network
 ## Status and next steps
 
 - ✅ 10/10 gene reviews complete (Tier 1 regulators, Tier 2 chaperones, Tier 3 integrators).
-- ⬜ Per-gene tables on the project page need refreshing from the current files.
+- ✅ Per-gene tables on the project page refreshed from the current files.
 - ⬜ A second DREB2A review exists under `genes/ARATH/DREB2A/` alongside `AT5G05410/`; reconcile.
 - ⬜ Network integration: capture HSF → target hierarchy (module or GO-CAM).
 

@@ -108,3 +108,7 @@ documents and are candidates for future dedicated modules.
       feedstocks and to pretreatment).
 - [ ] Per-gene reviews for feedstock-species orthologs (poplar/sorghum) of the
       exemplar enzymes above.
+
+## Slides
+
+- [Slides](PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.html) (Marp source: [PLANT_BIOENERGY-slides.md](PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.md)) — AI generated

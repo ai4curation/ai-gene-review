@@ -164,6 +164,10 @@ According to PubMed (verified):
 - [ ] Module F — CCM: LCIA/B, CCM1, carbonic anhydrases
 - [ ] Module G — pigment biosynthesis: CHLH, POR
 
+## Slides
+
+- [Slides](PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.html) (Marp source: [PHOTOSYNTHESIS-slides.md](PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.md)) — AI generated
+
 # NOTES
 
 ## 2026-06-12 (Session 1)

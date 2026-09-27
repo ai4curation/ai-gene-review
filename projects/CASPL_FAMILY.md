@@ -70,3 +70,7 @@ transfer. See `bioinformatics/RESULTS.md`.
   set ([PMID:39124195]) and watermelon ClCASPL ([PMID:26399665]) are TrEMBL only, so they cannot be
   curated to the repository's reviewed-entry standard. Rice (29) and maize (23) *do* have reviewed
   CASPL entries and are the curatable cross-species extension if desired.
+
+## Slides
+
+- [Slides](CASPL_FAMILY/slides/CASPL_FAMILY-slides.html) (Marp source: [CASPL_FAMILY-slides.md](CASPL_FAMILY/slides/CASPL_FAMILY-slides.md)) — AI generated

@@ -333,3 +333,7 @@ dirs:** likely `EMENI` (*A. nidulans*) and `NEUCR` (*N. crassa*).
   tier 5; could be spun out to a `conidial_wall_assembly` module if it grows.
 - **GO-CAM coverage:** check `gocams/index.tsv` for any existing conidiation
   models to attach via `gocam_associations`.
+
+## Slides
+
+- [Slides](CONIDIATION/slides/CONIDIATION-slides.html) (Marp source: [CONIDIATION-slides.md](CONIDIATION/slides/CONIDIATION-slides.md)) — AI generated
