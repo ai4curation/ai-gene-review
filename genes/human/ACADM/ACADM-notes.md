@@ -281,3 +281,12 @@ Final independent signoff found no remaining blocking biological concern across 
 ## PR #3156 participation-test follow-up
 
 The earlier glycogen-biosynthesis OVER_ANNOTATED decision is superseded by REMOVE. This electronic transfer assigns ACADM to glycogen synthesis, whereas the recovered source describes G6P flux repartitioning and no ACADM-performed synthesis step. The reason and ROLE_CONFLATION assessment therefore support removing this process assertion. Regulation of gluconeogenesis remains a separate, context-dependent claim. Final counts are 38 ACCEPT, 6 KEEP_AS_NON_CORE, 4 UNDECIDED, 1 REMOVE and 1 MODIFY; all 50 source assertions are unchanged. PMID:18459129 still requires its normal cache fetch before this draft can become ready.
+
+
+## 2026-09-27: Required publication cache recovered
+
+Recovered required PMID:18459129 through standard fetch-pmid in read-only Actions run 36286975328 (job 108529455048, artifact 10920674630), transported unchanged by read-only run 36288441414. Verified artifact SHA256 c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713 and every record SHA256/Git blob before importing. Re-read this abstract, confirmed exact citation title and retained full_text_unavailable=true. All annotation decisions, source objects, core functions, reference identities and alternative products remain unchanged from 786055049e98d6df533cb981a2bffedc9b8a8148. Targeted validation passed with 0 warnings; YAML status is COMPLETE. The machine cache requirement is satisfied; source-limited UNDECIDED judgments remain explicit.
+
+This supersedes the earlier missing-cache publication gate. The recovered record is abstract-only; neither its presence nor successful validation establishes access to the full paper. Zero remaining validation warnings permit COMPLETE status and a ready PR.
+
+Final checks: `just validate human ACADM`, `just render human ACADM` and the new history validation all passed. The parsed review differs only in source-access notes and, where applicable, status; every biological decision and source field is preserved.
