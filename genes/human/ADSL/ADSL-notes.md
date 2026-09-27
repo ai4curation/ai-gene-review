@@ -354,3 +354,37 @@ reaction support instead of an aim-only quotation. All 30 source assertions and 
 reference identities, downloaded sources and published history remain unchanged.
 
 Peer review also distinguished the dual-substrate assays reported in PMID:10888601 from the reaction descriptions in PMID:19405474, whose measured kinetics concern adenylosuccinate. The two relevant review rows now cite the measured dual-substrate result.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+The earlier nine-record cache gate is now closed. Standard fetch output from
+GitHub Actions run 36286975328 (head
+5946477c8ac79ade0709264c775ea1262b108438), artifact 10920674630, was
+transported without refetching or modifying records and verified against ZIP
+SHA-256 c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713.
+The local import receipt is
+`tmp/verified-reference-records/local-import-receipt.json`. Only this gene's
+nine required records belong in its publication manifest.
+
+- PMID:25681585 and PMID:32439803 now have cached XML full text. The former
+  reports mouse HIF-1α induction of AMPD and HPRT and hadacidin-sensitive
+  purine-cycle physiology, without identifying ADSL as the induced enzyme.
+  The latter reports endogenous ADSL proximity during hypoxic purinosome
+  assembly and no corresponding increase in de novo purine synthesis. The
+  recovered Methods/Results agree with the previous external-source readings.
+  Their local `full_text_unavailable` flags are now false.
+- PMID:6480832, PMID:3777158, PMID:690130, PMID:3689310, PMID:40033100,
+  PMID:8887278 and PMID:7128902 now have normal cached abstracts. Their
+  local full-text flags remain true. These abstracts preserve the documented
+  mouse/rat distinctions, tissue-dependent starvation response, rat tetrameric
+  enzyme evidence and source-specific uncertainty. Prior external full-paper
+  access for PMID:690130 is still distinguished from its abstract-only cache.
+
+All 30 source assertions, annotation decisions, two cores, 23 reference
+identifiers/titles and machine-generated gene files are unchanged. Cache
+availability is distinct from citation verification and does not resolve the
+remaining contextual-transfer uncertainties. Previous history and dated notes
+are retained; this entry supersedes their missing-record status. Targeted
+validation, rendering and the new history check are recorded in the closure
+manifest. COMPLETE is used only if the targeted validation has no warnings.
