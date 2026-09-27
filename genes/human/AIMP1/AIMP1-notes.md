@@ -57,3 +57,74 @@ All 14 original PMID caches and all ten cited Reactome caches are present. The s
 Evidence quotes are ordinary `supporting_text` from the actual cached text or short externally verified primary abstracts. No full-text-only field is used to evade a missing cache, and generated research headers are not substituted for experimental evidence. Reference identity/title pairs from the original review are unchanged. The review is validated and rendered with the repository tools; the final handoff manifest records check results, source preservation, exact byte hashes and all cache gates.
 
 Final local checks: schema validation, strict ontology term/label validation, history validation and rendering passed. The local best-practice/GOA check passed with one intentional advisory: no annotation cites the generated research file, because primary evidence is used instead. The case-sensitive whitespace-normalized audit matched all 56 ordinary quote occurrences whose caches are present; five unique externally verified abstract snippets account for 12 further occurrences awaiting normal caches. The complete `just validate human AIMP1` run remains separately tracked in the handoff manifest until its reference phase finishes.
+
+## 2026-09-27 PR #3262 feedback: primary release evidence and binding scope
+
+The current-head [review](https://github.com/ai4curation/ai-gene-review/pull/3262#issuecomment-5853340658)
+was read in full against published head `a7342d4d932748d0687fb56eaec20e8ef1a7de09`.
+All six canonical file blobs matched that head before editing. The 50 machine
+source objects, molecular-form fields, qualifiers, two cores and action counts
+remain unchanged. The one corrected reference title is the later added
+PMID:29379495: its normal CI fetch returned `T(H)1`, whereas the primary web
+heading displays a subscript H. The review now uses the machine plain-text
+rendering. This corrects the observed CI error; it does not claim that a local
+DNS-limited validation can re-fetch that record.
+
+The earlier extracellular section is superseded on one source attribution:
+PMID:11741979's intact-p43 secretion sentence is introductory background. Its
+own reported assays concern the C-terminal EMAP-II ligand, recipient-cell
+surface binding and endothelial growth inhibition. The affected reviews now
+cite those actual results, rather than calling the sentence a release assay.
+
+The independent primary [PMID:10850427](https://pubmed.ncbi.nlm.nih.gov/10850427/)
+and its [author-uploaded original](https://www.researchgate.net/publication/12468958_Prostate_adenocarcinoma_cells_release_the_novel_proinflammatory_polypeptide_EMAP-II_in_response_to_stress)
+were read. Human prostate-cancer cells release precursor and processed forms
+under stress. Figure 6 separately tests the recombinant 34- and 22-kDa forms.
+These results support extracellular localization and form-dependent cytokine
+activity, without establishing constitutive secretion or a unique release route.
+The normal fetch failed DNS (0/1; `/tmp/AIMP1-10850427-fetch.log`); external
+primary reading is not a fabricated local cache. The new record is a future
+recovery gate, separate from the seven earlier source4-owned records.
+
+The [original GBP1 paper](https://www.researchgate.net/publication/259322294_Guanylate_Binding_Protein_1-Mediated_Interaction_of_T_Cell_Antigen_Receptor_Signaling_with_the_Cytoskeleton)
+was reread. Figure 3D reports four control-subtracted runs and the Discussion
+names p43. The [GO:0051020 definition](https://amigo.geneontology.org/amigo/term/GO:0051020)
+identifies the GTPase partner class; it does not assert GAP/GEF chemistry.
+NON_CORE retains the curator's contextual physical-interaction interpretation,
+with direct binary contact unresolved. Generic GO:0005515 removals follow the
+information-content policy, rather than a rule rejecting all AP-MS evidence.
+A short external snippet now identifies the target-level evidence; the ordinary
+local record remains abstract-only.
+
+The externally available PMID:11306575 Results/Figure 6 was independently
+reread and supplies the short solution-dimer quote. Exact immutable UniProt
+text corroborates it as a database statement. The annotation reason now also
+distinguishes the later AIMP1-AIMP2 assembly state in PMID:39542129; neither
+experiment establishes a universal native MSC stoichiometry. The cached
+PMID:10791971 complex-membership row now quotes the actual p43 immunoblot and
+co-elution result. The endothelial-apoptosis reason explicitly retains the
+bovine recipient-cell, recombinant full-length ligand and high-dose arm of a
+biphasic response. These assay limits already supported the accepted refinement.
+
+Extracellular cytokine activity remains positively supported but non-core because
+its deployment depends on release, processing and responding-cell context. The
+two integrated cores retain intracellular tRNA recruitment and MSC assembly.
+No missing-cached-source count is used to rank one biological function above
+another. The contradictory PMID:22190034 availability prose now matches its
+actual abstract-only normal metadata and unchanged true-unavailable flag.
+
+The earlier final-check paragraph recorded a then-pending reference phase.
+The new follow-up manifest separately records the terminal current validation,
+source integrity, exact quotes, history and rendering; the prior CI failure is
+not represented as a pass. The complete recursive review/notes/provider census
+now has eight missing PMID records: **10358004, 10850427, 12237313, 17001013,
+17525271, 25288775, 29379495 and 39542129**. DRAFT remains required until normal
+cache retrieval permits every source-specific title/quote check.
+
+The parent independently checked the full biological delta and the original human
+release, GBP1-association and solution-dimer sources, finding no blocker. Final
+full targeted validation exited 0 with all validations passed. Its two warnings
+are the eight known missing publication records (reported repeatedly where cited)
+and the intentional unused historical research-report advisory. History validation,
+rendering, source preservation and all 50 cached quote occurrences passed. The
+two external full-text snippets remain explicitly distinguished from local caches.
