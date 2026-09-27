@@ -96,3 +96,7 @@ Targets problematic mRNAs:
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
+
+## Slides
+
+- [Slides](RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.html) (Marp source: [RIBOSOME_QUALITY_CONTROL-slides.md](RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.md)) — AI generated

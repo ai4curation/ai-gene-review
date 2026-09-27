@@ -3,7 +3,7 @@ title: "ER-phagy (Selective ER Autophagy) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
-genes: [RETREG1, RTN3, SEC62, CCPG1, TEX264, ATL3, MAP1LC3B, GABARAP, ULK1, ATG9A, ERN1, EIF2AK3]
+genes: [SEC62, ATL3, ULK1, ATG9A, EIF2AK3]   # reviewed genes only; full candidate list is in the table below
 ---
 
 # ER-phagy (Selective ER Autophagy) Project
@@ -11,7 +11,7 @@ genes: [RETREG1, RTN3, SEC62, CCPG1, TEX264, ATL3, MAP1LC3B, GABARAP, ULK1, ATG9
 **Bottom line:** scoped, not yet started as a project. ER-phagy is the selective
 autophagy of endoplasmic reticulum, carried out by ER-membrane receptors
 (FAM134B/RETREG1, RTN3, SEC62, CCPG1, TEX264, ATL3) that bind ATG8-family
-proteins such as LC3B and GABARAP. This page lists 12 candidate human genes but
+proteins such as LC3B and GABARAP. The candidate table below lists 12 human genes, but
 no ER-phagy-specific work has been done: there is no module and no gene review
 made for this project. Five candidates were reviewed for other projects (SEC62
 and ATL3 for Proteostasis, ULK1 and ATG9A for the CONDENSATES phagophore audit,
@@ -51,7 +51,7 @@ Proteins that bridge ER to autophagosomes via LC3-interacting regions (LIRs):
 - **ERN1** (IRE1α) - ER stress sensor
 - **EIF2AK3** (PERK) - ER stress kinase
 
-## Candidate Genes (~12-15)
+## Candidate Genes (12)
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -65,6 +65,8 @@ Proteins that bridge ER to autophagosomes via LC3-interacting regions (LIRs):
 | GABARAP | O95166 | ATG8 family |
 | ULK1 | O75385 | Autophagy kinase |
 | ATG9A | Q7Z3C6 | Membrane trafficking |
+| ERN1 | O75460 | IRE1α, ER stress sensor |
+| EIF2AK3 | Q9NZJ5 | PERK, ER stress kinase |
 
 ## Key Recent Discoveries (2020+)
 
@@ -82,3 +84,7 @@ Proteins that bridge ER to autophagosomes via LC3-interacting regions (LIRs):
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
+
+## Slides
+
+- [Slides](ER_PHAGY/slides/ER_PHAGY-slides.html) (Marp source: [ER_PHAGY-slides.md](ER_PHAGY/slides/ER_PHAGY-slides.md)) — AI generated

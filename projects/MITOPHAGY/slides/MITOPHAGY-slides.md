@@ -73,7 +73,6 @@ Selective autophagy of damaged mitochondria in human: a scoped project
 | SQSTM1 | GO:0000423 mitophagy | IGI, IBA | KEEP_AS_NON_CORE |
 | BNIP3L | GO:1901524 regulation of mitophagy | IEA | ACCEPT |
 | VCP | GO:0000423 mitophagy | IDA | ACCEPT |
-| ULK1 | GO:0000423 mitophagy | IBA | KEEP_AS_NON_CORE |
 
 ---
 

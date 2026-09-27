@@ -69,3 +69,6 @@ Started: 2025-11-10
 - **DCN**: Collagen fibrillogenesis, TGF-β regulation
 - **SPARC**: Parent family member, Ca²⁺ binding, collagen binding, anti-adhesive
 
+## Slides
+
+- [Slides](ECM/slides/ECM-slides.html) (Marp source: [ECM-slides.md](ECM/slides/ECM-slides.md)) — AI generated

@@ -3,7 +3,7 @@ title: "Stress Granule Assembly Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
-genes: [G3BP1, G3BP2, TIA1, TIAL1, CAPRIN1, USP10, TARDBP, FUS, HNRNPA1, HNRNPA2B1, ATXN2, VCP, PABPC1, FMR1, EIF2S1, EIF4G1]
+genes: [TIA1, TIAL1, USP10, TARDBP, HNRNPA2B1, VCP]   # reviewed genes only; full candidate list is in the table below
 ---
 
 # Stress Granule Assembly Project
@@ -11,8 +11,8 @@ genes: [G3BP1, G3BP2, TIA1, TIAL1, CAPRIN1, USP10, TARDBP, FUS, HNRNPA1, HNRNPA2
 **Bottom line:** scoped, not yet started as a project. Stress granules are
 membraneless RNA-protein condensates that form when translation initiation
 stalls under stress; G3BP1/G3BP2 and TIA1/TIAL1 nucleate them, and several
-ALS/FTD proteins (TDP-43, FUS, hnRNPA1/A2B1, ATXN2) partition into them. This
-page lists 16 candidate human genes, but there is no stress granule module and
+ALS/FTD proteins (TDP-43, FUS, hnRNPA1/A2B1, ATXN2) partition into them. The
+candidate table below lists 16 human genes, but there is no stress granule module and
 the core nucleators G3BP1 and G3BP2 have not been reviewed. Six candidates
 already have reviews made for other projects (TIA1, TIAL1, USP10, TARDBP,
 HNRNPA2B1, VCP). The stress-granule rows were accepted for TIA1 (8 rows,
@@ -65,7 +65,7 @@ Mutated in ALS/FTD:
 - **VCP** (p97) - AAA+ ATPase
 - **Chaperones** (HSP70 family)
 
-## Candidate Genes (~15-18)
+## Candidate Genes (16)
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -78,9 +78,13 @@ Mutated in ALS/FTD:
 | TARDBP | Q13148 | TDP-43 |
 | FUS | P35637 | ALS gene |
 | HNRNPA1 | P09651 | RNA binding |
+| HNRNPA2B1 | P22626 | RNA binding |
 | ATXN2 | Q99700 | ALS modifier |
 | VCP | P55072 | Disassembly |
 | PABPC1 | P11940 | Poly(A) binding |
+| FMR1 | Q06787 | FMRP |
+| EIF2S1 | P05198 | eIF2α |
+| EIF4G1 | Q04637 | Translation initiation |
 
 ## Key Recent Discoveries (2020+)
 
@@ -99,3 +103,7 @@ Mutated in ALS/FTD:
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
+
+## Slides
+
+- [Slides](STRESS_GRANULES/slides/STRESS_GRANULES-slides.html) (Marp source: [STRESS_GRANULES-slides.md](STRESS_GRANULES/slides/STRESS_GRANULES-slides.md)) — AI generated

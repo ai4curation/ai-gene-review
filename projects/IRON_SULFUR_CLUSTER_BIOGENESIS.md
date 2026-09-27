@@ -96,3 +96,7 @@ Cytosolic/nuclear Fe-S protein maturation:
 
 - [x] HSCB reviewed
 - [ ] Remaining genes need setup
+
+## Slides
+
+- [Slides](IRON_SULFUR_CLUSTER_BIOGENESIS/slides/IRON_SULFUR_CLUSTER_BIOGENESIS-slides.html) (Marp source: [IRON_SULFUR_CLUSTER_BIOGENESIS-slides.md](IRON_SULFUR_CLUSTER_BIOGENESIS/slides/IRON_SULFUR_CLUSTER_BIOGENESIS-slides.md)) — AI generated

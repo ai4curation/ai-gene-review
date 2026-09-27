@@ -114,7 +114,7 @@ batch.
 | [STRESS_GRANULES](STRESS_GRANULES.md) | per-condensate project (human SGs) | `SCOPING`; self-described stub, 5 of ~12 candidates have gene folders |
 | `MODULE:phagophore_assembly_site` | module | `DRAFT`; the corpus's only condensate modeled as a module |
 | `projects/CONDENSATES/scripts/scan_condensate_annotations.py` | audit script | regenerates every number on this page |
-| [GO:0034045 corpus slice audit](CONDENSATES/GO_0034045-annotation-audit.md) | per-assertion re-review | 18 annotations across 11 genes moved `ACCEPT` → `MODIFY`; input to GO issue #29437 |
+| [GO:0034045 corpus slice audit](CONDENSATES/GO_0034045-annotation-audit.md) | per-assertion re-review | all 31 first-pass assertions across 14 genes moved off `ACCEPT` (26 `MODIFY`, 5 `MARK_AS_OVER_ANNOTATED`); input to GO issue #29437 |
 | [SL project](SL.md) | sibling project | `GO_REF:0000044` over-annotation; SL-0221 is its first subproject |
 
 ### Relationship to the per-condensate projects
@@ -158,3 +158,7 @@ and already reviewed, so the batch tests the principles rather than the pipeline
   it structurally (e.g. as a knowledge-gap `boundary`) rather than in prose?
 - Do IEA/ISS/ISO scaffold annotations survive scrutiny anywhere? Of the 22 in the corpus, 8
   are non-experimental and they account for every non-`ACCEPT` outcome.
+
+## Slides
+
+- [Slides](CONDENSATES/slides/CONDENSATES-slides.html) (Marp source: [CONDENSATES-slides.md](CONDENSATES/slides/CONDENSATES-slides.md)) — AI generated
