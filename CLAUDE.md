@@ -509,7 +509,7 @@ main review file.
 Use the `PredictionReview` class (validated with `-C PredictionReview`):
 
 ```bash
-uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C PredictionReview genes/ECOLI/yciO/yciO-predictions-review.yaml
+uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C PredictionReview genes/ECOLI/yciO/yciO-det-predictions-review.yaml
 ```
 
 ### Prediction sources
@@ -540,6 +540,8 @@ other computational method that produces GO or EC predictions.
 - `LOCALIZATION_DEFAULT` - Defaults to cytosol/cytoplasm when no TM/signal features, mislocalizing secreted/organellar/membrane proteins
 - `TAXON_CONSTRAINT_VIOLATION` - Term valid only in another lineage/kingdom (e.g. animal terms for a plant protein)
 - `WRONG_INPUT_SEQUENCE` - Pipeline fed the wrong protein sequence (data error, not model error)
+- `DOMAIN_ARCHITECTURE_MISMATCH` - Predicted activity needs a domain or catalytic region the selected protein lacks
+- `COMPLEX_ACTIVITY_TRANSFER` - Catalytic activity of a complex assigned to a noncatalytic accessory subunit
 - See schema for full list
 
 ## Page rendering and deployment

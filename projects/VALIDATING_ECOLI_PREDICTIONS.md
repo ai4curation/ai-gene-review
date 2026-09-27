@@ -135,6 +135,11 @@ Last updated: 2026-09-26
 
 # NOTES
 
+## 2026-09-27
+
+- Several reference PMIDs in the `*-det-predictions-review.yaml` files resolved to unrelated papers, including the DeepECTF citation 37820725, a labile-iron imaging study. These were corrected on main in PR #3273 (DeepECTF is now PMID:37963869).
+- Build: `render-bioreason-eval` is now part of `build-pages` and the daily page workflow.
+
 ## 2026-09-26
 
 - Corrected the UniProt accessions for all 7 genes and the b-numbers for ygfF (b2902) and yciO (b1267), taking the values from the

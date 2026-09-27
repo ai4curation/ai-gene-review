@@ -52,6 +52,9 @@ are facet counts in the browser. Useful starting views:
 | **[BioReason-Pro and GO-GPT](BIOREASON_COMPARISON.md)** | BioReason-Pro functional summaries and reasoning traces, its SFT GO predictions, and the separate upstream GO-GPT term predictions. | [SFT reviews](BIOREASON_COMPARISON/sft-eval.html) · [GO-GPT reviews](BIOREASON_COMPARISON/gogpt-eval.html) · [Manuscript](BIOREASON_COMPARISON/article/manuscript.pdf) |
 | **[DeepECTransformer / E. coli](VALIDATING_ECOLI_PREDICTIONS.md)** | Enzyme-function predictions for selected E. coli proteins, with attention to substrate specificity, paralogs, and physiological context. | [Prediction reviews](VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html) · [Blinded recapitulation](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md) ([table](BIOREASON_COMPARISON/deepectf-eval.html); 4/7 match) |
 | **[Affinage](AFFINAGE_EVALUATION.md)** | Literature-derived functional narratives, GO grounding, and retrieval of relevant publications. | [Pilot results](AFFINAGE_EVALUATION/results/summary.md) · [Narrative versus GO analysis](AFFINAGE_EVALUATION/results/narrative-vs-go.md) · [Project findings](AFFINAGE_EVALUATION.md) |
+| **[Structure-based prediction](STRUCTURE_FUNCTION.md)** | Fold, active-site and structure-aware learned methods for distant homologs, tested against cases from existing reviews. | [Project page](STRUCTURE_FUNCTION.md) |
+| **[OpenScientist co-scientist](COSCIENTIST.md)** | An autonomous research agent used as an independent bioinformatician to test gene-function hypotheses; its verdicts also serve as adjudicators in the ProtNLM2 and TreeGrafter evaluations. | [Project page](COSCIENTIST.md) |
+| **[Prokaryotic immunity term prediction](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md)** | Scoping: translating family-level defense-system calls into review-ready GO term suggestions. | [Project page](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md) |
 
 BioReason-Pro SFT, RL narratives, and upstream GO-GPT outputs are separate
 evaluation targets. The GO-GPT review includes unresolved predictions; its table
@@ -75,6 +78,10 @@ orthology, phylogeny, and family membership have their own index,
 | [InterPro2GO](INTERPRO.md) | GO mappings attached to domain and family signatures, including specificity and propagation limits. |
 | [NCBIFam](NCBIFam.md) | Functional-family mappings and opportunities or risks in extending GO coverage. |
 | [PAINT / IBA](IBA_REVIEW.md) | Curator-assessed phylogenetic function inheritance and the evidence for individual transfers. |
+| [UniProt keywords (SPKW)](SPKW.md) | Annotations derived only from UniProt keyword mappings (`GO_REF:0000043`) and their over-annotation patterns. |
+| [Pfam → GO](PFAM.md) | Whether pfam2go adds specificity beyond InterPro2GO, and headroom for new family mappings. |
+| [Rhea → GO](RHEA.md) | What rhea2go contributes beyond ec2go, and reactions with no GO target. |
+| [TCDB → GO](TCDB.md) | Transporter classifications that never become GO annotations, and candidate TC-to-GO mappings. |
 | [ARBA rule reviews](https://ai4curation.io/ai-gene-review/rules/arba/index.html) | Reviews of UniProt's automated annotation rules and their biological scope. |
 
 ## Reading the evaluations
