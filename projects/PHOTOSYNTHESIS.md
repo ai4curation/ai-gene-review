@@ -166,7 +166,7 @@ According to PubMed (verified):
 
 ## Slides
 
-- [Slides](PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.html) (Marp source: [PHOTOSYNTHESIS-slides.md](PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.md)) — AI generated
+- [Slides](../../projects/PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.html) (Marp source: [PHOTOSYNTHESIS-slides.md](PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.md)) — AI generated
 
 # NOTES
 

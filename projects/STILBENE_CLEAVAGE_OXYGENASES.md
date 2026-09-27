@@ -142,6 +142,6 @@ experimental evidence separates them.
 
 ## Slides
 
-- [Slides](STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html) (Marp source: [STILBENE_CLEAVAGE_OXYGENASES-slides.md](STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.md)) — AI generated
+- [Slides](../../projects/STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html) (Marp source: [STILBENE_CLEAVAGE_OXYGENASES-slides.md](STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.md)) — AI generated
 
 **Source**: [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review)

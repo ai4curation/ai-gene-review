@@ -363,4 +363,4 @@ Record provenance per gene as `[PMID:xxxx "supporting text"]` in the gene notes.
 
 ## Slides
 
-- [Slides](DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.html) (Marp source: [DICTYOSTELIUM_DEVELOPMENT-slides.md](DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.md)) — AI generated
+- [Slides](../../projects/DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.html) (Marp source: [DICTYOSTELIUM_DEVELOPMENT-slides.md](DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.md)) — AI generated
