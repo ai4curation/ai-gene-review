@@ -2,9 +2,34 @@
 title: "Pseudoenzymes Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [RAMVA, SCHPO, SACEN, PSEAE, STRCO]
+genes: [RvY_13070, RvY_00650, RvY_03757, RvY_17310, RvY_15948, Epe1, eryCII, pqsB, actI-ORF2]
 ---
 
 # Pseudoenzymes Project
+
+**Bottom line:** pseudoenzymes keep an enzyme's fold but have lost its
+catalysis, and automated pipelines (InterPro2GO, EC2GO, UniRule, ARBA, IBA)
+still give them the family's catalytic activity and the processes that follow
+from it. This project catalogs the pseudoenzymes found during gene review,
+the checks used to detect them (catalytic-residue conservation, PROSITE motif
+context, M-CSA and HMM scoring, structures), and the annotation errors they
+cause. Nine reviewed genes carry the analysis: five Cu/Zn-SOD paralogs in the
+tardigrade *R. varieornatus*, the fission yeast JmjC "reader" Epe1, the
+P450-like glycosyltransferase activator EryCII, and the non-catalytic
+condensing-enzyme subunits PqsB and ActI-ORF2. In those reviews, Epe1's
+histone demethylase rows and EryCII's monooxygenase and heme rows are
+REMOVE; the SOD activity rows on RvY_13070 (RvSOD15), RvY_00650 and RvY_03757
+and the acyltransferase rows on PqsB and ActI-ORF2 are MARK_AS_OVER_ANNOTATED.
+Two gene reviews are more cautious than the prose below: RvY_17310's SOD rows
+are UNDECIDED, and the CCS-like RvY_15948 keeps superoxide metabolic process
+as non-core rather than removing it.
+
+We did this because family-based propagation never checks whether the
+catalytic residues survive, so pseudoenzymes are a systematic, predictable
+source of false enzyme annotations. The case list is still small; a
+systematic screen across existing reviews and the human pseudokinome is the
+main open task.
 
 **Project Start Date:** 2026-04-09
 **Focus:** Identification, annotation, and curation of catalytically inactive enzyme homologs
@@ -250,13 +275,13 @@ well-documented alternative function.
 | Feature | Details |
 |---------|---------|
 | **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
-| **Defect** | Degenerate Fe(II)-binding motif (HVD at position 279-282 instead of canonical HxD); missing key catalytic residues |
-| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays; H297A "catalytic" mutant retains anti-silencing function |
+| **Defect** | Degenerate Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution) |
+| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
 | **Actual function** | Anti-silencing factor; recruits SAGA histone acetyltransferase and Bdf2 bromodomain protein to heterochromatin boundaries; promotes nucleosome turnover; functions as H3K9me **reader**, not eraser |
 | **Type** | Type 5 (reader/recognition without modification) |
-| **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0051213 (dioxygenase activity), GO:0005506 (iron ion binding), GO:0070076 (histone lysine demethylation) |
-| **Annotations added** | GO:0042393 (histone binding), GO:0140030 (modification-dependent protein binding) |
-| **References** | Raiymbek 2020; Bao 2019; Epe1 gene review at `genes/SCHPO/Epe1/` |
+| **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0032454 (histone H3K9 demethylase activity; IDA and EXP rows), GO:0140680 (histone H3K36me/H3K36me2 demethylase activity), GO:0051213 (dioxygenase activity), GO:0016491 (oxidoreductase activity), GO:0046872 (metal ion binding). Open PR #3229 proposes UNDECIDED rather than REMOVE for the two experimental GO:0032454 rows |
+| **Annotations added** | NEW rows: GO:0140030 (modification-dependent protein binding), GO:0031452 (negative regulation of heterochromatin formation), GO:0006473 (protein acetylation); GO:0042393 (histone binding) enters as the proposed replacement for the MODIFY on protein binding and as a core-function MF, not as a NEW row |
+| **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Sorida 2019 (PMID:31206516); Epe1 gene review at `genes/SCHPO/Epe1/` |
 
 **Key insight:** Epe1 is a paradigm for the Type 5 (reader) pseudoenzyme.
 Its JmjC domain retains substrate recognition capability (binds H3K9me) but
@@ -469,8 +494,12 @@ Good template for families where the pseudoenzyme has neofunctionalized
 - **Byrne et al. 2020** - PseudoHunter detection pipeline *Bioinformatics*;
   tool paper
 - **Raiymbek et al. 2020** - Epe1 biochemistry and anti-silencing function
-- **Bao et al. 2019** - Epe1 H297A mutant retains anti-silencing; confirms
-  non-enzymatic mechanism
+- **Bao et al. 2019** - Epe1 recruits SAGA; overexpressed Epe1-H297A still
+  disrupts silencing, SAGA-dependently (the paper notes that endogenous-level
+  H297A resembles epe1Δ)
+- **Sorida et al. 2019** - single-copy Epe1-H297A suppresses ectopic
+  heterochromatin formation but fails to remove established ectopic
+  heterochromatin (PMID:31206516)
 - **Manning et al. 2002** - Original identification of ~10% of human kinome
   as pseudokinases *Cell*
 

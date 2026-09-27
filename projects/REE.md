@@ -1,12 +1,31 @@
 ---
 title: "Rare Earth Element (REE) Extraction Pathways (Biological Systems)"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
+species: [METEA]
 ---
 
 # Rare Earth Element (REE) Extraction Pathways (Biological Systems)
 
-Concepts for engineered pathways to sense, mobilize, capture, concentrate, and release rare earth elements (REEs) and associated strategic metals (Co, Ni, Mn) using microbial or plant chassis.
+**Bottom line:** rare earth elements are recovered today by mineral processing
+that is chemically harsh and poorly selective, while some bacteria already
+solubilize, import and store lanthanides as part of normal metabolism. This
+page is a design document for an engineered biological pipeline built from
+four modules: metal sensing and controlled leaching, selective binding and
+uptake, intracellular sequestration, and triggered export into a recovery
+solution. It names candidate genes for each module (the `mll` lanthanophore
+cluster, the `lut` uptake cluster with `lanM`, the `xoxF`/`xoxG`/`xoxJ`
+methanol dehydrogenase module, `czc`/`cnr`/`rcnA` efflux systems, `smtA`,
+`ppk`), maps the *Methylorubrum extorquens* AM1 loci where they are known, and
+scores four candidate chassis on selectivity, leaching strength and metal
+tolerance. It is scoped, not started: no experiments, no curation batch, and
+the storage and export loci in AM1 are explicitly unmapped. Related gene
+reviews for the AM1 `mll`, `lut` and `xox` genes live under `genes/METEA/` and
+are tracked by the METEA_MLL_CLUSTER project.
+
+The chassis comparison is the practical output so far: AM1 wins on REE
+selectivity and loses on acid tolerance, which is why the blueprint separates
+leaching from uptake rather than asking one organism to do both.
 
 ## Slides
 

@@ -2,10 +2,32 @@
 title: "Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs"
 maturity: SCOPING
 tags: [OBSOLETION]
-species: [human, PSEPK, POPTR, DANRE, METTP]
+species: [human, PSEPK, POPTR, DANRE, METTP, DROME]
 ---
 
 # Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs
+
+**Bottom line:** GO is obsoleting 43 biological-process terms that name the
+amino acid charged onto a tRNA (alanyl-tRNA aminoacylation and so on, plus
+their mitochondrial twins) and merging them into two parents, GO:0006418 and
+GO:0070127, because amino-acid identity is already captured by the 1:1
+`<aa>-tRNA ligase activity` MF terms. We checked every affected term in
+QuickGO, counted its annotations (six mitochondrial terms have none), and
+enumerated the reviews in this repo that use them. The obsoletion matters here
+because it reverses a judgment our reviews make: they mark GO:0006418 as
+over-annotated because the amino-acid-specific child "already captures" the
+process. The impact tables below were written on 2026-08-29, before the PSEPK
+aminoacyl-tRNA batch (#2899) merged; the repo now has 33 reviews touching the
+obsoleted terms, 26 of them in strictly validated `core_functions`, and 16
+reviews that mark GO:0006418 over-annotated or modify it away (15 PSEPK
+synthetases plus human AARS1). No review has been edited for the obsoletion
+yet, and the module text records that QuickGO's 2026-09-22 snapshot already
+obsoletes GO:0006421, GO:0006425 and GO:0070681.
+
+It also surfaced an upstream problem worth reporting: zebrafish *gtpbp3*, a
+tRNA-modifying GTPase rather than a synthetase, is the only gene annotated to
+two of the mitochondrial terms, and a bulk migration would carry those six
+over-annotations into GO:0070127.
 
 ## Overview
 
@@ -362,3 +384,7 @@ the window for contributing the gtpbp3 finding is now.
   `GO:0070149`, `GO:0070153` and `GO:0070155` all verified via the QuickGO
   annotation API. In-repo impact enumerated by parsing all 15 affected review
   YAMLs. No upstream comment posted yet.
+
+## Slides
+
+- [Slides](AMINO_ACID_ACTIVATION_OBSOLETION/slides/AMINO_ACID_ACTIVATION_OBSOLETION-slides.html) (Marp source: [AMINO_ACID_ACTIVATION_OBSOLETION-slides.md](AMINO_ACID_ACTIVATION_OBSOLETION/slides/AMINO_ACID_ACTIVATION_OBSOLETION-slides.md)) — AI generated

@@ -17,6 +17,23 @@ genes:
 
 # Cargo Receptor Ligand Activity (GO:0140355) — Obsoletion & Transfer
 
+**Bottom line:** GO is retiring `GO:0140355 cargo receptor ligand activity`
+with no replacement, because being recognised by a cargo receptor is something
+done to a protein, not an activity it performs; the receptor's
+`GO:0038024 cargo receptor activity` should carry the ligand as its input
+instead. We re-counted the term's footprint in QuickGO: 172 annotations, of
+which 157 are Ensembl orthology projections from just three seeds (mouse Tcn2,
+mouse Cblif and yeast ATG5), so the real curation job is six experimental rows.
+We did this because three reviews in this repo use the term: TCN2 and CBLIF
+accept it and list it as a `core_functions` molecular function, which will fail
+strict validation once the term is obsolete, and TCN1 keeps it as non-core.
+Status: scoped, waiting for go-ontology#32466; no review has been edited yet.
+The three B12 carriers already carry `GO:0031419 cobalamin binding` and
+`GO:0015889 cobalamin transport`, and the receptors (CD320, CUBN, AMN) are
+reviewed here with `GO:0038024`, so no content should be lost. Two rows should
+go regardless of the obsoletion: the yeast ATG5 IDA and an orphaned mouse Hpse
+ISO whose human source annotation no longer exists.
+
 ## Overview
 
 A GO obsoletion proposal will retire the molecular-function term
@@ -320,3 +337,7 @@ Confirm accessions with `just fetch-gene <organism> <gene>` before starting.
   annotated to GO:0140355 today, so the obsoletion strands nothing; but the
   2019 curation problem that motivated it ("we don't have an activity for
   this") is not solved by the obsoletion either.
+
+## Slides
+
+- [Slides](CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION/slides/CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION-slides.html) (Marp source: [CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION-slides.md](CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION/slides/CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION-slides.md)) — AI generated
