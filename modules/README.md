@@ -21,9 +21,12 @@ The module validator label-checks every ontology `term` block and every
 `evidence[].source_id` that cites a GO term with a `title`, at any depth, against
 the configured ontology. An evidence entry therefore cannot keep citing a retired
 id under its pre-obsoletion name after the `term` blocks have been refreshed.
-Reviewed label aliases in `conf/oak_config.yaml` bridge only a lagging ontology
-snapshot: a term whose ontology label carries GO's `obsolete ` prefix is an error
-even when an alias matches, so an alias can never hide an obsoletion.
+A `term` block whose ontology label carries GO's `obsolete ` prefix is an error
+whatever label the module wrote, so neither a reviewed alias in
+`conf/oak_config.yaml` (those bridge only a lagging snapshot) nor pasting the
+`obsolete ...` label in verbatim can keep a module grounded on a retired term.
+An evidence entry may quote a retired label verbatim to document the retirement;
+a stale pre-obsoletion title there is still reported as an obsoletion.
 
 Run module-focused deep research with:
 

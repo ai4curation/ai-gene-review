@@ -146,15 +146,10 @@ def test_iter_taxon_descriptors_finds_taxa_and_taxon_slots():
     doc = {
         "module": {
             "context": {"taxa": [{"preferred_term": "Mammalia"}]},
-            "annotons": [
-                {"participant": {"taxon": {"preferred_term": "Homo sapiens"}}}
-            ],
+            "annotons": [{"participant": {"taxon": {"preferred_term": "Homo sapiens"}}}],
         }
     }
-    found = [
-        (path, descriptor["preferred_term"])
-        for path, descriptor in iter_taxon_descriptors(doc)
-    ]
+    found = [(path, descriptor["preferred_term"]) for path, descriptor in iter_taxon_descriptors(doc)]
     assert found == [
         ("$.module.context.taxa[0]", "Mammalia"),
         ("$.module.annotons[0].participant.taxon", "Homo sapiens"),
@@ -378,8 +373,7 @@ def test_validate_paint_ptns_accepts_a_more_specific_node_term():
     ancestors = {"GO:0004672": {"GO:0004672", "GO:0003674"}}.get
 
     errors, warnings = validate_paint_ptns(
-        list(iter_ancestral_node_uses(doc)),
-        index,
+        list(iter_ancestral_node_uses(doc)), index,
         lambda t: ancestors(t) or {t},
     )
 
@@ -523,15 +517,32 @@ def test_validate_terms_reviewed_alias_cannot_bridge_obsoletion():
         terms, {"GO": "real"}, resolver, label_aliases=aliases
     )
     assert len(errors) == 1
-    assert "obsolete" in errors[0]
-    assert "cannot bridge" in errors[0]
+    assert "is obsolete" in errors[0]
+    assert "alias" in errors[0] and "dropped" in errors[0]
     assert warnings == []
 
 
-def test_validate_terms_alias_not_consulted_when_ontology_label_matches():
-    # A module that deliberately cites the retired label verbatim (e.g. to
-    # explain why a distinction cannot be grounded) matches the ontology's own
-    # label, so the alias is never reached and no obsoletion error fires.
+def test_validate_terms_reports_obsoletion_without_an_alias():
+    # No alias involved: the message still names the obsoletion, not just a
+    # label mismatch, so the remedy is to repoint rather than to relabel.
+    terms = [("GO:0006535", "L-cysteine biosynthetic process from L-serine")]
+    resolver = _resolver_factory(
+        {
+            "GO:0006535": (
+                "obsolete L-cysteine biosynthetic process from L-serine",
+                set(),
+            )
+        }
+    )
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver)
+    assert len(errors) == 1
+    assert "is obsolete" in errors[0] and "replaced_by" in errors[0]
+    assert "alias" not in errors[0]
+
+
+def test_validate_terms_rejects_verbatim_obsolete_label_as_grounding():
+    # Pasting the ontology's 'obsolete X' label into a term block matches the
+    # primary label exactly, but a module still cannot be grounded on it.
     terms = [
         ("GO:0046537", "obsolete 2,3-bisphosphoglycerate-independent PGM activity")
     ]
@@ -543,11 +554,46 @@ def test_validate_terms_alias_not_consulted_when_ontology_label_matches():
             )
         }
     )
-    aliases = {"GO:0046537": {"anything"}}
-    errors, warnings = validate_terms(
-        terms, {"GO": "real"}, resolver, label_aliases=aliases
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver)
+    assert len(errors) == 1
+    assert "cannot be grounded on a retired term" in errors[0]
+
+
+def test_validate_terms_lets_evidence_quote_a_retired_label_verbatim():
+    # emp_glycolysis cites GO:0046537 as evidence with its retired label to
+    # explain why the dPGM/iPGM distinction cannot be grounded; that is allowed.
+    terms = [
+        ("GO:0046537", "obsolete 2,3-bisphosphoglycerate-independent PGM activity")
+    ]
+    resolver = _resolver_factory(
+        {
+            "GO:0046537": (
+                "obsolete 2,3-bisphosphoglycerate-independent PGM activity",
+                set(),
+            )
+        }
+    )
+    errors, _ = validate_terms(
+        terms,
+        {"GO": "real"},
+        resolver,
+        where="evidence title",
+        allow_obsolete_citation=True,
     )
     assert errors == []
+    # ...but a stale pre-obsoletion title on the same id is still an obsoletion.
+    stale = [("GO:0046537", "2,3-bisphosphoglycerate-independent PGM activity")]
+    errors, _ = validate_terms(
+        stale,
+        {"GO": "real"},
+        resolver,
+        where="evidence title",
+        allow_obsolete_citation=True,
+    )
+    assert len(errors) == 1
+    assert (
+        "is obsolete" in errors[0] and "quote the retired label verbatim" in errors[0]
+    )
 
 
 def test_validate_terms_names_the_field_in_mismatch_messages():
@@ -726,6 +772,27 @@ def test_validate_module_file_passes_conformant_module():
         MODULES_DIR / "erk_cascade.yaml", resolver=_skip_label_resolver
     )
     assert result.errors == [], "\n".join(result.errors)
+
+
+def test_validate_module_file_checks_evidence_titles(tmp_path):
+    # The evidence-title check is wired through validate_module_file: a stale
+    # title on a GO id cited as evidence surfaces as an error, and the same id
+    # asserted as a grounding resolves through one cached lookup.
+    doc = {
+        "id": "MODULE:evidence_titles",
+        "title": "evidence titles",
+        "evidence": [{"source_id": "GO:0019344", "title": "stale title"}],
+        "module": {"id": "m", "label": "m"},
+    }
+    path = tmp_path / "evidence_titles.yaml"
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+    resolver = _resolver_factory(
+        {"GO:0019344": ("L-cysteine biosynthetic process", set())}
+    )
+    result = validate_module_file(path, resolver=resolver)
+    assert [e for e in result.errors if "evidence title says 'stale title'" in e], (
+        result.errors
+    )
 
 
 def test_validate_module_file_flags_bad_conformance(tmp_path):

@@ -229,7 +229,9 @@ GO_BRANCH_CONSTRAINTS: Dict[str, GoBranchConstraint] = {
     "cellular_components": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
-    "source_location": GoBranchConstraint("GO:0110165", "cellular anatomical entity"),
+    "source_location": GoBranchConstraint(
+        "GO:0110165", "cellular anatomical entity"
+    ),
     "destination_location": GoBranchConstraint(
         "GO:0110165", "cellular anatomical entity"
     ),
@@ -362,9 +364,7 @@ def iter_typed_go_terms(obj: object, path: str = "$") -> Iterator[TypedGoTerm]:
                     if not isinstance(descriptor, dict):
                         continue
                     descriptor_path = (
-                        f"{child_path}[{index}]"
-                        if isinstance(value, list)
-                        else child_path
+                        f"{child_path}[{index}]" if isinstance(value, list) else child_path
                     )
                     term = descriptor.get("term")
                     if (
@@ -1379,6 +1379,7 @@ def validate_terms(
     resolver: Resolver,
     label_aliases: Optional[Dict[str, Set[str]]] = None,
     where: str = "module",
+    allow_obsolete_citation: bool = False,
 ) -> Tuple[List[str], List[str]]:
     """Validate a list of ``(id, label)`` terms, returning (errors, warnings).
 
@@ -1386,14 +1387,19 @@ def validate_terms(
     silently), or omits it (skip with a warning). ``resolver`` performs the
     actual ontology lookup for configured prefixes. ``label_aliases`` adds
     explicitly reviewed labels when the configured ontology snapshot lags the
-    authoritative source. A reviewed alias is consulted only when the
-    ontology's own label and synonyms do not match, and it never bridges an
-    obsoletion: an id whose primary label carries GO's ``obsolete `` prefix is
-    an error even when an alias matches, because the alias then hides that the
-    module is grounded on a retired term (this is how GO:0006535 stayed in a
-    module for months after GO retired it). ``where`` names the field the
-    labels came from in messages (``module`` for ``term`` blocks, ``evidence
-    title`` for ``evidence[].source_id`` citations).
+    authoritative source; an alias is consulted only when the ontology's own
+    label and synonyms fail.
+
+    A term whose ontology label carries GO's ``obsolete `` prefix is an error
+    whatever the provided label says -- a reviewed alias cannot bridge it (this
+    is how GO:0006535 sat in a module for months after GO retired it), and
+    pasting the ``obsolete ...`` label in verbatim does not make a retired
+    grounding valid. The one exception is ``allow_obsolete_citation``, used for
+    ``evidence[].source_id`` citations: an evidence entry may quote a retired
+    label verbatim to document the retirement, but a mismatched title on an
+    obsolete id is still reported as an obsoletion. ``where`` names the field
+    the labels came from in messages (``module`` for ``term`` blocks,
+    ``evidence title`` for citations).
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -1427,20 +1433,20 @@ def validate_terms(
         if status == "not_found":
             errors.append(f"Term id {curie} not found in configured ontology")
             continue
-        err = compare_label(curie, label, primary, set(aliases), where=where)
         reviewed = label_aliases.get(curie, set()) if label_aliases else set()
-        if err and reviewed:
-            if is_obsolete_label(primary):
-                errors.append(
-                    f"{curie} is obsolete in the configured ontology "
-                    f"('{primary}'); the reviewed label alias in oak_config.yaml "
-                    f"cannot bridge an obsoletion -- repoint to its replaced_by "
-                    f"term and drop the alias"
-                )
-                continue
+        obsolete = is_obsolete_label(primary)
+        err = compare_label(curie, label, primary, set(aliases), where=where)
+        if err and reviewed and not obsolete:
             err = compare_label(
                 curie, label, primary, set(aliases) | reviewed, where=where
             )
+        if obsolete and (err or not allow_obsolete_citation):
+            errors.append(
+                obsolete_term_message(
+                    curie, primary, where, bool(reviewed), allow_obsolete_citation
+                )
+            )
+            continue
         if err:
             errors.append(err)
 
@@ -1462,6 +1468,40 @@ def is_obsolete_label(primary: Optional[str]) -> bool:
     False
     """
     return primary is not None and primary.lower().startswith("obsolete ")
+
+
+def obsolete_term_message(
+    curie: str,
+    primary: Optional[str],
+    where: str,
+    has_alias: bool,
+    citation_allowed: bool,
+) -> str:
+    """Explain an obsolete-term error and name the remedy.
+
+    >>> obsolete_term_message("GO:1", "obsolete x", "module", False, False)
+    "GO:1 is obsolete in the configured ontology ('obsolete x'); a module cannot be grounded on a retired term -- repoint to its replaced_by term"
+    >>> obsolete_term_message("GO:1", "obsolete x", "evidence title", True, True).endswith(
+    ...     "cannot bridge an obsoletion and should be dropped")
+    True
+    """
+    message = f"{curie} is obsolete in the configured ontology ('{primary}'); "
+    if citation_allowed:
+        message += (
+            "cite its replaced_by term, or quote the retired label verbatim "
+            "if the entry documents the retirement"
+        )
+    else:
+        message += (
+            f"a {where} cannot be grounded on a retired term -- repoint to its "
+            "replaced_by term"
+        )
+    if has_alias:
+        message += (
+            "; the reviewed label alias for it in oak_config.yaml cannot bridge "
+            "an obsoletion and should be dropped"
+        )
+    return message
 
 
 def validate_go_branches(
@@ -1616,7 +1656,9 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     def get(adapter_string: str):
         return _get_cached_adapter(adapter_string)
 
-    def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
+    lookups: Dict[str, Tuple[str, Optional[str], Set[str]]] = {}
+
+    def lookup(curie: str) -> Tuple[str, Optional[str], Set[str]]:
         prefix = curie.split(":", 1)[0]
         adapter_string = adapter_map[prefix]
         assert adapter_string is not None  # routed only for configured prefixes
@@ -1635,6 +1677,14 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
             return ("ok", primary, aliases)
         except Exception:  # noqa: BLE001 - external system
             return ("unavailable", None, set())
+
+    def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
+        # One lookup per CURIE per process: a term cited as evidence and
+        # asserted as a grounding would otherwise hit the adapter twice and
+        # double any "ontology unavailable" warning.
+        if curie not in lookups:
+            lookups[curie] = lookup(curie)
+        return lookups[curie]
 
     return resolve
 
@@ -1657,7 +1707,9 @@ def _build_go_branch_resolver(adapter_map: Dict[str, Optional[str]]) -> BranchRe
                 return "not_found"
             if curie == root_id:
                 return "not_in_branch"
-            ancestors = set(go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"]))
+            ancestors = set(
+                go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"])
+            )
             return "ok" if root_id in ancestors else "not_in_branch"
         except Exception:  # noqa: BLE001 - external system
             return "unavailable"
@@ -1762,6 +1814,7 @@ def validate_module_file(
         resolver,
         label_aliases,
         where="evidence title",
+        allow_obsolete_citation=True,
     )
     errors.extend(evidence_errors)
     warnings.extend(evidence_warnings)
@@ -1822,13 +1875,11 @@ def validate_module_file(
         gene_index=gene_index,
         genes_dir=genes_dir if genes_dir is not None else project_root / "genes",
         family_reviews_dir=(
-            family_reviews_dir
-            if family_reviews_dir is not None
+            family_reviews_dir if family_reviews_dir is not None
             else project_root / "interpro" / "panther"
         ),
         pfam_reviews_dir=(
-            pfam_reviews_dir
-            if pfam_reviews_dir is not None
+            pfam_reviews_dir if pfam_reviews_dir is not None
             else project_root / "interpro" / "pfam"
         ),
         subclass_of=go_subclass_predicate(
@@ -2028,9 +2079,7 @@ def validate_supporting_text(
             continue
         message = str(getattr(result, "message", "") or "")
         if is_unfetchable(message):
-            errors.append(
-                f"Supporting text could not be checked ({source_id}): {message}"
-            )
+            errors.append(f"Supporting text could not be checked ({source_id}): {message}")
         else:
             errors.append(f"Supporting text mismatch ({source_id}): {message}")
     return errors, warnings
@@ -2154,9 +2203,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     gene_index = index_gene_reviews(Path(__file__).resolve().parents[3] / "genes")
     for path in args.files:
-        result = validate_module_file(
-            path, config_path=args.config, gene_index=gene_index
-        )
+        result = validate_module_file(path, config_path=args.config, gene_index=gene_index)
         ungrounded += result.ungrounded_families
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")
