@@ -13,12 +13,12 @@ Each row counted here is one emitted GO term. Narrative functions, protein names
 
 | Category | GO claims |
 |---|---:|
-| COR | 53 |
+| COR | 52 |
 | CNN | 32 |
-| LSP | 83 |
-| UNC | 103 |
-| NPI | 17 |
-| PLI | 0 |
+| LSP | 84 |
+| UNC | 98 |
+| NPI | 20 |
+| PLI | 2 |
 | REP | 0 |
 | **Total** | **288** |
 

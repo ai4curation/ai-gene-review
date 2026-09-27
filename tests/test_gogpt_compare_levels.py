@@ -115,7 +115,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     )
 
     assert committed == details
-    assert len(details) == 297
+    assert len(details) == 296
     # Regenerated from the reviewed actions and core-function slots.
     assert stats == {
         # #3246 merged the duplicate ARATH/AAU94417 review into AT1G06680 (both
@@ -126,7 +126,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # 52/3 post-review and 12/1 core leave. The merged PHYB's refreshed GOA
         # has 51 terms (-1) and its reconciled review 46 post-review (-3) and 7
         # core terms (+3), with all three PHYB overlaps unchanged (3/1/1).
-        "goa": {"overlap": 1023, "total": 2879, "pred": 8822},
+        # #3253 merged the duplicate ARATH/P93002 review into NPR1 (both
+        # P93002), removing one gene: -16 predictions; P93002's 32/3 GOA,
+        # 28/1 post-review and 4/0 core leave. The merged NPR1's refreshed GOA
+        # has 29 terms (-3) and its reconciled review 27 post-review terms (-2)
+        # with one more overlap (GO:0031348 now retained: 1 -> 2); its GOA (3)
+        # and core (4 terms, 0 overlaps) counts are unchanged.
+        "goa": {"overlap": 1020, "total": 2844, "pred": 8806},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -195,8 +201,10 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # post-review term each from ANOGA/PGRPLD and ECOLX/SNIPE and one core
         # term each from ECOLI SecB and surA, with no overlap change.
         # #3251 (P14713 merged into PHYB): see the GOA comment above.
-        "post_review": {"overlap": 849, "total": 2702, "pred": 8822},
-        "core": {"overlap": 355, "total": 1210, "pred": 8822},
+        # #3253 (P93002 merged into NPR1): see the GOA comment above; the lost
+        # P93002 post-review overlap is offset by NPR1's gained one.
+        "post_review": {"overlap": 849, "total": 2672, "pred": 8806},
+        "core": {"overlap": 355, "total": 1206, "pred": 8806},
     }
 
 
