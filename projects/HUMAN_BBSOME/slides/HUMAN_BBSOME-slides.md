@@ -71,12 +71,12 @@ Reviewing GO annotations for the 14 genes of a ciliary coat complex
 
 | Gene | Ann. | ACCEPT | Non-core | Over-ann. | MODIFY | REMOVE |
 |---|---|---|---|---|---|---|
-| BBS1 | 60 | 30 | 18 | 7 | 5 | 0 |
+| BBS1 | 60 | 26 | 7 | 23 | 4 | 0 |
 | BBS2 | 67 | 16 | 24 | 25 | 0 | 2 |
 | BBS4 | 110 | 42 | 37 | 31 | 0 | 0 |
-| MKKS | 61 | 5 | 23 | 30 | 2 | 0 |
-| TTC8 | 47 | 23 | 10 | 14 | 0 | 0 |
-| BBIP1 | 24 | 13 | 8 | 3 | 0 | 0 |
+| MKKS | 60 | 5 | 21 | 32 | 2 | 0 |
+| TTC8 | 45 | 23 | 10 | 12 | 0 | 0 |
+| BBIP1 | 22 | 11 | 8 | 3 | 0 | 0 |
 
 <span class="small">Six of 14 shown; full table in projects/HUMAN_BBSOME.md.</span>
 
