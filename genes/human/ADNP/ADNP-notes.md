@@ -403,3 +403,12 @@ The original 33 PMID records were already cached. A notes-inclusive census found
 Current tally: 53 original rows retained; 18 ACCEPT, 14 MODIFY, 13 UNDECIDED, 7 KEEP_AS_NON_CORE and 1 REMOVE. Two redundant prior NEW rows were withdrawn. All source assertions, provider files, publication caches, UniProt, GOA and existing bioinformatics files remain unchanged. Validation, history and rendering results are recorded below when complete.
 
 Validation completed: `just validate human ADNP` passed with two warnings: the missing PMID:21267468 cache and intentional non-use of the faulty provider report as annotation evidence. The history validator and `just render human ADNP` passed. A separate notes-inclusive census found 35 cited PMIDs, 33 cached and the two missing records listed above. All 53 original source objects and 42 original reference ID/title pairs compare equal to baseline; UniProt and GOA are byte-identical. The YAML has no anchors, aliases or trailing whitespace. The generated HTML was checked for the revised action tally and evidence-boundary text. Exact byte counts, SHA256 hashes and base Git blobs are in `/tmp/ADNP-local-manifest.json` for parent publication.
+
+## 2026-09-27 review-status correction
+
+Set the YAML status to DRAFT under the literal GeneReviewStatusEnum, which
+reserves COMPLETE for reviews without validation warnings. The already documented
+source-cache warnings remain unresolved. All biological judgments, source
+assertions, reference assessments and core functions are unchanged. This status
+label correction does not imply that source retrieval or automated review has
+subsequently succeeded.
