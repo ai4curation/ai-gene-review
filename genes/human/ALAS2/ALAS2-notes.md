@@ -201,3 +201,67 @@ passed. All 40 source objects, four alternative products and 19 original
 reference identity pairs were asserted unchanged. Final actions are 29 ACCEPT,
 five KEEP_AS_NON_CORE, four REMOVE, one MODIFY and one UNDECIDED. The multiline
 UniProt matrix-face/peripheral quote was checked against exact source bytes.
+
+
+## 2026-09-27 — source5 recovery and PR #3267 evidence follow-up
+
+This entry supersedes the two missing-cache gates reported in the earlier dated
+entry. The published review was checked byte-for-byte at head
+`f0ec347e93276d4a69d832bdb567440720a08be6`; the five canonical gene files and
+published history matched before editing. All 40 source assertions, four
+alternative products, reference identities, annotation actions and the single
+catalytic core are retained.
+
+The [normal recovery run](https://github.com/ai4curation/ai-gene-review/actions/runs/36295820535)
+ran at commit `60c5e96f8317dd1e7d8325242d8037b81e272c59`. Its original artifact
+10926007634 has ZIP SHA256
+`cd022c3e045b00798f8e29ff86904be885a4ed9e8b539ba11d44f6b954149400`.
+The independently verified import copied both records without alteration:
+
+- `publications/PMID_10562540.md` — SHA256 `e2bf6f57b3192e5a06a9fe0b7a259fbe8464570ff49d4bcd87abf332b527ebe2`.
+- `publications/PMID_9446639.md` — SHA256 `9bada88eacf51376ce40f1fd55715f2240b78b17bb77b2ac24b33ef3d3b784f1`.
+
+Both caches have `full_text_available: false`; the YAML therefore retains
+`full_text_unavailable: true`. PMID:10562540's cached abstract directly contains
+the previously quoted sentence about diffuse cytoplasmic iron accumulation,
+resolving the in-repository evidence-verification item in
+[review comment 5853651866](https://github.com/ai4curation/ai-gene-review/pull/3267#issuecomment-5853651866).
+The earlier external full-paper Figure 4/Table II assessment remains separately
+identified; the recovered cache does not contain those figure/table passages.
+PMID:9446639's cached abstract preserves the distinction between unchanged early
+erythroid markers and reduced heme, globin and hemoglobinized cells. No new
+full-text experiment is inferred, and no biological decision changes.
+
+Four ISS source comments now refer only to the actual mouse UniProt P08680
+donor; the nonexistent Ensembl identifier claim is removed from those four
+comments. Compara rows retain their real seeded Ensembl source identifiers.
+The generic-binding row sourced to PMID:14643893 now also quotes that paper's
+own splice-variant/SUCLA2-affinity abstract, with the later human structure paper
+as independent support. Its REMOVE action concerns the uninformative term,
+not the reported association.
+
+The core/non-core distinction remains mechanistic: ALAS2 catalyzes a step in
+biosynthesis of heme, a chemical component of hemoglobin. The late erythroid
+maturation phenotype is a contextual consequence of heme supply and does not
+identify ALAS2 as a cell-fate regulator. The oxygen-homeostasis row remains
+UNDECIDED: the available source establishes oxygen-dependent regulation of
+ALAS2, while the full paper needed to adjudicate any additional oxygen
+steady-state evidence remains inaccessible. The reviewer explicitly accepted
+this as a defensible source-access judgment.
+
+The recursive authored YAML/notes/provider-artifact census contains 13 PMIDs
+and Reactome R-HSA-189442, all now cached. No provider report or nested research
+artifact exists. DOI scanning decodes URLs and Markdown escapes and removes
+unbalanced URL punctuation: the sole DOI, `10.1016/s1357-2725(03)00246-2`, matches
+the actual cached metadata for PMID:14643893 on the published head. It adds no
+new citation obligation. Source identities and hashes are checked against
+exact published objects; the two recovered records are the only new source
+files required for this follow-up. Earlier failed-fetch reports remain as
+historical provenance, with their results stated in the dated text above.
+
+Final follow-up checks: `just validate human ALAS2` completed with exit 0 and no
+curation warnings; schema/history validation and HTML rendering passed. All
+quoted passages now have local source records and pass exact normalized-text
+checks. With no outstanding citation-cache gate, status is COMPLETE. No
+biological action, core term, machine-fetched source or published history was
+rewritten.
