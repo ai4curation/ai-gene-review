@@ -3,6 +3,7 @@ title: "BioReason-Pro Comparison Project"
 collections: [FUNCTION_PREDICTION]
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
+# ARGO139 species, from BIOREASON_COMPARISON/genes.csv (priority order for gene autolinking)
 species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, 9CAUD, AGKCO, ANOGA]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
@@ -15,6 +16,11 @@ sidecars:
   benchmark_metrics: BIOREASON_COMPARISON/benchmark-metrics.json
   second_review_ratings: BIOREASON_COMPARISON/second-review-ratings.csv
   second_review_agreement: BIOREASON_COMPARISON/second-review-agreement.json
+  sft_rl_matched_ratings: BIOREASON_COMPARISON/sft-rl-matched/sft-rl-matched-ratings.csv
+  sft_rl_matched_summary: BIOREASON_COMPARISON/sft-rl-matched/sft-rl-matched-summary.json
+  failure_mode_counts: BIOREASON_COMPARISON/failure-mode-counts.json
+  failure_mode_rl_flags: BIOREASON_COMPARISON/failure-mode-rl-flags.csv
+  audit_followup: BIOREASON_COMPARISON/audit-followup.json
 manifest:
   slides:
     - href: BIOREASON_COMPARISON/article/slides.html
@@ -60,6 +66,10 @@ The overlap view is fixed at the review snapshot and matches the manuscript. The
 set and claim views read the current reviews, so their counts can move ahead of
 the dated figures, which are recorded in [`benchmark-metrics.json`](BIOREASON_COMPARISON/benchmark-metrics.json).
 
+**Bottom line:** across the ARGO139 collected cohort, BioReason-Pro's functional summaries mostly restate what InterPro domain labels already say. The model-performance denominator excludes the wrong-input `csr-1` case (n=138) and separately flags seven sequence-truncated cases. It adds real value mainly for proteins with distinctive multi-domain architectures. It fails repeatedly on localization, pseudoenzymes, paralogs, and organism-specific biology, but these are recurrent modes illustrated by selected cases, not measured prevalence rates. The [failure-mode section](#failure-mode-taxonomy) gives the counts that do exist, with denominators.
+
+**Reference standard.** The references are local AIGR gene reviews. The first rater (the per-gene `*-bioreason-rl-review.md` scores) and the blinded second rater are LLM agents applying the rubric below. Scores therefore measure agreement with that review standard, fixed at the snapshot commit below, rather than with expert ground truth; no human expert has scored these summaries. The model behind the second rater is not recorded.
+
 
 📄 **[Read the manuscript (PDF)](BIOREASON_COMPARISON/article/manuscript.pdf)** &nbsp;·&nbsp; 🖥 **[View the slide deck](BIOREASON_COMPARISON/article/slides.html)** &nbsp;·&nbsp; 📝 [Abstract](BIOREASON_COMPARISON/article/abstract.md)
 
@@ -84,6 +94,15 @@ the dated figures, which are recorded in [`benchmark-metrics.json`](BIOREASON_CO
 
 We downloaded the reports for selected genes from https://app.bioreason.net/ (there is no API yet so this cannot be done in bulk). We assigned an AI agent to compare them with existing pipelines (for example, InterPro2GO) and with the agent-adjudicated local AIGR reference. These local references have mixed review maturity and are not independently expert-signed ground truth.
 
+**Independence of the reference and the raters.** Every judgment on this page comes from an LLM agent:
+
+- **Reference.** Each local `*-ai-review.yaml` was written by an LLM curation agent. Its maturity varies (see the status breakdown below).
+- **First rater.** The correctness and completeness scores in each `*-bioreason-rl-review.md` were assigned by an LLM comparison agent that could read the reference.
+- **Second rater.** The [blinded second rater](BIOREASON_COMPARISON/second-review-protocol.md) is also an LLM agent. Its model is not recorded.
+- **Matched SFT/RL rater.** The [matched SFT-vs-RL comparison](#matched-sft-vs-rl-comparison-110-argo139-genes) was scored by a Claude Code agent (Claude Opus 5.5) on 2026-09-27.
+
+The raters share a model family with the reference authors, so their agreement measures consistency between agents, not accuracy against expert judgment. A small human-rated anchor set would be needed to calibrate them.
+
 ## Notes on browsing results
 
 Each individual gene review page, e.g. aprE, SlyD contains BOTH the bioreason results AND the detailed review of the bioreason results. You will need to search in the page for "bioreason" or scroll down to the sections:
@@ -96,13 +115,13 @@ Each individual gene review page, e.g. aprE, SlyD contains BOTH the bioreason re
 
 1. **BioReason largely recapitulates InterPro labels in narrative form.** For most genes, the functional summary does not provide biological insight beyond what InterPro domain annotations already capture. Genuine value-add is modest and concentrated in proteins with distinctive, well-annotated domain architectures such as TOR1 (FRB domain enables pathway-level inference), PTEN, NOTCH1, and EGFR. For standard domain families like Src-family kinases, Fyn and Src receive essentially identical generic descriptions.
 
-2. **Systematic localization errors.** BioReason defaults to "cytosolic" or "cytoplasmic" when no transmembrane domains are detected, failing for periplasmic proteins (Skp, CpxP, Spy), vacuolar proteins (cps1), mitochondrial matrix proteins (alo1, HSP60, CAT2), and ER membrane proteins (IRE1, ETR1). Proteins where InterPro domain names explicitly mention the compartment (KAR2, PDI1) are handled correctly.
+2. **Recurrent localization errors.** 16 of 138 RL reviews (12%) explicitly flag a wrong localization in the Functional Summary. This is a script-derived lower bound (see the [failure-mode counts](#failure-mode-taxonomy)). Most flagged cases describe a compartmentalized protein as cytoplasmic, cytosolic or soluble. Examples are periplasmic proteins (Skp, CpxP), a vacuolar protein (cps1), mitochondrial proteins (alo1, HSP60, CAT2) and ER-membrane proteins (IRE1, ETR1). Proteins whose InterPro domain names mention the compartment (KAR2, PDI1) are placed correctly.
 
 3. **Pseudo-enzymes are a blind spot.** BioReason assumes catalytic activity from conserved but degenerate domains and cannot reliably identify inactive family members. Epe1 (pseudo-demethylase), cts2 (pseudo-chitinase missing catalytic glutamate), and pmp20 (a 1-Cys peroxiredoxin-family protein with an intact peroxidatic cysteine but directly assayed as peroxidase-inactive and functioning as a chaperone) are all incorrectly assigned ancestral enzymatic activity.
 
 4. **Paralogs get identical generic descriptions.** Closely related paralogs such as Fyn/Src (mouse), sigF/sigG/sigK (B. subtilis sporulation sigma factors), and Hspa5/Hspa8 (rat Hsp70 family) receive interchangeable summaries with no gene-specific biology.
 
-5. **Organism-specific biology is consistently absent.** Dauer formation and insulin/IGF-1 signaling in C. elegans (daf-16, daf-2), UPRmt master regulation (atfs-1), sporulation compartment specificity in B. subtilis (sigF forespore, sigK mother cell), prion propagation in yeast (HSP104), and cytoophidium biology (ura7) are all missed.
+5. **Organism-specific biology is often absent.** Dauer formation and insulin/IGF-1 signaling in C. elegans (daf-16, daf-2), UPRmt master regulation (atfs-1), sporulation compartment specificity in B. subtilis (sigF forespore, sigK mother cell), prion propagation in yeast (HSP104), and cytoophidium biology (ura7) are all missed.
 
 6. **Selected-case organism means differ.** Mouse scores highest on descriptive correctness and the selected S. pombe cases lowest among the organism groups with at least three genes; two single-gene groups score lower (select a species in the [RL narrative view](../app/predictions/index.html?projects=BIOREASON_COMPARISON&cohorts=argo139_rl_narrative&performance_included=true)). These differences are confounded by deliberate case selection: S. pombe is enriched for obscure proteins and pseudoenzymes, whereas several other groups contain more canonical proteins. InterPro informativeness and training distribution are hypotheses, not measured explanations.
 
@@ -156,7 +175,27 @@ The local AIGR references are also not represented as independently expert-signe
 
 **Dated snapshot.** Numbers derived from the live AIGR reviews and SFT prediction assessments (the GO-GPT three-level overlap, the sidecars' reference statuses, checksums and ARGO95 assessment counts, the CAFA-style scores and NPI/PLI/REP GOA-overlap counts in `cafa-style/`, the second-review agreement, and the [ProtNLM cross-cohort summary](PROTNLM_EVALUATION/benchmark-results.md)) are computed from the repository at `review_snapshot_commit` in `benchmark-policy.yaml`, not from the working tree, so ordinary curation — including recoding a `*-sft-predictions.yaml` assessment — does not change them. Tests that only check live files are well-formed (every narrative review has two in-range scores; no deterministic category conflicts; `FREQUENCY_BIAS` only on `REP`) still read the working tree and pin no numbers. The frozen ARGO95/ARGO139 GOA inputs stay pinned separately at `baseline_commit`. A refresh is deliberate: `just refresh-benchmark-snapshot [COMMIT]` (default `origin/main`) bumps the snapshot, regenerates every derived file, and prints which headline numbers moved; then update the pinned test numbers and the "as of" dates, and review the diff.
 
+RL scores by reference status (138-gene performance set; `csr-1` is the excluded `COMPLETE` reference):
+
+| Reference status | n | Mean correctness | Mean completeness |
+|------------------|---|------------------|-------------------|
+| `COMPLETE` | 78 | 4.08 | 2.96 |
+| `DRAFT` | 45 | 3.82 | 2.73 |
+| `IN_PROGRESS` | 11 | 3.91 | 3.18 |
+| `INITIALIZED` | 4 | 4.50 | 3.50 |
+| all non-`COMPLETE` | 60 | 3.88 | 2.87 |
+| all | 138 | 3.99 | 2.92 |
+
+Scores against `COMPLETE` references are slightly higher on both axes. The four `INITIALIZED` references are one-line descriptions, so a generic summary can look complete against them.
+
 The two rubric axes remain correlated, so they should not be read as statistically independent merely because the rubric defines different concepts. A [blinded second rater](BIOREASON_COMPARISON/second-review-protocol.md) scored a deterministic 20-gene subset balanced across first-rater correctness strata and agreed closely on correctness (quadratic-weighted kappa 0.95) and less well on completeness (kappa 0.74). Raw ratings and the [generated agreement metrics](BIOREASON_COMPARISON/second-review-agreement.json), including exact and within-one agreement, are committed.
+
+**Caveats on the kappa values:**
+
+- The sample has 4 genes per first-rater correctness stratum. It is not weighted by prevalence: 70 of 138 first-rater scores are 5, but only 4 of the 20 sampled genes are.
+- Spreading the sample evenly across the 1-5 range increases between-gene variance, which inflates quadratic-weighted kappa. The kappa values above are therefore optimistic estimates of agreement on ARGO139 as a whole.
+- Raw agreement moves the other way. Reweighting each stratum's exact agreement to first-rater prevalence gives 88% for correctness and 71% for completeness (`audit-followup.json`, `second_rater_reweighted`). With 4 genes per stratum, both estimates are very uncertain.
+- Both raters are LLM agents (see [Methods](#methods)).
 
 Most ARGO95 `CNN` calls are exact matches to the frozen GOA input; the rest are supported as non-novel by other established local evidence. The [claims view](../app/predictions/index.html?dataset=claims&cohorts=argo95_sft_terms) gives the category split. A frozen-ontology [ID/label adjudication](BIOREASON_COMPARISON/argo95-ontology-pair-adjudication.tsv) re-examined mismatched or unresolved raw pairs that were nonnegative either at the audit baseline or after manual biological reclassification, and changed most of them after separating ontology status from the biological rubric and assessing the canonical GO concept rather than an intended but incompatible label. Raw model pairs remain unchanged and are explicitly flagged in their review rationales. DnaK zinc ion binding (`GO:0008270`) moved from `NPI` to `CNN` during comprehensive review because PMID:11985624 directly identifies DnaK in a radioactive Zn(II)-binding screen and the term was already present in GOA as an IDA annotation; the observation remains non-core because its physiological relevance and binding mechanism are unresolved. The IRE1 nucleus prediction (GO:0005634) was also corrected from `NPI` to `CNN` after the gene review retained its existing IDA annotation (PMID:17035634) as `KEEP_AS_NON_CORE`; this reconciles the prediction assessment with the current review without making nuclear localization the core cellular location.
 
@@ -170,6 +209,46 @@ The [external-authority verification](BIOREASON_COMPARISON/verify_ontology_autho
 
 The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware leaf pruning. Most of the cleaned terms are either `CNN` or still-unresolved `UNC`, and nearly every document remains `DRAFT`; only `BACSU/ftsZ` and `SCHPO/ral2` are fully resolved. This is a transparent pending review, not a completed GO-GPT performance result; the [GO-GPT leaf claims](../app/predictions/index.html?dataset=claims&source_method=GO-GPT&source_version=bioreason.net%2F2026-03%2Frl) show its current state.
 
+## Leakage, novelty and scripted calls
+
+*Computed on 2026-09-27 at commit `9891e5ffd` plus that day's uncommitted edits, with `uv run python projects/BIOREASON_COMPARISON/audit_followup.py --test-parquet <bioreason-pro-test-data parquet>`. Output: [`audit-followup.json`](BIOREASON_COMPARISON/audit-followup.json).*
+
+**ARGO139 is almost entirely outside BioReason-Pro's held-out test split.** Most ARGO139 proteins are well characterized and were chosen for that reason. Only one ARGO139 accession (`SCHPO/alo1`) is in the public 8,630-protein temporal test split ([`wanglab/bioreason-pro-test-data`](https://huggingface.co/datasets/wanglab/bioreason-pro-test-data)). The other 138 were eligible to be in the training distribution. Across all 4,980 AIGR gene reviews, 28 accessions are in the test split.
+
+120 of 139 genes have at least one experimental GOA annotation. For 117 of them, at least one experimental annotation line is dated on or before 2022-01-01.
+
+**What the training cutoff means for CNN and CAFA-style precision.**
+
+- **The cutoff is an assumption.** No file in this repository, and neither HuggingFace dataset card, states BioReason-Pro's training cutoff date. The only record is a "post-2022" temporal test split. We therefore use two labelled assumptions: 2022-01-01 (primary) and 2023-01-01 (sensitivity).
+- **The GOA `DATE` is a last-modified date.** It records when an annotation line was created or last modified. IEA and IBA lines are regenerated routinely, so a post-cutoff date is an upper bound on post-cutoff knowledge. A pre-cutoff date shows the line existed before the cutoff.
+
+| ARGO95 CNN calls (682) | 2022-01-01 cutoff | 2023-01-01 cutoff |
+|---|---|---|
+| Exact GO ID present in the gene's committed GOA TSV | 630 | 630 |
+| ...where every matching line is dated after the cutoff | 71 (11%) | 63 (10%) |
+| ...with at least one experimental line | 558 | 558 |
+| ...where the earliest experimental line is dated after the cutoff | 33 (6%) | 23 (4%) |
+
+At least 559 of the 630 exact-GOA CNN calls (89%) match an annotation line that already existed before the assumed cutoff. Under either assumption, **the 71% CNN rate and the propagated CAFA-style precision of 0.862 (the `hf_catalogue` row of [`cafa-style/argo139_cafa_style_summary.csv`](BIOREASON_COMPARISON/cafa-style/argo139_cafa_style_summary.csv)) mostly measure recall of annotations that predate training.** They are not evidence of prospective prediction. All 23 `COR` calls are absent from GOA by definition, so they have no GOA date to test.
+
+**The current-snapshot audit relabelled 61 calls as `CNN`.** The audit script (`scripts/auto_review_sft_predictions.py`) reclassifies a call deterministically when an exact join to current GOA or AIGR makes its label inconsistent. Its rationales, counted from the ARGO95 files:
+
+| Reclassification | Rationale | Calls |
+|---|---|---|
+| `UNC` → `CNN` | the current AIGR contains a positive exact action | 27 |
+| `COR` → `CNN` | the exact GO ID is already present in current local GOA | 25 |
+| `NPI` → `CNN` | the current AIGR contains a positive exact action | 9 |
+| `CNN` → `NPI` | all exact AIGR actions are negative | 16 |
+| `CNN` → `REP` | all exact AIGR actions reject or over-annotate generic protein binding | 4 |
+| `UNC` → `NPI` | all exact AIGR actions are negative | 2 |
+| `LSP` → `REP` | all exact AIGR actions reject or over-annotate generic protein binding | 1 |
+
+For 21 of the 25 `COR` → `CNN` calls, a matching GOA line is dated before 2022. Those 21 were never novel, not even at the assumed training cutoff; they had been misclassified as `COR`.
+
+**71 `CNN` calls carry a scripted rationale.** In nine ARGO95 genes (mouse Calm1 and Pten; rat Casp3, Hspa5, Rgn, Slc5a1, St13, Tp53 and Uggt1), 71 `CNN` calls carry the identical sentence "Term is in GOA — already a known curated annotation." A further 22 `UNC` calls carry the identical sentence "Generic or ancestor term not confirmed or refuted by GOA or AI gene review." Both sentences come from the original automated review pass, not from term-by-term reading.
+
+For the 71 `CNN` calls this is acceptable. `CNN` is definitional for an exact in-GOA term, and all 71 have an exact line in the committed GOA TSV. It is still disclosed here because all 95 ARGO95 files are marked `COMPLETE`. The 22 scripted `UNC` calls have not been individually reviewed. The supplemental 198-file SFT union is dominated by these templates: 8,783 of 11,100 rationales. See [`article/TODO.md`](BIOREASON_COMPARISON/article/TODO.md).
+
 ## Results (138-gene performance set; 139 collected exports)
 
 About half of the performance set scored 5/5 on correctness, while almost none
@@ -177,6 +256,7 @@ reached 5/5 on completeness; the typical summary gets the core function right an
 leaves out established context. The score distributions are the facet counts in
 the [RL narrative view](../app/predictions/index.html?projects=BIOREASON_COMPARISON&cohorts=argo139_rl_narrative&performance_included=true); select a species to see that organism's distribution.
 
+Rows sum to 138. The three n=1 species (9CAUD dfrP, AGKCO fibrolase and ANOGA PGRPLB) were previously omitted. Values are computed by `audit_followup.py` (`rl_by_organism`).
 ### Top performers (correctness 5/5)
 
 | Gene | Organism | Completeness | Why it works |
@@ -223,9 +303,49 @@ where a *predicted GO term* embodies the failure; modes that are narrative-only 
 calling a periplasmic protein "cytoplasmic" in prose while GO-GPT still predicts the periplasm
 term) leave no discordant term to tag and are recorded only in the RL narrative reviews.
 
+**Counts and denominators.** These were computed on 2026-09-27 at commit `9891e5ffd` plus that day's uncommitted edits, with `uv run python projects/BIOREASON_COMPARISON/failure_mode_counts.py`. Outputs are in [`failure-mode-counts.json`](BIOREASON_COMPARISON/failure-mode-counts.json) and [`failure-mode-rl-flags.csv`](BIOREASON_COMPARISON/failure-mode-rl-flags.csv).
+
+- **ARGO95 SFT terms.** 147 of 955 terms are discordant: 113 `NPI`, 5 `PLI` and 29 `REP`. 85 of the 147 carry an `error_type`. **62 (all `NPI`) carry none.** They are reported as untagged rather than back-filled. The 85 tags are:
+
+  | `error_type` | Terms |
+  |---|---|
+  | `FREQUENCY_BIAS` | 29 |
+  | `PATHWAY_CONTEXT_IGNORED` | 14 |
+  | `NAMING_INCONSISTENCY` | 13 |
+  | `PSEUDOENZYME_OVERANNOTATION` | 9 |
+  | `TAXON_CONSTRAINT_VIOLATION` | 7 |
+  | `PARALOG_OVERANNOTATION` | 5 |
+  | `LOCALIZATION_DEFAULT` | 4 |
+  | `TRAINING_DATA_CONTAMINATION` | 2 |
+  | `CURATION_MISTAKE` | 1 |
+  | `MULTIPLE_FUNCTIONS` | 1 |
+
+- **ARGO139 GO-GPT leaf terms.** 124 of 5,923 terms are `NPI`, and none carries an `error_type`. The GO-GPT review is still pending: 3,899 terms are `UNC`.
+- **RL narratives.** The narrative reviews carry no controlled tag. A script flags a review only when its prose states the failure explicitly, so each flag count is a lower bound; recall is not measured. We flag the two modes whose wording is unambiguous:
+  - Localization error: 16 of 138 performance-set reviews. In a hand check, 14 of the 16 describe a cytoplasmic, cytosolic or soluble placement. The other two are pgl-1 (called nuclear) and cts2 (called wall-associated).
+  - Wrong input: 1 of 139 collected exports (`csr-1`).
+
+  HSP60 shows that recall is incomplete: its review calls the "cytosolic" claim a significant error, but the wording does not match a marker.
+
+| Mode | Controlled tag | ARGO95 SFT terms (genes) | RL narrative evidence |
+|---|---|---|---|
+| 1 Pseudo-enzyme | `PSEUDOENZYME_OVERANNOTATION` | 9 (3) | illustrative (selected cases) |
+| 2 Localization default | `LOCALIZATION_DEFAULT` | 4 (4) | 16/138 explicit flags (lower bound) |
+| 3 Paralog indistinguishability | `PARALOG_OVERANNOTATION` | 5 (3) | illustrative |
+| 4 Organism-specific biology absent | none | none | illustrative |
+| 5 Neo-functionalization / moonlighting | `MULTIPLE_FUNCTIONS` | 1 (1) | illustrative |
+| 6 Narrative-GO disconnect | none | none | illustrative |
+| 7 Cross-kingdom fold bias | `TAXON_CONSTRAINT_VIOLATION` | 7 (7) | illustrative |
+| 8 Generated UniProt-style summary | none | none | 3/139 RL strings are exact UniProt substrings (see mode 8) |
+| 9 Wrong input data | `WRONG_INPUT_SEQUENCE` | 0 (`csr-1` is not in ARGO95) | 1/139 |
+
+None of these counts supports calling a mode "systematic" in the sense of a measured, high prevalence. The modes are recurrent patterns, documented with selected examples.
+
+**Eight or nine modes.** Modes 1-8 are failures of the model's output. Mode 9 is a pipeline and data-provenance failure: BioReason correctly described the sequence it was given, and `csr-1` is excluded from the performance set. The manuscript and abstract therefore count eight model-output modes, while this page lists nine headings.
+
 ### 1. Pseudo-enzyme blind spot
 
-BioReason assumes catalytic activity from conserved domains without checking whether catalytic residues are intact. This is a systematic failure for proteins that retain an ancestral fold but have lost enzymatic activity.
+BioReason assumes catalytic activity from conserved domains without checking whether catalytic residues are intact. This recurs for proteins that retain an ancestral fold but have lost enzymatic activity. Three S. pombe RL cases are shown below, and ARGO95 tags 9 SFT terms in 3 genes as `PSEUDOENZYME_OVERANNOTATION`. This is a set of examples, not a prevalence estimate.
 
 **Examples:**
 - **Epe1** (SCHPO, 1/5): BioReason claims *"JmjC catalytic center dictates a lysine demethylase mechanism"* but Epe1 has a degenerate Fe(II)-binding triad (H297-E299-Y370, with Tyr370 in place of the third iron-ligand His). No detectable demethylase activity in mass spec assays. Functions as anti-silencing factor through HP1/Swi6 binding.
@@ -268,13 +388,20 @@ each gene's `*-hypotheses/` directory.
 
 ### 2. Localization defaults to cytoplasm
 
-When InterPro annotations lack transmembrane or signal peptide information, BioReason systematically defaults to cytoplasmic localization. This fails for:
+When InterPro annotations lack transmembrane or signal-peptide information, BioReason often places the protein in the cytoplasm. The counts:
 
-- **Periplasmic proteins**: Skp, CpxP, Spy (all E. coli) are called cytoplasmic despite having signal peptides.
+- 16 of 138 RL reviews explicitly flag a localization error (lower bound).
+- 14 of those 16 involve a cytoplasmic, cytosolic or soluble placement.
+- 4 ARGO95 SFT terms are tagged `LOCALIZATION_DEFAULT`.
+
+These counts show a recurrent pattern, not a demonstrated systematic default. Examples:
+
+- **Periplasmic proteins**: Skp and CpxP (E. coli) are called cytoplasmic despite having signal peptides. Spy is *not* an example of this mode. Its summary places it "at the cell envelope" and mentions "periplasmic stress". Its failure is misidentification: the Cpx-auxiliary family label (IPR052211) leads the model to describe Spy as a signaling component rather than a periplasmic chaperone.
+- **Other periplasmic and envelope enzymes**: pedH (P. putida) is called "soluble" and "cytoplasmic". mrdA (E. coli) and mrcA (P. putida) are placed on the cytoplasmic face or side of the envelope.
 - **ER membrane proteins**: ETR1 (Arabidopsis ethylene receptor) called "soluble cytoplasmic signal transducer" — actually an ER membrane integral protein with 3 TM helices. IRE1 (yeast) similarly mislocalised.
 - **Mitochondrial proteins**: alo1 (SCHPO), HSP60 (yeast), CAT2 (yeast) all called cytosolic.
 - **Vacuolar proteins**: cps1 (SCHPO) called cytoplasmic.
-- **Secreted proteins**: fibrolase (AGKCO) claimed as "membrane-tethered neural/endocrine" — actually a secreted venom fibrinolytic enzyme.
+- **Wrong compartment in another direction** (not a cytoplasmic default): fibrolase (AGKCO) is claimed as "membrane-tethered" with neural/endocrine roles; it is actually a secreted venom fibrinolytic enzyme. pgl-1 is called a nuclear hub; it is a cytoplasmic P-granule component.
 
 Proteins succeed when InterPro domain names explicitly contain the compartment (KAR2/BiP -> ER, PDI1 -> ER).
 
@@ -317,7 +444,7 @@ In multiple cases, the GO term predictions from the upstream ESM model are more 
 
 Training data skewed toward well-studied organisms can bias predictions:
 
-- **aprE** (BACSU): BioReason predicts human hemostasis/blood coagulation processes for a B. subtilis subtilisin, reflecting mammalian-dominated training data.
+- **aprE** (BACSU), a term-level example, not an RL narrative one. The hemostasis and blood-coagulation terms for this B. subtilis subtilisin appear in two places. One is the upstream GO-GPT panel in the RL export: `GO:0030195` negative regulation of blood coagulation, `GO:1900047` negative regulation of hemostasis, and others. The other is the HF SFT term `GO:0030195`, which is tagged `NPI` / `TAXON_CONSTRAINT_VIOLATION`. The HF SFT narrative also says the protease "likely remodels host factors to dampen clot formation". The RL Functional Summary makes no coagulation claim and scored 5/5 correctness (3/5 completeness).
 - **PGRPLB** (ANOGA): Called a "fruit fly" protein when it is actually from the mosquito Anopheles gambiae.
 - **NFE2L2** (human): bZIP domain analysis erroneously emphasizes erythroid function (from the NF-E2 family name) over the protein's primary role in antioxidant response.
 
@@ -366,19 +493,16 @@ Both are pseudoenzymes with catalytic domain signatures. BioReason **correctly**
 - **RL**: 7.4/10, preferred for factual reliability
 - SFT fabricated InterPro entries for novel proteins; RL never did
 
-### Our pilot (5 genes)
-- Texts clearly different; SFT ~10% longer
-- SFT more specific but sometimes wrong; RL safer but shallower
-- Both fail on pseudoenzymes (Epe1)
+### Our data
 
-The primary structured SFT term cohort is ARGO95 (95 HF-catalogue genes, 955 terms); mixed-source SFT views are supplemental.
+- **Matched narrative comparison:** 110 ARGO139 genes, scored by the same rater. See [Matched SFT vs RL comparison](#matched-sft-vs-rl-comparison-110-argo139-genes). It replaces an early five-gene pilot, which is no longer reported.
+- **SFT term cohort:** the primary structured SFT term cohort is ARGO95 (95 HF-catalogue genes, 955 terms). Mixed-source SFT views are supplemental.
 
 ## Paper evaluation sets
 
 - **Test set**: 8,630 proteins ([HuggingFace](https://huggingface.co/datasets/wanglab/bioreason-pro-test-data)), temporal holdout post-2022
 - **Human eval**: 192 proteins, 162 by external biologists. Protein list not published.
-- **Overlap with AIGR**: 7 of 1,211 genes. Low by design -- their test set is newly annotated, ours is deeply characterized.
-- 99 additional genes from their test set are being reviewed to expand overlap.
+- **Overlap with AIGR**: 28 of the 4,980 current AIGR gene reviews are in the test split. Only 1 of the 139 ARGO139 genes is (`SCHPO/alo1`). These counts come from `audit_followup.py --test-parquet` on 2026-09-27; see [Leakage, novelty and scripted calls](#leakage-novelty-and-scripted-calls). The overlap is low by design: their test set is newly annotated, while ours is deeply characterized. An earlier version of this page gave "7 of 1,211" and said "99 additional genes are being reviewed". Both statements are stale and have been replaced.
 
 ## HuggingFace protein_catalogue analysis
 
@@ -455,28 +579,90 @@ Full details: [research/bioreason-sft-evaluation.md](https://ai4curation.io/ai-g
 
 We evaluated 45 proteins from the HF SFT catalogue across 15 clades (DANRE, DICDI, METJA, MYCTU, PSEAE, ANOGA, ARATH, DROME, ECOLI, SCHPO, human, mouse, rat, worm, yeast), 3 proteins per clade, mixing well-characterized and poorly-characterized proteins.
 
-Mean correctness was 3.0/5 and completeness 2.7/5, below the RL performance set
-on both axes and consistent with the paper's claim that RL hallucinates less. No
-protein scored 5/5 on either axis.
+Mean correctness was 3.0/5 and completeness 2.7/5. No protein scored 5/5 on either axis.
+
+**The SFT-45 and RL-138 cohorts cannot be compared.** They share no genes. SFT-45 was chosen to mix well-characterized and uncharacterized proteins across 15 clades. ARGO139 is mostly well-characterized proteins. The two were also scored by different agents against references of different maturity. A difference in their means therefore says nothing about SFT versus RL. For the like-for-like comparison, see [Matched SFT vs RL comparison](#matched-sft-vs-rl-comparison-110-argo139-genes).
 
 ### Top failure modes (SFT catalogue)
 
-1. **Fabricated UniProt summaries (7/45 = 16%)**. BioReason generates fake "UniProt Summary" text for uncharacterized proteins. All 7 cases are on proteins where UniProt says "Uncharacterized protein." This is systematic and dangerous — it misrepresents an authoritative database.
+1. **Fabricated UniProt summaries (7/45 = 16%)**. BioReason generates fake "UniProt Summary" text for uncharacterized proteins. All 7 cases are on proteins where UniProt says "Uncharacterized protein." The pattern recurs in this sample, and it is dangerous because it mimics an authoritative database.
 
 2. **Paralog/family conflation (8/45 = 18%)**. Biology from well-characterized family members is applied to divergent paralogs: mlcD (calmodulin→myosin I LC), rdgBbeta (vibrator→Class II PITP), Ndufb1/NDUFAB1 confusion, Ifi204/AIM2 conflation, Hmgcs2/HMGCS1 mixing.
 
 3. **Organism-specific biology usually absent**. Most reviews found no organism-specific insight beyond domain architecture. Mosquito eye pigmentation, Mtb drug targets, yeast cell wall biology, worm body size regulation, and plant cold stress were missed; `fen1` is a counterexample where the review credits a zebrafish retinal-phenotype link.
 
-4. **Inverse quality vs characterization**. The orphan examples with 0-3 GOA annotations (mbiA, MJ1511, YGR117C; where BioReason could add most value) all score at the floor of the 1-5 scale. mbiA was recorded as 0/5 in the source evaluation, below the rubric range, and is counted as 1 in the table above. Well-characterized proteins (where BioReason scores 4/5) already have extensive annotations making the narrative redundant.
+4. **Inverse quality vs characterization**. The orphan examples with 0-3 GOA annotations (mbiA, MJ1511, YGR117C) all score at the floor of the 1-5 scale; these are the proteins where BioReason could add the most value. mbiA was recorded as 0/0 in the source evaluation, which is outside the 1-5 rubric. It is counted as 1/1 in the table above. Well-characterized proteins, where BioReason scores 4/5, already have extensive annotations, so the narrative adds little.
 
 5. **Hallucinated GO IDs**. BioReason cites specific GO IDs that map to completely different terms (e.g. GO:0047554 cited as caffeoyl-CoA O-methyltransferase, actually 2-pyrone-4,6-dicarboxylate lactonase).
 
 6. **Directional errors**. Several errors get the mechanism exactly backwards: CRH1 donor-acceptor direction, Sstr5 ligand preference, gcl substrate clearance direction, CHL1 cell death promotion vs limitation.
 
-### Comparison: SFT catalogue vs RL web scrapes
+### SFT-45 and RL-138 side by side (not comparable)
 
-The SFT model scores lower than RL, consistent with the paper's finding that SFT has "more hallucinations." Generated UniProt-style prose is a concern in both modes: only 3 of the 139 collected RL strings are exact substrings of the cached UniProt record, and several contain clear factual conflicts. The RL model's claim to "never fabricate InterPro entries" does not extend to UniProt-style summaries.
+An earlier version of this page read the gap between the two cohorts as consistent with the paper's finding that SFT has "more hallucinations". That claim is withdrawn; the matched comparison below does not reproduce it. Generated UniProt-style prose is a concern in both modes: only 3 of the 139 collected RL strings are exact substrings of the cached UniProt record, and several contain clear factual conflicts. The RL model's claim to "never fabricate InterPro entries" does not extend to UniProt-style summaries.
 
-### Key conclusion
+### Key conclusion (SFT-45)
 
-BioReason SFT is a **domain-interpretation narrative engine**, not a biological knowledge system. It adds modest value (~30% of proteins) when domain architectures are diagnostic, but introduces systematic fabrication and false specificity for the remaining ~70%. The proteins where BioReason could add the most value (uncharacterized, minimal annotations) are precisely where it performs worst.
+BioReason SFT is a **domain-interpretation narrative engine**, not a biological knowledge system.
+
+- **Where it helps.** It adds modest value when domain architectures are diagnostic. In the 45-protein sample, 15/45 scored 4/5 correctness and none scored 5/5.
+- **Where it fails.** Elsewhere it often fabricates or adds false specificity.
+- **The inverse relationship.** The proteins where BioReason could add the most value (uncharacterized, with minimal annotations) are exactly where it performs worst in this sample.
+
+## Matched SFT vs RL comparison (110 ARGO139 genes)
+
+*Computed on 2026-09-27 at commit `9891e5ffd` plus that day's uncommitted edits. Reproduce with:*
+
+```bash
+uv run python projects/BIOREASON_COMPARISON/sft-rl-matched/extract_sft_summaries.py --parquet-dir <protein_catalogue/data>
+uv run python projects/BIOREASON_COMPARISON/sft-rl-matched/compare_sft_rl.py
+```
+
+**Data.** The per-gene folders hold SFT narratives only for the 45 SFT-catalogue proteins, and those share no genes with ARGO139. The narrative does exist upstream, though: each HF `wanglab/protein_catalogue` entry carries a Functional Summary in its `generation` field. 110 of the 139 ARGO139 accessions are in the catalogue, all with a parseable Functional Summary. The 110 exclude `csr-1` and all seven truncated-input genes. `extract_sft_summaries.py` writes them, with a SHA-256 of each `generation`, to [`sft-functional-summaries.tsv`](BIOREASON_COMPARISON/sft-rl-matched/sft-functional-summaries.tsv).
+
+**Protocol.**
+
+- **Rater.** One LLM agent (Claude Code, Claude Opus 5.5; "rater B") scored the 110 SFT Functional Summaries against the current `*-ai-review.yaml` description and `core_functions`. It used the same 1-5 anchors as the RL reviews (the `bioreason-predictions` skill rubric).
+- **Same-rater RL re-score.** Rater B then re-scored the 110 RL Functional Summaries in the same session. This separates the model difference from the rater difference.
+- **Blinding.** Rater B was not blinded to model identity. It had already seen the project page, which names some first-rater RL scores. Before the RL re-score it also saw the first-rater scores of 25 genes (flagged in the ratings file).
+- **Outputs.** Scores and one-line SFT rationales are in [`sft-rl-matched-ratings.csv`](BIOREASON_COMPARISON/sft-rl-matched/sft-rl-matched-ratings.csv). Statistics are in [`sft-rl-matched-summary.json`](BIOREASON_COMPARISON/sft-rl-matched/sft-rl-matched-summary.json).
+
+**Results (n=110, paired; Wilcoxon signed-rank).**
+
+| Comparison | Correctness (x vs y) | x>y / y>x / tie | p | Completeness (x vs y) | x>y / y>x / tie | p |
+|---|---|---|---|---|---|---|
+| **SFT vs RL, same rater (B)** | 3.96 vs 4.05 | 24 / 38 / 48 | 0.62 | 3.88 vs 2.75 | 80 / 1 / 29 | 2.5e-15 |
+| RL rater B vs RL first rater (calibration) | 4.05 vs 3.95 | 13 / 5 / 92 | 0.041 | 2.75 vs 2.87 | 12 / 27 / 71 | 0.031 |
+| SFT (B) vs RL (first rater), confounded | 3.96 vs 3.96 | 27 / 33 / 50 | 0.74 | 3.88 vs 2.87 | 74 / 2 / 34 | 3.9e-14 |
+
+**Rater calibration.** On the same RL text, rater B agreed with the first rater exactly on 92/110 correctness scores (quadratic-weighted kappa 0.93) and 71/110 completeness scores (kappa 0.78). On the 85 genes whose first-rater score rater B had not seen, kappa was 0.92 and 0.78. The two raters are similar enough that the SFT-RL difference is not a rater artifact.
+
+**Findings.**
+
+- **Correctness.** SFT and RL narratives do not differ detectably on this matched set. The paper's claim that RL makes fewer factual errors is not reproduced at the level of the Functional Summary.
+- **Completeness.** SFT narratives are substantially more complete: a mean 1.1 points higher, with SFT ahead on 80/110 genes and RL ahead on 1. This fits the paper's description of SFT as mechanistically richer.
+- **Where SFT is better.** Several RL failures listed above have SFT summaries that get the core biology right: pol5, RAS2, KEAP1, drp-1, atg38, Spy and Skp.
+- **Where SFT is worse.** Some SFT summaries are worse than the RL ones, for example sigK (called a primary sigma factor), CRY (stabilizes rather than degrades TIM), St13 and atfs-1.
+- **Possible leakage.** Many SFT summaries restate highly specific GOA-like annotations, such as anther tapetum or UV-B response for BRI1. This is consistent with the [leakage section](#leakage-novelty-and-scripted-calls): well-characterized proteins may be recalled rather than predicted.
+
+**Caveats.**
+
+- One LLM rater, not blinded to model identity.
+- References are LLM-authored, and 48 of the 110 are not `COMPLETE`.
+- The SFT text comes from the HF catalogue and the RL text from the web app, so the two model versions and input panels may differ.
+- By reference status, the SFT-RL correctness difference is near zero for `COMPLETE` references (4.18 vs 4.08, n=62) and favours RL for `DRAFT` references (3.54 vs 3.94, n=35, p=0.045 uncorrected). See the summary JSON.
+
+**Still open.** A human-rated anchor subset and a rater blinded to model identity (for example with SFT and RL texts shuffled and unlabelled). An SFT narrative is also needed for the 29 ARGO139 genes absent from the catalogue; it would have to be generated with the released SFT model.
+
+## Notes and changelog
+
+### 2026-09-27: follow-up to the function-prediction evaluation review
+
+This entry responds to the BioReason section of [the 2026-09-26 review](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md). New numbers were computed at commit `9891e5ffd` plus that day's uncommitted edits. Per-gene sft, gogpt and rl assessments were not changed.
+
+- **SFT vs RL.** The unmatched comparison (SFT-45 vs RL-138, no shared genes) and its claim to be "consistent with the paper" are withdrawn. They are replaced by a [matched 110-gene comparison](#matched-sft-vs-rl-comparison-110-argo139-genes) using HF-catalogue SFT Functional Summaries, with a same-rater RL re-score (`sft-rl-matched/`).
+- **Failure modes.** Mode counts now have denominators (`failure_mode_counts.py`). The page reports that 62 of 147 ARGO95 discordant terms lack an `error_type`, and that `LOCALIZATION_DEFAULT` is tagged 4 times. "Systematic" is softened throughout. The RL narrative localization flags (16/138) are script-derived lower bounds (`failure-mode-rl-flags.csv`).
+- **Mis-assigned examples.** Spy was removed as a "called cytoplasmic" example: its summary says cell envelope, and its failure is family-label misidentification. aprE's coagulation terms are now attributed to GO-GPT and HF SFT, not to the RL narrative, which scored 5/5.
+- **Raters.** The page now states that the references and both raters are LLM agents. It adds the caveat that the kappa sample is balanced rather than prevalence-weighted, gives prevalence-reweighted agreement, and adds the promised table of scores by reference status.
+- **Leakage and novelty.** New section covering the test-split overlap, GOA dates of CNN calls under two assumed cutoffs, the 61 `→CNN` audit reclassifications, and the scripted CNN/UNC rationales (`audit_followup.py`).
+- **Stale text.** Fixed the by-organism table (it omitted three n=1 species), the frontmatter species list, "Our pilot (5 genes)", "7 of 1,211" / "99 additional genes", the mbiA 0/0 scale note, and the eight-versus-nine mode count.
