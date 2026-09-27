@@ -210,3 +210,106 @@ PMID:40818613 remains cache-dependent; it is not presented as a recovered local
 record. The recursive YAML/notes/provider census remains 12 PMIDs with five
 missing records, no Reactome IDs and no provider artifact. The checked review
 stays DRAFT. Logs and the explicit publication manifest preserve these limits.
+
+### PR 3287 evidence and term-scope follow-up, 2026-09-27
+
+The exact reviewed head was `afd87b03e1c37589d03d084a942c5a84b5ad1411`.
+All 44 source assertions, their actions, all 19 reference identities and both
+core units are preserved. The changes address the full reviewer comment
+[5854544244](https://github.com/ai4curation/ai-gene-review/issues/3287#issuecomment-5854544244).
+
+The five missing records remain normal-cache requirements. Their VERIFIED
+assessments mean that the intended primary identities and relevant content were
+independently inspected; they do not claim that a local cache exists. Direct PMC
+opens intermittently returned browser challenges during this follow-up, while
+indexed original PMC pages supplied the relevant text. The rechecked routes are
+PMID:25315780 / [PMC4239649](https://pmc.ncbi.nlm.nih.gov/articles/PMC4239649/),
+PMID:30361410 / [PMC6277169](https://pmc.ncbi.nlm.nih.gov/articles/PMC6277169/),
+PMID:31742248 / [PMC6861130](https://pmc.ncbi.nlm.nih.gov/articles/PMC6861130/),
+PMID:37087101 / [PMC10209018](https://pmc.ncbi.nlm.nih.gov/articles/PMC10209018/),
+and PMID:40818613 / [PMC12465037](https://pmc.ncbi.nlm.nih.gov/articles/PMC12465037/).
+The last paper's existing ordinary supporting-text quote about restoring mutant
+co-localization is verbatim in the primary abstract, also reproduced in PubMed.
+Its Methods explicitly specify human ABHD5 NM_016006.6 and human PNPLA1 constructs.
+The quote remains an ordinary cache-dependent quote; it was not moved into a
+different field to avoid the missing-source check. No unchanged normal-fetch
+failure was repeated. The already dispatched source10 recovery must be verified
+and imported before these five gates can close.
+
+The PNPLA1 unit now has an explicit curator question about the molecular-function
+term. Live [GO:0060229](https://amigo.geneontology.org/amigo/term/GO:0060229)
+specifies activation of lipid hydrolysis, whereas the PNPLA1 assay measures
+transacylation. Live [GO:0008047](https://amigo.geneontology.org/amigo/term/GO:0008047)
+defines an increase in catalytic activity and its comment requires direct enzyme
+interaction without covalent modification. It is also the parent of the existing
+lipase-activator term. Wild-type association, droplet targeting and restoration
+of activity by forced co-localization of binding-defective mutants are distinct
+results. They justify retaining the biological PNPLA1 unit while leaving its
+most suitable GO MF as an explicit curator question. No NEW row, redundant
+ancestor or unverified mechanism is added.
+
+The cytoplasm row no longer uses a tissue-expression fragment as localization
+support. It retains the correct UniProt localization statement and a short exact
+external primary localization excerpt with its PMC2570125 route and human
+Figure 2 context. Local PMID:18832586 remains abstract-only. The description now
+states the bounded recombinant-human HDAC4 cleavage result directly; the LPAAT
+controversy and its assay controls remain in these notes and the relevant rows.
+
+SOURCE_BAD on the Rhea/EC propagation block concerns the challenged assignment
+of ABHD5 to those reactions, not the existence or correctness of the reaction
+identifiers. Those comments already make this distinction. Direct biochemical
+counterexperiments support the source-assignment judgment, so replacing it with
+a weak-source label would lose that distinction. A future upstream UniProt
+curation report should include the original positive study, the controlled
+counterexperiments and the different LPGAT preparation; no external ticket was
+sent by this follow-up.
+
+### Source10 import and recovered-text assessment, 2026-09-27
+
+The five required normal-fetch records were imported without overwrites under
+`tmp/source10-canonical-import-receipt.json` (SHA256
+`18d517caec871b4306b21283bb89204639ecc0b25f6f495802bd664d072c8359`).
+All five exact canonical byte hashes match that receipt. PMID:25315780 remains
+abstract-only; PMID:30361410, PMID:31742248, PMID:37087101 and PMID:40818613 now
+contain full-text extractions. Reference access flags now reflect those actual
+caches rather than the earlier failed local fetches. The five normal publication
+cache gates are closed; the earlier failure notes remain historical provenance.
+
+Rereading the recovered Methods, Results and captions preserves the two lipid
+regulatory cores and every annotation action. PMID:30361410 Figure 4 uses murine
+proteins, while Figure 5 explicitly tests human ABHD5 variants with human PNPLA1.
+PMID:37087101 uses human CGI-58 and PNPLA1 with mouse ATGL and preserves the
+preparation-specific absence of enhanced transacylation. PMID:40818613 Figure 7
+and the human-construct Methods confirm the forced proteoliposome co-localization
+rescue, including the two variants with reduced PNPLA1 binding. Its existing
+abstract quote is now verifiable directly against the normal cache.
+
+The fuller PMID:31742248 Methods reveal a source-label limitation: human HDAC4 is
+explicit, but the ABHD5 expression plasmid is named
+`6XHis-smt3-TEV-mABHD5`. The Results compare mouse Ser239 and human Ser237 and
+use Ser237 mutant numbering. The precise sequence behind that construct name was
+not independently resolved here. Therefore the current description and reference
+assessment avoid the earlier unqualified attribution to recombinant human ABHD5.
+This is an explicit narrowing of assay provenance, not evidence of wrong-gene
+curation. The dose response, inhibitor, mutant and thermal-stability assays still
+support reported ABHD5-dependent peptide cleavage; human-cell and mouse results
+remain separate. No protease annotation or core is added.
+
+The 2015 notice linked by PMID:25315780 was independently read on the indexed
+original [PMC4281727](https://pmc.ncbi.nlm.nih.gov/articles/PMC4281727/),
+[DOI:10.1074/jbc.A114.573857](https://doi.org/10.1074/jbc.A114.573857).
+It corrects author-affiliation symbols only; it contains no assay or data
+correction. PubMed's original record lists the erratum bibliographically and the
+PMC notice displays no PMID. Targeted primary PubMed/DOI searches did not confirm
+a separate PMID; the identifier-conversion API was inaccessible. This is recorded
+as an externally inspected DOI/PMC-only notice with no normal local cache, not
+silently mapped to the original paper or to an invented PMID. It does not alter
+the biological source judgment. There are no provider artifacts or new PMID
+citations in this follow-up.
+
+Final targeted validation passed with exit 0 and zero curation warnings. The
+review status is COMPLETE; all 12 cited PMIDs are normally cached, and the
+separate externally verified DOI-only affiliation notice remains explicit.
+Final schema, history, rendering, immutable-field and literal-quote checks are
+recorded in the follow-up manifest. Completion of this local review does not
+claim PR approval, publication or merge.
