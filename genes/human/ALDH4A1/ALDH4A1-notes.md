@@ -219,3 +219,182 @@ recorded in `review_notes`.
 
 This should be revisited if the native complex is isolated from mitochondria with a defined
 stoichiometry, or if the proteoliposome stimulation is independently reproduced.
+
+## 2026-09-27 ClinGen campaign re-review
+
+This entry supersedes the earlier action recommendations and the 2026-09-17 MPC
+interpretation above; the historical text is retained as provenance. HGNC:406 is
+Approved ALDH4A1, with previous symbol ALDH4 and alias P5CDh. The immutable record
+is human UniProt P30038. Parent preflight and an independent byte comparison found
+all five canonical files identical to main
+`ba3ff58d7d2de76dbe3c24b16e05e12369f463fc`; canonical and both alias PR searches
+were empty. All 17 seeded source objects and all three alternative products remain
+unchanged. This is a full audit despite the previous COMPLETE label.
+
+### Research and source access
+
+The genuine Falcon request used a 1200-second timeout and the configured
+perplexity-lite fallback, concurrently with normal publication caching. Both
+provider commands failed during retrieval of `deep-research-client` from PyPI
+because DNS could not resolve the host, before either research provider was
+contacted. No provider report was created. The normal gene-publication command
+reused all ten requested canonical PMID records. The terminal logs are
+`/tmp/ALDH4A1-provider.log` and `/tmp/ALDH4A1-fetch.log`; they are local operational
+receipts, not independent biological evidence. The manual research is recorded
+here rather than impersonating a provider artifact.
+
+The notes-inclusive census also found the historical `PubMed:9700195` citation
+above. A normal `fetch-pmid 9700195` attempt failed with the URL/DNS error
+`nodename nor servname provided, or not known` and produced no cache
+(`/tmp/ALDH4A1-extra-fetch.log`). That historical source remains an explicit
+notes-only cache gate; it is not newly used to support a decision. All ten PMID
+references in the YAML and all three cited Reactome records are cached. The
+review remains DRAFT pending recovery of this notes citation.
+
+The canonical full papers read were PMID:22516612, PMID:21998747,
+PMID:34800366, PMID:40355545, PMID:40044865 and PMID:40691140. The local records for
+PMID:8621661, PMID:4015840, PMID:32814053 and PMID:40101766 are abstract-only;
+the metadata flags retain those distinctions. For the interaction-screen design,
+the original full PMID:32814053 was additionally read at the
+[MDC accepted-paper route](https://edoc.mdc-berlin.de/id/eprint/19322/1/19322oa.pdf),
+previously downloaded as `/tmp/ACTA1-PMID32814053.pdf`. This does not imply recovery
+of its ALDH4A1-specific supplementary interaction entry. The Nature primary
+[PMID:40355545 article](https://www.nature.com/articles/s41556-025-01651-8) agrees
+with the cached full paper. These external checks were performed on 2026-09-27.
+
+### Catalysis, localization and source-specific judgments
+
+PMID:22516612 directly measures recombinant human GSA/NAD+ turnover and human
+apo/mutant structures. Human equilibrium analytical ultracentrifugation gives a
+122 kDa dimer estimate, in agreement with its domain-swapped crystal dimer. The
+ligand complexes used to analyze substrate recognition are mouse P5CDH; the
+hydroxylated-substrate accommodation in Figure S8 is a structural model. The paper
+states established hydroxyproline-pathway activity, but does not newly measure
+human hydroxylated-GSA turnover. The current reference finding and hydroxyproline
+reason now make that distinction. PMID:21998747 is a HOGA1 study whose introduction
+and pathway diagram place P5CDH in the four-enzyme mitochondrial pathway, not a
+new P5CDH enzyme assay. The preserved TAS process is supported as catalytic pathway
+participation, with the corresponding cached Reactome reaction as corroboration.
+
+Broad mitochondrial annotations retain ACCEPT at their original source resolution.
+The generic oxidoreductase MF is refined by MODIFY to the directly measured
+GO:0003842 subtype; the broad class remains biologically correct. Separate matrix
+annotations supply compartment precision. Human homodimeric self-association is an established property of the
+core enzyme and is also ACCEPT, without creating a separate binding core.
+The live [HPA subcellular page](https://www.proteinatlas.org/ENSG00000159423-ALDH4A1/subcellular)
+reports supported mitochondrial staining in HaCaT and Hep-G2 cells and cytosolic
+staining in A-431. The mitochondrial HTP paper has cached full text; its exact
+ALDH4A1 supplementary row was not independently recovered. Its broad curated
+assignment is retained with independent localization support, not a claim that
+all organellar assignments were individually remeasured in this audit.
+
+The original [CACAO/GONUTS annotation record](https://gowiki.tamu.edu/wiki/index.php/HUMAN:AL4A1)
+traces the broad NAD+-aldehyde-dehydrogenase assignment to CACAO8806 and Table 1 of
+[PMID:4015840](https://gowiki.tamu.edu/wiki/index.php/PMID:4015840), with agar-overlay
+staining using propionaldehyde or benzaldehyde. The full Table 1 was not recovered.
+The abstract's emphasis on other ALDH forms therefore does not establish a wrong
+protein assignment. The curated broad function is biologically sound; MODIFY refines it to the
+independently measured human P5CDH reaction. This refinement does not claim that
+the unread original table assayed GSA. The detailed original substrate assay
+remains curator-deferred rather than independently verified.
+
+The generic GO:0005515 record is REMOVE as uninformative, not because the
+ALDH4A1-RBBP4 interaction is disproven. The immutable UniProt record lists three
+experiments; the original screen performs repeated screens and pairwise retests.
+The exact supplementary pair and a mechanistic RBBP4-dependent ALDH4A1 activity
+remain unverified. No specific adaptor or scaffold function is substituted.
+
+For propagation, PTN002684348 is the sole IBA source entity. Human self-evidence
+is legitimate descendant grounding. The PAINT tree/node placement, ARBA internal
+conditions and missing live InterPro entries were not reconstructed; their source
+reviews explicitly retain UNRESOLVED internals where appropriate. Positive target
+judgments rely on the independently established human reaction and location, not
+fabricated verification of automated rules. The source mappings to EC:1.2.1.88,
+RHEA:30235 and SL-0170 are consistent with the immutable human record.
+
+### Accessory MPC activation: positive evidence and NEW audit
+
+The current decision adds one source-specific IDA proposal for GO:0141109
+transporter activator activity. It does not add a transport-process annotation,
+a pyruvate-carrier molecular function or an obligate third-subunit complex term.
+ALDH4A1 performs the proposed regulatory work by binding the carrier and enhancing
+its measured transport. This assignment does not rest on knockout necessity.
+
+PMID:40355545 Figure 5 reports binding of recombinant ALDH4A1 to MPC1 and MPC2,
+with human-cell association and interaction-defective deletion/rescue experiments.
+The deletion of residues 182–199 loses MPC association and pyruvate-import rescue
+while retaining the measured cellular proline-regulation phenotype; this is not a
+complete purified-enzyme kinetic characterization of that deletion. Figure 6 and
+Extended Data Figure 8 report enhanced MPC association/oligomerization with added
+ALDH4A1. Figure 7 compares empty proteoliposomes, individual MPC subunits,
+MPC1+MPC2, and MPC1+MPC2 with WT or catalytic S352L ALDH4A1. MPC1+MPC2 already
+transports; added WT or S352L increases transport over time. The source explicitly
+states [PMID:40355545, Results, "In vitro binding assay demonstrated the direct
+interaction of ALDH4A1 with both MPC1 and MPC2"] and [PMID:40355545, Results,
+"Either wild-type ALDH4A1 or mutant ALDH4A1(S352L) further enhanced pyruvate
+transport by MPC1–MPC2 in a time-dependent manner compared with MPC1–MPC2"].
+
+The reconstitution Methods use purified recombinant proteins, phosphatidylcholine
+and cardiolipin, detergent removal and radiolabeled uptake/filter washing. The
+recovered description does not provide an ALDH4A1-alone transport arm. It also
+does not settle matched incorporated MPC amount/orientation for every comparison,
+or distinguish stabilization during reconstitution from an increase in turnover
+per incorporated carrier. Thus the evidence supports a transporter-activating
+contribution but does not establish standalone carrier activity or a universal
+native stoichiometry. The paper's gel filtration, crosslinking and native-gel data
+are positive complex evidence; the previously stated requirement for any native
+isolation is outdated. Those data still do not quantify a unique native 1:1:1
+stoichiometry. A peer independently read these Results/Methods and reached the
+same bounded interpretation.
+
+The live [GO:0141109 definition and parents](https://amigo.geneontology.org/amigo/term/GO:0141109)
+were checked on 2026-09-27. The definition requires binding and increased
+transporter activity; its is_a parents are transporter regulator activity and
+molecular function activator activity. It is not a carrier-activity assertion.
+The proposed term is not an ancestor or descendant of any retained seeded term,
+and there is no second NEW term. The target accession/name search of the cached
+`gocams/index.tsv` found no ALDH4A1/P30038 activity; it therefore supplied no
+existing target model to resolve or contradict this role.
+
+The comparator check considered transporter-associated proteins whose regulatory
+role is distinct from substrate translocation. Primary UniProt annotation displays
+show the same term on rat [Pdzk1/Q9JJ40](https://www.uniprot.org/uniprotkb/Q9JJ40/entry)
+(source RGD), mouse [Cltrn/Q9ESG4](https://www.uniprot.org/uniprotkb/Q9ESG4)
+(source GO_Central), and rat [Atp1b2/P13638](https://www.uniprot.org/uniprotkb/P13638/entry)
+(source RGD). Their roles span a binding scaffold, a carrier-binding trafficking/
+activity regulator, and a noncatalytic pump partner. They establish that GO uses
+this MF for transporter-associated regulatory proteins; they do not transfer
+those proteins' particular mechanisms to ALDH4A1. These were annotation-display
+checks, not independent re-reviews of every donor experiment or exact evidence
+chain. Local authored NEW proposals in other reviews were not treated as curated
+comparator assertions. QuickGO API requests did not yield an independently
+usable annotation export, so no comprehensive species-wide absence claim is made.
+
+The MPC1-MPC2 structural papers constrain the translocation pathway to the
+heterodimer. They do not refute accessory regulation. Co-expression of two tagged
+subunits does not prove that endogenous host ALDH4A1 could never be present;
+the previous categorical sample-exclusion sentence is withdrawn. PMID:40044865
+and PMID:40691140 full Methods were read; PMID:40101766 remains limited to its
+primary abstract/publisher record. PMID:40355545 is VERIFIED for the bounded
+binding/activation claim, rather than DISPUTED merely for lacking an independent
+replication. Native occupancy, stoichiometry, physiological distribution and the
+precise activation mechanism remain explicit questions. The newer activity is
+kept outside the integrated defining P5CDH catalytic core at this stage.
+
+The current 18-entry review has 14 ACCEPT, two enzyme-specificity MODIFY actions,
+one generic-binding REMOVE and one NEW. The catalytic core integrates proline and hydroxyproline degradation under
+the same enzyme MF in the matrix. No second broad core duplicates that chemistry.
+
+Validation note: live AmiGO labels GO:0003842 with an explicit `(NAD+)` suffix,
+whereas the repository validator expects the shorter name already present in
+the source snapshot. Authored labels use the validator-compatible name for the
+same term ID; NAD+ chemistry remains explicit in the prose. No source term ID or
+label was changed.
+
+Final checks: targeted gene validation and rendering passed. All 35 attached
+quotations matched the canonical sources under whitespace normalization. The
+17 seeded source objects, 18 original reference identity/title pairs, three
+alternative products, UniProt and GOA bytes were preserved. Parent independent
+review accepted the biological decisions after the two enzyme-specificity
+refinements and added core matrix evidence. The YAML validator has no curation
+warnings; DRAFT is retained for the notes-only PMID:9700195 cache gate.
