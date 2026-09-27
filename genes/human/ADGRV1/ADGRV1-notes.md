@@ -298,3 +298,80 @@ assessment. PubMed confirms the same article and DOI (10.3390/cells11182790).
 Normal local fetching still fails DNS, so the five required cache gaps remain
 draft gates. CI also reported publisher-PDF HTTP 403 responses; external PDF
 reading recorded above is separate from successful normal cache creation.
+
+### 2026-09-27 — PR #3192 evidence-verifiability follow-up
+
+The complete [review comment](https://github.com/ai4curation/ai-gene-review/pull/3192#issuecomment-5851472562)
+was read against published head `676504ebc6d7997336569b87b00642f26cb61230`.
+Local YAML, HTML and notes byte hashes matched that publication receipt before
+editing. All 65 assertion source objects, including the 64 original assertions
+and retained structural NEW proposal, and all 26 current reference identifier/title
+pairs are preserved. The earlier title-correction record is unchanged.
+
+A fresh supported `just fetch-pmid` attempt for PMID:22419726, PMID:24191038,
+PMID:24962568, PMID:35630584 and PMID:36139365 returned exit 1 and cached 0/5.
+Every attempt failed with `nodename nor servname provided, or not known`.
+The complete log is `/tmp/ADGRV1-followup-fetch.log`. CI's earlier success reaching
+PubMed metadata justified this retry, but does not establish successful retrieval
+from this local runtime. No publication file was authored or modified manually.
+
+The four open-access sources account for 28 quotation instances: 10 each from
+PMID:24962568 and PMID:35630584, five from PMID:24191038 and three from
+PMID:36139365. These now use `supporting_text`; the nonpublic-PDF exemption is
+not appropriate simply because a normal fetch fails. They are **not yet
+cache-validated**. The missing caches remain a publication gate, and future
+normal retrieval must check these excerpts against the resulting text. The
+PMID:36139365 excerpt now states the observed ER/MAM fraction result rather than
+only that cells were fractionated. The separately sourced, abstract-only cached
+PMID:16434480 still uses the full-text field for its externally read author PDF.
+
+Primary identity and content checks remain distinct from cache availability:
+
+- [PMC3839775](https://pmc.ncbi.nlm.nih.gov/articles/PMC3839775/) was read again;
+  its metadata explicitly links PMID:24191038 and DOI 10.1073/pnas.1318501110.
+  Figures 3 and 5 retain the mini-MASS1 degradation, calcium-response and
+  G-alpha interaction scope.
+- [PMC9146371](https://pmc.ncbi.nlm.nih.gov/articles/PMC9146371/) explicitly links
+  PMID:35630584. Its [publisher PDF](https://mdpi-res.com/d_attachment/molecules/molecules-27-03108/article_deploy/molecules-27-03108.pdf?version=1652352248)
+  was read again, especially section 2.2 and Figure 2. It reports the shorter
+  VLGR1a and engineered CTF, not signaling by intact native VLGR1b.
+- Indexed primary [PMC4148852](https://pmc.ncbi.nlm.nih.gov/articles/PMC4148852/)
+  again exposed the Vgain/autoproteolysis Results. The original primary read
+  established the PMID:24962568 linkage; intermittent challenge responses are
+  recorded as current access limits, not as a reason to erase that verification.
+- The [Cells publisher PDF](https://mdpi-res.com/d_attachment/cells/cells-11-02790/article_deploy/cells-11-02790.pdf?version=1662544865)
+  was read again, including sections 3.3–3.4 and Figure 3. DOI 10.3390/cells11182790
+  is the previously PubMed-verified PMID:36139365 article. The YAML retains the
+  exact machine title with `Ca(2+)`; the earlier superscript rendering difference
+  did not identify another paper.
+- The original [JCEM publisher abstract](https://academic.oup.com/jcem/article/97/4/E565/2833844)
+  read established PMID:22419726's identity and the limited bone-density findings.
+  The exact mineralization experiment remains inaccessible, and its annotation
+  stays UNDECIDED. VERIFIED here is a citation judgment, not a claim that the
+  full experiment or positive mineral deposition was verified.
+
+The description now states the isoform/coupling boundary compactly. The
+GO:0048513 developmental replacement is GO:0060122 stereocilium organization,
+matching the demonstrated structural contribution and the integrated core;
+the broader existing inner-ear-development assertion remains non-core context.
+The PDZ-docking core omits redundant visual perception while retaining
+photoreceptor maintenance. Establishment of protein localization remains in
+that core because physical tail docking supplies an anchoring contribution,
+in addition to the mouse partner-mislocalization phenotype. It does not assign
+ADGRV1 the myosin transport step. The cached PMID:17567809 support is attached
+to the core as well as the assertion. Broad cytoplasm assertions remain at
+their source resolution; fragment ER/MAM evidence supports this compartment
+without making the source assertion erroneous or requiring a new localization.
+
+The review remains DRAFT. The action counts are unchanged; all five source-cache
+gaps must be resolved before the evidence-verifiability request can be closed.
+
+The coordinator independently read the complete follow-up delta, including the
+description, stereocilium replacement, GPCR/PDZ cores and all five changed source
+assessments, and accepted the changes. The coordinator separately confirmed
+preservation of source objects, actions and reference identities. No cache was
+recovered. The standard gene validation and the resulting publication manifest
+record this remaining limitation rather than treating field conversion as a
+successful source fetch.
+
+Validation outcome (2026-09-27 UTC): the existing standard `just validate human ADGRV1` run completed successfully, with two warning groups: unavailable publication caches and unused Falcon evidence. The normal retry recovered no caches. All five missing PMID cache gates therefore remain open, and the review remains DRAFT. Rendering, history validation, source-object and reference-identity preservation checks passed. The coordinator independently accepted the complete biological delta.
