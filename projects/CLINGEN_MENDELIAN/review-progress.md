@@ -100,7 +100,7 @@ are therefore expected; existing human reviews still link normally.
 | ADNP | Definitive | COMPLETE | Review #3193 merged; exact-head approval and required CI passed; all 44 scoped merged blobs verified | `cmungall/clingen-adnp` | [#3193](https://github.com/ai4curation/ai-gene-review/pull/3193) |
 | ADSL | Definitive | INITIALIZED | Merged #3194; final-head approval and required CI passed; all 23 scoped merged blobs verified | `cmungall/clingen-adsl` | [#3194](https://github.com/ai4curation/ai-gene-review/pull/3194) |
 | AFG3L2 | Definitive | COMPLETE | Post-merge source follow-up #3312 merged; current-head approval and required CI passed; all 13 scoped merged blobs verified | `cmungall/clingen-afg3l2` | [#3196](https://github.com/ai4curation/ai-gene-review/pull/3196) |
-| AGK | Definitive | COMPLETE | Original review merged; recovered source closure assessed and validated; publication pending; DOI-only dissertation access remains explicitly limited | `cmungall/clingen-agk` | [#3195](https://github.com/ai4curation/ai-gene-review/pull/3195) |
+| AGK | Definitive | COMPLETE | Post-merge source follow-up #3314 merged; current-head approval and required CI passed; all 46 scoped merged blobs verified | `cmungall/clingen-agk` | [#3195](https://github.com/ai4curation/ai-gene-review/pull/3195) |
 | AGL | Definitive | INITIALIZED | Merged; final-head approval and required CI passed; all required source follow-ups merged | `cmungall/clingen-agl` | [#3197](https://github.com/ai4curation/ai-gene-review/pull/3197) |
 | AGO1 | Definitive | COMPLETE | Post-merge source follow-up #3313 merged; current-head approval and required CI passed; all 13 scoped merged blobs verified | `cmungall/clingen-ago1` | [#3207](https://github.com/ai4curation/ai-gene-review/pull/3207) |
 | AGO2 | Definitive | COMPLETE | Post-merge source follow-up #3288 merged; exact-head approval and required CI passed; all 21 scoped merged blobs verified | `cmungall/clingen-ago2` | [#3210](https://github.com/ai4curation/ai-gene-review/pull/3210) |
@@ -139,6 +139,10 @@ are therefore expected; existing human reviews still link normally.
 | ALG8 | Definitive | INITIALIZED | Review #3298 merged; exact-head approval and required CI passed; all 10 scoped merged blobs verified | `cmungall/clingen-alg8` | [#3298](https://github.com/ai4curation/ai-gene-review/pull/3298) |
 | ALG9 | Definitive | INITIALIZED | Review #3299 merged; exact-head approval and required CI passed; all 11 scoped merged blobs verified | `cmungall/clingen-alg9` | [#3299](https://github.com/ai4curation/ai-gene-review/pull/3299) |
 | ALB | Definitive | No review | Review #3305 merged; current-head approval and required CI passed; all 41 scoped merged blobs verified | `cmungall/clingen-alb` | [#3305](https://github.com/ai4curation/ai-gene-review/pull/3305) |
+| ALK | Definitive | INITIALIZED | Changes requested #3316; source caches closed; evidence and term corrections underway; approval, CI and merge remain pending | `cmungall/clingen-alk` | [#3316](https://github.com/ai4curation/ai-gene-review/pull/3316) |
+| ALMS1 | Definitive | INITIALIZED | Changes requested #3318; source caches closed; evidence and term corrections underway; approval, CI and merge remain pending | `cmungall/clingen-alms1` | [#3318](https://github.com/ai4curation/ai-gene-review/pull/3318) |
+| ALPK1 | Definitive | INITIALIZED | Changes requested #3317; source caches closed; evidence and term corrections underway; approval, CI and merge remain pending | `cmungall/clingen-alpk1` | [#3317](https://github.com/ai4curation/ai-gene-review/pull/3317) |
+| AMT | Definitive | INITIALIZED | Review #3315 merged; current-head approval and required CI passed; all 12 scoped merged blobs verified | `cmungall/clingen-amt` | [#3315](https://github.com/ai4curation/ai-gene-review/pull/3315) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -150,16 +154,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-local/published tree checks and append-only receipt chains. **67 of 2,876 genes
-are complete**; 69 original gene PRs have merged, with 2 requiring source
-follow-ups. The campaign has 69 dedicated full-audit PRs.
+local/published tree checks and append-only receipt chains. **69 of 2,876 genes
+are complete**; 70 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 73 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ABCC8, AFG3L2, AGO1 and ABCD1 source follow-ups have merged with current-head approval, required CI and every scoped merged blob verified. AKR1D1 was merged by an external actor; its R-HSA-193755 source requirement remains unresolved, so it is not counted complete. AGK’s recovered source closure is validated and awaiting publication. Normal seed files for ALK, ALMS1 and ALPK1 and 55 separately verified auxiliary records are imported; their full manual audits are in progress.
+AMT’s full audit merged after current-head approval, required CI and all 12 scoped gene/source blobs were verified. AGK’s source22 follow-up and evidence clarification merged after current-head approval, required CI and all 46 scoped merged blobs were verified. AKR1D1 remains incomplete after its externally observed original merge because R-HSA-193755 is unresolved. ALK, ALPK1 and ALMS1 have published audit PRs with required source caches closed; all three have current-head changes requested and corrections are underway; ALK’s YAML DRAFT status records three intentional advisory groups and does not mean its PR is draft. Source23 imported 14 PMIDs while R-HSA-193763 failed without output. Seed6 imported 18 exact primary files containing 205 PENDING annotations after independent ALS2 adjudication; this does not add completed reviews. Source24’s fixed 13-PMID normal recovery run succeeded; its exact artifact was transferred and hash-verified, with strict record staging and canonical import still pending. Seed6 also imported 25 absent auxiliary files without changing existing cache versions.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -561,3 +565,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-27 checkpoint51: Record verified source follow-ups, exact source21 import and independently reconciled first-review versus post-merge completions. Newly complete: ABCA3, ALB, ADGRV1, AGRN, ABCA4. 63/2,876 complete; 68 original merges; 5 pending source follow-ups; 69 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-27 checkpoint52: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ABCC8, AFG3L2, AGO1, ABCD1. 67/2,876 complete; 69 original merges; 2 pending source follow-ups; 69 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-27 checkpoint53: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: AGK, AMT. 69/2,876 complete; 70 original merges; 1 pending source follow-ups; 73 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
