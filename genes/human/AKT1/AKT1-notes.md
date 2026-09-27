@@ -327,3 +327,72 @@ warning that no annotation uses the generated Falcon report as primary support.
 This is appropriate: the generated report is retained as background, while
 source-specific primary evidence supports the decisions. Final source-preservation,
 history validation and rendering are recorded in the handoff manifest.
+
+
+## 2026-09-27 verified source-recovery follow-up
+
+This entry supersedes the earlier missing-Reactome and metadata-only source
+statements. The canonical review, notes, HTML, machine files and prior history
+were byte-checked against published PR #3242 head
+`25067bbc3c0641b650867b75f3d2dac333b84431` before editing.
+All 445 source assertions and actions, 250 reference identities, two cores and
+existing history are preserved. Only the MPST-source evidence prose/availability
+and its reference assessment change; no new annotation is proposed.
+
+All 54 previously absent Reactome records now have normal-fetch caches. Their
+stable IDs, nonempty summaries and exact bytes match the verified source2 import
+receipt. The summaries corroborate the event-level interpretations already read
+on the live Reactome pages; they are not substitutes for the fuller participant
+and compartment records previously inspected. In particular, AKT is the substrate
+in its activating/deactivating reactions, many E17K substrate events explicitly
+remain predictions, and the NR4A1 event retains its disputed physiological-kinase
+assignment. The R-HSA-9860759 residue-name inconsistency remains documented in its
+reference assessment; the machine title and cached record are preserved.
+
+The normal-fetch candidate for [PMID:36126419](https://pubmed.ncbi.nlm.nih.gov/36126419/)
+was checked against the [original PMC article](https://pmc.ncbi.nlm.nih.gov/articles/PMC9486620/):
+PMID, title, author list, PMCID PMC9486620 and DOI 10.1016/j.redox.2022.102469
+match. The old canonical file was a 436-byte metadata placeholder (Git blob
+`36895e1bd940255b25be03e16fdaa6e81b2744c3`). It is replaced by the exact,
+unaltered 166524-byte normal-fetch candidate with SHA256
+`ae05feaf20dcf1275ccc9f87119e4337c7505ecb0d73830dc5020bcec06d8292`.
+No cache text or metadata was hand-edited.
+
+The recovered Methods 2.13 describe tagged MPST/AKT transfection and
+immunoprecipitation in HEK293T cells, plus an assay of recombinant His-MPST and
+GST-AKT. Results 3.8/Figure 9 provide the positive interaction and C-terminal
+AKT deletion-mapping results. The text generally names AKT, without accession
+information resolving every construct or endogenous isoform. The interaction is
+retained as evidence while its generic protein-binding annotation remains REMOVE
+under the uninformative-term policy. It is not a false-interaction judgment.
+
+A newly visible internal wording inconsistency is retained explicitly. The
+abstract says MPST reduces AKT phosphorylation, whereas Results/Figure 8 report
+reduced Ser473 phosphorylation after MPST loss and Results 3.8 describe MPST
+sustaining AKT phosphorylation. This does not negate the independent Figure 9
+interaction experiments. No kinase-inhibitor or other new molecular function is
+inferred from that contradictory abstract sentence. The XML extraction repeats
+some sections, but includes actual Methods, Results and figure captions; both
+review availability flags for this source are now false.
+
+The normal output came from Actions source run 36289953066 at head
+`fecff1befb769b1753300fa1bc2e3442813e9dd2`, transport run 36292331362,
+artifact 10923045788. Verified artifact SHA256:
+`0876942c72b2e537e858e8af7cd3c79d34b97c2169490e3d883c6f00884e2965`.
+The source2 import receipt records all per-file hashes; the MPST file was held
+as a candidate until this identity/content review. GitHub subtree queries confirm
+that all 54 Reactome paths are absent from the published baseline and the old
+MPST metadata blob is exactly the one replaced.
+
+The three required correction records PMID:33790472, PMID:35267011 and
+PMID:36423325 remain pending the coordinated source3 recovery. Their citations
+and existing assessments remain intact. This is partial cache closure; the review
+remains DRAFT. Final validation, quote/source preservation and rendering results
+are recorded in the follow-up manifest.
+
+Follow-up `just validate human AKT1` passed with the same seven explained
+source-specific/action and provider-quotation advisories. A separate check finds
+94/94 ordinary supporting-text occurrences in their exact local sources using
+case-sensitive whitespace-only normalization; no full-text escape fields or
+missing quoted sources are present. The notes-inclusive correction-cache gate
+remains separate from this successful validator result.
