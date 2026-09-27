@@ -43,10 +43,14 @@ dgcAB with PP_0312/PP_0313.
 
 ### GO:0009055 electron transfer activity, `enables` — ACCEPT (was MARK_AS_OVER_ANNOTATED)
 
-Same reasoning as for etfA/etfB: GO types obligate subunits of a multi-protein
-carrier with the complex's activity and records the dependency as
-`contributes_to_molecular_function`, which this review does. See
-`genes/human/ETFA` and `genes/human/ETFB`, both of which ACCEPT the term.
+Same reasoning as for etfA/etfB: an obligate subunit of a multi-protein carrier
+is reasonably typed with the complex's activity. See `genes/human/ETFA` and
+`genes/human/ETFB`, both of which ACCEPT the term.
+
+The dependency is recorded as `contributes_to_molecular_function`. Those two
+human reviews are not a precedent for that — both place GO:0009055 directly in
+`molecular_function` — so it is a deliberate divergence here, on the grounds
+that the heterodimer's single FAD sits at the subunit interface.
 
 ### GO:0033539 fatty acid beta-oxidation using acyl-CoA dehydrogenase — MARK_AS_OVER_ANNOTATED, reason strengthened
 

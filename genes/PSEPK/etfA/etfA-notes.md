@@ -25,23 +25,40 @@ alpha polypeptide alone. That reasoning is defensible in the abstract but is
 not how this repository or GO models obligate subunits, and applying it here
 would have left etfA with no molecular-function term for its defining activity.
 
-The repo's own completed ortholog reviews settle the convention:
+The repo's own completed ortholog reviews settle the ACCEPT call:
 `genes/human/ETFA/ETFA-ai-review.yaml` ACCEPTs `enables GO:0009055` three
 times over (IBA, InterPro2GO IEA, and IDA from PMID:9334218), and
 `genes/human/ETFB/ETFB-ai-review.yaml` ACCEPTs it on the *beta* subunit and
 calls it "the core molecular function of the ETF heterodimer, in which the beta
-subunit is an integral partner". The subunit-level dependency is expressed
-where it belongs — as `contributes_to_molecular_function` in `core_functions` —
-and that modelling was already present here and is unchanged.
+subunit is an integral partner".
 
-### GO:0033539 fatty acid beta-oxidation using acyl-CoA dehydrogenase — kept as MARK_AS_OVER_ANNOTATED
+One correction to an earlier draft of this note: those two reviews are *not* a
+precedent for the `contributes_to_molecular_function` modelling. Both place
+GO:0009055 directly in `molecular_function`
+(`ETFA-ai-review.yaml` core_functions, `ETFB-ai-review.yaml` core_functions).
+Recording it here as `contributes_to_molecular_function` is a deliberate
+divergence — the single FAD of the bacterial heterodimer sits at the
+alpha/beta interface, so neither polypeptide carries the activity alone — and
+the YAML reasons now say so rather than citing a convention the human reviews
+do not establish.
 
-ETFs are promiscuous acceptors; the TreeGrafter term asserts a specific donor
-pathway that the record does not establish for KT2440. Retained as
-over-annotated rather than removed, since fatty-acid beta-oxidation is a
-plausible (and for this locus, likely) contributor — PP_4203, the partner
-ETF-QO, is the obligatory reoxidation node for the organism's acyl-CoA
-dehydrogenases. See `genes/PSEPK/PP_4203/PP_4203-notes.md`.
+### GO:0033539 fatty acid beta-oxidation using acyl-CoA dehydrogenase — KEEP_AS_NON_CORE (was MARK_AS_OVER_ANNOTATED)
+
+ETFs are promiscuous acceptors, so the TreeGrafter term names one donor pathway
+rather than the subunit's function. But an earlier draft called it
+over-annotated while this same note, `PP_4203-notes.md`, and the PP_0312 review
+all argued the opposite — that fatty-acid beta-oxidation is the likely major
+donor pathway for this locus, since PP_4203 is the obligatory reoxidation node
+for the organism's large acyl-CoA dehydrogenase repertoire, and that rejecting
+GO:0033539 on PP_0312 depends on those electrons arriving here instead. That is
+an internal contradiction: MARK_AS_OVER_ANNOTATED asserts the term overshoots,
+which this synthesis denies.
+
+KEEP_AS_NON_CORE is what the evidence actually supports. The involvement is
+legitimate on the electron-acceptor basis that `genes/human/ETFB` uses for the
+same term; it is non-core because the donor-acceptor pairing has not been
+demonstrated experimentally in KT2440 and this ETF is not dedicated to
+beta-oxidation. See `genes/PSEPK/PP_4203/PP_4203-notes.md`.
 
 ### GO:0050660 flavin adenine dinucleotide binding — ACCEPT
 

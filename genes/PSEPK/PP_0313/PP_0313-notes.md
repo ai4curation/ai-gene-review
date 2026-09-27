@@ -34,12 +34,19 @@ asserted as established — the pairing has never been assayed. Full detail in
 
 This was the single annotation on the gene, so marking it over-annotated would
 have left PP_0313 with no molecular-function term whatsoever — while the
-annotation is not wrong about what the protein is for. GO's convention for an
-obligate subunit of a multi-protein electron carrier is to ACCEPT `enables` and
-record the subunit-level dependency as `contributes_to_molecular_function`,
-which this review does. The repo's completed ortholog review
+annotation is not wrong about what the protein is for. An obligate subunit of a
+multi-protein electron carrier is reasonably typed with the complex's activity,
+and the repo's completed ortholog review
 `genes/human/ETFB/ETFB-ai-review.yaml` ACCEPTs the same term on the
 corresponding beta subunit and calls it the core molecular function.
+
+The subunit-level dependency is recorded as
+`contributes_to_molecular_function`. That part is *not* taken from the human
+review, which places GO:0009055 directly in `molecular_function`; it is a
+deliberate divergence, since the flavin is contributed by the alpha subunit
+PP_0312. Unlike etfB/PP_4202, PP_0313 has no COFACTOR line in its UniProt
+record, so no subunit-specific `molecular_function` is asserted here — see the
+open question below.
 
 ## Open questions
 

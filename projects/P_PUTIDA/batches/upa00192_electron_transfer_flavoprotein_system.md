@@ -22,8 +22,9 @@ This module covers the conserved ETF electron relay, not every upstream
 flavin-dependent dehydrogenase that can donate electrons to it. The PP_4201-
 PP_4203 locus encodes an ETF alpha/beta heterodimer and ETF:quinone
 oxidoreductase, satisfying both stages of the relay. PP_0312-PP_0313 encode a
-second ETF-family alpha/beta pair. Their family identity is clear, but this
-first pass does not assign a specific physiological donor pathway to that pair.
+second ETF-family alpha/beta pair. Their family identity is clear, and genomic
+context points to methylated-glycine oxidation as the likely donor pathway (see
+below), but that pairing has not been assayed.
 
 ## Functional Parts
 
@@ -31,7 +32,7 @@ first pass does not assign a specific physiological donor pathway to that pair.
 |---|---|---|
 | Soluble ETF electron acceptor | EtfA Q88F97 and EtfB Q88F96 | Covered |
 | ETF reoxidation and quinone reduction | PP_4203 Q88F95 | Covered |
-| Alternative ETF heterodimer | PP_0312 Q88R22 and PP_0313 Q88R21 | Present; donor specificity unresolved |
+| Alternative ETF heterodimer | PP_0312 Q88R22 and PP_0313 Q88R21 | Present; methylated-glycine oxidation the likely donor pathway, not yet assayed |
 
 ## Gene Curation
 
@@ -49,10 +50,21 @@ The reusable module represents bacterial and mitochondrial ETF systems without
 making mitochondrial localization part of the universal definition. Its root
 node is typed with the process term GO:0022900 electron transport chain; the
 complex term GO:0045251 sits on the PROTEIN_COMPLEX node for the heterodimer,
-where a cellular-component grounding belongs. Both subunits carry
-`enables GO:0009055` with the subunit-level dependency recorded as
-`contributes_to_molecular_function` in the gene reviews — matching the completed
-human ETFA/ETFB/ETFDH reviews, whose groundings the module cites.
+where a cellular-component grounding belongs, and all four ETF-subunit reviews
+now carry it as `in_complex`, as the human ETFA and ETFB reviews do. Compartment
+is modelled rather than asserted in prose: each of the two parts carries a
+`variant_sets` entry on a taxon axis, giving cytoplasm (GO:0005737) /
+mitochondrial matrix (GO:0005759) for the soluble heterodimer and plasma
+membrane (GO:0005886) / mitochondrial inner membrane (GO:0005743) for the
+oxidoreductase step.
+
+Both subunits carry `enables GO:0009055`, and the gene reviews record the
+subunit-level dependency as `contributes_to_molecular_function`. Note that this
+is a deliberate divergence from the completed human ETFA and ETFB reviews,
+which place GO:0009055 directly in `molecular_function`: the single FAD of the
+heterodimer sits at the subunit interface, so neither polypeptide carries the
+activity alone. The human reviews are cited for the ACCEPT call and for the
+GO:0045251 grounding, not as precedent for the `contributes_to` modelling.
 
 For the second KT2440 ETF pair, the adjacent genes dgcA (PP_0310) and dgcB
 (PP_0311) are dimethylglycine dehydrogenase subunits at EC 1.5.8.-, hence
