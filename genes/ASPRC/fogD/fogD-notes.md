@@ -105,3 +105,15 @@ The current PAINT slice records experimentally grounded Ayr1-seeded IBDs, but do
 The main PMID:32134669 cache is abstract-only and the publisher main article returned 403. Its open supplement was independently downloaded from the ACS Figshare API (article 11944365, file 21927279; DOI:10.1021/acs.orglett.0c00440.s001; MD5 a4e37dcbc2f110a230a24b385e1cfba6). Methods S5-S6 identify A. ruber QEN-0407-G2 as the DNA/RNA source and CBS135680 as the reference genome. Table S1 maps FogD to EYE95338/EURHEDRAFT_455854. The supplement identifies JN009 as the fogD deletion strain in the reconstructed A. nidulans JN004 cluster background. Table S2 and Figure S8 (S18/S30) were visually inspected: the latter contains a small 2d peak in the deletion strain. This corrects any implication of a native CBS135680 deletion or purified FogD catalytic assay.
 
 Retain broad secondary-metabolite participation and a conservative SDR-derived oxidoreductase proposal. Withdraw the specific CH-OH/NAD(P) reaction assignment pending direct reaction/cofactor evidence; a reductive thioester-release proposal does not establish that reaction class by itself. Remove the redundant NEW polyketide-process row because it descends from the existing secondary-metabolite process; keep the specific pathway in the core summary. The former flavoglaucin-term proposal is moved to an ontology question. Unverified supporting_text_fulltext paraphrases are removed, and UniProt-derived statements are explicitly attributed to UniProt rather than invented primary quotations.
+
+
+## OpenScientist Ayr1-propagation follow-up (2026-09-27)
+
+Assessed `fogD-hypotheses/sdr-lipid-functions-and-polyketide-release/openscientist.md`.
+The report validated the concern that GO:0000140, GO:0004806, GO:0005783,
+GO:0005811, GO:0006654 and GO:0019433 are Ayr1-seeded TreeGrafter transfers
+without FogD-specific evidence. Updated the acyl-DHAP reductase row to
+`MODIFY` toward the broad `GO:0016491` oxidoreductase proposal, and marked the
+other five lipid activity/location/process rows as over-annotated. The stronger
+OpenScientist lead of `GO:0016616` was not adopted because the exact purified
+FogD reaction, carrier state and cofactor remain unresolved.
