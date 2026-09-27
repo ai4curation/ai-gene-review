@@ -83,6 +83,22 @@ genes:
 
 # IBA Annotation Quality Project
 
+**Bottom line:** IBA annotations transfer GO terms along PANTHER family trees
+from experimentally studied proteins to their relatives, and they make up a
+large share of GO for most genomes. Working from gene reviews, we catalogued
+where those transfers go wrong and why: 14 recurring failure patterns (such as
+pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
+wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
+table below, and a structured `propagation_review` vocabulary (root cause,
+failure modes, per-source status) that reviews now use; 691 gene reviews
+carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node
+spreads to every descendant, so one bad call can mislabel hundreds of
+proteins. The work covers both directions: in 1,015 reviewed human genes, 511
+curated core molecular functions (across 423 genes) have no IBA support at
+all. A corpus-wide re-review started on 2026-09-20 over 3,427 genes and 11,829
+propagated annotations; 81 genes are reviewed and 65 await adjudication
+([rereview-2026-09-20](IBA_REVIEW/rereview-2026-09-20/README.md)).
+
 ## Overview
 
 > Project log, per-pass verification narrative, and lessons learned: [IBA_REVIEW/HISTORY.md](IBA_REVIEW/HISTORY.md).
@@ -832,7 +848,7 @@ Before a strong `REMOVE` on an IBA row, record that these checks were done:
 **Example - Epe1 (S. pombe)**:
 - IBA annotation: `GO:0032452` (histone demethylase activity)
 - Source: Related JmjC domain proteins with characterized demethylase activity
-- Reality: Epe1 has degenerate active site (HVD vs HXD), no detectable activity
+- Reality: Epe1's Fe(II)-binding triad is H297-E299-Y370 (Tyr370 replaces the third, His, iron ligand), and no demethylase activity is detectable in vitro
 - **Impact**: Misleading annotation propagated via phylogenetic inference
 
 ### 2. Ubiquitin-Like Modifier Specificity: IBA as a Positive Control
