@@ -146,9 +146,11 @@ are therefore expected; existing human reviews still link normally.
 | ALPK3 | Definitive | INITIALIZED | Review #3325 merged; current-head approval and required CI passed; all 18 scoped merged blobs verified | `cmungall/clingen-alpk3` | [#3325](https://github.com/ai4curation/ai-gene-review/pull/3325) |
 | ALPL | Definitive | COMPLETE | Review #3320 merged; current-head approval and required CI passed; all 47 scoped merged blobs verified | `cmungall/clingen-alpl` | [#3320](https://github.com/ai4curation/ai-gene-review/pull/3320) |
 | ALX3 | Definitive | INITIALIZED | Review #3324 merged; current-head approval and required CI passed; all 13 scoped merged blobs verified | `cmungall/clingen-alx3` | [#3324](https://github.com/ai4curation/ai-gene-review/pull/3324) |
-| ALS2 | Definitive | INITIALIZED | Ready #3326; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate; YAML remains DRAFT for documented scientific uncertainties or validator advisories, while the PR is ready and required source caches are closed | `cmungall/clingen-als2` | [#3326](https://github.com/ai4curation/ai-gene-review/pull/3326) |
-| ALX1 | Definitive | INITIALIZED | Ready #3327; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate; YAML remains DRAFT for documented scientific uncertainties or validator advisories, while the PR is ready and required source caches are closed | `cmungall/clingen-alx1` | [#3327](https://github.com/ai4curation/ai-gene-review/pull/3327) |
-| ALX4 | Definitive | INITIALIZED | Ready #3328; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-alx4` | [#3328](https://github.com/ai4curation/ai-gene-review/pull/3328) |
+| ALS2 | Definitive | INITIALIZED | Review #3326 merged; current-head approval and required CI passed; all 23 scoped merged blobs verified | `cmungall/clingen-als2` | [#3326](https://github.com/ai4curation/ai-gene-review/pull/3326) |
+| ALX1 | Definitive | INITIALIZED | Review #3327 merged; current-head approval and required CI passed; all 21 scoped merged blobs verified | `cmungall/clingen-alx1` | [#3327](https://github.com/ai4curation/ai-gene-review/pull/3327) |
+| ALX4 | Definitive | INITIALIZED | Review #3328 merged; current-head approval and required CI passed; all 19 scoped merged blobs verified | `cmungall/clingen-alx4` | [#3328](https://github.com/ai4curation/ai-gene-review/pull/3328) |
+| AMER1 | Definitive | INITIALIZED | Review #3329 merged; current-head approval and required CI passed; all 42 scoped merged blobs verified | `cmungall/clingen-amer1` | [#3329](https://github.com/ai4curation/ai-gene-review/pull/3329) |
+| ANK1 | Definitive | INITIALIZED | Ready #3332; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ank1` | [#3332](https://github.com/ai4curation/ai-gene-review/pull/3332) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -160,16 +162,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-local/published tree checks and append-only receipt chains. **75 of 2,876 genes
-are complete**; 76 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 79 dedicated full-audit PRs.
+local/published tree checks and append-only receipt chains. **79 of 2,876 genes
+are complete**; 80 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 81 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ALX3 #3324 and ALPK3 #3325 have verified protected merges after their scoped evidence follow-ups, with 13 and 18 scoped blobs verified. ALS2 #3326, ALX1 #3327 and ALX4 #3328 are published as ready original review PRs; their review, CI and verified merge remain separate. ALS2 and ALX1 retain biological YAML DRAFT for documented scientific uncertainties or validator advisories, with required cache records present; ALX4 is COMPLETE with three explicit UNDECIDED judgments. Source26 imported all twenty-one exact normal records without overwrite. Source27 canonically imported the exact PMID22215675 record after strict staging and primary scientific assessment. AMER1 now has all fourteen PMID and twenty-one Reactome caches, a local COMPLETE review retaining 61 source assertions, and reported full validation PASS; final freeze and publication remain pending. AMER1 contributes neither a published audit PR nor a campaign completion at this snapshot. Six next-gene normal fetches failed DNS resolution before producing seeds; their fixed seed7 recovery workflow is published and dispatched, with run metadata and actual outputs still pending. The externally observed AKR1D1 merge remains incomplete because its required Reactome record is still missing.
+ALX1 #3327, ALX4 #3328, ALS2 #3326 and AMER1 #3329 have verified protected merges after their scoped evidence follow-ups, with 21, 19, 23 and 42 scoped merged blobs verified. ALS2 retains both follow-up revisions in its receipt chain. AMER1 retains its original audit and four-file mechanistic evidence follow-up. ANK1 #3332 is a published ready original audit, with current-head review, required CI and verified merge remaining separate; it adds no campaign completion at this snapshot. Seed7 supplied 18 exact normal primary files for six genes, all 297 source assertions PENDING at import. Forty-one selected absent normal source caches were also imported without overwrite, with shared candidates deduplicated. Current gene reviews and source closure remain distinct from import. Source28 recovery completed successfully, but its exact artifact retrieval and canonical source import are not yet claimed. The externally observed AKR1D1 merge remains incomplete because its required Reactome record is unresolved.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -577,3 +579,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-27 checkpoint54: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ALPK1, ALK, ALMS1, ALPL. 73/2,876 complete; 74 original merges; 1 pending source follow-ups; 76 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-27 checkpoint55: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ALX3, ALPK3. 75/2,876 complete; 76 original merges; 1 pending source follow-ups; 79 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-27 checkpoint56: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ALX1, ALX4, ALS2, AMER1. 79/2,876 complete; 80 original merges; 1 pending source follow-ups; 81 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
