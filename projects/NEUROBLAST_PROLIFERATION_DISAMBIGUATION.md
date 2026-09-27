@@ -20,9 +20,10 @@ because upstream is still deciding how to split the terms and annotation-level
 evidence can inform that decision now. Scoped, not yet started: none of the
 ten candidate genes has a review under this project. Four repo reviews made
 for other reasons touch the affected terms on vertebrate genes (human FGFR2,
-SHH and TP53, mouse Ctnnb1), and all four kept the row as `KEEP_AS_NON_CORE`
-rather than applying the `MODIFY` rule proposed here, while the fly gene insc
-correctly keeps GO:0055059 as `ACCEPT`.
+SHH and TP53, mouse Ctnnb1, whose row is now retired), and all four kept the
+row as `KEEP_AS_NON_CORE` rather than applying the `MODIFY` rule proposed here.
+The fly-sense term GO:0055059 fits both fly genes that carry it: insc keeps it
+as `ACCEPT` and Lkb1 as `KEEP_AS_NON_CORE`.
 
 ## Overview
 
@@ -189,3 +190,7 @@ the annotation review is valuable input to that discussion now.
   and parsed for scope. GO:0007405 and the proposed replacement GO:0061351
   verified in OLS. No reviews started yet; ASCL1 and FGFR2 are the only
   affected genes currently in the repo (both `genes/human/`).
+
+## Slides
+
+- [Slides](NEUROBLAST_PROLIFERATION_DISAMBIGUATION/slides/NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.html) (Marp source: [NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.md](NEUROBLAST_PROLIFERATION_DISAMBIGUATION/slides/NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.md)) — AI generated

@@ -644,3 +644,7 @@ Key themes across neuron-glia fate decision genes:
 5. Subtype specification (DLX1 for GABAergic) operates downstream of initial neuron fate commitment
 
 Ready to proceed with Priority 2 genes (subtype specification).
+
+## Slides
+
+- [Slides](NEURON_DEVELOPMENT/slides/NEURON_DEVELOPMENT-slides.html) (Marp source: [NEURON_DEVELOPMENT-slides.md](NEURON_DEVELOPMENT/slides/NEURON_DEVELOPMENT-slides.md)) — AI generated

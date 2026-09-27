@@ -204,3 +204,7 @@ Those may become relevant later, but the present project is first a grounded cur
 ## Source input
 
 - Key ideation source: [cmungall/stuff issue #671](https://github.com/cmungall/stuff/issues/671), fetched 2026-04-11
+
+## Slides
+
+- [Slides](MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.html) (Marp source: [MECHANOBIOLOGY-slides.md](MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.md)) — AI generated

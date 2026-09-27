@@ -46,7 +46,7 @@ When a knockout changes behaviour, is behaviour the gene's function?
 
 - A behaviour integrates the whole nervous system, plus development, metabolism and basic cell biology.
 - So almost any perturbation can move it: a tubulin, a lysosomal peptidase, a ciliary scaffold.
-- In the [ASSAY_TO_FUNCTION](../../ASSAY_TO_FUNCTION.md) framing it is the **most distal, most convergent** readout.
+- In the [ASSAY_TO_FUNCTION](../../ASSAY_TO_FUNCTION.html) framing it is the **most distal, most convergent** readout.
 - Source surface today: **209** behaviour annotations on **87** genes in GOA files; IMP 84, IEA 39, IGI 30, IDA 3.
 
 ---
@@ -73,7 +73,7 @@ When a knockout changes behaviour, is behaviour the gene's function?
 
 - ✅ Corpus mined; rubric written; accepted rows spot-checked (9 missed downgrades fixed).
 - ✅ IMPReSS ingested; assay→GO map and checker built; `BEHAVIORAL_ASSAY` class added to ASSAY_TO_FUNCTION.
-- ⬜ Regenerate `reports/REPORT.md` (committed copy is from June: 146 adjudicated, 87%).
+- ✅ `reports/REPORT.md` regenerated (September 2026: 197 adjudicated, 86%).
 - ⬜ Resolve 9 UNDECIDED rows, including Agtr1a drinking (IMP/IGI).
 - ⬜ Record *which assay* drove each behaviour annotation so the check can run automatically.
 

@@ -21,9 +21,10 @@ handle phenotype-driven annotations. A re-run of the miner in September 2026
 finds 216 behaviour annotations in reviews, of which 197 were adjudicated as
 core or not: 169 (86%) were downgraded and 28 accepted, mostly sensory
 channels and receptors acting in the relevant neurons (worm lov-1, pkd-2,
-tax-4), plus the fly clock protein CRY and the satiety hormone GCG. The counts further down (146 adjudicated,
-87%) come from the June report, before the corpus grew; the conclusion is
-unchanged, and `reports/REPORT.md` should be regenerated.
+tax-4), plus the fly clock protein CRY and the satiety hormone GCG. `reports/REPORT.md`
+is regenerated from that re-run; the ~81% → 87% figures in the spot-check
+section below are the June snapshot (146 adjudicated) that motivated it, and
+the conclusion is unchanged.
 
 ## Motivation
 
@@ -73,14 +74,14 @@ followed by `behavioral response to pain`, `mating behavior`, `social
 behavior`, `circadian behavior`, and `adult locomotory behavior`.
 
 **Reviewer decisions.** Of the behaviour annotations reviewers have adjudicated
-as core-vs-not (146, excluding the 9 `NEW` proposed terms, which add rather than
-downgrade), **~81% were downgraded** — kept as non-core, marked as
-over-annotated, or removed — and only a minority were `ACCEPT`ed as a core
-function:
+as core-vs-not (197 of 216 in the September 2026 re-run, excluding the 10 `NEW`
+proposed terms, which add rather than downgrade, and 9 `UNDECIDED`), **169 (86%)
+were downgraded** — kept as non-core, marked as over-annotated, or removed — and
+only 28 were `ACCEPT`ed as a core function:
 
 | Action | Meaning for a behaviour term | Share |
 |---|---|---|
-| `KEEP_AS_NON_CORE` | Real phenotype, distal to molecular function | dominant (~60%) |
+| `KEEP_AS_NON_CORE` | Real phenotype, distal to molecular function | dominant (147 of 216, ~68%) |
 | `ACCEPT` | Behaviour genuinely near the core (e.g. receptors, clock genes) | minority |
 | `MARK_AS_OVER_ANNOTATED` | Too broad / too distal to be useful | small |
 | `REMOVE` | Contradicted — wrong gene/paralog or not supported | small |
@@ -192,8 +193,9 @@ downgrades.
   cilium dysfunction.
 
 This moved 9 annotations from core to non-core, raising the downgrade rate among
-adjudicated behaviour annotations from ~81% to **87%** (127 of 146; now only 19
-`ACCEPT`ed as core). **Borderline cases left as-is** (documented, not changed): `daf-2`
+adjudicated behaviour annotations in the June snapshot from ~81% to **87%** (127 of 146; then only 19
+`ACCEPT`ed as core). The September 2026 re-run, over a larger corpus, gives 86%
+(169 of 197; 28 accepted). **Borderline cases left as-is** (documented, not changed): `daf-2`
 feeding/eating (the pleiotropic insulin receptor — feeding is one of many
 outputs) and `trpm7` swimming (a channel-kinase whose swimming phenotype is
 plausibly a distal developmental consequence) — defensible either way and not
@@ -207,7 +209,7 @@ activity, or a downstream cellular consequence?) and **convergence** (is the
 readout a specific signature of process P, or a hub that many inputs feed into?).
 A whole-animal behaviour is the *maximal* phenotypic + high-convergence readout:
 it integrates the entire nervous system plus development, metabolism and basic
-cell biology, so almost any perturbation can move it. That is exactly why ~87% of
+cell biology, so almost any perturbation can move it. That is exactly why 86% (169 of 197) of
 adjudicated behaviour annotations are downgraded.
 
 Behaviour has now been added as a first-class readout in that project's catalogue
@@ -272,7 +274,8 @@ is only the modality) — confirming that fix from the assay side.
 
 - [x] Mine the source surface and reviewer decisions; confirm the
       over-annotation signature (~81% of adjudicated behaviour annotations
-      downgraded, rising to 87% after the spot-check below).
+      downgraded, rising to 87% after the spot-check below; 86% of 197 in the
+      September 2026 re-run).
 - [x] Document exemplars and a working rubric.
 - [x] Spot-check the `ACCEPT`ed behaviour annotations — proximal cases upheld
       (CRY, lov-1/pkd-2, GCG, DpuGr29); 9 missed downgrades (App ×5, STAT3 ×3,
@@ -298,3 +301,7 @@ is only the modality) — confirming that fix from the assay side.
   process").
 - [CONTESTED_FUNCTION](CONTESTED_FUNCTION.md) — for cases where the behaviour
   annotation is genuinely contradicted rather than merely distal.
+
+## Slides
+
+- [Slides](BEHAVIOR/slides/BEHAVIOR-slides.html) (Marp source: [BEHAVIOR-slides.md](BEHAVIOR/slides/BEHAVIOR-slides.md)) — AI generated
