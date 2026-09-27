@@ -682,3 +682,66 @@ All reference-review findings were reconciled with these decisions. Exact origin
 The coordinator independently read all 40 decisions, three cores and 27 reference assessments and accepted the biological scope. Before publication, 34 incomplete inherited supporting excerpts were replaced with substantive verbatim passages from their actual caches, including beta-catenin co-recovery, human fibroblast ciliation, HAP1 binding, ciliary/junctional localization and the OTUD1–TYK2 dependency. All 73 cached annotation/core/finding excerpts were checked against the source text. Actions and all original source objects remain unchanged. The transcription caveat for PMID:20956301 now explicitly covers the externally recovered Results inspected, rather than implying only the abstract was considered.
 
 The earlier prefix-only citation census missed three identifiers in the historical comma-separated retraction-sweep list: PMID:28442542, PMID:25616960 and PMID:18636121. These are retained historical citations, not newly verified primary support for the current judgments; the inherited claim of a clean corrections sweep is not independently reasserted. Normal fetches for all three failed DNS and cached 0/1 each. The complete notes-inclusive census is therefore **22 PMIDs, 18 cached, four missing**: PMID:18636121, PMID:25616960, PMID:28118669 and PMID:28442542. This supersedes the earlier single-source cache-gate statement. No cache bytes or provider output were fabricated, and the review remains DRAFT.
+
+
+## 2026-09-27: PR #3215 evidence-code and core follow-up
+
+Read the complete current-head review at <https://github.com/ai4curation/ai-gene-review/pull/3215#issuecomment-5852254267> against head `515f45bac7a82f32942208d20dedaeec74e0072b`. The three gene artifact blobs matched the published tree before edits. All 37 machine-seeded annotation objects retain their original term, evidence, reference, qualifier, supporting entities and isoform fields; their actions are unchanged.
+
+The three prior authored NEW proposals are withdrawn, superseding the earlier retention notes above. For GO:0090263, the full cached [PMID:19718039](https://pubmed.ncbi.nlm.nih.gov/19718039/) shows stimulated reporters and endogenous cyclin D1 in human host cells, plus mouse loss-of-function and beta-catenin nuclear-localization measurements. [PMID:21623382](https://pubmed.ncbi.nlm.nih.gov/21623382/) uses disease-variant constructs linked back to the former study. Neither accessible Methods section resolves the original Jouberin construct species. Further attempts to read the PMC/Nature supplement did not recover it. A human host cell is not sufficient to code an assay as direct evidence for a human transgene. The same limitation applies to the prior GO:0008013 IPI proposal: the human UniProt record has an experimental CTNNB1 interaction citation, but that curated trace alone does not resolve the source detail needed to manufacture a NEW annotation. This does not deny beta-catenin association or the positive Wnt findings.
+
+For the prior GO:0030674 ISS proposal, full cached [PMID:35821088](https://pubmed.ncbi.nlm.nih.gov/35821088/) Figure 4g directly measures loss of OTUD1–Tyk2 association in Ahi1-null mouse peritoneal macrophages; Figure 5c tests ubiquitination dependency in RAW264.7 cells. Human A549 Supplementary Figure S5a shows association and S4g measures TYK2 stability. Those human assays corroborate the pathway but do not establish the same bridging dependency. An independent annotation-reviewer consultation confirmed this boundary. An exact implementable mouse donor GO assertion remains unverified. Consequently, no direct-human IDA/IMP recoding is made merely to satisfy the review. The measured mammalian biology remains in the synthesis and questions, with the original species limits, while the corresponding formal core MF/BP assignments are omitted pending provenance resolution.
+
+The ciliary core also omits its optional GO:0042802 MF because self-association does not identify the specific AHI1 activity that organizes the transition zone. The existing self-association annotation remains ACCEPT. The core's explicit knowledge gap carries this distinction; no hypothetical complex activity or contributes_to qualifier is invented.
+
+Retain GO:0016192 vesicle-mediated transport as ACCEPT: the mouse primary study [PMID:19625297](https://pubmed.ncbi.nlm.nih.gov/19625297/) directly distinguishes defective Golgi-directed transport and transferrin recycling from preserved vesicle formation/internalization. These are central cargo-organization functions, now included in the ciliary/trafficking core. Refining a different opsin-localization source to its measured ciliary destination does not force all trafficking to that destination. Likewise, retain the GO:0044458 IBA: cilium assembly is already represented by the broader core process, and annotation core status does not require literal duplication of every child term in the core table.
+
+Fresh primary verification of [PMID:28118669](https://pubmed.ncbi.nlm.nih.gov/28118669/) on 2026-09-27 recovered the PubMed abstract and figure captions, with DOI 10.1167/iovs.16-20326 and PMCID PMC5270624. Figure 9 shows preserved photoreceptor connecting-cilium markers; Figure 10 explicitly describes human AHI1 RNA rescue of mutant zebrafish distal pronephric cilia. This strengthens the conserved cilium-assembly interpretation without asserting a native human motile-cell assay. The PMC full-text route returned a browser challenge. VERIFIED continues to mean that the identifier and cited primary result were checked; it does not mean a local cache exists. No cached quote or findings entry has been manufactured from the web passage.
+
+The cilium IC annotation no longer uses a culture-medium sentence as localization support; the existing human-construct basal-body result provides the relevant evidence. GO:1904491 remains UNDECIDED because the full original NAS evidence and the AHI1-specific transition-zone recruitment dependency are incompletely resolved. Preservation of two markers in one retinal model does not disprove structural participation for every substrate or tissue.
+
+The four existing notes-inclusive cache gates remain: PMID:18636121, PMID:25616960, PMID:28118669 and PMID:28442542. They are assigned to the normal batch recovery workflow; this follow-up does not duplicate that active fetch, fabricate records or downgrade previously verified external identity merely because the cache is missing. Status remains DRAFT. Validation, rendering, new history and the final publication manifest are recorded separately for the coordinator.
+
+## 2026-09-27 verified source2 cache recovery
+
+This entry supersedes the preceding missing-cache statements without rewriting
+that historical access record. Four genuine, normally generated publication
+records are now cached: PMID:28118669 and PMID:28442542 contain extracted full
+text; PMID:18636121 and PMID:25616960 remain abstract-only. Each byte count and
+SHA-256 digest matches `tmp/verified-reference-records2/local-import-receipt.json`.
+The source artifact is 10923045788 from run 36289953066, source head
+`fecff1befb769b1753300fa1bc2e3442813e9dd2`, ZIP SHA-256
+`0876942c72b2e537e858e8af7cd3c79d34b97c2169490e3d883c6f00884e2965`.
+No source bytes were edited or reconstructed.
+
+The recovered Methods/Results and Figures 9–10 of PMID:28118669 confirm the
+previous external source reading. Human wild-type AHI1 RNA rescues pronephric
+cilia and cone outer-segment phenotypes in mutant zebrafish; the R589X construct
+does not. This remains human-construct rescue in a zebrafish host, not an assay
+of native human motile cells. A verbatim cached result is now attached to the
+retained IBA judgment. Connecting-cilium localization of Cc2d2a and Cep290 is
+preserved in the retinal model, although Cc2d2a fluorescence intensity is reduced.
+This distinction is now explicit in the transition-zone process rationale;
+it does not resolve all possible AHI1-dependent substrates or tissue contexts.
+
+PMID:28442542 Methods and Results test full-length human AHI1 isoform 1 and
+WD40-domain variants expressed as mRFP fusions in hTERT-RPE1 cells. Wild-type
+protein is enriched at the ciliary base, and tested RP/JBTS variants show reduced
+enrichment. Patient-fibroblast ciliation, cilium length and IFT marker patterns
+show no significant differences in the reported comparisons. This corroborates
+compartment and allele-specific context without establishing a new exact
+transition-zone recruiting mechanism. PMID:18636121's recovered abstract
+explicitly describes the mouse Ahi1–Hap1 complex and developmental/trafficking
+phenotypes. PMID:25616960's abstract distinguishes tolerated C-terminal human
+truncations from disease-associated upstream effects, with zebrafish experiments;
+it does not establish that every truncating AHI1 allele is functionally equivalent.
+The earlier historical claim of a clean retraction sweep is not reasserted merely
+because citation records are now available.
+
+All 37 seeded source objects and actions, core functions and the three withdrawn
+prior NEW proposals remain as in the reviewed follow-up. The prior unpublished
+feedback history is preserved byte-for-byte; a separate cache-recovery history
+records this session. All four notes-inclusive publication cache gates are now
+closed. Status remains DRAFT while the unused-provider validation advisory
+persists; cache availability is not confused with universal full-paper access
+or verification of every donor assertion.
