@@ -3,7 +3,7 @@ title: "Yeast Metabolic Engineering & Bioproduction"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
-genes: [PDC1, ADH1, ADH2, GPD1, GPD2, HXK1, PFK1, PYC1, TDH1, ZWF1]
+autolink_gene_symbols: false
 ---
 
 # Yeast Metabolic Engineering & Bioproduction

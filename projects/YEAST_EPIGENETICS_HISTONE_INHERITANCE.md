@@ -130,7 +130,7 @@ Last updated: 2026-08-12
   - SWI3: 40 annotations → 18 ACCEPT (45%)
   - SNF5: 36 annotations → 20 ACCEPT (55.6%)
   - CHD1: 65 annotations → 52 ACCEPT (80%)
-- Phase 7 (Histone Readers): 2/2 - 41 annotations, 22 ACCEPT (54%)
+- Phase 7 (RCO1 reader + PHD1 TF): 2/2 - 41 annotations, 22 ACCEPT (54%)
   - RCO1: 28 annotations → 11 ACCEPT (39.3%)
   - PHD1: 13 annotations → 11 ACCEPT (84.6%)
 
@@ -172,7 +172,7 @@ Last updated: 2026-08-12
 
 **Phase 6 Summary**: 257 annotations, 159 ACCEPT (61.9%), reveals SWI/SNF complex annotation heterogeneity
 
-### Phase 7 - Histone Readers (RCO1, PHD1)
+### Phase 7 - Histone Reader RCO1, plus PHD1 (APSES TF, mis-filed here)
 
 **RCO1 (Regulator of Chromatin Organization 1 - H3K4me3 reader)**
 - 28 annotations → 11 ACCEPT (39.3%), 13 KEEP_AS_NON_CORE, 1 MODIFY
@@ -193,7 +193,7 @@ Last updated: 2026-08-12
 - Single-function enzymes (HDACs, methyltransferases): 70-84% ACCEPT
 - Multi-subunit complexes (SWI/SNF, FACT): 55-65% ACCEPT
 - Histone chaperones (ASF1, RTT109): 47-81% ACCEPT
-- Histone readers (RCO1, PHD1): 39-85% ACCEPT
+- Phase 7 (reader RCO1; PHD1 is an APSES TF, not a reader): 39-85% ACCEPT
 - Chromatin remodelers (CHD1, SWI2): 68-80% ACCEPT
 
 **Common Annotation Issues Across All Phases:**
@@ -318,7 +318,7 @@ Last updated: 2026-08-12
 - Phase 4: Histone Methyltransferases (SET1, DOT1, CLR4)
 - Phase 5: Histone Chaperones & FACT (SPT16, POB3, CAF-1 [RLF2, CAC2, MSI1], ASF1, RTT109)
 - Phase 6: Chromatin Remodelers (SWI1, SWI2, SWI3, SNF5, CHD1)
-- Phase 7: Histone Readers (RCO1, PHD1)
+- Phase 7: Histone Reader RCO1 (PHD1 is an APSES TF, not a reader)
 
 ## 2025-12-30
 
