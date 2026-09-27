@@ -201,7 +201,7 @@ took the post-review reference to 2,769 terms and 854 overlaps, and the core ref
 to 1,226 terms and 357 overlaps. Finally, #3246 merged the duplicate `ARATH/AAU94417`
 review into `ARATH/AT1G06680`, removing one gene (36 predictions; 21 GOA, 12
 post-review and 5 core terms) while the merged AT1G06680 gained two post-review terms
-and one overlap, and #3239 repointed obsolete author-supplied ids, removing one
+and one overlap (the merged record again retains `GO:0009535`, a predicted term), and #3239 repointed obsolete author-supplied ids, removing one
 post-review term each from `ANOGA/PGRPLD` and `ECOLX/SNIPE` and one core term each
 from `ECOLI/SecB` and `ECOLI/surA` without changing any overlap. The current totals
 are 2,757 post-review terms with 852 overlaps and 1,219 core terms with 356 overlaps. Thus the recorded
