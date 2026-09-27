@@ -3,6 +3,10 @@ title: "Parasite Immune Modulators"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [DESRO]
+sidecars:
+  slide_figures:
+    - PARASITE_IMMUNE_MODULATORS/slides/candidate-funnel.svg
+    - PARASITE_IMMUNE_MODULATORS/slides/host-targets.svg
 ---
 
 # Parasite Immune Modulators
@@ -114,3 +118,7 @@ See `projects/VAMPIROME.md` for the Vampirome-focused project and shared candida
 
 - Project initialized with seed DESRO proteins (Draculin, CALCA).
 - Awaiting full seed list for remaining vampire bat modulators.
+
+## Slides
+
+- [Slides](PARASITE_IMMUNE_MODULATORS/slides/PARASITE_IMMUNE_MODULATORS-slides.html) (Marp source: [PARASITE_IMMUNE_MODULATORS-slides.md](PARASITE_IMMUNE_MODULATORS/slides/PARASITE_IMMUNE_MODULATORS-slides.md)) — AI generated

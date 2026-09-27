@@ -73,6 +73,8 @@ Reviewing GO annotations for 18 genes of a nematode immune system
 
 ![h:500](actions-by-gene.svg)
 
+<span class="small">Bar totals include proposed NEW rows, so they run higher than the non-NEW tier counts on the previous slide (e.g. surveillance tier 158 here vs 151).</span>
+
 ---
 
 ## A pseudokinase is not a kinase

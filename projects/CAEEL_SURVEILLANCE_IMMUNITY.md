@@ -4,6 +4,11 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [pmk-1, sek-1, nsy-1, tir-1, atf-7, skn-1, zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1, daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
+sidecars:
+  slide_figures:
+    - CAEEL_SURVEILLANCE_IMMUNITY/slides/surveillance-pathway.svg
+    - CAEEL_SURVEILLANCE_IMMUNITY/slides/actions-by-gene.svg
+    - CAEEL_SURVEILLANCE_IMMUNITY/slides/nipi-3-review-table.jpg
 ---
 
 # C. elegans Surveillance Immunity Project
@@ -401,3 +406,7 @@ All provide specific, actionable guidance for implementation and quality improve
 - Priority 3 implementation: 25-40 hours (4-8 weeks)
 - Validation and final review: 2-3 hours
 - Total to completion: 31-49 hours
+
+## Slides
+
+- [Slides](CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.html) (Marp source: [CAEEL_SURVEILLANCE_IMMUNITY-slides.md](CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.md)) — AI generated
