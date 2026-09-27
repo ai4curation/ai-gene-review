@@ -110,3 +110,82 @@ The quote check is case-sensitive after whitespace normalization. The single ext
 Final targeted validation passed with two warning groups: four missing PMID caches, and the intentional source-specific ACCEPT/UNDECIDED split for GO:0004332 (unresolved PMID:6696436 attribution versus independently supported enzyme records). The two missing Reactome records are separately tracked draft gates even though that validator did not report them. History validation and rendering passed. No NEW rows, source-object edits, cache edits or Git mutations were made.
 
 Parent independent review accepted the full biological draft and requested that the unrecovered ALDOB exosome hit remain UNDECIDED. That source-specific change was applied without changing the seeded assertion. All 53 decisions, the two cores, reference assessments and correction scopes received independent parent review; the final one-row delta was returned for publication inspection.
+
+## 2026-09-27 source6 recovery and PR #3279 follow-up
+
+All five canonical gene files matched the current published head
+`74cbc1ede513e7f16dfd053df2a63a64ccd1aa5d` before editing. Formal review
+5329496575 and detailed comment 5854101760 were read in full. This follow-up
+preserves every original source assertion, all 53 actions, both catalytic cores
+and the existing experimental uncertainties.
+
+The six source6 records were imported by the parent as exact normal-fetcher
+bytes after archive, source, identity, fresh-main absence and no-overwrite checks.
+Source run 36297910960, head `41e41a94fb65b65ddc78627208d955fa1e7eb1c7`, and
+`tmp/source6-canonical-import-receipt.json` identify the recovery. The preceding
+six missing-cache gates are now closed; source availability is still limited:
+
+- PMID:25637246 and PMID:29533924 contain research abstracts, not full bodies.
+  Their mouse knockout and upstream KHK intervention results corroborate the
+  donor physiology already assessed. They do not replace direct human enzyme
+  measurements or assign KHK catalysis to ALDOB. Exact abstract excerpts are now
+  attached to their findings.
+- PMID:4343087 and PMID:41188550 are bibliographic-only despite their Abstract
+  headings. The older mouse paper's exact gene/assay attribution remains
+  UNVERIFIED; its provisional title is replaced by the actual machine-fetched
+  isotope typography. The correction's previously inspected publisher notice
+  still supplies the bounded image-replacement assessment; the recovered record
+  alone does not reveal that notice body.
+- Reactome:R-HSA-5656438 and Reactome:R-HSA-70342 contain human event summaries.
+  The first is defective-enzyme context; the second directly states cytosolic
+  tetrameric ALDOB and F1P cleavage. The existing positive compartment decision
+  and two substrate-specific cores are retained. No additional bibliography
+  entry merely mentioned by a Reactome summary is promoted to an independent
+  supporting source without inspecting it.
+
+The original full BBS paper and V-ATPase paper were recovered again at the author
+URLs above. Figure 3 and adjacent Results in PMID:18000879 distinguish peripheral
+MTOC association from overlap with the gamma-tubulin marker. The three
+compartment rows now attach a short exact Figure 3 excerpt using
+`supporting_text_fulltext`, replacing the uninformative coIP abstract quote.
+Methods/Results and Figures 2, 3 and 6 of PMID:17576770 establish human A318E and
+R303W constructs in yeast and the binding-versus-catalysis distinction. The two
+contextual assembly/binding rows now attach short exact external excerpts.
+Manual access receipts reside in `tmp/ALDOB-source6-followup/external-evidence.json`;
+the normal caches are untouched and remain marked full-text unavailable. The
+prior full JBC Methods/Results read for PMID:10625657 was complete for the
+substrate assays, not an inference from an abstract or a partial-paper absence.
+
+The local ALDOA and PFKM review reasons were inspected read-only. Several accept
+free-fructose binding using F1,6BP/F6P evidence; PFKM calls F6P binding more
+specific, although it lies on the carbohydrate-derivative branch rather than
+under the free monosaccharide term. A suggested question now flags these
+source-specific judgments and the shared ARBA00092505 rule for a separate
+primary-evidence review. Neither other gene was edited or automatically judged
+incorrect from corpus agreement/disagreement.
+
+The local `rules/arba/rules_data.json` summary is now inspected: ARBA00092505
+lists one condition set, taxon/FunFam condition types, aldolase FunFam
+3.20.20.70:FF:000021 and GO:0070061. ARBA00043337 and ARBA00087539 also have
+summaries, while ARBA00035055 is absent. These summaries lack the complete
+grouped taxon predicates and training annotations, so they do not resolve every
+source-status uncertainty as the reviewer suggested. The propagation comments
+now distinguish inspected summary fields from unresolved exact derivation.
+
+The generic G6PD/TP53 IPI row still recommends MODIFY to the already-supported
+adaptor MF because this is positive functional refinement of an existing source
+assertion. The separately seeded adaptor row is IDA, so the source tuples are
+not identical; no extra row or NEW coverage is manufactured. The exosome HDA
+remains UNDECIDED because its target-specific supplementary hit is unrecovered.
+Other genes' majority actions cannot supply this missing evidence or justify a
+contamination claim. The two catalytic/process rows cited to PMID:9244396 retain
+their independent human enzyme support and no longer attach its unrelated
+cytoskeleton-preference quotation.
+
+The recursive authored-source census still contains 19 required PMIDs and six
+Reactome records, all now present. No provider report or hidden provider-only
+bibliography exists for this gene. Original PDF/author URLs are mapped to their
+already cited primary records; no novel DOI-only citation or new fetch request
+is introduced. DRAFT is retained while the intentional GO:0004332
+source-specific ACCEPT/UNDECIDED validation advisory remains. Current-head
+review and required CI are separate from local cache closure.
