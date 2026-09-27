@@ -29,11 +29,13 @@ proteins become potassium channel regulators rather than transporters, sigma
 factors get `sigma factor activity` instead of DNA-binding transcription
 factor activity, and DVU3336 turns out to carry only the KdpD sensor domain,
 with the histidine kinase on the neighbouring DVU3335. The input list also
-put rpoC, an RNA polymerase core subunit, among the sigma factors. One claim
-needs re-checking: the DVU0848 and DVU0849 reviews reassign those genes from
-QmoA/QmoB to the Flx–Hdr bifurcating complex, but the adjacent DVU0850 carries
-the NCBIfam `qmoC` family and the DVU0848 deep research never discusses Qmo,
-so the conventional QmoABC assignment has not actually been ruled out.
+put rpoC, an RNA polymerase core subunit, among the sigma factors. An earlier
+reassignment of DVU0848 and DVU0849 from QmoA/QmoB to the Flx–Hdr bifurcating
+complex was wrong and is reverted in
+[PR #3226](https://github.com/ai4curation/ai-gene-review/pull/3226): the genes
+sit in the aprBA–qmoABC cluster (DVU0846–0850), while Flx–Hdr is encoded at
+DVU2399–2405. Once #3226 merges, QmoB loses two unsupported `NEW` rows
+(178 rows, 35 `NEW`).
 
 ## Overview
 
@@ -147,8 +149,8 @@ D. vulgaris Hildenborough possesses multiple hydrogenases for hydrogen cycling, 
 ## Sulfate Reduction Pathway (Priority 1) - COMPLETED
 - [x] aprB (Q72DT3) - APS reductase beta subunit (electron transfer)
 - [x] aprA (Q72DT2) - APS reductase alpha subunit (catalytic FAD-containing)
-- [x] qmoA (Q72DT1) - HdrA-like electron bifurcating subunit (note: NOT QmoA)
-- [x] qmoB (Q72DT0) - HdrA/FAD-containing bifurcating subunit
+- [x] qmoA (Q72DT1) - QmoA, soluble HdrA-like FAD subunit of QmoABC (identity restored in PR #3226)
+- [x] qmoB (Q72DT0) - QmoB, HdrA-like iron-sulfur flavoprotein with an MvhD-like domain (identity restored in PR #3226)
 - [x] qmoC (Q72DS9) - Membrane subunit of QmoABC complex
 - [x] DVU0279 (Q72FD5) - SulP/SLC26 family transporter (likely dicarboxylate, not sulfate)
 
@@ -207,11 +209,11 @@ Key findings from annotation reviews:
    - **aprB (Q72DT3)**: Beta subunit with two [4Fe-4S] clusters. Core function is electron transfer (GO:0009055), not catalytic activity. Modified GO:0009973 (adenylyl-sulfate reductase activity) to electron transfer activity since AprB is the electron relay, not the catalytic subunit.
    - **aprA (Q72DT2)**: Alpha subunit containing FAD. This is the catalytic subunit. Accepted GO:0009973 (adenylyl-sulfate reductase activity). Added GO:0019420 (dissimilatory sulfate reduction).
 
-2. **DVU0848-0850 (NOT QmoABC!)**:
-   - **CRITICAL FINDING**: DVU0848-0850 are actually part of the **FlxABCD-HdrABC electron bifurcating complex**, NOT the QmoABC complex as initially annotated in the input list.
-   - **DVU0848 (Q72DT1)**: HdrA-like protein with FAD/NAD-binding domains. Functions in electron bifurcation, coupling NADH oxidation with ferredoxin reduction. Essential for ethanol metabolism.
-   - **DVU0849 (Q72DT0)**: HdrA/FAD-containing subunit of the Flx-Hdr complex.
-   - **DVU0850 (Q72DS9)**: This IS QmoC - the membrane-integral subunit with heme b groups that transfers electrons from the quinone pool. Part of the actual QmoABC complex.
+2. **DVU0848-0850 (QmoABC)**:
+   - **Correction (2026-09, [PR #3226](https://github.com/ai4curation/ai-gene-review/pull/3226)):** the first reviews reassigned DVU0848 and DVU0849 to the FlxABCD-HdrABC bifurcating complex. That was wrong: DVU0846-0850 is the aprBA-qmoABC cluster, and Flx-Hdr is encoded at DVU2399-2405. The Flx-Hdr claims came from deep-research files and a thesis about the Flx-Hdr complex; #3226 restores QmoA/QmoB and re-grounds the rows in the Qmo literature.
+   - **DVU0848 (Q72DT1)**: QmoA, a soluble HdrA-like FAD protein; the subunit reported to contact AprAB.
+   - **DVU0849 (Q72DT0)**: QmoB, a soluble HdrA-like iron-sulfur flavoprotein with a C-terminal MvhD/FlpD-like domain. Its AP-MS partner Q72DS8 (DVU0851) is QmoD, not HdrC.
+   - **DVU0850 (Q72DS9)**: QmoC, the membrane-integral subunit with heme b groups that exchanges electrons with the menaquinone pool.
 
 3. **DVU0279 (Q72FD5) - Sulfate Permease?**:
    - **ANNOTATION CONCERN**: Despite being annotated as "sulfate permease family protein", the SulP/SLC26 family is functionally diverse. Many members transport dicarboxylates, bicarbonate, or other anions rather than sulfate. The annotation GO:0055085 (transmembrane transport) was accepted but sulfate-specific transport needs experimental verification.

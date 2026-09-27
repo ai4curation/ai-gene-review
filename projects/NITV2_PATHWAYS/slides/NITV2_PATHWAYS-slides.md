@@ -38,7 +38,7 @@ GO review of four pathways in the model sulfate-reducing bacterium
 
 - We reviewed **23 genes** in sulfate reduction, potassium transport, sigma factors and hydrogen metabolism; **20 are done** (180 rows), 3 hydrogenase stubs are still `PENDING`.
 - The main fix is **separating catalytic from accessory subunits**: AprB, KdpC and the TrkA-type RCK proteins lose inherited catalytic or transporter terms.
-- One claim needs checking: the reviews move DVU0848–0849 from **QmoAB** to Flx–Hdr, against the adjacent `qmoC` gene.
+- A wrong reassignment of DVU0848–0849 to Flx–Hdr is reverted to **QmoA/QmoB** (PR #3226): they sit in the *aprBA–qmoABC* cluster; Flx–Hdr is DVU2399–2405.
 
 ---
 
@@ -84,7 +84,7 @@ GO review of four pathways in the model sulfate-reducing bacterium
 
 - ✅ Sulfate reduction (6), potassium transport (7), sigma factors (5) reviewed.
 - ◐ Hydrogenases: hydA and hynA1 reviewed; hysA, echA, cooH still `PENDING`.
-- ⬜ Re-check the DVU0848–0849 Flx–Hdr reassignment against the QmoABC literature.
+- ✅ DVU0848–0849 restored to QmoA/QmoB (PR #3226; QmoB drops two unsupported `NEW` rows).
 - ⬜ Update the status checklist on the project page.
 
 **Read more:** `projects/NITV2_PATHWAYS.md` · `genes/DESVH/<accession>/`
