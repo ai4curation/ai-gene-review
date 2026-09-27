@@ -1,18 +1,32 @@
 ---
 title: "Pancrustacea Metamorphosis Gene Families"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [DROME]
 genes: [kni, hairy, klg, trn, caps, kek1, krz, insc]
+sidecars:
+  slide_figures:
+    - PANCRUSTACEA_METAMORPHOSIS/slides/four-origins.svg
+    - PANCRUSTACEA_METAMORPHOSIS/slides/kni-review-table.jpg
+    - PANCRUSTACEA_METAMORPHOSIS/slides/receptor-corrections.svg
 ---
 
 # Pancrustacea Metamorphosis Gene Families
 
-**Four independent origins of metamorphic development across the arthropod
-clade Pancrustacea repeatedly recruited *different* gene families that
-nonetheless converge on the *same* developmental functions. This project
-tracks the specific gene families that a recent phylogenomic study implicates
-in that convergence, as candidates for GO-annotation review.**
+**Bottom line:** metamorphosis evolved four separate times in Pancrustacea (insects,
+decapods and krill, copepods, barnacles), and a 2026 phylogenomic preprint (Campli et al.)
+finds that each origin recruited *different* gene families that converge on the *same*
+developmental functions, with a small core of 15 families showing adaptive expansion. We took
+the eight *Drosophila* reference genes the paper names for those families (`kni`, `hairy`,
+`klg`, `trn`, `caps`, `kek1`, `krz`, `insc`) and reviewed every existing GO annotation on
+them, because almost all functional knowledge for these families comes from the fly and would
+be the source of any transfer to crustacean orthologues. All eight reviews are done and
+validate: 183 existing annotations adjudicated (108 ACCEPT, 46 KEEP_AS_NON_CORE, 24 MODIFY,
+1 REMOVE, 1 MARK_AS_OVER_ANNOTATED, 3 UNDECIDED) plus 4 proposed NEW terms. The main
+corrections were redirecting propagated receptor terms on adhesion molecules (`trn`, `klg`)
+and on the ligand-less orphan receptor `knirps` to what the proteins actually do, and
+resolving every bare `protein binding` row to its named partner. The optional next step, an
+ecdysteroid-regulation module, has not been started.
 
 ## Source
 
@@ -193,3 +207,7 @@ regulation module) and, optionally, the secondary mentions (*deadpan*).
 **Data-provenance note.** For *klingon* and *inscuteable*, `fetch-gene` first
 resolved sparse TrEMBL accessions (3 and 1 annotations); the reviews use the
 annotation-rich accessions **Q9VCT4** and **Q9W2R4** instead.
+
+## Slides
+
+- [Slides](PANCRUSTACEA_METAMORPHOSIS/slides/PANCRUSTACEA_METAMORPHOSIS-slides.html) (Marp source: [PANCRUSTACEA_METAMORPHOSIS-slides.md](PANCRUSTACEA_METAMORPHOSIS/slides/PANCRUSTACEA_METAMORPHOSIS-slides.md)) — AI generated
