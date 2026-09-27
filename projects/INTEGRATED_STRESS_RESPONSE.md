@@ -91,6 +91,12 @@ Four kinases sense different stresses:
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
+- EIF2AK3 (PERK): the review does not add GO:0140467 *integrated stress
+  response signaling*. [PR #3219](https://github.com/ai4curation/ai-gene-review/pull/3219)
+  removed that proposed `NEW` row: GO:0140467 is an ancestor of the
+  already-accepted GO:0036499 *PERK-mediated unfolded protein response*, and
+  the cited 1999 cloning paper (PMID:9930704) does not show ISR signalling.
+  With #3219 merged, EIF2AK3 has 95 annotation rows, down from 96.
 
 ## Slides
 

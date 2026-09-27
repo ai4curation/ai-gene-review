@@ -61,7 +61,7 @@ A scoped project: about 18 candidate genes, five already reviewed
 
 ![h:430](eif2ak3-review-table.jpg)
 
-<span class="small">Generic kinase rows are <b>MODIFY</b>'d to <em>eukaryotic translation initiation factor 2alpha kinase activity</em>; the review also proposes <em>integrated stress response signaling</em> (GO:0140467) as NEW.</span>
+<span class="small">Generic kinase rows are <b>MODIFY</b>'d to <em>eukaryotic translation initiation factor 2alpha kinase activity</em>; ISR involvement is carried by the accepted <em>PERK-mediated unfolded protein response</em> (GO:0036499); a NEW <em>integrated stress response signaling</em> (GO:0140467) row, its ancestor, was dropped in PR #3219.</span>
 
 ---
 
