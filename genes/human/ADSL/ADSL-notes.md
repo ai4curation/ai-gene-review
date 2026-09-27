@@ -388,3 +388,36 @@ remaining contextual-transfer uncertainties. Previous history and dated notes
 are retained; this entry supersedes their missing-record status. Targeted
 validation, rendering and the new history check are recorded in the closure
 manifest. COMPLETE is used only if the targeted validation has no warnings.
+
+
+## 2026-09-27 recovered-abstract quotation follow-up for PR #3194
+
+The current-head review at `87cbc5210d17dde649c9bf68c12b8065c57b3e8e`
+requested direct cached support for three physiological judgments. The starvation
+row now quotes PMID:690130 for loss of liver/spleen activity, unchanged kidney/brain/
+muscle activity, and restoration after refeeding. Its rationale and reference
+assessment explicitly rest on the recovered abstract. The earlier dated record
+of external full-article access remains historical provenance, rather than a
+requirement for reproducing this decision. The cache remains abstract-only.
+
+The aerobic-respiration row now quotes the authors' anaplerotic interpretation
+from PMID:3777158. The muscle-response row quotes the metabolite-based activity
+estimate and the reported stimulation-dependent synthetase/lyase change. These
+excerpts support the existing distinction between metabolic support for respiration
+and an unresolved source-specific muscle-response transfer; full controls remain
+unavailable. The source spelling “anapleurotic” is preserved in the exact quotation.
+
+The hypoxia rationale now states the actual PMID:8887278 results: increased AMP
+deamination, decreased cortical IMP reamination, greater ADSL than synthetase
+activity, and cycle limitation mainly by synthetase and AMP supply. A non-limiting
+step need not be unregulated, so these findings alone do not settle the precise
+ADSL-specific response or its human transfer. UNDECIDED remains appropriate. The
+AMP-biosynthesis row now quotes PMID:11428554's explicit AMP-level discussion and
+the measured human adenylosuccinate-to-AMP reaction from PMID:19405474, replacing
+the less informative B-lymphocyte sentence and reaction-description fragment.
+
+All 30 original source objects, actions, two cores, 23 reference identifiers/titles,
+availability flags and machine-generated sources are preserved. No new publication
+is introduced. The notes-inclusive source census, case-sensitive normalized quote
+checks, targeted validation, history validation and render are recorded in the
+follow-up manifest. COMPLETE is retained only with zero validation warnings.
