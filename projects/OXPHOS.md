@@ -397,3 +397,7 @@ plus mobile electron carriers and assembly factors. 7 genes already reviewed fro
 projects (ATP5MC1/2/3, CYC1, COX5B, TMEM70, LRPPRC). 25 new genes prioritized across
 three tiers. Complex II (SDH) genes are particularly interesting due to dual TCA/ETC
 function and tumor suppressor roles.
+
+## Slides
+
+- [Slides](OXPHOS/slides/OXPHOS-slides.html) (Marp source: [OXPHOS-slides.md](OXPHOS/slides/OXPHOS-slides.md)) — AI generated

@@ -380,3 +380,7 @@ Still not in this repository:
 | [PMID:35977508](https://pubmed.ncbi.nlm.nih.gov/35977508/) | Liang et al. *Mitochondrial microproteins link metabolic cues to respiratory chain biogenesis.* Cell Rep 2022 |
 | [PMID:37590370](https://pubmed.ncbi.nlm.nih.gov/37590370/) | Lim et al. *In silico protein interaction screening uncovers DONSON's role in replication initiation.* Science 2023 |
 | [PMID:40015271](https://pubmed.ncbi.nlm.nih.gov/40015271/) | Schmid & Walter. *Predictomes, a classifier-curated database of AlphaFold-modeled PPIs.* Mol Cell 2025 |
+
+## Slides
+
+- [Slides](MITO_INTERACTOME/slides/MITO_INTERACTOME-slides.html) (Marp source: [MITO_INTERACTOME-slides.md](MITO_INTERACTOME/slides/MITO_INTERACTOME-slides.md)) — AI generated

@@ -323,3 +323,7 @@ and IMP L-valine catabolic process from PMID:40056416 / PMID:39727068). Re-fetch
 with `-u Q7JR58 --force` (merged, preserving reviewed content), reviewed the 10
 newly-surfaced annotations, and re-aligned the review `id` and the module
 `representative_member` for the hydratase step to `Q7JR58`.
+
+## Slides
+
+- [Slides](FATTY_ACID_BETA_OXIDATION/slides/FATTY_ACID_BETA_OXIDATION-slides.html) (Marp source: [FATTY_ACID_BETA_OXIDATION-slides.md](FATTY_ACID_BETA_OXIDATION/slides/FATTY_ACID_BETA_OXIDATION-slides.md)) — AI generated

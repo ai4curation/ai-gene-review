@@ -398,3 +398,7 @@ fuller candidate list; these are the already-curated anchors.
   (6) re-review the module cohort for `proposed_new_terms`, which it currently
   under-proposes (1 across 100 genes); (7) extend Phase 3 across the remaining GALNT paralogues and the
   core 3/core 4 and capping steps.
+
+## Slides
+
+- [Slides](GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.html) (Marp source: [GLYCOBIOLOGY-slides.md](GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.md)) — AI generated

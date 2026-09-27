@@ -123,3 +123,7 @@ The project should review key components of each import pathway. Priority genes 
   - [x] MTCH2 — metazoan MIM insertase (22 annotations reviewed)
   - [ ] Remaining genes (TIMM23, TIMM22, SAMM50, GFER, TOMM22, TOMM70, etc.)
 - [ ] Propose GO term hierarchy
+
+## Slides
+
+- [Slides](MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.html) (Marp source: [MITOCHONDRIAL_IMPORT_PATHWAYS-slides.md](MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.md)) — AI generated
