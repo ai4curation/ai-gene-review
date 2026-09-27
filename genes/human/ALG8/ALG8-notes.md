@@ -113,3 +113,26 @@ PubMed, PMC and actual author-upload links were reconciled to those same studies
 ResearchGate numeric article identifier is not a PMID. An incidental commentary bibliography
 inside the original normal PubMed record is not adopted as evidence for an authored claim.
 Earlier statements identifying PMID:28375157 as the sole missing record are superseded here.
+
+
+## 2026-09-27: source18 correction record and source completion
+
+The normal record for [PMID:28862642] is now cached unchanged from source18. This closes
+the last required cache gap. The record identifies the published erratum but repeats the
+original paper's abstract; the broad machine classification as primary research and the
+Abstract heading do not turn it into a separate experiment or the correction body. The
+[official JCI corrigendum](https://www.jci.org/articles/view/96729) was independently reread:
+it repairs Pkd1 primer labeling/sequences and points to the separate Xbp1 RT-PCR primer
+reference. Those corrections do not add ALG8 catalytic, trafficking or chaperone activity.
+The public correction text remains separate from the actual local cache contents.
+
+All seven required PMIDs and three Reactome records are now present. The prior recursive
+DOI, PMC and public-source census still resolves to the same seven journal records; there
+are no provider reports or new literature identifiers. All 24 complete annotation objects,
+the integrated core, two alternative products and 17 reference identities are unchanged.
+Only the status and two reference-assessment passages change. The 48 cached quotations
+remain intact, and every existing machine-source file is preserved.
+
+Full target validation, history validation and rendering passed. A separate peer read confirmed
+the three-field YAML delta and the actual erratum-cache limitation. All 48 exact cached
+quotes and all prior annotation/core/product objects passed integrity checks.
