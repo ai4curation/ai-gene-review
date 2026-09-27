@@ -202,3 +202,18 @@ question and found no biological blocker. Source preservation and all 43 cached
 supporting snippets were independently checked with case-sensitive whitespace
 normalization. The clinical full-text excerpt was checked against the institutional
 PDF, page 407. No action was changed merely to eliminate a validation warning.
+
+
+## 2026-09-27 — Source6 publication-cache closure
+
+PR #3268 remained at exact head `8d48f6840058c4387f535908b1eb1baedd1804b8`; all five canonical file blobs matched before authoring. The three required donor records are now genuine normal-fetch artifacts imported by the parent without overwrites from source run 36297910960, attempt 1, head `41e41a94fb65b65ddc78627208d955fa1e7eb1c7`. The source archive and staged record hashes were verified separately; each canonical publication byte sequence matches `tmp/source6-canonical-import-receipt.json`. All three are **abstract-only**, not newly available full papers. This supersedes the earlier operational missing-cache gate, not the full-source limitations.
+
+- PMID:11544478 reports Aldh5a1-null mice, elevated GABA/GHB in urine and brain/liver homogenates, lethal seizures and pharmacologic rescue. It corroborates the mouse GO-CAM donor context; it is not relabeled a direct human enzymatic assay.
+- PMID:12065715 reports intervention-dependent lifespan extension and high-dose vigabatrin-associated GABA elevation without a parallel GHB decrease. The original succinate-process donor is retained with independent human product-forming chemistry; the recovered abstract does not add a succinate-flux assay.
+- PMID:17854388 measures glucose/acetate isotope incorporation and cortical metabolite pools in 17-day-old mice. Its introductory NADP-dependent statement is not an experimental cofactor-specificity result. Direct human NAD+ kinetics and the existing integrated core remain unchanged. An independent annotation-reviewer peer read this recovered abstract and confirmed this source boundary.
+
+Each recovered reference assessment now states actual local access and includes an exact abstract finding. No annotation reason/action, original source assertion, alternative product, core, original title, machine source, or published history has been rewritten. The publication census covers the entire gene tree, including DOI strings, institutional PDF and primary-page links, and confirms 13 required PMIDs and the reviewed Reactome event R-HSA-888548 are cached. There are no provider artifacts or new DOI-only publication gates. Nine raw UniProt bibliography entries remain separately inventoried because they are not invoked for retained substantive claims; the homotetramer claim is independently grounded in the existing human biochemical/structural references. The broader UniProt Reactome cross-reference R-HSA-916853 is likewise not an additional reviewed source assertion. These inventories do not replace source-specific evidence judgments.
+
+Status is COMPLETE after closure of the three operational cache gates and warning-free targeted validation; the documented limits of abstract-only donor evidence remain explicit. The normal provider attempts from the full review are preserved as failed pre-contact attempts, with no fabricated report and no unnecessary repeat.
+
+The targeted validator completed successfully with no review warnings. Exact preservation checks retain all 25 complete annotation objects, both alternative products, the core and 20 reference identities/titles. All 46 cached snippets are case-sensitive verbatim matches after whitespace normalization, and the unchanged external clinical excerpt matches its retained primary-PDF receipt. New-history validation and HTML rendering also passed.
