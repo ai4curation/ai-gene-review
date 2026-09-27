@@ -1,7 +1,7 @@
 ---
 title: "CAEEL Surveillance Immunity Project - Comprehensive Curation Recommendations"
 maturity: COMPLETE
-tags: [BIOLOGY_DOMAIN]
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [pmk-1, sek-1, nsy-1, tir-1, atf-7, skn-1, zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1, daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
 ---
