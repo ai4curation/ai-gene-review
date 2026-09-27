@@ -54,3 +54,158 @@ immunodeficiency.
 - GO:0006457 (protein folding, NAS PMID:12217961) — MARK_AS_OVER_ANNOTATED. ALG12 does not fold
   proteins; N-glycosylation is upstream of/supports folding but "protein folding" mis-describes
   the molecular role. Downstream/indirect.
+
+## 2026-09-27 full annotation audit
+
+This dated section supersedes the earlier decision summary above. All 23 seeded
+annotations and 12 original reference identities were reviewed; the final file
+contains 18 ACCEPT, four MODIFY and one UNDECIDED decisions, no NEW rows, 13
+reference assessments and one integrated catalytic core. The previous two cores
+represented the same reaction in related processes and are consolidated. All
+source term/evidence/reference/qualifier fields are preserved. No new process term
+is asserted: both LLO biosynthesis and protein N-linked glycosylation were already
+seeded and represented in the prior cores.
+
+### Identity, baseline and research provenance
+
+Human ALG12 is HGNC:19358 / UniProtKB:Q9BV10; CDG1G and ECM39 are aliases. The root
+preflight verified all five canonical files against main
+`ba3ff58d7d2de76dbe3c24b16e05e12369f463fc`, with no canonical/alias directory or open-PR
+conflict (three separate open-PR searches, 2026-09-27 05:18 UTC). The baseline was
+INITIALIZED despite prior author decisions. The original GOA, UniProt record,
+reference identities and annotation source objects remain unchanged.
+
+The default Falcon research launch with `--fallback perplexity-lite --timeout 1200`
+ran concurrently with `fetch-gene-pmids`. The first launch incorrectly inherited
+offline dependency mode; an online retry using the supported `/tmp` UV tool/cache
+directories failed DNS while resolving `deep-research-client` from PyPI. Both
+providers failed before research execution. Logs: `/tmp/ALG12-deep-research.log`
+and `/tmp/ALG12-deep-research-online.log`. No generated provider report exists and
+none was authored manually. Publication caching succeeded for all four seeded
+PMIDs (`/tmp/ALG12-fetch-goa.log`). The normal new-source fetch of PMID:41807832
+failed DNS, cached 0/1 and exited 1 (`/tmp/ALG12-fetch-new.log`); this is the sole
+missing required PMID in the YAML/notes census. It is reserved for future recovery,
+not added to an already frozen recovery batch. The review stays DRAFT.
+
+### Primary evidence and access limits
+
+- **PMID:11983712**, Chantret et al. Human F142V patient fibroblasts accumulate
+  truncated lipid-linked glycans. The original Results/Figure 5 compares GFP-only
+  with human wild-type ALG12 transduction in immortalized patient fibroblasts and
+  shows restoration of mature LLO. Figure 6 separately follows transfer of truncated
+  glycans to proteins and their reglucosylation; UGGT performs the reglucosylation.
+  This is positive direct precursor-pathway evidence, not an ALG12 folding assay.
+  [PubMed](https://pubmed.ncbi.nlm.nih.gov/11983712/) establishes the identifier.
+  The original article's Results/Figures 1, 5 and 6 were recovered from the
+  [author-uploaded full primary text](https://www.researchgate.net/publication/11385482_Congenital_Disorders_of_Glycosylation_Type_Ig_Is_Defined_by_a_Deficiency_in_Dolichyl-P-mannoseMan7GlcNAc2-PP-dolichyl_Mannosyltransferase),
+  DOI 10.1074/jbc.M203285200. The repository cache is still abstract-only. Cached
+  result-bearing evidence: “the pathological phenotype of the fibroblasts of the
+  patient was largely normalized upon transduction with the wild type gene”.
+- **PMID:12093361**, Thiel et al. The independently checked
+  [primary PMC record](https://pmc.ncbi.nlm.nih.gov/articles/PMC1222867/) and abstract
+  report reduced patient-fibroblast enzyme activity, Man7 precursor accumulation
+  and wild-type cDNA normalization. The patient's serum transferrin loses complete
+  N-glycan chains, but the rescue experiment measures fibroblast enzyme activity;
+  it is not a claim of treatment correcting circulating transferrin. The full PDF
+  body was not recovered for independent assay-detail inspection. The positive
+  abstract findings and concordant human source support ACCEPT with curator
+  deference. The local cache is abstract-only.
+- **PMID:12217961**, Grubenmann et al. The human patient glycan profiles, normal
+  human cDNA rescue of yeast alg12 and failure of the tested human mutant alleles
+  support the enzyme identity. The [original HMG article](https://academic.oup.com/hmg/article/11/19/2331/2355556)
+  and [Paperity preview](https://paperity.org/p/40175018/alg12-mannosyltransferase-defect-in-congenital-disorder-of-glycosylation-type-lg)
+  expose abstract/early original text, but the preview explicitly truncates before
+  full Results/Discussion. Original PDF access failed/redirected to an abstract.
+  An independent peer reader confirmed these limits. Protein-folding NAS is
+  therefore UNDECIDED, replacing the prior categorical indirect-effect judgment.
+  The membrane-facing location remains a curator inference, not an imagined
+  microscopy assay. The local cache remains abstract-only.
+- **PMID:19946888**: the [primary PubMed record](https://pubmed.ncbi.nlm.nih.gov/19946888/)
+  describes membrane isolation and mass spectrometry in YTS NK-like cells. No
+  ALG12-specific peptide table was recovered. Retain membrane HDA with curator
+  deference and independent positive ALG12 membrane biology; preserve its broad
+  source resolution. A specific ER annotation elsewhere does not invalidate the
+  broad membrane result, and the number of proteins identified does not establish
+  contamination. The prior OVER decision is superseded by ACCEPT.
+
+All four local publication flags remain `full_text_unavailable: true`. External
+article access and local-cache availability are distinct. Ordinary YAML evidence
+snippets are taken from the unchanged local abstracts or protected UniProt/Reactome
+records; no external paraphrase is presented as a cached quote.
+
+### New structural study: construct and species boundaries
+
+**PMID:41807832**, *Structures of ALG3/9/12 reveal the assembly logic of the N-glycan
+oligomannose core*, DOI 10.1038/s41589-026-02164-7. Identifier/title linkage was
+independently established through the [RCSB 9S6T primary deposition](https://www.rcsb.org/structure/9S6T),
+which explicitly links the citation to this PMID, and the
+[publisher primary article](https://www.nature.com/articles/s41589-026-02164-7).
+The PubMed page itself intermittently returned a browser challenge. Full indexed
+publisher Results were recovered with the query
+`"s41589-026-02164-7" "GgALG12" "Results"`; the read included biochemical
+characterization, pseudo-Michaelis complex preparation, C-branch initiation,
+Figures 1/3/4 and Extended Data 1. The study uses **chicken GgALG12**, human HsALG9
+and yeast ScALG3, expressed in HEK293 cells. Human expression host does not make
+GgALG12 a human protein. Purified wild-type GgALG12 processes shortened Dol25-linked
+substrates; E35Q facilitates substrate-bound structural analysis and has strongly
+reduced activity. The study supports conserved substrate recognition, with the
+human clinical variants mapped onto homologous chicken residues. These results
+are ortholog evidence and do not establish human ALG12 topology experimentally.
+The older human prediction of 12 transmembrane helices in the historical notes is
+not equated with the new 11-helix chicken structural topology. The captured
+Fab-containing particle does not establish a physiological ALG12 complex.
+
+The missing normal cache remains explicit even though primary external evidence
+was read; no new activity or process annotation is manufactured from this paper.
+
+### Ontology, PAINT and GO-CAM checks
+
+- Live [GO:0006457](https://amigo.geneontology.org/amigo/term/GO:0006457) describes
+  assistance in covalent/noncovalent polypeptide assembly into tertiary structure.
+  It is not restricted to classical chaperone catalysis. Its protein-maturation
+  context does not by itself resolve the original ALG12 NAS evidence.
+- Live [GO:0006488](https://amigo.geneontology.org/amigo/term/GO:0006488) describes
+  formation of dolichol-linked oligosaccharides and is `part_of` protein N-linked
+  glycosylation (GO:0006487). ALG12 catalyzes a chemical step of that precursor
+  process. Both terms already occur in the source review; their inclusion is
+  synthesis of established participation, not a proposed missing process.
+- Live [GO:0098553](https://amigo.geneontology.org/amigo/term/GO:0098553) includes
+  proteins embedded in or attached to the ER membrane's lumen-facing leaflet and
+  is `part_of` ER membrane. It fits the site of the lipid-linked reaction.
+- GO:0052917 is the existing donor/acceptor-specific MF used in the source review
+  and the GO-CAM. RHEA:29535 / EC:2.4.1.260 and the human studies identify the same
+  reaction. Live AmiGO retrieval of the full MF definition repeatedly timed out;
+  QuickGO returned only its JavaScript shell. No obsolescence or relabeling claim
+  is made from these access failures. The authoritative seeded term identity is
+  retained for validation. The installed OAK `sqlite:obo:go` snapshot was also read: GO:0052917
+  resolves to the exact Man7-to-Man8/Dol-P-Man reaction and has alpha-1,6-mannosyltransferase
+  activity as a parent; GO:0000009 in turn has mannosyltransferase activity as a parent.
+  This is explicitly a local ontology check, not a successful live API response.
+- `interpro/panther/PTHR22760/PTHR22760-paint.tsv` contains the ER-membrane IBD at
+  **PTN000509188**, and alpha-1,6-mannosyltransferase/N-glycosylation IBDs at
+  **PTN000509189**. Structured propagation blocks name the ancestral nodes only.
+  Human ALG12 evidence among the descendants is legitimate target grounding; no
+  donor-count or self-circularity argument is used. The InterPro and linkage-specific PAINT assertions are biologically true; target-level
+  human substrate evidence nevertheless supports MODIFY to the exact MF. This
+  granularity refinement neither disputes PAINT node placement nor assigns exact
+  substrate specificity to every family descendant. The two reaction-specific
+  Reactome MF rows are likewise refined to the chemistry those events resolve.
+- `gocams/65c57c3400000687/65c57c3400000687-src.yaml`, activity
+  `65d7e4ac00000341`, places Q9BV10 with MF GO:0052917, `occurs_in` GO:0098553
+  (IC from the same original HMG source), and `part_of` GO:0006488 (patient-study
+  evidence). This is explicit concordant curation, not independent replication.
+- Cached Reactome R-HSA-446198 specifies the normal eighth-mannose transfer and ER
+  lumen. Disease event R-HSA-4720497 describes the normal reaction before impaired
+  variants; refining its generic MF does not assert normal mutant activity or
+  alter the original reference. The parent R-HSA-446193 summary has a localized
+  wording error about three terminal GlcNAcs: the mature precursor has **three
+  glucoses**, as the human record and primary sources establish.
+
+No new flat annotations, core biological processes, complex memberships or
+speculative oligomerization functions are introduced. No custom bioinformatics
+analysis was needed. Validation, history and exact source-preservation results
+are recorded in the companion session history and publication manifest.
+
+The coordinator independently read all 23 decisions, 13 reference assessments,
+description, integrated core and questions. Its requested two target-specific MF
+refinements were incorporated before final validation; all other biology was accepted.
