@@ -38,7 +38,7 @@ Proteins that keep an enzyme's fold but not its activity
 
 - **Pseudo-enzymes** keep a family's domain but have lost catalysis, so IBA, IEA and sometimes experimental rows give them an activity biochemistry contradicts.
 - We reviewed four cases in depth: **Epe1** (fission yeast) and three biosynthetic-cluster proteins, **eryCII, pqsB, actI-ORF2**.
-- Epe1's **7 catalytic and metal rows are REMOVE**, replaced by histone-binding terms. Finding **more candidates has not started**.
+- Epe1's **5 electronic catalytic and metal rows are REMOVE**, replaced by histone-binding terms; the 2 experimental (IDA/EXP) rows are **UNDECIDED**. Finding **more candidates has not started**.
 
 ---
 
@@ -61,10 +61,10 @@ Proteins that keep an enzyme's fold but not its activity
 1. The JmjC iron triad is **H297-E299-Y370**, not the canonical **H-D-H**.
 2. The distal **Fe(II)-binding** histidine is lost: **His370 is a Tyr**.
 3. **Mass spectrometry** shows no demethylation of H3K9me2/me3 peptides.
-4. The **H297A** catalytic mutant keeps full anti-silencing function.
+4. **H297A** is assay-dependent: epe1Δ-like at endogenous levels, still anti-silencing only when overexpressed.
 5. The **C-terminus alone**, without JmjC, disrupts heterochromatin.
 
-<span class="small">Sources named on the project page: Trewick 2007, Wang 2013, Bao 2019, Raiymbek 2020.</span>
+<span class="small">Sources named on the project page: Trewick 2007, Wang 2013, Audergon 2015, Bao 2019, Raiymbek 2020.</span>
 
 ---
 

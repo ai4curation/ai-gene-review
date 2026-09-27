@@ -16,8 +16,9 @@ against assays, catalytic-site mutants and the protein's actual mechanism. We di
 because these cases need several evidence types synthesised at once, which makes them a
 demanding test for AI-assisted curation, and because a wrong catalytic term on a
 pseudo-enzyme keeps being re-propagated. Four reviews are complete: fission yeast Epe1,
-whose seven demethylase, oxidoreductase, dioxygenase and metal-binding rows (including
-IDA and EXP rows) are all REMOVE in favour of histone-binding terms, and three
+whose five electronic (IBA/IEA) demethylase, oxidoreductase, dioxygenase and metal-binding
+rows are REMOVE in favour of histone-binding terms while the two PomBase experimental
+(IDA/EXP) H3K9 demethylase rows are UNDECIDED (PR #3229), and three
 biosynthetic-cluster proteins without active sites (eryCII, pqsB, actI-ORF2). Finding
 further candidates has not started; the [Top-Nots](TOP_NOTS.md) candidate list is the
 natural source.
@@ -63,7 +64,7 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 1. Epe1 JmjC Fe(II)-binding triad is H297-E299-Y370 rather than the canonical H-D-H
 2. The distal iron-ligating histidine is lost (His370 replaced by Tyr; UniProt caution)
 3. Mass spectrometry assays show NO demethylation of H3K9me2/me3 peptides
-4. H297A catalytic mutant retains full anti-silencing function
+4. The H297A Fe(II)-site mutant does not settle it: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing, SAGA-dependently (Bao 2019)
 5. C-terminus alone (without JmjC) disrupts heterochromatin
 
 **Actual Function**: Non-enzymatic anti-silencing factor that:
@@ -72,7 +73,7 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 - Promotes nucleosome turnover
 - Functions as chromatin reader, not eraser
 
-**AI Review Action**: REMOVE all enzymatic activity annotations; propose replacement with binding terms.
+**AI Review Action**: REMOVE the IBA/IEA enzymatic activity annotations and propose binding terms; the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence (see PR #3229).
 
 **Source**: Presented at Gene Ontology Consortium Meeting, October 2025, Cambridge UK. See [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review).
 
@@ -110,7 +111,8 @@ A gene belongs in this project if:
 ## Key References
 
 - Raiymbek et al. (2020) - Epe1 biochemical characterization
-- Bao et al. (2019) - Epe1 SAGA recruitment mechanism
+- Bao et al. (2019) - Epe1 SAGA recruitment mechanism; overexpressed H297A (PMID:30573453)
+- Audergon et al. (2015) - H297A/K314A phenocopy epe1Δ in ectopic H3K9me inheritance (PMID:25838386)
 - Trewick et al. (2007) - Original observation of degenerate JmjC
 - Wang et al. (2013) - Epe1/Bdf2 boundary formation
 
