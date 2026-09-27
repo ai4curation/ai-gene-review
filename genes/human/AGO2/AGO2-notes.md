@@ -170,3 +170,123 @@ artifact citations. Source receipts are
 SHA-256 is `0876942c72b2e537e858e8af7cd3c79d34b97c2169490e3d883c6f00884e2965`.
 Only the nine exact required recovered records accompany this gene's
 manifest. No cache, Git state or remote state was edited.
+
+## 2026-09-27 remaining provider references after PR 3264 merge
+
+The merged review at main `d35dcc30b44924f79c0510b281ae824aa536848a`
+was rechecked against every local gene file before this follow-up. The two
+provider-only citations, PMID:15105377 and PMID:23746446, now have verified,
+unchanged normal-fetch caches from source4 run 36294925088, artifact 10925791130
+(ZIP SHA256 `26ba088d1d78146c81fd744fc68aa532f4a9eb2c3dfc4b96cd647fd74624ac81`).
+Both include full text; their abstracts and relevant experimental passages
+were read. The 2004 paper characterizes cleavage chemistry in affinity-purified
+minimal RISC from human HeLa extract, without identifying a purified AGO2
+polypeptide as the sole catalytic component in that experiment. The 2013 paper
+studies engineered human AGO1/AGO3, with AGO2 structural and domain comparators.
+These source scopes are preserved; neither cache creates a new AGO2 assertion.
+
+The prior DNS and missing-record statements above are historical. A fresh
+recursive census now finds all 92 cited PMIDs and all cited Reactome records.
+The full review YAML, all 267 seeded assertions, actions, five cores, reference
+identities, quotations, alternative products and raw/provider files remain
+unchanged. This follow-up adds only the two exact caches, provenance notes,
+their rendering and a scaffolded history record. Intentional validation
+advisories remain separate from the now-closed source gaps.
+
+
+## 2026-09-27 DOI-inclusive provider citation census correction
+
+The preceding all-cached census counted explicit PMID citations but missed references expressed only as DOIs in the immutable provider reports. That completeness claim is superseded by this DOI-inclusive audit. All provider DOI strings were decoded and normalized, compared with normal publication-cache metadata, and mapped to primary PubMed title/DOI records. The following cited sources are still missing:
+
+| PMID and primary record | Normalized DOI | Provider location |
+|---|---|---|
+| [PMID:38448799], *Target-directed microRNA degradation: Mechanisms, significance, and functional implications* | 10.1002/wrna.1832 | AGO2-deep-research-falcon.md, line 262 |
+| [PMID:38029964], *When Argonaute takes out the ribonuclease sword* | 10.1016/j.jbc.2023.105499 | AGO2-deep-research-falcon.md, line 260 |
+| [PMID:39499674], *Technologies for Targeted RNA Degradation and Induced RNA Decay* | 10.1021/acs.chemrev.4c00472 | AGO2-deep-research-falcon.md, line 263 |
+| [PMID:38224449], *To kill a microRNA: emerging concepts in target-directed microRNA degradation* | 10.1093/nar/gkae003 | AGO2-deep-research-falcon.md, line 261 |
+| [PMID:37621215], *The EDC4-XRN1 interaction controls P-body dynamics to link mRNA decapping with decay* | 10.15252/embj.2023113933 | AGO2-deep-research-falcon.md, line 265 |
+| [PMID:38939184], *Principle, application and challenges of development siRNA-based therapeutics against bacterial and viral infections: a comprehensive review* | 10.3389/fmicb.2024.1393646 | AGO2-deep-research-falcon.md, line 313 |
+| [PMID:38892257], *Nuclear miRNAs: Gene Regulation Activities* | 10.3390/ijms25116066 | AGO2-deep-research-falcon.md, line 264 |
+| [PMID:39188988], *RNA interference therapy in cardiology: will new targets improve therapeutic goals?* | 10.7573/dic.2024-3-1 | AGO2-deep-research-falcon.md, line 303 |
+
+These eight DOI references support the provider narrative or its background bibliography; their inclusion here does not certify each generated claim or create a new annotation. The separate DOI 10.1016/j.isci.2024.109151 maps to already-cached PMID:38384836 and is not a new gap.
+
+One ordinary 13-record fetch ended naturally with exit 1 and cached 0/13 because DNS resolution failed. The newly decoded BMB source received a separate first attempt, also exit 1 and cached 0/1. No cache was created or edited. Exact DOI strings, titles, primary URLs, provider file/line context, protected hashes and terminal logs are recorded in `tmp/AGO2-AIMP2-doi-audit/`; the fixed source11 proposal reserves the missing records without changing earlier dispatched batches.
+
+The review YAML, all original annotation assertions and decisions, reference assessments, core functions, alternative products, raw source files and generated provider reports are byte-identical to published head `6da6488244749c9c71b3eba85534a53653be6a33`. This follow-up changes only append-only notes and session provenance and regenerates the derived HTML. The PR remains draft until the 8 required DOI-derived caches are recovered through the normal fetcher; prior validation advisories remain separate from this source gate.
+
+## 2026-09-27 source11 recovery and current-head review response
+
+All six local gene files were verified byte-for-byte against published PR #3288 head
+`3fdc436a4b115fee2be80cb880180081d0606a99` before this follow-up. The eight DOI-derived
+records above now have unchanged normal-fetch caches from source11 run 36304820186;
+the exact run, artifact, byte digests and canonical import are bound by
+`tmp/source11-canonical-import-receipt.json` and this session's publication manifest.
+The prior DNS/missing-source account is historical, and the eight-source cache gate is closed.
+All eight records contain actual full-text sections. Primary title/DOI identities were verified
+separately from content interpretation; metadata availability is not a scientific endorsement.
+
+The abstracts and relevant full-text sections were read with the following scope:
+
+| Recovered source | Evidence assessment for AGO2 |
+|---|---|
+| [PMID:37621215] | Primary human HeLa reporter, RNA-stability and P-body experiments perturb EDC4/XRN1 interaction or abundance. They connect downstream decapping machinery to miRNA-target repression and storage. They do not independently assign EDC4/XRN1 catalytic chemistry or a new P-body assembly function to AGO2. |
+| [PMID:38029964] | Review of Argonaute slicing, domain organization and two-metal catalysis, including human AGO2 and guide-dependent human AGO3 activation. It corroborates the general mechanism while preserving the distinction between organisms, paralogs and biochemical conditions; it is not a new human AGO2 experiment. |
+| [PMID:38224449] | Review of target-directed miRNA degradation. ZSWIM8 recognizes a trigger-induced AGO state and promotes AGO proteolysis, exposing the guide to decay. AGO's role as the degraded protective carrier is distinguished from catalyzing guide degradation; no NEW degradation process is inferred from necessity alone. |
+| [PMID:38448799] | Independent review of the same TDMD mechanism and its biological consequences. Its species-specific examples and upstream trigger/ubiquitin-ligase roles remain distinct from AGO2 target-RNA slicing. It does not justify automatic transfer of every developmental phenotype to human AGO2. |
+| [PMID:38892257] | Review of nuclear miRNA activities, including reported nuclear AGO2/TNRC6 complexes and trafficking. It supplies discovery/context, without establishing intrinsic sequence-specific DNA recognition or transferring every miRNA-linked transcriptional effect to AGO2. Original experiment-specific annotation judgments remain unchanged. |
+| [PMID:38939184] | Broad review of siRNA delivery and anti-infective applications, with a mechanism section describing AGO2 passenger-strand cleavage and target recognition. Therapeutic target suppression does not establish an endogenous AGO2 role in each treated infection or disease. |
+| [PMID:39188988] | Clinical-development review of siRNA therapies in cardiology. Its introductory molecular account is imprecise, including a statement that RNA-induced silencing prevents mRNA transcription. It is retained as historical application context, not an authority for AGO2 cleavage chemistry, transcriptional activity or current drug-approval counts. |
+| [PMID:39499674] | Review of multiple RNA-degradation technologies; the RNAi section distinguishes guide-loaded AGO2 cleavage from RNase H and other platforms. Its sentence describing one aspartate and two glutamates in AGO2 is not adopted as the catalytic-residue composition; the established DEDH mechanism in the underlying primary evidence remains the basis for the existing review. |
+
+This assessment does not promote the provider bibliography to new annotation-level evidence.
+The review YAML remains byte-identical, including all 267 seeded assertions, qualifiers,
+isoforms, existing reference assessments, actions and five cores. No molecular-function or
+process assertion is added, and no generated provider or machine cache is edited.
+
+The current-head formal review (5329776864; detailed comment 5854700212) correctly identified
+eight doubled PubMed URL suffixes in the rendered DOI table. The eight notes citations now use
+the repository's bare `[PMID:…]` convention, letting the renderer generate one link each.
+This is the only alteration to preceding notes; this evidence section is appended. The
+reviewer's optional history suggestions are recorded here without rewriting published history.
+Its suggestion to waive provider-source retrieval is moot because all eight records are now
+recovered and assessed. Intentional review-action and unused-provider validation advisories
+remain separate from the closed source gate; DRAFT review status is retained.
+
+The final census also normalized DOI links in the authored review and notes, beyond the
+provider bibliography. It resolved the already-discussed Nature correction
+DOI:10.1038/s41586-024-08559-7 to [PMID:39875610], *Author Correction: An RNA-dependent
+RNA polymerase formed by TERT and the RMRP RNA*. The primary PubMed record and
+[full publisher notice](https://www.nature.com/articles/s41586-024-08559-7) were independently
+read. The prior interpretation remains accurate: the correction replaces the Figure 5b
+MCF7 beta-actin/Dicer images and fixes a lane label, with unchanged conclusions according to
+the authors; it is not a retraction or an AGO2 RNA-polymerase experiment. This DOI was already
+used in the assessment of original PMID:19701182 and is a substantive required source.
+It is absent from the current PR head and freshly checked main, and one normal fetch ended
+with exit 1, 0/1 cached, DNS failure (`/tmp/AGO2-correction-fetch.log`). Thus the eight
+source11 gaps are closed, but **PMID:39875610 remains the sole required cache gate**.
+The DOI was neither silently exempted nor added to a previously frozen recovery batch.
+
+
+## 2026-09-27: Nature correction source closure
+
+The normal [PMID:39875610] cache now verifies the title, DOI
+10.1038/s41586-024-08559-7 and correction link to original PMID:19701182.
+Although it has an Abstract heading, its contents are bibliographic and
+affiliation metadata only: neither a substantive abstract nor the correction
+body is present. The cache retains `full_text_available: false`. The
+[official publisher notice](https://www.nature.com/articles/s41586-024-08559-7)
+was separately reread. It replaces the MCF7 beta-actin and Dicer images in
+Figure 5b after duplication of the beta-actin blot, and corrects the sh-Dicer lane label; the authors state
+that conclusions are unchanged. This is not a retraction or an AGO2
+RNA-polymerase experiment. The Figure 5c evidence assessment is unchanged.
+
+This closes the sole remaining publication-cache gate. All review YAML bytes,
+annotation actions, five cores and reference objects remain unchanged. The
+current-head approval and full comment 5855518032 were read; its suggested gate
+waiver is unnecessary because the genuine standard-fetch record is now present.
+Source16 run 36313594604, head 408e7c41d93c2fd63f54ac1da5d7201edbc901bb,
+artifact 10931450272 SHA256 4251efe477f5575fe1f7f86a5b543f3188e81a87fd25fc88e65c47a2af862c01
+supplied the exact immutable record. The published project provenance mirrors
+record cache-recovery digests separately from these scientific notes. The PR
+can now receive a fresh review; existing YAML advisories are unchanged.
