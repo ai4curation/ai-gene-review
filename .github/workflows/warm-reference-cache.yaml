@@ -1,155 +1,255 @@
 ---
-name: Warm reference cache
+name: ClinGen reference recovery artifact
+run-name: Reference recovery at ${{ github.ref_name }} (${{ github.sha }})
 
-# Keeps the committed reference cache (publications/) complete so the full
-# `just validate-all` reference phase stays cache-bound instead of re-fetching
-# references from PubMed/providers on every run. Runs weekly (newly-added
-# references are fetched; an unchanged cache is a no-op) and on demand.
-
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 1"  # Mondays 04:00 UTC, ahead of the weekly validate-all
+# TEMPORARY: replace only this path on the dedicated task branch.
+# The registered default-branch workflow is not changed or dispatched.
+'on':
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
-  group: warm-reference-cache
-  cancel-in-progress: true
+  group: clingen-reference-recovery-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  warm-reference-cache:
+  recover:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/cmungall/clingen-reference-fetch-20260927'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    permissions:
-      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
-      # with the ai4c-agent App token below.
-      contents: read
-
+    timeout-minutes: 90
+    env:
+      PYTHONUNBUFFERED: '1'
     steps:
-      - name: Checkout repository
+      - name: Checkout the dispatched commit
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          ref: ${{ github.sha }}
+          fetch-depth: 1
           persist-credentials: false
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
 
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
-      - name: Install just
-        run: uv tool install rust-just
-
-      - name: Install project
-        run: uv sync --dev
-
-      - name: Warm the reference cache
-        run: just warm-references
-
-      - name: Check for cache changes
-        id: check-changes
-        run: |
-          if git diff --quiet publications/; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Reference cache already complete; nothing to commit."
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff --stat publications/ | tail -1
-          fi
-
-      - name: Compute metadata
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: metadata
-        run: |
-          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
-          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
-          {
-            echo "branch=auto/warm-reference-cache"
-            echo "changed=$CHANGED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
-
-      # Minted here rather than at job start, for the same reason as
-      # generate-pages: the cache warm needs no credentials, only the push does,
-      # and a token minted at job start burns its 60-minute life on the fetch.
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - name: Install uv without a shared dependency cache
+        uses: astral-sh/setup-uv@v7
         with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+          enable-cache: false
 
-      - name: Create or update warm-cache PR
-        if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
-        shell: bash
+      - name: Initialize artifact receipt and audited PMID requests
         run: |
-          # Commit as the ai4c-agent App bot and serve the short-lived token to git
-          # through the gh credential helper, instead of persisting it in .git/config.
-          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          gh auth setup-git
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          root = Path(os.environ["RUNNER_TEMP"]) / "clingen-reference-recovery" / "artifact"
+          root.mkdir(parents=True)
+          requested = ['120213', '690130', '718989', '1413626', '1672610', '1684101', '2866764', '2985752', '3689310', '3777158', '5166591', '6144148', '6480832', '7128902', '7733320', '8026493', '8064675', '8387517', '8654595', '8887278', '9218493', '9845365', '10692424', '10720488', '11222505', '11967537', '11988101', '12499231', '15180797', '15252046', '16150824', '16213491', '16221767', '16672280', '16742956', '16924481', '18459129', '19159466', '19346281', '19656850', '20473314', '21267468', '21475248', '21990100', '22419726', '23112191', '23766516', '24191038', '24962568', '25002142', '25681585', '26764146', '27647924', '29925947', '32439803', '33199684', '34824276', '35630584', '36139365', '38479840', '40033100', '40500329', '40593796', '40930611', '41387688', '16713557', '36194562']
+          (root / "requested-pmids.json").write_text(json.dumps(requested, indent=2) + "\n")
+          (root / "run-receipt.json").write_text(json.dumps({
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "ref": os.environ["GITHUB_REF"],
+              "head_sha": os.environ["GITHUB_SHA"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "status": "initialized_before_dependency_install",
+              "excluded_non_pmids": ["Reactome:R-HSA-9734745", "Reactome:R-HSA-9748784", "Reactome:R-HSA-9754964"]
+          }, indent=2) + "\n")
+          PY
 
-          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
-          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
-          git checkout -B "$BRANCH_NAME"
+      - name: Install the locked normal project runtime
+        timeout-minutes: 15
+        run: uv sync --frozen --no-dev
 
-          git add publications/
-          git commit -m "$(cat <<EOF
-          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
+      - name: Fetch only missing requested records with the standard CLI
+        id: fetch
+        continue-on-error: true
+        timeout-minutes: 65
+        run: |
+          uv run --no-sync python - <<'PY'
+          """Draft runner helper; calls the normal CLI and never authors publication text."""
+          from pathlib import Path
+          import hashlib
+          import json
+          import os
+          import re
+          import shutil
+          import signal
+          import subprocess
+          import time
+          from datetime import datetime, timezone
 
-          Automated weekly warm so validate-all reads cached references instead of
-          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
-          EOF
-          )"
+          import yaml
 
-          git push --force-with-lease origin "$BRANCH_NAME"
 
-          PR_BODY="$(mktemp)"
-          {
-            echo "## Summary"
-            echo
-            echo "Automated weekly warm of the reference cache (\`publications/\`)."
-            echo "Fetches references that are new or lack full text so the full"
-            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
-            echo
-            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
-            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
-            echo
-            echo "Cache data only — no functional review needed; merge when convenient."
-            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
-          } > "$PR_BODY"
+          def sha256(data):
+              return hashlib.sha256(data).hexdigest()
 
-          EXISTING_PR_NUMBER="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --limit 1 \
-            --jq '.[0].number // empty')"
 
-          if [ -n "$EXISTING_PR_NUMBER" ]; then
-            gh api \
-              --method PATCH \
-              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
-              -f body="$(cat "$PR_BODY")" \
-              >/dev/null
-            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
-            exit 0
-          fi
+          def inspect_record(path, requested):
+              data = path.read_bytes()
+              text = data.decode("utf-8")
+              if not text.startswith("---\n"):
+                  raise ValueError("Missing standard YAML frontmatter")
+              parts = re.split(r"^---\s*$", text, maxsplit=2, flags=re.MULTILINE)
+              meta = yaml.safe_load(parts[1])
+              if not isinstance(meta, dict) or str(meta.get("pmid")) != requested:
+                  raise ValueError("Returned PMID does not match request; preserve for inspection")
+              if not isinstance(meta.get("title"), str) or not meta["title"].strip():
+                  raise ValueError("No title in returned metadata")
+              if not isinstance(meta.get("full_text_available"), bool):
+                  raise ValueError("No boolean full_text_available metadata")
+              return {
+                  "bytes": len(data),
+                  "sha256": sha256(data),
+                  "git_blob_sha": hashlib.sha1(
+                      b"blob " + str(len(data)).encode() + b"\0" + data
+                  ).hexdigest(),
+                  "frontmatter": meta,
+                  "has_full_text_section": "## Full Text" in parts[2],
+              }
 
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Warm reference cache" \
-            --body-file "$PR_BODY"
 
-          echo "Created warm-cache PR."
+          def main():
+              repo = Path(os.environ["GITHUB_WORKSPACE"])
+              root = Path(os.environ["RUNNER_TEMP"]) / "clingen-reference-recovery"
+              artifact = root / "artifact"
+              work = root / "fetch-work"
+              raw = work / "publications"
+              raw.mkdir(parents=True, exist_ok=True)
+              accepted = artifact / "publications"
+              accepted.mkdir(exist_ok=True)
+              logs = artifact / "logs"
+              logs.mkdir(exist_ok=True)
+              requested = json.loads((artifact / "requested-pmids.json").read_text())
+              if len(requested) != len(set(requested)) or not 1 <= len(requested) <= 100:
+                  raise ValueError("Expected a bounded, unique PMID list")
+              if any(not isinstance(x, str) or not re.fullmatch(r"[1-9][0-9]{0,8}", x) for x in requested):
+                  raise ValueError("Only explicit numeric PMID strings are allowed")
+              report = {
+                  "repository": os.environ["GITHUB_REPOSITORY"],
+                  "ref": os.environ["GITHUB_REF"],
+                  "head_sha": os.environ["GITHUB_SHA"],
+                  "run_id": os.environ["GITHUB_RUN_ID"],
+                  "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+                  "started_utc": datetime.now(timezone.utc).isoformat(),
+                  "fetcher": ".venv/bin/ai-gene-review fetch-pmid (installed standard CLI)",
+                  "metadata_scope": "Fetcher-generated frontmatter preserved verbatim; label checks are not independent scientific validation or a completeness guarantee.",
+                  "fetcher_sha256": sha256((repo / "src/ai_gene_review/etl/publication.py").read_bytes()),
+                  "cli_sha256": sha256((repo / "src/ai_gene_review/cli.py").read_bytes()),
+                  "lockfile_sha256": sha256((repo / "uv.lock").read_bytes()),
+                  "dependency_versions": {},
+                  "entries": [],
+              }
+              from importlib.metadata import version
+              for name in ["ai-gene-review", "linkml-reference-validator", "biopython", "requests"]:
+                  report["dependency_versions"][name] = version(name)
+
+              def checkpoint():
+                  (artifact / "fetch-report.json").write_text(json.dumps(report, indent=2) + "\n")
+
+              deadline = time.monotonic() + 60 * 60
+              checkpoint()
+              for pmid in requested:
+                  result = {"pmid": pmid}
+                  report["entries"].append(result)
+                  existing = repo / "publications" / f"PMID_{pmid}.md"
+                  if existing.exists():
+                      result.update(status="already_present", sha256=sha256(existing.read_bytes()))
+                      checkpoint()
+                      continue
+                  remaining = deadline - time.monotonic()
+                  if remaining <= 0:
+                      result["status"] = "not_attempted_run_budget"
+                      checkpoint()
+                      continue
+                  result["status"] = "fetching"
+                  result["started_utc"] = datetime.now(timezone.utc).isoformat()
+                  checkpoint()
+                  command = [str(repo / ".venv/bin/ai-gene-review"), "fetch-pmid", pmid,
+                             "--output-dir", str(raw), "--delay", "1.0"]
+                  with (logs / f"PMID_{pmid}.log").open("w") as log:
+                      process = subprocess.Popen(command, cwd=work, stdout=log,
+                                                 stderr=subprocess.STDOUT, start_new_session=True)
+                      try:
+                          result["returncode"] = process.wait(timeout=min(180, remaining))
+                          result["status"] = "fetch_failed" if result["returncode"] else "fetched"
+                      except subprocess.TimeoutExpired:
+                          os.killpg(process.pid, signal.SIGKILL)
+                          process.wait()
+                          result.update(status="timeout", returncode=process.returncode)
+                  generated = raw / f"PMID_{pmid}.md"
+                  if generated.exists():
+                      try:
+                          metadata = inspect_record(generated, pmid)
+                          result.update(metadata)
+                          if result["returncode"] != 0:
+                              raise ValueError("Fetcher did not finish successfully")
+                          destination = accepted / generated.name
+                          shutil.copyfile(generated, destination)
+                          assert destination.read_bytes() == generated.read_bytes()
+                          result["artifact_path"] = "publications/" + generated.name
+                          result["status"] = "recovered"
+                      except Exception as exc:
+                          result["inspection_error"] = str(exc)
+                          result["status"] = "needs_inspection"
+                          quarantine = artifact / "quarantine"
+                          quarantine.mkdir(exist_ok=True)
+                          shutil.copyfile(generated, quarantine / generated.name)
+                  elif result["status"] == "fetched":
+                      result["status"] = "missing_output"
+                  checkpoint()
+                  time.sleep(1.0)
+              report["finished_utc"] = datetime.now(timezone.utc).isoformat()
+              good = {"recovered", "already_present"}
+              report["unresolved_pmids"] = [r["pmid"] for r in report["entries"] if r["status"] not in good]
+              report["recovered_count"] = sum(r["status"] == "recovered" for r in report["entries"])
+              checkpoint()
+              summary = Path(os.environ["GITHUB_STEP_SUMMARY"])
+              with summary.open("a") as out:
+                  out.write(f"Recovered {report['recovered_count']} standard cache records; "
+                            f"{len(report['unresolved_pmids'])} unresolved.\n")
+                  out.write("See fetch-report.json and per-PMID logs. No repository files were published.\n")
+              return int(bool(report["unresolved_pmids"]))
+
+
+          if __name__ == "__main__":
+              raise SystemExit(main())
+          PY
+
+      - name: Verify the checked-out repository is unchanged
+        id: unchanged
+        if: ${{ always() }}
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"
+
+      - name: Upload standard cache records and provenance only
+        id: artifact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: clingen-reference-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/clingen-reference-recovery/artifact/
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
+          overwrite: false
+
+      - name: Report incomplete runs after preserving their artifact
+        if: ${{ always() }}
+        env:
+          FETCH_OUTCOME: ${{ steps.fetch.outcome }}
+          UNCHANGED_OUTCOME: ${{ steps.unchanged.outcome }}
+          ARTIFACT_OUTCOME: ${{ steps.artifact.outcome }}
+        run: |
+          python - <<'PY'
+          import os
+          expected = ['FETCH_OUTCOME', 'UNCHANGED_OUTCOME', 'ARTIFACT_OUTCOME']
+          failed = {key: os.environ.get(key) for key in expected if os.environ.get(key) != 'success'}
+          if failed:
+              raise SystemExit(f"Incomplete reference recovery; inspect artifact/logs: {failed}")
+          PY
