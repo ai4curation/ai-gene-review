@@ -59,8 +59,6 @@ Mitochondrion; the mature enzyme is generated from a ~74-kDa cytosolic precursor
 - **protein binding (GO:0005515)** IPI PMID:16899818 with ATCAY (Q86WG3) — bare protein binding; keep as evidence of the direct ATCAY interaction but MARK_AS_OVER_ANNOTATED (uninformative MF); the biology is captured in notes/core.
 - IEA/IBA/ISS/NAS/TAS/HTP duplicates of the above accepted terms: ACCEPT or KEEP_AS_NON_CORE per redundancy.
 - **amino acid metabolic process (GO:0006520)** IEA (ARBA) and **L-glutamine metabolic process (GO:0006541)** IEA (InterPro) — correct but general parents of the specific catabolic term; KEEP_AS_NON_CORE / MODIFY toward the specific GO:0006543.
-</content>
-</invoke>
 
 ## 2026-09: GO:0005515 rows re-actioned under the protein-binding policy
 This section supersedes the earlier MARK_AS_OVER_ANNOTATED plan for protein binding written above. The repo policy excludes that action for GO:0005515. A row goes to MODIFY where the paper supports a more informative MF, and otherwise to REMOVE. Removal does not mean the interaction is false.
