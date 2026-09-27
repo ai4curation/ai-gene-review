@@ -69,7 +69,7 @@ GO:0030943 → GO:0140436 mitochondrial signal sequence receptor activity, row b
 
 | Review | Rows | Current action | core_functions |
 |---|---|---|---|
-| human TOMM20 | IDA, IBA | ACCEPT | yes |
+| human TOMM20 | IDA, IBA; replacement target | ACCEPT | yes |
 | human TOMM22 | IDA | ACCEPT | yes |
 | human TIMM50 | NAS | NEW | yes |
 | worm tomm-22 | ISS | NEW | yes |
@@ -85,6 +85,7 @@ GO:0030943 → GO:0140436 mitochondrial signal sequence receptor activity, row b
 
 - **2026-05-28:** project created; the replacement term was not yet in OLS.
 - **2026-09-26:** GO:0030943 obsolete, **GO:0140436 live**. Local `cache/ontologies/go.tsv` still lists the old term as live, so validation is quiet.
+- **TOMM20** also proposes GO:0030943 as the replacement for its obsolete GO:0051082 row: one obsolete term replacing another. Re-point it to GO:0140436.
 - Next: move TOMM20, TOMM22, tomm-22, TOM22 and TIMM50 to **GO:0140436** (MODIFY or re-proposed NEW rows, and `core_functions`); then decide TIM22, TIMM22, TOMM40 and ACL4 on their own merits.
 - Coordinate with the **MITOCHONDRIAL_IMPORT_PATHWAYS** project.
 

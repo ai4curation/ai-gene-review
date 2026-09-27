@@ -421,3 +421,7 @@ reviews) are also good candidates for evidence-code modernization.
   redirection. No UniRule/Keywords mappings. No gene reviews started
   yet in this repo; none of the ~25 affected gene products are present
   under `genes/`.
+
+## Slides
+
+- [Slides](NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.html) (Marp source: [NLS_BINDING_OBSOLETION-slides.md](NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.md)) — AI generated

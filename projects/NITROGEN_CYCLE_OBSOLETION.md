@@ -3,6 +3,7 @@ title: "Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term O
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [mouse, human, AZOVI]
+genes: [nifA]
 ---
 
 # Nitrogen Cycle Metabolic Process — do_not_annotate / Regulation Term Obsoletion
@@ -200,3 +201,7 @@ genes (see `projects/OVER_ANNOTATION_PATTERNS.md`).
   three places (MODIFY target for GO:0009399, a NEW row, and
   `core_functions`); the local `cache/ontologies/go.tsv` still lists it as
   live, so validation does not flag it.
+
+## Slides
+
+- [Slides](NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.html) (Marp source: [NITROGEN_CYCLE_OBSOLETION-slides.md](NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.md)) — AI generated

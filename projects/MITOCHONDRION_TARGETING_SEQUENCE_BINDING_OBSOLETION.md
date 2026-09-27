@@ -21,7 +21,9 @@ the TIM23 complex records need individual decisions, so upstream ruled out a
 blanket `replaced_by`. In this repo, 10 reviews touch GO:0030943 (more than
 the eight listed below), five of them in `core_functions` (human TOMM20,
 TOMM22, TIMM50; worm tomm-22; yeast TOM22), and none uses GO:0140436 yet.
-Scoped, not yet started: the MODIFY pass is now unblocked but has not been
+Human TOMM20 also names GO:0030943 as the proposed replacement for its
+obsolete GO:0051082 row, so one obsolete term currently replaces another;
+that replacement must be re-pointed to GO:0140436 too. Scoped, not yet started: the MODIFY pass is now unblocked but has not been
 done. The impact table below predates later edits; yeast ACL4's row is now
 UNDECIDED, not REMOVE.
 
@@ -249,4 +251,11 @@ obsoletions, but no curator group is blocked waiting on AI Gene Review.
   TIMM22; yeast TIM22, TOM22, ACL4; worm tomm-22. Five list it in
   `core_functions` (TOMM20, TOMM22, TIMM50, tomm-22, TOM22). The local
   `cache/ontologies/go.tsv` still records GO:0030943 as live, so validation
-  does not flag these yet. None of the reviews uses GO:0140436.
+  does not flag these yet. None of the reviews uses GO:0140436. TOMM20 also
+  uses GO:0030943 as the `proposed_replacement_terms` target of its obsolete
+  GO:0051082 (unfolded protein binding) row, so that replacement must also
+  move to GO:0140436.
+
+## Slides
+
+- [Slides](MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.html) (Marp source: [MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md](MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md)) — AI generated

@@ -171,4 +171,10 @@ than to fix outstanding GOA rows.
   still carry their pre-obsoletion actions (human VMP1 and CALM1 ACCEPT;
   mouse Calm1/2/3 KEEP_AS_NON_CORE). The CALM1 row is an IDA from
   PMID:28890335, but its review text is generic Reactome/TAS boilerplate, so
-  it needs a real assessment when refreshed.
+  it needs a real assessment when refreshed. The local
+  `cache/ontologies/go.tsv` still records GO:1990456 as live, so validation
+  does not flag these five reviews yet.
+
+## Slides
+
+- [Slides](MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html) (Marp source: [MITO_ER_TETHERING_OBSOLETION-slides.md](MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.md)) — AI generated

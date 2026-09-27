@@ -185,3 +185,7 @@ HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
   (PR #1998) and FDPS, IDI1 (PR #2153) are reviewed. Rows on the obsolete
   terms remain in rat Hmgcs2 (IBA + IEA, UNDECIDED) and yeast ERG19 (RCA,
   KEEP_AS_NON_CORE).
+
+## Slides
+
+- [Slides](MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.html) (Marp source: [MEVALONATE_PATHWAY_OBSOLETION-slides.md](MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.md)) — AI generated

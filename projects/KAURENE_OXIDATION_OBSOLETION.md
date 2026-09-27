@@ -160,3 +160,7 @@ the upstream issue.
   confirmed via REST.
 - 2026-09-26 — OLS now returns GO:0010241 as obsolete, with the reason
   pointing to GO:0009686. Still no AI Gene Review files for either gene.
+
+## Slides
+
+- [Slides](KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.html) (Marp source: [KAURENE_OXIDATION_OBSOLETION-slides.md](KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.md)) — AI generated

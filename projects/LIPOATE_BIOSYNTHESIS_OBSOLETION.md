@@ -301,3 +301,7 @@ and only MGI has marked its annotations done upstream.
   experimental annotations and the `GO:0016992` `part_of` child confirmed via
   QuickGO; all five InterPro entries confirmed via the InterPro REST API.
   Upstream, only MGI has marked its annotation done.
+
+## Slides
+
+- [Slides](LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.html) (Marp source: [LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md](LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md)) — AI generated
