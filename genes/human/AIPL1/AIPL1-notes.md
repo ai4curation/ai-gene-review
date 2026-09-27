@@ -250,3 +250,23 @@ Targeted validation passes with one intentional unused-provider advisory; the
 previous core-process-coverage advisory is resolved. History, rendering and
 source/isoform/reference preservation checks pass. The source4 cache gates
 remain PMID:38662103 and PMID:39026984.
+
+## 2026-09-27 source4 supporting-reference recovery
+
+The two remaining citations now have unchanged normal-fetch publication records
+from source run 36294925088, artifact 10925791130 (ZIP SHA256
+`26ba088d1d78146c81fd744fc68aa532f4a9eb2c3dfc4b96cd647fd74624ac81`).
+The verified import used exclusive creates and preserved every source byte.
+Both records include XML-derived full text. Their abstracts and relevant
+AIPL1 passages were read: PMID:38662103 is a clinical/genetic LCA cohort
+including four AIPL1-associated cases, while PMID:39026984 is a review whose
+section 3.3 discusses AIPL1-dependent PDE6 maturation and the distinction from
+outer-segment trafficking. Neither is substituted for the direct biochemical
+experiments supporting the existing review.
+
+The earlier DNS failures above are historical; these two cache gaps are now
+closed. The full biological YAML, source assertions, core, reference identities,
+quotations and raw gene files remain byte-identical to reviewed branch head
+`4529a91543c9d75f1974ae0ce025846e08d4ab55`. Only this provenance note, its
+rendering, a new history record and the two immutable caches are added.
+The intentional provider-citation advisory remains distinct from source closure.
