@@ -78,38 +78,43 @@ are therefore expected; existing human reviews still link normally.
 | ABCA4 | Definitive | No review | Merged; final validation and CI passed | `cmungall/clingen-abca4` | [#3132](https://github.com/ai4curation/ai-gene-review/pull/3132) |
 | ABCB4 | Definitive | No review | Merged; final approval and required CI passed | `cmungall/clingen-abcb4` | [#3135](https://github.com/ai4curation/ai-gene-review/pull/3135) |
 | ABCC6 | Definitive | No review | Merged; final approval and required CI passed | `cmungall/clingen-abcc6` | [#3138](https://github.com/ai4curation/ai-gene-review/pull/3138) |
-| ABCC8 | Definitive | No review | Merged independently; post-merge correction #3211 awaits recovered-cache publication and current-head review | `cmungall/clingen-abcc8` | [#3136](https://github.com/ai4curation/ai-gene-review/pull/3136) |
+| ABCC8 | Definitive | No review | Original review merged; ready post-merge correction #3211 includes all required caches and awaits current checks | `cmungall/clingen-abcc8` | [#3136](https://github.com/ai4curation/ai-gene-review/pull/3136) |
 | ABCC9 | Definitive | No review | Merged; final approval and required CI passed | `cmungall/clingen-abcc9` | [#3148](https://github.com/ai4curation/ai-gene-review/pull/3148) |
-| ABCD1 | Definitive | No review | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-abcd1` | [#3150](https://github.com/ai4curation/ai-gene-review/pull/3150) |
+| ABCD1 | Definitive | No review | Merged; final-head approval and required CI passed; all required source caches published | `cmungall/clingen-abcd1` | [#3150](https://github.com/ai4curation/ai-gene-review/pull/3150) |
 | ACAD8 | Definitive | INITIALIZED | Merged; final approval and required CI passed | `cmungall/clingen-acad8` | [#3151](https://github.com/ai4curation/ai-gene-review/pull/3151) |
 | ACAD9 | Definitive | COMPLETE | Merged; final approval and required CI passed | `cmungall/clingen-acad9` | [#3152](https://github.com/ai4curation/ai-gene-review/pull/3152) |
-| ACADM | Definitive | COMPLETE | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-acadm` | [#3156](https://github.com/ai4curation/ai-gene-review/pull/3156) |
+| ACADM | Definitive | COMPLETE | Merged; final-head approval and required CI passed; all required source caches published | `cmungall/clingen-acadm` | [#3156](https://github.com/ai4curation/ai-gene-review/pull/3156) |
 | ACADS | Definitive | COMPLETE | Merged; final approval and required CI passed | `cmungall/clingen-acads` | [#3155](https://github.com/ai4curation/ai-gene-review/pull/3155) |
 | ACADSB | Definitive | INITIALIZED | Merged; final approval and required CI passed | `cmungall/clingen-acadsb` | [#3154](https://github.com/ai4curation/ai-gene-review/pull/3154) |
 | ACADVL | Definitive | COMPLETE | Merged; final-head approval and required CI passed | `cmungall/clingen-acadvl` | [#3157](https://github.com/ai4curation/ai-gene-review/pull/3157) |
-| ACAN | Definitive | COMPLETE | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-acan` | [#3153](https://github.com/ai4curation/ai-gene-review/pull/3153) |
-| ACAT1 | Definitive | COMPLETE | Merged independently; required PMID records recovered locally; post-merge source follow-up needed before campaign completion | `cmungall/clingen-acat1` | [#3158](https://github.com/ai4curation/ai-gene-review/pull/3158) |
-| ACOX1 | Definitive | INITIALIZED | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-acox1` | [#3159](https://github.com/ai4curation/ai-gene-review/pull/3159) |
-| ACOX2 | Definitive | INITIALIZED | Merged independently; required PMID records recovered locally; post-merge source follow-up needed before campaign completion | `cmungall/clingen-acox2` | [#3161](https://github.com/ai4curation/ai-gene-review/pull/3161) |
-| ACSL4 | Definitive | COMPLETE | Merged independently; required PMID records recovered locally; post-merge source follow-up needed before campaign completion | `cmungall/clingen-acsl4` | [#3160](https://github.com/ai4curation/ai-gene-review/pull/3160) |
+| ACAN | Definitive | COMPLETE | Merged; final-head approval and required CI passed; all required source caches published | `cmungall/clingen-acan` | [#3153](https://github.com/ai4curation/ai-gene-review/pull/3153) |
+| ACAT1 | Definitive | COMPLETE | Original review merged; ready cache follow-up #3250 validates without warnings and awaits current checks | `cmungall/clingen-acat1` | [#3158](https://github.com/ai4curation/ai-gene-review/pull/3158) |
+| ACOX1 | Definitive | INITIALIZED | Merged; final-head approval and required CI passed; all required source caches published | `cmungall/clingen-acox1` | [#3159](https://github.com/ai4curation/ai-gene-review/pull/3159) |
+| ACOX2 | Definitive | INITIALIZED | Original review merged; draft cache follow-up #3248 closes six review/notes gaps; two hypothesis-only citations remain | `cmungall/clingen-acox2` | [#3161](https://github.com/ai4curation/ai-gene-review/pull/3161) |
+| ACSL4 | Definitive | COMPLETE | Original review merged; ready cache follow-up #3247 awaits current-head review, CI and merge | `cmungall/clingen-acsl4` | [#3160](https://github.com/ai4curation/ai-gene-review/pull/3160) |
 | ACTA1 | Definitive | COMPLETE | Merged; final-head approval and required CI passed | `cmungall/clingen-acta1` | [#3163](https://github.com/ai4curation/ai-gene-review/pull/3163) |
 | ACTA2 | Definitive | COMPLETE | Merged; final-head approval and required CI passed; all cited publication caches available | `cmungall/clingen-acta2` | [#3164](https://github.com/ai4curation/ai-gene-review/pull/3164) |
-| ACTB | Definitive | COMPLETE | Draft; required PMID records recovered locally; source assessment, validation and cache publication follow-up pending | `cmungall/clingen-actb` | [#3184](https://github.com/ai4curation/ai-gene-review/pull/3184) |
+| ACTB | Definitive | COMPLETE | Ready PR; source-cache follow-up published and validated; current-head review and required CI pending | `cmungall/clingen-actb` | [#3184](https://github.com/ai4curation/ai-gene-review/pull/3184) |
 | ADA | Definitive | INITIALIZED | Draft; required PMID records recovered locally; source follow-up and three Reactome records remain | `cmungall/clingen-ada` | [#3179](https://github.com/ai4curation/ai-gene-review/pull/3179) |
-| ADGRV1 | Definitive | COMPLETE | Draft; required PMID records recovered locally; source assessment, validation and cache publication follow-up pending | `cmungall/clingen-adgrv1` | [#3192](https://github.com/ai4curation/ai-gene-review/pull/3192) |
+| ADGRV1 | Definitive | COMPLETE | Ready PR; source-cache follow-up published and validated; current-head review and required CI pending | `cmungall/clingen-adgrv1` | [#3192](https://github.com/ai4curation/ai-gene-review/pull/3192) |
 | ADNP | Definitive | COMPLETE | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-adnp` | [#3193](https://github.com/ai4curation/ai-gene-review/pull/3193) |
-| ADSL | Definitive | INITIALIZED | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-adsl` | [#3194](https://github.com/ai4curation/ai-gene-review/pull/3194) |
-| AFG3L2 | Definitive | COMPLETE | Draft; human-protein maturation follow-up and recovered mouse donor cache published; PMID:30252181 still required | `cmungall/clingen-afg3l2` | [#3196](https://github.com/ai4curation/ai-gene-review/pull/3196) |
-| AGK | Definitive | COMPLETE | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-agk` | [#3195](https://github.com/ai4curation/ai-gene-review/pull/3195) |
+| ADSL | Definitive | INITIALIZED | Ready PR; recovered sources published; current-head reviewer requests exact source quotations; follow-up in progress | `cmungall/clingen-adsl` | [#3194](https://github.com/ai4curation/ai-gene-review/pull/3194) |
+| AFG3L2 | Definitive | COMPLETE | Draft; current-head reviewer requests autoprocessing core consistency and a cached supporting quote; PMID:30252181 remains required | `cmungall/clingen-afg3l2` | [#3196](https://github.com/ai4curation/ai-gene-review/pull/3196) |
+| AGK | Definitive | COMPLETE | Ready PR; current head approved; required CI still running | `cmungall/clingen-agk` | [#3195](https://github.com/ai4curation/ai-gene-review/pull/3195) |
 | AGL | Definitive | INITIALIZED | Draft; required PMID records recovered locally; source follow-up and cited Reactome records remain | `cmungall/clingen-agl` | [#3197](https://github.com/ai4curation/ai-gene-review/pull/3197) |
-| AGO1 | Definitive | COMPLETE | Draft; required PMID records recovered locally; source assessment, validation and cache publication follow-up pending | `cmungall/clingen-ago1` | [#3207](https://github.com/ai4curation/ai-gene-review/pull/3207) |
+| AGO1 | Definitive | COMPLETE | Ready PR; source-cache follow-up published and validated; current-head review and required CI pending | `cmungall/clingen-ago1` | [#3207](https://github.com/ai4curation/ai-gene-review/pull/3207) |
 | AGO2 | Definitive | COMPLETE | Draft; five prior PMID gates recovered locally; three new PMIDs and one Reactome record still required; cache follow-up pending | `cmungall/clingen-ago2` | [#3210](https://github.com/ai4curation/ai-gene-review/pull/3210) |
-| AGPAT2 | Definitive | INITIALIZED | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-agpat2` | [#3208](https://github.com/ai4curation/ai-gene-review/pull/3208) |
-| AGPS | Definitive | INITIALIZED | Ready PR; required source caches included and validated; current-head review and CI pending | `cmungall/clingen-agps` | [#3209](https://github.com/ai4curation/ai-gene-review/pull/3209) |
-| AGXT | Definitive | INITIALIZED | Ready PR; specificity and evidence follow-up validated with zero warnings; current-head review and CI pending | `cmungall/clingen-agxt` | [#3212](https://github.com/ai4curation/ai-gene-review/pull/3212) |
-| AHDC1 | Definitive | COMPLETE | Draft; required PMID records recovered locally; source assessment, validation and cache publication follow-up pending | `cmungall/clingen-ahdc1` | [#3213](https://github.com/ai4curation/ai-gene-review/pull/3213) |
-| AHI1 | Definitive | COMPLETE | Draft; 40-entry substantive audit independently reviewed and published; four notes-inclusive PMID caches required | `cmungall/clingen-ahi1` | [#3215](https://github.com/ai4curation/ai-gene-review/pull/3215) |
-| AKT1 | Limited | COMPLETE | Substantive audit in progress | — | — |
+| AGPAT2 | Definitive | INITIALIZED | Ready PR; current head approved; required CI still running | `cmungall/clingen-agpat2` | [#3208](https://github.com/ai4curation/ai-gene-review/pull/3208) |
+| AGPS | Definitive | INITIALIZED | Ready PR; current head approved; required CI still running | `cmungall/clingen-agps` | [#3209](https://github.com/ai4curation/ai-gene-review/pull/3209) |
+| AGXT | Definitive | INITIALIZED | Merged; final-head approval and required CI passed; all required source caches published | `cmungall/clingen-agxt` | [#3212](https://github.com/ai4curation/ai-gene-review/pull/3212) |
+| AHDC1 | Definitive | COMPLETE | Ready PR; source-cache follow-up published and validated; current-head review and required CI pending | `cmungall/clingen-ahdc1` | [#3213](https://github.com/ai4curation/ai-gene-review/pull/3213) |
+| AHI1 | Definitive | COMPLETE | Draft; current-head reviewer requests evidence/core refinements; four notes-inclusive PMID caches remain | `cmungall/clingen-ahi1` | [#3215](https://github.com/ai4curation/ai-gene-review/pull/3215) |
+| AKT1 | Limited | COMPLETE | Draft #3242; 445 seeded annotations audited; three correction records, one metadata-only record and 54 Reactome caches remain | `cmungall/clingen-akt1` | [#3242](https://github.com/ai4curation/ai-gene-review/pull/3242) |
+
+| AGRN | Definitive | COMPLETE | Draft #3243; 102 seeded annotations audited; four unsupported or redundant prior NEW rows withdrawn; three PMID caches remain | `cmungall/clingen-agrn` | [#3243](https://github.com/ai4curation/ai-gene-review/pull/3243) |
+| AHCY | Definitive | COMPLETE | Draft #3244; 25 seeded annotations plus one evidence-corrected prior NEW audited; six notes-inclusive PMID caches remain | `cmungall/clingen-ahcy` | [#3244](https://github.com/ai4curation/ai-gene-review/pull/3244) |
+| AIMP1 | Definitive | COMPLETE | Substantive audit in progress; canonical symbol and source baseline verified | — | — |
+| AIMP2 | Definitive | COMPLETE | Substantive audit in progress; canonical symbol and source baseline verified | — | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -122,17 +127,22 @@ failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) records the exact local file sets
 and SHA-256 hashes for the separately published gene revisions. Recheck each remote head
-before publishing a follow-up, and keep project tracking in its own PR. ABCC8
-still needs the normal cache fetch for PMID:16924481; ABCD1 needs PMID:16213491.
-ACAN also needs PMID:11222505, and ACADM needs PMID:18459129. Their targeted validators pass with these warnings, but the reference-cache
-requirement remains outstanding. ABCG5 initialization also failed at the normal
-UniProt fetch because DNS access was unavailable; no seed files were invented.
-ABCG5, ABCG8, ABHD12 and ABHD5 remain queued in the normal alphabetical order.
-While those source downloads are unavailable, workers are auditing the next
-available cached reviews, now reaching AHI1 and AKT1. This temporary
-scheduling does not mark the earlier unseeded genes complete. The concurrent cached-review batch assigned ACAN before ACADVL; that was a scheduling exception to strict alphabetical order, and ACADVL has a dedicated audit PR with a published follow-up. ACAD8's genuine
-Falcon/fallback launch attempts failed at dependency retrieval before provider
-contact; its manual primary-source research is documented without a fabricated report.
+before publishing a follow-up, and keep project tracking in its own PR. Recovered
+source records have now been published for ABCC8, ABCD1, ACAN and ACADM; their
+earlier cache failures are resolved. Four post-merge follow-up PRs remain open
+(ABCC8 #3211, ACSL4 #3247, ACAT1 #3250 and ACOX2 #3248), so those genes are not
+yet counted complete. ACOX2's two remaining citations occur only in its immutable
+hypothesis artifact; its six review/notes cache gaps are closed.
+
+Normal local source downloads still encounter DNS failures. A bounded read-only
+Actions recovery run for nine PMID records and 65 Reactome records is queued;
+another bounded recovery/initialization workflow is being prepared. ABCG5, ABCG8,
+ABHD12, ABHD5, AICDA, AGTPBP1, AIFM1 and AK2 remain unseeded and incomplete.
+Meanwhile, cached reviews have reached AIMP1 and AIMP2. AKT1's Limited-tier audit
+is an explicit temporary scheduling exception; it does not change the tier order
+or mark earlier unavailable genes complete. The earlier ACAN-before-ACADVL
+concurrency exception is retained in the dated log. Provider attempts that fail
+before execution are documented as failures, without fabricated reports.
 
 The complete log of ABCB4's second review attempt reports the review account's
 session limit, with reset at **2026-09-27 01:00 UTC**. That earlier comment accepted the biological fixes, but did not record formal approval at the time. ABCB4 later received current-head approval and merged.
@@ -144,7 +154,7 @@ outage window.
 
 Merged project setup PR: [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
 
-The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **16 of
+The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **21 of
 2,876 genes are complete** for this campaign. ABAT is in the Moderate tier.
 
 ## Verification log
@@ -486,3 +496,7 @@ The earliest unseeded nuclear protein-coding Definitive gene is **ABCG5**. **16 
   The read-only recovery and transport runs delivered 67 genuine machine-generated publication records (17 full text, 50 abstracts). ZIP and record hashes were checked before local import; the [recovery manifest](reference-recovery.json) records exact provenance and file hashes. Cache availability does not imply full-text access, biological certainty or campaign completion. Remaining local records are being assessed and included in their respective gene follow-ups. A second bounded source-fetch workflow is in preparation for newly cited papers and missing Reactome records. AKT1 substantive review continues.
 
 - 2026-09-27: The second bounded source-recovery run [36289953066](https://github.com/ai4curation/ai-gene-review/actions/runs/36289953066) is queued at exact task-branch head `fecff1befb769b1753300fa1bc2e3442813e9dd2`. It requests nine papers and 65 cited Reactome records using normal fetchers, read-only permissions and temporary output directories. A metadata-only AKT1 record will be retrieved as a separate comparison candidate. The first dispatch was rejected because runner context was unavailable in job-level environment settings; moving those two paths to runner initialization fixed the workflow without changing the source list or fetcher. No source-recovery result is claimed before verified artifact import. AGRN substantive review has started; AKT1 continues.
+
+- 2026-09-27 03:36 UTC: Completed protected merges for AGXT #3212, ABCD1 #3150, ACAN #3153, ACADM #3156 and ACOX1 #3159 after final-head approvals and passing required CI. Campaign completion is 21 of 2,876; 25 original gene PRs are merged and four still require their post-merge follow-ups. The exact current main is `23787fa952f4d41c0b92795752e367b2d9a207b1`; its 4,997 review paths include newly merged human ABCD1.
+  Published draft substantive audits AKT1 #3242 (445 seeded annotations), AGRN #3243 (102) and AHCY #3244 (25 plus a retained prior NEW with corrected evidence), bringing the campaign to 42 audited genes. ADGRV1, ACTB, AGO1 and AHDC1 source-cache follow-ups are ready. ABCC8 #3211 and new ACAT1 #3250 / ACSL4 #3247 follow-ups are ready; ACOX2 #3248 remains draft for its separate hypothesis-only citations. All earlier provenance chains are preserved. AIMP1 and AIMP2 substantive audits continue; current-head ADSL, AFG3L2 and AHI1 feedback is being assessed.
+  Verified 36 latest receipts / 180 hashes, 51 historical receipts / 266 hashes and 5 post-merge revision receipts / 35 hashes across four PRs. Source recovery batch2 is queued, with no result inferred.
