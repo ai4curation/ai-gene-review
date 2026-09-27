@@ -38,7 +38,7 @@ GO:0048278 and 8 related process terms → MFs GO:0160321 docking and GO:7770062
 
 - GO **retired the vesicle docking process subtree** (9 terms) and minted two MFs: **GO:0160321** docking and **GO:7770062** tethering activity.
 - This is the **parent tracker** (#6379): 130 upstream annotations, 96 still pending; siblings cover regulation, tethering and targeting.
-- **Refresh fixed in #3237 (open):** **USO1** → GO:7770062 tethering; **STX12** → GO:0005484 SNAP receptor activity, obsolete BP out of `core_functions`.
+- **Refresh fixed in #3237 (merged):** **USO1** → GO:7770062 tethering; **STX12** → GO:0005484 SNAP receptor activity, obsolete BP out of `core_functions`.
 
 ---
 
@@ -65,7 +65,7 @@ GO:0048278 and 8 related process terms → MFs GO:0160321 docking and GO:7770062
 
 ## State in this repo
 
-| Review | Obsolete term | Row | Action (#3237, open) | New target |
+| Review | Obsolete term | Row | Action (#3237, merged) | New target |
 |---|---|---|---|---|
 | `human/USO1` (p115) | GO:0048211 Golgi vesicle docking | IBA | ACCEPT → MODIFY | GO:7770062 vesicle membrane tethering activity |
 | `human/STX12` | GO:0048278 vesicle docking (also in `core_functions`) | IBA | ACCEPT → MODIFY | GO:0005484 SNAP receptor activity; core BP dropped |
@@ -77,7 +77,7 @@ GO:0048278 and 8 related process terms → MFs GO:0160321 docking and GO:7770062
 
 ## Next steps
 
-1. Merge **#3237** (USO1, STX12, plus Camk2a and TMF1 for the sibling trackers).
+1. **#3237** merged (USO1, STX12, plus Camk2a and TMF1 for the sibling trackers).
 2. Queue new reviews: **STX1A, STXBP1, EXOC4, EXOC6, NSF**; yeast Uso1 and Sec1 later.
 
 **Siblings:** `SYNAPTIC_VESICLE_DOCKING_OBSOLETION` (#6415) · `VESICLE_TETHERING_OBSOLETION` (#6375) · `VESICLE_TARGETING_OBSOLETION` (#6424) · ciliary, ER-PM, mito-ER trackers

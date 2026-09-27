@@ -26,7 +26,7 @@ style: |
 
 # Peroxisome targeting signal binding obsoletion
 
-GO:0005052 · GO:0005053 · GO:0033328 → GO:0000268 peroxisome signal sequence receptor activity
+GO:0005052 · GO:0005053 · GO:0033328 · GO:0036105 → GO:0000268 peroxisome signal sequence receptor activity
 
 <span class="small">AI Gene Review · projects/PEROXISOME_TARGETING_SIGNAL_OBSOLETION · 2026</span>
 
@@ -36,13 +36,13 @@ GO:0005052 · GO:0005053 · GO:0033328 → GO:0000268 peroxisome signal sequence
 
 ## Bottom line
 
-- GO **obsoleted three signal-specific binding terms** (PTS1, PTS2, mPTS) and merged them into the renamed parent **GO:0000268**.
-- The change has **landed** (OLS shows all three obsolete); the page's "not yet applied" status is out of date.
-- **Refresh fixed in #3233 (open):** 18 ACCEPT rows in PEX5, PEX7 and PEX19 → MODIFY to GO:0000268; PEX5's mPTS row stays UNDECIDED.
+- GO **obsoleted four signal-specific binding terms** (PTS1, PTS2, mPTS and its class-1 child) and merged them into the renamed parent **GO:0000268**.
+- The change **landed** in GO release 2026-07-26 (OLS shows all four obsolete, `replaced_by` GO:0000268).
+- **Refresh fixed in #3233 (open):** 18 ACCEPT rows in PEX5, PEX7 and PEX19 → MODIFY to GO:0000268; PEX5's mPTS row stays UNDECIDED; two peroxin–peroxin protein-binding rows drop their replacement (PEX5 → MARK_AS_OVER_ANNOTATED, PEX7 → REMOVE), since a peroxin contact is not signal recognition.
 
 ---
 
-## Three children, one parent
+## Four obsolete terms, one parent
 
 ![h:480](term-map.svg)
 
@@ -78,7 +78,7 @@ GO:0005052 · GO:0005053 · GO:0033328 → GO:0000268 peroxisome signal sequence
 
 ## Next steps
 
-1. Merge **#3233**; author-supplied ids (5 replacement terms, PEX19 core MF) already point to GO:0000268.
+1. Merge **#3233**: 3 of 5 replacement terms and the PEX19 core MF point to GO:0000268; the other 2 are dropped.
 2. Re-run `just fetch-gene` once GOA swaps the ids itself.
 3. Note the IPR044536 redirect in the PEX7 review; leave SGD/AspGD orthologs to the broader peroxisome project.
 

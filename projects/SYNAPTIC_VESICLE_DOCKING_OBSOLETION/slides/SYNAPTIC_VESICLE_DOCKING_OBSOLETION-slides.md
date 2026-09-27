@@ -38,7 +38,7 @@ GO:0099148 retired as docking becomes a molecular function, GO:0160321
 
 - GO now treats vesicle docking as a **molecular function** (GO:0160321); **GO:0099148** regulation of synaptic vesicle docking is **obsolete**.
 - Its SynGO rows sit on **Camk2a, Septin5 and tom-1**; a regulator should **not** inherit the docking MF.
-- **Camk2a fixed in #3237 (open):** both GO:0099148 rows → MODIFY to **GO:0048172** regulation of short-term neuronal synaptic plasticity, not the docking MF.
+- **Camk2a fixed in #3237 (merged):** both GO:0099148 rows → MODIFY to **GO:0048172** regulation of short-term neuronal synaptic plasticity, not the docking MF.
 
 ---
 
@@ -67,7 +67,7 @@ GO:0099148 retired as docking becomes a molecular function, GO:0160321
 
 | Gene | Rows on GO:0099148 | Review here |
 |---|---|---|
-| Camk2a (mouse P11798) | IMP + IDA, PMID:17660813 | ACCEPT → **MODIFY** GO:0048172 (#3237, open) |
+| Camk2a (mouse P11798) | IMP + IDA, PMID:17660813 | ACCEPT → **MODIFY** GO:0048172 (#3237, merged) |
 | Septin5 (mouse Q9Z2Q6) | IMP + IDA, PMID:20624595 | none |
 | tom-1 (worm A0A0K3ATN9) | IMP ×2 + IDA ×2, PMID:16895441 | none |
 
@@ -77,7 +77,7 @@ GO:0099148 retired as docking becomes a molecular function, GO:0160321
 
 ## Next steps
 
-1. Merge **#3237** (Camk2a → GO:0048172).
+1. **#3237** merged (Camk2a → GO:0048172).
 2. Review **Septin5** (then human SEPTIN5, Q99719): the one candidate for GO:0160321.
 3. Review **tom-1** as the negative-regulator case.
 

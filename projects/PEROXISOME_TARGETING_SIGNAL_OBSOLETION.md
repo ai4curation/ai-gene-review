@@ -10,26 +10,30 @@ genes: [PEX5, PEX7, PEX19]
 
 **Bottom line:** Peroxisomal proteins are imported by cytosolic receptors
 that recognise short targeting signals: PEX5 reads PTS1, PEX7 reads PTS2,
-and PEX19 reads the membrane signal mPTS. GO has obsoleted the three
-signal-specific binding terms (GO:0005052, GO:0005053, GO:0033328) as
-"a specific substrate" and folded them into their parent GO:0000268, now
-named *peroxisome signal sequence receptor activity*. We recorded the
-upstream tickets and listed every review in this repo that uses the old
-terms, so the reviews can be refreshed once GOA catches up. The change
-has landed: OLS now shows all three terms as obsolete, so the "not yet
-applied" status entry below is out of date. The refresh is fixed in
-#3233 (open). 19 `existing_annotations` rows carry the obsolete ids
-(PEX5 10, PEX7 7, PEX19 2, counting PEX19's GO:0036105 mPTS class-1
-row). The 18 ACCEPT rows among them become MODIFY → GO:0000268 (PEX5 9,
-PEX7 7, PEX19 2), and the PEX5 GO:0033328 IPI row stays UNDECIDED,
-because PEX5 is not an mPTS receptor. Author-supplied ids (five
-`proposed_replacement_terms` in PEX5 and PEX7, and PEX19's
-`core_functions` MF GO:0036105) now point to GO:0000268. The biology
-does not change.
+and PEX19 reads the membrane signal mPTS. GO release 2026-07-26 obsoleted
+four signal-specific binding terms (GO:0005052, GO:0005053, GO:0033328
+and its child GO:0036105) as "a specific substrate", each with
+`replaced_by` GO:0000268, now named *peroxisome signal sequence receptor
+activity*. We recorded the upstream tickets and listed every review in
+this repo that uses the old terms. The refresh is in #3233 (open).
+19 `existing_annotations` rows carry the obsolete ids (PEX5 10, PEX7 7,
+PEX19 2, counting PEX19's GO:0036105 IDA row). The 18 ACCEPT rows among
+them become MODIFY → GO:0000268 (PEX5 9, PEX7 7, PEX19 2), and the PEX5
+GO:0033328 IPI row stays UNDECIDED, because PEX5 is not an mPTS receptor.
+Of the five author-supplied `proposed_replacement_terms` that used the
+obsolete ids, three now point to GO:0000268. The two on generic
+protein-binding rows were dropped instead, because a peroxin–peroxin
+contact is not signal-sequence recognition: PEX5 PMID:10562279 (PEX12/PEX10
+contact) becomes MARK_AS_OVER_ANNOTATED and PEX7 PMID:11546814 (PEX5L
+co-receptor contact) becomes REMOVE. PEX19's `core_functions` MF
+GO:0036105 becomes GO:0000268. The body sections below still describe
+the plan as it stood before the obsoletion ("to be obsoleted", "once the
+obsoletion lands"); the obsoletion table has been updated to the four
+applied terms.
 
 ## Overview
 
-A GO obsoletion proposal will collapse three sibling "targeting signal binding"
+A GO obsoletion (applied 2026-07-26) collapsed four sibling "targeting signal binding"
 terms into their parent (renamed to a receptor activity term). The rationale is
 that these distinct signal sequences are recognized by the same receptor in each
 case, so the precise sequence type is beyond GO's scope.
@@ -42,15 +46,17 @@ gene reviews for refresh once the obsoletion lands.
 - Annotation tracker: [geneontology/go-annotation#6401](https://github.com/geneontology/go-annotation/issues/6401)
 - Ontology ticket: [geneontology/go-ontology#31419](https://github.com/geneontology/go-ontology/issues/31419)
 
-## Obsoletion plan (per upstream)
+## Obsoletion (applied in GO release 2026-07-26)
 
-Three terms to be obsoleted, replaced by their (renamed) parent:
+Four terms obsoleted, each with `replaced_by: GO:0000268` (checked against OLS4,
+2026-09-26):
 
 | Obsoleted term | ID | Replacement |
 |---|---|---|
-| peroxisome matrix targeting signal-1 binding | GO:0005052 | parent of "peroxisome targeting sequence binding", to be renamed "peroxisome signal sequence receptor activity" |
+| peroxisome matrix targeting signal-1 binding | GO:0005052 | GO:0000268, formerly "peroxisome targeting sequence binding", renamed "peroxisome signal sequence receptor activity" |
 | peroxisome matrix targeting signal-2 binding | GO:0005053 | same parent |
 | peroxisome membrane targeting sequence binding | GO:0033328 | same parent |
+| peroxisome membrane class-1 targeting sequence binding | GO:0036105 | same parent (was a child of GO:0033328) |
 
 Affected upstream annotations (from issue body): 45 total — AspGD 2, ComplexPortal 2,
 GeneDB 1, SGD 5, UniProt 30, UniProt-extensions 5. Plus an InterPro mapping
@@ -69,7 +75,8 @@ The obsoleted terms appear in three already-reviewed human genes (existing
 
 All three are fixed in #3233 (open): 18 ACCEPT rows → MODIFY to GO:0000268
 (PEX5 9, PEX7 7, PEX19 2); PEX5 GO:0033328 IPI stays UNDECIDED with an
-obsoletion note. GOA `term.id`s are left as GOA supplies them.
+obsoletion note; two generic protein-binding rows whose replacement pointed
+at an obsolete id become MARK_AS_OVER_ANNOTATED (PEX5) and REMOVE (PEX7). GOA `term.id`s are left as GOA supplies them.
 
 These genes are already part of the broader [PEROXISOME](PEROXISOME.md) project.
 
@@ -87,11 +94,11 @@ These genes are already part of the broader [PEROXISOME](PEROXISOME.md) project.
 ## Candidate genes for refresh (once obsoletion lands)
 
 Initial set — genes already reviewed in this repo whose annotations cite one of
-the three to-be-obsoleted terms:
+the four obsoleted terms:
 
 1. PEX5 (human) — PTS1 receptor; primary affected gene with both GO:0005052 and GO:0033328 annotations.
 2. PEX7 (human) — PTS2 receptor; affected by GO:0005053 obsoletion and the IPR044536 → GO:0005053 mapping.
-3. PEX19 (human) — Cytosolic PMP receptor; affected by GO:0033328 obsoletion.
+3. PEX19 (human) — Cytosolic PMP receptor; affected by the GO:0033328 and GO:0036105 obsoletions.
 
 Additional candidates to consider once the obsoletion is applied (not yet in
 this repo, but flagged by the upstream tally — do not add without verifying via
@@ -135,8 +142,10 @@ mechanical (term ID/label refresh) rather than scientific.
   same day). Obsoletion not yet applied. No review edits required at this time.
 - 2026-09-26 — Refresh fixed in #3233 (open) for PEX5, PEX7 and PEX19:
   18 ACCEPT rows → MODIFY to GO:0000268 peroxisome signal sequence
-  receptor activity; PEX5 GO:0033328 stays UNDECIDED; author-supplied
-  ids repointed to GO:0000268. Maturity stays SCOPING until #3233 merges;
+  receptor activity; PEX5 GO:0033328 stays UNDECIDED; three of five
+  `proposed_replacement_terms` and PEX19's core MF repointed to
+  GO:0000268, and two peroxin–peroxin protein-binding rows dropped their
+  replacement (PEX5 → MARK_AS_OVER_ANNOTATED, PEX7 → REMOVE). Maturity stays SCOPING until #3233 merges;
   the yeast/Aspergillus orthologs remain optional.
 
 ## Slides
