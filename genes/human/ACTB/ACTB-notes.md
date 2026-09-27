@@ -103,3 +103,31 @@ Final action totals for this follow-up are **103 ACCEPT, 67 KEEP_AS_NON_CORE, 4 
 The eleven references PMID:11078522, PMID:14966270, PMID:15121898, PMID:17404223, PMID:19199708, PMID:22664934, PMID:23382103, PMID:23533145, PMID:24327345, PMID:27153538, PMID:30280653 retain `full_text_unavailable: false` because their cache metadata records available full text. Missing extracted sections or supplementary identification tables remain described in each reference review; partial extraction is not the same as no full-text access.
 
 Reopened the primary Wiley page for PMID:25255767 (https://febs.onlinelibrary.wiley.com/doi/10.1111/febs.13068): the publisher labels it **Free Access**, with Results and Figure 4A accessible. No Creative Commons or comparable redistribution license was established from that page. Its concise wild-type polymerization excerpt is now included in all twelve same-protein-binding supporting entries as well as the core, using `supporting_text_fulltext` for publisher text not licensed for wholesale repository redistribution. The original machine cache remains abstract-only and unchanged.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+The missing PMID:9845365 and PMID:29925947 records are now present as exact
+normal-fetch output. The first remains abstract-only and directly describes
+beta-actin/BAF53 purification and their contribution to BRG1 activity and
+chromatin association. It does not assign the BRG1 motor reaction to ACTB.
+The second now contains XML full text from PMC6145447. Results and Methods
+separate beta-actin recruitment in Xenopus extracts, human U2OS actin-chromobody
+imaging and repair-focus movement, and mouse-tail fibroblast perturbations.
+Actin-chromobody imaging is not an ACTB-specific knockout experiment. The source
+supports the existing nuclear localization and contextual interpretation; no
+new repair-process annotation is proposed. Its full_text_unavailable flag is
+false; the first source retains true. The obsolete missing-cache sentence in
+the nucleus reason now states the source's nuclear-actin context.
+
+Both records come from normal fetch Actions run 36286975328, head
+5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630, verified ZIP
+SHA-256 `c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`.
+The per-file import receipt is
+`tmp/verified-reference-records/local-import-receipt.json`. This dated entry
+supersedes the earlier missing-cache status, without rewriting prior history.
+All 247 source assertions and actions, three cores, 175 reference identities
+and machine/provider files are preserved. Targeted validation, render, history
+and exact byte checks are recorded in the closure manifest. Status COMPLETE
+requires zero validation warnings; an unused-provider advisory is independent
+of the closed cache gate. No cache content was edited.
