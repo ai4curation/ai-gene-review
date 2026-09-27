@@ -14,7 +14,6 @@ payload stays a fraction of the raw JSON while keeping every value intact.
 from __future__ import annotations
 
 import argparse
-import datetime
 import json
 from pathlib import Path
 import shutil
@@ -95,7 +94,6 @@ def build_propagation_browser(root: Path, output_dir: Path,
     meta_path = root / data_dir / "refresh-metadata.json"
     donor_meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
     metadata = {
-        "built": datetime.date.today().isoformat(),
         "donor_cache": donor_meta,
         "row_count": len(rows),
     }
