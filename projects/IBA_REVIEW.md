@@ -86,9 +86,9 @@ genes:
 **Bottom line:** IBA annotations transfer GO terms along PANTHER family trees
 from experimentally studied proteins to their relatives, and they make up a
 large share of GO for most genomes. Working from gene reviews, we catalogued
-where those transfers go wrong and why: 15 recurring failure patterns (such as
+where those transfers go wrong and why: 14 recurring failure patterns (such as
 pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
-wrong-paralog and cross-kingdom transfers), 53 worked cases in the
+wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
 table below, and a structured `propagation_review` vocabulary (root cause,
 failure modes, per-source status) that reviews now use; 691 gene reviews
 carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node

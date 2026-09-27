@@ -3,7 +3,7 @@ title: "Cuproptosis (Copper-Dependent Cell Death) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human]
-genes: [FDX1, LIAS, LIPT1, DLD, DLAT, PDHA1, PDHB, SLC31A1, ATP7A, ATP7B, ATOX1, MTF1, GLS, LIPT2, GCSH, CDKN2A, FDX2]
+genes: [DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH]
 ---
 
 # Cuproptosis (Copper-Dependent Cell Death) Project

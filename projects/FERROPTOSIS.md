@@ -16,8 +16,9 @@ parallel defence systems that suppress it (GPX4–glutathione, FSP1–CoQ10,
 DHODH–CoQ10, GCH1–BH4), and its transcriptional regulators, and captured the
 mechanism as a decomposable [ferroptosis module](../modules/ferroptosis.html).
 We did this because the defence pathways were discovered from 2019 onward and
-the question was whether GO had caught up with them. The 22 reviews cover 2,372
-existing annotations (873 of them on TP53, where 344 were removed); the core
+the question was whether GO had caught up with them. The 22 reviews cover 2,362
+existing annotations plus 10 proposed new ones (872 existing on TP53, where 344
+were removed); the core
 suppressors carry `GO:0110076` negative regulation of ferroptosis, accepted on
 GPX4, SLC7A11, AIFM2/FSP1, FTH1 and NFE2L2 and proposed as new for DHODH. A
 2026 second pass on GPX4, SLC7A11, ACSL4 and AIFM2 left a few evidence

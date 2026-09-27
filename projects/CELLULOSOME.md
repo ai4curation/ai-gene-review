@@ -3,6 +3,7 @@ title: "Cellulosome Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [ACET2, CLOCL]
+genes: [cipA, Q01866, ancA, sdbA, celA, celC, celD, celK, celS, P10477, P55742, P15329, Q70DK5, Q84C00, P38535, P51584, P10478, P38058, Q9RGE8, Q9RGE6, Q6DTY2, Q9RGE7]
 ---
 
 # Cellulosome Project
@@ -19,8 +20,11 @@ been propagated onto the non-catalytic scaffoldins. The reviews remove
 `GO:0004553` hydrolase activity from the CipA and CipB scaffoldins, give them
 cellulosome assembly (`GO:0044575`) and specific cohesin-dockerin binding terms
 (`GO:1990308`, `GO:1990311`, `GO:1990312`, `GO:1990309`) instead of `protein
-binding`, and add `GO:0043263` cellulosome to the docking enzymes. All 22
-reviews are done; *Ruminococcus flavefaciens* is noted as a possible extension.
+binding`, and add `GO:0043263` cellulosome to the docking enzymes. No
+annotation in the 22 reviews is left at `action: PENDING`, but only one review
+file (xghA, `Q70DK5`) is marked `status: COMPLETE`; the other 21 are still
+`status: DRAFT`, pending a final sign-off. *Ruminococcus flavefaciens* is noted
+as a possible extension.
 
 ## Overview
 

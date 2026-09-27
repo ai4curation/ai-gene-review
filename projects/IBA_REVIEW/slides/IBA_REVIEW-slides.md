@@ -218,7 +218,7 @@ The recurring failure mode is **acting on one line of evidence**. Flagging a cur
 
 IBA is powerful but **directional**: it can over-annotate diverged leaves *and* under-call established biology.
 
-15 over-annotation patterns + a quantified incompleteness analysis (511 missed human core MFs).
+14 over-annotation patterns (plus one positive control) + a quantified incompleteness analysis (511 missed human core MFs).
 
 Verify, don't trust — synthesize UniProt, GO definitions, WITH/FROM, MSA, and primary literature before flagging.
 
