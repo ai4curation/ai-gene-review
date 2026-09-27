@@ -294,6 +294,10 @@ Family members that have lost the signature catalytic activity.
 - [ ] Literature verification of Tier 1 candidates
 - [ ] Formal NOT annotation proposals
 
+## Slides
+
+- [Slides](TOP_NOTS/slides/TOP_NOTS-slides.html) (Marp source: [TOP_NOTS-slides.md](TOP_NOTS/slides/TOP_NOTS-slides.md)) — AI generated
+
 Last updated: 2026-03-06
 
 # NOTES

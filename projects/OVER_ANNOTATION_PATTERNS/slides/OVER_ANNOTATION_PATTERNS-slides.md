@@ -60,7 +60,7 @@ Recurring ways a GO annotation can be defensible and still say nothing, or say s
 
 ![h:450](epe1-review-table.jpg)
 
-<span class="small">Fission yeast Epe1 has a JmjC domain but lacks the Fe(II)-binding catalytic residues; the IBA demethylase row is REMOVE with histone-binding replacements proposed.</span>
+<span class="small">Fission yeast Epe1 has a JmjC domain but has lost its distal Fe(II)-binding histidine (His370 is a Tyr); the IBA demethylase row is REMOVE with histone-binding replacements proposed.</span>
 
 ---
 

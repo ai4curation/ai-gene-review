@@ -23,8 +23,10 @@ has no field for that yet. Most defects live in GOA, IntAct or UniProt rather th
 this repo, and nothing has been reported upstream.
 
 The sibling [Miscitation Audit](MISCITATION_AUDIT.md) keys the same flags on the
-citation to find bad PMIDs copied across genes; its counts differ slightly because it
-counts gene-by-citation rows from a different run.
+citation to find bad PMIDs copied across genes. Both count one flag per (gene,
+citation) pair; the audit's register is an earlier run over 4,467 reviews, and between
+the two runs the counts moved in both directions (`WRONG_IDENTIFIER` 28 to 26,
+`MISCITED` 257 to 274), so they do not match exactly.
 
 ## Overview
 
@@ -361,6 +363,10 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
       may simply omit it, which is indistinguishable from "no problem found")
+
+## Slides
+
+- [Slides](MISCITATIONS/slides/MISCITATIONS-slides.html) (Marp source: [MISCITATIONS-slides.md](MISCITATIONS/slides/MISCITATIONS-slides.md)) — AI generated
 
 Last updated: 2026-09-17
 

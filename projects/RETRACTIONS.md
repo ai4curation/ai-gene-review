@@ -251,6 +251,10 @@ The worked example is human/TNFRSF21, which already does all of this by hand.
       PMID's PubMed PT list and simply ignores `Retracted Publication`; a
       retraction/EoC flag could ride along at no extra request cost
 
+## Slides
+
+- [Slides](RETRACTIONS/slides/RETRACTIONS-slides.html) (Marp source: [RETRACTIONS-slides.md](RETRACTIONS/slides/RETRACTIONS-slides.md)) — AI generated
+
 # NOTES
 
 ## 2026-09-17

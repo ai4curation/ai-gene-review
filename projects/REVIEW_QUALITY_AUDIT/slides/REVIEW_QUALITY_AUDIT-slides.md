@@ -83,6 +83,6 @@ Detecting gene reviews whose reasoning and evidence are boilerplate
 - ✅ Detector built; Tier 1 and Tier 2 cleared and confirmed by re-run.
 - ⬜ Tier 3 (30 files): tighten the one-line `reason` in bulk; low priority.
 - ⬜ Add the placeholder string and a low unique-reason ratio as a **CI smell test**.
-- ⬜ Regenerate the committed report (it still shows the 2,801-file run).
+- ⬜ Regenerate the committed report (post-rework, but still over 2,801 files).
 
 **Read more:** `projects/REVIEW_QUALITY_AUDIT.md` · `REVIEW_QUALITY_AUDIT/scan_boilerplate.py` · `reports/REPORT.md`

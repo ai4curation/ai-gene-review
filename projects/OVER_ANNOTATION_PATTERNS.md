@@ -170,6 +170,10 @@ These over-annotation patterns:
 - [x] pombe/Epe1 - pseudo-demethylase
 - [x] CANAL/LPL1 - hydrolase, membrane prediction
 
+## Slides
+
+- [Slides](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html) (Marp source: [OVER_ANNOTATION_PATTERNS-slides.md](OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.md)) — AI generated
+
 Last updated: 2026-01-22
 
 # NOTES

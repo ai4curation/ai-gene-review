@@ -17,7 +17,9 @@ concentrates in large hub genes where it does the most damage. The first run fla
 51 of 2,801 files: 4 Tier 1 (mouse Egfr, Grb2, Cbl, Egf) and 13 genuine Tier 2
 reworks, all of which have since been re-reviewed, plus 34 low-severity Tier 3 files.
 A re-run on 2026-09-26 over 4,982 files finds Tier 1: 0, Tier 2: 0, Tier 3: 30; the
-committed [report](REVIEW_QUALITY_AUDIT/reports/REPORT.md) is from the 2,801-file run.
+committed [report](REVIEW_QUALITY_AUDIT/reports/REPORT.md) was regenerated after the
+reworks but still over 2,801 files (Tier 1: 0, Tier 2: 0, Tier 3: 34), so only its file
+count and Tier 3 total are stale.
 The CI smell test recommended below has not been added.
 
 ## The defect
@@ -138,3 +140,7 @@ effort and where over-annotation is most likely.
   over-annotation patterns these hub-gene reviews tend to contain.
 - [BEHAVIOR](BEHAVIOR.md) — behaviour over-annotations; several flagged genes
   (Mtor, Hsp90aa1, Pten, Drd1) also carry behaviour terms.
+
+## Slides
+
+- [Slides](REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.html) (Marp source: [REVIEW_QUALITY_AUDIT-slides.md](REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.md)) — AI generated

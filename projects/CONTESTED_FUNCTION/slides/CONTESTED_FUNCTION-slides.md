@@ -58,8 +58,8 @@ Proteins that keep an enzyme's fold but not its activity
 
 ## Evidence against demethylase activity
 
-1. The JmjC domain has **HVD** instead of the canonical **HxD** motif.
-2. It lacks the conserved **Fe(II)-binding** histidines.
+1. The JmjC iron triad is **H297-E299-Y370**, not the canonical **H-D-H**.
+2. The distal **Fe(II)-binding** histidine is lost: **His370 is a Tyr**.
 3. **Mass spectrometry** shows no demethylation of H3K9me2/me3 peptides.
 4. The **H297A** catalytic mutant keeps full anti-silencing function.
 5. The **C-terminus alone**, without JmjC, disrupts heterochromatin.

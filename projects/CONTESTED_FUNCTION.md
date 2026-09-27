@@ -60,8 +60,8 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 - `GO:0046872` metal ion binding (IEA)
 
 **The Evidence Against**:
-1. Epe1 JmjC domain has HVD instead of canonical HXD motif
-2. Lacks conserved Fe(II)-binding histidine residues
+1. Epe1 JmjC Fe(II)-binding triad is H297-E299-Y370 rather than the canonical H-D-H
+2. The distal iron-ligating histidine is lost (His370 replaced by Tyr; UniProt caution)
 3. Mass spectrometry assays show NO demethylation of H3K9me2/me3 peptides
 4. H297A catalytic mutant retains full anti-silencing function
 5. C-terminus alone (without JmjC) disrupts heterochromatin
@@ -129,6 +129,10 @@ A gene belongs in this project if:
 - [ ] Identify additional pseudo-enzyme candidates
 - [ ] Screen for over-annotated IBA/IEA annotations in reviewed genes
 
+## Slides
+
+- [Slides](CONTESTED_FUNCTION/slides/CONTESTED_FUNCTION-slides.html) (Marp source: [CONTESTED_FUNCTION-slides.md](CONTESTED_FUNCTION/slides/CONTESTED_FUNCTION-slides.md)) — AI generated
+
 Last updated: 2026-01-22
 
 # NOTES
@@ -141,9 +145,9 @@ Created project to document genes with contested molecular functions, starting w
 
 **Epe1 Summary**:
 - Full review in `genes/SCHPO/Epe1/Epe1-ai-review.yaml`
-- 5 enzymatic annotations marked REMOVE:
+- 7 enzymatic annotations marked REMOVE:
   - `GO:0032452` histone demethylase activity (IBA)
-  - `GO:0032454` histone H3K9 demethylase activity (IDA x2)
+  - `GO:0032454` histone H3K9 demethylase activity (IDA, EXP)
   - `GO:0140680` histone H3K36me/H3K36me2 demethylase activity (IEA)
   - `GO:0051213` dioxygenase activity (IEA)
   - `GO:0016491` oxidoreductase activity (IEA)
