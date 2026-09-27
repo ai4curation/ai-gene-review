@@ -956,3 +956,38 @@ validation and rendering pass; the existing unused-provider advisory remains.
 Twenty-two inherited notes links were changed to the renderer-native PMID
 notation to remove duplicated PubMed hyperlinks without changing their targets
 or scientific content. All published history files remain unchanged.
+
+## 2026-09-27: recovered CEP290 preprint and final source closure
+
+This entry supersedes the preceding missing-cache statement for [PMID:39896654].
+The normal fetch record now contains its abstract and full-text Methods/Results;
+the source bytes, provider report and published history remain unchanged. The
+primary PubMed and PMC pages independently establish its identifier, exact
+title and DOI 10.1101/2025.01.20.633784. The previous ordinary CLI retrieval
+failed with DNS errors; primary web identity verification was a separate route,
+not a successful CLI download. The subsequent isolated normal-fetch recovery
+produced the record now included with this change. It remains a bioRxiv preprint.
+
+The recovered Methods identify wild-type C57BL/6J mice and global Cep290
+knockout and near-null models. The relevant Results and superresolution
+fluorescence experiments compare AHI1/NPHP1 distributions in their retinal
+photoreceptors: knockout restricts these proteins to the proximal connecting
+cilium, whereas wild-type and near-null distributions extend along it. AHI1
+is the measured component in this experiment; CEP290 is the perturbed product.
+This supports the stated CEP290-dependent localization observation without
+establishing AHI1-dependent recruitment of other transition-zone proteins.
+The separate human retinal sample, from one subject, is used to localize CEP290
+and RPGR by iterative expansion microscopy. It is not a human AHI1 perturbation
+experiment. Repeated paragraphs in the normal XML extraction are duplicates,
+not independent experiments. Relevant Methods and Results were read directly;
+no complete assessment of every supplemental experiment is claimed.
+
+The new reference entry records that limited finding and an exact source quote.
+All 37 annotation objects, their actions and all three core descriptions remain
+unchanged; no annotation is added. The GO:1904491 uncertainty is preserved.
+The recursive authored/provider citation census closes at 37 cached PMIDs and
+eight cached Reactome records, with no missing required record. The previously
+assessed publisher-only 2004 correction remains explicitly separate because no
+distinct PMID was established; no new source identifier is inferred for it.
+The review stays DRAFT for the existing unused-provider validation advisory,
+while the publication-cache gate is closed.
