@@ -7,7 +7,7 @@ title: "Transcription Factor Annotation Review Project"
 **Bottom line:** having a DNA-binding domain does not make a protein a
 transcription factor, and GO's dbTF annotations (`GO:0003700` and descendants)
 are the place where that confusion shows up. We compared the 1,448 human
-Swiss-Prot dbTF annotations against InterPro domains, the UniProt KW-0805
+Swiss-Prot proteins with a dbTF annotation against InterPro domains, the UniProt KW-0805
 keyword set (2,376 proteins) and the GREEKC consortium's curated dbTF target
 set (1,449 proteins), then reviewed the proteins where the sets disagreed. GOA
 and GREEKC agree on 1,385 proteins, 95.6%. Seven of the 62 GOA-only proteins
@@ -22,7 +22,7 @@ PTHR11636; a family review for PTHR10574 records the root cause.
 The false-negative direction came out clean. Homeobox-fold ceramide synthases,
 the bHLH inhibitors ID1-4 that lack a basic region, and the NCOA coactivators
 are all correctly excluded from dbTF. The planned ML second pass has not been
-run: 945 IEA-only dbTF annotations are still waiting for DeepTFactor
+run: 945 proteins whose dbTF annotation is IEA-only are still waiting for DeepTFactor
 validation, and 50 GREEKC-only proteins are unreviewed.
 
 ## Objective
@@ -331,3 +331,7 @@ From Lovering et al. (2021) "A GO catalogue of human DNA-binding transcription f
 ### Phase 3-4: Structure & Transcriptomics (Not Started)
 - [ ] Foldseek validation for ambiguous cases
 - [ ] iModulon integration for bacterial TFs
+
+## Slides
+
+- [Slides](slides/TRANSCRIPTION_FACTORS-slides.html) (Marp source: [TRANSCRIPTION_FACTORS-slides.md](slides/TRANSCRIPTION_FACTORS-slides.md)) — AI generated

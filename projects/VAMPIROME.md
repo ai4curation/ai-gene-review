@@ -18,7 +18,8 @@ reviewed them plus draculin (K9IMD0). Across 14 reviewed proteins there are 136
 annotation rows: 64 ACCEPT, 29 MODIFY, 21 UNDECIDED, 15
 MARK_AS_OVER_ANNOTATED, 4 NEW and 3 REMOVE. The large UNDECIDED share is the
 honest result for an all-electronic, TrEMBL-only species where the underlying
-experiments were done on other mammals.
+experiments were done on other mammals. The fifteenth listed gene, CALCA
+(vCGRP), is not yet reviewed: a transcriptome search found no matching peptide.
 
 We did this because saliva proteins of blood-feeding animals are annotated
 almost entirely by homology to their host counterparts, which imports the

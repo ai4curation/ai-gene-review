@@ -676,3 +676,7 @@ The PN project is broader:
 [Ribosome Quality Control](RIBOSOME_QUALITY_CONTROL.md) ·
 [Integrated Stress Response](INTEGRATED_STRESS_RESPONSE.md) ·
 [ER-phagy](ER_PHAGY.md)
+
+## Slides
+
+- [Slides](PROTEOSTASIS/slides/PROTEOSTASIS-slides.html) (Marp source: [PROTEOSTASIS-slides.md](PROTEOSTASIS/slides/PROTEOSTASIS-slides.md)) — AI generated

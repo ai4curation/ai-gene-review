@@ -14,14 +14,16 @@ intrinsically disordered proteins that each protect a different cellular
 compartment, plus a much-expanded superoxide dismutase family. We reviewed all
 18 of its curated proteins: the chromatin shield Dsup, the cytosolic CAHS,
 secretory SAHS and mitochondrial MAHS families, the LEA protein RvLEAM, the Mn-SOD
-RvY_01767, and all 10 Cu/Zn-SOD paralogs. Across 84 annotation rows the actions
+RvY_01767, and all 9 Cu/Zn-SOD paralogs. Across 84 annotation rows the actions
 were 38 ACCEPT, 18 NEW, 11 KEEP_AS_NON_CORE, 10 MARK_AS_OVER_ANNOTATED, 3 MODIFY,
 3 UNDECIDED and 1 REMOVE. Two results stand out: `GO:0009269` response to
 desiccation was missing from every disordered protectant and was proposed as
 NEW on seven genes, and a sequence plus PROSITE analysis of the SOD family
-(`genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/`) found one structurally
-confirmed pseudoenzyme, three probably impaired paralogs, one copper chaperone
-and four likely functional enzymes.
+(`genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/`) found one pseudoenzyme
+(RvSOD15, whose Val87 in place of a copper-ligand histidine is confirmed by
+crystal structure, PMID:37358501, though no activity assay exists), three
+probably impaired paralogs, one copper chaperone and four likely functional
+enzymes.
 
 We did this because the organism is both biologically unusual and almost
 entirely electronically annotated, which makes it a good place to see what
@@ -135,7 +137,8 @@ Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
   fail PROSITE PS00087 (the N-terminal Cu coordination signature), indicating
   divergence in flanking residues that maintain the structural geometry of the
   Cu site. By analogy with the V87H rescue failure in RvSOD15 (where restoring
-  the missing histidine did NOT restore activity due to loop dynamics), these
+  the missing histidine did NOT restore stable Cu coordination, because a
+  flexible loop destabilizes it; PMID:37358501), these
   paralogs likely have impaired catalytic function.
 - **1 copper chaperone** (RvY_15948, CCS homolog): correctly lacks SOD activity
   annotation in GOA - automated pipelines got this one right

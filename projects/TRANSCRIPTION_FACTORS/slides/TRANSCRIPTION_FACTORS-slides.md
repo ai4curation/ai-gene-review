@@ -36,7 +36,7 @@ AI Gene Review · `projects/TRANSCRIPTION_FACTORS/`
 
 ## Bottom line
 
-- GOA lists **1,448** human Swiss-Prot dbTF annotations (`GO:0003700` and descendants); the GREEKC curated set lists **1,449**, and the two agree on **1,385**, or **95.6%**
+- GOA gives a dbTF annotation to **1,448** human Swiss-Prot proteins (`GO:0003700` and descendants); the GREEKC curated set lists **1,449**, and the two agree on **1,385**, or **95.6%**
 - Seven of the 62 GOA-only proteins were reviewed in detail and **all seven were over-annotated**; NTN1 and NTN3 trace to one bad PAINT node
 - The false-negative direction is clean: ID1-4, the NCOA coactivators and homeobox-fold ceramide synthases are all correctly excluded
 
@@ -98,7 +98,7 @@ Recorded in the family review `interpro/panther/PTHR10574/PTHR10574-review.md`.
 
 ## Evidence, and what is left to check
 
-Of the 1,448 dbTF annotations, **945 are IEA-only**. That is the pool where a machine-learning second pass could add something.
+Of the 1,448 dbTF-annotated proteins, **945 have IEA-only support**. That is the pool where a machine-learning second pass could add something.
 
 Planned but not run:
 
