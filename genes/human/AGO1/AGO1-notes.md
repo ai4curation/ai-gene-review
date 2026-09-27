@@ -323,3 +323,28 @@ caches remain PMID:26764146 and PMID:40500329, so status stays DRAFT. No cache,
 provider report, GOA, UniProt, Git state or shared project file was modified.
 
 Final follow-up checks: 77 ACCEPT, 7 KEEP_AS_NON_CORE, 8 UNDECIDED, 20 REMOVE and 1 MODIFY. The coordinator independently read the full delta and checked the two primary assay caches and live ontology terms, finding no biological blocker. Gene validation passes with the same missing-cache and unused-provider-quote warnings; history validation and rendering pass. All source objects/reference identities and immutable source bytes match the published baseline.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+Both required records, PMID:26764146 and PMID:40500329, now exist as exact normal
+fetch output. PMID:26764146 remains abstract-only. Its AGO1/AGO3, TNFAIP3 and
+miR-19a/b results do not identify the precise NIK/non-canonical NF-kappaB assay,
+so the already reviewed mouse-donor transfer remains UNDECIDED. The known
+historical MGI provenance is preserved. PMID:40500329 now provides XML full text
+from PMC12264181, matching the previously read publisher reply. The HBB reporter
+comparison tests stop-go reporter sensitivity; it does not independently measure
+endogenous AGO1 abundance. The prior AGO1 orthogonal evidence and the opposing
+methodological critique remain explicitly disputed. Its local access flag is
+now false; scientific correctness remains DISPUTED.
+
+These are unedited records from normal fetch Actions run 36286975328, head
+5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630. Verified ZIP
+SHA-256: `c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`.
+Per-file hashes are in `tmp/verified-reference-records/local-import-receipt.json`.
+This dated entry supersedes the earlier missing-cache status. All 113 original
+source assertions and reviews, the core synthesis, 85 reference identities,
+NOT/isoform fields, machine/provider files and prior history are preserved.
+Validation, rendering and history checks are recorded in the closure manifest.
+COMPLETE requires zero validation warnings; source-specific uncertainty and any
+unused-provider advisory are separate from the now-closed cache requirements.
