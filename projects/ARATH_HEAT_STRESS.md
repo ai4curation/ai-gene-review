@@ -38,7 +38,7 @@ This document tracks the curation of 10 key heat stress response genes in Arabid
 
 | Gene Symbol | Locus | Status | UniProt Fetched | GOA Fetched | Deep Research | Review Started | Review Completed | Notes |
 |-------------|-------|--------|-----------------|-------------|---------------|----------------|------------------|-------|
-| DREB2A | AT5G05410 | ✅ COMPLETE | ✅ | ✅ (39 annots) | ✅ (37 cites) | ✅ | ✅ | Cross-stress integrator, 15 ACCEPT, 9 MODIFY, 7 OVER-ANNOTATED, 8 NON-CORE |
+| DREB2A | AT5G05410 | ✅ COMPLETE | ✅ | ✅ (41 annots) | ✅ (37 cites) | ✅ | ✅ | Cross-stress integrator, 19 ACCEPT, 8 MODIFY, 12 NON-CORE, 2 REMOVE |
 | HSFA3 | AT5G03720 | ✅ COMPLETE | ✅ | ✅ (15 annots) | ✅ (36 cites) | ✅ | ✅ | Memory specialist (forgetter3), 11 ACCEPT, 4 MODIFY |
 | HSFA1E | AT3G02990 | ✅ COMPLETE | ✅ | ✅ (13 annots) | ✅ (38 cites) | ✅ | ✅ | Osmotic/salt specialist, 12 ACCEPT, 1 NON-CORE, 4 NEW |
 
@@ -134,10 +134,10 @@ Ensure annotations capture:
 8. ✅ **HSP90.1** - 33 annotations reviewed (14 ACCEPT, 7 MODIFY, 8 NON-CORE, 4 REMOVE)
 
 ### TIER 3 - Key Transcriptional Integrators (COMPLETE)
-9. ✅ **DREB2A** - 39 annotations reviewed (15 ACCEPT, 9 MODIFY, 7 OVER-ANNOTATED, 8 NON-CORE)
+9. ✅ **DREB2A** - 41 annotations reviewed (19 ACCEPT, 8 MODIFY, 12 NON-CORE, 2 REMOVE)
 10. ✅ **HSFA3** - 15 annotations reviewed (11 ACCEPT, 4 MODIFY)
 
-**Total Annotations Reviewed:** 266 across all 10 genes
+**Total Annotations Reviewed:** 268 across all 10 genes
 **Total Deep Research Citations:** 435 citations
 
 ## Key Achievements
