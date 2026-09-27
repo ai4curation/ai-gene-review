@@ -1,11 +1,27 @@
 ---
 title: "Specific Annotation Edit Recommendations"
-maturity: COMPLETE
+maturity: ARCHIVED
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1]
 ---
 
 # Specific Annotation Edit Recommendations
+
+**Bottom line:** this is a working document from the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md)
+project, written on 2025-12-29 to turn the Priority 2 review of six
+surveillance-immunity genes (zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1)
+into line-level YAML edits. It records which protein-binding rows were
+already converted to MODIFY (ZIP-2), proposes consolidating redundant
+CEBP-2 protein-binding rows, asks for six ELT-2 and three HLH-30 generic
+transcription terms to be marked over-annotated, and asks for the FSHR-1
+immune phenotypes to be checked against PMID:19196974 and PMID:26360906.
+The final YAML files took only part of this advice: the ELT-2 and HLH-30
+generic terms stayed ACCEPT (ELT-2 *tissue development* became MODIFY),
+and FSHR-1 ended with two REMOVE rows for its hormone-signalling terms and a
+NEW Gram-positive defence row. Treat the per-gene reviews as authoritative;
+the file paths and line numbers below point to an older checkout.
+
 ## C. elegans Surveillance Immunity Genes (Priority 2)
 
 This document provides specific edit recommendations for the AI review YAML files based on systematic curation of all annotations.

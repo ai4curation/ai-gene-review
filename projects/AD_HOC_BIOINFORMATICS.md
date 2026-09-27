@@ -1,10 +1,32 @@
 ---
 title: "Ad-Hoc Bioinformatics Analysis Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
+species: [SCHPO, human, CANAL, BPZF4]
+genes: [Epe1, PHYKPL, LPL1, AcrF8]
 ---
 
 # Ad-Hoc Bioinformatics Analysis Project
+
+**Bottom line:** many GO annotations are inferred from a domain or family
+match, and the fastest way to test one is often a small computation: check
+whether the catalytic residues are still there, whether a "transmembrane"
+segment makes sense, or whether a family member really has the family's
+substrate. This page catalogues four early cases where the review agent did
+that kind of ad-hoc analysis, one per analysis type. Epe1 (*S. pombe*) is the
+worked example: its JmjC domain carried seven catalytic or metal-binding
+annotations, and all seven are REMOVE in the review, while PHYKPL lost its IEA
+`transaminase activity` and *C. albicans* LPL1 lost its IEA `membrane` row.
+Only Epe1 has a scripted `-bioinformatics/` folder; PHYKPL and LPL1 were
+argued inside the review, and AcrF8 has no analysis folder. The catalogue
+below stopped in January 2026, while the repository now holds 237
+`genes/*/*/*-bioinformatics/` folders (116 human, 40 HORSE, 24 DROME), so the
+table is a sample, not an inventory; see [BIOINFORMATICS](BIOINFORMATICS.md)
+for the reproducible-workflow standard.
+
+We did this because a domain hit says what a protein's ancestors did, not what
+it does, and a residue-level check is cheap evidence that can stop a wrong
+enzymatic annotation from propagating to orthologs.
 
 ## Overview
 
@@ -27,10 +49,17 @@ The agentic AI system can:
 
 **Example - Epe1 (S. pombe)**:
 - JmjC domain suggests histone demethylase activity
-- Analysis revealed: HVD instead of canonical HXD motif
-- Missing Fe(II)-binding histidine residues
+- Analysis: the Fe(II) facial triad is H297, E299 and **Y370**; the third
+  ligand, which must be histidine for Fe(II) coordination, is tyrosine, the same
+  substitution seen in catalytically dead human PHF2
 - **Conclusion**: Pseudo-enzyme lacking catalytic activity
-- **Location**: `genes/pombe/Epe1/Epe1-bioinformatics/`
+- **Location**: `genes/SCHPO/Epe1/Epe1-bioinformatics/`
+- **Provenance of the triad call**: the first Epe1 script reported an "HVD
+  instead of HXD" motif, which does not hold up (HVD fits HXD). The Y370 defect
+  came from a later (2026-07) blinded OpenScientist run on the demethylase
+  hypothesis
+  (`genes/SCHPO/Epe1/Epe1-hypotheses/function-hypothesis-go-0032452/openscientist.md`)
+  and matches the UniProt caution.
 
 ### 2. Domain Architecture Analysis
 
@@ -125,7 +154,7 @@ Consider computational analysis when:
 - [x] CANAL/LPL1 - Localization prediction
 
 ## Bioinformatics Folders
-- [x] genes/pombe/Epe1/Epe1-bioinformatics/
+- [x] genes/SCHPO/Epe1/Epe1-bioinformatics/
 - [ ] genes/human/PHYKPL/PHYKPL-bioinformatics/ (to be created)
 - [ ] genes/CANAL/LPL1/LPL1-bioinformatics/ (to be created)
 
@@ -143,7 +172,11 @@ Documented cases where ad-hoc bioinformatics resolved annotation ambiguities.
 
 **Epe1 Example**:
 - JmjC domain → 7 enzymatic activity annotations
-- Active site analysis → HVD instead of HXD, no Fe(II) binding
+- Active site analysis → HVD instead of HXD, no Fe(II) binding (superseded: the defect is Y370 at the third Fe(II) ligand; see the Epe1 example above)
 - **Result**: All 7 enzymatic annotations marked REMOVE
 
 This demonstrates how computational analysis can systematically identify pseudo-enzymes and prevent annotation errors from propagating.
+
+## Slides
+
+- [Slides](AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.html) (Marp source: [AD_HOC_BIOINFORMATICS-slides.md](AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.md)) — AI generated
