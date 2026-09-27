@@ -22,3 +22,6 @@ Sources: UniProt Q9VT70, GOA seed (36 rows), cached publications (all GOA PMIDs 
 
 ### Module relevance (nucleokinesis)
 - Fly NudE supports the module's NudE-unit role (Lis1-dynein regulator; GO:0140659) and a nucleus-positioning role in postmitotic neurons, but there is no fly evidence for centrosome residency, differing from mammalian NDE1/NDEL1.
+
+### Deep research (Falcon) incorporated
+- Consistent with review; supports non-centrosomal localization [file:DROME/nudE/nudE-deep-research-falcon.md "showing that localization is dynamically regulated rather than constitutively centrosomal"] and notes no stable NudE-dynein association in fly TAP ("stable soluble association with dynein itself was not convincingly detected in the reported TAP experiment"), so GO:0140659 kept as ISS.

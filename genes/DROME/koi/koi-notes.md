@@ -18,3 +18,12 @@ Decisions
 - Perinuclear region of cytoplasm (IDA, IEA) -> MODIFY to nuclear envelope (SUN protein must span INM).
 - MTOC (IEA) -> MARK_AS_OVER_ANNOTATED (ncMTOC is Msp300-anchored on the cytoplasmic face).
 - Nuclear migration, nucleus localization, NE rows -> ACCEPT.
+
+## 2026-09-27 update: Falcon deep research incorporated
+
+- Deep research flagged germline roles; verified and cached PMID:26458247 (Christophorou 2015, abstract-only),
+  PMID:36375065 (Rubin 2022, full text), PMID:28716842 (Ding 2017 Kuduk, full text) via PubMed DOI lookup.
+- [PMID:26458247 "Klaroid (SUN) and Klarsicht (KASH) co-localize with centromeres at the nuclear envelope and are required for proper chromosome motions and pairing"]
+- [PMID:36375065 "In addition, we found that pairing of centromeres II and III were down to 45% and 55%, respectively, in koi mutant cells"]
+- Revised GO:0034993 IBA from MODIFY -> KEEP_AS_NON_CORE (propagation supported; earlier "no meiotic evidence" rationale was wrong).
+  Added a germline chromosome-pairing core function. Possible NEW GO:0007129 left as a suggested question (premeiotic timing).

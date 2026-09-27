@@ -29,3 +29,7 @@ Sources: UniProt P16568, GOA seed (39 rows), cached publications; Falcon deep re
 
 ### Publications added
 PMID:29944118, PMID:19515976, PMID:32378283, PMID:15582780, PMID:10825285, PMID:8951073 (all PubMed-verified via eutils before fetch).
+
+### Deep research (Falcon) incorporated
+- Consistent with review. Adds Sladewski 2018 fly BicD-Egl-K10 reconstitution [file:DROME/BicD/BicD-deep-research-falcon.md "Addition of **K10 mRNA** opened the complex and produced robust minus-end-directed motility"], cited on the NEW GO:0140660 row; supports the NOT mRNA binding row ("BicD should not itself be annotated as the principal sequence-specific RNA-binding protein").
+- Also mentions BicD roles in female meiosis II and pronuclear fusion (Vazquez-Pianzola 2022) and FMRP as a partner; not cached or added, left for future curation.
