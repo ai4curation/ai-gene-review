@@ -98,3 +98,34 @@ Read the complete external review on published head `3e201f8136d848005c724c46333
 The notes-inclusive cache census remains 15 PMIDs, 13 present. Missing PMID:15252046 and PMID:25002142 remain publication draft gates. Prior genuine provider reports and all machine caches remain untouched; this bounded review follow-up did not retry failed provider/fetch jobs. Targeted gene validation, history validation, source integrity and rendering are checked in the final follow-up receipt. No Git state, remote comments or shared project files were changed.
 
 The coordinator independently read the complete follow-up delta and confirmed source preservation, with no biological blocker. Targeted gene validation passes with the two expected warning categories (missing caches and no provider-report supporting quotes); final schema, history validation and rendering pass.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+Both required source records are now present. PMID:15252046 is abstract-only,
+so its local full-text limitation remains. Its positive recombinant MuLK
+substrate results do not resolve the previously documented human assay conflict
+or unread donor biosynthetic-process evidence. PMID:25002142 now includes
+XML full text from PMC4743503. The inspected Results and Methods support
+IMS-targeted APEX proximity with ratiometric controls for cytosolic background.
+Biotinylated peptides in selected known IMM proteins face the IMS. The extracted
+main text does not expose the AGK-specific supplementary hit, and recovering
+the paper does not by itself resolve AGK outer- versus inner-membrane attachment.
+That annotation remains UNDECIDED. Its local full_text_unavailable flag is
+now false, with the supplementary evidence limit stated separately.
+
+The exact records originate from normal fetch output in Actions run 36286975328,
+head 5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630.
+The verified transported ZIP SHA-256 is
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`;
+`tmp/verified-reference-records/local-import-receipt.json` records per-file
+hashes. Only these two gene-required caches enter this follow-up manifest.
+No cache, genuine provider report or other machine artifact was edited.
+
+All 44 source assertions and reviews, three cores, 34 reference identities,
+isoforms and prior history remain unchanged. This dated entry supersedes the
+missing-cache status above. Targeted validation, rendering and history checks
+are recorded in the closure manifest. The intentional provider-quotation
+advisory, if still emitted, keeps the YAML DRAFT under the schema's zero-warning
+COMPLETE rule; it is separate from the now-closed source-cache gate. No provider
+text was promoted into primary evidence merely to suppress that advisory.
