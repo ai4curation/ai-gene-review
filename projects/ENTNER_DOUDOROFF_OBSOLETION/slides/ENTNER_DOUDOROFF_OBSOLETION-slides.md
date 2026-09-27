@@ -37,8 +37,8 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 ## Bottom line
 
 - GO **obsoleted four ED sub-pathway terms** (GO:0009255, GO:0061679, GO:0061680, GO:0061681) and folded them into **GO:0061678**.
-- Only **two repo reviews** use them: *P. putida* **edd** (accepted IEA) and **eda** (proposed NEW), both on GO:0009255.
-- The obsoletion **has landed** (OLS marks GO:0009255 obsolete); both reviews **still carry the old id** and need a term swap.
+- Only **two repo reviews** use them: *P. putida* **edd** (IEA row) and **eda** (proposed NEW), both on GO:0009255.
+- The obsoletion **has landed** (OLS marks GO:0009255 obsolete); both reviews are **fixed in #3232 (open)**: edd ACCEPT → MODIFY → GO:0061678, eda NEW → GO:0061678.
 
 ---
 
@@ -63,11 +63,11 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 
 ---
 
-## The edd row today
+## The edd row before #3232
 
 ![h:400](edd-review.jpg)
 
-<span class="small">genes/PSEPK/edd/edd-ai-review.html: the ACCEPT on GO:0009255 stays an ACCEPT once lifted to GO:0061678.</span>
+<span class="small">genes/PSEPK/edd/edd-ai-review.html: the ACCEPT on GO:0009255 (main, before #3232). GOA ids are not rewritten, so #3232 makes it MODIFY → GO:0061678 rather than keeping ACCEPT.</span>
 
 ---
 
@@ -75,21 +75,19 @@ Four variant terms → GO:0061678 Entner-Doudoroff pathway
 
 | Gene | Row on GO:0009255 | Action | Also in |
 |---|---|---|---|
-| PSEPK **edd** | IEA, GO_REF:0000120 | ACCEPT | `core_functions.directly_involved_in` |
-| PSEPK **eda** | proposed, from UniProt pathway line | NEW | `core_functions.directly_involved_in` |
+| PSEPK **edd** | IEA, GO_REF:0000120 | ACCEPT → **MODIFY → GO:0061678** (#3232) | `core_functions.directly_involved_in` |
+| PSEPK **eda** | proposed, from UniProt pathway line | NEW, now **GO:0061678** (#3232) | `core_functions.directly_involved_in` |
 
 - No review uses GO:0061679, GO:0061680 or GO:0061681.
 - No gene review yet uses the replacement GO:0061678; the ED **module** is already grounded in it.
-- Sibling term GO:0061688 (obsoleted in the same GO release) is still proposed by PSEPK **glk**.
+- Sibling term GO:0061688 (obsoleted in the same GO release) was proposed by PSEPK **glk**; #3232 drops it and ACCEPTs glk's GOA **GO:0006096** row, since Glk does no ED step.
 - Upstream: EcoCyc 1 and UniProt 3 annotations, plus 7 external mappings, to move.
 
 ---
 
 ## Next steps
 
-1. Swap GO:0009255 → **GO:0061678** in `genes/PSEPK/edd/edd-ai-review.yaml` and `genes/PSEPK/eda/eda-ai-review.yaml` (rows and `core_functions`); update eda's summary wording.
-2. Replace the obsolete GO:0061688 in `genes/PSEPK/glk/glk-ai-review.yaml`.
-3. `just validate PSEPK edd`, `eda` and `glk`.
+1. Merge #3232 (open): edd, eda → **GO:0061678** (rows and `core_functions`); glk → **GO:0006096**. All three validate.
 4. Later, as one batch: E. coli **edd** and **eda** (not yet in the repo), and a pass over gnd.
 
 **Upstream:** go-annotation#6390 · go-ontology#31916

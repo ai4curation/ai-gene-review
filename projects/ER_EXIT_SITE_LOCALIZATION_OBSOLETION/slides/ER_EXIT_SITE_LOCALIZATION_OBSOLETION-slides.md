@@ -38,7 +38,7 @@ GO:0070973 → five destinations, chosen per annotation
 
 - GO **obsoleted GO:0070973** because curators used it for four different roles; there is **no single replacement**.
 - The **10 curated annotations** each get their own term: COPII coat assembly, ER→Golgi transport, its regulation, ER stress, or deletion.
-- In this repo, **BCAP31 is already aligned** and yeast **YET2** only has the same IBA in its cached UniProt record; **LRRK2 still ACCEPTs two rows** and needs a MODIFY to GO:0060628.
+- In this repo, **BCAP31 is already aligned** and yeast **YET2** only has the same IBA in its cached UniProt record; **LRRK2's two ACCEPT rows now MODIFY to GO:0060628**, fixed in #3241 (open).
 
 ---
 
@@ -81,7 +81,7 @@ GO:0070973 → five destinations, chosen per annotation
 
 | Review | GO:0070973 rows | Current action | Needed |
 |---|---|---|---|
-| `genes/human/LRRK2` | IEA (GO_REF:0000120), IMP (PMID:25201882) | ACCEPT, ACCEPT | **MODIFY → GO:0060628** |
+| `genes/human/LRRK2` | IEA (GO_REF:0000120), IMP (PMID:25201882) | ACCEPT → MODIFY ×2 | **→ GO:0060628**, fixed in #3241 (open) |
 | `genes/human/BCAP31` | IBA (GO_REF:0000033) | MARK_AS_OVER_ANNOTATED | none |
 | `genes/yeast/YET2` | IBA, cached UniProt record only (not in GOA file) | not reviewed | none; same PTN000294723 node |
 
@@ -91,7 +91,7 @@ GO:0070973 → five destinations, chosen per annotation
 
 ## Next steps
 
-1. MODIFY both LRRK2 GO:0070973 rows to **GO:0060628** and run `just validate human LRRK2`.
+1. Merge #3241 (open): both LRRK2 GO:0070973 rows already MODIFY to **GO:0060628**.
 2. Optional: review **SEC16A**, **MIA3**, **GBF1** as clean cases for the three main replacement terms.
 3. Flag UniRule **UR001349783** for retargeting so the IEA tail does not re-propagate.
 
