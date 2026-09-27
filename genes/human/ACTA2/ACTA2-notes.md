@@ -454,3 +454,14 @@ Reviewed formal review 5850935287 in full against published head 45e0a9ceda8dfce
 - Reference identity is separated from claim support. UNVERIFIED judgments retain the specific uninspected experiment/corrigendum caveat; verified title/identifier alone does not resolve the scientific claim. In particular, an unread corrigendum does not establish that an ACTA2 conclusion is disputed.
 
 No cache or machine-source content was edited. Targeted validation, append-only history validation, source-object comparison and HTML regeneration are recorded in the handoff manifest.
+
+## 2026-09-27 status-label follow-up
+
+The biological review has approval and all required publications are cached.
+Two validation advisories nevertheless remain: qualifier-dependent extracellular
+decisions and no direct annotation quote from the retained provider report.
+Set `status: DRAFT` to follow the literal status enum, which reserves `COMPLETE`
+for reviews without validation warnings. This changes no biological decision,
+reference assessment, source assertion or core function. The existing approval
+describes the preceding biological content; the status-only commit is separately
+validated and remains subject to the normal PR checks.
