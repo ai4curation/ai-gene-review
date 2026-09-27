@@ -13,8 +13,10 @@ autolink_gene_symbols: false
 - Source bucket: KEGG `ppu00362` (benzoate degradation)
 - Focused genes: five proteins implementing four consecutive reactions
 - Satisfiability: complete
-- Module research: running
-- Gene-level OpenScientist research: running
+- Module research: complete (pathway-level OpenScientist report, linked below)
+- Gene-level OpenScientist research: missing for all five genes
+  (`openscientist_research_status` is `MISSING` throughout
+  `ppu00362_protocatechuate_ortho_cleavage.tsv`)
 
 ## Boundary
 
@@ -41,5 +43,5 @@ annoton. No generic cytoplasmic localization is asserted at module level.
 
 ## Evidence
 
-- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__protocatechuate-ortho-cleavage__ppu00362-deep-research-openscientist.md)
+- [OpenScientist module/pathway/taxon report](../deep-research/PSEPK__protocatechuate-ortho-cleavage-pathway__ppu00362-deep-research-openscientist.md)
 - `modules/protocatechuate_ortho_cleavage.yaml`
