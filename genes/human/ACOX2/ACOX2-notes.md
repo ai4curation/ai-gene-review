@@ -48,8 +48,9 @@ catalytic activity.
 autosomal recessive inborn error of bile-acid synthesis. Accumulation of toxic C27
 intermediates (THCA, DHCA), negligible C24 bile acids, persistent hypertransaminasemia /
 liver fibrosis; variable neurological features (ataxia, cognitive impairment). Known
-variants: R225W [PMID:27884763] and a large N-terminal deletion (69-682 del) [PMID:27647924,
-via UniProt]. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for BCFA).
+variants: R225W [PMID:27884763] and premature termination p.Y69* [PMID:27647924].
+The latter corresponds to loss of residues 69–681 in UniProt's protein-consequence
+annotation, not an N-terminal in-frame deletion. Phytanic/pristanic acids remain normal (redundancy with ACOX3 for BCFA).
 
 ## Molecular function GO landscape
 
@@ -246,3 +247,33 @@ validation and rendering also passed. The parsed YAML delta is exactly the statu
 change; there are no annotation, reference, core, description, isoform or quotation
 changes. The incremental six-file manifest records the two exact new source
 records, YAML, notes, rendered HTML and the newly scaffolded history.
+
+
+## 2026-09-27 — independent human deficiency and family-binding evidence
+
+The [human index report PMID:27647924](https://pubmed.ncbi.nlm.nih.gov/27647924/)
+now explicitly supports the bile-acid annotation and core alongside the independent
+R225W study. Its cached abstract describes p.Y69*, absent liver ACOX2 staining,
+and accumulated upstream bile-acid intermediates. This corroborates pathway
+participation and disease involvement without being an isolated-enzyme chemistry
+assay. The earlier disease paragraph's deletion wording is corrected: p.Y69* is a
+premature stop, and UniProt's missing residues 69–681 describe its consequence.
+
+The [rat structural study PMID:16672280](https://pubmed.ncbi.nlm.nih.gov/16672280/)
+and [original structure 2DDH](https://www.rcsb.org/structure/2DDH) provide positive
+family-level context: rat ACOX1/ACO-II binds a free C12 fatty acid after hydrolysis
+of the cocrystallized CoA ester. That evidence is now stated directly in the
+fatty-acid-binding IBA rationale. It does not resolve the uninspected Acox2/Acox3
+experimental descendants behind the target's PTN000097533 assertion, so its
+UNDECIDED judgment remains. Both newly listed references remain marked as
+abstract-only locally; no recovered full experiment is implied.
+
+Historical local receipt paths above are working audit aids, not tracked public
+source links. The durable recovery records are [source1 run36286975328](https://github.com/ai4curation/ai-gene-review/actions/runs/36286975328)
+and [source3 run36292249952](https://github.com/ai4curation/ai-gene-review/actions/runs/36292249952),
+with their source commits, artifact identifiers and archive hashes already recorded
+above. Existing journal entries remain as provenance. This follow-up adds two
+reference assessments and corroborating quotes; all 40 source assertions/actions,
+both core functions' biological scopes and all 22 original reference identities
+remain unchanged. The complete citation census remains 15 cached PMIDs and five
+cached Reactome records: these two papers were already counted in the notes.
