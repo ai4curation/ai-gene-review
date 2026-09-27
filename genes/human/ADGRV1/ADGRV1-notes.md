@@ -661,3 +661,22 @@ external Figure 5 receipt remains clearly attributed to its primary PDF.
 Source preservation, published-history hashes, append-only notes, rendered
 PMID links, YAML anchors and trailing whitespace were checked. The newly
 scaffolded history and final rendering are validated in the handoff receipt.
+
+
+### 2026-09-27: Figure 5 evidence and redistribution scope
+
+The original author PDF for [PMID:16434480] is publicly readable but carries
+an explicit Oxford University Press rights notice on page 751. Its full text
+is therefore not copied into the publication cache. This is the schema's
+intended distinction for `supporting_text_fulltext`: access to a public URL
+does not establish permission to redistribute the whole article. The earlier
+public/private interpretation above was too narrow.
+
+The Figure 5 caption on page 757 was independently rechecked at the
+[author PDF](https://www.ag-wolfrum.bio.uni-mainz.de/files/2019/01/VanWijk_et_al_2006_Whirlin_Usher_Network_HumMolGen.pdf).
+Its short verified excerpt is restored to the cytoplasm row's machine-readable
+evidence field. The reason retains the human VLGR1b fragment, COS-1 host,
+whirlin-dependent retention and page/URL context. This restores the contextual
+literature-support check without changing the non-core localization decision
+or implying that the intact receptor is freely cytosolic. The ordinary local
+cache remains abstract-only, and no full article or invented cache is added.
