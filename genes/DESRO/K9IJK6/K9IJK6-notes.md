@@ -23,3 +23,8 @@ Make the molecular work or process role explicit separately for each challenged 
 ## Evidence-presentation correction (2026-09-23)
 
 Corrected local-file quotations or matched supporting text to its claim where applicable. Missing-assay caveats remain in reasons rather than serving as positive support. Annotation actions are unchanged.
+
+
+## Focused OpenScientist DSPA-gamma follow-up
+
+The focused report supports the existing catalytic and extracellular core for the compact salivary DSPA-gamma protein, but resolves the four pending downstream cell-biology rows as over-annotation. K9IJK6 has kringle and protease domains and lacks the finger/EGF exosites of full-length mammalian tPA; PDGFR signaling, smooth-muscle migration, cellular response to lipid and cellular response to oxygen-containing compound are therefore left out of the core and marked as unsupported carry-overs.
