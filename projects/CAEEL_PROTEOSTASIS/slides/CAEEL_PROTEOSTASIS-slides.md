@@ -38,7 +38,7 @@ Reviewing GO annotations for chaperones, degradation machinery and longevity reg
 
 - The network **folds, holds and clears** proteins; in worms its capacity declines with age under insulin/FOXO control.
 - We reviewed **every GO annotation on 17 genes**: **773 rows**, 597 ACCEPT, 56 MODIFY, 4 REMOVE, 10 NEW.
-- Most changes replace `protein binding` with **Hsp90 protein binding** and similar. The worm has **one HSP90, HSP-90** (Q18688); daf-21 is its old mutant name, and a duplicate review under that name was retired.
+- Most changes replace `protein binding` with more specific terms. The worm has **one HSP90, HSP-90** (Q18688); daf-21 is its old mutant name, and PR #3225 retires the duplicate review under that name.
 
 ---
 
@@ -73,7 +73,7 @@ Reviewing GO annotations for chaperones, degradation machinery and longevity reg
 
 ## Findings
 
-1. **`protein binding` → Hsp90 protein binding** (GO:0051879): 9 IPI rows on hsp-90; HSP-1 partners → protein-folding chaperone binding.
+1. **`protein binding` → specific binding terms**: HSP-1 partners → protein-folding chaperone binding. ⚠️ The 9 hsp-90 IPI rows propose *Hsp90 protein binding* (GO:0051879), which means binding *to* Hsp90 and belongs on partners (STI-1, UNC-45); to be corrected.
 2. **Holdase vs foldase**: HSP-16.2 *protein refolding* removed.
 3. **Artefacts removed**: LGG-1 *GABA receptor binding* (IBA), AAK-2 *positive regulation of protein secretion*, SKN-1 *regulation of translation*.
 4. **One HSP90, not two**: daf-21 is a synonym of hsp-90 (Q18688), not a paralog; the accession P41887 once given for it is fission-yeast Swo1.
@@ -83,7 +83,8 @@ Reviewing GO annotations for chaperones, degradation machinery and longevity reg
 ## Status and next steps
 
 - ✅ 17 gene reviews and the pathway summary complete.
-- ✅ Duplicate daf-21 review retired; hsp-90 is the single HSP90 review (PR #3225).
+- ⬜ Duplicate daf-21 review retired in PR #3225 (approved, pending merge); hsp-90 is the single HSP90 review.
+- ⬜ Re-target the 9 hsp-90 GO:0051879 MODIFY rows (GO:0051087 for co-chaperones; chaperone activity for clients).
 - ⬜ The status section on the project page (868 rows, 626 ACCEPT) predates later edits.
 - ⬜ Only cct-1, cct-8 and rpn-10 of the chaperonin and proteasome subunits on the page have reviews; the rest are not yet reviewed.
 
