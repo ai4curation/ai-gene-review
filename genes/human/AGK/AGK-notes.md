@@ -1,5 +1,7 @@
 # AGK notes
 
+The [PR #3195 follow-up](#2026-09-27--pr-3195-review-follow-up) supersedes the earlier non-core plasma-membrane conclusion below. The historical fraction signal is retained as evidence, but its functional compartment attribution is now UNDECIDED.
+
 ## 2026-06-03 - Proteostasis PN review
 
 - Deep research provenance: `just deep-research-falcon human AGK --fallback perplexity-lite` was attempted for this review. Falcon timed out after 600 seconds, then the configured `perplexity-lite` fallback failed with an API quota error. No provider deep-research file was produced, so this review uses cached publications, UniProt, GOA, and PN project reports directly.
@@ -34,3 +36,96 @@ A Falcon deep-research run completed for AGK (the earlier 2026-06-03 attempt had
 ## Evidence re-review, 2026-09-20
 
 Reviewed all 44 rows using lipid enzymology, TIM22 primary studies, source references and PAINT PTHR12358. The ceramide-kinase ancestor PTN008994514 is supported by mouse Agk and fly Mulk, not a CERK-only transfer. Human negative substrate assays (PMID:15939762) remain a target-specific basis for the activity challenge; PMID:16269826 reports a negative MuLK follow-up but also cautions that no firm substrate conclusion could be drawn. The existing OpenScientist report was reused and its incorrect CERK-transfer explanation was explicitly rejected. Ceramide and sphingosine biosynthesis are separately UNDECIDED because lack of phosphorylation does not directly test lipid formation. Plasma-membrane localization was restored as non-core: the full primary fractionation text reports a smaller P4 pool, not absence. Reactome cytosol rows were verified against [R-HSA-6802510](https://reactome.org/content/detail/R-HSA-6802510), the modified AGK(1-33)/BRAF(328-766) fusion participant in all five events; these are not evidence for intact AGK localization. The TIM22 and acylglycerol-kinase core functions remain supported.
+
+## 2026-09-27 — Complete source and annotation re-review
+
+This section supersedes earlier statements in these notes and the generated PN snapshot that described exclusive mitochondrial localization, removed all plasma-membrane evidence, equated sphingolipid phosphorylation with sphingolipid biosynthesis, or represented the earlier failed research attempt as the only provider outcome. The machine reports and generated PN notes are preserved unchanged.
+
+Identity and baseline: human AGK, UniProt Q53H12, HGNC:21869; MULK is a previous symbol and FLJ10842 an alias. ClinGen's HGNC-attributed gene facts were checked at https://search.clinicalgenome.org/kb/genes/AGK. Parent verified current main 795b693f and zero open PRs for both AGK and MULK. The review contains 44 original assertions, two isoforms and no NEW annotations. The current GOA TSV has 45 lines of assertions because its SMIM26 IPI row is duplicated; the 44 existing source objects are preserved without editing their terms, references, evidence or qualifiers. The current-main HTML differs from the older local rendering and is treated only as a derived publication baseline.
+
+Research execution: the genuine June Falcon report and July OpenScientist hypothesis report were read and preserved. A fresh Falcon attempt with Perplexity Lite fallback was launched concurrently with `just fetch-gene-pmids human AGK`. It used the normal wrapper's `run_deep_research` function with the output directed to `/tmp/aigr-agk-research/AGK` to protect the existing machine report. Both attempts failed before provider execution: `deep-research-client` dependency resolution could not resolve `pypi.org` (exit 2 each; wrapper exit 1). Logs: `/tmp/AGK-fresh-research.log`. Publication caching completed with all 13 existing references already cached. No fresh provider artifact was produced or written manually.
+
+### Substrate specificity and propagation
+
+- PMID:15939762 is the human cDNA study, with expression in mammalian cells, isotope-product assays, immunoprecipitated kinase and G126E controls. Its full local Results/Methods were inspected. MAG and DAG activity is positive; Figure 1 tests C6-ceramide without significant phosphorylation and discusses the conflicting recombinant bacterial mouse-MuLK result. Detergent and substrate delivery affect activity, including loss of DAG activity in octylglucoside. The ceramide removals are therefore target/assay judgments, not universal absence claims. The direct quote is: “Significant phosphorylated products were only detected with monoacylglycerols and diacylglycerols as substrates, but not with any other lipid tested, including ceramide and sphingosine”.
+- PMID:16269826 is not a wrong-gene citation merely because its title foregrounds CERK. The cached abstract explicitly assays MuLK and says no ceramide phosphorylation was found, while adding that no firm substrate conclusions could be drawn. Indexed primary publisher discussion distinguishes predominantly human MuLK experiments from the earlier murine enzyme. Full original text was not completely recovered. Source: https://www.jlr.org/article/S0022-2275%2820%2933628-2/fulltext .
+- PMID:15252046, *MuLK, a eukaryotic multi-substrate lipid kinase*, was independently identified through PubMed. Its abstract positively reports recombinant MAG/DAG/ceramide activity. This is genuine conflicting donor evidence, not a CERK paralog experiment; source species is corroborated by the primary follow-up. The original complete experiment/process record was not recovered. https://pubmed.ncbi.nlm.nih.gov/15252046/ . The normal cache attempt failed DNS and produced no file.
+- Cached `interpro/panther/PTHR12358/PTHR12358-paint.tsv` independently confirms PTN008994514 ceramide-kinase IBD with mouse Agk and fly Mulk seeds, MAG/DAG activities with human experimental descendants, ceramide biosynthesis with mouse Agk, and PTN000270644 sphingosine biosynthesis with SPHK1/SPHK2. The human self-source is valid descendant evidence, not circular. Only PTN nodes are used in IBA source_entities. The current slice differs from the older GOA location slice; do not silently substitute a CERK node for the historical plasma-membrane ancestor.
+- The combined ceramide IEA includes mouse Q9ESW4, an Ensembl donor, EC:2.7.1.138, RHEA:17929 and RHEA:43312. The last reaction has an experimentally supported positive C6-ceramide attribution to PMID:15939762 in the cached UniProt record, although that paper reports a negative C6-ceramide result. This is an explicit source-attribution problem, distinct from the general reaction transferred by similarity. No cached UniProt/Rhea record was edited. Ensembl model and ARBA rule internals that were not recovered are marked UNRESOLVED, while independently corroborated biological calls remain accepted.
+- Ceramide and sphingosine biosynthetic-process rows remain UNDECIDED. The mouse ceramide-process trail points to the Waggoner paper, but its full process evidence was unavailable. Lipid phosphorylation consumes the named lipid, so kinase-negative evidence cannot by itself reject formation of that lipid. No pathway mechanism was invented from the broad PAINT node.
+
+### Compartments, complex role and binding
+
+- PMID:15939762 reports much less AGK in P4 plasma-membrane material than in mitochondria, not absence. The non-core plasma-membrane call is retained without calling the fraction pure. Broad `membrane` is accepted at its source resolution, alongside the existing specific mitochondrial annotations.
+- The source event Reactome R-HSA-5696074 explicitly attributes outer-membrane AGK to Hung et al., PMID:25002142. PubMed identity, indexed primary IMS-APEX scope, and the interpretation in the later Kang study were inspected. IMS proximity alone does not settle IMM versus OMM attachment; the AGK supplementary entry remains uninspected. This row is now UNDECIDED. The distinct established inner-membrane TIM22 pool remains core. Aars1 independently reached the same bounded assessment. https://pubmed.ncbi.nlm.nih.gov/25002142/ . Normal caching failed DNS; no file was produced.
+- PMID:28712726 author manuscript Figure 1 and Figures 2–3 Results were read at https://researchmgt.monash.edu/ws/files/310919825/213513462_oa.pdf . Protease accessibility after OMM disruption supports IMS exposure; extraction supports membrane association. Carrier-import and complex-assembly defects are rescued by kinase-dead G126E, with substrate-specific differences. This confirms a structural contribution to import, without making AGK the independent pore. Only the inspected portions are claimed; the local cache remains abstract-only. PMID:28712724 independently supports TIM22 assembly, import and kinase-independent function in its accessible primary abstract.
+- PMID:32901109 primary indexed Results describe the AGK anchor and interfaces with Tim29 and small Tim proteins. https://pmc.ncbi.nlm.nih.gov/articles/PMC8027037/ . The 2020 structure provides specific information absent from the local bibliographic-only cache. The earlier Falcon statements of no predicted transmembrane segment and unresolved structural placement are too broad; the description now uses membrane association/IMS exposure without overclaiming topology. Title text is not used as a mechanistic supporting quote.
+- PMID:33476211 directly identifies SFXNs as a TIM22 substrate class in its cached abstract. Its one-carbon-metabolism phenotype does not establish AGK as a one-carbon enzyme. No redundant or phenotype-driven NEW process is proposed.
+- The five cytosolic Reactome rows are retained as REMOVE because their AGK-linked entity is the fusion AGK(1–33)InsW-p-BRAF(328–766), verified at https://reactome.org/content/detail/R-HSA-6802510 . Each cached event summary was read. This is an entity-context mismatch for intact AGK; it is not a claim that native AGK never has a cytosolic pool. Supporting quotes now come from the event summaries rather than these notes.
+- Generic HCCS/HTT protein-binding rows remain REMOVE for lack of useful molecular-function information, without denying the pair. Partner identifiers are recorded in GOA and UniProt, but individual supplementary pairs were not independently recovered. For PMID:37009826, indexed primary Figure 6 supports SMIM26–AGK co-IP and location/signaling changes in renal-cancer cells; these do not independently demonstrate that AGK directly phosphorylates AKT or has a new MF toward SMIM26. https://pmc.ncbi.nlm.nih.gov/articles/PMC10240204/ .
+- PMID:34800366 full local text explicitly discusses acylglycerol kinase associated with TIMM22 in the turnover analysis. Its finding now uses that AGK-specific text instead of treating a proteome-size statement as direct identification evidence.
+
+### Core and reference audit
+
+Live AmiGO definitions were checked after QuickGO requests failed. GO:0047620 has monoacylglycerol chemical participants (EC:2.7.1.94), whereas GO:0004143 is DAG phosphorylation (EC:2.7.1.107). The original single lipid core used the monoacyl term to represent both reactions. Two substrate-specific lipid cores now capture these distinct activities, plus the kinase-independent TIM22 contribution; there is no redundant umbrella core. The existing `contributes_to_molecular_function` is preserved for TIM22 and does not assign an autonomous transporter to AGK.
+
+- https://amigo.geneontology.org/amigo/term/GO:0047620
+- https://amigo.geneontology.org/amigo/term/GO:0004143
+- https://amigo.geneontology.org/amigo/term/GO:0008320
+
+No exact Q53H12 entry occurs in the cached `gocams/index.tsv`; the AGK text search only matched unrelated NAGK. No GO-CAM was invented and no NEW assertion was needed. All 32 original reference id/title pairs were preserved; two primary references were added. Every reference has a bounded manual assessment. UniProt and the OpenScientist report carry DISPUTED flags for specified content, not an allegation that all their information is invalid. The latter report's CERK-transfer story and claim that Bektas did not test ceramide are contradicted by the inspected PAINT data and human Results.
+
+Local evidence flags were checked for all 15 PMID entries. The 13 existing caches include four with extracted full sections (PMID:15939762, PMID:28514442, PMID:33961781, PMID:34800366). The BioPlex 3 extraction is incomplete despite its full-text metadata; its missing pair table is explicitly acknowledged. Other cached records are abstract-only or bibliographic-only and have `full_text_unavailable: true`; external reading does not change that flag. PMID:37655851 remains background review context: the inaccessible AGK-specific cardiolipin statement from the prior provider-based finding was removed, without disputing the review itself.
+
+Cache gate: all PMIDs across this notes file and the review YAML were counted. PMID:15252046 and PMID:25002142 are missing after their single normal fetch attempts; the other 13 are present. The review must remain a draft until normal source recovery. No cached publication, source TSV/UniProt record, provider output, hypothesis artifact or generated PN file was modified.
+
+Independent review: root read all 44 decisions, three cores and 34 reference assessments and found no biological blocker. Root independently checked the five fusion-event placements, the monoacylglycerol GO definition and the RHEA:43312 citation against the actual negative human C6-ceramide assay. Aars1's bounded outer-membrane consultation is recorded above. History validation and rendering passed; final targeted validation and the exact file manifest are the publication checks.
+
+Final validation passed. GO:0008320 uses the repository validator's label `protein transmembrane transporter activity`; current live AmiGO displays `transmembrane protein transporter activity` with the former as a synonym. The identifier and functional scope agree. The remaining warnings concern the two unavailable primary caches and intentional use of primary evidence rather than provider-report supporting quotes.
+
+## 2026-09-27 — PR #3195 review follow-up
+
+Read the complete external review on published head `3e201f8136d848005c724c463334348aea63a5cd`, including all seven substantive and optional items. The three local gene-file blobs exactly matched the reviewed publication artifacts before edits. The review is now **DRAFT**, consistent with the missing required caches and the schema's warning semantics. All 44 source assertions, all 34 reference identities, both isoforms and all three core functions remain unchanged. One annotation action changes: plasma membrane KEEP_AS_NON_CORE to UNDECIDED. The resulting counts are 26 ACCEPT, 12 REMOVE, four UNDECIDED and two MODIFY, with no NEW annotations.
+
+**Fractionation evidence.** PMID:15939762 Figure 2 measures both AGK protein and MOG kinase activity in differential-centrifugation fractions; its cached legend explicitly says, “AGK activity was also determined in each subcellular fraction with MOG as substrate.” The Results identify P2 as the strongest AGK protein/activity fraction and report less protein in P4. Thus the study is not merely a protein-depletion experiment. However, the P4-specific quantitative activity and marker-purity interpretation were not independently resolved in this follow-up: the primary PDF text was retrieved, but the figure-image request timed out. The historical PAINT plasma-membrane IBD at PTN000270644 also remains unreconstructed from the current cache. These limits warrant UNDECIDED for a functional plasma-membrane pool, without declaring the signal to be contamination or proving that no pool exists. This supersedes the non-core interpretation in the September 20 and initial September 27 notes. The original qualifier is unchanged.
+
+**Specificity depends on what the assays resolve.** Retained MODIFY on the two broad kinase MFs: direct human substrate assays resolve MAG-to-LPA and DAG-to-PA chemistry, providing specific functional replacements beyond the InterPro/ortholog source. Retained ACCEPT on broad membrane CC: membrane association is established, but the combined electronic sources do not uniquely resolve each pool's membrane attachment. The separately supported TIM22 inner-membrane/IMS compartment does not convert every broad source into a measured IMM/IMS assignment. Reasons on all three rows now state that evidence-specific distinction. No new annotation is added for the already-seeded specific kinase activities, and membrane association is not confused with an aqueous IMS location.
+
+**Outer membrane and source scope.** The Reactome outer-membrane quotation was removed from `supported_by` because it was the claim being assessed, not independent corroboration. A recovered Hung AGK supplementary hit would verify the identification but an IMS-APEX proximity hit alone would still not distinguish the membrane anchor. The outer-membrane decision stays UNDECIDED pending topology-resolving evidence; independent TIM22 evidence continues to support the inner-membrane core without excluding every other pool. PMID:16269826's cached sentence supports mitochondrial context only, not membrane versus organelle interior or a particular leaflet. Its IDA membrane annotation remains accepted with curator deference and independent human membrane evidence; the rationale and reference assessment now state that distinction explicitly.
+
+**Core contribution and ontology.** Added an expert question explaining that GO:0008320 is a `contributes_to_molecular_function` synthesis for the TIM22 structural subunit, not a new independent transporter assertion. The complex role, qualifiers and all cores are unchanged. Live [AmiGO GO:0008320](https://amigo.geneontology.org/amigo/term/GO:0008320) still lists “transmembrane protein transporter activity” as its name and “protein transmembrane transporter activity” as a synonym; the existing authored label accepted by the repository validator is retained. No new ontology ID is invented and no NEW process is proposed.
+
+The notes-inclusive cache census remains 15 PMIDs, 13 present. Missing PMID:15252046 and PMID:25002142 remain publication draft gates. Prior genuine provider reports and all machine caches remain untouched; this bounded review follow-up did not retry failed provider/fetch jobs. Targeted gene validation, history validation, source integrity and rendering are checked in the final follow-up receipt. No Git state, remote comments or shared project files were changed.
+
+The coordinator independently read the complete follow-up delta and confirmed source preservation, with no biological blocker. Targeted gene validation passes with the two expected warning categories (missing caches and no provider-report supporting quotes); final schema, history validation and rendering pass.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+Both required source records are now present. PMID:15252046 is abstract-only,
+so its local full-text limitation remains. Its positive recombinant MuLK
+substrate results do not resolve the previously documented human assay conflict
+or unread donor biosynthetic-process evidence. PMID:25002142 now includes
+XML full text from PMC4743503. The inspected Results and Methods support
+IMS-targeted APEX proximity with ratiometric controls for cytosolic background.
+Biotinylated peptides in selected known IMM proteins face the IMS. The extracted
+main text does not expose the AGK-specific supplementary hit, and recovering
+the paper does not by itself resolve AGK outer- versus inner-membrane attachment.
+That annotation remains UNDECIDED. Its local full_text_unavailable flag is
+now false, with the supplementary evidence limit stated separately.
+
+The exact records originate from normal fetch output in Actions run 36286975328,
+head 5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630.
+The verified transported ZIP SHA-256 is
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`;
+`tmp/verified-reference-records/local-import-receipt.json` records per-file
+hashes. Only these two gene-required caches enter this follow-up manifest.
+No cache, genuine provider report or other machine artifact was edited.
+
+All 44 source assertions and reviews, three cores, 34 reference identities,
+isoforms and prior history remain unchanged. This dated entry supersedes the
+missing-cache status above. Targeted validation, rendering and history checks
+are recorded in the closure manifest. The intentional provider-quotation
+advisory, if still emitted, keeps the YAML DRAFT under the schema's zero-warning
+COMPLETE rule; it is separate from the now-closed source-cache gate. No provider
+text was promoted into primary evidence merely to suppress that advisory.
