@@ -126,9 +126,11 @@ The reviews give the evidence with verbatim quotes. In brief:
   over-placement**. Fixing the IBD fixes the TreeGrafter output with no change to
   TreeGrafter.
 - **Earlier reviews did not catch it.** The PTHR15184 family review
-  (`interpro/panther/PTHR15184/PTHR15184-review.yaml`) rates the `PTN008558586`
-  assertions SOUND. It checked the node against its F1-β descendants only, and
-  that assessment should be revisited in light of the placement check.
+  (`interpro/panther/PTHR15184/PTHR15184-review.yaml`) had rated the `PTN008558586`
+  assertions SOUND, having checked the node against its F1-β descendants only. It
+  now records both as **TOO_DEEP**, lists SF9, SF62 and SF81 as diverged
+  subfamilies, and scopes `GO:0046933` to the F1-β subfamilies and `GO:0008564` to
+  the export-ATPase subfamilies (updated 2026-09-27).
 - **Not in the frozen headline figures.** These rows postdate the frozen 2026-09-06
   snapshot, so they are absent from the tables on the main TreeGrafter page.
 
@@ -141,6 +143,9 @@ The reviews give the evidence with verbatim quotes. In brief:
    - Drop `GO:0046961` and `GO:0006754` from IPR013380. That entry is SctN-specific,
      so the mapping is wrong for every member.
    - Suppress IPR004100 → `GO:1902600` / `GO:0046034` when IPR005714 also matches.
+   - Drop the stale IPR005714 → `GO:0009058` *biosynthetic process* mapping.
+   - All five are recorded in the [InterPro mapping review](../INTERPRO.md)
+     ([mapping set](../INTERPRO/interpro2go.sssom.yaml)).
 3. **UniProt:** rename the flagellar FliI entries to a flagellar export ATPase, use
    EC 7.4.2.8, and drop the "proton translocase" clause.
 
