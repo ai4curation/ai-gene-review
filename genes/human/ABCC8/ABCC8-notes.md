@@ -78,7 +78,7 @@ Targeted gene validation, append-only history validation, rendering and a render
 
 Read both cached mouse models [62f58d8800002184](../../../gocams/62f58d8800002184/62f58d8800002184-src.yaml) and [62f58d8800002020](../../../gocams/62f58d8800002020/62f58d8800002020-src.yaml). MGI:MGI:1352629 is Abcc8; the former model links it to GO:0035774 with IMP PMID:16924481 and MGI:MGI:2388392. The latter contains negative-secretion and zinc-binding activities. No NEW zinc-binding assertion is added solely from that mouse transfer.
 
-[PMID:16924481](https://pubmed.ncbi.nlm.nih.gov/16924481/), abstract: complete SUR1 loss reduces glucose-stimulated secretion, whereas partial loss enhances it. The positive association is retained as non-core with dosage dependence, alongside the established negative gating role. The publication-cache fetch failed with a DNS error; its verified citation is included transparently, and the required cached publication remains unavailable until normal retrieval succeeds.
+[PMID:16924481], abstract: complete SUR1 loss reduces glucose-stimulated secretion, whereas partial loss enhances it. The positive association is retained as non-core with dosage dependence, alongside the established negative gating role. The publication-cache fetch failed with a DNS error; its verified citation is included transparently, and the required cached publication remains unavailable until normal retrieval succeeds.
 
 Replaced the ATPase methods-only quote with result-bearing text and added ATP hydrolysis as a catalytic core subactivity. The direct 2015 biochemical assay uses GST–NBD2 dimers, not intact channels; unknown active-dimer concentration prevents comparative catalytic-rate claims. Conditional hydrolysis-independent gating remains explicitly described. The primary human evidence now supports the IBA scope correction without a provider-report quotation. Repetitive Ensembl comments have been shortened.
 
@@ -160,3 +160,65 @@ All 64 source assertions and reviews, two cores, 43 reference identities and
 protected machine/provider artifacts are preserved. The exact cache remains
 unedited. Validation, rendering and history checks are recorded in the closure
 manifest; COMPLETE is used only if gene validation reports zero warnings.
+
+## 2026-09-27: postmerge source-13 evidence closure
+
+The earlier PMID:16924481 closure did not cover nine DOI-only papers retained in
+the Falcon report. This entry supersedes that narrower completeness claim. All
+nine normal records are now canonical, with exact source-13 import hashes checked
+against `tmp/source13-canonical-import-receipt.json`. Their actual article bodies,
+including primary Methods and Results where present, were read. The immutable
+report, its nested table and image, GOA, UniProt and seven published histories are
+preserved. No annotation action or core function changes follow from this read.
+
+The current-main baseline was verified at
+`2d78a0153f605fdcab542419d79d8b50f6b654e6`: all 15 gene/history files matched.
+ABCC8, previous symbols SUR/HRINS and seven HGNC aliases had no open PR overlap;
+the alias directories were absent. HGNC:59 and UniProt Q09428 identify SUR1.
+
+| Recovered source | Actual evidence and retained limits |
+| --- | --- |
+| [PMID:29685928] | Structural review, not a new experiment. ABC-exporter architecture does not establish SUR1 solute export. Nucleotide occupancy and a proposed hydrolytic cycle are distinguished from measured ATPase activity. |
+| [PMID:31343405] | Primary cryo-EM, crosslinking, maturation and patch-clamp work uses hamster SUR1 with rat Kir6.2. INS-1 and COSm6 are expression hosts. Drug-pocket densities and Kir6.2 N-terminal interactions support pharmacochaperoning and gating coupling; these are not direct human constructs or a SUR1 solute-flux assay. |
+| [PMID:31821855] | Mechanistic review of pharmacochaperones. It summarizes the preceding experiments rather than independently repeating them. Rescued surface delivery does not guarantee normal gating, and an inhibitory chaperone must dissociate for function to recover. |
+| [PMID:36170658] | Review of multiple KATP-dependent diseases and isoforms. Its neonatal-diabetes subsection heading incorrectly says loss of function, while the body correctly explains gain of function. A conflicting introductory nucleotide sentence is also not adopted. SUR2/Cantú findings concern ABCC9. |
+| [PMID:38408297] | Italian sequencing/clinical cohort: 104 individuals across several genes, comprising 96 neonatal-diabetes and eight severe-insulin-resistance cases. ABCC8 accounts for 13 transient and one permanent diabetes cases. The reported splice-variant functional test belongs to a cited earlier study, not this cohort's experiments. |
+| [PMID:38489043] | Structural/function review separating Kir6 conduction from SUR regulation. SUR2A/B differences and engineered open-state mutants are not treated as native ABCC8 isoform experiments. ATPase evidence does not establish an obligatory hydrolysis event for every opening. |
+| [PMID:38791571] | Two Romanian patients: an ABCC8 exon 20–26 homozygous deletion and a paternal p.Arg598Ter allele. Sequencing, segregation, phenotype and treatment observations are direct; channel function and allelic-expression imbalance are not measured. Focal disease in the second child is suspected, with PET declined, rather than histologically demonstrated. |
+| [PMID:39192869] | Two Chinese children with de novo p.Leu1294Phe, one presenting after six months. Clinical response and remission are uncontrolled observations; predictions are not electrophysiology. The source requests functional testing. Persistently open KATP channels hyperpolarize beta cells; the Discussion's contrary depolarization wording is not adopted. |
+| [PMID:40302972] | Retrospective Chinese cohort: 69 ABCC8 and ten KCNJ11 cases among 121 children. The 79-person KATP subgroup and 65.9% nonsurgical-response figure combine both genes. Variant sequencing and clinical outcomes do not measure channel activity. The publication date is 19 November 2024, despite the provider's January label. |
+
+The four review articles provide secondary synthesis, the pharmacochaperone paper
+provides rodent-protein mechanistic experiments, and the four clinical papers
+provide human genetic/phenotypic observations. None supplies an independent SUR1
+potassium pump, a new process annotation or a reason to collapse the distinct
+regulatory and measured ATP-hydrolysis cores. Existing dosage-dependent insulin
+findings and contextual injury judgments remain intact.
+
+The inherited public full-text excerpt for [PMID:20610380] was removed from the
+private/unshareable `supporting_text_fulltext` field. Its direct PMID support and
+the cached human structural quote from [PMID:29286281] remain. The publicly
+[indexed original article](https://pmc.ncbi.nlm.nih.gov/articles/PMC2937900/)
+was reread on this date: Methods, “KATP Constructs,” identifies human Kir6.2 and
+human SUR1; Results, “Ankyrin-B Forms a Ternary Complex with Kir6.2 and SUR1/SUR2A,”
+and Figure 3 report: “anti-Kir6.2 Ig co-immunoprecipitated both SUR1 and SUR2A from
+cotransfected cells”. The direct page was challenge-blocked, but indexed primary
+Methods/Results were returned. This is an access receipt for that same paper,
+not an independent study or a notes-based evidence source. Its local cache remains
+abstract-only. The experiment does not establish direct ankyrin-B/SUR1 binding.
+
+The recursive census covers the authored YAML/notes, Falcon report, nested artifact
+and its cited image source, DOI and PMC links, and source citations associated
+with reviewed assertions. It resolves 37 required PMIDs and seven Reactome entries,
+all now present. The generic Open Targets platform bibliography is infrastructure,
+not an additional ABCC8 experiment. Bare unrelated UniProt bibliography entries
+are not silently made new review claims. No new fetch or source fabrication was
+needed. One YAML anchor was expanded with parsed equality, and the one explicit
+PubMed Markdown link was normalized to the repository's rendering convention.
+
+All 64 source objects and actions, two cores, three alternative products and 43
+prior reference identities are preserved; nine source assessments are appended.
+The five UNDECIDED annotations retain their documented evidential limits. YAML
+DRAFT remains appropriate while intentional validation advisories remain; source
+availability no longer imposes a draft-PR gate. Targeted, history, rendering,
+exact-quote and preservation checks are recorded in the frozen follow-up receipt.
