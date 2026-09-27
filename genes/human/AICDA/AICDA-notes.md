@@ -148,3 +148,14 @@ GO:0019239 core has a validator coverage advisory after the two broad rows are
 refined to free-cytidine activity. A redundant NEW annotation is not introduced
 solely to suppress that advisory. The final validation and exact-file manifest
 record the remaining advisory separately from the now-closed source gates.
+
+
+## 2026-09-27 — zinc-source attribution and evidence attachments
+
+Checked PR #3290 head `dbe85cc339c55fd45ebc17ffbe1b238644d823ef` and all five canonical file hashes before this bounded follow-up. The current formal review and full comment were read. The zinc-ion-binding **ACCEPT** stands, with corrected experiment attribution: **PMID:10373455** reports zinc-chelation inhibition of mouse GST-AID, whereas the original full Results of **PMID:28757211** resolve the catalytic zinc-containing site in engineered human AID. Exact cached quotes from both papers now support the row, and its two InterPro source comments preserve the species/assay distinction. The abstract-only **PMID:12651944** record is no longer cited for the chelation experiment. This correction does not infer that a missing word in an abstract proves the full paper lacks an experiment.
+
+The existing RNA-binding IBA now carries the exact **PMID:12651944** abstract sentence describing inhibitory RNA bound to AID and RNase-dependent access to ssDNA deamination. It supports RNA binding, not RNA editing. The prior human Ramos/Sf9 construct assessment remains based on the separately documented original Methods; the new quote does not pretend that construct detail is in the abstract.
+
+All 47 original source objects and all actions, core functions, original reference identities, findings and availability flags remain unchanged. Sixteen identical reference-note paragraphs were omitted because the retained findings already carry each source's scope; the reference correctness/relevance assessments remain. Repeated method-source prefaces were trimmed, and operational recovery-batch wording was replaced by plain cache-access descriptions in the curated YAML. The complex reason now rests solely on its positive multistep purification/functional evidence with unresolved contact geometry, without the former absence-of-disproof clause. Historical notes retain their provenance and do not imply persistent public availability of temporary execution receipts.
+
+No publication cache, provider artifact or raw source was edited, and no new citation was introduced. The recursive authored/provider/link census is checked before freezing. YAML DRAFT remains appropriate for the existing intentional generic-deaminase core advisory; it is not a missing-source gate. Validation, append-only history, exact quotations and rendering are recorded in the handoff manifest.
