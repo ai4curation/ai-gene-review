@@ -67,7 +67,7 @@ GO:0052704 and GO:0140479 → GO:0052699 ergothioneine biosynthetic process
 
 1. If wanted, review the operon as one batch: **egtD, egtB, egtC, egtE** (A0R5M8, A0R5N0, A0R5M9, A0R5M7), sharing PMID:20420449.
 2. Anchor each on its catalytic MF; BP on **GO:0052699**.
-3. Confirm the species folder first: the repo has `genes/MYCSM/`, while the page proposes `MYCS2` for strain mc(2)155.
+3. Species folder: **`MYCS2`** (strain mc(2)155, taxon 246196), beside the generic `MYCSM` used by `arr` — as `PSEAE` sits beside `PSEAI`.
 4. S. pombe egt1/egt2 are unaffected and optional.
 
 **Upstream:** go-annotation#6402 · go-ontology#32018 · go-ontology#11163

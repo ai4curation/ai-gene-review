@@ -3,7 +3,7 @@ title: "Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [PSEPK]
-genes: [edd, eda]
+genes: [edd, eda, glk]
 ---
 
 # Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)
@@ -114,6 +114,12 @@ Glk phosphorylates glucose upstream and performs no ED step.
 (`genes/PSEPK/pgi2` mentions GO:0061688 only in prose, to
 reject it.)
 
+**Negative control: PSEPK zwf.** `genes/PSEPK/zwf/` is a complete review of
+glucose-6-phosphate 1-dehydrogenase, the entry step that feeds
+6-phosphogluconate into the ED pathway. `zwf-ai-review.yaml` uses none of
+GO:0009255, GO:0061678 or GO:0061688, so it needs no change and confirms that
+only the edd and eda reviews (plus glk's proposed target) are affected.
+
 ## Scope
 
 - **Organisms**: bacteria (E. coli, Pseudomonas spp., other ED-using
@@ -148,10 +154,7 @@ add files without confirming the UniProt accession from the UniProt API.
    organism for the ED pathway and likely the EcoCyc-affected entry upstream.
 5. **eda (E. coli K-12)** — KDPG aldolase; companion to E. coli edd,
    completes the two-enzyme ED core.
-6. **zwf (PSEPK)** — glucose-6-phosphate 1-dehydrogenase, the entry step into
-   the ED pathway via 6-phosphogluconate. Already partially covered in the
-   PSEPK gene set per `projects/SPKW/SPKW-PSEPK.md`; verify status before adding.
-7. **gnd / 6PGD homologs** — the diversion point between ED and the pentose
+6. **gnd / 6PGD homologs** — the diversion point between ED and the pentose
    phosphate pathway; a clean review here clarifies why annotations should
    sit at GO:0061678 rather than a sub-variant.
 
@@ -175,7 +178,7 @@ add files without confirming the UniProt accession from the UniProt API.
    term-ID swap.
 3. **Re-run `just validate PSEPK edd` and `just validate PSEPK eda`** after
    the edits to confirm the schema accepts the new term IDs.
-4. **Defer new ortholog reviews** (E. coli edd/eda, zwf, gnd) to a follow-up
+4. **Defer new ortholog reviews** (E. coli edd/eda, gnd) to a follow-up
    batch — the obsoletion does not block them, and they are best done as a
    coherent ED-pathway batch rather than ad hoc.
 
@@ -196,7 +199,7 @@ reviews, but those are independent of the obsoletion itself.
   GO:0061678; eda NEW row and `core_functions` → GO:0061678; glk's obsolete
   GO:0061688 MODIFY target dropped, its GOA GO:0006096 row now ACCEPT and
   `core_functions` → GO:0006096 (Glk does no ED step). Once #3232 merges no
-  review here uses GO:0009255 or GO:0061688. The E. coli / zwf / gnd ortholog
+  review here uses GO:0009255 or GO:0061688. The E. coli edd/eda and gnd ortholog
   reviews remain as optional follow-up.
 
 ## Slides

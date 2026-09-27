@@ -57,7 +57,7 @@ yet in this repository.
 
 | Group | Annotations | Status |
 |---|---:|---|
-| CGD (Candida glabrata) | 4 | pending |
+| CGD (Candida Genome Database; *Candida* species not recorded upstream) | 4 | pending |
 | PomBase | 13 | DONE |
 | TAIR (Arabidopsis) | 2 | pending |
 | UniProt | 2 | per latest comment, "uniprot updated" |
@@ -154,7 +154,7 @@ add files without confirming the UniProt accession from the UniProt API.
 
 ### Lower priority / verification only
 
-9. **CGD-affected Candida glabrata orthologs** — 4 annotations upstream; not a
+9. **CGD-affected *Candida* orthologs** (species to confirm from the CGD rows) — 4 annotations upstream; not a
    primary AI Gene Review focus organism. Defer unless the broader project
    expands to fungal pathogens.
 

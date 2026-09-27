@@ -2,6 +2,7 @@
 title: "Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion"
 maturity: SCOPING
 tags: [OBSOLETION]
+species: [MYCS2]
 ---
 
 # Ergothioneine Biosynthesis Variant-Pathway Terms — Obsoletion
@@ -110,7 +111,9 @@ IMP from PMID:24828577. These are on the surviving parent term and are
 No genes annotated to GO:0052704 or GO:0140479 are currently reviewed
 in this repo:
 
-- `genes/MYCS2/` — does not exist (no *M. smegmatis* genes reviewed yet)
+- `genes/MYCS2/` — does not exist; no *M. smegmatis* mc(2)155 genes are
+  reviewed. The only *M. smegmatis* review is `genes/MYCSM/arr/` (O67972,
+  generic taxon 1772), which is unrelated to ergothioneine.
 - `genes/SCHPO/egt1/`, `genes/SCHPO/egt2/` — do not exist
 
 So **no existing review needs a refresh** for the obsoletion itself.
@@ -132,7 +135,12 @@ this repo, and the obsoletion is a natural trigger to add it.
 ## Candidate genes for initial review
 
 Verify each with `just fetch-gene MYCS2 <gene>` before starting and
-confirm UniProt accessions. None are currently in the repo. The four
+confirm UniProt accessions. **Species folder:** use `MYCS2`, not the
+existing `MYCSM`. The four accessions are strain mc(2)155 entries
+(e.g. EGTB_MYCS2, A0R5N0, taxon 246196), and the repo already files
+strain-specific UniProt mnemonics beside generic ones (`PSEAE` beside
+`PSEAI`, `ECOLI` beside `ECOLX`). `MYCSM` is the generic taxon-1772 code
+used by the `arr` review. None are currently in the repo. The four
 genes form one operon and are best reviewed together as a small batch.
 
 ### Tier 1 — direct experimental annotation, well-characterized

@@ -14,7 +14,9 @@ the plant and cyanobacterial CHLP reaction that reduces geranylgeranyl
 diphosphate to phytyl diphosphate for chlorophyll and tocopherol. We
 listed the four experimental annotations that must move, the four
 UniRule/InterPro mappings to redirect, and checked the repo. Two rows fit
-the new term (Arabidopsis and tobacco CHLP). Two do not obviously fit:
+the new term's substrate (Arabidopsis and tobacco CHLP); the Arabidopsis
+row is IDA, but the tobacco row is NAS only and may warrant removal rather
+than remapping. Two do not obviously fit:
 human AKR1C3 and AKR1B10, both IDA from one aldo-keto reductase paper
 (PMID:21187079), and the archaeal IPR023590 mapping, whose enzyme acts on
 a lipid rather than free GGDP. Scoped, not yet started: none of the four

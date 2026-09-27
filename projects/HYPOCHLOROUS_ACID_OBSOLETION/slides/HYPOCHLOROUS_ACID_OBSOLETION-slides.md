@@ -38,7 +38,7 @@ GO:0002148, GO:0002149, GO:0002150: all three now obsolete
 
 - GO **obsoleted all three HOCl process terms**; the two children because each "represents a MF term".
 - Only **one experimental row** is affected: mouse **Mpo** IMP (PMID:10085024), plus a rat ISO copy.
-- **Scoped, not yet started:** Mpo is not reviewed here, and the MF anchor the page proposes (**GO:0140825**) is labelled *lactoperoxidase activity* in OLS, so it needs rechecking.
+- **Scoped, not yet started:** Mpo is not reviewed here, and the MF anchor an earlier draft proposed (**GO:0140825**) is *lactoperoxidase activity* in OLS, so it must not be used; the right MF is still to be found.
 
 ---
 

@@ -10,7 +10,9 @@ species: [mouse]
 **Bottom line:** GO has obsoleted all three hypochlorous acid (HOCl)
 process terms: the grouping term GO:0002148 went first, and OLS now lists
 the biosynthetic (GO:0002149) and catabolic (GO:0002150) terms as obsolete
-too, on the grounds that each "represents a MF term". HOCl is made in one
+too. Their obsolete definitions give the final reason, "this BP term
+represents a MF term"; the originating ticket (go-ontology#22891) had
+instead flagged the wrong `is_a` parent (see Overview). HOCl is made in one
 enzymatic step, myeloperoxidase turning H2O2 and chloride into HOCl, so a
 process term adds nothing to the enzyme activity. We inventoried the
 annotations: one mouse Mpo IMP row (MGI, PMID:10085024), one rat Mpo ISO
@@ -27,16 +29,20 @@ A GO obsoletion proposal targets three biological-process terms in the
 hypochlorous acid (HOCl) branch:
 
 - **GO:0002148 hypochlorous acid metabolic process** (BP, **already obsolete**)
-- **GO:0002149 hypochlorous acid biosynthetic process** (BP, *active*, obsoletion proposed)
-- **GO:0002150 hypochlorous acid catabolic process** (BP, *active*, obsoletion proposed)
+- **GO:0002149 hypochlorous acid biosynthetic process** (BP, now obsolete in OLS)
+- **GO:0002150 hypochlorous acid catabolic process** (BP, now obsolete in OLS)
 
-The rationale, captured in go-ontology#22891, is that the original parentage
+The two rationales come from different stages. The originating ticket,
+go-ontology#22891, argued that the original parentage
 (`is_a` *organic acid metabolic process*, GO:0006082) is incorrect because
 hypochlorous acid contains no carbon and so is not an organic acid. The
 grouping-term obsoletion at the parent level (go-ontology#30524) already
 removed GO:0002148, which had no remaining annotations. The two child terms
-still carry annotations and need a curatorial decision before they can be
-obsoleted.
+carried annotations and needed a curatorial decision first. When they were
+obsoleted, the reason recorded in their definitions was different: "The
+reason for obsoletion is that this BP term represents a MF term" (OLS,
+GO:0002149), i.e. HOCl formation is a single enzymatic step best captured
+as an MF.
 
 This project tracks the impact on AI Gene Review. No genes in scope are
 currently reviewed here.
