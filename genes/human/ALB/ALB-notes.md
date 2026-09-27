@@ -63,3 +63,31 @@ Every DOI/PMC URL used in these notes resolves to an already named original PMID
 ## Final verification
 
 Targeted full validation completed with exit 0 and no review advisories; the runtime emitted only a dependency deprecation notice. All 92 supporting passages match their actual local source with case-sensitive whitespace normalization, with no match relying on case folding. All 66 source assertions, 58 original reference identities, three alternative products, raw GOA/UniProt files and 34 imported cache byte strings pass preservation checks. The YAML contains no anchors or trailing spaces. History validation and rendering pass. COMPLETE describes the finished manual audit, not certainty about the 13 explicitly UNDECIDED source assertions.
+
+
+## 2026-09-27: heme pathway review follow-up
+
+The current formal review 5330691370 and full comment 5856716505 were read.
+The heme-biosynthesis action is changed from MARK_AS_OVER_ANNOTATED to
+REMOVE, matching its existing source-specific rationale. In [PMID:20705604],
+human albumin accepts already formed hemin from ABCG2's extracellular loop;
+it does not perform a step of heme formation. The positive carrier evidence
+is preserved, and no replacement activity or NEW process is invented. This
+supersedes the earlier note's over-annotation action for that pathway.
+Bilirubin transport remains the supported refinement of the separate heme
+catabolism row.
+
+The suggested question on colloid osmotic pressure records a physiological
+role already stated in the immutable UniProt FUNCTION section, which labels
+it Probable. It asks how concentration and ligand occupancy affect that
+contribution; it does not assert an unverified ontology gap or add a core
+term. The seven discussed proteomic location rows remain UNDECIDED because
+the source-specific albumin evidence was not recovered. Comparisons with
+other genes and albumin abundance do not establish contamination or override
+that evidence limit. The actual child event R-HSA-9709883 remains valid
+support for the broader parent R-HSA-9707564 assertion.
+
+All 66 annotation source objects, two cores, three products and 61 reference
+identities are preserved. The updated actions are 36 ACCEPT,
+9 KEEP_AS_NON_CORE, 5 REMOVE, 2 MARK_AS_OVER_ANNOTATED, 1 MODIFY and
+13 UNDECIDED. No new source or cache edit is required.
