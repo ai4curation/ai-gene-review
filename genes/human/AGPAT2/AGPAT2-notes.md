@@ -307,3 +307,38 @@ Cached Reactome6799350 lacks the AGPAT2 participant list. Prior positive identit
 All five required missing normal caches remain gates: **11967537,16150824,19346281,34824276,41387688**. No reference or note citation was removed to evade the requirement. Status stays DRAFT. No source cache, provider output, published history, Git state or shared project file was manually altered.
 
 Follow-up normal `fetch-pmid` attempt completed: **Cached 0/5**, with DNS resolution errors for every requested PMID. No publication file was generated. The execution log is `/tmp/AGPAT2-followup-fetch.log`.
+
+
+## 2026-09-27 normal publication-cache recovery
+
+All five required records are now locally available from standard fetch output:
+PMID:11967537, PMID:16150824 and PMID:19346281 are abstract-only;
+PMID:34824276 and PMID:41387688 include XML full text. The latter two
+`full_text_unavailable` flags are now false. Previously verified external
+source readings remain distinct from the newly recovered local records.
+
+The recovered primary abstracts agree with the established pedigree,
+epidermal-expression and rat-paroxetine scopes. Relevant cached Results,
+Methods and Figures 4-7 of PMID:34824276 support human AGPAT2/CDS complex
+formation and altered lipid flux, while leaving direct substrate channeling
+as a model. PMID:41387688 Results and Figures 1, 6, 8 and 9 retain the
+distinction between human-cell perturbation/interaction experiments and
+mouse-MEF rescue or isolated-ER reconstitution. AGPAT2 produces PA; these
+experiments do not assign it autonomous DRP1-like membrane shaping. No
+annotation action, source assertion, core or biological summary changes follow.
+The two rat contextual transfers and the neutrophil locations remain unresolved
+for the documented source-specific reasons.
+
+Records were imported verbatim from Actions run 36286975328, head
+5946477c8ac79ade0709264c775ea1262b108438, artifact 10920674630. The
+transported ZIP SHA-256 is
+`c0ffe4a66b80278af34b44aab6a3ae354ffd5699236b3a486ca95527be5e9713`;
+`tmp/verified-reference-records/local-import-receipt.json` records the
+per-file hashes. The publication manifest includes only these five required
+records, without altering their machine-fetched titles or content.
+
+All 31 source assertions and reviews, the integrated core, 23 reference
+identifiers/titles, immutable gene files and prior history are preserved. This
+entry supersedes the missing-cache status in earlier dated notes. Targeted
+validation, rendering and fresh history validation are recorded in the closure
+manifest; COMPLETE is used only with zero gene validation warnings.
