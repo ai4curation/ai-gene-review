@@ -61,7 +61,8 @@ EPEC EscN.
   *effector* SseJ-2HA reaches the host vacuolar membrane in a SsaN-dependent way (Fig. 2D/E). SsaN itself is
   never shown in a host compartment, and as a cytoplasmic sorting-platform ATPase it is not a translocated
   substrate. These look like the effector's localisation transferred to the machine. Host cell cytoplasm is
-  removed; host cell membrane is redirected to GO:0005886 plasma membrane, which is what the fractionation
+  removed; host cell membrane is redirected to GO:0009898 cytoplasmic side of plasma membrane (SsaN has no
+  transmembrane segment; revised 2026-09-27 after PR review), which is what the fractionation
   actually supports.
 - GO:0050714 positive regulation of protein secretion (IMP). SsaN is a core component of the secretion
   machine, not a regulator of it: deleting it abolishes secretion outright. GO:0030254 protein secretion by
