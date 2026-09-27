@@ -1,5 +1,6 @@
 ---
 title: "InterPro Mapping Review Project"
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 sidecars:
