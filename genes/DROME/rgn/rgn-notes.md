@@ -34,11 +34,12 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 
 - [PMID:18485344](https://pubmed.ncbi.nlm.nih.gov/18485344/): “We identified three genes, regeneration (rgn), augmenter of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed specifically in blastema cells during disc regeneration.”
 - [PMID:41935796](https://pubmed.ncbi.nlm.nih.gov/41935796/): 2026 abstract-only evidence that Rgn deficiency in gut progenitors disrupts Notch signaling, insulin/TOR-linked redox control and intestinal stem-cell maintenance during epithelial repair.
+- [PMID:42486707](https://pubmed.ncbi.nlm.nih.gov/42486707/): bibliographic cached corrigendum to PMID:41935796; the cache does not expose correction details.
 
 ## Annotation decisions
 
-- GO:0005802 trans-Golgi network (IBA): **REMOVE**. PANTHER:PTN000575073 propagates the mammalian TGN38/TGOLN trans-Golgi localization from PTHR23211 into a divergent fly secretory CTLD protein; the Rgn-specific genetic evidence supports regeneration roles, not TGN residence or a TGN38-like trafficking cycle.
-- GO:0030140 trans-Golgi network transport vesicle (IBA): **REMOVE**. The same PANTHER:PTN000575073 node propagates mammalian TGN38/TGOLN transport-vesicle residence, but Rgn has no direct evidence for TGN-derived vesicle localization.
+- GO:0005802 trans-Golgi network (IBA): **UNDECIDED**. PANTHER:PTN000575073 propagates mammalian TGN38/TGOLN trans-Golgi localization within PTHR23211:SF0, which also contains M9PFV8; same-subfamily propagation and unresolved direct Rgn localization argue against a confident REMOVE even though the 808-residue fly CTLD protein has no target evidence for TGN38-like residence.
+- GO:0030140 trans-Golgi network transport vesicle (IBA): **UNDECIDED**. The same PANTHER:PTN000575073 node propagates mammalian TGN38/TGOLN transport-vesicle residence, but Rgn has no direct evidence for TGN-derived vesicle localization and the SF0 assignment keeps the transfer unresolved rather than demonstrably wrong.
 - GO:0030246 carbohydrate binding (IEA): **UNDECIDED**. Several proteins retain this fold without the canonical carbohydrate-binding activity. The exact target has no mapped ligand-binding assay.
 - GO:0030246 carbohydrate binding (ISS): **UNDECIDED**. PMID:16475980 directly assays DL1 and discusses Drosophila lectins. It supplies useful family biology but does not establish carbohydrate binding by the long Rgn isoform; target-specific ligand or conserved-binding-site evidence is required.
 - GO:0042246 tissue regeneration (IEP): **ACCEPT**. PMID:18485344 reports rgn expression in regenerating blastema cells, matching the tissue-regeneration process established by perturbation evidence in the same paper.
