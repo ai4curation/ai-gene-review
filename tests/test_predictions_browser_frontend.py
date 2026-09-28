@@ -232,3 +232,30 @@ def test_claim_table_distinguishes_seeded_and_reviewed_unc(page, prediction_page
         expect(row).to_have_count(1)
         expect(row.locator(".table-cell-assessment")).to_contain_text("UNC")
         expect(row.locator(".table-cell-review_score")).to_have_text("1")
+
+
+def test_gogpt_overlap_view_is_dated_and_filters_by_reference_layer(page, tmp_path: Path):
+    """The snapshot overlap tab labels its date and its level facets count matching terms."""
+    common = {"source_method": "GO-GPT", "source_version": "GO-GPT direct run",
+              "species": "ECOLI", "gene_symbol": "g", "projects": ["BIOREASON_COMPARISON"],
+              "cohorts": ["supplement_gogpt_overlap_300"], "snapshot_date": "2026-01-02",
+              "default_visible": True, "review_link": "", "gene_predictions": 3}
+    overlap = [
+        {**common, "overlap_id": "a", "term_id": "GO:0000001", "in_goa": True,
+         "in_post_review": True, "in_core": True, "matched_levels": ["Raw GOA"]},
+        {**common, "overlap_id": "b", "term_id": "GO:0000002", "in_goa": True,
+         "in_post_review": False, "in_core": False, "matched_levels": ["Raw GOA"]},
+        {**common, "overlap_id": "c", "term_id": "GO:0000003", "in_goa": False,
+         "in_post_review": False, "in_core": False, "matched_levels": []},
+    ]
+    payload = {"sets": [], "claims": [], "overlap": overlap,
+               "metadata": {"overlap_snapshot_date": "2026-01-02"}}
+    (tmp_path / "index.html").write_text((BROWSER / "index.html").read_text())
+    (tmp_path / "data.js").write_text("window.predictionData=" + json.dumps(payload) + ";")
+    (tmp_path / "schema.js").write_text((BROWSER / "predictions_schema.js").read_text())
+    page.goto((tmp_path / "index.html").as_uri() + "?dataset=overlap&in_goa=true")
+    expect(page.locator("#datasetTabs")).to_contain_text("GO-GPT overlap (as of 2026-01-02) (3)")
+    expect(page.locator("#scopeNote")).to_contain_text("as of 2026-01-02")
+    expect(page.locator("#resultsCount")).to_have_text("Showing 2 of 2 predicted terms")
+    page.goto((tmp_path / "index.html").as_uri() + "?dataset=overlap&in_core=true")
+    expect(page.locator("#resultsCount")).to_have_text("Showing 1 of 1 predicted terms")
