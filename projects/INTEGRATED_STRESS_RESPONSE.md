@@ -14,7 +14,7 @@ translated. Scoped, not yet started as a project: this page lists about 18
 candidate human genes, including the DELE1-OMA1 route from mitochondrial stress
 to HRI, but no project-specific review work has been done. Five candidates
 already have reviews from other work: EIF2AK3 (PERK), ATF4, ATF3 and EIF2B4 are
-COMPLETE and OMA1 is IN_PROGRESS, 490 annotations between them. Thirteen have
+COMPLETE and OMA1 is IN_PROGRESS, 489 annotations between them. Thirteen have
 no gene folder, including the hub EIF2S1 (eIF2α), three of the four kinases,
 DELE1 and four of the five eIF2B subunits. There is no ISR module yet.
 

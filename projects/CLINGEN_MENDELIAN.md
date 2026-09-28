@@ -2893,8 +2893,8 @@ mitochondrial, 3 undetermined-inheritance follow-ups), each with its disease
 links preserved in the checklist below. Each review assesses the gene product's
 molecular function and GO annotations; a disease link alone does not establish
 a function. Reviews run one gene per PR in evidence-priority order, and existing
-reviews get a fresh audit (716 of the 2,876 genes now have a human review in the
-repo, mostly from earlier projects). The 2026-09-26 progress log records 14
+reviews get a fresh audit (747 of the 2,876 genes had a human review in the
+repo on 2026-09-27, mostly from earlier projects). The 2026-09-26 progress log records 14
 merged gene PRs (A4GALT through ACADVL; 607 annotations reviewed), each ticked
 in the checklist below; later merges are added there as they are recorded.
 

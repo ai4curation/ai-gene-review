@@ -38,7 +38,7 @@ A scoped project: about 18 candidate genes, five already reviewed
 
 - Four kinases (**HRI, PKR, PERK, GCN2**) each sense a different stress and phosphorylate **eIF2α**, which blocks **eIF2B**, dampens translation and lets **ATF4** through.
 - **Scoped, not yet started**: no project-specific review work has been done.
-- **5 of 18** candidates already have reviews from other work (EIF2AK3, ATF4, ATF3, EIF2B4 COMPLETE; OMA1 IN_PROGRESS; 490 annotations). **EIF2S1**, three kinases and DELE1 have no gene folder.
+- **5 of 18** candidates already have reviews from other work (EIF2AK3, ATF4, ATF3, EIF2B4 COMPLETE; OMA1 IN_PROGRESS; 489 annotations). **EIF2S1**, three kinases and DELE1 have no gene folder.
 
 ---
 
@@ -69,7 +69,7 @@ A scoped project: about 18 candidate genes, five already reviewed
 
 | Genes | State |
 |---|---|
-| EIF2AK3 (96 ann.), ATF4 (216), ATF3 (80), EIF2B4 (44) | COMPLETE |
+| EIF2AK3 (95 ann.), ATF4 (216), ATF3 (80), EIF2B4 (44) | COMPLETE |
 | OMA1 (54) | IN_PROGRESS |
 | EIF2AK1, EIF2AK2, EIF2AK4, EIF2S1, DELE1, DDIT3, PPP1R15A, PPP1R15B, EIF2B1/2/3/5, ASNS | No gene folder |
 

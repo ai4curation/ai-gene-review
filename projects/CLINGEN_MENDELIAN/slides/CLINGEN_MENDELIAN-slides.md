@@ -52,7 +52,7 @@ A one-gene-per-PR review campaign over 2,876 ClinGen-validated genes
 
 - ClinGen **grades the evidence** for each gene–disease link, so the seed set is explicit and reproducible (archived CSV, SHA-256, seed script).
 - Limited associations are kept as candidates, not established causation; RNA genes and other loci get separate workflows.
-- 716 of the 2,876 genes already have a human review; the campaign **re-audits** them against current rules rather than assuming they are done.
+- 747 of the 2,876 genes had a human review on 2026-09-27; the campaign **re-audits** them against current rules rather than assuming they are done.
 
 ---
 
