@@ -1,155 +1,254 @@
----
-name: Warm reference cache
-
-# Keeps the committed reference cache (publications/) complete so the full
-# `just validate-all` reference phase stays cache-bound instead of re-fetching
-# references from PubMed/providers on every run. Runs weekly (newly-added
-# references are fetched; an unchanged cache is a no-op) and on demand.
-
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 1"  # Mondays 04:00 UTC, ahead of the weekly validate-all
-  workflow_dispatch:
-
+name: ClinGen reference recovery batch 54
+run-name: Reference recovery batch 54 at ${{ github.ref_name }} (${{ github.sha }})
+"on":
+  workflow_dispatch: null
+permissions:
+  contents: read
 concurrency:
-  group: warm-reference-cache
-  cancel-in-progress: true
-
+  group: clingen-reference-recovery54-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  warm-reference-cache:
+  recover:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'ai4curation/ai-gene-review' &&
+      github.ref == 'refs/heads/cmungall/clingen-reference-fetch54-20260928'
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
-      # with the ai4c-agent App token below.
-      contents: read
-
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    - name: Checkout the dispatched commit
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ github.sha }}
+        fetch-depth: 1
+        persist-credentials: false
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - name: Set isolated runtime paths after runner initialization
+      run: |
+        python - <<'PYENV'
+        from pathlib import Path
+        import os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery54'
+        with Path(os.environ['GITHUB_ENV']).open('a') as out:
+            out.write('UV_CACHE_DIR='+str(root/'uv-cache')+'\n')
+            out.write('UV_PROJECT_ENVIRONMENT='+str(root/'venv')+'\n')
+        PYENV
+    - name: Initialize fixed source requests and partial report
+      run: |
+        python - <<'PYINIT'
+        from pathlib import Path
+        import json, os, base64, zlib, hashlib
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery54'/'artifact'
+        root.mkdir(parents=True)
+        REQUESTS_B85 = 'c-rk)+in~;5`Fhq5PEWe>F&AcYCQ?EofvD`f)rql*nz-ibEavr$zGB@(!dCif7n0VFWFP<%S<bd;)R`;O$=F@W|PHY)v0re^Zp5ApYWfty<269y=QE%u2iu%X~$F?navkRC&vf#ezdZMr17N;qP(e;_sXpLmn&(c$J_Vu5d&ve@Al&7pSu}C1s;?&yR$xZfAKnO>S%o}omwhc+}JxK-A%vh#v5My(uQusxTfZzq&1<cGbfkQNh4$;xF}_kb9i~MpA^!omC1TLNpHtz@G#-tOYbXbLi*8LvuoTswNi%bo84V#jWQ}It}|W~icE5y)J|30Z4y<$k_wy0>}qA`pa(lcLEZ=2p?&-ibMXNKABG%!*qiLysCZo?L@{T-%~Wes1swx=(X=OLcFEvA6TE?MjOWI>ifdNLwbZsIUunwHI+;7J4CAI?L3;c!JXK1_IP@;T32tS<G!Q@muS>2s>`sMpYZP!mz_sGEv}`JlwC^}qSQY)ArnBkdI5Vr+bb2z%Y#Y#<#%Y>ZhEV%wSynfBC5zOET%|@=sZnLRvg@o5K(=dRK+?A`=Hyz*I~en}aYEjBVOzYuC73>A=eDY~3=$z+Dgk(~%O<}-lz8rg<08b^RWk5`2cEJYOUdMY4Hqf!9$E0hshk!#ys2`xu|^42A$v#+MgO!7B!edf#hoe7wDmr*%VgOY5tF>;PH{4bxW9XS_B{i7RosF0cT(eVEq%&fHd?a_8A@Atc8Aho#s*B_Mao{8Le|m{m>I96n>}*A{z%b&f7l5ll>6Dy$$x(R_k4ezvNx73cXy<XKp!c4ttu7#Gxp+hM`nN@&jGZO)y`^#5|3D(;CMkgBO7N4nyYp=E7UTw0O~VFqld5(jpmNkrNkjYG`^4J@5gVua||O2+KSd{%AVUUSeoZjv&y2PM%m=PvyWwb<I^#;?OGa+1m5JfF$IuGIC^EkB6j6K8w@KOM7YJ=DJ&CyC}J$a4j%&w6xe0g5serSFzPl03G!@!2nt&Cnd1&|(D*9^ZDJh*i@+J|glQbf$(7Z1r36NV=Bk3@o!`H-RF2=jOuj@r=JUnz(R8~1w|4v)+A*7dk$Ch;cw9Ulq-rc4XYQUb<>bE_<xuTV2i8%%qzbfP2@B#fk_oBDVzMh5k4wPpF#DKp3cxR&PiOOVN<aHwp$Gk$zKI@u*4Y292O}Xs;mCW$vj<AgixU>OTVY+%vC5V7jqcdHrIeRyb=VJQg4dDwo+~dJ6cre(rSKo(+<%@;PuPp=m>bHXkRX4s2vM74ngF*}4%<^>;LEEwXY9wT^EXraH#=M`7A)r5B&}DdS<s0IpyE?j@Xg^d-mkc^3XG1zKs=x~ju0L#0x^vkh&VoB#`*a_Cd^CW$Y6X^J4xK98^Kq^=iJ>&=i8RThElpHCwzrY1XI0qYdIXz+lmM4sX`6A1Mz~%OKw)OnBb#Ux6nz0y|^D@I$BcOy3sAUr0gQ@3}_d%RZ*5(rr(Nzj5Le&4HUEU3NdM@c><xb0%d|6xA97d*`Sc*kn$Dix~YK*st!(MUBx4Ph4}W&G!kF-v=iS2iSOd*y9ujx<4K?_1pxqp^M|a%PB(oqqv?y;!FQ90&dvpNcCA|v1stc1{wKA%hXyL+YuV;HN(UvVm-dSo^*&f6xzcx4&?jb;66$~o<q2*LVotQ<Y}LWPd~tmaVs;V8)CJHyL?l2{8rh@b)>v^{KnB1_?H>M%ad$dI2(PURB&m#q0PG>CGZ{IHIIK!^0{GbCZi}LO0&A?vPL>f3sUfvnO>Tjd3_y~`H-E);;SgkVeDZg@@aMD(CtubsbV>Mwc43^Val1gbnk%bif7e7&wDow&W2pmC?8VSAT!S%UP0`VQr#Dy}&9aX`Esmbn*2r`^+uz4+@oSoc?gZbaIryBhuWSy67GUTOE?>XB9+>xOON8fVv+Kx)?5CG+h%a4J4_eSpX*D?65)rt)?;Ki=^ZUs`T(E5*Qd$NqlV_wsaf_Wc536Y*@i_PkG{^=5jcvv$gJO3MbT`nJ=9%W=)(^9@%gc5_3ZHg-gvW3te(3;DfuOtzk)?)hFh*O%?<R=EZLq@Xp88uM==3F7D|9O?2LmRtL6x{53KI5sQ#>VVZw$1=dCG#W%Whul1hHPH=-8&R=y<nsPV6~o-Dgz$ZJ*q}*?Vwf&Mq&`Up;TNd0^df$_H3<iavux&yEg|qJa=PfgaR-Ft9~QMgSS3;_cN-_>Su~I=UWLagX^lb`1y936tEx_zqrZ_kC*cIPTkZ>5&Czn^id{kI)}Hl#XoN?zC0$+xFmxLDv~>&;VD?AK<u8>BGJNap(ioOEn%X&NN_U+=7mjJ69ZFbz|&t<+sqAjMZ@&J3QY+K}0jOy9=QuMPZvhFOPwbcMTs=w<8R1A=rOi*7r02Pp!a{pP&2}ijQ!U'
+        REQUESTS_SHA256 = 'fa4bef773737bf6dd241cd647fa68ae83b9bd9095b5689ef441bfecacc5b97ee'
+        def decoded(payload, expected):
+            raw=zlib.decompress(base64.b85decode(payload))
+            if hashlib.sha256(raw).hexdigest()!=expected:
+                raise ValueError('Embedded source provenance checksum mismatch')
+            return raw
+        (root/'requests.json').write_bytes(decoded(REQUESTS_B85, REQUESTS_SHA256))
+        receipt={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+        receipt.update(status='initialized_before_dependency_install',scope='3 fixed normal PMID requests; no Reactome request; no gene seeding, provider run or source authoring')
+        (root/'run-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+        (root/'fetch-report.json').write_text(json.dumps(dict(receipt,entries=[]),indent=2)+'\n')
+        PYINIT
+    - name: Write exact source provenance
+      run: |
+        python - <<'PYPROVENANCE'
+        from pathlib import Path
+        import json, os, base64, zlib, hashlib
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery54'/'artifact'
+        assert root.is_dir()
+        PROVENANCE_B85 = 'c-rNC+m0m3mE60&qR_AEp7Hx-_(WhImVmGVNC^-i5Cy+Zr&wLps>=*#7X<bn^oRNqnYm|mXI5u;1{bprqa}%9OhsfwxcfPF%#I)T_?LI(;qI=L=T>iDp3A!*-YKEn2N6H0@ZY5WL8~7`{7z~oeE82o{2;`;_wRCgYPX-#;U1UA9)y><w(3e1-Fcas?mngFvd*DbEqj$+zy9p!hsVG4yN91|^W8(fefpSi51oCEp=Mj6XriPVL+L^a5u(XD>RfC|UMk$<>EY$EwA=Df+b!>Rcerowe)yMnPmksMbh!Po-M8Dv_S2#L{C&AQeE0bm+`b5vvo*>zDT_@iIA@hoIpKAkD!C`CYA}tr|MoWR`R@DAFZu3J((~cre%>-j*Ol+h>26F*u4U6jaZS|hD{fwd>Dj5Ueapv|%JajgHt#2r!K+ynwaco?SQPp(8=FgW#S{@$m%eoNz{^kH-941Qu-i&iCZvM)H1uHgswUadSygBBVhX{jh(_Z_-~D)a{`iu=f9?IJ?|)8@pFTXc-X7b1X&*`|AKQ1oq)&H$&v^Xp{k!t=h&w#rru@Vkjj?!6&o587Pk(GrA8$WD9zLbVUvAUq!|hM)@z4*g;+6h>`@!8lKiof!XM9f2AMxwwPoKYk(})i_J(rKxe5mc|@Z<gW<0U@uX&+v1@Zs^{;rYA&_4II0tNi7;;bpCh7^{y-S%>?2XGOJ6314y!u$!iA!Hd+|W5OS_sU{g+T<GW}8MK$)nNVca$qU1ALXV%?xGNZ15p)ecI3c`FBHP?ui=}kaTgN!o;v@U?f4{WHU;fRl9KU|kx?to<>zagJIG?=9sil;P7g}puifY0IQ&cE6N}O*Ne~KbXykY9nTAR^s|848MkgCA!42I7(7{5?O;eIkz30qRWW#v*v>(IPU?fK(F#jpPG>C?+|%6IMN_ka8!HxEDGx5t}wUvCcgwS8{*$Nlro^T)^5KK$VyZVvp{!}Fm%{qE+eeNK<*x#7y^_W1bn8Sr)U{PP2^;|+Q`+~F@zhx;Gz#*h2q@#*;{JwLZkpP!#@KBKqV<4^4dKKPREZXR1{2cF=MAJfk_cMm^4y}$YA_V{q~@bdim<#_7;0hd0bcZW5iqo0VI<>BT2`P~ot{kzYf4yXV6>f^6}67S&>5C7cm0iO4Vj$dPF{^y_ZJL1dJN8IZO6Z3UWPEPRo0(rOh56|#}ckH*rJ$hv{g5Yv<c*0-M!iOKx$fxga{&b%{KYe^a3vk<q$NII+Pc1!`k2e`FSJNXp_B|T-d^2D1=Hc<?%WEC){ls>cbpLRV_qn@0+_Piwl7Ek(mc#RC%7>@d_xc`<_>i8S@V1{Y#BVIu*yvA8H@Mom2wga#YIX2RQ>>1_j+Ar;T39Dlu2n^VrgX6z7^93bgzlvb;#<>|t!Go<z;J1JF5su>(sV$~0~Qx2dupMl^zLsMi~EPiPiT2>Xwzu;p|S(sNu_-ZmVU3C(;7he4ws|XD!bzLFED95Yjib6d6@d`(Hw7o1~%Wq>TY3mxB-T)pf7F-qvv>fV(qu1TXA*!E1JV_`0j`Mm%F?7@175z_=FeO+w<c~qZO71;4VP-2LbOp+Vixn@^BB=_%ucY5BRT-haV63Fpe{S`Q2B$zxl(7!;M$C`Iw$~{&0_B$3y762Q>R=VlQ_vD45dA{ZEId!}Bnu;WtmyhlZj5eNeYyL3IByE+39}ePc)%mJ>TFrPZW$E5#Vmy>3zqBO+k9YJ{Y2N{@g)8?4JIBOF9Prh+k6rA=xV03I>RiX>~5h}ap&upMW0()f$e&NTeBWNirW9Oz%At=~<P!9Q>RUHbBP|5slW;iL;q%vvbhV|P_m{6m8!st7`oZBQUuURH_lW)i#ytrtbXM};gRxFAaSwhM!)kyK3<<#G`n-KAnLB6;r}B8<UJTnmy><csSmrGppZ-^1Tv>YwNiw~Qw*kL}#u<e9JabocZh$Jrk4+uGT*Ik6NMl5xp~4hw<LrEDvSg=|Sw{A=<Nq*+*BKsJpG@H{}S32+w-d2H=lOEIKi-9_zHhUdb)K<OJ8sz|s`lUb7o3;k<2+n2WfJ2~6i`@eRfJdJxb8T6lvqGy3lagZDZnj=`zVid-<uB*uvp)j~)vdTpP%{;slEH3x*Z5QU^Y>+M6RzPo^57GDD3}R}n#tX3B?u0G^&Ia2}FBL!UpjE$8!2b<d(0_z6{<Ru8koL_`DrHaO28f$MG=<s;t#!mq)r?n83Wy7veRJK))I-vdLO5sPiXfqjcvbxM!dT{3Du&-UL~8+A-(t(UXz8_7-rI_<i-^VL*K6kI_H8SLKW$~{rRAh3;6Wr>m!b=c;058AYQj*aZlO6LleE=N8U@|dTyW8PUl1z4ZKV~`Ta^^_G8CIuMrO1(W`;~rx-&Jy?)9(K%HI&3`j0?(eyv7c@=vX#IBjN4LRP$S?_IVkq=~&|X`sB|XA1rZb2BjSphQ*)5MqH;EtKGkvLoH}rkQAtf=$@sqsY=%r$f=Ih9nJiRzQFH+Dg*DUNbNGr&FgE>kZ8-`>3^P0?jhDDUVP9xRnKOs-<hpOPLz*%i2N;3jb}ng{s{JuoV%uVPbMtbmL2qHR9J8TL4-%=qr;Q8u|D7=WF9O{7}oNPMW2&fzMF(7Kh;BO7nmoYn4PqQ#wZAP*7FamI@F923DDtiVnfD;pH!YYY?rQq`XN^1S7o>GWaY~D6Ya6w8M?PibEf_zm~g~CydDxsnL;r-X89Mg0O#Jis3DJcufeNq#|dU;_3S@36>8`t317FH^lwvXrd)mb#Q$I&y*YD1yp^2@-Mwb?_r?md4Ms3y2hI;;4FsPn~1Kk-hSKc>TUEuFb8fSpzN#jwh*qJ3r%F(3p!c#eXglq2lERbKW~ipF`SN~Xf=wGJCHH}4VtUAY3EZg9Sy3c7A-sw)gb1$q!2KbZz}67ybRS|fK!9<b2TE?N~NUt2p+%}rCfzcMyaef-G|WMHfQGBKRmTDL_^#BqOY{ZSaa%WNdx?fV(zpeWSNRbIt^UcRlq4a9528OwTtu_V+(vm19`Fs#mVx**fbcq5P%KD6s<aLk!5cQ@w5t~vkq|CDoWfnHs(reB)a%C3fL5Vj4c^-X%Yy$q8Y>~YXKH;3EOP%76i*SB1uN5R{#ct<{VQ&`@e0D7ND*<j&TN_!q`Maz$^vG3qt@mQk+sq`+(z0b71$UoU^MCY_G*MoakL4AjJyIcdf$%z^yarHDa1?#YM0S*PHZ({|OPa@=|LWf<Vh4>>lF*Ou?_E4LZkG0FQuO6`k$-z}{VHjf>$_CMZiX31D+IlTG<1bOJRJum%xQ1bTsx5T1bzDJKMg3i$Wv-&9n;&>EXU?(iEQq_eWNECK6Ufu>7<fX|jj*K^<18h_2yfH9}0mYlKO78w&B35}vb{)&X^0RdDH2B5dFuUIq4B<PgYB$<e`z^UF4mM;trf^Gv*jsS`Xfl&>5t0kgH!i(nULJrRD69nN}b3~N(Y<L<}8axNs>{IF(A&)Dx6#*n8IDnXN5fr)Oe}FRQy9PuBgNU1TE&T$sNET!Z*l3aoF$4u-?MtpEcqN+x76>hb+c!M%8m>Vro=&3#a5G&}mx;jv;!}%c4N#TvV^z?QIZC3JJ!e9Kw%}9-_}#&wFr4w*<`fmG;ap&qx-~0f&b}ttXqVbqTcL}Z1Dxz?jucngqYdczY1B!uWzd(N1h~2?fM>}$qG&jiSYi=CrYwk28r?1sF2Ekp!AT|w1H6!1*G6l|(~fpX&QOAY5GWxz5zz2Q;6HTRJ`ykG)$!5Np0p>z(vkxZc(BY8YsX^|L4^ke(iuTq87~p|K;IEI0D}RZCL=<q*8snZeBFVW8&Me)oNH{9f-(Ukj2JMq&`FC>u&+JWSb@?c8)u=XgM@NI6g(Onp;ZPWWwh}btS$qgYq7pt4?m8O)Ii*9E2xifFrj=&QzBMDl>uO&*?KD;*r}|6CaXO}VPWH?hq|vp`YIp*c}{r_!eO(3>I`TDrP8K@-{2LX-C>$gKs7r+Lhm{PFbYF1pv{A`rRKpRzHJb=9uW{+1H&pX{6&L)7*ZSznGwQNAG^r=8g!K#kcONNPy@??=xcENu8IVe0WZU7fGRS)YcO+dBSN6UAOfac!G%G>4<MKO1rJgxOIU6Lolj^Mi7UDU09g^CyBAgm<MGIS?YTw{q><r_h)SD-jy42DmtHMgqp22CXxiFj5L<HxOOSBs1Z)I>#7m{Z$unK7sP#ew(!g{f!3d+%RLqe)v^mj0nGgj^fW|IyA9s`2_(62>6tNLY1?X-}76Fe>vmLJ;OGDs<4i&*8{A4J3QJRH&$C3bu=w}U12Of3-vB4!Yw7xGs!NjV^Et1F;Iv3Fl?Eq0oP!ao@bB!R_XinoPvkRfe2t|$ofV2x8!VIDh+yu%MSfpJ7M91DhR5XIV1@jTih?WF$alw5+&^%%jC@tYqGqmZXEfjLoXors$tiA4R&NYG%RXB}5#WQFZ3+DyM;{9_dEr3KQb||PD_^<=sMpzkwVPPz?0)iavN4UCx*D=F&Kp_A-Jt{C<uyyiT$b1<fo_bOyFxj@NIoJ3B#F{v54+NSAP4*7l3}ghH5dle<?lgc6^q5H%kYT{H?6OoSGeA0+0w|AgN?u4Y)DE@dJI_W$PK+uB2y8T47V2az9l$~Qouc#_KR{d%XIMZ}2m;hzLuuwLgoUBS0$vP?)f<AU_h4&)GW5G+E?z(ZfS=al<b~mpwkcU13#pRt2vq^-fPcmeheBf@bO8=+XLGL61Fg(ybHH*~Vg<t7BrBS_#{WUzMD0zoJ;H6162v^P0?{HE3?yu2=D?WN#HC;gnb$!65W3J{T|5)*7Ip^PbMQPMjRwf=YtB`65Q91;2N@k#AvT!>H_fz;$2T4E7XbqS-A6B1AYAsQfq+Ws@z?-9Qvn@d&lh43f|UV_h17xS$QY_V;34x7P$ga?vLR&eYtJ=uK)XK;Jsm_Dm<Bh2;)L0oRN&056$%6>X(Nq8ORN{5I@UIaxTLe<JPzoXx&UqkG(F}Z4K%j5F~FQHLIG3;loJF4-WKY|>;pG-l^X<gCVp}S-Gw=WH$s*g=KV<*T~ZLM$tfLlfw%_EPe8VeDCHa|15}Vt2tOCdTaMu3oD<Mi0aU=0e87mo=(19Aq#JveJJo`^#toG6_B5>nG{87i5rM)k^bU__iYbE@Tfmd8Nq~s~4N`z}DReKuT7ybd0p~X2QhO9=fQf)+BVf8#3uDoIs3)LFuyz2p+($;$HEN*A6VDRD2=FFku<2}|zZ^&>#$wDRDO;SO-50H(!J^GEYFUCRP-7fBacO)a-W$jPJ`IQmy^GOUc%S5hgUt-j47EG`=NdOqV3lVn#FpUpR(A9_<PWesO2-mT5jmL_!RjIRnJR#X>+S;Ldq^qf1dS2prL0@3%BLDJAQh4vtyAzx@YCGktOYTRly_h5KwV89xOhIpl;GILf+94V8>cMrL<(3?IG@1ks98+Upw}$pVg|s#fDoW`gKJ%APf*D;@0w&_Mi_+{1Sm>`1rdNZt*VxR-TM+%>KZwK<NMRZ8(tfoCA$F;%Lo}(BHY5nge|bORGMPaSBPE>V4$-c7&5aO$T*dw^_Nn-xDGO~L+4<OTm!lBsRKno`xp|0_gciZt36s=)p9zX!dr7p+yZw4a17oG9Sm{TL0G|lU?Xgr2H!zst&%*fN&#{Q&Dx;>wYntbXu&dtZeX6pbIPbgyn!x(&qa;l@z8bq#z$Xc2aq;rsW*t1n4*HdPQro&7v~kHfw}{u2gZV@T8md;dRGDmlWqX+;t^Ja%omh`fmMYB?@wjW^$cy8s}Ud<KnYr^f~vRsqK{Tr&CQxKcHlJ_NHe2uJvXqcmSX8zcT+J6%E5;LdQg^5XfQHPM%GBql4_OtQuIMMHmv~U5zIXJXNUk63qK`qkfO#0>=gTysn%DysFY_?K?RI~FQ95lBL)^k@?=r~4<IZ!C}s;NGaz#aB@Q4SmGBABZVL3>h2e>Sdl+ir91*%F>aG*Q8O$~pL{Wi%K-lg>H*K!!(lhSXS$+!VB-?b5)i81kLRv$#cn=EIn6+0n0Pr$mlyvZB2WLod1Vok#+^ymyG#uiSl)8r`eCBj3Gs>!$jP58BD7vpX*SJB@?iAZngMd!3^uS!Zs#;1CE|_0Rz*vX_L=BJ}gnEE{&_O1y$iPUN3iz^@ssRw5EO-#?Hz2M?k1;pUxTO|W(N{3Po_D6<wY!RK{wy(yhd3s4(d{1Xkg-GD8>V7m9$pu`I|!Q#6_HS)5xPR6R@0zdK_}&<G*y9(3g05QAow8A5bRUBz}g&}aR?m+{=O62{8gQ8PpJW3m-C}40MCSXRWQ)yo}8>LW!XS0iDJ(BthJzbXNj?KVE>3eMqkjSfPT}xiV%VxVU=T>@cwX{YPp&tVz{N=8G5c!1Le<{j_m?^9_$m3_j>R#<3)u05(0!XIw?g|&_WvQzyk$ii4-$Fh%S4(&>SiV+(vp%a~mr_U^Un}c`0J5Yyo^uK{)Jd&NXJBtvFBWgbs-fzXpL0DFnzzQG?fL5Yr;ol*BR9l12|T#sp)5H)jFpx<uTdma<Cd4QoevNkIf_wKYzhbX~x=ttQFdH(h#lR>8(onH_};B})Sm775O^sSrDqSZ2vZ$4Dp-9CsmCp>;E%S5}eK2owfi?w3YKfoX<>k(OlY$-&6DOez{gQQzRK=$^cD_V*euaENcGg@{?$QBcQuQACDZ1Oz3zm9sry)8NiPZC!FNNi_(F4tWWIg#LwN*m7x3!Qdq529%RDHZ~9H8Z&%HNmC$y9r{LyePtu&8ZR)2C}*{J5cNv2Cc?M|Ndps;I>IpuB!YtZLlXmMWv?OxUsCQ-z&@FliOOGM)fxzxdrciQx`x7Bu7F_T_~Mxn(aXuOlZBeANdtGbu*tVB6k@yto0jNTc#97nOs0&LN#xqmCfm`kC3Bu$gQRFqLIU*w2p2?;^}rW!bCw4QPJDshNKt^C;1{8D0vXb2A8Rw$Xn}U_)Y$OuzDB4mKpP~E)G!f|1Nf!%O5_F;1H*DnwE`!?_?XJ{xigi>eF>;xW+gjF9F4H$GBBh;g}{Sg&``cw0}^uIIe}%aPbZws_COvsE^#Z}23C=!>`MqNOa&qFpeSI`h&47D=4e25SoX<WHdn`ig<n86YmL;vWQ@D)0yN4spdbr0&_SHeu0^VylL_V;EdaMaH8$M^NV{PwI>;`^%o}?TVlG*UnBF8)qLu}28lD6yXA$4C=c+<|X*Ldbgr8)I_EZR4(4Fj<F@)ZO9kMc}L8In<)1}5=SETMNjtbc<=h_tsK<e3Mp#ZCJSTG-@5JI5TM01c5(EXq-Q5%*XWbhuV#3kneRgI1)7NFm9(vH*kOjWzi3`#Sq`<=7%CR`0X>O4Ocm=`eFYEUYlVCOYK&)5Ql<Mb&&TL&Npvu;gV3@)d(ldb4`z~qI%<2ebbs$<=_v~W7a=AKjXtx0$%3$!FadtY;|CJdrDoy-=-l5=$C$625QfdWM!n&*UI))qk&fz?2-sZ#hd8X~zhu6;(k+68N4?jc)|nuqLU^%AfWfE^$`5-d)-LikVnpv{Wwli6p^gYITko`boAy`d|K1=cX8S7@yeInf{@lo*VRSsv#s*l7XIu?pu>`DHLIWB4$J(Xu4BQ8%%IxG;3-?9t+|vtamYt${h$qY%2_VX`0|;ZdH6YH%C=Td$!h*42nAI5!du6+%fEPSBtRbyhBwQ8h@VpqZD}DmaZnWGW&u<yyUEvQmep_twl_O&0`rUQP)=ZQz}fNnE1>i&zD`xhv`~kZ6FKg~E%_4nBbO$d<fCqm2RO_7_LT#tOenjZ>o;NT0nGXhTeuIR{Zk&UasPu2vw1vs@d*4a79jxXE0qf>}ZEWWlA|h%*I^G@zZ($QHK3sU8bR%YmuJB;%zbx2jcE#ZXxn2+xw>MxZ)vlt5D@^a6^T_mop!%@t^QMnK`!AX83r?gc6#h6=$6Y*yWZvT0BnUzHWvYpw|xdjs_DLTL$1;sPgt(`8nz_y9#A8bq}y%(W%%W?-s_oh5>{?rF<aMxf8^jBEUrL0>`jCL&pICUsB|0JV~IdBF)zXFz<QvIR?cJJ+mRJqpt=V6=o8k$%EZ9c$&F1z3#X@EnYd*PuDDU$>_**JlvU*jl$>8*pZLG$0G_=`)mYH!8^#oP<{EnHkM4yorE<T3r+fMnFNl<E0wp5&sLQIizy{kSpMq4X$@cZ5GX{=9I6c>}ia@N<H;yM#|B*1L&Z&Fk{xTWiOfnoFS}0&VeUHU%;6w8Uw&hx)f%cdo~u((J#%uW$<nb@m3II3|z-H<&p+9=v-qh8hBte;hV;w72!ksYbwtl(&O_1YWDfNe?ELZ$qkAC@qb!pXhLf#a!rOT)=BG&Byk2WL@Z>L6cMaK*|P!#svxua3DV7}WMCc_%nB4aJBU2#fyDqmTyB8dh3k4)3XG5&W4ZY9@xzxzq37?doJ6PFv&5O=Dg)3!0bMc5mI7oTv{%L;*oeU9&~pwQY@u*DoosqmRGx_c@`7_0?RwThVH8=k93kfdKm!9v8JjUyl&U6QdT}W}d@0Yr-1B4MoIiB}rmf&(8VsaI4`h-|^ED`1ICKWUNVrI$e~8v4<fL}ZTWIHk-Z1`B<WQ`7uZX0w=7Ml20J>g#=rPUdnhwCQQre3xkXKt^6`0Pc<zq}U;uus=P1Yd#f*m>m{D3-wPk;*>DCVXV+yk%z$_&&+Xa-frJ6)=Rgmh`H2+&N<w2iGlU~*`3RTYYb*-{`}lowl|uC_puC7c=&%m;o6?aMl4-*k-)F%QDQ5wQ&GFN3Yd83L3j&g!Be_%qm})wW)0K#3WY1y)m8vW9N=$pe4|3&8N-1|9$}yx0JJtpPx{v$Y(cQn50(3MJ<`sRFgFB}=d)urmTdY|yMyFQt{rX>#wNTs)V)*mS9g8!wG;24!4@g9F<VfmIFt?*qhi_gY&48Qm_vzqvjD;7MnNGGGGeAfP62ANmh(-I-@-9UbhfhdDHEEThQpEW%s1JwSA64HE$>T}Y}h7g=<RWR=0N-WUW1piniaS7&8YEP$u624|wb9E;xT?OY}QFYk^k;<=Ot_doDhDxr?kXBW;QIKjQQ&Uye-h+AhR#?&dddD@Njp4+Dp@r2wu&HbBz-<zkwG`&?@r?m?pRGZJ%On}+2bsAXVY}|Y`Kp3EP^ViM<fQH)cQz$sGecH2ja`VkW5FlIi_GxFFx0|OSg{}0Pr#bf?w|@<RrTk{Q5yHaa)nL)o=$qysT!aQO+vlN!P1t<8WMPpN+xM3d9i#o?d<YABl!_5RZ=bi4IsEPW1JKZbg||px>!SS#NeG~FaUO{6wx91fwH+4j2r?e+;{7l@CTu?+!yBdA28$?dG;aI;5n)p;?jN0X!EV04V!e@;+knB+4CBJ~c>_E#i}R5IVEg&XNG{^qJg;G)a(ny~ID!N4Y@WyMC6x5``REXsw$CH@p^a+$ybCN&**s4)mfQBL#+;j40CohmHJkPc<)&j0oA5z$5M9{3zcz3lyu{{t3tnUwzjso{1wOF?9}u=V{zf3OFYLnz41nJD51fyzwA?-)!RzFv{TMEEbqjoSP!87mMf)Roi#j0}Y6rPss9Sl30HizN7w0(*ux+(LGHDgJ&qI~jrB$=UY#a50L&Mc(uW}~<gf+S7HBL^Qz2ED8aIe?=@xwp<>GvO^*Tx&W=Ry<wxt(rZ2vOp8T<C&;$dvmoj9%=z(7lNT+ZWn%P`rGh=VF;1mq~k0`Zg~+CnA?GQ@~TV<9471YEQRFra$AZ>zvqmos>JT(|fMt`q6#YnSJ*QI_|s9?HUgu_dHigDR<qE70TM}xe&qUoEt7KG-}U<PWe5is>TL3X6J=^*Bv8sKRYjUap#5J@4PVVeRSB{nDeN%xG?U0$30%E5YmN^J1>+w@BtJr!hCjI7y#}&>{iFOl;ZMrM#E)xydZO>!S1@wM6vU_xa&G6_C+$|ZP<HZ+;yS#dzuV(41u=e9YZh_*?TYC(U`#9YmD1-A@8`u2e`?W@^RONu${2$La&V2bD=W37y*ze+FkD$48*zFd7;}w!MNZ+?`aInJFl79KmGUr@<FrQ>Kgmwg&6AzwO?4czRtqA^2}^Y_h^HAgLvne4IAME+sa&dudUh6tXQEq0^8>SdwyHFb5Cuwd6hZve$hNcS}tJ^+sY9ZthSYxhU@}bZ08bTu3pH61~3Ybu-nQEJYA|&Wo33KE3TpvV!KymutsjbH6Ey0R<WJDg&?s?E%I5yYQM;5aopYZ{aIdPv|FAJVf#Fn(TT<TdnVNUB3~pVe0Y&>iV7W|xAQsBwa%^bHO84mJ_LTOon0tX6@uSR)hcEK%yu%CgQvwp&s)g}kA+oR;}*(W2Q}7+Eb<}H{$X+6IVBhQoCxcQi+l|C^;UXu9<qOtZ#1wC1Q2=Rb@sZ~IW8HGn@|N=<ec6{Dj_(tu*h*+Zo9F_Mi?JfIX(riu!~6%!*!%;`}a<a+34-_hC6cDRW`(!ZJz|(XoSP<9Gv6UFsmG!0MXf=j>4D=mMkoDV9M@Nq<B$#VjJ$dZA2ncTud;aZ_M`eh*Vr_A-8`I8ftV{BygPu#o7iONL{^1z#5I74Su`tWZ>f4>wO0UaYlzdIUQ|Iqn_Up^|+?PF1U)}di1b}THNqqkq?B-M@zR+9RLutU3h@x4inoJ8n~a}c2qUs-NA3qQgExkxR|9dA_l~@?JP4Vp~mFnmtGG$_@k3?G4%k$RA!ssfLnR=`SzS+42yXO$sUQ@aabxDTv+6_S)vgZ^InQ!$S&BaRzS4{PchENmBo390bk790kX7T%)2?b<${MfG%m&k4+0>D#k{JQ8n_=8F$eU0@%w<`cWS$TqoOdji+Mdd<aW&Bq^aA+CB%5vsI6k6(qS=g29~7a_PnnGhgE)i!kzPWK5WCb(p;vvJw8fvbM9@P1|I0N*`8Nc7BV1g+b?H0l$DE^&xpA_=dV1*M{SoYD6Z|+emmw1gTNNId71!=6$|wRmJRn=s53a2Ss*gQf!<b+2thKa#rqpW@wct+3?8qy$44_5TD_Qe<i>gn9_yTd__d4k%Xwc6jgn>?|IoVV!nXe#84)k`WYf8l#P5mw5+rv|ZWqv|_GLNMt}J3iPg-%BJBfRAcCawvMco7jSZ+sb7*}vQtndNWwU_}lCU9@BZU2_cp6G@D1HHE;3ujQRH`~7tic;Ax=Itdgep_ei$U3jE(3ybexX_^xOpExSx$jC`=uqe#kiNxvs&Hc#rC=;e*!JJZ$wal#v2ZSD7mN+OT1&U`Pbf~ks0+|Q@I7vaKqz;(lK~_1yXIt#<jnckVneYjZN<EjUC=Qr<Mwcjk9fV2aOds>{%*Hx61hFD_1k4mxV80*G7`lEx>_Xr1V7`js4SEqJBu<RFhTJD?J_eXf}E4NU%P!zktcfX?aatIiUA~6D1ji17u!A$1cRl91<FAoELe&mM-Gc@m{wv@ut}0;#Uiu8Ei}}&mvLKVuNU>AWHGDi7!MVpwppO&7Y4!tWrE<RO%~^+R|^%Sp%9E&up~S?__#O^RV(G{e1r_zZa?QG<RV)K)oPVookt8?uo&)IDXd&%14D?596z_T1XWy}N1QUJZndYp39jyBScoGh@gKD)8Wh5;ivA=^ZWiK!^nH;~6I74eXvs}jDKECqM+;832=2i`JuJvIGj4WKl&4wtxJY6f?iIW`@42Jt;yky(+IDMLMOYM-g1A%uFN)%r@L8BGgey>UK`sP9Ydc|y^BBN|S$j^tEyN2;dSzIVAJ4+-?ehp$YW4nH5wl&i3+=_qvekLW|Alx8g5q@n8=NLsj1OmYSN0WHlq(jK9DbC=E@095m3Rbo=eEh)umcYheg#_={M0YVr_*i)d#ot&3-TyA<FH^G3VcN`$ZKHIc_AJJuUMobnLbmCqE*M7{$lEsU&=Bo@ye)kwjyT7e7W?3wZ4n0RL?yE7q#BPaf#+?M%u1Y`B3E06k#!sVzk-r7DNq&sI-7h=E1kuBCygPWNlRo3}CVg*aL7#zk)@<!r;YuDa;~^?ip4V?e{_R+YbviX2i0VTk!FVxl2}tu3&-N{KXY4LDHE8Y{0GULSzJPR^u0JNLaU+8wXqBrrX=F9~FSXEZ7pi8MFv1@VdCD`ew#o_!aChC+iopBt{Y07xR4FmH12~?JB9D*DOi~M3iQs4W;vuj=!C1N52TSSR%vu-|bX}q|F$)C|NLY{OxEr@_;HXmWWv9nzr4R^YwC(N=2wy!5%A@qL!yq?$Yi-V+ldLt&Jq7bXPMdw1w5m6TumzZ4#!K0(6TE9K^K=iwqitZCI>igf8J6%l3K8b-Qtqq4)d%(f0Yk6uev1KN+rw-9GQg;};}bMDDY-Ala}iw;<U}U@t_9V<E^wyKw?VY_H+qT2ET$_W3BH(hCyIIXJt@Fmet_uSm99RnmACVl6VHo?krii)iS$weN~#2NTVzQpa<%<Hejc4RC?>%HS2vN?W_Q%5Zw;78z`=Y(lhJkVF-@ns-(8p%?aTBvVr{p2CvbwQibOqs4+ta5!rh6L-;3+-+wX;ns_ZK?G56o!nKB5xEQAY5R7RT0r)Ru^#m6uXdCQD1Ic$EsV_)EX0Dk1b(FV>}7Y%(s1vf1;hu=IBk0{7qQ!II>#L)omy0FK><6ls9-SsWXYl`4EVK};bim!GuXbr<OJ+uAw5&hahq*(;{}+Azj8h-;xGDdQ31itiREGj8mz~;6>ZT>ax7>I=$<u;l)XfVU95a%#ZK6sG8oG$omeH&z)%)5PzvxR)S~JQ1i>$oNKA5sh1!Z5^k|VA9_!N8V&$n~7V=ais~s~rG`ZmADmUfPt$wv27R+QDw$;duosxJZ_aK2~z}qembIfDA)4T3l$I8tG^kP~{s?}~4qXuFz?Sufwy`UG0AJHZ*st~A|<tmYAWn3lNKp+=YPC7c6saTv3imGinOKHVw^)k25)r%O<;#0LS7UkqZQO+`;#qU+HdXZ=XKjc=jyA}*7D^J6w+LLjj`ItpDKkli-Vp^1of)~<{($hG(szTy7X149qgN~?0MoO3nj9y?MIP5B8<+(g4Eb1mf@U2^AG`PXVYV|#LAF+!>C=4hpDu+Gb%*cI}!|n{U%pR`AH0Sm<I}YHn+L|O#m@fvOAGX|1cPY*(+eIn990`@}!PUm2&2mu!LVVP#5~k=@0*oKITBI{0ZC@`3SFEzw01x5y*`V2dlYe0`XFkf8R9x^P3g=Z`!UER)A}_)1M_0AV!MH^&vKmuAi*9wS9J8y*8J3DHvZzi7xzddi#6zy;bR(R8RXL-_SKGH^h6yW7K*R`xSAHFKw})Urt#2c3gqmKGc^92sEOsLsjjL^hpgH4WF&^g?v|a=X5my^>a7%HsDhKwI<BMfkk>9yn6q-aMx#`1V!w)Ovb`BO;#W~|eId9-v$3?j*m*_84wL+Y?i)0bvuy>0YV{RX5Rx^r*V7=Jpg`1w))r=U|51jFfJz^gG$BvD^zWyxi$#JkQVq5xfk)2#@I>V|X?gX+Z>)~fQR>jTBvKi<?eo=cdn*7-BBJ!BARkvErZ(}gcDzz46SQY<q@5sey581FP{xc+$i}_PPoID%WJvFV73p%#fnJF%^l8Z#XWYPG7?QvzH32uFU5jh}u`QeGhIx$wAud1D*Ue;`epn_R-y9Fg$NLM#L6@I!3dxv6HT;#n?QzF+{Y&SYOM{w9?8(b#h7r-c3OJJ_J;%e=mu#30XTw0{h=G^oSxvuzK(M9<%!{KUMKh1=rTqS4ty~S09jb$QsRsO4?Tu<k$^qzcyg@wgMJtYK_UsYX$8^H(TYNe&WQXwGSA}7yXcHJVMpd>4Cw?`X#)XOFCf>N(42)J44DrcoNB<-1p={-v@(P!I!i@<Bdq8tqpn`NwFwH6GcvRLb7O&FQDuW!9)-kD!PSR^MP&IMD9i>*)vzlFHipg^jys8V7Hqh5$_22sC&^O<v7L^*!4>MTm>9r}tTC}LIIh~bEf4MkaU92TYKBPkuWa|%ZBV~J*Qeyq0KjuLQD<IbkLwc8~t;TnqtecUrIthVET7r4cOM=!=+hl^5gp~a&3MH+sQcLg07IJ1~8mXO<VRYee3RCwBLdsYTVZ&zFT&RK@VIvmAHyTwj|fJ3uTqv$e8>9O5yidm3Fw_4WHhDC<gaw+R+x9nl?UU7FIzuHE5p8tB=4F<Wjh}-VjA}mIWD5`c{2n0WM8ncI5VenS#6LjPZ(`vT~bb~ot@o)Als}R;kwOSmkxXH*O#iO|^?qczl2v@eRJk}R~eeGTB1gys|_AUWY<p$Xc_9DV!l{wd2hLN!R`dT}pw>B{-vDhd_DX+$i`PbX-Nv?tbM(0-(>6Ybor?=e`o|sUUXHm`UfOkc4;{Af~dii#ft~c<@z_`#>R3_o9HGAMQ;HHZdG}IvIoL#L{uylsSN(ErLUdRi6`+Bi;2{%L23zG$Gu<K5ny$2p6*A_2UZ+j?FaaKEF;vP$OUfZ*Di`{`@+^tWXB_!=03B`>+7JEjJI>IE}qR_+zA<rJW14Im~0hK&;a=T}yOGHrYh2R751ihFR26&0F(ua?2t(tc~{QvZErO_t4qfNi1k1UNwxgCxAEq!chG|KO2)NkpdOS4h8>E*A7yF+^X<(9rjXXY#%rS1E7{2-kf-zNbFh+KVwBgX}t5l5p~%JB<65HcVc<GX46^0((YEgUM%ZH&f^D4^8%-l{~?EmygZL$0VEci<jfT>Jf=+sXM67RMpTg&TLUTuL#%c8uU5M-}6HF3BHjuE$|?5F6tTEF)%_);Pq?<hZ~q(h4^Z#}@nJkl(yF<7wPAo$I^DVNiZp4cBaAM8*YC41GHf`4x-th{$bM=9?kD@bBXgWX{evgLJgqN$CA3kQ!Uqyyx@>e&ozJbllg0eWoNH#q|vD2Q`asxFen)lr(W1a%1W74vN)ATDx(Gj&R4nLi`vvZZ;zIcy;hJ$q!cYke^VUgQZwZjL{f}(Xujwhc0q&CH_^9$@I}62sMj`jYAvoztJ{kckt@w-JieMQ+a+#cem-Wd_4Tr-uetLS%2FLQ9+)5){_<4hF_FQIZ1HnT2oDu-%)Bdk(vt250av@6wJ;=nSk4>kw3<)>;=c?M=py`FqoD_E!hK_ffrF!$yJ0nf`CZ6zxqhH<Rchr4HFq-O1{J4_u%lx@CaSTItn@ox-UqMMpXQ6@USlF827|<mjD?Yr;ivr2ab;6wVdwaIH!H|5djr3|4Nhc(=h~>1B>Y{%5bB-aTr;ZH9ZGDG+u^TEvKf#aWe}c#)F;5AJuRSZo?slck^?k+;C{xa*!;^;UV0N6~H{CL(O+MHEXJGG0ob*P_&<B4Q?*wIGi&j!&HTbq}0=D1K0JAL)=VEqom2n0YH>=o*!Kqrpomj;|_tl#0~dmmLI?`hSe&%G+#$^b4oMb473#PG~h_{+ueSQ9)!L@^bfBF9IhMiZ|UQ7qfPOW0ekMpKS0z6_|3o$XgMxZqyZBTh5?50)r0Xj1TRj9zaG(GI48z}bQ-!xXdZFFaSaDYDtZC!Io!a*5ZpKl+#+>Y7{LVqG7tHA;bFwWFbO)$RnYU}>!AzNIq=@j&9DME*5Fg)Fi1I{1vushI%Z%Rd#8>IaIDNgR_+<^xVnXh<iv6w>M%a*G2@wK9VQQnddEYc3-{;ZVWip3Yx(Kvd4VELHfkPvmYUDQ;5g6D!!ZXbr;EeJ!!ZnUCkZ=U932(r1zcJ+Uk8UUt8r*7tb2waGzOvV7$+US4}5fSKYRLk80R7DYUc%fteJoHmNjhSklzTLQQ1j;eP@CMeR84`KjLmjG~)M%;9&Ct6<@p0kt)nCLGR*<d4ae3*wx&;$xpmMuvg|aDid^$hl;C&kFi?BX%7TKIm0Vd=~&D+4n0HDJmlA?X0%6aoX{azn{Xr_0aj?ox9hn@k2LcR!SX{B;w{v%y6gyQ{ItMqF~FX9dJOS=%s4c1Y&8ECAvN;_Gw>T))i(&K;>1|R5(Vy+F*(5a1O*SdBGt#^Avc4ZbO7Aoc*tcOW3Uv<frENw2IB)N16TpWV}!WupNm%JA&a}`1(HKN|H>+iSL(pcCFak-O~eFjJu(IZrOEfra3?NRVy}!t$Bp|Y<KVY};$$3w`*h4}12-KR*D{YXNf?W{=^67dz|_Ybj2fTM8i!7BMbUtK8l0Qx&(B8=mIfb<LC!n4v7O`S2fP3$t;ZoqSQxHHQo~KrdFVlkjGTwCUpd1Lw}1D;G!#KC3;<!h`&bck&V}$77e^~J!V*hfN34;Y>YImXoF0uojX?bJ&SZ+3q;Ps669Iaf(P@a{PKrVwqm||k$>R{`{lEtejEmOIL&Rh+CN%?*)??fdJHbNCWNGMiuB$pBZ0|=|x9|fIxon9$#`6#)H%?{)N(EpMGfYaZJe!BGBW|Pk=P%LaTEzUVd=d5C{0iy@-(z9zusWxw(P?zCA7PLp#SA-hfGs^#h#%9cb_7^^B-{bxF`+7OyM)oTcpGcSkVbx%YWNYN@X<>mceEOw!Ik3EM>uTOPh8=2otpHJlSR|mx#SiAay<0m7|I|u0RZz3c-9fGIE{KlJX{>?F~AXFk1>?{hD>3_xn$vI*z;`OycS$S9EBi)xV5iB(8^(nIGp8u@8`GmI3+aVBBIZHFuzH0lu$54qSrW7^J_)p5OGV-5UCxx(d5Rw$-D!<)2fd&c`gDRG#QSek1<pzJ^PG{K&FpKZdDT}jW^B^WoESGUIz0Jqiv2c6hr6SQGs$llNnCkDBYRiH2Py#TV|SPaB-vL)E*E0F=(MbSl=}xs~Vs48sU^I_ZVd1?DM{-k=3{{wKNXtvGcD4m>KK9J&l}3fJ5%+IkhqH#LNpKKc0J($skSUcxYd_JSYW`XC6{t+SiC}CmZqnjOg)a&@4Wxqono|Oc1ewh*L+S;lRz~A*1QMgTZjwW5gER$@xok53eB|%3w-$re){AdRoTpJ{TO{aY`1T=7c%EtvbeWuu@pIdp$e~cxZ%hB$Q#4(T{fsLkUf)0ONFD!oQJ6et>35aTI%a3pM}BP2;C*!bot>=i{L}k{E7SVdl7TfBWE$T1mv2TA+CcIi)(<B_}fQ^M&xj5q;1%9P)X{Eifi22>g<(Ii?F(U@{IB*M5m3Rp4yWqzZViIE5GFp`5}CgCQm>8;2?!54p|Typ}sa&&bM-I3^Le>G))_oD%V7(iPAK^5G+wa7Ir-N8T4^a)L>k`Rd#bQpkA$cdXI#uMk6K@MbPwia|{ANA@G;U!j8i%#~=+gDHYf)gjkayV*=&97NXqD@Br<H$yy+!~MB?)>s=q7zX#u8P}3ci%Em{y%;^l7!1ZaZaqH^BiEOYLw0Yl$7G6&LjZB>V6<``f>x_J7LKG%PL4uyHGhUzgk~Q%b3o4{gY(=|U^brnUQAky!$8G54vD`<<}y~2jYG6SPmew2C}gQK>YULEc>IyBu-Ido2J4LZLE^zB@GLh8&k2`sYV1@p2?SRO#@F!AaCt5M|K>g{K3gU)5rK<=8-eB+I?m!T(L}xp!q;Q$*fsInXi8Q#qcrQzXUsZ{rvJ7OYFQ*QLH9J0orEt-8vizmoI?BwDl0we8s7lviMrwzMl<0f2o&};Bg7=@gcT#S^>3Wl7(uN&4;7j9IE>sN@f$ZiaY*hHIMvGd_Tzl8WA9EhVgf{mqrV}b%$$;E>-2OzM&WSGGy&r0)40aiPSB<PQ|71%n1YyIi1u3XHvhEYkO(4v;DhG7&v83*(-X>n**Cv3`Y?7_Hm59|hhy=C`{J>3hsVmR9%~8qr?VNM^xT@s-PUB8;%l-w!EM8|MhquG>&(m|e(COXv;2&5^htrb*A~sC@6g-kis((kuHbY!iIji>r79+XQ%kU-JZc+f%hV;0jVxj~W_wtiHe=3da?%h0rpZKO!puE7(A%JoqdY%Y`{%EZx!Qs1`e)=3y-xctLG)B0T?MNM-8WrhtK1JHJ5Gjy#X!c`3ZBZjFHxZUi|(>yyfYlTUh2ORvn~m2t)iC|xn1%VmYSe>@ZSb&vEoajQ0j}BLeFB!AwjsA&<LWOAyDSbz5o369#=a@U+WyhrRb+~nj*#8oXVm!-)t(P@H4>4hnTwn4kP43L|2HpRw|;f^G-I1q>KSiJ$&0Y=nz#?(4ulj6lY5;#y6N2kXp#@S-37-YhU`tT$F{}7SJ83*4I>w8o41o)6#xy3O?jN#Oz4h5MO|=Q-yOw&aZNs&$-%v=DKn56V)dj2%cCl_*sP%T!txi(PL}6br_Gc9-h{OFPww~W>t-AIw^tH@V;s;Orr#Jn=iWIE<Fa5s`J@o$n>gHkX^Ctx6I81z7`GShnM?`9>nke)IO)j^xW=#xp{0)?eV8pZ+`!$-~Xe$$?3U#{M}8uySsV*_}JRb$hY4d=TvY0@DES;OSyZg_{HH7KmOdxGkWUgq2C;yd9sz4=flJO&C@d;@EzX${^9<0N*0g)r-z&4h7<qyU;mHQ_`&CN|AZgBzhU>{Nsli${^PN1?fuQ?$A_N|wLRX9zqh|0o}Lf)KYl2wd~CS7;~hS}$HC`@=hd6Lhm!7QGj4k0KOY`%UhoEY<8(gcyTikekLmNrU%q?yx4-?T{|D3X>UI'
+        PROVENANCE_SHA256 = '711455a44a89b167a331473cd1935189acbddf32efd66b029b54c4809bab50b6'
+        def decoded(payload, expected):
+            raw=zlib.decompress(base64.b85decode(payload))
+            if hashlib.sha256(raw).hexdigest()!=expected:
+                raise ValueError('Embedded source provenance checksum mismatch')
+            return raw
+        (root/'source-list-provenance.json').write_bytes(decoded(PROVENANCE_B85, PROVENANCE_SHA256))
+        PYPROVENANCE
+    - name: Install uv without a shared dependency cache
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: false
+    - name: Install the locked normal project runtime
+      timeout-minutes: 15
+      run: uv sync --frozen --no-dev --no-editable
+    - name: Run normal source fetchers in isolated temporary directories
+      id: fetch
+      continue-on-error: true
+      timeout-minutes: 40
+      run: |
+        uv run --no-sync python - <<'PYFETCH'
+        """Retrieve a fixed PMID/Reactome inventory with the normal CLI; never author source records."""
+        from pathlib import Path
+        from datetime import datetime, timezone
+        from importlib.metadata import version
+        import hashlib,json,os,re,signal,subprocess,time,yaml
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
+        BRANCH='refs/heads/cmungall/clingen-reference-fetch54-20260928'
+        REPOSITORY='ai4curation/ai-gene-review'
+        ROOT_NAME='clingen-reference-recovery54'
+        REQUEST_SHA256='fa4bef773737bf6dd241cd647fa68ae83b9bd9095b5689ef441bfecacc5b97ee'
+        PMIDS={'12379852','22387004','26633894'}
+        REACTOME_IDS=set()
+        PER_PMID_SECONDS=180
+        PER_REACTOME_SECONDS=60
+        TOTAL_SECONDS=35*60
+        REACTOME_CALL='''from pathlib import Path
+        import sys
+        from ai_gene_review.etl.reactome import cache_reactome_pathway
+        raise SystemExit(0 if cache_reactome_pathway(sys.argv[1], output_dir=Path(sys.argv[2]), force=False) else 1)
+        '''
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+        def digest(data):
+         return {'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'git_blob_sha':hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()}
 
-      - name: Install just
-        run: uv tool install rust-just
+        def validate_requests(raw):
+         if hashlib.sha256(raw).hexdigest()!=REQUEST_SHA256:raise ValueError('Requests differ from the fixed approved bytes')
+         data=json.loads(raw);allowed={('pmid',x) for x in PMIDS}|{('reactome',x) for x in REACTOME_IDS}
+         if not isinstance(data,list) or len(data)!=len(allowed):raise ValueError('Wrong finite inventory size')
+         if {(r['kind'],r['id']) for r in data}!=allowed:raise ValueError('Wrong fixed source inventory')
+         for r in data:
+          if set(r)!={'kind','id','mode','genes','citations'} or r['mode']!='fetch_missing':raise ValueError('Unsupported request shape or mode')
+          pattern={'pmid':r'[1-9][0-9]{0,8}','reactome':r'R-[A-Z]{3}-[1-9][0-9]{0,8}'}.get(r['kind'])
+          if not pattern or not re.fullmatch(pattern,r['id']):raise ValueError('Invalid source identifier')
+          if not r['genes'] or not r['citations']:raise ValueError('Missing source provenance')
+         return data
 
-      - name: Install project
-        run: uv sync --dev
+        def inspect_publication(raw,pmid):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal publication frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or str(meta.get('pmid'))!=pmid:raise ValueError('Wrong publication identifier')
+         if not isinstance(meta.get('title'),str) or not meta['title'].strip():raise ValueError('Missing publication title')
+         if not isinstance(meta.get('full_text_available'),bool):raise ValueError('Missing normal availability metadata')
+         if not parts[2].strip():raise ValueError('Empty publication body')
+         return {**digest(raw),'frontmatter':meta,'has_abstract_section':'## Abstract' in parts[2],'has_full_text_section':'## Full Text' in parts[2]}
 
-      - name: Warm the reference cache
-        run: just warm-references
+        def inspect_reactome(raw,identifier):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal Reactome frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or meta.get('stable_id')!=identifier:raise ValueError('Wrong Reactome identifier')
+         if not isinstance(meta.get('display_name'),str) or not meta['display_name'].strip() or meta['display_name']=='Unknown pathway':raise ValueError('Missing Reactome title')
+         if not parts[2].strip():raise ValueError('Empty Reactome body')
+         return {**digest(raw),'frontmatter':meta,'has_summary':bool(meta.get('summary')),'has_summary_section':'## Summary' in parts[2]}
 
-      - name: Check for cache changes
-        id: check-changes
-        run: |
-          if git diff --quiet publications/; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Reference cache already complete; nothing to commit."
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff --stat publications/ | tail -1
-          fi
+        def inspect_source(raw,kind,identifier):
+         if kind=='pmid':return inspect_publication(raw,identifier)
+         if kind=='reactome':return inspect_reactome(raw,identifier)
+         raise ValueError('Wrong source kind')
 
-      - name: Compute metadata
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: metadata
-        run: |
-          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
-          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
-          {
-            echo "branch=auto/warm-reference-cache"
-            echo "changed=$CHANGED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
+        def relative_cache_path(kind,identifier):
+         if kind=='pmid' and identifier in PMIDS:return Path('publications',f'PMID_{identifier}.md')
+         if kind=='reactome' and identifier in REACTOME_IDS:return Path('reactome',identifier+'.md')
+         raise ValueError('Unapproved source/path')
 
-      # Minted here rather than at job start, for the same reason as
-      # generate-pages: the cache warm needs no credentials, only the push does,
-      # and a token minted at job start burns its 60-minute life on the fetch.
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+        def write_raw(destination,data):
+         destination.parent.mkdir(parents=True,exist_ok=True)
+         with destination.open('xb') as handle:handle.write(data)
+         if destination.read_bytes()!=data:raise ValueError('Raw byte-copy mismatch')
 
-      - name: Create or update warm-cache PR
-        if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
-        shell: bash
-        run: |
-          # Commit as the ai4c-agent App bot and serve the short-lived token to git
-          # through the gh credential helper, instead of persisting it in .git/config.
-          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          gh auth setup-git
+        def copy_raw_tree(source,destination):
+         records=[]
+         for path in sorted(source.rglob('*')):
+          if path.is_symlink():raise ValueError('Generated symlink requires inspection')
+          if not path.is_file():continue
+          rel=path.relative_to(source);data=path.read_bytes();write_raw(destination/rel,data);records.append({'path':str(rel),**digest(data)})
+         return records
 
-          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
-          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
-          git checkout -B "$BRANCH_NAME"
+        def command_for(kind,identifier,runtime,work):
+         relative=relative_cache_path(kind,identifier);output=work/relative.parent
+         if kind=='pmid':return [str(runtime/'bin/ai-gene-review'),'fetch-pmid',identifier,'--output-dir',str(output),'--delay','1.0']
+         return [str(runtime/'bin/python'),'-c',REACTOME_CALL,identifier,str(output)]
 
-          git add publications/
-          git commit -m "$(cat <<EOF
-          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
+        def run_command(command,work,logpath,timeout):
+         with logpath.open('w') as log:
+          proc=subprocess.Popen(command,cwd=work,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+          try:return {'returncode':proc.wait(timeout=timeout),'timed_out':False}
+          except subprocess.TimeoutExpired:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();return {'returncode':proc.returncode,'timed_out':True}
+          except BaseException:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();raise
 
-          Automated weekly warm so validate-all reads cached references instead of
-          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
-          EOF
-          )"
-
-          git push --force-with-lease origin "$BRANCH_NAME"
-
-          PR_BODY="$(mktemp)"
-          {
-            echo "## Summary"
-            echo
-            echo "Automated weekly warm of the reference cache (\`publications/\`)."
-            echo "Fetches references that are new or lack full text so the full"
-            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
-            echo
-            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
-            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
-            echo
-            echo "Cache data only — no functional review needed; merge when convenient."
-            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
-          } > "$PR_BODY"
-
-          EXISTING_PR_NUMBER="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --limit 1 \
-            --jq '.[0].number // empty')"
-
-          if [ -n "$EXISTING_PR_NUMBER" ]; then
-            gh api \
-              --method PATCH \
-              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
-              -f body="$(cat "$PR_BODY")" \
-              >/dev/null
-            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
-            exit 0
-          fi
-
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Warm reference cache" \
-            --body-file "$PR_BODY"
-
-          echo "Created warm-cache PR."
+        def main():
+         if os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or os.environ.get('GITHUB_REF')!=BRANCH or os.environ.get('GITHUB_REPOSITORY')!=REPOSITORY:raise ValueError('Wrong event, task branch or repository')
+         repo=Path(os.environ['GITHUB_WORKSPACE']).resolve();runner=Path(os.environ['RUNNER_TEMP']).resolve();root=runner/ROOT_NAME
+         runtime=Path(os.environ['UV_PROJECT_ENVIRONMENT']).resolve()
+         if not runtime.is_relative_to(root) or root.is_relative_to(repo):raise ValueError('Runtime/output path outside isolated runner temp')
+         artifact=root/'artifact';workroot=root/'fetch-work';workroot.mkdir(parents=True);logs=artifact/'logs';logs.mkdir()
+         requests=validate_requests((artifact/'requests.json').read_bytes())
+         report={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+         report.update(started_utc=datetime.now(timezone.utc).isoformat(),entries=[],request_digest=digest((artifact/'requests.json').read_bytes()),provenance_digest=digest((artifact/'source-list-provenance.json').read_bytes()),versions={},source_code={},scope='Raw normal publication and Reactome outputs only. Metadata checks do not establish scientific support or complete article access. No source authoring, review, gene seeding, import, refresh or remote mutation.')
+         def save():(artifact/'fetch-report.json').write_text(json.dumps(report,indent=2)+'\n')
+         save();deadline=time.monotonic()+TOTAL_SECONDS
+         try:
+          for name in ['ai-gene-review','linkml-reference-validator','PyYAML']:report['versions'][name]=version(name)
+          for name in ['src/ai_gene_review/cli.py','src/ai_gene_review/etl/publication.py','src/ai_gene_review/etl/reactome.py','uv.lock','.github/workflows/warm-reference-cache.yaml']:report['source_code'][name]=digest((repo/name).read_bytes())
+          save()
+          for request in requests:
+           kind=request['kind'];identifier=request['id'];key=kind+'_'+identifier;entry={'kind':kind,'id':identifier,'status':'pending'};report['entries'].append(entry);save()
+           relative=relative_cache_path(kind,identifier);existing=repo/relative
+           if existing.exists():
+            try:entry.update(inspect_source(existing.read_bytes(),kind,identifier),status='already_present')
+            except Exception as exc:entry.update(status='existing_needs_inspection',error=str(exc),existing_digest=digest(existing.read_bytes()))
+            save();continue
+           remaining=deadline-time.monotonic()
+           if remaining<=0:entry['status']='not_attempted_budget';save();continue
+           work=workroot/key;work.mkdir();command=command_for(kind,identifier,runtime,work);entry.update(status='fetching',command=command,started_utc=datetime.now(timezone.utc).isoformat());save()
+           try:
+            entry.update(run_command(command,work,logs/(key+'.log'),min(PER_PMID_SECONDS if kind=='pmid' else PER_REACTOME_SECONDS,remaining)))
+            generated=work/relative
+            if entry['returncode']!=0:raise ValueError('Normal fetch failed or timed out')
+            if generated.is_symlink():raise ValueError('Symlink publication output')
+            raw=generated.read_bytes();entry.update(inspect_source(raw,kind,identifier))
+            entry['raw_outputs']=copy_raw_tree(work,artifact/'raw_outputs'/key)
+            write_raw(artifact/relative,raw);entry.update(status='recovered',artifact_path=str(relative))
+           except Exception as exc:
+            entry.update(status='needs_inspection',error=str(exc))
+            try:entry['quarantined_outputs']=copy_raw_tree(work,artifact/'quarantine'/key)
+            except Exception as copy_error:entry['quarantine_error']=str(copy_error)
+           save()
+         except Exception as exc:
+          report['fatal_error']=str(exc)
+         finally:
+          attempted={(r['kind'],r['id']) for r in report['entries']}
+          report['entries'] += [{'kind':r['kind'],'id':r['id'],'status':'not_attempted_after_failure'} for r in requests if (r['kind'],r['id']) not in attempted]
+          report['finished_utc']=datetime.now(timezone.utc).isoformat();report['unresolved_sources']=[r['kind']+':'+r['id'] for r in report['entries'] if r['status'] not in {'recovered','already_present'}];report['recovered_count']=sum(r['status']=='recovered' for r in report['entries']);save()
+         with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:summary.write(f"Recovered {report['recovered_count']} normal source caches; {len(report['unresolved_sources'])} unresolved. All outputs require independent identity/content checks before import.\n")
+         return int(bool(report['unresolved_sources']) or 'fatal_error' in report)
+        if __name__=='__main__':raise SystemExit(main())
+        PYFETCH
+    - name: Verify the checked-out repository is unchanged
+      id: unchanged
+      if: ${{ always() }}
+      run: |
+        git diff --exit-code
+        git diff --cached --exit-code
+        test -z "$(git ls-files --others --exclude-standard)"
+    - name: Upload raw normal sources and partial reports
+      id: artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: clingen-reference-recovery54-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/clingen-reference-recovery54/artifact/
+        if-no-files-found: error
+        retention-days: 7
+        include-hidden-files: false
+        overwrite: false
+    - name: Report incomplete recovery after preserving outputs
+      if: ${{ always() && (steps.fetch.outcome != 'success' || steps.unchanged.outcome != 'success' ||
+        steps.artifact.outcome != 'success') }}
+      run: exit 1
