@@ -22,6 +22,7 @@ The two gene reviews themselves live as usual in `genes/DANRE/<gene>/`.
 | Pair | PANTHER call | Fate (summary) |
 |---|---|---|
 | [cryaba / cryabb](cryaba_cryabb/cryaba_cryabb.md) | TGD_or_lineage | MIXED: uneven expression split (cryaba lens-restricted in adults, cryabb broad); both keep chaperone activity with different strengths; shared dose-sensitive lens role. TGD origin not settled |
+| [col1a1a / col1a1b](col1a1a_col1a1b/col1a1a_col1a1b.md) | TGD_tree | DOSAGE with a minor expression partition: col1a1b (alpha3(I)) is a co-expressed, partly interchangeable chain of the same type I trimer; col1a1a is dose-limiting and alone makes fin-fold actinotrichia; no protein-level innovation shown |
 | [mitfa / mitfb](mitfa_mitfb/mitfa_mitfb.md) | TGD_likely_parallel | PARTITION (expression); protein conserved (mitfb rescues nacre); residual redundancy in xanthophores and RPE; resolved differently in medaka |
 | [pax6a / pax6b](pax6a_pax6b/pax6a_pax6b.md) | TGD_likely_parallel | PARTITION (expression) on a shared dose-sensitive core: pancreas pax6b-only, habenula pax6a-only, eye shared; equal transactivation |
 | [sox9a / sox9b](sox9a_sox9b/sox9a_sox9b.md) | TGD_or_lineage | PARTITION (expression); sox9b-only roles are ancestral SOX9 roles; redundancy only in shared domains |

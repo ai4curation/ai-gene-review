@@ -210,9 +210,10 @@ These pairs come from the background research.
   experimental rows and pax6b 3 UniProt rows, which sit on sibling accessions.
 - [ ] Decide how to handle genes whose GOA annotations are split across UniProt
   accessions (option: let `fetch-gene` merge GOA rows from secondary accessions)
-- [ ] Batch 2: further literature-supported pairs (e.g. vcla/vclb, vegfaa/vegfab,
-  hbegfa/hbegfb, gpr22a/gpr22b, grk7a/grk7b), then a random sample of
-  `TGD_tree` 1:1 pairs
+- [x] Batch 2, literature-supported pairs, all reviewed with pair pages:
+  fgf8a/fgf8b, tbx5a/tbx5b, col1a1a/col1a1b, grk7a/grk7b (grk7b updated), vcla/vclb
+- [ ] Batch 3: a random sample of `TGD_tree` 1:1 pairs, for an unbiased estimate of
+  how often each fate occurs
 
 # NOTES
 
@@ -273,3 +274,27 @@ These pairs come from the background research.
   - The 8 other genes are unaffected.
   - Batch 2 genes are audited before fetching, and each is fetched on the accession
     carrying the most experimental rows.
+- **Batch 2 results.** Each gene was audited before fetching, and all ten were on
+  complete accessions. Deep research failed for all nine new genes (Edison 402), so
+  the literature searches were done by hand.
+  - fgf8a/fgf8b: PARTITION, lopsided. fgf8a keeps most domains.
+  - col1a1a/col1a1b: DOSAGE. alpha3(I) is an extra chain of the same trimer;
+    double heterozygotes are fragile.
+  - tbx5a/tbx5b: MIXED. Both copies are essential; the fin role is split; protein
+    divergence is inferred.
+  - grk7a/grk7b: MIXED. Asymmetric cone expression; grk7b is reportedly a slower
+    kinase.
+  - vcla/vclb: MIXED. Conserved protein with an expression-biased partition.
+- **Across both batches (10 pairs).**
+  - Clear protein-level innovation in only one pair (elnb). It is suspected but
+    unestablished in tbx5b and grk7b.
+  - No pair behaves as pure backup. Where copies overlap, the double heterozygote
+    or double mutant shows a dosage requirement (pax6, col1a1, vcl).
+  - The best-known "compensation" case (vcla to vclb) is mRNA-decay-triggered
+    transcriptional adaptation. No protein-level substitution has been shown.
+  - The partition is usually lopsided: one copy keeps most ancestral domains
+    (fgf8a, tbx5a, cryabb, grk7a).
+- **Curation findings worth reporting upstream.**
+  - Two col1a1a "skeletal system development" IMP rows (PMID:30082390) are backed
+    by col1a1b and col1a2 genotypes. This is a ZFIN gene-attribution error.
+  - The PANTHER human-ortholog column lists COL3A1 for both col1a1 paralogs.
