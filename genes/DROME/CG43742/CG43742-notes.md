@@ -62,7 +62,7 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 - GO:0008150 biological_process (ND): **MODIFY**. The intact first-domain catalytic triad supports generic proteolysis; physiological substrate and context remain unresolved.
 - GO:0008233 peptidase activity (IEA): **MODIFY**. The S1 catalytic architecture supports the existing serine-type endopeptidase term.
 - GO:0016787 hydrolase activity (IEA): **MODIFY**. The first S1 domain and retained catalytic triad support the specific peptidase class rather than a generic hydrolase label.
-- GO:0045087 innate immune response (IBA): **UNDECIDED**. The IBA is a curated phylogenetic hypothesis; the exact target is SP251 rather than Snake and tandem PD/PLD architecture alone does not identify an immune cascade or substrate. The relevant ancestral immune assertion requires inspection.
+- GO:0045087 innate immune response (IBA): **ACCEPT**. PAINT places the innate-immune assertion at PTN000667087, the same Diptera-level ancestor that supports the extracellular-region IBA. The exact target is SP251 rather than Snake, so no embryonic Toll-cascade or Snake substrate is inferred; the broad inherited immune-process term is supported.
 - GO:0051604 protein maturation (IEA): **UNDECIDED**. The source sequence supports serine protease potential but no physiological maturation substrate or activation cascade is established for CG43742.
 
 ## Research assessment
@@ -72,3 +72,9 @@ The Falcon report calls the target a CLIP-subfamily protease without resolving t
 Provider output: [CG43742-deep-research-falcon.md](CG43742-deep-research-falcon.md). Primary papers and source records, rather than provider verdicts, support the assessment.
 
 The annotation and prediction assessments are complete. UNC/UNDECIDED record delimited scientific or evidence uncertainty. Empty core-function lists indicate that no sufficiently resolved molecular activity can be asserted, rather than an unfinished review.
+
+## 2026-09-28 IBA re-review
+
+Fetched and inspected `interpro/panther/PTHR24256/PTHR24256-paint.tsv`. Both CG43742 IBA rows trace to `PANTHER:PTN000667087`: extracellular region was placed at that node on 2026-05-29 and innate immune response was placed at the same node on 2025-12-20. The node-level extracellular inference agrees with the exact target signal peptide, and the node-level innate-immune inference resolves the prior placeholder uncertainty about whether the GOA row came from a relevant ancestral assertion.
+
+Exact searches for `CG43742`, `FBgn0263999`, `A0A0B4KFF2`, and Drosophila `SP251` did not identify a newer paper that directly characterizes this protein. PMID:30367934 remains the only direct full-text source naming SP251 in the SP/PD/PLD classification; more recent CLIP/S1A studies characterize other Drosophila proteases or aggregate hemolymph protease activity and should remain contextual.
