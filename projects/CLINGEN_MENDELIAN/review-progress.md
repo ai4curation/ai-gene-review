@@ -189,7 +189,7 @@ are therefore expected; existing human reviews still link normally.
 | ARX | Definitive | NORMAL_PENDING_SEED_REVIEWED | Review #3384 merged; current-head approval and required CI passed; all 19 scoped merged blobs verified | `cmungall/clingen-arx` | [#3384](https://github.com/ai4curation/ai-gene-review/pull/3384) |
 | ASAH1 | Definitive | PREEXISTING_REVIEW_AUGMENTED | Required tests passed at the recorded head #3383; review job hit its quota limit and posted no new-head review. No approval or merge claimed. | `cmungall/clingen-asah1` | [#3383](https://github.com/ai4curation/ai-gene-review/pull/3383) |
 | ASL | Definitive | PREEXISTING_REVIEW_AUGMENTED | Required tests passed at the recorded head #3385; review job hit its quota limit and posted no new-head review. No approval or merge claimed. | `cmungall/clingen-asl` | [#3385](https://github.com/ai4curation/ai-gene-review/pull/3385) |
-| ASH1L | Definitive | NORMAL_PENDING_SEED_REVIEWED | Scientific follow-up comment reports no further changes requested #3387; required tests passed at the unchanged head. Formal CHANGES_REQUESTED from the earlier head remains; one quota-reset review retry is queued at attempt 2. No exact-head approval or merge claimed. | `cmungall/clingen-ash1l` | [#3387](https://github.com/ai4curation/ai-gene-review/pull/3387) |
+| ASH1L | Definitive | NORMAL_PENDING_SEED_REVIEWED | Review #3387 merged; current-head approval and required CI passed; all 17 scoped merged blobs verified | `cmungall/clingen-ash1l` | [#3387](https://github.com/ai4curation/ai-gene-review/pull/3387) |
 | ASNS | Definitive | NORMAL_PENDING_SEED_REVIEWED | Ready #3438; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-asns` | [#3438](https://github.com/ai4curation/ai-gene-review/pull/3438) |
 | ASPA | Definitive | NORMAL_PENDING_SEED_REVIEWED | Ready #3440; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-aspa` | [#3440](https://github.com/ai4curation/ai-gene-review/pull/3440) |
 
@@ -203,8 +203,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **111 of 2,876 genes
-are complete**; 112 original gene PRs have merged, with 1 requiring source
+signed publication/file checks and append-only receipt chains. **112 of 2,876 genes
+are complete**; 113 original gene PRs have merged, with 1 requiring source
 follow-ups. The campaign has 122 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
@@ -212,7 +212,7 @@ source follow-up, imported normal cache, approval, successful CI and verified me
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ASNS (#3438) and ASPA (#3440) have verified initial audits; publication does not grant completion, approval or a merge. ASH1L (#3387) has a favorable scientific follow-up comment and successful required tests at its unchanged head, while the formal earlier-head changes-requested review remains. Its single authorized quota-reset review retry was queued at attempt 2 in the recorded observation; no current-head approval or merge is claimed. The earlier review request and quota failure remain historical. No completion checkbox, merge receipt, source import or seed import is added at this checkpoint. The APC2 failed local premerge gate and subsequent verified merge remain distinct events, including the recorded execution deviation. The externally merged AKR1D1 review remains incomplete because its required Reactome record is unresolved. All earlier policy holds, quota observations and publication histories are retained.
+ASH1L (#3387) is complete after exact-head approval, successful required tests and verification of all 17 scoped merged blobs. Its earlier scientific comment, quota failure and queued retry observation remain historical. ASNS (#3438) and ASPA (#3440) remain published audits without completion or merge claims at this fixed cut. Source imports 50–58 and Seed13–18 primary and auxiliary imports have completed; their tracker reconciliation is pending a separate bounded checkpoint. No new import ledger transitions enter this merge-only cut, and recovery imports do not grant gene completion. The APC2 failed local premerge gate and subsequent verified merge remain distinct, including the recorded execution deviation. AKR1D1 remains incomplete because its required Reactome record is unresolved. All prior policy holds, quota observations, publication chains and histories are preserved.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -656,3 +656,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-28 checkpoint72: Record two verified ASH1L publication events and one reconciled ARX completion; no new source or seed imports enter this cut. Preserve the APC2 failed local gate and the exact-head quota/CI observations. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARX. 111/2,876 complete; 112 original merges; 1 pending source follow-ups; 120 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-28 checkpoint73: Record ASNS and ASPA initial publications plus the bounded ASH1L scientific comment and pending quota-reset review retry; no new source or seed imports enter this cut. Preserve the APC2 failed local gate and the exact-head quota/CI observations. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: none at this checkpoint. 111/2,876 complete; 112 original merges; 1 pending source follow-ups; 122 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-28 checkpoint74: Record the verified ASH1L merge; completed Source50–58 and Seed13–18 imports await separate ledger reconciliation; no new source or seed imports enter this cut. Preserve the APC2 failed local gate and the exact-head quota/CI observations. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ASH1L. 112/2,876 complete; 113 original merges; 1 pending source follow-ups; 122 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
