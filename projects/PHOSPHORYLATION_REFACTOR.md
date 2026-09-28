@@ -87,11 +87,11 @@ This project systematically analyzed phosphorylation annotations across **9 Mode
    - **Transcription factors** treated as kinases when they are substrates (CREB1, ATF2, ERG, RUNX3, RARA)
    - **Adapter proteins** credited with kinase activity belonging to associated kinases
 
-3. **Errors propagate via ISS transfer.** The rat database (RGD) demonstrates this clearly: 8 of 11 problematic rows are ISS transfers from mouse and human, replicating the same errors (Ppp3cb phosphatase, Glyctk sugar kinase, Gas6/Pdgfb ligands). The glycerate kinase error specifically appears in human (GLYCTK), fly (CG9886), zebrafish (glyctk), and rat (Glyctk). This highlights how computational inference methods can spread annotation errors across species.
+3. **Errors propagate via ISS transfer.** The rat database (RGD) demonstrates this clearly: 8 of 11 problematic rows are ISS transfers from mouse and human, including rat/Ppp3cb, rat/Glyctk, rat/Gas6 and rat/Pdgfb. The glycerate kinase error specifically appears in human GLYCTK, fly CG9886, zebrafish glyctk, and rat/Glyctk. This highlights how computational inference methods can spread annotation errors across species.
 
 4. **Opposite-reaction errors are particularly problematic.** Annotating phosphatases (enzymes that REMOVE phosphate) to phosphorylation (the process of ADDING phosphate) represents a fundamental biological error. Found in:
    - Human: CDC25B, PPP3CB, PTPN6, PPP4R1
-   - Rat: Ppp3cb (calcineurin, ISS from human)
+   - Rat: rat/Ppp3cb (calcineurin, ISS from human)
    - Arabidopsis: TOPP4, CDC25
 
 5. **Lipid and sugar kinases require substrate-specific terms.** Genes like PI3K (lipid kinase), IP6K3 (inositol kinase), and GLYCTK (sugar kinase) should not be annotated to "protein phosphorylation" - they should use substrate-appropriate terms like GO:0046834 (lipid phosphorylation) or GO:0046835 (carbohydrate phosphorylation).
@@ -1841,7 +1841,7 @@ correct annotation to regulatory activity rather than phosphorylation.
 
 | Pattern | Mouse | Human | Fly | Zebrafish | Worm | Arabidopsis | S. cerevisiae | S. pombe |
 |---------|-------|-------|-----|-----------|------|-------------|---------------|----------|
-| **Total problematic** | ~20 | ~45 | 2 genes | 1 | 0 | **4** | 0 | 0 |
+| **Total problematic** | ~20 | ~45 | 3 rows / 2 genes | 1 | 0 | **4** | 0 | 0 |
 | Phosphatases | 0 | 3 | 0 | 0 | 0 | **2** | 0 | 0 |
 | Lipid kinases | 0 | 1 | 0 | 0 | 0 | **1** | 0 | 0 |
 | Sugar kinases | 0 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
@@ -1919,38 +1919,38 @@ IDA annotations warrant closer examination.
 
 | Gene | GO Term | Error Type | Code | Origin |
 |------|---------|------------|------|--------|
-| **Gas6** | protein phosphorylation | Signaling ligand | R-ligand | Mouse/Human |
-| **Glyctk** | protein phosphorylation | Sugar kinase (EC 2.7.1.31) | W-sugar | Human |
-| **Ilf3** | protein phosphorylation | Substrate | S | Human |
-| **Pdgfb** | protein phosphorylation, peptidyl-Tyr phosphorylation | Signaling ligand | R-ligand | Human |
-| **Prrt1** | protein phosphorylation | Adapter protein | R-adapter | Human |
-| **Ywhaz** | protein phosphorylation | 14-3-3 adapter | R-adapter | Human |
-| **Ppp3cb** | protein phosphorylation | **PHOSPHATASE** (calcineurin) | O-ser | Human |
+| **rat/Gas6** | protein phosphorylation | Signaling ligand | R-ligand | Mouse/Human |
+| **rat/Glyctk** | protein phosphorylation | Sugar kinase (EC 2.7.1.31) | W-sugar | Human |
+| **rat/Ilf3** | protein phosphorylation | Substrate | S | Human |
+| **rat/Pdgfb** | protein phosphorylation, peptidyl-Tyr phosphorylation | Signaling ligand | R-ligand | Human |
+| **rat/Prrt1** | protein phosphorylation | Adapter protein | R-adapter | Human |
+| **rat/Ywhaz** | protein phosphorylation | 14-3-3 adapter | R-adapter | Human |
+| **rat/Ppp3cb** | protein phosphorylation | **PHOSPHATASE** (calcineurin) | O-ser | Human |
 
-**Ppp3cb** is particularly egregious - it's calcineurin, a calcium-dependent protein serine/threonine
+**rat/Ppp3cb** is particularly egregious - it's calcineurin, a calcium-dependent protein serine/threonine
 PHOSPHATASE (EC 3.1.3.16), annotated to phosphorylation. Has "phosphatase activity" (IDA/TAS) annotations.
 
 ### IDA Annotations (Require Review)
 
 | Gene | GO Term | Analysis | Code | Action |
 |------|---------|----------|------|--------|
-| **Grm5** | protein phosphorylation | GPCR already annotated to positive regulation of MAPK cascade from the same PMID | R-receptor | **REMOVE** |
-| **Pick1** | protein phosphorylation | PDZ scaffold with "protein kinase C binding" | R-adapter | **MODIFY** |
-| **Thy1** | protein autophosphorylation | GPI-anchored ligand that triggers FAK autophosphorylation | R-ligand | **REMOVE** |
+| **rat/Grm5** | protein phosphorylation | GPCR already annotated to positive regulation of MAPK cascade from the same PMID | R-receptor | **REMOVE** |
+| **rat/Pick1** | protein phosphorylation | PDZ scaffold with "protein kinase C binding" | R-adapter | **MODIFY** |
+| **rat/Thy1** | protein autophosphorylation | GPI-anchored ligand that triggers FAK autophosphorylation | R-ligand | **REMOVE** |
 
-**Grm5** (Metabotropic glutamate receptor 5)
+**rat/Grm5** (Metabotropic glutamate receptor 5)
 - GPCR that activates Src family kinases via Homer scaffolding
 - Has "protein tyrosine kinase activator activity" (IGI/ISO)
 - The receptor ACTIVATES kinases but doesn't phosphorylate - should be regulatory term
 - Action: **REMOVE** duplicate GO:0006468 row; GO:0043410 positive regulation of MAPK
   cascade already captures the PMID:15758184 evidence [R-receptor]
 
-**Pick1** (Protein interacting with C kinase 1)
+**rat/Pick1** (Protein interacting with C kinase 1)
 - PDZ domain protein that binds and scaffolds PKC
 - Has "protein kinase C binding" (IDA) - it's an ADAPTER, not a kinase
 - Action: **MODIFY** → GO:0045859 [R-adapter]
 
-**Thy1** (Thy-1 membrane glycoprotein)
+**rat/Thy1** (Thy-1 membrane glycoprotein)
 - GPI-anchored membrane protein
 - Annotated to "protein autophosphorylation" (IDA) but has NO kinase domain
 - Also has "negative regulation of protein kinase activity" (IDA)
@@ -1962,7 +1962,7 @@ PHOSPHATASE (EC 3.1.3.16), annotated to phosphorylation. Has "phosphatase activi
 
 | Pattern | Mouse | Human | Rat | Fly | Zebrafish | Worm | Arabidopsis | S. cerevisiae | S. pombe |
 |---------|-------|-------|-----|-----|-----------|------|-------------|---------------|----------|
-| **Total problematic** | ~20 | ~45 | **11 rows** | 3 rows | 1 | 0 | 4 | 0 | 0 |
+| **Total problematic** | ~20 | ~45 | **11 rows** | 3 rows / 2 genes | 1 | 0 | 4 | 0 | 0 |
 | Phosphatases | 0 | 3 | **1** | 0 | 0 | 0 | 2 | 0 | 0 |
 | Signaling ligands | 5 | 7+ | **2** | 0 | 0 | 0 | 0 | 0 | 0 |
 | Sugar kinases | 0 | 1 | **1** | 1 | 1 | 0 | 1 | 0 | 0 |
@@ -1971,19 +1971,19 @@ PHOSPHATASE (EC 3.1.3.16), annotated to phosphorylation. Has "phosphatase activi
 | Substrates | 0 | 5 | **2** | 1 | 0 | 0 | 1 | 0 | 0 |
 
 **Key observation**: RGD errors are almost entirely ISS transfers from MGI/GOA. The 3 IDA annotations
-(Grm5, Pick1, Thy1) represent independent rat-specific curation that also shows over-annotation patterns.
+(rat/Grm5, rat/Pick1, rat/Thy1) represent independent rat-specific curation that also shows over-annotation patterns.
 
 ## STATUS (Rat)
 
 - [x] Query analysis completed - **11 problematic rows across 10 genes found**
 - [x] 8 ISS transfer rows identified (same errors as mouse and human)
-- [x] 1 phosphatase (Ppp3cb) - **REMOVE** [O-ser]
-- [x] 2 signaling ligands (Gas6, Pdgfb) - **MODIFY** [R-ligand]
-- [x] 1 sugar kinase (Glyctk) - **REMOVE** [W-sugar]
-- [x] 2 adapters (Ywhaz, Pick1) - **MODIFY** [R-adapter]
-- [x] 1 AMPAR auxiliary subunit (Prrt1) - **REMOVE**
-- [x] 1 receptor (Grm5) - **REMOVE** [R-receptor]
-- [x] Thy1 autophosphorylation - **REMOVE** [R-ligand]
+- [x] 1 phosphatase (rat/Ppp3cb) - **REMOVE** [O-ser]
+- [x] 2 signaling ligands (rat/Gas6, rat/Pdgfb) - **MODIFY** [R-ligand]
+- [x] 1 sugar kinase (rat/Glyctk) - **REMOVE** [W-sugar]
+- [x] 2 adapters (rat/Ywhaz, rat/Pick1) - **MODIFY** [R-adapter]
+- [x] 1 AMPAR auxiliary subunit (rat/Prrt1) - **REMOVE**
+- [x] 1 receptor (rat/Grm5) - **REMOVE** [R-receptor]
+- [x] rat/Thy1 autophosphorylation - **REMOVE** [R-ligand]
 
 **Last updated**: 2026-09-28
 
@@ -1998,16 +1998,16 @@ mostly ISS transfers from mouse and human. The errors mirror those found in the
 source databases (MGI, GOA).
 
 **ISS transfer errors (7 genes)**:
-- Gas6, Pdgfb - signaling ligands [R-ligand]
-- Glyctk - sugar kinase [W-sugar]
-- Ilf3 - substrate [S]
-- Prrt1, Ywhaz - adapter proteins [R-adapter]
-- Ppp3cb - phosphatase (calcineurin) [O-ser]
+- rat/Gas6, rat/Pdgfb - signaling ligands [R-ligand]
+- rat/Glyctk - sugar kinase [W-sugar]
+- rat/Ilf3 - substrate [S]
+- rat/Prrt1, rat/Ywhaz - adapter proteins [R-adapter]
+- rat/Ppp3cb - phosphatase (calcineurin) [O-ser]
 
 **IDA annotations requiring review (3 genes)**:
-- Grm5 - GPCR row redundant with a positive-regulation-of-MAPK annotation [R-receptor]
-- Pick1 - PKC scaffold/adapter [R-adapter]
-- Thy1 - GPI ligand upstream of FAK autophosphorylation [R-ligand]
+- rat/Grm5 - GPCR row redundant with a positive-regulation-of-MAPK annotation [R-receptor]
+- rat/Pick1 - PKC scaffold/adapter [R-adapter]
+- rat/Thy1 - GPI ligand upstream of FAK autophosphorylation [R-ligand]
 
 **Annotation quality gradient (updated - 9 MODs)**:
 - **EXCELLENT**: SGD, PomBase, WormBase (0 errors)
