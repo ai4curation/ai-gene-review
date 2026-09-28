@@ -300,13 +300,19 @@ the same in vivo H3K9me readout for H297A, Y307A and Y370A), though
 no study has measured demethylation directly. That one experiment is read from
 both arms: retained prevention of de novo H3K9me argues that part of the
 anti-silencing activity does not need H297, while lost removal of established
-H3K9me is the counter-evidence to a purely non-catalytic reading. Y307, the
+H3K9me is the counter-evidence to a purely non-catalytic reading. The removal
+arm is read at single-copy dose, where even wild-type removal is limited
+(Sorida et al. report that "re-introduction of single copy Epe1 did not erase
+ectopic heterochromatin when an H3K9me source existed nearby, while Epe1
+overexpression completely erased it"). Y307, the
 residue of the UniProt loss-of-function record, is assigned by Raiymbek et al.
 to the alpha-ketoglutarate site, and Sorida et al. describe Epe1Y307A as
 retaining the metal-binding residues, so that record implicates the
 2-oxoglutarate part of the cofactor pocket without isolating catalysis. A
-required domain is not required catalysis, since Raiymbek et al. (PMID:32195666)
-place H3K9me recognition in the JmjC domain. This creates a common annotation error where
+required domain is not required catalysis: Raiymbek et al. (PMID:32195666)
+show that the JmjC-containing half of Epe1 (amino acids 1–600) binds H3K9me3
+peptide and H3K9-methylated histones directly, without Swi6, and interpret this
+as H3K9me recognition by the JmjC domain. This creates a common annotation error where
 JmjC domain presence alone leads to multiple incorrect MF/BP annotations.
 
 ### Cytochrome-P450-homologue glycosyltransferase activator (S. erythraea EryCII)
