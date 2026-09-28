@@ -7,6 +7,7 @@ diffs the two, so a snapshot bump shows exactly which reported numbers moved.
 
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 from typing import Any
@@ -17,8 +18,19 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 REPORTS = {
     "bioreason": "projects/BIOREASON_COMPARISON/benchmark-metrics.json",
     "protnlm": "projects/PROTNLM_EVALUATION/benchmark-summary.json",
+    "second_review": "projects/BIOREASON_COMPARISON/second-review-agreement.json",
 }
-SKIPPED_KEYS = {"review_snapshot", "narrative_reviews", "zero_go_prediction_reviews"}
+CAFA_DIR = "projects/BIOREASON_COMPARISON/cafa-style"
+INCORRECT = {"NPI", "PLI", "REP"}
+SKIPPED_KEYS = {
+    "review_snapshot",
+    "narrative_reviews",
+    "zero_go_prediction_reviews",
+    # second-review-agreement.json provenance strings, not numbers
+    "blinding",
+    "sampling",
+    "sample_salt",
+}
 
 
 def flatten(value: Any, prefix: str) -> list[str]:
@@ -54,12 +66,52 @@ def flatten(value: Any, prefix: str) -> list[str]:
     return [f"{prefix}: {value}"]
 
 
+def _read_csv(path: Path) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))
+
+
+def cafa_headlines(repo_root: Path) -> list[str]:
+    """CAFA-style numbers quoted in the manuscript and supplement Table S7.
+
+    Only the rows that are published are listed: the HF-catalogue NPI/PLI/REP
+    GOA-overlap counts and the propagated all-aspect scores against all GOA.
+    """
+    cafa = repo_root / CAFA_DIR
+    incorrect = [
+        row
+        for row in _read_csv(cafa / "argo139_prediction_goa_overlap.csv")
+        if row["source_group"] == "hf_catalogue" and row["assessment"] in INCORRECT
+    ]
+    lines = [
+        f"cafa.hf_incorrect.n: {len(incorrect)}",
+        f"cafa.hf_incorrect.exact_in_goa: {sum(r['exact_in_goa_all'] == 'True' for r in incorrect)}",
+        "cafa.hf_incorrect.propagated_overlap: "
+        f"{sum(r['closure_intersects_goa_all'] == 'True' for r in incorrect)}",
+    ]
+    for row in _read_csv(cafa / "argo139_cafa_style_summary.csv"):
+        if (row["reference_set"], row["term_mode"], row["aspect"]) != (
+            "goa_all",
+            "raw",
+            "all_aspects",
+        ):
+            continue
+        prefix = f"cafa.{row['source_group']}"
+        lines += [
+            f"{prefix}.n_ref_direct: {row['n_ref_direct']}",
+            f"{prefix}.closure_precision: {float(row['closure_precision']):.3f}",
+            f"{prefix}.closure_recall: {float(row['closure_recall']):.3f}",
+            f"{prefix}.closure_f1: {float(row['closure_f1']):.3f}",
+        ]
+    return sorted(lines)
+
+
 def headlines(repo_root: Path) -> list[str]:
     """Headline lines for every snapshot-derived report under ``repo_root``."""
     lines: list[str] = []
     for name, path in REPORTS.items():
         lines += flatten(json.loads((repo_root / path).read_text(encoding="utf-8")), name)
-    return lines
+    return lines + cafa_headlines(repo_root)
 
 
 def main(repo_root: Path = typer.Option(REPO_ROOT, help="Repository root")) -> None:

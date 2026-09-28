@@ -12,16 +12,16 @@ The score propagates predicted and reference GO terms over `is_a` and
 | Source | genes | scored direct predictions | direct GOA terms | precision | recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
 | hf_catalogue | 95 | 952 | 2369 | 0.862 | 0.479 | 0.615 |
-| web_export | 44 | 9730 | 3885 | 0.780 | 0.533 | 0.633 |
-| all_sources | 139 | 10682 | 6254 | 0.809 | 0.511 | 0.626 |
+| web_export | 44 | 9730 | 3888 | 0.780 | 0.531 | 0.632 |
+| all_sources | 139 | 10682 | 6257 | 0.809 | 0.510 | 0.625 |
 
 ## Propagated all-aspect agreement against experimental GOA only
 
 | Source | genes | scored direct predictions | experimental GOA terms | precision | recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
 | hf_catalogue | 86 | 847 | 1196 | 0.847 | 0.691 | 0.761 |
-| web_export | 34 | 9350 | 1940 | 0.736 | 0.842 | 0.785 |
-| all_sources | 120 | 10197 | 3136 | 0.773 | 0.779 | 0.776 |
+| web_export | 34 | 9386 | 1948 | 0.735 | 0.831 | 0.780 |
+| all_sources | 120 | 10233 | 3144 | 0.772 | 0.774 | 0.773 |
 
 ## GOA agreement does not imply correctness
 

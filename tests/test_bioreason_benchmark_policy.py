@@ -21,7 +21,11 @@ from ai_gene_review.bioreason_ontology import (
     frozen_go_sha256,
     get_go_adapter,
 )
-from ai_gene_review.source_tree import commit_date, declared_review_snapshot
+from ai_gene_review.source_tree import (
+    commit_date,
+    declared_review_snapshot,
+    review_snapshot_tree,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -264,6 +268,8 @@ def test_headline_cli_lists_the_snapshot_numbers() -> None:
     assert "bioreason.supplement_gogpt_overlap_300.n_genes: 296" in lines
     assert "bioreason.supplement_gogpt_overlap_300.core.n_overlap: 355" in lines
     assert "protnlm.go_counts.COR: 52" in lines
+    assert "cafa.hf_incorrect.n: 147" in lines
+    assert "second_review.correctness.quadratic_weighted_kappa: 0.95" in lines
     assert not any("review_snapshot" in line for line in lines)
 
 
@@ -287,16 +293,37 @@ def test_generated_quality_sidecar_has_expected_denominators() -> None:
     assert slyd["frozen_goa_sha256"] != slyd["current_goa_sha256"]
 
 
+def _score_axes(text: str) -> set[str]:
+    return {name.lower() for name, _ in SCORE_RE.findall(text)}
+
+
 def test_all_narrative_reviews_have_two_in_range_scores() -> None:
-    for kind, expected in (("rl", 139), ("sft", 45)):
+    """Validity of the live files: any narrative review a curator edits must still parse.
+
+    Deliberately reads the working tree and pins no count; the benchmark cohort
+    sizes are checked at the review snapshot below.
+    """
+    for kind in ("rl", "sft"):
         paths = sorted(REPO_ROOT.glob(f"genes/*/*/*bioreason-{kind}-review.md"))
+        assert paths
+        for path in paths:
+            assert _score_axes(path.read_text()) == {"correctness", "completeness"}, path
+
+
+def test_snapshot_narrative_cohorts_have_expected_sizes_and_scores(
+    forbid_working_tree_genes: None,
+) -> None:
+    tree = review_snapshot_tree(REPO_ROOT)
+    for kind, expected in (("rl", 139), ("sft", 45)):
+        paths = tree.glob(f"genes/*/*/*bioreason-{kind}-review.md")
         assert len(paths) == expected
         for path in paths:
-            scores = {name.lower(): int(value) for name, value in SCORE_RE.findall(path.read_text())}
-            assert scores.keys() == {"correctness", "completeness"}, path
+            assert _score_axes(tree.read_text(path)) == {"correctness", "completeness"}, path
 
 
-def test_second_review_sample_and_metrics_are_current() -> None:
+def test_second_review_sample_and_metrics_are_current(
+    forbid_working_tree_genes: None,
+) -> None:
     path = PROJECT_DIR / "analyze_second_review.py"
     spec = importlib.util.spec_from_file_location("analyze_second_review", path)
     assert spec and spec.loader
@@ -492,12 +519,18 @@ def test_publication_headlines_match_generated_metrics() -> None:
     )
 
 
-def test_cafa_overlap_assessments_match_current_prediction_sources() -> None:
-    """A stale CSV and matching stale manuscript must not validate each other."""
+def test_cafa_overlap_assessments_match_snapshot_prediction_sources(
+    forbid_working_tree_genes: None,
+) -> None:
+    """A stale CSV and matching stale manuscript must not validate each other.
+
+    Both sides are pinned to the review snapshot, so a curation edit to a live
+    ``*-sft-predictions.yaml`` cannot move the published 147/47/119 counts.
+    """
     from collections import Counter
 
     module = _load_cafa_module()
-    predictions = module.read_predictions(set(module.read_argo139()))
+    predictions = module.read_predictions(set(module.read_argo139()), module.snapshot())
     expected = Counter(
         (module.source_group(p), p.organism, p.gene, p.aspect, p.term_id, p.assessment)
         for p in predictions
