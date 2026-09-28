@@ -53,6 +53,11 @@ Predominantly cellular component and biological process annotations that accurat
 - **Process**: Negative regulation of heterochromatin (GO:0031452)
 - **Mechanism**: Competes with silencing factors for HP1 binding
 
+### 4. Nucleosome Turnover
+- **Molecular Function**: Histone binding (GO:0042393); purified Epe1 preferentially binds H3K9me3 peptides and H3K9-methylated histones (Raiymbek 2020, PMID:32195666)
+- **Process**: Chromatin organization (GO:0006325)
+- **Knowledge gap**: how Epe1 increases nucleosome turnover, and whether its histone binding drives it, is not known
+
 ## Evidence Base
 - 33 peer-reviewed publications reviewed
 - Deep research synthesis incorporated

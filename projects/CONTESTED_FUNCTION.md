@@ -72,8 +72,8 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 **Actual Function**: Non-enzymatic anti-silencing factor that:
 - Binds HP1/Swi6 to recruit SAGA histone acetyltransferase complex
 - Recruits Bdf2 bromodomain protein to heterochromatin boundaries
-- Promotes nucleosome turnover
-- Functions as chromatin reader, not eraser
+- Promotes nucleosome turnover (mechanism unresolved)
+- Binds H3K9-methylated histones in vitro (Raiymbek 2020); no eraser (demethylase) activity has been detected
 
 **AI Review Action**: REMOVE the IBA/IEA enzymatic activity annotations and propose binding terms; the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence.
 
