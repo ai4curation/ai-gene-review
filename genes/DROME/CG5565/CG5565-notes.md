@@ -6,6 +6,8 @@ Q9VQ04 is the single 240-residue CG5565-PA product in the current FlyBase record
 
 [PMID:20722631](https://pubmed.ncbi.nlm.nih.gov/20722631/) characterized human HDHD1/PUDP Q08623: purified enzyme hydrolyzed pseudouridine 5′-phosphate with Km 0.3 μM and at least 1000-fold greater catalytic efficiency than the other tested phosphate esters. GOA specifically records manual ortholog transfer from that experimentally characterized protein. The proposed core function is a qualified inference rather than a direct fly assay.
 
+The current PTHR18901 PAINT export places pseudouridine 5′-phosphatase activity at PTN000431252, seeded by human PUDP and yeast YKL033W-A, while the older broad GO:0016791 phosphatase IBA in the CG5565 GOA snapshot cites PTN000431251. The broad row is therefore best treated as stale and less granular rather than as wrong-family propagation: present PAINT and FlyBase ISS both converge on the more specific pseudouridine 5′-phosphatase term, but direct Drosophila kinetics remain unavailable.
+
 The ProtNLM structural donor Q9V1B3 is a Pyrococcus protein; its glyceraldehyde-3-phosphate statement is itself by similarity to Q58832. Shared structure does not determine substrate specificity. Conversely the existence of a better-supported physiological substrate cannot refute the explicitly in vitro side-activity claim, which remains UNC. The source is a function paragraph only, with no original GO predictions.
 
 ## Research assessment and sequence check
