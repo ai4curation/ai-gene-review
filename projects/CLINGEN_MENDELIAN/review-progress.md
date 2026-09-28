@@ -158,11 +158,13 @@ are therefore expected; existing human reviews still link normally.
 | ANKRD26 | Definitive | INITIALIZED | Review #3339 merged; current-head approval and required CI passed; all 13 scoped merged blobs verified | `cmungall/clingen-ankrd26` | [#3339](https://github.com/ai4curation/ai-gene-review/pull/3339) |
 | ANKS6 | Definitive | COMPLETE | Review #3343 merged; current-head approval and required CI passed; all 16 scoped merged blobs verified | `cmungall/clingen-anks6` | [#3343](https://github.com/ai4curation/ai-gene-review/pull/3343) |
 | ANO10 | Definitive | INITIALIZED | Ready #3347; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ano10` | [#3347](https://github.com/ai4curation/ai-gene-review/pull/3347) |
-| ANO5 | Definitive | INITIALIZED | Ready #3349; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ano5` | [#3349](https://github.com/ai4curation/ai-gene-review/pull/3349) |
-| ANOS1 | Definitive | INITIALIZED | Ready #3350; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-anos1` | [#3350](https://github.com/ai4curation/ai-gene-review/pull/3350) |
-| ANTXR1 | Definitive | INITIALIZED | Ready #3351; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-antxr1` | [#3351](https://github.com/ai4curation/ai-gene-review/pull/3351) |
+| ANO5 | Definitive | INITIALIZED | Review #3349 merged; current-head approval and required CI passed; all 24 scoped merged blobs verified | `cmungall/clingen-ano5` | [#3349](https://github.com/ai4curation/ai-gene-review/pull/3349) |
+| ANOS1 | Definitive | INITIALIZED | Review #3350 merged; current-head approval and required CI passed; all 15 scoped merged blobs verified | `cmungall/clingen-anos1` | [#3350](https://github.com/ai4curation/ai-gene-review/pull/3350) |
+| ANTXR1 | Definitive | INITIALIZED | Review #3351 merged; current-head approval and required CI passed; all 22 scoped merged blobs verified | `cmungall/clingen-antxr1` | [#3351](https://github.com/ai4curation/ai-gene-review/pull/3351) |
 | ANTXR2 | Definitive | INITIALIZED | Ready #3352; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-antxr2` | [#3352](https://github.com/ai4curation/ai-gene-review/pull/3352) |
 | ANXA11 | Definitive | INITIALIZED | Ready #3353; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-anxa11` | [#3353](https://github.com/ai4curation/ai-gene-review/pull/3353) |
+| AP4E1 | Definitive | INITIALIZED | Ready #3354; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ap4e1` | [#3354](https://github.com/ai4curation/ai-gene-review/pull/3354) |
+| AP5Z1 | Definitive | INITIALIZED | Ready #3355; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ap5z1` | [#3355](https://github.com/ai4curation/ai-gene-review/pull/3355) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -174,16 +176,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-local/published tree checks and append-only receipt chains. **86 of 2,876 genes
-are complete**; 87 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 93 dedicated full-audit PRs.
+local/published tree checks and append-only receipt chains. **89 of 2,876 genes
+are complete**; 90 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 95 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ANKS6 is complete after approval at its exact final SAM followup head, successful required CI and exact merged-file verification. Original ANTXR1 (#3351), ANTXR2 (#3352) and ANXA11 (#3353) audits are published. ANO10 (#3347), ANO5 (#3349), ANOS1 (#3350) and ANTXR1 (#3351) have published reviewer followups; all original and intermediate heads remain recorded. These six audits remain open at this checkpoint; publication does not imply approval or completion. Source35 imported seven exact normal PMID records. Seed9 imported six initialized reviews with 623 PENDING annotations and 70 selected normal caches (59 PMID and 11 Reactome), while preserving 181 existing files and quarantining six InterPro exports. Of the 70 selected caches, 68 were absent on main and two synchronized exact existing main bytes. No existing local cache was overwritten. Source imports and initialized seeds do not count as completed reviews. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved.
+ANO5, ANOS1 and ANTXR1 are complete after approval at their exact final heads, successful required CI and exact merged-file verification. AP4E1 (#3354) and AP5Z1 (#3355) original audits are published. ANTXR1 (#3351), ANO10 (#3347) and ANXA11 (#3353) have additional published reviewer followups; every earlier head remains recorded. ANTXR1 completion follows its second published followup. The other five unmerged audits remain incomplete at this checkpoint. Source36 imported nine exact normal PMID records without overwriting any cache. Four contain full text (three XML, one HTML); five remain abstract-only, including an erratum with no substantive correction body. Source recovery does not imply scientific endorsement or gene completion. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -601,3 +603,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-28 checkpoint59: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ANK1. 85/2,876 complete; 86 original merges; 1 pending source follow-ups; 90 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-28 checkpoint60: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ANKS6. 86/2,876 complete; 87 original merges; 1 pending source follow-ups; 93 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-28 checkpoint61: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ANO5, ANOS1, ANTXR1. 89/2,876 complete; 90 original merges; 1 pending source follow-ups; 95 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
