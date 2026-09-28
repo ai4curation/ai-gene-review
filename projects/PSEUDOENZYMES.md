@@ -163,8 +163,10 @@ is altered.
 **Example implementations:**
 - `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/analyze_sods.py` - Cu/Zn
   SOD catalytic residue check against human SOD1
-- `genes/SCHPO/Epe1/Epe1-bioinformatics/analyze_jmjc_protein.py` - JmjC
-  Fe(II) coordination motif check
+- `genes/SCHPO/Epe1/Epe1-bioinformatics/02_jmjc_domain_analysis.py` - JmjC
+  Fe(II) ligands read from UniProt FT BINDING features (a bare `H.[DE]` motif
+  scan does not locate the site: Epe1's HVD@280 is not a ligand, and active
+  KDM2A's ligand H212 is itself an HVD)
 
 ### 2. PROSITE motif matching
 
@@ -281,7 +283,7 @@ well-documented alternative function.
 | **Actual function** | Anti-silencing factor; associates with the SAGA histone acetyltransferase complex (and recruits it to heterochromatin when overexpressed); recruits the Bdf2 bromodomain protein to the boundaries flanking centromeres; required for normal heterochromatic nucleosome turnover, which chaperones such as FACT carry out; binds Swi6/HP1 in an H3K9 methylation-stimulated manner; no demethylase (eraser) activity has been detected, though latent activity is not excluded |
 | **Type** | Type 5 (probable: recognition without detected modification activity) |
 | **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0140680 (histone H3K36me/H3K36me2 demethylase activity), GO:0051213 (dioxygenase activity), GO:0016491 (oxidoreductase activity). The two experimental GO:0032454 rows (IDA and EXP) and GO:0046872 (metal ion binding) are UNDECIDED rather than REMOVE |
-| **Annotations added** | NEW rows: GO:0070087 (chromo shadow domain binding, Swi6), GO:0035035 (histone acetyltransferase binding), GO:0030674 (protein-macromolecule adaptor activity) and GO:0042393 (histone binding); the MODIFY on the protein-binding IPI (partner Cdt2) proposes GO:0031625 (ubiquitin protein ligase binding). The core-function MFs are GO:0070087 (Swi6 chromoshadow-domain binding), GO:0035035 (histone acetyltransferase binding, SAGA), GO:0030674 (protein-macromolecule adaptor activity, Bdf2 recruitment), GO:0042393 (histone binding: purified Epe1 preferentially binds H3K9-methylated histones, Raiymbek 2020; attached to the nucleosome-turnover core function, whose mechanism is unresolved) and GO:0003712 (transcription coregulator activity) |
+| **Annotations added** | NEW rows: GO:0070087 (chromo shadow domain binding, Swi6), GO:0062070 (SAGA complex binding), GO:0030674 (protein-macromolecule adaptor activity) and GO:0042393 (histone binding); the MODIFY on the protein-binding IPI (partner Cdt2) proposes GO:0031625 (ubiquitin protein ligase binding). The core-function MFs are GO:0070087 (Swi6 chromoshadow-domain binding), GO:0062070 (SAGA complex binding; shown with overexpressed Epe1), GO:0030674 (protein-macromolecule adaptor activity, Bdf2 recruitment), GO:0042393 (histone binding: purified Epe1 preferentially binds H3K9-methylated histones, Raiymbek 2020; attached to the nucleosome-turnover core function, whose mechanism is unresolved) and GO:0003712 (transcription coregulator activity) |
 | **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Sorida 2019 (PMID:31206516); Epe1 gene review at `genes/SCHPO/Epe1/` |
 
 **Key insight:** Epe1 is a probable Type 5 (reader) pseudoenzyme. It binds
@@ -481,10 +483,10 @@ to other enzyme families:
 ### JmjC domain template (`genes/SCHPO/Epe1/Epe1-bioinformatics/`)
 More elaborate pipeline with:
 - `01_fetch_sequences.py` - fetch paralogs and orthologs
-- `02_jmjc_domain_analysis.py` - domain boundary + Fe(II)-binding motif search
-- `03_conservation_analysis.py` - multiple sequence alignment conservation scoring
-- `04_functional_regions_analysis.py` - non-catalytic region analysis (coiled coil, NLS, etc.)
-- `05_structural_features.py` - structural feature prediction
+- `02_jmjc_domain_analysis.py` - JmjC boundary and Fe(II) ligands from UniProt features
+- `03_conservation_analysis.py` - MAFFT alignment of JmjC domains; residue at each annotated site
+- `04_functional_regions_analysis.py` - comparator Fe-ligand counts and C-terminal composition
+- `05_structural_features.py` - domain figure marking the UniProt BINDING, CAUTION and MUTAGEN positions
 - `justfile` - reproducible pipeline
 
 Good template for families where the pseudoenzyme has neofunctionalized
@@ -523,7 +525,7 @@ Good template for families where the pseudoenzyme has neofunctionalized
 - **Byrne et al. 2020** - PseudoHunter detection pipeline *Bioinformatics*;
   tool paper
 - **Raiymbek et al. 2020** - Epe1 biochemistry and anti-silencing function
-- **Bao et al. 2019** - Epe1 recruits SAGA; overexpressed Epe1-H297A still
+- **Bao et al. 2019** - overexpressed Epe1 recruits SAGA; overexpressed Epe1-H297A still
   disrupts silencing, SAGA-dependently (the paper notes that endogenous-level
   H297A resembles epe1Δ)
 - **Sorida et al. 2019** - single-copy Epe1-H297A suppresses ectopic

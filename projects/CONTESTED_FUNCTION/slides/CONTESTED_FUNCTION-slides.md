@@ -38,7 +38,7 @@ Proteins that keep an enzyme's fold but not its activity
 
 - **Pseudo-enzymes** keep a family's domain but have lost catalysis, so IBA, IEA and sometimes experimental rows give them an activity biochemistry contradicts.
 - We reviewed four cases in depth: **Epe1** (fission yeast) and three biosynthetic-cluster proteins, **eryCII, pqsB, actI-ORF2**.
-- Epe1's **4 electronic catalytic rows are REMOVE** (only the IBA demethylase row gets a replacement, chromo shadow domain binding); the **2 IDA/EXP rows and metal ion binding are UNDECIDED**. Finding **more candidates has not started**.
+- Epe1's **4 electronic catalytic rows are REMOVE** (none has a replacement term; binding functions are separate NEW rows); the **2 IDA/EXP rows and metal ion binding are UNDECIDED**. Finding **more candidates has not started**.
 
 ---
 

@@ -13,11 +13,12 @@ Completed review of 33 existing GO annotations for S. pombe Epe1. No histone dem
 3. **GO:0016491** (oxidoreductase activity, IEA) - REMOVE
 4. **GO:0051213** (dioxygenase activity, IEA) - REMOVE
 
-What is removed is the PAINT/keyword inference of canonical JHDM1-type activity, not a claim that latent activity is excluded. GO:0032452 histone demethylase activity is an OLS ancestor of GO:0032454 histone H3K9 demethylase activity, whose two experimental rows are UNDECIDED; if PomBase upholds either, GO:0032452 follows by the true-path rule, so the GO:0032452 REMOVE rejects only the IBA inference path. GO:0016491 and GO:0051213 are not ancestors of GO:0032454 and do not formally conflict with it, although JmjC demethylation is 2-oxoglutarate-dependent dioxygenase chemistry.
+What is removed is the PAINT/keyword inference of canonical JHDM1-type activity, not a claim that latent activity is excluded. GO:0032452 histone demethylase activity is an OLS ancestor of GO:0032454 histone H3K9 demethylase activity, whose two experimental rows are UNDECIDED; if PomBase upholds either, GO:0032452 follows by the true-path rule, so the GO:0032452 REMOVE rejects only the IBA inference path. GO:0016491 and GO:0051213 are not ancestors of GO:0032454 (OLS hierarchicalAncestors of GO:0032454) and do not formally conflict with it, although JmjC demethylation is 2-oxoglutarate-dependent dioxygenase chemistry.
 
-### Annotations left undecided (3 annotations)
+### Annotations left undecided (4 annotations)
 - **GO:0032454** (histone H3K9 demethylase activity) x2 - UNDECIDED (IDA/EXP from PMID:25838386; in vivo genetic evidence, catalysis disputed; not removed, flagged for discussion with PomBase)
 - **GO:0046872** (metal ion binding, IEA) - UNDECIDED (UniProt Metal-binding keyword, resting on its BINDING 297/299 Fe cation features, which are themselves predicted from the JmjC ProRule PRU00538; H297 and E299 are retained, the third His ligand is Y370, and metal binding has not been measured)
+- **GO:0031507** (NOT heterochromatin formation, negated IDA, PMID:25831549) - UNDECIDED (the biology, that Epe1 opposes heterochromatin assembly, is sound, but OLS lists GO:0031507 as an ancestor of GO:0033696, so the seven accepted GO:0033696 rows entail what this row denies under the true-path rule; left UNDECIDED rather than overruling the curator, and raised with PomBase)
 
 **Rationale**:
 - No demethylase activity detected in vitro (Tsukada 2006, PMID:16362057; Raiymbek 2020, PMID:32195666)
@@ -36,19 +37,18 @@ What is removed is the PAINT/keyword inference of canonical JHDM1-type activity,
 
 ### Proposed New Annotations (4 NEW rows)
 1. **GO:0070087** chromo shadow domain binding (IPI, PMID:32195666): recombinant Epe1 binds Swi6, reduced by the Swi6 CSD mutation L315E; replaces the earlier GO:0140030, whose definition requires the modification on the bound protein itself
-2. **GO:0035035** histone acetyltransferase binding (IPI, PMID:30573453): SAGA co-purifies with Epe1 and Gcn5 co-immunoprecipitates with overexpressed Epe1
+2. **GO:0062070** SAGA complex binding (IPI, PMID:30573453): SAGA co-purifies with overexpressed Epe1 and Gcn5 co-immunoprecipitates with it, probably through Tra1, so the row asserts binding to the complex rather than GO:0035035 histone acetyltransferase binding; the association has been shown only with overexpressed Epe1
 3. **GO:0030674** protein-macromolecule adaptor activity (IMP, PMID:24013502): Epe1 binds Bdf2 and is required for its recruitment to IRC boundaries
 4. **GO:0042393** histone binding (IDA, PMID:32195666): purified Epe1 prefers H3K9me3 peptides and H3K9-methylated histones
 
-Protein acetylation (GO:0006473) is not proposed: Gcn5 in SAGA performs the acetylation, and Epe1's part is captured by GO:0035035. Negative regulation of heterochromatin formation (GO:0031452) is not proposed either. PomBase curated Epe1's anti-silencing role as seven experimental GO:0033696 heterochromatin boundary formation rows and did not add GO:0031452, which we read as a curation convention rather than a gap. The tension with SGD's IMP annotation of DOT1 to GO:0031452 is raised as a suggested question for PomBase, as is the NOT GO:0031507 row, since GO:0031507 is an ancestor of GO:0033696. Nucleosome organization (GO:0034728) is not proposed either: epe1 deletion reduces heterochromatic histone turnover, which shows Epe1 is necessary for normal turnover, but the disassembly and reassembly are performed by chaperones and remodelers such as FACT, and by GOA convention GO:0034728 is annotated to such chaperones and remodelers. Epe1 therefore fails the participation test for a NEW process term, and its turnover role is described in core function 4 without one.
+Protein acetylation (GO:0006473) is not proposed: Gcn5 in SAGA performs the acetylation, and Epe1's part is captured by GO:0062070 SAGA complex binding. Negative regulation of heterochromatin formation (GO:0031452) is not proposed either. PomBase curated Epe1's anti-silencing role as seven experimental GO:0033696 heterochromatin boundary formation rows and did not add GO:0031452, which we read as a curation convention rather than a gap. The tension with SGD's IMP annotation of DOT1 to GO:0031452 is raised as a suggested question for PomBase, as is the NOT GO:0031507 row, since GO:0031507 is an ancestor of GO:0033696. Nucleosome organization (GO:0034728) is not proposed either: epe1 deletion reduces heterochromatic histone turnover, which shows Epe1 is necessary for normal turnover, but the disassembly and reassembly are performed by chaperones and remodelers such as FACT, and by GOA convention GO:0034728 is annotated to such chaperones and remodelers. Epe1 therefore fails the participation test for a NEW process term, and its turnover role is described in core function 4 without one.
 
-### Annotations Accepted (23 annotations)
+### Annotations Accepted (22 annotations)
 Predominantly cellular component and biological process annotations that accurately reflect Epe1's localization and function:
 - Heterochromatin boundary formation (multiple evidence)
 - Nuclear and heterochromatin localization
 - Regulation of transcription by RNA polymerase II
 - Transcription coregulator activity
-- NOT heterochromatin formation (GO:0031507, negated IDA); OLS lists GO:0031507 as an ancestor of GO:0033696, so this row sits uneasily with the positive boundary rows, and the tension is raised with PomBase
 
 ## Core Functions Identified
 
@@ -57,10 +57,10 @@ Predominantly cellular component and biological process annotations that accurat
 - **Process**: Heterochromatin boundary formation (GO:0033696)
 - **Description**: Binds HP1/Swi6 at H3K9-methylated heterochromatin through C-terminal domain to antagonize silencing. Raiymbek et al. show that expressing the Epe1 C-terminus alone is sufficient to disrupt heterochromatin by outcompeting the histone deacetylase Clr3 from sites of heterochromatin formation, through this Swi6 interaction.
 
-### 2. SAGA Recruitment
-- **Molecular Function**: Histone acetyltransferase binding (GO:0035035)
+### 2. SAGA Association
+- **Molecular Function**: SAGA complex binding (GO:0062070)
 - **Process**: Regulation of transcription by RNA polymerase II (GO:0006357)
-- **Description**: Recruits SAGA histone acetyltransferase complex to heterochromatin for H3 acetylation
+- **Description**: Associates with the SAGA histone acetyltransferase complex; when overexpressed, Epe1 co-purifies with SAGA (probably through Tra1) and recruits it to heterochromatin, raising H3 acetylation. Every result used overexpressed Epe1, so the association of endogenous Epe1 is not established
 
 ### 3. Bdf2 Recruitment to Boundaries
 - **Molecular Function**: Protein-macromolecule adaptor activity (GO:0030674)

@@ -17,8 +17,8 @@ because these cases need several evidence types synthesised at once, which makes
 demanding test for AI-assisted curation, and because a wrong catalytic term on a
 pseudo-enzyme keeps being re-propagated. Four reviews are complete: fission yeast Epe1,
 whose four electronic (IBA/IEA) demethylase, oxidoreductase and dioxygenase rows are
-REMOVE (only the IBA demethylase row gets a replacement, GO:0070087 chromo shadow
-domain binding; the oxidoreductase, dioxygenase and H3K36 demethylase rows have none),
+REMOVE (none of the four has a replacement term; Epe1's binding functions are
+captured by separate NEW rows, such as GO:0070087 chromo shadow domain binding),
 and three
 biosynthetic-cluster proteins without active sites (eryCII, pqsB, actI-ORF2). Epe1's
 two PomBase experimental (IDA/EXP) H3K9 demethylase rows and its electronic metal ion
@@ -84,7 +84,7 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 - Required for normal heterochromatic nucleosome turnover (mechanism unresolved; the turnover itself is carried out by chaperones such as FACT)
 - Binds H3K9-methylated histones in vitro (Raiymbek 2020); no eraser (demethylase) activity has been detected
 
-**AI Review Action**: REMOVE the four IBA/IEA enzymatic activity annotations, proposing GO:0070087 chromo shadow domain binding as the replacement for the IBA demethylase row, and add NEW binding rows (Swi6, SAGA, Bdf2, histones); the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence.
+**AI Review Action**: REMOVE the four IBA/IEA enzymatic activity annotations, none with a replacement term, and capture Epe1's binding functions as separate NEW rows (Swi6, SAGA, Bdf2, histones); the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence.
 
 **Source**: Presented at Gene Ontology Consortium Meeting, October 2025, Cambridge UK. See [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review).
 
@@ -166,7 +166,7 @@ Created project to document genes with contested molecular functions, starting w
   - `GO:0016491` oxidoreductase activity (IEA)
   - `GO:0046872` metal ion binding (IEA) - UNDECIDED (rule-predicted Fe ligands H297/E299 retained, binding unmeasured)
 - Key evidence: Mass spectrometry assays, non-canonical Fe(II) triad, assay-dependent H297A phenotype
-- Proposed replacements: `GO:0070087` chromo shadow domain binding (Swi6; for the removed demethylase IBA); `GO:0031625` ubiquitin protein ligase binding (for the Cdt2 protein-binding IPI)
+- Proposed replacements: `GO:0031625` ubiquitin protein ligase binding (for the Cdt2 protein-binding IPI MODIFY); none of the four REMOVE rows has a replacement, and the binding functions are separate NEW rows (`GO:0070087`, `GO:0062070`, `GO:0030674`, `GO:0042393`)
 - 5 core functions documented with supporting evidence
 
 This case demonstrates how AI review can integrate:

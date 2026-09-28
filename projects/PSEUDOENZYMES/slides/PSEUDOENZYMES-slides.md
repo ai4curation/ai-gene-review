@@ -109,7 +109,7 @@ Outcome: over-annotated catalytic terms → MARK_AS_OVER_ANNOTATED / REMOVE; rea
 - **Actual function:** anti-silencing factor — associates with SAGA, recruits Bdf2 to centromere-flanking boundaries; binds H3K9-methylated histones; no eraser activity detected.
 - **Removed:** GO:0032452, GO:0140680 (demethylases), GO:0051213 (dioxygenase), GO:0016491 (oxidoreductase). **Undecided:** GO:0032454 (IDA, EXP), GO:0046872.
 - **Open:** JmjC domain essential and Y307A (2-oxoglutarate site) loss of function (Ayoub 2003, possibly one experiment); the lost Sorida arm; demethylation never measured directly.
-- **Added (NEW):** GO:0070087 (Swi6 CSD binding), GO:0035035 (SAGA/Gcn5), GO:0030674 (Bdf2 adaptor), GO:0042393 (histone binding).
+- **Added (NEW):** GO:0070087 (Swi6 CSD binding), GO:0062070 (SAGA complex), GO:0030674 (Bdf2 adaptor), GO:0042393 (histone binding).
 
 (Raiymbek et al. 2020; Bao et al. 2019)
 
