@@ -3143,7 +3143,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ARID1B** — HGNC:18040; [Coffin-Siris syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d487e6c4-9727-4315-90a2-11338128a8e5-2019-12-04T200734.569Z) (MONDO:0015452; AD; Definitive).
 - [ ] **ARID2** — HGNC:18037; [Coffin-Siris syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ae1a697f-8dcd-4edf-a25b-e5e0593e7e61-2022-12-06T230000.000Z) (MONDO:0015452; AD; Definitive).
 - [ ] **ARL13B** — HGNC:25419; [Joubert syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f6c474c9-4035-498c-a902-03be50d36205-2020-06-03T210114.719Z) (MONDO:0018772; AR; Definitive).
-- [ ] **ARL2BP** — HGNC:17146; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afe2baae-73d8-4f77-a106-a9163dbde4ce-2025-01-02T170000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **ARL2BP** — HGNC:17146; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afe2baae-73d8-4f77-a106-a9163dbde4ce-2025-01-02T170000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **ARL6** — HGNC:13210; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9289028a-10d0-4d9a-aa17-13d13d91c732-2025-07-14T160000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **ARL6IP1** — HGNC:697; [hereditary spastic paraplegia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_58275699-f116-4243-83da-72f751753837-2022-10-17T180000.000Z) (MONDO:0019064; AR; Definitive).
 - [x] **ARMC2** — HGNC:23045; [spermatogenic failure 38](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aef0ad23-4568-4ef7-94e9-557981bfbe6c-2023-05-10T160000.000Z) (MONDO:0032748; AR; Definitive).
