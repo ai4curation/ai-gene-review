@@ -275,7 +275,7 @@ well-documented alternative function.
 
 | Feature | Details |
 |---------|---------|
-| **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
+| **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/2-oxoglutarate-dependent dioxygenase) |
 | **Defect** | Non-canonical Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution). Tyr370 is nonetheless required (Y370A loses function, Raiymbek 2020); Y307 is a 2-oxoglutarate-site residue and Y307A also loses function. Required is not catalytic: these mutants also weaken Swi6 binding |
 | **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019; one experiment read from two arms, retained prevention and lost removal), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
 | **Actual function** | Anti-silencing factor; associates with the SAGA histone acetyltransferase complex (and recruits it to heterochromatin when overexpressed); recruits the Bdf2 bromodomain protein to the boundaries flanking centromeres; required for normal heterochromatic nucleosome turnover, which chaperones such as FACT carry out; binds Swi6/HP1 in an H3K9 methylation-stimulated manner; no demethylase (eraser) activity has been detected, though latent activity is not excluded |
@@ -295,7 +295,8 @@ experiment), and Wang et al. 2015 (PMID:25774602)
 interpret active-site mutant phenotypes as enzymatic redundancy with Mst2.
 Independently, Sorida et al. 2019 (PMID:31206516) show that H297A leaves the de
 novo arm intact but entirely fails to remove established ectopic
-heterochromatin, a separation of function read out as H3K9me in vivo, though
+heterochromatin, a separation of function read out as H3K9me (Raiymbek et al. give
+the same in vivo H3K9me readout for H297A, Y307A and Y370A), though
 no study has measured demethylation directly. That one experiment is read from
 both arms: retained prevention of de novo H3K9me argues that part of the
 anti-silencing activity does not need H297, while lost removal of established
