@@ -32,6 +32,16 @@ The two gene reviews themselves live as usual in `genes/DANRE/<gene>/`.
 | [tbx5a / tbx5b](tbx5a_tbx5b/tbx5a_tbx5b.md) | TGD_likely_parallel | MIXED: both copies essential and non-redundant (heart looping, fin); fin role split (tbx5a initiation, tbx5b outgrowth); one-sided expression loss in tbx5b; protein divergence inferred (49% identity, no reciprocal mRNA cross-rescue), not established |
 | [vcla / vclb](vcla_vclb/vcla_vclb.md) | TGD_tree | MIXED: conserved protein with expression-biased partition (vclb-only coronary/epicardial role, lethal alone; vcla dispensable even maternal-zygotic); shared dose-sensitive endothelial barrier role; vclb upregulation in vcla mutants is mRNA-decay-triggered adaptation, no protein-level compensation shown |
 
+## Random sample (batch 3)
+
+Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs; see
+[batch3_sample.tsv](../batch3_sample.tsv). Every page carries a **Sample record** line.
+
+| Pair | Fate | Level | Evidence | Identity | Summary |
+|---|---|---|---|---|---|
+| [smad3a / smad3b](smad3a_smad3b/smad3a_smad3b.md) | BACKUP (provisional) | both | experimental_both | 94.1% | Conserved R-SMADs acting alike in side-by-side assays and broadly co-expressed; only the double knockout has a reported phenotype; single-mutant data not visible |
+| [eef1da / eef1db](eef1da_eef1db/eef1da_eef1db.md) | UNRESOLVED | none | expression_only | 40.5% (long isoforms; GEF region 89%) | No functional data; both keep an intact GEF domain and are co-expressed in all Bgee tissues; eef1da is maternal and early-embryo biased |
+
 ## Template
 
 ```markdown
