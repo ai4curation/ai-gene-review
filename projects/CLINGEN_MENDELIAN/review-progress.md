@@ -167,9 +167,9 @@ are therefore expected; existing human reviews still link normally.
 | AP5Z1 | Definitive | INITIALIZED | Review #3355 merged; current-head approval and required CI passed; all 16 scoped merged blobs verified | `cmungall/clingen-ap5z1` | [#3355](https://github.com/ai4curation/ai-gene-review/pull/3355) |
 | AP1G1 | Definitive | INITIALIZED | Review #3357 merged; current-head approval and required CI passed; all 47 scoped merged blobs verified | `cmungall/clingen-ap1g1` | [#3357](https://github.com/ai4curation/ai-gene-review/pull/3357) |
 | AP2M1 | Definitive | INITIALIZED | Review #3358 merged; current-head approval and required CI passed; all 104 scoped merged blobs verified | `cmungall/clingen-ap2m1` | [#3358](https://github.com/ai4curation/ai-gene-review/pull/3358) |
-| APC2 | Strong | INITIALIZED | Ready #3359; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-apc2` | [#3359](https://github.com/ai4curation/ai-gene-review/pull/3359) |
+| APC2 | Strong | INITIALIZED | Review #3359 merged; current-head approval and required CI passed; all 21 scoped merged blobs verified | `cmungall/clingen-apc2` | [#3359](https://github.com/ai4curation/ai-gene-review/pull/3359) |
 | APC | Definitive | INITIALIZED | Review #3360 merged; current-head approval and required CI passed; all 122 scoped merged blobs verified | `cmungall/clingen-apc` | [#3360](https://github.com/ai4curation/ai-gene-review/pull/3360) |
-| ARG1 | Definitive | COMPLETE | Ready #3361; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-arg1` | [#3361](https://github.com/ai4curation/ai-gene-review/pull/3361) |
+| ARG1 | Definitive | COMPLETE | Review #3361 merged; current-head approval and required CI passed; all 22 scoped merged blobs verified | `cmungall/clingen-arg1` | [#3361](https://github.com/ai4curation/ai-gene-review/pull/3361) |
 | APOL1 | Definitive | INITIALIZED | Review #3363 merged; current-head approval and required CI passed; all 18 scoped merged blobs verified | `cmungall/clingen-apol1` | [#3363](https://github.com/ai4curation/ai-gene-review/pull/3363) |
 | ARHGAP29 | Definitive | INITIALIZED | Review #3362 merged; current-head approval and required CI passed; all 17 scoped merged blobs verified | `cmungall/clingen-arhgap29` | [#3362](https://github.com/ai4curation/ai-gene-review/pull/3362) |
 | APOB | Definitive | INITIALIZED | Ready #3365; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-apob` | [#3365](https://github.com/ai4curation/ai-gene-review/pull/3365) |
@@ -185,6 +185,10 @@ are therefore expected; existing human reviews still link normally.
 | ARPC1B | Definitive | INITIALIZED | Review #3378 merged; current-head approval and required CI passed; all 27 scoped merged blobs verified | `cmungall/clingen-arpc1b` | [#3378](https://github.com/ai4curation/ai-gene-review/pull/3378) |
 | ARSA | Definitive | PREEXISTING_REVIEW_AUGMENTED | Review #3376 merged; current-head approval and required CI passed; all 31 scoped merged blobs verified | `cmungall/clingen-arsa` | [#3376](https://github.com/ai4curation/ai-gene-review/pull/3376) |
 | ARSB | Definitive | PREEXISTING_REVIEW_AUGMENTED | Review #3379 merged; current-head approval and required CI passed; all 30 scoped merged blobs verified | `cmungall/clingen-arsb` | [#3379](https://github.com/ai4curation/ai-gene-review/pull/3379) |
+| ARSL | Definitive | NORMAL_PENDING_SEED_REVIEWED | Required tests passed at the recorded head #3382; review job hit its quota limit and posted no new-head review. No approval or merge claimed. | `cmungall/clingen-arsl` | [#3382](https://github.com/ai4curation/ai-gene-review/pull/3382) |
+| ARX | Definitive | NORMAL_PENDING_SEED_REVIEWED | Approved #3384 at the recorded head; required tests remained in progress at the checkpoint observation. No merge or completion claimed. | `cmungall/clingen-arx` | [#3384](https://github.com/ai4curation/ai-gene-review/pull/3384) |
+| ASAH1 | Definitive | PREEXISTING_REVIEW_AUGMENTED | Required tests passed at the recorded head #3383; review job hit its quota limit and posted no new-head review. No approval or merge claimed. | `cmungall/clingen-asah1` | [#3383](https://github.com/ai4curation/ai-gene-review/pull/3383) |
+| ASL | Definitive | PREEXISTING_REVIEW_AUGMENTED | Required tests passed at the recorded head #3385; review job hit its quota limit and posted no new-head review. No approval or merge claimed. | `cmungall/clingen-asl` | [#3385](https://github.com/ai4curation/ai-gene-review/pull/3385) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -196,16 +200,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **108 of 2,876 genes
-are complete**; 109 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 115 dedicated full-audit PRs.
+signed publication/file checks and append-only receipt chains. **110 of 2,876 genes
+are complete**; 111 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 119 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ARSA (#3376), ARSB (#3379) and ARPC1B (#3378) are complete after approval at each exact published head, successful required CI and verified merged file scope. The checkpoint preserves both ARSA followups, the ARPC1B followup, and the initial ARSB audit plus its followup as five distinct published updates. ARSB is the only new initial audit in this cut. Earlier first-review comments remain historical. Newer source and seed imports, including Source50–54 and Seed13–14, are excluded from this finite checkpoint. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved. Earlier policy-only holds remain historical observations, not approval or merge claims.
+ARG1 (#3361) and APC2 (#3359) are complete after exact-head approval, successful required CI and verification of every scoped merged blob. The APC2 execution record preserves a failed local gate caused by transient UNKNOWN mergeability; the dependent merge was mistakenly issued despite that failure. GitHub accepted the exact-head merge, and later signed/file verification succeeded. That later evidence does not turn the failed local gate into a PASS. Four initial audits and three followups are recorded for ARSL, ASAH1, ARX and ASL. At the recorded cut, ARSL, ASAH1 and ASL tests passed, but their review jobs hit a quota limit without posting a new-head review. ARX received exact-head approval while required tests remained in progress. None of these four reviews is counted complete. ASH1L has a prospective annotation consultation and ASNS has a recovered seed artifact; those observations do not constitute completed reviews. No new source or seed import ledger transitions enter this finite checkpoint. The externally merged AKR1D1 review remains incomplete because its required Reactome record is unresolved. Earlier review and policy-hold observations remain historical.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -643,3 +647,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-28 checkpoint69: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARL2BP. 105/2,876 complete; 106 original merges; 1 pending source follow-ups; 114 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-28 checkpoint70: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARSA, ARSB, ARPC1B. 108/2,876 complete; 109 original merges; 1 pending source follow-ups; 115 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-28 checkpoint71: Record seven verified publication events and two reconciled completions; no new source or seed imports enter this cut. Preserve the APC2 failed local gate and the exact-head quota/CI observations. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARG1, APC2. 110/2,876 complete; 111 original merges; 1 pending source follow-ups; 119 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
