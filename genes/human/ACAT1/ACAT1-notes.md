@@ -61,7 +61,7 @@ metabolic process (GO:1902224, IC) [GOA / UniProt GO xrefs].
 
 ## Isoleucine catabolism + 3-ketothiolase / beta-ketothiolase deficiency (3KTD)
 
-T2 catalyzes the final thiolytic step of isoleucine catabolism (2-methylacetoacetyl-CoA -> 
+T2 catalyzes the final thiolytic step of isoleucine catabolism (2-methylacetoacetyl-CoA ->
 propionyl-CoA + acetyl-CoA). Loss causes "beta-ketothiolase deficiency" / 3KTD (MIM:203750).
 - PMID:9744475 (Fukao et al. 1998): "Mitochondrial acetoacetyl-CoA thiolase (T2) deficiency is an
   inborn error of ketone body and isoleucine catabolisms." [PMID:9744475 abstract].
@@ -404,3 +404,55 @@ Follow-up verification: `just validate human ACAT1`, history validation and
 `just render human ACAT1` all passed. All 49 parsed source objects and any
 alternative-product metadata match the published baseline; trailing-space cleanup
 was checked for parsed-YAML identity. The eight donor-cache draft gate remains.
+
+
+## 2026-09-27 post-merge publication-cache closure
+
+The eight donor records missing at PR #3158 publication are now present as genuine
+machine-generated PubMed caches from GitHub Actions run
+[36286975328](https://github.com/ai4curation/ai-gene-review/actions/runs/36286975328),
+artifact 10920674630. Each local file was compared byte-for-byte with the recovered
+`tmp/verified-reference-artifact.zip` member. No cache text was authored or edited.
+This closes the historical missing-cache gate; it does not turn abstracts into
+full experimental access. All eight records have `full_text_available: false`.
+
+The recovered records were read: PMID:1672610 covers rat mitochondrial CoA
+modification; PMID:1684101 identifies glutamate dehydrogenase as the partner in
+co-immunoprecipitation and cross-linking of CoA-modified rat thiolase;
+PMID:11988101 covers matrix-protein turnover and oligomeric enzyme;
+PMID:2866764 concerns developing rat brown-adipose enzyme activities and tissue
+acetoacetate oxidation; PMID:5166591 measures enzyme activities during postnatal
+rat development; PMID:7733320 examines postnatal rat proximal-tubule enzyme
+activities under thyroid perturbation; PMID:6144148 tests neonatal L-thyroxine and
+reports unchanged thiolase activity in rat brain; PMID:2985752 measures brain
+mitochondrial enzyme responses to chronic prenatal/postnatal rat undernutrition.
+
+The three previous statements that the binding partner, hormone, or nutritional
+experiment was unidentified are updated to these positive abstract findings.
+Their human annotations remain UNDECIDED because full-source interpretation and
+transfer of the specific context remain unresolved. The recovered abstracts do
+not justify converting the other source-limited decisions into confident
+acceptances or rejections. Every one of the 49 seeded assertions, all 49 actions,
+all alternative-product metadata and the integrated catalytic core are retained.
+The three newly quoted donor abstracts are separately listed in references;
+all 25 original reference identifiers/titles and assessments are unchanged.
+
+The review/notes citation census has no missing PMID files. Final validation,
+schema status and render results are recorded below after the targeted checks.
+
+Targeted `just validate human ACAT1` passed with zero gene-validation warnings;
+`just validate-history` passed. The schema status remains COMPLETE, now with the
+publication-cache gate closed and no validation warnings. All 19 PMID citations
+in the review and notes have local records; abstract-only availability is preserved.
+The generated HTML was refreshed after these final notes.
+
+
+## 2026-09-27 — PR #3250 recovered-source follow-up
+
+Read formal review 5329543865 and detailed comment 5854249827 at the exact published head 4c29b5ebfa2088dcbb6580d6a8af1b3ff1786f49, and verified all five canonical gene-file blobs before editing. The recovered PMID:5166591 abstract is now attached directly to GO:0001889 and receives a reference assessment. It measures developmental **enzyme activity**, not directly expression abundance or a liver-development mechanism. Both rat-source comments now describe the positive activity profile. UNDECIDED remains appropriate because the full source interpretation and transfer of a developmental process role to human ACAT1 remain unresolved. The earlier notes' unavailable-source statements describe historical access and are superseded by this recovery.
+
+The optional evidence refinements are also incorporated: PMID:1684101 confines co-purification of the glutamate-dehydrogenase partner to CoA-modified thiolase; PMID:1672610 describes transient acid-stable, thiol-labile CoA modification of partially active rat forms, distinct from the independently supported human reversible cosubstrate interaction. The latter abstract now has an exact supporting quote and reference assessment. The PMID:6144148 quote is extended to a complete sentence and both donor comments explicitly describe the null thiolase-activity readout alongside increases in other enzymes.
+
+The UNRESOLVED propagation statuses are retained: the donor identities and reported experiments are established, but the full source interpretation and human transfer are not settled. One null abstract readout does not demonstrate absence of every hormone-response role, and a modification-dependent rat interaction does not establish either presence or loss of that interaction in human ACAT1. No action, core function, source object, machine cache, or published history record is changed. The two added reference assessments verify the intended primary records and bounded abstract-level support, without claiming full-text access.
+
+Full targeted validation passed without review warnings. All 49 source objects and actions, the cores and 28 previous reference objects are preserved; the two new reference identities/titles and all four touched cached excerpts were checked. History validation, HTML rendering and exact manifest checks also passed.

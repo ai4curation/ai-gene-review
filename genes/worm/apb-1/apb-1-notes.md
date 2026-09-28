@@ -1,0 +1,19 @@
+# apb-1 — AP complex subunit beta (Q9N4F3, TrEMBL) — curation notes
+
+## Identity
+- `apb-1` (Y71H2B.10) encodes the single large beta-adaptin of C. elegans. Unlike mammals, which have separate beta1 (AP-1) and beta2 (AP-2) subunits, the worm beta is shared between the AP-1 and AP-2 complexes [PMID:23482940 "The β subunit is shared by AP1 and AP2 in C"] [PMID:23482940 "Beta levels are reduced in apm-2 mutants compared to apa-2 mutants; however, beta is still present and stable in AP1 complexes in apm-2 mutants."]. The deep-research report (file:worm/apb-1/apb-1-deep-research-falcon.md) reaches the same conclusion and adds that GFP–APB-1 labels intestinal TGN-associated puncta with SMAP-1 (Wang et al. 2021, DOI 10.3389/fcell.2021.774401).
+- The AP-2 core describes apb-1 as the beta2 subunit [PMID:23696751 "RNAi of apa-2, apb-1 and dpy-23, which encode the α, β2 and μ2 subunits of the AP2 complex, respectively"].
+
+## Molecular role
+- Beta-adaptin is the subunit that links the AP-2 core to clathrin via its hinge clathrin box [PMID:10588660 "The β-adaptin subunit is thought to connect the AP2 complex to clathrin ( Pearse and Robinson, 1990 )."] [PMID:23482940 "Although clathrin is largely recruited to AP2 by the β subunit, even in the absence of β, it could still be recruited indirectly to the complex via AP180"].
+- In AP-2, beta pairs with mu2 as a hemicomplex: APB-1::GFP and mu2 remain stable and localised at nerve-ring synapses and the oocyte plasma membrane in alpha-adaptin (apa-2) mutants, whereas beta is reduced in mu2 (apm-2) mutants but persists in AP-1 [PMID:23482940 "Tagged β-adaptin and μ2-adaptin are localized to synaptic regions of the nerve ring (the major neuropil of the worm, Figure 6B,C) and at the plasma membrane in oocytes (Figure 6—figure supplement 1)."] [PMID:23482940 "Here we demonstrate that in the absence of α-adaptin that a μ2-β hemicomplex remains, and that in the absence of μ2-adaptin that a α-σ2 complex remains in vivo."].
+
+## Endocytic functions
+- Oocyte yolk uptake: beta-adaptin RNAi, like clathrin and alpha-adaptin RNAi, abolishes YP170::GFP uptake and produces embryonic defects [PMID:10588660 "elegans clathrin heavy chain, α-adaptin, and β-adaptin RNAi all produced similar defects in oocytes and embryos."] [PMID:19047463 "RNA interference against clathrin, α adaptin, or β2 adaptin each abolished uptake of a GFP-tagged vitellogenin (YP170-GFP) into oocytes."].
+- Apoptotic-cell clearance: apb-1 RNAi increases persistent germ-cell corpses, ~48% of which are not internalised; corpses are recognised by CED-1 and CED-6 normally but actin recruitment and phagosome maturation fail; APB-1 binds CED-6, DYN-1 and LST-4 directly in vitro [PMID:23696751 "Similarly, 12 of 25 corpses (48%) from 7 gonad arms of apb-1(RNAi) animals were found not to be internalized (Figure 1D)."] [PMID:23696751 "Thus, loss of chc-1 and apb-1 resulted in a failure in actin cytoskeleton rearrangement required for cell corpse engulfment, like that caused by loss of ced-1 or ced-6."] [PMID:23696751 "GST-CED-6 directly interacted with 35S-labeled APA-2, APB-1 and DPY-23, and His6-tagged CHC-1C (Figure 4A)."].
+- Synapses: the beta/mu2 hemicomplex retains partial AP-2 function in synaptic vesicle endocytosis; complete loss of AP-2 function requires removing both hemicomplexes [PMID:23482940 "Nonetheless, a complete block of AP2 function requires the simultaneous removal of both α- and μ2-adaptins."].
+
+## Curation decisions
+- The AP-1 adaptor complex IBA and trans-Golgi network IBA are correct for this gene because the worm beta is shared with AP-1; they are not over-propagations.
+- AP-2 adaptor complex (GO:0030122) is missing from GOA and is proposed as NEW on the basis of the hemicomplex study (PMID:23482940) and the beta2 designation in PMID:23696751.
+- Generic protein binding (CED-6 IPI) is removed as uninformative; the interaction itself is not disputed.

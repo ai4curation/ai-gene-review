@@ -25,7 +25,9 @@ Bioinformatics analysis of Epe1 (O94603) confirms it as a JmjC domain-containing
 > UniProt entry (O94603 BINDING 297, 299; CC note on position 370), Epe1's JmjC
 > Fe(II) triad is H297-E299-Y370: the HX(D/E) pair is intact (the "HIE" hit at
 > 296-299 below) and the third ligand, a His in canonical HX(D/E)...H
-> demethylases, is replaced by Tyr370.
+> demethylases, is replaced by Tyr370. The "JmjC domain (400-600)" boundaries
+> used in this section and in section 2 are also wrong: UniProt annotates the
+> JmjC domain at 243-402 (FT DOMAIN), which contains H297, E299 and Y370.
 
 - **Fe(II) binding motifs**: 3 HxD/E motifs detected
   - Position 279-282: HVD

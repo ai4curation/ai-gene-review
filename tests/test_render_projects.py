@@ -6,6 +6,7 @@ from pathlib import Path
 
 from ai_gene_review.render_projects import (
     build_symbol_to_species_index,
+    copy_referenced_assets,
     is_slides_markdown,
     link_uniprot_code_spans,
     parse_frontmatter,
@@ -1216,3 +1217,80 @@ def test_projects_table_has_collection_filter(tmp_path):
     html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
     assert 'data-filter="collection"' in html
     assert 'data-collections="HOMOLOGY"' in html
+
+
+@pytest.mark.parametrize(
+    "tag",
+    ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "EVALUATION", "ML_PREDICTIONS", "OBSOLETION"],
+)
+def test_projects_table_offers_every_tag_as_filter_chip(tmp_path, tag):
+    """Each controlled-vocabulary tag in use becomes a Tags filter chip."""
+    from ai_gene_review.render_projects import render_projects_table
+
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "FOO.md").write_text(f"---\ntitle: Foo\ntags: [{tag}]\n---\n# Foo\n")
+    html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
+    assert f'<span class="chip" data-value="{tag}">{tag}</span>' in html
+
+
+def test_linked_deck_pulls_in_its_images(tmp_path):
+    """A deck linked from a project page deploys with the figures it references.
+
+    The page links only the deck HTML; the deck's own <img> references (and
+    nothing outside projects/) must be copied alongside it.
+    """
+    projects_dir = tmp_path / "projects"
+    slides = projects_dir / "FOO" / "slides"
+    slides.mkdir(parents=True)
+    (projects_dir / "FOO.md").write_text(
+        "# Foo\n\n- [Slides](FOO/slides/FOO-slides.html)\n"
+    )
+    (slides / "FOO-slides.html").write_text(
+        '<img src="diagram.svg"><img src="shots/review.jpg">'
+        '<img src="https://cdn.example.org/emoji.svg">'
+        '<img src="../../../outside.png">'
+    )
+    (slides / "diagram.svg").write_text("<svg/>")
+    (slides / "shots").mkdir()
+    (slides / "shots" / "review.jpg").write_bytes(b"jpg")
+    (tmp_path / "outside.png").write_bytes(b"png")
+
+    output_dir = tmp_path / "pages" / "projects"
+    copied = copy_referenced_assets([projects_dir / "FOO.md"], output_dir, projects_dir)
+
+    out = output_dir / "FOO" / "slides"
+    assert sorted(p.relative_to(output_dir).as_posix() for p in copied) == [
+        "FOO/slides/FOO-slides.html",
+        "FOO/slides/diagram.svg",
+        "FOO/slides/shots/review.jpg",
+    ]
+    assert (out / "diagram.svg").read_text() == "<svg/>"
+    assert not (tmp_path / "pages" / "outside.png").exists()
+
+
+def test_project_provider_artifacts_distinguish_unarchived_from_broken_links(tmp_path):
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    report = projects / "report.md"
+    report.write_text("""---
+title: Provider report
+artifacts:
+- path: final_report.pdf
+  media_type: application/pdf
+- path: archived.pdf
+  media_type: application/pdf
+---
+[Missing provider export](final_report.pdf)
+[Archived export](archived.pdf)
+[Ordinary broken link](typo.pdf)
+""")
+    (projects / "archived.pdf").write_bytes(b"archived report")
+    output, _ = render_project(report, tmp_path / "pages/projects",
+                               genes_dir=tmp_path / "genes", projects_dir=projects)
+    text = output.read_text()
+    assert 'Missing provider export (not archived)' in text
+    assert 'data-unavailable-artifact="final_report.pdf"' in text
+    assert 'href="final_report.pdf"' not in text
+    assert 'href="archived.pdf"' in text
+    assert 'href="typo.pdf"' in text

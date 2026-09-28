@@ -29,8 +29,19 @@ All scripts now:
 - Generate data-driven conclusions
 - Work without hardcoded results
 
-## Key Finding Confirmed
-The analysis correctly identifies:
+## Key Finding (superseded)
+
+> **Correction (2026-09):** the finding below is retracted. The motif scan matches
+> any `H.[DE]` string; "HVD at 280" is not the Fe(II) site and is not by itself a
+> defect (active KDM2A has an FHVD motif). Per UniProt O94603 (BINDING 297, 299;
+> CC note on position 370), Epe1's JmjC Fe(II) triad is H297-E299-Y370: the
+> HX(D/E) pair is intact and the third ligand, a His in canonical demethylases,
+> is replaced by Tyr370. No demethylase activity has been detected for purified
+> Epe1 (PMID:32195666), but whether it has latent activity is unresolved, so
+> "lacking catalytic activity" overstates what the sequence shows. See
+> RESULTS.md section 3.
+
+The original (retracted) text read:
 - HVD motif at position 280 (valine prevents Fe(II) binding)
 - HIE motif at position 297
 - This makes Epe1 a pseudo-demethylase lacking catalytic activity

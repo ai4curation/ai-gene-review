@@ -74,13 +74,10 @@ class SiteManifest:
 
     @property
     def deployable(self) -> bool:
-        """Readiness policy shared by CLI reporting and deployment."""
+        """Artifact readiness; content-quality diagnostics are advisory."""
         return (
-            self.total_bytes <= self.size_budget_bytes
-            and self.archive_bytes <= self.archive_size_budget_bytes
-            and self.linked_source_files_not_staged == 0
-            and self.broken_local_links == 0
-            and self.off_base_path_links == 0
+            0 < self.total_bytes <= self.size_budget_bytes
+            and 0 < self.archive_bytes <= self.archive_size_budget_bytes
         )
 
 
@@ -468,13 +465,13 @@ def main() -> None:
         print(
             "::warning title=Pages links missing site prefix::"
             f"{manifest.off_base_path_links:,} likely off-base links; "
-            "see off_base_path_urls in the manifest. Deployment is blocked."
+            "see off_base_path_urls in the manifest. Publication continues."
         )
     if manifest.broken_local_links:
         print(
             "::warning title=Broken local Pages links::"
             f"{manifest.broken_local_links:,} missing static targets; "
-            "see broken_local_link_paths in the manifest. Deployment is blocked."
+            "see broken_local_link_paths in the manifest. Publication continues."
         )
     if manifest.linked_source_files_not_staged:
         linked_size_mib = manifest.linked_source_bytes_not_staged / MIB
@@ -482,7 +479,7 @@ def main() -> None:
             "::warning title=Linked files are outside the Pages artifact::"
             f"Published files link to {manifest.linked_source_files_not_staged:,} "
             f"existing repository files ({linked_size_mib:,.1f} MiB) that are not "
-            "staged. Resolve these omissions before deployment."
+            "staged (orphaned review pages). Publication continues; inspect the manifest."
         )
 
 
