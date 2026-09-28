@@ -54,3 +54,28 @@ The 2002 axon-guidance construct/antibody scope remains unresolved after the acc
 ### Source33 citation closure
 
 All five normal records were imported without overwriting a prior cache. Their exact titles and abstract quotations now support the relevant assertions, and every PMID availability flag reflects the cached record. All 16 original annotation objects remain unchanged outside their review fields. Four finite evidence uncertainties remain explicit; completion records the finished assessment, not a resolution of every biological question. No new process annotation was added.
+
+
+## 2026-09-28 — PR #3350 evidence follow-up
+
+This section supersedes the earlier unresolved 2002 construct scope and the provisional WAP-domain decision. The 16 source assertions, prior NEW heparin annotation, raw files, normal publication records and published history remain intact. The two independent consultations distinguish source identity from the experiments actually read.
+
+### Heparin and heparan sulfate
+
+[GO:0008201](https://amigo.geneontology.org/amigo/term/GO:0008201) specifies heparin binding. Its heparan-sulfate synonym has RELATED, not EXACT, scope; [GO:1904399](https://amigo.geneontology.org/amigo/term/GO:1904399) separately specifies heparan-sulfate binding. Both have glycosaminoglycan-binding ancestry. The previous claim that the terms were equivalent is withdrawn. The retained heparin MF describes the ligand actually used in biochemical assays, while physiological cell-surface HS interactions are discussed separately.
+
+The [original 2004 biochemical paper, author-uploaded copy](https://www.researchgate.net/publication/8388366_Cross-talk_of_anosmin-1_the_protein_implicated_in_X-linked_Kallmann%27s_syndrome_with_heparan_sulphate_and_urokinase-type_plasminogen_activator) was read at recombinant-protein, ELISA/SPR and protease Methods, corresponding Results and WAP Discussion. Figure 3 uses HS in ELISA; Figure 4/Table 1 use heparin in SPR. The SPR Methods explicitly state “immobilized biotin conjugated heparin”. Thus the abstract's compressed HS/SPR wording does not describe the assay reagent precisely. The previous NEW GO:0008201 remains supported by the independently cited 2009 heparin-complex study; no additional MF is added here.
+
+The same original paper reports enhanced uPA amidolytic activity and “had no effect on thrombin amidolytic activity”. The WAP-derived IEA inhibitor assignment exceeds the demonstrated activity and is marked over-annotated. This is not a universal NOT assertion: other peptidases were not excluded. The exact cached uPA result and this externally read thrombin scope are kept separate. The normal 2004 record remains abstract-only.
+
+### Human cue and rat neuronal responders
+
+The [original 2002 Cell paper, author-uploaded copy](https://www.academia.edu/14598342/Anosmin_1_Defective_in_the_X_Linked_Form_of_Kallmann_Syndrome_Promotes_Axonal_Branch_Formation_from_Olfactory_Bulb_Output_Neurons) was read at Figure 1, Figure 7 and tandem-assay Results, Cells and axon-guidance Methods. Figure 1A/B (p. 219) explicitly identifies “Purified anosmin-1 produced by CHO cells transfected with the human KAL-1 cDNA”. Cells Methods (p. 226) identify clone 2.3d11. Figure 7 links the producer-cell preparation to directional attraction of E15 rat olfactory-bulb axons; tandem geometry separates attraction from simple growth promotion. E17 axons and dorsal-root-ganglion controls respond differently. Figure images and all supplements were not independently inspected.
+
+The human protein supplies the extracellular cue; CHO cells produce it and rat neurons respond. This closes the earlier construct boundary without relying on rodent antibody reactivity or later clone continuity. Existing axon guidance is accepted using this later independent evidence while preserving the original 1991 TAS source. The result does not establish guidance of every axon or initial lateral-olfactory-tract formation. No new BP is proposed. Existing chemotaxis and neuronal-differentiation core context describes cue/modulator participation, not locomotion of the protein.
+
+### Remaining source-specific limits
+
+The ANOS1–NCALD and ANOS1–UBQLN1 HuRI pair experiments remain unadjudicated. General article availability does not replace their construct and pair-table evidence. Under the explicit user action definitions, genericity alone does not show these experimental assertions are incorrect; they remain UNDECIDED. Empty notes-only support entries were removed instead of presenting this evidence boundary as a positive experimental finding.
+
+The FGFR1 refinement now quotes the weaker FGFR2IIIc and negligible FGFR3IIIc comparison. Reference reviews name the experiments or remaining access limits. Human interstitial-matrix evidence remains PMID:10340754; the unresolved linkage to the gastric-cancer IHC source is retained without a blanket miscitation judgment. Cache titles, normal availability flags, source identifiers and the published history are unchanged.
