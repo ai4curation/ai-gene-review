@@ -49,6 +49,7 @@ Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs; see
 | [olfm3a / olfm3b](olfm3a_olfm3b/olfm3a_olfm3b.md) | UNRESOLVED | expression | expression_only | 83.2% | Conserved protein; olfm3a is the larval brain/retina copy, olfm3b near-silent in larvae with weak adult calls; consistent with partition or with olfm3b decline; Ensembl dates the duplication to Gnathostomata |
 | [agxta / agxtb](agxta_agxtb/agxta_agxtb.md) | PARTITION | protein | sequence_only | 62.4% | Targeting signals split: agxta keeps only a C-terminal peroxisomal-type signal, agxtb only the gar-like N-terminal mitochondrial sequence (gar and tetrapods have both); catalytic residues and liver/kidney expression shared; pattern recurs across teleosts; untested experimentally |
 | [slc7a10a / slc7a10b](slc7a10a_slc7a10b/slc7a10a_slc7a10b.md) | UNRESOLVED | expression | experimental_one | 77.8% | Protein conserved (all tested Asc-1 residues identical); slc7a10a broad, slc7a10b narrow and closer to gar; only slc7a10b has a mutant (diet-induced weight gain); ancestral tissue pattern uncertain |
+| [exoc3l2a / exoc3l2b](exoc3l2a_exoc3l2b/exoc3l2a_exoc3l2b.md) | UNRESOLVED | both | expression_only | 50.9% | EXOC3L2 co-orthologs (PANTHER's EXOC3L4 label is wrong); exoc3l2a endothelial, exoc3l2b neural crest/arches in a separate study, never compared side by side; exoc3l2a evolves about 2x faster; double-conserved synteny; no functional data |
 
 ## Template
 
