@@ -165,9 +165,11 @@ are therefore expected; existing human reviews still link normally.
 | ANXA11 | Definitive | INITIALIZED | Review #3353 merged; current-head approval and required CI passed; all 35 scoped merged blobs verified | `cmungall/clingen-anxa11` | [#3353](https://github.com/ai4curation/ai-gene-review/pull/3353) |
 | AP4E1 | Definitive | INITIALIZED | Ready #3354; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ap4e1` | [#3354](https://github.com/ai4curation/ai-gene-review/pull/3354) |
 | AP5Z1 | Definitive | INITIALIZED | Review #3355 merged; current-head approval and required CI passed; all 16 scoped merged blobs verified | `cmungall/clingen-ap5z1` | [#3355](https://github.com/ai4curation/ai-gene-review/pull/3355) |
-| AP1G1 | Definitive | INITIALIZED | Ready #3357; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ap1g1` | [#3357](https://github.com/ai4curation/ai-gene-review/pull/3357) |
+| AP1G1 | Definitive | INITIALIZED | Review #3357 merged; current-head approval and required CI passed; all 47 scoped merged blobs verified | `cmungall/clingen-ap1g1` | [#3357](https://github.com/ai4curation/ai-gene-review/pull/3357) |
 | AP2M1 | Definitive | INITIALIZED | Ready #3358; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ap2m1` | [#3358](https://github.com/ai4curation/ai-gene-review/pull/3358) |
 | APC2 | Strong | INITIALIZED | Ready #3359; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-apc2` | [#3359](https://github.com/ai4curation/ai-gene-review/pull/3359) |
+| APC | Definitive | INITIALIZED | Ready #3360; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-apc` | [#3360](https://github.com/ai4curation/ai-gene-review/pull/3360) |
+| ARG1 | Definitive | COMPLETE | Ready #3361; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-arg1` | [#3361](https://github.com/ai4curation/ai-gene-review/pull/3361) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -179,16 +181,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-local/published tree checks and append-only receipt chains. **93 of 2,876 genes
-are complete**; 94 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 98 dedicated full-audit PRs.
+local/published tree checks and append-only receipt chains. **94 of 2,876 genes
+are complete**; 95 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 100 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ANXA11 and AP5Z1 are complete after approval at their exact final heads, successful required CI and exact merged-file verification. AP2M1 (#3358) and APC2 (#3359) are newly published original audits. AP1G1 (#3357) and AP4E1 (#3354) have published reviewer followups; every earlier head remains recorded. The four unmerged audits remain incomplete at this checkpoint. The eight Source37 normal PMID records were already imported and recorded at checkpoint62; all prior source-import receipts remain intact. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved.
+AP1G1 is complete after approval at its exact final head, successful required CI and exact merged-file verification. APC (#3360) and ARG1 (#3361) are newly published original audits. Both AP2M1 reviewer followups, AP4E1’s third followup and APC2’s provenance amendment are recorded in order with prior heads retained. Source38’s two PMID caches and Source39’s three Reactome caches were imported without overwrite. Seed10 supplied 18 original seed files (551 PENDING annotations), followed by 137 recovered normal caches and one separate exact-main cache synchronization; 133 existing caches were preserved and 11 recovered records remained quarantined. These imports do not complete any review. Source40’s fixed three-source workflow was published and dispatch accepted; this checkpoint makes no successful retrieval or import claim for it. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -612,3 +614,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-28 checkpoint62: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ANO10, ANTXR2. 91/2,876 complete; 92 original merges; 1 pending source follow-ups; 96 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-28 checkpoint63: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ANXA11, AP5Z1. 93/2,876 complete; 94 original merges; 1 pending source follow-ups; 98 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-28 checkpoint64: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: AP1G1. 94/2,876 complete; 95 original merges; 1 pending source follow-ups; 100 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
