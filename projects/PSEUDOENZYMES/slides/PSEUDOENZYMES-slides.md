@@ -106,7 +106,7 @@ Outcome: over-annotated catalytic terms → MARK_AS_OVER_ANNOTATED / REMOVE; rea
 
 - **Defect:** degenerate Fe(II) triad H297-E299-Y370: Tyr370 replaces the third iron-ligand His.
 - **Biochemistry:** no detectable H3K9me removal in vitro; H297A phenotype is assay-dependent (loss of function at endogenous level, still active when overexpressed).
-- **Actual function:** anti-silencing factor — recruits SAGA / Bdf2 to heterochromatin boundaries; binds H3K9-methylated histones; no eraser activity detected.
+- **Actual function:** anti-silencing factor — associates with SAGA, recruits Bdf2 to centromere-flanking boundaries; binds H3K9-methylated histones; no eraser activity detected.
 - **Removed:** GO:0032452 (demethylase), GO:0140680 (H3K36 demethylase), GO:0051213 (dioxygenase), GO:0016491 (oxidoreductase). **Undecided:** GO:0032454 (IDA, EXP), GO:0046872 (metal ion binding).
 - **Added (NEW):** GO:0070087 (Swi6 CSD binding), GO:0035035 (SAGA/Gcn5), GO:0030674 (Bdf2 adaptor), GO:0042393 (histone binding).
 

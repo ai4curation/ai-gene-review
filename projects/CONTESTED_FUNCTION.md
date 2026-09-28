@@ -63,16 +63,16 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 - `GO:0046872` metal ion binding (IEA)
 
 **The Evidence Against**:
-1. The Epe1 JmjC Fe(II)-binding triad is H297-E299-Y370: the distal iron-ligating His is replaced by Tyr
-2. The distal iron-ligating histidine is lost (His370 replaced by Tyr; UniProt caution)
-3. Mass spectrometry assays show NO demethylation of H3K9me2/me3 peptides
-4. The H297A Fe(II)-site mutant does not settle it: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing, SAGA-dependently (Bao 2019)
-5. C-terminus alone (without JmjC) disrupts heterochromatin
+1. The Epe1 JmjC Fe(II)-binding triad is H297-E299-Y370: the distal iron-ligating His is replaced by Tyr (UniProt caution)
+2. Mass spectrometry assays show NO demethylation of H3K9me2/me3 peptides
+3. The H297A Fe(II)-site mutant does not settle it: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing, SAGA-dependently (Bao 2019)
+4. C-terminus alone (without JmjC) disrupts heterochromatin
 
-**Actual Function**: Non-enzymatic anti-silencing factor that:
-- Binds HP1/Swi6 to recruit SAGA histone acetyltransferase complex
-- Recruits Bdf2 bromodomain protein to heterochromatin boundaries
-- Promotes nucleosome turnover (mechanism unresolved)
+**Actual Function**: Anti-silencing factor whose characterized mechanisms are non-catalytic:
+- Binds HP1/Swi6 (chromoshadow domain) at H3K9-methylated heterochromatin
+- Associates with the SAGA histone acetyltransferase complex
+- Recruits Bdf2 bromodomain protein to the heterochromatin boundaries flanking centromeres
+- Required for normal heterochromatic nucleosome turnover (mechanism unresolved; the turnover itself is carried out by chaperones such as FACT)
 - Binds H3K9-methylated histones in vitro (Raiymbek 2020); no eraser (demethylase) activity has been detected
 
 **AI Review Action**: REMOVE the IBA/IEA enzymatic activity annotations and propose binding terms; the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence.
@@ -156,7 +156,7 @@ Created project to document genes with contested molecular functions, starting w
   - `GO:0051213` dioxygenase activity (IEA)
   - `GO:0016491` oxidoreductase activity (IEA)
   - `GO:0046872` metal ion binding (IEA) - UNDECIDED (rule-predicted Fe ligands H297/E299 retained, binding unmeasured)
-- Key evidence: Mass spectrometry assays, degenerate active site residues, catalytic mutant retains function
+- Key evidence: Mass spectrometry assays, non-canonical Fe(II) triad, assay-dependent H297A phenotype
 - Proposed replacements: `GO:0070087` chromo shadow domain binding (Swi6; for the removed demethylase IBA); `GO:0031625` ubiquitin protein ligase binding (for the Cdt2 protein-binding IPI)
 - 5 core functions documented with supporting evidence
 

@@ -18,7 +18,7 @@ cause. Nine reviewed genes carry the analysis: five Cu/Zn-SOD paralogs in the
 tardigrade *R. varieornatus*, the fission yeast JmjC "reader" Epe1, the
 P450-like glycosyltransferase activator EryCII, and the non-catalytic
 condensing-enzyme subunits PqsB and ActI-ORF2. In those reviews, Epe1's
-histone demethylase rows and EryCII's monooxygenase and heme rows are
+electronic histone demethylase rows and EryCII's monooxygenase and heme rows are
 REMOVE; the SOD activity rows on RvY_13070 (RvSOD15), RvY_00650 and RvY_03757
 and the acyltransferase rows on PqsB and ActI-ORF2 are MARK_AS_OVER_ANNOTATED.
 Two gene reviews are more cautious than the prose below: RvY_17310's SOD rows
@@ -278,7 +278,7 @@ well-documented alternative function.
 | **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
 | **Defect** | Degenerate Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution) |
 | **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
-| **Actual function** | Anti-silencing factor; recruits SAGA histone acetyltransferase and Bdf2 bromodomain protein to heterochromatin boundaries; promotes nucleosome turnover; binds Swi6/HP1 in an H3K9 methylation-stimulated manner; no demethylase (eraser) activity has been detected, though latent activity is not excluded |
+| **Actual function** | Anti-silencing factor; associates with the SAGA histone acetyltransferase complex (and recruits it to heterochromatin when overexpressed); recruits the Bdf2 bromodomain protein to the boundaries flanking centromeres; required for normal heterochromatic nucleosome turnover, which chaperones such as FACT carry out; binds Swi6/HP1 in an H3K9 methylation-stimulated manner; no demethylase (eraser) activity has been detected, though latent activity is not excluded |
 | **Type** | Type 5 (probable: recognition without detected modification activity) |
 | **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0140680 (histone H3K36me/H3K36me2 demethylase activity), GO:0051213 (dioxygenase activity), GO:0016491 (oxidoreductase activity). The two experimental GO:0032454 rows (IDA and EXP) and GO:0046872 (metal ion binding) are UNDECIDED rather than REMOVE |
 | **Annotations added** | NEW rows: GO:0070087 (chromo shadow domain binding, Swi6), GO:0035035 (histone acetyltransferase binding), GO:0030674 (protein-macromolecule adaptor activity) and GO:0042393 (histone binding); the MODIFY on the protein-binding IPI (partner Cdt2) proposes GO:0031625 (ubiquitin protein ligase binding). The core-function MFs are GO:0070087 (Swi6 chromoshadow-domain binding), GO:0035035 (histone acetyltransferase binding, SAGA), GO:0030674 (protein-macromolecule adaptor activity, Bdf2 recruitment), GO:0042393 (histone binding: purified Epe1 preferentially binds H3K9-methylated histones, Raiymbek 2020; attached to the nucleosome-turnover core function, whose mechanism is unresolved) and GO:0003712 (transcription coregulator activity) |
@@ -376,10 +376,11 @@ a NEW annotation for the actual function is appropriate:
 ### Pattern 5: Automated pipelines over-propagate downstream annotations
 When a pseudoenzyme is incorrectly annotated with a catalytic activity, the
 downstream biological process and pathway annotations are also incorrectly
-propagated. For example, Epe1's incorrect histone demethylase activity leads
-to incorrect histone demethylation (BP), which leads to incorrect
-"negative regulation of gene expression, epigenetic." All these downstream
-annotations must be removed together.
+propagated. For example, a histone demethylase activity row on a
+pseudo-demethylase can bring histone demethylation (BP) rows with it. Such
+downstream rows should be reviewed together with the activity row. (Epe1 has
+no histone demethylation BP row in GOA; its demethylase MF rows are the
+case in point.)
 
 ### Pattern 6: The "catalytic residue plus flanking context" rule
 For reliable pseudoenzyme detection, check THREE things:
@@ -477,8 +478,9 @@ Good template for families where the pseudoenzyme has neofunctionalized
    and functional characterization to distinguish.
 
 4. **Do pseudoenzymes retain substrate binding?** Yes in many cases (HER3
-   binds ATP; Epe1 binds H3K9me; iRhoms bind protease substrates). This is
-   the common "retained substrate binding + lost catalysis" pattern.
+   binds ATP; Epe1 binds H3K9-methylated histones in vitro; iRhoms bind
+   protease substrates). This is the common "retained substrate binding +
+   lost or undetected catalysis" pattern.
 
 5. **Are there pseudoenzymes in non-enzyme families?** Pseudo-receptors,
    pseudo-transcription factors, etc. exist. Similar principles apply.
