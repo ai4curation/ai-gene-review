@@ -290,7 +290,8 @@ detected, and latent activity is not excluded. The case is not closed: the JmjC
 domain is essential for Epe1 activity in complementation experiments (Ayoub et
 al. 2003, PMID:12773576) and is required for its effect on Pol II accessibility
 (Zofall and Grewal 2006, PMID:16762840), UniProt records the single-residue
-mutant Y307A as loss of function (from PMID:12773576), and Wang et al. 2015 (PMID:25774602)
+mutant Y307A as loss of function (from the same paper, possibly the same
+experiment), and Wang et al. 2015 (PMID:25774602)
 interpret active-site mutant phenotypes as enzymatic redundancy with Mst2. A
 required domain is not required catalysis, since Raiymbek et al. (PMID:32195666)
 place H3K9me recognition in the JmjC domain. This creates a common annotation error where
