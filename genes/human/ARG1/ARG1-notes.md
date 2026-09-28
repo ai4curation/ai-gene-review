@@ -1,5 +1,7 @@
 # ARG1 (Arginase-1, human, UniProtKB:P05089) — review notes
 
+> Historical research notes follow. The dated source-scope correction and normal-source closure sections supersede earlier nuclear-carryover, generic-binding, NK-cell, IFN-signaling and manganese-contribution interpretations. The current review has one catalytic core and four unresolved source-specific assertions.
+
 ## Summary of function
 ARG1 is the cytosolic, liver-type (type I) arginase, a binuclear manganese
 metalloenzyme that catalyzes the terminal (fifth) step of the urea cycle:
@@ -186,3 +188,40 @@ source-specific evidence remains uncertain. The three newly read records do not
 change any action, product, core or original source assertion. The review status
 is COMPLETE; this records completion of the audit, not resolution of every
 biological uncertainty. Raw gene records and every prior cache remain unchanged.
+
+
+## 2026-09-28 PR3361 evidence-scope clarification
+
+All 38 annotation decisions, three product records and the single arginase core
+remain unchanged. The original source fields and published history are preserved.
+The user-supplied session AGENTS.md requires `UNDECIDED` when relevant experimental
+evidence cannot be accessed and defines `REMOVE` as an assertion unlikely to be
+correct. This explicit instruction takes priority over the local review skill's
+generic-binding removal default. It is not a rule attributed to CLAUDE.md.
+Consequently the uninspected ARG1–CMTM6 table entry stays unresolved. No specific
+binding activity is invented to replace an unadjudicated co-IP/MS observation.
+
+The six cytoplasm/arginine-metabolism reasons now distinguish PAINT, UniProt,
+InterPro, crystallographic EXP and cDNA-era TAS provenance. Independent human
+cytosolic or catalytic evidence corroborates these broad assertions without
+relabeling it as the original source experiment. The MF refinements identify
+known catalytic or manganese specificity; retained broad CC/BP annotations are
+umbrella coverage of that same function, not additional activities. Extracellular
+myeloid arginase is biologically real and remains a secondary context of the same
+chemistry in this compact single-core synthesis.
+
+The two granule-exocytosis Reactome identities and summaries are checked, but
+their ARG1-specific participant inventories remain uninspected. Their reference
+reviews now explicitly say `UNVERIFIED` for that remaining scope. The deficient-
+variant and gene-expression records retain the separately documented prior
+official graph read by the coordinating reviewer; their short recovered summaries
+do not themselves display every participant or compartment. In the expression
+event ARG1 is the cytosolic protein output, not the transcriptional machinery.
+
+The IFN-gamma-production refinement still depends on the publicly linked original
+Blood Results/Figure 6C–D and targeted Methods recorded above. General cytokine
+suppression in the immutable abstract cache alone does not establish the specific
+endpoint. The exact short figure-legend quotation and body locator remain visible;
+no publication cache was edited. The antiprotozoal transfer remains unresolved,
+with the donor infection context and possible parasite-versus-host-defense effects
+raised as a question rather than asserted from an uninspected experiment.
