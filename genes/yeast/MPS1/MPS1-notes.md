@@ -5,7 +5,9 @@
 Serine/threonine-protein kinase MPS1 (Monopolar spindle protein 1; RPK1), 764 aa, kinase
 domain 440–720, catalytic Asp563, kinase-dead D580A behaves as a null
 [PMID:7737118 "A mutation predicted to abolish kinase function not only eliminates in vitro protein kinase activity, but also behaves like a null mutation in vivo"].
-PANTHER PTHR22974:SF21 (TTK subfamily). Human orthologue TTK (genes/human/TTK, complete review).
+PANTHER PTHR22974:SF21 (TTK subfamily; cached `PTHR22974-review.md`
+identifies this as the Mps1/TTK anchor subfamily). Human orthologue TTK
+(genes/human/TTK, complete review).
 The deep-research file (`MPS1-deep-research-falcon.md`) was present and was used for orientation only;
 every claim in the review is anchored to the cached primary papers.
 
@@ -62,8 +64,15 @@ Meiosis: anchor-away of Mps1 shortens the checkpoint delay in mek1Δ
   sites for Bub3-Bub1 and Mad1, so it does the work rather than merely being required.
 - GO:0007094 IGI (PMID:8688079) lists BUB2 among partners; Bub2 is a MEN component rather than a SAC protein, but
   that reflects the mutant panel of the paper and does not affect the Mps1 annotation.
-- All IBA rows ACCEPTed; SGD:S000002186 (MPS1 itself) in WITH/FROM reflects the yeast IDA/IMP rows used to place
-  the ancestral nodes (PTN001122082 Mps1/TTK subfamily; PTN000540737 deeper family node).
+- 2026-09-28 IBA re-review: all IBA rows were retained. The current PAINT cache places the kinetochore,
+  dual-specificity-kinase and mitotic/meiotic SAC assertions at PTN001122082, the Mps1/TTK subfamily
+  node, and places the serine/threonine kinase, nuclear, and chromosome-segregation assertions at the
+  broader PTN000540737 kinase-family node. SGD:S000002186 (MPS1 itself) in WITH/FROM reflects the yeast
+  IDA/IMP rows used to place those ancestral nodes and is not circular.
+- Newer-literature search on 2026-09-28 found the already cached 2026 Stu1/Slk19 JCB paper as the newest
+  MPS1-specific primary result. That work is already represented in GOA and this review by the
+  GO:0098653 centromere clustering row; the other recent yeast checkpoint hits were methods or review
+  papers that do not change MPS1 annotations.
 - No NEW terms proposed. Candidate considered and rejected: "repair of mitotic kinetochore microtubule attachment
   defect" (GO:0140273) as used for human TTK — in yeast the biorientation function is already captured by
   GO:0031134/GO:1990758 and adding a sibling would be redundant.
@@ -78,4 +87,4 @@ S000003061 SPC105, S000005878 MEK1.
 ## Validation
 
 `just validate yeast MPS1` — valid, no warnings (2026-09-26). Rendered with `just render yeast MPS1`.
-Actions: ACCEPT 38, REMOVE 5, MODIFY 4, KEEP_AS_NON_CORE 1, MARK_AS_OVER_ANNOTATED 1 (49 rows).
+Actions: ACCEPT 36, REMOVE 5, MODIFY 4, KEEP_AS_NON_CORE 3, MARK_AS_OVER_ANNOTATED 1 (49 rows).
