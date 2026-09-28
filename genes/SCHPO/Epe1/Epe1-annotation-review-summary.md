@@ -23,6 +23,7 @@ What is removed is the PAINT/keyword inference of canonical JHDM1-type activity,
 - The H297A Fe(II)-site mutant does not settle the question, and its phenotype depends on the assay: at endogenous levels it behaves like epe1Δ in erasing tethering-induced H3K9me (Audergon 2015, PMID:25838386) and fails to remove established ectopic heterochromatin while still suppressing variegation (Sorida 2019, PMID:31206516); only when overexpressed does it still disrupt pericentric silencing, in a SAGA-dependent way (Bao 2019, PMID:30573453)
 - C-terminus alone (without JmjC) can disrupt heterochromatin (Raiymbek 2020, PMID:32195666)
 - The PHF2 JmjC domain carries a similar anomaly yet has latent, phosphorylation-activated demethylase activity (noted by Audergon 2015), which is why the experimental rows are not removed
+- Counter-evidence to a purely non-catalytic reading: the JmjC domain is essential for Epe1 activity in complementation experiments (Ayoub 2003, PMID:12773576) and is required for its effect on Pol II accessibility (Zofall and Grewal 2006, PMID:16762840), who note the mechanism may differ from demethylase JmjC proteins; Raiymbek 2020 (PMID:32195666) propose a non-catalytic H3K9me-reading role for the domain; Wang 2015 (PMID:25774602) interpret the phenotypes of epe1-H374A and epe1-Y307A with mst2 loss as enzymatic redundancy (residue 374 of UniProt O94603 is Thr, so the mutated histidine cannot be identified from the cache)
 
 ### Annotation Modified for Specificity (1 annotation)
 1. **GO:0005515** (protein binding, IPI with Cdt2) → GO:0031625 ubiquitin protein ligase binding
@@ -53,6 +54,8 @@ Predominantly cellular component and biological process annotations that accurat
 - **Molecular Function**: Chromo shadow domain binding (GO:0070087)
 - **Process**: Heterochromatin boundary formation (GO:0033696)
 - **Description**: Binds HP1/Swi6 at H3K9-methylated heterochromatin through C-terminal domain to antagonize silencing. Raiymbek et al. show that expressing the Epe1 C-terminus alone is sufficient to disrupt heterochromatin by outcompeting the histone deacetylase Clr3 from sites of heterochromatin formation, through this Swi6 interaction.
+- **Knowledge gap**: Whether the JmjC domain contributes to Epe1 function by catalysis or only by binding is unresolved. The domain is required for Epe1 activity (PMID:12773576) and for its effect on Pol II accessibility (PMID:16762840), Raiymbek et al. propose a non-catalytic H3K9me-reading role for it (PMID:32195666), and Wang et al. interpret active-site mutant phenotypes as enzymatic redundancy with Mst2 (PMID:25774602).
+- **Open question**: No study has measured an Epe1 enzymatic activity, and none has separated the JmjC domain's binding and catalytic contributions in vivo.
 
 ### 2. SAGA Recruitment
 - **Molecular Function**: Histone acetyltransferase binding (GO:0035035)
@@ -80,7 +83,7 @@ Predominantly cellular component and biological process annotations that accurat
 - 18 PMID references cited in the review
 - Deep research synthesis incorporated
 - UniProt annotations considered
-- Multiple experimental approaches evaluated (genetics, biochemistry, proteomics, ChIP-seq)
+- Multiple experimental approaches evaluated (genetics, biochemistry, proteomics)
 
 ## Critical Corrections Made
 The most significant correction was removing the propagated (IBA/IEA) demethylase, oxidoreductase and dioxygenase annotations, which rest on JmjC domain presence alone. The electronic metal ion binding row is UNDECIDED, because the Fe(II) ligands it rests on are rule-predicted and binding has not been measured, and the PomBase experimental GO:0032454 rows are also UNDECIDED rather than overruling curators who read the full text. Epe1 is best described as a JmjC protein whose catalytic activity has never been detected and whose known functions have not been shown to require it.
