@@ -43,7 +43,7 @@ def get_json(url: str) -> dict:
 
 
 def accessions(gene: str) -> list[tuple[str, str]]:
-    q = urllib.parse.urlencode({"query": f"gene_exact:{gene} AND organism_id:7955",
+    q = urllib.parse.urlencode({"query": f'gene_exact:"{gene}" AND organism_id:7955',
                                 "fields": "accession,reviewed", "format": "json", "size": 100})
     data = get_json(f"{UNIPROT}?{q}")
     return [(r["primaryAccession"], "reviewed" if "Swiss" in r["entryType"] else "unreviewed")
