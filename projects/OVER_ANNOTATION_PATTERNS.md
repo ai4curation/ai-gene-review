@@ -46,7 +46,7 @@ These patterns emerge from multiple sources:
 **Examples from Reviews**:
 - **PHYKPL**: 4 protein binding annotations from HTP screens showing interactions with POT1, USO1, VAC14, LNX2 - none related to its metabolic function
 - **UBA7**: 6 protein binding annotations from interactome studies - UBA7 obviously binds proteins (ISG15, UBE2L6) but the generic term adds nothing
-- **Epe1**: Protein binding annotation when specific HP1/Swi6 binding and SAGA complex binding are more informative
+- **Epe1**: Protein binding IPI row (partner Cdt2) when ubiquitin protein ligase binding (GO:0031625) is more informative
 
 **Recommended Action**: REMOVE generic protein binding when more specific functional annotations exist or when interactions are from HTP screens without validation.
 

@@ -63,7 +63,7 @@ Proteins that keep an enzyme's fold but not its activity
 3. **H297A separates functions**: prevention of de novo H3K9me is retained, removal of established ectopic heterochromatin is lost.
 4. The **C-terminus alone**, without JmjC, disrupts heterochromatin.
 
-<span class="small">Sources named on the project page: Ayoub 2003, Trewick 2007, Wang 2013, Audergon 2015, Bao 2019, Sorida 2019, Raiymbek 2020.</span>
+<span class="small">Sources named on the project page: Ayoub 2003, Trewick 2007, Wang 2013 (Bdf2, PMID:24013502), Audergon 2015, Bao 2019, Sorida 2019, Raiymbek 2020.</span>
 
 ---
 
@@ -72,7 +72,10 @@ Proteins that keep an enzyme's fold but not its activity
 - The **JmjC domain is essential** for Epe1 activity (Ayoub 2003) and for its effect on Pol II accessibility (Zofall & Grewal 2006, who note the mechanism may differ from demethylases).
 - **Y307A** is recorded as loss of function, but from the same Ayoub paper, possibly the same experiment.
 - **Sorida 2019**, independent: H297A keeps prevention but loses removal of established H3K9me, read out in vivo.
+- **Wang 2015** (Mst2/Epe1): epe1-H374A and epe1-Y307A read as enzymatically dead, redundant with Mst2 (residue 374 of O94603 is Thr, so the His cannot be identified).
 - Against: **no study has measured demethylation directly**, and the same mutations weaken Swi6 binding and localization.
+
+<span class="small">Sources: Ayoub 2003 (PMID:12773576), Zofall & Grewal 2006 (PMID:16762840), Sorida 2019 (PMID:31206516), Wang 2015 (Mst2/Epe1, PMID:25774602), Raiymbek 2020 (PMID:32195666).</span>
 
 ---
 

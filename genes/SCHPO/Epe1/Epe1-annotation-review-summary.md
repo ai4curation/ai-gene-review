@@ -11,7 +11,7 @@ Completed review of 33 existing GO annotations for S. pombe Epe1. No histone dem
 3. **GO:0016491** (oxidoreductase activity, IEA) - REMOVE
 4. **GO:0051213** (dioxygenase activity, IEA) - REMOVE
 
-What is removed is the PAINT/keyword inference of canonical JHDM1-type activity, not a claim that latent activity is excluded.
+What is removed is the PAINT/keyword inference of canonical JHDM1-type activity, not a claim that latent activity is excluded. GO:0032452 histone demethylase activity is an OLS ancestor of GO:0032454 histone H3K9 demethylase activity, whose two experimental rows are UNDECIDED; if PomBase upholds either, GO:0032452 follows by the true-path rule, so the GO:0032452 REMOVE rejects only the IBA inference path. GO:0016491 and GO:0051213 are not ancestors of GO:0032454 and do not formally conflict with it, although JmjC demethylation is 2-oxoglutarate-dependent dioxygenase chemistry.
 
 ### Annotations left undecided (3 annotations)
 - **GO:0032454** (histone H3K9 demethylase activity) x2 - UNDECIDED (IDA/EXP from PMID:25838386; in vivo genetic evidence, catalysis disputed; not removed, flagged for discussion with PomBase)

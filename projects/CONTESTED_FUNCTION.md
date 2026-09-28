@@ -84,7 +84,7 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 - Required for normal heterochromatic nucleosome turnover (mechanism unresolved; the turnover itself is carried out by chaperones such as FACT)
 - Binds H3K9-methylated histones in vitro (Raiymbek 2020); no eraser (demethylase) activity has been detected
 
-**AI Review Action**: REMOVE the IBA/IEA enzymatic activity annotations and propose binding terms; the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence.
+**AI Review Action**: REMOVE the four IBA/IEA enzymatic activity annotations, proposing GO:0070087 chromo shadow domain binding as the replacement for the IBA demethylase row, and add NEW binding rows (Swi6, SAGA, Bdf2, histones); the two PomBase experimental GO:0032454 rows (IDA/EXP, Audergon 2015) are UNDECIDED, since they rest on in vivo genetic evidence.
 
 **Source**: Presented at Gene Ontology Consortium Meeting, October 2025, Cambridge UK. See [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review).
 
