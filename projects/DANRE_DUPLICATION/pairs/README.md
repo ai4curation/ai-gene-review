@@ -45,6 +45,8 @@ Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs; see
 | [magi3b (LOC564220) / wu:fi36a10](LOC564220_wu_fi36a10/LOC564220_wu_fi36a10.md) | UNRESOLVED, leaning non-redundant | expression | experimental_both | 58.2% | MAGI3 co-orthologs with a conserved scaffold; each F0 crispant impairs brain vascularization and the double is no worse; wu:fi36a10 broad and gar-like, magi3b narrower; Compara dates the duplication to Euteleostomi, not the TGD |
 | [tmc2a / tmc2b](tmc2a_tmc2b/tmc2a_tmc2b.md) | PARTITION | expression | experimental_both | 68.0% | Lopsided, overlapping zones: tmc2b dominates lateral line and peripheral ear, tmc2a the central ear and saccule; double mutants worse than singles; Tmc2b transgene rescues all organs, Tmc2a untested; TGD only partly supported by synteny |
 | [lhfpl5a / lhfpl5b](lhfpl5a_lhfpl5b/lhfpl5a_lhfpl5b.md) | PARTITION | expression | experimental_both | 76.5% | Clean organ split: lhfpl5a inner ear only, lhfpl5b lateral line only; each mutant loses transduction only in its organ; Lhfpl5a rescues lhfpl5b mutants; double-conserved synteny |
+| [abi1a / abi1b](abi1a_abi1b/abi1a_abi1b.md) | UNRESOLVED | expression | expression_only | 79.2% | Conserved protein; timing split (abi1b maternal/cleavage, abi1a zygotic and broad like gar ABI1); ancestral maternal loading unknown; only a mosaic F0 abi1a knockdown, which has no heart phenotype |
+| [olfm3a / olfm3b](olfm3a_olfm3b/olfm3a_olfm3b.md) | UNRESOLVED | expression | expression_only | 83.2% | Conserved protein; olfm3a is the larval brain/retina copy, olfm3b near-silent in larvae with weak adult calls; consistent with partition or with olfm3b decline; Ensembl dates the duplication to Gnathostomata |
 
 ## Template
 

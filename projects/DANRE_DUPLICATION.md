@@ -212,8 +212,12 @@ These pairs come from the background research.
   accessions (option: let `fetch-gene` merge GOA rows from secondary accessions)
 - [x] Batch 2, literature-supported pairs, all reviewed with pair pages:
   fgf8a/fgf8b, tbx5a/tbx5b, col1a1a/col1a1b, grk7a/grk7b (grk7b updated), vcla/vclb
-- [ ] Batch 3: a random sample of `TGD_tree` 1:1 pairs, for an unbiased estimate of
-  how often each fate occurs
+- [x] Batch 3: random sample of 8 `TGD_tree` 1:1 pairs (seed 20260928;
+  `scripts/sample_pairs.py`, `batch3_sample.tsv`), all reviewed with pair pages
+- [ ] Batch 4 (optional): enlarge the random sample. With n=8 the fate proportions
+  have wide uncertainty.
+- [ ] Decide whether to fix PANTHER-derived symbol gaps in `panther_tgd_pairs.tsv`
+  (e.g. tmc2a has no ZFIN id)
 
 # NOTES
 
@@ -298,3 +302,29 @@ These pairs come from the background research.
   - Two col1a1a "skeletal system development" IMP rows (PMID:30082390) are backed
     by col1a1b and col1a2 genotypes. This is a ZFIN gene-attribution error.
   - The PANTHER human-ortholog column lists COL3A1 for both col1a1 paralogs.
+- **Batch 3 results (random sample, 8 pairs).** Each pair page carries a machine-readable
+  **Sample record** line; the table is in the [pairs index](DANRE_DUPLICATION/pairs/README.md).
+
+  | Fate | Pairs |
+  |---|---|
+  | PARTITION (expression) | tmc2a/tmc2b, lhfpl5a/lhfpl5b |
+  | BACKUP (provisional) | smad3a/smad3b |
+  | INNOVATION | none |
+  | UNRESOLVED | eef1da/eef1db, abi1a/abi1b, olfm3a/olfm3b, si:dkey-283b1.7/vwc2, magi3b/wu:fi36a10 |
+
+  - **Evidence is scarce for a typical pair.** Only 4 of 8 pairs have experimental
+    data on both copies; 3 have expression data only. The literature-chosen batches
+    (1-2) therefore give a much richer picture than a typical TGD pair supports.
+  - **PANTHER placement is not sufficient on its own.** For 2 of 8 pairs
+    (si:dkey-283b1.7/vwc2, magi3b/wu:fi36a10), Ensembl Compara and gar synteny do not
+    support TGD origin: the duplication is placed deeper, or the partner is a
+    divergent family member. For olfm3 the two sources disagree, although synteny
+    supports duplicated segments. Pair selection should add a synteny or Compara
+    check to the `TGD_tree` call.
+  - **Where there is evidence, the pattern matches batches 1-2.** Proteins are
+    conserved and the copies differ in where they are expressed (tmc2, lhfpl5; also
+    the RNA-seq-only splits in abi1 and olfm3). The one backup call (smad3) is
+    provisional: the single-mutant data were not accessible.
+  - **Caution.** With n=8, none of these proportions is precise, and the absence of
+    innovation in the sample is not evidence that it is rare beyond what the
+    genome-wide studies already show (about 7% of pairs against gar, PMID:28944589).
