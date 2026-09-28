@@ -97,7 +97,7 @@ MF:
 BP:
 - GO:0006351 DNA-templated transcription — IEA (InterPro) — KEEP_AS_NON_CORE (generic)
 - GO:0006355 regulation of DNA-templated transcription — IEA (InterPro) — KEEP_AS_NON_CORE (generic parent)
-- GO:0006357 regulation of transcription by RNA Pol II — IEA (GO_REF:0000108 logical inference from MF) — KEEP_AS_NON_CORE
+- GO:0006357 regulation of transcription by RNA Pol II — IEA (GO_REF:0000108 logical inference from MF) — ACCEPT
 - GO:0006355 regulation of DNA-templated transcription — ISS (PMID:10447589, MAL63) — KEEP_AS_NON_CORE (generic; specific MAL-regulon role is a gap for the defective allele)
 CC:
 - GO:0005634 nucleus — IEA (GO_REF:0000120) — ACCEPT (predicted NLS + TF)
@@ -109,9 +109,14 @@ Notes on actions:
   not in the review set.
 - The "maltose regulon activation" specificity is the crux: because the S288C allele is
   defective, I do NOT elevate a specific "positive regulation of maltose-regulon
-  transcription" role to a core function; the generic RNA-Pol-II regulation terms are kept
-  as non-core, and the maltose-specific role is written up as the primary knowledge gap.
+  transcription" role to a core function; the broad RNA-Pol-II regulation term is accepted
+  as the process tied to the core MF, and the maltose-specific role is written up as the
+  primary knowledge gap.
 - Avoid `protein binding` — not present in GOA; good.
+- IBA review: PTHR31668 has one nuclear-localization IBD node, but it does not propagate
+  to the S288C MAL33 branch, so GOA has no IBA rows for MAL33 to adjudicate. 2024-2026
+  literature search found the *S. eubayanus* MAL33 paper on natural maltose-utilization
+  variation, but no newer direct S288C *S. cerevisiae* MAL33/YBR297W functional assay.
 
 ## Core function synthesis
 
