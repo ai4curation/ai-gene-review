@@ -104,7 +104,7 @@ Outcome: over-annotated catalytic terms → MARK_AS_OVER_ANNOTATED / REMOVE; rea
 
 *S. pombe* Epe1 (UniProt O94603) — probable JmjC pseudo-demethylase.
 
-- **Defect:** degenerate Fe(II) triad H297-E299-Y370: Tyr370 replaces the third iron-ligand His.
+- **Defect:** non-canonical Fe(II) triad H297-E299-Y370 (Tyr370 for the third His), yet Y370A loses function.
 - **Biochemistry:** no detectable H3K9me removal in vitro; Sorida 2019's H297A experiment read two ways: prevention of de novo H3K9me retained (part of the activity does not need H297); removal of established H3K9me lost (the counter-evidence).
 - **Actual function:** anti-silencing factor — associates with SAGA, recruits Bdf2 to centromere-flanking boundaries; binds H3K9-methylated histones; no eraser activity detected.
 - **Removed:** GO:0032452, GO:0140680 (demethylases), GO:0051213 (dioxygenase), GO:0016491 (oxidoreductase). **Undecided:** GO:0032454 (IDA, EXP), GO:0046872.

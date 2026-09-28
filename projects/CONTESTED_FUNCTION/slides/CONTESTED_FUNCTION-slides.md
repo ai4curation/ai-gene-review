@@ -58,7 +58,7 @@ Proteins that keep an enzyme's fold but not its activity
 
 ## Evidence against demethylase activity
 
-1. The JmjC iron triad is **H297-E299-Y370**: position 370 is a **Tyr** where canonical JmjC demethylases have the third iron-ligating His.
+1. The JmjC iron triad is **H297-E299-Y370**: position 370 is a **Tyr** where canonical JmjC demethylases have the third iron-ligating His. Yet **Y370A loses function** (Raiymbek 2020): the Tyr is required, though required is not catalytic.
 2. **Mass spectrometry** shows no demethylation of H3K9me2/me3 peptides.
 3. **H297A keeps prevention** of de novo H3K9me (nearly fully), so part of the anti-silencing activity does not need H297 (Sorida 2019). *One experiment read two ways*: its other arm, lost removal of established H3K9me, is on the next slide.
 4. The **C-terminus alone**, without JmjC, disrupts heterochromatin.

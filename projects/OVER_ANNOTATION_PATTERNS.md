@@ -66,7 +66,7 @@ These patterns emerge from multiple sources:
 **The Problem**: IEA annotations from domain presence (InterPro, Pfam) that don't reflect actual biochemical activity.
 
 **Examples**:
-- **Epe1**: JmjC domain → histone demethylase activity, dioxygenase activity (REMOVE - no activity detected, non-canonical Fe(II) triad); metal ion binding left UNDECIDED (two of three iron ligands retained, binding unmeasured)
+- **Epe1**: JmjC domain → histone demethylase activity, dioxygenase activity (REMOVE - no activity detected, non-canonical Fe(II) triad, although the divergent Tyr370 is required for function); metal ion binding left UNDECIDED (two of three iron ligands retained, binding unmeasured)
 - **PHYKPL**: Aminotransferase domain → transaminase activity (INCORRECT - functions as phospho-lyase)
 
 **Recommended Action**: REMOVE when biochemical evidence contradicts domain prediction.
