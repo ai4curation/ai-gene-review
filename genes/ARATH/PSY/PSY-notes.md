@@ -265,5 +265,8 @@ suggested questions.
 | GO:0046905 15-cis-phytoene synthase activity | TAS 12805607 | ACCEPT |
 | GO:0051996 squalene synthase [NAD(P)H] activity | IEA IPR033904 | REMOVE |
 
-No NEW annotations proposed. GO:1901174 phytoene biosynthetic process is used
-in core_functions only (descendant of carried GO:0016120).
+No NEW annotations proposed. GO:1901174 phytoene biosynthetic process (a
+descendant of the carried GO:0016120) is the most precise process term, but per
+the redundancy rule it is neither proposed as NEW nor placed in core_functions;
+core_functions uses the two carried process terms GO:0016117 and GO:0016120 and
+names phytoene biosynthesis in its description.
