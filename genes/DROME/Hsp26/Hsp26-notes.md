@@ -1,0 +1,17 @@
+# Hsp26 IBA re-review notes
+
+## 2026-09-28
+
+Rebased on current `origin/main` and refreshed GOA with `just fetch-gene DROME Hsp26` before re-review. The fetch did not add or remove source rows: the review still covers 22 original GOA assertions. All original source assertions were preserved.
+
+Current `interpro/panther/PTHR45640/PTHR45640-paint.tsv` places the live nucleus, cytoplasm, response-to-heat and protein-refolding IBD assertions at PTN000897708, with taxon `6072` Eumetazoa. Hsp26 is classified in PTHR45640:SF13 with Hsp22, Hsp23, Hsp27, Hsp67Ba and Hsp67Bc, so the live cytoplasm, heat-response and refolding IBAs are supported by the ancestral PAINT placement and by direct Drosophila small-HSP experiments. The old `GO:0051082` unfolded protein binding IBA is absent from current PAINT, consistent with obsolete-term drift rather than a loss of Hsp26 holdase activity.
+
+Full cached PMID:16572729 and PMID:26705243 support retaining `GO:0042026 protein refolding` for Hsp26. Morrow et al. purified the four classical small HSPs, showed Hsp26 protects heated citrate synthase and luciferase clients, and showed luciferase can later be refolded by other chaperones in ATP-supplemented reticulocyte lysate. Vos et al. directly tested Hsp26 in S2 cells and found that Hsp26 overexpression increased recovery of heat-denatured luciferase. The small HSP does the holding step rather than the ATP-driven folding step, but that is direct work in the protein-refolding process.
+
+The nucleus IBA was left `UNDECIDED`. The PTN000897708 source is an actual PAINT ancestor for Hsp26, not an invented donor-count transfer, and the cached evidence does not show a target-specific loss. However, the primary cached Hsp26 papers verify cytosolic localization: Morrow et al. cite Hsp23/Hsp26 as cytosolic and Hsp27 as nuclear, and Santana et al. show tagged Hsp26 signal in larval CNS cytoplasm and NMJ boutons. The Falcon report mentions a minor Hsp26 nuclear-matrix fraction in embryos and S2 cells, but the underlying primary paper still needs retrieval and checking for Hsp26/Hsp27/Hsp23 specificity and fraction purity before the row can be confidently accepted as contextual.
+
+PMID:32437379 was read in full and supports the Hsp23-Hsp26 interaction reported again by the 2024 DPIM2 row. That generic `GO:0005515 protein binding` IPI was changed from legacy `MARK_AS_OVER_ANNOTATED` to `MODIFY`, with `GO:0031072 heat shock protein binding` as a concrete replacement; the evidence supports Hsp26 binding another heat shock protein without asserting a fixed stoichiometry or obligatory complex.
+
+Full cached PMID:30400176 was read for developmental-expression context. It is a Drosophila small-HSP review that summarizes Hsp26 early-embryo, ovary and testis expression, as well as published pan-neural knockdown/NMJ observations; it does not by itself justify a new Hsp26 GO process row. Full cached PMID:39353569 was read for the 2024 Mediator/Moesin heat-shock regulatory result. Hsp26 was an exception among assayed Hsp genes in Med15-silenced ovaries, so this is useful regulatory context but not a direct Hsp26 molecular function annotation.
+
+Recent PubMed search covered `Hsp26`, `heat shock protein 26`, `sHSP26`, `CG4183` and Drosophila. The newest hits were environmental or regulatory expression studies, including 2025 cobalt chloride retinal stress, 2024 PET microplastics, and 2023 DAxud1/Hsp70 heat-shock regulation papers. No newer primary paper displaced the cached direct biochemical and developmental evidence used for the GO decisions here.
