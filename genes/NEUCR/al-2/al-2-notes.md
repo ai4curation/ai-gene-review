@@ -129,3 +129,27 @@ the better-supported level; raised instead as a suggested question.
 - No purified-enzyme kinetics / cofactor determination for native al-2.
 - Structural basis of monocyclic (single-cyclization) preference vs bicyclic
   cyclases is unknown.
+
+## Verification log (review finalized)
+
+- QuickGO term definitions confirmed: GO:0004311 = FPP + IPP -> GGPP (head-to-tail
+  elongation; al-2 consumes GGPP, made by al-3) -> REMOVE; GO:0051996 = 2 FPP +
+  NAD(P)H -> squalene (wrong substrate/product/cofactor) -> REMOVE.
+- QuickGO ancestor checks: GO:0046905 IS a descendant of GO:0016765 (via GO:0004659
+  prenyltransferase) -> MODIFY GO:0016765 -> GO:0046905 justified by subsumption.
+  GO:0045436 is NOT a descendant of GO:0016872 (ancestors run through GO:0009975
+  cyclase / GO:0016860 / GO:0016853 isomerase) -> MODIFY GO:0016872 -> GO:0045436
+  justified by IPR017825 (Lycopene_cyclase_dom) domain-signature intent + direct
+  assay, NOT by ontology subsumption.
+- All three cached publications (PMID:11862485, PMID:16928467, PMID:8163509) are
+  abstract-only (full_text_available: false); UniProt cites 11862485 and 16928467
+  with ECO:0000269 for both EC 2.5.1.32 and EC 5.5.1.19, so the enzymatic IDA rows
+  rest on curator-read full text.
+- Deep-research quote "N-terminal residues 1–244 form the cyclase region" is NOT a
+  verbatim substring of the falcon report; not cited. Cyclase region grounded on
+  UniProt REGION 1..241 instead. Verbatim deep-research quotes used: "In *N.
+  crassa*, GGPP is supplied by AL-3." and "No direct study was found that localizes
+  native AL-2 in *N. crassa*".
+- Final tally: 16 existing_annotations reviewed — 12 ACCEPT, 2 MODIFY, 2 REMOVE;
+  no UNDECIDED, no NEW. Two core_functions (GO:0046905 synthase; GO:0045436
+  cyclase). `just validate NEUCR al-2` -> "✓ Valid ... All validations passed".
