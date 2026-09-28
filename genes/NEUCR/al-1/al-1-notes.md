@@ -106,3 +106,26 @@ hydrophobic polyene substrates, so GO:0016020 membrane is retained (general, inf
 
 No REMOVE actions: the GOA set contains no paralog IEA over-annotations (no squalene
 synthase or GGPP synthase activity) and no generic protein binding.
+
+## Final review status
+
+Review completed and written to al-1-ai-review.yaml (status: COMPLETE).
+`just validate NEUCR al-1` -> "✓ Valid" / "✓ All validations passed"; one
+non-blocking WARNING only (no annotation cites the deep-research file, which is
+deliberately not used as a source of quotes/identifiers per the review brief).
+
+Action tally over the 9 GOA rows: 9 ACCEPT, 0 MODIFY, 0 REMOVE, 0 UNDECIDED,
+0 KEEP_AS_NON_CORE-as-action (non-core status noted in reasons for the two general
+parents GO:0008299 and GO:0016491, and for GO:0016020). One NEW row added:
+GO:0016120 carotene biosynthetic process (IDA, PMID:11017770).
+
+No REMOVE was warranted: the GOA set contains no InterPro2GO/ARBA paralog
+over-annotations (no squalene synthase, GGPP synthase, or other wrong-paralog MF)
+and no generic GO:0005515 protein binding. The IEA/IBA general-parent rows
+(GO:0008299, GO:0016491, GO:0016020) are correct-but-general and were ACCEPTed
+per reviewer guidance on broader-but-not-wrong electronic terms.
+
+proposed_new_terms: one entry requesting a GO:0016166 child specific to the fungal
+five-step, 3,4-didehydrolycopene-forming desaturation (RHEA:30603/30607/30611/
+30623/30979, NAD-dependent), which GO currently cannot distinguish from the
+bacterial four-step lycopene-forming CrtI activity.
