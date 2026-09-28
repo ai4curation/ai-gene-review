@@ -28,6 +28,7 @@ The two gene reviews themselves live as usual in `genes/DANRE/<gene>/`.
 | [elna / elnb](elna_elnb/elna_elnb.md) | unresolved (TGD per literature) | MIXED: expression partition plus protein-level innovation in elnb (bulbus arteriosus stiffness; elna and Polypterus eln fail to rescue) |
 | [grk7a / grk7b](grk7a_grk7b/grk7a_grk7b.md) | TGD_tree | MIXED: asymmetric expression partition (grk7a pan-cone and dominant in larvae; grk7b enriched in adult UV cones); both keep rhodopsin kinase activity, grk7b reportedly >30-fold slower; grk7b backs up grk7a only in the pineal |
 | [tbx5a / tbx5b](tbx5a_tbx5b/tbx5a_tbx5b.md) | TGD_likely_parallel | MIXED: both copies essential and non-redundant (heart looping, fin); fin role split (tbx5a initiation, tbx5b outgrowth); one-sided expression loss in tbx5b; protein divergence inferred (49% identity, no reciprocal mRNA cross-rescue), not established |
+| [vcla / vclb](vcla_vclb/vcla_vclb.md) | TGD_tree | MIXED: conserved protein with expression-biased partition (vclb-only coronary/epicardial role, lethal alone; vcla dispensable even maternal-zygotic); shared dose-sensitive endothelial barrier role; vclb upregulation in vcla mutants is mRNA-decay-triggered adaptation, no protein-level compensation shown |
 
 ## Template
 
