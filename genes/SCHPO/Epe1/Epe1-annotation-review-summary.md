@@ -5,17 +5,17 @@ Completed review of 33 existing GO annotations for S. pombe Epe1. No histone dem
 
 ## Key Findings
 
-### Propagated catalytic annotations removed (5 annotations)
+### Propagated catalytic annotations removed (4 annotations)
 1. **GO:0032452** (histone demethylase activity, IBA) - REMOVE
 2. **GO:0140680** (histone H3K36me/H3K36me2 demethylase activity, IEA) - REMOVE
 3. **GO:0016491** (oxidoreductase activity, IEA) - REMOVE
 4. **GO:0051213** (dioxygenase activity, IEA) - REMOVE
-5. **GO:0046872** (metal ion binding, IEA) - REMOVE
 
 What is removed is the PAINT/keyword inference of canonical JHDM1-type activity, not a claim that latent activity is excluded.
 
-### Experimental catalytic annotations left undecided (2 annotations)
+### Annotations left undecided (3 annotations)
 - **GO:0032454** (histone H3K9 demethylase activity) x2 - UNDECIDED (IDA/EXP from PMID:25838386; in vivo genetic evidence, catalysis disputed; not removed, flagged for discussion with PomBase)
+- **GO:0046872** (metal ion binding, IEA) - UNDECIDED (UniProt Metal-binding keyword, resting on its BINDING 297/299 Fe cation features; H297 and E299 are retained, the third His ligand is Y370, and metal binding has not been measured)
 
 **Rationale**:
 - No demethylase activity detected in vitro (Tsukada 2006, PMID:16362057; Raiymbek 2020, PMID:32195666)

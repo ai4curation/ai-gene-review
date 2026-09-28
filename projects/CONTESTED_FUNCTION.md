@@ -20,7 +20,8 @@ whose five electronic (IBA/IEA) demethylase, oxidoreductase, dioxygenase and met
 rows are REMOVE in favour of histone-binding terms, and three
 biosynthetic-cluster proteins without active sites (eryCII, pqsB, actI-ORF2). The two
 PomBase experimental (IDA/EXP) H3K9 demethylase rows on Epe1 are also REMOVE in the
-current review; PR #3229, not yet merged, proposes moving them to UNDECIDED. Finding
+current review; PR #3229, not yet merged, proposes moving them, and the electronic
+metal ion binding row, to UNDECIDED. Finding
 further candidates has not started; the [Top-Nots](TOP_NOTS.md) candidate list is the
 natural source.
 
@@ -154,7 +155,7 @@ Created project to document genes with contested molecular functions, starting w
   - `GO:0140680` histone H3K36me/H3K36me2 demethylase activity (IEA)
   - `GO:0051213` dioxygenase activity (IEA)
   - `GO:0016491` oxidoreductase activity (IEA)
-  - `GO:0046872` metal ion binding (IEA)
+  - `GO:0046872` metal ion binding (IEA) - PR #3229 proposes UNDECIDED (H297/E299 retained, binding unmeasured)
 - Key evidence: Mass spectrometry assays, degenerate active site residues, catalytic mutant retains function
 - Proposed replacements: `GO:0042393` histone binding, `GO:0140030` modification-dependent protein binding
 - 6 core functions documented with supporting evidence

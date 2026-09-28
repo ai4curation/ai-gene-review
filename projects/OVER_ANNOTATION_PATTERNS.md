@@ -19,9 +19,10 @@ first presented at the GO Consortium meeting in October 2025. Nine exemplar revi
 complete (human PHYKPL and UBA7, fission yeast Epe1, *Candida* LPL1, and five
 biosynthetic-cluster enzymes: pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII), and their
 recorded actions match the patterns: all ten generic `protein binding` IPI rows on
-PHYKPL and UBA7 are REMOVE, and Epe1's JmjC-domain demethylase, dioxygenase and
-metal-binding rows are REMOVE (all seven in the current review; PR #3229, not yet
-merged, proposes UNDECIDED for the two experimental IDA/EXP rows). The catalogue is qualitative; it does not yet measure how
+PHYKPL and UBA7 are REMOVE, and Epe1's electronically inferred JmjC-domain
+demethylase, oxidoreductase and dioxygenase rows are REMOVE, while its two
+experimental IDA/EXP H3K9 demethylase rows and its metal ion binding row are
+UNDECIDED. The catalogue is qualitative; it does not yet measure how
 often each pattern occurs across the repository.
 
 ## Overview
@@ -65,7 +66,7 @@ These patterns emerge from multiple sources:
 **The Problem**: IEA annotations from domain presence (InterPro, Pfam) that don't reflect actual biochemical activity.
 
 **Examples**:
-- **Epe1**: JmjC domain → histone demethylase activity, dioxygenase activity, metal ion binding (ALL INCORRECT - pseudo-enzyme)
+- **Epe1**: JmjC domain → histone demethylase activity, dioxygenase activity (REMOVE - no activity detected, non-canonical Fe(II) triad); metal ion binding left UNDECIDED (two of three iron ligands retained, binding unmeasured)
 - **PHYKPL**: Aminotransferase domain → transaminase activity (INCORRECT - functions as phospho-lyase)
 
 **Recommended Action**: REMOVE when biochemical evidence contradicts domain prediction.
