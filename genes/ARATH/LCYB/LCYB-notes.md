@@ -132,7 +132,9 @@ Verified: GO:1901812 exists, is a descendant of GO:0016117 (per brief).
 
 ## Action tally
 
-ACCEPT 6; REMOVE 4; MODIFY 2; KEEP_AS_NON_CORE 1; NEW 1. No UNDECIDED, no PENDING.
+ACCEPT 8; REMOVE 4; MODIFY 2; KEEP_AS_NON_CORE 1 (= 15 existing reviewed); plus NEW 1.
+No UNDECIDED, no PENDING.
+ACCEPT = 3x chloroplast, 2x carotenoid biosynthetic process, 3x lycopene beta cyclase activity.
 
 ## Evidence caveats
 
