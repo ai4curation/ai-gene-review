@@ -17,7 +17,11 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from ai_gene_review.source_tree import SourceTree, review_snapshot_tree
+from ai_gene_review.source_tree import (
+    SourceTree,
+    declared_review_snapshot,
+    review_snapshot_tree,
+)
 
 PROJECT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PROJECT_DIR.parents[1]
@@ -164,6 +168,11 @@ def analyze(
         first_values = [int(first_by_key[key][axis]) for key in observed]
         second_values = [int(row[axis]) for row in second]
         result[axis] = axis_summary(first_values, second_values)
+    review_snapshot = declared_review_snapshot(repo_root)
+    result["review_snapshot"] = {
+        "commit": review_snapshot.commit,
+        "date": review_snapshot.date,
+    }
     result["both_axes_exact_agreement"] = round(
         sum(
             int(first_by_key[key]["correctness"]) == int(row["correctness"])

@@ -7,7 +7,10 @@ BioReason-Pro SFT files do not contain model confidence scores.
 The score propagates predicted and reference GO terms over `is_a` and
 `part_of` ancestors from the GO 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots.
 
-## Propagated all-aspect agreement against current GOA
+Predictions and reference GOA are read at the review snapshot, as of 2026-09-27 (commit `c7551cb3db`), not the working tree;
+refresh with `just refresh-benchmark-snapshot`.
+
+## Propagated all-aspect agreement against GOA at the review snapshot
 
 | Source | genes | scored direct predictions | direct GOA terms | precision | recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -25,7 +28,7 @@ The score propagates predicted and reference GO terms over `is_a` and
 
 ## GOA agreement does not imply correctness
 
-In the HF catalogue subset, 47/147 NPI/PLI/REP terms are exact matches to current GOA, and 119/147 have propagated overlap with current GOA. A retrospective GOA-agreement metric would therefore reward some terms that the evidence-grounded review classifies as wrong or frequency-biased.
+In the HF catalogue subset, 47/147 NPI/PLI/REP terms are exact matches to snapshot GOA, and 119/147 have propagated overlap with snapshot GOA. A retrospective GOA-agreement metric would therefore reward some terms that the evidence-grounded review classifies as wrong or frequency-biased.
 
 ## HF catalogue exact GOA overlap by AI-AUGR assessment
 

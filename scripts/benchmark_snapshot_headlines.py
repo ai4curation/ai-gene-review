@@ -22,18 +22,18 @@ REPORTS = {
 }
 CAFA_DIR = "projects/BIOREASON_COMPARISON/cafa-style"
 INCORRECT = {"NPI", "PLI", "REP"}
+COMMON_SKIPPED_KEYS = frozenset({"review_snapshot"})
+"""Provenance, not numbers: left out of every report's headlines."""
 SKIPPED_KEYS = {
-    "review_snapshot",
-    "narrative_reviews",
-    "zero_go_prediction_reviews",
-    # second-review-agreement.json provenance strings, not numbers
-    "blinding",
-    "sampling",
-    "sample_salt",
+    "protnlm": frozenset({"narrative_reviews", "zero_go_prediction_reviews"}),
+    "second_review": frozenset({"blinding", "sampling", "sample_salt"}),
 }
+"""Per-report keys left out of the headlines (per-record lists and provenance strings)."""
 
 
-def flatten(value: Any, prefix: str) -> list[str]:
+def flatten(
+    value: Any, prefix: str, skipped: frozenset[str] = COMMON_SKIPPED_KEYS
+) -> list[str]:
     """Flatten nested numbers into sorted ``dotted.key: value`` lines.
 
     >>> flatten({"b": {"n": 2}, "a": 1, "review_snapshot": {"commit": "x"}}, "r")
@@ -42,13 +42,15 @@ def flatten(value: Any, prefix: str) -> list[str]:
     ['c.fly.records: 3']
     >>> flatten([{"n": 1}, 7], "x")
     ['x.0.n: 1', 'x.1: 7']
+    >>> flatten({"sampling": "text", "n": 2}, "s", COMMON_SKIPPED_KEYS | {"sampling"})
+    ['s.n: 2']
     """
     if isinstance(value, dict):
         return sorted(
             line
             for key, item in value.items()
-            if key not in SKIPPED_KEYS
-            for line in flatten(item, f"{prefix}.{key}")
+            if key not in skipped
+            for line in flatten(item, f"{prefix}.{key}", skipped)
         )
     if isinstance(value, list):
         return sorted(
@@ -58,9 +60,10 @@ def flatten(value: Any, prefix: str) -> list[str]:
                 flatten(
                     {k: v for k, v in item.items() if k != "cohort"},
                     f"{prefix}.{item['cohort']}",
+                    skipped,
                 )
                 if isinstance(item, dict) and "cohort" in item
-                else flatten(item, f"{prefix}.{index}")
+                else flatten(item, f"{prefix}.{index}", skipped)
             )
         )
     return [f"{prefix}: {value}"]
@@ -110,7 +113,10 @@ def headlines(repo_root: Path) -> list[str]:
     """Headline lines for every snapshot-derived report under ``repo_root``."""
     lines: list[str] = []
     for name, path in REPORTS.items():
-        lines += flatten(json.loads((repo_root / path).read_text(encoding="utf-8")), name)
+        skipped = COMMON_SKIPPED_KEYS | SKIPPED_KEYS.get(name, frozenset())
+        lines += flatten(
+            json.loads((repo_root / path).read_text(encoding="utf-8")), name, skipped
+        )
     return lines + cafa_headlines(repo_root)
 
 

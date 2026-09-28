@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import csv
 import io
+import json
 import math
 import urllib.request
 from collections import Counter, defaultdict
@@ -38,7 +39,11 @@ from ai_gene_review.bioreason_ontology import (
     ensure_frozen_go,
     validate_frozen_go_release,
 )
-from ai_gene_review.source_tree import SourceTree, review_snapshot_tree
+from ai_gene_review.source_tree import (
+    SourceTree,
+    declared_review_snapshot,
+    review_snapshot_tree,
+)
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -47,6 +52,8 @@ ONTOLOGY_RELEASE = GO_RELEASE
 DEFAULT_ONTOLOGY = FROZEN_GO_PATH
 OUT_DIR = PROJECT_DIR / "cafa-style"
 FIGURE_PATH = PROJECT_DIR / "article" / "figures" / "cafa_style_argo139_sft.png"
+SNAPSHOT_SIDECAR = OUT_DIR / "review-snapshot.json"
+"""Records which review snapshot produced the CSVs, README and figure in ``OUT_DIR``."""
 
 GO_BASIC_URLS = [GO_RELEASE_URL]
 
@@ -529,6 +536,7 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
         & (summary["aspect"] == "all_aspects")
     ].copy()
     exp_rows = exp_rows.set_index("source_group").loc[["hf_catalogue", "web_export", "all_sources"]]
+    review_snapshot = declared_review_snapshot(REPO_ROOT)
 
     lines = [
         "# ARGO95 CAFA-style retrospective GOA agreement",
@@ -540,7 +548,11 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
         "The score propagates predicted and reference GO terms over `is_a` and",
         f"`part_of` ancestors from the GO {ONTOLOGY_RELEASE} `go-basic.obo`, excluding the three GO aspect roots.",
         "",
-        "## Propagated all-aspect agreement against current GOA",
+        "Predictions and reference GOA are read at the review snapshot, as of "
+        f"{review_snapshot.date} (commit `{review_snapshot.short}`), not the working tree;",
+        "refresh with `just refresh-benchmark-snapshot`.",
+        "",
+        "## Propagated all-aspect agreement against GOA at the review snapshot",
         "",
         "| Source | genes | scored direct predictions | direct GOA terms | precision | recall | F1 |",
         "|---|---:|---:|---:|---:|---:|---:|",
@@ -596,9 +608,9 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
             "",
             (
                 f"In the HF catalogue subset, {wrong_exact}/{len(hf_wrong)} "
-                "NPI/PLI/REP terms are exact matches to current GOA, and "
+                "NPI/PLI/REP terms are exact matches to snapshot GOA, and "
                 f"{wrong_closure}/{len(hf_wrong)} have propagated overlap with "
-                "current GOA. A retrospective GOA-agreement metric would therefore "
+                "snapshot GOA. A retrospective GOA-agreement metric would therefore "
                 "reward some terms that the evidence-grounded review classifies as "
                 "wrong or frequency-biased."
             ),
@@ -641,7 +653,7 @@ def write_figure(summary: pd.DataFrame) -> None:
         for i, value in enumerate(values):
             if not math.isnan(value):
                 ax.text(i, value + 0.02, f"{value:.2f}", ha="center", va="bottom", fontsize=9)
-    axes[0].set_ylabel("propagated F1 vs current GOA")
+    axes[0].set_ylabel("propagated F1 vs snapshot GOA")
     fig.suptitle("Retrospective CAFA-style GOA agreement for SFT terms", y=1.04)
     fig.tight_layout()
 
@@ -679,6 +691,15 @@ def main() -> None:
     assessment_overlap.to_csv(OUT_DIR / "argo139_prediction_goa_overlap.csv", index=False)
     write_markdown_summary(summary, assessment_overlap)
     write_figure(summary)
+    review_snapshot = declared_review_snapshot(REPO_ROOT)
+    SNAPSHOT_SIDECAR.write_text(
+        json.dumps(
+            {"review_snapshot": {"commit": review_snapshot.commit, "date": review_snapshot.date}},
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     unresolved = pd.DataFrame(
         [{"term_id": term_id, "count": count} for term_id, count in graph.unresolved.items()]
@@ -690,7 +711,7 @@ def main() -> None:
         & (summary["term_mode"] == "raw")
         & (summary["aspect"] == "all_aspects")
     ].set_index("source_group")
-    print("Retrospective CAFA-style propagated all-aspect F1 vs current GOA")
+    print("Retrospective CAFA-style propagated all-aspect F1 vs snapshot GOA")
     for source in ["hf_catalogue", "web_export", "all_sources"]:
         row = main_rows.loc[source]
         print(
