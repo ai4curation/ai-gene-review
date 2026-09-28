@@ -71,9 +71,10 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 **Evidence for a catalytic contribution (not excluded)**:
 1. The JmjC domain is required for Epe1 function: "the jmjC domain is essential for Epe1 activity" in complementation experiments (Ayoub et al. 2003, PMID:12773576), and Epe1's effect on Pol II accessibility "requires Epe1's JmjC domain" (Zofall and Grewal 2006, PMID:16762840)
 2. A required domain is not required catalysis: Zofall and Grewal note the mechanism "might be distinct from other JmjC proteins that possess known demethylase activities", and Raiymbek et al. (PMID:32195666) propose that the JmjC domain is primarily responsible for H3K9 methylation recognition and binding
-3. Wang et al. 2015 (PMID:25774602) interpret the sickness of epe1-H374A and epe1-Y307A mutants combined with mst2 loss as redundancy between the enzymatic activities of Mst2 and Epe1 (residue 374 of UniProt O94603 is Thr, so the mutated histidine cannot be identified from the cached text)
+3. A residue-level result: UniProt records Y307A as loss of function (FT MUTAGEN 307, experimental evidence from PMID:12773576). UniProt has no BINDING feature at 307; Raiymbek et al. group Y307 with residues affecting Fe(II) or alpha-ketoglutarate binding. Because it is a single residue, "the domain is needed for folding" does not easily explain it, although the same mutations also weaken Swi6 binding
+4. Wang et al. 2015 (PMID:25774602) interpret the sickness of epe1-H374A and epe1-Y307A mutants combined with mst2 loss as redundancy between the enzymatic activities of Mst2 and Epe1 (residue 374 of UniProt O94603 is Thr, so the mutated histidine cannot be identified from the cached text)
 
-**Actual Function**: Anti-silencing factor whose characterized mechanisms are non-catalytic:
+**Characterized mechanisms** (binding and recruitment; a catalytic contribution is not excluded, see above):
 - Binds HP1/Swi6 (chromoshadow domain) at H3K9-methylated heterochromatin
 - Associates with the SAGA histone acetyltransferase complex
 - Recruits Bdf2 bromodomain protein to the heterochromatin boundaries flanking centromeres

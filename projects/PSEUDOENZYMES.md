@@ -15,7 +15,7 @@ from it. This project catalogs the pseudoenzymes found during gene review,
 the checks used to detect them (catalytic-residue conservation, PROSITE motif
 context, M-CSA and HMM scoring, structures), and the annotation errors they
 cause. Nine reviewed genes carry the analysis: five Cu/Zn-SOD paralogs in the
-tardigrade *R. varieornatus*, the fission yeast JmjC "reader" Epe1, the
+tardigrade *R. varieornatus*, the fission yeast JmjC protein Epe1 (a probable "reader"), the
 P450-like glycosyltransferase activator EryCII, and the non-catalytic
 condensing-enzyme subunits PqsB and ActI-ORF2. In those reviews, Epe1's
 electronic histone demethylase rows and EryCII's monooxygenase and heme rows are
@@ -289,7 +289,8 @@ H3K9-methylated histones in vitro, but no demethylase activity has been
 detected, and latent activity is not excluded. The case is not closed: the JmjC
 domain is essential for Epe1 activity in complementation experiments (Ayoub et
 al. 2003, PMID:12773576) and is required for its effect on Pol II accessibility
-(Zofall and Grewal 2006, PMID:16762840), and Wang et al. 2015 (PMID:25774602)
+(Zofall and Grewal 2006, PMID:16762840), UniProt records the single-residue
+mutant Y307A as loss of function (from PMID:12773576), and Wang et al. 2015 (PMID:25774602)
 interpret active-site mutant phenotypes as enzymatic redundancy with Mst2. A
 required domain is not required catalysis, since Raiymbek et al. (PMID:32195666)
 place H3K9me recognition in the JmjC domain. This creates a common annotation error where
