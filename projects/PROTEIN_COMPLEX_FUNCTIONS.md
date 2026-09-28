@@ -1,11 +1,13 @@
 ---
 title: "Protein Complex Functions Project"
-maturity: MATURE
+maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
 ---
 
 # Protein Complex Functions Project
+
+**Bottom line:** when an activity belongs to a protein complex, GO annotation tends to hand the catalytic function to every subunit, so structural, accessory, regulatory and assembly proteins end up labelled as catalysts. This project sets out how to attribute complex functions: which members enable the activity, which contribute to it, and which should instead carry assembly, stability, regulation or membership terms. We did this because the problem recurs in large complexes (OXPHOS, proteasome, ribosome) and because GO-CAM export currently turns complex membership into `contributes_to` molecular-function annotations for supernumerary subunits. So far the project has a decision framework, review rubric and GO-CAM export position (favouring separate active-member and accessory/structural-member relations), the PSMB5 and PSMA1 reviews as a catalytic versus structural proteasome pair, and three obligate-heterodimer examples from the BGC project. Structure-prediction pilots with BioLM Boltz2 and ESMFold2 on CYC1:UQCRFS1, PSMB5:PSMA1 and COX2:SCO1/SCO2 did not produce a curation-grade interface: the Boltz2 runs all had ipTM below 0.4, and the ESMFold2 COX2:SCO1 runs that reached ipTM 0.58 to 0.63 still placed the SCO1 copper motif about 50 Å from the COX2 CuA site. Structure prediction therefore stays hypothesis-generating, not curation evidence. The OXPHOS attribution matrix, the audit of existing OXPHOS reviews and the downstream-user guidance are not yet done, so the project is still in progress.
 
 ## Overview
 
@@ -597,3 +599,7 @@ All three were over-annotated in GOA with the catalytic MF on the non-catalytic 
 EryCII is notable: rather than `contributes_to` the GT activity, the partner has its **own** MF
 (allosteric activator), and full GT activity *requires* it. Cross-refs: `PSEUDOENZYMES.md`,
 `OVER_ANNOTATION_PATTERNS.md` (patterns 7-8).
+
+## Slides
+
+- [Slides](PROTEIN_COMPLEX_FUNCTIONS/slides/PROTEIN_COMPLEX_FUNCTIONS-slides.html) (Marp source: [PROTEIN_COMPLEX_FUNCTIONS-slides.md](PROTEIN_COMPLEX_FUNCTIONS/slides/PROTEIN_COMPLEX_FUNCTIONS-slides.md)) — AI generated

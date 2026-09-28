@@ -35,6 +35,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+from ai_gene_review.validation.supporting_text import clear_publication_caches
+
 from linkml_reference_validator.etl.fulltext.base import FullTextProviderRegistry
 from linkml_reference_validator.etl.reference_fetcher import (
     MIN_FULL_TEXT_CHARS,
@@ -55,6 +57,15 @@ FULL_TEXT_STUB_MARKERS = (
     "The Full Text of this article is available as a",
     "Subscribe to this journal",
     "access via your institution",
+    # A RIS citation export. `TY  - JOUR` opens one, with the two spaces RIS mandates.
+    # openalex resolved PMID:12534463 to a university repository landing page whose
+    # "full text" was that page's header, the abstract as prose, and a RIS dump repeating
+    # the abstract as N2 and AB. It passed every guard below: no paywall marker, longer
+    # than the abstract, and the citation metadata supplied enough added characters to
+    # clear MIN_FULL_TEXT_CHARS. Bulk without body.
+    "TY  - JOUR",
+    # The Pure repository software's landing-page header, which is what that page was.
+    "Research output:Contribution to journal",
 )
 
 _FRONTMATTER_DELIMITER = re.compile(r"^---[ \t]*$", re.MULTILINE)
@@ -114,7 +125,7 @@ def find_warm_candidates(
         if frontmatter.get("full_text_attempted") and not include_attempted:
             continue
         has_full_text = bool(frontmatter.get("full_text_available")) and (
-            FULL_TEXT_HEADER in body
+            _full_text_section_start(body) != -1
         )
         if has_full_text:
             continue
@@ -164,6 +175,10 @@ def _rewrite(path: Path, frontmatter: Dict[str, Any], body: str) -> None:
     if not markdown.endswith("\n"):
         markdown += "\n"
     path.write_text(markdown)
+    # The validation-side reads of this directory are lru_cached with no invalidation, so
+    # a sweep that repairs a record and then validates in the same process would otherwise
+    # see the pre-repair answer.
+    clear_publication_caches()
 
 
 def mark_attempted(path: Path, frontmatter: Dict[str, Any], body: str) -> None:
@@ -197,6 +212,19 @@ def _abstract_text(body: str) -> str:
     if next_heading != -1:
         section = section[:next_heading]
     return section.strip()
+
+
+def is_usable_full_text_for_abstract(text: str, abstract: str) -> bool:
+    """``is_usable_full_text`` for a caller that already holds the abstract.
+
+    ``cache_publication`` fetches and has the abstract in hand, rather than a cache-file
+    body to parse it out of. It previously applied no content check at all -- it set
+    ``full_text_available`` straight from ``FullTextResult.is_complete`` -- which is how a
+    repository landing page and a RIS citation export became "full text" for PMID:12534463
+    and cost twelve accurate flags. That path is the one this repo's own error message now
+    tells authors to use, so it needs the same guard as the warm sweep.
+    """
+    return is_usable_full_text(text, f"{ABSTRACT_HEADER}{abstract}\n")
 
 
 def is_usable_full_text(text: str, body: str) -> bool:
@@ -251,6 +279,25 @@ def is_usable_full_text(text: str, body: str) -> bool:
     return True
 
 
+def _full_text_section_start(body: str) -> int:
+    r"""Index of the ``## Full Text`` heading in *body*, or -1.
+
+    Matches a **whole line**, not a bare substring or a line prefix.
+
+    ``body.find("## Full Text")`` also matches inside ``### Full Text Notes`` -- it lands
+    on the ``## Full Text`` at offset one -- and the caller truncates there, destroying
+    everything between that point and the real section. Same substring-for-structure shape
+    as the truncation removed from ``_existing_accepted_full_text``.
+
+    Anchoring only on the left was still not enough for the reader and the writer to agree:
+    the reader requires ``\n## Full Text\n``, so ``## Full Textual analysis`` was a section
+    to this function and invisible to that one. Requiring the line to *end* after the
+    header closes that, and drops a ``startswith`` branch the reader had no equivalent of.
+    """
+    match = re.search(rf"^{re.escape(FULL_TEXT_HEADER)}$", body, flags=re.MULTILINE)
+    return match.start() if match else -1
+
+
 def apply_full_text(
     path: Path,
     frontmatter: Dict[str, Any],
@@ -279,7 +326,7 @@ def apply_full_text(
     # the newly added text is whitespace-cleaned; the existing body is kept
     # verbatim (see _rewrite).
     cleaned = re.sub(r"[ \t]+(?=\r?$)", "", text.strip(), flags=re.MULTILINE)
-    section_start = body.find(FULL_TEXT_HEADER)
+    section_start = _full_text_section_start(body)
     if section_start != -1:
         body = body[:section_start].rstrip("\n") + "\n"
     body = body.rstrip("\n") + f"\n\n{FULL_TEXT_HEADER}\n\n{cleaned}\n"

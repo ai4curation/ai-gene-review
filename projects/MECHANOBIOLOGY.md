@@ -1,11 +1,27 @@
 ---
 title: "Mechanobiology Gene Review Project"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 ---
 
 # Mechanobiology Gene Review Project
+
+**Bottom line:** cells sense stiffness, shear, stretch, compression and
+membrane tension through channels such as PIEZO1, integrin adhesions, the
+nuclear lamina and the YAP/TAZ pathway, and GO annotations in this area mix
+genuine sensors with generic adhesion, cytoskeleton and ECM terms. This page
+defines the scope for reviewing that gene set: inclusion criteria, six
+sensor-to-modifier modules, 30 candidate genes in five review batches, and
+the `stimulus -> sensor -> downstream axis -> phenotype` chain each review
+should record. We scoped it this way so that reviews separate the few direct
+mechanosensors from the many downstream effectors and ECM genes that are easy
+to over-annotate with `response to mechanical stimulus`. Scoped, not yet
+started: none of the Batch A to D genes (PIEZO1/2, TRPV4, PKD1/2, the
+integrin adhesome, LINC complex or Hippo effectors) has a review in the repo.
+Four Batch E matrix genes (FN1, LOX, SPARC, DCN) have human reviews made for
+other purposes, covering 355 annotations, but none has been assessed against
+this project's mechanical-chain questions.
 
 ## Scope
 
@@ -188,3 +204,7 @@ Those may become relevant later, but the present project is first a grounded cur
 ## Source input
 
 - Key ideation source: [cmungall/stuff issue #671](https://github.com/cmungall/stuff/issues/671), fetched 2026-04-11
+
+## Slides
+
+- [Slides](MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.html) (Marp source: [MECHANOBIOLOGY-slides.md](MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.md)) — AI generated

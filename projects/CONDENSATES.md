@@ -1,12 +1,29 @@
 ---
 title: "Biomolecular Condensates"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, worm, SCHPO, mouse]
 genes: [SQSTM1, NFE2L2, LGALS3, TARDBP, TP53, pgl-1, pgl-2, pgl-3, meg-2, meg-3, meg-4, mid1, Ccnt1]
 ---
 
 # Biomolecular Condensates
+
+**Bottom line:** membraneless compartments such as stress granules, P granules,
+the nucleolus and the phagophore assembly site are heavily annotated as
+locations, but GO and this repository almost never record which proteins build
+them. This cross-cutting project audited that gap with a regenerable script:
+238 gene folders carry a condensate-space CC term, yet only 9 carry
+`molecular condensate scaffold activity` (GO:0140693), and reviewers had
+already downgraded 146 of 399 (37%) reviewed condensate-space annotations
+without a shared rule. It then re-reviewed every annotation in the corpus to
+`GO:0034045` phagophore assembly site membrane and its two related terms
+(59 assertions across 21 gene folders, feeding GO issue #29437). Every
+previously reviewed assertion had been accepted; after re-review, all 31
+first-pass assertions across 14 genes moved to MODIFY (26) or
+MARK_AS_OVER_ANNOTATED (5). GO has since obsoleted GO:0034045 and added
+`phagophore membrane` (GO:7770114). The five working principles below are
+still drafts, and the proposed calibration batch of scaffold genes has not
+been run.
 
 Membraneless compartments — stress granules, P granules, P-bodies, the nucleolus, PML
 bodies, nuclear speckles, the phagophore assembly site — are among the most heavily
@@ -97,7 +114,7 @@ batch.
 | [STRESS_GRANULES](STRESS_GRANULES.md) | per-condensate project (human SGs) | `SCOPING`; self-described stub, 5 of ~12 candidates have gene folders |
 | `MODULE:phagophore_assembly_site` | module | `DRAFT`; the corpus's only condensate modeled as a module |
 | `projects/CONDENSATES/scripts/scan_condensate_annotations.py` | audit script | regenerates every number on this page |
-| [GO:0034045 corpus slice audit](CONDENSATES/GO_0034045-annotation-audit.md) | per-assertion re-review | 18 annotations across 11 genes moved `ACCEPT` → `MODIFY`; input to GO issue #29437 |
+| [GO:0034045 corpus slice audit](CONDENSATES/GO_0034045-annotation-audit.md) | per-assertion re-review | all 31 first-pass assertions across 14 genes moved off `ACCEPT` (26 `MODIFY`, 5 `MARK_AS_OVER_ANNOTATED`); input to GO issue #29437 |
 | [SL project](SL.md) | sibling project | `GO_REF:0000044` over-annotation; SL-0221 is its first subproject |
 
 ### Relationship to the per-condensate projects
@@ -141,3 +158,7 @@ and already reviewed, so the batch tests the principles rather than the pipeline
   it structurally (e.g. as a knowledge-gap `boundary`) rather than in prose?
 - Do IEA/ISS/ISO scaffold annotations survive scrutiny anywhere? Of the 22 in the corpus, 8
   are non-experimental and they account for every non-`ACCEPT` outcome.
+
+## Slides
+
+- [Slides](CONDENSATES/slides/CONDENSATES-slides.html) (Marp source: [CONDENSATES-slides.md](CONDENSATES/slides/CONDENSATES-slides.md)) — AI generated

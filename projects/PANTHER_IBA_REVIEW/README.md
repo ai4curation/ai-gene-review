@@ -1,12 +1,32 @@
 ---
 title: "PANTHER IBA family review"
+maturity: MATURE
+tags: [EVALUATION, PIPELINE]
+species: [SCHPO]
 ---
 
 # PANTHER IBA family review
 
-Family-level (PANTHER/PAINT) review of the IBA annotations on the 41 reviewed
-S. pombe genes. Reviews the *source* of the IBAs — the phylogenetic
-propagation — rather than re-judging gene by gene.
+**Bottom line:** every IBA annotation descends from a PAINT curator's IBD
+judgment placed at an ancestral node of a PANTHER tree, so the place to test
+an IBA is that node and the target's position below it. We rebuilt the
+propagation behind all 160 IBAs on the 41 reviewed *S. pombe* genes (36 of
+which carry IBAs) from cached repo data: source node, seed genes, subfamilies,
+PAINT loss annotations, and our per-gene action. We did this to check whether
+the per-gene calls hold up at the family level, and to find the patterns that
+mark a real over-propagation. They held up. The per-gene reviews kept 148 of
+the 160 IBAs (117 ACCEPT, 31 KEEP_AS_NON_CORE); the 36 cross-subfamily flags
+turned out to be mostly conserved functions; and the family lens confirmed the
+two localization REMOVEs (pom1 `cytoskeleton`, rqh1 `cytoplasm`) and recast the
+third REMOVE (mid1 septin ring organization) as sub-functionalization between
+the two pombe anillins. No new IBA errors were found among the accepted rows.
+
+The same tooling also extracts PAINT's own loss annotations (IRD/IKR) as a
+curation guard: 2,129 loss findings across 549 cached families (2,123 paired with a confirmed ancestral gain), of which 63 IKR losses fall on a
+reviewed member and are ready for residue-level follow-up. The written review
+is in [REVIEW.md](REVIEW.md).
+
+The rest of this page documents the scripts and tables.
 
 - `extract_iba_propagation.py` — reproducible extractor: for each IBA, resolves
   the ancestral PANTHER node, the seed genes, and the subfamilies of our gene
@@ -84,3 +104,7 @@ over-fires on broadly conserved functions — it is triage, not a verdict.
 One well-characterized descendant can soundly ground an ancestral assertion.
 Review its phylogenetic placement and relevant functional divergence; do not
 infer weak support from a short seed list.
+
+## Slides
+
+- [Slides](slides/PANTHER_IBA_REVIEW-slides.html) (Marp source: [PANTHER_IBA_REVIEW-slides.md](slides/PANTHER_IBA_REVIEW-slides.md)) — AI generated

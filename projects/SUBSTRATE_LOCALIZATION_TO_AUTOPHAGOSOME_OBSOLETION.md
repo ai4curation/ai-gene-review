@@ -16,6 +16,26 @@ genes:
 
 # Substrate Localization to Autophagosome (GO:0061753) — Obsoletion & Transfer
 
+**Bottom line:** In selective autophagy, cargo receptors link a substrate
+(glycogen, mitochondria, ER, bacteria, misfolded proteins) to ATG8-family
+proteins on the forming autophagosome. GO plans to obsolete the process
+term GO:0061753 *substrate localization to autophagosome* because it
+restates the receptor's molecular function (GO:0160247 *autophagy cargo
+adaptor activity*), and it has no single replacement: each annotation must
+move to the selective-autophagy process its paper supports. We pulled
+every affected row from QuickGO (5 direct experimental annotations on
+TOM1, Stbd1, IRGQ and SMURF1, 5 MF rows that use the term in an
+extension, and 10 ISS/ISO ortholog rows), mapped each to a destination
+term, and found two errors in the upstream table. The obsoletion has not
+landed: GO:0061753 is still active in OLS, and go-ontology#32304 is open.
+Scoped, no review refreshed yet. Two reviews here will go stale, not one
+as the impact section below says: `human/RETREG2` and `human/STBD1`
+(reviewed since this page was written) each ACCEPT an IEA row for
+GO:0061753 and list it in the strictly validated `core_functions`.
+
+The IRGQ case is the one open scientific question: no GO term covers
+autophagy of misfolded MHC-I, so it is a candidate new-term request.
+
 ## Overview
 
 A GO obsoletion proposal will retire the biological-process term
@@ -259,3 +279,7 @@ Nothing is broken until the obsoletion is applied.
   all UniProt accessions verified against the UniProt REST API; all fourteen GO
   ids verified in OLS. Two discrepancies found in the upstream table (see above).
   Repo impact: `human/RETREG2` only. No gene reviews started or refreshed yet.
+
+## Slides
+
+- [Slides](SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION/slides/SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.html) (Marp source: [SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.md](SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION/slides/SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.md)) — AI generated

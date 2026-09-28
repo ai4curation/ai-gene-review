@@ -1,10 +1,23 @@
 ---
 title: "Retracted Literature Behind Annotations"
-maturity: SCOPING
-tags: [PIPELINE]
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
 ---
 
 # Retracted Literature Behind Annotations
+
+**Bottom line:** a GO annotation outlives its source paper, and nothing in this
+repository's pipeline re-checked whether a cited paper had since been retracted. We built
+`check_retractions.py`, which collects every PMID cited in the gene reviews together with
+where it is cited (reference list, quoted `supporting_text`, or the annotation's own
+evidence line) and asks PubMed for retraction, expression-of-concern and erratum signals.
+We did this because a citation that was sound when written can go bad later, and only
+re-asking PubMed can find that. The first full run (2026-09-17) covered 25,088 distinct
+PMIDs in 3,736 review files and found 7 retracted papers, 13 expressions of concern and
+659 errata; the reviews had already caught 3 of the 7 by hand, and 4 of the 7 sit under
+a GO annotation. None of those four is an accepted core function: the recorded actions
+are REMOVE (TP53), KEEP_AS_NON_CORE (mouse Mtor, BACE1) and UNDECIDED (STAT3). Flagging
+those four and the expressions of concern in the reviews is still to do.
 
 ## Overview
 
@@ -237,6 +250,10 @@ The worked example is human/TNFRSF21, which already does all of this by hand.
       backfill (`ai_gene_review/etl/publication_type.py`), which already fetches each
       PMID's PubMed PT list and simply ignores `Retracted Publication`; a
       retraction/EoC flag could ride along at no extra request cost
+
+## Slides
+
+- [Slides](RETRACTIONS/slides/RETRACTIONS-slides.html) (Marp source: [RETRACTIONS-slides.md](RETRACTIONS/slides/RETRACTIONS-slides.md)) — AI generated
 
 # NOTES
 

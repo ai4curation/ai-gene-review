@@ -2,9 +2,28 @@
 title: "Prokaryotic Immunity Term Prediction"
 maturity: SCOPING
 tags: [PIPELINE]
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/defense-go-flow.svg
+    - PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/defense-go-why.svg
 ---
 
 # Prokaryotic Immunity Term Prediction
+
+**Bottom line:** Scoped, with a first code unit built and nothing yet connected
+to it. Anti-phage defense predictors report broad family calls such as
+`CRISPR-Cas`, `CBASS` or `Thoeris`, and a family label alone is not a safe basis
+for a precise GO annotation. In April 2026 we added a small translation layer
+(`src/ai_gene_review/defense_go/`) that gives each defense family a stable ID,
+resolves label aliases, and records per family whether a GO term can be
+suggested automatically. The registry covers five families: CRISPR-Cas maps to
+GO:0099048 and restriction-modification to GO:0009307, while abortive infection,
+CBASS and Thoeris are deliberately review-only because the families are too
+mechanistically diverse for one term. The layer has 5 targeted tests, but no
+predictor or export code calls it yet, and wiring it into the prediction
+pipeline, writing `PredictionReview` output, and adding more families are all
+still to do.
 
 ## Overview
 
@@ -126,3 +145,7 @@ Deferred:
 - export of wrapper output into `PredictionReview` YAML
 - expansion of the registry to more defense families and GO policies
 - support for evidence-code policy and provenance payloads
+
+## Slides
+
+- [Slides](PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.html) (Marp source: [PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.md)) — AI generated

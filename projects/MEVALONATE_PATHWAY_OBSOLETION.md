@@ -2,9 +2,34 @@
 title: "Mevalonate Pathway Term Cleanup — Obsoletion & Replacement"
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
+species: [human, rat, yeast]
+genes: [HMGCS1, HMGCR, MVK, PMVK, MVD, FDPS, IDI1, Hmgcs2, ERG19]
+sidecars:
+  slide_assets:
+    - MEVALONATE_PATHWAY_OBSOLETION/slides/pathway-split.svg
+    - MEVALONATE_PATHWAY_OBSOLETION/slides/term-map.svg
 ---
 
 # Mevalonate Pathway Term Cleanup — Obsoletion & Replacement
+
+**Bottom line:** GO had two overlapping process terms for the route from
+acetyl-CoA through mevalonate to isoprenoid precursors: GO:1902767 *isoprenoid
+biosynthetic process via mevalonate* and GO:0010142 *farnesyl diphosphate
+biosynthetic process, mevalonate pathway*. Both are now obsolete in OLS
+(checked 2026-09-26), with annotations to be redirected to GO:0019287
+*isopentenyl diphosphate biosynthetic process, mevalonate pathway* (the steps
+up to IPP) or GO:0045337 *farnesyl diphosphate biosynthetic process* (IPP to
+FPP). We tracked the upstream lists (2 and 21 experimental annotations) and
+argued that each row needs a per-enzyme choice between the two replacements,
+not a relabel. The repo has moved past the Impact and Candidate sections
+below: the human mevalonate enzymes HMGCS1, HMGCR, MVK, PMVK, MVD, IDI1 and
+FDPS are now reviewed (PRs #1998, #2153) with `mevalonate_pathway` and
+`isoprenoid_diphosphate_biosynthesis` modules, and MVK, PMVK and MVD accept
+GO:0019287 while FDPS accepts GO:0045337. Two reviews carried
+obsolete-term rows, both resolved in #3232 (per-row outcome in Status
+below): yeast ERG19's GO:0010142 RCA row is now `REMOVE`, since its
+replacement GO:0019287 is already accepted, and rat Hmgcs2's GO:0010142 IBA
+and IEA rows stay `UNDECIDED`, with the obsoletion recorded in `reason`.
 
 ## Overview
 
@@ -126,11 +151,12 @@ Listed in priority order. Each should be set up with
 
 ## Proposed approach
 
-1. **Wait for the obsoletion to land before bulk-rewriting.** GO ontology
-   ticket #32082 is still under discussion. AI Gene Review reviews can
-   proceed on the underlying biology now and record the currently-live
-   term ID; the action codes (ACCEPT vs MODIFY vs REMOVE) are independent
-   of whether the obsoletion has merged.
+1. **The obsoletion has landed** (GO:0010142 is obsolete in the GO release
+   2026-07-26). GOA-sourced term ids are never rewritten; record the
+   obsoletion in `action`/`reason` and, where a replacement applies,
+   `proposed_replacement_terms`. Where the correct replacement is already
+   annotated to the gene, prefer `REMOVE` over a duplicate `MODIFY`
+   (as done for yeast ERG19 in PR #3232).
 2. **Group the review by replacement target, not by the obsoleting term.**
    Genes whose experimental evidence supports the upper half of the
    pathway (mevalonate → IPP) want `GO:0019287`; genes covering the lower
@@ -161,3 +187,19 @@ HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
   (opened 2026-05-28) and companion issue #6439. Obsoletion not yet
   applied. No reviews started; the rat HMGCS2 entry is the only gene in
   this repo currently carrying an annotation to either obsoleting term.
+- 2026-09-26 — OLS lists both GO:1902767 and GO:0010142 as obsolete, each
+  pointing to GO:0019287 or GO:0045337. Human HMGCS1, HMGCR, MVK, PMVK, MVD
+  (PR #1998) and FDPS, IDI1 (PR #2153) are reviewed. Rows on the obsolete
+  terms remain in rat Hmgcs2 (IBA + IEA, UNDECIDED) and yeast ERG19 (RCA,
+  KEEP_AS_NON_CORE).
+- 2026-09-27 — Obsoletion is in the GO release 2026-07-26. PR #3232
+  applied it: rat Hmgcs2 (two `UNDECIDED` GO:0010142 rows) now records the
+  obsoletion in `reason` without proposing a replacement, since native
+  mevalonate-pathway participation is unresolved; yeast ERG19's GO:0010142
+  RCA row is `REMOVE`, because its only applicable replacement
+  (GO:0019287) is already an `ACCEPT`ed row. No other review carries a
+  GO:0010142 GOA row.
+
+## Slides
+
+- [Slides](MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.html) (Marp source: [MEVALONATE_PATHWAY_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.md)) — AI generated
