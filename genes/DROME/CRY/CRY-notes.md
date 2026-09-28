@@ -189,8 +189,10 @@ rows. PTN002479144 supports the nucleus, cytoplasm, circadian gene expression,
 and photoperiod entrainment rows for the CRY-containing cryptochrome ancestor;
 PTN000894457 supports non-core negative regulation of transcription in the
 animal-cryptochrome branch; PTN000155848 supports FAD binding at the family
-root, but its DNA-binding assertion is inherited from DNA-repair photolyases and
-does not transfer to Drosophila CRY.
+root. The PTN000155848 DNA-binding IBD remains unresolved for Drosophila CRY:
+its source set mixes photolyases with animal cryptochromes, and PAINT explicitly
+prunes GO:0003904 photolyase activity at PTN000894457 without pruning
+GO:0003677.
 
 I searched PubMed with `((Drosophila[Title/Abstract]) AND
 (cryptochrome[Title/Abstract] OR DmCRY[Title/Abstract])) AND 2023:2026[pdat]`.
