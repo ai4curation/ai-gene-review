@@ -158,7 +158,7 @@ Created project to document genes with contested molecular functions, starting w
   - `GO:0046872` metal ion binding (IEA) - UNDECIDED (rule-predicted Fe ligands H297/E299 retained, binding unmeasured)
 - Key evidence: Mass spectrometry assays, degenerate active site residues, catalytic mutant retains function
 - Proposed replacements: `GO:0070087` chromo shadow domain binding (Swi6; for the removed demethylase IBA); `GO:0031625` ubiquitin protein ligase binding (for the Cdt2 protein-binding IPI)
-- 6 core functions documented with supporting evidence
+- 5 core functions documented with supporting evidence
 
 This case demonstrates how AI review can integrate:
 1. Domain-based predictions (suggests demethylase)

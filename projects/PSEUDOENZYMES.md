@@ -269,7 +269,7 @@ REMOVED for RvY_15948 (which is a chaperone, not a SOD).
 
 ### JmjC histone demethylase pseudoenzyme (Schizosaccharomyces pombe)
 
-**Epe1** (*S. pombe*, UniProt O94603) - **confirmed pseudoenzyme** with
+**Epe1** (*S. pombe*, UniProt O94603) - **probable pseudoenzyme** with
 well-documented alternative function.
 
 | Feature | Details |
@@ -283,9 +283,9 @@ well-documented alternative function.
 | **Annotations added** | NEW rows: GO:0070087 (chromo shadow domain binding, Swi6), GO:0035035 (histone acetyltransferase binding), GO:0030674 (protein-macromolecule adaptor activity) and GO:0042393 (histone binding); the MODIFY on the protein-binding IPI (partner Cdt2) proposes GO:0031625 (ubiquitin protein ligase binding). The core-function MFs are GO:0070087 (Swi6 chromoshadow-domain binding), GO:0035035 (histone acetyltransferase binding, SAGA), GO:0030674 (protein-macromolecule adaptor activity, Bdf2 recruitment), GO:0042393 (histone binding: purified Epe1 preferentially binds H3K9-methylated histones, Raiymbek 2020; attached to the nucleosome-turnover core function, whose mechanism is unresolved) and GO:0003712 (transcription coregulator activity) |
 | **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Sorida 2019 (PMID:31206516); Epe1 gene review at `genes/SCHPO/Epe1/` |
 
-**Key insight:** Epe1 is a paradigm for the Type 5 (reader) pseudoenzyme.
-Its JmjC domain retains substrate recognition capability (binds H3K9me) but
-cannot catalyze demethylation. This creates a common annotation error where
+**Key insight:** Epe1 is a probable Type 5 (reader) pseudoenzyme. It binds
+H3K9-methylated histones in vitro, but no demethylase activity has been
+detected, and latent activity is not excluded. This creates a common annotation error where
 JmjC domain presence alone leads to multiple incorrect MF/BP annotations.
 
 ### Cytochrome-P450-homologue glycosyltransferase activator (S. erythraea EryCII)
@@ -514,7 +514,7 @@ Good template for families where the pseudoenzyme has neofunctionalized
   - `genes/RAMVA/RvY_00650/`, `genes/RAMVA/RvY_03757/`, `genes/RAMVA/RvY_17310/`
     (PROSITE-identified impaired paralogs)
   - `genes/RAMVA/RvY_15948/` - CCS chaperone (different pseudoenzyme type)
-  - `genes/SCHPO/Epe1/` - JmjC pseudo-demethylase (paradigmatic Type 5 example)
+  - `genes/SCHPO/Epe1/` - probable JmjC pseudo-demethylase (Type 5 example)
 
 ## TODO / future work
 

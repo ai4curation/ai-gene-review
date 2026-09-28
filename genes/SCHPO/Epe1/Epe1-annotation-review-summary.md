@@ -24,9 +24,11 @@ What is removed is the PAINT/keyword inference of canonical JHDM1-type activity,
 - C-terminus alone (without JmjC) can disrupt heterochromatin (Raiymbek 2020, PMID:32195666)
 - The PHF2 JmjC domain carries a similar anomaly yet has latent, phosphorylation-activated demethylase activity (noted by Audergon 2015), which is why the experimental rows are not removed
 
-### Annotations Modified for Specificity (2 annotations)
+### Annotation Modified for Specificity (1 annotation)
 1. **GO:0005515** (protein binding, IPI with Cdt2) → GO:0031625 ubiquitin protein ligase binding
-2. **GO:0006338** (chromatin remodeling) → More specific mechanisms
+
+### Annotation Kept as Non-core (1 annotation)
+- **GO:0006338** (chromatin remodeling, IBA): correct but general. Epe1 already carries the more specific GO:0033696 heterochromatin boundary formation on seven ACCEPTed experimental rows, so no replacement is proposed.
 
 ### Proposed New Annotations (4 NEW rows)
 1. **GO:0070087** chromo shadow domain binding (IPI, PMID:32195666): recombinant Epe1 binds Swi6, reduced by the Swi6 CSD mutation L315E; replaces the earlier GO:0140030, whose definition requires the modification on the bound protein itself
@@ -34,7 +36,7 @@ What is removed is the PAINT/keyword inference of canonical JHDM1-type activity,
 3. **GO:0030674** protein-macromolecule adaptor activity (IMP, PMID:24013502): Epe1 binds Bdf2 and is required for its recruitment to IRC boundaries
 4. **GO:0042393** histone binding (IDA, PMID:32195666): purified Epe1 prefers H3K9me3 peptides and H3K9-methylated histones
 
-Protein acetylation (GO:0006473) is not proposed: Gcn5 in SAGA performs the acetylation, and Epe1's part is captured by GO:0035035. Negative regulation of heterochromatin formation (GO:0031452) is not proposed either: Epe1 already carries seven experimental GOA rows for its child term, heterochromatin boundary formation (GO:0033696, synonym "negative regulation of heterochromatin spreading"), so a GO:0031452 row would add no information.
+Protein acetylation (GO:0006473) is not proposed: Gcn5 in SAGA performs the acetylation, and Epe1's part is captured by GO:0035035. Negative regulation of heterochromatin formation (GO:0031452) is not proposed either. PomBase curated Epe1's anti-silencing role as seven experimental GO:0033696 heterochromatin boundary formation rows and did not add GO:0031452, which we read as a curation convention rather than a gap. The tension with SGD's IMP annotation of DOT1 to GO:0031452 is raised as a suggested question for PomBase, as is the NOT GO:0031507 row, since GO:0031507 is an ancestor of GO:0033696.
 
 ### Annotations Accepted (24 annotations)
 Predominantly cellular component and biological process annotations that accurately reflect Epe1's localization and function:
@@ -49,19 +51,14 @@ Predominantly cellular component and biological process annotations that accurat
 ### 1. Heterochromatin Boundary Establishment
 - **Molecular Function**: Chromo shadow domain binding (GO:0070087), for the H3K9 methylation-stimulated Swi6 interaction, which depends on the Swi6 chromoshadow domain; Bdf2 recruitment is captured as protein-macromolecule adaptor activity (GO:0030674)
 - **Process**: Heterochromatin boundary formation (GO:0033696)
-- **Mechanism**: Binds HP1/Swi6 at heterochromatin sites, recruits Bdf2
+- **Mechanism**: Binds HP1/Swi6 at heterochromatin sites and recruits Bdf2. The Swi6 interaction is also proposed to let the Epe1 C-terminus outcompete the HDAC Clr3 at Swi6 binding sites, which disrupts heterochromatin assembly when the C-terminus is expressed alone
 
 ### 2. Transcriptional Co-activation
 - **Molecular Function**: Transcription coregulator activity (GO:0003712)
 - **Process**: Regulation of transcription (GO:0006357)
 - **Mechanism**: Recruits SAGA histone acetyltransferase complex
 
-### 3. Anti-silencing Activity
-- **Molecular Function**: Chromo shadow domain binding (GO:0070087)
-- **Process**: Heterochromatin boundary formation (GO:0033696)
-- **Mechanism**: Competes with silencing factors for HP1 binding
-
-### 4. Nucleosome Turnover
+### 3. Nucleosome Turnover
 - **Molecular Function**: Histone binding (GO:0042393); purified Epe1 preferentially binds H3K9me3 peptides and H3K9-methylated histones (Raiymbek 2020, PMID:32195666)
 - **Process**: Chromatin organization (GO:0006325)
 - **Knowledge gap**: how Epe1 increases nucleosome turnover, and whether its histone binding drives it, is not known
