@@ -41,3 +41,12 @@ The shipped UniProt record positively corroborates the unresolved partners: ACY3
 The single cytosolic catalytic core includes acetate metabolism and L-aspartate biosynthesis. Aspartate metabolism remains ACCEPT as an original assertion but is omitted from the synthesized core because it is an ancestor of L-aspartate biosynthesis. No new process or second binding core is proposed.
 
 Decisions: 14 ACCEPT, 5 KEEP_AS_NON_CORE, 5 MODIFY, 10 UNDECIDED and 1 REMOVE. All 35 original source assertions are preserved without new rows. No alternative products were supplied by the normal seed. The two additional localization references were recovered by the normal fetcher; actual cache availability is reflected in each reference flag, while the bounded reading scope remains explicit.
+
+
+## 2026-09-28 review follow-up
+
+Retain GO:0016811 IBA as ACCEPT: the PTN007644184 IBD table records chemically concordant inherited amide hydrolysis, with human ASPA among descendant evidence. The table does not establish an independently inspected full phylogeny; no target-specific loss is established. Three other refinements now explicitly acknowledge that their specific replacements already exist.
+
+Add zinc ion binding (GO:0008270, IDA, PMID:17194761), supported by human crystal metal coordination and human ligand mutagenesis (PMID:17027983). Independent consultation inspected original PMC1766406 Zinc Coordination Results: zinc soaking, anomalous signal and zinc-edge comparison support human binding; no native intracellular metal-occupancy claim follows. The canonical paper cache remains abstract-only. This physical binding supports the existing single catalytic core, not a second physiological activity. The description now includes brain white matter and Canavan disease. The E178D note preserves the abstract's loss-of-activity language and its altered-kcat observation without inventing a residual value.
+
+The ten source-specific interaction records remain UNDECIDED: the original assay evidence has not been read. UniProt partner corroboration does not establish the contents of each cited assay. Generic-term policy clarification remains pending; no inference that an interaction is false is made. Final counts: 15 ACCEPT, 5 KEEP_AS_NON_CORE, 4 MODIFY, 10 UNDECIDED, 1 REMOVE and 1 NEW (36 rows, 35 original source objects unchanged).
