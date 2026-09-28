@@ -2,9 +2,41 @@
 title: "Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)"
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
+species: [human]
+genes: [TMF1, TRAPPC1, TRAPPC3, TRAPPC4, TRAPPC5, TRAPPC8, TRAPPC11, TRAPPC12, TRAPPC13]
 ---
 
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)
+
+**Bottom line:** Before a vesicle docks and fuses, a tether (a long
+coiled-coil golgin or a multisubunit complex such as TRAPP, COG or the
+exocyst) makes first contact and bridges it to the target membrane. GO
+has obsoleted GO:0099022 *vesicle tethering* and four children because
+tethering is a binding activity, and minted the MF GO:7770062 *vesicle
+membrane tethering activity* in its place; the recommended pattern is
+that MF with a `part_of` link to the transport process it serves. We
+recorded the upstream plan, the InterPro and UniRule mappings already
+removed, and the reviews in this repo that touch the terms. The
+obsoletion has landed: OLS shows GO:0099022 and GO:0099041 obsolete and
+GO:7770062 minted, so the "placeholder", "not yet minted" and "not yet applied" notes
+below are out of date, and the "Impact on this repo" table predates and
+omits the eight TRAPP reviews. Partly done: eight human TRAPP subunit reviews
+(TRAPPC1, 3, 4, 5, 8, 11, 12, 13), written after this page, already
+MODIFY their NAS row on the obsolete GO:0099022 to GO:0006888 *ER to
+Golgi vesicle-mediated transport*. TMF1 is fixed in #3237 (merged): its
+NEW MF row and core MF move from the stand-in GO:0060090 to GO:7770062,
+the obsolete GO:0099041 NEW row and core BP are removed, and the
+"vesicle tethering activity" `proposed_new_terms` entry is dropped now
+that GO has minted it. The same PR moves USO1's docking row to
+GO:7770062. The tether-subunit new reviews (Tier 2 onward) have not
+started.
+
+This is the tethering step of the vesicle refactor. The docking step is
+tracked in [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md)
+(#6379) and its regulation sub-issue in
+[SYNAPTIC_VESICLE_DOCKING_OBSOLETION](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)
+(#6415); the targeting terms that fold into transport processes are in
+[VESICLE_TARGETING_OBSOLETION](VESICLE_TARGETING_OBSOLETION.md) (#6424).
 
 ## Overview
 
@@ -93,13 +125,14 @@ references to the obsoleted terms:
 
 | Gene | Organism | File | Affected row | Notes |
 |---|---|---|---|---|
-| **TMF1** | human | `genes/human/TMF1/TMF1-ai-review.yaml` | GO:0099041 NAS row (line ~331); also referenced in `core_functions` (line ~615) and `proposed_new_terms` (line ~656, GO:0099022 / GO:7770062) | The review already requests "vesicle tethering activity" as a new MF — this is the *direct motivating use case* for the obsoletion plan. |
-| **USO1** | human | `genes/human/USO1/USO1-ai-review.yaml` | No direct rows under the 5 obsoleted IDs, but USO1 is a Golgi *tether/docking* factor (p115) and is already affected by the sibling [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md) (#6379) via its GO:0048211 IBA row. | Refresh under that tracker; coordinate here only if a tethering MF annotation is added on refresh. |
+| **TMF1** | human | `genes/human/TMF1/TMF1-ai-review.yaml` | GO:0099041 NEW row; also in `core_functions` and `proposed_new_terms` (GO:0099022 / GO:7770062) | Fixed in #3237 (merged): NEW MF row and core MF GO:0060090 → GO:7770062; GO:0099041 NEW row, core BP and the `proposed_new_terms` entry removed. |
+| **USO1** | human | `genes/human/USO1/USO1-ai-review.yaml` | No direct rows under the 5 obsoleted IDs; its GO:0048211 IBA row is tracked under [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md) (#6379). | That row now MODIFYs to the tethering MF GO:7770062, fixed in #3237 (merged). |
 
 Verified by `grep -r "GO:00990(22\|41\|44\|69)\|GO:0090522" genes/` across
 `-goa.tsv` and `-ai-review.yaml` files.
 
-**TMF1 is the highest-priority follow-up here.** Its review explicitly cites
+**TMF1 was the highest-priority follow-up here; fixed in #3237 (merged).** The
+paragraph records the original plan. Its review explicitly cites
 this obsoletion plan and uses GO:0060090 *molecular adaptor activity* as a
 stand-in for the not-yet-minted tether MF (see `TMF1-ai-review.yaml:600-668`).
 Once GO:7770062 lands, TMF1 should be refreshed to (a) update the
@@ -136,7 +169,7 @@ accessions before starting.
 1. **TMF1** (human, UniProt **P82094**) — `genes/human/TMF1/`. Direct
    GO:0099041 NAS row + `proposed_new_terms` already references GO:0099022 and
    GO:7770062. The single cleanest test case for transferring an existing
-   review onto the new tether MF.
+   review onto the new tether MF. Fixed in #3237 (merged): now on GO:7770062.
 
 ### Tier 2 — InterPro2GO–flagged tether subunits (high-priority new reviews)
 
@@ -238,3 +271,16 @@ trackers.
   **TMF1** (direct GO:0099041 row; review's `proposed_new_terms` already
   references GO:0099022 / GO:7770062). No gene reviews started or refreshed
   yet under this tracker.
+- 2026-09-26 — TMF1 refresh fixed in #3237 (merged): NEW MF row and core
+  MF GO:0060090 → GO:7770062 vesicle membrane tethering activity;
+  obsolete GO:0099041 NEW row and core BP removed; `proposed_new_terms`
+  entry removed because GO has minted the MF. USO1's GO:0048211 row
+  also moves to GO:7770062 in the same PR. The TRAPPC1/3/4/5/8/11/12/13
+  GO:0099022 rows already MODIFY to GO:0006888 and are unchanged. Tier 2
+  new reviews not started, so maturity stays IN_PROGRESS.
+- 2026-09-27 — #3237 merged, so the TMF1 and USO1 refreshes are on
+  `main`. Tier 2 new reviews not started; maturity stays IN_PROGRESS.
+
+## Slides
+
+- [Slides](VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.html) (Marp source: [VESICLE_TETHERING_OBSOLETION-slides.md](VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.md)) — AI generated

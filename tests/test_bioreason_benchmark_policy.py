@@ -5,6 +5,7 @@ import csv
 import importlib.util
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -20,10 +21,19 @@ from ai_gene_review.bioreason_ontology import (
     frozen_go_sha256,
     get_go_adapter,
 )
+from ai_gene_review.source_tree import commit_date, declared_review_snapshot
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PROJECT_DIR = REPO_ROOT / "projects" / "BIOREASON_COMPARISON"
+AS_OF_PROSE_SITES = (
+    "projects/BIOREASON_COMPARISON/article/supplemental-benchmark-details.md",
+    "projects/BIOREASON_COMPARISON.md",
+    "projects/PROTNLM_EVALUATION.md",
+    "projects/BIOREASON_COMPARISON/article/slides.md",
+    "projects/BIOREASON_COMPARISON/article/slides.html",
+    "pages/projects/BIOREASON_COMPARISON/article/slides.html",
+)
 SCORE_RE = re.compile(
     r"\*\*(Correctness|Completeness)\*\*:\s*([1-5])\s*/\s*5",
     re.IGNORECASE,
@@ -98,19 +108,20 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
 
 
-def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> None:
+def test_argo95_exact_goa_reads_the_declared_baseline_commit(
+    forbid_working_tree_genes: None,
+) -> None:
     module = _load_sidecar_module()
     policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
     baseline = policy["baseline_commit"]
 
-    frozen = module.frozen_goa_ids("genes/ECOLI/SlyD/SlyD-goa.tsv", baseline)
+    slyd = "genes/ECOLI/SlyD/SlyD-goa.tsv"
+    frozen = module.frozen_goa_ids(slyd, baseline)
     assert {"GO:0016853", "GO:0046872", "GO:0051082"} <= frozen
+    # The review snapshot's refreshed SlyD GOA dropped these rows, so the
+    # frozen ARGO95 numbers below depend on reading baseline_commit specifically.
+    assert "GO:0051082" not in module.goa_ids_from_text(module.read_text(slyd))
 
-    def reject_working_tree_goa(_path: Path) -> set[str]:
-        raise AssertionError("frozen metric consulted a working-tree GOA snapshot")
-
-    for helper in ("goa_ids", "latest_goa_date", "sha256"):
-        monkeypatch.setattr(module, helper, reject_working_tree_goa)
     summary = module.argo95_exact_goa_summary(
         set(module.read_rl_gene_list()), policy
     )
@@ -203,7 +214,9 @@ def test_argo139_truncated_sequences_are_flagged_not_excluded() -> None:
     )
 
 
-def test_generated_sidecars_match_current_sources(tmp_path: Path) -> None:
+def test_generated_sidecars_match_review_snapshot(
+    tmp_path: Path, forbid_working_tree_genes: None
+) -> None:
     module = _load_sidecar_module()
     module.main(tmp_path)
 
@@ -215,8 +228,43 @@ def test_generated_sidecars_match_current_sources(tmp_path: Path) -> None:
     ):
         assert (tmp_path / filename).read_bytes() == (PROJECT_DIR / filename).read_bytes(), (
             f"{filename} is stale; run "
-            "`just refresh-bioreason-benchmark-sidecars` from the repository root"
+            "`just refresh-benchmark-snapshot` from the repository root"
         )
+
+
+def test_review_snapshot_is_dated_and_recorded_in_derived_reports() -> None:
+    snapshot = declared_review_snapshot(REPO_ROOT)
+    assert snapshot.date == commit_date(REPO_ROOT, snapshot.commit)
+    recorded = {"commit": snapshot.commit, "date": snapshot.date}
+    metrics = json.loads((PROJECT_DIR / "benchmark-metrics.json").read_text())
+    protnlm = json.loads(
+        (REPO_ROOT / "projects/PROTNLM_EVALUATION/benchmark-summary.json").read_text()
+    )
+    assert metrics["review_snapshot"] == recorded
+    assert protnlm["review_snapshot"] == recorded
+    # Hand-maintained prose: wording differs per site, the date and commit may not.
+    marker = re.compile(rf"{re.escape(snapshot.date)}\W{{1,3}}commit\W{{1,3}}{snapshot.short}\b")
+    for site in AS_OF_PROSE_SITES:
+        text = (REPO_ROOT / site).read_text(encoding="utf-8")
+        assert marker.search(text), (
+            f"{site} does not state the review snapshot "
+            f"({snapshot.date}, commit {snapshot.short}); update its 'as of' sentence"
+        )
+
+
+def test_headline_cli_lists_the_snapshot_numbers() -> None:
+    result = subprocess.run(
+        [sys.executable, "scripts/benchmark_snapshot_headlines.py", "--repo-root", str(REPO_ROOT)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    lines = result.stdout.splitlines()
+    assert "bioreason.supplement_gogpt_overlap_300.n_genes: 296" in lines
+    assert "bioreason.supplement_gogpt_overlap_300.core.n_overlap: 355" in lines
+    assert "protnlm.go_counts.COR: 52" in lines
+    assert not any("review_snapshot" in line for line in lines)
 
 
 def test_generated_quality_sidecar_has_expected_denominators() -> None:
@@ -312,10 +360,14 @@ def test_publication_headlines_match_generated_metrics() -> None:
         "\\texttt{INITIALIZED}."
     ) in manuscript_flat
 
+    # The project page keeps only bottom-line numbers; distributions live in the
+    # prediction browser and in the manuscript, which is still checked below.
+    project_flat = " ".join(project.split())
     assert (
-        f"**Overall correctness: {rl['mean_correctness']:.1f}/5** | "
-        f"**Overall completeness: {rl['mean_completeness']:.1f}/5**"
-    ) in project
+        f"mean correctness on the {rl['n']}-gene performance set is "
+        f"{rl['mean_correctness']:.1f}/5 but completeness only "
+        f"{rl['mean_completeness']:.1f}/5"
+    ) in project_flat
     for score in range(5, 0, -1):
         correctness = rl["correctness_distribution"].get(str(score), 0)
         completeness = rl["completeness_distribution"].get(str(score), 0)
@@ -323,7 +375,6 @@ def test_publication_headlines_match_generated_metrics() -> None:
         p_text = f"{completeness} ({round(100 * completeness / rl['n'])}%)"
         c_tex = c_text.replace("%", "\\%")
         p_tex = p_text.replace("%", "\\%")
-        assert f"| {score} | {c_text} | {p_text} |" in project
         assert f"{score} & {c_tex} & {p_tex}" in manuscript
 
     assessments = sft["assessment_distribution"]
@@ -332,15 +383,32 @@ def test_publication_headlines_match_generated_metrics() -> None:
         in supplement
         for category in ("CNN", "NPI", "PLI", "COR", "LSP", "REP", "UNC")
     )
-    assert all(
-        f"{value:,}" in project
-        for value in (
-            gogpt["n_predictions"],
-            gogpt["assessment_distribution"]["CNN"],
-            gogpt["assessment_distribution"]["NPI"],
-            gogpt["assessment_distribution"]["UNC"],
-        )
+    # Qualitative claims that replaced tables: each is asserted on the page and
+    # checked against the metric that supports it, so neither side can drift.
+    assert (
+        "Most of the cleaned terms are either `CNN` or still-unresolved `UNC`"
+        in project_flat
     )
+    assert gogpt["assessment_distribution"]["CNN"] + gogpt["assessment_distribution"]["UNC"] > (
+        gogpt["n_predictions"] / 2
+    )
+    assert "About half of the performance set scored 5/5 on correctness" in project_flat
+    assert 0.4 <= rl["correctness_distribution"]["5"] / rl["n"] <= 0.6
+    assert "while almost none reached 5/5 on completeness" in project_flat
+    assert rl["completeness_distribution"].get("5", 0) <= 0.02 * rl["n"]
+    assert (
+        "Mouse scores highest on descriptive correctness and the selected S. pombe "
+        "cases lowest among the organism groups with at least three genes; two "
+        "single-gene groups score lower"
+    ) in project_flat
+    per_organism = rl["per_organism"]
+    by_mean = sorted(per_organism, key=lambda org: per_organism[org]["mean_correctness"])
+    assert by_mean[-1] == "mouse"
+    multi_gene = [org for org in by_mean if per_organism[org]["n"] >= 3]
+    assert multi_gene[0] == "SCHPO"
+    below_schpo = by_mean[: by_mean.index("SCHPO")]
+    assert len(below_schpo) == 2
+    assert all(per_organism[org]["n"] == 1 for org in below_schpo)
     assert sft["cnn_exact_frozen_goa"] == 635
     assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
@@ -348,7 +416,10 @@ def test_publication_headlines_match_generated_metrics() -> None:
         "n_reviewed": 82,
         "n_changed": 65,
     }
-    assert all(f"{value:,}" in project for value in assessments.values())
+    assert (
+        f"Of the {sft['n_predictions']:,} SFT terms, {assessments['CNN']:,} were correct "
+        f"but already known and only {assessments['COR']:,} were correct novel predictions"
+    ) in project_flat
 
     categories = ("CNN", "NPI", "PLI", "COR", "LSP", "REP", "UNC")
     for key in (
@@ -374,8 +445,8 @@ def test_publication_headlines_match_generated_metrics() -> None:
             assert f"| {category} | {count:,} | {percent:.1f} |" in supplement
 
     overlap = metrics["supplement_gogpt_overlap_300"]
-    assert overlap["n_genes"] == 299
-    assert overlap["n_predictions"] == 8871
+    assert overlap["n_genes"] == 296
+    assert overlap["n_predictions"] == 8806
     goa_percent = 100 * overlap["goa"]["n_overlap"] / overlap["n_predictions"]
     post_review_percent = (
         100 * overlap["post_review"]["n_overlap"] / overlap["n_predictions"]

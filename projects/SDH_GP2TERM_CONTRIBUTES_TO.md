@@ -2,9 +2,41 @@
 title: "Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)"
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
+species: [human, 9POAL]
+genes: [SDHA, SDHB, SDHC, SDHD, NCGR_LOCUS67308]
+sidecars:
+  slide_figures:
+    - SDH_GP2TERM_CONTRIBUTES_TO/slides/complex-ii-relations.svg
+    - SDH_GP2TERM_CONTRIBUTES_TO/slides/qualifier-audit.svg
 ---
 
 # Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)
+
+**Bottom line:** succinate dehydrogenase (respiratory complex II) is a
+four-subunit enzyme, and no single subunit carries out the whole
+succinate-to-quinone reaction (GO:0008177). GO has agreed
+(go-annotation#6414) that each subunit should link to that activity with
+`contributes_to` rather than `enables`. We audited the repo and found five
+reviews carrying GO:0008177: human SDHA, SDHB, SDHC, SDHD and one plant
+iron-sulfur-subunit ortholog (9POAL/NCGR_LOCUS67308). All five argue for
+`contributes_to` in prose. At the audit (2026-09-26) only SDHC and one SDHA
+row carried the structured `qualifier: contributes_to` field, and in both
+cases that qualifier comes from GOA itself, not from a curation edit.
+[PR #3223](https://github.com/ai4curation/ai-gene-review/pull/3223) (merged 2026-09-27) has since edited SDHB and SDHD: the GOA `enables`
+GO:0008177 rows (three on SDHB, one on SDHD) are now `MODIFY`, and each
+gene gains a single `NEW` GO:0008177 row carrying `qualifier: contributes_to` (IDA, PMID:37098072),
+the pairing the validator accepts. Still open: the SDHA
+GO:0000104 decision, the plant SDH2 ortholog (NCGR_LOCUS67308), and the
+PSEPK sdhA and sdhB reviews added later, which
+carry GO:0008177 rows with `enables` and are not yet in the table below
+(PSEPK sdhC and sdhD mention GO:0008177 only under
+`core_functions.contributes_to_molecular_function`, already modelled
+correctly, so a plain grep returns nine files, not seven).
+
+The fix matters because a qualifier that lives only in prose is invisible to
+any tool that reads the YAML, and SDHA needs a real judgement: its
+flavoprotein subunit can run the succinate half-reaction alone, so `enables`
+on the parent GO:0000104 may be correct for it.
 
 ## Overview
 
@@ -71,8 +103,8 @@ Checked `genes/**/*-ai-review.yaml` for GO:0008177 / GO:0000104:
 |---|---|---|---|---|
 | **SDHC** (human, P56378) | `genes/human/SDHC/SDHC-ai-review.yaml` | GO:0008177 IEA | Structured **`qualifier: contributes_to`** present; `action: ACCEPT` | ✅ Already aligned with #6414 — exemplar pattern |
 | **SDHA** (human, P31040) | `genes/human/SDHA/SDHA-ai-review.yaml` | GO:0008177 IBA | `action: MODIFY` → proposes GO:0000104; one `qualifier: contributes_to` present; prose discusses enables-vs-contributes | Re-check the SDHA/GO:0000104 nuance above; confirm GO:0008177 retains `contributes_to` |
-| **SDHB** (human, P21912) | `genes/human/SDHB/SDHB-ai-review.yaml` | GO:0008177 IEA + 2 IMP | Prose says qualifier "should ideally be `contributes_to`"; `action: ACCEPT`; **no structured `qualifier:` field** on any of the three GO:0008177 rows | Add structured `qualifier: contributes_to` to all three GO:0008177 entries |
-| **SDHD** (human, O14521) | `genes/human/SDHD/SDHD-ai-review.yaml` | GO:0008177 IEA (GOA qualifier `enables`) | Prose says qualifier "should be `contributes_to`"; `action: ACCEPT`; **no structured `qualifier:` field** | Add structured `qualifier: contributes_to` to the GO:0008177 entry |
+| **SDHB** (human, P21912) | `genes/human/SDHB/SDHB-ai-review.yaml` | GO:0008177 IEA + 2 IMP | At audit: prose-only, `action: ACCEPT`, no structured qualifier. Since [PR #3223](https://github.com/ai4curation/ai-gene-review/pull/3223): the three GOA `enables` rows are `MODIFY`, plus a paired `NEW` row with `qualifier: contributes_to` (IDA, PMID:37098072) | ✅ Done in #3223 (merged 2026-09-27); re-fetch once GOA reflects #6414 |
+| **SDHD** (human, O14521) | `genes/human/SDHD/SDHD-ai-review.yaml` | GO:0008177 IEA (GOA qualifier `enables`) | At audit: prose-only, `action: ACCEPT`, no structured qualifier. Since [PR #3223](https://github.com/ai4curation/ai-gene-review/pull/3223): the GOA `enables` row is `MODIFY`, plus a paired `NEW` row with `qualifier: contributes_to` (IDA, PMID:37098072) | ✅ Done in #3223 (merged 2026-09-27); re-fetch once GOA reflects #6414 |
 | **NCGR_LOCUS67308** (9POAL plant SDH2 iron-sulfur ortholog) | `genes/9POAL/NCGR_LOCUS67308/NCGR_LOCUS67308-ai-review.yaml` | GO:0008177 IEA | `action: MODIFY` → GO:0009055; uses core-function `contributes_to_molecular_function`; prose says "contributes to" | Decide explicitly whether to retain MODIFY → GO:0009055 or instead keep GO:0008177 with `qualifier: contributes_to` |
 
 > `genes/human/NDUFV1` also matched the GO:0008177 grep but only in
@@ -81,8 +113,8 @@ Checked `genes/**/*-ai-review.yaml` for GO:0008177 / GO:0000104:
 
 The substantive finding: the qualifier intent is discussed in prose
 in all five reviews but the **structured `qualifier: contributes_to`
-field is applied inconsistently** (present on SDHC and one SDHA
-entry; missing on SDHB and SDHD). The follow-up is a small,
+field was applied inconsistently** (present on SDHC and one SDHA
+entry; missing on SDHB and SDHD until #3223). The follow-up is a small,
 well-defined **consistency pass**, not new biology.
 
 ## Scope
@@ -105,11 +137,22 @@ have propagated to GOA: `just fetch-gene human SDHB` etc.
 
 ### Tier 1 — concrete consistency fixes (clear, low-judgement)
 
-1. **SDHB** (human, P21912) — add structured `qualifier:
-   contributes_to` to all three GO:0008177 existing-annotation entries
-   (one IEA plus two IMP rows); the prose already justifies it.
-2. **SDHD** (human, O14521) — same fix; GOA currently has `enables`,
-   prose already argues for `contributes_to`.
+1. **SDHB** (human, P21912) — ✅ done in [PR #3223](https://github.com/ai4curation/ai-gene-review/pull/3223) (merged 2026-09-27): the three GOA
+   `enables` GO:0008177 rows (one IEA, two IMP) are `MODIFY` with
+   GO:0008177 as the proposed replacement, and a `NEW` GO:0008177 row
+   carries `qualifier: contributes_to` (IDA, PMID:37098072).
+2. **SDHD** (human, O14521) — ✅ done in #3223, same pattern for its
+   one IEA row.
+
+Note: `qualifier` on an existing annotation mirrors the GOA row
+(`SDHC-goa.tsv` itself ships `contributes_to`; `SDHB-goa.tsv` and
+`SDHD-goa.tsv` ship `enables`), so on the SDHB/SDHD GOA rows the
+qualifier is written to match GOA (`enables`), not overridden;
+an override would be overwritten by `just fetch-gene`. The intended
+relation is recorded as a `MODIFY` on each `enables` row plus a paired
+`NEW` `contributes_to` row, which is the combination the validator
+accepts. Once GOA reflects #6414, re-fetch and the paired rows collapse
+into the GOA rows.
 
 ### Tier 2 — verify / nuance
 
@@ -138,20 +181,21 @@ have propagated to GOA: `just fetch-gene human SDHB` etc.
    qualifier changes for human SDH subunits may not yet have
    propagated. Doing the consistency pass now risks re-pulling GOA
    that still shows `enables`.
-2. When convenient (or when GOA reflects the upstream change),
-   execute the **Tier 1** consistency fixes on SDHB and SDHD: add
-   the structured `qualifier: contributes_to` to the GO:0008177
-   entry, matching the existing SDHC pattern, and re-run
-   `just validate human SDHB` / `just validate human SDHD`.
+2. **Tier 1** on SDHB and SDHD is done (#3223, `MODIFY` + paired
+   `NEW` `contributes_to` rows). When GOA reflects the upstream change,
+   re-fetch both and re-run `just validate human SDHB` /
+   `just validate human SDHD`.
 3. Do the **Tier 2** SDHA/9POAL checks, explicitly documenting the
-   SDHA GO:0000104 half-reaction nuance.
+   SDHA GO:0000104 half-reaction nuance, and bring the PSEPK sdhA and
+   sdhB reviews into scope.
 4. Do **not** create reviews for non-repo MOD orthologs — those are
    owned by the upstream groups.
 
 ## Priority
 
 **Low–Medium.** Small, well-bounded scope (4 genes needing a
-structured-field consistency edit; 1 already correct). No new
+structured-field consistency edit, of which SDHB and SDHD are done in
+#3223; 1 already correct). No new
 biology and no obsoletion — the substantive value is making the
 repo's gp2term qualifiers internally consistent and aligned with the
 upstream Complex II policy decision. Good low-risk follow-up once the
@@ -166,3 +210,12 @@ upstream qualifier change propagates.
   qualifier present on SDHC (and one SDHA entry) but missing on
   SDHB/SDHD — held as a tracking project with a defined Tier 1/Tier 2
   consistency pass. No gene reviews edited yet.
+- 2026-09-27 — SDHB and SDHD edited in
+  [PR #3223](https://github.com/ai4curation/ai-gene-review/pull/3223)
+  (merged 2026-09-27): GOA `enables` GO:0008177 rows → `MODIFY`, each gene gains a paired
+  `NEW` GO:0008177 `contributes_to` row (IDA, PMID:37098072). Open:
+  SDHA GO:0000104, 9POAL NCGR_LOCUS67308, PSEPK sdhA/sdhB.
+
+## Slides
+
+- [Slides](SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.html) (Marp source: [SDH_GP2TERM_CONTRIBUTES_TO-slides.md](SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.md)) — AI generated

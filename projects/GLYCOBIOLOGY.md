@@ -8,6 +8,23 @@ genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1, GALNT1, C1GALT1
 
 # Glycobiology Project
 
+**Bottom line:** glycosylation is the most common and diverse protein
+modification, built by large, sequence-similar families of glycosyltransferases
+and read by lectins, and GO annotation of these glycogenes is easy to get wrong
+at the level of specificity. We reviewed every existing GO annotation on 11
+human glycogenes (seven exemplars spanning transferase, lectin and CDG axes,
+then four mucin-type O-glycan initiation genes), indexed 17 glycobiology
+pathway modules whose 100 cited gene reviews add 2,735 more annotations, and
+built a CAZy-family-to-GO mapping (`cazy2go`) as the glyco analogue of
+`interpro2go`. Across the 376 exemplar annotations only 4 were removed, while
+105 were kept as non-core, 48 marked over-annotated and 36 modified: the
+problem is altitude and pleiotropy (generic parent MF or `membrane` terms,
+downstream physiology on single-sugar enzymes), not wrong functions, and the
+module cohort shows the same skew. The `cazy2go` work produced a 60-row
+safe-to-propagate set and 34 hand-endorsed family-level gaps in `interpro2go`,
+still awaiting curator sign-off. The GOA closure query that would size the full
+animal glycogene set has not been run.
+
 ## Overview
 
 Glycobiology studies the structure, biosynthesis, degradation, and biological
@@ -381,3 +398,7 @@ fuller candidate list; these are the already-curated anchors.
   (6) re-review the module cohort for `proposed_new_terms`, which it currently
   under-proposes (1 across 100 genes); (7) extend Phase 3 across the remaining GALNT paralogues and the
   core 3/core 4 and capping steps.
+
+## Slides
+
+- [Slides](GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.html) (Marp source: [GLYCOBIOLOGY-slides.md](GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.md)) — AI generated

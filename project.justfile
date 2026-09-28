@@ -1519,7 +1519,7 @@ stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
 # Build the complete disposable publication tree used by the Pages migration.
-build-pages: render-all render-projects render-prediction-eval validate-modules render-modules deploy-browser deploy-predictions-browser stage-pages
+build-pages: render-all render-projects render-prediction-eval render-modules deploy-browser deploy-predictions-browser deploy-propagation-browser stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
@@ -1534,6 +1534,31 @@ render-bioreason-eval:
 # Refresh the deterministic BioReason benchmark cohort, gene, quality, and metrics sidecars
 refresh-bioreason-benchmark-sidecars:
     uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
+
+# Bump the benchmark review snapshot to COMMIT (default origin/main), regenerate the
+# GO-GPT three-level overlap, BioReason sidecars and ProtNLM summary from that commit,
+# and print which headline numbers moved. Then update the pinned test numbers and the
+# "as of DATE (commit SHA)" prose, and review the diff.
+refresh-benchmark-snapshot commit="origin/main":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sha="$(git rev-parse --verify "{{commit}}^{commit}")"
+    date="$(git show -s --format=%cs "$sha")"
+    policy=projects/BIOREASON_COMPARISON/benchmark-policy.yaml
+    before="$(uv run python scripts/benchmark_snapshot_headlines.py)"
+    uv run python - "$policy" "$sha" "$date" <<'PY'
+    import re, sys
+    path, sha, date = sys.argv[1:]
+    text = open(path).read()
+    text = re.sub(r"(?m)^review_snapshot_commit: .*$", f"review_snapshot_commit: {sha}", text, count=1)
+    text = re.sub(r'(?m)^review_snapshot_date: .*$', f'review_snapshot_date: "{date}"', text, count=1)
+    open(path, "w").write(text)
+    PY
+    uv run python scripts/gogpt_compare_levels.py
+    uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
+    uv run python projects/PROTNLM_EVALUATION/build_benchmark_summary.py > /dev/null
+    echo "Review snapshot is now ${sha:0:10} (${date}). Headline changes:"
+    diff <(echo "$before") <(uv run python scripts/benchmark_snapshot_headlines.py) || true
 
 # Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
 check-bioreason-sft-reviews:
@@ -1861,6 +1886,20 @@ deploy-browser: export-annotations-json
 # Build the shared prediction-set and claim browser, including narrative reviews.
 deploy-predictions-browser:
     uv run python -m ai_gene_review.tools.build_prediction_browser
+
+# Refresh the donor cache for the homology-propagation browser (network:
+# UniProt donor identities, QuickGO donor annotations, GO is_a/part_of closure).
+[positional-arguments]
+refresh-propagation-sources *ARGS:
+    uv run python -m ai_gene_review.tools.refresh_propagation_sources "$@"
+
+# Build the homology-propagation browser (app/propagation/) from cached files.
+deploy-propagation-browser:
+    uv run python -m ai_gene_review.tools.build_propagation_browser
+
+# Regenerate projects/HOMOLOGY_PROPAGATION/propagation-stats.md.
+propagation-stats:
+    uv run python -m ai_gene_review.tools.propagation_stats
 
 # Serve the linkml-browser app locally  
 serve-browser:
