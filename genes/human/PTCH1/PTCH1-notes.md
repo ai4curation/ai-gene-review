@@ -86,7 +86,7 @@ This is exactly what `modules/hedgehog_signaling.yaml` encodes for the `patched_
 annoton (MF `GO:0140303 intramembrane lipid carrier activity`, process
 `GO:0045879 negative regulation of smoothened signaling pathway`, location plasma membrane),
 and what the GO-CAM models record: `gocams/index.tsv` gives PTCH1 the same MF/BP pair with
-location `GO:0098804 non-motile cilium membrane` in five human models
+location `GO:0098804 non-motile cilium membrane` in six human models
 (696022cd00000812, 696022cd00000908, 696022cd00001146, 696022cd00001204, 696022cd00001246,
 696022cd00001370). **No conflict with the module or the family reviews was found.**
 
