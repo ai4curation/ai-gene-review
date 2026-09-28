@@ -182,8 +182,9 @@ are therefore expected; existing human reviews still link normally.
 | ARMC9 | Definitive | INITIALIZED | Changes requested #3371; exact-head review remains unresolved; approval, CI and merge remain pending | `cmungall/clingen-armc9` | [#3371](https://github.com/ai4curation/ai-gene-review/pull/3371) |
 | ARL13B | Definitive | INITIALIZED | Held on exact-head review #3374; the remaining generic-binding policy request conflicts with the explicit user action definitions. No approval, CI completion or merge claimed. | `cmungall/clingen-arl13b` | [#3374](https://github.com/ai4curation/ai-gene-review/pull/3374) |
 | ARL2BP | Definitive | INITIALIZED | Review #3373 merged; current-head approval and required CI passed; all 33 scoped merged blobs verified | `cmungall/clingen-arl2bp` | [#3373](https://github.com/ai4curation/ai-gene-review/pull/3373) |
-| ARPC1B | Definitive | INITIALIZED | Changes requested in exact-head initial review #3378; approval, CI completion and merge remain separate | `cmungall/clingen-arpc1b` | [#3378](https://github.com/ai4curation/ai-gene-review/pull/3378) |
-| ARSA | Definitive | PREEXISTING_REVIEW_AUGMENTED | Initial review comment requests corrections #3376; no overall review decision, approval, CI completion or merge inferred from this comment | `cmungall/clingen-arsa` | [#3376](https://github.com/ai4curation/ai-gene-review/pull/3376) |
+| ARPC1B | Definitive | INITIALIZED | Review #3378 merged; current-head approval and required CI passed; all 27 scoped merged blobs verified | `cmungall/clingen-arpc1b` | [#3378](https://github.com/ai4curation/ai-gene-review/pull/3378) |
+| ARSA | Definitive | PREEXISTING_REVIEW_AUGMENTED | Review #3376 merged; current-head approval and required CI passed; all 31 scoped merged blobs verified | `cmungall/clingen-arsa` | [#3376](https://github.com/ai4curation/ai-gene-review/pull/3376) |
+| ARSB | Definitive | PREEXISTING_REVIEW_AUGMENTED | Review #3379 merged; current-head approval and required CI passed; all 30 scoped merged blobs verified | `cmungall/clingen-arsb` | [#3379](https://github.com/ai4curation/ai-gene-review/pull/3379) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -195,16 +196,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **105 of 2,876 genes
-are complete**; 106 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 114 dedicated full-audit PRs.
+signed publication/file checks and append-only receipt chains. **108 of 2,876 genes
+are complete**; 109 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 115 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ARL2BP is complete after approval at its exact published head, successful required CI and verified merged files. ARSA (#3376) augments a preexisting review with all original source assertions; ARPC1B (#3378) is a newly published initial audit. Their later scientific followups are outside this fixed cut. Source49 imported one exact normal PMID cache without overwrite; import alone does not complete a biological review. Source50, ARSB and later publications are excluded. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved. Earlier policy-only holds remain historical observations, not approval or merge claims. The archived first ARSA review comment requests corrections; no unsaved overall review decision is inferred from it. ARPC1B has a CHANGES_REQUESTED review on the exact initial published head. Both remain incomplete at this cut.
+ARSA (#3376), ARSB (#3379) and ARPC1B (#3378) are complete after approval at each exact published head, successful required CI and verified merged file scope. The checkpoint preserves both ARSA followups, the ARPC1B followup, and the initial ARSB audit plus its followup as five distinct published updates. ARSB is the only new initial audit in this cut. Earlier first-review comments remain historical. Newer source and seed imports, including Source50–54 and Seed13–14, are excluded from this finite checkpoint. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved. Earlier policy-only holds remain historical observations, not approval or merge claims.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -640,3 +641,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-28 checkpoint68: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARID1B. 104/2,876 complete; 105 original merges; 1 pending source follow-ups; 112 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-28 checkpoint69: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARL2BP. 105/2,876 complete; 106 original merges; 1 pending source follow-ups; 114 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-28 checkpoint70: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARSA, ARSB, ARPC1B. 108/2,876 complete; 109 original merges; 1 pending source follow-ups; 115 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
