@@ -131,6 +131,10 @@ NOT known (genuine knowledge gaps):
 - C: mitochondrial inner membrane (ISS, PMID:10930523) → ACCEPT (core; strong homology + MCF membrane protein).
 - C: mitochondrial inner membrane (IEA, GO_REF:0000044 SubCell) → ACCEPT (consistent, redundant with ISS).
 - C: mitochondrion (IBA) → ACCEPT as non-core (correct but less specific than inner membrane).
+- 2026-09-28 IBA re-review: the broad mitochondrion IBA at PTN002909487 was
+  retained as a safe non-core mitochondrial-carrier localization, and the existing
+  structured over-annotation calls for the PTN000640552 citrate rows were retained.
+  A newer yeast SLC25 review, PMID:40836422, still lists Mrx20/YFR045W as unknown.
 - P: transmembrane transport (IEA InterPro) → ACCEPT (family-level; correct general process).
 - P: mitochondrial transport (ISS, PMID:10930523) → ACCEPT/KEEP (general, defensible).
 - F: citrate secondary active transmembrane transporter activity (IBA) → MARK_AS_OVER_ANNOTATED
