@@ -28,15 +28,14 @@ What is removed is the PAINT/keyword inference of canonical JHDM1-type activity,
 1. **GO:0005515** (protein binding, IPI with Cdt2) → GO:0031625 ubiquitin protein ligase binding
 
 ### Annotations Kept as Non-core (2 annotations)
-- **GO:0006325** (chromatin organization, IEA): correct but the most generic chromatin process term; the specific processes are GO:0033696 (seven ACCEPTed rows) and GO:0034728 nucleosome organization (NEW).
-- **GO:0006338** (chromatin remodeling, IBA): correct but general. Epe1 already carries the more specific GO:0033696 heterochromatin boundary formation on seven ACCEPTed experimental rows, so no replacement is proposed.
+- **GO:0006325** (chromatin organization, IEA): correct but generic. The specific process is GO:0033696 heterochromatin boundary formation (seven ACCEPTed experimental rows), which lies below it.
+- **GO:0006338** (chromatin remodeling, IBA): correct but generic, for the same reason: GO:0033696 also lies below it, so no replacement is proposed. Epe1's role in heterochromatic nucleosome turnover is described in core function 4 without a process term.
 
-### Proposed New Annotations (5 NEW rows)
+### Proposed New Annotations (4 NEW rows)
 1. **GO:0070087** chromo shadow domain binding (IPI, PMID:32195666): recombinant Epe1 binds Swi6, reduced by the Swi6 CSD mutation L315E; replaces the earlier GO:0140030, whose definition requires the modification on the bound protein itself
 2. **GO:0035035** histone acetyltransferase binding (IPI, PMID:30573453): SAGA co-purifies with Epe1 and Gcn5 co-immunoprecipitates with overexpressed Epe1
 3. **GO:0030674** protein-macromolecule adaptor activity (IMP, PMID:24013502): Epe1 binds Bdf2 and is required for its recruitment to IRC boundaries
 4. **GO:0042393** histone binding (IDA, PMID:32195666): purified Epe1 prefers H3K9me3 peptides and H3K9-methylated histones
-5. **GO:0034728** nucleosome organization (IMP, PMID:34731638): heterochromatic histone turnover is reduced when epe1 is deleted; the mechanism is not known
 
 Protein acetylation (GO:0006473) is not proposed: Gcn5 in SAGA performs the acetylation, and Epe1's part is captured by GO:0035035. Negative regulation of heterochromatin formation (GO:0031452) is not proposed either. PomBase curated Epe1's anti-silencing role as seven experimental GO:0033696 heterochromatin boundary formation rows and did not add GO:0031452, which we read as a curation convention rather than a gap. The tension with SGD's IMP annotation of DOT1 to GO:0031452 is raised as a suggested question for PomBase, as is the NOT GO:0031507 row, since GO:0031507 is an ancestor of GO:0033696.
 
@@ -67,9 +66,9 @@ Predominantly cellular component and biological process annotations that accurat
 
 ### 4. Nucleosome Turnover
 - **Molecular Function**: Histone binding (GO:0042393)
-- **Process**: Nucleosome organization (GO:0034728)
-- **Description**: Promotes nucleosome turnover at heterochromatin to destabilize silencing marks
-- **Knowledge gap**: Histone binding by Epe1 is directly shown (purified Epe1 preferentially binds H3K9me3 peptides and H3K9-methylated histones in vitro), but how Epe1 increases nucleosome turnover is not known, and no study has shown that this histone binding is the activity that drives turnover. The more specific GO:0062072 histone H3K9me2/3 reader activity is not used for this core function because no study links Epe1's H3K9me binding to the turnover outcome.
+- **Process**: none asserted (see description and suggested questions)
+- **Description**: Promotes nucleosome turnover at heterochromatin to destabilize silencing marks. Heterochromatic histone turnover is reduced when epe1 is deleted, but the chaperones and remodelers that perform nucleosome disassembly and reassembly (such as FACT) are other proteins, and Epe1's route to turnover is unknown, so no process term is asserted for this role.
+- **Knowledge gap**: Histone binding by Epe1 is directly shown (purified Epe1 preferentially binds H3K9me3 peptides and H3K9-methylated histones in vitro), but how Epe1 increases nucleosome turnover is not known, and no study has shown that this histone binding is the activity that drives turnover. The more specific GO:0062072 histone H3K9me2/3 reader activity is not used for this core function because no study links Epe1's H3K9me binding to the turnover outcome. Mechanism linking Epe1's H3K9me-histone binding to nucleosome turnover in heterochromatin, and how an upstream promoter of heterochromatic histone turnover should be represented in GO. GO nucleosome organization (GO:0034728) is carried by the chaperones and remodelers that do the work, and positive regulation of histone exchange (GO:1900051) is obsolete.
 
 ### 5. Transcription of Heterochromatic Repeats
 - **Molecular Function**: Transcription coregulator activity (GO:0003712)
