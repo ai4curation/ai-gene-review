@@ -2,9 +2,38 @@
 title: "Phosphorylation Annotation Refactor Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [human, mouse]
+sidecars:
+  slide_figures:
+    - PHOSPHORYLATION_REFACTOR/slides/phospho-results.svg
+    - PHOSPHORYLATION_REFACTOR/slides/who-does-the-step.svg
 ---
 
 # Phosphorylation Annotation Refactor Project
+
+**Bottom line:** GO often annotates proteins to "protein phosphorylation"
+(GO:0006468) and its children when they are the substrate, regulator or even
+the opposite enzyme of a kinase. We queried nine model organism databases for
+genes carrying a phosphorylation process term but no protein kinase activity
+(GO:0004672), then reviewed every flagged row in the mouse and human sets
+gene by gene. The repo now holds reviews for 60 of these genes (15 mouse, 45
+human) covering 68 phosphorylation-branch rows: 34 REMOVE, 26 MODIFY (mostly
+to GO:0045859 regulation of protein kinase activity or a substrate-specific
+term), 4 UNDECIDED, 2 MARK_AS_OVER_ANNOTATED, 1 KEEP_AS_NON_CORE and 1 ACCEPT.
+The errors fall into a small taxonomy: substrates annotated as enzymes,
+ligands and cyclins that only regulate a kinase, lipid and sugar kinases on the
+protein term, and phosphatases annotated to the reaction they reverse. SGD,
+PomBase and WormBase had no such rows; the human and mouse sets had the most,
+and RGD shows the same errors copied in by ISS. The per-gene status lists
+below predate some later edits: in the YAMLs Ang2 and BIRC6 are now UNDECIDED,
+ADM2 is REMOVE, Egf and Ednra are MARK_AS_OVER_ANNOTATED and Drd1 is
+KEEP_AS_NON_CORE. The fly, zebrafish, Arabidopsis and rat findings are
+query-level recommendations with no gene reviews behind them.
+
+We did this because the set difference between "phosphorylation process" and
+"kinase activity" is a cheap, precise filter for a known class of
+over-annotation, and the recurring error types generalize to other process
+terms where the substrate is credited with the step.
 
 ## Overview
 
@@ -1980,3 +2009,7 @@ mouse/human. The errors mirror those found in the source databases (MGI, GOA).
 - **GOOD**: FlyBase (~3 errors), TAIR (~7-10 confirmed)
 - **MODERATE**: RGD (11 errors, mostly ISS transfers)
 - **NEEDS REVIEW**: MGI (~20 errors), GOA (~45 errors)
+
+## Slides
+
+- [Slides](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html) (Marp source: [PHOSPHORYLATION_REFACTOR-slides.md](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.md)) — AI generated

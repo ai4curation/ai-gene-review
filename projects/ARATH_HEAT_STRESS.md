@@ -3,7 +3,7 @@ title: "Arabidopsis Heat Stress Gene Curation Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [ARATH]
-genes: [AT4G17750, AT5G16820, AT1G32330, AT3G02990, AT2G26150, AT1G74310, AT5G02500, AT5G52640, AT5G05410, AT5G03720]
+genes: [AT4G17750, AT5G16820, AT1G32330, AT3G02990, AT2G26150, AT1G74310, AT5G02500, AT5G52640, DREB2A, AT5G03720]
 ---
 
 # Arabidopsis Heat Stress Gene Curation Project
@@ -13,17 +13,18 @@ which the HSFA1 master regulators switch on amplifiers (HSFA2, DREB2A, HSFA3)
 and the chaperones (HSP101, HSC70-1, HSP90.1) that protect proteins and feed
 back on the HSFs. We reviewed every existing GO annotation on these 10 genes,
 which live in the repo under their locus folders (e.g. `genes/ARATH/AT4G17750/`
-for HSFA1A). All 10 reviews are done: 266 annotations were assessed, with 183
-accepted, 36 kept as non-core, 24 modified, 12 marked over-annotated, 9 removed
-and 2 left undecided, plus 10 new annotations proposed. The main corrections
+for HSFA1A; DREB2A is under `genes/ARATH/DREB2A/`). All 10 reviews are done:
+268 annotations were assessed, with 184 accepted, 44 kept as non-core, 22
+modified, 5 marked over-annotated, 11 removed and 2 left undecided, plus 7 new
+annotations proposed. The main corrections
 were replacing `protein binding` rows with specific partner terms (heat shock
 protein binding, Hsp90 binding, transcription factor binding), removing
 chloroplast localizations for the cytosolic chaperones HSP101 and HSC70-1, and
-sharpening the HSFA3 and DREB2A process and DNA-binding terms. The per-gene
-counts in the tables below are taken from the current review files. The
-repo also holds a duplicate DREB2A review under a symbol folder
-(`genes/ARATH/DREB2A/`) alongside the locus folder (`genes/ARATH/AT5G05410/`)
-counted here; the two still need to be reconciled.
+sharpening the HSFA3 process term and the DREB2A transcription-factor and
+partner-binding terms. The per-gene counts in the tables below are taken from
+the current review files. The duplicate DREB2A review that used to sit in a
+locus folder (`genes/ARATH/AT5G05410/`) has been merged into
+`genes/ARATH/DREB2A/` (#3231), and DREB2A is counted from that merged file.
 
 We did this because the heat stress network is a well-studied regulatory
 hierarchy with strong genetic evidence, which makes it a good test of whether
@@ -61,7 +62,7 @@ This document tracks the curation of 10 key heat stress response genes in Arabid
 
 | Gene Symbol | Locus | Status | UniProt Fetched | GOA Fetched | Deep Research | Review Started | Review Completed | Notes |
 |-------------|-------|--------|-----------------|-------------|---------------|----------------|------------------|-------|
-| DREB2A | AT5G05410 | ✅ COMPLETE | ✅ | ✅ (39 annots) | ✅ (37 cites) | ✅ | ✅ | Cross-stress integrator, 18 ACCEPT, 10 MODIFY, 7 OVER-ANNOTATED, 4 NON-CORE, 3 NEW |
+| DREB2A | AT5G05410 | ✅ COMPLETE | ✅ | ✅ (41 annots) | ✅ (37 cites) | ✅ | ✅ | Cross-stress integrator, 19 ACCEPT, 12 NON-CORE, 8 MODIFY, 2 REMOVE |
 | HSFA3 | AT5G03720 | ✅ COMPLETE | ✅ | ✅ (15 annots) | ✅ (36 cites) | ✅ | ✅ | Memory specialist (forgetter3), 12 ACCEPT, 3 MODIFY, 1 NEW |
 | HSFA1E | AT3G02990 | ✅ COMPLETE | ✅ | ✅ (13 annots) | ✅ (38 cites) | ✅ | ✅ | Osmotic/salt specialist, 12 ACCEPT, 1 NON-CORE |
 
@@ -157,10 +158,10 @@ Ensure annotations capture:
 8. ✅ **HSP90.1** - 33 annotations reviewed (24 ACCEPT, 4 REMOVE, 2 MODIFY, 2 UNDECIDED, 1 NON-CORE) + 2 NEW
 
 ### TIER 3 - Key Transcriptional Integrators (COMPLETE)
-9. ✅ **DREB2A** - 39 annotations reviewed (18 ACCEPT, 10 MODIFY, 7 OVER-ANNOTATED, 4 NON-CORE) + 3 NEW
+9. ✅ **DREB2A** - 41 annotations reviewed (19 ACCEPT, 12 NON-CORE, 8 MODIFY, 2 REMOVE)
 10. ✅ **HSFA3** - 15 annotations reviewed (12 ACCEPT, 3 MODIFY) + 1 NEW
 
-**Total Annotations Reviewed:** 266 across all 10 genes (183 ACCEPT, 36 NON-CORE, 24 MODIFY, 12 OVER-ANNOTATED, 9 REMOVE, 2 UNDECIDED) + 10 NEW
+**Total Annotations Reviewed:** 268 across all 10 genes (184 ACCEPT, 44 NON-CORE, 22 MODIFY, 5 OVER-ANNOTATED, 11 REMOVE, 2 UNDECIDED) + 7 NEW
 **Total Deep Research Citations:** 435 citations
 
 ## Key Achievements
@@ -186,7 +187,7 @@ All four HSFA1 family members fully characterized with functional distinctions:
 - **HSFA1E**: Osmotic/salt specialist (subfunctionalization)
 
 **Summary of Fetched Data:**
-- Total GO annotations: 266 across all 10 genes
+- Total GO annotations: 268 across all 10 genes
 - Total publications cached: 71 unique PMIDs
 - PANTHER families identified: 5 families
   - PTHR10015: Heat Shock Transcription Factor (HSFA1A/B/D/E, HSFA2, HSFA3)

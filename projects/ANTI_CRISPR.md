@@ -1,10 +1,26 @@
 ---
 title: "Anti-CRISPR Proteins Project"
-maturity: COMPLETE
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [BPZF4]
+genes: [AcrF8, ACA2]
 ---
 
 # Anti-CRISPR Proteins Project
+
+**Bottom line:** anti-CRISPR (Acr) proteins are small phage proteins that switch
+off bacterial CRISPR-Cas immunity, and their GO annotations lag far behind a
+detailed structural literature. We reviewed two genes from Pectobacterium phage
+ZF40: the Type I-F inhibitor AcrF8 and its Aca2 repressor (reviewed as
+`genes/BPZF4/ACA2`, which the pending list below predates). For AcrF8 the
+generic IEA term `GO:0052170` (symbiont-mediated suppression of host innate immune response) was
+modified to `GO:0098672` (symbiont-mediated suppression of host CRISPR-cas system), and
+`GO:0043021` ribonucleoprotein complex binding was added as its core function
+from the cryo-EM structure (PMID:32170016). We also proposed a new term,
+"CRISPR RNA binding anti-CRISPR activity", because AcrF8 contacts the crRNA as
+well as the Cas7f backbone and no current term captures that. The wider Acr
+families (AcrIF, AcrIE, AcrIIA) have not been started, so the project is a
+worked example rather than a family-wide review.
 
 ## Overview
 

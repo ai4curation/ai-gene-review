@@ -140,7 +140,13 @@ def write_report(out_dir: str, files: int, flags: list[dict], register: list[dic
     ours = sum(1 for f in flags if f["correctness"] in DEFECT_FLAGS and f["source"] != "GOA")
     wrong = [r for r in register if r["worst_flag"] == "WRONG_IDENTIFIER"]
     miscited = [r for r in register if r["worst_flag"] == "MISCITED"]
-    multi = [r for r in wrong if r["n_flagged_genes"] > 1]
+    # Multi-gene means WRONG_IDENTIFIER on more than one gene, not any defect flag:
+    # a citation can be WRONG_IDENTIFIER on one gene and MISCITED on others.
+    wrong_id_genes: dict[str, set[str]] = defaultdict(set)
+    for f in flags:
+        if f["correctness"] == "WRONG_IDENTIFIER":
+            wrong_id_genes[f["citation"]].add(f"{f['species']}/{f['gene']}")
+    multi = [r for r in wrong if len(wrong_id_genes[r["citation"]]) > 1]
     spreading = [r for r in wrong if r["n_unflagged_users"] > 0]
 
     lines = [
@@ -181,7 +187,7 @@ def write_report(out_dir: str, files: int, flags: list[dict], register: list[dic
             "|---|---|",
         ]
         for r in multi:
-            lines.append(f"| `{r['citation']}` | {r['flagged_genes'].replace(';', ', ')} |")
+            lines.append(f"| `{r['citation']}` | {', '.join(sorted(wrong_id_genes[r['citation']]))} |")
         lines.append("")
 
         lines += [

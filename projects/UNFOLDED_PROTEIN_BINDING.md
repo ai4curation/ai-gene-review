@@ -8,6 +8,28 @@ sidecars:
 ---
 # Unfolded Protein Binding Annotation Review
 
+**Bottom line:** `GO:0051082` unfolded protein binding described what a
+chaperone sticks to rather than what it does, so it was applied alike to
+ATP-driven foldases, passive holdases, co-chaperones, and E3 ligases that
+merely recognise misfolded substrates. We audited every experimental
+annotation to it and to `GO:0031249` denatured protein binding: 148 genes
+across 17 species, 5,529 annotation decisions, none left pending, with each
+gene reassigned to a mechanism-specific molecular function. Of the 33 human
+genes, 16 became `GO:0044183` protein folding chaperone, 2 took other specific
+terms, 5 were marked over-annotated, 3 were removed, and 7 could not be moved
+at all. Both source terms were subsequently obsoleted
+([go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962)),
+but the general holdase term the audit asked for was never created, so those 7
+in-situ holdases (CRYAA, CRYAB, HSPB6, CLU, SCG5, DNAJB6, DNAJB8, plus HSPH1)
+now sit on an obsolete term with no correct replacement.
+
+That gap is the live item. `GO:0140309` was written for carrier-holdases such
+as the small TIMs and still requires escorting the client to an acceptor or a
+location, which a crystallin does not do, so it cannot absorb them. The
+mechanism classes and decision rules below are the reusable part of the work;
+the stranded genes need an upstream ontology decision, not gene-by-gene
+patching.
+
 > **⚠️ STATUS UPDATE (2026-07-25) — the obsoletion went through and the holdase NTR was never created.**
 > Verified live against QuickGO and OLS while reviewing human/CRYAA:
 >
@@ -23,6 +45,10 @@ sidecars:
 > [go-ontology#30962](https://github.com/geneontology/go-ontology/issues/30962) /
 > [#30552](https://github.com/geneontology/go-ontology/issues/30552)) rather than resolving gene-by-gene.
 > Until then these genes retain GO:0051082 as an interim annotation with `proposed_replacement_terms: [id: NTR]`.
+>
+> **Superseded pattern (2026-09):** the "retain GO:0051082 until NTR created" advice in this page is being retired.
+> Holdase genes now record the missing term in `core_functions[].proposed_molecular_function` ("holdase chaperone activity",
+> schema PR #3254) instead of keeping the obsolete id as a core MF; see PR #3261 (ARATH/ECOLI/PSEPK/RAMVA/SULAC) and #3260.
 >
 > **One detail below has drifted:** this page states that `holdase` is a **BROAD** synonym on GO:0140309.
 > [QuickGO](https://www.ebi.ac.uk/QuickGO/term/GO:0140309), rechecked 2026-08-29, reports all three synonyms (`holdase`, `unfolded protein carrier activity`,

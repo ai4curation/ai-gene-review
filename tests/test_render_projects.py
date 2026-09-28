@@ -1219,6 +1219,21 @@ def test_projects_table_has_collection_filter(tmp_path):
     assert 'data-collections="HOMOLOGY"' in html
 
 
+@pytest.mark.parametrize(
+    "tag",
+    ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "EVALUATION", "ML_PREDICTIONS", "OBSOLETION"],
+)
+def test_projects_table_offers_every_tag_as_filter_chip(tmp_path, tag):
+    """Each controlled-vocabulary tag in use becomes a Tags filter chip."""
+    from ai_gene_review.render_projects import render_projects_table
+
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "FOO.md").write_text(f"---\ntitle: Foo\ntags: [{tag}]\n---\n# Foo\n")
+    html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
+    assert f'<span class="chip" data-value="{tag}">{tag}</span>' in html
+
+
 def test_linked_deck_pulls_in_its_images(tmp_path):
     """A deck linked from a project page deploys with the figures it references.
 
@@ -1252,3 +1267,30 @@ def test_linked_deck_pulls_in_its_images(tmp_path):
     ]
     assert (out / "diagram.svg").read_text() == "<svg/>"
     assert not (tmp_path / "pages" / "outside.png").exists()
+
+
+def test_project_provider_artifacts_distinguish_unarchived_from_broken_links(tmp_path):
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    report = projects / "report.md"
+    report.write_text("""---
+title: Provider report
+artifacts:
+- path: final_report.pdf
+  media_type: application/pdf
+- path: archived.pdf
+  media_type: application/pdf
+---
+[Missing provider export](final_report.pdf)
+[Archived export](archived.pdf)
+[Ordinary broken link](typo.pdf)
+""")
+    (projects / "archived.pdf").write_bytes(b"archived report")
+    output, _ = render_project(report, tmp_path / "pages/projects",
+                               genes_dir=tmp_path / "genes", projects_dir=projects)
+    text = output.read_text()
+    assert 'Missing provider export (not archived)' in text
+    assert 'data-unavailable-artifact="final_report.pdf"' in text
+    assert 'href="final_report.pdf"' not in text
+    assert 'href="archived.pdf"' in text
+    assert 'href="typo.pdf"' in text

@@ -1,9 +1,9 @@
 ---
 title: "BioReason-Pro Comparison Project"
 collections: [FUNCTION_PREDICTION]
-maturity: IN_PROGRESS
-tags: [PIPELINE, FLAGSHIP]
-species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, DANRE]
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
+species: [human, mouse, rat, worm, yeast, SCHPO, DROME, ARATH, ECOLI, BACSU, PSEPK, 9CAUD, AGKCO, ANOGA]
 sidecars:
   genes: BIOREASON_COMPARISON/genes.csv
   argo139_species_counts: BIOREASON_COMPARISON/argo139-species-counts.csv
@@ -18,14 +18,29 @@ sidecars:
 ---
 # BioReason-Pro Comparison Project
 
+**Bottom line:** BioReason-Pro (Fallahpour et al. 2026,
+[doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) is a
+reasoning LLM that turns GO-GPT term predictions, InterPro domains and organism
+context into a written functional summary. We collected its web reports for 139
+genes from 14 organisms (ARGO139) and had an agent score each summary against
+our local gene review, then assessed all 955 SFT GO-term predictions for a 95-gene
+subset (ARGO95) with the COR/CNN/LSP/UNC/PLI/NPI/REP taxonomy. On the 138-gene
+performance set (the wrong-input `csr-1` export is excluded) mean correctness is
+4.0/5 but completeness only 2.9/5, and most summaries restate what InterPro domain
+labels already say. The model fails systematically on localization, pseudoenzymes,
+paralogs and organism-specific biology. Of the 955 SFT terms, 682 (71%) were correct
+but already known and only 23 were correct novel predictions. A blinded second rater
+on 20 genes agreed closely on correctness (weighted kappa 0.95) and less well on completeness (kappa 0.74). The GO-GPT leaf-term
+review of ARGO139 is still pending (137 of 139 files are `DRAFT`).
+
+We did this to answer the question a database curator actually faces: are a new
+method's predictions good enough to import, and where do they break? The work was
+presented at ISMB 2026 and is written up as a manuscript.
+
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
 **[Browse BioReason comparison predictions](../app/predictions/index.html?projects=BIOREASON_COMPARISON)** — filter SFT and GO-GPT term predictions alongside RL narrative reviews, with each assessment scheme kept explicit.
 
-
-Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against agent-adjudicated local AIGR gene reviews.
-
-**Bottom line:** across the ARGO139 collected cohort, BioReason-Pro's functional summaries mostly restate what InterPro domain labels already say. The model-performance denominator excludes the wrong-input `csr-1` case (n=138) and separately flags seven sequence-truncated cases. It adds real value mainly for proteins with distinctive multi-domain architectures, and fails systematically on localization, pseudoenzymes, paralogs, and organism-specific biology.
 
 📄 **[Read the manuscript (PDF)](BIOREASON_COMPARISON/article/manuscript.pdf)** &nbsp;·&nbsp; 🖥 **[View the slide deck](BIOREASON_COMPARISON/article/slides.html)** &nbsp;·&nbsp; 📝 [Abstract](BIOREASON_COMPARISON/article/abstract.md)
 
@@ -119,7 +134,9 @@ Correctness is scored only on claims the model makes; missing biology lowers com
 
 ARGO139 names the **collected cohort** (139 exports), not an unconditional model-performance denominator. The current policy excludes `worm/csr-1` from model scoring because the export was generated from nhr-47/Q17370 rather than CSR-1. Seven otherwise retained exports are exact 2,000-residue prefixes of longer UniProt sequences (`Dscam1`, `BRCA2`, `HTT`, `LRRK2`, human and mouse `NOTCH1`, and `TOR1`) and are stratified as `TRUNCATED_AT_MODEL_LIMIT`.
 
-The local AIGR references are also not represented as independently expert-signed ground truth: as of the current refresh, 79 are `COMPLETE`, 45 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. `benchmark-quality.csv` records this status plus export/accession, sequence lengths, GOA dates, raw-export checksums, and separate counts/checksums for the InterPro and upstream GO-GPT sections. All 139 exports contain the GO-GPT section; three lack an InterPro section (`Shu1`, `atg16`, and `pgl-1`). Publication-facing analyses must disclose the reference-status and input-quality strata.
+The local AIGR references are also not represented as independently expert-signed ground truth: as of the review snapshot (2026-09-27, commit `c7551cb3db`), 79 are `COMPLETE`, 45 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. `benchmark-quality.csv` records this status plus export/accession, sequence lengths, GOA dates, raw-export checksums, and separate counts/checksums for the InterPro and upstream GO-GPT sections. All 139 exports contain the GO-GPT section; three lack an InterPro section (`Shu1`, `atg16`, and `pgl-1`). Publication-facing analyses must disclose the reference-status and input-quality strata.
+
+**Dated snapshot.** Numbers derived from the live AIGR reviews (the GO-GPT three-level overlap, the sidecars' reference statuses and checksums, and the [ProtNLM cross-cohort summary](PROTNLM_EVALUATION/benchmark-results.md)) are computed from the repository at `review_snapshot_commit` in `benchmark-policy.yaml`, not from the working tree, so ordinary curation does not change them. The frozen ARGO95/ARGO139 GOA inputs stay pinned separately at `baseline_commit`. A refresh is deliberate: `just refresh-benchmark-snapshot [COMMIT]` (default `origin/main`) bumps the snapshot, regenerates every derived file, and prints which headline numbers moved; then update the pinned test numbers and the "as of" dates, and review the diff.
 
 The rescored axes remain associated (Pearson 0.688; Spearman 0.617), so they should not be interpreted as statistically independent merely because the rubric defines different concepts. A [blinded second rater](BIOREASON_COMPARISON/second-review-protocol.md) scored a deterministic 20-gene subset balanced across first-rater correctness strata. Correctness agreement was 80% exact and 100% within one point (quadratic-weighted kappa 0.950); completeness agreement was 55% exact and 95% within one point (kappa 0.744). Raw ratings and [generated agreement metrics](BIOREASON_COMPARISON/second-review-agreement.json) are committed.
 
@@ -214,7 +231,7 @@ term) leave no discordant term to tag and are recorded only in the RL narrative 
 BioReason assumes catalytic activity from conserved domains without checking whether catalytic residues are intact. This is a systematic failure for proteins that retain an ancestral fold but have lost enzymatic activity.
 
 **Examples:**
-- **Epe1** (SCHPO, 1/5): BioReason claims *"JmjC catalytic center dictates a lysine demethylase mechanism"* but Epe1 has degenerate active site residues (HVD instead of HXD, Tyr307 instead of catalytic His). No detectable demethylase activity in mass spec assays. Functions as anti-silencing factor through HP1/Swi6 binding.
+- **Epe1** (SCHPO, 1/5): BioReason claims *"JmjC catalytic center dictates a lysine demethylase mechanism"* but Epe1 has a degenerate Fe(II)-binding triad (H297-E299-Y370, with Tyr370 in place of the third iron-ligand His). No detectable demethylase activity in mass spec assays. Functions as anti-silencing factor through HP1/Swi6 binding.
 - **cts2** (SCHPO, 2/5): Called an active chitinase, but the protein lacks the essential catalytic glutamate and is likely catalytically dead.
 - **pmp20** (SCHPO, 1/5): Predicted as an active peroxidase, but this 1-Cys family member was directly assayed as peroxidase-inactive and functions as a molecular chaperone; absence of a resolving cysteine is not itself the mechanistic defect.
 
