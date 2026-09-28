@@ -204,9 +204,12 @@ These pairs come from the background research.
   and `scripts/compare_pair.py`
 - [x] Batch 1, literature-supported pairs, all reviewed with pair pages:
   cryaba/cryabb, mitfa/mitfb, pax6a/pax6b, sox9a/sox9b, elna/elnb
-- [ ] Audit UniProt accession choice for each gene: ZFIN experimental annotations
-  can sit on a different (RefSeq-derived TrEMBL) accession than the one reviewed
-  (found for pax6a)
+- [x] Accession audit (`scripts/accession_audit.py`, results in
+  [accession_audit.md](DANRE_DUPLICATION/accession_audit.md)). 8 of 10 genes are on the
+  accession holding all their experimental GOA rows. pax6a is missing 9 ZFIN
+  experimental rows and pax6b 3 UniProt rows, which sit on sibling accessions.
+- [ ] Decide how to handle genes whose GOA annotations are split across UniProt
+  accessions (option: let `fetch-gene` merge GOA rows from secondary accessions)
 - [ ] Batch 2: further literature-supported pairs (e.g. vcla/vclb, vegfaa/vegfab,
   hbegfa/hbegfb, gpr22a/gpr22b, grk7a/grk7b), then a random sample of
   `TGD_tree` 1:1 pairs
@@ -256,3 +259,17 @@ These pairs come from the background research.
 - **Deep research.** falcon ran for mitfa, sox9a/b and elna/b. It failed for mitfb
   and pax6a/b (Edison 402 Payment Required; OpenAI key invalid), so those
   literature searches were done by hand, as recorded in the gene notes.
+
+## 2026-09-28
+
+- **Accession audit.** For zebrafish, GOA spreads a gene's annotations over several
+  UniProt entries:
+  - IBA and UniProt-curated rows go to the reference-proteome or Swiss-Prot entry.
+  - ZFIN's experimental rows go to RefSeq-derived TrEMBL entries.
+  - For pax6a these do not overlap. P26630 has the IBAs and UniProt's IMPs;
+    A0A8M9P6C7 (identical sequence) has ZFIN's 12 experimental rows. Switching
+    accession would only move the gap, so pax6a stays on P26630. The missing rows
+    are listed in the audit and on the pax6 pair page.
+  - The 8 other genes are unaffected.
+  - Batch 2 genes are audited before fetching, and each is fetched on the accession
+    carrying the most experimental rows.

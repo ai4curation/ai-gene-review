@@ -250,6 +250,13 @@ annotations. To restore the symmetry the genetic evidence supports, I added epit
 development and neural crest cell migration to pax6a as NEW. Both rest on evidence that
 involves both copies.
 
+The project-wide [accession audit](../../accession_audit.md) quantifies this. Nine ZFIN
+experimental pax6a rows are on the RefSeq-derived entries (A0A8M9P6C7, whose sequence is
+identical to P26630, and others) and are not in the pax6a review. Conversely, the IBA
+annotations and UniProt's IMP rows from PMID:20152834 exist only on P26630. For pax6b, the same
+three UniProt IMP rows from PMID:20152834 sit only on the legacy entry Q9YHZ8. No single
+accession carries the full GOA set for either gene.
+
 **Asymmetries from which copy a paper studied.**
 
 - Eye, lens, cornea and lens-morphogenesis IMPs are on pax6b only, because the single-mutant
