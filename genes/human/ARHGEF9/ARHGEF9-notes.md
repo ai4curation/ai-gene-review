@@ -44,3 +44,44 @@ The positive control in [PMID:25678704, Figure 1D caption](https://pubmed.ncbi.n
 ## Completion checks
 
 The complete review passes the gene validator with no gene advisories and renders successfully. The source audit preserves all 28 original assertions and three products; 43 literal quotation instances, 44 availability flags and seven PMID titles match their actual sources. All five Source41 records match the exact recovered archive, and original raw inputs and existing caches remain unchanged. Final independent annotation consultation is recorded separately.
+
+
+## Reviewer follow-up: interaction evidence and CDC42 specificity
+
+The ten partner-specific protein-binding assertions are corroborated by the
+unchanged UniProt INTERACTION block, which lists all ten partners with three
+experiments each. This is positive curated evidence, not evidence of a false
+interaction. The exact original HuRI and neurodegeneration-network pair records
+and controls remain unread. Their UNDECIDED actions therefore express unresolved
+source-specific assessment; they do not reject the interactions. The explicit
+instructions supplied for this task require UNDECIDED when relevant publications
+cannot be assessed and define REMOVE through unlikely correctness. That instruction
+takes precedence over the skill's generic-binding removal default. Genericity alone
+does not establish incorrectness, and gephyrin experiments cannot supply an
+informative replacement for these different partners.
+
+The broad ARBA small-GTPase regulation annotation is refined to
+[GO:0032489 regulation of Cdc42 protein signal transduction](https://amigo.geneontology.org/amigo/term/GO:0032489).
+The current official definition and hierarchy were read: the term is a biological
+process under regulation of Rho protein signaling, itself under the seeded broad
+small-GTPase regulation term. The [original human hPEM-2 result](https://pubmed.ncbi.nlm.nih.gov/10559246/)
+selectively activates CDC42 rather than Rac or RhoA. The exchange factor performs
+the regulatory step; this is not an inference from necessity alone. The core uses
+the specific process instead of simultaneously retaining its parent. The original
+Reactome pathway annotation remains broad and unchanged. Human protein was tested
+in cellular activation assays; this is not a claim of purified human exchange kinetics.
+
+The description now includes the developmental/epileptic encephalopathy and
+hyperekplexia context recorded in the normal UniProt disease section and the
+[gephyrin-clustering paper](https://pubmed.ncbi.nlm.nih.gov/15215304/).
+Detailed synaptic mechanisms remain supported chiefly by the separately documented
+rat constructs and mouse neuronal experiments; no newly read human synaptic assay
+or isoform-specific mechanism is claimed by the shorter biological summary.
+
+PI3P binding remains part of the supported membrane-adaptor mechanism. No additional
+NEW assertion is proposed in this follow-up: the existing adaptor MF and its lipid
+interaction evidence are retained, and a distinct lipid-specific annotation can be
+assessed separately with its precise donor, construct and transfer scope. This is
+a scope choice, not a claim that lipid binding and adaptor activity are GO synonyms.
+All original source objects, the existing NEW adaptor assertion, three product
+definitions and immutable source files are preserved.
