@@ -1536,7 +1536,8 @@ refresh-bioreason-benchmark-sidecars:
     uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
 
 # Bump the benchmark review snapshot to COMMIT (default origin/main), regenerate the
-# GO-GPT three-level overlap, BioReason sidecars and ProtNLM summary from that commit,
+# GO-GPT three-level overlap, BioReason sidecars, CAFA-style ARGO95 scores, second-review
+# agreement and ProtNLM summary from that commit,
 # and print which headline numbers moved. Then update the pinned test numbers and the
 # "as of DATE (commit SHA)" prose, and review the diff.
 refresh-benchmark-snapshot commit="origin/main":
@@ -1556,6 +1557,8 @@ refresh-benchmark-snapshot commit="origin/main":
     PY
     uv run python scripts/gogpt_compare_levels.py
     uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
+    uv run python projects/BIOREASON_COMPARISON/cafa_style_argo139.py > /dev/null
+    uv run python projects/BIOREASON_COMPARISON/analyze_second_review.py > /dev/null
     uv run python projects/PROTNLM_EVALUATION/build_benchmark_summary.py > /dev/null
     echo "Review snapshot is now ${sha:0:10} (${date}). Headline changes:"
     diff <(echo "$before") <(uv run python scripts/benchmark_snapshot_headlines.py) || true
