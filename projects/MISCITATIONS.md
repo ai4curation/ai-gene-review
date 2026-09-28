@@ -2,8 +2,8 @@
 title: "Miscitation Review Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
-species: [human]
-genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39]
+species: [human, ARATH]
+genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1]
 ---
 
 # Miscitation Review Project
@@ -164,6 +164,57 @@ already cites `31189953` for five other NLRP3 annotations. A leading `3` was dro
 This is the cleanest possible illustration of why check 1 cannot help: the review
 records the title *"[Profanities and the profane person]"*, and that is genuinely the
 title of `PMID:1189953`. The citation is internally perfect and externally absurd.
+
+### MYH9, RAB3A, SYTL4, RAB10 — a dropped digit spread across a complex
+
+Found on 2026-09-27 while reviewing MYH9 for the
+[nucleokinesis module](../modules/nucleokinesis.yaml). It is the NLRP3 defect again,
+but spread across the members of a complex.
+
+`PMID:2732579` resolves to *"[Two sisters with pseudoidiopathic hypoparathyroidism
+presenting extensive intracranial calcification]"* (1989), a Japanese case report.
+A live QuickGO query returns **11 annotations** citing it, all `assigned_by` UniProt
+on 2019-02-19:
+
+| Gene | Rows citing `PMID:2732579` |
+|---|---|
+| MYH9 (P35579) | `GO:0005515` IPI with RAB3A; `GO:0032418` lysosome localization, `GO:0045055` regulated exocytosis, `GO:1905684` regulation of plasma membrane repair (IMP) |
+| RAB3A (P20336) | the same four, with MYH9 as the IPI partner |
+| SYTL4 (Q96C24) | `GO:0032418`, `GO:1905684` (IMP) |
+| RAB10 (P61026) | `GO:0045055` (IMP) |
+
+The intended reference is `PMID:27325790`, *"A Rab3a-dependent complex essential for
+lysosome positioning and plasma membrane repair"* (J Cell Biol, 2016): the cited number
+is `27325790` with its last digit dropped. That paper studies exactly these four
+proteins (Rab3a, its effector Slp4-a/SYTL4, nonmuscle myosin heavy chain IIA/MYH9, and
+Rab10 as a second repair regulator) and exactly these processes. UniProt also cites
+`27325790` correctly for two MYH9 rows (`GO:0005515` with RAB3A, `GO:0001778` plasma
+membrane repair) entered eight days earlier, on 2019-02-11. So the two numbers were
+used side by side for the same paper.
+
+MYH9's review records `correctness: WRONG_IDENTIFIER` with a `replacement` to
+`PMID:27325790` (`reason: WRONG_IDENTIFIER`). RAB3A, SYTL4 and RAB10 have no reviews
+in this repo yet, so their seven rows are not in the register. That is a concrete
+case where the register under-counts a complex-partner spread.
+
+### ARATH/WIP1 — an IntAct interaction citing a dental paper
+
+Found on 2026-09-27 while reviewing Arabidopsis WIP1 for the
+[LINC complex module](../modules/linc_complex.yaml). A live QuickGO query returns
+**2 annotations** citing `PMID:20579133`: the reciprocal `GO:0005515` IPI pair
+WIP1 (Q8GXA4) with RANGAP1 (Q9LE82), `assigned_by` IntAct on 2026-07-25.
+PubMed resolves `20579133` to *"A laboratory evaluation of the physical and
+mechanical properties of selected root canal sealers"* (Int Endod J, 2010).
+
+This is not a dropped digit. The IntAct record behind the rows (IMEx
+IM-19345) credits "Xu et al. (2007)", which points to `PMID:17600715`,
+*"Anchorage of plant RanGAP to the nuclear envelope involves novel
+nuclear-pore-associated proteins"* (Curr Biol, 2007). That is the paper that
+characterized the WIP1-RanGAP1 interaction. But `PMID:17600715` carries its own
+IMEx id (IM-19776), so the intended reference is not certain. WIP1's review
+records `correctness: WRONG_IDENTIFIER` without a `replacement`. This is the first
+IntAct-sourced `WRONG_IDENTIFIER` in the project, and the error sits in the
+publication identifier of the IMEx record, not in a GO curation step.
 
 ### ZBP1 and GRID1 — the interactor, not the paper
 
@@ -359,6 +410,12 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
       pattern, and split source-database defects from review defects
 - [ ] Neighbour sweep on the five recurring wrong PMIDs — check remaining ELOVL/NAA
       family members and other complex partners
+- [x] MYH9 `PMID:2732579` → `PMID:27325790` (dropped digit) recorded; live GOA shows
+      the same defect on RAB3A, SYTL4 and RAB10 (11 rows total)
+- [ ] Record the RAB3A / SYTL4 / RAB10 rows when those genes are reviewed
+- [x] ARATH/WIP1 `PMID:20579133` (dental paper) on the WIP1-RANGAP1 IntAct pair
+      recorded; the intended paper is probably `PMID:17600715`, but that is
+      unconfirmed (IMEx IM-19345)
 - [ ] Decide what, if anything, to report upstream to GOA / UniProt / IntAct, and in
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
@@ -368,9 +425,28 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
 
 - [Slides](MISCITATIONS/slides/MISCITATIONS-slides.html) (Marp source: [MISCITATIONS-slides.md](MISCITATIONS/slides/MISCITATIONS-slides.md)) — AI generated
 
-Last updated: 2026-09-17
+Last updated: 2026-09-27
 
 # NOTES
+
+## 2026-09-27
+
+**WIP1 IntAct wrong identifier.** Found while reviewing Arabidopsis WIP1 for the
+LINC complex module. IntAct's WIP1-RANGAP1 IPI pair cites `PMID:20579133`, a
+2010 root canal sealer study. Checked at NCBI E-utilities and in live QuickGO
+(2 rows). The IMEx record credits Xu et al. 2007 (`PMID:17600715`), but no
+replacement is asserted because that paper has a separate IMEx record. This
+kind of error should be reported to IntAct rather than GOA.
+
+
+**MYH9 dropped digit, spread across a complex.** Found while reviewing MYH9 for the
+nucleokinesis module. `PMID:2732579` (a 1989 hypoparathyroidism case report) stands in
+for `PMID:27325790` (Rab3a/Slp4-a/NMHC-IIA lysosome positioning, 2016). Both titles
+were checked at NCBI E-utilities, and the rows were checked in live QuickGO, not only
+the local `-goa.tsv`. This is the second dropped-digit case after NLRP3. It is also the
+first complex-partner spread of the dropped-digit kind: 11 rows over MYH9, RAB3A, SYTL4
+and RAB10, all from one UniProt curation date. It is worth reporting to UniProt as one
+group.
 
 ## 2026-09-17
 
