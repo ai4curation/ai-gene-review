@@ -25,7 +25,7 @@ What is removed is the PAINT/keyword inference of canonical JHDM1-type activity,
 - The PHF2 JmjC domain carries a similar anomaly yet has latent, phosphorylation-activated demethylase activity (noted by Audergon 2015), which is why the experimental rows are not removed
 
 ### Annotations Modified for Specificity (2 annotations)
-1. **GO:0005515** (protein binding) → More specific binding terms
+1. **GO:0005515** (protein binding, IPI with Cdt2) → GO:0031625 ubiquitin protein ligase binding
 2. **GO:0006338** (chromatin remodeling) → More specific mechanisms
 
 ### Annotations Accepted (24 annotations)
