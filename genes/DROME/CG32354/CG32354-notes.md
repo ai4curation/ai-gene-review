@@ -51,7 +51,7 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 
 ## 2026-09-28 IBA re-review
 
-PTHR10913 is a heterogeneous follistatin/Kazal family. The current PAINT snapshot puts `GO:0005576` on the metazoan `PTN000099217` node and `GO:0030154` on the family-root `PTN000099219` node; the more specific activin/TGF-beta-binding assertions are instead on `PTN001657053`, a vertebrate follistatin branch that does not contain Drosophila CG32354.
+PTHR10913 is a heterogeneous follistatin/Kazal family. The current PAINT snapshot records `GO:0005576` on `PTN000099217` with `taxon:2759` and `GO:0030154` on `PTN000099219` with no taxon value; the empty PTN000099219 taxon and the same PTN's appearance in the unrelated PTHR21632 slice mean the cached TSV alone does not establish it as the PTHR10913 root. The more specific activin/TGF-beta-binding assertions are instead on `PTN001657053` with `taxon:6072` and no corresponding `GO:0048185`, `GO:0030510`, or `GO:0032926` rows in `CG32354-goa.tsv`, so CG32354 is not receiving those follistatin-specific functions.
 
 This supports keeping extracellular region as a broad, non-committal IBA: the transmembrane segment plus seven Kazal-like domains are compatible with a surface or exposed ectodomain. It does not convert the protein into a soluble secreted protein or establish either a specific serine-protease inhibitor activity or follistatin-like growth-factor antagonism.
 
@@ -66,7 +66,7 @@ No target-specific primary finding is used to establish a molecular activity her
 ## Annotation decisions
 
 - GO:0004867 serine-type endopeptidase inhibitor activity (IEA): **UNDECIDED**. Repeated Kazal-like domains support a protease-interaction hypothesis, but the exact inhibitory loops and target protease have not been functionally resolved. This fold also occurs in non-inhibitory extracellular proteins.
-- GO:0005576 extracellular region (IBA): **ACCEPT**. Seven Kazal-like domains and an N-terminal hydrophobic segment support the existing curated IBA extracellular localization. This does not imply release as a soluble secreted protein.
+- GO:0005576 extracellular region (IBA): **KEEP_AS_NON_CORE**. Seven Kazal-like domains and an N-terminal hydrophobic segment support the existing curated IBA extracellular localization. This does not imply release as a soluble secreted protein or a resolved core function.
 - GO:0030154 cell differentiation (IBA): **UNDECIDED**. Extracellular Kazal-domain proteins can have regulatory or structural functions; family architecture does not establish which differentiation process this fly protein participates in. The ancestral assertion and target function need resolution.
 
 ## Research provenance
