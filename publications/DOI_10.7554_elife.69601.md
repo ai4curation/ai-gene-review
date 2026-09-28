@@ -12,6 +12,7 @@ journal: eLife
 year: '2021'
 doi: 10.7554/elife.69601
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Hsp40s play complementary roles in the prevention of tau amyloid formation
