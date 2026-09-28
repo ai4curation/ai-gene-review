@@ -34,9 +34,9 @@ query-level recommendations with no gene reviews behind them.
 Arabidopsis and rat sections were rechecked against current fetched GOA with
 qualifiers preserved. Several old rows are no longer current positive protein
 phosphorylation assertions: Arabidopsis CRY2 was a false positive because both
-kinase rows are `NOT` annotations, PI4KG7 and LecRK-I.5/I.8 are bona fide
-protein kinases, and Argk1, PWD, CKB2 and AAK1 do not currently carry positive
-protein-phosphorylation process rows. See the
+kinase rows are `NOT` annotations, PI4KG7, AAK1/FER and LecRK-I.5/I.8 are
+bona fide protein kinases, and Argk1, PWD and CKB2 do not currently carry
+positive protein-phosphorylation process rows. See the
 [detailed cross-species re-audit](PHOSPHORYLATION_REFACTOR/cross_species_reaudit.md).
 
 We did this because the set difference between "phosphorylation process" and
@@ -1200,15 +1200,19 @@ are for legitimate metabolic kinases (ribokinase, hexokinase, etc.).
 
 | Gene | GO Term | Issue | Code | Recommended Action |
 |------|---------|-------|------|-------------------|
-| Dref | protein phosphorylation + autophosphorylation | ISS from human CAMKK2 to a BED-domain transcription factor | X | **REMOVE** |
+| Dref | protein phosphorylation + autophosphorylation | BED-domain transcription factor annotated by CAMKK2 ISS transfer | S-tf | **REMOVE** |
 | CG9886 | protein phosphorylation | Glycerate kinase (sugar) | W-sugar | **REMOVE** |
 
 **Dref** (DNA replication-related element factor)
 - Annotated to both GO:0006468 and GO:0046777 (autophosphorylation)
+- Dref is a transcription factor that regulates cell-proliferation gene
+  expression, not a protein kinase
 - The current rows are old ISS transfers from human CAMKK2 (UniProtKB:Q96RR4)
-  onto a BED-domain transcription factor
+  onto a BED-domain transcription factor, confirming the wrong substrate-type
+  inference
 - No FlyBase or PAINT row supports a kinase activity for Dref
-- Status: **REMOVE** [X] - wrong-donor ISS transfer
+- Status: **REMOVE** [S-tf] - transcription factor substrate / wrong CAMKK2
+  ISS transfer
 
 **CG9886** (Glycerate kinase)
 - Annotated to GO:0006468 "protein phosphorylation"
@@ -1246,7 +1250,8 @@ Dref ISS transfer from human CAMKK2.
 - [x] Mulk - **CORRECT** (lipid kinase)
 - [x] rdgA - **CORRECT** (lipid kinase)
 - [x] Argk1 - **STALE HIT** (no current positive protein-phosphorylation BP row)
-- [x] Dref - **REMOVE** [X] (wrong-donor ISS transfer)
+- [x] Dref - **REMOVE** [S-tf] (transcription factor substrate / wrong CAMKK2
+  ISS transfer)
 - [x] CG9886 - **REMOVE** [W-sugar] (glycerate kinase, not protein kinase)
 
 **Last updated**: 2026-09-28
@@ -1277,7 +1282,7 @@ legitimate non-protein kinases (sugar kinases, lipid kinases).
    - Current GOA has arginine kinase molecular-function rows but no positive
      protein-phosphorylation biological-process row
 
-4. **Dref** (DNA replication-related element factor) - **REMOVE** [X]
+4. **Dref** (DNA replication-related element factor) - **REMOVE** [S-tf]
    - Transcription factor annotated to GO:0006468 + GO:0046777 (autophosphorylation)
    - Rows are ISS transfers from human CAMKK2, a different calcium/calmodulin-dependent
      kinase family
@@ -1357,12 +1362,12 @@ process. This is the correct annotation pattern that was missing in mammals.
 
 | Pattern | Mouse | Human | Fly | Yeast |
 |---------|-------|-------|-----|-------|
-| Total problematic annotations | ~20 | ~45 | ~3 | **0** |
+| Total problematic annotations | ~20 | ~45 | 3 rows / 2 genes | **0** |
 | Cyclins misannotated | 4 genes | 1 gene | 0 | **0** |
 | Phosphatases misannotated | 0 | 3 genes | 0 | **0** |
 | Signaling ligands misannotated | 5 genes | 7+ genes | 0 | **0** |
 | Sugar kinases misannotated | 0 | 1 gene | 1 gene | **0** |
-| Transcription factors | 0 | 5 genes | 1? | **0** |
+| Transcription factors | 0 | 5 genes | 1 | **0** |
 | Adapter proteins | 0 | 3 genes | 0 | **0** |
 
 **Key observation**: SGD has the highest annotation quality among the MODs surveyed. This may reflect:
@@ -1461,12 +1466,12 @@ process itself. This is the correct annotation pattern.
 
 | Pattern | Mouse | Human | Fly | S. cerevisiae | S. pombe |
 |---------|-------|-------|-----|---------------|----------|
-| **Total problematic** | ~20 | ~45 | ~3 | **0** | **0** |
+| **Total problematic** | ~20 | ~45 | 3 rows / 2 genes | **0** | **0** |
 | Cyclins misannotated | 4 | 1 | 0 | **0** | **0** |
 | Phosphatases | 0 | 3 | 0 | **0** | **0** |
 | Signaling ligands | 5 | 7+ | 0 | **0** | **0** |
 | Sugar kinases | 0 | 1 | 1 | **0** | **0** |
-| TFs as substrates | 0 | 5 | 1? | **0** | **0** |
+| TFs as substrates | 0 | 5 | 1 | **0** | **0** |
 | Adapter proteins | 0 | 3 | 0 | **0** | **0** |
 
 **Key observation**: Both yeast MODs (SGD, PomBase) have perfect phosphorylation annotation quality.
@@ -1578,12 +1583,12 @@ process terms - avoiding the over-annotation pattern seen in mouse and human.
 
 | Pattern | Mouse | Human | Fly | Zebrafish | S. cerevisiae | S. pombe |
 |---------|-------|-------|-----|-----------|---------------|----------|
-| **Total problematic** | ~20 | ~45 | ~3 | **1** | **0** | **0** |
+| **Total problematic** | ~20 | ~45 | 3 rows / 2 genes | **1** | **0** | **0** |
 | Cyclins misannotated | 4 | 1 | 0 | **0** | **0** | **0** |
 | Phosphatases | 0 | 3 | 0 | **0** | **0** | **0** |
 | Signaling ligands | 5 | 7+ | 0 | **0** | **0** | **0** |
 | Sugar kinases | 0 | 1 | 1 | **1** | **0** | **0** |
-| TFs as substrates | 0 | 5 | 1? | **0** | **0** | **0** |
+| TFs as substrates | 0 | 5 | 1 | **0** | **0** | **0** |
 | Adapter proteins | 0 | 3 | 0 | **0** | **0** | **0** |
 
 **Key observation**: ZFIN annotation quality is very good, comparable to FlyBase. Only the
@@ -1690,12 +1695,12 @@ regulatory activity annotation.
 
 | Pattern | Mouse | Human | Fly | Zebrafish | Worm | S. cerevisiae | S. pombe |
 |---------|-------|-------|-----|-----------|------|---------------|----------|
-| **Total problematic** | ~20 | ~45 | ~3 | 1 | **0** | **0** | **0** |
+| **Total problematic** | ~20 | ~45 | 3 rows / 2 genes | 1 | **0** | **0** | **0** |
 | Cyclins misannotated | 4 | 1 | 0 | 0 | **0** | **0** | **0** |
 | Phosphatases | 0 | 3 | 0 | 0 | **0** | **0** | **0** |
 | Signaling ligands | 5 | 7+ | 0 | 0 | **0** | **0** | **0** |
 | Sugar kinases | 0 | 1 | 1 | 1 | **0** | **0** | **0** |
-| TFs as substrates | 0 | 5 | 1? | 0 | **0** | **0** | **0** |
+| TFs as substrates | 0 | 5 | 1 | 0 | **0** | **0** | **0** |
 | Adapter proteins | 0 | 3 | 0 | 0 | **0** | **0** | **0** |
 
 **Key observation**: WormBase joins SGD and PomBase with perfect phosphorylation annotation
@@ -1791,7 +1796,7 @@ not proteins.
 
 - **CRY2** is a false positive from qualifier flattening: its kinase activity
   and protein autophosphorylation rows are both `NOT` annotations.
-- **PWD**, **CKB2** and **AAK1** do not currently carry positive
+- **PWD** and **CKB2** do not currently carry positive
   protein-phosphorylation process rows in GOA.
 
 ### Substrate/Immune Regulator [S]
@@ -1810,6 +1815,7 @@ not proteins.
 | Gene | GO Term | Status | Notes |
 |------|---------|--------|-------|
 | **PI4K GAMMA 7** | protein autophosphorylation | KEEP | The PMID:17880284 abstract reports autophosphorylation and phosphorylation of Ser/Thr protein substrates |
+| **AAK1 / FER** | protein autophosphorylation | KEEP | AAK1 resolves to FERONIA, a receptor-like protein kinase with an IDA protein kinase activity row and an IDA protein autophosphorylation row from PMID:17673660 |
 | **LecRK-I.5** | protein phosphorylation | KEEP | P2K2/LecRK-I.5 is an active L-type lectin receptor kinase |
 | **LecRK-I.8** | protein autophosphorylation | KEEP | The full text of PMID:28722654 reports strong autophosphorylation by the LecRK-I.8 kinase domain |
 
@@ -1840,7 +1846,7 @@ correct annotation to regulatory activity rather than phosphorylation.
 | Lipid kinases | 0 | 1 | 0 | 0 | 0 | **1** | 0 | 0 |
 | Sugar kinases | 0 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
 | Regulatory subunits | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| Substrates | 0 | 5 | 1? | 0 | 0 | **1** | 0 | 0 |
+| Substrates | 0 | 5 | 1 | 0 | 0 | **1** | 0 | 0 |
 
 **Key observation**: TAIR had several stale or false-positive query hits after qualifier-aware
 rechecking, but the remaining TOPP4 and CDC25 rows are still opposite-reaction phosphatase
@@ -1853,8 +1859,8 @@ errors, the same pattern seen in human GOA.
 - [x] 1 lipid kinase (ATPI4K ALPHA) - **MODIFY** [W-lipid]
 - [x] 1 substrate (RIN4) - **REMOVE** [S]
 - [x] CRY2 false positive - only negated NOT rows
-- [x] PWD, CKB2, AAK1 stale hits - no current positive protein-phosphorylation BP row
-- [x] PI4K GAMMA 7, LecRK-I.5 and LecRK-I.8 are supported protein kinases
+- [x] PWD, CKB2 stale hits - no current positive protein-phosphorylation BP row
+- [x] PI4K GAMMA 7, AAK1/FER, LecRK-I.5 and LecRK-I.8 are supported protein kinases
 - [ ] IEA annotations (29 genes) need systematic review
 
 **Last updated**: 2026-09-28
@@ -1875,9 +1881,9 @@ systematic review.
 3. **ATPI4K ALPHA** - PI4-kinase (lipid kinase) [W-lipid]
 4. **RIN4** - Immune regulator phosphorylated by AvrRpm1/AvrB-triggered kinases [S]
 
-**False positives or stale hits**: CRY2 is negated in GOA; PWD, CKB2 and AAK1
-do not currently have positive protein-phosphorylation process rows; PI4K GAMMA 7,
-LecRK-I.5 and LecRK-I.8 are supported protein kinases.
+**False positives or stale hits**: CRY2 is negated in GOA; PWD and CKB2 do not
+currently have positive protein-phosphorylation process rows; PI4K GAMMA 7,
+AAK1/FER, LecRK-I.5 and LecRK-I.8 are supported protein kinases.
 
 **Note**: Initial query found 49 genes, but 7 were false positives due to different ID formats
 in TAIR (locus:XXXXXX vs ATXGXXXXX). Symbol-based matching reduced this to 42 genes.
@@ -1962,7 +1968,7 @@ PHOSPHATASE (EC 3.1.3.16), annotated to phosphorylation. Has "phosphatase activi
 | Sugar kinases | 0 | 1 | **1** | 1 | 1 | 0 | 1 | 0 | 0 |
 | Receptors | 2 | 0 | **1** | 0 | 0 | 0 | 0 | 0 | 0 |
 | Adapter proteins | 0 | 3 | **3** | 0 | 0 | 0 | 0 | 0 | 0 |
-| Substrates | 0 | 5 | **2** | 1? | 0 | 0 | 1 | 0 | 0 |
+| Substrates | 0 | 5 | **2** | 1 | 0 | 0 | 1 | 0 | 0 |
 
 **Key observation**: RGD errors are almost entirely ISS transfers from MGI/GOA. The 3 IDA annotations
 (Grm5, Pick1, Thy1) represent independent rat-specific curation that also shows over-annotation patterns.
