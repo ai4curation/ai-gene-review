@@ -66,6 +66,8 @@ genes: [GPX4, ACSL4]           # OPTIONAL: only when the gene set is small + exp
   - `BIOLOGY_DOMAIN` — gene/pathway biology collections (organism or theme)
   - `PIPELINE` — cross-cutting tooling / methodology / annotation-process work
   - `OBSOLETION` — GO term obsoletion & replacement tracking
+  - `EVALUATION` — evaluations of prediction methods or annotation sources
+  - `ML_PREDICTIONS` — projects centred on machine-learning function predictions
 - **`species`** — list of organism scope using the same labels as the `genes/`
   directory (`human`, `mouse`, `worm`, `yeast`, or UniProt species codes like
   `SCHPO`, `ARATH`). Omit for genuinely organism-agnostic methodology projects.

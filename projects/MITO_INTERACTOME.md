@@ -1,12 +1,30 @@
 ---
 title: "MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial Proteome"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human, yeast]
 genes: [COA4, COX17, COX19, COX23, CMC2, PET191, COX11, SCO1, SCO2, COX16, COA6, COQ2, COQ4, COQ5, COQ6, COQ7, COQ9, COQ8A, PDSS1, PDSS2, BOLA3, GLRX5, PMPCA, PMPCB, COX20, HSPA9]
 ---
 
 # MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial Proteome
+
+**Bottom line:** Swaminathan et al. (Nat Commun 2026) ran AlphaFold-Multimer on
+all 630,003 pairs of the 1123 MitoCarta3.0 proteins and report 2895 predicted
+interactions at mean ipTM ≥ 0.5 (about 85% precision, 67% recall), including
+partners for 85 of 101 orphan mitochondrial proteins. We read the paper for two
+different uses: as a prediction resource, whose hits are hypotheses that must
+never enter `existing_annotations` or justify `protein binding`, and as an
+experimental paper whose co-IP, knockout, ICP-MS and BN-PAGE data place the
+orphan COA4 at a COX11-dependent step of copper delivery to cytochrome c
+oxidase. Acting on the second use, we reviewed human COA4 and the yeast copper
+delivery set (COA4, COX17, COX19, COX23, CMC2, PET191): 97 annotations, 59
+accepted, 33 kept as non-core, 4 marked over-annotated and 1 removed. That one
+removal, COX17 `protein farnesylation` citing a paper about COX10, seeded the
+[miscitation audit](MISCITATION_AUDIT.md). The per-gene counts below differ
+slightly from the current YAMLs (yeast set 72 annotations, not 74), and human
+COA5 (the paper's "PET191") was already reviewed under the complex IV
+assembly-factor module. Still open: human COX17/COX19/CMC2, TCAIM, UQCC4 and
+the complex Q genes COQ3 and COQ10A/B.
 
 ## Overview
 
@@ -362,3 +380,7 @@ Still not in this repository:
 | [PMID:35977508](https://pubmed.ncbi.nlm.nih.gov/35977508/) | Liang et al. *Mitochondrial microproteins link metabolic cues to respiratory chain biogenesis.* Cell Rep 2022 |
 | [PMID:37590370](https://pubmed.ncbi.nlm.nih.gov/37590370/) | Lim et al. *In silico protein interaction screening uncovers DONSON's role in replication initiation.* Science 2023 |
 | [PMID:40015271](https://pubmed.ncbi.nlm.nih.gov/40015271/) | Schmid & Walter. *Predictomes, a classifier-curated database of AlphaFold-modeled PPIs.* Mol Cell 2025 |
+
+## Slides
+
+- [Slides](MITO_INTERACTOME/slides/MITO_INTERACTOME-slides.html) (Marp source: [MITO_INTERACTOME-slides.md](MITO_INTERACTOME/slides/MITO_INTERACTOME-slides.md)) — AI generated

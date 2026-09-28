@@ -353,7 +353,12 @@
 
         <p class="project-meta">
             <span class="badge m-IN_PROGRESS">IN_PROGRESS</span>
-            <span class="badge tag t-PIPELINE">PIPELINE</span>
+            <span class="badge tag t-PIPELINE">PIPELINE</span><span class="badge tag t-EVALUATION">EVALUATION</span>
+        </p>
+
+
+        <p class="project-collections"><strong>Collection:</strong>
+            <a href="HOMOLOGY_PROPAGATION.html">Propagation by homology</a>
         </p>
 
 
@@ -368,205 +373,199 @@
 
     <div class="content">
         <h1 id="inferred-from-sequence-orthology-iso-evidence-code-review">Inferred from Sequence Orthology (ISO) Evidence Code Review</h1>
-<h2 id="overview">Overview</h2>
-<p>ISO (Inferred from Sequence Orthology, ECO:0000266) transfers GO annotations<br />
-between orthologous genes. The code is often reliable for conserved molecular<br />
-functions, but the current reviewed corpus shows that ISO rows need a different<br />
-review question from ordinary evidence rows:</p>
-<blockquote>
-<p>Is the source annotation itself sound, and is this specific term safe to<br />
-propagate across this orthology relationship?</p>
-</blockquote>
-<p>The answer is not binary. Existing reviews show three common outcomes:</p>
+<p><strong>Bottom line:</strong> ISO transfers a GO annotation from a gene to its ortholog in another species, so an ISO row can fail because the source annotation is weak or because the term should not cross that orthology edge. We read the ISO rows in existing gene reviews, worked through three contrasting cases in depth (mouse <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a>, <a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a> and <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>), and built a failure taxonomy that separates source defects from propagation defects, now recorded in the structured <code>review.propagation_review</code> field. We did this so that reviewers stop treating ISO as either trustworthy or garbage and instead say where each defect lives. As of 2026-09-26 the repo holds 4,345 reviewed ISO rows in 201 gene reviews (3,258 mouse, 962 rat, and 125 in human, fission yeast and bacterial reviews): 1,456 ACCEPT, 2,073 KEEP_AS_NON_CORE, 435 MARK_AS_OVER_ANNOTATED, 179 REMOVE, 111 MODIFY, 35 UNDECIDED, plus 56 NEW. The usual problem is a cloud of true but contextual transfers; outright failures cluster in cases like <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>, a divergent angiogenin paralog where 41 of 46 ISO rows were removed. The corpus snapshot below (2026-06-29) predates these counts.</p>
+<p>Of the 304 ISO rows that already carry a structured <code>propagation_review</code>, the commonest root causes are <code>PROPAGATION_BAD</code> (119) and <code>TERM_SCOPING_PROBLEM</code> (101), and the commonest subtype is <code>CONTEXT_OR_TISSUE_MISMATCH</code> (113). One action item remains: a reusable donor-trace script.</p>
+<p>Part of <a href="HOMOLOGY_PROPAGATION.html">Propagation by Homology</a>.<br />
+<strong><a href="../../app/propagation/index.html?evidence=ISO">Browse ISO rows</a></strong> ·<br />
+<a href="HOMOLOGY_PROPAGATION/propagation-stats.html">Current statistics</a></p>
+<h2 id="what-an-iso-annotation-asserts">What an ISO annotation asserts</h2>
+<p>ISO (Inferred from Sequence Orthology, ECO:0000266) says: <em>gene product X has<br />
+this function because its ortholog Y was shown experimentally to have it.</em> Every<br />
+ISO row therefore names three things, and a review should name them too:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Where it is in the GAF</th>
+<th>Example (mouse <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a>, calcium channel regulator activity)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Source</strong> — the donor annotation</td>
+<td><code>WITH/FROM</code> gene product, plus that gene's own experimental annotation to the same term</td>
+<td>human <a href="../../genes/human/CALM3/CALM3-ai-review.html">CALM3</a> (<code>UniProtKB:P0DP25</code>), IDA</td>
+</tr>
+<tr>
+<td><strong>Relation</strong> — why the donor counts</td>
+<td>The <code>REFERENCE</code> GO_REF names the pipeline and its orthology set</td>
+<td>GO_REF:0000119, Alliance human→mouse orthology</td>
+</tr>
+<tr>
+<td><strong>Target</strong> — the annotated gene</td>
+<td><code>GENE PRODUCT ID</code></td>
+<td>mouse <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> (<code>UniProtKB:P0DP28</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Almost all ISO in the corpus comes from three automated pipelines, which move<br />
+only experimental annotations (IDA, IMP, IPI, IGI, EXP) from the donor<br />
+(<a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs.yaml">GO_REF definitions</a>):</p>
+<table>
+<thead>
+<tr>
+<th>GO_REF</th>
+<th>Donor → target</th>
+<th>Orthology source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO_REF:0000119</td>
+<td>human → mouse</td>
+<td>Alliance of Genome Resources</td>
+</tr>
+<tr>
+<td>GO_REF:0000096</td>
+<td>mouse ↔ rat</td>
+<td>Alliance of Genome Resources</td>
+</tr>
+<tr>
+<td>GO_REF:0000121</td>
+<td>other mammals (human, mouse, pig, dog, …) → rat</td>
+<td>RGD, from HCOP and Alliance calls</td>
+</tr>
+</tbody>
+</table>
+<p>The validity of an ISO row is then three separate questions:</p>
 <ol>
-<li>The transfer is correct, sometimes even redundant with target-species<br />
-   experimental evidence.</li>
-<li>The source annotation is weak, stale, circular, or miscited.</li>
-<li>The source annotation is sound, but propagation to the target is unsafe<br />
-   because the target is a paralog, a diverged family member, a different<br />
-   isoform/compartment context, or a different physiological context.</li>
+<li><strong>Is the source sound?</strong> Does the donor <em>still</em> carry the term, with<br />
+   experimental evidence, from a paper about that gene? A donor that has since<br />
+   lost the term leaves a stale transfer; a donor whose own support is inferred<br />
+   makes the ISO a transfer of a transfer.</li>
+<li><strong>Is the relation the right one?</strong> Is the donor the target's one-to-one<br />
+   ortholog, or a paralog, or one member of a one-to-many call?</li>
+<li><strong>Is the term safe to move?</strong> Conserved biochemistry usually is; tissue,<br />
+   developmental, compartment, and regulatory context often is not.</li>
 </ol>
-<h2 id="corpus-snapshot">Corpus Snapshot</h2>
-<p>Read-only inventory on 2026-06-29 of reviewed <code>*-ai-review.yaml</code> files containing<br />
-<code>evidence_type: ISO</code>:</p>
+<p>The <a href="../../app/propagation/index.html?evidence=ISO">propagation browser</a> shows all<br />
+three for every ISO row: the donor resolved to symbol and species, whether the<br />
+donor currently carries the term (<code>Donor support</code>), whether the donor is the<br />
+target's namesake (<code>Donor vs target symbol</code>), and the review verdict.</p>
+<h2 id="worked-examples">Worked examples</h2>
+<h3 id="calmodulin-an-orthology-pipeline-that-also-transfers-across-paralogs">Calmodulin: an orthology pipeline that also transfers across paralogs</h3>
+<p>Target: mouse <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a>. It receives ISO from four donors:</p>
 <table>
 <thead>
 <tr>
-<th>Metric</th>
-<th style="text-align: right;">Count</th>
+<th>Donor</th>
+<th>Relation to mouse <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a></th>
+<th>Pipeline</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Reviewed ISO rows</td>
-<td style="text-align: right;">4,189</td>
+<td>human <a href="../../genes/human/CALM3/CALM3-ai-review.html">CALM3</a> (<code>UniProtKB:P0DP25</code>)</td>
+<td>ortholog</td>
+<td>GO_REF:0000119</td>
 </tr>
 <tr>
-<td>Gene review files with ISO rows</td>
-<td style="text-align: right;">153</td>
+<td>rat <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> (<code>RGD:2259</code>)</td>
+<td>ortholog</td>
+<td>GO_REF:0000096</td>
 </tr>
 <tr>
-<td>Mouse ISO rows</td>
-<td style="text-align: right;">3,228</td>
+<td>rat <a href="../../genes/mouse/Calm1/Calm1-ai-review.html">Calm1</a> (<code>RGD:2257</code>)</td>
+<td>paralog</td>
+<td>GO_REF:0000096</td>
 </tr>
 <tr>
-<td>Rat ISO rows</td>
-<td style="text-align: right;">926</td>
-</tr>
-<tr>
-<td>Other species ISO rows</td>
-<td style="text-align: right;">35</td>
+<td>rat <a href="../../genes/mouse/Calm2/Calm2-ai-review.html">Calm2</a> (<code>RGD:2258</code>)</td>
+<td>paralog</td>
+<td>GO_REF:0000096</td>
 </tr>
 </tbody>
 </table>
-<p>Disposition across those reviewed ISO rows:</p>
-<table>
-<thead>
-<tr>
-<th>Review action</th>
-<th style="text-align: right;">Count</th>
-<th>Interpretation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ACCEPT</code></td>
-<td style="text-align: right;">1,374</td>
-<td>Conserved enough to keep as core or correct annotation.</td>
-</tr>
-<tr>
-<td><code>KEEP_AS_NON_CORE</code></td>
-<td style="text-align: right;">1,970</td>
-<td>Often true, but contextual, tissue-specific, downstream, or generic localization.</td>
-</tr>
-<tr>
-<td><code>MARK_AS_OVER_ANNOTATED</code></td>
-<td style="text-align: right;">378</td>
-<td>Biology may be related, but the propagated term overstates the direct role.</td>
-</tr>
-<tr>
-<td><code>REMOVE</code></td>
-<td style="text-align: right;">217</td>
-<td>Strong evidence that the annotation should not be retained.</td>
-</tr>
-<tr>
-<td><code>MODIFY</code></td>
-<td style="text-align: right;">114</td>
-<td>The transfer captures the right idea but needs a better GO term.</td>
-</tr>
-<tr>
-<td><code>UNDECIDED</code></td>
-<td style="text-align: right;">127</td>
-<td>Evidence could not be adjudicated confidently.</td>
-</tr>
-<tr>
-<td><code>NEW</code></td>
-<td style="text-align: right;">9</td>
-<td>Orthology-supported new-annotation candidates recorded in review files.</td>
-</tr>
-</tbody>
-</table>
-<p>Most reviewed ISO rows are therefore not catastrophic failures. The main curation<br />
-value is discriminating correct/non-core transfers from source or propagation<br />
-defects.</p>
-<h2 id="existing-review-synthesis">Existing Review Synthesis</h2>
-<h3 id="calmodulin-valid-family-wide-transfer-with-locus-specific-caveats">Calmodulin: valid family-wide transfer, with locus-specific caveats</h3>
-<p><a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> is the clean positive control. Mouse <code>Calm1</code>, <code>Calm2</code>, and <code>Calm3</code> encode<br />
-the same calmodulin protein, so ISO transfer of core protein functions such as<br />
-calcium binding, channel<br />
-regulation, calcineurin/CaMKII-related signaling, and cytoplasmic localization is<br />
-biochemically sound. The remaining issue is not protein orthology but locus and<br />
-context: <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> has a distinct 3-UTR/Stau2-dependent dendritic mRNA-localization<br />
-mechanism, while many synaptic, cardiac, spindle, centrosome, and sarcomere rows<br />
-are best retained as non-core context rather than treated as defining <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a><br />
-function.</p>
-<h3 id="ghr-direct-donor-support-mixed-with-circular-and-stale-transfers"><a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a>: direct donor support mixed with circular and stale transfers</h3>
-<p><a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a> shows why ISO review must trace the donor edge. The manual donor trace<br />
-(<code>genes/mouse/Ghr/Ghr-iso-donor-trace.md</code>) separates<br />
-human and rat donor rows into direct receptor biology, redundant/circular<br />
-transfer chains, and stale or context-heavy rows.</p>
-<p>Good transfers include growth hormone receptor activity, peptide hormone binding,<br />
-plasma membrane/cell surface localization, receptor complex terms, and<br />
-growth-hormone/JAK-STAT pathway terms. Problem rows include lipid binding, growth<br />
-factor binding, receptor internalization, response to estradiol, response to<br />
-cycloheximide, IGF receptor signaling, cytosol, cytoplasmic RNP granule,<br />
-proteasome-mediated catabolism, and negative regulation of GHR signaling. Several<br />
-are not simply "wrong ortholog" cases; they are transfer-of-transfer artifacts<br />
-or donor rows with no current source-side support.</p>
-<p>The <a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a> review also shows an isoform trap: extracellular-space annotations can<br />
-fit the GH-binding protein product, while signaling annotations apply to the<br />
-full-length membrane receptor.</p>
-<h3 id="ang2-source-and-propagation-defects-reinforce-each-other"><a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>: source and propagation defects reinforce each other</h3>
-<p><a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> is the strongest ISO negative control. A reproducible source trace<br />
-(<code>genes/mouse/Ang2/Ang2-bioinformatics/RESULTS.md</code>) found that<br />
-all 46 local ISO rows were transferred from human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a> (<code>UniProtKB:P03950</code>) via<br />
-<code>GO_REF:0000119</code>. The trace classified the human source side as:</p>
-<table>
-<thead>
-<tr>
-<th>Source-side status</th>
-<th style="text-align: right;">Count</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Current human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a> term with direct experimental support</td>
-<td style="text-align: right;">34</td>
-</tr>
-<tr>
-<td>Current human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a> term with inferred support only</td>
-<td style="text-align: right;">4</td>
-</tr>
-<tr>
-<td>No current matching human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a> source term</td>
-<td style="text-align: right;">8</td>
-</tr>
-</tbody>
-</table>
-<p>Even many directly supported human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a> annotations are unsafe for mouse <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>,<br />
-because mouse <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>/Angrp is a divergent angiogenin paralog: direct mouse evidence<br />
-supports RNase/tRNA-cleavage activity but not canonical angiogenesis, receptor<br />
-binding, signaling, stress-response, nuclear-trafficking, or immune-effector<br />
-roles. The reviewed <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> ISO rows ended up mostly <code>REMOVE</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Action for <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> ISO rows</th>
-<th style="text-align: right;">Count</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>REMOVE</code></td>
-<td style="text-align: right;">41</td>
-</tr>
-<tr>
-<td><code>ACCEPT</code></td>
-<td style="text-align: right;">2</td>
-</tr>
-<tr>
-<td><code>KEEP_AS_NON_CORE</code></td>
-<td style="text-align: right;">2</td>
-</tr>
-<tr>
-<td><code>MODIFY</code></td>
-<td style="text-align: right;">1</td>
-</tr>
-</tbody>
-</table>
-<p><a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> also exposed source-annotation hygiene problems outside the ISO block:<br />
-several experimental GOA rows trace to angiopoietin-2, angiotensin II, or ZNF418<br />
-papers rather than to mouse <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>/Angrp. This is the clearest example where<br />
-"source annotation bad" and "propagation bad" both matter.</p>
-<h3 id="broad-mouse-and-rat-iso-the-common-pattern-is-non-core-context">Broad mouse and rat ISO: the common pattern is non-core context</h3>
-<p>The largest reviewed ISO blocks are not dominated by outright removals. Many<br />
-mouse and rat signaling genes carry large ISO sets where the core molecular<br />
-function is correct but the transferred rows include many tissue, pathway,<br />
-phenotype, complex, or localization contexts. Typical review actions are<br />
-<code>KEEP_AS_NON_CORE</code>, <code>MARK_AS_OVER_ANNOTATED</code>, or <code>MODIFY</code>, not <code>REMOVE</code>.</p>
-<p>This matters for reviewer tone: ISO is not mostly garbage. The risk is that a<br />
-large cloud of true-but-contextual annotations can obscure the small number of<br />
-source defects, stale transfers, and paralog-specific propagation failures.</p>
+<p>So yes — part of the <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> ISO set is paralogy transfer. The two pipelines<br />
+behave differently: human→mouse (GO_REF:0000119) pairs namesakes (<a href="../../genes/human/CALM1/CALM1-ai-review.html">CALM1</a>→<a href="../../genes/mouse/Calm1/Calm1-ai-review.html">Calm1</a>,<br />
+<a href="../../genes/mouse/Calm2/Calm2-ai-review.html">CALM2</a>→<a href="../../genes/mouse/Calm2/Calm2-ai-review.html">Calm2</a>, <a href="../../genes/human/CALM3/CALM3-ai-review.html">CALM3</a>→<a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a>), while mouse↔rat (GO_REF:0000096) donates from all<br />
+three rat loci to each mouse locus, so rat <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> also donates to mouse <a href="../../genes/mouse/Calm1/Calm1-ai-review.html">Calm1</a> and<br />
+<a href="../../genes/mouse/Calm2/Calm2-ai-review.html">Calm2</a> (<a href="../../app/propagation/index.html?evidence=ISO&amp;symbol_match=DIFFERENT_SYMBOL&amp;q=calm">browse</a>).<br />
+Five <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> terms, including chromatin, are donated by rat <a href="../../genes/mouse/Calm1/Calm1-ai-review.html">Calm1</a> alone. Here it<br />
+is harmless for protein-level terms: <a href="../../genes/mouse/Calm1/Calm1-ai-review.html">Calm1</a>, <a href="../../genes/mouse/Calm2/Calm2-ai-review.html">Calm2</a>, and <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a> encode identical<br />
+proteins in mouse, rat, and human, and differ only at the locus level (UTR<br />
+regulation and tissue expression).<br />
+The donors all still carry their terms experimentally. What does not transfer<br />
+is locus-level biology — <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a>'s Stau2-dependent dendritic mRNA localization is<br />
+Calm3-specific — so synaptic, cardiac, spindle, and sarcomere rows are kept as<br />
+non-core rather than read as Calm3-defining. (An earlier version of the <a href="../../genes/mouse/Calm3/Calm3-ai-review.html">Calm3</a><br />
+review named the human donor as <a href="../../genes/human/CALM1/CALM1-ai-review.html">CALM1</a>; <a href="https://www.uniprot.org/uniprotkb/P0DP25/entry">P0DP25</a> is <a href="../../genes/human/CALM3/CALM3-ai-review.html">CALM3</a>, and the review has<br />
+been corrected.)</p>
+<h3 id="ang2-the-right-source-the-wrong-target"><a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>: the right source, the wrong target</h3>
+<p>Target: mouse <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> (Angrp). Every ISO row comes from human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a><br />
+(<code>UniProtKB:P03950</code>) via GO_REF:0000119. The donor is well characterised and<br />
+most of its terms are still experimentally supported, but mouse <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> is a<br />
+divergent member of the expanded mouse angiogenin family, not <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a>'s namesake<br />
+ortholog: direct mouse<br />
+evidence supports RNase/tRNA cleavage but not angiogenesis, receptor binding,<br />
+signaling, nuclear trafficking, or immune-effector roles. Most rows were<br />
+removed as <code>PROPAGATION_BAD</code> + <code>WRONG_ORTHOLOG_OR_PARALOG</code> +<br />
+<code>FUNCTIONAL_DIVERGENCE</code>. The donor check also finds rows whose human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a> term<br />
+has since gone or was itself only inferred, so source and propagation defects<br />
+compound. The manual trace is in<br />
+<code>genes/mouse/Ang2/Ang2-bioinformatics/RESULTS.md</code>;<br />
+<a href="../../app/propagation/index.html?evidence=ISO&amp;q=Ang2">browse the rows</a>.</p>
+<h3 id="ghr-sound-orthologs-stale-sources"><a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a>: sound orthologs, stale sources</h3>
+<p>Target: mouse <a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a>. Donors are its orthologs, human GHR (<code>UniProtKB:P10912</code>,<br />
+GO_REF:0000119) and rat <a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a> (<code>RGD:2687</code>, GO_REF:0000096), so the relation is<br />
+not the problem. Receptor activity, hormone binding, membrane localization and<br />
+JAK-STAT signaling transfer cleanly. The problems are on the source side:<br />
+several transferred terms (growth factor binding, receptor internalization,<br />
+response to estradiol, response to cycloheximide) are no longer on the human<br />
+donor, and one (cytosol) is supported on the donor only by IBA. A stale source<br />
+is not automatically a wrong term — the JAK-STAT rows are also stale on the<br />
+donor but were kept because the biology is well established for mouse <a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a>. The manual trace is<br />
+<code>genes/mouse/Ghr/Ghr-iso-donor-trace.md</code>; the browser's <code>Donor support = ABSENT</code><br />
+filter now finds the same pattern automatically<br />
+(<a href="../../app/propagation/index.html?evidence=ISO&amp;donor_support=ABSENT">browse</a>).<br />
+<a href="../../genes/mouse/Ghr/Ghr-ai-review.html">Ghr</a> also shows an isoform trap: extracellular-space rows fit the GH-binding<br />
+protein, signaling rows fit the full-length receptor.</p>
+<h2 id="what-iso-adds-on-top-of-iba">What ISO adds on top of IBA</h2>
+<p>For each ISO row the browser records the closest IBA on the same target, using<br />
+the GO is_a/part_of closure<br />
+(<a href="HOMOLOGY_PROPAGATION/propagation-stats.html#what-does-iso-add-on-top-of-iba">statistics</a>):</p>
+<ul>
+<li><strong>IBA to the same or a more specific term</strong> — the ISO row is already implied<br />
+  by PAINT. Same-term rows are rarely rejected; ISO here is corroboration, not<br />
+  new information.</li>
+<li><strong>IBA only to a more general term</strong> — ISO adds specificity below a PAINT<br />
+  term.</li>
+<li><strong>No related IBA</strong> — ISO adds a new assertion. This is the majority of ISO<br />
+  rows, and mostly biological process: the tissue, pathway and physiological<br />
+  context that experimental work in human or rat establishes and PAINT does<br />
+  not propagate. It is also where most of the non-core, over-annotated and<br />
+  removed ISO rows sit.</li>
+</ul>
+<p>So ISO's value beyond IBA is mainly mammal-specific process and context<br />
+annotation carried from the best-studied species, with conserved core<br />
+functions largely duplicated by PAINT. The review burden follows the same line:<br />
+the rows ISO uniquely contributes are the ones that most need checking.<br />
+<a href="../../app/propagation/index.html?evidence=ISO&amp;iba_on_target=NONE">Browse ISO rows with no related IBA</a>.</p>
+<h2 id="where-iso-fails">Where ISO fails</h2>
+<p>The failure patterns seen so far, in rough order of how often they change the<br />
+verdict:</p>
+<ul>
+<li><strong>Context, not function.</strong> Most ISO rows are true but contextual — the<br />
+  common outcome is <code>KEEP_AS_NON_CORE</code>, not <code>REMOVE</code>. The risk is that a cloud<br />
+  of true-but-contextual rows hides the few real defects.</li>
+<li><strong>Donor is not the namesake.</strong> ISO annotations whose donors all have a<br />
+  different gene symbol from the target (paralogs, expanded families) are<br />
+  rejected or reduced about three times as often as annotations with a<br />
+  namesake donor (see statistics).</li>
+<li><strong>Stale source.</strong> The donor no longer carries the term. The row outlives the<br />
+  evidence that justified it.</li>
+<li><strong>Transfer of a transfer.</strong> The donor's own support is inferred.</li>
+</ul>
 <h2 id="failure-taxonomy">Failure Taxonomy</h2>
 <p>Use two labels when reviewing IBA or ISO propagation:</p>
 <ol>
@@ -784,8 +783,20 @@ source defects, stale transfers, and paralog-specific propagation failures.</p>
 <li>[x] Add a source/family annotation checklist for future ISO and IBA reviews.</li>
 <li>[x] Add structured <code>review.propagation_review</code> schema fields for the taxonomy<br />
       and per-source entity comments.</li>
-<li>[ ] Add a reusable ISO donor-trace script that handles multiple source entities<br />
-      and writes the same source-status fields used in the <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> trace.</li>
+<li>[x] Add a reusable donor trace: <code>just refresh-propagation-sources</code> resolves every<br />
+      ISO/ISS/ISA/Compara donor and records whether it still carries the term;<br />
+      surfaced in the <a href="../../app/propagation/index.html">propagation browser</a>.</li>
+<li>[x] Regenerated statistics (species pairs, donor support, ISO vs IBA) in<br />
+<a href="HOMOLOGY_PROPAGATION/propagation-stats.html">propagation-stats</a> instead of<br />
+      hand-maintained counts.</li>
+<li>[ ] Map automated donor support onto <code>propagation_review.source_entities[].source_status</code><br />
+      suggestions for reviewers (e.g. <code>ABSENT</code> → <code>SOURCE_STALE_OR_MISSING</code>).</li>
+<li>[ ] Distinguish one-to-one from one-to-many orthology calls in the browser<br />
+      (needs Alliance/HCOP orthology type, not yet cached).</li>
+</ul>
+<h2 id="slides">Slides</h2>
+<ul>
+<li><a href="ISO/slides/ISO-slides.html">Slides</a> (Marp source: <a href="ISO/slides/ISO-slides.html">ISO-slides.md</a>) — AI generated</li>
 </ul>
     </div>
 

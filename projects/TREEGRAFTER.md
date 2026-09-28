@@ -1,6 +1,7 @@
 ---
 title: "TreeGrafter Inference Evaluation"
-maturity: IN_PROGRESS
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+maturity: MATURE
 tags: [EVALUATION, PIPELINE]
 # Bare symbols here span many species (aprA is Desulfovibrio, pepV is P. putida,
 # "FAS"/"ArgE" are family names), so prose auto-linking mis-targets; keep it off.
@@ -15,9 +16,34 @@ sidecars:
   failure_modes: TREEGRAFTER/treegrafter_failure_modes.tsv
   failure_mode_curated: TREEGRAFTER/failure_mode_curated.tsv
   rejection_rereview: TREEGRAFTER/rereview-2026-09-24/summary.tsv
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - TREEGRAFTER/slides/treegrafter-graft.svg
+    - TREEGRAFTER/slides/treegrafter-results.svg
 ---
 
 # TreeGrafter Inference Evaluation
+
+**Bottom line:** TreeGrafter grafts a protein that is not in a PANTHER reference
+tree onto the best-matching node and copies that node's GO terms to it as IEA
+annotations (`GO_REF:0000118`), with no curator in the loop. We took every such
+annotation in the review corpus at a frozen 2026-09-06 snapshot (898 annotations
+on 510 reviewed proteins) and tallied how reviewers treated them, alongside the
+curated PAINT/IBA set as a contrast. Reviewers accepted 41% of TreeGrafter
+annotations as-is and rejected 26% (`REMOVE` or `MARK_AS_OVER_ANNOTATED`), against
+72% accepted for PAINT/IBA; molecular-function terms fared worst, with 52%
+down-graded. When another pipeline reproduced the same TreeGrafter call
+(`GO_REF:0000120`) acceptance rose to 77%, though reviewers could see that label.
+In five of six down-graded cases the tree placement was sound and the inherited
+term was the problem (too coarse, a sibling term, or a generic localization). The
+errors cluster by family: 29 of the 63 PANTHER families with at least four
+reviewed annotations had half or more of their terms down-graded.
+
+We did this because TreeGrafter output is routinely conflated with curated
+PAINT/IBA, and knowing where automated grafting over-reaches gives PANTHER and
+PAINT curators concrete families to fix. About 70% of the rows come from the
+*Pseudomonas putida* KT2440 batch, so the rates are directional; the corpus has
+grown since the snapshot and the tables were deliberately not chased.
 
 ## Overview
 
@@ -381,6 +407,15 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   exemplars. Key result: the placement is usually sound; the error is the GO term
   attached to the graft node, and **InterPro often resolves the protein better
   than PANTHER** (e.g. `IPR011803 AprA`, `IPR003083 S-crystallin`).
+- **[ATP-synthase terms on flagellar/T3SS export ATPases](TREEGRAFTER/rotary-atpase-leak.md)**
+  — a case study of **inherited PAINT over-placement**. The `GO:0046933` /
+  `GO:0045259` IBD sits on the duplication node `PTN008558586` in PTHR15184, above
+  both the F1-β and the FliI/SctN clades. PAINT IBA and TreeGrafter then label
+  nearly every FliI/SctN protein an ATP synthase, and InterPro2GO (IPR013380,
+  IPR004100) and `GO_REF:0000108` add further wrong rows. Nine full reviews
+  (FliI in *Caulobacter*, *H. pylori*, *P. putida*, *E. coli* and *Salmonella*;
+  SctN in *Salmonella* ×2, *Yersinia* and *Shigella*) remove 31 of the 35 affected
+  rows and mark the other 4 as over-annotations.
 - **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
@@ -416,6 +451,24 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   `PP_0094`, `I7J3R9` and `NCGR_LOCUS1270` ×2. Their re-review rationales in
   the batch records are written from the evidence and should make the
   hand-classification of that queue easier.
+- Independent corroboration of one retained row: the re-review kept the
+  `REMOVE` on PSEPK `fliI` `GO:0046933` (proton-transporting ATP synthase
+  activity, rotational mechanism) on the grounds that phylogenetic transfer
+  across homologous ATPase families produced a contradicted molecular
+  function. The [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case
+  study added the following day reaches the same conclusion from the opposite
+  direction — a proteome-wide completeness test whose false positives were
+  FliI/SctN export ATPases — and locates the error upstream, in a PAINT IBD on
+  a duplication node rather than in the graft.
+
+## 2026-09-27
+
+- Added the [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case study.
+  It began as a first-principles completeness test (F-type ATP synthase across
+  15,525 bacterial reference proteomes), whose false positives turned out to be
+  FliI/SctN export ATPases annotated as ATP synthases. The TreeGrafter graft points
+  are correct here; the error is inherited from a PAINT IBD on a duplication node.
+  None of these rows are in the frozen 2026-09-06 tables.
 
 ## 2026-09-25
 
@@ -517,3 +570,7 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   sibling rows now sit beside a relaxed parent (PSEPK `ubiA` `GO:0004659` /
   `GO:0016765`, `zwf` `GO:0006098`), and PSEPK `benB` still carries an `IC`
   annotation to the obsolete `GO:0043640`.
+
+## Slides
+
+- [Slides](TREEGRAFTER/slides/TREEGRAFTER-slides.html) (Marp source: [TREEGRAFTER-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/TREEGRAFTER/slides/TREEGRAFTER-slides.md)) — AI generated
