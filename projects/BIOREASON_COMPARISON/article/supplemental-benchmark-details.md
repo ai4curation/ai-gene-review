@@ -24,7 +24,7 @@ ARGO139 uses agent-adjudicated local AIGR references, not independently expert-s
 | `supplement_sft_narrative_hf` | 45 | - | SFT narrative cross-check |
 | `supplement_sft_terms_hf_catalogue_all` | 154 | 1,358 | Full HF catalogue view |
 | `supplement_sft_terms_union_all` | 198 | 11,100 | ARGO139 plus 59 HF-only genes |
-| `supplement_gogpt_overlap_300` | 299 | 8,871 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
+| `supplement_gogpt_overlap_300` | 296 | 8,806 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
 
 The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue` SFT download contained 95/139 ARGO139 genes. The remaining 44 ARGO139 genes were not present in that download. We do **not** fill those 44 into the primary SFT analysis, because the BioReason-Pro SFT web exports expose a much larger ancestor-rich term panel and are not comparable to the HF catalogue source.
 
@@ -120,15 +120,17 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,897 `CNN`, 124 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
-A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
+A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,806 GO-GPT predictions across 296 canonical genes (the historical cohort identifier is retained after duplicate reviews were merged). It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
-**Table S8.** GO-GPT prediction overlap at three reference levels (299 canonical genes).
+The overlap analysis is a dated snapshot: the numbers below are as of 2026-09-27 (commit `c7551cb3db`), computed from the GOA files and AIGR reviews at that commit rather than the working tree, so later curation does not change them until the snapshot is deliberately refreshed (`just refresh-benchmark-snapshot`).
 
-| Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
+**Table S8.** GO-GPT prediction overlap at three reference levels (296 canonical genes).
+
+| Reference level | Terms in reference | Predictions overlapping | % of 8,806 predictions |
 |---|---:|---:|---:|
-| Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,760 | 848 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,233 | 351 | 4.0 |
+| Raw GOA | 2,844 | 1,020 | 11.6 |
+| Retained/replacement/proposed-new AIGR annotations | 2,672 | 849 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,206 | 355 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
@@ -137,58 +139,10 @@ SlyD instead leaves its holdase molecular-function slot term-less while the same
 is pending. This is an explicitly temporary cross-review difference: HdeB's obsolete
 term is retained only as an interim benchmark representation and should migrate to the
 general holdase term once that term is available.
-The subsequent HdeA comprehensive review increased the post-review denominator by
-one term and the core-function denominator by two terms without changing either
-exact-overlap count. The Spy comprehensive review likewise added two terms to each
-denominator without changing either exact-overlap count. The CpxP comprehensive
-review added one post-review term and two core-function terms, again without changing
-either exact-overlap count. The DnaJ comprehensive review
-then removed two net post-review terms and three exact GO-GPT overlaps after identifying
-five CAFA rows miscited to a GrpE-DnaK structure paper. Its synthesized core-function
-term count and overlap were unchanged: evidence-backed ATPase activator activity
-replaced an overclaimed protein-unfolding process term in the core set.
-The subsequent DnaK comprehensive review changed annotation classifications and
-advanced the reference to `COMPLETE` without changing any of the three overlap totals.
-The GroEL comprehensive review then removed two net post-review terms and one exact
-GO-GPT overlap by narrowing broad cytoplasm to the directly supported cytosol term;
-its synthesized core-function term count and overlap were unchanged.
-The RidA comprehensive review subsequently removed one net post-review term and one
-exact overlap by narrowing broad annotations and replacing obsolete terms with the
-specific L-isoleucine process or the general holdase NTR; its GO-valued core-function
-count and overlap were unchanged.
-The Skp comprehensive review retained the experimentally supported protein-folding
-process term, added it to the synthesized core process set, and treated
-homotrimerization as non-core. These changes added one reference term and one exact
-GO-GPT overlap at both the post-review and core-function levels; raw GOA was unaffected
-by these curation-only updates. SlyD is the exception: its committed GOA snapshot was
-refetched, removing exact matches to obsolete `GO:0051082` and the active broad parents
-`GO:0016853` and `GO:0046872`. This reduced the raw and post-review reference totals and
-overlaps by three, while its term-less holdase core reduced the GO-valued core total and
-overlap by one. The CnoX comprehensive review likewise refetched its committed GOA
-snapshot, removing obsolete `GO:0051082` and two stale process rows, which reduced the
-raw reference total by three and the exact overlaps by two; its completed review added
-evidence-backed `GO:0009408` to the post-review set and dropped general redox homeostasis
-from the core, leaving `GO:0051087` as an evidence-backed core activity that GO-GPT did
-not predict.
-`BACSU/lipA` then followed the obsoletion of `GO:0009107`: both lipoate
-biosynthesis rows now resolve to the replacement `GO:0009249`, which the review already
-carried, so the post-review reference total fell by one distinct term, and the
-core-function slot keyed on the obsolete term was dropped, reducing the GO-valued core
-total by one. Neither exact-overlap count moved, because `GO:0009107` was never in the
-GO-GPT prediction set.
-
-Most recently, the `ARATH/AT1G06680` (PSBP1) re-review synthesized a core_functions
-block for the first time, adding four GO-valued core slots of which one
-(`GO:0019684`) is a predicted overlap, and stopped retaining `GO:0009535`
-post-review in favour of the narrower thylakoid-lumen term, dropping one predicted
-post-review overlap without changing the post-review total. Thus the recorded
-denominator changes combine upstream reference
-curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
-did not change.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 4.0%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,806 predictions across 296 canonical genes (mean 29.8 per gene). Raw GOA agreement was 11.6%; exact agreement with all GO-valued AIGR core-function slots was 4.0%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 

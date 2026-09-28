@@ -261,21 +261,38 @@ def test_daily_generation_relies_on_main_validation_workflow():
     assert "just validate-all" in validation["run"]
 
 
-def test_shadow_pages_failures_do_not_block_regeneration():
-    """Shadow failures remain observable without failing the legacy PR lane."""
+def test_pages_artifact_failures_do_not_block_regeneration():
+    """Artifact failures remain observable without failing the legacy PR lane."""
     job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
     stage = _step(job, "Stage GitHub Pages artifact")
     summary = _step(job, "Summarize staged Pages site")
-    upload = _step(job, "Upload shadow GitHub Pages artifact")
+    upload = _step(job, "Upload GitHub Pages artifact")
     for step in (stage, summary, upload):
         assert step["continue-on-error"] is True
     for step in (summary, upload):
-        assert step["if"] == "steps.shadow-stage.outcome == 'success'"
-    assert stage["id"] == "shadow-stage"
-    warning = _step(job, "Warn when shadow Pages build fails")
+        assert step["if"] == "steps.pages-stage.outcome == 'success'"
+    assert stage["id"] == "pages-stage"
+    warning = _step(job, "Warn when Pages artifact build fails")
     for step in (stage, summary, upload):
         assert f"steps.{step['id']}.outcome == 'failure'" in warning["if"]
     assert "::warning" in warning["run"]
+
+
+def test_pages_artifact_contains_rule_and_prediction_builds():
+    """Both renderers must finish before the deployable artifact is staged."""
+    job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
+    steps = job["steps"]
+    stage_index = steps.index(_step(job, "Stage GitHub Pages artifact"))
+    upload_index = steps.index(_step(job, "Upload GitHub Pages artifact"))
+    for name, command in (
+        ("Render cached rule reviews and index", "just render-rule-pages"),
+        ("Render ProtNLM prediction evaluations from all review sidecars", "just render-prediction-eval"),
+        ("Build shared predictions browser", "just deploy-predictions-browser"),
+        ("Build homology propagation browser", "just deploy-propagation-browser"),
+    ):
+        build = _step(job, name)
+        assert build["run"] == command
+        assert steps.index(build) < stage_index < upload_index
 
 
 def test_pages_deployment_requires_opt_in_and_publishable_artifact():
@@ -286,16 +303,16 @@ def test_pages_deployment_requires_opt_in_and_publishable_artifact():
     assert deploy["needs"] == "generate-pages"
     assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in deploy["if"]
     assert "needs.generate-pages.outputs.deployable == 'true'" in deploy["if"]
-    assert "steps.shadow-upload.outcome == 'success'" in build["outputs"]["deployable"]
+    assert "steps.pages-upload.outcome == 'success'" in build["outputs"]["deployable"]
     assert (
-        "steps.shadow-summary.outputs.deployable == 'true'"
+        "steps.pages-summary.outputs.deployable == 'true'"
         in build["outputs"]["deployable"]
     )
     summary = _step(build, "Summarize staged Pages site")["run"]
     assert ".deployable == true" in summary
     assert ".broken_local_links" in summary
     assert ".off_base_path_links" in summary
-    assert "likely missing site-prefix links" in summary
+    assert "absolute deployment size ceiling" in summary
     assert deploy["concurrency"] == {"group": "pages", "cancel-in-progress": False}
     assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
     assert deploy["environment"]["name"] == "github-pages"
@@ -428,6 +445,16 @@ def test_generated_artifact_allowlist_is_fully_anchored():
         "app/index.html",
         "app/data.js",
         "app/schema.js",
+        "app/predictions/index.html",
+        "app/predictions/data.js",
+        "app/predictions/schema.js",
+        "app/predictions/source-files.json",
+        "app/propagation/index.html",
+        "app/propagation/data.js",
+        "app/propagation/schema.js",
+        "app/propagation/source-files.json",
+        "rules/arba/index.html",
+        "rules/arba/ARBA00000900/ARBA00000900-review.html",
         "reports/validation-all.tsv",
     ):
         assert allowed(path), path
@@ -437,7 +464,31 @@ def test_generated_artifact_allowlist_is_fully_anchored():
         "genes/human/TP53/TP53-ai-review.html-notes.md",
         "pages",
         "app/extra.js",
+        "app/predictions/source-files.json.bak",
+        "app/predictions/curated-review.yaml",
+        "app/propagation/curated-review.yaml",
+        "app/propagation/source-files.json.bak",
+        "rules/arba/ARBA00000900/ARBA00000900-review.yaml",
+        "rules/arba/ARBA00000900/ARBA00000900-review.html.bak",
         "reports",
         "src/ai_gene_review/render.py",
     ):
         assert not allowed(path), path
+
+
+def test_propagation_failure_blocks_publication_but_preserves_regeneration():
+    job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
+    build = _step(job, "Build homology propagation browser")
+    assert build["continue-on-error"] is True
+    assert _step(job, "Stage GitHub Pages artifact")["if"] == "steps.propagation-build.outcome == 'success'"
+    for name in ("Check for changes", "Create or update regeneration PR"):
+        assert 'app/propagation/' in _step(job, name)['run']
+    assert "steps.propagation-build.outcome == 'failure'" in _step(job, "Warn when Pages artifact build fails")['if']
+
+
+def test_publication_does_not_run_biological_validation():
+    workflow = _workflow(GENERATE_PAGES)
+    assert not any('validate-modules' in step.get('run', '') for step in workflow['jobs']['generate-pages']['steps'])
+    assert 'validate-modules' not in (ROOT / 'project.justfile').read_text().split('build-pages:', 1)[1].splitlines()[0]
+    ci = _workflow(ROOT / '.github/workflows/main.yaml')
+    assert _step(ci['jobs']['test'], 'Validate modules (scoped)')['run'] == 'just validate-modules'

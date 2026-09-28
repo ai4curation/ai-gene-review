@@ -4087,6 +4087,7 @@ class CoreFunction(ConfiguredBaseModel):
                        'obligation_level': 'REQUIRED',
                        'range': 'GOMolecularActivityEnum'}],
          'domain_of': ['GoCamActivityReview', 'CoreFunction']} })
+    proposed_molecular_function: Optional[str] = Field(default=None, description="""The core activity when GO has no term for it yet: the proposed_name of an entry in this review's top-level proposed_new_terms. Use it instead of putting an obsolete or ill-fitting GO id in molecular_function (e.g. in-situ holdase chaperones after GO:0051082 was obsoleted with no replacement). When GO creates the term, move its id to molecular_function and drop this.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CoreFunction']} })
     contributes_to_molecular_function: Optional[Term] = Field(default=None, description="""A molecular function that this gene product contributes to as part of a complex, but does not independently enable. Used for accessory/structural subunits of multi-protein complexes (e.g., an accessory subunit of Complex I contributes_to NADH dehydrogenase activity but does not have that activity on its own). The molecular_function slot should then contain the subunit-specific activity (e.g., structural molecule activity).""", json_schema_extra = { "linkml_meta": {'bindings': [{'binds_value_of': 'id',
                        'obligation_level': 'REQUIRED',
                        'range': 'GOMolecularActivityEnum'}],

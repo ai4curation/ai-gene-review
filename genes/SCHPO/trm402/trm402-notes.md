@@ -45,3 +45,8 @@ The rRNA methyltransferase, rRNA processing and mitochondrial-LSU IBA assertions
 ## Research provenance
 
 The genuine [Falcon report](trm402-deep-research-falcon.md) is retained with its provider metadata and artifact. Its conclusions were checked against the target record, exact accession and primary sources described above. Scientific uncertainties are recorded as UNC/UNDECIDED findings rather than a request for another reviewer to perform this assessment.
+
+
+## Full-gene re-review, 2026-09-20
+
+All19 rows reviewed, preserving trm402 folder and current trm4b symbol. Restored RNA binding, methyltransferase, RNA methyltransferase and cytoplasm to ACCEPT. Physiological wobbleC34 IBA/ISO remain REMOVE on direct paralog-resolved evidence, explicitly preserving real in-vitro C34 catalysis. RNA-substrate and mitochondrial-assembly extensions remain UNDECIDED pending root-managed clade/substrate adjudication. The complete Falcon report is now referenced and used substantively; its physiological-site distinction and non-exclusion of cytoplasmic residence agree with the primary full text. No NEW rows added.

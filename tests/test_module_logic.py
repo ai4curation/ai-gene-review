@@ -230,7 +230,35 @@ def test_methionine_genome_reconstruction(present, found, gaps):
     assert [step_id(s) for s in unsatisfied_steps(circuit, holds)] == gaps
 
 
-@pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
+def _abduction_fixture() -> dict:
+    """Fixed three-step circuit; curation additions must not change unit inputs.
+
+    Keep the live methionine module covered by the reconstruction tests above.
+    Here each tuple is one alternative route; multi-gene tuples are AND gates.
+    """
+    steps: list[tuple[str, list[tuple[str, ...]]]] = [
+        ("acylation", [("metA",), ("metX",)]),
+        ("sulfur_incorporation", [("metB", "metC"), ("metY",), ("metZ",)]),
+        ("methylation", [("metE",), ("metH",)]),
+    ]
+    return {"module": {"id": "abduction_fixture", "parts": [
+        {"order": order, "node": {
+            "id": step,
+            "variant_sets": [{
+                "id": f"{step}_alternatives",
+                "variants": [
+                    {"id": f"{step}_{index}", "annotons": [
+                        {"id": symbol, "participant": {"gene": {"preferred_term": symbol}}}
+                        for symbol in route
+                    ]}
+                    for index, route in enumerate(routes)
+                ],
+            }],
+        }}
+        for order, (step, routes) in enumerate(steps, 1)
+    ]}}
+
+
 @pytest.mark.parametrize(
     "present,active,classification,gaps",
     [
@@ -245,7 +273,7 @@ def test_methionine_genome_reconstruction(present, found, gaps):
     ],
 )
 def test_abduction_classification(present, active, classification, gaps):
-    circuit = compile_module_file(METHIONINE)
+    circuit = compile_module(_abduction_fixture())
 
     def holds(atom):
         return atom.gene_symbol in present
@@ -312,8 +340,34 @@ def test_family_atom_uses_concrete_representatives():
     assert hbdh.uniprots == ("Q88IC6", "Q02338")
 
 
+@pytest.mark.parametrize("representative_label", ["Species B", "B"])
+def test_explicit_gene_symbol_takes_precedence_over_family_labels(representative_label):
+    """An explicit gene names the candidate; family members still supply accessions."""
+    annoton = _annoton("a", "A", "P1")
+    annoton["participant"]["family"] = {"representative_members": [
+        {"preferred_term": representative_label, "term": {"id": "UniProtKB:P2"}},
+    ]}
+    circuit = compile_module({"module": {"id": "step", "annotons": [annoton]}})
+    atom, = iter_atoms(circuit)
+    assert atom.gene_symbols == ("A",)
+    assert atom.uniprots == ("P1", "P2")
+    ab = abduce(circuit, lambda candidate: False, asserted_active=True)
+    assert ab.gap_candidates == {"a": ["A"]}
+
+
 def test_atom_is_hashable():
     # frozen dataclass -> usable in sets (a regression we want to keep)
     atoms = set(iter_atoms(compile_module(_toy_module())))
     assert len(atoms) == 5
     assert all(isinstance(a, Atom) for a in atoms)
+
+
+def test_methionine_family_gap_candidates_are_symbols():
+    """Exercise the curated family-bearing input that exposed organism tokens."""
+    circuit = compile_module_file(METHIONINE)
+    result = abduce(circuit, lambda atom: "metH" in atom.gene_symbols, asserted_active=True)
+    assert result.classification == "ABDUCTION_TARGET"
+    assert result.gap_candidates["acylation"] == ["metA", "metX"]
+    assert result.gap_candidates["sulfur_incorporation"] == [
+        "metB", "metC", "metY", "metZ"
+    ]

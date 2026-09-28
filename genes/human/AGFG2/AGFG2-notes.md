@@ -1,3 +1,5 @@
+> The 2026-09-20 re-review below supersedes earlier PAINT and catalytic interpretations.
+
 # AGFG2 (O95081) — review journal
 
 Working notes for the GO annotation review. Process history lives here rather than in
@@ -407,3 +409,19 @@ re-checked against the files in *this* worktree by the committed audit script be
 hook error was dismissed, and `just validate` run inside the worktree reports `✓ Valid`.
 A hook error is a claim to verify, not an order — complying with these would have meant
 deleting correct evidence.
+
+
+## 2026-09-20 full-gene re-review
+
+All seven source annotations and both existing authored proposals were assessed. The actual PTHR46134 tree places O95081/PTN002509056 under both positive nodes, so three developmental MARK_AS_OVER_ANNOTATED calls become ACCEPT; cytoplasm and membrane become ACCEPT as correct central locations. Source-node NOT_RELEVANT and pairwise/donor-count reasoning were removed. Closer mouse Agfg2 without experiments is not a biological negative control. Salivary enrichment does not exclude germ-cell function.
+
+The real R75/T89 correspondence is now machine-readable in residue_claims. PMID:23433073 also reports loss of the ASAP3 Asp-homologous position in all GIT sequences, and PMID:10788515 measures GIT1/GIT2 GAP activity. Therefore the selected four Asp-retaining controls cannot establish universal inactivity. GO:0005096 becomes UNDECIDED. A neutral OpenScientist hypothesis was registered after root's exact repository/global-cache negative check and launched through the gated runner; provider completion is not yet claimed.
+
+Both existing NEW process assertions remain: primary AGFG2 trafficking-cofactor participation is distinct from cargo/substrate necessity, same-role GO comparators are saved, and no redundant process ancestor/descendant was found. Full PMID:34369554 narrows the exocytosis mechanism and corrects the claim that every maturation measure is unchanged. Full PMID:25496667 found no significant replication defect, so viral activation is explicitly receptor-removal/cofactor support, not demonstrated enhancement of viral replication. Full PMID:10613896 includes Hrbl reporter experiments but performs detailed localization and NPF mutation on Hrb; reporter enhancement is not direct RNA transport. Affinage's dual Nef/Vpu narrative is retained, its conflicting table, mammal-only claim and assay conflations are documented. Primary-scope and tree/ontology artifacts provide the evidence trail.
+
+The older audit_claims.py H check requires now-removed historical count sentences to appear in the review; those source counts remain in immutable JSON and RESULTS.md, but they are not mandatory biological claims. Current review verification uses schema/best-practice validation, source-field preservation and exact quote checks. The historical script remains available without changing its old tests to force the new narrative to pass.
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Keep the biological description independent of propagation-review workflow.

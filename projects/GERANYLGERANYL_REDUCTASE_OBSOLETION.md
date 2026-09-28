@@ -1,10 +1,28 @@
 ---
 title: "Geranylgeranyl Reductase Activity — Obsoletion & Replacement"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [human, ARATH, TOBAC]
 ---
 
 # Geranylgeranyl Reductase Activity — Obsoletion & Replacement
+
+**Bottom line:** GO has obsoleted GO:0045550 *geranylgeranyl reductase
+activity*, which had no enzyme cross-reference, and merged it into
+GO:0102067 *geranylgeranyl diphosphate reductase activity* (EC 1.3.1.83),
+the plant and cyanobacterial CHLP reaction that reduces geranylgeranyl
+diphosphate to phytyl diphosphate for chlorophyll and tocopherol. We
+listed the four experimental annotations that must move, the four
+UniRule/InterPro mappings to redirect, and checked the repo. Two rows fit
+the new term's substrate (Arabidopsis and tobacco CHLP); the Arabidopsis
+row is IDA, but the tobacco row is NAS only and may warrant removal rather
+than remapping. Two do not obviously fit:
+human AKR1C3 and AKR1B10, both IDA from one aldo-keto reductase paper
+(PMID:21187079), and the archaeal IPR023590 mapping, whose enzyme acts on
+a lipid rather than free GGDP. Scoped, not yet started: none of the four
+genes has a review here. The obsoletion has since landed (OLS lists
+GO:0045550 as obsolete), so the "not yet applied" notes below are out of
+date.
 
 ## Overview
 
@@ -158,3 +176,7 @@ term).
 - 2026-05-08 — Verified Q9ZS34 organism via UniProt REST as Nicotiana tabacum
   (taxon 4097), verified GO:0045550 and GO:0102067 labels via OLS, and
   verified UniRule:UR001995838 via UniProt REST.
+
+## Slides
+
+- [Slides](GERANYLGERANYL_REDUCTASE_OBSOLETION/slides/GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.html) (Marp source: [GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.md](GERANYLGERANYL_REDUCTASE_OBSOLETION/slides/GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.md)) — AI generated
