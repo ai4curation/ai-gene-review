@@ -173,9 +173,13 @@ are therefore expected; existing human reviews still link normally.
 | APOL1 | Definitive | INITIALIZED | Review #3363 merged; current-head approval and required CI passed; all 18 scoped merged blobs verified | `cmungall/clingen-apol1` | [#3363](https://github.com/ai4curation/ai-gene-review/pull/3363) |
 | ARHGAP29 | Definitive | INITIALIZED | Review #3362 merged; current-head approval and required CI passed; all 17 scoped merged blobs verified | `cmungall/clingen-arhgap29` | [#3362](https://github.com/ai4curation/ai-gene-review/pull/3362) |
 | APOB | Definitive | INITIALIZED | Ready #3365; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-apob` | [#3365](https://github.com/ai4curation/ai-gene-review/pull/3365) |
-| AR | Definitive | INITIALIZED | Ready #3364; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ar` | [#3364](https://github.com/ai4curation/ai-gene-review/pull/3364) |
-| ARHGEF9 | Definitive | INITIALIZED | Ready #3366; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-arhgef9` | [#3366](https://github.com/ai4curation/ai-gene-review/pull/3366) |
-| ARID1A | Definitive | INITIALIZED | Ready #3367; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-arid1a` | [#3367](https://github.com/ai4curation/ai-gene-review/pull/3367) |
+| AR | Definitive | INITIALIZED | Review #3364 merged; current-head approval and required CI passed; all 114 scoped merged blobs verified | `cmungall/clingen-ar` | [#3364](https://github.com/ai4curation/ai-gene-review/pull/3364) |
+| ARHGEF9 | Definitive | INITIALIZED | Review #3366 merged; current-head approval and required CI passed; all 19 scoped merged blobs verified | `cmungall/clingen-arhgef9` | [#3366](https://github.com/ai4curation/ai-gene-review/pull/3366) |
+| ARID1A | Definitive | INITIALIZED | Review #3367 merged; current-head approval and required CI passed; all 53 scoped merged blobs verified | `cmungall/clingen-arid1a` | [#3367](https://github.com/ai4curation/ai-gene-review/pull/3367) |
+| ARID1B | Definitive | INITIALIZED | Ready #3370; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-arid1b` | [#3370](https://github.com/ai4curation/ai-gene-review/pull/3370) |
+| ARID2 | Definitive | INITIALIZED | Ready #3372; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-arid2` | [#3372](https://github.com/ai4curation/ai-gene-review/pull/3372) |
+| ARMC2 | Definitive | INITIALIZED | Review #3369 merged; current-head approval and required CI passed; all 11 scoped merged blobs verified | `cmungall/clingen-armc2` | [#3369](https://github.com/ai4curation/ai-gene-review/pull/3369) |
+| ARMC9 | Definitive | INITIALIZED | Changes requested #3371; exact-head review remains unresolved; approval, CI and merge remain pending | `cmungall/clingen-armc9` | [#3371](https://github.com/ai4curation/ai-gene-review/pull/3371) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -187,16 +191,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-local/published tree checks and append-only receipt chains. **99 of 2,876 genes
-are complete**; 100 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 106 dedicated full-audit PRs.
+signed publication/file checks and append-only receipt chains. **103 of 2,876 genes
+are complete**; 104 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 110 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-APOL1 and ARHGAP29 are complete after approval at their exact final heads, successful required CI and exact merged-file verification. AR (#3364), APOB (#3365), ARHGEF9 (#3366) and ARID1A (#3367) are newly published original audits. Their first reviewer followups, plus APOL1 and ARHGAP29 source followups, retain every earlier published revision. Source41 and Source42 imported nine normal PMID caches without overwrite. Seed11 imported 18 primary files containing 349 PENDING assertions and then 21 normal auxiliary caches; 65 existing caches and all differing recovered copies were preserved separately. Imports do not complete biological reviews. Later followups and review decisions are outside this finite receipt cut. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved.
+ARHGEF9, ARID1A, AR and ARMC2 are complete after exact-head approval, successful required CI and verified merged files. ARMC2 (#3369), ARID1B (#3370), ARMC9 (#3371) and ARID2 (#3372) are newly published original audits. AR’s second followup and the first ARMC2, ARMC9 and ARID1B followups retain every earlier published revision. Native API publications are verified from their actual historical payloads, signed commits and complete remote file proofs; no local commit is invented. Source43–46 imported nine exact normal PMID caches without overwrite. Imports do not complete biological reviews. ARMC9 remains held on its exact current head over the generic-binding policy conflict documented by the reviewer; supported interactions are retained under the explicit user action definitions, and no merge is claimed. Source47, the ARID2 followup and ARL2BP publication are outside this fixed receipt cut. The externally merged AKR1D1 audit remains incomplete because its required Reactome record is unresolved.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -626,3 +630,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-28 checkpoint65: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: AP4E1, AP2M1, APC. 97/2,876 complete; 98 original merges; 1 pending source follow-ups; 102 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-28 checkpoint66: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: APOL1, ARHGAP29. 99/2,876 complete; 100 original merges; 1 pending source follow-ups; 106 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-28 checkpoint67: Record verified source follow-ups, explicitly receipted source/seed imports and independently reconciled first-review versus post-merge completions. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARHGEF9, ARID1A, AR, ARMC2. 103/2,876 complete; 104 original merges; 1 pending source follow-ups; 110 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
