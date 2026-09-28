@@ -60,3 +60,63 @@ cerebroside-3-sulfate)** to yield **galactosylceramide (cerebroside) + sulfate**
 - MF: GO:0004098 cerebroside-sulfatase activity (exact GOA sulfatase MF, most specific)
 - BP: GO:0030149 sphingolipid catabolic process (directly_involved_in)
 - CC: GO:0043202 lysosomal lumen (located_in)
+
+
+## Reassessment, 2026-09-28
+
+The following source-grounded reassessment supersedes the earlier decision summary. It covers all 41 current source annotations and preserves both alternative products. The old summary conflated two sibling enzyme terms and discounted several locations or interactions without target-specific grounds. The final source inventory includes distinct HuRI partners and two endolysosomal IC variants, whose identities remain intact.
+
+## Enzyme and substrate distinctions
+
+The complete cached body of PMID:25553303 was read. Its leukocyte assay hydrolyses natural N-octadecanoyl-sulfatide, quantifies ceramide product by UPLC-MS/MS, and compares results with a traditional synthetic-substrate colorimetric assay. This supports both natural cerebroside-sulfatase catalysis and a separate diagnostic aryl-sulfate activity. The latter is a real assay activity, but should not define a separate physiological core function. The article is indexed as a letter but reports original experimental measurements; that publication-type label alone is not grounds for discounting its results.
+
+The current [GO:0004065 definition and parents](https://amigo.geneontology.org/amigo/term/GO:0004065) specify phenol-sulfate hydrolysis (EC 3.1.6.1). [GO:0004098](https://amigo.geneontology.org/amigo/term/GO:0004098) specifies cerebroside-3-sulfate hydrolysis (EC 3.1.6.8). Both directly descend from sulfuric ester hydrolase activity; neither is the parent of the other. This supersedes the earlier notes: GO:0004065 is not a parent of GO:0004098.
+
+PMID:24294900 was read at abstract scope: it directly describes measurement of ARSA activity against unmodified sulfatide, including an enzyme-free parallel assay. PMID:10751093 was also read at abstract scope: mutant expression, residual activity and prelysosomal arrest support the established enzyme function, while the substrate and complete assay details remain unread. Do not describe these abstract-only caches as full-text evidence.
+
+PMID:32431092's cached Introduction, assay Methods, Results and Discussion were read. Its experiment measures human leukocyte activity with 4-nitrocatechol sulfate and relates that activity to pseudodeficiency genotypes. Physiological sulfatide accumulation is background context, not the experiment performed. The existing sphingolipid-catabolism annotation is consistent with ARSA's established function, but its IDA code must not be glossed as a direct natural-lipid turnover experiment in this paper. PMID:2562955's abstract explicitly reports expression of human ARSA in monkey and baby-hamster kidney cells, increased activity, lysosome-like staining and M6P-receptor-dependent delivery to dense lysosomes; preserve that heterologous-cell scope.
+
+The indexed [original PMID:19224915 paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC2666589/) was read in its Experimental Procedures, Results for Figures 1–4 and Discussion. Purified recombinant human ARSA with human or porcine saposin B desulfated sulfatide in micelles/liposomes; omission controls and alternative saposins delimit the cofactor requirement. Parallel p-nitrocatechol sulfate assays bypass the membrane-substrate presentation requirement. These experiments directly separate the catalytic enzyme from the lipid-presenting cofactor. The cached record contains the complete abstract only; the separately inspected original Experimental Procedures and Results are not represented as cached full text.
+
+## Ganglio-series sulfatides versus gangliosides
+
+The original PMID:11919180 article was read through indexed full-text excerpts of its Results, Table III and Discussion, [original article copy](https://www.researchgate.net/publication/11445869_Kidney_sulfatides_in_mouse_models_of_inherited_glycosphingolipid_disorders_-_Determination_by_nano-electrospray_ionization_tandem_mass_spectrometry). Direct page retrieval failed. ASA-deficient mouse kidneys accumulate SM4s, SM3 and SB1a; the paper distinguishes these sulfated lipids from sialylated gangliosides and proposes ARSA-mediated sulfate cleavage in their degradation. Human Tay-Sachs liver measurements concern a different experimental comparison. This is evidence about substrate chemistry and actual experiments, not a wrong-gene inference from the title.
+
+[GO:0006689](https://amigo.geneontology.org/amigo/term/GO:0006689) requires a sialylated ceramide oligosaccharide. [GO:0046479](https://amigo.geneontology.org/amigo/term/GO:0046479) covers glycosphingolipid breakdown and is its parent. MODIFY to GO:0046479 preserves the supported catabolic role without conflating the sulfate-containing substrates with gangliosides. Preserve the source IDA code and document the mouse-to-human scope. This is a correction of an existing row, not a NEW biological-process assertion.
+
+## Maturation and catalytic cofactor
+
+The complete cached extraction of PMID:9342345 contains the abstract and Discussion, but not a complete Results/Methods extraction. It describes in-vitro translation and microsome translocation, formation of formylglycine after or late during entry into the ER, and the ARSA peptide sequence sufficient for modification. ARSA is the substrate of this activation reaction. ER localization is a maturation compartment, not the location assigned to its mature lipid-hydrolysis core function.
+
+PMID:12888274 was read at abstract scope. It explicitly identifies calcium at the active site of endogenous human placental ARSA, contrasting magnesium in a recombinant structure. Calcium binding is relevant to the enzyme mechanism; retain the established annotation without inventing a separate calcium-signaling role.
+
+## SUMF2 paper and scoped correction
+
+The cached main text of PMID:15962010 was read from Introduction through Results/Discussion and Methods. Its Fig. 4 activity series explicitly includes ARSA expressed in Cos7 cells with SUMF1 or SUMF2. Its physical-association experiments in Fig. 2 concern SUMF1/SUMF2 and IDS/SGSH. The ARSA result must not be replaced with an assumed ARSA physical interaction. The main text delegates substrate-specific assay methods to its supplement, which has not been read.
+
+The [2016 correction, PMID:27909074](https://pmc.ncbi.nlm.nih.gov/articles/PMC5283596/) identifies image problems in supplementary loading-control panels 4A/4B associated with Fig. 2A/2C and retracts those panels. It does not retract the entire paper or specifically identify the Fig. 4 ARSA measurements as invalid. The cached record is a bibliographic erratum notice only; the correction details above come from the separately inspected original online author/editor statements. The reference assessment records the limited quality concern. Retain GO:0008484 sulfuric ester hydrolase activity as ACCEPT because the original ARSA activity is supported; the unread substrate supplement does not justify making that particular IDA assertion more specific using other papers. This supersedes the earlier over-annotation decision.
+
+## Localization and Reactome graph checks
+
+All five existing Reactome cache summaries were read. The live participant graph adds information absent from those summaries:
+
+- [R-HSA-6798751](https://reactome.org/content/detail/R-HSA-6798751) transports the [azurophil-granule set R-HSA-6798742](https://reactome.org/content/detail/R-HSA-6798742) to the [extracellular set R-HSA-6806184](https://reactome.org/content/detail/R-HSA-6806184). Both sets explicitly list ARSA chains 19–444 and 448–507. Keep these two existing TAS locations as non-core; the old over-annotation arguments based only on ARSA's main lysosomal role do not rebut these modeled locations. No neutrophil-degranulation process annotation is proposed.
+- [R-HSA-1614362](https://reactome.org/content/detail/R-HSA-1614362) uses SUMF1 as catalyst. Its substrate set [R-HSA-1614312](https://reactome.org/content/detail/R-HSA-1614312) contains ER-luminal ARSA dimer, and its product set [R-HSA-1614309](https://reactome.org/content/detail/R-HSA-1614309) contains active ARSA:Ca2+. This supports ER-lumen transit and maturation, not ARSA catalysis of its own activation.
+- [R-HSA-2248891](https://reactome.org/content/detail/R-HSA-2248891) explicitly models active ARSA:Ca2+ moving from ER lumen to lysosomal lumen; M6PR supplies cargo-receptor activity. ARSA is the cargo.
+- [R-HSA-9840949](https://reactome.org/content/detail/R-HSA-9840949) explicitly assigns active ARSA:Ca2+ as the catalyst in lysosomal lumen for SM3 desulfation. R-HSA-1606807's cached summary explicitly places ARSA in lysosomal lumen during saposin-B-dependent sulfatide hydrolysis.
+
+PMID:27498570 was read at abstract scope, in its opening Results (cathepsin substrates and acid-phosphatase cytochemistry in NRK, HeLa and MCF7 cells), and the extracted Discussion/Methods. Its general endolysosomal model supports the curator's IC inference for an acid hydrolase, not a claim that these displayed experiments directly imaged ARSA. The two IC rows retain their different supporting-entity identities.
+
+## Interaction and exosome evidence
+
+Independent consultation examined the cached screen abstracts, exact UniProt partners and the [primary HuRI TRIP13 portal table](https://interactome-atlas.org/search/TRIP13). The indexed primary table explicitly reports ARSA–TRIP13 for Yu-11, HI-II-14, Yang-16 and HI-III, corresponding to PMID:21516116, PMID:25416956, PMID:26871637 and PMID:32296183. The neighboring-network table additionally reports ARSA–VENTX and ARSA–RHOXF2 for HI-III. Those six source assertions are retained as non-core interactions. Q15645 is TRIP13. Gene-level portal evidence does not resolve original construct or isoform details and does not establish an endogenous complex or a distinct physiological molecular function.
+
+The source-specific Sahni-15 ARSA–TRIP13 record and ten remaining HuRI source rows retain UNDECIDED with explicit pair/construct limits. A missing accessible pair record is not evidence that the experiment was absent or the interaction false. Generic protein binding is uninformative, but that alone does not establish the likely biological error required for REMOVE under the explicit user ActionEnum.
+
+The complete cached main text of [PMID:23533145](https://pubmed.ncbi.nlm.nih.gov/23533145/) describes pooled human expressed-prostatic-secretion urine, exosome enrichment, LC-MS and FDR methods. Its target-specific protein/peptide entry in Supplementary Table 2 remains unread. The exosome location therefore remains UNDECIDED, without a contamination or target-absence claim.
+
+## Core synthesis and scope
+
+The single core is cerebroside-sulfatase activity (GO:0004098) contributing directly to glycosphingolipid breakdown (GO:0046479). Its main established compartment is lysosomal lumen (GO:0043202). The existing inferred endolysosome-lumen activity site (GO:0036021) is retained explicitly as inference: the [cached GO-CAM](../../../gocams/696022cd00002259/696022cd00002259-src.yaml), activity 696022cd00002297, places ARSA/P15289 on GO:0004098 and carries an IC occurs_in edge supported by PMID:27498570 and GO:0030149. No direct ARSA imaging experiment is invented. Saposin B supplies lipid presentation; SUMF1 matures ARSA; ARSA itself performs desulfation.
+
+The final decisions are 13 ACCEPT, 15 KEEP_AS_NON_CORE, 12 UNDECIDED and one MODIFY. No NEW annotation is proposed. Existing evidence codes, identifiers, qualifiers and alternative products remain unchanged. The earlier seminolipid assertion is not carried into the standalone description because the inspected evidence used for this reassessment does not establish that physiological substrate context.
