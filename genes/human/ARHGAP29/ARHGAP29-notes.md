@@ -23,3 +23,68 @@ All fourteen original annotations and both seeded alternative products are retai
 Exact PAINT topology/IBD and historical ARBA conditions were not reconstructed. The three PAINT reviews retain the actual seeded PTN004470214 or PTN002689839 source and mark its tracing unresolved; independent target evidence supports the biological assertions. The target's occurrence in its own donor set is expected grounding, not circularity. No isoform-specific function is inferred without mapping the tested construct.
 
 The configured deep-research attempt failed during source preparation and produced no provider report. Normal source records were recovered through the repository fetch workflow; there is no authored provider-branded research file. Unread target-specific evidence remains explicit and is not converted into an incorrectness claim.
+
+
+## Reviewer followup: endothelial signaling and craniofacial development
+
+The earlier two UNDECIDED decisions above record the initial review. Both are
+now ACCEPT with explicit deference to the original experimental curator:
+independent evidence establishes cytoplasmic localization and PDZ-domain binding.
+The original localization supplement and Radil-specific interaction record remain
+unread. PTPL1 binding corroborates the molecular function; it is not presented as
+verification of the Radil experiment. The complex-association rationale now relies
+on the reported positive coimmunoprecipitation, without treating a missing construct
+accession as evidence against that result. All 14 original source assertions and
+both product records remain intact; no NEW annotation is added.
+
+The [1997 biochemical study](https://pubmed.ncbi.nlm.nih.gov/9305890/) joins two
+observations: Rho-directed GAP activity and C-terminal binding to PTPL1 PDZ4.
+The [2005 Rap2 study](https://pubmed.ncbi.nlm.nih.gov/15752761/) identifies human
+PARG1 as a putative Rap2 effector through a separate region of the protein.
+Its GTP-dependent interaction and fibroblast cytoskeletal results suggest
+regulation of the GAP; they do not establish a universal activation mechanism.
+Only the complete abstract of that study was read.
+
+The [2011 tubulogenesis study](https://pubmed.ncbi.nlm.nih.gov/21396893/) tests
+ARHGAP29 depletion in human umbilical vein endothelial cells in three-dimensional
+matrix. Loss of lumen formation accompanies altered GTPase signaling, contractility
+and matrix adhesion. The cultured human depletion experiments are distinct from
+the paper's mouse Rasip1 knockout and mouse endothelial colocalization assays.
+The abstract, targeted primary Results/Discussion and the complete main Experimental
+Procedures were read in the recovered normal body. Supplementary protocols and
+image pixels were not independently audited. This supports a role in human
+endothelial morphogenesis, without asserting that every in-vivo stage of vessel
+formation requires ARHGAP29.
+
+The [2013 barrier study](https://pubmed.ncbi.nlm.nih.gov/23798437/) connects
+Rap1, RASIP1/RADIL and ARHGAP29 to Rho-dependent actomyosin tension. Human
+endothelial depletion reduces electrical barrier resistance; Rho/ROCK inhibition
+or depletion supports the proposed signaling order. Target Results, Discussion
+and the short main Methods were read. Detailed supplementary protocols remain
+unread. The authors did not consistently detect a bulk Rho-GTP reduction after
+Rap1 activation, so local regulation should not be restated as a demonstrated
+global decrease. The later HEG1/RASIP1 study provides the separately inspected
+ARHGAP29 coassociation evidence already described above.
+
+The [2012 cleft study](https://pubmed.ncbi.nlm.nih.gov/23008150/) combines human
+case/control variant analysis with mouse craniofacial expression studies.
+Rare potentially damaging human variants implicate ARHGAP29 in nonsyndromic cleft
+lip with or without cleft palate. Reduced expression in Irf6-deficient mice
+suggests a developmental relationship; it does not demonstrate direct IRF6
+regulation in human cells. The complete abstract, expression/sample/sequencing/statistics
+Methods and target Results were read in the recovered normal body. Truncating
+variants also occurred in unaffected relatives, and the aggregate associations
+did not survive the paper's multiple-testing threshold. This early study is
+supporting evidence; it does not independently establish fully penetrant inheritance.
+The project's ClinGen inventory separately records the gene-disease association.
+
+These findings expand the biological summary while retaining the existing GAP
+core and negative-regulation process. Rho-specific pathway membership is kept
+because the GAP performs the switch-regulation step itself. No new vascular or
+craniofacial process annotation is inferred from perturbation phenotypes alone.
+
+
+The four additional publication records were recovered by the normal fetcher without
+source authoring. The 2011 and 2012 records contain XML-derived full text; the 2005
+and 2013 records are abstract-only. Reference and quotation availability flags
+follow those actual records, while external reading is documented separately.
