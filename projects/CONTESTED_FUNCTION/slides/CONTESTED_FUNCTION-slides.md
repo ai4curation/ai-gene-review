@@ -38,7 +38,7 @@ Proteins that keep an enzyme's fold but not its activity
 
 - **Pseudo-enzymes** keep a family's domain but have lost catalysis, so IBA, IEA and sometimes experimental rows give them an activity biochemistry contradicts.
 - We reviewed four cases in depth: **Epe1** (fission yeast) and three biosynthetic-cluster proteins, **eryCII, pqsB, actI-ORF2**.
-- Epe1's **4 electronic catalytic rows are REMOVE**, replaced by histone-binding terms; the **2 IDA/EXP rows and metal ion binding are UNDECIDED**. Finding **more candidates has not started**.
+- Epe1's **4 electronic catalytic rows are REMOVE** (only the IBA demethylase row gets a replacement, chromo shadow domain binding); the **2 IDA/EXP rows and metal ion binding are UNDECIDED**. Finding **more candidates has not started**.
 
 ---
 
@@ -58,13 +58,21 @@ Proteins that keep an enzyme's fold but not its activity
 
 ## Evidence against demethylase activity
 
-1. The JmjC iron triad is **H297-E299-Y370**: the distal iron-ligating His is replaced by **Tyr**.
-2. The distal **Fe(II)-binding** histidine is lost: **His370 is a Tyr**.
-3. **Mass spectrometry** shows no demethylation of H3K9me2/me3 peptides.
-4. **H297A** is assay-dependent: epe1Δ-like at endogenous levels, still anti-silencing only when overexpressed.
-5. The **C-terminus alone**, without JmjC, disrupts heterochromatin.
+1. The JmjC iron triad is **H297-E299-Y370**: position 370 is a **Tyr** where canonical JmjC demethylases have the third iron-ligating His.
+2. **Mass spectrometry** shows no demethylation of H3K9me2/me3 peptides.
+3. **H297A separates functions**: prevention of de novo H3K9me is retained, removal of established ectopic heterochromatin is lost.
+4. The **C-terminus alone**, without JmjC, disrupts heterochromatin.
 
-<span class="small">Sources named on the project page: Trewick 2007, Wang 2013, Audergon 2015, Bao 2019, Raiymbek 2020.</span>
+<span class="small">Sources named on the project page: Ayoub 2003, Trewick 2007, Wang 2013, Audergon 2015, Bao 2019, Sorida 2019, Raiymbek 2020.</span>
+
+---
+
+## Evidence for a catalytic contribution (not excluded)
+
+- The **JmjC domain is essential** for Epe1 activity (Ayoub 2003) and for its effect on Pol II accessibility (Zofall & Grewal 2006, who note the mechanism may differ from demethylases).
+- **Y307A** is recorded as loss of function, but from the same Ayoub paper, possibly the same experiment.
+- **Sorida 2019**, independent: H297A keeps prevention but loses removal of established H3K9me, read out in vivo.
+- Against: **no study has measured demethylation directly**, and the same mutations weaken Swi6 binding and localization.
 
 ---
 

@@ -17,7 +17,9 @@ because these cases need several evidence types synthesised at once, which makes
 demanding test for AI-assisted curation, and because a wrong catalytic term on a
 pseudo-enzyme keeps being re-propagated. Four reviews are complete: fission yeast Epe1,
 whose four electronic (IBA/IEA) demethylase, oxidoreductase and dioxygenase rows are
-REMOVE in favour of histone-binding terms, and three
+REMOVE (only the IBA demethylase row gets a replacement, GO:0070087 chromo shadow
+domain binding; the oxidoreductase, dioxygenase and H3K36 demethylase rows have none),
+and three
 biosynthetic-cluster proteins without active sites (eryCII, pqsB, actI-ORF2). Epe1's
 two PomBase experimental (IDA/EXP) H3K9 demethylase rows and its electronic metal ion
 binding row are UNDECIDED: catalysis and metal binding are unmeasured or disputed, not
@@ -65,14 +67,14 @@ Generic "protein binding" or "metal binding" annotations based on domains that d
 **The Evidence Against**:
 1. The Epe1 JmjC Fe(II)-binding triad is H297-E299-Y370: the distal iron-ligating His is replaced by Tyr (UniProt caution)
 2. Mass spectrometry assays show NO demethylation of H3K9me2/me3 peptides
-3. The H297A Fe(II)-site mutant does not settle it: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing, SAGA-dependently (Bao 2019)
+3. The H297A Fe(II)-site mutant does not settle it: at endogenous levels it behaves like epe1Δ in erasing ectopic H3K9me (Audergon 2015), while overexpressed H297A still disrupts silencing, SAGA-dependently (Bao 2019). Sorida 2019 shows the split within one experiment: under H297A, prevention of de novo H3K9me is retained (part of the anti-silencing activity does not need H297), but removal of established ectopic heterochromatin is lost (see item 4 below)
 4. C-terminus alone (without JmjC) disrupts heterochromatin
 
 **Evidence for a catalytic contribution (not excluded)**:
 1. The JmjC domain is required for Epe1 function: "the jmjC domain is essential for Epe1 activity" in complementation experiments (Ayoub et al. 2003, PMID:12773576), and Epe1's effect on Pol II accessibility "requires Epe1's JmjC domain" (Zofall and Grewal 2006, PMID:16762840)
 2. A required domain is not required catalysis: Zofall and Grewal note the mechanism "might be distinct from other JmjC proteins that possess known demethylase activities", and Raiymbek et al. (PMID:32195666) propose that the JmjC domain is primarily responsible for H3K9 methylation recognition and binding
 3. A single-residue mutant is recorded as loss of function, but it is not independent of item 1: UniProt records Y307A as loss of function (FT MUTAGEN 307, experimental evidence from PMID:12773576, its only mutagenesis record). UniProt has no BINDING feature at 307; Raiymbek et al. group Y307 with residues affecting Fe(II) or alpha-ketoglutarate binding. This and the domain-essential statement in item 1 both come from Ayoub 2003 and may reflect the same experiment, so it is not an independent line of evidence; the same mutations also weaken Swi6 binding
-4. An independent separation of function: Sorida et al. 2019 (PMID:31206516) found that H297A, a UniProt Fe ligand, still suppressed red-white variegation (the de novo, N-terminal-dependent arm) but "entirely failed to remove already-established ectopic heterochromatin", which they attribute to the JmjC domain. This is a different paper, residue and assay, a folding defect would not predict the pattern, and it reads out H3K9me in vivo; it does not measure demethylation, and H297A also reduces Epe1's heterochromatin localization
+4. An independent separation of function: Sorida et al. 2019 (PMID:31206516) found that H297A, a UniProt Fe ligand (rule-predicted, PRU00538), still suppressed red-white variegation (the de novo, N-terminal-dependent arm) but "entirely failed to remove already-established ectopic heterochromatin", which they attribute to the JmjC domain. This is a different paper, residue and assay, a folding defect would not predict the pattern, and it reads out H3K9me in vivo; it does not measure demethylation, and H297A also reduces Epe1's heterochromatin localization
 5. Wang et al. 2015 (PMID:25774602) interpret the sickness of epe1-H374A and epe1-Y307A mutants combined with mst2 loss as redundancy between the enzymatic activities of Mst2 and Epe1 (residue 374 of UniProt O94603 is Thr, so the mutated histidine cannot be identified from the cached text)
 
 **Characterized mechanisms** (binding and recruitment; a catalytic contribution is not excluded, see above):
