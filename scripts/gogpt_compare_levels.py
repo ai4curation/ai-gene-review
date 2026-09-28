@@ -168,6 +168,7 @@ def build_comparison(
                 "post_review_overlap": len(overlaps["post_review"]),
                 "core_terms": len(reference_sets["core"]),
                 "core_overlap": len(overlaps["core"]),
+                "predicted_terms": sorted(specific_predictions),
                 "goa_overlap_terms": sorted(overlaps["goa"]),
                 "post_review_overlap_terms": sorted(overlaps["post_review"]),
                 "core_overlap_terms": sorted(overlaps["core"]),

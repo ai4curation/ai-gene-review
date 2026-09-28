@@ -360,10 +360,14 @@ def test_publication_headlines_match_generated_metrics() -> None:
         "\\texttt{INITIALIZED}."
     ) in manuscript_flat
 
+    # The project page keeps only bottom-line numbers; distributions live in the
+    # prediction browser and in the manuscript, which is still checked below.
+    project_flat = " ".join(project.split())
     assert (
-        f"**Overall correctness: {rl['mean_correctness']:.1f}/5** | "
-        f"**Overall completeness: {rl['mean_completeness']:.1f}/5**"
-    ) in project
+        f"mean correctness on the {rl['n']}-gene performance set is "
+        f"{rl['mean_correctness']:.1f}/5 but completeness only "
+        f"{rl['mean_completeness']:.1f}/5"
+    ) in project_flat
     for score in range(5, 0, -1):
         correctness = rl["correctness_distribution"].get(str(score), 0)
         completeness = rl["completeness_distribution"].get(str(score), 0)
@@ -371,7 +375,6 @@ def test_publication_headlines_match_generated_metrics() -> None:
         p_text = f"{completeness} ({round(100 * completeness / rl['n'])}%)"
         c_tex = c_text.replace("%", "\\%")
         p_tex = p_text.replace("%", "\\%")
-        assert f"| {score} | {c_text} | {p_text} |" in project
         assert f"{score} & {c_tex} & {p_tex}" in manuscript
 
     assessments = sft["assessment_distribution"]
@@ -380,15 +383,32 @@ def test_publication_headlines_match_generated_metrics() -> None:
         in supplement
         for category in ("CNN", "NPI", "PLI", "COR", "LSP", "REP", "UNC")
     )
-    assert all(
-        f"{value:,}" in project
-        for value in (
-            gogpt["n_predictions"],
-            gogpt["assessment_distribution"]["CNN"],
-            gogpt["assessment_distribution"]["NPI"],
-            gogpt["assessment_distribution"]["UNC"],
-        )
+    # Qualitative claims that replaced tables: each is asserted on the page and
+    # checked against the metric that supports it, so neither side can drift.
+    assert (
+        "Most of the cleaned terms are either `CNN` or still-unresolved `UNC`"
+        in project_flat
     )
+    assert gogpt["assessment_distribution"]["CNN"] + gogpt["assessment_distribution"]["UNC"] > (
+        gogpt["n_predictions"] / 2
+    )
+    assert "About half of the performance set scored 5/5 on correctness" in project_flat
+    assert 0.4 <= rl["correctness_distribution"]["5"] / rl["n"] <= 0.6
+    assert "while almost none reached 5/5 on completeness" in project_flat
+    assert rl["completeness_distribution"].get("5", 0) <= 0.02 * rl["n"]
+    assert (
+        "Mouse scores highest on descriptive correctness and the selected S. pombe "
+        "cases lowest among the organism groups with at least three genes; two "
+        "single-gene groups score lower"
+    ) in project_flat
+    per_organism = rl["per_organism"]
+    by_mean = sorted(per_organism, key=lambda org: per_organism[org]["mean_correctness"])
+    assert by_mean[-1] == "mouse"
+    multi_gene = [org for org in by_mean if per_organism[org]["n"] >= 3]
+    assert multi_gene[0] == "SCHPO"
+    below_schpo = by_mean[: by_mean.index("SCHPO")]
+    assert len(below_schpo) == 2
+    assert all(per_organism[org]["n"] == 1 for org in below_schpo)
     assert sft["cnn_exact_frozen_goa"] == 635
     assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
@@ -396,7 +416,10 @@ def test_publication_headlines_match_generated_metrics() -> None:
         "n_reviewed": 82,
         "n_changed": 65,
     }
-    assert all(f"{value:,}" in project for value in assessments.values())
+    assert (
+        f"Of the {sft['n_predictions']:,} SFT terms, {assessments['CNN']:,} were correct "
+        f"but already known and only {assessments['COR']:,} were correct novel predictions"
+    ) in project_flat
 
     categories = ("CNN", "NPI", "PLI", "COR", "LSP", "REP", "UNC")
     for key in (

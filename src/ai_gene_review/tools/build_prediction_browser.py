@@ -36,13 +36,15 @@ def encode_prediction_data_js(data: dict[str, Any]) -> str:
         return packed
 
     payload = {"sets": pack(data["sets"]), "claims": pack(data["claims"]),
+               "overlap": pack(data["overlap"]),
                "metadata": data["metadata"], "columns": columns}
     encoded = json.dumps(payload, ensure_ascii=True, separators=(",", ":"), allow_nan=False)
     return (
         "(()=>{const p=" + encoded + ";"
         "const unpack=rows=>rows.map(row=>Object.fromEntries("
         "p.columns[row[0]].map((key,i)=>[key,row[i+1]])));"
-        "window.predictionData={sets:unpack(p.sets),claims:unpack(p.claims),metadata:p.metadata};})();\n"
+        "window.predictionData={sets:unpack(p.sets),claims:unpack(p.claims),"
+        "overlap:unpack(p.overlap),metadata:p.metadata};})();\n"
     )
 
 
@@ -63,7 +65,7 @@ def build_prediction_browser(root: Path, output_dir: Path) -> dict[str, Any]:
 
     links = {
         value
-        for row in [*data["sets"], *data["claims"]]
+        for row in [*data["sets"], *data["claims"], *data["overlap"]]
         for key, value in row.items()
         if key.endswith("_link") and isinstance(value, str)
         and value and not value.startswith(("?", "#"))
@@ -84,7 +86,8 @@ def build_prediction_browser(root: Path, output_dir: Path) -> dict[str, Any]:
     templates = Path(__file__).resolve().parents[1] / "browser"
     shutil.copyfile(templates / "index.html", output_dir / "index.html")
     shutil.copyfile(templates / "predictions_schema.js", output_dir / "schema.js")
-    return {"sets": len(data["sets"]), "claims": len(data["claims"]), "data_bytes": size}
+    return {"sets": len(data["sets"]), "claims": len(data["claims"]),
+            "overlap": len(data["overlap"]), "data_bytes": size}
 
 
 def main() -> None:
