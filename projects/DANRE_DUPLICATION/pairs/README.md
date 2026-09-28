@@ -58,6 +58,8 @@ Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs; see
 | [prom1a / prom1b](prom1a_prom1b/prom1a_prom1b.md) | PARTITION | expression | experimental_both | 54.4% | Lopsided: prom1a keeps the broad, maternal, gar-like pattern; prom1b is retina/brain-restricted and the prominin photoreceptors depend on (only prom1b mutants lose outer segments); complementary in adult brain; double-conserved synteny |
 | [tp53bp2a / tp53bp2b](tp53bp2a_tp53bp2b/tp53bp2a_tp53bp2b.md) | UNRESOLVED | expression | experimental_both | 60.9% | Both copies act alike in the one side-by-side study (Irs-1 binding, Akt inhibition; morpholino and overexpression only) and keep the p53-binding module; timing split (tp53bp2b near background during gastrula-pharyngula); weak synteny |
 | [tusc2a / tusc2b](tusc2a_tusc2b/tusc2a_tusc2b.md) | UNRESOLVED | expression | expression_only | 80.2% | No zebrafish literature; myristoylation site and calcium-binding motif conserved in both; tusc2a maternal-biased, tusc2b the main zygotic and adult copy; double-conserved synteny through gar |
+| [gad1a / gad1b](gad1a_gad1b/gad1a_gad1b.md) | UNRESOLVED | expression | experimental_one | 86.3% | Same enzyme in both copies; gad1b is the pan-GABAergic copy (~20x more abundant; null mutant has seizure-like activity); gad1a weakly expressed; the classic 'GAD67' probe is gad1b by sequence, so some 'gad1a' expression records may be gad1b signal |
+| [gria1a / gria1b](gria1a_gria1b/gria1a_gria1b.md) | UNRESOLVED | both | expression_only | 82.5% | Channel core intact in both; largely overlapping neural expression; gria1b evolves faster (also in medaka) and lacks the S831/S845-equivalent regulatory serines; no copy-resolved functional data |
 
 ## Template
 
