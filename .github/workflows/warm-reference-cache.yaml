@@ -1,155 +1,254 @@
----
-name: Warm reference cache
-
-# Keeps the committed reference cache (publications/) complete so the full
-# `just validate-all` reference phase stays cache-bound instead of re-fetching
-# references from PubMed/providers on every run. Runs weekly (newly-added
-# references are fetched; an unchanged cache is a no-op) and on demand.
-
-on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 1"  # Mondays 04:00 UTC, ahead of the weekly validate-all
-  workflow_dispatch:
-
+name: ClinGen reference recovery batch 44
+run-name: Reference recovery batch 44 at ${{ github.ref_name }} (${{ github.sha }})
+"on":
+  workflow_dispatch: null
+permissions:
+  contents: read
 concurrency:
-  group: warm-reference-cache
-  cancel-in-progress: true
-
+  group: clingen-reference-recovery44-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
-  warm-reference-cache:
+  recover:
+    if: github.event_name == 'workflow_dispatch' && github.repository == 'ai4curation/ai-gene-review' &&
+      github.ref == 'refs/heads/cmungall/clingen-reference-fetch44-20260927'
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    permissions:
-      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
-      # with the ai4c-agent App token below.
-      contents: read
-
+    env:
+      PYTHONUNBUFFERED: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    - name: Checkout the dispatched commit
+      uses: actions/checkout@v7
+      with:
+        ref: ${{ github.sha }}
+        fetch-depth: 1
+        persist-credentials: false
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - name: Set isolated runtime paths after runner initialization
+      run: |
+        python - <<'PYENV'
+        from pathlib import Path
+        import os
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery44'
+        with Path(os.environ['GITHUB_ENV']).open('a') as out:
+            out.write('UV_CACHE_DIR='+str(root/'uv-cache')+'\n')
+            out.write('UV_PROJECT_ENVIRONMENT='+str(root/'venv')+'\n')
+        PYENV
+    - name: Initialize fixed source requests and partial report
+      run: |
+        python - <<'PYINIT'
+        from pathlib import Path
+        import json, os, base64, zlib, hashlib
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery44'/'artifact'
+        root.mkdir(parents=True)
+        REQUESTS_B64 = 'eNrtVsty2zgQvOcrpnTWw7KkxI5PXtubqDaOU7ZvcUoFkSMSGxLgAqAem8q/bw9IWko25aRqs7cc9AKBmUFPT7fePyP6hBdR76M2ae8l9apSp71+s6bjyvHpdHb6/MWLbrW0Kcv6ikOSL0rtvTZZ9zBjwx5P38efWDi/vb447cVfH9o9iQ4qaGsO931qP/E47KoYf81OrzSnC7sx7BbdqYU3qvK5DW3KeKZSIZczoaxGjlfs2CQ8SFSS82CpUOd0OkjZ68yMujiDLo4fxRoHynv2vmQThn96aw7DW6czbVSxOMzTnNJGB62KkUpTLWFVMaicLpXbPRWw0EbuOJ4drAXeBond/HyInXjAwsNjBx56/cMgpaoqwBM79u8+NTF1KCKY53RxO797dws0PKfkE8dsaGUdveY049xmJOgoFJZR5exaAy7SBot5kC/BUqILjXvRqjaJXJWUSeOiFVg0++Fh6tRqSTw+Go6PJicjPx3PTk4GR2O8jmbTwRdltogtalfImTyEyr8cjap6WXI6NMlSD01RDo3Oh5ldj7qbjg5jPNLlZwRzvNa8QTBva5fwwie2IeXNaqUT9BuIpLwFku/q5TU+AJcJkt+NIuajy5t5xKejzv7A9QVF6tAt+7oAuLLtd53VjmlGiaoE2z72J0WdSjtCzvR2/nowuZ9QYb0f2NWg60Gf5tcXl7KeoHd/R2ZT0CVTgso9x+Cv3syPR3ibkEqSuqyLZhtvK2Am/PRDutSOkxCrwybwlpJcFQWbDDVLEOBXaJ+zo6VNd90mVIlB1j4gyhlyllXBgemaQ25T3yd5GlyNyEEtC+6TrytskaTA5KCCmGPVoFDpLReecrVmMjbQjgMtha/gY4Uq0Ua6wxdQbrRPsLS1SdH4l3TTYd4hjDwF2haKXdeoHZW29ntcJXuDZMJFQX6HG5WA5V5lAkDTsH0uz3/VIjFte8lxqVAc1caxt8UaR1bOlh0OZ6TafLn1gbSP1/J1JBPqIUwX1AIDGJvtWGWy6ps7DulqC4SFCnldKkPzu7vR/LdzcnbjsTkgtZzTDuUgX2GzQXDKeOig1CzCMqQ3KuAnjtcABukx3gpYe66UwyNAU2ljOD2LTK3YCFDUDoKjOAFSOXJpQPrIa9CGdRX68UpQjhKh03ghCAWgbCEgBLQgZJTDL2ffrtkogLnoOiiDNjfQUZs5IVlbdFPLGbqpEqlMpW1VDQSRFXFcpSYEhVS1SLPIWWzXas9R5YJOCu6YDCmEnqIYZMI2cJ+WWrDUmCxKCqXBh15b9+fG0PD+uf8jHjo5PZk9n8zGvzz0p3vo8fEPeWjXgac99Ks+fe2hhsPGuo/CDzgiO/BQprIzxqArmYDAIgUbHXKyVWWltSQ717icmGqJicME+cJuGmV1VhiooXalTnC+XtbgZYbxDvn3PPV0Ojg6nsFXpyeTwe4/mGp39Z9iqt8M9n1TfcJM+/vBbWshtYQaA9j+gTc1hGKTi6AIbb7tsgVjyKBSubN1llOlDMOh+3T59nyv8tG+dFnWxlZQFF21rO93TUZegSdpV++uLkbXdzERnqHbzkYlQjgd6mi5j35wtQ2isCldqqBoHA9N27Ig+LfRT4Q4UUPLqPDgdty3t9BGwkXhoj4hHG9zVSPfWgRdJPJpp3wU571BRpeKNtOZnI//E0UQIVvCzJLLJTs5lXAVWme7v3l1fnt+PT7bjwCiin4//oFouNQ44+urP45PJ/fRbuOFv8AJAT1V1iWYcVq6eH2ZCm1gyXntW0OGvMdS+7TJNQoT8yz1NkiTW+nfwA9xq7jtlwn+Xyb47MOzfwDzkK+6'
+        REQUESTS_SHA256 = '7877d9ccd729a0a13b660b801b1720beca29e06e2ec27e8874dc83064d7b3343'
+        def decoded(payload, expected):
+            raw=zlib.decompress(base64.b64decode(payload, validate=True))
+            if hashlib.sha256(raw).hexdigest()!=expected:
+                raise ValueError('Embedded source provenance checksum mismatch')
+            return raw
+        (root/'requests.json').write_bytes(decoded(REQUESTS_B64, REQUESTS_SHA256))
+        receipt={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+        receipt.update(status='initialized_before_dependency_install',scope='2 fixed normal PMID requests; no Reactome request; no gene seeding, provider run or source authoring')
+        (root/'run-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
+        (root/'fetch-report.json').write_text(json.dumps(dict(receipt,entries=[]),indent=2)+'\n')
+        PYINIT
+    - name: Write exact source provenance
+      run: |
+        python - <<'PYPROVENANCE'
+        from pathlib import Path
+        import json, os, base64, zlib, hashlib
+        root=Path(os.environ['RUNNER_TEMP']).resolve()/'clingen-reference-recovery44'/'artifact'
+        assert root.is_dir()
+        PROVENANCE_B64 = 'eNq1fVuPXDmS3vv+ikK/ekrNIINBcvZpYRvwAr4Au/aTMSiQPGSrdqUqbVWpL7MYwP/B/9C/xF+kbodSViqrI3t2VtNNZTIP48Tl+4LB4L//3dXVD/3+zZvRn8Z28/6p//Dnqx+883LtyrXP/5Pcn7n8OeRXwYWS+D8492fnfviTfq3Vx3Hztt7e6VcChcA0PMsMRJlobEzFuTrHTJNbbTFSSnX31V/uH/51vrn/5aa9uW83j6/rYZ6WWslbi7244XrdSu7TkXO5cAsltB57TeQ/zPN4//6hj5t+v40bnfPN7d3ALP+Ov9O/feg/1tubn8bduHkYP9+OX37sb25fvftNf6g731pkz4Oox+qzSPTet+qmiO9t1ui3zOPwQ8cnG09vfnz3vr257fXp9v7u48SZZPo0h4TJPKqMxtN1GW5racNPdMezic/fmfhh1P50/3Z8nNVVxmNGX4I0v1HpPlFtHFsf0rm74ielPv2nWd///OrNff/Xg0j75jnXjhUOSHdLfqs0IcgtNEi45iy+QAyfvvrqp9un1+/bj5/ez+OPv9SHt9cPY46HcdfHda/99Xj1W3375kVvDLP/7fDW+vsHTPR0U9ujzrd7YU/16f2jTjofxuPrm3cPt2/rw2839d3tzc/j4Xbeju3TU/4uxcP3MPG7+7vHL7+KsXf16bXO9fT23Y9fLfO61af+mvl6G4+3P939eHiwa/3x608zXT/c3z+9+pfH+7uPv6EK/tvT0IWIC5/HoOE+iv5OyanMWAbP4mOpQwql0pzUFGcewZfaZt6qhBJd2CRSGMWnrQ5PLCz9y+/gVS3m01vINUcIfyZJWVp03VXfJ0/oNAfZvBs5xB8OE/zto0z+7f14+M0ukMM0zwgiST4iiEYl1eoCwxTbYKhMcyFsWHYOHFpzm/RUA1SUeoNBpc3hjUY/2Usr2/a8IIprrsQomDr6Dsm10VQfOIwZepHgpqtC5aMgPuvm2/H0+n7TGf7x7dv3T7W9GVf3v9yNh6u7e6zk6t2b949Xt3fbeDfwx93T1dMv99f/+J+ubvVfbp9+u6qPj+Px8S3+7e+v7u8Gx+vH0e/vNnz/4W19c3UQ39UvVWd5Gg8P79/B8V79ApO7Gr/ePl1TvKr49F/Hw/3V/fund++fHv+E7149jKeH367uH/THb3++3d5jrn7/9t2bob7nqr+pt29fXf3nX+E1rh7qL1dv7n/S7+C9jO3VB2/5MPCGHtXP9/v3d09YpD+Mv3t7+/XQJ+/zedgdhufD/V/HHZz+3e3ETPpi//dfPsyhfvDxNeb+6Mj6uH33zQc+OMrPrvpGZaqy/od/+m//sVx98H5Xtyqaq3cP9z9BtR5fXf3zXX33+Pr+6REf6PcP2xUeTVePvx31AcJseMatPtyOg6Serj48pcrq81N9nPvxoyR6vbu/w9O8ubm9UwnrYx4U4fdYQL99Oizr+vHTg/54WM/1F1V4xih8yu6IVTjpMHTOMIKEiMSEyJQG9xFIBiVyxClk57dQsof3iFucjaobgpCW3Qn34CS0qn6yzY1SgwmMTr0UBD4ZyVe3Jamx1i9W8eHlfdDdmzmw8G9ldbt9EeBhAOEkFknp84NgDM8Ka4z0w8ehv3x+SGiqVdKHB3ulE+1n/aSFO892oTf77e/t3irc2G70y2vl0oLzcZYJL7zhjxDE+YLI3GL2wCCJNhqlc50V74Vd97UGR91lwVvN+9/6+sVm3oriGepwjN1NxAFfJlx/SkkcecZ0MvJn6f/ts5xgF5tK4OZf4Vh0KjiPm8enDb5H/wce6otMYZMdGn2jcXqsUv0SuuHU3t7eQVuebt8OzLJ/bPVwB7SGD8LT7f5GP7zd6Mf/fPX08H7s/kqtHtF/6NO5b57/o4/87GgOg3C48xYqqy9Pn+l/3MGLP2x4LPjQjx77uCOuTxxfOXYfnPbjB8e8d8Z//8UZ14NXv3o3HnS+b5zxF7n9sXp4/XH61cnsQUiWowqZh3DZMgE/IVQ2YIyeNvxfBWAog6Clo842qkt+COXmY1as0mrGGGV3SiGBYygiXHeAaECwBhADLYx9NjixAC8G5Qx5i58V8iuPU99vmHHevhl/kHM+IbpjgvsjxGYU2kcbuLxUVkd6xK39EU7N6NL+CGEcEN+rt9u3ssCvO38MzwLQZkB7t2G1wLV9A/tL+qBFaCsBr7KCK4Xh66Q6GOuINYQmY7jmczghDerdiYshNhfHNguBIWT8C6BsAoMtiNogQvLHSeOAgr+PaUJw8YhkwFFbAvamXgsoDwDHRpuDiEJIAq2GSgRAEqiII6mgoz5x2kCQYDTbOCUZCLxAo1IEwpjDuS0CfJQCsUuCjkSpAl3J+Y+QzI4IXH9iAM9hPZFjGlNHEZdz6jWIF6oCgg9l6VB5Gey3Pmfn4BGRorjaKUzvUwObgacYvZyQC4QdAzQEgpcNAmgtwWk5UOHGE1BsBFjt1tgsl0/i+I4z9ZSOgd1UtiFAvMzVTRD5rNYDzwpr8cKzY6ngxjRacUy05ZzjRtHn6WgAItPzAuCEKeBAg7qkWGJyWO0cFCDV5nLdCtdttvI12B2/dpA8vOjHL5mJj9QJdOFnvOV75Ro7yPtMVP+UstilTj4wmMcfP1OxayVfj8+G7kLHQzdMo29+bmNzs9U2NvxL4zyp9DkK3rGMGnrrY7YO+gwXWiKFnBC4XIwpngrdW4oluTKkpuJy9Juk2BHkoMEZbirOXsC/57dY8iXgxn/Sno+SeF4EKYHlHBWCG1txvc2WJCMuDNniCJJqhtvoc+Otwy3MktilLNXPSKBRvoXmEiGK+lNCYPgf2eCoBnlobmJqiDmgSRsstZCPiWfKeZ4rhA+ZyuvHcVCHA6D9LZwtA44cjoqgggd2wIVtA6FrCJl4PIEjxf87B21n+M7OW5DSM22AEuxdmKR5QMRWOqkHCF3kHAJ7SSP4ickazVFjlM1xaAAiGf/Ui0kP+GwZEF7icWIVa0mljMp4adW5Pt3gSluM1LbcJY444fA8tCNHR62O6YuPbZZW4FHbSWKFaOYifI9qF4I2zMEV7rN34gL1S1685nSrSQjxbCHAitNRGUwPxzi3zgMfmdMDPJVtQywdE/YMxNHCQKzpaXQpJQWBI0xd/5NLg2BOymD4OEbLlRPe/cDCS6eYQyujTwbXB+CTOINJBnK2DKRkPioDH2Gu3AWGi/goOQ0Xap/ioKXw94WBL7aAKJPgKWurFfoReCS8wdr9PCmDWHOb8AcpE1A5YB0pnkMYEoJLTC2qWcw2TTJI5xsDfPJxY6jCccZOpeLxAoBV9bnToJGwRp45kIcFIPCHOgv7GMhN51OAh59jykmPEEBLhmMpcKAFuGpjSHtU9a4Vy2hFcssiziSEfL4QXKH4jCqMBHOvCFMNvGxCGxI+G6IDYuAsCASA5COnif8iHEiaAc4988gQDEDXKSnUGkFmEGm4ci45+zFD6m3jnDwND8/ognNiU4VyfmwI+Nnj/B78KHRlGhrCY0I4rJERxdRxA0IFLohteI9wBJ5yiGBkjMg5fXNQnXJKCN3njXVTaqMwRqSi8LLCniYFiYBoELrAzZqEQO5sKQTO8ThUwpplq/BPIOQj+o7ASDVxK6wbX710B5/enHr3gBcLMI6oKXiFlSrBRE5JgQKHMAvofkukW2uhFA07AZOOgEHE4OiYbVKgF+hCWLJquy0n2EIVuMUUQCXLNvGIwEkuObiEpuyTEwHUgLYjuCOUZHgQKgBKKSCAfCf5KODk7DYN0SJDReGd7yC6BcoBuQhFhGObFM5HjD4oVH0GKsyafSC4crzzAfys4MFz4NRm9g2xcesxzZjgywoIGSJcixvAtBOodjsZIhxQRsyYMIQBpNQTIpGPIDbg67m4CHvsYO02MYQXuEd46uPIGaBnRATJhvAAQB94AjHjcXsgmJE42ho4WZkz6P5cV2CF8JDAHeoAVZVTYgD70HgCRAplclC6HgBSWUEz1IOd4y2V6ZpNDC/AjQpijyvDAMb3FdHQ++k7ARyDH+DNg94o4AtbgUsogDceCoMAKR0fzOCxDXx8nvQM3jdw2DlcB41CRAEBg0gRbjYgspkcqDkn/LhNCucDR2LKz9Aoii2HEnMGGphbhMkPP0rNI8RYGQiqzaScG8gZkQakBwuoHW4khA6uvp1EDAFx1RE4SpGgucCiLAqEfwCOIxL3HOAoio1D0PnYsUg5HiuBmByIXakRYEafLE4stvQBeEQw3pwAF1qP1fUR4eJKrwgqeJMB3AIs4GSsBOIMo3PqqcIItoTJqmuba4pDsHqAyAq+bRPC+eAxFj6OmjQzm2cpThpediGtIoCqC2TT2jbgxYNUBMcyBwBvAAyMwNKOO4hABfA86RZAFBJQxdCkS4CjASgJNcThthGw+lQiOOtmFML54LH4Z3ZFelIY1yMcGIIaVt1yHxlQ0+srA4UA8xPEtwI7ANDpih2iG4ihoqUGJyNlaXAJAJpwzLN4MDVwVeVljeB42aVZPYPQG1HT+dgxAfEdl8KEGwc1TAKOAFALngMA4XhKQHAAEdwaMWgfAiNN6tsgj2AKFAkQ7cRTP5lgmh4WMfVzBfgIugRlAJdqUSuIdK8DrpKSMcF0PnZEzHbPeEZV0exAfUNosAHnIkyhdDBAAPw5AJ1SAmtAOMCblQ5378CQwa62LnRSFSgOT5topVhNEyAjw1fiz9LgKCCCjaFsfhiFcD50DJ6PCwG4WSvNQBIHaTHXDPifILOExDXOAtdVvdO4AcToRgES3vAfzTgyj+FOQ6bY5gAdAeiAwEJHeERggCXAOgS+BR44bNEohBcgx5L9ceDY8Gq2MWG5OfLgMfGoIxSMOCgu6DDe44Yo0RIP0CeihEfJwMUbHCl44kmsAJjBYGOCOEmjQS3mwVk2/TEw+RSASQDRbFI4HziqFR+HChPkEHEB5j8owYi5dji0MbpS6doBMliw/pgcwHOMQ4AjQvPAwZAeNOxklARJLS0TV6CkWDJMLyIcg5lHOMfksZbcMtsChH8Bbsz+meRC20DsYJzgOgmm332ISnGkesHbFh9y6HMQaHBFdGhAFSKAkwnaUAEXTpKIVsBEKUXM6eFsgcJThnbALJr38JYNFGKSkVf783Gj9ykeTz3DN+Kdb65olV6eE/5PU+YNBDDCscetOvAA+Maa4TQ8XiDCZADM3BwcHLvTUvCAiFwQFNnBzGJwHCG+3iGUnmM8hEqyUSl/PmwMymiOb8TAToVzA4NsvBH8Ip4WLKmAW/nYhdWKe/BUZ4mtlEA9+y6+qJ6407pQsNpDVVdEmAXhKIUj/Avpw+TYFI4poDL6hfNxo4/uuY2YUeEEI0283YwVRsAl0QpgVzZfAHDz1opoihFeLkzJQHy51tIq2Hih07sQdfOpbgUvfxsZTGp6eB2wqzbhjjrQiFI3W87RvyDpKGAyx4FjhZvjCPg4Yht45Q5Pp2kpUIlUwS40E8CzgVICM3vNFzIUG4AiDLiMk1LIvvJIMkiBGMASI9oCISE0uww/PDY/GqKmLQXvzweOcH7p+EYEFovXQZNBCBoCeyTAKxiBix3WUPvwuk3n3NwYTnFqFXvP28aTmm8lptObcvjGxIKzMPRBBuByqlO0cJo1LLuUgivDJIXgXpBhCeV4iBiiW22IeBmxAB6L4tbAF0C8gKehuyqQAAStW/CkLGAjB5LRwAvygFmfTrCotVHNk2FKPcG7gKqUCSgOXlECVCGFQjZdCOcjx0T5ma0It22lFl8L1D+C7nVJ3gfAKAHjRUwDy4oRj6sbcoRYUsNAyOwJwd9RO8mpGXqfK3xh7Qey2tintrEDBIXPVKvyxbVoQwvBv8AgIj+DHFMAkh18OBbSBrD9qKXPECZveONe4McQOByU2gXwAS112opi37pt1E6jBcAvHh2BFjAkgT3lAocb4YkUU5LbykAkcrYsUwgvYFJEz5Bqn/G+Uwdl8AH4pgPbVa4ZGFGdpMzhIsIBg1Qg4AvCZ/EuVQRV7j3Wk6pQEHJhVF2rHSDeEmaoACIwsdaBlRz+6GBxNiHwC3JMz3CIGZJWbh+4kjBC4KwRdGrLJeKZNelUWkg+ZtayHZi4wKMJTLvCrBH/T3KIDR+rwGCwJAozV5daJQ66G+hnbxBnJ8QkmxDOx405yPH4UEd1vcJus+7E+k0P7WjByUDAQEwDjUZsB2wG+EOgzSFT1YNZ0Bre4PhP7k/OBGARgbFhaxnoqSRoGrdt9K2DaMoGLjKbcZM2yAviQ3pmUwoPJLr9hlecsHoqk4CV56GCHyrSsWIQB8kbUA5h6WEreWw8CnlQIDqdgO+wJ5dGATsBQ0FsAXciyQMeNzb8Y8pwFpsxPqQXZNricdiIRWrdks+ICS7J5hTEtFmFtlEbDVAhjQQSUwvBqYdrBD0QsGPgBQ4nc0wIvzyTLxsYFMCTalTFquEOthhmAovtjoIRKpwPG316BjvH6RoMVvRRUzjwAk6uhA6KCbpUhMgVvw3ECzgHRJLSi6YIUnaT5jgpBGXdmJBSaq5ydCBiAVxVWRWQE40MXuFBsW1COB81huieSzzn2XKFlwNpzDVnh2C25RQgBk3CRu5V9SOQmnDyTbdpOjxac3D6pwnErL35CmnGeCgg7sAeYxtDt/D1KBjlGJRY2sqYXrBTHcvxRFtxlHsjBhkoGha34XOZm2ipFm8Tb90nRFDJbXMhDM4TZCiOrSDqgRnO05rgwZNyhX6R8tQqMAM9OVoYWCkNuCOItxlruc7HjALEclQI0lyk0eKhXgnxu3WXEcZ80WoFMEjwRcTL0Nvs1Q9Q7ZkmIqqWMMDMYz+9T834GEBpE8DPWEYCBSsNPsETd06bQLbOdZsQzseMjLh/nE9rCtB7rdxkGYHUCCgUGHwHmfYw5toz4hrN7UPtcJvFwYI0YVx8Os0kA+JJm1udoI5b7rr75kpsqlX4+QLcIZSNHIpfkGwUPg4Z05jOA/8RGCThzcELpJyAjTsiJFXllyXWOFlLy7XCLwDsBi3zQeSAezyZVIgJfhfMlGFkTgs/AJjJdcQhoNA8tTBMAGEs1Z0vAIyBnrEFrAjvRYKmf+EcS96ABGoCA47Qg4AVJ8B9B9Q7BdFdz3fPKbkPsKjtZGiIXJoWZaQMl+oGMJLrSiSrnlPnzYGH5jjjZpHAC3ang8gzPLqBRDPeusSaBO9GuM7RWk3sCcw/Ot07EoZJAzQ5rXmeDRgzhrE5Oplwhg/AwmEJHnRUS+TgArUSQPCLqfsUAMVKEpMSvCTFKM/sv0TZeuiD9KC7rg7Anjugc6WahRAO9bBRbtMlLo7HtgkoDyxEIIFyutQbmEJ6h5cBEsrw/36CeoCMTSAnrRz2AKRp690igvOBYgDeP24IgEAO0H5EQEE9J8MtueEpTYZKwDmA96Ze9BAWgwWVGnrXxNBsHDcAhNPbDg0uJCI+9gynyiBiw0sNKYM2AiO4MWRunM8WAdaer4eew76uD0+3gB9Pr/56++4oXXYZuO94ASPnMWrRI1TUo1BMncQ1rBN+atMyJWBBreh2WlYBZ9i06AjRUQB2obYnFR/RvwkiKiU9D0wOX+Q+dMFuahU1OEIp/UVLLtefj2k+t1oP3hJyfIYVejx7BhZ2cL2HaqGMqIzw1vDCY6klCt6N4GWC6hfdFeTZvEICYCI66eo6GEML2UN3tEq8IHZmOFOojSKNBg1RNMHtJcsld/35dMf33jIFBzJ83LiVicHPhAoKUBK8OynzHYAlcG8Nrplg+l3t3o1JiPMBhDECCnVIk9PJ1+y8HoTYmBJtrQNMuzDxZ0LIC5o7nnCkkSi+aN30gnVHH+mZOjzoWhsDZC9uNYLw+kF6CijoYR3YugCQAQAN72H2cMgD4aqAzsNV677r6aLM6hTZOj3pwxJcChV4CVLtm9/AoDQBgXhRaD16+pdP7VgOLoxu9LjbdrMebd8J5tNpaT2+s3+Y28MoeUC4kwT79PfhwaE1v//7CdaTy+//PiEgiBfDBPBr8NqWCRCUHP3+CbShD1ykYYKSgRL9758ACBLIziCDoLA/5t8/AcxPYjEIET4GftLwBHLoYuEtmgwS7CwTJK1BNLwF4CLhEiwTCEuKhglCTpGSYQLdlyyWJwDL9MmgB4jl2STEkjkGMSyBnBTPni0zJO84G6RAWlgTnWUVVKBKIZlmyNnkWclrMA6WGSJphs+yCmALvAxThCLAb5M+AKUAiZFpBpAYschBdEs1mwItmHSJJknCsDhb5ADjLuQtgKVQLCyWVRSgRW9aRZEoORrehdfKqEAW0KKFGSzZMgMD9bBphlK0/59hBs+kR2sNMwT4WrLYpgdVEAAowwxYBLlgkST4LQiTZYbowETYW2aQrCU8hhkUh5PFV/vDvpc3gXnttMgGTxs8h5KdAcLAsksBrTHMwAhYEIZhhghGHE3PIBSKCYnpySfAOYN/YOcgTGeaAYYRLBEHMxSty7bMUIITMvgo1pYeYkKkkijEmEz6UDiKP5VN8cZsinJIW0BxQP7ikmkGQBxTWMxEWaRYZmD20ejMtX7VAhez4I17g9JquzCwQTKpnO4aniXJT41Mv53ln67/yz//w3VJgRPHy0zFOZ3nWr8/VUTov8hUkp3j88jaOVOV5C40lZxJGc6ZKp6HFb83VdKTvheZiOJ5mcMzJjova/K9iTyAqFzkkahkfxklwEyxlAvNJO5iMxFdbKZwmZm0UculZuJLPVMO5VIzyYV03NFlVueJ6ELPpEehglxmKjCQ81J/Z03F/jJTiU+XcXa6LXlm9uOsqcKFnkq7SdLFppJysalSuthU+XILzJcT+3nU5qypyuVkdZmY5cFinaOLTUUXickhSYFruMhUGTD2Ip4vlHO5+vdmYu0IehFBaeVNjheaiYu72EzlQjOJuxT/4BTz5aYqF5oqpsu8PgGvj5eRVc6sO72Xm+oiYs8lBGa5zFT6VBfxxEXgE1K50FTwC/lCUyXP7jJTeb4QrwXmKPFCsspMnvliU8llUi96yjpcRux6dsruZP77//qv10Fr9u25JZ0KNrjAvSNJ1mBLsmrHFbZsA5eY5Uxo9FxdQSzwypY9XJ9SiGypr4jOq4JbZgCCSpZdYEqCKJ5su+EpmV4mSJ02LMyW3S64VG/ZYQkhwXySpQIP/jM5MqWa2WMh0bJHE7mQP7k/wsb9EW2r4pxFaSlHJouoscIA8h4sNacpIOB5U1mRiyGZyorUAYhlFVH0TJ0YZ8jZMoN2J3Kmd5G0viqZimEcISKbCnKKh0IESxlJICdiKwJhYVPpAuJ2kGjas/M5J0v9qNeNarbUf6phBmfaJo4UQnQmZx5ZTDuwIftDiw1T6UJ2OZtmEPFkKiMp8FDFVMJRtGQvmGaI7E0FewzvAlJy8hBGtIVF0aaaxQDECixfggWHOac1/Kaq5agtpE0b9pyyrQpNb+6JpqMUrL3vvOUZxB2Oj1lmYO1tHW2FC8yWsKp3FYNbWuq3RFvM26qvXGC2HC7SW4n1RKaxbsnHC20fQqTxlBsRmxspiqaKqWYfasOW0xPktQkKWZ4hAeCHbKoklZC8CQqVGIKpipMDFDcni+JR1u6Rl1A8+BLhkC9TdxL4JEFMRoKoHWWiKTfD2oU2m8iZNrg2Fa+FEvACLXAekCCHaIoBpH27Ld4z6+1qFprLLvicLKcE9EK0YjolwK5kEDxLBa4eAdofDTyi9tmY0hT4bUsFP5ymZ0vyJ3ufoPSWo38lm8r3SZWlWFg0ecqSTUXGeow7m445eSVN0ZSWDR7wzZSXYUnF5gITwfJNR86AvEIyHfcShFBTlk3wKksxZZeAHrPpMGeiAEqQTbTIAc1YniHDPYi3aHXxunUcTYfWNKZaqJmewxQLpvJAp8VlG8H0IZuOWnmQs2I5Fuu9BJ8s58T1yFnKFpDug3astFiWDxLxCMmUbZTAlsO9PsbsssVX6ykFH8mULlCCajky7xMsy1s6F3ht9hySJV3gGMSvWPJ0rnBxpk04coKQZdrGQ9hjE+hW5hEsG6KgV5S96V0w616kZSuRIYZgsayghDMG0/E/vfXQlPkVcSWZ9hJEjMdiYVSe2IIn8S6LZAt+YCogL5epEdebRNJlMgkkPl6m/hYwz1+qetNfqCqxQPeiO1kFU6xb6TnC65o6MsBKycLO4amyhGwDEnBVpuOOzFnvgbMEcdI6mGCCAQDolg0cPXIZE1ueIXvdyU6mk+cEoG/ZOg1Fu2ll09Yp8HUxbb6mFE1EI+h9N8W0+Zp8jplNM+hWPLOpJZe2EbCE4KJn+rxpAxiRS6Ipe0dAASS2AJqLZRubHZAMuctEPfBHukis4hzObTzy3aQ+0+6g9bEeg85c9qUVU9GUVotULPZARa+VjZZD7SEwRUuzQr3DPiZLDyQsICZTZw6vZe3eVGnoYA5sahdIib2pc09ILidTbzB2mZZjr8f03tpcEyp37pGS5zAagIUNWYAVQ1aWGYDP4EWzCeWxj6ZEC2s6OpuK04J3piaXmneLzlQbotfneEs0g+3BlZp6fWqqxtZHJYknb0kfhlRCyCZ0kx3gqphmoORN200hQyXZlHCCDHIqphlyiES2GYr3Jn3QIx9kKvPLhaMn2wxgcKZUjd4R7iKZihUhS9NJBL16PIRomwEcjE9GNWuTIwR/oWzakBLCf7ypc59zbOuaR9okxrSFocl7U42c0z1OCyYN3uspAIvlaEvNFEysP0dyJi92KLOLpn5zQfsomgrHmaUYZ4APsmA1zKD3hVqiOxxINvUGDTFoAYKpz5rWHpl8seQEyGrKfjggNUvlJ2aAcZq8edJTfqatHO2YS9mWR0raT9oyA6iat70LvS3B0vE2gDOzKQuEGQqwM5kQp271mjCKHogwWZaeQ7Z5uaz9ap3paEo6dGo1IU5Jti3OXErMtoMliHsu2bBaTMGytRcKDENseFF7oCRTbpP02IYpj+IpcTDleLMWbJu2OJ3OYarx1KI5b+pwKnrcwHT+VkpMbNvqVRqVT6J/4+l7Sk676poalCa9Ed7UdduJ3v5lOzUebacMCh6hWLQ2EFArWzQGFMaDiJkwq1a7W+430F70MbKtLy+wVjThRaAUSjbE6bR3r2kGcmyqt0/Kgkz6kHLgbOpDkAo7Y89sp2IwHTzVFqA2hIGY4osNaeXi2IRREN2jaZ8l6xWhyZSRclFMx+tDIfg4E38oHhiDTTktEBAxsSCExWJqy62HG1yy4SQt/E2m0zTslQCYTjMmzb2fxAfmFh8akkwNGVwhNu1xkqSiCMFStg+VcWK6KUYPRFuqSEgdEJOpMQUDIVj44qF60RfTzSBRC7QssVm7EJCpqBYkyYYXtadVCXT6JsZoRdZEjix7WqRHlW2HbtQ/2O4vcXoIy5J581raKKaKPiLEb1M1nW42Z9OtjiFEPbhjmQEuyLS355OeODd110pZK/vF1F2L4UhN+wuiGwSmvLorejO7Ka8ORyamvLrWkpv2ekS7qZh2B/XMjbNcqqE3haoztcxQXPHBlJHWo4HRVp+px7CCLa/ubS1+knYhM9XKJmafkolxSoqm7ntQhcyFbY2KEhy+aYaojtLEDzxDmGzbd5diq1NNIqYqdL2lCVzNlMP0WW8CtvVLCSZvz6SlYrvd5GNIS8yXXmshlek+zBxLjKbDh0V0g9FSyYnobjpCCVabotCFmowU5u8Unhibg3jHbn+D6LGfMDZigP4jypr8WVSs4UxZmwzViKdFaTw9lMXZGtxkPb5licF67Xu0JPkKByfe1LEswAKdqWUFvFURU981IDLToVXljNlZ3gSRnv617MeQ1nMXS/acgp5GM92z/GGGbGLP0ElT24xSGIzN4tNdhE7aMjZBq05MGRtCYGHTGQMC/TXdBqu9i7LlrMXhwkpxttq6hCksscADkDlv6qLnOSdTLZVWnWTT7loJDrZl2kXQW9i96RZUrwWfJ3e2vfGUkvrAnMhW8ZWgtcl2X2zKbEHg/lD5djLH78mKHqISP0uTNtGaczn5kPa7WJ22EDAdGSNvgnL+0BXDdOALjI6zKWVD4DqumPpB6OY22YopIxVb+V2MYuqKFYrAmzrTDNnrNp7xKGl0tquYOXhL2TpIvnaY9SYX44VMm6EfGimZnsHnGEzlVj4UYk4XuqTJRzrJTL217kp9EZuuTsAj6uXQFoSs1SXeuK/KQrbGUZLEdJ4x+Qxsl01n6AowtgkZMntb7VfS+5uyqb+nE9ANW3UI8LEN12m5gKU6BIQL3iibejwn4DamS/V4ltPYi61JMC0zNYg8CSCJ5bwPCK5uyJu8gONgaqvo9fR2NF1OQIdqGIsNB0542WTql6IYM9haVBWx7aYB1dhqSIsGhWC0YWerIQckcSmctrxoP/eYTWfxD52qfDFlmHQr21afEYHnk6k+g7W5tam7dWYx9ab2h1NNJq0Vbc0WbSeCtAmLqVZWnCPbziX5Yrs3DC4IMMDWoyfEmEwnH7TcxoQjQEjyPut5zP7FmvVIwXT4qmROxly/FImmG/s0sWoi4oSoq+eOTA2ucw7BxEMc1uBMdW5gQra2zEn3202XnxWXijd1hymMkGKqlHNwgWSp1gUS07PXppbIWS/0NDWP9Z6DaSfcFwQDU10TyHUS08nr7AWcMNtOLQCaF1ONOTlbaodEL404nQuxFgJ4T1HSybt0fLbWiGgrDcv+kV5NSEKmGvLMTkydl6LuICVbk2xjrx4Pep2N1insbOdYYBiebB0ZJcA42VYrVyjb+ikyKKvJvg9bGrZ+iqzpTtNZW6A9Om291u64RW9UsdxG5/XqMTKdGSDt7W7KEupFlJzFOoOJowQ4wWLqSSJJG8zb+mSVYOxlmrPPbNP7mMm2tyua5Dip98G4h+31IndLKqboXSOWt11EFERYkiR67UsyAUqnvRnYHDZtlzi6aHoTQe+dCqcP6wXjRj7eNTlTy2flk7rNbgnuOdsuaUREBH+wNfuJWo9ra7ccgpy+JTZYKxoinFgxNQMNjpOtzXghUC2TrJ2Pydw4gcRUrk+aujfVRHjSnsQW+/YRxNsIi71LttYLJZKtCWYJIfF3glqw3msKhbNEXnBidqb+cuSdNsHNtmvdYDimS9ki530d3jFRW09vl0zJVJjhgzitm7RUjwIniQkvgnj7bOowpQ0ug2l3XSlrMmH3D2V2JraX4O1PM61g3BXT5i/O1gUTplHYUtKk7aWzqb/8oWw7W2ohGIrPptCqBSElW+5CYURWltOn1IOYd0ERMkyXKnptZGHaQfAICWK6pjMBm5s6hnmwueBMfW4I8cC2A+k1JrDpZDQ5b+vdWkLW9o4ndc56K3RJsdh6tx/OVZhuKvLa7s9y1scDL7JppxX6RrpXYtE5ryUnJq2N2u43m8qJo96ze1JjrNn75IvW55hQiCwzHHvKs7OU379XPcplLh4rESzUX2gqoO6TwYSt6SrYlO1yilD0uJSpEAwzLJfTHFun9SIQF2Pxtjud4euDMxX+YJXFVHobXfaRTZdwyNrY+ZiszVmSFH2yHIPXJKpkW2t457Lp0nm9RTTvyzSPScrIqwOX7J031dD75PeH2NenHGNjfOzTdD+8q0+v9WtPb9/9+GEJ1/qZ64fR738eD7/x9TYeb3+6+/Fh/Nv78fj0+OpfHu/vPv/sD+23p6ErBRb4PPb4uurtj5hVWhkjt03w9ngWUIq8cdhqyn5GPYEWykgblLilMIU3kdHSnJI7HGHfwpff+en26aa9uW83mFxnjlwaxS2mTFtwo23D9R78VofbGm+uzJzjjNsHMfxtt/z4kuXHM5dPwCFH1j+kaVn57JvEmqS0LFznaK0m9jRFoqO6gaU0kR7hDnrrs9VRYxibI35+/UKMVc+tepnSaZBgzd5Pwe+l7lNojUv61CVov355yfrlzPUHQO8j659Rth701ibEbV1aapX7ZF+pZqHm02yj5jZd4uJ4bJsU1xNVwfKBMJ9ff5hNeq+ZKYzsfPOTtZ3YnDP5beTuh/i09f7t+tNL1p/OXT8s7pj+k95uHuqIMbXmM4SQ3PCUJkMZiHnkknrZ0ob111pq6J1TnbNx3PqYz6+/b21yj9FvPffMHGYcXmpIuU+asIIxZG6f6hSW9d/U97/evrmtD7/dqAvZ+yktPdZ01uefJa0K4917gAst2iD7y4DoPVDly8ChCQCI4Jc5iOH8S96P5JT0WoYvIz5EBmvZj7Bug+y/BaFGvVZ0P6L3Ie5/yycqetXkl5FISe9XW0bgxmX/W1GbDxfaj4CzawucLyMSDzcn7keKgKjtf0vbxWn7gv0Ifp3230peXbQsIzDUuP/1xImJ988Mcp714sf9SPZpbyJ6LSNUa/+t4g7ppmUEMSzun7BAR/Oy9oIwiU/tRwAx4rL2kl0McRkpDMXYvS/vGPMK70dEL2/evXdPeGBtj7sbCaXI3vVhTdkTl/1IRvTYr8vrse4QZD+CFybrZ8A3Wfa/Dubk4l5iiPHwVXvtBbrCwF57vfZvgybuR0rUQ4C7EUGsg4p/GQmHYzV7qYKiRzzyfiRm/HcvZ90NgMQ+orO/rGbcn97XNzf1ob++/Xk869X0s9fjV3z6uj483U78w6u/3r771ofBCDKFI15Me/8xl5FrqwTEum11qwi7SUasiqlcnG0DjtUmYk4KVYR2PxSHlObjCS/uaq09VVjSaG7rLSF6IwgUt5FevIJ/ApOoYX7rxfIpLwYNDjCOvXJCQWSn4wm4mXk3gDejh9B2bgwvK9NOWQrEs3oNwgDvP6IJy1D2bx1ejOOic+qzUqDFr4ketli9mAM1WD6j9pYWn+X0pjO3+DWPx1k+Q0XPvy+eDq5vv07dBBG/+FC9hNq5/Sok4SN+77P0fm+3d/ukjY3z4vdLzKSnWncjcJna1Gs3ou5wWdcRP6KZIrf4EYalhLT4EV+YaD/yoTJrb/8ugdKHxSNkvSBsP4Jfd4ttq5HSPgQqt01wHYv9a4/d/W9BMzjs/b6WugDiuL1H8OrkdyvFFyjyfu0BDyS0j4uIx3qj827t7KBh4VOblb+sRnK2j8jn+QinF4Uc8RGe8xgV5KVH6gieMXUS1wBvIBqgOmAcYdoYsquJuNYWwgAIhO5V5r36fYN0K+bRLouUJMABOXyN+1Cc4ya+63uFzvQjSKec8hEpa4P73StLGb5rHy/A9vRKkp2PUD+/t9wc4dJp/wnAQD2P8NXAznC03FDb++38TAI43uMn0Y6zO+0qyYE7711Tgu7LfiCDSS3GqMEGsWMZEW3BvB9h3RfcuwKnbr58NSJ5cV+QmsgC1AAxAsjWfiQTLU8MiMFJ94t3rtIh1Ln9tzAE7uKXERHtMrwb8drLbhkJGYbuVrgZtbvKbkTj7DqCKJX98ltF7XWZB77JLd8CQTtUrO5HkrbGW0ay6CmG3cihzJWWEAAXk1cgqxf4xiUE4C3n5VvaMn1ZKUZgkPsRjvAqC+CDRAFAV/gLCYawhoC0KNTHkbKMaAuj5Vu6Bl4+k6Keut+PwCnzAtmFEH6W5xF1wUvQxIg2h92PeI1ty7d8+UoTRJnK8gahPfja8q0Uw6pRSQ8ZLAEIDMLzV5Bd49064vX6qhXWu7LYl0Z5WoB1inS4yWE/khQWLiNZz24uI5h30TE9o7KSpQwXoR3e9wEawXf5rRxB1Ba4ciRk6+nxNRxjJCzvAuBKYcVKGPQp9yMMn1y+BwaCHjRfSAWrPX8HDPiyAA+vJ030JuOFZoQs+3Ds9H6cVNaRlJdvYVmU1hHtg7rXXq9Nl7L/iopk2kM1wAwAlr2u6oWQ2t12GdHGaMu3SM1i+YweA/qKwOj9tsvMIFhugT1Bb59ZqIhmhHjvabWLtb7E/QjeRS4LNQLmW+KyNgeJi3VjRO/C3s+jlzYt5FY7l6lHXEYy3Nj+t+CwVYP3I+K0v/MeYqn9ywK6YMu8p8Rw+yXT8lvARYDo+/eFRWkN+H4E5DbvPbaSNzzifiSBJjItI/A/tEDHrFRyb3FeY33eRz3tZnfoi3uKFuLvpexlGIA3tU3NHiiSVg0uIxB02L+dI2AS7o8Wqh+Uxy8+POiZ7cVyj0BQiCO5sIJSENk9cgCkQejex68ABFCiLCNgA8ktBNgnNcP9CNiv54USQ8e05/a3JPnLiNpt2mMJ7Q2NV7pfVwHHWVgi+Ctio1ugNWm39mUEpuviEUJeXgC2y6cE49iO42yPMBlyPAK06/BAzXm65toWgOGgZMXT5nJrINulFiXrQfqY0TcA47DxbB6i7mlAuCdSikFmUyNP+BqwfO2Iyxq/OdJoLW69t9m5fQu0yX2HjWuLmb2dSljMNOAtpz1K1vQc701SEFvDPtWWDqWecQ/f45qmydCaJZBmvbFy/3axvBj3KloC8N7eCwL/r+4MUUy7ue3ROoKIWwAyWGZagpgWnfmF32u1zeJy9CYbxKd1JOUVxjpovawQHk+8BlWtylwDOCYCT1lhNX5sBeN6YfGSydRqXJcWOJxU4ss84FBuzfSCYcT4VaY30t6gMfLhcPseaEMYZQXRAJLLKrymYxcwBXvWSLsf8dqyYvmMVuOEBVYHUc65ZF/055bfAtrksOZjPrTY3+dj4LrCCsadD8t7136ZizMjvVK9LIkpFtbItgBtvThxGYG98ArGodkia75a71te4LkczoUt8LykVaOA4OMSDOH+NADEdSStEBWvT0+ULoBdMRct8FyTJCuER0xYnucIYGc5lMLsR9RrL5/RoLaAX0ma98rrCDjhMg9MOfHyLVAMimv2HsSV15H4VXYKVEpj3zKiief4FYGIC1EDkfRfzewZ8dCvuwBpCVkgEIj6S84fbwaAYR1RdL78FkN/40ogELLkGyKSv6IdKcqyK1FccYsVJDW4RRNg/xDGkhcEXFjCtUrHryQjs15OLl+NrDsXmSWvqYh8aHS2X1c+pCkXGgQ/Il/TF2DShfRA8uTW5DBW5pfPBNa06EJoMsU1c8lZVgqoV4Xyos9wbJJlzW66suzaqM8CaN0DUsiYlsjlAfbgw/dAEm9UrWUZ0dtKF4qTYZae190WPW+yH/HaJtqtNEhrShYahJWXJbcaSZsaL3s0wK0LwdIRn9cRVraykCftIbkQLLywdUfG61WUbqVKOfFC78CMNIGzkifhsOR6lfnnZYdId/QWiWHEO1q+pfd9h+UzuegtHwvlUhEuOWOll275jAewXPbCAjjPkuM/kmnW+4pkkTwQgFBcPqO5UVl+HZyj7CMRNJ4PV4btCZbeYr6fRxNFbqGbrCWee7sA/xO48QXKuaIXVO1HVH1yXHfQ4GxlGVHrXkYyOPKih6JknBYyp+R3mRmy4LIQRwEmWQl60mvnlrejl3ou6RyMZE3h70cU/6yE79D1eT8CCYYlFhwhc5oXWWDpMTqFqLPSOz2psFic9nfBsva7B1o5JguV/JY8iT/cibtQJW3KXr6lL4rhz+Yv5K5BXm7n7di+s2GgnW6BFY4Qmcxdq1RCpTBL2gDcXNNNxlTYU6MtUA+9a9mIG5Nqm0GGMv7SoRqcTuwYwO3wLBsjEG+t4625MPFn2gZMNVGddQ6N/UeIDJ0iMmcQCODCFc0dw/4apegk0v+dmD1p0eT38LiS3oUfaAukBZMeweN/GPqOWva/IJEjuPVblBo1FXUa3x1BT9/iFx8OR6tPIohvk6R6Rfyyj+g01sSvdh+1HGOJWuxCTCc9N7PTdP0y4jWvsx8p8DvyHa/8rceN2oJ88Z1av7KsQlR7lnioO2Qhr74TiG/Z6Uwq6bB4U4X6ed0NBXpanlkvK4kLEtF8sec1EaYbSYt/xZuI7vSO6VkeF/Au7WNLUJEt+nzMK3+b0jrHB3+TnMqFy4LLPieVdiOH/m1yxE/TS/w0ne2noyKmYzVsuc82BrcZtxp1R33QECcB7ziAIShXnlrtAbgZpoQRuRRfUvXS4XHLiRrG6uKQ7uYgWCEca6iuVsSAvnktLqmjwq7apyPBn/z03f3dp2I8neS/3199vH/n//2f/8vhavz6rt493t7f/elKJXD1MB7e45//6WNl/Z+u3j3c/3y7jYerw/j49fbx6fbup+te++uBT8+H8fj6T/iHd6M+4ftv7nt9c9XqU399NYf+ef9w9R6P8Obw1+22vbm9/+mhvnv92yt90L/93d/+7v8DmZRoIg=='
+        PROVENANCE_SHA256 = '5e8c5d23b84036a0c8d39df99ae8d6d146f6178d992f2f46e1d56866e095e9fe'
+        def decoded(payload, expected):
+            raw=zlib.decompress(base64.b64decode(payload, validate=True))
+            if hashlib.sha256(raw).hexdigest()!=expected:
+                raise ValueError('Embedded source provenance checksum mismatch')
+            return raw
+        (root/'source-list-provenance.json').write_bytes(decoded(PROVENANCE_B64, PROVENANCE_SHA256))
+        PYPROVENANCE
+    - name: Install uv without a shared dependency cache
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: false
+    - name: Install the locked normal project runtime
+      timeout-minutes: 15
+      run: uv sync --frozen --no-dev --no-editable
+    - name: Run normal source fetchers in isolated temporary directories
+      id: fetch
+      continue-on-error: true
+      timeout-minutes: 40
+      run: |
+        uv run --no-sync python - <<'PYFETCH'
+        """Retrieve a fixed PMID/Reactome inventory with the normal CLI; never author source records."""
+        from pathlib import Path
+        from datetime import datetime, timezone
+        from importlib.metadata import version
+        import hashlib,json,os,re,signal,subprocess,time,yaml
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
+        BRANCH='refs/heads/cmungall/clingen-reference-fetch44-20260927'
+        REPOSITORY='ai4curation/ai-gene-review'
+        ROOT_NAME='clingen-reference-recovery44'
+        REQUEST_SHA256='7877d9ccd729a0a13b660b801b1720beca29e06e2ec27e8874dc83064d7b3343'
+        PMIDS={'29459677', '39856351'}
+        REACTOME_IDS=set()
+        PER_PMID_SECONDS=180
+        PER_REACTOME_SECONDS=60
+        TOTAL_SECONDS=35*60
+        REACTOME_CALL='''from pathlib import Path
+        import sys
+        from ai_gene_review.etl.reactome import cache_reactome_pathway
+        raise SystemExit(0 if cache_reactome_pathway(sys.argv[1], output_dir=Path(sys.argv[2]), force=False) else 1)
+        '''
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
+        def digest(data):
+         return {'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest(),'git_blob_sha':hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()}
 
-      - name: Install just
-        run: uv tool install rust-just
+        def validate_requests(raw):
+         if hashlib.sha256(raw).hexdigest()!=REQUEST_SHA256:raise ValueError('Requests differ from the fixed approved bytes')
+         data=json.loads(raw);allowed={('pmid',x) for x in PMIDS}|{('reactome',x) for x in REACTOME_IDS}
+         if not isinstance(data,list) or len(data)!=len(allowed):raise ValueError('Wrong finite inventory size')
+         if {(r['kind'],r['id']) for r in data}!=allowed:raise ValueError('Wrong fixed source inventory')
+         for r in data:
+          if set(r)!={'kind','id','mode','genes','citations'} or r['mode']!='fetch_missing':raise ValueError('Unsupported request shape or mode')
+          pattern={'pmid':r'[1-9][0-9]{0,8}','reactome':r'R-[A-Z]{3}-[1-9][0-9]{0,8}'}.get(r['kind'])
+          if not pattern or not re.fullmatch(pattern,r['id']):raise ValueError('Invalid source identifier')
+          if not r['genes'] or not r['citations']:raise ValueError('Missing source provenance')
+         return data
 
-      - name: Install project
-        run: uv sync --dev
+        def inspect_publication(raw,pmid):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal publication frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or str(meta.get('pmid'))!=pmid:raise ValueError('Wrong publication identifier')
+         if not isinstance(meta.get('title'),str) or not meta['title'].strip():raise ValueError('Missing publication title')
+         if not isinstance(meta.get('full_text_available'),bool):raise ValueError('Missing normal availability metadata')
+         if not parts[2].strip():raise ValueError('Empty publication body')
+         return {**digest(raw),'frontmatter':meta,'has_abstract_section':'## Abstract' in parts[2],'has_full_text_section':'## Full Text' in parts[2]}
 
-      - name: Warm the reference cache
-        run: just warm-references
+        def inspect_reactome(raw,identifier):
+         text=raw.decode('utf-8');parts=re.split(r'^---\s*$',text,maxsplit=2,flags=re.M)
+         if not text.startswith('---\n') or len(parts)!=3:raise ValueError('Missing normal Reactome frontmatter')
+         meta=yaml.safe_load(parts[1])
+         if not isinstance(meta,dict) or meta.get('stable_id')!=identifier:raise ValueError('Wrong Reactome identifier')
+         if not isinstance(meta.get('display_name'),str) or not meta['display_name'].strip() or meta['display_name']=='Unknown pathway':raise ValueError('Missing Reactome title')
+         if not parts[2].strip():raise ValueError('Empty Reactome body')
+         return {**digest(raw),'frontmatter':meta,'has_summary':bool(meta.get('summary')),'has_summary_section':'## Summary' in parts[2]}
 
-      - name: Check for cache changes
-        id: check-changes
-        run: |
-          if git diff --quiet publications/; then
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "Reference cache already complete; nothing to commit."
-          else
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            git diff --stat publications/ | tail -1
-          fi
+        def inspect_source(raw,kind,identifier):
+         if kind=='pmid':return inspect_publication(raw,identifier)
+         if kind=='reactome':return inspect_reactome(raw,identifier)
+         raise ValueError('Wrong source kind')
 
-      - name: Compute metadata
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: metadata
-        run: |
-          CHANGED=$(git diff --name-only publications/ | wc -l | tr -d ' ')
-          TOTAL=$(find publications -maxdepth 1 \( -name 'PMID_*.md' -o -name 'DOI_*.md' \) | wc -l | tr -d ' ')
-          {
-            echo "branch=auto/warm-reference-cache"
-            echo "changed=$CHANGED"
-            echo "total=$TOTAL"
-          } >> "$GITHUB_OUTPUT"
+        def relative_cache_path(kind,identifier):
+         if kind=='pmid' and identifier in PMIDS:return Path('publications',f'PMID_{identifier}.md')
+         if kind=='reactome' and identifier in REACTOME_IDS:return Path('reactome',identifier+'.md')
+         raise ValueError('Unapproved source/path')
 
-      # Minted here rather than at job start, for the same reason as
-      # generate-pages: the cache warm needs no credentials, only the push does,
-      # and a token minted at job start burns its 60-minute life on the fetch.
-      - name: Generate ai4c-agent token
-        id: ai4c-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
-          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+        def write_raw(destination,data):
+         destination.parent.mkdir(parents=True,exist_ok=True)
+         with destination.open('xb') as handle:handle.write(data)
+         if destination.read_bytes()!=data:raise ValueError('Raw byte-copy mismatch')
 
-      - name: Create or update warm-cache PR
-        if: steps.check-changes.outputs.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
-          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
-        shell: bash
-        run: |
-          # Commit as the ai4c-agent App bot and serve the short-lived token to git
-          # through the gh credential helper, instead of persisting it in .git/config.
-          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
-          git config user.name "${APP_SLUG}[bot]"
-          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
-          gh auth setup-git
+        def copy_raw_tree(source,destination):
+         records=[]
+         for path in sorted(source.rglob('*')):
+          if path.is_symlink():raise ValueError('Generated symlink requires inspection')
+          if not path.is_file():continue
+          rel=path.relative_to(source);data=path.read_bytes();write_raw(destination/rel,data);records.append({'path':str(rel),**digest(data)})
+         return records
 
-          BRANCH_NAME="${{ steps.metadata.outputs.branch }}"
-          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
-          git checkout -B "$BRANCH_NAME"
+        def command_for(kind,identifier,runtime,work):
+         relative=relative_cache_path(kind,identifier);output=work/relative.parent
+         if kind=='pmid':return [str(runtime/'bin/ai-gene-review'),'fetch-pmid',identifier,'--output-dir',str(output),'--delay','1.0']
+         return [str(runtime/'bin/python'),'-c',REACTOME_CALL,identifier,str(output)]
 
-          git add publications/
-          git commit -m "$(cat <<EOF
-          Warm reference cache (${{ steps.metadata.outputs.changed }} entries updated)
+        def run_command(command,work,logpath,timeout):
+         with logpath.open('w') as log:
+          proc=subprocess.Popen(command,cwd=work,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+          try:return {'returncode':proc.wait(timeout=timeout),'timed_out':False}
+          except subprocess.TimeoutExpired:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();return {'returncode':proc.returncode,'timed_out':True}
+          except BaseException:
+           try:os.killpg(proc.pid,signal.SIGKILL)
+           except ProcessLookupError:pass
+           proc.wait();raise
 
-          Automated weekly warm so validate-all reads cached references instead of
-          re-fetching them. ${{ steps.metadata.outputs.total }} references cached total.
-          EOF
-          )"
-
-          git push --force-with-lease origin "$BRANCH_NAME"
-
-          PR_BODY="$(mktemp)"
-          {
-            echo "## Summary"
-            echo
-            echo "Automated weekly warm of the reference cache (\`publications/\`)."
-            echo "Fetches references that are new or lack full text so the full"
-            echo "\`just validate-all\` reference phase stays cache-bound (no re-fetching)."
-            echo
-            echo "- **${{ steps.metadata.outputs.changed }}** cache entries added/updated this run"
-            echo "- **${{ steps.metadata.outputs.total }}** references cached total"
-            echo
-            echo "Cache data only — no functional review needed; merge when convenient."
-            echo "(Raw fetched PDFs in \`publications/files/\` are gitignored.)"
-          } > "$PR_BODY"
-
-          EXISTING_PR_NUMBER="$(gh pr list \
-            --repo "$GITHUB_REPOSITORY" \
-            --head "$BRANCH_NAME" \
-            --state open \
-            --json number \
-            --limit 1 \
-            --jq '.[0].number // empty')"
-
-          if [ -n "$EXISTING_PR_NUMBER" ]; then
-            gh api \
-              --method PATCH \
-              "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
-              -f body="$(cat "$PR_BODY")" \
-              >/dev/null
-            echo "Updated existing warm-cache PR #$EXISTING_PR_NUMBER."
-            exit 0
-          fi
-
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH_NAME" \
-            --title "Warm reference cache" \
-            --body-file "$PR_BODY"
-
-          echo "Created warm-cache PR."
+        def main():
+         if os.environ.get('GITHUB_EVENT_NAME')!='workflow_dispatch' or os.environ.get('GITHUB_REF')!=BRANCH or os.environ.get('GITHUB_REPOSITORY')!=REPOSITORY:raise ValueError('Wrong event, task branch or repository')
+         repo=Path(os.environ['GITHUB_WORKSPACE']).resolve();runner=Path(os.environ['RUNNER_TEMP']).resolve();root=runner/ROOT_NAME
+         runtime=Path(os.environ['UV_PROJECT_ENVIRONMENT']).resolve()
+         if not runtime.is_relative_to(root) or root.is_relative_to(repo):raise ValueError('Runtime/output path outside isolated runner temp')
+         artifact=root/'artifact';workroot=root/'fetch-work';workroot.mkdir(parents=True);logs=artifact/'logs';logs.mkdir()
+         requests=validate_requests((artifact/'requests.json').read_bytes())
+         report={key:os.environ[key] for key in ['GITHUB_REPOSITORY','GITHUB_REF','GITHUB_SHA','GITHUB_RUN_ID','GITHUB_RUN_ATTEMPT']}
+         report.update(started_utc=datetime.now(timezone.utc).isoformat(),entries=[],request_digest=digest((artifact/'requests.json').read_bytes()),provenance_digest=digest((artifact/'source-list-provenance.json').read_bytes()),versions={},source_code={},scope='Raw normal publication and Reactome outputs only. Metadata checks do not establish scientific support or complete article access. No source authoring, review, gene seeding, import, refresh or remote mutation.')
+         def save():(artifact/'fetch-report.json').write_text(json.dumps(report,indent=2)+'\n')
+         save();deadline=time.monotonic()+TOTAL_SECONDS
+         try:
+          for name in ['ai-gene-review','linkml-reference-validator','PyYAML']:report['versions'][name]=version(name)
+          for name in ['src/ai_gene_review/cli.py','src/ai_gene_review/etl/publication.py','src/ai_gene_review/etl/reactome.py','uv.lock','.github/workflows/warm-reference-cache.yaml']:report['source_code'][name]=digest((repo/name).read_bytes())
+          save()
+          for request in requests:
+           kind=request['kind'];identifier=request['id'];key=kind+'_'+identifier;entry={'kind':kind,'id':identifier,'status':'pending'};report['entries'].append(entry);save()
+           relative=relative_cache_path(kind,identifier);existing=repo/relative
+           if existing.exists():
+            try:entry.update(inspect_source(existing.read_bytes(),kind,identifier),status='already_present')
+            except Exception as exc:entry.update(status='existing_needs_inspection',error=str(exc),existing_digest=digest(existing.read_bytes()))
+            save();continue
+           remaining=deadline-time.monotonic()
+           if remaining<=0:entry['status']='not_attempted_budget';save();continue
+           work=workroot/key;work.mkdir();command=command_for(kind,identifier,runtime,work);entry.update(status='fetching',command=command,started_utc=datetime.now(timezone.utc).isoformat());save()
+           try:
+            entry.update(run_command(command,work,logs/(key+'.log'),min(PER_PMID_SECONDS if kind=='pmid' else PER_REACTOME_SECONDS,remaining)))
+            generated=work/relative
+            if entry['returncode']!=0:raise ValueError('Normal fetch failed or timed out')
+            if generated.is_symlink():raise ValueError('Symlink publication output')
+            raw=generated.read_bytes();entry.update(inspect_source(raw,kind,identifier))
+            entry['raw_outputs']=copy_raw_tree(work,artifact/'raw_outputs'/key)
+            write_raw(artifact/relative,raw);entry.update(status='recovered',artifact_path=str(relative))
+           except Exception as exc:
+            entry.update(status='needs_inspection',error=str(exc))
+            try:entry['quarantined_outputs']=copy_raw_tree(work,artifact/'quarantine'/key)
+            except Exception as copy_error:entry['quarantine_error']=str(copy_error)
+           save()
+         except Exception as exc:
+          report['fatal_error']=str(exc)
+         finally:
+          attempted={(r['kind'],r['id']) for r in report['entries']}
+          report['entries'] += [{'kind':r['kind'],'id':r['id'],'status':'not_attempted_after_failure'} for r in requests if (r['kind'],r['id']) not in attempted]
+          report['finished_utc']=datetime.now(timezone.utc).isoformat();report['unresolved_sources']=[r['kind']+':'+r['id'] for r in report['entries'] if r['status'] not in {'recovered','already_present'}];report['recovered_count']=sum(r['status']=='recovered' for r in report['entries']);save()
+         with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:summary.write(f"Recovered {report['recovered_count']} normal source caches; {len(report['unresolved_sources'])} unresolved. All outputs require independent identity/content checks before import.\n")
+         return int(bool(report['unresolved_sources']) or 'fatal_error' in report)
+        if __name__=='__main__':raise SystemExit(main())
+        PYFETCH
+    - name: Verify the checked-out repository is unchanged
+      id: unchanged
+      if: ${{ always() }}
+      run: |
+        git diff --exit-code
+        git diff --cached --exit-code
+        test -z "$(git ls-files --others --exclude-standard)"
+    - name: Upload raw normal sources and partial reports
+      id: artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: clingen-reference-recovery44-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/clingen-reference-recovery44/artifact/
+        if-no-files-found: error
+        retention-days: 7
+        include-hidden-files: false
+        overwrite: false
+    - name: Report incomplete recovery after preserving outputs
+      if: ${{ always() && (steps.fetch.outcome != 'success' || steps.unchanged.outcome != 'success' ||
+        steps.artifact.outcome != 'success') }}
+      run: exit 1
