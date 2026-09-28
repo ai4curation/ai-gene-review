@@ -49,6 +49,30 @@ predictions:
         evidence is missing and avoid speculation.
 ```
 
+## Selected records with no GO/EC predictions
+
+When a selected benchmark target has no emitted GO/EC predictions in the frozen
+source, still write its `PredictionReview` sidecar with an explicit
+`predictions: []`. Use `description` for the summary evaluation: identify the
+method and snapshot, distinguish absent GO/EC output from any emitted name,
+location, or function text, and assess whether well-supported functions were
+omitted. Cite the frozen output and decisive biological sources through
+`source_documents` and `references`, with supporting excerpts in reference
+`findings` where applicable. `status: COMPLETE` can describe a completed
+assessment of the empty output; it does not imply the full gene review is complete.
+
+Use exact-accession and isoform evidence before calling an omission an obvious
+miss. Unresolved substrate specificity or absent catalytic architecture can make
+withholding a term reasonable. Do not insert expected terms into `predictions`,
+assign a COR/CNN/LSP/UNC/PLI/NPI/REP score to an absent prediction, or infer recall
+without a defined expected annotation set. Report zero-output records separately
+from emitted-claim assessment counts. A missing sidecar means unrecorded review,
+whereas `predictions: []` plus a completed summary records an assessed absence.
+
+If the user requests a cohort of genes **with GO predictions**, enforce that
+selection criterion against the actual source. Function text, protein names,
+and subcellular-location identifiers do not satisfy it.
+
 ## Evidence and reasoning
 
 Separate biological correctness, agreement with existing annotations, and the

@@ -1814,6 +1814,89 @@ def refresh_publications(
 
 
 @app.command()
+def warm_publications(
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum records to attempt this run"),
+    ] = None,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between records in seconds")
+    ] = 0.3,
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="List candidates without network or file changes"),
+    ] = False,
+    providers: Annotated[
+        Optional[str],
+        typer.Option(
+            "--providers",
+            help="Comma-separated full-text provider chain override "
+            "(default: pmc,epmc_preprint,unpaywall,openalex)",
+        ),
+    ] = None,
+    retry_attempted: Annotated[
+        bool,
+        typer.Option(
+            "--retry-attempted",
+            help="Also re-attempt records already tagged full_text_attempted "
+            "(use after the provider chain or acceptance guards improve)",
+        ),
+    ] = False,
+):
+    """Warm the publications cache via the linkml-reference-validator full-text chain.
+
+    Attempts full text for cached publications that lack it, using LRV's
+    provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Unlike
+    refresh-publications, this also covers DOI-only records without a PMC ID,
+    and follows the monarch-initiative/dismech warm-reference-cache tagging
+    convention: every cleanly concluded attempt is durably recorded as
+    ``full_text_attempted: true``, so bounded --limit sweeps drain the backlog
+    incrementally and never re-query the same record.
+
+    Only open-access full text is merged into the shared cache; non-public
+    locations are ignored.
+
+    Examples:
+        ai-gene-review warm-publications --dry-run --limit 20
+        ai-gene-review warm-publications --limit 200
+        ai-gene-review warm-publications --limit 50 --providers unpaywall,openalex
+    """
+    from ai_gene_review.etl.publication_warm import warm_publications as run_warm
+
+    provider_list = (
+        [p.strip() for p in providers.split(",") if p.strip()] if providers else None
+    )
+    stats = run_warm(
+        publications_dir=publications_dir,
+        limit=limit,
+        delay=delay,
+        providers=provider_list,
+        dry_run=dry_run,
+        retry_attempted=retry_attempted,
+    )
+    if dry_run:
+        would_attempt = (
+            stats["candidates"] if limit is None else min(limit, stats["candidates"])
+        )
+        typer.echo(
+            f"Dry run: would attempt {would_attempt} of {stats['candidates']} "
+            "candidates in the backlog"
+        )
+        return
+    typer.echo("=" * 60)
+    typer.echo("WARM SWEEP SUMMARY")
+    typer.echo("=" * 60)
+    typer.echo(f"Candidates in backlog: {stats['candidates']}")
+    typer.echo(f"Processed this run: {stats['processed']}")
+    typer.echo(f"Full text retrieved: {stats['full_text']}")
+    typer.echo(f"Durably attempted (no text found): {stats['attempted']}")
+    typer.echo(f"Transient errors (will retry next run): {stats['transient_error']}")
+
+
+@app.command()
 def convert_doi_publications(
     publications_dir: Annotated[
         Path, typer.Option("--dir", help="Publications directory")
@@ -1938,11 +2021,19 @@ def refresh_publications_active(
             elif force:
                 stubs.append(pmid)
             else:
-                content = pub_file.read_text()
-                if "full_text_available: false" in content or "full_text_available: true" not in content:
-                    stubs.append(pmid)
-                else:
+                # Use the shared predicate rather than substring-matching the whole file.
+                # The old test classed any record without an explicit
+                # `full_text_available: true` as a stub, which is 905 records -- 242 of them
+                # carrying full text under a `content_type` key -- and it matched the string
+                # anywhere in the file, including inside quoted full text.
+                from ai_gene_review.validation.supporting_text import (
+                    cached_full_text_available,
+                )
+
+                if cached_full_text_available(f"PMID:{pmid}", publications_dir):
                     cached.append(pmid)
+                else:
+                    stubs.append(pmid)
 
         typer.echo(f"\n  Missing (need fetch): {len(missing)}")
         typer.echo(f"  Stubs (need refresh): {len(stubs)}")

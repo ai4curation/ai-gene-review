@@ -2,9 +2,31 @@
 title: "Function Knowledge Gaps"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+sidecars:
+  slide_figures:
+    - FUNCTION_KNOWLEDGE_GAPS/slides/dark-score-decomposed.svg
+    - FUNCTION_KNOWLEDGE_GAPS/slides/gap-anatomy.svg
+    - FUNCTION_KNOWLEDGE_GAPS/slides/gap-register-counts.svg
 ---
 
 # Function Knowledge Gaps
+
+**Bottom line:** about a fifth of the proteins in well-studied organisms
+still have no informative functional description, and many are conserved
+from yeast to human. This project records what is *not* known about a gene
+product as a curated, sourced statement, with the same evidentiary discipline
+the rest of the repo applies to what is known. We first tested a metric for
+"darkness" and found that most genes it flagged were structural subunits GO
+cannot describe or plain curation gaps, so a gap is now a judgement made by
+reading. We wrote 23 worked prose entries spanning biology, curation and
+ontology gaps, added a fourth kind (contested functions), and made
+`KnowledgeGap` a schema class that can sit on a gene, annotation, core
+function, module or module step. Reviews have since adopted it widely: on
+2026-09-26 the YAMLs hold 1,461 structured gaps in 535 gene and module files
+(1,117 OPEN, 59 NARROWING), more than the 1,073 in the last generated
+[register](FUNCTION_KNOWLEDGE_GAPS/structured-gaps.md). Open items are a
+deep-research PMID validator, a fourth read-list batch and curating the
+contested-function candidates.
 
 What does biology genuinely *not* know about how a gene works — and how do we state it
 rigorously enough that someone could close it?
@@ -97,6 +119,23 @@ Second, *which GO aspect is dark* — most "dark" genes are not uniformly dark:
   metabolism).
 - **CC-dark** — function known, but where/when unknown.
 - **Wholly dark** — only root terms / IEA / `protein binding` survive review (the deep unknome).
+
+### A fourth kind: the contested-function gap
+
+The three kinds above all describe *absence* of knowledge. A survey of 2025-2026 literature
+surfaced a distinct and, for curation, sharper species: genes where biology knows **two
+incompatible things**, both experimentally supported, neither retracted.
+
+> **Contested-function gap** — two or more lines of experimental work assign the gene product
+> mutually incompatible molecular functions and no consensus has formed. Neither `UNDECIDED`
+> (which implies we could not access the evidence) nor `ACCEPT` (which implies the matter is
+> settled) fits.
+
+These are worth separating out because the conflict is frequently **already inside GOA**, with
+experimental evidence codes on both sides — in the TMEM65 case as a positive `enables`/IDA and a
+`NOT|enables`/IDA of the *same* term, citing the two papers that disagree. See
+[Contested Functions: a 2025-2026 read-list](FUNCTION_KNOWLEDGE_GAPS/contested-functions-2025-2026.md)
+for the survey, the ranked candidate list, and the verification traps it turned up.
 
 ## The unit of work: anatomy of a gap entry
 
@@ -914,6 +953,11 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
 - [x] Documented deep-research review mechanisms (failure-mode table + layered checks)
 - [ ] Implement `validate-deep-research`: PMID resolution + title-match + per-file reliability score (extends `validate_pmid_references.py`)
 - [ ] Read-list deepening, batch 4: PUS3, CFAP418, SOCS4/SOCS5, RFT1, pef-1, fshr-1, alo1
+- [x] Fourth gap kind identified: the *contested-function gap*, with a 2025-2026 literature
+      survey and ranked read-list ([sub-page](FUNCTION_KNOWLEDGE_GAPS/contested-functions-2025-2026.md));
+      all cited PMIDs re-verified for title/journal/year and DOI
+- [ ] Curate contested-function read-list into reviews (first picks: TMEM175; TMEM65 + SLC8B1
+      as a pair; MEFV update for the CDC42 mechanism)
 - [ ] Decide unit granularity (per-gap vs per-gene narrative)
 - [x] Decide home: standalone register vs `knowledge_gaps` schema element — **done**: added a first-class `KnowledgeGap` schema class (gene/annotation/core-function/module/module-node), with the structured register rendered from it
 - [ ] Conservation / disease prioritization pass over candidates
@@ -961,3 +1005,7 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
   unlocatable KCTD14 CUL3-non-binding claim was dropped. General principle adopted: **provenance for
   a gap must be a verified primary source or a checkable repo fact (GOA evidence codes), never an
   unverified deep-research summary** — see the new "Reviewing deep-research output" section.
+
+## Slides
+
+- [Slides](FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.html) (Marp source: [FUNCTION_KNOWLEDGE_GAPS-slides.md](FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.md)) — AI generated

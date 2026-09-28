@@ -15,8 +15,16 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.render import normalize_artifact_metadata, resolve_research_artifacts
+from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
 NOTEBOOK_SUFFIXES = {".ipynb"}
+
+
+def has_gene_review(genes_dir: Path, species: str, symbol: str) -> bool:
+    """Only link targets that the gene renderer will actually publish."""
+    return (genes_dir / species / symbol / f'{symbol}-ai-review.yaml').is_file()
 
 
 def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
@@ -40,6 +48,8 @@ def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
     ...     (genes / "human" / "GPX4").mkdir(parents=True)
     ...     (genes / "human" / "TP53").mkdir(parents=True)
     ...     (genes / "mouse" / "Gpx4").mkdir(parents=True)
+    ...     for gene in genes.glob('*/*'):
+    ...         _ = (gene / f'{gene.name}-ai-review.yaml').write_text('gene_symbol: ' + gene.name)
     ...     index = build_symbol_to_species_index(genes)
     ...     sorted(index.keys())
     ['GPX4', 'Gpx4', 'TP53']
@@ -58,7 +68,7 @@ def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
         species = species_dir.name
 
         for gene_dir in species_dir.iterdir():
-            if not gene_dir.is_dir():
+            if not has_gene_review(genes_dir, species, gene_dir.name):
                 continue
 
             symbol = gene_dir.name
@@ -202,14 +212,14 @@ def resolve_frontmatter_gene_links(
 
         if "/" in raw_gene:
             code, candidate_symbol = raw_gene.split("/", 1)
-            if (genes_dir / code / candidate_symbol).is_dir():
+            if has_gene_review(genes_dir, code, candidate_symbol):
                 species = code
                 symbol = candidate_symbol
                 url = f"{base_path}/{species}/{symbol}/{symbol}-ai-review.html"
             elif (genes_dir / code).is_dir():
                 warnings.append(
                     f"Frontmatter gene '{raw_gene}' not found "
-                    f"(no genes/{code}/{candidate_symbol})."
+                    f"(no review YAML in genes/{code}/{candidate_symbol})."
                 )
         else:
             species_list = symbol_index.get(raw_gene, [])
@@ -527,8 +537,7 @@ def replace_gene_tags(
         if not label:
             label = symbol
 
-        target_dir = genes_dir / species / symbol
-        if not target_dir.exists():
+        if not has_gene_review(genes_dir, species, symbol):
             warnings.append(
                 f"Gene tag target not found for species='{species}' symbol='{symbol}'"
             )
@@ -563,7 +572,7 @@ def replace_species_qualified_symbols(
     ``CODE`` must be a five-character uppercase UniProt mnemonic (e.g. ``ARATH``,
     ``POPTR``, ``9INFA``) or one of a small set of lowercase model-organism
     directory names (``human``, ``mouse``, ``rat``, ``worm``, ``yeast``). The
-    reference is only linked when ``genes/CODE/symbol/`` actually exists, so the
+    reference is only linked when ``genes/CODE/symbol/symbol-ai-review.yaml`` exists, so the
     regex can stay permissive while precision comes from the filesystem check. A
     ``CODE`` that is itself a known species directory but whose ``symbol`` is
     missing yields a warning (likely a typo); anything else is left untouched.
@@ -573,6 +582,7 @@ def replace_species_qualified_symbols(
     >>> with tempfile.TemporaryDirectory() as tmp:
     ...     g = Path(tmp) / "genes"
     ...     (g / "POPTR" / "CASPL4C1").mkdir(parents=True)
+    ...     _ = (g / "POPTR/CASPL4C1/CASPL4C1-ai-review.yaml").write_text("gene_symbol: CASPL4C1")
     ...     out, warns = replace_species_qualified_symbols(
     ...         "See POPTR/CASPL4C1 for detail.", g)
     ...     ("[POPTR/CASPL4C1](" in out, warns)
@@ -603,7 +613,7 @@ def replace_species_qualified_symbols(
     def replace_match(match: re.Match) -> str:
         code = match.group("code")
         symbol = match.group("symbol")
-        if (genes_dir / code / symbol).is_dir():
+        if has_gene_review(genes_dir, code, symbol):
             url = f"{base_path}/{code}/{symbol}/{symbol}-ai-review.html"
             return f"[{code}/{symbol}]({url})"
         # Only warn when CODE is clearly a species directory we know about, so a
@@ -611,7 +621,7 @@ def replace_species_qualified_symbols(
         if (genes_dir / code).is_dir():
             warnings.append(
                 f"Species-qualified symbol '{code}/{symbol}' not found "
-                f"(no genes/{code}/{symbol})."
+                f"(no review YAML in genes/{code}/{symbol})."
             )
         return match.group(0)
 
@@ -732,6 +742,7 @@ def process_markdown_content(content: str) -> str:
     True
     """
 
+    content = protect_scientific_notation(content)
     # Process mermaid blocks for HTML
     def replace_mermaid(match: re.Match) -> str:
         mermaid_code = match.group(1)
@@ -1060,37 +1071,49 @@ def convert_referenced_notebooks(
     return output_paths, warnings
 
 
+HTML_ASSET_SUFFIXES = {".html", ".htm"}
+
+
 def copy_referenced_assets(
     md_files: List[Path],
     output_dir: Path,
     projects_dir: Path,
     rendered_paths: Optional[List[Path]] = None,
 ) -> List[Path]:
-    """Copy local assets referenced by markdown content or sidecar metadata."""
+    """Copy local assets referenced by markdown content or sidecar metadata.
+
+    Copied HTML assets are followed transitively: a linked Marp deck
+    (``FOO/slides/FOO-slides.html``) pulls in the figures it references, so a
+    deck linked from its project page deploys with its images.
+    """
     projects_root = projects_dir.resolve()
     output_root = output_dir.resolve()
     rendered = {path.resolve() for path in (rendered_paths or [])}
     copied: List[Path] = []
     seen_assets: set[Path] = set()
 
+    pending: List[Path] = []
     for md_file in md_files:
-        asset_paths = referenced_local_assets(
-            md_file,
-            projects_dir,
-        ) + referenced_frontmatter_sidecars(md_file, projects_dir)
-        for asset_path in asset_paths:
-            if asset_path in seen_assets:
-                continue
-            seen_assets.add(asset_path)
+        pending.extend(
+            referenced_local_assets(md_file, projects_dir)
+            + referenced_frontmatter_sidecars(md_file, projects_dir)
+        )
+    while pending:
+        asset_path = pending.pop(0)
+        if asset_path in seen_assets:
+            continue
+        seen_assets.add(asset_path)
+        if asset_path.suffix.lower() in HTML_ASSET_SUFFIXES:
+            pending.extend(referenced_local_assets(asset_path, projects_dir))
 
-            rel_path = asset_path.resolve().relative_to(projects_root)
-            output_path = output_root / rel_path
-            if output_path.resolve() in rendered:
-                continue
+        rel_path = asset_path.resolve().relative_to(projects_root)
+        output_path = output_root / rel_path
+        if output_path.resolve() in rendered:
+            continue
 
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(asset_path, output_path)
-            copied.append(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(asset_path, output_path)
+        copied.append(output_path)
 
     return copied
 
@@ -1253,6 +1276,11 @@ def render_project(
         if template_path is None:
             template_path = Path(__file__).parent / "templates" / "family_index.html.j2"
 
+    # Collection membership/index blocks only apply to top-level project pages.
+    collections: Dict[str, Any] = {"memberships": [], "indexes": []}
+    if projects_dir is not None and subdir_depth == 0:
+        collections = collection_context(frontmatter, md_path.stem, projects_dir)
+
     # Set up template
     if template_path is None:
         module_dir = Path(__file__).parent
@@ -1277,12 +1305,26 @@ def render_project(
         source_ref=quote(source_ref, safe=""),
         warnings=warnings,
         frontmatter=frontmatter,
+        collections=collections,
         projects_base_path="../" * subdir_depth,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
     # Create output directory and write file, mirroring subfolder structure
     output_path = output_dir / rel_path.with_suffix(".html")
+    repo_root = projects_dir.resolve().parent if projects_dir is not None else genes_dir.resolve().parent
+    # Bundle assets are copied after rendering; retain their mirrored URLs even
+    # on a clean build where those output files do not exist yet.
+    mirrored_assets = set(referenced_local_assets(md_path, projects_dir)) if projects_dir is not None else set()
+    # Provider report exports may list artifacts that were never archived.
+    # Render the same explicit notices as gene research panels, while leaving
+    # undeclared broken links visible to the publication audit.
+    # Keep artifact URLs relative to the source here; the publication rewriter
+    # below maps archived files into their mirrored output locations.
+    html = resolve_research_artifacts(
+        normalize_artifact_metadata(frontmatter), html, md_path, md_path.parent,
+    )
+    html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
 
@@ -1406,6 +1448,100 @@ def latest_review_status(manual_reviews: Any) -> Optional[str]:
     return str(status) if status is not None else None
 
 
+def load_collections(projects_dir: Path) -> Dict[str, Dict[str, Any]]:
+    """Load the project-collection registry (``projects/collections.yaml``).
+
+    Returns an empty mapping when no registry exists.
+    """
+    path = projects_dir / "collections.yaml"
+    if not path.exists():
+        return {}
+    data = yaml.safe_load(path.read_text()) or {}
+    return {str(k): dict(v or {}) for k, v in data.items()}
+
+
+def collect_project_rows(projects_dir: Path) -> List[Dict[str, Any]]:
+    """Collect frontmatter metadata for every top-level ``projects/*.md`` page."""
+    rows: List[Dict[str, Any]] = []
+    for md_path in sorted(projects_dir.glob("*.md")):
+        if md_path.name == "README.md":
+            continue
+        frontmatter, content = parse_frontmatter(md_path.read_text())
+
+        title = frontmatter.get("title")
+        if not title:
+            heading_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+            title = heading_match.group(1).strip() if heading_match else md_path.stem
+
+        species = _as_string_list(frontmatter.get("species"))
+        genes = _as_string_list(frontmatter.get("genes"))
+        tags = _as_string_list(frontmatter.get("tags"))
+
+        # ``maturity`` is the controlled-vocabulary project lifecycle field;
+        # fall back to the legacy free-text ``status`` if a page predates it.
+        maturity = frontmatter.get("maturity") or frontmatter.get("status")
+        if maturity is not None:
+            maturity = str(maturity)
+
+        # Count supporting markdown docs in the project's FOO/ folder, if any.
+        support_dir = projects_dir / md_path.stem
+        support_count = (
+            len(list(support_dir.rglob("*.md"))) if support_dir.is_dir() else 0
+        )
+
+        manual_reviews = frontmatter.get("manual_reviews")
+        review_status = latest_review_status(manual_reviews)
+        review_count = len(manual_reviews) if isinstance(manual_reviews, list) else 0
+
+        collections = _as_string_list(frontmatter.get("collections"))
+        rows.append(
+            {
+                "slug": md_path.stem,
+                "collections": collections,
+                "title": title,
+                "url": f"{md_path.stem}.html",
+                "species": species,
+                "genes": genes,
+                "tags": tags,
+                "maturity": maturity,
+                "support_count": support_count,
+                "review_status": review_status,
+                "review_count": review_count,
+            }
+        )
+
+    rows.sort(key=lambda r: str(r["title"]).casefold())
+    return rows
+
+
+def collection_context(
+    frontmatter: Dict[str, Any], slug: str, projects_dir: Path
+) -> Dict[str, Any]:
+    """Collections a page belongs to, and the members of any it indexes.
+
+    ``memberships`` lists ``{key, title, index}`` for each collection named in
+    the page's ``collections`` frontmatter. ``indexes`` lists, for each
+    collection whose registry ``index`` is this page, the member project rows
+    (excluding the index page itself).
+    """
+    registry = load_collections(projects_dir)
+    memberships = [
+        {"key": key, "title": registry[key].get("title", key),
+         "index": registry[key].get("index")}
+        for key in _as_string_list(frontmatter.get("collections"))
+        if key in registry and registry[key].get("index") != slug
+    ]
+    indexed = [key for key, spec in registry.items() if spec.get("index") == slug]
+    indexes = []
+    if indexed:
+        rows = collect_project_rows(projects_dir)
+        for key in indexed:
+            members = [r for r in rows if key in r["collections"] and r["slug"] != slug]
+            indexes.append({"key": key, "title": registry[key].get("title", key),
+                            "members": members})
+    return {"memberships": memberships, "indexes": indexes}
+
+
 def render_projects_table(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
@@ -1435,71 +1571,31 @@ def render_projects_table(
     if not template_path.exists():
         raise FileNotFoundError(f"Template not found: {template_path}")
 
-    rows: List[Dict[str, Any]] = []
-    for md_path in sorted(projects_dir.glob("*.md")):
-        if md_path.name == "README.md":
-            continue
-        frontmatter, content = parse_frontmatter(md_path.read_text())
-
-        title = frontmatter.get("title")
-        if not title:
-            heading_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
-            title = heading_match.group(1).strip() if heading_match else md_path.stem
-
-        def _as_list(value: Any) -> List[str]:
-            if value is None:
-                return []
-            if isinstance(value, (list, tuple)):
-                return [str(v) for v in value]
-            return [str(value)]
-
-        species = _as_list(frontmatter.get("species"))
-        genes = _as_list(frontmatter.get("genes"))
-        tags = _as_list(frontmatter.get("tags"))
-
-        # ``maturity`` is the controlled-vocabulary project lifecycle field;
-        # fall back to the legacy free-text ``status`` if a page predates it.
-        maturity = frontmatter.get("maturity") or frontmatter.get("status")
-        if maturity is not None:
-            maturity = str(maturity)
-
-        # Count supporting markdown docs in the project's FOO/ folder, if any.
-        support_dir = projects_dir / md_path.stem
-        support_count = (
-            len(list(support_dir.rglob("*.md"))) if support_dir.is_dir() else 0
-        )
-
-        manual_reviews = frontmatter.get("manual_reviews")
-        review_status = latest_review_status(manual_reviews)
-        review_count = len(manual_reviews) if isinstance(manual_reviews, list) else 0
-
-        rows.append(
-            {
-                "slug": md_path.stem,
-                "title": title,
-                "url": f"{md_path.stem}.html",
-                "species": species,
-                "genes": genes,
-                "tags": tags,
-                "maturity": maturity,
-                "support_count": support_count,
-                "review_status": review_status,
-                "review_count": review_count,
-            }
-        )
-
-    rows.sort(key=lambda r: str(r["title"]).casefold())
+    rows = collect_project_rows(projects_dir)
 
     # Stable, meaningful ordering for the controlled vocabularies so the
     # template can render filter chips deterministically.
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
-    tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    tag_order = [
+        "FLAGSHIP",
+        "BIOLOGY_DOMAIN",
+        "PIPELINE",
+        "EVALUATION",
+        "ML_PREDICTIONS",
+        "OBSOLETION",
+    ]
     review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [
         m for m in maturity_order if any(r["maturity"] == m for r in rows)
     ]
     all_tags = [t for t in tag_order if any(t in r["tags"] for r in rows)]
     all_species = sorted({s for r in rows for s in r["species"]})
+    registry = load_collections(projects_dir)
+    all_collections = [
+        {"key": k, "title": v.get("title", k)}
+        for k, v in registry.items()
+        if any(k in r["collections"] for r in rows)
+    ]
     all_review_statuses = [
         s for s in review_status_order if any(r["review_status"] == s for r in rows)
     ]
@@ -1514,6 +1610,7 @@ def render_projects_table(
         all_maturities=all_maturities,
         all_tags=all_tags,
         all_species=all_species,
+        all_collections=all_collections,
         all_review_statuses=all_review_statuses,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"

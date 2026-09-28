@@ -1,10 +1,32 @@
 ---
 title: "SwissProt Keywords (SPKW) Unique Terms Project"
-maturity: MATURE
-tags: [PIPELINE, FLAGSHIP]
+maturity: COMPLETE
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
+species: [human, SCHPO, ANOGA, DROME, PSEPK, ARATH, BPT4, ECO57]
 ---
 
 # SwissProt Keywords (SPKW) Unique Terms Project
+
+**Bottom line:** UniProt keywords were mapped to GO terms (`GO_REF:0000043`),
+and for many genes a keyword was the only source of an annotation. We reviewed
+genes whose annotation rested solely on such a keyword, in 12 subprojects that
+cover human apoptosis, rhythm and autophagy terms, five model or vector
+organisms, phages, viruses and non-Arabidopsis plants (137 genes by the results
+table below). Eukaryotic process keywords were the
+problem: 79 to 100% of reviewed apoptosis, autophagy, rhythm and *S. pombe*
+meiosis rows were over-annotations, mostly because a gene that regulates or is
+merely active during a process was annotated as participating in it. Bacterial
+keyword rows were mostly sound (one of four *P. putida* cases flagged). GOA
+retired the SPKW pipeline for all cellular organisms around April 2026, so this
+work is now retrospective. The plant subproject shows the cost of that blanket
+removal: only about 15% of plant SPKW-unique terms carried real over-annotation
+risk, and correct facts such as DELLA gibberellin signaling (RHT1) and patatin
+storage activity (PATB1) were lost with the bad ones.
+
+We did this to find which keyword-to-GO mappings are systematically unsafe and
+why, so that the same checks can be applied to other mapping sources (the
+UniPathway project reuses its closure filter), and to give GOA evidence about
+what its retirement discarded.
 
 ## Overview
 
@@ -77,8 +99,8 @@ Not all SPKW-unique annotations are over-annotations:
 
 - **Started**: 2025-12-23
 - **Last updated**: 2026-05-30
-- **Total genes reviewed**: 133 across 11 subprojects
-- **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
+- **Total genes reviewed**: 137 across 12 subprojects (sum of the results table above)
+- **Compiled data**: `spkw_reviewed_genes.csv` was not archived in this repository; the reviewed-gene summary is retained below.
 
 ### Phase 1 (Original)
 - [x] MAP3K5 - COMPLETE
@@ -237,7 +259,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 ### 2026-02-04
 
 - Researched UniProt keyword assignment process (confirmed: Swiss-Prot = manual)
-- Created [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv) compiling 95 reviewed genes
+- Created `spkw_reviewed_genes.csv` compiling 95 reviewed genes
 - Added Swiss-Prot vs TrEMBL stratification to methodology
 - Cross-species analysis: issue rates 10-40%, all Swiss-Prot dominated
 
@@ -246,3 +268,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 - Added [SPKW-VIRUS.md](SPKW/SPKW-VIRUS.md) as the virus-wide and clade-specific counterpart to the organism SPKW subprojects
 - Quantified `virus.ddb`: 180,680 SPKW annotations, 135,117 naive SPKW-unique annotations, and 80,218 closure-filtered SPKW-unique annotations
 - Summarized 11 existing viral gene reviews across phage, anti-CRISPR, influenza, phage quorum-sensing, and DGR cases
+
+## Slides
+
+- [Slides](SPKW/slides/SPKW-slides.html) (Marp source: [SPKW-slides.md](SPKW/slides/SPKW-slides.md)) — AI generated

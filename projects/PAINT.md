@@ -1,11 +1,16 @@
 ---
 title: "PAINT Human No-IBA Gene Review Project"
-maturity: SCOPING
+collections: [HOMOLOGY_PROPAGATION]
+maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
 ---
 
 # PAINT Human No-IBA Gene Review Project
+
+**Bottom line:** PAINT curators annotate ancestral nodes in PANTHER trees, and those calls reach human genes as IBA annotations; human genes with no IBA at all may be poorly characterized, divergent, or lack orthologs with experimental evidence. This project works through a list of 7,593 such genes (7,524 distinct symbols), giving each two deep research reports and a full AI-assisted review of its existing GO annotations. We did this to find where phylogenetic annotation has a gap or a wrong node, and to see what the literature supports for genes that inherit nothing. As of 2026-09-26, 715 of the listed genes have a completed review (not all written under this project), covering 24,409 annotation decisions: 11,926 ACCEPT, 5,786 KEEP_AS_NON_CORE, 2,778 MARK_AS_OVER_ANNOTATED, 1,475 MODIFY, 1,338 REMOVE, 902 NEW and 204 UNDECIDED. The status section below (635 genes, 2026-09-04) predates this count.
+
+The headline lessons are that the no-IBA list is stale (most genes in the 2026-09-04 batch now receive IBAs), that the recurring real gap is families with no molecular-function IBD at all, and that gene names mislead: PLD3 and PLD4, named as phospholipases D, are 5'-3' exonucleases, and PLD5 is catalytically inactive. The 2026-09-04 batch added structured PANTHER FamilyReviews for all 19 of its families; one of them (PTHR48178, PEX2) found an IBD placed on a PEX2/PAF1 name confusion.
 
 ## Overview
 
@@ -21,8 +26,8 @@ For each gene, the workflow generates at least 2 deep research reports (from dif
 ## Data Source
 
 - **Spreadsheet**: https://docs.google.com/spreadsheets/d/12bR3FZ7XrUXL86IKJc__K6QbFBEsSlQeSdiVXwFsjEI/
-- **Local**: `projects/PAINT/human-no-IBA-simple.csv` (format: species,uniprot_id,gene_symbol)
-- **Total genes**: 7,594
+- **Local**: `projects/paint/human-no-IBA-simple.csv` (format: species,uniprot_id,gene_symbol)
+- **Total genes**: 7,593
 
 ## Model Species
 
@@ -76,7 +81,7 @@ just validate human GENE
 List all completed PAINT genes:
 
 ```bash
-comm -12 <(cut -d',' -f3 projects/PAINT/human-no-IBA-simple.csv | sort) \
+comm -12 <(cut -d',' -f3 projects/paint/human-no-IBA-simple.csv | sort) \
          <(grep -l "status: COMPLETE" genes/human/*/*.yaml | xargs dirname | xargs -I{} basename {} | sort)
 ```
 
@@ -88,24 +93,68 @@ Supplementary files in `projects/PAINT/`:
 
 # STATUS
 
-**Project Statistics (2026-02-04):**
-- Total genes in project: 7,594
-- **PAINT genes completed: 207** (2.7%)
-- Total comprehensive reviews: 328
-- Genes with gene folders: 424
-- Genes with deep research: 339
-- Ready for review (have deep research but not complete): 22
+**Project Statistics (2026-09-04):**
+- Total genes in project: 7,593
+- **PAINT genes completed: 635** (8.4%)
+- Ready for review (have deep research but not complete): 6
+  (ERVMER34-1, PEX11A, SUMF2, TAX1BP1, TMEM67, TMF1)
+- Structured PANTHER FamilyReviews written for reviewed genes' families: 19 of 19
+  (`interpro/panther/<PTHR>/<PTHR>-review.yaml`)
 
 ## Progress
 - [x] Infrastructure setup (batch processing, parallel deep research)
-- [x] 207 PAINT gene reviews completed
-- [ ] Complete reviews for remaining 22 genes with deep research
+- [x] 635 PAINT gene reviews completed
+- [x] Family-level review dimension added: paired FamilyReview per reviewed gene
+- [ ] Complete reviews for remaining 6 genes with deep research
+- [x] FamilyReviews for all 19 families of the 2026-09-04 batch (the three
+      InterPro-outage stragglers — PTHR11494, PTHR15414, PTHR48482 — recovered
+      and completed the same day)
+- [ ] Re-fetch IL10 GOA: the cached snapshot still carries now-obsolete
+      GO:0005615 rows that PAINT has already migrated to GO:0005576
+- [ ] Re-derive the no-IBA source list against current GOA (see 2026-09-04 note)
 - [ ] Scale deep research to all genes
-- [ ] Full project completion (7,594 genes)
+- [ ] Full project completion (7,593 genes)
 
-Last updated: 2026-02-04
+Last updated: 2026-09-04
 
 # NOTES
+
+## 2026-09-04
+
+**20-gene batch with paired PANTHER family reviews**
+
+Completed finishing reviews (all validate with zero warnings, status COMPLETE)
+for 20 genes: BCKDHA, BCKDHB, CD28, CTLA4, NDUFS2, NDUFV1, PEX2, PEX10,
+PEX11B, PEX13, PEX16, ORMDL3, MBL2, MTCH2, IL10, ERLEC1, CFAP61, LOXHD1,
+GPATCH11, NAALADL2 — and, new for this project, wrote structured FamilyReviews
+(node-level PAINT/IBD adjudication) for all 19 of their PANTHER families
+(CD28/CTLA4 share PTHR11494; the three families stalled by a multi-hour
+InterPro API outage were recovered and completed the same day). Across the
+19: residue validator 506 checks pass / 0 fail, family-gene crosscheck 0
+conflicts.
+
+Key findings:
+- **The no-IBA source list is stale.** Most of the 20 "no-IBA" genes now
+  receive IBAs (PAINT IBDs dated 2022–2026): PEX11B, ORMDL3, CFAP61, LOXHD1,
+  BCKDHA/B, PEX13, PEX16, MTCH2, MBL2 among them. The recurring *real* gap is
+  narrower and invisible to a has-IBA test: **families lacking any
+  molecular-function IBD** (BCKDH E1, PEX13, PEX16, NDUFV1's eukaryotic node),
+  leaving human genes with only uninformative protein-binding IPI rows as MFs.
+- **PTHR48178 (PEX2)**: the Cdc73/Paf1-complex IBD is a homonym confusion
+  (PEX2 synonym PAF1 vs the PAF1 elongation factor), seeded by the target's
+  own miscited IDA — WRONG_NODE, retraction recommended.
+- **IL10**: four GO_REF:0000024 ISS rows trace to mouse TNF (P06804), not
+  mouse IL-10 — a wrong-accession entry set argued from fold non-homology.
+- **PTHR10404 (NAALADL2)**: human NAALADL2 descends from the carboxypeptidase
+  IBD node yet receives no IBA (silent pruning); recommended an explicit IRD,
+  with a machine-checked residue site proving loss of the catalytic Glu pair.
+- **GPATCH11**: PAINT's 2026-02-25 snapshot already withdrew the kinetochore
+  IBD (go-annotation#6450); the 2017 GOA kinetochore IBA is stale propagation.
+- **BCKDHA**: draft carried a systematic 45-residue precursor-vs-mature
+  numbering error, now corrected against the UniProt SQ block.
+
+Provenance: history records under `history/genes/human/<GENE>/` and
+`history/other/<PTHR>/` (one per gene and per family review).
 
 ## 2026-02-04
 
@@ -152,3 +201,7 @@ Completed reviews for:
 - RASA3 - Bifunctional RasGAP
 
 Key finding: PLD3/PLD4/PLD5 nomenclature is misleading - they are exonucleases, not phospholipases.
+
+## Slides
+
+- [Slides](paint/slides/PAINT-slides.html) (Marp source: [PAINT-slides.md](paint/slides/PAINT-slides.md)) — AI generated

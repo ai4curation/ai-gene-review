@@ -1,0 +1,21 @@
+# ELOVL2: primary evidence scope checked 2026-09-20
+
+This is a manual assessment, not a provider-generated report. No exact OpenScientist query/report was found for ELOVL2/Q9NXB9 or ELOVL6/Q9H5J4 in the repository and global cache. An unrelated PGRPLC report mentioning elongases was not used.
+
+The source/term JSON records the actual PTHR11157 target lineage, positive ancestral IBDs, absence of an on-lineage negative assertion, live term definitions and the exact IntAct query responses. Both targets descend from PTN000125390; donor count and target self-inclusion are not objections.
+
+## Shared human substrate assay, PMID:20937905
+
+The publication cache remains abstract-only. Full author manuscript was read at [HUSCAP](https://hdl.handle.net/2115/45300), [PDF](https://eprints.lib.hokudai.ac.jp/dspace/bitstream/2115/45300/1/PNAS107-43_18439-18444.pdf), SHA256 `bf4715a183e5631c78ec7d27ba3b8f270a99c0196aff7492b1c69f54f6df1f93`. Figure 1B was visually inspected at PDF page 26 (zero-based 25), not inferred from the abstract. HEK293T membrane fractions expressing human proteins were assayed with 50 micromolar acyl-CoA and radiolabeled malonyl-CoA, 30 minutes at 37 C, three replicates. ELOVL6 signals for C18:2 and C18:3(n-3) are significantly above vector, although far below C16:0. ELOVL2 has no significant signal above vector on the tested saturated C16-C26 or C18:1 substrates; the finite panel cannot exclude every substrate or condition. Figure 1D maps ELOVL6's C16-to-C18 step upstream of longer-chain synthesis. Results describe ER localization for all seven proteins and CERS2 co-immunoprecipitation with all seven; indirect association remains possible. CERS2 functional regulation emphasized ELOVL1, not exclusive binding to ELOVL1.
+
+## Chemistry and pathway scope
+
+GO:0042761 defines a very-long-chain fatty acid by an aliphatic tail containing more than 22 carbons; GO:0035338 and GO:0042759 use 13-22 tail carbons for long-chain species. Papers conventionally report total chain carbon numbers. C18 alone does not establish a VLCFA product; C24 clearly qualifies. An enzyme can perform an upstream synthesis step without catalyzing the terminal step. Reactome R-HSA-75876 includes the C16-to-C18 cycle in the route that continues to longer products; its own >20-carbon prose is not substituted for the GO boundary. GO:0036109 currently contains a chemical typo (omega-6/C18H32O2 for alpha-linolenic acid). The intended ALA route is omega-3, 18:3, as independently described in Reactome R-HSA-2046106. Source term ID and label are preserved.
+
+## ELOVL2-specific scope
+
+PMID:12371743 explicitly identifies the human 296-residue ELOVL2 clone and C20-to-C22 and C22-to-C24 polyunsaturated conversions. Its accessible abstract establishes positive target activity, but does not supply a comprehensive negative substrate panel. PMID:19575253 says preferential polyunsaturated activity; inaccessible full tables are not treated as universal exclusion. PMID:10970790 foregrounds HELO1, and PMID:11734209 describes coexpression of elongase/desaturase genes without resolving exact constructs in the accessible abstract. Those limited texts do not justify a confident wrong-identifier or exact-target-assay judgment.
+
+PMID:38485951 full text, especially Figure 4 and the accompanying Results, separates fatty-acid elongation by ELOVL2/4/5 from the subsequent acyl transfer by CerS3. Mouse AdipoR2 deletion reduces ELOVL2 expression and VLC-PUFA-containing sphingolipids. This is pathway and ortholog context, not an ELOVL2-only knockout or direct human sphingolipid-flux experiment. ELOVL2 catalyzes synthesis of acyl-chain precursors, rather than being a passive substrate of ceramide synthesis. PMID:21106902 independently establishes mouse ELOVL2-dependent testis VLC-PUFA pools, but its total-lipid/acyl-CoA measurements do not assign all detected C28-C30 products to direct ELOVL2 catalytic cycles.
+
+The IntAct HuRI records verify FXYD6, IFITM3, MALL and TMEM218 pairings. The TECR interaction in PMID:38422897 is retained with the explicit limit that the accessible abstract emphasizes HACD1/2-TECR and the exact ELOVL2 assignment also rests on curated UniProt/GOA. Empty current IntAct query results for this paper and PMID:20937905 are not negative interaction evidence.

@@ -13,9 +13,9 @@ title: "C. elegans Surveillance Immunity Gene Review - Complete Documentation In
 ## Quick Navigation
 
 ### Starting Documents (Read These First)
-1. **[CURATION FINDINGS (THIS FILE'S COMPANION)](SURVEILLANCE_IMMUNITY_CURATION_FINDINGS.md)** - Executive summary of findings
-2. **[CURATION SUMMARY](SURVEILLANCE_IMMUNITY_GENE_REVIEW_SUMMARY.md)** - Detailed analysis of each gene (80+ pages)
-3. **[IMPLEMENTATION CHECKLIST](SURVEILLANCE_IMMUNITY_CURATION_CHECKLIST.md)** - Line-by-line action items
+1. **[CURATION FINDINGS (THIS FILE'S COMPANION)](../SURVEILLANCE_IMMUNITY_CURATION_FINDINGS.md)** - Executive summary of findings
+2. **[CURATION SUMMARY](../SURVEILLANCE_IMMUNITY_GENE_REVIEW_SUMMARY.md)** - Detailed analysis of each gene (80+ pages)
+3. **[IMPLEMENTATION CHECKLIST](../SURVEILLANCE_IMMUNITY_CURATION_CHECKLIST.md)** - Line-by-line action items
 
 ---
 

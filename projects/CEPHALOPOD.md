@@ -3,8 +3,24 @@ title: Cephalopod Neuro Gene Reviews
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [OCTVU, OCTBM, DORPE, SEPOF, STHOU, DOROP, EUPSC]
+genes: [DDO, AP180, cpx, CTR1, OPR, FMRFa, P21613, RHO, CRT1, sympp, CTR2, OCTS1, TDO, OCBIM_22008529mg, Q6WDN4, ADAR2]
 ---
 # Project CEPHALOPOD: AI Gene Review for Cephalopod Genes
+
+**Bottom line:** octopus, squid and cuttlefish have the largest invertebrate
+nervous systems, yet all cephalopods together carry only 27 experimental GO
+annotations out of 333,921. We reviewed 16 experimentally studied cephalopod
+genes across 7 species, from synaptic proteins of the squid giant synapse
+(AP180, complexin, kinesin) to cephalopod novelties such as the CRT1
+chemoreceptor, symplectin and reflectin. We did this to test whether
+literature-driven review can fill an annotation desert that electronic
+pipelines cover only by transfer from vertebrates. The reviews assessed 126
+existing annotations and proposed 49 new ones, and exposed systematic pipeline
+errors: all three octopus OT/VP-family receptors carried `GO:0005000`
+vasopressin receptor activity (modified to `GO:0008188` neuropeptide receptor
+activity), and ADAR2 carried the tRNA-specific deaminase term (removed). The
+future-candidates table lists the next genes; the CRT1 review also exists as a
+duplicate folder, `genes/OCTBM/OCBIM_22006518mg`.
 
 ## Motivation
 

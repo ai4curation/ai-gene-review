@@ -3,9 +3,26 @@ title: "Cuproptosis (Copper-Dependent Cell Death) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+genes: [DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH]
 ---
 
 # Cuproptosis (Copper-Dependent Cell Death) Project
+
+**Bottom line:** cuproptosis is a form of regulated cell death, defined in 2022,
+in which copper reduced by the ferredoxin FDX1 binds lipoylated TCA-cycle
+enzymes such as DLAT and makes them aggregate. Scoped, not yet started as a
+review campaign: this page selects 17 human genes in three priority tiers
+(copper handling, the FDX1 trigger, the lipoylation machinery and its
+lipoylated targets, and regulators), and a draft
+[cuproptosis module](../modules/cuproptosis.html) grounded in the GO term
+`GO:0160119` cuproptosis was built alongside it. We chose it because the
+pathway is young, so its GO annotations are likely incomplete, and it pairs
+with the Ferroptosis project as a second metal-dependent death pathway. Seven
+of the 17 genes (DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH) already have
+reviewed annotations from other work (no pending rows, though DLD, DLAT, PDHA1,
+PDHB and GLS are still flagged `status: INITIALIZED`), none of which mentions
+cuproptosis. Of the other ten, LIPT1 has been fetched but not reviewed and nine
+have no gene folder yet.
 
 ## Overview
 
@@ -151,8 +168,10 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
 
 ## Project Status
 
-- [ ] Stub — needs gene folder setup (`just fetch-gene human <GENE>`)
-- [ ] Priority 1 genes reviewed (0/7)
-- [ ] Priority 2 genes reviewed (0/6)
-- [ ] Priority 3 genes reviewed (0/4)
+- [ ] Gene folder setup (`just fetch-gene human <GENE>`) — done for the reviewed
+  genes below; FDX1, LIAS, SLC31A1, ATP7A, ATOX1, MTF1, LIPT2, CDKN2A and FDX2 still
+  need folders (LIPT1 has only a UniProt record)
+- [ ] Priority 1 genes reviewed (4/7: DLD, DLAT, PDHA1, PDHB; FDX1, LIAS, LIPT1 pending)
+- [ ] Priority 2 genes reviewed (2/6: GLS, ATP7B; SLC31A1, ATP7A, ATOX1, MTF1 pending)
+- [ ] Priority 3 genes reviewed (1/4: GCSH; LIPT2, CDKN2A, FDX2 pending)
 - [ ] Pathway summary + ontology-gap assessment

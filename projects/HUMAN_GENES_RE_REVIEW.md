@@ -1,12 +1,35 @@
 ---
 title: Human Genes Annotation Re-Review
-maturity: IN_PROGRESS
+maturity: MATURE
+tags: [EVALUATION]
 autolink_gene_symbols: true
 species:
   - human
+sidecars:
+  slide_figures:
+    - HUMAN_GENES_RE_REVIEW/slides/not-audit.svg
+    - HUMAN_GENES_RE_REVIEW/slides/sweep-funnel.svg
 ---
 
 # Human Genes Annotation Re-Review
+
+**Bottom line:** each gene review assigns an action (ACCEPT, REMOVE, MODIFY
+and so on) to every existing GO annotation, and those actions are only as
+good as the reviewer who set them. We re-read the actions in every human
+review file then in the repo, 1,323 genes from AAAS to ZSWIM8, and asked of
+each one whether we agreed, using the YAML and cached publications without
+new literature searches. Agreement was about 99.7%: only three actions were
+changed (ABL1 UNDECIDED → REMOVE, ADRM1 REMOVE → UNDECIDED, BRCA2 NOT-row
+REMOVE → ACCEPT), and all three edits are in the current YAMLs. We also
+adjudicated all 143 NOT annotations and logged four fence cases (AGO3/AGR2,
+ATP23, GAPDH, HSPA1B) and two literature questions (ASCL1, ATF3) for a
+curator. The sweep finished in July 2026; since then TRA2B, flagged below as
+never reviewed, has been reviewed, and the human set has grown to 2,048
+review files, so about 725 newer reviews have not had this second pass.
+
+We did this to measure how far the first-pass actions can be trusted before
+building summaries and modules on them, and to find any systematic reviewer
+errors worth a guideline change.
 
 ## Purpose
 
@@ -276,3 +299,7 @@ Cursor = last gene fully re-reviewed. Genes are processed alphabetically.
   dependent activator function (heterodimers with c-Jun). Removing the activator IDA
   annotations may lose real biology; verify the source papers. Guideline-preferred
   fallback: UNDECIDED / KEEP_AS_NON_CORE rather than REMOVE.
+
+## Slides
+
+- [Slides](HUMAN_GENES_RE_REVIEW/slides/HUMAN_GENES_RE_REVIEW-slides.html) (Marp source: [HUMAN_GENES_RE_REVIEW-slides.md](HUMAN_GENES_RE_REVIEW/slides/HUMAN_GENES_RE_REVIEW-slides.md)) — AI generated

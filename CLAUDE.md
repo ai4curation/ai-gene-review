@@ -328,6 +328,16 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
+obsoleted without a replacement), do not put an obsolete or ill-fitting id in
+`core_functions.molecular_function`. Instead set `proposed_molecular_function` to the
+`proposed_name` of a top-level `proposed_new_terms` entry, and leave `molecular_function`
+unset. Validation errors if no entry matches, if both are set, or if neither the core
+function nor the proposed term has `supported_by` (a proposed activity can never trace to an
+existing annotation). In a MODIFY, the matching replacement is `proposed_replacement_terms:
+[{id: NTR, label: ...}]` whose label starts with that same `proposed_name` (a warning
+otherwise). When GO creates the term, swap its id into `molecular_function`.
+
 ### PANTHER ids: never write a family label from memory
 
 PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in
@@ -572,6 +582,15 @@ project page and its sub-pages (`[x](FOO/bar.md)` from `FOO.md`; `[parent](../FO
 from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the path.
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+
+**Collections.** Related projects are grouped under an index page by listing a
+collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys
+are registered in `projects/collections.yaml` (title + index page slug); the
+index page gets an auto-generated member table, members get a link back to it,
+and the all-projects table gains a Collection filter. Current collections:
+`FUNCTION_PREDICTION` (index `FUNCTION_PREDICTION_EVALUATION`) and
+`HOMOLOGY_PROPAGATION` (index `HOMOLOGY_PROPAGATION`, with the propagation
+browser at `app/propagation/`).
 
 **Manual reviews.** A project page may record reviewer sign-offs in frontmatter
 under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if

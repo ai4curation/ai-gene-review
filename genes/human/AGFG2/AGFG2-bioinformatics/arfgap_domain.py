@@ -4,7 +4,7 @@
 Two questions the gene's *name* ("Arf-GAP domain and FG repeat-containing protein 2")
 asserts but does not establish.
 
-TWO residues are tested, not one, and they answer oppositely
+TWO residue positions are mapped; activity remains unresolved
 ------------------------------------------------------------
 * the **catalytic arginine** (``C-x2-C-x16-C-x2-C-x4-R``), and
 * the **Arf-contacting aspartate** that PMID:23433073 (Schlacht et al. 2013)
@@ -12,8 +12,9 @@ TWO residues are tested, not one, and they answer oppositely
   glutamine in the Arf (Arf6-Q67) that is essential to hydrolysis*", and reports
   as absent from 38 of 40 AGFG sequences.
 
-Testing only the arginine would have produced the *opposite* conclusion from
-testing both, which is why the second residue is not an optional refinement.
+Both residue observations matter, but neither directly measures activity. The GIT
+counterexample (PMIDs 23433073 and 10788515) prevents treating the Asp-homologous
+substitution as a universal inactivity diagnostic.
 
 Method, and why each step is there
 ----------------------------------
@@ -51,9 +52,9 @@ can be derived:
    whose similarity is confined to a 127-aa domain is a different claim from one
    that is similar throughout.
 
-Nothing here measures GAP *activity* — no such measurement exists for any AGFG
-protein (see litsearch.py).  An intact site licenses "untested", not "active"; a
-missing one licenses "predicted to have lost", not "measured inactive".
+Nothing here measures GAP activity. The recorded searches did not recover a direct
+AGFG assay; that is not proof of universal absence. Sequence coordinates support a
+focused biochemical question, not an automatic activity verdict.
 """
 
 from __future__ import annotations
