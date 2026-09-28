@@ -49,6 +49,16 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 | Name | Kazal-like domain-containing protein | CNN | Seven domain features and PROSITE PS51465 independently establish the Kazal-like architecture. This validates the domain name without asserting serine-protease inhibition. |
 | Location | Secreted (SL-0243) | UNC | The extracellular IBA supports an exposed or extracellular protein region, but the exact source has a transmembrane segment at residues 57-78 and no cleavable signal-peptide feature. An ectodomain on a membrane-tethered protein is not equivalent to soluble secretion; topology or shedding evidence is needed. |
 
+## 2026-09-28 IBA re-review
+
+PTHR10913 is a heterogeneous follistatin/Kazal family. The current PAINT snapshot puts `GO:0005576` on the metazoan `PTN000099217` node and `GO:0030154` on the family-root `PTN000099219` node; the more specific activin/TGF-beta-binding assertions are instead on `PTN001657053`, a vertebrate follistatin branch that does not contain Drosophila CG32354.
+
+This supports keeping extracellular region as a broad, non-committal IBA: the transmembrane segment plus seven Kazal-like domains are compatible with a surface or exposed ectodomain. It does not convert the protein into a soluble secreted protein or establish either a specific serine-protease inhibitor activity or follistatin-like growth-factor antagonism.
+
+The cell-differentiation IBA should stay unresolved. The PAINT source node aggregates heterogeneous extracellular descendants, including follistatin-related, SPARC/Tiggrin and zebrafish Kazal-family seeds, and the CG32354 branch has no direct developmental-process assay or molecular target.
+
+Exact searches for `Q9VSK1`, `CG32354`, `FBgn0052354` and `CG7159` did not recover a recent target-specific functional paper. The FlyBase/NCBI-linked full-text paper from Firth et al. reports `CG32354` among "`10 genes upregulated in GMR>sSpi: CG32354`" in the Drosophila eye-disc peripodial-epithelium screen [PMID:17553483, "Spitz from the retina regulates genes transcribed in the second mitotic wave, peripodial epithelium, glia and plasmatocytes of the Drosophila eye imaginal disc"], but this is expression-screen evidence, not a direct assay of CG32354 localization, molecular function or developmental participation.
+
 ## Literature evidence
 
 No target-specific primary finding is used to establish a molecular activity here. The current assessment is bounded by exact-record architecture and the explicitly identified curated inferences.
