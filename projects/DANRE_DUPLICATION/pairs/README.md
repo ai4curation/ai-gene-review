@@ -41,6 +41,8 @@ Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs; see
 |---|---|---|---|---|---|
 | [smad3a / smad3b](smad3a_smad3b/smad3a_smad3b.md) | BACKUP (provisional) | both | experimental_both | 94.1% | Conserved R-SMADs acting alike in side-by-side assays and broadly co-expressed; only the double knockout has a reported phenotype; single-mutant data not visible |
 | [eef1da / eef1db](eef1da_eef1db/eef1da_eef1db.md) | UNRESOLVED | none | expression_only | 40.5% (long isoforms; GEF region 89%) | No functional data; both keep an intact GEF domain and are co-expressed in all Bgee tissues; eef1da is maternal and early-embryo biased |
+| [si:dkey-283b1.7 / vwc2](si_dkey-283b1.7_vwc2/si_dkey-283b1.7_vwc2.md) | UNRESOLVED (TGD not confirmed) | protein | experimental_one | 32.6% | vwc2 is the VWC2 ortholog (secreted BMP antagonist, forebrain; morpholino data); si:dkey-283b1.7 is an unstudied, fast-evolving brorin-family gene; Ensembl Compara and gar synteny do not support the PANTHER pairing |
+| [magi3b (LOC564220) / wu:fi36a10](LOC564220_wu_fi36a10/LOC564220_wu_fi36a10.md) | UNRESOLVED, leaning non-redundant | expression | experimental_both | 58.2% | MAGI3 co-orthologs with a conserved scaffold; each F0 crispant impairs brain vascularization and the double is no worse; wu:fi36a10 broad and gar-like, magi3b narrower; Compara dates the duplication to Euteleostomi, not the TGD |
 
 ## Template
 
