@@ -1,0 +1,57 @@
+# ARX research notes
+
+## 2026-09-28 — Initial source review
+
+ARX (UniProt Q96QS3; HGNC:18060) is a paired homeobox transcription factor. The recovered seed contains 48 original assertions and no alternative-product list. The seed, UniProt and GOA are preserved byte-for-byte. Decisions remain prospective until independent annotation/core consultation. No new annotation is currently proposed.
+
+The configured Falcon research attempt with Perplexity-lite fallback failed once after 5.89 seconds with a connection error and produced no report. Sensitive traceback output was discarded after its digest and safe diagnostic signals were recorded. This journal records manual research; it is not a provider report. Normal publication recovery and the quarantined Seed14 auxiliary copies are tracked separately. Existing canonical copies of PMID:21653829 and PMID:28473536 take precedence over differing recovered copies.
+
+### DNA binding and repression — PMID:22194193
+
+The normal record is abstract-only. Separately, I read the [author-uploaded original paper](https://www.researchgate.net/publication/51920343_ARX_homeodomain_mutations_abolish_DNA_binding_and_lead_to_a_loss_of_transcriptional_repression): cloning/cell-culture, reporter, EMSA and ChIP Methods; targeted Results and Figures 1–5 captions. The constructs explicitly encode human full-length ARX (1–562) or its 303–431 region. In HEK293T cells, wild-type ARX represses a reporter containing LMO1 TAATTA sites and decreases endogenous LMO1/SHOX2 expression. EMSA competition and antibody supershift support sequence recognition; full-length Myc-ARX ChIP supports occupancy of the two endogenous loci. Wild-type protein is predominantly nuclear. Mutants disrupt binding and repression to differing degrees; P353L is a milder case. These observations establish nuclear, chromatin-associated transcriptional repression. External full-text reading does not turn the normal abstract-only cache into full text.
+
+### Activation and PHF8 — PMID:31691806 and PMID:34356104
+
+The canonical-eligible 2019 record contains the complete main Results, Discussion and Methods, which I read. Promoter reporters and ChIP support ARX-mediated KDM5C activation, enhanced with PHF8. The paper explicitly leaves direct ARX–PHF8 contact unresolved. Its embryonic mouse brain, mouse ES-derived neuron and worm experiments are distinct from its cultured-cell promoter experiments. SAHA rescue of downstream chromatin/transcriptional abnormalities does not establish a clinical treatment or assign histone-demethylase chemistry to ARX. [Original paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC7002875/).
+
+For the 2021 paper, I read Methods 2.3–2.5, Results 3.4/3.6 and the relevant Discussion in the recovered XML. Reciprocal endogenous co-immunoprecipitation in SH-SY5Y cells and tagged-protein experiments support ARX–PHF8 association. The paper explicitly identifies the human ARX reference sequence NM_139058.2. PHF8 is a catalytic histone demethylase; enzyme binding is a possible same-source refinement of the existing generic interaction. Co-immunoprecipitation does not establish a purified binary interface, and no demethylase activity is attributed to ARX. [Original paper](https://pmc.ncbi.nlm.nih.gov/articles/PMC8305412/).
+
+### Interaction screen and methylation screen
+
+For [PMID:21653829](https://pmc.ncbi.nlm.nih.gov/articles/PMC3169432/), I read the available canonical main Results/Discussion and original PMC Methods. The screen uses full or partial bait cDNAs and a human brain library; secondary yeast tests and a sampled mammalian affinity assay are reported. I did not recover the supplementary construct/pair table identifying the exact ARX–ACTN1 and ARX–PICK1 experiments. The UniProt interaction list corroborates the named pairs but does not establish each source-local construct or validation route. The inaccessible supplement is an evidence boundary, not proof that either interaction is false.
+
+For [PMID:28473536](https://pmc.ncbi.nlm.nih.gov/articles/PMC8009048/), I read the complete available canonical abstract and concluding text and inspected the original article's supplement links. The specific ARX row, reagent and methylation-preference data were not recovered. The existing broad sequence-specific DNA-binding assertion is independently supported by the targeted ARX experiments above; no ARX methyl-CpG preference is inferred from this screen's general conclusions.
+
+### Intestinal evidence and source boundaries
+
+The abstract-only [PMID:37883554](https://pubmed.ncbi.nlm.nih.gov/37883554/) is not sufficient to assign all five human ARX lineage endpoints. I read targeted institutional original Results; an independent reader also examined pages 1, 6 and 7. In the human ZNF800-null organoid context, ARX overexpression did not reverse the enterochromaffin bias or alter PAX4, and FLAG-ARX ChIP did not bind the tested PAX4 enhancer. These are conditional negatives. The five-lineage discussion draws on earlier mouse literature; the supplementary ARX Methods and panel images remain unread. The human IDA assertions therefore require source-specific adjudication, rather than either automatic acceptance from the pathway model or removal from the title.
+
+Tracing the mouse donor O35085 identified [PMID:22387004](https://pmc.ncbi.nlm.nih.gov/articles/PMC3322318/). I read its original Methods, targeted mouse Results, human Figure 6 Results/caption and Discussion through the indexed official PMC text. WA09 human ES cells received stable ARX shRNA or control and were differentiated into proximal intestinal organoids. At day 68, partial ARX knockdown reduced CCK, secretin and preproglucagon expression while general epithelial, non-endocrine and pan-endocrine markers were maintained. Somatostatin expression did not increase in the human experiment. Mouse conditional deletion reduced several hormone-producing lineages and increased somatostatin cells. Thus the human and mouse D-cell observations must not be collapsed into a positive human D-cell differentiation claim. This source independently supports an ARX role in human endocrine specification; it does not retrospectively change the experiment cited by the 2023 IDA rows.
+
+### Pancreatic and neuronal development
+
+I read the complete official abstract of [PMID:12379852](https://pubmed.ncbi.nlm.nih.gov/12379852/). Mutant embryonic mice show forebrain proliferation and interneuron migration/differentiation defects; human XLAG cases carry loss-of-function variants. Full Methods have not been read. The mouse experimental and human clinical evidence are kept distinct.
+
+For [PMID:26633894](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0144100), I read the original human CA1S hESC/ZFN and re-expression Methods, targeted Figures 4–5 Results and Discussion. ARX-deficient endocrine cultures lose most glucagon-positive cells; an examined human XLAG pancreas lacks glucagon and pancreatic-polypeptide cells. Re-expression restores insulin but not glucagon in that protocol. The beta-cell effect in vitro differs from the patient tissue. This supports human pancreatic endocrine specification without claiming universal alpha-cell rescue or a mapped direct target mechanism.
+
+### Citation, phylogeny and GO-CAM checks
+
+PMID:16301625 is a valid normal record whose complete abstract describes mouse HY antigen/Smcy presentation. Its full assay identity has not been investigated sufficiently to declare an ARX misattribution. The original reference is preserved; the ARX transcription-factor function has independent positive evidence.
+
+The recovered PANTHER family metadata names PTHR24329 “Paired Homeobox Transcription Factors.” No complete PAINT topology or target node reconstruction has been inspected. Existing IBA nodes PTN004692309 and PTN001216073 are not rejected on donor counts, and ARX occurring among its own descendant evidence is not circularity.
+
+I inspected all five ARX activity objects in the cached production GO-CAM 69169b7400000113. They connect DNA-binding transcription-factor activity and chromatin with the five intestinal lineage terms. The MF edge cites PMID:16301625, the chromatin edge PMID:22194193 and the lineage edges PMID:37883554. This is a genuine curator model to consider, but it does not resolve the source-specific reading gaps by itself. No missing process assertion is inferred from the model or from necessity alone.
+
+Current official GO pages were read for transcription-factor activity, pancreatic A-cell differentiation, enteroendocrine differentiation and its G-cell child, enzyme binding and alpha-actinin binding. Specific replacement/core terms will be checked before authorship. Broad and narrow DNA-binding assertions can all remain in the original annotation audit, while the synthesized core should avoid redundant parent/child lists.
+
+### Mouse donor record — O35085
+
+On 2026-09-28, I read the indexed official [reviewed mouse Arx record O35085](https://www.uniprot.org/uniprot/O35085). Its Gene Ontology table explicitly lists “intestinal type N enteroendocrine cell differentiation” with UniProtKB as the source and two publications. Its function summary links intestinal lineage roles to PMID:22387004 and PMID:22570716. This observation supports the provenance of the existing mouse-to-human electronic N-cell assertion; it is not an independent human neurotensin perturbation result. The human experiments read in PMID:22387004 measured CCK, secretin and preproglucagon, so that paper is not attached as though it directly measured human N cells. The current direct entry renderer returned a JavaScript fallback, while the indexed official record exposed the table and function text. The underlying N-cell experimental panels were not newly read in this donor-record check.
+
+## Consulted draft
+
+The independent all48 consultation supports 39 ACCEPT, eight UNDECIDED and one same-source enzyme-binding refinement, with no new assertions. The five 2023 human lineage assertions retain their source-specific uncertainty; the mouse N-cell transfer cites the donor-record observation above, not an invented human neurotensin assay. PHF8 association is a cellular co-immunoprecipitation result, not purified binary binding or ARX demethylase activity. The single core combines sequence-specific transcriptional regulation with supported developmental roles. Normal Source54 reference closure is documented below. Original source objects and the absent alternative-product list are preserved.
+
+## Source54 normal reference closure
+
+All three recovered normal records now match their exact archived bytes. PMID:12379852 remains abstract-only; PMID:22387004 and PMID:26633894 have XML full text. Complete abstracts and the bounded Methods/Results scopes recorded in the actual primary assessment were read. No source cache was edited. The 2012 human WA09 organoid experiment supports CCK, Secretin and Preproglucagon transcript outcomes, while the N-cell transfer remains grounded in the separately observed mouse donor annotation. Human somatostatin was not increased after partial knockdown; this does not prove absence of a D-cell role. The 2015 timed rescue increased C-peptide release without restoring glucagon release in that comparison, although a small glucagon transcript increase was reported. Those endpoint qualifications refine prose, not the consulted 39 ACCEPT, eight UNDECIDED and one MODIFY decisions or the single core.
