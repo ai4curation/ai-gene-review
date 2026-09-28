@@ -8,7 +8,8 @@ Reports, as markdown:
      and review actions, so asymmetries between the copies are visible;
   2b. terms missing from both GOA files (e.g. proposed NEW terms) get their
      aspect from the QuickGO API;
-  3. the molecular functions each review lists under core_functions.
+  3. the molecular functions each review lists under core_functions
+     (molecular_function and contributes_to_molecular_function).
 
 Usage (from repo root):
     uv run python projects/DANRE_DUPLICATION/scripts/compare_pair.py mitfa mitfb \
@@ -125,8 +126,13 @@ def main(a: str, b: str) -> None:
 
     print("## Core molecular functions\n")
     for gene, review in ((a, ra), (b, rb)):
-        mfs = [cf.get("molecular_function", {}) for cf in review.get("core_functions") or []]
-        listed = "; ".join(f"{m.get('id')} {m.get('label')}" for m in mfs if m) or "none"
+        items = []
+        for cf in review.get("core_functions") or []:
+            if cf.get("molecular_function"):
+                items.append(("", cf["molecular_function"]))
+            if cf.get("contributes_to_molecular_function"):
+                items.append(("contributes to ", cf["contributes_to_molecular_function"]))
+        listed = "; ".join(f"{rel}{m.get('id')} {m.get('label')}" for rel, m in items) or "none"
         print(f"- **{gene}**: {listed}")
 
 

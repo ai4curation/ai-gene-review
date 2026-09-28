@@ -43,6 +43,8 @@ Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs; see
 | [eef1da / eef1db](eef1da_eef1db/eef1da_eef1db.md) | UNRESOLVED | none | expression_only | 40.5% (long isoforms; GEF region 89%) | No functional data; both keep an intact GEF domain and are co-expressed in all Bgee tissues; eef1da is maternal and early-embryo biased |
 | [si:dkey-283b1.7 / vwc2](si_dkey-283b1.7_vwc2/si_dkey-283b1.7_vwc2.md) | UNRESOLVED (TGD not confirmed) | protein | experimental_one | 32.6% | vwc2 is the VWC2 ortholog (secreted BMP antagonist, forebrain; morpholino data); si:dkey-283b1.7 is an unstudied, fast-evolving brorin-family gene; Ensembl Compara and gar synteny do not support the PANTHER pairing |
 | [magi3b (LOC564220) / wu:fi36a10](LOC564220_wu_fi36a10/LOC564220_wu_fi36a10.md) | UNRESOLVED, leaning non-redundant | expression | experimental_both | 58.2% | MAGI3 co-orthologs with a conserved scaffold; each F0 crispant impairs brain vascularization and the double is no worse; wu:fi36a10 broad and gar-like, magi3b narrower; Compara dates the duplication to Euteleostomi, not the TGD |
+| [tmc2a / tmc2b](tmc2a_tmc2b/tmc2a_tmc2b.md) | PARTITION | expression | experimental_both | 68.0% | Lopsided, overlapping zones: tmc2b dominates lateral line and peripheral ear, tmc2a the central ear and saccule; double mutants worse than singles; Tmc2b transgene rescues all organs, Tmc2a untested; TGD only partly supported by synteny |
+| [lhfpl5a / lhfpl5b](lhfpl5a_lhfpl5b/lhfpl5a_lhfpl5b.md) | PARTITION | expression | experimental_both | 76.5% | Clean organ split: lhfpl5a inner ear only, lhfpl5b lateral line only; each mutant loses transduction only in its organ; Lhfpl5a rescues lhfpl5b mutants; double-conserved synteny |
 
 ## Template
 
