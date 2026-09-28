@@ -60,7 +60,7 @@ Proteins that keep an enzyme's fold but not its activity
 
 1. The JmjC iron triad is **H297-E299-Y370**: position 370 is a **Tyr** where canonical JmjC demethylases have the third iron-ligating His.
 2. **Mass spectrometry** shows no demethylation of H3K9me2/me3 peptides.
-3. **H297A separates functions**: prevention of de novo H3K9me is retained, removal of established ectopic heterochromatin is lost.
+3. **H297A keeps prevention** of de novo H3K9me (nearly fully), so part of the anti-silencing activity does not need H297 (Sorida 2019). *One experiment read two ways*: its other arm, lost removal of established H3K9me, is on the next slide.
 4. The **C-terminus alone**, without JmjC, disrupts heterochromatin.
 
 <span class="small">Sources named on the project page: Ayoub 2003, Trewick 2007, Wang 2013 (Bdf2, PMID:24013502), Audergon 2015, Bao 2019, Sorida 2019, Raiymbek 2020.</span>
@@ -70,8 +70,8 @@ Proteins that keep an enzyme's fold but not its activity
 ## Evidence for a catalytic contribution (not excluded)
 
 - The **JmjC domain is essential** for Epe1 activity (Ayoub 2003) and for its effect on Pol II accessibility (Zofall & Grewal 2006, who note the mechanism may differ from demethylases).
-- **Y307A** is recorded as loss of function, but from the same Ayoub paper, possibly the same experiment.
-- **Sorida 2019**, independent: H297A keeps prevention but loses removal of established H3K9me, read out in vivo.
+- **Y307A** is recorded as loss of function, but from the same Ayoub paper, possibly the same experiment. Y307 is a 2-oxoglutarate-site residue, not an Fe ligand (Raiymbek; Sorida): cofactor pocket implicated, catalysis not isolated.
+- **Sorida 2019**, independent of Ayoub: under H297A, **removal of established H3K9me is lost**, read out in vivo. *One experiment read two ways*: its other arm, retained prevention, is on the previous slide.
 - **Wang 2015** (Mst2/Epe1): epe1-H374A and epe1-Y307A read as enzymatically dead, redundant with Mst2 (residue 374 of O94603 is Thr, so the His cannot be identified).
 - Against: **no study has measured demethylation directly**, and the same mutations weaken Swi6 binding and localization.
 

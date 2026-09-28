@@ -105,10 +105,10 @@ Outcome: over-annotated catalytic terms → MARK_AS_OVER_ANNOTATED / REMOVE; rea
 *S. pombe* Epe1 (UniProt O94603) — probable JmjC pseudo-demethylase.
 
 - **Defect:** degenerate Fe(II) triad H297-E299-Y370: Tyr370 replaces the third iron-ligand His.
-- **Biochemistry:** no detectable H3K9me removal in vitro; H297A separates functions: prevention of de novo H3K9me is retained, removal of established ectopic heterochromatin is lost (Sorida 2019).
+- **Biochemistry:** no detectable H3K9me removal in vitro; Sorida 2019's H297A experiment read two ways: prevention of de novo H3K9me retained (part of the activity does not need H297); removal of established H3K9me lost (the counter-evidence).
 - **Actual function:** anti-silencing factor — associates with SAGA, recruits Bdf2 to centromere-flanking boundaries; binds H3K9-methylated histones; no eraser activity detected.
-- **Removed:** GO:0032452 (demethylase), GO:0140680 (H3K36 demethylase), GO:0051213 (dioxygenase), GO:0016491 (oxidoreductase). **Undecided:** GO:0032454 (IDA, EXP), GO:0046872 (metal ion binding).
-- **Open:** the JmjC domain is essential for Epe1 activity and UniProt records Y307A as loss of function (both from Ayoub 2003, possibly one experiment); independently, Sorida 2019 shows H297A keeps the de novo arm but fails to remove established ectopic heterochromatin (separation of function, H3K9me read out in vivo); no study has measured demethylation directly.
+- **Removed:** GO:0032452, GO:0140680 (demethylases), GO:0051213 (dioxygenase), GO:0016491 (oxidoreductase). **Undecided:** GO:0032454 (IDA, EXP), GO:0046872.
+- **Open:** JmjC domain essential and Y307A (2-oxoglutarate site) loss of function (Ayoub 2003, possibly one experiment); the lost Sorida arm; demethylation never measured directly.
 - **Added (NEW):** GO:0070087 (Swi6 CSD binding), GO:0035035 (SAGA/Gcn5), GO:0030674 (Bdf2 adaptor), GO:0042393 (histone binding).
 
 (Raiymbek et al. 2020; Bao et al. 2019)

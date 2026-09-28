@@ -277,7 +277,7 @@ well-documented alternative function.
 |---------|---------|
 | **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
 | **Defect** | Degenerate Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution) |
-| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
+| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019; one experiment read from two arms, retained prevention and lost removal), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
 | **Actual function** | Anti-silencing factor; associates with the SAGA histone acetyltransferase complex (and recruits it to heterochromatin when overexpressed); recruits the Bdf2 bromodomain protein to the boundaries flanking centromeres; required for normal heterochromatic nucleosome turnover, which chaperones such as FACT carry out; binds Swi6/HP1 in an H3K9 methylation-stimulated manner; no demethylase (eraser) activity has been detected, though latent activity is not excluded |
 | **Type** | Type 5 (probable: recognition without detected modification activity) |
 | **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0140680 (histone H3K36me/H3K36me2 demethylase activity), GO:0051213 (dioxygenase activity), GO:0016491 (oxidoreductase activity). The two experimental GO:0032454 rows (IDA and EXP) and GO:0046872 (metal ion binding) are UNDECIDED rather than REMOVE |
@@ -296,7 +296,14 @@ interpret active-site mutant phenotypes as enzymatic redundancy with Mst2.
 Independently, Sorida et al. 2019 (PMID:31206516) show that H297A leaves the de
 novo arm intact but entirely fails to remove established ectopic
 heterochromatin, a separation of function read out as H3K9me in vivo, though
-no study has measured demethylation directly. A
+no study has measured demethylation directly. That one experiment is read from
+both arms: retained prevention of de novo H3K9me argues that part of the
+anti-silencing activity does not need H297, while lost removal of established
+H3K9me is the counter-evidence to a purely non-catalytic reading. Y307, the
+residue of the UniProt loss-of-function record, is assigned by Raiymbek et al.
+to the alpha-ketoglutarate site, and Sorida et al. describe Epe1Y307A as
+retaining the metal-binding residues, so that record implicates the
+2-oxoglutarate part of the cofactor pocket without isolating catalysis. A
 required domain is not required catalysis, since Raiymbek et al. (PMID:32195666)
 place H3K9me recognition in the JmjC domain. This creates a common annotation error where
 JmjC domain presence alone leads to multiple incorrect MF/BP annotations.
