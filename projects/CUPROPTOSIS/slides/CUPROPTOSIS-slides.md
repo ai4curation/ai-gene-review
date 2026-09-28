@@ -176,6 +176,6 @@ specificity control.
   copper handling, specificity controls).
 - **Status: SCOPING.** Next steps:
   - [ ] Gene folder setup (`just fetch-gene human <GENE>`)
-  - [ ] Priority 1 genes (0/7), Priority 2 (0/6), Priority 3 (0/4)
+  - [ ] Priority 1 genes (4/7), Priority 2 (2/6), Priority 3 (1/4)
   - [ ] Pathway summary + ontology-gap assessment
 - Parallels the **Ferroptosis** project as a metal-dependent cell-death pathway.
