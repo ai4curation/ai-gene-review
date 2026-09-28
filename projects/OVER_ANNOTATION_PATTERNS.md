@@ -56,7 +56,7 @@ These patterns emerge from multiple sources:
 
 **Examples**:
 - **LPL1**: `GO:0016787` (hydrolase activity) when `GO:0102545` (phospholipase B activity) is more specific
-- **Epe1**: `GO:0016491` (oxidoreductase activity) assigned despite protein lacking catalytic activity
+- **Epe1**: `GO:0016491` (oxidoreductase activity) assigned although no catalytic activity has been detected and the Fe(II) triad is non-canonical
 - **UBA7**: `GO:0016874` (ligase activity) when `GO:0019782` (ISG15 activating enzyme activity) is specific
 
 **Recommended Action**: REMOVE or MODIFY to more specific child terms.

@@ -39,7 +39,7 @@ Predominantly cellular component and biological process annotations that accurat
 ## Core Functions Identified
 
 ### 1. Heterochromatin Boundary Establishment
-- **Molecular Function**: Histone binding (GO:0042393)
+- **Molecular Function**: Modification-dependent protein binding (GO:0140030), for the H3K9 methylation-stimulated Swi6 interaction; Bdf2 recruitment is captured as protein-macromolecule adaptor activity (GO:0030674)
 - **Process**: Heterochromatin boundary formation (GO:0033696)
 - **Mechanism**: Binds HP1/Swi6 at heterochromatin sites, recruits Bdf2
 

@@ -277,10 +277,10 @@ well-documented alternative function.
 | **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
 | **Defect** | Degenerate Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution) |
 | **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
-| **Actual function** | Anti-silencing factor; recruits SAGA histone acetyltransferase and Bdf2 bromodomain protein to heterochromatin boundaries; promotes nucleosome turnover; functions as H3K9me **reader**, not eraser |
-| **Type** | Type 5 (reader/recognition without modification) |
+| **Actual function** | Anti-silencing factor; recruits SAGA histone acetyltransferase and Bdf2 bromodomain protein to heterochromatin boundaries; promotes nucleosome turnover; binds Swi6/HP1 in an H3K9 methylation-stimulated manner; no demethylase (eraser) activity has been detected, though latent activity is not excluded |
+| **Type** | Type 5 (probable: recognition without detected modification activity) |
 | **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0140680 (histone H3K36me/H3K36me2 demethylase activity), GO:0051213 (dioxygenase activity), GO:0016491 (oxidoreductase activity). The two experimental GO:0032454 rows (IDA and EXP) and GO:0046872 (metal ion binding) are UNDECIDED rather than REMOVE |
-| **Annotations added** | NEW rows: GO:0140030 (modification-dependent protein binding), GO:0031452 (negative regulation of heterochromatin formation), GO:0006473 (protein acetylation); GO:0042393 (histone binding) enters as the proposed replacement for the MODIFY on protein binding and as a core-function MF, not as a NEW row |
+| **Annotations added** | NEW rows: GO:0140030 (modification-dependent protein binding), GO:0031452 (negative regulation of heterochromatin formation), GO:0006473 (protein acetylation); the MODIFY on protein binding proposes GO:0140030, GO:0035035 (histone acetyltransferase binding) and GO:0030674 (protein-macromolecule adaptor activity, for Bdf2 recruitment), which are also core-function MFs, not NEW rows |
 | **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Sorida 2019 (PMID:31206516); Epe1 gene review at `genes/SCHPO/Epe1/` |
 
 **Key insight:** Epe1 is a paradigm for the Type 5 (reader) pseudoenzyme.
