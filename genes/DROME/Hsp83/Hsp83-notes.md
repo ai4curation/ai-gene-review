@@ -21,10 +21,10 @@ Re-reviewed all Hsp83 rows for the DROME IBA campaign, with emphasis on the ten 
 
 ### Protein-binding cleanup
 
-Migrated the three legacy generic `GO:0005515 protein binding` rows from `MARK_AS_OVER_ANNOTATED` to `MODIFY -> GO:0140662`:
+Migrated two legacy generic `GO:0005515 protein binding` rows from `MARK_AS_OVER_ANNOTATED` to `MODIFY -> GO:0140662`, and removed the Morgana row:
 
 - PMID:22579285: Hsp90/Nelf-E interaction is part of NELF stabilization.
-- PMID:31907206: Morgana/CHORD co-purifies with the Hsp90-R2TP-TTT supercomplex.
+- PMID:31907206: Morgana/CHORD co-purifies with the Hsp90-R2TP-TTT supercomplex, supporting complex association but not Hsp83 foldase activity on Morgana as a client.
 - PMID:23509070: Hsp90 binds Sicily and, Sicily-dependently, the CI subunit ND42.
 
 ### New-publication search
