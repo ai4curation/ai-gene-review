@@ -1,5 +1,7 @@
 # ANO10 research notes
 
+Current interpretation: ANO10 is an ER phospholipid scramblase, with a separately observed, condition-dependent plasma-membrane pool. Channel and NOT assertions retain their source-specific assay limits. The entries below preserve the research chronology; later dated follow-ups supersede earlier pending-access and draft-status statements.
+
 ## Initial review, 2026-09-27
 
 The verified Seed8 input contains 16 annotations and five alternative products. The original YAML, UniProt record and GOA bytes are preserved in `tmp/ANO10-initial/`. Fresh primary GitHub preflight at `025b22a6a49de665ffb482eb51803e3b1c387c3f` found no ANO10/TMEM16K canonical or history paths, task branch, or matching open PR. Existing raw data and publication caches remain read-only.
@@ -33,7 +35,7 @@ The current [Human Protein Atlas ANO10 summary](https://www.proteinatlas.org/ENS
 PTHR12308 membership records can identify family members but do not establish equivalent functions or PAINT ancestral placement. The Seed8 family metadata record with conflicting timestamps remains quarantined. Exact PAINT nodes and source mappings still require inspection. ANO10 appearing in its own IBA donor list is legitimate descendant experimental evidence, not circularity. No new BP is presently proposed.
 
 
-### Prospective consultation and authored draft
+### Historical prospective consultation and authored draft
 
 Independent all-16-row consultation supported three UNDECIDED assertions, twelve secondary retained assertions and one ACCEPT membrane assertion. The drafted review adds one directly demonstrated scramblase MF. ER membrane is recorded as the precisely supported core location rather than another NEW row alongside the existing broad membrane annotation. No new BP or scrambling-to-ion-transport/sorting causal edge is proposed. All sixteen original source objects and five products are unchanged.
 
@@ -53,7 +55,9 @@ No local GO-CAM index record matched Q9NW15, ANO10 or TMEM16K. No exact local PA
 These access extensions revise the two reference read scopes; they do not change any annotation action, source assertion or compact core. Schema-only validation of the initial authored draft passed without fetching missing references. Full source validation remains pending the four actual normal Source32 records.
 
 
-### Source32 actual record closure (2026-09-28)
+### Historical normal-cache closure, before the first PR follow-up (2026-09-28)
+
+This entry records the state at that time. Its unread-body rationale and one-ACCEPT count were superseded by the following PR3347 follow-up, which read PMID:21984732 and refined the broad membrane annotation.
 
 The four requested normal caches were imported by the project owner without overwriting existing records. All four imported byte hashes match the assessed exact archive and carry XML full-text flags. This flag describes the cached format, not a claim that every structural analysis, supplement or image was inspected. The original five abstract-only caches and two Reactome records remain unchanged; external original-paper observations recorded above remain separate from cached availability.
 
@@ -81,3 +85,16 @@ The positive calcium-gated chloride assertion is retained as a conditional secon
 The broad membrane HDA is refined to [ER membrane, GO:0005789](https://amigo.geneontology.org/amigo/term/GO:0005789) using independent human PMID:31477691 localization. This does not attribute ER-specific evidence to the NK-cell proteome survey, whose target peptide entry remains uninspected. HPA plasma-membrane observations and tagged-human surface staining remain separately retained as secondary pools. The exact PAINT tree/IBD was not recovered: no matching local node data, and the official PTHR12308 family page was inaccessible during the bounded follow-up. Other species' annotation displays and a different node identifier cannot establish the target's ancestral placement. No donor-count or self-donor objection is made; ordinary source qualifiers remain unchanged under the annotation-review instructions.
 
 Independent historical consultation reviewed the original 21984732 main body, indexed 20056604 assays and the author thesis version of 22946059; my own 22946059 read used the published journal body. These scopes are kept separate. All sixteen original source objects, the original NOT, five alternative products, prior NEW scramblase assertion and published history are preserved. The only action change is membrane ACCEPT to MODIFY ER membrane. New findings expose the mixed historical results and the established scramblase/contact results. Final checks and consultation are recorded in the new follow-up history.
+
+
+### PR3347 second follow-up: positive plasma-membrane evidence (2026-09-28)
+
+The [published PMID:22946059 localization Results](https://journals.biologists.com/jcs/article/125/21/4991/32556/Anoctamins-are-a-family-of-Ca2-activated-Cl), under the section on plasma-membrane localization immediately before Figure 8, report an extracellular FLAG insertion and labeling of nonpermeabilized cells: "The results show a spotted membrane expression of Ano10". Figure 8 and the cDNA Methods identify human anoctamins expressed in HEK293 cells. The adjacent Discussion cautions that native abundance may be insufficient for substantial surface accumulation. I reread those Results, Figure 8 legend and construct/immunocytochemistry Methods; supplementary Figure S3 pixels remain uninspected. The abstract-only normal cache is preserved. This original-body observation, rather than a truncated abstract or ER-localization quotation, supports the retained secondary surface pool.
+
+The current [HPA ANO10 subcellular summary and assay table](https://www.proteinatlas.org/ENSG00000160746-ANO10/subcellular) state "Localized to the Plasma membrane (supported)" and list HPA016624 staining at the plasma membrane in BJ, HUVEC/TERT2 and U2OS cells. HUVEC/TERT2 is a single cell line. The table was inspected; image pixels were not independently scored. HPA's secondary cilium and vesicle observations are not promoted to new annotations. This positive HPA evidence is distinct from the endogenous ER staining with HPA051569 in PMID:31477691.
+
+All five plasma-membrane rows retain KEEP_AS_NON_CORE. Their support now points to the actual positive surface observations; ER localization remains contextual evidence and supports the ER core. Neither tagged surface access nor HPA staining establishes native plasma-membrane predominance or surface lipid scrambling. The historical Reactome and electronic-transfer source records remain intact; independent human support does not reconstruct their original source chains.
+
+The precise PAINT placement remains unresolved. No exact local IBD/tree data resolve PTN000267334 or PTN002642655. The official [current PAINT directory](https://data.pantherdb.org/ftp/downloads/paint/current/) lists IBD.gaf, but web retrieval was inaccessible and one bounded direct attempt failed DNS with zero bytes. The project owner independently encountered the same access limit. No ancestral branch, loss or divergence is inferred from different node identifiers, donor counts or self-inclusion. The annotation-review instructions treat ordinary relationship qualifiers as inert in this review; original qualifiers remain unchanged. This is an explicit scope limitation, not a finding that the curated ancestral judgment is wrong.
+
+The three previously empty findings sections now summarize the already inspected negative-quenching, engineered-targeting and expression-background experiments, with their respective read scopes. All 16 original assertions, NOT, five products, prior NEW scramblase row, all actions and the compact core are preserved. Earlier immutable history records retain their original filenames; this follow-up receives a newly scaffolded codex record. Validation and final independent consultation are recorded there.
