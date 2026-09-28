@@ -68,3 +68,12 @@ A gene product can participate in a process by contributing within its complex; 
 The current [GO:0045815 definition and parents](https://amigo.geneontology.org/amigo/term/GO:0045815) describe epigenetic remodeling that permits gene expression and relate it to initiation. The term is a descendant of broad chromatin remodeling. Direct human assembly/DNA contacts and receptor reporters support the broader activities, but the inspected PMID:11734557 abstract and independent reporter experiments do not close this more specific chromatin mechanism. Its original UniProt NAS record is now UNDECIDED, and the redundant specific child is removed from the remodeling core. The independent coactivator core remains linked to positive transcription. No ATPase activity is assigned to ARID1B.
 
 Independent prospective consultation read all 51 decisions, the four changes, the official membership branches and ontology definitions, and the bounded ComplexPortal manual sections. Full original source limitations and the verified unrelated PMID:17340523 remain explicit. Historical observations and original source caches have not been rewritten.
+
+
+## Followup: shipped neural-complex evidence
+
+The three existing npBAF/nBAF ACCEPT decisions now cite exact SUBUNIT passages in the preserved [ARID1B UniProt record](ARID1B-uniprot.txt). The npBAF row additionally retains its exact cached Reactome R-HSA-9934021 passage. The nBAF quote explicitly includes “By similarity”; these curated statements do not establish a newly inspected human neural-complex isolation experiment or reconstruct the PAINT node.
+
+The earlier inspection of the external Reactome ARID1B entity remains a bounded observation in this journal. Its uncached entity description is no longer used as a supporting-text attachment for these three rows. The other notes attachments report the previously inspected Human Protein Atlas localization table or the separately documented historical-alias analysis; UniProt's general nucleus statement does not replace the more specific nucleoplasm observation. No additional source retrieval or new biological claim is introduced.
+
+All 51 original annotation objects, four alternative products, 29 ACCEPT/two MODIFY/20 UNDECIDED decisions and both cores remain unchanged. The original publication and all prior histories and normal source files are preserved.
