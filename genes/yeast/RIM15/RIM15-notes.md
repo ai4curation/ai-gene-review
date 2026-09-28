@@ -88,3 +88,31 @@ Actions taken:
 - The duplicated `GO:0045959` errata prose was dropped from both `reason` fields.
   The correction is recorded above and in git history; with the replacement gone
   the erroneous id no longer appears anywhere in the file.
+
+## 2026 IBA re-review
+
+Re-checked the five current RIM15 IBA annotations against GOA and the cached
+`PTHR24356` PAINT table:
+
+- `GO:0004674 protein serine/threonine kinase activity` and `GO:0035556 intracellular
+  signal transduction` both trace to `PANTHER:PTN000683254`, a broad AGC-kinase node.
+  Both are sound for Rim15, whose direct Ser/Thr kinase activity transduces nutrient
+  signals through Igo1/Igo2, Rph1, Msn2/Hsf1, and PP2A-Cdc55 outputs.
+- `GO:0007346 regulation of mitotic cell cycle` traces to `PANTHER:PTN008614785`.
+  This is not a G1/G0 quiescence assertion; it is the conserved Greatwall-family
+  mitotic-cell-cycle placement, and budding yeast Rim15 has direct evidence for
+  promoting timely mitotic entry under temperature stress through Igo1/Igo2 and
+  PP2A(Cdc55). The IBA was therefore changed from `MODIFY` to `KEEP_AS_NON_CORE`,
+  not replaced by `GO:1903452`.
+- `GO:0005634 nucleus` and `GO:0005737 cytoplasm` both trace to
+  `PANTHER:PTN001220116`, a fungal localization node seeded by SGD's direct Rim15
+  nucleo-cytoplasmic shuttling evidence. The IBA rows are sound and core.
+
+The same mitotic-cycle correction was applied to both
+`GO:1901992 positive regulation of mitotic cell cycle phase transition` rows. The
+2013 Juanes et al. paper supports that phase-transition term directly, so those rows
+should be retained as non-core rather than redirected to G1/G0 entry.
+
+A newer-paper search found a 2026 industrial adaptive-laboratory-evolution study using
+`rim15` deletion in lignocellulosic-hydrolysate adaptation. It did not change the direct
+kinase, signaling, localization, quiescence, or mitotic-cycle conclusions in the review.
