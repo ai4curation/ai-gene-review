@@ -28,6 +28,15 @@ What is removed is the PAINT/keyword inference of canonical JHDM1-type activity,
 1. **GO:0005515** (protein binding, IPI with Cdt2) → GO:0031625 ubiquitin protein ligase binding
 2. **GO:0006338** (chromatin remodeling) → More specific mechanisms
 
+### Proposed New Annotations (5 NEW rows)
+1. **GO:0070087** chromo shadow domain binding (IPI, PMID:32195666): recombinant Epe1 binds Swi6, reduced by the Swi6 CSD mutation L315E; replaces the earlier GO:0140030, whose definition requires the modification on the bound protein itself
+2. **GO:0035035** histone acetyltransferase binding (IPI, PMID:30573453): SAGA co-purifies with Epe1 and Gcn5 co-immunoprecipitates with overexpressed Epe1
+3. **GO:0030674** protein-macromolecule adaptor activity (IMP, PMID:24013502): Epe1 binds Bdf2 and is required for its recruitment to IRC boundaries
+4. **GO:0042393** histone binding (IDA, PMID:32195666): purified Epe1 prefers H3K9me3 peptides and H3K9-methylated histones
+5. **GO:0031452** negative regulation of heterochromatin formation
+
+Protein acetylation (GO:0006473) is not proposed: Gcn5 in SAGA performs the acetylation, and Epe1's part is captured by GO:0035035.
+
 ### Annotations Accepted (24 annotations)
 Predominantly cellular component and biological process annotations that accurately reflect Epe1's localization and function:
 - Heterochromatin boundary formation (multiple evidence)
@@ -39,7 +48,7 @@ Predominantly cellular component and biological process annotations that accurat
 ## Core Functions Identified
 
 ### 1. Heterochromatin Boundary Establishment
-- **Molecular Function**: Modification-dependent protein binding (GO:0140030), for the H3K9 methylation-stimulated Swi6 interaction; Bdf2 recruitment is captured as protein-macromolecule adaptor activity (GO:0030674)
+- **Molecular Function**: Chromo shadow domain binding (GO:0070087), for the H3K9 methylation-stimulated Swi6 interaction, which depends on the Swi6 chromoshadow domain; Bdf2 recruitment is captured as protein-macromolecule adaptor activity (GO:0030674)
 - **Process**: Heterochromatin boundary formation (GO:0033696)
 - **Mechanism**: Binds HP1/Swi6 at heterochromatin sites, recruits Bdf2
 
@@ -49,7 +58,7 @@ Predominantly cellular component and biological process annotations that accurat
 - **Mechanism**: Recruits SAGA histone acetyltransferase complex
 
 ### 3. Anti-silencing Activity
-- **Molecular Function**: Modification-dependent protein binding (GO:0140030)
+- **Molecular Function**: Chromo shadow domain binding (GO:0070087)
 - **Process**: Negative regulation of heterochromatin (GO:0031452)
 - **Mechanism**: Competes with silencing factors for HP1 binding
 
