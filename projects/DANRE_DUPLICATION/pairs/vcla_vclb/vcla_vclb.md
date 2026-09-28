@@ -15,6 +15,8 @@ juveniles, so in that domain the relationship is a PARTITION. Loss of vcla alone
 maternal-zygotic, has no visible phenotype. Losing both copies adds mild vascular leakage and
 lethality before adulthood.
 
+**Sample record:** fate=MIXED; level=expression; evidence=experimental_both; identity=81.4%
+
 vcla nonsense mutants that degrade their mRNA upregulate vclb mRNA by transcriptional adaptation. That
 response is triggered by mutant mRNA decay, not by loss of Vcla protein. It shows that the vclb locus
 responds, not that Vclb protein makes up for Vcla. A Western blot of another vcla nonsense allele found

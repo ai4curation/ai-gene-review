@@ -32,10 +32,15 @@ The two gene reviews themselves live as usual in `genes/DANRE/<gene>/`.
 | [tbx5a / tbx5b](tbx5a_tbx5b/tbx5a_tbx5b.md) | TGD_likely_parallel | MIXED: both copies essential and non-redundant (heart looping, fin); fin role split (tbx5a initiation, tbx5b outgrowth); one-sided expression loss in tbx5b; protein divergence inferred (49% identity, no reciprocal mRNA cross-rescue), not established |
 | [vcla / vclb](vcla_vclb/vcla_vclb.md) | TGD_tree | MIXED: conserved protein with expression-biased partition (vclb-only coronary/epicardial role, lethal alone; vcla dispensable even maternal-zygotic); shared dose-sensitive endothelial barrier role; vclb upregulation in vcla mutants is mRNA-decay-triggered adaptation, no protein-level compensation shown |
 
-## Random sample (batch 3)
+## Random sample (batches 3-4)
 
-Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs; see
-[batch3_sample.tsv](../batch3_sample.tsv). Every page carries a **Sample record** line.
+Drawn at random (seed 20260928) from the 778 PANTHER `TGD_tree` 1:1 pairs. From batch 4 on, a
+pair also had to be confirmed by Ensembl Compara (duplication node at Teleostei,
+Osteoglossocephalai or Clupeocephala); see [random_sample.tsv](../random_sample.tsv) and the
+[summary table](../random_sample_summary.md). Four batch 3 pairs failed that check but are kept
+here as reviewed pairs: eef1da/eef1db, olfm3a/olfm3b, si:dkey-283b1.7/vwc2 and
+magi3b/wu:fi36a10. vcla/vclb was drawn but had already been reviewed in batch 2, so it is not
+repeated in this table. Every page carries a **Sample record** line.
 
 | Pair | Fate | Level | Evidence | Identity | Summary |
 |---|---|---|---|---|---|

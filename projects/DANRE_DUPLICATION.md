@@ -214,8 +214,13 @@ These pairs come from the background research.
   fgf8a/fgf8b, tbx5a/tbx5b, col1a1a/col1a1b, grk7a/grk7b (grk7b updated), vcla/vclb
 - [x] Batch 3: random sample of 8 `TGD_tree` 1:1 pairs (seed 20260928;
   `scripts/sample_pairs.py`, `batch3_sample.tsv`), all reviewed with pair pages
-- [ ] Batch 4 (optional): enlarge the random sample. With n=8 the fate proportions
-  have wide uncertainty.
+- [x] Batch 4: random sample enlarged to 18 Compara-confirmed pairs (35 draws); all reviewed.
+  Tabulated in [random_sample_summary.md](DANRE_DUPLICATION/random_sample_summary.md)
+  (`scripts/tabulate_sample.py`)
+- [ ] Report upstream: PANTHER TGD_tree false positives (e.g. avp/oxt, myh10/myh14),
+  PANTHER subfamily/ortholog errors (exoc3l2 as EXOC3L4, sh3glb2a in a drebrin-like
+  subfamily, COL3A1 for col1a1a/b), and ZFIN attribution issues (col1a1a IMP genotypes;
+  gad1 probe identity)
 - [ ] Decide whether to fix PANTHER-derived symbol gaps in `panther_tgd_pairs.tsv`
   (e.g. tmc2a has no ZFIN id)
 
@@ -328,3 +333,38 @@ These pairs come from the background research.
   - **Caution.** With n=8, none of these proportions is precise, and the absence of
     innovation in the sample is not evidence that it is rare beyond what the
     genome-wide studies already show (about 7% of pairs against gar, PMID:28944589).
+- **Batch 4 and the confirmed random sample (18 pairs).** Details are in
+  [random_sample_summary.md](DANRE_DUPLICATION/random_sample_summary.md).
+  - **PANTHER placement alone is unreliable.** Of 34 drawn pairs with annotations, only 18
+    (53%) were confirmed by Ensembl Compara. Rejected pairs include ancient paralogs such
+    as avp/oxt, myh10/myh14 and hnrnpm/nucleolin.
+  - **Fates:** UNRESOLVED 12, PARTITION 4, BACKUP 1 (smad3, provisional), MIXED 1 (vcl),
+    INNOVATION 0.
+    - Three partitions are at the expression level (tmc2, lhfpl5, prom1).
+    - One is at the protein level: agxt split the ancestral dual peroxisomal and
+      mitochondrial targeting signals between the copies, inferred from sequence.
+  - **Evidence depth is the limiting factor.** Only 7 of 18 pairs have experimental data
+    on both copies; 8 have expression data only, and 1 sequence only. Most UNRESOLVED
+    calls reflect missing data, not ambiguous data.
+  - **Where divergence is seen, it is mostly in expression** (11 pairs), often a
+    maternal-versus-zygotic or broad-versus-restricted split with one copy gar-like.
+    Protein-level signals are rare and mostly unverified:
+    - agxt targeting signals;
+    - guca1c/d Ca2+ sensitivity;
+    - gria1b regulatory serines;
+    - faster evolution of one copy in exoc3l2 and gria1.
+  - **No INNOVATION in 18 random pairs.** By the rule of three this bounds its frequency
+    at roughly 17% or less (95%). That is consistent with the genome-wide estimate of
+    about 7% against gar (PMID:28944589).
+- **Overall (literature-chosen batches 1-2 plus the random sample).**
+  - The typical retained TGD pair keeps the same molecular function in both copies and
+    differs in where and when each copy is expressed. The split is often lopsided, with
+    one copy keeping the ancestral, gar-like pattern.
+  - Clear protein-level innovation was found only in the literature-chosen elnb.
+  - Pure backup was not demonstrated for any pair.
+  - For GO curation this means:
+    - MF annotations can usually be shared across a pair, while BP and CC need
+      copy-specific evidence.
+    - IBA propagation of tissue-specific processes to the non-expressing copy is the most
+      common error found. Examples: sox9a heart, pax6a pancreas, lhfpl5b hearing, prom1a
+      photoreceptor differentiation, agxtb peroxisome.
