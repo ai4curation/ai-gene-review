@@ -26,6 +26,7 @@ The two gene reviews themselves live as usual in `genes/DANRE/<gene>/`.
 | [pax6a / pax6b](pax6a_pax6b/pax6a_pax6b.md) | TGD_likely_parallel | PARTITION (expression) on a shared dose-sensitive core: pancreas pax6b-only, habenula pax6a-only, eye shared; equal transactivation |
 | [sox9a / sox9b](sox9a_sox9b/sox9a_sox9b.md) | TGD_or_lineage | PARTITION (expression); sox9b-only roles are ancestral SOX9 roles; redundancy only in shared domains |
 | [elna / elnb](elna_elnb/elna_elnb.md) | unresolved (TGD per literature) | MIXED: expression partition plus protein-level innovation in elnb (bulbus arteriosus stiffness; elna and Polypterus eln fail to rescue) |
+| [grk7a / grk7b](grk7a_grk7b/grk7a_grk7b.md) | TGD_tree | MIXED: asymmetric expression partition (grk7a pan-cone and dominant in larvae; grk7b enriched in adult UV cones); both keep rhodopsin kinase activity, grk7b reportedly >30-fold slower; grk7b backs up grk7a only in the pineal |
 
 ## Template
 
