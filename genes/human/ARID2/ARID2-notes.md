@@ -51,3 +51,30 @@ The raw GOA provenance identifies all 14 NAS rows as ComplexPortal assignments c
 ## Final source record
 
 The additional PMID:22184115 normal cache is abstract-only. Its complete abstract was read and its bytes match the verified Source45 artifact. Earlier targeted reading of the original mouse osteoblast Results is documented above and does not change the cache availability flag. All 45 decisions and two core functions received independent draft consultation; final authored-file and exact-source checks are recorded separately.
+
+
+## PR #3372 follow-up: BAF200–BRG1 association and source scope
+
+The original published review and history remain the baseline. This follow-up resolves one previously unread experiment and refines that original assertion to ATPase binding. All 45 source annotations, both products and the two core functions are preserved. No NEW annotation is added.
+
+The earlier statement that the ARID2–BRG1 experiment in [PMID:22140357](https://pmc.ncbi.nlm.nih.gov/articles/PMC3226458/) had not been recovered is superseded by the present targeted read. Figure 3C describes BRG1 immunoprecipitation from human J-Lat A2 cells and immunoblotting of associated BAF200, alongside other complex subunits. The surrounding Results distinguish BAF/PBAF perturbations. The antibody Methods explicitly names anti-BAF200. Its detailed M2-agarose procedure concerns Tat-FLAG, so that protocol is not attributed to the anti-BRG1 experiment. Figure pixels and complete supplements were not inspected. The observed complex association supports GO:0051117 ATPase binding to SMARCA4/BRG1; it does not establish a purified binary interface or ATP hydrolysis by ARID2.
+
+The full [2015 publisher correction notice](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002302) and corrected Figure 2/4 captions were inspected independently. It describes reordered/spliced Figure 2D loading lanes with corrected actin presentation, reused/duplicated Figure 4A control panels with replacement replicate material, a splice disclosure in S1B and repeated S8C/F presentations. It does not name Figure 3C and is not a retraction. These substantial image-presentation concerns warrant a LOW_QUALITY caution on the reference, without treating every experiment in the article as false. The target association also agrees with the earlier human PBAF purification in PMID:15985610, whose original read scope remains recorded above.
+
+The current official [GO:0016514](https://amigo.geneontology.org/amigo/term/GO:0016514) definition describes an 8–14-protein SWI/SNF-type complex containing the SNF2/SMARCA4 ATPase or an ortholog. It does not explicitly exclude mammalian PBAF. [GO:0016586](https://amigo.geneontology.org/amigo/term/GO:0016586), RSC-type complex, explicitly includes PBAF among its synonyms and describes bromodomain-containing complexes. Both terms share GO:0070603 as an is_a parent; neither is asserted here to be the other's formal parent. Stable human ARID2 incorporation into BRG1-containing PBAF supports retention of the broad existing CC assertion while the more specific PBAF term remains in the core. The historical PMID:8895581 source stays unchanged, and the target-specific corroboration is explicitly attributed to later human ARID2 work.
+
+The remaining nine interaction assertions are distinguished by their actual source access:
+
+| Source and partner | Inspected evidence | Remaining limit |
+| --- | --- | --- |
+| PMID:24981860; SMARCB1 and SMARCE1 | Complete cached abstract and official indexed record: tagged human chromatin-protein AP-MS survey. | Publisher direct access returned 403; neither precise pair experiment was inspected. Its table/figure location is unknown. |
+| PMID:30108113; SMARCB1 | Original interactome Results describe SMARCB1 AP-MS and BioID in Flp-In T-REx 293 cells. | The exact ARID2 record and which assay supports it remain unverified. Dataset EV5 and image pixels were not inspected. |
+| PMID:31759698; SMARCB1 | Original complex-assembly Results describe WT/mutant SMARCB1 incorporation assessed by IP, immunoblot and proteomics. | The ARID2 pair-level observation remains unread. Retrieved ARID2 prose concerns ChIP-seq data, not proof of a missing interaction. |
+| PMID:33961781; SMARCB1 and SMARCE1 | Entire cache, including Introduction/Discussion, describes BioPlex AP-MS in 293T and HCT116 cells. | The extraction lacks original pair-level Results/Methods; bait/prey and cellular contexts remain unresolved. |
+| PMID:34591612; SMARCB1 | Entire cached abstract/Discussion describes AP-MS across three human breast cell lines. | The specific pair, mutant and cell-line conditions have not been inspected. |
+| PMID:35271311; SMARCA4 | Entire cached abstract/Discussion describes endogenous tagging and IP-MS in HEK293T cells. | The precise pair measurement remains unread; localization agreement does not substitute for it. |
+| PMID:40205054; SMARCE1 | Original proteomics acquisition Results describe U2OS Flag-HA baits, AP-MS and quality controls. | The exact pair record and detection modality have not been inspected. |
+
+The normal cache flags remain unchanged. In particular, a true full-text flag can accompany a partial HTML extraction. No missing target-name search hit is treated as evidence that the experiment is absent, and no uninspected pair is assigned to a guessed supplementary table. Independent human PBAF association establishes biological plausibility but does not close each source-specific assay.
+
+The three established non-core interactions with SMARCB1, PBRM1 and SMARCE1 remain supported by original human PBAF purification. Under the explicit user ActionEnum, REMOVE requires likely biological error; genericity alone does not meet that criterion. That instruction takes precedence over the skill's generic-binding default. This policy choice is recorded once here, while individual review reasons describe the biology and experimental limits.
