@@ -383,9 +383,32 @@ def test_publication_headlines_match_generated_metrics() -> None:
         in supplement
         for category in ("CNN", "NPI", "PLI", "COR", "LSP", "REP", "UNC")
     )
+    # Qualitative claims that replaced tables: each is asserted on the page and
+    # checked against the metric that supports it, so neither side can drift.
+    assert (
+        "Most of the cleaned terms are either `CNN` or still-unresolved `UNC`"
+        in project_flat
+    )
     assert gogpt["assessment_distribution"]["CNN"] + gogpt["assessment_distribution"]["UNC"] > (
         gogpt["n_predictions"] / 2
-    ), "the project page says most GO-GPT leaf terms are CNN or UNC"
+    )
+    assert "About half of the performance set scored 5/5 on correctness" in project_flat
+    assert 0.4 <= rl["correctness_distribution"]["5"] / rl["n"] <= 0.6
+    assert "while almost none reached 5/5 on completeness" in project_flat
+    assert rl["completeness_distribution"].get("5", 0) <= 0.02 * rl["n"]
+    assert (
+        "Mouse scores highest on descriptive correctness and the selected S. pombe "
+        "cases lowest among the organism groups with at least three genes; two "
+        "single-gene groups score lower"
+    ) in project_flat
+    per_organism = rl["per_organism"]
+    by_mean = sorted(per_organism, key=lambda org: per_organism[org]["mean_correctness"])
+    assert by_mean[-1] == "mouse"
+    multi_gene = [org for org in by_mean if per_organism[org]["n"] >= 3]
+    assert multi_gene[0] == "SCHPO"
+    below_schpo = by_mean[: by_mean.index("SCHPO")]
+    assert len(below_schpo) == 2
+    assert all(per_organism[org]["n"] == 1 for org in below_schpo)
     assert sft["cnn_exact_frozen_goa"] == 635
     assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0

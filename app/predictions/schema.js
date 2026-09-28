@@ -4,13 +4,16 @@
     if (!payload || !Array.isArray(payload.sets) || !Array.isArray(payload.claims)) {
         throw new Error('Prediction browser data must contain sets and claims arrays');
     }
+    const metadata = payload.metadata || {};
+    // Per-dataset constants are stored once in metadata and merged back into each row.
+    const rowDefaults = metadata.overlap_row_defaults || {};
     const overlapRows = Array.isArray(payload.overlap) ? payload.overlap : [];
     const requested = new URLSearchParams(window.location.search).get('dataset');
     const dataset = requested === 'claims' ? 'claims'
         : requested === 'overlap' && overlapRows.length ? 'overlap' : 'sets';
     const claims = dataset === 'claims';
     const overlap = dataset === 'overlap';
-    const snapshotDate = payload.metadata.overlap_snapshot_date || '';
+    const snapshotDate = metadata.overlap_snapshot_date || '';
     const field = (name, label, type = 'string', extra = {}) => ({field: name, label, type, ...extra});
     const facet = (name, label, type = 'string', extra = {}) => field(name, label, type, {sortBy: 'count', ...extra});
     const link = (name, label, extra = {}) => field(name, label, 'url', extra);
@@ -145,8 +148,9 @@
     ];
     const overlapNote = `GO-GPT three-level overlap as of ${snapshotDate}: each row is one specific GO-GPT predicted term for one gene, `
         + 'compared with the raw GOA annotations, the post-review AIGR annotations, and the AIGR core functions at the review snapshot. '
-        + 'The facet counts are the overlap totals; this comparison is separate from the reviewed claims.';
-    window.searchData = payload[dataset];
+        + 'The facet counts are the overlap totals; selecting several reference layers shows terms matching any of them. '
+        + 'This comparison is separate from the reviewed claims.';
+    window.searchData = overlap ? overlapRows.map(row => ({...rowDefaults, ...row})) : payload[dataset];
     window.searchSchema = {
         title: 'Prediction Review Browser',
         description: 'Browse computational prediction reviews by source, organism and assessment.',

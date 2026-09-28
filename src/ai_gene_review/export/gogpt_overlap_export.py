@@ -29,6 +29,7 @@ LEVEL_LABELS = {
     "in_post_review": "Post-review AIGR",
     "in_core": "AIGR core functions",
 }
+NO_LEVEL_LABEL = "No reference layer"
 
 
 def overlap_rows_for_record(record: dict[str, Any]) -> list[dict[str, Any]]:
@@ -43,7 +44,7 @@ def overlap_rows_for_record(record: dict[str, Any]) -> list[dict[str, Any]]:
     >>> [(r["term_id"], r["in_goa"], r["in_post_review"], r["in_core"]) for r in rows]
     [('GO:1', True, True, False), ('GO:2', False, False, False)]
     >>> rows[0]["matched_levels"], rows[1]["matched_levels"]
-    (['Raw GOA', 'Post-review AIGR'], [])
+    (['Raw GOA', 'Post-review AIGR'], ['No reference layer'])
 
     A report whose overlap lists name a term outside the predicted set is
     inconsistent and is rejected rather than silently dropped:
@@ -76,7 +77,8 @@ def overlap_rows_for_record(record: dict[str, Any]) -> list[dict[str, Any]]:
                 "species": organism,
                 "term_id": term_id,
                 **flags,
-                "matched_levels": [LEVEL_LABELS[f] for f, hit in flags.items() if hit],
+                "matched_levels": [LEVEL_LABELS[f] for f, hit in flags.items() if hit]
+                or [NO_LEVEL_LABEL],
                 "gene_predictions": record["preds"],
                 "gene_goa_terms": record["goa_terms"],
                 "gene_post_review_terms": record["post_review_terms"],
@@ -94,28 +96,34 @@ def collect_gogpt_overlap(
     ``review_link(organism, gene)`` returns a browser-relative gene review link
     or an empty string. A checkout without the report (or without the benchmark
     policy that dates it) contributes no rows.
+
+    Fields that are the same on every row (method, project, cohort, snapshot,
+    source file) are stored once in ``metadata["overlap_row_defaults"]`` rather
+    than repeated on each of the ~9,000 rows; the browser merges them back in.
+    The GO-GPT batch behind this report carries no model version, so
+    ``source_version`` is left empty rather than given a descriptive label.
     """
     report = root / LEVELS_REPORT
     if not report.is_file() or not (root / BENCHMARK_POLICY).is_file():
         return [], {}
     snapshot = declared_review_snapshot(root)
     records = json.loads(report.read_text(encoding="utf-8"))
-    common = {
+    row_defaults = {
         "source_method": "GO-GPT",
-        "source_version": "GO-GPT direct run",
+        "source_version": "",
         "projects": ["BIOREASON_COMPARISON"],
         "cohorts": [OVERLAP_COHORT],
         "snapshot_date": snapshot.date,
         "snapshot_commit": snapshot.commit,
         "source_file": LEVELS_REPORT.as_posix(),
-        "default_visible": True,
     }
     rows = []
     for record in records:
         link = review_link(record["organism"], record["gene"])
         for row in overlap_rows_for_record(record):
-            rows.append({**common, **row, "review_link": link})
+            rows.append({**row, "review_link": link})
     metadata = {
+        "overlap_row_defaults": row_defaults,
         "overlap_snapshot_date": snapshot.date,
         "overlap_snapshot_commit": snapshot.commit,
         "overlap_gene_count": len(records),

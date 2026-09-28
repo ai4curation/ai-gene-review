@@ -349,8 +349,9 @@ writes protein names, GO terms and function paragraphs straight from sequence,
 and UniProt ships its output on unreviewed entries. We assessed it the way a
 curator would, protein by protein, using the COR/CNN/LSP/UNC/NPI/PLI/REP
 categories of de Crécy-Lagard et al. 2025 (PMID:40703034). As of the review
-snapshot (2026-09-27, commit `c7551cb3db`) that covers 242 prediction targets and
-288 GO-term assessments, plus separate reviews of the narrative function text.
+snapshot (2026-09-27, commit `c7551cb3db`), the assessment covers 242 prediction
+targets and 288 GO-term assessments, plus separate reviews of the narrative
+function text.
 Correct novel predictions outnumber correct but already-known ones, because the
 purposive cohorts favour proteins without existing annotation, and contradicted
 predictions are a small minority. Narrative text behaves differently from GO

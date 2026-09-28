@@ -97,7 +97,7 @@ Each individual gene review page, e.g. aprE, SlyD contains BOTH the bioreason re
 
 5. **Organism-specific biology is consistently absent.** Dauer formation and insulin/IGF-1 signaling in C. elegans (daf-16, daf-2), UPRmt master regulation (atfs-1), sporulation compartment specificity in B. subtilis (sigF forespore, sigK mother cell), prion propagation in yeast (HSP104), and cytoophidium biology (ura7) are all missed.
 
-6. **Selected-case organism means differ.** Mouse scores highest on descriptive correctness and the selected S. pombe cases lowest (select a species in the [RL narrative view](../app/predictions/index.html?projects=BIOREASON_COMPARISON&cohorts=argo139_rl_narrative&performance_included=true)). These differences are confounded by deliberate case selection: S. pombe is enriched for obscure proteins and pseudoenzymes, whereas several other groups contain more canonical proteins. InterPro informativeness and training distribution are hypotheses, not measured explanations.
+6. **Selected-case organism means differ.** Mouse scores highest on descriptive correctness and the selected S. pombe cases lowest among the organism groups with at least three genes; two single-gene groups score lower (select a species in the [RL narrative view](../app/predictions/index.html?projects=BIOREASON_COMPARISON&cohorts=argo139_rl_narrative&performance_included=true)). These differences are confounded by deliberate case selection: S. pombe is enriched for obscure proteins and pseudoenzymes, whereas several other groups contain more canonical proteins. InterPro informativeness and training distribution are hypotheses, not measured explanations.
 
 Only one gene, rat Uggt1, scored 5/5 on both axes.
 

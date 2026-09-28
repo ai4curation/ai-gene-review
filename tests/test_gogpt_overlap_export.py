@@ -63,8 +63,11 @@ def test_rows_carry_snapshot_date_and_review_link(tmp_path: Path) -> None:
 
     rows, metadata = collect_gogpt_overlap(tmp_path, lambda org, gene: f"{org}/{gene}.html")
 
-    assert {row["snapshot_date"] for row in rows} == {"2026-01-02"}
     assert {row["review_link"] for row in rows} == {"ECOLI/g.html"}
+    defaults = metadata["overlap_row_defaults"]
+    assert defaults["snapshot_date"] == "2026-01-02"
+    assert defaults["source_version"] == ""
+    assert not set(defaults) & set().union(*rows), "constants are stored once, not per row"
     assert metadata["overlap_snapshot_date"] == "2026-01-02"
     assert metadata["overlap_gene_count"] == 1
     assert metadata["overlap_row_count"] == 3
