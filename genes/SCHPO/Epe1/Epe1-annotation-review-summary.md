@@ -60,7 +60,7 @@ Predominantly cellular component and biological process annotations that accurat
 - Multiple experimental approaches evaluated (genetics, biochemistry, proteomics, ChIP-seq)
 
 ## Critical Corrections Made
-The most significant correction was removing the propagated (IBA/IEA) demethylase and cofactor annotations, which rest on JmjC domain presence alone, while leaving the PomBase experimental GO:0032454 rows as UNDECIDED rather than overruling curators who read the full text. Epe1 is best described as a JmjC protein whose catalytic activity has never been detected and whose known functions do not need it.
+The most significant correction was removing the propagated (IBA/IEA) demethylase, oxidoreductase and dioxygenase annotations, which rest on JmjC domain presence alone. The electronic metal ion binding row is UNDECIDED, because the Fe(II) ligands it rests on are rule-predicted and binding has not been measured, and the PomBase experimental GO:0032454 rows are also UNDECIDED rather than overruling curators who read the full text. Epe1 is best described as a JmjC protein whose catalytic activity has never been detected and whose known functions have not been shown to require it.
 
 ## Validation Status
 ✓ File passes schema validation

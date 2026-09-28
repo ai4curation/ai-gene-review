@@ -1,6 +1,8 @@
 # Epe1 Bioinformatics Analysis Results
 
 ## Summary
+> Superseded in part; see the correction note in section 3.
+
 Bioinformatics analysis of Epe1 (O94603) confirms it as a JmjC domain-containing protein with features consistent with heterochromatin regulation but lacking robust demethylase activity, supporting its role as an H3K9me reader rather than eraser.
 
 ## Key Findings
@@ -28,6 +30,12 @@ Bioinformatics analysis of Epe1 (O94603) confirms it as a JmjC domain-containing
 > demethylases, is replaced by Tyr370. The "JmjC domain (400-600)" boundaries
 > used in this section and in section 2 are also wrong: UniProt annotates the
 > JmjC domain at 243-402 (FT DOMAIN), which contains H297, E299 and Y370.
+> The same correction applies to section 4 and to the Summary: their conclusions
+> ("Lacks key catalytic residues", "Functions as H3K9me reader, not eraser",
+> "lacking robust demethylase activity") were drawn from this scan and are
+> superseded. The residue-level picture is the non-canonical H297-E299-Y370 triad
+> above, with K314 (the predicted 2-oxoglutarate site) retained; whether Epe1 has
+> latent catalytic activity is unresolved.
 
 - **Fe(II) binding motifs**: 3 HxD/E motifs detected
   - Position 279-282: HVD
@@ -37,6 +45,9 @@ Bioinformatics analysis of Epe1 (O94603) confirms it as a JmjC domain-containing
 - **Conserved histidines**: 25 total, with appropriate spacing for metal coordination
 
 ### 4. Demethylase Activity Features
+
+> Superseded; see the correction note in section 3.
+
 - **α-ketoglutarate binding**: 4 potential motifs identified
 - **Histone binding**: 72 basic patches for histone tail interaction
 - **Critical finding**: Lacks key catalytic residues for robust demethylase activity
