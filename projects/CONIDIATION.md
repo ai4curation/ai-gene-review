@@ -336,4 +336,4 @@ dirs:** likely `EMENI` (*A. nidulans*) and `NEUCR` (*N. crassa*).
 
 ## Slides
 
-- [Slides](../../projects/CONIDIATION/slides/CONIDIATION-slides.html) (Marp source: [CONIDIATION-slides.md](CONIDIATION/slides/CONIDIATION-slides.md)) — AI generated
+- [Slides](CONIDIATION/slides/CONIDIATION-slides.html) (Marp source: [CONIDIATION-slides.md](CONIDIATION/slides/CONIDIATION-slides.md)) — AI generated

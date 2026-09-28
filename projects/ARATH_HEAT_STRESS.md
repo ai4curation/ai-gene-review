@@ -205,4 +205,4 @@ All four HSFA1 family members fully characterized with functional distinctions:
 
 ## Slides
 
-- [Slides](../../projects/ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.html) (Marp source: [ARATH_HEAT_STRESS-slides.md](ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.md)) — AI generated
+- [Slides](ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.html) (Marp source: [ARATH_HEAT_STRESS-slides.md](ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.md)) — AI generated

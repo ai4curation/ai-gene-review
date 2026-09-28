@@ -73,4 +73,4 @@ transfer. See `bioinformatics/RESULTS.md`.
 
 ## Slides
 
-- [Slides](../../projects/CASPL_FAMILY/slides/CASPL_FAMILY-slides.html) (Marp source: [CASPL_FAMILY-slides.md](CASPL_FAMILY/slides/CASPL_FAMILY-slides.md)) — AI generated
+- [Slides](CASPL_FAMILY/slides/CASPL_FAMILY-slides.html) (Marp source: [CASPL_FAMILY-slides.md](CASPL_FAMILY/slides/CASPL_FAMILY-slides.md)) — AI generated

@@ -111,4 +111,4 @@ documents and are candidates for future dedicated modules.
 
 ## Slides
 
-- [Slides](../../projects/PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.html) (Marp source: [PLANT_BIOENERGY-slides.md](PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.md)) — AI generated
+- [Slides](PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.html) (Marp source: [PLANT_BIOENERGY-slides.md](PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.md)) — AI generated
