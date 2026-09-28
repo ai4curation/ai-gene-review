@@ -2,9 +2,35 @@
 title: "Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor"
 maturity: IN_PROGRESS
 tags: [OBSOLETION, FLAGSHIP]
+species: [mouse, worm]
+genes: [Camk2a, Septin5, tom-1]
 ---
 
 # Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor
+
+**Bottom line:** Before a synaptic vesicle fuses, it docks at the active
+zone, held there by specific binding proteins. GO has retired the whole
+vesicle-docking process subtree and now represents docking as a
+molecular function, GO:0160321 *vesicle docking activity*. This page
+tracks one piece of that change: GO:0099148 *regulation of synaptic
+vesicle docking*, flagged by SynGO (go-annotation#6415), whose
+experimental annotations sit on three genes: mouse Camk2a, mouse
+Septin5 and worm tom-1. We listed those rows and argued that most
+should not become the new MF, because a kinase such as CaMKIIα
+regulates docking without doing it. The obsoletion has now landed:
+OLS shows GO:0099148 obsolete and GO:0160321 minted, so the "not yet
+applied", "placeholder" and "not yet minted" notes below are out of date. The one affected review is fixed
+in #3237 (merged): mouse Camk2a's two GO:0099148 rows (IMP and IDA,
+PMID:17660813) move from ACCEPT to MODIFY → GO:0048172 *regulation of
+short-term neuronal synaptic plasticity*, not the docking MF, because
+the paper shows αCaMKII regulates the number of docked vesicles without
+docking them. Septin5 and tom-1 still have no review here.
+
+This is the regulation branch of the docking refactor. The parent
+tracker [VESICLE_DOCKING_OBSOLETION](VESICLE_DOCKING_OBSOLETION.md)
+covers the docking terms themselves (#6379), and
+[VESICLE_TETHERING_OBSOLETION](VESICLE_TETHERING_OBSOLETION.md) covers
+the earlier tethering step (#6375).
 
 ## Overview
 
@@ -88,9 +114,11 @@ in the upstream issue.
 
 **Mouse `Camk2a` is already reviewed here and is directly affected.**
 `genes/mouse/Camk2a/Camk2a-ai-review.yaml` carries two GO:0099148 rows
-(IMP and IDA, both `PMID:17660813`), each currently `action: ACCEPT`. Once the
-obsoletion is applied these become annotations to an obsolete term and the
-review must be refreshed.
+(IMP and IDA, both `PMID:17660813`), each formerly `action: ACCEPT`. Both are
+now `MODIFY` → GO:0048172 regulation of short-term neuronal synaptic
+plasticity, fixed in #3237 (merged), which also replaced the supporting text
+with the abstract's sentences on docked-vesicle number and short-term
+presynaptic plasticity. The paragraphs below record the original reasoning.
 
 The refresh is **not** a mechanical relabel. CaMKIIα is a Ser/Thr kinase that
 *regulates* presynaptic vesicle docking; it is not itself a vesicle-docking
@@ -128,8 +156,8 @@ accessions before starting.
 ### Tier 1 — refresh required (already in repo)
 
 1. **Camk2a** (mouse, UniProt **P11798**) — `genes/mouse/Camk2a/`. Two
-   GO:0099148 rows currently `ACCEPT`; must be re-evaluated once the term is
-   obsoleted. Highest priority because an existing review goes stale on
+   GO:0099148 rows were `ACCEPT`; now `MODIFY` → GO:0048172, fixed in
+   #3237 (merged). Highest priority because an existing review goes stale on
    obsoletion. Expect `MODIFY` (regulatory kinase, not a docking adaptor),
    not a clean transfer to the new MF.
 
@@ -186,3 +214,16 @@ required.
   GO:0160321 not yet minted. Affected experimental annotations: Camk2a
   (mouse, in repo — needs refresh), Septin5 (mouse, not in repo), tom-1
   (C. elegans, not in repo). No gene reviews started or refreshed yet.
+- 2026-09-26 — Camk2a refresh fixed in #3237 (merged): both GO:0099148
+  rows (IMP, IDA; PMID:17660813) ACCEPT → MODIFY to GO:0048172
+  regulation of short-term neuronal synaptic plasticity (regulator, not
+  docker, as this page anticipated); supporting text now quotes the
+  abstract. Septin5 and tom-1 reviews not started, so maturity stays
+  SCOPING.
+- 2026-09-27 — #3237 merged, so the Camk2a refresh is on `main`.
+  Maturity moves to IN_PROGRESS: the one affected review is done and
+  only the Septin5 and tom-1 new reviews remain.
+
+## Slides
+
+- [Slides](SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.html) (Marp source: [SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.md](SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.md)) — AI generated

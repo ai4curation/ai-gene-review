@@ -7,12 +7,27 @@ species: [human, ECOLI, MYCTU, METJA, SCHPO, worm]
 
 # COSCIENTIST
 
-**Using an autonomous AI "co-scientist" (OpenScientist) as an independent
-bioinformatician to test specific gene-function hypotheses that the literature
-cannot settle — and wiring the verdicts back into curated GO reviews.**
+**Bottom line:** some annotation questions cannot be settled by reading papers,
+such as whether a predicted enzyme still has its catalytic residues or whether
+a localization was propagated from a paralog. We used OpenScientist, an
+autonomous research agent that runs code, as an independent bioinformatician:
+each run tests one hypothesis of the form "gene G has function F", and the
+verdict is checked against curator judgment and wired into the gene's
+`-ai-review.yaml`. The tables below record the runs this project designed; the
+most useful verdicts led to removals, for example `GO:0016491` on the METJA
+pseudoenzyme MJ1511 and the IBA `GO:0030321` transepithelial chloride transport
+row on CLCN7, which traces to a family-level statement propagated to about
+1,198 orthologs. Structural questions made the agent execute code, while
+topology and regulatory questions mostly got reasoning over databases until a
+prompt-template change (tested A/B on CLCN7) made it compute. No hallucinated
+citations were found. The approach is now routine: the repo holds 295
+finished OpenScientist hypothesis reports (`openscientist.md`) for 263 genes,
+out of 310 run directories under `genes/*/*/*-hypotheses/`,
+far more than the tables below list.
 
-📊 **Slides:** [COSCIENTIST-slides](COSCIENTIST/slides/COSCIENTIST-slides.md)
-(Marp; regenerate the PDF with `just gen-project-slides COSCIENTIST`).
+📊 **Slides:** [COSCIENTIST-slides](COSCIENTIST/slides/COSCIENTIST-slides.html)
+(Marp source: [COSCIENTIST-slides.md](COSCIENTIST/slides/COSCIENTIST-slides.md);
+regenerate the PDF with `just gen-project-slides COSCIENTIST`).
 
 ## Motivation
 

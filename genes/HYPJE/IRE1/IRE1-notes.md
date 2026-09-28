@@ -14,3 +14,8 @@ The direct enzyme and broad parent annotations remain ACCEPT: RNA cleavage is hy
 ## Recovery review consistency follow-up (2026-09-22)
 
 Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.
+
+
+## Focused OpenScientist fungal IRE1 follow-up
+
+The focused report resolves the two pending mammalian death-arm rows. G0RBE3 remains a conserved fungal IRE1 UPR sensor with kinase and RNase activities, but the IRE1-TRAF2-ASK1 complex requires TRAF2 and ASK1/MAP3K5, neither of which was found in the Trichoderma proteome; ASK1 was not recovered from Fungi at all. The apoptosis and complex evidence belongs to mammalian PTHR13954:SF17 IRE1, whereas G0RBE3 and the TreeGrafter Sclerotinia source are fungal SF6 IRE1 proteins. GO:1990604 is now REMOVE and GO:0070059 is MARK_AS_OVER_ANNOTATED as a mammalian subfamily carry-over.
