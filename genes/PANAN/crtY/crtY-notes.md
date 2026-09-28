@@ -85,3 +85,33 @@
 All GO ids from QuickGO or the GOA rows; Rhea ids (32219/32239/55620) and EC 5.5.1.19 from the
 UniProt record; PMIDs from the cached publications. No identifiers taken from the deep-research
 report.
+
+## Publication cache + quote verification (2026-09-28, completion run)
+- All four UniProt-cited PMIDs now cached, all abstract-only (full_text_available: false):
+  PMID:2254247, PMID:8898919, PMID:11943208, PMID:20178989. GOA cites only PMID:20178989.
+- PMID:20178989 abstract confirms the non-redox FADred mechanism verbatim: "We show that
+  reduced FAD is the essential lycopene cyclase (CrtY) cofactor" and "Lycopene cyclase,
+  thus, ranks among the novel class of non-redox flavoproteins". Localization is NOT in the
+  abstract (mechanism-only); UniProt attributes "Cell inner membrane" to this paper's full
+  text (ECO:0000269), so the EXP plasma-membrane row is retained per the do-not-overrule rule.
+- PMID:11943208 abstract confirms NADPH is not incorporated/indirect: "No hydrogen is
+  transferred from NADPH, which is therefore not involved directly in the cyclization
+  reaction, but must play an indirect role, e.g. as an allosteric activator."
+- PMID:8898919 abstract confirms alternative-substrate cyclization (neurosporene ->
+  7,8-dihydro-beta-carotene via beta-zeacarotene; zeta-carotene -> tetrahydro-beta-carotene).
+- PMID:2254247 abstract confirms the six-gene cluster naming and pathway order; its inline
+  pathway diagram is garbled by extraction (do not quote that fragment).
+- Deep-research verbatim strings usable as file: support (ASCII only): "no net oxidation or
+  reduction of the carotenoid occurs"; "membrane-associated/peripheral enzyme acting on a
+  membrane-embedded substrate"; "No experimentally solved three-dimensional structure of
+  P21687 was identified in the retrieved literature."
+- Note: UniProt DR block lists GO:0005737 cytoplasm (IEA:UniProtKB-ARBA), but this row is
+  NOT in the GOA tsv, so it is not an existing_annotation to review.
+
+## NEW proposal reconsidered against the CLAUDE.md redundancy rule
+- GO:1901812 beta-carotene biosynthetic process is a descendant of GO:0016117 (already
+  carried). The redundancy caution applies, but CrtY *directly catalyses* both beta-ring
+  cyclizations that create beta-carotene (participation satisfied by catalysis, not by
+  necessity/substrate), so the specific product-process term is more informative than the
+  generic carotenoid term and is retained as NEW. GO:0016120 is NOT proposed (it would be an
+  ancestor of GO:1901812 and is not even a descendant of GO:0016117 in the current ontology).

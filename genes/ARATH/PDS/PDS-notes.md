@@ -107,6 +107,31 @@ desaturase) activity (GO:0016166), directly involved in carotenoid biosynthetic
 process (GO:0016117) and carotene biosynthetic process (GO:0016120), at plastid
 (chloroplast/chromoplast) membranes (envelope and thylakoid).
 
+## Final action decisions (completed review)
+
+- Tally: 19 ACCEPT, 1 KEEP_AS_NON_CORE (cytosol HDA), 1 MODIFY, 1 NEW; 0 PENDING.
+- **GO:0016491 oxidoreductase activity (IEA, IPR002937): MODIFY -> GO:0016166**
+  phytoene dehydrogenase activity. Revised from the earlier "ACCEPT" note:
+  oxidoreductase activity is uninformatively broad when the specific EC 1.3.5.5
+  activity is known and already annotated (IDA/IBA/IEA). This mirrors the sibling
+  ZDS review, which MODIFY'd the identical IPR002937->GO:0016491 row to the
+  specific desaturase activity GO:0016719. Not a REMOVE: PDS genuinely is an
+  oxidoreductase, so the parent is correct, just too general.
+- **NEW: GO:1901177 lycopene biosynthetic process (IDA, PMID:9914519).** Revised
+  from the earlier "no NEW" note. Participation test: PDS performs two of the four
+  desaturations of the phytoene->lycopene route, so it does part of the work of
+  lycopene biosynthesis (not merely required for it). Comparator test: the sibling
+  desaturase ZDS, in the same role in the same pathway and characterised in the
+  same paper (PMID:9914519), carries GO:1901177 (IDA); PDS lacked it. UniProt
+  PATHWAY explicitly places PDS in "lycopene biosynthesis"
+  [file:ARATH/PDS/PDS-uniprot.txt "PATHWAY: Carotenoid biosynthesis; lycopene biosynthesis."].
+  Both tests satisfied; proposed conservatively.
+- cytosol (GO:0005829, HDA PMID:28887381) kept as KEEP_AS_NON_CORE, not REMOVE:
+  it is an experimental HDA hit; the study reports many proteins "clearly
+  partitioned between cytosolic and membrane-associated pools"
+  [PMID:28887381], so the signal reflects the pre-import precursor / dual pool,
+  not a functional cytosolic activity.
+
 ## Provenance note
 
 `PDS-deep-research-falcon.md` was used as retrieval support only. All identifiers
