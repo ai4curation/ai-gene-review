@@ -15,9 +15,8 @@ Read the cached interaction and SWI/SNF-assembly references for the generic IntA
   PMID:9726966) likewise support complex composition or Swi3/Anc1/Arp-subunit architecture,
   not a separate specific SNF5-side binding activity.
 * The SWI/SNF-nucleosome cryo-EM paper (PMID:32188938) is different: it directly places the
-  Snf5 C-terminus against the histones and acidic patch, so GOA's generic IntAct row was
-  removed and a precise `GO:0031491 nucleosome binding` `NEW` row was added from the same
-  paper.
+  Snf5 C-terminus against the histones and acidic patch, so GOA's generic IntAct row is
+  now a `MODIFY` to the precise `GO:0031491 nucleosome binding` replacement term.
 
 Also searched 2025-2026 literature for SNF5/Snf5/SWI-SNF and cached the directly relevant
 recent SWI/SNF papers found after the 2025 deep-research runs:
