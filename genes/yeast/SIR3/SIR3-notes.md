@@ -106,4 +106,7 @@ MRX (Mre11-Rad50-Xrs2) complex, thereby limiting Mre11-mediated resection,
 delaying MRX removal from DSB ends, and promoting NHEJ"]. The existing
 `GO:0006303` action therefore remains `MODIFY`, but the replacement is now the
 directional `GO:2001034 positive regulation of double-strand break repair via
-nonhomologous end joining`.
+nonhomologous end joining`. Because the same paper explicitly describes Sir3 as
+"a direct negative regulator of Sae2", the proposed Sae2-directed molecular
+function is the direction-preserving `GO:0140678 molecular function inhibitor
+activity`.
