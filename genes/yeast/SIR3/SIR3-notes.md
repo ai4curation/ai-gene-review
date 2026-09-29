@@ -76,3 +76,34 @@ Also addressed two smaller review points:
   (SIR2 `REMOVE`, SIR3 this entry, SIR4 `MARK_AS_OVER_ANNOTATED`). Those sibling
   entries should be reconciled with the NEJ1 rationale above in a separate pass;
   a note to that effect is now in the SIR3 `reason`.
+
+## 2026-09-29 Update
+
+Aligned SIR3 with the IBA propagation review:
+
+- The two current `PANTHER:PTN000080056` transfers from the ORC1/CDC6 PAINT
+  family, `GO:0006270` and `GO:0003688`, now carry
+  `PROPAGATION_BAD`/`WRONG_ORTHOLOG_OR_PARALOG` propagation reviews. SIR3 is an
+  ORC1-derived silencing paralog that retained a BAH/AAA-like chromatin
+  scaffold, not ORC/Cdc6 origin-licensing or origin-DNA-binding activity.
+- The `GO:0033314` checkpoint-signaling IBA points to the same PTN in the cached
+  GOA row but is no longer present in the local 2026 PTHR10763 PAINT export, so
+  it was marked `SOURCE_STALE_OR_MISSING`.
+- The five remaining `GO:0005515 protein binding` rows from RAP1/SIR4
+  interaction and high-throughput complex papers are now `REMOVE`: the physical
+  interactions are not disputed, but no more-specific RAP1- or Sir4-binding MF
+  term exists and generic protein binding should not be retained.
+
+The newer full-text SIR3 literature does not reopen the IBA calls. Goodnight and
+Rine 2022 refine Sir3 recruitment and spread by Sir3-M.EcoGII/Nanopore mapping
+but do not support origin-DNA binding or initiation. Roisne-Hamelin et al. 2021
+do require a correction to the September NHEJ rationale: the original NEJ1
+rescue literature still shows an indirect SIR contribution through HML/HMR
+silencing, but SIR3 also has a direct Sae2-binding role that limits
+MRX-dependent resection and promotes NHEJ [PMID:34817085 "Via physical
+interaction with the Sae2 protein, Sir3 impairs Sae2-dependent functions of the
+MRX (Mre11-Rad50-Xrs2) complex, thereby limiting Mre11-mediated resection,
+delaying MRX removal from DSB ends, and promoting NHEJ"]. The existing
+`GO:0006303` action therefore remains `MODIFY`, but the replacement is now the
+directional `GO:2001034 positive regulation of double-strand break repair via
+nonhomologous end joining`.
