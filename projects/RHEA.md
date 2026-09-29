@@ -16,14 +16,17 @@ EC number too, and `ec2go` already supplies the same GO term for 88% of reaction
 that have both. We measured where RHEA adds something EC does not (772 GO terms
 reachable only through RHEA, 462 reactions whose EC has no `ec2go` line), where
 reactions have no GO target at all (2,731 of 7,635 enzymatic reactions, 36%),
-and where the mapped term fails to reach reviewed entries. We then curated 132
+and where the mapped term fails to reach reviewed entries. We then curated 150
 new RHEA-to-GO mappings, each backed by a reviewed enzyme: ready-to-add exact
-matches, four broad matches, and new-term suggestions where GO has no specific
-activity. Added to `rhea2go`, they would give 42 new annotations to Swiss-Prot
+matches, broad matches, and new-term suggestions where GO has no specific
+activity. Added to `rhea2go`, they would give 88 new annotations to Swiss-Prot
 entries; after scoring all remaining EC-bridge reactions, no cleanly mappable
 reviewed gap is left, so the remaining problem is missing GO terms rather than
-missing mappings. The SSSOM set validates; the forward cross-organism scan is
-still pending.
+missing mappings. A per-family scan of three promiscuous families sharpens
+this: in human cytochrome P450s 68% of curated reactions have no mapping at all
+(and 96% of those carry no EC either), while the closure-filtered reverse gap is
+empty — so drop-out, not mis-propagation, is what is left to fix. The SSSOM set
+validates; the forward cross-organism scan is still pending.
 
 We did this because RHEA is a reaction-grounded, curated source of enzyme
 function, and we needed to know whether its GO contribution is real or only
@@ -88,7 +91,13 @@ reproducible probe script, and the all-important closure caveat. The deeper
   closure-aware review**, not confirmed gaps.
 - **Some reactions have no GO term at all** (e.g. `RHEA:46608` has no `rhea2go`
   line). These cannot propagate by construction and are candidates for
-  `proposed_new_terms`.
+  `proposed_new_terms`. Measured per family rather than globally this is the
+  largest effect: **68%** of the reactions curated onto reviewed human
+  cytochrome P450s have no `rhea2go` line (see below).
+- **Closure filtering removes the reverse gap entirely in well-curated
+  families.** Across 98 reviewed entries in three families, **zero** lack a GO
+  term that a mapped reaction would supply — the exact-match pilot percentages
+  below were altitude difference, as the caveat predicted.
 
 ## RHEA is mostly masked by EC
 
@@ -184,13 +193,44 @@ not **coverage** gaps (no MF term at all). G2/G3/G6 are where RHEA genuinely add
 something EC does not. Detail and reproduction in
 [RHEA-EC-SPECIFICITY.md](RHEA/RHEA-EC-SPECIFICITY.md).
 
+## Promiscuous enzyme families: where the mapping drops out
+
+The specificity-collapse result above (G5) was measured from the GO side — one
+term absorbing many reactions. Measured from the *protein* side, in three
+families picked for substrate promiscuity, the dominant failure is not collapse
+but **drop-out**: of the 297 distinct reactions annotated to reviewed human
+cytochrome P450s, **201 (68%) have no `rhea2go` target**, and **192 of those
+carry no EC number either** — EC stops at "unspecific monooxygenase" where RHEA
+continues to the substrate, so the EC bridge cannot rescue them. Human
+carboxylesterases and microbial haloalkane dehalogenases show the same shape at
+smaller scale.
+
+Equally important, the **reverse gap is zero** in these families once `is_a`
+closure is applied: none of the 98 entries lacks a GO term that a mapped
+reaction would give it. That is direct confirmation of the closure caveat below
+— the pilot's 40–99% exact-match figures were altitude difference, not missing
+annotation — and it moves the remaining value from G6 to **G4**.
+
+The haloalkane family supplies the rule that separates a mapping gap from a term
+gap: GO once had the substrate-specific term `GO:0018777` for LinB's
+tetrachlorocyclohexadiene reaction and **obsoleted it as "a specific substrate
+of" `GO:0018786`**. GO does not create a term per substrate, so an instance
+reaction inside a class the term already names deserves a mapping, not a
+new-term request.
+
+Full analysis, per-family tables and the 18 resulting SSSOM rows (46 new
+Swiss-Prot annotations — including the CYP1B1 estrogen 4-hydroxylase, CYP2J2
+EPA/DHA epoxygenase and CYP11B2 aldosterone-synthase term proposals, and the
+CYP4F22 ichthyosis-gene gap): [RHEA-PROMISCUOUS-FAMILIES.md](RHEA/RHEA-PROMISCUOUS-FAMILIES.md)
+([`rhea_family_explorer.py`](RHEA/rhea_family_explorer.py)).
+
 ## Curated new mappings (SSSOM)
 
 Filling the gaps is a curation deliverable, not just an audit. The curated
 RHEA→GO mappings — reactions absent from `rhea2go` but with (or needing) a GO MF
 term — are recorded in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), the same
 **SSSOM YAML** format used by the [ANTIMICROBIAL_RESISTANCE](ANTIMICROBIAL_RESISTANCE.md)
-`aro2go` mapping set. **132 mappings** so far, each backed by a review of a reviewed
+`aro2go` mapping set. **150 mappings** so far, each backed by a review of a reviewed
 (Swiss-Prot) enzyme that carries the reaction
 ([RHEA-MAPPING-REVIEWS.md](RHEA/RHEA-MAPPING-REVIEWS.md)). The predicate encodes
 the specificity finding:
@@ -201,11 +241,14 @@ the specificity finding:
   EC. Backed by enzymes such as biotinidase (BTD, biotinidase deficiency), TPMT
   (thiopurine pharmacogenomics), VKORC1L1 (warfarin), PYCR1, phosphoserine
   aminotransferase (serC), mRNA-capping enzyme (RNGTT), and SAMD8/SMSr.
-- **`skos:broadMatch`** (4 rows) — only a broader class term exists; the comment
-  names the narrower GO term to request (PHYKPL→`lyase activity`; B3GALNT2→
-  `acetylgalactosaminyltransferase activity`; SULT6B1→`aryl sulfotransferase
-  activity`; DPEP2→`dipeptidase activity`).
-- **`sssom:NoTermFound`** (18 rows) — **new GO term suggestions**: reactions where
+- **`skos:broadMatch`** (17 rows) — only a broader class term exists. For 7 of
+  them the comment names the narrower GO term to request (PHYKPL→`lyase
+  activity`; B3GALNT2→`acetylgalactosaminyltransferase activity`; SULT6B1→`aryl
+  sulfotransferase activity`; DPEP2→`dipeptidase activity`; and the three CES
+  rows). The other 10, from the promiscuous-family analysis, are **subsumed
+  instance reactions** — the class term's definition already covers them, so
+  they request no new term (see the `GO:0018777` obsoletion precedent above).
+- **`sssom:NoTermFound`** (23 rows) — **new GO term suggestions**: reactions where
   QuickGO returns no specific MF term at all (hppE fosfomycin epoxidase; a
   trimethylaminoethylphosphonate dioxygenase; cellobionic-acid phosphorylase;
   1,4-β-mannosyl-GlcNAc phosphorylase) — GO new-term-request candidates.
@@ -218,7 +261,8 @@ validation (GO objects bound to the molecular-function branch; generated nested
 view [`rhea2go.terms.yaml`](RHEA/rhea2go.terms.yaml)).
 
 **Propagation gain.** If these mappings were added to `rhea2go`, they would
-add **42 new GO molecular-function annotations to Swiss-Prot (reviewed)** entries — the
+add **88 new GO molecular-function annotations to Swiss-Prot (reviewed)** entries (42 from
+batches 1–6, 46 from the promiscuous-family batch 7) — the
 curation-relevant gain we track — filling real reviewed-entry gaps; the all-UniProtKB figure
 (~25,842, mostly automated TrEMBL) is secondary because curated enzymes already carry the term,
 because reviewed enzymes carrying the reaction already have the term (the
@@ -284,7 +328,8 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
 | Closure-aware reverse gap on the high-gap pilot reactions | Separate true gaps from expected parent/child altitude for `RHEA:21248`, `RHEA:10596`; promote real gaps to gene reviews. |
 | "No `rhea2go` mapping" reaction set | Enumerate UniProt-used RHEA reactions with no GO MF target → batch `proposed_new_terms`. |
 | RHEA directional-quartet join audit | Test whether master-vs-directional id mismatch causes systematic non-propagation. |
-| Exemplar gene reviews | Pick 2–3 confirmed (closure-filtered) gap genes and run the full review workflow, mirroring the UniPathway exemplar pattern. |
+| Exemplar gene reviews | Pick 2–3 confirmed (closure-filtered) gap genes and run the full review workflow, mirroring the UniPathway exemplar pattern. CYP4F22 (ichthyosis; no specific MF term) and CYP11B2 (no aldosterone-synthase term) are the strongest candidates from the family analysis. |
+| Extend the family scan | `rhea_family_explorer.py` takes any UniProt query; other promiscuous families (UGTs, SULTs, FMOs, ABC transporters' ATPase reactions) should show the same drop-out signature. |
 
 ## Project Status
 
@@ -300,16 +345,20 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
 - **Reproducible scripts**: [`RHEA/rhea_go_gap_probe.py`](RHEA/rhea_go_gap_probe.py)
   (reverse gap), [`RHEA/rhea_ec_specificity.py`](RHEA/rhea_ec_specificity.py)
   (EC-masking, specificity, gaps), [`RHEA/rhea_gap_finder.py`](RHEA/rhea_gap_finder.py)
-  (gap case selection)
-- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 132
-  SSSOM rows (111 exactMatch ready-to-add, 4 broadMatch, 17 new-term suggestions),
+  (gap case selection), [`RHEA/rhea_family_explorer.py`](RHEA/rhea_family_explorer.py)
+  (per-family drop-out and closure-aware gap)
+- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 150
+  SSSOM rows (110 exactMatch ready-to-add, 17 broadMatch, 23 new-term suggestions),
   each backed by a reviewed enzyme in
   [`RHEA/RHEA-MAPPING-REVIEWS.md`](RHEA/RHEA-MAPPING-REVIEWS.md);
   `just validate-rhea-mappings`
 - **Current conclusion**: RHEA is an active, reaction-grounded MF source whose
-  most valuable contribution to this project is the **reverse direction** —
-  surfacing UniProt-annotated enzyme activities that never propagate to GO — once
-  exact-match gaps are corrected by ontology-closure filtering.
+  most valuable contribution is **the reactions it never maps** (G4), not the
+  reverse-propagation gap (G6). Once exact-match gaps are corrected by ontology-
+  closure filtering the reverse gap vanishes in the families tested (0/98
+  entries), while mapping drop-out reaches 68% of the reaction space for human
+  cytochrome P450s — mostly substrate-specific reactions that carry no EC number
+  either, so no bridge reaches them.
 
 ## Slides
 
