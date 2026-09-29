@@ -25,7 +25,8 @@ PTHR12504 current PAINT still places these IBDs at `PTN004364609`:
 
 The GOA `contributes_to GO:0008320` row still points to `PTN004364609` with
 `SGD:S000005075`, but the current `PTHR12504-paint.tsv` snapshot has no
-GO:0008320 row at that node. I recorded `SOURCE_STALE_OR_MISSING` for the PTN
+GO:0008320 row at that node. Human TOMM22 carries the same IBA source and should
+be rechecked in a follow-up pass. I recorded `SOURCE_STALE_OR_MISSING` for the PTN
 and set the stale PAINT row to REMOVE while preserving the biological call:
 yeast TOM22 has a direct SGD IMP to `contributes_to GO:0008320`, and the
 `contributes_to` qualifier remains the right semantics for a receptor/scaffold
@@ -33,9 +34,15 @@ subunit that helps the TOM complex transport proteins without itself being the
 Tom40 pore.
 
 A 2024-2026 PubMed check found recent mitochondrial-import papers that mention
-Tom22, including PMID:41457021/PMID:41279142 on yeast import clogging and
-PMID:38848361 on reconstituted human PINK1 activation at TOM, but did not find a
-new yeast TOM22 paper that changes the core signal-receptor, TOM-scaffold, or
+Tom22, including Mishra et al.'s yeast import-clogging work in its preprint and
+published forms [PMID:41279142 "Proximity-dependent biotin identification (BioID)
+suggested that Mfb1 interacts with several mitochondrial surface proteins including
+Tom22, a component of the TOM complex."; PMID:41457021 "Proximity-dependent biotin
+identification (BioID) suggested that Mfb1 interacts with several mitochondrial
+surface proteins including Tom22, a component of the TOM complex."] and a
+reconstituted-human-TOM PINK1 study [PMID:38848361 "co-expression of human PINK1
+and all seven TOM subunits in Saccharomyces cerevisiae is sufficient for PINK1
+activation"]. None changed the core yeast TOM22 signal-receptor, TOM-scaffold, or
 `contributes_to` transporter-activity calls.
 
 ## Decision
@@ -93,6 +100,8 @@ The biologically appropriate response to the upstream concern is to keep direct
 
 - Cached publications used (verbatim supporting_text):
   PMID:9774667, PMID:10519552, PMID:11276259, PMID:12628251.
+- Recent literature checked:
+  PMID:41457021, PMID:41279142, PMID:38848361.
 - Cross-reference: `genes/human/TOMM22/TOMM22-ai-review.yaml` (ortholog review)
   and `genes/human/TOMM22/TOMM22-deep-research-falcon.md` (used for orthologue
   context; quoted verbatim).
