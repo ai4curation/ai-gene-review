@@ -3,12 +3,11 @@
 ## 2026-09-29 IBA re-review
 
 SHY1 has two IBA rows from `GO_REF:0000033`, both traced by GOA to
-`PANTHER:PTN000603741` in the SURF1/Shy1 family. The repository has
-`PTHR23427` in `interpro/panther/panther.obo`, with S. cerevisiae Shy1 in
-`PTHR23427:SF2 SURFEIT LOCUS PROTEIN 1`, but no cached PTHR23427 PAINT TSV or
-PTN record. I added structured `propagation_review` blocks to both rows and
-recorded the PTN as `SOURCE_STALE_OR_MISSING` because the exact ancestral
-assertion cannot be recovered from a local PAINT export.
+`PANTHER:PTN000603741` in the SURF1/Shy1 family. I fetched the current
+`PTHR23427` metadata, entries table, and PAINT node export; the cached PAINT
+slice still places both `GO:0033617 mitochondrial respiratory chain complex IV
+assembly` and `GO:0005739 mitochondrion` on `PTN000603741`, and
+S. cerevisiae Shy1 is in `PTHR23427:SF2 SURFEIT LOCUS PROTEIN 1`.
 
 The complex IV assembly IBA is a sound core transfer. S. cerevisiae Shy1 has
 direct experimental support as a complex IV assembly factor that interacts with
@@ -22,11 +21,12 @@ S. cerevisiae action calls [PMID:39289458].
 
 I reclassified both `GO:0005515 protein binding` IPI rows from
 `MARK_AS_OVER_ANNOTATED` to `REMOVE` under the current generic-protein-binding
-policy. The Cox14/Mss51 and Coa1 contacts are real, but the informative
-curation is Shy1's role in complex IV assembly, not a standalone protein-binding
-MF. I also changed the obsolete `GO:0051082 unfolded protein binding` IMP row to
-`REMOVE`; PMID:11389896 supports a Shy1-containing assembly complex and a
-complex IV assembly/stability role, not direct general binding to unfolded
+policy. Both current IntAct rows are Shy1-Coa1 edges; that contact is real, but
+the informative curation is Shy1's role in complex IV assembly, not a standalone
+protein-binding MF. I changed the obsolete `GO:0051082 unfolded protein binding`
+IMP row to `MODIFY` with a `GO:0140777 protein-containing complex stabilizing
+activity` replacement; PMID:11389896 supports a Shy1-containing assembly complex
+and a complex IV assembly/stability role, not general binding to unfolded
 substrates.
 
 ## Newer-literature search
