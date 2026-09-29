@@ -84,9 +84,10 @@ The old refolding IBA is generalized to protein folding because current PAINT ex
   still carries cytosol and nucleus but not plasma membrane.
 - Removed the pinned GO:0005886 plasma-membrane IBA as stale: it points to
   PTN002500132, and the current PAINT snapshot has no GO:0005886 assertion at
-  that node. This is separate from the still-live nucleus IBA, which remains
-  `UNDECIDED` because target cytosolic localization does not exclude every
-  secondary pool.
+  that node. The pinned Candida, mouse and rat extant donors are likewise absent
+  from any current PTHR45639 GO:0005886 row. This is separate from the still-live
+  nucleus IBA, which remains `UNDECIDED` because target cytosolic localization
+  does not exclude every secondary pool.
 - Kept the ATPase IBA at `REMOVE` for Ssz1-specific subactivity loss, the HSP
   binding and protein-folding-chaperone IBAs as supported by RAC evidence, and
   the protein-refolding IBA as `MODIFY` to GO:0006457 by the fungal
