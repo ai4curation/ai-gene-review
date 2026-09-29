@@ -34,6 +34,13 @@ evidence against the terms: direct yeast work independently establishes both
 transport and Golgi-like membrane association. The target's own SGD source is
 valid descendant evidence and is not circular.
 
+2026-09-29 IBA project alignment: all three IBA rows were tightened to record
+only the ancestral `PANTHER:PTN...` node as `source_entity`. The extant
+`SGD:S000003063` and `MGI:MGI:891965` identifiers remain legitimate GOA
+WITH/FROM descendant evidence behind the PAINT placements, but the IBA review
+project now keeps them in provenance prose rather than in the structured
+`source_entities` list.
+
 ## Core biology
 
 Vps45 is a Sec1/Munc18-family regulator of SNARE-dependent Golgi/endosomal
@@ -82,9 +89,10 @@ activity.
 
 All 12 generic protein-binding physical rows are retained one-for-one. The seven
 rows whose WITH/FROM partner is the syntaxin SNARE Tlg1 or Tlg2 are MODIFY to
-GO:0000149 SNARE binding; the other five remain over-annotated. Several are
-informative interaction data, yet `GO:0005515` loses the partner and role
-specificity. PMID:12553664 is especially limited: its
+GO:0000149 SNARE binding; the other five are REMOVE because the generic
+`GO:0005515` term loses the partner and role specificity without support for a
+narrower molecular-function replacement. Several are informative interaction
+data even though the generic GO row is not. PMID:12553664 is especially limited: its
 cached abstract is entirely about Ivy1, Ypt7, and Vps33, not Vps45; without full
 text the row is not called wrong, but the reference is recorded as relevance
 NONE/correctness UNVERIFIED.
@@ -103,5 +111,6 @@ defective in vacuolar acidification."].
 
 ## Final action profile
 
-The 40 physical rows have 20 ACCEPT, 9 MARK_AS_OVER_ANNOTATED, 7 MODIFY, 3
-KEEP_AS_NON_CORE, and 1 UNDECIDED decisions. There are no PENDING or NEW rows.
+The 40 physical rows have 20 ACCEPT, 4 MARK_AS_OVER_ANNOTATED, 7 MODIFY, 5
+REMOVE, 3 KEEP_AS_NON_CORE, and 1 UNDECIDED decisions. There are no PENDING or
+NEW rows.
