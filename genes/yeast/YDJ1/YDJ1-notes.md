@@ -80,3 +80,31 @@
 - PMID:10811660 was manually classified as `MISCITED`/`NONE` for YDJ1: its
   abstract reports human p23 assays and supplies no YDJ1-specific experimental
   support for the CAFA-assigned IDA row.
+
+## 2026-09-29 IBA project re-review
+
+- Rechecked all six IBA rows against the PTHR43888 PAINT cache and the
+  `projects/IBA_REVIEW.md` taxonomy. The review already records PTN ancestor
+  nodes, not extant WITH/FROM donors, as the IBA `source_entities`; YDJ1
+  self-evidence remains valid grounding of the ancestral PTN assertions rather
+  than circular support. Current PAINT still supports the cytosol, ATPase
+  activator, heat-response, refolding, and nucleus decisions; obsolete
+  GO:0051082 remains correctly scoped to direct Ydj1 replacements rather than
+  treated as a propagated active GO term.
+
+- Migrated the eight `GO:0005515 protein binding` IPI annotations from the
+  legacy `MARK_AS_OVER_ANNOTATED` action to `REMOVE`. This does not dispute the
+  reported Rad3/Rad24/Ctr9, Hsp82, Sgt2/Mdy2, Sup35, Ssa1, Sse1, Tif2, and Eft2
+  physical associations, but `protein binding` is a generic molecular-function
+  label; the functionally established partnerships are already represented by
+  Hsp70 protein binding, heat shock protein binding, ATPase activator activity,
+  TRC-pathway review text, or client-folding activity as appropriate.
+
+- Searched newer literature and cached PMID:39652584 and PMID:40383781. Omkar
+  et al. (2024) directly shows that Ydj1 J-domain acetylation tunes Ssa1 and
+  Hsp82 interaction, client refolding, Ssa1 ATPase stimulation, and translation
+  fidelity, refining regulation of the existing Hsp40/Hsp70 co-chaperone model.
+  Vestergaard et al. (2025) used YDJ1 and SSA1 overexpression to improve
+  heterologous aspulvinone E production; that supports the breadth of Ydj1's
+  client-folding utility but is a cell-factory application and not evidence for
+  a new endogenous GO term.

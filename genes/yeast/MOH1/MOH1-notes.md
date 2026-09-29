@@ -95,20 +95,21 @@ from what is NOT known, with inline provenance.
   known or potential zinc-binding proteins was identified using a bioinformatics
   analysis that combined global domain searches with local motif searches"]
 
-### Olgun et al. 2025 (bioRxiv preprint 10.1101/2025.10.30.685511) — most recent (KNOWN, NOT peer-reviewed)
+### Olgun et al. 2026 (Microbial Cell, PMID:42404825) — most recent (KNOWN, peer-reviewed)
 - Title: "Yippee-like protein Moh1 links gene expression to metabolism and
-  selective stress resistance in Saccharomyces cerevisiae." Preprint, no PMID.
+  selective stress resistance in Saccharomyces cerevisiae."
 - Reports: moh1Δ increases sensitivity to sodium azide and sulfuric acid but
   **increases resistance to H2O2 and acetic acid**; H2O2 resistance attributed to
   **decreased cellular uptake from altered membrane permeability**, not lowered
   mitochondrial ROS; transcriptional reprogramming + metabolic remodeling (lipids,
   proteins, cell-wall polysaccharides).
+- The Discussion summarizes prior AP-MS evidence that Moh1p associates with
+  **CCT2/CCT3** and **multiple core GID subunits**; GID is the yeast multisubunit
+  E3 ubiquitin ligase, so this changes the GO:0000151 call from family
+  over-propagation to a plausible but accessory/conditional complex association.
 - This reinforces a role in **stress resistance / membrane and metabolic
-  remodeling** but still does not assign a molecular activity. Because it is a
-  non-peer-reviewed preprint with no PMID, it is used here for context/knowledge-gap
-  framing only (status CLOSING/NARROWING for some gaps), NOT as the basis of a
-  positive GO core function. Verbatim quoting deferred (no cached full text; the
-  reference validator only checks PMID/file: quotes).
+  remodeling** but still does not assign a molecular activity. The peer-reviewed
+  paper was published after the initial MOH1 review and is now cached as full text.
 
 ## SGD-curated phenotypes (KNOWN, from SGD locus S000000145)
 
@@ -138,13 +139,15 @@ human YPEL5 for partial cross-complementation.
    binding/scaffold module, but what Moh1 *does* biochemically (binds what? acts
    on what?) is unknown. No catalytic activity is supported.
 2. **Direct physical partners / substrates.** Despite ~49 recorded interactions,
-   no functionally validated, direct partner or cargo is established. The
+   no functionally validated, direct partner or cargo is established. CCT2/CCT3
+   and core GID subunits are now the leading co-purification candidates. The
    Drosophila Yippee–Hemolin interaction has no yeast counterpart.
 3. **Mechanism linking Moh1 to stress resistance and stationary-phase survival.**
    Why does deletion *increase* acute stress resistance yet *decrease* long-term
-   survival? The 2025 preprint proposes altered membrane permeability/metabolic
-   remodeling, but the causal molecular step (and whether Moh1 acts directly on
-   membranes, transcription, or metabolism) is undetermined.
+   survival? The 2026 Microbial Cell paper shows altered membrane
+   permeability/metabolic remodeling, but the causal molecular step (and whether
+   Moh1 acts directly through GID, CCT, membranes, transcription, or metabolism) is
+   undetermined.
 4. **Whether the "pro-apoptotic"/regulated-cell-death framing is the correct
    biological process.** The apoptosis label rests on one heterologous
    complementation study in a contested yeast-apoptosis paradigm.
@@ -157,13 +160,12 @@ human YPEL5 for partial cross-complementation.
 ## Annotation-review plan
 
 - GO:0000151 ubiquitin ligase complex (IBA, GO_REF:0000033, from PANTHER node
-  PTN002302768 seeded by human YPEL5 P62699): **scrutinize.** No yeast evidence
-  places Moh1 in a ubiquitin-ligase complex; the IBA is a family-level
-  propagation from the Mis18/cereblon(CULT) neighborhood. The Yippee fold is
-  related to cereblon's thalidomide-binding CULT domain (which *is* a substrate
-  receptor of a CRL4 E3), but Moh1/YPEL proteins are not established E3 components.
-  Lean MARK_AS_OVER_ANNOTATED (family over-propagation; not core), unless deep
-  research surfaces yeast evidence.
+  PTN002302768 seeded by human YPEL5 P62699): **KEEP_AS_NON_CORE.** QuickGO
+  confirms that the PAINT node also gives YPEL5 this term, UniProt places YPEL5 in
+  the human CTLH E3 ligase complex with an ancillary role, and the 2026 MOH1 paper
+  summarizes prior AP-MS association with multiple core yeast GID subunits. Moh1 is
+  not in the structurally defined yeast GID core, so the IBA should be kept as a
+  non-core contextual complex association.
 - GO:0008270 zinc ion binding (RCA, PMID:30358795): **KEEP** — corroborated by
   UniProt features and my bioinformatics; the only defensible molecular function.
   Structural zinc, so KEEP_AS_NON_CORE / ACCEPT (it is the core molecular feature
