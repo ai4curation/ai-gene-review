@@ -223,3 +223,17 @@ Focused validation after this follow-up passed with 14 existing generic-binding
 advisories; HTML rendering and the new history record validation passed. The
 scaffolded history filename retains its generated actor token; its actor metadata
 correctly records Codex. No new repository-wide validation pass is claimed.
+
+
+## Alpha/beta assembly refinement and review follow-up, 2026-09-29
+
+Seven generic binding rows now map to **GO:0046982 protein heterodimerization activity**: the beta2 interaction (PMID:11027149) and six beta1 interactions. The [official molecular-function definition](https://amigo.geneontology.org/amigo/term/GO:0046982) describes association with a nonidentical protein to form a heterodimer. This is a specific assembly function, not a substitution of molecular function by cellular-complex membership and not a new annotation added alongside the original.
+
+Root reread the complete normal PMID:11027149 abstract, which explicitly includes human alpha1/beta combinations in Xenopus, alongside the nongastric constructs. For beta1, [PMID:35803952](https://pubmed.ncbi.nlm.nih.gov/35803952/) provides direct human alpha1/beta1/FXYD2 structural context. The cached first structural-determination Results paragraph and expression/purification Methods were reread: tagged human subunits are coexpressed in HEK293F, affinity-purified and separated chromatographically before structural analysis. No figure pixels or new stoichiometry analysis was performed. The beta-pair refinement concerns the alpha/beta association inside that accessory-containing complex. The uninspected BioPlex, OpenCell and crosslink target entries remain explicitly uninspected, with their original IPI provenance retained and the independent structure cited separately.
+
+The [ChEBI ouabain outgoing relationships](https://www.ebi.ac.uk/chebi/CHEBI:472805), rechecked on 2026-09-29, explicitly contain `CHEBI:472805 is_a CHEBI:26764` (steroid hormone) and separately `CHEBI:472805 is_a CHEBI:38092` (cardenolide glycoside). These are ontology assertions, not evidence for endogenous endocrine physiology. The existing non-core response rationale now names the exact axiom and retains the human-protein/Xenopus-host boundary. The PMID:10636900 reference assessment now also records the previously inspected selected Results/Figure 6 caption. Its finding uses a short cached abstract anchor for the isoform-dependent ouabain effect; the abstract-only cache is unchanged.
+
+Seven other generic associations retain KEEP_AS_NON_CORE and the LCK pair retains UNDECIDED under the evidence judgments already recorded. This is Codex's curation decision under the supplied action definitions, not a claimed maintainer sign-off or an assertion that the automated binding policy has changed. The remaining policy disagreement is explicit; no unsupported REMOVE is introduced to obtain approval. Earlier notes describing binding warnings as pre-existing refer to the previous version of this review, not to an exemption for a previously merged repository record. The source assertions, four products and single pump core remain unchanged.
+
+
+Focused validation after these refinements passed with seven generic-binding advisories and no blocking error. The seven supported associations deliberately retain KEEP_AS_NON_CORE under the supplied action definitions; the unresolved LCK pair remains UNDECIDED. Rendering and the matching generated EDIT history validation passed. Status remains DRAFT. No new repository-wide validation success, current-head approval or merge is asserted.
