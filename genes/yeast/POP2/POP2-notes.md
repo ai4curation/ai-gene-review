@@ -13,8 +13,9 @@ pairwise transfers.
   that Caf1p/Pop2p is required for normal mRNA deadenylation in vivo and co-purifies with a
   Ccr4p-dependent poly(A)-specific exonuclease activity [PMID:11410650; PMID:11239395].
 - `GO:0004535 poly(A)-specific ribonuclease activity`: sound. The IBD was refreshed on 2026-05-28 and
-  is grounded in experimentally characterized CAF1-family nucleases from fly, mouse, human and fission
-  yeast. Yeast Pop2 is divergent and Ccr4 is the primary in vivo catalytic deadenylase, but the
+  is grounded in experimentally characterized CAF1-family nucleases from fly, mouse, and human
+  descendants; fission yeast appears in the GOA `WITH/FROM`, but not in this GO:0004535 IBD donor set.
+  Yeast Pop2 is divergent and Ccr4 is the primary in vivo catalytic deadenylase, but the
   abstract-only cached Daugeron and Thore papers are enough to verify that recombinant Pop2 degrades
   poly(A) and that active-site mutagenesis localizes intrinsic RNase activity to the Pop2 RNase D
   domain [PMID:11410650; PMID:14618157]. Ohn et al. then refine the in vivo interpretation:
