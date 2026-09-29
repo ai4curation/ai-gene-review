@@ -16,6 +16,17 @@ Re-checked the four current RAS2 IBA annotations against GOA and the cached PANT
   the conserved Ras GTPase switch role that Ras2 performs upstream of Cyr1/cAMP/PKA in
   budding yeast.
 
+The `SGD:S000005042` donor that appears in the `GO:0005886` and `GO:0003924`
+`WITH/FROM` sets is RAS2 itself. That is expected for target-seeded PAINT nodes: the
+direct yeast SGD evidence helped place the IBD at `PTN000631348`, and the resulting
+IBA records that plasma-membrane localization and GTPase activity are inherited
+Ras-family properties rather than lineage-specific RAS2 observations.
+
+`PTN000631348` also carries `GO:0007264 small GTPase mediated signal transduction`,
+the parent of `GO:0007265 Ras protein signal transduction`; RAS2 inherits the more
+specific child from `PTN008393310`, so the current GOA has no redundant IBA for the
+parent term.
+
 All four IBA rows are biologically sound for RAS2, so the YAML now keeps them as `ACCEPT`
 and records `propagation_review.root_cause: NO_FAILURE_CORE` with the PTN ancestral node,
 not the extant `WITH/FROM` genes, as the source entity. The full GOA `WITH/FROM` sets were
