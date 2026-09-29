@@ -104,8 +104,11 @@ IBA review project convention. All are from the same ancestral
 
 The extant `SGD:S000001799` and `SGD:S000005609` entries in GOA are valid
 descendant evidence behind the PAINT placement, and Whi5 appearing in its own
-WITH/FROM is not circular. For structured `source_entities`, each IBA row now
-records only the ancestral PTN node.
+WITH/FROM is not circular. Structured `source_entities` now record the
+ancestral PTN plus the curated SGD donors that each IBA row's argument rests
+on. The local PTHR28246 cache has `PTHR28246-entries.csv` but no
+`PTHR28246-paint.tsv`, so the review records that local mirror limitation in
+PTN comments rather than treating `PTN002000919` as stale.
 
 Search on 2026-09-29 found no newer published *S. cerevisiae* WHI5 paper that
 changes the GO review beyond the already-cached 2025 Atg1/autophagy report
