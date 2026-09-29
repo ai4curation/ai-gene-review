@@ -127,3 +127,25 @@ RAVE and the Rcy1 complex are deliberately not core functions (see above); they 
 * Whether the skp1-4/skp1-12 mitotic arrest is checkpoint-dependent (experiment suggested).
 * Whether Skp1 phosphorylation (S162, T177) tunes receptor loading in vivo (experiment suggested).
 * The Bub1 checkpoint claim rests on one abstract-only paper.
+
+## 2026-09-29 - IBA propagation rereview
+
+Rechecked the five IBA rows against the IBA project rubric and the cached support for their target-side
+biology:
+
+* `GO:0000278 mitotic cell cycle` from `PANTHER:PTN000877296` remains broad but sound; the direct
+  Bai 1996 yeast abstract establishes the mixed G1/G2 skp1 arrest and the target's own SGD row in
+  `WITH/FROM` is expected, not circular.
+* `GO:0005634 nucleus`, `GO:0005737 cytoplasm`, `GO:0031146 SCF-dependent proteasomal ubiquitin-dependent
+  protein catabolic process`, and `GO:0097602 cullin family protein binding` from `PANTHER:PTN000126179`
+  remain core Skp1 calls, backed by the Mathias/Koepp/Kaplan localization, SCF receptor, and Cdc53-binding
+  papers that were already cached.
+
+`genes/yeast/SKP1/SKP1-goa.tsv` still names the two PTNs, but the local PAINT snapshot under
+`interpro/panther/PTHR11165/` currently contains only `PTHR11165-metadata.yaml` and
+`PTHR11165-entries.csv`, so the review now records each PTN source as `SOURCE_STALE_OR_MISSING`
+while keeping the accepted biological decisions.
+
+Fresh PubMed searches for 2025-2026 `Skp1`/`SKP1`/`Cbf3d` with exact `Saccharomyces cerevisiae` or
+yeast SCF/RAVE terms recovered only a mammalian Rabconnectin-3/V-ATPase paper that mentions yeast
+Skp1/RAVE as background; no newer budding-yeast SKP1 paper changes the 2026-09-26 curation.
