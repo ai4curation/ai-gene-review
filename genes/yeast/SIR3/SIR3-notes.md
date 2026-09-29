@@ -74,18 +74,18 @@ Also addressed two smaller review points:
   PMID:9501103 annotation — from one experiment assaying SIR2, SIR3 and SIR4
   together — is currently adjudicated three different ways across the repo
   (SIR2 `REMOVE`, SIR3 this entry, SIR4 `MARK_AS_OVER_ANNOTATED`). Those sibling
-  entries should be reconciled with the NEJ1 rationale above in a separate pass;
-  a note to that effect is now in the SIR3 `reason`.
+  entries should be reconciled with the NEJ1 rationale above in a separate pass.
 
 ## 2026-09-29 Update
 
 Aligned SIR3 with the IBA propagation review:
 
-- The two current `PANTHER:PTN000080056` transfers from the ORC1/CDC6 PAINT
-  family, `GO:0006270` and `GO:0003688`, now carry
-  `PROPAGATION_BAD`/`WRONG_ORTHOLOG_OR_PARALOG` propagation reviews. SIR3 is an
-  ORC1-derived silencing paralog that retained a BAH/AAA-like chromatin
-  scaffold, not ORC/Cdc6 origin-licensing or origin-DNA-binding activity.
+- The `GO:0006270` transfer from the ORC1/CDC6 PAINT family still carries a
+  `PROPAGATION_BAD`/`WRONG_ORTHOLOG_OR_PARALOG` propagation review because SIR3
+  is absent from those IBD seeds. The `GO:0003688` transfer is now
+  `TERM_SCOPING_PROBLEM`: SIR3 itself is in that seed list via SGD's
+  over-scoped origin-binding IDA from PMID:29795547, whose data support Sir3
+  binding to origin-adjacent nucleosomes rather than origin DNA itself.
 - The `GO:0033314` checkpoint-signaling IBA points to the same PTN in the cached
   GOA row but is no longer present in the local 2026 PTHR10763 PAINT export, so
   it was marked `SOURCE_STALE_OR_MISSING`.
@@ -94,10 +94,10 @@ Aligned SIR3 with the IBA propagation review:
   interactions are not disputed, but no more-specific RAP1- or Sir4-binding MF
   term exists and generic protein binding should not be retained.
 
-The newer full-text SIR3 literature does not reopen the IBA calls. Goodnight and
+The newer full-text SIR3 literature does not reopen the IBA calls. Brothers and
 Rine 2022 refine Sir3 recruitment and spread by Sir3-M.EcoGII/Nanopore mapping
-but do not support origin-DNA binding or initiation. Roisne-Hamelin et al. 2021
-do require a correction to the September NHEJ rationale: the original NEJ1
+but do not support origin-DNA binding or initiation. Bordelet et al. 2022 do
+require a correction to the September NHEJ rationale: the original NEJ1
 rescue literature still shows an indirect SIR contribution through HML/HMR
 silencing, but SIR3 also has a direct Sae2-binding role that limits
 MRX-dependent resection and promotes NHEJ [PMID:34817085 "Via physical
