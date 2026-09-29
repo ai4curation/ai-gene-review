@@ -6,9 +6,10 @@
   `PTN000359478` still carries `GO:0006357` regulation of transcription by RNA polymerase
   II and `GO:0005634` nucleus, and the transfers remain valid for S. cerevisiae Swi1.
 - Preserved the existing `REMOVE` decision for `GO:0000976` transcription cis-regulatory
-  region binding. The PAINT row is seeded by human ARID1A/ARID1B evidence at the root
-  ARID/SWI1-family node, whereas yeast Swi1's ARID is weak and nonspecific and Swi1 is
-  better captured as a SWI/SNF scaffold that contributes to nucleosome engagement.
+  region binding. The PAINT row is seeded by human ARID5B/MRF2 evidence from a different
+  subfamily at the Opisthokont ARID/SWI1-family node, whereas yeast Swi1's ARID is weak
+  and nonspecific and Swi1 is better captured as a SWI/SNF scaffold that contributes to
+  nucleosome engagement.
 - `PTN002303792` still carries `GO:0016514` SWI/SNF complex on the fungal Swi1 node with
   Candida, S. pombe, and S. cerevisiae descendant evidence, so the complex-membership IBA
   was kept as core.
