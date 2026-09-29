@@ -1,0 +1,64 @@
+# ATF6 review notes
+
+## 2026-09-29: initial evidence assessment
+
+The normal seed identifies human ATF6 (UniProt P18850; 670 amino acids), with 88 existing annotations and no seeded alternative-product records. The annotation list is still unreviewed. Cleavage of the membrane precursor into an active N-terminal transcription factor is protein processing; it must not be represented as an invented splice isoform.
+
+The normal falcon research request with perplexity-lite fallback ended unsuccessfully and created no research file. These are manual notes. The normal Seed22 publication output is being checked and imported separately; existing publication caches must remain unchanged. No duplicate gene-wide fetch was started while that import was pending.
+
+### Mechanistic frame and primary sources
+
+ATF6 is an ER membrane bZIP transcription factor. Its precursor and released transcription factor have different locations. ER stress promotes trafficking to the Golgi, proteolytic release of the cytosolic N-terminal region, and nuclear transcriptional activation. The source UniProt record cites the human studies that distinguish these events:
+
+- [PMID:10564271](https://pubmed.ncbi.nlm.nih.gov/10564271/), *Mammalian transcription factor ATF6 is synthesized as a transmembrane protein and activated by proteolysis in response to endoplasmic reticulum stress*. The official PMC abstract was checked: the precursor is a type II ER membrane protein; the released N-terminal region enters the nucleus and activates the GRP78/BiP gene. Full-paper reading is still pending.
+- [PMID:11163209](https://pubmed.ncbi.nlm.nih.gov/11163209/), *ER stress induces cleavage of membrane-bound ATF6 by the same proteases that process SREBPs*. The UniProt source assigns processing to MBTPS1 and MBTPS2. This is a source-guided reading target, not yet an independently adjudicated paper.
+- [PMID:11779464](https://pubmed.ncbi.nlm.nih.gov/11779464/), *XBP1 mRNA is induced by ATF6 and spliced by IRE1 in response to ER stress to produce a highly active transcription factor*. Transcriptional induction and IRE1-mediated splicing are distinct molecular activities.
+- [PMID:17765680](https://pubmed.ncbi.nlm.nih.gov/17765680/), *Transcriptional induction of mammalian ER quality control proteins is mediated by single or combined action of ATF6alpha and XBP1*. The official abstract explicitly identifies mouse knockout embryonic fibroblasts. It supports ATF6alpha-dependent chaperone expression and cooperative induction of ERAD-component genes with XBP1; this experiment must not be described as human knockout evidence or direct protein-folding/degradation activity.
+- [PMID:11256944](https://pubmed.ncbi.nlm.nih.gov/11256944/), *Identification of the G13 ... gene product related to activating transcription factor 6 as a transcriptional activator of the mammalian unfolded protein response*. The official abstract discusses both ATF6alpha and the G13/ATF6beta product. Its paralog-focused title does not establish misattribution of ATF6 annotations.
+
+### Ontology checks and questions for the annotation review
+
+The official [GO:0036500 record](https://amigo.geneontology.org/amigo/term/GO%3A0036500) defines the ATF6 branch of the unfolded protein response as signaling from ATF6 activation through regulation of a downstream process such as transcription. This is consistent with the mechanistic frame above. The official [GO:0001228 record](https://amigo.geneontology.org/amigo/term/GO%3A0001228) identifies RNA polymerase II-specific DNA-binding transcription activator activity. These are candidate core terms, subject to full evidence review and validation.
+
+Several distinctions need explicit assessment before choosing actions:
+
+- Preserve experimentally supported Golgi, ER and nuclear annotations while explaining the precursor/processed-state distinction. Do not infer that every location applies to both forms.
+- Assess the fibrillar-center/nucleolar imaging rows against the actual evidence; the established nuclear role alone does not verify those subnuclear compartments.
+- The existing protein-folding and ERAD-pathway annotations require separating expression of chaperones or degradation components from executing their downstream activities. Do not claim ATF6 is a chaperone, foldase or degradation enzyme.
+- Eye-development and visual-perception findings need distinction from the direct transcriptional activity. The source UniProt record identifies autosomal recessive achromatopsia studies, including PMID:26029869.
+- Read the actual CREBH- and CREB4-focused studies before assessing ATF6 interactions or reporter/localization annotations. A paper title naming another transcription factor is insufficient evidence of an error.
+- Evaluate the original evidence for each generic protein-binding row. No new broad protein-binding assertion is planned, and absence of a full text is not a reason to reject an experimental interaction.
+- Do not assume that the gene's name proves positive regulation of its own signaling pathway; inspect the evidence and definition for the existing regulatory rows separately.
+
+No new GO assertion, final action, core-function entry or full-text verification is claimed at this stage.
+
+### Additional primary-source reading
+
+All 26 PMID abstracts associated with the seeded review have now been read, using the existing caches and the exact staged normal-fetch output. This does not imply that every paper's full text or every reported interaction has been inspected. The existing cache for PMID:23661758 supplies its title, *Networks of bZIP protein-protein interactions diversified over a billion years of evolution*; the seed's missing-title placeholder can be corrected in the authored review without editing that cache.
+
+[PMID:16236796](https://pubmed.ncbi.nlm.nih.gov/16236796/): the actual Methods name FLAG-ATF6 and its 1–373 construct. The Figure 10 Results explicitly describe transfected ATF6 in the ER before treatment, in the Golgi after 30 minutes of DTT, and in the nucleus at 120 minutes. CREB4 remains distinct from ATF6 in that comparison. Thus the ATF6 localization rows are supported by experiments on ATF6 within this CREB4-focused paper, rather than merely by its background discussion. Construct/assay Methods and the relevant Results were read; no image-level inspection is claimed.
+
+[PMID:19543265](https://pubmed.ncbi.nlm.nih.gov/19543265/): the Results and Methods distinguish CRTC2-associated-protein discovery from endogenous and tagged CRTC2 in human HEK293T cells, interaction/co-IP and promoter experiments in primary mouse hepatocytes, and mouse liver experiments. The N-terminal ATF6 region associates with CRTC2; the ER-luminal fragment does not. CRTC2 recruitment to Xbp1 regulatory DNA depends on ATF6. The mouse metabolic outcome should not become a new human gluconeogenesis annotation. Detailed Results and Methods were read; supplemental raw interaction tables were not.
+
+[PMID:26029869](https://pubmed.ncbi.nlm.nih.gov/26029869/): patient-derived fibroblasts carrying homozygous Arg324Cys show reduced induction of ATF6 target genes. Controlled HEK293 experiments use a DHFR-ATF6(1–373) fusion and the corresponding mutant. This supports impaired transcriptional activation as the disease mechanism. Human foveal hypoplasia and cone dysfunction must be distinguished from the mouse phenotype: young knockout mice retain retinal function, whereas older animals develop rod and cone impairment. Genetic/clinical Results, cellular functional Results, and relevant Methods were read. These findings do not make ATF6 a phototransduction enzyme.
+
+[PMID:22682248](https://pmc.ncbi.nlm.nih.gov/articles/3372931/): the existing cache reports available full text but contains Introduction and Discussion without Results or Methods. The indexed official PMC page supplies Figure 5, binding Results and Methods. The purified luminal fragments depicted in Figure 5B/C are mouse ATF6; human ATF6 GAL4 fusion constructs were also tested with Thbs4. The text names HEK293 cells for the latter assay, whereas its caption names COS cells. Do not silently resolve that discrepancy or describe all assays as purified human binding. The cardiac co-IP is from mouse tissue. The cached availability flag remains unchanged; quote only text actually present in the cache when using a cached-reference supporting snippet.
+
+The apparent ATF6B repression in PMID:14973138 and its absence in the knockout comparison in PMID:17765680 come from different experimental contexts. Neither abstract supports a universal assertion that ATF6B always inhibits ATF6.
+
+A search for ATF6/P18850 in the local GO-CAM index found no matching entry. No inference about all external GO-CAM content follows from that local result.
+
+
+### Final initial synthesis
+
+All 88 original annotations have been reviewed: 64 ACCEPT, 15 KEEP_AS_NON_CORE, seven UNDECIDED and two MODIFY. The source objects, qualifiers, partner accessions and evidence codes are unchanged; there are no NEW annotations or invented alternative-product records. The single core is nuclear DNA-binding transcription activation in the ATF6-mediated unfolded protein response. ER/Golgi locations describe the precursor activation route.
+
+Protein folding is refined to the ATF6 signaling response, and direct ERAD participation is refined to [positive regulation of ERAD pathway](https://amigo.geneontology.org/amigo/term/GO:1904294). The official definition/parents were read: regulation of degradation is distinct from executing the proteolysis or retrotranslocation steps. The existing positive regulation of ATF6-response annotation is retained with the concrete human ERSE reporter evidence in PMID:9837962; it does not assert feedback regulation or self-cleavage.
+
+Independent annotation/core consultation covered every source row, all 26 cached abstracts, six pathway summaries and selected primary Results/Methods. Current [HPA subcellular tables](https://www.proteinatlas.org/ENSG00000118217-ATF6/subcellular) and HPA071169 ICC assessment support the contextual nucleolar/fibrillar-center rows; no image pixels or processing-state resolution was claimed. PAINT target self-inclusion is legitimate experimental grounding; the tree/MSA was not reconstructed.
+
+The separate primary-source consultation of [PMID:16469704](https://www.sciencedirect.com/science/article/pii/S0092867406000043) inspected original indexed Results and Figures 6-7 legends. Reciprocal co-IP uses endogenous human ATF6 in 293T with FLAG-CREBH; p50 reporter activation and human CRP probe capture supply further support. The exact p50 construct species/residue boundaries and purified dimer stoichiometry remain unresolved. The original array Methods for PMID:20102225 include human-human pairs, and PMID:23661758 uses solution FRET across species. Their exact ATF6-XBP1/ATF6B supplemental pair entries were inaccessible. P17861 is XBP1, not ATF1. The unchanged canonical caches retain their original availability flags, even where external or quarantined original text was richer.
+
+Four contextual generic associations are retained as non-core. Unresolved target-specific interactions, apoptosis and autophagy evidence remain UNDECIDED. Established homodimerization is retained for two sources with explicit curator deference; the TAP/MS self-association row remains source-specifically unresolved because the analysis removes bait self-identifications. No assay is rejected merely because its title foregrounds a different gene or because a generic term is uninformative.
+
+The normal publication import is complete, with existing caches preserved. The unsuccessful provider-research attempt produced no report; manual source work supplied the review. Earlier pending statements above document the progression of the evidence assessment. Exact cached excerpts support seven reference findings, and the authored title placeholder for PMID:23661758 is corrected from its existing record.
