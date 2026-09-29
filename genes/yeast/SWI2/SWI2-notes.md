@@ -15,9 +15,10 @@
 - Removed `GO:0031507` heterochromatin formation because the cited S. cerevisiae SWI/SNF
   evidence shows Snf2 overcoming Sir-mediated heterochromatin repression during
   recombinational repair, not creating heterochromatin.
-- Converted the legacy `GO:0005515` protein binding IPI rows to `REMOVE`. The interactions
-  are real but are better represented by SWI/SNF complex membership, transcription-factor
-  binding, histone binding, nucleosome binding, and chromatin binding.
+- Converted most legacy `GO:0005515` protein binding IPI rows to `REMOVE`. The generic
+  interactome edges are better represented by SWI/SNF complex membership, transcription-factor
+  binding, histone binding, and chromatin binding; the two cryo-EM Snf2/SWI-SNF nucleosome
+  rows were instead changed to `MODIFY` with GO:0031491 `nucleosome binding`.
 - Searched 2025+ PubMed for `SWI2`, `SNF2`, `YOR290C`, and `SWI/SNF` with
   `Saccharomyces cerevisiae`. The hits included new SWI/SNF target-gene studies in
   2025-2026 and several papers on other SNF2-family remodelers such as Fun30, Rad5, and
