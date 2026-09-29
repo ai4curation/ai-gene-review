@@ -149,3 +149,60 @@ Normal source recovery is pending for PMID:38032054 and PMID:9600907. They have 
 Source71 supplied the exact normal PMID38032054 and PMID9600907 caches. Their reference objects and explicit annotation links now accompany the previously reviewed plasma-membrane and processed-product mitochondrial interpretations. PMID38032054 is available as normal XML text; PMID9600907 remains abstract-only in the normal cache, while the earlier independent primary consultation of selected original Methods/Results/captions remains separately attributed. No new quote or stronger assay claim was introduced.
 
 The concise core omits the generic cytoplasmic-vesicle location because the included late-endosomal location already provides a more specific vesicular compartment. The original vesicle annotation and the vesicular transport description are preserved. All 61 annotation decisions and five products remain unchanged by this final reference closure.
+
+
+## 2026-09-29 — revised biological interpretation after review
+
+This entry supersedes the earlier cell-only copper-import interpretation, blanket plasma-membrane and mitochondrial exclusions, and wrong-paralog claim about PMID:15269005. The previous entries remain above as an append-only journal. The current evidence and reading limits are summarized below.
+
+### Identity and transport mechanism
+
+Human ATP7B (UniProt P35670; Wilson disease protein, EC 7.2.2.8) is a P1B-type Cu(I)-transporting ATPase. Its six amino-terminal heavy metal-associated domains receive copper from ATOX1 and participate in regulation of the transport cycle. The transmembrane CPC motif is required for transport in the tested functional system. Loss of ATP7B causes Wilson disease (MIM:277900). The domain and disease identifiers are present in the immutable UniProt record; the metal-binding, nucleotide-binding and complementation experiments provide independent mechanistic support (PMID:9837819, PMID:12029094, PMID:14709553, PMID:15205462, PMID:16567646).
+
+The principal activity is ATP-dependent copper translocation from the cytosol into Golgi and vesicular compartments. ATP binding, copper binding and ATP hydrolysis are mechanistic facets of this activity. ATOX1 transfer to isolated ATP7B amino-terminal domains and N-domain ATP binding are construct-level observations; they are not presented as purified full-length transport assays. Human ATP7B expressed in Sf9 cells supports ATP-dependent copper uptake into membrane vesicles, with mock, low-temperature, vanadate and catalytic-mutant controls. Those microsomes are not a homogeneous purified-protein reconstitution (PMID:22240481).
+
+### Copper import, export and localization
+
+Copper entry into the Golgi or a vesicle is organelle import. The official definition of [copper ion import](https://amigo.geneontology.org/amigo/term/GO:0015677) includes entry into an organelle and therefore fits this ATP7B-mediated step. Subsequent exocytosis moves copper out of the cell and contributes to [copper ion export](https://amigo.geneontology.org/amigo/term/GO:0060003). These describe different boundaries of the same route. Neither term requires the unsupported claim that ATP7B always pumps directly across the plasma membrane (PMID:16472602; Reactome:R-HSA-936895).
+
+TGN and late-endosomal locations are retained with cell-model and copper-condition limits. PMID:15681833 reports endogenous and tagged ATP7B localization with late-endosomal markers. Imaging supports the compartment, but does not by itself measure lumenal copper flux or establish exclusive residence. Its location findings do not erase independently supported TGN localization. The ATP7B step in Reactome R-HSA-936895 specifically connects cytosolic Cu(I) to the Golgi lumen; R-HSA-936837 supplies broader P-type transport context.
+
+The HepG2 and CHO findings summarized in PMID:16472602 support vesicular sequestration followed by exocytosis. Failure to see surface localization in those conditions is not a universal exclusion. Selected original Results and Figure 1 text from PMID:38032054 describe copper-dependent apical localization of tagged ATP7B in polarized MDCK cells. The selected Methods identify the host and tagged constructs, but do not resolve the donor species of the existing ATP7B plasmid. These observations support context-dependent surface localization, not a universal endogenous location or a direct surface copper-flux measurement.
+
+### Specificity of the existing annotations
+
+The broad electronic and functional transport assertions can be refined to the experimentally supported substrate and mechanism without declaring their ancestors false. Copper-transporter and ATPase-coupled cation-transporter rows propose P-type monovalent copper transporter activity; nucleotide and metal binding propose ATP and copper binding; the broad transport processes propose copper ion transmembrane transport. Repeated evidence for a specific term remains legitimate: these are refinements of existing assertions, not additional functions.
+
+The nucleotide-binding refinement does not mean that ATP7B binds only ATP. The recombinant N-domain in PMID:15205462 also discriminates little among ATP, ADP and AMP. ATP binding is selected because it is directly supported and relevant to the transport cycle.
+
+The electronic broad membrane row can use independent evidence to specify the TGN membrane. The HDA membrane annotation from PMID:19946888 is treated separately. Its YTS NK-cell target table has not been inspected, so the curator's membrane observation is retained as non-core context without substituting TGN localization as though that study measured it. The specific TGN location is independently represented elsewhere.
+
+Correct associations with COMMD1, DCTN4, GRX1 and PLZF remain non-core interaction observations. Their generic labels do not make the underlying experiments false, and no unsupported adaptor or catalytic function is manufactured from them. The COMMD1 precipitation experiments use cell lysates and an ATP7B amino-terminal construct; they are not purified binary stoichiometry measurements (PMID:17919502).
+
+Three assertions remain unresolved: the exact plasma-membrane xenobiotic-export inference linked to PMID:9837819; the ATP7B basolateral target experiment in PMID:15269005; and the ATP7B MitoCoP target evidence/product in PMID:34800366. The unread target panels do not establish wrong-gene attribution. Independently supported copper-response and TGN assertions linked to PMID:15269005 are retained with curatorial deference and an explicit source-reading limitation.
+
+### Alternative products
+
+All five supplied alternative-product objects are preserved. The curated UniProt record distinguishes cytoplasmic isoform 2 from the principal membrane transporter and describes mitochondrial WND/140-kDa material. Selected original mitochondrial experiments in PMID:9600907 involve human tissue and HepG2 material and leave processing unresolved. No cleavage site, correspondence to a particular splice product, or autonomous mitochondrial copper-transport function is inferred. These observations remain non-core product context.
+
+### Source-reading boundaries
+
+The recorded source assessment includes all available cached abstracts, both complete Reactome summaries, and UniProt functional, interaction, localization and alternative-product sections. Later normal records for PMID:38032054 and PMID:9600907 are now available. The former contains XML text; the latter remains abstract-only in the normal cache. Independent selected original reading for the mitochondrial study is attributed separately and does not turn its normal cache into a full article.
+
+- **PMID:9837819 and PMID:26004889:** complete cached abstracts describe human ATP7B complementation in yeast ccc2 models. Growth or iron-uptake rescue is a functional copper-delivery readout, not purified copper flux. The original evidence-code tuples are preserved.
+- **PMID:12029094, PMID:14709553, PMID:15205462 and PMID:16567646:** complete cached abstracts support copper transfer/binding and recombinant domain nucleotide-binding or structural observations. No whole-paper or full-length purified-transport reading is claimed from these abstracts.
+- **PMID:15681833:** the earlier source consultation read complete cached Results, including endogenous/tagged ATP7B, Rab7/NPC1 and U18666A comparisons. Methods and figure pixels were not inspected. The follow-up rechecked the abstract used for the literal annotation anchor.
+- **PMID:16939419:** the normal extraction contains abstract, introduction and discussion, despite its full-text-available flag. It has no Methods or Results section. The reported catalytic-mutant trafficking conclusions retain that boundary; the availability flag itself is unchanged.
+- **PMID:17919502:** the recorded reading covers the complete abstract, Methods and selected COMMD1-association Results in HEK293T/HepG2 cells, including ATP7B residues 1–650. Later degradation Results and complete Discussion were not independently read. The follow-up rechecked the complete abstract and exact interaction anchor.
+- **PMID:22240481:** the recorded reading covers the complete abstract, selected expression/vesicle-assay Methods and the first transport Results, plus bounded variant results. A prior combined display truncated a later catalytic passage; complete Results or whole-paper reading is not claimed. The follow-up rechecked the first transport result and its controls.
+- **PMID:16472602:** the cached abstract includes explicit Methods/Results summaries for endogenous HepG2 localization and CHO wild-type/mutant copper sequestration. The complete article was not read. Annotation and core excerpts are taken from this abstract.
+- **PMID:15269005, PMID:19946888 and PMID:34800366:** exact ATP7B target panels/tables remain unverified. Titles or abstracts foregrounding another protein or a broad survey are not evidence that the curator misidentified ATP7B.
+- **PMID:38032054 and PMID:9600907:** selected original text supports the context and product distinctions above. No figure-pixel or whole-paper endorsement is implied. Normal cache identity, availability and provenance are preserved.
+
+Annotation-level excerpts and the two core excerpts are exact normal-cache substrings. Repeated excerpts count separately toward a maximum of 25 quoted words per source; reference findings retain their substantive paraphrased summaries without duplicating those quotations. These notes use paraphrase rather than an additional layer of quoted text.
+
+### Superseded historical interpretations
+
+Earlier notes and the immutable Falcon report supplied useful leads but also made stronger claims than the inspected evidence supports. The cell-only interpretation of copper import, universal exclusion of plasma-membrane ATP7B, wrong-paralog assertion about PMID:15269005, blanket rejection of mitochondrial material, and guessed correspondence between WND/140-kDa processing and splice products are superseded by the source-specific interpretation above. The original published notes remain preserved with the prior curation history; the provider output and all normal sources are unchanged.
+
+The local GO-CAM index had no ATP7B/P35670 match in the recorded search. This is a local-index observation, not a claim of universal model absence. One copper-transport core is retained, with no new annotations or disease-process assertions.
