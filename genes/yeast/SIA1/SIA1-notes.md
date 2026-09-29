@@ -117,9 +117,10 @@ Pma1 H+-ATPase; molecular mechanism unknown. I will use the BP "regulation of pr
   is an abstract-only refetch for the UniProt ethanol-induction line.
 - Resolved the IBA row against `SIA1-goa.tsv` and `interpro/panther/PTHR32440/PTHR32440-paint.tsv`.
   The row points to `PANTHER:PTN001286392|SGD:S000004353`, and the local PAINT file confirms
-  `PTN001286392` carries `GO:0004721` from the yeast **DCR2** seed. I kept the annotation
-  `KEEP_AS_NON_CORE`, but aligned `propagation_review.source_entities` with the ancestral PTN
-  source expected by the IBA project.
+  `PTN001286392` carries `GO:0004721` from the yeast **DCR2** seed; QuickGO also currently
+  reports SGD experimental phosphoprotein-phosphatase annotations on DCR2 itself. I kept the
+  annotation `KEEP_AS_NON_CORE`, but aligned `propagation_review.source_entities` with the
+  ancestral PTN source expected by the IBA project.
 - Searched current literature for `SIA1`/`YOR137C`/`Pma1` and found no newer paper that directly
   demonstrates SIA1's molecular activity, localization, or SIA1-Pma1 contact. The 2024 Guarini
   et al. Pma1 phosphoregulation paper is relevant pathway context: it places Pma1 S911-T912
