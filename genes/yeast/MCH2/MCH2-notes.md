@@ -164,8 +164,9 @@ sub-gap (mch1-5 quintuple-only phenotype). Validation clean: schema, references,
 Searched for newer MCH2/Mch2/YKL221W publications and did not find a 2024-2026 paper
 that directly identifies MCH2's substrate, localization, or biological role. Re-checked the
 two IBA rows against PANTHER PTHR11360: both GO:0022857 and GO:0005886 are placed at
-PTN002260587, while the thyroid-hormone, L-lactate, riboflavin, monocarboxylate, and
-apical-plasma-membrane assertions sit on narrower descendant nodes and do not propagate to MCH2.
+PTN002260587, while the monocarboxylate, riboflavin, thyroid-hormone, lactate, creatine,
+carboxylic-acid, and basolateral-plasma-membrane assertions sit on narrower descendant
+nodes and do not propagate to MCH2.
 The generic transporter IBA is still supported; the plasma-membrane IBA remains a plausible
 but not directly demonstrated localization and was aligned with the IBA project by tracing
 `propagation_review.source_entities` to the PAINT ancestral node rather than to the extant
