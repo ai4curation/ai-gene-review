@@ -191,8 +191,9 @@ are therefore expected; existing human reviews still link normally.
 | ASL | Definitive | PREEXISTING_REVIEW_AUGMENTED | Ready #3385; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-asl` | [#3385](https://github.com/ai4curation/ai-gene-review/pull/3385) |
 | ASH1L | Definitive | NORMAL_PENDING_SEED_REVIEWED | Review #3387 merged; current-head approval and required CI passed; all 17 scoped merged blobs verified | `cmungall/clingen-ash1l` | [#3387](https://github.com/ai4curation/ai-gene-review/pull/3387) |
 | ASNS | Definitive | NORMAL_PENDING_SEED_REVIEWED | Ready #3438; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-asns` | [#3438](https://github.com/ai4curation/ai-gene-review/pull/3438) |
-| ASPA | Definitive | NORMAL_PENDING_SEED_REVIEWED | Ready #3440; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-aspa` | [#3440](https://github.com/ai4curation/ai-gene-review/pull/3440) |
+| ASPA | Definitive | NORMAL_PENDING_SEED_REVIEWED | Review #3440 merged; current-head approval and required CI passed; all 25 scoped merged blobs verified | `cmungall/clingen-aspa` | [#3440](https://github.com/ai4curation/ai-gene-review/pull/3440) |
 | ASS1 | Definitive | DRAFT (existing authored review) | Ready #3473; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-ass1` | [#3473](https://github.com/ai4curation/ai-gene-review/pull/3473) |
+| ASPM | Definitive | ABSENT | Ready #3501; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-aspm` | [#3501](https://github.com/ai4curation/ai-gene-review/pull/3501) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -204,16 +205,16 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **114 of 2,876 genes
-are complete**; 115 original gene PRs have merged, with 1 requiring source
-follow-ups. The campaign has 123 dedicated full-audit PRs.
+signed publication/file checks and append-only receipt chains. **115 of 2,876 genes
+are complete**; 116 original gene PRs have merged, with 1 requiring source
+follow-ups. The campaign has 124 dedicated full-audit PRs.
 
 The table records independently verified publication and completion states. A published
 source follow-up, imported normal cache, approval, successful CI and verified merge are
 separate events. Earlier source-gate lists describe their historical publication time.
 The original ALB PENDING seed and every prior publication/history receipt remain intact.
 
-ARSL (#3382) and ASAH1 (#3383) are complete after exact-head approval, successful required tests and verification of every merged scoped blob. ASAH1’s earlier UNKNOWN mergeability check stopped before mutation; a later CLEAN check followed a verified disjoint external main advance. Its missing raw first-checker output remains disclosed. ASPA (#3440), ASL (#3385) and ASNS (#3438) have published followups; ASS1 (#3473) is a newly recorded audit. These four publication events await their own exact-head review, CI and merge. Twenty-one completed historical imports are now reconciled: Source50–58 plus Seed13–18 primary and auxiliary closures, comprising 67 exact creates without overwrite. This reconciliation performs no new cache writes and grants no gene completion. Source59 and Seed19/later recovery events remain outside this fixed cut. The APC2 failed local premerge gate and subsequent verified merge retain their recorded execution deviation. AKR1D1 remains incomplete because its required Reactome record is unresolved. All prior policy holds, quota observations, publication chains and histories are preserved.
+ASPA (#3440) is complete after exact-head approval, successful required tests and verification of all 25 merged scoped blobs and 18 PR additions. ASPM (#3501) is newly recorded as a published audit with 13 exact additions; approval, required CI and verified merge remain separate. Completed Source59 and Source60 imports and Seed19/20 primary and auxiliary closures are acknowledged but their ledger reconciliation is deferred to a separate bounded checkpoint; Seed20 auxiliary created no files and preserved existing sources. No import or source-run success grants gene completion. All previously reconciled imports, publication chains and historical status observations remain unchanged. The APC2 failed local premerge gate and its execution deviation, and the ASAH1 stopped UNKNOWN observation with missing raw checker output, remain preserved without retrospective PASS. AKR1D1 remains incomplete because its required Reactome record is unresolved. All policy holds and quota observations remain.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -661,3 +662,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-09-28 checkpoint74: Record the verified ASH1L merge; completed Source50–58 and Seed13–18 imports await separate ledger reconciliation; no new source or seed imports enter this cut. Preserve the APC2 failed local gate and the exact-head quota/CI observations. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ASH1L. 112/2,876 complete; 113 original merges; 1 pending source follow-ups; 122 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
 
 - 2026-09-29 checkpoint75: Record the verified ARSL and ASAH1 merges, the ASPA/ASL/ASNS published followups, the ASS1 initial publication and 21 completed Source50–58/Seed13–18 import events. Reconciliation grants no extra gene completion and performs no new cache writes. Preserve the APC2 failed local gate and the exact-head quota/CI observations. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ARSL, ASAH1. 114/2,876 complete; 115 original merges; 1 pending source follow-ups; 123 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
+
+- 2026-09-29 checkpoint76: Record the verified ASPA merge and ASPM initial publication. Completed Source59/60 and Seed19/20 primary and auxiliary imports await a separately bounded ledger reconciliation; this cut performs no cache writes. Preserve the APC2 failed local gate and the exact-head quota/CI observations. Authored successors follow verified effective branch heads while preserving earlier synchronization receipts. Newly complete: ASPA. 115/2,876 complete; 116 original merges; 1 pending source follow-ups; 124 full-audit PRs. Preserve all prior histories, source receipts and original merge identities.
