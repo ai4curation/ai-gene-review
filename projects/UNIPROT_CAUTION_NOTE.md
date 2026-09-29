@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
 genes: [RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2, DPYSL2, DPYSL3, DPYSL4, CRMP1, ILK, ROR1, CASP12, AZIN2]
+manifest:
+  slides:
+    - href: UNIPROT_CAUTION_NOTE/slides/UNIPROT_CAUTION_NOTE-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/MXs2GAexVfUiJm199ytbVq
+      title: Project brief
 ---
 
 # UniProt CAUTION Note Project
@@ -439,7 +445,3 @@ database-wide distribution without fetching genes: 14,513 reviewed entries,
 against the 148 reviewed-CAUTION genes we already have yields a 4,046-entry
 high-value worklist — the basis for a prioritized deep dive (starting with human
 pseudo-enzymes flagged by degenerate-domain cautions).
-
-## Slides
-
-- [Slides](UNIPROT_CAUTION_NOTE/slides/UNIPROT_CAUTION_NOTE-slides.html) (Marp source: [UNIPROT_CAUTION_NOTE-slides.md](UNIPROT_CAUTION_NOTE/slides/UNIPROT_CAUTION_NOTE-slides.md)) — AI generated

@@ -5,6 +5,12 @@ tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human, mouse, rat, yeast, SCHPO, DROME, DANRE, ARATH, BOVIN, CANAL, CRIGR, ECOLI, NEUCR, ASPNG, SALTY, HYPJE, worm]
 sidecars:
   genes: UNFOLDED_PROTEIN_BINDING/genes.csv
+manifest:
+  slides:
+    - href: UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/Pq1dTSSsM9XnT98HnZ6ab8
+      title: Project brief
 ---
 # Unfolded Protein Binding Annotation Review
 
@@ -85,10 +91,6 @@ patching.
 > "co-chaperone activity" is obsolete, and (4) how the post-obsoletion replacement gap for
 > in-situ holdases should be repaired. Detailed review YAMLs are in `genes/<SPECIES>/<GENE>/`.
 > Validate with: `just validate-all` (writes `reports/validation-all.tsv`).
-
-## Slides
-
-- [Slides](../../projects/UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html) (AI generated)
 
 ## Terminology
 

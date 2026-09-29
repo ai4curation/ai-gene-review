@@ -7,6 +7,12 @@ sidecars:
     - FUNCTION_KNOWLEDGE_GAPS/slides/dark-score-decomposed.svg
     - FUNCTION_KNOWLEDGE_GAPS/slides/gap-anatomy.svg
     - FUNCTION_KNOWLEDGE_GAPS/slides/gap-register-counts.svg
+manifest:
+  slides:
+    - href: FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/Atsg3qcaESE4Psj7FDs2Um
+      title: Project brief
 ---
 
 # Function Knowledge Gaps
@@ -1005,7 +1011,3 @@ human/SOCS4/SOCS5, human/RFT1, worm/pef-1, worm/fshr-1, SCHPO/alo1, and DESVH/Q7
   unlocatable KCTD14 CUL3-non-binding claim was dropped. General principle adopted: **provenance for
   a gap must be a verified primary source or a checkable repo fact (GOA evidence codes), never an
   unverified deep-research summary** — see the new "Reviewing deep-research output" section.
-
-## Slides
-
-- [Slides](FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.html) (Marp source: [FUNCTION_KNOWLEDGE_GAPS-slides.md](FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.md)) — AI generated

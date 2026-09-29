@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [APP, PSEN1, PSEN2, APOE, TREM2, SORL1, ABCA7, ADAM10, BACE1, NCSTN, APH1A, APH1B, PSENEN, CLU, BIN1, PICALM, CD33, CR1, CD2AP, INPP5D, PLCG2, ABI3, SPI1, MS4A4A, MS4A6A, EPHA1, FERMT2, CASS4, MAPT, GSK3B, CDK5, CDK5R1, LRP1, ABCA1]
+manifest:
+  slides:
+    - href: ALZHEIMER_DISEASE/slides/ALZHEIMER_DISEASE-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/UnNzWTgnMmSE5mZaEPUCuG
+      title: Project brief
 ---
 
 # Alzheimer Disease Gene Review Project
@@ -667,7 +673,3 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleRe
   processing, gamma-secretase-mediated intramembrane proteolysis,
   apolipoprotein/lipoprotein transport, microglial lipid-debris sensing, tau
   microtubule biology, or endocytic adaptor trafficking.
-
-## Slides
-
-- [Slides](ALZHEIMER_DISEASE/slides/ALZHEIMER_DISEASE-slides.html) (Marp source: [ALZHEIMER_DISEASE-slides.md](ALZHEIMER_DISEASE/slides/ALZHEIMER_DISEASE-slides.md)) — AI generated

@@ -36,6 +36,12 @@ external_sources:
   - https://deliverome.org/platform/
   - https://deliverome.org/platform/progress/
   - https://geneontology.org/docs/go-annotations/
+manifest:
+  slides:
+    - href: DELIVEROME/slides/DELIVEROME-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/6c2seZotkYZQ22pTQxPvMR
+      title: Project brief
 ---
 
 # Deliverome GO Collaboration
@@ -179,7 +185,3 @@ The human and mouse comparison is reassuring for GO transfer: both reviews conve
 - Mouse Rab7/Rab7a is the best current model-system anchor for Deliverome's endosomal routing question: it provides in vivo evidence that Rab7-mediated late endosomal maturation can suppress LNP cytosolic escape by routing cargo toward degradative compartments.
 - Human RAB7A and mouse Rab7/Rab7a should be kept aligned on conserved core terms, while using human for disease genetics and mouse for tissue and in vivo delivery physiology.
 - The SynGO annotations from PMID:24217640 support AMPA-receptor movement toward late endosomal/lysosomal compartments during LTD, but the accessible paper text emphasizes stargazin/AP-2/AP-3A rather than Rab7 itself. These rows are retained only as non-core neuronal-context annotations, not as primary Rab7 biology.
-
-## Slides
-
-- [Slides](DELIVEROME/slides/DELIVEROME-slides.html) (Marp source: [DELIVEROME-slides.md](DELIVEROME/slides/DELIVEROME-slides.md)) — AI generated

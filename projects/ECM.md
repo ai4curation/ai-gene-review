@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [AGRN, HSPG2, EPYC, SPOCK1, SPOCK2, SPOCK3, NID1, FN1, DCN, SPARC]
+manifest:
+  slides:
+    - href: ECM/slides/ECM-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/GsehR2DwujN5p72k3Y33K4
+      title: Project brief
 ---
 
 # Extracellular Matrix (ECM) Project
@@ -68,7 +74,3 @@ Started: 2025-11-10
 - **FN1**: Cell adhesion, migration, wound healing
 - **DCN**: Collagen fibrillogenesis, TGF-β regulation
 - **SPARC**: Parent family member, Ca²⁺ binding, collagen binding, anti-adhesive
-
-## Slides
-
-- [Slides](ECM/slides/ECM-slides.html) (Marp source: [ECM-slides.md](ECM/slides/ECM-slides.md)) — AI generated

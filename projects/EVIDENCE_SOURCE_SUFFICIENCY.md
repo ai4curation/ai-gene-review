@@ -2,6 +2,12 @@
 title: "EVIDENCE_SOURCE_SUFFICIENCY"
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
+manifest:
+  slides:
+    - href: EVIDENCE_SOURCE_SUFFICIENCY/slides/EVIDENCE_SOURCE_SUFFICIENCY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/1E5N6CURrZmbvxXEgk6uh7
+      title: Project brief
 ---
 
 # EVIDENCE_SOURCE_SUFFICIENCY
@@ -171,7 +177,3 @@ the reproducible stratified sample (30 genes, 484 ACCEPT annotations, seed
   sources* are enough to confirm one.
 - **`AD_HOC_BIOINFORMATICS.md`** — bioinformatics analyses are themselves a
   `publication_type: BIOINFORMATICS` evidence source tracked by this analysis.
-
-## Slides
-
-- [Slides](EVIDENCE_SOURCE_SUFFICIENCY/slides/EVIDENCE_SOURCE_SUFFICIENCY-slides.html) (Marp source: [EVIDENCE_SOURCE_SUFFICIENCY-slides.md](EVIDENCE_SOURCE_SUFFICIENCY/slides/EVIDENCE_SOURCE_SUFFICIENCY-slides.md)) — AI generated

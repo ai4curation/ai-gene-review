@@ -4,6 +4,12 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH]
+manifest:
+  slides:
+    - href: CUPROPTOSIS/slides/CUPROPTOSIS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/85LwTAVJUnCY6yJFKHcXnh
+      title: Project brief
 ---
 
 # Cuproptosis (Copper-Dependent Cell Death) Project
@@ -155,10 +161,6 @@ The lipoic acid post-translational modification on TCA-cycle E2 enzymes is the
   process role, not a new MF.
 - Watch for over-annotation of every lipoylation/TCA gene with a generic
   "cell death" process term where the experimental support is indirect.
-
-## Slides
-
-- [Slides](CUPROPTOSIS/slides/CUPROPTOSIS-slides.html) (Marp source: [CUPROPTOSIS-slides.md](CUPROPTOSIS/slides/CUPROPTOSIS-slides.md)) — AI generated
 
 ## Key References
 

@@ -7,6 +7,12 @@ sidecars:
   slide_figures:
     - PHOSPHORYLATION_REFACTOR/slides/phospho-results.svg
     - PHOSPHORYLATION_REFACTOR/slides/who-does-the-step.svg
+manifest:
+  slides:
+    - href: PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/FZZCXiuP5Hpq5kY7s6nMFh
+      title: Project brief
 ---
 
 # Phosphorylation Annotation Refactor Project
@@ -2015,7 +2021,3 @@ source databases (MGI, GOA).
 - **GOOD**: FlyBase (3 rows / 2 genes), TAIR (4 rows)
 - **MODERATE**: RGD (11 errors, mostly ISS transfers)
 - **NEEDS REVIEW**: MGI (~20 errors), GOA (~45 errors)
-
-## Slides
-
-- [Slides](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html) (Marp source: [PHOSPHORYLATION_REFACTOR-slides.md](PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.md)) — AI generated

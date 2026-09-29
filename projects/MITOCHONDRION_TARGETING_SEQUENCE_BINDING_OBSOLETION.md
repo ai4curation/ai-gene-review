@@ -8,6 +8,12 @@ sidecars:
   slide_assets:
     - MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/import-route.svg
     - MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/term-map.svg
+manifest:
+  slides:
+    - href: MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/9cUTrMWePSbqsUwiuS3bXt
+      title: Project brief
 ---
 
 # Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement
@@ -276,7 +282,3 @@ obsoletions, but no curator group is blocked waiting on AI Gene Review.
   same PTN000364156 node as yeast TIM22). Yeast ACL4 stays `UNDECIDED` with no
   replacement. This corrects the earlier "already `REMOVE`" description of ACL4.
   The PAP2 and ComplexPortal TIM23 cases remain open.
-
-## Slides
-
-- [Slides](MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.html) (Marp source: [MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.md)) — AI generated

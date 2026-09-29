@@ -8,6 +8,12 @@ sidecars:
   slide_assets:
     - BGC/slides/complex-pairs.svg
     - BGC/slides/eryCII-review-table.jpg
+manifest:
+  slides:
+    - href: BGC/slides/BGC-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/JVCyoqSc6xLv4upJ5x28fH
+      title: Project brief
 ---
 
 # Biosynthetic Gene Cluster (BGC) Enzyme Complexes Project
@@ -247,7 +253,3 @@ UniProt carries a "lacks the ... binding sites" CAUTION.
   `projects/ENZYME_SPECIFICITY.md` (EryCIII TDP-vs-UDP donor),
   `projects/STRUCTURE_FUNCTION.md` (catalytic-residue presence/absence calls),
   `projects/TOP_NOTS.md` (NOT candidates: heme-less P450, active-site-less condensing folds).
-
-## Slides
-
-- [Slides](BGC/slides/BGC-slides.html) (Marp source: [BGC-slides.md](BGC/slides/BGC-slides.md)) — AI generated

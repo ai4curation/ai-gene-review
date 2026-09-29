@@ -3,6 +3,12 @@ title: "Top-Nots: Candidate NOT Annotations from Existing Reviews"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, mouse, yeast, SCHPO, DROME, ANOGA, ACET2, BACSU, DESVH, ECOLI, METEA, METTP, PSEAE, PSEPK, SALTY, CANGA, CLOCL, ARATH, worm]
+manifest:
+  slides:
+    - href: TOP_NOTS/slides/TOP_NOTS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/Dcpr2BwERF8TFxPXiUiycg
+      title: Project brief
 ---
 # Top-Nots: Candidate NOT Annotations from Existing Reviews
 
@@ -293,10 +299,6 @@ Family members that have lost the signature catalytic activity.
 ## In Progress
 - [ ] Literature verification of Tier 1 candidates
 - [ ] Formal NOT annotation proposals
-
-## Slides
-
-- [Slides](TOP_NOTS/slides/TOP_NOTS-slides.html) (Marp source: [TOP_NOTS-slides.md](TOP_NOTS/slides/TOP_NOTS-slides.md)) — AI generated
 
 Last updated: 2026-03-06
 

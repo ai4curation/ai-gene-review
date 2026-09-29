@@ -3,6 +3,12 @@ title: "COSCIENTIST"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human, ECOLI, MYCTU, METJA, SCHPO, worm]
+manifest:
+  slides:
+    - href: COSCIENTIST/slides/COSCIENTIST-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/9qccr18p9kHwufWPqF1tjh
+      title: Project brief
 ---
 
 # COSCIENTIST

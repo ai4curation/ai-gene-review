@@ -2,6 +2,12 @@
 title: "Structure-Based Function Prediction for Gene Review"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+manifest:
+  slides:
+    - href: STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/9LtNVgeV5JyNbBwHNAtzYt
+      title: Project brief
 ---
 
 # Structure-Based Function Prediction for Gene Review
@@ -423,7 +429,3 @@ DUF4246 is not in our current review pipeline, but this demonstrates a generaliz
 - For REE-related proteins (mll cluster, lut cluster, lanM): does structural analysis reveal additional functional sites missed by InterPro?
 - How well do 3Di-based methods handle multi-domain proteins where domain orientation matters?
 - For fold-switching proteins: can we detect these computationally and flag them during review?
-
-## Slides
-
-- [Slides](STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.html) (Marp source: [STRUCTURE_FUNCTION-slides.md](STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.md)) — AI generated

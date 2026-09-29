@@ -11,6 +11,12 @@ genes:
   - lsdB
   - Q53353
   - RCO1
+manifest:
+  slides:
+    - href: STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/LocaBRZyx9MgonQTLUDrJF
+      title: Project brief
 ---
 
 # Stilbene Cleavage Oxygenases (SCO / LSD family)
@@ -139,9 +145,5 @@ experimental evidence separates them.
   two-anchor architecture in a way that explains their differing hydroxylation requirements?
 - Should GO adopt the proposed *stilbene α,β-dioxygenase activity* grouping as the parent of the
   reaction-specific leaves?
-
-## Slides
-
-- [Slides](STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html) (Marp source: [STILBENE_CLEAVAGE_OXYGENASES-slides.md](STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.md)) — AI generated
 
 **Source**: [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review)

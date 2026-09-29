@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [ARATH]
 genes: [AT4G17750, AT5G16820, AT1G32330, AT3G02990, AT2G26150, AT1G74310, AT5G02500, AT5G52640, DREB2A, AT5G03720]
+manifest:
+  slides:
+    - href: ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/LccgRwveX3WD36dBzUGemZ
+      title: Project brief
 ---
 
 # Arabidopsis Heat Stress Gene Curation Project
@@ -202,7 +208,3 @@ All four HSFA1 family members fully characterized with functional distinctions:
 - Locus identifiers (AT codes) confirmed via TAIR database
 - Focus on experimentally validated functions
 - Pay special attention to mutant phenotypes (triple KO, hot1-3, hsfa2)
-
-## Slides
-
-- [Slides](ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.html) (Marp source: [ARATH_HEAT_STRESS-slides.md](ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.md)) — AI generated

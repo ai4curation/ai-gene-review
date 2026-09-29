@@ -10,6 +10,12 @@ sidecars:
     - PATHWAY_SATISFIABILITY/slides/fig-lobule.svg
     - PATHWAY_SATISFIABILITY/slides/fig-tissues.svg
     - PATHWAY_SATISFIABILITY/slides/module-circuit.svg
+manifest:
+  slides:
+    - href: PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/6RKzB26ZBXGu1RH5tPgmD1
+      title: Project brief
 ---
 
 # Pathway satisfiability
@@ -223,7 +229,3 @@ exact commands to reproduce every result above are in the companion notebook:
 - Apply the engine to additional curated modules (it is module-agnostic).
 - Promote the resolvers from `modules/experimental/` into a small CLI once the oracle
   interfaces stabilise.
-
-## Slides
-
-- [Slides](PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.html) (Marp source: [PATHWAY_SATISFIABILITY-slides.md](PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.md)) — AI generated

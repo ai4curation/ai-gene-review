@@ -3,6 +3,12 @@ title: "Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [ECOLI, PSEAE]
+manifest:
+  slides:
+    - href: ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/QG3qUxoDDS2zn4KB6e6ydj
+      title: Project brief
 ---
 
 # Alkyl Hydroperoxide Reductase Activity — Obsoletion & Replacement
@@ -169,7 +175,3 @@ review is blocked.
   #6396 still open (no comments). Ontology obsoletion PR
   geneontology/go-ontology#32015 already merged. No gene reviews
   started in this repo.
-
-## Slides
-
-- [Slides](ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.html) (Marp source: [ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.md](ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.md)) — AI generated

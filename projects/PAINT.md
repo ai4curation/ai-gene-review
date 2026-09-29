@@ -4,6 +4,12 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
+manifest:
+  slides:
+    - href: paint/slides/PAINT-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/ARCY71E1L7Dkzoobx7WyfV
+      title: Project brief
 ---
 
 # PAINT Human No-IBA Gene Review Project
@@ -201,7 +207,3 @@ Completed reviews for:
 - RASA3 - Bifunctional RasGAP
 
 Key finding: PLD3/PLD4/PLD5 nomenclature is misleading - they are exonucleases, not phospholipases.
-
-## Slides
-
-- [Slides](paint/slides/PAINT-slides.html) (Marp source: [PAINT-slides.md](paint/slides/PAINT-slides.md)) — AI generated

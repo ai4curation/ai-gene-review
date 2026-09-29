@@ -12,6 +12,12 @@ genes:
   - CYP24A1
   - CYP27A1
   - CYP3A4
+manifest:
+  slides:
+    - href: CALCITRIOL_BIOSYNTHESIS_OBSOLETION/slides/CALCITRIOL_BIOSYNTHESIS_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/4zG7wZUT7XK17Bdaocsw2b
+      title: Project brief
 ---
 
 # Calcitriol Biosynthesis from Calciol — Obsoletion & Replacement
@@ -246,7 +252,3 @@ hydroxylase partners. Skip if higher-priority obsoletions are still open.
   has the PMID:15465040 IDA row as `GO:1901755` (no `GO:0036378` row remains),
   reviewed as `KEEP_AS_NON_CORE`. CYP27B1, CYP2R1, CYP3A4 and CYP24A1 still
   have no review.
-
-## Slides
-
-- [Slides](CALCITRIOL_BIOSYNTHESIS_OBSOLETION/slides/CALCITRIOL_BIOSYNTHESIS_OBSOLETION-slides.html) (Marp source: [CALCITRIOL_BIOSYNTHESIS_OBSOLETION-slides.md](CALCITRIOL_BIOSYNTHESIS_OBSOLETION/slides/CALCITRIOL_BIOSYNTHESIS_OBSOLETION-slides.md)) — AI generated

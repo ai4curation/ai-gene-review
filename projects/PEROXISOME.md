@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [PEX1, PEX2, PEX3, PEX5, PEX6, PEX7, PEX10, PEX11A, PEX11B, PEX11G, PEX12, PEX13, PEX14, PEX16, PEX19, PEX26]
+manifest:
+  slides:
+    - href: PEROXISOME/slides/PEROXISOME-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/7Y2qKPFq916QDfjfp87CRG
+      title: Project brief
 ---
 
 # Peroxisome Biogenesis Project
@@ -222,7 +228,3 @@ Priority is based on: (1) disease prevalence in ZSD, (2) functional centrality,
 - Prioritized Phase 1 as core import/recycling machinery (PEX1, PEX5, PEX6, PEX7, PEX14, PEX26)
 - PEX1 is highest priority: most commonly mutated in Zellweger spectrum disorders
 - Will start with Phase 1 genes, fetching data and performing annotation review
-
-## Slides
-
-- [Slides](PEROXISOME/slides/PEROXISOME-slides.html) (Marp source: [PEROXISOME-slides.md](PEROXISOME/slides/PEROXISOME-slides.md)) — AI generated

@@ -5,8 +5,10 @@ This module converts project markdown files (from projects/) to HTML,
 automatically linking gene symbols to their corresponding gene review pages.
 """
 
+import os
 import re
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote, unquote, urlparse
@@ -141,6 +143,75 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     return frontmatter, remaining
 
 
+class _IndentedListDumper(yaml.SafeDumper):
+    """SafeDumper that indents block sequences under their parent key."""
+
+    def increase_indent(self, flow: bool = False, indentless: bool = False) -> None:
+        return super().increase_indent(flow, False)
+
+
+def set_frontmatter_key(content: str, key: str, value: Any) -> str:
+    """Set one top-level frontmatter key, leaving every other line untouched.
+
+    The key's block is replaced in place if present, otherwise appended at the
+    end of the frontmatter. Only the new block is serialized, so existing key
+    order, quoting, comments and flow style elsewhere are preserved.
+
+    >>> page = '---\\ntitle: "Foo"\\ntags: [A, B]\\n---\\n# Foo\\n'
+    >>> out = set_frontmatter_key(page, "manifest", {"slides": [{"href": "FOO/s.html"}]})
+    >>> print(out, end="")
+    ---
+    title: "Foo"
+    tags: [A, B]
+    manifest:
+      slides:
+        - href: FOO/s.html
+    ---
+    # Foo
+    >>> print(set_frontmatter_key(out, "manifest", {"artifacts": []}), end="")
+    ---
+    title: "Foo"
+    tags: [A, B]
+    manifest:
+      artifacts: []
+    ---
+    # Foo
+    >>> set_frontmatter_key("# no frontmatter", "x", 1)
+    Traceback (most recent call last):
+    ...
+    ValueError: content has no YAML frontmatter block
+    """
+    lines = content.split("\n")
+    end_idx = next(
+        (i for i, line in enumerate(lines[1:], start=1) if line.strip() == "---"),
+        None,
+    ) if content.startswith("---") else None
+    if end_idx is None:
+        raise ValueError("content has no YAML frontmatter block")
+    block = yaml.dump(
+        {key: value},
+        Dumper=_IndentedListDumper,
+        sort_keys=False,
+        allow_unicode=True,
+        default_flow_style=False,
+        width=10_000,
+    ).rstrip("\n").split("\n")
+    start = next(
+        (i for i in range(1, end_idx) if re.match(rf"{re.escape(key)}\s*:", lines[i])),
+        None,
+    )
+    if start is None:
+        start = stop = end_idx
+    else:
+        stop = start + 1
+        # A top-level block continues through indented, list-item and blank lines.
+        while stop < end_idx and (
+            not lines[stop].strip() or lines[stop][0] in " \t-"
+        ):
+            stop += 1
+    return "\n".join(lines[:start] + block + lines[stop:])
+
+
 def _frontmatter_bool(value: Any, default: bool) -> bool:
     """Parse a permissive boolean-like frontmatter value."""
     if isinstance(value, bool):
@@ -165,6 +236,182 @@ def _as_string_list(value: Any) -> List[str]:
     if isinstance(value, (list, tuple, set)):
         return [str(v) for v in value]
     return [str(value)]
+
+
+@dataclass(frozen=True)
+class ManifestKind:
+    """How one resource list under project ``manifest`` frontmatter behaves.
+
+    Attributes:
+        label: Pill/link text used when an entry has no ``title``.
+        allow_local: Whether ``href`` may be a path relative to ``projects/``
+            (otherwise it must be an ``https://`` URL).
+        local_source_suffix: For local targets, a sibling file with this
+            suffix must also exist (e.g. the Marp ``.md`` source of a deck).
+    """
+
+    label: str
+    allow_local: bool
+    local_source_suffix: Optional[str] = None
+
+
+#: Resource lists allowed under project frontmatter ``manifest``, in render
+#: order. Adding a new kind (e.g. ``data``, ``reports``) is one entry here.
+MANIFEST_KINDS: Dict[str, ManifestKind] = {
+    "slides": ManifestKind(label="Slides", allow_local=True, local_source_suffix=".md"),
+    "artifacts": ManifestKind(label="Brief", allow_local=False),
+}
+
+#: Allowed keys inside a single manifest entry.
+MANIFEST_ENTRY_KEYS = {"href", "title", "description"}
+
+
+def _is_https_url(href: str) -> bool:
+    """Return True for an absolute ``https://`` URL.
+
+    >>> _is_https_url("https://claude.ai/artifact/abc")
+    True
+    >>> _is_https_url("http://example.org/x")
+    False
+    >>> _is_https_url("FOO/slides/FOO-slides.html")
+    False
+    """
+    parsed = urlparse(href)
+    return parsed.scheme == "https" and bool(parsed.netloc)
+
+
+def manifest_errors(manifest: Any, projects_dir: Path) -> List[str]:
+    """Return problems with a project's ``manifest`` frontmatter (empty if valid).
+
+    ``manifest`` maps each kind in :data:`MANIFEST_KINDS` to a list of entries
+    with a required ``href`` and optional ``title``/``description``. Local
+    ``href`` values are paths relative to ``projects_dir``.
+
+    >>> ok = {"artifacts": [{"href": "https://claude.ai/artifact/X", "title": "Brief"}]}
+    >>> manifest_errors(ok, Path("projects"))
+    []
+    >>> manifest_errors({"decks": []}, Path("projects"))
+    ["manifest has unknown key(s) ['decks']; allowed keys are ['artifacts', 'slides']"]
+    >>> manifest_errors({"artifacts": [{"href": "FOO/brief.html"}]}, Path("projects"))
+    ["manifest.artifacts[0] href 'FOO/brief.html' must be an https URL"]
+    >>> manifest_errors({"artifacts": [{"url": "https://x.org"}]}, Path("projects"))[0]
+    "manifest.artifacts[0] has unknown key(s) ['url']; allowed keys are ['description', 'href', 'title']"
+    """
+    if not isinstance(manifest, dict):
+        return ["manifest must be a mapping"]
+    errors: List[str] = []
+    unknown = sorted(set(manifest) - set(MANIFEST_KINDS))
+    if unknown:
+        errors.append(
+            f"manifest has unknown key(s) {unknown}; "
+            f"allowed keys are {sorted(MANIFEST_KINDS)}"
+        )
+    root = projects_dir.resolve()
+    for kind, spec in MANIFEST_KINDS.items():
+        entries = manifest.get(kind)
+        if entries is None:
+            continue
+        if not isinstance(entries, list):
+            errors.append(f"manifest.{kind} must be a list")
+            continue
+        for i, entry in enumerate(entries):
+            where = f"manifest.{kind}[{i}]"
+            if not isinstance(entry, dict):
+                errors.append(f"{where} must be a mapping")
+                continue
+            extra = sorted(set(entry) - MANIFEST_ENTRY_KEYS)
+            if extra:
+                errors.append(
+                    f"{where} has unknown key(s) {extra}; "
+                    f"allowed keys are {sorted(MANIFEST_ENTRY_KEYS)}"
+                )
+            for key in ("title", "description"):
+                if key in entry and not isinstance(entry[key], str):
+                    errors.append(f"{where} '{key}' must be a string")
+            href = entry.get("href")
+            if not isinstance(href, str) or not href.strip():
+                errors.append(f"{where} needs a non-empty string 'href'")
+                continue
+            if _is_https_url(href):
+                continue
+            if not spec.allow_local:
+                errors.append(f"{where} href {href!r} must be an https URL")
+                continue
+            target = (projects_dir / href).resolve()
+            if urlparse(href).scheme or not target.is_relative_to(root):
+                errors.append(
+                    f"{where} href {href!r} must be an https URL or a path under projects/"
+                )
+            elif not target.is_file():
+                errors.append(f"{where} href {href!r} does not exist under projects/")
+            elif (
+                spec.local_source_suffix
+                and not target.with_suffix(spec.local_source_suffix).is_file()
+            ):
+                errors.append(
+                    f"{where} href {href!r} has no sibling "
+                    f"{target.with_suffix(spec.local_source_suffix).name} source"
+                )
+    return errors
+
+
+def manifest_resources(
+    frontmatter: Dict[str, Any], md_path: Path, projects_dir: Path
+) -> List[Dict[str, Any]]:
+    """Flatten ``manifest`` frontmatter into render-ready resource links.
+
+    Local hrefs (relative to ``projects_dir``) are re-expressed relative to
+    ``md_path``'s folder, so the link works from the page's rendered location.
+
+    >>> fm = {"manifest": {
+    ...     "artifacts": [{"href": "https://claude.ai/artifact/X"}],
+    ...     "slides": [{"href": "FOO/slides/FOO-slides.html", "title": "Deck"}]}}
+    >>> for r in manifest_resources(fm, Path("projects/FOO.md"), Path("projects")):
+    ...     print(r["kind"], r["label"], r["href"], r["external"])
+    slides Deck FOO/slides/FOO-slides.html False
+    artifacts Brief https://claude.ai/artifact/X True
+    >>> manifest_resources({}, Path("projects/FOO.md"), Path("projects"))
+    []
+    """
+    manifest = frontmatter.get("manifest") or {}
+    resources: List[Dict[str, Any]] = []
+    for kind, spec in MANIFEST_KINDS.items():
+        for entry in manifest.get(kind) or []:
+            href = str(entry["href"])
+            external = _is_https_url(href)
+            if not external:
+                href = Path(
+                    os.path.relpath(projects_dir / href, md_path.parent)
+                ).as_posix()
+            resources.append(
+                {
+                    "kind": kind,
+                    "label": entry.get("title") or spec.label,
+                    "href": href,
+                    "description": entry.get("description"),
+                    "external": external,
+                }
+            )
+    return resources
+
+
+def referenced_manifest_files(md_path: Path, projects_dir: Path) -> List[Path]:
+    """Existing local files under ``projects_dir`` named by ``manifest`` hrefs."""
+    frontmatter, _ = parse_frontmatter(md_path.read_text())
+    manifest = frontmatter.get("manifest") or {}
+    root = projects_dir.resolve()
+    files: List[Path] = []
+    for kind, spec in MANIFEST_KINDS.items():
+        if not spec.allow_local:
+            continue
+        for entry in manifest.get(kind) or []:
+            href = str(entry["href"])
+            if _is_https_url(href):
+                continue
+            candidate = (projects_dir / href).resolve()
+            if candidate.is_file() and candidate.is_relative_to(root) and candidate not in files:
+                files.append(candidate)
+    return files
 
 
 def should_autolink_gene_symbols(frontmatter: Dict[str, Any]) -> bool:
@@ -1097,6 +1344,7 @@ def copy_referenced_assets(
         pending.extend(
             referenced_local_assets(md_file, projects_dir)
             + referenced_frontmatter_sidecars(md_file, projects_dir)
+            + referenced_manifest_files(md_file, projects_dir)
         )
     while pending:
         asset_path = pending.pop(0)
@@ -1306,6 +1554,9 @@ def render_project(
         warnings=warnings,
         frontmatter=frontmatter,
         collections=collections,
+        resources=manifest_resources(
+            frontmatter, md_path, projects_dir if projects_dir is not None else md_path.parent
+        ),
         projects_base_path="../" * subdir_depth,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
@@ -1315,7 +1566,12 @@ def render_project(
     repo_root = projects_dir.resolve().parent if projects_dir is not None else genes_dir.resolve().parent
     # Bundle assets are copied after rendering; retain their mirrored URLs even
     # on a clean build where those output files do not exist yet.
-    mirrored_assets = set(referenced_local_assets(md_path, projects_dir)) if projects_dir is not None else set()
+    mirrored_assets = (
+        set(referenced_local_assets(md_path, projects_dir))
+        | set(referenced_manifest_files(md_path, projects_dir))
+        if projects_dir is not None
+        else set()
+    )
     # Provider report exports may list artifacts that were never archived.
     # Render the same explicit notices as gene research panels, while leaving
     # undeclared broken links visible to the publication audit.
@@ -1494,6 +1750,7 @@ def collect_project_rows(projects_dir: Path) -> List[Dict[str, Any]]:
         review_count = len(manual_reviews) if isinstance(manual_reviews, list) else 0
 
         collections = _as_string_list(frontmatter.get("collections"))
+        resources = manifest_resources(frontmatter, md_path, projects_dir)
         rows.append(
             {
                 "slug": md_path.stem,
@@ -1507,6 +1764,10 @@ def collect_project_rows(projects_dir: Path) -> List[Dict[str, Any]]:
                 "support_count": support_count,
                 "review_status": review_status,
                 "review_count": review_count,
+                "manifest": {
+                    kind: [r for r in resources if r["kind"] == kind]
+                    for kind in MANIFEST_KINDS
+                },
             }
         )
 
@@ -1612,6 +1873,7 @@ def render_projects_table(
         all_species=all_species,
         all_collections=all_collections,
         all_review_statuses=all_review_statuses,
+        manifest_kinds=MANIFEST_KINDS,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 

@@ -3,6 +3,12 @@ title: "Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [human, PSEPK, POPTR, DANRE, METTP, DROME]
+manifest:
+  slides:
+    - href: AMINO_ACID_ACTIVATION_OBSOLETION/slides/AMINO_ACID_ACTIVATION_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/JaNKtV5ieHC144LALVXD27
+      title: Project brief
 ---
 
 # Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs
@@ -384,7 +390,3 @@ the window for contributing the gtpbp3 finding is now.
   `GO:0070149`, `GO:0070153` and `GO:0070155` all verified via the QuickGO
   annotation API. In-repo impact enumerated by parsing all 15 affected review
   YAMLs. No upstream comment posted yet.
-
-## Slides
-
-- [Slides](AMINO_ACID_ACTIVATION_OBSOLETION/slides/AMINO_ACID_ACTIVATION_OBSOLETION-slides.html) (Marp source: [AMINO_ACID_ACTIVATION_OBSOLETION-slides.md](AMINO_ACID_ACTIVATION_OBSOLETION/slides/AMINO_ACID_ACTIVATION_OBSOLETION-slides.md)) — AI generated

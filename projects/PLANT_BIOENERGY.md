@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [ARATH, POPTR, SORBI]
 autolink_gene_symbols: false
+manifest:
+  slides:
+    - href: PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/92U5hqDhdMw4bNbohBwAKP
+      title: Project brief
 ---
 
 # Plant Bioenergy Modules
@@ -108,7 +114,3 @@ documents and are candidates for future dedicated modules.
       feedstocks and to pretreatment).
 - [ ] Per-gene reviews for feedstock-species orthologs (poplar/sorghum) of the
       exemplar enzymes above.
-
-## Slides
-
-- [Slides](PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.html) (Marp source: [PLANT_BIOENERGY-slides.md](PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.md)) — AI generated

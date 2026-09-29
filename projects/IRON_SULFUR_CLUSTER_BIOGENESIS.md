@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [NFS1, ISCU, FXN, LYRM4, HSPA9, HSCB, GLRX5, ISCA1, ISCA2, IBA57, NFU1, BOLA3, ABCB7, CIAO1, MMS19]
+manifest:
+  slides:
+    - href: IRON_SULFUR_CLUSTER_BIOGENESIS/slides/IRON_SULFUR_CLUSTER_BIOGENESIS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/5tZjqRb2tFMCKoamGFVLKA
+      title: Project brief
 ---
 
 # Iron-Sulfur Cluster Biogenesis Project
@@ -96,7 +102,3 @@ Cytosolic/nuclear Fe-S protein maturation:
 
 - [x] HSCB reviewed
 - [ ] Remaining genes need setup
-
-## Slides
-
-- [Slides](IRON_SULFUR_CLUSTER_BIOGENESIS/slides/IRON_SULFUR_CLUSTER_BIOGENESIS-slides.html) (Marp source: [IRON_SULFUR_CLUSTER_BIOGENESIS-slides.md](IRON_SULFUR_CLUSTER_BIOGENESIS/slides/IRON_SULFUR_CLUSTER_BIOGENESIS-slides.md)) — AI generated

@@ -4,6 +4,12 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [OPTN, CALCOCO2, SQSTM1, TAX1BP1, NBR1, TBK1, BNIP3L, VCP]   # reviewed genes only; full candidate list is in the table below
+manifest:
+  slides:
+    - href: MITOPHAGY/slides/MITOPHAGY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/6cKsT95CWm1eYy7upcA6HU
+      title: Project brief
 ---
 
 # PINK1-Parkin Mitophagy Project
@@ -88,7 +94,3 @@ PINK1/Parkin-independent:
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
-
-## Slides
-
-- [Slides](MITOPHAGY/slides/MITOPHAGY-slides.html) (Marp source: [MITOPHAGY-slides.md](MITOPHAGY/slides/MITOPHAGY-slides.md)) — AI generated

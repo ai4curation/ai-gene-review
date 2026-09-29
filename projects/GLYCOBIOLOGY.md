@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human]
 genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1, GALNT1, C1GALT1, C1GALT1C1, GCNT1]
+manifest:
+  slides:
+    - href: GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/UqXg1UcLZY6vA2goRnxuCj
+      title: Project brief
 ---
 
 # Glycobiology Project
@@ -398,7 +404,3 @@ fuller candidate list; these are the already-curated anchors.
   (6) re-review the module cohort for `proposed_new_terms`, which it currently
   under-proposes (1 across 100 genes); (7) extend Phase 3 across the remaining GALNT paralogues and the
   core 3/core 4 and capping steps.
-
-## Slides
-
-- [Slides](GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.html) (Marp source: [GLYCOBIOLOGY-slides.md](GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.md)) — AI generated

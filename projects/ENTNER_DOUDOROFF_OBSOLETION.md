@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [PSEPK]
 genes: [edd, eda, glk]
+manifest:
+  slides:
+    - href: ENTNER_DOUDOROFF_OBSOLETION/slides/ENTNER_DOUDOROFF_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/5RhmT3CyKNu5wKp3pXvmaG
+      title: Project brief
 ---
 
 # Entner-Doudoroff Sub-pathway Obsoletion (GO:0009255, GO:0061679, GO:0061680, GO:0061681)
@@ -194,7 +200,3 @@ reviews, but those are independent of the obsoletion itself.
   GO:0061688 (glycolytic process via Entner-Doudoroff Pathway, replaced_by
   GO:0006096) was handled on PSEPK glk, which stays `ACCEPT` on GO:0006096.
   The E. coli edd/eda and gnd ortholog reviews remain as optional follow-up.
-
-## Slides
-
-- [Slides](ENTNER_DOUDOROFF_OBSOLETION/slides/ENTNER_DOUDOROFF_OBSOLETION-slides.html) (Marp source: [ENTNER_DOUDOROFF_OBSOLETION-slides.md](ENTNER_DOUDOROFF_OBSOLETION/slides/ENTNER_DOUDOROFF_OBSOLETION-slides.md)) — AI generated

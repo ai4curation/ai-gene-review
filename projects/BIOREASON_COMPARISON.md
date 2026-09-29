@@ -15,6 +15,12 @@ sidecars:
   benchmark_metrics: BIOREASON_COMPARISON/benchmark-metrics.json
   second_review_ratings: BIOREASON_COMPARISON/second-review-ratings.csv
   second_review_agreement: BIOREASON_COMPARISON/second-review-agreement.json
+manifest:
+  slides:
+    - href: BIOREASON_COMPARISON/article/slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/DtnNGp5GAUCDokkUYa1eRE
+      title: Project brief
 ---
 # BioReason-Pro Comparison Project
 

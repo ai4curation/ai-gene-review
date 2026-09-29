@@ -3,6 +3,12 @@ title: "Hypochlorous Acid Metabolic Process Terms — Obsoletion"
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [mouse]
+manifest:
+  slides:
+    - href: HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/TzdUqWUZ2PZqr9iAxh7GBe
+      title: Project brief
 ---
 
 # Hypochlorous Acid Metabolic Process Terms — Obsoletion
@@ -156,7 +162,3 @@ review is blocked.
   go-ontology#30524 (closed). Two child BP terms (GO:0002149,
   GO:0002150) still active. No replacement target chosen upstream. No
   reviews started in this repo.
-
-## Slides
-
-- [Slides](HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.html) (Marp source: [HYPOCHLOROUS_ACID_OBSOLETION-slides.md](HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.md)) — AI generated

@@ -4,6 +4,12 @@ maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast]
 genes: [YKT6, CLASP1, CLASP2, WIPI1, AP1AR, GLTP, SPA2]
+manifest:
+  slides:
+    - href: VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/XAjoLKXq6LnhcNxykAmQZq
+      title: Project brief
 ---
 
 # Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement
@@ -247,7 +253,3 @@ until the obsoletion propagates to released annotations.
   affected gene is reviewed in this repo, so nothing needs refresh —
   held as a forward-looking tracking project. No gene reviews
   started.
-
-## Slides
-
-- [Slides](VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.html) (Marp source: [VESICLE_TARGETING_OBSOLETION-slides.md](VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.md)) — AI generated

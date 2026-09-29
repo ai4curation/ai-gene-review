@@ -6,6 +6,12 @@ sidecars:
   slide_charts:
     - RHEA/slides/rhea-ec-masking.svg
     - RHEA/slides/rhea-gap-pilot.svg
+manifest:
+  slides:
+    - href: RHEA/slides/RHEA-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/X9HRwXhBWGyMBDYHrcnios
+      title: Project brief
 ---
 
 # RHEA → GO Contribution & Gap Project
@@ -310,7 +316,3 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
   most valuable contribution to this project is the **reverse direction** —
   surfacing UniProt-annotated enzyme activities that never propagate to GO — once
   exact-match gaps are corrected by ontology-closure filtering.
-
-## Slides
-
-- [Slides](RHEA/slides/RHEA-slides.html) (Marp source: [RHEA-slides.md](RHEA/slides/RHEA-slides.md)) — AI generated

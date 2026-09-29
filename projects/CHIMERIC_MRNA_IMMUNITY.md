@@ -8,6 +8,12 @@ sidecars:
   slide_figures:
     - CHIMERIC_MRNA_IMMUNITY/slides/attribution.svg
     - CHIMERIC_MRNA_IMMUNITY/slides/trans-splicing-mechanism.svg
+manifest:
+  slides:
+    - href: CHIMERIC_MRNA_IMMUNITY/slides/CHIMERIC_MRNA_IMMUNITY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/DA8KLya8H2EUtc279huYwc
+      title: Project brief
 ---
 
 # Chimeric mRNA Trans-Fusions in Immunity
@@ -142,7 +148,3 @@ whereas many catalogued chimeras are cancer-associated or of unproven function.
 - **PMID:42686912** — Venezia O, Kane H, et al. (senior author R. Jackson). *Functional
   chimeric mRNAs encode proteins in mammalian immunity.* Nature, 2 Sep 2026.
   DOI: 10.1038/s41586-026-10982-x. (Primary source; PubMed-verified.)
-
-## Slides
-
-- [Slides](CHIMERIC_MRNA_IMMUNITY/slides/CHIMERIC_MRNA_IMMUNITY-slides.html) (Marp source: [CHIMERIC_MRNA_IMMUNITY-slides.md](CHIMERIC_MRNA_IMMUNITY/slides/CHIMERIC_MRNA_IMMUNITY-slides.md)) — AI generated

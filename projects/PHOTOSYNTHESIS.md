@@ -3,6 +3,12 @@ title: "Photosynthesis Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [CHLRE, ARATH]
+manifest:
+  slides:
+    - href: PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/YKYcxNMSUMYDFoTjF54wiD
+      title: Project brief
 ---
 
 # Photosynthesis Project
@@ -163,10 +169,6 @@ According to PubMed (verified):
 - [ ] Module E — CBB cycle: rbcL, rbcS, rca, PRK, gapA/gapB
 - [ ] Module F — CCM: LCIA/B, CCM1, carbonic anhydrases
 - [ ] Module G — pigment biosynthesis: CHLH, POR
-
-## Slides
-
-- [Slides](PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.html) (Marp source: [PHOTOSYNTHESIS-slides.md](PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.md)) — AI generated
 
 # NOTES
 

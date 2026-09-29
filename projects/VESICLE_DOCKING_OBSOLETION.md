@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [human]
 genes: [USO1, STX12]
+manifest:
+  slides:
+    - href: VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/ScwarepnxD4tbNoBeWw92e
+      title: Project brief
 ---
 
 # Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)
@@ -291,7 +297,3 @@ whereas CaMKIIα is a regulator and forces a harder per-gene judgment.
 - 2026-09-27 — #3237 merged, so both affected reviews (USO1, STX12)
   are refreshed on `main`. Maturity moves to IN_PROGRESS: the Tier-1
   refresh is done and only the Tier 2/3 new-review queue remains.
-
-## Slides
-
-- [Slides](VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.html) (Marp source: [VESICLE_DOCKING_OBSOLETION-slides.md](VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.md)) — AI generated

@@ -79,6 +79,12 @@ genes:
   - yakA
   - statA
   - statC
+manifest:
+  slides:
+    - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/AUT3cgCPXmUUG57tko5G9C
+      title: Project brief
 ---
 
 # IBA Annotation Quality Project
@@ -834,10 +840,6 @@ Before a strong `REMOVE` on an IBA row, record that these checks were done:
 - `review.reason` states the biological rationale, while
   `review.propagation_review` records the mechanical root cause, failure modes,
   and source entities.
-
-## Slides
-
-- [Slides](IBA_REVIEW/slides/IBA_REVIEW-slides.html) (Marp source: [IBA_REVIEW-slides.md](IBA_REVIEW/slides/IBA_REVIEW-slides.md)) — AI generated
 
 ## IBA Quality Issues
 

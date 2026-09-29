@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [ire-1, xbp-1, pek-1, atf-6, hsp-4, atf-4, atfs-1, dve-1, ubl-5, hsp-6, hsp-60, clpp-1, gcn-2, abu-1, lin-65, met-2, jmjd-3.1, ocr-2]
+manifest:
+  slides:
+    - href: CAEEL_UPR_STRESS/slides/CAEEL_UPR_STRESS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/GhbVGvzpDdWA5Wgpt4KqiD
+      title: Project brief
 ---
 
 # C. elegans Unfolded Protein Response & Stress Integration Project
@@ -224,7 +230,3 @@ Convergent signaling:
 3. JMJD-3.1 acts locus-specifically in stress response (unlike UTX-1 global developmental regulator)
 4. OCR-2 requires OSM-9 heteromerization for polymodal sensory function
 5. MET-2/LIN-65 complex establishes H3K9me2 marks for transgenerational UPR-mt inheritance
-
-## Slides
-
-- [Slides](CAEEL_UPR_STRESS/slides/CAEEL_UPR_STRESS-slides.html) (Marp source: [CAEEL_UPR_STRESS-slides.md](CAEEL_UPR_STRESS/slides/CAEEL_UPR_STRESS-slides.md)) — AI generated

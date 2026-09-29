@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human]
 genes: [ABCD3]
+manifest:
+  slides:
+    - href: REACTOME_GAP_FILLING/slides/REACTOME_GAP_FILLING-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/CMwsBhXeKDFnUm7CoieU39
+      title: Project brief
 ---
 
 # Reactome Black Box Event Gap-Filling
@@ -133,7 +139,3 @@ Beyond bile acid metabolism, several Reactome pathway areas are rich in BBEs ame
 - [Reactome R-HSA-382575](https://reactome.org/content/detail/R-HSA-382575) — ABCD1-3 dimers transfer LCFAs
 - [Reactome R-HSA-194068](https://reactome.org/content/detail/R-HSA-194068) — Bile acid metabolism pathway
 - [Reactome R-HSA-1369062](https://reactome.org/content/detail/R-HSA-1369062) — ABC transporters in lipid homeostasis
-
-## Slides
-
-- [Slides](REACTOME_GAP_FILLING/slides/REACTOME_GAP_FILLING-slides.html) (Marp source: [REACTOME_GAP_FILLING-slides.md](REACTOME_GAP_FILLING/slides/REACTOME_GAP_FILLING-slides.md)) — AI generated

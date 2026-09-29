@@ -7,6 +7,12 @@ species: [NICAT]
 sidecars:
   genes: NICOTINE_BIOSYNTHESIS/genes.csv
   review_jobs: NICOTINE_BIOSYNTHESIS/review_jobs.csv
+manifest:
+  slides:
+    - href: NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/UnQ9Raqh1BixjT3CMmvgdH
+      title: Project brief
 ---
 # Nicotine Biosynthesis Project
 
@@ -215,10 +221,6 @@ Important caveats:
 - [x] Advance all currently launched NICAT aliases beyond `INITIALIZED`.
 - [ ] Resolve a stable public accession for `NaNAMNH`.
 - [ ] Revisit whether `NaNUP` belongs in the core transport batch after the minimal metabolon is reviewed.
-
-## Slides
-
-- [Slides](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html) (Marp source: [NICOTINE_BIOSYNTHESIS-slides.md](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.md)) — AI generated
 
 ## Sources
 

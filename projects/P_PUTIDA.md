@@ -9,6 +9,12 @@ sidecars:
     - P_PUTIDA/slides/d-ala-hole.svg
     - P_PUTIDA/slides/module-first-workflow.svg
     - P_PUTIDA/slides/ppu00470-batch-page.jpg
+manifest:
+  slides:
+    - href: P_PUTIDA/slides/P_PUTIDA-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
+      title: Project brief
 ---
 
 # P. putida Gene Annotation Review Project
@@ -502,7 +508,3 @@ as a hypothesis source unless it adds curation-changing evidence.
 
 Opened draft PR [#1874](https://github.com/ai4curation/ai-gene-review/pull/1874)
 for the `ppu00400` / `tryptophan_biosynthesis` pilot batch.
-
-## Slides
-
-- [Slides](P_PUTIDA/slides/P_PUTIDA-slides.html) (Marp source: [P_PUTIDA-slides.md](P_PUTIDA/slides/P_PUTIDA-slides.md)) — AI generated

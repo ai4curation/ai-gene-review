@@ -4,6 +4,12 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [SEC62, ATL3, ULK1, ATG9A, EIF2AK3]   # reviewed genes only; full candidate list is in the table below
+manifest:
+  slides:
+    - href: ER_PHAGY/slides/ER_PHAGY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/JUWPntJaSWNzA2RferrHAX
+      title: Project brief
 ---
 
 # ER-phagy (Selective ER Autophagy) Project
@@ -84,7 +90,3 @@ Proteins that bridge ER to autophagosomes via LC3-interacting regions (LIRs):
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
-
-## Slides
-
-- [Slides](ER_PHAGY/slides/ER_PHAGY-slides.html) (Marp source: [ER_PHAGY-slides.md](ER_PHAGY/slides/ER_PHAGY-slides.md)) — AI generated

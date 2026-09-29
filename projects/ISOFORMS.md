@@ -6,6 +6,12 @@ genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, F
 species: [human, mouse, rat, DROME]
 sidecars:
   genes: ISOFORMS/genes.csv
+manifest:
+  slides:
+    - href: ISOFORMS/slides/ISOFORMS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/7VHDo7VPudGeN5Lo7yzWtU
+      title: Project brief
 ---
 # ISOFORMS: Genes with Clear Functional Differences Between Isoforms
 
@@ -410,7 +416,3 @@ Initial project creation. Research conducted on classic isoform cases:
 **Decision on DSCAM**: Include with caveats - human DSCAM does NOT have the 38,016 isoform diversity of *Drosophila* Dscam1. The vertebrate equivalent is clustered protocadherins. Still worth reviewing but with lower priority.
 
 **Next steps**: Begin with AGRN as it has clear, well-documented isoform-specific functions with clinical relevance.
-
-## Slides
-
-- [Slides](ISOFORMS/slides/ISOFORMS-slides.html) (Marp source: [ISOFORMS-slides.md](ISOFORMS/slides/ISOFORMS-slides.md)) — AI generated

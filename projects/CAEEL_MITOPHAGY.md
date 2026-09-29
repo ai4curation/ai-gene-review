@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [pink-1, pdr-1, dct-1, drp-1, fzo-1, eat-3, bec-1, lgg-1, lgg-2, sqst-1, atg-18, epg-5, atfs-1, hlh-30, skn-1, miro-1, spg-7]
+manifest:
+  slides:
+    - href: CAEEL_MITOPHAGY/slides/CAEEL_MITOPHAGY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/MZfV4C54x9an6CVWB5c81V
+      title: Project brief
 ---
 
 # C. elegans Mitophagy & Mitochondrial Quality Control Project
@@ -267,7 +273,3 @@ All 5 longevity & regulation genes reviewed (fundc-1 omitted at the time as lack
 
 ### Project Complete!
 All 17 genes (6 + 6 + 5) across 3 priority levels have been reviewed. Only pathway summary integration remains.
-
-## Slides
-
-- [Slides](CAEEL_MITOPHAGY/slides/CAEEL_MITOPHAGY-slides.html) (Marp source: [CAEEL_MITOPHAGY-slides.md](CAEEL_MITOPHAGY/slides/CAEEL_MITOPHAGY-slides.md)) — AI generated

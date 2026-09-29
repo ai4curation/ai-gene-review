@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [NDUFS1, NDUFV1, NDUFS2, NDUFS4, ACAD9, SDHA, SDHB, SDHC, SDHD, SDHAF2, CYC1, UQCRFS1, UQCRC1, BCS1L, COX4I1, COX4I2, COX5B, COX6A1, COX6B1, NDUFA4, SURF1, SCO1, SCO2, COX10, COX15, LRPPRC, ATP5F1A, ATP5F1B, ATP5MC1, ATP5MC2, ATP5MC3, ATP5IF1, TMEM70, CYCS, COQ8A, ETFDH]
+manifest:
+  slides:
+    - href: OXPHOS/slides/OXPHOS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/2epY9vXE7hr4YB697cQHWY
+      title: Project brief
 ---
 
 # Oxidative Phosphorylation (OXPHOS) Project
@@ -397,7 +403,3 @@ plus mobile electron carriers and assembly factors. 7 genes already reviewed fro
 projects (ATP5MC1/2/3, CYC1, COX5B, TMEM70, LRPPRC). 25 new genes prioritized across
 three tiers. Complex II (SDH) genes are particularly interesting due to dual TCA/ETC
 function and tumor suppressor roles.
-
-## Slides
-
-- [Slides](OXPHOS/slides/OXPHOS-slides.html) (Marp source: [OXPHOS-slides.md](OXPHOS/slides/OXPHOS-slides.md)) — AI generated

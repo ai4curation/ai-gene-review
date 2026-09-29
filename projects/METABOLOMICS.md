@@ -2,6 +2,12 @@
 title: "Metabolomics Interpretation with GO and GO-CAM"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+manifest:
+  slides:
+    - href: METABOLOMICS/slides/METABOLOMICS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/1n4HSQCXjJ6ogACVmJMQGu
+      title: Project brief
 ---
 
 # Metabolomics Interpretation with GO and GO-CAM
@@ -449,7 +455,3 @@ strategy, phasing, and the KEGG-licensing caveat are in
   genes, and GO-CAM causal networks — giving a GO-native, closure-aware,
   multi-omics-compatible alternative/complement to KEGG/SMPDB/mummichog
   enrichment.
-
-## Slides
-
-- [Slides](METABOLOMICS/slides/METABOLOMICS-slides.html) (Marp source: [METABOLOMICS-slides.md](METABOLOMICS/slides/METABOLOMICS-slides.md)) — AI generated

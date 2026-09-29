@@ -4,6 +4,12 @@ maturity: COMPLETE
 tags: [PIPELINE, FLAGSHIP]
 species: [CANAL, human, SACEN]
 genes: [LPL1, GND1, PHYKPL, eryCIII, ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2]
+manifest:
+  slides:
+    - href: ENZYME_SPECIFICITY/slides/ENZYME_SPECIFICITY-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/16YgnHyBS1PjY9QWUZgZwZ
+      title: Project brief
 ---
 
 # Enzyme Specificity Project
@@ -332,7 +338,3 @@ GO→RHEA chaining check (now generalized into the module tooling) surface a
 reaction-specificity mapping gap — `GO:0004300` maps to RHEA:20724 (the (3E)
 variant) rather than the canonical (2E) crotonase RHEA:16105. Logged for the
 RHEA project (`projects/RHEA/RHEA-EC-SPECIFICITY.md`).
-
-## Slides
-
-- [Slides](ENZYME_SPECIFICITY/slides/ENZYME_SPECIFICITY-slides.html) (Marp source: [ENZYME_SPECIFICITY-slides.md](ENZYME_SPECIFICITY/slides/ENZYME_SPECIFICITY-slides.md)) — AI generated

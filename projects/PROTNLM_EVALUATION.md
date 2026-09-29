@@ -341,6 +341,12 @@ genes:
 - worm/C28G1.2
 - worm/dpm-1
 - worm/wdr-23
+manifest:
+  slides:
+    - href: PROTNLM_EVALUATION/protnlm_evaluation_slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/XSJYGbkxkq6cVsDY6ifBQb
+      title: Project brief
 ---
 # ProtNLM2 Evaluation
 

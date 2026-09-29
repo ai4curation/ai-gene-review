@@ -3,6 +3,12 @@ title: "Ciliary Basal Body-Plasma Membrane Docking — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [human]
+manifest:
+  slides:
+    - href: CILIARY_BASAL_BODY_DOCKING_OBSOLETION/slides/CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/WkiiVnceKdNuUeX5QEKU7r
+      title: Project brief
 ---
 
 # Ciliary Basal Body-Plasma Membrane Docking — Obsoletion & Replacement
@@ -192,7 +198,3 @@ this a natural moment to tackle it.
   already removed; Reactome RAB3IP fix scheduled for June 2026 release;
   MGI/UniProt/Xenbase/ZFIN direct annotations still pending. No gene reviews
   started yet in this repo.
-
-## Slides
-
-- [Slides](CILIARY_BASAL_BODY_DOCKING_OBSOLETION/slides/CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.html) (Marp source: [CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.md](CILIARY_BASAL_BODY_DOCKING_OBSOLETION/slides/CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.md)) — AI generated

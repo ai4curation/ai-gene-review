@@ -9,6 +9,12 @@ sidecars:
     - NITV2_PATHWAYS/slides/actions-bar.svg
     - NITV2_PATHWAYS/slides/kdpC-review-table.jpg
     - NITV2_PATHWAYS/slides/potassium-systems.svg
+manifest:
+  slides:
+    - href: NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/SYDG4JC3arG7b3fFiuq6UK
+      title: Project brief
 ---
 
 # Nitratidesulfovibrio vulgaris Pathways Project
@@ -256,7 +262,3 @@ Key findings from annotation reviews:
 
 4. **c-di-AMP signaling**:
    - The second messenger c-di-AMP binds to RCK regulatory subunits to modulate K+ uptake capacity, linking potassium homeostasis to broader cellular signaling networks.
-
-## Slides
-
-- [Slides](NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.html) (Marp source: [NITV2_PATHWAYS-slides.md](NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.md)) — AI generated

@@ -4,6 +4,12 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
 autolink_gene_symbols: false
+manifest:
+  slides:
+    - href: YEAST_METABOLIC_ENGINEERING/slides/YEAST_METABOLIC_ENGINEERING-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/PhjFARuVnF4cXY1B4wqBXb
+      title: Project brief
 ---
 
 # Yeast Metabolic Engineering & Bioproduction
@@ -83,7 +89,3 @@ Last updated: 2025-12-30
 - Selected metabolic engineering & bioproduction as focus area
 - Identified 10 candidate genes spanning primary alcohol production, byproduct suppression, and central carbon metabolism
 - Ready to begin gene review workflow
-
-## Slides
-
-- [Slides](YEAST_METABOLIC_ENGINEERING/slides/YEAST_METABOLIC_ENGINEERING-slides.html) (Marp source: [YEAST_METABOLIC_ENGINEERING-slides.md](YEAST_METABOLIC_ENGINEERING/slides/YEAST_METABOLIC_ENGINEERING-slides.md)) — AI generated

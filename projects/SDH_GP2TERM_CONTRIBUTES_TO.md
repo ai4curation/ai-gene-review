@@ -8,6 +8,12 @@ sidecars:
   slide_figures:
     - SDH_GP2TERM_CONTRIBUTES_TO/slides/complex-ii-relations.svg
     - SDH_GP2TERM_CONTRIBUTES_TO/slides/qualifier-audit.svg
+manifest:
+  slides:
+    - href: SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/J1xwYhcpMh2DgVVs3VobX4
+      title: Project brief
 ---
 
 # Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)
@@ -215,7 +221,3 @@ upstream qualifier change propagates.
   (merged 2026-09-27): GOA `enables` GO:0008177 rows → `MODIFY`, each gene gains a paired
   `NEW` GO:0008177 `contributes_to` row (IDA, PMID:37098072). Open:
   SDHA GO:0000104, 9POAL NCGR_LOCUS67308, PSEPK sdhA/sdhB.
-
-## Slides
-
-- [Slides](SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.html) (Marp source: [SDH_GP2TERM_CONTRIBUTES_TO-slides.md](SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.md)) — AI generated

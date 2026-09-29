@@ -2,6 +2,12 @@
 title: "Review Quality Audit"
 maturity: MATURE
 tags: [PIPELINE, EVALUATION]
+manifest:
+  slides:
+    - href: REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/UW3xrt3nFrBrQUhq3QxrsD
+      title: Project brief
 ---
 
 # Review Quality Audit
@@ -140,7 +146,3 @@ effort and where over-annotation is most likely.
   over-annotation patterns these hub-gene reviews tend to contain.
 - [BEHAVIOR](BEHAVIOR.md) — behaviour over-annotations; several flagged genes
   (Mtor, Hsp90aa1, Pten, Drd1) also carry behaviour terms.
-
-## Slides
-
-- [Slides](REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.html) (Marp source: [REVIEW_QUALITY_AUDIT-slides.md](REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.md)) — AI generated

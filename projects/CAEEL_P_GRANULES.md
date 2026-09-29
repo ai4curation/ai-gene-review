@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [pgl-1, pgl-2, pgl-3, glh-1, glh-4, meg-3, meg-4, prg-1, csr-1, deps-1, wago-1, znfx-1, mut-16, meg-1, meg-2, mbk-2, mex-5, car-1, cgh-1]
+manifest:
+  slides:
+    - href: CAEEL_P_GRANULES/slides/CAEEL_P_GRANULES-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/5cREn2bg18z6AMLszSedou
+      title: Project brief
 ---
 
 # C. elegans P Granule/Germ Granule Dynamics Project
@@ -254,7 +260,3 @@ While *C. elegans* specific, P granule biology informs:
 - **glh-1**: VASA-like DEAD box helicase, essential for P granule integrity
 - **meg-3/meg-4**: IDR proteins that drive phase separation
 - These genes are critical for understanding P granule biophysics
-
-## Slides
-
-- [Slides](CAEEL_P_GRANULES/slides/CAEEL_P_GRANULES-slides.html) (Marp source: [CAEEL_P_GRANULES-slides.md](CAEEL_P_GRANULES/slides/CAEEL_P_GRANULES-slides.md)) — AI generated

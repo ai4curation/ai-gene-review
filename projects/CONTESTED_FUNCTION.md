@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [SCHPO, SACEN, PSEAE, STRCO]
 genes: [Epe1, eryCII, pqsB, actI-ORF2]
+manifest:
+  slides:
+    - href: CONTESTED_FUNCTION/slides/CONTESTED_FUNCTION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/GW82WzsUznCSPvHxx9WdXV
+      title: Project brief
 ---
 
 # Contested Function Project
@@ -141,10 +147,6 @@ A gene belongs in this project if:
 ## Pending
 - [ ] Identify additional pseudo-enzyme candidates
 - [ ] Screen for over-annotated IBA/IEA annotations in reviewed genes
-
-## Slides
-
-- [Slides](CONTESTED_FUNCTION/slides/CONTESTED_FUNCTION-slides.html) (Marp source: [CONTESTED_FUNCTION-slides.md](CONTESTED_FUNCTION/slides/CONTESTED_FUNCTION-slides.md)) — AI generated
 
 Last updated: 2026-01-22
 

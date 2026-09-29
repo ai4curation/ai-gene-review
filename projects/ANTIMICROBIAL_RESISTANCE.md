@@ -10,6 +10,12 @@ sidecars:
     - ANTIMICROBIAL_RESISTANCE/slides/aro2go-table.jpg
     - ANTIMICROBIAL_RESISTANCE/slides/candidates-by-term.svg
     - ANTIMICROBIAL_RESISTANCE/slides/cfr-review-table.jpg
+manifest:
+  slides:
+    - href: ANTIMICROBIAL_RESISTANCE/slides/ANTIMICROBIAL_RESISTANCE-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/96q6dgRv3WdTTC6pcCoT4z
+      title: Project brief
 ---
 
 # Antimicrobial Resistance (AMR) Project
@@ -351,7 +357,3 @@ A working pipeline applies the ARO→GO mapping to UniProt records: `projects/AN
 **Source**: AI Gene Review project, [ai4curation/ai-gene-review](https://github.com/ai4curation/ai-gene-review). CARD/ARO are products of the Comprehensive Antibiotic Resistance Database (card.mcmaster.ca), CC-BY 4.0.
 </content>
 </invoke>
-
-## Slides
-
-- [Slides](ANTIMICROBIAL_RESISTANCE/slides/ANTIMICROBIAL_RESISTANCE-slides.html) (Marp source: [ANTIMICROBIAL_RESISTANCE-slides.md](ANTIMICROBIAL_RESISTANCE/slides/ANTIMICROBIAL_RESISTANCE-slides.md)) — AI generated

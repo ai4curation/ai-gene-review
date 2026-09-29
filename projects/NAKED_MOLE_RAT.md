@@ -17,6 +17,12 @@ sidecars:
     - NAKED_MOLE_RAT/slides/cgas-hyal2-failures.svg
     - NAKED_MOLE_RAT/slides/cgas-review-table.jpg
     - NAKED_MOLE_RAT/slides/projection-outcomes.svg
+manifest:
+  slides:
+    - href: NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/QZ1exte7BMGxrEdFcomwvJ
+      title: Project brief
 ---
 
 # Naked Mole Rat (HETGA) Annotation Review
@@ -195,7 +201,3 @@ not for either hyaluronidase. Search partners, paralogs and the pathway, not jus
 
 Several key papers are abstract-only in the cache, including all four cGAS papers and the
 primary NaV1.7 acid-insensitivity paper. Quote only what those abstracts state.
-
-## Slides
-
-- [Slides](NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.html) (Marp source: [NAKED_MOLE_RAT-slides.md](NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.md)) — AI generated

@@ -4,6 +4,12 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, DROME, mouse]
 genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2, Acadl, Acadvl, Egm, Mcad, Arc42, CG4860, Mtpalpha, Echs1, scu, Mtpbeta, Acaa, Acat1, Dci, Ech1, CG4592, CG4594, CG4598]
+manifest:
+  slides:
+    - href: FATTY_ACID_BETA_OXIDATION/slides/FATTY_ACID_BETA_OXIDATION-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/CFSC1azmzHYyEFApt15dV7
+      title: Project brief
 ---
 
 # Mitochondrial Fatty Acid β-Oxidation (cross-species)
@@ -329,7 +335,3 @@ and IMP L-valine catabolic process from PMID:40056416 / PMID:39727068). Re-fetch
 with `-u Q7JR58 --force` (merged, preserving reviewed content), reviewed the 10
 newly-surfaced annotations, and re-aligned the review `id` and the module
 `representative_member` for the hydratase step to `Q7JR58`.
-
-## Slides
-
-- [Slides](FATTY_ACID_BETA_OXIDATION/slides/FATTY_ACID_BETA_OXIDATION-slides.html) (Marp source: [FATTY_ACID_BETA_OXIDATION-slides.md](FATTY_ACID_BETA_OXIDATION/slides/FATTY_ACID_BETA_OXIDATION-slides.md)) — AI generated

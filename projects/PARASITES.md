@@ -9,6 +9,12 @@ sidecars:
     - PARASITES/slides/host-interface.svg
     - PARASITES/slides/reviewed-entries.svg
     - PARASITES/slides/cpi-2-review-table.jpg
+manifest:
+  slides:
+    - href: PARASITES/slides/PARASITES-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/3qU2zXzH22ZaEpAM2QAsoR
+      title: Project brief
 ---
 
 # Parasites
@@ -124,7 +130,3 @@ as reviews are scoped.
 - [SATELLITE_MODEL_ORGANISMS](SATELLITE_MODEL_ORGANISMS.md) — non-parasitic
   comparative nematodes (*C. briggsae*) and necromenic associates
   (*P. pacificus*); some insect-parasitic nematodes are cross-listed there.
-
-## Slides
-
-- [Slides](PARASITES/slides/PARASITES-slides.html) (Marp source: [PARASITES-slides.md](PARASITES/slides/PARASITES-slides.md)) — AI generated

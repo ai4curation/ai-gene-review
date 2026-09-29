@@ -4,6 +4,12 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [TOMM40, TOMM20, TOMM22, TOMM70, TOMM5, TOMM6, TOMM7, SAMM50, MTX1, MTX2, MTCH2, CHCHD4, GFER, TIMM23, TIMM17A, TIMM50, TIMM21, TIMM22, TIMM44, PAM16, HSPA9, PMPCA, PMPCB]
+manifest:
+  slides:
+    - href: MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.html
+  artifacts:
+    - href: https://claude.ai/artifact/QQQefrEZVFhvdvALWSZA78
+      title: Project brief
 ---
 
 # Mitochondrial Import Pathways Project
@@ -125,7 +131,3 @@ The project should review key components of each import pathway. Priority genes 
   - [x] MTCH2 — metazoan MIM insertase (22 annotations reviewed)
   - [ ] Remaining genes (TIMM23, TIMM22, SAMM50, GFER, TOMM22, TOMM70, etc.)
 - [ ] Propose GO term hierarchy
-
-## Slides
-
-- [Slides](MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.html) (Marp source: [MITOCHONDRIAL_IMPORT_PATHWAYS-slides.md](MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.md)) — AI generated

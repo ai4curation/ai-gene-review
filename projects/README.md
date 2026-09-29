@@ -74,6 +74,22 @@ genes: [GPX4, ACSL4]           # OPTIONAL: only when the gene set is small + exp
 - **`genes`** — optional; include only when the set is small and clearly bounded
   (or backed by a `FOO/genes.csv` sidecar). Large/open-ended gene lists belong in
   the project body or a sidecar, not in frontmatter.
+- **`manifest`** — optional companion resources, as typed lists (test-enforced):
+  `slides` (a deck `.html` path relative to `projects/` with its Marp `.md`
+  beside it, or an `https://` URL) and `artifacts` (`https://` only, e.g. the
+  project's Claude brief). Each entry needs `href` and may carry `title` and
+  `description`. They render as a link bar under the page title and as
+  Slides/Brief columns in the all-projects table, so the deck link does not also
+  belong in the page body.
+
+  ```yaml
+  manifest:
+    slides:
+      - href: FERROPTOSIS/slides/FERROPTOSIS-slides.html
+    artifacts:
+      - href: https://claude.ai/artifact/XXXX
+        title: Project brief
+  ```
 
 ### Known exceptions
 
