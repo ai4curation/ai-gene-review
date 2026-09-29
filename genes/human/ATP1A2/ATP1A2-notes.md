@@ -62,3 +62,20 @@ After verified Source70 import, the complete normal PMID12805306 main text was r
 ## Canonical validation, 2026-09-29
 
 Focused validation (`just validate human ATP1A2`) passed with one advisory for the non-core generic beta-subunit binding row. Its verified interaction context is retained under the action policy. HTML rendering passed. A matching history record was scaffolded with `just new-history`; its validation is recorded separately. No new repository-wide validation PASS is claimed. All 19 normal source records, raw UniProt/GOA files and provider-attempt evidence are preserved.
+
+
+## Binding and chemical-classification clarification, 2026-09-29
+
+The existing IPI interaction with human beta1 (UniProtKB:P05026) is refined to **GO:0046982 protein heterodimerization activity**. The [GO definition and parents](https://amigo.geneontology.org/amigo/term/GO:0046982) identify this as a molecular-function subtype of protein dimerization, describing association with a nonidentical protein into a heterodimer. The [complete PMID:23954377 abstract](https://pubmed.ncbi.nlm.nih.gov/23954377/) describes alpha2 G900R/E902K at the alpha/beta interface and likely impairment of that interaction. The partner accession comes from the unchanged GOA IPI assertion; the abstract does not independently map it or expose the interaction assay. The prior alpha2/beta1 functional-assembly evidence supplies biological context. This refines the existing binding row; it neither replaces molecular function with a complex term nor adds a duplicate NEW annotation.
+
+The requested exact chemical relationship appears in the official [ChEBI:472805 ouabain record](https://www.ebi.ac.uk/chebi/CHEBI:472805), outgoing relations, rechecked on 2026-09-29:
+
+- `CHEBI:472805 (ouabain) is_a CHEBI:26764 (steroid hormone)`.
+- Separately, `CHEBI:472805 is_a CHEBI:38092 (cardenolide glycoside)`.
+- Its `has_role CHEBI:38147 (cardiotonic drug)` relation describes another aspect and does not replace either class assertion.
+
+Thus the two steroid-hormone-binding rows retain their non-core decisions. The steroid-binding and steroid-stimulus-response reasons now also name the explicit axiom. The classification is not an inference that every steroid is a hormone and does not establish endogenous endocrine physiology. The previously documented microsomal binding and intact-oocyte current experiments remain distinct evidence types; no new original-paper reading beyond the complete PMID:23954377 abstract is claimed in this follow-up.
+
+The ATP-metabolism comment concerns the existing GO:0046034 row (the review comment named GO:0006200). It remains ACCEPT because alpha2 performs ATP hydrolysis as part of the core transport reaction, which the single GO:0005391 core already states. The distilled core need not duplicate all broad parent annotations. The two cardiac specificity cautions remain MARK_AS_OVER_ANNOTATED: this follow-up adds no evidence that would warrant escalating the conservative calls to REMOVE. Other physiological and unresolved donor-assay decisions are unchanged. The older notes remain an append-only record; this section provides the concise biological rationale for the current changes.
+
+The independently reviewed follow-up passed focused validation (`just validate human ATP1A2`, 3fd1e7), rendering (f2c5c7), and validation of the new EDIT history record `2026-09-29T201203Z-codex-06c8e5.yaml` (399a22). The single generic-binding advisory is resolved by the supported molecular-function refinement. No repository-wide validation result is inferred from these focused checks.
