@@ -2,7 +2,7 @@
 ## Saccharomyces cerevisiae (UniProt P18480)
 
 ### Review Status: COMPLETE
-**Total Annotations Reviewed:** 33 review rows representing 36 existing GO annotations
+**Total Annotations Reviewed:** 36 review rows covering 44 GOA annotation rows
 
 ---
 
@@ -10,24 +10,24 @@
 
 ### Annotation Actions Breakdown
 
-**ACCEPT (20 review rows - 60.6%)**
+**ACCEPT (23 review rows - 63.9%)**
 - Core function annotations supported by experimental evidence
 - Proper localization to nuclear/chromatin compartments
 - Well-supported biological and molecular processes
 - High-quality evidence codes (IDA, IMP, IGI, IPI)
 
-**KEEP_AS_NON_CORE (3 review rows - 9.1%)**
+**KEEP_AS_NON_CORE (3 review rows - 8.3%)**
 - Cytosol localization (1 annotation)
   - Minor/transient localization, not primary functional compartment
 - Invasive growth and double-strand break repair processes (2 annotations)
   - Valid but pleiotropic effect of general transcriptional role
 
-**REMOVE (9 review rows - 27.3%)**
+**REMOVE (9 review rows - 25.0%)**
 - Generic "protein binding" annotations with no specific molecular-function replacement
   - Physical interactions are not disputed, but GO:0005515 does not describe a
     specific SNF5 activity
 
-**MODIFY (1 review row - 3.0%)**
+**MODIFY (1 review row - 2.8%)**
 - PMID:32188938 generic "protein binding" refined to GO:0031491 nucleosome binding
   based on cryo-EM support for Snf5 acidic-patch engagement
 
@@ -135,7 +135,7 @@
    - Leverage deep research on metabolic sensing role
 
 ### For Core Function Definition
-The 36 annotations cleanly support ~7 core functions:
+The 36 review rows cleanly support ~7 core functions:
 1. SWI/SNF complex membership (structural)
 2. Nucleosome anchoring (biochemical)
 3. Chromatin remodeling (catalytic)
@@ -183,10 +183,10 @@ All major findings from SNF5-deep-research-perplexity.md have been incorporated:
 ## VALIDATION NOTES
 
 The comprehensive review demonstrates that SNF5 annotations are:
-- **Well-supported:** 60.6% of review rows accepted as core functions
-- **Appropriately conservative:** 9.1% marked as non-core but evidentially valid
-- **Specific:** 27.3% removed and 3.0% refined to eliminate generic protein-binding assertions
-- **Complete:** All 36 source annotations addressed in 33 review rows
+- **Well-supported:** 63.9% of review rows accepted as core functions
+- **Appropriately conservative:** 8.3% marked as non-core but evidentially valid
+- **Specific:** 25.0% removed and 2.8% refined to eliminate generic protein-binding assertions
+- **Complete:** 44 GOA annotation rows addressed in 36 review rows
 
 The generic "protein binding" annotations were removed or, where PMID:32188938
 independently supported acidic-patch engagement, refined to nucleosome binding;
