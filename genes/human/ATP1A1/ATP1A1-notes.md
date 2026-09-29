@@ -178,3 +178,18 @@ Resolve the exact target observations for the eight undecided rows. Human pump a
 A later agent inadvertently repeated the provider command after the earlier closure. That additional attempt also produced no report and returned an API-key diagnostic; it is preserved as an additional failed attempt, not described as the first. The accompanying normal fetch-gene-pmids call completed without new files and preserved all 41 protected files. No further provider retry is planned.
 
 Focused validation passed with 14 advisories for supported generic-binding rows retained as non-core under the user action definitions. There were no schema, term or reference errors in that command. Rendering passed. The review remains DRAFT, and no new repository-wide validation pass is claimed.
+
+
+## Prospective first review response — 2026-09-29
+
+The biological model remains one ATP-driven sodium-export/potassium-import pump. All 127 seeded source objects, four alternative products and the original core are preserved. The 128 archived GOA rows include one pair differing only in date; 127 distinct seeded assertions are reviewed. The 34 catch-all reasons now explain the actual ion, reaction or process and each source type. Remaining summaries distinguish activity, transport and cellular location instead of conflating them.
+
+Ouabain ligand classification is confirmed directly: [CHEBI:472805](https://www.ebi.ac.uk/chebi/CHEBI:472805) explicitly has an is_a relationship to steroid hormone CHEBI:26764 as well as cardenolide glycoside. The non-core binding assertion from human alpha1/alpha2 constructs therefore remains supported [PMID:14742675]. This classification does not establish a cellular signaling response.
+
+The indexed original [PMID:11546672 publisher text](https://journals.physiology.org/doi/abs/10.1152/ajpcell.2001.281.4.C1336) was inspected for membrane preparation, immunoblotting, equilibrium binding, association/dissociation kinetics and relevant Results/Discussion. These are membrane assays. A cell-state endpoint was not verified, so both GO:0071383 and GO:1903416 are proposed UNDECIDED. This supersedes the earlier binding-based retention rationale for these two rows without asserting that ATP1A1 cannot mediate ouabain responses. Complete cached and official identity/abstract evidence remains available; original figure pixels, supplements and every full-paper section were not read, and the normal cache stays abstract-only.
+
+Existing broad annotations are retained when correct at their source scope; the precise child annotations already present carry the narrower function. No duplicate child replacements are manufactured merely to increase the MODIFY count. The general ZNRF-associated complex is retained without guessing a more specific GO complex. Supported generic associations remain non-core under the user's ActionEnum, and the unresolved LCK pair remains UNDECIDED. No binding-policy REMOVE, NEW annotation or second core is introduced.
+
+This prospective response changes only the two response-row actions (74 ACCEPT, 41 KEEP_AS_NON_CORE, 10 UNDECIDED and two MARK_AS_OVER_ANNOTATED). Earlier validation and publication statements above describe the initial version. Canonical application, validation, history and publication of this proposal have not occurred.
+
+Root applied the reviewed proposal after checking all changed reasons, reference fields and 81 summary edits. Focused validation passed on 2026-09-29 with the same 14 generic-binding advisories; source objects, four alternative products and the single pump core are unchanged. The two response claims remain UNDECIDED at the inspected evidence scope. No new repository-wide validation pass is claimed.
