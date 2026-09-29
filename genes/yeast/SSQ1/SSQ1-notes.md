@@ -106,3 +106,21 @@ For YAR1, unanswered report questions are not positive evidence. For SSQ1, the
 located Nop1 association remains recorded while its generic binding label is removed.
 The annotation changes apply only to the relevant gene; no inherited location is
 rejected solely from its best-characterized compartment.
+
+## 2026-09-29 IBA follow-up
+
+- Exact PubMed search for `(SSQ1 OR Ssq1 OR YLR369W) AND "Saccharomyces
+  cerevisiae"` from 2025 onward found no newer SSQ1-specific functional papers;
+  the cached primary literature above remains the relevant source set for target
+  biochemical evidence.
+- Rechecked all seven IBA rows against the current
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv` snapshot. The accepted
+  cytoplasm, mitochondrion, ATP-hydrolysis, heat-shock-protein-binding and
+  iron-sulfur-cluster-assembly calls still map to extant IBD nodes on the Q05931
+  path, including SSQ1 itself as legitimate experimental grounding for several
+  transfers.
+- Left GO:0044183 protein folding chaperone and GO:0042026 protein refolding as
+  `UNDECIDED`: current PAINT still places both assertions at PTN000452648, but
+  the inspected Ssq1 assays establish Isu/Grx5 engagement, ATP-regulated
+  unfolded-substrate binding and antiaggregation rather than a decisive
+  restoration-of-folding-activity result.
