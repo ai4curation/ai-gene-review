@@ -3,7 +3,7 @@
 ## 2026-09-28 IBA and cached-publication pass
 
 - Reviewed `PHD1-ai-review.yaml`, `PHD1-uniprot.txt`, the Falcon and Perplexity deep-research reports, and the cached publications for PMID-backed rows.
-- Current PAINT in `interpro/panther/PTHR47792/PTHR47792-paint.tsv` places all four PHD1 IBA terms at `PANTHER:PTN000917459`: `GO:0005634`, `GO:0003700`, `GO:0043565`, and `GO:0045944`. PHD1 (`P36093`) is in `PTHR47792:SF1`, so these are direct SOK2/PHD1 APSES-family transfers.
+- Current PAINT in `interpro/panther/PTHR47792/PTHR47792-paint.tsv` places all four PHD1 IBA terms at `PANTHER:PTN000917459`: `GO:0005634`, `GO:0003700`, `GO:0043565`, and `GO:0045944`. PHD1 (`P36093`) is in `PTHR47792:SF1`, the only PTHR47792 subfamily; the PAINT node is a broad fungal APSES-family placement rather than a recent PHD1/SOK2-only placement.
 - Several of the IBA donor lists include SGD:S000001526, the PHD1 target itself. That is valid for IBA: PHD1's experimental nuclear-localization, DNA-binding transcription factor, and positive regulation of Pol II transcription rows were descendant evidence used to place APSES-family IBDs.
 - No IBA row needed action changes. The 2024 Cromie et al. structured-colony paper shows background-dependent redundancy of single `phd1` deletion in F13 colonies, but it does not contradict the gain-of-function and cascade evidence that PHD1 positively regulates pseudohyphal growth.
 
