@@ -52,8 +52,9 @@ Journal / working notes for the AI GO-annotation review of *Saccharomyces cerevi
 - PANTHER family **PTHR32440**, subfamily **SF0 "PHOSPHATASE DCR2-RELATED"**. Reviewed SF0 members
   (from PTHR32440-entries.csv): S. cerevisiae **DCR2** (Q05924, "Phosphatase DCR2"), the K. lactis
   SIA1 ortholog (Q6CPQ2), S. pombe SPCC1020.05, and several **Arabidopsis "probable INACTIVE purple
-  acid phosphatase"** proteins (PAP14/16/28/29). The InterPro family text notes the family is in the
-  "purple acid phosphatase family, although some are predicted to be inactive."
+  acid phosphatase"** proteins (PAP14/16/28/29). The local PTHR32440 PAINT cache has
+  `GO:0004721 phosphoprotein phosphatase activity` on **PANTHER:PTN001286392**, seeded from
+  **SGD:S000004353 / DCR2**, matching the 2017 IBA node in SIA1 GOA.
 - Metallophosphatase catalytic signature (the conserved metal-coordinating blocks
   D-x-H…GD-x-x-D…GNH[D/E]…GH-x-H). Manual inspection of the SIA1 sequence finds candidate motifs:
   `QITDFHF` (~315, DxH), `VVITGDLLDS` (~350, GD..D), and `SCGHEHNNDCC` (~575, GH-x-H). So at least
@@ -109,20 +110,31 @@ Pma1 H+-ATPase; molecular mechanism unknown. I will use the BP "regulation of pr
 6. **Broader phenotype.** SGD large-scale phenotypes (altered chemical/UV resistance, abnormal
    vacuolar morphology, competitive-fitness changes) are unexplained at the molecular level.
 
+## 2026-09-29 IBA re-review
+
+- Re-read the cached primary papers for the SIA1 phenotype/name/expression trail:
+  `PMID_9450541.md` and `PMID_11861547.md` are abstract-only; `PMID_11389906.md`
+  is an abstract-only refetch for the UniProt ethanol-induction line.
+- Resolved the IBA row against `SIA1-goa.tsv` and `interpro/panther/PTHR32440/PTHR32440-paint.tsv`.
+  The row points to `PANTHER:PTN001286392|SGD:S000004353`, and the local PAINT file confirms
+  `PTN001286392` carries `GO:0004721` from the yeast **DCR2** seed. I kept the annotation
+  `KEEP_AS_NON_CORE`, but aligned `propagation_review.source_entities` with the ancestral PTN
+  source expected by the IBA project.
+- Searched current literature for `SIA1`/`YOR137C`/`Pma1` and found no newer paper that directly
+  demonstrates SIA1's molecular activity, localization, or SIA1-Pma1 contact. The 2024 Guarini
+  et al. Pma1 phosphoregulation paper is relevant pathway context: it places Pma1 S911-T912
+  phosphorylation under largely redundant Ptk1/Ptk2 kinases and Glc7 PP1 dephosphorylation
+  [PMID:38227612 "In this study, we show that S911-T912 phosphorylation in Pma1 is mediated by the
+  largely redundant Ptk1 and Ptk2 kinase paralogs. Dephosphorylation of S911-T912, as occurs under
+  glucose starvation, is dependent on the Glc7 PP1 phosphatase."]. It still does not close the SIA1
+  mechanistic gap.
+
 ## Files / provenance
 
 - UniProt: genes/yeast/SIA1/SIA1-uniprot.txt
 - GOA: genes/yeast/SIA1/SIA1-goa.tsv
-- PANTHER: interpro/panther/PTHR32440/ (metadata + entries)
+- PANTHER: interpro/panther/PTHR32440/ (metadata, PAINT, entries)
 - Cached pubs: publications/PMID_9450541.md (abstract only), publications/PMID_11861547.md
-  (abstract only). PMID:11389906 (ethanol induction) referenced by UniProt but not central to MF.
-- Deep research: NOT AVAILABLE. Two `just deep-research-falcon yeast SIA1 --fallback
-  perplexity-lite` runs both failed — the Falcon/Edison endpoint repeatedly disconnected
-  (RemoteProtocolError / connection reset) and timed out at 600s, and the perplexity-lite
-  fallback returned HTTP 401 "insufficient_quota". No `-deep-research-*.md` file was produced.
-  Per project rules I did NOT hand-author a file named `-deep-research-{provider}.md`. The
-  review is instead grounded in: UniProt Q12212 (domains/features), the GOA TSV, PANTHER
-  PTHR32440 family data, the SGD locus record (name + curated summary + phenotypes, fetched
-  from the SGD backend API), and the two cached primary papers PMID:9450541 and PMID:11861547.
-</content>
-</invoke>
+  (abstract only), publications/PMID_11389906.md (abstract only), publications/PMID_38227612.md
+  (full text; Pma1 context).
+- Deep research: genes/yeast/SIA1/SIA1-deep-research-falcon.md, used for context only.
