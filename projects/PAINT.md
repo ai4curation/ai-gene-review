@@ -1,11 +1,16 @@
 ---
 title: "PAINT Human No-IBA Gene Review Project"
-maturity: SCOPING
+collections: [HOMOLOGY_PROPAGATION]
+maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
 ---
 
 # PAINT Human No-IBA Gene Review Project
+
+**Bottom line:** PAINT curators annotate ancestral nodes in PANTHER trees, and those calls reach human genes as IBA annotations; human genes with no IBA at all may be poorly characterized, divergent, or lack orthologs with experimental evidence. This project works through a list of 7,593 such genes (7,524 distinct symbols), giving each two deep research reports and a full AI-assisted review of its existing GO annotations. We did this to find where phylogenetic annotation has a gap or a wrong node, and to see what the literature supports for genes that inherit nothing. As of 2026-09-26, 715 of the listed genes have a completed review (not all written under this project), covering 24,409 annotation decisions: 11,926 ACCEPT, 5,786 KEEP_AS_NON_CORE, 2,778 MARK_AS_OVER_ANNOTATED, 1,475 MODIFY, 1,338 REMOVE, 902 NEW and 204 UNDECIDED. The status section below (635 genes, 2026-09-04) predates this count.
+
+The headline lessons are that the no-IBA list is stale (most genes in the 2026-09-04 batch now receive IBAs), that the recurring real gap is families with no molecular-function IBD at all, and that gene names mislead: PLD3 and PLD4, named as phospholipases D, are 5'-3' exonucleases, and PLD5 is catalytically inactive. The 2026-09-04 batch added structured PANTHER FamilyReviews for all 19 of its families; one of them (PTHR48178, PEX2) found an IBD placed on a PEX2/PAF1 name confusion.
 
 ## Overview
 
@@ -21,8 +26,8 @@ For each gene, the workflow generates at least 2 deep research reports (from dif
 ## Data Source
 
 - **Spreadsheet**: https://docs.google.com/spreadsheets/d/12bR3FZ7XrUXL86IKJc__K6QbFBEsSlQeSdiVXwFsjEI/
-- **Local**: `projects/PAINT/human-no-IBA-simple.csv` (format: species,uniprot_id,gene_symbol)
-- **Total genes**: 7,594
+- **Local**: `projects/paint/human-no-IBA-simple.csv` (format: species,uniprot_id,gene_symbol)
+- **Total genes**: 7,593
 
 ## Model Species
 
@@ -76,7 +81,7 @@ just validate human GENE
 List all completed PAINT genes:
 
 ```bash
-comm -12 <(cut -d',' -f3 projects/PAINT/human-no-IBA-simple.csv | sort) \
+comm -12 <(cut -d',' -f3 projects/paint/human-no-IBA-simple.csv | sort) \
          <(grep -l "status: COMPLETE" genes/human/*/*.yaml | xargs dirname | xargs -I{} basename {} | sort)
 ```
 
@@ -89,7 +94,7 @@ Supplementary files in `projects/PAINT/`:
 # STATUS
 
 **Project Statistics (2026-09-04):**
-- Total genes in project: 7,594
+- Total genes in project: 7,593
 - **PAINT genes completed: 635** (8.4%)
 - Ready for review (have deep research but not complete): 6
   (ERVMER34-1, PEX11A, SUMF2, TAX1BP1, TMEM67, TMF1)
@@ -108,7 +113,7 @@ Supplementary files in `projects/PAINT/`:
       GO:0005615 rows that PAINT has already migrated to GO:0005576
 - [ ] Re-derive the no-IBA source list against current GOA (see 2026-09-04 note)
 - [ ] Scale deep research to all genes
-- [ ] Full project completion (7,594 genes)
+- [ ] Full project completion (7,593 genes)
 
 Last updated: 2026-09-04
 
@@ -196,3 +201,7 @@ Completed reviews for:
 - RASA3 - Bifunctional RasGAP
 
 Key finding: PLD3/PLD4/PLD5 nomenclature is misleading - they are exonucleases, not phospholipases.
+
+## Slides
+
+- [Slides](paint/slides/PAINT-slides.html) (Marp source: [PAINT-slides.md](paint/slides/PAINT-slides.md)) — AI generated

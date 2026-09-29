@@ -26,10 +26,11 @@ E. **Summary opener agrees with action.**  The first sentence is what a human
    what gets reworded.
 F. **Propagation review present** on every REMOVE / MARK_AS_OVER_ANNOTATED row
    whose evidence code is not experimental.
-G. **The peptide claim matches the computed data.**  The set of GO ids this
-   review treats as NAP-peptide-derived must equal
-   ``results.json["nap_derived_go_ids"]``, which is computed from QuickGO and
-   PubMed.  Selects on GO id, so rewording cannot drift it.
+G. **Donor provenance matches the saved source data.**  Each saved Compara
+   (GO id, donor) pair must resolve to its review row, source entity and cited
+   donor PMID(s). The saved peptide/protein index must match the per-entry
+   abstract classifications. Neither the action nor root_cause is prescribed:
+   an abstract classification is not a biological verdict on the human row.
 I. **The verdict tally in ``ADNP-notes.md`` equals the computed one.**  Added
    because the first PR body's hand-counted tally was wrong on three of six
    actions.
@@ -109,6 +110,11 @@ StrictLoader.add_constructor(
 
 def norm(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def quote_norm(text: str) -> str:
+    """Ignore layout whitespace, but retain case for verbatim source checks."""
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def walk_quotes(node: Any, path: str = "") -> Iterator[tuple[str, str, str]]:
@@ -195,7 +201,7 @@ def audit(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> list[str]
             problems.append(f"D: no cached source for {ref} (at {path})")
             continue
         checked += 1
-        if norm(text) not in norm(src):
+        if quote_norm(text) not in quote_norm(src):
             problems.append(f"D: quote not verbatim in {ref} at {path}: {text[:80]!r}")
     if checked == 0:
         problems.append("D: zero quotes were actually checked -- refusing to pass vacuously")
@@ -229,29 +235,38 @@ def audit(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> list[str]
                         f"{review['action']} without a propagation_review"
                     )
 
-    # ---- G: peptide claim vs computed data -------------------------------
-    expected_nap = set(results["nap_derived_go_ids"])
-    expected_protein = set(results["protein_derived_go_ids"])
-    if not expected_nap:
-        problems.append("G: results.json lists no NAP-derived terms -- nothing to check against")
-    claimed_nap = set()
-    for ann in annotations:
-        if ann.get("original_reference_id") != "GO_REF:0000107":
+    # ---- G: saved source provenance, independent of curation verdict ------
+    entries = results.get("entries") or []
+    if not entries:
+        problems.append("G: source snapshot has no donor entries")
+    for key, peptide_only in (("nap_derived_go_ids", True), ("protein_derived_go_ids", False)):
+        computed = {
+            e["go_id"] for e in entries
+            if (e["assayed_entity"] == "PEPTIDE_ONLY") == peptide_only
+        }
+        if set(results.get(key) or []) != computed:
+            problems.append(f"G: {key} differs from the saved per-entry classifications")
+    for entry in entries:
+        go_id, donor = entry["go_id"], entry["donor"]
+        rows = [
+            a for a in annotations
+            if a.get("original_reference_id") == "GO_REF:0000107"
+            and a["term"]["id"] == go_id
+            and donor in (a.get("supporting_entities") or [])
+        ]
+        if len(rows) != 1:
+            problems.append(f"G: expected one Compara row for {(go_id, donor)}, found {len(rows)}")
             continue
-        if "UniProtKB:Q9JKL8" not in (ann.get("supporting_entities") or []):
-            continue
-        prop = (ann.get("review") or {}).get("propagation_review") or {}
-        if prop.get("root_cause") == "SOURCE_BAD":
-            claimed_nap.add(ann["term"]["id"])
-    if claimed_nap != expected_nap:
-        problems.append(
-            "G: rows flagged root_cause=SOURCE_BAD do not match the computed "
-            f"NAP-derived set. only-in-YAML={sorted(claimed_nap - expected_nap)} "
-            f"only-in-results.json={sorted(expected_nap - claimed_nap)}"
-        )
-    leaked = claimed_nap & expected_protein
-    if leaked:
-        problems.append(f"G: protein-derived rows flagged as peptide-derived: {sorted(leaked)}")
+        review = rows[0].get("review") or {}
+        entities = (review.get("propagation_review") or {}).get("source_entities") or []
+        if donor not in {e.get("source_id") for e in entities}:
+            problems.append(f"G: {go_id} omits donor {donor} from its propagation source entities")
+        # Donor provenance may be recorded in evidence objects, additional
+        # references or the explicit review/source-comment narrative.
+        cited = set(re.findall(r"PMID:\d+", json.dumps(review)))
+        expected = {c["pmid"] for c in entry["reference_calls"]}
+        if expected - cited:
+            problems.append(f"G: {go_id} omits saved donor references {sorted(expected - cited)}")
 
     # ---- H: core_functions backed by rows --------------------------------
     backed: set[str] = set()
@@ -286,8 +301,8 @@ def audit(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> list[str]
     # records made the inversion explicit, citing Tubb3/Tubb4b rows carrying
     # WITH/FROM RGD:71030.  Those rows come from PMID:16893427, the donor for
     # GO:0048487 -- not for GO:0042277, whose only donor is PMID:14706557 and
-    # which annotates exactly one entity.  The REMOVE stands on entity identity
-    # alone; the tubulin cross-check belongs on the GO:0048487 row, where it is.
+    # which annotates exactly one entity. The tubulin cross-check belongs on
+    # GO:0048487; this guard does not prescribe a curation action for either row.
     #
     # The guard selects on STABLE tokens (a PMID, an RGD id, two gene symbols) --
     # those survive rewording, unlike the conclusion's phrasing.  Stated
@@ -374,6 +389,9 @@ def check_verdict_table(annotations: list[dict], notes: Path | None = None) -> l
     computed = computed_verdicts(annotations)
     if stated != computed:
         return [f"I: notes tally {stated} != computed {computed}"]
+    total = re.search(r"\|\s*\*\*total\*\*\s*\|\s*\*\*(\d+)\*\*\s*\|", match.group(1))
+    if not total or int(total.group(1)) != len(annotations):
+        return ["I: notes total is absent or differs from the annotation count"]
     return []
 
 
@@ -420,7 +438,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"OK: {len(doc['existing_annotations'])} annotations, "
         f"{len(goa_rows)} GOA rows, {sum(1 for _ in walk_quotes(doc))} quotes, "
-        f"{len(results['nap_derived_go_ids'])} peptide-derived terms matched"
+        f"{len(results['entries'])} donor rows reconciled; "
+        f"{len(results['nap_derived_go_ids'])} peptide-screen terms indexed"
     )
     informational = report_only(doc)
     if informational:
@@ -509,26 +528,26 @@ def self_test(doc: dict, raw: str, goa_rows: list[dict], results: dict) -> int:
 
     expect("F-propagation", strip_propagation, "F:")
 
-    def unflag_peptide_row(d, g, s):
+    def lose_donor_reference(d, g, s):
         for ann in d["existing_annotations"]:
             if ann["term"]["id"] == "GO:0050805":
-                ann["review"]["propagation_review"]["root_cause"] = "UNRESOLVED"
+                # A provenance check should detect losing the source citation,
+                # regardless of the chosen curation action or root cause.
+                ann["review"] = json.loads(
+                    json.dumps(ann["review"]).replace("PMID:15963648", "PMID:0")
+                )
                 return True
         return False
 
-    expect("G-drift", unflag_peptide_row, "G:")
+    expect("G-source-citation", lose_donor_reference, "G:")
 
-    def misflag_protein_row(d, g, s):
-        for ann in d["existing_annotations"]:
-            if ann["term"]["id"] == "GO:0030425":
-                ann["review"]["propagation_review"] = {
-                    "root_cause": "SOURCE_BAD",
-                    "source_entities": [{"source_id": "UniProtKB:Q9JKL8"}],
-                }
-                return True
-        return False
+    def drift_source_index(d, g, s):
+        # This value must be derived from saved per-entry classification,
+        # rather than from a human review verdict.
+        s["nap_derived_go_ids"] = []
+        return True
 
-    expect("G-leak", misflag_protein_row, "G:")
+    expect("G-source-index", drift_source_index, "G:")
 
     def reintroduce_withdrawn(d, g, s):
         for ann in d["existing_annotations"]:

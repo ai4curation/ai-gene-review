@@ -2885,6 +2885,19 @@ genes:
 
 # ClinGen Mendelian Disease Genes
 
+**Bottom line:** ClinGen's Gene–Disease Validity curations grade the evidence
+that a gene causes an inherited disease. We seeded a review campaign from the
+2026-09-25 export: every gene with at least one Definitive, Strong, Moderate or
+Limited association, 2,876 genes in all (2,836 nuclear Mendelian, 37
+mitochondrial, 3 undetermined-inheritance follow-ups), each with its disease
+links preserved in the checklist below. Each review assesses the gene product's
+molecular function and GO annotations; a disease link alone does not establish
+a function. Reviews run one gene per PR in evidence-priority order, and existing
+reviews get a fresh audit (747 of the 2,876 genes had a human review in the
+repo on 2026-09-27, mostly from earlier projects). The 2026-09-26 progress log records 14
+merged gene PRs (A4GALT through ACADVL; 607 annotations reviewed), each ticked
+in the checklist below; later merges are added there as they are recorded.
+
 ## Overview
 
 Seed a human gene-function review project from ClinGen's published Gene–Disease
@@ -2995,27 +3008,27 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 
 ### Nuclear Mendelian protein-coding genes: Definitive (2054 genes)
 
-- [ ] **A4GALT** — HGNC:18149; [A4GALT-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e3a8df0-77f1-4395-b501-63a96016e515-2025-05-30T170000.000Z) (MONDO:0100587; AR; Definitive).
-- [ ] **AARS1** — HGNC:20; [AARS1-related leukoencephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3cfbfccc-95a9-4271-b8a2-8b6d2bcc1b27-2025-08-27T170000.000Z) (MONDO:1010132; AD; Limited); [Charcot-Marie-Tooth disease axonal type 2N](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92de3832-c272-4993-8586-288c6331dec2-2024-03-14T160000.000Z) (MONDO:0013212; AD; Definitive); [developmental and epileptic encephalopathy, 29](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_42966231-b079-475d-92e3-b3985a0c2f01-2025-12-19T170000.000Z) (MONDO:0014593; AR; Definitive).
+- [x] **A4GALT** — HGNC:18149; [A4GALT-congenital disorder of glycosylation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e3a8df0-77f1-4395-b501-63a96016e515-2025-05-30T170000.000Z) (MONDO:0100587; AR; Definitive).
+- [x] **AARS1** — HGNC:20; [AARS1-related leukoencephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3cfbfccc-95a9-4271-b8a2-8b6d2bcc1b27-2025-08-27T170000.000Z) (MONDO:1010132; AD; Limited); [Charcot-Marie-Tooth disease axonal type 2N](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92de3832-c272-4993-8586-288c6331dec2-2024-03-14T160000.000Z) (MONDO:0013212; AD; Definitive); [developmental and epileptic encephalopathy, 29](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_42966231-b079-475d-92e3-b3985a0c2f01-2025-12-19T170000.000Z) (MONDO:0014593; AR; Definitive).
 - [x] **AARS2** — HGNC:21022; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_583e237c-18f6-4427-a04f-82ea0f020daf-2022-04-18T160000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **AASS** — HGNC:17366; [hyperlysinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92e04f9e-f03e-4295-baac-e9fb6b48a258-2022-10-14T160000.000Z) (MONDO:0009388; AR; Definitive).
-- [ ] **ABCA3** — HGNC:33; [interstitial lung disease due to ABCA3 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f3e2d402-69a2-496f-af67-ba3aae132eab-2024-09-17T160000.000Z) (MONDO:0012582; AR; Definitive).
-- [ ] **ABCA4** — HGNC:34; [ABCA4-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_38729563-bf36-48ae-929e-fa69a225de39-2022-10-06T160000.000Z) (MONDO:0800406; AR; Definitive).
-- [ ] **ABCB4** — HGNC:45; [progressive familial intrahepatic cholestasis type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_009134d7-b79c-4a90-9bae-c1f302439258-2022-11-23T170000.000Z) (MONDO:0011214; AR; Definitive).
-- [ ] **ABCC6** — HGNC:57; [inherited pseudoxanthoma elasticum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_18edfc74-3c10-4d05-81e1-6622e391efae-2025-10-22T160000.000Z) (MONDO:0100091; SD; Definitive).
+- [x] **AASS** — HGNC:17366; [hyperlysinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_92e04f9e-f03e-4295-baac-e9fb6b48a258-2022-10-14T160000.000Z) (MONDO:0009388; AR; Definitive).
+- [x] **ABCA3** — HGNC:33; [interstitial lung disease due to ABCA3 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f3e2d402-69a2-496f-af67-ba3aae132eab-2024-09-17T160000.000Z) (MONDO:0012582; AR; Definitive).
+- [x] **ABCA4** — HGNC:34; [ABCA4-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_38729563-bf36-48ae-929e-fa69a225de39-2022-10-06T160000.000Z) (MONDO:0800406; AR; Definitive).
+- [x] **ABCB4** — HGNC:45; [progressive familial intrahepatic cholestasis type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_009134d7-b79c-4a90-9bae-c1f302439258-2022-11-23T170000.000Z) (MONDO:0011214; AR; Definitive).
+- [x] **ABCC6** — HGNC:57; [inherited pseudoxanthoma elasticum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_18edfc74-3c10-4d05-81e1-6622e391efae-2025-10-22T160000.000Z) (MONDO:0100091; SD; Definitive).
 - [ ] **ABCC8** — HGNC:59; [hyperinsulinemic hypoglycemia, familial, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_22a96fa9-e835-45fa-9b9d-af37b07ac8d5-2026-01-20T170000.000Z) (MONDO:0009734; AR; Definitive); [hyperinsulinism](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_215c3f2d-c6c7-42b7-8e84-472023ff2378-2026-01-20T170000.000Z) (MONDO:0002177; AD; Definitive); [monogenic diabetes](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_33c0dfa5-c6ea-42fd-8118-be6ff97beb3e-2022-07-24T160000.000Z) (MONDO:0015967; SD; Definitive); [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_14b1739d-8890-4927-8efb-e909f48bad5a-2025-03-12T160000.000Z) (MONDO:0015924; AD; Moderate).
-- [ ] **ABCC9** — HGNC:60; [dilated cardiomyopathy 1O](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8be22ebc-f0f5-4de5-9c2a-382ebd02c533-2026-03-04T170000.000Z) (MONDO:0012062; AD; Limited); [hypertrichotic osteochondrodysplasia Cantu type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_53f8043c-d672-4dfd-a1b7-c5fd6e1cdcae-2025-02-21T170000.000Z) (MONDO:0009406; AD; Definitive).
+- [x] **ABCC9** — HGNC:60; [dilated cardiomyopathy 1O](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8be22ebc-f0f5-4de5-9c2a-382ebd02c533-2026-03-04T170000.000Z) (MONDO:0012062; AD; Limited); [hypertrichotic osteochondrodysplasia Cantu type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_53f8043c-d672-4dfd-a1b7-c5fd6e1cdcae-2025-02-21T170000.000Z) (MONDO:0009406; AD; Definitive).
 - [ ] **ABCD1** — HGNC:61; [adrenoleukodystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_815e0f84-b530-4fd2-81a9-02e02bf352ee-2020-12-18T050000.000Z) (MONDO:0018544; XL; Definitive).
 - [ ] **ABCG5** — HGNC:13886; [sitosterolemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c52c7403-8975-4a3f-8796-a966e977f708-2020-07-10T160000.000Z) (MONDO:0008863; AR; Definitive).
 - [ ] **ABCG8** — HGNC:13887; [sitosterolemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_af59edc2-1148-4dca-b804-192639017b65-2020-07-14T202806.911Z) (MONDO:0008863; AR; Definitive).
 - [ ] **ABHD12** — HGNC:15868; [PHARC syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ccd68c20-2024-4239-be51-26697e19a6b4-2018-06-26T160000.000Z) (MONDO:0012984; AR; Definitive).
 - [ ] **ABHD5** — HGNC:21396; [Dorfman-Chanarin disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_19bf65b3-0c75-46e2-8796-5664ce6dd371-2022-08-02T160000.000Z) (MONDO:0010155; AR; Definitive).
-- [ ] **ACAD8** — HGNC:87; [isobutyryl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0d260f0e-df71-420a-9281-92e4bddcddbb-2019-04-26T160000.000Z) (MONDO:0012648; AR; Definitive).
-- [ ] **ACAD9** — HGNC:21497; [acyl-CoA dehydrogenase 9 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5fad1866-75ce-470f-984c-e64bb7e11168-2018-03-27T160000.000Z) (MONDO:0012624; AR; Definitive).
+- [x] **ACAD8** — HGNC:87; [isobutyryl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0d260f0e-df71-420a-9281-92e4bddcddbb-2019-04-26T160000.000Z) (MONDO:0012648; AR; Definitive).
+- [x] **ACAD9** — HGNC:21497; [acyl-CoA dehydrogenase 9 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5fad1866-75ce-470f-984c-e64bb7e11168-2018-03-27T160000.000Z) (MONDO:0012624; AR; Definitive).
 - [ ] **ACADM** — HGNC:89; [medium chain acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fb987774-0e5b-4466-924f-6f19fccc6599-2018-01-23T170000.000Z) (MONDO:0008721; AR; Definitive).
-- [ ] **ACADS** — HGNC:90; [short chain acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c6bc94e9-cdf2-4efb-b654-004541efc344-2018-01-23T170000.000Z) (MONDO:0008722; AR; Definitive).
-- [ ] **ACADSB** — HGNC:91; [2-methylbutyryl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bfa3857-c96c-40ac-b4c1-2cf04fd4eb4f-2019-03-22T160000.000Z) (MONDO:0012392; AR; Definitive).
-- [ ] **ACADVL** — HGNC:92; [very long chain acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_130ca053-9f40-4fd5-b89c-b9b374694fda-2018-02-20T170000.000Z) (MONDO:0008723; AR; Definitive).
+- [x] **ACADS** — HGNC:90; [short chain acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c6bc94e9-cdf2-4efb-b654-004541efc344-2018-01-23T170000.000Z) (MONDO:0008722; AR; Definitive).
+- [x] **ACADSB** — HGNC:91; [2-methylbutyryl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bfa3857-c96c-40ac-b4c1-2cf04fd4eb4f-2019-03-22T160000.000Z) (MONDO:0012392; AR; Definitive).
+- [x] **ACADVL** — HGNC:92; [very long chain acyl-CoA dehydrogenase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_130ca053-9f40-4fd5-b89c-b9b374694fda-2018-02-20T170000.000Z) (MONDO:0008723; AR; Definitive).
 - [ ] **ACAN** — HGNC:319; [ACAN-related short stature spectrum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fbf745d3-628c-4b90-aaa6-a0e28dd7bae1-2025-05-07T160000.000Z) (MONDO:1060149; AD; Definitive).
 - [ ] **ACAT1** — HGNC:93; [beta-ketothiolase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_99bcab0a-de59-479d-8fe6-8b76cbce90ee-2018-05-22T160000.000Z) (MONDO:0008760; AR; Definitive).
 - [ ] **ACBD5** — HGNC:23338; [acyl-CoA binding domain containing protein 5 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ac052f6-de8d-4c14-adf2-bbecb624defd-2024-06-21T160000.000Z) (MONDO:0100112; AR; Definitive).
@@ -5902,3 +5915,7 @@ Initial source-based seed only. No gene-level curation sign-offs were made.
 
 The review campaign started with A4GALT, AARS1, and AARS2. Each gene receives a
 separate PR and remains unchecked until its review and PR follow-up are complete.
+
+## Slides
+
+- [Slides](CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.html) (Marp source: [CLINGEN_MENDELIAN-slides.md](CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.md)) — AI generated
