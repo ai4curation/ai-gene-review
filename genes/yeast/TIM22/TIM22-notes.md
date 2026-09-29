@@ -11,10 +11,12 @@ current molecular function on that node is `GO:0032977` membrane insertase activ
 added on 2026-07-29, which is a better direct activity term for the Tim22
 carrier-pathway insertase.
 
-`GO:0030943` is obsolete in current GO and should be remapped rather than accepted
-as-is. For TIM22, the receptor replacement `GO:0140436` would be the wrong role:
-Tim22 responds to internal targeting sequences as the signal-gated insertion channel,
-whereas the current PAINT update captures the insertase activity itself.
+QuickGO marks `GO:0030943` obsolete in current GO and notes that it was obsoleted in
+favor of more specific molecular functions. For TIM22, the receptor replacement
+`GO:0140436` would be the wrong role: Kovermann et al.'s signal-recognition evidence
+is real, but Tim22 responds to internal targeting sequences as the signal-gated
+insertion channel, and `GO:0032977` already covers binding a transmembrane-domain
+protein and mediating its integration into the inner membrane.
 
 ## 2026-09-29 literature check
 
