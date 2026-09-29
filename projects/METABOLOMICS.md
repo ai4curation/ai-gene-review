@@ -5,6 +5,7 @@ tags: [PIPELINE]
 manifest:
   slides:
     - href: METABOLOMICS/slides/METABOLOMICS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/1n4HSQCXjJ6ogACVmJMQGu
       title: Project brief

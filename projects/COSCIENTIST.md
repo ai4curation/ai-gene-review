@@ -6,6 +6,7 @@ species: [human, ECOLI, MYCTU, METJA, SCHPO, worm]
 manifest:
   slides:
     - href: COSCIENTIST/slides/COSCIENTIST-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/9qccr18p9kHwufWPqF1tjh
       title: Project brief

@@ -7,6 +7,7 @@ genes: [AGRN, HSPG2, EPYC, SPOCK1, SPOCK2, SPOCK3, NID1, FN1, DCN, SPARC]
 manifest:
   slides:
     - href: ECM/slides/ECM-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/GsehR2DwujN5p72k3Y33K4
       title: Project brief

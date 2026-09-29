@@ -7,6 +7,7 @@ genes: [Camk2a, Septin5, tom-1]
 manifest:
   slides:
     - href: SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/S1zALM2bz3sWnCmAk4ucMa
       title: Project brief

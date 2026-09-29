@@ -7,6 +7,7 @@ species: [human]
 manifest:
   slides:
     - href: paint/slides/PAINT-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/ARCY71E1L7Dkzoobx7WyfV
       title: Project brief

@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: PHOSPHORYLATION_REFACTOR/slides/PHOSPHORYLATION_REFACTOR-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/FZZCXiuP5Hpq5kY7s6nMFh
       title: Project brief

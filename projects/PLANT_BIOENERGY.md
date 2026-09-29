@@ -7,6 +7,7 @@ autolink_gene_symbols: false
 manifest:
   slides:
     - href: PLANT_BIOENERGY/slides/PLANT_BIOENERGY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/92U5hqDhdMw4bNbohBwAKP
       title: Project brief

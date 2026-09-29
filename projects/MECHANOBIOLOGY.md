@@ -6,6 +6,7 @@ species: [human]
 manifest:
   slides:
     - href: MECHANOBIOLOGY/slides/MECHANOBIOLOGY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/MvFbo2qfKDeCNMKTyZ5bBd
       title: Project brief

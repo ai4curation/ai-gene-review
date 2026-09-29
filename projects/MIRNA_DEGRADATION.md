@@ -15,6 +15,7 @@ sidecars:
 manifest:
   slides:
     - href: MIRNA_DEGRADATION/slides/MIRNA_DEGRADATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/XL9eBPWsypGXtYqjeLMxwJ
       title: Project brief

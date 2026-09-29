@@ -7,6 +7,7 @@ genes: [edd, eda, glk]
 manifest:
   slides:
     - href: ENTNER_DOUDOROFF_OBSOLETION/slides/ENTNER_DOUDOROFF_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/5RhmT3CyKNu5wKp3pXvmaG
       title: Project brief

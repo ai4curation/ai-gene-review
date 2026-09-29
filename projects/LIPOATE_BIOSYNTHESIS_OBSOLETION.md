@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/PXWTPryxRQnYCr1b89XoEc
       title: Project brief

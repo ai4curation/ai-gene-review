@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: FUNCTION_KNOWLEDGE_GAPS/slides/FUNCTION_KNOWLEDGE_GAPS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Atsg3qcaESE4Psj7FDs2Um
       title: Project brief

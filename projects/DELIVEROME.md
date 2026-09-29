@@ -39,6 +39,7 @@ external_sources:
 manifest:
   slides:
     - href: DELIVEROME/slides/DELIVEROME-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/6c2seZotkYZQ22pTQxPvMR
       title: Project brief

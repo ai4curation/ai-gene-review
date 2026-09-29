@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/14vNKPzXp8HCF7zFRx11VH
       title: Project brief

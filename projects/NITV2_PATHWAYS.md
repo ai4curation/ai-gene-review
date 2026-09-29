@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: NITV2_PATHWAYS/slides/NITV2_PATHWAYS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/SYDG4JC3arG7b3fFiuq6UK
       title: Project brief

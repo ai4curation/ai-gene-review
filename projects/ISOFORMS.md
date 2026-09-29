@@ -9,6 +9,7 @@ sidecars:
 manifest:
   slides:
     - href: ISOFORMS/slides/ISOFORMS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/7VHDo7VPudGeN5Lo7yzWtU
       title: Project brief

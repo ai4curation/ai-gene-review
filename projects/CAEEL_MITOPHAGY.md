@@ -7,6 +7,7 @@ genes: [pink-1, pdr-1, dct-1, drp-1, fzo-1, eat-3, bec-1, lgg-1, lgg-2, sqst-1, 
 manifest:
   slides:
     - href: CAEEL_MITOPHAGY/slides/CAEEL_MITOPHAGY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/MZfV4C54x9an6CVWB5c81V
       title: Project brief

@@ -6,6 +6,7 @@ species: [ARATH, PETHY, MYCTU]
 manifest:
   slides:
     - href: PREPHENATE_PATHWAY_OBSOLETION/slides/PREPHENATE_PATHWAY_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/U9y2NbaW7yQxL2cifkkwzN
       title: Project brief

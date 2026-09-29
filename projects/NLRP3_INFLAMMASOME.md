@@ -6,6 +6,7 @@ species: [human]
 manifest:
   slides:
     - href: NLRP3_INFLAMMASOME/slides/NLRP3_INFLAMMASOME-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/NjmYtfwPS1nDE8WcAWGBDN
       title: Project brief

@@ -7,6 +7,7 @@ genes: [ecm, sucB, mdcD, gcvP, rbsD, glgX, HADHB, CPT1C]
 manifest:
   slides:
     - href: METABOLIC_MODEL_ANALYSIS/slides/METABOLIC_MODEL_ANALYSIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/JcAT9tMrYkugHrVWdvf4jf
       title: Project brief

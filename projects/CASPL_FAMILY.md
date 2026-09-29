@@ -7,6 +7,7 @@ genes: [CASPL1B1, CASPL1B2, CASPL1C1, CASPL1C2, CASPL1C3, CASPL1D1, CASPL1D2, CA
 manifest:
   slides:
     - href: CASPL_FAMILY/slides/CASPL_FAMILY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/3x1WtDnjnkCfq72Ye8oNmP
       title: Project brief

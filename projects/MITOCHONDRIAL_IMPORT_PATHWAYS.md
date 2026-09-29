@@ -7,6 +7,7 @@ genes: [TOMM40, TOMM20, TOMM22, TOMM70, TOMM5, TOMM6, TOMM7, SAMM50, MTX1, MTX2,
 manifest:
   slides:
     - href: MITOCHONDRIAL_IMPORT_PATHWAYS/slides/MITOCHONDRIAL_IMPORT_PATHWAYS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/QQQefrEZVFhvdvALWSZA78
       title: Project brief

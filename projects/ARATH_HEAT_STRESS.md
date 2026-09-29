@@ -7,6 +7,7 @@ genes: [AT4G17750, AT5G16820, AT1G32330, AT3G02990, AT2G26150, AT1G74310, AT5G02
 manifest:
   slides:
     - href: ARATH_HEAT_STRESS/slides/ARATH_HEAT_STRESS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/LccgRwveX3WD36dBzUGemZ
       title: Project brief

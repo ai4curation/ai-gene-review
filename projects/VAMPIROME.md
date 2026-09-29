@@ -7,6 +7,7 @@ genes: [CALCA, K9IFT7, K9IFY6, K9IIP0, K9IJK6, K9IMD0, K9IUF6, K9IWC0, K9IWH5, K
 manifest:
   slides:
     - href: VAMPIROME/slides/VAMPIROME-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/1ghAwJrhtJzxZqEG18BhsQ
       title: Project brief

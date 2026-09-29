@@ -6,6 +6,7 @@ species: [human]
 manifest:
   slides:
     - href: ICAM3_RECEPTOR_ACTIVITY_OBSOLETION/slides/ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/4Uucr6PiddSxk9TztWyqsp
       title: Project brief

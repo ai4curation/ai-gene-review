@@ -6,6 +6,7 @@ species: [yeast]
 manifest:
   slides:
     - href: YEAST_DNA_REPAIR_CHROMATIN/slides/YEAST_DNA_REPAIR_CHROMATIN-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Lxg43GSyUuGs8J3X1tAvBr
       title: Project brief

@@ -15,6 +15,7 @@ genes:
 manifest:
   slides:
     - href: CALCITRIOL_BIOSYNTHESIS_OBSOLETION/slides/CALCITRIOL_BIOSYNTHESIS_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/4zG7wZUT7XK17Bdaocsw2b
       title: Project brief

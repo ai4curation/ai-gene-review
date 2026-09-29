@@ -7,6 +7,7 @@ genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1, GALNT1, C1GALT1
 manifest:
   slides:
     - href: GLYCOBIOLOGY/slides/GLYCOBIOLOGY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/UqXg1UcLZY6vA2goRnxuCj
       title: Project brief

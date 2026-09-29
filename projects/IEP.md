@@ -71,6 +71,7 @@ genes:
 manifest:
   slides:
     - href: IEP/slides/IEP-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/ALd7v1pAxR1cZDVMSJbzVY
       title: Project brief

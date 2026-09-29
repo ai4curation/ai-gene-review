@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: NITROGEN_CYCLE_OBSOLETION/slides/NITROGEN_CYCLE_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/EyvXXNbTm1E3c73sx1HTPp
       title: Project brief

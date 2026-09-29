@@ -8,6 +8,7 @@ sidecars:
 manifest:
   slides:
     - href: UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Pq1dTSSsM9XnT98HnZ6ab8
       title: Project brief

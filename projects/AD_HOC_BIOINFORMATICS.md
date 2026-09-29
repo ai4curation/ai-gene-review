@@ -7,6 +7,7 @@ genes: [Epe1, PHYKPL, LPL1, AcrF8]
 manifest:
   slides:
     - href: AD_HOC_BIOINFORMATICS/slides/AD_HOC_BIOINFORMATICS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/L2Sufj4t2uzGbunSeHsxvK
       title: Project brief

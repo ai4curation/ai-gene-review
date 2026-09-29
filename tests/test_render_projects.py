@@ -17,6 +17,7 @@ from ai_gene_review.render_projects import (
     replace_species_qualified_symbols,
     render_project,
     render_project_bundle,
+    render_all_projects,
     render_projects_table,
     resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
@@ -1275,6 +1276,7 @@ title: Foo project
 manifest:
   slides:
     - href: FOO/slides/FOO-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/abc123
       title: Project brief
@@ -1335,8 +1337,41 @@ def test_manifest_renders_resource_bar_under_title(manifest_projects):
         '<a class="rk-artifacts" href="https://claude.ai/artifact/abc123" '
         'target="_blank" rel="noopener"'
     ) in html
-    assert ">Slides</a>" in html
+    assert '>Slides <span class="note">AI generated</span></a>' in html
+    assert 'title="Slides (AI generated)"' in html
     assert "Project brief <span class=\"ext\"" in html
+
+
+def test_malformed_manifest_warns_and_does_not_block_other_pages(manifest_projects):
+    """A bad manifest entry is reported as a page warning and skipped.
+
+    The whole-site render must still finish: the bad page renders (keeping its
+    valid entries), the sibling page's deck is copied, and the table is written.
+    """
+    (manifest_projects / "BAD.md").write_text(
+        "---\ntitle: Bad\nmanifest:\n  slides:\n    - title: no href\n"
+        "    - href: BAD/slides/missing.html\n  artifacts:\n"
+        "    - href: https://claude.ai/artifact/ok\n  decks: []\n---\n# Bad\n"
+    )
+    root = manifest_projects.parent
+    output_dir = root / "pages" / "projects"
+    _, warnings = render_all_projects(
+        projects_dir=manifest_projects, output_dir=output_dir, genes_dir=root / "genes"
+    )
+    bad = [w for w in warnings if "Invalid manifest in BAD.md" in w]
+    assert any("manifest.slides[0] needs a non-empty string 'href'" in w for w in bad)
+    assert any("manifest.slides[1] href 'BAD/slides/missing.html' does not exist" in w for w in bad)
+    assert any("unknown key(s) ['decks']" in w for w in bad)
+    assert len(bad) == 3
+
+    html = (output_dir / "BAD.html").read_text()
+    assert "Invalid manifest in BAD.md" in html
+    assert 'class="rk-slides"' not in html
+    assert 'href="https://claude.ai/artifact/ok"' in html
+
+    assert (output_dir / "FOO" / "slides" / "FOO-slides.html").is_file()
+    assert (output_dir / "FOO" / "slides" / "diagram.svg").is_file()
+    assert (output_dir / "all-projects.html").is_file()
 
 
 def test_page_without_manifest_has_no_resource_bar(tmp_path):
@@ -1361,7 +1396,9 @@ def test_projects_table_links_slides_and_brief(manifest_projects):
     ).read_text()
     assert "<th>Slides</th><th>Brief</th>" in html
     foo_row = html[html.index('data-slug="foo"'):].split("</tr>")[0]
-    assert '<a href="FOO/slides/FOO-slides.html" title="Slides">slides</a>' in foo_row
+    assert (
+        '<a href="FOO/slides/FOO-slides.html" title="Slides (AI generated)">slides</a>'
+    ) in foo_row
     assert 'href="https://claude.ai/artifact/abc123" target="_blank"' in foo_row
     bar_row = html[html.index('data-slug="bar"'):].split("</tr>")[0]
     assert bar_row.count('class="res"><span class="muted">') == 2

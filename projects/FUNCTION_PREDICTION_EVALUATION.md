@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/FWa7DRJiqJvUFZNxGvrErV
       title: Project brief

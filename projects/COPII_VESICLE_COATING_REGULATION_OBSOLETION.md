@@ -6,6 +6,7 @@ species: [human, yeast]
 manifest:
   slides:
     - href: COPII_VESICLE_COATING_REGULATION_OBSOLETION/slides/COPII_VESICLE_COATING_REGULATION_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/VouhgTdzdQgHZHDpPyGxSw
       title: Project brief

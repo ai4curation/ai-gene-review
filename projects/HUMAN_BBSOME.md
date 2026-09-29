@@ -7,6 +7,7 @@ genes: [BBS1, BBS2, ARL6, BBS4, BBS5, MKKS, BBS7, TTC8, BBS9, BBS10, BBS12, LZTF
 manifest:
   slides:
     - href: HUMAN_BBSOME/slides/HUMAN_BBSOME-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/LHycMPW3frEEecc1J3b1Yr
       title: Project brief

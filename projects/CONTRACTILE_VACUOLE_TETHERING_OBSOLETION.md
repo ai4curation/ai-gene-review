@@ -6,6 +6,7 @@ species: [DICDI]
 manifest:
   slides:
     - href: CONTRACTILE_VACUOLE_TETHERING_OBSOLETION/slides/CONTRACTILE_VACUOLE_TETHERING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/WW3DePjjF7cHWKTLfD2z7N
       title: Project brief

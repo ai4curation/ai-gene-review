@@ -6,6 +6,7 @@ species: [MYCS2]
 manifest:
   slides:
     - href: ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION/slides/ERGOTHIONEINE_BIOSYNTHESIS_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/UgnTdyckzfeHaC4cu2CbXT
       title: Project brief

@@ -16,6 +16,7 @@ genes:
 manifest:
   slides:
     - href: CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION/slides/CARGO_RECEPTOR_LIGAND_ACTIVITY_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/KRnhmaC5Dv78KU6uHN5AW5
       title: Project brief

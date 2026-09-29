@@ -7,6 +7,7 @@ genes: [SQSTM1, NFE2L2, LGALS3, TARDBP, TP53, pgl-1, pgl-2, pgl-3, meg-2, meg-3,
 manifest:
   slides:
     - href: CONDENSATES/slides/CONDENSATES-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/NgFAjNB3S9TtgRvwFg4LBS
       title: Project brief

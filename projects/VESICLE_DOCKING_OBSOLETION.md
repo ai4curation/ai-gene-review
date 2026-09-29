@@ -7,6 +7,7 @@ genes: [USO1, STX12]
 manifest:
   slides:
     - href: VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/ScwarepnxD4tbNoBeWw92e
       title: Project brief

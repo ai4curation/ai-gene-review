@@ -7,6 +7,7 @@ genes: [OPTN, CALCOCO2, SQSTM1, TAX1BP1, NBR1, TBK1, BNIP3L, VCP]   # reviewed g
 manifest:
   slides:
     - href: MITOPHAGY/slides/MITOPHAGY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/6cKsT95CWm1eYy7upcA6HU
       title: Project brief

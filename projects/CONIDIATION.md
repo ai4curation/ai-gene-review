@@ -12,6 +12,7 @@ genes: [brlA, abaA, wetA, vosA, velB, veA, laeA, fluG, flbB, flbC, flbD, flbE, s
 manifest:
   slides:
     - href: CONIDIATION/slides/CONIDIATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/5RLkvDe6U9n6epeLhUzxpR
       title: Project brief

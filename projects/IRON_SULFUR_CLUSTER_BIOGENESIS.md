@@ -7,6 +7,7 @@ genes: [NFS1, ISCU, FXN, LYRM4, HSPA9, HSCB, GLRX5, ISCA1, ISCA2, IBA57, NFU1, B
 manifest:
   slides:
     - href: IRON_SULFUR_CLUSTER_BIOGENESIS/slides/IRON_SULFUR_CLUSTER_BIOGENESIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/5tZjqRb2tFMCKoamGFVLKA
       title: Project brief

@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: P_PUTIDA/slides/P_PUTIDA-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
       title: Project brief

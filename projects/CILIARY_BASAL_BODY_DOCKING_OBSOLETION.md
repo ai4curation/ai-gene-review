@@ -6,6 +6,7 @@ species: [human]
 manifest:
   slides:
     - href: CILIARY_BASAL_BODY_DOCKING_OBSOLETION/slides/CILIARY_BASAL_BODY_DOCKING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/WkiiVnceKdNuUeX5QEKU7r
       title: Project brief

@@ -7,6 +7,7 @@ genes: [SEC62, ATL3, ULK1, ATG9A, EIF2AK3]   # reviewed genes only; full candida
 manifest:
   slides:
     - href: ER_PHAGY/slides/ER_PHAGY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/JUWPntJaSWNzA2RferrHAX
       title: Project brief

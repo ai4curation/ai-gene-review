@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: BACSU/slides/BACSU-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/AuQCDtu8bJ3pAjSXuMRzAB
       title: Project brief

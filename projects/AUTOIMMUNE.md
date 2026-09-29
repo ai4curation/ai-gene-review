@@ -7,6 +7,7 @@ genes: [PTPN22, CTLA4, IL2RA, IL4, STAT4, IL13, IL23R, IL7R, ORMDL3, TNFAIP3, TN
 manifest:
   slides:
     - href: AUTOIMMUNE/slides/AUTOIMMUNE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/8N7vPAZj25wxqZfyQbJ2Rs
       title: Project brief

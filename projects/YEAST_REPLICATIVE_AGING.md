@@ -7,6 +7,7 @@ genes: [SIR2, SIR3, SIR4, HST2, HST3, PNC1, HAP4, SOD2, CAT2, CYC1, LSM1, DBP5, 
 manifest:
   slides:
     - href: YEAST_REPLICATIVE_AGING/slides/YEAST_REPLICATIVE_AGING-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/QC3jFS9mYFP8PCGoCDApTg
       title: Project brief

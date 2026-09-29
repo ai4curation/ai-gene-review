@@ -7,6 +7,7 @@ genes: [TIA1, TIAL1, USP10, TARDBP, HNRNPA2B1, VCP]   # reviewed genes only; ful
 manifest:
   slides:
     - href: STRESS_GRANULES/slides/STRESS_GRANULES-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/U63wVz7VQDZJSrarka9GZY
       title: Project brief

@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/F9qBEY55uKnCdC2Rd3Cvav
       title: Project brief

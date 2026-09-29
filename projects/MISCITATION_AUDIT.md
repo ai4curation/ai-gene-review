@@ -6,6 +6,7 @@ autolink_gene_symbols: false
 manifest:
   slides:
     - href: MISCITATION_AUDIT/slides/MISCITATION_AUDIT-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/MivpKQ5kSzXjx2C5kqUYqs
       title: Project brief

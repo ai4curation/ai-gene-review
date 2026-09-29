@@ -6,6 +6,7 @@ tags: [EVALUATION]
 manifest:
   slides:
     - href: ORTHOLOG_CONJECTURE/slides/ORTHOLOG_CONJECTURE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/QSeyfbwNfcDm6KauRqS6Fx
       title: Project brief

@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: NITROGEN_CYCLE/slides/NITROGEN_CYCLE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/W3XvHrjuvVoB8T78sP322h
       title: Project brief

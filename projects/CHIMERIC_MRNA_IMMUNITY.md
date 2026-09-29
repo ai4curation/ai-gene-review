@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: CHIMERIC_MRNA_IMMUNITY/slides/CHIMERIC_MRNA_IMMUNITY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/DA8KLya8H2EUtc279huYwc
       title: Project brief

@@ -7,6 +7,7 @@ autolink_gene_symbols: false
 manifest:
   slides:
     - href: YEAST_METABOLIC_ENGINEERING/slides/YEAST_METABOLIC_ENGINEERING-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/PhjFARuVnF4cXY1B4wqBXb
       title: Project brief

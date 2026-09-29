@@ -7,6 +7,7 @@ genes: [PEX5, PEX7, PEX19]
 manifest:
   slides:
     - href: PEROXISOME_TARGETING_SIGNAL_OBSOLETION/slides/PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/5Qm2i3acmFHbD9o18jmd9W
       title: Project brief

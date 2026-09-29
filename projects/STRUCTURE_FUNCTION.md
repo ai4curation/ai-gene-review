@@ -5,6 +5,7 @@ tags: [PIPELINE]
 manifest:
   slides:
     - href: STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/9LtNVgeV5JyNbBwHNAtzYt
       title: Project brief

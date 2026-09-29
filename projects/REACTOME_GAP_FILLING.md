@@ -7,6 +7,7 @@ genes: [ABCD3]
 manifest:
   slides:
     - href: REACTOME_GAP_FILLING/slides/REACTOME_GAP_FILLING-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/CMwsBhXeKDFnUm7CoieU39
       title: Project brief

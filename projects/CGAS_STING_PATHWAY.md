@@ -6,6 +6,7 @@ species: [human]
 manifest:
   slides:
     - href: CGAS_STING_PATHWAY/slides/CGAS_STING_PATHWAY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/CHJ3zFu9zViWjXBSaCmQLS
       title: Project brief

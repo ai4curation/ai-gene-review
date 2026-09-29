@@ -7,6 +7,7 @@ genes: [VAPA]
 manifest:
   slides:
     - href: ER_PM_TETHERING_OBSOLETION/slides/ER_PM_TETHERING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/FMq8m8yzvRNQmUs1Jv1YqH
       title: Project brief

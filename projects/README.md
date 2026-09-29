@@ -78,7 +78,8 @@ genes: [GPX4, ACSL4]           # OPTIONAL: only when the gene set is small + exp
   `slides` (a deck `.html` path relative to `projects/` with its Marp `.md`
   beside it, or an `https://` URL) and `artifacts` (`https://` only, e.g. the
   project's Claude brief). Each entry needs `href` and may carry `title` and
-  `description`. They render as a link bar under the page title and as
+  `description` (shown on the pill; decks carry `AI generated`). They render
+  as a link bar under the page title and as
   Slides/Brief columns in the all-projects table, so the deck link does not also
   belong in the page body.
 
@@ -86,6 +87,7 @@ genes: [GPX4, ACSL4]           # OPTIONAL: only when the gene set is small + exp
   manifest:
     slides:
       - href: FERROPTOSIS/slides/FERROPTOSIS-slides.html
+        description: AI generated
     artifacts:
       - href: https://claude.ai/artifact/XXXX
         title: Project brief

@@ -7,6 +7,7 @@ genes: [hsf-1, hsp-1, hsp-16.2, hsp-90, hsp-4, cdc-48, bec-1, lgg-1, rpn-10, ufd
 manifest:
   slides:
     - href: CAEEL_PROTEOSTASIS/slides/CAEEL_PROTEOSTASIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/NzeqEauDrdbesCvTHPj76c
       title: Project brief

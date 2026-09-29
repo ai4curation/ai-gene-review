@@ -7,6 +7,7 @@ genes: [ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2, Ac
 manifest:
   slides:
     - href: FATTY_ACID_BETA_OXIDATION/slides/FATTY_ACID_BETA_OXIDATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/CFSC1azmzHYyEFApt15dV7
       title: Project brief

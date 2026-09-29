@@ -20,6 +20,7 @@ sidecars:
 manifest:
   slides:
     - href: NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/QZ1exte7BMGxrEdFcomwvJ
       title: Project brief

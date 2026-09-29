@@ -7,6 +7,7 @@ genes: [drd-5, tra-1, tra-2, fem-3, she-1, cep-1, trr-1, kin-1, peb-1, ubl-1, oa
 manifest:
   slides:
     - href: SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/KpzGoG9pcLXFud2YtDLotZ
       title: Project brief

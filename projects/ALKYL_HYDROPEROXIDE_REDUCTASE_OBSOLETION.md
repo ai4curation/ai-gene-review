@@ -6,6 +6,7 @@ species: [ECOLI, PSEAE]
 manifest:
   slides:
     - href: ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION/slides/ALKYL_HYDROPEROXIDE_REDUCTASE_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/QG3qUxoDDS2zn4KB6e6ydj
       title: Project brief

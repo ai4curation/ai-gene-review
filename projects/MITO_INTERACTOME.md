@@ -7,6 +7,7 @@ genes: [COA4, COX17, COX19, COX23, CMC2, PET191, COX11, SCO1, SCO2, COX16, COA6,
 manifest:
   slides:
     - href: MITO_INTERACTOME/slides/MITO_INTERACTOME-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/L7PBduAAKoptsd5k3tyCsi
       title: Project brief

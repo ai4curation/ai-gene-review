@@ -6,6 +6,7 @@ species: [METEA]
 manifest:
   slides:
     - href: REE/slides/REE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/DsVBv7tjfvaSfEkmp45HNM
       title: Project brief

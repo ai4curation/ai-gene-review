@@ -6,6 +6,7 @@ species: [human]
 manifest:
   slides:
     - href: PROTEIN_COMPLEX_FUNCTIONS/slides/PROTEIN_COMPLEX_FUNCTIONS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/NFR4zX8oqgzvQhqZF1aQ28
       title: Project brief

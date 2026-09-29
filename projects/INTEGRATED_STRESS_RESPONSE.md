@@ -6,6 +6,7 @@ species: [human]
 manifest:
   slides:
     - href: INTEGRATED_STRESS_RESPONSE/slides/INTEGRATED_STRESS_RESPONSE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Lfky9QLttPtNhYWCDnYQyx
       title: Project brief

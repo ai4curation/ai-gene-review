@@ -7,6 +7,7 @@ genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1]
 manifest:
   slides:
     - href: MISCITATIONS/slides/MISCITATIONS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/B28H55M68QGuTavmzp4QAR
       title: Project brief

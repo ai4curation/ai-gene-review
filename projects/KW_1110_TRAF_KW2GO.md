@@ -5,6 +5,7 @@ tags: [PIPELINE, OBSOLETION]
 manifest:
   slides:
     - href: KW_1110_TRAF_KW2GO/slides/KW_1110_TRAF_KW2GO-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/HpYCKxoFy6C6gRzHn7FTcp
       title: Project brief

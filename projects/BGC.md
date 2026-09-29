@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: BGC/slides/BGC-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/JVCyoqSc6xLv4upJ5x28fH
       title: Project brief

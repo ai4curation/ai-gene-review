@@ -6,6 +6,7 @@ species: [human, SCHPO, ANOGA, DROME, PSEPK, ARATH, BPT4, ECO57]
 manifest:
   slides:
     - href: SPKW/slides/SPKW-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Q1kfWqa9VVSQCUq4RvthWu
       title: Project brief

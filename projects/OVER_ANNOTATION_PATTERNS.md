@@ -7,6 +7,7 @@ genes: [PHYKPL, UBA7, Epe1, LPL1, pqsC, pqsB, actI-ORF1, actI-ORF2, eryCII]
 manifest:
   slides:
     - href: OVER_ANNOTATION_PATTERNS/slides/OVER_ANNOTATION_PATTERNS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/MrmXAmcMnpxL43743j1ogb
       title: Project brief

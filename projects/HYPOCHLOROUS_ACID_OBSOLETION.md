@@ -6,6 +6,7 @@ species: [mouse]
 manifest:
   slides:
     - href: HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/TzdUqWUZ2PZqr9iAxh7GBe
       title: Project brief

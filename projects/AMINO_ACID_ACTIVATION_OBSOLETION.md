@@ -6,6 +6,7 @@ species: [human, PSEPK, POPTR, DANRE, METTP, DROME]
 manifest:
   slides:
     - href: AMINO_ACID_ACTIVATION_OBSOLETION/slides/AMINO_ACID_ACTIVATION_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/JaNKtV5ieHC144LALVXD27
       title: Project brief

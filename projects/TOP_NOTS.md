@@ -6,6 +6,7 @@ species: [human, mouse, yeast, SCHPO, DROME, ANOGA, ACET2, BACSU, DESVH, ECOLI, 
 manifest:
   slides:
     - href: TOP_NOTS/slides/TOP_NOTS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Dcpr2BwERF8TFxPXiUiycg
       title: Project brief

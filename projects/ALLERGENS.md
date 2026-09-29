@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: ALLERGENS/slides/ALLERGENS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/3mEMoeKTFksZXuPqF9xaif
       title: Project brief

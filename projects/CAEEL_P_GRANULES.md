@@ -7,6 +7,7 @@ genes: [pgl-1, pgl-2, pgl-3, glh-1, glh-4, meg-3, meg-4, prg-1, csr-1, deps-1, w
 manifest:
   slides:
     - href: CAEEL_P_GRANULES/slides/CAEEL_P_GRANULES-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/5cREn2bg18z6AMLszSedou
       title: Project brief

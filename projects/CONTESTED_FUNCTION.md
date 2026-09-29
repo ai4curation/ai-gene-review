@@ -7,6 +7,7 @@ genes: [Epe1, eryCII, pqsB, actI-ORF2]
 manifest:
   slides:
     - href: CONTESTED_FUNCTION/slides/CONTESTED_FUNCTION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/GW82WzsUznCSPvHxx9WdXV
       title: Project brief

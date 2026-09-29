@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: CAEEL_SURVEILLANCE_IMMUNITY/slides/CAEEL_SURVEILLANCE_IMMUNITY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
       title: Project brief

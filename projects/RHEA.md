@@ -9,6 +9,7 @@ sidecars:
 manifest:
   slides:
     - href: RHEA/slides/RHEA-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/X9HRwXhBWGyMBDYHrcnios
       title: Project brief

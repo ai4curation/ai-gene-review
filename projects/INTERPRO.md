@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: INTERPRO/slides/INTERPRO-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/NaAEVgdB1TnJUKnBWWt69N
       title: Project brief

@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/732CHnKMbyydt26H9ByLRQ
       title: Project brief

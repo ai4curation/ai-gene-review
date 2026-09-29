@@ -7,6 +7,7 @@ genes: [lipl-4, lbp-8, nhr-80, nhr-49]
 manifest:
   slides:
     - href: CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING/slides/CAEEL_LYSOSOME_NUCLEUS_LIPID_SIGNALING-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/GGj6w4dnuzCJ8qRJ5hhT8c
       title: Project brief

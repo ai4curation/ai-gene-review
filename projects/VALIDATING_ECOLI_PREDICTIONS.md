@@ -14,6 +14,7 @@ sidecars:
 manifest:
   slides:
     - href: VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/TgrzGMFVcJVh62Yn7CMNLU
       title: Project brief

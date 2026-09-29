@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/RK6KkhfjZSxgQTA1pScaVR
       title: Project brief

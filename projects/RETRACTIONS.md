@@ -5,6 +5,7 @@ tags: [PIPELINE, EVALUATION]
 manifest:
   slides:
     - href: RETRACTIONS/slides/RETRACTIONS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/EGPyig2PBuAJ92DwrZAqxG
       title: Project brief

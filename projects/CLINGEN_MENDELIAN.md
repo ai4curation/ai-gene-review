@@ -2884,6 +2884,7 @@ genes:
 manifest:
   slides:
     - href: CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/4hQjBNnZX7gypVhGru5wBL
       title: Project brief

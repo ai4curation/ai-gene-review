@@ -7,6 +7,7 @@ genes: [ZNF598, EDF1, GIGYF2, PELO, HBS1L, ABCE1, NEMF, LTN1, TCF25, ANKZF1, ASC
 manifest:
   slides:
     - href: RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/UbYWkzMVw26ir7qryZGAgu
       title: Project brief

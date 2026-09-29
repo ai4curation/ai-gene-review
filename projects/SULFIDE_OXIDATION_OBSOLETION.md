@@ -7,6 +7,7 @@ genes: [SQOR, TSTD1, SLC25A10]
 manifest:
   slides:
     - href: SULFIDE_OXIDATION_OBSOLETION/slides/SULFIDE_OXIDATION_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/HysvuoTXVgtA5FsaWajEWG
       title: Project brief

@@ -9,6 +9,7 @@ sidecars:
 manifest:
   slides:
     - href: PFAM/slides/PFAM-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/W4798uw5yzf3XeGei7Mvp4
       title: Project brief

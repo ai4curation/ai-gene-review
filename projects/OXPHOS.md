@@ -7,6 +7,7 @@ genes: [NDUFS1, NDUFV1, NDUFS2, NDUFS4, ACAD9, SDHA, SDHB, SDHC, SDHD, SDHAF2, C
 manifest:
   slides:
     - href: OXPHOS/slides/OXPHOS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/2epY9vXE7hr4YB697cQHWY
       title: Project brief

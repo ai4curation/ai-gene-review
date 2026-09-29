@@ -7,6 +7,7 @@ species: [human, mouse, rat]
 manifest:
   slides:
     - href: ISO/slides/ISO-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/GC5QNPTZrY1hotMEPdr3ME
       title: Project brief

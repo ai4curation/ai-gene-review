@@ -7,6 +7,7 @@ genes: [AcrF8, ACA2]
 manifest:
   slides:
     - href: ANTI_CRISPR/slides/ANTI_CRISPR-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/RLHL9r41LvokY2PpeEuBzu
       title: Project brief

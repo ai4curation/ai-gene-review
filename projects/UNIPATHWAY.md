@@ -6,6 +6,7 @@ species: [human, PSEPK, RHOPA, CUPNH, FERPA, 9ARCH, DESPS, POLH7, BRADI]
 manifest:
   slides:
     - href: UNIPATHWAY/slides/UNIPATHWAY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/U4SuDGuX6Pm3BNujvCkbuH
       title: Project brief

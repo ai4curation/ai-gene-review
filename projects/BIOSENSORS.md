@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: BIOSENSORS/slides/BIOSENSORS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/22PJuQQ4X8nZJ92sdhs6P7
       title: Project brief

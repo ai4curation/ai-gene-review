@@ -69,7 +69,7 @@ def test_cli_populates_manifest_and_drops_slides_section(script, projects):
     foo = (projects / "FOO.md").read_text()
     fm, body = parse_frontmatter(foo)
     assert fm["manifest"] == {
-        "slides": [{"href": "FOO/slides/FOO-slides.html"}],
+        "slides": [{"href": "FOO/slides/FOO-slides.html", "description": "AI generated"}],
         "artifacts": [{"href": "https://claude.ai/artifact/foo", "title": "Project brief"}],
     }
     assert manifest_errors(fm["manifest"], projects) == []

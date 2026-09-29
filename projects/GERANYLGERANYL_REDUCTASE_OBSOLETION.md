@@ -6,6 +6,7 @@ species: [human, ARATH, TOBAC]
 manifest:
   slides:
     - href: GERANYLGERANYL_REDUCTASE_OBSOLETION/slides/GERANYLGERANYL_REDUCTASE_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/P59Mj5VWEfewku9ULtzfdz
       title: Project brief

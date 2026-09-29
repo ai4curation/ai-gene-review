@@ -7,6 +7,8 @@ For every top-level ``projects/*.md`` page this:
   and that have a sibling ``.md`` source -- from ``projects/<STEM>/slides/``
   (matched case-insensitively, so ``PAINT.md`` finds ``paint/slides/``) and
   from decks the page body already links to;
+* marks each deck ``description: AI generated`` (the label the old in-body
+  deck links carried; the resource bar shows it on the pill);
 * adds ``manifest.artifacts`` from a TSV of ``stem<TAB>url[<TAB>title]``
   (title defaults to ``Project brief``);
 * writes ``manifest`` with :func:`set_frontmatter_key`, leaving all other
@@ -33,6 +35,8 @@ import typer
 from ai_gene_review.render_projects import parse_frontmatter, set_frontmatter_key
 
 DEFAULT_ARTIFACT_TITLE = "Project brief"
+#: Carried over from the in-body deck links ("— AI generated"); shown on the pill.
+SLIDES_DESCRIPTION = "AI generated"
 SLIDES_HEADING = re.compile(r"^##\s+Slides\s*$")
 DECK_LINE = re.compile(r"^- \[Slides\]\((?P<href>[^)]+)\)")
 FOOTER_LINE = re.compile(r"^(---|Last updated:.*|\*\*Source\*\*:.*)$")
@@ -184,7 +188,9 @@ def main(
         manifest: dict[str, list[dict[str, str]]] = {}
         decks = find_decks(md_path, projects_dir)
         if decks:
-            manifest["slides"] = [{"href": href} for href in decks]
+            manifest["slides"] = [
+                {"href": href, "description": SLIDES_DESCRIPTION} for href in decks
+            ]
         if md_path.stem in briefs:
             manifest["artifacts"] = briefs[md_path.stem]
         if not manifest:

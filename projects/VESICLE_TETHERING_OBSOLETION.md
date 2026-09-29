@@ -7,6 +7,7 @@ genes: [TMF1, TRAPPC1, TRAPPC3, TRAPPC4, TRAPPC5, TRAPPC8, TRAPPC11, TRAPPC12, T
 manifest:
   slides:
     - href: VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/4gpN5w7vVbudek27XV5L7C
       title: Project brief

@@ -7,6 +7,7 @@ genes: [GPX4, SLC7A11, SLC3A2, ACSL4, LPCAT3, AIFM2, DHODH, GCH1, PTS, SPR, NCOA
 manifest:
   slides:
     - href: FERROPTOSIS/slides/FERROPTOSIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/7nSuCeq7xETTYoc6zrZeoG
       title: Project brief

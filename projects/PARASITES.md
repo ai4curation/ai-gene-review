@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: PARASITES/slides/PARASITES-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/3qU2zXzH22ZaEpAM2QAsoR
       title: Project brief

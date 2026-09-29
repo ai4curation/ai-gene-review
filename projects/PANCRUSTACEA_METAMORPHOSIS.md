@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: PANCRUSTACEA_METAMORPHOSIS/slides/PANCRUSTACEA_METAMORPHOSIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/PxxS5zriXhGzC6gvrazkFT
       title: Project brief

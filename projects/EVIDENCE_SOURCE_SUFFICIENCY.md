@@ -5,6 +5,7 @@ tags: [PIPELINE, FLAGSHIP]
 manifest:
   slides:
     - href: EVIDENCE_SOURCE_SUFFICIENCY/slides/EVIDENCE_SOURCE_SUFFICIENCY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/1E5N6CURrZmbvxXEgk6uh7
       title: Project brief

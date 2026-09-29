@@ -7,6 +7,7 @@ genes: [App, STAT3, nphp-1, Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, T
 manifest:
   slides:
     - href: BEHAVIOR/slides/BEHAVIOR-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/YLcccJMkX5QNmHL4d5pWez
       title: Project brief

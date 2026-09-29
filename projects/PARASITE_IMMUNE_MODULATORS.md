@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: PARASITE_IMMUNE_MODULATORS/slides/PARASITE_IMMUNE_MODULATORS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/JJLDmMgBcefBkHqhR9iHiA
       title: Project brief

@@ -7,6 +7,7 @@ genes: [LPL1, GND1, PHYKPL, eryCIII, ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, 
 manifest:
   slides:
     - href: ENZYME_SPECIFICITY/slides/ENZYME_SPECIFICITY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/16YgnHyBS1PjY9QWUZgZwZ
       title: Project brief

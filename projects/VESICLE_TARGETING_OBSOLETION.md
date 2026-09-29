@@ -7,6 +7,7 @@ genes: [YKT6, CLASP1, CLASP2, WIPI1, AP1AR, GLTP, SPA2]
 manifest:
   slides:
     - href: VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/XAjoLKXq6LnhcNxykAmQZq
       title: Project brief

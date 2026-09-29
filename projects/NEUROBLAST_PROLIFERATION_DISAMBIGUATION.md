@@ -6,6 +6,7 @@ species: [mouse, human, rat]
 manifest:
   slides:
     - href: NEUROBLAST_PROLIFERATION_DISAMBIGUATION/slides/NEUROBLAST_PROLIFERATION_DISAMBIGUATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/XBdGBSK3stehfvRxFBKmU9
       title: Project brief

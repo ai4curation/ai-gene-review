@@ -6,6 +6,7 @@ species: [CHLRE, ARATH]
 manifest:
   slides:
     - href: PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/YKYcxNMSUMYDFoTjF54wiD
       title: Project brief

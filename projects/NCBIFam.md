@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: NCBIFam/slides/NCBIFam-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
       title: Project brief

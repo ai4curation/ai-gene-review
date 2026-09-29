@@ -7,6 +7,7 @@ genes: [cipA, Q01866, ancA, sdbA, celA, celC, celD, celK, celS, P10477, P55742, 
 manifest:
   slides:
     - href: CELLULOSOME/slides/CELLULOSOME-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/VHttoJK4pkrUE9GQEEFGYM
       title: Project brief

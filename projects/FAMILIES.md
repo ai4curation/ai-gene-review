@@ -7,6 +7,7 @@ autolink_gene_symbols: false
 manifest:
   slides:
     - href: FAMILIES/slides/FAMILIES-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/3EXdRSggSxqVqzjNGdB2Tx
       title: Project brief

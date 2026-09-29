@@ -7,6 +7,7 @@ genes: [daf-19, osm-3, osm-5, che-2, che-3, bbs-1, bbs-8, mks-3, nphp-1, nphp-4,
 manifest:
   slides:
     - href: CAEEL_CILIOPATHY/slides/CAEEL_CILIOPATHY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/6FL1QHUfX93w3d1czhc48e
       title: Project brief

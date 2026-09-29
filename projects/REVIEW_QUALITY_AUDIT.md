@@ -5,6 +5,7 @@ tags: [PIPELINE, EVALUATION]
 manifest:
   slides:
     - href: REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/UW3xrt3nFrBrQUhq3QxrsD
       title: Project brief

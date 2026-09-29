@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: PDB/slides/PDB-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/DTWWmrU3z8AaCTrCLj1TCs
       title: Project brief

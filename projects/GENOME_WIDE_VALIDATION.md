@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/LTstg8jwzm9v2CXuxMaHhp
       title: Project brief

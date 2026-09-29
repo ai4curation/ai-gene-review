@@ -9,6 +9,7 @@ sidecars:
 manifest:
   slides:
     - href: ALPHAFOLD/slides/ALPHAFOLD-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/HZk3XAMM2N7tXrZpBvsb1H
       title: Project brief

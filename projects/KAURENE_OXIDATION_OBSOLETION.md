@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: KAURENE_OXIDATION_OBSOLETION/slides/KAURENE_OXIDATION_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/5BmmH5Vkxba1QVEiczUKnU
       title: Project brief

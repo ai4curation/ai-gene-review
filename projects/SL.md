@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: SL/slides/SL-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/U1DVKXZnKCDpdWahMw1JTy
       title: Project brief

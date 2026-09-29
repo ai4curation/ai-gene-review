@@ -13,6 +13,7 @@ sidecars:
 manifest:
   slides:
     - href: ANTIMICROBIAL_RESISTANCE/slides/ANTIMICROBIAL_RESISTANCE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/96q6dgRv3WdTTC6pcCoT4z
       title: Project brief

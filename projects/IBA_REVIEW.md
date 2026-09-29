@@ -82,6 +82,7 @@ genes:
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/AUT3cgCPXmUUG57tko5G9C
       title: Project brief

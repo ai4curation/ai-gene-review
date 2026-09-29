@@ -7,6 +7,7 @@ genes: [ire-1, xbp-1, pek-1, atf-6, hsp-4, atf-4, atfs-1, dve-1, ubl-5, hsp-6, h
 manifest:
   slides:
     - href: CAEEL_UPR_STRESS/slides/CAEEL_UPR_STRESS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/GhbVGvzpDdWA5Wgpt4KqiD
       title: Project brief

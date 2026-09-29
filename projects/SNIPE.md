@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: SNIPE/slides/SNIPE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/MV5mj86PH7dB1UaTfnLYZ4
       title: Project brief

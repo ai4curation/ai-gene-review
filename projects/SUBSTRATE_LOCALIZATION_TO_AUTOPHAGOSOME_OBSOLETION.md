@@ -15,6 +15,7 @@ genes:
 manifest:
   slides:
     - href: SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION/slides/SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/SeXepPvtBDmbHEuqka23aE
       title: Project brief

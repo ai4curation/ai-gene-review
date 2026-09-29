@@ -12,6 +12,7 @@ sidecars:
 manifest:
   slides:
     - href: HUMAN_GENES_RE_REVIEW/slides/HUMAN_GENES_RE_REVIEW-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Gu6CuxB6PcEA9pzAh8hfzV
       title: Project brief

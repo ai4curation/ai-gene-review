@@ -7,6 +7,7 @@ genes: [GCN5, ESA1, SAS2, SAS3, RPD3, HDA1, HST1, HST2, SIR2, SIR3, SIR4, ORC1, 
 manifest:
   slides:
     - href: YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/LzuMfM7j89Dimy9hz3Kg2U
       title: Project brief

@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION/slides/MITOCHONDRION_TARGETING_SEQUENCE_BINDING_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/9cUTrMWePSbqsUwiuS3bXt
       title: Project brief

@@ -13,6 +13,7 @@ sidecars:
 manifest:
   slides:
     - href: PATHWAY_SATISFIABILITY/slides/PATHWAY_SATISFIABILITY-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/6RKzB26ZBXGu1RH5tPgmD1
       title: Project brief

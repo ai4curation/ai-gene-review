@@ -22,6 +22,7 @@ sidecars:
 manifest:
   slides:
     - href: TREEGRAFTER/slides/TREEGRAFTER-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/Wi9WbyuGcFMPSKNmXX1UoP
       title: Project brief

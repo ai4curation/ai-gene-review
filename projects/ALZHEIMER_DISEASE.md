@@ -7,6 +7,7 @@ genes: [APP, PSEN1, PSEN2, APOE, TREM2, SORL1, ABCA7, ADAM10, BACE1, NCSTN, APH1
 manifest:
   slides:
     - href: ALZHEIMER_DISEASE/slides/ALZHEIMER_DISEASE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/UnNzWTgnMmSE5mZaEPUCuG
       title: Project brief

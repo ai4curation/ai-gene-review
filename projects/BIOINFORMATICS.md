@@ -7,6 +7,7 @@ genes: [pmp20, Epe1, tpx1]
 manifest:
   slides:
     - href: BIOINFORMATICS/slides/BIOINFORMATICS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/L3hzbPCFcEKXqgeSBKoLZz
       title: Project brief

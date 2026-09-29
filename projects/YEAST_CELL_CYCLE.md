@@ -6,6 +6,7 @@ species: [yeast]
 manifest:
   slides:
     - href: YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/9PwAusPtykDxdDpz1FfBMo
       title: Project brief

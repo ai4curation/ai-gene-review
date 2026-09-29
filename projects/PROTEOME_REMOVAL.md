@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: PROTEOME_REMOVAL/slides/PROTEOME_REMOVAL-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/8bAohnAviZzF1wzvBwfR6f
       title: Project brief

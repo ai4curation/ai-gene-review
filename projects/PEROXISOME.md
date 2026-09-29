@@ -7,6 +7,7 @@ genes: [PEX1, PEX2, PEX3, PEX5, PEX6, PEX7, PEX10, PEX11A, PEX11B, PEX11G, PEX12
 manifest:
   slides:
     - href: PEROXISOME/slides/PEROXISOME-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/7Y2qKPFq916QDfjfp87CRG
       title: Project brief

@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/J1xwYhcpMh2DgVVs3VobX4
       title: Project brief

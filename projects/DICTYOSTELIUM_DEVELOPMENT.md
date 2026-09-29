@@ -6,6 +6,7 @@ species: [DICDI]
 manifest:
   slides:
     - href: DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/FJvHoxwCfnrbDz9JcYwAiJ
       title: Project brief

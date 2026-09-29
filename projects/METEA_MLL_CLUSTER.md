@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: METEA_MLL_CLUSTER/slides/METEA_MLL_CLUSTER-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/9sHNCzSVUdc8vmkyqRJLSh
       title: Project brief

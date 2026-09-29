@@ -7,6 +7,7 @@ genes: [DLD, DLAT, PDHA1, PDHB, ATP7B, GLS, GCSH]
 manifest:
   slides:
     - href: CUPROPTOSIS/slides/CUPROPTOSIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/85LwTAVJUnCY6yJFKHcXnh
       title: Project brief

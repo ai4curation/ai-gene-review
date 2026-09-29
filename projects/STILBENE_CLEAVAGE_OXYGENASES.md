@@ -14,6 +14,7 @@ genes:
 manifest:
   slides:
     - href: STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/LocaBRZyx9MgonQTLUDrJF
       title: Project brief

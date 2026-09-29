@@ -10,6 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/UnQ9Raqh1BixjT3CMmvgdH
       title: Project brief

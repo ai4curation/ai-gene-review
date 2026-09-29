@@ -7,6 +7,7 @@ genes: [ASCL1, NEUROG1, NEUROG2, NEUROD1, OLIG2, SOX9, NFIA, STAT3, NOTCH1, HES1
 manifest:
   slides:
     - href: NEURON_DEVELOPMENT/slides/NEURON_DEVELOPMENT-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/HF8et9f8zWj6HJupfFzNUf
       title: Project brief

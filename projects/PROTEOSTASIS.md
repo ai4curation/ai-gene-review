@@ -97,6 +97,7 @@ review_batches:
 manifest:
   slides:
     - href: PROTEOSTASIS/slides/PROTEOSTASIS-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/X5CfsBDy2fmRP57wscyizk
       title: Project brief

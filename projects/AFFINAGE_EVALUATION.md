@@ -33,6 +33,7 @@ sidecars:
 manifest:
   slides:
     - href: AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/5CqTrkg55DQ3bTTeMAFdHm
       title: Project brief

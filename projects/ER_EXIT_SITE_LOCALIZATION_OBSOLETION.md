@@ -7,6 +7,7 @@ genes: [LRRK2, BCAP31, YET2]
 manifest:
   slides:
     - href: ER_EXIT_SITE_LOCALIZATION_OBSOLETION/slides/ER_EXIT_SITE_LOCALIZATION_OBSOLETION-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/7CCaYcKNiv414UEVhwVRFX
       title: Project brief

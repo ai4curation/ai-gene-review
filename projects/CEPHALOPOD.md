@@ -7,6 +7,7 @@ genes: [DDO, AP180, cpx, CTR1, OPR, FMRFa, P21613, RHO, CRT1, sympp, CTR2, OCTS1
 manifest:
   slides:
     - href: CEPHALOPOD/slides/CEPHALOPOD-slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/28zEmyjHveReX4PwN5NiNo
       title: Project brief

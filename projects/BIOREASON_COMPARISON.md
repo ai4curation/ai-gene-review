@@ -18,6 +18,7 @@ sidecars:
 manifest:
   slides:
     - href: BIOREASON_COMPARISON/article/slides.html
+      description: AI generated
   artifacts:
     - href: https://claude.ai/artifact/DtnNGp5GAUCDokkUYa1eRE
       title: Project brief
