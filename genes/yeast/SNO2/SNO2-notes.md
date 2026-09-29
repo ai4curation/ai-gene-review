@@ -172,9 +172,10 @@ without altering the evidence-grounded conclusions above.
   `PANTHER:PTN000774355` in `interpro/panther/PTHR31559/PTHR31559-paint.tsv`.
 - The current PAINT file has matching IBDs for `GO:1903600`, `GO:0004359`, `GO:0008614`,
   and `GO:0042823`; the PLP-biosynthesis placement was refreshed on 2025-09-04.
-- No propagation failure was found. The three PLP/glutaminase/complex rows remain core, and
-  `GO:0008614 pyridoxine metabolic process` remains defensible but non-core because it is
-  broader than SNO2's PLP-biosynthesis role.
+- No propagation failure was found for the three PLP/glutaminase/complex rows. QuickGO confirms
+  that `GO:0008614 pyridoxine metabolic process` is a parallel B6-vitamer branch, not an
+  ancestor of `GO:0042823`; both pyridoxine rows should therefore be refined to the true
+  parent `GO:0042819 vitamin B6 biosynthetic process`.
 - Searched 2024-2026 PubMed and broader web results for SNO2/SNZ/SNO/PdxT/pyridoxal yeast
   papers. No newer SNO2 functional paper changed the existing caveat that SNO2-specific
   enzymatic activity and physiology are assigned from family membership, an intact catalytic
