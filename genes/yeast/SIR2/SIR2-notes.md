@@ -240,9 +240,9 @@ No IBA failure was found. The molecular-function and subtelomeric-silencing
 transfers are core, while the broad `DNA damage response` transfer is defensible
 but non-core because the direct SIR2 phenotypes sit downstream of chromatin
 silencing. In-target SGD evidence appears among the PAINT seeds for the H3K14,
-H3K9, H4K16, DNA-damage-response, and subtelomeric-heterochromatin nodes; direct
-SIR2 literature also supports the nuclear localization and transcriptional
-corepressor assignments.
+nuclear-localization, H3K9, H4K16, DNA-damage-response, and
+subtelomeric-heterochromatin nodes; direct SIR2 literature also supports the
+transcriptional corepressor assignment.
 
 The 2026 search also recovered the 2024 Cucinotta/Tsukiyama full-text preprint
 on quiescent rDNA architecture, cached as PMID:39713455. It strengthens the
