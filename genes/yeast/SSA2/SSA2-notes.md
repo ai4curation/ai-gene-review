@@ -31,6 +31,10 @@
   [file:interpro/panther/PTHR19375/PTHR19375-paint.tsv].
 - Marked generic nucleotide binding as over-annotated because ATP binding/hydrolysis and
   ATP-dependent chaperone activity are already represented more informatively.
+- Removed the remaining bare `GO:0005515 protein binding` rows from generic
+  high-throughput or prediction-backed interaction records, and retained the two
+  Hsp70/Hsp90 co-chaperone rows as `MODIFY` to `GO:0031072 heat shock protein
+  binding`.
 - Kept broad nuclear import as non-core because its direct support is the specialized
   tRNA-import pathway rather than the central folding/refolding mechanism.
 
@@ -46,6 +50,22 @@
 - SSA2 is directly relevant to `UNFOLDED_PROTEIN_BINDING`; its row now points to
   GO:0140662 and describes its constitutive cytosolic Hsp70 role.
 - No curated module membership was found for SSA2/YLL024C/P10592.
+
+## 2026-09-29 IBA follow-up
+
+- Rechecked all eight GO_REF:0000033 IBA rows against
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv`. The accepted nucleus,
+  cytoplasm, cytosol, ATPase, heat-shock-protein-binding, protein-folding
+  chaperone, and protein-refolding transfers all still trace to current PAINT
+  rows; the pinned plasma-membrane IBA remains stale because current
+  PTN002500132 carries only `GO:0005634 nucleus` and `GO:0005829 cytosol`.
+- Added `propagation_review.source_entities` to the accepted IBA rows that were
+  missing source traces, and expanded the PTN-only Hsp70-family molecular
+  function blocks with representative current donors.
+- Searched PubMed for exact `SSA2`/`Ssa2`/`YLL024C` mentions in 2025-2026. The
+  only exact 2026 hit was PMID:41699988, an adaptive-evolution study of
+  trehalose accumulation and freeze-thaw tolerance that does not alter the
+  cytosolic Hsp70 curation decisions.
 
 ## Focused hypothesis research
 
