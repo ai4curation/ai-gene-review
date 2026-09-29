@@ -97,7 +97,7 @@ characterized SMYD enzyme Set5.
 
 | # | Term | Evid | Ref | Decision | Rationale |
 |---|------|------|-----|----------|-----------|
-| 1 | GO:0016279 protein-lysine N-methyltransferase activity | IBA | GO_REF:0000033 | KEEP_AS_NON_CORE | Best-supported MF: intact SET/SMYD active site + literature calling Set6 the most-likely genuine protein KMT. Putative, not demonstrated, so non-core. |
+| 1 | GO:0016279 protein-lysine N-methyltransferase activity | IBA | GO_REF:0000033 | ACCEPT | Best-supported MF: intact SET/SMYD active site + literature calling Set6 the most-likely genuine protein KMT. Putative, but this is the safest core-function call. |
 | 2 | GO:0042054 histone methyltransferase activity | IBA | GO_REF:0000033 | MARK_AS_OVER_ANNOTATED | Over-specific substrate class. SMYD/SETD6 act largely on non-histone targets; no histone substrate shown for Set6. The lysine-KMT MF (#1) is the defensible level. |
 | 3 | GO:0005634 nucleus | IBA | GO_REF:0000033 | KEEP_AS_NON_CORE | Plausible by SMYD family transfer, but Set6 localization is explicitly unmeasured; keep as non-core, low confidence. |
 | 4 | GO:0006338 chromatin remodeling | IEA (from GO:0042054) | GO_REF:0000108 | REMOVE | Inter-ontology inference chained off the over-annotated histone-MTase term (#2); no evidence Set6 remodels chromatin. Falls with its parent term. |
@@ -127,3 +127,22 @@ characterized SMYD enzyme Set5.
 `just deep-research-falcon yeast SET6 --fallback perplexity-lite` was attempted but timed
 out (no report produced); per project policy no fabricated deep-research file was written.
 These notes are the manual research journal instead.
+
+## 2026-09-29 IBA re-review
+
+- Re-read the GOA IBA rows against `interpro/panther/PTHR12197/PTHR12197-paint.tsv`.
+  All three PAINT rows descend from `PANTHER:PTN008534456`.
+- Added explicit `propagation_review` metadata to the accepted
+  `GO:0016279 protein-lysine N-methyltransferase activity` IBA and the non-core
+  `GO:0005634 nucleus` IBA. The already-reviewed `GO:0042054 histone methyltransferase
+  activity` over-propagation was left as a substrate-scoping problem on the same PTN node.
+- Promoted the broad lysine-methyltransferase IBA from `KEEP_AS_NON_CORE` to `ACCEPT`
+  because it is the only plausible SET6 enzymatic activity and the broad, family-consistent
+  term avoids the unsupported histone-specific substrate. It remains explicitly putative in
+  the summary, reason, and knowledge gaps.
+- Removed structural `GO:0008270 zinc ion binding` from `core_functions`. It is retained as
+  a non-core RCA annotation, but its role is to support the SMYD fold rather than to define a
+  standalone evolved activity.
+- Searched PubMed for 2023-2026 `SET6`/`YPL165C`/`Set6` yeast papers and found no newer
+  direct SET6 publication beyond the already-cached Hamey and Wilkins 2023 methylation-network
+  synthesis.
