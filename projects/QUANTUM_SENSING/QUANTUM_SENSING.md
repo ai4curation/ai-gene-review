@@ -1,8 +1,31 @@
 ---
 title: "Quantum Sensing Proteins and Engineering Chassis"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN]
+species: [DROME, ARATH, human]
 ---
 
 # Quantum Sensing Proteins and Engineering Chassis
+
+**Bottom line:** a few biological sensors may depend on quantum effects, and
+the best-supported case is radical-pair magnetoreception, where blue light
+creates spin-correlated flavin-tryptophan radical pairs in cryptochromes
+whose chemistry is sensitive to weak magnetic fields. From one deep-research
+report (January 2026) we summarized the three proposed magnetoreception
+mechanisms (radical pair, magnetite, induction), shortlisted five candidate
+proteins (robin CRY4, monarch CRY1, human CRY2, fly CRY and the engineered
+MagLOV proteins) and five engineering chassis, and listed contested areas
+such as fly behavioural assays and vibrational olfaction. We did this to
+scope whether an AI Gene Review project could usefully cover quantum-sensitive
+proteins, or support engineering them. Scoped, not yet started: no gene has
+been reviewed for this project, and the triage pipeline the page describes
+under `projects/quantum-sensing-bioinformatics/` is not in the repo. Existing
+reviews made for other projects already carry magnetoreception rows: fly CRY
+(4 rows across those two terms, plus 1 for GO:0050980 *detection of light
+stimulus involved in magnetoreception*) and Arabidopsis CRY1 (2 rows) keep
+`magnetoreception` or `response to magnetism` as `KEEP_AS_NON_CORE`, and human CRY2 has none. The page also
+holds an unrelated side note on open light-source datasets
+(`LIGHT_SOURCE_OPEN_DATASETS.md`).
 
 ## Scope
 Working definition: biological systems in which quantum effects (spin chemistry, quantum coherence, or tunneling) materially affect a sensing or signal transduction step. The strongest evidence base today is for radical-pair magnetoreception in cryptochromes; other areas are more speculative or are about energy transfer rather than sensing.
@@ -145,3 +168,7 @@ Implication: potential quantum-tunneling or inelastic electron transfer mechanis
 - InParanoid: CRY1_ARATH ortholog group lists Q96524 (CRY2).
 - RCSB PDB/AlphaFold: UniProt O77059 (Drosophila cryptochrome).
 - Deep research report: file:projects/QUANTUM_SENSING/QUANTUM_SENSING-deep-research-openai.md
+
+## Slides
+
+- [Slides](slides/QUANTUM_SENSING-slides.html) (Marp source: [QUANTUM_SENSING-slides.md](slides/QUANTUM_SENSING-slides.md)) — AI generated

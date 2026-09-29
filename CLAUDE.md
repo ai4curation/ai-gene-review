@@ -328,6 +328,16 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
+obsoleted without a replacement), do not put an obsolete or ill-fitting id in
+`core_functions.molecular_function`. Instead set `proposed_molecular_function` to the
+`proposed_name` of a top-level `proposed_new_terms` entry, and leave `molecular_function`
+unset. Validation errors if no entry matches, if both are set, or if neither the core
+function nor the proposed term has `supported_by` (a proposed activity can never trace to an
+existing annotation). In a MODIFY, the matching replacement is `proposed_replacement_terms:
+[{id: NTR, label: ...}]` whose label starts with that same `proposed_name` (a warning
+otherwise). When GO creates the term, swap its id into `molecular_function`.
+
 ### PANTHER ids: never write a family label from memory
 
 PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in

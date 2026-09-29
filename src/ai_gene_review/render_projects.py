@@ -15,6 +15,7 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.render import normalize_artifact_metadata, resolve_research_artifacts
 from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
 
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
@@ -1070,37 +1071,49 @@ def convert_referenced_notebooks(
     return output_paths, warnings
 
 
+HTML_ASSET_SUFFIXES = {".html", ".htm"}
+
+
 def copy_referenced_assets(
     md_files: List[Path],
     output_dir: Path,
     projects_dir: Path,
     rendered_paths: Optional[List[Path]] = None,
 ) -> List[Path]:
-    """Copy local assets referenced by markdown content or sidecar metadata."""
+    """Copy local assets referenced by markdown content or sidecar metadata.
+
+    Copied HTML assets are followed transitively: a linked Marp deck
+    (``FOO/slides/FOO-slides.html``) pulls in the figures it references, so a
+    deck linked from its project page deploys with its images.
+    """
     projects_root = projects_dir.resolve()
     output_root = output_dir.resolve()
     rendered = {path.resolve() for path in (rendered_paths or [])}
     copied: List[Path] = []
     seen_assets: set[Path] = set()
 
+    pending: List[Path] = []
     for md_file in md_files:
-        asset_paths = referenced_local_assets(
-            md_file,
-            projects_dir,
-        ) + referenced_frontmatter_sidecars(md_file, projects_dir)
-        for asset_path in asset_paths:
-            if asset_path in seen_assets:
-                continue
-            seen_assets.add(asset_path)
+        pending.extend(
+            referenced_local_assets(md_file, projects_dir)
+            + referenced_frontmatter_sidecars(md_file, projects_dir)
+        )
+    while pending:
+        asset_path = pending.pop(0)
+        if asset_path in seen_assets:
+            continue
+        seen_assets.add(asset_path)
+        if asset_path.suffix.lower() in HTML_ASSET_SUFFIXES:
+            pending.extend(referenced_local_assets(asset_path, projects_dir))
 
-            rel_path = asset_path.resolve().relative_to(projects_root)
-            output_path = output_root / rel_path
-            if output_path.resolve() in rendered:
-                continue
+        rel_path = asset_path.resolve().relative_to(projects_root)
+        output_path = output_root / rel_path
+        if output_path.resolve() in rendered:
+            continue
 
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(asset_path, output_path)
-            copied.append(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(asset_path, output_path)
+        copied.append(output_path)
 
     return copied
 
@@ -1303,6 +1316,14 @@ def render_project(
     # Bundle assets are copied after rendering; retain their mirrored URLs even
     # on a clean build where those output files do not exist yet.
     mirrored_assets = set(referenced_local_assets(md_path, projects_dir)) if projects_dir is not None else set()
+    # Provider report exports may list artifacts that were never archived.
+    # Render the same explicit notices as gene research panels, while leaving
+    # undeclared broken links visible to the publication audit.
+    # Keep artifact URLs relative to the source here; the publication rewriter
+    # below maps archived files into their mirrored output locations.
+    html = resolve_research_artifacts(
+        normalize_artifact_metadata(frontmatter), html, md_path, md_path.parent,
+    )
     html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
@@ -1555,7 +1576,14 @@ def render_projects_table(
     # Stable, meaningful ordering for the controlled vocabularies so the
     # template can render filter chips deterministically.
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
-    tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    tag_order = [
+        "FLAGSHIP",
+        "BIOLOGY_DOMAIN",
+        "PIPELINE",
+        "EVALUATION",
+        "ML_PREDICTIONS",
+        "OBSOLETION",
+    ]
     review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [
         m for m in maturity_order if any(r["maturity"] == m for r in rows)
