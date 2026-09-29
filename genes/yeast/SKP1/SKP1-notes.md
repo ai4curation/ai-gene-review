@@ -141,10 +141,11 @@ biology:
   remain core Skp1 calls, backed by the Mathias/Koepp/Kaplan localization, SCF receptor, and Cdc53-binding
   papers that were already cached.
 
-`genes/yeast/SKP1/SKP1-goa.tsv` still names the two PTNs, but the local PAINT snapshot under
-`interpro/panther/PTHR11165/` currently contains only `PTHR11165-metadata.yaml` and
-`PTHR11165-entries.csv`, so the review now records each PTN source as `SOURCE_STALE_OR_MISSING`
-while keeping the accepted biological decisions.
+Fetched `interpro/panther/PTHR11165/PTHR11165-paint.tsv` and confirmed that current PAINT still
+places the nucleus, cytoplasm, SCF-dependent proteasomal degradation, and cullin-binding IBDs on
+`PTN000126179`, and broad mitotic-cell-cycle IBD on `PTN000877296`. The review now enumerates
+curated subsets of the actual extant donors from each row rather than treating the two PTNs as
+unrecoverable.
 
 Fresh PubMed searches for 2025-2026 `Skp1`/`SKP1`/`Cbf3d` with exact `Saccharomyces cerevisiae` or
 yeast SCF/RAVE terms recovered only a mammalian Rabconnectin-3/V-ATPase paper that mentions yeast
