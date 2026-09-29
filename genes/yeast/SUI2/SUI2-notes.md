@@ -14,11 +14,11 @@
   `GO:0006413`, plus the eukaryote-restricted `PTN000063908` IBD rows for
   `GO:0005850` and `GO:0033290`. SUI2 itself appears among the descendant seeds for all
   but the ribosome-binding row; that is valid target support, not circular evidence.
-- Preserved the four core IBA calls as `ACCEPT` and added `propagation_review` blocks
+- Preserved all five IBA calls as `ACCEPT` and added `propagation_review` blocks
   with the relevant PANTHER PTN source nodes. Kept the `GO:0043022 ribosome binding`
-  IBA as `MODIFY`: the family-level inheritance is plausible, but ribosome binding is
-  less mechanistic than eIF2 translation initiation factor activity plus the specific
-  methionyl-initiator tRNA binding term already present from direct yeast assays.
+  IBA because R53 directly contacts 18S rRNA helix 23 in the yeast PIC; the
+  translation-initiation-factor and methionyl-initiator-tRNA-binding rows are already
+  present and do not replace that 40S contact.
 - Converted the legacy generic `GO:0005515 protein binding` rows from
   `MARK_AS_OVER_ANNOTATED` to `REMOVE`. The underlying interactions are not being
   disputed; `GO:0005515` is simply too low-information when eIF2 complex membership,
