@@ -1,11 +1,30 @@
 ---
 title: "Oxidative Phosphorylation (OXPHOS) Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+genes: [NDUFS1, NDUFV1, NDUFS2, NDUFS4, ACAD9, SDHA, SDHB, SDHC, SDHD, SDHAF2, CYC1, UQCRFS1, UQCRC1, BCS1L, COX4I1, COX4I2, COX5B, COX6A1, COX6B1, NDUFA4, SURF1, SCO1, SCO2, COX10, COX15, LRPPRC, ATP5F1A, ATP5F1B, ATP5MC1, ATP5MC2, ATP5MC3, ATP5IF1, TMEM70, CYCS, COQ8A, ETFDH]
 ---
 
 # Oxidative Phosphorylation (OXPHOS) Project
+
+**Bottom line:** oxidative phosphorylation makes most cellular ATP through four
+electron-transport complexes, two mobile carriers and the ATP synthase, built
+from about 90 subunits plus dozens of assembly factors. We prioritized 38 human
+nuclear-encoded genes across all five complexes, the carriers and CoQ/ETF
+entry points, and reviewed every existing GO annotation on them; 36 now have
+reviews in the repo (1,330 annotations: 861 accepted, 201 kept as non-core, 152
+marked over-annotated, 38 modified, 52 removed, 18 NEW, 8 undecided). The reviews apply one
+pattern throughout: catalytic subunits enable their own activity and
+`contributes_to` the complex activity, non-catalytic subunits only contribute,
+and assembly factors (SURF1, SCO1/SCO2, COX10, COX15) are annotated to assembly
+or cofactor biosynthesis rather than to the oxidase itself. Typical removals
+were whole-complex activity on an assembly factor (SURF1 cytochrome-c oxidase
+activity) and a wrong-reaction MF (COX10 `GO:0004311`). A taxon-neutral
+[OXPHOS module](../modules/oxphos.yaml) models each complex as one catalytic
+node with its subunits as active units. NDUFS2, NDUFS4, SDHC, SDHD, UQCRC1,
+BCS1L, ACAD9, ATP5F1A, SDHAF2, COQ8A and ETFDH were reviewed under other
+projects and modules; only COX7A2L and HCCS remain unreviewed.
 
 ## Overview
 
@@ -279,17 +298,17 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [x] SCO1 -- reviewed 2026-05-18 (24 annotations, copper chaperone/COX2 CuA maturation factor)
 - [x] COX10 -- reviewed 2026-05-18 (24 annotations, heme O synthase; erroneous GO:0004311 assignment removed)
 - [x] COX15 -- reviewed 2026-05-18 (25 annotations, heme A synthase; complex-component calls over-annotated)
-- [ ] NDUFS2
-- [ ] NDUFS4
-- [ ] SDHC
-- [ ] SDHD
-- [ ] UQCRC1
-- [ ] BCS1L
-- [ ] ACAD9
-- [ ] ATP5F1A
-- [ ] SDHAF2
-- [ ] COQ8A
-- [ ] ETFDH
+- [x] NDUFS2 -- reviewed under another project or module
+- [x] NDUFS4 -- reviewed under another project or module
+- [x] SDHC -- reviewed under another project or module
+- [x] SDHD -- reviewed under another project or module
+- [x] UQCRC1 -- reviewed under another project or module
+- [x] BCS1L -- reviewed under another project or module
+- [x] ACAD9 -- reviewed under another project or module
+- [x] ATP5F1A -- reviewed under another project or module
+- [x] SDHAF2 -- reviewed under another project or module
+- [x] COQ8A -- reviewed under another project or module
+- [x] ETFDH -- reviewed under another project or module
 - [ ] COX7A2L
 - [ ] HCCS
 
@@ -378,3 +397,7 @@ plus mobile electron carriers and assembly factors. 7 genes already reviewed fro
 projects (ATP5MC1/2/3, CYC1, COX5B, TMEM70, LRPPRC). 25 new genes prioritized across
 three tiers. Complex II (SDH) genes are particularly interesting due to dual TCA/ETC
 function and tumor suppressor roles.
+
+## Slides
+
+- [Slides](OXPHOS/slides/OXPHOS-slides.html) (Marp source: [OXPHOS-slides.md](OXPHOS/slides/OXPHOS-slides.md)) — AI generated

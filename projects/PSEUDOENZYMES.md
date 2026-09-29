@@ -2,9 +2,34 @@
 title: "Pseudoenzymes Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [RAMVA, SCHPO, SACEN, PSEAE, STRCO]
+genes: [RvY_13070, RvY_00650, RvY_03757, RvY_17310, RvY_15948, Epe1, eryCII, pqsB, actI-ORF2]
 ---
 
 # Pseudoenzymes Project
+
+**Bottom line:** pseudoenzymes keep an enzyme's fold but have lost its
+catalysis, and automated pipelines (InterPro2GO, EC2GO, UniRule, ARBA, IBA)
+still give them the family's catalytic activity and the processes that follow
+from it. This project catalogs the pseudoenzymes found during gene review,
+the checks used to detect them (catalytic-residue conservation, PROSITE motif
+context, M-CSA and HMM scoring, structures), and the annotation errors they
+cause. Nine reviewed genes carry the analysis: five Cu/Zn-SOD paralogs in the
+tardigrade *R. varieornatus*, the fission yeast JmjC protein Epe1 (a probable "reader"), the
+P450-like glycosyltransferase activator EryCII, and the non-catalytic
+condensing-enzyme subunits PqsB and ActI-ORF2. In those reviews, Epe1's
+electronic histone demethylase rows and EryCII's monooxygenase and heme rows are
+REMOVE; the SOD activity rows on RvY_13070 (RvSOD15), RvY_00650 and RvY_03757
+and the acyltransferase rows on PqsB and ActI-ORF2 are MARK_AS_OVER_ANNOTATED.
+Two gene reviews are more cautious than the prose below: RvY_17310's SOD rows
+are UNDECIDED, and the CCS-like RvY_15948 keeps superoxide metabolic process
+as non-core rather than removing it.
+
+We did this because family-based propagation never checks whether the
+catalytic residues survive, so pseudoenzymes are a systematic, predictable
+source of false enzyme annotations. The case list is still small; a
+systematic screen across existing reviews and the human pseudokinome is the
+main open task.
 
 **Project Start Date:** 2026-04-09
 **Focus:** Identification, annotation, and curation of catalytically inactive enzyme homologs
@@ -104,8 +129,9 @@ or sequestration function:
 ### Type 5: Retaining reader/recognition function
 The pseudoenzyme retains substrate recognition (e.g., modification state)
 without modifying the substrate:
-- **Epe1**: JmjC "pseudo-demethylase" that reads H3K9me marks without removing
-  them, acting as an anti-silencing factor
+- **Epe1**: probable JmjC "pseudo-demethylase" that binds H3K9-methylated
+  histones in vitro; no demethylase activity has been detected (latent activity
+  is not excluded), and it acts as an anti-silencing factor
 - **MLL3/KMT2C SET domain**: reduced methyltransferase activity; may primarily
   read H3K4me
 
@@ -137,8 +163,10 @@ is altered.
 **Example implementations:**
 - `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/analyze_sods.py` - Cu/Zn
   SOD catalytic residue check against human SOD1
-- `genes/SCHPO/Epe1/Epe1-bioinformatics/analyze_jmjc_protein.py` - JmjC
-  Fe(II) coordination motif check
+- `genes/SCHPO/Epe1/Epe1-bioinformatics/02_jmjc_domain_analysis.py` - JmjC
+  Fe(II) ligands read from UniProt FT BINDING features (a bare `H.[DE]` motif
+  scan does not locate the site: Epe1's HVD@280 is not a ligand, and active
+  KDM2A's ligand H212 is itself an HVD)
 
 ### 2. PROSITE motif matching
 
@@ -244,23 +272,49 @@ REMOVED for RvY_15948 (which is a chaperone, not a SOD).
 
 ### JmjC histone demethylase pseudoenzyme (Schizosaccharomyces pombe)
 
-**Epe1** (*S. pombe*, UniProt O94603) - **confirmed pseudoenzyme** with
+**Epe1** (*S. pombe*, UniProt O94603) - **probable pseudoenzyme** with
 well-documented alternative function.
 
 | Feature | Details |
 |---------|---------|
-| **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/α-KG dioxygenase) |
-| **Defect** | Degenerate Fe(II)-binding motif (HVD at position 279-282 instead of canonical HxD); missing key catalytic residues |
-| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays; H297A "catalytic" mutant retains anti-silencing function |
-| **Actual function** | Anti-silencing factor; recruits SAGA histone acetyltransferase and Bdf2 bromodomain protein to heterochromatin boundaries; promotes nucleosome turnover; functions as H3K9me **reader**, not eraser |
-| **Type** | Type 5 (reader/recognition without modification) |
-| **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0051213 (dioxygenase activity), GO:0005506 (iron ion binding), GO:0070076 (histone lysine demethylation) |
-| **Annotations added** | GO:0042393 (histone binding), GO:0140030 (modification-dependent protein binding) |
-| **References** | Raiymbek 2020; Bao 2019; Epe1 gene review at `genes/SCHPO/Epe1/` |
+| **Family** | JmjC domain (IPR003347); cupin superfamily (Fe(II)/2-oxoglutarate-dependent dioxygenase) |
+| **Defect** | Non-canonical Fe(II)-binding triad: H297-E299-Y370, with Tyr370 in place of the third iron-ligand His of canonical HX(D/E)...H JmjC demethylases (UniProt caution). Tyr370 is nonetheless required (Y370A loses function, Raiymbek 2020); Y307 is a 2-oxoglutarate-site residue and Y307A also loses function. Required is not catalytic: these mutants also weaken Swi6 binding |
+| **Biochemical evidence** | Purified Epe1 shows NO detectable removal of H3K9me marks in mass spec assays. The H297A Fe(II)-site mutant is assay-dependent: expressed from a single copy it fails, like epe1Δ, to remove already-established ectopic heterochromatin although it still suppresses its formation (Sorida 2019; one experiment read from two arms, retained prevention and lost removal), while overexpressed H297A still disrupts silencing in a SAGA-dependent way (Bao 2019) |
+| **Actual function** | Anti-silencing factor; associates with the SAGA histone acetyltransferase complex (and recruits it to heterochromatin when overexpressed); recruits the Bdf2 bromodomain protein to the boundaries flanking centromeres; required for normal heterochromatic nucleosome turnover, which chaperones such as FACT carry out; binds Swi6/HP1 in an H3K9 methylation-stimulated manner; no demethylase (eraser) activity has been detected, though latent activity is not excluded |
+| **Type** | Type 5 (probable: recognition without detected modification activity) |
+| **Annotations removed** | GO:0032452 (histone demethylase activity), GO:0140680 (histone H3K36me/H3K36me2 demethylase activity), GO:0051213 (dioxygenase activity), GO:0016491 (oxidoreductase activity). The two experimental GO:0032454 rows (IDA and EXP) and GO:0046872 (metal ion binding) are UNDECIDED rather than REMOVE |
+| **Annotations added** | NEW rows: GO:0070087 (chromo shadow domain binding, Swi6), GO:0062070 (SAGA complex binding), GO:0030674 (protein-macromolecule adaptor activity) and GO:0042393 (histone binding); the MODIFY on the protein-binding IPI (partner Cdt2) proposes GO:0031625 (ubiquitin protein ligase binding). The core-function MFs are GO:0070087 (Swi6 chromoshadow-domain binding), GO:0062070 (SAGA complex binding; shown with overexpressed Epe1), GO:0030674 (protein-macromolecule adaptor activity, Bdf2 recruitment), GO:0042393 (histone binding: purified Epe1 preferentially binds H3K9-methylated histones, Raiymbek 2020; attached to the nucleosome-turnover core function, whose mechanism is unresolved) and GO:0003712 (transcription coregulator activity) |
+| **References** | Raiymbek 2020; Bao 2019 (PMID:30573453); Sorida 2019 (PMID:31206516); Epe1 gene review at `genes/SCHPO/Epe1/` |
 
-**Key insight:** Epe1 is a paradigm for the Type 5 (reader) pseudoenzyme.
-Its JmjC domain retains substrate recognition capability (binds H3K9me) but
-cannot catalyze demethylation. This creates a common annotation error where
+**Key insight:** Epe1 is a probable Type 5 (reader) pseudoenzyme. It binds
+H3K9-methylated histones in vitro, but no demethylase activity has been
+detected, and latent activity is not excluded. The case is not closed: the JmjC
+domain is essential for Epe1 activity in complementation experiments (Ayoub et
+al. 2003, PMID:12773576) and is required for its effect on Pol II accessibility
+(Zofall and Grewal 2006, PMID:16762840), UniProt records the single-residue
+mutant Y307A as loss of function (from the same paper, possibly the same
+experiment), and Wang et al. 2015 (PMID:25774602)
+interpret active-site mutant phenotypes as enzymatic redundancy with Mst2.
+Independently, Sorida et al. 2019 (PMID:31206516) show that H297A leaves the de
+novo arm intact but entirely fails to remove established ectopic
+heterochromatin, a separation of function read out as H3K9me (Raiymbek et al. give
+the same in vivo H3K9me readout for H297A, Y307A and Y370A), though
+no study has measured demethylation directly. That one experiment is read from
+both arms: retained prevention of de novo H3K9me argues that part of the
+anti-silencing activity does not need H297, while lost removal of established
+H3K9me is the counter-evidence to a purely non-catalytic reading. The removal
+arm is read at single-copy dose, where even wild-type removal is limited
+(Sorida et al. report that "re-introduction of single copy Epe1 did not erase
+ectopic heterochromatin when an H3K9me source existed nearby, while Epe1
+overexpression completely erased it"). Y307, the
+residue of the UniProt loss-of-function record, is assigned by Raiymbek et al.
+to the alpha-ketoglutarate site, and Sorida et al. describe Epe1Y307A as
+retaining the metal-binding residues, so that record implicates the
+2-oxoglutarate part of the cofactor pocket without isolating catalysis. A
+required domain is not required catalysis: Raiymbek et al. (PMID:32195666)
+show that the JmjC-containing half of Epe1 (amino acids 1–600) binds H3K9me3
+peptide and H3K9-methylated histones directly, without Swi6, and interpret this
+as H3K9me recognition by the JmjC domain. This creates a common annotation error where
 JmjC domain presence alone leads to multiple incorrect MF/BP annotations.
 
 ### Cytochrome-P450-homologue glycosyltransferase activator (S. erythraea EryCII)
@@ -350,10 +404,11 @@ a NEW annotation for the actual function is appropriate:
 ### Pattern 5: Automated pipelines over-propagate downstream annotations
 When a pseudoenzyme is incorrectly annotated with a catalytic activity, the
 downstream biological process and pathway annotations are also incorrectly
-propagated. For example, Epe1's incorrect histone demethylase activity leads
-to incorrect histone demethylation (BP), which leads to incorrect
-"negative regulation of gene expression, epigenetic." All these downstream
-annotations must be removed together.
+propagated. For example, a histone demethylase activity row on a
+pseudo-demethylase can bring histone demethylation (BP) rows with it. Such
+downstream rows should be reviewed together with the activity row. (Epe1 has
+no histone demethylation BP row in GOA; its demethylase MF rows are the
+case in point.)
 
 ### Pattern 6: The "catalytic residue plus flanking context" rule
 For reliable pseudoenzyme detection, check THREE things:
@@ -428,10 +483,10 @@ to other enzyme families:
 ### JmjC domain template (`genes/SCHPO/Epe1/Epe1-bioinformatics/`)
 More elaborate pipeline with:
 - `01_fetch_sequences.py` - fetch paralogs and orthologs
-- `02_jmjc_domain_analysis.py` - domain boundary + Fe(II)-binding motif search
-- `03_conservation_analysis.py` - multiple sequence alignment conservation scoring
-- `04_functional_regions_analysis.py` - non-catalytic region analysis (coiled coil, NLS, etc.)
-- `05_structural_features.py` - structural feature prediction
+- `02_jmjc_domain_analysis.py` - JmjC boundary and Fe(II) ligands from UniProt features
+- `03_conservation_analysis.py` - MAFFT alignment of JmjC domains; residue at each annotated site
+- `04_functional_regions_analysis.py` - comparator Fe-ligand counts and C-terminal composition
+- `05_structural_features.py` - domain figure marking the UniProt BINDING, CAUTION and MUTAGEN positions
 - `justfile` - reproducible pipeline
 
 Good template for families where the pseudoenzyme has neofunctionalized
@@ -451,8 +506,9 @@ Good template for families where the pseudoenzyme has neofunctionalized
    and functional characterization to distinguish.
 
 4. **Do pseudoenzymes retain substrate binding?** Yes in many cases (HER3
-   binds ATP; Epe1 binds H3K9me; iRhoms bind protease substrates). This is
-   the common "retained substrate binding + lost catalysis" pattern.
+   binds ATP; Epe1 binds H3K9-methylated histones in vitro; iRhoms bind
+   protease substrates). This is the common "retained substrate binding +
+   lost or undetected catalysis" pattern.
 
 5. **Are there pseudoenzymes in non-enzyme families?** Pseudo-receptors,
    pseudo-transcription factors, etc. exist. Similar principles apply.
@@ -469,8 +525,12 @@ Good template for families where the pseudoenzyme has neofunctionalized
 - **Byrne et al. 2020** - PseudoHunter detection pipeline *Bioinformatics*;
   tool paper
 - **Raiymbek et al. 2020** - Epe1 biochemistry and anti-silencing function
-- **Bao et al. 2019** - Epe1 H297A mutant retains anti-silencing; confirms
-  non-enzymatic mechanism
+- **Bao et al. 2019** - overexpressed Epe1 recruits SAGA; overexpressed Epe1-H297A still
+  disrupts silencing, SAGA-dependently (the paper notes that endogenous-level
+  H297A resembles epe1Δ)
+- **Sorida et al. 2019** - single-copy Epe1-H297A suppresses ectopic
+  heterochromatin formation but fails to remove established ectopic
+  heterochromatin (PMID:31206516)
 - **Manning et al. 2002** - Original identification of ~10% of human kinome
   as pseudokinases *Cell*
 
@@ -485,7 +545,7 @@ Good template for families where the pseudoenzyme has neofunctionalized
   - `genes/RAMVA/RvY_00650/`, `genes/RAMVA/RvY_03757/`, `genes/RAMVA/RvY_17310/`
     (PROSITE-identified impaired paralogs)
   - `genes/RAMVA/RvY_15948/` - CCS chaperone (different pseudoenzyme type)
-  - `genes/SCHPO/Epe1/` - JmjC pseudo-demethylase (paradigmatic Type 5 example)
+  - `genes/SCHPO/Epe1/` - probable JmjC pseudo-demethylase (Type 5 example)
 
 ## TODO / future work
 

@@ -3,9 +3,39 @@ title: "C. elegans Mitophagy & Mitochondrial Quality Control Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
+genes: [pink-1, pdr-1, dct-1, drp-1, fzo-1, eat-3, bec-1, lgg-1, lgg-2, sqst-1, atg-18, epg-5, atfs-1, hlh-30, skn-1, miro-1, spg-7]
 ---
 
 # C. elegans Mitophagy & Mitochondrial Quality Control Project
+
+**Bottom line:** mitophagy, the selective autophagy of damaged
+mitochondria, is conserved in *C. elegans*, where the PINK-1 kinase, the
+PDR-1 Parkin ligase and the DCT-1 (BNIP3L/NIX) receptor mark mitochondria
+for the LGG-1/LGG-2 autophagy machinery, and ATFS-1 decides between repair
+through the mitochondrial unfolded protein response and removal. We
+reviewed every existing GO annotation on 17 genes in three tiers (core
+mitophagy and dynamics, autophagy machinery, longevity regulators) and wrote
+a [pathway summary](CAEEL_MITOPHAGY/CAEEL_MITOPHAGY-pathway.md). All 17
+reviews are complete: 543 rows, 408 ACCEPT, 62 KEEP_AS_NON_CORE, 12
+MARK_AS_OVER_ANNOTATED, 26 MODIFY, 3 REMOVE, 9 UNDECIDED and 23 NEW
+proposals. The main results are a NEW mitochondrion autophagosome adaptor
+activity (GO:0140580) for DCT-1, replacement of generic `protein binding`
+rows on LGG-1, LGG-2, BEC-1, SQST-1 and SKN-1, and new transport and fission
+terms for MIRO-1. The December 2025 status notes below overstate
+removals: the DRP-1 microtubule rows are marked over-annotated, and a
+September 2026 re-review moved EAT-3's peroxisome-fission and microtubule
+rows from REMOVE to UNDECIDED. The notes below also say fundc-1 has no
+clear worm ortholog; that is out of date: fundc-1 (Q22252, the FUNDC1
+ortholog) now has a completed review in `genes/worm/` that proposes the
+same adaptor activity (GO:0140580), but it is not counted in the 17-gene,
+543-row totals. Six of the 17 genes are shared with other projects
+(bec-1, lgg-1, atg-18, skn-1 and hlh-30 with proteostasis, atfs-1 with
+the UPR project), so do not sum row totals across projects.
+
+We did this because the worm is a main genetic model for Parkinson's
+disease genes and for the link between mitochondrial quality control and
+lifespan, and its annotations feed orthology-based inference for the human
+PINK1/Parkin pathway.
 
 ## Overview
 
@@ -108,7 +138,7 @@ Stress response coordination:
 | miro-1 | Q94263 | RHOT1/2 | Mito transport/Parkin target | ✓ REVIEWED |
 | spg-7 | Q9N3T5 | AFG3L2 | m-AAA protease | ✓ REVIEWED |
 
-**Note:** fundc-1 was listed but has no clear C. elegans ortholog in UniProt.
+**Note:** fundc-1 was originally skipped as lacking a clear C. elegans ortholog in UniProt; this is out of date. fundc-1 (Q22252) is the FUNDC1 ortholog and now has a completed review (`genes/worm/fndc-1/`), not yet counted in this project's totals.
 
 ## Key Biological Concepts
 
@@ -219,7 +249,7 @@ All 6 autophagy machinery genes reviewed:
 
 ## 2025-12-28 - Priority 3 COMPLETE
 
-All 5 longevity & regulation genes reviewed (fundc-1 omitted - no clear C. elegans ortholog):
+All 5 longevity & regulation genes reviewed (fundc-1 omitted at the time as lacking a clear C. elegans ortholog; since reviewed as Q22252, see note above):
 
 ### Priority 3 Summary:
 - **atfs-1** (Q23272): ATFS1 transcription factor - Master regulator of UPR-mt. Dual targeting (MTS+NLS) allows import-efficiency sensing. Under stress, accumulates in nucleus to activate mitochondrial chaperones, proteases, and immune genes. Degraded by LONP-1 in healthy mitochondria.
@@ -237,3 +267,7 @@ All 5 longevity & regulation genes reviewed (fundc-1 omitted - no clear C. elega
 
 ### Project Complete!
 All 17 genes (6 + 6 + 5) across 3 priority levels have been reviewed. Only pathway summary integration remains.
+
+## Slides
+
+- [Slides](CAEEL_MITOPHAGY/slides/CAEEL_MITOPHAGY-slides.html) (Marp source: [CAEEL_MITOPHAGY-slides.md](CAEEL_MITOPHAGY/slides/CAEEL_MITOPHAGY-slides.md)) — AI generated

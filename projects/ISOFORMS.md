@@ -2,12 +2,14 @@
 title: "ISOFORMS: Genes with Clear Functional Differences Between Isoforms"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
-genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, FGFR2, PKM]
+genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, TPM3, DSCAM, FGFR2, PKM, STAT3]
 species: [human, mouse, rat, DROME]
 sidecars:
   genes: ISOFORMS/genes.csv
 ---
 # ISOFORMS: Genes with Clear Functional Differences Between Isoforms
+
+**Bottom line:** most GO annotations are made at the gene level, but alternative splicing and proteolytic cleavage can give one gene products with opposite functions, such as anti-apoptotic Bcl-xL and pro-apoptotic Bcl-xS, or neuroprotective sAPPalpha and neurotoxic amyloid-beta from APP. We reviewed every existing GO annotation on 16 paradigm genes (13 splicing cases in three tiers, plus the POMC and APP/App polyproteins), 2,774 annotation rows in all, and extended the data model to record which isoform an annotation was made on (`isoform`), NOT annotations (`negated`), and curator-defined functionally distinct products (`functional_isoforms`). We did this to measure how often gene-level annotation merges functions that belong to different products, and to give reviewers a way to say so. The conflation pattern holds across the set: 246 rows were marked over-annotated, often because one isoform's function was attached to the whole gene (8 in BCL2L1 for pro/anti-apoptotic conflation; 21 in VEGFA, whose VEGF165B isoform is anti-angiogenic; 63 in mouse App, where the page's notes attribute them to amyloid-beta-specific terms). Thirteen of the 16 reviews are marked COMPLETE; WT1 and VEGFA are still IN_PROGRESS and DSCAM is a DRAFT, and PTBP1/2 and MST1R have not been started. The checkboxes under Priority Genes predate the status section below.
 
 ## Overview
 
@@ -121,7 +123,7 @@ Key reviews and resources:
 ### Tier 2 Genes
 - [x] FN1 - **COMPLETE** - 193 annotations | EDA/EDB domain developmental splicing
 - [x] TPM1 - **COMPLETE** - 55 annotations | 9 OVER_ANNOTATED (muscle vs cytoskeletal isoforms)
-- [x] TPM3 - **COMPLETE** - 39 annotations | 16 OVER_ANNOTATED (slow muscle vs TM30nm cytoskeletal)
+- [x] TPM3 - **COMPLETE** - 39 annotations | 17 OVER_ANNOTATED (slow muscle vs TM30nm cytoskeletal)
 - [x] DSCAM - **COMPLETE** - 50 annotations | 4 OVER_ANNOTATED (human has only 2 isoforms, not 38,016!)
 
 ### Tier 3 Genes
@@ -247,14 +249,14 @@ Remaining: PTBP1/2 (splicing regulators - different focus), RON/MST1R
 |------|-------|--------|----------|----------------|-------------|
 | FN1 | 193 | 62 | 39 | 0 | EDA/EDB developmental splicing |
 | TPM1 | 55 | 34 | 12 | 9 | Muscle vs cytoskeletal isoforms |
-| TPM3 | 39 | 19 | 4 | 16 | Slow muscle vs TM30nm cytoskeletal |
+| TPM3 | 39 | 7 | 14 | 17 | Slow muscle vs TM30nm cytoskeletal |
 | DSCAM | 50 | 42 | 3 | 4 | Only 2 isoforms (not like Drosophila!) |
 
 **Key Tier 2 Findings:**
 
 1. **FN1**: 17 isoforms with EDA/EDB domain variation. Plasma FN (hepatocyte) vs cellular FN (fibroblast). EDA/EDB+ isoforms are oncofetal antigens used in cancer imaging.
 
-2. **TPM1/TPM3**: Tissue-specific tropomyosin isoforms - skeletal muscle, smooth muscle, cardiac, and cytoskeletal variants. Annotations for "muscle contraction" often apply only to muscle isoforms. TPM3 had highest over-annotation rate (16/39).
+2. **TPM1/TPM3**: Tissue-specific tropomyosin isoforms - skeletal muscle, smooth muscle, cardiac, and cytoskeletal variants. Annotations for "muscle contraction" often apply only to muscle isoforms. TPM3 had highest over-annotation rate (17/39).
 
 3. **DSCAM**: CRITICAL CAVEAT - Human DSCAM has only 2 isoforms, NOT the 38,016 of Drosophila Dscam1! Vertebrates use protocadherins instead. Some IBA annotations may be inappropriately extrapolated from fly.
 
@@ -408,3 +410,7 @@ Initial project creation. Research conducted on classic isoform cases:
 **Decision on DSCAM**: Include with caveats - human DSCAM does NOT have the 38,016 isoform diversity of *Drosophila* Dscam1. The vertebrate equivalent is clustered protocadherins. Still worth reviewing but with lower priority.
 
 **Next steps**: Begin with AGRN as it has clear, well-documented isoform-specific functions with clinical relevance.
+
+## Slides
+
+- [Slides](ISOFORMS/slides/ISOFORMS-slides.html) (Marp source: [ISOFORMS-slides.md](ISOFORMS/slides/ISOFORMS-slides.md)) — AI generated

@@ -1,10 +1,27 @@
 ---
 title: "Ortholog Conjecture Project"
-maturity: IN_PROGRESS
-tags: [PIPELINE]
+collections: [HOMOLOGY_PROPAGATION]
+maturity: SCOPING
+tags: [EVALUATION]
 ---
 
 # Ortholog Conjecture Project
+
+**Bottom line:** the ortholog conjecture says that orthologs keep more similar
+functions than paralogs at the same evolutionary distance, and GO relies on it
+every time an annotation is transferred by orthology (ISO, IBA, and the
+Ensembl Compara and OrthoMCL IEA pipelines). This project is scoped, not yet
+started as an analysis. So far it holds a literature summary of the debate
+(PMID:21695233, PMID:22359495, PMID:22615551, PMID:23209392), a draft
+"open-world" similarity metric that treats missing annotations as unknown
+rather than absent, and a seed list of five documented divergence cases (CMAH,
+UOX, GULO, CDC14, and Arabidopsis/A. lyrata co-orthologs). No ortholog
+datasets have been assembled and no metrics have been computed.
+
+We are doing this because published tests of the conjecture disagree, largely
+because GO annotation bias and propagated annotations contaminate the
+measurement. A bias-controlled measure would tell curators when an
+orthology-based transfer is likely to overstate conservation.
 
 ## Overview
 The ortholog conjecture (OC) posits that orthologs (genes separated by speciation) tend to retain more similar functions than paralogs (genes separated by duplication) at the same evolutionary distance. This assumption underpins many automated functional annotations and cross-species inference pipelines. The OC remains debated because different data types, bias controls, and evaluation metrics can yield opposite conclusions.

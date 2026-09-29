@@ -1,10 +1,26 @@
 ---
 title: "Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsoletion"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [ARATH, PETHY, MYCTU]
 ---
 
 # Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsoletion
+
+**Bottom line:** Plants and many bacteria make L-phenylalanine and
+L-tyrosine from chorismate by way of prephenate. GO has obsoleted
+GO:0009095 *aromatic amino acid family biosynthetic process, prephenate
+pathway*, because it pre-composed two pathways that GO already has as
+GO:0009094 *L-phenylalanine biosynthetic process* and GO:0006571
+*L-tyrosine biosynthetic process*. We recorded the upstream tickets and
+the four experimental annotations that must move, on three proteins:
+Arabidopsis PAT (two rows), Petunia PPA-AT and M. tuberculosis Rv0948c.
+The upstream reviewer proposes removal for three rows and a move to
+GO:0009094 only for Petunia PPA-AT, whose RNAi data show a phenylalanine
+effect. The obsoletion has now landed (OLS shows GO:0009095 obsolete),
+so the "not yet applied" notes below are out of date. Scoped, not yet
+started: none of the three proteins has a review in this repo, so no
+existing review is affected.
 
 ## Overview
 
@@ -158,3 +174,7 @@ phenylalanine-biosynthesis annotation; the rest are cleanup.
   (opened 2026-05-13) and ontology issue #32005 (closed). Obsoletion not yet
   applied. No reviews started; none of the three affected genes are in this
   repo.
+
+## Slides
+
+- [Slides](PREPHENATE_PATHWAY_OBSOLETION/slides/PREPHENATE_PATHWAY_OBSOLETION-slides.html) (Marp source: [PREPHENATE_PATHWAY_OBSOLETION-slides.md](PREPHENATE_PATHWAY_OBSOLETION/slides/PREPHENATE_PATHWAY_OBSOLETION-slides.md)) — AI generated
