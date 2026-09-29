@@ -60,3 +60,38 @@ After Source72 exact import, root read all six newly available abstracts and the
 ## Focused validation
 
 2026-09-29. `just validate human ATP8A2` passed schema, authored-term and reference checks; `just render human ATP8A2` passed. Four advisories remain: the supported CDC50A association is retained as non-core under the supplied action definitions; the two IBA substrate refinements do not claim an inspected PAINT placement and therefore do not manufacture propagation metadata; and the broad experimental Golgi assignment is retained while its electronic counterpart is refined to membrane. The latter preserves experimental curation at its demonstrated resolution. These warnings are disclosed, not a claim that they disappeared. The generated history is checked separately. No new global validation pass or external PR approval is claimed.
+
+
+## 2026-09-29: review feedback and CDC50A assembly
+
+Refined the generic CDC50A interaction to protein heterodimerization activity
+(GO:0046982). The original IPI row and Q9NV96 partner are preserved. The normal
+PMID:21454556 source establishes the ATP8A2–CDC50A alpha/beta transport complex;
+its dual-purification and reconstitution constructs are bovine. Endogenous human
+CDC50A also associates with expressed bovine ATP8A2. This supports conserved
+assembly, without claiming a human 1:1 stoichiometry measurement in the original
+PMID:31397519 abstract. GO:0046982 remains a molecular-function refinement; the
+existing complex-location assertion describes a separate aspect of the protein.
+
+Added a short literal evidence anchor for preserved organ-of-Corti morphology at
+the adult mouse endpoint. This supports the existing caution about inner-ear
+morphogenesis, alongside the distinct spiral-ganglion degeneration phenotype.
+Clarified the experimentally curated Golgi resolution and the two target-specific
+refinements of broader PAINT assertions. These refinements do not reject the
+ancestral node placement or imply a newly inspected PAINT tree.
+
+The current normal caches for PMID:21454556 and PMID:24413176 contain full text;
+the review retains the recorded limits of the selected sections actually read.
+Newer papers PMID:38436085 and PMID:39662833 were considered as corroborating
+leads, but were not added as cached or principal evidence for this correction.
+The earlier journal entries remain as the record of the initial assessment.
+
+Current scope: 39 preserved source assertions, three unchanged alternative
+products and one unchanged transport core; 19 ACCEPT, 12 MODIFY,
+6 KEEP_AS_NON_CORE and 2 MARK_AS_OVER_ANNOTATED. No new annotation or process
+assertion was added. Review status remains DRAFT.
+
+Focused follow-up checks passed: gene validation reports three advisories (the
+two PAINT rows lack a claimed inspected-node propagation record, and Golgi IDA
+versus IEA decisions remain source-specific). Rendering and the new history
+record also passed. No repository-wide validation pass is claimed.
