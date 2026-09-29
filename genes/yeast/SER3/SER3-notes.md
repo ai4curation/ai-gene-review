@@ -102,7 +102,7 @@ alone to keep this diff scoped to the annotation under review.
   2-hydroxyglutarate activities. The seventh row, from PMID:16120614, is about
   mammalian Serinc proteins and is not direct evidence for S. cerevisiae Ser3p.
 - A fresh 2023-2026 PubMed/web search did not find new direct evidence requiring
-  a GO change. The 2024 S. cerevisiae Pib2/TORC1 paper used Ser3
+  a GO change. The 2024 S. cerevisiae Pib2/TORC1 paper (PMID:38127619) used Ser3
   phosphorylation as a TORC1 readout while identifying Pib2 as the cysteine
-  sensor, and the 2026 `SER3` hit engineered serine biosynthesis in
-  Komagataella phaffii rather than characterizing S. cerevisiae Ser3p.
+  sensor, and the 2026 `SER3` hit (PMID:41796364) engineered serine biosynthesis
+  in Komagataella phaffii rather than characterizing S. cerevisiae Ser3p.
