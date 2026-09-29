@@ -59,7 +59,8 @@ flap cleavage. Importantly, Rad27-E176A fully suppressed DNA:RNA hybrid accumula
 cycling cells, and EXO1 overexpression suppressed both the growth defect and hybrid accumulation,
 supporting a model in which hybrids arise mainly after flap accumulation rather than because Rad27 is
 the limiting direct R-loop resolvase.
-[PMID:40064914 "In contrast, while the cleavage of R-loop 3′ boundaries was detectable"]
+[PMID:40064914 "In contrast, while the cleavage of R-loop 3′ boundaries was detectable (Fig. 3b,
+right panels), it was several orders of magnitude less efficient than for flaps (Fig. 3d, e)."]
 [PMID:40064914 "Using in vitro assays, we found that Rad27-E176A indeed failed to process R-loop substrates,
 while it cleaved flaps as efficiently as the wt protein"]
 
@@ -133,7 +134,7 @@ flap endonuclease annotations. These were migrated from the legacy `MARK_AS_OVER
 
 ## Proposed new annotations
 
-Two, from PMID:36672839 and PMID:40064914 (both full text cached):
+One, from PMID:36672839 (full text cached), with R-loop caveats from PMID:40064914:
 
 - §3.1 and §3.2 (Figures 1–2) assay recombinant *S. cerevisiae* Rad27 alongside human FEN1 on
   lagging-strand RNA:DNA hybrid substrates — nicked RNA and RNA flaps.
@@ -148,14 +149,13 @@ Hence:
 - **GO:0004523 RNA-DNA hybrid ribonuclease activity — IDA.** Directly assayed on purified Rad27.
   [PMID:36672839 "We found that both human and yeast FEN1 efficiently cleaved an RNA flap in the
   intermediates using its endonuclease activity."]
-- **GO:0062176 R-loop processing — IDA from yeast Rad27 in vitro.** The 2022 paper's R-loop experiments
-  were human-only, but PMID:40064914 directly assayed purified *S. cerevisiae* Rad27 on synthetic R-loop
-  substrates and found detectable, weak R-loop 3' boundary cleavage. The same paper argues that the
-  DNA:RNA hybrid accumulation observed in cycling Rad27-depleted cells primarily follows flap accumulation
-  rather than loss of direct R-loop cleavage, so this remains non-core mechanistic coverage rather than a
-  central Rad27 pathway role.
 
 The human FEN1 GO:0062176 annotation *is* correctly IDA — those are the human experiments.
+PMID:40064914 then assayed purified *S. cerevisiae* Rad27 on synthetic R-loop substrates and found
+detectable but very weak R-loop 3' boundary cleavage; because the same paper argues that DNA:RNA
+hybrid accumulation in cycling Rad27-depleted cells primarily follows flap accumulation rather than
+loss of direct R-loop cleavage, direct yeast R-loop processing should stay a question rather than a
+proposed process annotation.
 
 ## Citation hygiene notes
 
@@ -170,5 +170,5 @@ IDA is accepted in deference to the SGD curator's full-text reading.
 
 ## Action tally
 
-43 annotations (41 from GOA + 2 proposed NEW):
-ACCEPT 29 · MODIFY 4 · KEEP_AS_NON_CORE 4 · REMOVE 4 · NEW 2.
+42 annotations (41 from GOA + 1 proposed NEW):
+ACCEPT 29 · MODIFY 4 · KEEP_AS_NON_CORE 4 · REMOVE 4 · NEW 1.
