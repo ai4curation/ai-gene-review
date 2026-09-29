@@ -20,3 +20,19 @@ Decisions
 - Protein binding rows (Kel1, Nnf1, Rsc4; large-scale screens) removed as uninformative.
 - Identical protein binding (dimerization) kept non-core.
 - MT plus-end binding IDA kept non-core (localization evidence; partly Ndl1/Bik1-dependent).
+
+## 2026-09-28 IBA/new-literature re-review
+
+- Current PAC1 GOA has two `GO_REF:0000033` IBA rows, both for cellular-component
+  localization. `PANTHER:PTN008687761` transfers `GO:0005737 cytoplasm`; this is broad but
+  correct for cytoplasmic Pac1/LIS1. `PANTHER:PTN002891245` transfers
+  `GO:0015630 microtubule cytoskeleton`; this is also correct and includes the direct
+  yeast Pac1 plus-end localization evidence as a PAINT descendant source, which is expected
+  rather than circular.
+- No IBA rows currently assert Pac1's direct dynein-regulator molecular activity; the review
+  should keep the proposed `GO:0140659 cytoskeletal motor regulator activity` row.
+- Searched for newer PAC1/Lis1 literature and cached the final peer-reviewed version of the
+  2025 Geohring et al. preprint as PMID:41571912. The 2026 Nature Chemical Biology paper
+  directly refines Pac1 mechanism by showing that nucleotide states in AAA1, AAA3 and AAA4
+  tune Pac1 binding stoichiometry and that the 1 dynein:1 Pac1-dimer state opens/stabilizes
+  uninhibited dynein through Pac1-linker contacts required for in-cell spindle movement.
