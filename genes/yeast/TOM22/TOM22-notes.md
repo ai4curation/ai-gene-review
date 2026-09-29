@@ -14,12 +14,36 @@ The PANTHER family `PTN004364609` IBA propagation reaches yeast Tom22 via
 "transmembrane protein transporter activity" should propagate to Tom22 at all,
 since Tom40 is the conducting pore.
 
+## 2026-09-29 IBA refresh
+
+PTHR12504 current PAINT still places these IBDs at `PTN004364609`:
+
+- `GO:0005742 mitochondrial outer membrane translocase complex`, seeded by
+  `FB:FBgn0035473|RGD:1303260|SGD:S000005075|UniProtKB:Q9NS69`.
+- `GO:0030150 protein import into mitochondrial matrix`, seeded by
+  `RGD:1303260|SGD:S000005075|UniProtKB:Q9NS69`.
+
+The GOA `contributes_to GO:0008320` row still points to `PTN004364609` with
+`SGD:S000005075`, but the current `PTHR12504-paint.tsv` snapshot has no
+GO:0008320 row at that node. I recorded `SOURCE_STALE_OR_MISSING` for the PTN
+and set the stale PAINT row to REMOVE while preserving the biological call:
+yeast TOM22 has a direct SGD IMP to `contributes_to GO:0008320`, and the
+`contributes_to` qualifier remains the right semantics for a receptor/scaffold
+subunit that helps the TOM complex transport proteins without itself being the
+Tom40 pore.
+
+A 2024-2026 PubMed check found recent mitochondrial-import papers that mention
+Tom22, including PMID:41457021/PMID:41279142 on yeast import clogging and
+PMID:38848361 on reconstituted human PINK1 activation at TOM, but did not find a
+new yeast TOM22 paper that changes the core signal-receptor, TOM-scaffold, or
+`contributes_to` transporter-activity calls.
+
 ## Decision
 
-Retain both GO:0008320 annotations on yeast Tom22 with the `contributes_to`
-qualifier:
+Remove the stale GO:0008320 PAINT propagation, but retain GO:0008320 on yeast
+Tom22 with the `contributes_to` qualifier through direct SGD support:
 
-1. `contributes_to GO:0008320` — IBA from PTN004364609 (GO_REF:0000033) — ACCEPT.
+1. `contributes_to GO:0008320` - IBA from PTN004364609 (GO_REF:0000033) - REMOVE as stale in current PAINT.
 2. `contributes_to GO:0008320` — IMP from PMID:10519552 (SGD assignment) — ACCEPT.
 
 Reasoning:
@@ -30,7 +54,7 @@ Reasoning:
   Tom22 fits that pattern — it is a receptor/scaffold for the TOM complex, the
   complex as a whole performs transmembrane protein transport, and Tom40 is the
   conducting pore.
-- The IBA is not the only source of this annotation. SGD already has an
+- The stale IBA is not the only source of this annotation. SGD already has an
   experimental **IMP** annotation with `contributes_to` from PMID:10519552
   (van Wilpe et al. 1999, "Tom22 is a multifunctional organizer of the
   mitochondrial preprotein translocase", Nature). Per CLAUDE.md curation
@@ -41,17 +65,17 @@ Reasoning:
   Tom22, i.e. Tom22 is required for the activity of the TOM transmembrane
   protein translocase even though Tom40 is the pore.
 - The human ortholog review (`genes/human/TOMM22/TOMM22-ai-review.yaml`) reaches
-  the same conclusion: ACCEPT `contributes_to GO:0008320` rather than remove.
+  the same biological conclusion: Tom22 orthologs contribute to GO:0008320 as
+  TOM receptor/scaffold subunits even though Tom40 is the pore.
 
-The biologically appropriate response to the upstream concern is to keep
-`contributes_to` on Tom22 and reserve `enables GO:0008320` for Tom40.
+The biologically appropriate response to the upstream concern is to keep direct
+`contributes_to` support on Tom22 and reserve `enables GO:0008320` for Tom40.
 
 ## Other key calls
 
-- All `enables GO:0005515 protein binding` IPIs — MARK_AS_OVER_ANNOTATED. Per
-  CLAUDE.md guidance, generic `protein binding` is uninformative; the TOM and
-  TOM-SAM complex membership annotations capture the same information with more
-  specificity.
+- All `enables GO:0005515 protein binding` IPIs — REMOVE. Per project guidance,
+  generic `protein binding` is uninformative; the TOM and TOM-SAM complex
+  membership annotations capture the same information with more specificity.
 - `GO:0006886 intracellular protein transport` IEA — MARK_AS_OVER_ANNOTATED.
   Generic; specific TOM-mediated import BPs are already present.
 - `GO:0005739 mitochondrion` HDA × 2 — MARK_AS_OVER_ANNOTATED. Parent of the
@@ -78,11 +102,10 @@ The biologically appropriate response to the upstream concern is to keep
 
 ## Open questions for the upstream curator
 
-- Should the PTN004364609 IBA for GO:0008320 be left in place with
-  `contributes_to` on all non-Tom40 subunits (the conservative interpretation
-  consistent with the SGD IMP and the human TOMM22 review), or only on
-  receptors that have direct experimental support? If the latter, Tom22 should
-  still keep the term because PMID:10519552 is a direct IMP.
+- If PAINT restores GO:0008320 at a Tom22 ancestral node, should the propagation
+  use `contributes_to` on all non-Tom40 subunits or only on receptors that have
+  direct experimental support? If the latter, yeast Tom22 should still keep the
+  term because PMID:10519552 is a direct IMP.
 - For the related `GO:0030943 mitochondrion targeting sequence binding`
   proposed obsoletion (go-annotation#6437 → go-ontology#32108), once the NTR
   replacement term is minted, Tom22 will need a MODIFY pass on the
