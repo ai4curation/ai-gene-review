@@ -75,8 +75,9 @@ section plus domain/orthology-grounded (not invented) reasoning.
   mitochondrial genome maintenance. (These are HTP/large-scale phenotypes, not deep mechanism.)
 
 ### Family / paralog / ortholog context
-- **Paralog**: PGA3 (arose from the whole-genome duplication). PGA3 = plasma-membrane-associated
-  NADH:coenzyme-Q6 reductase (the PANTHER SF143 exemplar). [WebSearch: SGD/Wikidata]
+- **Paralog**: PGA3 (arose from the whole-genome duplication). PANTHER subfamily SF143 is named
+  for plasma membrane-associated coenzyme Q6 reductase PGA3, while GO/PAINT still uses PGA3 as a
+  donor for cytochrome-b5 reductase activity at PTN000452207.
 - Related family members in yeast: **MCR1** (YKL150W; mitochondrial OMM/IMS NADH-cytochrome b5
   reductase; electron donor to sterol-biosynthetic cytochrome P450s Erg11/Erg5/Erg1 and to
   fatty-acid/sterol desaturation; oxidative-stress response), **CBR1** (ER NADH-cytochrome b5
@@ -91,13 +92,13 @@ section plus domain/orthology-grounded (not invented) reasoning.
   all three AIM33 IBA rows.
 - The current plasma-membrane assertion is `PTN001064672 / GO:0005886`, a Saccharomycetaceae
   AIM33/PGA3-branch IBD seeded only by **PGA3** (`SGD:S000004594`, 2025-04-08). That same node
-  carries an explicit `GO:0005739` mitochondrial IRD from the broader `PTN000452207` node.
-  This supports the existing conclusion: the membrane fold transfers, but PGA3 is the direct
-  plasma-membrane seed and AIM33 still needs its own membrane localized.
+  carries an explicit negated `GO:0005739` mitochondrial IRD from the broader `PTN000452207`
+  node. The negation supports the existing conclusion that neither the PGA3 plasma-membrane
+  site nor the upstream mitochondrial site should be assigned to AIM33 before direct localization.
 - `PTN000452207 / GO:0004128` remains current and is seeded by **MCR1** and **PGA3**. The
   ancestral flavin reductase fold is real, but the mixed donor biology still leaves AIM33's
-  acceptor unresolved: MCR1 is a cytochrome-b5 reductase, whereas PGA3 is described as a
-  plasma-membrane coenzyme-Q6 reductase.
+  acceptor unresolved: MCR1 is a cytochrome-b5 reductase, whereas the PGA3 PANTHER subfamily is
+  named for plasma membrane-associated coenzyme Q6 reductase.
 - `PTN000452208 / GO:0006696` remains current as a broad MCR1-seeded ergosterol-biosynthesis
   assertion. No AIM33-specific sterol-biosynthesis evidence was found, so this remains a
   paralog over-propagation rather than a core process for AIM33.
