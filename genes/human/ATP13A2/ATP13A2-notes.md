@@ -55,3 +55,16 @@ The original 28 normal bibliographic records and 27 available abstracts were rea
 IBA assertions are treated as ancestral PAINT judgments. Neither donor count nor the human target's presence among descendant evidence is a defect. Exact PAINT trees were not reconstructed. No NEW annotation was proposed, and no external text was made into a fabricated publication cache. The normal provider attempt returned no report; these are manual notes, not provider output.
 
 The final draft binds the canonical PMID:37080960 record byte-for-byte to the verified 135,791-byte recovery member (SHA256 184aba2e7aceb48fed4c2f5fe7533f8d4c4f5f7d070d97a1587147f993c43d2d). The source was imported by its separate recovery owner. This authoring preparation changes no canonical gene or source file.
+
+
+## Follow-up: lysosomal protein degradation and core evidence
+
+The earlier neutral replacement for row120 is refined to [GO:1905167 positive regulation of lysosomal protein catabolic process](https://amigo.geneontology.org/amigo/term/GO:1905167). The complete normal [PMID:22885599 commentary](https://pmc.ncbi.nlm.nih.gov/articles/PMC3442887/) describes defective degradation in ATP13A2-mutant patient fibroblasts and depleted human BE-M17 cells, and rescue with wild-type ATP13A2. This favors the positive direction while retaining a secondary homeostatic interpretation. ATP13A2 is not assigned protease activity or another core. TAS and the original source assertion remain unchanged: this short commentary summarizes earlier work and has no independent Methods section. No complete read of its underlying primary experiment is claimed here.
+
+The three pre-existing neutral regulation rows remain supported broader assertions. Different evidence rows may legitimately overlap; eliminating duplication is not the rationale for a more specific replacement. This is a refinement of an existing MODIFY, not a NEW process assertion.
+
+The transport core now uses its transport-specific PMID:31996848 anchor alone. The PMID:26134396 topology quotation remains represented in its reference finding and the location-related annotations, rather than serving as if it measured polyamine movement. Three short, cache-verbatim reference findings record the transport, topology and lysosomal-rescue evidence. Normal availability flags are unchanged; the 2020 transport cache remains abstract-only. Previously documented human variant-2, yeast-membrane reconstitution and purified ATPase assay boundaries remain in force, without a new full-paper read claim.
+
+The eight verified generic associations remain non-core under the user's ActionEnum. No functional MF is invented from association alone. The five synthetic yeast-peptide metal-binding transfers remain UNDECIDED: a small alignment alone would not establish activity of those sites in intact human ATP13A2, and no new alignment or assay is claimed.
+
+The applied follow-up passed focused validation (nine existing advisories: eight generic-binding decisions and the source-specific manganese-response action difference), rendering, and validation of the newly scaffolded history record. These checks do not establish a new repository-wide validation pass. The independent review covered the finite changes above rather than repeating the entire 120-row scientific audit.
