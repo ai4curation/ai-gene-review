@@ -2,7 +2,7 @@
 
 ## PAINT / IBA rows
 
-- `GO:0005730 nucleolus`: current PTHR45903 PAINT places this at `PANTHER:PTN000523093`, seeded by SGD RRB1 itself plus vertebrate GRWD1 entries. This is consistent with the cached Rpl3-chaperone literature and remains `ACCEPT` with `NO_FAILURE_CORE`.
+- `GO:0005730 nucleolus`: current PTHR45903 PAINT places this at `PANTHER:PTN000523093`, seeded by SGD RRB1 itself, human GRWD1 (`UniProtKB:Q9BQ67`), and an unresolved `UniProtKB:Q386K4` seed that is present in PAINT but absent from local PANTHER entry indexes. This is consistent with the cached Rpl3-chaperone literature and remains `ACCEPT` with `NO_FAILURE_CORE`.
 - `GO:0042254 ribosome biogenesis`: current PTHR45903 PAINT places this at the same `PANTHER:PTN000523093` node, seeded by SGD RRB1 and human GRWD1. The broad process transfer is biologically sound but less precise than the experimental yeast evidence: Schaper et al. reported that "Impairment of Rrb1p function results in decreased levels of free 60S ribosomal subunits" [PMID:11728313]. I left the row as `MODIFY` to `GO:0042273 ribosomal large subunit biogenesis` and added `TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH`.
 
 ## Literature search
