@@ -370,6 +370,35 @@ fixes:
 ---
 # NOTES
 
+## 2026-09-29
+
+- **Viral proteins appear to have dropped out of TreeGrafter.** Prompted by
+  the `GO:0006302` double-strand break repair row on the phiR8-01 family-A
+  DNA polymerase (`9CAUD/g022`, I7J3R9). Of all the reviewed proteins in the
+  corpus with a phage or virus taxon, only two had `GO_REF:0000118` rows: g022
+  (one row, graft node `PTN000015309`, PTHR10133:SF27) and phiNIT1
+  `9CAUD/dfrP` (D0VXF2, two rows from `PTN000167324`, PTHR48069).
+  In the 2026-07-27 GOA release (QuickGO) **neither protein has any
+  TreeGrafter annotation**, and `PANTHER:PTN…` is also gone from the with/from
+  of their `GO_REF:0000120` rows. Their UniProt entries still carry the
+  `DR PANTHER` family lines, so the protein is still classified in the family;
+  only the GO propagation stopped. We have not found a release note that says
+  so, and two proteins are too few to call it policy. It fits PANTHER trees
+  being built from cellular-organism reference proteomes, which would make a
+  graft of a viral sequence an extrapolation outside the tree's taxonomic scope.
+- **The change cuts both ways.** The g022 row was one of our down-grades
+  (`REMOVE`; it is the `I7J3R9` mode-0 row in the heuristic queue under Next
+  steps). But the two dfrP rows had been reviewed as correct:
+  `GO:0046452` dihydrofolate metabolic process (`ACCEPT`) and `GO:0046655`
+  folic acid metabolic process (`KEEP_AS_NON_CORE`). So excluding viruses
+  removes true positives as well as the false one, and the DHFR still keeps
+  its MF and THF-biosynthesis terms through InterPro2GO and UniRule.
+- Refreshed both genes' GOA and marked the vanished rows `retired: true`, which
+  keeps their reviews for provenance. The frozen 2026-09-06 tables still count
+  the three rows; they will drop out at the next snapshot refresh.
+- **Follow-up:** confirm with the PANTHER/GOA side whether viral sequences are
+  now deliberately excluded from TreeGrafter.
+
 ## 2026-09-27
 
 - Added the [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case study.
