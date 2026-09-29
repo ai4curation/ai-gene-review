@@ -21,7 +21,8 @@
   contractile ring, intermediate layer`, and broader `GO:0008104` and
   `GO:0030010` process assertions. The PomBase-only GO:0120105 row is a live
   fission-yeast ring assertion, not a live successor for the old S. cerevisiae
-  `GO:1902716` row.
+  `GO:1902716` row, and should be narrowed away from budding yeast if the
+  current Eukaryota placement would export to S. cerevisiae SPA2.
 - Cached and read PMID:38802374, the 2024 Nature Communications paper reporting that
   S. cerevisiae Spa2 remodels ADP-actin under glucose starvation. This supports the
   existing actin-cytoskeleton interpretation; no new GO term was needed because the
