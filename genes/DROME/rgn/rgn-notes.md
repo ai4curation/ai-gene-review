@@ -38,6 +38,8 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 
 ## Annotation decisions
 
+PAINT provenance: `just fetch-panther-paint PTHR23211` returned exactly one annotated node, `PTN000575073`, with two IBD rows for mammalian TGN38/TGOLN trans-Golgi localization.
+
 - GO:0005802 trans-Golgi network (IBA): **UNDECIDED**. PANTHER:PTN000575073 propagates mammalian TGN38/TGOLN trans-Golgi localization within PTHR23211:SF0, which also contains M9PFV8; same-subfamily propagation and unresolved direct Rgn localization argue against a confident REMOVE even though the 808-residue fly CTLD protein has no target evidence for TGN38-like residence.
 - GO:0030140 trans-Golgi network transport vesicle (IBA): **UNDECIDED**. The same PANTHER:PTN000575073 node propagates mammalian TGN38/TGOLN transport-vesicle residence, but Rgn has no direct evidence for TGN-derived vesicle localization and the SF0 assignment keeps the transfer unresolved rather than demonstrably wrong.
 - GO:0030246 carbohydrate binding (IEA): **UNDECIDED**. Several proteins retain this fold without the canonical carbohydrate-binding activity. The exact target has no mapped ligand-binding assay.
