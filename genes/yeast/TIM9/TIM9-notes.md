@@ -3,8 +3,8 @@
 ## 2026-08-28 dedicated re-review
 
 - All 29 physical GOA rows correspond to 29 distinct term/evidence/reference/
-  qualifier signatures and are represented in `existing_annotations`. One
-  evidence-supported NEW annotation adds GO:0140309.
+  qualifier signatures and are represented in `existing_annotations`. The obsolete
+  GO:0051082 row is modified to the more specific GO:0140309.
 
 - TIM9 and TIM10 form the soluble IMS chaperone shuttle, but their roles are not
   assumed to be identical at the subunit level. The intact complex binds carrier
@@ -58,8 +58,7 @@
 
 - Current PTHR13172 PAINT now places `GO:0140309` unfolded protein holdase
   activity at `PANTHER:PTN004407763`, dated 2026-06-03. That corroborates the
-  existing TIM9 `GO:0051082` to `GO:0140309` MODIFY and the proposed
-  literature-backed `GO:0140309` NEW row.
+  existing TIM9 `GO:0051082` to `GO:0140309` MODIFY.
 
 - The stale GOA IBA rows are otherwise unchanged: the GOA snapshot still carries
   `GO:0005743`, `GO:0045039`, and `GO:0140318` from `PTN004407763`, while the
