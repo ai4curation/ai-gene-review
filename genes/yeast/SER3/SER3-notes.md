@@ -89,3 +89,20 @@ membership.
 
 The two sibling annotations still carry title-only `supporting_text`, which was left
 alone to keep this diff scoped to the annotation under review.
+
+## 2026-09-29 IBA / protein-binding re-review
+
+- The current SER3 GOA export has no `GO_REF:0000033` / IBA rows, so there was no
+  PAINT node placement to adjudicate for this gene.
+- Seven legacy `GO:0005515` protein-binding rows were converted from
+  `MARK_AS_OVER_ANNOTATED` to `REMOVE`. Six of them are IntAct annotations to
+  the Ser3/Ser33 physical interaction in high-throughput interactome or paralog
+  heteromer studies; the interaction may be real, but the generic binding term
+  does not add a specific molecular function beyond Ser3p's accepted 3PGDH and
+  2-hydroxyglutarate activities. The seventh row, from PMID:16120614, is about
+  mammalian Serinc proteins and is not direct evidence for S. cerevisiae Ser3p.
+- A fresh 2023-2026 PubMed/web search did not find new direct evidence requiring
+  a GO change. The 2024 S. cerevisiae Pib2/TORC1 paper used Ser3
+  phosphorylation as a TORC1 readout while identifying Pib2 as the cysteine
+  sensor, and the 2026 `SER3` hit engineered serine biosynthesis in
+  Komagataella phaffii rather than characterizing S. cerevisiae Ser3p.
