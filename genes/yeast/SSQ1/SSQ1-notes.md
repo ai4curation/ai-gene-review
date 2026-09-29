@@ -123,4 +123,7 @@ rejected solely from its best-characterized compartment.
   `UNDECIDED`: current PAINT still places both assertions at PTN000452648, but
   the inspected Ssq1 assays establish Isu/Grx5 engagement, ATP-regulated
   unfolded-substrate binding and antiaggregation rather than a decisive
-  restoration-of-folding-activity result.
+  restoration-of-folding-activity result. Added the close fission-yeast
+  mitochondrial Hsp70 donor in the GO:0044183 seed set and the fungal
+  PTN001065099 GO:0042026 NOT/IRD as evidence that PAINT blocks the same
+  ancestral refolding term when a fungal branch warrants it.
