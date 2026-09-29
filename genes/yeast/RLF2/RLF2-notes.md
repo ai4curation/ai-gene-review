@@ -21,6 +21,17 @@ that point at the PTN ancestral node as the propagation source and mark all six
 rows as `NO_FAILURE_CORE`.
 
 The newer-paper search found a 2026 centromeric-H3-variant review mentioning yeast
-CAF-1/Cac1 and the 2024 fission-yeast CAF-1 structural work already discussed in the
-Falcon report, but no newer direct budding-yeast Cac1 paper that changes these IBA
+CAF-1/Cac1 [PMID:41993598 "The conserved heterotrimeric chromatin assembly factor-1
+(CAF-1) complex, composed of the yeast subunits Cac1–3, deposits them onto newly
+replicated DNA"] and the 2024 fission-yeast CAF-1 structural work already discussed in
+the Falcon report [PMID:38376141 "Here, we reconstituted a complete SpCAF-1 from
+fission yeast."], but no newer direct budding-yeast Cac1 paper that changes these IBA
 calls.
+
+## PR follow-up
+
+Reviewer follow-up added PubMed-backed provenance for the newer-paper sweep, using the
+2026 Frontiers Cse4 review and the 2024 eLife fission-yeast CAF-1 structural paper.
+The H3-H4 chaperone IBA now records the single fission-yeast Pcf1 donor explicitly,
+and the CAF-1-complex IBA records the RLF2 self-seed as target evidence rather than
+circular support.
