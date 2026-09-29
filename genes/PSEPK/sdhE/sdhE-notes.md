@@ -27,9 +27,13 @@ and the localization are by-similarity transfers from the same source ortholog,
 Family assignment is unambiguous: `PANTHER; PTHR39585; FAD ASSEMBLY FACTOR SDHE`,
 `Pfam; PF03937; Sdh5`, `InterPro; IPR050531; SdhE_FAD_assembly_factor`
 [file:PSEPK/sdhE/sdhE-uniprot.txt]. Pfam `Sdh5` is the same domain family as the eukaryotic
-SDHAF2/Sdh5 assembly factor, which is why this review's core function mirrors the repo's
-`genes/human/SDHAF2` treatment (`GO:0044183` protein folding chaperone + `GO:0018293`
-protein-FAD linkage).
+SDHAF2/Sdh5 assembly factor, so PSEPK SdhE and human SDHAF2 are members of one FAD-assembly
+factor family and share the `GO:0018293` protein-FAD linkage process. The family relationship
+does **not** carry the human review's molecular function across: this review's core MF is
+`GO:0050660` flavin adenine dinucleotide binding, not the `GO:0044183` protein folding
+chaperone term that `genes/human/SDHAF2` uses. See "Why the core MF is `GO:0050660`, not
+`GO:0044183` protein folding chaperone" below for the evidence, and for why the SDHAF2
+precedent does not transfer.
 
 ## Primary literature
 
