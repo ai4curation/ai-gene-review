@@ -101,3 +101,45 @@ Follow-up validation: focused `just validate human ATP2B2` passed without
 annotation advisories, and `just render human ATP2B2` succeeded. The scaffolded
 session history records the two action changes and source-access limits. No new
 repository-wide validation pass is claimed.
+
+
+## Second PR feedback: calcineurin interaction (2026-09-29)
+
+The complete normal and official PubMed abstract of PMID:17689535 positively
+reports an endogenous human PMCA2-calcineurin association. That target-specific
+evidence resolves the broad binding function independently of the unresolved
+machine-supplied P01258 partner. Row 8 is therefore refined to protein phosphatase
+binding (GO:0019903), rather than treating a metadata discrepancy as absence of
+all biological support. This is a contextual interaction outside the single
+calcium-export core. No signaling-process annotation is introduced.
+
+P01258 remains CALCA/calcitonin in the unchanged source assertion. Neither a
+calcineurin subunit accession nor a corrected database interaction is guessed.
+The existing question about the exact P01258 mapping is retained. Full original
+Methods and interaction-record details were not accessed; the abstract does not
+justify describing this as a purified direct-binding measurement. The reference
+is verified only for its official identity and explicit abstract-supported claim.
+The normal cache remains abstract-only. This entry supersedes the earlier notes'
+uncertainty about the entire function in row 8, while retaining their unresolved
+partner-mapping qualification. The SCRIB row remains UNDECIDED.
+
+The official AmiGO parent definition and hierarchy support GO:0019903. A more
+specific child, GO:0030346 protein phosphatase 2B binding, is listed in that
+hierarchy and the local ontology label cache, but its complete official definition
+could not be retrieved during this bounded check. The present proposal uses the
+verified parent without adding the child as a duplicate assertion.
+
+All 58 machine source objects, eight alternative products, the single core and
+existing questions are unchanged. The proposed counts are 28 ACCEPT, nine
+KEEP_AS_NON_CORE, 19 UNDECIDED, one MARK_AS_OVER_ANNOTATED and one MODIFY.
+One 13-word literal abstract anchor is added to the affected row; no duplicate
+quotation is added to reference findings. This is a prospective proposal; its
+focused validation/render/history will follow only after canonical application.
+
+Sources checked:
+- https://pubmed.ncbi.nlm.nih.gov/17689535/
+- https://amigo.geneontology.org/amigo/term/GO:0019903
+- https://www.uniprot.org/entry/P06881 (explicit cross-reference to P01258)
+- https://www.ncbi.nlm.nih.gov/protein/1476413357
+
+Focused validation after applying this follow-up passed (`just validate human ATP2B2`, actual e0146a); gene rendering passed (2b0526). The new EDIT history record `2026-09-29T200440Z-codex-582807.yaml` passed history validation (1f3081). The earlier validation 07adfd ran before the follow-up was applied and is not evidence for this revision. All source assertions and alternative products remain unchanged.
