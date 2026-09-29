@@ -57,3 +57,20 @@ The YAML `description` field was revised to keep it as a standalone biological s
   separately by reference and `WITH/FROM` partner rather than collapsed.
 - Generic nucleotide binding is now `MODIFY` to the existing specific ATP-binding
   term GO:0005524, matching the treatment of the same parent term in SSA4.
+
+## 2026-09-29 IBA follow-up
+
+- Rechecked all eight GO_REF:0000033 IBA rows against
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv`. The accepted nucleus,
+  cytoplasm, cytosol, ATPase, heat-shock-protein-binding, protein-folding
+  chaperone, and protein-refolding transfers all still trace to current PAINT
+  rows; the pinned plasma-membrane IBA remains stale because current
+  PTN002500132 carries only `GO:0005634 nucleus` and `GO:0005829 cytosol`.
+- Added missing `propagation_review.source_entities` blocks for the accepted
+  IBA rows and expanded the PTN-only chaperone IBA with representative current
+  donors from PTN000452648.
+- Searched PubMed for exact `SSA3`/`Ssa3`/`YBL075C` mentions in 2025-2026 and
+  found no new exact-match papers that change the Ssa3 curation.
+- Converted the legacy bare `GO:0005515 protein binding` rows from generic
+  high-throughput interaction datasets to `REMOVE`; the two Hsp70-paralog
+  interaction rows remain `MODIFY` to `GO:0030544 Hsp70 protein binding`.
