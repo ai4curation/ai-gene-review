@@ -69,3 +69,14 @@ The authors interpret this mechanism as unconventional GEF activity. The inspect
 The linked author correction (PMID:40016599; doi:10.1038/s41422-025-01088-6) replaces a duplicated supplementary wound-healing image. The authors state that quantification and conclusions remain unchanged; the correction does not state a change to the nucleotide-loading experiments. That notice was independently read as a correction, not treated as a retraction or independent validation of the original raw data.
 
 Other source boundaries remain recorded per reference. In particular, PMID:33065002's short cache lacks Results/Methods despite its full-text flag; selected original structural text was independently consulted. Screen-derived binding assertions without the exact target assay remain UNDECIDED. Supported generic binding stays non-core rather than being labeled false merely for lacking functional specificity. Neither the original GOA nor UniProt/publication/provider caches were edited.
+
+
+## PR3550 review follow-up — 2026-09-29
+
+The signaling-specific TORC1, amino-acid-response and contributes_to GEF-activator assertions are retained as non-core, aligning their classification with the single V0 assembly/acidification core. This preserves the curated complex-associated signaling evidence while keeping the ATP6AP1-specific supplemental assay limitation explicit. The lysosomal is_active_in assertion remains accepted because that location independently matches the pump core. Counts are now 20 ACCEPT, 24 KEEP_AS_NON_CORE, nine UNDECIDED and one MODIFY over the same 54 source assertions. No new GO assertion or additional catalytic core is introduced.
+
+PMID:38448650 now has a machine-readable finding and an exact short source quotation for its reported C-terminal Rheb-loading effect. The separate fluorescent nucleotide-addition assays remain distinct from measuring release of preloaded GDP. PMID:40016599 is now represented explicitly as the externally inspected correction, with its ordinary cache correctly marked as lacking full text. Neither source cache was changed.
+
+Supported generic-binding annotations remain non-core under the user-supplied ActionEnum definitions; this preserves correct peripheral observations without manufacturing a replacement function. The generic-binding skill preference does not override those definitions. Uninspected exosome evidence remains UNDECIDED. The original history record and earlier reasoning above are preserved as session provenance.
+
+The follow-up passed focused validation with the same three advisories: two supported generic-binding rows retained as non-core and the existing provider report not used as direct annotation evidence. Rendering passed. The review remains DRAFT; no new repository-wide validation pass is claimed.
