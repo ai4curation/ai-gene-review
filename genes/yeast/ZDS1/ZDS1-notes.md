@@ -61,5 +61,5 @@ protein binding does not add an informative standalone molecular function.
 
 Searches for newer ZDS1/Zds1, Cdc55, PP2A and Rho1 literature did not find a
 newer peer-reviewed paper that supersedes the cached 2011 Cdc55-localization
-work, the 2015 Rho1-output paper summarized in the Falcon report, or the 2023
+work, the 2016 Rho1-output paper summarized in the Falcon report, or the 2023
 yeast interactome map already referenced in the review.
