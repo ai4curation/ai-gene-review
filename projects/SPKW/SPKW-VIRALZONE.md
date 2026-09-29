@@ -130,9 +130,9 @@ All 22 are live (non-obsolete) terms. `kw` marks the annotation route.
 | GO:0099045 | viral extrusion | VZ:3951 | 0.99 | 0.81 | KW-1249 |
 | GO:0075520 | actin-dependent intracellular transport of virus | VZ:991 | 0.99 | 0.73 | KW-1178 |
 | GO:0099009 | viral genome circularization | VZ:3968 | 0.91 | 0.75 | KW-1253 |
-| GO:0099000 | symbiont genome ejection through host cell envelope | VZ:3950 | 0.90 | 0.63 | KW-1242 |
+| GO:0099000 | symbiont genome ejection through host cell envelope, contractile tail mechanism | VZ:3950 | 0.90 | 0.63 | KW-1242 |
 | GO:0060141 | symbiont-mediated induction of syncytium formation | VZ:5957 | 0.88 | 0.62 | KW-1180 |
-| GO:0099001 | symbiont genome ejection through host cell envelope | VZ:3952 | 0.87 | 0.64 | KW-1243 |
+| GO:0099001 | symbiont genome ejection through host cell envelope, long flexible tail mechanism | VZ:3952 | 0.87 | 0.64 | KW-1243 |
 | GO:0075525 | viral translational termination-reinitiation | VZ:858 | 0.86 | 0.66 | KW-1158 |
 | GO:0039592 | symbiont-mediated arrest of host cell cycle | VZ:876 | 0.85 | 0.67 | KW-1079 |
 | GO:0039690 | positive stranded viral RNA replication | VZ:1116 | 0.85 | 0.67 | — |
@@ -142,7 +142,7 @@ All 22 are live (non-obsolete) terms. `kw` marks the annotation route.
 | GO:0039704 | viral translational shunt | VZ:608 | 0.84 | 0.84 | — |
 | GO:0039708 | nuclear capsid assembly | VZ:1516 | 0.83 | 0.69 | — |
 | GO:0098931 | virion attachment to host cell flagellum | VZ:3949 | 0.83 | 0.71 | KW-1240 |
-| GO:0099002 | symbiont genome ejection through host cell envelope | VZ:3954 | 0.83 | 0.67 | KW-1244 |
+| GO:0099002 | symbiont genome ejection through host cell envelope, short tail mechanism | VZ:3954 | 0.83 | 0.67 | KW-1244 |
 | GO:0039713 | viral factory | VZ:1951 | 0.82 | 0.74 | — |
 | GO:0098669 | superinfection exclusion | VZ:3971 | 0.79 | 0.59 | KW-1260 |
 | GO:0046755 | viral budding | VZ:1947 | 0.78 | 0.75 | KW-1198 |
@@ -163,10 +163,12 @@ their agreement.
 
 ### Worked case: the viral-factory branch
 
-`GO:0039713 viral factory` scores 0.82/0.74 against `VZ:1951`, and the branch
+`GO:0039713 viral factory` scores 0.82/0.74 against `VZ:1951`. The branch
 beneath it — spherule, double-membrane vesicle, tube viral factory, virogenic
-stroma, peristromal region — is drawn from the same page's sections, though only
-the parent carries the dbxref. Sizes ("50-400nm diameter membrane invagination",
+stroma, peristromal region — appears to be drawn from the same page's sections,
+but only the parent carries a `VZ:` dbxref, so **none of the children is in the
+scored table above**: that reading is manual, not measured, and is flagged as
+such in the module's scope note. Sizes ("50-400nm diameter membrane invagination",
 "200-300nm... derived from the endoplasmic reticulum or Golgi") and family lists
 travel verbatim into the definitions.
 
