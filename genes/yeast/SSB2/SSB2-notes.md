@@ -65,7 +65,11 @@ Read the complete existing SSB1-versus-SSB2 OpenScientist hypothesis report and 
   `propagation_review` detail for the broad cytoplasm transfer and expanded
   PTN-only nucleus, ATP hydrolysis, heat-shock-protein binding,
   protein-folding chaperone, and cytosol blocks with representative curated
-  extant donors.
+  extant donors. The PTN entries are the inherited PAINT nodes that support
+  those transfers, not irrelevant donor rows.
+- Corrected `UniProtKB:P0A6Z1` from E. coli DnaK to HscA and relabeled
+  `PomBase:SPBC1709.05` neutrally after rechecking the local PTHR19375 member
+  table and the cached fission-yeast sks2+/hsc1+ text in PMID:16040599.
 - Left the existing plasma-membrane IBA diagnosis unchanged: the GOA row is
   pinned to PTN002500132, but current PAINT no longer carries a plasma-membrane
   assertion from that node, and the independent Ssb2 HDA row is retained only as
