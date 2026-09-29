@@ -89,7 +89,13 @@ supported, the UniProt-SubCell vacuolar-membrane IEA is consistent with the more
 specific SGD location, and the ND root molecular-function row honestly marks Vam10p
 as MF-dark.
 
-The 2025 Vps5/Vps17 retromer structure paper (PMID:40234461) mentions VAM10 only
-as the embedded opposite-strand ORF that must be preserved or ectopically supplied
-when deleting and rebuilding VPS5 constructs. It supports the genomic-overlap caveat
-but does not define any new Vam10p molecular activity or GO annotation.
+The 2025 Vps5/Vps17 retromer structure paper mentions VAM10 only in its strain
+and plasmid design: Vam10p was ectopically supplied at `LEU2`, and the VPS5-HA
+plasmids mutated the overlapping VAM10 start codon so the VPS5 coding sequence
+was preserved without making Vam10p [PMID:40234461 "Vam10 was cloned into
+pRS305 vector using Not1/Sma1 restriction sites to generate an integrative
+plasmid that was linearized, transformed and integrated ectopically";
+"A point mutation was introduced in the start codon of VAM10 (M-to-I) by
+site-directed mutagenesis, because VAM10 overlaps with VPS5"]. It supports the
+genomic-overlap caveat but does not define any new Vam10p molecular activity or
+GO annotation.
