@@ -349,38 +349,50 @@ every TreeGrafter row then marked `REMOVE` or `MARK_AS_OVER_ANNOTATED` was
 re-examined against a fixed rule set: `REMOVE` requires positive contrary
 evidence, broad-but-true terms are not over-annotations, a too-coarse ancestor
 is `MODIFY` rather than `REMOVE`, and every term definition is checked in
-QuickGO. Rules, per-batch records and a generated summary are in
+QuickGO. A term that is true but is a redundant ancestor of a carried term, or
+a redundant generic compartment, is `KEEP_AS_NON_CORE` rather than `ACCEPT`:
+the enum reserves `ACCEPT` for terms "representing the core function of the
+gene", so restoring a bare ancestor as core would assert something the evidence
+does not. Rules, per-batch records and a generated summary are in
 [`TREEGRAFTER/rereview-2026-09-24/`](TREEGRAFTER/rereview-2026-09-24/README.md).
 The nine genes already re-audited on 2026-09-20 were left as recorded there.
 
 **192 rejected rows across 165 genes: 114 (59%) stand, 78 (41%) were relaxed** —
-30 to `ACCEPT`, 25 to `KEEP_AS_NON_CORE`, 9 to `MODIFY`, 7 `REMOVE` →
-`MARK_AS_OVER_ANNOTATED`, 4 to `UNDECIDED`, 3 `REMOVE` → `KEEP_AS_NON_CORE` or
-`ACCEPT`.
+56 to `KEEP_AS_NON_CORE`, 8 `REMOVE` → `MARK_AS_OVER_ANNOTATED`, 6 to `MODIFY`,
+5 to `ACCEPT`, 3 `REMOVE` → `UNDECIDED`. Only five rows are restored as core
+functions, each one a term the protein itself performs: the MurJ flippase
+reaction (`GO:0034204`), the AccA/AccD carboxyltransferase complex
+(`GO:0009329`), bis-MGD biosynthesis on MobA (`GO:1902758`), and the two
+lymphotoxin-alpha signalling processes on `K9IWR0`.
 
 **This is the largest post-snapshot change to the down-graded population**, and
 the frozen tables and the failure-mode analysis built on them predate it. The
 relaxations say more about the first-pass reviews than about TreeGrafter, and
 they cut unevenly across the four failure modes:
 
-- **Redundant locations (24 rows).** `cytosol`/`cytoplasm` on soluble bacterial
+- **Redundant locations (34 rows).** `cytosol`/`cytoplasm` on soluble bacterial
   enzymes had been down-graded purely because a sibling location row existed. A
-  broad true term is not an error. Mode 3 (generic/context, 36% of the frozen
+  broad true term is not an error, but a redundant compartment is not a core
+  function either, so these are `KEEP_AS_NON_CORE`. Mode 3 (generic/context, 36% of the frozen
   classification) is therefore the mode that shrinks most: it is a real failure
   only where the location is *incompatible* with the protein — secreted
   cystatin `cpi-2`, exported flagellar hook `flgE`, periplasmic `alr` — and
   those rejections stand.
-- **True ancestors of an accepted term (~20 rows).** `oxidoreductase activity`
-  on `betA`, `glycosyltransferase activity` on `murG`, `protein transport` on
-  `secD`/`secF`, `deaminase activity` on `guaD`; each verified by QuickGO
-  ancestry and restored. The six complex I subunits carrying `NADH
-  dehydrogenase activity` became `MODIFY` → `GO:0008137` with
-  `contributes_to` — a whole-complex activity on a single subunit, which is a
-  granularity (mode 1) case the classification did not separate out.
+- **True ancestors of a carried specific term (~20 rows).** `oxidoreductase
+  activity` on `betA`, `glycosyltransferase activity` on `murG`, `protein
+  transport` on `secD`/`secF`, `deaminase activity` on `guaD`; each verified by
+  QuickGO ancestry and kept as non-core. The six complex I subunits carrying
+  `NADH dehydrogenase activity` are a granularity (mode 1) case the
+  classification did not separate out — a whole-complex activity on a single
+  subunit that lacks the NADH site. On `nuoE`/`nuoH`/`nuoI`, where GOA carries
+  no `GO:0008137` row, that becomes `MODIFY` → `GO:0008137` with
+  `contributes_to`; on `nuoG`/`nuoL`/`nuoM`, which already carry a separate
+  `GO:0008137` row taking the same qualifier correction, proposing it again
+  would be redundancy, so the ancestor is kept as non-core instead.
 - **Rejections resting only on "no target-specific assay" (~12 rows).** Absence
   of a target experiment does not refute a supported phylogenetic inference;
-  these became `MARK_AS_OVER_ANNOTATED`, or `UNDECIDED` where the substrate is
-  genuinely unknown (`ptxD`, `retS`, `TFP` nucleus).
+  these became `MARK_AS_OVER_ANNOTATED`, or `UNDECIDED` in the three cases where
+  the substrate itself is genuinely unknown (`ptxD` ×2, `retS`).
 - **Label read instead of definition (1 row, but instructive).** `GO:0009329
   "acetate CoA-transferase complex"` on PSEPK `accD` was removed as a different
   enzyme; the term's *definition* is the AccA/AccD carboxyltransferase
@@ -427,6 +439,35 @@ cached substrate-panel quotes) rather than left on family-level doubt.
 
 ---
 # NOTES
+
+## 2026-09-29
+
+- Review round on the rejection re-review (PR #3165). Corrected three
+  mis-transcribed UniProt accessions in shipped reason text (`guaD` cited
+  gshB's `Q88D35` instead of `Q88F18`; `tyrB` `Q88NM1` for `Q88LG1`; `davA`
+  `Q88RC2` for `Q88QV2`) and the same errors in three batch records — six sites,
+  each re-checked against the gene's own `AC` line.
+- **Settled the `ACCEPT` / `KEEP_AS_NON_CORE` convention**, which the first pass
+  had applied inconsistently (some `cytosol` rows went each way). `ACCEPT` is
+  defined as retaining a term as the gene's *core function*, so a redundant
+  ancestor of a carried term, or a redundant generic compartment, is
+  `KEEP_AS_NON_CORE`. 26 rows moved, leaving five `ACCEPT`s, each a term the
+  protein itself performs. The prose in every moved row was rewritten to match.
+- `nuoG`/`nuoL`/`nuoM` had been given `MODIFY` → `GO:0008137` while already
+  carrying a separate `GO:0008137` row, which is the redundancy `CLAUDE.md`
+  rules out; they are now `KEEP_AS_NON_CORE`, with the qualifier correction left
+  on the one row that needs it. `nuoE`/`nuoH`/`nuoI` keep the `MODIFY` because
+  GOA carries no such row for them.
+- `aroQ-III`'s `core_functions` cited a synthesized summary as `supporting_text`
+  against `GO_REF:0000120`, which has no cached text, so the verbatim validator
+  could not catch it. Re-pointed at the UniProt file with four verbatim quotes,
+  and `PMID:41029715` now carries a `reference_review` recording that it
+  establishes the `aroQ` step in KT2440 but does not say which of the three
+  paralogs it used.
+- Also removed the audit-bookkeeping sentences that had crept into
+  `review.reason` across 21 files (batch-file pointers belong in the notes and
+  audit records, per #3100), and dropped a duplicate `GO:0008812` row this
+  branch had added to `cache/go/terms.csv`.
 
 ## 2026-09-28
 
