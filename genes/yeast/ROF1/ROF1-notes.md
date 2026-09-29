@@ -72,14 +72,15 @@ GOA source: genes/yeast/ROF1/ROF1-goa.tsv (7 annotations).
 - PMID:22095082 (Cain 2012) — Mit1/Wor1/Ryp1 conserved regulator; YHR177W DNA-binding; paralog relationship (abstract-only cache).
 - PMID:16455487 (Sopko 2006) — systematic overexpression phenotypes (abstract-only) — overexpression cell-cycle phenotype context.
 - PMID:18617996 (Niu 2008) — cell cycle control by overexpression (full text cached) — overexpression phenotype context.
-</content>
-</invoke>
 
 ## 2026 IBA re-review
 
 Re-checked the four current ROF1 IBA rows against GOA and the cached `PTHR28027`
 PAINT table. All four trace to `PANTHER:PTN001997771`, a fungal WOPR-family
 node seeded by the Candida albicans Wor1 gene `CGD:CAL0000193718`.
+That CGD seed resolves to the same Wor1 source as the experimental ISS row:
+UniProtKB:Q5AP80 is Candida albicans Wor1, and its UniProt record cross-references
+CGD `CAL0000193718` / `WOR1`.
 
 - `GO:0003700 DNA-binding transcription factor activity`
 - `GO:0005634 nucleus`
@@ -95,7 +96,9 @@ contexts and Arita et al. 2021 directly found a rapidly repressed, WOPR-motif-
 enriched gene set after Z3pr-ROF1 induction [PMID:34096681]. I therefore
 changed the IBA action to `MODIFY`, with `GO:0006357 regulation of
 transcription by RNA polymerase II` retained as the direction-neutral
-replacement.
+replacement. The negative child `GO:0000122` was left as a suggested question rather
+than a replacement because the current budding-yeast repression data are
+overexpression based and not yet tied to direct Rof1 ChIP/CUT&RUN targets.
 
 The newer-paper search found the 2021 YETI Rof1 paper as a direct source that
 was discussed in the Falcon report but absent from the YAML. I did not find a
