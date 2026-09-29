@@ -81,9 +81,9 @@
   rows; the pinned plasma-membrane IBA remains stale because current
   PTN002500132 carries only `GO:0005634 nucleus` and `GO:0005829 cytosol`.
 - Recorded the 2026 fungal PTN001065099 `GO:0042026 protein refolding` NOT/IRD
-  and retained the SSA4 transfer because the pinned row still descends from the
-  PTN000452648 refolding IBD and has no `GO:0006457 protein folding`
-  replacement IBA.
+  and retained the SSA4 transfer because SSB2/SSZ1 tracing places PTN001065099
+  on the ribosome-associated Ssb/Ssz loss branch, whereas the retained
+  PTN000452648 refolding IBD is seeded by cytosolic Ssa-family SSA1.
 - Added missing `propagation_review.source_entities` blocks for the accepted
   IBA rows and expanded the PTN-only chaperone IBA with representative current
   donors from PTN000452648.
