@@ -51,3 +51,34 @@ In mouse models, Dph1 deficiency promotes eEF2 dissociation from ribosomes and a
 - PMID:37675463 - Hawer et al. (2023) Dis Model Mech. DPH1/DPH2 variant analysis.
 - PMID:38671004 - Yu et al. (2024) Nat Commun. eEF2-p53 association and neural crest defects.
 - PMID:38097404 - Hawer et al. (2024) Trends Mol Med. Diphthamide review with clinical relevance.
+
+## Re-review 2026-09-29
+
+Starting state: valid with one warning (inconsistent actions on GO:0090560); several review
+blocks had empty `reason` fields and leaned on deep-research quotes.
+
+- GO:0090560 2-(3-amino-3-carboxypropyl)histidine synthase activity: the split action is
+  **kept deliberately** and the qualifier argument is now stated in both reasons. The ISS row
+  carries `contributes_to` and is ACCEPTed; the InterPro IEA row asserts `enables` and is
+  MARK_AS_OVER_ANNOTATED. The biology behind the distinction: dph2's own cluster is not the
+  catalytic one [UniProt "Facilitates the reduction of the catalytic iron-sulfur cluster found
+  in the dph1 subunit (By similarity)."], and the enzyme is the heterodimer [PMID:29590073
+  "The enzyme that performs this reaction is a Dph2 ... homodimer in archaea ... or a
+  Dph1-Dph2 heterodimer in eukaryotes"; PMID:24422557 "suggesting that Dph1 and Dph2 form a
+  heterodimer."]. The remaining validator warning is therefore expected.
+- Wrote reasons for every row (they were empty on the IBA, both other GO:0017183 rows,
+  GO:0120513 and GO:0051539) and replaced deep-research paraphrases of UniProt with the
+  UniProt FUNCTION/COFACTOR/SUBUNIT lines and primary quotes [PMID:20559380 "A crystal
+  structure of reconstituted PhDph2 along with UV-Vis, EPR, and Mössbauer spectroscopies
+  confirmed the presence of a [4Fe-4S] cluster."].
+- GO:0051539 ACCEPT retained and argued as a function of dph2 itself (not of the complex),
+  which is what keeps the contributes_to framing of GO:0090560 coherent.
+- GO:0005737 cytoplasm (NEW) retained. Comparator check run via QuickGO: yeast DPH2 (P32461)
+  carries GO:0005737 by HDA and human DPH2 (Q9BQC3) carries GO:0005829 cytosol, so this is
+  the ortholog-consistent location rather than an invention; the reason now says so and notes
+  the absence of any zebrafish experiment. Added a localization experiment to close that gap.
+- Added reference_review to all 8 PMIDs (7 full-text cached, PMID:38097404 abstract-only) and
+  rewrote description to be mechanism-first, stating plainly that zebrafish dph2 has no
+  direct functional characterization.
+
+Validation after edits: zero errors; one expected warning (the GO:0090560 qualifier split).
