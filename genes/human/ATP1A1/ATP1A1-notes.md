@@ -193,3 +193,33 @@ Existing broad annotations are retained when correct at their source scope; the 
 This prospective response changes only the two response-row actions (74 ACCEPT, 41 KEEP_AS_NON_CORE, 10 UNDECIDED and two MARK_AS_OVER_ANNOTATED). Earlier validation and publication statements above describe the initial version. Canonical application, validation, history and publication of this proposal have not occurred.
 
 Root applied the reviewed proposal after checking all changed reasons, reference fields and 81 summary edits. Focused validation passed on 2026-09-29 with the same 14 generic-binding advisories; source objects, four alternative products and the single pump core are unchanged. The two response claims remain UNDECIDED at the inspected evidence scope. No new repository-wide validation pass is claimed.
+
+
+## Ouabain response: independent functional corroboration (2026-09-29)
+
+Rows 110 and 118 are retained as non-core following a separate primary-paper check.
+PMID11546672 remains a membrane ligand-binding source; its inspected experiments do
+not themselves establish an intact-cell response. The additional evidence is the
+original PMID10636900: human alpha1/beta1 expressed in Xenopus oocytes, pump-current
+Methods, voltage-dependence Results, and Figure 6 caption explicitly compare currents
+before and after 100 micromolar ouabain and subtract endogenous currents. This is a
+functional change in cellular activity, which fits the existing steroid-stimulus and
+glycoside-response terms. It is not a claim of glycoside metabolism, general endocrine
+signaling, or a new core function. The source GOA reference/evidence fields are unchanged;
+PMID10636900 is additional corroboration, not a reassignment of what PMID11546672 assayed.
+
+Original paper: https://www.researchgate.net/publication/12677380_Transport_and_Pharmacological_Properties_of_Nine_Different_Human_NaK-ATPase_Isozymes
+Read scope: author-uploaded original Methods (especially indexed lines 1699–1722),
+matched Results (3010–3090), and Figure 6 caption (4488–4544). Complete-paper, supplementary
+data, and figure-pixel inspection are not claimed. The normal PMID10636900 cache remains
+abstract-only; these external Methods are not presented as literal cache quotations.
+Definitions checked: https://amigo.geneontology.org/amigo/term/GO:0071383 and
+https://amigo.geneontology.org/amigo/term/GO:1903416. Both allow a functional change in
+activity as the response endpoint; neither requires a transcriptional response.
+All 127 source assertions, four alternative products, one core, other review decisions,
+existing reference findings, and availability flags are preserved.
+
+Focused validation after this follow-up passed with 14 existing generic-binding
+advisories; HTML rendering and the new history record validation passed. The
+scaffolded history filename retains its generated actor token; its actor metadata
+correctly records Codex. No new repository-wide validation pass is claimed.
