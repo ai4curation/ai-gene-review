@@ -28,11 +28,16 @@ SEAC/EGOC, but do not change the reviewed core model of TOR1 as a TORC1
 serine/threonine kinase catalytic subunit that coordinates growth with
 macroautophagy inhibition.
 
-- PMID:40622848: Gtr1/2 and Pib2 drive multiple TORC1 signaling states in
-  budding yeast.
-- PMID:41318596: Ait1, Gcn2, and SEAC/GATOR cooperate to regulate TORC1 during
-  nitrogen limitation and starvation.
-- PMID:41680390: cryo-EM and functional analysis of the yeast amino-acid-sensing
-  SEAC-EGOC supercomplex.
-- PMID:41513735: Tor1 A2357T confers growth-promoting TORC1 activity independent
-  of Gtr1/2 and Pib2.
+- Gtr1/2 and Pib2 drive multiple TORC1 signaling states in budding yeast
+  [PMID:40622848 "Here, we report that this dual regulator system pushes TORC1
+  into at least three distinct signaling states"].
+- Ait1, Gcn2, and SEAC/GATOR cooperate to regulate TORC1 during nitrogen
+  limitation and starvation [PMID:41318596 "SEAC, Ait1, and Gcn2 cooperate to
+  drive TORC1 into a fully inhibited state"].
+- Cryo-EM and functional analysis refined the yeast amino-acid-sensing
+  SEAC-EGOC supercomplex [PMID:41680390 "Here we determined the cryo-electron
+  microscopy structure of the SEAC bound to its substrate, the EGOC
+  (Ragulator-Rag), and studied its function in TORC1 amino acid signaling"].
+- Tor1 A2357T confers growth-promoting TORC1 activity independent of Gtr1/2 and
+  Pib2 [PMID:41513735 "identified a novel, dominant TOR1 mutation introducing
+  an A2357T substitution into the Tor1 kinase domain"].
