@@ -49,13 +49,16 @@ All five IBA annotations descend from PTHR10681 node PTN000073874. Current
 `PTHR10681-paint.tsv` retains that same node for cytosol (GO:0005829),
 thioredoxin peroxidase activity (GO:0008379), response to oxidative stress
 (GO:0006979), hydrogen peroxide catabolic process (GO:0042744), and cell redox
-homeostasis (GO:0045454). TSA1 itself is an experimental seed for four of these
-five calls; this is valid target-grounded IBD evidence, not circularity. The
-hydrogen-peroxide-catabolism call is seeded by other experimentally
-characterized peroxiredoxins and is independently supported by TSA1
+homeostasis (GO:0045454). Current PAINT keeps TSA1 as an experimental seed for the
+cytosol, oxidative-stress, and redox-homeostasis IBDs; this is valid
+target-grounded IBD evidence, not circularity. The GOA 2025 WITH/FROM for
+`GO:0008379` still listed TSA1/TSA2, but the 2026-08-28 PAINT row was narrowed to
+fission-yeast, metazoan, and protist seeds. The hydrogen-peroxide-catabolism call is
+also seeded by other experimentally characterized peroxiredoxins. Both molecular
+activity and hydrogen-peroxide catabolism remain independently supported by TSA1
 biochemistry. The only source-format drift is that current PAINT writes the two
-Arabidopsis redox-homeostasis seeds as AGI_LocusCode identifiers whereas cached
-GOA writes TAIR:locus identifiers. No node-placement failure or target-specific
+Arabidopsis redox-homeostasis seeds as AGI_LocusCode identifiers whereas cached GOA
+writes TAIR:locus identifiers. No node-placement failure or target-specific
 loss/divergence was found.
 
 ### Obsolete unfolded-protein term
