@@ -81,9 +81,11 @@ characterized SMYD enzyme Set5.
 
 1. **Substrate** — no protein (histone or non-histone) methylation site attributable to SET6
    has ever been identified. The generic "histone methyltransferase" call is an
-   IBA/family-transfer inference from a mixed SMYD donor set; Set5 acts on histone H4 and
-   mammalian SMYD proteins have both histone and non-histone targets, so a
-   histone-specific MF is not defensible for SET6 itself.
+   IBA/family-transfer inference from a mixed SMYD donor set; Set5 acts on H4K5, H4K8,
+   and H4K12 [PMID:31642774 "Set1, Set2, and Set5 are known to catalyze methylation
+   at H3K4, H3K36 and H4K5, K8, and K12, respectively"] and mammalian SMYD proteins
+   have both histone and non-histone targets, so a histone-specific MF is not defensible
+   for SET6 itself.
 2. **In-vivo (or in-vitro) activity** — SET6 has never been shown to transfer a methyl group
    to anything; competence is inferred only from sequence-conserved active-site residues.
    "Motif conservation is necessary but not sufficient for activity"
