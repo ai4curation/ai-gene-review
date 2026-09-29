@@ -71,3 +71,17 @@
   partner identities are retained, but genome-scale co-complex, prediction, paralog-
   heteromer, and affinity-enrichment datasets are not described as targeted proof of
   direct binary contact when the specific edge is absent from the narrative text.
+
+## 2026-09-29 IBA follow-up
+
+- Rechecked all eight GO_REF:0000033 IBA rows against
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv`. The accepted nucleus,
+  cytoplasm, cytosol, ATPase, heat-shock-protein-binding, protein-folding
+  chaperone, and protein-refolding transfers all still trace to current PAINT
+  rows; the pinned plasma-membrane IBA remains stale because current
+  PTN002500132 carries only `GO:0005634 nucleus` and `GO:0005829 cytosol`.
+- Added missing `propagation_review.source_entities` blocks for the accepted
+  IBA rows and expanded the PTN-only chaperone IBA with representative current
+  donors from PTN000452648.
+- Searched PubMed for exact `SSA4`/`Ssa4`/`YER103W` mentions in 2025-2026 and
+  found no new exact-match papers that change the Ssa4 curation.
