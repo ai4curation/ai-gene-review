@@ -183,3 +183,9 @@ KEEP_AS_NON_CORE 1.
   function 1; populated `findings` for the deep-research reference; checked every
   `existing_annotations` row against SWI4-goa.tsv (35 = 35, no placeholder text);
   wrote these notes; re-validated and rendered.
+- 2026-09-29: aligned all seven IBA rows with the current `PTHR24198` PAINT
+  snapshot. Added `PANTHER:PTN000917496` as the PTN-level source in
+  `propagation_review` blocks for the four supported IBA rows, kept the cytoplasm and
+  MBF transfers as `PROPAGATION_BAD`, and searched newer literature. PMID:40124484
+  provides 2025 full-text support for Swi4-dependent SWI4 autoregulation at Start but
+  does not require a new GO term.
