@@ -54,11 +54,20 @@
 ## 2026-09-29 IBA follow-up
 
 - Rechecked all eight GO_REF:0000033 IBA rows against
-  `interpro/panther/PTHR19375/PTHR19375-paint.tsv`. The accepted nucleus,
-  cytoplasm, cytosol, ATPase, heat-shock-protein-binding, protein-folding
-  chaperone, and protein-refolding transfers all still trace to current PAINT
-  rows; the pinned plasma-membrane IBA remains stale because current
-  PTN002500132 carries only `GO:0005634 nucleus` and `GO:0005829 cytosol`.
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv`. The nucleus, cytoplasm,
+  cytosol, ATPase, heat-shock-protein-binding, and protein-folding chaperone
+  transfers all still trace to current PAINT rows. The pinned plasma-membrane
+  IBA remains stale because current PTN002500132 carries only `GO:0005634
+  nucleus` and `GO:0005829 cytosol`.
+- Retained `GO:0042026 protein refolding` as a core Ssa2 activity because
+  Ssa1/2 refolding is directly supported by PMID:8947547, but marked the 2022
+  IBA row itself as stale: current PAINT carries a 2026 fungal PTN001065099
+  NOT/IRD for `GO:0042026` with `GO:0006457 protein folding` retained at the
+  same node.
+- Recorded the probable GOA lag in the other direction: PTN001065100 now
+  carries a Saccharomycetaceae `GO:0006616 SRP-dependent cotranslational
+  protein targeting to membrane` IBD seeded by SSA2 itself, but the pinned SSA2
+  GOA snapshot has no matching `GO:0006616` IBA row.
 - Added `propagation_review.source_entities` to the accepted IBA rows that were
   missing source traces, and expanded the PTN-only Hsp70-family molecular
   function blocks with representative current donors.
