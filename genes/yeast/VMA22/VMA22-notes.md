@@ -74,9 +74,14 @@ and is expected, but it is not the source entity to curate.
 
 The newly cached Wang et al. 2023 cryo-EM study (PMID:36724250) directly
 resolved yeast V0 assembly intermediates bound by Vma12p and Vma22p and supports
-the dedicated V-ATPase assembly-factor mechanism. It reinforces the core
+the dedicated V-ATPase assembly-factor mechanism. Its Vma22p-specific section
+shows that Vma22p occupies the V0 subunit-d site otherwise used by V1 subunit D,
+so Vma22p can both connect Vma12p to subunit d and prevent premature V1 binding
+to the partially assembled V0 sector. The structure reinforces the core
 V-ATPase assembly call and the proposed dedicated assembly-factor term, but it
-does not rescue `GO:0051082 unfolded protein binding`.
+does not rescue `GO:0051082 unfolded protein binding`; the remaining structural
+question is what the 35-residue disordered loop C-terminal to Vma22p's folded
+subunit-D-like core contributes.
 
 ## Localization and evidence limitations
 
