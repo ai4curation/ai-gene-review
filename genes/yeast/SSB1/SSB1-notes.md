@@ -184,9 +184,10 @@
   SSB2 review. Current PAINT records a NOT/IRD for `GO:0042026` at fungal node
   PTN001065099, sourced from PTN000452648 on 2026-06-16, and carries the broader
   `GO:0006457 protein folding` assertion down that branch. The pinned GOA row
-  is therefore `SOURCE_STALE_OR_MISSING`; modifying it to `GO:0006457` follows
-  the PAINT revision without claiming every possible refolding activity is
-  absent.
+  therefore traces to a still-sound source node whose refolding assertion should
+  no longer propagate to ribosome-associated fungal Ssb; modifying it to
+  `GO:0006457` follows the PAINT revision without claiming every possible
+  refolding activity is absent.
 - Exact PubMed searches for `(SSB1/Ssb1/YDL229W) AND Saccharomyces cerevisiae`
   in 2025+ found two direct Ssb1/2 papers. PMID:41078542 links Ssb1/2 to ABC
   transporter gene expression and quorum-sensing-molecule release at the
