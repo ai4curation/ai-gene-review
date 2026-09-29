@@ -40,3 +40,64 @@ Root separately read complete PMID:17234811 Methods and selected Results/Discuss
 ## Validation — 2026-09-29
 
 Focused `just validate human ATP2B2` passed with no gene-review advisories. The HTML render succeeded and the scaffolded curation history validated. These checks cover the present review and its references; no new repository-wide validation PASS is claimed. The independent final consistency check preserved all 58 source objects and eight products and verified all six literal quotations against their normal source caches.
+
+
+## First PR feedback: primary-source follow-up (2026-09-29)
+
+The two action changes are cilium row 18 to ACCEPT and neuronal
+differentiation row 29 to MARK_AS_OVER_ANNOTATED. Mouse olfactory cilia evidence
+is distinct from hair-cell stereocilia. Complete original differentiation Methods
+and selected Results establish upregulation after chemical induction; they do not
+establish PMCA2 as the driver of neuronal differentiation. Existing source tuples
+and eight alternative products are preserved. The single pump core now names
+stereocilia-to-endolymph export, and the biological description includes DFNA82.
+The human monogenic deafness paper adds corroboration to the existing non-core
+hearing annotations; it does not turn disease into a separate molecular core.
+
+Cardiac-conduction rows 54/55 remain unresolved. Tissue-expression evidence is
+relevant, but low heart transcript abundance does not disprove a cardiac role.
+PMID8245032 has a linked erratum (PMID7989379); its body was not inspected, so
+precise tissue quantities are not asserted. Generic-binding pairs 8/9 remain
+unresolved because their exact supporting evidence has not been verified.
+User-provided annotation actions require UNDECIDED in that situation. A generic
+label alone does not establish that either experimental interaction is false.
+The exosome row 40 likewise remains unresolved: membrane topology is compatible
+with vesicle incorporation, and the target proteomics row is still unread.
+
+Each review summary now states the evidence separately from the action reason.
+No NEW annotation, replacement term or added core is proposed. The previously
+recorded normal research-provider failure is retained; no repeat is claimed.
+
+Source reading: original PMID11259493 complete Methods 427–797 and selected
+Results 890–1277/1566–1940, Figure4 caption, selected Discussion 1942–2006/2226–2355;
+PMID16855061 complete Methods 245–414, Results 421–480, Discussion and Conclusion,
+but no figure pixels. PMID30535804 official complete abstract and selected indexed
+original genetic Results were inspected; original complete Methods were not.
+PMID8245032 identity/abstract was independently checked; the cardiac abundance
+wording is attributed to the immutable UniProt record. No complete-paper claim
+is inferred from an abstract-only normal cache.
+
+Primary sources:
+- https://www.researchgate.net/publication/247659906_Differentiation_induces_up-regulation_of_plasma_membrane_Ca2ATPase_and_concomitant_increase_in_Ca2_efflux_in_human_neuroblastoma_cell_line_IMR32_PMCA_up-regulation_during_differentiation
+- https://www.researchgate.net/publication/6930862_Plasma_Membrane_Calcium_Pumps_in_Mouse_Olfactory_Sensory_Neurons
+- https://pubmed.ncbi.nlm.nih.gov/30535804/
+- https://pubmed.ncbi.nlm.nih.gov/8245032/
+
+The normal records for PMID:16855061, PMID:30535804 and PMID:8245032 are now
+available and match their recovered and staged bytes exactly. The first and
+third are abstract-only; PMID:30535804 has an XML body. Complete normal headers
+and abstracts were read at closure. The earlier external primary-source reading
+scopes remain distinct from cache availability; the recovered XML body was not
+reread in full, and the PMID:7989379 erratum remains uninspected.
+
+This follow-up supersedes the initial review's cilium and neuronal-differentiation
+uncertainty and its 27 ACCEPT / 9 non-core / 22 UNDECIDED tally. The current
+decisions are 28 ACCEPT, 9 KEEP_AS_NON_CORE, 20 UNDECIDED and 1
+MARK_AS_OVER_ANNOTATED across the same 58 source assertions and eight products.
+Historical validation observations above describe the initial version; validation
+of this follow-up will be recorded after application.
+
+Follow-up validation: focused `just validate human ATP2B2` passed without
+annotation advisories, and `just render human ATP2B2` succeeded. The scaffolded
+session history records the two action changes and source-access limits. No new
+repository-wide validation pass is claimed.
