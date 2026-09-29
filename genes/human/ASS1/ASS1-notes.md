@@ -75,7 +75,7 @@ The previously checked publisher correction remains limited to its actual scope.
 
 ## Final source closure and synthesis
 
-The eight additional normal source caches were recovered and independently checked before final authoring. Each reference records its actual cache availability and the separately bounded scientific reading. The original 79 source assertions, order and qualifiers are preserved; one human nuclear-localization assertion is appended. No new process or second catalytic core is proposed. Decisions: 28 ACCEPT, 30 UNDECIDED, 18 KEEP_AS_NON_CORE, 3 MODIFY and 1 NEW. The original deep-research report and artifacts remain unchanged.
+The eight additional normal source caches were recovered and independently checked before final authoring. Each reference records its actual cache availability and the separately bounded scientific reading. The original 79 source assertions, order and qualifiers are preserved; one human nuclear-localization assertion is appended. No new process or second catalytic core is proposed. Initial publication decisions: 28 ACCEPT, 30 UNDECIDED, 18 KEEP_AS_NON_CORE, 3 MODIFY and 1 NEW; subsequent dated reassessments below supersede those counts. The original deep-research report and artifacts remain unchanged.
 
 
 ## 2026-09-29 — review follow-up
@@ -90,7 +90,7 @@ The complete normal abstracts for PMID:11083085, PMID:7845368 and PMID:8867809 w
 
 ### RNA-binding target evidence
 
-The [original article and supplement](https://rnajc.ucsf.edu/sites/rnajc.ucsf.edu/files/CastelloArticlePlusSupplementalJune2012.pdf) for PMID:22658674 explicitly places ASS1 in the mRNA-interactome class of Table 1 (printed p. 1404; PDF page 12). The parsed table, capture/enrichment Results, Figure 1 legend and isolation Methods were inspected. Parsed table text was inspected; table images were not examined. This closes the previously uninspected target boundary. Row 75 is now KEEP_AS_NON_CORE; RNA-target specificity remains unestablished. Cache availability is kept distinct from this external full-text reading.
+The [original article and supplement](https://rnajc.ucsf.edu/sites/rnajc.ucsf.edu/files/CastelloArticlePlusSupplementalJune2012.pdf) for PMID:22658674 explicitly places ASS1 in the mRNA-interactome class of Table 1 (printed p. 1404; PDF page 12). The parsed table, capture/enrichment Results, Figure 1 legend and isolation Methods were inspected. Parsed table text was inspected; table images were not examined. This closes the previously uninspected target boundary. The RNA-binding row is now KEEP_AS_NON_CORE; RNA-target specificity remains unestablished. Cache availability is kept distinct from this external full-text reading.
 
 
 ### Source-specific response and neuronal-location reassessment
@@ -126,3 +126,16 @@ The following reading scope applies to this reassessment. Most donor papers were
 - [PMID:8985169](https://pubmed.ncbi.nlm.nih.gov/8985169/): Complete official abstract. Cultured rat hepatocyte oleate/dexamethasone/carnitine conditions and ASS mRNA; full paper unread.
 - [PMID:18457831](https://pubmed.ncbi.nlm.nih.gov/18457831/): Complete official indexed abstract: polyaspartoyl-L-arginine, rat aortic endothelial cells, ASS protein induction and functional NO/arginine-cycle endpoints; NOS/ASL inhibitors, not an ASS-specific intervention. Later direct PubMed reopen returned a stub; no complete Methods or image inspection claimed.
 - [PMID:22658674](https://rnajc.ucsf.edu/sites/rnajc.ucsf.edu/files/CastelloArticlePlusSupplementalJune2012.pdf): UCSF-hosted primary article plus supplement, parsed PDF text. Main Table 1, printed p. 1404 / PDF page 12 (zero-based page 11), explicitly classifies ASS1 as mRNA interactome. Read Results pp. 1394–1396, main Methods In Vivo Isolation of HeLa RBPs (p. 1403), and Extended Experimental Procedures S1–S2 (PDF pages 15–16): capture, protein identification and enrichment analysis. Human HeLa, UV crosslinking, stringent oligo(dT) capture and RNase release. No ASS1-specific binding-site/CLIP validation or raw-spectra reanalysis. EMBL direct PDF open limited; UCSF supplied actual parsed text.
+
+
+## 2026-09-29 — second review follow-up
+
+The amine parent is now retained alongside its supported cellular child, following the verified [GO hierarchy](https://amigo.geneontology.org/amigo/term/GO:0071418). The spermine and polyaspartoyl-L-arginine experiments remain distinct. The dexamethasone response is retained using the [rat astrocyte activity experiment](https://pubmed.ncbi.nlm.nih.gov/8923475/) in addition to [hepatocyte transcription](https://pubmed.ncbi.nlm.nih.gov/9395312/). The criterion is a target-specific enzymatic or metabolic response in the relevant stimulus context; a changed transcript alone does not automatically establish a process role, and an ASS-specific knockout is not mandatory.
+
+The original [gastric-fundus study](https://www.sciencedirect.com/science/article/pii/S0014299902025840) places ASS in nerve fibers. Its electronic localization transfer is generalized to [neuron projection](https://amigo.geneontology.org/amigo/term/GO:0043005), avoiding an unverified claim about the [unipolar-neuron prebranch segment](https://amigo.geneontology.org/amigo/term/GO:0070852). The complete official abstract and indexed publisher Discussion were inspected; complete figures and antibody-control Methods were not.
+
+The four developmental transfers remain unresolved. Their reasons now distinguish organ maturation from morphogenesis. [Kidney development](https://amigo.geneontology.org/amigo/term/GO:0001822) and [diaphragm development](https://amigo.geneontology.org/amigo/term/GO:0060539) include progression to the mature organ. The existing abstract-level evidence does not settle whether ASS-dependent metabolic maturation supports the developmental assignments; inaccessible full studies are not treated as negative results. Direct publisher retrieval of the kidney and hepatocyte studies remained unavailable.
+
+The RNA reference assessment now matches the already inspected ASS1 Table 1 record. The normal abstract-only cache and every existing quotation remain unchanged. Known NMRAL1 association remains non-core under the supplied ActionEnum; a false interaction or unsupported replacement is not asserted to resolve the generic-binding policy disagreement. The ARAF row remains uncertain because the exact target record is unread.
+
+Current proposed decisions: 28 ACCEPT, 26 KEEP_AS_NON_CORE, 21 UNDECIDED, 4 MODIFY and 1 NEW. All 79 original assertions and the previously proposed nuclear-location row are preserved; no additional annotation or core is added.
