@@ -81,8 +81,9 @@ characterized SMYD enzyme Set5.
 
 1. **Substrate** — no protein (histone or non-histone) methylation site attributable to SET6
    has ever been identified. The generic "histone methyltransferase" call is an
-   IBA/family-transfer inference; the SMYD family (and human SETD6) act **largely on
-   non-histone targets**, so a histone-specific MF is not defensible for SET6.
+   IBA/family-transfer inference from a mixed SMYD donor set; Set5 acts on histone H4 and
+   mammalian SMYD proteins have both histone and non-histone targets, so a
+   histone-specific MF is not defensible for SET6 itself.
 2. **In-vivo (or in-vitro) activity** — SET6 has never been shown to transfer a methyl group
    to anything; competence is inferred only from sequence-conserved active-site residues.
    "Motif conservation is necessary but not sufficient for activity"
@@ -98,7 +99,7 @@ characterized SMYD enzyme Set5.
 | # | Term | Evid | Ref | Decision | Rationale |
 |---|------|------|-----|----------|-----------|
 | 1 | GO:0016279 protein-lysine N-methyltransferase activity | IBA | GO_REF:0000033 | ACCEPT | Best-supported MF: intact SET/SMYD active site + literature calling Set6 the most-likely genuine protein KMT. Putative, but this is the safest core-function call. |
-| 2 | GO:0042054 histone methyltransferase activity | IBA | GO_REF:0000033 | MARK_AS_OVER_ANNOTATED | Over-specific substrate class. SMYD/SETD6 act largely on non-histone targets; no histone substrate shown for Set6. The lysine-KMT MF (#1) is the defensible level. |
+| 2 | GO:0042054 histone methyltransferase activity | IBA | GO_REF:0000033 | MARK_AS_OVER_ANNOTATED | Over-specific substrate class. Set5 supports the source-side histone call, but no histone substrate has been shown for Set6. The lysine-KMT MF (#1) is the defensible level. |
 | 3 | GO:0005634 nucleus | IBA | GO_REF:0000033 | KEEP_AS_NON_CORE | Plausible by SMYD family transfer, but Set6 localization is explicitly unmeasured; keep as non-core, low confidence. |
 | 4 | GO:0006338 chromatin remodeling | IEA (from GO:0042054) | GO_REF:0000108 | REMOVE | Inter-ontology inference chained off the over-annotated histone-MTase term (#2); no evidence Set6 remodels chromatin. Falls with its parent term. |
 | 5 | GO:0008270 zinc ion binding | RCA | PMID:30358795 | KEEP_AS_NON_CORE | Computational (zinc-proteome) prediction, corroborated by the Cys-rich SMYD zinc-knot/post-SET architecture in the bioinformatics analysis. Structural, non-core. |
