@@ -86,6 +86,26 @@ section plus domain/orthology-grounded (not invented) reasoning.
   soluble flavohemoprotein (extra cytochrome-b5 and p23 domains) important for beta-cell/oxidative-
   stress protection — a different domain architecture from the polytopic yeast AIM33.
 
+### 2026-09-29 PAINT / IBA re-check
+- Re-read `interpro/panther/PTHR19370/PTHR19370-paint.tsv` and the GOA `WITH/FROM` strings for
+  all three AIM33 IBA rows.
+- The current plasma-membrane assertion is `PTN001064672 / GO:0005886`, a Saccharomycetaceae
+  AIM33/PGA3-branch IBD seeded only by **PGA3** (`SGD:S000004594`, 2025-04-08). That same node
+  carries an explicit `GO:0005739` mitochondrial IRD from the broader `PTN000452207` node.
+  This supports the existing conclusion: the membrane fold transfers, but PGA3 is the direct
+  plasma-membrane seed and AIM33 still needs its own membrane localized.
+- `PTN000452207 / GO:0004128` remains current and is seeded by **MCR1** and **PGA3**. The
+  ancestral flavin reductase fold is real, but the mixed donor biology still leaves AIM33's
+  acceptor unresolved: MCR1 is a cytochrome-b5 reductase, whereas PGA3 is described as a
+  plasma-membrane coenzyme-Q6 reductase.
+- `PTN000452208 / GO:0006696` remains current as a broad MCR1-seeded ergosterol-biosynthesis
+  assertion. No AIM33-specific sterol-biosynthesis evidence was found, so this remains a
+  paralog over-propagation rather than a core process for AIM33.
+- Current PAINT now has a very broad `PTN001833551 / GO:0016491 oxidoreductase activity` IBD
+  seeded by MCR1, PGA3, CBR1 and many non-yeast CYB5R family members. That IBD is not in AIM33's
+  current GOA rows, but it agrees with the retained InterPro `GO:0016491` row and is the safest
+  molecular-function level for AIM33 until its acceptor is measured directly.
+
 ## NOT known (the real knowledge gaps)
 1. **Catalytic activity of AIM33 itself.** No enzyme assay demonstrates cytochrome-b5 reductase
    (or any) activity for AIM33. EC is 1.-.-.- (class assigned, sub-subclass unknown). The
