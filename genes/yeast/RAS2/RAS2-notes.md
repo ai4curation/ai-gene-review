@@ -23,9 +23,9 @@ IBA records that plasma-membrane localization and GTPase activity are inherited
 Ras-family properties rather than lineage-specific RAS2 observations.
 
 `PTN000631348` also carries `GO:0007264 small GTPase mediated signal transduction`,
-the parent of `GO:0007265 Ras protein signal transduction`; RAS2 inherits the more
-specific child from `PTN008393310`, so the current GOA has no redundant IBA for the
-parent term.
+the parent of `GO:0007265 Ras protein signal transduction`; RAS2 currently inherits
+the more specific child from `PTN008393310` without a redundant GO:0007264 IBA row in
+the fetched GOA snapshot.
 
 All four IBA rows are biologically sound for RAS2, so the YAML now keeps them as `ACCEPT`
 and records `propagation_review.root_cause: NO_FAILURE_CORE` with the PTN ancestral node,
