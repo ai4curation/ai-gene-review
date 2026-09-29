@@ -16,8 +16,13 @@ and the current review already captures this as SHY1's central process. The
 mitochondrion IBA is also sound, with direct inner-mitochondrial-membrane
 evidence from the original yeast characterization [PMID:9162072]. The 2024
 S. pombe Shy1/SURF1 homolog study provides newer ortholog corroboration for
-mitochondrial localization and complex IV assembly, but it does not change the
-S. cerevisiae action calls [PMID:39289458].
+mitochondrial localization and complex IV assembly, but it also reports that
+S. pombe shy1 deletion does not critically disrupt respiratory-chain assembly
+[PMID:39289458 "Unlike its homologs, deletion of shy1 does not critically
+disrupt respiratory chain assembly, indicating the presence of the compensatory
+mechanism(s) within S. pombe that ensure mitochondrial functionality."]. I
+therefore treated it as corroborating ortholog context rather than direct
+S. cerevisiae evidence.
 
 I reclassified both `GO:0005515 protein binding` IPI rows from
 `MARK_AS_OVER_ANNOTATED` to `REMOVE` under the current generic-protein-binding
