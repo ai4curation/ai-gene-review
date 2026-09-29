@@ -108,7 +108,10 @@ WITH/FROM is not circular. Structured `source_entities` now record the
 ancestral PTN plus the curated SGD donors that each IBA row's argument rests
 on. The local PTHR28246 cache has `PTHR28246-entries.csv` but no
 `PTHR28246-paint.tsv`, so the review records that local mirror limitation in
-PTN comments rather than treating `PTN002000919` as stale.
+PTN comments rather than treating `PTN002000919` as stale. The cytoplasm IBA
+is retained as non-core despite its `is_active_in` qualifier because canonical
+SBF corepression is nuclear but the Atg1-Whi5 starvation interaction leaves a
+possible noncanonical cytoplasmic activity unresolved.
 
 Search on 2026-09-29 found no newer published *S. cerevisiae* WHI5 paper that
 changes the GO review beyond the already-cached 2025 Atg1/autophagy report
