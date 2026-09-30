@@ -1,0 +1,86 @@
+---
+title: "Pennycress (Thlaspi arvense) Oilseed Domestication Genes"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
+species: [THLAR, ARATH]
+genes: [FAE1, TFP, CYP71B1, matK]
+---
+
+# Pennycress (Thlaspi arvense) Oilseed Domestication Genes
+
+**Bottom line:** Field pennycress is a wild Brassicaceae being turned into a winter
+oilseed cover crop, mostly by knocking out genes whose Arabidopsis orthologs are well
+understood. Only three pennycress proteins are in Swiss-Prot (CYP71B1, TFP, matK), and all
+three are already reviewed here. Everything else in the proteome (UP000836841, about 26,400
+proteins) is unreviewed TrEMBL with electronic-only GO annotations. The pennycress mutant
+papers are therefore a direct source of organism-specific experimental evidence (IMP) that
+GOA does not yet have. The pilot gene, FAE1, is reviewed: its 6 IEA annotations are all
+consistent with the literature (2 accepted, 2 made more specific, 2 kept as non-core), and
+one new IMP annotation (very long-chain fatty acid biosynthetic process) is proposed from
+the pennycress CRISPR knockouts.
+
+## Why pennycress
+
+- Domestication traits map onto single genes with strong knockout phenotypes in pennycress
+  itself (oil composition, seed coat, glucosinolates, flowering habit, pod shatter, dormancy).
+- Arabidopsis orthologs are already reviewed in this repo (e.g. FAE1, TT8, TTG1, FLC, CBF1,
+  WRI1, DGAT1, FAD2), so each pennycress review can be checked against its ortholog.
+- The glucosinolate-myrosinase defence system links the existing TFP review to sulfate
+  assimilation modules and is not yet represented as a module.
+
+## Working with TrEMBL entries
+
+- Most proteome entries carry only a locus name (`TAV2_LOCUS...`). Identify genes by
+  orthology, and prefer a named entry with literature when one is identical or nearly
+  identical to the proteome entry.
+- FAE1 is reviewed on V9XY07 (named, cited). It differs from the proteome entry
+  A0AAU9T3A1 / `TAV2_LOCUS26079` at 1 of 506 residues. Fetched with
+  `just fetch-gene THLAR V9XY07 --alias FAE1`.
+- **Species trap:** metal hyperaccumulation work (HMA4, ZIP transporters, Cd/Zn/Ni
+  tolerance) was done in *Noccaea caerulescens*, formerly *Thlaspi caerulescens*, not in
+  *T. arvense*. Check the species in every paper.
+
+## Gene list
+
+| Gene | UniProt | Theme | Status |
+|------|---------|-------|--------|
+| FAE1 | V9XY07 | Seed oil: erucic acid (VLCFA) | Reviewed (pilot) |
+| TFP | G1FNI6 | Glucosinolate breakdown | Reviewed (earlier) |
+| CYP71B1 | P49264 | Specialized metabolism, function unknown | Reviewed (earlier) |
+| matK | Q9GF35 | Chloroplast intron splicing | Reviewed (earlier) |
+| FAD2, ROD1, FAD3 | to identify | Seed oil: oleic vs. polyunsaturated | Planned |
+| TT8, TT2, TTG1 | to identify | Seed coat, fibre, dormancy | Planned |
+| MYB28, MYC3, GTR1/2, AOP2 | to identify | Seed glucosinolate | Planned |
+| FLC, FRI, IND, ALC, DOG1 | to identify | Flowering habit, pod shatter, dormancy | Planned |
+
+## FAE1 pilot: findings
+
+- **Activity:** fatty acid elongase activity (the KCS condensation step) accepted. Pennycress
+  FAE1 raises erucic acid when expressed in Arabidopsis seed (PMID:32740897), and CRISPR
+  knockouts in pennycress remove erucic acid from seed oil (PMID:30230695).
+- **Process:** `fatty acid biosynthetic process` sharpened to `very long-chain fatty acid
+  biosynthetic process`, and that term added as a new IMP annotation. FAE1 catalyses a step
+  of the process, so this is participation, not just requirement.
+- **Not added:** triglyceride biosynthesis. FAE1 makes the acyl-CoA that DGAT1 and other
+  acyltransferases put into oil; it does none of the acylation itself.
+- **Location:** `membrane` sharpened to ER membrane. There is no pennycress localization
+  data; this rests on the conserved ER elongase.
+
+## Next steps
+
+1. Review the other oil-composition genes (FAD2, ROD1) using PMID:33968108.
+2. Add plant 3-ketoacyl-CoA synthase (FAE1/KCS) as a variant of the condensation step in
+   `modules/fatty_acid_elongation_cycle.yaml`, which currently lists only animal ELOVLs.
+   Plant KCSs are unrelated to ELOVLs, so this is a variant, not an extra member.
+3. Draft a glucosinolate-myrosinase module, tying in TFP and the domestication knockouts
+   of MYB28 and MYC3 (PMID:41578087).
+4. Seed coat and weediness: TT8 knockout (PMID:41578087; PMID:41685867).
+
+## Key literature (PMIDs checked against PubMed)
+
+- PMID:30230695 — molecular tools and CRISPR fae1 knockouts in pennycress.
+- PMID:33968108 — fad2 and rod1 stacked with fae1 for high-oleic oil.
+- PMID:39657724 — multi-omics of the fae1 knockout.
+- PMID:32740897 — functional analysis of pennycress FAE1 in Arabidopsis.
+- PMID:41578087 — stacking domestication traits by CRISPR (Nature Plants 2026).
+- PMID:39470818 — review of pennycress domestication and engineering.
