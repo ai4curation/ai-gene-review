@@ -56,3 +56,22 @@
 - PMID:22302990 — BBS7 (and "other BBS proteins") interaction with RNF2, transcriptional role (MEDIUM, BBS7-centric).
 - PMID:18299575 — Bbs loss alters motile cilia in airway (MEDIUM; supports motile cilium localization/cilium beat).
 - PMID:33144677 — DLEC1 interaction (spermatogenesis paper) (LOW-MEDIUM, interaction only).
+
+
+## 2026-09-30 BBS2 source-complete review
+
+The normal local GOA projection recovers 89 distinct source assertions from 92 raw rows, including 22 partner-specific assertions absent from the inherited 67-row review. Three full source keys occur twice in the raw file; these exact duplicates do not represent additional distinct assertions. Qualifiers, evidence, source references and WITH/FROM identities are retained, including BBS7 isoform 2 and the separately tested NRF1/FNDC3B isoforms. No new annotation is proposed by this consultation.
+
+This assessment supersedes the earlier cilia-only reasons for removing microvillus and stereocilium locations. PMID:25605782 directly localizes mouse Bbs2 at both actin-rich sites despite the paper's Bbs8/Ift20 title. PMID:18032602 explicitly includes Bbs2-null brain morphology despite its Bbs1-focused title. These are contextual transferred assertions, not new human assays. The earlier RNF2/BBS7-only concern is also superseded: PMID:22302990 includes tagged BBS2–RNF2 co-IP. RNF2 is an E3 ligase, supporting ubiquitin protein ligase binding; endogenous co-IP and yeast screening in that paper were BBS7 experiments.
+
+The inherited interaction-partner labels require correction: Q9NRI5 is DISC1, P68104 is EEF1A1, and Q15154 is PCM1. The source identifiers themselves remain unchanged. Canonical BBS7 interactions can be refined to heterodimerization and canonical BBS9 interactions to the integral BBSome scaffold role, with independent primary structural/assembly grounding identified separately from each original interaction assay. The BBS7 isoform-2 assertion remains non-core because the structural construct's precise isoform has not been established here. Supported remaining interactions are kept as non-core under the user-supplied ActionEnum; lack of a specific mechanism is not evidence that an observed interaction is false.
+
+One scaffold core is sufficient. The structural paper PMID:31530639 uses low-resolution negative-stain EM, cross-linking/MS and integrative modeling, not high-resolution cryo-EM. No ARL6 GTPase, BBS1/7 cargo-recognition or CCT folding activity is assigned to BBS2. Some cilia initially form in Bbs2-null mice, so broad cilium-assembly annotations do not imply a universal initiation requirement. Adipogenesis remains undecided because the traced PMID:17379567 evidence available here is an expression study, not a demonstrated BBS2-performed differentiation step.
+
+No provider report was present. The first normal provider attempt stopped at a UV tool-directory configuration error; a corrected attempt using the established writable directories failed at offline dependency resolution before generating a provider report. No manual text has been labeled as a provider report. The normal existing-PMID command found all 24 requested records cached. The consultation's source-read-limits.json distinguishes complete abstracts, selected primary Results/Methods and uninspected images/supplements; several caches marked full-text available contain only partial article bodies. Additional normal-source acquisition is owned separately and must be recorded before final integration.
+
+The five additional normal sources were recovered through Source87 and imported without source editing. The integrated review has 16 ACCEPT, 56 KEEP_AS_NON_CORE, 15 MODIFY and two UNDECIDED decisions, with one scaffold core and no NEW annotation. The earlier notes remain as historical context; the corrections above govern this revision.
+
+### Validation of this revision — 2026-09-30
+
+Focused validation passed with 26 advisories, all concerning supported generic protein-binding rows retained as non-core under the supplied review criteria. These advisories remain disclosed; they do not provide evidence that the interactions are false. The generated Codex EDIT history and rendering passed. The exact source census contains 89 distinct assertions from 92 raw rows, with no new assertion. This is focused validation, not a new claim that repository-wide reference checks passed.
