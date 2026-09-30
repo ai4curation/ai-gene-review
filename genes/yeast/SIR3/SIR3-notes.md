@@ -81,8 +81,9 @@ Also addressed two smaller review points:
 Aligned SIR3 with the IBA propagation review:
 
 - The `GO:0006270` transfer from the ORC1/CDC6 PAINT family still carries a
-  `PROPAGATION_BAD`/`WRONG_ORTHOLOG_OR_PARALOG` propagation review because SIR3
-  is absent from those IBD seeds. The `GO:0003688` transfer is now
+  `PROPAGATION_BAD`/`WRONG_ORTHOLOG_OR_PARALOG` propagation review because Sir3
+  is an ORC1-derived silent-chromatin scaffold that suppresses, rather than
+  initiates, MCM loading at euchromatic origins. The `GO:0003688` transfer is now
   `TERM_SCOPING_PROBLEM`: SIR3 itself is in that seed list via SGD's
   over-scoped origin-binding IDA from PMID:29795547, whose data support Sir3
   binding to origin-adjacent nucleosomes rather than origin DNA itself.
