@@ -36,4 +36,6 @@ Notch-module role: **CSL — the DNA-binding nuclear effector of canonical Notch
 - Zebrafish has rbpja/rbpjb; Drosophila Su(H); C. elegans lag-1.
 
 ## Deep research
-Falcon deep research launched; see review for whether it was used.
+Falcon deep research completed (Rbpj-deep-research-falcon.md; wrapper reported a 600 s timeout but the
+falcon client finished and wrote the file). Consistent with the above
+[file:mouse/Rbpj/Rbpj-deep-research-falcon.md "Rbpj encodes a sequence-specific DNA-binding transcription factor that serves as the central nuclear mediator of canonical Notch signaling in mammals"].
