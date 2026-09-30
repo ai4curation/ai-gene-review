@@ -138,6 +138,64 @@ def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Di
     return isoforms
 
 
+def _repair_truncated_product_sequences(
+    existing_products: Any, fresh_products: List[Dict[str, str]]
+) -> int:
+    """Repair only legacy VSP-only notes ending in a dangling comma.
+
+    Require a unique matching isoform ID and a complete fresh VSP list that
+    strictly extends the old list in the same order. Names, descriptions,
+    arbitrary prose, product order and all other fields remain untouched.
+
+    Examples:
+        >>> old = [{"id": "P46379-4", "name": "curated", "sequence_note": "VSP_015695,"}]
+        >>> fresh = [{"id": "P46379-4", "sequence_note": "VSP_015695, VSP_045913"}]
+        >>> _repair_truncated_product_sequences(old, fresh)
+        1
+        >>> old[0]["name"]
+        'curated'
+        >>> _repair_truncated_product_sequences(old, fresh)
+        0
+    """
+    if not isinstance(existing_products, list):
+        return 0
+
+    def unique_by_id(products: List[Any]) -> Dict[str, Dict[str, Any]]:
+        by_id: Dict[str, Dict[str, Any]] = {}
+        duplicates = set()
+        for product in products:
+            if not isinstance(product, dict):
+                continue
+            product_id = product.get("id")
+            if not isinstance(product_id, str) or not re.fullmatch(
+                r"[A-Z0-9]+-[1-9][0-9]*", product_id
+            ):
+                continue
+            if product_id in by_id:
+                duplicates.add(product_id)
+            by_id[product_id] = product
+        return {key: value for key, value in by_id.items() if key not in duplicates}
+
+    fresh_by_id = unique_by_id(fresh_products)
+    repaired = 0
+    for product_id, product in unique_by_id(existing_products).items():
+        old_note = product.get("sequence_note")
+        new_note = fresh_by_id.get(product_id, {}).get("sequence_note")
+        if not isinstance(old_note, str) or not isinstance(new_note, str):
+            continue
+        # A bare trailing comma is the old physical-line parser's signature.
+        if not re.fullmatch(r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*,\s*", old_note):
+            continue
+        if not re.fullmatch(r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*", new_note):
+            continue
+        old_ids = re.findall(r"VSP_[0-9]{6}", old_note)
+        new_ids = re.findall(r"VSP_[0-9]{6}", new_note)
+        if len(new_ids) > len(old_ids) and new_ids[:len(old_ids)] == old_ids:
+            product["sequence_note"] = new_note
+            repaired += 1
+    return repaired
+
+
 def _extract_panther_family_id(uniprot_data: str) -> Optional[str]:
     """Extract PANTHER family ID from UniProt data.
 
@@ -281,6 +339,8 @@ def fetch_gene_data(
             - qualifiers_backfilled: int - Number of existing annotations enriched
             - supporting_entities_backfilled: int - Number of existing annotations
               enriched with WITH/FROM entities
+            - alternative_product_sequences_repaired: int - Number of legacy truncated
+                VSP-only sequence notes extended from the current UniProt record
             - uniprot_updated: bool - True if UniProt file was updated
             - goa_updated: bool - True if GOA file was updated
             - uniprot_differences: bool - True if UniProt content differs from existing
@@ -382,6 +442,7 @@ def fetch_gene_data(
         "references_added": 0,
         "qualifiers_backfilled": 0,
         "supporting_entities_backfilled": 0,
+        "alternative_product_sequences_repaired": 0,
         "uniprot_updated": False,
         "goa_updated": False,
         "uniprot_differences": uniprot_differs,
@@ -512,15 +573,28 @@ def fetch_gene_data(
             yaml_existed,
         )
 
-        # Add alternative_products to existing files if missing
+        # Fill missing products, or narrowly repair legacy truncated VSP lists.
         if yaml_existed:
             with open(yaml_file, "r") as f:
                 existing_data = yaml.safe_load(f)
 
-            if existing_data and "alternative_products" not in existing_data:
+            if isinstance(existing_data, dict) and existing_data:
                 alt_products = _extract_alternative_products(uniprot_data, uniprot_id)
-                if alt_products:
+                changed = False
+                if "alternative_products" not in existing_data and alt_products:
                     existing_data["alternative_products"] = alt_products
+                    changed = True
+                    print(f"  ✓ Added {len(alt_products)} isoforms to alternative_products")
+                    result["alternative_products_added"] = len(alt_products)
+                elif "alternative_products" in existing_data:
+                    repaired = _repair_truncated_product_sequences(
+                        existing_data["alternative_products"], alt_products
+                    )
+                    result["alternative_product_sequences_repaired"] = repaired
+                    changed = repaired > 0
+                    if repaired:
+                        print(f"  ✓ Repaired {repaired} truncated isoform sequence notes")
+                if changed:
                     with open(yaml_file, "w") as f:
                         yaml.dump(
                             existing_data,
@@ -529,8 +603,6 @@ def fetch_gene_data(
                             sort_keys=False,
                             allow_unicode=True,
                         )
-                    print(f"  ✓ Added {len(alt_products)} isoforms to alternative_products")
-                    result["alternative_products_added"] = len(alt_products)
 
     # Auto-fetch PANTHER family data if found in UniProt data
     panther_family_id = _extract_panther_family_id(uniprot_data)
