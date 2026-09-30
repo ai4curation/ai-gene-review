@@ -87,3 +87,24 @@ SMO, RNF2) are captured by the BBSome part_of and specific MF/process annotation
 - PMID:22302990 Gascue 2012 JCS — BBS7 nuclear role, RNF2 interaction, transcription. VERIFIED (abstract).
 - PMID:19081074 Loktev 2008 Dev Cell — BBIP10 discovery; BBSome context. VERIFIED.
 - PMID:24550735 Chamling 2014 PLoS Genet — AZI1/CEP131 regulates BBSome trafficking. VERIFIED.
+
+
+## 2026-09-30 independent BBS7 annotation consultation (prospective)
+
+The normal TMP source projection restores 15 omitted source annotations and 35 WITH/FROM lists. All 65 raw records are covered by 63 distinct source objects; two exact duplicates collapse without losing support. Two alternative-product records remain unchanged. The old authored structural-molecule NEW entry is proposed for withdrawal, separately from the source inventory.
+
+Seven exact canonical BBS2 partner records are refined to heterodimerization using independent human integrative structural evidence (PMID:31530639) and ordered-assembly evidence (PMID:22500027). The original screening evidence remains attached and its individual supplementary rows are not claimed to have been reverified. Other supported generic interactions remain non-core under the user-supplied ActionEnum; they are not rejected merely for low informativeness. BBS7 is a client of chaperonin-assisted assembly, not an independently established folding catalyst.
+
+The RNF2 source is directly about BBS7 interaction, including endogenous HeLa co-immunoprecipitation. RNF2 is an E3 ligase, so the binding replacement is ubiquitin protein ligase binding, not sequence-specific Pol II transcription-factor binding. Transcription and proteasomal-regulation annotations remain contextual; no BBS7 ligase, protease or direct DNA-binding activity is asserted. The DISC1 partner Q9NRI5 is corrected in authored prose; it is not PCM1.
+
+Mouse and zebrafish sources support ciliary, laterality and pigment-transport contexts. They do not imply universal loss of every primary cilium or every ciliary cargo. The adipogenesis transfer is unresolved because the available mouse donor is an expression-profile source. Digestive-tract morphogenesis is also unresolved because its precise donor assay has not been established. These uncertainties are not claims that unread full papers lack relevant data.
+
+Normal cached abstracts were read for all 17 inherited PMIDs, with selected body passages for the mechanistic papers and separate official primary Results/captions as recorded in the consultation. The root-owned normal cache request for PMID:23572516 and PMID:24938409 failed DNS once (actual54d8ec); their recovery remains separate and pending. No cache was fabricated. For identification, the latter DOI is 10.1016/j.ydbio.2014.05.020, correcting an unverified DOI in an earlier coordination message. The provider is absent and the unchanged configured dependency-resolution failure is documented; no provider-named manual research was authored. No new direct quotations are added.
+
+Source90 reassessment read the complete normal23572516 abstract and normal24938409 abstract plus extracted Methods, Results and Discussion. The latter confirms zebrafish retrograde pigment-transport and ciliary-length effects while preserving Bbs7 anterograde transport. Its mouse BBSome immunoprecipitation concerns Pk2-null testes. The digestive-tract donor context remains unresolved; no source action or core changed. The prior PMC access limit is superseded for24938409, but figures, movies and supplements were not audited.
+
+The two requested normal sources were subsequently imported through Source90 and explicitly reassessed before integration; the prospective consultation above records the earlier state. All 63 source assertions and two alternative products are preserved. The final synthesis identifies BBS2-BBS7 heterodimerization as the molecular core, with distinct BBS2-BBS9 organization and cargo-specific mouse outcomes. The previous authored generic structural-molecule NEW entry is withdrawn without losing a source assertion. Nine MODIFY decisions receive structured source-only support. The single new quotation contains seven words from PMID:31530639 (14 cumulatively with BBS2). No provider-named manual research or new process assertion is created.
+
+### Final focused checks
+
+The independently reviewed 63-source-annotation proposal passed focused validation and HTML rendering. Its 22 advisories comprise 21 supported generic-binding rows retained as KEEP_AS_NON_CORE under the supplied ActionEnum and one missing structured propagation-review advisory for the broad IBA localization-process refinement. The underlying phylogenetic node was not independently reconstructed, so no unsupported node-specific metadata is added. The review preserves both alternative products, all 65 raw rows and their 63 distinct source assertions; the prior authored NEW is withdrawn separately. No repository-wide validation result is claimed.
