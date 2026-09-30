@@ -2,9 +2,8 @@
 
 ## Status of inputs
 - UniProt, GOA (91 rows, 89 seeded annotations after de-duplication) and all 35 GOA PMIDs are cached.
-- Falcon deep research had not reached spz in the batch queue when this review was written; the
-  review was drafted from UniProt, GOA and the cached primary literature (see end of file for
-  the deep-research status).
+- The review was drafted from UniProt, GOA and the cached primary literature; Falcon deep research
+  (spz-deep-research-falcon.md) completed afterwards and was checked for consistency.
 
 ## Identity and structure
 - Secreted cystine-knot protein, synthesised as a disulfide-linked dimeric pro-protein; many
@@ -85,4 +84,9 @@
   about the Toll-regulated antifungal Baramicin; proposed MODIFY to GO:0002804.
 
 ## Deep research status
-- See bottom of review history; Falcon deep research not available at time of writing.
+- spz-deep-research-falcon.md (completed 2026-09-30) agrees with the review: Spz is a secreted,
+  non-enzymatic cystine-knot cytokine, activated by Easter (embryo) or SPE/MP1 and other proteases
+  (immunity, damage), acting in the perivitelline space and haemolymph; Toll-1 is the established
+  receptor and Toll-7 binding is less firmly established. Its statement that Gram-negative bacteria
+  can activate the pathway draws largely on other insects (e.g. Tenebrio), so it does not resolve
+  the GO:0050829 row, which stays UNDECIDED. No annotation changes resulted.
