@@ -1,8 +1,8 @@
 # TLR15 (chicken, UniProt A0A8V0Z0H8) — curation notes
 
-No `TLR15-deep-research-*.md` file was produced by the batch harness before this
-review was written; these notes rest on the UniProt record, the GOA rows and the
-cached publications.
+These notes rest on the UniProt record, the GOA rows and the cached publications;
+the Falcon deep-research report arrived after the review was written and is
+cross-checked at the end of this file.
 
 ## Entry identity (TrEMBL, unreviewed)
 
@@ -79,3 +79,70 @@ The interesting rows are the two IBA annotations transferred from human TLR2
   this family, it is confirmed experimentally for this receptor by surface
   biotinylation and confocal microscopy.
 - GO:0007165 and GO:0016020 kept as non-core.
+
+
+## Deep-research cross-check (2026-09-30)
+
+Compared `TLR15-deep-research-falcon.md` against the finished review. The report is about
+the right gene and is unusually useful here, because it surfaces four papers later than the
+two the review rested on. Each was fetched and read before use.
+
+Agreement: cell-surface localisation; activation by proteolytic cleavage of the ectodomain
+by secreted microbial proteases as the best-supported mechanism; MyD88-dependent signalling
+to NF-kappa-B; no mammalian orthologue; explicit warning that the *Salmonella*, *Clostridium*
+and viral associations are expression-level and should not be treated as direct ligand
+recognition. The report's own summary line, that
+[file:CHICK/TLR15/TLR15-deep-research-falcon.md "pathogen-associated protease sensing remains its best-supported molecular function"],
+coincides with the review's deliberate refusal to upgrade GO:0038023 to GO:0038187.
+
+Additions taken up, each verified in a primary paper:
+
+- **The receptor is not confined to birds and reptiles** (`publications/PMID_36605191.md`).
+  [PMID:36605191 "TLR15 is presented in cartilaginous fish (only in holocephalans) and in lungfish"];
+  it is an ancient gnathostome lineage lost or pseudogenised in many groups, including mammals.
+  `description` corrected. The same paper strengthens the REMOVE of GO:0042497 rather than
+  weakening it:
+  [PMID:36605191 "Our phylogenetic analyses also show, with good support, that TLR15 forms a distinct subfamily within vertebrate TLRs"]
+  and [PMID:36605191 "an ectodomain with single-domain architecture, instead of the three-domain architecture shared by all TLR1 family members"]
+  — the lipopeptide-binding site of the TLR1/TLR2 pair is built in the three-domain
+  architecture this receptor does not have. Both quotes added to that row's `supported_by`.
+- **The signalling complex is better constrained** (`publications/PMID_37079400.md`). The
+  cytoplasmic TIR domain was crystallised as a dimer with a TLR1-subfamily-unlike interface,
+  [PMID:37079400 "Collectively, our structural and mutational analyses suggest that TLR15TIR employs the BB, αC2 and DD regions for dimerization"],
+  and interface mutation abolished the dimer in solution. The GO:0043235 row stays
+  KEEP_AS_NON_CORE, but its reason no longer says the composition is unknown: a homodimer is
+  now the likely composition, while the isolated domain remains mostly monomeric and no
+  full-length dimer has been shown. The same paper argues structurally for the adaptor,
+  [PMID:37079400 "These observations allow us to propose that TLR15 signals through MyD88"],
+  added to the GO:0002224 row.
+- **Independent receptor-dependence in a chicken cell background**
+  (`publications/PMID_33514434.md`, abstract-only). Overexpression in DF-1 fibroblasts
+  augmented and [PMID:33514434 "knockdown of ChTLR15 in DF1 cells showed inverse effects"] on
+  NF-kappa-B and NLRP3/IL-1-beta activation by *Eimeria tenella* sporozoites. Added to the
+  GO:0002224 row.
+- **The one candidate protein ligand is itself a protease**
+  (`publications/PMID_40639002.md`): an *E. tenella* aspartyl protease
+  [PMID:40639002 "identified as a potential TLR15 ligand by"] co-immunoprecipitation. Cited in
+  the GO:0038023 reason, because it reinforces protease activation rather than pattern binding.
+
+Considered and **not** taken up:
+
+- **No NEW defence-response or inflammatory-response process term.** The Eimeria evidence is
+  strong enough to be worth recording but not to annotate: the causal readouts are signalling
+  intermediates and cytokine transcripts in an overexpressing fibroblast line, the candidate
+  ligand paper calls the receptor assignment "potential" and explicitly leaves other pattern
+  recognition receptors open, and the cecal expression correlation with oocyst output is
+  correlative. Raised as a suggested question instead.
+- **The *Mycoplasma synoviae* diacylated-lipopeptide reports do not reopen GO:0042497.** They
+  are induction and siRNA studies, the term removed is a *binding* term for *triacyl*
+  lipopeptides, and the one direct test of acylated lipopeptides on this receptor was negative.
+  Noted here as the main caveat a curator might raise against the REMOVE.
+- Viral associations: the report itself says the receptor should not be annotated as a viral
+  sensor, which matches the review.
+
+Other change: the `references` list contained each of its three PMIDs twice; the duplicates
+were removed.
+
+Actions: unchanged for every existing annotation. Changes were confined to `description`, four
+`reason` fields, six new `supported_by` quotes, five new references (four PMIDs plus the Falcon
+file) and one new suggested question.

@@ -1,9 +1,9 @@
 # tlr22 (zebrafish, UniProt A0A2R8RTN4) — curation notes
 
-No `tlr22-deep-research-*.md` file was produced by the batch harness before this
-review was written; these notes rest on the UniProt record, the GOA rows and the
-cached publications. This is the thinnest evidence base of the eight genes reviewed
-in this batch, and the review is correspondingly conservative.
+These notes rest on the UniProt record, the GOA rows and the cached publications;
+the Falcon deep-research report arrived after the review was written and is
+cross-checked at the end of this file. This is the thinnest evidence base of the
+eight genes reviewed in this batch, and the review is correspondingly conservative.
 
 ## Entry identity (TrEMBL, unreviewed)
 
@@ -93,3 +93,46 @@ demonstrated for this species.
   cell-surface annotation: all three would rest on the fugu orthologue, and
   cross-species transfer of a ligand specificity is exactly what this project set out
   to scrutinise. They appear instead as the leading suggested experiments.
+
+
+## Deep-research cross-check (2026-09-30)
+
+Compared `tlr22-deep-research-falcon.md` against the finished review. Right gene, and it
+independently confirms the review's central judgment, in almost the same terms: the
+functional picture for TLR22 comes from other teleosts, and
+[file:DANRE/tlr22/tlr22-deep-research-falcon.md "the zebrafish TLR22 protein itself (A0A2R8RTN4) has not been directly tested for ligand binding"].
+It lists as unresolved exactly the four things the review declined to annotate: ligand
+specificity of the zebrafish protein, subcellular localisation, adaptor usage and downstream
+pathway. Added as a reference and cited on the generic `membrane` row for that reason.
+
+One refinement taken up:
+
+- **The cross-species localisation transfer the review declined would not even have had a
+  single target.** The report shows the comparative literature divided, with the fugu work
+  placing the receptor at the cell surface while recent reviews of fish Toll-like receptors
+  describe TLR22 as endosomal and lysosomal, possibly a genuine species difference. That
+  strengthens the decision to keep GO:0016020 generic, and is now recorded in that row's reason.
+
+Considered and not taken up:
+
+- **Mycobacterium-induced expression of zebrafish tlr22**, which the report offers, traces to a
+  2024 review rather than to a primary zebrafish paper that could be quoted; searches for a
+  primary source found none. It would in any case be another transcript-level observation, so it
+  does not resolve the UNDECIDED GO:0009617 row, which turns on what PMID:17804254's figures
+  show. The row stays UNDECIDED.
+- Interferon induction, dsRNA recognition, MyD88 or TICAM-1 dependence, ERK/JNK/p38 effects,
+  dendritic-cell cross-presentation and the reactive-oxygen-species-limiting role are all from
+  fugu, grouper, trout or reviews. None is annotated, consistent with the review's original
+  position that cross-species ligand and pathway transfer is what this project is scrutinising.
+- The report notes one comparative genomic study reporting TLR22 absent from zebrafish
+  assemblies, which conflicts with the existence of this gene; the entry's RefSeq, GeneID and
+  ZFIN cross-references settle that, and nothing in the review depends on it.
+- Structural details (LRR counts of 15 or 26 in different analyses, flattened horseshoe
+  ectodomain) are predictions, and the report itself flags the disagreement.
+
+Other change: the `references` list contained PMID:18714020 and PMID:24282308 twice each; the
+duplicates were removed.
+
+Actions: every existing annotation unchanged, including the UNDECIDED GO:0009617 row, and no
+new annotations. Changes are one `reason` field, one new `supported_by` quote, one new reference
+(the Falcon file) and the reference de-duplication.

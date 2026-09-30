@@ -1,8 +1,8 @@
 # tlr5b (zebrafish, UniProt A0ACM8R384) — curation notes
 
-No `tlr5b-deep-research-*.md` file was produced by the batch harness before this
-review was written; these notes rest on the UniProt record, the GOA rows and the
-cached publications.
+These notes rest on the UniProt record, the GOA rows and the cached publications;
+the Falcon deep-research report arrived after the review was written and is
+cross-checked at the end of this file.
 
 ## Entry identity (TrEMBL, unreviewed)
 
@@ -73,3 +73,46 @@ contributes the activity rather than possessing it alone.
   on a commentary about another species; a plasma-membrane annotation would go beyond
   what was observed, since both paralogues were found in vesicle-like compartments
   rather than at a defined surface location.
+
+
+## Deep-research cross-check (2026-09-30)
+
+Compared `tlr5b-deep-research-falcon.md` against the finished review. Right gene, right
+accession, and it agrees with every decision: flagellin as the ligand, obligate
+heterodimerisation with the paralogue as the distinguishing feature, UNC93B1-dependent
+trafficking, MyD88-dependent signalling to NF-kappa-B, teleost tandem duplication with
+subfunctionalisation, and explicit caution that the grass carp dsRNA result has not been
+shown for zebrafish —
+[file:DANRE/tlr5b/tlr5b-deep-research-falcon.md "However, this dual-ligand capability has not been directly demonstrated for zebrafish TLR5b"],
+which is exactly why the review made no dsRNA or interferon annotation.
+
+Additions taken up, verified in primary papers:
+
+- **In vivo loss-of-function evidence, which the review lacked entirely**
+  (`publications/PMID_26208853.md`, full text). Morpholino knockdown in zebrafish embryos:
+  [PMID:26208853 "Our results revealed that abrogation of both tlr5a and tlr5b effectively prevented the il1b up-regulation observed in control embryos upon flagellin stimulation"],
+  with the informative asymmetry that there was
+  [PMID:26208853 "a complete block of induction of il1b by injection with flagellin and a partial effect of the tlr5b morpholino"].
+  A partial single-paralogue effect is what an obligate heterodimer predicts. Added to the
+  GO:0034146 row and to `core_functions.supported_by`; until now every line of evidence for
+  this gene came from heterologous expression or crystallography.
+- **The vesicular compartment is identifiable, if not annotatable.** The primary paper's marker
+  data were more specific than the review's wording allowed: the paralogues associated more with
+  LAMP-1 than with EEA-1 positive vesicles, and
+  [PMID:29555749 "drUNC93B1 enhanced relocalization of both receptors toward LAMP-1–specific compartments"]
+  coinciding with increased flagellin responsiveness. Recorded in the GO:0016020 reason. The
+  location annotation is deliberately still the generic `membrane`, because this is
+  overexpression in a heterologous line; the existing suggested question and localisation
+  experiment cover the gap.
+
+Not taken up: the transcriptome-level downstream gene lists (il1b, il8, mmp9, cxcl-C1c, irak3,
+tnfa) are outputs of the pathway rather than activities of this gene product, so they support the
+pathway term and nothing further; the Stockhammer knockdowns used a combined tlr5a+tlr5b
+morpholino, which cannot apportion the effect between paralogues; and the aquaculture-adjuvant
+material is application rather than function. The report's claim of MyD88 dependence for this
+receptor is drawn from reviews rather than from a zebrafish experiment, and no adaptor annotation
+is made.
+
+Actions: every existing annotation unchanged, no new annotations. Changes are to two `reason`
+fields, three new `supported_by` quotes on annotations plus one in `core_functions`, and two new
+references (PMID:26208853 and the Falcon file).

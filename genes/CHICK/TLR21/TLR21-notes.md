@@ -1,8 +1,8 @@
 # TLR21 (chicken, UniProt A0A8V0ZKW5) — curation notes
 
-No `TLR21-deep-research-*.md` file was produced by the batch harness before this
-review was written; these notes rest on the UniProt record, the GOA rows and the
-cached publications.
+These notes rest on the UniProt record, the GOA rows and the cached publications;
+the Falcon deep-research report arrived after the review was written and is
+cross-checked at the end of this file.
 
 ## Entry identity (TrEMBL, unreviewed)
 
@@ -71,3 +71,43 @@ receptor-specific term (GO:0035682) exists and is now proposed. The general patt
 across the batch is that the numbered pathway terms are safe to use where the
 receptor identity is unambiguous, whereas donor-specific *ligand* terms
 (triacyl lipopeptide binding on chicken TLR15) are not.
+
+
+## Deep-research cross-check (2026-09-30)
+
+Compared `TLR21-deep-research-falcon.md` against the finished review. The report is about the
+right gene and the right accession, and it agrees with the review on everything the review
+asserted: unmethylated CpG DNA as the ligand class, endosomal site of action, functional rather
+than orthologous relationship to mammalian TLR9, pattern recognition receptor rather than enzyme,
+and the reservation that MyD88 dependence for this receptor is inferred rather than directly
+demonstrated.
+
+One substantive addition, verified and taken up as the review's only new annotation:
+
+- **The receptor drives an interferon-beta response, not only an NF-kappa-B one.** The report
+  cited a preprint; the published version was fetched as `publications/PMID_37951324.md`
+  (Dev Comp Immunol, abstract-only in the cache, but the claims used are in the abstract).
+  Chicken TLR21 [PMID:37951324 "triggers the activation of NF-κB and induces a potent type-I interferon response"]
+  in chicken macrophages, and interferon-beta transcription downstream of it
+  [PMID:37951324 "was found to be dependent on both NF-κB and IRF7 signalling, but independent of"]
+  TBK1. Added as `NEW` GO:0032728 positive regulation of interferon-beta production, and to
+  `core_functions.directly_involved_in`; the two-arm signalling output is now in `description`.
+
+  The two tests in CLAUDE.md were run before proposing it. Participation: the receptor performs
+  the sensing step that switches the output on, rather than being a substrate of it. Comparator:
+  the mammalian receptors in the same role already carry this exact term from equivalent
+  experiments — human TLR9 and mouse Tlr9 hold GO:0032728 by IDA (PMID:16286015 and
+  PMID:15356140 respectively, checked in QuickGO), and human TLR3 holds it by IDA and IMP — so
+  the absence of an interferon term on the avian sensor is a gap in this species' annotation
+  rather than a convention. GO:0032728 is neither an ancestor nor a descendant of the proposed
+  GO:0035682, so it is not redundant with it.
+
+Not taken up: the CpG-adjuvant and in-ovo vaccination work, the intravaginal CpG study and the
+CpG-K3 whole-animal study are all applications of the ligand rather than evidence about the
+gene product's own activity, and the behavioural and metabolic readouts are far downstream. The
+report also repeats the (correct) point that no new primary localisation study exists, so the
+endosome call still rests on the 2009-2010 papers.
+
+Actions: every existing annotation unchanged; one `NEW` row added. Other changes are to
+`description`, `core_functions.directly_involved_in`, two new references (PMID:37951324 and the
+Falcon file, the latter cited only for the endosome consensus) and one new `supported_by` quote.

@@ -1,8 +1,8 @@
 # Tlr13 (mouse, UniProt Q6R5N8, MGI:3045213) — curation notes
 
-Deep research (falcon) was requested by the batch harness but no
-`Tlr13-deep-research-*.md` file had been produced when this review was written;
-these notes come from the UniProt record, the GOA rows and the cached publications.
+These notes come from the UniProt record, the GOA rows and the cached publications;
+the Falcon deep-research report arrived after the review was written and is
+cross-checked at the end of this file.
 Unlike its Tlr11/Tlr12 neighbours, Tlr13 has no nomenclature ambiguity — the gene
 symbol, the UniProt entry and the literature name all agree.
 
@@ -63,3 +63,65 @@ symbol, the UniProt entry and the literature name all agree.
 - GO:0005737 cytoplasm (IDA) and GO:0043408 regulation of MAPK cascade (IGI with
   Map3k7) are kept as non-core: true but generic, and superseded by the endosome and
   MyD88-pathway annotations respectively.
+
+
+## Deep-research cross-check (2026-09-30)
+
+Compared `Tlr13-deep-research-falcon.md` against the finished review. Right gene, no naming
+ambiguity, and it confirms the whole of the review's picture: sequence-specific recognition of a
+short conserved 23S rRNA motif, endosomal site of action, absolute UNC93B1 dependence,
+ligand-induced dimerisation, MyD88-dependent signalling to NF-kappa-B and MAP kinases, myeloid
+expression, and absence from the human genome. This was also the report with the most genuinely
+new content, because it covers a 2020-2025 literature the review had not seen.
+
+Two threads were followed into primary papers.
+
+**1. Host defence against Streptococcus pneumoniae — taken up as the review's only new
+annotation.** `publications/PMID_32209688.md` (mBio 2020, full text):
+[PMID:32209688 "Collectively, these data indicate that mice with single defects in TLR7, TLR9, or TLR13 have moderately impaired antipneumococcal defenses in the brain resulting in late-onset lethality"],
+microglia lacking the receptor produce less CXCL1 and TNF, and
+[PMID:32209688 "the simultaneous absence of TLR7, TLR9, and TLR13 was associated with extreme susceptibility to infection"]
+because resident macrophages cannot recruit neutrophils. `publications/PMID_38358825.md`
+(JCI Insight 2024, full text) adds double-knockout evidence:
+[PMID:38358825 "TLR13 and TLR2 are major pneumococcal sensors in the subarachnoid space"], with
+[PMID:38358825 "the concerted activity of cell-surface TLR2 and endosomal TLR13 as drivers of brain pathology in meningitis"].
+
+Added as `NEW` GO:0050830 defense response to Gram-positive bacterium (IMP), and to
+`core_functions.directly_involved_in`. The CLAUDE.md tests: participation is satisfied by the
+receptor's own work, since it binds the 23S rRNA ligand directly (with a structure of the
+complex) and that recognition is the step initiating chemokine output — this is not a bare
+necessity argument. The comparator check settles the term choice: mouse Tlr2, the surface sensor
+of the same bacterium and the partner in the double knockout, carries GO:0050830 by IMP from
+three papers, so a sensing receptor conventionally takes it. Two caveats are recorded in the
+row's reason: the Gram-positive child is used because every phenotype is with *S. pneumoniae*
+even though the rRNA ligand is not Gram-positive-specific, and the same signalling is protective
+in the lung but drives brain damage in meningitis, so only the protective side is annotated.
+
+**2. Microbiome RNA and tissue-protective macrophages — recorded but not annotated.**
+`publications/PMID_39853307.md` (J Exp Med 2025, full text) shows that lysosomal RNA stress in
+RNase T2-deficient mice drives macrophage accumulation in spleen and liver
+[PMID:39853307 "TLR13 activation by microbiota-derived ribosomal"] RNAs, maturing into
+IL-10-expressing and tissue-clearance-gene-expressing Kupffer cells, with resistance to
+acetaminophen and LPS/D-galactosamine liver injury. Cited as in vivo support on the GO:0019843
+rRNA-binding row, since it shows the physiological ligand is ribosomal RNA of commensal origin,
+and summarised in `description`. No process annotation is proposed: the phenotype was obtained
+in an RNase-deficient background, and terms for macrophage accumulation or hepatoprotection would
+attribute to this receptor an outcome produced by the macrophages it activates.
+
+Also added to `description`, from PMID:32209688, that human TLR8 is regarded as performing the
+equivalent endosomal bacterial-RNA sensing, which sharpens the review's bare statement that
+humans lack the gene.
+
+Not taken up: the LXR-alpha/MafB, Syk, ERK, mTOR and beta-catenin components of the hepatic
+program, and the CD5L/C1qb/Axl/Tgm2 output, are downstream of the receptor; the meningitis
+therapy work (chloroquine plus anti-TLR2 antibody) is pharmacological and not receptor-specific,
+since chloroquine blocks endosomal acidification generally; the reported responses to
+*Klebsiella pneumoniae* and streptococci of other groups come through a review; and the report's
+15-nucleotide consensus motif differs from the 13-nucleotide ligand in the crystal structure, so
+no residue-level claim was changed. The GO:0009615 response-to-virus row stays KEEP_AS_NON_CORE —
+the report gives no new viral evidence and treats bacterial rRNA as the ligand throughout.
+
+Actions: every existing annotation unchanged; one `NEW` row added. Other changes are
+`description`, `core_functions` (one process term, two new supporting quotes), one new
+`supported_by` quote on the rRNA-binding row and four new references (three PMIDs plus the Falcon
+file).

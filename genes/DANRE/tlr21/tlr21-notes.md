@@ -1,8 +1,8 @@
 # tlr21 (zebrafish, UniProt F1QMN8) — curation notes
 
-No `tlr21-deep-research-*.md` file was produced by the batch harness before this
-review was written; these notes rest on the UniProt record, the GOA rows and the
-cached publications.
+These notes rest on the UniProt record, the GOA rows and the cached publications;
+the Falcon deep-research report arrived after the review was written and is
+cross-checked at the end of this file.
 
 ## Entry identity (TrEMBL, unreviewed)
 
@@ -77,3 +77,42 @@ and the functional literature on this receptor concerns CpG-DNA sensing.
   mediates a CpG-driven protective response against a bacterial pathogen, but it is
   the sensor upstream of the humoral effectors rather than an effector itself.
 - GO:0061809 removed (see above); GO:0007165 and GO:0016020 kept as non-core.
+
+
+## Deep-research cross-check (2026-09-30)
+
+Compared `tlr21-deep-research-falcon.md` against the finished review. Right gene, right
+accession, and it independently reaches the same conclusions on every substantive point:
+CpG-DNA sensing with a GTCGTT preference distinct from zebrafish TLR9's GACGTT/AACGTT
+preference; no response to other PAMP classes; intracellular rather than surface
+localisation with ER-to-endosome trafficking via UNC93B1; functional analogy to mammalian
+TLR9 without orthology; and cooperative CpG surveillance with TLR9 in the same animal.
+
+Most usefully, it reaches the same verdict on the enzymatic row that this review removed:
+[file:DANRE/tlr21/tlr21-deep-research-falcon.md "The EC number 3.2.2.6 assigned to F1QMN8 in UniProt appears to be an annotation error"].
+That is now cited on the GO:0061809 REMOVE row as concurrence; the argument itself still
+rests on the UniProt family statement about TIR-domain NADase activity and on the absence of
+any enzymatic report for a TLR21.
+
+One addition taken up, as a question rather than an annotation:
+
+- **Adaptor usage for this receptor is genuinely unresolved.** The report sets out two
+  incompatible models in the comparative literature, a MyD88-associated one and a
+  TRIF-exclusive one proposed for fish TLR21, and states that
+  [file:DANRE/tlr21/tlr21-deep-research-falcon.md "No zebrafish-specific TLR21 adaptor knockout, co-immunoprecipitation, or complementation experiment was identified in the reviewed literature"].
+  The review never asserted an adaptor, so nothing needed correcting, but the ambiguity is
+  worth recording because it bounds which downstream process terms could ever be annotated.
+  Added as a suggested question.
+
+Not taken up: the CpG-ODN2007 protection result against *Vibrio vulnificus* is a ligand
+treatment in whole animals, not a manipulation of this receptor, so it cannot support a
+receptor annotation beyond what PMID:24282308 already supports; the interferon and IRF3/IRF7
+outputs are extrapolated from chicken TLR21 and from pathway diagrams rather than measured for
+the zebrafish receptor, so no interferon-production term is proposed here (unlike the chicken
+review in this batch, where the measurement exists); the LRR-count and docking-model details
+come from carp, catfish and chicken proteins; and the aquaculture-adjuvant material is
+application rather than function.
+
+Actions: every existing annotation unchanged, including the GO:0061809 REMOVE and the
+GO:0005886 over-annotation call, and no new annotations. Changes are one new reference (the
+Falcon file), one new `supported_by` quote and one new suggested question.
