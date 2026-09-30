@@ -76,6 +76,8 @@
 6. **Cellular response to mechanical stimulus (IEP PMID:19593445)** — the cited full text (BAD in
    prostate cancer) contains no mention of MyD88 or mechanical stimulation. Likely a wrong PMID;
    UNDECIDED rather than REMOVE, flagged in reference_review.
+6b. **Nucleus (EXP PMID:21057262)** — no localisation data found in the cached clinical paper;
+   kept as non-core (deferring to the curator) for consistency with the other nucleus rows.
 7. **Cell surface (IDA PMID:22851693)** — MYD88 is a cytoplasmic adaptor; the paper studies
    membrane-associated IL-1R complex I. MODIFY to GO:0031234.
 8. **protein binding IPI rows** — MODIFY to TIR domain binding (TIRAP, SARM1, TLR partners in MAPPIT),
@@ -91,10 +93,20 @@
     primes/licenses via TLR signaling. MODIFY to GO:1900227 positive regulation of NLRP3
     inflammasome complex assembly (which is also separately supported by IMP PMID:33718825).
 
+## Deep research
+
+- Falcon deep research completed after the first draft (`MYD88-deep-research-falcon.md`). It is
+  consistent with the review: direct TIR recruitment by TLR5/7/8/9, IL-1R and IL-18R; progressive
+  MyD88 oligomerisation to a threshold before stable IRAK4 engagement; OTUD5 K11-chain cleavage;
+  S257 phosphorylation and the oncogenic L265P TIR mutation. It reports nothing supporting
+  histone-chaperone, chromatin or phagocytosis roles. Added as a reference and cited in the IL-1R
+  family core function.
+
 ## NEW annotations considered
 
 - GO:0035655 interleukin-18-mediated signaling pathway: UniProt states involvement; supported in
   review PMID:36865541 (IL-18R uses MyD88). MYD88 performs the adaptor step in IL-18R signaling
   (participation test passes: it is the adaptor that bridges IL-18R1 TIR to IRAK4). Comparator:
-  IRAK4/IRAK1 human are annotated in IL-18 pathway in GOA? Not verified here, so this was NOT added
-  as NEW; raised as a suggested question instead.
+  QuickGO (2026-09-30) shows human GO:0035655 annotations only on IL18, IL18R1, IL18RAP, AKT1,
+  PIK3R1, PDGFB — not on IRAK4, TRAF6 or mouse Myd88. The adaptor layer is systematically absent,
+  so per CLAUDE.md this was NOT added as NEW; raised as a suggested question instead.

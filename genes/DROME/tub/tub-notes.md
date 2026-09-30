@@ -26,4 +26,4 @@
 - hemocyte proliferation TAS from a review whose cached abstract does not mention Tube -> UNDECIDED.
 
 ## Deep research
-Falcon deep research had not started for DROME genes when this review was written. Review done from UniProt and cached publications.
+Falcon deep research was never run for this gene. The background preparation job exited (code 144) while still working through human genes, whose runs had failed with "All providers failed". No DROME deep-research log appeared after about 40 minutes of waiting, so the review was completed from UniProt and cached publications only.

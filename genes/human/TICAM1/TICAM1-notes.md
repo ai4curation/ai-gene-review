@@ -6,10 +6,13 @@ inducing IFN-beta) and TICAM-1. Reviewed as part of the INNATE_IMMUNITY project,
 
 ## Deep research status
 
-Falcon deep research for TICAM1 had not started when this review was written (the batch
-queue was still processing the TLR receptors). The review below is built from the UniProt
-record and cached publications only. If `TICAM1-deep-research-falcon.md` appears later, it
-should be checked against the decisions here.
+The review was drafted from the UniProt record and cached publications before Falcon deep
+research finished. `TICAM1-deep-research-falcon.md` (review-based: Hu 2024, Chen 2021 and
+others, no PMIDs) arrived later and agrees with every decision here. It describes TICAM1 as
+a scaffold "without itself possessing enzymatic activity". It also stresses the
+RHIM-dependent apoptosis and necroptosis branches (RIPK1-FADD-caspase-8; RIPK3-MLKL, which
+can bypass RIPK1). Its sources are reviews, so I did not use them for NEW annotations; they
+back the cell-death suggested question.
 
 ## Identity and domain architecture (UniProt Q8IUC6)
 

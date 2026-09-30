@@ -81,3 +81,13 @@
 ## Deep research
 
 Falcon deep research status is recorded below once the background job finishes.
+
+Falcon deep research completed (genes/human/CD14/CD14-deep-research-falcon.md) and agrees with
+the synthesis above: "The primary molecular function of CD14 is to serve as a co-receptor that
+captures, concentrates, and transfers pathogen-associated molecular patterns (PAMPs) and
+damage-associated molecular patterns (DAMPs) to downstream signaling receptors". It also reports
+(from reviews, not read here as primary papers) CD14 roles in TLR4-independent NFAT signalling,
+CD14-dependent cytosolic LPS delivery for the non-canonical (caspase-11/4/5) inflammasome
+(Vasudevan 2022, Cell Rep), and flotillin-dependent CD14 trafficking through early endosomes,
+recycling endosomes and TGN (Matveichuk 2024). None of these primary papers were cached, so no
+NEW annotations were proposed from them.

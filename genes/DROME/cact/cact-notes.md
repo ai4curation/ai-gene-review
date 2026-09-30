@@ -26,4 +26,4 @@
 - HMP from the Schupbach & Wieschaus female-sterile screen (oogenesis, dorsal appendage formation): abstract does not mention cactus, full text not cached -> UNDECIDED.
 
 ## Deep research
-Falcon deep research had not started for DROME genes when this review was written (the batch job was still working through human genes). Review was carried out from the UniProt record and cached publications only. See final section if updated.
+Falcon deep research was never run for this gene. The background preparation job exited (code 144) while still working through human genes, whose runs had failed with "All providers failed". No DROME deep-research log appeared after about 40 minutes of waiting, so the review was completed from the UniProt record and cached publications only.
