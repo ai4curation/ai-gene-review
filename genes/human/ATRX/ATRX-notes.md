@@ -94,3 +94,21 @@ Independent scientific review supported all five findings and the limited descri
 
 
 Final integration checks (2026-09-29): `just validate human ATRX` passed with the same 15 disclosed advisories (13 generic-binding policy and two source-specific term-action differences); rendering and the newly scaffolded EDIT history validation passed. The new history retains the helper-generated filename/session identifier and records codex as its actual actor. No global validation result, external approval or merge is claimed.
+
+
+## Bounded response to the first ATRX review
+
+Retain evidence-supported generic binding as non-core and partner-specific MF refinements under the user's ActionEnum. A repeated evidence route to an already represented term does not establish that the original experimental interaction is false. No high-throughput matrix is newly claimed to have been inspected. The two unresolved p53 transfers remain UNDECIDED: the historical MGI donor citation was identified, but the exact p53 assay underlying that transfer remains unresolved.
+
+Accept the two source-specific nucleoplasm assertions consistently with normal ATRX chromatin activity. The defective-ATRX and defective-DAXX Reactome events describe mutant behavior, while the normal ATRX–DAXX assembly event and human nuclear-body evidence independently support the gene-level compartment. Neither mutant event is relabeled as a direct wild-type localization experiment.
+
+Retain both positive-regulation-of-nuclear-replication annotations with narrower mechanistic reasons. The current GO:0010571 definition encompasses frequency, rate **or extent**, so fork protection/restart is not excluded merely because one assay found unchanged fork speed. Mouse ES-cell S-phase/DNA-fiber results in PMID:24651726 and human HCT116/HeLa replication-stress experiments in PMID:23329831 support the vulnerable-chromatin context. The negative fork-speed result refers to the tested hydroxyurea-recovery assay; no general global acceleration or DNA-polymerase activity is claimed. This is a proposed biological disagreement with the reviewer's optional non-core suggestion, for root adjudication.
+
+The description is rewritten as standalone biology and the mechanical source-byte provenance sentence is moved here. Selected PMID:26373281 Results were read from the exact recovered artifact; the existing canonical record remains abstract-only and byte-distinct, and neither cache has been overwritten. That provenance does not change the macroH2A-binding conclusion. Other access limits remain in the relevant reasons where they affect confidence.
+
+Reading boundary: the full saved review comment and prior source-specific consultations were consumed. This follow-up read the complete normal PMID:12953102 abstract and selected Methods/Results in the normal 23329831 and24651726 records, alongside complete Reactome9670619/9670620 summaries. Existing primary-reading notes for42380617 and26373281 are reused without pretending to have re-read whole papers or supplementary target tables. No new quotes or source findings are added; all existing quotes remain literal and within25words per source across the document. All79 original source objects, six products, references and two cores are preserved. No canonical mutation or approval/CI claim is made by this proposal.
+
+
+### Applied independent adjudication
+
+The independent biological consultation accepted this proposal, including the replication decisions and the two nucleoplasm changes. Mouse delayed S phase was measured after aphidicolin release; unchallenged asynchronous profiles were previously unchanged. Fork stalling also increased without HU. Human unchanged elongation speed does not refute restart/extent regulation. Preserve these assay boundaries. No annotation source objects, products, core functions or cached source bytes were changed.
