@@ -22,6 +22,7 @@
 
 ## Problem annotations
 - GO:0010463 mesenchymal cell proliferation (IDA, UniProt) cites PMID:11023837, an alpha2-macroglobulin/glycodelin (PP14) paper. Neither the abstract nor the Europe PMC MeSH headings mention FGF7/KGF/FGF; the PMC full text could not be retrieved (Europe PMC 500 error; not in BioC OA subset). Likely a wrong PMID but we cannot see what the curator saw. Biologically, FGF7 lacks activity on fibroblasts [PMID:2915979]. -> UNDECIDED, flag for UniProt.
+  - Update (2026-09-30): full text checked from a reviewer-supplied PDF of PMC1221387 (6 pages). No mention of FGF7, KGF, keratinocyte growth factor, fibroblasts or mesenchymal cells; the only proliferation assay uses T cells, and the only growth factors named are IL-2, TGF-beta, PDGF and NGF, as alpha2-macroglobulin cargo in the introduction. -> REMOVE (the reference does not support the annotation; likely a mis-entered PMID).
 - GO:0005737 cytoplasm IBA (is_active_in) from whole-family node PTN000160075 — driven by intracellular FGFs / non-signal-peptide FGF1/FGF2. FGF7 has a cleaved signal peptide and acts extracellularly. Mouse Fgf7 has no experimental cytoplasm annotation (QuickGO check of P36363). -> REMOVE.
 - GO:0022008 neurogenesis IBA (family root) — FGF7's neural role is synapse organization, not generation of neurons. -> MARK_AS_OVER_ANNOTATED.
 - GO:0034394 protein localization to cell surface — cortactin membrane translocation downstream of receptor; cortactin is cortical/cytoplasmic, not cell-surface. -> MARK_AS_OVER_ANNOTATED.
