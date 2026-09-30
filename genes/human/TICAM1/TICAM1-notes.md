@@ -86,9 +86,15 @@ CARM1 (33961781), TLR4 (36232715). Decision: MODIFY to GO:0035591 where the pape
 TICAM1 bridging a receptor to a downstream effector (14982987 TRAF6; 25736436 TLR3/TRAF6/
 RIPK1/TBK1/TICAM2); REMOVE as uninformative where the interaction is with a regulator acting
 on TICAM1 or from screens (A20, TRIM56, CARM1, HCV/ISG56 papers, network map). TLR4 binding
-(36232715) -> GO:0035325 Toll-like receptor binding is an option but is subsumed by adaptor
-activity; chose MODIFY to GO:0035591 for consistency? No - PAUF paper only shows
-co-IP unchanged; REMOVE (uninformative).
+(36232715): GO:0035325 Toll-like receptor binding exists, but the PAUF paper uses the
+TRIF-TLR4 co-IP only as a readout ("However, rPAUF did not affect the binding of TRIF to
+TLR4 (Figure 6B)." [PMID:36232715]), so REMOVE as uninformative.
+
+## Action summary
+
+120 rows: ACCEPT 88, MODIFY 8 (molecular adaptor activity x2 and protein binding x6 ->
+signaling adaptor activity), REMOVE 7 (protein binding), KEEP_AS_NON_CORE 16,
+MARK_AS_OVER_ANNOTATED 1 (cell surface receptor signaling pathway). No NEW annotations.
 
 ## Project questions
 
