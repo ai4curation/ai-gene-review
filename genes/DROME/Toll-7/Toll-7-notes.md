@@ -30,3 +30,9 @@ GO:0002752 IC, both FlyBase from PMID:22464169). No GO:0002224 (toll-like recept
 signaling pathway) term is attached. The PRR terms rest on a single lab's virion
 co-precipitation data; I keep them as non-core rather than remove them, and raise
 the definitional issue (whole-virion binding vs. a defined PAMP) as a question.
+
+## Falcon deep research (added after it completed)
+
+- Deep research (file:DROME/Toll-7/Toll-7-deep-research-falcon.md) agrees that the antiviral assignment is contested: ["Toll-7's involvement in the response to viral infection remains unresolved and should not be treated as established functional annotation"]. This supports keeping GO:0038187 and GO:0002752 as non-core rather than core.
+- It also reports that olfactory wiring is ligand- and TIR-independent: ["the known neurotrophin ligands DNT-1 and DNT-2 are dispensable for this ORN-PN matching function"]. The axon guidance annotation stands, but in olfactory wiring Toll-7 acts as a recognition molecule and not as a neurotrophin receptor.
+- It summarises a 2024 iScience study (Zhang et al., "Maintaining Toll signaling in Drosophila brain is required to sustain autophagy for dopamine neuron survival") reporting that Toll-7 maintains basal brain autophagy through a MyD88-independent, Tube/Pelle/PP2A pathway, and that the TIR-7 domain induces drosomycin in S2 cells in a MyD88-dependent way. The PMID was not resolved or cached in this session, so it is not cited in the review. It is a candidate for a future positive regulation of autophagy / neuron survival annotation.

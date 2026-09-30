@@ -86,7 +86,9 @@ demonstrated for this species.
   ZFIN curator may well have read a figure showing induction, so the row is not
   removed; but the assertion cannot be verified from what is available, which is the
   circumstance the UNDECIDED action exists for.
-- GO:0007165 and GO:0016020 kept as non-core.
+- GO:0007165 kept as non-core; GO:0016020 membrane accepted (signal peptide plus a
+  predicted transmembrane segment) but deliberately not refined to a specific
+  compartment.
 - No `NEW` annotations. In particular no dsRNA-binding, interferon-pathway or
   cell-surface annotation: all three would rest on the fugu orthologue, and
   cross-species transfer of a ligand specificity is exactly what this project set out
