@@ -222,7 +222,11 @@ Full analysis, per-family tables and the 18 resulting SSSOM rows (46 new
 Swiss-Prot annotations — including the CYP1B1 estrogen 4-hydroxylase, CYP2J2
 EPA/DHA epoxygenase and CYP11B2 aldosterone-synthase term proposals, and the
 CYP4F22 ichthyosis-gene gap): [RHEA-PROMISCUOUS-FAMILIES.md](RHEA/RHEA-PROMISCUOUS-FAMILIES.md)
-([`rhea_family_explorer.py`](RHEA/rhea_family_explorer.py)).
+([`rhea_family_explorer.py`](RHEA/rhea_family_explorer.py)). The P450 half of this
+is followed up family-wide in the [CYTOCHROME_P450](CYTOCHROME_P450.md) project,
+which adds batch 8: the cascade-step gaps, where GO holds a reaction's chemistry
+for one substrate (the leukotriene B4 ω-oxidation trio) and not for another on the
+same protein.
 
 ## Curated new mappings (SSSOM)
 
@@ -230,7 +234,7 @@ Filling the gaps is a curation deliverable, not just an audit. The curated
 RHEA→GO mappings — reactions absent from `rhea2go` but with (or needing) a GO MF
 term — are recorded in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), the same
 **SSSOM YAML** format used by the [ANTIMICROBIAL_RESISTANCE](ANTIMICROBIAL_RESISTANCE.md)
-`aro2go` mapping set. **150 mappings** so far, each backed by a review of a reviewed
+`aro2go` mapping set. **154 mappings** so far, each backed by a review of a reviewed
 (Swiss-Prot) enzyme that carries the reaction
 ([RHEA-MAPPING-REVIEWS.md](RHEA/RHEA-MAPPING-REVIEWS.md)). The predicate encodes
 the specificity finding:
@@ -248,7 +252,7 @@ the specificity finding:
   rows). The other 10, from the promiscuous-family analysis, are **subsumed
   instance reactions** — the class term's definition already covers them, so
   they request no new term (see the `GO:0018777` obsoletion precedent above).
-- **`sssom:NoTermFound`** (23 rows) — **new GO term suggestions**: reactions where
+- **`sssom:NoTermFound`** (27 rows) — **new GO term suggestions**: reactions where
   QuickGO returns no specific MF term at all (hppE fosfomycin epoxidase; a
   trimethylaminoethylphosphonate dioxygenase; cellobionic-acid phosphorylase;
   1,4-β-mannosyl-GlcNAc phosphorylase) — GO new-term-request candidates.
@@ -347,8 +351,8 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
   (EC-masking, specificity, gaps), [`RHEA/rhea_gap_finder.py`](RHEA/rhea_gap_finder.py)
   (gap case selection), [`RHEA/rhea_family_explorer.py`](RHEA/rhea_family_explorer.py)
   (per-family drop-out and closure-aware gap)
-- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 150
-  SSSOM rows (110 exactMatch ready-to-add, 17 broadMatch, 23 new-term suggestions),
+- **Curated mappings**: [`RHEA/rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml) — 154
+  SSSOM rows (110 exactMatch ready-to-add, 17 broadMatch, 27 new-term suggestions),
   each backed by a reviewed enzyme in
   [`RHEA/RHEA-MAPPING-REVIEWS.md`](RHEA/RHEA-MAPPING-REVIEWS.md);
   `just validate-rhea-mappings`

@@ -211,6 +211,15 @@ and EC 3.1.1.84 has neither an `ec2go` line nor a GO term. The gain reaches
 MGLL, LYPLA2 and their rodent orthologs, plus the bacterial cocaine esterase
 CocE.
 
+## Follow-up
+
+The CYP450 half of this page is taken further, family-wide, in the
+[CYTOCHROME_P450](../CYTOCHROME_P450.md) project: tier classification of all 60
+reviewed human CYPs, the evidence behind their activity terms, and the
+**cascade-step** gap class this page did not separate out — intermediate steps of
+multi-step P450 transformations that GO holds for one substrate and not for
+another on the same protein (SSSOM batch 8).
+
 ## What this adds to the project's conclusions
 
 1. **Revise the emphasis on the reverse direction.** [RHEA.md](../RHEA.md)
