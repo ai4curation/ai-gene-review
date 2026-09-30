@@ -26,7 +26,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent.parent
 REPO = HERE.parents[1]
 API = "https://rest.uniprot.org/uniprotkb/search"
-FIELDS = "accession,reviewed,gene_primary,protein_name,length,annotation_score"
+FIELDS = "accession,reviewed,gene_primary,protein_name,length,annotation_score,keyword"
 
 
 def query(symbol: str, taxon: str, accession: str = "") -> list[dict]:
@@ -55,6 +55,10 @@ def primary_gene(entry: dict) -> str:
     return genes[0].get("geneName", {}).get("value", "")
 
 
+def is_reference_proteome(entry: dict) -> bool:
+    return any(k.get("id") == "KW-1185" for k in entry.get("keywords", []))
+
+
 def protein_name(entry: dict) -> str:
     desc = entry.get("proteinDescription", {})
     rec = desc.get("recommendedName") or (desc.get("submissionNames") or [{}])[0]
@@ -76,7 +80,11 @@ def main() -> None:
         pool = primary or hits
         reviewed = [h for h in pool if h["entryType"].startswith("UniProtKB reviewed")]
         pool = reviewed or pool
-        pool.sort(key=lambda h: -h.get("annotationScore", 0))
+        # Among unreviewed entries prefer the reference-proteome record (the one
+        # GOA annotates), then the highest annotation score.
+        pool.sort(
+            key=lambda h: (not is_reference_proteome(h), -h.get("annotationScore", 0))
+        )
         best = pool[0] if pool else None
         folder = REPO / "genes" / row["species"] / row["symbol"]
         out.append(
@@ -86,6 +94,9 @@ def main() -> None:
                 "status": ("reviewed" if reviewed else "unreviewed") if best else "",
                 "n_hits": len(pool),
                 "primary_name_match": "yes" if primary else "no",
+                "reference_proteome": ("yes" if is_reference_proteome(best) else "no")
+                if best
+                else "",
                 "protein_name": protein_name(best) if best else "",
                 "review_exists": "yes"
                 if (folder / f"{row['symbol']}-ai-review.yaml").exists()
