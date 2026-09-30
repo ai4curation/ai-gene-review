@@ -53,3 +53,12 @@
 ## Project questions (INNATE_IMMUNITY / TLR batch)
 - TIRAP carries only vertebrate TLR-pathway terms (GO:0002224 branch); no GO:0008063 Toll signaling
   conflation. The TLR3 regulation row is the only ligand/receptor-specific term that is wrong.
+
+## Deep research (Falcon, completed 2026-09-30)
+- `TIRAP-deep-research-falcon.md` arrived after the first draft of the review; it agrees with the core
+  picture ("membrane-recruited bridging adaptor ... connects activated Toll-like receptors—principally TLR2
+  and TLR4—to the downstream signaling adaptor MyD88"). No review action changed.
+- New leads it raises (not in GOA, primary papers not cached here, so NOT used for annotations): endosomal
+  PI3P binding for TLR9, 2025 bioRxiv cryo-EM of TIRAP filaments, TIR-domain acetylation by CBP (EMBO J
+  2024), TIRAP-Cish control of M. tuberculosis phagosome acidification (PLoS Pathog 2023), and a 2026
+  report of nuclear TIRAP in hepatic stellate cells. Recorded as suggested questions only.
