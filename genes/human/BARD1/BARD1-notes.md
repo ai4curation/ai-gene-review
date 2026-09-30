@@ -51,3 +51,22 @@ Replication-fork resection (GO:0110025) remains UNDECIDED. The canonical PMID:29
 Claim-specific reference assessments now distinguish verified paper identity from unresolved support for BARD1–AKT1 and fork resection. PMID:35512704 compares wild-type and mutant interactions; its title does not establish that every recorded edge is mutant-specific. The dispute attached to PMID:12419249 is confined to the broader BRCA1–XIST localization model, as challenged in the [PMID:17146760 abstract](https://pubmed.ncbi.nlm.nih.gov/17146760/). It does not invalidate BARD1-associated RNA observed in the original immunoprecipitation. The later paper's full Methods were not read.
 
 This follow-up preserves all 161 source annotation objects, the one previously proposed molecular function, four alternative products, both cores and all 104 reference identities. It changes only four actions, yielding 96 ACCEPT, 46 KEEP_AS_NON_CORE, 17 MODIFY, two UNDECIDED and one NEW. No new source fetching or provider retry was needed.
+
+
+### 2026-09-30: exact quote and ontology relation clarification
+
+The PMID:11573085 anchor now begins at “structure” so the parsed quote is a
+contiguous substring of the normal abstract cache. The prior wording matched
+after whitespace normalization but crossed a source newline after “solution”;
+shortening it preserves the structural claim and reduces the quoted word count.
+The cached publication is unchanged.
+
+For the chromatin-remodeling annotation, the relation used in the rationale is
+GO:0140993 histone modifying activity **part_of** GO:0006338 chromatin remodeling,
+as shown by the official [AmiGO term record](https://amigo.geneontology.org/amigo/term/GO%3A0006338?relation=isa_partof).
+This is a molecular-activity-to-process relation; it is not a claim that
+GO:0016570 histone modification is an is_a child of chromatin remodeling.
+Together with the directly reconstituted BRCA1–BARD1 H2A modification in
+PMID:34321665, it supports the retained broad process annotation without
+assigning BARD1 the ATP-dependent remodeling activity of SMARCAD1. No annotation
+action, source assertion, core function, or reference record changes.
