@@ -59,10 +59,11 @@ and the functional literature on this receptor concerns CpG-DNA sensing.
 
 ## Annotation decisions (summary)
 
-- GO:0002224 (IDA, PMID:24282308) modified to GO:0035682 toll-like receptor 21
-  signaling pathway: the receptor-specific term exists and this is precisely the
-  paper that demonstrated ligand-induced signalling through this receptor.
-- GO:0002224 (IBA) accepted as the family-level statement.
+- Both GO:0002224 rows (IDA, PMID:24282308; IBA) modified to GO:0035682 toll-like
+  receptor 21 signaling pathway: the receptor-specific term exists, and the cited
+  paper demonstrated ligand-induced signalling through this receptor, with the
+  specificity residing in its own ectodomain and the output depending on its own TIR
+  residues.
 - GO:0002221 pattern recognition receptor signaling pathway (IDA, PMID:22729906) kept
   as non-core: it is the generic parent of the terms above, and its cited evidence is
   expression modulation rather than signalling.
