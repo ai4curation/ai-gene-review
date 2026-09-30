@@ -92,8 +92,8 @@ TLR4 (Figure 6B)." [PMID:36232715]), so REMOVE as uninformative.
 
 ## Action summary
 
-120 rows: ACCEPT 88, MODIFY 8 (molecular adaptor activity x2 and protein binding x6 ->
-signaling adaptor activity), REMOVE 7 (protein binding), KEEP_AS_NON_CORE 16,
+120 rows: ACCEPT 91, MODIFY 8 (molecular adaptor activity x2 and protein binding x6 ->
+signaling adaptor activity), REMOVE 7 (protein binding), KEEP_AS_NON_CORE 13,
 MARK_AS_OVER_ANNOTATED 1 (cell surface receptor signaling pathway). No NEW annotations.
 
 ## Project questions

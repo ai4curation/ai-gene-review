@@ -30,4 +30,4 @@
 - Qiu 2013 PLoS One (PMID:23626692) carries a 2024 expression of concern.
 
 ## Deep research
-- See TLR6-deep-research-falcon.md if present (status noted at end of this file).
+- Falcon deep research failed (falcon timed out; perplexity-lite fallback unavailable: "All providers failed" in the run log). The review was completed without a deep-research file, from the UniProt record and the cached publications listed above (full text for PMID:20037584, 20067962, 20406817, 23155421, 23626692, 23812099, 33576548; abstracts only for the rest).
