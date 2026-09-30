@@ -91,9 +91,10 @@ molecular function — consistent with the "dark gene" status.
 1. **GO:0004672 protein kinase activity — IBA (GO_REF:0000033)** — from PANTHER family
    PTN001969686, with reference members = Arabidopsis MAP3K loci **AT1G05100, AT3G50310,
    AT4G26890** (WITH/FROM). CAF120 has **no protein kinase domain** (only the PH domain). This
-   is a family over-propagation: a shared accessory PH module pulled a non-kinase yeast protein
-   into a plant-MAP3K-dominated PANTHER cluster, inheriting the kinase MF from the kinase-domain
-   members. Biologically indefensible → **REMOVE**.
+   is a family over-propagation: a non-kinase yeast protein inherits the kinase MF from a
+   plant-MAP3K-supported PAINT node. The basis for the placement is not evident in the cached
+   data, because CAF120 has no kinase domain and its current UniProt record has no PANTHER
+   cross-reference at all. Biologically indefensible → **REMOVE**.
 2. **GO:0007165 signal transduction — IBA (GO_REF:0000033)** — same PANTHER family
    (PTN001969686), same Arabidopsis MAP3K reference set. "Signal transduction" is the generic
    BP the plant MAP3Ks carry. No evidence CAF120 acts in a signaling cascade; inherited via the
@@ -174,3 +175,20 @@ annotations (only the crossover finding, which I verified, was incorporated).
 - PMID:17287358 — Chi 2007 phosphoproteome (additional phosphosites).
 - PMID:25028499 — Lee 2014 stress-induced relocalization; source of the bud-neck IDA
   (abstract-only in cache).
+
+## 2026-09-30 IBA rereview
+
+Rechecked both CAF120 IBA rows against the current cached PTHR11584 PAINT export:
+
+- `GO:0004672 protein kinase activity` remains an over-propagation from
+  PTN001969686. The node's 2026-08-28 IBD is still sourced by Arabidopsis
+  MAP3Ks (`AT1G05100`, `AT1G07150`, `AT3G50310`, `AT4G26890`), while yeast
+  Caf120 has a divergent Skg3/CAF120-like PH domain and no kinase domain.
+- `GO:0007165 signal transduction` remains the linked process
+  over-propagation from the same PTN001969686 branch and its Arabidopsis MAP3K
+  sources (`AT1G05100`, `AT2G32510`, `AT3G50310`).
+- The post-2022 public-paper search did not surface a newer focused CAF120
+  functional paper. Recent hits were broad yeast-expression, yeast-engineering,
+  database, or dissertation records and did not reopen the kinase/signaling IBA
+  removals or the conservative meiotic-crossover `NEW` annotation from the
+  cached Wild et al. 2019 full text.
