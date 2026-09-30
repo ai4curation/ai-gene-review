@@ -91,3 +91,12 @@ interactions, one cytoplasmic location refinement, and the deliberately distinct
 experimental versus ancestral cohesion decisions. Structured propagation metadata
 records term granularity for the scaffold refinement and unresolved inheritance
 for the cohesion assertion. Rendering and generated history validation passed.
+
+
+## First PR feedback correction (2026-09-30)
+
+The earlier proposed GO:0046603 replacement imposed an unsupported mitotic restriction. [PMID:20300119](https://pubmed.ncbi.nlm.nih.gov/20300119/) measures premature centrosomal splitting in asynchronous cultures, with an interphase C-Nap1/rootletin-linker context. The corrected replacement is [GO:1903127 positive regulation of centriole-centriole cohesion](https://amigo.geneontology.org/amigo/term/GO%3A1903127), whose [regulation parent](https://amigo.geneontology.org/amigo/term/GO%3A0030997) and [cohesion target](https://amigo.geneontology.org/amigo/term/GO%3A0010457) were checked. This correction supersedes the earlier mitotic-term choice in these append-only notes. AXIN2 organizes the GSK3/beta-catenin mechanism; it is not the kinase. The independent consultant additionally read the staged Results/Discussion and confirmed the rescue interpretation.
+
+Seven generic-binding assertions with curated beta-catenin or GSK3 partners are refined to beta-catenin binding or protein kinase binding. This follows the experimental curator's partner attribution and independently supported AXIN2 interactions in [PMID:22056988](https://pubmed.ncbi.nlm.nih.gov/22056988/), [PMID:30824926](https://pubmed.ncbi.nlm.nih.gov/30824926/) and PMID:20300119. It does not establish that the original supplementary interaction rows or constructs were independently inspected, and co-complex detection does not establish purified direct binding. The existing reference-level access and erratum limits remain. Forty other generic-binding rows retain their existing decisions pending the outstanding policy question.
+
+The broad cytoplasmic assertion is retained as non-core because it covers both cytosolic and centrosomal pools. Unread mismatch-repair/repeat-maintenance experiments remain UNDECIDED; the abstract alone does not justify overruling an experimental curator. The distinct IBA cohesion assertion is unchanged. Independent review passed the nine changed annotations and added question. All 117 source objects, all references and the single scaffold core remain intact: 30 ACCEPT, 31 KEEP_AS_NON_CORE, 42 UNDECIDED, 14 MODIFY and no NEW annotations.
