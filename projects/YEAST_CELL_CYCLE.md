@@ -3,6 +3,13 @@ title: "Yeast Cell Cycle & Translation Control"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+manifest:
+  slides:
+    - href: YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/9PwAusPtykDxdDpz1FfBMo
+      title: Project brief
 ---
 
 # Yeast Cell Cycle & Translation Control
@@ -109,7 +116,3 @@ Last updated: 2025-12-30
 - Selected 23 genes spanning cyclins, CDK machinery, ribosome biogenesis, and translation factors
 - Emphasis on emerging translational control mechanisms (Cln3/Whi5 regulatory circuits)
 - Ready to begin gene review workflow
-
-## Slides
-
-- [Slides](YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html) (Marp source: [YEAST_CELL_CYCLE-slides.md](YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.md)) — AI generated

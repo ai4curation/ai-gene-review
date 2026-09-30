@@ -7,6 +7,13 @@ sidecars:
   slide_charts:
     - NCBIFam/slides/ncbifam-flow.svg
     - NCBIFam/slides/ncbifam-gain.svg
+manifest:
+  slides:
+    - href: NCBIFam/slides/NCBIFam-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
+      title: Project brief
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
@@ -596,7 +603,3 @@ over-annotation.
   curated `equivalog` GO via the `ncbifam2go` SSSOM mapping (seeded here) — the
   RHEA pattern applied to a family resource; the gain is large but TrEMBL-weighted,
   concentrated in mobile-element/defense/secretion biology.
-
-## Slides
-
-- [Slides](NCBIFam/slides/NCBIFam-slides.html) (Marp source: [NCBIFam-slides.md](NCBIFam/slides/NCBIFam-slides.md)) — AI generated

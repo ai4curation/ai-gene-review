@@ -3,6 +3,13 @@ title: "cGAS-STING Cytosolic DNA Sensing Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+manifest:
+  slides:
+    - href: CGAS_STING_PATHWAY/slides/CGAS_STING_PATHWAY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/CHJ3zFu9zViWjXBSaCmQLS
+      title: Project brief
 ---
 
 # cGAS-STING Cytosolic DNA Sensing Project
@@ -90,7 +97,3 @@ The cGAS-STING pathway is a critical innate immune signaling system that detects
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
-
-## Slides
-
-- [Slides](CGAS_STING_PATHWAY/slides/CGAS_STING_PATHWAY-slides.html) (Marp source: [CGAS_STING_PATHWAY-slides.md](CGAS_STING_PATHWAY/slides/CGAS_STING_PATHWAY-slides.md)) — AI generated

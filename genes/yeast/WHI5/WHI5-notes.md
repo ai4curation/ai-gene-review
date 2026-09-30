@@ -87,3 +87,34 @@ Not cached (cited in deep research only): Skotheim 2008 (positive feedback), Tab
 Wagner 2009 (Msn5 export/phosphosites), Travesa 2013 (SBF specificity), Xiao 2024
 (hypo/hyper-phosphorylation), Irvali 2023 (reversible Start), Su 2024 (meiotic entry), Ravi
 2024 (START-BYCC model).
+
+## 2026-09-29 - IBA project alignment
+
+Rechecked the five IBA rows against the GOA WITH/FROM traces and the current
+IBA review project convention. All are from the same ancestral
+`PANTHER:PTN002000919` placement over the Whi5/Whi7 family:
+
+- `GO:0000978 RNA polymerase II cis-regulatory region sequence-specific DNA
+  binding` is still MODIFY to `GO:0061629`; the PTN-level assertion
+  role-conflates promoter occupancy with sequence-specific DNA binding.
+- `GO:0006357 regulation of transcription by RNA polymerase II` is still MODIFY
+  to `GO:0000122`; the family-level function is repressive, not sign-neutral.
+- `GO:0003712 transcription coregulator activity`, `GO:0005634 nucleus`, and
+  `GO:0005737 cytoplasm` now have explicit `propagation_review` blocks.
+
+The extant `SGD:S000001799` and `SGD:S000005609` entries in GOA are valid
+descendant evidence behind the PAINT placement, and Whi5 appearing in its own
+WITH/FROM is not circular. Structured `source_entities` now record the
+ancestral PTN plus the curated SGD donors that each IBA row's argument rests
+on. The local PTHR28246 cache has `PTHR28246-entries.csv` but no
+`PTHR28246-paint.tsv`, so the review records that local mirror limitation in
+PTN comments rather than treating `PTN002000919` as stale. The cytoplasm IBA
+is retained as non-core despite its `is_active_in` qualifier because canonical
+SBF corepression is nuclear but the Atg1-Whi5 starvation interaction leaves a
+possible noncanonical cytoplasmic activity unresolved.
+
+Search on 2026-09-29 found no newer published *S. cerevisiae* WHI5 paper that
+changes the GO review beyond the already-cached 2025 Atg1/autophagy report
+(PMID:40365021). Recent 2024 Start-mechanism papers are already covered by the
+Falcon deep-research report as context, the 2025 Whi5/Mug54 paper concerns
+fission yeast, and a 2026 SBF/Whi5 chromatin-binding result is still a preprint.

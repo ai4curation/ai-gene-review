@@ -4,6 +4,10 @@ maturity: COMPLETE
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
 genes: [daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
+      title: Project brief (C. elegans surveillance immunity)
 ---
 
 # GO Annotation Curation Review: C. elegans Surveillance Immunity Genes

@@ -21,7 +21,11 @@ from ai_gene_review.bioreason_ontology import (
     frozen_go_sha256,
     get_go_adapter,
 )
-from ai_gene_review.source_tree import commit_date, declared_review_snapshot
+from ai_gene_review.source_tree import (
+    commit_date,
+    declared_review_snapshot,
+    review_snapshot_tree,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +37,7 @@ AS_OF_PROSE_SITES = (
     "projects/BIOREASON_COMPARISON/article/slides.md",
     "projects/BIOREASON_COMPARISON/article/slides.html",
     "pages/projects/BIOREASON_COMPARISON/article/slides.html",
+    "projects/BIOREASON_COMPARISON/cafa-style/README.md",
 )
 SCORE_RE = re.compile(
     r"\*\*(Correctness|Completeness)\*\*:\s*([1-5])\s*/\s*5",
@@ -242,6 +247,10 @@ def test_review_snapshot_is_dated_and_recorded_in_derived_reports() -> None:
     )
     assert metrics["review_snapshot"] == recorded
     assert protnlm["review_snapshot"] == recorded
+    for frozen in ("second-review-agreement.json", "cafa-style/review-snapshot.json"):
+        assert json.loads((PROJECT_DIR / frozen).read_text())["review_snapshot"] == recorded, (
+            f"{frozen} was not generated at the declared review snapshot"
+        )
     # Hand-maintained prose: wording differs per site, the date and commit may not.
     marker = re.compile(rf"{re.escape(snapshot.date)}\W{{1,3}}commit\W{{1,3}}{snapshot.short}\b")
     for site in AS_OF_PROSE_SITES:
@@ -264,6 +273,8 @@ def test_headline_cli_lists_the_snapshot_numbers() -> None:
     assert "bioreason.supplement_gogpt_overlap_300.n_genes: 296" in lines
     assert "bioreason.supplement_gogpt_overlap_300.core.n_overlap: 355" in lines
     assert "protnlm.go_counts.COR: 52" in lines
+    assert "cafa.hf_incorrect.n: 147" in lines
+    assert "second_review.correctness.quadratic_weighted_kappa: 0.95" in lines
     assert not any("review_snapshot" in line for line in lines)
 
 
@@ -287,16 +298,41 @@ def test_generated_quality_sidecar_has_expected_denominators() -> None:
     assert slyd["frozen_goa_sha256"] != slyd["current_goa_sha256"]
 
 
+def _score_axes(text: str) -> set[str]:
+    return {name.lower() for name, _ in SCORE_RE.findall(text)}
+
+
 def test_all_narrative_reviews_have_two_in_range_scores() -> None:
+    """Validity of the live files: any narrative review a curator edits must still parse.
+
+    Deliberately reads the working tree and pins no count; the benchmark cohort
+    sizes are checked at the review snapshot below.
+    """
+    tree = review_snapshot_tree(REPO_ROOT)
+    for kind in ("rl", "sft"):
+        pattern = f"genes/*/*/*bioreason-{kind}-review.md"
+        paths = sorted(REPO_ROOT.glob(pattern))
+        live = {path.relative_to(REPO_ROOT).as_posix() for path in paths}
+        # Curation may add reviews but must not silently delete a benchmark one.
+        assert set(tree.glob(pattern)) <= live, sorted(set(tree.glob(pattern)) - live)
+        for path in paths:
+            assert _score_axes(path.read_text()) == {"correctness", "completeness"}, path
+
+
+def test_snapshot_narrative_cohorts_have_expected_sizes_and_scores(
+    forbid_working_tree_genes: None,
+) -> None:
+    tree = review_snapshot_tree(REPO_ROOT)
     for kind, expected in (("rl", 139), ("sft", 45)):
-        paths = sorted(REPO_ROOT.glob(f"genes/*/*/*bioreason-{kind}-review.md"))
+        paths = tree.glob(f"genes/*/*/*bioreason-{kind}-review.md")
         assert len(paths) == expected
         for path in paths:
-            scores = {name.lower(): int(value) for name, value in SCORE_RE.findall(path.read_text())}
-            assert scores.keys() == {"correctness", "completeness"}, path
+            assert _score_axes(tree.read_text(path)) == {"correctness", "completeness"}, path
 
 
-def test_second_review_sample_and_metrics_are_current() -> None:
+def test_second_review_sample_and_metrics_match_snapshot(
+    forbid_working_tree_genes: None,
+) -> None:
     path = PROJECT_DIR / "analyze_second_review.py"
     spec = importlib.util.spec_from_file_location("analyze_second_review", path)
     assert spec and spec.loader
@@ -492,21 +528,28 @@ def test_publication_headlines_match_generated_metrics() -> None:
     )
 
 
-def test_cafa_overlap_assessments_match_current_prediction_sources() -> None:
-    """A stale CSV and matching stale manuscript must not validate each other."""
-    from collections import Counter
+def test_cafa_overlap_table_is_regenerated_from_snapshot(
+    forbid_working_tree_genes: None,
+) -> None:
+    """A stale CSV and matching stale manuscript must not validate each other.
 
+    The whole overlap table is recomputed from the review snapshot: the
+    assessments (prediction side) and the exact and propagated GOA-overlap
+    columns behind the published 47 and 119 (reference side, using the frozen
+    GO release). Comparing text catches a stale CSV on either side, which is how
+    the csr-1 GOA change in #3214 previously went unnoticed.
+    """
     module = _load_cafa_module()
-    predictions = module.read_predictions(set(module.read_argo139()))
-    expected = Counter(
-        (module.source_group(p), p.organism, p.gene, p.aspect, p.term_id, p.assessment)
-        for p in predictions
+    keys = set(module.read_argo139())
+    tree = module.snapshot()
+    graph = module.GoGraph(module.prepare_ontology(module.DEFAULT_ONTOLOGY))
+    regenerated = module.assessment_overlap_table(
+        module.read_predictions(keys, tree), module.read_goa_terms(keys, tree), graph
+    ).to_csv(index=False)
+    committed = (
+        PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv"
+    ).read_text(encoding="utf-8")
+    assert regenerated == committed, (
+        "cafa-style/argo139_prediction_goa_overlap.csv is stale; run "
+        "`just refresh-benchmark-snapshot` from the repository root"
     )
-    with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
-        observed = Counter(
-            tuple(row[key] for key in (
-                "source_group", "organism", "gene", "aspect", "term_id", "assessment"
-            ))
-            for row in csv.DictReader(handle)
-        )
-    assert observed == expected

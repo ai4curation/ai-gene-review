@@ -3,6 +3,13 @@ title: "Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsolet
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [ARATH, PETHY, MYCTU]
+manifest:
+  slides:
+    - href: PREPHENATE_PATHWAY_OBSOLETION/slides/PREPHENATE_PATHWAY_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/U9y2NbaW7yQxL2cifkkwzN
+      title: Project brief
 ---
 
 # Aromatic Amino Acid Biosynthetic Process, Prephenate Pathway — Obsoletion
@@ -174,7 +181,3 @@ phenylalanine-biosynthesis annotation; the rest are cleanup.
   (opened 2026-05-13) and ontology issue #32005 (closed). Obsoletion not yet
   applied. No reviews started; none of the three affected genes are in this
   repo.
-
-## Slides
-
-- [Slides](PREPHENATE_PATHWAY_OBSOLETION/slides/PREPHENATE_PATHWAY_OBSOLETION-slides.html) (Marp source: [PREPHENATE_PATHWAY_OBSOLETION-slides.md](PREPHENATE_PATHWAY_OBSOLETION/slides/PREPHENATE_PATHWAY_OBSOLETION-slides.md)) — AI generated

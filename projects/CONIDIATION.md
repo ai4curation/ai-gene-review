@@ -9,6 +9,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [EMENI, NEUCR]
 genes: [brlA, abaA, wetA, vosA, velB, veA, laeA, fluG, flbB, flbC, flbD, flbE, sfgA, fadA, sfaD, gpgA, flbA, rodA, dewA, wA, yA, wc-1, wc-2, frq, fl, eas, con-6, con-10, acon-2, acon-3]
+manifest:
+  slides:
+    - href: CONIDIATION/slides/CONIDIATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/5RLkvDe6U9n6epeLhUzxpR
+      title: Project brief
 ---
 
 # Conidiation regulatory cascade — module design proposal
@@ -333,7 +340,3 @@ dirs:** likely `EMENI` (*A. nidulans*) and `NEUCR` (*N. crassa*).
   tier 5; could be spun out to a `conidial_wall_assembly` module if it grows.
 - **GO-CAM coverage:** check `gocams/index.tsv` for any existing conidiation
   models to attach via `gocam_associations`.
-
-## Slides
-
-- [Slides](CONIDIATION/slides/CONIDIATION-slides.html) (Marp source: [CONIDIATION-slides.md](CONIDIATION/slides/CONIDIATION-slides.md)) — AI generated

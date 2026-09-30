@@ -74,3 +74,28 @@ Re-read all 31 annotation rows, primary sources and the Falcon report, and criti
 Newly cached full primary PMID:32198371 directly demonstrates short nascent-chain contacts in Saccharomyces cerevisiae and describes "Ssz1 is an active chaperone optimized for transient, low-affinity substrate binding". The chaperone review, obsolete unfolded-binding replacement, description and core function now include this relay mechanism. The ATPase report identified this lead but did not independently adjudicate refolding or secondary nucleus/plasma-membrane localization.
 
 The old refolding IBA is generalized to protein folding because current PAINT explicitly places a NOT/IRD at fungal PTN001065099 below PTN000452648 and current SSZ1 leaf PTN000453341 carries generalized GO:0006457 through these nodes. This curation revision is not proof of universal absent refolding capacity. Nucleus/plasma-membrane rows are UNDECIDED rather than removed merely because RAC primarily functions on cytosolic ribosomes. The coordinated new focused report will independently evaluate these questions; it has not yet been incorporated here.
+
+## 2026-09-29 IBA follow-up
+
+- Rechecked all eight IBA rows against the current
+  `interpro/panther/PTHR45639/PTHR45639-paint.tsv` snapshot. PTN000452648
+  still carries the broad ATPase, HSP-binding, chaperone and refolding
+  ancestral assertions; PTN002321897 still carries cytoplasm; PTN002500132
+  still carries cytosol and nucleus but not plasma membrane.
+- Removed the pinned GO:0005886 plasma-membrane IBA as stale: it points to
+  PTN002500132, and the current PAINT snapshot has no GO:0005886 assertion at
+  that node. The pinned Candida, mouse and rat extant donors are likewise absent
+  from any current PTHR45639 GO:0005886 row. This is separate from the still-live
+  nucleus IBA, which remains `UNDECIDED` because target cytosolic localization
+  does not exclude every secondary pool.
+- Kept the ATPase IBA at `REMOVE` for Ssz1-specific subactivity loss, the HSP
+  binding and protein-folding-chaperone IBAs as supported by RAC evidence, and
+  the protein-refolding IBA as `MODIFY` to GO:0006457 by the fungal
+  PTN001065099 NOT/IRD revision.
+- Exact 2025+ PubMed search for `(SSZ1 OR Ssz1 OR YHR064C) AND
+  "Saccharomyces cerevisiae"` returned PMID:39863615, PMID:40156734 and
+  PMID:41078542. PMID:39863615 is a *Candida glabrata* Ipi1 paper with
+  *S. cerevisiae* PDR context only. PMID:40156734 directly tests ssz1∆ in a
+  prion/Hsp104 background and was added as a medium-relevance downstream
+  proteostasis reference. PMID:41078542 directly assays SSB1/2 and mentions
+  Ssz1/PDR context; it was cached but did not change SSZ1 annotation decisions.
