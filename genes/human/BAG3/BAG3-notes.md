@@ -166,3 +166,47 @@ The two references and short exact abstract anchors complete the evidence
 links without changing any annotation decision or core function. The review
 has 41 references and all 168 source assertions, including three explicit
 UNDECIDED annotations. Existing source and provider files remain unchanged.
+
+
+### 2026-09-30 — first PR review follow-up
+
+The first review comment on PR #3578 prompted a fresh check of the actual
+GO:0061684 definition and synonyms. Official AmiGO lists CASA and
+chaperone-assisted selective autophagy, with PMID:23434281 among its definition
+sources; the official FlyBase report exposes the latter as an exact synonym.
+The earlier replacement treated the label as restricted to canonical direct
+lysosomal translocation and therefore narrowed the ontology incorrectly.
+The annotation is now ACCEPT under the current CASA-inclusive scope. BAG3's
+CASA scaffold and autophagosome-assembly roles remain distinct from canonical
+chaperone-mediated lysosomal translocation. The ontology question now requests
+clarification of this existing scope; it does not propose a redundant term.
+The earlier replacement recommendation above is superseded by this correction.
+
+Official term records: https://amigo.geneontology.org/amigo/term/GO:0061684
+and https://flybase.org/cgi-bin/cvreport.pl?cvterm=GO%3A0061684&rel=is_a .
+The available PMID:20060297 and PMID:23434281 abstracts were reread. No new
+full-paper or supplementary-data access is claimed.
+
+All 112 generic protein-binding source rows are preserved: 19 specific MODIFY
+decisions and 93 KEEP_AS_NON_CORE decisions. Of the latter, 91 shared the
+supplementary-access wording; the other two already had distinct SQSTM1 and
+RAPGEF6 reasoning. The 91 reasons now distinguish GOA's experimentally curated
+association from an independently inspected pair-level result. The supplied
+ActionEnum and experimental-curator deference govern retention; an
+uninformative term alone does not establish a false interaction. No lower
+skill-driven blanket REMOVE conversion is made. Accession identities remain
+explicit; partner symbols are not guessed.
+
+The HSPB1 refinements now separate the original GOA partner identity from the
+independent direct functional evidence in PMID:27884606. General complex
+binding is still refined to adaptor activity, already supported by another
+source annotation; this is not proposed new coverage. The spinal-cord row
+remains UNDECIDED because the full experimental paper was not inspected. The
+cadherin row remains UNDECIDED and its method-only quotation is removed.
+The BAX row now explicitly attributes rat C6 to separately inspected primary
+Methods/Results and distinguishes that source from the abstract-only cache.
+
+The final counts are 35 ACCEPT, 20 MODIFY, 110 KEEP_AS_NON_CORE and three
+UNDECIDED, with all 168 source assertions, three unchanged core functions and
+41 unchanged references. No NEW or REMOVE annotation is introduced. No new
+quotations were added.
