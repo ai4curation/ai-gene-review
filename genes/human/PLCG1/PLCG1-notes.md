@@ -30,3 +30,6 @@ PLCG1 is broadly expressed and pleiotropic. TCR signalling is one of several cor
 
 ### Validation
 - `just validate human PLCG1`: valid, no errors or warnings.
+
+### Deep research status
+- The falcon deep-research job (`just deep-research-falcon human PLCG1 --fallback perplexity-lite`) was still running after about 35 minutes, when this review was completed. The perplexity-lite fallback is not available here: sibling runs logged "Provider 'perplexity' not available". This review therefore relies on the cached publications and UniProt, not deep research. If `PLCG1-deep-research-falcon.md` appears later, check it against the core functions above.

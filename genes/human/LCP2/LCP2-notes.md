@@ -6,7 +6,9 @@ Project: ADAPTIVE_IMMUNITY, T cell receptor trunk.
 
 - `just deep-research-falcon human LCP2 --fallback perplexity-lite` was run. The first
   background run's log was overwritten by a concurrent job, and no
-  `LCP2-deep-research-*.md` file was produced. It was re-run; see the status at the end of this file.
+  `LCP2-deep-research-*.md` file was produced. It was re-run and failed again: falcon timed out
+  after 600s, and the perplexity-lite fallback errored with "Provider 'perplexity' not available".
+  No deep-research file exists.
   The review was done from UniProt, GOA and cached publications, not from deep research.
 
 ## Biology summary (with provenance)
