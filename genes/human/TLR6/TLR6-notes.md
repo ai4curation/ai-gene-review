@@ -1,0 +1,33 @@
+# TLR6 (human, Q9Y2C9) review notes
+
+## Identity and architecture
+- Type I transmembrane Toll-like receptor: signal peptide 1-31, LRR ectodomain (32-586), TM 587-607, cytoplasmic TIR domain (UniProt Q9Y2C9).
+- Cloning paper: [PMID:10231569 "Human and murine TLR6 are type-I transmembrane receptors that contain both an extracellular leucine-rich repeat (LRR) domain and a cytoplasmic Toll/IL-1 receptor (IL-1R)-like region."]; closest paralogue TLR1 (69% identity); constitutively active TLR6 activates NF-kB and JNK [PMID:10231569 "Like other TLR family members, constitutively active TLR6 activates both NF-kappaB and c-Jun N-terminal kinase (JNK)."]
+
+## Core function: TLR2 co-receptor for diacylated lipopeptides
+- Knockout: [PMID:11431423 "Here we show that TLR6-deficient (TLR6(-/-)) cells are unresponsive to MALP-2 but retain their normal responses to lipopeptides of other bacterial origins."] and [PMID:11431423 "co-expression of TLR2 and TLR6 is absolutely required for MALP-2 responsiveness"].
+- [PMID:12077222 "TLR6 associates with TLR2 and recognizes diacylated mycoplasmal lipopeptide along with TLR2."]
+- Structure: [PMID:19931471 "We have determined the crystal structures of TLR2-TLR6-diacylated lipopeptide, TLR2-lipoteichoic acid, and TLR2-PE-DTPA complexes."]; specificity set by TLR6: [PMID:19931471 "First, the lipid channel of TLR6 is blocked by two phenylalanines."]; mutation of those residues made TLR2-TLR6 respond to triacylated lipopeptides too.
+- So the recognition MF is a heterodimer-level activity: TLR2 binds the acyl chains, TLR6 supplies the interface and discriminates diacyl vs triacyl. contributes_to pattern recognition receptor activity (GO:0038187) is the right MF shape. There is no TLR-specific MF term.
+- Heterodimers pre-exist at the cell surface, are recruited to rafts on ligand, and traffic to Golgi independently of signalling [PMID:16880211 "Our data show that TLR2 forms heterodimers with TLR1 and TLR6 and that these heterodimer pre-exist and are not induced by the ligand."; "Activation occurs at the cell surface, and the observed trafficking is independent of signaling."]
+- S. aureus sensing by TLR2/6 in HEK293T [PMID:20406817 "we next used HEK293T transfected with TLR2/6 and/or NOD2 and measured NF-κB activation"].
+
+## Secondary: CD36-TLR4-TLR6 sterile inflammation
+- [PMID:20037584 "Importantly, we determine that the earliest event in this inflammatory cascade is not ligation of the TLRs but rather CD36-mediated recognition, which signals via Src kinases to induce a previously undescribed TLR heterodimer of TLR4-TLR6."]
+- MyD88 and TRIF both used; Tlr6-/- macrophages/microglia lose chemokine, IL-1b, ROS, NO responses to oxLDL / Abeta.
+- Consequence for GO: amyloid-beta binding (IC) is not supported -> REMOVE; recognition is CD36.
+- Sheedy 2013: CD36-TLR4-TLR6 primes NLRP3 [PMID:23812099 "These data indicate that CD36-TLR4-TLR6, acting via NF-κB and ROS, primes the NLRP3 inflammasome in response to oxLDL."], but [PMID:23812099 "oxLDL-induced IL-1β secretion from LPS-primed Tlr6–/– macrophages was similar to wild-type macrophages"] -> "positive regulation of NLRP3 inflammasome complex assembly" is over-annotation (priming, not assembly).
+- Liu 2012: TLR6 suppresses TLR2-mediated Abeta responses [PMID:22198949 "TLR2-mediated Aβ42-triggered inflammatory activation was enhanced by TLR1 and suppressed by TLR6"] - context specific, somewhat at odds with Stewart 2010 (TLR2 not required there).
+
+## Curation decisions of note
+- GO:0001875 LPS immune receptor activity (IDA, contributes_to, PMID:16880211): MODIFY to GO:0038187 PRR activity. Cited abstract concerns diacylated lipoprotein/LTA; TLR6 KO cells lose only MALP-2 responses. Full text not cached, so kept as MODIFY rather than REMOVE.
+- GO:0031663 LPS-mediated signaling (IEA GO_REF:0000108, derived from GO:0001875): REMOVE.
+- GO:0007250 activation of NIK activity (NAS): REMOVE; cloning paper only shows NF-kB/JNK reporter activation.
+- GO:0046209 NO metabolic process (IEA): REMOVE; regulation already captured.
+- GO:2001238 positive regulation of extrinsic apoptotic signaling: over-annotation (neurons die from microglial products).
+- protein binding: MODIFY to TLR2 binding / Toll-like receptor binding where supported; TLR1 rows (TM peptides, BioPlex) REMOVE.
+- Pathway terms: GO:0038124 (TLR6:TLR2) is_a GO:0002224 but is NOT a child of GO:0034150 (TLR6 signaling pathway), which itself sits under cell-surface TLR signaling. TLR6 has no annotation to GO:0034150. No NEW annotations added — GO:0038124 already covers it. Raised as a suggested question (ontology structure).
+- Qiu 2013 PLoS One (PMID:23626692) carries a 2024 expression of concern.
+
+## Deep research
+- See TLR6-deep-research-falcon.md if present (status noted at end of this file).
