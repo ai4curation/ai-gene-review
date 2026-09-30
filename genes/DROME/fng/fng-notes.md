@@ -34,3 +34,8 @@ subfamily line.
 
 ## Deep research
 - falcon run rate-limited initially; relaunched with longer timeout.
+
+## Deep research (falcon) completed
+- `fng-deep-research-falcon.md` generated. Consistent with the review; adds site-specific
+  work (Pandey et al. 2019) that glycans on Notch EGF8 and EGF12 are key for Delta signalling
+  and for limiting Serrate cis-inhibition. Not independently verified from primary text here.
