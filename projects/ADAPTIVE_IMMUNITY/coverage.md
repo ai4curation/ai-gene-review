@@ -17,7 +17,7 @@ Back to the [project page](../ADAPTIVE_IMMUNITY.md).
 | MHC class I antigen processing and presentation | 8 | 0 | 0 | 6 | none |
 | MHC class II antigen processing and presentation | 7 | 0 | 0 | 0 | none |
 | V(D)J recombination | 7 | 0 | 0 | 1 | none |
-| T cell receptor signaling | 14 | 2 | 2 | 8 | `t_cell_receptor_signaling` |
+| T cell receptor signaling | 14 | 11 | 11 | 8 | `t_cell_receptor_signaling` |
 | T cell co-stimulation and inhibitory checkpoints | 9 | 3 | 2 | 8 | none |
 | IL-2 and common gamma-chain cytokine signaling | 11 | 5 | 3 | 10 | `jak_stat_signaling` |
 | Helper and regulatory T cell differentiation | 9 | 5 | 2 | 4 | none |
@@ -26,7 +26,7 @@ Back to the [project page](../ADAPTIVE_IMMUNITY.md).
 | B cell differentiation and germinal center | 10 | 1 | 0 | 3 | none |
 | Class switch recombination and somatic hypermutation | 6 | 1 | 0 | 2 | none |
 | Antibody transport and Fc receptor effector signaling | 7 | 0 | 0 | 1 | `fc_gamma_receptor_signaling`, `fc_epsilon_receptor_signaling` |
-| **Unique genes** | 105 | 19 | 12 | 53 | |
+| **Unique genes** | 105 | 28 | 21 | 53 | |
 
 ## Module grounding
 
@@ -34,7 +34,7 @@ UniProtKB accessions grounded in each module and how many have a human review.
 
 | Module | Status | Grounded proteins | With review |
 |---|---|---:|---:|
-| [`t_cell_receptor_signaling`](../../modules/t_cell_receptor_signaling.html) | DRAFT | 7 | 0 |
+| [`t_cell_receptor_signaling`](../../modules/t_cell_receptor_signaling.html) | DRAFT | 7 | 7 |
 | [`jak_stat_signaling`](../../modules/jak_stat_signaling.html) | DRAFT | 10 | 8 |
 | [`b_cell_receptor_signaling`](../../modules/b_cell_receptor_signaling.html) | DRAFT | 7 | 1 |
 | [`fc_gamma_receptor_signaling`](../../modules/fc_gamma_receptor_signaling.html) | DRAFT | 7 | 1 |
@@ -91,19 +91,19 @@ Grounding terms: GO:0050852 T cell receptor signaling pathway.
 
 | Gene | Review status | Human GO-CAM models |
 |---|---|---:|
-| `CD3D` | no review | 0 |
-| `CD3E` | no review | 8 |
-| `CD3G` | no review | 0 |
+| human/CD3D | COMPLETE | 0 |
+| human/CD3E | COMPLETE | 8 |
+| human/CD3G | COMPLETE | 0 |
 | human/CD247 | COMPLETE | 6 |
 | `CD4` | no review | 12 |
 | human/CD8A | COMPLETE | 0 |
-| `LCK` | no review | 15 |
-| `ZAP70` | no review | 12 |
-| `LAT` | no review | 3 |
-| `LCP2` | no review | 0 |
+| human/LCK | COMPLETE | 15 |
+| human/ZAP70 | COMPLETE | 12 |
+| human/LAT | COMPLETE | 3 |
+| human/LCP2 | COMPLETE | 0 |
 | `ITK` | no review | 0 |
-| `PLCG1` | no review | 0 |
-| `NFATC1` | no review | 1 |
+| human/PLCG1 | COMPLETE | 0 |
+| human/NFATC1 | COMPLETE | 1 |
 | `PTPRC` | no review | 1 |
 
 ### T cell co-stimulation and inhibitory checkpoints

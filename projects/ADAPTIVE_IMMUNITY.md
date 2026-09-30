@@ -1,6 +1,6 @@
 ---
 title: "Adaptive Immunity"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 ---
@@ -12,17 +12,20 @@ how antigen is processed and shown on MHC, how T and B cell receptors are built
 by V(D)J recombination and signal, how co-stimulation and checkpoints set the
 response, how T and B cells differentiate, and how antibodies are diversified
 and act. We divided it into 12 areas, each grounded in GO biological process
-terms, with 105 human anchor genes. Only 19 of the 105 have a review (12
-COMPLETE, 5 DRAFT, 2 IN_PROGRESS), mostly cytokine-signaling and T helper
-transcription-factor genes from the [AUTOIMMUNE](AUTOIMMUNE.md) project. The
-core machinery of the area has no review at all: MHC class I and II
-presentation, V(D)J recombination and T cell cytotoxicity are 0 reviewed, and
-the T cell receptor module's seven grounded proteins (CD3, LCK, ZAP70, LAT,
-PLCG1, NFATC1) are all unreviewed. Four adaptive signaling modules exist, all
-DRAFT, and nothing yet models antigen presentation or receptor gene
-recombination. The next step is to review the T cell receptor trunk and the MHC
-class I pathway; both already have human GO-CAM models to check the reviews
-against.
+terms, with 105 human anchor genes. The first batch reviewed the T cell
+receptor trunk: CD3D, CD3E, CD3G, LCK, ZAP70, LAT, LCP2, PLCG1 and NFATC1, all
+COMPLETE, covering 1,103 existing annotations plus 10 new ones. The T cell
+receptor area is now 11 of 14 anchor genes reviewed, and all seven proteins
+grounded in the T cell receptor module have a review. Across the project, 28 of
+the 105 genes have a review (21 COMPLETE). The main calls were to replace
+generic `protein binding` rows with the domain-level activity each paper shows
+(SH2 phosphotyrosine binding, SH3 binding, scaffold/adaptor activity), to give
+the CD3 chains adaptor activity that contributes to, rather than enables, the
+complex's receptor activity, and to keep knockout-phenotype processes non-core.
+MHC class I and II presentation, V(D)J recombination and T cell cytotoxicity
+still have no reviews. The next steps are the rest of the T cell receptor area
+(CD4, ITK, PTPRC), updating the T cell receptor module from the new reviews,
+and the MHC class I pathway.
 
 The counts come from [coverage.md](ADAPTIVE_IMMUNITY/coverage.md), which
 `ADAPTIVE_IMMUNITY/scripts/coverage.py` generates from the scope file
@@ -51,7 +54,7 @@ Reviewed / anchor genes per area, from [coverage.md](ADAPTIVE_IMMUNITY/coverage.
 | MHC class I antigen processing and presentation | GO:0019885 | none | 0/8 |
 | MHC class II antigen processing and presentation | GO:0019886 | none | 0/7 |
 | V(D)J recombination | GO:0033151 | none | 0/7 |
-| T cell receptor signaling | GO:0050852 | [t_cell_receptor_signaling](../modules/t_cell_receptor_signaling.html) | 2/14 |
+| T cell receptor signaling | GO:0050852 | [t_cell_receptor_signaling](../modules/t_cell_receptor_signaling.html) | 11/14 |
 | T cell co-stimulation and inhibitory checkpoints | GO:0031295 | none | 3/9 |
 | IL-2 and common gamma-chain cytokine signaling | GO:0038110 | [jak_stat_signaling](../modules/jak_stat_signaling.html) | 5/11 |
 | Helper and regulatory T cell differentiation | GO:0046632 | none | 5/9 |
@@ -66,12 +69,14 @@ twice), so the per-area gene counts add up to 107, not 105.
 
 ## Existing resources
 
-- **Gene reviews.** COMPLETE reviews exist for CD247 (the TCR zeta chain),
-  CD8A, CD28, CTLA4, GATA3, LYN, PIK3CD, PLCG2, JAK1, STAT3, STAT5A and STAT5B.
+- **Gene reviews.** COMPLETE reviews exist for the T cell receptor trunk
+  reviewed here (CD3D, CD3E, CD3G, LCK, ZAP70, LAT, LCP2, PLCG1, NFATC1) and,
+  from earlier work, CD247 (the TCR zeta chain), CD8A, CD28, CTLA4, GATA3, LYN,
+  PIK3CD, PLCG2, JAK1, STAT3, STAT5A and STAT5B.
   AICDA, BACH2, IL2RA, IRF4 and STAT4 are DRAFT; IL7R and PTPN22 are
   IN_PROGRESS.
 - **Modules.** Four adaptive modules, all DRAFT: T cell receptor signaling
-  (0 of 7 grounded proteins reviewed), B cell receptor signaling (1 of 7),
+  (7 of 7 grounded proteins reviewed), B cell receptor signaling (1 of 7),
   Fc-gamma and Fc-epsilon receptor signaling (1 of 7 each). The JAK-STAT module
   (8 of 10) covers the signaling half of the IL-2 area.
 - **GO-CAM models.** 53 of the 105 anchor genes appear in at least one human
@@ -82,6 +87,58 @@ twice), so the per-area gene counts add up to 107, not 105.
   TAP (HSV-1 ICP47, HCMV US6, EBV BNLF2a) and of TCR signaling via LAT (HSV-1
   US3). Read the matching models before proposing any new process annotation;
   they are the curators' own statement of each gene's role.
+
+## T cell receptor trunk: findings
+
+| Gene | Annotations | Accept | Non-core | Over-annotated | Modify | Remove | Undecided | New |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| human/CD3D | 62 | 45 | 14 | 2 | 0 | 1 | 0 | 1 |
+| human/CD3E | 106 | 64 | 7 | 11 | 13 | 9 | 2 | 0 |
+| human/CD3G | 111 | 88 | 12 | 1 | 1 | 9 | 0 | 0 |
+| human/LCK | 234 | 54 | 95 | 9 | 8 | 64 | 4 | 0 |
+| human/ZAP70 | 98 | 52 | 17 | 1 | 12 | 16 | 0 | 0 |
+| human/LAT | 87 | 55 | 8 | 3 | 14 | 7 | 0 | 3 |
+| human/LCP2 | 109 | 39 | 1 | 1 | 37 | 30 | 1 | 2 |
+| human/PLCG1 | 230 | 135 | 16 | 1 | 54 | 21 | 3 | 2 |
+| human/NFATC1 | 66 | 45 | 7 | 1 | 7 | 6 | 0 | 2 |
+| **Total** | **1,103** | **577** | **177** | **30** | **146** | **163** | **10** | **10** |
+
+"Annotations" counts existing GOA rows; "New" rows are additional.
+
+- **Generic `protein binding` was most of the work.** Where the paper shows
+  the mechanism, rows were changed to the domain-level activity: SH2
+  phosphotyrosine binding (ZAP70 on ITAMs, PLCG1 on receptors and LAT, LCK),
+  SH3 or proline-rich binding (CD3E with NCK, PLCG1, LCP2 with GADS), or
+  scaffold/adaptor activity (LAT, LCP2). Screen-only hits and enzyme-substrate
+  pairs were removed.
+- **CD3 chains.** CD3D, CD3E and CD3G all take signaling receptor complex
+  adaptor activity (GO:0030159) contributing to the complex's transmembrane
+  signaling receptor activity, since antigen is bound by TCR alpha/beta. The
+  contributes_to MHC class II receptor activity row is marked over-annotated on
+  all three, matching the CD247 review. CD3G alone carries receptor
+  internalization, for its di-leucine endocytosis motif.
+- **LAT and LCP2** are adaptors in three receptor systems: T cell receptor,
+  mast cell Fc-epsilon receptor and platelet GPVI; the last two were added as
+  NEW on both. LAT also gains molecular condensate scaffold activity from its
+  phase-separation data.
+- **Pleiotropic genes stay broad.** PLCG1's core functions lead with
+  growth-factor receptor signaling (EGFR, FGFR, PDGFR), and NFATC1's include
+  osteoclast differentiation, with the T cell role as one context among
+  several.
+- **Removed as contradicted:** serine/threonine phosphatase activity on LCK
+  (it has no phosphatase domain) and FK506 binding on NFATC1 (FK506 binds
+  FKBP12).
+- **For curators:** a COP9 signalosome annotation from PMID:22561606 on LAT and
+  PLCG1 appears to mean the TCR signalosome; PMID:22732588, cited for ZAP70
+  tyrosine phosphorylation, reports that ZAP70 does not phosphorylate THEMIS;
+  PMID:10821850, cited for NFATC1 transcription factor activity, describes
+  NFAT1. These are recorded as suggested questions or reference reviews in the
+  gene files.
+- **Deep research.** Falcon reports exist for eight of the nine genes (not
+  CD3G), but most arrived after the 10-minute wrapper timeout, and the perplexity fallback is not
+  configured here, so the reviews rest mainly on UniProt, Reactome and the
+  cached papers (mostly abstracts). Each gene's notes file says how its report
+  was used.
 
 ## Curation rules for adaptive-immune genes
 
@@ -120,8 +177,11 @@ twice), so the per-area gene counts add up to 107, not 105.
 - [x] Define the scope: 12 areas, GO grounding and 105 anchor genes
       (`ADAPTIVE_IMMUNITY/areas.yaml`, symbols checked against HGNC).
 - [x] Generate the coverage tables (`scripts/coverage.py` → `coverage.md`).
-- [ ] Review the T cell receptor trunk: CD3D, CD3E, CD3G, LCK, ZAP70, LAT,
-      LCP2, PLCG1, NFATC1. This also grounds the T cell receptor module.
+- [x] Review the T cell receptor trunk: CD3D, CD3E, CD3G, LCK, ZAP70, LAT,
+      LCP2, PLCG1, NFATC1 (all COMPLETE; see findings below).
+- [ ] Finish the T cell receptor area: CD4, ITK, PTPRC.
+- [ ] Update the T cell receptor module's annotons to the molecular functions
+      chosen in the new reviews, and check them against the TCR GO-CAMs.
 - [ ] Review the MHC class I pathway: HLA-A, B2M, TAP1, TAP2, TAPBP, ERAP1,
       and check them against the MHC class I peptide loading GO-CAM.
 - [ ] Review the B cell receptor trunk (CD79A, CD79B, SYK, BTK, BLNK, CD19) and
