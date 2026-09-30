@@ -12,7 +12,7 @@ Part of [Innate Immune System Pathways Across Animals](../INNATE_IMMUNITY.md).
 **Bottom line:** batch 1 is reviewed. All ten human TLRs, mouse Tlr11–13,
 chicken TLR15 and TLR21, zebrafish tlr5b, tlr21 and tlr22, Drosophila Toll
 (Tl), 18w and Toll-7, and *C. elegans* TOL-1 now have complete reviews, as do
-the accessory proteins and adaptors listed below — 37 gene products and 2,746
+the accessory proteins and adaptors listed below — 37 gene products and 2,734
 existing annotations in all. The Toll/TLR split held up: no fly Toll receptor
 carries a vertebrate TLR-pathway term, but the fly Toll-pathway term had leaked
 the other way, onto human IRAK4 and MYD88 by phylogenetic inference. Findings
@@ -45,22 +45,22 @@ reference-proteome records, the entry GOA annotates most was chosen and pinned i
 | human | TLR8 | Q9NR97 | Swiss-Prot | Toll-like receptor 8 | GO:0034158 | yes |
 | human | TLR9 | Q9NR96 | Swiss-Prot | Toll-like receptor 9 | GO:0034162 | yes |
 | human | TLR10 | Q9BXR5 | Swiss-Prot | Toll-like receptor 10 | GO:0034166 | yes |
-| mouse | Tlr4 | Q9QUK6 | Swiss-Prot | Toll-like receptor 4 | GO:0034142 | no |
+| mouse | `Tlr4` | Q9QUK6 | Swiss-Prot | Toll-like receptor 4 | GO:0034142 | no |
 | mouse | Tlr11 | Q6R5P0 | Swiss-Prot | Toll-like receptor 11 | GO:0034170 | yes |
 | mouse | Tlr12 | Q6QNU9 | Swiss-Prot | Toll-like receptor 12 | GO:0034174 | yes |
 | mouse | Tlr13 | Q6R5N8 | Swiss-Prot | Toll-like receptor 13 | GO:0034178 | yes |
-| CHICK | TLR3 | A0A8V0YT51 | TrEMBL | Toll-like receptor 3 | GO:0034138 | no |
-| CHICK | TLR4 | C4PCF3 | TrEMBL | Toll-like receptor 4 | GO:0034142 | no |
-| CHICK | TLR7 | A0A1L4FML6 | TrEMBL | Toll like receptor 7 | GO:0034154 | no |
+| CHICK | `TLR3` | A0A8V0YT51 | TrEMBL | Toll-like receptor 3 | GO:0034138 | no |
+| CHICK | `TLR4` | C4PCF3 | TrEMBL | Toll-like receptor 4 | GO:0034142 | no |
+| CHICK | `TLR7` | A0A1L4FML6 | TrEMBL | Toll like receptor 7 | GO:0034154 | no |
 | CHICK | TLR15 | A0A8V0Z0H8 | TrEMBL | Toll-like receptor 15 | GO:0035681 | yes |
 | CHICK | TLR21 | A0A8V0ZKW5 | TrEMBL | Toll like receptor 21 | GO:0035682 | yes |
-| DANRE | tlr3 | A0A8M1N4E3 | TrEMBL | Toll-like receptor 3 | GO:0034138 | no |
-| DANRE | tlr4ba | A0A8M3B7X7 | TrEMBL | Toll-like receptor 4 | GO:0034142 (see question 2) | no |
-| DANRE | tlr5a | F8W4F1 | TrEMBL | Toll-like receptor 5 | GO:0034146 | no |
+| DANRE | `tlr3` | A0A8M1N4E3 | TrEMBL | Toll-like receptor 3 | GO:0034138 | no |
+| DANRE | `tlr4ba` | A0A8M3B7X7 | TrEMBL | Toll-like receptor 4 | GO:0034142 (see question 2) | no |
+| DANRE | `tlr5a` | F8W4F1 | TrEMBL | Toll-like receptor 5 | GO:0034146 | no |
 | DANRE | tlr5b | A0ACM8R384 | TrEMBL | Toll-like receptor 5b precursor | GO:0034146 | yes |
-| DANRE | tlr18 | A3KH14 | TrEMBL | Toll-like receptor 18 isoform X4 | none | no |
-| DANRE | tlr19.1 | A0A8M1RKQ4 | TrEMBL | Toll-like receptor 12 (sic) | none | no |
-| DANRE | tlr20.2 | F1QRG0 | TrEMBL | Toll-like receptor 20, tandem duplicate 2 | none | no |
+| DANRE | `tlr18` | A3KH14 | TrEMBL | Toll-like receptor 18 isoform X4 | none | no |
+| DANRE | `tlr19.1` | A0A8M1RKQ4 | TrEMBL | Toll-like receptor 12 (sic) | none | no |
+| DANRE | `tlr20.2` | F1QRG0 | TrEMBL | Toll-like receptor 20, tandem duplicate 2 | none | no |
 | DANRE | tlr21 | F1QMN8 | TrEMBL | Toll-like receptor 21 precursor | GO:0035682 | yes |
 | DANRE | tlr22 | A0A2R8RTN4 | TrEMBL | Toll-like receptor 22 precursor | none | yes |
 | DROME | Tl | P08953 | Swiss-Prot | Protein toll | GO:0008063 (Toll signaling pathway) | yes |
@@ -80,7 +80,7 @@ Zebrafish tlr19.1 (A0A8M1RKQ4) carries the submitter name "Toll-like receptor
 before fetching it.
 
 **Mouse Tlr11 and Tlr12 names are swapped between the literature and the
-databases.** The paper that calls its protein "TLR12" (PMID:23246311) gives
+databases.** The paper that calls its protein "`TLR12`" (PMID:23246311) gives
 RefSeq NP_991388.1, which UniProt maps to Q6R5P0 — the entry MGI and UniProt
 name Tlr11. Both UniProt entries carry a caution that the literature swaps the
 two names. Because the numbered GO terms GO:0034170 and GO:0034174 are named

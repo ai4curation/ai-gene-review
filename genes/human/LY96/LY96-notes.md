@@ -6,12 +6,41 @@ segment. Isoform 2 lacks residues 38-68.
 
 ## Deep research status
 
-The background deep-research job finished (exit 0) but produced
-`LY96-deep-research-asta.md` (Asta corpus retrieval), not a Falcon report. Its 20
-retrieved papers are generic bioinformatics/database papers unrelated to MD-2
-(IgAN subtyping, CRONOS, LIPID MAPS, etc.), so it contributed nothing to this
-review. The review was built from the UniProt record, the cached GOA publications
-(all 14 cached; several abstract-only) and the cached Reactome entries.
+`LY96-deep-research-asta.md` (Asta corpus retrieval) returned 20 generic
+bioinformatics/database papers unrelated to MD-2 and was not used. The review was
+built from the UniProt record, the cached GOA publications (all 14 cached; several
+abstract-only) and the cached Reactome entries.
+
+## Deep-research cross-check (2026-09-30)
+
+Compared the completed review against `LY96-deep-research-falcon.md` (sources are
+mostly 2021-2025 reviews, a dissertation and Fu et al. 2025 cryo-EM).
+
+- Agreement: MD-2 is the non-enzymatic LPS/lipid A-binding coreceptor of TLR4; TLR4
+  alone lacks the recognition pocket; beta-cup fold with a hydrophobic cavity; binds the
+  TLR4 ectodomain via a surface including the C95-C105 region; agonist-bound MD-2 (F126
+  loop, one exposed acyl chain, phosphates) drives the 2:2:2 TLR4-MD-2-LPS complex;
+  lipid IVa is a species-dependent antagonist in human; soluble/secreted MD-2 exists;
+  CD14-dependent endocytosis feeds the TRAM/TRIF branch. All of these are already
+  covered by the MF/CC/BP decisions, the description and core_functions.
+- Additions (not used to change annotations): Asn26/Asn114 glycosylation requirement
+  (dissertation source, not verified); angiotensin II as a direct MD-2 ligand (review
+  source, not verified) -- added to the existing suggested question on non-LPS ligands;
+  VEO-IBD LY96 p.T116del variant, DCM biomarker data, drug/antagonist catalogue, and the
+  zebrafish ly96 ortholog -- context only, no GO consequence.
+- MD-2 supports TLR4 maturation and surface delivery: verified as a statement in a
+  cached primary paper [PMID:11593030 "MD-2 binds to the extracellular domains of both TLRs 2 and 4 and causes their surface expression levels to increase"].
+  No GOA row captures this and no NEW term was proposed (it would be a regulation/
+  chaperone-type term whose actor question is unresolved); added as a suggested question.
+- Conflicts: none. The report's framing ("principal ligand-binding component",
+  "TLR4 supplies the transmembrane and intracellular signaling machinery") matches the
+  review's choice of coreceptor activity (enables) plus contributes_to GO:0001875 in
+  core_functions, and is consistent with TLR4 (enables GO:0001875, core) and CD14
+  (GO:0001875 -> molecular carrier activity).
+- Changes: no annotation actions changed. Added the Falcon report to `references`;
+  added PMID:11593030 (surface-expression quote) and the Falcon report as extra
+  support/reason text on the GO:0031666 IBA row (action stays KEEP_AS_NON_CORE); two
+  suggested-question edits.
 
 ## Biology, with provenance
 

@@ -1,6 +1,6 @@
 ---
 title: "Innate Immune System Pathways Across Animals"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human, mouse, CHICK, DANRE, XENTR, DROME, ANOGA, worm, NEMVE, TACTR]
 ---
@@ -13,14 +13,19 @@ adaptors and kinase relays, NLRs and inflammasomes, cytosolic nucleic-acid
 sensors (RIG-I-like receptors, cGAS-like receptors and STING), C-type lectin and
 complement-type recognition, and the Rel/NF-kappaB and IRF transcriptional
 outputs — organised by **gene family** and compared across ten species from
-sea anemone to human. It is scoped, not yet started: a candidate list of
-**202 gene products** with UniProt accessions resolved programmatically
-([candidates-resolved.tsv](INNATE_IMMUNITY/candidates-resolved.tsv)) is in
-place, and **28 already have complete reviews** from other projects (14 human,
-13 *C. elegans*, 1 *Anopheles*; 2,387 existing annotations between them). None
-of the Toll-like receptors themselves, none of the Drosophila Toll or Imd
-pathway genes and none of the non-human vertebrate genes have been reviewed.
-The first batch is the TLR axis (see [TLR family sub-page](INNATE_IMMUNITY/TLR_FAMILY.md)).
+sea anemone to human. **Batch 1, the Toll/TLR axis, is reviewed:** 37 gene
+products in six species (all ten human TLRs with their co-receptors and
+adaptors, mouse, chicken and zebrafish lineage-specific TLRs, the Drosophila
+Toll pathway from Spätzle to Dorsal, *C. elegans* TOL-1 and Nematostella
+MyD88), covering 2,734 existing annotations (plus 14 proposed new ones). Together with 28 genes reviewed
+earlier by other projects, 65 of the 202 candidates
+([candidates-resolved.tsv](INNATE_IMMUNITY/candidates-resolved.tsv)) are done.
+The main results: the fly Toll-pathway term has leaked onto human IRAK4 and
+MYD88 by phylogenetic inference; LPS and lipopeptide receptor terms were
+spread across TLR partners that do not bind those ligands; and one mis-cited
+paper (PMID:19593445) supports a "response to mechanical stimulus" row on six
+TLR-axis genes. Details are in [Batch 1 results](#batch-1-results) and on the
+[TLR family sub-page](INNATE_IMMUNITY/TLR_FAMILY.md).
 
 We scoped this because innate immunity is where GO annotation is most exposed
 to cross-species over-propagation. The same families (TLRs, NLRs, TIR proteins,
@@ -63,7 +68,7 @@ convention.
 | Code | Species | Lineage | Why included |
 |------|---------|---------|--------------|
 | human | *Homo sapiens* | Mammalia | Reference system; most experimental annotation |
-| mouse | *Mus musculus* | Mammalia | Rodent-specific TLR11/12/13; NAIP/NLRC4 and NLRP1B genetics |
+| mouse | *Mus musculus* | Mammalia | `Tlr11`, `Tlr12`, `Tlr13`, which have no counterpart among human TLR1–10; NAIP/NLRC4 and NLRP1B genetics |
 | CHICK | *Gallus gallus* | Aves | Bird-specific TLR15 and TLR21 |
 | DANRE | *Danio rerio* | Teleostei | Fish-specific TLRs (TLR5b, TLR18–22); inflammasome GO-CAM exists |
 | XENTR | *Xenopus tropicalis* | Amphibia | Amphibian comparator (thin coverage) |
@@ -106,7 +111,7 @@ flagellin, ssRNA, CpG DNA) and signals through MYD88 and/or TICAM1 (TRIF). In
 Drosophila, Toll (Tl) is activated by the cleaved cytokine Spätzle, produced by
 a protease cascade downstream of the real pattern recognition proteins (PGRPs,
 GNBPs). GO carries a numbered signaling-pathway term for most vertebrate TLRs,
-including the lineage-specific TLR11, 12, 13, 15 and 21, but none for fish TLR22.
+including the lineage-specific `TLR11`, 12, 13, 15 and 21, but none for fish TLR22.
 Detail: [TLR family sub-page](INNATE_IMMUNITY/TLR_FAMILY.md).
 
 ### TIR-domain adaptors
@@ -237,7 +242,7 @@ Production GO-CAMs in `gocams/index.tsv` relevant to the first batch
 | 5f46c3b700002102 | SPModule-TIRAP-MYDDOSOME |
 | 641ce4dc00000050 | NOD2 signaling in response to muramyl dipeptide (MDP) leading to NF-kappa-B and MAPK kinase activation |
 | 5fadbcf000001101 | SPModule IFIH1-MAVS |
-| 60418ffa00001019 | NLRP3 inflammasome in pyroptosis via nlrp3, caspa, caspb etc. (zebrafish) |
+| 60418ffa00001019 | NLRP3 inflammasome in pyroptosis via `nlrp3`, `caspa`, `caspb` etc. (zebrafish) |
 | 568b0f9600000284 | Antibacterial innate immune response in the intestine via MAPK cascade (*C. elegans*) |
 
 No production GO-CAM in the index models the Drosophila Toll or Imd pathway.
@@ -309,76 +314,196 @@ against the current replacement.
 
 # STATUS
 
-2026-09-30 — scoped. 202 candidates, 28 reviewed (from other projects).
+2026-09-30 — batch 1 (Toll/TLR axis) reviewed: 37 genes, all `status:
+COMPLETE`, all passing `just validate`, each with a history record. 65 of 202
+candidates now have reviews. Next: batch 2 (see below).
+
 Accessions come from `scripts/resolve_candidates.py`, which queries UniProt by
-primary gene name per taxon (Swiss-Prot preferred) or verifies a pinned
-accession; rerun it after editing `candidates.tsv`. "TrEMBL" marks
-unreviewed entries, where the chosen accession is the highest annotation-score
-hit and should be checked before `just fetch-gene`. Species codes NEMVE and
-TACTR have no gene folders yet; for those, the accession is the folder name.
+primary gene name per taxon (Swiss-Prot preferred, then the reference-proteome
+entry) or verifies an accession pinned in `candidates.tsv`; rerun it after
+editing `candidates.tsv`. "TrEMBL" marks unreviewed entries.
 
-## Batch 1: TLR axis (priority)
+## Batch 1 results
 
-Human TLR1–TLR10 with CD14, LY96, MYD88, TIRAP, TICAM1, IRAK4 and UNC93B1;
-mouse Tlr11, Tlr12, Tlr13; chicken TLR15, TLR21; zebrafish tlr5b, tlr21,
-tlr22; Drosophila spz, Tl, 18w, Toll-7, Myd88, tub, pll, cact, dl, Dif;
-*C. elegans* tol-1; Nematostella MyD88.
+Actions per gene. "Rows" counts every annotation entry in the review: the
+seeded GOA rows (exact duplicates in the GOA file are merged) plus the NEW
+proposals added by the reviewer.
+
+| Species | Gene | Accession | Rows | Accept | Keep non-core | Modify | Remove | Over-annot. | Undecided | New |
+|---|---|---|---|---|---|---|---|---|---|---|
+| human | TLR1 | Q15399 | 81 | 58 | 11 | 4 | 4 | 3 | 0 | 1 |
+| human | TLR2 | O60603 | 146 | 86 | 21 | 7 | 19 | 10 | 2 | 1 |
+| human | TLR3 | O15455 | 126 | 76 | 32 | 3 | 6 | 6 | 3 | 0 |
+| human | TLR5 | O60602 | 33 | 28 | 2 | 2 | 0 | 0 | 1 | 0 |
+| human | TLR6 | Q9Y2C9 | 120 | 70 | 32 | 8 | 6 | 4 | 0 | 0 |
+| human | TLR7 | Q9NYK1 | 108 | 84 | 15 | 3 | 2 | 3 | 1 | 0 |
+| human | TLR8 | Q9NR97 | 54 | 32 | 5 | 8 | 4 | 4 | 1 | 0 |
+| human | TLR9 | Q9NR96 | 136 | 74 | 53 | 1 | 2 | 5 | 1 | 0 |
+| human | TLR10 | Q9BXR5 | 41 | 21 | 12 | 2 | 4 | 0 | 0 | 2 |
+| human | CD14 | P08571 | 151 | 93 | 47 | 6 | 4 | 1 | 0 | 0 |
+| human | LY96 | Q9Y6Y9 | 104 | 59 | 32 | 10 | 3 | 0 | 0 | 0 |
+| human | UNC93B1 | Q9H1C4 | 65 | 25 | 11 | 2 | 27 | 0 | 0 | 0 |
+| human | MYD88 | Q99836 | 229 | 112 | 36 | 41 | 35 | 4 | 1 | 0 |
+| human | TIRAP | P58753 | 109 | 41 | 29 | 19 | 15 | 4 | 1 | 0 |
+| human | TICAM1 | Q8IUC6 | 120 | 91 | 13 | 8 | 7 | 1 | 0 | 0 |
+| human | IRAK4 | Q9NWZ3 | 126 | 51 | 40 | 11 | 21 | 2 | 0 | 1 |
+| mouse | Tlr11 | Q6R5P0 | 9 | 1 | 3 | 2 | 0 | 0 | 2 | 1 |
+| mouse | Tlr12 | Q6QNU9 | 8 | 2 | 3 | 2 | 0 | 0 | 0 | 1 |
+| mouse | Tlr13 | Q6R5N8 | 21 | 10 | 4 | 6 | 0 | 0 | 0 | 1 |
+| DROME | spz | P48607 | 89 | 75 | 11 | 1 | 0 | 1 | 1 | 0 |
+| DROME | Tl | P08953 | 104 | 73 | 21 | 4 | 3 | 1 | 2 | 0 |
+| DROME | Toll-7 | Q7KIN0 | 24 | 18 | 4 | 0 | 0 | 0 | 2 | 0 |
+| DROME | tub | P22812 | 55 | 38 | 1 | 10 | 4 | 0 | 1 | 1 |
+| DROME | pll | Q05652 | 76 | 56 | 4 | 9 | 3 | 2 | 1 | 1 |
+| DROME | cact | Q03017 | 47 | 33 | 5 | 4 | 3 | 0 | 2 | 0 |
+| DROME | dl | P15330 | 114 | 79 | 20 | 6 | 7 | 0 | 0 | 2 |
+| DROME | Dif | P98149 | 81 | 63 | 11 | 4 | 3 | 0 | 0 | 0 |
+| CHICK | TLR15 | A0A8V0Z0H8 | 7 | 2 | 3 | 1 | 1 | 0 | 0 | 0 |
+| CHICK | TLR21 | A0A8V0ZKW5 | 6 | 0 | 2 | 3 | 0 | 0 | 0 | 1 |
+| DANRE | tlr5b | A0ACM8R384 | 5 | 1 | 2 | 2 | 0 | 0 | 0 | 0 |
+| DANRE | tlr21 | F1QMN8 | 10 | 1 | 4 | 3 | 1 | 1 | 0 | 0 |
+| DANRE | tlr22 | A0A2R8RTN4 | 4 | 1 | 1 | 1 | 0 | 0 | 1 | 0 |
+| DROME | 18w | A1ZBR2 | 20 | 14 | 4 | 0 | 0 | 2 | 0 | 0 |
+| DROME | Myd88 | A1Z7T8 | 32 | 25 | 2 | 1 | 3 | 1 | 0 | 0 |
+| worm | tol-1 | Q9N5Z3 | 7 | 4 | 1 | 1 | 0 | 0 | 0 | 1 |
+| human | TLR4 | O00206 | 275 | 145 | 72 | 5 | 30 | 22 | 1 | 0 |
+| NEMVE | MyD88 | A7RHZ4 | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **all** | **37 genes** | | **2748** | **1647** | **569** | **200** | **217** | **77** | **24** | **14** |
+
+### Findings
+
+- **Fly Toll-pathway term on human proteins.** GO:0008063 Toll signaling
+  pathway is defined by ligand binding to "the receptor Toll", yet human IRAK4
+  and MYD88 carry it by IBA (PAINT nodes PTN000701353 and PTN000386853, fly
+  donors). Both reviews change it to GO:0002755 MyD88-dependent toll-like
+  receptor signaling pathway and question the node placement. In the other
+  direction, no fly Toll receptor carries a vertebrate TLR-pathway term;
+  vertebrate-only terms were removed from fly Pelle and Tube (LPS-mediated
+  signaling) and fly Myd88 (canonical NF-kappaB signaling, which GO defines as
+  IKK-dependent; the fly Toll pathway uses no IKK).
+- **Who recognises LPS.** TLR4 keeps GO:0001875 LPS immune receptor activity
+  as its core function; MD-2 (LY96) binds lipid A and records the receptor
+  activity as contributes_to; CD14 is changed to molecular carrier activity
+  because it hands LPS on and cannot signal across the membrane. The same LPS
+  term had also reached TLR1, TLR2 and TLR6, which recognise lipopeptides; it
+  is modified to pattern recognition receptor activity (TLR1, TLR6) or removed
+  and left undecided (TLR2, where the full text of two experimental papers is
+  not cached). GO-CAM 5fb9cc0600000727 uses the LPS term for the TLR1–TLR2
+  complex too; this is recorded as a question, not edited.
+- **A recurring GOA citation error.** PMID:19593445, a prostate-cancer paper
+  about BAD that never mentions TLRs, is cited for GO:0071260 cellular response
+  to mechanical stimulus on TLR3, TLR4, TLR5, TLR7, TLR8 and MYD88. Each row is
+  left UNDECIDED with the reference flagged. A second mis-citation,
+  PMID:23382219 (a sorting-nexin structure paper), supports a TLR7 row.
+- **Mouse Tlr11/Tlr12 names are swapped** between the literature and
+  MGI/UniProt (verified via RefSeq NP_991388.1); the numbered pathway terms are
+  therefore not assigned to either entry. See the TLR family sub-page.
+- **Wrong chemistry and wrong compartments.** GO:0070305 response to cGMP on
+  TLR7 is changed to guanosine binding: the TLR7 ligand is 2',3'-cGMP, not the
+  3',5' isomer the term covers (GO has no 2',3'-cGMP term). TLR8 endolysosome
+  rows are moved to early endosome membrane, and TLR3, TLR7, TLR8 and TLR9
+  plasma-membrane IBA rows are demoted because these receptors signal from
+  endosomes.
+- **Participation test.** UNC93B1, the trafficking chaperone for endosomal
+  TLRs, keeps its TLR-pathway rows only as non-core; its core function is
+  protein carrier chaperone activity. Spätzle carries no processing term
+  (FlyBase puts those on the proteases). A Dif salivary-gland cell-death IMP
+  row is removed because its own paper reports no phenotype in Rel-family null
+  mutants.
+- **Mouse-sourced errors.** Histone chaperone and chromatin remodeling IEA rows
+  on MYD88 came from a mouse annotation of a paper showing only that MyD88
+  signaling is needed for nucleosome remodeling; removed here, and the mouse
+  source annotation needs the same fix.
+- **Twelve NEW annotations in the first pass** (two more came from the deep-research cross-check below), each checked against the participation and
+  comparator tests, including IkappaB kinase activity for fly Pelle (Pelle
+  itself phosphorylates Cactus), negative regulation of toll-like receptor
+  signaling for TLR10, triacyl and diacyl lipopeptide binding for TLR1 and
+  TLR2, and signaling adaptor activity for fly Tube and human IRAK4.
+
+### Deep-research cross-check
+
+Most reviews were written before their Falcon deep-research report arrived, so
+each was later compared against its report. A report claim could change a
+review only after it was verified in a primary paper and quoted from it. The
+reports largely agreed with the reviews. Across 37 genes the pass changed no
+existing action and added two NEW annotations, both verified and
+comparator-checked: positive regulation of interferon-beta production on
+chicken TLR21 (PMID:37951324; human and mouse TLR9 carry the term) and defense
+response to Gram-positive bacterium on mouse Tlr13 (PMID:32209688,
+PMID:38358825; mouse `Tlr2` carries it). Other changes were to descriptions and
+supporting references, for example correcting the relationship between worm
+TOL-1 and IKB-1 (IKB-1 opposes TOL-1; PMID:26279230). Several report claims
+were rejected because cached primary papers contradict them (e.g. that
+Spätzle binds Toll with low affinity, that TLR5 and TLR6 signal only through
+MyD88, and that TLR4 binds amyloid-beta directly). Reviews whose report adds
+nothing citable keep a validator warning that the deep-research file is not
+cited; the Tlr11 and Tlr12 reports use the swapped literature names, so they
+are deliberately not cited.
+
+## Batch 2 (proposed)
+
+The Drosophila recognition and Imd modules (PGRP-SA, PGRP-SD, GNBP1, GNBP3,
+modSP, Grass, SPE, psh, nec; PGRP-LC, PGRP-LE, imd, Fadd, Dredd, Diap2, Tak1,
+Tab2, IKKbeta, key, Rel), the remaining human TLR-axis genes (LBP, TICAM2, IRAK1, IRAK2,
+MAP3K7, TAB1, TAB2; TRAF3, TRAF6 and TBK1 are already reviewed) and the zebrafish/chicken TLRs not
+yet covered (`tlr3`, `tlr4ba`, `tlr5a`, `tlr18`, `tlr19.1`, `tlr20.2`; chicken `TLR3`, `TLR4`,
+`TLR7`).
 
 ## Full checklist by module
 
-### Toll-like receptor signaling (3/51 reviewed)
+### Toll-like receptor signaling (29/51 reviewed)
 
-- [ ] human: TLR1 (Q15399)
-- [ ] human: TLR2 (O60603)
-- [ ] human: TLR3 (O15455)
-- [ ] human: TLR4 (O00206)
-- [ ] human: TLR5 (O60602)
-- [ ] human: TLR6 (Q9Y2C9)
-- [ ] human: TLR7 (Q9NYK1)
-- [ ] human: TLR8 (Q9NR97)
-- [ ] human: TLR9 (Q9NR96)
-- [ ] human: TLR10 (Q9BXR5)
-- [ ] human: CD14 (P08571)
-- [ ] human: LY96 (Q9Y6Y9)
+- [x] human: TLR1 (Q15399)
+- [x] human: TLR2 (O60603)
+- [x] human: TLR3 (O15455)
+- [x] human: TLR4 (O00206)
+- [x] human: TLR5 (O60602)
+- [x] human: TLR6 (Q9Y2C9)
+- [x] human: TLR7 (Q9NYK1)
+- [x] human: TLR8 (Q9NR97)
+- [x] human: TLR9 (Q9NR96)
+- [x] human: TLR10 (Q9BXR5)
+- [x] human: CD14 (P08571)
+- [x] human: LY96 (Q9Y6Y9)
 - [ ] human: LBP (P18428)
-- [ ] human: UNC93B1 (Q9H1C4)
-- [ ] human: MYD88 (Q99836)
-- [ ] human: TIRAP (P58753)
-- [ ] human: TICAM1 (Q8IUC6)
+- [x] human: UNC93B1 (Q9H1C4)
+- [x] human: MYD88 (Q99836)
+- [x] human: TIRAP (P58753)
+- [x] human: TICAM1 (Q8IUC6)
 - [ ] human: TICAM2 (Q86XR7)
 - [ ] human: SARM1 (Q6SZW1)
 - [ ] human: IRAK1 (P51617)
 - [ ] human: IRAK2 (O43187)
 - [x] human: IRAK3 (Q9Y616)
-- [ ] human: IRAK4 (Q9NWZ3)
+- [x] human: IRAK4 (Q9NWZ3)
 - [x] human: TRAF3 (Q13114)
 - [x] human: TRAF6 (Q9Y4K3)
-- [ ] mouse: Tlr11 (Q6R5P0)
-- [ ] mouse: Tlr12 (Q6QNU9)
-- [ ] mouse: Tlr13 (Q6R5N8)
-- [ ] mouse: Tlr4 (Q9QUK6)
-- [ ] CHICK: TLR15 (Q2XQ10, TrEMBL)
-- [ ] CHICK: TLR21 (A0A8V0ZYL3, TrEMBL)
-- [ ] CHICK: TLR3 (A0A8V0YT51, TrEMBL)
-- [ ] CHICK: TLR4 (C4PCF3, TrEMBL)
-- [ ] CHICK: TLR7 (A0A1L4FML6, TrEMBL)
-- [ ] CHICK: MYD88 (A5HNF6)
-- [ ] DANRE: tlr3 (Q32PW5, TrEMBL)
-- [ ] DANRE: tlr4ba (A0A8M3B7X7, TrEMBL)
-- [ ] DANRE: tlr5a (F8W4F1, TrEMBL)
-- [ ] DANRE: tlr5b (F8W3J5, TrEMBL)
-- [ ] DANRE: tlr22 (A0A2R8RTN4, TrEMBL)
-- [ ] DANRE: tlr21 (F1QMN8, TrEMBL)
-- [ ] DANRE: tlr18 (A3KH14, TrEMBL)
-- [ ] DANRE: tlr19.1 (A0A8M1RKQ4, TrEMBL)
-- [ ] DANRE: tlr20.2 (F1QRG0, TrEMBL)
-- [ ] DANRE: myd88 (Q5XJ85)
-- [ ] DANRE: ticam1 (Q1LUQ2, TrEMBL)
-- [ ] DANRE: irak4 (A0AC58IUN4, TrEMBL)
-- [ ] DANRE: traf6 (Q6IWL4)
-- [ ] XENTR: myd88 (Q28DJ2)
-- [ ] XENTR: tlr5 (A0A803K1J2, TrEMBL)
-- [ ] NEMVE: MyD88 (A7RHZ4, TrEMBL)
+- [x] mouse: Tlr11 (Q6R5P0)
+- [x] mouse: Tlr12 (Q6QNU9)
+- [x] mouse: Tlr13 (Q6R5N8)
+- [ ] mouse: `Tlr4` (Q9QUK6)
+- [x] CHICK: TLR15 (A0A8V0Z0H8, TrEMBL)
+- [x] CHICK: TLR21 (A0A8V0ZKW5, TrEMBL)
+- [ ] CHICK: `TLR3` (A0A8V0YT51, TrEMBL)
+- [ ] CHICK: `TLR4` (C4PCF3, TrEMBL)
+- [ ] CHICK: `TLR7` (A0A1L4FML6, TrEMBL)
+- [ ] CHICK: `MYD88` (A5HNF6)
+- [ ] DANRE: `tlr3` (A0A8M1N4E3, TrEMBL)
+- [ ] DANRE: `tlr4ba` (A0A8M3B7X7, TrEMBL)
+- [ ] DANRE: `tlr5a` (F8W4F1, TrEMBL)
+- [x] DANRE: tlr5b (A0ACM8R384, TrEMBL)
+- [x] DANRE: tlr22 (A0A2R8RTN4, TrEMBL)
+- [x] DANRE: tlr21 (F1QMN8, TrEMBL)
+- [ ] DANRE: `tlr18` (A3KH14, TrEMBL)
+- [ ] DANRE: `tlr19.1` (A0A8M1RKQ4, TrEMBL)
+- [ ] DANRE: `tlr20.2` (F1QRG0, TrEMBL)
+- [ ] DANRE: `myd88` (Q5XJ85)
+- [ ] DANRE: `ticam1` (A0A8M1N991, TrEMBL)
+- [ ] DANRE: `irak4` (A0AC58IUN4, TrEMBL)
+- [ ] DANRE: `traf6` (Q6IWL4)
+- [ ] XENTR: `myd88` (Q28DJ2)
+- [ ] XENTR: `tlr5` (A0A803K1J2, TrEMBL)
+- [x] NEMVE: MyD88 (A7RHZ4, TrEMBL)
 
 ### NF-kappaB / IRF output (3/17 reviewed)
 
@@ -398,53 +523,53 @@ tlr22; Drosophila spz, Tl, 18w, Toll-7, Myd88, tub, pll, cact, dl, Dif;
 - [ ] human: IRF7 (Q92985)
 - [x] human: TOLLIP (Q9H0E2)
 - [x] human: TNFAIP3 (P21580)
-- [ ] NEMVE: NF-kappaB (A7UNT2, TrEMBL)
+- [ ] NEMVE: `NF-kappaB` (A7UNT2, TrEMBL)
 
-### Drosophila Toll pathway (0/19 reviewed)
+### Drosophila Toll pathway (10/19 reviewed)
 
-- [ ] DROME: PGRP-SA (Q9VYX7)
-- [ ] DROME: PGRP-SD (Q9VS97)
-- [ ] DROME: GNBP1 (Q9NHB0)
-- [ ] DROME: GNBP3 (Q9NHA8)
-- [ ] DROME: modSP (Q9VER6)
-- [ ] DROME: Grass (Q9VB68)
-- [ ] DROME: SPE (Q9VCJ8)
-- [ ] DROME: psh (Q9VWU1)
-- [ ] DROME: nec (Q7JWX3, TrEMBL)
-- [ ] DROME: spz (P48607)
-- [ ] DROME: Tl (P08953)
-- [ ] DROME: 18w (A1ZBR2, TrEMBL)
-- [ ] DROME: Toll-7 (Q7KIN0)
-- [ ] DROME: Myd88 (Q7K105, TrEMBL)
-- [ ] DROME: tub (P22812)
-- [ ] DROME: pll (Q05652)
-- [ ] DROME: cact (Q03017)
-- [ ] DROME: dl (P15330)
-- [ ] DROME: Dif (P98149)
+- [ ] DROME: `PGRP-SA` (Q9VYX7)
+- [ ] DROME: `PGRP-SD` (Q9VS97)
+- [ ] DROME: `GNBP1` (Q9NHB0)
+- [ ] DROME: `GNBP3` (Q9NHA8)
+- [ ] DROME: `modSP` (Q9VER6)
+- [ ] DROME: `Grass` (Q9VB68)
+- [ ] DROME: `SPE` (Q9VCJ8)
+- [ ] DROME: `psh` (Q9VWU1)
+- [ ] DROME: `nec` (A1Z6V7, TrEMBL)
+- [x] DROME: spz (P48607)
+- [x] DROME: Tl (P08953)
+- [x] DROME: 18w (A1ZBR2, TrEMBL)
+- [x] DROME: Toll-7 (Q7KIN0)
+- [x] DROME: Myd88 (A1Z7T8, TrEMBL)
+- [x] DROME: tub (P22812)
+- [x] DROME: pll (Q05652)
+- [x] DROME: cact (Q03017)
+- [x] DROME: dl (P15330)
+- [x] DROME: Dif (P98149)
 
 ### Drosophila Imd pathway (0/11 reviewed)
 
-- [ ] DROME: PGRP-LC (Q9GNK5)
-- [ ] DROME: PGRP-LE (Q9VXN9)
-- [ ] DROME: imd (Q7K4Z4)
-- [ ] DROME: Fadd (Q9V3B4)
-- [ ] DROME: Dredd (Q8IRY7)
-- [ ] DROME: Diap2 (Q24307)
-- [ ] DROME: Tak1 (Q9V3Q6)
-- [ ] DROME: Tab2 (A0A0B4KG87, TrEMBL)
-- [ ] DROME: IKKbeta (Q9VEZ5)
-- [ ] DROME: key (Q9GYV5)
-- [ ] DROME: Rel (Q94527)
+- [ ] DROME: `PGRP-LC` (Q9GNK5)
+- [ ] DROME: `PGRP-LE` (Q9VXN9)
+- [ ] DROME: `imd` (Q7K4Z4)
+- [ ] DROME: `Fadd` (Q9V3B4)
+- [ ] DROME: `Dredd` (Q8IRY7)
+- [ ] DROME: `Diap2` (Q24307)
+- [ ] DROME: `Tak1` (Q9V3Q6)
+- [ ] DROME: `Tab2` (A0A0B4KG87, TrEMBL)
+- [ ] DROME: `IKKbeta` (Q9VEZ5)
+- [ ] DROME: `key` (Q9GYV5)
+- [ ] DROME: `Rel` (Q94527)
 
-### C. elegans p38 PMK-1 pathway (8/10 reviewed)
+### C. elegans p38 PMK-1 pathway (9/10 reviewed)
 
-- [ ] worm: tol-1 (Q9N5Z3, TrEMBL)
+- [x] worm: tol-1 (Q9N5Z3, TrEMBL)
 - [x] worm: tir-1 (Q86DA5)
 - [x] worm: nsy-1 (Q21029)
 - [x] worm: sek-1 (G5EDF7)
 - [x] worm: pmk-1 (Q17446)
 - [x] worm: atf-7 (Q86MD3)
-- [ ] worm: dkf-2 (O45818)
+- [ ] worm: `dkf-2` (O45818)
 - [x] worm: nipi-3 (G5EED4)
 - [x] worm: zip-2 (Q21148)
 - [x] worm: fshr-1 (L8EC40, TrEMBL)
@@ -452,7 +577,7 @@ tlr22; Drosophila spz, Tl, 18w, Toll-7, Myd88, tub, pll, cact, dl, Dif;
 ### C. elegans epidermal/TGF-beta immunity (3/4 reviewed)
 
 - [x] worm: dbl-1 (G5EEL5)
-- [ ] worm: sma-3 (P45896)
+- [ ] worm: `sma-3` (P45896)
 - [x] worm: sta-2 (Q20977)
 - [x] worm: nlp-29 (O44664)
 
@@ -474,14 +599,14 @@ tlr22; Drosophila spz, Tl, 18w, Toll-7, Myd88, tub, pll, cact, dl, Dif;
 - [x] human: GSDMD (P57764)
 - [ ] human: IL1B (P01584)
 - [ ] human: IL18 (Q14116)
-- [ ] mouse: Naip5 (Q9R016)
-- [ ] mouse: Nlrp1b (A1Z198)
-- [ ] mouse: Nlrc4 (Q3UP24)
-- [ ] DANRE: nod1 (A0A8M1RMD1, TrEMBL)
-- [ ] DANRE: nod2 (A0A8M1P9S9, TrEMBL)
-- [ ] DANRE: pycard (Q9I9N6)
-- [ ] DANRE: caspa (Q9I9L7)
-- [ ] DANRE: caspb (Q504J1)
+- [ ] mouse: `Naip5` (Q9R016)
+- [ ] mouse: `Nlrp1b` (A1Z198)
+- [ ] mouse: `Nlrc4` (Q3UP24)
+- [ ] DANRE: `nod1` (A0A8M1RMD1, TrEMBL)
+- [ ] DANRE: `nod2` (A0A8M1P9S9, TrEMBL)
+- [ ] DANRE: `pycard` (Q9I9N6)
+- [ ] DANRE: `caspa` (Q9I9L7)
+- [ ] DANRE: `caspb` (Q504J1)
 
 ### Cytosolic nucleic-acid sensing (4/23 reviewed)
 
@@ -494,20 +619,20 @@ tlr22; Drosophila spz, Tl, 18w, Toll-7, Myd88, tub, pll, cact, dl, Dif;
 - [x] human: STING1 (Q86WV6)
 - [x] human: ZBP1 (Q9H171)
 - [x] human: IFI16 (Q16666)
-- [ ] CHICK: IFIH1 (A0A1D5P5I0, TrEMBL)
-- [ ] CHICK: MAVS (A0A8V0YPL4, TrEMBL)
-- [ ] CHICK: STING1 (E1C7U0)
-- [ ] CHICK: CGAS (A0A8V0X930, TrEMBL)
-- [ ] DANRE: rigi (A0A0D5W690, TrEMBL)
-- [ ] DANRE: mavs (B8A4W7, TrEMBL)
-- [ ] DANRE: sting1 (E7F4N7)
-- [ ] DANRE: cgasa (F1QCP4, TrEMBL)
-- [ ] DROME: cGlr1 (A1ZA55)
-- [ ] DROME: cGlr2 (A8DYP7)
-- [ ] DROME: Sting (A0A0B4LFY9)
-- [ ] worm: drh-1 (G5EDI8, TrEMBL)
-- [ ] NEMVE: STING (A7SLZ2)
-- [ ] NEMVE: cGAS (A7SFB5)
+- [ ] CHICK: `IFIH1` (A0A1D5P5I0, TrEMBL)
+- [ ] CHICK: `MAVS` (A0A8V0YPL4, TrEMBL)
+- [ ] CHICK: `STING1` (E1C7U0)
+- [ ] CHICK: `CGAS` (A0A8V0X930, TrEMBL)
+- [ ] DANRE: `rigi` (A0A8M1P6Y9, TrEMBL)
+- [ ] DANRE: `mavs` (B8A4W7, TrEMBL)
+- [ ] DANRE: `sting1` (E7F4N7)
+- [ ] DANRE: `cgasa` (F1QCP4, TrEMBL)
+- [ ] DROME: `cGlr1` (A1ZA55)
+- [ ] DROME: `cGlr2` (A8DYP7)
+- [ ] DROME: `Sting` (A0A0B4LFY9)
+- [ ] worm: `drh-1` (G5EDI8, TrEMBL)
+- [ ] NEMVE: `STING` (A7SLZ2)
+- [ ] NEMVE: `cGAS` (A7SFB5)
 
 ### C-type lectin receptors (0/5 reviewed)
 
@@ -528,25 +653,25 @@ tlr22; Drosophila spz, Tl, 18w, Toll-7, Myd88, tub, pll, cact, dl, Dif;
 - [ ] DROME: `Tep1` (Q7KT66, TrEMBL)
 - [ ] DROME: `Tep2` (Q8IPH5, TrEMBL)
 - [x] ANOGA: TEP1 (Q9GYW4)
-- [ ] ANOGA: LRIM1 (A7XBG8, TrEMBL)
-- [ ] ANOGA: APL1C (L7T8J3, TrEMBL)
-- [ ] ANOGA: REL2 (B2FXG9, TrEMBL)
+- [ ] ANOGA: `LRIM1` (A7XBG8, TrEMBL)
+- [ ] ANOGA: `APL1C` (L7T8J3, TrEMBL)
+- [ ] ANOGA: `REL2` (B2FXG9, TrEMBL)
 
 ### Horseshoe crab coagulation cascade (0/6 reviewed)
 
-- [ ] TACTR: factor C (P28175)
-- [ ] TACTR: factor B (Q27081)
-- [ ] TACTR: factor G alpha (Q27082)
-- [ ] TACTR: factor G beta (Q27083)
-- [ ] TACTR: proclotting enzyme (P21902)
-- [ ] TACTR: coagulogen (P02681)
+- [ ] TACTR: `factor C` (P28175)
+- [ ] TACTR: `factor B` (Q27081)
+- [ ] TACTR: `factor G alpha` (Q27082)
+- [ ] TACTR: `factor G beta` (Q27083)
+- [ ] TACTR: `proclotting enzyme` (P21902)
+- [ ] TACTR: `coagulogen` (P02681)
 
 ### Drosophila JAK-STAT (0/4 reviewed)
 
-- [ ] DROME: hop (Q24592)
-- [ ] DROME: Stat92E (Q24151)
-- [ ] DROME: upd3 (Q59E38, TrEMBL)
-- [ ] DROME: TotA (Q8IN44)
+- [ ] DROME: `hop` (Q24592)
+- [ ] DROME: `Stat92E` (Q24151)
+- [ ] DROME: `upd3` (Q59E38, TrEMBL)
+- [ ] DROME: `TotA` (Q8IN44)
 
 ### Interferon effectors (0/4 reviewed)
 
@@ -560,28 +685,47 @@ tlr22; Drosophila spz, Tl, 18w, Toll-7, Myd88, tub, pll, cact, dl, Dif;
 - [ ] human: DEFB4A (O15263)
 - [ ] human: CAMP (P49913)
 - [ ] human: LYZ (P61626)
-- [ ] DROME: Drs (P41964)
-- [ ] DROME: DptA (P24492)
-- [ ] DROME: Mtk (Q24395)
-- [ ] DROME: AttA (P45884)
-- [ ] DROME: CecA1 (C0HKQ7)
-- [ ] DROME: Def (P36192)
+- [ ] DROME: `Drs` (P41964)
+- [ ] DROME: `DptA` (P24492)
+- [ ] DROME: `Mtk` (Q24395)
+- [ ] DROME: `AttA` (P45884)
+- [ ] DROME: `CecA1` (C0HKQ7)
+- [ ] DROME: `Def` (P36192)
 - [x] worm: clec-60 (Q23564, TrEMBL)
 - [x] worm: lys-7 (O16202)
-- [ ] worm: spp-1 (Q22291, TrEMBL)
+- [ ] worm: `spp-1` (Q22291, TrEMBL)
 
 # NOTES
 
 ## 2026-09-30
 
 - Created the project page, the candidate list and the resolver script.
-- The resolver first matched synonyms (mouse Tlr11 resolved to the TLR12
+- The resolver first matched synonyms (mouse `Tlr11` resolved to the `TLR12`
   entry; chicken TLR15 to a "Toll-like receptor 2" record); it now requires
   a primary gene-name match. Zebrafish symbols were corrected to the current
-  UniProt names (cgasa, tlr19.1, tlr20.2). No *X. tropicalis* tlr4 entry was
+  UniProt names (`cgasa`, `tlr19.1`, `tlr20.2`). No *X. tropicalis* `tlr4` entry was
   found, so it was dropped.
 - Chicken TLR15 still resolves to a TrEMBL entry whose protein name reads
   "Toll-like receptor 2" (Q2XQ10, primary gene TLR15); another TLR15 entry
   (E5L3Q3) is named "Toll-like receptor 15". Pick deliberately before fetching.
 - No Nematostella entry is named as a Toll-like receptor, although 17 carry a
   TIR domain; no accession is asserted for it.
+
+## 2026-09-30 — batch 1
+
+- Reviewed the 37 batch-1 genes with 21 parallel reviewer agents, each
+  following the annotation-reviewer skill; every review validates and has a
+  history record.
+- Falcon deep research was unreliable: the wrapper's default 600 s timeout
+  killed most first attempts, the perplexity-lite fallback has no key in this
+  environment, and some Edison calls returned "no answer". A rerun with a
+  2,700 s timeout and one Falcon retry produced reports for 36 genes; the Asta
+  fallback returned unrelated papers for LY96 and was not used. Reviews were
+  written from UniProt and cached primary papers, and a second pass
+  cross-checked each finished review against its report once it arrived.
+- Accessions: the resolver now prefers reference-proteome entries (fly Myd88
+  is A1Z7T8, zebrafish tlr5b A0ACM8R384); chicken TLR15 (A0A8V0Z0H8) and TLR21
+  (A0A8V0ZKW5) are pinned to the entry GOA annotates most.
+- `just validate-references` prints "Total checks: 0" on clean files; it
+  counts issues, not checks. An invented quote does fail it, so quote checking
+  works.
