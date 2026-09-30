@@ -1,12 +1,32 @@
 ---
 title: "PANTHER IBA family review"
+maturity: MATURE
+tags: [EVALUATION, PIPELINE]
+species: [SCHPO]
 ---
 
 # PANTHER IBA family review
 
-Family-level (PANTHER/PAINT) review of the IBA annotations on the 40 reviewed
-S. pombe genes. Reviews the *source* of the IBAs — the phylogenetic
-propagation — rather than re-judging gene by gene.
+**Bottom line:** every IBA annotation descends from a PAINT curator's IBD
+judgment placed at an ancestral node of a PANTHER tree, so the place to test
+an IBA is that node and the target's position below it. We rebuilt the
+propagation behind all 160 IBAs on the 41 reviewed *S. pombe* genes (36 of
+which carry IBAs) from cached repo data: source node, seed genes, subfamilies,
+PAINT loss annotations, and our per-gene action. We did this to check whether
+the per-gene calls hold up at the family level, and to find the patterns that
+mark a real over-propagation. They held up. The per-gene reviews kept 148 of
+the 160 IBAs (117 ACCEPT, 31 KEEP_AS_NON_CORE); the 36 cross-subfamily flags
+turned out to be mostly conserved functions; and the family lens confirmed the
+two localization REMOVEs (pom1 `cytoskeleton`, rqh1 `cytoplasm`) and recast the
+third REMOVE (mid1 septin ring organization) as sub-functionalization between
+the two pombe anillins. No new IBA errors were found among the accepted rows.
+
+The same tooling also extracts PAINT's own loss annotations (IRD/IKR) as a
+curation guard: 2,129 loss findings across 549 cached families (2,123 paired with a confirmed ancestral gain), of which 63 IKR losses fall on a
+reviewed member and are ready for residue-level follow-up. The written review
+is in [REVIEW.md](REVIEW.md).
+
+The rest of this page documents the scripts and tables.
 
 - `extract_iba_propagation.py` — reproducible extractor: for each IBA, resolves
   the ancestral PANTHER node, the seed genes, and the subfamilies of our gene
@@ -17,8 +37,8 @@ propagation — rather than re-judging gene by gene.
   `node_seed_count` (the authoritative canonical seed count curated at the source
   node, vs. the few `n_seeds` echoed into the leaf), `node_evidence`
   (IBD/IRD/IKR), and `node_loss`. New flags: `SINGLE_NODE_SEED` (≤1 canonical
-  seed — weak support), `NODE_LOSS` (an IRD/IKR loss at the source node), and
-  `NODE_NOT_IN_IBD`.
+  seed — a provenance count, not a measure of evidential strength), `NODE_LOSS` (an IRD/IKR loss at the source node), and
+  `NODE_NOT_IN_IBD`; `NONE` denotes a row with no propagation flags.
 - `extract_node_annotations.py` — pulls the **PTN node-level (PAINT) annotations**
   themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR — plus a few IBA-on-node —
   layer that is the *source* of every IBA). For each ancestral node our genes
@@ -55,17 +75,20 @@ propagation — rather than re-judging gene by gene.
   Note: `loss_clade`/`retaining_clade` are resolved from the *reviewed* member
   tables + leaf GAF, so a finding with `n_members_affected=0` yields an empty
   `loss_clade` (the loss is in an unsampled subfamily); seeds are still provided.
-  Of the 296 IKR findings, 49 have ≥1 attributed reviewed member and are
+  Of the 403 IKR findings, 63 have ≥1 attributed reviewed member and are
   immediately actionable.
 - `REVIEW.md` — the written review and findings.
 
 Regenerate:
 
 ```bash
-uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
-uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
-uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+just refresh-panther-iba-project
 ```
+
+The three tables can also be refreshed independently with
+`just refresh-panther-iba-propagation`,
+`just refresh-panther-iba-node-annotations`, and
+`just refresh-panther-iba-function-losses`.
 
 The node-level source files (`IBD.gaf`, leaf GAF) are downloaded on demand into
 a gitignored `.cache/panther/` and are not committed. Per-family node slices can
@@ -75,6 +98,13 @@ be materialised under `interpro/panther/<FAM>/<FAM>-paint.tsv` with:
 just fetch-panther-paint PTHR10177
 ```
 
-Scope: the 151 IBAs in the 40 reviewed genes (38 PANTHER families, all cached
+Scope: the 160 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
 locally). Note the cross-subfamily flag is deliberately sensitive and
 over-fires on broadly conserved functions — it is triage, not a verdict.
+One well-characterized descendant can soundly ground an ancestral assertion.
+Review its phylogenetic placement and relevant functional divergence; do not
+infer weak support from a short seed list.
+
+## Slides
+
+- [Slides](slides/PANTHER_IBA_REVIEW-slides.html) (Marp source: [PANTHER_IBA_REVIEW-slides.md](slides/PANTHER_IBA_REVIEW-slides.md)) — AI generated

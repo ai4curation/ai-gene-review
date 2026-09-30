@@ -45,3 +45,7 @@
 - No experimental annotation is proposed for REMOVE. Clearly-wrong purely-electronic (IEA) or MF-miscast annotations proposed for REMOVE where justified; otherwise MARK_AS_OVER_ANNOTATED / KEEP_AS_NON_CORE.
 </content>
 </invoke>
+
+## 2026-09-20 full-gene re-review
+
+Read every source annotation and relevant evidence, including primary full texts for disputed reactions and the exact PAINT target path. See [AKR1C4-primary-source-checks.md](AKR1C4-primary-source-checks.md) for assay context, access limits, short exact excerpts, and pending focused adjudication. All original source fields are preserved; no NEW annotation is added. Broad true chemistry and localization are retained separately from exact substrate/reaction conflicts.

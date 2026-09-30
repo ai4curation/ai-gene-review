@@ -1,6 +1,7 @@
 ---
 title: "Affinage Evaluation Project"
-maturity: IN_PROGRESS
+collections: [FUNCTION_PREDICTION]
+maturity: MATURE
 tags: [PIPELINE, EVALUATION]
 species: [human]
 sidecars:
@@ -21,8 +22,46 @@ sidecars:
   narrative_vs_go: AFFINAGE_EVALUATION/results/narrative-vs-go.md
   fa_cohort_summary: AFFINAGE_EVALUATION/results/fa-cohort.md
   fa_cohort_dir: AFFINAGE_EVALUATION/results/fa-cohort/
+  paint_campaign_summary: AFFINAGE_EVALUATION/results/paint-campaign.md
+  paint_campaign_per_gene: AFFINAGE_EVALUATION/results/paint-campaign/per-gene.json
+  paint_campaign_summary_md: AFFINAGE_EVALUATION/results/paint-campaign/summary.md
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - AFFINAGE_EVALUATION/slides/affinage-pipeline.svg
+    - AFFINAGE_EVALUATION/slides/affinage-results.svg
+    - AFFINAGE_EVALUATION/slides/go-downcast.svg
+manifest:
+  slides:
+    - href: AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/5CqTrkg55DQ3bTTeMAFdHm
+      title: Project brief
 ---
 # Affinage Evaluation Project
+
+**Bottom line:** Affinage (Cheeseman Lab) writes a literature-grounded mechanism
+narrative for every human protein-coding gene and then maps its findings onto GO
+and Reactome terms. We compared its output with our agent-adjudicated gene reviews
+in four GO-layer cohorts (42 human genes), a forward test on the 22 Fanconi anemia
+genes, and a retrieval test on 91 genes from the PAINT campaign. The GO layer
+almost never reaches the specific curated function: it captured the primary
+molecular function for 1 of 42 genes (KRAS `GTPase activity`), usually stopping at
+a generic parent such as `oxidoreductase activity` and sometimes landing on the
+wrong catalytic branch. The narrative is much stronger: in the Fanconi cohort it
+contributed 59 primary papers and 13 new GO annotations across 10 genes without
+reversing any existing curation decision. As a literature search it supplied 52%
+of the 718 references the 91 reviews had to find, an upper bound because 56 of
+those reviews were written with the Affinage report in hand, and its
+`gates_passed` flag checks precision only.
+
+We did this to decide whether Affinage could serve AIGR as a GO-grounding source,
+a deep-research input, or a literature search. The answer so far: use the
+narrative as a deep-research input, ignore the GO layer, and search partners,
+complexes and paralogs independently.
+
+[Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
+
 
 Systematic evaluation of **Affinage** (Cheeseman Lab, Whitehead Institute/MIT;
 [affinage.wi.mit.edu](https://affinage.wi.mit.edu), [arXiv:2607.02217](https://arxiv.org/abs/2607.02217))
@@ -69,6 +108,14 @@ below and [`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md)
 This is still exploratory, not a finished benchmark: exact-GO-id agreement only,
 and the local AIGR references are mixed-maturity, not independently expert-signed
 ground truth.
+
+## Retrieval evaluation
+
+Separately from the GO layer, [**Retrieval recall at scale**](#retrieval-recall-at-scale-paint-campaign-n91)
+(n=91) measures what Affinage *finds* rather than what it says: it supplies **52%** of the
+references a review has to go locate (an upper bound; see the campaign's limits section), uniformly across dark and well-studied genes, and its
+`gates_passed` flag certifies precision only — there is no recall gate, and six reports returned
+zero citations without being flagged.
 
 ## What Affinage is (and how it differs from BioReason)
 
@@ -257,6 +304,41 @@ and measure **net curation value** — not exact-GO overlap.
 **Takeaway:** used as this project endorses — narrative-as-input, GO-layer-ignored — Affinage
 delivered measurable, conservative value on the very pathway where it should have been most
 redundant with AIGR's own deep-research step.
+
+## Retrieval recall at scale (PAINT campaign, n=91)
+
+Full analysis: [`results/paint-campaign.md`](AFFINAGE_EVALUATION/results/paint-campaign.md) ·
+generated tables in [`results/paint-campaign/`](AFFINAGE_EVALUATION/results/paint-campaign/) ·
+regenerate with `uv run python retrieval_recall.py --all`.
+
+Every cohort above asks what Affinage *says*. This one asks what it *finds*, over 91 human genes
+reviewed with Affinage as the deep-research provider during the PAINT backlog campaign.
+
+**Affinage supplies about half the references a review has to go find, and its trust gates cannot
+tell you which half is missing.** Of 1626 PMIDs cited by the finished reviews, 908 arrive
+prepackaged in the GOA file and need no search at all; scored against the **718 the reviewer
+genuinely had to locate**, pooled recall is **52%**. (Scoring against all 1626 — including
+references the provider was never asked to retrieve — understates it at 32%.) Conversely 39% of
+what Affinage returned was cited, the ordinary cost of a literature sweep.
+
+- **`gates_passed` measures precision, and there is no recall gate.** The gates correctly certify
+  that returned citations are real and correctly quoted. Two verified misses on
+  otherwise-clean reports: **ADAMTSL1**'s `PMID:22242013`, which holds the only molecular-function
+  experiment ever done on the human protein (a measured SPR negative) and is cited seven times in
+  the review; and **ACTG2**'s `PMID:38820162`, a 2024 cryo-EM study supplying four of five proposed
+  new annotations and cited 29 times. Both absent from the report **and** from GOA.
+- **Recall does not depend on how well-studied the gene is** — 52% / 50% / 56% across dark,
+  medium and well-studied bands. The apparent dark-gene collapse in the sorted per-gene table is a
+  small-denominator artifact (genes with one novel reference score 0% or 100%). What changes with
+  curation depth is the *consequence* of a miss: on a dark gene, half the literature can be the
+  difference between one functional experiment and none.
+- **Six reports returned zero PMIDs** (AADACL2/3/4, ACP7, ACTL10, ACTR8) — including a whole
+  paralogue family — and are not flagged as failures. ACTL10's empty report carries
+  `gates_passed: True`, which is vacuously true and reads as success.
+
+**Takeaway:** consistent with the FA-cohort result — the narrative is the product and it earns its
+keep — but it cannot be the literature search. The decisive paper for a sparsely-annotated gene is
+usually titled for a partner, complex, or paralogue, so search those independently.
 
 ## Failure-mode taxonomy (verified by inspection)
 

@@ -72,3 +72,15 @@ Core: GO:0004581 MF (ACCEPT), GO:0006488 / GO:0006487 BP (ACCEPT), GO:0005789 ER
   It is a large-scale MS localization to bulk membrane; keep as non-core / over-annotated
   relative to the specific ER-membrane term. MARK_AS_OVER_ANNOTATED (redundant with specific CC).
 - GO:0005515 protein binding x4: MARK_AS_OVER_ANNOTATED (viral interactome, non-informative).
+
+## Horse-pair evidence and exact protein model
+
+The selected horse ALG5 A0A5F5PM72 retains the N-terminal hydrophobic membrane anchor, but the 294-aa sequence deletes canonical human residues 95–124. The remaining 294 residues align at 94.6% identity. Do not equate sequence-family identity with demonstrated activity of a deletion-bearing model. The horse GOA enzyme activity is UNDECIDED pending model/structure validation; ER membrane residence remains supported by the preserved anchor.
+
+[PMID:10359825](https://pubmed.ncbi.nlm.nih.gov/10359825/), DOI [10.1073/pnas.96.12.6982](https://doi.org/10.1073/pnas.96.12.6982), studies BOTH ALG5 and ALG6 despite its ALG6-focused title. “Expression of the human ALG5 and ALG6 cDNA could partially complement the respective S. cerevisiae alg5 and alg6 deficiency.” This supports human ALG5 glucose-donor pathway identity and demonstrates why title-only paralog attribution is unsafe. The independent human UniProt biochemical statement is explicitly experimental-source-derived, not ARBA.
+
+The ProtNLM paragraph instead describes GDP-mannose transfer and DPM synthase, which are not established properties of this ALG5-family sequence. The internal deletion does not itself establish conversion to a GDP-mannose-dependent enzyme. No horse functional paper was identified; human deep research is prioritized.
+
+## Research synthesis
+
+The human Falcon synthesis supports UDP-glucose-dependent dolichyl-phosphate glucosylation and separates yeast topology experiments from direct human evidence. Its disease survey emphasizes the 2024 p.Arg79Trp founder pedigrees, but the independently cached PMID:35896117 establishes earlier monoallelic ALG5 disease and impaired polycystin-1 maturation. The current biological summary therefore describes the verified dominant kidney phenotype and does not assert an unverified ALG5-CDG diagnosis or experimentally settled human membrane topology.

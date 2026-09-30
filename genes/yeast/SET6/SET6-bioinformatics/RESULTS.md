@@ -94,8 +94,9 @@ MYND domain, so a full MYND ZF could not be confirmed here.
 - **What is NOT supported:** sequence integrity says nothing about the **substrate** or
   the **biological role**. No in-vitro or in-vivo methyltransferase activity, and no
   substrate, has been demonstrated for SET6 in the literature. A generic "histone
-  methyltransferase activity" is unsupported — the SMYD family (and SETD6) act largely on
-  **non-histone** substrates, and Set6's substrate is explicitly listed as unknown.
+  methyltransferase activity" is unsupported -- Set5 is an H4 lysine methyltransferase
+  and mammalian SMYD proteins have both histone and non-histone targets, while Set6's
+  substrate is explicitly listed as unknown.
 - Motif conservation is necessary but not sufficient for activity; the only way to settle
   competence is an enzymatic assay.
 

@@ -6,7 +6,9 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
+from ai_gene_review.source_tree import review_snapshot_tree
 from scripts.gogpt_compare_levels import (
     build_comparison,
     get_core_terms_from_document,
@@ -83,11 +85,8 @@ def test_core_term_extraction_covers_every_go_valued_slot() -> None:
     }
 
 
-def test_post_review_terms_include_new_go_terms_and_respect_exclusions(
-    tmp_path: Path,
-) -> None:
-    review = tmp_path / "gene-ai-review.yaml"
-    review.write_text(
+def test_post_review_terms_include_new_go_terms_and_respect_exclusions() -> None:
+    review = yaml.safe_load(
         """
 existing_annotations:
   - term: {id: GO:0000001}
@@ -108,18 +107,21 @@ core_functions:
     assert get_post_review_terms(review) == {"GO:0000001", "GO:0000004"}
 
 
-def test_committed_three_level_report_matches_current_reviews() -> None:
-    details, stats = build_comparison(REPO_ROOT)
+def test_committed_three_level_report_matches_review_snapshot(
+    forbid_working_tree_genes: None,
+) -> None:
+    details, stats = build_comparison(review_snapshot_tree(REPO_ROOT))
     committed = json.loads(
         (REPO_ROOT / "reports/gogpt-comparison-levels.json").read_text()
     )
 
     assert committed == details
-    assert len(details) == 299
+    assert len(details) == 296
+    # Pinned at review_snapshot_commit in benchmark-policy.yaml; bump via `just refresh-benchmark-snapshot`.
     assert stats == {
-        "goa": {"overlap": 1040, "total": 2960, "pred": 8871},
-        "post_review": {"overlap": 859, "total": 2767, "pred": 8871},
-        "core": {"overlap": 349, "total": 1224, "pred": 8871},
+        "goa": {"overlap": 1020, "total": 2844, "pred": 8806},
+        "post_review": {"overlap": 849, "total": 2672, "pred": 8806},
+        "core": {"overlap": 355, "total": 1206, "pred": 8806},
     }
 
 

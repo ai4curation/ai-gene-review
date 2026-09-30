@@ -1,10 +1,31 @@
 ---
 title: "Top-Nots: Candidate NOT Annotations from Existing Reviews"
-maturity: MATURE
-tags: [PIPELINE]
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
 species: [human, mouse, yeast, SCHPO, DROME, ANOGA, ACET2, BACSU, DESVH, ECOLI, METEA, METTP, PSEAE, PSEPK, SALTY, CANGA, CLOCL, ARATH, worm]
+manifest:
+  slides:
+    - href: TOP_NOTS/slides/TOP_NOTS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Dcpr2BwERF8TFxPXiUiycg
+      title: Project brief
 ---
 # Top-Nots: Candidate NOT Annotations from Existing Reviews
+
+**Bottom line:** a NOT annotation states that a gene product lacks a function, and it is
+the only thing that stops automated pipelines from re-asserting a wrong activity by IEA
+or IBA. Many of the repo's ~6,319 REMOVE and MARK_AS_OVER_ANNOTATED decisions are really
+negative findings, so we mined them for the strongest NOT candidates with a keyword score
+over the review summaries ("lacks catalytic", "pseudoenzyme", "no detectable activity"
+and similar). We did this because a REMOVE only cleans one review, while a NOT, filed
+upstream, prevents the same error from propagating again. The scan (2026-03-06) found
+250 candidates across 19 species, 115 strong (score 4 or more) and 22 very strong,
+dominated by pseudo-enzymes, "is phosphorylated" misread as "does phosphorylation", and
+assembly factors given the activity of their complex; 21 of the 22 Tier 1 rows are
+REMOVE in their reviews and one is MARK_AS_OVER_ANNOTATED. No candidate has yet been
+literature-verified or proposed as a formal NOT, so the list is a worklist, not a
+submission.
 
 ## Overview
 
@@ -113,7 +134,6 @@ with no active site (the catalytic residues are in their partner subunit).
 | human | RUNX3 | Q13761 | `GO:0006468` protein phosphorylation | IDA | 5 |
 | human | SLC3A2 | P08195 | `GO:0005975` carbohydrate metabolic process | IEA | 5 |
 | mouse | Dnaja3 | Q99M87 | `GO:0005524` ATP binding | IEA | 5 |
-| yeast | HST1 | P50111 | `GO:0004864` protein phosphatase inhibitor activity | IMP | 5 |
 
 ### Wrong Binding, Localization, and Process (score 4-5)
 

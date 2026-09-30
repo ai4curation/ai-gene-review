@@ -20,11 +20,22 @@ The curated review establishes that ral2 functions upstream of Ras1 in the **Ras
 
 BioReason misses the entire mating/conjugation biology, which is the experimentally characterized function (IMP and IGI evidence). The ubiquitin ligase hypothesis, while structurally plausible for a Kelch-BTB protein, has no experimental support for ral2.
 
-The localization claim of cytoplasm is also inconsistent with the curated review, which accepts endoplasmic reticulum (GO:0005783) as the experimentally determined localization (HDA, PMID:16823372).
+The localization claim of cytoplasm is unsupported. The curated review retains the
+high-throughput endoplasmic-reticulum annotation as UNDECIDED because the accessible
+PMID:16823372 record does not expose the Ral2-specific image or classification; it
+does not establish either ER or cytoplasm as a core functional location.
 
 Comparison with interpro2go:
 
-There are no interpro2go (GO_REF:0000002) annotations in the curated review for ral2. The existing IBA annotations come from PANTHER (GO_REF:0000033) and are noted as being from an **incorrect family assignment** (PTHR43503, Peroxiredoxin family), leading to erroneous peroxidase activity, cell redox homeostasis, and cytosol annotations -- all marked REMOVE. BioReason avoids the peroxiredoxin error (which is good) but instead fabricates an equally unsupported ubiquitin ligase narrative. BioReason correctly identifies the Kelch-BTB architecture, which interpro2go missed entirely due to the wrong PANTHER family, but then goes wrong on the functional inference.
+There are no interpro2go (GO_REF:0000002) annotations in the curated review for ral2.
+PANTHER places Ral2 in the Mds3-related subfamily PTHR43503:SF2 of a heterogeneous
+family that also contains peroxiredoxins. PAINT now records explicit loss edges for
+peroxidase activity, cytosol, and cell redox homeostasis before the Ral2/Mds3 node,
+so those obsolete redox annotations are absent from current GOA. The surviving IBA
+to conjugation is appropriate. BioReason avoids the ancestral peroxiredoxin functions
+but instead substitutes an unsupported ubiquitin-ligase narrative. It recognizes the
+Kelch/BTB-like architecture, then over-interprets fold-level similarity as a specific
+biochemical mechanism.
 
 ## Notes on thinking trace
 

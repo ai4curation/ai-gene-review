@@ -1,0 +1,11 @@
+# CG31099 / Q8IMT2
+
+Q8IMT2 maps to FlyBase FBgn0051099 and CG31099, with historical CG10551 naming. [PMID:32540344](https://pubmed.ncbi.nlm.nih.gov/32540344/), DOI https://doi.org/10.1016/j.ibmb.2020.103429, states: “We propose the hypothesis that members of the arthropod-specific ecdysteroid kinase-like (EcKL) gene family encode detoxicative kinases.” The standard cache is abstract-only. Its broad hypothesis is not evidence for CG31099-specific ecdysteroid 22phosphorylation. The existing TAS and the broader ProtNLM process both remain unresolved; no catalytic loss is alleged. No specific core function is asserted because none has been established. The CHK-domain name is not interpreted as proof of choline kinase substrate specificity.
+
+## Sequence and research provenance
+
+The selected frozen UniProt record is retained in [CG31099-uniprot-source.json](CG31099-uniprot-source.json), with the complete original prediction metadata in [CG31099-predictions-source.json](CG31099-predictions-source.json). It maps the exact accession to this FlyBase gene; current sequence identity does not establish the historical predictor input. Gene-level experiments support conserved functions unless a relevant isoform difference is established. Falcon research was requested with perplexity-lite fallback alongside publication caching. Primary publications and sequence observations, rather than AI summaries or ARBA assertions, support the curated conclusions.
+
+## Research readback and broader phylogenomic evidence
+
+The completed Falcon report was inspected. It finds CG31099/Dro14-0 in the 2020 preprint and a preliminary RNAi developmental-lethality phenotype, but no defined reaction. Its biological conclusion agrees with the primary-source uncertainty assessment; the report is not used as an independent assay. [PMID:38291829](https://pubmed.ncbi.nlm.nih.gov/38291829/) is now cached with full text. The 2024 phylogenomics study resolves 13 EcKL subfamilies and places the two biochemically characterized ecdysteroid kinases in different subfamilies. Neither CG31099 nor CG10551 is named in its main text. Thus membership of the broad family does not establish a steroid substrate or validate the target kinase without finer evolutionary placement. No specific catalytic loss or inactivity is claimed.

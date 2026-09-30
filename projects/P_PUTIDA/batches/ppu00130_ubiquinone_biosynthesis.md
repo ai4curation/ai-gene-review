@@ -82,4 +82,23 @@ OpenScientist status:
   explicitly homology- and pathway-supported assignment because the KT2440
   protein itself has not been assayed.
 
+Module repair (2026-09-01):
+
+- Narrowed both UbiG annotons from `PTHR43464` to the verified
+  `PTHR43464:SF19` placement shared by KT2440 Q88M10 and reviewed E. coli
+  P17993.
+- Narrowed UbiE from `PTHR43591` to `PTHR43591:SF24`, shared by KT2440 Q88D17
+  and reviewed E. coli P0A887; the existing `PTN001297884` assertion remains
+  grounded by the local PAINT IBD export.
+- Retained the official subfamily labels verbatim even though they say
+  "mitochondrial"; the bacterial exemplars establish that this wording is not
+  a localization claim for the module.
+- Modeled UbiF and Coq7 as lineage-specific alternatives for late C-3
+  hydroxylation, rather than requiring the Pseudomonas Coq7 replacement in all
+  bacterial implementations; the UbiF branch is grounded by its reviewed E.
+  coli exemplar rather than the distinct Coq7 EC/Rhea reaction.
+- Added direct E. coli UbiG and UbiE evidence, documented residual SF19/SF24
+  heterogeneity, retained supported UbiC cytoplasm localization in the core
+  function, and marked the more specific cytosol transfer as over-annotated.
+
 Generated UTC: 2026-07-19T02:51:10Z

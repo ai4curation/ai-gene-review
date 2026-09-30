@@ -1,11 +1,43 @@
 ---
 title: "Yeast Epigenetics & Histone Inheritance"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+genes: [GCN5, ESA1, SAS2, SAS3, RPD3, HDA1, HST1, HST2, SIR2, SIR3, SIR4, ORC1, SET1, DOT1, SPT16, POB3, ASF1, RTT109, SWI1, SWI2, SWI3, SNF5, CHD1, RCO1, PHD1]
+manifest:
+  slides:
+    - href: YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LzuMfM7j89Dimy9hz3Kg2U
+      title: Project brief
 ---
 
 # Yeast Epigenetics & Histone Inheritance
+
+**Bottom line:** budding yeast keeps silent and active chromatin states
+through cell division with a small set of histone writers, erasers, readers,
+chaperones and remodelers. We planned reviews of *S. cerevisiae* genes in
+those classes (acetyltransferases, deacetylases, SIR silencing proteins,
+methyltransferases, FACT and other chaperones, SWI/SNF and CHD1, and the
+Rpd3S reader RCO1) to test how well GO captures their chromatin functions. 25 of them
+now have reviews, covering 1,255 existing annotations: 778 ACCEPT, 288
+KEEP_AS_NON_CORE, 132 REMOVE, 30 MARK_AS_OVER_ANNOTATED, 11 MODIFY and 16
+UNDECIDED. Most removals (110 of 132) are generic `protein binding`
+(GO:0005515) rows; the substantive corrections were the SAS2 and SAS3
+substrate specificities and a mis-filed HST1 review that was in fact ZDS1.
+Two gaps remain. The CAF-1 chromatin assembly factor, whose subunits are
+RLF2 (alias CAC1), CAC2 and MSI1, has no reviews yet; these are pending. (A
+folder formerly named `genes/yeast/CAF1/` held the unrelated CCR4-NOT
+deadenylase, now renamed POP2; it is not part of this project.) CLR4 is a
+fission yeast gene with no *S. cerevisiae* review. PHD1, filed below as a
+histone reader, is not one: the name means "pseudohyphal determinant", it
+has no PHD finger, and its review describes an APSES-family transcription
+factor that controls pseudohyphal growth.
+
+The "29 genes" and per-phase counts in the Progress section below come from
+the December 2025 run and predate later re-reviews; the numbers above are
+recounted from the current review files.
 
 ## Overview
 
@@ -18,7 +50,7 @@ This project reviews *Saccharomyces cerevisiae* genes central to **epigenetic me
 3. **Histone Deacetylases (HDACs)** - Rpd3, Hda1, sirtuins (SIR2/HST family)
 4. **Histone Methyltransferases & Demethylases** - SET domain proteins
 5. **Chromatin Remodelers** - SWI/SNF, ISWI, CHD1, INO80 complexes
-6. **Histone Chaperones** - FACT, CAF1, ASF1 (histone recycling and deposition)
+6. **Histone Chaperones** - FACT, CAF-1 (RLF2/CAC1, CAC2, MSI1), ASF1 (histone recycling and deposition)
 7. **Silent Chromatin & Heterochromatin** - SIR proteins, H3K9 methylation (mating type locus, rDNA)
 8. **Memory-Driving Mechanisms** - Self-perpetuating histone modifications and feedback loops
 
@@ -43,7 +75,7 @@ This project reviews *Saccharomyces cerevisiae* genes central to **epigenetic me
 
 # STATUS
 
-Last updated: 2025-12-30
+Last updated: 2026-08-12
 
 ## Genes to Review
 
@@ -56,7 +88,7 @@ Last updated: 2025-12-30
 ### Histone Deacetylases (HDACs)
 - [ ] RPD3 - Reduced potassium dependency (HDAC, class I)
 - [ ] HDA1 - Histone deacetylase (HDAC, class II)
-- [ ] HST1 - Histone deacetylase sirtuin (NAD+-dependent, class III)
+- [x] HST1 - Histone deacetylase sirtuin (NAD+-dependent, class III)
 - [ ] HST2 - Histone deacetylase sirtuin (NAD+-dependent)
 - [ ] SIR2 - Silent information regulator (NAD+-dependent deacetylase, master regulator)
 
@@ -73,7 +105,9 @@ Last updated: 2025-12-30
 ### Histone Chaperones & Recycling (FACT Complex & Associated)
 - [ ] SPT16 - Facilitates chromatin transcription (FACT component, H2A/H2B transfer)
 - [ ] POB3 - Promoter of basal transcription (FACT component, SSRP1 homolog)
-- [ ] CAF1 - Chromatin assembly factor (histones H3/H4 deposition)
+- [ ] RLF2 (alias CAC1) - CAF-1 large subunit (H3/H4 deposition) - review pending
+- [ ] CAC2 - CAF-1 subunit - review pending
+- [ ] MSI1 - CAF-1 subunit (WD40, RbAp48 homolog) - review pending
 - [ ] ASF1 - Anti-silencing function protein (H3/H4 chaperone)
 - [ ] RTT109 - H3K56 acetyltransferase (newly synthesized histone acetylation)
 
@@ -86,7 +120,7 @@ Last updated: 2025-12-30
 
 ### Histone Modifications - Readers & Adaptors
 - [ ] RCO1 - Regulator of chromatin organization (H3K4me3 reader)
-- [ ] PHD1 - Plant homeodomain (histone modification reader)
+- [ ] PHD1 - Pseudohyphal determinant; APSES transcription factor (not a histone reader, despite the name)
 
 ## Progress
 
@@ -103,7 +137,7 @@ Last updated: 2025-12-30
   - SWI3: 40 annotations → 18 ACCEPT (45%)
   - SNF5: 36 annotations → 20 ACCEPT (55.6%)
   - CHD1: 65 annotations → 52 ACCEPT (80%)
-- Phase 7 (Histone Readers): 2/2 - 41 annotations, 22 ACCEPT (54%)
+- Phase 7 (RCO1 reader + PHD1 TF): 2/2 - 41 annotations, 22 ACCEPT (54%)
   - RCO1: 28 annotations → 11 ACCEPT (39.3%)
   - PHD1: 13 annotations → 11 ACCEPT (84.6%)
 
@@ -145,7 +179,7 @@ Last updated: 2025-12-30
 
 **Phase 6 Summary**: 257 annotations, 159 ACCEPT (61.9%), reveals SWI/SNF complex annotation heterogeneity
 
-### Phase 7 - Histone Readers (RCO1, PHD1)
+### Phase 7 - Histone Reader RCO1, plus PHD1 (APSES TF, mis-filed here)
 
 **RCO1 (Regulator of Chromatin Organization 1 - H3K4me3 reader)**
 - 28 annotations → 11 ACCEPT (39.3%), 13 KEEP_AS_NON_CORE, 1 MODIFY
@@ -153,7 +187,7 @@ Last updated: 2025-12-30
 - Modification: GO:0006357 too broad - should be "chromatin organization" or "antisense regulation"
 - Core: H3K4me3 recognition, Rpd3S complex component, cryptic transcription suppression
 
-**PHD1 (Plant HomeoDomain 1 - H3me reader / transcription factor)**
+**PHD1 (Pseudohyphal Determinant 1 - APSES transcription factor; no PHD finger, not a histone reader)**
 - 13 annotations → 11 ACCEPT (84.6%), 2 KEEP_AS_NON_CORE
 - Excellence: Highest ACCEPT rate in Phase 7, well-characterized master regulator
 - Core: Sequence-specific DNA binding, positive transcription regulation, pseudohyphal growth regulation
@@ -166,7 +200,7 @@ Last updated: 2025-12-30
 - Single-function enzymes (HDACs, methyltransferases): 70-84% ACCEPT
 - Multi-subunit complexes (SWI/SNF, FACT): 55-65% ACCEPT
 - Histone chaperones (ASF1, RTT109): 47-81% ACCEPT
-- Histone readers (RCO1, PHD1): 39-85% ACCEPT
+- Phase 7 (reader RCO1; PHD1 is an APSES TF, not a reader): 39-85% ACCEPT
 - Chromatin remodelers (CHD1, SWI2): 68-80% ACCEPT
 
 **Common Annotation Issues Across All Phases:**
@@ -218,7 +252,7 @@ Last updated: 2025-12-30
 - 47 total annotations → 22 ACCEPT (46.8%), 24 KEEP_AS_NON_CORE (51.1%), 1 OVER_ANNOTATED (2.1%)
 - Core functions: H3/H4 dimer chaperone (distinct from FACT's H2A/H2B), replication-dependent nucleosome assembly, transcription-coupled recycling
 - Challenge: Lowest ACCEPT rate (47%) due to pleiotropic roles and overlap with multiple functional partners
-- Key insight: Hub protein interacting with CAF1, FACT, RTT109, SIR proteins; central to epigenetic memory maintenance
+- Key insight: Hub protein interacting with CAF-1, FACT, RTT109, SIR proteins; central to epigenetic memory maintenance
 
 **RTT109 (H3K56 Acetyltransferase)**
 - 70 total annotations → 57 ACCEPT (81.4%), 12 KEEP_AS_NON_CORE (17.1%), 1 OVER_ANNOTATED (1.4%)
@@ -229,7 +263,7 @@ Last updated: 2025-12-30
 **Phase 5 Summary**: 205 annotations across 4 genes, 127 ACCEPT (61.9%), reveals complexity of histone chaperone network and generic annotation over-representation
 
 ### Deep Research Completion
-- All 7 genes (SET1, DOT1, SPT16, POB3, ASF1, RTT109, CAF1) have Perplexity deep research files
+- All 6 genes (SET1, DOT1, SPT16, POB3, ASF1, RTT109) have Perplexity deep research files (a seventh, filed under CAF1, was for the POP2 deadenylase, not the chromatin assembly factor)
 - Cyberian (Claude) deep research encountered technical issues - Perplexity research sufficient for comprehensive reviews
 - Research files available in each gene folder: `*-deep-research-perplexity.md`
 
@@ -241,9 +275,9 @@ Last updated: 2025-12-30
 5. **Newly-synthesized histone modifications** (RTT109 H3K56ac) are distinct from chromatin-incorporated modifications
 
 ### Issues Identified & Notes
-- **CAF1 nomenclature collision**: Repository contains POP2 (mRNA deadenylase) under "CAF1" name, not chromatin assembly factor histone chaperone - requires clarification for future use
+- **CAF1 nomenclature collision (resolved)**: the folder named "CAF1" held POP2 (CCR4-NOT mRNA deadenylase, P39008), not the chromatin assembly factor; it was renamed `genes/yeast/POP2/` (PR #3236). The CAF-1 histone chaperone subunits RLF2 (CAC1), CAC2 and MSI1 are pending reviews
 - **SAS2/SAS3 substrate corrections**: Successfully corrected project description errors (H3K9 → H4K16/H3K14)
-- **HST1 nomenclature error**: P50111 is ZDS1 kinase, not sirtuin - noted in Phase 2
+- **HST1 nomenclature error corrected and canonical review completed**: P50111/YMR273C is the PP2A-Cdc55 regulator ZDS1, not the sirtuin HST1; its review was moved to `genes/yeast/ZDS1/`. Canonical HST1 (P53685/YOL068C) now has a separate literature-backed review.
 
 ## 2025-12-31
 
@@ -272,21 +306,26 @@ Last updated: 2025-12-30
 **Phase 2 - Histone Deacetylases (HDACs)**
 - RPD3: 160 annotations → 85 ACCEPT (53%)
 - HDA1: 38 annotations → 27 ACCEPT (71%)
-- HST1: 40 annotations → 26 ACCEPT (65%) [Note: P50111 is ZDS1 kinase, not sirtuin]
+- ZDS1 (formerly misfiled as HST1): 27 consolidated review entries → 9 ACCEPT,
+  11 KEEP_AS_NON_CORE, 7 MARK_AS_OVER_ANNOTATED. The corrected review retains
+  direct ZDS1 evidence for PP2A-Cdc55 inhibition and secondary heterochromatin effects,
+  and synthesizes a PP2A-Cdc55 spatial-regulation core function; these
+  results do not represent the sirtuin HST1.
+- HST1 (canonical P53685/YOL068C): 38 annotations → 15 ACCEPT, 8 KEEP_AS_NON_CORE, 11 MARK_AS_OVER_ANNOTATED, 2 REMOVE, 2 UNDECIDED. The review distinguishes native Sum1-Rfm1-Hst1 promoter repression from conditional Sum1-1 mating-type silencing and rejects Sir2-derived telomeric inferences.
 - HST2: 26 annotations → 21 ACCEPT (81%)
 - SIR2: 79 annotations → 50 ACCEPT (63%)
 
 ### Critical Corrections Made
 1. SAS2/SAS3 substrate specificity: Corrected from H3K9 to H4K16/H3K14
-2. HST1 nomenclature: Identified P50111 as ZDS1 kinase, not histone deacetylase
+2. HST1 nomenclature and function: Identified P50111/YMR273C as ZDS1, then reviewed canonical HST1/P53685 as a locus-specific NAD-dependent deacetylase whose main context is the Sum1-Rfm1-Hst1 repressor rather than Sir2-like regional silencing
 3. Generic protein binding annotations: Systematically marked as non-core
 4. Phylogenetic inference errors: Corrected SAS2 complex assignment
 
 ### Next Phases (4-7)
 - Phase 4: Histone Methyltransferases (SET1, DOT1, CLR4)
-- Phase 5: Histone Chaperones & FACT (SPT16, POB3, CAF1, ASF1, RTT109)
+- Phase 5: Histone Chaperones & FACT (SPT16, POB3, CAF-1 [RLF2, CAC2, MSI1], ASF1, RTT109)
 - Phase 6: Chromatin Remodelers (SWI1, SWI2, SWI3, SNF5, CHD1)
-- Phase 7: Histone Readers (RCO1, PHD1)
+- Phase 7: Histone Reader RCO1 (PHD1 is an APSES TF, not a reader)
 
 ## 2025-12-30
 

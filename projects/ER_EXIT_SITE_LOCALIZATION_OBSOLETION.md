@@ -2,9 +2,41 @@
 title: "Protein Localization to ER Exit Site — Obsoletion"
 maturity: IN_PROGRESS
 tags: [OBSOLETION, FLAGSHIP]
+species: [human, yeast]
+genes: [LRRK2, BCAP31, YET2]
+manifest:
+  slides:
+    - href: ER_EXIT_SITE_LOCALIZATION_OBSOLETION/slides/ER_EXIT_SITE_LOCALIZATION_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/7CCaYcKNiv414UEVhwVRFX
+      title: Project brief
 ---
 
 # Protein Localization to ER Exit Site — Obsoletion
+
+**Bottom line:** GO has obsoleted the process term GO:0070973 *protein
+localization to endoplasmic reticulum exit site*, because curators had used it
+for four different things: COPII coat assembly (SEC16A), ER-to-Golgi transport
+(MIA3, GBF1), regulation of that transport (LRRK2) and ER quality control
+(Bcap29/Bcap31). There is no single replacement, so we mapped each of the 10
+curated annotations to the term the upstream plan proposes (GO:0048208,
+GO:0006888, GO:0060628, GO:0034976, or deletion) and checked which reviews in
+this repo use the term. Two reviews annotate it. Human BCAP31 already marks
+its IBA row MARK_AS_OVER_ANNOTATED, so its review needs no change. A third
+reviewed gene, yeast YET2 (a BCAP29/BCAP31-family member descending from the
+same PANTHER node PTN000294723), carries the same IBA in its cached UniProt
+record but not in its GOA file or review; the obsoletion removes it. Human LRRK2 had
+two GO:0070973 rows marked ACCEPT (IEA GO_REF:0000120 and IMP PMID:25201882). Both
+now MODIFY to GO:0060628 *regulation of ER to Golgi vesicle-mediated transport*,
+fixed in #3241 (merged).
+The obsoletion has now landed (OLS lists GO:0070973 as obsolete, with
+context-dependent replacements), so the "OPEN" ticket status below is out of
+date.
+
+The term also carried about 14,400 IEA and IBA annotations driven by one
+UniRule mapping, so the cleanup reaches much further than the curated count
+suggests.
 
 ## Overview
 
@@ -98,8 +130,8 @@ the volume shows how far a handful of curated annotations has propagated.
 The curated annotations fall into biologically distinct classes:
 
 - **COPII coat-assembly scaffolds** — SEC16A / SEC16 / sec-16A.1 organize ER
-  exit sites and template the COPII coat. The right MF/BP is COPII vesicle
-  coat assembly (`GO:0048208`), not a "localization" term.
+  exit sites and template the COPII coat. The right term is the BP COPII
+  vesicle coat assembly (`GO:0048208`), not a "localization" term.
 - **Anterograde transport cargo/machinery** — MIA3/TANGO1 (`GO:0006888`),
   GBF1 (general vesicle-mediated transport). These are about the transport step
   itself.
@@ -123,15 +155,19 @@ The curated annotations fall into biologically distinct classes:
 ## Impact on this repo
 
 Two affected gene products already have `*-ai-review.yaml` files that annotate
-`GO:0070973` (verified 2026-05-29):
+`GO:0070973` (verified 2026-05-29). A later `grep -rl GO:0070973 genes/` over
+all file types adds a third reviewed gene, yeast YET2, whose only occurrence is
+the cached UniProt DR block:
 
 | Gene | Path | Relation to affected set | Current handling of GO:0070973 | Action when obsoletion lands |
 |---|---|---|---|---|
-| LRRK2 (human, Q5S007) | `genes/human/LRRK2` | Directly affected (row 7) | Two annotations — IEA (`GO_REF:0000120`) and IMP (PMID:25201882) — both `ACCEPT` with summary "LRRK2 regulates Sec16A at ER exit sites" | **MODIFY** → `GO:0060628` regulation of ER to Golgi vesicle-mediated transport, matching the upstream Q5S007 plan |
+| LRRK2 (human, Q5S007) | `genes/human/LRRK2` | Directly affected (row 7) | Two annotations — IEA (`GO_REF:0000120`) and IMP (PMID:25201882) — were `ACCEPT` with summary "LRRK2 regulates Sec16A at ER exit sites" | **MODIFY** → `GO:0060628` regulation of ER to Golgi vesicle-mediated transport, matching the upstream Q5S007 plan. Done in #3241 (merged): both rows MODIFY, supporting text now quotes the PMID:25201882 abstract sentence on anchoring Sec16A at ERES |
 | BCAP31 (human, Q61335 is the mouse ortholog) | `genes/human/BCAP31` | Ortholog of affected mouse Bcap31 (row 9); the human record's GO:0070973 is an IBA over-propagation | IBA already `MARK_AS_OVER_ANNOTATED` per go-annotation#6385 (over-propagation from PANTHER PTN000294723; core role is ER QC / translocon chaperone) | No change needed — already flagged; obsoletion removes the IBA. The curated mouse Bcap29/Bcap31 records remap to `GO:0034976`, consistent with the existing "ER quality control" rationale |
+| YET2 (yeast, YMR040W) | `genes/yeast/YET2` | BCAP29/BCAP31-family member; same PTN000294723 node (its GOA file carries three other IBA rows from it) | Only in `YET2-uniprot.txt:86` (`IBA:GO_Central`); absent from `YET2-goa.tsv`, so the review has no row for it | No change needed — same over-propagation BCAP31 flags; the obsoletion removes it |
 
-The human LRRK2 review will need a `MODIFY` pass once the obsoletion lands; the
-human BCAP31 review is already aligned with the upstream direction.
+The human LRRK2 `MODIFY` pass is done in #3241 (merged); the
+human BCAP31 review is already aligned with the upstream direction, and the
+YET2 IBA disappears with the term.
 
 ## Scope
 
@@ -150,8 +186,8 @@ human BCAP31 review is already aligned with the upstream direction.
 Listed in priority order. The first two already have reviews here and would be
 directly exercised by the obsoletion.
 
-1. **LRRK2 (human, Q5S007)** — already reviewed; needs a `MODIFY` of GO:0070973 →
-   `GO:0060628` (regulation of ER→Golgi transport). Highest-value, lowest-effort.
+1. **LRRK2 (human, Q5S007)** — already reviewed; the `MODIFY` of GO:0070973 →
+   `GO:0060628` (regulation of ER→Golgi transport) is fixed in #3241 (merged).
 2. **BCAP31 (human)** — already reviewed and `MARK_AS_OVER_ANNOTATED`; confirm
    alignment once obsoletion lands.
 3. **SEC16A (human, O15027)** — clean COPII coat-assembly case → `GO:0048208`;
@@ -169,9 +205,8 @@ directly exercised by the obsoletion.
    replacement terms already exist in GO (`GO:0048208`, `GO:0090114`,
    `GO:0006888`, `GO:0060628`, `GO:0034976`), so no NTR blocks this — unlike the
    mitochondrion-targeting-sequence-binding case.
-2. **Pre-stage the LRRK2 MODIFY** (GO:0070973 → `GO:0060628`) so the repo review
-   is ready the moment the term is obsoleted. Both LRRK2 GO:0070973 annotations
-   (IEA and IMP) should move together.
+2. **Apply the LRRK2 MODIFY** (GO:0070973 → `GO:0060628`). Both LRRK2 GO:0070973
+   annotations (IEA and IMP) move together; fixed in #3241 (merged).
 3. **Confirm BCAP31** stays `MARK_AS_OVER_ANNOTATED`; the curated mouse
    Bcap29/Bcap31 remap to `GO:0034976` is consistent with the human review.
 4. **Optionally seed SEC16A / MIA3 / GBF1 reviews** as the clean COPII / secretory
@@ -182,8 +217,8 @@ directly exercised by the obsoletion.
 ## Priority
 
 Low–medium. Only ~10 curated annotations, replacement terms already exist, and
-the two repo-resident genes (LRRK2, BCAP31) are already reviewed — LRRK2 just
-needs a one-line MODIFY and BCAP31 is already aligned. No curator group is
+the two repo-resident genes (LRRK2, BCAP31) are already reviewed — the LRRK2
+MODIFY is in #3241 (merged) and BCAP31 is already aligned. No curator group is
 blocked waiting on AI Gene Review. The large IEA/IBA tail (driven by the
 UniRule mapping) makes the cleanup more impactful than the small curated count
 suggests.
@@ -199,3 +234,10 @@ suggests.
   (needs MODIFY → `GO:0060628`) and human BCAP31 (already
   `MARK_AS_OVER_ANNOTATED` per go-annotation#6385). One UniRule mapping
   (`UR001349783`) needs retargeting/removal.
+- 2026-09-26 — LRRK2 refresh fixed in #3241 (merged): the two ACCEPT rows on
+  obsolete GO:0070973 (IEA `GO_REF:0000120`, IMP PMID:25201882) now MODIFY to
+  `GO:0060628`; the GOA `term.id` is unchanged and the live ERES localization
+  (GO:0070971) row is untouched. BCAP31's IBA row stays
+  `MARK_AS_OVER_ANNOTATED`. With #3241 merged, no review in this repo relies on
+  GO:0070973; remaining optional work is seeding SEC16A / MIA3 / GBF1 and
+  flagging `UR001349783`.

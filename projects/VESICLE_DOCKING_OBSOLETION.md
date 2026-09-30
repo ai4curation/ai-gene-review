@@ -2,9 +2,50 @@
 title: "Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)"
 maturity: IN_PROGRESS
 tags: [OBSOLETION]
+species: [human]
+genes: [USO1, STX12]
+manifest:
+  slides:
+    - href: VESICLE_DOCKING_OBSOLETION/slides/VESICLE_DOCKING_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/ScwarepnxD4tbNoBeWw92e
+      title: Project brief
 ---
 
 # Vesicle Docking BP Subtree — Obsoletion & MF Refactor (GO:0048278)
+
+**Bottom line:** A transport vesicle is first tethered at a distance,
+then docked against its target membrane, then fused. GO has retired the
+whole GO:0048278 *vesicle docking* process subtree (nine terms,
+including the regulation terms) because docking is the binding activity
+of specific proteins, and now asks curators to move annotations to one
+of two minted molecular functions: GO:0160321 *vesicle docking
+activity* or GO:7770062 *vesicle membrane tethering activity*. This is
+the parent tracker for go-annotation#6379; we recorded the upstream
+plan and group tallies, found the affected reviews in this repo, and
+queued canonical docking factors (STX1A, STXBP1, exocyst, NSF) as new
+reviews. The obsoletion has landed: OLS shows all nine terms obsolete
+(GO:0048278, GO:0048211, GO:0090384, GO:0006904, GO:0016081, GO:0061790
+and the regulation terms GO:0106020/21/22, which carry only a `consider`
+pointer to GO:0160321) and both MFs minted, so the "not yet applied",
+"placeholder", "not yet minted" and "likely retained regulatory BP" notes below are out of
+date. Both affected human reviews are fixed in #3237 (merged): the USO1
+IBA row on GO:0048211 *Golgi vesicle docking* moves from ACCEPT to
+MODIFY → GO:7770062 *vesicle membrane tethering activity* (p115 is the
+canonical Golgi tether), and the STX12 IBA row on GO:0048278 moves from
+ACCEPT to MODIFY → GO:0005484 *SNAP receptor activity*, with the
+obsolete BP dropped from its `core_functions`. STX12 was reviewed after
+this page was written. The new-review queue (STX1A, STXBP1, exocyst,
+NSF) has not started.
+
+Sibling trackers split the rest of the refactor:
+[SYNAPTIC_VESICLE_DOCKING_OBSOLETION](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md)
+handles the regulation sub-issue (#6415, mouse Camk2a),
+[VESICLE_TETHERING_OBSOLETION](VESICLE_TETHERING_OBSOLETION.md) the
+tethering step (#6375), and
+[VESICLE_TARGETING_OBSOLETION](VESICLE_TARGETING_OBSOLETION.md) the
+targeting terms that fold into transport processes (#6424).
 
 ## Overview
 
@@ -54,9 +95,9 @@ children).
 | vesicle docking | GO:0048278 | MF: GO:0160321 vesicle docking activity (placeholder) |
 | Golgi vesicle docking | GO:0048211 | MF: GO:0160321 |
 | phagosome-lysosome docking | GO:0090384 | MF: GO:0160321 |
-| regulation of vesicle docking | GO:0106020 | (likely retained regulatory BP) |
-| positive regulation of vesicle docking | GO:0106022 | (likely retained regulatory BP) |
-| negative regulation of vesicle docking | GO:0106021 | (likely retained regulatory BP) |
+| regulation of vesicle docking | GO:0106020 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
+| positive regulation of vesicle docking | GO:0106022 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
+| negative regulation of vesicle docking | GO:0106021 | obsolete; OLS `consider` GO:0160321 (no direct replacement) |
 | vesicle docking involved in exocytosis | GO:0006904 | MF: GO:0160321 |
 | synaptic vesicle docking | GO:0016081 | MF: GO:0160321 (docking) or the proposed "vesicle tethering activity" MF (not yet minted; see Overview) |
 | dense core granule docking | GO:0061790 | MF: GO:0160321 |
@@ -100,14 +141,15 @@ nine obsoleted IDs:
 
 | Gene | Organism | File | Affected row |
 |---|---|---|---|
-| **USO1** | human | `genes/human/USO1/USO1-ai-review.yaml` | GO:0048211 Golgi vesicle docking, IBA from `PANTHER:PTN000000707` / `SGD:S000002216`, currently `action: ACCEPT` |
+| **USO1** | human | `genes/human/USO1/USO1-ai-review.yaml` | GO:0048211 Golgi vesicle docking, IBA from `PANTHER:PTN000000707` / `SGD:S000002216`; was `ACCEPT`, `MODIFY` → GO:7770062 vesicle membrane tethering activity, fixed in #3237 (merged) |
+| **STX12** | human | `genes/human/STX12/STX12-ai-review.yaml` | GO:0048278 vesicle docking, IBA; was `ACCEPT` and in `core_functions`, row `MODIFY` → GO:0005484 SNAP receptor activity and core BP dropped, fixed in #3237 (merged) |
 
 Also tracked under the sibling project
 [`SYNAPTIC_VESICLE_DOCKING_OBSOLETION`](SYNAPTIC_VESICLE_DOCKING_OBSOLETION.md):
 
 | Gene | Organism | Affected row |
 |---|---|---|
-| Camk2a | mouse | two GO:0099148 rows currently `ACCEPT` (see that tracker) |
+| Camk2a | mouse | two GO:0099148 rows, was `ACCEPT`, `MODIFY` → GO:0048172 regulation of short-term neuronal synaptic plasticity, fixed in #3237 (merged; see that tracker) |
 
 The **USO1** annotation will need a refresh when the obsoletion lands. USO1
 (p115) is a *bona fide* Golgi vesicle tether/docking factor, so this is one
@@ -142,8 +184,9 @@ accessions before starting.
 ### Tier 1 — refresh required (already in repo)
 
 1. **USO1** (human, UniProt **O60763**) — `genes/human/USO1/`. The
-   GO:0048211 IBA row is currently `ACCEPT`; refresh once the obsoletion
-   lands. Likely a clean transfer to **GO:0160321 vesicle docking activity**
+   GO:0048211 IBA row was `ACCEPT`; fixed in #3237 (merged), which
+   chose the tethering MF GO:7770062 (the text below is the original
+   plan). Likely a clean transfer to **GO:0160321 vesicle docking activity**
    or the **proposed "vesicle tethering activity" MF** (not yet minted; see
    Overview — *not* GO:0099023, which is the CC "vesicle tethering complex").
    p115 is the canonical Golgi tether — see existing notes mentioning
@@ -245,3 +288,13 @@ whereas CaMKIIα is a regulator and forces a harder per-gene judgment.
   OLS; replacement MF **GO:0160321** not yet minted. Affected existing
   reviews: USO1 (human, in repo — needs refresh once obsoletion lands).
   No gene reviews started or refreshed yet under this tracker.
+- 2026-09-26 — Refresh of the two affected reviews fixed in #3237
+  (merged): USO1 GO:0048211 IBA row ACCEPT → MODIFY to GO:7770062 vesicle
+  membrane tethering activity; STX12 GO:0048278 IBA row ACCEPT → MODIFY
+  to GO:0005484 SNAP receptor activity, obsolete BP removed from
+  `core_functions`. Camk2a (sibling tracker) is in the same PR. GOA
+  `term.id`s are left as GOA supplies them. Tier 2/3 new reviews not
+  started, so maturity stays SCOPING.
+- 2026-09-27 — #3237 merged, so both affected reviews (USO1, STX12)
+  are refreshed on `main`. Maturity moves to IN_PROGRESS: the Tier-1
+  refresh is done and only the Tier 2/3 new-review queue remains.

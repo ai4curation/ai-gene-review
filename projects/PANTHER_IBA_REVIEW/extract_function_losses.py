@@ -125,7 +125,7 @@ def main() -> None:
     out = REPO / "projects" / "PANTHER_IBA_REVIEW" / "family_function_losses.tsv"
     cols = list(rows[0].keys())
     with out.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 

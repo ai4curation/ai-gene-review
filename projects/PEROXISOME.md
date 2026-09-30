@@ -1,11 +1,40 @@
 ---
 title: "Peroxisome Biogenesis Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
+genes: [PEX1, PEX2, PEX3, PEX5, PEX6, PEX7, PEX10, PEX11A, PEX11B, PEX11G, PEX12, PEX13, PEX14, PEX16, PEX19, PEX26]
+manifest:
+  slides:
+    - href: PEROXISOME/slides/PEROXISOME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/7Y2qKPFq916QDfjfp87CRG
+      title: Project brief
 ---
 
 # Peroxisome Biogenesis Project
+
+**Bottom line:** peroxisomes are built and maintained by the PEX proteins
+(peroxins), which insert membrane proteins, import matrix enzymes through a
+receptor-docking-recycling cycle, and divide the organelle; their loss causes
+Zellweger spectrum disorders. We reviewed every existing GO annotation on the
+16 human peroxins, in three phases: import and recycling, the RING ligases and
+docking complex, then membrane biogenesis and proliferation. All 16 reviews
+are in the repo (828 annotations: 579 accepted, 51 kept as non-core, 93 marked
+over-annotated, 28 modified, 64 removed, 11 NEW, 2 undecided). PEX39, a
+recently characterized PTS2-import factor that binds PEX7, has its own review
+but is outside this set. Generic `protein binding` was
+the dominant problem: 35 of PEX19's 37 removals and 17 of PEX5's 19
+over-annotations are `protein binding` IPI rows. The other recurring pattern
+was guilt by cargo or phenotype, where a peroxin is annotated to the metabolic
+process of the enzymes it imports or to a downstream knockout phenotype; these
+rows were mostly kept as non-core (PEX7 ether lipid biosynthesis, PEX13 neuron
+migration) rather than removed. The
+conserved machinery is modelled in the
+[peroxisome lifecycle module](../modules/peroxisome-lifecycle.html), and the
+obsoletion of the targeting-signal binding terms that affects PEX5, PEX7 and
+PEX19 is tracked separately.
 
 ## Overview
 

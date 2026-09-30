@@ -71,15 +71,21 @@ def run(scenario: Scenario) -> list[tuple]:
     rows = []
     for tissue, (active, basis) in scenario.assertions.items():
         def holds(atom, _t=tissue):
-            s = atom.gene_symbol
-            return bool(s) and matrix.get(s, {}).get(_t, 0.0) >= scenario.threshold
+            return any(
+                matrix.get(symbol, {}).get(_t, 0.0) >= scenario.threshold
+                for symbol in atom.gene_symbols
+            )
 
         ab = abduce(circuit, holds, asserted_active=active)
         # name the specific unexpressed atoms inside each gap step (precision)
         missing_atoms = {}
         for s in unsatisfied_steps(circuit, holds):
-            missing_atoms[step_id(s)] = sorted(
-                a.gene_symbol for a in iter_atoms(s) if a.gene_symbol and not holds(a))
+            missing_atoms[step_id(s)] = sorted({
+                symbol
+                for a in iter_atoms(s)
+                for symbol in a.gene_symbols
+                if symbol in matrix and matrix.get(symbol, {}).get(tissue, 0.0) < scenario.threshold
+            })
         rows.append((tissue, basis, ab, missing_atoms))
     return rows
 

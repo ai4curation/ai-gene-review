@@ -73,5 +73,62 @@ around the E2 (DBT) 24-meric transacylase core, to which multiple E1 (α2β2) an
 - GO:0016831 carboxy-lyase activity (TAS): correct but generic parent of the specific
   decarboxylase activity → MARK_AS_OVER_ANNOTATED / could MODIFY to GO:0003863.
 - No falcon deep-research file available at time of writing (recipe launched; polled).
-</content>
-</invoke>
+
+---
+
+## 2026-09-04 — PAINT no-IBA project finishing pass
+
+Reviewed every `existing_annotations` entry against the cached publications, the UniProt
+record and `BCKDHA-deep-research-falcon.md` (which had landed by the time of this pass).
+Status moved `INITIALIZED` → `COMPLETE`; validation is clean (`✓ Valid`, zero warnings,
+`--terms` included) and `update-status` now agrees.
+
+**Corrections made**
+
+- **Residue numbering was mislabelled as "mature".** The description and two annotation
+  summaries said Ser337 / TPP 158–336 / Mg 238,267,269 were "in mature numbering". They
+  are not: UniProt P12694 numbering is *precursor* numbering (TRANSIT 1..45, CHAIN
+  46..445), so Ser337 of the precursor is Ser292 of the mature chain — which is exactly
+  the "Ser292-alpha" the structural literature uses, and 45 residues away from what the
+  file claimed. Fixed in `description`, in the GO:0030976 and GO:0000287 summaries, and
+  in the corresponding `core_functions` description. Verified position-by-position
+  against the SQ block: 158 Y, 159 R, 207 S, 239 G, 240 A, 265 R, 336 H (ThDP);
+  238 E, 267 N, 269 Y (Mg2+); 206 S, 208 P, 211 T, 212 Q (structural K+); 337 S.
+- **`- No falcon deep-research file available`** — stale; the file exists and is now
+  cited. Also removed two stray XML-ish tags that had been left at the end of this file.
+
+**Additions**
+
+- New `action: NEW` annotation **GO:0030955 potassium ion binding** (IDA,
+  PMID:10745006). UniProt records four structural K+ BINDING sites on E1-alpha and the
+  structure paper states the ions were located and that one of them orders the
+  cofactor-proximal loop [PMID:10745006 "The position of two important potassium (K(+))
+  ions was determined."; "One of these ions assists a loop that is close to the cofactor
+  to adopt the proper conformation."]. Added as non-core (structural, not catalytic), so
+  it is deliberately *not* promoted into `core_functions`.
+- `supported_by` added to the previously bare magnesium `core_functions` entry.
+- `file:human/BCKDHA/BCKDHA-deep-research-falcon.md` and
+  `file:human/BCKDHA/BCKDHA-uniprot.txt` added to `references` with findings; the deep
+  research is marked `correctness: UNVERIFIED` because it is an LLM synthesis whose own
+  citation keys were not checked — it is used only where UniProt or PMID:10745006
+  independently corroborate it. It does cleanly document the subunit division of labour
+  at the cofactor site [file "The E1α subunit provides residues critical for binding the
+  diphosphate portion of thiamine pyrophosphate and associated divalent metal atoms,
+  while E1β subunits contribute residues that bind the thiazolium ring portion"].
+
+**Actions left unchanged after re-checking** — the five bare `protein binding` IPIs stay
+`MARK_AS_OVER_ANNOTATED` (all WITH/FROM P21953; the real content is the α2β2 tetramer,
+already carried by GO:0160157); GO:0016624 stays `MODIFY`→GO:0003863; GO:0016831
+carboxy-lyase stays `MARK_AS_OVER_ANNOTATED`. Note the earlier note in this file arguing
+that "E1 does NOT use a disulfide acceptor" is **wrong** — EC 1.2.4.4 sits in EC 1.2.4,
+"with a disulfide as acceptor", the acceptor being the lipoamide disulfide of E2, and
+GO:0003863 *is_a* GO:0016624. The MODIFY call is still right, but for the granularity
+reason only, and the YAML `reason` was already phrased that way.
+
+**Family context** — see `interpro/panther/PTHR43380/PTHR43380-review.yaml`. Two things
+worth carrying back here: (1) BCKDHA is no longer IBA-free — GOA now has IBAs for
+GO:0009083 (20260530) and GO:0160157 (20250904), matching the two PAINT rows; (2) PAINT
+still asserts **no molecular function** on the branched-chain side of PTHR43380, so
+GO:0003863 — the best-evidenced term this gene has — does not propagate. PANTHER also
+lumps bacterial pyruvate dehydrogenase E1-alpha (pdhA) into the same subfamily SF1 as
+BCKDHA, so any MF term must be placed at a PTN node rather than at SF1.

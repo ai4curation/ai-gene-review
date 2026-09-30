@@ -23,21 +23,27 @@ autolink_gene_symbols: false
 - SelD supplies selenophosphate, SerS charges tRNA(Sec), SelA converts the
   charged tRNA to Sec-tRNA(Sec), and SelB delivers it during UGA recoding.
 - The species-neutral module also records the distinct eukaryotic
-  PSTK-SEPSECS and SECISBP2-EEFSEC implementations as alternatives.
-- Sulfur assimilation, free selenocysteine catabolism, and downstream
-  selenoprotein reactions in the broad KEGG map are outside the boundary.
+  PSTK-SEPSECS and SECISBP2-EEFSEC implementation as one coupled alternative.
+- A single taxonomic `EXACTLY_ONE` choice prevents invalid hybrid routes while
+  leaving SelD/SEPHS2 and SerS/SARS shared before the branch.
+- tRNA(Sec), the SECIS RNA element, and the in-frame UGA context are required
+  non-protein substrates or conditions, not missing protein annotons.
+- Selenium uptake and selenide production, tRNA transcription and maturation,
+  ribosome biogenesis, free selenocysteine catabolism, and downstream
+  selenoprotein functions are outside the boundary.
 
 ## Required Workflow
 
 - [x] Curate or update the species-neutral module.
 - [x] Run module-level OpenScientist deep research.
-- [ ] Run module + pathway + PSEPK OpenScientist deep research.
+- [x] Run module + pathway + PSEPK OpenScientist deep research for wave113.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [ ] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway: [#2322](https://github.com/ai4curation/ai-gene-review/pull/2322).
-- [ ] Shepherd PR through review, CI, and merge readiness.
+- [x] Shepherd the earlier PR #2322 through merge.
+- [ ] Open and shepherd the wave113 repair PR.
 
 2026-07-26: OpenScientist timed out after 7200s for the module + pathway +
 PSEPK report; no report file was produced.
@@ -71,4 +77,86 @@ The checked rows are the four bacterial Sec-machinery proteins. Sulfur and
 methionine metabolism entries remain visible only as excluded candidates from
 the broad KEGG selenocompound map.
 
-Generated UTC: 2026-07-27T01:16:39.263687+00:00
+## 2026-09-01 Wave113 Repair
+
+### Reusable structure and scope
+
+The module retains `scope: CONCRETE`. In the module schema, CONCRETE covers a
+specific, leaf-grounded biological process as well as a taxon-scoped instance;
+it does not mean that the document must be restricted to one species. This
+module has exact reaction leaves and concrete reviewed exemplars, so ABSTRACT
+would incorrectly describe it as an intentionally ungrounded conformance motif.
+
+The previous model had independent `EXACTLY_ONE` choices for Sec-tRNA synthesis
+and insertion. Module-logic enumeration therefore permitted four combinations,
+including bacterial SelA with eukaryotic SECISBP2/EEFSEC and eukaryotic
+PSTK/SEPSECS with bacterial SelB. Wave113 replaces those independent choices
+with one coupled taxonomic `EXACTLY_ONE` branch. Route enumeration now yields
+exactly two routes:
+
+1. shared SelD/SerS, then bacterial SelA and SelB;
+2. shared SelD/SerS, then eukaryotic PSTK, SEPSECS, SECISBP2, and EEFSEC.
+
+Archaeal PSTK/SEPSECS chemistry is acknowledged but archaeal recoding remains a
+knowledge gap rather than an incomplete third branch.
+
+### Family and evolutionary grounding
+
+Exact PANTHER labels and membership were checked against
+`interpro/panther/panther.obo` and `panther-members.tsv`. Reviewed E. coli
+exemplars P16456 (SelD), P0A8L1 (SerS), P0A821 (SelA), and P14081 (SelB) add
+cross-species bacterial grounding; the existing human exemplars ground the
+eukaryotic and shared leaves. SelB remains grounded by
+`InterPro:IPR004535`, whose exact label is "Translation elongation factor,
+selenocysteine-specific", because the local PANTHER assignments do not place
+PSEPK Q88QJ7 in the PAINT bacterial SelB node.
+
+Only locally verified PAINT nodes with matching positive IBD rows were added:
+PTN000029003 for selenide, water dikinase activity, PTN000207214 for bacterial
+serine-tRNA ligase activity, PTN001284456 for bacterial SelA activity, and
+PTN002665097 for SECIS binding by SECISBP2. Candidate nodes lacking exact
+function or representative-seed support were omitted.
+
+The completed [module/pathway/taxon OpenScientist report](../deep-research/PSEPK__selenocysteine_biosynthesis_incorporation__ppu00450-deep-research-openscientist.md)
+finds the KT2440 bacterial route covered by `selD`, `serS`, `selA`, and `selB`
+and confirms that the KEGG ppu00450 bucket is over-broad. Its suggestion to add
+`selC` as a module gene is interpreted as an RNA-requirement observation:
+tRNA(Sec) is essential but is not a protein annoton. Its `fdoG` selenoprotein
+target is useful evidence that the route is biologically used, but downstream
+selenoprotein function remains outside this machinery module.
+
+### Independent annotation review
+
+The required independent annotation-reviewer pass covered every annotation,
+core function, supporting quotation, and local family claim for all four PSEPK
+reviews.
+
+| Gene | Wave113 disposition |
+|---|---|
+| `selD` | No change needed; all five annotations are coherent and the misleading SF0 display-name caveat is handled conservatively |
+| `serS` | No change needed; all three MODIFY decisions are true descendant narrowings and both tRNA(Ser) and tRNA(Sec) roles are captured |
+| `selA` | No change needed; GO:0001514 to GO:0001717 is a justified narrowing and the NEW PLP-binding proposal is supported |
+| `selB` | No change needed; both MODIFY decisions and the cautious unreviewed-entry framing are supported |
+
+The reviewer identified one module blocker: both SelB leaves used a paraphrased
+InterPro label. They now carry the exact InterPro name. It also confirmed that
+all module PANTHER labels and representative-member containments are exact and
+that molecular functions occur only on leaf annotons.
+
+### Wave113 research and validation
+
+- The generic OpenScientist module run completed normally in 1,599 seconds
+  with the full 7,200-second provider allowance; its report and HTML/PDF
+  artifacts were refreshed.
+- The PSEPK module/pathway/taxon run completed normally in 1,056 seconds with
+  the same allowance and produced the previously missing report and artifacts.
+- Both module validators pass. The semantic validator reports only advisory
+  warnings for unavailable NCBITaxon label lookup and the unconfigured
+  `InterPro` prefix; the exact InterPro label was independently verified.
+- `just validate PSEPK <gene>` passes for `selD`, `serS`, `selA`, and `selB`.
+- All 34 module-logic tests pass. Direct route enumeration asserts two routes
+  and identifies only SelD and SerS as shared core atoms.
+- The module, this batch page, and all four gene reviews render successfully.
+- The branch was fetched and explicitly rebased onto the latest `origin/main`
+  before the final validation pass. `git diff --check` passes, and generated GO
+  cache plus unrelated PANTHER-member noise are excluded.

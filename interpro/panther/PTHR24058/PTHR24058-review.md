@@ -55,12 +55,16 @@ HIPK subfamilies (SF17, SF43-SF53, SF45, SF46) encode homeodomain-interacting pr
 
 ## IBA Annotation Assessment
 
-Two IBA (GO_REF:0000033) annotations were propagated to the anchor gene **pom1 (Q09690, subfamily SF132)** via PANTHER node PTN008603465. Both are **cross-subfamily localization transfers**, and the seed evidence comes from non-cortical DYRK paralogs.
+Three IBA (GO_REF:0000033) annotations are now propagated to the anchor gene **pom1 (Q09690, subfamily SF132)**. The molecular-function assertion comes from the conserved DYRK catalytic branch at PTN000624408 and is well supported. The two cellular-component assertions come from the deeper PTN008603465 localization node and require subfamily-aware review.
 
-| GO ID | Label | Aspect | Seed subfamilies (other_sf) | Our action |
-|-------|-------|--------|-----------------------------|------------|
-| GO:0005737 | cytoplasm | CC | PTHR24058:SF35; PTHR24058:SF51 (2 seeds, 0 same-SF) | **KEEP_AS_NON_CORE** |
-| GO:0005856 | cytoskeleton | CC | PTHR24058:SF35 (1 seed, 0 same-SF) | **REMOVE** |
+| GO ID | Label | Aspect | PAINT node / evidence pattern | Our action |
+|-------|-------|--------|-------------------------------|------------|
+| GO:0004674 | protein serine/threonine kinase activity | MF | PTN000624408; broad DYRK branch with experimentally annotated Pom1 among the descendants | **ACCEPT** |
+| GO:0005737 | cytoplasm | CC | PTN008603465; cross-subfamily localization evidence | **KEEP_AS_NON_CORE** |
+| GO:0005856 | cytoskeleton | CC | PTN008603465; cross-subfamily localization evidence | **REMOVE** |
+
+**GO:0004674 (protein serine/threonine kinase activity) - ACCEPT.**
+This is the conserved-catalysis case. PAINT places the activity at PTN000624408, a DYRK-family branch whose descendants span fungi, animals and plants. Pom1 itself is one of the experimentally annotated descendants used to ground the node, which is expected for an IBA and is not circular: the IBA additionally asserts that the activity is inherited from the ancestral node. Multiple target-specific Pom1 annotations independently establish the same activity, including direct phosphorylation of cell-polarity substrates in vitro (PMID:25720772). The node placement and the target biology therefore both support the transfer.
 
 **GO:0005856 (cytoskeleton) - REMOVE (KNOWN TRUE POSITIVE error).**
 This is a genuine cross-subfamily over-propagation. The single seed for this term lies in **SF35 (DYRK3)**, none in Pom1's own SF132. DYRK3 associates with the pericentriolar material/centrosome and cytoskeleton-linked condensates, so a cytoskeleton location is reasonable *for DYRK3*. **Pom1, by contrast, is a peripheral plasma-membrane/cell-cortex kinase** whose gradient emanates from cell tips; its delivery depends on the Tea1-Tea4 microtubule landmark system but Pom1 is not itself a structural component of the cytoskeleton. The IBA is therefore an over-annotation propagated across an inappropriate functional boundary and is removed in the pom1 review. (See `genes/SCHPO/pom1/pom1-ai-review.yaml`, GO:0005856, action REMOVE.)
@@ -68,17 +72,17 @@ This is a genuine cross-subfamily over-propagation. The single seed for this ter
 **GO:0005737 (cytoplasm) - KEEP_AS_NON_CORE.**
 The two seeds lie in SF35 and SF51 (DYRK paralogs), again outside SF132. The term is not wrong - Pom1 is a cytoplasmic-face cortical protein - but it is far less specific and informative than the experimentally supported cell-cortex-of-cell-tip / plasma-membrane / site-of-polarized-growth locations. It is retained as non-core rather than removed because a cytoplasmic assignment is biologically defensible.
 
-**Calibration note.** This family illustrates the difference between the conserved-catalysis case and the localization-transfer risk. We do not challenge the conserved kinase molecular-function terms, but localization IBAs propagated from metazoan DYRK paralogs to the cortical fungal Pom1 require subfamily-aware review, and one (cytoskeleton) is a clear positive error.
+**Calibration note.** This family illustrates the difference between the conserved-catalysis case and the localization-transfer risk. The new PTN000624408 kinase IBA is accepted, while localization IBAs propagated from deeper DYRK ancestry to the cortical fungal Pom1 require subfamily-aware review, and one (cytoskeleton) is a clear positive error.
 
 ## Key Considerations for Curators
 
-1. Family-wide propagation is appropriate only for the catalytic/ATP-binding molecular-function terms.
+1. Family-wide propagation is appropriate for catalytic/ATP-binding molecular-function terms; the PTN000624408 `GO:0004674` placement is supported by Pom1's direct experimental activity.
 2. Localization and process terms must be gated by subfamily; nuclear (PRP4/HIPK), stress-granule/centrosomal (DYRK3) and cortical (Pom1) compartments are mutually exclusive.
 3. The Pom1 cytoskeleton IBA (GO:0005856) is a documented false transfer from the DYRK3 subfamily and should not be propagated to cortical fungal members.
 
 ## Review Status
 
-- **Date**: 2026-06-07
+- **Date**: 2026-09-01
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER metadata/entries, UniProt, S. pombe pom1 curated review, GOA IBA annotations, PANTHER_IBA_REVIEW propagation table

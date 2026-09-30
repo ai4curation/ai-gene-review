@@ -1,10 +1,40 @@
 ---
 title: "RHEA → GO Contribution & Gap Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+sidecars:
+  slide_charts:
+    - RHEA/slides/rhea-ec-masking.svg
+    - RHEA/slides/rhea-gap-pilot.svg
+manifest:
+  slides:
+    - href: RHEA/slides/RHEA-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/X9HRwXhBWGyMBDYHrcnios
+      title: Project brief
 ---
 
 # RHEA → GO Contribution & Gap Project
+
+**Bottom line:** RHEA reactions reach GO molecular function through the
+`rhea2go` mapping (`GO_REF:0000116`), but UniProt enzymes nearly always carry an
+EC number too, and `ec2go` already supplies the same GO term for 88% of reactions
+that have both. We measured where RHEA adds something EC does not (772 GO terms
+reachable only through RHEA, 462 reactions whose EC has no `ec2go` line), where
+reactions have no GO target at all (2,731 of 7,635 enzymatic reactions, 36%),
+and where the mapped term fails to reach reviewed entries. We then curated 132
+new RHEA-to-GO mappings, each backed by a reviewed enzyme: ready-to-add exact
+matches, four broad matches, and new-term suggestions where GO has no specific
+activity. Added to `rhea2go`, they would give 42 new annotations to Swiss-Prot
+entries; after scoring all remaining EC-bridge reactions, no cleanly mappable
+reviewed gap is left, so the remaining problem is missing GO terms rather than
+missing mappings. The SSSOM set validates; the forward cross-organism scan is
+still pending.
+
+We did this because RHEA is a reaction-grounded, curated source of enzyme
+function, and we needed to know whether its GO contribution is real or only
+duplicates EC before relying on it in gene reviews.
 
 ## Overview
 
@@ -148,7 +178,10 @@ only a class root — are in [RHEA-GAP-CASES.md](RHEA/RHEA-GAP-CASES.md): **PHYK
 GalNAc-T; propose new term; dystroglycanopathy gene), **SAMD8/SMSr** (the
 existing term `GO:0002950 ceramide phosphoethanolamine synthase activity` is
 simply not applied — pure propagation gap), and **SULT6B1** (only
-`sulfotransferase activity`; cautious fill given by-similarity evidence). Cases
+`sulfotransferase activity`; cautious fill given by-similarity evidence). Note:
+the current SAMD8 review no longer treats this as a clean gap: it finds that the
+`GO:0002950` definition specifies CDP-ethanolamine rather than
+phosphatidylethanolamine as the donor, and proposes a new term instead. Cases
 selected reproducibly by [`rhea_gap_finder.py`](RHEA/rhea_gap_finder.py).
 
 G1/G4 are mirror images: where EC and RHEA agree RHEA is redundant; where RHEA
@@ -169,7 +202,7 @@ term — are recorded in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), the sa
 ([RHEA-MAPPING-REVIEWS.md](RHEA/RHEA-MAPPING-REVIEWS.md)). The predicate encodes
 the specificity finding:
 
-- **`skos:exactMatch`** (111 rows) — the GO term *is* the reaction's activity;
+- **`skos:exactMatch`** (110 rows) — the GO term *is* the reaction's activity;
   ready-to-add `rhea2go` entries. Most are **EC-bridge supported**: `ec2go` maps
   the reaction's EC to this exact GO term and `rhea2ec` maps the reaction to that
   EC. Backed by enzymes such as biotinidase (BTD, biotinidase deficiency), TPMT
@@ -179,7 +212,7 @@ the specificity finding:
   names the narrower GO term to request (PHYKPL→`lyase activity`; B3GALNT2→
   `acetylgalactosaminyltransferase activity`; SULT6B1→`aryl sulfotransferase
   activity`; DPEP2→`dipeptidase activity`).
-- **`sssom:NoTermFound`** (17 rows) — **new GO term suggestions**: reactions where
+- **`sssom:NoTermFound`** (18 rows) — **new GO term suggestions**: reactions where
   QuickGO returns no specific MF term at all (hppE fosfomycin epoxidase; a
   trimethylaminoethylphosphonate dioxygenase; cellobionic-acid phosphorylase;
   1,4-β-mannosyl-GlcNAc phosphorylase) — GO new-term-request candidates.
@@ -263,7 +296,7 @@ reverse side — the opposite emphasis from the SPKW over-annotation hunt.
 ## Project Status
 
 - **Started**: 2026-06-20
-- **Maturity**: SCOPING — pipeline identified, mapping characterised, reverse-gap
+- **Maturity**: IN_PROGRESS — pipeline identified, mapping characterised, reverse-gap
   probe working with live pilot results; forward cross-organism scan staged
   pending go-db access.
 - **Computed live**: `GO_REF:0000116` identification (assigned_by=RHEA, MF, IEA);

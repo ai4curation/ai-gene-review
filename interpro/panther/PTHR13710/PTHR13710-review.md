@@ -57,16 +57,19 @@ The following IBA (GO_REF:0000033) annotations were propagated to S. pombe rqh1 
 
 | GO ID | Label | Aspect | Node | Seed SFs | Our Action | Assessment |
 |-------|-------|--------|------|----------|------------|------------|
-| GO:0005737 | **cytoplasm** | CC | PTN000344873 | SF105; SF152 | **REMOVE** | **Over-propagation (TRUE POSITIVE).** This cytoplasm term was propagated from sibling RecQ subfamilies (RECQL1/SF105 and RECQL5/SF152), not from the BLM/Rqh1 lineage. All experimental *S. pombe* data place Rqh1 in the nucleus (nuclear chromosome, nucleolus, replication forks, DSB sites); there is no support for a cytoplasmic site of action. This is a `CROSS_SUBFAMILY;LOCALIZATION` case where the flag correctly signals a genuine error, and we **REMOVE** it. |
+| GO:0005737 | **cytoplasm** | CC | PTN000344873 | SF105; SF108; SF152 | **REMOVE** | **Over-propagation (TRUE POSITIVE).** This cytoplasm term was propagated from sibling RecQ subfamilies (RECQL1/SF105, RECQL4/SF108 and RECQL5/SF152), not from the BLM/Rqh1 lineage. All experimental *S. pombe* data place Rqh1 in the nucleus (nuclear chromosome, nucleolus, replication forks, DSB sites); there is no support for a cytoplasmic site of action. This is a `CROSS_SUBFAMILY;LOCALIZATION` case where the flag correctly signals a genuine error, and we **REMOVE** it. |
 | GO:0005634 | nucleus | CC | PTN001415789 | SF152 | ACCEPT | **Appropriate.** Nuclear localization is the experimentally established compartment for Rqh1 and the conserved site of RecQ function. Correct despite cross-subfamily seeding. |
 | GO:0005694 | chromosome | CC | PTN000344873 | SF105; SF108; SF120; SF152 | ACCEPT | **Appropriate.** RecQ helicases act on chromosomal DNA; chromosome localization is a broadly conserved, experimentally supported property of Rqh1. The cross-subfamily flag is triage only here. |
+| GO:0043138 | 3'-5' DNA helicase activity | MF | PTN000344873 | SF105; SF120 | ACCEPT | **Core and directly grounded.** Purified Rqh1 itself has 3'-5' helicase activity, and the target is among the experimental descendants supporting the PAINT node. |
 | GO:0006260 | DNA replication | BP | PTN000344874 | SF105; SF108; SF120; SF152 | KEEP_AS_NON_CORE | **Appropriate but non-core.** Rqh1 processes replication forks, so involvement in DNA replication is real but is a secondary, supporting role relative to its core helicase/recombination-suppression function. Propagation valid; downgraded to non-core. |
+| GO:0000724 | double-strand break repair via homologous recombination | BP | PTN000344874 | — | ACCEPT | **Appropriate and target-grounded.** The node includes Rqh1's own experimental HR-repair annotation, which supports inheritance rather than constituting circularity. |
+| GO:0009378 | four-way junction helicase activity | MF | PTN000344873 | SF120 | KEEP_AS_NON_CORE | **Appropriate conserved RecQ specialization, retained as non-core.** The PAINT node has same-subfamily BLM and sibling WRN/plant RecQ seeds; Rqh1 experimentally processes branched recombination intermediates, with no evidence of lineage-specific loss. A focused OpenScientist search found no direct purified-Rqh1 four-way-substrate assay, so this remains an IBA inference rather than a core function or direct experimental claim. |
 
-**Summary:** Three of four propagations are correct; the standout is **GO:0005737 (cytoplasm)**, a genuine cross-subfamily over-propagation from RECQL1/RECQL5 siblings that contradicts the experimentally nuclear localization of Rqh1, which we therefore **REMOVE**. This illustrates the calibrated rule that `LOCALIZATION` terms imported from a sibling subfamily can be true over-annotations when they contradict known localization — in contrast to the broadly conserved nuclear/chromosome terms, which are retained.
+**Summary:** Six of seven propagations are retained (four ACCEPT, two KEEP_AS_NON_CORE); the standout is **GO:0005737 (cytoplasm)**, a genuine cross-subfamily over-propagation from RECQL1/RECQL4/RECQL5 siblings that contradicts the experimentally nuclear localization of Rqh1, which we therefore **REMOVE**. The three newly reconciled PAINT assertions add target-grounded 3'-5' helicase and HR-repair functions plus a non-core conserved four-way-junction substrate specialization.
 
 ## Review Status
 
-- **Date**: 2026-06-07
+- **Date**: 2026-09-01
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER metadata/entries, UniProt, S. pombe rqh1 GOA + ai-review, iba_propagation.tsv

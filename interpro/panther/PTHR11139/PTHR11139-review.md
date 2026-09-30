@@ -82,20 +82,32 @@ The following IBA (GO_REF:0000033) annotations are propagated to **rad3** (Q0209
 | GO ID | Label | Aspect | PANTHER node | Our action | Flags | Verdict |
 |-------|-------|--------|--------------|-----------|-------|---------|
 | GO:0004674 | protein serine/threonine kinase activity | MF | PTN000124197 | ACCEPT | CROSS_SUBFAMILY | **Appropriate** |
+| GO:0005634 | nucleus | CC | PTN000124197 | ACCEPT | CROSS_SUBFAMILY;LOCALIZATION | **Appropriate** |
+| GO:0000278 | mitotic cell cycle | BP | PTN001673376 | KEEP_AS_NON_CORE | CROSS_SUBFAMILY | **Appropriate but broad** |
 | GO:0000077 | DNA damage checkpoint signaling | BP | PTN001673376 | ACCEPT | CROSS_SUBFAMILY | **Appropriate** |
+| GO:0006281 | DNA repair | BP | PTN001673376 | KEEP_AS_NON_CORE | CROSS_SUBFAMILY | **Appropriate but broad** |
+| GO:0000723 | telomere maintenance | BP | PTN001673376 | KEEP_AS_NON_CORE | NO_UNIPROT_SEEDS | **Appropriate but secondary** |
 | GO:0005694 | chromosome | CC | PTN001673376 | ACCEPT | CROSS_SUBFAMILY;LOCALIZATION | **Appropriate** |
 
 **GO:0004674 (protein serine/threonine kinase activity).** Flagged CROSS_SUBFAMILY (node PTN000124197, seeds include human ATR Q13535, ATM Q13315, DNA-PKcs P78527, SMG1 Q96Q15 across SF68/SF69/SF71). This is the defining catalytic activity of the entire active PIKK family; transfer across the DNA-damage-kinase subfamilies is exactly the broadly conserved function the calibrated rules say is correct. rad3 is experimentally a protein Ser/Thr (S/T-Q) kinase. **Appropriate — core.**
 
 **GO:0000077 (DNA damage checkpoint signaling).** Flagged CROSS_SUBFAMILY (seeds include human ATR Q13535 and ATM Q13315 from SF69). This is the core biological process of the ATR/ATM checkpoint clade to which rad3/Mec1 belongs; cross-subfamily transfer from metazoan ATR (the direct ortholog group) to fungal Mec1/rad3 is biologically correct and matches rad3's curated role as the apical checkpoint sensor kinase. **Appropriate — core.**
 
+**GO:0005634 (nucleus).** Flagged CROSS_SUBFAMILY;LOCALIZATION at the deeper PIKK node. Although localization can diverge, Rad3 is independently supported in nuclear, chromatin-bound checkpoint complexes, so this transfer agrees with target-specific evidence. **Appropriate.**
+
+**GO:0000278 (mitotic cell cycle).** Flagged CROSS_SUBFAMILY at the ATR/Mec1 checkpoint node. Rad3 mutant phenotypes directly establish coupling of mitotic entry to DNA integrity and completion of replication. The IBA is biologically sound but less informative than the specific damage- and replication-checkpoint terms. **Appropriate — non-core broad parent.**
+
+**GO:0006281 (DNA repair).** Flagged CROSS_SUBFAMILY at the same checkpoint node and grounded by experimental descendants including Rad3 itself. Classic rad3 mutants are radiation-sensitive and the primary paper explicitly assigns a repair contribution, but Rad3 coordinates repair through checkpoint signaling rather than acting as a repair enzyme. **Appropriate — non-core broad process.**
+
+**GO:0000723 (telomere maintenance).** The extractor reports NO_UNIPROT_SEEDS because none of the node's descendant evidence identifiers map through its canonical-UniProt seed subset; this is not an absence of PAINT evidence. The GOA source list contains experimentally annotated descendants, including Rad3 itself, and S. pombe genetics and ChIP directly support Rad3-Rad26 in telomere maintenance. **Appropriate — genuine secondary function.**
+
 **GO:0005694 (chromosome).** Flagged CROSS_SUBFAMILY;LOCALIZATION (seeds include ATR Q13535 / ATM Q13315). rad3 is a nuclear, chromatin-associated kinase that localizes to sites of DNA damage, stalled forks and telomeres, so chromosome localization is consistent with its known biology, not contradicted by it. Per the rules, localization transfer that matches the gene's documented localization is appropriate. **Appropriate.**
 
-**Verdict:** All three rad3 IBAs are well-supported by the family tree. Every flag is CROSS_SUBFAMILY arising from propagation between the metazoan ATR (SF69)/ATM and fungal Mec1 (SF125) checkpoint subfamilies — the correct ortholog clade — plus the conserved PIKK kinase activity. None of rad3's IBAs derive from the mTOR (SF9), TRRAP (SF1) or SMG1 pathways, so the major neofunctionalization boundaries within this family were respected. No over-propagations detected.
+**Verdict:** All seven rad3 IBAs are compatible with the family tree and with target-specific evidence. Four are core or direct localizations; the broad mitotic-cell-cycle and DNA-repair processes and the specialized telomere-maintenance role are retained as non-core. Cross-subfamily flags arise from propagation among the conserved PIKK or ATR/Mec1 checkpoint clades, not from transfer of mTOR, TRRAP, or SMG1-specific biology. The telomere row's seed-mapping flag does not invalidate the PAINT node, and Rad3's presence among the descendants is expected experimental grounding rather than circularity. No over-propagations detected.
 
 ## Review Status
 
-- **Date**: 2026-06-07
+- **Date**: 2026-09-01
 - **Reviewer**: AI-assisted review
 - **Status**: DRAFT
 - **Based on**: PANTHER metadata/member table, UniProt (Q02099), rad3 GOA IBA rows, iba_propagation.tsv, rad3-ai-review.yaml

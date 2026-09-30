@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PANTHER IBA family review - AI Gene Review Projects</title>
@@ -280,6 +281,15 @@
         .t-PIPELINE       { background: #ede9fe; color: #5b21b6; }
         .t-OBSOLETION     { background: #fee2e2; color: #991b1b; }
 
+        /* Project resource bar (manifest: slides, artifacts) */
+        .resource-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0.75rem; }
+        .resource-bar a { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.8rem; border-radius: 9999px; border: 1px solid #bfdbfe; background: #eff6ff; color: #1e40af; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+        .resource-bar a:hover { background: #dbeafe; text-decoration: none; }
+        .resource-bar a.rk-artifacts { border-color: #e9d5ff; background: #faf5ff; color: #6b21a8; }
+        .resource-bar a.rk-artifacts:hover { background: #f3e8ff; }
+        .resource-bar .ext { font-size: 0.8em; opacity: 0.8; }
+        .resource-bar .note { font-size: 0.75em; font-weight: 500; opacity: 0.75; }
+
         /* Manual reviews */
         .manual-reviews {
             background-color: var(--bg-light);
@@ -342,14 +352,23 @@
 </head>
 <body>
     <nav class="breadcrumb">
-        <a href="../index.html">Home</a> &raquo;
-        <a href="index.html">Projects</a> &raquo;
+        <a href="../../../index.html">Home</a> &raquo;
+        <a href="../index.html">Projects</a> &raquo;
         PANTHER IBA family review
     </nav>
 
     <header class="header">
         <h1>PANTHER IBA family review</h1>
 
+
+        <p class="project-meta">
+            <span class="badge m-MATURE">MATURE</span>
+            <span class="badge tag t-EVALUATION">EVALUATION</span><span class="badge tag t-PIPELINE">PIPELINE</span>
+        </p>
+
+
+
+        <p><strong>Species:</strong> SCHPO</p>
 
 
     </header>
@@ -360,9 +379,24 @@
 
     <div class="content">
         <h1 id="panther-iba-family-review">PANTHER IBA family review</h1>
-<p>Family-level (PANTHER/PAINT) review of the IBA annotations on the 40 reviewed<br />
-S. pombe genes. Reviews the <em>source</em> of the IBAs — the phylogenetic<br />
-propagation — rather than re-judging gene by gene.</p>
+<p><strong>Bottom line:</strong> every IBA annotation descends from a PAINT curator's IBD<br />
+judgment placed at an ancestral node of a PANTHER tree, so the place to test<br />
+an IBA is that node and the target's position below it. We rebuilt the<br />
+propagation behind all 160 IBAs on the 41 reviewed <em>S. pombe</em> genes (36 of<br />
+which carry IBAs) from cached repo data: source node, seed genes, subfamilies,<br />
+PAINT loss annotations, and our per-gene action. We did this to check whether<br />
+the per-gene calls hold up at the family level, and to find the patterns that<br />
+mark a real over-propagation. They held up. The per-gene reviews kept 148 of<br />
+the 160 IBAs (117 ACCEPT, 31 KEEP_AS_NON_CORE); the 36 cross-subfamily flags<br />
+turned out to be mostly conserved functions; and the family lens confirmed the<br />
+two localization REMOVEs (<a href="../../../genes/SCHPO/pom1/pom1-ai-review.html">pom1</a> <code>cytoskeleton</code>, <a href="../../../genes/SCHPO/rqh1/rqh1-ai-review.html">rqh1</a> <code>cytoplasm</code>) and recast the<br />
+third REMOVE (<a href="../../../genes/SCHPO/mid1/mid1-ai-review.html">mid1</a> septin ring organization) as sub-functionalization between<br />
+the two pombe anillins. No new IBA errors were found among the accepted rows.</p>
+<p>The same tooling also extracts PAINT's own loss annotations (IRD/IKR) as a<br />
+curation guard: 2,129 loss findings across 549 cached families (2,123 paired with a confirmed ancestral gain), of which 63 IKR losses fall on a<br />
+reviewed member and are ready for residue-level follow-up. The written review<br />
+is in <a href="REVIEW.html">REVIEW.md</a>.</p>
+<p>The rest of this page documents the scripts and tables.</p>
 <ul>
 <li><code>extract_iba_propagation.py</code> — reproducible extractor: for each IBA, resolves<br />
   the ancestral PANTHER node, the seed genes, and the subfamilies of our gene<br />
@@ -373,8 +407,8 @@ propagation — rather than re-judging gene by gene.</p>
 <code>node_seed_count</code> (the authoritative canonical seed count curated at the source<br />
   node, vs. the few <code>n_seeds</code> echoed into the leaf), <code>node_evidence</code><br />
   (IBD/IRD/IKR), and <code>node_loss</code>. New flags: <code>SINGLE_NODE_SEED</code> (≤1 canonical<br />
-  seed — weak support), <code>NODE_LOSS</code> (an IRD/IKR loss at the source node), and<br />
-<code>NODE_NOT_IN_IBD</code>.</li>
+  seed — a provenance count, not a measure of evidential strength), <code>NODE_LOSS</code> (an IRD/IKR loss at the source node), and<br />
+<code>NODE_NOT_IN_IBD</code>; <code>NONE</code> denotes a row with no propagation flags.</li>
 <li><code>extract_node_annotations.py</code> — pulls the <strong>PTN node-level (PAINT) annotations</strong><br />
   themselves from PANTHER's <code>IBD.gaf</code> (the IBD/IRD/IKR — plus a few IBA-on-node —<br />
   layer that is the <em>source</em> of every IBA). For each ancestral node our genes<br />
@@ -409,24 +443,33 @@ propagation — rather than re-judging gene by gene.</p>
 <p>Note: <code>loss_clade</code>/<code>retaining_clade</code> are resolved from the <em>reviewed</em> member<br />
   tables + leaf GAF, so a finding with <code>n_members_affected=0</code> yields an empty<br />
 <code>loss_clade</code> (the loss is in an unsampled subfamily); seeds are still provided.<br />
-  Of the 296 IKR findings, 49 have ≥1 attributed reviewed member and are<br />
+  Of the 403 IKR findings, 63 have ≥1 attributed reviewed member and are<br />
   immediately actionable.<br />
 - <code>REVIEW.md</code> — the written review and findings.</p>
 <p>Regenerate:</p>
-<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>refresh-panther-iba-project
 </code></pre></div>
 
+<p>The three tables can also be refreshed independently with<br />
+<code>just refresh-panther-iba-propagation</code>,<br />
+<code>just refresh-panther-iba-node-annotations</code>, and<br />
+<code>just refresh-panther-iba-function-losses</code>.</p>
 <p>The node-level source files (<code>IBD.gaf</code>, leaf GAF) are downloaded on demand into<br />
 a gitignored <code>.cache/panther/</code> and are not committed. Per-family node slices can<br />
 be materialised under <code>interpro/panther/&lt;FAM&gt;/&lt;FAM&gt;-paint.tsv</code> with:</p>
 <div class="codehilite"><pre><span></span><code>just<span class="w"> </span>fetch-panther-paint<span class="w"> </span>PTHR10177
 </code></pre></div>
 
-<p>Scope: the 151 IBAs in the 40 reviewed genes (38 PANTHER families, all cached<br />
+<p>Scope: the 160 IBAs in the 41 reviewed genes (39 PANTHER families, all cached<br />
 locally). Note the cross-subfamily flag is deliberately sensitive and<br />
-over-fires on broadly conserved functions — it is triage, not a verdict.</p>
+over-fires on broadly conserved functions — it is triage, not a verdict.<br />
+One well-characterized descendant can soundly ground an ancestral assertion.<br />
+Review its phylogenetic placement and relevant functional divergence; do not<br />
+infer weak support from a short seed list.</p>
+<h2 id="slides">Slides</h2>
+<ul>
+<li><a href="slides/PANTHER_IBA_REVIEW-slides.html">Slides</a> (Marp source: <a href="slides/PANTHER_IBA_REVIEW-slides.html">PANTHER_IBA_REVIEW-slides.md</a>) — AI generated</li>
+</ul>
     </div>
 
     <footer>

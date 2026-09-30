@@ -1,0 +1,3 @@
+# CG5565 sequence comparison
+
+Run `just` here. Biopython 1.85 is specified explicitly. Immutable target and comparator JSON records are in the parent folder. Global BLOSUM62 alignments compare the native fly protein with human PUDP and the original archaeal structural donor; the human self-alignment verifies residue indexing and complete recovery. The same generic program is used for other independent fly targets. This comparison measures coverage and mapped sequence features; it does not establish substrate specificity or substitute for orthology inference. See RESULTS.md and machine-readable output folders.

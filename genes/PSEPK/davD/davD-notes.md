@@ -14,5 +14,8 @@
   exact record assigns NADP dependence by similarity. Direct Q88RC0 cofactor
   preference has not been measured, so neither source establishes strict
   NAD-versus-NADP specificity.
+- The electronic cytosol annotation is plausible but has no direct localization
+  evidence [file:PSEPK/davD/davD-uniprot.txt, "GO; GO:0005829; C:cytosol"]. It
+  is retained as non-core and omitted from the synthesized core function.
 - Purified-enzyme substrate and cofactor panels would quantify discrimination
   against succinate semialdehyde and NAD+.

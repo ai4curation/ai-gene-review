@@ -1,0 +1,15 @@
+# SPCS2 family evidence
+
+InterPro IPR009582, non-generated description; source: https://www.ebi.ac.uk/interpro/api/entry/interpro/IPR009582/
+
+This family represents the Signal peptidase complex subunit 2 (SPCS2) and its homologues, such as Spc2 from budding yeasts. The signal peptidase complex cleaves the signal sequence from proteins targeted to the endoplasmic reticulum (ER).  Mammalian signal peptidase is as a complex of five different polypeptide chains [[cite:PUB00010061]], while the budding yeast SPC comprises four proteins [[cite:PUB00087521]]. Budding yeast Spc2 has been shown to be a nonessential component of the signal peptidase complex [[cite:PUB00094330]]. Spc2 has been shown to enhance the enzymatic activity of the SPC and facilitate the interactions between different components of the translocation site [[cite:PUB00094331]].
+Translocation of polypeptide chains across the endoplasmic reticulum (ER) membrane is triggered by signal sequences. Subsequently, signal recognition particle interacts with its membrane receptor and the ribosome-bound nascent chain is targeted to the ER where it is transferred into a protein-conducting channel. At some point, a second signal sequence recognition event takes place in the membrane and translocation of the nascent chain through the membrane occurs. The signal sequence of most secretory and membrane proteins is cleaved off at this stage. Cleavage occurs by the signal peptidase complex (SPC) as soon as the lumenal domain of the translocating polypeptide is large enough to expose its cleavage site to the enzyme. The signal peptidase complex is possibly also involved in proteolytic events in the ER membrane other than the processing of the signal sequence, for example the further digestion of the cleaved signal peptide or the degradation of membrane proteins [[cite:PUB00010061]].
+
+## Mouse canonical record
+
+UniProt: https://www.uniprot.org/uniprotkb/Q9CYN2/entry
+
+Component of the signal peptidase complex (SPC) which catalyzes the cleavage of N-terminal signal sequences from nascent proteins as they are translocated into the lumen of the endoplasmic reticulum (By similarity). Enhances the enzymatic activity of SPC and facilitates the interactions between different components of the translocation site (By similarity)
+Evidence: [{"evidenceCode": "ECO:0000250", "source": "UniProtKB", "id": "Q04969"}, {"evidenceCode": "ECO:0000250", "source": "UniProtKB", "id": "Q15005"}]
+Component of the signal peptidase complex paralog A (SPC-A) composed of a catalytic subunit SEC11A and three accessory subunits SPCS1, SPCS2 and SPCS3. Component of the signal peptidase complex paralog C (SPC-C) composed of a catalytic subunit SEC11C and three accessory subunits SPCS1, SPCS2 and SPCS3. Within the complex, interacts with SEC11A or SEC11C and SPCS1. The complex induces a local thinning of the ER membrane which is used to measure the length of the signal peptide (SP) h-region of protein substrates. This ensures the selectivity of the complex towards h-regions shorter than 18-20 amino acids
+Evidence: [{"evidenceCode": "ECO:0000250", "source": "UniProtKB", "id": "Q15005"}]

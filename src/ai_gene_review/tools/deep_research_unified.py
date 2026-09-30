@@ -2,7 +2,6 @@
 """Unified CLI wrapper for deep research using deep-research-client library."""
 
 import sys
-import re
 from pathlib import Path
 from typing import Optional
 
@@ -10,33 +9,12 @@ import click
 from deep_research_client import DeepResearchClient  # type: ignore[import-untyped]
 from deep_research_client.templates import TemplateManager  # type: ignore[import-untyped]
 
-from ai_gene_review.etl.gene import expand_organism_name, fetch_uniprot_data, resolve_gene_to_uniprot
-
-
-# Official UniProtKB accession syntax (6 or 10 characters). Used to decide
-# whether a positional argument is an accession or a gene symbol, so that
-# all-uppercase gene symbols 6-10 chars long (e.g. ATP6AP1, ATP6V1H, CCDC47)
-# are NOT misclassified as accessions.
-# https://www.uniprot.org/help/accession_numbers
-_UNIPROT_ACCESSION_RE = re.compile(
-    r'^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$'
+from ai_gene_review.etl.gene import (
+    expand_organism_name,
+    fetch_uniprot_data,
+    is_uniprot_accession,
+    resolve_gene_to_uniprot,
 )
-
-
-def is_uniprot_accession(value: str) -> bool:
-    """Return True if ``value`` looks like a UniProtKB accession.
-
-    Examples:
-        >>> is_uniprot_accession("Q9H2V7")
-        True
-        >>> is_uniprot_accession("A0A024R161")
-        True
-        >>> is_uniprot_accession("ATP6AP1")
-        False
-        >>> is_uniprot_accession("SPNS1")
-        False
-    """
-    return bool(_UNIPROT_ACCESSION_RE.match(value))
 
 
 def extract_uniprot_fields(uniprot_text: str, uniprot_id: str) -> dict:

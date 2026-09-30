@@ -1,11 +1,32 @@
 ---
 title: "Satellite Model Organisms"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [CAEBR, PRIPA]
+genes: [drd-5, tra-1, tra-2, fem-3, she-1, cep-1, trr-1, kin-1, peb-1, ubl-1, oaz]
+manifest:
+  slides:
+    - href: SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/KpzGoG9pcLXFud2YtDLotZ
+      title: Project brief
 ---
 
 # Satellite Model Organisms
+
+**Bottom line:** satellite model organisms are species studied mainly as
+comparators to a reference model organism; here, the nematodes
+*Caenorhabditis briggsae* and *Pristionchus pacificus* alongside
+*C. elegans*. Most of their GO annotations are transferred by orthology, so we
+reviewed them to see whether the comparative inference holds up. We reviewed
+11 genes: 10 *C. briggsae* genes (drd-5, the sex-determination set tra-1,
+tra-2, fem-3 and she-1, and five other protein-level entries) and oaz, the only
+Swiss-Prot entry for *P. pacificus*. All 11 have been reviewed (the files still carry `status: INITIALIZED`). They cover 115
+existing annotation rows (52 ACCEPT, 43 KEEP_AS_NON_CORE, 11
+MARK_AS_OVER_ANNOTATED, 6 MODIFY, 3 REMOVE) and propose 4 NEW terms; she-1 had
+no GO annotations and was curated from the literature. The open question is
+whether to add the TrEMBL-only *P. pacificus* plasticity genes such as eud-1.
 
 ## Overview
 
@@ -52,31 +73,31 @@ may be added as gene reviews accrue.
 
 ## Genes for review
 
-- [x] `CAEBR` **drd-5** — dopamine-receptor-family gene; reviewed (see
+- [x] `CAEBR` **drd-5** — short-chain dehydrogenase/reductase family enzyme ("dietary restriction down regulated"); reviewed (see
   `genes/CAEBR/drd-5/`).
 - **`CAEBR` sex-determination set** — seeded as the flagship comparative-evolution
   batch (sex determination is the canonical *C. briggsae* vs *C. elegans* evo-devo
-  story); annotations are PENDING review:
-  - [ ] **tra-1** (`Q17308`) — Gli/Ci-family transcription factor, terminal global
+  story); reviewed:
+  - [x] **tra-1** (`Q17308`) — Gli/Ci-family transcription factor, terminal global
     regulator of the sex-determination pathway (PE=1; has experimental annotation).
-  - [ ] **tra-2** (`Q17307`) — membrane receptor-type regulator of sex
+  - [x] **tra-2** (`Q17307`) — membrane receptor-type regulator of sex
     determination (PE=1; has experimental annotations).
-  - [ ] **fem-3** (`Q8I8U6`) — sex-determination protein FEM-3 (PE=1; has
+  - [x] **fem-3** (`Q8I8U6`) — sex-determination protein FEM-3 (PE=1; has
     experimental annotations).
-  - [ ] **she-1** (`A8XDR5`) — F-box "spermless hermaphrodites" protein, a
+  - [x] **she-1** (`A8XDR5`) — F-box "spermless hermaphrodites" protein, a
     *C. briggsae*-lineage-specific gene required for hermaphrodite spermatogenesis;
     **no GO annotations yet** (annotation gap — a good de-novo curation target).
 - **`CAEBR` other protein-level (PE=1) genes** — the remaining *C. briggsae*
-  entries with experimental protein-level evidence; seeded, annotations PENDING:
-  - [ ] **cep-1** (`A8WW61`) — p53/p63/p73-family transcription factor
+  entries with experimental protein-level evidence; reviewed:
+  - [x] **cep-1** (`A8WW61`) — p53/p63/p73-family transcription factor
     (germline DNA-damage apoptosis); 31 GOA annotations.
-  - [ ] **trr-1** (`A8WTE8`) — TRRAP-like transcription-associated protein.
-  - [ ] **kin-1** (`A8XW88`) — cAMP-dependent protein kinase catalytic subunit (PKA).
-  - [ ] **peb-1** (`A8XJ98`) — FLYWCH-type zinc-finger pharyngeal regulator
+  - [x] **trr-1** (`A8WTE8`) — TRRAP-like transcription-associated protein.
+  - [x] **kin-1** (`A8XW88`) — cAMP-dependent protein kinase catalytic subunit (PKA).
+  - [x] **peb-1** (`A8XJ98`) — FLYWCH-type zinc-finger pharyngeal regulator
     (has an experimental annotation).
-  - [ ] **ubl-1** (`P37164`) — ubiquitin-like / ribosomal eS31 fusion protein.
-- [ ] `PRIPA` **oaz** (`Q9NHZ4`, ornithine decarboxylase antizyme) — seeded into
-  `genes/PRIPA/oaz/`; annotations are PENDING review. This is the species' only
+  - [x] **ubl-1** (`P37164`) — ubiquitin-like / ribosomal eS31 fusion protein.
+- [x] `PRIPA` **oaz** (`Q9NHZ4`, ornithine decarboxylase antizyme) — seeded into
+  `genes/PRIPA/oaz/`; reviewed. This is the species' only
   reviewed (Swiss-Prot) entry; its 4 GOA annotations are all IBA/IEA (no
   experimental evidence).
 - [ ] `PRIPA` developmental-plasticity / predatory-morph genes — TrEMBL-only;
@@ -84,8 +105,9 @@ may be added as gene reviews accrue.
 
 ## Status / next steps
 
-- **SCOPING.** *C. briggsae* `drd-5` + sex-determination set (`tra-1`, `tra-2`,
-  `fem-3`, `she-1`) and *P. pacificus* `oaz` are present.
+- **IN_PROGRESS.** All 11 seeded genes are reviewed: *C. briggsae* `drd-5`, the
+  sex-determination set (`tra-1`, `tra-2`, `fem-3`, `she-1`), five other PE=1
+  genes, and *P. pacificus* `oaz`.
 - *C. briggsae* has 582 reviewed entries; the protein-level (PE=1)
   experimentally-characterized ones cluster on sex determination, which is why
   that set was chosen as the first comparative batch.
@@ -94,8 +116,7 @@ may be added as gene reviews accrue.
   142 aa), now seeded as `genes/PRIPA/oaz/` — alongside ~26,000 unreviewed TrEMBL
   entries. The classic developmental-plasticity / predatory-morph genes are all
   TrEMBL-only, so seeding those means working from unreviewed accessions.
-- Next: complete the PENDING annotation review of `PRIPA` `oaz`, and decide
-  whether to pull in TrEMBL plasticity genes (e.g. the *eud-1*/sulfatase morph
+- Next: decide whether to pull in TrEMBL plasticity genes (e.g. the *eud-1*/sulfatase morph
   switch) backed by literature + bioinformatics.
 - Where a satellite gene is annotated only by orthology to the reference MOD,
   record in the review whether the comparative inference is supported by direct
