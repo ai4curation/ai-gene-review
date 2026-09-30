@@ -7,9 +7,9 @@
   Ser/Thr kinases; EC 2.7.11.1; Mg2+ cofactor. Loss-of-function causes IMD67 (IRAK-4 deficiency).
 - Cached GOA publications (all 26 GOA PMIDs present in `publications/`), and cached Reactome
   entries under `reactome/`.
-- Deep research: no `IRAK4-deep-research-*.md` file had been produced when this review was
-  written (the Falcon batch had not reached IRAK4; no IRAK4 job was running). The review is based
-  on the cached primary literature and UniProt only.
+- Deep research: none available. The batch Falcon deep-research job was terminated (exit 144)
+  before it reached IRAK4, so no `IRAK4-deep-research-*.md` exists. The review is based on the
+  cached primary literature, cached Reactome entries and UniProt only.
 
 ## Core biology (with provenance)
 

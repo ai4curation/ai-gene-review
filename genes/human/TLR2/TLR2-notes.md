@@ -36,4 +36,10 @@ TLR2 is not an LPS receptor:
 - No TLR-specific MF exists; GO:0038187 is used as the core MF.
 
 ## Deep research status
-Falcon deep research had not finished when this review was completed. The review does not use it.
+Falcon deep research finished after the review was drafted. The runner reported exit code 1, but it wrote `TLR2-deep-research-falcon.md`. I read it afterwards and it agrees with the decisions above:
+- It calls TLR2 homodimers controversial, which supports keeping identical protein binding as non-core.
+- It notes that TLR2 responses to purified peptidoglycan or LTA may reflect contaminating lipoproteins, which matches the suggested question on peptidoglycan.
+- It says TLR2/TLR4 recognition of LPS is context-dependent and not fully established, which is consistent with UNDECIDED on the LPS IDA rows.
+- It describes TLR2/TLR10 heterodimers as a newer partnership.
+
+Nothing in it changed an action. Its citations are secondary (Falcon-summarised reviews) and none are cited in the YAML.
