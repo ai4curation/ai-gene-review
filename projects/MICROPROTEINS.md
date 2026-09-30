@@ -150,7 +150,7 @@ a new microprotein-specific branch. This needs to be tested gene by gene.
    symbol, including this repo's `genes/human/<SYMBOL>/` layout, will merge
    them with the canonical protein. See
    [Naming alternative-ORF peptides](#naming-alternative-orf-peptides-vs-isoforms-and-polyproteins)
-   for the proposed convention.
+   for the agreed convention.
 2. **mtDNA-rRNA-encoded peptides** (humanin, MOTS-c, SHLP1–6) are filed under
    `MT-RNR1`/`MT-RNR2`, the rRNA genes; humanin and SHLP1–6 (seven entries)
    share the one symbol `MT-RNR2`. Nuclear `MTRNR2L1–13` ("humanin-like") are
@@ -180,7 +180,7 @@ Why alt-ORF peptides cannot go into the host folder as a `functional_isoform`:
 - `fetch-gene` pulls GOA by accession, so the peptide's annotations would never be seeded into the host folder.
 - Host and peptide usually have unrelated functions. AltMIEF1 assembles the mitoribosome; MIEF1 recruits DRP1 for mitochondrial fission.
 
-**Proposed convention:**
+**Convention (agreed 2026-09-30, recorded in `CLAUDE.md`):**
 
 1. **The peptide has its own HGNC symbol.** Use it as a plain folder name. This covers
    all the renamed lncRNA-derived peptides (`SPAAR`, `NBDY`, `MTLN`, `STRIT1`, `MRLN`) and
@@ -206,7 +206,7 @@ Why alt-ORF peptides cannot go into the host folder as a `functional_isoform`:
 Tested on 2026-09-30:
 - `just fetch-gene human L0R8F8 --alias MIEF1__L0R8F8`, run in a scratch directory, seeded
   20 GOA annotations, all on L0R8F8 and none from canonical MIEF1.
-- `fetch-gene` writes `gene_symbol: L0R8F8`, so it has to be set to `MIEF1` by hand.
+- `fetch-gene` originally wrote `gene_symbol: L0R8F8`. It now takes UniProt's gene name when it is given an accession, so the stub gets `MIEF1`.
 - After that edit the file passes `ai-gene-review validate`, and no check ties the folder name to `gene_symbol`.
 
 What this does not solve:
@@ -231,7 +231,7 @@ Last updated: 2026-09-30
 
 ## Census
 - [x] Census script + tables (`MICROPROTEINS/scripts/microprotein_census.py`)
-- [ ] Naming/folder convention for alt-ORF / uORF peptides — proposed (`<HOST>__<ACC>`, HGNC symbol when assigned); awaiting maintainer sign-off
+- [x] Naming/folder convention for alt-ORF / uORF peptides — `<HOST>__<ACC>`, or the HGNC symbol when one is assigned (agreed 2026-09-30; in `CLAUDE.md`)
 
 ## Tier 1 — sORF-class, well characterized, GO gap/problem (human)
 - [ ] STRIT1 (DWORF) — no human experimental function; 45 IPI protein binding
@@ -250,7 +250,7 @@ Last updated: 2026-09-30
 ## Tier 2 — sORF-class, emerging / thin evidence
 - [ ] ASDURF, MLDHR, MARCHF6-DT, CLMB, TZMP1, SMIM22, CEBPZOS, HOXB-AS3, LINC-PINT
 - [ ] SMIM series with IEA-only `membrane` (SMIM2, 5, 10, 11, 13, 15, 18, 36, 40, 41) and HTP/IDA localization only (SMIM8, 12, 14)
-- [ ] Alt-ORF entries (use `<HOST>__<ACC>` once agreed): AltMIEF1 (L0R8F8), DDIT3 uORF (P0DPQ6), PRKCH uORF2 (C0HM02), SEHBP (C0HLU2), miPEP155 (C0HMA1), SHMOOSE (C0HM83)
+- [ ] Alt-ORF entries (`<HOST>__<ACC>` folders): AltMIEF1 (L0R8F8), DDIT3 uORF (P0DPQ6), PRKCH uORF2 (C0HM02), SEHBP (C0HLU2), miPEP155 (C0HMA1), SHMOOSE (C0HM83)
 - [ ] mtDNA-rRNA peptides: humanin, MOTS-c, SHLPs; MTRNR2L1–13
 
 ## Tier 3 — over-annotation audit (PE4–5 with IBA/ISS function)
@@ -283,3 +283,5 @@ Last updated: 2026-09-30
   Alt-ORF peptides are separate UniProt accessions, so they cannot be `functional_isoforms`.
   Proposed a `<HOST>__<ACC>` folder, reusing the PSEPK paralogue precedent. Tested fetch and
   validate for MIEF1__L0R8F8 in a scratch directory; no folder was created in the repo.
+- Convention agreed: `<HOST>__<ACC>` (double underscore). Added it to `CLAUDE.md`.
+  `fetch-gene` now sets `gene_symbol` from the UniProt `GN Name=` line when it is given an accession.
