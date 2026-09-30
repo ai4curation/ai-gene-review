@@ -66,3 +66,13 @@ Additional primary reading confirms that BBS4 requirements differ by tissue and 
 ## Validation of the 2026-09-30 revision
 
 Focused validation passed with 34 advisories for generic protein-binding assertions retained as non-core under the supplied ActionEnum. The exact interactions are preserved where a more specific activity is not established. No errors or source-projection mismatches were reported.
+
+## 2026-09-30 review follow-up: source-specific mechanisms and evidence anchors
+
+Five PCM1 IPI records (PMID:17574030, PMID:18772192, PMID:18000879, PMID:19081074 and PMID:22500027) now retain their original association as non-core. They no longer repeat the complete adaptor mechanism established by PMID:15107855. That direct mechanism remains in its own accepted/modified source records and the core function. The exact supplementary PCM1 pair in PMID:18000879 remains uninspected; its curated association is retained without claiming an independently verified construct-level assay. This supersedes the five earlier mechanism replacements without disputing the interactions.
+
+Eight short, cache-verified abstract anchors restore direct evidence on existing localization, dynactin-binding, microtubule-anchoring and BBSome annotations. Reference-section labels identify them as abstract text. Longer repeated quotations are not necessary to retain their evidence links.
+
+The RNF2 assay detail comes from separately accessed [original Results and the Fig.3C caption](https://pmc.ncbi.nlm.nih.gov/articles/PMC3283873/), which enumerate tagged BBS4 among the tested proteins. The normal publication cache is abstract-only. No complete-paper, supplement or figure-pixel inspection is claimed. Endogenous HeLa co-IP and yeast bait evidence are specific to BBS7. The more specific RNF2 binding term is also justified by the partner's E3-ligase identity. The prior figure statement therefore has an external primary source; limited local cache coverage does not make it fabricated.
+
+The revised totals are 42 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and three UNDECIDED across all 130 source annotations. All three alternative products and both core functions are retained. Supported generic interactions remain non-core under the supplied ActionEnum; informativeness alone does not justify REMOVE. The PR's separate policy disagreement remains unresolved.
