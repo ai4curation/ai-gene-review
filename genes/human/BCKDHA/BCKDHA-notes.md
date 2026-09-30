@@ -132,3 +132,22 @@ still asserts **no molecular function** on the branched-chain side of PTHR43380,
 GO:0003863 — the best-evidenced term this gene has — does not propagate. PANTHER also
 lumps bacterial pyruvate dehydrogenase E1-alpha (pdhA) into the same subfamily SF1 as
 BCKDHA, so any MF term must be placed at a PTN node rather than at SF1.
+
+
+## 2026-09-30 BCKDHA source and mechanism reassessment
+
+All 38 source assertions remain, with their 11 missing supporting-entity lists restored from GOA. The three pre-existing authored cofactor-binding annotations are retained, giving 41 total rows: 28 ACCEPT, eight KEEP_AS_NON_CORE, two MODIFY and three inherited NEW. No additional annotation or process assertion is introduced. The five BCKDHB interaction records are biologically coherent but generic, so they are retained as non-core instead of being rejected or treated as independent molecular functions.
+
+One core now represents BCKDHA's contribution to the alpha2-beta2 E1 enzyme. The alpha chain helps bind and position ThDP and its metal ions; the assembled enzyme decarboxylates branched-chain ketoacids and reductively acylates the DBT lipoyl group. DBT and DLD perform the subsequent transfer-to-CoA and redox steps. Participation in the overall complex reaction does not assign those separate chemical activities to BCKDHA. This committed oxidation follows the reversible transamination step.
+
+The magnesium and potassium contacts are grounded in the immutable UniProt record and the official human 1DTW structural record. Multiple listed coordinating residues do not constitute multiple alpha-chain potassium sites. The later 1U5B record contains manganese, so it is not used as specific magnesium-ligand evidence. Coordinates were not independently reanalyzed. Mature alpha Ser292 corresponds to precursor Ser337; phosphorylation disrupts lipoyl-domain recognition and reductive acylation more strongly than initial decarboxylation.
+
+The two machine-derived UniProt products remain unchanged. Alternative-product targeting, assembly and regulation are experimental questions, not established loss of activity. Cached human studies and their complete abstracts support the synthesis, with full-paper and pair-level screen limitations recorded per reference. The provider reports remain unchanged as research leads. The earlier gel-band subunit assignments and counting of individual potassium contacts as separate sites are superseded here.
+
+All ten normal Reactome records were recovered through Source94 after the documented initial local retrieval failed. Their recovered content was read and reassessed before this integration. Database descriptions are interpreted at their actual subunit and reaction level, including the alpha-versus-beta wording conflict in the PPM1K event. The original source assertions remain intact; a database wording discrepancy does not manufacture an experimental correction. Earlier notes are retained as history.
+
+### Final validation and independent science review
+
+The independent final biology review passed after narrowing an inherited universal activity-loss claim to severe impairment and removing an unlisted beta-specific residual-activity example from the alpha review. All 38 source annotations and three inherited cofactor-binding proposals remain in order; 11 missing supporting-entity lists were restored exactly from GOA. Both source-derived alternative products remain unchanged.
+
+`just validate human BCKDHA` passed with six advisories: five supported generic protein-binding IPI annotations remain `KEEP_AS_NON_CORE` under the supplied action definitions, and annotations do not directly cite the retained generated research report. Primary normal publication records, reviewed UniProt and the ten normal Reactome records support the synthesis. No complete primary-paper, figure, pair-specific proteomics supplement, or PAINT-tree reconstruction is claimed. The separate `pkg_resources` deprecation notice is an environment warning. `just render human BCKDHA` succeeded. These are focused checks, not a claim that the entire repository was validated.
