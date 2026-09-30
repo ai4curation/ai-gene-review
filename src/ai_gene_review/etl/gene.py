@@ -108,48 +108,28 @@ def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Di
     if not alt_products_lines:
         return []
 
-    # Parse the isoforms
-    current_isoform: Dict[str, str] = {}
+    # CC lines wrap fields at arbitrary positions. Parse complete semicolon-delimited
+    # records after joining their physical lines, so Sequence and Synonyms survive
+    # continuation lines and IsoId/Sequence may be on separate lines.
+    content = " ".join(line[2:].strip() for line in alt_products_lines)
+    count = re.search(r"(?:^|;)\s*Named isoforms=(\d+)", content)
+    if count and int(count.group(1)) <= 1:
+        return []
 
-    for line in alt_products_lines:
-        # Remove CC prefix and clean up
-        content = line[2:].strip() if line.startswith("CC") else line.strip()
-
-        # Check for Named isoforms count
-        if "Named isoforms=" in content:
-            match = re.search(r'Named isoforms=(\d+)', content)
-            if match:
-                num_isoforms = int(match.group(1))
-                if num_isoforms <= 1:
-                    return []  # Don't return data for single isoform genes
-
-        # Match Name line: "Name=Bcl-X(L); Synonyms=Bcl-xL;"
-        name_match = re.match(r'Name=([^;]+)(?:;\s*Synonyms=([^;]+))?', content)
-        if name_match:
-            # Save previous isoform if exists
-            if current_isoform and 'id' in current_isoform:
-                isoforms.append(current_isoform)
-
-            current_isoform = {'name': name_match.group(1).strip()}
-            # Add synonym as alternate name if present
-            if name_match.group(2):
-                synonyms = name_match.group(2).strip()
-                # Use first synonym if multiple, append others to name
-                current_isoform['name'] = f"{current_isoform['name']} ({synonyms})"
+    for record in re.split(r"(?:^|;)\s*Name=", content)[1:]:
+        name = re.match(r"([^;]+);", record)
+        isoid = re.search(r"(?:^|;)\s*IsoId=([^;]+);", record)
+        sequence = re.search(r"(?:^|;)\s*Sequence=([^;]+)", record)
+        if not (name and isoid and sequence):
             continue
-
-        # Match IsoId line: "IsoId=Q07817-1; Sequence=Displayed;"
-        isoid_match = re.match(r'IsoId=([^;]+);\s*Sequence=([^;]+)', content)
-        if isoid_match and current_isoform:
-            current_isoform['id'] = isoid_match.group(1).strip()
-            seq_info = isoid_match.group(2).strip()
-            if seq_info != "Displayed":
-                current_isoform['sequence_note'] = seq_info
-            continue
-
-    # Don't forget the last isoform
-    if current_isoform and 'id' in current_isoform:
-        isoforms.append(current_isoform)
+        isoform = {"name": name.group(1).strip(), "id": isoid.group(1).strip()}
+        synonyms = re.search(r"(?:^|;)\s*Synonyms=([^;]+);", record)
+        if synonyms:
+            isoform["name"] += f" ({synonyms.group(1).strip()})"
+        seq_info = sequence.group(1).strip()
+        if seq_info != "Displayed":
+            isoform["sequence_note"] = seq_info
+        isoforms.append(isoform)
 
     # Only return if there are multiple isoforms
     if len(isoforms) <= 1:
