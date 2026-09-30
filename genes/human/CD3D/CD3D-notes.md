@@ -5,7 +5,7 @@ Part of the ADAPTIVE_IMMUNITY project, T cell receptor trunk (CD3D, CD3E, CD3G, 
 ## Session 2026-09-30
 
 ### Setup
-- `just deep-research-falcon human CD3D --fallback perplexity-lite` launched in background (status recorded below).
+- `just deep-research-falcon human CD3D --fallback perplexity-lite` FAILED: falcon timed out (600s) and the perplexity-lite fallback errored ("Provider 'perplexity' not available. Available: falcon, asta, openscientist"). No deep-research file exists; the review is based on UniProt, cached publications, Reactome and QuickGO. Re-run deep research later and reconcile.
 - `just fetch-gene-pmids human CD3D`: 9/9 GOA PMIDs cached. Only PMID:11390434 and PMID:32296183 have full text; the rest are abstract-only.
 
 ### Biology summary

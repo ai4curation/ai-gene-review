@@ -43,3 +43,9 @@ Context: ADAPTIVE_IMMUNITY project, T cell receptor trunk.
 
 Falcon deep research (`just deep-research-falcon human CD3G --fallback perplexity-lite`) was launched in
 parallel with the review; see status below.
+
+Status (2026-09-30): deep research FAILED. Falcon timed out/failed (600 s timeout). The
+perplexity-lite fallback then failed with "Provider 'perplexity' not available. Available: falcon,
+asta, openscientist", ending in "All providers failed". The review was written without a deep research
+file, using the UniProt record, the cached GOA-cited publications, and five UniProt-cited papers
+fetched with `just fetch-pmid` (PMID:2470098, 8187769, 1535555, 15136729, 17277165).
