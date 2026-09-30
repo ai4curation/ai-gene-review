@@ -20,4 +20,6 @@
 - Developmental IMP terms (mesodermal fate, stem cell proliferation) kept as non-core. No REMOVE.
 
 ## Deep research
-- Falcon deep research: see below (appended when available).
+- Falcon deep research completed (sel-8-deep-research-falcon.md; the first wrapper run reported a 600 s timeout but the Falcon job finished and wrote the report). Consistent with the review. Additional points:
+  - Mastermind assignment "rests primarily on its conserved role in the Notch transcription complex rather than strong primary-sequence similarity to non-nematode Mastermind proteins" - relevant variant note: no PANTHER family on the UniProt record.
+  - Recent work (Zhou et al. 2023-2025, not cached) implicates SEL-8 in neuronal LIN-12/OSM-11 Notch signaling linking hypodermal insulin signaling to associative memory.
