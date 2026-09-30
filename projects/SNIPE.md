@@ -2,7 +2,6 @@
 title: "SNIPE: Membrane-Bound Nuclease Anti-Phage Defence"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-collections: [IMMUNE_SYSTEM]
 species: [ECOLX]
 genes: [SNIPE]
 sidecars:

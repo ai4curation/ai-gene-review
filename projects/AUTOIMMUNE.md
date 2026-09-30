@@ -2,7 +2,6 @@
 title: "Autoimmune Genetics - Greatest Hits"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-collections: [IMMUNE_SYSTEM]
 species: [human]
 genes: [PTPN22, CTLA4, IL2RA, IL4, STAT4, IL13, IL23R, IL7R, ORMDL3, TNFAIP3, TNFRSF1A, EGR2, BACH2, IRF4, STAT3, IKZF1, CD28, GATA3, SMAD3, IL10]
 manifest:

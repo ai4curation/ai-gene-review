@@ -2,7 +2,6 @@
 title: "Parasite Immune Modulators"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-collections: [IMMUNE_SYSTEM]
 species: [DESRO]
 sidecars:
   slide_figures:

@@ -2,7 +2,6 @@
 title: "Anti-CRISPR Proteins Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
-collections: [IMMUNE_SYSTEM]
 species: [BPZF4]
 genes: [AcrF8, ACA2]
 manifest:

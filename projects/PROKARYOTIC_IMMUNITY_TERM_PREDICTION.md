@@ -2,7 +2,6 @@
 title: "Prokaryotic Immunity Term Prediction"
 maturity: SCOPING
 tags: [PIPELINE]
-collections: [IMMUNE_SYSTEM]
 sidecars:
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
   slide_images:
