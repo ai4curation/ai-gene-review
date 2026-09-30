@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-30T05:15:22.438841'
-end_time: '2026-09-30T05:31:41.271184'
-duration_seconds: 978.83
+start_time: '2026-09-30T05:31:19.319596'
+end_time: '2026-09-30T05:46:53.946509'
+duration_seconds: 934.63
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: worm
@@ -25,10 +25,10 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 34
-artifact_count: 3
+citation_count: 33
+artifact_count: 2
 artifact_sources:
-  edison_answer_artifacts: 3
+  edison_answer_artifacts: 2
 artifacts:
 - filename: artifact-00.md
   path: apx-1-deep-research-falcon_artifacts/artifact-00.md
@@ -42,12 +42,6 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-01
-- filename: artifact-02.md
-  path: apx-1-deep-research-falcon_artifacts/artifact-02.md
-  media_type: text/markdown
-  source: edison_answer_artifacts
-  data_storage_id: null
-  description: Edison artifact artifact-02
 ---
 
 ## Question
@@ -158,164 +152,165 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Comprehensive Research Report: APX-1 Gene Function in *Caenorhabditis elegans*
+# Comprehensive Research Report: APX-1 (Anterior Pharynx in Excess Protein 1) in *Caenorhabditis elegans*
 
-## Gene Identity Confirmation
+## Gene Identity and Overview
 
-APX-1 (Anterior pharynx in excess protein 1; UniProt: P41990; Gene: apx-1/K08D9.3) is a bona fide Delta/Serrate/LAG-2 (DSL) family Notch ligand in *Caenorhabditis elegans* (liu2023mechanismsoflineage pages 5-6, liu2023mechanismsoflineage pages 4-5). The protein matches the expected characteristics from the UniProt annotation, containing the DSL domain (IPR001774), EGF repeats (IPR000742), and the C2_N_APX domain (IPR057536, PF25337) (holt2016characterisationofthe pages 180-186, holt2016characterisationoftheb pages 180-186).
+The gene *apx-1* (UniProt: P41990) encodes the anterior pharynx in excess protein 1, a transmembrane signaling molecule belonging to the Delta/Serrate/LAG-2 (DSL) family of Notch ligands in *Caenorhabditis elegans* (mcgovern2018thedslligand pages 1-4, bowerman1995determinantsofblastomere pages 5-7). The protein is named for the embryonic phenotype observed when maternal *apx-1* function is disrupted: embryos develop an excess of anterior pharyngeal cell types at the expense of posterior-specific cell types (bowerman1995determinantsofblastomere pages 5-7, bowerman1995determinantsofblastomere pages 7-8). APX-1 is a well-characterized DSL ligand that shares functional properties with other members of this protein family, particularly LAG-2, though it plays distinct developmental and physiological roles (holt2016characterisationoftheb pages 173-180, chen2004thelateralsignal pages 3-4).
 
-## Molecular Function and Protein Structure
+## Molecular Function and Biochemical Role
 
 ### Primary Function as a Notch Ligand
 
-APX-1 functions as a transmembrane ligand that activates Notch-family receptors on neighboring cells through direct contact-dependent signaling (mcgovern2018thedslligand pages 1-4, goutte2002aph1isa pages 4-5). The protein activates two *C. elegans* Notch receptors: **GLP-1** (primarily in embryonic and germline contexts) and **LIN-12** (in somatic cell fate decisions, vulval development, and adult reproductive functions) (liu2023mechanismsoflineage pages 5-6, mcgovern2018thedslligand pages 1-4, chen2020glp1notch—lag1csl pages 2-4).
+APX-1 functions as a cell-surface signaling ligand that binds to and activates the Notch family receptors GLP-1 and LIN-12 on neighboring cells (holt2016characterisationoftheb pages 191-194, mcgovern2018thedslligand pages 1-4, langridge2021thec.elegans pages 16-20). Unlike enzymes or receptors, APX-1 does not catalyze biochemical reactions or transduce signals internally; instead, its biochemical role is to engage Notch receptors through direct extracellular protein-protein interactions, initiating a conserved signaling cascade that regulates cell fate decisions (holt2016characterisationofthe pages 191-194, holt2016characterisationofthea pages 191-194). APX-1 is localized to the plasma membrane where it contacts neighboring cells expressing GLP-1 or LIN-12, functioning at cell-cell contact sites rather than as a diffusible signal (goutte2002aph1isa pages 4-5, goutte2002aph1isa pages 1-3).
 
-The mechanism involves binding to Notch receptors on adjacent cells, triggering proteolytic cleavage that releases the Notch intracellular domain (NICD), which translocates to the nucleus and activates transcription through the CSL transcription factor LAG-1 (chen2020glp1notch—lag1csl pages 2-4, broek2021investigatingtherole pages 30-36, broek2021investigatingtherole pages 36-41).
+### Domain Structure and Mechanistic Details
 
-### Protein Domain Architecture
+APX-1 contains several critical extracellular domains that mediate its ligand function. The N-terminal region includes an MNNL-like domain (also annotated as C2_N_APX; InterPro IPR057536), followed by the conserved DSL domain (InterPro IPR001774; Pfam PF01414), and multiple EGF-like repeats (InterPro IPR000742) (holt2016characterisationoftheb pages 191-194, holt2016characterisationofthea pages 113-119, holt2016characterisationoftheb pages 173-180). 
 
-APX-1 exhibits a modular extracellular architecture characteristic of DSL ligands. A comprehensive domain-function analysis is presented below:
+Functional studies using domain deletion and mutagenesis have revealed the importance of these structural elements. Both the MNNL and DSL domains are absolutely essential for APX-1 activity: deletion of either domain completely abolished the ability of APX-1 to rescue the anchor-cell duplication phenotype in *lag-2* mutants (holt2016characterisationoftheb pages 191-194, holt2016characterisationoftheb pages 173-180). Targeted mutations in predicted surface loops within these domains—specifically the C3–C4 loop of the DSL domain and the β5–β6 loop of the MNNL domain—significantly reduced APX-1 signaling activity, consistent with their roles in receptor binding and possibly membrane-associated interactions (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthe pages 173-180).
 
-| Domain Name | Location in Protein | Structural Features | Functional Role | Key Evidence |
+The first EGF-like domain contributes to optimal signaling but is not strictly essential: its deletion retained partial rescue activity, though significantly less than wild-type APX-1 (p=0.023), suggesting it supports ligand presentation, stability, or receptor engagement (holt2016characterisationoftheb pages 173-180). Recombinant APX-1 fragments have been produced for biochemical studies, with some constructs showing dimeric behavior when Fc-tagged, though heterogeneity has prevented high-resolution structural determination (holt2016characterisationofthea pages 113-119, holt2016characterisationoftheb pages 113-119, holt2016characterisationofthe pages 113-119).
+
+| APX-1 region/domain | Structural features | Experimental evidence | Functional interpretation | Evidence strength |
 |---|---|---|---|---|
-| C2_N_APX / N-terminal C2-like region | Extreme N-terminal extracellular region of the precursor; overlaps or is closely associated with the region historically described as MNNL | APX-1-specific N-terminal C2-like module; predicted lipid/phospholipid-interacting fold | May orient or stabilize the ligand ectodomain at the membrane and facilitate productive Notch activation; its precise biochemical activity has not been directly established | Structural interpretation associates this region with phospholipid binding and Notch activation, but direct APX-1 biochemical evidence remains limited (holt2016characterisationofthe pages 180-186, holt2016characterisationoftheb pages 180-186, holt2016characterisationofthea pages 180-186) |
-| MNNL region | N-terminal extracellular region, preceding the DSL domain | Cysteine-rich module containing a predicted β5–β6 surface loop; substantially overlaps the annotated N-terminal C2-like region in contemporary domain models | Required for efficient ligand activity and probably contributes to receptor engagement, ectodomain orientation, or membrane interaction | Deletion abolished APX-1 rescue of the *lag-2(q420)* anchor-cell duplication phenotype; targeted β5–β6-loop substitutions reduced but did not eliminate activity. Misfolding or impaired surface delivery after deletion was not formally excluded (holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 180-186, holt2016characterisationofthea pages 180-186) |
-| DSL domain | Extracellular; immediately C-terminal to the N-terminal C2-like/MNNL region and before the EGF-like repeats | Conserved Delta/Serrate/LAG-2 module with disulfide-bonded loops, including a predicted C3–C4 receptor-contact loop | Core Notch-receptor-binding and activation module; supports APX-1-mediated activation of GLP-1 or LIN-12 in the appropriate cellular context | Complete DSL deletion abolished rescue in vivo, whereas substitutions in the predicted C3–C4 loop reduced but did not eliminate signaling. The DSL region is considered the minimal receptor-binding unit of canonical Notch ligands (holt2016characterisationofthe pages 45-50, holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 180-186, holt2016characterisationofthe pages 173-180) |
-| EGF-like domains | Extracellular; positioned C-terminal to the DSL domain and N-terminal to the membrane anchor | Repeated cysteine-rich EGF-like modules; recombinant APX-1 constructs containing one to several repeats showed calcium-sensitive-module architecture and could form dimers or higher-order aggregates | Accessory modules that can enhance receptor-binding geometry, affinity, or signaling efficiency; at least the first repeat is not absolutely required for activity | Deletion of EGF-like repeat 1 retained partial rescue but was significantly less effective than wild-type APX-1, indicating a supportive rather than indispensable role. Recombinant constructs confirm an MNNL–DSL–EGF-repeat organization (holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 180-186, holt2016characterisationoftheb pages 113-119, holt2016characterisationofthe pages 113-119) |
-| Transmembrane domain | Near the C terminus, between the extracellular EGF-containing region and the cytoplasmic tail | Single membrane-spanning segment characteristic of membrane-bound DSL ligands | Anchors APX-1 at the signal-sending cell surface, enabling short-range presentation to Notch receptors on adjacent cells | Endogenous APX-1 is described as a transmembrane ligand and localizes to the P2 surface at its contact with GLP-1-expressing ABp. Engineered APX-1 lacking its transmembrane segment can be secreted and remain signaling-competent, showing that anchoring is physiologically important but not absolutely required experimentally (goutte2002aph1isa pages 4-5, chen2004thelateralsignal pages 5-7, chen2004thelateralsignal pages 7-8) |
+| N-terminal C2_N_APX domain (also described as MNNL-like) | N-terminal extracellular, cysteine-rich module preceding the DSL domain; corresponds to InterPro IPR057536/Pfam PF25337 in the supplied UniProt annotation. A predicted β5–β6 surface loop was examined by mutagenesis; calcium binding was investigated but not established. | Deleting this entire region abolished APX-1 rescue of the duplicated-anchor-cell phenotype in `lag-2(q420)` animals. Mutating its predicted surface loop significantly impaired rescue. Limited proteolysis did not show calcium-dependent protection, leaving calcium binding unresolved. (holt2016characterisationofthea pages 113-119, holt2016characterisationoftheb pages 173-180, holt2016characterisationoftheb pages 113-119) | Essential for full ligand activity, probably by helping form or orient the receptor-binding surface and possibly mediating membrane/lipid interactions. A direct lipid-binding mechanism has not been demonstrated for APX-1. | Moderate: in-vivo deletion and mutagenesis support functional necessity, but no high-resolution APX-1 structure or definitive biochemical mechanism is available. |
+| DSL domain | Conserved Delta/Serrate/LAG-2 extracellular ligand domain (InterPro IPR001774; Pfam PF01414). Contains a predicted C3–C4 loop; residues A147–K150 (`ANAK`) were replaced with `ETSD` in a targeted mutant. | Complete DSL-domain deletion abolished rescue in the anchor-cell assay, while mutation of the predicted loop markedly reduced activity. The requirement agrees with APX-1's classification as a canonical DSL-family Notch ligand. (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthe pages 173-180) | Principal conserved domain for productive engagement and activation of the LIN-12/GLP-1 Notch receptors; indispensable for APX-1 signaling in vivo. | Strong for functional necessity; direct APX-1–receptor structural contacts have not been resolved at atomic resolution. |
+| EGF-like repeat 1 | Small disulfide-rich extracellular EGF module immediately following the DSL region (InterPro IPR000742). It forms part of the extended extracellular receptor-interaction region. | Deletion retained partial signaling but rescued significantly less effectively than wild-type APX-1 (`p = 0.023`), showing that EGF-like repeat 1 is contributory rather than strictly essential in the tested assay. (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthea pages 173-180) | Supports optimal ligand folding, presentation, stability, or receptor engagement but is not by itself the indispensable Notch-binding determinant. | Moderate-to-strong for a supporting role; the precise biochemical contribution remains unresolved. |
+| Additional EGF-like repeats | Serial extracellular EGF modules downstream of EGF-like repeat 1. Recombinant constructs extending through repeats 3 or 4 were produced; some showed aggregation, while Fc-tagged fragments appeared dimeric. | APX-1 fragments spanning the N-terminal region through EGF-like repeats 3–4 were purified, but heterogeneity and failure to obtain suitable crystals prevented definitive structural analysis. (holt2016characterisationofthea pages 113-119, holt2016characterisationoftheb pages 113-119, holt2016characterisationofthe pages 113-119) | Likely extend and stabilize the extracellular ligand architecture and may influence receptor accessibility; individual repeat requirements have not been established conclusively. | Limited: supported mainly by recombinant-protein characterization rather than repeat-specific in-vivo tests. |
+| Composite N-terminal ligand-binding unit | The C2_N_APX/MNNL-like, DSL, and first EGF-like domains form a contiguous extracellular signaling unit. Recombinant constructs containing this unit could be purified, although a high-resolution structure was not obtained. | Removing either the N-terminal C2_N_APX/MNNL-like domain or DSL domain eliminated activity, whereas removing EGF-like repeat 1 reduced but did not eliminate activity. Wild-type APX-1 partially substituted for LAG-2 in the anchor-cell assay, reducing the mutant phenotype by approximately 25–33%. (holt2016characterisationoftheb pages 191-194, holt2016characterisationofthe pages 113-119, holt2016characterisationoftheb pages 173-180) | Together these domains create the functional Notch-ligand interface: the first two are essential, while the adjacent EGF module improves signaling efficiency. | Strong for the domain hierarchy in vivo; incomplete for atomic mechanism and receptor-specific affinity. |
 
 
-*Table: APX-1 is a modular, membrane-tethered DSL/Notch ligand whose N-terminal C2-like/MNNL and DSL regions are most critical for activity. EGF-like repeats enhance signaling, while the transmembrane segment normally enables cell-surface presentation.*
+*Table: This table maps APX-1’s extracellular domains to structural observations and in-vivo functional tests. It distinguishes experimentally established requirements from mechanistic interpretations that remain unresolved.*
 
-The **DSL domain** is the core receptor-binding module—deletion experiments demonstrate it is absolutely required for APX-1 activity, as complete removal abolished rescue of Notch-dependent phenotypes (holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 180-186). The **MNNL (C2_N_APX) domain** is similarly essential, with deletion causing complete loss of function (holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 173-180, holt2016characterisationofthea pages 180-186). These two N-terminal domains together constitute the minimal functional unit for Notch receptor engagement.
+## Cellular Localization
 
-The **EGF-like domains** play accessory roles, enhancing signaling efficiency rather than being absolutely required. Deletion of EGF-like domain 1 retained partial activity but showed significantly reduced rescue compared to wild-type APX-1 (holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 173-180). This indicates these domains contribute to optimal receptor binding geometry or affinity (holt2016characterisationofthe pages 45-50, holt2016characterisationofthe pages 180-186).
+APX-1 is a transmembrane protein that functions at the plasma membrane of signal-sending cells. Immunolocalization studies demonstrate that APX-1 localizes as a line or zone at cell-cell contact boundaries, consistent with juxtacrine signaling (goutte2002aph1isa pages 4-5, goutte2002aph1isa pages 1-3). The protein is expressed in multiple tissue contexts throughout *C. elegans* development and adult life:
 
-## Cellular Localization and Expression Pattern
+**Embryonic Expression:** In the early four-cell embryo, APX-1 is expressed by the posterior P2 blastomere, where it appears enriched at the contact surface with the neighboring ABp cell that expresses the GLP-1 receptor (goutte2002aph1isa pages 1-3).
 
-APX-1 is a **single-pass transmembrane protein** localized to the plasma membrane of signal-sending cells, where it presents the extracellular ligand domain to Notch receptors on adjacent receiving cells (goutte2002aph1isa pages 4-5). This membrane anchorage enables the short-range, contact-dependent signaling characteristic of canonical Notch pathways.
+**Germline and Gonad:** APX-1 is produced by distal tip cells (DTCs), the somatic cells that form the germline stem cell niche (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 11-14, zhang2024dos3mediatescellnonautonomous pages 5-5). Additionally, in the adult reproductive system, APX-1 is expressed in the proximal somatic gonadal sheath cells and in the distal-most cells of the spermatheca (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 9-11).
 
-The protein shows spatially and temporally restricted expression in specific cell types:
+These expression patterns position APX-1 at critical signaling interfaces where cell-cell communication regulates developmental decisions and physiological processes.
 
-1. **Early embryo**: P2 blastomere at the 4-cell stage, concentrated at the P2-ABp contact surface (goutte2002aph1isa pages 4-5, goutte2002aph1isa pages 1-3)
-2. **Germline niche**: Distal tip cells (DTCs) that cap the germline (mcgovern2018thedslligand pages 1-4, broek2021investigatingtherole pages 24-30)
-3. **Vulval development**: P6.p and its descendants during vulval induction (chen2004thelateralsignal pages 2-3, chen2004thelateralsignal pages 4-5)
-4. **Adult reproductive system**: Proximal gonadal sheath cells and distal spermatheca (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 9-11)
+## Biological Processes and Signaling Pathways
 
-## Biological Processes and Developmental Roles
+APX-1 participates in the conserved Notch signaling pathway, functioning at multiple developmental stages and in distinct tissues to regulate diverse biological processes.
 
-APX-1 participates in multiple developmental and physiological processes through Notch signaling. A systematic analysis of these contexts is provided below:
+### Early Embryonic Cell Fate Specification
 
-| Developmental Stage/Context | Expressing Cell/Tissue | Target Cell/Tissue | Notch Receptor Involved | Biological Process Regulated | Key Phenotypes |
-|---|---|---|---|---|---|
-| Early embryo, 4-cell stage | Posterior P2 blastomere; APX-1 is concentrated at the surface where P2 contacts ABp | ABp blastomere, but not its sister ABa because only ABp contacts P2 | GLP-1 | Contact-dependent induction distinguishes ABp from ABa. GLP-1 activation induces REF-1/Hes-family repressors in ABp, suppressing `tbx-37/38` and establishing the ABp lineage program. (goutte2002aph1isa pages 4-5, goutte2002aph1isa pages 1-3, liu2023mechanismsoflineage pages 5-6, liu2023mechanismsoflineage pages 4-5) | Loss of maternal APX-1 signaling disrupts early Notch-dependent lineage specification and causes maternal-effect embryonic lethality; strong alleles show fully penetrant lethality. (mcgovern2018thedslligand pages 6-9) |
-| Larval and adult germline stem-cell niche | Somatic distal tip cell (DTC), which presents APX-1 together with LAG-2 | Adjacent distal germline stem/progenitor cells | GLP-1 | DTC-derived ligand activates GLP-1, whose intracellular domain acts with LAG-1/CSL to induce `lst-1` and `sygl-1`; these targets maintain stem/progenitor identity and oppose premature meiotic entry. APX-1 and LAG-2 have overlapping niche activity. (chen2020glp1notch—lag1csl pages 2-4, broek2021investigatingtherole pages 30-36, broek2021investigatingtherole pages 36-41, mcgovern2018thedslligand pages 1-4) | Reduced niche signaling decreases the germline progenitor pool and permits premature meiotic differentiation; excessive or ectopic ligand exposure can maintain undifferentiated germ cells and promote proximal germline tumors. APX-1 may also affect oocyte growth at low penetrance. (chen2020glp1notch—lag1csl pages 2-4, mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 11-14) |
-| Vulval precursor-cell patterning | P6.p, the presumptive primary vulval precursor cell, and its descendants; `apx-1` expression is induced downstream of LIN-3–LET-23/Ras signaling | Neighboring vulval precursor cells that adopt secondary fates | LIN-12 | APX-1 contributes to the lateral signal activating LIN-12 in neighboring cells. It acts redundantly with transmembrane LAG-2 and secreted DSL-1, coupling primary-fate induction in P6.p to secondary-fate specification in adjacent cells. (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 2-3, chen2004thelateralsignal pages 4-5) | Depletion of an individual ligand has a sensitized or partly buffered effect, whereas combined reduction of `apx-1`, `lag-2`, and `dsl-1` causes a strong lateral-signaling defect and allows adjacent precursor cells to adopt inappropriate primary-like fates. (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 4-5) |
-| Adult reproductive function and ovulation | Proximal somatic gonadal sheath cells and the four distal-most spermathecal cells | Gonadal cells coordinating oocyte entry, spermathecal closure, contraction, and embryo transit; the precise receptor-bearing cell was not definitively resolved | Most strongly implicated: LIN-12; GLP-1 was not supported as the principal ovulation receptor | Post-developmental APX-1 signaling coordinates sheath–spermatheca function, timely distal-neck closure, calcium dynamics, and movement of the oocyte or fertilized embryo through the spermatheca. LAG-2 can substitute in this context. (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 9-11) | APX-1 depletion produces endomitotic oocytes in approximately 20–33% of animals or gonad arms under several tested conditions, including 26% after adult treatment versus 0% in controls. Additional phenotypes include delayed or failed neck closure, abnormal calcium signaling, oocyte reflux, pinching or fragmentation, entrapment in the spermatheca, and failed embryo expulsion; preserved tissue markers argue for a physiological rather than gross cell-fate defect. (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 21-22, mcgovern2018thedslligand pages 17-21) |
+One of the earliest and best-characterized roles of APX-1 is in early embryonic patterning. Maternal APX-1 expressed by the P2 blastomere signals to the neighboring ABp cell via the GLP-1 receptor at the four-cell stage (ghai2011transcriptionalregulationof pages 34-38, goutte2002aph1isa pages 1-3, bowerman1995determinantsofblastomere pages 5-7). This contact-dependent interaction distinguishes the initially equivalent sister blastomeres ABa and ABp, establishing different developmental fates for their descendants (bowerman1995determinantsofblastomere pages 7-8, bowerman1995determinantsofblastomere pages 5-7). Loss of maternal *apx-1* function, prevention of P2-ABp contact, or removal of P2 all produce similar phenotypes: embryos generate excess ABa-specific cell types at the expense of ABp-specific lineages, resulting in an anterior pharynx excess (bowerman1995determinantsofblastomere pages 5-7, bowerman1995determinantsofblastomere pages 7-8). This demonstrates that APX-1-dependent signaling is essential for proper dorsal-ventral patterning and lineage specification in the early embryo.
 
+Several *apx-1* alleles exhibit completely penetrant maternal-effect lethality, confirming an essential embryonic requirement for this gene (mcgovern2018thedslligand pages 6-9).
 
-*Table: This table maps APX-1 expression and receptor usage to its major developmental and reproductive functions in C. elegans. It also summarizes experimentally observed phenotypes associated with reduced APX-1 signaling.*
+### Germline Stem Cell Maintenance and Development
 
-### Early Embryonic Development
+In the germline, APX-1 functions together with LAG-2 as a DTC-derived signal that maintains the germline stem/progenitor cell (GSPC) population (mcgovern2018thedslligand pages 1-4, zhang2024dos3mediatescellnonautonomous pages 5-5). The DTC expresses both APX-1 and LAG-2, which interact with GLP-1/Notch receptors on adjacent germ cells to promote proliferation and prevent premature differentiation (zhang2024dos3mediatescellnonautonomous pages 5-5, jones2024c.elegansgermline pages 3-4). This Notch signaling activates downstream targets including *sygl-1* and *lst-1* to maintain an undifferentiated, mitotically active stem cell pool (zhang2024dos3mediatescellnonautonomous pages 5-5). APX-1 has been shown to influence the size of the germline progenitor pool and, at lower penetrance, oocyte size (mcgovern2018thedslligand pages 11-14). Recent work has placed APX-1-mediated Notch signaling in the context of germline aging, showing that Notch activity declines with age and contributes to age-related GSPC loss (zhang2024dos3mediatescellnonautonomous pages 5-5).
 
-At the 4-cell stage, APX-1 expressed in the posterior P2 blastomere activates GLP-1 in the adjacent ABp cell, distinguishing ABp from its sister ABa (liu2023mechanismsoflineage pages 5-6, liu2023mechanismsoflineage pages 4-5). This asymmetric signaling initiates an ABp-specific transcriptional program through REF-1/Hes repressors, which suppress the T-box transcription factors TBX-37 and TBX-38 (liu2023mechanismsoflineage pages 5-6). This represents the first major cell fate decision subdividing the AB lineage and is essential for proper embryonic patterning. Maternal-effect lethal alleles of *apx-1* cause fully penetrant embryonic lethality, underscoring its essential role (mcgovern2018thedslligand pages 6-9).
+### Vulval Development and Lateral Signaling
 
-### Germline Stem Cell Maintenance
+During larval vulval development, APX-1 participates in the LIN-12/Notch-mediated lateral signaling pathway that patterns vulval precursor cell (VPC) fates (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 1-2). The lateral signal is produced by the presumptive primary VPC (P6.p) and acts on neighboring cells to promote secondary vulval fate adoption while preventing additional primary fates. APX-1 functions redundantly with LAG-2 and DSL-1 as components of this lateral signal: all three genes are transcriptionally upregulated in P6.p downstream of inductive LET-23/EGFR–Ras signaling (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 5-7). Single-ligand perturbations produce mild defects due to functional compensation, but combined depletion of DSL ligands results in strong lateral signaling defects, with over 90% of hermaphrodites showing at least one adjacent VPC pair adopting primary fate (chen2004thelateralsignal pages 3-4).
 
-In the adult germline, APX-1 is co-expressed with LAG-2 in the distal tip cell (DTC), the somatic niche that maintains germline stem/progenitor cells (chen2020glp1notch—lag1csl pages 2-4, broek2021investigatingtherole pages 30-36, mcgovern2018thedslligand pages 1-4). These ligands activate GLP-1 on adjacent germ cells, inducing the transcriptional targets *lst-1* and *sygl-1*, which maintain stem cell identity and prevent premature meiotic entry (chen2020glp1notch—lag1csl pages 2-4). The GLP-1 intracellular domain (GLP-1[ICD]) enters the nucleus and associates with LAG-1/CSL to activate these targets (chen2020glp1notch—lag1csl pages 2-4, broek2021investigatingtherole pages 36-41). Reduced DTC signaling decreases the progenitor pool, while excessive APX-1 can promote ectopic proliferation or proximal germline tumors (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 11-14).
+APX-1 can functionally substitute for LAG-2 in the anchor cell (AC) specification process during gonad development. Expression of either APX-1 or LAG-2 partially rescues the duplicated-anchor-cell phenotype of *lag-2* mutants with statistically equivalent efficiency (approximately 25–33% rescue; p=0.372), demonstrating substantial functional redundancy between these DSL ligands in this developmental context (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 173-180).
 
-### Vulval Development
+### Adult Reproductive Function and Ovulation
 
-During larval vulval induction, APX-1 contributes to the "lateral signal" that specifies secondary vulval fates (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 2-3, chen2004thelateralsignal pages 4-5). Expression in the presumptive primary vulval precursor cell (P6.p) is induced downstream of EGF/LET-23/Ras signaling (chen2004thelateralsignal pages 4-5, chen2004thelateralsignal pages 5-7). APX-1 acts redundantly with LAG-2 and the secreted ligand DSL-1 to activate LIN-12 in neighboring cells (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 4-5). Loss of individual ligands has modest effects due to redundancy, but combined depletion causes strong lateral signaling defects (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 4-5).
+Recent studies have identified a post-developmental role for APX-1 in adult reproductive physiology. APX-1 is required for normal ovulation through LIN-12/Notch signaling in the proximal gonad (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 9-11). APX-1 depletion causes multiple ovulation defects including delayed or failed distal spermathecal neck closure, oocyte slippage back into the oviduct, oocyte fragmentation, and abnormal calcium signaling in the spermatheca (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 9-11, mcgovern2018thedslligand pages 21-22). These defects lead to the formation of endomitotic oocytes that undergo abnormal polyploid divisions (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 6-9).
 
-### Adult Reproductive Function
+Importantly, tissue-specific RNAi experiments demonstrate that APX-1 functions in somatic gonadal tissues (sheath and spermatheca) rather than autonomously in the germline (mcgovern2018thedslligand pages 6-9). The ovulation defects occur despite normal expression of sheath and spermathecal cell markers, indicating that APX-1/LIN-12 signaling maintains functional coordination and physiological activity rather than basic cell identity (mcgovern2018thedslligand pages 9-11). APX-1 likely coordinates the mechanical and signaling events required for proper spermathecal contraction, oocyte transit, and embryo expulsion (mcgovern2018thedslligand pages 9-11, mcgovern2018thedslligand pages 21-22).
 
-APX-1 has a post-developmental role in coordinating ovulation, a function discovered more recently (mcgovern2018thedslligand pages 1-4). Expressed in the proximal gonadal sheath and distal spermatheca, APX-1 regulates spermathecal neck closure, calcium dynamics, and oocyte transit (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 9-11, mcgovern2018thedslligand pages 21-22). Depletion causes the "endomitotic oocyte" (Emo) phenotype in 20-33% of animals, with oocytes becoming trapped and undergoing endoreduplication rather than being properly ovulated (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 17-21, mcgovern2018thedslligand pages 1-4). This function appears primarily mediated through LIN-12 rather than GLP-1 (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 11-14).
-
-## Functional Relationships with Other DSL Ligands
-
-*C. elegans* possesses ten DSL-family genes, including both transmembrane and naturally secreted forms—a unique feature among model organisms (chen2004thelateralsignal pages 5-7, chen2004thelateralsignal pages 7-8, chen2004thelateralsignal pages 4-5, chen2004thelateralsignal pages 2-3). APX-1 exhibits significant functional overlap and interchangeability with related ligands:
-
-| Ligand Name | Protein Type | Primary Expression Sites | Main Notch Receptors Activated | Key Functions | Functional Redundancy / Interchangeability |
-|---|---|---|---|---|---|
-| **APX-1** | Canonical single-pass **transmembrane** DSL ligand; endogenous protein is displayed at the signaling-cell surface (goutte2002aph1isa pages 4-5) | P2 blastomere at the four-cell embryonic stage; distal tip cell; P6.p and descendants during vulval induction; proximal gonadal sheath and distal spermatheca (goutte2002aph1isa pages 1-3, mcgovern2018thedslligand pages 1-4, chen2004thelateralsignal pages 2-3) | **GLP-1** in embryonic ABp and adjacent germ cells; **LIN-12** in vulval and adult gonadal contexts (liu2023mechanismsoflineage pages 5-6, chen2020glp1notch—lag1csl pages 2-4, mcgovern2018thedslligand pages 9-11) | Specifies ABp identity; contributes to germline stem/progenitor maintenance; participates in vulval lateral signaling; supports spermathecal closure, calcium dynamics, oocyte transit, and normal ovulation (liu2023mechanismsoflineage pages 5-6, chen2020glp1notch—lag1csl pages 2-4, chen2004thelateralsignal pages 4-5, mcgovern2018thedslligand pages 9-11) | Overlaps with LAG-2 in DTC and ovulation functions and with LAG-2/DSL-1 in vulval lateral signaling. APX-1 can substitute for LAG-2 in some LIN-12-dependent assays, but interchangeability is context-dependent rather than universal (mcgovern2018thedslligand pages 9-11, chen2004thelateralsignal pages 3-4, holt2016characterisationofthe pages 98-102) |
-| **LAG-2** | Canonical single-pass **transmembrane** DSL ligand (chen2004thelateralsignal pages 2-3) | Distal tip cell of the germline niche; P6.p and descendants; signal-sending cells in multiple LIN-12-dependent fate decisions (chen2020glp1notch—lag1csl pages 2-4, chen2004thelateralsignal pages 4-5, chen2004thelateralsignal pages 5-7) | **GLP-1** in germ cells; **LIN-12** in somatic cell-fate decisions and vulval precursor cells (chen2020glp1notch—lag1csl pages 2-4, holt2016characterisationofthe pages 98-102) | Maintains germline stem-cell fate through GLP-1; contributes to vulval lateral signaling and other LIN-12-mediated fate choices (chen2020glp1notch—lag1csl pages 2-4, chen2004thelateralsignal pages 4-5) | Functions with APX-1 in the DTC niche and can replace APX-1 in the ovulation context. Its functions can also be supplied experimentally by APX-1 or secreted DSL-1 in selected developmental assays (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 9-11, chen2004thelateralsignal pages 7-8) |
-| **DSL-1** | Naturally **secreted** DSL ligand lacking a predicted transmembrane domain; can signal at a distance (chen2004thelateralsignal pages 5-7, chen2004thelateralsignal pages 7-8) | P6.p and descendants during vulval development; experimentally active when expressed from heterologous or *lag-2* regulatory sequences (chen2004thelateralsignal pages 4-5, chen2004thelateralsignal pages 5-7) | Activates **LIN-12** and can also activate **GLP-1** when ectopically expressed (chen2004thelateralsignal pages 7-8, chen2004thelateralsignal pages 5-7) | Forms part of the redundant vulval lateral signal and demonstrates that membrane anchoring is not obligatory for productive Notch activation in *C. elegans* (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 7-8) | Redundant with APX-1 and LAG-2 in vulval signaling; can substitute experimentally for LAG-2 in multiple fate decisions despite being secreted, illustrating topological plasticity among worm DSL ligands (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 7-8, chen2004thelateralsignal pages 5-7) |
+| Developmental stage / tissue | Cellular localization or source | Notch receptor partner | Specific biological process | Key phenotype or evidence when APX-1 is disrupted |
+|---|---|---|---|---|
+| Four-cell embryo: P2–ABp interface | Transmembrane APX-1 is presented by the posterior P2 blastomere and enriched along its contact boundary with ABp | GLP-1 | Contact-dependent induction distinguishes ABp from its initially equivalent sister ABa and establishes dorsal–ventral and lineage-specific cell fates | Maternal *apx-1* loss or prevention of P2–ABp contact converts ABp descendants toward ABa-like fates, producing excess anterior-pharyngeal cell types; strong alleles cause fully penetrant maternal-effect embryonic lethality (goutte2002aph1isa pages 1-3, bowerman1995determinantsofblastomere pages 7-8, bowerman1995determinantsofblastomere pages 5-7, mcgovern2018thedslligand pages 6-9) |
+| Distal gonad: distal tip cell (DTC)–germ-cell niche | DTC-derived cell-surface ligand contacts GLP-1-expressing distal germ cells; APX-1 acts alongside LAG-2 | GLP-1 | Supports GLP-1/Notch signaling that maintains an undifferentiated, proliferation-competent germline stem/progenitor pool, with downstream activity involving *sygl-1* and *lst-1* | Reduced APX-1/DSL-ligand input can alter progenitor-pool size and germline development; APX-1-specific effects are partly masked by LAG-2 redundancy. Recent aging work places APX-1 in a niche pathway whose Notch activity declines with age but did not isolate APX-1 experimentally (mcgovern2018thedslligand pages 11-14, zhang2024dos3mediatescellnonautonomous pages 5-5, mcgovern2018thedslligand pages 1-4, jones2024c.elegansgermline pages 3-4) |
+| Larval vulval precursor cells (VPCs) | APX-1 is a transmembrane component of the lateral signal produced by VPCs, including the presumptive primary VPC P6.p; expression rises downstream of LET-23/EGFR–Ras induction | LIN-12 | Redundant lateral signaling with LAG-2 and DSL-1 promotes secondary vulval fate and prevents adjacent VPCs from adopting primary fate | Single-ligand perturbations are mild because of redundancy; combined depletion produces a strong lateral-signaling defect, with over 90% of hermaphrodites showing at least one adjacent pair of primary-fate VPCs and nearly 70% of adjacent pairs affected (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 5-7, chen2004thelateralsignal pages 1-2) |
+| Larval somatic gonad: anchor-cell/ventral-uterine-cell decision | Experimentally expressed APX-1 can function at the signaling-cell surface in place of LAG-2 | LIN-12 | LIN-12-mediated reciprocal signaling specifies one anchor cell and one ventral uterine cell | APX-1 expression partially rescues the duplicated-anchor-cell phenotype of *lag-2(q420)* mutants by about 25–33%, demonstrating context-specific interchangeability with LAG-2; deleting APX-1's MNNL or DSL domain abolishes rescue (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthe pages 173-180, holt2016characterisationofthe pages 180-186) |
+| Adult proximal gonad: proximal sheath and distal four spermathecal cells | APX-1 reporter expression occurs in proximal sheath cells and the distal spermatheca; as a transmembrane DSL ligand, it is expected to signal at somatic-cell contact surfaces | LIN-12 is the best-supported functional partner; GLP-1 may respond under abnormal proximal germline juxtaposition | Coordinates post-developmental ovulation, distal spermathecal-neck closure, calcium-dependent contraction, oocyte transit, and soma–germline communication | Somatic depletion causes delayed or failed neck closure, oocyte slippage or fragmentation, defective transit, absent strong calcium pulses, retained embryos, and endomitotic oocytes. Sheath and spermathecal identity markers remain present, supporting a physiological rather than gross cell-specification defect (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 9-11, mcgovern2018thedslligand pages 21-22) |
 
 
-*Table: Comparison of APX-1, LAG-2, and DSL-1 by topology, expression, receptor usage, biological functions, and experimentally demonstrated redundancy in C. elegans Notch signaling.*
+*Table: This table maps APX-1 expression and cell-surface signaling to its receptor partners, biological roles, and disruption phenotypes across embryonic, germline, vulval, and adult reproductive contexts. It also distinguishes direct APX-1 evidence from conclusions complicated by redundancy with other DSL ligands.*
 
-**LAG-2** is the most closely related transmembrane ligand and shows extensive functional redundancy with APX-1 (mcgovern2018thedslligand pages 1-4, mcgovern2018thedslligand pages 9-11, holt2016characterisationofthe pages 98-102). The two ligands can substitute for each other in multiple developmental contexts, including DTC niche signaling and ovulation (mcgovern2018thedslligand pages 9-11, mcgovern2018thedslligand pages 1-4). In vulval development, they act alongside **DSL-1**, a naturally secreted DSL ligand that demonstrates Notch activation does not require membrane anchoring (chen2004thelateralsignal pages 5-7, chen2004thelateralsignal pages 7-8). Importantly, engineered secreted forms of APX-1 remain functional, confirming the transmembrane domain serves primarily to position the ligand rather than being mechanistically essential for receptor activation (chen2004thelateralsignal pages 7-8).
+## Functional Redundancy Among DSL Ligands
 
-This redundancy likely provides developmental robustness—removing any single ligand often produces weak or context-dependent phenotypes, while combined perturbations cause severe defects (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 4-5).
+APX-1 exhibits substantial functional overlap with other *C. elegans* DSL ligands, particularly LAG-2. Multiple lines of evidence demonstrate this redundancy:
+
+1. **Interchangeability in specific assays:** APX-1 and LAG-2 show statistically equivalent rescue ability in the anchor-cell duplication assay (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 173-180).
+
+2. **Shared receptor activation:** Both ligands can activate GLP-1 and LIN-12 receptors (ghai2011transcriptionalregulationof pages 34-38, langridge2021thec.elegans pages 16-20, chen2004thelateralsignal pages 3-4).
+
+3. **Compensatory relationships:** Combined depletion of multiple DSL ligands produces stronger phenotypes than single-ligand loss, indicating that ligands buffer each other's absence (chen2004thelateralsignal pages 3-4, chen2004thelateralsignal pages 7-8).
+
+4. **Domain-dependent activity:** The redundancy depends on conserved structural domains, as deletion of MNNL or DSL domains eliminates APX-1's ability to compensate for LAG-2 loss (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthe pages 180-186).
+
+However, this redundancy is context-specific rather than absolute. APX-1 cannot fully replace all LAG-2 functions, as evidenced by incomplete rescue and embryonic lethality associated with some transgenic lines (holt2016characterisationofthe pages 180-186). Different DSL ligands may have distinct expression patterns, temporal dynamics, or tissue-specific requirements that limit interchangeability in certain developmental contexts.
 
 ## Recent Developments (2023-2025)
 
-Recent studies continue to illuminate APX-1 function in quantitative and mechanistic contexts:
+Recent research has expanded our understanding of APX-1 function and regulation:
 
-**Quantitative developmental analysis**: A 2023 study by Natesan et al. applied novel branch edit distance metrics to analyze cell-cycle timing across >1300 *C. elegans* embryos, including *apx-1* RNAi treatments. This analysis revealed that *apx-1* knockdown shows more complete penetrance than *glp-1* or *lag-1* RNAi, suggesting a central role in early fate specification (natesan2023novelmetricsreveala pages 1-2). The work demonstrates quantitative links between cell fate pathways (including Notch) and cell cycle timing patterns.
+### Modulation by Adhesion GPCRs
 
-**Cell morphology mapping**: Guan et al. (2025) developed automated morphological mapping of all 671 cells during *C. elegans* embryogenesis, confirming that the P2 cell expresses *apx-1* while showing low GLP-1 expression, consistent with APX-1 functioning as the signal-sending cell (Published online April 2025, DOI: 10.1038/s41467-025-58878-0).
+A 2025 study identified a novel regulatory mechanism for Notch signaling involving the adhesion GPCR latrophilin-1 (LAT-1) (post2025notchactivityis pages 7-8). APX-1 can interact with LAT-1, and this interaction appears to use the same structural mechanism identified for LAG-2 binding, involving residues in LAT-1's extracellular RBL and GAIN domains (post2025notchactivityis pages 7-8). Because APX-1 can compensate for LAG-2 in some contexts, LAT-1 may engage multiple DSL ligands through a general binding mechanism, providing a new layer of Notch pathway modulation (post2025notchactivityis pages 7-8, post2025notchactivityis pages 2-3). This represents an emerging area of research into how GPCRs can fine-tune Notch signaling independently of canonical G-protein signaling.
 
-**Regulatory mechanisms**: Zhang et al. (2024) identified DOS-3, a non-canonical Notch ligand, as a direct transcriptional target of DAF-16/FOXO that mediates cell-non-autonomous regulation of germline stem cells. This work places Notch signaling, including potential APX-1 activity, downstream of insulin/IGF signaling in aging contexts (Published June 2024, DOI: 10.1038/s41467-024-49318-6).
+### Roles in Cell Fate Plasticity and Transdifferentiation
 
-**Germline functional atlas**: Cao et al. (2024) systematically analyzed 364 germline-expressed nucleic acid binding proteins, confirming that LAG-2/APX-1 ligands from the DTC interact with GLP-1 to control germ cell proliferation and differentiation (Published August 2024, DOI: 10.1038/s41467-024-51212-0).
+Recent work has implicated Notch signaling, including APX-1-mediated pathways, in natural transdifferentiation events in *C. elegans* (ghai2011transcriptionalregulationof pages 34-38). While APX-1 has primarily been studied in the context of cell fate specification and maintenance, emerging evidence suggests that Notch ligands may also regulate cellular plasticity and competence for reprogramming (mcgovern2018thedslligand pages 11-14).
 
-**Evolutionary and mechanistic insights**: Recent reviews by Bray & Bigas (2025) on Notch signaling modes and Lv et al. (2024) on invertebrate Notch evolution provide updated frameworks for understanding conserved and divergent features of Notch pathways, including the unique *C. elegans* secreted DSL ligands (Published March 2025 and March 2024, respectively).
+### Germline Aging and Stem Cell Decline
 
-## Key Mechanistic Insights
+A 2024 study on germline stem cell aging demonstrated that Notch signaling in the distal germline declines with age, contributing to age-related GSPC loss and reproductive aging (zhang2024dos3mediatescellnonautonomous pages 5-5). APX-1, as one of the DTC-derived ligands activating GLP-1, participates in this age-sensitive pathway. The study further showed that DAF-16/FOXO-regulated pathways can sustain Notch signaling to counteract age-related stem cell depletion, placing APX-1-mediated signaling in the broader context of longevity and reproductive aging (zhang2024dos3mediatescellnonautonomous pages 5-5).
 
-### Substrate Specificity
+### Germline Tumor Models
 
-As a Notch ligand, APX-1 does not catalyze reactions or transport substrates in the enzymatic sense. Rather, its "substrate specificity" relates to which Notch receptors it activates. APX-1 can engage both GLP-1 and LIN-12, with context-dependent receptor usage: GLP-1 predominates in embryonic ABp specification and germline stem cell maintenance, while LIN-12 mediates vulval lateral signaling and adult ovulation functions (liu2023mechanismsoflineage pages 5-6, chen2020glp1notch—lag1csl pages 2-4, mcgovern2018thedslligand pages 1-4).
+Recent characterizations of germline tumor models have highlighted the role of GLP-1/Notch signaling activated by ligands including APX-1 (jones2024c.elegansgermline pages 3-4). Aberrant activation of this pathway can lead to ectopic proliferation and germline tumors, demonstrating the importance of precise spatial and temporal control of APX-1 signaling (jones2024c.elegansgermline pages 3-4).
 
-### Signaling Mechanism
+## Experimental Evidence and Methodological Approaches
 
-APX-1 functions through canonical Notch trans-activation: the ligand on one cell binds the receptor on an adjacent cell, triggering a conformational change that exposes protease cleavage sites in the receptor. Sequential cleavage by ADAM metalloproteases and γ-secretase releases the NICD, which enters the nucleus and activates transcription (chen2020glp1notch—lag1csl pages 2-4, broek2021investigatingtherole pages 30-36). The requirement for cell-cell contact ensures short-range, spatially precise signaling.
+The functional characterization of APX-1 has employed diverse experimental approaches:
 
-Interestingly, *C. elegans* LIN-12 and GLP-1 appear "tuned to lower force thresholds" for activation compared to *Drosophila* Notch, potentially explaining why secreted DSL ligands can function in worms—less mechanical force from ligand endocytosis may be required to expose the receptor cleavage site (Referenced but not fully accessible in current evidence).
+**Genetic Analysis:** Classical genetic studies using maternal-effect lethal alleles, temperature-sensitive mutations, and RNAi-mediated depletion have defined APX-1's developmental requirements (bowerman1995determinantsofblastomere pages 5-7, mcgovern2018thedslligand pages 6-9, bowerman1995determinantsofblastomere pages 7-8).
 
-### Signaling Pathway Integration
+**Domain Mutagenesis:** Systematic domain deletions and targeted point mutations have mapped functional regions essential for receptor binding and signaling (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthe pages 173-180).
 
-APX-1/Notch signaling interfaces with other developmental pathways. In vulval development, APX-1 expression is induced downstream of EGF/LET-23 signaling, coupling primary-fate induction to lateral signaling (chen2004thelateralsignal pages 4-5, chen2004thelateralsignal pages 5-7). Recent work indicates membrane trafficking pathways (AGEF-1/ARF-1/AP-1) differentially regulate both Notch and EGFR signaling in tissue-specific manners (kato2026theagef1arf1gtpaseap1 pages 1-5, kato2026theagef1arf1gtpaseap1 pages 23-26). In the embryo, APX-1/GLP-1 signaling appears functionally separable from concurrent Wnt-mediated interactions, as Wnt-dependent processes remain intact when Notch signaling is disrupted (goutte2002aph1isa pages 3-4, goutte2002aph1isa pages 1-3).
+**Rescue Assays:** Transgenic expression experiments have demonstrated functional equivalence between APX-1 and LAG-2 in specific contexts and identified domain requirements for ligand activity (holt2016characterisationoftheb pages 173-180, holt2016characterisationofthea pages 173-180, holt2016characterisationofthe pages 173-180).
 
-## Summary
+**Live Imaging:** Time-lapse microscopy of ovulation has revealed real-time defects in spermathecal function and oocyte transit when APX-1 is depleted (mcgovern2018thedslligand pages 6-9).
 
-APX-1 is a transmembrane DSL ligand essential for multiple Notch-dependent developmental processes in *C. elegans*. Its modular protein structure includes essential MNNL and DSL domains for receptor binding, accessory EGF-like repeats that enhance signaling, and a transmembrane anchor that positions the ligand at the cell surface. The protein activates GLP-1 and LIN-12 Notch receptors in spatially and temporally restricted contexts: embryonic ABp specification, germline stem cell maintenance, vulval lateral signaling, and adult ovulation. APX-1 functions redundantly with LAG-2 and other DSL ligands, providing developmental robustness. Recent quantitative and systems-level studies continue to refine our understanding of APX-1's roles in cell fate decisions, demonstrating its continued relevance to fundamental questions in developmental biology.
+**Tissue-Specific Analysis:** Cell-type-specific RNAi and marker analysis have determined where APX-1 functions and distinguished autonomous from non-autonomous requirements (mcgovern2018thedslligand pages 6-9, mcgovern2018thedslligand pages 9-11).
 
-## Key References
+**Biochemical Studies:** Recombinant protein production and in vitro binding assays have provided insights into APX-1 structure and interactions, though high-resolution structural data remain limited (holt2016characterisationofthea pages 113-119, holt2016characterisationoftheb pages 113-119, post2025notchactivityis pages 7-8).
 
-**Classic papers**: Goutte et al. (2002, PNAS) - Early embryonic function; Chen & Greenwald (2004, Dev Cell) - Vulval lateral signaling with secreted ligands; Liu & Murray (2023, Genetics) - Comprehensive lineage specification review
+## Summary and Significance
 
-**Recent functional studies**: McGovern et al. (2018, Dev Biol) - Adult ovulation function; Natesan et al. (2023, PLOS Comput Biol) - Quantitative developmental analysis
+APX-1 is a multifunctional transmembrane DSL ligand that activates Notch receptors GLP-1 and LIN-12 in *C. elegans* to regulate diverse developmental and physiological processes. Its primary biochemical role is to engage Notch receptors at cell-cell contact sites through conserved MNNL and DSL domains, initiating juxtacrine signaling cascades that control cell fate decisions. APX-1 functions from the earliest embryonic stages through adult life, participating in embryonic patterning, germline stem cell maintenance, vulval development, and reproductive physiology. The protein exhibits context-dependent functional redundancy with other DSL ligands, particularly LAG-2, though it also has distinct requirements and expression patterns.
 
-**Current reviews**: Bray & Bigas (2025, Nat Rev Mol Cell Biol) - Notch signaling modes; Lv et al. (2024, Int J Mol Sci) - Evolution of Notch signaling
+Recent research has revealed new regulatory mechanisms involving GPCR modulation, connections to aging and stem cell decline, and roles in cellular plasticity. The gene's name—anterior pharynx in excess—reflects its discovery through embryonic patterning defects, but subsequent work has shown that APX-1's functions extend far beyond early development to encompass germline homeostasis and adult reproductive function. Understanding APX-1 provides insights into the evolution and diversification of Notch signaling systems and the mechanisms by which conserved developmental pathways are deployed in multiple contexts to control tissue patterning, stem cell biology, and physiological processes.
 
 References
 
-1. (liu2023mechanismsoflineage pages 5-6): Jun Liu and J. I. Murray. Mechanisms of lineage specification in caenorhabditis elegans. Genetics, Oct 2023. URL: https://doi.org/10.1093/genetics/iyad174, doi:10.1093/genetics/iyad174. This article has 17 citations and is from a domain leading peer-reviewed journal.
+1. (mcgovern2018thedslligand pages 1-4): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
 
-2. (liu2023mechanismsoflineage pages 4-5): Jun Liu and J. I. Murray. Mechanisms of lineage specification in caenorhabditis elegans. Genetics, Oct 2023. URL: https://doi.org/10.1093/genetics/iyad174, doi:10.1093/genetics/iyad174. This article has 17 citations and is from a domain leading peer-reviewed journal.
+2. (bowerman1995determinantsofblastomere pages 5-7): Bruce Bowerman. Determinants of blastomere identity in the early c. elegans embryo. BioEssays, 17:405-414, May 1995. URL: https://doi.org/10.1002/bies.950170508, doi:10.1002/bies.950170508. This article has 42 citations and is from a peer-reviewed journal.
 
-3. (holt2016characterisationofthe pages 180-186): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
+3. (bowerman1995determinantsofblastomere pages 7-8): Bruce Bowerman. Determinants of blastomere identity in the early c. elegans embryo. BioEssays, 17:405-414, May 1995. URL: https://doi.org/10.1002/bies.950170508, doi:10.1002/bies.950170508. This article has 42 citations and is from a peer-reviewed journal.
 
-4. (holt2016characterisationoftheb pages 180-186): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
+4. (holt2016characterisationoftheb pages 173-180): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
-5. (mcgovern2018thedslligand pages 1-4): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
+5. (chen2004thelateralsignal pages 3-4): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
 
-6. (goutte2002aph1isa pages 4-5): Caroline Goutte, Makoto Tsunozaki, Valerie A. Hale, and James R. Priess. Aph-1 is a multipass membrane protein essential for the notch signaling pathway in caenorhabditis elegans embryos. Proceedings of the National Academy of Sciences of the United States of America, 99:775-779, Jan 2002. URL: https://doi.org/10.1073/pnas.022523499, doi:10.1073/pnas.022523499. This article has 615 citations and is from a highest quality peer-reviewed journal.
+6. (holt2016characterisationoftheb pages 191-194): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
-7. (chen2020glp1notch—lag1csl pages 2-4): Jian Chen, Ariz Mohammad, Nanette Pazdernik, Huiyan Huang, Beth Bowman, Eric Tycksen, and Tim Schedl. Glp-1 notch—lag-1 csl control of the germline stem cell fate is mediated by transcriptional targets lst-1 and sygl-1. PLOS Genetics, 16:e1008650, Mar 2020. URL: https://doi.org/10.1371/journal.pgen.1008650, doi:10.1371/journal.pgen.1008650. This article has 61 citations and is from a domain leading peer-reviewed journal.
+7. (langridge2021thec.elegans pages 16-20): Paul D. Langridge, Jessica Yu Chan, Alejandro Garcia-Diaz, Iva Greenwald, and Gary Struhl. The c. elegans notch proteins lin-12 and glp-1 are tuned to lower force thresholds for activation than drosophila notch. bioRxiv, Feb 2021. URL: https://doi.org/10.1101/2021.02.11.429991, doi:10.1101/2021.02.11.429991. This article has 1 citations.
 
-8. (broek2021investigatingtherole pages 30-36): KD Vanden Broek. Investigating the role of rack-1 in the c. elegans germ line. Unknown journal, 2021.
+8. (holt2016characterisationofthe pages 191-194): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
-9. (broek2021investigatingtherole pages 36-41): KD Vanden Broek. Investigating the role of rack-1 in the c. elegans germ line. Unknown journal, 2021.
+9. (holt2016characterisationofthea pages 191-194): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
-10. (holt2016characterisationofthea pages 180-186): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
+10. (goutte2002aph1isa pages 4-5): Caroline Goutte, Makoto Tsunozaki, Valerie A. Hale, and James R. Priess. Aph-1 is a multipass membrane protein essential for the notch signaling pathway in caenorhabditis elegans embryos. Proceedings of the National Academy of Sciences of the United States of America, 99:775-779, Jan 2002. URL: https://doi.org/10.1073/pnas.022523499, doi:10.1073/pnas.022523499. This article has 615 citations and is from a highest quality peer-reviewed journal.
 
-11. (holt2016characterisationofthea pages 173-180): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
+11. (goutte2002aph1isa pages 1-3): Caroline Goutte, Makoto Tsunozaki, Valerie A. Hale, and James R. Priess. Aph-1 is a multipass membrane protein essential for the notch signaling pathway in caenorhabditis elegans embryos. Proceedings of the National Academy of Sciences of the United States of America, 99:775-779, Jan 2002. URL: https://doi.org/10.1073/pnas.022523499, doi:10.1073/pnas.022523499. This article has 615 citations and is from a highest quality peer-reviewed journal.
 
-12. (holt2016characterisationofthe pages 45-50): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
+12. (holt2016characterisationofthea pages 113-119): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
 13. (holt2016characterisationofthe pages 173-180): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
@@ -323,79 +318,71 @@ References
 
 15. (holt2016characterisationofthe pages 113-119): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
-16. (chen2004thelateralsignal pages 5-7): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
+16. (holt2016characterisationofthea pages 173-180): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
-17. (chen2004thelateralsignal pages 7-8): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
+17. (mcgovern2018thedslligand pages 11-14): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
 
-18. (goutte2002aph1isa pages 1-3): Caroline Goutte, Makoto Tsunozaki, Valerie A. Hale, and James R. Priess. Aph-1 is a multipass membrane protein essential for the notch signaling pathway in caenorhabditis elegans embryos. Proceedings of the National Academy of Sciences of the United States of America, 99:775-779, Jan 2002. URL: https://doi.org/10.1073/pnas.022523499, doi:10.1073/pnas.022523499. This article has 615 citations and is from a highest quality peer-reviewed journal.
+18. (zhang2024dos3mediatescellnonautonomous pages 5-5): Zhifei Zhang, Haiyan Yang, Lei Fang, Guangrong Zhao, Jun Xiang, Jialin C. Zheng, and Zhao Qin. Dos-3 mediates cell-non-autonomous daf-16/foxo activity in antagonizing age-related loss of c. elegans germline stem/progenitor cells. Nature Communications, Jun 2024. URL: https://doi.org/10.1038/s41467-024-49318-6, doi:10.1038/s41467-024-49318-6. This article has 6 citations and is from a highest quality peer-reviewed journal.
 
-19. (broek2021investigatingtherole pages 24-30): KD Vanden Broek. Investigating the role of rack-1 in the c. elegans germ line. Unknown journal, 2021.
+19. (mcgovern2018thedslligand pages 6-9): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
 
-20. (chen2004thelateralsignal pages 2-3): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
+20. (mcgovern2018thedslligand pages 9-11): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
 
-21. (chen2004thelateralsignal pages 4-5): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
+21. (ghai2011transcriptionalregulationof pages 34-38): Vikas Ghai. Transcriptional regulation of genes expressed in the caenorhabditis elegans pharyngeal glands. Jan 2011. URL: https://doi.org/10.11575/prism/3981, doi:10.11575/prism/3981. This article has 0 citations.
 
-22. (mcgovern2018thedslligand pages 6-9): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
+22. (jones2024c.elegansgermline pages 3-4): Mariah E. Jones, Mina Norman, Alex Minh Tiet, Jiwoo Lee, and Myon Hee Lee. C. elegans germline as three distinct tumor models. Biology, Jun 2024. URL: https://doi.org/10.3390/biology13060425, doi:10.3390/biology13060425. This article has 3 citations.
 
-23. (mcgovern2018thedslligand pages 9-11): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
+23. (chen2004thelateralsignal pages 1-2): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
 
-24. (mcgovern2018thedslligand pages 11-14): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
+24. (chen2004thelateralsignal pages 5-7): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
 
-25. (chen2004thelateralsignal pages 3-4): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
+25. (mcgovern2018thedslligand pages 21-22): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
 
-26. (mcgovern2018thedslligand pages 21-22): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
+26. (holt2016characterisationofthe pages 180-186): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
 
-27. (mcgovern2018thedslligand pages 17-21): Marie McGovern, Perla Gisela Castaneda, Olga Pekar, Laura G. Vallier, Erin J. Cram, and E. Jane Albert Hubbard. The dsl ligand apx-1 is required for normal ovulation in c. elegans. Developmental biology, 435 2:162-169, Mar 2018. URL: https://doi.org/10.1016/j.ydbio.2018.01.009, doi:10.1016/j.ydbio.2018.01.009. This article has 12 citations and is from a peer-reviewed journal.
+27. (chen2004thelateralsignal pages 7-8): Ning Chen and Iva Greenwald. The lateral signal for lin-12/notch in c. elegans vulval development comprises redundant secreted and transmembrane dsl proteins. Developmental cell, 6 2:183-92, Feb 2004. URL: https://doi.org/10.1016/s1534-5807(04)00021-8, doi:10.1016/s1534-5807(04)00021-8. This article has 272 citations and is from a highest quality peer-reviewed journal.
 
-28. (holt2016characterisationofthe pages 98-102): L Holt. Characterisation of the notch receptor/ligand interaction using c. elegans as a model. Unknown journal, 2016.
+28. (post2025notchactivityis pages 7-8): Willem Berend Post, Victoria Elisabeth Groß, Daniel Matúš, Iannis Charnay, Fabian Liessmann, Florian Seufert, Peter Hildebrand, Jens Meiler, Anette Kaiser, Torsten Schöneberg, and Simone Prömel. Notch activity is modulated by the agpcr latrophilin binding the dsl ligand in c. elegans. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-61730-0, doi:10.1038/s41467-025-61730-0. This article has 4 citations and is from a highest quality peer-reviewed journal.
 
-29. (natesan2023novelmetricsreveala pages 1-2): Gunalan Natesan, Timothy Hamilton, Eric J. Deeds, and Pavak K. Shah. Novel metrics reveal new structure and unappreciated heterogeneity in caenorhabditis elegans development. Dec 2023. URL: https://doi.org/10.1371/journal.pcbi.1011733, doi:10.1371/journal.pcbi.1011733. This article has 9 citations and is from a highest quality peer-reviewed journal.
-
-30. (kato2026theagef1arf1gtpaseap1 pages 1-5): Tatsuya Kato, Clare FitzPatrick, Soroosh Siyoofi, Haojun Zhu, Edouarda Taguedong, Olga Skorobogata, and Christian E. Rocheleau. The agef-1/arf-1 gtpase/ap-1 trafficking pathway differentially regulates lin-12/notch signaling in a tissue specific manner in <i>c. elegans</i>. bioRxiv, Apr 2026. URL: https://doi.org/10.64898/2026.04.17.719071, doi:10.64898/2026.04.17.719071. This article has 0 citations.
-
-31. (kato2026theagef1arf1gtpaseap1 pages 23-26): Tatsuya Kato, Clare FitzPatrick, Soroosh Siyoofi, Haojun Zhu, Edouarda Taguedong, Olga Skorobogata, and Christian E. Rocheleau. The agef-1/arf-1 gtpase/ap-1 trafficking pathway differentially regulates lin-12/notch signaling in a tissue specific manner in <i>c. elegans</i>. bioRxiv, Apr 2026. URL: https://doi.org/10.64898/2026.04.17.719071, doi:10.64898/2026.04.17.719071. This article has 0 citations.
-
-32. (goutte2002aph1isa pages 3-4): Caroline Goutte, Makoto Tsunozaki, Valerie A. Hale, and James R. Priess. Aph-1 is a multipass membrane protein essential for the notch signaling pathway in caenorhabditis elegans embryos. Proceedings of the National Academy of Sciences of the United States of America, 99:775-779, Jan 2002. URL: https://doi.org/10.1073/pnas.022523499, doi:10.1073/pnas.022523499. This article has 615 citations and is from a highest quality peer-reviewed journal.
+29. (post2025notchactivityis pages 2-3): Willem Berend Post, Victoria Elisabeth Groß, Daniel Matúš, Iannis Charnay, Fabian Liessmann, Florian Seufert, Peter Hildebrand, Jens Meiler, Anette Kaiser, Torsten Schöneberg, and Simone Prömel. Notch activity is modulated by the agpcr latrophilin binding the dsl ligand in c. elegans. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-61730-0, doi:10.1038/s41467-025-61730-0. This article has 4 citations and is from a highest quality peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](apx-1-deep-research-falcon_artifacts/artifact-00.md)
 - [Edison artifact artifact-01](apx-1-deep-research-falcon_artifacts/artifact-01.md)
-- [Edison artifact artifact-02](apx-1-deep-research-falcon_artifacts/artifact-02.md)
 
 ## Citations
 
-1. mcgovern2018thedslligand pages 6-9
-2. liu2023mechanismsoflineage pages 5-6
-3. mcgovern2018thedslligand pages 1-4
-4. chen2004thelateralsignal pages 2-3
-5. chen2004thelateralsignal pages 7-8
-6. natesan2023novelmetricsreveala pages 1-2
-7. liu2023mechanismsoflineage pages 4-5
-8. holt2016characterisationofthe pages 180-186
-9. holt2016characterisationoftheb pages 180-186
-10. broek2021investigatingtherole pages 30-36
-11. broek2021investigatingtherole pages 36-41
-12. holt2016characterisationofthea pages 180-186
-13. holt2016characterisationofthea pages 173-180
-14. holt2016characterisationofthe pages 45-50
-15. holt2016characterisationofthe pages 173-180
-16. holt2016characterisationoftheb pages 113-119
-17. holt2016characterisationofthe pages 113-119
-18. chen2004thelateralsignal pages 5-7
-19. broek2021investigatingtherole pages 24-30
-20. chen2004thelateralsignal pages 4-5
-21. mcgovern2018thedslligand pages 9-11
-22. mcgovern2018thedslligand pages 11-14
-23. chen2004thelateralsignal pages 3-4
-24. mcgovern2018thedslligand pages 21-22
-25. mcgovern2018thedslligand pages 17-21
-26. holt2016characterisationofthe pages 98-102
-27. ICD
-28. https://doi.org/10.1093/genetics/iyad174,
-29. https://doi.org/10.1016/j.ydbio.2018.01.009,
-30. https://doi.org/10.1073/pnas.022523499,
-31. https://doi.org/10.1371/journal.pgen.1008650,
-32. https://doi.org/10.1016/s1534-5807(04
-33. https://doi.org/10.1371/journal.pcbi.1011733,
-34. https://doi.org/10.64898/2026.04.17.719071,
+1. holt2016characterisationoftheb pages 173-180
+2. mcgovern2018thedslligand pages 6-9
+3. mcgovern2018thedslligand pages 11-14
+4. chen2004thelateralsignal pages 3-4
+5. mcgovern2018thedslligand pages 9-11
+6. holt2016characterisationofthe pages 180-186
+7. post2025notchactivityis pages 7-8
+8. ghai2011transcriptionalregulationof pages 34-38
+9. mcgovern2018thedslligand pages 1-4
+10. bowerman1995determinantsofblastomere pages 5-7
+11. bowerman1995determinantsofblastomere pages 7-8
+12. holt2016characterisationoftheb pages 191-194
+13. holt2016characterisationofthe pages 191-194
+14. holt2016characterisationofthea pages 191-194
+15. holt2016characterisationofthea pages 113-119
+16. holt2016characterisationofthe pages 173-180
+17. holt2016characterisationoftheb pages 113-119
+18. holt2016characterisationofthe pages 113-119
+19. holt2016characterisationofthea pages 173-180
+20. chen2004thelateralsignal pages 1-2
+21. chen2004thelateralsignal pages 5-7
+22. mcgovern2018thedslligand pages 21-22
+23. chen2004thelateralsignal pages 7-8
+24. post2025notchactivityis pages 2-3
+25. https://doi.org/10.1016/j.ydbio.2018.01.009,
+26. https://doi.org/10.1002/bies.950170508,
+27. https://doi.org/10.1016/s1534-5807(04
+28. https://doi.org/10.1101/2021.02.11.429991,
+29. https://doi.org/10.1073/pnas.022523499,
+30. https://doi.org/10.1038/s41467-024-49318-6,
+31. https://doi.org/10.11575/prism/3981,
+32. https://doi.org/10.3390/biology13060425,
+33. https://doi.org/10.1038/s41467-025-61730-0,

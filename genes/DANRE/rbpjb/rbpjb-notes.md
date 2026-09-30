@@ -13,4 +13,4 @@
   oscillator."] Morpholino studies often target both paralogs.
 - IBA nodes: PTN000071433 (nucleus, DNA-binding TF activity, cis-reg DNA binding); PTN002580211
   (Notch signaling pathway, MAML1-RBP-Jkappa-ICN1 complex).
-- Deep research: first falcon attempt failed (template variables missing, UniProt 429), relaunched.
+- Deep research: first falcon attempt failed (template variables missing after UniProt 429); rerun succeeded (rbpjb-deep-research-falcon.md), cited.

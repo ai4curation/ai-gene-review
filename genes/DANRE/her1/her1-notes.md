@@ -22,5 +22,5 @@
 - Decisions: protein binding (IPI) removed (dimerization captured by heterodimerization term);
   identical protein binding -> protein homodimerization activity; DNA-templated transcription
   marked over-annotated; NEW GO:0001227 (IDA, PMID:22911291).
-- Deep research: falcon runs timed out at 600 s (twice), relaunched with --timeout 2400; review
+- Deep research: falcon (600 s wrapper timeout, but the client completed): her1-deep-research-falcon.md present and cited.
   written from cached full-text publications.

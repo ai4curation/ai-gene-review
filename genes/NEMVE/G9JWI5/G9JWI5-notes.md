@@ -48,5 +48,6 @@
 
 ## Deep research
 
-- `just deep-research-falcon NEMVE G9JWI5 --alias notch --fallback perplexity-lite` launched
-  2026-09-30. Review based on cached full-text publications.
+- First run with --alias failed (template variables missing); rerun without alias produced
+  G9JWI5-deep-research-falcon.md (falcon), cited in the review. Review based primarily on cached
+  full-text publications.

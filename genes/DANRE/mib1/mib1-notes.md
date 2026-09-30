@@ -16,4 +16,4 @@
   PTN008608909 (endocytosis, Notch signaling pathway).
 - Decisions: all generic protein binding IPIs removed; positive regulation of protein
   ubiquitination -> MODIFY protein ubiquitination; ~100 developmental IMP/IGI rows kept non-core.
-- Deep research: falcon timed out (600 s) and relaunched with --timeout 2400.
+- Deep research: falcon (600 s wrapper timeout, but the client completed): mib1-deep-research-falcon.md present and cited.
