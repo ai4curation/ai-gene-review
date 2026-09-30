@@ -98,3 +98,19 @@ Short primary anchors replace the prior repeated or punctuation-altered snippets
 ### Focused validation of the completed amendment
 
 `just validate human BBIP1` passed (actual ae727d), with four advisories. Three concern supported generic protein-binding rows retained as non-core under the supplied ActionEnum: the interaction observations are not shown incorrect, and no unsupported replacement activity is invented. The fourth concerns the available Falcon report not being cited by an annotation; the report remains unchanged, while decisions use directly read primary evidence. These advisories do not justify removing supported interactions or citing provider prose in place of primary evidence. Rendering passed (774e6b); the new history record records the actual checks. No global validation claim.
+
+
+## 2026-09-30 — first review follow-up: partner-specific binding and localization evidence
+
+The discovery-paper binding tuple combines two original GOA observations, with BBS4/Q96RK4 and HDAC6/Q9UBN7. The HDAC6 component supports MODIFY to [GO:0042826 histone deacetylase binding](https://amigo.geneontology.org/amigo/term/GO%3A0042826), a child of enzyme binding. The cached abstract explicitly identifies the association [PMID:19081074]; [NCBI HDAC6](https://www.ncbi.nlm.nih.gov/gene/10013/) corroborates the partner identity. This refinement applies to HDAC6, not to BBS4. Both original partner records remain preserved, and the reason retains the supported BBS4 observation. Full original biochemical Results remain inaccessible, so this does not establish purified binary binding, direct enzyme inhibition, or a coordinated three-protein bridge. The two other BBS4 source rows remain KEEP_AS_NON_CORE under the supplied ActionEnum; a supported interaction is not removed solely because its GO term is generic.
+
+The [official HPA antibody record](https://www.proteinatlas.org/ENSG00000214413-BBIP1/summary/antibody) names basal-body and cytosolic staining in RPTEC/TERT1 and serum-starved hTERT-RPE1 cells. The revised reasons link that record directly and make the read boundary explicit: antibody text and the existing HPA IDA were assessed; image pixels and antibody specificity were not independently re-scored. The basal-body ACCEPT is retained, and no isoform attribution is added.
+
+Additional references now follow the claim: discovery and human structural evidence support complex membership; the human structure and existing Reactome cargo events support structural participation in receptor trafficking; the discovery paper supports the assembly phenotype. PMID:31951201 is linked wherever the reason invokes the later structure. A row's original reference is not repeated as an additional reference. The scaffold NEW row already identifies PMID:31951201 as its original reference and uses the existing single core anchor. No scientific quotation is added or repeated here.
+
+Positive cytosol reasons now describe the corresponding complex-localization context, and the core prose states how scaffold activity contributes to receptor localization. The accepted scaffold term, all core ontology terms, the withdrawn process/adaptor proposals, four alternative products and all 22 machine-source objects remain unchanged. The resulting source decisions are 11 ACCEPT, 10 KEEP_AS_NON_CORE and 1 MODIFY, plus the single previously accepted scaffold NEW assertion. This supersedes the earlier all-three-generic-binding NC summary for the HDAC6 component only.
+
+
+### Focused checks for the first follow-up
+
+`just validate human BBIP1` passed (actual 2ddbd2) with three advisories: the two remaining supported generic-binding rows stay non-core under the supplied ActionEnum, and the immutable Falcon report remains uncited while directly read primary sources support the decisions. No interaction is removed solely for genericity. Rendering passed (faeb27); the generated Codex EDIT history records this session. No global validation claim.
