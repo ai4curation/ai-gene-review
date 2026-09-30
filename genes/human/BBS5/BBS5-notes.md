@@ -61,3 +61,10 @@ Normal-source primary reading confirms the zebrafish Bbs5 looping phenotype and 
 ## Validation of the 2026-09-30 revision
 
 Focused validation passed with 14 advisories for generic protein-binding assertions retained as non-core under the supplied ActionEnum. Source-supported associations remain non-core when a more specific activity has not been established. No errors or source-projection mismatches were reported.
+
+
+## Event-specific cytosol explanations — 2026-09-30
+
+The five cytosol annotations refer to distinct events involving the BBSome: formation of the complex, association with RAB3IP, cargo recognition, targeting to the primary cilium, and regulation by LZTFL1. Their reasons now explain those individual contexts instead of repeating a general list of activities performed by other proteins. BBS5 remains a component of the complex; these location annotations do not establish a separate exchange-factor, motor, cargo-recognition or assembly-scaffold activity for BBS5 [Reactome:R-HSA-5617815; Reactome:R-HSA-5624125; Reactome:R-HSA-5624126; Reactome:R-HSA-5624127; Reactome:R-HSA-5624129].
+
+All 45 annotation decisions and source assertions, the two core functions and both alternative products are unchanged. The five complete cached event summaries were read for this clarification. No new quotation or full-text access claim is introduced.
