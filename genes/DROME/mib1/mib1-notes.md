@@ -39,3 +39,10 @@ PTHR24202:SF53 (E3 UBIQUITIN-PROTEIN LIGASE MIB1).
 
 ## Deep research
 - falcon run launched; if absent, it did not complete (rate limited API).
+
+## Deep research (falcon) completed
+- `mib1-deep-research-falcon.md` generated (retry with longer timeout). Consistent with the
+  review; notes bipartite N-box/C-box ligand recognition by the MZM and REP domains (from
+  mammalian MIB1-JAG1 structural work) and that Ser signalling is strictly Mib1/ubiquitin
+  dependent whereas Dl retains weak ubiquitination-independent activity. Not independently
+  verified from primary text here.

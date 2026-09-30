@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-30T05:14:52.908335'
-end_time: '2026-09-30T05:29:10.557612'
-duration_seconds: 857.65
+start_time: '2026-09-30T05:25:23.026725'
+end_time: '2026-09-30T05:39:37.703213'
+duration_seconds: 854.68
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: DROME
@@ -27,10 +27,10 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 35
-artifact_count: 2
+citation_count: 47
+artifact_count: 3
 artifact_sources:
-  edison_answer_artifacts: 2
+  edison_answer_artifacts: 3
 artifacts:
 - filename: artifact-00.md
   path: mib1-deep-research-falcon_artifacts/artifact-00.md
@@ -44,6 +44,12 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-01
+- filename: artifact-02.md
+  path: mib1-deep-research-falcon_artifacts/artifact-02.md
+  media_type: text/markdown
+  source: edison_answer_artifacts
+  data_storage_id: null
+  description: Edison artifact artifact-02
 ---
 
 ## Question
@@ -154,246 +160,241 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Comprehensive Research Report: Drosophila mib1 (mind-bomb) Gene
+# Comprehensive Research Report: Drosophila mib1 (mind-bomb)
 
-## Gene Identity Verification
+## Gene Identity and Overview
 
-The gene mib1 (CG5841, UniProt Q9VUX2) in *Drosophila melanogaster* encodes Mind bomb 1 (Mib1), an E3 ubiquitin-protein ligase (EC 2.3.2.27) that is essential for Notch signaling activation (vullings2025anothertailof pages 1-2). The protein contains characteristic ankyrin repeats (IPR002110) and MIB/HERC2 domains (IPR010606) as specified in the UniProt entry, confirming the correct gene identity.
+The mib1 gene (CG5841) of *Drosophila melanogaster* encodes the E3 ubiquitin-protein ligase Mind bomb 1 (Mib1, also known as D-mib), a critical regulator of Notch signaling during development (lai2005theubiquitinligase pages 1-2, lai2005theubiquitinligase pages 3-4). This report synthesizes findings from foundational studies (2005-2020) and recent research (2023-2025) to provide a comprehensive understanding of mib1's molecular function, biological processes, and subcellular localization.
 
 ## Molecular Function and Enzymatic Activity
 
-### Primary Enzymatic Function
+### E3 Ubiquitin Ligase Activity
 
-Mib1 functions as a RING-type E3 ubiquitin ligase that catalyzes the transfer of ubiquitin from E2 ubiquitin-conjugating enzymes to lysine residues in substrate proteins (seib2021theroleof pages 8-9). The protein is approximately 1200 amino acids in length and contains three C-terminal RING finger domains, of which the terminal RING3 domain is essential for catalytic activity (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2). The RING domains bind ubiquitin-charged E2 enzymes and facilitate ubiquitin transfer to substrate lysines, while N-terminal MZM (MIB/HERC2 domains surrounding a ZZ-type zinc finger) and REP (MIB repeat) regions mediate substrate recognition (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2).
+Drosophila Mib1 functions as a RING-type E3 ubiquitin ligase that catalyzes the transfer of ubiquitin from E2 ubiquitin-conjugating enzymes to specific substrate proteins (lai2005theubiquitinligase pages 1-2, guo2016structureandfunction pages 5-7). Unlike RBR-type E3 ligases, Mib1 does not form a covalent ubiquitin intermediate but instead coordinates the E2-ubiquitin complex to facilitate direct transfer to substrates (guo2016structureandfunction pages 5-7). The primary enzymatic function is to mono-ubiquitinate Notch ligands, promoting their endocytosis and signaling activity (lai2005theubiquitinligase pages 1-2, bras2011themultiplefacets pages 2-3).
+
+### Protein Domain Architecture
+
+Mib1 exhibits a modular domain organization that integrates substrate recognition, scaffolding, and catalytic functions:
+
+| Domain name | Location in protein | Structural features | Function |
+|---|---|---|---|
+| MZM domain | N-terminal | Two Mib-Herc2 (MH) subdomains flanking a ZZ-type zinc-finger domain; peptide-binding modules have an SH3-like fold. (guo2016structureandfunction pages 2-4, lai2005theubiquitinligase pages 3-4, guo2016structureandfunction pages 4-5) | Substrate-recognition module. It binds the membrane-proximal N-box of DSL-ligand cytoplasmic tails; together with REP binding, this creates cooperative bipartite recognition and helps orient ligand lysines for ubiquitination. (guo2016structureandfunction pages 2-4, guo2016structureandfunction pages 4-5, mcmillan2015atailof pages 1-3) |
+| REP domain | N-terminal, following MZM | Two tandem Mib-repeat modules with peptide-binding architecture; forms the second component of the MZM–REP substrate-binding region. (guo2016structureandfunction pages 2-4, guo2016structureandfunction pages 4-5, guo2016structureandfunction pages 1-2) | Recognizes the ligand’s C-terminal C-box. Simultaneous engagement of the N-box by MZM and the C-box by REP increases substrate affinity and promotes efficient ubiquitination of Notch ligands. (guo2016structureandfunction pages 4-5, mcmillan2015atailof pages 1-3) |
+| Ankyrin-repeat region (ANK) | Central | Extended array of approximately eight to nine ankyrin repeats; the precise count varies between early Drosophila annotation and later conserved Mib1 architecture descriptions. (guo2016structureandfunction pages 2-4, lai2005theubiquitinligase pages 3-4, guo2016structureandfunction pages 1-2) | Proposed interaction scaffold or molecular spacer that establishes the distance and orientation between the N-terminal ligand-binding modules and the C-terminal E2–ubiquitin-binding RING machinery. Its exact mechanistic contribution remains incompletely resolved. (guo2016structureandfunction pages 2-4) |
+| RING-finger region (RNG) | C-terminal | Three RING elements; the terminal RING most closely matches the canonical RING E3-ligase motif. Unlike RBR ligases, Mib1 is not thought to form a covalent E3–ubiquitin intermediate. (guo2016structureandfunction pages 5-7, lai2005theubiquitinligase pages 3-4) | Catalytic E3-ligase machinery: recruits ubiquitin-charged E2 enzymes and facilitates direct ubiquitin transfer to bound substrates. The terminal RING is especially important; disrupting or deleting the RING region impairs ubiquitination and can produce dominant-negative effects on Notch signaling. (guo2016structureandfunction pages 5-7, lai2005theubiquitinligase pages 3-4, dho2019proximityinteractionsof pages 2-4) |
+
+
+*Table: Domain-level summary of how Drosophila Mib1 combines bipartite Notch-ligand recognition, ankyrin-mediated organization, and C-terminal RING-dependent ubiquitin transfer.*
+
+The bipartite substrate-recognition mechanism represents a key feature of Mib1 function: the MZM domain binds the membrane-proximal N-box motif of DSL ligands, while the REP domain simultaneously engages the C-terminal C-box (guo2016structureandfunction pages 4-5, mcmillan2015atailof pages 1-3). This cooperative two-site interaction increases substrate affinity and positions lysine residues for efficient ubiquitination (vullings2025anothertailof pages 1-2, kalodimou2023separablerolesfor pages 17-19).
 
 ### Substrate Specificity
 
-The primary physiological substrates of Drosophila Mib1 are the Notch ligands **Delta (Dl)** and **Serrate (Ser)**, both members of the DSL (Delta/Serrate/Lag-2) family of transmembrane proteins (vullings2025anothertailof pages 1-2).
+The primary established substrates of Drosophila Mib1 are the two DSL-family Notch ligands, Delta (Dl) and Serrate (Ser) (lai2005theubiquitinligase pages 1-2, lai2005theubiquitinligase pages 4-6). Recent work (2023-2025) has elucidated the specific ubiquitination requirements:
 
-**For Delta:** Mib1 recognizes Delta through a bipartite binding mechanism in which the MZM domain binds the N-box (also called ICD2) and the REP domain binds the C-box (also called ICD3) of Delta's intracellular domain (vullings2025anothertailof pages 1-2). Recent work by Vüllings et al. (2025) demonstrated that full Mib1-dependent activation of Delta requires a combination of six intracellular lysine residues, with **lysine 742 (K742)** being the most important single residue (vullings2025anothertailof pages 1-2). Loss or mutation of these lysines reduces Delta signaling activity and increases cis-inhibition, in which ligand and receptor on the same cell interfere with productive trans-signaling (vullings2025anothertailof pages 1-2). Importantly, Delta retains weak signaling activity even when all intracellular lysines are replaced by arginine (DlK2R variant), indicating that ubiquitination enhances but is not absolutely required for Delta function (troost2023themeaningof pages 1-2).
-
-**For Serrate:** In contrast to Delta, Serrate is more strictly dependent on Mib1-mediated ubiquitination (seib2025theintracellulardomains pages 2-3, seib2025theintracellulardomains pages 1-2). Loss of Mib1 nearly abolishes Serrate endocytosis and signaling, causing Serrate to accumulate at the plasma membrane (seib2025theintracellulardomains pages 1-2). At least five conserved intracellular lysines are required for Mib1-mediated Serrate activation, with approximately six lysines needed for complete signaling and trafficking behavior (seib2025theintracellulardomains pages 2-3, seib2025theintracellulardomains pages 1-2). The five most conserved lysines preferentially support the signaling-relevant endocytic route, while an additional lysine helps restore bulk endocytosis (seib2025theintracellulardomains pages 2-3). Unlike Delta, a lysine-deficient Serrate variant cannot support development, highlighting Serrate's absolute dependence on ubiquitination (seib2025theintracellulardomains pages 2-3, seib2025theintracellulardomains pages 1-2).
-
-| Substrate or feature | Ubiquitination sites | Functional requirement | Key findings |
-| --- | --- | --- | --- |
-| **Delta (Dl)** | Six intracellular lysines collectively support full Mib1-dependent activity; **K742** is the most important identified residue. | Ubiquitination is required for maximal Mib1-dependent signaling and productive endocytosis, but a lysine-less Delta variant retains weak activity. | MZM binds the Delta N-box in ICD2, while REP binds the C-box in ICD3. Loss of relevant lysines reduces trans-activation and increases cis-inhibition. (vullings2025anothertailof pages 1-2, troost2023themeaningof pages 1-2, vullings2025anothertailof pages 2-4) |
-| **Serrate (Ser)** | At least **five conserved intracellular lysines** support signaling; approximately **six lysines** are needed for complete signaling and trafficking behavior. | Serrate is more strictly dependent than Delta on Mib1-mediated ubiquitination. Loss of intracellular lysines or Mib1 nearly abolishes Serrate endocytosis and signaling. | Five conserved lysines preferentially support signaling-relevant endocytosis; an additional lysine helps restore bulk endocytosis. Ubiquitination also regulates degradation and cis-inhibition. (seib2025theintracellulardomains pages 2-3, seib2025theintracellulardomains pages 1-2, seib2021theroleof pages 8-9) |
-| **Catalytic RING region** | Not an acceptor substrate; recruits an E2–ubiquitin conjugate for transfer of ubiquitin to ligand lysines. | Mib1 contains three C-terminal RING fingers; the terminal **RING3** is required for demonstrated catalytic activity. | RING-defective variants fail to ubiquitinate substrates. The resulting ubiquitination commonly regulates trafficking rather than proteasomal degradation. (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2, dho2019proximityinteractionsof pages 2-4) |
-| **MZM recognition region** | Not an acceptor-site class; recognizes ligand-tail motifs before ubiquitin transfer. | Required for productive substrate recognition; it binds the Delta N-box in ICD2. | MZM contains MIB/HERC-related elements surrounding a ZZ-type zinc finger. Deleting MZM while retaining REP can produce dominant-negative Notch defects. (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2, vullings2025anothertailof pages 8-10) |
-| **REP recognition region** | Not an acceptor-site class; recognizes a second ligand-tail determinant. | Cooperates with MZM in bipartite substrate recognition; it binds the Delta C-box in ICD3. | REP helps position the ligand intracellular domain for ubiquitination and contributes to interfering interactions when MZM is absent. (vullings2025anothertailof pages 1-2, dho2019proximityinteractionsof pages 1-2, vullings2025anothertailof pages 8-10) |
-| **Overall specificity** | The best-supported direct Drosophila targets are lysines in the cytoplasmic tails of Delta and Serrate. | Mib1-dependent ubiquitination selects ligands for signaling-competent, Epsin-associated endocytosis rather than controlling all bulk uptake. | The primary outcome is non-proteolytic activation and trafficking of Notch ligands in signal-sending cells. Delta retains alternative activity, whereas Serrate is strongly Mib1- and lysine-dependent. (troost2023themeaningof pages 1-2, seib2021theroleof pages 9-11, seib2021theroleof pages 6-8, seib2025theintracellulardomains pages 2-3) |
+| Substrate Name | Substrate Type | Ubiquitination Sites/Requirements | Functional Consequence of Ubiquitination | Key Citations |
+|---|---|---|---|---|
+| **Delta (Dl)** | Transmembrane DSL-family Notch ligand | Mib1 modifies lysines in the intracellular domain. Full Mib1-dependent signaling requires a combination of **six lysines**, with **K742** reported as the most important contributor. Mib1 recognizes Delta through a bipartite interaction involving its N-box and C-box regions. | Promotes Epsin-dependent ligand endocytosis in the signal-sending cell, efficient trans-activation of Notch, and relief of Delta–Notch cis-inhibition. Ubiquitination is required for **full Mib1-dependent activity**, but Delta retains weak, context-dependent ubiquitination-independent signaling, particularly through Neuralized-associated mechanisms. | (berndt2017ubiquitylationindependentactivationof pages 1-2, vullings2025anothertailof pages 1-2, troost2023themeaningof pages 1-2) |
+| **Serrate (Ser)** | Transmembrane DSL-family Notch ligand | Its intracellular domain contains **10 lysines**. At least **five conserved lysines** are required for Mib1-mediated signaling; approximately **six lysines** are needed to restore complete signaling and endocytic behavior. **K1362** has been identified as an especially important residue near the predicted Mib1-binding region. | Mib1-dependent ubiquitination drives Serrate endocytosis, trafficking, turnover, and productive Notch activation. Unlike Delta, Serrate signaling appears **strictly dependent on Mib1-mediated ubiquitination**; lysine-deficient Serrate lacks the residual ubiquitination-independent activity observed for Delta. | (berndt2017ubiquitylationindependentactivationof pages 1-2, berndt2017ubiquitylationindependentactivationof pages 2-3, seib2025theintracellulardomains pages 17-18, seib2025theintracellulardomains pages 1-2) |
 
 
-*Table: Summary of the experimentally supported Drosophila Mib1 substrates, lysine requirements, and functional domains. It highlights the stronger dependence of Serrate than Delta on Mib1-mediated ubiquitination.*
+*Table: Comparison of the experimentally supported Notch-ligand substrates of Drosophila Mib1, including lysine requirements and signaling consequences. The table highlights Delta’s residual ubiquitination-independent activity versus Serrate’s stronger dependence on Mib1-mediated ubiquitination.*
 
-## Subcellular Localization
-
-Mib1 functions primarily at the **plasma membrane** and in **endocytic compartments** of signal-sending cells (dho2019proximityinteractionsof pages 2-4, dho2019proximityinteractionsof pages 9-12). Studies in mammalian epithelial cells show that MIB1 localizes to the lateral membrane and tight junctions, where it colocalizes with epithelial polarity proteins including CRB1, CRB3, and ZO1 (dho2019proximityinteractionsof pages 9-12). The protein also associates with centrosomal and pericentriolar satellite structures (dho2019proximityinteractionsof pages 2-4, dho2019proximityinteractionsof pages 9-12). Functionally, Mib1 is associated with clathrin-coated pits and endocytic machinery components including Epsin, EPS15, and FCHO2 (dho2019proximityinteractionsof pages 2-4, dho2019proximityinteractionsof pages 4-5). The ligase ubiquitinates ligands at or near the plasma membrane to initiate their internalization through clathrin-mediated endocytosis (seib2021theroleof pages 9-11, seib2021theroleof pages 6-8).
+Notably, Delta and Serrate differ substantially in their dependence on ubiquitination. While Serrate signaling is strictly dependent on Mib1-mediated ubiquitination and shows nearly abolished endocytosis in mib1 mutants, Delta retains weak, context-dependent ubiquitination-independent signaling activity, particularly through Neuralized-associated mechanisms (berndt2017ubiquitylationindependentactivationof pages 1-2, berndt2017ubiquitylationindependentactivationof pages 2-3).
 
 ## Role in Notch Signaling Pathway
 
-### Mechanism of Notch Activation
+### Mechanism of Ligand Activation
 
-Mib1 plays a central role in activating the Notch signaling pathway through a sophisticated mechanotransduction mechanism (vullings2025anothertailof pages 1-2, seib2021theroleof pages 3-4, sprinzak2021biophysicsofnotch pages 1-3). The pathway operates as follows:
+Mib1 promotes Notch ligand activity through ubiquitination-dependent endocytosis in the signal-sending cell, which is essential for productive trans-activation of Notch receptors on adjacent receiving cells (lai2005theubiquitinligase pages 1-2, berndt2017ubiquitylationindependentactivationof pages 2-3). Two mechanistic models have been proposed to explain how ligand endocytosis activates Notch:
 
-1. **Ligand Ubiquitination:** In the signal-sending cell, Mib1 ubiquitinates the intracellular domains of Delta and Serrate ligands at the plasma membrane (vullings2025anothertailof pages 1-2, troost2023themeaningof pages 1-2).
+**Mechanical Force Model:** Ligand bound to Notch on an adjacent cell undergoes Mib1-dependent ubiquitination and endocytosis in the sending cell, generating mechanical pulling force across the ligand-receptor complex (weinmaster2011notchligandubiquitylation pages 5-6, weinmaster2011notchligandubiquitylation pages 4-5, kandachar2012endocytosisandcontrol pages 4-5). This force destabilizes the Notch heterodimer and exposes the S2 cleavage site to ADAM metalloproteases, initiating the proteolytic cascade that releases the Notch intracellular domain (NICD) for nuclear signaling (weinmaster2011notchligandubiquitylation pages 6-7, liu2013functionalanalysisof pages 28-32).
 
-2. **Epsin Recruitment:** Ubiquitinated ligands are recognized by the endocytic adaptor protein Epsin (Liquid facets in *Drosophila*) through its ubiquitin-interacting motifs (troost2023themeaningof pages 1-2, seib2021theroleof pages 9-11, seib2021theroleof pages 6-8). This coupling to Epsin is crucial because it directs ligands into a specialized, signaling-competent endocytic pathway distinct from bulk endocytosis (seib2021theroleof pages 9-11, seib2021theroleof pages 6-8).
+**Recycling/Trafficking Model:** Alternatively, Mib1-mediated ubiquitination directs ligands through an endosomal processing pathway where they are modified or sorted, then recycled to the plasma membrane in a more signaling-competent state (weinmaster2011notchligandubiquitylation pages 4-5, bras2011themultiplefacets pages 5-6, bras2011themultiplefacets pages 6-8). This model proposes that endocytosis activates ligands by correctly localizing, concentrating, or presenting them at specialized membrane microdomains (weinmaster2011notchligandubiquitylation pages 5-6, kandachar2012endocytosisandcontrol pages 7-7).
 
-3. **Force Generation:** When the ligand binds to Notch receptors on an adjacent signal-receiving cell (trans-interaction), ligand endocytosis generates a mechanical pulling force that is transmitted through the ligand-receptor bond (seib2021theroleof pages 3-4, sprinzak2021biophysicsofnotch pages 1-3, lv2024evolutionandfunction pages 2-4, sprinzak2021biophysicsofnotch pages 11-13). This force has been estimated at 2–5 pN based on measurements of Dll1 endocytosis stalling forces, which is below the ~19 pN rupture force of the Notch1–Dll1 bond, allowing pulling without breaking the interaction (sprinzak2021biophysicsofnotch pages 11-13).
+These mechanisms are not mutually exclusive and may operate in different cellular contexts (kandachar2012endocytosisandcontrol pages 4-5, bras2011themultiplefacets pages 6-8).
 
-4. **Mechanotransduction:** The pulling force induces conformational changes in Notch's negative regulatory region (NRR), which normally shields the S2 cleavage site (seib2021theroleof pages 3-4, sprinzak2021biophysicsofnotch pages 1-3, lv2024evolutionandfunction pages 2-4, seib2021theroleof pages 1-3). Force-dependent opening of the NRR exposes this previously inaccessible site.
+### Relief of Cis-Inhibition
 
-5. **Proteolytic Processing:** Once exposed, the metalloprotease ADAM10 (Kuzbanian in *Drosophila*) cleaves Notch at the S2 site, generating the membrane-tethered NEXT fragment (sprinzak2021biophysicsofnotch pages 1-3, lv2024evolutionandfunction pages 2-4, seib2021theroleof pages 1-3). The γ-secretase complex then performs intramembrane cleavage at S3, releasing the Notch intracellular domain (NICD) (sprinzak2021biophysicsofnotch pages 1-3, lv2024evolutionandfunction pages 2-4).
+An important function of Mib1 is relieving cis-inhibition, where ligand and Notch molecules expressed in the same cell inhibit one another (berndt2017ubiquitylationindependentactivationof pages 1-2, berndt2017ubiquitylationindependentactivationof pages 2-3). By promoting ligand ubiquitination and endocytosis, Mib1 helps remove ligands from inhibitory interactions with Notch, thereby enabling effective trans-activation of Notch on neighboring cells (berndt2017ubiquitylationindependentactivationof pages 2-3).
 
-6. **Transcriptional Activation:** NICD enters the nucleus and forms a transcriptional activation complex with RBPJ/CSL and Mastermind family cofactors (MAML), activating expression of Notch target genes (lv2024evolutionandfunction pages 2-4, sprinzak2021biophysicsofnotch pages 1-3).
+## Developmental Processes and Biological Functions
 
-The endocytic machinery, including clathrin-coated pit formation, actin polymerization coordinated through WASP/ARP2/3, and dynamin-mediated scission, collectively generate the mechanical forces required for this activation mechanism (seib2021theroleof pages 13-14, seib2021theroleof pages 11-13).
+Mib1 is required for numerous Notch-dependent developmental processes, though its requirement is context-dependent:
 
-### Regulation of Cis-Inhibition
-
-Mib1-mediated endocytosis also plays an important role in reducing cis-inhibition, whereby ligands and receptors on the same cell form non-productive interactions that suppress signaling (vullings2025anothertailof pages 8-10, seib2025theintracellulardomains pages 2-3). By promoting ligand internalization and potentially recycling ligands back to the surface in a modified state, Mib1 helps separate cis-interacting pairs and enhance productive trans-signaling to neighboring cells (vullings2025anothertailof pages 8-10, seib2021theroleof pages 11-13).
-
-## Relationship with Neuralized (Neur)
-
-In *Drosophila*, Mib1 functions alongside another E3 ubiquitin ligase called Neuralized (Neur), and the two proteins have complementary but distinct roles in activating Notch ligands (kalodimou2023separablerolesfor pages 14-15, troost2023themeaningof pages 1-2, kalodimou2023separablerolesfor pages 17-19, vullings2025anothertailof pages 1-2).
-
-### Molecular Distinctions
-
-The two ligases differ in their substrate recognition mechanisms and functional modes:
-
-- **Substrate Binding:** Mib1 binds Delta through N-box (ICD2) and C-box (ICD3) motifs via its MZM and REP domains, whereas Neur recognizes an NxxN "Neur-box" motif (NEQN in Delta) in ICD1 through its NHR1 domain (kalodimou2023separablerolesfor pages 17-19, seib2021theroleof pages 8-9).
-
-- **Functional Mode:** Mib1 acts primarily as a transient catalytic ubiquitin ligase requiring Delta lysines for robust signaling (kalodimou2023separablerolesfor pages 17-19, troost2023themeaningof pages 1-2). Neur, in contrast, has dual functionality: it can both ubiquitinate Delta and serve as an endocytic co-adaptor forming a stable Delta–Neur complex (kalodimou2023separablerolesfor pages 14-15, kalodimou2023separablerolesfor pages 17-19). Consequently, Neur can activate lysine-deficient Delta variants, whereas Mib1 activity is more strictly ubiquitination-dependent (kalodimou2023separablerolesfor pages 14-15, troost2023themeaningof pages 1-2).
-
-### Developmental Context
-
-The two ligases show distinct expression patterns and developmental deployment:
-
-- **Mib1** is expressed ubiquitously in wing imaginal discs and is the dominant Delta-activating ligase in wing patterning, including dorsal-ventral boundary specification (vullings2025anothertailof pages 1-2, vullings2025anothertailof pages 2-4).
-
-- **Neuralized** is restricted primarily to late-arising sensory organ precursor cells in the peripheral nervous system and is the predominant ligase in embryonic neuroblast selection and CNS ganglion mother cell (GMC) sibling specification (kalodimou2023separablerolesfor pages 14-15, kalodimou2023separablerolesfor pages 5-7, kalodimou2023separablerolesfor pages 15-17).
-
-Loss of Neur causes strong neurogenic phenotypes with neural hyperplasia, whereas loss of Mib1 alone does not produce the same defect in embryonic neuroblast selection, demonstrating context-specific requirements (kalodimou2023separablerolesfor pages 15-17).
-
-| Feature | Mib1 (Mind bomb 1) | Neuralized (Neur) |
-|---|---|---|
-| Protein class and architecture | Large RING-type E3 ubiquitin ligase with N-terminal MZM and REP substrate-recognition regions, eight ankyrin repeats, and three C-terminal RING fingers; the terminal RING finger is essential for catalytic activity. (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2) | RING-type E3 ubiquitin ligase containing NHR1 and NHR2 regions plus a catalytic RING domain; NHR1 recognizes ligand, while NHR2 contributes to oligomerization and full E3 activity. (seib2021theroleof pages 8-9) |
-| Delta-binding determinants | MZM and REP recognize Delta intracellular N-box/ICD2 and C-box/ICD3 regions, respectively, forming a bipartite interaction. (vullings2025anothertailof pages 1-2) | NHR1 binds an NxxN “Neur-box” motif—NEQN in Delta—located principally in ICD1; weaker interaction with ICD2 has also been reported. (kalodimou2023separablerolesfor pages 17-19, seib2021theroleof pages 8-9) |
-| Primary biochemical mode | Transfers ubiquitin to multiple lysines in the Delta intracellular domain; full Mib1-dependent signaling requires a combination of six lysines, with K742 contributing most strongly. (vullings2025anothertailof pages 1-2) | Can ubiquitinate Delta but also acts as an endocytic co-adaptor in a stable Delta–Neur complex; consequently, some Neur-dependent signaling persists when Delta lysines or the Neur RING domain are compromised. (kalodimou2023separablerolesfor pages 14-15, kalodimou2023separablerolesfor pages 17-19) |
-| Dependence on Delta ubiquitination | Strongly ubiquitination-dependent: intracellular Delta lysines are needed for robust ligand activation and productive endocytosis in Mib1-dependent contexts. (troost2023themeaningof pages 1-2) | Not strictly dependent on ubiquitination of Delta itself; Neur can activate lysine-deficient Delta, although ubiquitination of another complex component may enhance signaling. (kalodimou2023separablerolesfor pages 17-19, kalodimou2023separablerolesfor pages 14-15) |
-| Interaction with endocytosis | Mib1-mediated ligand ubiquitination promotes recognition by Epsin/Liquid facets and entry into signaling-relevant endocytosis that generates force for Notch activation. (seib2021theroleof pages 9-11, seib2021theroleof pages 6-8) | Neur can participate directly in a dynamin-dependent endocytic complex; in some CNS lineage signaling, this mode is reported to be Epsin-independent. (kalodimou2023separablerolesfor pages 17-19) |
-| Expression pattern in the wing disc | Broadly or ubiquitously expressed in the wing imaginal disc, making it the principal Delta-activating ligase in most of the wing pouch. (vullings2025anothertailof pages 1-2, vullings2025anothertailof pages 2-4) | Restricted mainly to late-arising sensory-organ precursor cells rather than broadly expressed throughout the wing pouch. (vullings2025anothertailof pages 1-2) |
-| Predominant developmental contexts | Dominant in wing-disc Notch signaling, including dorsal–ventral boundary specification, where Delta lysines are important and Neur is absent from most of the wing pouch. (kalodimou2023separablerolesfor pages 14-15, vullings2025anothertailof pages 2-4) | Predominant in sensory-organ precursor selection, embryonic neuroblast selection, and ganglion-mother-cell sibling specification in the CNS. (kalodimou2023separablerolesfor pages 5-7, kalodimou2023separablerolesfor pages 15-17) |
-| Functional relationship | Overlaps with Neur but primarily behaves as a transient catalytic modifier of Delta; it can provide backup activity in some Neur-dominated contexts. (kalodimou2023separablerolesfor pages 17-19, kalodimou2023separablerolesfor pages 5-7) | Overlaps with Mib1 but combines catalytic and adaptor functions, allowing stronger or mechanistically distinct Delta activation in selected neural contexts. (kalodimou2023separablerolesfor pages 14-15, kalodimou2023separablerolesfor pages 17-19) |
-| Best-supported distinction | Broadly deployed, substrate-ubiquitination-dependent ligand activator. | Developmentally restricted ligand activator that can couple Delta to endocytosis independently of ubiquitinating Delta itself. |
+| Developmental Process/Tissue | Mib1 Requirement Level | Phenotype When `mib1` Is Lost | Associated Notch Ligand |
+|---|---|---|---|
+| Wing-margin specification | Essential | Loss of Cut expression and failure to form a normal wing margin; adult wings are severely reduced or vestigial. (lai2005theubiquitinligase pages 4-6, lai2005theubiquitinligase pages 3-4) | Both Delta and Serrate (lai2005theubiquitinligase pages 1-2, lai2005theubiquitinligase pages 6-7) |
+| Eye development | Essential | Eye imaginal discs are abnormally small, and strong mutants can be eyeless. (lai2005theubiquitinligase pages 3-4, wang2005distinctrolesfor pages 2-3) | Both; the available genetic evidence does not assign the phenotype exclusively to either ligand. (lai2005theubiquitinligase pages 1-2, lai2005theubiquitinligase pages 4-6) |
+| Leg-joint formation | Essential | Legs are shortened or squat and fail to form normal joints. (lai2005theubiquitinligase pages 3-4) | Both; Mib1 can regulate Delta and Serrate, but the cited phenotype is not resolved to one ligand. (lai2005theubiquitinligase pages 1-2) |
+| Wing-pouch development | Essential | Wing pouch is strongly reduced, with loss or reduction of the pouch marker Nubbin and impaired wing growth. (lai2005theubiquitinligase pages 3-4) | Both Delta and Serrate (lai2005theubiquitinligase pages 4-6, berndt2017ubiquitylationindependentactivationof pages 2-3) |
+| CNS lateral inhibition | Largely dispensable or redundant in the tested lineages | Delta-dependent neural development can proceed through Neuralized-mediated, partly ubiquitination-independent signaling; Mib1 loss therefore does not abolish all lateral-inhibition events. (berndt2017ubiquitylationindependentactivationof pages 1-2, kalodimou2023separablerolesfor pages 17-19, troost2023themeaningof pages 1-2) | Primarily Delta (berndt2017ubiquitylationindependentactivationof pages 1-2, kalodimou2023separablerolesfor pages 17-19) |
+| Sensory-organ precursor specification | Largely dispensable endogenously, but functionally substitutable | Most precursor singularization remains intact in `mib1` mutants; experimentally supplied Mib1 can rescue Neuralized-deficient lateral inhibition and restore socket and shaft fates. (lai2005theubiquitinligase pages 10-11, lai2005theubiquitinligase pages 3-4) | Primarily Delta in lateral inhibition; Serrate may contribute to later lineage decisions. (lai2005theubiquitinligase pages 1-2, lai2005theubiquitinligase pages 10-11) |
+| Neuronal morphogenesis and neuromuscular-junction growth | Important | Loss of Mib1 enhances synaptic growth at the larval neuromuscular junction and genetically interacts with p35/CDK5; homozygous loss-of-function also causes pupal lethality. (choe2007neuronalmorphogenesisis pages 4-5, choe2007neuronalmorphogenesisis pages 6-7) | Not firmly assigned; this phenotype may include Notch-dependent and additional trafficking-related effects rather than a demonstrated Delta- or Serrate-specific mechanism. (choe2007neuronalmorphogenesisis pages 4-5, lai2005theubiquitinligase pages 2-3) |
 
 
-*Table: Comparison of the domain architecture, Delta-recognition mechanisms, ubiquitination requirements, expression patterns, and developmental deployment of the two Drosophila Notch-ligand E3 ligases.*
+*Table: This table summarizes where Drosophila Mib1 is essential, important, or largely redundant during development, together with loss-of-function phenotypes and the best-supported DSL-ligand assignments. It distinguishes strong appendage-development requirements from contexts in which Neuralized can sustain Delta signaling.*
 
-## Biological Processes and Developmental Roles
+Mib1 is ubiquitously expressed and therefore supports most DSL ligand signaling during development (berndt2017ubiquitylationindependentactivationof pages 2-3). However, it is particularly essential for wing margin specification, eye formation, and leg joint development, whereas lateral inhibition during neurogenesis is more dependent on Neuralized and can proceed with reduced Mib1 activity (lai2005theubiquitinligase pages 4-6, lai2005theubiquitinligase pages 10-11, lai2005theubiquitinligase pages 3-4). Loss-of-function mib1 mutants are typically pupal lethal, with severe reductions in eye and wing imaginal discs (wang2005distinctrolesfor pages 2-3, choe2007neuronalmorphogenesisis pages 6-7).
 
-Mib1 is essential for numerous Notch-dependent developmental processes in *Drosophila* (vullings2025anothertailof pages 8-10, troost2023themeaningof pages 1-2). In wing imaginal discs, Mib1 is required for full Delta signaling activity, and loss of Mib1 strongly suppresses Delta-dependent Notch activation (vullings2025anothertailof pages 8-10). Expression of Mib1 under the tubulin promoter can restore Notch pathway activation in mib1 mutant contexts (vullings2025anothertailof pages 8-10).
+Importantly, Mib1 can functionally substitute for Neuralized in multiple developmental contexts. When expressed in neuralized mutant sensory organs, Mib1 rescues outer sensory cell specification, restores socket cell fate, and substantially reduces excessive neuronal clusters caused by defective lateral inhibition (lai2005theubiquitinligase pages 10-11). This functional complementation demonstrates substantial overlap in the activities of these two unrelated E3 ubiquitin ligases (lai2005theubiquitinligase pages 1-2).
 
-Mib1 variants lacking the MZM domain while retaining REP produce dominant-negative effects, causing severe Notch-related developmental defects, near sterility, and reduced survival (vullings2025anothertailof pages 8-10). This suggests that the REP domain can mediate interfering interactions when MZM is absent, highlighting the importance of balanced domain function (vullings2025anothertailof pages 8-10).
+## Subcellular Localization
 
-Interestingly, a Delta variant lacking all intracellular lysines (DlK2R) can provide sufficient activity to support complete development of *Drosophila* when present as a single genomic copy, although ubiquitination is required for full signaling strength (troost2023themeaningof pages 1-2). This indicates that while Mib1-dependent ubiquitination is important for robust Notch signaling, alternative activation mechanisms (particularly through Neuralized) can compensate under physiological conditions (troost2023themeaningof pages 1-2).
+Mib1 localizes primarily to intracellular endosomal compartments, where it executes its regulatory functions in membrane protein trafficking (choe2007neuronalmorphogenesisis pages 4-5). Studies using subcellular markers demonstrate strongest colocalization with early endosome antigen 1 (EEA1), indicating enrichment on early endosomes (choe2007neuronalmorphogenesisis pages 4-5). Mib1 also associates with proteins involved in membrane trafficking, endocytic sorting, and recycling pathways, including Rab11-interacting proteins (choe2007neuronalmorphogenesisis pages 4-5).
 
-## Notch-Independent Functions
+In polarized epithelial cells, vertebrate MIB1 homologs localize to lateral membranes and tight junctions, where they colocalize with polarity proteins such as CRB1, CRB3, and ZO-1 (dho2019proximityinteractionsof pages 9-12). This localization pattern is consistent with Mib1's role in regulating ligand trafficking and presentation at cell-cell contact sites where Notch signaling occurs.
 
-While Mib1's best-characterized role in *Drosophila* is in Notch ligand activation, studies in vertebrate systems have revealed Notch-independent functions that may be conserved. In zebrafish, Mib1 regulates planar cell polarity (PCP)-dependent convergent extension movements during gastrulation independently of Notch signaling (saraswathy2022thee3ubiquitin pages 1-2, saraswathy2021thee3ubiquitin pages 4-7, saraswathy2021thee3ubiquitin pages 9-11). This function involves Mib1-mediated ubiquitination and endocytosis of the PCP component Ryk, a receptor-like tyrosine kinase (saraswathy2022thee3ubiquitin pages 1-2, saraswathy2021thee3ubiquitin pages 9-11). Loss of zebrafish mib1 impairs convergent extension, and this defect can be rescued by the PCP effector RhoA or by Ryk, but not by constitutively active Notch (NICD), demonstrating that the function is Notch-independent (saraswathy2022thee3ubiquitin pages 1-2, saraswathy2021thee3ubiquitin pages 4-7). Whether similar PCP-related functions exist for Drosophila Mib1 requires further investigation, though current literature on *Drosophila* mib1 focuses primarily on its Notch-related roles (vullings2025anothertailof pages 8-10, troost2023themeaningof pages 1-2, vullings2025anothertailof pages 1-2).
+## Recent Developments (2023-2025)
 
-## Domain Structure and Functional Regions
+### Bipartite Binding Mechanism
 
-Mib1 is organized into several functionally distinct regions (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2):
+Recent structural and functional studies have confirmed and extended the bipartite ligand-recognition mechanism originally described for mammalian MIB1 to Drosophila (vullings2025anothertailof pages 1-2). Work published in 2025 demonstrated that activation of Delta by Mib1 follows similar rules as mammalian MIB1-JAGGED1 interactions, with both the N-box (recognized by MZM) and C-box (recognized by REP) contributing to efficient signaling in vivo (vullings2025anothertailof pages 1-2). This finding establishes the bipartite mechanism as a conserved feature of Mib1-dependent DSL ligand activation rather than a mammalian-specific innovation.
 
-1. **N-terminal MZM region:** Contains two MIB/HERC2 homology domains flanking a ZZ-type zinc finger. This region binds the N-box/ICD2 of Delta and is essential for substrate recognition (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2).
+### Differential Ligand Requirements
 
-2. **REP region:** Contains two adjacent MIB homology repeats that bind the C-box/ICD3 of Delta, completing the bipartite substrate interaction (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2).
+A 2025 study characterized fundamental differences between the intracellular domains of Delta and Serrate (seib2025theintracellulardomains pages 17-18, seib2025theintracellulardomains pages 1-2). While both ligands require Mib1 for activation, Serrate is absolutely dependent on ubiquitination for all signaling activity, whereas Delta possesses both Mib1-dependent and Mib1-independent signaling modes (seib2025theintracellulardomains pages 1-2, berndt2017ubiquitylationindependentactivationof pages 1-2). For Serrate, lysines are essential not only for signaling but also for Mib1-mediated endocytosis and degradation, highlighting a more stringent requirement for ubiquitin-dependent regulation (seib2025theintracellulardomains pages 1-2).
 
-3. **Ankyrin repeats:** Eight central ankyrin repeats contribute to the protein's structural organization (seib2021theroleof pages 8-9).
+### Ubiquitination-Independent Signaling
 
-4. **Three C-terminal RING fingers:** These provide E3 ubiquitin ligase activity, with RING3 being the only RING domain demonstrated as essential for ubiquitination of characterized substrates (seib2021theroleof pages 8-9, dho2019proximityinteractionsof pages 1-2, dho2019proximityinteractionsof pages 2-4). A coiled-coil region is located between RING2 and RING3 (dho2019proximityinteractionsof pages 1-2).
+Work from 2023 has further dissected the separable roles of Neuralized and ubiquitin in Delta signaling (kalodimou2023separablerolesfor pages 17-19). These studies demonstrate that while Mib1 primarily functions as a transient binding partner that catalyzes Delta ubiquitination, Neuralized can form a more stable complex with Delta and promote signaling through both ubiquitination-dependent and -independent mechanisms (kalodimou2023separablerolesfor pages 17-19, kalodimou2023separablerolesfor pages 20-21). A 2023 analysis showed that Delta with all lysines replaced by arginine (DlK2R) retains partial activity when present as a genomic knock-in allele, sufficient to complete development, though with reduced Mib1-dependent signaling (troost2023themeaningof pages 1-2).
 
-Deletion or mutation studies confirm that the RING domains are required for catalytic activity—RING-defective mutants cannot ubiquitinate substrates—while the MZM/REP regions are required for substrate binding and proper ligand activation (dho2019proximityinteractionsof pages 8-9, dho2019proximityinteractionsof pages 4-5, dho2019proximityinteractionsof pages 2-4).
+## Current Understanding and Expert Analysis
 
-## Current Understanding and Recent Developments (2023–2025)
+The accumulated evidence establishes Mib1 as a critical regulator of Notch signaling that functions by ubiquitinating DSL ligands to enable their productive trans-activation of Notch receptors. Several key concepts have emerged from recent research:
 
-Recent studies have significantly advanced our understanding of Mib1 function:
+1. **Context-Dependent Function:** Mib1 is essential for specific developmental processes (wing margin, eye, appendages) but less critical for others (CNS lateral inhibition), reflecting functional complementation with Neuralized and context-specific requirements for different activation mechanisms (lai2005theubiquitinligase pages 3-4, wang2005distinctrolesfor pages 2-3).
 
-1. **Bipartite Binding Mechanism (Vüllings et al., 2025):** The most recent work demonstrates that Drosophila Mib1 activates Delta through a bipartite binding mechanism similar to mammalian MIB1-JAG1 interactions, with both N-box and C-box interactions required for full activity (vullings2025anothertailof pages 1-2). This study identified K742 as the most important among six critical lysines in Delta's intracellular domain (vullings2025anothertailof pages 1-2).
+2. **Bipartite Recognition:** The two-site binding mechanism enables high-affinity substrate engagement and positions lysines for efficient ubiquitination, representing a sophisticated substrate-selection strategy (guo2016structureandfunction pages 4-5, vullings2025anothertailof pages 1-2).
 
-2. **Ligand-Specific Requirements (Seib et al., 2025):** Work published in late 2024/early 2025 revealed that Serrate is more strictly dependent on Mib1-mediated ubiquitination than Delta, with at least five conserved lysines required for signaling (seib2025theintracellulardomains pages 2-3, seib2025theintracellulardomains pages 1-2). This contrasts with Delta, which retains residual activity without ubiquitination (seib2025theintracellulardomains pages 2-3).
+3. **Ligand-Specific Requirements:** Delta and Serrate differ fundamentally in their dependence on ubiquitination, with Serrate showing strict Mib1 dependence while Delta retains alternative activation routes (seib2025theintracellulardomains pages 1-2, berndt2017ubiquitylationindependentactivationof pages 1-2). This asymmetry may reflect differences in ligand trafficking, membrane dynamics, or interaction with endocytic machinery.
 
-3. **Ubiquitination-Independent Signaling Modes (Troost et al., 2023; Kalodimou et al., 2023):** These studies demonstrated that Delta can signal through multiple modes—some ubiquitination-dependent (Mib1-mediated) and some ubiquitination-independent (primarily Neur-mediated)—and that these modes have different developmental requirements (troost2023themeaningof pages 1-2, kalodimou2023separablerolesfor pages 17-19).
+4. **Mechanistic Complexity:** The enduring debate between mechanical force and recycling models highlights that ligand endocytosis serves multiple functions, and different mechanisms may predominate in different cellular contexts or developmental stages (weinmaster2011notchligandubiquitylation pages 5-6, bras2011themultiplefacets pages 5-6, bras2011themultiplefacets pages 6-8).
 
-4. **Mechanotransduction Models (Sprinzak & Blacklow, 2021; Seib & Klein, 2021):** Comprehensive reviews have clarified the mechanotransduction mechanism by which ligand endocytosis generates force to activate Notch, with quantitative estimates of forces involved (seib2021theroleof pages 3-4, sprinzak2021biophysicsofnotch pages 1-3, sprinzak2021biophysicsofnotch pages 11-13, seib2021theroleof pages 1-3).
+## Conclusion
 
-## Conclusions
-
-Drosophila Mib1 is a RING-type E3 ubiquitin ligase that serves as a critical regulator of Notch signaling by ubiquitinating the intracellular domains of Notch ligands Delta and Serrate. Its primary molecular function is to catalyze ubiquitin transfer to specific lysine residues in these ligands (K742 and five others in Delta; at least five conserved lysines in Serrate), thereby promoting their recognition by the endocytic adaptor Epsin and entry into a specialized endocytic pathway. This ubiquitination-dependent endocytosis generates mechanical force that pulls on Notch receptors in adjacent cells, inducing the conformational changes required for proteolytic activation and downstream signaling.
-
-Mib1 functions at the plasma membrane and in endocytic compartments of signal-sending cells, where it collaborates with clathrin-mediated endocytic machinery. It works complementarily with Neuralized, another E3 ligase, with the two proteins showing different binding mechanisms, expression patterns, and developmental contexts. While Mib1 is broadly expressed and dominates in wing disc patterning, Neuralized is restricted to neural contexts and can activate Delta through ubiquitination-independent mechanisms.
-
-The protein's approximately 1200-amino-acid structure includes N-terminal MZM and REP substrate-recognition domains that mediate bipartite binding to ligand intracellular motifs, central ankyrin repeats, and three C-terminal RING fingers that provide catalytic activity. Recent structural and functional studies (2023–2025) have revealed ligand-specific differences in ubiquitination requirements, with Serrate being more strictly dependent on Mib1 than Delta, and have clarified the mechanotransduction mechanism underlying force-dependent Notch activation.
+Drosophila mib1 encodes a multidomain RING-type E3 ubiquitin ligase that serves as a master regulator of Notch ligand activation. Through its bipartite substrate-recognition mechanism, Mib1 selectively ubiquitinates Delta and Serrate on specific intracellular lysine residues, promoting their endocytosis and enabling productive trans-activation of Notch receptors. Mib1 localizes to endosomal compartments where it regulates ligand trafficking and relieves cis-inhibition. While essential for numerous developmental processes including wing margin specification, eye formation, and appendage development, Mib1 function is context-dependent and can be complemented by Neuralized in specific tissues. Recent work (2023-2025) has illuminated the molecular details of ligand recognition, the differential requirements of Delta versus Serrate for ubiquitination, and the conservation of bipartite binding mechanisms from flies to mammals, advancing our understanding of this critical developmental regulator.
 
 References
 
-1. (vullings2025anothertailof pages 1-2): Nicole Vüllings, Alina Airich, Ekaterina Seib, Tobias Troost, and Thomas Klein. Another tail of two sites: activation of the notch ligand delta by mindbomb1. BMC biology, 23 1:71, Mar 2025. URL: https://doi.org/10.1186/s12915-025-02162-6, doi:10.1186/s12915-025-02162-6. This article has 1 citations and is from a domain leading peer-reviewed journal.
+1. (lai2005theubiquitinligase pages 1-2): Eric C. Lai, Fabrice Roegiers, Xiaoli Qin, Yuh Nung Jan, and Gerald M. Rubin. The ubiquitin ligase drosophila mind bomb promotes notch signaling by regulating the localization and activity of serrate and delta. Development, 132:2319-2332, May 2005. URL: https://doi.org/10.1242/dev.01825, doi:10.1242/dev.01825. This article has 225 citations and is from a domain leading peer-reviewed journal.
 
-2. (seib2021theroleof pages 8-9): Ekaterina Seib and Thomas Klein. The role of ligand endocytosis in notch signalling. Biology of the Cell, 113:401-418, Jun 2021. URL: https://doi.org/10.1111/boc.202100009, doi:10.1111/boc.202100009. This article has 44 citations and is from a peer-reviewed journal.
+2. (lai2005theubiquitinligase pages 3-4): Eric C. Lai, Fabrice Roegiers, Xiaoli Qin, Yuh Nung Jan, and Gerald M. Rubin. The ubiquitin ligase drosophila mind bomb promotes notch signaling by regulating the localization and activity of serrate and delta. Development, 132:2319-2332, May 2005. URL: https://doi.org/10.1242/dev.01825, doi:10.1242/dev.01825. This article has 225 citations and is from a domain leading peer-reviewed journal.
 
-3. (dho2019proximityinteractionsof pages 1-2): Sascha E. Dho, Nancy Silva-Gagliardi, Fabio Morgese, Etienne Coyaud, Emily Lamoureux, Donna M. Berry, Brian Raught, and C. Jane McGlade. Proximity interactions of the ubiquitin ligase mind bomb 1 reveal a role in regulation of epithelial polarity complex proteins. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48902-x, doi:10.1038/s41598-019-48902-x. This article has 41 citations and is from a peer-reviewed journal.
+3. (guo2016structureandfunction pages 5-7): Bingqian Guo, Brian J McMillan, and Stephen C Blacklow. Structure and function of the mind bomb e3 ligase in the context of notch signal transduction. Current opinion in structural biology, 41:38-45, Dec 2016. URL: https://doi.org/10.1016/j.sbi.2016.05.012, doi:10.1016/j.sbi.2016.05.012. This article has 65 citations and is from a peer-reviewed journal.
 
-4. (troost2023themeaningof pages 1-2): Tobias Troost, Ekaterina Seib, Alina Airich, Nicole Vüllings, Aleksandar Necakov, Stefano De Renzis, and Thomas Klein. The meaning of ubiquitylation of the dsl ligand delta for the development of drosophila. BMC Biology, Nov 2023. URL: https://doi.org/10.1186/s12915-023-01759-z, doi:10.1186/s12915-023-01759-z. This article has 9 citations and is from a domain leading peer-reviewed journal.
+4. (bras2011themultiplefacets pages 2-3): Stéphanie Le Bras, Nicolas Loyer, and Roland Le Borgne. The multiple facets of ubiquitination in the regulation of notch signaling pathway. Traffic, 12:149-161, Feb 2011. URL: https://doi.org/10.1111/j.1600-0854.2010.01126.x, doi:10.1111/j.1600-0854.2010.01126.x. This article has 127 citations and is from a peer-reviewed journal.
 
-5. (seib2025theintracellulardomains pages 2-3): Ekaterina Seib, Maya Schmid, Hideyuki Shimizu, Tobias Troost, Sunday Faith Oyelere, Biswajit Chakraborty, Martin Baron, and Thomas Klein. The intracellular domains of the dsl ligands serrate and delta provide different activities. Cell Communication and Signaling, Oct 2025. URL: https://doi.org/10.1186/s12964-025-02472-w, doi:10.1186/s12964-025-02472-w. This article has 0 citations and is from a peer-reviewed journal.
+5. (guo2016structureandfunction pages 2-4): Bingqian Guo, Brian J McMillan, and Stephen C Blacklow. Structure and function of the mind bomb e3 ligase in the context of notch signal transduction. Current opinion in structural biology, 41:38-45, Dec 2016. URL: https://doi.org/10.1016/j.sbi.2016.05.012, doi:10.1016/j.sbi.2016.05.012. This article has 65 citations and is from a peer-reviewed journal.
 
-6. (seib2025theintracellulardomains pages 1-2): Ekaterina Seib, Maya Schmid, Hideyuki Shimizu, Tobias Troost, Sunday Faith Oyelere, Biswajit Chakraborty, Martin Baron, and Thomas Klein. The intracellular domains of the dsl ligands serrate and delta provide different activities. Cell Communication and Signaling, Oct 2025. URL: https://doi.org/10.1186/s12964-025-02472-w, doi:10.1186/s12964-025-02472-w. This article has 0 citations and is from a peer-reviewed journal.
+6. (guo2016structureandfunction pages 4-5): Bingqian Guo, Brian J McMillan, and Stephen C Blacklow. Structure and function of the mind bomb e3 ligase in the context of notch signal transduction. Current opinion in structural biology, 41:38-45, Dec 2016. URL: https://doi.org/10.1016/j.sbi.2016.05.012, doi:10.1016/j.sbi.2016.05.012. This article has 65 citations and is from a peer-reviewed journal.
 
-7. (vullings2025anothertailof pages 2-4): Nicole Vüllings, Alina Airich, Ekaterina Seib, Tobias Troost, and Thomas Klein. Another tail of two sites: activation of the notch ligand delta by mindbomb1. BMC biology, 23 1:71, Mar 2025. URL: https://doi.org/10.1186/s12915-025-02162-6, doi:10.1186/s12915-025-02162-6. This article has 1 citations and is from a domain leading peer-reviewed journal.
+7. (mcmillan2015atailof pages 1-3): Brian J. McMillan, Björn Schnute, Nadja Ohlenhard, Brandon Zimmerman, Laura Miles, Natalia Beglova, Thomas Klein, and Stephen C. Blacklow. A tail of two sites: a bipartite mechanism for recognition of notch ligands by mind bomb e3 ligases. Molecular cell, 57 5:912-924, Mar 2015. URL: https://doi.org/10.1016/j.molcel.2015.01.019, doi:10.1016/j.molcel.2015.01.019. This article has 58 citations and is from a highest quality peer-reviewed journal.
 
-8. (dho2019proximityinteractionsof pages 2-4): Sascha E. Dho, Nancy Silva-Gagliardi, Fabio Morgese, Etienne Coyaud, Emily Lamoureux, Donna M. Berry, Brian Raught, and C. Jane McGlade. Proximity interactions of the ubiquitin ligase mind bomb 1 reveal a role in regulation of epithelial polarity complex proteins. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48902-x, doi:10.1038/s41598-019-48902-x. This article has 41 citations and is from a peer-reviewed journal.
+8. (guo2016structureandfunction pages 1-2): Bingqian Guo, Brian J McMillan, and Stephen C Blacklow. Structure and function of the mind bomb e3 ligase in the context of notch signal transduction. Current opinion in structural biology, 41:38-45, Dec 2016. URL: https://doi.org/10.1016/j.sbi.2016.05.012, doi:10.1016/j.sbi.2016.05.012. This article has 65 citations and is from a peer-reviewed journal.
 
-9. (vullings2025anothertailof pages 8-10): Nicole Vüllings, Alina Airich, Ekaterina Seib, Tobias Troost, and Thomas Klein. Another tail of two sites: activation of the notch ligand delta by mindbomb1. BMC biology, 23 1:71, Mar 2025. URL: https://doi.org/10.1186/s12915-025-02162-6, doi:10.1186/s12915-025-02162-6. This article has 1 citations and is from a domain leading peer-reviewed journal.
+9. (dho2019proximityinteractionsof pages 2-4): Sascha E. Dho, Nancy Silva-Gagliardi, Fabio Morgese, Etienne Coyaud, Emily Lamoureux, Donna M. Berry, Brian Raught, and C. Jane McGlade. Proximity interactions of the ubiquitin ligase mind bomb 1 reveal a role in regulation of epithelial polarity complex proteins. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48902-x, doi:10.1038/s41598-019-48902-x. This article has 41 citations and is from a peer-reviewed journal.
 
-10. (seib2021theroleof pages 9-11): Ekaterina Seib and Thomas Klein. The role of ligand endocytosis in notch signalling. Biology of the Cell, 113:401-418, Jun 2021. URL: https://doi.org/10.1111/boc.202100009, doi:10.1111/boc.202100009. This article has 44 citations and is from a peer-reviewed journal.
+10. (vullings2025anothertailof pages 1-2): Nicole Vüllings, Alina Airich, Ekaterina Seib, Tobias Troost, and Thomas Klein. Another tail of two sites: activation of the notch ligand delta by mindbomb1. BMC biology, 23 1:71, Mar 2025. URL: https://doi.org/10.1186/s12915-025-02162-6, doi:10.1186/s12915-025-02162-6. This article has 1 citations and is from a domain leading peer-reviewed journal.
 
-11. (seib2021theroleof pages 6-8): Ekaterina Seib and Thomas Klein. The role of ligand endocytosis in notch signalling. Biology of the Cell, 113:401-418, Jun 2021. URL: https://doi.org/10.1111/boc.202100009, doi:10.1111/boc.202100009. This article has 44 citations and is from a peer-reviewed journal.
+11. (kalodimou2023separablerolesfor pages 17-19): Konstantina Kalodimou, Margarita Stapountzi, Nicole Vüllings, Ekaterina Seib, Thomas Klein, and Christos Delidakis. Separable roles for neur and ubiquitin in delta signalling in the drosophila cns lineages. Cells, 12:2833, Dec 2023. URL: https://doi.org/10.3390/cells12242833, doi:10.3390/cells12242833. This article has 4 citations.
 
-12. (dho2019proximityinteractionsof pages 9-12): Sascha E. Dho, Nancy Silva-Gagliardi, Fabio Morgese, Etienne Coyaud, Emily Lamoureux, Donna M. Berry, Brian Raught, and C. Jane McGlade. Proximity interactions of the ubiquitin ligase mind bomb 1 reveal a role in regulation of epithelial polarity complex proteins. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48902-x, doi:10.1038/s41598-019-48902-x. This article has 41 citations and is from a peer-reviewed journal.
+12. (lai2005theubiquitinligase pages 4-6): Eric C. Lai, Fabrice Roegiers, Xiaoli Qin, Yuh Nung Jan, and Gerald M. Rubin. The ubiquitin ligase drosophila mind bomb promotes notch signaling by regulating the localization and activity of serrate and delta. Development, 132:2319-2332, May 2005. URL: https://doi.org/10.1242/dev.01825, doi:10.1242/dev.01825. This article has 225 citations and is from a domain leading peer-reviewed journal.
 
-13. (dho2019proximityinteractionsof pages 4-5): Sascha E. Dho, Nancy Silva-Gagliardi, Fabio Morgese, Etienne Coyaud, Emily Lamoureux, Donna M. Berry, Brian Raught, and C. Jane McGlade. Proximity interactions of the ubiquitin ligase mind bomb 1 reveal a role in regulation of epithelial polarity complex proteins. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48902-x, doi:10.1038/s41598-019-48902-x. This article has 41 citations and is from a peer-reviewed journal.
+13. (berndt2017ubiquitylationindependentactivationof pages 1-2): Nicole Berndt, Ekaterina Seib, Soya Kim, Tobias Troost, Marvin Lyga, Jessica Langenbach, Sebastian Haensch, Konstantina Kalodimou, Christos Delidakis, and Thomas Klein. Ubiquitylation-independent activation of notch signalling by delta. eLife, Sep 2017. URL: https://doi.org/10.7554/elife.27346, doi:10.7554/elife.27346. This article has 30 citations and is from a domain leading peer-reviewed journal.
 
-14. (seib2021theroleof pages 3-4): Ekaterina Seib and Thomas Klein. The role of ligand endocytosis in notch signalling. Biology of the Cell, 113:401-418, Jun 2021. URL: https://doi.org/10.1111/boc.202100009, doi:10.1111/boc.202100009. This article has 44 citations and is from a peer-reviewed journal.
+14. (troost2023themeaningof pages 1-2): Tobias Troost, Ekaterina Seib, Alina Airich, Nicole Vüllings, Aleksandar Necakov, Stefano De Renzis, and Thomas Klein. The meaning of ubiquitylation of the dsl ligand delta for the development of drosophila. BMC Biology, Nov 2023. URL: https://doi.org/10.1186/s12915-023-01759-z, doi:10.1186/s12915-023-01759-z. This article has 9 citations and is from a domain leading peer-reviewed journal.
 
-15. (sprinzak2021biophysicsofnotch pages 1-3): David Sprinzak and Stephen C. Blacklow. Biophysics of notch signaling. Annual Review of Biophysics, 50:157-189, May 2021. URL: https://doi.org/10.1146/annurev-biophys-101920-082204, doi:10.1146/annurev-biophys-101920-082204. This article has 280 citations and is from a domain leading peer-reviewed journal.
+15. (berndt2017ubiquitylationindependentactivationof pages 2-3): Nicole Berndt, Ekaterina Seib, Soya Kim, Tobias Troost, Marvin Lyga, Jessica Langenbach, Sebastian Haensch, Konstantina Kalodimou, Christos Delidakis, and Thomas Klein. Ubiquitylation-independent activation of notch signalling by delta. eLife, Sep 2017. URL: https://doi.org/10.7554/elife.27346, doi:10.7554/elife.27346. This article has 30 citations and is from a domain leading peer-reviewed journal.
 
-16. (lv2024evolutionandfunction pages 2-4): Yan Lv, Xuan Pang, Zhonghong Cao, Changping Song, Baohua Liu, Weiwei Wu, and Qiuxiang Pang. Evolution and function of the notch signaling pathway: an invertebrate perspective. International Journal of Molecular Sciences, 25:3322, Mar 2024. URL: https://doi.org/10.3390/ijms25063322, doi:10.3390/ijms25063322. This article has 36 citations.
+16. (seib2025theintracellulardomains pages 17-18): Ekaterina Seib, Maya Schmid, Hideyuki Shimizu, Tobias Troost, Sunday Faith Oyelere, Biswajit Chakraborty, Martin Baron, and Thomas Klein. The intracellular domains of the dsl ligands serrate and delta provide different activities. Cell Communication and Signaling, Oct 2025. URL: https://doi.org/10.1186/s12964-025-02472-w, doi:10.1186/s12964-025-02472-w. This article has 0 citations and is from a peer-reviewed journal.
 
-17. (sprinzak2021biophysicsofnotch pages 11-13): David Sprinzak and Stephen C. Blacklow. Biophysics of notch signaling. Annual Review of Biophysics, 50:157-189, May 2021. URL: https://doi.org/10.1146/annurev-biophys-101920-082204, doi:10.1146/annurev-biophys-101920-082204. This article has 280 citations and is from a domain leading peer-reviewed journal.
+17. (seib2025theintracellulardomains pages 1-2): Ekaterina Seib, Maya Schmid, Hideyuki Shimizu, Tobias Troost, Sunday Faith Oyelere, Biswajit Chakraborty, Martin Baron, and Thomas Klein. The intracellular domains of the dsl ligands serrate and delta provide different activities. Cell Communication and Signaling, Oct 2025. URL: https://doi.org/10.1186/s12964-025-02472-w, doi:10.1186/s12964-025-02472-w. This article has 0 citations and is from a peer-reviewed journal.
 
-18. (seib2021theroleof pages 1-3): Ekaterina Seib and Thomas Klein. The role of ligand endocytosis in notch signalling. Biology of the Cell, 113:401-418, Jun 2021. URL: https://doi.org/10.1111/boc.202100009, doi:10.1111/boc.202100009. This article has 44 citations and is from a peer-reviewed journal.
+18. (weinmaster2011notchligandubiquitylation pages 5-6): Gerry Weinmaster and Janice A. Fischer. Notch ligand ubiquitylation: what is it good for? Developmental cell, 21 1:134-44, Jul 2011. URL: https://doi.org/10.1016/j.devcel.2011.06.006, doi:10.1016/j.devcel.2011.06.006. This article has 137 citations and is from a highest quality peer-reviewed journal.
 
-19. (seib2021theroleof pages 13-14): Ekaterina Seib and Thomas Klein. The role of ligand endocytosis in notch signalling. Biology of the Cell, 113:401-418, Jun 2021. URL: https://doi.org/10.1111/boc.202100009, doi:10.1111/boc.202100009. This article has 44 citations and is from a peer-reviewed journal.
+19. (weinmaster2011notchligandubiquitylation pages 4-5): Gerry Weinmaster and Janice A. Fischer. Notch ligand ubiquitylation: what is it good for? Developmental cell, 21 1:134-44, Jul 2011. URL: https://doi.org/10.1016/j.devcel.2011.06.006, doi:10.1016/j.devcel.2011.06.006. This article has 137 citations and is from a highest quality peer-reviewed journal.
 
-20. (seib2021theroleof pages 11-13): Ekaterina Seib and Thomas Klein. The role of ligand endocytosis in notch signalling. Biology of the Cell, 113:401-418, Jun 2021. URL: https://doi.org/10.1111/boc.202100009, doi:10.1111/boc.202100009. This article has 44 citations and is from a peer-reviewed journal.
+20. (kandachar2012endocytosisandcontrol pages 4-5): Vasundhara Kandachar and Fabrice Roegiers. Endocytosis and control of notch signaling. Current opinion in cell biology, 24 4:534-40, Aug 2012. URL: https://doi.org/10.1016/j.ceb.2012.06.006, doi:10.1016/j.ceb.2012.06.006. This article has 113 citations and is from a peer-reviewed journal.
 
-21. (kalodimou2023separablerolesfor pages 14-15): Konstantina Kalodimou, Margarita Stapountzi, Nicole Vüllings, Ekaterina Seib, Thomas Klein, and Christos Delidakis. Separable roles for neur and ubiquitin in delta signalling in the drosophila cns lineages. Cells, 12:2833, Dec 2023. URL: https://doi.org/10.3390/cells12242833, doi:10.3390/cells12242833. This article has 4 citations.
+21. (weinmaster2011notchligandubiquitylation pages 6-7): Gerry Weinmaster and Janice A. Fischer. Notch ligand ubiquitylation: what is it good for? Developmental cell, 21 1:134-44, Jul 2011. URL: https://doi.org/10.1016/j.devcel.2011.06.006, doi:10.1016/j.devcel.2011.06.006. This article has 137 citations and is from a highest quality peer-reviewed journal.
 
-22. (kalodimou2023separablerolesfor pages 17-19): Konstantina Kalodimou, Margarita Stapountzi, Nicole Vüllings, Ekaterina Seib, Thomas Klein, and Christos Delidakis. Separable roles for neur and ubiquitin in delta signalling in the drosophila cns lineages. Cells, 12:2833, Dec 2023. URL: https://doi.org/10.3390/cells12242833, doi:10.3390/cells12242833. This article has 4 citations.
+22. (liu2013functionalanalysisof pages 28-32): S Liu. Functional analysis of neuralized in notch signaling and germline stem cell maintenance. Unknown journal, 2013.
 
-23. (kalodimou2023separablerolesfor pages 5-7): Konstantina Kalodimou, Margarita Stapountzi, Nicole Vüllings, Ekaterina Seib, Thomas Klein, and Christos Delidakis. Separable roles for neur and ubiquitin in delta signalling in the drosophila cns lineages. Cells, 12:2833, Dec 2023. URL: https://doi.org/10.3390/cells12242833, doi:10.3390/cells12242833. This article has 4 citations.
+23. (bras2011themultiplefacets pages 5-6): Stéphanie Le Bras, Nicolas Loyer, and Roland Le Borgne. The multiple facets of ubiquitination in the regulation of notch signaling pathway. Traffic, 12:149-161, Feb 2011. URL: https://doi.org/10.1111/j.1600-0854.2010.01126.x, doi:10.1111/j.1600-0854.2010.01126.x. This article has 127 citations and is from a peer-reviewed journal.
 
-24. (kalodimou2023separablerolesfor pages 15-17): Konstantina Kalodimou, Margarita Stapountzi, Nicole Vüllings, Ekaterina Seib, Thomas Klein, and Christos Delidakis. Separable roles for neur and ubiquitin in delta signalling in the drosophila cns lineages. Cells, 12:2833, Dec 2023. URL: https://doi.org/10.3390/cells12242833, doi:10.3390/cells12242833. This article has 4 citations.
+24. (bras2011themultiplefacets pages 6-8): Stéphanie Le Bras, Nicolas Loyer, and Roland Le Borgne. The multiple facets of ubiquitination in the regulation of notch signaling pathway. Traffic, 12:149-161, Feb 2011. URL: https://doi.org/10.1111/j.1600-0854.2010.01126.x, doi:10.1111/j.1600-0854.2010.01126.x. This article has 127 citations and is from a peer-reviewed journal.
 
-25. (saraswathy2022thee3ubiquitin pages 1-2): Vishnu Muraleedharan Saraswathy, Akshai Janardhana Kurup, Priyanka Sharma, Sophie Polès, Morgane Poulain, and Maximilian Fürthauer. The e3 ubiquitin ligase mindbomb1 controls planar cell polarity-dependent convergent extension movements during zebrafish gastrulation. eLife, Feb 2022. URL: https://doi.org/10.7554/elife.71928, doi:10.7554/elife.71928. This article has 8 citations and is from a domain leading peer-reviewed journal.
+25. (kandachar2012endocytosisandcontrol pages 7-7): Vasundhara Kandachar and Fabrice Roegiers. Endocytosis and control of notch signaling. Current opinion in cell biology, 24 4:534-40, Aug 2012. URL: https://doi.org/10.1016/j.ceb.2012.06.006, doi:10.1016/j.ceb.2012.06.006. This article has 113 citations and is from a peer-reviewed journal.
 
-26. (saraswathy2021thee3ubiquitin pages 4-7): Vishnu Muraleedharan Saraswathy, Priyanka Sharma, Akshai Janardhana Kurup, Sophie Polès, Morgane Poulain, and Maximilian Fürthauer. The e3 ubiquitin ligase mindbomb1 controls zebrafish planar cell polarity. bioRxiv, Jul 2021. URL: https://doi.org/10.1101/2021.07.05.451064, doi:10.1101/2021.07.05.451064. This article has 0 citations.
+26. (lai2005theubiquitinligase pages 6-7): Eric C. Lai, Fabrice Roegiers, Xiaoli Qin, Yuh Nung Jan, and Gerald M. Rubin. The ubiquitin ligase drosophila mind bomb promotes notch signaling by regulating the localization and activity of serrate and delta. Development, 132:2319-2332, May 2005. URL: https://doi.org/10.1242/dev.01825, doi:10.1242/dev.01825. This article has 225 citations and is from a domain leading peer-reviewed journal.
 
-27. (saraswathy2021thee3ubiquitin pages 9-11): Vishnu Muraleedharan Saraswathy, Priyanka Sharma, Akshai Janardhana Kurup, Sophie Polès, Morgane Poulain, and Maximilian Fürthauer. The e3 ubiquitin ligase mindbomb1 controls zebrafish planar cell polarity. bioRxiv, Jul 2021. URL: https://doi.org/10.1101/2021.07.05.451064, doi:10.1101/2021.07.05.451064. This article has 0 citations.
+27. (wang2005distinctrolesfor pages 2-3): Weidong Wang and Gary Struhl. Distinct roles for mind bomb, neuralized and epsin in mediating dsl endocytosis and signaling in drosophila. Development, 132:2883-2894, Jun 2005. URL: https://doi.org/10.1242/dev.01860, doi:10.1242/dev.01860. This article has 235 citations and is from a domain leading peer-reviewed journal.
 
-28. (dho2019proximityinteractionsof pages 8-9): Sascha E. Dho, Nancy Silva-Gagliardi, Fabio Morgese, Etienne Coyaud, Emily Lamoureux, Donna M. Berry, Brian Raught, and C. Jane McGlade. Proximity interactions of the ubiquitin ligase mind bomb 1 reveal a role in regulation of epithelial polarity complex proteins. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48902-x, doi:10.1038/s41598-019-48902-x. This article has 41 citations and is from a peer-reviewed journal.
+28. (lai2005theubiquitinligase pages 10-11): Eric C. Lai, Fabrice Roegiers, Xiaoli Qin, Yuh Nung Jan, and Gerald M. Rubin. The ubiquitin ligase drosophila mind bomb promotes notch signaling by regulating the localization and activity of serrate and delta. Development, 132:2319-2332, May 2005. URL: https://doi.org/10.1242/dev.01825, doi:10.1242/dev.01825. This article has 225 citations and is from a domain leading peer-reviewed journal.
+
+29. (choe2007neuronalmorphogenesisis pages 4-5): Eun-Ah Choe, Lujian Liao, Jian-Ying Zhou, Dongmei Cheng, Duc M. Duong, Peng Jin, Li-Huei Tsai, and Junmin Peng. Neuronal morphogenesis is regulated by the interplay between cyclin-dependent kinase 5 and the ubiquitin ligase mind bomb 1. The Journal of Neuroscience, 27:9503-9512, Aug 2007. URL: https://doi.org/10.1523/jneurosci.1408-07.2007, doi:10.1523/jneurosci.1408-07.2007. This article has 90 citations.
+
+30. (choe2007neuronalmorphogenesisis pages 6-7): Eun-Ah Choe, Lujian Liao, Jian-Ying Zhou, Dongmei Cheng, Duc M. Duong, Peng Jin, Li-Huei Tsai, and Junmin Peng. Neuronal morphogenesis is regulated by the interplay between cyclin-dependent kinase 5 and the ubiquitin ligase mind bomb 1. The Journal of Neuroscience, 27:9503-9512, Aug 2007. URL: https://doi.org/10.1523/jneurosci.1408-07.2007, doi:10.1523/jneurosci.1408-07.2007. This article has 90 citations.
+
+31. (lai2005theubiquitinligase pages 2-3): Eric C. Lai, Fabrice Roegiers, Xiaoli Qin, Yuh Nung Jan, and Gerald M. Rubin. The ubiquitin ligase drosophila mind bomb promotes notch signaling by regulating the localization and activity of serrate and delta. Development, 132:2319-2332, May 2005. URL: https://doi.org/10.1242/dev.01825, doi:10.1242/dev.01825. This article has 225 citations and is from a domain leading peer-reviewed journal.
+
+32. (dho2019proximityinteractionsof pages 9-12): Sascha E. Dho, Nancy Silva-Gagliardi, Fabio Morgese, Etienne Coyaud, Emily Lamoureux, Donna M. Berry, Brian Raught, and C. Jane McGlade. Proximity interactions of the ubiquitin ligase mind bomb 1 reveal a role in regulation of epithelial polarity complex proteins. Scientific Reports, Aug 2019. URL: https://doi.org/10.1038/s41598-019-48902-x, doi:10.1038/s41598-019-48902-x. This article has 41 citations and is from a peer-reviewed journal.
+
+33. (kalodimou2023separablerolesfor pages 20-21): Konstantina Kalodimou, Margarita Stapountzi, Nicole Vüllings, Ekaterina Seib, Thomas Klein, and Christos Delidakis. Separable roles for neur and ubiquitin in delta signalling in the drosophila cns lineages. Cells, 12:2833, Dec 2023. URL: https://doi.org/10.3390/cells12242833, doi:10.3390/cells12242833. This article has 4 citations.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](mib1-deep-research-falcon_artifacts/artifact-00.md)
 - [Edison artifact artifact-01](mib1-deep-research-falcon_artifacts/artifact-01.md)
+- [Edison artifact artifact-02](mib1-deep-research-falcon_artifacts/artifact-02.md)
 
 ## Citations
 
-1. vullings2025anothertailof pages 1-2
-2. seib2021theroleof pages 8-9
-3. troost2023themeaningof pages 1-2
-4. seib2025theintracellulardomains pages 1-2
-5. seib2025theintracellulardomains pages 2-3
-6. dho2019proximityinteractionsof pages 9-12
-7. sprinzak2021biophysicsofnotch pages 11-13
-8. kalodimou2023separablerolesfor pages 15-17
-9. kalodimou2023separablerolesfor pages 17-19
-10. vullings2025anothertailof pages 8-10
-11. dho2019proximityinteractionsof pages 1-2
-12. vullings2025anothertailof pages 2-4
-13. dho2019proximityinteractionsof pages 2-4
-14. seib2021theroleof pages 9-11
-15. seib2021theroleof pages 6-8
-16. dho2019proximityinteractionsof pages 4-5
-17. seib2021theroleof pages 3-4
-18. sprinzak2021biophysicsofnotch pages 1-3
-19. lv2024evolutionandfunction pages 2-4
-20. seib2021theroleof pages 1-3
-21. seib2021theroleof pages 13-14
-22. seib2021theroleof pages 11-13
-23. kalodimou2023separablerolesfor pages 14-15
-24. kalodimou2023separablerolesfor pages 5-7
-25. dho2019proximityinteractionsof pages 8-9
-26. https://doi.org/10.1186/s12915-025-02162-6,
-27. https://doi.org/10.1111/boc.202100009,
-28. https://doi.org/10.1038/s41598-019-48902-x,
-29. https://doi.org/10.1186/s12915-023-01759-z,
-30. https://doi.org/10.1186/s12964-025-02472-w,
-31. https://doi.org/10.1146/annurev-biophys-101920-082204,
-32. https://doi.org/10.3390/ijms25063322,
-33. https://doi.org/10.3390/cells12242833,
-34. https://doi.org/10.7554/elife.71928,
-35. https://doi.org/10.1101/2021.07.05.451064,
+1. guo2016structureandfunction pages 5-7
+2. guo2016structureandfunction pages 2-4
+3. berndt2017ubiquitylationindependentactivationof pages 2-3
+4. lai2005theubiquitinligase pages 3-4
+5. lai2005theubiquitinligase pages 1-2
+6. lai2005theubiquitinligase pages 10-11
+7. choe2007neuronalmorphogenesisis pages 4-5
+8. dho2019proximityinteractionsof pages 9-12
+9. vullings2025anothertailof pages 1-2
+10. seib2025theintracellulardomains pages 1-2
+11. kalodimou2023separablerolesfor pages 17-19
+12. troost2023themeaningof pages 1-2
+13. bras2011themultiplefacets pages 2-3
+14. guo2016structureandfunction pages 4-5
+15. mcmillan2015atailof pages 1-3
+16. guo2016structureandfunction pages 1-2
+17. dho2019proximityinteractionsof pages 2-4
+18. lai2005theubiquitinligase pages 4-6
+19. berndt2017ubiquitylationindependentactivationof pages 1-2
+20. seib2025theintracellulardomains pages 17-18
+21. weinmaster2011notchligandubiquitylation pages 5-6
+22. weinmaster2011notchligandubiquitylation pages 4-5
+23. kandachar2012endocytosisandcontrol pages 4-5
+24. weinmaster2011notchligandubiquitylation pages 6-7
+25. liu2013functionalanalysisof pages 28-32
+26. bras2011themultiplefacets pages 5-6
+27. bras2011themultiplefacets pages 6-8
+28. kandachar2012endocytosisandcontrol pages 7-7
+29. lai2005theubiquitinligase pages 6-7
+30. wang2005distinctrolesfor pages 2-3
+31. choe2007neuronalmorphogenesisis pages 6-7
+32. lai2005theubiquitinligase pages 2-3
+33. kalodimou2023separablerolesfor pages 20-21
+34. https://doi.org/10.1242/dev.01825,
+35. https://doi.org/10.1016/j.sbi.2016.05.012,
+36. https://doi.org/10.1111/j.1600-0854.2010.01126.x,
+37. https://doi.org/10.1016/j.molcel.2015.01.019,
+38. https://doi.org/10.1038/s41598-019-48902-x,
+39. https://doi.org/10.1186/s12915-025-02162-6,
+40. https://doi.org/10.3390/cells12242833,
+41. https://doi.org/10.7554/elife.27346,
+42. https://doi.org/10.1186/s12915-023-01759-z,
+43. https://doi.org/10.1186/s12964-025-02472-w,
+44. https://doi.org/10.1016/j.devcel.2011.06.006,
+45. https://doi.org/10.1016/j.ceb.2012.06.006,
+46. https://doi.org/10.1242/dev.01860,
+47. https://doi.org/10.1523/jneurosci.1408-07.2007,
