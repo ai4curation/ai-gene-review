@@ -66,14 +66,34 @@ the pennycress CRISPR knockouts.
 - **Location:** `membrane` sharpened to ER membrane. There is no pennycress localization
   data; this rests on the conserved ER elongase.
 
+## Modules
+
+- **Fatty acid elongation** (`modules/fatty_acid_elongation_cycle.yaml`, updated). The
+  condensation step is now a choice between two unrelated enzyme families that carry out
+  the same reaction: animal and fungal ELOVLs, and plant 3-ketoacyl-CoA synthases (KCS).
+  The KCS variant uses Arabidopsis FAE1 and CER6 and pennycress FAE1 as examples, and cites
+  the PAINT node PTN000774398. The other three steps of the cycle are carried out by
+  orthologous enzymes in plants and animals, so each now lists an Arabidopsis example
+  (KCR1, PAS2, ECR/CER10) alongside the human one.
+- **Glucosinolate-myrosinase defense**
+  (`modules/aliphatic_glucosinolate_myrosinase_defense.yaml`, new). It has five parts:
+  1. methionine chain elongation (BCAT4, MAM, IPMI, IPMDH1, BCAT3)
+  2. core structure (CYP79F, CYP83A1, GGP1, SUR1, UGT74C1, SOT17/18)
+  3. side-chain modification (FMO GS-OX, AOP2), which is optional
+  4. myrosinase hydrolysis (TGG1/TGG2)
+  5. specifier proteins (ESP, NSP, and pennycress TFP), which are optional
+
+  Each step cites a primary paper. Pennycress seed glucosinolate is mostly sinigrin
+  (allylglucosinolate), which requires a working AOP2. The Arabidopsis Columbia AOP2 is
+  inactive, so the module uses the functional Cvi-0 allele as its example.
+
 ## Next steps
 
 1. Review the other oil-composition genes (FAD2, ROD1) using PMID:33968108.
-2. Add plant 3-ketoacyl-CoA synthase (FAE1/KCS) as a variant of the condensation step in
-   `modules/fatty_acid_elongation_cycle.yaml`, which currently lists only animal ELOVLs.
-   Plant KCSs are unrelated to ELOVLs, so this is a variant, not an extra member.
-3. Draft a glucosinolate-myrosinase module, tying in TFP and the domestication knockouts
-   of MYB28 and MYC3 (PMID:41578087).
+2. Find pennycress orthologs of the glucosinolate module enzymes (especially AOP2 and the
+   myrosinases) in the reference proteome, and add them as examples once reviewed.
+3. Review the glucosinolate regulators targeted in domestication (MYB28, MYC3;
+   PMID:41578087). They are deliberately outside the module.
 4. Seed coat and weediness: TT8 knockout (PMID:41578087; PMID:41685867).
 
 ## Key literature (PMIDs checked against PubMed)
