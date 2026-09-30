@@ -20,3 +20,6 @@
 - identical protein binding (ISO): marked over-annotated; the human source is high-throughput only, and ABI is a single subunit in the WRC.
 - small GTPase binding is kept with contributes_to, which is correct because Rac1 binds CYFIP, not ABI2.
 - No NEW terms were proposed. Kinase binding (Abl SH3 interaction) is by similarity only for mouse.
+
+## Deep research (falcon) cross-check
+- Abi2-deep-research-falcon.md agrees with the review: non-enzymatic WRC adaptor; Abl SH3 interaction; localization at lamellipodia, forming adherens junctions and dendritic spines. It also notes PIM1 phosphorylation of Ser183, which stabilizes ABI2 (Jensen et al. 2023, human). No change to any annotation decision.
