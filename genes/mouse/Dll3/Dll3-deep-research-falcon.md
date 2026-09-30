@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2026-09-30T05:16:24.937939'
-end_time: '2026-09-30T05:29:47.389473'
-duration_seconds: 802.45
+cached: true
+start_time: '2026-09-30T05:30:16.263198'
+end_time: '2026-09-30T05:30:16.267711'
+duration_seconds: 0.0
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: mouse

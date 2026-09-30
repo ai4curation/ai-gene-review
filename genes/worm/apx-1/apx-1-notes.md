@@ -3,7 +3,7 @@
 UniProt P41990 (secondary Q9TXN4), "Protein apx-1". PANTHER (verbatim from UniProt): PTHR24049 (CRUMBS
 FAMILY MEMBER), PTHR24049:SF22 (DROSOPHILA CRUMBS HOMOLOG). This is the same odd subfamily in which PANTHER
 places the LIN-12 receptor. The lag-2 ligand is instead in PTHR22669 (DSL domain protein). IBA: Notch binding
-(GO:0005112) from PANTHER:PTN002371879, whose donors are Dl/Ser/DLL/JAG/DLK ligands. That IBA is correct for
+(GO:0005112) from PANTHER:PTN002371879, whose donors are DSL ligands (Dl, Ser, DLL, JAG). That IBA is correct for
 APX-1 but wrong for LIN-12.
 
 ## Ligand function

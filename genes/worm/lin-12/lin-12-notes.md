@@ -11,8 +11,8 @@ Notch-like protein; one of the two C. elegans Notch receptors (the other is GLP-
 - PANTHER (from the UniProt record, verbatim): PTHR24049 (CRUMBS FAMILY MEMBER), PTHR24049:SF22
   (DROSOPHILA CRUMBS HOMOLOG). Note: this is an odd placement for a Notch receptor. APX-1 (a DSL
   ligand) is placed in the same subfamily, and the lin-12 IBA rows for Notch binding (PTN002371879) and
-  negative regulation of Notch signaling (PTN001170801) are both seeded exclusively by DSL/DLK ligand
-  donors (Dl, Ser, DLL1/3/4, JAG1/2, DLK1). These are ligand functions and I flag them as
+  negative regulation of Notch signaling (PTN001170801) are both seeded exclusively by DSL ligand
+  donors (e.g. Dl, Ser, mouse DLL1/DLL3/DLL4, rat JAG1; the negative-regulation node donors are mouse DLL4 and rat DLL3). These are ligand functions and I flag them as
   mis-propagated onto a receptor (REMOVE).
 - GLP-1 by contrast is in PTHR45836:SF23 (NEUROGENIC LOCUS NOTCH HOMOLOG PROTEIN 1).
 

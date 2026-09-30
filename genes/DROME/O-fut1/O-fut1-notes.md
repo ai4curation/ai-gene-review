@@ -39,3 +39,6 @@ publications and UniProt.
 
 ## Pathway-variant notes
 - Fly-specific(?) chaperone role making catalysis dispensable for many Notch events; in mouse Pofut1 the enzyme is required (catalytic role more prominent).
+
+## Deep research final status
+Falcon output arrived after the wrapper timeout (`O-fut1-deep-research-falcon.md`); reviewed and cited in the review YAML.

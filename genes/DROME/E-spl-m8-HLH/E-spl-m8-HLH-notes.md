@@ -28,3 +28,6 @@ unavailable. See end of file for final status.
 ## PAINT nodes (GOA WITH/FROM)
 - PTN004213585: GO:0000122, GO:0000981, GO:0005634, GO:0000978
 - PTN000105428: GO:0009952, GO:0050767
+
+## Deep research final status
+Falcon output arrived after the wrapper timeout (`E-spl-m8-HLH-deep-research-falcon.md`); reviewed and cited (WRPW-Groucho, CK2 Ser159 requirement for Atonal repression, Bandyopadhyay 2016 per deep research).

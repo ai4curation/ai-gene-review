@@ -32,3 +32,6 @@ unavailable. See end of file for final status.
 
 ## Pathway-variant notes
 - Hairless is an arthropod/insect innovation; vertebrate RBPJ repression uses other corepressors (SHARP/SPEN, KyoT2 etc.).
+
+## Deep research final status
+Falcon output arrived after the wrapper timeout (`H-deep-research-falcon.md`); reviewed and cited in the review YAML.
