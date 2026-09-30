@@ -4,6 +4,13 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, mouse, rat]
+manifest:
+  slides:
+    - href: ISO/slides/ISO-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/GC5QNPTZrY1hotMEPdr3ME
+      title: Project brief
 ---
 # Inferred from Sequence Orthology (ISO) Evidence Code Review
 
@@ -289,7 +296,3 @@ Use this checklist before making a strong `REMOVE` call on ISO or IBA.
       suggestions for reviewers (e.g. `ABSENT` → `SOURCE_STALE_OR_MISSING`).
 - [ ] Distinguish one-to-one from one-to-many orthology calls in the browser
       (needs Alliance/HCOP orthology type, not yet cached).
-
-## Slides
-
-- [Slides](ISO/slides/ISO-slides.html) (Marp source: [ISO-slides.md](ISO/slides/ISO-slides.md)) — AI generated

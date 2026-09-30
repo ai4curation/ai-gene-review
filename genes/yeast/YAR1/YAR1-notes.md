@@ -38,8 +38,12 @@ is additionally `SOURCE_STALE_OR_MISSING`. PTN labels are kept as bare
 The current node also has positive IBD assertions for GO:0000978
 `RNA polymerase II cis-regulatory region sequence-specific DNA binding` and
 GO:0000082 `G1/S transition of mitotic cell cycle`, both dated 2026-02-24. These
-are absent from the pinned YAR1 GOA snapshot but can propagate on refresh, so the
-review raises the broad node placement itself for PAINT-curator reconsideration.
+are absent from the pinned YAR1 GOA snapshot but can propagate on refresh. The
+DNA-binding assertion would fail for the same APSES-domain reason as GO:0001228;
+the G1/S assertion would be inherited from Swi4/Mbp1/Swi6-like cell-cycle
+regulators, while the slow-growth phenotype of `yar1Δ` was later placed in the
+Rps3/40S-biogenesis pathway. The review therefore raises the broad node
+placement itself for PAINT-curator reconsideration.
 
 ## Experimental biology
 
@@ -121,3 +125,26 @@ For YAR1, unanswered report questions are not positive evidence. For SSQ1, the
 located Nop1 association remains recorded while its generic binding label is removed.
 The annotation changes apply only to the relevant gene; no inherited location is
 rejected solely from its best-characterized compartment.
+
+## Focused transcription/MBF/SBF IBA follow-up, 2026-09-29
+
+Re-reviewed the three transcription-related IBA rows that were left
+UNDECIDED on 2026-09-20 against a newer focused local report,
+`YAR1-hypotheses/transcriptional-regulation-and-mbf-sbf-membership/openscientist.md`,
+the current cached PTHR24198 PAINT table, Complex Portal CPX-946/CPX-950, the
+IntAct P46683 interactome, and a fresh PubMed/web search for newer YAR1 primary
+literature. No newer YAR1 molecular-function paper displaced the established
+Rps3-chaperone model.
+
+The MBF/SBF uncertainty is now resolved against YAR1. Complex Portal still
+defines SBF as Swi4-Swi6 and MBF as Mbp1-Swi6, with no Yar1 subunit. IntAct
+currently lists 15 Yar1/P46683 rows involving Rps3, Ltv1, Sfm1, Ess1, and
+Hsp70/Hsp40 chaperone-network proteins, but no Swi4, Swi6, or Mbp1. The
+structural paper PMID:24021814 and the direct Rps3 chaperone paper
+PMID:22570489 place Yar1's ankyrin repeats on Rps3 binding and solubility, not
+on Pol II promoter regulation. GO:0045944 and GO:0030907 remain present on
+PTN000917496 in the cached PAINT table but are bad transfers to YAR1; the older
+GO:0033309 SBF row is also stale because that term is now absent from
+PTHR24198. The review therefore resolves the GO:0045944 and GO:0030907 rows to
+REMOVE with `PROPAGATION_BAD`, and the stale GO:0033309 row to REMOVE with
+`SOURCE_STALE_OR_MISSING`, all anchored on `PANTHER:PTN000917496`.

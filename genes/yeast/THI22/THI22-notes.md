@@ -161,6 +161,20 @@ confirms 76.4% identity and conservation of all THI20 functional residues (HMP-b
 thiaminase-II C468->C489, E540->E561) — THI22 is NOT a residue-dead pseudoenzyme, which is why
 no domain/pseudoenzyme-based REMOVE was applied to the kinase/thiaminase MF terms.
 
+## 2026-09-29 — IBA alignment
+
+- Rechecked the four THI22 IBA rows against the current `PTHR20858` PAINT snapshot.
+  `GO:0005829`, `GO:0008902`, `GO:0008972`, and `GO:0009228` are all current IBD
+  assertions on `PTN000466159`.
+- Added `PANTHER:PTN000466159` propagation-source reviews to the cytosol and HMP-kinase
+  rows and normalized the existing HMP-P kinase and thiamine-biosynthesis rows away from
+  extant yeast donor IDs to the ancestral PTN node. The node placement itself explains
+  the IBA transfer; THI22-specific concerns are target-branch divergence and unresolved
+  localization, not weak donor count or circularity.
+- Searched 2025-2026 PubMed and the broader web for THI22/YPR121W and the yeast
+  THI20/THI21/THI22 thiamine-kinase family. The search did not find newer
+  peer-reviewed evidence that resolves THI22's activity or localization.
+
 ## 2026-08-08 — OpenScientist blinded run on GO:0005576 (pre-registration)
 
 Launched a neutral function-assignment hypothesis job before looking at any result, so the

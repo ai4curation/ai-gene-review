@@ -72,3 +72,26 @@
   Ssa1 experiments are marked `VERIFIED` only when the cached text exposes the
   relevant evidence. With the exact 242-row reconciliation and all actions
   resolved, the review is promoted to `COMPLETE`.
+
+## 2026-09-29 IBA re-review
+
+- All eight IBA rows were rechecked against the GOA `WITH/FROM` PAINT nodes and
+  the current local PTHR19375 cache. PTN000452648 still carries the core ATP
+  hydrolysis, heat shock protein binding, protein folding chaperone, and protein
+  refolding assertions; PTN002321897 still carries broad cytoplasm; PTN002500132
+  still carries nucleus and cytosol but not plasma membrane. The stale
+  PTN002500132/GO:0005886 plasma-membrane IBA therefore remains the only IBA
+  removal, while the other IBA rows now carry explicit structured
+  `propagation_review` provenance.
+- The 189 remaining legacy `GO:0005515` high-throughput IPI rows were changed
+  from `MARK_AS_OVER_ANNOTATED` to `REMOVE`, matching the project rule that
+  generic protein binding is uninformative rather than an over-specific
+  biological-process claim. The two Ssa1-Sse1 targeted rows stay `MODIFY` to
+  the better-supported `GO:0031072` heat shock protein binding term.
+- A 2024 PNAS Sup35 amyloid paper and three full-text 2024-2025 Ssa1/Ssa2
+  papers were cached and added as manually verified references: PMID:39656207
+  maps Sup35 residues 143-164 as an Ssa1/Sis1-dependent amyloid-disaggregation
+  determinant; PMID:39795068 maps Ssa1-EEVD/Sis1 contacts by NMR; PMID:40202836
+  shows Ssa1, Sis1, and Hsp104 overexpression can limit Pab1 inclusions in
+  cells lacking SSA1 and SSA2; and PMID:41390490 places Ssa1 T492 phosphorylation
+  downstream of heat-induced Mid2/Pkc1 signaling.

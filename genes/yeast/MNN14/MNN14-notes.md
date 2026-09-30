@@ -124,3 +124,23 @@ outer-chain maturation/modification, so this is an appropriate (if slightly gene
 - WebSearch (Odani 1997 PMID:9459307; Wang MNN6=KTR6): MNN6/Ktr6 = the mannosylphosphate transferase;
   MNN4 = its positive regulator, Mnn4p amount rate-limiting.
 - OLS: GO:0006491, GO:0009101, GO:0000031, GO:0008047 definitions confirmed.
+
+## 2026-09-28 — IBA re-review
+
+The single IBA row derives from current PANTHER data:
+
+```text
+PTHR15407  PTN001034988  GO:0009101  P  IBD  CGD:CAL0000174110|CGD:CAL0000175223|MGI:MGI:2179507|SGD:S000001684|SGD:S000003822|UniProtKB:O75072  taxon:33154  20251219
+```
+
+This is not a stale or circular propagation. `PTN001034988` still exists, MNN14's own
+`SGD:S000003822` evidence in the WITH/FROM list is an experimentally characterized
+descendant used to place the ancestral IBD, and `GO:0009101 glycoprotein biosynthetic
+process` is broad but valid for the mannosylphosphorylation activity defined by
+PMID:28101612 and PMID:33144549.
+
+Newer literature search turned up no post-2021 direct *S. cerevisiae* MNN14 papers that
+change the GO calls. Pakhomova et al. 2026 is about *Ogataea polymorpha*
+phosphomannosylation mutants and only mentions MNN14 as a *S. cerevisiae* MNN4 paralog;
+2024-2026 reviews on heterologous protein glycosylation likewise use MNN14 as background
+for mannosylphosphate removal or M6P glyco-engineering.

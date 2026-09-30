@@ -3,6 +3,13 @@ title: "UniPathway Unique Terms Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human, PSEPK, RHOPA, CUPNH, FERPA, 9ARCH, DESPS, POLH7, BRADI]
+manifest:
+  slides:
+    - href: UNIPATHWAY/slides/UNIPATHWAY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/U4SuDGuX6Pm3BNujvCkbuH
+      title: Project brief
 ---
 
 # UniPathway Unique Terms Project
@@ -457,7 +464,3 @@ FROM true_unique;
 ```
 
 </details>
-
-## Slides
-
-- [Slides](UNIPATHWAY/slides/UNIPATHWAY-slides.html) (Marp source: [UNIPATHWAY-slides.md](UNIPATHWAY/slides/UNIPATHWAY-slides.md)) — AI generated

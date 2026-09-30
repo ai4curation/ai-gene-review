@@ -19,6 +19,13 @@ sidecars:
   slide_images:
     - TREEGRAFTER/slides/treegrafter-graft.svg
     - TREEGRAFTER/slides/treegrafter-results.svg
+manifest:
+  slides:
+    - href: TREEGRAFTER/slides/TREEGRAFTER-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Wi9WbyuGcFMPSKNmXX1UoP
+      title: Project brief
 ---
 
 # TreeGrafter Inference Evaluation
@@ -471,7 +478,3 @@ fixes:
 - **Refresh the snapshot** when the next batch lands: re-run the three scripts,
   classify the new down-grades in `failure_mode_curated.tsv`, and re-pin the
   date and commit in the Results header.
-
-## Slides
-
-- [Slides](TREEGRAFTER/slides/TREEGRAFTER-slides.html) (Marp source: [TREEGRAFTER-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/TREEGRAFTER/slides/TREEGRAFTER-slides.md)) — AI generated

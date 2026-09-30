@@ -3,6 +3,13 @@ title: "Miscitation Audit"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 autolink_gene_symbols: false
+manifest:
+  slides:
+    - href: MISCITATION_AUDIT/slides/MISCITATION_AUDIT-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/MivpKQ5kSzXjx2C5kqUYqs
+      title: Project brief
 ---
 
 # Miscitation Audit
@@ -168,7 +175,3 @@ rather than literal symbols. Output is retained in `paralog_mismatches.tsv` and
 - [MITO_INTERACTOME.md](MITO_INTERACTOME.md) — where the COX17/COX10 case surfaced.
 - [IBA_REVIEW.md](IBA_REVIEW.md) — propagation failure taxonomy; miscitation is one way
   a propagated annotation acquires unsound support.
-
-## Slides
-
-- [Slides](MISCITATION_AUDIT/slides/MISCITATION_AUDIT-slides.html) (Marp source: [MISCITATION_AUDIT-slides.md](MISCITATION_AUDIT/slides/MISCITATION_AUDIT-slides.md)) — AI generated

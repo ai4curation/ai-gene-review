@@ -80,3 +80,18 @@
 - Nothing NEW proposed: the DNA-replication-stress and filamentous-growth roles (UniProt FUNCTION, papers
   not cached) reuse the same Cdc28-Tyr19 activity and are not represented in GOA; not added without
   cached primary evidence.
+
+## 2026-09-29 — IBA source alignment
+
+- Rechecked the five SWE1 IBA rows against the current `PTHR11042` PAINT snapshot and the cached
+  family review. The relevant nodes still carry each propagated term: `PTN000113601` for
+  `GO:0005634` nucleus and `GO:0005737` cytoplasm, `PTN000867899` for `GO:0004713` protein tyrosine
+  kinase activity, and `PTN008315181` for `GO:0010972` negative regulation of G2/M transition and
+  `GO:0110031` negative regulation of G2/MI transition.
+- The PAINT evidence agrees with the family-level PTHR11042 review: the tyrosine-kinase, mitotic
+  G2/M, and meiotic G2/MI IBAs are core for Swe1; the
+  nucleus transfer matches direct S. cerevisiae localization evidence, and broad cytoplasm is defensible
+  but non-core because bud neck and nucleus are more informative.
+- Searched 2025+ PubMed for `SWE1`, `Swe1`, and `YJL187C` with `Saccharomyces cerevisiae`. The two hits
+  were PMID:41927924, already cited for meiotic checkpoint maintenance, and PMID:42395383, a
+  Cryptococcus neoformans Wee1-family preprint that does not change the S. cerevisiae SWE1 calls.

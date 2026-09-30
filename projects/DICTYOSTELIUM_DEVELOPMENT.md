@@ -3,6 +3,13 @@ title: "Dictyostelium Development Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [DICDI]
+manifest:
+  slides:
+    - href: DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/FJvHoxwCfnrbDz9JcYwAiJ
+      title: Project brief
 ---
 
 # Dictyostelium Development Project
@@ -360,7 +367,3 @@ Ras/Rap members, dhk/grl family members, ecm/cot paralogs, statB/statD.
 Seed the literature at review time; canonical entry points include the
 *Dictyostelium* developmental cell-signaling reviews and dictyBase gene pages.
 Record provenance per gene as `[PMID:xxxx "supporting text"]` in the gene notes.
-
-## Slides
-
-- [Slides](DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.html) (Marp source: [DICTYOSTELIUM_DEVELOPMENT-slides.md](DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.md)) — AI generated
