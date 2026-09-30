@@ -87,6 +87,22 @@ the pennycress CRISPR knockouts.
   (allylglucosinolate), which requires a working AOP2. The Arabidopsis Columbia AOP2 is
   inactive, so the module uses the functional Cvi-0 allele as its example.
 
+All 25 Arabidopsis example enzymes named in these two modules now have full gene reviews
+(`genes/ARATH/<GENE>/`), as does pennycress FAE1. Things the reviews found that bear on
+the modules:
+
+- **Missing GO terms:** GO has no activity term for the CYP83A1 or AOP2 reactions, or for
+  the specific ESP and NSP1 reactions. Each review proposes one.
+- **Paralog mis-propagation:** leucine-biosynthesis annotations on MAM1 were inherited
+  from its IPMS paralogs, and MAM1 shows no IPMS activity, so they are removed. MAM3 does
+  have weak IPMS activity, so that annotation is kept as non-core.
+- **Chain-elongation process term:** BCAT4, BCAT3, MAM1 and MAM3 gain the term
+  `L-homomethionine biosynthetic process` (GO:0033322). The term fits by definition, but
+  QuickGO shows no gene product in any species annotated to it.
+- **Disputed ESP evidence:** the ESP leaf-senescence and defence annotations come from a
+  study in Columbia, whose leaves are reported to have essentially no ESP. They are kept
+  as non-core, not removed.
+
 ## Next steps
 
 1. Review the other oil-composition genes (FAD2, ROD1) using PMID:33968108.
