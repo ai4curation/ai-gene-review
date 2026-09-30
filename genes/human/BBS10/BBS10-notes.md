@@ -97,3 +97,39 @@ regulation of protein-containing complex assembly (GO:0043254). MF: ATP binding
 (GO:0005524), with probable protein-folding-chaperone activity (GO:0044183 / GO:0140662, not
 experimentally proven). All ciliary/retinal phenotypes are downstream of impaired BBSome
 assembly.
+
+## ClinGen project re-review — 2026-09-30
+
+This re-review retains the twelve inherited source assertions and restores two partner-specific assertions from the unchanged GOA file. The normal local seeder, run with title fetching disabled and output confined to a temporary file, also restores eight missing supporting-entity lists. The fourteen distinct source tuples now match the raw GOA records. It supersedes the earlier vertebrate-specific description, the ATP-binding catalytic core, and the two authored NEW assertions for folding-chaperone activity and cytoplasm. Those two additions were assigned an IBA/GO_REF provenance without an actual PAINT assertion; withdrawing them does not delete a source annotation or assert that BBS10 cannot occur in the cytoplasm.
+
+The recovered PMID:20080638 sources name BBS12/Q6ZW61 and BBS7/Q8IWZ6. The inherited partner from that paper is BBS9/Q3SYG4. Selected original Results explicitly describe the corresponding co-immunoprecipitation associations; no purified affinity or substrate-folding activity is inferred. The BioPlex sources name BBS7, with their precise supplementary-record limitations retained. Each recovered source received a separate annotation consultation. The final fourteen source decisions are four ACCEPT, eight KEEP_AS_NON_CORE and two MODIFY, with no NEW assertion.
+
+### Assembly function and molecular uncertainty
+
+The demonstrated role is BBSome assembly. BBS10 associates with BBS proteins and helps organize the BBS-chaperonin machinery. Its substoichiometric recovery supports a transient or regulatory role, without establishing constitutive membership in either that machinery or the mature BBSome. The normal cache for [PMID:20080638](https://pubmed.ncbi.nlm.nih.gov/20080638/) is abstract-only. Selected original Results and Discussion were read separately, including the D81N interaction experiments. Disruption of several associations can reflect an altered protein conformation; it is not a selective test of ATP binding or hydrolysis.
+
+In human 293T cells, BBS10 depletion and overexpression have opposing effects on BBS6 association with CCT proteins. These results support regulation of the assembly machinery; chaperone-mediated BBSome assembly is its related downstream process. Patient fibroblasts also show defective BBSome assembly. The adjacent thermolysin experiments concern Bbs6-null cells and cannot be attributed to a direct BBS10 folding assay. [PMID:22500027](https://pubmed.ncbi.nlm.nih.gov/22500027/)
+
+The single core therefore records these two experimentally supported processes and an explicit molecular-function gap. It does not assign a folding MF, a CCT ATPase activity, or stable BBSome membership. The original ATP-binding IEA is retained as non-core sequence-based evidence. GO:0044183 requires assistance with folding of a bound protein; association with a folding system alone does not establish that activity. The ontology's open [assembly-chaperone term request](https://github.com/geneontology/go-ontology/issues/31631) is relevant context, not an existing GO identifier to assert.
+
+### Localization, partner specificity and cell context
+
+The cilium source annotation is refined to GO:0036064, ciliary basal body. Original immunolocalization Results include endogenous BBS10 in human primary renal proximal tubular epithelial cells and differentiating human preadipocytes. The Falcon artifact's IMCD wording is not used as the basis for this refinement. Selected primary Results and figure captions were inspected; microscopy images and supplementary Methods were not independently assessed. [PMID:19190184](https://pubmed.ncbi.nlm.nih.gov/19190184/)
+
+Ciliogenesis varies with experimental context. Two BBS10 RNAi reagents reduce ciliation in differentiating human preadipocytes, whereas the c91fs95 patient fibroblasts in the assembly study retain cilia despite defective BBSome formation. The clinical retinal study supplies a separate human phenotype. These observations support contextual non-core associations without a universal requirement for BBS10 in every ciliogenesis assay. [PMID:19190184](https://pubmed.ncbi.nlm.nih.gov/19190184/), [PMID:22500027](https://pubmed.ncbi.nlm.nih.gov/22500027/), [PMID:17980398](https://pubmed.ncbi.nlm.nih.gov/17980398/)
+
+The BBS10-RNF2 row is refined to ubiquitin protein ligase binding. The original Figure 3C and Results explicitly include tagged BBS10 co-immunoprecipitation with tagged RNF2; the Methods identify HEK293 cells. The endogenous interaction, yeast assay and downstream transcriptional experiments emphasize other BBS proteins and are not transferred to BBS10. RNF2 is the E3-ligase partner, not an established sequence-specific RNA polymerase II DNA-binding transcription factor. The normal cache remains abstract-only; the original selected Results, caption and Methods were inspected separately. [PMID:22302990](https://pubmed.ncbi.nlm.nih.gov/22302990/)
+
+Supported generic interactions are deliberately retained as non-core under the supplied ActionEnum. The exact high-throughput supplementary bait-prey records were not independently resolved, so no specific cell line, purified binary contact or additional activity is invented from those rows. [PMID:28514442](https://pubmed.ncbi.nlm.nih.gov/28514442/), [PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/)
+
+### Evolution and research boundaries
+
+The later phylogenetic analysis reports chaperonin-like BBS homologs outside vertebrates. This removes support for the earlier vertebrate-specific generalization, without constituting a new phylogenetic reconstruction or biochemical activity inference here. The complete indexed abstract and limited indexed primary passages were read. [PMID:24010126](https://pubmed.ncbi.nlm.nih.gov/24010126/)
+
+The existing Falcon report and its artifact are preserved as prior provider research. They are not primary verification of any citation. All available source annotations received an independent annotation consultation. The GO-CAM index contains no BBS10/Q8TAM1 match. Complete article images, supplements and PAINT family topology were not reconstructed. Publication full-text flags were checked against actual content; partial caches were not treated as complete papers.
+
+A later primary study, [PMID:40914337](https://pubmed.ncbi.nlm.nih.gov/40914337/), was checked before finalization. Its complete PubMed abstract reports reduced stability and partner association for BBS10/BBS12 variants, with altered ciliary length in human-cell models. The publisher access attempt returned403; full Results, Methods and figures remain unread. The abstract's primary-cilium localization wording does not distinguish the basal body from the axoneme and does not establish exclusive localization. The basal-body refinement remains grounded in the independently inspected earlier localization experiments. This later work supports variant-dependent assembly context without resolving autonomous ATPase or folding activity. It is added as a bounded reference, not as a new process annotation.
+
+### Validation of this revision
+
+Focused schema, term, reference and best-practice validation passed on 2026-09-30. The 6 advisories comprise 5 supported generic-binding rows retained as non-core under the supplied ActionEnum and one unused-provider-evidence advisory. The unchanged provider report is a lead map; primary publications support the annotation decisions. Rendering passed. No repository-wide validation pass is claimed.
