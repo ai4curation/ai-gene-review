@@ -88,3 +88,32 @@ labelled GO:1903749 identifier and label are preserved. No new process or
 molecular-function assertion is added. The proposal preserves all 96 source
 objects and all 39 references, with 44 ACCEPT, 43 non-core, eight MODIFY and
 one UNDECIDED; the two catalytic cores remain distinct.
+
+## Second review follow-up: retained interaction context — 2026-09-30
+
+The 15 remaining generic protein-binding annotations are deliberately retained
+as KEEP_AS_NON_CORE under the user-supplied ActionEnum. That instruction
+reserves REMOVE for an annotation unlikely to be correct on the combined
+evidence; it permits KEEP_AS_NON_CORE for a supported annotation that does not
+represent a core function. This takes precedence over the general review
+recommendation to remove uninformative protein-binding terms. These rows
+retain evidence-supported interaction context, not an additional core
+molecular function or a claim of isolated binary binding from every assay.
+
+A supported, more specific replacement has not been established for each
+remaining exact assay, partner and partner-isoform assertion. Assigning an
+adaptor or inhibitor activity solely from a physical association would add a
+functional claim the experiment does not establish. In contrast, three
+canonical BRCA1/BARD1 binding rows were already changed to MODIFY because
+independent inhibition experiments support GO:1990948. The BRCA1-5 partner
+row retains its explicit isoform-assay limit. The unresolved BRAF assertion
+remains UNDECIDED and is separate from these 15 retained interactions. The
+remaining generic-binding advisories are therefore acknowledged consequences
+of this deliberate instruction precedence, rather than unreviewed rows.
+
+The earlier notes sentence assigning the nonhistone core an ER-membrane
+location is superseded by the first follow-up and this clarification. The
+current core uses endoplasmic reticulum (GO:0005783), reflecting the
+ER-associated BAP1 pool without requiring localization to the lipid bilayer.
+This notes-only clarification changes no annotation, core function, reference,
+source object or prior history record.
