@@ -3,8 +3,8 @@
 ## 2026-08-28 dedicated re-review
 
 - All 29 physical GOA rows correspond to 29 distinct term/evidence/reference/
-  qualifier signatures and are represented in `existing_annotations`. One
-  evidence-supported NEW annotation adds GO:0140309.
+  qualifier signatures and are represented in `existing_annotations`. The obsolete
+  GO:0051082 row is modified to the more specific GO:0140309.
 
 - TIM9 and TIM10 form the soluble IMS chaperone shuttle, but their roles are not
   assumed to be identical at the subunit level. The intact complex binds carrier
@@ -31,7 +31,7 @@
   `SGD:S000007256` appearing in WITH/FROM is valid experimental grounding, not
   circularity.
 
-- The single GO:0005515 IPI is marked over-annotated rather than removed: the
+- The single GO:0005515 IPI should be removed rather than retained: the
   Tim9-Tim10 interaction is real, but generic protein binding loses the informative
   IMS chaperone-complex and transporter context.
 
@@ -53,3 +53,17 @@
 
 - Twelve of the thirteen cached PMID records are abstract-only. Experimental rows
   were not rejected merely because their full assay details were unavailable.
+
+## 2026-09-29 IBA refresh
+
+- Current PTHR13172 PAINT now places `GO:0140309` unfolded protein holdase
+  activity at `PANTHER:PTN004407763`, dated 2026-06-03. That corroborates the
+  existing TIM9 `GO:0051082` to `GO:0140309` MODIFY.
+
+- The stale GOA IBA rows are otherwise unchanged: the GOA snapshot still carries
+  `GO:0005743`, `GO:0045039`, and `GO:0140318` from `PTN004407763`, while the
+  current PAINT table carries only `GO:0042719` and `GO:0140309` at that node.
+
+- 2025-2026 searches for TIM9, Tim9-Tim10, `YEL020W-A`, and yeast small-TIM
+  literature did not find a newer TIM9-specific primary paper that changes the
+  core holdase/chaperone interpretation.
