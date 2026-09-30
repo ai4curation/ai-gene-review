@@ -122,3 +122,34 @@ The GOA source contains separate BBS4/Q96RK4 and HDAC6/Q9UBN7 interaction record
 Histone deacetylase binding accurately describes the HDAC6 observation; it does not describe the BBS4 partner. That supported observation remains in the reference finding and these notes, while the established BBS4/BBS8 structural contribution remains represented by the scaffold core. No additional MF is manufactured to compensate for the source aggregation. A future partner-resolved source model could represent the two interactions independently. [PMID:19081074](https://pubmed.ncbi.nlm.nih.gov/19081074/)
 
 The three generic-binding entries are deliberately retained as supported non-core context under the user's supplied action definitions, which reserve REMOVE for annotations unlikely to be correct on the combined evidence. This instruction takes precedence over the general recommendation to remove uninformative protein-binding terms. It does not promote those interactions to additional core functions. The notes record this decision explicitly; no repository-wide policy change is part of the gene review.
+
+
+### 2026-09-30: correction of the inherited interaction-source projection
+
+The previous explanation that the two PMID:19081074 interactions could not be
+represented separately was incorrect. Although Review has no partner-specific
+replacement slot, ExistingAnnotation.supporting_entities supplies the source
+partner scope, and the GOA validator includes that field in annotation identity.
+Two annotations with distinct support lists can therefore carry different
+review actions without ambiguity. This corrects the earlier statement that
+splitting the inherited entry would leave indistinguishable annotations.
+
+The unchanged GOA file contains 23 distinct source tuples. The normal local
+seeder, run without title fetching and with output confined to a temporary
+file, restores nine missing support lists and adds the separately sourced
+HDAC6/Q9UBN7 interaction; these are recovered source annotations, not NEW
+biological assertions. Its BBS4/Q96RK4 counterpart remains separate and
+non-core. The HDAC6 source is refined to GO:0042826 histone deacetylase binding
+because the PMID:19081074 abstract explicitly identifies that interaction.
+The term names the enzyme class of the binding partner; it does not claim
+that BBIP1 binds histones, independently inhibits HDAC6, or bridges HDAC6 to
+BBS4. The normal cache is abstract-only, and no new full-text assay claim is made.
+
+The three supported BBS4-specific interactions remain KEEP_AS_NON_CORE under
+the supplied ActionEnum: they are supported interactions, and the existing
+scaffold core carries their principal structural interpretation. This source
+repair does not change that separate instruction-precedence decision or any
+other annotation judgment. There are now 23 source annotations plus the one
+existing scaffold NEW proposal: 11 ACCEPT, 11 KEEP_AS_NON_CORE, 1 MODIFY, and
+1 NEW. All four alternative products, the scaffold core, and all reference
+records remain unchanged.
