@@ -112,3 +112,12 @@ Reading boundary: the full saved review comment and prior source-specific consul
 ### Applied independent adjudication
 
 The independent biological consultation accepted this proposal, including the replication decisions and the two nucleoplasm changes. Mouse delayed S phase was measured after aphidicolin release; unchallenged asynchronous profiles were previously unchanged. Fork stalling also increased without HU. Human unchanged elongation speed does not refute restart/extent regulation. Preserve these assay boundaries. No annotation source objects, products, core functions or cached source bytes were changed.
+
+
+## Second PR review follow-up (2026-09-30)
+
+Rechecked the replication-recovery interpretation in PMID:23329831 against Results paragraph 46 and Discussion paragraph 50. The authors explicitly conclude that ATRX does not regulate replication rate from their post-hydroxyurea fiber-length result. Their reduced origin-firing readout also carries an inefficient CldU-incorporation/recovery caveat. Both points are now explicit in annotations 44 and 45 (zero-based indices) and the reference finding. Retention uses the combined contextual recovery and mouse fork-maintenance evidence, not an assertion of direct origin-initiation control or faster elongation. Earlier journal statements must be read with this correction.
+
+Retained the supported HP1alpha and macroH2A interactions as non-core rather than duplicating existing more specific binding annotations. Condensed three DAXX interaction reasons while retaining independent targeted support and curator deference; their original high-throughput pair matrices were not newly inspected. No experimental assertion was removed on abstract-only evidence. The generic-binding policy question remains unresolved under the user-defined action meanings.
+
+Independent biological consultation passed after the CldU caveat correction. All 79 original source objects, six alternative products and two core functions remain unchanged; actions are 50 ACCEPT, 25 KEEP_AS_NON_CORE, two MODIFY and two UNDECIDED, with no NEW assertions. Original source caches and earlier history records remain unchanged. Focused validation and rendering are recorded separately after application.
