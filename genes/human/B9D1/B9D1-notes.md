@@ -1,0 +1,39 @@
+# B9D1 curation notes
+
+## 2026-09-30 — ClinGen Mendelian campaign
+
+Human B9D1 is UniProt Q9UPM9, HGNC:24123 and NCBI Gene 27077. The normal source seed contains 30 distinct GOA annotation objects and two alternative products, Q9UPM9-1 and Q9UPM9-2. All source terms, identifiers, evidence codes, qualifiers, interaction partners and isoform metadata are preserved.
+
+### Biological synthesis
+
+B9D1 contributes to the MKS complex at the ciliary transition zone. Human-protein interaction experiments support an MKS1–B9D2–B9D1 arrangement, with B9D2 connecting the other two subunits. The complex helps establish the ciliary gate and its protein composition. Its interdependent localization and contribution to cilium assembly support one core unit with complex, location and process terms. A specific autonomous molecular activity remains unestablished; the molecular-function field is therefore omitted rather than populated from B9/C2-like domain resemblance [PMID:22179047](https://pubmed.ncbi.nlm.nih.gov/22179047/), [PMID:32726168](https://pubmed.ncbi.nlm.nih.gov/32726168/).
+
+The five generic binding annotations all record B9D2 (Q9BPU9). These supported interactions are retained as non-core. The targeted three-hybrid experiments identify B9D2 as the bridge, so their architecture does not establish adaptor activity for B9D1. Large-screen pair tables were not independently inspected; absence from an abstract is not grounds for rejecting an experimental annotation.
+
+### Evidence and assay limits
+
+[PMID:19208769](https://pubmed.ncbi.nlm.nih.gov/19208769/) was read from its complete cached abstract and official figure captions. It distinguishes human ciliogenesis defects from the absence of comparable overt structural defects in worm mutants. The localization captions use tagged human orthologs in mouse IMCD3 cells; they should not be described as endogenous human-cell microscopy. Centrosome, basal-body and historical axonemal annotations remain compatible with the newer transition-zone findings. Full Methods and original images were not independently inspected.
+
+[PMID:22179047](https://pubmed.ncbi.nlm.nih.gov/22179047/) is abstract-only in the cache. It reports interdependent B9D1/TMEM231/CC2D2A localization and altered ciliary membrane diffusion and composition after complex disruption. This supports a barrier assembly and protein-localization role without identifying an independent ligand-receptor activity for B9D1.
+
+[PMID:32726168](https://pubmed.ncbi.nlm.nih.gov/32726168/) was examined in its available interaction and localization Results, Discussion and relevant Methods. Human constructs were tested by cell-lysate immunoprecipitation and three-hybrid assays. Tagged B9D1 localized to the transition zone in control RPE1 cells and depended on MKS1 and B9D2. The knockout lines in this paper target MKS1 and B9D2, not B9D1. Normal measured IFT localization and movement do not demonstrate normal permeability for every soluble protein. Original images, videos and supplementary data were not independently inspected.
+
+[PMID:41165761](https://pubmed.ncbi.nlm.nih.gov/41165761/) was identified through PubMed and the JCI primary article. The complete available Results, Discussion and Methods distinguish human B9D1-knockout ciliogenesis, CP110-removal and ciliary tubulin-modification phenotypes from the detailed B9D2/TMEM67 trafficking and vesicle assays. The work supports ciliary organization, without assigning B9D1 an intrinsic tubulin-modifying activity or direct TMEM67 interaction. Original images and supplements were not independently inspected. Both normal full-text caches were recovered for final assessment.
+
+The [PMID:40205054](https://pubmed.ncbi.nlm.nih.gov/40205054/) interaction source has a publisher correction, [PMID:41039152](https://pubmed.ncbi.nlm.nih.gov/41039152/). The complete available correction text and publisher PDF were read. They correct a duplicated loss-function equation; they do not retract the paper or withdraw the B9D1–B9D2 interaction. Original source and correction identifiers are both retained.
+
+The three Reactome event summaries describe cytosolic context during ciliary assembly. They assign nucleotide exchange to RAB3IP and recruitment activities to their respective machinery, not to B9D1. Broad cytosolic and membrane-associated pools remain compatible with the focused transition-zone role.
+
+### Propagation and receptor activity
+
+The mouse receptor donor Q9R1S0 traces through MGI J:178421 to [PMID:21763481](https://pubmed.ncbi.nlm.nih.gov/21763481/), not PMID:21493627. The complete cached Methods, Results and Discussion were read. Mutant mouse fibroblasts retain cilia but fail to recruit Smoothened after SAG stimulation and show reduced Gli1/Ptch1 responses. GO:0008158 requires Hedgehog ligand recognition and signal transmission across a membrane; these experiments establish a ciliary localization mechanism, not intrinsic receptor activity. Both transferred receptor rows are therefore removed. The original images and supplements were not independently inspected. The human patient variant in this study concerns B9D2, not B9D1. The Smoothened pathway associations are retained as non-core consequences of ciliary organization.
+
+The cilium-assembly ISS donor Q9NXB0 is human MKS1, not a mouse B9D1 ortholog. Its source identifier is preserved. The PAINT node was not reconstructed; independent functional evidence supports the retained process and complex annotations, without treating donor count as evidence strength.
+
+The final review contains 14 ACCEPT, 13 KEEP_AS_NON_CORE, one MODIFY and two REMOVE decisions. The cilium IEA is refined to ciliary transition zone. There are no NEW assertions. A matching GO-CAM index entry was not found; no new process annotation is inferred from that absence.
+
+### Research provenance
+
+The normal Falcon command and configured fallback failed during dependency resolution before producing a provider report. This journal records manual primary-source research. Each of the two new donor/mechanistic references had one ordinary fetch attempt, which failed with DNS errors; their independently verified identities and original failure outputs support the existing reference-cache workflow. The ordinary reference-cache recovery returned full text for both papers. The final review incorporates those records, resolves the two receptor transfers and preserves every source annotation object and alternative product.
+
+The newer study also distinguishes human B9D1 knockout results from B9D2-focused mouse, zebrafish and disease-variant experiments. Its preciliary centriole microscopy uses tagged MKS1/B9D2, with an acknowledged overexpression caveat. Neither complex association nor altered tubulin modifications is used to infer an autonomous B9D1 molecular activity.
