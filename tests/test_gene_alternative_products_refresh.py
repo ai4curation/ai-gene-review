@@ -109,3 +109,72 @@ def test_refresh_does_not_replace_add_or_remove_product_records():
 @pytest.mark.parametrize("value", [None, {}, "curated explanation"])
 def test_refresh_preserves_nonlist_existing_products(value):
     assert gene._repair_truncated_product_sequences(value, [{"id": "P46379-4", "sequence_note": COMPLETE}]) == 0
+
+
+@pytest.mark.parametrize("note", [
+    SHORT + " # Keep this sequence comment",
+    "'" + SHORT + "' # Keep this sequence comment",
+    '"' + SHORT + '" # Keep this sequence comment',
+    ">- # Keep this sequence comment\n      " + SHORT,
+    "|- # Keep this sequence comment\n      " + SHORT,
+])
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_fetch_repair_preserves_all_bytes_outside_sequence_scalar(tmp_path, monkeypatch, note, newline):
+    """Folded/literal prose, comments, quotes and nonstandard indentation survive."""
+    directory = tmp_path / "genes/human/BAG6"
+    directory.mkdir(parents=True)
+    review = directory / "BAG6-ai-review.yaml"
+    raw = BAG6.read_text()
+    goa = "GENE PRODUCT DB\tGENE PRODUCT ID\tGO TERM\n"
+    original = """# Reviewer comment retained verbatim.
+id: P46379
+gene_symbol: BAG6
+description: >-
+  A deliberately folded description has meaningful presentation.
+  It continues on a second line without a trailing newline in the value.
+alternative_products:
+  - id: P46379-4  # Source product identity
+    name: 'Curated name'
+    description: |-
+      Keep this literal product description.
+      Keep its second line too.
+    sequence_note: NOTE
+  - id: P46379-2
+    name: "2"
+    sequence_note: 'Curated selection: VSP_015695' # Authored note
+existing_annotations: []  # Keep this comment and the blank line below.
+
+suggested_questions:
+  - question: >-
+      A folded question remains folded.
+      Even its short physical lines survive.
+""".replace("NOTE", note).replace("\n", newline)
+    review.write_text(original)
+    monkeypatch.setattr(gene, "fetch_uniprot_data", lambda accession: raw)
+    monkeypatch.setattr(gene, "fetch_goa_data", lambda accession: goa)
+    monkeypatch.setattr(gene, "_extract_panther_family_id", lambda text: None)
+    monkeypatch.setattr(GOAValidator, "seed_missing_annotations", lambda *args, **kwargs: (0, None, 0, 0, 0))
+
+    result = gene.fetch_gene_data(("human", "BAG6"), base_path=tmp_path, fetch_titles=False)
+    assert result["alternative_product_sequences_repaired"] == 1
+    assert review.read_bytes() == original.replace(SHORT, COMPLETE).encode()
+    expected = yaml.safe_load(original)
+    expected["alternative_products"][0]["sequence_note"] = COMPLETE
+    assert yaml.safe_load(review.read_text()) == expected
+    first = review.read_bytes()
+    assert gene.fetch_gene_data(("human", "BAG6"), base_path=tmp_path, fetch_titles=False)["alternative_product_sequences_repaired"] == 0
+    assert review.read_bytes() == first
+
+
+@pytest.mark.parametrize("product_id,fresh", [
+    ("P46379-4, Q12345-2", [{"id": "P46379-4, Q12345-2", "sequence_note": COMPLETE}]),
+    ("P46379-99", [{"id": "P46379-4", "sequence_note": COMPLETE}]),
+    ("P46379-4", [{"id": "P46379-4", "sequence_note": COMPLETE}] * 2),
+])
+def test_unrepairable_legacy_note_reports_its_product(product_id, fresh, capsys):
+    existing = [{"id": product_id, "sequence_note": SHORT}]
+    assert gene._repair_truncated_product_sequences(existing, fresh) == 0
+    assert existing[0]["sequence_note"] == SHORT
+    message = capsys.readouterr().out
+    assert "Left truncated sequence note unchanged" in message
+    assert product_id in message

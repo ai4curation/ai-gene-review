@@ -15,7 +15,11 @@ Example:
           CFAP300-goa.csv
 """
 
+from io import StringIO
 from pathlib import Path
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
+from ruamel.yaml.tokens import ScalarToken
 from typing import Tuple, Optional, List, Dict, Any
 import requests
 import yaml
@@ -122,10 +126,14 @@ def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Di
         sequence = re.search(r"(?:^|;)\s*Sequence=([^;]+)", record)
         if not (name and isoid and sequence):
             continue
-        isoform = {"name": name.group(1).strip(), "id": isoid.group(1).strip()}
+        # Evidence belongs to the source record, not the common isoform name.
+        clean_name = re.sub(r"\s*\{ECO:[^}]*\}", "", name.group(1)).strip()
+        isoform = {"name": clean_name, "id": isoid.group(1).strip()}
         synonyms = re.search(r"(?:^|;)\s*Synonyms=([^;]+);", record)
         if synonyms:
-            isoform["name"] += f" ({synonyms.group(1).strip()})"
+            clean_synonyms = re.sub(r"\s*\{ECO:[^}]*\}", "", synonyms.group(1)).strip()
+            if clean_synonyms:
+                isoform["name"] += f" ({clean_synonyms})"
         seq_info = sequence.group(1).strip()
         if seq_info != "Displayed":
             isoform["sequence_note"] = seq_info
@@ -176,24 +184,82 @@ def _repair_truncated_product_sequences(
             by_id[product_id] = product
         return {key: value for key, value in by_id.items() if key not in duplicates}
 
+    existing_by_id = unique_by_id(existing_products)
     fresh_by_id = unique_by_id(fresh_products)
     repaired = 0
-    for product_id, product in unique_by_id(existing_products).items():
+    for product in existing_products:
+        if not isinstance(product, dict):
+            continue
         old_note = product.get("sequence_note")
-        new_note = fresh_by_id.get(product_id, {}).get("sequence_note")
-        if not isinstance(old_note, str) or not isinstance(new_note, str):
-            continue
         # A bare trailing comma is the old physical-line parser's signature.
-        if not re.fullmatch(r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*,\s*", old_note):
+        if not isinstance(old_note, str) or not re.fullmatch(
+            r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*,\s*", old_note
+        ):
             continue
-        if not re.fullmatch(r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*", new_note):
+        product_id = product.get("id")
+        if not isinstance(product_id, str) or product_id not in existing_by_id:
+            print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+                  "unsupported or ambiguous existing isoform ID")
             continue
-        old_ids = re.findall(r"VSP_[0-9]{6}", old_note)
-        new_ids = re.findall(r"VSP_[0-9]{6}", new_note)
-        if len(new_ids) > len(old_ids) and new_ids[:len(old_ids)] == old_ids:
-            product["sequence_note"] = new_note
-            repaired += 1
+        if product_id not in fresh_by_id:
+            print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+                  "isoform ID is absent or ambiguous in the current UniProt record")
+            continue
+        new_note = fresh_by_id[product_id].get("sequence_note")
+        if isinstance(new_note, str) and re.fullmatch(
+            r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*", new_note
+        ):
+            old_ids = re.findall(r"VSP_[0-9]{6}", old_note)
+            new_ids = re.findall(r"VSP_[0-9]{6}", new_note)
+            if len(new_ids) > len(old_ids) and new_ids[:len(old_ids)] == old_ids:
+                product["sequence_note"] = new_note
+                repaired += 1
+                continue
+        print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+              "the current sequence is not a complete ordered extension")
     return repaired
+
+
+def _replace_repaired_sequence_scalars(
+    original: str, products: List[Any], old_notes: List[Any], round_trip: YAML
+) -> str:
+    """Emit repaired scalars with ruamel, retaining all other source bytes.
+
+    A whole-document round trip retains block styles but can still rewrap plain
+    strings and normalize indentation. Use ruamel's source marks to splice only
+    changed sequence-note tokens, leaving comments and unrelated formatting intact.
+    """
+    tokens = {
+        (token.start_mark.line, token.start_mark.column): token
+        for token in round_trip.scan(original)
+        if isinstance(token, ScalarToken)
+    }
+    replacements = []
+    for product, old_note in zip(products, old_notes):
+        if not isinstance(product, CommentedMap) or product.get("sequence_note") == old_note:
+            continue
+        position = product.lc.value("sequence_note")
+        token = tokens.get(position)
+        if token is None:
+            # Aliases do not have independent scalar spans; do not rewrite one.
+            raise ValueError("Cannot surgically replace an aliased sequence_note")
+        stream = StringIO()
+        fragment_data = CommentedMap(sequence_note=product["sequence_note"])
+        if "sequence_note" in product.ca.items:
+            fragment_data.ca.items["sequence_note"] = product.ca.items["sequence_note"]
+        round_trip.dump(fragment_data, stream)
+        fragment = stream.getvalue()
+        value_token = [t for t in round_trip.scan(fragment) if isinstance(t, ScalarToken)][1]
+        replacement = fragment[value_token.start_mark.index:value_token.end_mark.index]
+        key_column = product.lc.key("sequence_note")[1]
+        replacement = "".join(
+            (" " * key_column if index else "") + line
+            for index, line in enumerate(replacement.splitlines(keepends=True))
+        )
+        replacements.append((token.start_mark.index, token.end_mark.index, replacement))
+    for start, end, replacement in sorted(replacements, reverse=True):
+        original = original[:start] + replacement + original[end:]
+    return original
 
 
 def _extract_panther_family_id(uniprot_data: str) -> Optional[str]:
@@ -575,34 +641,36 @@ def fetch_gene_data(
 
         # Fill missing products, or narrowly repair legacy truncated VSP lists.
         if yaml_existed:
-            with open(yaml_file, "r") as f:
-                existing_data = yaml.safe_load(f)
+            round_trip = YAML()
+            round_trip.preserve_quotes = True
+            round_trip.width = 1000
+            original_text = yaml_file.read_bytes().decode("utf-8")
+            if "\r\n" in original_text:
+                round_trip.line_break = "\r\n"  # type: ignore[assignment]  # ruamel infers None
+            existing_data = round_trip.load(original_text)
 
             if isinstance(existing_data, dict) and existing_data:
                 alt_products = _extract_alternative_products(uniprot_data, uniprot_id)
-                changed = False
                 if "alternative_products" not in existing_data and alt_products:
                     existing_data["alternative_products"] = alt_products
-                    changed = True
+                    with open(yaml_file, "w", encoding="utf-8") as f:
+                        round_trip.dump(existing_data, f)
                     print(f"  ✓ Added {len(alt_products)} isoforms to alternative_products")
                     result["alternative_products_added"] = len(alt_products)
                 elif "alternative_products" in existing_data:
-                    repaired = _repair_truncated_product_sequences(
-                        existing_data["alternative_products"], alt_products
-                    )
-                    result["alternative_product_sequences_repaired"] = repaired
-                    changed = repaired > 0
+                    products = existing_data["alternative_products"]
+                    old_notes = [
+                        p.get("sequence_note") if isinstance(p, dict) else None
+                        for p in products
+                    ] if isinstance(products, list) else []
+                    repaired = _repair_truncated_product_sequences(products, alt_products)
                     if repaired:
-                        print(f"  ✓ Repaired {repaired} truncated isoform sequence notes")
-                if changed:
-                    with open(yaml_file, "w") as f:
-                        yaml.dump(
-                            existing_data,
-                            f,
-                            default_flow_style=False,
-                            sort_keys=False,
-                            allow_unicode=True,
+                        updated_text = _replace_repaired_sequence_scalars(
+                            original_text, products, old_notes, round_trip
                         )
+                        yaml_file.write_bytes(updated_text.encode("utf-8"))
+                        print(f"  ✓ Repaired {repaired} truncated isoform sequence notes")
+                    result["alternative_product_sequences_repaired"] = repaired
 
     # Auto-fetch PANTHER family data if found in UniProt data
     panther_family_id = _extract_panther_family_id(uniprot_data)

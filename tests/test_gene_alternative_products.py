@@ -2,8 +2,8 @@
 from ai_gene_review.etl.gene import _extract_alternative_products
 
 
-def test_atxn2_wrapped_sequence_preserves_all_six_variants():
-    # Exact alternative-products section of the normal Q99700 record.
+def test_atxn2_wrapped_sequence_preserves_isoform3_six_vsp_identifiers():
+    # Transcribed Q99700 example: five isoforms; isoform 3 has six VSP identifiers.
     record = """CC   -!- ALTERNATIVE PRODUCTS:
 CC       Event=Alternative splicing; Named isoforms=5;
 CC       Name=1;
@@ -69,5 +69,21 @@ CC         IsoId=Q99700-5;
 CC         Sequence=Not described;
 """
     assert _extract_alternative_products(record, "Q99700")[1] == {
-        "name": "5 {ECO:0000305}", "id": "Q99700-5", "sequence_note": "Not described"
+        "name": "5", "id": "Q99700-5", "sequence_note": "Not described"
     }
+
+
+def test_evidence_tags_are_removed_from_new_names_and_synonyms():
+    record = """CC   -!- ALTERNATIVE PRODUCTS:
+CC       Event=Alternative splicing; Named isoforms=2;
+CC       Name=ZAKalpha {ECO:0000303|PubMed:32289254,
+CC         ECO:0000303|PubMed:32610081}; Synonyms=Alpha {ECO:0000305};
+CC         IsoId=Q9NYL2-1; Sequence=Displayed;
+CC       Name=ZAKbeta; Synonyms=Beta {ECO:0000305}, MLK7;
+CC         IsoId=Q9NYL2-2; Sequence=VSP_047547;
+"""
+    products = _extract_alternative_products(record, "Q9NYL2")
+    assert products == [
+        {"id": "Q9NYL2-1", "name": "ZAKalpha (Alpha)"},
+        {"id": "Q9NYL2-2", "name": "ZAKbeta (Beta, MLK7)", "sequence_note": "VSP_047547"},
+    ]
