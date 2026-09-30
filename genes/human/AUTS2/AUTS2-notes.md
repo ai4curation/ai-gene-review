@@ -179,3 +179,26 @@ also passed. Three advisories flag generic interactions retained as non-core
 under the curation action definitions. They are not evidence that those
 interactions are false. All four uninspected interactome pairs remain
 UNDECIDED. The scaffolded history records these results.
+
+
+## First review follow-up — 2026-09-30
+
+The independent biological consultation confirms that the core should explicitly
+include a contribution to transcription coactivator activity (GO:0003713),
+alongside direct histone acetyltransferase binding (GO:0035035). Human AUTS2
+GAL4 reporter experiments establish active P300 recruitment and dependence on
+P300 and PRC1 components. Mouse NRF1 co-association and chromatin-occupancy
+experiments supply the native targeting mechanism in the studied neural
+contexts. The description distinguishes these systems and assigns the enzymatic
+steps to P300 and CK2. It does not assert autonomous DNA recognition or a direct
+human neuronal NRF1 experiment.
+
+Selected complete Results/Methods paragraphs in PMID:25519132 and
+PMID:34637754 were independently rechecked; whole papers and supplements were
+not newly read. The broad cytoskeletal location is retained as non-core and
+positive transcription regulation as core, without duplicating narrower terms
+already represented in the source annotations. Counts are now eight ACCEPT,
+13 KEEP_AS_NON_CORE, two MODIFY, four UNDECIDED and one MARK_AS_OVER_ANNOTATED.
+All 28 original source objects and four products remain unchanged, with no NEW
+assertion. Supported generic interactions are preserved under the user action
+definitions; the review's blanket-removal policy objection remains unresolved.
