@@ -2,6 +2,7 @@
 title: "Chimeric mRNA Trans-Fusions in Immunity"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
+collections: [IMMUNE_SYSTEM]
 species: [human, mouse]
 genes: [GSDMD, TMEM106A]
 sidecars:

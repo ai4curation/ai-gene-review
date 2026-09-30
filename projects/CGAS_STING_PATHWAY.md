@@ -2,6 +2,7 @@
 title: "cGAS-STING Cytosolic DNA Sensing Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+collections: [IMMUNE_SYSTEM]
 species: [human]
 manifest:
   slides:

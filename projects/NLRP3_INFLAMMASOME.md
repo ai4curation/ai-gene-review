@@ -2,6 +2,7 @@
 title: "NLRP3 Inflammasome Assembly Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+collections: [IMMUNE_SYSTEM]
 species: [human]
 manifest:
   slides:
