@@ -204,6 +204,20 @@ def calibrate(
                     if routes:
                         break
             if not routes:
+                # (d) the mirror image of (c): the module asserts the long way round and
+                # the source only the shortcut (SIGNOR-EGF has direct ERK1/2 -| SOS1 where
+                # the module also carries ERK -> ERK_OUTPUT -| SOS)
+                for x in sorted(ext.edges, key=str):
+                    if x.target != e.target or x.source == e.source or x.sign != e.sign:
+                        continue
+                    if path_sign(cur.edges, x.source, e.target, {e.source}) == e.sign:
+                        reading = (
+                            f"{label} collapses this into the direct {x} edge, which the "
+                            f"module also carries; this edge is the module's longer route"
+                        )
+                        routes = [(e.sign, [x.source])]
+                        break
+            if not routes:
                 # (b) the source reaches the target from a *different* mapped symbol via
                 # unmapped intermediates (BBM-070 routes DUSP1 from ERK through MSK and CREB)
                 other = [

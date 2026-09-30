@@ -228,6 +228,15 @@ counterfactual `.bnet` linked from §3c so the page mirror carries it; and an RS
 annoton on `erk_output` (RPS6KA1, RPS6KA3) so the RSK ⊣ SOS edge has a modelled
 actor rather than a prose one.
 
+Third round (approve again; five suggestions). The cycle guard I had just added was
+wrong in the way the reviewer said: one shared visited-set across sibling branches
+fires on a diamond, so a duplicated id would have aborted translation with a
+diagnosis naming the wrong problem; it is per-path now, with a diamond test. The
+`max_paths` valve could silently turn a truncated enumeration into a definite
+sign; it now warns and `path_sign` answers `?`. A fourth reading covers the mirror
+case (module asserts the long route, source only the shortcut), the RSK target is
+grounded to SOS1, and this project record now exists for the rounds.
+
 ## 2026-09-27
 
 Acted on the first-pass calibration. Feedback loops closed in `erk_cascade` (three

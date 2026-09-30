@@ -102,7 +102,7 @@ External regulators of jnk_cascade tiers not named by the module (4): `v_ATM -> 
 | `SOS -> RAS` | agree |  |
 | `DUSP -| ERK` | module-only | DUSP has no counterpart in SIGNOR-EGF (see mapping notes) |
 | `ERK_OUTPUT -> DUSP` | module-only | DUSP has no counterpart in SIGNOR-EGF (see mapping notes) |
-| `ERK_OUTPUT -| SOS` | module-only | absent from SIGNOR-EGF (both ends mapped, no route; see mapping notes) |
+| `ERK_OUTPUT -| SOS` | module-only | SIGNOR-EGF collapses this into the direct ERK -| SOS edge, which the module also carries; this edge is the module's longer route |
 | `RASGAP -| RAS` | module-only | RASGAP has no counterpart in SIGNOR-EGF (see mapping notes) |
 
 External regulators of erk_cascade tiers not named by the module (4): `EGFR -> GRB2`, `PTPN11 -> RAS`, `SRC -> GRB2`, `SRC -| RAS`

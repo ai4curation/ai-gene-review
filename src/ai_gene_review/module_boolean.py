@@ -62,6 +62,7 @@ from __future__ import annotations
 import csv
 import itertools
 import re
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterator, Optional, Union
@@ -289,19 +290,24 @@ class _Flattener:
             str(c.get("target")) for c in self.connections
         }
 
-    def _descendants(self, element: str, _seen: Optional[set[str]] = None) -> set[str]:
-        """All element ids below ``element``; a cyclic ``parts`` tree raises rather than hangs."""
-        seen = set() if _seen is None else _seen
-        if element in seen:
+    def _descendants(
+        self, element: str, _path: frozenset[str] = frozenset()
+    ) -> set[str]:
+        """All element ids below ``element``.
+
+        The guard is per path: only a genuine cycle (an element that contains
+        itself) raises. An id reachable from two sibling branches (a diamond, or a
+        duplicated id) is merely collected once.
+        """
+        if element in _path:
             raise ValueError(f"cyclic module tree at {element!r}")
-        seen.add(element)
         node = self.index.get(element)
         out: set[str] = set()
         if node is None:
             return out
         for child in _children(node):
             out.add(child)
-            out |= self._descendants(child, seen)
+            out |= self._descendants(child, _path | {element})
         return out
 
     def _is_atomic(self, element: str) -> bool:
@@ -754,7 +760,9 @@ def find_paths(
     The search enumerates simple paths, which is exponential in the worst case;
     it is meant for the curated-module and published-model scale this project
     runs at (tens of variables, ``via`` sets of a few dozen), not for genome-scale
-    graphs. ``max_paths`` bounds the enumeration as a safety valve.
+    graphs. ``max_paths`` bounds the enumeration as a safety valve; hitting it
+    emits a :class:`RuntimeWarning` and :func:`path_sign` then answers ``?``
+    (unknown) rather than a sign derived from a partial enumeration.
 
     >>> es = {SignedEdge("a", "b", "+"), SignedEdge("b", "d", "+"),
     ...       SignedEdge("a", "c", "-"), SignedEdge("c", "d", "+")}
@@ -775,6 +783,12 @@ def find_paths(
             if e.target == target:
                 found.append((nsign, list(interior)))
                 if len(found) >= max_paths:
+                    warnings.warn(
+                        f"find_paths({source!r} -> {target!r}) hit max_paths={max_paths}; "
+                        "the enumeration is truncated",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
                     return sorted(found, key=lambda p: (len(p[1]), p[1], p[0]))
             elif e.target in via and e.target not in interior and e.target != source:
                 stack.append((e.target, nsign, interior + (e.target,)))
@@ -782,14 +796,20 @@ def find_paths(
 
 
 def path_sign(
-    edges: set[SignedEdge], source: str, target: str, via: set[str]
+    edges: set[SignedEdge],
+    source: str,
+    target: str,
+    via: set[str],
+    max_paths: int = 10_000,
 ) -> Optional[str]:
     """Net sign of the directed path(s) ``source -> ... -> target`` through ``via``.
 
     Used to recognise an external edge that the module expresses as a chain
     through intermediate tiers the external model does not name (tier
     compression). Returns ``+``/``-`` when every such path agrees, ``?`` when
-    paths of both signs exist, and ``None`` when there is no path.
+    paths of both signs exist or the enumeration was truncated at ``max_paths``
+    (a partial enumeration must not yield a definite sign), and ``None`` when
+    there is no path.
 
     >>> es = {SignedEdge("a", "b", "+"), SignedEdge("b", "c", "+"), SignedEdge("c", "d", "-")}
     >>> path_sign(es, "a", "d", {"b", "c"}), path_sign(es, "a", "d", {"b"})
@@ -798,9 +818,12 @@ def path_sign(
     >>> path_sign(es, "a", "d", {"b", "c"})
     '?'
     """
-    signs = {sign for sign, _ in find_paths(edges, source, target, via)}
-    if not signs:
+    paths = find_paths(edges, source, target, via, max_paths=max_paths)
+    if not paths:
         return None
+    if len(paths) >= max_paths:
+        return "?"
+    signs = {sign for sign, _ in paths}
     return signs.pop() if len(signs) == 1 else "?"
 
 

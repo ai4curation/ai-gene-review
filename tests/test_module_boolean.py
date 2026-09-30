@@ -361,3 +361,35 @@ def test_descendants_rejects_cyclic_tree():
     flat.index["b"]["parts"].append({"node": flat.index["a"]})  # a -> b -> a
     with pytest.raises(ValueError, match="cyclic"):
         flat._descendants("a")
+
+
+def test_descendants_accepts_diamond_tree():
+    """An id reachable from two sibling branches is not a cycle and must not raise."""
+    from ai_gene_review.module_boolean import _Flattener
+
+    shared = {"id": "leaf"}
+    doc = {
+        "id": "root",
+        "parts": [
+            {"node": {"id": "left", "parts": [{"node": shared}]}},
+            {"node": {"id": "right", "parts": [{"node": shared}]}},
+        ],
+    }
+    assert _Flattener(doc)._descendants("root") == {"left", "right", "leaf"}
+
+
+def test_path_sign_truncation_answers_unknown():
+    """A truncated enumeration must not produce a definite sign."""
+    import warnings
+
+    es = {
+        SignedEdge("a", "b", "+"),
+        SignedEdge("b", "d", "+"),
+        SignedEdge("a", "c", "-"),
+        SignedEdge("c", "d", "+"),
+    }
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        assert path_sign(es, "a", "d", {"b", "c"}, max_paths=1) == "?"
+    assert any(issubclass(w.category, RuntimeWarning) for w in caught)
+    assert path_sign(es, "a", "d", {"b"}) == "+"
