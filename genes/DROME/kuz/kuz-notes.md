@@ -40,3 +40,9 @@ subfamily PTHR45702:SF2 (KUZBANIAN, ISOFORM A).
 
 ## Deep research
 - falcon runs hit rate limits/timeouts; relaunched with longer timeout.
+
+## Deep research (falcon) completed
+- `kuz-deep-research-falcon.md` generated for Q9VJW9 (retry with --timeout 2400). Consistent
+  with the review (S2 cleavage generating NEXT; force-dependent exposure of the S2 site; Dl and
+  Robo as additional substrates). The exact Drosophila S2 scissile bond is not mapped. Not
+  independently verified from primary text here.
