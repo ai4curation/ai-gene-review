@@ -23,5 +23,9 @@ UniProt Q05652 (KPEL_DROME), 501 aa; N-terminal death domain (55-121), C-termina
 - Hemocyte proliferation TAS (review, abstract-only) UNDECIDED.
 - No GO:0002224 (TLR signaling) or PRR terms reach pll; GO:0008063 is used consistently.
 
-## Deep research
-Falcon deep research had not finished (still queued in the batch job) when this review was completed; the review rests on the UniProt record and the cached GOA publications. Re-check against the deep research file when it appears.
+## Deep-research cross-check (2026-09-30)
+Compared pll-deep-research-falcon.md with the review.
+- Agrees: IRAK-family kinase; MyD88-Tube-Pelle death-domain complex; autophosphorylation; Pelle as the Cactus kinase standing in for IKK. The report's Cactus sites (Ser74/78/116, 75-80% reduction) and IkappaBalpha Ser32/Ser36 chimera were checked in PMID:24086459 ("mutating these three sites consistently reduced phosphorylation by 75-80%"), supporting the NEW GO:0008384 row.
+- Minor conflicts, not acted on: domain boundaries (report: kinase ~130-501) differ from UniProt (213-499); review keeps UniProt. Report lists Dorsal as a candidate substrate; not established.
+- Adds: Wu et al. 2015 (fetched, PMID:26474173, full text): Toll-independent anti-apoptotic role; "Pll physically interacts with and phosphorylates on dFoxO, which likely contributes to the cytoplasmic retention of dFoxO." Not in GOA; raised as a suggested question (negative regulation of apoptosis) rather than a NEW row. The apoptotic process NAS REMOVE stands: that row rested on death-domain homology, not on this paper. Zhang et al. 2024 (PMID:38292423): Tube/Pelle knockdown blocks Toll-1/Toll-7-induced autophagy in S2 cells; recorded as a reference only. Dillard et al. 2025 tumour work not checked; no change.
+- Changes: references (+PMID:26474173, +PMID:38292423) and suggested_questions (+1). No annotation actions changed.

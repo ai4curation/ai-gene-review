@@ -20,5 +20,9 @@ UniProt A1Z7T8 (TrEMBL; the project page lists Q7K105, which fetch-gene resolved
 - Response to mycotoxin and response to tumor cell: KEEP_AS_NON_CORE.
 - No GO:0002224 or PRR terms on Myd88; GO:0008063 is used consistently.
 
-## Deep research
-Falcon deep research had not finished (still queued in the batch job) when this review was completed; the review rests on the UniProt record and the cached GOA publications. Re-check against the deep research file when it appears.
+## Deep-research cross-check (2026-09-30)
+Compared Myd88-deep-research-falcon.md with the review.
+- Agrees: non-enzymatic Toll adaptor; TIR binding to Toll, death-domain complex with Tube and Pelle; Cactus degradation and Dif/Dorsal release; requirement for antifungal and Gram-positive defence; phosphoinositide binding.
+- Conflicts, not acted on: the report calls Myd88 "predominantly cytoplasmic" and says Myd88-specific developmental evidence is "limited". Both are contradicted by cached primary papers already used: plasma membrane localisation via PI(4,5)P2 [PMID:22464168] and maternal dorsalised phenotypes with transgene rescue [PMID:12524523, PMID:12559494]. The report's "C-terminal TIR domain" ignores the C-terminal lipid-binding extension (UniProt TIR 241-375 of 537).
+- Adds: Zhang et al. 2024 (fetched, PMID:38292423, full text) - in S2 cells expressing Toll TIR domains, "Toll-1 but not Toll-7 activated autophagy is dMyd88 dependent", and "RNAi of dMyd88 suppressed both TIR-1 and TIR-7 activated expression of Drs". Cell-culture only, so no autophagy annotation proposed; added as reference and suggested question.
+- Changes: references (+PMID:38292423) and suggested_questions (+1). No annotation actions changed.

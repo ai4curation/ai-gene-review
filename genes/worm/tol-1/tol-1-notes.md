@@ -2,9 +2,8 @@
 
 ## Status of inputs
 
-- No Falcon deep-research job was queued for worm tol-1 in this batch (no `dr-worm-tol-1` log and no
-  `worm tol-1 dr=` line in the batch task output), so this review was done from the UniProt record,
-  the GOA rows and the cached primary literature below. No `-deep-research-*.md` file exists.
+- Review originally done from UniProt, GOA and cached literature; Falcon deep research arrived
+  later and was cross-checked (see the section at the end).
 - UniProt Q9N5Z3 is an unreviewed TrEMBL entry (1221 aa): signal peptide 1-23, LRR ectodomain,
   single TM helix 997-1021, cytoplasmic TIR domain 1054-1178. PDB 8SUF covers the ectodomain (26-996)
   in complex work with LAT-1.
@@ -42,8 +41,9 @@
   [PMID:11516642 "None of them are important for the resistance of C. elegans to a number of pathogens"],
   [PMID:11516642 "The tol-1 mutants are defective in their avoidance of pathogenic S. marcescens, although other chemosensory behaviors are wild type"].
 - Brandt & Ringstad 2015: TOL-1 acts in BAG CO2-sensing neurons, cell-specifically required and
-  rescued there, regulates BAG gene expression, and acts with trf-1, pik-1, ikb-1 and pmk-3
-  (a p38) to promote BAG development and function
+  rescued there, regulates BAG gene expression, and acts with trf-1 and pik-1, upstream of pmk-3
+  (a p38), to promote BAG development and function; ikb-1 acts antagonistically
+  [PMID:26279230 "suppressed the CO2 avoidance defect caused by loss of either tol-1 or pmk-3 function"]
   [PMID:26279230 "for pathogen avoidance TOL-1 signaling is required in the chemosensory BAG neurons, where it regulates gene expression and is necessary for their chemosensory function"],
   [PMID:26279230 "Genetic studies revealed that TOL-1 acts together with many conserved components of TLR signaling"].
   This is a developmental/permissive role enabling a behaviour, not acute microbe recognition
@@ -71,3 +71,20 @@
 - GO:0050829 defense response to Gram-negative bacterium (IMP, Tenor): KEEP_AS_NON_CORE - single-study, pathogen-specific, contested.
 - NEW: GO:0001664 G protein-coupled receptor binding (LAT-1 is an adhesion GPCR; direct binding, structure, in vivo interface mutants). Comparator: teneurins (other latrophilin partners) carry the parent GO:0005102 signaling receptor binding; GPCR ligands (NPY, POMC, Rspo1) carry GO:0001664, so GPCR binding on a latrophilin ligand is within convention.
 - Not proposed: GO:0002224 TLR signaling pathway, GO:0038187 PRR activity - no evidence TOL-1 binds microbial molecules; ligand is LAT-1 (endogenous). GO:0008063 Toll signaling pathway is defined around "the receptor Toll"; raised as a question rather than asserted.
+
+## Deep-research cross-check (2026-09-30)
+Compared tol-1-deep-research-falcon.md with the review.
+- Agrees: sole C. elegans Toll-family receptor; LAT-1 binding by the C-LRR (KD 186 nM), interface
+  mutants phenocopy the null, trans interaction; BAG-neuron developmental role enabling Serratia
+  avoidance; immune role pathogen-specific (Salmonella) and not upstream of TIR-1/PMK-1; no MyD88 or
+  NF-kappaB in the worm.
+- Correction made (verified in full text, PMID:26279230): IKB-1 is antagonistic, not a co-acting
+  pathway member - "deletion of ikb-1 ... suppressed the CO2 avoidance defect caused by loss of either
+  tol-1 or pmk-3 function". Also added the BAG axon defect: "we found that 30% of tol-1 mutant BAG cells
+  exhibited abnormal axonal commissures". Description, core function 2 wording/support and the
+  PMID:26279230 finding statement were updated.
+- Adds, not acted on: report details from Tenor & Aballay 2008 (no susceptibility to E. faecalis,
+  S. pneumoniae etc.; Salmonella triggers no avoidance) - cached abstract only, cannot be verified; they
+  would reinforce, not change, the KEEP_AS_NON_CORE decision. Expression in nerve ring, pharynx, valve,
+  gonad and vulva (Carmona-Rosas 2025) - no location annotations proposed.
+- No annotation actions changed.

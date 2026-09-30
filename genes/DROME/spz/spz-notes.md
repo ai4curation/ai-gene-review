@@ -83,10 +83,10 @@
 - GO:0010628 positive regulation of gene expression (IMP, PMID:34432851): too general; the paper is
   about the Toll-regulated antifungal Baramicin; proposed MODIFY to GO:0002804.
 
-## Deep research status
-- spz-deep-research-falcon.md (completed 2026-09-30) agrees with the review: Spz is a secreted,
-  non-enzymatic cystine-knot cytokine, activated by Easter (embryo) or SPE/MP1 and other proteases
-  (immunity, damage), acting in the perivitelline space and haemolymph; Toll-1 is the established
-  receptor and Toll-7 binding is less firmly established. Its statement that Gram-negative bacteria
-  can activate the pathway draws largely on other insects (e.g. Tenebrio), so it does not resolve
-  the GO:0050829 row, which stays UNDECIDED. No annotation changes resulted.
+## Deep-research cross-check (2026-09-30)
+Compared spz-deep-research-falcon.md with the review.
+- Agrees: secreted non-enzymatic cystine-knot cytokine; pro-domain masks receptor binding; Easter (embryo) and SPE/MP1/Hayan/Psh (immunity, damage) processing; C-106 binds the concave LRR face of Toll; Toll-1 is the established receptor and Toll-7 binding is less firmly established; D/V patterning, antifungal and Gram-positive defence; damage-induced activation (consistent with the wounding/H2O2 rows kept as non-core).
+- Conflict, resolved in favour of the review: the report calls Spz-Toll binding "low affinity". Primary data say otherwise: "the mature form of Spätzle bound to the Toll ectodomain with high affinity" [PMID:12872120] and "an affinity of about 50 nM" for Spz with Toll N13-VLR [PMID:24282309]. The description's "nanomolar affinity" stands.
+- Unresolved: the report's claim that Gram-negative bacteria can activate the pathway draws largely on other insects, so it does not resolve the GO:0050829 row (stays UNDECIDED).
+- Paralog statements (Spz2/Spz5 binding Toll-6/7) concern other genes and were not transferred.
+- Changes: none to the review file.

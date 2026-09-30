@@ -2,9 +2,8 @@
 
 ## Status of inputs
 
-- No Falcon deep-research job was queued for NEMVE A7RHZ4 in this batch (no `dr-NEMVE-A7RHZ4` log
-  and no `NEMVE A7RHZ4 dr=` line in the batch task output). Review done from UniProt, GOA and cached
-  literature. No `-deep-research-*.md` file exists.
+- Review originally done from UniProt, GOA and cached literature; Falcon deep research arrived
+  later and was cross-checked (see the section at the end).
 - UniProt A7RHZ4 (TrEMBL, PE 4 predicted, 245 aa, flagged Fragment with NON_TER at residue 1):
   Death domain 1-65 (PROSITE PS50017), TIR domain 104-236 (PS50104). InterPro IPR017281 (MyD88 family),
   PANTHER PTHR15079:SF3 (MYD88). ORF NEMVEDRAFT_v1g82163. Name from ProtNLM. The N-terminus is missing,
@@ -53,3 +52,15 @@
   (e.g. GO:0034142 TLR4) - no IL-1 ligand, and no evidence of TLR4-type ligand specificity for Nv-TLR
   (TIR similarity to TLR4 does not imply LPS recognition).
 - No NEW annotations: nothing experimental on this protein.
+
+## Deep-research cross-check (2026-09-30)
+Compared A7RHZ4-deep-research-falcon.md with the review.
+- Agrees: MyD88-family DD + TIR adaptor, fragmentary record, cytoplasmic, non-enzymatic; Nv-TLR TIR
+  binds human MYD88/MAL; reconstituted Nv-TLR responds to flagellin and heat-killed Vibrio; Hydra MyD88
+  loss-of-function; no direct experiment on A7RHZ4 itself. Most mechanistic detail in the report
+  (Myddosome stoichiometry, intermediate domain, IRAK/TRAF6/TAK1) is mammalian and was not transferred.
+- Added (verified in PMID:29109290 full text): "mRNAs for homologs of all predicted TLR–to–NF-κB pathway
+  proteins were detected in nematosomes" - one sentence in the description and a core-function
+  supported_by. Nv-TLR morpholino knockdown affects early development, proposed to be NF-kappaB
+  independent - added as a suggested question on whether NvMyD88 mediates it.
+- No annotation actions changed.

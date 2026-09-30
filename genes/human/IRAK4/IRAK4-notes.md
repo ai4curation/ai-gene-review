@@ -7,9 +7,29 @@
   Ser/Thr kinases; EC 2.7.11.1; Mg2+ cofactor. Loss-of-function causes IMD67 (IRAK-4 deficiency).
 - Cached GOA publications (all 26 GOA PMIDs present in `publications/`), and cached Reactome
   entries under `reactome/`.
-- Deep research: none available. The batch Falcon deep-research job was terminated (exit 144)
-  before it reached IRAK4, so no `IRAK4-deep-research-*.md` exists. The review is based on the
-  cached primary literature, cached Reactome entries and UniProt only.
+- Deep research: `IRAK4-deep-research-falcon.md` (Falcon) arrived after the review was written;
+  see the cross-check section below.
+
+## Deep-research cross-check (2026-09-30)
+
+Compared the Falcon report against every annotation decision, the description and both core
+functions.
+- **Agreement:** active Ser/Thr kinase of the Myddosome; DD-mediated MyD88 recruitment then
+  IRAK1/IRAK2 recruitment; separable kinase and scaffold roles; scaffold integrates MYD88 and TRIF
+  at TRAF6 in TLR4 signalling (PMID:35977521, already cited); TLR3 is IRAK4-independent; IRAK4 is
+  cytosolic/receptor-proximal and "not a transmembrane, extracellular, or constitutively nuclear
+  protein" - consistent with REMOVE (extracellular region) and MARK_AS_OVER_ANNOTATED (nucleus).
+  The falcon file is now cited as context on those two rows. No annotation action changed.
+- **Additions (not verified in a cached primary paper, so no annotation change):**
+  trans-autophosphorylation at T345/S346 as a Myddosome-maturation switch (Srikanth et al. 2024,
+  bioRxiv preprint); IRAK1 T209 as the initiating IRAK4 site, with T387 possibly IRAK1
+  autophosphorylation (secondary review); a MyD88-independent IRAK4-IRAK1 pathway after DNA
+  double-strand breaks (Li et al. 2023, not fetched). Raised as a suggested question.
+- **Nuance:** the report states kinase activity is essential for MyD88 signalling largely from
+  mouse Irak4 kinase-dead data; the review already records that human macrophages/fibroblasts
+  are partly kinase-independent [PMID:36865541]. No conflict requiring change.
+- Changes: falcon file added to references and cited on GO:0005576 and GO:0005634 rows; one new
+  suggested question.
 
 ## Core biology (with provenance)
 
