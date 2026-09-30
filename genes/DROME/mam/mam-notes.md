@@ -2,8 +2,8 @@
 
 ## Session 2026-09-30 (Notch signaling module)
 
-Deep research: first falcon attempt hit Edison 429 rate limiting; relaunched. Review written from
-UniProt, cached publications and GOA.
+Deep research: first falcon attempt hit Edison 429 rate limiting; the relaunch produced
+`mam-deep-research-falcon.md` (used for corroboration of the ternary-complex role).
 
 ### Key findings
 - Drosophila Mam forms the ternary complex with NICD and Su(H) at E(spl) [PMID:11390662].

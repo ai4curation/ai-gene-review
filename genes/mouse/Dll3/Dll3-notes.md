@@ -45,4 +45,10 @@ does not activate Notch in trans.
   ligand, cell surface, Mib1-dependent endocytosis).
 
 ## Deep research
-Falcon deep research launched; see review for whether it was used.
+Falcon deep research completed on a second run with a 2400 s timeout (Dll3-deep-research-falcon.md).
+Key points consistent with primary literature: cis-inhibitor, Golgi-retained, intracellular domain lacks
+lysines and the PDZ-binding motif
+[file:mouse/Dll3/Dll3-deep-research-falcon.md "Dll3 serves primarily as a **cell-autonomous cis-inhibitor** of Notch signaling"].
+Primary support for the lysine-less intracellular region: [PMID:18676613 "the transmembrane/intracellular domain of Dll3, which contains no lysine"].
+Note tension: Chen et al. 2021 report MIB2-dependent DLL3 ubiquitination in oocytes [PMID:34635817], so
+lysine-independent (or ectodomain) ubiquitination, or a context-specific mechanism, remains unresolved.

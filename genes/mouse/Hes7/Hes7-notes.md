@@ -46,5 +46,7 @@ target gene / segmentation-clock transcriptional repressor** (Hairy/E(spl) class
   activity per se.
 
 ## Deep research
-- Falcon deep research was launched (`just deep-research-falcon mouse Hes7 --fallback perplexity-lite`);
-  see status in the review/notes below.
+Falcon deep research completed (Hes7-deep-research-falcon.md; wrapper reported a 600 s timeout but the
+falcon client finished and wrote the file). It additionally reports Hes7-dependent oscillation of Dll1 and
+Dusp4 (citing 2024-2025 reviews; not independently verified here)
+[file:mouse/Hes7/Hes7-deep-research-falcon.md "Hes7 functions as a sequence-specific DNA-binding transcriptional repressor that recognizes and binds N-box regulatory sequences in target gene promoters"].

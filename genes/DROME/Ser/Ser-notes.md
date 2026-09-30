@@ -2,8 +2,9 @@
 
 ## Session 2026-09-30 (Notch signaling module)
 
-Deep research: falcon run launched; first attempt failed (falcon timeout, perplexity fallback not
-configured), relaunched. Review written from UniProt, cached publications and GOA.
+Deep research: `Ser-deep-research-falcon.md` (falcon) produced during the session (wrapper
+reported a timeout but the client completed). It notes the Serrate/Jagged cysteine-rich domain,
+strong Mib1 dependence and cis-inhibition; used for corroboration.
 
 ### Key findings
 - Serrate binds the same Notch EGF repeats (11-12) as Delta [PMID:1657403].

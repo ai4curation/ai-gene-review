@@ -2,11 +2,11 @@
 
 ## Session 2026-09-30 (Notch signaling module)
 
-Deep research: `just deep-research-falcon DROME N --fallback perplexity-lite` was launched; the
-wrapper timed out after 600 s (falcon) and the perplexity fallback is not configured in this
-environment. No deep-research file was available when the review was written, so the review is
-based on UniProt P07207, the cached publications, and the GOA annotation set (298 rows, 163
-distinct terms; no IBA rows for N).
+Deep research: `just deep-research-falcon DROME N --fallback perplexity-lite` — the wrapper reported
+a 600 s falcon timeout, but the falcon client completed and wrote `N-deep-research-falcon.md`
+later in the session; it was used for corroboration (NRR autoinhibition, glycan tuning). The review
+is primarily based on UniProt P07207, cached publications, and the GOA set (298 rows, 163 distinct
+terms; no IBA rows for N).
 
 ### Key findings (with provenance)
 
