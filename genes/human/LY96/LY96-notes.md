@@ -6,10 +6,12 @@ segment. Isoform 2 lacks residues 38-68.
 
 ## Deep research status
 
-Falcon deep research for LY96 had not completed when this review was written
-(queued behind other genes in the batch). The review was built from the UniProt
-record, the cached GOA publications and the cached Reactome entries. See the end
-of this file for any later reconciliation.
+The background deep-research job finished (exit 0) but produced
+`LY96-deep-research-asta.md` (Asta corpus retrieval), not a Falcon report. Its 20
+retrieved papers are generic bioinformatics/database papers unrelated to MD-2
+(IgAN subtyping, CRONOS, LIPID MAPS, etc.), so it contributed nothing to this
+review. The review was built from the UniProt record, the cached GOA publications
+(all 14 cached; several abstract-only) and the cached Reactome entries.
 
 ## Biology, with provenance
 
