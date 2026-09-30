@@ -6,10 +6,14 @@ Project: ADAPTIVE_IMMUNITY, T cell receptor trunk.
 
 - `just deep-research-falcon human LCP2 --fallback perplexity-lite` was run. The first
   background run's log was overwritten by a concurrent job, and no
-  `LCP2-deep-research-*.md` file was produced. It was re-run and failed again: falcon timed out
+  `LCP2-deep-research-*.md` file was produced. The re-run's wrapper reported failure: falcon timed out
   after 600s, and the perplexity-lite fallback errored with "Provider 'perplexity' not available".
-  No deep-research file exists.
-  The review was done from UniProt, GOA and cached publications, not from deep research.
+  The falcon client still completed in the background at 13:54, after about 1186 s, and wrote
+  `LCP2-deep-research-falcon.md`.
+  The review was done from UniProt, GOA and cached publications. The deep-research report was read
+  afterwards. It is consistent with the review: SAM-domain oligomerization, and roles in neutrophils,
+  platelets, NK cells and mast cells. It is cited as corroboration on the collagen-activated
+  signaling NEW row.
 
 ## Biology summary (with provenance)
 
