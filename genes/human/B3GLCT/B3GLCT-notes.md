@@ -43,3 +43,8 @@ ADAMTS9 experiments used recombinant human fragments, separate from mouse eye ph
 The 2026 structure resolves acceptor recognition by adjoining GT-A domains, with an inactive N-terminal domain and active C-terminal domain. UDP/Mn binding and chelation revise the 2021 metal-independence suggestion at finding level. The older mutagenesis remains informative. The enzyme is truncated, and printed residue boundaries are inconsistent; exact boundaries and resolution are unnecessary here. The proposed reaction geometry includes modeling. No whole-protein pseudoenzyme, second catalytic function, or Notch assertion is added. [PMID:34058199](https://pubmed.ncbi.nlm.nih.gov/34058199/), [PMID:42575440](https://pubmed.ncbi.nlm.nih.gov/42575440/).
 
 The repeated Sato snippet on the activity IDA row was removed. Its core and ER-location snippets remain, alongside the earlier notes quotation. Every new supporting snippet is exact source text, with total quotations limited to 25 words per paper across the proposed review and notes. Independent final biological peer and canonical application remain pending at this entry.
+
+
+## PR 3575 evidence-anchor follow-up
+
+The exact-head review approved the biology and suggested a more informative localization excerpt. Expanded only the PMID16899492 ER-residence anchor to include the retention context; this supports ER residence while the existing reason separately qualifies membrane topology. Annotation actions, source tuples, references and the catalytic core are unchanged. The aggregate PMID16899492 quotation count across review and notes is 23 words; no additional quote is added here.
