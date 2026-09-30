@@ -26,4 +26,7 @@
 - HMP from the Schupbach & Wieschaus female-sterile screen (oogenesis, dorsal appendage formation): abstract does not mention cactus, full text not cached -> UNDECIDED.
 
 ## Deep research
-Falcon deep research was never run for this gene. The background preparation job exited (code 144) while still working through human genes, whose runs had failed with "All providers failed". No DROME deep-research log appeared after about 40 minutes of waiting, so the review was completed from the UniProt record and cached publications only.
+The review was drafted from the UniProt record and cached publications before Falcon deep research (cact-deep-research-falcon.md) was finished. The report was read afterwards and agrees with the curation decisions: cytoplasmic IkappaB that sequesters Dorsal/Dif through its ankyrin repeats, Toll-induced N-terminal phosphorylation and proteasomal degradation, and Toll-independent turnover through the C-terminal PEST region (CKII, Calpain A). New points it raises that do not change any annotation:
+- Modelling (Barros et al. 2021) and facilitated-diffusion work (Carrell 2016; Schloop 2020) suggest the Dorsal-Cactus complex also acts as a mobile carrier that concentrates Dorsal ventrally. In this view Cactus promotes Toll-dependent Dorsal import on the ventral side while inhibiting basal import elsewhere.
+- In Yorkie/polarity-deficient tumour models (a bioRxiv preprint), Cactus acts upstream of JNK.
+Neither is backed by a cached primary paper here, so neither was used as annotation evidence. The report calls the direct Cactus kinase "not definitively established". That conflicts with PMID:24086459, which shows in vitro that Pelle phosphorylates the signal-responsive serines. The review follows the primary paper.

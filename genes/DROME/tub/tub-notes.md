@@ -26,4 +26,9 @@
 - hemocyte proliferation TAS from a review whose cached abstract does not mention Tube -> UNDECIDED.
 
 ## Deep research
-Falcon deep research was never run for this gene. The background preparation job exited (code 144) while still working through human genes, whose runs had failed with "All providers failed". No DROME deep-research log appeared after about 40 minutes of waiting, so the review was completed from UniProt and cached publications only.
+The review was drafted from UniProt and cached publications before Falcon deep research (tub-deep-research-falcon.md) was finished. The report was read afterwards and agrees with the curation decisions:
+- Tube is a non-enzymatic death-domain adaptor that bridges MyD88 and Pelle, which do not bind each other directly. This supports the NEW signaling adaptor activity annotation.
+- Tube acts at the cytoplasmic face of the plasma membrane, and forced membrane targeting activates signalling.
+- Tube belongs to the Toll (not Imd) pathway, and it is a maternal dorsal-group gene.
+- The report explicitly warns against annotating Tube as an IRAK-like enzyme on the basis of distant homology. This is consistent with removing the kinase-family-derived nucleus IBA and the LPS-pathway IBA.
+Nothing in the report changes any action.
