@@ -31,6 +31,11 @@ UniProt P13508, "Protein glp-1" (contains glp-1/Notch intracellular domain). Sec
   the pathway. GLP-1 and LIN-12 are largely interchangeable biochemically [PMID:1769331].
 - GLP-1 in dauer neurons maintains dauer [PMID:18599512].
 
-## Deep research
 
-Falcon deep research launched in background; see status note below.
+## Deep research status
+
+The first falcon run (`just deep-research-falcon worm glp-1 --fallback perplexity-lite`) timed out at 600 s. The
+perplexity fallback is unavailable in this environment. A rerun with `--timeout 2400` succeeded:
+`glp-1-deep-research-falcon.md`. It is consistent with the review and is cited in core_functions. Note that
+falcon reports C. elegans LIN-12/GLP-1 are tuned to lower force thresholds for activation than Drosophila
+Notch (Langridge et al. 2021 bioRxiv; not in the publications cache, so not used as evidence here).

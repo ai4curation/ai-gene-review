@@ -16,3 +16,6 @@
 
 ## Variant-relevant biology
 - In mammals MIB1 is the main ligand E3; Neuralized (NEURL1/1B) is minor, in contrast to Drosophila where Neur is critical in neurogenesis.
+
+## Deep research
+- Falcon deep research completed: file:human/MIB1/MIB1-deep-research-falcon.md (first attempt timed out at the 600 s wrapper default; rerun with --timeout 2700). Key statements quoted in the review are verbatim from that file.

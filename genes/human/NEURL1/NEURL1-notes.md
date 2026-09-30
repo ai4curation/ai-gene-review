@@ -16,3 +16,7 @@
 
 ## Variant-relevant biology
 - Neuralized is essential for Delta signaling in Drosophila neurogenesis but minor/redundant in mammals.
+
+## Deep research
+- Falcon deep research completed: file:human/NEURL1/NEURL1-deep-research-falcon.md (first attempt timed out at the 600 s wrapper default; rerun with --timeout 2700). Key statements quoted in the review are verbatim from that file.
+- Deep research: Neurl1 acts redundantly with Neurl2 in hippocampal memory; single knockouts lack overt deficits [file:human/NEURL1/NEURL1-deep-research-falcon.md].

@@ -16,3 +16,6 @@
 
 ## Variant-relevant biology
 - Fringe is a ligand-selectivity modifier: enhances Delta-like, reduces Jagged/Serrate responses; oscillates in the vertebrate segmentation clock.
+
+## Deep research
+- Falcon deep research completed: file:human/LFNG/LFNG-deep-research-falcon.md (first attempt timed out at the 600 s wrapper default; rerun with --timeout 2700). Key statements quoted in the review are verbatim from that file.

@@ -29,3 +29,16 @@ cell projection membrane (GO:0031253) and cell fate specification (GO:0001708). 
 
 - GO:0032809 neuronal cell body membrane (IDA, PMID:16672375 and PMID:8575327): the cells assayed (DTC and
   gonadal cells) are not neurons, so I MODIFY this to plasma membrane.
+
+## Deep research status
+
+The first falcon run (`just deep-research-falcon worm lag-2 --fallback perplexity-lite`) timed out at 600 s. The
+perplexity fallback is unavailable in this environment. A rerun with `--timeout 2400` succeeded:
+`lag-2-deep-research-falcon.md`. It is consistent with the review and is cited in core_functions. Note that
+falcon reports C. elegans LIN-12/GLP-1 are tuned to lower force thresholds for activation than Drosophila
+Notch (Langridge et al. 2021 bioRxiv; not in the publications cache, so not used as evidence here).
+
+Falcon also reports two points not verified against cached primary papers. (1) A soluble LAG-2 ectodomain
+did not rescue lag-2 null lethality, whereas GPI tethering partly did (Post et al. 2025). This appears to be in
+tension with PMID:8575327, where truncated secreted DSL forms substituted for lag-2. (2) The adhesion GPCR LAT-1
+binds LAG-2 in cis on the DTC and enhances GLP-1 activation.

@@ -29,4 +29,6 @@
 - No worm Hairless; corepressor partners for default repression not established.
 
 ## Deep research
-- Falcon deep research: see below (appended when available).
+- Falcon deep research completed (lag-1-deep-research-falcon.md). Consistent with the review. Additional points:
+  - Notch-independent terminal selector role in ADF serotonergic neurons (Maicas et al. 2021; not in local publication cache): "LAG-1 has a striking Notch-independent role as a terminal selector in ADF serotonergic chemosensory neurons" - LAG-1 activates tph-1, cat-1, bas-1, cat-4 without GLP-1, LIN-12 or SEL-8. Relevant as a CSL-independent-of-Notch variant for the module; not added as NEW annotation here (primary paper not cached).
+  - LST-1 feeds back on LAG-1 (Ferdous et al. 2023), dampening Notch-dependent transcription.

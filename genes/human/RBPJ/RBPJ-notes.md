@@ -20,3 +20,6 @@
 
 ## Variant-relevant biology
 - CSL is the single DNA-binding effector; "default repression" mode; repressor partners differ by lineage (SPEN/SHARP in mammals vs Hairless in Drosophila).
+
+## Deep research
+- Falcon deep research completed: file:human/RBPJ/RBPJ-deep-research-falcon.md (first attempt timed out at the 600 s wrapper default; rerun with --timeout 2700). Key statements quoted in the review are verbatim from that file.

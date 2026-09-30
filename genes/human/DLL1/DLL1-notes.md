@@ -21,3 +21,6 @@
 
 ## Variant-relevant biology
 - DLL1 has a DOS motif (DLL4 does not); has C-terminal PDZ-binding ATEV motif (shared with DLL4, absent from JAG1); acts in trans (activation) and cis (inhibition).
+
+## Deep research
+- Falcon deep research completed: file:human/DLL1/DLL1-deep-research-falcon.md (the wrapper reported a 600 s timeout, but the client finished writing the report after 941 s). Key statements quoted in the review are verbatim from that file.

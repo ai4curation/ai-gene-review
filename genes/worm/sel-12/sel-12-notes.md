@@ -24,4 +24,8 @@
 - membrane protein ectodomain proteolysis IBA kept as non-core (gamma-secretase performs intramembrane cleavage; PSEN1 carries the term by IDA -> convention).
 
 ## Deep research
-- Falcon deep research: see below (appended when available).
+- Falcon deep research completed (sel-12-deep-research-falcon.md). Consistent with the review. Additional points:
+  - "SEL-12-containing gamma-secretase catalyzes the final transmembrane cleavage (S3 cleavage), releasing the LIN-12 intracellular domain from its membrane anchor"
+  - Catalytic D226A mutant abolishes Notch-related (egg-laying) function (Ashkavand et al. 2025, not cached).
+  - Gamma-secretase-independent restraint of ER-to-mitochondria calcium transfer (Norman lab 2020-2025, not cached); supports keeping the calcium ion homeostasis IBA as non-core.
+  - sel-12 ubiquitous; hop-1 low in larvae, needed in adult germline; spr-5 loss derepresses hop-1 and suppresses sel-12.

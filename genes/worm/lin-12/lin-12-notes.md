@@ -56,7 +56,11 @@ Notch-like protein; one of the two C. elegans Notch receptors (the other is GLP-
   [PMID:23539368]; basement-membrane sliding [PMID:27661254]; dauer recovery [PMID:18599512]; sleep
   [PMID:29523076].
 
-## Deep research
 
-Falcon deep research launched (`just deep-research-falcon worm lin-12 --fallback perplexity-lite`);
-see status at end of this file.
+## Deep research status
+
+The first falcon run (`just deep-research-falcon worm lin-12 --fallback perplexity-lite`) timed out at 600 s. The
+perplexity fallback is unavailable in this environment. A rerun with `--timeout 2400` succeeded:
+`lin-12-deep-research-falcon.md`. It is consistent with the review and is cited in core_functions. Note that
+falcon reports C. elegans LIN-12/GLP-1 are tuned to lower force thresholds for activation than Drosophila
+Notch (Langridge et al. 2021 bioRxiv; not in the publications cache, so not used as evidence here).

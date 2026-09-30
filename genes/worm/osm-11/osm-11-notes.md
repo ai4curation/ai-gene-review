@@ -28,3 +28,11 @@ Notch signaling pathway (GO:0045747).
 - This is a nematode-specific pathway variant: the DOS motif is split off from the DSL ligand into separate
   secreted co-ligands (OSM-11, OSM-7, DOS-1/2/3). Vertebrate DLK1/DLK2 and DNER-type DOS proteins are
   functional analogs, since DLK1 rescues osm-11.
+
+## Deep research status
+
+The first falcon run (`just deep-research-falcon worm osm-11 --fallback perplexity-lite`) timed out at 600 s. The
+perplexity fallback is unavailable in this environment. A rerun with `--timeout 2400` succeeded:
+`osm-11-deep-research-falcon.md`. It is consistent with the review and is cited in core_functions. Note that
+falcon reports C. elegans LIN-12/GLP-1 are tuned to lower force thresholds for activation than Drosophila
+Notch (Langridge et al. 2021 bioRxiv; not in the publications cache, so not used as evidence here).

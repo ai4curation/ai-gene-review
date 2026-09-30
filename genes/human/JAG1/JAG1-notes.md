@@ -21,3 +21,7 @@
 
 ## Variant-relevant biology
 - Serrate-type ligand: 16 EGF repeats + cysteine-rich region; Fringe-sensitive (Fringe reduces Jagged signaling through NOTCH1/2); C-terminal PDZ motif; JAG1-CD46 non-Notch receptor interaction.
+
+## Deep research
+- Falcon deep research completed: file:human/JAG1/JAG1-deep-research-falcon.md (first attempt timed out at the 600 s wrapper default; rerun with --timeout 2700). Key statements quoted in the review are verbatim from that file.
+- Deep research: JAG1 cis-inhibition is receptor-dependent (weak on NOTCH1, stronger on NOTCH2); N-terminal region is a C2-type phospholipid-binding domain [file:human/JAG1/JAG1-deep-research-falcon.md].

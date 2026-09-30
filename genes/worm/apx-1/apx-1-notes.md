@@ -28,3 +28,11 @@ APX-1 but wrong for LIN-12.
 
 - Maternal DSL ligand acting in a 4-cell embryo inductive event, which is a nematode-specific use of the
   pathway. APX-1 lacks a DOS motif (C. elegans DSL ligands; see PMID:18700817).
+
+## Deep research status
+
+The first falcon run (`just deep-research-falcon worm apx-1 --fallback perplexity-lite`) timed out at 600 s. The
+perplexity fallback is unavailable in this environment. A rerun with `--timeout 2400` succeeded:
+`apx-1-deep-research-falcon.md`. It is consistent with the review and is cited in core_functions. Note that
+falcon reports C. elegans LIN-12/GLP-1 are tuned to lower force thresholds for activation than Drosophila
+Notch (Langridge et al. 2021 bioRxiv; not in the publications cache, so not used as evidence here).
