@@ -80,3 +80,21 @@ PMID:24026985 (Scheidecker et al., J Med Genet 2014; not cached, cited in UniPro
   (e.g. regulation of microtubule polymerization/stability; negative regulation of tubulin deacetylation
   via HDAC6 binding). HDAC6 binding itself is more informative than generic protein binding.
 - BBSome structural stability ("Required for ... BBSome stability") — supports a structural/scaffold role.
+
+
+## 2026-09-30 — prospective primary-evidence amendment
+
+This entry supersedes the earlier mechanistic proposals while preserving the prior journal. All 22 machine-source tuples and four alternative products are retained. The three supported generic binding assertions are non-core under the supplied ActionEnum; genericity alone does not make an interaction incorrect or exaggerated. The resulting source decisions are 11 ACCEPT and 11 KEEP_AS_NON_CORE.
+
+The prior authored microtubule-polymerization and molecular-adaptor NEW proposals are withdrawn. The available depletion, HDAC6 association and rescue evidence establishes a phenotype but does not identify a tubulin-incorporation step performed by BBIP1 or a coordinated HDAC6/BBS4 bridge. No substitute NEW process is proposed, so no comparator-based gap claim is made. The tubulin observations remain in the biological description and questions.
+
+The structural NEW proposal is narrowed to GO:0140378 protein complex scaffold activity and represented by one BBSome core. Its integral BBS4/BBS8 contacts are supported by selected original human structural Results and purification Methods [PMID:31951201](https://elifesciences.org/articles/53910). The official term is a descendant of structural molecule activity; the broad ancestor is not retained as a second proposal. After that single failed local fetch, a read-only current-main check found the existing normal record for this PMID. Its exact signed-main bytes were restored with exclusive create and verified by blob and SHA256. The fetched title (including final period) and one short structural Results anchor are now bound in the candidate. This source binding does not claim that full focused validation, history creation or rendering has run.
+
+The 2017 publisher supplementary Figure 6 caption independently supports the BBS4–BBS18 pair [PMID:29039417](https://www.nature.com/articles/nmeth.4464). Its 104-residue construct is not assigned to a current UniProt isoform without provenance. The exact mutation matrix and image pixels remain unread. Selected local PMID22500027 Results distinguish BBS4 association from BBS4-dependent PCM1 co-association. Complete PMID19081074 abstract and original Figure 2 caption support discovery/localization and ciliogenesis, while full biochemical Results remain inaccessible. HPA antibody text, rather than a generated axoneme quotation, supports basal-body localization; ciliary-membrane IDA is retained with curator deference and the original localization experiment's access limitation.
+
+Short primary anchors replace the prior repeated or punctuation-altered snippets. Existing notes remain historical and no scientific snippets are repeated in this appendix. The generated Falcon file, raw UniProt/GOA, source records and products are unchanged. The separate current-main/open-PR ownership check is read-only; this proposal does not perform canonical application, history creation, validation, rendering or publication.
+
+
+### Focused validation of the completed amendment
+
+`just validate human BBIP1` passed (actual ae727d), with four advisories. Three concern supported generic protein-binding rows retained as non-core under the supplied ActionEnum: the interaction observations are not shown incorrect, and no unsupported replacement activity is invented. The fourth concerns the available Falcon report not being cited by an annotation; the report remains unchanged, while decisions use directly read primary evidence. These advisories do not justify removing supported interactions or citing provider prose in place of primary evidence. Rendering passed (774e6b); the new history record records the actual checks. No global validation claim.
