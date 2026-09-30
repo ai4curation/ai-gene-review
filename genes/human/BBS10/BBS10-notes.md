@@ -133,3 +133,12 @@ A later primary study, [PMID:40914337](https://pubmed.ncbi.nlm.nih.gov/40914337/
 ### Validation of this revision
 
 Focused schema, term, reference and best-practice validation passed on 2026-09-30. The 6 advisories comprise 5 supported generic-binding rows retained as non-core under the supplied ActionEnum and one unused-provider-evidence advisory. The unchanged provider report is a lead map; primary publications support the annotation decisions. Rendering passed. No repository-wide validation pass is claimed.
+
+
+## 2026-09-30 — evidence and citation follow-up
+
+Short verbatim anchors now accompany the basal-body refinement, the context-specific ciliogenesis evidence and the two experimental assembly annotations. The BBS-chaperonin regulation quote is moved from the core to its experimental row; the redundant fragment in the molecular-function gap is removed. The RNF2 refinement has a structured source citation and an explicit link to the inspected Results/Figure 3C/Methods. Its abstract-only normal cache does not contain the BBS10 assay, so no replacement quotation is invented. The basal-body and ciliogenesis snippets refer to the BBS10/BBS12 experiments; the complete conditions remain in the rationales and reference assessment.
+
+The biological summary now includes TCP-1/CCT family membership and the BBS7-BBS2-BBS9 assembly intermediate. The core distinguishes participation in BBSome assembly from regulation of the machinery's formation. The molecular activity remains unresolved; no proposed catalytic term is added without direct evidence. Colonless PMID identifiers and missing spaces in the review are corrected. Earlier notes containing 'returned403' should read 'returned 403'; the original journal entries remain intact.
+
+The PMID:17980398 and PMID:33961781 caches contain full-text content. Their earlier full-text-unavailable flags were incorrect and are removed; limited reading and uninspected supplementary interaction records remain explicitly documented. Five supported generic associations remain KEEP_AS_NON_CORE under the supplied ActionEnum. In particular, independent BBS10-BBS7 co-immunoprecipitation supports the biological interaction represented by the two BioPlex rows, without claiming that the exact BioPlex records were independently audited. Neither REMOVE nor UNDECIDED is selected solely to satisfy the generic-binding advisory. No source tuple, action or alternative product is changed.
