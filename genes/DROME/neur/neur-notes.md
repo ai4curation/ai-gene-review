@@ -58,3 +58,9 @@ Drosophila melanogaster, FBgn0002932, CG11988. 754 aa (isoform 1). Domains: two 
 ## Deep research
 - `just deep-research-falcon DROME neur --fallback perplexity-lite` launched; see status in
   review references (file present only if it completed).
+
+## Deep research (falcon) completed
+- `neur-deep-research-falcon.md` generated (second attempt with --timeout 2400). Consistent with
+  the review; adds Kalodimou et al. 2023 (Neur also acts as a non-catalytic endocytic
+  co-adaptor for Delta; RING-less Neur retains limited activity) and the basic KKIKKR (82-87)
+  membrane-targeting region. Not independently verified from primary text here.
