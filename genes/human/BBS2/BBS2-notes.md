@@ -75,3 +75,12 @@ The five additional normal sources were recovered through Source87 and imported 
 ### Validation of this revision — 2026-09-30
 
 Focused validation passed with 26 advisories, all concerning supported generic protein-binding rows retained as non-core under the supplied review criteria. These advisories remain disclosed; they do not provide evidence that the interactions are false. The generated Codex EDIT history and rendering passed. The exact source census contains 89 distinct assertions from 92 raw rows, with no new assertion. This is focused validation, not a new claim that repository-wide reference checks passed.
+
+
+## 2026-09-30 response to PR3590 scientific review
+
+The GO hierarchy was checked again against the [official stereocilium page](https://amigo.geneontology.org/amigo/term/GO:0032420): it explicitly lists neuron projection as an is_a parent (accessed 2026-09-30). The reviewer's proposed sibling-only relationship was not supported by this ontology release. The PAINT localization and its original supporting entities are retained.
+
+The RNF2 decision now rests on the BBS2/RNF2 interaction curated with IPI and on the partner's ubiquitin-ligase identity; it no longer requires a figure-level assertion unavailable in the cached abstract. Short verbatim anchors were added for mouse Bbs2 localization in microvilli/stereocilia and for the Bbs2-null brain findings (PMID:25605782; PMID:18032602). The scaffold core now includes the ciliary protein-localization process and membrane/basal-body locations, with evidence from BBS2 depletion and curated direct localization (PMID:22072986; PMID:19081074; PMID:18299575). Individual refined interaction reasons identify their own partner and source paper.
+
+The action totals and all 89 source keys remain unchanged. Generic interaction observations remain non-core under the user's explicit ActionEnum criteria; the reviewer request to remove otherwise supported interactions solely because the term is broad conflicts with those criteria. No new annotations or source records are introduced in this response.
