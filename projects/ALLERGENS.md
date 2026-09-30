@@ -9,6 +9,13 @@ sidecars:
     - ALLERGENS/slides/ch1-review-table.jpg
     - ALLERGENS/slides/priority-quadrant.svg
     - ALLERGENS/slides/triage-pipeline.svg
+manifest:
+  slides:
+    - href: ALLERGENS/slides/ALLERGENS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/3mEMoeKTFksZXuPqF9xaif
+      title: Project brief
 ---
 
 # Allergens Project
@@ -317,7 +324,3 @@ and matches the allergen designation by **regex** so embedded IEDB names
   binding is correctly a negated GOA annotation.
 - Next: extend the IEDB name-join to protein-name-labelled allergens (human `Hom s …`),
   then continue the backlog (other pollens, foods, molds, insects) by priority.
-
-## Slides
-
-- [Slides](ALLERGENS/slides/ALLERGENS-slides.html) (Marp source: [ALLERGENS-slides.md](ALLERGENS/slides/ALLERGENS-slides.md)) — AI generated

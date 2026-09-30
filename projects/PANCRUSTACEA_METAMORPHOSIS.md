@@ -9,6 +9,13 @@ sidecars:
     - PANCRUSTACEA_METAMORPHOSIS/slides/four-origins.svg
     - PANCRUSTACEA_METAMORPHOSIS/slides/kni-review-table.jpg
     - PANCRUSTACEA_METAMORPHOSIS/slides/receptor-corrections.svg
+manifest:
+  slides:
+    - href: PANCRUSTACEA_METAMORPHOSIS/slides/PANCRUSTACEA_METAMORPHOSIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/PxxS5zriXhGzC6gvrazkFT
+      title: Project brief
 ---
 
 # Pancrustacea Metamorphosis Gene Families
@@ -207,7 +214,3 @@ regulation module) and, optionally, the secondary mentions (*deadpan*).
 **Data-provenance note.** For *klingon* and *inscuteable*, `fetch-gene` first
 resolved sparse TrEMBL accessions (3 and 1 annotations); the reviews use the
 annotation-rich accessions **Q9VCT4** and **Q9W2R4** instead.
-
-## Slides
-
-- [Slides](PANCRUSTACEA_METAMORPHOSIS/slides/PANCRUSTACEA_METAMORPHOSIS-slides.html) (Marp source: [PANCRUSTACEA_METAMORPHOSIS-slides.md](PANCRUSTACEA_METAMORPHOSIS/slides/PANCRUSTACEA_METAMORPHOSIS-slides.md)) — AI generated

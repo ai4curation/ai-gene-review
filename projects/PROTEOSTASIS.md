@@ -94,6 +94,13 @@ review_batches:
     target_gene_count: 20
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch9_selection_notes.md
+manifest:
+  slides:
+    - href: PROTEOSTASIS/slides/PROTEOSTASIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/X5CfsBDy2fmRP57wscyizk
+      title: Project brief
 ---
 # Human Proteostasis Network Project
 
@@ -675,7 +682,3 @@ The PN project is broader:
 [Ribosome Quality Control](RIBOSOME_QUALITY_CONTROL.md) ·
 [Integrated Stress Response](INTEGRATED_STRESS_RESPONSE.md) ·
 [ER-phagy](ER_PHAGY.md)
-
-## Slides
-
-- [Slides](PROTEOSTASIS/slides/PROTEOSTASIS-slides.html) (Marp source: [PROTEOSTASIS-slides.md](PROTEOSTASIS/slides/PROTEOSTASIS-slides.md)) — AI generated

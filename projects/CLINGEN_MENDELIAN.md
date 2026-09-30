@@ -2881,6 +2881,13 @@ genes:
   - "human/ZNF462"
   - "human/ZNF711"
   - "human/ZSWIM6"
+manifest:
+  slides:
+    - href: CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/4hQjBNnZX7gypVhGru5wBL
+      title: Project brief
 ---
 
 # ClinGen Mendelian Disease Genes
@@ -5915,7 +5922,3 @@ Initial source-based seed only. No gene-level curation sign-offs were made.
 
 The review campaign started with A4GALT, AARS1, and AARS2. Each gene receives a
 separate PR and remains unchecked until its review and PR follow-up are complete.
-
-## Slides
-
-- [Slides](CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.html) (Marp source: [CLINGEN_MENDELIAN-slides.md](CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.md)) — AI generated

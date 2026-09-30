@@ -4,6 +4,10 @@ maturity: ARCHIVED
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
 genes: [zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
+      title: Project brief (C. elegans surveillance immunity)
 ---
 
 # Specific Annotation Edit Recommendations

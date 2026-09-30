@@ -4,6 +4,13 @@ maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast, ARATH]
 genes: [VAPA]
+manifest:
+  slides:
+    - href: ER_PM_TETHERING_OBSOLETION/slides/ER_PM_TETHERING_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/FMq8m8yzvRNQmUs1Jv1YqH
+      title: Project brief
 ---
 
 # ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)
@@ -198,7 +205,3 @@ membrane contact site (MCS) area has been growing in interest.
   (definition requires PM lipid binding by the adaptor; at VAPA contacts the
   partner's PH domain does it). VAPA never had GO:0061817 in GOA or its
   review; the only occurrence is a UniProt DR line in `VAPA-uniprot.txt`.
-
-## Slides
-
-- [Slides](ER_PM_TETHERING_OBSOLETION/slides/ER_PM_TETHERING_OBSOLETION-slides.html) (Marp source: [ER_PM_TETHERING_OBSOLETION-slides.md](ER_PM_TETHERING_OBSOLETION/slides/ER_PM_TETHERING_OBSOLETION-slides.md)) — AI generated
