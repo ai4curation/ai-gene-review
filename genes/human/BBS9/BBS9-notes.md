@@ -35,3 +35,24 @@
 1. Structural scaffold subunit of the BBSome (β-propeller + GAE/platform/α-helical core, with BBS2/BBS7). [PMID:17574030; PMID:26085087]
 2. BBSome-mediated trafficking of membrane/signaling cargo to and within the primary cilium = protein localization to cilium. [PMID:17574030; PMID:23943788]
 3. Required for ciliogenesis/cilium assembly (downstream). [PMID:17574030]
+
+
+## 2026-09-30 independent BBS9 annotation consultation (prospective)
+
+The normal TMP source projection recovers 21 omitted source objects and 25 supporting-entity lists. All 69 raw records are distinct and match the 69 reviewed source objects. Seven alternative products remain unchanged. The old authored structural-molecule NEW is considered separately and proposed for withdrawal because a specific scaffold replacement is available on the existing ND source.
+
+Selected primary assembly experiments (PMID:22500027 and PMID:22072986) support BBS9 as an integral BBSome scaffold, not merely a protein with a beta-propeller domain. The source ND root and exact canonical BBS1/BBS2/BBS5/TTC8 partner annotations can be refined using that independent evidence. Original screening sources and their limitations remain explicit. The distinct TTC8 accession A0A0C4DGX9 is identified but its construct has not been matched to the mechanistic experiments, so it remains non-core. Other supported generic interactions also remain non-core under the supplied ActionEnum, rather than being rejected solely for informativeness.
+
+The earlier assertion that a molecular function must be catalytic is superseded. The old generic structural-molecule proposal is redundant with the more specific scaffold refinement, and an isolated crystallographic fold does not alone prove the assembly role. The 2015 BBS9 N-terminal structure and the later low-resolution BBS2/7/9 integrative model have distinct scopes.
+
+Ciliary locations and assembly are retained with cell-context and species bounds. The additional primary PMID:22479622 reports mouse IMCD3 and zebrafish knockdown, with human-mRNA rescue in zebrafish; it does not show universal human-cell dependence. Mouse adipogenesis transfers remain unresolved because the traced evidence is an expression timecourse (PMID:17379567), not a verified differentiation perturbation assay.
+
+The normal PMID:23943788 extraction lacks Results/Methods even though its metadata says full text is available. Selected original Results were read separately: BBS9 localizes to cilia, transition zones and satellites; BBS9 knockdown perturbs the satellite pool of CEP290 while transition-zone localization remains. Neither a complete-paper read nor loss of CEP290 transition-zone localization is claimed. HPA localization text and cell-line tables were read without reanalyzing image pixels. No source/cache file or canonical gene file was changed, no provider report was fabricated, and no new quotations were added.
+
+Source91 subsequently completed the normal PMID:22479622 import. Its relevant available primary evidence was reassessed before this integrated proposal; cache and external reading limits are recorded separately. The source-complete decisions are 22 ACCEPT, 24 KEEP_AS_NON_CORE, 21 MODIFY and two UNDECIDED, with one BBSome scaffold core. The old authored generic structural-molecule NEW is withdrawn without removing any source object. All 69 distinct raw sources and seven alternative products remain preserved. All MODIFY decisions have structured source/primary references; no new direct quotation is added.
+
+The subsequently imported normal PMID:22479622 XML cache was read for its abstract, Results, main Discussion and available Methods. Mouse IMCD3 shRNA and zebrafish Kupffer-vesicle experiments support the existing cilium-assembly decisions in those contexts; the Discussion contrasts an earlier weaker RPE-cell phenotype. Wild-type human mRNA rescue was measured in zebrafish eye development, not a direct human-cell ciliogenesis assay. Heart looping and laterality markers were explicitly not tested. Main captions were read as text, while figure pixels and supplemental files were not inspected. The three cilium-assembly reasons now record these limits; all decisions and the scaffold core remain unchanged.
+
+## 2026-09-30 validation and application
+
+The independently reviewed proposal was applied with all 69 source objects and seven alternative products preserved. Focused validation passed with 14 generic protein-binding advisories, and the review rendered successfully. These evidence-supported interactions remain non-core under the supplied ActionEnum: REMOVE denotes an unlikely-correct assertion, whereas KEEP_AS_NON_CORE retains supported context. More specific scaffold activity is already assigned where independent primary evidence supports the exact partner scope. No direct quotations, source-cache changes or provider-report changes were introduced in this application.
