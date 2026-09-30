@@ -2,7 +2,7 @@
 
 Sources: UniProt Q9BXR5 (function text is "By similarity" only), GOA (39 rows), cached
 publications (GOA PMIDs plus TLR10 functional papers fetched for this review).
-Deep research status: see bottom of file.
+Deep-research cross-check: see bottom of file.
 
 ## Is TLR10 an inhibitory TLR? (project question 4)
 
@@ -54,5 +54,28 @@ Surface in pDC/B/monocyte (PMID:38995177, PMID:28235773) and endosomal in macrop
 [PMID:29616030 "TLR10 was predominately expressed in endosomes, with the highest expression detected in RAB11A+ recycling endosomes and RAB5+ early endosomes"].
 Plasma membrane accepted; endosome not proposed as NEW (single study).
 
-## Deep research status
-Falcon deep research for TLR10 was still running when this review was finished, so the review does not use it. It rests on cached primary literature.
+## Deep-research cross-check (2026-09-30)
+
+- **Agrees:** TLR10 as a predominantly inhibitory, orphan TLR (supports the NEW
+  `GO:0034122` and the KEEP_AS_NON_CORE handling of propagated activating terms);
+  TLR2 and TLR1 heterodimerisation; MyD88 recruitment without NF-kappaB activation;
+  PI3K/Akt-IL-1Ra mechanism; B-cell suppression; dual plasma membrane/endosome
+  location; minority activating reports (influenza, Listeria, HIV-1 gp41).
+- **Adds:** the report emphasises the pDC study (PMID:38995177, already cited):
+  antibody engagement suppressed virus-induced IFN-alpha, IFN-lambda and TNF-alpha
+  via STAT3/SOCS3 and blocked IRF7 nuclear translocation. Verified in the cached full
+  text [PMID:38995177 "The induction of IFN-α and TNF-α by all 4 viruses was
+  significantly suppressed upon TLR10-engagement as was the expression of IL6 by SeV,
+  and IFN-λ by HSV."]. Because the stimulus is a surrogate agonist antibody and no
+  physiological ligand is known, this was raised as a suggested question (GO:0032687
+  negative regulation of interferon-alpha production, QuickGO-verified) rather than
+  added as NEW. Polymorphism/disease associations and TLR10-transgenic mouse data were
+  not used.
+- **Conflicts:** the report states in one place that monocytes lack TLR10 and
+  elsewhere that monocytes express it; the review follows the primary paper
+  [PMID:28235773 "TLR10 is preferentially expressed on monocytes"]. The report also
+  describes TLR10 homodimers as "generally" pro-inflammatory, which the cited primary
+  papers do not support; not adopted.
+- **Changes:** no annotation decisions changed. Added the report to `references`,
+  cited it as corroborating context on the NEW `GO:0034122` row, and added one
+  suggested question (pDC IFN-alpha suppression).

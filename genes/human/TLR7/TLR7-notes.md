@@ -3,12 +3,10 @@
 Batch 1 of the INNATE_IMMUNITY project (Toll/TLR axis). Reviewed alongside TLR8
 (Q9NR97), with which TLR7 shares most of its annotation set and its PAINT node.
 
-**Deep research:** no `TLR7-deep-research-*.md` was produced. The background
-deep-research job failed for this gene (all providers failed; the log records
-`All providers failed`). These notes are therefore built from the UniProt record,
-the cached publications in `publications/`, the ontology (QuickGO) and, where a
-cached record was abstract-only and a decision hinged on the full text, the open
-PMC copy (noted explicitly each time).
+**Deep research:** `TLR7-deep-research-falcon.md` (Falcon) arrived after the
+review was written; see the cross-check section at the end. The notes below are
+built from the UniProt record, cached publications, QuickGO and, where noted, open
+PMC full text.
 
 ## What TLR7 is
 
@@ -147,3 +145,26 @@ function causes SLEB17 (lupus).
     assumption of the UNC93B1 route with no direct evidence for human TLR7 (and
     Golgi markers explicitly failed to colocalise with the paralogue TLR8,
     [PMID:22164301]).
+
+## Deep-research cross-check (2026-09-30)
+
+Compared the Falcon report (review-level sources: Zheng 2023, Hamerman & Barton
+2024, von Hofsten 2024, Lind 2022; citation keys are not PMIDs) against every
+review decision, the description and core functions.
+
+- **Agrees:** dual-site recognition (guanosine at site 1, uridine-containing ssRNA
+  at site 2; matches PMID:27742543/PMID:38697119); RNase T2-generated ligands; Z-loop
+  cleavage; UNC93B1-dependent ER-to-endolysosome trafficking; MyD88-IRAK4/IRAK1-TRAF6
+  to NF-kappaB and IRF7/type I IFN; *not* a plasma-membrane receptor (consistent with
+  keeping the PAINT/melanocyte plasma membrane rows only as non-core); pDC/B-cell
+  expression; TLR7 Y264H gain-of-function lupus (PMID:35477763).
+- **Adds (not used for decisions):** possible TIRAP/TRAM contribution to TLR7-IRF7
+  signalling; Cys98-Cys475 disulfide linking cleaved ectodomain fragments; B-cell
+  differentiation/autoantibody roles; therapeutic antagonists. None was verified in a
+  cached primary paper and none supports a NEW term under the participation test.
+- **Conflicts:** none. The report does not mention the reference problems found here
+  (PMID:19593445, PMID:23382219) or the 2',3'- vs 3',5'-cGMP issue.
+- **Changes:** no annotation decisions changed. Added the report to `references`
+  (relevance LOW, UNVERIFIED) and cited it as corroborating context on the
+  `GO:0038187` IMP row.
+

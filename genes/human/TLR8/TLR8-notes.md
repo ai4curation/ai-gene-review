@@ -152,3 +152,24 @@ mosaicism.
     true but generic; the receptor-activity row MODIFYs to `GO:0038187 pattern
     recognition receptor activity`, which TLR8 already carries by IBA and which is
     what the structures establish.
+
+## Deep-research cross-check (2026-09-30)
+
+The Falcon report had already been read for orientation when the review was
+written; this pass re-compared it against each decision.
+
+- **Agrees:** dual-site ligand recognition with uridine at site 1 (PMID:25599397);
+  preformed inactive dimer reorganised by agonist (PMID:23520111); Z-loop insertion;
+  UNC93B1-dependent trafficking and colocalisation with Rab5 early endosomes and ER
+  but not Golgi or LAMP1 lysosomes (matches PMID:22164301 and the demotion of the Golgi
+  and endolysosome membrane rows); myeloid expression; strong NF-kappaB/inflammatory
+  output with weaker type I IFN than TLR7; IMD98 gain-of-function.
+- **Adds (not used for decisions):** TIRAP-dependent TLR8-IRF5 signalling; mouse data
+  that TLR8 restrains TLR7; NK ADCC enhancement by TLR8 agonists. None verified in a
+  cached primary paper; none is an activity TLR8 itself performs that GO lacks.
+- **Minor conflict:** the report says the second site "preferentially binds
+  guanosine-rich ssRNA"; the review follows the primary structure paper
+  (PMID:25599397: a short oligonucleotide at the concave-surface site). Left as is.
+- **Changes:** no annotation decisions changed. Added the report to `references`
+  and cited it as corroborating context on the `GO:0038187` IBA row.
+

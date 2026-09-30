@@ -2,9 +2,8 @@
 
 ## Deep research status
 
-Falcon deep research was run for this gene but failed (600 s timeout, and the
-perplexity-lite fallback was not available in this environment). No
-`TLR9-deep-research-*.md` file exists. The review below is built from the
+The Falcon report (`TLR9-deep-research-falcon.md`) arrived after the review was
+written; see the cross-check section at the end. The review is built from the
 UniProt record, the cached GOA-cited publications, and six additional primary
 papers fetched into `publications/` (PMID:11564765, 17932028, 25686612,
 18820679, 18931679, 20865800).
@@ -73,3 +72,23 @@ papers fetched into `publications/` (PMID:11564765, 17932028, 25686612,
 - GO:1901895 (SERCA2 inhibition, PMID:24610369): experiments mainly in rat and
   mouse cardiomyocytes; kept as non-core, not overruled.
 - No NEW annotations proposed.
+
+## Deep-research cross-check (2026-09-30)
+
+- **Agrees:** unmethylated CpG DNA sensing (core GO:0045322/GO:0038187/GO:0034162);
+  CpG DNA as molecular glue for a 2:2 dimer (PMID:25686612); Z-loop cleavage required
+  (PMID:18820679, PMID:18931679); ER synthesis, UNC93B1, Golgi transit and
+  DHHC3/PPT1 palmitoylation cycle (PMID:38169466 - supports the accepted Golgi membrane
+  rows); early-to-late endosome progression shaping NF-kappaB vs IRF7 output;
+  MyD88-only signalling; cell-type-restricted surface TLR9 (consistent with keeping
+  plasma membrane rows as non-core).
+- **Adds (not used for decisions):** ligand-induced Y870/Y980 phosphorylation by
+  Syk/EGFR (2025), UNC93B1 N272 glycosylation, surface TLR9 on neutrophils and
+  erythrocytes, and a mouse hippocampal role of Tlr9 in memory formation. These are
+  single-lab or mouse findings not in GOA and not verified here in a cached primary
+  paper; no NEW terms proposed.
+- **Conflicts:** none. The report does not address siRNA binding, type II IFN or the
+  rat-derived IEA rows.
+- **Changes:** no annotation decisions changed. Added the report to `references`
+  and cited it as corroborating context on the `GO:0045322` row.
+

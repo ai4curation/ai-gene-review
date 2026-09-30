@@ -1,9 +1,8 @@
 # Tlr11 (mouse, UniProt Q6R5P0, MGI:3045226) — curation notes
 
-Deep research (falcon) was requested for this gene by the batch harness but no
-`Tlr11-deep-research-*.md` file was produced before this review was written, so
-these notes are built from the UniProt record, the cached GOA rows and the cached
-publications listed below.
+These notes are built from the UniProt record, the cached GOA rows and the cached
+publications listed below; the Falcon deep-research report arrived after the review
+was written and is cross-checked at the end of this file.
 
 ## The Tlr11 / Tlr12 naming inversion (critical for every annotation here)
 
@@ -87,3 +86,54 @@ PHENOTYPE, not under Q6R5P0.
 - NEW GO:0042832 defense response to protozoan proposed: Q6R5P0 is the receptor
   Koblansky calls TLR12, whose loss impairs IL-12 production and resistance to
   *T. gondii*; the paralogue already carries this term from the mirror-image paper.
+
+
+## Deep-research cross-check (2026-09-30)
+
+Compared `Tlr11-deep-research-falcon.md` against the finished review. **The report
+is written around the literature name, not the database symbol.** Its subject is the
+receptor the literature calls TLR11, i.e. Q6QNU9 / MGI Tlr12, so most of its content
+(Hatai's flagellin and profilin binding assays, the MIC3 candidate ligand, the testis
+expression survey) belongs to the paralogue's review and was cross-filed there. The
+report never states the inversion; it only remarks that the gene "was historically
+also referred to as" the other name.
+
+Agreement, for the parts that are about this entry (the report's "TLR12" statements
+and the family-level material): intracellular endosomal/endolysosomal rather than
+surface localisation; UNC93B1 dependence; direct profilin binding by the ectodomain
+at endolysosomal pH; obligate heterodimer with the paralogue in conventional
+dendritic cells and macrophages; MyD88-dependent signalling with the paralogue
+supplying MyD88 recruitment; IL-12 as the defining output; absence of a functional
+human counterpart. These all match decisions already in the review.
+
+Additions taken up, each verified in a primary paper:
+
+- **The pair is not rodent-restricted.** The report's phylogenetic section (citing a
+  2024 equid comparative-genomics paper) contradicted the review's "rodent-restricted"
+  wording. Verified directly in the cached primary sources:
+  [PMID:23246311 "TLR12 sequences are present in the genomes of rodents, horses, and lemurs, but could not be detected in humans."]
+  and [PMID:37874499 "equine TLR11 and TLR12 are transcribed genes and confirmed their expression in equine white blood cells"].
+  `description` corrected; the human absence, which is the point that matters for the
+  annotations, is unchanged.
+- **The transcriptional route is not simply NF-kappa-B.** The report's Tlr12 counterpart
+  flagged an IRF8-dependent, largely NF-kappa-B-independent IL-12 pathway. Verified in
+  the cached full text:
+  [PMID:24078692 "our study uncovered a MyD88 and IRF8-dependent but NF-κB independent pathway in DCs for the induction of IL-12"]
+  and [PMID:24078692 "neither NF-κB1 nor NF-κB2 were required for DC IL-12 production"],
+  against [PMID:23246311 "TLR11 and TLR12 act as obligate heterodimers to activate NF-κB and produce IL-12 in response to TgPRF"].
+  The `description`, the GO:0002224 summary and the core-function description no longer
+  assert NF-kappa-B activation as the route; a suggested question records the cell-type
+  dependence. No GO annotation changed, since no NF-kappa-B regulation term was
+  annotated or proposed.
+
+Not taken up: the report's claims about plasmacytoid-dendritic-cell homodimer function
+and about this receptor being more essential than its paralogue are Koblansky findings
+stated under the inverted name, and the review already records the homodimer capability;
+no annotation turns on them. The MIC3 candidate ligand and the testis expression are
+paralogue-side and in any case too preliminary for a GO annotation.
+
+Actions: unchanged for every existing annotation and for the proposed GO:0042832. Changes
+were confined to `description`, two narrative fields and one new suggested question. The
+Falcon file is deliberately **not** cited as `supported_by` on any annotation, because its
+gene-name mapping is inverted and a reader following the citation would be misled; the
+validator warning about unused deep research is accepted for that reason.
