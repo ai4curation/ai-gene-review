@@ -120,3 +120,115 @@ by coupling them to intraflagellar transport (IFT).
 - protein binding (GO:0005515) IPI ×many: uninformative per guidelines; the BBSome-subunit ones support
   complex membership; KEEP_AS_NON_CORE (avoid promoting "protein binding").
 </content>
+
+## 2026-09-30 — primary-evidence reassessment
+
+Human BBS1 is Q8NFJ9, HGNC:966, NCBI Gene582. The 60 original source
+assertions and all three alternative-product objects must be preserved.
+Q8NFJ9-2 is named product3 (DPP3-BBS1) in the source; this is not a basis for
+assigning every canonical BBS1 assay to that fusion product.
+
+### ARL6 recruitment and receptor recognition
+
+[PMID:25402481](https://pubmed.ncbi.nlm.nih.gov/25402481/) directly measures
+binding between recombinant human BBS1 N-terminal domain and human ARL6,
+with an affinity of approximately0.54 micromolar in the reported assay.
+The crystal complex is algal, whereas the human biochemical experiments
+are separate. The human BBS1 domain was produced in High Five cells and
+ARL6 in E. coli. A one-residue construct-boundary difference between the
+Results and Methods is not evidence for natural isoform specificity.
+Selected affinity Results and the purification, ITC, pulldown and
+cell-assay Methods were read. The first core therefore uses small GTPase
+binding; it does not give BBS1 ARL6's catalytic activity.
+
+[PMID:20603001](https://pubmed.ncbi.nlm.nih.gov/20603001/) establishes the
+BBSome as an ARL6-GTP effector. Bovine retinal BBSome purification, human
+RPE-cell localization and individual BBS1-domain experiments are distinct
+parts of the evidence. Selected Results and main Methods through the
+purification/liposome assays were inspected; some pulldown procedures
+refer to supplementary methods that were not fully read. Complex-level
+cargo recognition is not automatically assigned to isolated BBS1.
+
+The old review dismissed four Smoothened/Patched binding annotations as
+genetic or localization evidence only. The actual full-text Results,
+Figures2–3 captions and Methods in
+[PMID:22228099](https://pubmed.ncbi.nlm.nih.gov/22228099/) include human
+tagged BBS constructs in293T cells, reciprocal immunoprecipitation and
+receptor-tail mapping. The BBS1-associated segments include Smoothened's
+cytoplasmic tail and Patched1's C-terminal region. The binding observations
+are supported even though the abstract foregrounds mouse genetics and
+Hedgehog signaling. They do not establish purified binary affinities. One receptor
+binding core can represent this shared cargo-recognition role.
+
+### Contextual interactions and donor evidence
+
+[PMID:22302990](https://pubmed.ncbi.nlm.nih.gov/22302990/) has an
+abstract-only local cache. Separately indexed original Results and
+Figure3C explicitly include tagged BBS1 among proteins co-precipitating
+RNF2. The BBS7 bait and endogenous-IP experiments are not relabeled as
+BBS1 experiments. RNF2 is a ubiquitin ligase; binding that partner is
+better represented by ubiquitin protein ligase binding than by binding
+a sequence-specific RNA-polymerase-II transcription factor. Changes in
+RNF2 abundance after BBS1 depletion do not make BBS1 a protease.
+
+The mouse Bbs1 donor annotation supports the contextual motile-cilium and
+ciliary-beat roles in
+[PMID:18299575](https://pubmed.ncbi.nlm.nih.gov/18299575/). The available
+cache contains an abstract and Discussion but omits the Results and
+supplementary Methods despite its full-text flag. The independent
+consultation inspected indexed Results/Figure6A and the official MGI
+donor mapping. Direct human localization in that paper concerns BBS2
+and BBS4 and must not be transferred to BBS1. A primary-cilium-only
+rationale cannot dismiss the mouse Bbs1 airway findings.
+
+[PMID:21471969](https://pubmed.ncbi.nlm.nih.gov/21471969/) provides
+context for the phosphoprotein-binding transfer. Indexed original
+Results, Figure1 and Methods summary distinguish mouse DISC1 S710
+phosphodead/phosphomimetic constructs and phosphorylation-dependent
+BBS1 association in HT22 cells. Human DISC1 S713 biochemical experiments
+are a separate assay. This supports a contextual interaction and
+centrosomal recruitment in mouse cortical development; BBS1 is not
+the kinase. The full supplementary files were not read. Its normal
+cache fetch failed once with DNS errors; the recovered normal record
+is now bound to this proposal.
+
+PMID:17980398 describes retinal imaging in human BBS1/BBS10 patients,
+not a mouse experiment. An experimental annotation must not be
+rejected from that abstract alone. PMID:24939912 distinguishes ciliary
+PC1 targeting from plasma-membrane targeting and cilium length.
+PMID:32814053 is the Haenig neurodegenerative interactome; findings
+from a separate BBS1 assembly paper must not be attributed to it.
+
+### Curation boundaries
+
+Supported generic interactions are retained as non-core unless a
+specific molecular activity is established. PAINT assertions are
+not judged by donor count or by the source paper's title. No new
+biological-process annotation is proposed from an isolated knockout
+phenotype. Cilium assembly and physiological outcomes are retained
+as context where justified; they do not require additional duplicate
+core functions.
+
+The standard Falcon invocation with perplexity-lite fallback stopped
+before either provider started because the pinned client dependency
+was unavailable offline. The standard publication command found all
+23 original PMIDs already cached. No provider report or downloaded
+source content was authored manually. Final decisions, source binding,
+history and validation will be recorded after integration.
+
+This reassessment supersedes earlier journal statements dismissing SMO/PTCH and RNF2 interactions or presuming absence of a motile-cilium role. All 60 original assertions remain:31 ACCEPT,23 KEEP_AS_NON_CORE and six MODIFY; no NEW assertion is added. Three products and two molecular cores are retained. The LEPR generic-binding row is refined to signaling receptor binding with the annotation consultant’s specific concurrence.
+
+### Focused application checks
+
+The exact independently reviewed proposal was applied on 2026-09-30. Focused validation passed with 14 advisories, all for supported generic protein-binding annotations retained as non-core under the supplied ActionEnum. These recommendations do not establish that the interactions are incorrect. Rendering passed; all 60 source objects and three products remain unchanged. No repository-wide validation pass is claimed. The new Codex EDIT history records this reassessment.
+
+
+## 2026-09-30 — source completeness correction before publication
+
+The earlier 60-row audit covered the legacy review groups, not every distinct WITH/FROM tuple. A normal offline seed-goa projection with title fetching disabled recovered 23 additional partner-specific rows and backfilled 43 supporting-entity lists. The immutable GOA contains 86 raw lines representing 83 distinct source tuples; three repeated projected tuples are retained once. The review now contains all 83 distinct tuples: 31 ACCEPT, 46 KEEP_AS_NON_CORE and six MODIFY. All prior 60 judgments, three alternative products, two molecular cores and 35 references are preserved.
+
+The added rows retain source-attributed interactions separately for BBSome subunits, RAB3IP isoforms, EEF1A1, PCM1 and PARK7. They do not inherit receptor-, RNF2- or ARL6-specific refinements. The RAB3IP isoforms identify partners, not BBS1 isoforms. Abstract-only sources and uninspected supplementary pair matrices remain explicitly limited; co-complex affinity purification is not treated as purified binary binding. The BioPlex 33961781 cache contains Introduction and Discussion despite its full-text flag. Generic binding remains non-core under the supplied ActionEnum. No new quotation or autonomous molecular activity is asserted.
+
+This correction supersedes the earlier completeness claim while preserving that history and the unexecuted 60-row native packet. No branch, commit or PR was created from the superseded packet. Independent biological review accepted the 23 supplemental judgments and exact source projection before this application.
+
+Focused validation after the source-completeness repair passed with 37 generic-binding non-core advisories, retained under the supplied ActionEnum (58b8c6). Rendering passed (f6d9e0), and the separate Codex EDIT history passed schema validation (a71a1e). Raw/source bytes remain unchanged; no repository-wide validation claim is made. The first history scaffold command used an ambiguous actor option and stopped before creation; the corrected actor-name command generated the new record normally.
