@@ -173,7 +173,37 @@ def calibrate(
                     f"collapsed path in {label} via unmapped intermediates "
                     f"({' -> '.join(routes[0][1])})"
                 )
-            else:
+            if not routes:
+                # (c) the source routes it through *mapped* intermediates only, along a
+                # route the module also wires (BBM-070: v_ERK -> v_RSK -| v_SOS, with RSK
+                # mapped to ERK_OUTPUT and the module carrying ERK -> ERK_OUTPUT -| SOS)
+                mapped_ext = set(external_map)
+                for src in sorted(ext_ids_for_symbol.get(e.source, ())):
+                    for tgt in sorted(ext_ids_for_symbol.get(e.target, ())):
+                        for sign, interior in find_paths(
+                            external_edges, src, tgt, mapped_ext
+                        ):
+                            syms = {external_map[v] for v in interior}
+                            if (
+                                sign == e.sign
+                                and interior
+                                and path_sign(cur.edges, e.source, e.target, syms)
+                                == e.sign
+                            ):
+                                via = ", ".join(
+                                    f"{external_map[v]} ({v})" for v in interior
+                                )
+                                reading = (
+                                    f"{label} routes it via {via}, a route the module also "
+                                    f"wires; the module additionally asserts this direct edge"
+                                )
+                                routes = [(sign, interior)]
+                                break
+                        if routes:
+                            break
+                    if routes:
+                        break
+            if not routes:
                 # (b) the source reaches the target from a *different* mapped symbol via
                 # unmapped intermediates (BBM-070 routes DUSP1 from ERK through MSK and CREB)
                 other = [
@@ -342,6 +372,10 @@ def dynamics(models: dict[str, BooleanModel]) -> str:
     lines.append("")
 
     lines.append("### 3c. Counterfactual: the ERK module with its feedback loops cut")
+    lines.append("")
+    lines.append(
+        "Model file: [`out/erk_cascade_pre_calibration.bnet`](out/erk_cascade_pre_calibration.bnet)."
+    )
     lines.append("")
     lines.append(
         "This is the wiring the module had before the calibration (no ERK -| RAF, no ERK output -| SOS, "

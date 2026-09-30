@@ -53,7 +53,7 @@ Edges are compared on the shared symbols of the reviewed mappings (`models/boole
 | `RAS -> RAF` | agree |  |
 | `SOS -> RAS` | agree |  |
 | `DUSP -| ERK` | module-only | absent from BBM-070 (both ends mapped, no route; see mapping notes) |
-| `ERK -| SOS` | module-only | absent from BBM-070 (both ends mapped, no route; see mapping notes) |
+| `ERK -| SOS` | module-only | BBM-070 routes it via ERK_OUTPUT (v_RSK), a route the module also wires; the module additionally asserts this direct edge |
 | `ERK_OUTPUT -> DUSP` | module-only | BBM-070 reaches DUSP from ERK via unmapped intermediates (v_MSK -> v_CREB) |
 | `RASGAP -| RAS` | module-only | RASGAP has no counterpart in BBM-070 (see mapping notes) |
 
@@ -141,6 +141,8 @@ Inputs are the stimulus (adaptor recruitment) and the GAP tier; the DUSP step is
 | EGFR stimulus | complex attractor (480,801,456,128 states) | * | * | * | * | * | * | * | * | * |
 
 ### 3c. Counterfactual: the ERK module with its feedback loops cut
+
+Model file: [`out/erk_cascade_pre_calibration.bnet`](out/erk_cascade_pre_calibration.bnet).
 
 This is the wiring the module had before the calibration (no ERK -| RAF, no ERK output -| SOS, DUSP as a free input). Overrides applied (prototype `update_rule` values on the module's own ids):
 

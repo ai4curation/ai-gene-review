@@ -31,8 +31,9 @@ the bundle no longer doubles as a free input beside its own child). The module
 **Consequence.** As first translated, the ERK module had only fixed points; the
 published model (BBM-070) oscillates under sustained EGFR stimulus because ERK
 inhibits RAF and RSK inhibits SOS. With those loops now curated in, the translated
-module oscillates too ([RESULTS §3a](RESULTS.md)); the counterfactual with the loops
-cut, the module's earlier wiring, is the fixed point ([RESULTS §3c](RESULTS.md)).
+module oscillates too ([RESULTS §3a](RESULTS.md#3a-the-curated-erk-module-as-translated-feedback-loops-closed));
+the counterfactual with the loops cut, the module's earlier wiring, is the fixed point
+([RESULTS §3c](RESULTS.md#3c-counterfactual-the-erk-module-with-its-feedback-loops-cut)).
 Feedback is the single most consequential wiring fact for dynamics, and it is the
 one the schema encouraged curators to drop.
 

@@ -339,3 +339,25 @@ def test_module_to_bnet_cli(tmp_path):
         stdout.exit_code == 0
         and "inputs: adaptor_recruitment, rasgap_step" in stdout.output
     )
+
+
+def test_with_logic_declares_non_essential_regulators():
+    """A regulator that cancels out still has to be declared, or to_bnet references an unknown symbol."""
+    bn = parse_bnet("targets, factors\na, a\nx, a")
+    over = bn.with_logic({"x": "a | (b & !b)"})
+    assert "b" in over.variables
+    assert not any(e.source == "b" for e in over.edges)
+    text = over.to_bnet()
+    assert "b, b" in text
+    assert parse_bnet(text).variables == over.variables
+
+
+def test_descendants_rejects_cyclic_tree():
+    """A cycle introduced into the parts tree raises instead of recursing forever."""
+    from ai_gene_review.module_boolean import _Flattener
+
+    doc = {"id": "a", "parts": [{"node": {"id": "b", "parts": []}}]}
+    flat = _Flattener(doc)
+    flat.index["b"]["parts"].append({"node": flat.index["a"]})  # a -> b -> a
+    with pytest.raises(ValueError, match="cyclic"):
+        flat._descendants("a")

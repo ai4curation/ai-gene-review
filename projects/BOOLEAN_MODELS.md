@@ -216,6 +216,18 @@ comparison still uses the pooled export, and says so); module-only readings now
 distinguish "source routes it via unmapped intermediates" from "absent"; tests for
 constants, SIGNOR skipping, the CLI, and `__file__`-anchored paths.
 
+Second round (the re-review approved; only suggestions remained). Taken: a real bug
+in `with_logic`, which dropped a non-essential regulator from `variables` and so
+could write a `.bnet` referencing an undeclared symbol; a cycle guard in the tree
+walk and a path-count bound on `find_paths`; the mapping notes now state the
+expected module-only SOS edge each source leaves by construction; a third
+module-only reading, "routes it via a mapped intermediate the module also wires",
+which is exactly what the split SOS feedback creates (BBM-070 has RSK ⊣ SOS, the
+module has both that and direct ERK ⊣ SOS); anchored links into RESULTS; the
+counterfactual `.bnet` linked from §3c so the page mirror carries it; and an RSK
+annoton on `erk_output` (RPS6KA1, RPS6KA3) so the RSK ⊣ SOS edge has a modelled
+actor rather than a prose one.
+
 ## 2026-09-27
 
 Acted on the first-pass calibration. Feedback loops closed in `erk_cascade` (three

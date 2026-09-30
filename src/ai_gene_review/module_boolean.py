@@ -155,11 +155,13 @@ class BooleanModel:
             rules[var] = expr
             edges = {e for e in edges if e.target != var}
             for reg in _identifiers(expr):
+                if (
+                    reg not in variables
+                ):  # declare every referenced symbol, as parse_bnet does
+                    variables.append(reg)
                 sign = _monotone_sign(expr, reg)
                 if sign == "0":  # not essential: no edge, matching parse_bnet
                     continue
-                if reg not in variables:
-                    variables.append(reg)
                 edges.add(SignedEdge(reg, var, sign))
         return BooleanModel(variables, rules, edges, self.source)
 
@@ -287,14 +289,19 @@ class _Flattener:
             str(c.get("target")) for c in self.connections
         }
 
-    def _descendants(self, element: str) -> set[str]:
+    def _descendants(self, element: str, _seen: Optional[set[str]] = None) -> set[str]:
+        """All element ids below ``element``; a cyclic ``parts`` tree raises rather than hangs."""
+        seen = set() if _seen is None else _seen
+        if element in seen:
+            raise ValueError(f"cyclic module tree at {element!r}")
+        seen.add(element)
         node = self.index.get(element)
         out: set[str] = set()
         if node is None:
             return out
         for child in _children(node):
             out.add(child)
-            out |= self._descendants(child)
+            out |= self._descendants(child, seen)
         return out
 
     def _is_atomic(self, element: str) -> bool:
@@ -734,12 +741,20 @@ def project_edges(edges: set[SignedEdge], mapping: dict[str, str]) -> Projection
 
 
 def find_paths(
-    edges: set[SignedEdge], source: str, target: str, via: set[str]
+    edges: set[SignedEdge],
+    source: str,
+    target: str,
+    via: set[str],
+    max_paths: int = 10_000,
 ) -> list[tuple[str, list[str]]]:
     """All simple directed paths ``source -> ... -> target`` whose interior lies in ``via``.
 
     Returns ``(net_sign, [interior vertices])`` pairs in a deterministic order
     (adjacency and results sorted), so callers are reproducible across runs.
+    The search enumerates simple paths, which is exponential in the worst case;
+    it is meant for the curated-module and published-model scale this project
+    runs at (tens of variables, ``via`` sets of a few dozen), not for genome-scale
+    graphs. ``max_paths`` bounds the enumeration as a safety valve.
 
     >>> es = {SignedEdge("a", "b", "+"), SignedEdge("b", "d", "+"),
     ...       SignedEdge("a", "c", "-"), SignedEdge("c", "d", "+")}
@@ -759,6 +774,8 @@ def find_paths(
             nsign = sign if e.sign == "+" else ("-" if sign == "+" else "+")
             if e.target == target:
                 found.append((nsign, list(interior)))
+                if len(found) >= max_paths:
+                    return sorted(found, key=lambda p: (len(p[1]), p[1], p[0]))
             elif e.target in via and e.target not in interior and e.target != source:
                 stack.append((e.target, nsign, interior + (e.target,)))
     return sorted(found, key=lambda p: (len(p[1]), p[1], p[0]))
