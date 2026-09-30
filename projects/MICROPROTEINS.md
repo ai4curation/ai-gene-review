@@ -103,13 +103,14 @@ Mostly not, and when they do it is usually thin:
   protein-level-evidence set have any MF term. The whole SMIM series
   (`SMIM2`, `SMIM5`, `SMIM10`, `SMIM11`, `SMIM13`, `SMIM15`, `SMIM18`, `SMIM36`, `SMIM40`, `SMIM41`)
   carries nothing beyond IEA `membrane`.
-- **Human function is often only inferred from mouse.** The discovery work on
-  the muscle SERCA regulators was done in mouse, so human `MRLN` (myoregulin)
+- **Human function in GOA is often only inferred from mouse.** The discovery work on
+  the muscle SERCA regulators was done in mouse, so in GOA human `MRLN` (myoregulin)
   and `ERLN` have only ISS/IEA, and human `STRIT1` (DWORF) has ISS for
-  SERCA activation plus **45 IPI `protein binding` rows** from interactome
-  screens. Small hydrophobic TM peptides are notoriously "sticky" in such
-  screens. This is the clearest case where a well-established function is
-  invisible as experimental GO for the human gene.
+  SERCA activation plus **45 IPI `protein binding` rows** from one yeast two-hybrid
+  screen. Small hydrophobic TM peptides are notoriously "sticky" in such
+  screens. The Tier 1 reviews found that human-peptide experiments do exist for all
+  three: reconstitution with purified SERCA, and cell assays with the human pump. So the
+  gap is in GO coverage, not in the literature (see [Tier 1 results](#tier-1-results-2026-09-30)).
 - **IBA reaches proteins that may not exist.** Several PE5 ("uncertain") products
   of pseudogenes inherit full sets of phylogenetic annotations: `SNRPGP15`
   (13 IBA spliceosome terms), `PMCHL1`/`PMCHL2` (neuropeptide signalling),
@@ -162,6 +163,70 @@ a new microprotein-specific branch. This needs to be tested gene by gene.
 5. **Orthology is weak.** Short, fast-evolving and often primate-specific ORFs
    make ISS/ISO and IBA transfers less reliable. The reverse also happens: human genes miss mouse
    experimental data because nobody made the ISS call.
+
+## Tier 1 results (2026-09-30)
+
+All 12 Tier 1 genes are reviewed; each review passes `just validate` with no annotation
+left PENDING. Falcon deep research timed out (600 s, tried on STRIT1), so the reviews rest on
+cached publications plus targeted PubMed retrieval.
+
+| gene | existing rows | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW | core MF |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| `STRIT1` (DWORF) | 52 | 3 | 2 | 0 | 2 | 45 | 0 | transporter activator activity GO:0141109 |
+| `MRLN` (myoregulin) | 6 | 3 | 1 | 0 | 2 | 0 | 1 | ATPase inhibitor activity GO:0042030 |
+| `ERLN` (endoregulin) | 2 | 2 | 0 | 0 | 0 | 0 | 2 | ATPase inhibitor activity GO:0042030 |
+| `MTLN` (mitoregulin) | 21 | 11 | 7 | 0 | 1 | 2 | 1 | cardiolipin binding GO:1901612 |
+| `UQCC6` (BRAWNIN) | 11 | 9 | 0 | 1 | 0 | 1 | 0 | — (complex III assembly factor) |
+| `NBDY` (NoBody) | 6 | 3 | 0 | 0 | 1 | 2 | 0 | — (P-body regulator) |
+| `MYMX` (myomixer) | 19 | 7 | 7 | 4 | 1 | 0 | 1 | fusogenic activity GO:0140522 |
+| `SPAAR` | 11 | 9 | 2 | 0 | 0 | 0 | 0 | — (TORC1 negative regulator) |
+| `SMIM43` (NEMEP) | 8 | 5 | 2 | 0 | 1 | 0 | 1 | transporter activator activity GO:0141109 |
+| `TUNAR` | 11 | 8 | 2 | 0 | 1 | 0 | 0 | ATPase binding GO:0051117 |
+| `PIGBOS1` | 5 | 3 | 0 | 0 | 2 | 0 | 0 | transmembrane transporter binding GO:0044325 |
+| `APELA` (Elabela) | 34 | 18 | 15 | 0 | 0 | 1 | 1 | hormone activity GO:0005179 |
+
+### What Tier 1 shows
+
+1. **The dominant role is regulating another protein.** Of the 12 genes:
+   - Seven act on a partner protein. `STRIT1`, `MRLN`, `ERLN` and `TUNAR` act on SERCA;
+     `SMIM43` on GLUT1/3; `PIGBOS1` on CLCC1; `SPAAR` on the lysosomal V-ATPase.
+   - Two are assembly or scaffold factors (`UQCC6`, `MTLN`).
+   - Only `MYMX` (a fusogen) and `APELA` (a hormone) have a stand-alone activity.
+   - The GO MF terms that fit the regulators are the transporter/ATPase regulator terms:
+     ATPase inhibitor activity GO:0042030, transporter activator activity GO:0141109.
+     These are the terms curators already use for the classic regulins PLN and SLN.
+   - **Several microproteins have no MF that GO can express yet**: BRAWNIN, NoBody, SPAAR,
+     and MTLN's regulatory role. They were left without an MF rather than given
+     `protein binding`.
+2. **Direction and mechanism are often disputed.**
+   - `TUNAR`: the papers disagree on whether it inhibits or activates SERCA, so it got only a
+     neutral binding term.
+   - `MRLN` and `ERLN`: the mouse and human-reconstitution studies disagree on whether the
+     peptide changes the pump's Ca²⁺ affinity (KCa) or its maximum rate (Vmax).
+   - `MTLN`: the papers disagree on whether it sits in the outer or inner membrane.
+   - `STRIT1`: it is unclear whether it activates SERCA directly or only by displacing the
+     inhibitors.
+   - Each is recorded as a `suggested_question` rather than resolved by fiat.
+3. **Interaction-screen inflation is the largest source of removals**: 45 of 52 STRIT1 rows
+   (HuRI yeast two-hybrid), plus the bare `protein binding` rows on MTLN, NBDY and UQCC6.
+4. **Downstream physiology outnumbers direct function.** Knockout phenotypes (triglyceride
+   homeostasis, muscle differentiation, insulin secretion, neuron development, vasculogenesis)
+   were kept as non-core; 38 rows across the set.
+5. **Specific errors found in GOA:**
+   - `APELA` adult heart development (ISS) was transferred from mouse **Aplnr**, the receptor
+     (Q9WV08), not from an Apela ortholog. Removed; worth reporting to UniProt.
+   - `MYMX` regeneration (IMP) cites a paper that contains no regeneration experiment.
+   - `UQCC6` complex IV assembly (IDA) rests on a marginal knockdown effect. The cited paper
+     itself credits complex IV assembly to a different gene, TMEM223.
+6. **Evidence strength of the new annotations (NEW):**
+   - `ERLN`: IDA from reconstitution with purified human peptide.
+   - `MYMX`: IDA, fusogenic activity with purified ectodomain.
+   - `APELA`: IDA, Gi-coupled signalling.
+   - `MTLN`: ISS from mouse (cardiolipin binding).
+   - `SMIM43`: moderate confidence (co-IP plus binding-deficient mutants).
+   - `MRLN`: IMP. The only human-cell evidence is shRNA knockdown in the AC16 transformed
+     cardiac line, from a paper whose main topic is Wnt signalling. This is the weakest of
+     the six and is a candidate to drop.
 
 ## Naming alternative-ORF peptides (vs isoforms and polyproteins)
 
@@ -234,18 +299,18 @@ Last updated: 2026-09-30
 - [x] Naming/folder convention for alt-ORF / uORF peptides — `<HOST>__<ACC>`, or the HGNC symbol when one is assigned (agreed 2026-09-30; in `CLAUDE.md`)
 
 ## Tier 1 — sORF-class, well characterized, GO gap/problem (human)
-- [ ] STRIT1 (DWORF) — no human experimental function; 45 IPI protein binding
-- [ ] MRLN (myoregulin) — ISS/IEA only
-- [ ] ERLN (endoregulin) — ISS/IEA only
-- [ ] MTLN (mitoregulin)
-- [ ] UQCC6 (BRAWNIN)
-- [ ] NBDY (NoBody)
-- [ ] MYMX (myomixer)
-- [ ] SPAAR
-- [ ] SMIM43 (NEMEP)
-- [ ] TUNAR
-- [ ] PIGBOS1
-- [ ] APELA (Elabela)
+- [x] STRIT1 (DWORF) — 45 IPI protein binding removed; human-peptide evidence exists but GOA uses ISS
+- [x] MRLN (myoregulin) — MODIFY to ATPase inhibitor activity; NEW IMP is weak (see results)
+- [x] ERLN (endoregulin) — NEW IDA from human reconstitution
+- [x] MTLN (mitoregulin)
+- [x] UQCC6 (BRAWNIN)
+- [x] NBDY (NoBody)
+- [x] MYMX (myomixer)
+- [x] SPAAR
+- [x] SMIM43 (NEMEP)
+- [x] TUNAR
+- [x] PIGBOS1
+- [x] APELA (Elabela) — removed ISS transferred from the receptor Aplnr
 
 ## Tier 2 — sORF-class, emerging / thin evidence
 - [ ] ASDURF, MLDHR, MARCHF6-DT, CLMB, TZMP1, SMIM22, CEBPZOS, HOXB-AS3, LINC-PINT
@@ -285,3 +350,11 @@ Last updated: 2026-09-30
   validate for MIEF1__L0R8F8 in a scratch directory; no folder was created in the repo.
 - Convention agreed: `<HOST>__<ACC>` (double underscore). Added it to `CLAUDE.md`.
   `fetch-gene` now sets `gene_symbol` from the UniProt `GN Name=` line when it is given an accession.
+- Tier 1 (12 genes) reviewed with one agent per gene, following the annotation-reviewer
+  instructions; each was committed as it passed validation. Falcon deep research timed out
+  after 600 s (tested on STRIT1), so no `-deep-research-falcon.md` files exist for these genes.
+- Corrected the census claim: human experimental evidence *does* exist for STRIT1, MRLN and
+  ERLN, but GOA carries only ISS transfers from mouse for them.
+- To check: the MRLN NEW (IMP, PMID:41348974) is weak. The reconstitution paper
+  PMID:34445594 used synthetic MLN without stating its species, so it cannot replace that
+  evidence as a human IDA.
