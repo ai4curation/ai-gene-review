@@ -39,3 +39,29 @@ The normal `just deep-research-falcon human B4GALT7 --fallback perplexity-lite` 
 All39 distinct source objects retain their downloaded term, evidence, reference, qualifier and supporting-entity fields. The final decisions are20 ACCEPT,11 MODIFY,7 KEEP_AS_NON_CORE and1 UNDECIDED; no NEW rows or inferred alternative products were introduced. One catalytic core integrates manganese-dependent xylose transfer with Golgi linker synthesis. The directional proliferation question remains open. Six generic interaction assertions remain non-core under the user-supplied action definitions: low informativeness does not establish falsity. The local generic-binding policy may warn about these retained assertions.
 
 The complete available main body of PMID:24052259 and the two corrected term definitions received an independent second read; the full39-row proposal also received independent review. Short verbatim anchors are present at the relevant corrections and core, with cumulative quotation counts kept within25 words per publication. Ontology labels and relations were checked against the local GO2026-03-25 snapshot; changes from carbohydrate/protein-modification descriptions to the direct linker process are biological replacements, not unsupported claims of formal subclass relationships. Raw GOA, UniProt and all cached publications/Reactome sources remain unchanged. Seven absent normal fetched publication caches were imported; two differing existing publication versions and both family exports were preserved.
+
+## First PR feedback follow-up — 2026-09-30
+
+The first review of PR #3577 confirmed complete source coverage, the exact
+supporting snippets and the two reaction/process refinements. Its request to
+remove prompt and review-process narration from public annotation reasons is
+addressed by biological explanations. The research access limits and original
+decision provenance remain in the earlier journal rather than being erased.
+
+The broad membrane IDA now proposes Golgi membrane (GO:0000139). Type-II membrane
+topology and independent Golgi localization support that refinement; those
+experiments do not resolve a particular cisterna. The independent source
+annotation to Golgi cisterna membrane remains unchanged.
+
+Six experimental generic-binding assertions remain KEEP_AS_NON_CORE. The supplied
+ActionEnum defines REMOVE as unlikely-correct annotation; lack of informative
+function alone does not establish that threshold. The lower-priority generic-
+binding skill guidance does not override that instruction. Partner identities,
+reference IDs and every source tuple are preserved. The public reasons state
+the biological evidence and its limits without narrating instruction precedence.
+
+The collagen-organization IMP remains non-core: it records the downstream patient
+cell phenotype, without assigning direct collagen assembly to the enzyme. No new
+process or experiment is asserted. All 39 source objects and action totals are
+unchanged (20 ACCEPT, 11 MODIFY, seven non-core, one UNDECIDED), as are the single
+core, short evidence anchors, source records and fetched null product fields.
