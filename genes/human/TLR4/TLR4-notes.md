@@ -2,13 +2,34 @@
 
 ## Provenance of inputs
 
-- Falcon deep research (`TLR4-deep-research-falcon.md`) was run by the batch coordinator and
-  **failed** ("Verbose Edison response has no answer. Status: fail"). A retry was started in the
-  background; it had not produced a file when this review was written. This review therefore rests on
-  the UniProt record (`TLR4-uniprot.txt`), the 61 cached GOA publications in `publications/`, OLS term
-  look-ups and a QuickGO query for GO:0001875; no deep-research text is cited.
+- Falcon deep research (`TLR4-deep-research-falcon.md`) arrived after the review was written from
+  the UniProt record, the 61 cached GOA publications, OLS look-ups and a QuickGO query for
+  GO:0001875; see the cross-check section below.
 - 275 seeded GOA rows (from 279 tsv lines); 31 are generic `protein binding` IPI rows; 34 are
   Reactome TAS location rows; 1 is a NOT row (row 147, GO:0031663, PMID:10880523).
+
+## Deep-research cross-check (2026-09-30)
+
+The Falcon report is built almost entirely on secondary reviews (2020-2025) and adds little
+mechanistic detail beyond what the review already takes from primary papers.
+- **Agreement:** type I TM receptor with LRR ectodomain and TIR domain; LPS delivered by LBP/CD14
+  to TLR4-MD-2, ligand-induced homodimerisation; MyD88/TIRAP at the plasma membrane and
+  CD14-dependent endocytosis then TRAM/TRIF signalling from endosomes; engagement by endogenous
+  DAMPs (HMGB1, oxLDL, amyloid-beta). Consistent with all core functions, locations and the
+  ACCEPT/KEEP_AS_NON_CORE decisions. The falcon file is cited as context on the two GO:0035666
+  TRIF-dependent pathway rows.
+- **Additions (not used):** a long list of review-level DAMP "ligands" (HSP60/70/90,
+  S100A8/A9, fibrinogen, fibronectin, heparan sulfate, hyaluronan, versican, mtDNA) and
+  therapeutic agents (TAK-242, eritoran, AS04/MPLA, neoseptins). The report itself notes that
+  direct-ligand claims need exclusion of endotoxin contamination; none was verified in a primary
+  paper, so no binding or receptor-activity annotations were added.
+- **Apparent conflict, not a real one:** the report lists amyloid-beta as a TLR4 ligand, whereas
+  the review REMOVEs GO:0001540 amyloid-beta binding. The report only says amyloid-beta is
+  "reported to activate microglial TLR4-associated inflammatory responses" (from a secondary
+  review), and the primary paper assigns ligand binding to CD36 [PMID:20037584 "CD36 that acts
+  as the common ligand binding receptor for oxLDL and β-amyloid"]. Decision unchanged.
+- Changes: falcon file added to references and cited on 2 rows; no action, term, description or
+  core-function changes.
 
 ## Core biology (with provenance)
 
