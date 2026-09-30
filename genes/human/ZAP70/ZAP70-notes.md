@@ -27,4 +27,4 @@ Project: ADAPTIVE_IMMUNITY (T cell receptor trunk).
 
 ## Deep research
 
-- `just deep-research-falcon human ZAP70 --fallback perplexity-lite` launched in background at the start of the review; see status note below.
+- `just deep-research-falcon human ZAP70 --fallback perplexity-lite` launched in background at the start of the review. The wrapper reported a falcon timeout after 600s and the perplexity-lite fallback failed (provider not available), but the falcon job itself completed (~1218 s, 29 citations) and wrote `ZAP70-deep-research-falcon.md`. Its content (tandem SH2 binding of doubly phosphorylated ITAMs, LCK-dependent activation via Y315/Y319/Y493, LAT and SLP-76 as principal substrates, ZAP70 not phosphorylating ITAMs) is consistent with this review and it is cited in core_functions.

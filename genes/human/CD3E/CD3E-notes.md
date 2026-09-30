@@ -31,4 +31,4 @@ Project: ADAPTIVE_IMMUNITY (T cell receptor trunk).
 
 ## Deep research
 
-`just deep-research-falcon human CD3E --fallback perplexity-lite` launched in background at start of review; see status below.
+`just deep-research-falcon human CD3E --fallback perplexity-lite` succeeded (falcon, ~15 min; CD3E-deep-research-falcon.md). It was consistent with the review; it added the BRS-mediated LCK recruitment (cited in core function 2), the di-glycine hinge (Gly169-Gly170) and IRAP-dependent endosomal TCR signaling, none of which changed any annotation decision.
