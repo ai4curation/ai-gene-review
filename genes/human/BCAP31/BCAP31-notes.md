@@ -80,3 +80,31 @@ Actions taken in this review update:
   removed in favour of translocon-associated chaperone framing.
 - `description` and several annotation `reason` fields reworded to drop the
   "cargo receptor" characterization.
+## Source-complete BCAP31 reassessment
+
+The normal projection contains 61 distinct source assertions from 64 raw rows, including eight previously omitted partner records and three exact duplicate raw records. All source identities, qualifiers and partners are retained. Three old authored NEW entries are assessed separately; their proposed withdrawal removes no GOA assertion.
+
+This reassessment supersedes the earlier substrate-only apoptosis rationale. Intact BCAP31 helps assemble the FIS1/procaspase-8 signaling platform, and a cleavage product can transmit a signal. The carrier role is grounded in client binding/delivery, while an intrinsic ATP-dependent ratchet has not been established by the available evidence. The two disputed PAINT trafficking assertions remain unresolved; the real curator issue and positive MHC-I experiments must both be represented.
+
+The rat clathrin transfer is contradicted by the cited donor fractionation experiment. In contrast, the experimental cell-surface and lipid-droplet annotations are retained as secondary contexts without speculative artifact explanations. Mouse spermatogenesis remains unresolved because the traced evidence is an expression survey whose BCAP31-specific body evidence was not inspected.
+
+Reactome's cytosolic cleavage entity is the terminal 238–246 fragment, not p20. The two machine-derived UniProt alternative products are a separate splicing record and do not imply RefSeq-numbering equivalence or isoform-specific function.
+
+Supported generic interactions are kept as non-core under the user-supplied ActionEnum. The CFTR client and the separate FIS1/CASP8 platform rows receive evidence-specific refinements; machinery, combined-partner and high-throughput records are not indiscriminately relabeled. No NEW process assertion or new direct quotation is proposed.
+
+The existing Falcon report and all raw/cached sources are preserved. Normal cache availability and selected external primary reading are recorded separately. Full-paper, figure-pixel, supplemental-pair and PAINT-node reconstruction are not claimed where not performed. Five of six additional normal sources were subsequently imported through Source92 and reassessed before this integrated proposal. PMID:19342655 remained unrecovered; its provisional extra citations are omitted, while its earlier bounded web-reading evidence and the actual normal-fetch failure remain recorded. The precise recovered-source read scopes are recorded in each reference review.
+
+The integrated proposal retains 61 source annotations: 18 ACCEPT, 36 KEEP_AS_NON_CORE, three MODIFY, three UNDECIDED and one REMOVE. Three old authored NEW entries are withdrawn separately. It incorporates the two machine-derived UniProt alternative products and three reviewed core functions, without assigning function by isoform number. No new direct quotation is added.
+
+The revised authored pathway supersedes the earlier substrate-only exclusion of apoptosis, an intrinsic ATP-translocation mechanism, and universal cytoplasmic coiled-coil client recognition. ER-associated p20 is distinguished from the cytosolic terminal fragment. HACD2 is stabilized in its reported client context; it is not described as a BAP31-promoted degradation target. TOMM40-associated localization and turnover remain bounded to the experiments. The provider report and all raw or cached sources are unchanged.
+
+Source92 recovered five normal records: PMID:9396746, PMID:14581517, PMID:15187134, PMID:17056546 and PMID:23967155. Their canonical bytes match the staged bytes used for the bounded reading recorded here. PMID:19342655 returned exit1 without a timeout or quarantined output and remains absent; this establishes a failed normal retrieval only, not retraction, inaccessibility or absence of biological evidence. Earlier official abstract/selected web reading is preserved in the original consultation. Its provisional extra citations are removed from rows1,2,9 and the revised pathway; no original GOA source assertion is removed. The two detailed trafficking inferences remain UNDECIDED and the broad vesicle-transport context remains non-core, supported by the available15187134/17056546 material. New sources do not alter the reviewed annotation actions or three core functions. The human MHC-I experiment is context dependent; the isolated-domain coiled-coil study does not disprove full-length BAP29/BAP31 association.
+
+
+## Final validation and source boundary
+
+The applied review retains all 61 distinct source assertions from 64 raw GOA rows, restores eight omitted assertions and 32 supporting-entity lists, and withdraws only three old authored NEW entries. The two alternative products are derived from the unchanged UniProt record without assigning RefSeq or functional equivalence. The pathway now reflects the reviewed client-handling, signaling-platform and selective mitochondrial-localization evidence.
+
+Focused validation and pathway PMID checks passed. The 23 advisories comprise 18 supported generic protein-binding annotations retained as non-core under the supplied ActionEnum; two UNDECIDED IBA annotations whose ancestral nodes were not reconstructed; one unchanged Falcon report not used as direct annotation evidence; one ERAD core process absent from the source annotation block; and one ontology-label version discrepancy. GO:0140597 retains the current official label protein carrier activity verified during the review, whereas the local validator expected protein carrier chaperone. No additional NEW assertion is introduced to silence these advisories. Rendering and generated Codex EDIT history validation are recorded separately.
+
+Five of six requested additional normal references were recovered and reviewed within the documented reading limits. PMID:19342655 remains absent after the recorded normal retrieval failure; this is neither a retraction claim nor a claim that its publication is inaccessible. Its provisional extra citations were omitted without changing the associated decisions. No repository-wide validation result is claimed.
