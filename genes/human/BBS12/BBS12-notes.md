@@ -71,3 +71,12 @@ Independent annotation consultation and root synthesis agree on the assembly-onl
 ### Validation of this revision
 
 Focused schema, term, reference and best-practice validation passed on 2026-09-30. The 13 advisories comprise 12 supported generic-binding rows retained as non-core under the supplied ActionEnum and one unused-provider-evidence advisory. The unchanged provider report is a lead map; primary publications support the annotation decisions. Rendering passed. No repository-wide validation pass is claimed.
+
+
+## 2026-09-30 — source and citation follow-up
+
+The ATP-binding rationale now explicitly includes the published comparison with vertebrate orthologs and has a short verbatim primary-source anchor (PMID:24010126). Motif divergence weakens the electronic transfer; it does not measure human BBS12 nucleotide binding. The decision remains UNDECIDED, with binding distinguished from hydrolysis. This supersedes any reading of the earlier rationale as restricting the divergence to non-vertebrates.
+
+The description now names BBS10 among the associated assembly proteins, restores the mature BBSome composition and cytoplasmic context, and keeps evidential judgments in the review and knowledge gap. The PMID:33961781 full-text-unavailable flag was incorrect and is removed; its uninspected supplementary pair records remain a separate reading limit. The PMID:20080638 notes now identify the selected PMC text as external consultation, separate from the abstract-only normal cache. Its unrelated additional citation on photoreceptor maintenance is removed. The Falcon assessment again distinguishes independently supported assembly/localization claims from unverified motif, localization-exclusion, signaling and quantitative claims.
+
+The twelve generic interaction rows remain KEEP_AS_NON_CORE because their named associations are supported while an informative molecular activity is unresolved. REMOVE and UNDECIDED are available actions; neither is selected merely to satisfy the generic-binding advisory. This is an explicit biological judgment under the supplied ActionEnum, despite the narrower action preference in the repository's protein-binding policy. It does not claim that the enum permits only KEEP_AS_NON_CORE. No source tuple or annotation action changes in this follow-up.
