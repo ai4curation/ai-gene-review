@@ -1464,9 +1464,11 @@ def validate_terms(
 def is_obsolete_label(primary: Optional[str]) -> bool:
     """True when an ontology's primary label marks the term as retired.
 
-    GO (and the other OBO ontologies) prefix the label of an obsoleted term
-    with ``obsolete ``, which is the only obsoletion signal the label resolver
-    exposes.
+    The GO sqlite build prefixes the label of an obsoleted term with
+    ``obsolete ``, which is the only obsoletion signal the label resolver
+    exposes. The OLS-backed adapters used for the other prefixes (CHEBI,
+    NCBITaxon, ...) return labels without that prefix, so this check reaches
+    GO only; an obsoletion elsewhere is a missed detection, not a false alarm.
 
     >>> is_obsolete_label("obsolete L-cysteine biosynthetic process from L-serine")
     True
