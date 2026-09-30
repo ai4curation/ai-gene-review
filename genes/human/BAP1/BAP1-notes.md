@@ -39,3 +39,52 @@ The parkin-recruitment screen includes BAP1 among reconfirmed candidates in publ
 Several caches are abstract-only. Existing PMID:33961781 and PMID:35512704 caches contain incomplete article sections despite their full-text flags; neither flag was equated with a complete-paper read. Pair-level supplementary interaction tables were not independently inspected. Reference reviews in the YAML record source-specific boundaries. Primary Results/Methods and figure captions were read selectively where needed; no raw sequencing, microscopy images, cryo-EM maps or entire supplement reanalysis is claimed.
 
 The normal source-fetch attempt failed before writing gene files. Verified recovery supplied the original machine-generated sources. The default Falcon research attempt and configured perplexity-lite fallback could not start because the required offline dependency was unavailable; neither produced a research report. This document records manual research, and no provider-labeled report was manufactured. An independent annotation reviewer assessed 30 rows and checked the remaining 66 plus the two-core plan. Source files and existing publication caches were preserved.
+
+## First review follow-up: functional specificity and source scope — 2026-09-30
+
+The BRCA1–BARD1 interaction experiments support ubiquitin ligase inhibitor
+activity (GO:1990948). PMID:19117993 reports inhibition of ligase-dependent
+ubiquitination even with catalytic-mutant BAP1. Its indexed publisher Methods
+and Discussion were read separately from the normal abstract-only cache; the
+complete paper, figures and supplements were not inspected. Three generic
+binding rows with canonical BRCA1 or BARD1 are refined using that evidence,
+including the older PMID:9528852 BRCA1 interaction with the later paper as an
+additional reference. The BRCA1-5 partner row remains non-core because the
+particular partner isoform was not established in those inhibition assays.
+Other supported generic interactions retain their non-core classifications.
+
+The nonhistone catalytic core now uses endoplasmic reticulum (GO:0005783).
+PMID:28614305 reports fractionation, immunofluorescence and immunogold evidence
+for an ER-associated pool, and an artificially ER-targeted BAP1 construct.
+Those selected Results and Methods support the organelle assignment; they do
+not require assigning endogenous BAP1 to the ER lipid bilayer. Lack of integral
+membrane topology alone would not exclude peripheral membrane association.
+
+The HCFC1 details in the protein-turnover and K48-deubiquitination reasons were
+checked against original indexed Results, Figure 5 caption and Discussion in
+[PMID:19188440](https://pmc.ncbi.nlm.nih.gov/articles/PMC2663315/), with relevant
+Methods also inspected. The K48-restricted ubiquitin/WT-versus-C91A experiment
+and precursor/processed-HCFC1 accumulation are present in those passages.
+Proteasomal turnover remains the authors' interpretation, not a universal
+mechanism demonstrated for all BAP1 substrates. The normal cache remains
+abstract-only; article images and supplements were not read.
+
+The gene-expression replacement is a reassignment to a regulatory process,
+not a purported is_a refinement. The original source IDs are unchanged.
+
+The official GO mature-cell differentiation pattern maps GO:0043363 to
+CL:0000562, nucleate erythrocyte. This is a resulting mature cell identity, not
+merely a nucleated intermediate. The adult-mouse hematology Results and
+relevant Methods in the normal full-text cache of PMID:22878500 describe
+anemia and erythroid dysplasia, including increased nucleated erythroid cells.
+That evidence supports generalizing the electronic annotation to erythrocyte
+differentiation (GO:0030218). It does not establish production of the mature
+nucleate cell type or a direct human differentiation mechanism. The primary
+identity is DOI 10.1126/science.1221711, PMCID PMC5201002. The complete paper
+and supplements were not re-read for this bounded follow-up.
+
+The parkin-recruitment phenotype remains non-core; the source's obsolete-
+labelled GO:1903749 identifier and label are preserved. No new process or
+molecular-function assertion is added. The proposal preserves all 96 source
+objects and all 39 references, with 44 ACCEPT, 43 non-core, eight MODIFY and
+one UNDECIDED; the two catalytic cores remain distinct.
