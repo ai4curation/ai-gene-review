@@ -35,11 +35,44 @@ TLR2 is not an LPS receptor:
 - GO:0034134 / 0038123 / 0038124 are correctly on human TLR2; IBA GO:0002224 fits.
 - No TLR-specific MF exists; GO:0038187 is used as the core MF.
 
-## Deep research status
-Falcon deep research finished after the review was drafted. The runner reported exit code 1, but it wrote `TLR2-deep-research-falcon.md`. I read it afterwards and it agrees with the decisions above:
-- It calls TLR2 homodimers controversial, which supports keeping identical protein binding as non-core.
-- It notes that TLR2 responses to purified peptidoglycan or LTA may reflect contaminating lipoproteins, which matches the suggested question on peptidoglycan.
-- It says TLR2/TLR4 recognition of LPS is context-dependent and not fully established, which is consistent with UNDECIDED on the LPS IDA rows.
-- It describes TLR2/TLR10 heterodimers as a newer partnership.
+## Deep-research cross-check (2026-09-30)
 
-Nothing in it changed an action. Its citations are secondary (Falcon-summarised reviews) and none are cited in the YAML.
+Falcon deep research finished after the review was drafted (`TLR2-deep-research-falcon.md`;
+the runner reported exit code 1 but the file was written). Cross-checked against the
+completed review. **No annotation actions, descriptions or core functions were changed.**
+
+Agreement:
+- TLR2 is a signalling pattern recognition receptor, not an enzyme; TLR2:TLR1 for triacyl
+  and TLR2:TLR6 for diacyl lipopeptides, with TLR6 lacking the TLR1 channel for the third
+  acyl chain. Matches the two heterodimer core functions and the detection/binding rows.
+- Plasma membrane as the principal functional location; cell-type-wide expression on
+  myeloid and non-immune cells.
+- MyD88-dependent signalling through TIRAP/MAL, myddosome, TRAF6, TAK1 to NF-kappaB and
+  MAPK; no TRIF branch. Matches the accepted NF-kappaB row and the TIR-domain-binding
+  MODIFY decisions for TIRAP and MyD88.
+- TLR2 homodimer signalling is called controversial, supporting `identical protein binding`
+  being kept as non-core rather than made a core function.
+- Responses to purified peptidoglycan and lipoteichoic acid may reflect contaminating
+  lipoproteins, which is exactly the open peptidoglycan question already recorded.
+- TLR2/TLR4 recognition of LPS is described as context-dependent and incompletely
+  established, consistent with UNDECIDED on the two LPS rows (GO:0001530 IDA
+  PMID:11274165; GO:0001875 IDA PMID:16880211) and with the REMOVE of the TAS row.
+- Amyloid-beta and alpha-synuclein as DAMPs, consistent with keeping amyloid-beta binding
+  as non-core.
+
+Additions not acted on (report cites only secondary reviews; no primary paper verified, so
+per the "never cite deep research as sole support" rule nothing was asserted):
+- TLR2/TLR10 and TLR2/CLEC2D heterodimers; CLEC2D/TLR2 is described as negatively
+  regulating IRF5-mediated antifungal immunity. No `Toll-like receptor binding` or
+  process row was added for these.
+- Endosomal TLR2 pools with regulatory (IL-10) output, and soluble/vesicular TLR2 acting
+  as a decoy. Not annotated; the review's Golgi and cytoplasm IDA rows stay non-core. The
+  report asserts TLR2 is absent from the Golgi, which conflicts with the IDA Golgi row
+  (PMID:16880211); the experimental row was left in place per the rule against overruling
+  curators from incomplete evidence.
+- TLR2 promoting monocyte chemotaxis, adhesion, transendothelial migration, tissue-factor
+  expression and platelet interactions. These are downstream cellular consequences of
+  signalling and would not pass the participation test for a NEW process term, so none
+  was added.
+
+Conflict: none that changes a decision.

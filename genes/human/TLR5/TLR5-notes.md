@@ -3,9 +3,9 @@
 Toll-like receptor 5. Cell-surface pattern recognition receptor for bacterial flagellin.
 
 ## Deep research
-Falcon deep research did not complete during this session (see task log; `dr=` line
-did not report for TLR5/UNC93B1 within the window). No `-deep-research-falcon.md` was
-produced; review is based on the cached UniProt record, cached PMIDs and Reactome/OLS/QuickGO.
+`TLR5-deep-research-falcon.md` arrived after the review was drafted; the review itself is
+based on the cached UniProt record, cached PMIDs and Reactome/OLS/QuickGO. See the
+cross-check section at the end.
 
 ## Core biology
 - TLR5 recognizes bacterial flagellin (from Gram-positive and Gram-negative bacteria);
@@ -58,3 +58,42 @@ produced; review is based on the cached UniProt record, cached PMIDs and Reactom
 ## Comparator note (participation)
 TLR5 itself performs the recognition step (binds flagellin) and initiates signalling, so PRR
 activity and the TLR5 pathway term are genuine participation, not substrate/necessity artefacts.
+
+## Deep-research cross-check (2026-09-30)
+
+Compared the completed review against `TLR5-deep-research-falcon.md`.
+**No annotation action, term, description or core function was changed.**
+
+Agreement:
+- TLR5 is a signalling receptor, not an enzyme, whose specific ligand is bacterial
+  flagellin; recognition targets conserved D1-domain determinants (around residues 88-98)
+  that are buried in the assembled filament, so soluble/exposed monomers are the effective
+  ligand. This matches the accepted `pattern recognition receptor activity` rows and the
+  core functions, and matches PMID:14625549 and PMID:11323673 already quoted.
+- Plasma-membrane localisation with basolateral enrichment in intestinal epithelium, used
+  to discriminate breaching pathogens from luminal commensals. Supports the accepted
+  plasma-membrane rows and the description.
+- MyD88/myddosome to TRAF6-TAK1, then NF-kappaB and MAPK, with IL-8/CXCL8, CXCL1/2/5,
+  CCL2, CCL20, TNF and IL-6 as outputs. Supports keeping the IL-8 row as a non-core
+  downstream output rather than a core function.
+- A 2:2 flagellin-TLR5 signalling complex, consistent with the description's homodimer
+  statement and with PMID:22173220.
+
+Additions not acted on:
+- "Silent" commensal flagellins (e.g. Roseburia hominis) that engage the canonical D1
+  interface but dissociate too fast to form a productive complex. The primary source is a
+  December 2024 preprint cited only through the report, so nothing was asserted; this is a
+  property of the ligand rather than a new TLR5 function.
+- Bacterial evasion by motif substitution, filament sequestration and flagellin
+  downregulation; cancer-prognosis and vaccine-adjuvant/entolimod translational material.
+  All indirect; no NEW terms proposed.
+- The report does not mention the UNC93B1 requirement (PMID:24778236); the review's
+  treatment of it is unaffected and the existing suggested question stands.
+
+Conflict: the report states that TLR5 signals "exclusively" through MyD88, whereas the
+review's description and second core function also credit TRIF/TICAM1 in intestinal
+epithelium. The review's statement rests on a primary paper quoted verbatim
+[PMID:20855887 "TLR5 activation by flagellin permits the physical interaction between TLR5
+and TRIF in human colonic epithelial cells (NCM460)"], while the report's claim comes from
+secondary reviews, so the review was left unchanged. The existing suggested question on the
+MyD88/TRIF balance already records the tension.

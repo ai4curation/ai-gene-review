@@ -1,9 +1,9 @@
 # TLR3 (human, O15455) curation notes
 
 Reviewer: annotation-reviewer (INNATE_IMMUNITY batch 1, Toll/TLR axis).
-Deep research: the scheduled Falcon deep-research job **failed** (exit code 1;
-`agentapi not found in PATH`) and produced no `TLR3-deep-research-falcon.md`.
-This review therefore rests on the cached publications in `publications/`, the
+Deep research: `TLR3-deep-research-falcon.md` arrived after the review was drafted
+(the earlier run had failed); see the cross-check section at the end.
+The review itself rests on the cached publications in `publications/`, the
 UniProt record, and OLS/QuickGO term checks. No file named
 `-deep-research-<provider>.md` was written by hand.
 
@@ -97,3 +97,44 @@ LRR ectodomain (horseshoe), single TM helix (705-725), cytoplasmic TIR domain
   upstream of transcription factors.
 - `GO:0045766 positive regulation of angiogenesis` (IEA): UNDECIDED - could not trace the
   mouse source or find supporting cached evidence.
+
+## Deep-research cross-check (2026-09-30)
+
+Compared the completed review against `TLR3-deep-research-falcon.md`.
+**No annotation action, term, description or core function was changed;** two
+`suggested_questions` were added for claims the report makes that could not be verified
+against a primary paper.
+
+Agreement:
+- Endosomal/lysosomal dsRNA sensing with binding favoured at acidic pH (<=6.5), UNC93B1
+  chaperoning from the ER, and cell-type-dependent surface expression on fibroblasts and
+  epithelial cells. This is exactly the basis for splitting the plasma-membrane rows into
+  `located_in` (non-core) and `is_active_in` (over-annotated).
+- Structure-based, sequence-independent recognition of the ribose-phosphate backbone by the
+  23-LRR ectodomain with sites at both ends of the horseshoe; ~40-50 bp minimum for a
+  stable dimer. Matches the accepted dsRNA-binding rows and the H539/N541 mapping.
+- TRIF/TICAM1 recruitment to the TIR domain with TBK1-IKKepsilon-IRF3 for type I interferon
+  and TRAF6/RIPK1-TAK1-IKK for NF-kappaB and AP-1; RIPK3/MLKL necroptosis when caspase-8 is
+  blocked. Matches the accepted interferon-beta and NF-kappaB rows and the non-core
+  necroptotic row.
+- Endogenous/damage-associated RNA as a ligand, consistent with keeping
+  `inflammatory response to wounding` as non-core rather than core.
+
+Additions not acted on (the report cites only secondary reviews; no primary paper was
+available to quote, so nothing was asserted):
+- Lateral multimerisation of TLR3 dimers along long dsRNA (reported 2023 cryo-EM), with
+  >=90 bp needed for robust signalling. Recorded as a suggested question; the review still
+  follows PMID:18172197 in treating one dimer as the minimal signalling unit.
+- A reported TRIF-dependent MyD88 contribution to TLR3-driven NF-kappaB in mouse
+  macrophages (2025). Recorded as a suggested question; the MyD88-independent model
+  (PMID:12471095, PMID:16286015) is retained, and the description was not altered.
+- TRIM56 as a scaffolding positive regulator of TRIF, and ligand-induced Tyr759/Tyr858
+  phosphorylation. Both concern partners or modifications of TLR3, not new TLR3 functions.
+- Disease associations (autoimmunity, allergy, calcific aortic valve disease) and
+  poly(I:C)/poly-ICLC therapeutics. Indirect and pleiotropic; no NEW process terms.
+
+Conflicts: the report describes TLR3 surface expression on fibroblasts and epithelial cells
+as functional for detecting extracellular dsRNA, which sits against this review marking the
+`is_active_in plasma membrane` rows as over-annotated. The report supports this only from
+secondary reviews, so the decision stands and the existing suggested question on
+cell-surface TLR3 signalling covers it.

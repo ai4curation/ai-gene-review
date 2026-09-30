@@ -30,4 +30,45 @@
 - Qiu 2013 PLoS One (PMID:23626692) carries a 2024 expression of concern.
 
 ## Deep research
-- Falcon deep research failed (falcon timed out; perplexity-lite fallback unavailable: "All providers failed" in the run log). The review was completed without a deep-research file, from the UniProt record and the cached publications listed above (full text for PMID:20037584, 20067962, 20406817, 23155421, 23626692, 23812099, 33576548; abstracts only for the rest).
+- The review was completed without a deep-research file, from the UniProt record and the cached publications listed above (full text for PMID:20037584, 20067962, 20406817, 23155421, 23626692, 23812099, 33576548; abstracts only for the rest). `TLR6-deep-research-falcon.md` arrived afterwards; see the cross-check section below.
+
+## Deep-research cross-check (2026-09-30)
+
+Compared the completed review against `TLR6-deep-research-falcon.md`.
+**No annotation action, term, description or core function was changed.**
+
+Agreement:
+- TLR6's best-established functional form is the TLR2:TLR6 heterodimer, and it is a
+  receptor rather than an enzyme. Matches the core functions and the `Toll-like receptor 2
+  binding` / TLR2:TLR6 complex rows.
+- Diacyl specificity is set sterically by TLR6 Phe343 and Phe365 blocking the channel that
+  in TLR1 takes the third acyl chain, and swapping them for the TLR1 residues broadens the
+  response to triacylated ligands. Independent restatement of PMID:19931471, which the
+  review already quotes.
+- Plasma membrane as the functional location, with CD36, CD14 and LBP as accessory
+  receptors. Supports the accepted membrane and raft rows and the CD36 core function.
+- Ligands: Pam2CSK4, FSL-1, MALP-2, diacylated Gram-positive and Mycoplasma lipoproteins.
+  Matches the accepted diacyl lipopeptide binding and detection rows.
+- TIRAP/MAL then MyD88, myddosome, TRAF6-TAK1, canonical NF-kappaB plus JNK/p38/ERK.
+  Supports the accepted NF-kappaB and MyD88-dependent pathway rows and keeping the JNK row
+  non-core.
+
+Additions not acted on:
+- The report says that in the TLR2:TLR6 complex the two ester-linked chains insert into the
+  TLR2 pocket while the glycerol moiety and peptide head group contact both receptors. This
+  speaks directly to the existing suggested question on whether TLR6 itself touches the
+  ligand, but the claim is carried only by secondary reviews here, so the `lipopeptide
+  binding` rows were left as they were and the question stands.
+- Trained immunity, blood-brain-barrier expression, sex differences, H. pylori-driven TLR6
+  desensitisation, periodontal bone resorption and pulmonary arterial hypertension. All
+  downstream, indirect or context-specific; none passes the participation test for a NEW
+  process term.
+- Polymorphism associations (A359T>C, Ser249Pro, rs3775073). Not annotation-relevant.
+
+Conflicts: the report states that TLR6 signals "exclusively" through MyD88, whereas the
+review keeps two `TRIF-dependent toll-like receptor signaling pathway` rows (IEA/ISS) as
+non-core on the strength of the CD36-TLR4-TLR6 sterile-inflammation work
+(PMID:20037584). The report's claim is from secondary reviews and concerns the canonical
+TLR2:TLR6 route, which is not in dispute, so the non-core rows were left in place. The
+report also does not discuss the CD36-TLR4-TLR6 heterodimer at all, so it neither supports
+nor contradicts the removal of the amyloid-beta binding IC row.

@@ -3,10 +3,32 @@
 Unc-93 homolog B1; ER-resident multi-pass (12-TM) membrane chaperone/trafficking factor for
 nucleotide-sensing Toll-like receptors.
 
-## Deep research
-Falcon deep research did not complete during this session; no `-deep-research-falcon.md` was
-produced. Review is based on the cached UniProt record, cached PMIDs, Reactome, OLS/QuickGO, and
-the cached GO-CAM (65a1f4f800002740).
+## Deep-research cross-check (2026-09-30)
+Falcon deep research (`UNC93B1-deep-research-falcon.md`) arrived after the review was written and
+was compared against every decision.
+- **Agreement:** ER-resident 12-TM MFS-like chaperone; binds TLR3/7/8/9 (and TLR5) via the
+  N-terminal six-helix bundle; escorts them ER -> Golgi -> endolysosomes; LoF (e.g. H412R, 3d)
+  traps TLRs in the ER and causes HSE susceptibility. All location, TLR-binding and transport
+  decisions, the KEEP_AS_NON_CORE treatment of TLR3/7/9 pathway rows, and the protein-binding
+  MODIFY/REMOVE decisions are consistent with the report. No annotation action changed.
+- **Additions (verified in primary papers):** UNC93B1 also negatively regulates TLR7/TLR8 after
+  delivery, and gain-of-function variants cause monogenic SLE/chilblain lupus
+  [PMID:38869500 "these observations suggest that UNC93B1 mutations cause monogenic SLE
+or CBL due to differentially enhanced TLR7 and TLR8 signaling"];
+  [PMID:38780621 "identified both negative and positive regulatory regions affecting TLR3, TLR7,
+and TLR9 responses"].
+  Description extended with one sentence; both papers added to references.
+- **Additions (abstract-only, not used for annotation):** UNC93B1 binds STING and delivers it to
+  lysosomes for degradation, attenuating cGAS-STING signalling [PMID:35577759 "UNC93B1 interacts with STING and suppresses STING-activated downstream signaling by delivering STING to the lysosomes for degradation"].
+  Single-laboratory report; raised as a suggested question rather than a NEW annotation.
+- **Nuance / mild tension:** the report (via Song 2022, Front Immunol, PMID:35874766, not cached)
+  says Asn272 glycosylation of UNC93B1 is needed for MyD88 recruitment to TLR9, which qualifies the
+  older statement that UNC93B1 is dispensable for signal initiation [PMID:18305481]. Not verified
+  in a cached primary text; description wording left as is.
+- Minor report inaccuracy: it calls the TLR3 structure "mouse" only; Ishida 2021 solved human and
+  mouse TLR3-UNC93B1 plus human TLR7-UNC93B1.
+- Changes: description (GoF lupus sentence), 3 new references + falcon file reference, one
+  supported_by quote from the falcon file on a GO:0006886 row, one new suggested question.
 
 ## Core biology
 - ER-resident polytopic membrane protein; its function is to deliver nucleotide-sensing TLRs

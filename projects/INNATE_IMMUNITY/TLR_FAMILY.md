@@ -1,6 +1,6 @@
 ---
 title: "Toll and Toll-like Receptor Family"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, mouse, CHICK, DANRE, DROME, worm]
 ---
@@ -9,58 +9,64 @@ species: [human, mouse, CHICK, DANRE, DROME, worm]
 
 Part of [Innate Immune System Pathways Across Animals](../INNATE_IMMUNITY.md).
 
-**Bottom line:** the first review batch. 32 Toll/TLR receptors from five
-species are listed below with UniProt accessions resolved by
-[`resolve_candidates.py`](scripts/resolve_candidates.py); none has been
-reviewed yet. The family is the clearest test in the project of whether one
-name hides different functions. Vertebrate TLRs are pattern recognition
-receptors, each binding a class of microbial molecule. Drosophila Toll is a
-cytokine receptor for cleaved Spätzle. *C. elegans* TOL-1 is the single
-nematode Toll and its role in immunity is limited. GO reflects this with
-separate process terms — GO:0002224 toll-like receptor signaling pathway and
-GO:0008063 Toll signaling pathway — but annotations propagated by domain or
-phylogeny can cross that line.
+**Bottom line:** batch 1 is reviewed. All ten human TLRs, mouse Tlr11–13,
+chicken TLR15 and TLR21, zebrafish tlr5b, tlr21 and tlr22, Drosophila Toll
+(Tl), 18w and Toll-7, and *C. elegans* TOL-1 now have complete reviews, as do
+the accessory proteins and adaptors listed below — 37 gene products and 2,746
+existing annotations in all. The Toll/TLR split held up: no fly Toll receptor
+carries a vertebrate TLR-pathway term, but the fly Toll-pathway term had leaked
+the other way, onto human IRAK4 and MYD88 by phylogenetic inference. Findings
+by question are at the end of this page.
+
+The family is the clearest test in the project of whether one name hides
+different functions. Vertebrate TLRs are pattern recognition receptors, each
+binding a class of microbial molecule. Drosophila Toll is a cytokine receptor
+for cleaved Spätzle. *C. elegans* TOL-1 is the single nematode Toll and its role
+in immunity is limited. GO reflects this with separate process terms —
+GO:0002224 toll-like receptor signaling pathway and GO:0008063 Toll signaling
+pathway.
 
 ## Receptors
 
-"TrEMBL" entries are unreviewed; the accession shown is the highest
-annotation-score match on primary gene name and must be confirmed before
-`just fetch-gene`.
+"TrEMBL" entries are unreviewed; the accession shown is the reference-proteome
+match on primary gene name. For chicken TLR15 and TLR21, which have several
+reference-proteome records, the entry GOA annotates most was chosen and pinned in
+`candidates.tsv`; the reviewer confirmed both against Ensembl, NCBI and ZFIN.
 
-| Species | Gene | Accession | Entry | UniProt name | GO pathway term for this receptor |
-|---------|------|-----------|-------|--------------|-----------------------------------|
-| human | TLR1 | Q15399 | Swiss-Prot | Toll-like receptor 1 | GO:0034130 |
-| human | TLR2 | O60603 | Swiss-Prot | Toll-like receptor 2 | GO:0034134 |
-| human | TLR3 | O15455 | Swiss-Prot | Toll-like receptor 3 | GO:0034138 |
-| human | TLR4 | O00206 | Swiss-Prot | Toll-like receptor 4 | GO:0034142 |
-| human | TLR5 | O60602 | Swiss-Prot | Toll-like receptor 5 | GO:0034146 |
-| human | TLR6 | Q9Y2C9 | Swiss-Prot | Toll-like receptor 6 | GO:0034150 |
-| human | TLR7 | Q9NYK1 | Swiss-Prot | Toll-like receptor 7 | GO:0034154 |
-| human | TLR8 | Q9NR97 | Swiss-Prot | Toll-like receptor 8 | GO:0034158 |
-| human | TLR9 | Q9NR96 | Swiss-Prot | Toll-like receptor 9 | GO:0034162 |
-| human | TLR10 | Q9BXR5 | Swiss-Prot | Toll-like receptor 10 | GO:0034166 |
-| mouse | Tlr4 | Q9QUK6 | Swiss-Prot | Toll-like receptor 4 | GO:0034142 |
-| mouse | Tlr11 | Q6R5P0 | Swiss-Prot | Toll-like receptor 11 | GO:0034170 |
-| mouse | Tlr12 | Q6QNU9 | Swiss-Prot | Toll-like receptor 12 | GO:0034174 |
-| mouse | Tlr13 | Q6R5N8 | Swiss-Prot | Toll-like receptor 13 | GO:0034178 |
-| CHICK | TLR3 | A0A8V0YT51 | TrEMBL | Toll-like receptor 3 | GO:0034138 |
-| CHICK | TLR4 | C4PCF3 | TrEMBL | Toll-like receptor 4 | GO:0034142 |
-| CHICK | TLR7 | A0A1L4FML6 | TrEMBL | Toll like receptor 7 | GO:0034154 |
-| CHICK | TLR15 | Q2XQ10 | TrEMBL | Toll-like receptor 2 (sic) | GO:0035681 |
-| CHICK | TLR21 | A0A8V0ZYL3 | TrEMBL | Toll like receptor 21 | GO:0035682 |
-| DANRE | tlr3 | Q32PW5 | TrEMBL | Toll-like receptor 3 | GO:0034138 |
-| DANRE | tlr4ba | A0A8M3B7X7 | TrEMBL | Toll-like receptor 4 | GO:0034142 (see question 2) |
-| DANRE | tlr5a | F8W4F1 | TrEMBL | Toll-like receptor 5 | GO:0034146 |
-| DANRE | tlr5b | F8W3J5 | TrEMBL | Toll-like receptor 5b | GO:0034146 |
-| DANRE | tlr18 | A3KH14 | TrEMBL | Toll-like receptor 18 isoform X4 | none |
-| DANRE | tlr19.1 | A0A8M1RKQ4 | TrEMBL | Toll-like receptor 12 (sic) | none |
-| DANRE | tlr20.2 | F1QRG0 | TrEMBL | Toll-like receptor 20, tandem duplicate 2 | none |
-| DANRE | tlr21 | F1QMN8 | TrEMBL | Toll-like receptor 21 precursor | GO:0035682 |
-| DANRE | tlr22 | A0A2R8RTN4 | TrEMBL | Toll-like receptor 22 precursor | none |
-| DROME | Tl | P08953 | Swiss-Prot | Protein toll | GO:0008063 (Toll signaling pathway) |
-| DROME | 18w | A1ZBR2 | TrEMBL | 18 wheeler | — |
-| DROME | Toll-7 | Q7KIN0 | Swiss-Prot | Toll-like receptor 7 | — |
-| worm | tol-1 | Q9N5Z3 | TrEMBL | TIR domain-containing protein | — |
+| Species | Gene | Accession | Entry | UniProt name | GO pathway term for this receptor | Reviewed |
+|---------|------|-----------|-------|--------------|-----------------------------------|----------|
+| human | TLR1 | Q15399 | Swiss-Prot | Toll-like receptor 1 | GO:0034130 | yes |
+| human | TLR2 | O60603 | Swiss-Prot | Toll-like receptor 2 | GO:0034134 | yes |
+| human | TLR3 | O15455 | Swiss-Prot | Toll-like receptor 3 | GO:0034138 | yes |
+| human | TLR4 | O00206 | Swiss-Prot | Toll-like receptor 4 | GO:0034142 | yes |
+| human | TLR5 | O60602 | Swiss-Prot | Toll-like receptor 5 | GO:0034146 | yes |
+| human | TLR6 | Q9Y2C9 | Swiss-Prot | Toll-like receptor 6 | GO:0034150 | yes |
+| human | TLR7 | Q9NYK1 | Swiss-Prot | Toll-like receptor 7 | GO:0034154 | yes |
+| human | TLR8 | Q9NR97 | Swiss-Prot | Toll-like receptor 8 | GO:0034158 | yes |
+| human | TLR9 | Q9NR96 | Swiss-Prot | Toll-like receptor 9 | GO:0034162 | yes |
+| human | TLR10 | Q9BXR5 | Swiss-Prot | Toll-like receptor 10 | GO:0034166 | yes |
+| mouse | Tlr4 | Q9QUK6 | Swiss-Prot | Toll-like receptor 4 | GO:0034142 | no |
+| mouse | Tlr11 | Q6R5P0 | Swiss-Prot | Toll-like receptor 11 | GO:0034170 | yes |
+| mouse | Tlr12 | Q6QNU9 | Swiss-Prot | Toll-like receptor 12 | GO:0034174 | yes |
+| mouse | Tlr13 | Q6R5N8 | Swiss-Prot | Toll-like receptor 13 | GO:0034178 | yes |
+| CHICK | TLR3 | A0A8V0YT51 | TrEMBL | Toll-like receptor 3 | GO:0034138 | no |
+| CHICK | TLR4 | C4PCF3 | TrEMBL | Toll-like receptor 4 | GO:0034142 | no |
+| CHICK | TLR7 | A0A1L4FML6 | TrEMBL | Toll like receptor 7 | GO:0034154 | no |
+| CHICK | TLR15 | A0A8V0Z0H8 | TrEMBL | Toll-like receptor 15 | GO:0035681 | yes |
+| CHICK | TLR21 | A0A8V0ZKW5 | TrEMBL | Toll like receptor 21 | GO:0035682 | yes |
+| DANRE | tlr3 | A0A8M1N4E3 | TrEMBL | Toll-like receptor 3 | GO:0034138 | no |
+| DANRE | tlr4ba | A0A8M3B7X7 | TrEMBL | Toll-like receptor 4 | GO:0034142 (see question 2) | no |
+| DANRE | tlr5a | F8W4F1 | TrEMBL | Toll-like receptor 5 | GO:0034146 | no |
+| DANRE | tlr5b | A0ACM8R384 | TrEMBL | Toll-like receptor 5b precursor | GO:0034146 | yes |
+| DANRE | tlr18 | A3KH14 | TrEMBL | Toll-like receptor 18 isoform X4 | none | no |
+| DANRE | tlr19.1 | A0A8M1RKQ4 | TrEMBL | Toll-like receptor 12 (sic) | none | no |
+| DANRE | tlr20.2 | F1QRG0 | TrEMBL | Toll-like receptor 20, tandem duplicate 2 | none | no |
+| DANRE | tlr21 | F1QMN8 | TrEMBL | Toll-like receptor 21 precursor | GO:0035682 | yes |
+| DANRE | tlr22 | A0A2R8RTN4 | TrEMBL | Toll-like receptor 22 precursor | none | yes |
+| DROME | Tl | P08953 | Swiss-Prot | Protein toll | GO:0008063 (Toll signaling pathway) | yes |
+| DROME | 18w | A1ZBR2 | TrEMBL | 18 wheeler | — | yes |
+| DROME | Toll-7 | Q7KIN0 | Swiss-Prot | Toll-like receptor 7 | — | yes |
+| worm | tol-1 | Q9N5Z3 | TrEMBL | TIR domain-containing protein | — | yes |
 
 The ligand, Drosophila Spätzle (spz, P48607, Swiss-Prot), is listed with the
 receptors because it is what activates Tl. The pathway-term column records
@@ -69,11 +75,17 @@ It does not record what the gene is annotated to — that is what the reviews wi
 establish. GO has no pathway term for TLR14, TLR16, TLR17, TLR18, TLR19,
 TLR20 or TLR22.
 
-Two TrEMBL names disagree with the gene symbol: chicken TLR15 (Q2XQ10) is
-named "Toll-like receptor 2", and zebrafish tlr19.1 (A0A8M1RKQ4) is named
-"Toll-like receptor 12". Both are submitter names on unreviewed entries; other
-entries for the same genes carry the matching name, so choose the entry before
-fetching.
+Zebrafish tlr19.1 (A0A8M1RKQ4) carries the submitter name "Toll-like receptor
+12"; other entries for the gene carry the matching name, so choose the entry
+before fetching it.
+
+**Mouse Tlr11 and Tlr12 names are swapped between the literature and the
+databases.** The paper that calls its protein "TLR12" (PMID:23246311) gives
+RefSeq NP_991388.1, which UniProt maps to Q6R5P0 — the entry MGI and UniProt
+name Tlr11. Both UniProt entries carry a caution that the literature swaps the
+two names. Because the numbered GO terms GO:0034170 and GO:0034174 are named
+after the literature receptors, neither review assigns them; both use
+GO:0002224 and raise the naming as a question for GO and MGI.
 
 ## Accessory proteins and adaptors in this batch
 
@@ -85,26 +97,46 @@ test for them is the same as for the receptors — which of them performs the
 recognition step (see CLAUDE.md, *Do not add what curators deliberately
 declined to add*).
 
-## Questions for this batch
+## Findings by question
 
-Biological claims below marked "reported" are leads from background knowledge
-and must be sourced (deep research, cached PMIDs) before they are used in a
-review.
+The review for each gene holds the evidence; this summarises the cross-gene
+answers.
 
-1. **Toll is not a PRR.** Check Tl, 18w and Toll-7 for GO:0038187 pattern
-   recognition receptor activity or any GO:0002224-branch term. Toll-7 has
-   been reported to act in antiviral defence in the fly; decide from the
-   literature whether that supports a direct recognition MF or only a process
-   term.
-2. **Ligand-specific terms on orthologues.** Human TLR ligand terms (e.g. TLR4
-   and LPS) should transfer only to orthologues that keep the ligand. Chicken
-   TLR4 and the zebrafish tlr4 paralogues are the check: fish TLR4 has been
-   reported not to respond to LPS in the way mammalian TLR4 does.
-3. **Missing pathway terms.** Fish tlr18–20 and tlr22 have no numbered term.
-   Decide per gene whether GO:0002224 is sufficient or a new term is justified.
-4. **TLR10.** Human TLR10 is reported as an inhibitory TLR; check that
-   propagated positive-signaling terms fit the experimental evidence.
-5. **Nematostella.** 17 Nematostella UniProt entries carry a TIR domain but
-   none is named a Toll-like receptor. Identify the TLR (if any) with a domain
-   architecture check (LRR + transmembrane + TIR) before asserting an
-   accession.
+1. **Toll is not a PRR — confirmed.** Tl and 18w carry no pattern recognition
+   receptor activity and no GO:0002224-branch term. Tl's immune and
+   dorsoventral roles both rest on one function, cytokine receptor for Spätzle
+   in GO:0008063. 18w's immune rows are marked over-annotated: its larval
+   immune defect comes from delayed fat-body development. Toll-7 is the one
+   exception: it carries GO:0038187 by curator inference from virion
+   co-precipitation. Those rows are kept as non-core, not accepted, because no
+   viral ligand is defined and a later paper contradicts the specificity
+   control.
+2. **The fly term leaks onto human proteins.** GO:0008063 is defined by ligand
+   binding to "the receptor Toll", yet human IRAK4 and MYD88 carry it by IBA
+   (PAINT nodes PTN000701353 and PTN000386853, fly donors) and MYD88 also by a
+   rat-derived IEA. Both reviews change these to GO:0002755 MyD88-dependent
+   toll-like receptor signaling pathway and question the node placement.
+3. **Ligand-specific terms on orthologues and partners.** Challenged where the
+   ligand is not shared: triacyl lipopeptide binding on chicken TLR15 (transferred from
+   human TLR2; TLR15 is not a TLR2 orthologue and lipopeptides do not activate
+   it), LPS-mediated signaling on fly Pelle and Tube (removed), the TLR8 pathway
+   term on TLR7 (removed), and LPS receptor activity on TLR1, TLR2 and TLR6,
+   which recognise lipopeptides: modified to pattern recognition receptor
+   activity on TLR1 and TLR6, and on TLR2 removed for the review-article row
+   but left undecided for two experimental rows whose full text is not cached. Numbered pathway terms were kept where receptor
+   identity is clear (TLR15, TLR21 in chicken and zebrafish, zebrafish tlr5b).
+4. **Missing pathway terms.** For zebrafish tlr22, GO:0002224 is sufficient for
+   now: no ligand or adaptor has been shown in zebrafish (the dsRNA work was in
+   fugu), and fish TLR21/22/23 naming is unstable. No new term is requested.
+5. **No TLR-specific molecular function.** Reviews use GO:0038187 pattern
+   recognition receptor activity plus a ligand-binding term (dsRNA, unmethylated
+   CpG, lipopeptide, guanosine, LPS). Only TLR4 keeps GO:0001875 LPS immune
+   receptor activity as core; MD-2 (LY96) records it as contributes_to, and
+   CD14 is changed to molecular carrier activity because it delivers LPS but
+   cannot signal across the membrane. Chicken TLR15, which is
+   protease-activated, keeps generic signaling receptor activity.
+6. **TLR10 is inhibitory.** Confirmed from cached primary papers. Its inherited
+   positive-signaling rows are kept as non-core, and it gains NEW negative
+   regulation of toll-like receptor signaling pathway (GO:0034122).
+7. **Nematostella.** The single cnidarian protein reviewed is MyD88 (A7RHZ4, a
+   fragment). No Nematostella TLR accession has yet been asserted.
