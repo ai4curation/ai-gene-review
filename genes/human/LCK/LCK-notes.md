@@ -8,8 +8,12 @@ processes treated as non-core.
 ## Deep research
 
 - `just deep-research-falcon human LCK --fallback perplexity-lite` launched in background at the
-  start of the session (see final status below). Review was written from the cached
-  publications and the UniProt record.
+  start of the session. Falcon wrote `LCK-deep-research-falcon.md` (~16 min run, 50 citations),
+  but the just recipe exited non-zero ("All providers failed") because its 600 s wrapper timeout
+  fired and the perplexity-lite fallback is not configured in this environment. The falcon report
+  is complete and consistent with this review (zinc-dependent CD4/CD8alpha binding via Cys20/Cys23,
+  Y394 activating / Y505 CSK-inhibitory, coreceptor-bound vs free LCK pools, Wei et al. 2020 PNAS).
+  Annotation decisions rest on the cached publications and the UniProt record.
 
 ## Core biology (with provenance)
 
