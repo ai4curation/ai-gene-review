@@ -60,3 +60,7 @@ context-specific reuse and are kept as non-core.
 - Accept core MF: cytokine receptor activity (GO:0004896), cytokine binding (GO:0019955), transmembrane signaling receptor activity, TIR domain binding.
 - protein binding rows: MyD88 rows -> MODIFY to GO:0070976 TIR domain binding; Spätzle row -> MODIFY to GO:0019955 cytokine binding; Tehao and Weckle rows -> REMOVE (uninformative).
 - positive regulation of transcription by RNA polymerase II (Akirin paper, IMP) -> MARK_AS_OVER_ANNOTATED (the receptor is several steps upstream of transcription).
+
+## Falcon deep research (added after it completed)
+
+The Falcon report (file:DROME/Tl/Tl-deep-research-falcon.md) agrees with the curation: ["Toll does not directly bind microbial components; instead, upstream pattern-recognition proteins detect PAMPs"]. It raises no evidence for PRR activity or for vertebrate TLR-pathway terms on Tl. No annotation decisions changed.
