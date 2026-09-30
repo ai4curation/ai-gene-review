@@ -1,8 +1,9 @@
 ---
 title: "Origins of Animal Multicellularity"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
+genes: [rosetteless, jumble, couscous]
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals
@@ -16,13 +17,19 @@ annotated almost entirely by transfer from animals. A census of GOA on
 2026-09-30 found 0 experimental GO annotations for ichthyosporeans,
 ctenophores and placozoans. Choanoflagellates have 2, both `protein binding`;
 *Capsaspora* has 4, all on one histone; sponges have 16. Metazoa as a whole
-has about 952,000. This project is at the scoping stage. It plans to review
-the few unicellular-relative genes with direct genetic evidence (the
-*Salpingoeca rosetta* rosette-development genes first) and a matched set of
-animal "multicellularity toolkit" genes. It will also ask whether IBA and IEA
-propagation places animal-specific process terms on unicellular proteins, and
-whether GO has the terms to describe clonal colony development in a
-non-animal. No reviews have been done yet.
+has about 952,000. We are reviewing the few unicellular-relative genes with direct genetic
+evidence, starting with the three *Salpingoeca rosetta* genes required for
+rosette colonies, and will add a matched set of animal "multicellularity
+toolkit" genes. We also ask whether IBA and IEA propagation places
+animal-specific process terms on unicellular proteins, and whether GO has the
+terms to describe clonal colony development in a non-animal. Three draft
+reviews are done: rosetteless (secreted C-type lectin-like protein of the
+rosette extracellular matrix), jumble (Golgi-localised predicted
+glycosyltransferase) and couscous (predicted alpha-1,2-mannosyltransferase).
+They add two experimental annotations where GOA had none for these proteins,
+remove one electronic term (`GO:0046354` mannan biosynthetic process, whose GO
+definition is softwood hemicellulose), and show that GO has no term for
+rosette development; a new term is proposed in the rosetteless review.
 
 ## Motivation
 
@@ -215,19 +222,20 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 
 # STATUS
 
-2026-09-30: scoping.
+2026-09-30: Track A priorities 1–3 reviewed (DRAFT).
 
 - [x] GOA experimental-annotation census across Holozoa
 - [x] Resolve UniProt accessions for rosetteless, jumble, couscous
 - [ ] Resolve accessions for *S. rosetta* warts, yorkie and septins, and for *Capsaspora* integrin β2, vinculin and Brachyury
-- [ ] `just fetch-gene SALRS <gene>` for Track A priorities 1–3 (check that fetch works for unreviewed TrEMBL entries)
-- [ ] Deep research and review: rosetteless (F2U5Y1)
-- [ ] Deep research and review: jumble (F2TWH0)
-- [ ] Deep research and review: couscous (F2UJ78)
+- [x] `just fetch-gene SALRS <accession> --alias <name>` for Track A priorities 1–3 (works for unreviewed TrEMBL entries)
+- [x] Review: rosetteless (F2U5Y1) — DRAFT
+- [x] Review: jumble (F2TWH0) — DRAFT
+- [x] Review: couscous (F2UJ78) — DRAFT
 - [ ] Review OSCPE VIN1 and TLN
 - [ ] Track B human toolkit reviews (none started)
 - [ ] Track C propagation audit (not started)
-- [ ] Track D ontology check (not started)
+- [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
+- [ ] Deep research (falcon) for the three SALRS genes, once a provider key is available
 
 # NOTES
 
@@ -238,5 +246,31 @@ drift as GOA updates; rerun before quoting them elsewhere. All PMIDs on this
 page were checked against PubMed esummary, and all UniProt accessions against
 the UniProt REST API. The *S. rosetta* locus-to-gene mapping comes from the
 full text of PMID:25299189 (PTSG_03555 = Rosetteless) and PMID:30556809
-(GenBank EGD72416 = jumble, EGD77026 = couscous). None of the cited papers is
-cached under `publications/` yet.
+(GenBank EGD72416 = jumble, EGD77026 = couscous).
+
+Later the same day: reviewed rosetteless, jumble and couscous (SALRS, all
+DRAFT). No deep-research provider key was available, so each gene has a
+manual `-notes.md` built from the cached full text instead of a
+`-deep-research-*.md` file; falcon deep research is still to do. Cached the
+choanoflagellate papers under `publications/` (PMID:41037400 is abstract-only,
+so the 2025 knockout phenotypes are not yet captured). Findings:
+
+- **rosetteless**: NEW `GO:0031012` extracellular matrix (IDA). Core function
+  `GO:0005201` extracellular matrix structural constituent is inferred from
+  location plus phenotype, not measured, and is kept out of the annotation
+  rows. UniProt's name "Lung surfactant protein A" comes from the genome
+  project's EMBL record and should be changed.
+- **jumble**: NEW `GO:0005794` Golgi apparatus (IDA, tagged protein at the
+  Golgi position; the non-functional L305P protein is retained in the ER).
+  InterPro finds no domain; the glycosyltransferase call rests on fold
+  recognition only, so the MF appears only in core_functions.
+- **couscous**: 7 IEA rows. Accepted alpha-1,2-mannosyltransferase activity,
+  glycosyltransferase activity, glycoprotein biosynthetic process and
+  membrane. Golgi apparatus and Golgi membrane left UNDECIDED, because the
+  tagged protein was "clearly not localized to the Golgi" (PMID:30556809).
+  Removed mannan biosynthetic process.
+- None of the three was given a rosette-development process term: jumble and
+  couscous fail the participation test (necessity only, targets unknown), and
+  GO has no suitable term. The NTR "rosette colony development" is in the
+  rosetteless review, where the protein is a structural part of the colony
+  matrix.
