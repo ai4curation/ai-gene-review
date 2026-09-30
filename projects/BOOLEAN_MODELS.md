@@ -31,7 +31,8 @@ reviewed id-mapping, and diffed rather than merged.
   family edges activate, `NEGATIVELY_REGULATES` inhibits, and the default rule is the
   CaSQ convention *OR the activators, AND NOT the inhibitors*
   ([PMID:32403123](https://pubmed.ncbi.nlm.nih.gov/32403123/)). ERK, p38, JNK, JAK-STAT
-  and NF-κB modules all translate; the ERK cascade becomes 9 variables and 8 edges.
+  and NF-κB modules all translate (variable and edge counts are in the generated
+  [RESULTS](BOOLEAN_MODELS/RESULTS.md) table).
 - **The wiring the modules assert is right, and was incomplete in one specific way.**
   Against the published Grieco 2013 MAPK model
   ([PMID:24250280](https://pubmed.ncbi.nlm.nih.gov/24250280/), cached as BBM-070) *and*
@@ -127,19 +128,23 @@ uv run --with biodivine-aeon python projects/BOOLEAN_MODELS/run_mapk_demo.py
 | Finding | Where | Action taken |
 |---|---|---|
 | ERK ⊣ RAF negative feedback (BBM-070 `v_RAF` rule; SIGNOR `ERK1/2 -| BRAF`, Thr401 phosphorylation, direct) | `modules/erk_cascade.yaml` | **added** `erk_mapk → raf_map3k NEGATIVELY_REGULATES`, evidence PMID:15664191 (Raf-1), PMID:19933846 (B-Raf), plus the two sources |
-| RSK/ERK ⊣ SOS negative feedback (BBM-070 `v_SOS, v_GRB2 & !v_RSK`; SIGNOR `ERK1/2 -| SOS1`, Ser1132/1167/1197, direct) | `modules/erk_cascade.yaml` | **added** `erk_output → ras_gef_step NEGATIVELY_REGULATES`, evidence PMID:8816480 |
+| ERK/RSK ⊣ SOS negative feedback (BBM-070 `v_SOS, v_GRB2 & !v_RSK`; SIGNOR `ERK1/2 -| SOS1`, Ser1132/1167/1197, direct) | `modules/erk_cascade.yaml` | **added two edges**, each sourced where its evidence puts it: `erk_mapk → ras_gef_step` (direct ERK phosphorylation, PMID:8816480, the SIGNOR row) and `erk_output → ras_gef_step` (RSK phosphorylation at Ser1134/Ser1161, PMID:22827337, PMID:9242373, the BBM-070 rule) |
 | DUSP/MKP feedback cut: `mapk_negative_regulation` had no incoming edge although its description said "many ERK-induced as feedback" | `modules/erk_cascade.yaml` | **added** `erk_output → mapk_negative_regulation CAUSES`, evidence PMID:8995446 |
 | Same cut in the p38 module ("many of them induced by p38 itself as negative feedback") | `modules/p38_cascade.yaml` | **added** `p38_output → p38_negative_regulation CAUSES`, evidence PMID:16978838 (via MK2) and the BBM-070 MSK/CREB route |
 | SOCS loop half-wired: `stat_transcription → socs_feedback` existed but SOCS inhibited nothing | `modules/jak_stat_signaling.yaml` | **added** `socs_feedback → jak_activation NEGATIVELY_REGULATES`, evidence PMID:9202126, PMID:9202125 |
-| JNK module role said "negative regulation and feedback" with no upstream edge | `modules/jnk_cascade.yaml` | **reworded**, not wired: DUSP1/MKP-1 induction in this territory is p38/ERK-driven cross-regulation, not JNK feedback, so the step stays an external input and the text now says so |
+| JNK module role said "negative regulation and feedback" with no upstream edge | `modules/jnk_cascade.yaml` | **reworded**, not wired: the JNK-directed phosphatases modelled (DUSP10/16) are not JNK-induced, and DUSP1/MKP-1, which also terminates JNK, is p38/MK2-controlled (PMID:16978838, now cited on the node). The unmodelled p38-output → DUSP1 ⊣ JNK cross-cascade edge is recorded as a `knowledge_gaps` entry on the node |
 | p38 and JNK modules keep a MAP2K tier the published model compresses (MAP3K → p38 directly) | `modules/p38_cascade.yaml`, `modules/jnk_cascade.yaml` | none — reported as *collapsed path*, the module is finer-grained and correct |
 | External regulators of ERK tiers the module does not name: PP2A (PPP2CA) ⊣ MEK, AP1 ⊣ MEK, AKT ⊣ RAF, PKC → RAF, PLCγ → RAS (BBM-070); SRC ⊣ HRAS, PTPN11 → HRAS (SIGNOR) | `modules/erk_cascade.yaml` | left open: cross-talk candidates to adjudicate per edge; not all belong in a taxon-neutral core module |
 
-A translator fix came out of the edit: once ERK inhibits RAF *inside* the relay
-bundle, the last tier has an outgoing edge, and the first version of the flattener
-stopped treating it as the bundle's exit. Exits are now the children with no
-outgoing *activating* internal edge, and a pure-inhibitor tier (a GAP) is neither
-an entry nor an exit.
+Two translator fixes came out of the edits. Once ERK inhibits RAF *inside* the
+relay bundle, the last tier has an outgoing edge, and the first flattener stopped
+treating it as the bundle's exit; exits are now the children with no outgoing
+*activating* internal edge, and a pure-inhibitor tier (a GAP) is neither an entry
+nor an exit. And a container with no internal wiring whose child is itself a
+connection endpoint (the JAK-STAT negative-regulation bundle, whose SOCS child is
+STAT-induced) is now expanded to its children instead of becoming a second variable
+next to the child, so the QC check and the translation agree on which loops are
+closed: SOCS is induced, the PTP and PIAS tiers stay external inputs.
 
 ## Relationship to GO-CAM
 
@@ -177,6 +182,7 @@ the entry step rather than the relay.
 - [ ] Decide on and implement schema additions (`update_rule`, `sign`, `boolean_role`, `model_associations`)
 - [x] Close the feedback loops in the ERK, p38 and JAK-STAT modules with primary evidence; reword the JNK step as an external input (NF-κB has no feedback step to close: its module has no negative regulator yet)
 - [x] `module_qc` advisory check "feedback loop cut" + module-page card
+- [x] Address the PR review of [ai4curation/ai-gene-review#3494](https://github.com/ai4curation/ai-gene-review/pull/3494): counterfactual file matches its table, container/child double-counting fixed, SOS feedback split into its direct-ERK and RSK routes, JNK decision cited and its cross-cascade gap recorded, stale prose fixed, `path_sign` exhaustive and deterministic, bnet `0`/`1` constants, SIGNOR `direct`/taxon filters
 - [ ] GO-CAM as a third signed-edge source through the same translator
 - [ ] Extend calibration to JAK-STAT (BBM 166 Drosophila JAK-STAT; SIGNOR pathways), NF-κB (SIGNOR-NFKBC; BBM 136 EGF-TNFα), TCR (BBM 012/080), apoptosis (BBM 020/111)
 - [ ] `module_qc` advisory panel for the calibration diff itself (external-model agreement per module page)
@@ -185,6 +191,30 @@ the entry step rather than the relay.
 - [ ] CoLoMoTo notebook for a shareable, reproducible run
 
 # NOTES
+
+## 2026-09-30
+
+Review round on the PR (automated reviewer). All five "important" findings held up
+and are fixed: (1) the committed counterfactual `.bnet` still carried the DUSP rule
+its caption said it dropped — `BooleanModel.as_inputs()` now strips rule and
+incoming edge so the file is the model the table simulates; (2) the JAK-STAT
+negative-regulation container and its SOCS child were both variables, SOCS appearing
+twice in the JAK rule and the container remaining a free input that subsumed the
+loop just closed — a container with no internal edges whose descendant is an
+endpoint is now expanded to its children; (3) stale "8 edges" and a wrong section
+link in prose that claims nothing is hand-copied; (4) the SOS feedback was sourced
+from the output step but cited direct-ERK evidence — it is now two edges, direct ERK
+(PMID:8816480, SIGNOR) from `erk_mapk` and RSK (PMID:22827337, PMID:9242373,
+BBM-070) from `erk_output`, so each source's edge is matched by the module edge with
+the same route; (5) the JNK non-wiring claim was uncited — PMID:16978838 is now on
+the node, and the p38-output → DUSP1 ⊣ JNK cross-cascade edge that paper implies is
+recorded as a CURATION knowledge gap rather than silently absent. Suggestions taken:
+exhaustive, sorted path search with `?` for ambiguous sign; `with_logic` drops
+non-essential regulators like `parse_bnet`; `0`/`1` constants read and written,
+`&&`/`||` rejected with a message; SIGNOR `direct_only`/`taxa` filters (the
+comparison still uses the pooled export, and says so); module-only readings now
+distinguish "source routes it via unmapped intermediates" from "absent"; tests for
+constants, SIGNOR skipping, the CLI, and `__file__`-anchored paths.
 
 ## 2026-09-27
 

@@ -155,18 +155,41 @@ class BooleanModel:
             rules[var] = expr
             edges = {e for e in edges if e.target != var}
             for reg in _identifiers(expr):
+                sign = _monotone_sign(expr, reg)
+                if sign == "0":  # not essential: no edge, matching parse_bnet
+                    continue
                 if reg not in variables:
                     variables.append(reg)
-                edges.add(SignedEdge(reg, var, _monotone_sign(expr, reg)))
+                edges.add(SignedEdge(reg, var, sign))
         return BooleanModel(variables, rules, edges, self.source)
 
+    def as_inputs(self, *names: str) -> "BooleanModel":
+        """Return a copy in which ``names`` have no rule (free inputs).
+
+        Their incoming edges are dropped too, so the regulatory graph and the
+        rules stay consistent. Used to build counterfactuals ("what if this
+        induced step were an external input, as the module once modelled it").
+
+        >>> bn = parse_bnet("targets, factors\\na, a\\nb, a\\nc, b")
+        >>> bn.as_inputs("b").inputs, sorted(map(str, bn.as_inputs("b").edges))
+        (['a', 'b'], ['b -> c'])
+        """
+        rules = {k: v for k, v in self.rules.items() if k not in names}
+        edges = {e for e in self.edges if e.target not in names}
+        return BooleanModel(list(self.variables), rules, edges, self.source)
+
     def with_inputs(self, scenario: dict[str, bool]) -> "BooleanModel":
-        """Return a copy with the given inputs fixed to constants (a scenario)."""
+        """Return a copy with the given variables fixed to constants (a scenario).
+
+        Constants are written as ``1``/``0``, which BoolNet, PyBoolNet and
+        biodivine-aeon all read. Fixing a regulated variable (not only an input)
+        is allowed and means a knock-in/knock-out of that step.
+        """
         rules = dict(self.rules)
         for var, value in scenario.items():
             if var not in self.variables:
                 raise KeyError(f"unknown variable {var!r}")
-            rules[var] = "true" if value else "false"
+            rules[var] = "1" if value else "0"
         return BooleanModel(list(self.variables), rules, set(self.edges), self.source)
 
     def to_bnet(self, input_mode: str = "identity") -> str:
@@ -259,6 +282,21 @@ class _Flattener:
                 out.append((s, t, sign))
         return out
 
+    def _endpoints(self) -> set[str]:
+        return {str(c.get("source")) for c in self.connections} | {
+            str(c.get("target")) for c in self.connections
+        }
+
+    def _descendants(self, element: str) -> set[str]:
+        node = self.index.get(element)
+        out: set[str] = set()
+        if node is None:
+            return out
+        for child in _children(node):
+            out.add(child)
+            out |= self._descendants(child)
+        return out
+
     def _is_atomic(self, element: str) -> bool:
         node = self.index.get(element)
         if node is None:
@@ -266,11 +304,27 @@ class _Flattener:
         children = _children(node)
         if not children or "participant" in node:  # annoton or leaf node
             return True
-        return not self._internal_edges(element)
+        if self._internal_edges(element):
+            return False
+        # A container with no internal wiring is normally one lumped step. But if
+        # any of its descendants is itself a connection endpoint, the container and
+        # the child would both become variables (the child twice over), so the
+        # container is expanded to its children instead.
+        return not (self._descendants(element) & self._endpoints())
+
+    def _unwired_children(self, element: str) -> Optional[list[str]]:
+        """Children of a non-atomic container that has no internal edges, else None."""
+        node = self.index[element]
+        if self._internal_edges(element):
+            return None
+        return _children(node)
 
     def entries(self, element: str) -> list[str]:
         if self._is_atomic(element):
             return [element]
+        unwired = self._unwired_children(element)
+        if unwired is not None:
+            return [x for child in unwired for x in self.entries(child)]
         node = self.index[element]
         children = _children(node)
         internal = self._internal_edges(element)
@@ -291,6 +345,9 @@ class _Flattener:
     def exits(self, element: str) -> list[str]:
         if self._is_atomic(element):
             return [element]
+        unwired = self._unwired_children(element)
+        if unwired is not None:
+            return [x for child in unwired for x in self.exits(child)]
         node = self.index[element]
         children = _children(node)
         internal = self._internal_edges(element)
@@ -397,10 +454,27 @@ def module_file_to_boolean(
 # Boolean expression parsing (bnet syntax) and monotonicity
 # --------------------------------------------------------------------------
 
-_TOKEN = re.compile(r"\s*(?:(\()|(\))|(&)|(\|)|(!)|([A-Za-z_][A-Za-z0-9_.]*))")
+_TOKEN = re.compile(
+    r"\s*(?:(\()|(\))|(&)|(\|)|(!)|([A-Za-z_][A-Za-z0-9_.]*)|([01])(?![A-Za-z0-9_.]))"
+)
 
 
 def _tokenize(expr: str) -> list[str]:
+    """Tokenise a bnet expression (``&``, ``|``, ``!``, parentheses, identifiers, ``0``/``1``).
+
+    >>> _tokenize("(a | b) & !c")
+    ['(', 'a', '|', 'b', ')', '&', '!', 'c']
+    >>> _tokenize("x, 1"[3:]), _tokenize("0")
+    (['1'], ['0'])
+    >>> _tokenize("a && b")
+    Traceback (most recent call last):
+    ...
+    ValueError: '&&' / '||' are not bnet syntax (use single '&' / '|') in 'a && b'
+    """
+    if "&&" in expr or "||" in expr:
+        raise ValueError(
+            f"'&&' / '||' are not bnet syntax (use single '&' / '|') in {expr!r}"
+        )
     tokens: list[str] = []
     pos = 0
     expr = expr.strip()
@@ -576,16 +650,27 @@ def parse_bnet_file(path: Union[str, Path]) -> BooleanModel:
 # --------------------------------------------------------------------------
 
 
-def signor_signed_edges(path: Union[str, Path]) -> set[SignedEdge]:
+def signor_signed_edges(
+    path: Union[str, Path],
+    direct_only: bool = False,
+    taxa: Optional[set[str]] = None,
+) -> set[SignedEdge]:
     """Signed edges from a SIGNOR ``getPathwayData.php?...&relations=only`` TSV.
 
     Entities are keyed by SIGNOR ``entitya``/``entityb`` names; ``effect`` values
     beginning with ``up-regulates`` map to ``+``, ``down-regulates`` to ``-``, and
-    ``unknown`` rows are skipped.
+    other effects (``unknown``, ``form complex``) are skipped. SIGNOR pools
+    relations across species and includes indirect ones: ``direct_only`` keeps
+    rows whose ``direct`` flag is ``t``, and ``taxa`` keeps rows whose ``tax_id``
+    is in the set (e.g. ``{"9606"}``; SIGNOR uses ``-1`` for unspecified).
     """
     edges: set[SignedEdge] = set()
     with open(path, newline="") as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
+            if direct_only and (row.get("direct") or "").strip().lower() != "t":
+                continue
+            if taxa is not None and (row.get("tax_id") or "").strip() not in taxa:
+                continue
             effect = (row.get("effect") or "").strip()
             if effect.startswith("up-regulates"):
                 sign = "+"
@@ -648,35 +733,58 @@ def project_edges(edges: set[SignedEdge], mapping: dict[str, str]) -> Projection
     return out
 
 
-def path_sign(
+def find_paths(
     edges: set[SignedEdge], source: str, target: str, via: set[str]
-) -> Optional[str]:
-    """Net sign of a directed path ``source -> ... -> target`` through ``via`` symbols.
+) -> list[tuple[str, list[str]]]:
+    """All simple directed paths ``source -> ... -> target`` whose interior lies in ``via``.
 
-    Used to recognise an external edge that the module expresses as a chain
-    through intermediate tiers the external model does not name (tier
-    compression). Returns ``+``/``-`` for the first path found by depth-first
-    search whose interior vertices all lie in ``via``, else ``None``.
+    Returns ``(net_sign, [interior vertices])`` pairs in a deterministic order
+    (adjacency and results sorted), so callers are reproducible across runs.
 
-    >>> es = {SignedEdge("a", "b", "+"), SignedEdge("b", "c", "+"), SignedEdge("c", "d", "-")}
-    >>> path_sign(es, "a", "d", {"b", "c"}), path_sign(es, "a", "d", {"b"})
-    ('-', None)
+    >>> es = {SignedEdge("a", "b", "+"), SignedEdge("b", "d", "+"),
+    ...       SignedEdge("a", "c", "-"), SignedEdge("c", "d", "+")}
+    >>> find_paths(es, "a", "d", {"b", "c"})
+    [('+', ['b']), ('-', ['c'])]
     """
     out: dict[str, list[SignedEdge]] = {}
-    for e in edges:
+    for e in sorted(edges, key=lambda e: (e.source, e.target, e.sign)):
         out.setdefault(e.source, []).append(e)
-    stack: list[tuple[str, str, frozenset[str]]] = [(source, "+", frozenset())]
+    found: list[tuple[str, list[str]]] = []
+    stack: list[tuple[str, str, tuple[str, ...]]] = [(source, "+", ())]
     while stack:
-        node, sign, seen = stack.pop()
+        node, sign, interior = stack.pop()
         for e in out.get(node, []):
             if e.sign not in ("+", "-"):
                 continue
             nsign = sign if e.sign == "+" else ("-" if sign == "+" else "+")
             if e.target == target:
-                return nsign
-            if e.target in via and e.target not in seen and e.target != target:
-                stack.append((e.target, nsign, seen | {e.target}))
-    return None
+                found.append((nsign, list(interior)))
+            elif e.target in via and e.target not in interior and e.target != source:
+                stack.append((e.target, nsign, interior + (e.target,)))
+    return sorted(found, key=lambda p: (len(p[1]), p[1], p[0]))
+
+
+def path_sign(
+    edges: set[SignedEdge], source: str, target: str, via: set[str]
+) -> Optional[str]:
+    """Net sign of the directed path(s) ``source -> ... -> target`` through ``via``.
+
+    Used to recognise an external edge that the module expresses as a chain
+    through intermediate tiers the external model does not name (tier
+    compression). Returns ``+``/``-`` when every such path agrees, ``?`` when
+    paths of both signs exist, and ``None`` when there is no path.
+
+    >>> es = {SignedEdge("a", "b", "+"), SignedEdge("b", "c", "+"), SignedEdge("c", "d", "-")}
+    >>> path_sign(es, "a", "d", {"b", "c"}), path_sign(es, "a", "d", {"b"})
+    ('-', None)
+    >>> es |= {SignedEdge("a", "d", "+")}
+    >>> path_sign(es, "a", "d", {"b", "c"})
+    '?'
+    """
+    signs = {sign for sign, _ in find_paths(edges, source, target, via)}
+    if not signs:
+        return None
+    return signs.pop() if len(signs) == 1 else "?"
 
 
 @dataclass

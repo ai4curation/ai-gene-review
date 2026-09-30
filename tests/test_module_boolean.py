@@ -20,6 +20,7 @@ import pytest
 from ai_gene_review.module_boolean import (
     SignedEdge,
     diff_signed_edges,
+    find_paths,
     format_signed_diff,
     iter_mapping_pairs,
     load_mapping,
@@ -32,13 +33,15 @@ from ai_gene_review.module_boolean import (
     signor_signed_edges,
 )
 
-ERK = Path("modules/erk_cascade.yaml")
-BBM070 = Path("models/boolean/bbm-070-mapk-cancer-cell-fate/model.bnet")
-BBM070_MAPPING = Path(
-    "models/boolean/bbm-070-mapk-cancer-cell-fate/mapping_to_modules.yaml"
+ROOT = Path(__file__).resolve().parents[1]
+ERK = ROOT / "modules/erk_cascade.yaml"
+JAK_STAT = ROOT / "modules/jak_stat_signaling.yaml"
+BBM070 = ROOT / "models/boolean/bbm-070-mapk-cancer-cell-fate/model.bnet"
+BBM070_MAPPING = (
+    ROOT / "models/boolean/bbm-070-mapk-cancer-cell-fate/mapping_to_modules.yaml"
 )
-SIGNOR_EGF = Path("models/boolean/signor/SIGNOR-EGF.tsv")
-SIGNOR_MAPPING = Path("models/boolean/signor/SIGNOR-EGF.mapping_to_modules.yaml")
+SIGNOR_EGF = ROOT / "models/boolean/signor/SIGNOR-EGF.tsv"
+SIGNOR_MAPPING = ROOT / "models/boolean/signor/SIGNOR-EGF.mapping_to_modules.yaml"
 
 
 def _toy_module() -> dict:
@@ -141,8 +144,8 @@ def test_logic_override_and_scenario():
     assert SignedEdge("gtpase", "k2", "+") in overridden.edges
     assert SignedEdge("k1", "k2", "+") in overridden.edges
     fixed = overridden.with_inputs({"receptor": True, "gap": False})
-    assert fixed.rules["receptor"] == "true"
-    assert fixed.rules["gap"] == "false"
+    assert fixed.rules["receptor"] == "1"
+    assert fixed.rules["gap"] == "0"
     with pytest.raises(KeyError):
         bn.with_inputs({"nope": True})
 
@@ -251,4 +254,88 @@ def test_path_sign_recognises_tier_compression():
             {"ras_active", "raf_map3k", "mek_map2k"},
         )
         == "-"
+    )
+
+
+def test_as_inputs_drops_rule_and_incoming_edges():
+    bn = module_file_to_boolean(ERK)
+    assert "mapk_negative_regulation" in bn.rules
+    free = bn.as_inputs("mapk_negative_regulation")
+    assert "mapk_negative_regulation" in free.inputs
+    assert not any(e.target == "mapk_negative_regulation" for e in free.edges)
+    # the counterfactual file written by the demo must be readable back with DUSP as an input
+    assert "mapk_negative_regulation, mapk_negative_regulation" in free.to_bnet()
+
+
+def test_container_with_referenced_child_expands_to_children():
+    """jak_stat: the negative-regulation bundle has no internal edges but its SOCS child is
+    an endpoint, so the bundle must resolve to its children rather than become a second
+    variable alongside socs_feedback."""
+    bn = module_file_to_boolean(JAK_STAT)
+    assert "jak_stat_negative_regulation" not in bn.variables
+    assert bn.rules["socs_feedback"] == "stat_transcription"
+    assert SignedEdge("socs_feedback", "jak_activation", "-") in bn.edges
+    assert bn.rules["jak_activation"].count("socs_feedback") == 1
+    # the phosphatase and PIAS children are external inputs
+    assert {"ptp_dephosphorylation", "pias_restraint"} <= set(bn.inputs)
+
+
+@pytest.mark.parametrize(
+    "text,rule,inputs",
+    [
+        ("targets, factors\nx, 1\ny, x & !z\nz, z", "1", ["z"]),
+        ("targets, factors\nx, 0\ny, x | z", "0", ["z"]),
+        ("targets, factors\nx, true\ny, x", "true", []),
+    ],
+)
+def test_parse_bnet_constant_rules(text, rule, inputs):
+    bn = parse_bnet(text)
+    assert bn.rules["x"] == rule
+    assert bn.inputs == inputs
+    assert not any(e.target == "x" for e in bn.edges)
+
+
+def test_parse_bnet_rejects_c_style_operators():
+    with pytest.raises(ValueError, match="not bnet syntax"):
+        parse_bnet("targets, factors\nx, a && b")
+
+
+def test_signor_filters_and_skipping():
+    pooled = signor_signed_edges(SIGNOR_EGF)
+    human_direct = signor_signed_edges(SIGNOR_EGF, direct_only=True, taxa={"9606"})
+    assert human_direct < pooled
+    # the SOS1 phosphosite rows are macaque (tax 9534): dropped by a human-only filter
+    assert SignedEdge("ERK1/2", "SOS1", "-") in pooled
+    assert SignedEdge("ERK1/2", "SOS1", "-") not in human_direct
+    # 'unknown' effects are skipped: the EGFR -> GRB2 'unknown' row must not add a '?' edge
+    assert not any(e.sign not in {"+", "-"} for e in pooled)
+
+
+def test_find_paths_is_exhaustive_and_deterministic():
+    es = {
+        SignedEdge("a", "b", "+"),
+        SignedEdge("b", "d", "+"),
+        SignedEdge("a", "c", "-"),
+        SignedEdge("c", "d", "+"),
+    }
+    assert find_paths(es, "a", "d", {"b", "c"}) == [("+", ["b"]), ("-", ["c"])]
+    assert path_sign(es, "a", "d", {"b", "c"}) == "?"
+    assert path_sign(es, "a", "d", {"b"}) == "+"
+
+
+def test_module_to_bnet_cli(tmp_path):
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["module-to-bnet", str(ERK), "-o", str(tmp_path)])
+    assert result.exit_code == 0, result.output
+    written = (tmp_path / "erk_cascade.bnet").read_text()
+    assert written.startswith("targets, factors")
+    assert parse_bnet(written).edges == module_file_to_boolean(ERK).edges
+    stdout = runner.invoke(app, ["module-to-bnet", str(ERK)])
+    assert (
+        stdout.exit_code == 0
+        and "inputs: adaptor_recruitment, rasgap_step" in stdout.output
     )

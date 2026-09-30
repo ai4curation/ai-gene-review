@@ -30,6 +30,7 @@ from ai_gene_review.module_boolean import (
     SignedEdge,
     SignedEdgeDiff,
     diff_signed_edges,
+    find_paths,
     iter_mapping_pairs,
     load_mapping,
     module_file_to_boolean,
@@ -142,13 +143,56 @@ def calibrate(
         ext_ids_for_symbol: dict[str, set[str]] = {}
         for ext_id, sym in external_map.items():
             ext_ids_for_symbol.setdefault(sym, set()).add(ext_id)
-        unmapped_ext = {v for v in ext.unmapped_ids}
+        unmapped_ext = set(ext.unmapped_ids)
         for e in sorted(diff.left_only, key=str):
-            reading = "not in source (see mapping notes)"
-            for src in ext_ids_for_symbol.get(e.source, ()):
-                for tgt in ext_ids_for_symbol.get(e.target, ()):
-                    if path_sign(external_edges, src, tgt, unmapped_ext) == e.sign:
-                        reading = "collapsed path in source (source expresses it via intermediates the module does not name)"
+            missing = [
+                sym for sym in (e.source, e.target) if not ext_ids_for_symbol.get(sym)
+            ]
+            if missing:
+                rows.append(
+                    [
+                        f"`{e}`",
+                        "module-only",
+                        f"{', '.join(missing)} has no counterpart in {label} (see mapping notes)",
+                    ]
+                )
+                continue
+            reading = (
+                f"absent from {label} (both ends mapped, no route; see mapping notes)"
+            )
+            # (a) the source expresses the same edge through intermediates that are not mapped
+            routes = [
+                (sign, interior)
+                for src in sorted(ext_ids_for_symbol.get(e.source, ()))
+                for tgt in sorted(ext_ids_for_symbol.get(e.target, ()))
+                for sign, interior in find_paths(external_edges, src, tgt, unmapped_ext)
+                if sign == e.sign
+            ]
+            if routes:
+                reading = (
+                    f"collapsed path in {label} via unmapped intermediates "
+                    f"({' -> '.join(routes[0][1])})"
+                )
+            else:
+                # (b) the source reaches the target from a *different* mapped symbol via
+                # unmapped intermediates (BBM-070 routes DUSP1 from ERK through MSK and CREB)
+                other = [
+                    (sym, interior)
+                    for sym, ids in sorted(ext_ids_for_symbol.items())
+                    if sym != e.source and sym in module_symbols
+                    for src in sorted(ids)
+                    for tgt in sorted(ext_ids_for_symbol.get(e.target, ()))
+                    for sign, interior in find_paths(
+                        external_edges, src, tgt, unmapped_ext
+                    )
+                    if sign == e.sign and interior
+                ]
+                if other:
+                    sym, interior = other[0]
+                    reading = (
+                        f"{label} reaches {e.target} from {sym} via unmapped intermediates "
+                        f"({' -> '.join(interior)})"
+                    )
             rows.append([f"`{e}`", "module-only", reading])
         for e in sorted(diff.right_only, key=str):
             rows.append(
@@ -307,10 +351,13 @@ def dynamics(models: dict[str, BooleanModel]) -> str:
     for var, rule in PRE_CALIBRATION_LOGIC.items():
         lines.append(f"- `{var}, {rule}`")
     lines.append(
-        "- `mapk_negative_regulation` fixed as an input (0, or 1 in the constitutive-DUSP scenario)"
+        "- `mapk_negative_regulation` made a free input again (rule and incoming edge dropped; "
+        "0, or 1 in the constitutive-DUSP scenario)"
     )
     lines.append("")
-    pre = erk.with_logic(PRE_CALIBRATION_LOGIC)
+    # DUSP becomes a free input again (rule and incoming edge dropped), so the
+    # committed file is exactly the model the table below simulates.
+    pre = erk.with_logic(PRE_CALIBRATION_LOGIC).as_inputs("mapk_negative_regulation")
     (OUT / "erk_cascade_pre_calibration.bnet").write_text(pre.to_bnet() + "\n")
     pre_scenarios = {
         label: {

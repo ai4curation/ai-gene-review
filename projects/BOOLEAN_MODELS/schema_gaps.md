@@ -20,17 +20,21 @@ stay valid.
 **Observed.** Every one of the five signalling modules translated (ERK, p38, JNK,
 JAK-STAT, NF-κB) has a "negative regulation" step (`mapk_negative_regulation`,
 `p38_negative_regulation`, `jak_stat_negative_regulation`, …) that inhibits a kinase
-tier but has **no incoming edge**, so it becomes a free input. JAK-STAT even has a
-`socs_feedback` node that STAT transcription `CAUSES`, but SOCS's inhibition of JAK is
-routed through the separate `jak_stat_negative_regulation` input rather than from
-`socs_feedback`. The module *knows* the loop (the prose says "many ERK-induced as
-feedback") and the YAML cuts it.
+tier but has **no incoming edge**, so it becomes a free input. JAK-STAT even had a
+`socs_feedback` node that STAT transcription `CAUSES`, but SOCS's inhibition of JAK was
+routed through the enclosing `jak_stat_negative_regulation` bundle rather than from
+`socs_feedback` (fixed: SOCS now inhibits JAK directly, and the translator expands a
+bundle with no internal wiring to its children when one of them is an endpoint, so
+the bundle no longer doubles as a free input beside its own child). The module
+*knew* the loop (the prose says "many ERK-induced as feedback") and the YAML cut it.
 
-**Consequence.** The translated ERK module has only fixed points; the published model
-(BBM-070) oscillates under sustained EGFR stimulus because ERK inhibits RAF and RSK
-inhibits SOS. Adding just those two edges makes the translated module oscillate too
-([RESULTS §3c](RESULTS.md)). Feedback is the single most consequential wiring fact for
-dynamics, and it is the one the schema currently encourages curators to drop.
+**Consequence.** As first translated, the ERK module had only fixed points; the
+published model (BBM-070) oscillates under sustained EGFR stimulus because ERK
+inhibits RAF and RSK inhibits SOS. With those loops now curated in, the translated
+module oscillates too ([RESULTS §3a](RESULTS.md)); the counterfactual with the loops
+cut, the module's earlier wiring, is the fixed point ([RESULTS §3c](RESULTS.md)).
+Feedback is the single most consequential wiring fact for dynamics, and it is the
+one the schema encouraged curators to drop.
 
 **Proposal.** No new slot — a curation convention: a regulatory step that is *induced
 by* the pathway's own output must carry the `CAUSES`/`POSITIVELY_REGULATES` edge from
