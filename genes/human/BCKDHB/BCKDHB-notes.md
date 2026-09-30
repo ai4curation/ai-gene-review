@@ -132,3 +132,25 @@ in its own WITH/FROM for two of them — that is the expected marker of a node s
 target's own experimental annotation, not circularity. The real gap is that PTHR42980 has
 **no molecular-function IBD at all**, so GO:0003863 — the term with three independent
 experimental annotations on this gene — does not propagate to any ortholog.
+
+
+## 2026-09-30 BCKDHB source and mechanism reassessment
+
+All 41 source assertions remain, with 15 missing supporting-entity lists restored by the normal GOA projection. Two pre-existing authored cofactor-binding annotations remain separately identifiable, giving 43 rows: 34 ACCEPT, six KEEP_AS_NON_CORE, one MODIFY and two inherited NEW. No additional process or annotation is proposed. The five supported alpha-chain interaction records are retained as non-core under the supplied ActionEnum; lack of a more specific assay-grounded replacement is not evidence that an interaction is wrong.
+
+One core describes BCKDHB's participation in the shared alpha2-beta2 E1 active sites. The beta chain contributes ThDP contacts and catalytic chemistry; His146-beta is the numbering used in PMID:12902323, not a newly asserted precursor coordinate. E1 decarboxylates branched-chain ketoacids and reductively acylates the DBT lipoyl group. DBT and DLD perform the subsequent CoA-transfer and reoxidation steps. Alpha-chain phosphorylation regulates assembled E1 and is not a separate beta-chain kinase or phosphatase function. The overall complex oxidation follows reversible transamination.
+
+Six UniProt potassium-binding features describe coordinating residues, not six separate potassium sites. ThDP binding is supported within the assembled alpha/beta active site rather than as an independently demonstrated activity of isolated beta protein. No magnesium-binding annotation is introduced. A short IBA donor list is not a weak phylogenetic argument, and inclusion of the target among experimentally grounded descendants is legitimate. No PAINT-node reconstruction is claimed here.
+
+Both UniProt products are preserved. P21953-2 replaces canonical residues 212–218 and lacks residues 219–392; matching isoform numbers do not establish equivalence to RefSeq transcripts. Its import, assembly and retained enzymatic activity remain questions. The familial leader-region frameshift in PMID:2022752 is not treated as a clean mitochondrial-import experiment, and the reported residual complex activity is approximately 6%, not universally zero. That normal cache is abstract-only despite its repeated Full Text heading.
+
+The complete cached primary abstracts and relevant UniProt features were read, along with official human 1DTW metadata; no new coordinate, density, figure, supplement or full-paper analysis is claimed. Specific interactome and mitochondrial-proteomics supplementary rows were not inspected. The generated Falcon report remains unchanged as a source of leads, not as primary verification. Its incorrect NAD+ regeneration wording and unsupported extramitochondrial generalizations are superseded by the bounded account here. Historical notes are retained.
+
+All ten normal Reactome records were imported through Source94 after the preserved original local retrieval failed. Their normal bodies were reassessed before this proposal was generated. Their reaction descriptions are interpreted at their actual subunit and complex level; database labels for other enzymes do not establish autonomous BCKDHB chemistry. The precise reading scope and any event wording discrepancy are recorded per reference. This integration adds no verbatim quotation.
+
+Reactome R-HSA-5693153 has disputed beta-subunit wording: the phosphorylation-loop evidence identifies E1 alpha. The ten recovered short caches do not expose explicit compartment fields; retained matrix annotations also rely on the independently read human UniProt/E1 evidence.
+
+
+### Validation of the integrated review
+
+The focused `just validate human BCKDHB` command passed with six advisories: five supported generic protein-binding records retained as non-core under the supplied ActionEnum, and one noting that annotations cite primary/database evidence rather than the unchanged generated Falcon report. These advisories do not indicate an unsupported interaction or require a new molecular-function claim. Rendering passed, and the generated HTML is checked against the reviewed YAML. No global validation pass is claimed.
