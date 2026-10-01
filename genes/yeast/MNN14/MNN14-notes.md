@@ -85,8 +85,8 @@ KRE2/MNT1/GT15 mannosyltransferases.
 2. GO:0000139 Golgi membrane — IEA (SubCell). Supported by topology + SubCell. -> ACCEPT.
 3. GO:0006491 N-glycan processing — IGI (PMID:28101612), with SGD:S000001684 (MNN4). This is the
    experimental genetic-interaction annotation matching the double-deletion result. -> ACCEPT (core BP).
-4. GO:0003674 molecular_function — ND (root). Superseded by the 2021 in-vitro catalytic
-   evidence for GO:0000031. -> MODIFY to GO:0000031.
+4. GO:0003674 molecular_function — ND (root). Superseded by the separate NEW
+   GO:0000031 row carrying the 2021 in-vitro catalytic evidence. -> REMOVE.
 5. GO:0005575 cellular_component — ND (root). Superseded by Golgi membrane. -> REMOVE.
 6. GO:0000031 mannosylphosphate transferase activity — NEW from the 2021 recombinant
    Mnn14 biochemical assay.
