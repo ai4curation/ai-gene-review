@@ -54,21 +54,23 @@ wrong in substance.
 
 An earlier draft of this note justified the call by arguing that EtfB's own
 contribution is the upstream electron-carrier step rather than a
-carboxylic-acid catabolic reaction, and attributed a "does the gene product do
-any of the work of that process" test to CLAUDE.md. Both were wrong and have
-been removed. CLAUDE.md's actual participation test counts "contributing the
-structure or cofactor activity that a step depends on" as doing the work, and
-an obligate electron acceptor for the pathway dehydrogenases qualifies — which
-is how the human ortholog review treats ETFB's involvement in GO:0033539
-(`genes/human/ETFB/ETFB-ai-review.yaml`). Nothing that resembled the quoted
-sentence was in CLAUDE.md; it should not have been presented as project
-guidance.
+carboxylic-acid catabolic reaction, and backed that up with a paraphrase
+attributed to project guidance. Both have been removed: the argument does not
+need a project rule quoted at it, and no paraphrase should have been presented
+as one. On GO's own `involved_in` semantics an obligate electron acceptor for a
+pathway's dehydrogenases does part of the work of that pathway, and the human
+ortholog review treats ETFB's involvement in GO:0033539 on exactly that basis
+(`genes/human/ETFB/ETFB-ai-review.yaml`).
 
 The objection that survives is breadth, not participation. GO:0046395 is a
 high-level grouping term reached electronically that covers every carboxylic
 acid the organism degrades, including the many routes that never pass through
 an ETF; a specific donor-pathway term such as GO:0033539 carries the same claim
-without the over-reach.
+without the over-reach. That is why the annotation is now `MODIFY` →
+GO:0033539 rather than `MARK_AS_OVER_ANNOTATED`: marking it over-annotated
+would have left EtfB with no biological-process term while its obligate partner
+etfA keeps GO:0033539 from GOA. As on etfA, GO:0033539 stays out of
+`core_functions` — the donor-acceptor pairing is not demonstrated in KT2440.
 
 ### GO:0016208 AMP binding — added as NEW
 
