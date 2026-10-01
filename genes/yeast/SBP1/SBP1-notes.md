@@ -72,12 +72,13 @@ annotation was removed on the basis of incomplete full text.
 
 - The current GOA refresh adds two PTN000543777 process IBAs: `GO:0006364`
   rRNA processing and `GO:0071028` nuclear mRNA surveillance. The first is seeded
-  from MRD1-like rRNA-processing descendants and a zebrafish RRM protein, and the
-  second from other RRM-family nuclear mRNA surveillance factors. Both were marked
-  `REMOVE` with `FUNCTIONAL_DIVERGENCE`: the direct Sbp1 literature supports a
-  cytoplasmic mRNA-binding, translation-repression and P-body/stress-granule
-  program, while the older SSB-1/snR10/snR11 nucleolar evidence is indirect and
-  does not establish that Sbp1 executes an rRNA-processing step.
+  from SGD:S000006316/MRD1 and zebrafish evidence, while the second is seeded from
+  GBP2/HRB1-like SF3 RRM proteins rather than SBP1/SF56. `GO:0006364` was marked
+  `MARK_AS_OVER_ANNOTATED` and `GO:0071028` was marked `REMOVE`, both with
+  `FUNCTIONAL_DIVERGENCE`: the direct Sbp1 literature supports a cytoplasmic mRNA-binding,
+  translation-repression and P-body/stress-granule program, while the older SSB-1/snR10/snR11
+  nucleolar evidence is indirect and does not establish that Sbp1 executes an rRNA-processing
+  step.
 - A new current-GOA InterPro2GO `GO:0003723` RNA-binding row and UniProt EXP
   `GO:0005737` cytoplasm row were accepted. Four now-absent exact source rows
   were retained but marked `retired: true`: one old GO_REF:0000120 RNA-binding
