@@ -19,60 +19,27 @@
   primary paper beyond PMID:37968396, the broad 2023 Nature yeast interactome
   study already represented in the review.
 
-## 2026-10-10 refresh
+## 2026-10-01 current-GOA refresh
 
-- Re-fetched `yeast/SAS2`, bringing the review to the current 25 GOA rows and
-  adding five current rows for ComplexPortal SAS-I membership, UniProt's
-  experimentally supported protein-lysine-acetyltransferase activity, and three
-  extra IntAct `GO:0005515 protein binding` rows.
-- Kept the standing IBA calls for `PANTHER:PTN007449682`: `GO:0046972 histone
-  H4K16 acetyltransferase activity` is a supported inherited KAT8/Sas2 activity,
-  while `GO:0035267 NuA4 histone acetyltransferase complex` is a KAT5/TIP60
-  complex-membership assertion leaking across MYST paralogs.
-- Accepted the new ComplexPortal and UniProt rows, removed the newly added
-  generic interaction rows, and added explicit `PTHR10615` PAINT support so the
-  accepted and rejected IBA rows both trace to the PAINT node.
-- Repeated the newer-paper search. PubMed still finds no direct 2022-2026
-  `SAS2`/`Sas2`/`SAS-I` primary paper in *Saccharomyces*; the latest direct
-  SAS-I H4K16 paper from a broader H4K16/Sas2 query remains the 2021
-  replication-coupled acetylation study, PMID:34014972.
-- Corrected the newly seeded `GO:0005515` Q12495 interactor from Sas5 to
-  Cac1/Rlf2, the CAF-I largest subunit. The row remains `REMOVE` because generic
-  protein binding is uninformative, but its evidence records the SAS-I link to
-  CAF-I/Asf1 rather than another SAS acetyltransferase complex subunit.
-- Replaced residual title-only `supporting_text` snippets after PR review:
-  `PMID:11731479` and `PMID:15788653` now quote informative abstract text,
-  the SGD `PMID:27655944` silent-mating-type row is retained by curator
-  deference with an `UNVERIFIED` reference review because the local abstract
-  does not mention Sas2, and the zinc-binding RCA row now cites the
-  bioinformatic zinc-proteome method plus the UniProt C2HC MYST zinc-finger
-  feature.
-
-## 2026-10-11 GOA source refresh
-
-- Ran `just fetch-gene yeast SAS2`, then forced a current GOA/UniProt refresh with
-  `just fetch-gene yeast SAS2 --force`. The 2026 live GOA feed split several
-  IntAct protein-binding rows by supporting entity and added current source rows
-  for the SAS4/Cac1 interactions from PMID:11731480, the SAS4 chromatin
-  interactome association from PMID:21179020, the ComplexPortal SAS
-  acetyltransferase complex annotation from PMID:11731480, and the UniProt
-  protein-lysine-acetyltransferase activity annotation from PMID:22020126.
-- Marked nine rows that vanished from the current GOA snapshot as `retired:
-  true`: six old UniProt keyword rows, the Krogan 2006 IntAct SAS4
-  protein-binding row, and two stale Q99314-supported protein-binding rows that
-  had been seeded from the pre-force local GOA snapshot. The retirements record
-  upstream disappearance only; they do not change the biological interpretation
-  of Sas2 as the catalytic SAS-I/SAS acetyltransferase subunit.
-- Re-read cached PMID:11731480, PMID:21179020, and PMID:22020126 while resolving
-  the new rows. PMID:11731480 is abstract-only in the cache but directly states
-  that Sas2 interacts with Cac1 and Asf1 and is present in a nuclear protein
-  complex with Sas4 and Sas5. PMID:21179020 has full text cached and supports the
-  high-throughput chromatin-associated interactome source. PMID:22020126 is
-  abstract-only in the cache but directly reports ySas2 active-site lysine
-  autoacetylation and its requirement for acetylation and protein substrate
-  binding in vitro.
-- `just deep-research-falcon yeast SAS2 --fallback perplexity-lite` could not run
-  in this environment because the deep-research provider credentials were absent.
-  I searched the current web/PubMed-facing index for 2024-2026 direct
-  Sas2/SAS-I primary papers and did not find evidence that changes the September
-  IBA review.
+- Re-ran `just fetch-gene yeast SAS2 --force` and `just fetch-gene-pmids yeast
+  SAS2`. Live GOA now contains 25 rows. The refresh added three IntAct
+  `GO:0005515 protein binding` rows, a ComplexPortal `GO:0033255 SAS
+  acetyltransferase complex` row from PMID:11731480, and a UniProt
+  `GO:0061733 protein-lysine-acetyltransferase activity` row from PMID:22020126.
+- Preserved seven source rows that are no longer live in current GOA as
+  `retired: true`: six broad UniProt keyword IEAs from `GO_REF:0000043`
+  (`GO:0006325`, `GO:0006351`, `GO:0008270`, `GO:0016740`, `GO:0016746`,
+  `GO:0046872`) and the old BioGRID PMID:16554755 protein-binding row.
+- Read the cached PMID:11731480 and PMID:22020126 records while reviewing the
+  new rows. The additional Sas4 and Cac1/Rlf2 interactions from PMID:11731480
+  are valid physical evidence but remain uninformative as generic protein
+  binding; the ComplexPortal SAS acetyltransferase complex row is accepted.
+  PMID:22020126 independently supports the broad protein-lysine-acetyltransferase
+  activity through the conserved Sas2 active-site autoacetylation requirement.
+- Searched again for newer direct SAS2/Sas2/SAS-I/YMR127C/P40963 papers in
+  yeast/Saccharomyces through 2026. I did not find a newer direct biochemical,
+  localization, or complex-membership paper that changes the 2026-09-29 IBA
+  assessment. I fetched PMID:38229233 because it is a 2024 single-cell study of
+  IMD2 subtelomeric heterochromatin fluctuations that mentions Sas2-mediated
+  H4K16 acetylation as boundary context, but it does not provide new direct
+  Sas2 evidence or force a GO annotation change here.
