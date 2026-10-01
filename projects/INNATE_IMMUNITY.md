@@ -332,7 +332,7 @@ proposals added by the reviewer.
 | Species | Gene | Accession | Rows | Accept | Keep non-core | Modify | Remove | Over-annot. | Undecided | New |
 |---|---|---|---|---|---|---|---|---|---|---|
 | human | TLR1 | Q15399 | 81 | 58 | 11 | 4 | 4 | 3 | 0 | 1 |
-| human | TLR2 | O60603 | 146 | 86 | 21 | 7 | 19 | 10 | 2 | 1 |
+| human | TLR2 | O60603 | 146 | 86 | 21 | 8 | 20 | 9 | 1 | 1 |
 | human | TLR3 | O15455 | 126 | 76 | 32 | 3 | 6 | 6 | 3 | 0 |
 | human | TLR5 | O60602 | 33 | 28 | 2 | 2 | 0 | 0 | 1 | 0 |
 | human | TLR6 | Q9Y2C9 | 120 | 70 | 32 | 8 | 6 | 4 | 0 | 0 |
@@ -368,7 +368,7 @@ proposals added by the reviewer.
 | worm | tol-1 | Q9N5Z3 | 7 | 4 | 1 | 1 | 0 | 0 | 0 | 1 |
 | human | TLR4 | O00206 | 275 | 145 | 72 | 5 | 30 | 22 | 1 | 0 |
 | NEMVE | MyD88 | A7RHZ4 | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 |
-| **all** | **37 genes** | | **2748** | **1647** | **569** | **200** | **217** | **77** | **24** | **14** |
+| **all** | **37 genes** | | **2748** | **1647** | **569** | **201** | **218** | **76** | **23** | **14** |
 
 ### Findings
 
@@ -386,10 +386,15 @@ proposals added by the reviewer.
   activity as contributes_to; CD14 is changed to molecular carrier activity
   because it hands LPS on and cannot signal across the membrane. The same LPS
   term had also reached TLR1, TLR2 and TLR6, which recognise lipopeptides; it
-  is modified to pattern recognition receptor activity (TLR1, TLR6) or removed
-  and left undecided (TLR2, where the full text of two experimental papers is
-  not cached). GO-CAM 5fb9cc0600000727 uses the LPS term for the TLR1–TLR2
-  complex too; this is recorded as a question, not edited.
+  is modified to pattern recognition receptor activity on all three. The source
+  is two GO-CAMs, 5fb9cc0600000727 (TLR1–TLR2) and 5fce9b7300000030
+  (TLR2–TLR6): both type the receptor complex as LPS immune receptor activity
+  although their own ligands are lipopeptides, and the GOA rows share their
+  reference, curator and date. One term choice yields six gene annotations
+  (three IDA rows plus three inferred LPS signaling rows). Both models now have
+  `GoCamReview` files recording the receptor activity as WRONG and in CONFLICT
+  with the gene reviews; GO has no lipopeptide immune receptor term, so the fix
+  is GO:0038187 or a new term.
 - **A recurring GOA citation error.** PMID:19593445, a prostate-cancer paper
   about BAD that never mentions TLRs, is cited for GO:0071260 cellular response
   to mechanical stimulus on TLR3, TLR4, TLR5, TLR7, TLR8 and MYD88. Each row is

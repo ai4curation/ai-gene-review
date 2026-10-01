@@ -122,8 +122,9 @@ answers.
    it), LPS-mediated signaling on fly Pelle and Tube (removed), the TLR8 pathway
    term on TLR7 (removed), and LPS receptor activity on TLR1, TLR2 and TLR6,
    which recognise lipopeptides: modified to pattern recognition receptor
-   activity on TLR1 and TLR6, and on TLR2 removed for the review-article row
-   but left undecided for two experimental rows whose full text is not cached. Numbered pathway terms were kept where receptor
+   activity on TLR1, TLR2 and TLR6 (TLR2's review-article row is removed). The
+   rows come from GO-CAMs 5fb9cc0600000727 and 5fce9b7300000030, now reviewed
+   in their `GoCamReview` files. Numbered pathway terms were kept where receptor
    identity is clear (TLR15, TLR21 in chicken and zebrafish, zebrafish tlr5b).
 4. **Missing pathway terms.** For zebrafish tlr22, GO:0002224 is sufficient for
    now: no ligand or adaptor has been shown in zebrafish (the dsRNA work was in
