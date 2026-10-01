@@ -4,6 +4,39 @@
 Companion to `genes/human/COA4/`. Most of the mechanistic genetics for this family is in yeast;
 the human review depends on it via cross-species complementation.
 
+## 2026-10-01 current-GOA and IBA re-review
+
+Refreshed COA4 from current GOA and UniProt for the IBA campaign. The live GOA
+has **18** rows and seeded two new exact-source `PMID:20624914` IGI rows that
+split the previous aggregate `SHY1`/`CYC1` row into one SHY1 row and one CYC1
+row. I accepted both new rows and marked the old aggregate source row
+`retired: true` so the historical assertion stays visible without duplicating
+the live exact rows.
+
+The two live PAINT rows are both sound:
+
+- `PANTHER:PTN004427774 -> GO:0033617 mitochondrial respiratory chain complex
+  IV assembly`, seeded by yeast COA4 target evidence.
+- `PANTHER:PTN000341932 -> GO:0005758 mitochondrial intermembrane space`,
+  seeded by yeast COA4 target evidence.
+
+COA4 itself in the `WITH/FROM` is a target self-seed, not circularity. The
+function and localization are experimentally established on the target, and
+the PAINT assertions additionally record that these calls are inherited in the
+COA4 family.
+
+As in the CMC2 review, I changed both genome-wide C-terminal GFP localization
+rows from `PMID:14562095` to `REMOVE`. The nuclear and cytoplasmic calls are
+best explained as impaired import of a bulky C-terminal GFP fusion: Vögtle et
+al. explicitly warned that IMS proteins lack the matrix import motor force that
+can unfold GFP on import, and that many known IMS proteins in the Huh et al.
+yeast GFP library were scored in the cytosol and/or nucleus.
+
+The 2024-2026 literature search found no new yeast COA4 primary paper that
+changes the 2022/2026 placement of Coa4 upstream of Cox11 in the mitochondrial
+copper delivery pathway. PMID:40936169 is a 2025 human cancer paper about COA4
+overexpression, and PMID:36101433 was a false-positive PubMed hit.
+
 ## Identity and structure
 
 - Twin CX9C protein: CHCH domain 36–77, Cx9C motifs at 39–49 and 59–69, disulfides 39↔69 and
