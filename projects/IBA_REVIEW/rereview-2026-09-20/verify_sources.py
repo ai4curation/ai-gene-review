@@ -29,43 +29,16 @@ def make_signature(term_id, term_label, evidence_type, original_reference_id):
 # exceptions so unrelated source loss still fails loudly.
 EXPECTED_RETIREMENTS = {
     "genes/yeast/HSC82/HSC82-ai-review.yaml": Counter({
-        make_signature("GO:0006457", "protein folding", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0016887", "ATP hydrolysis activity", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0032991", "protein-containing complex", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0005886", "plasma membrane", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0005524", "ATP binding", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0005829", "cytosol", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0050821", "protein stabilization", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0034605", "cellular response to heat", "IBA", "GO_REF:0000033"): 1,
         make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0048471", "perinuclear region of cytoplasm", "IBA", "GO_REF:0000033"): 1,
         make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"): 1,
-        make_signature("GO:0000492", "box C/D snoRNP assembly", "IEA", "GO_REF:0000117"): 1,
         make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"): 1,
-        make_signature("GO:0005737", "cytoplasm", "IEA", "GO_REF:0000044"): 1,
-        make_signature("GO:0005739", "mitochondrion", "IEA", "GO_REF:0000044"): 1,
-        make_signature("GO:0006457", "protein folding", "IEA", "GO_REF:0000120"): 1,
-        make_signature("GO:0016887", "ATP hydrolysis activity", "IEA", "GO_REF:0000120"): 1,
-        make_signature("GO:0043248", "proteasome assembly", "IEA", "GO_REF:0000117"): 1,
         make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"): 1,
-        make_signature("GO:0140662", "ATP-dependent protein folding chaperone", "IEA", "GO_REF:0000002"): 1,
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:15699485"): 1,
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"): 1,
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"): 1,
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"): 1,
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"): 1,
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:37070168"): 1,
-        make_signature("GO:0070482", "response to oxygen levels", "NAS", "PMID:9632766"): 1,
-        make_signature("GO:0005737", "cytoplasm", "HDA", "PMID:14562095"): 1,
-        make_signature("GO:0005739", "mitochondrion", "HDA", "PMID:14576278"): 1,
-        make_signature("GO:0005739", "mitochondrion", "HDA", "PMID:16823961"): 1,
-        make_signature("GO:0005886", "plasma membrane", "HDA", "PMID:16622836"): 1,
-        make_signature("GO:0034605", "cellular response to heat", "IMP", "PMID:2674684"): 1,
-        make_signature("GO:0000492", "box C/D snoRNP assembly", "IMP", "PMID:18268103"): 1,
-        make_signature("GO:0000723", "telomere maintenance", "IMP", "PMID:17954556"): 1,
-        make_signature("GO:0006457", "protein folding", "IMP", "PMID:7791797"): 1,
-        make_signature("GO:0016887", "ATP hydrolysis activity", "IDA", "PMID:18492664"): 1,
-        make_signature("GO:0043248", "proteasome assembly", "IMP", "PMID:12853471"): 1,
         make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:9465043"): 1,
     }),
 }
@@ -78,6 +51,34 @@ def signature(annotation):
 def source_assertions(review):
     return Counter(signature(a) for a in review.get("existing_annotations") or []
                    if (a.get("review") or {}).get("action") != "NEW")
+
+
+def qualifier_backfill_matches(missing, current):
+    """Find missing frozen signatures preserved with only a new qualifier.
+
+    Older seeded reviews omitted qualifiers that are now backfilled by a force
+    fetch. A missing frozen assertion without qualifier is therefore preserved
+    when a current assertion has the same term/evidence/reference/isoform/NOT
+    fields plus any qualifier.
+    """
+    current_by_unqualified = Counter()
+    for encoded, count in current.items():
+        data = json.loads(encoded)
+        if "qualifier" not in data:
+            continue
+        data.pop("qualifier")
+        current_by_unqualified[json.dumps(data, sort_keys=True)] += count
+
+    matches = Counter()
+    for encoded, count in missing.items():
+        data = json.loads(encoded)
+        if "qualifier" in data:
+            continue
+        matched = min(count, current_by_unqualified[encoded])
+        if matched:
+            matches[encoded] = matched
+            current_by_unqualified[encoded] -= matched
+    return matches
 
 
 def verify_identity_migration(path, commit, before, after):
@@ -175,6 +176,10 @@ def main():
             expected, migration = verify_identity_migration(path, commit, before, after)
             result["identity_migration"] = migration
         missing = expected - current
+        qualifier_backfills = qualifier_backfill_matches(missing, current)
+        if qualifier_backfills:
+            result["qualifier_backfills"] = dict(qualifier_backfills)
+            missing -= qualifier_backfills
         retirements = EXPECTED_RETIREMENTS.get(path, Counter())
         applied = missing & retirements
         unexpected_retirements = retirements - missing
