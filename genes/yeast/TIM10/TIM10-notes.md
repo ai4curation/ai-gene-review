@@ -87,3 +87,23 @@
 - Searched 2025-2026 PubMed and the broader web for S. cerevisiae TIM10/MRS11
   and Tim9-Tim10/TIM22 mitochondrial import papers. Newer hits were review-level
   or concerned IMS proteostasis and did not alter the yeast TIM10 GO decisions.
+
+## 2026-10-01 refresh
+
+- Force-refreshed UniProt/GOA and re-reviewed all 37 live source rows plus the
+  nine exact historical source rows no longer present in current GOA.
+- Current SGD has replaced the old direct GO:0140318 protein transporter activity
+  and GO:0051082 unfolded protein binding rows with GO:0140309 unfolded protein
+  holdase activity on the same core Tim10 pathway evidence from PMID:9430585,
+  PMID:9495346, and PMID:30445040.
+- Live PTHR11038 PAINT no longer contains the stale GO:0032977 membrane insertase
+  IBD at PTN000113167 and now carries GO:0140309 at that same small-Tim node; the
+  retired insertase row remains marked as role conflation plus stale PAINT
+  provenance.
+- Added the direct FlyBase rows from PMID:30445040. The Ggc1/TIM9-TIM10 and
+  VDAC/Por1 beta-hairpin assays support GO:0140309 plus the specific TOM-TIM22
+  and beta-barrel precursor routing process rows without changing TIM10's primary
+  TIM22-carrier interpretation.
+- Checked the 2026 Yme1/Tim10 paper, PMID:41556501, after finding its 2025
+  bioRxiv precursor. The final article adds direct biochemical detail to Tim10
+  quality-control context but does not justify a new TIM10 GO assertion.
