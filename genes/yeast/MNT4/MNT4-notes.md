@@ -188,7 +188,7 @@ paper that changes this boundary.
 ## 2026-10-01 — current GOA refresh
 
 Forced a current GOA refresh for the IBA campaign. The refreshed snapshot has
-13 live GOA rows and seeded two rows that SGD now emits separately:
+13 live GOA rows and backfilled two live SGD rows that were missing from the review:
 `GO:0000033 alpha-1,3-mannosyltransferase activity` ISS rows from
 PMID:10521541 with MNT3 (`SGD:S000001276`) and MNT2 (`SGD:S000003226`)
 in `WITH/FROM`.
