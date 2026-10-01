@@ -627,7 +627,7 @@ established:
 | SSA4 | *S. cerevisiae* | P22202 | 33 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
 | SSB1 | *S. cerevisiae* | P11484 | 36 | MODIFY → GO:0140662 | Ribosome-associated HSP70; ATP-driven nascent-chain folding at the tunnel exit |
 | SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0140662 | Ribosome-associated HSP70 paralog of SSB1; ATP-driven nascent-chain folding |
-| SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0140662 | Specialized mitochondrial HSP70 for ATP-driven Fe-S cluster transfer from Isu to Grx5 |
+| SSQ1 | *S. cerevisiae* | Q05931 | 28 | GO:0140662 rejected; proposed iron-sulfur cluster transfer chaperone activity | Specialized mitochondrial HSP70 for ATP-driven Fe-S cluster transfer from Isu to Grx5; broad GO:0044183 retained as non-core pending an Fe-S cluster chaperone term |
 | SSZ1 | *S. cerevisiae* | P38788 | 30 | ACCEPT GO:0044183 | Atypical RAC HSP70-like regulator; pragmatic co-chaperone term, not an ATPase claim |
 | SYO1 | *S. cerevisiae* | Q07395 | 12 | MODIFY | Ribosome assembly |
 | TCP1 | *S. cerevisiae* | P12612 | 23 | MODIFY → GO:0044183 | TRiC subunit |
