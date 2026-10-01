@@ -38,7 +38,13 @@ automatic names:
 - **A0A0D2VUC6 (CAOG_005512) is CoBra.** It is the best T-subfamily match,
   and it has the arginine the paper reports for CoBra at the Lys149
   position.
-- **A0A0D2WSA5** fits the Tbx2/3 class, consistent with the paper's CoTbx3.
+- **A0A0D2WSA5** scores closest to human TBX2. We do not map it to the paper's
+  second gene. The paper calls that gene "CoTbx3" but places it in a new Tbx7
+  class of non-Brachyury holozoan T-box genes ("a previously undescribed class
+  of T-boxes (Tbx7), which includes the remaining (non-Brachyury) filasterean
+  and ichthyosporean T-box genes"). Human T-box domains cannot represent a
+  class with no human member. Corrected 2026-10-01; an earlier version called
+  A0A0D2WSA5 "consistent with the paper's CoTbx3".
 - **Caveats.** The assignment rests on similarity plus one marker residue, not
   a phylogeny. The paper also mentions a *Capsaspora* T-box gene with two
   T-box domains; none of the three UniProt entries has two annotated T-box
