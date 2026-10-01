@@ -133,9 +133,9 @@ role*. The gap is physiological, not structural (see §4).
 
 ---
 
-## 4. Annotation-by-annotation reasoning (GOA has 10 lines)
+## 4. Annotation-by-annotation reasoning (GOA has 11 lines)
 
-All ten GOA lines derive from **homology/electronic/phylogenetic** inference or are
+All eleven GOA lines derive from **homology/electronic/phylogenetic** inference or are
 ND placeholders — there is **no experimental (IDA/IMP/IPI/IGI) annotation** for ERR1.
 
 1. `GO:0004634 phosphopyruvate hydratase activity` / IBA (GO_REF:0000033) — enables.
@@ -164,7 +164,8 @@ ND placeholders — there is **no experimental (IDA/IMP/IPI/IGI) annotation** fo
 7. `GO:0006096 glycolytic process` / IEA (GO_REF:0000120) — involved_in. Redundant
    with #2, electronic. **KEEP_AS_NON_CORE** (same reasoning as #2).
 8. `GO:0004634 phosphopyruvate hydratase activity` / ISA (PMID:7785338;
-   with SGD:S000001217 ENO1, SGD:S000003486 ENO2) — enables. Sequence-similarity
+   with SGD:S000001217 ENO1 and SGD:S000003486 ENO2 represented as separate
+   current GOA source rows) — enables. Sequence-similarity
    annotation from SGD based on the Pryde 1995 identity to ENO1/ENO2. The reference
    supports *sequence similarity*, and the MF is domain-defensible. **ACCEPT**, but
    note the supporting paper reports DNA identity + genomic location only (abstract
@@ -190,8 +191,10 @@ over-ruling. No negated/isoform annotations.
   anchored to the UniProt record; the core numeric claims (100% ERR1=ERR2, all
   catalytic residues conserved) are reproducible from the sequences in the UniProt
   files.
-- The only literature reference in GOA is PMID:7785338 (abstract-only). Quotes used in
-  the review are verbatim substrings of the cached abstract.
+- The only literature reference in GOA is PMID:7785338 (abstract-only). Newer PMID:23359425
+  (also abstract-only) directly tested Err2p/Err3p enolase activity and rescue, so it
+  supports the ERR-family protein-capacity call without establishing native ERR1-locus
+  flux.
 - Falcon deep research was requested; if/when it returns it is kept as
   `ERR1-deep-research-falcon.md`. It must NOT be used to fabricate ERR1-specific
   experimental claims — the paralog-indistinguishability point above stands regardless.
@@ -207,8 +210,31 @@ hanging today. Per project rules I did NOT fabricate a `-deep-research-{provider
 file. This review is therefore grounded entirely in:
   - the UniProt record P0CX10 (domain architecture, catalytic residues, PE level),
   - the QuickGO GOA export (the 10 existing annotations),
-  - the one cached primary reference PMID:7785338 (abstract-only), and
+  - the cached primary references PMID:7785338 and PMID:23359425 (both abstract-only),
   - inline sequence/catalytic-residue analysis run in this session (ERR1 vs
     ENO1/ENO2/ERR2/ERR3).
 The paralog-indistinguishability and dark-gene conclusions do not depend on deep
 research; the honest `knowledge_gaps` section captures exactly what remains unknown.
+
+## 2026-10-01 current-GOA / IBA review
+
+- Refreshed ERR1 from current UniProt/GOA before editing. Current GOA has 11
+  live rows after the header; the refresh split the old SGD `GO:0004634`/`ISA`
+  assertion into separate ENO1 (`SGD:S000001217`) and ENO2 (`SGD:S000003486`)
+  source rows and advanced InterPro/UniProt IEA dates.
+- Checked `interpro/panther/PTHR11902/PTHR11902-paint.tsv`; all three ERR1
+  IBA assertions (`GO:0004634`, `GO:0006096`, `GO:0000015`) trace to
+  `PANTHER:PTN000224401`. The node is the enolase ancestral node and supports
+  transfer of phosphopyruvate hydratase activity and complex membership to the
+  ERR subfamily. The glycolytic-process transfer is also family-consistent, but
+  remains `KEEP_AS_NON_CORE` for ERR1 because native ERR1 expression and flux
+  are not established.
+- Added PMID:23359425. Kornblatt et al. tested the identical ERR2 product and
+  near-identical ERR3 product, showing in-vitro enolase activity and rescue of
+  an eno1 eno2 glucose-growth defect when overexpressed. This strengthens the
+  ERR-family activity and complex inferences without converting the glycolysis
+  process rows into native core ERR1 biology.
+- Rechecked 2024-2026 literature for exact ERR1/ERR2/ERR3 enolase mentions.
+  Later hits either cite the ERR proteins as putative enolases in pathway
+  models or report high-throughput context for ERR2/ERR3; none supersede
+  Kornblatt et al. or add direct ERR1-locus assays.
