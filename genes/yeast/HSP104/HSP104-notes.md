@@ -1,5 +1,48 @@
 # HSP104 review notes
 
+## 2026-10-01 GOA/IBA refresh
+
+- Forced a current GOA refresh and reconciled HSP104 to the 44 live GOA rows.
+  The older GO:0051082 IBA from GO_REF:0000033 is absent from both refreshed GOA
+  and the current PTHR11638 PAINT export. PTN007521008 now emits cytosol,
+  protein-folding chaperone binding, protein refolding, protein unfolding and
+  cellular heat acclimation, but not obsolete GO:0051082. The row was retained
+  as `retired: true` and as `UNDECIDED` rather than mechanically mapped to
+  GO:0044183 or GO:0140309, because the old bare unfolded-client binding claim
+  is not equivalent to either folding-chaperone or holdase activity.
+
+- Treated the S. cerevisiae HSP104 self-donors in the live PTHR11638 IBAs as
+  valid PAINT descendant evidence, not circular evidence. The broad PTN000181243
+  AAA+ node supports cytoplasm and ATP hydrolysis, and the fungal PTN007521008
+  node supports the cytosolic Hsp104 chaperone-binding/refolding/unfolding/heat
+  acclimation assertions. The mitochondrial Hsp78, mycobacterial ClpC, and plant
+  chloroplast nodes in PTHR11638 do not propagate to HSP104 and do not argue for
+  retargeting the budding-yeast rows.
+
+- Retired six stale GOA rows: obsolete GO:0051082 IBA, the direct obsolete
+  GO:0051082 PMID:16135516 IDA row, the old GO_REF:0000043 nucleotide-binding
+  keyword row, the old GO_REF:0000120 ATP-binding row now replaced by
+  InterPro2GO, and two high-throughput PMID:16554755/PMID:19536198 generic
+  GO:0005515 protein-binding rows no longer present in current GOA. The live
+  PMID:20850366 GO:0005515 row was changed to REMOVE because its useful biology
+  is already captured by TRC complex membership.
+
+- Removed the previous local NEW GO:0140545 proposal because SGD now directly
+  annotates HSP104 to ATP-dependent protein disaggregase activity from
+  PMID:31027887. Accepted the new SGD GO:0140545 row, accepted the new
+  InterPro2GO ATP-binding row, retained the new ComplexPortal TRC-complex NAS row
+  as non-core, and rejected the new GO:0015450 / GO_REF:0000108
+  protein-transmembrane-transport pair because GO:0015450 is defined as
+  ATP/pyrophosphate-driven carrier-mediated protein transport across a membrane,
+  whereas PMID:31027887 measures ATP-driven axial-pore movement of soluble
+  polypeptides by a cytosolic disaggregase.
+
+- Searched for newer 2024-2026 HSP104 papers. The 2025 Ste11 paper
+  PMID:41020413 reports that Ste11 aggregates disappear during stress recovery
+  and that this is impaired without Hsp104 or Sse1, further supporting the
+  Hsp104/Hsp70/Hsp110 disaggregase system. It corroborates the core function but
+  does not change the GO action set.
+
 ## 2026-08-28 annotation audit
 
 - HSP104 is the canonical cytosolic Hsp100/ClpB-family AAA+ disaggregase. Its
