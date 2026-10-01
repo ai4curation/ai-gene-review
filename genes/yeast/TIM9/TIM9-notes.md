@@ -67,3 +67,35 @@
 - 2025-2026 searches for TIM9, Tim9-Tim10, `YEL020W-A`, and yeast small-TIM
   literature did not find a newer TIM9-specific primary paper that changes the
   core holdase/chaperone interpretation.
+
+## 2026-10-01 current GOA refresh
+
+Refreshing GOA added 14 exact current rows. I retired nine assertions that have
+fallen out of the current snapshot: the three stale `PANTHER:PTN004407763` IBA
+rows for `GO:0005743`, `GO:0045039`, and broad `GO:0140318`; the old UniProt
+keyword `GO:0015031` and `GO:0046872` IEAs; the old ARBA `GO:0042719` IEA;
+the two former direct `GO:0140318` rows from `PMID:9822593`; and the old
+`GO:0051082` unfolded-protein-binding row that GO has replaced with direct
+`GO:0140309` holdase rows.
+
+The current `PTHR13172` PAINT slice still places the new `GO:0042719`
+mitochondrial IMS chaperone-complex IBA and the 2026 `GO:0140309` unfolded
+protein holdase activity assertion at `PANTHER:PTN004407763`, so the new IBA is
+a clean `NO_FAILURE_CORE` transfer. As in the 2026-09-29 pass, older GOA rows
+against the same node disappeared from GOA because current PAINT no longer
+places mitochondrial inner membrane, protein insertion into mitochondrial inner
+membrane, or broad protein transporter activity at `PTN004407763`.
+
+The full-text 2018 Weinhäupl et al. TIM9-TIM10 structural paper now supports
+four current FlyBase rows. Its recombinant TIM9-TIM10/client data directly
+support `GO:0140309` and `GO:7770061` TOM-TIM22-mediated mitochondrial inner
+membrane protein insertion. The same paper also supports
+`GO:7770063` beta barrel protein insertion into mitochondrial outer membrane
+through VDAC/Por1 beta-hairpin binding and Por1 assembly defects in small-Tim
+binding-cleft mutants, but I kept this row non-core because TIM22-directed
+carrier delivery remains TIM9's dominant route.
+
+I changed the new ARBA `GO:0070013` intracellular organelle lumen row to
+`MODIFY` with `GO:0005758` mitochondrial intermembrane space as the replacement,
+because direct and UniProt evidence resolve the location to IMS and make the
+ARBA term an unhelpful parent.
