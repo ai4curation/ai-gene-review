@@ -37,3 +37,25 @@ Actions remain13ACCEPT,13KEEP_AS_NON_CORE,2REMOVE(electronic transmembrane asser
 
 
 2026-10-01 — Completed review checks. Initial whole-gene independent science PASS822a87 and supplemental distinct science PASS91ad99 preceded canonical application3f984b. Focused schema, source GOA, reference and term validation passed (ee5f25) with one intentional generic-binding advisory under the supplied ActionEnum. HTML renderd05699 and history validation4bd2bb passed. The rendered page embeds the exact reviewed YAML. All30 source objects, absent products and raw31-row GOA are preserved. Ten protected source/cache files are unchanged. No successful provider report, figure-image/supplement reading or global validation is claimed.
+
+
+## Focused follow-up on location and molecular activity, 2026-10-01 UTC
+
+The current PR3758 review was checked against the existing source assertions and primary evidence. This section supersedes the earlier unqualified retention of axon cytoplasm and the reliance on a historical wiki warning; the prior dated notes remain intact.
+
+[Axon cytoplasm (GO:1904115)](https://amigo.geneontology.org/amigo/term/GO:1904115) is a particular neuronal compartment. The complete Discussion paragraph in the canonical [PMID:21998198](https://pmc.ncbi.nlm.nih.gov/articles/PMC3237628/) cache was reread. Besides the cell-body cargo-sorting results, it describes earlier detection of BLOC-1/AP-3 subunits in axons and dendrites and a nerve-terminal supracomplex. These observations prevent a claim that upstream sorting proves exclusion from axons. They do not identify BLOS3 in that compartment. The source electronic row therefore becomes UNDECIDED, with neither a new exclusion claim nor an invented imaging experiment. Its source qualifier and transport-derived supporting entities remain unchanged.
+
+The [GO:0035651 AP-3 adaptor complex binding](https://amigo.geneontology.org/amigo/term/GO:0035651) definition describes association with AP-3. Selected [PMID:22203680](https://pmc.ncbi.nlm.nih.gov/articles/PMC3285357/) expression/purification Methods, Figure 1 textual legend and AP-3 pull-down Results were reread, together with the subcomplex and peripheral-subunit Discussion. The recombinant human octamer binds AP-3 from human and mouse cell lysates with two negative controls; this is positive whole-complex evidence. The inspected assays do not test the effect of selectively omitting BLOS3 on AP-3 binding. Current [GO gene-product relation guidance](https://geneontology.org/docs/go-annotations/) restricts contributes_to to subunits required for that molecular activity. Accordingly, the existing contextual AP-3 row remains and the core knowledge gap now states the precise missing requirement test. No automatic core MF or duplicate NEW annotation is added. No images, supplements or raw assay data were newly inspected.
+
+The BLOS2 association is independently explicit in the canonical UniProt record and remains a supported non-core interaction. Breadth alone does not make the existing experimental assertion false. A more specific activity for that pair has not been established, and its partner must not be exchanged for AP-3 to make the term appear more informative. The generic-binding advisory is retained under the supplied ActionEnum.
+
+Official definitions and displayed parentage confirm that [melanosome transport](https://amigo.geneontology.org/amigo/term/GO:0032402) concerns movement of the organelle, whereas [endosome to melanosome transport](https://amigo.geneontology.org/amigo/term/GO:0035646) concerns delivery of substances to it. They are not an ancestor/descendant duplicate. The experimental whole-organelle row remains UNDECIDED. The transport-vesicle row also remains UNDECIDED: the previously inspected MuHA complex-localization text is positive context, but its omitted figure/supplement and exact BLOS3 assignment are unresolved. This follow-up does not claim new access to them.
+
+The two electronic transmembrane assignments remain REMOVE because sorting membrane cargo between compartments is not movement of protein across a lipid bilayer. Their current reasons now stand on that mechanism, not the old GONUTS flag. The donor's current status is explicitly unresolved and the first propagation classification is a term-scoping problem. The description spacing is corrected to Hermansky-Pudlak syndrome type 8.
+
+All 30 source objects, their order, absent products/alternative products, reference objects and existing quotations are unchanged. The proposed tally is 13 ACCEPT, 12 KEEP_AS_NON_CORE, 2 REMOVE and 3 UNDECIDED, with one core synthesis and zero NEW annotations. No cached source, raw record, canonical review, existing note or history was overwritten. This TMP proposal awaits independent science review and canonical adoption.
+
+
+## Follow-up verification
+
+Independent scientific review approved the six rationale refinements and axon-cytoplasm decision. Focused canonical validation passed with one explained generic-binding advisory, rendering passed, and the new history record validated. All 30 source assertions, prior reference quotes and raw sources remain unchanged.
