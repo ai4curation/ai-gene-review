@@ -29,7 +29,9 @@ OUT = Path(__file__).resolve().parent
 REVIEWS = [
     "SALRS/rosetteless", "SALRS/jumble", "SALRS/couscous",
     "SALRS/hippo", "SALRS/warts", "SALRS/yorkie",
+    "SALRS/SrSeptin2", "SALRS/SrSeptin6",
     "CAPO3/coHpo", "CAPO3/coWts", "CAPO3/coYki",
+    "CAPO3/CoBra", "CAPO3/coITGB2", "CAPO3/coVIN",
     "OSCPE/VIN1", "OSCPE/TLN",
 ]
 PROPAGATED_REFS = {"GO_REF:0000033", "GO_REF:0000118", "GO_REF:0000120"}

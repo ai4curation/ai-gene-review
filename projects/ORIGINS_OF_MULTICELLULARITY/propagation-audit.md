@@ -8,28 +8,43 @@ autolink_gene_symbols: false
 
 **Bottom line:** almost every GO annotation on choanoflagellate, *Capsaspora*
 and sponge proteins is propagated from animals, so we checked where that
-propagation goes wrong. Across the 11 project reviews there are 36 propagated
-rows (TreeGrafter `GO_REF:0000118` and the UniProt multi-method merge
-`GO_REF:0000120`). Reviewers accepted 24, kept 4 as non-core and left 1
-undecided, and down-graded 7. All 7 down-grades are TreeGrafter rows, and
-they come from three different mechanisms:
+propagation goes wrong. The 16 Track A reviews carry 53 propagated rows,
+from TreeGrafter (`GO_REF:0000118`) and the UniProt multi-method merge
+(`GO_REF:0000120`).
 
+| Reviewer action | Rows |
+|---|---:|
+| Accepted | 33 |
+| Kept as non-core | 6 |
+| Undecided | 3 |
+| Down-graded | 11 |
+
+All 11 down-grades are TreeGrafter rows. They come from four mechanisms:
+
+- **TreeGrafter grafts unicellular proteins onto animal-only nodes.** This is
+  the most common failure, with four cases:
+  - *Capsaspora* integrin betas onto the vertebrate ITGBL1 node (Case 7);
+  - choanoflagellate cadherins onto a node PAINT restricts to Bilateria
+    (Case 6);
+  - *Capsaspora* T-box factors onto an all-animal T-box node that carries
+    "cell fate specification" (Case 8);
+  - *Capsaspora* Warts with the citron/ROCK kinases (Case 2).
+
+  The *S. rosetta* protein knocked out as *yorkie* also landed with the MAGI
+  scaffolds (Case 3), but its inherited terms happened to be harmless.
 - **An animal-tissue term placed on a node that includes choanoflagellates.**
   PAINT put four process IBDs on the LATS node PTN002390470. One of them,
-  *regulation of organ growth*, is meaningless in a unicellular organism.
-- **TreeGrafter grafting into the wrong family.** This is the main
-  TreeGrafter failure: two Hippo-pathway proteins landed outside their
-  orthologous clade.
-  - *Capsaspora* Warts was placed with the citron/ROCK kinases.
-  - The *S. rosetta* protein knocked out as *yorkie* was placed with the
-    MAGI-related scaffolds.
-- **A lineage-specific term on a broad node.** A fungal cell-wall term,
-  *mannan biosynthetic process*, sits on a choanoflagellate
-  mannosyltransferase.
+  *regulation of organ growth*, is meaningless in a unicellular organism
+  (Case 1).
+- **A lineage-specific term on a broad node.** A mannan IBD seeded only by
+  *Candida* genes reaches a choanoflagellate mannosyltransferase, oomycetes
+  and green algae (Case 4).
+- **A family-level node term.** Talin "cell-cell adhesion" (Case 5).
 
-Most propagated terms were sound, including *hippo signaling* on the
-*Capsaspora* kinases and coactivator. The problems are specific and fixable at
-named nodes.
+Most propagated molecular-function and signalling terms were sound, for
+example *hippo signaling* on the *Capsaspora* kinases and coactivator. The
+problems are specific and fixable at named nodes; see the
+[upstream tickets](upstream-tickets/README.md).
 
 Data: [`propagation_audit.py`](propagation_audit.py) regenerates
 [`propagation_audit_rows.tsv`](propagation_audit_rows.tsv) (every propagated
@@ -42,8 +57,8 @@ from 2026-10-01.
 
 | Organism | Reviews | Propagated rows | Down-graded |
 |---|---|---:|---:|
-| *Salpingoeca rosetta* (choanoflagellate) | rosetteless, jumble, couscous, hippo, warts, yorkie | 17 | 4 |
-| *Capsaspora owczarzaki* (filasterean) | coHpo, coWts, coYki | 13 | 2 |
+| *Salpingoeca rosetta* (choanoflagellate) | rosetteless, jumble, couscous, hippo, warts, yorkie, SrSeptin2, SrSeptin6 | 19 | 4 |
+| *Capsaspora owczarzaki* (filasterean) | coHpo, coWts, coYki, CoBra, coITGB2, coVIN | 28 | 6 |
 | *Oscarella pearsei* (sponge) | VIN1, TLN | 6 | 1 |
 
 None of these organisms is a PANTHER reference genome, so none of the
@@ -171,7 +186,9 @@ Its TreeGrafter node PTN001270341 gave it the following rows:
 | `GO:0046354` mannan biosynthetic process | **REMOVE** | Defined in GO as the main hemicellulose of softwood; in fungi, Mnn2 builds cell-wall mannan. Nothing suggests choanoflagellates make mannan. |
 
 **Spread.** `GO:0046354` is on 4 choanoflagellate proteins and 1
-ichthyosporean protein. **Recommendation:** restrict the mannan IBD in the
+ichthyosporean protein. From this node it also reaches green algae and oomycetes,
+and all 56 of the node's IBA rows list only *Candida* seed genes
+([ticket 5](upstream-tickets/05-paint-mannan-node.md)). **Recommendation:** restrict the mannan IBD in the
 MNN2 family to the fungal node.
 
 ## Case 5: talin cell-cell adhesion (minor)
@@ -240,6 +257,52 @@ is wrong. Both readings point to a fix in the PTHR24027 tree.
 come to graft onto a Bilateria node. Graft them onto a pre-bilaterian
 cadherin node, or block terms from PTN000616280 for non-bilaterian queries.
 
+## Case 7: Capsaspora integrin betas grafted onto the vertebrate ITGBL1 node
+
+**What happened.** The 9 TreeGrafter rows on *Capsaspora* integrin beta 2
+(coITGB2, A0A0D2WRB3) all come from node PTN002560695 in PTHR10082. The
+PANTHER tree API (2026-10-01) gives this node as subfamily SF3, "INTEGRIN
+BETA-LIKE PROTEIN 1", with species Euteleostomi. Every leaf is a vertebrate
+ITGBL1, a secreted integrin-beta-like protein without the transmembrane
+receptor architecture. coITGB2 is a full transmembrane integrin beta:
+- a MIDAS-type motif;
+- NPxY-type tail motifs;
+- shown to mediate adhesion to fibronectin-coated surfaces (antibody
+  blocking; DOI:10.1101/2020.02.27.967653).
+
+**Spread.** In QuickGO, the node's 9 terms reach six *Capsaspora* integrin-beta
+entries, 54 rows in all:
+- A0A0D2U6H2, A0A0D2VIQ2, A0A0D2WRB3;
+- the cDNA entries D7PE18, D7PE19 and D7PE20.
+
+They also reach one ichthyosporean protein (A0A0L0G967, 9 rows). The terms
+include focal adhesion and cell-cell adhesion. The coITGB2 review marked both
+over-annotated, and modified cell-matrix adhesion to cell-substrate adhesion,
+since *Capsaspora* has no fibronectin ortholog and no known matrix ligand.
+
+**Recommendation for PANTHER.** Graft the unicellular holozoan integrin betas
+onto a pre-metazoan integrin-beta node, not the vertebrate ITGBL1
+subfamily.
+
+## Case 8: "cell fate specification" from an all-animal T-box node
+
+**What happened.** TreeGrafter grafts *Capsaspora* Brachyury (CoBra,
+A0A0D2VUC6) onto PTN000137774 in the T-box family PTHR11267. In the PANTHER
+tree API this is a duplication node whose leaves come from 34 organisms, all
+animals, from *Trichoplax* and *Nematostella* to human. Among its terms is
+`GO:0001708` cell fate specification, an embryonic-development process seeded
+by animal T-box genes. The CoBra review removed it:
+- nothing links CoBra to cell fate in *Capsaspora*;
+- even in *Xenopus*, CoBra activates mesendodermal genes without the
+  target selectivity of animal Brachyury (PMID:24043797).
+
+**Spread.** The same term from this node reaches 5 *Capsaspora* proteins
+(all T-box) and 3 ichthyosporean proteins in QuickGO.
+
+**Note.** PANTHER classifies CoBra in subfamily PTHR11267:SF181,
+"OPTOMOTOR-BLIND PROTEIN", a Tbx2-class name. That conflicts with the
+paper's phylogeny placing CoBra in the Brachyury class.
+
 ## What held up (negative controls)
 
 - **coYki:** all 3 of its TreeGrafter rows were accepted. Capsaspora and
@@ -259,7 +322,7 @@ transfer well. The failures are at the edges:
 
 ## Caveats
 
-- Eleven proteins is a small sample, chosen because they have experimental
+- Sixteen proteins is a small sample, chosen because they have experimental
   literature. It shows that each failure mode exists, not how often it occurs.
 - We read the PAINT node contents from the cached PTHR24356 slice and from
   QuickGO WITH/FROM fields. We did not re-run TreeGrafter or open the PANTHER

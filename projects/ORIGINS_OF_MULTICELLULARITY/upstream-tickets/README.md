@@ -25,6 +25,8 @@ filed.
 | 8 | UniProt / GO annotation | [NOT actin binding (IDA) on vinculin contradicts its cited paper](08-uniprot-vcl-not-actin.md) | 1 NOT IDA | no |
 | 9 | GO ontology | [Taxon constraints for organ-level growth terms; NTR rosette colony development](09-go-ontology.md) | ontology | no |
 | 10 | TreeGrafter (tool) | [QC rule: suppress graft-node terms whose PAINT taxon excludes the query](10-treegrafter-qc-rule.md) | method | no |
+| 11 | PANTHER / TreeGrafter (PTHR10082) | [Unicellular integrin betas grafted onto the vertebrate ITGBL1 node](11-panther-integrin-itgbl1-graft.md) | 54 + 9 TreeGrafter | no |
+| 12 | PANTHER / TreeGrafter (PTHR11267) | [*Capsaspora* Brachyury in a Tbx2-class subfamily; cell fate specification from an all-animal node](12-panther-tbox-cobra.md) | 5 + 3 TreeGrafter (one term) | no |
 
 The background for each ticket is in the
 [propagation audit](../propagation-audit.md), the

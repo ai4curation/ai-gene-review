@@ -28,6 +28,8 @@ lineages that the reference trees sample thinly.
 | Fungal pathway term on a choanoflagellate | *S. rosetta* couscous, F2UJ78 | node PTN001270341 (MNN2 family) | **3, out-of-context process** (pathway absent in host) | mannan biosynthetic process (removed) |
 | Family node term | sponge TLN, A0A3G2LGI8 | node PTN001072690 | **1, granularity / sibling term** | cell-cell adhesion → cell-matrix adhesion |
 | Graft onto a node PAINT restricts to Bilateria | three *S. rosetta* cadherins: F2UD23, F2UFV3, F2USU1 | PTHR24027:SF422, node PTN000616280 (`taxon:33213`) | **4-like, taxon-blind graft** | 30 rows of junction, catenin and adhesion terms; none of the proteins has the beta-catenin-binding domain (PF01049). Not reviewed as gene reviews; see the audit |
+| Graft onto the vertebrate ITGBL1 node | *Capsaspora* integrin beta 2 (coITGB2, A0A0D2WRB3) and five other *Capsaspora* integrin-beta entries | PTHR10082:SF3, node PTN002560695 (Euteleostomi) | **4, mis-placement onto an animal-only node** | focal adhesion and cell-cell adhesion (over-annotated); cell-matrix adhesion → cell-substrate adhesion |
+| Developmental term from an all-animal T-box node | *Capsaspora* Brachyury (CoBra, A0A0D2VUC6) | PTHR11267, node PTN000137774 (duplication node; 34 leaf organisms, all animals) | **3, out-of-context process** | cell fate specification (removed) |
 
 ## What is new relative to the main evaluation
 
@@ -63,13 +65,18 @@ lineages that the reference trees sample thinly.
    heterologous data support each one: coactivator activity, hippo signaling,
    and positive regulation of transcription by RNA polymerase II.
 
-4. **TreeGrafter grafts onto taxon-restricted nodes.** PAINT records cadherin
+4. **TreeGrafter grafts onto taxon-restricted nodes, repeatedly.** PAINT records cadherin
    node PTN000616280 at Bilateria (`taxon:33213`), yet three choanoflagellate
    cadherins graft onto it and inherit its adherens-junction and catenin
    terms ([audit, Case 6](../ORIGINS_OF_MULTICELLULARITY/propagation-audit.md)).
    The main evaluation never tested this, because its corpus is
-   bacterial-heavy. A cheap QC rule would be to suppress terms from a graft
-   node whose PAINT taxon does not include the query organism.
+   bacterial-heavy. Two more cases followed. *Capsaspora* integrin betas
+   graft onto the Euteleostomi ITGBL1 node, and *Capsaspora* T-box factors
+   graft onto an all-animal T-box node that carries "cell fate specification"
+   ([audit, Cases 7 and 8](../ORIGINS_OF_MULTICELLULARITY/propagation-audit.md)).
+   With three of five graft errors in this corpus of the same kind, a cheap QC
+   rule would pay off: suppress terms from a graft node whose PAINT taxon does
+   not include the query organism.
 
 ## Upstream tickets
 

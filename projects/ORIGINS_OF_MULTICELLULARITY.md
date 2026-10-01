@@ -3,7 +3,7 @@ title: "Origins of Animal Multicellularity"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
-genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK, CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1, CDH1, ABL1, MYC, NOTCH1, TP53]
+genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK, CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1, CDH1, ABL1, MYC, NOTCH1, TP53, SrSeptin2, SrSeptin6, CoBra, coITGB2, coVIN]
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals
@@ -26,20 +26,28 @@ relatives carry:
 | Sponges | 16 |
 | Metazoa as a whole | about 952,000 |
 
-We have 30 draft or updated reviews in four tracks:
+We have 35 draft or updated reviews in four tracks:
 
-- **Track A: 11 genes with direct genetic evidence in unicellular relatives
-  and a sponge.** These are the *S. rosetta* rosette genes, the *S. rosetta*
-  and *Capsaspora* Hippo pathways, and sponge vinculin and talin.
+- **Track A: 16 genes with direct genetic evidence in unicellular relatives
+  and a sponge.**
+  - *S. rosetta*: the rosette genes, the Hippo pathway and the septins.
+  - *Capsaspora*: the Hippo pathway, Brachyury, integrin beta 2 and
+    vinculin.
+  - Sponge: vinculin and talin.
 - **Track B: 19 human toolkit genes.** Each review records which functions
   are ancestral and which are animal recruitments.
 - **Track C: a propagation audit.** It found animal tissue terms (organ
   growth), junction terms and fungal pathway terms reaching unicellular
   proteins.
-  - Three PANTHER family-placement errors: *Capsaspora* Warts with the
-    ROCK/citron kinases, the *S. rosetta* yorkie candidate with the MAGI
-    scaffolds, and choanoflagellate cadherins grafted onto a node PAINT
-    restricts to Bilateria.
+  - Five TreeGrafter/PANTHER placement errors. Three of them graft
+    unicellular proteins onto animal-only nodes:
+    - choanoflagellate cadherins onto a node PAINT restricts to Bilateria;
+    - *Capsaspora* integrin betas onto the vertebrate ITGBL1 node;
+    - *Capsaspora* T-box factors onto an all-animal node carrying "cell fate
+      specification".
+
+    The other two are *Capsaspora* Warts with the ROCK/citron kinases, and
+    the *S. rosetta* yorkie candidate with the MAGI scaffolds.
   - One PAINT node placed too deep: the organ-growth term on the LATS node.
 - **Track D: one proposed GO term**, rosette colony development.
 
@@ -177,9 +185,9 @@ accessions given in the papers.
 | 2 | jumble (*jmbl*) | SALRS | F2TWH0 (PTSG_00436; EGD72416) | Forward genetics; mutant cells aggregate into amorphous clumps instead of rosettes, with aberrant glycosylation of the basal ECM [PMID:30556809 "Predicted glycosyltransferases promote development and prevent spurious cell clumping in the choanoflagellate S. rosetta"] | "Uncharacterized protein"; no GOA rows | Predicted glycosyltransferase, one N-terminal TM helix |
 | 3 | couscous (*cous*) | SALRS | F2UJ78 (PTSG_07368; EGD77026) | Forward genetics, same study [PMID:30556809] | "Apple domain-containing protein"; 7 IEA rows incl. `GO:0000026` alpha-1,2-mannosyltransferase activity | PF11051 mannosyltransferase plus PAN/apple domain; IEA MF is plausible, check the Golgi and "mannan biosynthesis"-type process IEAs |
 | 4 | *hippo*, *warts* and *yorkie* (Hippo pathway) | SALRS | F2UQC7 (PTSG_10780), F2U943 (PTSG_04961), F2UDK1 (PTSG_06057), from the bioRxiv preprint DOI:10.1101/2024.07.13.603360 | CRISPR knockouts; warts-KO rosettes are larger than wild type, and Warts and Yorkie regulate ECM genes including couscous [PMID:41037400 "A selection-based knockout approach for a choanoflagellate reveals regulation of multicellular development by Hippo signaling."] | | Pairs with the premetazoan Hippo pathway in *Capsaspora* [PMID:22832104 "Premetazoan origin of the hippo signaling pathway"] |
-| 5 | septins | SALRS | *to resolve* | Tagged septins localise to the basal poles of single cells and rosettes [PMID:30281390 "Transfection of choanoflagellates illuminates their cell biology and the ancestry of animal septins."] | | Localisation only; a role in rosette development is a hypothesis, so CC terms at most |
-| 6 | integrin β2 and vinculin | CAPO3 | *to resolve*; UniProt has several "Integrin beta" entries (e.g. A0A0D2WRB3, A0A0D2VIQ2, A0A0D2X2W6) | Adherent cells attach through actin-dependent filopodia, where integrin β2 and vinculin localise as patches [PMID:32857975] | | Map the paper's "integrin β2" to a UniProt accession from its methods before fetching |
-| 7 | Brachyury | CAPO3 | *to resolve* | Functional conservation shown in *Xenopus*; DNA-binding motif similar to metazoan Brachyury [PMID:24043797 "Early evolution of the T-box transcription factor family"] | | Premetazoan T-box factor; the paper argues metazoan-specific specificity arose later |
+| 5 | SrSeptin2, SrSeptin6 | SALRS | F2UEE2 (PTSG_07215, Group 4 Cdc12-like), F2UDE9 (PTSG_06009, Group 1B SEPT6-like) | Tagged septins localise to the basal poles of single cells and rosettes [PMID:30281390 "Transfection of choanoflagellates illuminates their cell biology and the ancestry of animal septins."] | | Localisation only; a role in rosette development is a hypothesis, so CC terms at most |
+| 6 | integrin β2 (coITGB2) and vinculin (coVIN) | CAPO3 | A0A0D2WRB3 (CAOG_05058; = D7PE19, GenBank GU320673) and A0A0D2WSN3 (CAOG_05123), both named in the methods of the preprint DOI:10.1101/2020.02.27.967653 | Adherent cells attach through actin-dependent filopodia, where integrin β2 and vinculin localise as patches [PMID:32857975] | | Map the paper's "integrin β2" to a UniProt accession from its methods before fetching |
+| 7 | Brachyury (CoBra) | CAPO3 | A0A0D2VUC6 (CAOG_005512), our assignment by T-subfamily similarity plus the Brachyury-specific Arg ([capsaspora-tbox](ORIGINS_OF_MULTICELLULARITY/capsaspora-tbox/RESULTS.md)) | Functional conservation shown in *Xenopus*; DNA-binding motif similar to metazoan Brachyury [PMID:24043797 "Early evolution of the T-box transcription factor family"] | | Premetazoan T-box factor; the paper argues metazoan-specific specificity arose later |
 | 8 | VIN1 / TLN | OSCPE | A0A3B6UES5 / A0A3G2LGI8 | [PMID:29880641] | 5 experimental rows | Reviewed (DRAFT) |
 | 9 | coHpo, coWts, coYki (Hippo pathway) | CAPO3 | A0A0D2WLF3 (CAOG_01932), A0A0D2VGR4 (CAOG_00619), A0A0D2WY30 (CAOG_07866) | Knockouts: coHpo and coWts mutants have nuclear coYki, elongated contractile cells and denser aggregates; coYki mutants bleb and make flatter aggregates; no proliferation effect [PMID:35659869 "Genome editing in the unicellular holozoan Capsaspora owczarzaki suggests a premetazoan role for the Hippo pathway in multicellular morphogenesis."; PMID:38517944 "The Hippo kinase cascade regulates a contractile cell behavior and cell density in a close unicellular relative of animals."] | IEA only | Reviewed (DRAFT); locus IDs from the key resources table of PMID:38517944 |
 
@@ -282,9 +290,10 @@ down-graded, all TreeGrafter IEAs, through three mechanisms:
 The cases are also written up for the
 [TreeGrafter evaluation](TREEGRAFTER/holozoan-hippo-case-study.md).
 
-**Upstream tickets.** [Ten ready-to-file reports](ORIGINS_OF_MULTICELLULARITY/upstream-tickets/README.md):
-- 5 to PANTHER/PAINT (the LATS node, the cadherin graft, the Warts and
-  Yorkie family boundaries, the mannan node);
+**Upstream tickets.** [Twelve ready-to-file reports](ORIGINS_OF_MULTICELLULARITY/upstream-tickets/README.md):
+- 7 to PANTHER/PAINT (the LATS node, the cadherin graft, the Warts and
+  Yorkie family boundaries, the mannan node, the integrin-ITGBL1 graft, the
+  CoBra subfamily and T-box node);
 - 3 to UniProt (the ITGB1-FLNB PMID, the Rosetteless name, the vinculin NOT
   row);
 - 1 to the GO ontology (organ-term taxon constraints; NTR rosette colony
@@ -332,7 +341,7 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] GOA experimental-annotation census across Holozoa
 - [x] Resolve UniProt accessions for rosetteless, jumble, couscous
 - [x] Resolve accessions for *S. rosetta* hippo, warts, yorkie and *Capsaspora* coHpo, coWts, coYki
-- [ ] Resolve accessions for *S. rosetta* septins and *Capsaspora* integrin β2, vinculin and Brachyury (PMID:32857975 is abstract-only; PMID:24043797 gives no locus ID for CoBra)
+- [x] Resolve and review *S. rosetta* SrSeptin2/SrSeptin6, *Capsaspora* integrin β2 (CAOG_05058), vinculin (CAOG_05123) and Brachyury (CAOG_005512, our assignment) — DRAFT
 - [x] `just fetch-gene SALRS <accession> --alias <name>` for Track A priorities 1–3 (works for unreviewed TrEMBL entries)
 - [x] Review: rosetteless (F2U5Y1) — DRAFT
 - [x] Review: jumble (F2TWH0) — DRAFT
@@ -472,3 +481,15 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
   COL4A1 review now records this with a `finding_review` (OVERTURNED), and the
   Track B tables were corrected. Basement-membrane function remains
   animal-specific.
+- **Remaining Track A genes and tickets.**
+  - **Accessions.** Resolved the *S. rosetta* septins (PMID:30281390) and
+    *Capsaspora* integrin beta 2 and vinculin (from the preprint methods,
+    once bioRxiv allowed the download). We assigned *Capsaspora* Brachyury
+    with our own analysis; the paper's "CoTbx3" turned out to belong to a
+    new Tbx7 class, so it is not mapped.
+  - **Reviews.** All five are DRAFT.
+  - **New propagation cases.** Two more TreeGrafter grafts of unicellular
+    proteins onto animal-only nodes: the integrin-ITGBL1 graft (Case 7) and
+    the T-box node's "cell fate specification" (Case 8). With the cadherin
+    case, that makes this the commonest failure mode in the audit. Both are
+    added to the audit, the TreeGrafter case study and the tickets (now 12).
