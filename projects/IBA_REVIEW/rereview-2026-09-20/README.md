@@ -57,10 +57,11 @@ canonical H2KZD5 sources equal the official fetch snapshots, and that all 21
 replacement source assertions equal the preserved unreviewed seed. The 16
 archived NHR-47 assertions are reported separately, not silently counted as
 canonical CSR-1 annotations. See the [migration manifest](../../../genes/worm/csr-1/csr-1-provenance/identity-migration-manifest.json).
-It does not assess biological correctness or count as a manual review.
-Narrow expected-retirement exceptions are registered in the script for current-GOA
-source refreshes; HSP82 has exact signature-level exceptions for qualifier
-backfills and rows no longer present in live GOA.
+Current-GOA refreshes with genuinely retired source assertions are registered as
+narrow signature-level exceptions in `verify_sources.py`, while qualifier-only
+backfills remain matched and reported generically. As of this batch, explicit
+exceptions cover CPS1, HSC82, HSP82, SSQ1, and YAR1. It does not assess
+biological correctness or count as a manual review.
 
 Scientific review checks whether the claimed activity, participation, or
 location is supported. Primary location does not establish exclusivity; broad
