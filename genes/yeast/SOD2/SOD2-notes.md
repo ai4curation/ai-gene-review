@@ -26,11 +26,10 @@
 Refreshing current GOA retained all three SOD2 IBA terms on the same PAINT nodes:
 `GO:0005739 mitochondrion` at `PANTHER:PTN000150076`, and both `GO:0004784
 superoxide dismutase activity` and `GO:0030145 manganese ion binding` at
-`PANTHER:PTN004256454`. The 2026-10-01 PAINT/GOA row for mitochondrial
-localization replaces the old TAIR locus source with `AGI_LocusCode:AT3G10920`,
-and the catalytic IBA replaces both old TAIR locus sources with
-`AGI_LocusCode` identifiers; I kept these as current exact rows because the IBD
-nodes and biological inferences are unchanged.
+`PANTHER:PTN004256454`. The 2026-10-01 PAINT/GOA rows now list
+`AGI_LocusCode` Arabidopsis donors in place of the older TAIR locus identifiers;
+I kept these as current exact rows because the IBD nodes and biological
+inferences are unchanged.
 
 Current GOA dropped five older broad automated rows from the previous review:
 keyword-derived `GO:0016209 antioxidant activity` and `GO:0016491
@@ -41,7 +40,7 @@ retired provenance. The current InterPro2GO `GO:0046872` row is still correct
 but non-core, because the exact `GO:0030145 manganese ion binding` annotation
 captures the active-site cofactor.
 
-Two new `GO_REF:0000123` rows came from the YeastPathways DETOX1-PWY GO-CAM
+Three new `GO_REF:0000123` rows came from the YeastPathways DETOX1-PWY GO-CAM
 import. The activity and process assertions for SOD2 are sound, but the paired
 `GO:0005829 cytosol` location contradicts direct matrix localization in
 PMID:238997 and import-dependent manganese activation in PMID:15851472, so I
