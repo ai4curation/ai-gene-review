@@ -189,6 +189,18 @@ types from the prediction-review taxonomy: `TAXON_CONSTRAINT_VIOLATION` and
 judgement: the question is whether the target sits inside the clade that
 inherited the function, not how many donors there are.
 
+**Report:** [Propagation audit](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md)
+(2026-10-01). Of 36 propagated rows in the 11 Track A reviews, 7 were
+down-graded, all TreeGrafter IEAs, through three mechanisms:
+- animal-tissue IBDs on the LATS node PTN002390470 that includes
+  choanoflagellates (regulation of organ growth);
+- cross-family grafts (*Capsaspora* Warts into the citron/ROCK family; the
+  *S. rosetta* yorkie candidate into the MAGI-related family);
+- a fungal mannan term on couscous.
+
+The cases are also written up for the
+[TreeGrafter evaluation](TREEGRAFTER/holozoan-hippo-case-study.md).
+
 ### Track D: ontology gaps
 
 - Is there a GO process term for clonal colony (rosette) development in a
@@ -237,7 +249,8 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] Review CAPO3 coHpo, coWts, coYki — DRAFT
 - [x] Review SALRS hippo, warts, yorkie — DRAFT
 - [ ] Track B human toolkit reviews (none started)
-- [ ] Track C propagation audit (started: three cases so far, coWts, warts, yorkie; see 2026-10-01 notes)
+- [x] Track C propagation audit for the Track A genes: [report](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md), cross-posted to the TREEGRAFTER project
+- [ ] Track C: extend the audit to the Track B human genes' unicellular orthologs
 - [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
 - [ ] Deep research (falcon) for the three SALRS genes, once a provider key is available
 

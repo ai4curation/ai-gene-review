@@ -365,6 +365,15 @@ fixes:
   (FliI in *Caulobacter*, *H. pylori*, *P. putida*, *E. coli* and *Salmonella*;
   SctN in *Salmonella* ×2, *Yersinia* and *Shigella*) remove 31 of the 35 affected
   rows and mark the other 4 as over-annotations.
+- **[Unicellular holozoans: Hippo pathway case study](TREEGRAFTER/holozoan-hippo-case-study.md)**
+  — TreeGrafter on choanoflagellate, *Capsaspora* and sponge proteins, which
+  have no IBA rows because none of them is a PANTHER reference genome. Two
+  cross-family mis-placements: *Capsaspora* Warts grafted with the
+  citron/ROCK kinases (PTHR22988:SF71), and the *S. rosetta* protein knocked out
+  as yorkie grafted with the MAGI-related family. One correct graft still
+  inherits animal-tissue IBDs from LATS node PTN002390470, including
+  `regulation of organ growth` on a unicellular organism. Not part of the
+  frozen snapshot.
 - **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
@@ -376,6 +385,18 @@ fixes:
 
 ---
 # NOTES
+
+## 2026-10-01
+
+- Added the [unicellular holozoan Hippo case study](TREEGRAFTER/holozoan-hippo-case-study.md)
+  from the ORIGINS_OF_MULTICELLULARITY reviews (11 proteins; 7 of 36
+  propagated rows down-graded, all `GO_REF:0000118`). New relative to the
+  frozen set: mis-placements that cross PANTHER family boundaries (Warts into
+  PTHR22988, Yorkie candidate into PTHR10316). Also a working hypothesis that
+  reference proteomes escape this because their tree position, not the HMM
+  call, sets their IBAs: fly wts is in PTHR22988 by UniProt's classification
+  but takes its IBAs from the LATS node. None of these rows are in the frozen
+  2026-09-06 tables.
 
 ## 2026-09-27
 
