@@ -47,3 +47,37 @@ The action is therefore `MARK_AS_OVER_ANNOTATED` rather than `KEEP_AS_NON_CORE`:
 compartment is retained (the IBA-overturn bar is not met) while the activity claim
 embedded in the qualifier is flagged as unestablished. `located_in GO:0005737` would be
 the accurate form of this annotation.
+
+## 2026-10-01 current-GOA and IBA refresh
+
+The forced current-GOA refresh reduced live GOA rows from 37 to 30. Five older assertions
+are now absent from live GOA and were retained only as `retired: true`: UniProt keyword
+`GO:0006325 chromatin organization`, UniProt keyword `GO:0006351 DNA-templated
+transcription`, ARBA `GO:0010557 positive regulation of macromolecule biosynthetic
+process`, UniProt keyword `GO:0016787 hydrolase activity`, and a PMID:16554755
+high-throughput `GO:0005515 protein binding` row.
+
+The current PTHR10625 PAINT snapshot still supports the two core HDA1 IBA transfers:
+PTN000065904 carries `GO:0000118 histone deacetylase complex`, and PTN008143312 carries
+`GO:0040029 epigenetic regulation of gene expression`. The GO:0000118 donor set includes
+the target itself, `SGD:S000004966`, which is not circular in PAINT: the SGD experimental
+annotation is descendant evidence used to place the ancestral IBD. The GO:0005737
+cytoplasm row remains the sole over-annotated IBA, and the overreach is specifically the
+`is_active_in` qualifier rather than the PAINT node.
+
+GOA now also exposes HDA2-specific IntAct rows alongside the existing HDA3 rows:
+`Q06629` is Hda2 and `Q06623` is Hda3 in the current UniProt record. PMID:11287668
+directly establishes both HDA1-HDA2/HDA3 complex membership and HDA1 self-interaction:
+the cached abstract states that HDA2 and HDA3 are in the HDA1 complex, that HDA1
+interacts with itself and with the HDA2-HDA3 subcomplex, and that mutations in any of
+the three components disrupt catalytic activity [PMID:11287668 "These interactions are
+necessary for catalytic activity because mutations in any of the three"]. The specific
+complex rows are kept; the generic HDA2/HDA3 protein-binding rows are removed as
+uninformative molecular-function annotations.
+
+Newer literature search: exact searches for HDA1/Hda1/YNL021W with Saccharomyces
+cerevisiae in 2024-2026 did not find a peer-reviewed paper that changes GO curation.
+A 2026 SSRN preprint reports Hda1 effects on leucine homeostasis, and a 2025
+fatty-alcohol cell-factory paper uses HDA1 deletion as a strain-engineering
+perturbation, but neither adds direct Hda1C molecular-function or core chromatin
+evidence beyond the established HDAC-complex model.
