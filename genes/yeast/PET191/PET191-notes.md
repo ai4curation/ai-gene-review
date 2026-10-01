@@ -44,3 +44,20 @@
   its involvement in the stage between MTCO1 maturation and the incorporation of
   MTCO2"]. This is consistent with, rather than corrective of, the yeast PAINT
   transfer.
+
+## 2026-10-01 current-GOA sweep
+
+- Refreshed UniProt/GOA and found the same ten live GOA rows: two PTHR28627
+  IBA rows, one SubCell intermembrane-space IEA, two direct complex-IV assembly
+  IMP rows, one direct intermembrane-space IDA, one direct inner-membrane IDA,
+  two high-throughput mitochondrial HDA rows, and the SGD molecular-function ND
+  placeholder.
+- Refetched the `PTHR28627` PAINT slice. `PTN002007797` still has both node
+  assertions: `GO:0005739` mitochondrion, seeded by yeast Pet191 and human
+  COA5, and `GO:0033617` mitochondrial respiratory chain complex IV assembly,
+  seeded by yeast Pet191 itself. The row-level
+  `propagation_review.source_entities` now name only this PTN node; the extant
+  `WITH/FROM` descendants remain as deterministic `supporting_entities`.
+- Searched for newer PET191/COA5 papers in 2025-2026 and found no newer
+  yeast-specific primary paper beyond the already-cached 2025 human COA5
+  complexome study.
