@@ -1,3 +1,8 @@
+---
+title: "Pennycress ortholog calls"
+species: [THLAR, ARATH]
+---
+
 # Pennycress ortholog calls for module exemplars (curator judgment)
 
 These calls interpret the generated tables in `results/` (`orthologs.tsv`, `candidates.tsv`,

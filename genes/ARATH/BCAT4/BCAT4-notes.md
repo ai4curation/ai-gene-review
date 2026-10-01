@@ -21,3 +21,14 @@
 - EXP from PMID:18318836 (Funakoshi 2008, D-amino acid aminotransferase paper) is abstract-only and the abstract does not mention BCAT4; UniProt cites it for BCAT4 kinetics, so deferred to curator (ACCEPT).
 - NEW: GO:0033322 L-homomethionine biosynthetic process. Participation passes (BCAT4 catalyzes the first step of the chain-elongation cycle). Comparator check: QuickGO shows zero annotations to GO:0033322 for any gene product, so no convention excludes catalysts; term is unused rather than deliberately withheld.
 - No deep-research file was available at the time of review.
+
+## 2026-10-01: GO:0033322 withdrawn
+
+The NEW annotation to GO:0033322 (L-homomethionine biosynthetic process) has been removed, and the
+term dropped from core_functions. GO obsoleted the sibling terms GO:0033506 ("glucosinolate
+biosynthetic process from homomethionine": "a specific pathway variant, which is out of scope for
+GO", replaced by GO:0019761) and GO:0033321 ("homomethionine metabolic process": "an unnecessary
+grouping term"). No gene product in any species carries GO:0033322. Read together, this is a GO
+convention to annotate the chain-elongation enzymes to glucosinolate biosynthetic process
+(GO:0019761), which this gene already carries, not a gap to fill. The question is kept as a
+suggested_question for GO.

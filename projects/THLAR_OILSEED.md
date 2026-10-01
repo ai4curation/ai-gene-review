@@ -96,18 +96,41 @@ the modules:
 - **Paralog mis-propagation:** leucine-biosynthesis annotations on MAM1 were inherited
   from its IPMS paralogs, and MAM1 shows no IPMS activity, so they are removed. MAM3 does
   have weak IPMS activity, so that annotation is kept as non-core.
-- **Chain-elongation process term:** BCAT4, BCAT3, MAM1 and MAM3 gain the term
-  `L-homomethionine biosynthetic process` (GO:0033322). The term fits by definition, but
-  QuickGO shows no gene product in any species annotated to it.
+- **Chain-elongation process term withdrawn:** BCAT4, BCAT3, MAM1 and MAM3 briefly carried the
+  unused term `L-homomethionine biosynthetic process` (GO:0033322). It was withdrawn because GO has
+  obsoleted its sibling terms as pathway variants out of scope, pointing to glucosinolate
+  biosynthetic process instead. It is kept as a question for GO in each review.
 - **Disputed ESP evidence:** the ESP leaf-senescence and defence annotations come from a
   study in Columbia, whose leaves are reported to have essentially no ESP. They are kept
   as non-core, not removed.
 
+## Pennycress orthologs
+
+`THLAR_OILSEED/ortholog_mapping/` holds a reproducible reciprocal-best-hit search of every
+Arabidopsis enzyme in the two modules against the pennycress reference proteome and back.
+The calls, with reasons, are in [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.md).
+
+- **One-to-one:** 13 enzymes have clear one-to-one pennycress orthologs at 83-96% identity. The
+  10 whose PANTHER family agrees with the module's were added to the modules as pennycress
+  examples (for instance BCAT4, MAM1, SUR1, SOT17, KCR1 and ECR).
+- **Expanded families:** pennycress has at least five TGG1-like myrosinases and at least four
+  SOT18-like sulfotransferases.
+- **Single genes:** one pennycress gene corresponds to both Arabidopsis CYP79F1 and CYP79F2,
+  and one to both SSU2 and SSU3.
+- **No counterpart found:** MAM3, FMOGS-OX1 and NSP1. A missing MAM3 would fit seed
+  glucosinolate dominated by the one-turn product sinigrin, but absence from a set of
+  predicted genes is not proof of loss.
+- **No true ESP:** the pennycress protein that best matches Arabidopsis ESP is 84% identical
+  to pennycress TFP, so it is a TFP-like paralog.
+- **Gene-model problems:** the AOP2, UGT74C1 and PAS2 matches sit in partial or fused gene
+  models.
+
 ## Next steps
 
 1. Review the other oil-composition genes (FAD2, ROD1) using PMID:33968108.
-2. Find pennycress orthologs of the glucosinolate module enzymes (especially AOP2 and the
-   myrosinases) in the reference proteome, and add them as examples once reviewed.
+2. Check the pennycress AOP2 gene model (TAV2_LOCUS22152 looks partial) and the PAS2 model
+   (fused to an MSL2-like gene). Pennycress makes allylglucosinolate, so a functional AOP2 is
+   expected.
 3. Review the glucosinolate regulators targeted in domestication (MYB28, MYC3;
    PMID:41578087). They are deliberately outside the module.
 4. Seed coat and weediness: TT8 knockout (PMID:41578087; PMID:41685867).

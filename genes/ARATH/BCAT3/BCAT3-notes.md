@@ -14,3 +14,14 @@
 - NEW GO:0019761 glucosinolate biosynthetic process (IMP, PMID:18162591): BCAT3 lacks it in GOA although it catalyzes elongation-cycle transaminations; comparator BCAT4 and MAM1/MAM3 carry it.
 - NEW GO:0033322 L-homomethionine biosynthetic process: term currently unannotated anywhere (QuickGO), so not a deliberate convention.
 - No deep-research file was available at the time of review.
+
+## 2026-10-01: GO:0033322 withdrawn
+
+The NEW annotation to GO:0033322 (L-homomethionine biosynthetic process) has been removed, and the
+term dropped from core_functions. GO obsoleted the sibling terms GO:0033506 ("glucosinolate
+biosynthetic process from homomethionine": "a specific pathway variant, which is out of scope for
+GO", replaced by GO:0019761) and GO:0033321 ("homomethionine metabolic process": "an unnecessary
+grouping term"). No gene product in any species carries GO:0033322. Read together, this is a GO
+convention to annotate the chain-elongation enzymes to glucosinolate biosynthetic process
+(GO:0019761), which this gene already carries, not a gap to fill. The question is kept as a
+suggested_question for GO.

@@ -16,3 +16,14 @@
 - Chloroplast localization for MAM1 itself is by sequence/proteomics; MAM3 paralog is immunolocalized [PMID:17369439].
 - Cached PMID:31023839 (Kumar et al. 2019, Brassica juncea MAM structure) for background; not cited in review.
 - No deep-research file was available at the time of review.
+
+## 2026-10-01: GO:0033322 withdrawn
+
+The NEW annotation to GO:0033322 (L-homomethionine biosynthetic process) has been removed, and the
+term dropped from core_functions. GO obsoleted the sibling terms GO:0033506 ("glucosinolate
+biosynthetic process from homomethionine": "a specific pathway variant, which is out of scope for
+GO", replaced by GO:0019761) and GO:0033321 ("homomethionine metabolic process": "an unnecessary
+grouping term"). No gene product in any species carries GO:0033322. Read together, this is a GO
+convention to annotate the chain-elongation enzymes to glucosinolate biosynthetic process
+(GO:0019761), which this gene already carries, not a gap to fill. The question is kept as a
+suggested_question for GO.
