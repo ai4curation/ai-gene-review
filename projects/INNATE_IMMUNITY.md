@@ -227,6 +227,19 @@ reviews:
 - [RIG-I signaling](../modules/rig_i_signaling.html)
 - [Canonical NF-kappaB signaling](../modules/nfkb_canonical_signaling.html)
 - [Type I interferon signaling](../modules/type_i_interferon_signaling.html)
+- [TLR2-heterodimer lipopeptide sensing](../modules/tlr2_heterodimer_lipopeptide_signaling.html)
+  and [TLR4-MD-2 LPS sensing](../modules/tlr4_md2_lps_signaling.html): curated
+  from the batch-1 reviews as reference representations. TLR1-TLR2 and
+  TLR2-TLR6 are pattern recognition receptors (GO:0038187) whose partner subunit
+  carries the lipopeptide-binding specificity; GO:0001875 lipopolysaccharide
+  immune receptor activity appears only on TLR4-MD-2. Each receptor and adaptor
+  links to the production GO-CAM activity it corresponds to, with a note where
+  the GO-CAM differs.
+
+Two of those GO-CAMs, 5fb9cc0600000727 (TLR1-TLR2) and 5fce9b7300000030
+(TLR2-TLR6), have `GoCamReview` files recording why their receptor activity is
+wrong; the two TLR4 models (5f46c3b700001031, 6413ac9800000654) type TLR4 only
+with generic signaling receptor activity and omit MD-2.
 
 Production GO-CAMs in `gocams/index.tsv` relevant to the first batch
 (human unless stated):
