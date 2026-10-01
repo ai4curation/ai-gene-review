@@ -126,3 +126,33 @@ The clathrin donor is rat/RGD; MGI supplies the cross-species comparison display
 The final independent science peer passed before applying this follow-up. `just validate human BCAP31` exited 0 with 21 warnings: 18 retained non-core protein-binding records, one unresolved IBA lacking an independently inspected PAINT node, one uncited provider-output warning, and one ontology-version label warning. The current official label for GO:0140597 is protein carrier activity; the local validator expects its older synonym protein carrier chaperone. Supported interaction records remain non-core under the supplied action definitions; no unsupported replacement activity or propagation diagnosis was invented to suppress warnings. The separate `pkg_resources` deprecation notice is an environment warning. The pathway PMID check passed. No repository-wide validation is claimed.
 
 `just render human BCAP31` succeeded. A new Codex/gpt-6 history session was scaffolded for PR #3605, with its validation recorded separately. The prior history and pathway, immutable source files, and all 30 publication/Reactome dependencies are preserved unchanged. This entry supersedes the earlier 23-warning validation count.
+
+
+## 2026-09-30: PAINT node inspection and official ontology evidence
+
+This entry supersedes the earlier statement that the revised PAINT node was not inspected. The [cached PAINT table](../../../interpro/panther/PTHR12701/PTHR12701-paint.tsv) contains four IBDs at PTN000294723: GO:0005789 (20260528), GO:0140388 (20260603), GO:0030970 and GO:2000060 (both 20260521). Neither GO:0006888 nor GO:0070973 remains. The two historical GOA IBAs, both dated 20170228, are now MARK_AS_OVER_ANNOTATED. Their source node and mouse donors are retained unchanged as historical provenance. The client-specific mouse and human results remain valid; this change follows the retired phylogenetic assertions rather than interpreting an incomplete phenotype as absence of function [PMID:15187134; PMID:17056546].
+
+The GO:0140388 IBD is seeded by UniProtKB:P51572, BCAP31 itself. This is expected when target experimental evidence grounds a PAINT ancestral assertion; it is not circular. The new node has been considered explicitly. The broader GO:0140597 carrier description is retained while a specific knowledge gap records how the narrower ATP-dependent ratchet assignment maps to the client-delivery experiments. The review neither removes that current IBD nor claims to have inspected its originating experimental annotation. Reconciliation with the curator requires the underlying assay, not a donor-count argument [PMID:18555783].
+
+The official [AmiGO record for GO:0140597](https://amigo.geneontology.org/amigo/term/GO:0140597), read on 2026-09-30, displays these fields:
+
+```text
+Accession: GO:0140597
+Name: protein carrier activity
+Synonyms: protein carrier chaperone, protein chaperone
+Last file loaded: 2026-08-06
+```
+
+Thus the local validator's alternative label reflects a different ontology version. The [GO:0140657 parent page](https://amigo.geneontology.org/amigo/term/GO:0140657) lists GO:0140388 under ATP-dependent activity, and the [FlyBase GO record](https://flybase.org/cgi-bin/cvreport.pl?id=GO:0140388) describes ATP-dependent binding cycles that drive membrane translocation. These sources make the label and mechanistic distinction checkable without changing source-derived IDs.
+
+Short verbatim anchors now support the signaling and mitochondrial-localization cores [PMID:21183955; PMID:31206022]. PMID21183955's retained normal cache is abstract-only, contrary to the PR comment's full-text characterization; the previously documented selected external Results remain separate. The mitochondrial quote supports the reported localization phenotype and does not establish an autonomous import motor. No NEW annotation is added, and supported generic interactions retain their existing non-core decisions under the supplied action definitions.
+
+
+### Structured record of the retired PAINT assertions
+
+The two historical trafficking IBAs now record `SOURCE_STALE_OR_MISSING` for PANTHER:PTN000294723. This classification means that their respective transferred terms no longer appear on the inspected node. It does not infer the reason for the historical source withdrawal or a target-specific loss of function. No biological failure subtype is assigned. The current BCAP31-seeded translocation-chaperone IBD remains explicitly acknowledged above.
+
+
+## Second follow-up validation, 2026-10-01 UTC
+
+The independently reviewed follow-up and narrowly reviewed propagation metadata pass focused validation (20 warnings), history validation, and rendering. Eighteen warnings concern supported generic binding retained as non-core under the supplied action definitions; one records reliance on direct primary/database sources rather than the unchanged generated report. The remaining warning reflects the older local label for GO:0140597; the current official name, protein carrier activity, was checked against AmiGO. The two prior missing-propagation warnings are resolved with an explicit retired-source classification, without inferring a biological cause. All 61 source objects and two products are preserved. No new global validation pass is claimed.
