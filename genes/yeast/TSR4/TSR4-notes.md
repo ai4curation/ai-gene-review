@@ -67,3 +67,23 @@ decision for TSR4.
 The core synthesis is therefore a cytoplasmic, Rps2-specific protein carrier
 chaperone whose activity directly supports ribosomal small-subunit biogenesis;
 SSU-rRNA maturation is retained as a downstream annotated consequence.
+
+## 2026-10-01 current GOA and PAINT refresh
+
+- Forced a fresh GOA/UniProt pull for TSR4. Current GOA has 14 live rows; exact row
+  parity required retiring the stale GO_REF:0000043 ribosome-biogenesis IEA row and the
+  three obsolete `GO:0051082 unfolded protein binding` rows, then accepting the two new
+  SGD IPI rows to `GO:0044183 protein folding chaperone` and the derived
+  `GO:0006457 protein folding` IEA row.
+- Added GOA's explicit qualifiers and `WITH/FROM` support entities to the live rows. The
+  only IBA row still traces to `PANTHER:PTN000958897|SGD:S000005382`, and the
+  target's own SGD seed remains valid descendant evidence rather than a circular support.
+- Refetched the PTHR47524 family and PAINT cache. Unlike the August 28 review, the local
+  cache now resolves `PANTHER:PTN000958897` and confirms the `GO:0030490 maturation of
+  SSU-rRNA` IBD seeded by TSR4 itself, so the IBA propagation source is now classified as
+  `SUPPORTS_TRANSFER` rather than `SOURCE_STALE_OR_MISSING`.
+- Searched for 2023-2026 TSR4/Rps2/uS5 literature. PMID:37509163 was already covered by
+  the Falcon report; PMID:42641886 is a new 2026 primary paper showing that the Rps2
+  N-terminal extension integrates Tsr4 binding, Pse1 importin recognition, and arginine
+  methylation. It reinforces the carrier-chaperone model and narrows the remaining
+  handoff question, but it does not require a new GO action.
