@@ -151,12 +151,11 @@ from external GOA/PAINT knowledge rather than corroborable here.
 The actions stayed unchanged, but the node is not stale: the cached upstream
 PANTHER `IBD.gaf` still places the 2020 GO:0005654 IBD and the 2025 GO:0005730
 IBD at PTN001144152. Nucleolus remains `ACCEPT` and `NO_FAILURE_CORE` because
-the GOA WITH/FROM list includes SRP40 itself (`SGD:S000001800`), the direct
-yeast IDA donor from Meier 1996
+the PAINT placement is concordant with direct yeast IDA evidence from Meier 1996
 [PMID:8702624 "SRP40 localizes to the yeast nucleolus"]. Nucleoplasm remains
 `KEEP_AS_NON_CORE` and `NO_FAILURE_NON_CORE`: it is plausible from the
-Nopp140-family shuttling context, but its PAINT donor set is mouse, rat, and
-worm only, with no yeast self-seed or human NOLC1 donor.
+Nopp140-family shuttling context, but direct yeast evidence only establishes
+Srp40p's nucleolar localization.
 
 PubMed/web searches for newer SRP40/Nopp140-family papers found Zhang et al.
 2024, an abstract-only Srp40p/isobutanol strain-engineering paper; because that
@@ -166,3 +165,31 @@ GO assertion. The search also found Meznad et al. 2026, a mammalian Nopp140
 study that demonstrates phosphorylation-dependent multivalent contacts with
 snoRNP-core IDRs and the RNA polymerase I-associated factor PAF49
 [PMID:41298079 "Here we demonstrate that Nopp140 concentrates intrinsically disordered and nuclear localization signal (NLS)-rich protein regions (IDRs), including a newly identified RNA polymerase I C-terminal domain (CTD) of the RNA polymerase I-associated factor PAF49."]. The paper reinforces the family model for IDR/charge-driven snoRNP concentration, but it is not yeast-specific and did not justify a new yeast GO assertion.
+
+## 2026-10-01 current GOA refresh
+
+Refreshing current GOA backfilled exact `WITH/FROM` values on the two
+`PANTHER:PTN001144152` IBA rows, the ARBA nucleolus row, and the rat-Nopp140
+ISS row for nucleocytoplasmic transport. All six current GOA rows now match
+live reviewed rows, and the single `GO:0042254 ribosome biogenesis` `NEW`
+proposal remains an intentional non-GOA row.
+
+The PAINT decisions themselves did not change: `GO:0005730 nucleolus` remains
+the core direct and inherited Srp40p location, while `GO:0005654 nucleoplasm`
+remains a plausible non-core Nopp140-family localization. I reduced each
+`propagation_review.source_entities` list to the single ancestral source node,
+`PANTHER:PTN001144152`, leaving the extant mouse, rat, worm, yeast, fly, and
+human PAINT evidence only in GOA's `supporting_entities`.
+
+After Claude review I also tightened the `GO:0005654` rationale to avoid treating
+the shorter GOA WITH/FROM list as a measure of weaker IBA support. The IBA stands
+or falls on the PAINT node placement at `PTN001144152`; the reason we keep
+nucleoplasm as non-core is simply that the direct yeast Srp40p localization is
+nucleolar only. Local `panther.obo` does contain SRP40-named PANTHER families, so
+the remaining local-cache caveat is narrower: `panther-members.tsv` does not map
+P32583 or human NOLC1 Q14978 to a family slice we can inspect here.
+
+The 2024-2026 PubMed refresh did not find a newer direct S. cerevisiae SRP40
+functional paper than the Zhang et al. 2024 isobutanol overexpression study,
+and the 2026 mammalian Nopp140 IDR-condensate paper remains useful family
+context rather than direct yeast evidence.
