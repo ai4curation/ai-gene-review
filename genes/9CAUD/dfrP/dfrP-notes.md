@@ -16,7 +16,9 @@
   GO:0046654 tetrahydrofolate biosynthetic process, is a *sibling* under
   GO:0006760 folic acid-containing compound metabolic process, not an
   ancestor, so the dihydrofolate-side statement would otherwise be lost. The
-  comparator check supports it. The PAINT IBD for GO:0046452 sits on
-  PTN000167322 in PTHR48069, grounded in human DHFR (P00374), *E. coli* folA
-  (P0ABQ4) and yeast DFR1. dfrP is in the same subfamily as folA (PTHR48069:SF3).
+  comparator check supports it. The PAINT IBD for GO:0046452 sits on the family
+  root node PTN000167322 in PTHR48069, seeded by rat Dhfr (RGD:2500), yeast DFR1
+  (SGD:S000005762) and human DHFR (P00374). *E. coli* folA (P0ABQ4) carries it
+  by IBA as a descendant (folA seeds GO:0046654, not this term). dfrP is in the
+  same subfamily as folA (PTHR48069:SF3).
   GO:0046655 was allowed to lapse as a broad parent.
