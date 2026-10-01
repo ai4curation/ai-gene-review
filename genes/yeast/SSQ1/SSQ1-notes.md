@@ -69,6 +69,19 @@
 - Final curation state: 9 `ACCEPT`, 8 `KEEP_AS_NON_CORE`, 10
   `MARK_AS_OVER_ANNOTATED`, 2 `MODIFY`, 0 `PENDING`; status set to `COMPLETE`.
 
+## 2026-10-01 current GOA correction
+
+After forcing SSQ1 to the live 28-row GOA snapshot, the obsolete `GO:0051082`
+row is no longer present and the older plan to replace it with `GO:0140662`
+was narrowed. Ssq1 is a dedicated Isu-scaffold Hsp70 that couples ATPase
+cycling to Fe-S cluster transfer from Isu1 to Grx5; direct target evidence
+supports ATP-regulated client binding and antiaggregation, but not productive
+ATP-dependent refolding of an unfolded protein, and `GO:0140309` is a carrier
+term for unfolded-protein cargo rather than a fit for Fe-S cluster handoff.
+The core function therefore records a proposed `iron-sulfur cluster transfer
+chaperone activity` NTR instead of using the generic `GO:0016887 ATP hydrolysis
+activity` as the only molecular function.
+
 ## 2026-09-21 full-source re-review
 
 All 29 original assertions were read and preserved in their original order, including term/evidence/reference/qualifier fields; no NEW rows were added. Source comparison and actual PAINT lineage are saved in the IBA re-review subfolder. Correct parent annotations for cytoplasm, mitochondrion, intracellular organelle lumen, ATP/nucleotide binding and hydrolase activity are core: precision of the matrix/ATPase children is not a biological reason to reject their parents.
