@@ -210,3 +210,20 @@ The final counts are 35 ACCEPT, 20 MODIFY, 110 KEEP_AS_NON_CORE and three
 UNDECIDED, with all 168 source assertions, three unchanged core functions and
 41 unchanged references. No NEW or REMOVE annotation is introduced. No new
 quotations were added.
+
+
+## 2026-10-01 — Scope of the retained interaction assertions
+
+The remaining disagreement after the [first PR #3578 follow-up](https://github.com/ai4curation/ai-gene-review/pull/3578#issuecomment-5909271845) concerns the repository's criterion for excluding generic binding. That guidance generally recommends a supported, informative molecular-function replacement or removal for lack of functional information, and explicitly says that removal need not mean the interaction is false. The earlier explanation did not acknowledge that distinction clearly enough. The 93 retained generic-binding rows therefore depart from the default; their advisories are expected, and this re-review does not qualify for the allowance for untouched legacy annotations.
+
+The supplied task instruction governs their retention outside the core when no justified specific replacement is available. This documents a bounded choice for the current BAG3 review, not a claim that the repository default already permits these actions or a proposal to alter the general skill or validator. The 91 rows highlighted in the follow-up are a subset of the 93 retained rows, not the total. All 112 original generic-binding assertions remain present: 19 receive specific MODIFY decisions, and 93 remain KEEP_AS_NON_CORE.
+
+The retained evidence has three distinct scopes:
+
+- One SQSTM1/p62 assertion, from [PMID:19229298](https://pubmed.ncbi.nlm.nih.gov/19229298/), has the previously inspected reciprocal coimmunoprecipitation and colocalization context. This supports an association in quality-control machinery without separating direct from indirect contact.
+- One RAPGEF6 assertion, from [PMID:23434281](https://pubmed.ncbi.nlm.nih.gov/23434281/), retains the source partner Q8TEU7. Its individual experiment remains unread. The independently described BAG3–SYNPO2 mechanism concerns Q9UMS6 and cannot justify an adaptor-activity replacement for RAPGEF6.
+- The other 91 IPI assertions retain GOA's experimentally curated partner and source with explicit curator deference. Their individual pair results were not independently inspected. They are not 91 newly confirmed experiments, nor evidence that every partner is a direct BAG3 substrate or a stable component of one common complex.
+
+The 19 specific refinements reflect the partner and evidence already recorded in each row. BAG3's established Hsp70 regulation, adaptor and cargo-handling functions do not automatically transfer those activities to every other pair. The three unresolved annotations—stress-fiber localization, spinal-cord development and cadherin binding—retain their separate `UNDECIDED` assessments. This explanation does not replace their uncertainty with generic curator deference.
+
+The [current BAG3 review](BAG3-ai-review.html) remains 35 ACCEPT, 20 MODIFY, 110 KEEP_AS_NON_CORE and three UNDECIDED decisions across 168 source assertions, with three core functions and 41 references. The prior CASA term-scope correction remains in effect. No new source reading, pair-level confirmation, quotation, annotation or biological decision is claimed by this clarification; the preserved earlier journal documents the actual reading limits.
