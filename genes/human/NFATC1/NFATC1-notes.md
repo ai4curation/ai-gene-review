@@ -30,3 +30,54 @@ Framing kept pleiotropic: T cell cytokine genes, osteoclast differentiation, hea
 - NEW: GO:0030316 osteoclast differentiation (PMID:12479813; TF does the program's work, comparator SPI1 carries GO:0030316 in human GOA);
   GO:0032743 positive regulation of interleukin-2 production (PMID:8202141).
 - Core MF: GO:0001228 (activator), GO:0061629 (partner TF binding), GO:0030346 (calcineurin docking).
+
+## Deep research integration (falcon)
+
+Report (`NFATC1-deep-research-falcon.md`) cites reviews by DOI/page only. DOIs of the primary studies it relies on
+were resolved via PubMed esearch and cached: PMID:42568576 (Sampere-Birlanga 2026), PMID:38346075 (Chaudhry 2024),
+PMID:39629220 (Yang 2024/2025), PMID:38926604 (Sato 2024), PMID:34943970 (Patil 2021); all full text.
+Reviews it leans on (not fetched, not used for annotation): Cai 2021 (DOI 10.3389/fcvm.2021.635172),
+Patterson 2021 Hemato, Kitamura 2021 IJMS, Thiel 2021 Cells, Oliveira 2026, Zheng 2024 (PMID:38310228), Wu 2024 TIBS.
+
+Claim classification (~30 substantive claims):
+- Confirms review (~17): NHR/RHR/TAD architecture; GGAA(A) core motif; weak monomeric DNA binding and AP-1 cooperativity;
+  PxIxIT and LxVP calcineurin docking (VIVIT competes); phospho-masked NLS; Ca2+/CaM-calcineurin activation;
+  GSK3/CK1/DYRK rephosphorylation and export; p38 phosphorylation; IL2/IL4 targets; autoregulated P1 alphaA isoform;
+  osteoclast master regulator downstream of RANKL; valve/endocardial requirement; VSMC/vascular gene regulation;
+  CsA/FK506 act on calcineurin, not NFATC1 (consistent with REMOVE of FK506 binding).
+- Adds something new (~6): NFATc1/alphaA promotes survival of exhausted CD8+ T cells [PMID:42568576 "Chronic antigen
+  receptor stimulation induces the expression of NFATc1/αA, a short isoform of NFATc1 that promotes TEX cell survival."];
+  persistent MCMV memory inflation [PMID:38346075]; TH2 polarization and DC priming [PMID:39629220 "Nfatc1's absence in
+  CD4+ T cells directly hampered TH2 cell polarization and functionality"]; histone gene repression [PMID:38926604];
+  NFATc1-EZH2 complex in PDAC [PMID:34943970]; beta-cell targets (Simonett 2021, NFATC2-focused).
+- Conflicts with review: none substantive.
+- Not relevant / unsupported (~7): cancer roles (CRC EMT/SNAI1, prostate, HCC FasL tumour suppression, FLT3-ITD AML,
+  CML imatinib resistance, VEGF/COX-2/CXCR7 angiogenesis), RA therapeutic targeting, pharmacology (A-285222, INCA-6),
+  diabetic atherosclerosis (CD137/OX40) - disease/pathway context, not GO-relevant or review-level only.
+
+Adopted:
+- description: alphaA isoform induced by chronic stimulation promoting exhausted CD8+ T cell survival; contribution
+  to TH2 differentiation (PMID:42568576, PMID:38346075, PMID:39629220).
+- core_functions (pleiotropic programs): added supported_by quotes from PMID:42568576 and PMID:39629220.
+- references: report title fixed and reference_review added (MEDIUM / LOW_QUALITY); five primary papers added with
+  findings and reference_review.
+- suggested_questions: histone repression / GO:0000122; direct targets (TOX, BCL2L11/BCL2) of alphaA in exhaustion.
+- suggested_experiments: test direct histone gene repression in non-transformed human cells.
+
+Not acted on:
+- No existing-annotation action changed (report offers no primary evidence against any decision).
+- No NEW annotations. Histone repression (GO:0000122) rests on one Sci Rep study in MCF7 cells (knockdown + ChIP),
+  so raised as a question rather than asserted. Exhaustion/TH2/memory evidence is mouse genetic necessity evidence for
+  broad immune processes; the existing T cell framing (IL2 production NEW, cytokine gene activation) already covers
+  the TF's direct role, so no further BP terms proposed. EZH2 interaction is cancer-context and would be protein binding.
+
+Report errors / overstatements detected:
+- Domain/NLS claims cited to Oliveira 2026 (a neurodegeneration review) and Hui 2023 (about NFAT3/NFATc4 in cardiac
+  hypertrophy) - off-target citations for NFATC1-specific statements (the claims themselves are generic and correct).
+- Beta-cell targets cited to Simonett 2021, whose title is about NFATC2 targets; the report itself concedes NFATC1
+  directness is uncertain.
+- "NFATc1/alphaA ... repressing the pro-apoptotic protein Bim": PMID:42568576 only reports Bcl2l11 "slightly increased"
+  in NFATc1-deficient cells and speculates on the Bim/Bcl-2 ratio.
+- TOX induction by NFATc1 is attributed to Sampere-Birlanga 2026, which cites it from earlier work (its ref 24).
+- "embryonic lethality ... and organ hypoplasia" (Kitamura review) not verified against primary KO papers; valve
+  defect lethality is supported (PMID:12370307).

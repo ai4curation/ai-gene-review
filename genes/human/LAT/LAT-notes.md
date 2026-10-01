@@ -49,3 +49,69 @@
 - NEW process terms: Fc-epsilon receptor signaling pathway (PMID:10843385) and
   collagen-activated signaling pathway (PMID:10567557); LAT does work in these pathways as the
   scaffold (same role as in TCR signaling), passing the participation test.
+
+## Deep research integration (falcon)
+
+2026-10-01. `LAT-deep-research-falcon.md` became available after the review was completed. It was read
+in full and treated as LLM-generated secondary literature. Its sources are two reviews (Shah 2021
+Signal Transduct Target Ther; Fernandez-Aguilar 2023 Biology), one regional review (Moskalev 2025),
+one optics review (Lee 2024) and three preprints (Rubin 2024 bioRxiv on pathway balance; Rainwater 2025
+bioRxiv on DNA-PKcs; Saez bioRxiv on trafficking, since published as PMID:33572370).
+
+Claim tally (about 25 substantive claims): 18 confirm the review, 3 add something new, 0 conflict with
+the review's decisions, 4 not relevant or unsupported. One claim exposed an error in the review itself
+(see below).
+
+### Claims adopted
+- **Tyrosine numbering (fixes a review error).** The report gives LAT as ~233 aa with Y132/Y171/Y191/Y226.
+  Checking the UniProt sequence shows these numbers belong to the short isoform O43561-2 (233 aa, missing
+  114-142). In the canonical long isoform O43561-1 (262 aa) the same residues are Y161/Y200/Y220/Y255
+  (UniProt MOD_RES 161/200/220/255). The previous description said "in the long isoform", which was
+  wrong. The description now gives both numberings.
+- **Vesicular LAT pool and Golgi/TGN trafficking (new).** The report cited the Saez bioRxiv preprint.
+  I verified this against peer-reviewed primary papers: PMID:29789604 [surface LAT phosphorylated first,
+  vesicular pool recruited later], PMID:23666293 [VAMP7 required for recruitment of LAT vesicles;
+  abstract-only], PMID:29440364 [Rab6/syntaxin-16 retrograde transport to Golgi-TGN], and
+  PMID:33572370 [the Saez study as published in Cells 2021: "more abundantly in intracellular
+  compartments"]. Changes: one description sentence added; the four papers added to `references` with
+  findings; PMID:29789604 added to supported_by for core function 1.
+- **Report quote as core-function context.** The report's scaffold sentence was added to
+  core function 1 supported_by.
+
+### Claims confirming the review (no change)
+These claims agree with the review: non-catalytic phospho-dependent scaffold; ZAP70 phosphorylation;
+docking sites (Y132 to PLCG1; GRB2/GADS at Y171/Y191/Y226; GRB2-SOS1 to Ras); C26/C29 palmitoylation
+and raft targeting; immunological synapse microclusters; TCR signalosome; Ca2+/NFAT, Ras-MAPK/AP-1
+outputs; LAT-null J.LAT phenotype; mouse KO thymic block; human SCID/CID with autoimmunity (IMD52).
+The review's GO:0030159, GO:0035591 and GO:0140693 MF choices, and its process terms, are unaffected.
+The report gives no evidence that challenges the NEW Fc-epsilon receptor or collagen-activated
+signaling rows, so these stay consistent with the matching LCP2 rows.
+
+### Claims not acted on
+- **Y110 as a GRB2 site; GRAP binding.** This is plausible, but the source is the Rubin 2024 preprint
+  and an AlphaFold model. It does not change any term.
+- **NF-kappaB via PLCG1-DAG-PKCtheta.** LAT acts upstream as scaffold and the DAG/PKCtheta step is
+  performed by other gene products. No NEW term is warranted (CLAUDE.md participation test).
+- **Rubin 2024 "pathway balance" and intrinsically disordered tail with >40% functional regions.**
+  These come from a preprint and are descriptive; no annotation consequence.
+- **DNA-PKcs phosphorylation of S224/S241 (Rainwater 2025).** The only source is one bioRxiv
+  preprint, which PubMed esearch did not find as a published paper. I raised it as a suggested
+  question. UniProt lists S224/S241 (canonical numbering) as high-throughput phosphoserines, but
+  this does not show which kinase acts there.
+- **Transmembrane residues L11-G12-L13 "critical for surface trafficking".** Preprint-only; not used.
+
+### Questions and experiments added
+- Should LAT carry a vesicle/TGN cellular component annotation? Does vesicular LAT act as a scaffold
+  itself or mainly as a reservoir? A matching experiment was added: plasma-membrane-restricted vs
+  vesicle-retained LAT variants.
+- Is the DNA-PKcs S224/S241 phosphorylation reproducible, and which isoform numbering does it use?
+
+### Report errors detected
+- It describes LAT as "approximately 233-amino-acid" without saying this is isoform 2. The
+  UniProt canonical isoform is 262 aa.
+- It credits "Yamane et al. (2026)" on SLP-76/PLCgamma1 fine-tuning to `shah2021tcellreceptor pages
+  7-8`, a 2021 review that cannot report a 2026 study. This is a misattribution; I did not use it.
+- It cites the Saez trafficking work only as a bioRxiv preprint, although it was published
+  (PMID:33572370).
+- It leans heavily on preprints (Rubin, Rainwater) for "recent developments", and these are presented
+  alongside peer-reviewed findings.
