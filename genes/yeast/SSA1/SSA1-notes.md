@@ -95,3 +95,30 @@
   shows Ssa1, Sis1, and Hsp104 overexpression can limit Pab1 inclusions in
   cells lacking SSA1 and SSA2; and PMID:41390490 places Ssa1 T492 phosphorylation
   downstream of heat-induced Mid2/Pkc1 signaling.
+
+## 2026-10-01 current-GOA reconciliation
+
+- `just fetch-gene yeast SSA1 --force` reconciled the review against the live
+  70-row GOA feed. The refresh seeded three new current assertions, backfilled
+  67 qualifiers and 40 supporting-entity lists, and left 175 exact historical
+  assertions from older local GOA snapshots outside the current feed. Those 175
+  rows are retained in `existing_annotations` with `retired: true` so the source
+  provenance remains visible while validation and the rendered review focus on
+  the live 70 rows.
+- The three new current rows were reviewed from cached evidence rather than left
+  `PENDING`: GO:0005524 ATP binding from InterPro was modified to the more
+  informative ATP hydrolysis activity; GO:0017053 Hap1-Ssa-Ydj1-Sro9
+  transcription repressor complex was kept as a non-core chaperone context; and
+  GO:0070585 protein localization to mitochondrion was kept as non-core because
+  PMID:8754838 supports an Ssa/Ydj1 effect on one tested mitochondrial precursor
+  but not a general mitochondrial-import role.
+- PTHR19375 was refreshed and the seven live IBA rows plus the retired
+  historical plasma-membrane IBA were rechecked against PTN000452648,
+  PTN002321897, and PTN002500132. The live nodes still support ATP hydrolysis,
+  heat-shock-protein binding, protein folding chaperone, protein refolding,
+  cytoplasm, cytosol, and nucleus; PTN002500132 still lacks GO:0005886, so the
+  historical plasma-membrane IBA remains marked `REMOVE` as stale.
+- Searches for newer Ssa1 papers found no uncached primary paper that changed the
+  review. The relevant 2024-2025 papers found in the search were already cached
+  and had been reviewed in the 2026-09-29 pass: PMID:39656207, PMID:39795068,
+  PMID:40202836, and PMID:41390490.
