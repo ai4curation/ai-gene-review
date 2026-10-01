@@ -58,6 +58,9 @@ replacement source assertions equal the preserved unreviewed seed. The 16
 archived NHR-47 assertions are reported separately, not silently counted as
 canonical CSR-1 annotations. See the [migration manifest](../../../genes/worm/csr-1/csr-1-provenance/identity-migration-manifest.json).
 It does not assess biological correctness or count as a manual review.
+Narrow expected-retirement exceptions are registered in the script for current-GOA
+source refreshes; HSP82 has exact signature-level exceptions for qualifier
+backfills and rows no longer present in live GOA.
 
 Scientific review checks whether the claimed activity, participation, or
 location is supported. Primary location does not establish exclusivity; broad
