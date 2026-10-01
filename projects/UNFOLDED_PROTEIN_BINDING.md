@@ -401,7 +401,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 | 9 | **Mito import/assembly** | TOMM20, GRPEL1 (human); TIM9, TIM10, COX20, PET100, SHY1, ATP10, ATP11 (yeast); Grpel2 (mouse); cia30 (N. crassa) | OVER_ANNOTATED (assembly factors) or MODIFY (TIMs → GO:0140309) |
 | 10 | **Ubiquitin/QC sensor** | SYVN1 (human); SAN1 (yeast); Fbxo2 (mouse); slrP (Salmonella) | REMOVE or MODIFY to GO:0051787 |
 | 11 | **Envelope/secretion chaperone systems** | SurA, Skp, Spy, SecB, HdeA, HdeB, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; SecB is a cytosolic secretion-coupled holdase, whereas the others act in the periplasm or envelope stress pathway. HdeA/HdeB/Spy await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
-| 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | MODIFY → GO:0044183 or OVER_ANNOTATED |
+| 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | Dedicated carrier chaperones with a defined acceptor, such as YAR1, may warrant MODIFY → GO:0140309; remaining older GO:0044183 sibling decisions need re-review |
 | 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX (E. coli); PP_1084/PpPrx (*P. putida*, direct literature gap case) | MODIFY → holdase NTR when evidence shows in-situ aggregation prevention without refolding; older GO:0044183 sibling decisions require re-review |
 | 14 | **Conditional moonlighting holdase** | RidA (E. coli) | MODIFY GO:0051082 → holdase NTR for reversible N-chlorination-dependent ATP-independent holdase activity; primary function is 2-iminoacid deaminase activity |
 | 15 | **Membrane protein chaperones** | SHR3, PHO86, GSF2, CHS7, NSG1, NSG2, VMA22, VPS45 (yeast) | MODIFY or OVER_ANNOTATED |
@@ -637,7 +637,7 @@ established:
 | TSR4 | *S. cerevisiae* | P25040 | 15 | MODIFY → GO:0044183 | Ribosome assembly chaperone |
 | VMA22 | *S. cerevisiae* | P38784 | 9 | NON_CORE | V-ATPase assembly |
 | VPS45 | *S. cerevisiae* | P38932 | 35 | OVER_ANNOTATED | SNARE regulator |
-| YAR1 | *S. cerevisiae* | P46683 | 19 | MODIFY | Rps3 chaperone |
+| YAR1 | *S. cerevisiae* | P46683 | 22 | MODIFY → GO:0140309 | Rps3 carrier chaperone; older ribosome-assembly sibling decisions need re-review |
 | YDJ1 | *S. cerevisiae* | P25491 | 49 | MODIFY → GO:0044183 | J-domain co-chaperone |
 
 </details>
