@@ -102,3 +102,23 @@ The BioReason deep-research file provides a generally accurate functional summar
   `MARK_AS_OVER_ANNOTATED` to `REMOVE`. The TRAMP-component interactions are already captured
   by `GO:0031499 TRAMP complex` and the helicase contribution annotation; broad interactome
   hits do not state a molecular function.
+
+## 2026-10-01 current GOA refresh
+
+- `just fetch-gene yeast PAP2 --force` refreshed the old 85-row review against 103
+  current GOA rows, backfilled current qualifiers/supporting entities, and seeded 17 new
+  exact-source rows for review. Current GOA contains one duplicated PMID:20696927
+  Air2 protein-binding source, so the merged review has 102 source rows.
+- Current PTHR23092 PAINT is stable relative to the 2026-09-28 check. PTN000558564
+  still carries the five core Trf4/5-family IBD assertions for nucleolus, TRAMP
+  complex membership, `poly(A) RNA polymerase activity`, `RNA 3'-end processing`, and
+  `polyadenylation-dependent ncRNA catabolic process`; the Schizosaccharomyces
+  PTN008590285 branch retains only the lineage-specific nucleus gain and IRD losses.
+- Eleven newly split `GO:0005515` IntAct rows from PMID:11805837, PMID:15828860,
+  PMID:15935758, PMID:15935759, PMID:21663793, and PMID:37968396 were removed as
+  generic interaction assertions. The direct TRAMP interactions are represented by
+  `GO:0031499`, and broad interactome hits do not add an informative Pap2/Trf4 activity.
+- The three new PMID:17983848 base-excision repair IGI exact-source rows were kept as
+  non-core, matching the existing secondary dRP lyase/base-excision-repair assessment.
+  The new ComplexPortal `GO:0031499` row from PMID:15828860 and two new PMID:17410208
+  nuclear mRNA-surveillance exact-source rows were accepted.
