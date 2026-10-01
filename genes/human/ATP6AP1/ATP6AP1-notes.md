@@ -80,3 +80,14 @@ PMID:38448650 now has a machine-readable finding and an exact short source quota
 Supported generic-binding annotations remain non-core under the user-supplied ActionEnum definitions; this preserves correct peripheral observations without manufacturing a replacement function. The generic-binding skill preference does not override those definitions. Uninspected exosome evidence remains UNDECIDED. The original history record and earlier reasoning above are preserved as session provenance.
 
 The follow-up passed focused validation with the same three advisories: two supported generic-binding rows retained as non-core and the existing provider report not used as direct annotation evidence. Rendering passed. The review remains DRAFT; no new repository-wide validation pass is claimed.
+
+
+## 2026-10-01 UTC — Binding-policy clarification
+
+The [review of PR #3550](https://github.com/ai4curation/ai-gene-review/pull/3550) at `6f4aedf04` correctly identifies the repository default: an uninformative generic binding annotation can be excluded even when its reported interaction is real. That informational-exclusion criterion is distinct from concluding that the experimental evidence is false. The earlier notes should not be read as saying that the default policy requires biological falsity or that these touched annotations qualify for a legacy exception.
+
+This task explicitly directs that generic binding not be removed solely for informativeness, while preserving uncertainty when the relevant experiment cannot be adjudicated. The retained decisions are a scoped application of those task instructions. They are not a claim of compliance with the default generic-binding policy, a global policy revision, or a reason to silence its advisory warnings.
+
+The retained rows distinguish viral NSP6 coassociation in human lung cells from ATP6AP2 coassociation and construct mapping. Neither is described as purified binary binding or a new ATP6AP1 enzymatic activity. V0 assembly-complex membership is a cellular-component statement; it is not a more specific molecular-function replacement for an enables protein-binding assertion. The existing pump contribution remains the sole core. The separate Rheb nucleotide-loading evidence still does not establish a GDP-preloaded chase assay, and the unresolved experimental rows remain UNDECIDED.
+
+This addendum changes only the explanation of the decision. It adds no primary-source reading, assay verification, quotation, annotation or core function. All current annotation decisions, products, evidence limitations and source objects remain unchanged.
