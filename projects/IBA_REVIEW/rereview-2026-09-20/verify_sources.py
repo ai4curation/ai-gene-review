@@ -128,6 +128,36 @@ def qualifier_backfill_matches(missing, current):
     return matches
 
 
+def label_rename_matches(missing, current):
+    """Find missing frozen signatures preserved with only a GO label change."""
+    def without_term_label(encoded, drop_qualifier=False):
+        data = json.loads(encoded)
+        term = data.get("term")
+        if isinstance(term, dict):
+            term.pop("label", None)
+        if drop_qualifier:
+            data.pop("qualifier", None)
+        return json.dumps(data, sort_keys=True)
+
+    current_by_unlabeled = Counter()
+    for encoded, count in current.items():
+        data = json.loads(encoded)
+        term = data.get("term")
+        if not isinstance(term, dict) or "label" not in term:
+            continue
+        current_by_unlabeled[without_term_label(encoded)] += count
+        if "qualifier" in data:
+            current_by_unlabeled[without_term_label(encoded, drop_qualifier=True)] += count
+
+    matches = Counter()
+    for encoded, count in missing.items():
+        matched = min(count, current_by_unlabeled[without_term_label(encoded)])
+        if matched:
+            matches[encoded] = matched
+            current_by_unlabeled[without_term_label(encoded)] -= matched
+    return matches
+
+
 def verify_identity_migration(path, commit, before, after):
     """Require baseline-identical archives and exact fetched replacements and seed.
 
@@ -227,6 +257,10 @@ def main():
         if qualifier_backfills:
             result["qualifier_backfills"] = dict(qualifier_backfills)
             missing -= qualifier_backfills
+        label_renames = label_rename_matches(missing, current)
+        if label_renames:
+            result["label_renames"] = dict(label_renames)
+            missing -= label_renames
         retirements = EXPECTED_RETIREMENTS.get(path, Counter())
         applied = missing & retirements
         unexpected_retirements = retirements - missing
