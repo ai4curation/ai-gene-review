@@ -17,6 +17,11 @@ Usage (from repo root):
 Writes failure-mode-counts.json and failure-mode-rl-flags.csv next to this
 script and prints Markdown tables. Nothing is hard-coded except the marker
 regexes, which are printed with the output.
+
+Gene files are read from ``--source-root`` (default: this repository). To match the
+page's other counts, which are frozen at ``review_snapshot_commit`` in
+``benchmark-policy.yaml``, point it at a checkout of that commit, e.g.
+``git worktree add /tmp/aigr-snapshot <review_snapshot_commit>``.
 """
 
 import csv
@@ -113,6 +118,12 @@ def tally(paths):
 
 
 def main():
+    global ROOT
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--source-root", type=Path, default=ROOT, help="tree to read genes/ from")
+    ROOT = ap.parse_args().source_root.resolve()
     bg = list(csv.DictReader(open(HERE / "benchmark-genes.csv")))
     argo95 = [((r["organism"], r["gene"]), r["source_file"]) for r in bg if r["benchmark"] == "argo95_sft_terms"]
     genes = list(csv.DictReader(open(HERE / "genes.csv")))

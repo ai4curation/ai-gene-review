@@ -32,14 +32,14 @@ Latest annotation date in each target's cached GOA file (a lower bound on when t
 
 | Cohort | GO claims | COR | CNN | LSP | UNC | NPI | PLI | REP | COR share | Median cached GOA rows per target |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO50 | 77 | 19 | 8 | 13 | 30 | 7 | 0 | 0 | 25% | 4 |
+| ARGO50 | 77 | 18 | 8 | 14 | 25 | 10 | 2 | 0 | 23% | 4 |
 | HORSE40 | 89 | 33 | 8 | 5 | 42 | 1 | 0 | 0 | 37% | 6 |
 | FLY41 | 50 | 1 | 11 | 16 | 15 | 7 | 0 | 0 | 2% | 9 |
 | POMBE20 | 32 | 0 | 2 | 27 | 3 | 0 | 0 | 0 | 0% | 12.5 |
 | NEUROSPORA20 | 21 | 0 | 1 | 19 | 1 | 0 | 0 | 0 | 0% | 8.5 |
 | MOD_EVOLUTION20 | 19 | 0 | 2 | 3 | 12 | 2 | 0 | 0 | 0% | 1 |
 
-A mechanical is_a/part_of check of all 53 COR calls against each target's cached GOA ([`cor_goa_entailment.py`](cor_goa_entailment.py), [TSV](cor-goa-entailment.tsv)) finds ANCESTOR_SAME_ASPECT: 3, DESCENDANT: 5, NONE: 45. 3 COR calls are entailed by an existing target annotation and are candidates for LSP/CNN re-review (HORSE/WDPCP cytoplasm via axoneme; HORSE/WDPCP cilium via axoneme; HORSE/WDPCP cytoskeleton via axoneme). Entailment by an existing MF through relations outside go-basic, or by an InterPro2GO domain mapping, is not checked.
+A mechanical is_a/part_of check of all 52 COR calls against each target's cached GOA ([`cor_goa_entailment.py`](cor_goa_entailment.py), [TSV](cor-goa-entailment.tsv)) finds ANCESTOR_SAME_ASPECT: 3, DESCENDANT: 5, NONE: 44. 3 COR calls are entailed by an existing target annotation and are candidates for LSP/CNN re-review (HORSE/WDPCP cytoplasm via axoneme; HORSE/WDPCP cilium via axoneme; HORSE/WDPCP cytoskeleton via axoneme). Entailment by an existing MF through relations outside go-basic, or by an InterPro2GO domain mapping, is not checked.
 
 ## Reviewed records with no GO predictions
 

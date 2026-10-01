@@ -211,7 +211,7 @@ The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware l
 
 ## Leakage, novelty and scripted calls
 
-*Computed on 2026-09-27 at commit `9891e5ffd` plus that day's uncommitted edits, with `uv run python projects/BIOREASON_COMPARISON/audit_followup.py --test-parquet <bioreason-pro-test-data parquet>`. Output: [`audit-followup.json`](BIOREASON_COMPARISON/audit-followup.json).*
+*Computed from the review snapshot (commit `c7551cb3db`, as above), with `uv run python projects/BIOREASON_COMPARISON/audit_followup.py --source-root <checkout of the snapshot commit> --test-parquet <bioreason-pro-test-data parquet>`. Output: [`audit-followup.json`](BIOREASON_COMPARISON/audit-followup.json).*
 
 **ARGO139 is almost entirely outside BioReason-Pro's held-out test split.** Most ARGO139 proteins are well characterized and were chosen for that reason. Only one ARGO139 accession (`SCHPO/alo1`) is in the public 8,630-protein temporal test split ([`wanglab/bioreason-pro-test-data`](https://huggingface.co/datasets/wanglab/bioreason-pro-test-data)). The other 138 were eligible to be in the training distribution. Across all 4,980 AIGR gene reviews, 28 accessions are in the test split.
 
@@ -303,7 +303,7 @@ where a *predicted GO term* embodies the failure; modes that are narrative-only 
 calling a periplasmic protein "cytoplasmic" in prose while GO-GPT still predicts the periplasm
 term) leave no discordant term to tag and are recorded only in the RL narrative reviews.
 
-**Counts and denominators.** These were computed on 2026-09-27 at commit `9891e5ffd` plus that day's uncommitted edits, with `uv run python projects/BIOREASON_COMPARISON/failure_mode_counts.py`. Outputs are in [`failure-mode-counts.json`](BIOREASON_COMPARISON/failure-mode-counts.json) and [`failure-mode-rl-flags.csv`](BIOREASON_COMPARISON/failure-mode-rl-flags.csv).
+**Counts and denominators.** These were computed from the review snapshot (commit `c7551cb3db`), with `uv run python projects/BIOREASON_COMPARISON/failure_mode_counts.py --source-root <checkout of the snapshot commit>`. Outputs are in [`failure-mode-counts.json`](BIOREASON_COMPARISON/failure-mode-counts.json) and [`failure-mode-rl-flags.csv`](BIOREASON_COMPARISON/failure-mode-rl-flags.csv).
 
 - **ARGO95 SFT terms.** 147 of 955 terms are discordant: 113 `NPI`, 5 `PLI` and 29 `REP`. 85 of the 147 carry an `error_type`. **62 (all `NPI`) carry none.** They are reported as untagged rather than back-filled. The 85 tags are:
 
@@ -611,7 +611,7 @@ BioReason SFT is a **domain-interpretation narrative engine**, not a biological 
 
 ## Matched SFT vs RL comparison (110 ARGO139 genes)
 
-*Computed on 2026-09-27 at commit `9891e5ffd` plus that day's uncommitted edits. Reproduce with:*
+*Computed on 2026-09-27 from the RL scores in `benchmark-genes.csv` and the SFT ratings committed here. Reproduce with:*
 
 ```bash
 uv run python projects/BIOREASON_COMPARISON/sft-rl-matched/extract_sft_summaries.py --parquet-dir <protein_catalogue/data>
@@ -658,7 +658,7 @@ uv run python projects/BIOREASON_COMPARISON/sft-rl-matched/compare_sft_rl.py
 
 ### 2026-09-27: follow-up to the function-prediction evaluation review
 
-This entry responds to the BioReason section of [the 2026-09-26 review](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md). New numbers were computed at commit `9891e5ffd` plus that day's uncommitted edits. Per-gene sft, gogpt and rl assessments were not changed.
+This entry responds to the BioReason section of [the 2026-09-26 review](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md). New numbers were computed against the 2026-09-27 working tree and, after rebasing onto main on 2026-10-01, re-run against the review snapshot (commit `c7551cb3db`) with identical results. Per-gene sft, gogpt and rl assessments were not changed.
 
 - **SFT vs RL.** The unmatched comparison (SFT-45 vs RL-138, no shared genes) and its claim to be "consistent with the paper" are withdrawn. They are replaced by a [matched 110-gene comparison](#matched-sft-vs-rl-comparison-110-argo139-genes) using HF-catalogue SFT Functional Summaries, with a same-rater RL re-score (`sft-rl-matched/`).
 - **Failure modes.** Mode counts now have denominators (`failure_mode_counts.py`). The page reports that 62 of 147 ARGO95 discordant terms lack an `error_type`, and that `LOCALIZATION_DEFAULT` is tagged 4 times. "Systematic" is softened throughout. The RL narrative localization flags (16/138) are script-derived lower bounds (`failure-mode-rl-flags.csv`).

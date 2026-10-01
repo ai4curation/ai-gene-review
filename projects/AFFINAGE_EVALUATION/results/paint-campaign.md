@@ -22,8 +22,8 @@ uv run python retrieval_recall.py --genes-file results/paint-campaign/campaign-g
     --split-file fa-cohort-genes.txt --split-name FA
 ```
 
-The figures below were regenerated at commit `fff7793a` (2026-09-27). They differ
-slightly from the first run (1626 → 1631 cited PMIDs, 718 → 723 novel, 52% → 51%
+The figures below were regenerated at commit `943b98815` (2026-10-01). They differ
+slightly from the first run (1626 → 1634 cited PMIDs, 718 → 726 novel, 52% → 51%
 pooled) because some reviews have been edited since.
 
 ## The 91 genes are two cohorts
@@ -37,9 +37,9 @@ first version of this page pooled them, which inflated every headline:
 
 | cohort | genes | novel refs | supplied by Affinage | recall |
 |--------|------:|-----------:|---------------------:|-------:|
-| **PAINT backlog (non-FA)** | **69** | **650** | **309** | **48%** |
+| **PAINT backlog (non-FA)** | **69** | **653** | **311** | **48%** |
 | FA cohort | 22 | 73 | 62 | 85% |
-| all 91, pooled | 91 | 723 | 371 | 51% |
+| all 91, pooled | 91 | 726 | 373 | 51% |
 
 17 of the 22 FA genes score 100%. The non-FA figure is the one to quote.
 
@@ -51,15 +51,15 @@ to go find (48%), and its trust gates cannot tell you which half is missing.**
 | (all 91) | |
 |---|---|
 | PMIDs Affinage returned | 1344 |
-| PMIDs cited by the finished reviews | 1631 |
+| PMIDs cited by the finished reviews | 1634 |
 | ... already supplied by GOA (no search needed) | 908 |
-| **References the reviews had to find** | **723** |
-| ... supplied by Affinage | 371 |
+| **References the reviews had to find** | **726** |
+| ... supplied by Affinage | 373 |
 | Pooled novel-reference recall (all 91 / non-FA 69) | 51% / **48%** |
 | Fraction of Affinage's returned refs the reviews used (all 91 / non-FA / FA) | 39% / 59% / 21% |
 
 The denominator matters. Counting every PMID in a finished review makes recall
-look like 32%, but 908 of the 1631 references arrive prepackaged in the GOA
+look like 32%, but 908 of the 1634 references arrive prepackaged in the GOA
 file — the reviewer is handed them and no retrieval is involved. Scoring a
 retrieval provider against references it was never asked to retrieve measures
 nothing. Restricted to the references the reviewer genuinely had to locate,
@@ -107,7 +107,7 @@ Split by cohort:
 | cohort | curation depth | genes | novel refs | supplied | recall |
 |--------|----------------|------:|-----------:|---------:|-------:|
 | non-FA | dark (0-2 GOA refs) | 25 | 170 | 87 | 51% |
-| non-FA | medium (3-9) | 36 | 418 | 205 | 49% |
+| non-FA | medium (3-9) | 36 | 421 | 207 | 49% |
 | non-FA | well-studied (10+) | 7 | 62 | 17 | **27%** |
 | FA | medium (3-9) | 5 | 20 | 15 | 75% |
 | FA | well-studied (10+) | 17 | 53 | 47 | 89% |
@@ -120,8 +120,9 @@ is narrower: on dark and medium non-FA genes, recall is about half (51%, 49%).
 The small-denominator point still applies to the remaining 100% genes: the ten
 non-FA ones had one to seven novel references each.
 
-The 0% end is not only dark genes either. By the script's own banding ACTR8 has
-12 GOA references (well-studied) and ACTR1B has 8 (medium).
+The 0% end is not only dark genes either: five of the seven at the 0% end
+(AADACL2/3/4, ACP7, ACTL10) have no GOA references, but by the script's own
+banding ACTR8 has 12 GOA references (well-studied) and ACTR1B has 8 (medium).
 
 What differs across the bands is at least the **consequence** of a miss. On
 a well-studied gene, half the literature still leaves several independent papers

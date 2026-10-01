@@ -27,6 +27,7 @@ Run: ``uv run python projects/PROTNLM_EVALUATION/cor_goa_entailment.py``
 from __future__ import annotations
 
 import csv
+import io
 import json
 from collections import Counter
 from pathlib import Path
@@ -34,18 +35,19 @@ from pathlib import Path
 import yaml
 
 from ai_gene_review.bioreason_ontology import GO_RELEASE, get_go_adapter
+from ai_gene_review.source_tree import SourceTree, declared_review_snapshot, review_snapshot_tree
 
 PREDICATES = ["rdfs:subClassOf", "BFO:0000050"]  # is_a, part_of
 ASPECT = {"GO_MF": "molecular_function", "GO_BP": "biological_process", "GO_CC": "cellular_component"}
 
 
-def target_goa(gene_dir: Path) -> list[dict[str, str]]:
-    files = sorted(gene_dir.glob("*-goa.tsv"))
+def target_goa(tree: SourceTree, gene_dir: str) -> list[dict[str, str]]:
+    files = sorted(tree.glob(f"{gene_dir}/*-goa.tsv"))
     if not files:
         return []
     return [
         r
-        for r in csv.DictReader(files[0].open(), delimiter="\t")
+        for r in csv.DictReader(io.StringIO(tree.read_text(files[0]), newline=""), delimiter="\t")
         if not (r.get("QUALIFIER") or "").startswith("NOT")
     ]
 
@@ -66,12 +68,16 @@ def main() -> None:
             ancestor_cache[term] = set(go.ancestors(term, predicates=PREDICATES, reflexive=False))
         return ancestor_cache[term]
 
+    # Read reviews and GOA at the same review_snapshot_commit as build_benchmark_summary.py,
+    # so the COR denominator here matches the dated cross-cohort counts.
+    tree = review_snapshot_tree(root)
+    snapshot = declared_review_snapshot(root)
     rows = []
-    for path in sorted(root.glob("genes/*/*/*-protnlm-predictions-review.yaml")):
-        doc = yaml.safe_load(path.read_text())
+    for path in sorted(tree.glob("genes/*/*/*-protnlm-predictions-review.yaml")):
+        doc = yaml.safe_load(tree.read_text(path))
         if doc["id"] not in targets:
             continue
-        goa = target_goa(path.parent)
+        goa = target_goa(tree, path.rsplit("/", 1)[0])
         for prediction in doc.get("predictions") or []:
             if prediction["review"]["assessment"] != "COR":
                 continue
@@ -93,7 +99,7 @@ def main() -> None:
                     relation, evidence = "DESCENDANT", ";".join(sorted(desc))
             rows.append(
                 dict(
-                    gene="/".join(path.parts[-3:-1]),
+                    gene="/".join(path.split("/")[1:3]),
                     accession=doc["id"],
                     cohorts=";".join(sorted(set(cohorts[doc["id"]]))),
                     term_id=pred,
@@ -114,6 +120,7 @@ def main() -> None:
         json.dumps(
             dict(
                 go_release=GO_RELEASE,
+                review_snapshot=snapshot.commit,
                 cor_calls=len(rows),
                 relation=dict(Counter(r["relation"] for r in rows)),
             ),

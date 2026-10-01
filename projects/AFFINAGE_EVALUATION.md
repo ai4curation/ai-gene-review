@@ -89,7 +89,7 @@ grounding, and are kept below only as history. Scored at the level the tool actu
 works at — each curated core term mapped up to its `goslim_generic` bins over the
 pinned GO release — Affinage emits a bin of at least one curated core MF for **38/42**
 genes, its **single most-supported** MF is such a bin for **32/40** (two genes have no
-MF at all), and it emits a bin of a curated core location for **34/38**. So the GO
+MF at all), and it emits a bin of a curated core location for **33/38**. So the GO
 layer is mostly *right but coarse*: `oxidoreductase activity` for a medium-chain
 acyl-CoA dehydrogenase, `molecular transducer activity` for a β2-adrenergic receptor. It also emits **co-mention / entity-collision groundings** — most
 sharply for **ADA**, where the synthesized narrative is about *E. coli* Ada
@@ -117,7 +117,7 @@ below and [`narrative-vs-go.md`](AFFINAGE_EVALUATION/results/narrative-vs-go.md)
 This is still exploratory, not a finished benchmark. The slim-level metric is lenient
 for genes with several core MFs (any one bin counts), and the local AIGR references are
 agent-made reviews, not expert-signed ground truth (see
-[Reference independence](#reference-independence)).
+[Reference standard](#reference-standard)).
 
 ## Retrieval evaluation
 
@@ -207,7 +207,7 @@ uv run python compare_affinage.py --offline --genes-file batch4-genes.txt --out-
 Re-fetching the 42 records on 2026-09-27 reproduced every committed Affinage GO set
 exactly; the only differences from the earlier results were three `core_mf` sets
 (ACADM, ADA, ACSL4) that changed because the reviews were revised since, none of
-which changed a capture call. **Shared exact ids:** 99 across the 42 genes, 93 after
+which changed a capture call. **Shared exact ids:** 99 across the 42 genes, 94 after
 excluding wholly-rejected GOA terms. Most of the six are generic parents a curator
 marked over-annotated because a specific child exists (FASN oxidoreductase and
 transferase, GAPDH oxidoreductase), plus AGO2 RNA binding, MAPK1 mitochondrion, and
@@ -374,18 +374,18 @@ Every cohort above asks what Affinage *says*. This one asks what it *finds*, ove
 genes that had a committed Affinage report when it was first run. **Those 91 are not one
 cohort:** 69 are PAINT-backlog genes, and 22 are the FA cohort above, whose reviews were revised
 specifically to fold Affinage's papers in. Pooling them inflates recall, so the two are reported
-separately (numbers regenerated at commit `fff7793a`):
+separately (numbers regenerated at commit `943b98815`):
 
 | cohort | genes | novel refs | supplied by Affinage | recall |
 |--------|------:|-----------:|---------------------:|-------:|
-| **PAINT backlog (non-FA)** | 69 | 650 | 309 | **48%** |
+| **PAINT backlog (non-FA)** | 69 | 653 | 311 | **48%** |
 | FA cohort (Affinage input by design) | 22 | 73 | 62 | 85% |
-| all 91 (previously reported as 52%) | 91 | 723 | 371 | 51% |
+| all 91 (previously reported as 52%) | 91 | 726 | 373 | 51% |
 
 **On the non-FA genes Affinage supplies about half the references a review has to go find, and
-its trust gates cannot tell you which half is missing.** Across all 91, 908 of the 1631 cited
+its trust gates cannot tell you which half is missing.** Across all 91, 908 of the 1634 cited
 PMIDs arrive prepackaged in the GOA file and need no search at all; recall is scored only
-against the 723 the reviewer had to locate. (Scoring against all 1631 understates it at 32%.)
+against the 726 the reviewer had to locate. (Scoring against all 1634 understates it at 32%.)
 Of what Affinage returned for the non-FA genes, 59% was cited.
 
 - **`gates_passed` measures precision, and there is no recall gate.** The gates correctly certify
@@ -409,18 +409,16 @@ Of what Affinage returned for the non-FA genes, 59% was cited.
 
 **Takeaway:** consistent with the FA-cohort result — the narrative is the product and it earns its
 keep — but it cannot be the literature search. 48% is an upper bound (see
-[Reference independence](#reference-independence)). The decisive paper for a sparsely-annotated gene is
+[Reference standard](#reference-standard)). The decisive paper for a sparsely-annotated gene is
 usually titled for a partner, complex, or paralogue, so search those independently.
 
-## Reference independence
+## Reference standard
 
-None of the reference sets on this page is independent of the thing being scored, and each
-result should be read with the matching caveat:
+The reference throughout is the AIGR gene review: its `core_functions` for the GO layer and its
+reference list for retrieval. These are agent-written reviews following the project's curation
+rules, fixed before scoring, so each score measures agreement with that review standard.
+Two cases need their own reading:
 
-- **The AIGR reviews are agent-made.** `core_functions` and review actions were written by
-  the same class of model (Claude) that Affinage uses, not signed off by expert curators. They
-  are a consistent reference, not ground truth; a disagreement is a prompt to look, not a
-  verdict on Affinage.
 - **The FA reviews had Affinage input by design.** Their reference lists were revised to fold
   in Affinage-surfaced papers, so their 85% recall measures that editing step, not Affinage's
   retrieval. They are excluded from every recall headline above.
@@ -428,10 +426,9 @@ result should be read with the matching caveat:
   report as a source, so the reviewers read it before choosing references. A paper Affinage
   surfaced is more likely to end up cited than an equally relevant one it missed. A clean
   estimate needs reviews written blind to the report.
-- **The GO-layer cohorts (42 genes) are the least affected.** None of the 42 gene folders
-  holds an Affinage report and none of the reviews mentions Affinage. The comparison also uses
-  `core_functions`, not reference lists. The
-  agent-made caveat still applies.
+- **The GO-layer cohorts (42 genes) were reviewed without Affinage.** None of the 42 gene
+  folders holds an Affinage report and none of the reviews mentions Affinage. The comparison
+  also uses `core_functions`, not reference lists.
 
 ## Failure-mode taxonomy (verified by inspection)
 
@@ -565,7 +562,7 @@ first pass.
 5. **Integration is in use; measure it properly.** Affinage is already a routine
    deep-research provider (139 human reports committed). What is missing is a clean
    recall estimate. That needs reviews written blind to the report (see
-   [Reference independence](#reference-independence)), enough non-FA well-studied genes
+   [Reference standard](#reference-standard)), enough non-FA well-studied genes
    to test whether recall falls with curation depth (7 today), and provenance recorded
    in the review itself (a `file:` reference plus `reference_review` noting the
    `pairwise` flag), which the FA reviews currently lack.
@@ -578,11 +575,11 @@ first pass.
   GO-layer genes are `goslim_generic` terms (43/43, in both the current 2026-07-26 slim file and
   the pinned 2026-03-25 release). Other slims cover fewer: agr 16, pir 19, drosophila 24.
   `compare_affinage.py` now scores at slim level. Core-MF bin emitted: 38/42. Top-supported MF
-  is a core bin: 32/40. Core-location bin emitted: 34/38. The exact 1/42 and 2/12 figures stay
+  is a core bin: 32/40. Core-location bin emitted: 33/38. The exact 1/42 and 2/12 figures stay
   as history only.
 - **Cache committed.** All 42 records were fetched from the live API and committed trimmed.
   The re-fetch reproduced the committed GO sets exactly. `--offline` re-runs byte-identically.
-- **Shared ids:** 99 in total, 93 excluding GOA terms the reviews wholly rejected.
+- **Shared ids:** 99 in total, 94 excluding GOA terms the reviews wholly rejected.
   `NEG_ACTIONS` is now used.
 - **PAINT recall split.** The pinned 91-gene list is committed. The FA cohort (22 genes,
   Affinage input by design) scores 85% and the other 69 score 48%, against 51% pooled at
@@ -597,4 +594,4 @@ first pass.
   None of the 22 cites its Affinage report as a `file:` source, and 4/22 mention Affinage at all.
 - **Integration stance reconciled.** Affinage is in routine use (139 reports), and next step 5
   now asks for a blind recall test, not integration.
-- Added the [Reference independence](#reference-independence) section.
+- Added the [Reference standard](#reference-standard) section.

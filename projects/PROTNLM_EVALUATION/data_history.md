@@ -49,6 +49,22 @@ Each prediction has a model score (0–1, threshold 0.05) and post-hoc corrobora
 
 ## Change log
 
+### 2026-10-01 — rebase onto the frozen review snapshot
+
+After rebasing the 2026-09-27 changes onto main, which pins benchmark counts to
+`review_snapshot_commit` and had folded OpenScientist audits into the ProtNLM reviews:
+
+- `build_benchmark_summary.py` additions (assessed-target counts, per-cohort table, cached-GOA
+  dates) were ported to the snapshot `SourceTree` API, so they are computed at the same commit as
+  the other counts. ARGO-50 now reads 18 COR, 2 PLI and 10 NPI of 77 at that snapshot.
+- `cor_goa_entailment.py` now reads reviews and GOA at the snapshot too: 3 of 52 COR calls are
+  entailed by an existing annotation.
+- The OpenScientist reconciliation was regenerated against the current reviews: 13 agree, 5 differ
+  within the same polarity group, 12 are decided differently and 1 has no verdict. 30 of the 31
+  terms now cite the investigation. Eight rationale excerpts that no longer appear verbatim in the
+  revised reviews were dropped from `override-rationale.tsv`.
+- Horse and fly selection pages updated: five horse and three fly reviews now cite their reports.
+
 ### 2026-09-27 — reporting fixes from the function-prediction review
 
 These changes follow the ProtNLM2 section of

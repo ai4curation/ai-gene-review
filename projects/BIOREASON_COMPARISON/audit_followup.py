@@ -29,6 +29,10 @@ Caveats encoded here, not hidden:
   * The BioReason-Pro training cutoff is not stated in any file in this repo; the
     page only records a "post-2022" temporal test split. CUTOFFS are labelled
     assumptions.
+Gene files are read from ``--source-root`` (default: this repository). To match the
+page's other counts, which are frozen at ``review_snapshot_commit`` in
+``benchmark-policy.yaml``, point it at a checkout of that commit, e.g.
+``git worktree add /tmp/aigr-snapshot <review_snapshot_commit>``.
 """
 
 import argparse
@@ -78,9 +82,12 @@ def means(rows):
 
 
 def main():
+    global ROOT
     ap = argparse.ArgumentParser()
     ap.add_argument("--test-parquet", type=Path)
+    ap.add_argument("--source-root", type=Path, default=ROOT, help="tree to read genes/ from")
     args = ap.parse_args()
+    ROOT = args.source_root.resolve()
     bg = list(csv.DictReader(open(HERE / "benchmark-genes.csv")))
     rl = [r for r in bg if r["benchmark"] == "argo139_rl_narrative" and r["performance_included"] == "true"]
     out = {}

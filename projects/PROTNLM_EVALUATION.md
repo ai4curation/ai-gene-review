@@ -402,20 +402,20 @@ illustrative case studies are below.
 
 **COR is not model novelty.** Here COR means *biologically supported and absent from the target's cached GOA/UniProt record*. It does not mean absent from ProtNLM2's training data (the sense used by de Crécy-Lagard et al.). The COR share differs sharply by cohort:
 
-- 33/89 GO claims (37%) for horse and 19/77 (25%) for ARGO-50;
+- 33/89 GO claims (37%) for horse and 18/77 (23%) for ARGO-50;
 - 1/50 for fly;
 - 0/32 for pombe, 0/21 for Neurospora and 0/19 for MOD-evolution.
 
-These differences reflect the targets' existing annotation, which terms each cohort's predictions emit, and how the LSP/COR boundary was applied, as much as the model. They should not be pooled into a single novelty rate. A mechanical GO-closure check finds 3 of the 53 COR calls already entailed by an existing target annotation (HORSE/WDPCP cytoplasm, cilium and cytoskeleton, via an IEA axoneme annotation). See the [per-cohort table](PROTNLM_EVALUATION/benchmark-results.md) and [entailment check](PROTNLM_EVALUATION/cor-goa-entailment.tsv).
+These differences reflect the targets' existing annotation, which terms each cohort's predictions emit, and how the LSP/COR boundary was applied, as much as the model. They should not be pooled into a single novelty rate. A mechanical GO-closure check finds 3 of the 52 COR calls already entailed by an existing target annotation (HORSE/WDPCP cytoplasm, cilium and cytoskeleton, via an IEA axoneme annotation). See the [per-cohort table](PROTNLM_EVALUATION/benchmark-results.md) and [entailment check](PROTNLM_EVALUATION/cor-goa-entailment.tsv).
 
-**OpenScientist investigations are advisory, and most of their verdicts were not adopted.** Focused [OpenScientist](https://www.openscientist.io) investigations examined the ARGO-50 predictions that were uncertain or disputed at the time. They surfaced useful evidence, such as the missing kinase domain in ARATH/F4JLB7 and the experimental autophagosome annotation on the human ortholog of GADMO/A0A8C5FPT8. The [reconciliation against the current reviews](PROTNLM_EVALUATION/openscientist-reconciliation.md) covers 31 GO terms in 21 genes:
+**OpenScientist investigations are advisory evidence; the reviews adopted many of their verdicts and departed from others.** Focused [OpenScientist](https://www.openscientist.io) investigations examined the ARGO-50 predictions that were uncertain or disputed at the time. They surfaced useful evidence, such as the missing kinase domain in ARATH/F4JLB7 and the experimental autophagosome annotation on the human ortholog of GADMO/A0A8C5FPT8. The [reconciliation against the current reviews](PROTNLM_EVALUATION/openscientist-reconciliation.md) covers 31 GO terms in 21 genes:
 
-- 8 agree with the current YAML;
-- 4 differ only within the same polarity group (COR vs CNN, or PLI vs NPI);
-- 18 are overridden by the current reviews, 16 of them from NPI back to UNC;
+- 13 agree with the current YAML;
+- 5 differ only within the same polarity group (COR vs CNN, or PLI vs NPI);
+- 12 are decided differently by the current reviews, 9 of them NPI → UNC;
 - 1 run failed.
 
-Only F4JLB7's review cites the investigation. The other overrides state their own rationale, usually that an unestablished transfer is UNC rather than NPI, but do not discuss the OpenScientist finding. See the [investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) for the original verdicts.
+All 12 differing reviews cite the investigation they depart from. Most apply the project's evidence rule that an unestablished transfer is UNC rather than NPI. See the [investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) for the original verdicts.
 
 ## ARGO-ProtNLM-50 key findings
 
@@ -535,7 +535,7 @@ These NPIs judge the deposited sequence, not the gene. They would not transfer t
 ### Reference standard and novelty
 
 - **Who made the reference calls.** Every assessment is an AI-agent review (coding agents following the function-prediction review skill), grounded in cited literature, cached GOA/UniProt records and reproducible sequence analyses. The categories therefore measure biological validity as judged by that review standard, fixed in each review file before it is counted here. No human curator has re-scored a subset.
-- **OpenScientist's role.** OpenScientist is a separate AI agent run on blinded, neutral hypotheses. Its reports are evidence inputs, not a second rater. Of the 30 ARGO-50 terms it gave a verdict on, the current reviews override 18, and only one review cites it. Horse and fly OpenScientist reports have been downloaded (eight horse, three of four fly) but are not yet incorporated.
+- **OpenScientist's role.** OpenScientist is a separate AI agent run on blinded, neutral hypotheses. Its reports are evidence inputs, not a second rater. Of the 30 ARGO-50 terms it gave a verdict on, the current reviews agree with 13, fall in the same polarity group for 5 and decide 12 differently, citing the report in each case. Horse and fly OpenScientist audits have since been incorporated into the reviews of five horse and five fly genes.
 - **GOA snapshot for COR/CNN.** Novelty is judged against each target's cached `*-goa.tsv`. The latest annotation date in 134 of the 162 files is in 2026; 24 files are empty. ProtNLM2 was trained on UniProt 2023_04. COR therefore means absent from a 2026 target record, not from the training data. A COR term may still have been learnable from annotated orthologs in the training release.
 
 ## References
@@ -558,7 +558,7 @@ These NPIs judge the deposited sequence, not the gene. They would not transfer t
 | [Exploratory notebook](PROTNLM_EVALUATION/protnlm_summary.ipynb) | Dataset exploration |
 | [Benchmark notebook](PROTNLM_EVALUATION/protnlm_bench50_eval.ipynb) | Benchmark overlap analysis |
 | [Slide deck](PROTNLM_EVALUATION/protnlm_evaluation_slides.html) (Marp source: [protnlm_evaluation_slides.md](PROTNLM_EVALUATION/protnlm_evaluation_slides.md)) — AI generated | Exploratory presentation; assessment totals and case judgments on this page reflect the current reviews |
-| [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) | Original ARGO-50 OpenScientist verdicts (advisory; most not adopted) |
+| [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) | Original ARGO-50 OpenScientist verdicts (advisory evidence) |
 | [OpenScientist reconciliation](PROTNLM_EVALUATION/openscientist-reconciliation.md) | Term-by-term comparison of those verdicts with the current reviews ([generator](PROTNLM_EVALUATION/reconcile_openscientist.py)) |
 | [Archive](PROTNLM_EVALUATION/archive/README.md) | Superseded bootstrap script and early triage CSV; do not run |
 | [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) | Domain-to-GO mapping coverage across the benchmark |
