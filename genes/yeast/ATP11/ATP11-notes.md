@@ -88,3 +88,11 @@ fact that motivates the GO:0051082 decision (in vitro holdase activity on reduce
 Not addressed here (out of scope for this PR, flagged by the reviewer): `UNFOLDED_PROTEIN_BINDING.md:538`
 describes ATP11 as the "Atp12p assembly factor", but Atp11 handles F1 beta/Atp2 and Atp12 handles
 F1 alpha/Atp1. That page needs a separate fix.
+
+## 2026-10-01 Update: IBA source review after current GOA refresh
+
+- Refreshed ATP11 from QuickGO/UniProt. Current GOA has 13 physical rows; the three historical rows for generic `GO:0005515 protein binding` and obsolete `GO:0051082 unfolded protein binding` are no longer present and were preserved with `retired: true`.
+- Checked cached PTHR13126 PAINT. All three live IBA rows trace to the same ATP11-family node, `PANTHER:PTN000319591`: `GO:0005739 mitochondrion`, `GO:0140777 protein-containing complex stabilizing activity`, and `GO:0033615 mitochondrial proton-transporting ATP synthase complex assembly`.
+- Reaffirmed the existing action calls. The PTN000319591 transfers are sound; Atp11 is a conserved mitochondrial F1 beta/Atp2 assembly factor, and `GO:0140777` is the most specific core molecular function for stabilizing the unassembled F1 beta subunit during alpha3-beta3 head assembly.
+- Left the two now-retired `GO:0051082` experimental rows as `KEEP_AS_NON_CORE` because the prior ATP11-specific unfolded-protein-binding review found that the reduced-insulin holdase assay extends beyond F1 beta client stabilization. The generic yeast-human `GO:0005515` row remains `REMOVE`.
+- Searched for newer ATP11/Atp11p Saccharomyces literature through 2026. Recent ATP synthase assembly hits were human, plant, bacterial, or centered on other yeast assembly factors and did not change the cached yeast ATP11 model.
