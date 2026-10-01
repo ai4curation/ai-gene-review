@@ -34,3 +34,37 @@ PLCG1 is broadly expressed and pleiotropic. TCR signalling is one of several cor
 ### Deep research status
 - The falcon deep-research job (`just deep-research-falcon human PLCG1 --fallback perplexity-lite`) was still running after about 35 minutes, when this review was completed. The perplexity-lite fallback is not available here: sibling runs logged "Provider 'perplexity' not available". This review therefore relies on the cached publications and UniProt, not deep research. If `PLCG1-deep-research-falcon.md` appears later, check it against the core functions above.
 - Update: the falcon run finished at 13:59 UTC, after the review, and wrote `PLCG1-deep-research-falcon.md`. A quick scan agrees with the review: it describes PIP2 hydrolysis downstream of EGFR (pTyr992), FGFR, PDGFR and the TCR; the SH3 domain binding proline-rich partners; the dynamin-1 GEF activity as secondary; and a nuclear PLCG1 fragment. It says nothing about COP9 signalosome or lysophospholipase C, so those rows stay UNDECIDED.
+
+## Deep research integration (falcon)
+
+Session 2026-10-01. Report: `PLCG1-deep-research-falcon.md` (Edison/falcon; 28 citation tags, but only 6 distinct sources: Hajicek 2019 eLife, Chen & Simons 2021 Sci Signal review, Kanemaru & Nakamura 2023 Biomolecules review, Zeng 2020 bioRxiv preprint, and two unpublished theses, Duarte 2023 and Nanna 2026). No PMIDs given; DOIs resolved through PubMed.
+
+### Claim classification (about 30 substantive claims)
+- **Confirms review (~18):** PIP2 -> IP3 + DAG catalysis, Ca2+-dependence; IP3 -> ER Ca2+ release, DAG -> PKC; cytosolic/autoinhibited at rest; Y783 phosphorylation relieves autoinhibition (plus Y771, Y775, Y1253); RTK recruitment via SH2 (EGFR pY992, PDGFR pY1021, FGFR1 pY766); TCR/LAT/ITK coupling; Ca2+/calcineurin/NFAT and DAG/PKC/RasGRP/ERK arms; plasma membrane translocation; ruffles/lamellipodia/migration; SH3 binding proline-rich partners (SOS, dynamin-1, SLP-76); dynamin-1 GEF activity; Rac1 activation via SH3; EGF-induced migration; angiogenesis and T cell phenotypes as downstream (non-core) outcomes; gain-of-function cancer mutations.
+- **Adds something new (5):** (1) structural detail of autoinhibition (regulatory array over the catalytic core; cSH2-C2 clasp displaced by pY783); (2) VEGFR2 (KDR) pY1175 docking and the PLCG1-PKC-ERK route in endothelial cells; (3) LAT condensate/phase-separation scaffolding and CD45 protection; (4) focal adhesion localization with GIT1/beta-PIX/FAK; (5) nuclear ~120 kDa PLCG1 fragment.
+- **Conflicts with review (1):** SH3 domain binds AKT (review REMOVEd the AKT1 protein-binding row, reading PMID:16525023 as AKT binding and phosphorylating PLCG1).
+- **Not relevant or unsupported (~6):** domain boundary table; cell-cycle regulator induction (Cdk4, cyclin D1, p27 export); erythropoiesis; PKC feedback on EGFR T654; DLL4/Notch tip/stalk selection; JAK2/GRB2/FAK SH2 partners. These come from reviews/theses or describe downstream pleiotropy.
+
+### Claims adopted (and where)
+- Autoinhibition mechanism -> `description`; `core_functions[0].supported_by` with two verbatim quotes from PMID:31889510 (Hajicek 2019, full text cached via `just fetch-pmid`).
+- VEGFR2 -> `description`; NEW `existing_annotations` row GO:0048010 vascular endothelial growth factor receptor signaling pathway (IDA, PMID:11387210, Takahashi 2001 EMBO J, full text cached); GO:0048010 added to `core_functions[0].directly_involved_in`; KDR added to the SH2 core function with PMID:11387210 support. NEW bar: PLCG1 performs the PIP2 hydrolysis step (catalytic effector, not substrate). Comparator check (QuickGO): PRKCB, PRKD1, PRKD2, PTK2, SRC, FYN, VAV1 carry GO:0048010 in human, so effectors do get the term. The review already listed VEGFR2 as a core receptor context (PDGFR NEW row reason, core function text) without a term. Caveat noted: the experiments used human KDR in mouse/bovine endothelial cells and a pan-PLC-gamma antibody.
+- LAT condensate scaffolding -> `description`; `core_functions[1].supported_by` (PMID:33929486, the peer-reviewed J Cell Biol 2021 version of the preprint the report cites; plus a verbatim quote from the report). No new MF annotation; raised as a question instead.
+- References added: the falcon report (reference_review LOW_QUALITY: secondary, theses, no PMIDs), PMID:11387210, PMID:31889510, PMID:33929486.
+
+### Claims not acted on (and why)
+- Focal adhesion and nuclear fragment localizations: only supported by reviews (Chen & Simons; Kanemaru & Nakamura) in the report; no primary paper checked. Raised as a question; no NEW CC terms.
+- SH3-AKT binding: from a thesis (Duarte 2023) only; conflicts with the review's reading of PMID:16525023. Raised as a question; AKT1 row left as is.
+- Erythropoiesis, cell-cycle regulators, Notch tip/stalk, PKC-EGFR feedback: downstream or pleiotropic, review-sourced only.
+
+### UNDECIDED rows
+- The report does not mention COP9 signalosome (GO:0008180), lysophospholipase C (GO:0140324) or endothelial apoptosis, so it offers no primary leads for them. COP9 and lysophospholipase C stay UNDECIDED (the Tespa1 paper PMID:22561606 and the rat donor evidence are still not available as full text).
+- GO:2000353 positive regulation of endothelial cell apoptotic process (PMID:27464494): changed UNDECIDED -> KEEP_AS_NON_CORE. This was not prompted by the report: the earlier reason said the direction could not be read from the abstract, but the paper's title ("MiR-30s Family Inhibit the Proliferation and Apoptosis ... Through Targeting ... PLCG1") states it, which matches the curator's positive-regulation term. Now handled the same way as the sibling proliferation row from the same paper.
+
+### Report errors / weaknesses detected
+- The domain table is labelled "human PLCgamma1", but the structural source (Hajicek 2019) solved **rat** PLC-gamma1 (P10686). The report never says the structure is human, but it presents the structural data as human.
+- Hajicek 2019 is listed under "Recent Developments (2023-2024 Sources)".
+- Zeng et al. is cited as a 2020 bioRxiv preprint; it was published as J Cell Biol 2021 (PMID:33929486). Minor detail: the paper says nSH2 binds LAT Y132; the report's "Tyr132 and Tyr171" cross-linking was not checked.
+- Two of the six sources are unpublished theses ("Unknown journal"); no PMIDs anywhere. No hallucinated PMIDs (none given); all four DOIs resolved to real papers.
+
+### Validation
+- `just validate human PLCG1`: valid, all validations passed.
