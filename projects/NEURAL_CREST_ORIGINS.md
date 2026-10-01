@@ -1,6 +1,6 @@
 ---
 title: Origins of the Neural Crest
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [XENLA, human, CIOIN]
 genes: [foxd3-a, sox10, snai2, sox9-a, twist1, ets1-a, myc-a, id3-a, sox8, pax3-a, zic1, MSX1, TFAP2A, hes4-a, gbx2, pou5f1.1, lin28a, snai1]
@@ -135,11 +135,11 @@ Accessions below were checked against the UniProt REST API on 2026-10-01.
 
 Last updated: 2026-10-01
 
-## Tier 1 — Neural crest specifiers (candidates for vertebrate-specific recruitment)
+## Tier 1 — Neural crest specifiers (candidates for vertebrate-specific recruitment) — COMPLETE 2026-10-01
 
 - [x] `XENLA/foxd3-a` (Q9DEN4) — FoxD3; NC specifier (repressor) with a competence face. Reviewed 2026-10-01: 25 GOA rows (14 ACCEPT, 5 non-core, 4 MODIFY, 2 over-annotated) + 1 NEW (GO:0001227). Homeolog `foxd3-b` Q9DEN3
 - [x] `XENLA/sox10` (Q8AXX8) — SoxE; NC specifier. Reviewed 2026-10-01: 32 GOA rows (11 ACCEPT, 14 non-core, 6 MODIFY, 1 REMOVE)
-- [ ] `XENLA/snai2` (Q91924) — Slug; NC specifier and EMT repressor
+- [x] `XENLA/snai2` (Q91924) — Slug; NC specifier then EMT/migration effector. Reviewed 2026-10-01: 15 GOA rows (13 ACCEPT, 1 MODIFY, 1 REMOVE) + 3 NEW (GO:0001227, GO:0000122, GO:0001222)
 - [x] `XENLA/sox9-a` (B7ZR65) — SoxE; NC specifier + crest-derived chondrogenesis. Reviewed 2026-10-01: 45 GOA rows (22 ACCEPT, 16 non-core, 5 MODIFY, 1 REMOVE, 1 over-annotated) + 1 NEW (GO:0001228)
 - [x] `XENLA/twist1` (P13903) — Twist; late, head-only NC specifier / ectomesenchyme driver. Reviewed 2026-10-01: 12 GOA rows (9 ACCEPT, 3 MODIFY) + 2 NEW (GO:0140416 Snail2 inhibition, GO:0048701 cranial skeleton morphogenesis)
 - [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
@@ -307,6 +307,55 @@ Last updated: 2026-10-01
   [PMID:23135395], which supports co-option. The *early* specifier role is
   absent in amniotes (Lander), so the conserved vertebrate role is
   ectomesenchyme, not specification.
+
+- **snai2.** NC specifier that later acts in EMT and migration. It comes on
+  after snai1 inside the prospective crest, and knockdown leaves zic1 and pax3
+  intact (Tien 2015). It cannot induce crest alone but can with Wnt. Blocking
+  it early prevents precursors from forming; blocking it later stops
+  migration (LaBonne 2000). NEW: `GO:0001227` repressor activity (engrailed
+  fusions; E-cadherin ChIP); `GO:0000122`; `GO:0001222` corepressor binding
+  (EZH2, Ajuba LIM proteins via SNAG). The TAS `GO:0014029` row was narrowed to
+  `GO:0014036`. Its source, PMID:15242799 (an Id2 paper), is flagged as
+  miscited, the same source twist1 found. Elp3 `protein binding` was removed.
+  *Withheld* `GO:0036032` delamination: frog cranial crest keep E-cadherin
+  while migrating and need it to migrate (Huang 2016). Evolution:
+  amphioxus Snail is expressed at the border, so Snail border expression is
+  ancestral. Lamprey has one snail gene; Snai1/Snai2 subfunctionalised
+  after the gnathostome duplication.
+
+### Tier 1 synthesis (2026-10-01)
+
+| Gene | Layer (review placement) | NC process term kept | Outgroup / evolution |
+|---|---|---|---|
+| foxd3-a | NC specifier (repressor), with a competence face | `GO:0014034` fate commitment | FoxD repressor activity ancestral; border expression plus N-terminal motif new in vertebrates |
+| sox10 | NC specifier | `GO:0014036` | Never in blastula; SoxE recruitment a vertebrate novelty |
+| sox9-a | NC specifier, then crest cartilage | `GO:0014036` | Cartilage role ancestral (lamprey Sox9 with Col2a1) |
+| sox8 | First-wave NC specifier (frog) | `GO:0014036` | Leading SoxE paralog differs by lineage |
+| snai2 | NC specifier, then migration | `GO:0014036`, `GO:0001755` | Snail border expression ancestral (amphioxus) |
+| twist1 | Late, head-only specifier; ectomesenchyme | `GO:0014036` | *Ciona* Twist mesoderm-only, sufficient for ectomesenchyme: co-option |
+| ets1-a | Late cranial-identity specifier, delamination | `GO:0036032`, `GO:0001755` (NEW) | Absent from lamprey crest, present in skate: a gnathostome addition |
+| id3-a | Progenitor maintenance / competence | `GO:0014029` (kept broad) | Border expression from lamprey; a change in where it is expressed |
+| myc-a | Competence factor from the blastula | `GO:0014029` (NEW, flagged) | Frog c-Myc vs chick N-Myc at the border |
+
+Cross-cutting findings:
+- **Three evolutionary modes appear in Tier 1.** (i) Ancestral border
+  expression (Snail). (ii) Co-option by a change in where a gene is expressed,
+  with protein activity unchanged (Id, SoxE, FoxD *cis*-regulation, Twist).
+  (iii) Protein change (FoxD3 N-terminal motif). Ets1 shows the crest network
+  kept growing after the vertebrate origin.
+- **Molecular function.** Recurring precise terms: `GO:0001227` (FoxD3,
+  Snai2), `GO:0001228` (Sox9, Ets1), and `GO:0140416` transcription regulator
+  inhibitor activity (Id3; Twist on Snail2). Generic `protein binding` was
+  replaced or removed everywhere.
+- **PMID:15242799** (an Id2 cardiac-crest paper) is the TAS source for the
+  `GO:0014029` rows on both twist1 and snai2, and is miscited for both. Report
+  it to the source curators.
+- **Homeologs.** In every case, experimental rows sit on one homeolog only
+  (foxd3-b, sox9-b, id3-b, myc-b and snai2.S lack them), while knockdown
+  reagents typically hit both.
+- **Flags for curator review:** the myc-a NEW `GO:0014029`; the twist1
+  "developmental process" IBA rows MODIFIED to `GO:0014036`; and the
+  convention below.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
