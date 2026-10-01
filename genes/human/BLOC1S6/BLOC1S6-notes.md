@@ -95,3 +95,21 @@ This entry supersedes the earlier interpretations specifically identified below.
 ## Canonical follow-up verification — 2026-10-01
 
 The distinct final science peer approved the exact held proposal. Canonical schema, GOA, cached-reference/quotation and ontology-term validation passed with the same 63 disclosed advisories: 58 generic-binding policy warnings and five unresolved IBA metadata requests. No unsupported REMOVE or phylogenetic metadata was introduced. Rendering and the new history record passed; the rendered embedded YAML equals the review. All 177 source assertions, three alternative products, prior history and source-cache bytes are preserved. The reviewed follow-up is ready for publication on the existing gene PR.
+
+
+## Second PR follow-up — 2026-10-01
+
+The [second review of PR #3770](https://github.com/ai4curation/ai-gene-review/pull/3770#issuecomment-5936932124) correctly challenges the earlier demand to exclude every hypothetical ER-lumen import route. That is too strong a requirement for judging an electronic transfer. The ER-lumen row is now MARK_AS_OVER_ANNOTATED: pallidin's established cytoplasmic/peripheral-membrane architecture does not support this compartment. This is a judgment of over-specific localization, not a claim that the unidentified mouse experiment was erroneous. The contractile-ring assertion remains unresolved because a cytoplasmic ring does not create the same topological mismatch.
+
+The gene-expression row remains UNDECIDED. Its rationale now distinguishes the hypothetical insufficiency of downstream abundance changes from an actual examination of the donor experiment. The six metabolic decisions are based on an inspected perturbation/metabolomics study; no equivalent source-to-assertion assessment has been established for this row. A targeted literature search located the expression-profiling study [PMID:32436302](https://pubmed.ncbi.nlm.nih.gov/32436302/), and selected indexed Table 6/Results describe changes in pallid mouse hippocampi. This is a lead, not a verified join to the current donor annotation; it has not been added as a curated reference or used to claim a new function. The earlier lipid and redox consultation remains applicable.
+
+The requested project policy retains supported generic physical interactions as non-core when no more informative molecular function has been established. No binding assertion is removed merely because its term is broad. Pairwise interaction evidence and membership in the BLOC-1 complex describe different claims; the presence of a complex-membership annotation alone does not establish that a binding assertion is false or circular. The eleven supported syntaxin/SNARE refinements remain in place.
+
+Likewise, the three identical-protein-binding records are not narrowed to homodimerization simply because separate homodimerization experiments exist on the same gene. Self-association in an interaction assay does not by itself establish its stoichiometry. One pallidin copy in the assembled BLOC-1 octamer does not invalidate isolated self-association observations.
+
+This follow-up preserves the biological summary, single core, three alternative products, all 177 source objects and 32 references. It changes one action and clarifies one unresolved rationale. Earlier journal entries remain as historical records; this entry supersedes the earlier ER-lumen decision.
+
+
+## Second follow-up validation — 2026-10-01
+
+The distinct science peer, focused schema/term/reference/GOA checks, history validation and rendering passed. The 63 existing advisories remain: 58 generic-binding policy advisories and five unresolved IBA provenance advisories. No uninspected PAINT history was invented to silence those warnings. The rendered YAML equals the reviewed file. Fetched source bytes and prior history remain unchanged. Remote publication and approval are subsequent steps.
