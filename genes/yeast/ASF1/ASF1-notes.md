@@ -234,3 +234,33 @@ The general lesson, recorded for future passes on this file: a "mismatched quote
 automatically fixed by finding a more topical sentence. Where the annotation comes from a
 complex-centric source, the complex identity in `ASF1-uniprot.txt` is the constraint, and an
 off-topic quote about the right complex beats an on-topic quote about the wrong one.
+
+## 2026-10-01 live-GOA refresh
+
+- Refreshed ASF1 against current GOA. The live export now has 56 physical rows.
+  The review keeps five stale exact rows as `retired: true`: the old combined
+  `GO_REF:0000120` chromatin-organization IEA, the old `GO:0006351
+  DNA-templated transcription` keyword IEA, two no-longer-live IntAct
+  `GO:0005515 protein binding` rows, and the old `GO:0001932 regulation of
+  protein phosphorylation` ComplexPortal row.
+- Rechecked PTHR12040 PAINT. The current PAINT export has four PTN000247832 IBD
+  assertions for ASF1: `GO:0000785 chromatin`, `GO:0005634 nucleus`,
+  `GO:0042393 histone binding`, and `GO:0006335 DNA replication-dependent
+  chromatin assembly`. All four remain core, conserved ASF1 calls; their
+  `propagation_review.source_entities` now record only the ancestral PTN source.
+- Resolved 14 newly seeded live rows. Twelve are current IntAct
+  `GO:0005515 protein binding` splits with exact partner accessions from
+  `PMID:11404324`, `PMID:11731480`, `PMID:18467557`, `PMID:21179020`,
+  `PMID:24209620`, and `PMID:37968396`; all were removed because the physical
+  contacts are real but generic protein binding is not an informative
+  molecular-function assertion. The restored `PMID:16020781` nucleus EXP row
+  was accepted, and the current InterPro2GO chromatin-organization row was
+  accepted as a broad replacement for the stale combined-IEA row.
+- Searched 2025-2026 literature and found no new primary yeast ASF1 paper that
+  changes the curated core H3-H4 chaperone model. Recent ASF1 papers instead
+  covered human ASF1A/B regulation or mirrored older yeast histone-chaperone
+  work.
+
+The refreshed review has 61 total rows: 56 current GOA rows and 5 retired
+historical rows. Final action counts are 30 ACCEPT, 26 REMOVE,
+4 KEEP_AS_NON_CORE, and 1 MARK_AS_OVER_ANNOTATED.
