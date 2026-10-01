@@ -27,6 +27,7 @@ lineages that the reference trees sample thinly.
 | Animal-tissue IBDs inherited at a correct graft | *S. rosetta* warts, F2U943 | PTHR24356:SF418, leaf PTN001220369 under PTN002390470 | **inherited PAINT over-placement**, like the [rotary-ATPase leak](rotary-atpase-leak.md) | regulation of organ growth (removed); positive regulation of apoptotic process and G1/S transition (over-annotated) |
 | Fungal pathway term on a choanoflagellate | *S. rosetta* couscous, F2UJ78 | node PTN001270341 (MNN2 family) | **3, out-of-context process** (pathway absent in host) | mannan biosynthetic process (removed) |
 | Family node term | sponge TLN, A0A3G2LGI8 | node PTN001072690 | **1, granularity / sibling term** | cell-cell adhesion → cell-matrix adhesion |
+| Graft onto a node PAINT restricts to Bilateria | three *S. rosetta* cadherins: F2UD23, F2UFV3, F2USU1 | PTHR24027:SF422, node PTN000616280 (`taxon:33213`) | **4-like, taxon-blind graft** | 30 rows of junction, catenin and adhesion terms; none of the proteins has the beta-catenin-binding domain (PF01049). Not reviewed as gene reviews; see the audit |
 
 ## What is new relative to the main evaluation
 
@@ -62,6 +63,14 @@ lineages that the reference trees sample thinly.
    heterologous data support each one: coactivator activity, hippo signaling,
    and positive regulation of transcription by RNA polymerase II.
 
+4. **TreeGrafter grafts onto taxon-restricted nodes.** PAINT records cadherin
+   node PTN000616280 at Bilateria (`taxon:33213`), yet three choanoflagellate
+   cadherins graft onto it and inherit its adherens-junction and catenin
+   terms ([audit, Case 6](../ORIGINS_OF_MULTICELLULARITY/propagation-audit.md)).
+   The main evaluation never tested this, because its corpus is
+   bacterial-heavy. A cheap QC rule would be to suppress terms from a graft
+   node whose PAINT taxon does not include the query organism.
+
 ## Upstream tickets
 
 - **PANTHER, family boundaries.** Rescore coWts (A0A0D2VGR4), fly wts (Q9VA38)
@@ -78,3 +87,6 @@ lineages that the reference trees sample thinly.
   biosynthetic process to fungi.
 - **GO.** Consider a taxon constraint keeping organ-level growth terms off
   unicellular lineages.
+- **PANTHER, PTHR24027.** Explain how *S. rosetta* SF422 cadherins graft onto
+  the Bilateria node PTN000616280, and graft them onto a pre-bilaterian node
+  instead.

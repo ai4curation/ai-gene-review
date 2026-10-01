@@ -3,33 +3,53 @@ title: "Origins of Animal Multicellularity"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
-genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK]
+genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK, CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1, CDH1, ABL1, MYC, NOTCH1, TP53]
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals
 
 **Bottom line:** animals evolved from a single-celled ancestor they share
-with choanoflagellates, and many genes that build animal bodies (cadherins,
-integrins and their adhesome, tyrosine kinases, Hippo signalling, the T-box
-factor Brachyury) predate animals and are present in their unicellular
-relatives. GO barely covers these relatives, so their functions are
-annotated almost entirely by transfer from animals. A census of GOA on
-2026-09-30 found 0 experimental GO annotations for ichthyosporeans,
-ctenophores and placozoans. Choanoflagellates have 2, both `protein binding`;
-*Capsaspora* has 4, all on one histone; sponges have 16. Metazoa as a whole
-has about 952,000. We are reviewing the few unicellular-relative genes with direct genetic
-evidence, starting with the three *Salpingoeca rosetta* genes required for
-rosette colonies, and will add a matched set of animal "multicellularity
-toolkit" genes. We also ask whether IBA and IEA propagation places
-animal-specific process terms on unicellular proteins, and whether GO has the
-terms to describe clonal colony development in a non-animal. Three draft
-reviews are done: rosetteless (secreted C-type lectin-like protein of the
-rosette extracellular matrix), jumble (Golgi-localised predicted
-glycosyltransferase) and couscous (predicted alpha-1,2-mannosyltransferase).
-They add two experimental annotations where GOA had none for these proteins,
-remove one electronic term (`GO:0046354` mannan biosynthetic process, whose GO
-definition is softwood hemicellulose), and show that GO has no term for
-rosette development; a new term is proposed in the rosetteless review.
+with choanoflagellates, and many genes that build animal bodies predate
+animals and are present in their unicellular relatives. Examples are
+cadherins, integrins and their adhesome, tyrosine kinases, Hippo signalling
+and the T-box factor Brachyury. GO barely covers these relatives, so their
+functions are annotated almost entirely by transfer from animals.
+
+A GOA census on 2026-09-30 found how few experimental GO annotations these
+relatives carry:
+
+| Lineage | Experimental annotations |
+|---|---:|
+| Ichthyosporeans, ctenophores, placozoans | 0 |
+| Choanoflagellates | 2, both `protein binding` |
+| *Capsaspora* | 4, all on one histone |
+| Sponges | 16 |
+| Metazoa as a whole | about 952,000 |
+
+We have 30 draft or updated reviews in four tracks:
+
+- **Track A: 11 genes with direct genetic evidence in unicellular relatives
+  and a sponge.** These are the *S. rosetta* rosette genes, the *S. rosetta*
+  and *Capsaspora* Hippo pathways, and sponge vinculin and talin.
+- **Track B: 19 human toolkit genes.** Each review records which functions
+  are ancestral and which are animal recruitments.
+- **Track C: a propagation audit.** It found animal tissue terms (organ
+  growth), junction terms and fungal pathway terms reaching unicellular
+  proteins.
+  - Three PANTHER family-placement errors: *Capsaspora* Warts with the
+    ROCK/citron kinases, the *S. rosetta* yorkie candidate with the MAGI
+    scaffolds, and choanoflagellate cadherins grafted onto a node PAINT
+    restricts to Bilateria.
+  - One PAINT node placed too deep: the organ-growth term on the LATS node.
+- **Track D: one proposed GO term**, rosette colony development.
+
+The pattern across Tracks A and B is consistent:
+- **Ancestral:** core molecular activities, such as kinase activity, YAP-TEAD
+  coactivation, talin-vinculin coupling, Myc-Max E-box binding and T-box DNA
+  binding.
+- **Animal-specific:** control of proliferation and organ size, coupling to
+  classical cadherins, and basement-membrane collagen IV, so far as the
+  evidence shows.
 
 ## Motivation
 
@@ -206,6 +226,39 @@ What each review concluded is ancestral and what is an animal recruitment
 | TBXT | T-box DNA motif binding and transcriptional activation (*Capsaspora* CoBra binds a mouse-like motif) | Target selectivity, which the chimera experiments place in the N/C termini and attribute to cofactors; all developmental roles. Choanoflagellates have no T-box genes |
 | CSK | Tyrosine kinase activity on the Src C-terminal tail | Adaptor recruitment (PAG, SCIMP) and immune-receptor signalling. Whether Csk already inhibited Src before animals is disputed: two choanoflagellate studies found weak or no inhibition, and a 2017 study reports inhibition |
 
+**Batch 2 results (2026-10-01, all DRAFT).** Six genes with large
+annotation sets; COL4A1 is the animal-innovation control.
+
+| Gene | Rows | Accept | Non-core | Modify | Remove | Over-annot. | Undecided | NEW |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| CTNNB1 | 723 | 254 | 112 | 217 | 126 | 13 | 1 | 0 |
+| SRC | 551 | 241 | 103 | 67 | 125 | 13 | 1 | 1 |
+| ITGB1 | 349 | 160 | 95 | 27 | 51 | 14 | 2 | 0 |
+| PTK2 | 234 | 95 | 51 | 11 | 66 | 5 | 5 | 1 |
+| CTNNA1 | 129 | 48 | 11 | 14 | 48 | 8 | 0 | 0 |
+| COL4A1 | 60 | 47 | 8 | 0 | 2 | 2 | 1 | 0 |
+
+| Gene | Ancestral | Animal-specific (on current evidence) |
+|---|---|---|
+| CTNNB1 / CTNNA1 | A catenin junction-and-polarity module without cadherins: *Dictyostelium* builds a polarized epithelium with Aardvark and an alpha-catenin (PMID:21393547) | The beta-catenin family itself (PTHR45976 is animal-only); classical-cadherin binding; TCF/LEF coactivation in Wnt signalling |
+| SRC | Tyrosine kinase activity and working SH2/SH3 domains (choanoflagellate Src) | The focal-adhesion, junction and PDZ partner network; receptor-specific pathways |
+| ITGB1 / PTK2 | Integrin beta receptors with cation-site ligand binding and NPxY tails, and bona fide FAK, in *Capsaspora*. Choanoflagellates lost integrins and FAK | Binding to animal matrix ligands; counter-receptor cell-cell adhesion; all tissue roles. No functional FAK data exist outside animals |
+| COL4A1 | None: collagen IV is absent from all unicellular relatives (PMID:28418331) | Everything; present with basement membranes in ctenophores, placozoans and homoscleromorph sponges. Confirms the control |
+
+**Evolutionary re-check of existing reviews (2026-10-01).** The five
+reviews that predate this project (all COMPLETE) received an additive pass:
+a sourced evolutionary-origin section in each gene's notes, a sentence in the
+description, new references and suggested questions. No review actions
+changed.
+
+| Gene | Ancestral | Animal-specific | Notable |
+|---|---|---|---|
+| CDH1 | Cadherin repeats (calcium binding, inferred from the fold) | Classical cadherins and the beta-catenin-binding tail (PF01049, absent from all unicellular holozoans) | Track C Case 6: choanoflagellate cadherins inherit Bilateria-node junction terms |
+| ABL1 | Tyrosine kinase activity (choanoflagellate MbAbl2 is constitutively active, PMID:26090675) | Myristoyl-cap autoinhibition; the F-actin- and DNA-binding C-terminus | Matches the SRC/CSK picture: an ancestral catalytic module with later regulation |
+| MYC | Myc-Max heterodimerization and E-box binding (*Monosiga*, PMID:21571926) | Proliferation, apoptosis and oncogenic roles | A ribosome-biogenesis target signature is inferred in *Monosiga* and *Capsaspora* but untested |
+| NOTCH1 | Domain modules only; CSL is present in *Capsaspora* without a receptor | Receptor, DSL ligands, MAML (eumetazoan) | One choanoflagellate (*Mylnosiga*) has a Notch-like domain order, so a choanozoan origin with loss is open |
+| TP53 | A p53-family DNA-binding domain in choanoflagellates, *Capsaspora* and ichthyosporeans (untested); germline DNA-damage apoptosis in cnidarian p63 | Somatic tumour suppression (vertebrate) | No functional study of any unicellular p53-family protein exists |
+
 ### Track C: propagation audit
 
 For each Track A/B family, pull the IBA and IEA annotations on
@@ -277,10 +330,10 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] Review CAPO3 coHpo, coWts, coYki — DRAFT
 - [x] Review SALRS hippo, warts, yorkie — DRAFT
 - [x] Track B batch 1: LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK — DRAFT
-- [ ] Track B batch 2: CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1
-- [ ] Track B: premetazoan pass on existing CDH1, ABL1, MYC, NOTCH1, TP53
+- [x] Track B batch 2: CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1 — DRAFT
+- [x] Track B: premetazoan pass on existing CDH1, ABL1, MYC, NOTCH1, TP53 (additive; no actions changed)
 - [x] Track C propagation audit for the Track A genes: [report](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md), cross-posted to the TREEGRAFTER project
-- [ ] Track C: extend the audit to the Track B human genes' unicellular orthologs
+- [x] Track C: extend the audit to the Track B human genes' IBA nodes ([Case 6 and extension table](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md))
 - [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
 - [ ] Deep research (falcon) for the three SALRS genes, once a provider key is available
 
@@ -383,3 +436,19 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
     mouse T carries the term).
   - **CSK.** Choanoflagellate Src/Csk papers cached (PMID:16873552,
     18390552, 28939764).
+- **Track B batch 2 and the re-check of existing reviews** (tables in Track B).
+  - ITGB1 turned up a GOA miscitation: PMID:10676904, a bovine oocyte paper,
+    is cited for ITGB1-FLNB. The intended paper is PMID:16076904, a digit
+    transposition. Recorded as a `replacement` and written up in
+    [MISCITATIONS](MISCITATIONS.md).
+  - The CDH1 re-check found Track C Case 6: three *S. rosetta* cadherins
+    graft onto a PAINT node restricted to Bilateria and inherit 30
+    junction/catenin rows. Added to the propagation audit and the TreeGrafter
+    case study.
+  - Process note: a review agent ran `git stash` / `pop` mid-run, briefly
+    removing other agents' uncommitted edits. All edits were recovered and
+    verified against the stash before committing.
+  - The TP53 agent observed that `just validate` accepted a slightly
+    paraphrased quote ("UV irradiation" for "ultraviolet (UV) irradiation"),
+    so the substring matching appears to tolerate small differences. The quote
+    was corrected to the exact text.

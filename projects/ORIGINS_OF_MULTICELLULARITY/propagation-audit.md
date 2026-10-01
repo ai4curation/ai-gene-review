@@ -182,6 +182,64 @@ cell-cell contacts, so the review changed it to `cell-matrix adhesion`. This is
 a family-level node term, not a taxon problem; `GO:0098609` occurs widely in
 unicellular holozoans through other families.
 
+## Extension: IBA nodes of the human toolkit genes (Track B)
+
+For each existing human review re-checked in Track B (CDH1, ABL1, MYC,
+NOTCH1, TP53), we took the PANTHER nodes behind its IBA rows and asked QuickGO
+whether those nodes' terms reach proteins of Choanoflagellata, Filasterea or
+Ichthyosporea, by IBA or by TreeGrafter IEA. Details and the query results are
+in each gene's notes (`genes/human/<GENE>/<GENE>-notes.md`, section
+"Premetazoan origin").
+
+| Gene | Node(s) | Reaches unicellular holozoans? | Assessment |
+|---|---|---|---|
+| CDH1 | PTN000616280 (PAINT taxon **Bilateria**) | **Yes: 30 TreeGrafter IEA rows**. Ten terms each on three *S. rosetta* cadherins: F2UD23, F2UFV3 and F2USU1 | **Case 6, below** |
+| CDH1 | PTN008601603 | Yes: 5 IBA rows on *M. brevicollis* A9V8Y4 | Case 6, below |
+| TP53 | PTN000893833 | Yes: 7 IBA terms each on *M. brevicollis* A9UZX3 and A9V4M3 | Mostly DNA-binding and transcription terms; `regulation of apoptotic process` is an untested extrapolation |
+| TP53 | PTN000154790 | 3 TreeGrafter rows on *Capsaspora* A0A0D2X0F0 (DNA binding, TF activity, regulation of transcription); the apoptosis term itself is not transferred | Plausible from domain conservation (PMID:31861340) |
+| MYC | PTN001691821 | Yes: 4 IBA rows on *M. brevicollis* Myc (A9V5B4) | **Supported**: the transcription-factor and nuclear terms match the experiments on choanoflagellate Myc (PMID:21571926) |
+| ABL1 | PTN002521457 | Yes: tyrosine kinase activity and plasma membrane on 59 *M. brevicollis* kinases | The MF is fine; plasma membrane is a localization default on cytoplasmic kinases |
+| NOTCH1 | PTN001933897 (Eumetazoa), PTN002911625 | No | Expected for the animal-innovation control |
+
+## Case 6: junction and catenin terms on choanoflagellate cadherins
+
+**What happened.** PAINT records node PTN000616280 in the cadherin family
+PTHR24027 at `taxon:33213` (Bilateria) in
+`interpro/panther/PTHR24027/PTHR24027-paint.tsv`. Its IBDs, seeded by mouse,
+rat, human and zebrafish classical cadherins, include adherens junction,
+catenin complex, cell-cell junction assembly, calcium-dependent cell-cell
+adhesion and cell morphogenesis. TreeGrafter nonetheless grafts three
+*S. rosetta* cadherins (subfamily PTHR24027:SF422) onto that node. Each of
+the three receives 10 IEA rows, 30 rows in all:
+
+| Protein | Domains (Pfam) |
+|---|---|
+| F2UD23 | cadherin repeats, SH2 |
+| F2UFV3 | cadherin repeats, laminin G |
+| F2USU1 | cadherin repeats, tyrosine phosphatase |
+
+Separately, node PTN008601603 gives *M. brevicollis* A9V8Y4 five IBA rows:
+beta-catenin binding, catenin complex, cadherin binding, cell migration and
+cell-cell adhesion.
+
+**Why it is a problem.** None of the four proteins has PF01049, the
+cytoplasmic domain through which classical cadherins bind beta-catenin. A
+UniProt census finds 0 PF01049 proteins in choanoflagellates, filastereans
+and ichthyosporeans, against 23,575 in animals (CDH1-bioinformatics/).
+Choanoflagellates lack classical cadherins (PMID:22837400, PMID:27189570), and
+*S. rosetta* colonies have no adherens-junction-like structures
+(PMID:22837400). So the catenin and junction terms describe a protein
+complex these proteins cannot form.
+
+**Why this matters for TreeGrafter.** This is the clearest case so far of
+TreeGrafter grafting onto a node that PAINT itself restricts to a clade the
+query is not in. Either the graft ignores the node's taxon, or the node label
+is wrong. Both readings point to a fix in the PTHR24027 tree.
+
+**Recommendation for PANTHER.** Check how the *S. rosetta* SF422 cadherins
+come to graft onto a Bilateria node. Graft them onto a pre-bilaterian
+cadherin node, or block terms from PTN000616280 for non-bilaterian queries.
+
 ## What held up (negative controls)
 
 - **coYki:** all 3 of its TreeGrafter rows were accepted. Capsaspora and
@@ -208,3 +266,6 @@ transfer well. The failures are at the edges:
   trees directly, except through the cached slice.
 - The other non-LATS members of PTN001122925 and PTN001270341 in unicellular
   holozoans were not reviewed. Some of those rows may be correct.
+- The Track B extension only checked the nodes behind each human gene's own
+  IBA rows. For CDH1 and TP53 the unicellular targets were identified from
+  QuickGO, not reviewed as gene reviews.
