@@ -31,3 +31,20 @@ Verbatim support is limited to short normal-cache anchors; aggregate words per s
 ## Completed review checks
 
 ROOT independently reviewed all 55 decisions and the core synthesis (science peer 4eb970). Exact canonical application 5d294f passed normal focused validation 84a63e, rendering eb781d and history validation d64991. The canonical validation reports 21 generic-binding advisories for associations retained as non-core under the user action definitions. The earlier TMP validation also reported 14 accepted rows lacking individual supported_by entries; this remains an evidence-presentation limitation, with source-specific reasoning and selected short exact anchors supplied elsewhere in the review. No repository-wide check, complete-paper review or supplement-wide audit is claimed. The source caches remain unchanged.
+
+
+## Review follow-up: evidence placement and complex contribution
+
+The core synthesis now records contributes_to ubiquitin-protein transferase activity (GO:0004842), consistent with the preserved source qualifier. BCOR recruits and organizes the complex; RNF2 supplies its catalytic activity. BCL6 binding is explicit in the same core mechanism. Short source excerpts now anchor the corepressor, transcription-factor binding, complex contribution, chromatin-remodeling and BCOR-complex decisions. The existing corepressor excerpt was moved to its experimental annotation to avoid duplicating quoted text.
+
+The HSP70 association remains non-core. The primary Results distinguish HSP70 from the Polycomb and SCF categories; that distinction does not show contamination or refute the observed association. The official GO:0031072 definition concerns binding, not an autonomous chaperone or heat-response function of BCOR. Its reason now states those separate limits explicitly. Direct binary binding and stable physiological membership are not asserted (PMID:16943429; https://amigo.geneontology.org/amigo/term/GO:0031072).
+
+All 55 source assertions, qualifiers, isoforms and four alternative products remain unchanged; no NEW annotation or action change is proposed. The 21 generic interaction decisions still follow the supplied user action definitions. Existing uncertainty about direct regulatory-region DNA contact is retained. Optional reference-level judgments are not inferred from whether a supplement was inspected.
+
+Verbatim totals in this version: PMID:10898795=23, PMID:16943429=23, PMID:17517692=9, PMID:19578371=19, PMID:25331958=11, PMID:26687479=13, PMID:27505670=13. The relevant excerpts are deliberately brief; detailed assay reasoning remains in the individual reviews. No additional source fetch or whole-paper/supplement audit was performed for this follow-up.
+
+
+Independent science review passed for this focused follow-up (2026-10-01). The exact approved YAML and appended notes were applied after matching the canonical preimages. All 55 original source objects, four products, annotation actions, raw source files, normal reference caches and prior history remain unchanged. Five load-bearing annotations gain brief evidence anchors; the HSP70 association retains an explicit directness limit and the existing complex-contribution activity is included in the core. Focused canonical validation, rendering and a new history record follow this application.
+
+
+Focused canonical validation, HTML rendering and history validation passed (2026-10-01). The rendered page embeds the exact approved YAML. The canonical validator reports 21 generic protein-binding advisories; the temporary proposal check additionally disclosed nine remaining short-evidence-anchor advisories. No full-repository validation is claimed. All normal sources and previous history remain unchanged.
