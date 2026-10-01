@@ -18,4 +18,5 @@ Automated deep-research providers were unavailable for this host, so this is a c
 - Mark generic nucleoside metabolism/process rows as over-annotated rather than false: they capture only a broad consequence of a nucleosidase family.
 - Accept `L-methionine cycle`: the SAH reaction generates S-ribosylhomocysteine for LuxS and is a direct bacterial route from SAH to homocysteine.
 - Modify `identical protein binding` to `protein homodimerization activity`, then keep homodimerization as non-core structural context.
-- Remove `purine deoxyribonucleoside catabolic process`: 5'-deoxyadenosine is a radical-SAM byproduct, not a 2'-deoxypurine nucleoside from DNA/nucleotide catabolism.
+- Mark `purine deoxyribonucleoside catabolic process` as over-annotated: Pfs does hydrolyze the purine deoxyribonucleoside 5'-deoxyadenosine, but the E. coli role of that reaction is radical-SAM byproduct repair rather than general purine deoxyribonucleoside catabolism.
+- Do not add `L-methionine salvage from methylthioadenosine` or `quorum sensing` to the MTA arm of Pfs: the UniProt methionine-salvage pathway is HAMAP-derived and E. coli K-12 lacks an obvious downstream 5-methylthioribose kinase route, and the direct AI-2/quorum-sensing producer step is LuxS cleavage of S-ribosylhomocysteine to DPD.
