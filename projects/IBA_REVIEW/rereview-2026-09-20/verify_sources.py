@@ -17,62 +17,82 @@ IDENTITY_MIGRATIONS = {
 }
 
 
+def signature(annotation):
+    return json.dumps({k: annotation[k] for k in FIELDS if k in annotation}, sort_keys=True)
+
+
 def make_signature(term_id, term_label, evidence_type, original_reference_id, qualifier=None):
-    row = {
+    annotation = {
+        "term": {"id": term_id, "label": term_label},
         "evidence_type": evidence_type,
         "original_reference_id": original_reference_id,
-        "term": {"id": term_id, "label": term_label},
     }
     if qualifier:
-        row["qualifier"] = qualifier
-    return json.dumps(row, sort_keys=True)
+        annotation["qualifier"] = qualifier
+    return signature(annotation)
 
 
 # Explicit current-GOA source refreshes. Keep these as narrow signature-level
 # exceptions so unrelated source loss still fails loudly.
 EXPECTED_RETIREMENTS = {
-    "genes/yeast/SSQ1/SSQ1-ai-review.yaml": Counter({
-        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043", "enables"): 1,
-        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120", "enables"): 1,
-        make_signature("GO:0016787", "hydrolase activity", "IEA", "GO_REF:0000043", "enables"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755", "enables"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198", "enables"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:11601843", "enables"): 1,
-    }),
-    "genes/yeast/YAR1/YAR1-ai-review.yaml": Counter({
-        make_signature("GO:0033309", "SBF transcription complex", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:26112308"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IMP", "PMID:22570489"): 1,
-    }),
-    "genes/yeast/HSC82/HSC82-ai-review.yaml": Counter({
-        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"): 1,
-        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:15699485"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:37070168"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:9465043"): 1,
-    }),
-    "genes/yeast/HSP82/HSP82-ai-review.yaml": Counter({
-        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"): 1,
-        make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"): 1,
-        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:10564510"): 1,
-        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"): 1,
-    }),
+    "genes/yeast/CPS1/CPS1-ai-review.yaml": Counter([
+        make_signature(
+            "GO:0051603", "proteolysis involved in protein catabolic process",
+            "IBA", "GO_REF:0000033",
+        ),
+        make_signature("GO:0004180", "carboxypeptidase activity", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0006508", "proteolysis", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0008233", "peptidase activity", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0046872", "metal ion binding", "IEA", "GO_REF:0000043"),
+        make_signature(
+            "GO:0051603", "proteolysis involved in protein catabolic process",
+            "IMP", "PMID:2026161",
+        ),
+    ]),
+    "genes/yeast/HSC82/HSC82-ai-review.yaml": Counter([
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:15699485"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:37070168"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:9465043"),
+    ]),
+    "genes/yeast/HSP82/HSP82-ai-review.yaml": Counter([
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"),
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:10564510"),
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"),
+    ]),
+    "genes/yeast/SSQ1/SSQ1-ai-review.yaml": Counter([
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043",
+                       qualifier="enables"),
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120",
+                       qualifier="enables"),
+        make_signature("GO:0016787", "hydrolase activity", "IEA", "GO_REF:0000043",
+                       qualifier="enables"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755",
+                       qualifier="enables"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198",
+                       qualifier="enables"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:11601843",
+                       qualifier="enables"),
+    ]),
+    "genes/yeast/YAR1/YAR1-ai-review.yaml": Counter([
+        make_signature("GO:0033309", "SBF transcription complex", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:26112308"),
+        make_signature("GO:0051082", "unfolded protein binding", "IMP", "PMID:22570489"),
+    ]),
 }
-
-
-def signature(annotation):
-    return json.dumps({k: annotation[k] for k in FIELDS if k in annotation}, sort_keys=True)
 
 
 def source_assertions(review):
@@ -222,6 +242,7 @@ def main():
     migration_errors = sum(len(r.get("identity_migration", {}).get("errors", [])) for r in results)
     retirement_errors = sum(len(r.get("unexpected_expected_retirements", {})) for r in results)
     migrations = sum("identity_migration" in r for r in results)
+    retirement_errors = sum(len(r.get("unexpected_expected_retirements", {})) for r in results)
     print(f"Checked {len(results)} changed gene reviews; {missing} missing or mutated source assertions; "
           f"{migrations} archived identity migration(s), {migration_errors} migration errors, "
           f"{retirement_errors} stale expected retirement(s)")
