@@ -52,12 +52,29 @@ Taken from `CLAUDE.md` and the 2026-09-20 audit README:
 
 One batch YAML per reviewer batch (`batch-NN.yaml`), top-level `date`, `scope`,
 and `genes`. Each gene entry records `gene`, `gene_file`, `status`
-(`reviewed`), `scope: treegrafter_rejections`, `outcome` (`changed` /
-`confirmed`), and an `annotations` list with `term_id`, `term_label`,
-`evidence_type`, `original_reference_id`, `previous_action`, `action`,
-`outcome` (`retained` when action unchanged, `changed` otherwise), and a
-`rationale` written from the evidence considered. When the review file was
-edited, the gene also gets an append-only history record scaffolded with
-`just new-history`.
+(`reviewed`), `scope: treegrafter_rejections`, `outcome`, and an `annotations`
+list with `term_id`, `term_label`, `evidence_type`, `original_reference_id`,
+`previous_action`, `action`, `outcome` (`retained` when action unchanged,
+`changed` otherwise), and a `rationale` written from the evidence considered.
+When the review file was edited, the gene also gets an append-only history
+record scaffolded with `just new-history`.
+
+**The two `outcome` fields mean different things, and the gene-level one is
+defined here because the first pass left it implicit.** Both describe
+adjudication, not file edits:
+
+- annotation-level `outcome`: `retained` when `previous_action == action`,
+  `changed` otherwise.
+- gene-level `outcome`: `changed` when **any** of the gene's annotations
+  changed action, `confirmed` when none did.
+
+So a gene whose actions all stand is `confirmed` even if its `reason` prose was
+rewritten — strengthening a rationale is not a change of adjudication, and the
+history record is what records the edit. The first pass applied this field
+inconsistently (some entries tracked the file rather than the decision); PR
+#3165 settled on the definition above and brought every entry into line with
+it. `check_outcomes.py` enforces it, so the next audit inherits a rule rather
+than re-inferring one. `summarize.py` reads only the annotation-level field, so
+the gene-level value is documentary.
 
 `summary.tsv` is generated from the batch files by `summarize.py`.

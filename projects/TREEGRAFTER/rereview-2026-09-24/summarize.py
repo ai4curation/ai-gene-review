@@ -68,13 +68,16 @@ def main() -> None:
         # The per-term table is capped, so say so in the file itself: a reader
         # otherwise cannot tell a short tail from a complete one.
         top = relaxed_terms.most_common(TOP_TERMS)
-        w.writerow(["relaxed_term_total_distinct", "", "", len(relaxed_terms)])
-        w.writerow(["relaxed_term_shown", "", "", len(top)])
+        shown_rows = sum(n for _, n in top)
+        remainder = sum(relaxed_terms.values()) - shown_rows
+        # Each label says its unit: the counts below mix distinct terms and rows.
+        w.writerow(["relaxed_distinct_terms", "", "", len(relaxed_terms)])
+        w.writerow(["relaxed_terms_shown", "", "", len(top)])
+        w.writerow(["relaxed_rows_shown", "", "", shown_rows])
+        w.writerow(["relaxed_rows_not_shown", "",
+                    f"spread over {len(relaxed_terms) - len(top)} further terms", remainder])
         for (tid, label), n in top:
             w.writerow(["relaxed_term", tid, label, n])
-        remainder = sum(relaxed_terms.values()) - sum(n for _, n in top)
-        if remainder:
-            w.writerow(["relaxed_term_other", "", f"{len(relaxed_terms) - len(top)} further terms", remainder])
     print(f"wrote {out}: {len(rows)} annotations across {len(genes)} genes")
     for (prev, new), n in sorted(transitions.items(), key=lambda kv: -kv[1]):
         print(f"  {prev} -> {new}: {n}")
