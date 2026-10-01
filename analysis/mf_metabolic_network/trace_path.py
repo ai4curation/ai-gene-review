@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Shortest metabolite->gene->metabolite route through the assembled network.
 
-Usage: uv run python trace_path.py ORG "source metabolite" "target metabolite"
+Usage: uv run python trace_path.py ORG/SOURCE "source metabolite" "target metabolite"
 Reads results/<ORG>/gene_reactions.tsv written by build_network.py. Paths are
 undirected (Rhea master reactions carry no physiological direction).
 """

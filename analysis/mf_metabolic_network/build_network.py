@@ -193,6 +193,7 @@ def load_reviews(org: str):
         if not isinstance(doc, dict):
             continue
         sym = doc.get("gene_symbol") or f.parent.name
+        acc = doc.get("id") or sym
         mf_core, terms = set(), set()
         for cf in doc.get("core_functions") or []:
             mf_core |= set(term_ids(cf.get("molecular_function")))
@@ -207,8 +208,68 @@ def load_reviews(org: str):
                 terms |= set(term_ids(ea.get("term")))
             elif act == "MODIFY":
                 terms |= {t for t in term_ids(rv.get("proposed_replacement_terms")) if t.startswith("GO:")}
-        genes[sym] = {"uniprot": doc.get("id"), "core_mf": mf_core, "terms": terms | mf_core}
+        genes[acc] = {"symbol": sym, "terms": terms | mf_core}
     return genes
+
+
+# ---------------------------------------------------------------- bulk sources
+EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+
+
+def load_uniprot(org: str, rhea_master: dict):
+    """data/<ORG>/uniprot.tsv from fetch_bulk.py -> acc -> symbol, Rhea master ids."""
+    genes = {}
+    for r in csv.DictReader((DATA / org / "uniprot.tsv").open(), delimiter="\t"):
+        acc = r["Entry"]
+        sym = r["Gene Names (primary)"] or (r["Gene Names (ordered locus)"].split() or [acc])[0]
+        rx = {rhea_master.get(x, x) for x in r["Rhea ID"].split()}
+        genes[acc] = {"symbol": sym, "rhea": rx, "terms": set()}
+    return genes
+
+
+def load_gaf(org: str, evidence: str):
+    """GOA GAF -> acc -> GO ids. evidence: all | noiea | exp. NOT rows are skipped."""
+    import gzip
+    out = defaultdict(set)
+    with gzip.open(DATA / org / "goa.gaf.gz", "rt") as fh:
+        for line in fh:
+            if line.startswith("!"):
+                continue
+            c = line.rstrip("\n").split("\t")
+            if c[0] != "UniProtKB" or "NOT" in c[3].split("|"):
+                continue
+            ev = c[6]
+            if evidence == "noiea" and ev == "IEA":
+                continue
+            if evidence == "exp" and ev not in EXPERIMENTAL:
+                continue
+            out[c[1]].add(c[4])
+    return out
+
+
+def load_rhea_master(path: Path):
+    m = {}
+    for r in csv.DictReader(path.open(), delimiter="\t"):
+        for k in ("RHEA_ID_LR", "RHEA_ID_RL", "RHEA_ID_BI", "RHEA_ID_MASTER"):
+            m["RHEA:" + r[k]] = "RHEA:" + r["RHEA_ID_MASTER"]
+    return m
+
+
+SOURCES = ("reviews", "uniprot-rhea", "goa-all", "goa-noiea", "goa-exp")
+
+
+def load_source(org: str, source: str, rhea_master: dict):
+    """Return acc -> {symbol, terms, [rhea]} for the chosen annotation source."""
+    if source == "reviews":
+        return load_reviews(org)
+    up = load_uniprot(org, rhea_master)
+    ev = {"uniprot-rhea": "all", "goa-all": "all", "goa-noiea": "noiea", "goa-exp": "exp"}[source]
+    gaf = load_gaf(org, ev)
+    for acc, d in up.items():
+        d["terms"] = gaf.get(acc, set())
+        if source != "uniprot-rhea":
+            d.pop("rhea")
+    return up
 
 
 # ---------------------------------------------------------------- analysis
@@ -217,9 +278,16 @@ def main():
     ap.add_argument("organism")
     ap.add_argument("--n-random", type=int, default=200)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--source", choices=SOURCES, default="reviews",
+                    help="reviews = curated gene reviews; uniprot-rhea = UniProt CATALYTIC ACTIVITY "
+                         "Rhea ids (BP from GOA, all evidence); goa-* = GOA MF->rhea2go and GOA BP, "
+                         "filtered by evidence")
+    ap.add_argument("--reviewed-genes-only", action="store_true",
+                    help="restrict a bulk source to the accessions that have a gene review")
     args = ap.parse_args()
     random.seed(args.seed)
-    out = HERE / "results" / args.organism
+    tag = args.source + ("-reviewedset" if args.reviewed_genes_only else "")
+    out = HERE / "results" / args.organism / tag
     out.mkdir(parents=True, exist_ok=True)
 
     names, ns, parents, obsolete, alt = load_go(DATA / "go-basic.obo")
@@ -228,7 +296,12 @@ def main():
     currency = {c for c, n in chebi2name.items() if n in CURRENCY_NAMES or CURRENCY_PATTERNS.search(n)
                 or MACROMOLECULE_PATTERNS.search(n)}
 
-    genes = load_reviews(args.organism)
+    rhea_master = load_rhea_master(DATA / "rhea-directions.tsv")
+    genes = load_source(args.organism, args.source, rhea_master)
+    if args.reviewed_genes_only:
+        keep = set(load_reviews(args.organism))
+        genes = {a: d for a, d in genes.items() if a in keep}
+    label = {a: d["symbol"] for a, d in genes.items()}
     norm = lambda t: alt.get(t, t)  # noqa: E731
 
     gene_rxn, gene_bp, gene_chem = {}, {}, {}
@@ -238,7 +311,11 @@ def main():
         mfs = {t for t in terms if ns.get(t) == "molecular_function"}
         bps = {t for t in terms if ns.get(t) == "biological_process"}
         n_mf_genes += bool(mfs)
-        rx = set().union(*[go2rhea.get(t, set()) for t in mfs]) if mfs else set()
+        if "rhea" in d:
+            rx = {r for r in d["rhea"] if r in rhea2chebi}
+            n_mf_genes += bool(rx) and not mfs
+        else:
+            rx = set().union(*[go2rhea.get(t, set()) for t in mfs]) if mfs else set()
         if rx:
             gene_rxn[g] = rx
             gene_chem[g] = set().union(*[rhea2chebi[r] for r in rx]) - currency
@@ -307,7 +384,7 @@ def main():
             "term": t, "label": names.get(t, ""), "n_genes": len(gs),
             "lcc_frac": round(lcc, 3), "random_lcc_mean": round(sum(rnd) / len(rnd), 3),
             "p_value": round(p, 4), "edges": sub.number_of_edges(),
-            "isolated_genes": ";".join(isolated), "genes": ";".join(gs),
+            "isolated_genes": ";".join(label[g] for g in isolated), "genes": ";".join(label[g] for g in gs),
         })
     term_rows.sort(key=lambda r: (r["p_value"], -r["lcc_frac"]))
 
@@ -331,14 +408,14 @@ def main():
                 "f1": round(best[0], 3) if best else 0, "precision": round(best[2], 3) if best else 0,
                 "recall": round(best[3], 3) if best else 0,
                 "top_metabolites": "; ".join(f"{chebi2name.get(c, c)}({n})" for c, n in hub),
-                "genes": ";".join(sorted(cm)),
+                "genes": ";".join(sorted(label[g] for g in cm)), "_acc": sorted(cm),
             })
 
     # ---------- discordant edges: strong metabolic link, no shared metabolic BP at all
     disc = []
     for a, b in G.edges():
         if met_bp[a] and met_bp[b] and not (met_bp[a] & met_bp[b] - {METABOLIC_PROCESS}):
-            disc.append({"gene_a": a, "gene_b": b, "n_shared": G[a][b]["weight"],
+            disc.append({"gene_a": label[a], "gene_b": label[b], "n_shared": G[a][b]["weight"],
                          "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in G[a][b]["chems"])})
     disc.sort(key=lambda r: -r["n_shared"])
 
@@ -385,19 +462,19 @@ def main():
             w.writerows(rows)
 
     wtsv("bp_term_coherence.tsv", term_rows)
-    wtsv("communities.tsv", comm_rows)
+    wtsv("communities.tsv", [{k: v for k, v in r.items() if k != "_acc"} for r in comm_rows])
     wtsv("discordant_edges.tsv", disc)
-    wtsv("gene_reactions.tsv", [{"gene": g, "uniprot": genes[g]["uniprot"], "reactions": ";".join(sorted(gene_rxn[g])),
+    wtsv("gene_reactions.tsv", [{"gene": label[g], "uniprot": g, "reactions": ";".join(sorted(gene_rxn[g])),
                                   "metabolites": "; ".join(sorted(chebi2name.get(c, c) for c in gene_chem[g])),
                                   "metabolic_bp": "; ".join(sorted(names.get(t, t) for t in spec[g])),
                                   "degree": G.degree(g)} for g in enz])
-    wtsv("edges.tsv", [{"gene_a": a, "gene_b": b, "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in d["chems"]),
+    wtsv("edges.tsv", [{"gene_a": label[a], "gene_b": label[b], "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in d["chems"]),
                         "share_specific_bp": share_specific(a, b) if met_bp[a] and met_bp[b] else ""}
                        for a, b, d in G.edges(data=True)])
     # graph for visualisation
-    comm_of = {g: r["community"] for r in comm_rows for g in r["genes"].split(";")}
+    comm_of = {g: r["community"] for r in comm_rows for g in r["_acc"]}
     json.dump({
-        "nodes": [{"id": g, "deg": G.degree(g), "comm": comm_of.get(g, -1),
+        "nodes": [{"id": g, "label": label[g], "deg": G.degree(g), "comm": comm_of.get(g, -1),
                    "bp": sorted(names.get(t, t) for t in spec[g])[:6],
                    "rxn": [rhea2eq[r] for r in sorted(gene_rxn[g])][:4]} for g in enz if G.degree(g)],
         "links": [{"source": a, "target": b, "w": d["weight"],
