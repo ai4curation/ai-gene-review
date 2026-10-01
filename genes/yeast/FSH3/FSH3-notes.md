@@ -209,5 +209,20 @@ Rechecked the three FSH3 IBA rows against the current cached PTHR48070 PAINT exp
   oleate and glucose conditions. This is useful quantitative context for Fsh3 as
   a peroxisomal protein but does not identify its substrate or change the IBA
   decisions.
-</content>
-</invoke>
+
+## 2026-10-01 current-GOA refresh
+
+Refreshed the UniProt/QuickGO seed from the 2026-10-01 current GOA:
+
+- Current GOA still contains the same six FSH3 rows: three IBAs at `PTN000512658`,
+  the `PMID:36164978` peroxisome IDA, and the two SGD/ND root placeholders.
+- No new `PENDING` rows were seeded and no historical rows needed `retired: true`.
+- `GO:0005634 nucleus`, `GO:0005737 cytoplasm`, and `GO:0016787 hydrolase activity`
+  keep the 2026-09-30 IBA decisions. Their `propagation_review.source_entities`
+  now record the PAINT node alone, matching the IBA project convention; the
+  self-seeded FSH3 descendant evidence on the cytoplasmic IBD is valid and not
+  circular.
+- No `GO:0005515 protein binding` rows were present.
+- PMID:41686312, found in the 2026 search, was added to the review as a LOW-relevance
+  quantitative peroxisomal-proteome reference. It contextualizes Fsh3 abundance in
+  oleate/glucose conditions but does not identify a substrate or justify a BP/MF change.
