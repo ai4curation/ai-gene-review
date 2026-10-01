@@ -37,3 +37,31 @@ Key cached publications:
   precursors after they enter the matrix.
 - Kubo et al. 1999 (PMID:9973563) reconstituted protection and refolding of
   firefly luciferase with purified mature Ssc1p, Mdj1p and Yge1p.
+
+## 2026-10-01 current GOA refresh
+
+- Forced a current GOA refresh and reconciled MDJ1 against the 21 live rows.
+  Four rows were newly seeded from current GOA: an SGD IPI matrix-localization
+  row from PMID:8943361, the ARBA GO:0030163 protein catabolic process row,
+  an SGD IPI GO:0101031 protein folding chaperone complex row from PMID:8943361,
+  and an SGD IPI GO:0140662 ATP-dependent protein folding chaperone row from
+  PMID:8943361.
+
+- Rechecked PTHR43096. Current PAINT still places the live GO:0005737 cytoplasm
+  and GO:0042026 protein refolding rows at PTN002454318. The obsolete
+  GO:0051082 IBA has disappeared from the current PANTHER snapshot and was
+  retained only as a retired historical row. The MDJ1 self-donors on this node
+  are legitimate descendant evidence, not circular support.
+
+- Marked eight older rows as retired because they are absent from the 2026-10-01
+  GOA snapshot: three obsolete GO:0051082 rows, the old GO:0008270 and GO:0046872
+  UniProt keyword rows, and three historical generic GO:0005515 IPI rows. Changed
+  all obsolete unfolded-protein-binding replacements to GO:0140662 now that SGD
+  has a current direct row for Mdj1's ATP-dependent Ssc1 cochaperone activity.
+
+- Searched for newer MDJ1/Mdj1/YFL016C literature. The direct newer hit was Horie
+  et al. 2025, PMID:40187374, which reports that mild ethanol pretreatment induces
+  mitochondrial protein-quality-control proteins including Mdj1 and that mdj1D
+  cells fail to suppress Aco1 aggregate formation after severe ethanol stress.
+  This corroborates the stress mtPQC role but does not change the core GO action
+  set.
