@@ -35,6 +35,7 @@ def main() -> None:
                     {
                         "batch": os.path.basename(path),
                         "gene": gene.get("gene", ""),
+                        "gene_file": gene.get("gene_file", ""),
                         "term_id": ann.get("term_id", ""),
                         "term_label": ann.get("term_label", ""),
                         "previous_action": ann.get("previous_action", ""),
@@ -53,7 +54,9 @@ def main() -> None:
         for r in rows
         if r["previous_action"] != r["action"]
     )
-    genes = {r["gene"] for r in rows}
+    # Key on gene_file, not the label: two paralogs can share a label
+    # (PSEPK/dapF named two proteins), which silently undercounted.
+    genes = {r["gene_file"] or r["gene"] for r in rows}
 
     out = os.path.join(HERE, "summary.tsv")
     with open(out, "w", newline="") as fh:
