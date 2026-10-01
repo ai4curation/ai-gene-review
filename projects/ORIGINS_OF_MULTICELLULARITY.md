@@ -3,7 +3,7 @@ title: "Origins of Animal Multicellularity"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
-genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN]
+genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK]
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals
@@ -178,6 +178,34 @@ are marked; they need a pass focused on whether the core function is ancestral.
   present in choanoflagellates in the form it has in animals, so they are
   controls for "animal innovation".
 
+**Batch 1 results (2026-10-01, all DRAFT).** Eight human genes, chosen to pair
+with the Track A reviews.
+
+| Gene | Rows | Accept | Non-core | Modify | Remove | Over-annot. | Undecided | NEW |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| LATS1 | 105 | 42 | 19 | 10 | 26 | 3 | 5 | 0 |
+| STK3 | 162 | 43 | 16 | 8 | 89 | 5 | 1 | 0 |
+| YAP1 | 314 | 99 | 42 | 30 | 136 | 5 | 2 | 0 |
+| TEAD1 | 57 | 36 | 2 | 15 | 3 | 1 | 0 | 0 |
+| TLN1 | 87 | 49 | 14 | 8 | 10 | 5 | 0 | 1 |
+| VCL | 107 | 49 | 20 | 9 | 14 | 13 | 1 | 1 |
+| TBXT | 39 | 21 | 11 | 4 | 1 | 0 | 0 | 2 |
+| CSK | 87 | 41 | 16 | 6 | 16 | 6 | 0 | 2 |
+
+Most removals are generic `protein binding` rows, removed as uninformative
+under the repository policy, or replaced by a specific binding term where the
+partner defines one.
+
+What each review concluded is ancestral and what is an animal recruitment
+(sources in each gene's notes):
+
+| Gene | Ancestral (present in unicellular relatives) | Animal-specific (on current evidence) |
+|---|---|---|
+| STK3 / LATS1 / YAP1 / TEAD1 | Hippo kinase cascade that keeps Yorkie/YAP out of the nucleus; YAP-TEAD coactivation; TEA-domain DNA binding (older still, in fungi). In *Capsaspora* the cascade controls the cytoskeleton, contractility and aggregate shape | Control of proliferation, organ size, regeneration and contact inhibition; the *Capsaspora* knockouts show no proliferation effect |
+| TLN1 / VCL | Talin binds integrin NPxY motifs and activates vinculin's F-actin binding at cell-substrate contacts (sponge biochemistry; *Capsaspora* filopodia) | Vinculin's alpha/beta-catenin link to cadherin junctions, so far documented only in bilaterians, though sponge vinculin is already at cell-cell contacts; platelet and leukocyte adhesion |
+| TBXT | T-box DNA motif binding and transcriptional activation (*Capsaspora* CoBra binds a mouse-like motif) | Target selectivity, which the chimera experiments place in the N/C termini and attribute to cofactors; all developmental roles. Choanoflagellates have no T-box genes |
+| CSK | Tyrosine kinase activity on the Src C-terminal tail | Adaptor recruitment (PAG, SCIMP) and immune-receptor signalling. Whether Csk already inhibited Src before animals is disputed: two choanoflagellate studies found weak or no inhibition, and a 2017 study reports inhibition |
+
 ### Track C: propagation audit
 
 For each Track A/B family, pull the IBA and IEA annotations on
@@ -248,7 +276,9 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] Review OSCPE VIN1 and TLN — DRAFT
 - [x] Review CAPO3 coHpo, coWts, coYki — DRAFT
 - [x] Review SALRS hippo, warts, yorkie — DRAFT
-- [ ] Track B human toolkit reviews (none started)
+- [x] Track B batch 1: LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK — DRAFT
+- [ ] Track B batch 2: CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1
+- [ ] Track B: premetazoan pass on existing CDH1, ABL1, MYC, NOTCH1, TP53
 - [x] Track C propagation audit for the Track A genes: [report](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md), cross-posted to the TREEGRAFTER project
 - [ ] Track C: extend the audit to the Track B human genes' unicellular orthologs
 - [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
@@ -340,3 +370,16 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
   hippo signaling not added, since hippo knockouts do not phenocopy warts
   (normal rosette size) and nothing places Hippo upstream of Warts in S.
   rosetta.
+- **Track B batch 1** (eight human genes, table in Track B). Points for a
+  human curator:
+  - **VCL.** We removed the NOT actin binding IDA row (PMID:7816144). The
+    cited abstract itself says the F-actin site is masked by head-tail
+    autoinhibition, not absent.
+  - **STK3.** The InterPro "protein tetramerization" row is marked
+    over-annotated, whereas the same row on *Capsaspora* coHpo was removed.
+    Human MST2 does sit in a 2:2 SAV1 complex, but SAV1 makes the contact
+    that joins the two pairs.
+  - **TBXT.** NEW notochord development (IMP, sacral agenesis variant;
+    mouse T carries the term).
+  - **CSK.** Choanoflagellate Src/Csk papers cached (PMID:16873552,
+    18390552, 28939764).
