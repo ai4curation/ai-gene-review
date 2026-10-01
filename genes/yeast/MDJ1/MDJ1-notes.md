@@ -55,13 +55,15 @@ Key cached publications:
 
 - Marked eight older rows as retired because they are absent from the 2026-10-01
   GOA snapshot: three obsolete GO:0051082 rows, the old GO:0008270 and GO:0046872
-  UniProt keyword rows, and three historical generic GO:0005515 IPI rows. Changed
-  all obsolete unfolded-protein-binding replacements to GO:0140662 now that SGD
-  has a current direct row for Mdj1's ATP-dependent Ssc1 cochaperone activity.
+  UniProt keyword rows, and three historical generic GO:0005515 IPI rows. The
+  obsolete unfolded-protein-binding rows should stay pointed at GO:0044183 rather
+  than GO:0140662, because Mdj1 is a J-domain Ssc1 cochaperone rather than the
+  ATP-dependent foldase.
 
 - Searched for newer MDJ1/Mdj1/YFL016C literature. The direct newer hit was Horie
   et al. 2025, PMID:40187374, which reports that mild ethanol pretreatment induces
   mitochondrial protein-quality-control proteins including Mdj1 and that mdj1D
   cells fail to suppress Aco1 aggregate formation after severe ethanol stress.
-  This corroborates the stress mtPQC role but does not change the core GO action
-  set.
+  This corroborates the stress mtPQC role and reinforces the need to track a
+  future in-situ holdase term for Mdj1, but it does not justify the
+  carrier-holdase term GO:0140309.
