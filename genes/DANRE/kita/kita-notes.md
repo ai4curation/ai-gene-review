@@ -140,3 +140,9 @@ for kita, with the zebrafish dispensability noted.
 - No `NEW` terms proposed: the core MFs are already representable via ACCEPT/MODIFY;
   substrate/participation and comparator tests do not justify additional process
   terms.
+
+## Re-review 2026-09-29
+- Audit of the existing 53-row review (recently curated with a Kit-signaling module). No PENDING rows; actions left largely intact.
+- Fixed the one IBA MODIFY row lacking propagation_review: GO:0019838 growth factor binding (IBA, family node PANTHER:PTN004704336) MODIFY -> GO:0005020 stem cell factor receptor activity. Added propagation_review (root_cause TERM_SCOPING_PROBLEM, GRANULARITY_MISMATCH): the type-III RTK family node correctly carries generic growth-factor binding, but kita's specific ligand is the SCF ortholog kitla [PMID:17257055 "kitla is the functional ligand to kita"], so the specific child term is the informative one.
+- Added reference_review (relevance + VERIFIED correctness) to all 10 PMID references.
+- Confirmed the two other MODIFY rows (GO:0004672 -> GO:0004714 RTK activity; GO:0019955 cytokine binding -> GO:0005020) and the REMOVE of GO:0038093 Fc receptor signaling pathway (IEA mis-mapping) as sound. Validation: 0 errors.
