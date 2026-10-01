@@ -145,7 +145,7 @@ Last updated: 2026-10-01
 - [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
 - [x] `XENLA/myc-a` (P06171) — c-Myc; competence factor carried from the blastula. Reviewed 2026-10-01: 11 GOA rows (10 ACCEPT, 1 non-core) + 1 NEW (GO:0014029, IMP PMID:12791268 — **flagged for curator check**, see notes)
 - [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (20 ACCEPT, 5 MODIFY, 2 REMOVE, 1 non-core)
-- [ ] `XENLA/sox8` (Q6VVD7) — SoxE
+- [x] `XENLA/sox8` (Q6VVD7) — SoxE; first-wave NC specifier. Reviewed 2026-10-01: 19 GOA rows (9 ACCEPT, 8 non-core, 2 MODIFY)
 
 ## Tier 2 — Neural plate border specifiers (ancestral chordate layer)
 
@@ -277,6 +277,19 @@ Last updated: 2026-10-01
   border, while chick uses N-Myc there and c-Myc later, so the crest needs
   Myc *activity* rather than one specific paralog.
 
+- **sox8.** First-wave NC specifier. It is the earliest SoxE gene at the
+  lateral neural plate edge, from mid-gastrula, and Pax3 plus Zic1 activate it
+  together with snail1 and myc [PMID:23509273, PMID:24360908]. Knockdown
+  *delays* crest induction, and any SoxE gene rescues it. Both `GO:0014029`
+  rows were narrowed to `GO:0014036`, consistent with sox9-a and sox10. The
+  IMP row also got `GO:0001755` migration. Family transfers from mammalian
+  Sox9/10 (PNS, ENS, epithelium) were kept non-core. Evolution: which SoxE
+  paralog leads in the crest differs by lineage. Frog uses Sox8, chick and
+  mouse Sox9, zebrafish sox9a/b, lamprey SoxE1/2 (duplicated independently
+  [PMID:21889937]). The specifier role belongs to the SoxE *group*, split
+  among paralogs differently in each lineage, so orthology transfer of
+  paralog-specific crest roles is unsafe.
+
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
 `GO:0014029` neural crest formation is defined as forming the *region of
@@ -287,5 +300,5 @@ ectoderm* between the neural plate and non-neural ectoderm. The chain is
 whole. Apply this consistently across Tier 1 (and decide whether border
 specifiers in Tier 2 should keep `GO:0014029`). This needs curator sign-off,
 because it modifies IMP rows to a more specific child term. Applied so far:
-sox10 and sox9-a narrowed to `GO:0014036`; foxd3-a already at `GO:0014034`
+sox10, sox9-a and sox8 narrowed to `GO:0014036`; foxd3-a already at `GO:0014034`
 (accepted); id3-a deliberately kept at `GO:0014029`, as a non-specifier.
