@@ -149,3 +149,16 @@ These notes are the manual research journal instead.
 - Searched PubMed for 2023-2026 `SET6`/`YPL165C`/`Set6` yeast papers and found no newer
   direct SET6 publication beyond the already-cached Hamey and Wilkins 2023 methylation-network
   synthesis.
+
+## 2026-10-01 current-GOA refresh
+
+- Refreshed UniProt/GOA for SET6. The live GOA snapshot still has seven rows and still
+  carries three IBAs at `PANTHER:PTN008534456`: broad `GO:0016279` lysine KMT,
+  over-specific `GO:0042054` histone methyltransferase, and non-core `GO:0005634`
+  nucleus.
+- Re-read the cached PAINT row and current web/PubMed-facing results for
+  `SET6`/`YPL165C`/`Set6`; no newer direct SET6 activity, substrate, or localization paper
+  superseded the 2023 Hamey/Wilkins synthesis.
+- Kept the existing biological calls intact, added current `supporting_entities` from live
+  GOA, and normalized IBA `source_entities` to the PTN node while leaving extant Set5 and
+  SMYD donors in `supporting_entities`.
