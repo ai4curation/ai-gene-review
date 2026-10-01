@@ -154,3 +154,17 @@ Reactome R-HSA-5693153 has disputed beta-subunit wording: the phosphorylation-lo
 ### Validation of the integrated review
 
 The focused `just validate human BCKDHB` command passed with six advisories: five supported generic protein-binding records retained as non-core under the supplied ActionEnum, and one noting that annotations cite primary/database evidence rather than the unchanged generated Falcon report. These advisories do not indicate an unsupported interaction or require a new molecular-function claim. Rendering passed, and the generated HTML is checked against the reviewed YAML. No global validation pass is claimed.
+
+
+## 2026-09-30: evidence anchors and mitochondrial compartment
+
+The two inherited NEW cofactor/ion-binding assertions and the single core function now include short verbatim anchors. The immutable UniProt precursor152 feature identifies the beta-chain thiamine-diphosphate contact shared with alpha; the PMID10745006 abstract locates the second structural potassium ion in beta; and the PMID9582350 abstract supports the assembled wild-type alpha2beta2 enzyme. This restores machine-checkable evidence while preserving the distinction between deposited structural interpretation and an independent inspection of atomic coordinates [PMID:10745006; PMID:9582350]. The local UniProt record is also quoted for its explicit matrix location.
+
+The ten Reactome-sourced annotations concern mitochondrial matrix localization. Their reasons now lead with that compartment and its independent UniProt corroboration, rather than reaction summaries. The fetched summaries do not expose a compartment field. Five are ordinary pathway events; R-HSA-9865115, R-HSA-9865121, R-HSA-9907572, R-HSA-9912480 and R-HSA-9912527 are disease-variant events. Earlier references to normal caches meant the standard machine-fetch procedure, not that each event represented normal physiology. The existing PPM1K/E1-beta description dispute remains explicit and does not invalidate matrix localization.
+
+The biological summary restores the supported EC1.2.4.4 designation and the 24-subunit cubic DBT core. All41 source assertions, both inherited NEW entries, both alternative products and all decisions remain unchanged. Supported generic interactions retain the supplied ActionEnum's non-core treatment; no evidence-free replacement activity is introduced to suppress a policy advisory. Final focused validation and independent review are recorded separately.
+
+
+## Follow-up validation, 2026-09-30
+
+The independently reviewed follow-up passes focused validation (six warnings), history validation, and rendering. Five warnings concern supported generic binding retained as non-core under the supplied action definitions; the other records that direct primary/database sources, rather than the unchanged generated report, support annotation decisions. All 41 source assertions, two inherited NEW assertions and two products are preserved. No new global validation pass is claimed.
