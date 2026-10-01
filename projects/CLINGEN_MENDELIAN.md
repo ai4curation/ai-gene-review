@@ -2956,9 +2956,9 @@ Gene reviews are proceeding in evidence-priority order, alphabetically within
 each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
-**147 of 2,876 genes are complete; 2,729 remain.** The verified BCKDK merge
+**148 of 2,876 genes are complete; 2,728 remain.** The verified BCL11B merge
 adds one completed gene to the preceding completion update.
-The 148 original gene PR merges include AKR1D1, whose required source follow-up
+The 149 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3217,7 +3217,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BCKDK** — HGNC:16902; [branched-chain keto acid dehydrogenase kinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f90aaad0-b56a-41dc-8d1f-9d12fc66113f-2019-01-18T170000.000Z) (MONDO:0013970; AR; Definitive).
 - [ ] **BCL10** — HGNC:989; [immunodeficiency 37](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2826b3a9-d32b-4d91-8c5d-1a20c408d08d-2022-12-29T180000.000Z) (MONDO:0014491; AR; Definitive).
 - [x] **BCL11A** — HGNC:13221; [Dias-Logan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9630f9a3-3f90-49c6-ae8b-6313c950b1b2-2020-09-01T100000.000Z) (MONDO:0014914; AD; Definitive).
-- [ ] **BCL11B** — HGNC:13222; [intellectual developmental disorder with speech delay, dysmorphic facies, and t-cell abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ca4f24f-78dd-4dda-a50d-07dd3d1cef07-2024-12-19T170000.000Z) (MONDO:0060763; AD; Definitive).
+- [x] **BCL11B** — HGNC:13222; [intellectual developmental disorder with speech delay, dysmorphic facies, and t-cell abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ca4f24f-78dd-4dda-a50d-07dd3d1cef07-2024-12-19T170000.000Z) (MONDO:0060763; AD; Definitive).
 - [ ] **BCOR** — HGNC:20893; [microphthalmia, syndromic 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3da06b77-1ed0-4197-948c-a9bbf80b6ed4-2020-12-17T171347.861Z) (MONDO:0010261; XL; Definitive).
 - [ ] **BCS1L** — HGNC:1020; [Bjornstad syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7a26b6b5-e703-43fc-bcd0-eaff67ef8107-2018-07-09T160000.000Z) (MONDO:0009872; AR; Definitive); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b50d7db-1144-4187-a60c-72b45adb80bd-2019-09-19T155315.896Z) (MONDO:0009723; AR; Limited); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_103c4ff3-1304-444e-93c7-c4cc729f19e4-2024-09-19T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **BEST1** — HGNC:12703; [BEST1-related dominant retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_487a42cc-7dd0-4991-ac9d-1346f59073c0-2023-08-03T160000.000Z) (MONDO:0700238; AD; Definitive).
