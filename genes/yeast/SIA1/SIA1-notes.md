@@ -130,6 +130,23 @@ Pma1 H+-ATPase; molecular mechanism unknown. I will use the BP "regulation of pr
   glucose starvation, is dependent on the Glc7 PP1 phosphatase."]. It still does not close the SIA1
   mechanistic gap.
 
+## 2026-10-01 current-GOA refresh
+
+- Refreshed GOA/UniProt for SIA1. The live GOA snapshot still contains the same
+  five rows: the `GO:0004721` IBA phosphatase assertion, the `GO:0016787`
+  InterPro2GO hydrolase assertion, SGD's IMP `GO:1902600` Pma1-related process
+  row, and the two SGD ND placeholders for molecular function and cellular
+  component.
+- Confirmed that the current `PTHR32440` PAINT cache still places the live
+  `GO:0004721` phosphoprotein phosphatase IBD on `PTN001286392` from the
+  `SGD:S000004353` DCR2 seed. The only other cached IBD is the
+  `GO:0016788` phosphoric ester hydrolase activity row on `PTN000793892`, which
+  is not in the current SIA1 GOA snapshot.
+- Searched current literature for SIA1/YOR137C/Pma1/eIF5A papers beyond the
+  2024 Pma1 phosphoregulation study already in the review; no newer direct
+  SIA1 paper was found that demonstrates catalytic phosphatase activity, a SIA1
+  substrate, direct Pma1 binding, or experimental localization.
+
 ## Files / provenance
 
 - UniProt: genes/yeast/SIA1/SIA1-uniprot.txt
