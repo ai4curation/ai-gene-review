@@ -17,17 +17,33 @@ IDENTITY_MIGRATIONS = {
 }
 
 
-def make_signature(term_id, term_label, evidence_type, original_reference_id):
-    return json.dumps({
+def make_signature(term_id, term_label, evidence_type, original_reference_id, qualifier=None):
+    row = {
         "evidence_type": evidence_type,
         "original_reference_id": original_reference_id,
         "term": {"id": term_id, "label": term_label},
-    }, sort_keys=True)
+    }
+    if qualifier:
+        row["qualifier"] = qualifier
+    return json.dumps(row, sort_keys=True)
 
 
 # Explicit current-GOA source refreshes. Keep these as narrow signature-level
 # exceptions so unrelated source loss still fails loudly.
 EXPECTED_RETIREMENTS = {
+    "genes/yeast/SSQ1/SSQ1-ai-review.yaml": Counter({
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043", "enables"): 1,
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120", "enables"): 1,
+        make_signature("GO:0016787", "hydrolase activity", "IEA", "GO_REF:0000043", "enables"): 1,
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755", "enables"): 1,
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198", "enables"): 1,
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:11601843", "enables"): 1,
+    }),
+    "genes/yeast/YAR1/YAR1-ai-review.yaml": Counter({
+        make_signature("GO:0033309", "SBF transcription complex", "IBA", "GO_REF:0000033"): 1,
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:26112308"): 1,
+        make_signature("GO:0051082", "unfolded protein binding", "IMP", "PMID:22570489"): 1,
+    }),
     "genes/yeast/HSC82/HSC82-ai-review.yaml": Counter({
         make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"): 1,
         make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"): 1,
@@ -40,6 +56,17 @@ EXPECTED_RETIREMENTS = {
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"): 1,
         make_signature("GO:0005515", "protein binding", "IPI", "PMID:37070168"): 1,
         make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:9465043"): 1,
+    }),
+    "genes/yeast/HSP82/HSP82-ai-review.yaml": Counter({
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"): 1,
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"): 1,
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"): 1,
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"): 1,
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"): 1,
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"): 1,
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"): 1,
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:10564510"): 1,
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"): 1,
     }),
 }
 
