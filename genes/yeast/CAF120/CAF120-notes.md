@@ -192,3 +192,23 @@ Rechecked both CAF120 IBA rows against the current cached PTHR11584 PAINT export
   database, or dissertation records and did not reopen the kinase/signaling IBA
   removals or the conservative meiotic-crossover `NEW` annotation from the
   cached Wild et al. 2019 full text.
+
+## 2026-10-01 current GOA refresh
+
+Refreshed UniProt/GOA and kept exact parity: the current source set has 8 live GOA rows,
+and the only non-GOA row in the review remains the conservative `NEW` meiotic-crossover
+proposal from Wild et al. 2019. Copied the current GOA `WITH/FROM` strings into
+`supporting_entities` for both IBA rows and the three UniProt SubCell IEA rows.
+
+Refetched `PTHR11584`; the PAINT table now has 23 node-level assertions. CAF120's two
+bad IBA annotations still trace to the same `PTN001969686` plant MAP3K node: the
+2026-08-28 protein-kinase IBD is seeded by `AT1G05100`, `AT1G07150`, `AT3G50310`, and
+`AT4G26890`, while the signal-transduction IBD is seeded by `AT1G05100`, `AT2G32510`,
+and `AT3G50310`. Those source genes remain bona fide MAP3Ks and do not rescue the
+non-kinase CAF120 target, so both `REMOVE` calls stand.
+
+UniProt P53836 advanced from entry version 165 to 166. The 2026 flat file no longer
+mirrors the old GO_Central `GO:0004672` and `GO:0007165` xrefs and still has no PANTHER
+family xref for CAF120; current GOA itself still carries both IBA rows. A newer-paper
+search for `CAF120`/`YNL278W` did not find a focused S. cerevisiae paper that reopens the
+kinase/signaling IBA removals or the existing meiotic crossover proposal.
