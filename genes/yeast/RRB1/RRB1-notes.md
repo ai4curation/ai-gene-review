@@ -8,3 +8,10 @@
 ## Literature search
 
 Searches on 2026-09-28 for `Rrb1`, `RRB1`, `YMR131C`, `Saccharomyces`, and `yeast` did not find newer direct yeast RRB1 studies from 2023-2026. The one 2020-2026 PubMed hit was Pillet et al. 2022, which extends the dedicated-chaperone model by showing that Rrb1 or Acl4 availability tunes nascent Rpl3/Rpl4 production: "the co-translational recognition of Rpl3 and Rpl4 by their respective dedicated chaperone, Rrb1 or Acl4, reduces the degradation of the encoding RPL3 and RPL4 mRNAs in the yeast Saccharomyces cerevisiae" [PMID:35357307].
+
+## 2026-10-01 current GOA refresh
+
+- A forced `just fetch-gene yeast RRB1 --force` left six live GOA rows. The old UniProt keyword rows for `GO:0006364 rRNA processing` and `GO:0042254 ribosome biogenesis`, three stale high-throughput `GO:0005515 protein binding` rows, and SGD's older `GO:0051082 unfolded protein binding` row are now absent from current GOA and were marked `retired: true`.
+- The old `PMID:26112308` `GO:0051082` SGD row has been superseded by a live `PMID:26112308` row for `GO:0140309 unfolded protein holdase activity`. I accepted the new row and updated the stale predecessor's replacement to the same live holdase term.
+- Re-reading Pausch et al. 2015 and Pillet et al. 2022 supports a focused holdase/chaperone model for Rrb1: Pausch et al. showed that "both Rrb1 and Sqt1 interact with the very N-terminal residues of Rpl3 and Rpl10, respectively" and that these dedicated chaperones can recognize nascent ribosomal-protein clients co-translationally [PMID:26112308]; Pillet et al. showed the downstream RPL3/RPL4 mRNA-control consequences of whether nascent Rpl3 and Rpl4 are captured by Rrb1 and Acl4 [PMID:35357307].
+- A fresh 2026-10-01 web/PubMed search for exact yeast `RRB1` / `Rrb1` / `YMR131C` papers did not find a newer direct Saccharomyces Rrb1 study that changes the 60S/Rpl3 holdase interpretation.
