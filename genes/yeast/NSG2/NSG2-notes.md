@@ -67,7 +67,26 @@
   gated at JCB/Rockefeller University Press, but the PubMed/JCB abstract
   directly supports glucose-starvation recruitment of Nsg1/Nsg2/Hmg1/Hmg2 to
   the NVJ and Nsg2 stabilization to suppress Hmg1.
-- Accepted the new logical `GO:0006457` and SGD `GO:0044183` rows. Kept the
-  new 2026 nuclear-membrane and NVJ rows as non-core localizations because
-  they capture conditional starvation remodeling rather than replacing the core
-  Hmg2 sterol-sensing-domain chaperone role.
+- Accepted the new SGD `GO:0044183` row and marked the new logical `GO:0006457`
+  row as over-annotated, because the current chaperone term is the best
+  available molecular-function parent but the inferred broad protein-folding
+  process still overstates Nsg2's direct SSD-client stabilization activity.
+  Kept the new 2026 nuclear-membrane and NVJ rows as non-core localizations
+  because they capture conditional starvation remodeling rather than replacing
+  the core Hmg2 sterol-sensing-domain chaperone role.
+
+## 2026-10-01 PR #3774 follow-up
+
+- Harmonized the proposed SSD-client chaperone NTR with the NSG1 wording and
+  made the gap rationale explicit: `GO:1904293` and `GO:0050821` capture
+  downstream process/outcome terms rather than the molecular activity of
+  binding a sterol-sensing domain client.
+- Added HMG2 as the direct substrate for the curated core activity and trimmed
+  the core-function description so the conditional NVJ/Hmg1 outcome is not
+  elevated into the primary molecular activity.
+- Changed the logical `GO:0006457 protein folding` row from `ACCEPT` to
+  `MARK_AS_OVER_ANNOTATED` to reflect the overbroad process inherited from the
+  interim `GO:0044183` mapping.
+- Expanded both NSG2 IBA comments to state that `PANTHER:PTN000393022` is an
+  Opisthokonta placement, while mammalian cholesterol-process control is placed
+  separately in PAINT below a Eumetazoa node.
