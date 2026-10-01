@@ -107,3 +107,23 @@ not on any demonstrated GSH-conjugation activity; the GTT3-specific domains and 
 multi-pass membrane topology distinguish it from the soluble Gtt1/Gtt2/Gto GSTs, and it
 is not co-regulated with them under oxidative stress. Whether Gtt3 is even a bona fide
 glutathione transferase is unresolved.
+
+## 2026-10-01 current-GOA and IBA refresh
+
+- `just fetch-gene yeast GTT3 --force` still found the same five GOA rows: one
+  `GO:0016020` IBA, one UniProt-SubCell nuclear-membrane IEA, one SGD
+  nuclear-periphery HDA, and the two explicit ND annotations for MF and BP. The
+  only deterministic source changes were a refreshed UniProt date, a refreshed
+  UniProt-SubCell annotation date, and supporting-entity backfill on the IBA and
+  UniProt-SubCell rows.
+- The current cached PAINT export for PTHR41807 contains one IBD row:
+  `PANTHER:PTN002223105` transfers `GO:0016020 membrane` from
+  `CGD:CAL0000194149`. This is a safe transfer to Gtt3's two-transmembrane-helix
+  family, but the row is kept as non-core because direct and UniProt-derived
+  annotations already place Gtt3 at the more specific nuclear envelope / nuclear
+  periphery.
+- Targeted Web and PubMed searches for exact `GTT3` / `YEL017W` yeast papers in
+  2023-2026 did not find a newer primary paper assigning a molecular activity or
+  biological process. NCBI Gene, SGD-family mirrors, BioGRID, and GEO-style
+  pages have current database records for GTT3, but they do not change the GO
+  review.
