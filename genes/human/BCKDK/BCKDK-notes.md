@@ -82,3 +82,17 @@ All 45 source assertions, three alternative products, references, action choices
 
 
 The follow-up passed independent science review, focused gene validation, rendering and history validation. Validation retained five retained generic-binding policy warnings; these are documented unresolved issues, not a claim of warning-free review. No full-repository validation was run.
+
+
+## Evidence presentation follow-up — 2026-10-01
+
+Four catabolism reasons now name their own source terms: L-isoleucine, L-leucine, L-valine and general amino acid catabolism. The replacement remains negative regulation of amino acid metabolic process, with BCAA specificity in the mechanism. The three source rows already naming branched-chain catabolism are unchanged. No annotation action or source identifier changes.
+
+The ACLY core now has a second short, exact abstract excerpt from [PMID:29779826](https://pubmed.ncbi.nlm.nih.gov/29779826/) that supports the lipid-biosynthesis regulatory outcome, alongside the existing human ACLY phosphorylation excerpt. The selected Results and animal Methods describe adenoviral BDK expression in lean Wistar rats and deuterium incorporation into liver palmitate. This is rodent physiological evidence paired with human protein chemistry; the core description retains that distinction and makes no new human localization claim. Its GO term is unchanged.
+
+The previously inspected [PMID:11839747 author-uploaded manuscript](https://www.researchgate.net/publication/11520759_Solution_Structure_and_Dynamics_of_the_Lipoic_Acid-bearing_Domain_of_Human_Mitochondrial_Branched-chain_a-Keto_Acid_Dehydrogenase_Complex) is now linked in the formal reference review. Its Introduction on journal page 15865 distinguishes the ketoacid complexes and describes the BCKD regulatory kinase on the E2 core. This is a background statement in a structural study, not a new kinase-binding experiment. The local publication cache remains abstract-only and unchanged.
+
+This focused pass read the PMID29779826 abstract, selected Results paragraph on in vivo lipogenesis, animal Methods and selected Discussion; it did not inspect figure images or supplementary data. For PMID11839747 it read the author-uploaded Introduction passage. Earlier broad outputs were clipped and are not complete-paper reads. All 45 source assertions, three alternative products, action choices and existing evidence excerpts remain intact; the five generic-binding policy warnings remain unresolved. Aggregate exact quoted words from PMID29779826 remain at most 25. Independent peer and normal canonical validation are pending at this proposal stage.
+
+
+This follow-up passed independent science peer 270b28, focused gene validation 29e20c, rendering 2f6bb7 and history validation 4e6d56. This closes the pending checks described above. Validation retained five retained generic-binding policy warnings; these are documented unresolved issues, not a claim of warning-free review. No full-repository validation was run.
