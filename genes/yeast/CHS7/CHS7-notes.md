@@ -15,6 +15,9 @@
 - Replaced Falcon-derived snippets on the PAINT and key experimental rows with
   exact cached support from PMID:10366589, PMID:15623581, PMID:29405545, and
   PMID:40137259.
+- Cached and cited the 2023 Sanchez et al. ER quality-control paper,
+  PMID:37819693, to support the proposed Chs7-specific chitin synthase export
+  chaperone activity.
 - Newer-literature search found the cached 2025 Chs3/Chs7 orphan-subunit
   trafficking paper, PMID:40137259, as the newest CHS7-focused budding-yeast
   primary paper. A 2025 Neurospora CSE-8/Chs7-family paper and a 2026
