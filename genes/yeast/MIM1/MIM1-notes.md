@@ -695,3 +695,24 @@ study already folded into this review. Updated the IntAct-derived `GO:0005515 pr
 binding` row from `MARK_AS_OVER_ANNOTATED` to `REMOVE` to match the current convention
 for generic protein-binding molecular-function rows; this only removes the GO-level
 assertion, not the underlying Mim1-Mim2 interaction record.
+
+## 2026-10-01 — current GOA refresh
+
+Forced a current GOA/UniProt refresh for the IBA campaign. The refreshed snapshot
+has 15 live GOA rows and seeded one row that the prior review had deliberately
+collapsed into the ComplexPortal MIM-complex review: the SGD IPI
+`GO:0140595 MIM complex` row from PMID:22467864 with Mim2
+(`SGD:S000007618`) in `WITH/FROM`.
+
+The duplicate SGD row is still a live, exact GOA assertion, so it now has its
+own `ACCEPT` review instead of being folded into the ComplexPortal row. The
+current PTHR28241 PAINT rows remain unchanged: both the `GO:0140595 MIM
+complex` IBA and the broad `GO:0045040 protein insertion into mitochondrial
+outer membrane` IBA are placed at `PANTHER:PTN002000670`; the former is a
+sound core complex-membership assertion and the latter should move with the
+node to `GO:7770059 alpha helical protein insertion into mitochondrial outer
+membrane`.
+
+Searched newer MIM1/Mim1/YOL026C literature. The recent direct hit was the
+Ayr1/MIM lipid-droplet paper already cached as PMID:41748941; no additional
+uncached 2026 primary paper changed the core MIM insertase action set.
