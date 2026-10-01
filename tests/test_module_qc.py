@@ -198,15 +198,12 @@ def test_homology_selector_anchor_is_grounded(selector_type, slot):
 
 
 def test_bbsome_leaf_grounding():
-    # bbsome.yaml grounds most subunits to concrete UniProt accessions, but the
-    # cargo-trafficking leaf references the BBSome only by its GO complex term
-    # (no active_units / representative members), so it is correctly flagged.
+    # The completed BBSome module should ground every terminal role to concrete
+    # UniProt accessions, including BBSome-as-cargo-adaptor leaves that also
+    # carry the GO complex term.
     data = load_module("bbsome.yaml")
     flagged = leaf_nodes_missing_representatives(data)
-    flagged_ids = {item["id"] for item in flagged}
-    assert "bbsome_cargo_trafficking" in flagged_ids
-    # The octamer leaf lists concrete subunits, so it must not be flagged.
-    assert "bbsome_core_octamer" not in flagged_ids
+    assert flagged == []
 
 
 def test_ras_mapk_flags_abstract_family_leaves():

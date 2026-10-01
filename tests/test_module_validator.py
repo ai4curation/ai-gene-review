@@ -29,6 +29,7 @@ from ai_gene_review.validation.module_validator import (
     validate_family_members,
     validate_paint_ptns,
     validate_go_branches,
+    validate_leaf_grounding_completeness,
     validate_taxon_context,
     validate_terms,
     validate_module_file,
@@ -664,6 +665,70 @@ def test_validate_module_file_flags_bad_conformance(tmp_path):
     assert any(
         "conformance" in e.lower() and "template" in e.lower() for e in result.errors
     )
+
+
+# --------------------------------------------------------------------------- #
+# Completed module completeness
+# --------------------------------------------------------------------------- #
+
+
+def test_validate_leaf_grounding_completeness_blocks_complete_uniprotless_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0004672",
+                                "label": "protein kinase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+        },
+    }
+
+    errors = validate_leaf_grounding_completeness(doc)
+
+    assert len(errors) == 1
+    assert "COMPLETE concrete modules" in errors[0]
+    assert "'root'" in errors[0]
+    assert "ANY_WITH_FUNCTION" in errors[0]
+
+
+@pytest.mark.parametrize(
+    "patch",
+    [
+        {"status": "DRAFT"},
+        {"status": "COMPLETE", "scope": "ABSTRACT"},
+    ],
+)
+def test_validate_leaf_grounding_completeness_allows_draft_or_abstract(patch):
+    doc = {
+        **patch,
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_PARTICIPANT",
+                        "description": "abstract participant",
+                    },
+                }
+            ],
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
 
 
 # --------------------------------------------------------------------------- #
