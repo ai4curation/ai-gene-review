@@ -110,8 +110,9 @@ NASEKVARVS SVSNSLPKLK FHSM                               (201-224)
 - **Siw14/Oca3**: the biochemically characterized active PFA-DSP (5-InsP7 phosphatase). Do NOT transfer its
   measured catalytic activity to OCA6.
 - **Oca1/YNL099C**: founding OCA gene (oxidant-induced G1 arrest); shown catalytically inactive in vitro.
-- **Oca2, Oca4, Oca5**: other family members; Oca4 has lost its catalytic motif; Oca5 reported as an inositol
-  pyrophosphatase in another study. None of their specific data should be attributed to OCA6.
+- **Oca2 and Oca4**: other OCA-clade pseudophosphatases in S. cerevisiae; Oca4 has lost its catalytic motif.
+  **Oca5/YHL021C** carries the same historical OCA name but is not part of the PFA-DSP/OCA phosphatase-fold
+  family. None of their specific data should be attributed to OCA6.
 - OCA6-specific direct evidence is limited to: cytoplasmic localization (HTP), BMV-screen phenotype,
   caffeine-sensitivity/genetic-linkage as an oca6Δ member of the family, SGD phenotype survey, and the Thr2
   phosphosite. Everything else is family-level or orthology-based inference.
