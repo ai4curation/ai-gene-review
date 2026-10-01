@@ -57,9 +57,11 @@ between ESL1 and ESL2. ESL1-specific single-mutant results are called out below.
    nonsense-mediated mRNA decay or telomere maintenance pathways"; "ESL1 and ESL2 do not
    seem to have NMD-related functions"; "Esl1 and Esl2 are not required for
    telomerase-dependent or alternative telomere maintenance mechanisms"]
-   → This directly REFUTES the IBA-propagated NMD (GO:0000184), telomerase holoenzyme
-     complex (GO:0005697), telomeric DNA binding (GO:0042162), and telomerase RNA binding
-     (GO:0070034) annotations for this yeast gene.
+   → The NMD substrate assays directly support removing the IBA-propagated NMD
+     annotation (GO:0000184). The telomere-maintenance assays indirectly challenge,
+     but do not directly negate, the IBA-propagated telomerase holoenzyme complex
+     (GO:0005697), telomeric DNA binding (GO:0042162), and telomerase RNA binding
+     (GO:0070034) annotations.
 
 2. **Environment-sensing adaptive gene expression.** esl1Δ esl2Δ deregulate ~50–53
    transcripts (≥2-fold) — hexose transporters (HXT3/6/7), hexokinase HXK1, MAL genes,
@@ -129,20 +131,22 @@ between ESL1 and ESL2. ESL1-specific single-mutant results are called out below.
 | GO term | aspect | evidence | verdict |
 |---|---|---|---|
 | GO:0000184 NMD | BP | IBA | REMOVE — directly refuted for this yeast gene (PMID:23893744) |
-| GO:0005697 telomerase holoenzyme complex | CC | IBA | REMOVE — refuted (no telomere role) |
-| GO:0042162 telomeric repeat DNA binding | MF | IBA | REMOVE — refuted (no telomere role) |
-| GO:0070034 telomerase RNA binding | MF | IBA | REMOVE — refuted (no telomere role) |
+| GO:0005697 telomerase holoenzyme complex | CC | IBA | UNDECIDED — maintenance phenotypes do not assay physical holoenzyme incorporation |
+| GO:0042162 telomeric repeat DNA binding | MF | IBA | UNDECIDED — maintenance phenotypes do not directly assay Esl1 DNA binding |
+| GO:0070034 telomerase RNA binding | MF | IBA | UNDECIDED — maintenance phenotypes do not directly assay Esl1 RNA binding |
 | GO:0003674 molecular_function (root) | MF | ND | KEEP_AS_NON_CORE (ND placeholder) |
 | GO:0005575 cellular_component (root) | CC | ND | KEEP_AS_NON_CORE (ND placeholder) |
-| GO:0008150 biological_process (root) | BP | ND | KEEP_AS_NON_CORE (ND placeholder) |
+| GO:0008150 biological_process (root) | BP | ND | ACCEPT — retained while the direct step underlying the double-mutant phenotypes remains unresolved |
 
 The four IBA annotations are phylogenetic propagations from the metazoan SMG5/6 / EST1A
-clade. Lai et al. 2013 experimentally tested exactly these two functions (NMD and
-telomere maintenance) in the yeast proteins and found them absent. This is a textbook
-case where experimental data in the target species overrides an IBA propagation. Note the
-NMD IBA even lists SGD:S000002614 (EBS1) among the with/from set — EBS1, not ESL1, is the
-yeast SMG7 ortholog with NMD links; ESL1's inclusion in the tree does not reflect yeast
-NMD function.
+clade. Lai et al. 2013 experimentally tested two NMD substrates in the yeast mutants and
+found them negative, making the NMD IBA a target-specific conflict. Note that the NMD IBA
+even lists SGD:S000002614 (EBS1) among the with/from set — EBS1, not ESL1, is the yeast
+SMG7 ortholog with NMD links; ESL1's inclusion in the tree does not reflect yeast NMD
+function. The same paper also tested telomere-length, senescence, subtelomeric-silencing
+and telomeric-transcript phenotypes; those are relevant negatives, but they do not directly
+measure Esl1-TLC1 RNA binding, Esl1-telomeric DNA binding or Esl1 telomerase-holoenzyme
+association.
 
 ## Deep research (falcon)
 `ESL1-deep-research-falcon.md` was generated (Edison, 21 citations, ~29 min). It is
@@ -179,3 +183,24 @@ Description, core narrative and knowledge gaps now avoid categorical loss of all
 Read the full telomerase-association report, HTML rendition and all three CSV artifacts. Its recommendations exceed its evidence: IBA-only is not an annotation failure, zero STRING experimental score is not a negative assay, and identical database scores do not trace the database source. The sequence matrix lacks executable code, sequence versions and aligned sequences; neither its reported global identity nor an uninspected subfamily name establishes interface loss. The positive IBD PTN000403280 is an actual ancestor of P40456/PTN007651903, and the related loss node is outside that lineage. NMD-substrate negatives cannot refute a separate binding/complex function by analogy.
 
 The report explicitly did not read primary full texts. Newly fetched [PMID:22544908] Fig.4 and assay Results establish purified KlEst1–Ter1 UV crosslinking despite failed EMSA, not an Esl1 negative. The previously reviewed full target paper [PMID:23893744] tests telomere outcomes, not physical Esl1 binding or complex incorporation. Retain UNDECIDED for all three telomerase assertions and record an expert/interface or direct-assay follow-up. No repeat OpenScientist call, no new process/nuclease term, and no change to the scoped canonical-NMD judgment.
+
+## 2026-10-01 current-GOA / IBA review
+
+- Refreshed ESL1 from current UniProt/GOA before editing. Current GOA still has
+  the same seven live rows: four `PANTHER:PTN000403280` IBA transfers plus the
+  three SGD ND root placeholders. No new current-GOA rows appeared and no
+  historical source signatures needed retirement.
+- Checked `interpro/panther/PTHR15696/PTHR15696-paint.tsv`. The four live IBA
+  rows remain rooted at `PANTHER:PTN000403280`. The NMD row remains a
+  target-specific conflict because Lai et al. tested `ade2-1` and `pre-CYH2`
+  RNA accumulation against an `upf1` control, while the three telomerase
+  association/binding rows remain `UNDECIDED` because the target telomere
+  phenotypes do not directly assay Esl1 binding or complex incorporation.
+- Backfilled deterministic `supporting_entities` from current GOA onto the four
+  IBA rows. The extra donor accessions do not change the IBA assessment: the
+  review is about PTN000403280's placement above P40456, not the extant donor
+  count.
+- Searched recent literature for exact yeast ESL1/YIL151C/Est1-SMG updates and
+  found no newer ESL1-specific primary paper after Lai et al. A newer broad
+  paralog-abundance/localization resource lists the ESL1-ESL2 pair, but does
+  not justify a new GO row or a change to the open molecular-mechanism gaps.
