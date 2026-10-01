@@ -141,7 +141,7 @@ Last updated: 2026-10-01
 - [x] `XENLA/sox10` (Q8AXX8) — SoxE; NC specifier. Reviewed 2026-10-01: 32 GOA rows (11 ACCEPT, 14 non-core, 6 MODIFY, 1 REMOVE)
 - [ ] `XENLA/snai2` (Q91924) — Slug; NC specifier and EMT repressor
 - [x] `XENLA/sox9-a` (B7ZR65) — SoxE; NC specifier + crest-derived chondrogenesis. Reviewed 2026-10-01: 45 GOA rows (22 ACCEPT, 16 non-core, 5 MODIFY, 1 REMOVE, 1 over-annotated) + 1 NEW (GO:0001228)
-- [ ] `XENLA/twist1` (P13903) — Twist; *Ciona* Twist misexpression makes a9.49 cells migratory
+- [x] `XENLA/twist1` (P13903) — Twist; late, head-only NC specifier / ectomesenchyme driver. Reviewed 2026-10-01: 12 GOA rows (9 ACCEPT, 3 MODIFY) + 2 NEW (GO:0140416 Snail2 inhibition, GO:0048701 cranial skeleton morphogenesis)
 - [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
 - [x] `XENLA/myc-a` (P06171) — c-Myc; competence factor carried from the blastula. Reviewed 2026-10-01: 11 GOA rows (10 ACCEPT, 1 non-core) + 1 NEW (GO:0014029, IMP PMID:12791268 — **flagged for curator check**, see notes)
 - [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (20 ACCEPT, 5 MODIFY, 2 REMOVE, 1 non-core)
@@ -289,6 +289,24 @@ Last updated: 2026-10-01
   [PMID:21889937]). The specifier role belongs to the SoxE *group*, split
   among paralogs differently in each lineage, so orthology transfer of
   paralog-specific crest roles is unsafe.
+
+- **twist1.** Late, head-only NC specifier. It comes on at stage 14, after
+  snai1/2, sox9 and foxd3, and Pax3 activates it directly without Zic1
+  [PMID:24360906]. Knockdown with rescue lowers sox10 and snai2 and widens the
+  zic1 border domain. NEW from Lander 2013 [PMID:23443570, full text]:
+  - `GO:0140416` transcription regulator inhibitor activity: Twist binds Snail2
+    and blocks Snail2-induced ectopic crest, under GSK3β control at S148.
+  - `GO:0048701` embryonic cranial skeleton morphogenesis.
+
+  The TAS `GO:0014029` row (source PMID:15242799, an Id2 cardiac-crest paper
+  whose abstract never mentions Twist) was narrowed to `GO:0014036` and its
+  reference flagged UNVERIFIED. The generic "developmental process" IBA/IEA
+  rows were also MODIFIED to `GO:0014036`. That is a large step from a broad
+  bHLH PAINT node and worth a second look. Evolution: in *Ciona*, Twist is
+  mesoderm-only, and forcing it into a9.49 makes migratory ectomesenchyme
+  [PMID:23135395], which supports co-option. The *early* specifier role is
+  absent in amniotes (Lander), so the conserved vertebrate role is
+  ectomesenchyme, not specification.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
