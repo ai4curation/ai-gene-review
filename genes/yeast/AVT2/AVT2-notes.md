@@ -126,5 +126,12 @@ There is a genuine, notable discrepancy:
    viable. Is AVT2 redundant with AVT1/3/4/5/6/7 or specialized/silent?
 4. No demonstrated activity in the one biochemical survey that assayed the whole family
    (only 4/7 members scored positive; AVT2 was among the 3 negatives).
+
+## 2026-10-01 Update: IBA source review after GOA refresh
+
+- Refreshed AVT2 from QuickGO/UniProt. Current GOA still has 9 physical rows; the refresh backfilled exact `supporting_entities` for the four IBA rows and UniProt/GOC IEA rows but did not introduce stale or new source assertions.
+- Checked cached PTHR22950 PAINT. The generic `GO:0015179 L-amino acid transmembrane transporter activity`, `GO:0003333 amino acid transmembrane transport`, and `GO:0016020 membrane` IBA rows all trace to the broad AAAP-family node `PANTHER:PTN000535793`. These transfers are sound only at their generic level; they do not resolve AVT2's unknown substrate, direction, or physiological compartment.
+- Checked the ER IBA row separately. `GO:0005783 endoplasmic reticulum` traces to the narrower `PANTHER:PTN001119002` node seeded by yeast AVT2 itself. That is valid target grounding rather than circularity, and the IBA agrees with SGD's direct ER localization from PMID:11274162.
+- Re-read the abstract-only cached PMID:11274162 and searched for newer AVT2/Avt2p literature. No 2025-2026 primary paper was found that assigns AVT2 a substrate or transport direction, so the knowledge gaps around substrate, direction, and ER-versus-vacuole localization remain open.
 </content>
 </invoke>
