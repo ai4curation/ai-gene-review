@@ -227,7 +227,7 @@ What each review concluded is ancestral and what is an animal recruitment
 | CSK | Tyrosine kinase activity on the Src C-terminal tail | Adaptor recruitment (PAG, SCIMP) and immune-receptor signalling. Whether Csk already inhibited Src before animals is disputed: two choanoflagellate studies found weak or no inhibition, and a 2017 study reports inhibition |
 
 **Batch 2 results (2026-10-01, all DRAFT).** Six genes with large
-annotation sets; COL4A1 is the animal-innovation control.
+annotation sets; COL4A1 is the animal-innovation control for basement-membrane function.
 
 | Gene | Rows | Accept | Non-core | Modify | Remove | Over-annot. | Undecided | NEW |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -243,7 +243,7 @@ annotation sets; COL4A1 is the animal-innovation control.
 | CTNNB1 / CTNNA1 | A catenin junction-and-polarity module without cadherins: *Dictyostelium* builds a polarized epithelium with Aardvark and an alpha-catenin (PMID:21393547) | The beta-catenin family itself (PTHR45976 is animal-only); classical-cadherin binding; TCF/LEF coactivation in Wnt signalling |
 | SRC | Tyrosine kinase activity and working SH2/SH3 domains (choanoflagellate Src) | The focal-adhesion, junction and PDZ partner network; receptor-specific pathways |
 | ITGB1 / PTK2 | Integrin beta receptors with cation-site ligand binding and NPxY tails, and bona fide FAK, in *Capsaspora*. Choanoflagellates lost integrins and FAK | Binding to animal matrix ligands; counter-receptor cell-cell adhesion; all tissue roles. No functional FAK data exist outside animals |
-| COL4A1 | None: collagen IV is absent from all unicellular relatives (PMID:28418331) | Everything; present with basement membranes in ctenophores, placozoans and homoscleromorph sponges. Confirms the control |
+| COL4A1 | The gene only, and only in the filasterean *Ministeria vibrans*: a canonical type IV collagen, upregulated during aggregation, in an amoeba with no basement membrane (PMID:28726632, 42265479). Absent from choanoflagellates and *Capsaspora* (PMID:28418331) | The basement membrane and the structural role of collagen IV in it; present with basement membranes in ctenophores, placozoans and homoscleromorph sponges. So COL4A1 is a valid control for function but not for gene presence (corrected 2026-10-01) |
 
 **Evolutionary re-check of existing reviews (2026-10-01).** The five
 reviews that predate this project (all COMPLETE) received an additive pass:
@@ -452,3 +452,11 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
     paraphrased quote ("UV irradiation" for "ultraviolet (UV) irradiation"),
     so the substring matching appears to tolerate small differences. The quote
     was corrected to the exact text.
+- **Correction: collagen IV outside animals.** The COL4A1 review first stated
+  that collagen IV is absent from all unicellular relatives (following
+  PMID:28418331). A 2017 genome survey found a canonical type IV collagen gene
+  in the filasterean *Ministeria vibrans* (PMID:28726632), and a 2026 study
+  found it upregulated during *Ministeria* aggregation (PMID:42265479). The
+  COL4A1 review now records this with a `finding_review` (OVERTURNED), and the
+  Track B tables were corrected. Basement-membrane function remains
+  animal-specific.

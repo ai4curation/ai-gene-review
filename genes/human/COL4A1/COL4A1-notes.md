@@ -102,3 +102,27 @@ supplementary tables). PMID:18160688, 20818663, 8900172, 14718574, 22261194, 283
 See `COL4A1-ai-review.yaml`. Core function: `GO:0030020` ECM structural constituent conferring
 tensile strength, in `GO:0005587` collagen type IV trimer, at `GO:0005604` basement membrane,
 directly involved in `GO:0071711` basement membrane organization. No NEW rows.
+
+## Correction (2026-10-01): collagen IV in a unicellular filasterean
+
+The statements above that collagen IV is absent from all unicellular relatives
+of animals are out of date. They follow Fidler et al. 2017 (PMID:28418331),
+which surveyed genomes including the filasterean *Capsaspora*. A broader genome
+survey published the same year found an exception:
+
+- [PMID:28726632 "We found, however, a remarkable exception: a canonical type IV collagen gene in the filasterean Ministeria vibrans, a naked filose amoeba devoid of basement membrane or ECM"]
+- A 2026 study of *Ministeria* aggregation found the gene upregulated during
+  aggregation: [PMID:42265479 "Diverse ECM-related genes were also upregulated, including alpha type IV collagen"]
+
+Revised conclusion:
+- **Animal-specific:** the basement membrane, and the structural role of
+  collagen IV in it.
+- **Older than animals:** the collagen IV gene itself, at least in Filasterea.
+  It is absent from choanoflagellates and *Capsaspora*, so it was lost in those
+  lineages, or *Ministeria* acquired it some other way. The papers read here do
+  not resolve this.
+- **COL4A1 as a control:** it remains an animal-innovation control for
+  basement-membrane function, but not for gene presence.
+
+The YAML records this as a `finding_review` (OVERTURNED) on the Fidler 2017
+finding, and the description and core function were updated.
