@@ -157,3 +157,21 @@ section plus domain/orthology-grounded (not invented) reasoning.
   PubMed-verified secondary sources (SGD S000004552, NCBI Gene 854887); it does not depend on the
   deep-research file. If the falcon retry produced `AIM33-deep-research-falcon.md`, it is included
   for the record but was not the basis for any specific claim.
+
+## 2026-10-01 current GOA refresh
+- Refreshed UniProt/GOA: AIM33 still has 9 live rows, with the same three IBA rows, three
+  UniProt/InterPro IEA rows, and three SGD ND roots. The UniProt and InterPro rows advanced from
+  `20260616` to `20260727`; no rows were added or removed.
+- Copied current GOA `WITH/FROM` strings into `supporting_entities` for the six computational
+  rows: `PTN001064672|PGA3` for plasma membrane, `PTN000452207|MCR1|PGA3` for cytochrome-b5
+  reductase, `PTN000452208|MCR1` for ergosterol biosynthesis, `ARBA00027922`,
+  `UniProtKB-SubCell:SL-0162`, and the four InterPro reductase-domain signatures.
+- Refetched `PTHR19370`; the family currently has 16 node-level PAINT assertions. The tree now
+  includes a newer broad mitochondrial `GO:0005739` IBD at `PTN000452207`, and still carries a
+  negated `GO:0005739` IRD at the AIM33/PGA3 `PTN001064672` node, so current GOA still omits
+  mitochondrial localization for AIM33. The three existing IBA judgments therefore remain valid:
+  generalize the PGA3-seeded plasma-membrane IBA to membrane, and keep cytochrome-b5 reductase
+  activity and ergosterol biosynthesis marked as over-specific paralog transfers.
+- Searched newer `AIM33` / `YML087C` / `Q04516` literature after the refresh. No direct paper was
+  found that identifies AIM33's endogenous membrane, physiological electron acceptor, or
+  mitochondrial/sterol-pathway mechanism, so no literature-backed action changed.
