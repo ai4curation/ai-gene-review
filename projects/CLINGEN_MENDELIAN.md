@@ -2956,9 +2956,9 @@ Gene reviews are proceeding in evidence-priority order, alphabetically within
 each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
-**149 of 2,876 genes are complete; 2,727 remain.** The verified BEST1 merge
+**150 of 2,876 genes are complete; 2,726 remain.** The verified BLNK merge
 adds one completed gene to the preceding completion update.
-The 150 original gene PR merges include AKR1D1, whose required source follow-up
+The 151 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3224,7 +3224,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BICRA** — HGNC:4332; [Coffin-Siris syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2dcc8864-4487-4c5c-b541-cfd972767269-2024-11-20T170000.000Z) (MONDO:0015452; AD; Definitive).
 - [ ] **BIN1** — HGNC:1052; [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bb963a9-ec8a-4966-93bb-4f8ef6f8f8a1-2024-06-10T160000.000Z) (MONDO:0018947; AD; Limited); [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d04cc64-0994-4579-99d5-bd2b89710173-2024-06-10T160000.000Z) (MONDO:0018947; AR; Definitive).
 - [ ] **BLM** — HGNC:1058; [Bloom syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0a20b67-5a62-462c-894b-76b60a66e979-2019-04-19T160000.000Z) (MONDO:0008876; AR; Definitive); [colorectal cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37bc882f-34c6-4aea-afea-7b6f037ed9a7-2024-11-22T180000.000Z) (MONDO:0005575; AD; Limited).
-- [ ] **BLNK** — HGNC:14211; [agammaglobulinemia 4, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e1d2e1b-52a6-4371-9055-0e1cc74da39d-2021-03-16T132748.373Z) (MONDO:0013289; AR; Definitive).
+- [x] **BLNK** — HGNC:14211; [agammaglobulinemia 4, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e1d2e1b-52a6-4371-9055-0e1cc74da39d-2021-03-16T132748.373Z) (MONDO:0013289; AR; Definitive).
 - [ ] **BLOC1S5** — HGNC:18561; [Hermansky-Pudlak syndrome 11](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_85cca8f5-d263-42c4-b84a-2d49deeee682-2023-09-06T160000.000Z) (MONDO:0030903; AR; Definitive).
 - [ ] **BLOC1S6** — HGNC:8549; [Hermansky-Pudlak syndrome 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_984682a2-afb9-48b3-afe8-20e0f633022d-2022-05-25T165516.466Z) (MONDO:0013606; AR; Definitive).
 - [ ] **BLTP1** — HGNC:26953; [Alkuraya-Kucinskas syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b92cd4c-7db0-40fe-b404-08f17f778c35-2026-01-21T170000.000Z) (MONDO:0060631; AR; Definitive).
