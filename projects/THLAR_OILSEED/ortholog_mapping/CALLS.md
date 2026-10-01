@@ -29,7 +29,7 @@ fused to an MSL2-like channel).
 | Step | Arabidopsis | Pennycress call | Entry (locus) | Notes |
 |---|---|---|---|---|
 | Met deamination | BCAT4 | 1:1 | A0AAU9S298 (TAV2_LOCUS10345) | 82.7% id |
-| MAM condensation | MAM1 | 1:1 | A0AAU9RP64 (TAV2_LOCUS6842) | 84.8% id; a second, partial MAM1-like model (TAV2_LOCUS5676, 395 aa) also maps back to MAM1 |
+| MAM condensation | MAM1 | single MAM gene, read as MAM1 ortholog | A0AAU9RP64 (TAV2_LOCUS6842) | 84.8% id. Strictly this is the co-ortholog topology (it is also the best hit of MAM3), as for CYP79F1/F2. It is read as the MAM1 ortholog because it maps back to MAM1 and no MAM3 counterpart exists, which fits the one-turn sinigrin profile. A second, partial MAM1-like model (TAV2_LOCUS5676, 395 aa) also maps back to MAM1 |
 | MAM condensation | MAM3 | unresolved | none | MAM3 maps to the same MAM1-like gene; no MAM3 counterpart found. Fits a seed profile dominated by the C3 (one-cycle) allylglucosinolate, but absence from a gene-model set is not proof of loss |
 | IPMI | IIL1 | 1:1 | A0AAU9T4X1 (TAV2_LOCUS24872) | 95.3% id |
 | IPMI | SSU3 | co-ortholog | A0AAU9S4C4 (TAV2_LOCUS13090) | single small-subunit gene, maps back to SSU2 (SSU2/SSU3 are Arabidopsis paralogs) |
@@ -56,13 +56,18 @@ fused to an MSL2-like channel).
 
 | Step | Arabidopsis | Pennycress call | Entry (locus) | Notes |
 |---|---|---|---|---|
-| KCS condensation | FAE1 | 1:1 | A0AAU9T3A1 (TAV2_LOCUS26079) | same protein as V9XY07 (99.8% id) |
-| KCS condensation | CUT1/KCS6 | 1:1 | A0AAU9SM40 (TAV2_LOCUS17730) | 95.8% id |
+| KCS condensation | FAE1 | 1:1 | A0AAU9T3A1 (TAV2_LOCUS26079) | same protein as V9XY07 (99.8% id), which is already the pennycress member in the module, so not added again |
+| KCS condensation | CUT1/KCS6 | 1:1 | A0AAU9SM40 (TAV2_LOCUS17730) | 95.8% id; added to the module KCS variant |
 | Ketoreduction | KCR1 | 1:1 | A0AAU9SJ87 (TAV2_LOCUS16128) | 89.9% id |
 | Dehydration | PAS2 | gene-model fusion | TAV2_LOCUS20000 | 94.9% id, but the 833 aa model is fused to an MSL2-like channel, so the reverse search lands on MSL2 |
 | Enoyl reduction | ECR | 1:1 | A0AAU9SFC3 (TAV2_LOCUS15241) | 96.1% id |
 
 ## Not added to the modules
+
+Of the 13 one-to-one calls, 11 are module members: the 10 single-copy glucosinolate and elongase
+enzymes plus pennycress CUT1/KCS6. The pennycress FAE1 entry (A0AAU9T3A1) is the same protein as
+the V9XY07 member already listed. CYP83A1 (and the CYP79F co-ortholog) are omitted for the
+reason below.
 
 The CYP79F and CYP83A1 pennycress orthologs (A0AAU9RCD6, A0AAU9TBL5) are 1:1 or co-ortholog calls
 but are not listed as module representative members. UniProt assigns them PANTHER families

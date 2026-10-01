@@ -241,7 +241,10 @@ def main(module_paths: list[str]) -> None:
         w.writerows(cand_rows)
 
     # pennycress-native exemplars (e.g. TFP, FAE1): which proteome entry is the same protein?
-    native = {a: q for a, q in all_q.items() if "OX=13288" in q.description}
+    thlar_accs = {acc(s.name) for s in thlar}
+    # pennycress exemplars from outside the reference proteome (e.g. Swiss-Prot TFP, FAE1 V9XY07);
+    # members already drawn from UP000836841 would only produce self-hits
+    native = {a: q for a, q in all_q.items() if "OX=13288" in q.description and a not in thlar_accs}
     native_rows = []
     if native:
         nq = pyhmmer.easel.DigitalSequenceBlock(ALPHABET, [q.digitize(ALPHABET) for q in native.values()])

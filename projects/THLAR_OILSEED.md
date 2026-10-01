@@ -110,9 +110,10 @@ the modules:
 Arabidopsis enzyme in the two modules against the pennycress reference proteome and back.
 The calls, with reasons, are in [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.md).
 
-- **One-to-one:** 13 enzymes have clear one-to-one pennycress orthologs at 83-96% identity. The
-  10 whose PANTHER family agrees with the module's were added to the modules as pennycress
-  examples (for instance BCAT4, MAM1, SUR1, SOT17, KCR1 and ECR).
+- **One-to-one:** 13 enzymes have clear one-to-one pennycress orthologs at 83-96% identity.
+  11 of them are now module examples (for instance BCAT4, MAM1, SUR1, SOT17, KCR1, ECR and
+  CUT1). Pennycress FAE1 was already in the module as V9XY07, and CYP83A1 is left out because
+  its PANTHER family differs between sources.
 - **Expanded families:** pennycress has at least five TGG1-like myrosinases and at least four
   SOT18-like sulfotransferases.
 - **Single genes:** one pennycress gene corresponds to both Arabidopsis CYP79F1 and CYP79F2,

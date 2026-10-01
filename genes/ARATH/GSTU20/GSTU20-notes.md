@@ -28,7 +28,7 @@
 - Outcome: glucosinolate role described in the description and core_functions free text only; a GO curator question about an acts_upstream_of_or_within IMP annotation is recorded in suggested_questions.
 
 ### Action tally
-- ACCEPT 13, KEEP_AS_NON_CORE 8, MARK_AS_OVER_ANNOTATED 3, MODIFY 1, UNDECIDED 0, NEW 0 (25 rows).
+- ACCEPT 13, KEEP_AS_NON_CORE 7, MARK_AS_OVER_ANNOTATED 4, MODIFY 1, UNDECIDED 0, NEW 0 (25 rows). (Response to gravity IEP moved from non-core to over-annotated on 2026-10-01, PR review.)
 
 ### Falcon deep research (GSTU20-deep-research-falcon.md, appeared mid-session)
 - Consulted after the review was drafted. It frames GSTU20 as catalysing "or facilitating" the GSH-conjugation step, citing Zhang et al. 2022 and Choi et al. 2024 (Plant Physiol 196:1340, HY5-HDA9 repression of glucosinolate genes including GSTU20). Neither provides enzyme assays on the native intermediate (Choi 2024 is transcriptional regulation), so the no-NEW decision stands. Choi 2024 not cached/cited in the YAML.
