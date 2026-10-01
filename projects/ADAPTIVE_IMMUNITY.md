@@ -134,11 +134,22 @@ twice), so the per-area gene counts add up to 107, not 105.
   PMID:10821850, cited for NFATC1 transcription factor activity, describes
   NFAT1. These are recorded as suggested questions or reference reviews in the
   gene files.
-- **Deep research.** Falcon reports exist for eight of the nine genes (not
-  CD3G), but most arrived after the 10-minute wrapper timeout, and the perplexity fallback is not
-  configured here, so the reviews rest mainly on UniProt, Reactome and the
-  cached papers (mostly abstracts). Each gene's notes file says how its report
-  was used.
+- **Deep research.** All nine genes have a Falcon report (CD3G's after a
+  rerun with a 45-minute timeout). Most reports arrived after the reviews were
+  written, so each was integrated afterwards: every substantive claim was
+  sorted as confirming, adding, conflicting or unsupported, and any claim that
+  changed the review was traced to its primary paper, cached and quoted. This
+  added about 35 primary papers and refined descriptions and core functions,
+  but changed no annotation action except two (a NEW VEGF receptor signaling
+  row on PLCG1, and one PLCG1 UNDECIDED row resolved). It also caught an
+  isoform-numbering error in the LAT description. The reports themselves were
+  unreliable in places: wrong-paper citations (NFATC2, NFATC4 or reviews
+  credited for NFATC1 facts), preprints presented as findings, and at least
+  one garbled structural claim (a CD3D salt bridge to a cytoplasmic residue).
+  Each gene's notes file has a "Deep research integration" section listing
+  what was adopted and rejected. Open question raised by the reports: human
+  gamma-delta TCR structures (PMID:38657677) contain CD3D as well as CD3G, but
+  GOA gives only CD3G the gamma-delta TCR complex term.
 
 ## Curation rules for adaptive-immune genes
 
