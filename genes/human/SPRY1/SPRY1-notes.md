@@ -65,3 +65,9 @@ SPRY4: RAF1 binding via cysteine-rich domain and TESK1 kinase inhibition -> kina
 association. SPRY1: GRB2 binding via phospho-Tyr53 -> sequestration MF; no kinase-inhibition evidence.
 Both converge on the same process set (negative regulation of FGFR signalling, Ras signalling, ERK1/2
 cascade) and cooperate as hetero-oligomers.
+
+## 2026-10-01: OpenScientist check of the GRB2-sequestration proposal
+
+- OpenScientist (2 iterations; `SPRY1-hypotheses/spry1-grb2-sh3-motif/openscientist.md`) scanned human, mouse and zebrafish SPRY1, SPRY2 and SPRY4 for the PxxPxR GRB2 SH3-binding motif. The only canonical C-terminal motif is SPRY2 PTVPPR (position 304); SPRY1 has none. This agrees with Lao 2006/2007 [PMID:16893902 "found exclusively on Spry2"; PMID:17255109 "An exclusive, necessary, but cryptic PXXPXR motif in the C terminus of Spry2"].
+- SPRY1 keeps the N-terminal NEYTEG Tyr53, so any SPRY1-GRB2 binding would be phospho-tyrosine dependent (Hanafusa 2002, PMID:12402043, abstract only). Gross 2001 (PMID:11585837) disputes sequestration. Even for SPRY2, GRB2 binding was dispensable for ERK inhibition in one study [PMID:17689925 "These results are evidence that the Sprouty2 mechanism of ERK inhibition is independent of Grb2 binding."].
+- Decision: deleted the NEW GO:0140311 protein sequestering activity proposal. A refuted or unsupported AI proposal is deleted, not set to REMOVE. Accepted the IBA GO:0004860 protein kinase inhibitor activity and made it the core MF. GRB2 sequestration is kept as a lead in the description and suggested questions.
