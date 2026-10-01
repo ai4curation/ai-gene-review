@@ -25,7 +25,6 @@ import gzip
 from pathlib import Path
 
 import pyhmmer
-import requests
 
 from find_orthologs import (
     ALPHABET, DATA, HERE, RESULTS, UNIPROT, acc, fetch, gene_name, identity_and_coverage,

@@ -98,16 +98,21 @@ Analyses: `aop2_check.py` (output `AOP2_RESULTS.md`) and `aop2_genomic.py` (outp
   mostly a 474 bp "intron" at 61000111-61000584. That stretch encodes the residues the predicted
   protein lacks.
 - **Conclusion.** The fragment results from an annotation error (a false intron), not from a
-  truncated gene. Pennycress has an intact AOP2-type open reading frame, consistent with its
-  allylglucosinolate (sinigrin) chemistry.
+  truncated gene. The genome carries a complete AOP2-type coding sequence, consistent with
+  pennycress allylglucosinolate (sinigrin) chemistry. These are coding exons in different genomic frames
+  separated by introns, not a single open reading frame.
 - **Caveats.**
   - Splice sites of the corrected model were not checked.
   - No transcript evidence was used.
   - Enzyme activity has not been tested.
-- **Tandem AOP1-like model.** The neighbouring model TAV2_LOCUS20419 (A0AAU9SRQ3, 631 aa) is a
-  fusion. It contains a fragmentary AOP-like unit followed by a complete AOP1-like unit (73.5% id
-  to Arabidopsis AOP1 over 99.7% of it). The locus is a tandem AOP cluster like Arabidopsis
-  AOP1/AOP2/AOP3.
+  - The model's first two annotated exons (60999055-60999090, 60999145-60999203) are not covered
+    by any AOP2-aligned segment, so its 5' end is probably also mis-predicted.
+- **Adjacent AOP1-like model.** TAV2_LOCUS20419 (A0AAU9SRQ3, 631 aa, CDS CAH2071850) lies on the
+  same chromosome sequence, on the opposite strand, 2,443 bp upstream of the AOP2 model
+  (`AOP2_GENOMIC_RESULTS.md`). It is a fusion: a fragmentary AOP-like unit followed by a complete
+  AOP1-like unit (73.5% id to Arabidopsis AOP1 over 99.7% of it). The locus is therefore an
+  adjacent, inverted AOP gene pair, as in Arabidopsis, where AOP1, AOP2 and AOP3 are in tandem
+  and inverted.
 
 The AOP2 entry is not added to the module as a representative member, because its UniProt
 sequence is the mis-predicted fragment.

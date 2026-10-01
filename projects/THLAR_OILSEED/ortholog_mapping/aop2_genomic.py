@@ -28,6 +28,8 @@ import requests
 from find_orthologs import ALPHABET, DATA, HERE, RESULTS, UNIPROT, acc, fetch, read_fasta
 
 CDS_PROTEIN_ID = "CAH2071852"
+# neighbouring AOP-like model (TAV2_LOCUS20419, A0AAU9SRQ3) whose position is reported for context
+NEIGHBOUR_PROTEIN_IDS = ["CAH2071850"]
 FLANK = 3000
 MIN_AA = 20
 COMPARATORS = ["B5KJ58", "Q945B5"]
@@ -144,6 +146,21 @@ def main() -> None:
     for r in rows:
         L.append(f"| {r['comparator']} | {r['comparator_from']}-{r['comparator_to']} | {r['identity_pct']} | {r['segment_genomic']} | "
                  f"{r['strand']}/{r['frame']} | {r['segment_aa']} | {r['evalue']} | {r['location']} | {r['annotated_intron_bp_inside']} |")
+    # annotated exons with no aligned same-strand segment over them
+    aligned = [tuple(map(int, r["segment_genomic"].split("-"))) for r in rows
+               if r["strand"] == gene_strand and r["comparator"] == COMPARATORS[0]]
+    unsupported = [(a, b) for a, b in exons if not any(a <= g2 and b >= g1 for g1, g2 in aligned)]
+    L += ["", f"Annotated exons not covered by any {COMPARATORS[0]}-aligned segment: " +
+          (", ".join(f"{a}-{b}" for a, b in unsupported) if unsupported else "none") + "."]
+    # neighbouring AOP-like model(s): genomic position relative to this locus
+    L += ["", "## Neighbouring model(s)", "",
+          "| CDS | Sequence | Strand | Span | Gap to this locus (bp) |", "|---|---|---|---|---|"]
+    for pid in NEIGHBOUR_PROTEIN_IDS:
+        nseq, nstrand, nex = cds_exons(pid)
+        n1, n2 = nex[0][0], nex[-1][1]
+        gap = exons[0][0] - n2 - 1 if n2 < exons[0][0] else n1 - exons[-1][1] - 1
+        same = "same sequence" if nseq == seqid else "different sequence"
+        L.append(f"| {pid} | {nseq} ({same}) | {nstrand} | {n1}-{n2} | {gap} |")
     (HERE / "AOP2_GENOMIC_RESULTS.md").write_text("\n".join(L) + "\n")
     print(f"{len(rows)} aligned segments; wrote results/aop2_genomic.tsv")
 

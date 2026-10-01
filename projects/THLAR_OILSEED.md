@@ -126,8 +126,9 @@ The calls, with reasons, are in [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.
 - **Gene-model problems:** the AOP2, UGT74C1 and PAS2 matches sit in partial or fused gene
   models.
 - **AOP2 is intact in the genome.** The predicted AOP2 protein is a fragment, but the genome
-  carries a complete AOP2-type open reading frame, 84% identical to Brassica rapa AOP2. The
-  annotation treated 474 bp of real coding sequence as an intron. This fits pennycress making
+  carries the complete AOP2-type coding sequence, 84% identical to Brassica rapa AOP2. The
+  annotation treated 568 bp of real coding sequence as intron, most of it one 474 bp false
+  intron. This fits pennycress making
   sinigrin, which needs a working AOP2. Details are in
   [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.md#aop2-gene-model).
 

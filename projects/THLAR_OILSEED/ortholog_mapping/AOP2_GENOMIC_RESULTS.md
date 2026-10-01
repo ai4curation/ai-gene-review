@@ -20,3 +20,11 @@ Region searched: OU466862.2:60996055-61004634; six-frame stop-free segments of a
 | Q945B5 | 5-122 | 65.3 | 60999272-60999700 | +/1 | 143 | 1.1e-47 | overlaps annotated exon | 36 |
 | Q945B5 | 123-346 | 55.6 | 60999889-61000710 | +/0 | 274 | 1.2e-57 | overlaps annotated exon | 568 |
 | Q945B5 | 345-432 | 68.2 | 61001353-61001634 | +/0 | 94 | 1.8e-40 | overlaps annotated exon | 24 |
+
+Annotated exons not covered by any B5KJ58-aligned segment: 60999055-60999090, 60999145-60999203.
+
+## Neighbouring model(s)
+
+| CDS | Sequence | Strand | Span | Gap to this locus (bp) |
+|---|---|---|---|---|
+| CAH2071850 | OU466862.2 (same sequence) | - | 60992352-60996611 | 2443 |
