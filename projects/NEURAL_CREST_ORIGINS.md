@@ -138,7 +138,7 @@ Last updated: 2026-10-01
 ## Tier 1 — Neural crest specifiers (candidates for vertebrate-specific recruitment)
 
 - [ ] `XENLA/foxd3-a` (Q9DEN4) — FoxD3; vertebrate-specific N-terminal motif; no border expression in amphioxus. Homeolog `foxd3-b` Q9DEN3
-- [ ] `XENLA/sox10` (Q8AXX8) — SoxE; NC specification, pigment and glia
+- [x] `XENLA/sox10` (Q8AXX8) — SoxE; NC specifier. Reviewed 2026-10-01: 32 GOA rows (11 ACCEPT, 14 non-core, 6 MODIFY, 1 REMOVE)
 - [ ] `XENLA/snai2` (Q91924) — Slug; NC specifier and EMT repressor
 - [ ] `XENLA/sox9-a` (B7ZR65) — SoxE; cranial NC and chondrogenesis (cross-check `human/SOX9`)
 - [ ] `XENLA/twist1` (P13903) — Twist; *Ciona* Twist misexpression makes a9.49 cells migratory
@@ -208,3 +208,25 @@ Last updated: 2026-10-01
   crest network in gnathostomes, not at the vertebrate base.
   Open: whether it belongs under NC cell fate specification (chick and frog
   data differ). Frog loss-of-function reagents hit both homeologs.
+- **sox10.** NC specifier: it comes on after the border genes, inside the
+  crest domain, downstream of Wnt/FGF and Snail [PMID:12885557, PMID:12812785].
+  All four `GO:0014029` neural crest formation rows, including three IMP rows,
+  were MODIFIED to `GO:0014036` neural crest cell fate specification. Melanocyte
+  differentiation was accepted as a core role. `enzyme binding` (an Ubc9 IPI,
+  which only shows Sox10 is a SUMOylation substrate) was removed. Sox10 is never
+  expressed in blastula cells, which fits SoxE recruitment being a vertebrate
+  novelty. Sox10 can replace SoxB1 to keep blastula cells pluripotent, but only
+  when overexpressed [PMID:30144418], so this was raised as a question, not
+  annotated. Lamprey SoxE paralogs duplicated independently [PMID:21889937], so
+  Sox10-specific late roles should not be transferred to lamprey genes.
+
+### Project-level decision to confirm: GO:0014029 vs GO:0014036
+
+`GO:0014029` neural crest formation is defined as forming the *region of
+ectoderm* between the neural plate and non-neural ectoderm. The chain is
+`GO:0014036` fate specification part_of `GO:0014034` fate commitment part_of
+`GO:0014029`. The sox10 review narrowed specifier genes from `GO:0014029` to
+`GO:0014036`, leaving `GO:0014029` for genes that act on the border region as a
+whole. Apply this consistently across Tier 1 (and decide whether border
+specifiers in Tier 2 should keep `GO:0014029`). This needs curator sign-off,
+because it modifies IMP rows to a more specific child term.
