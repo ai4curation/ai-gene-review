@@ -157,3 +157,21 @@ The initially sealed follow-up V1 retained three binding-class MODIFY decisions.
 ## Follow-up verification
 
 Independent scientific review approved this follow-up, including the material LNX1 construct uncertainty. The exact reviewed proposal was applied, canonical validation passed, the rendered HTML reproduces the review YAML, and the new history record validated. All original source assertions, source files and earlier history remain unchanged. Three LNX1 source assertions remain UNDECIDED; no new annotation or kinase/signaling core was added.
+
+
+## Concise evidence excerpts, second follow-up, 2026-10-01 UTC
+
+Eight additional exact excerpts improve the evidence displayed beside existing decisions. The urinary- and B-cell-exosome abstracts now identify the preparations and proteomic analyses behind the two retained HDA associations (PMID19056867 and PMID20458337). Neither excerpt identifies BLVRA itself; the existing reasons continue to defer to curator-reported detections and explicitly retain the uninspected peptide/table limitation. PMID19056867 repeats its abstract under a Full Text heading but remains an abstract-only extraction.
+
+The Reactome TAS row now includes its biliverdin-reduction statement. This supports the named reaction, while its existing reason still distinguishes the summary from direct cytosolic-location evidence. UniProt location excerpts are restored to the three relevant broad/mapped/immunofluorescence location rows; the HPA image remains uninspected. A short dual-reactant statement supports the existing NADH electronic reaction without replacing the independent biochemical evidence.
+
+The reductase core gains an exact phrase identifying human IX-alpha-reductase initial-rate kinetics from PMID10858451. This is assay context, not a newly inspected NADH- or NADPH-specific protocol. Accordingly, the two cofactor EXP rows and heme-catabolism row are not supplied with an unrelated abstract phrase merely to increase quote counts. Their original explanations and corroborating primary references remain intact. The three LNX1 pair/class excerpts also remain unchanged; no screened isoform or physiological interaction is newly verified.
+
+All 16 existing excerpts are retained and eight are added, for 24 total. Aggregate quoted words in the candidate YAML remain at most 25 per source. This is an assistant quotation limit, not a repository validation rule; the external request to drop it is not followed. The update improves source-specific context rather than restoring repeated passages for every row. This appendix introduces no additional quoted source text.
+
+For this focused update, the three complete cached abstracts of PMID19056867, PMID20458337 and PMID10858451, the complete normal Reactome reaction summary, and the relevant normal BLVRA UniProt function, cofactor and location fields were read. Existing quote strings across all sources were checked as exact cached substrings. No complete publication, figure image, supplement, BLVRA peptide entry or HPA image was newly inspected, and no source fetch was made. All 32 source objects and annotation decisions, the description, reference objects, one core's biological assignments and absent product slots are preserved. Distinct science peer remains pending; no canonical application, validation, rendering or history creation is claimed by this proposal.
+
+
+## Evidence-excerpt follow-up verification
+
+Independent scientific review approved the eight added exact excerpts and their stated limits. Canonical validation and history validation passed, and the rendered HTML reproduces the reviewed YAML. All 32 annotation decisions and source assertions, the description, reference objects and sole reductase core assignments remain unchanged. No source cache or prior history record was edited.
