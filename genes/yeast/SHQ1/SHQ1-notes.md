@@ -44,3 +44,23 @@ SHQ1-depletion strain and showed weakened Cbf5 interaction, loss of H/ACA
 snoRNAs, pre-rRNA processing defects, and reduced ribosome production
 [PMID:37818102]. This reinforces the conserved SHQ1-Cbf5 carrier-chaperone
 model but does not require a new GO term for the yeast protein.
+
+## 2026-10-01 current-GOA refresh
+
+- Refreshed UniProt/GOA for SHQ1. The live GOA snapshot has 13 rows and no longer
+  carries either `GO:0051082 unfolded protein binding` source assertion; both historical
+  rows were preserved as retired and still point to the more specific
+  `GO:0140597 protein carrier chaperone`.
+- Reviewed three live rows backfilled from current GOA: two additional PMID:12228251 IPI
+  rows for `GO:0000493 box H/ACA snoRNP assembly` through H/ACA assembly interactors were
+  accepted, and the generic `GO:0005515 protein binding` row for the same paper/with-from
+  set was removed as an uninformative interaction placeholder.
+- Downgraded the pre-existing `GO:0000493` IPI row with `SGD:S000002569` to
+  `UNDECIDED`: the cached Yang et al. abstract does not expose the NBP2-linked
+  full-text evidence behind that row, so it should be revisited from the full paper
+  before making a stronger call.
+- Re-read the current `PTHR12967` PAINT cache: `PTN000311574` still carries nucleoplasm,
+  cytoplasm, and box H/ACA snoRNP assembly for the SHQ1 homolog family, but not the
+  obsolete unfolded-protein-binding assertion. Newer literature searches found no
+  yeast SHQ1 paper after the cached 2023 human-SHQ1 complementation study that would
+  change the GO calls.
