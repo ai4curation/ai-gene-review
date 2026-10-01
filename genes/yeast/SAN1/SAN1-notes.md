@@ -1,0 +1,45 @@
+# SAN1 curation notes
+
+## 2026-09-29 IBA propagation re-review and recent-literature check
+
+Rechecked the three SAN1 IBA rows from `GO_REF:0000033`. UniProt places San1 in
+PANTHER family `PTHR15710` ("E3 UBIQUITIN-PROTEIN LIGASE PRAJA"), but this
+workspace does not have a cached `interpro/panther/PTHR15710/` PAINT export.
+The GOA rows still provide the immediate PTN source nodes: `GO:0006511` and
+`GO:0061630` trace to `PANTHER:PTN001864905`, while the non-core cytoplasm
+annotation traces to `PANTHER:PTN004565028`.
+
+Kept the two core IBA rows (`ubiquitin-dependent protein catabolic process` and
+`ubiquitin protein ligase activity`) as `ACCEPT` / `NO_FAILURE_CORE`: San1 has
+direct budding-yeast evidence as a nuclear RING E3 that ubiquitinates misfolded
+or mutant substrates for proteasomal degradation. Kept the cytoplasm IBA row as
+`KEEP_AS_NON_CORE` / `NO_FAILURE_NON_CORE`: San1 is primarily nuclear, but GOA
+also carries a direct SGD cytoplasm row from Heck et al. 2010 for
+chaperone-dependent handling of cytoplasmic misfolded proteins routed to San1.
+
+Searched PubMed and the web for 2023-2026 SAN1/San1 yeast papers. Cached six
+relevant primary papers:
+
+- PMID:38302116: abstract-only Genetics study showing San1-dependent degradation
+  of nonnative Nup1 in the nuclear pore complex.
+- PMID:39617269: full-text JBC study showing quiescent cells retain
+  degradation-mediated PQC that can depend on Ubr1 and San1, although Ubr1 is
+  dominant for the tested tGnd1/stGnd1 reporters.
+- PMID:39855624: abstract-only BBA Gene Regulatory Mechanisms study extending
+  San1/Spt16 work by analyzing San1-dependent FACT interactome changes.
+- PMID:41370327: full-text PLoS Genetics study implicating San1 and Das1 in
+  Mcd1 degradation when cohesin function is aberrant.
+- PMID:41511351: full-text Cells study showing San1-dependent proteasomal
+  turnover of soluble Htt103QP is required for efficient IBophagy in a budding
+  yeast model.
+- PMID:42300961: abstract-only FEBS Journal study using UBR1/SAN1 deletion to
+  reveal PQC-sensitive DHFR indel variants.
+
+Skipped the PMID:41341165 bioRxiv preprint because it is superseded by the
+PMID:41370327 PLoS Genetics paper, and skipped the 2023 Senataxin/ALS review
+because it is not about budding-yeast San1 function.
+
+The newer literature extends the set of San1 substrate contexts but does not
+change the core molecular picture: San1's central function is still recognition
+and RING E3-mediated ubiquitination of misfolded or aberrant proteins for
+proteasomal degradation.

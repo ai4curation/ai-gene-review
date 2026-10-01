@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [daf-19, osm-3, osm-5, che-2, che-3, bbs-1, bbs-8, mks-3, nphp-1, nphp-4, mks-1, mks-5, mks-6, mksr-2, bbs-2, bbs-5, bbs-7, lov-1, pkd-2, pef-1]
+manifest:
+  slides:
+    - href: CAEEL_CILIOPATHY/slides/CAEEL_CILIOPATHY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/6FL1QHUfX93w3d1czhc48e
+      title: Project brief
 ---
 
 # C. elegans Ciliopathy/IFT Pathway Project
@@ -299,7 +306,3 @@ Bardet-Biedl syndrome proteins:
 - CAEEL_PROTEOSTASIS (18 genes, not started)
 
 ---
-
-## Slides
-
-- [Slides](CAEEL_CILIOPATHY/slides/CAEEL_CILIOPATHY-slides.html) (Marp source: [CAEEL_CILIOPATHY-slides.md](CAEEL_CILIOPATHY/slides/CAEEL_CILIOPATHY-slides.md)) — AI generated

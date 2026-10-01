@@ -42,5 +42,28 @@ The existing annotation decisions remain evidence-consistent after re-audit: RNA
 and mRNA binding, translation repression, the curator's disputed eIF4G-association
 annotation, and cytoplasmic localization are retained as core; P-body localization is accepted as the site of the core disassembly function,
 whereas stress-granule and historical nucleolar localizations remain non-core; generic
-protein-binding annotations remain over-annotated. No experimental
+protein-binding annotations remain uninformative. No experimental
 annotation was removed on the basis of incomplete full text.
+
+## 2026-09-29 IBA re-review
+
+- The four `GO_REF:0000033` IBA rows were checked against the local PTHR23003
+  PAINT export. `GO:0003729` mRNA binding, `GO:0005634` nucleus, and
+  `GO:0005737` cytoplasm all descend from `PANTHER:PTN002345455`; the first and
+  third are core, while the nuclear placement is credible but non-core because
+  the better-characterized SBP1 program is cytoplasmic mRNP/translation control.
+  `GO:1990904` ribonucleoprotein complex descends from `PANTHER:PTN000543776`
+  and remains consistent with Sbp1 mRNP membership.
+- Three legacy `GO:0005515` protein-binding rows from high-throughput interactome
+  screens were converted from `MARK_AS_OVER_ANNOTATED` to `REMOVE`, following the
+  current IPI review policy for generic protein binding. Sbp1 has a more
+  informative retained molecular-function proposal for competitive Edc3
+  sequestration, `GO:0140311` protein sequestering activity.
+- A fresh PubMed/web search for 2023-2026 Sbp1 papers recovered one new direct
+  yeast paper after the cached 2025 JMB study: Mohanan et al. 2026, which
+  reports that Sbp1 localizes to reversible RGG-dependent cytoplasmic granules
+  under hydroxyurea and negatively regulates translation of `ATG1`, `ATG2`, and
+  `ATG9` [PMID:42371698, "Loss of Sbp1 leads to selective translational
+  upregulation of key autophagy genes ATG1, ATG2, and ATG9."]. The same PubMed
+  search also found a 2026 goji-berry `SBP1` paper; that hit concerns an
+  unrelated plant RING-finger self-incompatibility protein and was not used.

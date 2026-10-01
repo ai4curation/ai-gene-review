@@ -30,6 +30,13 @@ sidecars:
     - AFFINAGE_EVALUATION/slides/affinage-pipeline.svg
     - AFFINAGE_EVALUATION/slides/affinage-results.svg
     - AFFINAGE_EVALUATION/slides/go-downcast.svg
+manifest:
+  slides:
+    - href: AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/5CqTrkg55DQ3bTTeMAFdHm
+      title: Project brief
 ---
 # Affinage Evaluation Project
 
@@ -455,7 +462,3 @@ weak dark-gene prioritization signal. Full argument in
    perspective, human-only). Only worth revisiting as a free first-pass for the human
    backlog, or if a targeted test shows its retrieval recovers primary core-function
    evidence our pipeline systematically misses (raw citation count does not show this).
-
-## Slides
-
-- [Slides](AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.html) (Marp source: [AFFINAGE_EVALUATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/AFFINAGE_EVALUATION/slides/AFFINAGE_EVALUATION-slides.md)) — AI generated

@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [GPX4, SLC7A11, SLC3A2, ACSL4, LPCAT3, AIFM2, DHODH, GCH1, PTS, SPR, NCOA4, TFRC, FTH1, SLC40A1, GCLC, GSS, NFE2L2, KEAP1, ATF4, TP53, FADS1, ELOVL5]
+manifest:
+  slides:
+    - href: FERROPTOSIS/slides/FERROPTOSIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/7nSuCeq7xETTYoc6zrZeoG
+      title: Project brief
 ---
 
 # Ferroptosis Project
@@ -139,10 +146,6 @@ The ferroptosis mechanism is captured as a recursively decomposable module
   redundantly suppressed by four independent defense axes (GPX4–GSH,
   FSP1–CoQ10, DHODH–CoQ10, GCH1–BH4) plus a transcriptional regulatory layer
   (NRF2/KEAP1, ATF4, p53). Source: [`modules/ferroptosis.yaml`](https://github.com/ai4curation/ai-gene-review/blob/main/modules/ferroptosis.yaml).
-
-## Slides
-
-- [Slides](FERROPTOSIS/slides/FERROPTOSIS-slides.html) (Marp source: [FERROPTOSIS-slides.md](FERROPTOSIS/slides/FERROPTOSIS-slides.md)) — AI generated
 
 ## Key References
 
