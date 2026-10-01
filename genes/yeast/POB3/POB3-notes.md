@@ -74,3 +74,11 @@ associations with epigenetic, transcription, and repair factors [PMID:39855624].
   uninformative; the review already captures the biologically interpretable
   interactions as FACT complex membership, nucleosome binding, histone binding,
   replication, and transcription/chromatin organization.
+
+## 2026-10-01 current-GOA refresh
+
+- Forced `just fetch-gene yeast POB3 --force`. Current GOA has 33 rows. Ten rows were newly seeded from current IntAct, UniProt, ComplexPortal, and SGD data; nine older source rows disappeared from GOA and were retained as `retired: true`.
+- Re-fetched the PTHR45849 PAINT cache. Current PAINT still has the `GO:0035101` FACT-complex IBD at `PANTHER:PTN002492356` with `taxon:2759`; no IBA action change was needed, and the `propagation_review.source_entities` entry now traces that PTN node per the IBA campaign convention.
+- Reviewed newly seeded rows as three `REMOVE` calls for generic `GO:0005515` protein-binding IntAct assertions and seven `ACCEPT` calls for current nucleus, chromosome, DNA-templated-replication, DNA replication-dependent chromatin assembly, and FACT-complex rows.
+- Preserved nine no-longer-live source rows as retired: four old UniProt-keyword IEAs, four old generic protein-binding IPI rows, and the old ComplexPortal `GO:1902275` regulation of chromatin organization row.
+- `just fetch-gene-pmids yeast POB3` confirmed all 28 PMID-backed references are cached, fetching full text for `PMID:32701054`. Web/PubMed searches for 2025-2026 `POB3`/`Pob3`/`FACT` found no newer direct yeast POB3 paper that changes the review beyond the already cached 2025 FACT TAP-MS paper.
