@@ -99,3 +99,27 @@ The old refolding IBA is generalized to protein folding because current PAINT ex
   prion/Hsp104 background and was added as a medium-relevance downstream
   proteostasis reference. PMID:41078542 directly assays SSB1/2 and mentions
   Ssz1/PDR context; it was cached but did not change SSZ1 annotation decisions.
+
+## 2026-10-01 focused report incorporation
+
+- Read and incorporated
+  `SSZ1-hypotheses/refolding-and-secondary-compartments/openscientist.md`. The
+  report supports the existing stale `GO:0005886` plasma-membrane removal and
+  resolves `GO:0005634` nucleus from `UNDECIDED` to `REMOVE`: current
+  PTN002500132 nucleus propagation is live, but it is seeded by canonical
+  cytosolic Hsp70s and remains unsupported for specialized ribosome-associated
+  Ssz1.
+- Kept `GO:0042026` protein refolding at `MODIFY` to `GO:0006457`. The report
+  independently agrees that autonomous Ssz1 refolding is not supported, but its
+  live-QuickGO statement that no `GO:0042026` NOT exists in the family is stale
+  relative to the local PTHR45639 snapshot, where PTN001065099 already carries a
+  2026-06-16 NOT/IRD and generalized protein-folding assertion.
+- Reviewed the 45 current high-throughput `GO:0005515` rows added by the fresh
+  GOA seed. Newly seeded Zuo1-backed rows from PMIDs 16429126, 16554755,
+  19536198 and 37968396 were converted to `GO:0031072` heat shock protein
+  binding, matching the existing direct RAC partner rows; all other newly seeded
+  rows were removed as generic proteomics-derived `protein binding`. SSB2-backed
+  rows were kept at `REMOVE` with row-specific reasons because Ssb2 is the
+  cognate Hsp70, but these high-throughput co-purifications do not establish a
+  direct binary Ssz1-Ssb2 contact distinct from ribosome- and Zuo1-bridged
+  RAC/Ssb coupling.
