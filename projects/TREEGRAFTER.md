@@ -364,9 +364,9 @@ does not. Rules, per-batch records and a generated summary are in
 [`TREEGRAFTER/rereview-2026-09-24/`](TREEGRAFTER/rereview-2026-09-24/README.md).
 The nine genes already re-audited on 2026-09-20 were left as recorded there.
 
-**192 rejected rows across 165 genes: 114 (59%) stand, 78 (41%) were relaxed** —
-56 to `KEEP_AS_NON_CORE`, 8 `REMOVE` → `MARK_AS_OVER_ANNOTATED`, 6 to `MODIFY`,
-5 to `ACCEPT`, 3 `REMOVE` → `UNDECIDED`. Only five rows are restored as core
+**192 rejected rows across 165 genes: 117 (61%) stand, 75 (39%) were relaxed** —
+56 to `KEEP_AS_NON_CORE`, 7 `REMOVE` → `MARK_AS_OVER_ANNOTATED`, 5 to `ACCEPT`,
+4 to `MODIFY`, 3 `REMOVE` → `UNDECIDED`. Only five rows are restored as core
 functions, each one a term the protein itself performs: the MurJ flippase
 reaction (`GO:0034204`), the AccA/AccD carboxyltransferase complex
 (`GO:0009329`), bis-MGD biosynthesis on MobA (`GO:1902758`), and the two
@@ -414,7 +414,7 @@ dehydrogenases, cysteine synthase vs. O-acetylhomoserine sulfhydrylase. The
 hotspot list is built on exactly these, so it is the part of the analysis the
 re-review leaves standing — and the right input to the upstream tickets.
 
-About a third of the 114 retained rejections had their `reason` strengthened
+About a third of the 117 retained rejections had their `reason` strengthened
 with the specific evidence (EC numbers, PANTHER subfamily vs. graft node,
 cached substrate-panel quotes) rather than left on family-level doubt.
 
@@ -446,6 +446,42 @@ cached substrate-panel quotes) rather than left on family-level doubt.
 
 ---
 # NOTES
+
+## 2026-10-01
+
+- Second review round on PR #3165. **Withdrew two of the previous round's
+  relaxations**: PSEPK `benB` `GO:0019380` (3-phenylpropionate catabolic
+  process) and `prpC` `GO:0005975` (carbohydrate metabolic process) had been
+  moved `REMOVE` → `MODIFY` on the premise that the term was merely too coarse.
+  It is not: `GO:0019380` names a different substrate, and propanoate is an
+  organic acid rather than a carbohydrate, so both are wrong-substrate or
+  wrong-branch propagations — the class this audit retains elsewhere (`quiA`
+  `GO:0008876`). Both are `REMOVE` again, which also removes a duplication the
+  review caught: each `MODIFY` proposed a term the same review already asserts
+  on its own `IC`/`NEW` row (`GO:0043639`, `GO:0019543`). Split is now 116 stand
+  / 75 relaxed. One further row, the g022 double-strand break repair call, was
+  relaxed by this audit and then overtaken by main's finding that it is absent
+  from GOA entirely; the batch record keeps the reasoning and records that there
+  is no live annotation left to relax.
+- **Corrected a claim this branch had invented and then propagated.** The
+  2026-09-24 pass wrote that `benB` "still carries an `IC` annotation to the
+  obsolete `GO:0043640`". It does not, and never did: `GO:0043640` appears
+  nowhere in `benB-ai-review.yaml` on this branch or on `main`, whose
+  `proposed_replacement_terms` was already `GO:0043639`. `GO:0043640` *is*
+  obsolete (replaced_by `GO:0043639`, GO release 2026-07-26), which is how it
+  reached the sibling `benA`/`benC`/`benD` reviews legitimately and this one by
+  mistake. Removed from the review prose, the batch-03 record, this page's
+  next-steps (where it would have sent a curator after a row that does not
+  exist) and, per `docs/history.md`, corrected in place in the benB history
+  record since the statement was never true.
+- `accD`'s `core_functions.in_complex` now names `GO:0009329`, the
+  carboxyltransferase subcomplex the `GO:0009329` row argues for, rather than
+  the coarser `GO:0009317` it previously kept alongside that argument.
+- Smaller fixes: `murB`/`ubiK` prose no longer calls the broader cytoplasm row
+  "accepted" while the narrower cytosol row is non-core (the underlying
+  inversion is now named in the next-steps); a vestigial "Re-review." opener
+  removed from `pdxJ`; `summarize.py` records how many terms its capped table
+  leaves out, so `summary.tsv` is self-describing.
 
 ## 2026-09-29
 
@@ -640,14 +676,17 @@ cached substrate-panel quotes) rather than left on family-level doubt.
 - **Refresh the snapshot** when the next batch lands: re-run the three scripts,
   classify the new down-grades in `failure_mode_curated.tsv`, and re-pin the
   date and commit in the Results header. Note that the 2026-09-24 rejection
-  re-review (above) has already moved 78 rows *out* of the down-graded set, so
+  re-review (above) has already moved 75 rows *out* of the down-graded set, so
   this refresh is a re-classification of a shrunken population, not only an
   addition of new rows; the figures it would produce are recorded in the
   2026-09-28 note.
-- **Harmonize the rows the rejection re-review left out of scope.** Some
-  sibling rows now sit beside a relaxed parent (PSEPK `ubiA` `GO:0004659` /
-  `GO:0016765`, `zwf` `GO:0006098`), and PSEPK `benB` still carries an `IC`
-  annotation to the obsolete `GO:0043640`.
+- **Harmonize the rows the rejection re-review left out of scope.** Some sibling
+  rows now sit beside a relaxed parent (PSEPK `ubiA` `GO:0004659` /
+  `GO:0016765`, `zwf` `GO:0006098`). PSEPK `murB` and `ubiK` carry a sharper
+  version: their `GO:0005737` cytoplasm row is `ACCEPT` (a `GO_REF:0000120` row,
+  outside this audit's scope) while the more specific `GO:0005829` cytosol is
+  `KEEP_AS_NON_CORE`, so the less specific term currently reads as the core one.
+  `pdxB` and `pdxJ` have the consistent pairing.
 
 ## Slides
 

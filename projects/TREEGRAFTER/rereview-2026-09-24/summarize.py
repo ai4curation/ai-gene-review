@@ -19,6 +19,7 @@ import yaml
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TREEGRAFTER_REF = "GO_REF:0000118"
+TOP_TERMS = 20  # cap on the per-term table; the TSV records what it leaves out
 
 
 def main() -> None:
@@ -61,8 +62,16 @@ def main() -> None:
             w.writerow(["outcome", k, "", n])
         for (prev, new), n in sorted(transitions.items(), key=lambda kv: -kv[1]):
             w.writerow(["transition", prev, new, n])
-        for (tid, label), n in relaxed_terms.most_common(20):
+        # The per-term table is capped, so say so in the file itself: a reader
+        # otherwise cannot tell a short tail from a complete one.
+        top = relaxed_terms.most_common(TOP_TERMS)
+        w.writerow(["relaxed_term_total_distinct", "", "", len(relaxed_terms)])
+        w.writerow(["relaxed_term_shown", "", "", len(top)])
+        for (tid, label), n in top:
             w.writerow(["relaxed_term", tid, label, n])
+        remainder = sum(relaxed_terms.values()) - sum(n for _, n in top)
+        if remainder:
+            w.writerow(["relaxed_term_other", "", f"{len(relaxed_terms) - len(top)} further terms", remainder])
     print(f"wrote {out}: {len(rows)} annotations across {len(genes)} genes")
     for (prev, new), n in sorted(transitions.items(), key=lambda kv: -kv[1]):
         print(f"  {prev} -> {new}: {n}")
