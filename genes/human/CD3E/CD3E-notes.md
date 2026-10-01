@@ -32,3 +32,36 @@ Project: ADAPTIVE_IMMUNITY (T cell receptor trunk).
 ## Deep research
 
 `just deep-research-falcon human CD3E --fallback perplexity-lite` succeeded (falcon, ~15 min; CD3E-deep-research-falcon.md). It was consistent with the review; it added the BRS-mediated LCK recruitment (cited in core function 2), the di-glycine hinge (Gly169-Gly170) and IRAP-dependent endosomal TCR signaling, none of which changed any annotation decision.
+
+## Deep research integration (falcon)
+
+Report: CD3E-deep-research-falcon.md. It is mostly built on reviews (Mariuzza 2020, Xu 2020, Menon 2023, Chandler 2020) and gives no PMIDs. I resolved the DOIs of the key primary papers through PubMed and cached them: PMID:28659468, 32690949, 32730808, 38779683, 32487999.
+
+Note: core function 1 is now GO:0030159 signaling receptor complex adaptor activity, contributing to GO:0004888. This follows the CD3D/CD3E/CD3G harmonisation and replaces the older "Core functions" list above. The report has no evidence that conflicts with that change, or with the MARK_AS_OVER_ANNOTATED call on the contributes_to MHC class II receptor activity row.
+
+### Claims adopted
+- CD3E is the main LCK-recruiting CD3 chain, through ionic binding of its BRS to the LCK Unique domain [PMID:28659468 "CD3ε is the only CD3 chain that can efficiently interact with Lck"]. Added to the description, the core function 2 (GO:1990782) description and its supported_by, and the supported_by of the GO:0019901 MODIFY row. The action is unchanged.
+- Ligation exposes an RK motif that binds the LCK SH3 domain [PMID:32690949, abstract only]. Added to the description and to core function 2.
+- CD3E recruits LCK and NCK before ITAM phosphorylation [PMID:38779683]. Added to core function 2 supported_by.
+- Mono-phosphorylated CD3E ITAMs recruit the inhibitory kinase CSK [PMID:32730808, abstract only]. Added to the description and core function 2. CSK is a tyrosine kinase, so this falls within GO:1990782 and needs no new term.
+
+### Claims confirming the review (no change)
+- Type I TM subunit; 1:1:1:1 stoichiometry; CD3E paired with CD3G and with CD3D; one ITAM; ZAP70 docking.
+- BRS sequestered in the membrane at rest; NCK SH3.1 binding to the PRS; ER retention of unassembled subunits.
+- Plasma membrane location; SCID (IMD18).
+
+### Claims not acted on
+- Di-glycine motif (Gly169-Gly170): the only source is a 2024 Research Square preprint with no PMID. The residues do match the precursor sequence.
+- IRAP/Stx6 endosomal signalling (PMID:32487999): the paper is about the CD3 zeta pool. For CD3E it shows only proximity-ligation detection in IRAP vesicles ("IRAP vesicles contain several components of the TCR signalosome, such as ZAP-70, LAT, Lck and CD3ε"). That is too indirect for a NEW endosome CC annotation.
+- CD3E BRS recruiting p85 in CAR-T cells (PMID:32730808): engineered CAR context, so no GO term was added.
+- Calcium-mediated release of the cytoplasmic tail, and in situ extracellular conformation (Natarajan 2024): review-level or not specific to CD3E annotation.
+- The "chaperone" phrasing for CD3E: not adopted. Assembly is already captured by GO:0030159 and GO:0065003.
+- Clinical, therapeutic, CAR-T and aptamer sections: not relevant to GO.
+
+### Report errors and inconsistencies
+- It attributes NCK SH2 binding to phospho-Tyr177. The primary data put the shared SH3/SH2 switch residue at Y166, the N-terminal ITAM tyrosine in mature numbering [PMID:17617578].
+- It mixes numbering schemes: precursor Y188/Y199 versus cytoplasmic-tail Y39/Y50 in Woessner 2024.
+- Hartl 2020 is cited as an "Unknown journal" preprint, but it is Nat Immunol 2020 (PMID:32690949).
+- It gives no PMIDs at all.
+
+- Follow-up (coordinator): the PMID:28659468 quote on the GO:0019901 MODIFY row and two suggested questions (CSK recruitment in primary T cells; the Gly169-Gly170 hinge preprint) were added after the integration agent stopped, so the review now matches this section and the history record.
