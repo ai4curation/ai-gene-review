@@ -185,3 +185,19 @@ All 41 source/inherited NEW objects, two products, annotation actions, biologica
 
 
 The traceability follow-up was independently reviewed and applied. Focused validation passed with six existing advisories (five retained non-core generic binding rows and one uncited provider report). Rendering and history validation passed. No new scientific assertion or full-repository validation result is claimed.
+
+
+## Evidence adjudication and clearer source anchors — 2026-10-01
+
+The three human E1 structural/biochemical papers (PMIDs 12902323, 15166214 and 15576032) explicitly test alpha-chain residues or phosphorylation and their effects on E1 chemistry. Their generic BCKDHB-binding annotations are therefore refined to the already supported branched-chain 2-oxo acid dehydrogenase activity, with `contributes_to` as the proposed relationship. The original source qualifiers, partners, terms and evidence codes remain intact. This is evidence-based functional refinement; binding alone would not justify it. The alpha chain positions the cofactor and lipoyl-domain recognition loop within the alpha-beta enzyme. It is not an independently active E1 enzyme or the kinase that phosphorylates it.
+
+The two BioPlex rows are now UNDECIDED because their pair-specific supplements and cell context were not independently adjudicated. Their BCKDHB association is biologically plausible and is not being rejected. This supersedes the earlier decision to retain those five generic rows as non-core. No generic interaction was removed, and no new functional annotation was created.
+
+The source excerpts now identify alpha-chain mutations in the assembly experiment, the alpha subunit affected in the activity-loss experiment, and the enzyme catalyzing reductive acylation. The composition anchor includes alpha2-beta2. The phosphorylation excerpt explicitly includes the inhibition clause, and its reason explains that it is perturbation evidence for the normal E1 step. These edits address the scientific context of the excerpts while preserving all cited papers and the biological core.
+
+The previously mentioned quotation budget is an automated-assistant source-quotation constraint, not a repository validation rule or a claim about the supporting-text validator. The request to restore longer repeated quotations cannot be followed within that constraint. Full source records remain linked, the review reasons paraphrase the relevant experimental results, and the unchanged core cites PMID:9582350 for alpha2-beta2 composition. A bare source citation there does not withdraw that evidence. Counts include repeated excerpts in both alpha and beta reviews; no BCKDHB file was edited.
+
+For this follow-up, the complete cached abstracts of PMIDs 10745006, 12902323, 15166214, 15576032, 7883996 and 9582350 were read. This does not constitute a full-paper, figure, structural-coordinate or supplement audit. The official AmiGO entry for [GO:0003863](https://amigo.geneontology.org/amigo/term/GO:0003863), checked 2026-10-01 with its displayed 2026-08-06 ontology load, describes the E1 decarboxylating reductive-acylation reaction; the replacement does not assign DBT or DLD chemistry to BCKDHA. Independent peer review and focused validation remain pending.
+
+
+This follow-up has now passed independent scientific review, focused gene validation, rendering and history validation. Validation reported one advisory that the available Falcon research report is not cited; the annotations here use primary sources. The source fields and alternative products remain unchanged. This is focused validation, not a repository-wide validation claim.
