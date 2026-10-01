@@ -70,3 +70,25 @@ the supporting-text warning for PMID:17220467 is gone. The remaining warning
 (`existing_annotations[4].review.propagation_review` missing structured metadata on
 an IBA/MODIFY annotation) is pre-existing and out of scope for a citation-accuracy
 PR.
+
+## 2026-10-01 Update: current GOA and PAINT alignment
+
+- Forced a current GOA and UniProt refresh. The current GOA snapshot has 19 rows,
+  collapsing to 18 review signatures because the live `PMID:15766533`
+  `GO:0005515` row appears with two Hsp90 supporting entities.
+- Current PTHR12800 PAINT retains `GO:0006457` protein folding,
+  `GO:0031072` heat shock protein binding, and `GO:0050821` protein
+  stabilization on `PTN000980613`, adds `GO:1990565` HSP90-CDC37 chaperone
+  complex to that node, and no longer carries the older `GO:0005737` cytoplasm,
+  `GO:0051082` unfolded protein binding, or `GO:0051087` protein-folding
+  chaperone binding assertions.
+- Accepted the new `GO:1990565` complex-membership IBA and the live SGD
+  `PMID:9242486` `GO:0140597` protein carrier chaperone row. The latter is now
+  the best replacement for both stale `GO:0051082` rows.
+- Marked the old UniProt keyword `GO:0051301`, stale IntAct
+  `PMID:16554755` and `PMID:19536198` `GO:0005515` rows, and the three
+  stale/obsolete IBA rows as retired historical assertions.
+- Searched 2025-2026 PubMed and the web for yeast CDC37/Cdc37 literature.
+  `PMID:40902971` adds a phosphosite-mutant Cdc37 code collection and stress
+  phenotyping resource but does not require a new GO assertion beyond the
+  existing stress-response pathway rows.
