@@ -40,3 +40,11 @@ maturation model: Pno1 and Nob1 remain on late pre-40S particles, Pno1 stabilize
 Nob1 and blocks the Rps26 site, and Rio1 release of Pno1/Nob1 licenses correctly
 processed 18S rRNA for translation [PMID:39038273 "Pno1 stabilizes Nob1 on the
 ribosome"].
+
+## 2026-10-01 current-GOA refresh
+
+- Forced `just fetch-gene yeast PNO1 --force`. Current GOA has 20 rows. Six rows were newly seeded from current InterPro, UniProt, ComplexPortal, and ARBA data; four older source rows disappeared from GOA and were retained as `retired: true`.
+- Re-fetched the PTHR12826 PAINT cache. Current PAINT still has one annotated node, `PANTHER:PTN000302633`, carrying only the `GO:0005634` nucleus IBD at `taxon:2759`; no IBA action change was needed. The `propagation_review.source_entities` entry was narrowed to that PTN node per the IBA campaign convention.
+- Reviewed new current-GOA rows as `ACCEPT`: InterPro `GO:0003723` RNA binding, two UniProt EXP `GO:0005737` cytoplasm rows, UniProt/ARBA `GO:0005737` cytoplasm, ComplexPortal `GO:0032040` small-subunit processome, and ARBA `GO:0042254` ribosome biogenesis.
+- Preserved four no-longer-live rows as retired: the old combined-methods RNA-binding, cytoplasm, and ribosome-biogenesis IEAs, and the old PMID:12502737 `GO:0051082` unfolded-protein-binding row.
+- `just fetch-gene-pmids yeast PNO1` confirmed all 11 PMID-backed references are cached, fetching full text for `PMID:12628929`. Web/PubMed searches for 2025-2026 `PNO1`/`Pno1`/`Dim2`/`Rrp20` found no newer direct yeast PNO1 paper that changes the review.
