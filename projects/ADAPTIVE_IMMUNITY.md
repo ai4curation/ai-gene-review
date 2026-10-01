@@ -191,8 +191,11 @@ twice), so the per-area gene counts add up to 107, not 105.
 - [x] Review the T cell receptor trunk: CD3D, CD3E, CD3G, LCK, ZAP70, LAT,
       LCP2, PLCG1, NFATC1 (all COMPLETE; see findings below).
 - [ ] Finish the T cell receptor area: CD4, ITK, PTPRC.
-- [ ] Update the T cell receptor module's annotons to the molecular functions
-      chosen in the new reviews, and check them against the TCR GO-CAMs.
+- [x] Update the T cell receptor module to the new reviews: five parts
+      (TCR-CD3 recognition, LCK/ZAP70 relay, LAT/SLP-76 signalosome, PLCG1,
+      calcineurin-NFAT output), leaf functions from the reviews, and links to
+      the production GO-CAM "T cell receptor signaling (Human)". The module is
+      still DRAFT until CD4/CD8, PTPRC, GRAP2, ITK and calcineurin are added.
 - [ ] Review the MHC class I pathway: HLA-A, B2M, TAP1, TAP2, TAPBP, ERAP1,
       and check them against the MHC class I peptide loading GO-CAM.
 - [ ] Review the B cell receptor trunk (CD79A, CD79B, SYK, BTK, BLNK, CD19) and
