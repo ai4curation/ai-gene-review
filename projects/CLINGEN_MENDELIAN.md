@@ -2956,9 +2956,9 @@ Gene reviews are proceeding in evidence-priority order, alphabetically within
 each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
-**144 of 2,876 genes are complete; 2,732 remain.** This completion update records
-the verified BAP1, BARD1, BBIP1, BBS12 and BCAT2 merges after checkpoint 95.
-The 145 original gene PR merges include AKR1D1, whose required source follow-up
+**146 of 2,876 genes are complete; 2,730 remain.** Verified BCL11A and BCKDHA
+merges add two completed genes to the preceding completion update.
+The 147 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3212,11 +3212,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BBS9** — HGNC:30000; [BBS9-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3fc68f9f-ed7c-453e-8c41-179a9ccad0ca-2023-08-03T160000.000Z) (MONDO:0700236; AR; Definitive).
 - [ ] **BCAP31** — HGNC:16695; [severe motor and intellectual disabilities-sensorineural deafness-dystonia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d31d5251-bedd-49e9-b0bb-5ff6923edcf7-2023-08-02T160000.000Z) (MONDO:0010334; XL; Definitive).
 - [x] **BCAT2** — HGNC:977; [hypervalinemia and hyperleucine-isoleucinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b5e16ee6-88c9-4872-8681-dd7fd0156b0f-2020-07-24T172325.905Z) (MONDO:0100058; AR; Definitive).
-- [ ] **BCKDHA** — HGNC:986; [maple syrup urine disease type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5c89a6c7-751a-4a99-8a32-97cc33c5df7c-2018-09-14T160000.000Z) (MONDO:0023691; AR; Definitive).
+- [x] **BCKDHA** — HGNC:986; [maple syrup urine disease type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5c89a6c7-751a-4a99-8a32-97cc33c5df7c-2018-09-14T160000.000Z) (MONDO:0023691; AR; Definitive).
 - [ ] **BCKDHB** — HGNC:987; [maple syrup urine disease type 1B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0b0d314c-7355-441c-a357-72ba3e566c57-2019-02-08T170000.000Z) (MONDO:0023692; AR; Definitive).
 - [ ] **BCKDK** — HGNC:16902; [branched-chain keto acid dehydrogenase kinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f90aaad0-b56a-41dc-8d1f-9d12fc66113f-2019-01-18T170000.000Z) (MONDO:0013970; AR; Definitive).
 - [ ] **BCL10** — HGNC:989; [immunodeficiency 37](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2826b3a9-d32b-4d91-8c5d-1a20c408d08d-2022-12-29T180000.000Z) (MONDO:0014491; AR; Definitive).
-- [ ] **BCL11A** — HGNC:13221; [Dias-Logan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9630f9a3-3f90-49c6-ae8b-6313c950b1b2-2020-09-01T100000.000Z) (MONDO:0014914; AD; Definitive).
+- [x] **BCL11A** — HGNC:13221; [Dias-Logan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9630f9a3-3f90-49c6-ae8b-6313c950b1b2-2020-09-01T100000.000Z) (MONDO:0014914; AD; Definitive).
 - [ ] **BCL11B** — HGNC:13222; [intellectual developmental disorder with speech delay, dysmorphic facies, and t-cell abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ca4f24f-78dd-4dda-a50d-07dd3d1cef07-2024-12-19T170000.000Z) (MONDO:0060763; AD; Definitive).
 - [ ] **BCOR** — HGNC:20893; [microphthalmia, syndromic 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3da06b77-1ed0-4197-948c-a9bbf80b6ed4-2020-12-17T171347.861Z) (MONDO:0010261; XL; Definitive).
 - [ ] **BCS1L** — HGNC:1020; [Bjornstad syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7a26b6b5-e703-43fc-bcd0-eaff67ef8107-2018-07-09T160000.000Z) (MONDO:0009872; AR; Definitive); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b50d7db-1144-4187-a60c-72b45adb80bd-2019-09-19T155315.896Z) (MONDO:0009723; AR; Limited); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_103c4ff3-1304-444e-93c7-c4cc729f19e4-2024-09-19T040000.000Z) (MONDO:0044970; AR; Definitive).
