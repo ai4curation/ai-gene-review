@@ -140,7 +140,7 @@ Last updated: 2026-10-01
 - [ ] `XENLA/foxd3-a` (Q9DEN4) — FoxD3; vertebrate-specific N-terminal motif; no border expression in amphioxus. Homeolog `foxd3-b` Q9DEN3
 - [x] `XENLA/sox10` (Q8AXX8) — SoxE; NC specifier. Reviewed 2026-10-01: 32 GOA rows (11 ACCEPT, 14 non-core, 6 MODIFY, 1 REMOVE)
 - [ ] `XENLA/snai2` (Q91924) — Slug; NC specifier and EMT repressor
-- [ ] `XENLA/sox9-a` (B7ZR65) — SoxE; cranial NC and chondrogenesis (cross-check `human/SOX9`)
+- [x] `XENLA/sox9-a` (B7ZR65) — SoxE; NC specifier + crest-derived chondrogenesis. Reviewed 2026-10-01: 45 GOA rows (22 ACCEPT, 16 non-core, 5 MODIFY, 1 REMOVE, 1 over-annotated) + 1 NEW (GO:0001228)
 - [ ] `XENLA/twist1` (P13903) — Twist; *Ciona* Twist misexpression makes a9.49 cells migratory
 - [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
 - [ ] `XENLA/myc-a` (P06171) — c-Myc; NC stem-cell pool (cross-check `human/MYC`)
@@ -219,6 +219,18 @@ Last updated: 2026-10-01
   when overexpressed [PMID:30144418], so this was raised as a question, not
   annotated. Lamprey SoxE paralogs duplicated independently [PMID:21889937], so
   Sox10-specific late roles should not be transferred to lamprey genes.
+
+- **sox9-a.** NC specifier. At the border it comes on after Sox8 and before
+  Sox10 [PMID:16943273]. Morphants lose crest progenitors [PMID:11807034]. It
+  is needed for specification, not migration, and acts as an activator: an
+  engrailed-repressor fusion phenocopies the knockdown [PMID:15464575], so
+  `GO:0001228` was added as NEW. Its four `GO:0014029` rows were independently
+  narrowed to `GO:0014036`, matching sox10. Chondrogenesis is core
+  (crest-derived cranial cartilage); otic placode is a separate,
+  non-core deployment. Evolution: the cartilage role is ancestral (lamprey Sox9
+  co-expressed with Col2a1), and lamprey SoxE paralogs are not 1:1 orthologs.
+  All experimental rows sit on sox9-a, and the abstracts don't say whether the
+  reagents also hit sox9-b.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
