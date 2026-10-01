@@ -127,3 +127,24 @@ rejected solely from its best-characterized compartment.
   mitochondrial Hsp70 donor in the GO:0044183 seed set and the fungal
   PTN001065099 GO:0042026 NOT/IRD as evidence that PAINT blocks the same
   ancestral refolding term when a fungal branch warrants it.
+
+## 2026-10-01 focused report incorporation and current GOA refresh
+
+- Forced the GOA/UniProt refresh and aligned the review to 28 current GOA rows.
+  The old keyword-derived GO:0000166/GO:0016787 rows, obsolete GO:0051082 row,
+  older GO_REF:0000120 ATP-binding row and two Nop1-backed GO:0005515 rows are
+  absent from current GOA and were dropped from `existing_annotations`.
+- Incorporated
+  `SSQ1-hypotheses/folding-refolding-and-secondary-client-interactions/openscientist.md`.
+  The focused report supports Ssq1 holdase and unfolded-substrate-binding
+  capacity but found no target assay showing productive reactivation of a
+  denatured substrate. I kept the PTN000452648 GO:0044183 protein-folding
+  chaperone IBA as a non-core broad Hsp70 inference and changed GO:0042026
+  protein refolding from `UNDECIDED` to `MARK_AS_OVER_ANNOTATED`.
+- Current GOA no longer carries the old Ssq1-Nop1 TAP-MS `protein binding` rows.
+  I left the Nop1 lead in the notes/references rather than proposing a new
+  annotation because the evidence is high-throughput, spoke-expanded,
+  cross-compartment AP-MS.
+- A 2026-10-01 PubMed/web search found no newer SSQ1-specific functional paper
+  since the prior 2025+ search; no new literature changed the mitochondrial
+  Fe-S chaperone interpretation.
