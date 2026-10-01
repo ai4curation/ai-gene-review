@@ -209,6 +209,8 @@ regulation descendants.
 - [x] Existing mouse Tnfrsf1a review refreshed after GOA update and annotation-reviewer follow-up
 - [x] Existing mouse Akt1 review refreshed after GOA update, manual cached-publication research, GO-CAM comparison, and annotation-reviewer follow-up
 - [x] Existing mouse Mapk1 review refreshed after GOA update, manual cached-publication research, GO-CAM comparison, and annotation-reviewer follow-up
+- [x] Mouse Casp9 reviewed manually as the intrinsic initiator-caspase extension of the `GO:0006915` audit
+- [x] Mouse Casp8 reviewed manually as the death-receptor initiator-caspase extension of the `GO:0006915` audit
 - [x] Worm ced-3 reviewed as the first conserved CED pathway comparator
 - [x] Worm ced-4 reviewed as the conserved CED apoptosome adaptor comparator
 - [x] Worm ced-9 reviewed as the conserved CED BCL2-family apoptosis inhibitor comparator
@@ -231,6 +233,24 @@ regulation descendants.
 - [x] Exact human and mouse `GO:0006915` QuickGO rows fetched, normalized, and summarized
 
 # NOTES
+
+## 2026-10-01
+
+- Extended the mouse exact-`GO:0006915` audit to the two top-ranked initiator
+  caspases left after the first over-annotation slice. `Casp9` was centered on
+  APAF1-apoptosome recruitment and effector-procaspase maturation: inherited
+  broad apoptosis rows were tightened to intrinsic apoptotic signaling, while
+  stimulus-, stress-, tissue-, and c-Abl-binding transfers that could not be
+  checked from cached abstracts were left non-core, over-annotated, or
+  unresolved.
+- Completed the new mouse `Casp8` review with annotation-reviewer follow-up.
+  Generic `GO:0006915 apoptotic process` imports were scoped to
+  `GO:0008625 extrinsic apoptotic signaling pathway via death domain receptors`;
+  the direct PIDD row was marked over-annotated because the cited study does not
+  detect procaspase-8 processing in PIDD-expressing MEFs; execution-phase rows
+  were replaced by `GO:0051604 protein maturation`; and the anti-necroptotic
+  RIPK1/CYLD/gasdermin/N4BP1 cleavage branches were kept as direct but
+  apoptosis-adjacent functions.
 
 ## 2026-09-30
 
