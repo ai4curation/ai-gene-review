@@ -249,3 +249,39 @@ on quiescent rDNA architecture, cached as PMID:39713455. It strengthens the
 picture of Sir2 as an rDNA chromatin organizer in quiescence but does not imply
 a new GO process assertion beyond the existing rDNA heterochromatin and
 chromatin-organization rows.
+
+## 2026-10-01 Update: current-GOA refresh
+
+Forced a current GOA refresh and resolved all 73 live source rows. Seven older
+GOA rows no longer appear in the live feed and are preserved as `retired: true`
+rather than silently dropped: five UniProt-keyword GO_REF:0000043 rows, one
+older GO_REF:0000043 `GO:0046872` metal-ion-binding row, and one old aggregate
+`GO:0005515` Cdc14-binding row from PMID:16554755.
+
+The current PTHR11085 IBA placements are unchanged from the 2026-09-29 PAINT
+check: `GO:0005634` nucleus propagates through `PANTHER:PTN008492176`, while
+`GO:0003714`, `GO:0006974`, `GO:0031509`, `GO:0032041`, `GO:0046969`, and
+`GO:0046970` all propagate through `PANTHER:PTN000872222`. The refreshed
+`supporting_entities` continue to include PANTHER ancestral nodes plus extant
+experimentally grounded descendants, including valid SIR2 self-seeds.
+
+The 13 newly seeded rows all came from current SGD and pathway-model sources.
+The two `GO:0005677` chromatin-silencing complex rows and the `GO:0030869`
+RENT-complex row were accepted because they capture Sir2-Sir4 and RENT complex
+membership. Four exact `GO:0005515` Cdc14-binding rows were removed because
+they are generic protein-interaction assertions and are better represented by
+complex or partner-specific curation than by bare protein binding.
+
+The YeastPathways RCA imports split cleanly by what the modeled Sir2 reaction
+actually asserts. The two `GO:0017136` NAD-dependent histone-deacetylase rows
+were accepted as correct molecular-function assertions, but the two cytosol rows
+were removed because Sir2's active chromatin pools are nuclear/nucleolar. The
+NAD biosynthesis and NAD salvage process rows were also removed: Sir2 consumes
+NAD+ and releases nicotinamide for the salvage cycle, but downstream salvage
+enzymes do the NAD+ biosynthetic work.
+
+A 2026 search also found PMID:42049784, "Sir proteins impede, but do not
+prevent, access to silent chromatin in living Saccharomyces cerevisiae". The
+paper further supports a dynamic view of Sir-protein chromatin occupancy and
+does not require an action change beyond the existing Sir-complex chromatin
+silencing annotations.
