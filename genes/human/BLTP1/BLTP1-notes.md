@@ -69,3 +69,21 @@ Earlier entries retain the reading scope and workflow state at the time they wer
 ## Canonical validation — 2026-10-01
 
 The final independent annotation and core-function review passed. All four recovered reference caches were imported and checked against the authenticated archive before applying the reviewed candidate. Canonical schema, term, reference and GOA validation passed; the new history record and HTML rendering also passed. The rendered embedded YAML equals the review. One advisory notes that the broad core term GO:0120014 is absent from the source annotations. It is intentionally retained as the broader supported core activity while the existing PE-specific ISS assertion preserves its curator provenance and explicit uncertainty. No redundant NEW ancestor annotation was added. All 20 source assertions, six alternative products, and fetched UniProt/GOA and publication bytes remain unchanged. Publication and remote checks are separate subsequent steps.
+
+
+## First PR follow-up — 2026-10-01
+
+The [review of PR #3796](https://github.com/ai4curation/ai-gene-review/pull/3796#issuecomment-5936573169) identified a mismatch between the accepted PE-specific activity and the broader core. The PE-transfer ISS assertion is now MODIFY to GO:0120014 phospholipid transfer activity. The donor paper permits another transported lipid or indirect Mcd4 regulation; the worm structure could not identify its bound lipids precisely. This is a source-evidence specificity issue, not a rejection because a direct human assay is absent. The original GOA fields and donor remain intact.
+
+The two broad plasma-membrane assertions and generic membrane assertion are now KEEP_AS_NON_CORE. The existing accepted ER-membrane term is added to core locations alongside the ER–plasma-membrane contact site. No NEW ancestor or process annotation is introduced. The beta-catenin refinement now leads with the explicit GOA partner and normal UniProt interaction record; historical supplementary fragment coordinates are corroboration only and are not assigned to current isoforms.
+
+The reviewer suggested resolving all three NAS claims from PMID17190194 as over-annotations based on its structured abstract. A fresh [publisher article](https://www.besjournal.com/en/article/id/0a4a21a0-9bb8-41b8-931b-38413843e91a) and PubMed check still exposed only the abstract and indexed first page; the seven-page PDF could not be retrieved. Expression correlation does not establish regulation, and the nuclear claim conflicts with the general ER-bridge architecture. Nevertheless, the abstract does not prove that the inaccessible methods/results contain no further experiment or specialized localization. All three remain UNDECIDED with those scientific and access limits stated explicitly. This does not apply the experimental-annotation deference rule to NAS evidence.
+
+UniProt's LTAP1 interaction is explicitly by similarity to the worm ortholog. The 2025 paper identifies native worm Spigot as the C1orf43 ortholog and separately studies C1orf43 in human cells. LTAP1/C1orf43 is therefore named in a question about the native human complex rather than asserted as a measured human stoichiometry. Actin and cilia abnormalities motivate a follow-up question, not additional intrinsic BLTP1 activities.
+
+The candidate preserves all 20 source assertions, six alternative products and 13 reference identities: four ACCEPT, eleven KEEP_AS_NON_CORE, three UNDECIDED and two MODIFY. This entry supersedes the earlier decision to retain PE-specific activity as ACCEPT and the corresponding broader-core advisory explanation. Independent review and canonical validation are pending for this follow-up.
+
+
+## First follow-up validation — 2026-10-01
+
+The distinct annotation and core-function peer passed. Canonical schema, term, reference and GOA validation then passed without advisories; the previous broad-core mismatch is resolved by the reviewed replacement rather than by adding a redundant annotation. The new append-only history record and HTML rendering passed, and the embedded rendered YAML equals the canonical review. All 20 source assertions, six alternative products, fetched source files and prior history remain preserved. The three historical NAS decisions retain the documented full-text access limit. These local checks do not imply remote publication or approval.
