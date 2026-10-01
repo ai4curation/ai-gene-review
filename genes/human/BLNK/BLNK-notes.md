@@ -36,3 +36,17 @@ Focused temporary validation completed with schema, reference/title/supporting-t
 ## Completed independent review checks
 
 ROOT independently reviewed all 45 annotation decisions and both core functions against the primary-source assessment, selected Results and Methods, and official GO definitions (6205a3). The exact proposal was applied (5aff4b), then passed normal gene-path validation (d9b925), HTML rendering (b9744f) and history validation (8d55c8). The one advisory concerns the explicitly justified non-core SCIMP complex association; the supplied ActionEnum supports retaining a valid contextual association. The rendered page embeds the reviewed YAML. All 45 source objects and three alternative products are preserved, with no NEW annotations. Five unresolved assertions remain explicit. Source caches are unchanged. No whole-paper, figure-image, supplement or repository-wide audit is claimed, and no successful provider report is claimed.
+
+
+## 2026-10-01 — SCIMP interface follow-up
+
+This entry supersedes the earlier reason for leaving the SCIMP interaction generic. BLNK recognizes a phosphorylated residue on SCIMP through its own SH2 domain; cooperative GRB2 recruitment does not negate that mapped interface. The existing IPI annotation is refined to [phosphotyrosine residue binding, GO:0001784](https://www.ebi.ac.uk/QuickGO/term/GO:0001784). The reciprocal SH2-domain-binding term describes a different binding direction.
+
+Evidence: the unchanged [UniProt record](BLNK-uniprot.txt) specifies the BLNK SH2–SCIMP Tyr131 interaction, citing [PMID:21930792](https://pubmed.ncbi.nlm.nih.gov/21930792/). The complete cached abstract and selected [primary Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC3209250/) on human Ramos-cell mutagenesis were read again. Endogenous MHC-II confirmation remains a murine K46 experiment. Neither purified-pair measurements nor a complete figure/supplement audit is claimed. The exact short abstract quotation is recorded once in the YAML.
+
+The corrected totals are 26 ACCEPT, 11 MODIFY, 3 KEEP_AS_NON_CORE and 5 UNDECIDED. Both core functions and all 45 original source objects remain unchanged. No NEW annotation or product is added. The unresolved inflammatory, BTK, AR/KIT and RTK assertions retain their evidence limits. Lipid binding is already retained experimentally and described in condensate assembly; this focused change adds no new core activity or redundant process annotation. Existing journal entries are preserved as dated history.
+
+
+## Follow-up verification
+
+Independent science review approved the SCIMP phosphotyrosine-binding refinement. The exact proposal was applied; focused canonical validation passed without advisories, rendering passed and the new history record validated. All raw source caches and previous history remain unchanged.
