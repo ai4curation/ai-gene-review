@@ -34,25 +34,38 @@ pass. Note: this gene directory also carries several non-standard files
 curation pass; left untouched here since removing/consolidating them is outside the
 scope of this citation fix.
 
-## Update 2026-10-10
+## 2026-10-01 current-GOA / IBA review
 
-Refreshed the review against current GOA as the first MYST-family entry in the
-fungal PAINT family project.
-
-- Re-fetched `yeast/ESA1` and reconciled the old 63-line review against the
-  current 76 GOA rows, dropping stale rows that are no longer exported by GOA
-  and reviewing every newly seeded row.
-- Accepted the current `PTHR10615` IBA rows: broad eukaryotic MYST node
-  `PANTHER:PTN004172926` for chromatin, nucleus, histone acetyltransferase,
-  transcription, and chromatin-binding assertions, and fungal ESA1 node
-  `PANTHER:PTN000834946` for `histone H4 acetyltransferase activity`.
-- Updated all current `GO:0005515 protein binding` rows to `REMOVE`; the
-  IntAct and ComplexPortal curation remains useful as interaction evidence, but
-  the generic GO molecular-function assertion does not add an ESA1 activity.
-- Modified the current `GO:0000786 nucleosome` annotation to the molecular
-  function term `GO:0031491 nucleosome binding`, which better describes the
-  NuA4/Piccolo NuA4 nucleosome contact assay.
-- Read newer ESA1/NuA4 papers, including the 2024 nuclear-shape and lipid
-  metabolism study and the 2025 cryo-EM study of piccolo NuA4 acetylation, and
-  kept them as additional literature support rather than introducing a new GO
-  process assertion.
+- Refreshed ESA1 from current UniProt/GOA before editing. Current GOA has 76
+  live rows after the header; the refresh expanded the YAML from 63 to 86 rows
+  by adding 23 current assertions that were absent from the older review.
+- Preserved 10 historical source assertions as `retired: true`: the old generic
+  `GO:0004402` IBA, four old UniProt keyword rows under `GO_REF:0000043`, one
+  broad ARBA stress row, and three old consolidated IntAct `GO:0005515` rows
+  whose exact source signatures are absent from the current GOA export.
+- Checked `interpro/panther/PTHR10615/PTHR10615-paint.tsv`. Six live IBA rows
+  still trace to the broad MYST/KAT ancestor `PANTHER:PTN004172926`; the newly
+  materialized `GO:0010485 histone H4 acetyltransferase activity` IBA row traces
+  to the fungal Esa1/NuA4 node `PANTHER:PTN000834946`. Both placements match
+  yeast Esa1 biology, and the ESA1 self-donors are direct experimental seeds,
+  not circularity.
+- Resolved the new rows conservatively. New direct `GO:0004402` HAT rows, NuA4
+  and Piccolo complex rows, the broad DNA-damage response row, the
+  protein-lysine-acetyltransferase row, the histone H4 IBA, and the
+  crotonyltransferase row were accepted. The ComplexPortal nucleosome `part_of`
+  row was removed because NuA4/Piccolo bind nucleosome substrates but Esa1 is
+  not part of a nucleosome. The fission-yeast ISS
+  `GO:0106226 peptide 2-hydroxyisobutyryltransferase activity` row remains
+  `UNDECIDED` pending source-side review.
+- Converted all generic `GO:0005515 protein binding` rows to `REMOVE`. The
+  IntAct interactions may be real, but the bare binding rows add no functional
+  information beyond Esa1's NuA4/Piccolo complex membership and catalytic
+  annotations.
+- Searched 2024-2026 literature for exact yeast ESA1/NuA4/Tip60 updates. The
+  2024 NuA4/Pah1/nuclear-shape paper (PMID:38961766) extends the existing
+  lipid-metabolism/Pah1 context, and the 2025 Gcn5/Esa1/RSC-occupancy paper
+  (PMID:40958614) fits the existing chromatin/transcription-regulation calls.
+  The 2025 Piccolo NuA4 cryo-EM study (PMID:40100634) and the 2026
+  NuA4/Sfp1/ribosome-biogenesis paper (PMID:42103225) are additional context.
+  None justify new ESA1 GO rows beyond the accepted acetyltransferase,
+  complex, chromatin, and Pol II transcription-regulation assertions.
