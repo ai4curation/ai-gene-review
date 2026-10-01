@@ -85,3 +85,24 @@ not retained as APJ1's specialization. The report remains marked UNVERIFIED as
 an LLM-generated evidence synthesis; its conclusions were checked against the
 primary paper, and its ancillary literature leads are not used without
 independent verification.
+
+## 2026-10-01 IBA alignment and current-GOA refresh
+
+Forced a fresh QuickGO/UniProt fetch. The live APJ1 feed now has 22 GOA rows:
+all three `GO:0051082` unfolded-protein-binding rows have disappeared after the
+GO:0051082 obsoletion cleanup, and the UniProt keyword-derived `GO:0008270`
+and `GO:0046872` rows are gone. The SGD RCA `GO:0008270` zinc ion binding row
+remains live and continues to capture the class A zinc-binding region.
+
+The four remaining IBA rows were checked against
+`interpro/panther/PTHR43888/PTHR43888-paint.tsv`. Added explicit
+`propagation_review` source nodes for the three accepted rows:
+`GO:0001671` ATPase activator activity at PTN002376157, `GO:0034605` cellular
+response to heat at PTN001531327, and `GO:0005634` nucleus at PTN001180221.
+The `GO:0042026` protein refolding row already carried the same PTN001531327
+review and remains removed because PMID:32492414 supports APJ1-dependent
+nuclear aggregate turnover rather than refolding.
+
+PubMed/web freshness checks did not find a 2026 APJ1-specific mechanistic study
+that supersedes the already-incorporated 2025 Hsf1 attenuation paper
+(PMID:41025326).
