@@ -19,18 +19,14 @@ The task brief anticipated a GT15/MNN1 alpha-1,3-mannosyltransferase. **This is 
 the record shows.** MNN14 is NOT in the MNN1/GT15 family.
 
 - UniProt SIMILARITY: "Belongs to the **MNN4 family**." [UniProt P40355, "SIMILARITY: Belongs to the MNN4 family."]
-- Pfam: **PF04991 (LicD)** — a nucleotidyl-/phosphotransferase-type domain
-  [UniProt P40355, "Pfam; PF04991; LicD; 1."].
-- InterPro: **IPR007074** (LicD/FKTN/FKRP nucleotidyltransferase) and
-  **IPR009644** (FKTN/MNN4/W02B3.4-1)
-  [UniProt P40355, "InterPro; IPR007074; LicD/FKTN/FKRP_NTP_transf." and
-  "InterPro; IPR009644; FKTN/MNN4/W02B3.4-1."].
+- InterPro: **IPR009644** (FKTN/MNN-like).
+  [UniProt P40355, "InterPro; IPR009644; FKTN/MNN-like."].
 - PANTHER: PTHR15407 (FUKUTIN-RELATED)
   [UniProt P40355, "PANTHER; PTHR15407; FUKUTIN-RELATED; 1."].
 
-So the fold is the LicD/fukutin-related nucleotidyltransferase superfamily, shared by MNN4
-and the metazoan fukutin (FKTN)/FKRP ribitol-phosphate transferases — a phosphotransferase-type
-architecture, distinct from the KRE2/MNT1/GT15 mannosyltransferases.
+So MNN14 sits in the fukutin-related/MNN-like family shared by MNN4 and the metazoan
+fukutin (FKTN)/FKRP ribitol-phosphate transferases, distinct from the
+KRE2/MNT1/GT15 mannosyltransferases.
 
 ### Topology (type II Golgi membrane protein)
 - TOPO_DOM 1..21 Cytoplasmic; TRANSMEM 22..42 (signal-anchor, type II); TOPO_DOM 43..935 Lumenal.
@@ -66,48 +62,54 @@ architecture, distinct from the KRE2/MNT1/GT15 mannosyltransferases.
   [UniProt P40355, "SUBCELLULAR LOCATION: Golgi apparatus membrane"]
 
 ### NOT known (the real gaps)
-- **Molecular function is undetermined.** MNN14 has NO curated MF term other than the ND root.
-  The two live hypotheses, neither established for MNN14:
-  1. **Enzyme regulator/activator** of the mannosylphosphate transferase — the role its paralog
-     MNN4 is assigned. In yeast the actual catalytic **mannosylphosphate transferase is
-     Mnn6/Ktr6** (KRE2/MNT1 family), and **MNN4 is its positive regulator** whose amount is
-     rate-limiting [Odani et al. 1997, PMID:9459307 "Mannosylphosphate transfer to cell wall
-     mannan is regulated by the transcriptional level of the MNN4 gene"; Wang et al., MNN6=KTR6
-     is the mannosylphosphate transferase]. MNN4's curated MF is **enzyme activator activity
-     (GO:0008047, IMP:SGD)**; UniProt (P36044) states "While MNN4 seems to have a regulatory role
-     in N-glycan mannosylphosphorylation, a transferase activity of MNN4 cannot be ruled out."
-  2. **Transferase activity** of its own — suggested only by the conserved DXD motif (by similarity).
-- **Direct acceptor substrate / exact reaction of MNN14 is unknown** (which mannan/glycan position;
-  whether it transfers mannose-1-phosphate at all vs. regulates the enzyme that does).
+- **In-vivo division of labour with MNN4 is unresolved.** MNN14 has intrinsic
+  mannosylphosphate transferase activity in vitro [PMID:33144549], whereas the close paralog
+  MNN4 is curated as an enzyme activator/positive regulator of the Mnn6/Ktr6
+  mannosylphosphate transferase and is rate-limiting for mannosylphosphorylation
+  [PMID:9459307 "Although two genes, MNN6 and MNN4, which encode a mannosylphosphate
+  transferase and its putative positive regulator, respectively, are involved in this
+  modification, the amount of Mnn4p has been found to be a limiting factor for
+  mannosylphosphorylation."].
+- **Direct acceptor positions for MNN14 in vivo are unknown.** Recombinant MNN14 transfers
+  mannosyl-phosphate to high-mannose N-glycans in vitro, but which mannose residues/positions
+  depend on MNN14 versus MNN4 in the cell remains unresolved.
 - **Basis of the MNN4/MNN14 redundancy** is unknown (paralog sub-/neo-functionalization;
   condition-, substrate-, or acceptor-position specificity).
 - **Standalone loss-of-function phenotype** beyond the glyco-profile is uncharacterized; MNN14 is
   non-essential and there is no described growth/stress phenotype for mnn14Δ alone.
 
-## GOA annotations to review (5)
+## GOA annotations to review (5 live rows + 1 proposed molecular-function row)
 1. GO:0009101 glycoprotein biosynthetic process — IBA (GO_REF:0000033); IBA panel includes
    SGD:S000001684 (MNN4). BP is correct (mannosylphosphorylation is glycoprotein biosynthesis);
    generic but defensible. Not the *most* specific but IBA-appropriate. -> KEEP_AS_NON_CORE / ACCEPT.
 2. GO:0000139 Golgi membrane — IEA (SubCell). Supported by topology + SubCell. -> ACCEPT.
 3. GO:0006491 N-glycan processing — IGI (PMID:28101612), with SGD:S000001684 (MNN4). This is the
    experimental genetic-interaction annotation matching the double-deletion result. -> ACCEPT (core BP).
-4. GO:0003674 molecular_function — ND (root). MF genuinely unknown. -> KEEP_AS_NON_CORE.
-5. GO:0005575 cellular_component — ND (root). Superseded by Golgi membrane; but ND placeholder. -> KEEP_AS_NON_CORE.
+4. GO:0003674 molecular_function — ND (root). Superseded by the 2021 in-vitro catalytic
+   evidence for GO:0000031. -> MODIFY to GO:0000031.
+5. GO:0005575 cellular_component — ND (root). Superseded by Golgi membrane. -> REMOVE.
+6. GO:0000031 mannosylphosphate transferase activity — NEW from the 2021 recombinant
+   Mnn14 biochemical assay.
 
 Note: GO:0006491 "N-glycan processing" is defined as conversion of N-linked glycan to mature form by
 glycosidases/glycosyltransferases [OLS GO:0006491]. Mannosylphosphorylation is an N-glycan
 outer-chain maturation/modification, so this is an appropriate (if slightly generic) BP.
 
-## Candidate MF terms considered (NOT asserted as MNN14 core)
-- GO:0000031 mannosylphosphate transferase activity — this is the *catalytic* activity of Mnn6/Ktr6;
-  assigning it to MNN14 would be over-annotation because (a) MNN14's own catalytic activity is unproven
-  and (b) its paralog MNN4 is curated as a *regulator*, not a transferase. Listed only in knowledge_gaps.
-- GO:0008047 enzyme activator activity — the MF of the paralog MNN4 (IMP:SGD); a plausible-by-orthology
-  hypothesis for MNN14 but not experimentally shown for MNN14. Listed only in knowledge_gaps.
+## Molecular-function term triage
+
+- GO:0000031 mannosylphosphate transferase activity — asserted as a NEW row because Kang
+  et al. 2021 directly showed that recombinant soluble MNN14 can transfer mannosyl-phosphate
+  from GDP-mannose to high-mannose N-glycan acceptors [PMID:33144549 "a strategy is
+  established here for the in vitro mannosyl-phosphorylation of high-mannose type N-glycans
+  that utilizes a recombinant Mnn14 protein"].
+- GO:0008047 enzyme activator activity — the MF of the paralog MNN4 (IMP:SGD); still not
+  asserted for MNN14 because MNN14 itself has intrinsic catalytic activity, and whether it
+  also activates Mnn6/Ktr6 in vivo has not been tested.
 
 ## References gathered
 - PMID:28101612 — Kim et al. 2017, Appl Microbiol Biotechnol. Primary experimental (abstract-only cache).
-  The single functional paper directly on MNN14; source of IGI GO:0006491.
+  Genetic evidence linking MNN14 to N-glycan mannosylphosphorylation; source of IGI
+  GO:0006491.
 - PMID:12509465 — Lamb & Mitchell 2003 (RIM101 represses NRG1/SMP1). Source of the INDUCTION note;
   MNN14 mentioned as a Rim101-repressed target. Secondary/regulatory context.
 - PMID:9459307 — Odani et al. 1997, FEBS Lett. MNN4 = positive regulator of mannosylphosphorylation;
@@ -116,9 +118,9 @@ outer-chain maturation/modification, so this is an appropriate (if slightly gene
 - UniProt:P36044 — MNN4 paralog record (regulator MF; DXD ambiguity) for attribution.
 
 ## Web verification log
-- rest.uniprot.org P40355 (full record downloaded to MNN14-uniprot.txt): family=MNN4, Pfam LicD,
-  DXD 498-500, type II Golgi, FUNCTION = "role in N-glycan mannosylphosphorylation... partially
-  redundant with MNN4."
+- rest.uniprot.org P40355 (full record downloaded to MNN14-uniprot.txt): family=MNN4,
+  InterPro IPR009644, PANTHER PTHR15407, DXD 498-500, type II Golgi, FUNCTION =
+  "role in N-glycan mannosylphosphorylation... partially redundant with MNN4."
 - rest.uniprot.org P36044 (MNN4): MF enzyme activator activity (IMP:SGD); "seems to have a
   regulatory role... transferase activity cannot be ruled out."
 - WebSearch (Odani 1997 PMID:9459307; Wang MNN6=KTR6): MNN6/Ktr6 = the mannosylphosphate transferase;
@@ -144,3 +146,19 @@ change the GO calls. Pakhomova et al. 2026 is about *Ogataea polymorpha*
 phosphomannosylation mutants and only mentions MNN14 as a *S. cerevisiae* MNN4 paralog;
 2024-2026 reviews on heterologous protein glycosylation likewise use MNN14 as background
 for mannosylphosphate removal or M6P glyco-engineering.
+
+## 2026-10-01 current-GOA refresh
+
+Forced a current GOA/UniProt refresh and re-fetched all cached PMIDs. Current GOA still has
+the same five exact rows and no retired assertions are needed: one live IBA row, one live
+SubCell row, one live SGD IGI row, and the two SGD ND placeholders all remain represented
+in the review. The refresh backfilled current `supporting_entities` for the three non-ND
+GOA rows.
+
+Re-checked PANTHER PTHR15407 after the refresh. PTN001034988 is still the only ancestral
+PAINT node that transfers to MNN14, and it carries only the deliberately broad
+`GO:0009101` glycoprotein biosynthetic process assertion. The metazoan
+`GO:0000139` Golgi membrane IBD at PTN000395622 does not propagate to MNN14. The 2026
+literature search found newer glyco-engineering reviews and an orthologous
+*Ogataea polymorpha* phosphomannosylation paper, but no post-2021 direct
+*S. cerevisiae* MNN14 study that changed the MNN14 action set.
