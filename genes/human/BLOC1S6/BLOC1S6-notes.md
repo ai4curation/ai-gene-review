@@ -113,3 +113,12 @@ This follow-up preserves the biological summary, single core, three alternative 
 ## Second follow-up validation — 2026-10-01
 
 The distinct science peer, focused schema/term/reference/GOA checks, history validation and rendering passed. The 63 existing advisories remain: 58 generic-binding policy advisories and five unresolved IBA provenance advisories. No uninspected PAINT history was invented to silence those warnings. The rendered YAML equals the reviewed file. Fetched source bytes and prior history remain unchanged. Remote publication and approval are subsequent steps.
+
+
+## Scope of the binding decisions — 2026-10-01
+
+The [third PR review](https://github.com/ai4curation/ai-gene-review/pull/3770#issuecomment-5938278897) identifies a documentation gap: the general annotation-reviewer guidance favors removing uninformative generic binding, whereas this review retains 58 such observations as non-core. The [BLOC1S6 binding rationale](../../../projects/CLINGEN_MENDELIAN/BLOC1S6-binding-rationale.md) now records the scope and evidence limits of that exception. Earlier references here to a “requested project policy” should be read as this task-specific BLOC1S6 decision, not as a new global user policy or an instruction to migrate other reviews.
+
+The retained rows preserve existing curated physical associations, with their partner identifiers and sources, outside the core functional synthesis. Selected human reconstitution experiments distinguish isolated pallidin–BLOS1 and pallidin–Cappuccino pairs from whole-octamer association. Binary-screen records and AP-MS associations have different limits: the supplementary pairs were not all independently inspected, and co-purification is not proof of direct contact. The accepted complex-membership rows do not erase this source-specific information or make it circular. The eleven supported syntaxin/SNARE refinements remain the more informative decisions where partner class and evidence support them.
+
+This exception concerns the low information content of a supported association, not unresolved evidence. `UNDECIDED` remains necessary when the relevant assertion cannot be judged from accessible evidence; retaining a curated association does not certify every primary assay or establish a new mechanism. Self-association likewise does not establish homodimer stoichiometry. The core synthesis and all current annotation actions are unchanged by this clarification.
