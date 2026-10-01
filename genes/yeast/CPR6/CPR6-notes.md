@@ -69,3 +69,42 @@ Verified via QuickGO API:
 - `GO:0044183`: `{"isObsolete": false, "name": "protein folding chaperone", "definition":
   {"text": "Binding to a protein or a protein-containing complex to assist the protein
   folding process."}}`
+
+## 2026-10-01 IBA and current-GOA re-review
+
+Forced a current UniProt/GOA refresh and rechecked CPR6 against the PTHR11071
+PAINT cache and the cached primary papers. A Web/PubMed search for recent
+CPR6/Cpr6/YLR216C literature did not find a newer direct yeast CPR6 paper that
+changed the curation.
+
+The current GOA has only two live IBA rows:
+
+- `GO:0003755 peptidyl-prolyl cis-trans isomerase activity`
+- `GO:0006457 protein folding`
+
+Both trace to `PANTHER:PTN008511653` in current PAINT and are accepted as core
+inherited cyclophilin/Hsp90-co-chaperone biology. CPR6's own SGD seed in the
+`WITH/FROM` list is not circular; it is valid descendant evidence supporting the
+placement of the ancestral node.
+
+Several older assertions no longer exist in current GOA and are now explicit
+`retired: true` rows:
+
+- `GO:0005737 cytoplasm` IBA
+- `GO:0016018 cyclosporin A binding` IBA
+- `GO:0016853 isomerase activity` IEA from UniProt keyword mapping
+- `GO:0051082 unfolded protein binding` IEA from ARBA
+- `GO:0051082 unfolded protein binding` IDA from SGD
+
+The two stale unsplit `GO:0005515 protein binding` placeholders for
+`PMID:16554755` and `PMID:19536198` were deleted rather than retired. They were
+old aggregate IntAct rows with no exact interactor in the YAML, and the current
+refresh has no live exact CPR6 row from either PMID.
+
+The seven live exact `GO:0005515` IPI rows were re-reviewed by partner. The four
+HSP82 rows, from `PMID:11805837`, `PMID:15766533`, `PMID:21170051`, and
+`PMID:23396352`, were changed to `MODIFY` with `GO:0051087 protein-folding
+chaperone binding` as the replacement. The two URA2 rows and the RPD3 row were
+changed to `REMOVE`: those physical associations are not being disputed, but
+generic `protein binding` does not add useful molecular-function information for
+CPR6.
