@@ -4320,9 +4320,11 @@ def refresh_panther_members(
     """
     from ai_gene_review.etl.panther_families import (
         DEFAULT_ORGANISMS,
+        apply_member_overrides,
         build_member_index,
         fetch_panther_from_uniprot,
         fetch_sequence_classification,
+        load_member_overrides,
         write_member_index,
     )
     import yaml
@@ -4394,6 +4396,15 @@ def refresh_panther_members(
                 f"resolving {len(unresolved)} remaining accession(s) via UniProt..."
             )
             index.update(fetch_panther_from_uniprot(unresolved))
+
+    overrides_path = repo_root / "interpro" / "panther" / "panther-members-overrides.tsv"
+    overrides = load_member_overrides(overrides_path)
+    if overrides:
+        index = apply_member_overrides(index, overrides, accessions)
+        typer.echo(
+            f"applied {len(overrides)} curated override(s) from "
+            f"{overrides_path.relative_to(repo_root)}"
+        )
 
     unresolved = accessions - set(index)
     out_path = write_member_index(
