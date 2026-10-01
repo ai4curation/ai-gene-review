@@ -156,3 +156,20 @@ Added a `NEW` complex-membership annotation for `GO:0106055` and two
 synthesized core functions: the canonical ER-lumen protein-disulfide-isomerase
 activity used for oxidative folding, and the Mnl1/Htm1-associated
 protein-disulfide reductase activity that initiates glycoprotein ERAD.
+
+## 2026-10-01 current GOA refresh
+
+- `just fetch-gene yeast PDI1 --force` refreshed the review against 28 current
+  GOA rows, backfilled qualifiers/supporting entities, and seeded one new
+  ComplexPortal exact-source row for `GO:0106055 mannosyl-oligosaccharide
+  1,2-alpha-mannosidase complex`.
+- Current PTHR18929 PAINT remains aligned with the 2026-09-28 IBA review:
+  `PTN000432607` carries the four inherited ER/protein-folding/ER-stress/PDI
+  activity assertions for yeast PDI1, while the `GO:0003756` IKR on
+  `PTN002553919` remains on descendant non-PDI1 branches.
+- A 2025-2026 web/PubMed search did not find yeast-specific PDI1 literature
+  newer than the cached 2025 Mnl1/Htm1-Pdi1 structural and ERAD mechanism paper
+  (PMID:39930008).
+- The new `GO:0106055` row from PMID:19124653 was accepted as direct support for
+  the same Htm1/Mnl1-Pdi1 complex membership proposed from PMID:39930008 in the
+  prior review; that now-redundant `NEW` row was removed.
