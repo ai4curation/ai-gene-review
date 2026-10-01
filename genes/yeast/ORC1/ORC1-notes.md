@@ -28,3 +28,24 @@
   binding, pre-RC assembly and silent-locus heterochromatin formation are already curated. The
   exception is the PMID:8622770 Orc1-Sir1 row, where the interaction supports a more informative
   chromatin-protein adaptor activity.
+
+## 2026-10-01 current GOA refresh
+
+- `just fetch-gene yeast ORC1 --force` refreshed ORC1 from 48 historical GOA-derived rows
+  to 43 current GOA rows, with five newly seeded rows retained for review and ten historical
+  rows kept as `retired: true`.
+- Current PTHR10763 PAINT is stable relative to the 2026-09-28 check: PTN000080056 carries
+  `GO:0003688` and `GO:0006270`, PTN000080057 carries `GO:0005664`, PTN000080129 carries
+  `GO:0005634`, and no current PAINT node carries the stale checkpoint-signaling IBA.
+- The three new `GO:0005515` rows are IntAct exact-source splits for Orc4 interactions from
+  PMID:16429126, PMID:22405012, and PMID:37968396. Like the older Orc6 rows from the same
+  papers, they were removed as generic protein-binding annotations rather than disputed as
+  physical interactions.
+- The new InterPro2GO `GO:0005524 ATP binding` row from `IPR003959` was accepted as a direct
+  AAA+ ATPase-core mapping that matches direct yeast ATP-binding evidence, and the new
+  ComplexPortal `GO:0005664` row from PMID:27148210 was accepted as redundant direct support
+  for Orc1's membership in the yeast ORC heterohexamer.
+- New full-text PMID:42100701 was cached from PMC. Kawakami et al. 2026 mapped an Orc1
+  ISM-related region that restrains ORC-ssDNA binding and helps maintain origin specificity;
+  this refines the core `GO:0003688 DNA replication origin binding` model but does not justify
+  adding a separate ssDNA-binding function.
