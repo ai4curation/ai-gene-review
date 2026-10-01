@@ -50,7 +50,7 @@ the accurate form of this annotation.
 
 ## 2026-10-01 current-GOA and IBA refresh
 
-The forced current-GOA refresh reduced live rows from 35 to 30. Five older assertions
+The forced current-GOA refresh reduced live GOA rows from 37 to 30. Five older assertions
 are now absent from live GOA and were retained only as `retired: true`: UniProt keyword
 `GO:0006325 chromatin organization`, UniProt keyword `GO:0006351 DNA-templated
 transcription`, ARBA `GO:0010557 positive regulation of macromolecule biosynthetic
