@@ -38,3 +38,24 @@
   uses TAP-MS to profile Spt16/FACT-associated proteins and San1-dependent regulation of those
   interactions. These reinforce FACT chromatin/interaction biology but did not require a new GO
   annotation in this review.
+
+## 2026-10-01 GOA refresh
+
+- Re-fetched SPT16 from GOA/UniProt. Current GOA now carries the PAINT updates
+  anticipated in the 2026-09-29 audit: `GO:0000511 H2A-H2B histone complex
+  chaperone activity` from `PANTHER:PTN000360139|PomBase:SPBP8B7.19` and
+  `GO:0140673 transcription elongation-coupled chromatin remodeling` from
+  `PANTHER:PTN000360139|UniProtKB:Q9Y5B9`.
+- Re-fetched `PTHR13980`; current PAINT contains one recovered ancestral node,
+  `PTN000360139`, with exact IBDs for FACT complex, H2A-H2B histone complex
+  chaperone activity, nucleosome binding, and transcription elongation-coupled
+  chromatin remodeling.
+- Reviewed 11 newly seeded current GOA rows. Accepted the live H2A-H2B and
+  elongation-coupled chromatin-remodeling IBAs with `NO_FAILURE_CORE`
+  propagation reviews, accepted current EXP/NAS/IPI/IGI rows that restate
+  nuclear/chromatin/FACT/PIC/replication biology, removed the new generic IntAct
+  protein-binding row, and kept the broad ARBA epigenetic-regulation row as
+  non-core.
+- Marked pre-refresh IBA, UniProt-keyword, ARBA, no-WITH/FROM IntAct, identical
+  protein-binding, and old ComplexPortal NAS rows as `retired: true` when absent
+  from the refreshed GOA.
