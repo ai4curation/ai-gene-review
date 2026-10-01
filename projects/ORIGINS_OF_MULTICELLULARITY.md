@@ -3,7 +3,7 @@ title: "Origins of Animal Multicellularity"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
-genes: [rosetteless, jumble, couscous]
+genes: [rosetteless, jumble, couscous, coHpo, coWts, coYki, VIN1, TLN]
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals
@@ -156,11 +156,12 @@ accessions given in the papers.
 | 1 | rosetteless (*rtls*) | SALRS | F2U5Y1 (PTSG_03555) | Forward genetic screen; essential for rosette development; the protein forms an extracellular layer that coats and connects the basal poles of rosette cells [PMID:25299189] | "Lung surfactant protein A"; no GOA rows | C-type lectin domain (PF00059), signal peptide. The UniProt name is a similarity-derived label and looks like a naming error to report |
 | 2 | jumble (*jmbl*) | SALRS | F2TWH0 (PTSG_00436; EGD72416) | Forward genetics; mutant cells aggregate into amorphous clumps instead of rosettes, with aberrant glycosylation of the basal ECM [PMID:30556809 "Predicted glycosyltransferases promote development and prevent spurious cell clumping in the choanoflagellate S. rosetta"] | "Uncharacterized protein"; no GOA rows | Predicted glycosyltransferase, one N-terminal TM helix |
 | 3 | couscous (*cous*) | SALRS | F2UJ78 (PTSG_07368; EGD77026) | Forward genetics, same study [PMID:30556809] | "Apple domain-containing protein"; 7 IEA rows incl. `GO:0000026` alpha-1,2-mannosyltransferase activity | PF11051 mannosyltransferase plus PAN/apple domain; IEA MF is plausible, check the Golgi and "mannan biosynthesis"-type process IEAs |
-| 4 | *warts* and *yorkie* (Hippo pathway) | SALRS | *to resolve* | CRISPR knockouts; warts-KO rosettes are larger than wild type, and Warts and Yorkie regulate ECM genes including couscous [PMID:41037400 "A selection-based knockout approach for a choanoflagellate reveals regulation of multicellular development by Hippo signaling."] | | Pairs with the premetazoan Hippo pathway in *Capsaspora* [PMID:22832104 "Premetazoan origin of the hippo signaling pathway"] |
+| 4 | *hippo*, *warts* and *yorkie* (Hippo pathway) | SALRS | F2UQC7 (PTSG_10780), F2U943 (PTSG_04961), F2UDK1 (PTSG_06057), from the bioRxiv preprint DOI:10.1101/2024.07.13.603360 | CRISPR knockouts; warts-KO rosettes are larger than wild type, and Warts and Yorkie regulate ECM genes including couscous [PMID:41037400 "A selection-based knockout approach for a choanoflagellate reveals regulation of multicellular development by Hippo signaling."] | | Pairs with the premetazoan Hippo pathway in *Capsaspora* [PMID:22832104 "Premetazoan origin of the hippo signaling pathway"] |
 | 5 | septins | SALRS | *to resolve* | Tagged septins localise to the basal poles of single cells and rosettes [PMID:30281390 "Transfection of choanoflagellates illuminates their cell biology and the ancestry of animal septins."] | | Localisation only; a role in rosette development is a hypothesis, so CC terms at most |
 | 6 | integrin β2 and vinculin | CAPO3 | *to resolve*; UniProt has several "Integrin beta" entries (e.g. A0A0D2WRB3, A0A0D2VIQ2, A0A0D2X2W6) | Adherent cells attach through actin-dependent filopodia, where integrin β2 and vinculin localise as patches [PMID:32857975] | | Map the paper's "integrin β2" to a UniProt accession from its methods before fetching |
 | 7 | Brachyury | CAPO3 | *to resolve* | Functional conservation shown in *Xenopus*; DNA-binding motif similar to metazoan Brachyury [PMID:24043797 "Early evolution of the T-box transcription factor family"] | | Premetazoan T-box factor; the paper argues metazoan-specific specificity arose later |
-| 8 | VIN1 / TLN | OSCPE | A0A3B6UES5 / A0A3G2LGI8 | [PMID:29880641] | 5 experimental rows | The one sponge adhesome review; incl. `protein binding` IPI to replace |
+| 8 | VIN1 / TLN | OSCPE | A0A3B6UES5 / A0A3G2LGI8 | [PMID:29880641] | 5 experimental rows | Reviewed (DRAFT) |
+| 9 | coHpo, coWts, coYki (Hippo pathway) | CAPO3 | A0A0D2WLF3 (CAOG_01932), A0A0D2VGR4 (CAOG_00619), A0A0D2WY30 (CAOG_07866) | Knockouts: coHpo and coWts mutants have nuclear coYki, elongated contractile cells and denser aggregates; coYki mutants bleb and make flatter aggregates; no proliferation effect [PMID:35659869 "Genome editing in the unicellular holozoan Capsaspora owczarzaki suggests a premetazoan role for the Hippo pathway in multicellular morphogenesis."; PMID:38517944 "The Hippo kinase cascade regulates a contractile cell behavior and cell density in a close unicellular relative of animals."] | IEA only | Reviewed (DRAFT); locus IDs from the key resources table of PMID:38517944 |
 
 ### Track B: the animal toolkit, reviewed with premetazoan evidence in mind
 
@@ -226,14 +227,17 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 
 - [x] GOA experimental-annotation census across Holozoa
 - [x] Resolve UniProt accessions for rosetteless, jumble, couscous
-- [ ] Resolve accessions for *S. rosetta* warts, yorkie and septins, and for *Capsaspora* integrin β2, vinculin and Brachyury
+- [x] Resolve accessions for *S. rosetta* hippo, warts, yorkie and *Capsaspora* coHpo, coWts, coYki
+- [ ] Resolve accessions for *S. rosetta* septins and *Capsaspora* integrin β2, vinculin and Brachyury (PMID:32857975 is abstract-only; PMID:24043797 gives no locus ID for CoBra)
 - [x] `just fetch-gene SALRS <accession> --alias <name>` for Track A priorities 1–3 (works for unreviewed TrEMBL entries)
 - [x] Review: rosetteless (F2U5Y1) — DRAFT
 - [x] Review: jumble (F2TWH0) — DRAFT
 - [x] Review: couscous (F2UJ78) — DRAFT
-- [ ] Review OSCPE VIN1 and TLN
+- [x] Review OSCPE VIN1 and TLN — DRAFT
+- [x] Review CAPO3 coHpo, coWts, coYki — DRAFT
+- [ ] Review SALRS hippo, warts, yorkie (in progress)
 - [ ] Track B human toolkit reviews (none started)
-- [ ] Track C propagation audit (not started)
+- [ ] Track C propagation audit (started: first case found, coWts, below)
 - [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
 - [ ] Deep research (falcon) for the three SALRS genes, once a provider key is available
 
@@ -274,3 +278,33 @@ so the 2025 knockout phenotypes are not yet captured). Findings:
   GO has no suitable term. The NTR "rosette colony development" is in the
   rosetteless review, where the protein is a structural part of the colony
   matrix.
+
+## 2026-10-01
+
+Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
+(all DRAFT, manual notes because no deep-research key is available).
+
+- **coWts: first Track C case.** TreeGrafter places coWts (A0A0D2VGR4) in
+  PTHR22988:SF71 "CITRON RHO-INTERACTING KINASE", the ROCK/MRCK/citron family,
+  while human LATS1/2 are in PTHR24356. Drosophila wts is also in PTHR22988, so
+  the Warts/LATS clade is split across two PANTHER families. coWts therefore
+  inherits cytoskeletal terms from a ROCK/citron node and misses the LATS-node
+  hippo signaling IBA. Actomyosin structure organization was removed,
+  cytoskeleton terms marked over-annotated, and hippo signaling added (IMP,
+  coYki is nuclear in coWts-/- cells; PMID:38517944). The *S. rosetta* Warts
+  (F2U943) is in PTHR24356, the LATS family.
+- **coHpo:** signal transduction modified to hippo signaling; protein
+  tetramerization removed (a p53-like tetramerisation fold match on the SARAH
+  domain, which forms dimers).
+- **coYki:** all five propagated rows hold, including hippo signaling and
+  transcription coactivator activity; NEW DNA-binding transcription factor
+  binding (IPI, co-IP with coSd). Its knockout shows no proliferation effect,
+  so no proliferation term. A negative result for Track C.
+- **Sponge VIN1/TLN:** both protein binding rows replaced by talin binding and
+  vinculin binding. VIN1 binds F-actin only with talin peptide present; NEW
+  cell-cell junction (IDA, endogenous protein at epithelial contacts). TLN
+  cell-cell adhesion modified to cell-matrix adhesion.
+- Resolved *S. rosetta* hippo, warts, yorkie from the bioRxiv preprint of
+  PMID:41037400. The preprint full text could not be cached (bioRxiv rate
+  limits; the Europe PMC copy returns 403), so those reviews quote abstracts
+  only.
