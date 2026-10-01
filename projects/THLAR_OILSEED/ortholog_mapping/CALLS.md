@@ -45,7 +45,7 @@ fused to an MSL2-like channel).
 | Sulfation | SOT17 | 1:1 | A0AAU9RDZ2 (TAV2_LOCUS415) | 91.9% id |
 | Sulfation | SOT18 | one-to-many | TAV2_LOCUS7545, 19075, 7550, 5299 | at least four SOT18-like genes map back to SOT18 |
 | S-oxygenation | FMOGS-OX1 | unresolved | none | best hits map back to FMOGS-OX2 and OX5; GS-OX subclade present, OX1 counterpart not resolved |
-| Alkenylation | AOP2 | reverse-confirmed | A0AAU9SS97 (TAV2_LOCUS22152) | 68.5% id over 67% of the query; 342 aa model likely partial. Pennycress makes allylglucosinolate, so a functional AOP2 is expected; the gene model needs checking |
+| Alkenylation | AOP2 | 1:1, gene model wrong | A0AAU9SS97 (TAV2_LOCUS22152) | AOP2-type: 84.1% id to Brassica rapa AOP2 (GSL-ALK). The predicted protein is a fragment, but the genome carries the complete coding sequence (see "AOP2 gene model" below) |
 | Myrosinase | TGG1 | one-to-many | TAV2_LOCUS12773-12775 (tandem), 3697, 12474 | at least five TGG1-like genes |
 | Myrosinase | TGG2 | reverse-confirmed | TAV2_LOCUS5741, 25952 | two candidates map back to TGG2 |
 | Specifier | ESP | not an ESP ortholog | A0AAU9T6G1 (TAV2_LOCUS23048) | strict RBH to ESP, but 83.8% identical to pennycress TFP versus 73% to Arabidopsis ESP: a TFP-like paralog |
@@ -71,3 +71,38 @@ proteins (PTHR24298:SF684, PTHR47956:SF11, from PANTHER's Arabidopsis classifica
 like a PANTHER version difference between sources, and the module validator requires a
 representative member to belong to the declared family, so the family ids are left unchanged and
 these two members omitted. Partial, fused, one-to-many and unresolved calls are also omitted.
+
+## AOP2 gene model
+
+Analyses: `aop2_check.py` (output `AOP2_RESULTS.md`) and `aop2_genomic.py` (output
+`AOP2_GENOMIC_RESULTS.md`).
+
+- **AOP2-type gene.** TAV2_LOCUS22152 (UniProt A0AAU9SS97, flagged "Fragment") is AOP2-type. It is
+  84.1% identical to Brassica rapa AOP2 (GSL-ALK, B5KJ58), compared with 65.6-69.0% to Arabidopsis
+  AOP1, AOP2 and AOP3.
+- **What the predicted protein misses.** It aligns only to B. rapa residues 3-179 and 318-430. Its
+  catalytic 2OG-Fe(II) domain lacks the first 41 positions of the Pfam model (PF03171).
+- **The genome has the missing sequence.** Six-frame translation of the locus (OU466862.2,
+  chromosome 6) finds three stop-free stretches on the gene's strand. Together they cover B. rapa
+  AOP2 residues 3-430:
+  - residues 3-122: 85.8% id
+  - residues 123-347: 71.6% id, E = 3e-91
+  - residues 344-430: 80.5% id
+
+  The middle stretch (60999889-61000710) contains 568 bp that the gene model annotates as intron,
+  mostly a 474 bp "intron" at 61000111-61000584. That stretch encodes the residues the predicted
+  protein lacks.
+- **Conclusion.** The fragment results from an annotation error (a false intron), not from a
+  truncated gene. Pennycress has an intact AOP2-type open reading frame, consistent with its
+  allylglucosinolate (sinigrin) chemistry.
+- **Caveats.**
+  - Splice sites of the corrected model were not checked.
+  - No transcript evidence was used.
+  - Enzyme activity has not been tested.
+- **Tandem AOP1-like model.** The neighbouring model TAV2_LOCUS20419 (A0AAU9SRQ3, 631 aa) is a
+  fusion. It contains a fragmentary AOP-like unit followed by a complete AOP1-like unit (73.5% id
+  to Arabidopsis AOP1 over 99.7% of it). The locus is a tandem AOP cluster like Arabidopsis
+  AOP1/AOP2/AOP3.
+
+The AOP2 entry is not added to the module as a representative member, because its UniProt
+sequence is the mis-predicted fragment.

@@ -124,13 +124,18 @@ The calls, with reasons, are in [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.
   to pennycress TFP, so it is a TFP-like paralog.
 - **Gene-model problems:** the AOP2, UGT74C1 and PAS2 matches sit in partial or fused gene
   models.
+- **AOP2 is intact in the genome.** The predicted AOP2 protein is a fragment, but the genome
+  carries a complete AOP2-type open reading frame, 84% identical to Brassica rapa AOP2. The
+  annotation treated 474 bp of real coding sequence as an intron. This fits pennycress making
+  sinigrin, which needs a working AOP2. Details are in
+  [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.md#aop2-gene-model).
 
 ## Next steps
 
 1. Review the other oil-composition genes (FAD2, ROD1) using PMID:33968108.
-2. Check the pennycress AOP2 gene model (TAV2_LOCUS22152 looks partial) and the PAS2 model
-   (fused to an MSL2-like gene). Pennycress makes allylglucosinolate, so a functional AOP2 is
-   expected.
+2. Report the pennycress gene-model errors to the assembly or annotation maintainers: AOP2
+   (TAV2_LOCUS22152, a false intron), the AOP1-like fusion (TAV2_LOCUS20419) and PAS2 (fused
+   to an MSL2-like gene). Check the PAS2 locus the same way as AOP2.
 3. Review the glucosinolate regulators targeted in domestication (MYB28, MYC3;
    PMID:41578087). They are deliberately outside the module.
 4. Seed coat and weediness: TT8 knockout (PMID:41578087; PMID:41685867).
