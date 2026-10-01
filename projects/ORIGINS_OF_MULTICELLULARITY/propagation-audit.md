@@ -43,8 +43,9 @@ All 11 down-grades are TreeGrafter rows. They come from four mechanisms:
 
 Most propagated molecular-function and signalling terms were sound, for
 example *hippo signaling* on the *Capsaspora* kinases and coactivator. The
-problems are specific and fixable at named nodes; see the
-[upstream tickets](upstream-tickets/README.md).
+problems are specific and fixable at named nodes. Each down-graded row
+carries a `propagation_review` (root cause, failure modes, source node) in its
+gene review YAML; `propagation_audit_rows.tsv` lists them.
 
 Data: [`propagation_audit.py`](propagation_audit.py) regenerates
 [`propagation_audit_rows.tsv`](propagation_audit_rows.tsv) (every propagated
@@ -187,8 +188,7 @@ Its TreeGrafter node PTN001270341 gave it the following rows:
 
 **Spread.** `GO:0046354` is on 4 choanoflagellate proteins and 1
 ichthyosporean protein. From this node it also reaches green algae and oomycetes,
-and all 56 of the node's IBA rows list only *Candida* seed genes
-([ticket 5](upstream-tickets/05-paint-mannan-node.md)). **Recommendation:** restrict the mannan IBD in the
+and all 56 of the node's IBA rows list only *Candida* seed genes. **Recommendation:** restrict the mannan IBD in the
 MNN2 family to the fungal node.
 
 ## Case 5: talin cell-cell adhesion (minor)

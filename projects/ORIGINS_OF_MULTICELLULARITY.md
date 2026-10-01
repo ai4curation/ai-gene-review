@@ -290,17 +290,16 @@ down-graded, all TreeGrafter IEAs, through three mechanisms:
 The cases are also written up for the
 [TreeGrafter evaluation](TREEGRAFTER/holozoan-hippo-case-study.md).
 
-**Upstream tickets.** [Twelve ready-to-file reports](ORIGINS_OF_MULTICELLULARITY/upstream-tickets/README.md):
-- 7 to PANTHER/PAINT (the LATS node, the cadherin graft, the Warts and
-  Yorkie family boundaries, the mannan node, the integrin-ITGBL1 graft, the
-  CoBra subfamily and T-box node);
-- 3 to UniProt (the ITGB1-FLNB PMID, the Rosetteless name, the vinculin NOT
-  row);
-- 1 to the GO ontology (organ-term taxon constraints; NTR rosette colony
-  development);
-- 1 TreeGrafter QC rule.
-
-None is filed yet; the trackers are outside this repository.
+**Where the findings are recorded.** Each finding is a structured field in a
+review YAML, not free text:
+- every down-graded propagated row carries a `propagation_review` with root
+  cause, failure modes and the PANTHER source node and its status;
+- the ITGB1-FLNB miscitation is a `reference_review` with a
+  WRONG_IDENTIFIER `replacement`;
+- the collagen IV correction is a `finding_review` (OVERTURNED) on the COL4A1
+  reference;
+- the rosette development term is a `proposed_new_terms` entry in the
+  rosetteless review.
 
 ### Track D: ontology gaps
 
@@ -352,7 +351,6 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] Track B batch 1: LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK — DRAFT
 - [x] Track B batch 2: CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1 — DRAFT
 - [x] Track B: premetazoan pass on existing CDH1, ABL1, MYC, NOTCH1, TP53 (additive; no actions changed)
-- [x] Upstream tickets drafted ([index](ORIGINS_OF_MULTICELLULARITY/upstream-tickets/README.md)); filing is pending
 - [x] Track C propagation audit for the Track A genes: [report](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md), cross-posted to the TREEGRAFTER project
 - [x] Track C: extend the audit to the Track B human genes' IBA nodes ([Case 6 and extension table](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md))
 - [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
@@ -481,7 +479,7 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
   COL4A1 review now records this with a `finding_review` (OVERTURNED), and the
   Track B tables were corrected. Basement-membrane function remains
   animal-specific.
-- **Remaining Track A genes and tickets.**
+- **Remaining Track A genes.**
   - **Accessions.** Resolved the *S. rosetta* septins (PMID:30281390) and
     *Capsaspora* integrin beta 2 and vinculin (from the preprint methods,
     once bioRxiv allowed the download). We assigned *Capsaspora* Brachyury
@@ -492,4 +490,9 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
     proteins onto animal-only nodes: the integrin-ITGBL1 graft (Case 7) and
     the T-box node's "cell fate specification" (Case 8). With the cadherin
     case, that makes this the commonest failure mode in the audit. Both are
-    added to the audit, the TreeGrafter case study and the tickets (now 12).
+    added to the audit and the TreeGrafter case study.
+- **Tickets withdrawn; findings moved into the YAML.** The hand-written
+  upstream-ticket drafts were removed. Each finding is now carried by the
+  review YAML (`propagation_review`, `reference_review`, `finding_review`,
+  `proposed_new_terms`), and the proteins that carried mis-propagated terms
+  without a review are getting reviews.

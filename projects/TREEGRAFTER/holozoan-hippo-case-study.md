@@ -78,22 +78,18 @@ lineages that the reference trees sample thinly.
    rule would pay off: suppress terms from a graft node whose PAINT taxon does
    not include the query organism.
 
-## Upstream tickets
+## Where the findings are recorded
 
-- **PANTHER, family boundaries.** Rescore coWts (A0A0D2VGR4), fly wts (Q9VA38)
-  and *S. rosetta* Warts (F2U943) against the PTHR22988 subfamilies SF71 and
-  SF76 and the PTHR24356 LATS subfamilies. Do the same for F2UDK1 against
-  PTHR10316 and PTHR17616 (YAP1 family). PANTHER puts a different *S. rosetta*
-  WW protein, F2U5K0, in the YAP1 family, which conflicts with the
-  knockout literature; the orthology is unresolved.
-- **PAINT, PTHR24356 node PTN002390470.** Move `GO:0046620` regulation of
-  organ growth (seed: mouse Lats2 only) to a metazoan descendant node.
-  Consider the same for `GO:0043065` positive regulation of apoptotic process
-  (seed: fly wts only).
-- **PAINT, MNN2 family node PTN001270341.** Restrict `GO:0046354` mannan
-  biosynthetic process to fungi.
-- **GO.** Consider a taxon constraint keeping organ-level growth terms off
-  unicellular lineages.
-- **PANTHER, PTHR24027.** Explain how *S. rosetta* SF422 cadherins graft onto
-  the Bilateria node PTN000616280, and graft them onto a pre-bilaterian node
-  instead.
+Each down-graded row carries a `propagation_review` in its gene review YAML,
+naming the PANTHER source node with a `source_status`:
+- [`genes/CAPO3/coWts/coWts-ai-review.yaml`](../../genes/CAPO3/coWts/coWts-ai-review.yaml)
+- [`genes/SALRS/warts/warts-ai-review.yaml`](../../genes/SALRS/warts/warts-ai-review.yaml)
+- [`genes/SALRS/yorkie/yorkie-ai-review.yaml`](../../genes/SALRS/yorkie/yorkie-ai-review.yaml)
+- [`genes/SALRS/couscous/couscous-ai-review.yaml`](../../genes/SALRS/couscous/couscous-ai-review.yaml)
+- [`genes/OSCPE/TLN/TLN-ai-review.yaml`](../../genes/OSCPE/TLN/TLN-ai-review.yaml)
+- [`genes/CAPO3/CoBra/CoBra-ai-review.yaml`](../../genes/CAPO3/CoBra/CoBra-ai-review.yaml)
+- [`genes/CAPO3/coITGB2/coITGB2-ai-review.yaml`](../../genes/CAPO3/coITGB2/coITGB2-ai-review.yaml)
+
+The choanoflagellate cadherin graft and the *M. brevicollis* LATS IBAs are
+recorded in reviews of those proteins (under `genes/SALRS/` and
+`genes/MONBE/`).
