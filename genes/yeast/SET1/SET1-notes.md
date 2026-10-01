@@ -49,5 +49,5 @@
 
 - Marked five exact source assertions that disappeared from current GOA as retired:
   the old UniProt-keyword `chromatin organization`, `transferase activity`, and
-  `methylation` rows, the old RHEA `methyltransferase activity` parent row, and the
-  stale Krogan et al. generic protein-binding row.
+  `methylation` rows, the old keyword/ARBA-combined `methyltransferase activity`
+  parent row, and the stale Krogan et al. generic protein-binding row.
