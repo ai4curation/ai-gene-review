@@ -54,3 +54,14 @@ The final review retains all 24 original source assertions and three alternative
 The N-terminal glutamine-hydrolysis step remains ACCEPT because it performs an integral part of glutamine-dependent asparagine synthesis. Human N-terminal cysteine mutagenesis distinguishes glutamine-fed from ammonia-fed synthesis (PMID:2573597), while human domain/tunnel and coupled-reaction evidence (PMID:39627226) supports the integrated mechanism. The single core describes the complete coupled GO:0004066 reaction. RHEA:15889 is curator-inferred in the shipped UniProt record; this provenance does not make its chemistry biologically peripheral and does not establish an independently measured autonomous glutaminase assay. No second core or contributes_to relation is added.
 
 This bounded follow-up changes only the glutaminase rationale, leaving all original assertion fields, actions, three alternative products and the core unchanged. The WDR27 binding policy question remains pending; its positive pair evidence is not reclassified as incorrect. Counts remain 16 ACCEPT, 5 KEEP_AS_NON_CORE and 3 UNDECIDED.
+
+
+## 2026-10-01 UTC — Binding-policy clarification
+
+The [review of PR #3438](https://github.com/ai4curation/ai-gene-review/pull/3438) at `2e917ec2d` correctly distinguishes exclusion of an uninformative term from rejection of a reported interaction. The repository default can exclude GO:0005515 even when the interaction is real. The earlier notes should not be read as claiming that the default requires biological falsity or that a touched annotation falls within a legacy exception.
+
+For this task, the explicit instruction is not to remove generic binding solely for informativeness and to preserve UNDECIDED when the relevant experiment cannot be adjudicated. The existing decisions are a scoped application of those instructions. This is a documented departure from the default binding policy, not a global policy change or a claim that its advisory warnings have disappeared.
+
+The retained WDR27 association rests on the previously inspected, source-specific BioGRID pair record. That is not a claim that the original supplementary constructs or raw reporter data were read, nor evidence of an endogenous regulatory complex or a more specific ASNS binding function. The three other unadjudicated interaction rows remain UNDECIDED. The coupled asparagine-synthesis core and its integral glutamine-hydrolysis step are unchanged; retaining the association does not add a second catalytic core.
+
+This addendum adds no primary-source reading, assay verification or quotation. All existing actions, source assertions, products, reference findings and core claims remain unchanged.
