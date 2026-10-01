@@ -2956,9 +2956,14 @@ Gene reviews are proceeding in evidence-priority order, alphabetically within
 each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
-**151 of 2,876 genes are complete; 2,725 remain.** The verified BICRA merge
+The [BLOC1S6 binding rationale](CLINGEN_MENDELIAN/BLOC1S6-binding-rationale.md)
+records that review’s scoped use of supported, non-core interaction annotations
+and its evidence limits. It is a gene-specific exception to the general
+generic-binding guidance.
+
+**152 of 2,876 genes are complete; 2,724 remain.** The verified BLTP1 merge
 adds one completed gene to the preceding completion update.
-The 152 original gene PR merges include AKR1D1, whose required source follow-up
+The 153 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3227,7 +3232,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BLNK** — HGNC:14211; [agammaglobulinemia 4, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e1d2e1b-52a6-4371-9055-0e1cc74da39d-2021-03-16T132748.373Z) (MONDO:0013289; AR; Definitive).
 - [ ] **BLOC1S5** — HGNC:18561; [Hermansky-Pudlak syndrome 11](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_85cca8f5-d263-42c4-b84a-2d49deeee682-2023-09-06T160000.000Z) (MONDO:0030903; AR; Definitive).
 - [ ] **BLOC1S6** — HGNC:8549; [Hermansky-Pudlak syndrome 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_984682a2-afb9-48b3-afe8-20e0f633022d-2022-05-25T165516.466Z) (MONDO:0013606; AR; Definitive).
-- [ ] **BLTP1** — HGNC:26953; [Alkuraya-Kucinskas syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b92cd4c-7db0-40fe-b404-08f17f778c35-2026-01-21T170000.000Z) (MONDO:0060631; AR; Definitive).
+- [x] **BLTP1** — HGNC:26953; [Alkuraya-Kucinskas syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b92cd4c-7db0-40fe-b404-08f17f778c35-2026-01-21T170000.000Z) (MONDO:0060631; AR; Definitive).
 - [ ] **BMP4** — HGNC:1071; [BMP4-related ocular growth disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5e7832a8-8a0b-4719-aaf9-1cbdcc392776-2025-02-20T200000.000Z) (MONDO:0100613; AD; Definitive).
 - [ ] **BMPR1A** — HGNC:1076; [juvenile polyposis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7004b10e-0eb6-4517-8deb-2d4b7264d2f8-2022-12-30T180000.000Z) (MONDO:0017380; AD; Definitive).
 - [ ] **BMPR2** — HGNC:1078; [congenital heart disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b4322da-10a2-46c4-be0c-b5163ab5f401-2023-09-18T160000.000Z) (MONDO:0005453; AD; Limited); [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a20ce78b-18ba-436c-877e-a08d092ac7c7-2020-12-07T172318.621Z) (MONDO:0015924; AD; Definitive).
