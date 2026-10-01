@@ -36,14 +36,13 @@ LPL1 encodes a lipid droplet phospholipase B with dual roles in lipid metabolism
 ## Annotation Review Decisions
 
 ### Key Changes Made:
-1. **MODIFY**: Phosphatidylcholine lysophospholipase activity → Phospholipase B activity (GO:0102545)
-2. **REMOVE**: Monoacylglycerol lipase activity (no evidence, likely from paralog ROG1)
-3. **ACCEPT**: Lipid droplet localization (multiple supporting studies)
-4. **KEEP_AS_NON_CORE**: ER localization (minor/transient)
+1. **ACCEPT**: phosphatidylcholine, phosphatidylethanolamine, and phosphatidylglycerol reaction-level lipase activities as specific slices of Lpl1's broader B-type glycerophospholipase activity (GO:0102545)
+2. **RETIRE/REMOVE**: monoacylglycerol lipase activity, now absent from live GOA, because PAINT places that activity on the ROG1 paralog branch
+3. **ACCEPT**: lipid droplet localization from multiple supporting studies
+4. **KEEP_AS_NON_CORE**: ER and cytoplasm localizations as minor, broad, or contextual sites
 
 ### Missing Annotations Identified:
-- Cellular response to misfolded protein (GO:0071218)
-- Phospholipase B activity (GO:0102545) - more accurate than current narrow terms
+- B-type glycerophospholipase activity (GO:0102545) as the summarizing core activity
 - Lipid droplet organization (GO:0034389)
 
 ## Evolutionary Context
