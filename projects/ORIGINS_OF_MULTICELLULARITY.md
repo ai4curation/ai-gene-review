@@ -282,6 +282,17 @@ down-graded, all TreeGrafter IEAs, through three mechanisms:
 The cases are also written up for the
 [TreeGrafter evaluation](TREEGRAFTER/holozoan-hippo-case-study.md).
 
+**Upstream tickets.** [Ten ready-to-file reports](ORIGINS_OF_MULTICELLULARITY/upstream-tickets/README.md):
+- 5 to PANTHER/PAINT (the LATS node, the cadherin graft, the Warts and
+  Yorkie family boundaries, the mannan node);
+- 3 to UniProt (the ITGB1-FLNB PMID, the Rosetteless name, the vinculin NOT
+  row);
+- 1 to the GO ontology (organ-term taxon constraints; NTR rosette colony
+  development);
+- 1 TreeGrafter QC rule.
+
+None is filed yet; the trackers are outside this repository.
+
 ### Track D: ontology gaps
 
 - Is there a GO process term for clonal colony (rosette) development in a
@@ -332,6 +343,7 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] Track B batch 1: LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK — DRAFT
 - [x] Track B batch 2: CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1 — DRAFT
 - [x] Track B: premetazoan pass on existing CDH1, ABL1, MYC, NOTCH1, TP53 (additive; no actions changed)
+- [x] Upstream tickets drafted ([index](ORIGINS_OF_MULTICELLULARITY/upstream-tickets/README.md)); filing is pending
 - [x] Track C propagation audit for the Track A genes: [report](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md), cross-posted to the TREEGRAFTER project
 - [x] Track C: extend the audit to the Track B human genes' IBA nodes ([Case 6 and extension table](ORIGINS_OF_MULTICELLULARITY/propagation-audit.md))
 - [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
