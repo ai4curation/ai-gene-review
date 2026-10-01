@@ -31,3 +31,17 @@
   Cryptococcus eIF3 preprint (PMID:41648462); these do not change the direct Sui2
   functional calls. A web search for 2025-2026 SUI2/eIF2alpha papers likewise did not
   reveal a new SUI2-specific paper that needed to be added to the review.
+
+## 2026-10-01 current-GOA refresh
+
+- Refreshed UniProt/GOA for SUI2. The live GOA snapshot has 36 rows. The current
+  `PTHR10602` PAINT cache still carries five SUI2 IBA rows on `PTN000063907` and
+  `PTN000063908`; no IBA row needed a changed action.
+- Preserved six vanished rows as retired: old GO_REF:0000120 IEA rows for RNA binding
+  and translation initiation factor activity, keyword IEAs for broad translation and
+  translational initiation, and no-longer-live protein-binding rows from PMID:16554755
+  and PMID:27107014.
+- Reviewed five newly seeded current rows. The InterPro `GO:0003723` row and two
+  `TIF5` protein-binding rows were removed as generic, the InterPro `GO:0003743`
+  row was accepted as redundant but correct, and the ComplexPortal PMID:8947054
+  `GO:0005850` eIF2-complex row was accepted.
