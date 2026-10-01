@@ -135,6 +135,35 @@ def qualifier_backfill_matches(missing, current):
     return matches
 
 
+def qualifier_or_label_refresh_matches(missing, current):
+    """Find frozen signatures preserved after GOA metadata-only refreshes.
+
+    GOA refreshes can add a qualifier to a row whose older seed had none and can
+    also update a GO term label without changing the term id. Neither changes
+    the underlying term/evidence/reference source assertion.
+    """
+    current_by_metadata = Counter()
+    for encoded, count in current.items():
+        data = json.loads(encoded)
+        data.pop("qualifier", None)
+        if "term" in data and "id" in data["term"]:
+            data["term"] = {"id": data["term"]["id"]}
+        current_by_metadata[json.dumps(data, sort_keys=True)] += count
+
+    matches = Counter()
+    for encoded, count in missing.items():
+        data = json.loads(encoded)
+        data.pop("qualifier", None)
+        if "term" in data and "id" in data["term"]:
+            data["term"] = {"id": data["term"]["id"]}
+        key = json.dumps(data, sort_keys=True)
+        matched = min(count, current_by_metadata[key])
+        if matched:
+            matches[encoded] = matched
+            current_by_metadata[key] -= matched
+    return matches
+
+
 def verify_identity_migration(path, commit, before, after):
     """Require baseline-identical archives and exact fetched replacements and seed.
 
@@ -234,6 +263,10 @@ def main():
         if qualifier_backfills:
             result["qualifier_backfills"] = dict(qualifier_backfills)
             missing -= qualifier_backfills
+        metadata_refreshes = qualifier_or_label_refresh_matches(missing, current)
+        if metadata_refreshes:
+            result["qualifier_or_label_refreshes"] = dict(metadata_refreshes)
+            missing -= metadata_refreshes
         retirements = EXPECTED_RETIREMENTS.get(path, Counter())
         applied = missing & retirements
         unexpected_retirements = retirements - missing
