@@ -118,4 +118,8 @@ The old refolding IBA is generalized to protein folding because current PAINT ex
   GOA seed. Newly seeded Zuo1-backed rows from PMIDs 16429126, 16554755,
   19536198 and 37968396 were converted to `GO:0031072` heat shock protein
   binding, matching the existing direct RAC partner rows; all other newly seeded
-  rows were removed as generic proteomics-derived `protein binding`.
+  rows were removed as generic proteomics-derived `protein binding`. SSB2-backed
+  rows were kept at `REMOVE` with row-specific reasons because Ssb2 is the
+  cognate Hsp70, but these high-throughput co-purifications do not establish a
+  direct binary Ssz1-Ssb2 contact distinct from ribosome- and Zuo1-bridged
+  RAC/Ssb coupling.
