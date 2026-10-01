@@ -65,3 +65,21 @@ This supersedes the earlier pending-cache statement. The developmental citation 
 ## Follow-up verification
 
 ROOT independently approved all 22 annotation decisions and both core functions (bc87a7), then applied the exact proposal (dcd1e5). Focused canonical validation passed (c0e744), rendering passed (308d81), and the new history record validated (937ffc). The one advisory concerns an IBA refinement without an unperformed phylogenetic assessment. An initial validation invocation used an unsupported output flag and stopped before validation; its raw result is preserved, and the corrected invocation completed. Raw sources, existing reference caches and prior history remain unchanged. No whole-paper, supplementary-pair or PAINT-tree review is claimed.
+
+
+## Evidence scope and functional refinement, 2026-10-01 UTC
+
+The NCK1/CRK interactions are positively corroborated by UniProt. The unresolved question is which molecular-function refinement the BICRA peptide, partner domain and assay context can support. The original study-specific peptide and supplementary records remain uninspected; aggregate interaction counts cannot substitute for them. The three rows remain UNDECIDED for this assessment. The previous sentence about generic binding and REMOVE is superseded by this narrower explanation. No negative finding about the physical interactions is asserted.
+
+The [2011 BRD4 study, PMID:21555454](https://pmc.ncbi.nlm.nih.gov/articles/PMC3133372/) was consulted through indexed full-text Results, including the human 293T co-immunoprecipitation and C33A transcript experiments. Those assay details are not derived from the abstract-only cached record. The reviewed UniProt subunit annotation independently supports the BRD4-to-GBAF bridge. Existing verbatim anchors remain unchanged.
+
+The [Barish study, PMID:33232675](https://pubmed.ncbi.nlm.nih.gov/33232675/) establishes human neurodevelopmental and model-organism relevance. It does not independently test the mouse stem-cell mechanism in the two existing developmental annotations. Those annotations retain their qualified complex-level, species-specific interpretation and the documented possibility of BICRAL compensation. Their non-core classification does not imply that single-gene deletion establishes an indispensable stem-cell function.
+
+The remodeling core records BICRA's contribution to an ATPase-containing complex. No independently demonstrated subunit-specific molecular function is added to that core merely to fill an optional field. The separate BRD4-bridging core already records the supported protein–macromolecule adaptor activity; duplicating it would conflate the two evidential roles.
+
+This clarification preserves all 22 source assertions, both alternative products, both core functions, all actions and all quotation text. Reference notes now identify the publication or database evidence directly. Earlier journal and history entries remain historical records.
+
+
+## Second follow-up verification
+
+The changed evidence explanations passed independent scientific review (c1c2c6), focused validation, rendering and history validation. All 22 source assertions, annotation actions, two alternative products, both core functions and existing quotations remain unchanged. The single validation advisory concerns existing IBA propagation metadata; no new phylogenetic assessment is asserted. Raw sources, publication caches and earlier history remain unchanged.
