@@ -186,3 +186,20 @@ PMID:33805 now again records the human soluble-enzyme assays with free GlcNAc, g
 The restored summaries preserve source-specific limits: relative initiation-product targeting, the truncated PMID:2120039 abstract, localization without a demonstrated adhesion function, and tubulin association without proof of a universal retention mechanism. Eight available abstract records were read; PMID:2120039 is truncated and three caches repeat abstract text under a Full Text heading. For PMID:27872474, the relevant galactosylation Results and human-expression Methods were checked. No additional complete-paper, image or supplementary-data access is claimed.
 
 All 76 original source assertions, their decisions, two products and three cores are unchanged. Existing journal bytes are retained. No new quotations are added; the aggregate quotation inventory remains within 25 words per source. The current published PR body already identifies glycopeptide galactosylation, free-GlcNAc N-acetyllactosamine synthesis and lactose synthesis. No raw input, provider report or cached source is edited.
+
+
+## 2026-10-01 — Row-level catalytic evidence
+
+Short excerpts from the existing source abstracts now accompany the five requested annotations in the [B4GALT1 review](B4GALT1-ai-review.html). This changes where the evidence is displayed; all 76 source assertions, their actions, two products, reference findings and three core biological claims remain unchanged.
+
+| Annotation row | Existing source | Evidence now displayed at the annotation |
+|---|---|---|
+| 23, lactose synthase activity | [PMID:11419947](https://pubmed.ncbi.nlm.nih.gov/11419947/) | Alpha-lactalbumin promotes glucose binding to the catalytic component. The separately established bovine/mouse structural boundary remains explicit; the abstract does not identify those species. |
+| 46, protein N-linked glycosylation | [PMID:16157350](https://pubmed.ncbi.nlm.nih.gov/16157350/) | Galactose transfer to branched N-linked glycoprotein chains. Row 45 keeps a shorter excerpt identifying the wild-type kinetic preference; the distinction from M340H structures remains in the review. |
+| 67, glycopeptide galactosyltransferase activity | [PMID:33805](https://pubmed.ncbi.nlm.nih.gov/33805/) | Ovalbumin and desialylated ovine mucin as acceptor substrates. |
+| 68, N-acetyllactosamine synthase activity | PMID:33805 | Activity with free GlcNAc. |
+| 69, lactose synthase activity | PMID:33805 | Glucose in the presence of alpha-lactalbumin. |
+
+The second core's PMID:33805 excerpt is redistributed across rows 67–69, where each acceptor directly accompanies its annotation. The free-GlcNAc core retains PMID:33805 and PMID:2120039 as evidence; row 68 displays the relevant acceptor excerpt, and row 63 retains the recombinant-human-enzyme substrate-binding excerpt. No donor, product or reaction claim changes. The third core retains a direct PMID:11419947 excerpt for the 1:1 lactose-synthase assembly, while row 23 displays the glucose-binding mechanism and row 69 the independent human-enzyme assay context. All original core reference links remain present.
+
+The complete available cached abstracts of PMID:33805, PMID:11419947 and PMID:16157350 were reread for this redistribution. The available PMID:2120039 abstract was also reread and remains explicitly truncated. No complete article, new structure, figure image or supplementary dataset was inspected. Each omission marker joins ordered source spans without supplying missing words. The proposed YAML quotation inventory counts repetitions and remains within 25 words per PMID under both whitespace and punctuation-splitting counts; this new journal entry adds no quotations. Earlier journal text is preserved as historical material and is not included in that claim about the proposed YAML. All cached source bytes and availability flags remain unchanged.
