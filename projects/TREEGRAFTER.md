@@ -391,8 +391,12 @@ fixes:
   steps). But the two dfrP rows had been reviewed as correct:
   `GO:0046452` dihydrofolate metabolic process (`ACCEPT`) and `GO:0046655`
   folic acid metabolic process (`KEEP_AS_NON_CORE`). So excluding viruses
-  removes true positives as well as the false one, and the DHFR still keeps
-  its MF and THF-biosynthesis terms through InterPro2GO and UniRule.
+  removes true positives as well as the false one. The DHFR keeps its MF and
+  `GO:0046654` THF-biosynthesis terms through InterPro2GO and UniRule. But
+  `GO:0046654` is a *sibling* of `GO:0046452` under `GO:0006760`, not an
+  ancestor, so the dihydrofolate statement had no surviving replacement. It is
+  re-asserted in the review as a NEW ISS row, grounded in the PAINT IBD on
+  `PTN000167322` (PTHR48069), which dfrP shares with *E. coli* folA (SF3).
 - Refreshed both genes' GOA and marked the vanished rows `retired: true`, which
   keeps their reviews for provenance. The frozen 2026-09-06 tables still count
   the three rows; they will drop out at the next snapshot refresh.
