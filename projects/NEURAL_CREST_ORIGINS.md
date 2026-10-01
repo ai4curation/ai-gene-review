@@ -74,13 +74,23 @@ work. Expected problems to test, gene by gene:
    may be annotated directly to NC fate specification, and NC specifiers to
    "neural crest formation". Check whether the existing terms are precise
    enough, and whether a border term should be proposed (`proposed_new_terms`).
-2. **Necessity vs participation.** Most of the evidence is morpholino or
-   dominant-negative loss of a marker (e.g. loss of *sox10* or *snai2*
-   expression). Under the project rules (CLAUDE.md, *Do not add what curators
-   deliberately declined to add*), necessity alone does not make a gene a
-   participant. Most of these genes are transcription factors that act within
-   the specification programme, so process annotations should usually stand.
-   Signalling ligands and pluripotency factors need the comparator check.
+2. **Annotate the biology, not the experiment.** A GO annotation records our
+   synthesised judgement of what the gene product does, reached by biological
+   reasoning across several lines of evidence. It is not a transcript of one
+   assay. For each gene, the review should bring together:
+   - where and when it is expressed (border, premigratory or migratory crest);
+   - its molecular activity (DNA binding, activation or repression, partners);
+   - its direct targets and enhancer occupancy in the network;
+   - gain-of-function sufficiency (ectopic crest, reprogramming);
+   - loss-of-function phenotypes;
+   - conservation of that role across vertebrates and its state in the
+     outgroups.
+
+   From that combined picture, place the gene in the network layer where it
+   does its work. A border specifier, a crest specifier and a competence
+   factor each warrant a different process term. Where the biology does not
+   support a process term, it does not stand just because an experiment is
+   attached to it.
 3. **Molecular function precision.** Many entries are probably still at
    generic `DNA-binding transcription factor activity` or carry `protein binding`
    IPIs. Where the evidence supports it, prefer RNA polymerase II-specific
