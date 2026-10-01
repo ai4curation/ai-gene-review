@@ -171,3 +171,17 @@ The official AmiGO term page explicitly places GO:0120552 part_of GO:0009083 (BF
 ## Follow-up validation, 2026-09-30
 
 The independently reviewed follow-up passes focused validation (six warnings), history validation, and rendering. Five warnings concern supported generic binding retained as non-core under the supplied action definitions; the other records that primary/database sources, rather than the unchanged generated report, support annotation decisions. All 38 source assertions, three inherited NEW assertions and two products are preserved. No new global validation pass is claimed.
+
+
+## Bounded experimental-source traceability follow-up
+
+This follow-up addresses review 5373583625 against c1afcffa1530cc286455565391d77d68df53751e. Twelve non-generic experimental or inherited NEW rows (13, 15, 18, 20, 22, 23, 24, 25, 35, 36, 40 and 41; one-based) now have a local verbatim source anchor. The complete relevant cached abstracts were reread, alongside the exact UniProt alpha-chain location, subunit and metal-binding features. The high-throughput location anchors identify the human mitochondrial assay context; neither BCKDHA-specific supplementary entry nor phosphopeptide identification was newly reconstructed. The inherited caveats and the separate UniProt location citations remain in place. No complete-paper, figure or supplement read is claimed for this follow-up.
+
+The magnesium and potassium anchors name alpha precursor positions and ligands in the exact source columns. The potassium reason still distinguishes four alpha residue contacts from four sites and preserves the separate beta-site caveat. An E1 reductive-acylation excerpt from the already listed PMID15576032 is linked to row15 without attributing the complete three-reaction pathway to the alpha chain. The contributed molecular function retains its alpha-beta enzyme context.
+
+To keep repeated quotations within the per-source aggregate limit, the existing PMID7883996 row19 excerpt was shortened within the same sentence, and the PMID9582350 composition excerpt was shortened and moved from core support to row20. Both source citations remain in the core and rows. All top-level findings, including the six UniProt feature findings and the disputed Reactome beta attribution, are unchanged. The counts include every repeated excerpt occurrence in both BCKDHA and BCKDHB, with conservative inherited allowances for PMID10745006 and PMID15166214; no affected PMID exceeds 25 words. The alpha UniProt quote total is 25 words. Short anchors provide verifiable source links in conjunction with their preserved contextual reasons; they are not standalone proof of every clause.
+
+All 41 source/inherited NEW objects, two products, annotation actions, biological descriptions and core terms remain unchanged. The five generic protein-binding rows remain KEEP_AS_NON_CORE under the user's applicable action definitions. They are outside this finite traceability change; no reviewer recommendation has been converted mechanically into a removal or a stronger molecular-function assertion. Canonical application remains pending independent review.
+
+
+The traceability follow-up was independently reviewed and applied. Focused validation passed with six existing advisories (five retained non-core generic binding rows and one uncited provider report). Rendering and history validation passed. No new scientific assertion or full-repository validation result is claimed.
