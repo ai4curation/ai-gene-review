@@ -49,6 +49,10 @@ EXPECTED_RETIREMENTS = {
             "IMP", "PMID:2026161",
         ),
     ]),
+    "genes/yeast/CPR7/CPR7-ai-review.yaml": Counter([
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"),
+    ]),
     "genes/yeast/HSC82/HSC82-ai-review.yaml": Counter([
         make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
         make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"),
