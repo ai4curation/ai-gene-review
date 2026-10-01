@@ -137,7 +137,7 @@ Last updated: 2026-10-01
 
 ## Tier 1 — Neural crest specifiers (candidates for vertebrate-specific recruitment)
 
-- [ ] `XENLA/foxd3-a` (Q9DEN4) — FoxD3; vertebrate-specific N-terminal motif; no border expression in amphioxus. Homeolog `foxd3-b` Q9DEN3
+- [x] `XENLA/foxd3-a` (Q9DEN4) — FoxD3; NC specifier (repressor) with a competence face. Reviewed 2026-10-01: 25 GOA rows (14 ACCEPT, 5 non-core, 4 MODIFY, 2 over-annotated) + 1 NEW (GO:0001227). Homeolog `foxd3-b` Q9DEN3
 - [x] `XENLA/sox10` (Q8AXX8) — SoxE; NC specifier. Reviewed 2026-10-01: 32 GOA rows (11 ACCEPT, 14 non-core, 6 MODIFY, 1 REMOVE)
 - [ ] `XENLA/snai2` (Q91924) — Slug; NC specifier and EMT repressor
 - [x] `XENLA/sox9-a` (B7ZR65) — SoxE; NC specifier + crest-derived chondrogenesis. Reviewed 2026-10-01: 45 GOA rows (22 ACCEPT, 16 non-core, 5 MODIFY, 1 REMOVE, 1 over-annotated) + 1 NEW (GO:0001228)
@@ -231,6 +231,21 @@ Last updated: 2026-10-01
   co-expressed with Col2a1), and lamprey SoxE paralogs are not 1:1 orthologs.
   All experimental rows sit on sox9-a, and the abstracts don't say whether the
   reagents also hit sox9-b.
+
+- **foxd3-a.** NC specifier downstream of Zic/Wnt; Zic needs it to induce
+  Slug. It is a forkhead *repressor* that recruits Groucho/TLE through an eh1
+  motif, so `GO:0001227` was added as NEW and the Grg4 `protein binding` was
+  changed to `GO:0001222` transcription corepressor binding. The repression
+  process rows were narrowed to `GO:0000122`. `GO:0014034` NC fate commitment
+  was accepted as core. Mesoderm and organizer roles are a separate, non-core
+  deployment. The neurogenesis regulation terms (opposite signs in two papers)
+  were marked over-annotated. FoxD3 is also expressed in blastula cells, and
+  mouse Foxd3 maintains epiblast and crest progenitors; that competence role
+  is left as a question for frog. Evolution: repressor activity and DNA
+  specificity are ancestral, since amphioxus FoxD has both [PMID:24252777].
+  New in vertebrates are expression at the border [PMID:18562679] and the
+  N-terminal motif that lets FoxD3 induce crest. So both *cis*-regulatory and
+  protein changes were involved.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
