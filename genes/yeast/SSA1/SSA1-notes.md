@@ -106,8 +106,8 @@
   provenance remains visible while validation and the rendered review focus on
   the live 70 rows.
 - The three new current rows were reviewed from cached evidence rather than left
-  `PENDING`: GO:0005524 ATP binding from InterPro was modified to the more
-  informative ATP hydrolysis activity; GO:0017053 Hap1-Ssa-Ydj1-Sro9
+  `PENDING`: GO:0005524 ATP binding from InterPro was accepted as a distinct
+  nucleotide-binding-domain activity; GO:0017053 Hap1-Ssa-Ydj1-Sro9
   transcription repressor complex was kept as a non-core chaperone context; and
   GO:0070585 protein localization to mitochondrion was kept as non-core because
   PMID:8754838 supports an Ssa/Ydj1 effect on one tested mitochondrial precursor
