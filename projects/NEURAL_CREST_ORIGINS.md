@@ -143,7 +143,7 @@ Last updated: 2026-10-01
 - [x] `XENLA/sox9-a` (B7ZR65) — SoxE; NC specifier + crest-derived chondrogenesis. Reviewed 2026-10-01: 45 GOA rows (22 ACCEPT, 16 non-core, 5 MODIFY, 1 REMOVE, 1 over-annotated) + 1 NEW (GO:0001228)
 - [ ] `XENLA/twist1` (P13903) — Twist; *Ciona* Twist misexpression makes a9.49 cells migratory
 - [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
-- [ ] `XENLA/myc-a` (P06171) — c-Myc; NC stem-cell pool (cross-check `human/MYC`)
+- [x] `XENLA/myc-a` (P06171) — c-Myc; competence factor carried from the blastula. Reviewed 2026-10-01: 11 GOA rows (10 ACCEPT, 1 non-core) + 1 NEW (GO:0014029, IMP PMID:12791268 — **flagged for curator check**, see notes)
 - [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (20 ACCEPT, 5 MODIFY, 2 REMOVE, 1 non-core)
 - [ ] `XENLA/sox8` (Q6VVD7) — SoxE
 
@@ -260,6 +260,22 @@ Last updated: 2026-10-01
   Open: stem cell population maintenance (`GO:0019827`) for the shared
   Myc–Id3 blastula/NC programme [PMID:25931449] was raised as a question,
   not added.
+
+- **myc-a.** Competence factor carried over from the blastula. Myc is
+  expressed in pluripotent blastula cells [PMID:25931449], appears at the
+  border before slug, and is needed for crest precursors through Id3
+  [PMID:15772131]. The crest requirement does not depend on proliferation
+  [PMID:12791268], so the proliferation IBA is non-core. NEW `GO:0014029`
+  (IMP, PMID:12791268) was added at the broad level, matching id3-a.
+  **Flag:** no Myc ortholog in any species carries a neural crest process
+  term. Under CLAUDE.md a systematic absence should be read as a possible
+  convention. We judge it a coverage gap: Myc is a DNA-binding transcription
+  factor that directly drives Id3 in the crest, so it does part of the work.
+  This needs a curator decision. Open: the c-myc I/II naming conflicts
+  between Vriz 1989 and UniProt. The morpholino hits both homeologs, so the
+  same evidence applies to myc-b (P15171). Evolution: frog uses c-Myc at the
+  border, while chick uses N-Myc there and c-Myc later, so the crest needs
+  Myc *activity* rather than one specific paralog.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
