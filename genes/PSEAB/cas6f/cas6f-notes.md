@@ -81,13 +81,40 @@ Csy complex, an ortholog of the E. coli Cascade, and crRNA"].
   type I-E counterpart Cas6e/CasE (Q46897) carries exactly `GO:0004521` by IDA from
   PMID:18703739 (`genes/ECOLI/casE/casE-goa.tsv`). So the specific term is the
   convention for this family, and PA14 Cas6f is simply lagging. → MODIFY.
-- Both `GO:0005515 protein binding` rows are uninformative per project policy. What the
-  Csy4–Csy3 IPI actually establishes is Csy complex membership. **Comparator check:**
-  every E. coli Cascade subunit (casA, casB, casC, casD, casE) carries
-  `part_of GO:0032991 protein-containing complex` by IDA/IPI, including casE with an IPI
-  on the same partner-pair shape. GO has no CC term for a CRISPR surveillance complex
-  (QuickGO search for "CRISPR" returns only BP terms), so `GO:0032991` is the term the
-  consortium actually uses here. → MODIFY both to `GO:0032991`.
+- Both `GO:0005515 protein binding` rows are uninformative per project policy. The
+  Csy4–Csy3 IPI samples a contact internal to the Csy complex: Cas6f clamps the crRNA
+  3' stem-loop at the PAM-distal head and abuts the Cas7f backbone from there, and
+  because it never releases the product it cleaved, that clamp nucleates the whole
+  assembly. → MODIFY both to `GO:0005198 structural molecule activity`.
+
+  **Aspect correction (follow-up).** My first pass proposed
+  `part_of GO:0032991 protein-containing complex` as the replacement, reasoning from the
+  E. coli comparator where all five Cascade subunits carry exactly that. That was wrong
+  in form: these GOA rows carry `qualifier: enables`, so they are molecular-function
+  rows, and a gene product cannot *enable* a cellular component. However
+  well-supported complex membership is, it cannot be expressed by swapping a CC term
+  into an `enables` MF row. The E. coli reviews were not making this mistake — their
+  GOA already contained separate `part_of GO:0032991` rows, which they MODIFY to
+  `GO:1990904`; their `enables GO:0005515` rows went to `GO:0005198` instead.
+  Reconciled to the same convention:
+
+  - **MODIFY the `enables` rows to `GO:0005198 structural molecule activity`** ("the
+    action of a molecule that contributes to the structural integrity of a complex").
+    Aspect-correct, and none of its 22 children fits a non-ribosomal ribonucleoprotein,
+    so the parent is the right level. Each row is backed by the verbatim structural
+    quote naming the contact this subunit actually makes.
+  - **Carry complex membership on its own `NEW part_of GO:1990904 ribonucleoprotein
+    complex` row.** PA14 has no `part_of` complex row for any Csy subunit, unlike all
+    five E. coli Cascade subunits, so this is a real missing annotation rather than a
+    reformulation. `GO:1990904` rather than the bare `GO:0032991` root because the
+    60-nt crRNA is an integral component, not a ligand.
+  - **`core_functions[].in_complex` → `GO:1990904`** for the same reason.
+  - **Added a `proposed_new_terms` entry** for a "CRISPR RNA-guided surveillance
+    complex" CC term under `GO:1990904`, identical in substance to the one the five
+    E. coli Cascade reviews carry, so the two systems request one term rather than two.
+    GO's entire CRISPR vocabulary is five BP terms (`GO:0099048`, `GO:0043571`,
+    `GO:0098672` and the obsolete `GO:0110132`/`GO:0110133`); ComplexPortal models the
+    type I-E complex as CPX-1005, GO does not.
 - `GO:0043571 maintenance of CRISPR repeat elements` — both the IEA and the CACAO IMP
   are right. The term's definition explicitly includes "transcription of the CRISPR
   repeat arrays into RNA and processing" and "capture of new spacer elements", which is

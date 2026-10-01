@@ -54,7 +54,7 @@ missing a part.
 | Interference — target recognition | recognition blockade | DNA mimicry at the PAM site | AcrIIA4 (`UniProtKB:A0A247D711`) |
 | Interference — Cas3 recruitment | nuclease neutralisation | Cas3 sequestration (`GO:0140311`) | AcrF3-family (`UniProtKB:L7P7R7`) |
 | Interference — Cas9 cleavage | nuclease neutralisation | HNH-domain occlusion | AcrIIC1 (`UniProtKB:A0A2D0TCG3`) |
-| Interference — cOA signalling | enzymatic subversion | cOA ring nuclease | AcrIII-1 / DUF1874 family |
+| Interference — cOA signalling | enzymatic subversion | cOA ring nuclease | AcrIII-1 (`UniProtKB:Q8QL27`) |
 
 Two asymmetries in that table are worth reading as biology rather than as gaps in
 the curation.
@@ -114,11 +114,13 @@ unrepresentable in GO:
   different product — and must not be reused here. The matching gap in the
   suppression module is the absence of a ring nuclease term for degrading the
   same messenger.
-- **No molecular function for mimicry-based competitive inhibition or for
-  single-domain occlusion.** `GO:0140311` protein sequestering activity genuinely
-  fits AcrF3, and is used. Nothing fits AcrIIA4 or AcrIIC1, so both carry an
-  explicit `preferred_term` with **no id** rather than a binding term that would
-  discard the mechanism.
+- **No molecular function for mimicry-based competitive inhibition.** `GO:0140311`
+  protein sequestering activity genuinely fits AcrF3, and `GO:0140721` nuclease
+  inhibitor activity fits AcrIIC1 — this page previously claimed nothing in GO
+  covered the latter, which was wrong. What remains unexpressible for AcrIIC1 is
+  only the domain-level specificity, better pursued as an extension of
+  `GO:0140721` than as a new term. Mimicry is the real gap, and the reviews now
+  draft a term for it.
 
 Where no term exists, these modules assert no id. That is a deliberate choice: an
 omitted id says "not established", whereas a plausible-looking wrong id says
@@ -134,23 +136,36 @@ as fetched.
 
 ## Status and next steps
 
-Both modules validate (`linkml-validate -C ModuleReview` and the module
-validator) and render with no leaf-grounding gaps. Of 26 UniProt groundings in
-the host module, **none** has a gene review; in the suppression module 2 of 9 do
-(AcrF8 and its Aca2 partner). Candidates, in rough order of value:
+Both modules validate and render with no leaf-grounding gaps. **All 35 UniProt
+groundings now have gene reviews** — the 33 added in this batch plus the two that
+existed. Nine are `DRAFT` rather than `COMPLETE`, deliberately: the Cascade and
+class 2 sets each turn on a judgement call that wants a second opinion rather
+than on anything mechanical.
 
-- **`cas1`/`cas2` (`UniProtKB:Q46896`, `UniProtKB:P45956`)** — the adaptation
-  pair, and the place to settle whether Cas2 should carry any molecular function
-  at all. The module currently asserts none, on the grounds that its role is
-  structural; a review would test that.
-- **`cas9` (`UniProtKB:Q99ZW2`)** — heavily studied, and the natural host-side
-  counterpart to the existing AcrF8 review.
-- **`cas10`/`csm6` (`UniProtKB:Q53W19`, `UniProtKB:Q53W17`)** — the type III
-  pair, where the cOA ontology gap would need to be stated as a
-  `proposed_new_terms` entry rather than only as a module knowledge gap.
-- **`AcrIIA4` (`UniProtKB:A0A247D711`)** — the DNA-mimicry exemplar, and the
-  second-best-characterised Acr after AcrF8.
+Five ontology terms are drafted across the reviews, each argued as a missing
+member of an existing series rather than a one-off: cyclic oligoadenylate
+synthase activity and cyclic oligoadenylate binding (type III), guide
+RNA-directed target recognition and guide RNA-dependent nucleic acid
+endonuclease activity (kept as a complementary pair, since a catalytically dead
+but guide-loaded effector retains the first and loses the second), and nucleic
+acid mimicry-based competitive inhibitor activity (converged on independently by
+three sequence-unrelated anti-CRISPR families). A CRISPR RNA-guided surveillance
+complex CC term is requested too, on the finding that GO's entire CRISPR
+vocabulary is biological-process terms.
 
-Neither module has a `-deep-research-*.md` report; both were curated from the
-primary literature, GOA, UniProt and InterPro directly, and the QC panel reports
-the absence.
+Reviewing the exemplars corrected the modules in eight places, which is the
+argument for doing it: Cas2 does have a molecular function, Cas3's asserted
+function was the wrong one of its two activities, Cas12a's GOA term imports
+DNase I chemistry it does not have, AcrF2's blocked surface *is* established and
+makes it the strongest cross-class mimicry case, AcrVA1's catalyst is not
+established enough to be a family membership criterion, `GO:0140721` covers
+AcrIIC1, both complexes can be grounded at `GO:1990904`, and the AcrIII-1
+accession was resolvable after all.
+
+The remaining work is curation of the drafted terms with GO, and the open
+questions each review records.
+
+Neither module has a `-deep-research-*.md` report, and neither do the gene
+reviews: no provider API keys are configured in this environment, so findings
+went to `GENE-notes.md` files with verbatim `[PMID:x "..."]` provenance instead
+of a fabricated provider file. The QC panel reports the absence.
