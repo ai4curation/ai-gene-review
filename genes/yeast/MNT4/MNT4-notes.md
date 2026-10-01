@@ -184,3 +184,25 @@ MNN1/MNT2/MNT3, but the same 1999 family paper reported that MNT4 does not appea
 required for O-glycan synthesis, so the process should not be transferred to MNT4 without
 a new MNT4-specific assay. Newer literature and database searches found no direct post-1999
 paper that changes this boundary.
+
+## 2026-10-01 — current GOA refresh
+
+Forced a current GOA refresh for the IBA campaign. The refreshed snapshot has
+13 live GOA rows and seeded two rows that SGD now emits separately:
+`GO:0000033 alpha-1,3-mannosyltransferase activity` ISS rows from
+PMID:10521541 with MNT3 (`SGD:S000001276`) and MNT2 (`SGD:S000003226`)
+in `WITH/FROM`.
+
+Both new ISS rows were accepted with the same caveat as the pre-existing MNN1
+ISS and PTHR31392 IBA molecular-function rows: they support a probable MNN1/MNT
+family alpha-1,3-mannosyltransferase activity for MNT4, but the MNT4 acceptor
+remains unknown and the same Romero et al. paper reported that MNT4 is not
+required for O-glycan synthesis.
+
+Rechecked the three current PTHR31392/PTN001264810 IBA rows. The
+`GO:0000033` activity IBA remains sound, the `GO:0005794` Golgi apparatus IBA
+remains plausible but non-core because MNT4-specific localization is not
+established, and the `GO:0006493 protein O-linked glycosylation` IBA remains
+over-annotated because the transfer is sound for MNN1/MNT2/MNT3 but unsafe for
+MNT4. Searched current MNT4/Mnt4/YNR059W literature and found no newer direct
+yeast MNT4 paper that changes this boundary.
