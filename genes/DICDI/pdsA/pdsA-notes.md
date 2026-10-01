@@ -1,0 +1,13 @@
+# pdsA notes
+
+## 2026-09-20 focused report incorporation
+
+The full OpenScientist report on extracellular PDE and cAMP pathway regulation was read and its primary leads checked. The report confirms PdsA extracellular hydrolysis and the direct intracellular role of RegA, but its REFUTED recommendation applies an unjustified direct-only restriction to a negative-regulation BP. Both challenged IBAs now remain UNDECIDED rather than REMOVE/over-annotated. The current PTHR28283 PAINT slice places both at PTN002001416; source node identity is retained and no donor-count objection is used.
+
+PMID:17040207 models distinct nucleotide pools. PMID:30790701 and PMID:11390363 concern RegA/PKA; they do not test loss of a PdsA feedback role. PMID:23473502 explicitly describes a "dual positive and negative feedback circuit" coupling extracellular degradation to cAMP relay. The full 2009 methods/results (PMID:19477920) show normal ACA activation in pdsA-null cells prepared with exogenous PDE and stimulated with 10 micromolar cAMP: "Cells were stimulated with 10 μM cAMP." This preserves signaling machinery under that assay, not native PKA dynamics or glucose signaling. PMID:9405107 confirms PdsA loss/complementation affects coordinated development; PMID:36688866 mainly tests Polysphondylium violaceum, so its cross-species compartment comparison is not direct Dictyostelium negative evidence.
+
+The report itself states "no assay shows PdsA setting intracellular cAMP" and lists the existence/absence of a glucose-sensing Dictyostelium GPCR pathway as a knowledge gap. Missing assays and unverified pathway absence cannot be converted into demonstrated loss. It did not read fungal source papers in full; PTN002001416 is a node rather than a PANTHER family. Its claimed GO:1902660 row is absent from the current review and was not used.
+
+The useful directionality lead was verified against live QuickGO definitions: GO:0007193 denotes signaling via adenylate-cyclase inhibition, whereas GO:0106072 denotes negative regulation of an adenylate-cyclase-activating pathway. The original IMP row is MODIFY to the latter based on the actual cAMP-clearance feedback mechanism. No new process assertion was added. Catalytic cAMP binding was restored to ACCEPT; the cGMP-specific core entry no longer lists cAMP catabolism as the process of that reaction. Original GOA source fields and NOT localization metadata are unchanged. Existing positive/negative plasma-membrane evidence conflict remains explicitly unresolved.
+
+No duplicate report is requested; remaining glucose-pathway and PKA-output questions require expert/source follow-up.

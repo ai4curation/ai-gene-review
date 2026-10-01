@@ -85,3 +85,20 @@ The BioReason deep-research file provides a generally accurate functional summar
 - Mention of "CAF40 and NRD1 recruit the complex to histone mRNAs" is speculative -- no direct evidence for CAF40 involvement with TRAMP
 - Claim of "E3 ubiquitin ligase-like factor" (presumably HUL4/UBR5) is speculative for regulating complex turnover
 - Overall the functional summary is largely accurate but over-interprets some mechanistic details
+
+## 2026-09-28 IBA/new-literature re-review
+
+- All five current PAP2 IBA rows are placed by PAINT on the same `PANTHER:PTN000558564`
+  ancestral node in the poly(A) RNA polymerase family `PTHR23092`, covering nucleolus,
+  `RNA 3'-end processing`, `poly(A) RNA polymerase activity`,
+  `polyadenylation-dependent ncRNA catabolic process`, and the `TRAMP complex`. This node
+  placement is sound for budding-yeast Trf4/PAP2; the downstream `PANTHER:PTN008590285`
+  Schizosaccharomyces branch records inferred loss of most TRAMP-like assertions rather than
+  evidence against the Saccharomyces target.
+- Searched for newer PAP2/TRF4/TRAMP papers. The directly relevant newer primary paper is
+  Denson et al. PNAS 2025, PMID:39752526, which appears to supersede the 2024 bioRxiv
+  preprint PMID:39211223 and refines Trf4-Air2-Mtr4 assembly/RNA-binding dynamics in vitro.
+- Migrated the eleven generic `GO:0005515 protein binding` IPI rows from
+  `MARK_AS_OVER_ANNOTATED` to `REMOVE`. The TRAMP-component interactions are already captured
+  by `GO:0031499 TRAMP complex` and the helicase contribution annotation; broad interactome
+  hits do not state a molecular function.

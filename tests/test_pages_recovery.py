@@ -85,8 +85,7 @@ def good_manifest():
 
 @pytest.mark.parametrize('field,value', [
     ('deployable', False), ('size_budget_bytes', BUDGET + 1), ('total_bytes', BUDGET + 1),
-    ('total_bytes', True), ('linked_source_files_not_staged', 1),
-    ('broken_local_link_paths', ['missing.html']), ('off_base_path_urls', ['/genes/x']),
+    ('total_bytes', True),
 ])
 def test_rechecks_publication_policy(tmp_path, field, value):
     archive = tmp_path / 'artifact.tar'
@@ -185,10 +184,10 @@ def test_record_binds_manifest_to_the_actual_archive(tmp_path):
     validate_manifest(recorded, archive)
 
 
-def test_archive_cap_allows_tar_overhead_without_raising_site_limit(tmp_path):
+def test_artifact_over_one_gb_is_allowed_but_absolute_limit_is_rejected(tmp_path):
     archive = tmp_path / 'artifact.tar'
     with archive.open('wb') as stream:
-        stream.truncate(BUDGET + 1)
+        stream.truncate(1_073_741_825)
     validate_manifest(good_manifest(), archive)
     manifest = good_manifest()
     manifest['total_bytes'] = BUDGET + 1
@@ -206,3 +205,48 @@ def test_source_records_checksum_before_uploading_diagnostics_and_deploying():
     assert "steps.pages-summary.outputs.deployable == 'true'" in record['if']
     assert 'if [ ! -f "$PAGES_ARCHIVE_PATH" ]' in record['run']
     assert '::error title=Pages archive missing::' in record['run']
+
+
+def test_explicit_legacy_size_retry_keeps_integrity_checks(tmp_path):
+    archive = tmp_path / 'artifact.tar'
+    archive.write_bytes(b'original uploaded bytes')
+    digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+    manifest = dict(good_manifest(), deployable=False, size_budget_bytes=1_000_000_000,
+                    archive_size_budget_bytes=1_073_741_824, total_bytes=1_001_898_215,
+                    archive_checksum_required=True)
+    with pytest.raises(ValueError):
+        validate_manifest(manifest, archive)
+    validate_manifest(manifest, archive, digest)
+    with pytest.raises(ValueError, match='checksum'):
+        validate_manifest(manifest, archive, '0' * 64)
+    validate_manifest(dict(manifest, broken_local_link_paths=['missing.pdf']), archive, digest)
+    validate_manifest(dict(manifest, linked_source_files_not_staged=1), archive, digest)
+
+
+def test_enabled_publication_cannot_silently_skip_deployment():
+    job = yaml.safe_load(Path('.github/workflows/generate-pages.yaml').read_text())['jobs']['publication-status']
+    assert job['needs'] == ['generate-pages', 'deploy-pages']
+    assert 'always()' in job['if']
+    assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in job['if']
+    script = job['steps'][0]['run']
+    assert '"$DEPLOY_RESULT" != success' in script and 'exit 1' in script
+
+
+def test_content_quality_diagnostics_do_not_block_valid_archive(tmp_path):
+    archive = tmp_path / 'artifact.tar'
+    archive.write_bytes(b'valid uploaded archive')
+    manifest = dict(good_manifest(), linked_source_files_not_staged=1,
+                    broken_local_link_paths=['missing.pdf'], off_base_path_urls=['/genes/example'],
+                    archive_checksum_required=True, archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
+    validate_manifest(manifest, archive)
+    archive.write_bytes(b'corrupted archive')
+    with pytest.raises(ValueError, match='checksum'):
+        validate_manifest(manifest, archive)
+
+
+def test_source_validation_is_independent_of_biological_validation():
+    run, jobs, artifacts = source_inputs()
+    jobs['jobs'][0]['steps'] = [step for step in jobs['jobs'][0]['steps']
+                                 if step['name'] != 'Validate module YAML files']
+    jobs['jobs'][0]['steps'].append({'name': 'Validate module YAML files', 'conclusion': 'failure'})
+    assert validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)['github-pages'] == 2

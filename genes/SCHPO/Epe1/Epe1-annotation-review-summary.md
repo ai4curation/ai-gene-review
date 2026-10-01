@@ -1,30 +1,49 @@
 # Epe1 GO Annotation Review Summary
 
 ## Overview
-Completed comprehensive review of 32 existing GO annotations for S. pombe Epe1 protein based on current literature evidence demonstrating it is NOT an active histone demethylase but rather a non-enzymatic anti-silencing factor.
+Completed review of 33 existing GO annotations for S. pombe Epe1. No histone demethylase activity has been detected for purified Epe1, its JmjC Fe(II) triad is non-canonical, and its characterized anti-silencing mechanisms involve protein interactions; whether it has latent or in vivo catalytic activity is unresolved.
 
 ## Key Findings
 
-### Incorrect Annotations Removed (10 annotations)
-1. **GO:0032452** (histone demethylase activity) - REMOVE
-2. **GO:0032454** (histone H3K9 demethylase activity) x2 - REMOVE 
-3. **GO:0140680** (histone H3K36me/H3K36me2 demethylase activity) - REMOVE
-4. **GO:0016491** (oxidoreductase activity) - REMOVE
-5. **GO:0051213** (dioxygenase activity) - REMOVE
-6. **GO:0046872** (metal ion binding) - REMOVE
+*Notation: authored prose writes "alpha-ketoglutarate" or "2-oxoglutarate" in ASCII; verbatim quotes keep the source's own characters (for example "α-ketoglutarate" in Raiymbek 2020).*
 
-**Rationale**: Extensive biochemical evidence shows Epe1 lacks enzymatic activity:
-- No demethylase activity detected in vitro (Raiymbek 2020, PMID:32433969)
-- Lacks critical catalytic residues (HVD instead of HXD motif)
-- H297A catalytic mutant retains anti-silencing function (Bao 2019, PMID:30531922)
-- C-terminus alone (without JmjC) can disrupt heterochromatin
+### Propagated catalytic annotations removed (4 annotations)
+1. **GO:0032452** (histone demethylase activity, IBA) - REMOVE
+2. **GO:0140680** (histone H3K36me/H3K36me2 demethylase activity, IEA) - REMOVE
+3. **GO:0016491** (oxidoreductase activity, IEA) - REMOVE
+4. **GO:0051213** (dioxygenase activity, IEA) - REMOVE
 
-### Annotations Modified for Specificity (3 annotations)
-1. **GO:0005515** (protein binding) → More specific binding terms
-2. **GO:0006338** (chromatin remodeling) → More specific mechanisms
-3. **GO:0031507** (heterochromatin formation) → Negative regulation terms
+What is removed is the PAINT/keyword inference of canonical JHDM1-type activity, not a claim that latent activity is excluded. GO:0032452 histone demethylase activity is an OLS ancestor of GO:0032454 histone H3K9 demethylase activity, whose two experimental rows are UNDECIDED; if PomBase upholds either, GO:0032452 follows by the true-path rule, so the GO:0032452 REMOVE rejects only the IBA inference path. GO:0016491 and GO:0051213 are not ancestors of GO:0032454 (OLS hierarchicalAncestors of GO:0032454) and do not formally conflict with it, although JmjC demethylation is 2-oxoglutarate-dependent dioxygenase chemistry.
 
-### Annotations Accepted (19 annotations)
+### Annotations left undecided (4 annotations)
+- **GO:0032454** (histone H3K9 demethylase activity) x2 - UNDECIDED (IDA/EXP from PMID:25838386; in vivo genetic evidence, catalysis disputed; not removed, flagged for discussion with PomBase)
+- **GO:0046872** (metal ion binding, IEA) - UNDECIDED (UniProt Metal-binding keyword, resting on its BINDING 297/299 Fe cation features, which are themselves predicted from the JmjC ProRule PRU00538; H297 and E299 are retained, the third His ligand is Y370, and metal binding has not been measured)
+- **GO:0031507** (NOT heterochromatin formation, negated IDA, PMID:25831549) - UNDECIDED (the biology, that Epe1 opposes heterochromatin assembly, is sound, but OLS lists GO:0031507 as an ancestor of GO:0033696, so the seven accepted GO:0033696 rows entail what this row denies under the true-path rule; left UNDECIDED rather than overruling the curator, and raised with PomBase)
+
+**Rationale**:
+- No demethylase activity detected in vitro (Tsukada 2006, PMID:16362057; Raiymbek 2020, PMID:32195666)
+- Non-canonical Fe(II) ligand set: the JmjC triad is H297-E299-Y370, with Tyr370 in place of the third (His) iron ligand of canonical HX(D/E)...H demethylases. The divergent Tyr is nonetheless required, independently of Ayoub: Raiymbek 2020 (PMID:32195666) report "Replacing the non-conserved tyrosine residue in Epe1 with alanine (epe1 Y370A) leads to a similar loss of function phenotype. Hence, despite the lack of conservation, a natural tyrosine substitution within the JmjC domain of Epe1 is essential for its anti-silencing function in cells." Required is not catalytic, since H297A, Y307A and Y370A all weaken the Swi6 interaction; the triad argument rests on Tyr370 differing from the canonical His and on the undetected activity, not on the site being dispensable
+- The H297A Fe(II)-site mutant does not settle the question, and its phenotype depends on the assay: at endogenous levels it behaves like epe1Δ in erasing tethering-induced H3K9me (Audergon 2015, PMID:25838386) and fails to remove established ectopic heterochromatin while still suppressing variegation (Sorida 2019, PMID:31206516); only when overexpressed does it still disrupt pericentric silencing, in a SAGA-dependent way (Bao 2019, PMID:30573453)
+- C-terminus alone (without JmjC) can disrupt heterochromatin, but only partly: "Therefore, the Epe1434-948 mutant is a hypomorphic allele that partially retains wild-type levels of Epe1 anti-silencing activity.", and it is expressed 4-5 fold below full-length Epe1 (Raiymbek 2020, PMID:32195666)
+- The PHF2 JmjC domain carries a similar anomaly yet has latent, phosphorylation-activated demethylase activity (noted by Audergon 2015), which is why the experimental rows are not removed
+- Counter-evidence to a purely non-catalytic reading. The JmjC domain is essential for Epe1 activity in complementation experiments (Ayoub 2003, PMID:12773576), and Epe1's effect on Pol II accessibility requires the JmjC domain (Zofall and Grewal 2006, PMID:16762840), although Zofall and Grewal note the mechanism may differ from that of demethylase JmjC proteins. UniProt records Y307A as loss of function from the same Ayoub paper (MUTAGEN 307, its only mutagenesis record); it may reflect the same Ayoub experiment, so it is not an independent line of evidence. What Y307 is: Raiymbek et al. assign it to the alpha-ketoglutarate site ("residues involved in Fe (II) or α-ketoglutarate binding (epe1 H297A and epe1 Y307A, respectively)"), and Sorida et al. describe Epe1Y307A as a JmjC mutant "which retains the metal-binding residues" (citing a background reference, [12], not resolvable from the cache). These agree: Y307 is a 2-oxoglutarate-site residue, not an Fe(II) ligand, so Raiymbek's grouping of H297A, Y307A and Y370A as residues that "affect Fe(II) or α-ketoglutarate binding" is consistent. The Y307A loss of function therefore implicates the 2-oxoglutarate part of the cofactor pocket, not just the JmjC fold, but it does not isolate catalysis: Raiymbek assert that the substitutions "disrupt co-factor binding" from the residues' assigned active-site roles, but the data shown are reporter phenotypes, Swi6 co-IP and localization, with no cofactor-binding or activity measurement on Y307A; they call the mutants' loss of enzymatic activity "presumptive", and Y307A "fails to co-localize with mCherry-Swi6HP1" in vivo. That localization result conflicts with the reference Sorida cite for Swi6 interacting with Epe1Y307A, and not only in degree: Raiymbek's text says the mutations "significantly attenuate this interaction" but their figure legend states "The interaction between the two proteins is preserved in wild-type cells and is completely eliminated in all Epe1 JmjC mutants". The Y370A loss of function is the same colony readout. The direct in vivo readout for all three residues is H3K9me: "In contrast, Epe1 mutants that exhibit a red or sectored phenotype upon +tetracycline addition retain high levels of H3K9 methylation at the ectopic site (Figure 1D)." Expression and stability are excluded for all three mutants: "We verified that the expression level of all Epe1 mutant proteins is equal relative to an actin loading control. Hence, neither overexpression artifacts nor changes in protein stability contribute to the maintenance-specific phenotype we observed in our genetic assays"; a local conformational change stays open. Raiymbek 2020 (PMID:32195666) show that the JmjC-containing half of Epe1 binds H3K9 methylation directly: "Next, we expressed and purified a C-terminal truncation mutant of Epe1, MBP-Epe1-ΔC from Sf9 insect cells, which includes amino acids 1–600 and includes the putative catalytic JmjC domain. We found that Epe1-ΔC can also directly bind to an H3K9me3 peptide and specifically interacts with H3K9 methylated histones (Figure 5—figure supplement 1A,B)." The fragment lacks residues 601-948 but still contains the minimal Swi6-binding site (434–600), and the peptide and histone assays contain no Swi6, so H3K9me recognition by the JmjC-containing half is Swi6-independent and shown by data. The authors interpret it as the JmjC domain itself being "primarily responsible for H3K9 methylation recognition and binding", a non-catalytic role; since the fragment extends beyond the JmjC domain (233–434), that assignment is their inference. The strongest independent result is Sorida 2019 (PMID:31206516): H297A, a UniProt Fe ligand (rule-predicted, PRU00538), still suppressed variegation (the de novo arm) but entirely failed to remove already-established ectopic heterochromatin, a separation of function, which a folding defect would not predict (the in vivo H3K9me readout itself is shared with Raiymbek, above; Sorida's distinct contribution is the separation); recombinant H297A also has the same denaturation temperature as wild type (Raiymbek 2020). The removal arm has a dosage condition. It is read at single-copy expression, where Sorida et al. report that "re-introduction of single copy Epe1 did not erase ectopic heterochromatin when an H3K9me source existed nearby, while Epe1 overexpression completely erased it", so the H297A removal defect is seen where wild-type removal is already limited, and whether overexpressed H297A would remove established ectopic heterochromatin is not reported. Prevention is nearly but not fully retained (a few pink colonies), which Sorida et al. read as JmjC-dependent demethylation contributing "to full suppression to some extent"; their abstract states that prevention acts "independently of both its JmjC-mediated demethylation and heterochromatin association ability", so the lost removal arm remains open to loss of catalysis or loss of heterochromatin association. Wang 2015 (PMID:25774602) read epe1-H374A and epe1-Y307A as enzymatically dead (residue 374 of UniProt O94603 is Thr, so the mutated histidine cannot be identified from the cache); for Y307A that reading is consistent with a 2-oxoglutarate-site mutation but is an inference, not a measurement. No study has measured enzymatic demethylation directly, and the same mutations also weaken Swi6 binding and heterochromatin localization; Sorida et al. propose this themselves ("conformational changes in the JmjC domain induced by perturbations in Fe2+ binding result in a slight alteration of the interaction surface for Swi6 binding, while severely disrupting the structure of a region essential for heterochromatin association"). Adding Fe(II), alpha-ketoglutarate and ascorbate did not change Epe1-Swi6 binding in vitro, although Raiymbek et al. note the assay cannot capture effects of co-factor binding itself. The REMOVE rows rest on the undetected in vitro activity and the non-canonical triad; this genetic evidence is what the UNDECIDED GO:0032454 rows reflect.
+
+### Annotation Modified for Specificity (1 annotation)
+1. **GO:0005515** (protein binding, IPI with Cdt2) → GO:0031625 ubiquitin protein ligase binding
+
+### Annotations Kept as Non-core (2 annotations)
+- **GO:0006325** (chromatin organization, IEA): correct but generic. The specific process is GO:0033696 heterochromatin boundary formation (seven ACCEPTed experimental rows), which lies below it.
+- **GO:0006338** (chromatin remodeling, IBA): correct but generic, for the same reason: GO:0033696 also lies below it, so no replacement is proposed. Epe1's role in heterochromatic nucleosome turnover is described in core function 4 without a process term.
+
+### Proposed New Annotations (4 NEW rows)
+1. **GO:0070087** chromo shadow domain binding (IPI, PMID:32195666): recombinant Epe1 binds Swi6, reduced by the Swi6 CSD mutation L315E; replaces the earlier GO:0140030, whose definition requires the modification on the bound protein itself
+2. **GO:0062070** SAGA complex binding (IPI, PMID:30573453): SAGA co-purifies with overexpressed Epe1 and Gcn5 co-immunoprecipitates with it, probably through Tra1, so the row asserts binding to the complex rather than GO:0035035 histone acetyltransferase binding; the association has been shown only with overexpressed Epe1
+3. **GO:0030674** protein-macromolecule adaptor activity (IMP, PMID:24013502): Epe1 binds Bdf2 and is required for its recruitment to IRC boundaries
+4. **GO:0042393** histone binding (IDA, PMID:32195666): purified Epe1 prefers H3K9me3 peptides and H3K9-methylated histones
+
+Protein acetylation (GO:0006473) is not proposed: Gcn5 in SAGA performs the acetylation, and Epe1's part is captured by GO:0062070 SAGA complex binding. Negative regulation of heterochromatin formation (GO:0031452) is not proposed either. PomBase curated Epe1's anti-silencing role as seven experimental GO:0033696 heterochromatin boundary formation rows and did not add GO:0031452, which we read as a curation convention rather than a gap. The tension with SGD's IMP annotation of DOT1 to GO:0031452 is raised as a suggested question for PomBase, as is the NOT GO:0031507 row, since GO:0031507 is an ancestor of GO:0033696. Nucleosome organization (GO:0034728) is not proposed either: epe1 deletion reduces heterochromatic histone turnover, which shows Epe1 is necessary for normal turnover, but the disassembly and reassembly are performed by chaperones and remodelers such as FACT, and by GOA convention GO:0034728 is annotated to such chaperones and remodelers. Epe1 therefore fails the participation test for a NEW process term, and its turnover role is described in core function 4 without one.
+
+### Annotations Accepted (22 annotations)
 Predominantly cellular component and biological process annotations that accurately reflect Epe1's localization and function:
 - Heterochromatin boundary formation (multiple evidence)
 - Nuclear and heterochromatin localization
@@ -33,34 +52,41 @@ Predominantly cellular component and biological process annotations that accurat
 
 ## Core Functions Identified
 
-### 1. Heterochromatin Boundary Establishment
-- **Molecular Function**: Histone binding (GO:0042393)
+### 1. Swi6/HP1 Binding at Heterochromatin
+- **Molecular Function**: Chromo shadow domain binding (GO:0070087)
 - **Process**: Heterochromatin boundary formation (GO:0033696)
-- **Mechanism**: Binds HP1/Swi6 at heterochromatin sites, recruits Bdf2
+- **Description**: Binds HP1/Swi6 at H3K9-methylated heterochromatin through C-terminal domain to antagonize silencing. Raiymbek et al. show that expressing the Epe1 C-terminus alone is sufficient to disrupt heterochromatin by outcompeting the histone deacetylase Clr3 from sites of heterochromatin formation, through this Swi6 interaction.
 
-### 2. Transcriptional Co-activation
+### 2. SAGA Association
+- **Molecular Function**: SAGA complex binding (GO:0062070)
+- **Process**: Regulation of transcription by RNA polymerase II (GO:0006357)
+- **Description**: Associates with the SAGA histone acetyltransferase complex; when overexpressed, Epe1 co-purifies with SAGA (probably through Tra1) and recruits it to heterochromatin, raising H3 acetylation. Every result used overexpressed Epe1, so the association of endogenous Epe1 is not established
+
+### 3. Bdf2 Recruitment to Boundaries
+- **Molecular Function**: Protein-macromolecule adaptor activity (GO:0030674)
+- **Process**: Heterochromatin boundary formation (GO:0033696)
+- **Description**: Recruits Bdf2 bromodomain protein to heterochromatin boundaries to recognize acetylated histones
+
+### 4. Nucleosome Turnover
+- **Molecular Function**: Histone binding (GO:0042393)
+- **Process**: none asserted (see description and suggested questions)
+- **Description**: Promotes nucleosome turnover at heterochromatin to destabilize silencing marks. Heterochromatic histone turnover is reduced when epe1 is deleted, but the chaperones and remodelers that perform nucleosome disassembly and reassembly (such as FACT) are other proteins, and Epe1's route to turnover is unknown, so no process term is asserted for this role.
+- **Knowledge gap**: Histone binding by Epe1 is directly shown (purified Epe1 preferentially binds H3K9me3 peptides and H3K9-methylated histones in vitro), and the JmjC-containing half (amino acids 1–600) binds H3K9me3 peptide and H3K9-methylated histones directly, without Swi6, which Raiymbek et al. interpret as H3K9me recognition by the JmjC domain (PMID:32195666). Whether the JmjC domain also contributes catalysis is unresolved. The domain is required for Epe1 activity (PMID:12773576) and for its effect on Pol II accessibility (PMID:16762840), UniProt records Y307A as loss of function (from the same Ayoub paper, possibly the same experiment as the domain-essential statement; Raiymbek et al. place Y307 at the 2-oxoglutarate site and Sorida et al. describe Epe1Y307A as retaining the metal-binding residues, so this implicates the 2-oxoglutarate part of the cofactor pocket, though Y307A also fails to co-localize with Swi6), and Y370A at the divergent Tyr also causes loss of function, H297A, Y307A and Y370A all retain ectopic H3K9me after the initiator is released (PMID:32195666), and Wang et al. interpret active-site mutant phenotypes as enzymatic redundancy with Mst2 (PMID:25774602), and Sorida et al. show that H297A separates the de novo arm (intact) from removal of established ectopic heterochromatin (lost) (PMID:31206516), with the de novo arm slightly weakened and the removal arm read at single-copy dose, where even wild-type removal is incomplete near an H3K9me source, but no study has measured enzymatic demethylation directly. Raiymbek et al. speculate that the activity may be latent, needing "unique substrates or conditions", and note that the Neurospora JmjC protein DMM-1 likewise lacks in vitro activity (PMID:32195666). How Epe1 increases nucleosome turnover is also not known, and no study has shown that its histone binding drives turnover. The more specific GO:0062072 histone H3K9me2/3 reader activity is not used for this core function because no study links Epe1's H3K9me binding to the turnover outcome.
+- **Open question**: No study has measured an Epe1 enzymatic activity or separated the JmjC domain's binding and catalytic contributions in vivo. The mechanism linking Epe1's H3K9me-histone binding to nucleosome turnover in heterochromatin is unknown, as is how GO should represent an upstream promoter of heterochromatic histone turnover. By GOA convention GO:0034728 nucleosome organization is annotated to the chaperones and remodelers that do the work (for example the FACT subunits), and positive regulation of histone exchange (GO:1900051) is obsolete.
+
+### 5. Transcription of Heterochromatic Repeats
 - **Molecular Function**: Transcription coregulator activity (GO:0003712)
-- **Process**: Regulation of transcription (GO:0006357)
-- **Mechanism**: Recruits SAGA histone acetyltransferase complex
-
-### 3. Anti-silencing Activity
-- **Molecular Function**: Modification-dependent protein binding (GO:0140030)
-- **Process**: Negative regulation of heterochromatin (GO:0031452)
-- **Mechanism**: Competes with silencing factors for HP1 binding
+- **Process**: Regulation of regulatory ncRNA-mediated heterochromatin formation (GO:0010964)
+- **Description**: Enables transcription of heterochromatic repeats for RNAi-mediated heterochromatin establishment
 
 ## Evidence Base
-- 33 peer-reviewed publications reviewed
+- 18 PMID references cited in the review
 - Deep research synthesis incorporated
 - UniProt annotations considered
-- Multiple experimental approaches evaluated (genetics, biochemistry, proteomics, ChIP-seq)
+- Multiple experimental approaches evaluated (genetics, biochemistry, proteomics)
 
 ## Critical Corrections Made
-The most significant correction was removing all demethylase-related annotations despite:
-- IBA (inferred by homology) evidence
-- IDA/EXP evidence codes in some databases
-- JmjC domain presence
-
-This demonstrates the importance of critical evaluation beyond evidence codes, as Epe1 is a clear example of a pseudo-enzyme that has evolved away from catalytic function while retaining the protein fold for structural/regulatory roles.
+The most significant correction was removing the propagated (IBA/IEA) demethylase, oxidoreductase and dioxygenase annotations, which rest on JmjC domain presence alone. The electronic metal ion binding row is UNDECIDED, because the Fe(II) ligands it rests on are rule-predicted and binding has not been measured, and the PomBase experimental GO:0032454 rows are also UNDECIDED rather than overruling curators who read the full text. Epe1 is best described as a JmjC protein whose catalytic activity has never been detected and whose known functions have not been shown to require it.
 
 ## Validation Status
 ✓ File passes schema validation

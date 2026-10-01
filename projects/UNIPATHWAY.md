@@ -2,9 +2,38 @@
 title: "UniPathway Unique Terms Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [human, PSEPK, RHOPA, CUPNH, FERPA, 9ARCH, DESPS, POLH7, BRADI]
+manifest:
+  slides:
+    - href: UNIPATHWAY/slides/UNIPATHWAY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/U4SuDGuX6Pm3BNujvCkbuH
+      title: Project brief
 ---
 
 # UniPathway Unique Terms Project
+
+**Bottom line:** UniPathway is an archived pathway vocabulary whose mapping
+(`GO_REF:0000041`) still supplies biological-process annotations in GOA. We
+asked where it is the only source for a gene-term pair, after removing rows that
+another source already supports at the same term or a more specific descendant.
+That closure filter cuts human UniPathway rows from 1,129 to 247, and we ran the
+same scan across 13 single-species databases and 6 clade aggregates. We then
+reviewed 32 exemplar genes across 9 organisms, from human E3 ligase adaptors to
+bacterial denitrification enzymes and Brachypodium cell-wall enzymes. Of the 32
+UniPathway rows reviewed, 24 were accepted and 2 kept as non-core (GK5, PM20D1),
+so 26 of 32 stand. The other six are specific: UBA7 is an ISG15 enzyme swept
+into `protein ubiquitination` (MODIFY), nrfA is a dissimilatory nitrite
+reductase mapped to nitrate assimilation (REMOVE), the NorR regulators (norR1,
+norR2) were attached to denitrification as if they were enzymes and LPCAT1 sits
+under a broad lipid parent (all three MARK_AS_OVER_ANNOTATED), and the fungal
+singleton AJ80_06654 is UNDECIDED.
+
+We did this to decide whether a legacy, unmaintained source should be trusted,
+cleaned, or retired. The answer so far is that UniPathway is a net positive gap
+filler, and the risk sits in broad pathway buckets rather than in wholesale
+process conflation as seen with SPKW.
 
 ## Overview
 

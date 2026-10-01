@@ -64,6 +64,41 @@
             position: relative;
         }
 
+        .browser-navigation, .dataset-tabs, .scope-note, .active-filters {
+            padding: 12px 30px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .browser-navigation, .dataset-tabs, .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .browser-navigation a { color: #047857; font-size: 0.9rem; }
+        .dataset-tabs a {
+            padding: 9px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            color: #374151;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .dataset-tabs a[aria-current="page"] { background: #ecfdf5; border-color: #059669; color: #065f46; }
+        .scope-note { color: #4b5563; line-height: 1.5; font-size: 0.9rem; }
+        .active-filters button {
+            border: 1px solid #a7f3d0;
+            border-radius: 5px;
+            padding: 5px 8px;
+            background: #ecfdf5;
+            color: #065f46;
+            cursor: pointer;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            text-align: left;
+        }
+        [hidden] { display: none !important; }
+
         .search-container {
             padding: 24px 30px;
             background: white;
@@ -712,7 +747,7 @@
             .main-content {
                 flex-direction: column;
             }
-            
+
             .sidebar {
                 width: 100%;
             }
@@ -749,6 +784,10 @@
             <p id="appDescription">Schema-driven search with high performance</p>
         </div>
 
+        <nav id="browserNavigation" class="browser-navigation" aria-label="Browse related data" hidden></nav>
+        <nav id="datasetTabs" class="dataset-tabs" aria-label="Prediction datasets" hidden></nav>
+        <p id="scopeNote" class="scope-note" hidden></p>
+
         <div class="search-container">
             <input type="text" id="searchBox" class="search-box" placeholder="Search products...">
             <div class="view-toggle" role="group" aria-label="Results view">
@@ -757,6 +796,8 @@
             </div>
             <div class="performance-info" id="performanceInfo">Ready</div>
         </div>
+
+        <div id="activeFilters" class="active-filters" aria-label="Active filters" hidden></div>
 
         <div class="main-content">
             <div class="sidebar" id="facetsPanel">
@@ -792,7 +833,7 @@
                 console.log('🏗️ OptimizedFacetedSearch constructor called');
                 console.log('Data sample:', data.slice(0, 2));
                 console.log('Schema:', schema);
-                
+
                 this.originalData = data;
                 this.schema = schema;
                 this.currentFilters = {};
@@ -815,40 +856,47 @@
                 this.facetItemsToShow = schema.facetItemsToShow || 10;
                 this.expandedFacets = new Set();
                 this.currentFacetCounts = null;
-                
+
                 try {
                     console.log('📚 Building search index...');
                     this.searchIndex = this.buildSearchIndex();
                     console.log('✅ Search index built:', this.searchIndex.size, 'tokens');
-                    
+
                     console.log('🏷️ Building facet index...');
                     this.facetIndex = this.buildFacetIndex();
                     console.log('✅ Facet index built');
-                    
+
                     console.log('🎧 Setting up event listeners...');
                     this.setupEventListeners();
-                    
+                    if (this.schema.collapseSidebarOnMobile && window.matchMedia('(max-width: 768px)').matches) {
+                        this.toggleSidebar();
+                    }
+                    if (this.schema.syncUrl) {
+                        this.restoreUrlState();
+                        this.writeUrlState('replace');
+                    }
+
                     console.log('🔍 Performing initial search...');
-                    this.search();
+                    this.search(false);
                     console.log('✅ Constructor complete');
                 } catch (error) {
                     console.error('❌ Error in constructor:', error);
                     throw error;
                 }
             }
-            
+
             // Build inverted index for fast text search
             buildSearchIndex() {
                 console.log('Building search index for', this.originalData.length, 'items');
                 const index = new Map();
-                
+
                 this.originalData.forEach((item, idx) => {
                     // Get all searchable text
                     const searchText = this.schema.searchableFields
                         .map(field => {
                             const value = item[field];
                             if (value === undefined || value === null) {
-                                console.warn(`Missing field ${field} in item:`, item);
+                                if (!this.schema.quietMissingFields) console.warn(`Missing field ${field} in item:`, item);
                                 return '';
                             }
                             if (Array.isArray(value)) {
@@ -858,7 +906,7 @@
                         })
                         .join(' ')
                         .toLowerCase();
-                    
+
                     // Tokenize and index
                     const tokens = searchText.split(/\s+/).filter(token => token.length > 0);
                     tokens.forEach(token => {
@@ -868,28 +916,28 @@
                         index.get(token).add(idx);
                     });
                 });
-                
+
                 console.log('Search index created with', index.size, 'unique tokens');
                 return index;
             }
-            
+
             // Build facet index for fast filtering
             buildFacetIndex() {
                 console.log('Building facet index for fields:', this.schema.facets.map(f => f.field));
                 const index = {};
-                
+
                 this.schema.facets.forEach(facet => {
                     index[facet.field] = new Map();
                     console.log(`Processing facet: ${facet.field} (type: ${facet.type})`);
-                    
+
                     this.originalData.forEach((item, idx) => {
                         const value = item[facet.field];
-                        
+
                         if (value === undefined || value === null) {
-                            console.warn(`Missing facet field ${facet.field} in item ${idx}:`, item);
+                            if (!this.schema.quietMissingFields) console.warn(`Missing facet field ${facet.field} in item ${idx}:`, item);
                             return;
                         }
-                        
+
                         if (facet.type === 'array') {
                             if (!Array.isArray(value)) {
                                 console.warn(`Expected array for ${facet.field} in item ${idx}, got:`, typeof value, value);
@@ -906,7 +954,7 @@
                                 });
                                 return;
                             }
-                            
+
                             // Handle array case with safety check
                             value.forEach(val => {
                                 if (val !== undefined && val !== null) {
@@ -925,23 +973,22 @@
                             index[facet.field].get(key).add(idx);
                         }
                     });
-                    
+
                     console.log(`Facet ${facet.field} indexed with`, index[facet.field].size, 'unique values');
                 });
-                
+
                 return index;
             }
-            
+
             setupEventListeners() {
-                let searchTimeout;
                 document.getElementById('searchBox').addEventListener('input', (e) => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
                         this.currentQuery = e.target.value;
                         this.search();
                     }, 150); // Debounce for better UX
                 });
-                
+
                 document.addEventListener('click', (e) => {
                     if (e.target.closest('.facet-item')) {
                         this.handleFacetClick(e.target.closest('.facet-item'));
@@ -949,20 +996,20 @@
                         this.handleFacetToggle(e.target.closest('.facet-header'));
                     }
                 });
-                
+
                 // Add numeric input event listeners
                 document.addEventListener('input', (e) => {
                     if (e.target.classList.contains('numeric-input')) {
                         this.handleNumericInputChange(e.target);
                     }
                 });
-                
+
                 document.addEventListener('change', (e) => {
                     if (e.target.classList.contains('numeric-input')) {
                         this.handleNumericInputChange(e.target);
                     }
                 });
-                
+
                 document.getElementById('clearFilters').addEventListener('click', () => {
                     this.clearAllFilters();
                 });
@@ -980,9 +1027,26 @@
                         this.currentView = button.dataset.view;
                         this.updateViewToggle();
                         this.renderResults();
+                        this.writeUrlState();
+                        this.renderNavigation();
                     });
                 });
                 this.updateViewToggle();
+                if (this.schema.syncUrl) {
+                    window.addEventListener('popstate', () => {
+                        this.restoreUrlState();
+                        this.search(false);
+                    });
+                    document.getElementById('activeFilters').addEventListener('click', (event) => {
+                        const button = event.target.closest('button[data-filter]');
+                        if (!button) return;
+                        const field = button.dataset.filter;
+                        if (field === 'q') this.currentQuery = '';
+                        else delete this.currentFilters[field];
+                        document.getElementById('searchBox').value = this.currentQuery;
+                        this.search();
+                    });
+                }
 
                 // Load more button (delegated since it's dynamically created)
                 document.addEventListener('click', (e) => {
@@ -1005,6 +1069,120 @@
                 });
             }
 
+            urlFilterFields() {
+                return [...new Set([
+                    ...this.schema.facets.map(facet => facet.field),
+                    ...(this.schema.urlFilterFields || [])
+                ])];
+            }
+
+            restoreUrlState() {
+                clearTimeout(this.searchTimeout);
+                clearTimeout(this.sliderTimeout);
+                const params = new URLSearchParams(window.location.search);
+                this.currentQuery = params.get('q') || '';
+                this.currentFilters = {};
+                this.urlFilterFields().forEach(field => {
+                    const facet = this.schema.facets.find(config => config.field === field);
+                    if (facet && facet.type === 'integer') {
+                        const min = params.get(`${field}.min`);
+                        const max = params.get(`${field}.max`);
+                        if (min !== null && max !== null && Number.isFinite(Number(min)) && Number.isFinite(Number(max))) {
+                            this.currentFilters[field] = {min: Number(min), max: Number(max)};
+                        }
+                    } else {
+                        const values = params.getAll(field);
+                        if (values.length) this.currentFilters[field] = [...new Set(values)];
+                    }
+                });
+                // Explicit identity links must reach historical records too. A marker
+                // distinguishes a deliberately cleared filter set from a first visit.
+                if (!params.has('filters') && !(this.schema.defaultFilterBypassFields || []).some(field => params.has(field))) {
+                    Object.entries(this.schema.defaultFilters || {}).forEach(([field, values]) => {
+                        if (!this.currentFilters[field]) this.currentFilters[field] = [...values];
+                    });
+                }
+                const view = params.get('view');
+                this.currentView = ['table', 'card'].includes(view) ? view : (this.schema.defaultView || 'table');
+                document.getElementById('searchBox').value = this.currentQuery;
+                this.updateViewToggle();
+            }
+
+            writeUrlState(mode = 'push') {
+                if (!this.schema.syncUrl) return;
+                const url = new URL(window.location.href);
+                ['q', 'view', ...this.urlFilterFields()].forEach(field => {
+                    url.searchParams.delete(field);
+                    url.searchParams.delete(`${field}.min`);
+                    url.searchParams.delete(`${field}.max`);
+                });
+                url.searchParams.set('filters', '1');
+                if (this.currentQuery) url.searchParams.set('q', this.currentQuery);
+                if (this.currentView !== (this.schema.defaultView || 'table')) url.searchParams.set('view', this.currentView);
+                Object.entries(this.currentFilters).forEach(([field, values]) => {
+                    if (Array.isArray(values)) values.forEach(value => url.searchParams.append(field, value));
+                    else {
+                        url.searchParams.set(`${field}.min`, values.min);
+                        url.searchParams.set(`${field}.max`, values.max);
+                    }
+                });
+                if (url.href !== window.location.href) {
+                    window.history[mode === 'replace' ? 'replaceState' : 'pushState'](null, '', url.href);
+                }
+            }
+
+            renderNavigation() {
+                const navigation = document.getElementById('browserNavigation');
+                navigation.replaceChildren();
+                (this.schema.navigationLinks || []).forEach(item => {
+                    const link = document.createElement('a');
+                    link.href = item.href;
+                    link.textContent = item.label;
+                    navigation.append(link);
+                });
+                navigation.hidden = !navigation.children.length;
+                const tabs = document.getElementById('datasetTabs');
+                tabs.replaceChildren();
+                (this.schema.datasetTabs || []).forEach(tab => {
+                    const link = document.createElement('a');
+                    const url = new URL(window.location.href);
+                    const preserved = new Set(['q', 'view', 'filters', ...(this.schema.sharedFilterFields || [])]);
+                    [...url.searchParams.keys()].forEach(key => {
+                        if (!preserved.has(key)) url.searchParams.delete(key);
+                    });
+                    url.searchParams.set('dataset', tab.value);
+                    link.href = url.href;
+                    link.dataset.dataset = tab.value;
+                    link.textContent = `${tab.label} (${tab.count.toLocaleString()})`;
+                    if (tab.value === this.schema.dataset) link.setAttribute('aria-current', 'page');
+                    tabs.append(link);
+                });
+                tabs.hidden = !tabs.children.length;
+                const note = document.getElementById('scopeNote');
+                note.textContent = this.schema.scopeNote || '';
+                note.hidden = !note.textContent;
+                const active = document.getElementById('activeFilters');
+                active.replaceChildren();
+                if (this.schema.syncUrl) {
+                    const entries = Object.entries(this.currentFilters);
+                    if (this.currentQuery) entries.unshift(['q', [this.currentQuery]]);
+                    entries.forEach(([field, values]) => {
+                        const facet = this.schema.facets.find(config => config.field === field);
+                        const label = facet ? facet.label : ((this.schema.urlFilterLabels || {})[field] || (field === 'q' ? 'Search' : field));
+                        const display = Array.isArray(values)
+                            ? values.map(value => facet && facet.valueLabels ? (facet.valueLabels[value] || value) : value).join(', ')
+                            : `${values.min}–${values.max}`;
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.dataset.filter = field;
+                        button.textContent = `${label}: ${display} ×`;
+                        button.setAttribute('aria-label', `Remove ${label} filter`);
+                        active.append(button);
+                    });
+                }
+                active.hidden = !active.children.length;
+            }
+
             toggleSidebar() {
                 this.sidebarCollapsed = !this.sidebarCollapsed;
                 const sidebar = document.getElementById('facetsPanel');
@@ -1021,15 +1199,15 @@
                     button.setAttribute('aria-pressed', String(isActive));
                 });
             }
-            
+
             handleFacetClick(facetItem) {
                 const filterKey = facetItem.dataset.filter;
                 const value = facetItem.dataset.value;
-                
+
                 if (!this.currentFilters[filterKey]) {
                     this.currentFilters[filterKey] = [];
                 }
-                
+
                 const index = this.currentFilters[filterKey].indexOf(value);
                 if (index > -1) {
                     this.currentFilters[filterKey].splice(index, 1);
@@ -1039,15 +1217,15 @@
                 } else {
                     this.currentFilters[filterKey].push(value);
                 }
-                
+
                 this.search();
             }
-            
+
             handleFacetToggle(facetHeader) {
                 const field = facetHeader.dataset.field;
                 const facetContent = facetHeader.nextElementSibling;
                 const toggle = facetHeader.querySelector('.facet-toggle');
-                
+
                 if (this.collapsedFacets.has(field)) {
                     // Expand
                     this.collapsedFacets.delete(field);
@@ -1060,36 +1238,38 @@
                     toggle.classList.add('collapsed');
                 }
             }
-            
+
             clearAllFilters() {
+                clearTimeout(this.searchTimeout);
+                clearTimeout(this.sliderTimeout);
                 this.currentFilters = {};
                 this.currentQuery = '';
                 document.getElementById('searchBox').value = '';
                 this.search();
             }
-            
+
             handleNumericInputChange(element) {
                 const field = element.dataset.field;
                 const type = element.dataset.type;
                 const value = parseInt(element.value);
-                
+
                 if (!this.currentFilters[field]) {
                     const facetConfig = this.schema.facets.find(f => f.field === field);
                     if (!facetConfig || facetConfig.type !== 'integer') return;
-                    
+
                     // Initialize with full range
                     const counts = this.facetIndex[field] || new Map();
                     const values = Array.from(counts.keys()).map(k => parseInt(k)).filter(v => !isNaN(v));
                     if (values.length === 0) return;
-                    
+
                     const minValue = Math.min(...values);
                     const maxValue = Math.max(...values);
                     this.currentFilters[field] = { min: minValue, max: maxValue };
                 }
-                
+
                 // Update the filter value
                 this.currentFilters[field][type] = value;
-                
+
                 // Ensure min doesn't exceed max
                 if (this.currentFilters[field].min > this.currentFilters[field].max) {
                     if (type === 'min') {
@@ -1098,21 +1278,21 @@
                         this.currentFilters[field].min = value;
                     }
                 }
-                
+
                 // Update UI to reflect the change
                 this.updateSliderUI(field);
-                
+
                 // Debounce the search
                 clearTimeout(this.sliderTimeout);
                 this.sliderTimeout = setTimeout(() => {
                     this.search();
                 }, 150);
             }
-            
+
             updateSliderUI(field) {
                 const range = this.currentFilters[field];
                 if (!range) return;
-                
+
                 // Update all numeric inputs for this field
                 const inputs = document.querySelectorAll(`input[data-field="${field}"]`);
                 inputs.forEach(input => {
@@ -1120,41 +1300,41 @@
                     input.value = range[type];
                 });
             }
-            
-            search() {
+
+            search(updateUrl = true) {
                 const startTime = performance.now();
-                
+
                 let resultIndices = new Set();
-                
+
                 // Apply text search using inverted index
                 if (this.currentQuery.trim()) {
                     const tokens = this.currentQuery.toLowerCase().split(/\s+/);
-                    
+
                     if (tokens.length > 0) {
                         // Start with results for first token
                         const firstToken = tokens[0];
                         const matchingIndices = new Set();
-                        
+
                         // Find partial matches for better UX
                         for (const [indexToken, indices] of this.searchIndex) {
                             if (indexToken.includes(firstToken)) {
                                 indices.forEach(idx => matchingIndices.add(idx));
                             }
                         }
-                        
+
                         resultIndices = matchingIndices;
-                        
+
                         // Intersect with other tokens
                         for (let i = 1; i < tokens.length; i++) {
                             const token = tokens[i];
                             const tokenMatches = new Set();
-                            
+
                             for (const [indexToken, indices] of this.searchIndex) {
                                 if (indexToken.includes(token)) {
                                     indices.forEach(idx => tokenMatches.add(idx));
                                 }
                             }
-                            
+
                             // Intersect
                             resultIndices = new Set([...resultIndices].filter(idx => tokenMatches.has(idx)));
                         }
@@ -1163,16 +1343,16 @@
                     // No search query, include all items
                     resultIndices = new Set(Array.from({length: this.originalData.length}, (_, i) => i));
                 }
-                
+
                 // Apply facet filters using pre-computed index
                 for (const [filterKey, filterValues] of Object.entries(this.currentFilters)) {
                     const facetConfig = this.schema.facets.find(f => f.field === filterKey);
-                    
+
                     if (facetConfig && facetConfig.type === 'integer') {
                         // Handle numeric range filters
                         const range = filterValues;
                         console.log(`Applying range filter for ${filterKey}:`, range);
-                        
+
                         resultIndices = new Set([...resultIndices].filter(idx => {
                             const item = this.originalData[idx];
                             const value = parseInt(item[filterKey]);
@@ -1180,37 +1360,36 @@
                         }));
                     } else if (filterValues.length > 0) {
                         if (facetConfig && facetConfig.type === 'array') {
-                            // For array fields, use AND logic: item must have ALL selected values
-                            console.log(`Applying AND logic for array field ${filterKey}:`, filterValues);
-                            
+                            // Existing schemas require all values; a facet may opt into OR.
                             resultIndices = new Set([...resultIndices].filter(idx => {
                                 const item = this.originalData[idx];
                                 const itemValues = item[filterKey] || [];
-                                
-                                // Check if item has ALL selected filter values
-                                return filterValues.every(selectedValue => 
-                                    itemValues.includes(selectedValue)
-                                );
+
+                                const matches = selectedValue => itemValues.includes(selectedValue);
+                                return facetConfig.matchMode === 'any'
+                                    ? filterValues.some(matches) : filterValues.every(matches);
                             }));
                         } else {
                             // For scalar fields, use OR logic: item must match ANY selected value
                             console.log(`Applying OR logic for scalar field ${filterKey}:`, filterValues);
-                            
+
                             const facetMatches = new Set();
-                            
+
                             filterValues.forEach(value => {
-                                const indices = this.facetIndex[filterKey].get(value);
+                                const indices = this.facetIndex[filterKey]
+                                    ? this.facetIndex[filterKey].get(value)
+                                    : new Set([...resultIndices].filter(idx => String(this.originalData[idx][filterKey]) === value));
                                 if (indices) {
                                     indices.forEach(idx => facetMatches.add(idx));
                                 }
                             });
-                            
+
                             // Intersect with current results
                             resultIndices = new Set([...resultIndices].filter(idx => facetMatches.has(idx)));
                         }
                     }
                 }
-                
+
                 // Get actual data objects
                 const filteredData = Array.from(resultIndices).map(idx => this.originalData[idx]);
 
@@ -1228,28 +1407,30 @@
 
                 this.renderResults();
                 this.renderFacets(facetCounts);
+                if (updateUrl) this.writeUrlState();
+                this.renderNavigation();
             }
 
             loadMore() {
                 this.displayedCount += this.itemsPerPage;
                 this.renderResults();
             }
-            
+
             generateFacetCounts(resultIndices) {
                 const counts = {};
-                
+
                 this.schema.facets.forEach(facet => {
                     counts[facet.field] = new Map();
-                    
+
                     resultIndices.forEach(idx => {
                         const item = this.originalData[idx];
                         const value = item[facet.field];
-                        
+
                         // Skip if value is missing
                         if (value === undefined || value === null) {
                             return;
                         }
-                        
+
                         if (facet.type === 'array') {
                             // Handle case where array field might not be an array
                             if (Array.isArray(value)) {
@@ -1270,10 +1451,10 @@
                         }
                     });
                 });
-                
+
                 return counts;
             }
-            
+
             renderResults() {
                 const items = this.currentFilteredData;
                 const resultsCount = document.getElementById('resultsCount');
@@ -1281,7 +1462,7 @@
 
                 const totalCount = items.length;
                 const showingCount = Math.min(this.displayedCount, totalCount);
-                resultsCount.textContent = `Showing ${showingCount} of ${totalCount} items`;
+                resultsCount.textContent = `Showing ${showingCount} of ${totalCount} ${this.schema.itemLabel || 'items'}`;
                 resultsGrid.className = `results-grid ${this.currentView === 'table' ? 'table-view' : 'card-view'}`;
 
                 if (totalCount === 0) {
@@ -1386,7 +1567,7 @@
             }
 
             exportCurrentResultsToTsv() {
-                const fields = this.getTableFields();
+                const fields = this.schema.exportFields || this.getTableFields();
                 const rows = this.currentFilteredData || [];
                 const header = fields.map(fieldConfig => this.tsvCell(fieldConfig.label)).join('\t');
                 const body = rows.map(item => fields
@@ -1399,7 +1580,7 @@
                 const link = document.createElement('a');
                 const date = new Date().toISOString().slice(0, 10);
                 link.href = url;
-                link.download = `gene-annotation-review-${date}.tsv`;
+                link.download = `${this.schema.exportFilenamePrefix || 'gene-annotation-review'}-${date}.tsv`;
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
@@ -1414,6 +1595,7 @@
                 if (value === undefined || value === null) {
                     return mode === 'table' ? '<span class="empty-cell"></span>' : '';
                 }
+                if (value === '' && fieldConfig.emptyLabel) return this.escapeHtml(fieldConfig.emptyLabel);
 
                 if (fieldConfig.type === 'array') {
                     if (mode === 'card') {
@@ -1452,7 +1634,8 @@
                     const label = labelValue === undefined || labelValue === null
                         ? fieldConfig.label
                         : labelValue;
-                    return `<a href="${escapedUrl}" target="_blank" style="color: #10b981; text-decoration: none; border-bottom: 1px dashed #10b981;">${this.escapeHtml(label)}</a>`;
+                    const target = fieldConfig.target === '_self' ? '_self' : '_blank';
+                    return `<a href="${escapedUrl}" target="${target}" style="color: #10b981; text-decoration: none; border-bottom: 1px dashed #10b981;">${this.escapeHtml(label)}</a>`;
                 }
 
                 return this.escapeHtml(value);
@@ -1463,6 +1646,10 @@
                     .map((partConfig, index) => {
                         const value = item[partConfig.field];
                         if (value === undefined || value === null) {
+                            return '';
+                        }
+                        if (this.schema.hideEmptyFields && !partConfig.emptyLabel &&
+                            (value === '' || (Array.isArray(value) && value.length === 0))) {
                             return '';
                         }
 
@@ -1553,6 +1740,10 @@
                         if (value === undefined || value === null) {
                             return '';
                         }
+                        if (this.schema.hideEmptyFields && !fieldConfig.emptyLabel &&
+                            (value === '' || (Array.isArray(value) && value.length === 0))) {
+                            return '';
+                        }
 
                         const displayValue = this.renderValue(fieldConfig, value, 'card', item);
 
@@ -1569,32 +1760,40 @@
 
                 return html + this.renderLoadMore(totalCount);
             }
-            
+
             renderFacets(facetCounts) {
                 const sidebar = document.getElementById('facetsSidebar');
-                
+
                 const facetsHtml = this.schema.facets.map(facetConfig => {
-                    const counts = facetCounts[facetConfig.field] || new Map();
-                    
+                    const counts = new Map(facetCounts[facetConfig.field] || []);
+                    if (this.schema.keepFacetOptions && facetConfig.type !== 'integer') {
+                        this.facetIndex[facetConfig.field].forEach((_, key) => {
+                            if (!counts.has(key)) counts.set(key, 0);
+                        });
+                        (this.currentFilters[facetConfig.field] || []).forEach(key => {
+                            if (!counts.has(key)) counts.set(key, 0);
+                        });
+                    }
+
                     if (counts.size === 0) {
                         return '';
                     }
-                    
+
                     // Check if this facet is collapsed
                     const isCollapsed = this.collapsedFacets.has(facetConfig.field);
-                    
+
                     // Handle integer type facets with slider
                     if (facetConfig.type === 'integer') {
                         // Get min and max values
                         const values = Array.from(counts.keys()).map(k => parseInt(k)).filter(v => !isNaN(v));
                         if (values.length === 0) return '';
-                        
+
                         const minValue = Math.min(...values);
                         const maxValue = Math.max(...values);
-                        
+
                         // Get current filter range
                         const currentRange = this.currentFilters[facetConfig.field] || { min: minValue, max: maxValue };
-                        
+
                         return `
                             <div class="facet-group">
                                 <div class="facet-header" data-field="${facetConfig.field}">
@@ -1607,19 +1806,19 @@
                                             Range: ${minValue} to ${maxValue}
                                         </div>
                                         <div class="numeric-input-wrapper">
-                                            <input type="number" 
-                                                   class="numeric-input numeric-input-min" 
-                                                   min="${minValue}" 
-                                                   max="${maxValue}" 
+                                            <input type="number"
+                                                   class="numeric-input numeric-input-min"
+                                                   min="${minValue}"
+                                                   max="${maxValue}"
                                                    value="${currentRange.min}"
                                                    placeholder="Min"
                                                    data-field="${facetConfig.field}"
                                                    data-type="min">
                                             <span class="numeric-separator">-</span>
-                                            <input type="number" 
-                                                   class="numeric-input numeric-input-max" 
-                                                   min="${minValue}" 
-                                                   max="${maxValue}" 
+                                            <input type="number"
+                                                   class="numeric-input numeric-input-max"
+                                                   min="${minValue}"
+                                                   max="${maxValue}"
                                                    value="${currentRange.max}"
                                                    placeholder="Max"
                                                    data-field="${facetConfig.field}"
@@ -1630,7 +1829,7 @@
                             </div>
                         `;
                     }
-                    
+
                     // Regular facet handling for non-integer types
                     // Convert Map to array and sort
                     const buckets = Array.from(counts.entries())
@@ -1654,17 +1853,18 @@
                                         this.currentFilters[facetConfig.field].includes(bucket.key);
 
                         // Create hyperlink for CURIE type facets
-                        let displayValue = bucket.key;
+                        const label = facetConfig.valueLabels ? (facetConfig.valueLabels[bucket.key] || bucket.key) : bucket.key;
+                        let displayValue = this.escapeHtml(label);
                         if (facetConfig.type === 'curie' && bucket.key.includes(':')) {
-                            const curieUrl = `https://bioregistry.io/${bucket.key}`;
-                            displayValue = `<a href="${curieUrl}" target="_blank" style="color: inherit; text-decoration: none;" onclick="event.stopPropagation();">${bucket.key}</a>`;
+                            const curieUrl = `https://bioregistry.io/${this.escapeHtml(bucket.key)}`;
+                            displayValue = `<a href="${curieUrl}" target="_blank" style="color: inherit; text-decoration: none;" onclick="event.stopPropagation();">${this.escapeHtml(bucket.key)}</a>`;
                         }
 
                         return `
                             <div class="facet-item ${isActive ? 'active' : ''}"
                                  data-filter="${facetConfig.field}"
-                                 data-value="${bucket.key}">
-                                <input type="checkbox" class="facet-checkbox" ${isActive ? 'checked' : ''}>
+                                 data-value="${this.escapeHtml(bucket.key)}">
+                                <input type="checkbox" class="facet-checkbox" aria-label="${this.escapeHtml(facetConfig.label + ': ' + label)}" ${isActive ? 'checked' : ''}>
                                 <span>${displayValue}</span>
                                 <span class="facet-count">${bucket.doc_count}</span>
                             </div>
@@ -1695,7 +1895,7 @@
                         </div>
                     `;
                 }).join('');
-                
+
                 sidebar.innerHTML = facetsHtml;
             }
         }
@@ -1711,7 +1911,7 @@
                 "number_of_activities": 5
             },
             {
-                "id": "gomodel:568b0f9600000284", 
+                "id": "gomodel:568b0f9600000284",
                 "title": "Antibacterial innate immune response in the intestine via MAPK cascade (C. elegans)",
                 "taxon": "NCBITaxon:6239",
                 "status": "production",
@@ -1721,7 +1921,7 @@
             {
                 "id": "gomodel:test123",
                 "title": "Test model for neural development",
-                "taxon": "NCBITaxon:10090", 
+                "taxon": "NCBITaxon:10090",
                 "status": "development",
                 "model_activity_part_of_rollup_label": ["nervous system development", "cell differentiation"],
                 "number_of_activities": 8
@@ -1730,20 +1930,20 @@
 
         const sampleSchema = {
             "title": "GO Model Catalog",
-            "description": "Search and filter GO models by multiple criteria", 
+            "description": "Search and filter GO models by multiple criteria",
             "searchPlaceholder": "Search models...",
             "searchableFields": ["title", "model_activity_part_of_rollup_label"],
             "facets": [
                 {
                     "field": "taxon",
-                    "label": "Taxon", 
+                    "label": "Taxon",
                     "type": "string",
                     "sortBy": "count"
                 },
                 {
                     "field": "status",
                     "label": "Status",
-                    "type": "string", 
+                    "type": "string",
                     "sortBy": "alphabetical"
                 },
                 {
@@ -1764,10 +1964,10 @@
         // Initialize when ready
         function initializeSearch() {
             console.log('🔍 Initializing search...');
-            
+
             const data = window.searchData || sampleData;
             const schema = window.searchSchema || sampleSchema;
-            
+
             // Set title and description from schema
             if (schema.title) {
                 document.getElementById('appTitle').textContent = schema.title;
@@ -1775,7 +1975,7 @@
             if (schema.description) {
                 document.getElementById('appDescription').textContent = schema.description;
             }
-            
+
             // Set search placeholder
             if (schema.searchPlaceholder) {
                 document.getElementById('searchBox').placeholder = schema.searchPlaceholder;
@@ -1787,7 +1987,7 @@
                 styleEl.textContent = schema.customCss;
                 document.head.appendChild(styleEl);
             }
-            
+
             console.log('📊 Data check:', {
                 dataLoaded: !!window.searchData,
                 schemaLoaded: !!window.searchSchema,
@@ -1798,62 +1998,62 @@
                 schemaType: typeof schema,
                 schema: schema
             });
-            
+
             // Validate data structure
-            if (!data || !Array.isArray(data) || data.length === 0) {
+            if (!data || !Array.isArray(data)) {
                 console.error('❌ Invalid data:', data);
                 document.getElementById('resultsCount').textContent = 'Error: Invalid data format';
                 return;
             }
-            
+
             // Validate schema with detailed checks
             if (!schema) {
                 console.error('❌ Schema is null/undefined');
                 document.getElementById('resultsCount').textContent = 'Error: Schema is missing';
                 return;
             }
-            
+
             if (!schema.facets) {
                 console.error('❌ Schema missing facets array:', schema);
                 document.getElementById('resultsCount').textContent = 'Error: Schema missing facets';
                 return;
             }
-            
+
             if (!Array.isArray(schema.facets)) {
                 console.error('❌ Schema facets is not an array:', typeof schema.facets, schema.facets);
                 document.getElementById('resultsCount').textContent = 'Error: Schema facets must be an array';
                 return;
             }
-            
+
             if (!schema.searchableFields) {
                 console.error('❌ Schema missing searchableFields:', schema);
                 document.getElementById('resultsCount').textContent = 'Error: Schema missing searchableFields';
                 return;
             }
-            
+
             if (!Array.isArray(schema.searchableFields)) {
                 console.error('❌ Schema searchableFields is not an array:', typeof schema.searchableFields, schema.searchableFields);
                 document.getElementById('resultsCount').textContent = 'Error: Schema searchableFields must be an array';
                 return;
             }
-            
+
             // Check if searchable fields exist in data
-            const firstItem = data[0];
+            const firstItem = data[0] || {};
             console.log('🔍 First data item:', firstItem);
             console.log('🏷️ Schema searchableFields:', schema.searchableFields);
             console.log('📊 Schema facets:', schema.facets);
-            
+
             const missingFields = schema.searchableFields.filter(field => !(field in firstItem));
             if (missingFields.length > 0) {
                 console.warn('⚠️ Missing searchable fields:', missingFields);
             }
-            
+
             // Check if facet fields exist in data
             const missingFacetFields = schema.facets.filter(facet => !(facet.field in firstItem));
             if (missingFacetFields.length > 0) {
                 console.warn('⚠️ Missing facet fields:', missingFacetFields.map(f => f.field));
             }
-            
+
             try {
                 console.log('🚀 Creating search instance...');
                 new OptimizedFacetedSearch(data, schema);
@@ -1866,40 +2066,40 @@
 
         // Add more detailed event listening with better timing
         console.log('🔧 Setting up event listeners...');
-        
+
         let initializationAttempted = false;
-        
+
         function tryInitialize() {
             if (initializationAttempted) {
                 console.log('⏭️ Initialization already attempted, skipping');
                 return;
             }
-            
+
             if (window.searchData && window.searchSchema) {
                 console.log('✅ Both data and schema available, initializing...');
                 initializationAttempted = true;
                 initializeSearch();
             } else {
-                console.log('⏳ Still waiting...', { 
-                    hasData: !!window.searchData, 
-                    hasSchema: !!window.searchSchema 
+                console.log('⏳ Still waiting...', {
+                    hasData: !!window.searchData,
+                    hasSchema: !!window.searchSchema
                 });
             }
         }
-        
+
         // Check if already loaded
         if (window.searchData && window.searchSchema) {
             console.log('📦 Data already loaded, initializing immediately');
             initializeSearch();
         } else {
             console.log('⏳ Waiting for data to load...');
-            
+
             // Listen for both data and schema ready events
             window.addEventListener('searchDataReady', () => {
                 console.log('📡 searchDataReady event received');
                 setTimeout(tryInitialize, 50); // Small delay to ensure both files are processed
             });
-            
+
             // Enhanced fallback with more debugging
             setTimeout(() => {
                 if (window.searchDataLoading) {
@@ -1915,7 +2115,7 @@
                     searchSchemaType: typeof window.searchSchema,
                     schemaHasFacets: window.searchSchema ? !!window.searchSchema.facets : 'N/A'
                 });
-                
+
                 if (!initializationAttempted) {
                     if (window.searchData && window.searchSchema) {
                         console.log('🔄 Data available but not initialized, trying now...');

@@ -1,6 +1,6 @@
 ---
 title: "Stilbene Cleavage Oxygenases (SCO / lignostilbene α,β-dioxygenase family)"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [NEUCR, NOVAD, SPHPI, MYCMD]
 genes:
@@ -11,9 +11,32 @@ genes:
   - lsdB
   - Q53353
   - RCO1
+manifest:
+  slides:
+    - href: STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LocaBRZyx9MgonQTLUDrJF
+      title: Project brief
 ---
 
 # Stilbene Cleavage Oxygenases (SCO / LSD family)
+
+**Bottom line:** stilbene cleavage oxygenases are non-heme iron enzymes that
+split resveratrol-type stilbenes into two aromatic aldehydes; they share a fold
+and a PANTHER family (PTHR10543) with the carotenoid cleavage oxygenases. We
+reviewed seven members: six stilbene cleavers from fungi (Neurospora cao-1,
+Ustilago Rco1) and sphingomonad bacteria (NOV1, NOV2, LSD-I, LSD-III), plus the
+Neurospora carotenoid cleaver cao-2 as a control. We did this because
+family-level propagation assigns carotenoid terms to the whole clade. In all
+six stilbene cleavers, `GO:0010436` carotenoid dioxygenase activity (IBA or
+TreeGrafter IEA) was marked REMOVE, and `GO:0016121` carotene catabolic process
+was either modified to `GO:0046272` stilbene catabolic process (four genes) or
+removed (the two LSD isozymes); the same terms were accepted on cao-2. The
+project also tracks GO's July 2026 revision of this area (new `GO:7770086`
+resveratrol dioxygenase activity) and proposes a *stilbene α,β-dioxygenase
+activity* grouping term. All seven reviews are still status IN_PROGRESS, and
+the grouping term exists so far only as a proposed new term in the cao-1 review.
 
 ## Overview
 
