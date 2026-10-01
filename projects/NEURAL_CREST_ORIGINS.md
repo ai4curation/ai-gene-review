@@ -142,7 +142,7 @@ Last updated: 2026-10-01
 - [ ] `XENLA/snai2` (Q91924) — Slug; NC specifier and EMT repressor
 - [ ] `XENLA/sox9-a` (B7ZR65) — SoxE; cranial NC and chondrogenesis (cross-check `human/SOX9`)
 - [ ] `XENLA/twist1` (P13903) — Twist; *Ciona* Twist misexpression makes a9.49 cells migratory
-- [ ] `XENLA/ets1-a` (P18755) — Ets1; reported as part of the amniote cranial NC circuit (verify against PMID:27339986 full text during review)
+- [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
 - [ ] `XENLA/myc-a` (P06171) — c-Myc; NC stem-cell pool (cross-check `human/MYC`)
 - [ ] `XENLA/id3-a` (Q91399) — Id3; co-opted into the NC (amphioxus/lamprey Id)
 - [ ] `XENLA/sox8` (Q6VVD7) — SoxE
@@ -193,3 +193,18 @@ Last updated: 2026-10-01
   snai1 21, human MSX1 64, human TFAP2A 116.
 - Lamprey and amphioxus proteins are almost all TrEMBL and unannotated, so the
   evolutionary comparison will draw on the literature rather than GO data.
+
+### Tier 1 reviews (in progress)
+
+- **ets1-a.** Placed as a *late* NC specifier and cranial-identity factor. In
+  chick it comes on after the border genes, Tfap2b activates it, and it binds
+  the cranial Sox10E2 enhancer directly [PMID:27339986, PMID:20139305]. With
+  Sox8 and Tfap2b it reprograms trunk crest to a cranial, chondrogenic
+  identity. Frog loss of function disrupts delamination and migration but not
+  initial foxd3/snai2 [PMID:25691536]. The full text of PMID:27339986 confirms
+  that Ets1 is in the chick cranial circuit, which resolves the earlier
+  open point. Martik 2019 [PMID:31645763] finds Ets1 absent from lamprey
+  premigratory and migratory crest but present in skate, so Ets1 joined the
+  crest network in gnathostomes, not at the vertebrate base.
+  Open: whether it belongs under NC cell fate specification (chick and frog
+  data differ). Frog loss-of-function reagents hit both homeologs.
