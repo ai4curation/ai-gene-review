@@ -1,0 +1,8 @@
+## 2026-10-01 - COPII review
+
+- Generic protein binding annotations are removed because SAR1A functions as a regulated COPII small GTPase and has many real coat, cargo-adaptor, and high-throughput contacts, but GO:0005515 does not capture the informative activity: GTP-dependent recruitment and regulation of COPII coat assembly.
+- IBA PTN000195056 places SAR1A in a conserved Sar1 clade with experimentally supported GTP hydrolysis, COPII coat membership, COPII vesicle organization, ER-to-Golgi traffic, and ER exit site localization; no SAR1A-specific loss or divergence argues against this placement.
+- InterPro small-GTPase and SAR1-family signatures support SAR1A GTP binding, GTPase activity, and ER-to-Golgi protein transport; the InterPro intracellular protein transport parent term is true but GO:0006888 is the more informative child for SAR1A.
+- ARBA electronic COPII rows for COPII vesicle coat, COPII vesicle coat assembly, COPII-coated vesicle cargo loading, and endoplasmic reticulum exit site agree with the curated COPII picture; ARBA amino-acid/TORC1/leucine rows trace to the abstract-only SAR1B/GATOR2 literature and are left undecided for SAR1A.
+- UniProt SubCell places SAR1A at the ER membrane, cytosol, Golgi stack membrane, and lysosomal membrane; the ER membrane and cytosol entries are consistent with the COPII small-GTPase cycle, but the Golgi and lysosomal assignments trace to the abstract-only leucine/TORC1 study and are left undecided here.
+- The negated lipoprotein-transport row from PMID:32358066 captures a SAR1B-specific rescue experiment: SAR1A did not substitute for SAR1B in lipoprotein secretion, so the row is not evidence that SAR1A performs lipoprotein transport.
