@@ -202,3 +202,14 @@ already represented in the source annotations. Counts are now eight ACCEPT,
 All 28 original source objects and four products remain unchanged, with no NEW
 assertion. Supported generic interactions are preserved under the user action
 definitions; the review's blanket-removal policy objection remains unresolved.
+
+
+## 2026-10-01 UTC — Binding-policy clarification
+
+The [review of PR #3569](https://github.com/ai4curation/ai-gene-review/pull/3569) at `04712c385` correctly distinguishes exclusion of an uninformative term from rejection of a reported interaction. The repository default can exclude GO:0005515 even when the interaction is real. The earlier notes should not be read as claiming that the default requires biological falsity or that a touched annotation falls within a legacy exception.
+
+For this task, the explicit instruction is not to remove generic binding solely for informativeness and to preserve UNDECIDED when the relevant experiment cannot be adjudicated. The existing decisions are a scoped application of those instructions. This is a documented departure from the default binding policy, not a global policy change or a claim that its advisory warnings have disappeared.
+
+The three retained rows distinguish PCGF5 association, PCGF5-dependent RNF2 association, and the RNF2 association retained by the tested human variants. They do not assign purified autonomous AUTS2–RNF2 binding or ubiquitin-ligase catalysis to AUTS2. PRC1 membership and the qualified transcription-coactivator contribution remain represented separately from the source-specific interactions. The P300-specific refinements are preserved; their mechanism is not transferred indiscriminately to the RNF2 rows. Four unadjudicated interaction rows remain UNDECIDED.
+
+This addendum adds no primary-source reading, assay verification or quotation. All existing actions, source assertions, products, reference findings and core claims remain unchanged.
