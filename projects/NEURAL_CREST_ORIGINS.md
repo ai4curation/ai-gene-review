@@ -144,7 +144,7 @@ Last updated: 2026-10-01
 - [ ] `XENLA/twist1` (P13903) — Twist; *Ciona* Twist misexpression makes a9.49 cells migratory
 - [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
 - [ ] `XENLA/myc-a` (P06171) — c-Myc; NC stem-cell pool (cross-check `human/MYC`)
-- [ ] `XENLA/id3-a` (Q91399) — Id3; co-opted into the NC (amphioxus/lamprey Id)
+- [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (20 ACCEPT, 5 MODIFY, 2 REMOVE, 1 non-core)
 - [ ] `XENLA/sox8` (Q6VVD7) — SoxE
 
 ## Tier 2 — Neural plate border specifiers (ancestral chordate layer)
@@ -247,6 +247,20 @@ Last updated: 2026-10-01
   N-terminal motif that lets FoxD3 induce crest. So both *cis*-regulatory and
   protein changes were involved.
 
+- **id3-a.** Progenitor maintenance and competence factor, not a specifier.
+  Losing Id3 causes progenitor cell-cycle arrest and death "rather than a cell
+  fate switch", so its five IMP `GO:0014029` rows were *kept* at the broad
+  level, which fits the convention below. The IBA corepressor term was
+  MODIFIED to `GO:0140416` transcription regulator inhibitor activity, the term
+  human/mouse ID1/2/4 carry: Id proteins sequester bHLH partners off DNA. The
+  TreeGrafter circadian IEA was removed (an Id2-only function). Evolution: a
+  clean co-option case [PMID:14651928]. Amphioxus Id is expressed in
+  mesoderm/endoderm, and border expression first appears in lamprey; the
+  protein activity is ancestral, so this is a change in *where* it is expressed.
+  Open: stem cell population maintenance (`GO:0019827`) for the shared
+  Myc–Id3 blastula/NC programme [PMID:25931449] was raised as a question,
+  not added.
+
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
 `GO:0014029` neural crest formation is defined as forming the *region of
@@ -256,4 +270,6 @@ ectoderm* between the neural plate and non-neural ectoderm. The chain is
 `GO:0014036`, leaving `GO:0014029` for genes that act on the border region as a
 whole. Apply this consistently across Tier 1 (and decide whether border
 specifiers in Tier 2 should keep `GO:0014029`). This needs curator sign-off,
-because it modifies IMP rows to a more specific child term.
+because it modifies IMP rows to a more specific child term. Applied so far:
+sox10 and sox9-a narrowed to `GO:0014036`; foxd3-a already at `GO:0014034`
+(accepted); id3-a deliberately kept at `GO:0014029`, as a non-specifier.
