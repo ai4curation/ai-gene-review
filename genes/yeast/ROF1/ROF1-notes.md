@@ -51,13 +51,13 @@ GOA source: genes/yeast/ROF1/ROF1-goa.tsv (7 annotations).
 
 3. **GO:0043565 sequence-specific DNA binding — IBA (GO_REF:0000033), enables.** Directly supported by the co-crystal structure with a specific DNA site [PMID:24994900] and family DNA-binding specificity [PMID:22095082]. ACCEPT. Core MF.
 
-4. **GO:0045944 positive regulation of transcription by RNA polymerase II — IBA (GO_REF:0000033), involved_in.** IBA-propagated from the family; but note the *direction* (positive) is not established for Rof1 in S. cerevisiae and the direct budding-yeast experimental data point to repression of the FLO11 program. The safe, defensible statement is that Rof1 is involved in **regulation** of Pol II transcription; the specific positive direction is a knowledge gap. KEEP_AS_NON_CORE (regulatory role is real but non-core given uncertain direction / no direct targets), and flag the directionality gap. Consider that a more neutral term (regulation of transcription by RNA polymerase II) better reflects current evidence — but per guidance I will not rewrite the GOA id; I will note this in the review reason and knowledge_gaps and propose the neutral parent as a replacement suggestion.
+4. **GO:0045944 positive regulation of transcription by RNA polymerase II — IBA (GO_REF:0000033), involved_in.** IBA-propagated from the family; but note the *direction* (positive) is not established for Rof1 in S. cerevisiae and the direct budding-yeast experimental data point to repression of the FLO11 program. The safe, defensible statement is that Rof1 is involved in **regulation** of Pol II transcription; the specific positive direction is a knowledge gap. MODIFY to the direction-neutral parent (regulation of transcription by RNA polymerase II) and flag the directionality gap.
 
 5. **GO:0003677 DNA binding — IDA (PMID:24994900), enables.** Directly from the crystal structure of the YHR177W WOPR domain bound to DNA. Strong experimental support. ACCEPT. (GO:0043565 is the more specific term; this is the general parent — both are fine to retain, keep IDA general one as ACCEPT.)
 
 6. **GO:0005634 nucleus — IC (PMID:24994900), located_in.** Inferred by curator (IC) from the transcription-factor role. Reasonable for a sequence-specific DNA-binding TF. ACCEPT. Core location.
 
-7. **GO:0045944 positive regulation of transcription by RNA polymerase II — ISS (PMID:24994900, with/from UniProtKB:Q5AP80 = C. albicans Wor1), involved_in.** ISS from Wor1, an *activator* of opaque-phase genes. The inference transfers "regulates Pol II transcription" but the *positive* direction is Wor1-specific; S. cerevisiae Rof1 experimental data (PMID:28673928) indicate repression of FLO11/filamentation genes. Do NOT REMOVE (experimental/curator ISS grounded in real orthology), but mark the directionality as uncertain. KEEP_AS_NON_CORE with a note that direction is a knowledge gap.
+7. **GO:0045944 positive regulation of transcription by RNA polymerase II — ISS (PMID:24994900, with/from UniProtKB:Q5AP80 = C. albicans Wor1), involved_in.** ISS from Wor1, an *activator* of opaque-phase genes. The inference transfers "regulates Pol II transcription" but the *positive* direction is Wor1-specific; S. cerevisiae Rof1 experimental data (PMID:28673928, PMID:34096681) indicate repression of FLO11/filamentation genes. Do NOT REMOVE (experimental/curator ISS grounded in real orthology); MODIFY to the direction-neutral parent and mark the directionality as a knowledge gap.
 
 ## Core functions (defensible)
 
@@ -68,8 +68,38 @@ GOA source: genes/yeast/ROF1/ROF1-goa.tsv (7 annotations).
 ## References gathered
 - PMID:24994900 (Lohse 2014) — WOPR domain crystal structure + DNA binding (GO source; abstract-only cache, full_text_available:false).
 - PMID:28673928 (Cromie 2017) — biofilm-regulator overexpression screen; ROF1 naming; repressor of fluffy/FLO11 program (FULL TEXT cached).
+- PMID:34096681 (Arita 2021) — inducible Z3pr-ROF1 expression identified rapid Rof1-repressed genes whose promoters are enriched for a WOPR-like motif (FULL TEXT cached).
 - PMID:22095082 (Cain 2012) — Mit1/Wor1/Ryp1 conserved regulator; YHR177W DNA-binding; paralog relationship (abstract-only cache).
 - PMID:16455487 (Sopko 2006) — systematic overexpression phenotypes (abstract-only) — overexpression cell-cycle phenotype context.
 - PMID:18617996 (Niu 2008) — cell cycle control by overexpression (full text cached) — overexpression phenotype context.
-</content>
-</invoke>
+
+## 2026 IBA re-review
+
+Re-checked the four current ROF1 IBA rows against GOA and the cached `PTHR28027`
+PAINT table. All four trace to `PANTHER:PTN001997771`, a fungal WOPR-family
+node seeded by the Candida albicans Wor1 gene `CGD:CAL0000193718`.
+That CGD seed resolves to the same Wor1 source as the experimental ISS row:
+UniProtKB:Q5AP80 is Candida albicans Wor1, and its UniProt record cross-references
+CGD `CAL0000193718` / `WOR1`.
+
+- `GO:0003700 DNA-binding transcription factor activity`
+- `GO:0005634 nucleus`
+- `GO:0043565 sequence-specific DNA binding`
+- `GO:0045944 positive regulation of transcription by RNA polymerase II`
+
+The family transfer is sound for the nucleus, DNA-binding transcription-factor,
+and sequence-specific DNA-binding rows, so those now carry `NO_FAILURE_CORE`
+propagation reviews. The positive Pol-II regulation term has a sign-specific
+propagation problem: Wor1 is the C. albicans activator source, whereas
+budding-yeast Rof1 is experimentally observed in repressive overexpression
+contexts and Arita et al. 2021 directly found a rapidly repressed, WOPR-motif-
+enriched gene set after Z3pr-ROF1 induction [PMID:34096681]. I therefore
+changed the IBA action to `MODIFY`, with `GO:0006357 regulation of
+transcription by RNA polymerase II` retained as the direction-neutral
+replacement. The negative child `GO:0000122` was left as a suggested question rather
+than a replacement because the current budding-yeast repression data are
+overexpression based and not yet tied to direct Rof1 ChIP/CUT&RUN targets.
+
+The newer-paper search found the 2021 YETI Rof1 paper as a direct source that
+was discussed in the Falcon report but absent from the YAML. I did not find a
+2023-2026 primary paper that changes the Rof1 IBA calls.

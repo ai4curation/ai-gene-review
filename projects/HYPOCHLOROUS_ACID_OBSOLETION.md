@@ -1,10 +1,34 @@
 ---
 title: "Hypochlorous Acid Metabolic Process Terms — Obsoletion"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [mouse]
+manifest:
+  slides:
+    - href: HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/TzdUqWUZ2PZqr9iAxh7GBe
+      title: Project brief
 ---
 
 # Hypochlorous Acid Metabolic Process Terms — Obsoletion
+
+**Bottom line:** GO has obsoleted all three hypochlorous acid (HOCl)
+process terms: the grouping term GO:0002148 went first, and OLS now lists
+the biosynthetic (GO:0002149) and catabolic (GO:0002150) terms as obsolete
+too. Their obsolete definitions give the final reason, "this BP term
+represents a MF term"; the originating ticket (go-ontology#22891) had
+instead flagged the wrong `is_a` parent (see Overview). HOCl is made in one
+enzymatic step, myeloperoxidase turning H2O2 and chloride into HOCl, so a
+process term adds nothing to the enzyme activity. We inventoried the
+annotations: one mouse Mpo IMP row (MGI, PMID:10085024), one rat Mpo ISO
+row copied from it, and nothing on the catabolic term. No review in this
+repo uses these terms and Mpo is not reviewed. Scoped, not yet started:
+the status notes below predate the obsoletion, and the molecular function
+an earlier draft proposed as the anchor was wrong: OLS labels GO:0140825
+*lactoperoxidase activity*, not an HOCl-forming chloride peroxidase
+activity (corrected in the body below).
 
 ## Overview
 
@@ -12,16 +36,20 @@ A GO obsoletion proposal targets three biological-process terms in the
 hypochlorous acid (HOCl) branch:
 
 - **GO:0002148 hypochlorous acid metabolic process** (BP, **already obsolete**)
-- **GO:0002149 hypochlorous acid biosynthetic process** (BP, *active*, obsoletion proposed)
-- **GO:0002150 hypochlorous acid catabolic process** (BP, *active*, obsoletion proposed)
+- **GO:0002149 hypochlorous acid biosynthetic process** (BP, now obsolete in OLS)
+- **GO:0002150 hypochlorous acid catabolic process** (BP, now obsolete in OLS)
 
-The rationale, captured in go-ontology#22891, is that the original parentage
+The two rationales come from different stages. The originating ticket,
+go-ontology#22891, argued that the original parentage
 (`is_a` *organic acid metabolic process*, GO:0006082) is incorrect because
 hypochlorous acid contains no carbon and so is not an organic acid. The
 grouping-term obsoletion at the parent level (go-ontology#30524) already
 removed GO:0002148, which had no remaining annotations. The two child terms
-still carry annotations and need a curatorial decision before they can be
-obsoleted.
+carried annotations and needed a curatorial decision first. When they were
+obsoleted, the reason recorded in their definitions was different: "The
+reason for obsoletion is that this BP term represents a MF term" (OLS,
+GO:0002149), i.e. HOCl formation is a single enzymatic step best captured
+as an MF.
 
 This project tracks the impact on AI Gene Review. No genes in scope are
 currently reviewed here.
@@ -52,10 +80,15 @@ terminological.
 
 Single concrete gene: **mouse myeloperoxidase (Mpo, P11247)**. Myeloperoxidase
 is the textbook HOCl-generating enzyme of neutrophils (RHEA:43232,
-EC 1.11.2.2; H2O2 + Cl- + H+ → HOCl + H2O). The molecular function
-already has a precise MF term —
-**GO:0140825 chloride peroxidase activity (HOCl-forming)** —
-and the enzyme catalyzes one well-defined reaction whose product is HOCl.
+EC 1.11.2.2; H2O2 + Cl- + H+ → HOCl + H2O). The enzyme catalyzes one well-defined reaction whose product is HOCl.
+An earlier draft of this page named **GO:0140825** as the precise MF term
+for it, but OLS labels GO:0140825 *lactoperoxidase activity* ("2 a phenolic
+donor + H2O2 = 2 a phenolic radical donor + 2 H2O"), which is not the
+HOCl-forming reaction. The nearest GO term found by name,
+GO:0016691 *chloride peroxidase activity*, is defined as organic
+chlorination ("2 R-H + 2 chloride + H2O2 = 2 R-Cl + 2 H2O"), so whether GO
+has an MF term matching RHEA:43232 still needs checking (checked in OLS,
+2026-09-26).
 The pending obsoletion is therefore a clean Type B refresh:
 
 - Migrate the IMP annotation away from the soon-to-be-obsolete BP term to
@@ -106,10 +139,11 @@ so this remains passive tracking until the upstream decision lands.
    `/review` — Mpo is a high-yield review target regardless of the
    obsoletion (peroxidase MF, neutrophil/granule CC, immune-defense BP,
    well-cited literature).
-3. **Cross-reference GO:0140825** *chloride peroxidase activity
-   (HOCl-forming)* — this MF is the precise activity catalyzed by Mpo
-   and should appear in the `core_functions` section. The pending BP
-   obsoletion does not affect this MF term.
+3. **Identify the MF term for HOCl formation** (RHEA:43232, EC 1.11.2.2)
+   for Mpo's `core_functions`. Do not use GO:0140825, which is
+   *lactoperoxidase activity*; check whether GO:0016691 *chloride
+   peroxidase activity* (defined as organic chlorination) fits, or whether
+   a new term is needed.
 4. **Defer the rat ISO row** — it will follow the mouse migration
    automatically through the standard ISO pipeline.
 

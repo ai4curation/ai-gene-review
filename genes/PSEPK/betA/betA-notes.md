@@ -52,3 +52,10 @@ KT2440 protein.
 - Accept choline dehydrogenase activity, FAD binding, membrane association, and glycine-betaine biosynthesis.
 - Leave GO:0008802 on BetA UNDECIDED because the EC/HAMAP-derived IEA lacks a Q88CW6-specific biochemical assay.
 - Do not remove the second activity: absence of an accessible KT2440 assay is insufficient to disprove possible BetA bifunctionality.
+
+## 2026-09-27 retired process term
+
+- GO:0019285 was retired in GO release 2026-05-19, so the NEW proposal and the
+  authored core process now use GO:0031456 (glycine betaine biosynthetic process), the
+  term the bacterial_choline_to_glycine_betaine_biosynthesis module grounds the same
+  step on. The evidence and reasoning are unchanged.

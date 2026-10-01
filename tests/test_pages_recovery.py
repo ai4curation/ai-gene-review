@@ -85,8 +85,7 @@ def good_manifest():
 
 @pytest.mark.parametrize('field,value', [
     ('deployable', False), ('size_budget_bytes', BUDGET + 1), ('total_bytes', BUDGET + 1),
-    ('total_bytes', True), ('linked_source_files_not_staged', 1),
-    ('broken_local_link_paths', ['missing.html']), ('off_base_path_urls', ['/genes/x']),
+    ('total_bytes', True),
 ])
 def test_rechecks_publication_policy(tmp_path, field, value):
     archive = tmp_path / 'artifact.tar'
@@ -220,10 +219,8 @@ def test_explicit_legacy_size_retry_keeps_integrity_checks(tmp_path):
     validate_manifest(manifest, archive, digest)
     with pytest.raises(ValueError, match='checksum'):
         validate_manifest(manifest, archive, '0' * 64)
-    with pytest.raises(ValueError, match='publication policy'):
-        validate_manifest(dict(manifest, broken_local_link_paths=['missing.pdf']), archive, digest)
-    with pytest.raises(ValueError, match='publication policy'):
-        validate_manifest(dict(manifest, linked_source_files_not_staged=1), archive, digest)
+    validate_manifest(dict(manifest, broken_local_link_paths=['missing.pdf']), archive, digest)
+    validate_manifest(dict(manifest, linked_source_files_not_staged=1), archive, digest)
 
 
 def test_enabled_publication_cannot_silently_skip_deployment():
@@ -233,3 +230,23 @@ def test_enabled_publication_cannot_silently_skip_deployment():
     assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in job['if']
     script = job['steps'][0]['run']
     assert '"$DEPLOY_RESULT" != success' in script and 'exit 1' in script
+
+
+def test_content_quality_diagnostics_do_not_block_valid_archive(tmp_path):
+    archive = tmp_path / 'artifact.tar'
+    archive.write_bytes(b'valid uploaded archive')
+    manifest = dict(good_manifest(), linked_source_files_not_staged=1,
+                    broken_local_link_paths=['missing.pdf'], off_base_path_urls=['/genes/example'],
+                    archive_checksum_required=True, archive_sha256=hashlib.sha256(archive.read_bytes()).hexdigest())
+    validate_manifest(manifest, archive)
+    archive.write_bytes(b'corrupted archive')
+    with pytest.raises(ValueError, match='checksum'):
+        validate_manifest(manifest, archive)
+
+
+def test_source_validation_is_independent_of_biological_validation():
+    run, jobs, artifacts = source_inputs()
+    jobs['jobs'][0]['steps'] = [step for step in jobs['jobs'][0]['steps']
+                                 if step['name'] != 'Validate module YAML files']
+    jobs['jobs'][0]['steps'].append({'name': 'Validate module YAML files', 'conclusion': 'failure'})
+    assert validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)['github-pages'] == 2

@@ -1,6 +1,6 @@
 ---
 title: Human Proteostasis Network
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 priority: high
@@ -33,14 +33,14 @@ review_batches:
     sidecar: PROTEOSTASIS/review_batches.tsv
   - id: proteostasis-batch-2026-06-03
     title: "Proteostasis PN projected candidate additions batch 2"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 50
     sidecar: PROTEOSTASIS/review_batches.tsv
   - id: proteostasis-batch-2026-06-06
     title: "Proteostasis PN candidate additions batch 3 (V-ATPase, ER folding/QC, autophagy receptors, co-chaperone/UPS)"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 20
@@ -48,7 +48,7 @@ review_batches:
     selection_notes: PROTEOSTASIS/batch3_selection_notes.md
   - id: proteostasis-batch-2026-06-07
     title: "Proteostasis PN candidate additions batch 4 (V-ATPase tissue isoforms + ClC-7, mito/ER chaperones, collagen biogenesis, histone chaperones, CRL/UPS adaptors, CK2/CK1)"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 30
@@ -56,7 +56,7 @@ review_batches:
     selection_notes: PROTEOSTASIS/batch4_selection_notes.md
   - id: proteostasis-batch-2026-06-07b
     title: "Proteostasis PN candidate additions batch 5 (protein-folding chaperone & co-chaperone network: DNAJ/HSP40 family, small HSPs, HSP70/HSP90 hub co-chaperones, FKBP immunophilins, ER oxidative folding/PPIases)"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 50
@@ -64,7 +64,7 @@ review_batches:
     selection_notes: PROTEOSTASIS/batch5_selection_notes.md
   - id: proteostasis-batch-2026-06-07c
     title: "Proteostasis PN candidate additions batch 6 (co-translational quality control: ribosome-associated QC & ribosome rescue, UFMylation, NMD surveillance, nascent-chain N-terminal acetylation)"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 50
@@ -72,7 +72,7 @@ review_batches:
     selection_notes: PROTEOSTASIS/batch6_selection_notes.md
   - id: proteostasis-batch-2026-06-11
     title: "Proteostasis PN candidate additions batch 7 (ER protein biogenesis & ERAD: SRP/translocon/signal peptidase, EMC & GET membrane-protein insertion, ER glycoprotein-folding QC mannosidases/lectins, collagen prolyl hydroxylases & ER thioredoxins, ERAD ubiquitin machinery)"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 50
@@ -80,7 +80,7 @@ review_batches:
     selection_notes: PROTEOSTASIS/batch7_selection_notes.md
   - id: proteostasis-batch-2026-06-13
     title: "Proteostasis PN candidate additions batch 8 (UPS branch: Cullin-RING ligase substrate-recognition & assembly modules — F-box SCF/CRL1 substrate receptors FBXL/FBXW/FBXO incl. lectin F-box ERAD subfamily and APC/C-inhibitor F-box members, plus CRL4 core DDB1/DDB2/DDA1/DTL and CRL assembly regulators CAND2/GLMN)"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 50
@@ -88,41 +88,42 @@ review_batches:
     selection_notes: PROTEOSTASIS/batch8_selection_notes.md
   - id: proteostasis-batch-2026-06-14
     title: "Proteostasis PN candidate additions batch 9 (ALP branch: selective autophagy cargo recognition — SQSTM1/NBR1/OPTN/CCDC50/NUFIP1/RETREG2 receptors, TBK1/AZI2/TANK activation axis, TRIM5/13/16/17, ubiquitin-tagging E3s SIAH1/RNF41/RNF166/LRSAM1, plus MEFV/NLRX1/MAP1S)"
-    status: in_progress
+    status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
     target_gene_count: 20
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch9_selection_notes.md
+manifest:
+  slides:
+    - href: PROTEOSTASIS/slides/PROTEOSTASIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/X5CfsBDy2fmRP57wscyizk
+      title: Project brief
 ---
 # Human Proteostasis Network Project
 
-## Bottom line
+**Bottom line:** the Human Proteostasis Network (PN) Annotation 4.3.11
+workbook assigns 3,123 human genes to 4,000 roles across 9 branches of protein
+synthesis, folding, trafficking and degradation, but it contains no GO IDs and
+its taxonomy overlaps GO inconsistently. We use it as a scaffold,
+prioritization layer and QA source for GO curation, not as an annotation set to
+import. We built a curated PN→GO mapping for the 2026-04-17 release in which
+every source code resolves to `mapped`, `context_only` or `no_mapping`, and
+projected it against human GOA to get 1,093 candidate GO additions. PN-guided
+batches have produced reviews for all 371 genes listed in
+[review_batches.tsv](PROTEOSTASIS/review_batches.tsv) across nine batches
+(chaperones, co-translational QC, ER proteostasis, UPS Cullin-RING ligases,
+autophagy receptors). The reviews turned up concrete fixes: wrong
+localizations, pseudoenzyme miscalls, F-box adaptors annotated as catalytic
+ligases, and ontology gaps.
 
-We are using the **Human Proteostasis Network (PN) Annotation 4.3.11** workbook
-(3,123 genes, 4,000 role assignments across 9 branches) as a **scaffold,
-prioritization layer, and QA source** for GO curation — not as an annotation set
-to import. The workbook contains **no GO IDs**; it is a PN-native
-Branch/Class/Group/Type/Subtype taxonomy that overlaps GO inconsistently.
-
-So far the project has:
-
-- **Reviewed 320+ human genes** across the PN branches (chaperones,
-  translation/ribosome-QC, ER proteostasis, the UPS Cullin-RING ligases, and the
-  autophagy-lysosome receptors) — eight completed batches, with a ninth ~50-gene
-  batch in progress. See the [batch table](#review-progress).
-- **Built a complete curated PN→GO mapping** for the 2026-04-17 release: every
-  source code now resolves to `mapped`, `context_only`, or (most often)
-  `no_mapping`. See [mapping status](#current-mapping-completion-status).
-- **Projected mappings against human GOA**, yielding **1,093 candidate GO
-  additions** that feed manual rereview queues.
-- **Surfaced concrete curation fixes** — wrong localizations, pseudoenzyme
-  miscalls, adaptor-vs-catalyst corrections, and ontology gaps — that PN
-  prioritization led us to (see [Highlights](#highlights)).
-
-The deliverable is a **PN→GO bridge contract** (below): every PN row classified
-as GO-actionable, explicitly non-actionable, or queued as an ontology/evidence
-problem.
+We did this because PN is the most complete expert map of human proteostasis
+genes, which makes it a good way to find genes whose GO annotations are stale
+or over-propagated. The planned deliverable is a PN→GO bridge contract (below)
+that classifies every PN row as GO-actionable, explicitly non-actionable, or
+queued as an ontology or evidence problem.
 
 ## Highlights
 
@@ -209,7 +210,7 @@ rationale and notable calls for each batch live in the linked selection notes.
 | Batch | PN branch / theme | Genes | Selection notes |
 |-------|-------------------|------:|-----------------|
 | [#1217](https://github.com/ai4curation/ai-gene-review/pull/1217) (merged 2026-06-02) | First PN pass (mixed) | 50 | — |
-| `2026-06-03` *(in progress)* | Projected candidate additions, batch 2 | 50 | — |
+| `2026-06-03` | Projected candidate additions, batch 2 | 50 | — |
 | `2026-06-06` | Candidate additions batch 3 (V-ATPase, ER folding/QC, autophagy receptors) | 20 | [batch3](PROTEOSTASIS/batch3_selection_notes.md) |
 | `2026-06-07` | Batch 4 (V-ATPase isoforms, mito/ER chaperones, collagen, CRL/UPS adaptors) | 30 | [batch4](PROTEOSTASIS/batch4_selection_notes.md) |
 | `2026-06-07b` | Chaperone & co-chaperone network (DNAJ/HSP40, small HSPs, HSP70/90 co-chaperones, FKBPs, ER PPIases) | 50 | [batch5](PROTEOSTASIS/batch5_selection_notes.md) |
