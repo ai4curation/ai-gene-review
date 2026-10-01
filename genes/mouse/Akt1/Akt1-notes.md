@@ -32,3 +32,36 @@ kept as non-core unless the term directly describes AKT1 catalytic activity.
 Generic `protein binding`, broad kinase/transferase labels, and very broad
 cellular responses are marked as over-annotated when a more informative term is
 already present.
+
+## 2026-09-30 refresh
+
+Refreshed the GOA snapshot and resolved 32 newly seeded source rows without
+moving any of the survival-kinase pathway rows to apoptosis terms. The
+refreshed rows include replicated MGI evidence for BMP2/PI3K/AKT control of
+osteoblast differentiation [PMID:19208758 "an intact IGF-induced
+PI3-kinase-Akt signaling cascade is essential for BMP2-activated osteoblast
+differentiation"], Cntnap2/Akt-mTOR pain and inflammatory hypersensitivity
+phenotypes [PMID:31874168 "the dorsal root ganglion (DRG) from Cntnap2-/-
+mice also showed hyperactive Akt-mTOR signaling"], TSC/IRS genetic evidence
+for PI3K/AKT pathway signaling [PMID:15249583 "TSC1-2 is required for insulin
+signaling to PI3K"], and refreshed PAINT support for broad AKT-family
+serine/threonine kinase and intracellular signal-transduction assertions.
+
+Removed three newly seeded generic `GO:0005515 protein binding` rows from
+PMID:16051150 and PMID:16116448. Those papers support an Akt/beta-arrestin
+2/PP2A dopamine signaling complex [PMID:16051150 "D2 class-receptor-mediated
+Akt regulation involves the formation of signaling complexes containing
+beta-arrestin 2, PP2A, and Akt"] and a BAG1/B-Raf/Akt complex [PMID:16116448
+"a tripartite complex formed by Akt, B-Raf and Bag1"], respectively, but the
+generic molecular-function term does not identify AKT1's catalytic function or
+a specific adapter activity.
+
+The new UniProt EXP kinase rows from PMID:22057101, PMID:26440888, and
+PMID:30504268 were accepted because they directly report phosphorylation of
+GSK3B, mouse cGAS Ser291, and MICU1 by AKT. Nuclear localization from
+PMID:20189988 was kept as non-core, while cytoplasmic and plasma-membrane
+localization rows from PMID:19028694 and PMID:20189988 were accepted as part
+of the normal PH-domain AKT1 recruitment cycle. The mouse Aatf anti-apoptosis
+GO-CAM already places Akt1 upstream of `GO:2001243 negative regulation of
+intrinsic apoptotic signaling pathway`, so this refresh did not invent a new
+apoptosis annotation from broad pro-survival phenotypes.
