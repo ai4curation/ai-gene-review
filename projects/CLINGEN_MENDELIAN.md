@@ -2956,6 +2956,11 @@ Gene reviews are proceeding in evidence-priority order, alphabetically within
 each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
+**144 of 2,876 genes are complete; 2,732 remain.** This completion update records
+the verified BAP1, BARD1, BBIP1, BBS12 and BCAT2 merges after checkpoint 95.
+The 145 original gene PR merges include AKR1D1, whose required source follow-up
+remains outstanding. Audit and import totals retain their dated checkpoint scope.
+
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
 - [ ] Triage existing human reviews and prioritize new reviews by evidence level.
@@ -3194,19 +3199,19 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **B4GALT7** — HGNC:930; [Ehlers-Danlos syndrome, spondylodysplastic type, 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_19ab23bf-37ed-46bc-af9e-d3fc39adaf15-2024-08-05T160000.000Z) (MONDO:0020682; AR; Definitive).
 - [ ] **B9D1** — HGNC:24123; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8d682069-b65a-46d5-973a-6b43ba1a80e1-2023-05-08T160000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **BAG3** — HGNC:939; [dilated cardiomyopathy 1HH](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1bec07e1-0186-4f45-bd8e-7d8a0f2547a9-2026-03-04T170000.000Z) (MONDO:0013479; AD; Definitive); [myofibrillar myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_5466) (MONDO:0018943; AD; Definitive).
-- [ ] **BAP1** — HGNC:950; [BAP1-related tumor predisposition syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d70c33af-2e4f-4489-9c29-797655015b1d-2019-03-21T175713.803Z) (MONDO:0013692; AD; Definitive).
-- [ ] **BARD1** — HGNC:952; [BARD1-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_09113d8c-ba63-40f1-9c8f-08b67c6c867c-2024-09-03T170000.000Z) (MONDO:0700267; AD; Definitive).
-- [ ] **BBIP1** — HGNC:28093; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25f5e82a-06a1-4bf5-93b7-9691d3f709a5-2025-09-08T160000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **BAP1** — HGNC:950; [BAP1-related tumor predisposition syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d70c33af-2e4f-4489-9c29-797655015b1d-2019-03-21T175713.803Z) (MONDO:0013692; AD; Definitive).
+- [x] **BARD1** — HGNC:952; [BARD1-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_09113d8c-ba63-40f1-9c8f-08b67c6c867c-2024-09-03T170000.000Z) (MONDO:0700267; AD; Definitive).
+- [x] **BBIP1** — HGNC:28093; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25f5e82a-06a1-4bf5-93b7-9691d3f709a5-2025-09-08T160000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **BBS1** — HGNC:966; [BBS1-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ee6e7562-927a-459b-a0f1-ccd849c7e783-2023-12-07T170000.000Z) (MONDO:1040043; AR; Definitive).
 - [ ] **BBS10** — HGNC:26291; [BBS10-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f9eb490e-1977-426e-ac7a-c507bbc38490-2023-08-03T160000.000Z) (MONDO:0700237; AR; Definitive).
-- [ ] **BBS12** — HGNC:26648; [BBS12-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3aefcbae-bf06-45da-b3be-a550e997257a-2024-01-04T170000.000Z) (MONDO:1040045; AR; Definitive).
+- [x] **BBS12** — HGNC:26648; [BBS12-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3aefcbae-bf06-45da-b3be-a550e997257a-2024-01-04T170000.000Z) (MONDO:1040045; AR; Definitive).
 - [ ] **BBS2** — HGNC:967; [BBS2-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be74a060-cfb3-4180-a107-cfaf0e81bfa3-2024-03-07T170000.000Z) (MONDO:1040048; AR; Definitive).
 - [ ] **BBS4** — HGNC:969; [BBS4-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_988d537d-5595-4b8f-bbc4-8e3aefc025fa-2023-12-07T170000.000Z) (MONDO:1040044; AR; Definitive).
 - [ ] **BBS5** — HGNC:970; [BBS5-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdb1249e-ab95-4d34-a43f-1dbb09eb3d94-2023-12-07T170000.000Z) (MONDO:1040047; AR; Definitive).
 - [ ] **BBS7** — HGNC:18758; [BBS7-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a09e1836-927c-424d-b10c-fd93f3e6dc6b-2023-09-07T160000.000Z) (MONDO:1040042; AR; Definitive).
 - [ ] **BBS9** — HGNC:30000; [BBS9-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3fc68f9f-ed7c-453e-8c41-179a9ccad0ca-2023-08-03T160000.000Z) (MONDO:0700236; AR; Definitive).
 - [ ] **BCAP31** — HGNC:16695; [severe motor and intellectual disabilities-sensorineural deafness-dystonia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d31d5251-bedd-49e9-b0bb-5ff6923edcf7-2023-08-02T160000.000Z) (MONDO:0010334; XL; Definitive).
-- [ ] **BCAT2** — HGNC:977; [hypervalinemia and hyperleucine-isoleucinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b5e16ee6-88c9-4872-8681-dd7fd0156b0f-2020-07-24T172325.905Z) (MONDO:0100058; AR; Definitive).
+- [x] **BCAT2** — HGNC:977; [hypervalinemia and hyperleucine-isoleucinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b5e16ee6-88c9-4872-8681-dd7fd0156b0f-2020-07-24T172325.905Z) (MONDO:0100058; AR; Definitive).
 - [ ] **BCKDHA** — HGNC:986; [maple syrup urine disease type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5c89a6c7-751a-4a99-8a32-97cc33c5df7c-2018-09-14T160000.000Z) (MONDO:0023691; AR; Definitive).
 - [ ] **BCKDHB** — HGNC:987; [maple syrup urine disease type 1B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0b0d314c-7355-441c-a357-72ba3e566c57-2019-02-08T170000.000Z) (MONDO:0023692; AR; Definitive).
 - [ ] **BCKDK** — HGNC:16902; [branched-chain keto acid dehydrogenase kinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f90aaad0-b56a-41dc-8d1f-9d12fc66113f-2019-01-18T170000.000Z) (MONDO:0013970; AR; Definitive).
