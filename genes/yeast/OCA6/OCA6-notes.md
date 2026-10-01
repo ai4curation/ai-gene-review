@@ -163,3 +163,20 @@ The review therefore does not depend on an automated deep-research file.
   pseudophosphatases, including Oca6, due to active-site substitutions.
 - The IBA should therefore be treated as a pseudoenzyme propagation failure for OCA6, not as a
   weak-source or short-donor-list problem.
+
+## 2026-10-01 current GOA and PAINT refresh
+
+- Forced a current GOA/UniProt refresh. OCA6 still has the same six GOA rows:
+  one `GO:0016791` phosphatase-activity IBA, one EC/RHEA-derived `GO:0004725`
+  protein tyrosine phosphatase IEA, cytoplasm via UniProt SubCell and SGD HDA,
+  and SGD ND root rows for molecular function and biological process.
+- Re-fetched the current `PTHR31126` PAINT slice. The only OCA6 IBA still comes
+  from the broad `PANTHER:PTN001258896` phosphatase-activity node, and the
+  failure mode remains target-side motif degeneration across a likely OCA6
+  pseudophosphatase branch, not a short donor list, weak-source problem, or
+  circular propagation problem.
+- Searched PubMed/web for newer `OCA6`, `Oca6`, and `YDR067C` papers through
+  2026-10-01. PMID:38287338 was the only newer direct OCA6 primary paper found:
+  it shows that `oca6` deletion can combine with `pmt1`, `pmt2`, or `ski3`
+  deletions to increase engineered laccase secretion, but does not establish
+  OCA6's molecular substrate or a native biological process.
