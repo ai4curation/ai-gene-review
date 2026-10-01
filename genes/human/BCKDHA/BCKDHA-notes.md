@@ -151,3 +151,23 @@ All ten normal Reactome records were recovered through Source94 after the docume
 The independent final biology review passed after narrowing an inherited universal activity-loss claim to severe impairment and removing an unlisted beta-specific residual-activity example from the alpha review. All 38 source annotations and three inherited cofactor-binding proposals remain in order; 11 missing supporting-entity lists were restored exactly from GOA. Both source-derived alternative products remain unchanged.
 
 `just validate human BCKDHA` passed with six advisories: five supported generic protein-binding IPI annotations remain `KEEP_AS_NON_CORE` under the supplied action definitions, and annotations do not directly cite the retained generated research report. Primary normal publication records, reviewed UniProt and the ten normal Reactome records support the synthesis. No complete primary-paper, figure, pair-specific proteomics supplement, or PAINT-tree reconstruction is claimed. The separate `pkg_resources` deprecation notice is an environment warning. `just render human BCKDHA` succeeded. These are focused checks, not a claim that the entire repository was validated.
+
+
+## 2026-09-30 — First PR feedback follow-up
+
+Reviewed the first substantive feedback on PR #3614 against the current normal sources. All 38 source annotations and the three inherited cofactor-binding proposals remain in order, including qualifiers, supporting entities and both alternative products. Actions and core terms are unchanged.
+
+The five experimentally attributed BCKDHB associations remain non-core under the user-supplied action definitions: generic binding is less informative than the shared E1 assembly, but that alone does not make a supported association false. This is an explicit application of the user's definitions, not a legacy-action exemption. The five policy advisories remain expected.
+
+Selected existing source excerpts were moved into the experimental annotation decisions they support. Core excerpts now identify the E1 complex and its coupled decarboxylation/reductive-acylation chemistry with enough context to be intelligible. New excerpts are deliberately bounded; a bare citation elsewhere does not claim a pair-level experiment or unavailable full text was re-read. The complete abstracts and existing curator attribution retain the reading limits documented per reference. Repeating the same passage in every row would not supply independent evidence.
+
+The former combined UniProt finding is split into focused statements about matrix location, transit and mature-chain ranges, shared ThDP ligand, and specific magnesium/potassium contacts. Each excerpt supports its own statement. Complete contact lists remain in the three inherited proposals, with spacing corrected. Multiple coordinating residues still do not mean multiple alpha-chain potassium sites.
+
+The ten Reactome TAS decisions now justify matrix localization directly from the reviewed human UniProt SUBCELLULAR LOCATION. The cached Reactome summaries have no explicit compartment field, so they provide reaction context rather than independent localization experiments. E1 performs decarboxylation and reductive acylation, DBT transfers the acyl group to CoA, DLD reoxidizes the lipoyl group, BCKDK phosphorylates E1 alpha, and PPM1K removes that phosphate. Those roles are not inferred from a location annotation. Reactome source findings now describe source content with short exact excerpts; subunit-wording and genotype-specific cautions remain in reference-review notes. The PPM1K event's E1-beta wording remains disputed, and severe residual-activity values remain variant-specific.
+
+The official AmiGO term page explicitly places GO:0120552 part_of GO:0009083 (BFO:0000050), confirming the existing specific core process choice. The broader source assertions remain unchanged. [AmiGO GO:0120552](https://amigo.geneontology.org/amigo/term/GO:0120552). No new process annotation is proposed.
+
+
+## Follow-up validation, 2026-09-30
+
+The independently reviewed follow-up passes focused validation (six warnings), history validation, and rendering. Five warnings concern supported generic binding retained as non-core under the supplied action definitions; the other records that primary/database sources, rather than the unchanged generated report, support annotation decisions. All 38 source assertions, three inherited NEW assertions and two products are preserved. No new global validation pass is claimed.
