@@ -2956,9 +2956,9 @@ Gene reviews are proceeding in evidence-priority order, alphabetically within
 each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
-**146 of 2,876 genes are complete; 2,730 remain.** Verified BCL11A and BCKDHA
-merges add two completed genes to the preceding completion update.
-The 147 original gene PR merges include AKR1D1, whose required source follow-up
+**147 of 2,876 genes are complete; 2,729 remain.** The verified BCKDK merge
+adds one completed gene to the preceding completion update.
+The 148 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3214,7 +3214,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BCAT2** — HGNC:977; [hypervalinemia and hyperleucine-isoleucinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b5e16ee6-88c9-4872-8681-dd7fd0156b0f-2020-07-24T172325.905Z) (MONDO:0100058; AR; Definitive).
 - [x] **BCKDHA** — HGNC:986; [maple syrup urine disease type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5c89a6c7-751a-4a99-8a32-97cc33c5df7c-2018-09-14T160000.000Z) (MONDO:0023691; AR; Definitive).
 - [ ] **BCKDHB** — HGNC:987; [maple syrup urine disease type 1B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0b0d314c-7355-441c-a357-72ba3e566c57-2019-02-08T170000.000Z) (MONDO:0023692; AR; Definitive).
-- [ ] **BCKDK** — HGNC:16902; [branched-chain keto acid dehydrogenase kinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f90aaad0-b56a-41dc-8d1f-9d12fc66113f-2019-01-18T170000.000Z) (MONDO:0013970; AR; Definitive).
+- [x] **BCKDK** — HGNC:16902; [branched-chain keto acid dehydrogenase kinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f90aaad0-b56a-41dc-8d1f-9d12fc66113f-2019-01-18T170000.000Z) (MONDO:0013970; AR; Definitive).
 - [ ] **BCL10** — HGNC:989; [immunodeficiency 37](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2826b3a9-d32b-4d91-8c5d-1a20c408d08d-2022-12-29T180000.000Z) (MONDO:0014491; AR; Definitive).
 - [x] **BCL11A** — HGNC:13221; [Dias-Logan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9630f9a3-3f90-49c6-ae8b-6313c950b1b2-2020-09-01T100000.000Z) (MONDO:0014914; AD; Definitive).
 - [ ] **BCL11B** — HGNC:13222; [intellectual developmental disorder with speech delay, dysmorphic facies, and t-cell abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ca4f24f-78dd-4dda-a50d-07dd3d1cef07-2024-12-19T170000.000Z) (MONDO:0060763; AD; Definitive).
