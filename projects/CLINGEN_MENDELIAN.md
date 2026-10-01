@@ -2961,9 +2961,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**152 of 2,876 genes are complete; 2,724 remain.** The verified BLTP1 merge
-adds one completed gene to the preceding completion update.
-The 153 original gene PR merges include AKR1D1, whose required source follow-up
+**155 of 2,876 genes are complete; 2,721 remain.** The verified BLVRA, BLOC1S5
+and BLOC1S6 merges add three completed genes to the preceding completion update.
+The 156 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3230,8 +3230,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BIN1** — HGNC:1052; [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bb963a9-ec8a-4966-93bb-4f8ef6f8f8a1-2024-06-10T160000.000Z) (MONDO:0018947; AD; Limited); [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d04cc64-0994-4579-99d5-bd2b89710173-2024-06-10T160000.000Z) (MONDO:0018947; AR; Definitive).
 - [ ] **BLM** — HGNC:1058; [Bloom syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0a20b67-5a62-462c-894b-76b60a66e979-2019-04-19T160000.000Z) (MONDO:0008876; AR; Definitive); [colorectal cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37bc882f-34c6-4aea-afea-7b6f037ed9a7-2024-11-22T180000.000Z) (MONDO:0005575; AD; Limited).
 - [x] **BLNK** — HGNC:14211; [agammaglobulinemia 4, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e1d2e1b-52a6-4371-9055-0e1cc74da39d-2021-03-16T132748.373Z) (MONDO:0013289; AR; Definitive).
-- [ ] **BLOC1S5** — HGNC:18561; [Hermansky-Pudlak syndrome 11](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_85cca8f5-d263-42c4-b84a-2d49deeee682-2023-09-06T160000.000Z) (MONDO:0030903; AR; Definitive).
-- [ ] **BLOC1S6** — HGNC:8549; [Hermansky-Pudlak syndrome 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_984682a2-afb9-48b3-afe8-20e0f633022d-2022-05-25T165516.466Z) (MONDO:0013606; AR; Definitive).
+- [x] **BLOC1S5** — HGNC:18561; [Hermansky-Pudlak syndrome 11](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_85cca8f5-d263-42c4-b84a-2d49deeee682-2023-09-06T160000.000Z) (MONDO:0030903; AR; Definitive).
+- [x] **BLOC1S6** — HGNC:8549; [Hermansky-Pudlak syndrome 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_984682a2-afb9-48b3-afe8-20e0f633022d-2022-05-25T165516.466Z) (MONDO:0013606; AR; Definitive).
 - [x] **BLTP1** — HGNC:26953; [Alkuraya-Kucinskas syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b92cd4c-7db0-40fe-b404-08f17f778c35-2026-01-21T170000.000Z) (MONDO:0060631; AR; Definitive).
 - [ ] **BMP4** — HGNC:1071; [BMP4-related ocular growth disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5e7832a8-8a0b-4719-aaf9-1cbdcc392776-2025-02-20T200000.000Z) (MONDO:0100613; AD; Definitive).
 - [ ] **BMPR1A** — HGNC:1076; [juvenile polyposis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7004b10e-0eb6-4517-8deb-2d4b7264d2f8-2022-12-30T180000.000Z) (MONDO:0017380; AD; Definitive).
@@ -5160,7 +5160,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BICC1** — HGNC:19351; [renal dysplasia, cystic, susceptibility to](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_889b1070-5933-491e-94ec-74eb23996052-2022-09-28T160000.000Z) (MONDO:0011037; AD; Moderate).
 - [ ] **BLOC1S1** — HGNC:4200; [neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f6a0418-5c59-43f5-bb31-9f22f59a8079-2026-04-01T160000.000Z) (MONDO:0700092; AR; Moderate).
 - [ ] **BLOC1S3** — HGNC:20914; [Hermansky-Pudlak syndrome 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdeec503-f903-4507-89e7-33c9255b5ad1-2025-04-07T160000.000Z) (MONDO:0013560; AR; Moderate).
-- [ ] **BLVRA** — HGNC:1062; [hyperbiliverdinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_de6e575f-6a04-45fb-a9b5-0b21c9e6a7a8-2025-01-10T170000.000Z) (MONDO:0013595; AR; Moderate).
+- [x] **BLVRA** — HGNC:1062; [hyperbiliverdinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_de6e575f-6a04-45fb-a9b5-0b21c9e6a7a8-2025-01-10T170000.000Z) (MONDO:0013595; AR; Moderate).
 - [ ] **BPNT2** — HGNC:26019; [chondrodysplasia with joint dislocations, gPAPP type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f0edef29-df91-4320-b66d-4cc6a4ec3f94-2024-05-16T160000.000Z) (MONDO:0013561; AR; Moderate).
 - [ ] **CA8** — HGNC:1382; [cerebellar ataxia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a0800c48-e3b1-4cb2-bbd1-4d649e506ebd-2024-01-15T230000.000Z) (MONDO:0000437; AR; Moderate).
 - [ ] **CACNA1B** — HGNC:1389; [complex neurodevelopmental disorder with motor features](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_df8ed53b-a959-4e5b-a323-7a80b152a98b-2023-08-21T180000.000Z) (MONDO:0100516; AR; Moderate).
