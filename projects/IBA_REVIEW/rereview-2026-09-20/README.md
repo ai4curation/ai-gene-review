@@ -45,7 +45,9 @@ uv run python projects/IBA_REVIEW/rereview-2026-09-20/inventory.py
 `verify_sources.py` compares every changed review named in the manual audit records
 with the frozen Git baseline (excluding unrelated changes that arrive on main)
 and checks that all original non-NEW source assertions (term, evidence,
-reference, isoform, NOT, and qualifier) survive unchanged. The sole registered
+reference, isoform, NOT, and qualifier) survive unchanged. Explicit, signature-level
+exceptions are registered in the script for current-GOA source refreshes; HSC82
+has 38 such expected retirements after its 53-row GOA refresh. The sole registered
 identity migration is worm/csr-1: its frozen review mixed a deleted LARP-1
 accession with NHR-47 source annotations. The checker verifies that the original
 review and source files equal the frozen baseline in their archive, that the
