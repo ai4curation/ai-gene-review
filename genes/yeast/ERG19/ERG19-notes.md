@@ -147,3 +147,24 @@ The falcon report independently confirms the core review and contradicts nothing
 
 None of these change the annotation actions; they corroborate the core MF/BP/CC calls
 and the vacuole over-annotation flag.
+
+## 2026-10-01 current-GOA / IBA review
+
+- Refreshed ERG19 from current UniProt/GOA before editing. Current GOA has 24
+  live rows after the header; the refresh materialized the current
+  `PANTHER:PTN000104601` IBA rows for `GO:0004163` and `GO:0019287`, plus
+  separate `SGD_PWY:IPPSYN-PWY` and `SGD_PWY:PWY-922` RCA source rows for
+  decarboxylase activity and cytosolic site of action.
+- Checked `interpro/panther/PTHR10977/PTHR10977-paint.tsv` and the current
+  `.cache/panther/IBD.gaf`; `PANTHER:PTN000104601` carries all three ERG19
+  IBA assertions (`GO:0005829`, `GO:0004163`, `GO:0019287`). The node is a
+  direct fit for the diphosphomevalonate decarboxylase clade, so the three IBA
+  rows remain core `ACCEPT`s with `NO_FAILURE_CORE` propagation reviews.
+- Preserved the existing `NEW` ATP-binding proposal. The refreshed GOA still
+  lacks an ATP-binding row despite the direct TNP-ATP and ATP K_m data in
+  PMID:15169949 and the ATP-dependent GHMP fold described by PMID:11698677.
+- Rechecked newer literature. The 2024 isopentenol-utilization paper replaces
+  the native mevalonate pathway in an engineered yeast chassis, and the 2026
+  J. Fungi review updates the Garay preprint mentioned in the falcon report;
+  both are pathway/engineering context and neither changes the direct GO
+  annotation set for yeast ERG19.
