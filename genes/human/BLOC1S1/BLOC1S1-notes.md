@@ -42,3 +42,23 @@ The additional normal validation with `--terms` also passed (b2c431 to d6115b), 
 ## Completed independent review checks
 
 ROOT independently reviewed all 56 annotation decisions and three core functions against selected primary Results and Methods, donor evidence, and official GO definitions (ccff85). The exact proposal was applied (cee211), then passed normal gene-path and term validation (c75370), HTML rendering (9cf7fc) and history validation (c23ee2). The 17 advisories comprise 15 supported contextual binding associations retained non-core under the supplied ActionEnum and two scaffold core terms not duplicated as NEW annotations. The rendered page embeds the reviewed YAML. All 56 source objects and both alternative products are preserved; 57 raw GOA rows contain one metadata-only duplicate after projection. Ten unresolved assertions remain explicit. Source caches are unchanged. No whole-paper, figure-image, supplement or repository-wide audit is claimed, and no successful provider report is claimed.
+
+
+## 2026-10-01 — Evidence provenance follow-up
+
+The lysosomal-location rationale now states the source distinction directly: the [Reactome BLOC-1 assembly event](https://reactome.org/content/detail/R-HSA-429815) supplies no lysosomal localization. The replacement location comes from the [BORC study, PMID:25898167](https://pubmed.ncbi.nlm.nih.gov/25898167/), which separates lysosome-associated BORC from BLOC-1. BLOS1 is shared between those complexes; that does not transfer each complex's location to the other.
+
+All six HuRI pairs are present in the normal UniProt record with NbExp=3. Their reasons now explicitly acknowledge this positive corroboration. The pair-level primary confirmation and functional context remain uninspected, so the six source assertions remain UNDECIDED. The 15 independently supported complex associations remain KEEP_AS_NON_CORE under the supplied ActionEnum: lack of specificity alone does not establish biological error. No pair-specific scaffold activity is inferred merely from an interaction.
+
+The two scaffold functions are already machine-readable GO:0140378 entries in core_functions, supported by BLOC-1 reconstitution and BORC assembly evidence; they are not prose-only conclusions. This bounded follow-up does not duplicate them as NEW annotations. The mitochondrial regulatory role remains separated from unresolved catalytic chemistry. Cellular acetylation changes do not isolate the acetyl-transfer step, but the IMP evidence code alone is not a reason to negate molecular-function evidence. No catalytic subunit or complex is invented. Tear-fluid detection also remains unresolved; lack of a conventional signal peptide does not disprove extracellular detection.
+
+The clinical paper was reverified against [PubMed PMID:41887224](https://pubmed.ncbi.nlm.nih.gov/41887224/) and the [publisher abstract](https://doi.org/10.1016/j.ajhg.2026.02.024). The PubMed record gives PMCID PMC13087471 and the matching DOI. The publisher abstract describes 11 affected individuals from seven families, BLOC1S1 knockout cellular and iPSC-neuron phenotypes, and variant-rescue results. This verifies the earlier citation; the normal local publication cache is still absent, and no new cached-reference entry or quote is added. Earlier source-fetch reservations in this journal are historical and do not establish a completed or pending import of this paper.
+
+UniProt's statement about isoform 2 being the form found in non-primate orthologs is an inferred comparative statement. It does not identify which human isoform was assayed or establish that every human ISS/IBA source assertion is isoform-specific. Both existing alternative-product records and all original source objects remain unchanged. The previous failed provider attempt remains documented; this follow-up makes no provider-generated or complete-paper claim.
+
+Totals remain 22 ACCEPT, 21 KEEP_AS_NON_CORE, 10 UNDECIDED and 3 MODIFY, with three core functions and no NEW annotations. Only eight review rationales and this appended journal entry change; all source files and cached publications remain unchanged.
+
+
+## Follow-up verification
+
+Independent scientific review approved the eight rationale-only changes. Focused canonical validation passed with the 17 existing advisories: 15 generic-binding decisions and two scaffold-core terms not duplicated as NEW annotations. Rendering and new history validation passed. All 56 source assertions, existing actions, references, quotations, two alternative products and three core functions remain unchanged.
