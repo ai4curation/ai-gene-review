@@ -2956,9 +2956,9 @@ Gene reviews are proceeding in evidence-priority order, alphabetically within
 each tier. Track assignments, validation, and per-gene PRs in the
 [review progress log](CLINGEN_MENDELIAN/review-progress.md).
 
-**150 of 2,876 genes are complete; 2,726 remain.** The verified BLNK merge
+**151 of 2,876 genes are complete; 2,725 remain.** The verified BICRA merge
 adds one completed gene to the preceding completion update.
-The 151 original gene PR merges include AKR1D1, whose required source follow-up
+The 152 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3221,7 +3221,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BCOR** — HGNC:20893; [microphthalmia, syndromic 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3da06b77-1ed0-4197-948c-a9bbf80b6ed4-2020-12-17T171347.861Z) (MONDO:0010261; XL; Definitive).
 - [ ] **BCS1L** — HGNC:1020; [Bjornstad syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7a26b6b5-e703-43fc-bcd0-eaff67ef8107-2018-07-09T160000.000Z) (MONDO:0009872; AR; Definitive); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b50d7db-1144-4187-a60c-72b45adb80bd-2019-09-19T155315.896Z) (MONDO:0009723; AR; Limited); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_103c4ff3-1304-444e-93c7-c4cc729f19e4-2024-09-19T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [x] **BEST1** — HGNC:12703; [BEST1-related dominant retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_487a42cc-7dd0-4991-ac9d-1346f59073c0-2023-08-03T160000.000Z) (MONDO:0700238; AD; Definitive).
-- [ ] **BICRA** — HGNC:4332; [Coffin-Siris syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2dcc8864-4487-4c5c-b541-cfd972767269-2024-11-20T170000.000Z) (MONDO:0015452; AD; Definitive).
+- [x] **BICRA** — HGNC:4332; [Coffin-Siris syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2dcc8864-4487-4c5c-b541-cfd972767269-2024-11-20T170000.000Z) (MONDO:0015452; AD; Definitive).
 - [ ] **BIN1** — HGNC:1052; [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bb963a9-ec8a-4966-93bb-4f8ef6f8f8a1-2024-06-10T160000.000Z) (MONDO:0018947; AD; Limited); [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d04cc64-0994-4579-99d5-bd2b89710173-2024-06-10T160000.000Z) (MONDO:0018947; AR; Definitive).
 - [ ] **BLM** — HGNC:1058; [Bloom syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0a20b67-5a62-462c-894b-76b60a66e979-2019-04-19T160000.000Z) (MONDO:0008876; AR; Definitive); [colorectal cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37bc882f-34c6-4aea-afea-7b6f037ed9a7-2024-11-22T180000.000Z) (MONDO:0005575; AD; Limited).
 - [x] **BLNK** — HGNC:14211; [agammaglobulinemia 4, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e1d2e1b-52a6-4371-9055-0e1cc74da39d-2021-03-16T132748.373Z) (MONDO:0013289; AR; Definitive).
