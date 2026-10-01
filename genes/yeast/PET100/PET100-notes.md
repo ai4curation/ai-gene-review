@@ -45,3 +45,26 @@
   review keeps PET100 in late complex IV biogenesis: [PMID:38612624 "PET100 was
   first identified in yeast [74] as being required for COX assembly. PET100 was
   found to be associated with two different subassembly complexes"].
+
+## 2026-10-01 current GOA refresh
+
+- `just fetch-gene yeast PET100 --force` expanded the live GOA from 10 to 15
+  rows. Current PAINT now emits four PET100-family IBAs from
+  `PANTHER:PTN002143768`: accepted `GO:0005743` mitochondrial inner membrane
+  and `GO:0033617` mitochondrial respiratory chain complex IV assembly, the
+  overbroad live `GO:0044183` protein folding chaperone replacement, and
+  accepted `GO:0051131` chaperone-mediated protein complex assembly.
+- The historical `GO:0051082` unfolded protein binding IBA and IDA rows are no
+  longer in live GOA and are marked `retired: true`; they remain reviewed so
+  the obsolete source assertions are preserved for the IBA/chaperone audit.
+- Live GOA now also has a logical `GO_REF:0000108` `GO:0006457` protein folding
+  row from `GO:0044183`; this is marked over-annotated because Pet100 carries a
+  Cox7/Cox8/Cox9 module in complex IV assembly rather than executing generic
+  protein folding.
+- SGD's 2026 recuration of PMID:15507444 added `GO:0140597` protein carrier
+  activity and a direct `GO:0051131` row supported by Cox7/Cox9/Cox8 physical
+  interactions. These are accepted because the cached abstract places Pet100 in
+  Complex A with those subunits and concludes that Pet100 facilitates
+  interaction between the Pet100-lacking Complex A' and other COX
+  subassemblies: [PMID:15507444 "facilitate the interaction(s) between Complex
+  A' and other cytochrome c oxidase subassemblies and subunits"].
