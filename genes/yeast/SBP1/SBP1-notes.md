@@ -67,3 +67,19 @@ annotation was removed on the basis of incomplete full text.
   upregulation of key autophagy genes ATG1, ATG2, and ATG9."]. The same PubMed
   search also found a 2026 goji-berry `SBP1` paper; that hit concerns an
   unrelated plant RING-finger self-incompatibility protein and was not used.
+
+## 2026-10-01 current GOA refresh
+
+- The current GOA refresh adds two PTN000543777 process IBAs: `GO:0006364`
+  rRNA processing and `GO:0071028` nuclear mRNA surveillance. The first is seeded
+  from MRD1-like rRNA-processing descendants and a zebrafish RRM protein, and the
+  second from other RRM-family nuclear mRNA surveillance factors. Both were marked
+  `REMOVE` with `FUNCTIONAL_DIVERGENCE`: the direct Sbp1 literature supports a
+  cytoplasmic mRNA-binding, translation-repression and P-body/stress-granule
+  program, while the older SSB-1/snR10/snR11 nucleolar evidence is indirect and
+  does not establish that Sbp1 executes an rRNA-processing step.
+- A new current-GOA InterPro2GO `GO:0003723` RNA-binding row and UniProt EXP
+  `GO:0005737` cytoplasm row were accepted. Four now-absent exact source rows
+  were retained but marked `retired: true`: one old GO_REF:0000120 RNA-binding
+  row and three IntAct `GO:0005515` protein-binding rows that were already
+  reviewed as uninformative.
