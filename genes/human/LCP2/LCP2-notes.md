@@ -11,9 +11,8 @@ Project: ADAPTIVE_IMMUNITY, T cell receptor trunk.
   The falcon client still completed in the background at 13:54, after about 1186 s, and wrote
   `LCP2-deep-research-falcon.md`.
   The review was done from UniProt, GOA and cached publications. The deep-research report was read
-  afterwards. It is consistent with the review: SAM-domain oligomerization, and roles in neutrophils,
-  platelets, NK cells and mast cells. It is cited as corroboration on the collagen-activated
-  signaling NEW row.
+  afterwards and cited as corroboration on the collagen-activated signaling NEW row. The report was
+  later regenerated; see "Deep research integration (falcon)" below for the current version.
 
 ## Biology summary (with provenance)
 
@@ -57,3 +56,66 @@ Project: ADAPTIVE_IMMUNITY, T cell receptor trunk.
 
 - Should a kinase activator MF be added for ITK (PMID:17420479)?
 - Is there direct evidence for raft localization?
+
+## Deep research integration (falcon)
+
+The regenerated `LCP2-deep-research-falcon.md` (Edison, 24 citations) was re-read in full. It rests
+almost entirely on secondary reviews (Rudd 2021, Dadwal 2021, Borowicz 2020, Balagopalan 2021, Katzav
+2023, Liu 2023, Hakami 2026, an unidentified 2023 Chinese review). The only primary paper is Yamane et al.
+2026. The regenerated report no longer contains the sentence the review had quoted on the collagen
+NEW row ("SLP-76 contributes to platelet activation and aggregation..."). It also no longer mentions
+neutrophils or NK cells, contrary to what the note above originally said.
+
+Claim tally: about 27 substantive claims. 19 confirm the review, 4 add something new, 0 conflict with it,
+and 4 are not relevant or unsupported.
+
+**Confirms review (19):** non-catalytic adaptor; ZAP70 phosphorylation; Y113/Y128 bind VAV1 and NCK;
+Y145 and ITK; Y173 needed for PLCG1 activation in T and mast cells; GADS C-SH3 binds the central
+RxxK/PRR and bridges to pLAT; SH2 binds pADAP; ADAP-SKAP1-Rap1-LFA-1 inside-out signaling; HPK1
+association; cytosolic at rest and recruited to LAT microclusters; immunological synapse; PLCG1/Ca2+/NFAT;
+PKC-theta/NF-kB; Ras/ERK; actin and cytoskeleton; DN3 block in thymocyte development; GPVI in platelets;
+FcERI in mast cells; SAM domain at the N-terminus.
+
+**Adopted (adds new):**
+- The weak, conserved PRR185-200 / PLCG1 SH3 interaction in the LAT-GADS-SLP-76-PLCG1 tetramer tunes TCR
+  signal strength. Raising its affinity (SLP-76HA) increases PLCG1 activity, perturbs thymocyte
+  selection, CD8 central memory and Tfh responses. Verified in PMID:42660881 (full text, mouse). Added
+  to the description and to core_functions[0] supported_by, plus a suggested question.
+  [PMID:42660881 "the conserved weak SLP-76/PLC-γ1 interaction is important for the controlled activation of PLC-γ1, thus fine-tuning TCR signal strength to optimize T cell-mediated immunity"]
+- HPK1 phosphorylates Ser376 as negative feedback. The report cited only a review; the primary source
+  is PMID:17353368, which also shows the pS376 site recruits 14-3-3. Added to the description and to
+  core_functions[0] supported_by. No annotation was added: SLP-76 is the substrate here, and
+  HPK1 performs the step.
+  [PMID:17353368 "a novel negative feedback loop involving HPK-1-dependent serine phosphorylation of SLP-76 and 14-3-3 protein recruitment, which tunes T cell activation"]
+- SLP-76 binds SUMO-RANGAP1 at NPC cytoplasmic filaments via K56, and this promotes NFATC1 and p65 nuclear
+  entry. The primary source is PMID:26321253 (Rudd lab, Jurkat J14 and mouse). Added to the description
+  with hedged wording ("has been reported"). No NEW CC or BP annotation was made because the finding comes
+  from a single lab and GOA has no such annotation. Raised as a suggested question and a suggested experiment.
+- Report quoted in core_functions[0] for the "non-enzymatic scaffold" framing.
+
+**Not acted on / rejected:**
+- Clinical claims (checkpoint biomarker, antisense, 145pTyr peptides, CAR-T speculation): not relevant
+  to GO function, and the Chinese review is unidentified ("Unknown journal").
+- BCR signaling in CLL: rests only on the unidentified Chinese review, so no primary source.
+- c-Cbl-dependent microcluster internalization: this is a property of the microcluster, not an
+  SLP-76 activity. Not needed.
+- Treating the integrin/LFA-1 or NF-kB branches as separate processes: the report itself calls these
+  indirect consequences. The review keeps the process at TCR signaling, so no NEW process terms.
+
+**Report errors / embellishments detected:**
+- It calls the weak SLP-76/PLCG1 interaction a "kinetic proofreading mechanism". This phrase does not
+  appear in PMID:42660881. It also calls the study "landmark"/"paradigm shift", which is overstatement.
+- Domain boundaries are approximate. The SH2 is given as about 420-510, but UniProt has 422-530.
+  The SAM is given as about 12-78, but UniProt has 15-81.
+- HPK1-Ser376 and RanGAP1 are attributed to a review rather than to the primary papers.
+- The Tyr145-ITK assignment is self-flagged as unverified in the report. The review already supports
+  ITK recruitment via ZAP70-phosphorylated N-terminal tyrosines (PMID:17420479, PMID:21725281).
+- No wrong PMIDs were found (the report gives DOIs only). The DOI for Yamane 2026 resolves correctly to
+  PMID:42660881.
+
+**Fix for the regenerated report:** the stale falcon quote on the GO:0038065 NEW row was replaced with a
+current verbatim sentence ("SLP-76 participates in ITAM-receptor signaling downstream of the collagen
+receptor GPVI, ...").
+
+**Annotation actions:** no existing-annotation actions were changed. The report contains no primary
+evidence that contradicts any decision.
