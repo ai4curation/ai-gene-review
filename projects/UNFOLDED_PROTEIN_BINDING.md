@@ -392,7 +392,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 |---|----------|-------|------------------|
 | 1 | **HSP70 foldase/holdase** | HSPA1A/B, HSPA2, HSPA6, HSPA8, HSPA1L (human); SSA1-4, SSB1-2, SSQ1, KAR2, LHS1 (yeast); DnaK (E. coli); Hspa8 (mouse, rat); Hspa5/BiP (rat). SSZ1 is an atypical RAC regulator rather than an autonomous foldase. | ATP-dependent foldases: MODIFY → GO:0140662; holdase NTR pending; SSZ1 retains GO:0044183 under the pragmatic co-chaperone convention |
 | 2 | **HSP90 system** | AHSA1, PTGES3, AIP (human); HSP82, HSC82, CPR6, CPR7, CDC37 (yeast); CDC37 (C. albicans); Hsp83 (fly) | MODIFY or OVER_ANNOTATED |
-| 3 | **J-domain co-chaperones** | DNAJB1, DNAJB2, DNAJA2, DNAJA4 (human); DNAJB6, DNAJB8 (human, holdase-type); YDJ1, MDJ1, APJ1 (yeast); JEM1 (yeast, C. albicans); DnaJ (E. coli); Dnaja3, Dnajb11 (mouse) | MODIFY → GO:0044183 (interim); holdase-type → holdase NTR |
+| 3 | **J-domain co-chaperones** | DNAJB1, DNAJB2, DNAJA2, DNAJA4 (human); DNAJB6, DNAJB8 (human, holdase-type); YDJ1, MDJ1 (yeast); APJ1 (yeast, retired upstream); JEM1 (yeast, C. albicans); DnaJ (E. coli); Dnaja3, Dnajb11 (mouse) | MODIFY → GO:0044183 for retained non-holdase rows; APJ1 was not converted to a NEW assertion after upstream GO:0051082 retirement; holdase-type → holdase NTR |
 | 4 | **sHSPs/holdases** | CRYAA, CRYAB, HSPB6 (human); CLU, SCG5 (human); CRYAA (bovine); cryaa/cryaba/cryabb (zebrafish); HSP26 (yeast); Hsp22/23/26/27 (fly); HSP17.7 (Arabidopsis); HSPH1 (hamster) | MODIFY → holdase NTR; retain GO:0051082 until NTR created |
 | 5 | **Chaperonin/TRiC/CCT** | TCP1, CCT2-8 (yeast); GroEL (E. coli); HSP60, HSP10 (yeast) | MODIFY → GO:0044183 |
 | 6 | **Prefoldin** | PFDN1-6, VBP1 (human); PFD1, EGD1, EGD2 (yeast) | MODIFY → GO:0044183 |
@@ -572,7 +572,7 @@ established:
 | IRE1 | *T. reesei* | G0RBE3 | 21 | OVER_ANNOTATED | UPR sensor, not chaperone |
 | slrP | *S. typhimurium* | Q8ZQQ2 | 16 | REMOVE | T3SS effector E3 ligase (misannotation) |
 | ACL4 | *S. cerevisiae* | Q03771 | 18 | MODIFY | Ribosome assembly |
-| APJ1 | *S. cerevisiae* | P53940 | 26 | MODIFY → GO:0044183 | Nuclear J-domain co-chaperone; routes aggregated clients to proteasomal turnover |
+| APJ1 | *S. cerevisiae* | P53940 | 22 | GO:0051082 retired upstream; no NEW GO:0044183 | Nuclear J-domain co-chaperone; demonstrated output is aggregate turnover rather than refolding |
 | ATP10 | *S. cerevisiae* | P18496 | 14 | OVER_ANNOTATED | Atp6p assembly factor |
 | ATP11 | *S. cerevisiae* | P32453 | 16 | NON_CORE | Atp12p assembly factor |
 | BTT1 | *S. cerevisiae* | P40314 | 15 | MODIFY | Ribosome assembly |

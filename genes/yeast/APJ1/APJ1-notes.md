@@ -94,6 +94,16 @@ GO:0051082 obsoletion cleanup, and the UniProt keyword-derived `GO:0008270`
 and `GO:0046872` rows are gone. The SGD RCA `GO:0008270` zinc ion binding row
 remains live and continues to capture the class A zinc-binding region.
 
+The upstream `GO:0051082` retirement deliberately retires APJ1 from the old
+`UNFOLDED_PROTEIN_BINDING.md` interim `MODIFY -> GO:0044183` queue rather than
+turning that historical decision into a fresh `NEW` assertion. The 2026 YAR1
+refresh shows that both `GO:0140309` unfolded protein holdase activity and
+`GO:0044183` protein folding chaperone now exist in live upstream GOA when SGD
+chooses to assert them. For APJ1, the APJ1-specific output in PMID:32492414 is
+proteasomal turnover of insoluble nuclear clients rather than generic
+refolding, so there is no current APJ1 live row to modify and no strong basis
+for manufacturing a new `GO:0044183` annotation.
+
 The four remaining IBA rows were checked against
 `interpro/panther/PTHR43888/PTHR43888-paint.tsv`. Added explicit
 `propagation_review` source nodes for the three accepted rows:
