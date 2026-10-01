@@ -3,7 +3,7 @@ title: "Origins of Animal Multicellularity"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
-genes: [rosetteless, jumble, couscous, coHpo, coWts, coYki, VIN1, TLN]
+genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN]
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals
@@ -235,9 +235,9 @@ aggregative origin), [ECM](ECM.md), [MECHANOBIOLOGY](MECHANOBIOLOGY.md),
 - [x] Review: couscous (F2UJ78) — DRAFT
 - [x] Review OSCPE VIN1 and TLN — DRAFT
 - [x] Review CAPO3 coHpo, coWts, coYki — DRAFT
-- [ ] Review SALRS hippo, warts, yorkie (in progress)
+- [x] Review SALRS hippo, warts, yorkie — DRAFT
 - [ ] Track B human toolkit reviews (none started)
-- [ ] Track C propagation audit (started: first case found, coWts, below)
+- [ ] Track C propagation audit (started: three cases so far, coWts, warts, yorkie; see 2026-10-01 notes)
 - [ ] Track D ontology check (started: NTR "rosette colony development" drafted in the rosetteless review)
 - [ ] Deep research (falcon) for the three SALRS genes, once a provider key is available
 
@@ -306,5 +306,24 @@ Reviewed the *Capsaspora* Hippo kinase cascade and the sponge adhesome pair
   cell-cell adhesion modified to cell-matrix adhesion.
 - Resolved *S. rosetta* hippo, warts, yorkie from the bioRxiv preprint of
   PMID:41037400. The preprint full text could not be cached (bioRxiv rate
-  limits; the Europe PMC copy returns 403), so those reviews quote abstracts
-  only.
+  limits; the Europe PMC copy returns 403) at first; a later retry cached the
+  version 1 PDF. The PTSG locus IDs appear only in version 2 (read from
+  bioRxiv XML, not cached); this is recorded in each gene's notes.
+- **S. rosetta warts: second Track C case.** Its IBA rows come from the
+  Metazoa-Choanoflagellida speciation node PTN002390470 of the LATS family.
+  That node carries animal tissue-level terms: regulation of organ growth was
+  removed (choanoflagellates have no organs; GO's taxon constraints do not
+  exclude them), and positive regulation of apoptotic process and G1/S
+  transition were marked over-annotated. hippo signaling was accepted. *M.
+  brevicollis* Warts receives the same rows. This is a node-placement issue
+  for the PAINT curators, not a family error.
+- **S. rosetta yorkie: third Track C case.** TreeGrafter grafts F2UDK1 onto an
+  Ecdysozoa node of the MAGI-related family PTHR10316, a family-placement
+  error like coWts. Our motif scan (yorkie-bioinformatics/) finds four Warts
+  phosphorylation motifs but no TEAD-interface motif, and PANTHER classes a
+  different WW protein, F2U5K0, in the YAP1 family; the preprint nonetheless
+  names PTSG_06057 (F2UDK1) as yorkie. Orthology needs a proper phylogeny.
+- **S. rosetta hippo:** generic kinase and signal-transduction rows kept;
+  hippo signaling not added, since hippo knockouts do not phenocopy warts
+  (normal rosette size) and nothing places Hippo upstream of Warts in S.
+  rosetta.
