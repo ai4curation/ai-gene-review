@@ -73,6 +73,14 @@ EXPECTED_RETIREMENTS = {
         make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:10564510"),
         make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"),
     ]),
+    "genes/yeast/LPL1/LPL1-ai-review.yaml": Counter([
+        make_signature("GO:0047372", "monoacylglycerol lipase activity", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0005811", "lipid droplet", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0006629", "lipid metabolic process", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0016020", "membrane", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0016042", "lipid catabolic process", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0016787", "hydrolase activity", "IEA", "GO_REF:0000043"),
+    ]),
     "genes/yeast/SSQ1/SSQ1-ai-review.yaml": Counter([
         make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043",
                        qualifier="enables"),
@@ -239,6 +247,8 @@ def main():
     report = dict(baseline_commit=commit, checked_at=datetime.now(timezone.utc).isoformat(), genes=results)
     (HERE / "source-preservation-check.json").write_text(json.dumps(report, indent=2) + "\n")
     missing = sum(sum(r["missing_source_assertions"].values()) for r in results)
+    unexpected_retirements = sum(sum(r.get("unexpected_expected_retirements", {}).values())
+                                 for r in results)
     migration_errors = sum(len(r.get("identity_migration", {}).get("errors", [])) for r in results)
     retirement_errors = sum(len(r.get("unexpected_expected_retirements", {})) for r in results)
     migrations = sum("identity_migration" in r for r in results)
