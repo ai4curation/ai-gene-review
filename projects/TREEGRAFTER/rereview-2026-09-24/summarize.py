@@ -45,10 +45,13 @@ def main() -> None:
 
     transitions = Counter((r["previous_action"], r["action"]) for r in rows)
     outcomes = Counter(r["outcome"] for r in rows)
+    # Every row whose action moved, so the table's total matches `outcome changed`.
+    # Filtering on the *new* action instead silently dropped the
+    # REMOVE -> MARK_AS_OVER_ANNOTATED rows, which are relaxations too.
     relaxed_terms = Counter(
         (r["term_id"], r["term_label"])
         for r in rows
-        if r["action"] not in ("REMOVE", "MARK_AS_OVER_ANNOTATED")
+        if r["previous_action"] != r["action"]
     )
     genes = {r["gene"] for r in rows}
 

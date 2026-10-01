@@ -458,8 +458,7 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   wrong-branch propagations — the class this audit retains elsewhere (`quiA`
   `GO:0008876`). Both are `REMOVE` again, which also removes a duplication the
   review caught: each `MODIFY` proposed a term the same review already asserts
-  on its own `IC`/`NEW` row (`GO:0043639`, `GO:0019543`). Split is now 116 stand
-  / 75 relaxed. One further row, the g022 double-strand break repair call, was
+  on its own `IC`/`NEW` row (`GO:0043639`, `GO:0019543`). Split is now 117 stand / 75 relaxed. One further row, the g022 double-strand break repair call, was
   relaxed by this audit and then overtaken by main's finding that it is absent
   from GOA entirely; the batch record keeps the reasoning and records that there
   is no live annotation left to relax.
