@@ -82,3 +82,12 @@ The PMID:32296183 reference is marked VERIFIED for independently checked PubMed 
 
 
 Focused validation after this follow-up passed with four advisories and no blocking errors. The two structured IBA-metadata cautions retain the recorded node evidence without claiming a complete tree/alignment review. The glycoprotein-biosynthesis action difference remains source-specific, and the preserved Falcon report is not cited as authoritative evidence for the revised interpretation. Rendering passed. All 16 source assertions, their actions, both alternative products and downloaded sources remain unchanged; no repository-wide validation success is asserted.
+
+
+## 2026-10-01 UTC — Protein-binding decision and review-policy clarification
+
+The [current-head review of PR #3563](https://github.com/ai4curation/ai-gene-review/pull/3563) (commit `00c22ed89`, submitted 2026-09-30) identifies a policy disagreement: its requested REMOVE for GO:0005515 applies the default informational-exclusion criterion. That criterion can exclude a generic term even when the reported interaction is real; it is distinct from concluding that the experimental evidence is false. This concern is acknowledged rather than recast as a biological objection.
+
+For this task, the explicit evidence-access requirement is to use UNDECIDED when the relevant experiment cannot be adjudicated. The B3GALNT2–TMBIM1 pair and primary HuRI citation are identified, but the target experiment, tested ORF/isoform and pair-specific validation have not been inspected. Reading general HuRI screening methods and observing `full_text_available: true` do not establish that those target-level materials were accessed. The bibliographic VERIFIED flag and the annotation's UNDECIDED action therefore describe different judgments.
+
+The task also directs that generic binding not be changed solely for informativeness. That instruction does not establish the pair's function or supersede the evidence-access requirement with blanket retention: UNDECIDED remains the present action. No more specific molecular function is inferred, no global skill policy is changed, and all 16 actions, both products, the core function, candidate term and reference findings remain unchanged. Revisiting the action requires actual target-level evidence and application of the instructions governing that review, not merely the cache availability flag.
