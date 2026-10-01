@@ -237,6 +237,7 @@ are therefore expected; existing human reviews still link normally.
 | BCKDHA | Definitive | Existing review | Review #3614 merged at 2026-10-01T03:11:14Z; final-head approval and required CI passed; all 35 scoped merged blobs and 17 PR paths verified. | `cmungall/clingen-bckdha` | [#3614](https://github.com/ai4curation/ai-gene-review/pull/3614) |
 | BCKDK | Definitive | INITIALIZED seed | Review #3646 merged at 2026-10-01T05:18:33Z; final-head approval and required CI passed; all 23 scoped merged blobs and 15 PR paths verified. | `cmungall/clingen-bckdk` | [#3646](https://github.com/ai4curation/ai-gene-review/pull/3646) |
 | BCL11B | Definitive | INITIALIZED seed | Review #3664 merged at 2026-10-01T06:16:11Z; final-head approval and required CI passed; all 16 scoped merged blobs and 10 PR paths verified. | `cmungall/clingen-bcl11b` | [#3664](https://github.com/ai4curation/ai-gene-review/pull/3664) |
+| BEST1 | Definitive | INITIALIZED seed | Review #3718 merged at 2026-10-01T12:20:24Z; final-head approval and required CI passed; all 32 scoped merged blobs and 19 PR paths verified. | `cmungall/clingen-best1` | [#3718](https://github.com/ai4curation/ai-gene-review/pull/3718) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -248,8 +249,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **148 of 2,876 genes
-are complete**; 149 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **149 of 2,876 genes
+are complete**; 150 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -267,6 +268,8 @@ Completion update at 2026-10-01 03:11:14 UTC adds BCL11A #3650 and BCKDHA #3614.
 Completion update at 2026-10-01 05:18:33 UTC adds BCKDK #3646. Its final-head approval, passing required CI and signed merge commit include verification of all 23 scoped files and 15 PR paths. The count is now 147 completed genes and 148 original merges, with 2,729 genes remaining and AKR1D1 still requiring its source follow-up. Earlier completion and checkpoint observations remain historical; this update does not refresh other open PRs, audit totals or import totals.
 
 Completion update at 2026-10-01 06:16:11 UTC adds BCL11B #3664. Its final-head approval, passing required CI and signed merge commit include verification of all 16 scoped files and 10 PR paths. The count is now 148 completed genes and 149 original merges, with 2,728 genes remaining and AKR1D1 still requiring its source follow-up. Earlier completion and checkpoint observations remain historical; this update does not refresh other open PRs, audit totals or import totals.
+
+Completion update at 2026-10-01 12:20:24 UTC adds BEST1 #3718. Its final-head approval, passing required CI and signed merge commit include verification of all 32 scoped files and 19 PR paths. The count is now 149 completed genes and 150 original merges, with 2,727 genes remaining and AKR1D1 still requiring its source follow-up. Earlier completion and checkpoint observations remain historical; this update does not refresh other open PRs, audit totals or import totals.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -762,3 +765,5 @@ remains a scheduling exception. Project setup merged in
 - 2026-10-01 UTC: Recorded the verified BCKDK #3646 merge. Completion count: 146 → 147; original gene PR merges: 147 → 148; remaining catalog genes: 2,729. The inventory checkbox, progress row and exact merge receipt are recorded; earlier campaign observations and ClinGen association data are preserved.
 
 - 2026-10-01 UTC: Recorded the verified BCL11B #3664 merge. Completion count: 147 → 148; original gene PR merges: 148 → 149; remaining catalog genes: 2,728. The inventory checkbox, progress row and exact merge receipt are recorded; earlier campaign observations and ClinGen association data are preserved.
+
+- 2026-10-01 UTC: Recorded the verified BEST1 #3718 merge. Completion count: 148 → 149; original gene PR merges: 149 → 150; remaining catalog genes: 2,727. The inventory checkbox, progress row and exact merge receipt are recorded; earlier campaign observations and ClinGen association data are preserved.
