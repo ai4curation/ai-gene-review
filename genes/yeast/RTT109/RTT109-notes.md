@@ -78,3 +78,28 @@ These newer papers extend the transcription and replication-associated repair
 contexts but do not require new GO actions beyond the existing accepted
 chromatin organization, DNA damage response, and H3 acetyltransferase activity
 annotations.
+
+## 2026-10-01 current GOA refresh
+
+Rebased the RTT109 review onto current GOA/UniProt with `just fetch-gene yeast RTT109
+--force`; current GOA has 79 rows and the fetch seeded 15 new source assertions.
+The additions were broad experimental `GO:0004402 histone acetyltransferase
+activity` parents for the older Rtt109 HAT literature, one current RHEA/EC IEA
+for the same broad activity, two generic Vps75 `GO:0005515 protein binding`
+rows, two broad `GO:0061733 protein-lysine-acetyltransferase activity` rows, and
+one Vps75-sourced `GO:0070775 H3 histone acetyltransferase complex` row. The
+catalytic parents and complex row were accepted; the Vps75 protein-binding rows
+were removed as generic duplicates of the specific Rtt109-Vps75 H3
+acetyltransferase complex mechanism.
+
+No PAINT topology changed in the refreshed PTHR31571 export: `GO:0005634`,
+`GO:0032931`, and `GO:0006974` still all propagate from the fungal node
+`PANTHER:PTN001586545`. The prior PTN-only `propagation_review` entries remain
+valid; SGD RTT109 appearing among the node seeds is target-supported PAINT
+evidence, not circular evidence.
+
+Checked PubMed for 2025-2026 `Rtt109`/`RTT109`/`KAT11` hits. The direct budding
+yeast replication-repair paper PMID:39631395 was already cached in the prior
+pass; newer PubMed hits were either non-Saccharomyces, human EP300, model
+systems that only mention yeast RTT109, or a 2026 bioRxiv Candida albicans
+Rtt109 preprint, and did not require new RTT109 curation.
