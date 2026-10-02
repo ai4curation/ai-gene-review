@@ -184,8 +184,9 @@ running `fetch-gene`; do not guess one.
 - Resolved candidate genes against UniProtKB/Swiss-Prot. Notes from that:
   - Rice blast is under the strain-specific mnemonic **PYRO7** (strain 70-15) in
     Swiss-Prot. The repo already has a `genes/PYROR/` folder (taxon 318829) for
-    one non-effector gene. Decide whether the new blast reviews should go in
-    `PYRO7` (to match UniProt) or `PYROR` before fetching the first one.
+    one non-effector gene. **Decided (2026-10-02): new blast reviews go in
+    `genes/PYRO7/`**, matching UniProt. The existing `PYROR` review stays where
+    it is.
   - *Fulvia fulva* (*Cladosporium fulvum*) entries use **FULFL**, and *Ustilago
     maydis* entries use **MYCMD** (*Mycosarcoma maydis*).
   - ORA59 is named ERF094 in UniProt, and SYMRK/DMI2 in *Medicago* is NORK.
