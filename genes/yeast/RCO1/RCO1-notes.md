@@ -45,9 +45,9 @@ keyword transfer for a chromatin subunit and the second describes assembly rathe
 the maintenance/stabilization role supported by the Rpd3 core paper.
 
 `core_functions` now separates Rco1's PHD histone-reader activity from its SID-MRG
-Rpd3S scaffold role. GO has `GO:0140566 histone reader activity` for the PHD module
-but no specific scaffold MF for organizing two Eaf3-Rco1 arms within Rpd3S, so that
-activity is recorded as a proposed term instead of being folded into zinc binding.
+Rpd3S scaffold role. GO has `GO:0140566 histone reader activity` for the PHD module;
+the Rpd3S scaffold role is represented with `GO:0030674 protein-macromolecule
+adaptor activity` rather than being folded into zinc binding.
 
 ## 2026-10-01 GOA / PAINT refresh
 
@@ -66,6 +66,11 @@ marked `retired: true`, rather than being deleted. Current GOA also adds a
 ComplexPortal `part_of GO:0032221 Rpd3S complex` IPI row from PMID:17101441; this
 was accepted as a redundant but correct confirmation of Rco1's core Rpd3S
 membership.
+
+During PR review, the retired UniProt-keyword `GO:0006325 chromatin organization`
+row was replaced as live support by a `NEW` proposed row citing the Rpd3S primary
+literature, so `GO:0006357`, `GO:0006351`, `GO:0006334`, and `core_functions`
+no longer depend on an annotation absent from current GOA.
 
 Searched the 2025-2026 public literature for `RCO1`/`YMR075W`/Rpd3S updates.
 The newer hits were Rpd3S structural papers and reviews that refine Rco1 and
