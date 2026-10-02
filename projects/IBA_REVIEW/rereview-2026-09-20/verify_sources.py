@@ -21,9 +21,111 @@ def signature(annotation):
     return json.dumps({k: annotation[k] for k in FIELDS if k in annotation}, sort_keys=True)
 
 
+def make_signature(term_id, term_label, evidence_type, original_reference_id, qualifier=None):
+    annotation = {
+        "term": {"id": term_id, "label": term_label},
+        "evidence_type": evidence_type,
+        "original_reference_id": original_reference_id,
+    }
+    if qualifier:
+        annotation["qualifier"] = qualifier
+    return signature(annotation)
+
+
+# Explicit current-GOA source refreshes. Keep these as narrow signature-level
+# exceptions so unrelated source loss still fails loudly.
+EXPECTED_RETIREMENTS = {
+    "genes/yeast/CPS1/CPS1-ai-review.yaml": Counter([
+        make_signature(
+            "GO:0051603", "proteolysis involved in protein catabolic process",
+            "IBA", "GO_REF:0000033",
+        ),
+        make_signature("GO:0004180", "carboxypeptidase activity", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0006508", "proteolysis", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0008233", "peptidase activity", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0046872", "metal ion binding", "IEA", "GO_REF:0000043"),
+        make_signature(
+            "GO:0051603", "proteolysis involved in protein catabolic process",
+            "IMP", "PMID:2026161",
+        ),
+    ]),
+    "genes/yeast/HSC82/HSC82-ai-review.yaml": Counter([
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:15699485"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:37070168"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:9465043"),
+    ]),
+    "genes/yeast/HSP82/HSP82-ai-review.yaml": Counter([
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:21734642"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:31454312"),
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120"),
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:10564510"),
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000120"),
+    ]),
+    "genes/yeast/SSQ1/SSQ1-ai-review.yaml": Counter([
+        make_signature("GO:0000166", "nucleotide binding", "IEA", "GO_REF:0000043",
+                       qualifier="enables"),
+        make_signature("GO:0005524", "ATP binding", "IEA", "GO_REF:0000120",
+                       qualifier="enables"),
+        make_signature("GO:0016787", "hydrolase activity", "IEA", "GO_REF:0000043",
+                       qualifier="enables"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:16554755",
+                       qualifier="enables"),
+        make_signature("GO:0005515", "protein binding", "IPI", "PMID:19536198",
+                       qualifier="enables"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:11601843",
+                       qualifier="enables"),
+    ]),
+    "genes/yeast/YAR1/YAR1-ai-review.yaml": Counter([
+        make_signature("GO:0033309", "SBF transcription complex", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0051082", "unfolded protein binding", "IDA", "PMID:26112308"),
+        make_signature("GO:0051082", "unfolded protein binding", "IMP", "PMID:22570489"),
+    ]),
+}
+
+
 def source_assertions(review):
     return Counter(signature(a) for a in review.get("existing_annotations") or []
                    if (a.get("review") or {}).get("action") != "NEW")
+
+
+def qualifier_backfill_matches(missing, current):
+    """Find missing frozen signatures preserved with only a new qualifier.
+
+    Older seeded reviews omitted qualifiers that are now backfilled by a force
+    fetch. A missing frozen assertion without qualifier is therefore preserved
+    when a current assertion has the same term/evidence/reference/isoform/NOT
+    fields plus any qualifier.
+    """
+    current_by_unqualified = Counter()
+    for encoded, count in current.items():
+        data = json.loads(encoded)
+        if "qualifier" not in data:
+            continue
+        data.pop("qualifier")
+        current_by_unqualified[json.dumps(data, sort_keys=True)] += count
+
+    matches = Counter()
+    for encoded, count in missing.items():
+        data = json.loads(encoded)
+        if "qualifier" in data:
+            continue
+        matched = min(count, current_by_unqualified[encoded])
+        if matched:
+            matches[encoded] = matched
+            current_by_unqualified[encoded] -= matched
+    return matches
 
 
 def verify_identity_migration(path, commit, before, after):
@@ -120,16 +222,31 @@ def main():
         if path in IDENTITY_MIGRATIONS and after.get("id") != before.get("id"):
             expected, migration = verify_identity_migration(path, commit, before, after)
             result["identity_migration"] = migration
-        result["missing_source_assertions"] = dict(expected - current)
+        missing = expected - current
+        qualifier_backfills = qualifier_backfill_matches(missing, current)
+        if qualifier_backfills:
+            result["qualifier_backfills"] = dict(qualifier_backfills)
+            missing -= qualifier_backfills
+        retirements = EXPECTED_RETIREMENTS.get(path, Counter())
+        applied = missing & retirements
+        unexpected_retirements = retirements - missing
+        if retirements:
+            result["expected_retirements"] = dict(applied)
+            if unexpected_retirements:
+                result["unexpected_expected_retirements"] = dict(unexpected_retirements)
+        result["missing_source_assertions"] = dict(missing - retirements)
         results.append(result)
     report = dict(baseline_commit=commit, checked_at=datetime.now(timezone.utc).isoformat(), genes=results)
     (HERE / "source-preservation-check.json").write_text(json.dumps(report, indent=2) + "\n")
     missing = sum(sum(r["missing_source_assertions"].values()) for r in results)
     migration_errors = sum(len(r.get("identity_migration", {}).get("errors", [])) for r in results)
+    retirement_errors = sum(len(r.get("unexpected_expected_retirements", {})) for r in results)
     migrations = sum("identity_migration" in r for r in results)
+    retirement_errors = sum(len(r.get("unexpected_expected_retirements", {})) for r in results)
     print(f"Checked {len(results)} changed gene reviews; {missing} missing or mutated source assertions; "
-          f"{migrations} archived identity migration(s), {migration_errors} migration errors")
-    if missing or migration_errors:
+          f"{migrations} archived identity migration(s), {migration_errors} migration errors, "
+          f"{retirement_errors} stale expected retirement(s)")
+    if missing or migration_errors or retirement_errors:
         raise SystemExit(1)
 
 

@@ -6,6 +6,13 @@ sidecars:
   slide_charts:
     - PFAM/slides/pfam-coverage.svg
     - PFAM/slides/pfam-hypothesis.svg
+manifest:
+  slides:
+    - href: PFAM/slides/PFAM-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/W4798uw5yzf3XeGei7Mvp4
+      title: Project brief
 ---
 
 # Pfam → GO Mapping: A Precision Gap-Filling Experiment
@@ -298,7 +305,3 @@ Outputs (committed):
 
 The scripts hardcode no results and fabricate no mappings; if an input is missing
 they error out rather than guessing.
-
-## Slides
-
-- [Slides](PFAM/slides/PFAM-slides.html) (Marp source: [PFAM-slides.md](PFAM/slides/PFAM-slides.md)) — AI generated

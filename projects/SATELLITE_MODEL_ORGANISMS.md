@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [CAEBR, PRIPA]
 genes: [drd-5, tra-1, tra-2, fem-3, she-1, cep-1, trr-1, kin-1, peb-1, ubl-1, oaz]
+manifest:
+  slides:
+    - href: SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/KpzGoG9pcLXFud2YtDLotZ
+      title: Project brief
 ---
 
 # Satellite Model Organisms
@@ -121,7 +128,3 @@ may be added as gene reviews accrue.
   nematodes overlap with this project).
 - [CEPHALOPOD](CEPHALOPOD.md), [TARDIGRADE_STRESS_RESPONSE](TARDIGRADE_STRESS_RESPONSE.md)
   — other non-MOD organism gene-review collections.
-
-## Slides
-
-- [Slides](SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.html) (Marp source: [SATELLITE_MODEL_ORGANISMS-slides.md](SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.md)) — AI generated

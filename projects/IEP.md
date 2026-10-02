@@ -68,6 +68,13 @@ genes:
   - NFP
   - EME1
   - THI22
+manifest:
+  slides:
+    - href: IEP/slides/IEP-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/ALd7v1pAxR1cZDVMSJbzVY
+      title: Project brief
 ---
 
 # Inferred from Expression Pattern (IEP) Evidence Code Review
@@ -1123,7 +1130,3 @@ them.
   response (heat-shock and UPR chaperones, infection-inducible effectors, clock
   genes, stage markers that are the differentiated product), and fails when a
   constitutively-functioning protein is merely swept up by the condition.
-
-## Slides
-
-- [Slides](IEP/slides/IEP-slides.html) (Marp source: [IEP-slides.md](IEP/slides/IEP-slides.md)) — AI generated

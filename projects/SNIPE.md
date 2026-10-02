@@ -9,6 +9,13 @@ sidecars:
     - SNIPE/slides/go-hierarchy-gap.svg
     - SNIPE/slides/snipe-mechanism.svg
     - SNIPE/slides/snipe-proposed-terms.jpg
+manifest:
+  slides:
+    - href: SNIPE/slides/SNIPE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/MV5mj86PH7dB1UaTfnLYZ4
+      title: Project brief
 ---
 
 # SNIPE: Membrane-Bound Nuclease Anti-Phage Defence
@@ -190,7 +197,3 @@ Key observations:
 - SNIPE represents a genuinely novel immune mechanism — not sequence-based (like CRISPR) or modification-based (like R-M), but localization-based.
 - Conceptual parallel to eukaryotic IFITM proteins that block viral entry at membranes.
 - The modular N-terminal diversity across ~500 homologues is an interesting case for studying domain shuffling and functional diversification.
-
-## Slides
-
-- [Slides](SNIPE/slides/SNIPE-slides.html) (Marp source: [SNIPE-slides.md](SNIPE/slides/SNIPE-slides.md)) — AI generated

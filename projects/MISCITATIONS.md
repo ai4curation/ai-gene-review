@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, ARATH]
 genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1]
+manifest:
+  slides:
+    - href: MISCITATIONS/slides/MISCITATIONS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/B28H55M68QGuTavmzp4QAR
+      title: Project brief
 ---
 
 # Miscitation Review Project
@@ -420,10 +427,6 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
       may simply omit it, which is indistinguishable from "no problem found")
-
-## Slides
-
-- [Slides](MISCITATIONS/slides/MISCITATIONS-slides.html) (Marp source: [MISCITATIONS-slides.md](MISCITATIONS/slides/MISCITATIONS-slides.md)) — AI generated
 
 Last updated: 2026-09-27
 

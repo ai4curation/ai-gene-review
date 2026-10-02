@@ -8,6 +8,13 @@ sidecars:
   slide_images:
     - GENOME_WIDE_VALIDATION/slides/coherence-check.svg
     - GENOME_WIDE_VALIDATION/slides/coherence-violations.svg
+manifest:
+  slides:
+    - href: GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LTstg8jwzm9v2CXuxMaHhp
+      title: Project brief
 ---
 
 # Genome-wide validation
@@ -145,7 +152,3 @@ engine is organism-agnostic.
   genome-scale function annotations.* Briefings in Bioinformatics, 2026, 27(3):bbag336.
   [doi:10.1093/bib/bbag336](https://doi.org/10.1093/bib/bbag336). Software (GAEF):
   <https://github.com/bio-ontology-research-group/GAEF>.
-
-## Slides
-
-- [Slides](GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.html) (Marp source: [GENOME_WIDE_VALIDATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.md)) — AI generated

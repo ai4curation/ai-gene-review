@@ -18,6 +18,17 @@ Context: budding-yeast SUN comparator for `modules/linc_complex.yaml`. Human com
 - ND root MF -> REMOVE.
 - Karyogamy, nuclear congression, cohesion, homolog pairing, subtelomeric heterochromatin -> KEEP_AS_NON_CORE.
 - NEW GO:0106094 (mitotic Mps3-Mps2 LINC) from PMID:30862629.
+- 2026-09-28 IBA re-review: all three SUN-family IBA rows were retained and given structured
+  `propagation_review`. The current PAINT cache has GO:0005635 and GO:0043495 at the root
+  PTN000308195 SUN node and GO:0034993 at the PTN000308197 opisthokont node. The
+  microtubule wording of GO:0034993 still fits the actin-coupled budding-yeast t-LINC
+  imperfectly, but the propagated meiotic LINC complex membership is correct for Mps3.
+  PTHR12911-review.yaml assesses PTN000308197 as `NEEDS_PRUNING` because of UNC-84 and
+  testis-SUN propagation, not because of Mps3, so the gene-level `SUPPORTS_TRANSFER`
+  remains consistent with the family review.
+- Newer-literature search on 2026-09-28 did not find a post-2020 budding-yeast MPS3
+  primary paper that changes these calls; the 2020 t-LINC and 2019 SPIN/Mps3-Mps2 LINC
+  papers are already cached and incorporated.
 
 ## Deep research
 
