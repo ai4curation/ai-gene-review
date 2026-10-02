@@ -8,9 +8,9 @@ autolink_gene_symbols: false
 
 **Bottom line:** almost every GO annotation on choanoflagellate, *Capsaspora*
 and sponge proteins is propagated from animals, so we checked where that
-propagation goes wrong. The 16 Track A reviews carry 53 propagated rows,
-from TreeGrafter (`GO_REF:0000118`) and the UniProt multi-method merge
-(`GO_REF:0000120`).
+propagation goes wrong. The 16 Track A reviews, chosen because the genes have
+experimental literature, carry 53 propagated rows from TreeGrafter
+(`GO_REF:0000118`) and the UniProt multi-method merge (`GO_REF:0000120`).
 
 | Reviewer action | Rows |
 |---|---:|
@@ -19,7 +19,16 @@ from TreeGrafter (`GO_REF:0000118`) and the UniProt multi-method merge
 | Undecided | 3 |
 | Down-graded | 11 |
 
-All 11 down-grades are TreeGrafter rows. They come from four mechanisms:
+All 11 down-grades are TreeGrafter rows.
+
+Five further reviews were added *because* their proteins carry the terms found
+below: *M. brevicollis* LATS (MONBRDRAFT_1233) and four choanoflagellate
+cadherins. They add 48 propagated rows, 38 of them down-graded, including IBA
+rows on the *M. brevicollis* reference genome. They were chosen for their
+errors, so they are excluded from the rates above. All 21 reviews are in
+`propagation_audit_rows.tsv` (101 rows, 49 down-graded).
+
+The down-grades come from four mechanisms:
 
 - **TreeGrafter grafts unicellular proteins onto animal-only nodes.** This is
   the most common failure, with four cases:
@@ -45,7 +54,11 @@ Most propagated molecular-function and signalling terms were sound, for
 example *hippo signaling* on the *Capsaspora* kinases and coactivator. The
 problems are specific and fixable at named nodes. Each down-graded row
 carries a `propagation_review` (root cause, failure modes, source node) in its
-gene review YAML; `propagation_audit_rows.tsv` lists them.
+gene review YAML; `propagation_audit_rows.tsv` lists them. The proteins in Cases
+1 and 6 that reach these terms without literature have reviews too:
+*M. brevicollis* LATS (MONBRDRAFT_1233) and the four choanoflagellate
+cadherins (PTSG_05882, PTSG_06458, PTSG_11235, MBCDH12). Their PANTHER node
+analysis is in `genes/MONBE/MBCDH12/MBCDH12-bioinformatics/`.
 
 Data: [`propagation_audit.py`](propagation_audit.py) regenerates
 [`propagation_audit_rows.tsv`](propagation_audit_rows.tsv) (every propagated
@@ -61,6 +74,7 @@ from 2026-10-01.
 | *Salpingoeca rosetta* (choanoflagellate) | rosetteless, jumble, couscous, hippo, warts, yorkie, SrSeptin2, SrSeptin6 | 19 | 4 |
 | *Capsaspora owczarzaki* (filasterean) | coHpo, coWts, coYki, CoBra, coITGB2, coVIN | 28 | 6 |
 | *Oscarella pearsei* (sponge) | VIN1, TLN | 6 | 1 |
+| *S. rosetta* and *M. brevicollis*, chosen for their propagated terms | PTSG_05882, PTSG_06458, PTSG_11235, MBCDH12, MONBRDRAFT_1233 | 48 | 38 |
 
 None of these organisms is a PANTHER reference genome, so none of the
 proteins gets IBA rows. Their tree-based annotations all come from
@@ -232,12 +246,17 @@ the three receives 10 IEA rows, 30 rows in all:
 | Protein | Domains (Pfam) |
 |---|---|
 | F2UD23 | cadherin repeats, SH2 |
-| F2UFV3 | cadherin repeats, laminin G |
+| F2UFV3 | cadherin repeats, fibronectin type II |
 | F2USU1 | cadherin repeats, tyrosine phosphatase |
 
-Separately, node PTN008601603 gives *M. brevicollis* A9V8Y4 five IBA rows:
-beta-catenin binding, catenin complex, cadherin binding, cell migration and
-cell-cell adhesion.
+Separately, *M. brevicollis* A9V8Y4 (MBCDH12) receives five IBA rows: beta-catenin
+binding, catenin complex, cadherin binding, cell migration and cell-cell
+adhesion. They come from the cadherin family root PTN008601603, labelled
+"Metazoa-Choanoflagellida" in the PANTHER tree. A9V8Y4 is the only
+choanoflagellate leaf in PTHR24027 and hangs directly from that root, so its
+rows are a PAINT node-placement problem (IBDs placed too deep), not a
+TreeGrafter graft. Four of the ten TreeGrafter rows on the *S. rosetta*
+proteins are these same root IBDs; the other six are PTN000616280's own.
 
 **Why it is a problem.** None of the four proteins has PF01049, the
 cytoplasmic domain through which classical cadherins bind beta-catenin. A
