@@ -26,3 +26,13 @@
 
 ## PMID:33831160 investigation
 - `just fetch-gene-pmids` failed; esummary returns error "cannot get document summary"; Europe PMC EXT_ID query hitCount 0; WebSearch no hits. Treated as unresolvable/likely deleted PMID; annotation set UNDECIDED; reference kept with original id for provenance, flagged in reference_review.
+
+## Deep research provenance
+- `just deep-research-falcon ARATH CYP71A13 --fallback perplexity-lite`: the just recipe reported failure (perplexity provider unavailable as fallback), but the falcon client process completed later and wrote `CYP71A13-deep-research-falcon.md` (on-topic; consistent with this review).
+- `just deep-research ARATH CYP71A13 --provider asta`: returned only off-topic papers (database/genome-assembly papers, none on CYP71A13); file deleted.
+- `just deep-research ARATH CYP71A13 --provider openscientist`: completed, on-topic (`CYP71A13-deep-research-openscientist.md`).
+- Both reports state (from Mucha et al. 2019 full text, not in our abstract-only cache) that fluorescent CYP71A13 fusions localize to the ER in N. benthamiana and that CYP71A13 co-IPs with ATR1 and CYP71B15. Not independently verified here (PMC full text could not be retrieved), so ER membrane was not added as a NEW annotation; it is flagged in suggested questions/experiments.
+
+## Synthesis approach
+- Function inferred from convergent lines: (1) enzyme assays (E. coli, yeast microsomes: IAOx -> IAN, NADPH-dependent oxidative products, Cys-IAN with thiol donor, in vitro camalexin reconstitution) [PMID:17573535, PMID:24151049, PMID:25953104]; (2) mutant metabolite phenotypes (single ~2% camalexin, double KO traces; IAN rescue) [PMID:17573535, PMID:25953104]; (3) resistance phenotypes (A. brassicicola, B. cinerea UV-C-induced resistance, P. cucumerina/C. tropicale) [PMID:17573535, PMID:19154205, PMID:31411742]; (4) UniProt/Rhea (RHEA:23156, EC 4.8.1.3); (5) P450 family context (heme-thiolate, N-anchor) and paralog CYP71A12 (partially redundant, biased to ICOOH); (6) PAINT IBA node PTN005384924 for ISR is the CYP71A12/A13 clade, grounded in their own IMPs. Tang 2023 single-cell data used only as expression context.
+- Consistent with sibling CYP71A12 review: ER lumen IDA (PMID:33831160) UNDECIDED with topology caveat; ISR IBA and IMP KEEP_AS_NON_CORE (camalexin-dependent, SA-dependent ISR by P. fluorescens SS101).
