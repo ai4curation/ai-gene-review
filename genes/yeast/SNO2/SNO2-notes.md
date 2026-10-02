@@ -192,8 +192,9 @@ without altering the evidence-grounded conclusions above.
 - Refreshed `interpro/panther/PTHR31559/PTHR31559-paint.tsv`; it still has the single
   `PANTHER:PTN000774355` node with the same four node-level annotations, so the September 29
   IBA propagation calls remain current.
-- Accepted the GO label normalization from `pyridoxal 5'-phosphate synthase (glutamine
-  hydrolysing) activity` to `pyridoxal 5'-phosphate synthase (glutamine hydrolyzing) activity`.
-  Current GOA has no SNO2 cytosol row; UniProt also dropped the stale cytosol xref.
+- Current GOA uses the synonym spelling `pyridoxal 5'-phosphate synthase (glutamine hydrolyzing)
+  activity` for GO:0036381, but the review keeps the ontology-cache primary label spelling
+  `pyridoxal 5'-phosphate synthase (glutamine hydrolysing) activity`. Current GOA has no SNO2
+  cytosol row; UniProt also dropped the stale cytosol xref.
 - Re-ran a current web search for SNO2/YNL334C/PdxT/SNZ yeast papers. I found no newer direct
   SNO2 functional study that changes the review's family-based conclusion.
