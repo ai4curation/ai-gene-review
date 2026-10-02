@@ -3,6 +3,13 @@ title: "Protein Complex Functions Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, FLAGSHIP]
 species: [human]
+manifest:
+  slides:
+    - href: PROTEIN_COMPLEX_FUNCTIONS/slides/PROTEIN_COMPLEX_FUNCTIONS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NFR4zX8oqgzvQhqZF1aQ28
+      title: Project brief
 ---
 
 # Protein Complex Functions Project
@@ -599,7 +606,3 @@ All three were over-annotated in GOA with the catalytic MF on the non-catalytic 
 EryCII is notable: rather than `contributes_to` the GT activity, the partner has its **own** MF
 (allosteric activator), and full GT activity *requires* it. Cross-refs: `PSEUDOENZYMES.md`,
 `OVER_ANNOTATION_PATTERNS.md` (patterns 7-8).
-
-## Slides
-
-- [Slides](PROTEIN_COMPLEX_FUNCTIONS/slides/PROTEIN_COMPLEX_FUNCTIONS-slides.html) (Marp source: [PROTEIN_COMPLEX_FUNCTIONS-slides.md](PROTEIN_COMPLEX_FUNCTIONS/slides/PROTEIN_COMPLEX_FUNCTIONS-slides.md)) — AI generated

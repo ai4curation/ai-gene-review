@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [PTPN22, CTLA4, IL2RA, IL4, STAT4, IL13, IL23R, IL7R, ORMDL3, TNFAIP3, TNFRSF1A, EGR2, BACH2, IRF4, STAT3, IKZF1, CD28, GATA3, SMAD3, IL10]
+manifest:
+  slides:
+    - href: AUTOIMMUNE/slides/AUTOIMMUNE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/8N7vPAZj25wxqZfyQbJ2Rs
+      title: Project brief
 ---
 
 # Autoimmune Genetics - Greatest Hits
@@ -140,7 +147,3 @@ All 19 unique genes (20 rows) fetched, deep-researched (falcon), reviewed, and v
 - CD28: Resolved GO:0042110 inconsistency (IGI UNDECIDED→ACCEPT). Added supporting_text to ~40 reference findings. Down from 42w to 2w
 - IL10: Resolved UNDECIDED → ACCEPT/KEEP_AS_NON_CORE for GO:0140105, GO:0045944, GO:0045893. Now PASS (34w)
 - Remaining work: supporting_text coverage improvements (IL2RA 34w, IL10 34w, TNFAIP3 32w highest), STAT3 deep research
-
-## Slides
-
-- [Slides](AUTOIMMUNE/slides/AUTOIMMUNE-slides.html) (Marp source: [AUTOIMMUNE-slides.md](AUTOIMMUNE/slides/AUTOIMMUNE-slides.md)) — AI generated

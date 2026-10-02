@@ -2,6 +2,13 @@
 title: "Retracted Literature Behind Annotations"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
+manifest:
+  slides:
+    - href: RETRACTIONS/slides/RETRACTIONS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/EGPyig2PBuAJ92DwrZAqxG
+      title: Project brief
 ---
 
 # Retracted Literature Behind Annotations
@@ -250,10 +257,6 @@ The worked example is human/TNFRSF21, which already does all of this by hand.
       backfill (`ai_gene_review/etl/publication_type.py`), which already fetches each
       PMID's PubMed PT list and simply ignores `Retracted Publication`; a
       retraction/EoC flag could ride along at no extra request cost
-
-## Slides
-
-- [Slides](RETRACTIONS/slides/RETRACTIONS-slides.html) (Marp source: [RETRACTIONS-slides.md](RETRACTIONS/slides/RETRACTIONS-slides.md)) — AI generated
 
 # NOTES
 

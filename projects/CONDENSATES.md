@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, worm, SCHPO, mouse]
 genes: [SQSTM1, NFE2L2, LGALS3, TARDBP, TP53, pgl-1, pgl-2, pgl-3, meg-2, meg-3, meg-4, mid1, Ccnt1]
+manifest:
+  slides:
+    - href: CONDENSATES/slides/CONDENSATES-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NgFAjNB3S9TtgRvwFg4LBS
+      title: Project brief
 ---
 
 # Biomolecular Condensates
@@ -158,7 +165,3 @@ and already reviewed, so the batch tests the principles rather than the pipeline
   it structurally (e.g. as a knowledge-gap `boundary`) rather than in prose?
 - Do IEA/ISS/ISO scaffold annotations survive scrutiny anywhere? Of the 22 in the corpus, 8
   are non-experimental and they account for every non-`ACCEPT` outcome.
-
-## Slides
-
-- [Slides](CONDENSATES/slides/CONDENSATES-slides.html) (Marp source: [CONDENSATES-slides.md](CONDENSATES/slides/CONDENSATES-slides.md)) — AI generated
