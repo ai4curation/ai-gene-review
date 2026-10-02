@@ -101,22 +101,49 @@ measured ~48% of `file:` quotes non-verbatim while passing validation.
 
 ### What the sweep of this audit's changed set found
 
-**945 `file:` quotes across the 104 changed reviews**, compared against their
-cited files using the repo validator's own `normalize_text`. **Three were fixed
-and seven were left.**
+**`file:` `supporting_text` lives in two different slot classes, and the tools
+disagree about which one they read.** Getting this wrong is how the first pass of
+this sweep measured only half the set, so the slots come first:
+
+| slot | count here | what checks it |
+|---|---|---|
+| `*.supported_by[]` (annotation `review`, `core_functions`, `proposed_new_terms`) | 945 | the external `linkml-reference-validator` CLI — but not for `file:`, which is in `skip_prefixes` |
+| `references[].findings[].supporting_text` | 261 | `validator.py:117–131`, the repo-local gate — but only for `LITERATURE_PREFIXES`, so not `file:` either |
+
+So **neither slot is gated for `file:`**, and the two code paths cover opposite
+halves. The first version of this sweep keyed on `reference_id` and
+`supporting_text` appearing in the same mapping, which is true in `supported_by`
+and false in `findings` (where the id sits on the parent `- id:`), so it silently
+skipped all 261 — **which is the slot the repo-local gate actually reads.**
+A future `file:` gate has to name its slot set, or it will measure the wrong half
+exactly as this did.
+
+**Re-measured across both: 1206 quotes in 104 reviews, 15 non-verbatim, of which
+3 were fixed and 12 were left.**
 
 | | | |
 |---|---|---|
-| fixed | 3 | `THLAR/TFP` both `file:` quotes, and one on the `PSEPK/retS` `GO:0071474` row this audit relaxed to `UNDECIDED` |
-| left, inherited | 7 | `PSEAI/merA` 1, `PSEPK/groES` 1, `PSEPK/retS` 5 |
+| fixed | 3 | `THLAR/TFP` ×2 (`supported_by`), and one on the `PSEPK/retS` `GO:0071474` row this audit relaxed to `UNDECIDED` |
+| left, inherited — `supported_by` | 7 | `PSEAI/merA` 1, `PSEPK/groES` 1, `PSEPK/retS` 5 |
+| left, inherited — `references[].findings[]` | 5 | `PSEAI/merA` 2, `PSEPK/retS` 2, `SALSP/mcr-4` 1 |
 
-The seven are **not** clean. Each is non-verbatim, each is byte-identical on
-`main`, and each sits on a row this audit did not move — so they were reported
-rather than fixed, to keep the audit's diff from becoming a cleanup of inherited
-quote problems. **Do not read this section as "the changed set is verbatim": it
-is 7/945 short, deliberately and with the genes named.** (`merA` and `groES`
-carry a `no_change` history record for this reason — nothing else in the audit
-would otherwise say they were looked at.)
+All twelve are non-verbatim, all are byte-identical on `main`, and none sits on a
+row this audit moved — so they were reported rather than fixed, to keep the
+audit's diff from becoming a cleanup of inherited quote problems. **Do not read
+this section as "the changed set is verbatim": it is 12/1206 short, deliberately
+and with the genes named.** (`merA` and `groES` carry `no_change` history records
+for this reason; their first records say "one", which was true of the
+`supported_by`-only sweep that wrote them and is superseded by the figures here.)
+
+Two details that a count of distinct strings hides: `merA`'s quote occupies **two
+sites** — `supported_by` and `references[].findings[]`, the same text plus a
+period — so occurrences exceed distinct strings; and the compositions are **not**
+confined to notes files, which is the tempting generalisation. Of the five
+`findings` misses, two are `-notes.md`-sourced (`retS`), two are
+`-deep-research.md`-sourced (`merA`) and one comes from a `.tsv`
+(`SALSP/mcr-4`, `candidate_new_annotations.tsv`). Deep-research-sourced quotes
+are *usually* real copies, markdown emphasis included — spot-checks on `flgG` and
+`PP_1084` are verbatim — but `merA` shows the habit is not source-specific.
 
 Of the 34 raw flags the sweep produced, only those 7 are real. The other 27 are
 two classes that a naive substring test miscounts, and the distinction is the
@@ -129,6 +156,9 @@ spec any future `file:` gate has to implement:
 - **2 marked elisions.** `zwf` joins two fragments with a literal ` ... `, which
   is visible to a reader. A gate has to decide whether that is a supported
   convention.
+- **The slot set**, per the table above: `supported_by[]` *and*
+  `references[].findings[]`. The two existing code paths each read one, so a gate
+  inheriting either one's scope measures half the corpus.
 
 The difference between a marked and a silent elision is why only some of these
 read as quotes at all: `zwf` shows the join; `merA` performs the same operation

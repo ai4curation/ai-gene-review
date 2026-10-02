@@ -463,9 +463,39 @@ quote:</p>
 <a href="../../FUNCTION_KNOWLEDGE_GAPS.html"><code>FUNCTION_KNOWLEDGE_GAPS.md</code></a>; the SPKW audit<br />
 measured ~48% of <code>file:</code> quotes non-verbatim while passing validation.</p>
 <h3 id="what-the-sweep-of-this-audits-changed-set-found">What the sweep of this audit's changed set found</h3>
-<p><strong>945 <code>file:</code> quotes across the 104 changed reviews</strong>, compared against their<br />
-cited files using the repo validator's own <code>normalize_text</code>. <strong>Three were fixed<br />
-and seven were left.</strong></p>
+<p><strong><code>file:</code> <code>supporting_text</code> lives in two different slot classes, and the tools<br />
+disagree about which one they read.</strong> Getting this wrong is how the first pass of<br />
+this sweep measured only half the set, so the slots come first:</p>
+<table>
+<thead>
+<tr>
+<th>slot</th>
+<th>count here</th>
+<th>what checks it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>*.supported_by[]</code> (annotation <code>review</code>, <code>core_functions</code>, <code>proposed_new_terms</code>)</td>
+<td>945</td>
+<td>the external <code>linkml-reference-validator</code> CLI — but not for <code>file:</code>, which is in <code>skip_prefixes</code></td>
+</tr>
+<tr>
+<td><code>references[].findings[].supporting_text</code></td>
+<td>261</td>
+<td><code>validator.py:117–131</code>, the repo-local gate — but only for <code>LITERATURE_PREFIXES</code>, so not <code>file:</code> either</td>
+</tr>
+</tbody>
+</table>
+<p>So <strong>neither slot is gated for <code>file:</code></strong>, and the two code paths cover opposite<br />
+halves. The first version of this sweep keyed on <code>reference_id</code> and<br />
+<code>supporting_text</code> appearing in the same mapping, which is true in <code>supported_by</code><br />
+and false in <code>findings</code> (where the id sits on the parent <code>- id:</code>), so it silently<br />
+skipped all 261 — <strong>which is the slot the repo-local gate actually reads.</strong><br />
+A future <code>file:</code> gate has to name its slot set, or it will measure the wrong half<br />
+exactly as this did.</p>
+<p><strong>Re-measured across both: 1206 quotes in 104 reviews, 15 non-verbatim, of which<br />
+3 were fixed and 12 were left.</strong></p>
 <table>
 <thead>
 <tr>
@@ -478,22 +508,36 @@ and seven were left.</strong></p>
 <tr>
 <td>fixed</td>
 <td>3</td>
-<td><code>THLAR/TFP</code> both <code>file:</code> quotes, and one on the <code>PSEPK/retS</code> <code>GO:0071474</code> row this audit relaxed to <code>UNDECIDED</code></td>
+<td><code>THLAR/TFP</code> ×2 (<code>supported_by</code>), and one on the <code>PSEPK/retS</code> <code>GO:0071474</code> row this audit relaxed to <code>UNDECIDED</code></td>
 </tr>
 <tr>
-<td>left, inherited</td>
+<td>left, inherited — <code>supported_by</code></td>
 <td>7</td>
 <td><code>PSEAI/merA</code> 1, <code>PSEPK/groES</code> 1, <code>PSEPK/retS</code> 5</td>
 </tr>
+<tr>
+<td>left, inherited — <code>references[].findings[]</code></td>
+<td>5</td>
+<td><code>PSEAI/merA</code> 2, <code>PSEPK/retS</code> 2, <code>SALSP/mcr-4</code> 1</td>
+</tr>
 </tbody>
 </table>
-<p>The seven are <strong>not</strong> clean. Each is non-verbatim, each is byte-identical on<br />
-<code>main</code>, and each sits on a row this audit did not move — so they were reported<br />
-rather than fixed, to keep the audit's diff from becoming a cleanup of inherited<br />
-quote problems. <strong>Do not read this section as "the changed set is verbatim": it<br />
-is 7/945 short, deliberately and with the genes named.</strong> (<code>merA</code> and <code>groES</code><br />
-carry a <code>no_change</code> history record for this reason — nothing else in the audit<br />
-would otherwise say they were looked at.)</p>
+<p>All twelve are non-verbatim, all are byte-identical on <code>main</code>, and none sits on a<br />
+row this audit moved — so they were reported rather than fixed, to keep the<br />
+audit's diff from becoming a cleanup of inherited quote problems. <strong>Do not read<br />
+this section as "the changed set is verbatim": it is 12/1206 short, deliberately<br />
+and with the genes named.</strong> (<code>merA</code> and <code>groES</code> carry <code>no_change</code> history records<br />
+for this reason; their first records say "one", which was true of the<br />
+<code>supported_by</code>-only sweep that wrote them and is superseded by the figures here.)</p>
+<p>Two details that a count of distinct strings hides: <code>merA</code>'s quote occupies <strong>two<br />
+sites</strong> — <code>supported_by</code> and <code>references[].findings[]</code>, the same text plus a<br />
+period — so occurrences exceed distinct strings; and the compositions are <strong>not</strong><br />
+confined to notes files, which is the tempting generalisation. Of the five<br />
+<code>findings</code> misses, two are <code>-notes.md</code>-sourced (<code>retS</code>), two are<br />
+<code>-deep-research.md</code>-sourced (<code>merA</code>) and one comes from a <code>.tsv</code><br />
+(<code>SALSP/mcr-4</code>, <code>candidate_new_annotations.tsv</code>). Deep-research-sourced quotes<br />
+are <em>usually</em> real copies, markdown emphasis included — spot-checks on <code>flgG</code> and<br />
+<code>PP_1084</code> are verbatim — but <code>merA</code> shows the habit is not source-specific.</p>
 <p>Of the 34 raw flags the sweep produced, only those 7 are real. The other 27 are<br />
 two classes that a naive substring test miscounts, and the distinction is the<br />
 spec any future <code>file:</code> gate has to implement:</p>
@@ -505,6 +549,9 @@ spec any future <code>file:</code> gate has to implement:</p>
 <li><strong>2 marked elisions.</strong> <code>zwf</code> joins two fragments with a literal <code>...</code>, which<br />
   is visible to a reader. A gate has to decide whether that is a supported<br />
   convention.</li>
+<li><strong>The slot set</strong>, per the table above: <code>supported_by[]</code> <em>and</em><br />
+<code>references[].findings[]</code>. The two existing code paths each read one, so a gate<br />
+  inheriting either one's scope measures half the corpus.</li>
 </ul>
 <p>The difference between a marked and a silent elision is why only some of these<br />
 read as quotes at all: <code>zwf</code> shows the join; <code>merA</code> performs the same operation<br />
