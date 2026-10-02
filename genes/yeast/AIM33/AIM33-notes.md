@@ -93,8 +93,9 @@ section plus domain/orthology-grounded (not invented) reasoning.
 - The current plasma-membrane assertion is `PTN001064672 / GO:0005886`, a Saccharomycetaceae
   AIM33/PGA3-branch IBD seeded only by **PGA3** (`SGD:S000004594`, 2025-04-08). That same node
   carries an explicit negated `GO:0005739` mitochondrial IRD from the broader `PTN000452207`
-  node. The negation supports the existing conclusion that neither the PGA3 plasma-membrane
-  site nor the upstream mitochondrial site should be assigned to AIM33 before direct localization.
+  node. The negation shows that PAINT made a clade-specific call against propagating
+  the upstream mitochondrial site; the plasma-membrane site still rests on PGA3,
+  so neither site should be assigned to AIM33 before direct localization.
 - `PTN000452207 / GO:0004128` remains current and is seeded by **MCR1** and **PGA3**. The
   ancestral flavin reductase fold is real, but the mixed donor biology still leaves AIM33's
   acceptor unresolved: MCR1 is a cytochrome-b5 reductase, whereas the PGA3 PANTHER subfamily is
@@ -166,8 +167,8 @@ section plus domain/orthology-grounded (not invented) reasoning.
   rows: `PTN001064672|PGA3` for plasma membrane, `PTN000452207|MCR1|PGA3` for cytochrome-b5
   reductase, `PTN000452208|MCR1` for ergosterol biosynthesis, `ARBA00027922`,
   `UniProtKB-SubCell:SL-0162`, and the four InterPro reductase-domain signatures.
-- Refetched `PTHR19370`; the family currently has 16 node-level PAINT assertions. The tree now
-  includes a newer broad mitochondrial `GO:0005739` IBD at `PTN000452207`, and still carries a
+- Refetched `PTHR19370`; the family currently has 16 node-level PAINT assertions. The tree carries
+  a broad mitochondrial `GO:0005739` IBD at `PTN000452207`, and still carries a
   negated `GO:0005739` IRD at the AIM33/PGA3 `PTN001064672` node, so current GOA still omits
   mitochondrial localization for AIM33. The three existing IBA judgments therefore remain valid:
   generalize the PGA3-seeded plasma-membrane IBA to membrane, and keep cytochrome-b5 reductase
