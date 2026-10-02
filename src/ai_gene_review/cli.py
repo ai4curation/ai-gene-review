@@ -4401,10 +4401,16 @@ def refresh_panther_members(
     overrides = load_member_overrides(overrides_path)
     if overrides:
         index = apply_member_overrides(index, overrides, accessions)
+        applied = len(set(overrides) & accessions)
         typer.echo(
-            f"applied {len(overrides)} curated override(s) from "
+            f"applied {applied} of {len(overrides)} curated override(s) from "
             f"{overrides_path.relative_to(repo_root)}"
         )
+        if applied < len(overrides):
+            typer.echo(
+                "  ⚠ overrides for accessions no longer cited: "
+                + ", ".join(sorted(set(overrides) - accessions))
+            )
 
     unresolved = accessions - set(index)
     out_path = write_member_index(
