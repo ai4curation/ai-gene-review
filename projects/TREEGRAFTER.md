@@ -682,6 +682,18 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   snapshot are *P. putida* KT2440; a batch of eukaryotic or archaeal non-model
   genes would tell whether the 41% accept rate travels. The 29 HETGA rows
   already in the tree (not yet in the tables) are a first such batch.
+- **File the `GO:0009329` label/axiom defect with GO.** This is the one item the
+  2026-09-24 re-review turned from a suspicion into a verified finding (see the
+  label-vs-definition bullet above): the term's definition is the AccA/AccD
+  carboxyltransferase component of acetyl-CoA carboxylase, but its label says
+  "acetate CoA-transferase complex" and it carries a `capable_of` axiom to
+  `GO:0008775 acetate CoA-transferase activity` — EC 2.8.3.8, different
+  chemistry. Both contradict the definition. `interpro/panther/PTHR42995/
+  PTHR42995-paint.tsv` shows GO curators themselves use the term for bacterial
+  AccD (an IBD seeded by *E. coli* `P0A9Q5`), and QuickGO's own blacklist for the
+  term is ~80 `NOT`-qualified annotations on eukaryotic proteins — which is what a
+  misleading label looks like downstream. Proposed fix: rename to name the
+  carboxyltransferase component and drop or re-point the `capable_of` axiom.
 - **Refresh the snapshot** when the next batch lands: re-run the three scripts,
   classify the new down-grades in `failure_mode_curated.tsv`, and re-pin the
   date and commit in the Results header. Note that the 2026-09-24 rejection
