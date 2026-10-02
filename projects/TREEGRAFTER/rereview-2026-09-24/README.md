@@ -159,11 +159,22 @@ be built against. Raw flags, classified, with each denominator named:
 - **Wrap artifacts.** The quote *is* present, split across `CC` continuation
   lines — `secD`'s `Part of the essential Sec protein translocation apparatus`
   straddles `secD-uniprot.txt:47–48`. A gate must unwrap `CC`/`DR` continuations.
-  The findings slot's two are `PSEPK/infC:182` (straddling
-  `infC-uniprot.txt:29–30`, the IF-3 30S-binding sentence) and `PSEPK/mraY:192`
-  (straddling `mraY-uniprot.txt:33–34`, the phospho-MurNAc-pentapeptide transfer)
-  — named because they are the evidence for the rate difference below, and the
-  one row in this table that `grep` could not otherwise check.
+  The findings slot's two are **`PSEPK/infC:128`** (the IF-3 30S-binding
+  sentence, straddling `infC-uniprot.txt:29–31`) and **`PSEPK/mraY:191`** (the
+  phospho-MurNAc-pentapeptide transfer, straddling `mraY-uniprot.txt:32–34` —
+  the quote begins at `transfers`, the last word of `:32`). Both are under a
+  `- id: file:…-uniprot.txt` parent in `references[].findings[]`, and both return
+  `grep -cF` **0** against their source while matching once the `CC`
+  continuations are unwrapped. Named because they are the evidence for the rate
+  difference below, and the one row in this table `grep` could not otherwise
+  check.
+
+  *(Earlier revisions of this line cited `infC:182` and `mraY:192` with a
+  two-line span. `infC:182` was wrong twice over — it is a
+  `core_functions[].supported_by` quote, not a findings one, and its shorter text
+  is verbatim at count 1, so it is not an artifact at all. Both locators had been
+  derived by grepping for the quote text separately from the pass that classified
+  it, which matched a different occurrence; they are now read from the files.)*
   **But do not size that work from the `supported_by` rate**: it is 25/34 (74%)
   there and 2/7 (29%) in the findings slot, because the two slots cut quotes
   differently — findings-slot quotes are short and tend to stop *at* a wrap
