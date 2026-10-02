@@ -48,3 +48,15 @@ on CYP71A12, CYP71A13 and CYP71B15; GO:0005783 ER (IDA) on CYP71B15; and two GO:
 rows on CYP71B15. This content resembles Mucha et al. 2019 (PMID:31511315, camalexin
 metabolon), but per docs/reference_curation.md no replacement is recorded from similarity
 alone. Someone with browser access to PubMed, or TAIR, can settle it in one lookup.
+
+## PMID:33831160 resolved (2026-10-02)
+
+PubMed's redirection notice (read in a browser by the project lead): "PMID: 33831160 was deleted
+because it is a duplicate of PMID: 31511315" (Mucha et al. 2019, camalexin metabolon). Recorded as
+`replacement: {reference_id: PMID:31511315, reason: DUPLICATE_RECORD}` on the reference.
+Mucha's full text (read on PMC, PMC6881122; not cacheable, PMC serves abstract only) shows
+CYP71A12, CYP71A13 and CYP71B15 fusions colocalizing with the ER lumenal marker RFP-HDEL
+(Supplemental Figure 4), and states that eukaryotic P450s are anchored to the ER membrane with
+the catalytic centre facing the cytosol. The ER lumen IDA was therefore changed from UNDECIDED to
+MODIFY -> GO:0005789 endoplasmic reticulum membrane: the organelle call is sound, the lumen call
+over-reads a confocal colocalization.

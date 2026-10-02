@@ -17,8 +17,8 @@ covers six genes: MYB122, the one gene the paper tested genetically, plus its
 indole-glucosinolate regulator paralogs MYB51 and MYB34, the camalexin
 cytochromes CYP71A12 and CYP71A13, and the immune marker FRK1. Results are in
 the [review status](#review-status) table. All six reviews are complete: 96
-existing annotations were assessed, with 49 accepted, 22 kept as non-core, 7
-modified, 5 marked over-annotated, 11 removed and 2 left undecided, plus 7 new
+existing annotations were assessed, with 49 accepted, 22 kept as non-core, 9
+modified, 5 marked over-annotated and 11 removed, with none left undecided, plus 7 new
 annotations proposed.
 
 We picked this paper because it separates two kinds of evidence that GO
@@ -79,8 +79,8 @@ files.
 | MYB122 | At1g74080 | Q9C9C8 | Epidermis-specific induction at infection sites; mutant is hypersusceptible | ✅ complete | 12 | 8 accept, 3 non-core, 1 over-annotated; NEW regulation of glucosinolate biosynthetic process |
 | MYB51 | At1g18570 | O49782 | Induced only in vasculature at infection sites | ✅ complete | 12 | 6 accept, 4 non-core, 1 modify, 1 over-annotated; NEW transcription activator activity |
 | MYB34 | At5g60890 | O64399 | Third indole-glucosinolate MYB; not induced | ✅ complete | 17 | 10 accept, 1 non-core, 2 modify, 3 over-annotated, 1 remove; 2 NEW |
-| CYP71A12 | At2g30750 | O49340 | IAOx to IAN; induced mainly in epidermis | ✅ complete | 17 | 9 accept, 5 non-core, 1 modify, 1 remove, 1 undecided; NEW IAOx dehydratase activity, defense response to fungus |
-| CYP71A13 | At2g30770 | O49342 | IAOx to IAN; induced almost only in vasculature | ✅ complete | 24 | 11 accept, 8 non-core, 4 remove, 1 undecided |
+| CYP71A12 | At2g30750 | O49340 | IAOx to IAN; induced mainly in epidermis | ✅ complete | 17 | 9 accept, 5 non-core, 2 modify, 1 remove; NEW IAOx dehydratase activity, defense response to fungus |
+| CYP71A13 | At2g30770 | O49342 | IAOx to IAN; induced almost only in vasculature | ✅ complete | 24 | 11 accept, 8 non-core, 1 modify, 4 remove |
 | FRK1 (SIRK) | At2g19190 | O64483 | Marker for proximity to the infection | ✅ complete | 14 | 5 accept, 1 non-core, 3 modify, 5 remove; NEW response to fungus |
 
 ### Genes already reviewed in other projects
@@ -150,13 +150,13 @@ activity is annotated consistently across the TNLs.
   enzyme activity (`GO:0047720`, IDA) and `defense response to fungus` (IMP), as
   the main enzyme for pathogen-induced indole-3-carboxylic acid derivatives;
   CYP71A13 remains the main leaf camalexin enzyme. Both carry an ER-lumen IDA from
-  PMID:33831160, and both were left undecided because we could not identify
-  the paper. NCBI E-utilities return no record for it and Europe PMC has no hits.
-  PubMed's own page sits behind a bot check, so we could not see whether it
-  redirects to another record. TAIR made six annotations from this PMID on
-  2022-02-03 (ER and ER-lumen locations for CYP71A12, CYP71A13 and CYP71B15, plus
-  CYP71B15 interactions). That content resembles Mucha et al. 2019 (PMID:31511315),
-  but the link is not established and no replacement has been recorded.
+  PMID:33831160. PubMed's redirection notice shows that this is a deleted duplicate of
+  Mucha et al. 2019 (PMID:31511315). The evidence there is confocal colocalization
+  with the ER lumenal marker RFP-HDEL, which places the enzymes in the ER but cannot
+  tell lumen from membrane, and the paper itself describes these P450s as
+  membrane-anchored with the catalytic domain facing the cytosol. Both rows were
+  changed to `GO:0005789` endoplasmic reticulum membrane. The same TAIR curation also
+  put ER lumen on CYP71B15 (PAD3), which is not reviewed here.
 - **FRK1 is a marker, not a demonstrated defense component.** Its two
   `defense response to bacterium` rows were changed to `response to bacterium`,
   and one flg22-only row to `response to molecule of bacterial origin`. A motif
