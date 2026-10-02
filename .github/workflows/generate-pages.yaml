@@ -73,11 +73,14 @@ jobs:
       - name: Render ProtNLM prediction evaluations from all review sidecars
         run: just render-prediction-eval
 
-      - name: Validate module YAML files
-        run: just validate-modules
+      # Biological validation runs independently in main.yaml (PRs and weekly).
+      # Publication renders the accepted contents of main without revalidating GO.
 
       - name: Render module pages
         run: just render-modules
+
+      - name: Render gene review status dashboard
+        run: just render-dashboard
 
       - name: Render cached rule reviews and index
         run: just render-rule-pages
@@ -88,12 +91,18 @@ jobs:
       - name: Build shared predictions browser
         run: just deploy-predictions-browser
 
+      - name: Build homology propagation browser
+        id: propagation-build
+        continue-on-error: true
+        run: just deploy-propagation-browser
+
       # Build the candidate artifact for inspection. Publication remains opt-in
       # and separately gated on completeness and the supported size budget.
       # Keep every artifact step non-blocking so failures cannot skip the legacy
       # regeneration lane. Only summarize/upload a successfully staged tree.
       - name: Stage GitHub Pages artifact
         id: pages-stage
+        if: steps.propagation-build.outcome == 'success'
         continue-on-error: true
         run: just stage-pages
 
@@ -106,7 +115,7 @@ jobs:
           PAGES_ARTIFACT_DEPLOY_ENABLED: ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED }}
         run: |
           {
-            echo "## Shadow GitHub Pages artifact"
+            echo "## GitHub Pages artifact"
             echo
             if [ "$PAGES_ARTIFACT_DEPLOY_ENABLED" = "true" ]; then
               echo "Actions deployment is enabled for artifacts that pass the publication checks."
@@ -131,12 +140,14 @@ jobs:
             echo "| Broken local targets | $(jq -r .broken_local_links _site-manifest.json) |"
             echo "| Archive budget (bytes) | $(jq -r .archive_size_budget_bytes _site-manifest.json) |"
             echo "| Size budget (bytes) | $(jq -r .size_budget_bytes _site-manifest.json) |"
+            echo
+            echo "Link-quality findings above are advisory; they do not block publication."
           } >> "$GITHUB_STEP_SUMMARY"
           if jq -e '.deployable == true' _site-manifest.json > /dev/null; then
             echo "deployable=true" >> "$GITHUB_OUTPUT"
           else
             echo "deployable=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or has excluded or missing static local targets or likely missing site-prefix links. The existing site will remain deployed."
+            echo "::warning title=Pages deployment blocked::The artifact is empty or exceeds the absolute deployment size ceiling. The existing site will remain deployed."
           fi
 
       - name: Upload GitHub Pages artifact
@@ -178,11 +189,12 @@ jobs:
       - name: Warn when Pages artifact build fails
         if: >-
           ${{ !cancelled() &&
-              (steps.pages-stage.outcome == 'failure' ||
+              (steps.propagation-build.outcome == 'failure' ||
+               steps.pages-stage.outcome == 'failure' ||
                steps.pages-summary.outcome == 'failure' ||
                steps.pages-upload.outcome == 'failure' ||
                steps.archive-check.outcome == 'failure') }}
-        run: echo "::warning title=Pages artifact build failed::Inspect the staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
+        run: echo "::warning title=Pages artifact build failed::Inspect the propagation build, staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes
@@ -193,6 +205,7 @@ jobs:
             app/data.js \
             app/schema.js \
             app/predictions/ \
+            app/propagation/ \
             pages/ \
             rules/arba/index.html \
             ":(glob)rules/arba/*/*-review.html" \
@@ -207,6 +220,7 @@ jobs:
               app/data.js \
               app/schema.js \
               app/predictions/ \
+              app/propagation/ \
               pages/ \
               rules/arba/index.html \
               ":(glob)rules/arba/*/*-review.html" \
@@ -272,6 +286,7 @@ jobs:
             app/data.js \
             app/schema.js \
             app/predictions/ \
+            app/propagation/ \
             pages/ \
             rules/arba/index.html \
             ":(glob)rules/arba/*/*-review.html" \
@@ -285,7 +300,7 @@ jobs:
           # browser-app files and prediction source manifest, reports/, and
           # rule-review HTML.
           DISALLOWED="$(git diff --cached --name-only \
-            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/((predictions/)?(index\.html|data\.js|schema\.js)|predictions/source-files\.json)|reports/[^[:space:]]+|rules/arba/index\.html|rules/arba/ARBA[0-9]+/ARBA[0-9]+-review\.html)$' \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/(((predictions|propagation)/)?(index\.html|data\.js|schema\.js)|(predictions|propagation)/source-files\.json)|reports/[^[:space:]]+|rules/arba/index\.html|rules/arba/ARBA[0-9]+/ARBA[0-9]+-review\.html)$' \
             || true)"
           if [ -n "$DISALLOWED" ]; then
             echo "❌ Refusing to commit non-artifact files:"

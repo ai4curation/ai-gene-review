@@ -1,20 +1,44 @@
 ---
 title: "Genome-wide validation: system-level plausibility of annotation sets"
-maturity: SCOPING
-tags: [PIPELINE]
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
 autolink_gene_symbols: false
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - GENOME_WIDE_VALIDATION/slides/coherence-check.svg
+    - GENOME_WIDE_VALIDATION/slides/coherence-violations.svg
+manifest:
+  slides:
+    - href: GENOME_WIDE_VALIDATION/slides/GENOME_WIDE_VALIDATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LTstg8jwzm9v2CXuxMaHhp
+      title: Project brief
 ---
 
 # Genome-wide validation
 
-**Per-gene review asks "is *this* annotation right?" Genome-wide validation asks a question no
-single annotation can answer: could the *whole set* of functions annotated to an organism
-actually coexist in a living cell? We score a genome's annotation set against system-level
-constraints — every essential function present (completeness), every functional dependency
-satisfied (coherence), and no mutually exclusive functions co-occurring (consistency) — and
-turn each violation into a specific, reviewable curation lead.**
+**Bottom line:** Per-gene review asks whether one annotation is right; genome-wide
+validation asks whether the whole set of functions annotated to an organism could
+coexist in a living cell. Following the completeness / coherence / consistency
+framework of Tawfiq, Kulmanov & Hoehndorf (2026), we score a genome's annotation
+set against constraints already encoded in GO (essential functions present,
+`has_part` dependencies satisfied, taxon constraints respected) and turn each
+violation into a reviewable curation lead. So far only coherence has been built:
+the [E. coli pilot](GENOME_WIDE_VALIDATION/pilot-ecoli/README.md) scored the EcoCyc
+GAF against the 743 asserted `has_part` pairs in GO and found 17 of 129 activated
+dependencies unsatisfied (86.8% coherence). The 17 include one plausible biological
+gap (a denitrification pathway with no nitrous-oxide reductase), several
+granularity gaps, and probable over-annotations such as viral and heterochromatin
+terms on *E. coli*. Completeness, consistency, the minimal-genome pilot and the
+predictor sweep are not started.
 
-## Bottom line
+We are doing this because computational predictors can be accurate protein by
+protein yet produce a genome that no viable organism could have, and a cheap
+set-level screen would catch that across all the prediction sets this repo reviews.
+
+## Key ideas
 
 - **A new validation altitude.** Existing repo QC works one gene, one term at a time. This
   project validates the *annotation set of an entire genome/proteome* as a system, catching

@@ -1,0 +1,67 @@
+# B4GALT7 preliminary primary-source assessment
+
+This is manual preparation, not a provider report or substitute for normal source files. No annotation decisions have been applied. Human identity is B4GALT7, HGNC:930, NCBI Gene11285, UniProt Q9UBV7, Ensembl ENSG00000027847. The normal fetch failed before seed creation; its separate receipt records that outcome.
+
+[PMID:24052259](https://pubmed.ncbi.nlm.nih.gov/24052259/) and its [PMC article](https://pmc.ncbi.nlm.nih.gov/articles/PMC3814792/) distinguish human catalytic-domain structures from Drosophila substrate complexes. Selected indexed Methods/Results describe a human construct beginning at residue81, Mn/UDP-associated conformational changes, and a Drosophila D211N complex containing UDP-Gal and xylobiose. The human structure contains UDP despite soaking with UDP-Gal; bound intact donor/acceptor geometry should not be attributed directly to human wild-type protein. These passages support the xylose-directed proteoglycan-linker reaction. They are not a complete-text audit of the N-linked-glycosylation or GlcNAc-specific GOA assertions displayed at NCBI. Those require the complete source and GO definitions before a decision. Direct PMC opening returned a browser challenge; indexed primary passages were available. Observations: turn6554search0/1, turn6556search0. No coordinates or supplementary figures were analyzed.
+
+[PDB4IRP](https://www.rcsb.org/structure/4IRP) and [PDB4IRQ](https://www.rcsb.org/structure/4IRQ) independently map the structures to human Q9UBV7, expressed in E. coli, with no sequence mutation flagged. Both deposited protein entities contain251 residues, not full-length327. The entries list monomer assemblies and additional dimer assignments; this alone does not establish universal endogenous oligomerization. 4IRP explicitly lists Mn(II) and UDP. Read observations: turn6557view0/1. Crystal chain counts and predicted assemblies should not be promoted to a biological stoichiometry claim.
+
+[PMID:25568325](https://pubmed.ncbi.nlm.nih.gov/25568325/) combines human-enzyme mutagenesis, kinetics, modeling and cell assays. Its indexed abstract and figure captions explicitly distinguish modeled acceptor geometry from assays of xyloside turnover and decorin glycanation in CHOpgsB-618 cells. A PNGase-F-sensitive band concerns glycosylation of the enzyme itself; this is not evidence that B4GALT7 catalyzes N-linked glycosylation. Read observation: turn6556search1. Full Methods and supplements remain unread.
+
+[PMID:20691685](https://pubmed.ncbi.nlm.nih.gov/20691685/) directly verified title, DOI10.1016/j.febslet.2010.08.001 and complete abstract. It reports altered folding/activity for L206P and reduced xyloside affinity for R270C, linking variant defects to impaired GAG synthesis. The abstract cannot establish every experimental construct or protocol. Read observation: turn6555view2.
+
+The local GO-CAM index has no Q9UBV7/B4GALT7 match (30c186). The five preliminary PMID leads24052259,25568325,20691685,20236943,24755949 were absent from the local publication cache at this point (d992c9). No cache content was authored or synthesized from these web reads.
+
+## Source audit, 2026-09-30
+
+The verified normal-fetch archive now supplies 39 distinct GOA rows and nine publication candidates. The seven gene-specific cached abstracts were read in full (d65e8e); the available main body of PMID:24052259 was then read in full across e159be and374b26. Figures, supplementary files and coordinates were not inspected. These reads extend the preliminary assessment above; the earlier access limits remain an accurate account of those earlier observations.
+
+PMID:10438455 establishes the human enzyme's xylose-directed galactose transfer through expressed enzyme activity, CHO rescue, and chemical analysis of the beta1,4-linked product. PMID:10473568 independently reports human enzyme expression and beta-xyloside acceptor activity. PMID:10506123 identifies A186D/L206P patient alleles and distinguishes Golgi localization of wild-type/A186D from diffuse mutant L206P. PMID:20809901 distinguishes full-length membrane and soluble fusion-protein experiments: L206P abolishes measured activity, A186D weakens donor binding, and R270C impairs acceptor use. These are abstract-level reads; full protocols and figures are unavailable in these caches.
+
+In PMID:24052259 the human protein is a truncated catalytic-domain construct; crystal asymmetric-unit copies do not establish a native oligomer. Human structures show Mn and UDP, whereas the donor/acceptor ternary complex uses Drosophila D211N with xylobiose. Asp228 is the corresponding proposed human catalytic base. The article contains inconsistent residue numbers in isolated passages; these are not silently reconciled into an asserted mutant identity. Its substrate-recognition data concern xylose, while GlcNAc-specific B4GALT1 is discussed as a comparison. The available main body reports no B4GALT7 GlcNAc-glycopeptide assay or Asn-linked glycan synthesis assay. The R270C effect on loop flexibility is a structural hypothesis, not a measured dynamic mechanism. A Tyr177 mutant's weak glucose activity is described as data not shown and is not a native substrate claim.
+
+Official GO definitions were checked (bee2ee): GO:0003831 requires a GlcNAc glycopeptide acceptor; it should not be equated solely with N-linked substrates. GO:0006487 specifically describes Asn-linked protein glycosylation. GO:0046525 describes the demonstrated xylose-directed transfer. The existing GO:0120532 linker-biosynthesis assertion provides the matching process. The two conflicting experimental rows are candidates for MODIFY to these already represented terms, pending the independent review; they are not grounds for inventing additional annotations.
+
+The UniProt scientific sections and all three cached Reactome entries were read (1b4bb0). The reaction is UDP-Gal transfer to protein-linked xylose, producing the second sugar of the linker used by chondroitin/dermatan/heparan sulfate proteoglycans. Hyaluronan and keratan sulfate should not be swept into that substrate claim. Predicted glycosylation of B4GALT7 itself does not establish that the enzyme catalyzes N-linked glycosylation. The raw UniProt feature at226–229 names GlcNAc despite the xylose-specific reaction; this inconsistency merits a curation question, not modification of the downloaded record. Predicted type-II topology places the catalytic portion in the Golgi lumen. Mutant activity must remain allele-specific; partial-activity alleles are not universally null.
+
+PMID:16583246 describes R270C patient fibroblasts with reduced enzyme activity, deficient glycanation of decorin/biglycan, altered collagen fibrils and reduced proliferation. Its abstract does not resolve why GO:0048147 records negative regulation of proliferation. PubMed independently confirms the identity and abstract (turn6595search0); direct DOI opening did not yield the full paper (turn6594view1). Keep that directional question UNDECIDED without asserting a curator error or inferring a replacement positive-regulation annotation. The collagen phenotype can remain non-core. Normal decorin synthesis/secretion in this experiment must not become a claim that B4GALT7 is a secretion factor.
+
+PMID:34533190's abstract concerns Golgi enzyme retention but does not identify every assayed enzyme. The curated B4GALT7 localization remains consistent with independent evidence from PMID:10506123; absence of the target from the abstract is not evidence of mis-attribution.
+
+The existing canonical caches for PMID:25416956 and PMID:32296183 are preserved because the fetched variants differ. Read scope2358cb/fd53dc covers their abstracts, the former's introduction/discussion extraction, and the latter's HuRI generation/validation section; gene-specific supplementary interaction rows were not read. Raw GOA supplies six distinct IPI assertions: 25416956 with P53611/P60409 and32296183 with A8MQ03/P53611/Q15323/Q9NUH8. These remain distinct curator-attributed binary-interaction observations. Y2H survey support does not establish a physiological stoichiometric complex or the enzyme's catalytic mechanism. Retention as non-core is preferable to rejection merely because protein binding is uninformative.
+
+## Research provider attempt
+
+The normal `just deep-research-falcon human B4GALT7 --fallback perplexity-lite` attempt on2026-09-30 failed before either provider could run: the configured deep-research-client[cyberian]0.2.7rc1 dependency could not resolve in the available environment. The single fallback failed for the same reason (546f45). No provider report was produced or fabricated. The assessment above is manual primary-source research; the source limits are stated per paper.
+
+## Completed annotation assessment
+
+All39 distinct source objects retain their downloaded term, evidence, reference, qualifier and supporting-entity fields. The final decisions are20 ACCEPT,11 MODIFY,7 KEEP_AS_NON_CORE and1 UNDECIDED; no NEW rows or inferred alternative products were introduced. One catalytic core integrates manganese-dependent xylose transfer with Golgi linker synthesis. The directional proliferation question remains open. Six generic interaction assertions remain non-core under the user-supplied action definitions: low informativeness does not establish falsity. The local generic-binding policy may warn about these retained assertions.
+
+The complete available main body of PMID:24052259 and the two corrected term definitions received an independent second read; the full39-row proposal also received independent review. Short verbatim anchors are present at the relevant corrections and core, with cumulative quotation counts kept within25 words per publication. Ontology labels and relations were checked against the local GO2026-03-25 snapshot; changes from carbohydrate/protein-modification descriptions to the direct linker process are biological replacements, not unsupported claims of formal subclass relationships. Raw GOA, UniProt and all cached publications/Reactome sources remain unchanged. Seven absent normal fetched publication caches were imported; two differing existing publication versions and both family exports were preserved.
+
+## First PR feedback follow-up — 2026-09-30
+
+The first review of PR #3577 confirmed complete source coverage, the exact
+supporting snippets and the two reaction/process refinements. Its request to
+remove prompt and review-process narration from public annotation reasons is
+addressed by biological explanations. The research access limits and original
+decision provenance remain in the earlier journal rather than being erased.
+
+The broad membrane IDA now proposes Golgi membrane (GO:0000139). Type-II membrane
+topology and independent Golgi localization support that refinement; those
+experiments do not resolve a particular cisterna. The independent source
+annotation to Golgi cisterna membrane remains unchanged.
+
+Six experimental generic-binding assertions remain KEEP_AS_NON_CORE. The supplied
+ActionEnum defines REMOVE as unlikely-correct annotation; lack of informative
+function alone does not establish that threshold. The lower-priority generic-
+binding skill guidance does not override that instruction. Partner identities,
+reference IDs and every source tuple are preserved. The public reasons state
+the biological evidence and its limits without narrating instruction precedence.
+
+The collagen-organization IMP remains non-core: it records the downstream patient
+cell phenotype, without assigning direct collagen assembly to the enzyme. No new
+process or experiment is asserted. All 39 source objects and action totals are
+unchanged (20 ACCEPT, 11 MODIFY, seven non-core, one UNDECIDED), as are the single
+core, short evidence anchors, source records and fetched null product fields.

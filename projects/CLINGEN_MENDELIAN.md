@@ -2881,9 +2881,29 @@ genes:
   - "human/ZNF462"
   - "human/ZNF711"
   - "human/ZSWIM6"
+manifest:
+  slides:
+    - href: CLINGEN_MENDELIAN/slides/CLINGEN_MENDELIAN-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/4hQjBNnZX7gypVhGru5wBL
+      title: Project brief
 ---
 
 # ClinGen Mendelian Disease Genes
+
+**Bottom line:** ClinGen's Gene–Disease Validity curations grade the evidence
+that a gene causes an inherited disease. We seeded a review campaign from the
+2026-09-25 export: every gene with at least one Definitive, Strong, Moderate or
+Limited association, 2,876 genes in all (2,836 nuclear Mendelian, 37
+mitochondrial, 3 undetermined-inheritance follow-ups), each with its disease
+links preserved in the checklist below. Each review assesses the gene product's
+molecular function and GO annotations; a disease link alone does not establish
+a function. Reviews run one gene per PR in evidence-priority order, and existing
+reviews get a fresh audit (747 of the 2,876 genes had a human review in the
+repo on 2026-09-27, mostly from earlier projects). The 2026-09-26 progress log records 14
+merged gene PRs (A4GALT through ACADVL; 607 annotations reviewed), each ticked
+in the checklist below; later merges are added there as they are recorded.
 
 ## Overview
 

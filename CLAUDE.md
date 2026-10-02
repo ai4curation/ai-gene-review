@@ -328,6 +328,16 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
+obsoleted without a replacement), do not put an obsolete or ill-fitting id in
+`core_functions.molecular_function`. Instead set `proposed_molecular_function` to the
+`proposed_name` of a top-level `proposed_new_terms` entry, and leave `molecular_function`
+unset. Validation errors if no entry matches, if both are set, or if neither the core
+function nor the proposed term has `supported_by` (a proposed activity can never trace to an
+existing annotation). In a MODIFY, the matching replacement is `proposed_replacement_terms:
+[{id: NTR, label: ...}]` whose label starts with that same `proposed_name` (a warning
+otherwise). When GO creates the term, swap its id into `molecular_function`.
+
 ### PANTHER ids: never write a family label from memory
 
 PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in
@@ -573,6 +583,15 @@ from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the pat
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
 
+**Collections.** Related projects are grouped under an index page by listing a
+collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys
+are registered in `projects/collections.yaml` (title + index page slug); the
+index page gets an auto-generated member table, members get a link back to it,
+and the all-projects table gains a Collection filter. Current collections:
+`FUNCTION_PREDICTION` (index `FUNCTION_PREDICTION_EVALUATION`) and
+`HOMOLOGY_PROPAGATION` (index `HOMOLOGY_PROPAGATION`, with the propagation
+browser at `app/propagation/`).
+
 **Manual reviews.** A project page may record reviewer sign-offs in frontmatter
 under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if
 given) must be `READY` or `CHANGES_REQUESTED`; `date` is `YYYY-MM-DD`; `notes` is
@@ -592,6 +611,37 @@ manual_reviews:
 Reviews render as a block on the project page, and the **latest** review's status
 (most recent `date`) surfaces as a filterable "Review" column in the all-projects
 table.
+
+**Manifest (slides, briefs).** A project page lists its companion resources in
+frontmatter under `manifest`, a mapping of typed lists. Allowed lists are `slides`
+and `artifacts` (defined once in `MANIFEST_KINDS` in
+`src/ai_gene_review/render_projects.py`; adding e.g. `data` is one entry there).
+Each entry needs `href` and may carry `title` and `description`; unknown keys are
+rejected. A `slides` href is either an `https://` URL or a path **relative to
+`projects/`** to a rendered deck `.html` whose Marp `.md` source sits beside it
+(e.g. `FOO/slides/FOO-slides.html`); an `artifacts` href must be `https://`.
+
+```yaml
+manifest:
+  slides:
+    - href: UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html
+      title: Project deck        # optional; default label "Slides"
+      description: AI generated  # optional; shown on the pill and as its tooltip
+  artifacts:
+    - href: https://claude.ai/artifact/XXXX
+      title: Project brief       # optional; default label "Brief"
+```
+
+Entries render as a pill bar directly under the page title (a `description`
+appears as small text after the pill label, e.g. "Slides" then "AI generated"; artifacts open
+in a new tab) and as Slides/Brief columns in the all-projects table. Machine-made
+decks carry `description: AI generated`. The same `validate_manifest()` backs the
+pytest check and the renderer: at render time an invalid entry is left out and
+reported as a page warning, so one bad page never stops the site render. Manifest-linked
+decks are published with their images, so do **not** also add an in-body
+`## Slides` section with the deck link. `scripts/populate_project_manifest.py`
+fills `manifest` from the deck folders plus a `stem<TAB>url[<TAB>title]` brief
+list, editing only the `manifest` block of the frontmatter.
 
 **Gene-symbol auto-linking.** Project pages auto-link prose gene symbols to their
 review pages — never hardcode `genes/...` URLs. Linking is convention + metadata

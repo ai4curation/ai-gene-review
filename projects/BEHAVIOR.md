@@ -1,17 +1,37 @@
 ---
 title: "Behaviour Annotation Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [mouse, human, rat, worm, yeast, DANRE, DROME, DAPPU]
 genes: [App, STAT3, nphp-1, Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, Tuba1a, Agtr1a, Mtor, Fyn]
+manifest:
+  slides:
+    - href: BEHAVIOR/slides/BEHAVIOR-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/YLcccJMkX5QNmHL4d5pWez
+      title: Project brief
 ---
 
 # Behaviour Annotation Project
 
-**When a knockout changes how an animal behaves, the gene gets annotated to
-`behavior` (GO:0007610) — even when its molecular function lives many causal
-steps upstream. This is a textbook over-annotation scenario, and this project
-characterises it across the review corpus.**
+**Bottom line:** when a knockout changes how an animal behaves, the gene
+gets annotated to `behavior` (GO:0007610) or a child term, even when its
+molecular function sits many causal steps upstream. We mined every GOA file
+and every review in the corpus for behaviour terms, wrote a four-step rubric
+(remove if contradicted, accept if the gene acts in the circuit, keep as
+non-core if distal, mark over-annotated if uselessly broad), spot-checked
+every accepted row, and mapped 16 standardized behavioural assays (15 IMPReSS
+types plus the Morris water maze) to the GO terms they can support. We did this because behaviour is the most distal and
+most convergent readout there is, so it is the cleanest test of how reviewers
+handle phenotype-driven annotations. A re-run of the miner in September 2026
+finds 216 behaviour annotations in reviews, of which 197 were adjudicated as
+core or not: 169 (86%) were downgraded and 28 accepted, mostly sensory
+channels and receptors acting in the relevant neurons (worm lov-1, pkd-2,
+tax-4), plus the fly clock protein CRY and the satiety hormone GCG. `reports/REPORT.md`
+is regenerated from that re-run; the ~81% → 87% figures in the spot-check
+section below are the June snapshot (146 adjudicated) that motivated it, and
+the conclusion is unchanged.
 
 ## Motivation
 
@@ -53,22 +73,26 @@ Mined with [`BEHAVIOR/mine_behavior.py`](BEHAVIOR/mine_behavior.py) over every
 decisions). The full tables regenerate into
 [`BEHAVIOR/reports/REPORT.md`](BEHAVIOR/reports/REPORT.md).
 
-**Source surface.** Behaviour terms in the corpus GOA files are overwhelmingly
-phenotype-driven: **IMP + IGI account for the large majority** of behaviour
-annotations, with only a few IDA (direct assay) annotations. The most common
-terms are the broad ones — `locomotory behavior` (GO:0007626) by a wide margin,
-followed by `behavioral response to pain`, `mating behavior`, `social
-behavior`, `circadian behavior`, and `adult locomotory behavior`.
+**Source surface.** Behaviour terms in the corpus GOA files are mostly
+phenotype-driven: **IMP + IGI account for just over half** (114 of 209, 55%)
+of behaviour annotations; most of the rest is electronic or inferred by
+similarity (IEA 39, ISS 26, ISO 14), and only 3 are IDA (direct assay). The
+most common term is the broad `locomotory behavior` (GO:0007626, 26 rows) by a
+wide margin, followed by a cluster of terms at 7–11 rows each: `mating
+behavior`, `social behavior`, `behavioral response to pain`, `drinking
+behavior`, `chemosensory behavior`, `adult locomotory behavior`,
+`thermosensory behavior`, and `circadian behavior` (counts from the September
+2026 re-run of the miner).
 
 **Reviewer decisions.** Of the behaviour annotations reviewers have adjudicated
-as core-vs-not (146, excluding the 9 `NEW` proposed terms, which add rather than
-downgrade), **~81% were downgraded** — kept as non-core, marked as
-over-annotated, or removed — and only a minority were `ACCEPT`ed as a core
-function:
+as core-vs-not (197 of 216 in the September 2026 re-run, excluding the 10 `NEW`
+proposed terms, which add rather than downgrade, and 9 `UNDECIDED`), **169 (86%)
+were downgraded** — kept as non-core, marked as over-annotated, or removed — and
+only 28 were `ACCEPT`ed as a core function:
 
 | Action | Meaning for a behaviour term | Share |
 |---|---|---|
-| `KEEP_AS_NON_CORE` | Real phenotype, distal to molecular function | dominant (~60%) |
+| `KEEP_AS_NON_CORE` | Real phenotype, distal to molecular function | dominant (147 of 216, ~68%) |
 | `ACCEPT` | Behaviour genuinely near the core (e.g. receptors, clock genes) | minority |
 | `MARK_AS_OVER_ANNOTATED` | Too broad / too distal to be useful | small |
 | `REMOVE` | Contradicted — wrong gene/paralog or not supported | small |
@@ -180,8 +204,9 @@ downgrades.
   cilium dysfunction.
 
 This moved 9 annotations from core to non-core, raising the downgrade rate among
-adjudicated behaviour annotations from ~81% to **87%** (127 of 146; now only 19
-`ACCEPT`ed as core). **Borderline cases left as-is** (documented, not changed): `daf-2`
+adjudicated behaviour annotations in the June snapshot from ~81% to **87%** (127 of 146; then only 19
+`ACCEPT`ed as core). The September 2026 re-run, over a larger corpus, gives 86%
+(169 of 197; 28 accepted). **Borderline cases left as-is** (documented, not changed): `daf-2`
 feeding/eating (the pleiotropic insulin receptor — feeding is one of many
 outputs) and `trpm7` swimming (a channel-kinase whose swimming phenotype is
 plausibly a distal developmental consequence) — defensible either way and not
@@ -195,7 +220,7 @@ activity, or a downstream cellular consequence?) and **convergence** (is the
 readout a specific signature of process P, or a hub that many inputs feed into?).
 A whole-animal behaviour is the *maximal* phenotypic + high-convergence readout:
 it integrates the entire nervous system plus development, metabolism and basic
-cell biology, so almost any perturbation can move it. That is exactly why ~87% of
+cell biology, so almost any perturbation can move it. That is exactly why 86% (169 of 197) of
 adjudicated behaviour annotations are downgraded.
 
 Behaviour has now been added as a first-class readout in that project's catalogue
@@ -260,7 +285,8 @@ is only the modality) — confirming that fix from the assay side.
 
 - [x] Mine the source surface and reviewer decisions; confirm the
       over-annotation signature (~81% of adjudicated behaviour annotations
-      downgraded, rising to 87% after the spot-check below).
+      downgraded, rising to 87% after the spot-check below; 86% of 197 in the
+      September 2026 re-run).
 - [x] Document exemplars and a working rubric.
 - [x] Spot-check the `ACCEPT`ed behaviour annotations — proximal cases upheld
       (CRY, lov-1/pkd-2, GCG, DpuGr29); 9 missed downgrades (App ×5, STAT3 ×3,

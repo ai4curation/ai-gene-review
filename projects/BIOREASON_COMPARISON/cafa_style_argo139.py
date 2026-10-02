@@ -6,12 +6,20 @@ carry model confidence scores. The script therefore computes a single-threshold,
 CAFA-style GOA agreement score over propagated GO term sets. Mixed-source
 ARGO139 rows are emitted as source diagnostics, not as the primary SFT score.
 
+Gene inputs (``*-sft-predictions.yaml`` and ``*-goa.tsv``) are read at the
+declared ``review_snapshot_commit`` in the BioReason benchmark policy, not from
+the working tree, so ordinary curation cannot move the published counts; the
+cohort list ``genes.csv`` is read from the working tree. Refresh with
+``just refresh-benchmark-snapshot``.
+
 Outputs are written under projects/BIOREASON_COMPARISON/cafa-style/.
 """
 from __future__ import annotations
 
 import argparse
 import csv
+import io
+import json
 import math
 import urllib.request
 from collections import Counter, defaultdict
@@ -31,15 +39,21 @@ from ai_gene_review.bioreason_ontology import (
     ensure_frozen_go,
     validate_frozen_go_release,
 )
+from ai_gene_review.source_tree import (
+    SourceTree,
+    declared_review_snapshot,
+    review_snapshot_tree,
+)
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PROJECT_DIR.parents[1]
-GENES_DIR = REPO_ROOT / "genes"
 ONTOLOGY_RELEASE = GO_RELEASE
 DEFAULT_ONTOLOGY = FROZEN_GO_PATH
 OUT_DIR = PROJECT_DIR / "cafa-style"
 FIGURE_PATH = PROJECT_DIR / "article" / "figures" / "cafa_style_argo139_sft.png"
+SNAPSHOT_SIDECAR = OUT_DIR / "review-snapshot.json"
+"""Records which review snapshot produced the CSVs, README and figure in ``OUT_DIR``."""
 
 GO_BASIC_URLS = [GO_RELEASE_URL]
 
@@ -216,17 +230,20 @@ def read_argo139() -> dict[tuple[str, str], str]:
     return rows
 
 
-def read_yaml(path: Path) -> dict:
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+def snapshot() -> SourceTree:
+    """The repository at the declared review snapshot; all gene inputs come from here."""
+    return review_snapshot_tree(REPO_ROOT)
 
 
-def read_predictions(argo_keys: set[tuple[str, str]]) -> list[Prediction]:
+def read_predictions(
+    argo_keys: set[tuple[str, str]], tree: SourceTree
+) -> list[Prediction]:
     predictions: list[Prediction] = []
-    for path in sorted(GENES_DIR.glob("*/*/*-sft-predictions.yaml")):
-        organism, gene = path.parts[-3], path.parts[-2]
+    for path in tree.glob("genes/*/*/*-sft-predictions.yaml"):
+        _, organism, gene, _ = path.split("/")
         if (organism, gene) not in argo_keys:
             continue
-        doc = read_yaml(path)
+        doc = yaml.safe_load(tree.read_text(path)) or {}
         for pred in doc.get("predictions", []) or []:
             term = pred.get("predicted_term", {}) or {}
             term_id = str(term.get("id") or "")
@@ -249,11 +266,11 @@ def read_predictions(argo_keys: set[tuple[str, str]]) -> list[Prediction]:
     return predictions
 
 
-def parse_goa_file(path: Path, organism: str, gene: str) -> list[GoaTerm]:
-    if not path.exists():
+def parse_goa_file(tree: SourceTree, path: str, organism: str, gene: str) -> list[GoaTerm]:
+    if not tree.is_file(path):
         return []
     terms: list[GoaTerm] = []
-    with path.open(newline="", encoding="utf-8") as handle:
+    with io.StringIO(tree.read_text(path), newline="") as handle:
         reader = csv.DictReader(handle, delimiter="\t")
         for row in reader:
             qualifier = row.get("QUALIFIER", "")
@@ -277,11 +294,11 @@ def parse_goa_file(path: Path, organism: str, gene: str) -> list[GoaTerm]:
     return terms
 
 
-def read_goa_terms(argo_keys: set[tuple[str, str]]) -> list[GoaTerm]:
+def read_goa_terms(argo_keys: set[tuple[str, str]], tree: SourceTree) -> list[GoaTerm]:
     terms: list[GoaTerm] = []
     for organism, gene in sorted(argo_keys):
-        path = GENES_DIR / organism / gene / f"{gene}-goa.tsv"
-        terms.extend(parse_goa_file(path, organism, gene))
+        path = f"genes/{organism}/{gene}/{gene}-goa.tsv"
+        terms.extend(parse_goa_file(tree, path, organism, gene))
     return terms
 
 
@@ -519,6 +536,7 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
         & (summary["aspect"] == "all_aspects")
     ].copy()
     exp_rows = exp_rows.set_index("source_group").loc[["hf_catalogue", "web_export", "all_sources"]]
+    review_snapshot = declared_review_snapshot(REPO_ROOT)
 
     lines = [
         "# ARGO95 CAFA-style retrospective GOA agreement",
@@ -530,7 +548,11 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
         "The score propagates predicted and reference GO terms over `is_a` and",
         f"`part_of` ancestors from the GO {ONTOLOGY_RELEASE} `go-basic.obo`, excluding the three GO aspect roots.",
         "",
-        "## Propagated all-aspect agreement against current GOA",
+        "Predictions and reference GOA are read at the review snapshot, as of "
+        f"{review_snapshot.date} (commit `{review_snapshot.short}`), not the working tree;",
+        "refresh with `just refresh-benchmark-snapshot`.",
+        "",
+        "## Propagated all-aspect agreement against GOA at the review snapshot",
         "",
         "| Source | genes | scored direct predictions | direct GOA terms | precision | recall | F1 |",
         "|---|---:|---:|---:|---:|---:|---:|",
@@ -586,9 +608,9 @@ def write_markdown_summary(summary: pd.DataFrame, assessment_overlap: pd.DataFra
             "",
             (
                 f"In the HF catalogue subset, {wrong_exact}/{len(hf_wrong)} "
-                "NPI/PLI/REP terms are exact matches to current GOA, and "
+                "NPI/PLI/REP terms are exact matches to snapshot GOA, and "
                 f"{wrong_closure}/{len(hf_wrong)} have propagated overlap with "
-                "current GOA. A retrospective GOA-agreement metric would therefore "
+                "snapshot GOA. A retrospective GOA-agreement metric would therefore "
                 "reward some terms that the evidence-grounded review classifies as "
                 "wrong or frequency-biased."
             ),
@@ -631,7 +653,7 @@ def write_figure(summary: pd.DataFrame) -> None:
         for i, value in enumerate(values):
             if not math.isnan(value):
                 ax.text(i, value + 0.02, f"{value:.2f}", ha="center", va="bottom", fontsize=9)
-    axes[0].set_ylabel("propagated F1 vs current GOA")
+    axes[0].set_ylabel("propagated F1 vs snapshot GOA")
     fig.suptitle("Retrospective CAFA-style GOA agreement for SFT terms", y=1.04)
     fig.tight_layout()
 
@@ -656,8 +678,9 @@ def main() -> None:
     graph = GoGraph(ontology_path)
     argo = read_argo139()
     argo_keys = set(argo)
-    predictions = read_predictions(argo_keys)
-    goa_terms = read_goa_terms(argo_keys)
+    tree = snapshot()
+    predictions = read_predictions(argo_keys, tree)
+    goa_terms = read_goa_terms(argo_keys, tree)
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     per_gene, summary = summarize_scores(predictions, goa_terms, graph)
@@ -668,6 +691,15 @@ def main() -> None:
     assessment_overlap.to_csv(OUT_DIR / "argo139_prediction_goa_overlap.csv", index=False)
     write_markdown_summary(summary, assessment_overlap)
     write_figure(summary)
+    review_snapshot = declared_review_snapshot(REPO_ROOT)
+    SNAPSHOT_SIDECAR.write_text(
+        json.dumps(
+            {"review_snapshot": {"commit": review_snapshot.commit, "date": review_snapshot.date}},
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     unresolved = pd.DataFrame(
         [{"term_id": term_id, "count": count} for term_id, count in graph.unresolved.items()]
@@ -679,7 +711,7 @@ def main() -> None:
         & (summary["term_mode"] == "raw")
         & (summary["aspect"] == "all_aspects")
     ].set_index("source_group")
-    print("Retrospective CAFA-style propagated all-aspect F1 vs current GOA")
+    print("Retrospective CAFA-style propagated all-aspect F1 vs snapshot GOA")
     for source in ["hf_catalogue", "web_export", "all_sources"]:
         row = main_rows.loc[source]
         print(

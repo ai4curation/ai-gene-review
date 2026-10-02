@@ -232,3 +232,49 @@ def test_claim_table_distinguishes_seeded_and_reviewed_unc(page, prediction_page
         expect(row).to_have_count(1)
         expect(row.locator(".table-cell-assessment")).to_contain_text("UNC")
         expect(row.locator(".table-cell-review_score")).to_have_text("1")
+
+
+def test_gogpt_overlap_view_is_dated_and_filters_by_reference_layer(page, tmp_path: Path):
+    """The snapshot overlap tab labels its date and its level facets count matching terms.
+
+    Dataset-wide constants arrive once in metadata and must still be filterable per row.
+    """
+    defaults = {"source_method": "GO-GPT", "source_version": "",
+                "projects": ["BIOREASON_COMPARISON"], "cohorts": ["supplement_gogpt_overlap_300"],
+                "snapshot_date": "2026-01-02"}
+    common = {"species": "ECOLI", "gene_symbol": "g", "review_link": "", "gene_predictions": 3}
+    overlap = [
+        {**common, "overlap_id": "a", "term_id": "GO:0000001", "in_goa": True,
+         "in_post_review": True, "in_core": True, "matched_levels": ["Raw GOA"]},
+        {**common, "overlap_id": "b", "term_id": "GO:0000002", "in_goa": True,
+         "in_post_review": False, "in_core": False, "matched_levels": ["Raw GOA"]},
+        {**common, "overlap_id": "c", "term_id": "GO:0000003", "in_goa": False,
+         "in_post_review": False, "in_core": False, "matched_levels": ["No reference layer"]},
+    ]
+    payload = {"sets": [], "claims": [], "overlap": overlap,
+               "metadata": {"overlap_snapshot_date": "2026-01-02", "overlap_row_defaults": defaults}}
+    (tmp_path / "index.html").write_text((BROWSER / "index.html").read_text())
+    (tmp_path / "data.js").write_text("window.predictionData=" + json.dumps(payload) + ";")
+    (tmp_path / "schema.js").write_text((BROWSER / "predictions_schema.js").read_text())
+    page.goto((tmp_path / "index.html").as_uri() + "?dataset=overlap&in_goa=true")
+    expect(page.locator("#datasetTabs")).to_contain_text("GO-GPT overlap (as of 2026-01-02) (3)")
+    expect(page.locator("#scopeNote")).to_contain_text("as of 2026-01-02")
+    expect(page.locator("#resultsCount")).to_have_text("Showing 2 of 2 predicted terms")
+    page.goto((tmp_path / "index.html").as_uri() + "?dataset=overlap&in_core=true")
+    expect(page.locator("#resultsCount")).to_have_text("Showing 1 of 1 predicted terms")
+    page.goto((tmp_path / "index.html").as_uri() + "?dataset=overlap&source_method=GO-GPT")
+    expect(page.locator("#resultsCount")).to_have_text("Showing 3 of 3 predicted terms")
+    page.goto((tmp_path / "index.html").as_uri()
+              + "?dataset=overlap&matched_levels=No%20reference%20layer")
+    expect(page.locator("#resultsCount")).to_have_text("Showing 1 of 1 predicted terms")
+
+
+def test_payload_without_metadata_still_loads(page, tmp_path: Path):
+    """A hand-built payload with only sets and claims renders instead of throwing."""
+    payload: dict[str, list] = {"sets": [], "claims": []}
+    (tmp_path / "index.html").write_text((BROWSER / "index.html").read_text())
+    (tmp_path / "data.js").write_text("window.predictionData=" + json.dumps(payload) + ";")
+    (tmp_path / "schema.js").write_text((BROWSER / "predictions_schema.js").read_text())
+    page.goto((tmp_path / "index.html").as_uri())
+    expect(page.locator("#datasetTabs")).to_contain_text("Prediction sets (0)")
+    expect(page.locator("#datasetTabs")).not_to_contain_text("GO-GPT overlap")

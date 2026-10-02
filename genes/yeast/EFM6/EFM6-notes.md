@@ -141,3 +141,19 @@ methylation", DOI:10.1080/15476286.2018.1440875). Extra context NOT added to the
   Efm6 (Lys390, this gene), Efm7 (Lys3). Care: keep EFM6 = Lys390 only.
 - The alternate residue number "Lys395" seen in some reviews is a numbering variant of the same
   eEF1A site; the primary paper uses Lys390 (mature-protein numbering), which I follow.
+
+## 2026-09-30 IBA re-review
+
+- Rechecked the single GO_Central PTHR14614 IBA row against the current PAINT cache.
+  `GO:0008276` protein methyltransferase activity remains at `PTN000378681`, the
+  top PTHR14614 protein-methyltransferase-family node seeded by experimentally grounded
+  lysine, histidine, and related protein methyltransferases.
+- Confirmed the standing `MODIFY` call. The IBA transfer is biologically valid for Efm6,
+  but deliberately broad: PTHR14614 contains Efm-family lysine methyltransferases, Hpm1/
+  METTL18 histidine methyltransferases, and METTL23-family protein-arginine
+  methyltransferases, so the all-family node should not be narrowed to protein-lysine
+  N-methyltransferase activity. EFM6 itself should be represented by `GO:0016279`, which
+  is already present electronically and directly supported by the Jakobsson et al. 2015
+  eEF1A Lys390 study.
+- Searched for newer direct EFM6/YNL024C literature through 2026; no paper superseding the
+  eEF1A-Lys390 assignment or establishing a downstream biological process was found.
