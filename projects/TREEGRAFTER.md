@@ -408,6 +408,13 @@ they cut unevenly across the four failure modes:
   component of acetyl-CoA carboxylase, so the propagation was *more* specific
   than the term the gene already carried. The term's label and its `capable_of`
   axiom to `GO:0008775` contradict its own definition — worth raising with GO.
+  Confirmed against the live QuickGO ontology API on 2026-10-02 rather than only
+  against the cached label: the definition returns verbatim (xrefs
+  `PMID:2719476`, `PMID:8423010`), `GO:0009317` is a current ancestry relation,
+  `GO:0032283` (the plastid `accD` subcomplex) is still the sole child, and the
+  `capable_of GO:0008775` relation is present with a 2015-06-18 addition date.
+  The term is not obsolete and its aspect is `cellular_component`, so the
+  mismatch really is label-and-axiom versus definition.
 
 What survives scrutiny intact is **mode 4, the paralog / wrong-subfamily
 catalytic transfer**: spermidine synthase on the PMT methyltransferases,
