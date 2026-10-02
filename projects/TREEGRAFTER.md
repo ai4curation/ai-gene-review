@@ -691,7 +691,8 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   chemistry. Both contradict the definition. `interpro/panther/PTHR42995/
   PTHR42995-paint.tsv` shows GO curators themselves use the term for bacterial
   AccD (an IBD seeded by *E. coli* `P0A9Q5`), and QuickGO's own blacklist for the
-  term is ~80 `NOT`-qualified annotations on eukaryotic proteins — which is what a
+  term is ~80 `NOT`-qualified annotations on eukaryotic proteins (QuickGO,
+  2026-10-02, the same query as the verification above) — which is what a
   misleading label looks like downstream. Proposed fix: rename to name the
   carboxyltransferase component and drop or re-point the `capable_of` axiom.
 - **Refresh the snapshot** when the next batch lands: re-run the three scripts,

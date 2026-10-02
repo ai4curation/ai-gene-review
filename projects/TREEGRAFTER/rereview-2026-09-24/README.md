@@ -77,6 +77,31 @@ it. `check_outcomes.py` enforces it, so the next audit inherits a rule rather
 than re-inferring one. `summarize.py` reads only the annotation-level field, so
 the gene-level value is documentary.
 
+## What the verbatim check does and does not cover
+
+This audit's rules lean on `supporting_text` being a verbatim substring of its
+source, and round 3 caught a quote composed to fit a term exactly that way. The
+check is **not symmetric across reference types**, and the asymmetry is worth
+stating because it is easy to mistake a passing `just validate` for a verified
+quote:
+
+- **`PMID:` / `DOI:` quotes are gated.** `validate_reference_finding_supporting_text`
+  runs on `LITERATURE_PREFIXES` only, and a non-verbatim snippet fails.
+- **`file:` quotes are not gated at all.** `conf/reference_validator_config.yaml`
+  lists `file` in `skip_prefixes`, so `file:` references are exempt from snippet
+  checking. Every `file:` quote in this audit is **hand-verified** (by `grep -cF`
+  against the cited file), not machine-checked, and a composed one passes
+  validation silently.
+
+This is a known repo-wide blind spot, documented in
+[`MISCITATIONS.md`](../../MISCITATIONS.md), [`SPKW.md`](../../SPKW.md) and
+[`FUNCTION_KNOWLEDGE_GAPS.md`](../../FUNCTION_KNOWLEDGE_GAPS.md); the SPKW audit
+measured ~48% of `file:` quotes non-verbatim while passing validation. Two
+instances surfaced inside this audit's own changed set (PR #3165 round 10:
+`THLAR/TFP`, both `file:` quotes, plus one on the `PSEPK/retS` row this audit
+relaxed) and were fixed by substring swap. So: when reading a rationale here,
+treat a `file:` quote as a reviewer's transcription rather than a gated fact.
+
 ## What the counts count
 
 `192`, `117` and `75` are counts of **recorded rows**, and the gene figures need
