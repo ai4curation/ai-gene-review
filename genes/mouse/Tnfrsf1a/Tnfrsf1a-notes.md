@@ -26,7 +26,7 @@
 
 - Removed the new `GO:0005515 protein binding` partner rows from IntAct/AgBase/MGI as generic interaction imports rather than retained molecular functions. The PMID:11374864, PMID:16680093, PMID:17702576, and PMID:26649818 interactions fit the TNFR1 receptor-proximal signaling literature, but the GO term does not distinguish adaptor recruitment, ubiquitin-scaffold competition, IRE1/ER-stress complexing, or A20/RIPK1 regulation.
 
-- Kept newly surfaced `GO:0005576 extracellular region` transfers as non-core localization, reflecting soluble or shed TNFR1 ectodomain evidence while leaving plasma membrane/cell surface as the core receptor locations. The refreshed broad `response to lipopolysaccharide` ARBA row should be narrowed to `GO:0071222 cellular response to lipopolysaccharide`, and the even broader `GO:0071396 cellular response to lipid` row is over-annotated relative to direct TNF sensing.
+- Kept newly surfaced `GO:0005576 extracellular region` transfers as non-core localization, reflecting soluble or shed TNFR1 ectodomain evidence while leaving plasma membrane/cell surface as the core receptor locations. The refreshed broad `response to lipopolysaccharide` ARBA row and the even broader `GO:0071396 cellular response to lipid` row should both be narrowed to `GO:0071222 cellular response to lipopolysaccharide`, which GO places under the lipid-response branch, and retained as non-core relative to direct TNF receptor activity.
 
 - Dropped nine stale source rows no longer present in the refreshed GOA snapshot, including old support-list variants of TNF receptor activity, TNF binding, TNF-mediated signaling, extracellular space, cell surface, and bacterium-response assertions.
 
