@@ -24,5 +24,18 @@
 - Full text of PMID:20558315 and PMID:8075796 not available in cache (abstract only).
 
 ## Deep research status (2026-10-02)
-- `just deep-research-falcon CANAL PDE1 --fallback perplexity-lite` failed: falcon timed out after 600 s and the perplexity provider is not configured in this environment. No deep-research file was produced.
+- `just deep-research-falcon CANAL PDE1 --fallback perplexity-lite`: the wrapper reported failure (falcon timed out after 600 s; perplexity not configured), but the falcon job itself completed at 898 s and wrote PDE1-deep-research-falcon.md, which was then used.
 - Literature was instead gathered manually via PubMed search ("Candida albicans PDE1 phosphodiesterase" returned 5 hits: PMID:30299574, 20558315, 18078440, 9880329, 8075796), plus PMID:14523128 (PDE2). All cached publications are abstract-only.
+
+## Interaction with Gpa2 (follow-up, 2026-10-02)
+There is no evidence of a physical Pde1-Gpa2 interaction; the "regulatory module" of Wilson et al. 2010 is functional/genetic.
+- Gpa2 drives acidification-induced cAMP [PMID:20558315 "Our biochemical evidence shows that Gpa2 stimulates cAMP signalling in response to intracellular acidification"]; Pde1 terminates both glucose- and acidification-induced spikes.
+- Synthetic pde1 gpa2 defects (growth, morphogenesis, stress) are read by the authors as Gpa2 acting outside the cAMP pathway [PMID:20558315 "suggesting that Gpa2 mediates its effects on these processes in a cAMP pathway-independent manner"]. Consistent with Gpa2 having a MAPK-linked role [PMID:12477787 "These defects cannot be reversed by exogenous addition of cyclic AMP. However, overexpression of HST7, which encodes a component of the filament-inducing mitogen-activated protein kinase (MAPK) cascade, bypasses the Gpa2 requirement."]
+- Is the Gpr1-Gpa2 module glucose-activated in C. albicans? Disputed:
+  - Yes: [PMID:15302825 "Biochemical studies also reveal that GPR1 and GPA2 are required for a glucose-dependent increase in cellular cAMP."]
+  - No: [PMID:15673611 "deletion of neither CaGpr1 nor CaGpa2 affects glucose-induced cAMP signaling. In contrast, the latter is abolished in strains lacking CaCdc25 or CaRas1"]; ligands appear to be methionine/lactate [PMID:30761119 "However, it seems that the ligand(s) for CaGpr1 are not sugars but lactate and methionine."]; Gpr1 mediates lactate-induced beta-glucan masking [PMID:27941860].
+- Consequence for review: IBA GO:0110034 (negative regulation of adenylate cyclase-activating *glucose-activated* GPCR signalling, donor S. pombe cgs2) changed ACCEPT -> MARK_AS_OVER_ANNOTATED (TERM_SCOPING_PROBLEM). Receptor-agnostic GO:0141162 retained as core. PMID:15302825 finding marked DISPUTED.
+- Deep research also notes (citing Inglis & Sherlock 2013) that a pde1 single mutant filaments normally, consistent with keeping the filamentous growth IMPs as non-core.
+
+## Locus identifiers
+Falcon flagged that some literature labels PDE1 as orf19.4235 whereas UniProt Q5AGE4 lists orf19.11710. CGD's own PDE1 locus (CAL0000177603) cross-references Q5AGE4 and is the source of the IDA/IMP annotations, so the gene-to-accession mapping is CGD's. (Assembly 19 assigned separate orf19 numbers to allelic ORFs, which likely explains the two numbers; not independently verified here.)
