@@ -251,8 +251,10 @@ Refetched `PTHR12701`. The PAINT cache still exposes a single
 `GO:0140388` molecular-function hypothesis. The three live GOA IBA rows still
 trace to the exact `WITH/FROM` sets already recorded in the YAML, so no IBA
 action change was needed: ER membrane remains `NO_FAILURE_CORE`, while the two
-ERAD/process inferences remain plausible but untested `NO_FAILURE_NON_CORE`
-family calls for Yet2p.
+ERAD/process inferences remain non-core BAP29/BAP31 family calls for Yet2p.
+During PR review, the full Wilson & Barlowe text was also cited for negative
+yeast tests: the yet1/yet2/yet3 triple mutant was competent for CPY and
+alpha-factor translocation and had no obvious CPY*/Ste6* ERAD turnover defect.
 
 Searched again for newer YET2 literature. I did not find a peer-reviewed paper
 that supersedes the 2024 Zung et al. ERGosome/contact-site preprint, but the
