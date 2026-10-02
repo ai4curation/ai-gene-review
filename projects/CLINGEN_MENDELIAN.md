@@ -2950,6 +2950,12 @@ different partitions of the same inventory. Each individual association retains
 its own classification in the checklist. RNA and other locus types have separate
 checklist sections, so nuclear protein-coding headings exclude those genes.
 
+## Curation instructions
+
+For this ClinGen project, follow the user's standing instruction: retain a supported, biologically correct `GO:0005515` (protein binding) annotation as `KEEP_AS_NON_CORE` when no evidence-backed, more specific replacement has been established. Use `MODIFY` when the evidence supports a more informative term. If the relevant evidence cannot be accessed or adjudicated, use `UNDECIDED`; this instruction does not verify an uninspected interaction or justify inventing a molecular activity from association alone.
+
+This is an intentional task-specific departure from the annotation-reviewer skill's informational-exclusion recommendation, which generally uses `REMOVE` for uninformative generic binding without declaring the reported interaction false. The authority is the user's explicit instruction for this project, not the ActionEnum alone. This does not change the repository-wide policy or claim an external maintainer sign-off.
+
 ## Status
 
 Gene reviews are proceeding in evidence-priority order, alphabetically within
@@ -2961,9 +2967,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**159 of 2,876 genes are complete; 2,717 remain.** Verified BMP6 and BOLA3 merges
+**161 of 2,876 genes are complete; 2,715 remain.** Verified BLOC1S1 and ATP1A1 merges
 add two completed genes to the preceding completion update.
-The 160 original gene PR merges include AKR1D1, whose required source follow-up
+The 162 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3179,7 +3185,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ATN1** — HGNC:3033; [dentatorubral-pallidoluysian atrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e89969b5-53ef-4512-a770-59aeb22a0ce4-2026-05-13T160000.000Z) (MONDO:0007435; AD; Definitive).
 - [x] **ATP13A2** — HGNC:30213; [Kufor-Rakeb syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0ba5cb4f-3f7f-44dc-b2a5-0a2d62e510d4-2022-04-14T160000.000Z) (MONDO:0011706; AR; Definitive).
 - [x] **ATP13A3** — HGNC:24113; [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5024e74a-fe6e-4eb2-89df-d07ff18e439c-2021-11-09T173936.225Z) (MONDO:0015924; SD; Definitive).
-- [ ] **ATP1A1** — HGNC:799; [Charcot-Marie-tooth disease, axonal, type 2DD](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_65182954-6603-4880-85fa-352700bd784b-2026-07-29T160000.000Z) (MONDO:0054833; AD; Definitive).
+- [x] **ATP1A1** — HGNC:799; [Charcot-Marie-tooth disease, axonal, type 2DD](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_65182954-6603-4880-85fa-352700bd784b-2026-07-29T160000.000Z) (MONDO:0054833; AD; Definitive).
 - [x] **ATP1A2** — HGNC:800; [fetal akinesia, respiratory insufficiency, microcephaly, polymicrogyria, and dysmorphic facies](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fb2e7696-8d5d-48a2-892f-c8fad53c65f8-2025-07-01T160000.000Z) (MONDO:0859204; AR; Definitive); [hemiplegic migraine-developmental and epileptic encephalopathy spectrum](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fe788a45-b8da-4377-acdb-5dd55fcc3130-2024-01-16T200000.000Z) (MONDO:0100539; AD; Definitive).
 - [x] **ATP1A3** — HGNC:801; [ATP1A3-associated neurological disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2a572fef-35c5-46dd-8a69-af436b3ecdcc-2022-05-22T063513.942Z) (MONDO:0700002; AD; Definitive).
 - [x] **ATP2B2** — HGNC:815; [autosomal dominant nonsyndromic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_193d07d0-5e1a-4ea1-84d6-377eb8fb5e7f-2025-07-22T160000.000Z) (MONDO:0019587; AD; Definitive).
@@ -5158,7 +5164,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BACH2** — HGNC:14078; [immunodeficiency 60](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2473560a-6e5c-4342-a6e2-c89e37f4cc71-2023-02-21T180000.000Z) (MONDO:0032723; AD; Moderate).
 - [ ] **BAG5** — HGNC:941; [cardiomyopathy, dilated, 2F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_97fe83b7-fe12-4014-9706-6847446fa9bd-2026-03-04T170000.000Z) (MONDO:0030680; AR; Moderate).
 - [ ] **BICC1** — HGNC:19351; [renal dysplasia, cystic, susceptibility to](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_889b1070-5933-491e-94ec-74eb23996052-2022-09-28T160000.000Z) (MONDO:0011037; AD; Moderate).
-- [ ] **BLOC1S1** — HGNC:4200; [neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f6a0418-5c59-43f5-bb31-9f22f59a8079-2026-04-01T160000.000Z) (MONDO:0700092; AR; Moderate).
+- [x] **BLOC1S1** — HGNC:4200; [neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8f6a0418-5c59-43f5-bb31-9f22f59a8079-2026-04-01T160000.000Z) (MONDO:0700092; AR; Moderate).
 - [ ] **BLOC1S3** — HGNC:20914; [Hermansky-Pudlak syndrome 8](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdeec503-f903-4507-89e7-33c9255b5ad1-2025-04-07T160000.000Z) (MONDO:0013560; AR; Moderate).
 - [x] **BLVRA** — HGNC:1062; [hyperbiliverdinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_de6e575f-6a04-45fb-a9b5-0b21c9e6a7a8-2025-01-10T170000.000Z) (MONDO:0013595; AR; Moderate).
 - [ ] **BPNT2** — HGNC:26019; [chondrodysplasia with joint dislocations, gPAPP type](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f0edef29-df91-4320-b66d-4cc6a4ec3f94-2024-05-16T160000.000Z) (MONDO:0013561; AR; Moderate).
