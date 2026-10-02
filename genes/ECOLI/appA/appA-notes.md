@@ -22,12 +22,15 @@ papers support the histidine-acid-phosphatase active site and AppA catalytic
 mechanism [PMID:1429631; PMID:8407904].
 
 I accepted the two direct `GO:0052745 inositol phosphate phosphatase activity`
-rows and used the more specific `GO:0008707 inositol hexakisphosphate
-4-phosphatase activity` term for the core 6-phytase function; marked the GTPase
-and nucleotidase rows over-annotated; kept sugar-phosphatase and broad
-dephosphorylation rows as non-core; accepted `GO:0016036 cellular response to
-phosphate starvation`; modified broad `GO:0042597 periplasmic space` rows to
-`GO:0030288 outer membrane-bounded periplasmic space`; and marked
-`GO:0071454 cellular response to anoxia` as over-annotated because the
+rows and used `GO:0052745` for the core AppA function because it spans the
+stepwise phytate and lower-inositol-phosphate dephosphorylation ladder; marked
+the GTPase and nucleotidase rows over-annotated; kept sugar-phosphatase and
+broad dephosphorylation rows as non-core; accepted `GO:0016036 cellular
+response to phosphate starvation`; modified broad `GO:0042597 periplasmic
+space` rows to `GO:0030288 outer membrane-bounded periplasmic space`; and
+marked `GO:0071454 cellular response to anoxia` as over-annotated because the
 available text supports anaerobic induction of AppA, not a direct AppA step in
-an anoxia-response pathway.
+an anoxia-response pathway. I checked `GO:0008707` in QuickGO during PR review
+follow-up; it cross-references EC 3.1.3.26 and RHEA:20960, whose product is a
+1D-1,2,3,5,6-pentakisphosphate, so it represents the 1D-4 reaction rather than
+AppA's 1D-6 first step.

@@ -40,9 +40,9 @@ change the substrate-level assessment.
 ## Annotation decisions
 
 - `GO:0052745 inositol phosphate phosphatase activity` should be accepted for
-  both direct rows; the core molecular function should use the more specific
-  6-phytase term, `GO:0008707 inositol hexakisphosphate 4-phosphatase
-  activity`.
+  both direct rows and used as the core molecular function because it spans
+  AppA's stepwise phytate and lower-inositol-phosphate dephosphorylation
+  ladder.
 - `GO:0016036 cellular response to phosphate starvation` is accepted because
   AppA synthesis is induced by inorganic-phosphate starvation [PMID:6282821] and
   AppA acts as a mature periplasmic phosphate-scavenging enzyme rather than only
