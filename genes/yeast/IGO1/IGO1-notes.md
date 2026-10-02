@@ -52,10 +52,10 @@ Nature Communications translation/tRNA-modification paper (Falcon flags this).
    associate with the mRNA decapping activator Dhh1, shelters newly expressed
    mRNAs from degradation via the 5'-3' mRNA decay pathway"]. UniProt records
    interactions with RIM15, DHH1, PBP1, PBP4, LSM12. Caveats: (a) the 2013 PP2A
-   mechanism could account for the effect indirectly; (b) per the Falcon report,
-   Sarkar 2014 did not reproduce dhh1/ccr4 suppression in its background
-   ["The mRNA-decay role is supported, but it is context-dependent and does not
-   account for every Igo1 phenotype."]. Kept as ACCEPT with caveats recorded;
+   mechanism could account for the effect indirectly; (b) Sarkar 2014 did not
+   reproduce dhh1/ccr4 suppression in the SK1 background [PMID:24968058 "We
+   also found that dhh1Δ and ccr4Δ did not suppress the G0 entry defect of
+   igo1Δ igo2Δ cells"]. Kept as ACCEPT with caveats recorded;
    the curator read the full text and the finding is the paper's central claim.
 4. **Mitotic role (Juanes 2013, full text).** Paradoxical: phospho-Igo1 is an
    inhibitor in vitro, but in vivo igo1 igo2 cells have LOWER PP2A-Cdc55
@@ -137,9 +137,9 @@ cached publications, the Falcon report and the UniProt record.
   sporulation and osmostress roles can be cited as primary literature. The
   previously listed candidate PMIDs for Sarkar 2014 and Talarek 2017 were
   wrong; these are the PubMed-verified records for those papers.
-- A history record (`just new-history --kind gene --organism yeast --slug IGO1
-  --event CREATE ...`) was not created in this session because the task
-  restricted edits to `genes/yeast/IGO1/`; add it with the PR.
+- Completed 2026-10-01: added
+  `history/genes/yeast/IGO1/2026-10-01T221113Z-codex-447b74.yaml` to record the
+  IGO1 refresh.
 
 ## 2026-10-01 refresh
 
