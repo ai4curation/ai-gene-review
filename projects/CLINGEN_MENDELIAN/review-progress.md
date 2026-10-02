@@ -224,7 +224,7 @@ are therefore expected; existing human reviews still link normally.
 | B3GALT6 | Definitive | Not started | Review #3573 merged; current-head approval and required CI passed; all 16 scoped merged blobs verified | `cmungall/clingen-b3galt6` | [#3573](https://github.com/ai4curation/ai-gene-review/pull/3573) |
 | B3GLCT | Definitive | INITIALIZED seed | Review #3575 merged; current-head approval and required CI passed; all 18 scoped merged blobs verified | `cmungall/clingen-b3glct` | [#3575](https://github.com/ai4curation/ai-gene-review/pull/3575) |
 | B4GALNT1 | Definitive | Existing review | Review #3574 merged; current-head approval and required CI passed; all 16 scoped merged blobs verified | `cmungall/clingen-b4galnt1` | [#3574](https://github.com/ai4curation/ai-gene-review/pull/3574) |
-| B4GALT1 | Definitive | Existing review | Ready #3576; third follow-up published. At 09:06:52 UTC, exact-head review requested changes and required CI remained in progress; no merge or completion. | `cmungall/clingen-b4galt1` | [#3576](https://github.com/ai4curation/ai-gene-review/pull/3576) |
+| B4GALT1 | Definitive | Existing review | Review #3576 merged at 2026-10-02 12:10:43 UTC; final-head approval and required CI passed; all 50 scoped merged blobs and 11 PR paths verified. | `cmungall/clingen-b4galt1` | [#3576](https://github.com/ai4curation/ai-gene-review/pull/3576) |
 | B4GALT7 | Definitive | INITIALIZED seed | Review #3577 merged; current-head approval and required CI passed; all 20 scoped merged blobs verified | `cmungall/clingen-b4galt7` | [#3577](https://github.com/ai4curation/ai-gene-review/pull/3577) |
 | B9D1 | Definitive | INITIALIZED seed | Ready #3579; first follow-up published. Exact-head review holds on the generic-binding policy disagreement under the supplied ActionEnum; no further cosmetic revision or repeated review request. Required test was observed in progress; no approval, merge or completion. | `cmungall/clingen-b9d1` | [#3579](https://github.com/ai4curation/ai-gene-review/pull/3579) |
 | BAG3 | Definitive | Existing review | Ready #3578; initial and first follow-up published. Exact-head changes requested at 10:25:30 UTC; biology and provenance corrections accepted, remaining generic-binding policy disagreement held under the supplied ActionEnum. CI observed in progress; no merge readiness or completion. | `cmungall/clingen-bag3` | [#3578](https://github.com/ai4curation/ai-gene-review/pull/3578) |
@@ -255,8 +255,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **155 of 2,876 genes
-are complete**; 156 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **156 of 2,876 genes
+are complete**; 157 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -284,6 +284,8 @@ Completion update at 2026-10-01 17:30:00 UTC adds BICRA #3713. Its final-head ap
 Completion update at 2026-10-01 19:21:16 UTC adds BLTP1 #3796. Its final-head approval, passing required CI and signed merge commit include verification of all 16 scoped files and 15 PR paths. The count is now 152 completed genes and 153 original merges, with 2,724 genes remaining and AKR1D1 still requiring its source follow-up. Earlier completion and checkpoint observations remain historical; this update does not refresh other open PRs, audit totals or import totals.
 
 Completion update through 2026-10-01 20:46:03 UTC adds BLVRA #3775, BLOC1S5 #3781 and BLOC1S6 #3770. Their final-head approvals, passing required CI and signed merge commits include verification of all scoped files and complete PR path lists. The count is now 155 completed genes and 156 original merges, with 2,721 genes remaining and AKR1D1 still requiring its source follow-up. BLOC1S5 retains its biological YAML DRAFT status; its verified source-complete merge is counted separately from that field. Earlier completion and checkpoint observations remain historical; this update does not refresh other open PRs, audit totals or import totals.
+
+Completion update through 2026-10-02 12:10:43 UTC adds B4GALT1 #3576. Its final-head approval, passing required CI and signed merge commit are confirmed with all 50 scoped files and the complete 11-path PR verified. The count is now 156 completed genes and 157 original merges, with 2,720 genes remaining and AKR1D1 still requiring its source follow-up. B4GALT1 retains its biological YAML DRAFT status independently of campaign completion. Checkpoint95 audit/import totals and prior completion observations remain historical.
 
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
@@ -789,3 +791,15 @@ remains a scheduling exception. Project setup merged in
 - 2026-10-01 UTC: Recorded the verified BLTP1 #3796 merge. Completion count: 151 → 152; original gene PR merges: 152 → 153; remaining catalog genes: 2,724. The inventory checkbox, progress row and exact merge receipt are recorded; earlier campaign observations and ClinGen association data are preserved.
 
 - 2026-10-01 UTC: Recorded verified merges for BLVRA #3775, BLOC1S5 #3781 and BLOC1S6 #3770. Completion count: 152 → 155; original gene PR merges: 153 → 156; remaining catalog genes: 2,721. Inventory checkboxes, progress rows and exact merge receipts are recorded; earlier campaign observations and ClinGen association data are preserved.
+
+- 2026-10-02 UTC: Recorded the verified B4GALT1 #3576 merge. Completion count: 155 → 156; original gene PR merges: 156 → 157; remaining catalog genes: 2,720. All earlier checkpoint observations, ClinGen associations and the unresolved AKR1D1 follow-up are preserved.
+
+### Selected work in progress — 2026-10-02 receipt update
+
+These dated observations add no completion and do not revise checkpoint95 totals.
+
+- BOLA3: Published exact native review; no merge counted. PR [#3860](https://github.com/ai4curation/ai-gene-review/pull/3860) at `71bdefc23e655305d6db8cc0c09b99fad0f3f6df`.
+- PANTHER shared family review: Published family follow-up; latest saved review requests changes. This shared family repair does not count as a gene completion. PR [#3853](https://github.com/ai4curation/ai-gene-review/pull/3853) at `4827cd02fcdf19f552f5a40e6637253440dc7427`.
+- BMPR1A: Initial review published; round-one follow-up passed distinct science review and awaits publication. No merge counted. PR [#3854](https://github.com/ai4curation/ai-gene-review/pull/3854) at `478ecef8f4ce509c5b4aecdab6424c234f56ddfb`.
+- BRAF: Independent annotation candidate prepared in TMP for distinct science review; no publication or merge claimed.
+- BMPR2 / Seed62: Recovery workflow completed successfully; artifact source inspection and canonical seed import remain pending. Workflow success is not gene-review completion. Run [36974959734](https://github.com/ai4curation/ai-gene-review/actions/runs/36974959734).
