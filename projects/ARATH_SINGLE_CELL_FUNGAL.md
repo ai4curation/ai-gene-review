@@ -150,7 +150,13 @@ activity is annotated consistently across the TNLs.
   enzyme activity (`GO:0047720`, IDA) and `defense response to fungus` (IMP), as
   the main enzyme for pathogen-induced indole-3-carboxylic acid derivatives;
   CYP71A13 remains the main leaf camalexin enzyme. Both carry an ER-lumen IDA from
-  PMID:33831160, a PMID that no longer resolves, and both were left undecided.
+  PMID:33831160, and both were left undecided because we could not identify
+  the paper. NCBI E-utilities return no record for it and Europe PMC has no hits.
+  PubMed's own page sits behind a bot check, so we could not see whether it
+  redirects to another record. TAIR made six annotations from this PMID on
+  2022-02-03 (ER and ER-lumen locations for CYP71A12, CYP71A13 and CYP71B15, plus
+  CYP71B15 interactions). That content resembles Mucha et al. 2019 (PMID:31511315),
+  but the link is not established and no replacement has been recorded.
 - **FRK1 is a marker, not a demonstrated defense component.** Its two
   `defense response to bacterium` rows were changed to `response to bacterium`,
   and one flg22-only row to `response to molecule of bacterial origin`. A motif

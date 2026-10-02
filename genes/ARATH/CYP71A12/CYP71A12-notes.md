@@ -118,3 +118,15 @@
 The falcon job reported as timed out above kept running server-side and later wrote
 `CYP71A12-deep-research-falcon.md`. The review was completed before it arrived and does not
 rely on it; it is kept as a provenance record and a source of leads for future re-review.
+
+## PMID:33831160 follow-up (coordinator check, 2026-10-02)
+
+Rechecked directly: NCBI esummary returns "cannot get document summary", efetch returns an
+empty PubmedArticleSet, and Europe PMC (EXT_ID:33831160) has 0 hits. The PubMed web page
+(pubmed.ncbi.nlm.nih.gov/33831160/) serves a bot challenge, so any duplicate/redirect notice
+could not be read; the record is therefore unidentified, not shown to be deleted.
+QuickGO lists six TAIR annotations citing it, all dated 2022-02-03: GO:0005788 ER lumen (IDA)
+on CYP71A12, CYP71A13 and CYP71B15; GO:0005783 ER (IDA) on CYP71B15; and two GO:0005515 IPI
+rows on CYP71B15. This content resembles Mucha et al. 2019 (PMID:31511315, camalexin
+metabolon), but per docs/reference_curation.md no replacement is recorded from similarity
+alone. Someone with browser access to PubMed, or TAIR, can settle it in one lookup.
