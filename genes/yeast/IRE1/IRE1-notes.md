@@ -52,3 +52,26 @@ point mutations in the Ire1p NLS that inhibit nuclear localization"]. This consi
 repair follows the existing annotation review; it does not infer that nuclear
 localization is IRE1's principal location or resolve the mechanism of trafficking of
 the intact membrane protein. The reference cache remains abstract-only.
+
+## 2026-09-30 IBA rereview
+
+Rechecked the six IRE1 IBA rows against the current cached PTHR13954 PAINT export:
+
+- `PTN000359335` still carries the four deep eukaryotic IRE1 assertions
+  inherited by yeast IRE1: `GO:0005783 endoplasmic reticulum`,
+  `GO:0036498 IRE1-mediated unfolded protein response`, `GO:0004521 RNA
+  endonuclease activity`, and `GO:0004674 protein serine/threonine kinase
+  activity`. Those are core conserved Ire1 activities and localization.
+- `GO:0051082 unfolded protein binding` remains in the cached GOA snapshot but
+  is absent from the current PTHR13954 PAINT export. The yeast IRE1 seed is real
+  target evidence for unfolded-protein detection, not circular support, but the
+  GO:0051082 molecular-function term is obsolete and chaperone-scoped; the
+  existing replacement with `GO:0002235 detection of unfolded protein` remains
+  the better representation of Ire1's sensor role.
+- `GO:0070059 intrinsic apoptotic signaling pathway in response to endoplasmic
+  reticulum stress` remains confined to `PTN000359344`, the mammalian ERN1/ERN2
+  branch, and no longer sits on the broad eukaryotic IRE1 node that generated
+  the old yeast GOA row.
+- The 2026 public-literature search found current database, review, and yeast
+  engineering mentions but no newer direct yeast Ire1 primary study that changes
+  these IBA decisions.
