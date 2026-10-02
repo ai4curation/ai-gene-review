@@ -100,3 +100,25 @@ REMOVE 6 (4 protein binding, 2 mitochondrion HDA) · KEEP_AS_NON_CORE 1 (apoptot
 - Whether an MF term for the FEAR/PP2A-Cdc55 role is justified (scaffold vs inhibitor).
 - Ty1 retrotransposition role (Ho et al. 2015, not cached) not represented in GOA; not
   proposed as NEW pending comparator check.
+
+## 2026-10-01 current-GOA / IBA review
+
+- Forced a current `just fetch-gene yeast ESP1 --force` refresh. GOA still materializes the
+  same 41 source signatures already reviewed; no stale source rows need `retired: true`.
+- Rechecked all six PTHR12792 IBA rows against current PAINT. PTN000300670 still supports
+  the separase-family endopeptidase activity, nucleus, cytoplasm, mitotic spindle and
+  meiotic chromosome separation transfers, while the fungal PTN000980533 node supports
+  mitotic spindle pole body localization. All six remain `ACCEPT` and now carry
+  `NO_FAILURE_CORE` propagation reviews using the PTN node as the source entity.
+- Re-read the four `GO:0005515 protein binding` rows under the current IBA-project policy.
+  They remain `REMOVE`: the Pds1 interaction is better captured by `GO:1990520`
+  separase-securin complex, and the Cdc55 FEAR interaction is real but still lacks a direct,
+  specific molecular-function term because direct PP2A inhibition by substoichiometric Esp1 is
+  judged unlikely in [PMID:18762578].
+- Cached and read [PMID:25822502]. Esp1 affects Ty1 mobility/insertion and
+  co-immunoprecipitates with Ty1 integrase, but the exact step remains ambiguous between
+  cohesin-barrier removal and integrase targeting; no conservative Ty1 `NEW` term was added.
+- Newer-paper search found the 2024 cly8/esp1-G543E preprint [PMID:39484378], which reinforces
+  the mitotic chromosome-segregation role but adds no distinct Esp1 GO assertion, and a 2026
+  TORC1-stress paper [PMID:42360689] whose cohesin-degradation route is explicitly
+  separase-independent.
