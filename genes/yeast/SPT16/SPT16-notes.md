@@ -56,6 +56,11 @@
   nuclear/chromatin/FACT/PIC/replication biology, removed the new generic IntAct
   protein-binding row, and kept the broad ARBA epigenetic-regulation row as
   non-core.
+- During PR review, graded the broad RNA-polymerase-II transcription and
+  sister-chromatid-cohesion rows as non-core and updated the synthesized core
+  function to point at the current `GO:0140673` and `GO:0045815`
+  chromatin-remodeling rows rather than the retired pre-refresh
+  `GO:0006337` PAINT row.
 - Marked pre-refresh IBA, UniProt-keyword, ARBA, no-WITH/FROM IntAct, identical
   protein-binding, and old ComplexPortal NAS rows as `retired: true` when absent
   from the refreshed GOA.
