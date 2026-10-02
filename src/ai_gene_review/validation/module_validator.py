@@ -48,7 +48,8 @@ sufficient:
   machine-fetched ``*-goa.tsv``), since IRD/IKR nodes are legitimate provenance.
 * **Family membership**: a descriptor's declared family must actually contain the
   protein it names in ``representative_members``, per PANTHER's sequence
-  classification (``interpro/panther/panther-members.tsv``). This is the only
+  classification (the member index built into ``.cache/panther/panther-members-<release>.tsv``
+  by ``just refresh-panther-members``). This is the only
   check that separates a *mis-grounded* family from a merely *mislabelled* one --
   label checking alone cannot tell an invented label on the right family from a
   plausible label on the wrong one.
@@ -92,6 +93,7 @@ from ai_gene_review.etl.panther_families import (
     label_drift,
     load_member_index,
     load_subfamily_counts,
+    member_index_path,
 )
 from ai_gene_review.validation.supporting_text import (
     LITERATURE_PREFIXES,
@@ -1147,7 +1149,8 @@ def validate_family_members(
             warnings.append(
                 f"{use.path}: none of the representative members "
                 f"({_format_limited(set(use.representative_accessions))}) are in "
-                "interpro/panther/panther-members.tsv, so family membership was "
+                "the PANTHER member index (.cache/panther/panther-members-<release>.tsv), so "
+                "family membership was "
                 "not checked; refresh with `just refresh-panther-members`"
             )
             continue
@@ -1685,9 +1688,7 @@ def validate_module_file(
         resolver = _build_oak_resolver(adapter_map)
 
     if member_index is None:
-        member_index = load_member_index(
-            project_root / "interpro" / "panther" / "panther-members.tsv"
-        )
+        member_index = load_member_index(member_index_path(project_root))
     if paint_index is None:
         if panther_dir is None:
             panther_dir = project_root / "interpro" / "panther"

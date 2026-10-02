@@ -4315,7 +4315,7 @@ def refresh_panther_members(
         ),
     ] = False,
 ):
-    """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
+    """Build or extend the PANTHER member index (.cache/panther/panther-members-<release>.tsv).
 
     Builds a pruned UniProt-accession -> PANTHER-family index covering every
     accession cited in modules/: all ``representative_members`` whether or not
@@ -4335,6 +4335,8 @@ def refresh_panther_members(
         fetch_sequence_classification,
         incremental_member_index,
         load_member_index,
+        load_member_index_gaps,
+        member_index_path,
         write_member_index,
     )
     import yaml
@@ -4352,8 +4354,9 @@ def refresh_panther_members(
     # members are the ones whose real family most needs resolving -- plus the
     # accessions cited only in prose, which the prose scan checks.
     accessions: set[str] = set()
+    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)  # ~10x faster when present
     for path in sorted((repo_root / "modules").rglob("*.yaml")):
-        doc = yaml.safe_load(path.read_text())
+        doc = yaml.load(path.read_text(), Loader=loader)
         accessions.update(iter_all_representative_accessions(doc))
     prose = {c.accession for c in collect_claims(repo_root / "modules")}
     accessions.update(prose)
@@ -4368,7 +4371,7 @@ def refresh_panther_members(
     # check, so they must be indexed too or the check reports UNRESOLVED forever.
     family_accessions: set[str] = set()
     for path in sorted((repo_root / "interpro" / "panther").glob("PTHR*/PTHR*-review.yaml")):
-        doc = yaml.safe_load(path.read_text()) or {}
+        doc = yaml.load(path.read_text(), Loader=loader) or {}
         for sub in doc.get("subfamilies") or []:
             for member in sub.get("representative_members") or []:
                 if isinstance(member, dict) and member.get("id"):
@@ -4388,8 +4391,12 @@ def refresh_panther_members(
         )
     accessions.update(family_accessions)
 
-    members_path = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    members_path = member_index_path(repo_root)
     existing = {} if rebuild else load_member_index(members_path)
+    # Accessions already confirmed absent from both sources are not re-queried
+    # on every run (that re-parse of ~300 MB of classifications is what made an
+    # otherwise no-op refresh take a minute); --rebuild re-checks them.
+    known_absent = set() if rebuild else load_member_index_gaps(members_path).absent
     counts = {"files": 0, "uniprot": 0, "classifications": 0}
 
     def resolve(needed: set[str]) -> dict[str, str]:
@@ -4415,7 +4422,7 @@ def refresh_panther_members(
                 found.update(from_uniprot)
         return found
 
-    index = incremental_member_index(existing, accessions, resolve)
+    index = incremental_member_index(existing, accessions, resolve, known_absent)
     unresolved = accessions - set(index)
     out_path = write_member_index(
         index,
@@ -4566,9 +4573,9 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
-    member_index = load_member_index(
-        repo_root / "interpro" / "panther" / "panther-members.tsv"
-    )
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    member_index = load_member_index(member_index_path(repo_root))
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -4759,7 +4766,9 @@ def panther_report_stats(
                 family_level += 1
             family_uses.append((use, declared_at_subfamily))
 
-    members = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    members = member_index_path(repo_root)
     index = load_member_index(members)
     subfamily_counts = load_subfamily_counts(
         repo_root / "interpro" / "panther" / "panther.obo"

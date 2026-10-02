@@ -309,12 +309,16 @@ def _panther_index(
         load_member_index,
         load_member_index_gaps,
         load_obo_names,
+        member_index_path,
     )
 
+    # panther_dir is <repo>/interpro/panther; the member index is a build
+    # artifact in <repo>/.cache/panther.
+    members = member_index_path(Path(panther_dir).parents[1])
     return (
         load_obo_names(panther_dir / "panther.obo"),
-        load_member_index(panther_dir / "panther-members.tsv"),
-        load_member_index_gaps(panther_dir / "panther-members.tsv"),
+        load_member_index(members),
+        load_member_index_gaps(members),
     )
 
 

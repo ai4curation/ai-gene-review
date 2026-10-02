@@ -184,6 +184,22 @@ jobs:
           restore-keys: |
             uniprot-seq-${{ runner.os }}-
 
+      # The PANTHER member index (accession -> family) is a build artifact, not
+      # committed: validate-modules / validate-families run
+      # `just ensure-panther-members`, which extends it incrementally from the
+      # release-pinned PANTHER classification files cached here. A warm cache
+      # makes that a quick offline no-op; a cold one downloads ~300 MB once. The
+      # key changes when cited accessions change, so the extended index is saved,
+      # and restore-keys fall back to the nearest earlier cache.
+      - name: Cache PANTHER classifications and member index
+        uses: actions/cache@v6
+        with:
+          path: .cache/panther
+          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml') }}
+          restore-keys: |
+            panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-
+            panther-${{ runner.os }}-
+
       # Scope validation to what changed: a change to schema/validators/config could
       # affect every gene (-> full validate-all); otherwise validate only changed genes.
       - name: Validate gene reviews (scoped)

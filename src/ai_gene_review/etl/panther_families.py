@@ -19,17 +19,21 @@ slot into the existing validation stack:
     ``linkml-term-validator`` existence checking, label checking, and
     family/subfamily hierarchy with no bespoke resolver code.
 
-``PANTHER<REL>_<organism>`` sequence classifications -> ``panther-members.tsv``
+``PANTHER<REL>_<organism>`` sequence classifications -> ``panther-members-<REL>.tsv``
     A pruned ``UniProt accession -> PTHR family:SF`` index covering the
     accessions actually cited in the repository. This is what catches a *wrong
     grounding* as opposed to a wrong label: a family descriptor whose declared
     family provably does not contain the very protein it names as its
     representative member.
 
-Both artifacts are committed. Validation then needs no network access, and the
-pinned release makes results reproducible. Regenerate with
-``just build-panther-obo`` / ``just refresh-panther-members`` after a PANTHER
-release bump.
+``panther.obo`` is committed. The member index is a build artifact in the
+git-ignored ``.cache/panther/`` (see ``MEMBER_INDEX_RELPATH``): every module PR
+used to edit one committed copy, so concurrent PRs conflicted on it. It is built
+incrementally by ``just refresh-panther-members`` (run automatically by the
+validate-modules and validate-families recipes) from the release-pinned
+classification files, which are cached alongside it, so a warm cache needs no
+network. Regenerate with ``just build-panther-obo`` /
+``just refresh-panther-members --rebuild`` after a PANTHER release bump.
 """
 
 from __future__ import annotations
@@ -43,10 +47,12 @@ import requests
 import yaml
 
 PANTHER_RELEASE = "19.0"
-HMM_BASE = "https://data.pantherdb.org/ftp/hmm_classifications/current_release"
+# Release-pinned paths, not current_release/: the file names embed the release,
+# so current_release/ would 404 (or silently change) when PANTHER moves on.
+HMM_BASE = f"https://data.pantherdb.org/ftp/hmm_classifications/{PANTHER_RELEASE}"
 HMM_URL = f"{HMM_BASE}/PANTHER{PANTHER_RELEASE}_HMM_classifications"
 SEQ_BASE = (
-    "https://data.pantherdb.org/ftp/sequence_classifications/current_release/"
+    f"https://data.pantherdb.org/ftp/sequence_classifications/{PANTHER_RELEASE}/"
     "PANTHER_Sequence_Classification_files"
 )
 
@@ -309,6 +315,25 @@ DEFAULT_ORGANISMS: Tuple[str, ...] = (
 
 MEMBER_INDEX_HEADER = ["uniprot_accession", "panther_family_sf"]
 
+# The member index is a derived build artifact, not committed source: every row
+# can be rebuilt from PANTHER's release-pinned sequence classifications plus the
+# UniProt fallback, and a single committed file that every module PR edited made
+# concurrent PRs conflict. It lives in the git-ignored cache next to the
+# downloaded classification files, and `just refresh-panther-members` (run by
+# the validate-modules / validate-families recipes) builds it incrementally.
+# The release is in the file name so that bumping PANTHER_RELEASE starts a fresh
+# index instead of incrementally extending rows resolved against the old release.
+MEMBER_INDEX_RELPATH = Path(".cache") / "panther" / f"panther-members-{PANTHER_RELEASE}.tsv"
+
+
+def member_index_path(repo_root: Path) -> Path:
+    """Where the PANTHER member index lives for a repository checkout.
+
+    >>> member_index_path(Path("/repo")).as_posix()  # doctest: +ELLIPSIS
+    '/repo/.cache/panther/panther-members-....tsv'
+    """
+    return Path(repo_root) / MEMBER_INDEX_RELPATH
+
 
 # Two distinct markers, because the two states have different remedies and a
 # shared marker silently conflates them. "unresolved" means both PANTHER's
@@ -420,8 +445,8 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
     >>> sorted(gaps.absent), sorted(gaps.unchecked)
     ([], ['P9'])
 
-    An accession that has a family row is not a gap, even if a marker for it
-    survived a union merge:
+    An accession that has a family row is not a gap, even if a stale marker for
+    it remains (e.g. in a hand-edited or seeded index):
 
     >>> _ = (d / "merged.tsv").write_text(
     ...     "uniprot_accession\\tpanther_family_sf\\nP9\\tPTHR9\\n\\n# unresolved: P9\\n"
@@ -439,8 +464,7 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
             absent.add(line[len(UNRESOLVED_MARKER) :].strip())
         elif line.startswith(UNCHECKED_MARKER):
             unchecked.add(line[len(UNCHECKED_MARKER) :].strip())
-    # After a union merge, one side may have resolved an accession that the
-    # other still lists as a gap; the row wins.
+    # A stale gap marker for an accession that now has a row: the row wins.
     resolved = set(load_member_index(path))
     return MemberIndexGaps(absent - resolved, unchecked - resolved)
 
@@ -470,11 +494,9 @@ def load_member_index(path: Path) -> Dict[str, str]:
     Returns an empty mapping when the artifact is absent, so validation degrades
     to "not checkable" rather than failing on a fresh checkout.
 
-    The file is merged with git's ``union`` driver (see ``.gitattributes``), which
-    keeps the rows from both sides of a merge. Rows need not be sorted and an
-    identical row may repeat; both are harmless. Two rows giving one accession
-    different families are not: a union merge can produce that when both
-    branches re-resolved the same protein, so it raises rather than silently
+    Rows need not be sorted and an identical row may repeat; both are harmless.
+    Two rows giving one accession different families are not (a hand-edited or
+    concatenated index can contain them), so it raises rather than silently
     keeping whichever row came last.
 
     >>> import tempfile, pathlib
@@ -519,6 +541,7 @@ def incremental_member_index(
     existing: Dict[str, str],
     accessions: Set[str],
     resolve: Callable[[Set[str]], Dict[str, str]],
+    known_absent: Optional[Set[str]] = None,
 ) -> Dict[str, str]:
     """Extend ``existing`` with families for cited accessions it does not hold.
 
@@ -526,8 +549,10 @@ def incremental_member_index(
     adds only the rows a PR actually needs and cannot rewrite rows that other
     open PRs depend on (a full rebuild of this shared file changed ~70 unrelated
     rows in one run). ``resolve`` is called once, with only the missing
-    accessions; previously unresolved accessions are retried, since PANTHER
-    may have classified them since.
+    accessions, and not at all when nothing is missing, so a warm cache needs
+    no network. ``known_absent`` accessions (both PANTHER and UniProt were
+    already consulted and had no family) are not retried; a ``--rebuild``
+    re-checks them.
 
     >>> calls = []
     >>> def fake(acc):
@@ -537,9 +562,13 @@ def incremental_member_index(
     {'P1': 'PTHR1', 'P2': 'PTHR9'}
     >>> calls
     [['P2', 'P4']]
+    >>> incremental_member_index({"P1": "PTHR1"}, {"P1", "P4"}, fake, {"P4"})
+    {'P1': 'PTHR1'}
+    >>> len(calls)
+    1
     """
     index = dict(existing)
-    missing = set(accessions) - set(index)
+    missing = set(accessions) - set(index) - set(known_absent or ())
     if missing:
         index.update(resolve(missing))
     return index

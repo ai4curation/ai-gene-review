@@ -561,7 +561,12 @@ def test_sf0_really_contains_both_seld_and_sps1():
     """
     from ai_gene_review.etl.panther_families import load_member_index
 
-    members = load_member_index(Path("interpro/panther/panther-members.tsv"))
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    path = member_index_path(Path("."))
+    if not path.exists():
+        pytest.skip("member index not built; run `just ensure-panther-members`")
+    members = load_member_index(path)
     assert members["P16456"] == "PTHR10256:SF0"   # SelD, catalytic
     assert members["O18373"] == "PTHR10256:SF0"   # Sps1, arginine-substituted
     assert members["Q99611"] == "PTHR10256:SF1"   # SEPHS2, the catalytic branch
