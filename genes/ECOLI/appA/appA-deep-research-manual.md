@@ -24,9 +24,11 @@ profile. Purified enzyme preferentially hydrolysed the gamma-phosphoryl group of
 GTP and the 5'-beta-phosphoryl group of ppGpp, but not ATP, CTP, UTP, or most
 phosphomonoesters tested; the main phosphomonoester exceptions were
 p-nitrophenyl phosphate, 2,3-bisphosphoglycerate, and fructose
-1,6-bisphosphate [PMID:6282821]. This supports the GTPase, nucleotidase, and
-sugar-phosphatase rows as real side activities, while the phytase work makes
-inositol phosphate phosphatase activity the core term.
+1,6-bisphosphate [PMID:6282821]. This supports GTPase as a measured but
+non-physiological side reaction and supports the sugar-phosphatase rows as real
+side activities; the nucleotide reactions are phosphoanhydride hydrolyses rather
+than GO:0008252 nucleotidase chemistry. The phytase work makes 6-phytase the
+core activity.
 
 Mechanistically, Ostanin et al. used site-directed mutagenesis to show that
 Arg16 and His17 in the conserved RHGXRXP motif were essential for EcAP activity
@@ -37,8 +39,10 @@ change the substrate-level assessment.
 
 ## Annotation decisions
 
-- `GO:0052745 inositol phosphate phosphatase activity` is the core molecular
-  function and should be accepted for both direct rows.
+- `GO:0052745 inositol phosphate phosphatase activity` should be accepted for
+  both direct rows; the core molecular function should use the more specific
+  6-phytase term, `GO:0008707 inositol hexakisphosphate 4-phosphatase
+  activity`.
 - `GO:0016036 cellular response to phosphate starvation` is accepted because
   AppA synthesis is induced by inorganic-phosphate starvation [PMID:6282821] and
   AppA acts as a mature periplasmic phosphate-scavenging enzyme rather than only
@@ -46,10 +50,10 @@ change the substrate-level assessment.
 - `GO:0030288 outer membrane-bounded periplasmic space` is the best
   localisation term. The broader `GO:0042597 periplasmic space` rows should be
   modified to this Gram-negative-specific child.
-- `GO:0003924 GTPase activity`, `GO:0008252 nucleotidase activity`,
-  `GO:0050308 sugar-phosphatase activity`, and the broad process term
-  `GO:0016311 dephosphorylation` are kept as non-core biochemical capabilities
-  or umbrella process annotations.
+- `GO:0003924 GTPase activity` and `GO:0008252 nucleotidase activity` are
+  over-annotated; `GO:0050308 sugar-phosphatase activity` and the broad process
+  term `GO:0016311 dephosphorylation` are kept as non-core biochemical
+  capabilities or umbrella process annotations.
 - `GO:0071454 cellular response to anoxia` is marked over-annotated. Dassa et
   al. showed AppA accumulation after transfer to anaerobic conditions in the
   presence of nonlimiting phosphate [PMID:6282821], but the cached evidence does

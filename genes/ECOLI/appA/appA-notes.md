@@ -12,17 +12,21 @@ Reviewed all 21 seeded GOA rows for AppA. The core picture is a Sec-exported,
 periplasmic histidine acid phosphatase whose dominant physiological activity is
 phytate/inositol-phosphate hydrolysis during phosphate scavenging
 [PMID:8387749; PMID:11035187; PMID:10696472]. Dassa et al. explain the older
-GTPase, nucleotidase, and sugar-phosphatase rows: the purified pH 2.5 acid
-phosphatase preferentially hydrolysed GTP and ppGpp among nucleotides and also
-accepted a small subset of phosphomonoesters, including fructose
-1,6-bisphosphate [PMID:6282821]. The Ostanin mutagenesis papers support the
-histidine-acid-phosphatase active site and AppA catalytic mechanism
-[PMID:1429631; PMID:8407904].
+GTPase and nucleotidase rows: the purified pH 2.5 acid phosphatase can
+hydrolyse GTP and ppGpp in vitro, but these are slow phosphoanhydride reactions
+rather than GO:0008252 nucleotidase chemistry, and they do not match AppA's
+periplasmic phytase role [PMID:6282821]. The same paper supports the
+sugar-phosphatase side rows because AppA accepts a small subset of
+phosphomonoesters, including fructose 1,6-bisphosphate. The Ostanin mutagenesis
+papers support the histidine-acid-phosphatase active site and AppA catalytic
+mechanism [PMID:1429631; PMID:8407904].
 
-I accepted the two `GO:0052745 inositol phosphate phosphatase activity` rows as
-core; kept GTPase, nucleotidase, sugar-phosphatase, and broad dephosphorylation
-rows as non-core; accepted `GO:0016036 cellular response to phosphate
-starvation`; modified broad `GO:0042597 periplasmic space` rows to
+I accepted the two direct `GO:0052745 inositol phosphate phosphatase activity`
+rows and used the more specific `GO:0008707 inositol hexakisphosphate
+4-phosphatase activity` term for the core 6-phytase function; marked the GTPase
+and nucleotidase rows over-annotated; kept sugar-phosphatase and broad
+dephosphorylation rows as non-core; accepted `GO:0016036 cellular response to
+phosphate starvation`; modified broad `GO:0042597 periplasmic space` rows to
 `GO:0030288 outer membrane-bounded periplasmic space`; and marked
 `GO:0071454 cellular response to anoxia` as over-annotated because the
 available text supports anaerobic induction of AppA, not a direct AppA step in
