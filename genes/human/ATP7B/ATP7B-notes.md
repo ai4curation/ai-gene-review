@@ -217,3 +217,19 @@ The five retained rows remain the two MURR1/COMMD1 associations (PMID:12968035 a
 All 61 original source and review objects, five alternative products, eight existing refinements and the single copper-transport core remain unchanged.
 
 This addendum clarifies the authority and exclusion criterion for the existing decisions. It adds no primary-source reading, biological assertion or new annotation adjudication. Earlier journal entries and validation results remain historical; this clarification does not claim reviewer approval or PR completion.
+
+
+## 2026-10-02 — separate ATOX1 and COMMD1 source assertions
+
+The two immutable GOA records citing PMID:12968035 share protein binding, IPI evidence and the enables qualifier, but identify different partners: UniProtKB:O00244 (ATOX1) and UniProtKB:Q8N668 (COMMD1). The preceding published YAML represented that pair with one partner-unspecified object whose reason assessed COMMD1 only. This follow-up restores both existing source assertions as separate partner-specific objects. The added object is source recovery, not a NEW annotation. Raw identifiers, evidence, reference and source bytes are unchanged.
+
+The complete cached abstract of PMID:12968035 explicitly reports human MURR1/COMMD1 interaction with the Wilson disease protein and its amino-terminal region. The existing COMMD1 judgment is retained exactly, with its source partner now explicit. That abstract does not expose the ATOX1 experiment, and no original full-paper or interaction-table inspection is claimed. The independently cached abstract of PMID:12029094 describes ATP7B–ATOX1 protein interactions and reports recombinant ATOX1 transfer of copper to purified ATP7B amino-terminal domains, plus regulation of full-length ATP7B catalytic activity. This independently supports the ATP7B–ATOX1 association. It does not certify what was assayed in the original PMID:12968035 experiment. ATOX1 is therefore retained as non-core with curatorial deference for that original IPI source and an explicit source-reading limitation. No ATP7B chaperone, adaptor or narrower binding activity is inferred from the copper donor's function.
+
+The preceding five-retained-row and 61-object statements describe the earlier published state. The proposed current review has 62 existing annotation objects: 39 ACCEPT, 12 KEEP_AS_NON_CORE, eight MODIFY and three UNDECIDED, including six retained generic protein-binding objects. The other 60 review objects, all five alternative products, 34 reference objects, the single copper-transport core, description and DRAFT status remain unchanged. All existing quotations are unchanged; this follow-up adds no quotation or reference object. The standing task instruction for supported generic binding remains the authority already documented above; no new maintainer approval or global policy change is claimed.
+
+This is a TMP proposal pending independent scientific review and canonical application. Standard validation, rendering and append-only history will be recorded at the corresponding application stage.
+
+
+### 2026-10-02 — partner-restoration application closure
+
+The independently reviewed source-restoration proposal above is now applied locally. Normal canonical validation passed with nine warnings: six supported generic-binding retentions under the standing task instruction, two preexisting distinctions between source contexts, and the deliberate absence of citations to the historical provider report. Targeted gene rendering and validation of the newly scaffolded session history passed. All 62 source objects are represented; the source TSV, UniProt record, publication caches, prior histories, five products, 34 reference objects, literal quotations and copper-transport core remain preserved. The earlier TMP-stage paragraph is historical. These checks do not claim GitHub reviewer approval, merge or campaign completion.
