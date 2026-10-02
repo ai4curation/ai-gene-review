@@ -39,3 +39,14 @@ human CASP9 review, and the project apoptosis-module decisions.
 - Nucling and ER-stress papers support specialized Casp9-containing complexes
   or stimulus branches, but the synthesized core function remains cytosolic
   Apaf-1 apoptosome recruitment and downstream procaspase maturation.
+
+## 2026-10-02 PR follow-up
+
+- Cysteine endopeptidase, protein processing, protein maturation, and
+  execution-phase regulation rows were supported from procaspase-3 cleavage and
+  summarized as Casp9 downstream procaspase maturation rather than all citing the
+  same PMID:12097332 ER-stress abstract sentence.
+- Top-level apoptotic-process and generic apoptosis-regulation rows were
+  supported from the synthesized apoptosome role and narrowed to intrinsic
+  apoptotic signaling rather than all citing the same PMID:12097332
+  procaspase-3 cleavage sentence.
