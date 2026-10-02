@@ -7,7 +7,7 @@
   cellular bud tip, cellular bud neck, bipolar bud site selection, pseudohyphal
   growth, and invasive filamentous growth.
 - Two 2017 rows now have stale GOA PTNs but matching current PAINT assertions. The
-  MAP-kinase scaffold row points to old `PTN000492368` in GOA and mating projection
+  MAP kinase scaffold row points to old `PTN000492368` in GOA and mating projection
   tip points to old `PTN001091461`; current PAINT now places both at the broad
   Eukaryota node `PTN004550576` with a 2026-06-03 date.
 - Two 2017 rows point to `PANTHER:PTN001091460`, which is absent from the current
@@ -41,3 +41,9 @@
   short linear motif in Msb3, Msb4, Ste7 and Mkk1 and identifies Dse3 as a new
   Spa2-binding partner, which refines the scaffold mechanism without changing the
   GO surface.
+- During PR review, cached and read PMID:31699995 from the refreshed UniProt
+  record and PMID:29601579 for Foltman et al.'s budding-yeast division-site
+  counterexample. The Spa2/Aip5 papers support a second core Spa2 adaptor activity
+  in polarisome actin assembly, while Foltman supports a budding-yeast Chs2/IPCs
+  role that still does not rescue the fission-yeast GO:0120105 contractile-ring
+  intermediate-layer IBA.
