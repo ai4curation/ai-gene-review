@@ -42,3 +42,14 @@ The product-3 sequence-note truncation is corrected by executing only the indepe
 
 
 Focused validation passed after correcting only the newly authored stress-granule core label to the ontology label, stress granule assembly; source GOA labels were not changed. Ten advisories remain: nine supported generic-binding NON_CORE annotations under the supplied ActionEnum policy and the source-specific HDA versus IEA/NAS RNA-binding action difference explained above. Rendering passed. No global validation success or current-head approval is claimed.
+
+
+## ClinGen task instruction and generic-binding retention, 2026-10-02
+
+The retained GO:0005515 decisions implement the user's explicit instruction for this ClinGen task: keep a supported, biologically correct interaction as KEEP_AS_NON_CORE when no defensible, more specific replacement has been established, rather than remove it solely for lacking functional information. This deliberately departs from the annotation-reviewer skill's informational-exclusion recommendation. That recommendation can remove an uninformative annotation without declaring the interaction false; the latest review is correct about that distinction. Earlier references here to the supplied ActionEnum are incomplete as an explanation of authority: the basis is the explicit instruction for this task, not the enum alone, a repository-wide policy change, an exemption granted by the agent, or an observed maintainer sign-off. No external approval comment is claimed.
+
+The nine retained rows remain RBFOX1/A2BP1, three PABPC1 associations, Parkin, two DDX6 associations, TDP-43 and G3BP. The existing evidence boundaries are unchanged: Parkin acts on ATXN2 as its substrate, TDP-43 complex association is RNA-dependent, and DDX6 recovery is not uniformly a purified binary-binding measurement. The PABPC1 peptide/domain evidence does not test every natural ATXN2 isoform. Four endophilin rows retain their supported SH3-domain refinements, and all eight unresolved generic-binding rows remain UNDECIDED; evidence for an interaction in one paper does not verify an uninspected pair assignment in another.
+
+All 47 review objects (46 original source assertions and one existing NEW translation-activator proposal), five alternative products, three core descriptions and the repaired Q99700-3 sequence note remain unchanged. The RNA-transport over-annotation decision continues to distinguish a published hypothesis from a measured cargo-movement endpoint.
+
+This addendum clarifies the authority and exclusion criterion for the existing decisions. It adds no primary-source reading, biological assertion or new annotation adjudication. Earlier journal entries and validation results remain historical; this clarification does not claim reviewer approval or PR completion.
