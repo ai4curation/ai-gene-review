@@ -28,6 +28,8 @@
   [PMID:15911532; PMID:16858726; PMID:18304323].
 
 - PMID:8432702 fetched as abstract-level OpenAlex text and still does not
-  expose the localization evidence behind its cytosol row. PMID:13930693 has
-  only bibliographic metadata. Rows that depend uniquely on those papers were
-  left `UNDECIDED` rather than cited without inspectable evidence.
+  expose the localization evidence behind its cytosol row. PMID:13930693 and
+  PMID:5335908 have only bibliographic metadata. Rows that depend uniquely on
+  those papers were left `UNDECIDED` rather than cited without inspectable
+  evidence unless the core glycerol kinase claim was independently supported by
+  later literature.
