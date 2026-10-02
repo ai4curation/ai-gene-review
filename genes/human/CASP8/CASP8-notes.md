@@ -31,3 +31,21 @@
   HSP70/GATA1 localization rows, the COP/CARD-only protein paper, the
   CAAP/C9orf82 paper, the p23 paper, and specific immune differentiation terms
   sourced only to PMID:18309324.
+
+## 2026-10-02 PR follow-up
+
+- Broad orthology and electronic angiogenesis, heart-development, animal-organ
+  development, chordate-development, and neuron-apoptosis rows were kept non-core
+  or marked over-annotated because they are transferred organismal contexts
+  rather than direct human CASP8 biochemical activities.
+- Regulation-of-cytokine-production, lipopolysaccharide-response,
+  innate-immune, and macrophage-differentiation rows were treated as
+  inflammatory or differentiation contexts for CASP8 scaffolds and substrate
+  cleavage, not as core death-receptor, DISC, or protease functions.
+- Generic immune-process, positive-signal-transduction, and cell-differentiation
+  electronic rows were marked over-annotated because they are diffuse high-level
+  projections, not specific steps carried out by CASP8.
+- Ensembl and rat-transfer Noc1p-Noc2p complex, cell body,
+  protein-containing-complex-binding, cobalt, estradiol, ethanol, and anesthetic
+  rows were removed as unsupported electronic projections rather than human
+  CASP8 activities or locations.
