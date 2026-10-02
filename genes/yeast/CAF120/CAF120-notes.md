@@ -181,12 +181,13 @@ annotations (only the crossover finding, which I verified, was incorporated).
 Rechecked both CAF120 IBA rows against the current cached PTHR11584 PAINT export:
 
 - `GO:0004672 protein kinase activity` remains an over-propagation from
-  PTN001969686. The node's 2026-08-28 IBD is still sourced by Arabidopsis
-  MAP3Ks (`AT1G05100`, `AT1G07150`, `AT3G50310`, `AT4G26890`), while yeast
-  Caf120 has a divergent Skg3/CAF120-like PH domain and no kinase domain.
+  the PTHR11584 eukaryote-root node PTN001969686. The node's 2026-08-28
+  IBD is still sourced by Arabidopsis MAP3Ks (`AT1G05100`, `AT1G07150`,
+  `AT3G50310`, `AT4G26890`), while yeast Caf120 has a divergent Skg3/CAF120-like
+  PH domain and no kinase domain.
 - `GO:0007165 signal transduction` remains the linked process
-  over-propagation from the same PTN001969686 branch and its Arabidopsis MAP3K
-  sources (`AT1G05100`, `AT2G32510`, `AT3G50310`).
+  over-propagation from the same eukaryote-root PTHR11584 node and its Arabidopsis
+  MAP3K sources (`AT1G05100`, `AT2G32510`, `AT3G50310`).
 - The post-2022 public-paper search did not surface a newer focused CAF120
   functional paper. Recent hits were broad yeast-expression, yeast-engineering,
   database, or dissertation records and did not reopen the kinase/signaling IBA
@@ -201,11 +202,14 @@ proposal from Wild et al. 2019. Copied the current GOA `WITH/FROM` strings into
 `supporting_entities` for both IBA rows and the three UniProt SubCell IEA rows.
 
 Refetched `PTHR11584`; the PAINT table now has 23 node-level assertions. CAF120's two
-bad IBA annotations still trace to the same `PTN001969686` plant MAP3K node: the
-2026-08-28 protein-kinase IBD is seeded by `AT1G05100`, `AT1G07150`, `AT3G50310`, and
-`AT4G26890`, while the signal-transduction IBD is seeded by `AT1G05100`, `AT2G32510`,
-and `AT3G50310`. Those source genes remain bona fide MAP3Ks and do not rescue the
-non-kinase CAF120 target, so both `REMOVE` calls stand.
+bad IBA annotations still trace to `PTN001969686`, a taxon:2759 eukaryote-root
+node in `PTHR11584` (`SERINE/THREONINE PROTEIN KINASE`) seeded only by Arabidopsis
+MAP3K loci: the 2026-08-28 protein-kinase IBD is seeded by `AT1G05100`,
+`AT1G07150`, `AT3G50310`, and `AT4G26890`, while the signal-transduction IBD
+is seeded by `AT1G05100`, `AT2G32510`, and `AT3G50310`. That node placement,
+rather than the size of the donor set, is the error: the plant source genes
+are bona fide MAP3Ks, but they do not rescue the non-kinase CAF120 target,
+so both `REMOVE` calls stand.
 
 UniProt P53836 advanced from entry version 165 to 166. The 2026 flat file no longer
 mirrors the old GO_Central `GO:0004672` and `GO:0007165` xrefs and still has no PANTHER
