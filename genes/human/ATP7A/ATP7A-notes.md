@@ -78,3 +78,14 @@ Resulting action counts: 46 ACCEPT, 53 KEEP_AS_NON_CORE, 8 MODIFY, 1 REMOVE, 8 U
 ### Validation of the applied first follow-up
 
 The independently reviewed proposal is now applied. Focused schema, term and reference validation passed with five advisories: four retained non-core protein-binding associations and the deliberate distinction between broad HDA membrane evidence and a refined electronic membrane annotation. These advisories do not justify changing the supported biological judgments under the supplied ActionEnum; review status remains DRAFT. All 116 source assertions, six alternative products and the single transport core are preserved. No new repository-wide validation result is claimed.
+
+
+## ClinGen task instruction and generic-binding retention, 2026-10-02
+
+The retained GO:0005515 decisions implement the user's explicit instruction for this ClinGen task: keep a supported, biologically correct interaction as KEEP_AS_NON_CORE when no defensible, more specific replacement has been established, rather than remove it solely for lacking functional information. This deliberately departs from the annotation-reviewer skill's informational-exclusion recommendation. That recommendation can remove an uninformative annotation without declaring the interaction false; the latest review is correct about that distinction. Earlier references here to the supplied ActionEnum are incomplete as an explanation of authority: the basis is the explicit instruction for this task, not the enum alone, a repository-wide policy change, an exemption granted by the agent, or an observed maintainer sign-off. No external approval comment is claimed.
+
+The four retained associations remain PDZD11/AIPP1, SOD3, COMMD1 and dopamine beta-hydroxylase (PMID:16051599, PMID:16371425, PMID:21667063 and PMID:26199316). The existing PDZD11 assessment distinguishes ATP7A-tail dependence from an isolated or mutated partner-PDZ-domain assay; it does not deny the association or the plausible PDZ mechanism. The SOD3 experiments retain their mixed-species and construct limits, and co-immunoprecipitation is not relabelled as purified binary binding. ATP7A supplies copper rather than performing SOD3 or DBH catalysis. The separate GRX1/ATOX1 copper-dependent-binding and SNX27 PDZ-domain-binding refinements remain unchanged.
+
+All 116 original source and review objects, six alternative products and the single copper-transport core remain unchanged. The unresolved source-specific annotations and the Cu(II) action are not revised by this clarification.
+
+This addendum clarifies the authority and exclusion criterion for the existing decisions. It adds no primary-source reading, biological assertion or new annotation adjudication. Earlier journal entries and validation results remain historical; this clarification does not claim reviewer approval or PR completion.
