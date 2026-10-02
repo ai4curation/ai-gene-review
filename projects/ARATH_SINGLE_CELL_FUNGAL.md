@@ -16,7 +16,10 @@ with the hemibiotrophic fungus *Colletotrichum higginsianum*. The first batch
 covers six genes: MYB122, the one gene the paper tested genetically, plus its
 indole-glucosinolate regulator paralogs MYB51 and MYB34, the camalexin
 cytochromes CYP71A12 and CYP71A13, and the immune marker FRK1. Results are in
-the [review status](#review-status) table.
+the [review status](#review-status) table. All six reviews are complete: 96
+existing annotations were assessed, with 49 accepted, 22 kept as non-core, 7
+modified, 5 marked over-annotated, 11 removed and 2 left undecided, plus 7 new
+annotations proposed.
 
 We picked this paper because it separates two kinds of evidence that GO
 annotation usually blurs together. Most of its findings say *where* a gene is
@@ -73,12 +76,12 @@ files.
 
 | Gene | Locus | UniProt | Role in the paper | Status | Annotations reviewed | Summary |
 |---|---|---|---|---|---|---|
-| MYB122 | At1g74080 | Q9C9C8 | Epidermis-specific induction at infection sites; mutant is hypersusceptible | _in progress_ | | |
-| MYB51 | At1g18570 | O49782 | Induced only in vasculature at infection sites | _in progress_ | | |
-| MYB34 | At5g60890 | O64399 | Third indole-glucosinolate MYB; not induced | _in progress_ | | |
-| CYP71A12 | At2g30750 | O49340 | IAOx to IAN; induced mainly in epidermis | _in progress_ | | |
-| CYP71A13 | At2g30770 | O49342 | IAOx to IAN; induced almost only in vasculature | _in progress_ | | |
-| FRK1 (SIRK) | At2g19190 | O64483 | Marker for proximity to the infection | _in progress_ | | |
+| MYB122 | At1g74080 | Q9C9C8 | Epidermis-specific induction at infection sites; mutant is hypersusceptible | ✅ complete | 12 | 8 accept, 3 non-core, 1 over-annotated; NEW regulation of glucosinolate biosynthetic process |
+| MYB51 | At1g18570 | O49782 | Induced only in vasculature at infection sites | ✅ complete | 12 | 6 accept, 4 non-core, 1 modify, 1 over-annotated; NEW transcription activator activity |
+| MYB34 | At5g60890 | O64399 | Third indole-glucosinolate MYB; not induced | ✅ complete | 17 | 10 accept, 1 non-core, 2 modify, 3 over-annotated, 1 remove; 2 NEW |
+| CYP71A12 | At2g30750 | O49340 | IAOx to IAN; induced mainly in epidermis | ✅ complete | 17 | 9 accept, 5 non-core, 1 modify, 1 remove, 1 undecided; NEW IAOx dehydratase activity, defense response to fungus |
+| CYP71A13 | At2g30770 | O49342 | IAOx to IAN; induced almost only in vasculature | ✅ complete | 24 | 11 accept, 8 non-core, 4 remove, 1 undecided |
+| FRK1 (SIRK) | At2g19190 | O64483 | Marker for proximity to the infection | ✅ complete | 14 | 5 accept, 1 non-core, 3 modify, 5 remove; NEW response to fungus |
 
 ### Genes already reviewed in other projects
 
@@ -127,4 +130,37 @@ activity is annotated consistently across the TNLs.
 
 ## Findings
 
-_To be filled in when the first batch of reviews is complete._
+- **Regulators were annotated as enzymes.** MYB34 and MYB51 carried `GO:0009759`
+  indole glucosinolate biosynthetic process. Both were changed to `GO:0010439`
+  regulation of glucosinolate biosynthetic process, which MYB122 also received as a
+  new annotation, because the transcription factors catalyse no step of the pathway.
+  GO has no positive or indole-specific child of `GO:0010439`; the MYB34 review
+  proposes one.
+- **MYB122's fungal-defense annotation already exists.** GOA carries
+  `GO:0050832` defense response to fungus for MYB122 from this paper. It was
+  accepted, with a note that the evidence is a mutant phenotype (IMP) rather than
+  IDA. The paper's key-resources table lists both myb122 lines under the wrong
+  locus (AT3G25800, not At1g74080) and calls one a CRISPR line while the text says
+  T-DNA. These look clerical and are recorded on the reference.
+- **The three MYBs divide by cell type and by signal.** Several independent
+  studies agree that MYB34, unlike MYB51 and MYB122, is not induced by pathogens or
+  wounding, and Tang et al. found the same at infection sites. MYB34's
+  `response to other organism` row was marked over-annotated on that basis.
+- **The CYP71A12 and CYP71A13 paralogs were kept distinct.** CYP71A12 gained its
+  enzyme activity (`GO:0047720`, IDA) and `defense response to fungus` (IMP), as
+  the main enzyme for pathogen-induced indole-3-carboxylic acid derivatives;
+  CYP71A13 remains the main leaf camalexin enzyme. Both carry an ER-lumen IDA from
+  PMID:33831160, a PMID that no longer resolves, and both were left undecided.
+- **FRK1 is a marker, not a demonstrated defense component.** Its two
+  `defense response to bacterium` rows were changed to `response to bacterium`,
+  and one flg22-only row to `response to molecule of bacterial origin`. A motif
+  scan shows FRK1 has an intact kinase domain, but no activity, substrate or mutant
+  phenotype has been published.
+- **Induced systemic resistance looks mis-propagated.** For MYB51 and CYP71A12
+  the source study describes salicylic-acid-dependent resistance, while
+  `GO:0009682` is defined as salicylic-acid-independent. This is worth raising
+  with PAINT and the GOA curators.
+- **Open hypotheses for single-cell reanalysis.** Whether MYB122 levels track its
+  indole glucosinolate targets cell by cell in epidermis, and whether CYP71A12-high
+  and CYP71A13-high cells switch on different downstream branches. Only raw reads
+  are deposited (ENA PRJEB61052); there is no processed count matrix.
