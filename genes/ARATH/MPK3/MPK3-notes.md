@@ -22,6 +22,6 @@ Sources: UniProt Q39023, MPK3-deep-research-falcon.md, cached publications (all 
 ### Decisions
 - Camalexin biosynthetic process (IMP) -> MODIFY to GO:1901183 positive regulation of camalexin biosynthetic process (necessity vs participation; project question 3).
 - MKP2 protein binding -> MODIFY to phosphatase binding (consistent with MPK6). All other protein binding rows REMOVE.
-- NEW GO:0002221 pattern recognition receptor signaling pathway: MPK3 catalyses a step in the pathway; comparator BIK1 carries it; MPK3 had no immune signalling term, only expression-based responses.
+- GO:0002221 pattern recognition receptor signaling pathway was considered as NEW but dropped: same-role comparators (MPK6, MKK4, MKK5) lack it, and BIK1 is a receptor-proximal RLCK, not a same-role comparator. Raised as a suggested question.
 - Stress-response and developmental rows KEEP_AS_NON_CORE.
 - Stress granule IDA (PMID:30664249) - MPK3 not named in abstract; deferred to curator (KEEP_AS_NON_CORE), consistent with TZF1 recruitment reported in deep research.
