@@ -64,3 +64,18 @@ genuinely new, verifiable additions are the disease-genetics references:
 - Note: the Falcon report repeatedly cites the ER-phagy paper as "doi:10.1038/s44318-024-00232-z";
   this is the same study already in the review as PMID:39284914 (He et al. 2024, EMBO J). No new
   ER-phagy finding beyond what is already annotated.
+
+
+## 2026-09-20 full-gene IBA re-review
+
+All 15 annotations assessed: protease IBA, ER locations, six interaction rows, ER-phagy, inflammation, ER retention/retrotranslocation and paired canonical Wnt annotations. Nonproteolytic structural participation remains valid.
+
+Existing OpenScientist report: UBAC2-hypotheses/function-hypothesis-go-0004252/openscientist.md. It finds no GxSG in the three annotated membrane spans and no membrane catalytic histidine; the local UniProt sequence has only GSSG at residues 6-9. Primary PMID:23297223 explicitly identifies an ER-resident rhomboid pseudoprotease. Retain the serine-endopeptidase rejection.
+
+The report overstates the topology/phylogeny mechanism and incorrectly describes PMID:23297223 as the original IBA reference; the source is GO_REF:0000033. Its GO:0140318 recommendation has a false ER-phagy label: QuickGO calls this protein transporter activity. These limitations are recorded in reference_review.
+
+PMID:39284914 full text identifies the LIR-GABARAP interaction and selective ER-degradation mechanism. Replace that generic protein-binding row with GO:0140506 endoplasmic reticulum-autophagosome adaptor activity (verified QuickGO). Other generic binding rows removed solely as uninformative, not as false interactions. Core receptor MF now stated.
+
+PMID:31073040 supports limiting receptor maturation and stabilizing destruction-complex proteins through the LMBR1L/GP78/UBAC2 complex. Core wording now reflects this rather than claiming direct CTNNB1 ubiquitination by UBAC2. PMID:25660456 is abstract-only; the experimentally curated negative retrotranslocation row remains accepted without inventing a UBAC2-specific quote from its generic abstract.
+
+Verified the proximate IBA PANTHER nodes from cached WITH/FROM fields and revised structured propagation metadata to match final decisions; no relationship-field reasoning, donor-count argument, or invented topology reconstruction was used.

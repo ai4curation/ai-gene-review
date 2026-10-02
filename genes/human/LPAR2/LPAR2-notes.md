@@ -63,3 +63,29 @@ All 21 seeded references were audited: six GO method references, eight seeded PM
 ## Reference prioritization
 
 The strongest direct sources for later synthesis are PMID:9525886 (human receptor identity, ligand response, Gi/Rho signaling), PMID:9804623 (PLC/IP3/calcium and Gi/Gq), PMID:15143197 (LPAR2-NHERF2-PLCB3 specificity), PMID:16203867 (apical NHERF2-CFTR complex and Gi function), PMID:14688263 (TRIP6), PMID:16904289 (MAGI3), and PMID:19306925 (GRK2-dependent desensitization with strict LPA1/LPAR2 separation).
+
+
+## Full IBA re-review, 2026-09-20
+
+This assessment supersedes earlier universal coupling and membrane-exclusion arguments. All original source rows and qualifiers are preserved. Actual PTHR22750 ancestry places the target below PTN002733616; the target appearing as an IBD source is legitimate experimental grounding. GO cytoplasm includes internal membrane structures, and primary PMID:26473723 demonstrates internalization of human receptor constructs. Conditional cAMP activation from full PMID:10488122 Methods/Results/Fig.7 is retained non-core alongside cell-specific inhibitory responses; a shared focused report is pending. PMID:10727522 provides contrasting assays and human forebrain expression rather than a universal brain absence.
+
+Detailed primary-source access limits, ortholog chains, protein-binding decisions, NEW comparator/ancestor checks and pending questions are in [the shared primary evidence record](../../../../projects/IBA_REVIEW/rereview-2026-09-20/lysophosphatidic-receptor-primary-checks.md). The companion JSON records live ontology, annotation and tree responses. No additional NEW terms were added.
+
+
+## Recovery PR review: generic binding policy (2026-09-22)
+
+Applied the repository policy to the re-reviewed GO:0005515 rows. Removal concerns
+the uninformative function label and does not refute the source interaction.
+Rows whose target-specific assays remain inaccessible are UNDECIDED. Source
+assertions and supporting evidence are preserved.
+
+- PMID:16203867: MARK_AS_OVER_ANNOTATED -> REMOVE
+- PMID:28514442: KEEP_AS_NON_CORE -> REMOVE
+- PMID:33961781: KEEP_AS_NON_CORE -> REMOVE
+- PMID:39083597: KEEP_AS_NON_CORE -> REMOVE
+- PMID:19306925: KEEP_AS_NON_CORE -> REMOVE
+
+
+## Recovery PR signaling follow-up (2026-09-22)
+
+Restore full forskolin context in the quotation, distinguish external full-text access from the abstract-only cache, and retain branch-specific LPAR2 core terms without redundant NEW assertions beneath existing GPCR signaling.

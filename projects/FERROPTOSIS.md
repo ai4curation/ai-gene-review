@@ -1,18 +1,35 @@
 ---
 title: "Ferroptosis Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [GPX4, SLC7A11, SLC3A2, ACSL4, LPCAT3, AIFM2, DHODH, GCH1, PTS, SPR, NCOA4, TFRC, FTH1, SLC40A1, GCLC, GSS, NFE2L2, KEAP1, ATF4, TP53, FADS1, ELOVL5]
+manifest:
+  slides:
+    - href: FERROPTOSIS/slides/FERROPTOSIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/7nSuCeq7xETTYoc6zrZeoG
+      title: Project brief
 ---
 
 # Ferroptosis Project
 
-> Ferroptosis is, in the GO sense, an **evolved, programmed cell-death process**
-> ([GO:0097707](http://purl.obolibrary.org/obo/GO_0097707)) — not merely
-> something that happens pathologically to a cell. This project reviews the
-> genes that drive and (redundantly) suppress it; the mechanism is also captured
-> as a decomposable [**ferroptosis module**](../modules/ferroptosis.html).
+**Bottom line:** ferroptosis is iron-dependent regulated cell death driven by
+peroxidation of polyunsaturated phospholipids, and GO treats it as an evolved
+programmed process ([GO:0097707](http://purl.obolibrary.org/obo/GO_0097707)).
+We reviewed all 22 human genes that supply its substrates and iron, the four
+parallel defence systems that suppress it (GPX4–glutathione, FSP1–CoQ10,
+DHODH–CoQ10, GCH1–BH4), and its transcriptional regulators, and captured the
+mechanism as a decomposable [ferroptosis module](../modules/ferroptosis.html).
+We did this because the defence pathways were discovered from 2019 onward and
+the question was whether GO had caught up with them. The 22 reviews cover 2,362
+existing annotations plus 10 proposed new ones (872 existing on TP53, where 344
+were removed); the core
+suppressors carry `GO:0110076` negative regulation of ferroptosis, accepted on
+GPX4, SLC7A11, AIFM2/FSP1, FTH1 and NFE2L2 and proposed as new for DHODH. A
+2026 second pass on GPX4, SLC7A11, ACSL4 and AIFM2 left a few evidence
+follow-ups open.
 
 ## Overview
 
@@ -129,10 +146,6 @@ The ferroptosis mechanism is captured as a recursively decomposable module
   redundantly suppressed by four independent defense axes (GPX4–GSH,
   FSP1–CoQ10, DHODH–CoQ10, GCH1–BH4) plus a transcriptional regulatory layer
   (NRF2/KEAP1, ATF4, p53). Source: [`modules/ferroptosis.yaml`](https://github.com/ai4curation/ai-gene-review/blob/main/modules/ferroptosis.yaml).
-
-## Slides
-
-- [Slides](FERROPTOSIS/slides/FERROPTOSIS-slides.html) (Marp source: [FERROPTOSIS-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/FERROPTOSIS/slides/FERROPTOSIS-slides.md)) — AI generated
 
 ## Key References
 

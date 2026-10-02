@@ -24,6 +24,12 @@ import time
 from contextlib import contextmanager
 from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 
+from ai_gene_review.validation.folded_scalar import (
+    check_folded_scalar_hyphens,
+)
+from ai_gene_review.validation.protein_binding_policy import (
+    check_protein_binding_policy,
+)
 from ai_gene_review.validation.validation_report import (
     ValidationReport,
     ValidationSeverity,
@@ -31,6 +37,8 @@ from ai_gene_review.validation.validation_report import (
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.supporting_text import (
+    cached_record_has_no_body,
+    cached_text_missing,
     LITERATURE_PREFIXES,
     build_supporting_text_validator,
     cached_full_text_available,
@@ -114,9 +122,6 @@ def validate_reference_finding_supporting_text(
             continue
         if reference_id.split(":", 1)[0].upper() not in LITERATURE_PREFIXES:
             continue
-        reference_declares_unavailable = (
-            reference.get("full_text_unavailable") is True
-        )
         cache_has_full_text = cached_full_text_available(
             reference_id,
             resolved_publications_dir,
@@ -131,13 +136,19 @@ def validate_reference_finding_supporting_text(
             try:
                 result = validator.validate(supporting_text, reference_id)
             except Exception as exc:  # noqa: BLE001 - external publication cache
+                # A crash while checking is not a pass. Downgrading here would let a
+                # snippet through unverified for reasons that have nothing to do with
+                # whether it is correct, which is precisely the skipping the rule forbids.
                 report.add_issue(
-                    ValidationSeverity.WARNING,
+                    ValidationSeverity.ERROR,
                     (
-                        f"Finding supporting text could not be verified for "
+                        f"Finding supporting text could not be checked for "
                         f"{reference_id}: {type(exc).__name__}: {exc}"
                     ),
                     path=path,
+                    suggestion=(
+                        "Cache the publication so the quote can be verified against it"
+                    ),
                     validation_category="ReferenceValidator",
                     check_type="reference_finding_supporting_text",
                 )
@@ -145,26 +156,65 @@ def validate_reference_finding_supporting_text(
             if result.is_valid:
                 continue
             message = str(getattr(result, "message", "") or "")
-            declared_unavailable = (
-                reference_declares_unavailable
-                or finding.get("full_text_unavailable") is True
-            )
+            # A snippet must be deterministically checkable against the cache, and a
+            # failure to match is an error. There is no downgrade path: every branch that
+            # used to soften this made an unverified quote indistinguishable from a
+            # verified one, which is the only thing this check exists to tell apart.
+            #
+            # full_text_unavailable remains meaningful as *metadata* about the cached
+            # record, but it no longer excuses a mismatch -- declaring that you cannot
+            # check a quote is not the same as checking it.
+            severity = ValidationSeverity.ERROR
             if is_unfetchable(message):
-                severity = ValidationSeverity.WARNING
-                prefix = "Finding supporting text could not be verified"
-                suggestion = "Verify the quote when the publication text is available"
-            elif declared_unavailable or cache_has_full_text is False:
-                severity = ValidationSeverity.WARNING
+                prefix = "Finding supporting text could not be checked"
+                suggestion = (
+                    "Cache the publication so the quote can be verified, or quote a "
+                    "substring of text that is cached"
+                )
+            elif cache_has_full_text is False and cached_record_has_no_body(
+                reference_id, resolved_publications_dir
+            ):
+                # A stub: cached, reports no full text, and has no abstract either. Telling
+                # the author to quote the cached abstract is impossible advice -- there is
+                # no abstract. The metadata fetch failed, so the remedy is to re-fetch.
+                prefix = (
+                    "Finding supporting text cannot be checked: the cached record has no "
+                    "abstract or full-text body"
+                )
+                suggestion = (
+                    "Re-fetch the record with cache_publication(pmid, force=True), which "
+                    "re-downloads by PMID regardless of the full_text_attempted tag, then "
+                    "re-quote from the repaired cache"
+                )
+            elif cache_has_full_text is False:
                 prefix = (
                     "Finding supporting text is absent from the available "
                     "abstract-only cache"
                 )
                 suggestion = (
-                    "Verify the quote against full text; use full_text_unavailable to "
-                    "record that the quoted source text is not cached"
+                    "Quote a verbatim substring of the cached abstract, or fetch the "
+                    "full text into the cache so the quote can be verified"
+                )
+            elif cached_text_missing(reference_id, resolved_publications_dir):
+                # Nothing cached under this identifier, so there is no publication text to
+                # take a substring of. The final branch's advice ("an exact substring from
+                # the cached publication") is impossible here in the same way the
+                # abstract-only advice was impossible for a bodyless stub.
+                #
+                # Gated on the absence of the FILE, not on cache_has_full_text is None.
+                # None means "not recorded", which is a different thing: 90 cached records
+                # carrying a full PMC body resolved to None under the old content_type
+                # allow-list, and this branch would have told their authors to go cache a
+                # record that is already there.
+                prefix = (
+                    "Finding supporting text cannot be checked: no cached publication for "
+                    "this reference"
+                )
+                suggestion = (
+                    "Cache the publication first (just fetch-gene-pmids, or "
+                    "cache_publication(pmid, force=True)), then quote from it"
                 )
             else:
-                severity = ValidationSeverity.ERROR
                 prefix = "Finding supporting text is not a verbatim publication substring"
                 suggestion = (
                     "Replace the quote with an exact substring from the cached publication"
@@ -328,6 +378,54 @@ def validate_gene_review(
     return report
 
 
+def _check_proposed_molecular_function(
+    core_func: dict, i: int, proposed_terms_by_name: dict, report: ValidationReport
+) -> None:
+    """Check a core function's proposed_molecular_function.
+
+    It must be a string naming a top-level proposed_new_terms entry, must not be
+    combined with molecular_function (the point of the slot is to stop carrying an
+    obsolete or ill-fitting id), and must be grounded: supported_by on the core
+    function or on the proposed term, since it can never trace to an existing
+    annotation.
+    """
+    path = f"core_functions[{i}].proposed_molecular_function"
+    proposed_mf = core_func.get("proposed_molecular_function")
+    if not isinstance(proposed_mf, str):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"proposed_molecular_function must be a proposed_new_terms name (a string), got {type(proposed_mf).__name__}",
+            path=path,
+            suggestion="Use the proposed_name string, not a {id, label} term",
+        )
+        return
+    if core_func.get("molecular_function"):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Core function sets both molecular_function and proposed_molecular_function '{proposed_mf}'",
+            path=path,
+            suggestion="Drop molecular_function; the proposed term replaces it until GO creates one",
+        )
+    proposed = proposed_terms_by_name.get(proposed_mf)
+    if proposed is None:
+        names = sorted(n for n in proposed_terms_by_name if isinstance(n, str))
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Core function proposed_molecular_function '{proposed_mf}' does not match any proposed_new_terms entry"
+            + (f" (available: {', '.join(repr(n) for n in names)})" if names else " (there are none)"),
+            path=path,
+            suggestion="Add a proposed_new_terms entry whose proposed_name matches exactly, with a definition and justification",
+        )
+        return
+    if not core_func.get("supported_by") and not proposed.get("supported_by"):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Proposed molecular function '{proposed_mf}' has no supported_by on the core function or the proposed term",
+            path=path,
+            suggestion="A proposed activity can never trace to an existing annotation, so it needs its own evidence",
+        )
+
+
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
@@ -359,6 +457,12 @@ def check_best_practices_rules(
     if check_supporting_text:
         validate_reference_finding_supporting_text(data, report, publications_dir)
     validate_reference_replacements(data, report)
+    check_protein_binding_policy(data, report)
+    if yaml_file is not None:
+        # Source-level check: a folded scalar turns a newline into a space, so a
+        # hyphenated compound split across lines renders as two words. Invisible to
+        # anything that inspects the parsed document, because both forms parse fine.
+        check_folded_scalar_hyphens(Path(yaml_file), report)
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):
@@ -476,6 +580,20 @@ def check_best_practices_rules(
                     suggestion="File references must point to actual files, not directories",
                     validation_category="ReferenceValidator",
                     check_type="file_is_directory",
+                )
+
+    # Additional review citations may point to local evidence outside references.
+    for i, annotation in enumerate(data.get("existing_annotations") or []):
+        if not isinstance(annotation, dict):
+            continue
+        review = annotation.get("review")
+        if not isinstance(review, dict):
+            continue
+        for j, ref_id in enumerate(review.get("additional_reference_ids") or []):
+            if isinstance(ref_id, str):
+                validate_file_reference(
+                    ref_id,
+                    f"existing_annotations[{i}].review.additional_reference_ids[{j}]",
                 )
 
     # Check file: references in main references section
@@ -783,6 +901,29 @@ def check_best_practices_rules(
                                     modified_terms.add(term_id)
 
         core_function_terms = set()
+        proposed_terms_by_name = {
+            term.get("proposed_name"): term
+            for term in data.get("proposed_new_terms") or []
+            if isinstance(term, dict)
+        }
+
+        # An NTR replacement in a MODIFY should name the same proposed term, so the
+        # MODIFY side and the core-function side point at one proposal.
+        for k, ann in enumerate(data.get("existing_annotations") or []):
+            review = ann.get("review") if isinstance(ann, dict) else None
+            for rt in (review or {}).get("proposed_replacement_terms") or []:
+                if not (isinstance(rt, dict) and rt.get("id") == "NTR"):
+                    continue
+                label = str(rt.get("label") or "")
+                if not any(label.startswith(n) for n in proposed_terms_by_name if isinstance(n, str) and n):
+                    report.add_issue(
+                        ValidationSeverity.WARNING,
+                        f"NTR replacement '{label}' does not start with any proposed_new_terms name",
+                        path=f"existing_annotations[{k}].review.proposed_replacement_terms",
+                        suggestion="Start the NTR label with the proposed_name of a proposed_new_terms entry",
+                        validation_category="BestPractices",
+                        check_type="ntr_replacement_not_in_proposed_new_terms",
+                    )
 
         for i, core_func in enumerate(data["core_functions"]):
             if isinstance(core_func, dict):
@@ -827,6 +968,12 @@ def check_best_practices_rules(
                             validation_category="BestPractices",
                             check_type="core_function_molecular_function_not_in_annotations",
                         )
+
+                # proposed_molecular_function: the core activity when GO has no term yet
+                if "proposed_molecular_function" in core_func:
+                    _check_proposed_molecular_function(
+                        core_func, i, proposed_terms_by_name, report
+                    )
 
                 # Check locations field (should be CC terms)
                 locations = core_func.get("locations", [])

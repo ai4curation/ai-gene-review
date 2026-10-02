@@ -34,6 +34,7 @@ def load_module(name: str) -> dict:
 # Small helpers
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "value,expected",
     [
@@ -60,6 +61,7 @@ def test_is_leaf_node():
 # Tree traversal
 # ---------------------------------------------------------------------------
 
+
 def test_iter_nodes_visits_nested_parts():
     data = {
         "module": {
@@ -84,6 +86,7 @@ def test_iter_nodes_visits_nested_parts():
 # ---------------------------------------------------------------------------
 # Representative-member / leaf grounding
 # ---------------------------------------------------------------------------
+
 
 def test_node_representative_groundings_concrete_gene_product():
     node = {
@@ -172,6 +175,28 @@ def test_protein_complex_active_units_grounded():
     assert groundings == [{"id": "UniProtKB:Q8NFJ9", "label": "BBS1"}]
 
 
+@pytest.mark.parametrize(
+    "selector_type,slot", [("ORTHOLOG_OF", "ortholog_of"), ("HOMOLOG_OF", "homolog_of")]
+)
+def test_homology_selector_anchor_is_grounded(selector_type, slot):
+    node = {
+        "id": "n",
+        "annotons": [
+            {
+                "participant": {
+                    "selector_type": selector_type,
+                    slot: {
+                        "preferred_term": "E. coli BetT",
+                        "term": {"id": "UniProtKB:P0ABC9"},
+                    },
+                }
+            }
+        ],
+    }
+    groundings = node_representative_groundings(node)
+    assert groundings == [{"id": "UniProtKB:P0ABC9", "label": "E. coli BetT"}]
+
+
 def test_bbsome_leaf_grounding():
     # bbsome.yaml grounds most subunits to concrete UniProt accessions, but the
     # cargo-trafficking leaf references the BBSome only by its GO complex term
@@ -189,9 +214,7 @@ def test_ras_mapk_flags_abstract_family_leaves():
     data = load_module("erk_cascade.yaml")
     flagged = leaf_nodes_missing_representatives(data)
     # At least one leaf (e.g. the SOS GEF step) lacks representative members.
-    assert any(
-        "FAMILY" in item["selector_types"] for item in flagged
-    ), flagged
+    assert any("FAMILY" in item["selector_types"] for item in flagged), flagged
 
 
 def test_abstract_scope_skips_leaf_representative_grounding():
@@ -204,7 +227,10 @@ def test_abstract_scope_skips_leaf_representative_grounding():
                     "participant": {
                         "selector_type": "ANY_WITH_FUNCTION",
                         "required_function": {
-                            "term": {"id": "GO:0004672", "label": "protein kinase activity"}
+                            "term": {
+                                "id": "GO:0004672",
+                                "label": "protein kinase activity",
+                            }
                         },
                     }
                 }
@@ -218,16 +244,13 @@ def test_abstract_scope_skips_leaf_representative_grounding():
 # UniProt grounding collection
 # ---------------------------------------------------------------------------
 
+
 def test_collect_uniprot_groundings_dedupes_on_base_accession():
     data = {
         "module": {
             "id": "root",
             "annotons": [
-                {
-                    "participant": {
-                        "gene_product": {"term": {"id": "UniProtKB:Q8NFJ9"}}
-                    }
-                },
+                {"participant": {"gene_product": {"term": {"id": "UniProtKB:Q8NFJ9"}}}},
                 {
                     "participant": {
                         "gene_product": {"term": {"id": "UniProtKB:Q8NFJ9-2"}}
@@ -250,6 +273,7 @@ def test_collect_uniprot_groundings_bbsome():
 # ---------------------------------------------------------------------------
 # Gene-review index and join
 # ---------------------------------------------------------------------------
+
 
 def test_index_gene_reviews_and_completeness(tmp_path):
     genes = tmp_path / "genes"
@@ -311,6 +335,7 @@ def test_module_gene_review_summary_join(tmp_path):
 # Module-level deep research
 # ---------------------------------------------------------------------------
 
+
 def test_module_deep_research_present():
     result = module_deep_research(MODULES_DIR / "photosynthesis.yaml")
     assert result["has_deep_research"] is True
@@ -326,6 +351,7 @@ def test_module_deep_research_absent():
 # ---------------------------------------------------------------------------
 # linkml-data-qc
 # ---------------------------------------------------------------------------
+
 
 def test_run_data_qc_returns_compliance():
     result = run_data_qc(MODULES_DIR / "bbsome.yaml", schema_path=SCHEMA_PATH)
@@ -344,6 +370,7 @@ def test_collect_module_qc_smoke():
         "leaf_nodes_missing_representatives",
         "conformance_violations",
         "reaction_chaining",
+        "feedback_loops",
         "gene_reviews",
         "module_deep_research",
     }
@@ -365,12 +392,27 @@ def _chain_module(connection_extra: dict | None = None) -> dict:
     return {
         "module": {
             "parts": [
-                {"order": 1, "node": {"id": "s1", "annotons": [
-                    {"function": {"term": {"id": "GO:1"}}}]}},
-                {"order": 2, "node": {"id": "s2", "annotons": [
-                    {"function": {"term": {"id": "GO:2"}}}]}},
-                {"order": 3, "node": {"id": "s3", "annotons": [
-                    {"function": {"term": {"id": "GO:3"}}}]}},
+                {
+                    "order": 1,
+                    "node": {
+                        "id": "s1",
+                        "annotons": [{"function": {"term": {"id": "GO:1"}}}],
+                    },
+                },
+                {
+                    "order": 2,
+                    "node": {
+                        "id": "s2",
+                        "annotons": [{"function": {"term": {"id": "GO:2"}}}],
+                    },
+                },
+                {
+                    "order": 3,
+                    "node": {
+                        "id": "s3",
+                        "annotons": [{"function": {"term": {"id": "GO:3"}}}],
+                    },
+                },
             ],
             "connections": [
                 conn12,
@@ -452,3 +494,38 @@ def test_chaining_unresolvable_mf_is_not_a_warning():
         if "s2" in (f["source"], f["target"]):
             assert f["severity"] == "info"
             assert f["status"] == "NOT_CHECKED"
+
+
+# ---------------------------------------------------------------------------
+# Feedback-loop check (advisory; see projects/BOOLEAN_MODELS.md)
+# ---------------------------------------------------------------------------
+from ai_gene_review.module_qc import feedback_loop_findings  # noqa: E402
+
+
+def test_feedback_loops_closed_in_erk_cascade():
+    data = load_module("erk_cascade.yaml")
+    by_source = {f["source"]: f for f in feedback_loop_findings(data)}
+    assert by_source["mapk_negative_regulation"]["status"] == "closed"
+    assert (
+        by_source["erk_mapk"]["status"] == "closed"
+    )  # ERK -| RAF, ERK itself is downstream
+    assert (
+        by_source["rasgap_step"]["status"] == "input"
+    )  # a GAP is an input, not feedback
+    assert not [f for f in by_source.values() if f["severity"] == "warning"]
+
+
+def test_feedback_loops_cut_is_a_warning_not_an_error():
+    data = load_module("jnk_cascade.yaml")
+    findings = feedback_loop_findings(data)
+    assert all(f["severity"] in {"info", "warning"} for f in findings)
+    assert {f["source"] for f in findings} == {"jnk_negative_regulation"}
+
+
+def test_feedback_loop_closed_through_child_of_container():
+    """jak_stat: the SOCS child of the negative-regulation bundle is STAT-induced, so the bundle is closed."""
+    data = load_module("jak_stat_signaling.yaml")
+    by_source = {f["source"]: f for f in feedback_loop_findings(data)}
+    assert by_source["jak_stat_negative_regulation"]["status"] == "closed"
+    assert "via socs_feedback" in by_source["jak_stat_negative_regulation"]["message"]
+    assert by_source["socs_feedback"]["status"] == "closed"

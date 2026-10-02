@@ -1814,6 +1814,89 @@ def refresh_publications(
 
 
 @app.command()
+def warm_publications(
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum records to attempt this run"),
+    ] = None,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between records in seconds")
+    ] = 0.3,
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="List candidates without network or file changes"),
+    ] = False,
+    providers: Annotated[
+        Optional[str],
+        typer.Option(
+            "--providers",
+            help="Comma-separated full-text provider chain override "
+            "(default: pmc,epmc_preprint,unpaywall,openalex)",
+        ),
+    ] = None,
+    retry_attempted: Annotated[
+        bool,
+        typer.Option(
+            "--retry-attempted",
+            help="Also re-attempt records already tagged full_text_attempted "
+            "(use after the provider chain or acceptance guards improve)",
+        ),
+    ] = False,
+):
+    """Warm the publications cache via the linkml-reference-validator full-text chain.
+
+    Attempts full text for cached publications that lack it, using LRV's
+    provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Unlike
+    refresh-publications, this also covers DOI-only records without a PMC ID,
+    and follows the monarch-initiative/dismech warm-reference-cache tagging
+    convention: every cleanly concluded attempt is durably recorded as
+    ``full_text_attempted: true``, so bounded --limit sweeps drain the backlog
+    incrementally and never re-query the same record.
+
+    Only open-access full text is merged into the shared cache; non-public
+    locations are ignored.
+
+    Examples:
+        ai-gene-review warm-publications --dry-run --limit 20
+        ai-gene-review warm-publications --limit 200
+        ai-gene-review warm-publications --limit 50 --providers unpaywall,openalex
+    """
+    from ai_gene_review.etl.publication_warm import warm_publications as run_warm
+
+    provider_list = (
+        [p.strip() for p in providers.split(",") if p.strip()] if providers else None
+    )
+    stats = run_warm(
+        publications_dir=publications_dir,
+        limit=limit,
+        delay=delay,
+        providers=provider_list,
+        dry_run=dry_run,
+        retry_attempted=retry_attempted,
+    )
+    if dry_run:
+        would_attempt = (
+            stats["candidates"] if limit is None else min(limit, stats["candidates"])
+        )
+        typer.echo(
+            f"Dry run: would attempt {would_attempt} of {stats['candidates']} "
+            "candidates in the backlog"
+        )
+        return
+    typer.echo("=" * 60)
+    typer.echo("WARM SWEEP SUMMARY")
+    typer.echo("=" * 60)
+    typer.echo(f"Candidates in backlog: {stats['candidates']}")
+    typer.echo(f"Processed this run: {stats['processed']}")
+    typer.echo(f"Full text retrieved: {stats['full_text']}")
+    typer.echo(f"Durably attempted (no text found): {stats['attempted']}")
+    typer.echo(f"Transient errors (will retry next run): {stats['transient_error']}")
+
+
+@app.command()
 def convert_doi_publications(
     publications_dir: Annotated[
         Path, typer.Option("--dir", help="Publications directory")
@@ -1938,11 +2021,19 @@ def refresh_publications_active(
             elif force:
                 stubs.append(pmid)
             else:
-                content = pub_file.read_text()
-                if "full_text_available: false" in content or "full_text_available: true" not in content:
-                    stubs.append(pmid)
-                else:
+                # Use the shared predicate rather than substring-matching the whole file.
+                # The old test classed any record without an explicit
+                # `full_text_available: true` as a stub, which is 905 records -- 242 of them
+                # carrying full text under a `content_type` key -- and it matched the string
+                # anywhere in the file, including inside quoted full text.
+                from ai_gene_review.validation.supporting_text import (
+                    cached_full_text_available,
+                )
+
+                if cached_full_text_available(f"PMID:{pmid}", publications_dir):
                     cached.append(pmid)
+                else:
+                    stubs.append(pmid)
 
         typer.echo(f"\n  Missing (need fetch): {len(missing)}")
         typer.echo(f"  Stubs (need refresh): {len(stubs)}")
@@ -3001,6 +3092,14 @@ def render_projects(
         Path,
         typer.Option("--genes-dir", "-g", help="Genes directory for symbol index"),
     ] = Path("genes"),
+    source_ref: Annotated[
+        str,
+        typer.Option(
+            "--source-ref",
+            help="Git branch or commit for family catalog source links",
+            envvar="AI_GENE_REVIEW_SOURCE_REF",
+        ),
+    ] = "main",
     all_projects: Annotated[
         bool,
         typer.Option("--all", "-a", help="Render all project files in projects/"),
@@ -3050,6 +3149,7 @@ def render_projects(
             projects_dir=Path("projects"),
             output_dir=output_dir,
             genes_dir=genes_dir,
+            source_ref=source_ref,
         )
 
         if verbose and warnings:
@@ -3071,6 +3171,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    source_ref=source_ref,
                     projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
@@ -3259,6 +3360,86 @@ def render_module_notation(
             output_dir.mkdir(parents=True, exist_ok=True)
             out_path = output_dir / f"{module_file.stem}-notation.txt"
             out_path.write_text(notation)
+            typer.echo(f"Wrote {module_file} -> {out_path}")
+
+
+@app.command()
+def module_to_bnet(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to translate into a Boolean network"),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Write <stem>.bnet per module here; if omitted, print to stdout",
+        ),
+    ] = None,
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Translate all module YAML files in modules/"),
+    ] = False,
+    input_mode: Annotated[
+        str,
+        typer.Option(
+            "--input-mode",
+            help="How to write inputs: 'identity' (x, x; BoolNet convention) or 'free' (omitted)",
+        ),
+    ] = "identity",
+    logic: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--logic",
+            help="YAML mapping variable -> bnet expression overriding the default rule",
+        ),
+    ] = None,
+):
+    """Translate module YAML into a Boolean network (BoolNet .bnet format).
+
+    Every connection endpoint becomes a variable; container nodes are flattened
+    to their entry/exit tiers; the default update rule is the CaSQ convention
+    (OR of activators AND NOT the inhibitors). Elements with no incoming edge are
+    inputs. See projects/BOOLEAN_MODELS.md.
+
+    Examples:
+        ai-gene-review module-to-bnet modules/erk_cascade.yaml
+        ai-gene-review module-to-bnet --all -o projects/BOOLEAN_MODELS/out
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.module_boolean import module_file_to_boolean
+
+    if all_modules:
+        targets = sorted(modules_dir.glob("*.yaml"))
+    elif files:
+        targets = list(files)
+    else:
+        typer.echo("Please specify file(s) or use --all", err=True)
+        raise typer.Exit(code=1)
+
+    overrides = _yaml.safe_load(logic.read_text()) if logic else None
+    for module_file in targets:
+        if not module_file.exists():
+            typer.echo(f"Error: File not found: {module_file}", err=True)
+            continue
+        model = module_file_to_boolean(module_file, overrides)
+        if not model.variables:
+            typer.echo(f"# {module_file}: no connections; nothing to translate", err=True)
+            continue
+        text = model.to_bnet(input_mode=input_mode)
+        if output_dir is None:
+            typer.echo(f"# {module_file} ({len(model.variables)} variables, inputs: {', '.join(model.inputs)})")
+            typer.echo(text)
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            out_path = output_dir / f"{module_file.stem}.bnet"
+            out_path.write_text(text + "\n")
             typer.echo(f"Wrote {module_file} -> {out_path}")
 
 

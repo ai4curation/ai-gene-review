@@ -1,4 +1,10 @@
-"""Analyze blinded second-rater agreement for the ARGO139 RL score audit."""
+"""Analyze blinded second-rater agreement for the ARGO139 RL score audit.
+
+First-rater scores are read from the RL narrative reviews at the declared
+``review_snapshot_commit`` (BioReason benchmark policy), not the working tree,
+so later curation of a review cannot move the published agreement metrics.
+The second-rater ratings and the generated quality manifest are project files.
+"""
 from __future__ import annotations
 
 import argparse
@@ -11,6 +17,11 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from ai_gene_review.source_tree import (
+    SourceTree,
+    declared_review_snapshot,
+    review_snapshot_tree,
+)
 
 PROJECT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = PROJECT_DIR.parents[1]
@@ -64,7 +75,7 @@ def quadratic_weighted_kappa(first: list[int], second: list[int]) -> float:
     return 1.0 - observed / expected if expected else 1.0
 
 
-def read_first_ratings(repo_root: Path) -> list[dict[str, Any]]:
+def read_first_ratings(repo_root: Path, tree: SourceTree) -> list[dict[str, Any]]:
     quality_path = (
         repo_root / "projects" / "BIOREASON_COMPARISON" / "benchmark-quality.csv"
     )
@@ -77,8 +88,9 @@ def read_first_ratings(repo_root: Path) -> list[dict[str, Any]]:
 
     rows: list[dict[str, Any]] = []
     for organism, gene in sorted(included):
-        path = repo_root / "genes" / organism / gene / f"{gene}-bioreason-rl-review.md"
-        text = path.read_text(encoding="utf-8")
+        text = tree.read_text(
+            f"genes/{organism}/{gene}/{gene}-bioreason-rl-review.md"
+        )
         rows.append(
             {
                 "species": organism,
@@ -137,7 +149,7 @@ def analyze(
     with ratings_path.open(newline="", encoding="utf-8") as handle:
         second = list(csv.DictReader(handle))
 
-    first = read_first_ratings(repo_root)
+    first = read_first_ratings(repo_root, review_snapshot_tree(repo_root))
     expected = expected_sample(first)
     observed = [(row["species"], row["gene"]) for row in second]
     if observed != expected:
@@ -156,6 +168,11 @@ def analyze(
         first_values = [int(first_by_key[key][axis]) for key in observed]
         second_values = [int(row[axis]) for row in second]
         result[axis] = axis_summary(first_values, second_values)
+    review_snapshot = declared_review_snapshot(repo_root)
+    result["review_snapshot"] = {
+        "commit": review_snapshot.commit,
+        "date": review_snapshot.date,
+    }
     result["both_axes_exact_agreement"] = round(
         sum(
             int(first_by_key[key]["correctness"]) == int(row["correctness"])

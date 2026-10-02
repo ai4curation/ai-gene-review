@@ -138,10 +138,11 @@ def is_abstract_module(data: dict[str, Any]) -> bool:
 def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
     """Return concrete protein groundings (representative members) for a selector.
 
-    A grounding is a concrete protein example: a ``gene``/``gene_product`` carrying
-    a ``UniProtKB`` term, a ``protein_complex`` active unit that resolves the same
-    way, or a ``family``'s ``representative_members``. Abstract selectors
-    (``FAMILY`` with no representatives, ``ANY_WITH_FUNCTION``, etc.) return [].
+    A grounding is a concrete protein example: a ``gene``/``gene_product``,
+    ``ortholog_of``/``homolog_of`` anchor carrying a ``UniProtKB`` term, a
+    ``protein_complex`` active unit that resolves the same way, or a ``family``'s
+    ``representative_members``. Abstract selectors (``FAMILY`` with no
+    representatives, ``ANY_WITH_FUNCTION``, etc.) return [].
     """
     if not isinstance(selector, dict):
         return []
@@ -160,8 +161,8 @@ def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
         )
         groundings.append({"id": term_id, "label": label})
 
-    # Concrete gene / gene product participants.
-    for slot in ("gene", "gene_product"):
+    # Concrete participants and concrete homology anchors.
+    for slot in ("gene", "gene_product", "ortholog_of", "homolog_of"):
         descriptor = selector.get(slot)
         if isinstance(descriptor, dict):
             add_descriptor(descriptor)
@@ -703,6 +704,7 @@ _CHAIN_QUALIFIERS = (
     "4-saturated",
 )
 
+
 def _strip_article(token: str) -> str:
     """Drop a leading article and stoichiometric coefficient from a participant.
 
@@ -773,7 +775,9 @@ def _pick_representative_reaction(
     """
     if not rhea_ids:
         return None
-    generic = [r for r in rhea_ids if "acyl-coa" in (reaction_equation(r) or "").lower()]
+    generic = [
+        r for r in rhea_ids if "acyl-coa" in (reaction_equation(r) or "").lower()
+    ]
     pool = generic or rhea_ids
     return sorted(pool, key=lambda r: int(r.split(":")[1]))[0]
 
@@ -969,6 +973,173 @@ def reaction_chaining_findings(
 # ---------------------------------------------------------------------------
 
 
+def _describes_feedback(text: str) -> bool:
+    """True if some sentence asserts (rather than denies) feedback or induction.
+
+    >>> _describes_feedback("Phosphatases dephosphorylate ERK, many ERK-induced as feedback.")
+    True
+    >>> _describes_feedback("Modelled as an input rather than a JNK-driven feedback; DUSP1 is induced by p38, not JNK.")
+    False
+    >>> _describes_feedback("Terminates signaling.")
+    False
+    """
+    for sentence in re.split(r"(?<=[.;])\s+", text.lower()):
+        if not re.search(
+            r"\bfeedback\b|\binduced\b|\binduces\b|\binduction\b", sentence
+        ):
+            continue
+        if re.search(
+            r"\bnot\b|\brather than\b|\bno\b|\bnever\b|\bexternal input\b", sentence
+        ):
+            continue
+        return True
+    return False
+
+
+def feedback_loop_findings(data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Advisory check: is a negative regulator that the module calls a feedback wired as one?
+
+    A module often describes a phosphatase or inhibitor step as "induced by the
+    pathway itself as negative feedback" while the YAML gives that step a
+    ``NEGATIVELY_REGULATES`` edge but **no incoming edge**. Read as a Boolean
+    network (see projects/BOOLEAN_MODELS.md) such a step is a free input, the
+    loop is cut, and the dynamics change qualitatively (a switch instead of a
+    pulse). This check flags every ``NEGATIVELY_REGULATES`` source with no incoming
+    ``CAUSES``/``PROVIDES_INPUT_FOR``/``PRECEDES``/``POSITIVELY_REGULATES`` edge whose
+    ``description``/``notes``/``label``/``role`` text mentions feedback or induction.
+    **This never errors**: severity is ``warning`` (loop cut) or ``info`` (loop
+    closed, or the regulator is not described as feedback).
+
+    >>> data = {"module": {"id": "m",
+    ...   "parts": [{"role": "negative feedback", "node": {"id": "dusp",
+    ...              "description": "phosphatase induced as feedback"}},
+    ...             {"node": {"id": "erk"}}],
+    ...   "connections": [{"source": "dusp", "target": "erk",
+    ...                    "connection_type": "NEGATIVELY_REGULATES"}]}}
+    >>> [(f["source"], f["severity"]) for f in feedback_loop_findings(data)]
+    [('dusp', 'warning')]
+    >>> data["module"]["connections"].append(
+    ...     {"source": "erk", "target": "dusp", "connection_type": "CAUSES"})
+    >>> [(f["source"], f["severity"]) for f in feedback_loop_findings(data)]
+    [('dusp', 'info')]
+    """
+    module = data.get("module")
+    if not isinstance(module, dict):
+        return []
+    activating = {
+        "CAUSES",
+        "PROVIDES_INPUT_FOR",
+        "PRECEDES",
+        "POSITIVELY_REGULATES",
+        "HAS_INPUT",
+    }
+    # element id -> text that describes it (node/annoton text plus the enclosing part role)
+    text_for: dict[str, str] = {}
+
+    def walk(node: dict[str, Any], role: str = "") -> None:
+        nid = str(node.get("id") or "")
+        bits = [
+            role,
+            str(node.get("label") or ""),
+            str(node.get("description") or ""),
+            str(node.get("notes") or ""),
+        ]
+        if nid:
+            text_for[nid] = " ".join(bits)
+        for annoton in as_list(node.get("annotons")):
+            if isinstance(annoton, dict) and annoton.get("id"):
+                text_for[str(annoton["id"])] = " ".join(
+                    [
+                        str(annoton.get("label") or ""),
+                        str(annoton.get("role_description") or ""),
+                        str(annoton.get("notes") or ""),
+                    ]
+                )
+        for part in as_list(node.get("parts")):
+            child = part.get("node") if isinstance(part, dict) else None
+            if isinstance(child, dict):
+                walk(child, str(part.get("role") or ""))
+        for vs in as_list(node.get("variant_sets")):
+            for variant in as_list(vs.get("variants")) if isinstance(vs, dict) else []:
+                if isinstance(variant, dict):
+                    walk(variant)
+
+    walk(module)
+    # descendants: a container regulator counts as closed when any element inside it
+    # (e.g. the SOCS step inside a "negative regulation" bundle) has an upstream edge
+    descendants: dict[str, set[str]] = {}
+
+    def collect(node: dict[str, Any]) -> set[str]:
+        ids: set[str] = set()
+        for annoton in as_list(node.get("annotons")):
+            if isinstance(annoton, dict) and annoton.get("id"):
+                ids.add(str(annoton["id"]))
+        children = [
+            p.get("node") for p in as_list(node.get("parts")) if isinstance(p, dict)
+        ]
+        for vs in as_list(node.get("variant_sets")):
+            children.extend(as_list(vs.get("variants")) if isinstance(vs, dict) else [])
+        for child in children:
+            if isinstance(child, dict) and child.get("id"):
+                ids.add(str(child["id"]))
+                ids |= collect(child)
+        if node.get("id"):
+            descendants[str(node["id"])] = ids
+        return ids
+
+    collect(module)
+    connections = [
+        c
+        for n in iter_nodes(data)
+        for c in as_list(n.get("connections"))
+        if isinstance(c, dict)
+    ]
+    incoming_act: dict[str, list[str]] = {}
+    for c in connections:
+        if c.get("connection_type") in activating:
+            incoming_act.setdefault(str(c.get("target")), []).append(
+                str(c.get("source"))
+            )
+    for element, inner in descendants.items():
+        for child in inner:
+            for src in incoming_act.get(child, []):
+                if src not in inner:
+                    incoming_act.setdefault(element, []).append(f"{src} (via {child})")
+    findings: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for c in connections:
+        if c.get("connection_type") != "NEGATIVELY_REGULATES":
+            continue
+        source = str(c.get("source"))
+        if source in seen:
+            continue
+        seen.add(source)
+        described_as_feedback = _describes_feedback(text_for.get(source, ""))
+        closed = bool(incoming_act.get(source))
+        if closed:
+            severity, status = "info", "closed"
+            message = f"{source} is regulated by {', '.join(incoming_act[source])}: feedback loop closed"
+        elif described_as_feedback:
+            severity, status = "warning", "cut"
+            message = (
+                f"{source} is described as feedback/induced but has no incoming activating edge: "
+                "the loop is cut (it reads as a free input in a Boolean translation)"
+            )
+        else:
+            severity, status = "info", "input"
+            message = f"{source} is a negative regulator with no upstream edge (not described as feedback)"
+        findings.append(
+            {
+                "source": source,
+                "target": str(c.get("target")),
+                "status": status,
+                "severity": severity,
+                "message": message,
+            }
+        )
+    return findings
+
+
 def run_data_qc(
     yaml_path: Path,
     schema_path: Path = DEFAULT_SCHEMA_PATH,
@@ -1025,6 +1196,7 @@ def collect_module_qc(
             data, modules_dir=yaml_path.parent
         ),
         "reaction_chaining": reaction_chaining_findings(data),
+        "feedback_loops": feedback_loop_findings(data),
         "gene_reviews": module_gene_review_summary(
             data, gene_index=gene_index, genes_dir=genes_dir
         ),

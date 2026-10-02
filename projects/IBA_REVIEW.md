@@ -1,5 +1,6 @@
 ---
 title: "IBA Annotation Quality Project"
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR]
@@ -78,9 +79,32 @@ genes:
   - yakA
   - statA
   - statC
+manifest:
+  slides:
+    - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/AUT3cgCPXmUUG57tko5G9C
+      title: Project brief
 ---
 
 # IBA Annotation Quality Project
+
+**Bottom line:** IBA annotations transfer GO terms along PANTHER family trees
+from experimentally studied proteins to their relatives, and they make up a
+large share of GO for most genomes. Working from gene reviews, we catalogued
+where those transfers go wrong and why: 14 recurring failure patterns (such as
+pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
+wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
+table below, and a structured `propagation_review` vocabulary (root cause,
+failure modes, per-source status) that reviews now use; 691 gene reviews
+carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node
+spreads to every descendant, so one bad call can mislabel hundreds of
+proteins. The work covers both directions: in 1,015 reviewed human genes, 511
+curated core molecular functions (across 423 genes) have no IBA support at
+all. A corpus-wide re-review started on 2026-09-20 over 3,427 genes and 11,829
+propagated annotations; 81 genes are reviewed and 65 await adjudication
+([rereview-2026-09-20](IBA_REVIEW/rereview-2026-09-20/README.md)).
 
 ## Overview
 
@@ -818,10 +842,6 @@ Before a strong `REMOVE` on an IBA row, record that these checks were done:
   `review.propagation_review` records the mechanical root cause, failure modes,
   and source entities.
 
-## Slides
-
-- [Slides](IBA_REVIEW/slides/IBA_REVIEW-slides.html) (Marp source: [IBA_REVIEW-slides.md](IBA_REVIEW/slides/IBA_REVIEW-slides.md)) — AI generated
-
 ## IBA Quality Issues
 
 ### 1. Pseudo-Enzyme Propagation
@@ -831,7 +851,7 @@ Before a strong `REMOVE` on an IBA row, record that these checks were done:
 **Example - Epe1 (S. pombe)**:
 - IBA annotation: `GO:0032452` (histone demethylase activity)
 - Source: Related JmjC domain proteins with characterized demethylase activity
-- Reality: Epe1 has degenerate active site (HVD vs HXD), no detectable activity
+- Reality: Epe1's Fe(II)-binding triad is H297-E299-Y370 (Tyr370 replaces the third, His, iron ligand), and no demethylase activity is detectable in vitro
 - **Impact**: Misleading annotation propagated via phylogenetic inference
 
 ### 2. Ubiquitin-Like Modifier Specificity: IBA as a Positive Control
@@ -962,7 +982,7 @@ as a secondary function.
 - **ALDH1L1 (rat)** — `GO:0005739` (mitochondrion): UniProt names it *Cytosolic 10-formyltetrahydrofolate dehydrogenase* with `SUBCELLULAR LOCATION: Cytoplasm, cytosol` and a cytosol IDA. Mitochondrial one-carbon oxidation is the job of the distinct paralog **ALDH1L2**.
 - **HMGCS2 (rat)** — `GO:0010142` (farnesyl-PP biosynthesis, mevalonate pathway): a **paralog-pathway conflation**. The IBA comes from a PANTHER node (PTN000222418) that lumps the HMGCS paralogs. The cytosolic paralog **HMGCS1** feeds mevalonate→FPP→sterol/isoprenoid synthesis; mitochondrial HMGCS2's HMG-CoA is cleaved by HMG-CoA lyase to acetoacetate (ketogenesis). The shared HMG-CoA-synthase *reaction* is correctly classified under mevalonate biosynthesis (UniProt UniPathway tag), but assigning HMGCS2 to **FPP/isoprenoid** biosynthesis follows the wrong paralog's flux — an over-annotation. *(Nuance: the enzymatic step is real, so this is paralog over-annotation, not a fabricated activity.)*
 - **PEX2 (human)** — `GO:0016593` (Cdc73/Paf1 complex): PEX2 is a peroxisomal RING E3 ligase for PEX5 retrotranslocation (UniProt) and has no role in RNA Pol II transcription elongation, so membership in the Cdc73/Paf1 complex is clearly wrong. *(Caveat: the cause is unconfirmed — the IBA WITH/FROM is a PANTHER node, not a PAF1 gene. A legacy synonym collision — PEX2's old name "PAF1"/Peroxisome Assembly Factor 1 vs the unrelated transcription factor PAF1 — is a plausible but unverified explanation.)*
-- **CIRBP (human)** — `GO:0005681` (spliceosomal complex) + `GO:0000398` (mRNA splicing, via spliceosome): the cold-inducible RNA-binding protein CIRBP shares only the N-terminal RRM with the transformer-2/RBMX splicing factors that anchor these terms. PANTHER PAINT shows the splicing IBD sits at ancestral node **PTN000391532** (seeded by TRA2A, TRA2B, RBMX, *Drosophila* tra2, rat Tra2 — all bona fide splicing factors), while CIRBP's own subfamily node **PTN008729690** carries only `mRNA binding`. CIRBP has no experimental splicing evidence; its function is 3'-UTR binding, mRNA stabilization and translational control. A non-enzyme instance of complex-membership over-transfer across a functional-divergence boundary. *(See Featured Example and `families/PTHR48034/PTHR48034-review.md`.)*
+- **CIRBP (human)** — `GO:0005681` (spliceosomal complex) + `GO:0000398` (mRNA splicing, via spliceosome): the cold-inducible RNA-binding protein CIRBP shares only the N-terminal RRM with the transformer-2/RBMX splicing factors that anchor these terms. PANTHER PAINT shows the splicing IBD sits at ancestral node **PTN000391532** (seeded by TRA2A, TRA2B, RBMX, *Drosophila* tra2, rat Tra2 — all bona fide splicing factors), while CIRBP's own subfamily node **PTN008729690** carries only `mRNA binding`. CIRBP has no experimental splicing evidence; its function is 3'-UTR binding, mRNA stabilization and translational control. A non-enzyme instance of complex-membership over-transfer across a functional-divergence boundary. *(See Featured Example and `interpro/panther/PTHR48034/PTHR48034-review.md`.)*
 - **Lesson**: complex membership, compartment, and downstream pathway are not conserved across paralogs even when the fold/reaction is; verify the protein actually occupies the annotated complex/compartment and that its product reaches the annotated pathway.
 
 ### 11. Substrate Over-Propagation From a Multi-Specificity Enzyme Family
@@ -1225,7 +1245,7 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 **Recommendation for PANTHER Curators**:
 - Add an IRD/NOT (or restrictive re-annotation) for GO:0000398 and GO:0005681 on the CIRBP/RBM3 subfamily branch (node PTN008729690 and descendants), so the splicing terms stop descending to the cold-inducible mRNA-stability members.
 
-See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
+See detailed family analysis: `interpro/panther/PTHR48034/PTHR48034-review.md`
 
 ### DICDI cAMP / STAT developmental families — Stage-Specific Paralog & Lineage Over-Propagation
 
@@ -1365,7 +1385,7 @@ defined molecular function never reaches the leaf.
 
 We quantified this with a generic **evidence-subtraction** tool
 (`ai-gene-review subtraction-report`; see
-[docs](https://ai4curation.io/ai-gene-review/subtraction_report/)). Running it in
+[docs](../docs/subtraction_report.md)). Running it in
 "keep only IBA" mode over the 1015 reviewed human genes — i.e. asking *if IBA
 were the sole evidence, what curated biology would we lose?* — and applying
 ontology closure so that an IBA call to a **more general parent still counts** as
