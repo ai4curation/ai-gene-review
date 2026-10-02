@@ -32,8 +32,10 @@ COLUMNS = [
 ]
 
 
+DEFAULT_OUTPUT_PATH = Path("reports/proposed_new_terms.tsv")
+
 PROPOSED_NEW_TERMS_BLOCK = re.compile(
-    r"^proposed_new_terms\s*:\s*(?!\[\]\s*(?:#.*)?$).*$", re.MULTILINE
+    r"^proposed_new_terms:(?![ \t]*\[\][ \t]*(?:#.*)?$)", re.MULTILINE
 )
 
 
@@ -56,8 +58,6 @@ def clean_nested(value: Any) -> Any:
         return {key: clean_nested(nested) for key, nested in value.items()}
     if isinstance(value, list):
         return [clean_nested(nested) for nested in value]
-    if isinstance(value, str):
-        return clean_scalar(value)
     return value
 
 
@@ -68,11 +68,11 @@ def expand_inputs(inputs: list[Path]) -> list[Path]:
     paths: set[Path] = set()
     for input_path in inputs:
         if input_path.is_dir():
-            paths.update(input_path.glob("*-ai-review.yaml"))
-            paths.update(input_path.glob("*/*-ai-review.yaml"))
-            paths.update(input_path.glob("*/*/*-ai-review.yaml"))
-        else:
+            paths.update(input_path.rglob("*-ai-review.yaml"))
+        elif input_path.is_file():
             paths.add(input_path)
+        else:
+            raise FileNotFoundError(f"Review input does not exist: {input_path}")
 
     return sorted(paths, key=lambda path: path.as_posix())
 
@@ -90,16 +90,9 @@ def path_context(path: Path) -> tuple[str, str]:
 
 
 def format_mappings(term: dict[str, Any]) -> str:
-    mappings = []
-    for mapping in term.get("proposed_mappings") or []:
-        target = mapping.get("target_term") or {}
-        mappings.append(
-            {
-                "predicate": clean_scalar(mapping.get("predicate")),
-                "target_id": clean_scalar(target.get("id")),
-                "target_label": clean_scalar(target.get("label")),
-            }
-        )
+    mappings = [
+        clean_nested(mapping) for mapping in term.get("proposed_mappings") or []
+    ]
     return compact_json(mappings)
 
 
@@ -169,7 +162,14 @@ def export_proposed_terms(review_paths: list[Path], output_path: Path) -> int:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=COLUMNS, delimiter="\t")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=COLUMNS,
+            delimiter="\t",
+            quotechar=None,
+            quoting=csv.QUOTE_NONE,
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(rows)
 
@@ -190,8 +190,8 @@ def main() -> None:
         "-o",
         "--output",
         type=Path,
-        default=Path("proposed_new_terms.tsv"),
-        help="TSV output path. Defaults to proposed_new_terms.tsv.",
+        default=DEFAULT_OUTPUT_PATH,
+        help=f"TSV output path. Defaults to {DEFAULT_OUTPUT_PATH}.",
     )
     args = parser.parse_args()
 
