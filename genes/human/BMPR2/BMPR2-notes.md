@@ -86,3 +86,14 @@ No new biological-process assertion is proposed. In particular, necessity for di
 Normal candidate schema, ontology-term, reference/title/quotation and explicit strict GOA checks pass. Seven warnings are retained with explanations: the ontology cache still expects the older GO:0043235 label, while the authored core uses the current official primary label, signaling receptor complex; four generic-binding retention warnings follow the user instruction above; the modified PAINT receptor term lacks a structured ancestral-node audit because no complete PAINT tree/MSA was inspected; and the differing SMAD-regulation actions reflect source-specific evidence access rather than an inconsistent view of the receptor's biological function. No invented propagation evidence is added to silence a warning.
 
 This candidate is staged for independent scientific review. No canonical review, notes, source cache or history was changed by this proposal build; application, validation against the applied file and history remain separate subsequent steps.
+
+
+## Follow-up to PR 3878, 2026-10-02
+
+The generic-binding decisions follow the explicit task instruction recorded in [the ClinGen project curation instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions). This task-specific choice intentionally departs from the informational-exclusion recommendation; that recommendation does not assert that an uninformative interaction is false.
+
+The broad kinase assertion now targets the already-present BMP receptor activity. The TGF-beta-ligand receptor assertion is removed for incorrect ligand scope, superseding the earlier MODIFY disposition above. The [official term definition and comment](https://amigo.geneontology.org/amigo/term/GO:0005024) distinguish TGF-beta ligand reception from receptor-family membership. The retained BMP-binding and osteoblast-differentiation refinements now explicitly acknowledge existing target annotations: they consolidate source-specific assertions rather than add functional coverage. Source rows remain intact.
+
+The uncached activin and cardiac paper readings remain in the scientific sections above, with their links and access limits. The annotation reasons now refer to those notes and retain their cached UniProt or existing transfer provenance without repeating paper-specific experiments or colon-less PMID tokens. No source cache was fabricated or refreshed. This follow-up does not assert that a missing cache is equivalent to a full-paper reading or that the complete PAINT phylogeny was inspected.
+
+The suggested neuronal-localization removals are not adopted solely from receptor topology or an incomplete donor paper: signaling receptors can traffic to specialized membrane compartments, and the source-specific uncertainty remains. The four NOT assertions, 38 UNDECIDED decisions, two natural products and single molecular core are preserved.
