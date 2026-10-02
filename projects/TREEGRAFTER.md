@@ -364,7 +364,9 @@ does not. Rules, per-batch records and a generated summary are in
 [`TREEGRAFTER/rereview-2026-09-24/`](TREEGRAFTER/rereview-2026-09-24/README.md).
 The nine genes already re-audited on 2026-09-20 were left as recorded there.
 
-**192 rejected rows across 165 genes: 117 (61%) stand, 75 (39%) were relaxed** —
+**192 rejected rows across 166 gene entries — 165 proteins, since one protein
+had two review folders that this audit merged — of which 117 (61%) stand and
+75 (39%) were relaxed** —
 56 to `KEEP_AS_NON_CORE`, 7 `REMOVE` → `MARK_AS_OVER_ANNOTATED`, 5 to `ACCEPT`,
 4 to `MODIFY`, 3 `REMOVE` → `UNDECIDED`. Only five rows are restored as core
 functions, each one a term the protein itself performs: the MurJ flippase
@@ -679,7 +681,12 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   re-review (above) has already moved 75 rows *out* of the down-graded set, so
   this refresh is a re-classification of a shrunken population, not only an
   addition of new rows; the figures it would produce are recorded in the
-  2026-09-28 note.
+  2026-09-28 note. The refresh is also where to de-collide the member labels:
+  `treegrafter_family_hotspots.tsv` gives `PTHR31689` two PSEPK proteins under
+  the single label `dapF`, which the audit records now distinguish as
+  `dapF__Q88CF3` / `dapF__Q88GD4` after that collision silently undercounted
+  the audit's own gene total. The frozen table keeps the ambiguous label, so
+  the fix otherwise lives only in the audit folder.
 - **Harmonize the rows the rejection re-review left out of scope.** Some sibling
   rows now sit beside a relaxed parent (PSEPK `ubiA` `GO:0004659` /
   `GO:0016765`, `zwf` `GO:0006098`). PSEPK `murB` and `ubiK` carry a sharper

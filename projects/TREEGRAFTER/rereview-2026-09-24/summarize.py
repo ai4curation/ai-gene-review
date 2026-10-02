@@ -41,6 +41,7 @@ def main() -> None:
                         "previous_action": ann.get("previous_action", ""),
                         "action": ann.get("action", ""),
                         "outcome": ann.get("outcome", ""),
+                        "merged_into": gene.get("merged_into", ""),
                     }
                 )
 
@@ -54,16 +55,33 @@ def main() -> None:
         for r in rows
         if r["previous_action"] != r["action"]
     )
-    # Key on gene_file, not the label: two paralogs can share a label
-    # (PSEPK/dapF named two proteins), which silently undercounted.
-    genes = {r["gene_file"] or r["gene"] for r in rows}
+    # Three different things get called "genes" here, so each is counted and
+    # named separately rather than collapsed into one ambiguous figure:
+    #   - entries: one per gene entry in the batch records. Keyed on gene_file,
+    #     not the label, because two paralogs can share a label (PSEPK/dapF
+    #     named two proteins), which silently undercounted.
+    #   - proteins: entries minus those the audit established are a second
+    #     record of a protein already counted. `merged_into` marks those, so
+    #     this is derived from the records rather than adjusted by hand.
+    #   - rows / adjudications: likewise, a merged entry's rows duplicate the
+    #     surviving twin's, so they are recorded but not distinct decisions.
+    entries = {r["gene_file"] or r["gene"] for r in rows}
+    proteins = {
+        r["gene_file"] or r["gene"] for r in rows if not r["merged_into"]
+    }
+    adjudications = [r for r in rows if not r["merged_into"]]
 
     out = os.path.join(HERE, "summary.tsv")
     with open(out, "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t")
         w.writerow(["section", "key", "value", "count"])
-        w.writerow(["totals", "annotations", "", len(rows)])
-        w.writerow(["totals", "genes", "", len(genes)])
+        # `annotations`/`genes` were ambiguous: the first counted recorded rows
+        # and the second entries, but neither label said so, and a reader
+        # comparing them against the protein counts found them off by one.
+        w.writerow(["totals", "recorded_rows", "", len(rows)])
+        w.writerow(["totals", "distinct_adjudications", "", len(adjudications)])
+        w.writerow(["totals", "gene_entries", "", len(entries)])
+        w.writerow(["totals", "proteins", "", len(proteins)])
         for k, n in sorted(outcomes.items()):
             w.writerow(["outcome", k, "", n])
         for (prev, new), n in sorted(transitions.items(), key=lambda kv: -kv[1]):
@@ -81,7 +99,11 @@ def main() -> None:
                     f"spread over {len(relaxed_terms) - len(top)} further terms", remainder])
         for (tid, label), n in top:
             w.writerow(["relaxed_term", tid, label, n])
-    print(f"wrote {out}: {len(rows)} annotations across {len(genes)} genes")
+    print(
+        f"wrote {out}: {len(rows)} recorded rows "
+        f"({len(adjudications)} distinct adjudications) across "
+        f"{len(entries)} gene entries for {len(proteins)} proteins"
+    )
     for (prev, new), n in sorted(transitions.items(), key=lambda kv: -kv[1]):
         print(f"  {prev} -> {new}: {n}")
 

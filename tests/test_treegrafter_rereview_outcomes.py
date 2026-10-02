@@ -41,3 +41,10 @@ def test_rereview_outcomes_consistent(capsys):
     assert rc == 0, f"check_outcomes.py reported violations:\n{out}"
     # Guard against the checker silently finding nothing to check.
     assert "checked 0 gene entries" not in out, out
+    # The audit merged PSEPK/aroQ into PSEPK/aroQ-III, so one recorded
+    # gene_file no longer exists. That entry must be reported and checked
+    # against the surviving twin, not skipped: a quiet skip is how a row's
+    # action gets "verified" against nothing while the gate still prints it
+    # among the rows checked. Asserting the report rather than a count, so a
+    # future audit's own merge does not have to touch this test.
+    assert "merged entry:" in out, out

@@ -77,4 +77,31 @@ it. `check_outcomes.py` enforces it, so the next audit inherits a rule rather
 than re-inferring one. `summarize.py` reads only the annotation-level field, so
 the gene-level value is documentary.
 
+## What the counts count
+
+`192`, `117` and `75` are counts of **recorded rows**, and the gene figures need
+the same care, because one protein in this audit has two records. `PSEPK/aroQ`
+and `PSEPK/aroQ-III` were two reviews of the same protein (Q88IJ6), which this
+audit merged; the record for the merged-away folder stays (records are
+append-only) and declares `merged_into`, so its single `GO:0019631` row is
+recorded twice but was adjudicated once. The live state is therefore:
+
+| figure | value | meaning |
+|---|---|---|
+| `recorded_rows` | 192 | annotation rows across the ten batch records |
+| `distinct_adjudications` | 191 | rows on entries not marked `merged_into` |
+| `gene_entries` | 166 | `- gene:` entries across the records |
+| `proteins` | 165 | entries not marked `merged_into` |
+
+`summarize.py` derives all four from `merged_into` rather than from a hand
+adjustment, and `check_outcomes.py` checks a merged entry's action against the
+surviving twin instead of skipping it. The transition table and the
+`117 stand / 75 relaxed` split are row counts, so they include the `aroQ` pair
+once each.
+
+A gene entry's `gene` label mirrors its folder name under `genes/<ORG>/`,
+accession suffix included where the folder carries one (`PSEPK/dapF__Q88CF3`,
+`PSEPK/dapA__Q88NH2`). The suffix is the disambiguator the folder layout
+already uses; two of these labels would otherwise collide.
+
 `summary.tsv` is generated from the batch files by `summarize.py`.

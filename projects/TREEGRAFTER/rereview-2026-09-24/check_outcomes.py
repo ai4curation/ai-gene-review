@@ -5,6 +5,10 @@ Three checks, all of which the 2026-09-24 audit got wrong at least once before
 they were written down (see this folder's README):
 
 1. Each recorded ``action`` matches the live review file's action for that row.
+   When an entry declares ``merged_into`` (its folder was merged away by the
+   audit), the action is checked against that target and the substitution is
+   reported; a missing file without ``merged_into`` is a violation rather than
+   a silent skip.
 2. Annotation-level ``outcome`` is ``retained`` iff ``previous_action == action``.
 3. Gene-level ``outcome`` is ``changed`` iff **any** of that gene's annotations
    changed action, else ``confirmed``. This is adjudication, not file edits: a
@@ -34,6 +38,7 @@ TREEGRAFTER_REF = "GO_REF:0000118"
 def main() -> int:
     problems: list[str] = []
     preexisting: list[str] = []
+    merged: list[str] = []
     genes = rows = 0
     for path in sorted(glob.glob(os.path.join(HERE, "batch-*.yaml"))):
         batch = os.path.basename(path)
@@ -43,11 +48,34 @@ def main() -> int:
             genes += 1
             name = gene.get("gene", "?")
             anns = gene.get("annotations") or []
-            live_path = os.path.join(ROOT, gene.get("gene_file", ""))
+            # A recorded gene_file that no longer exists used to fall through
+            # silently (live = None -> continue), so the row's action was
+            # checked against nothing while the script still printed it among
+            # the rows checked and reported 0 violations. Exactly one entry is
+            # in that state -- PSEPK/aroQ, whose folder this audit merged away
+            # -- and that is now declared on the entry as `merged_into`, so the
+            # invariant is checked against the surviving twin instead of being
+            # skipped. A missing file with no `merged_into` is a violation: a
+            # mistyped path must not pass the gate green.
+            recorded = gene.get("gene_file", "")
+            merged_into = gene.get("merged_into", "")
+            check_path = merged_into or recorded
+            live_path = os.path.join(ROOT, check_path)
             live = None
             if os.path.exists(live_path):
                 with open(live_path) as fh:
                     live = yaml.safe_load(fh)
+                if merged_into:
+                    merged.append(
+                        f"{batch} {name}: {recorded} was merged away; action "
+                        f"checked against {merged_into}"
+                    )
+            else:
+                problems.append(
+                    f"{batch} {name}: {check_path} does not exist, so this "
+                    f"entry's recorded action is verified against nothing"
+                    + (" (merged_into target is missing)" if merged_into else "")
+                )
 
             for ann in anns:
                 rows += 1
@@ -101,6 +129,8 @@ def main() -> int:
                 )
 
     print(f"checked {genes} gene entries / {rows} annotation rows")
+    for m in merged:
+        print(f"  merged entry: {m}")
     for p in preexisting:
         print(f"  pre-existing (not this audit's): {p}")
     for p in problems:
