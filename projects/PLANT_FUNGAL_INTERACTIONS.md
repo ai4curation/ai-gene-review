@@ -1,22 +1,29 @@
 ---
 title: "Plant-Fungal Interactions"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [ARATH, ORYSJ, HORVU, SOLLC, MEDTR, LOTJA, PYRO7, FULFL, MYCMD, GIBZE]
+species: [ARATH, ORYSJ, HORVU, MEDTR, LOTJA, PYRO7, FULFL, MYCMD, GIBZE]
 genes: [CERK1, LYK5, LYM2, SYP121, BGLU26, ABCG36, CYP71B15, CYP79B2, MLO2, WRKY33, ERF094, MPK3, CEBIP, PIKM1-TS, RGA4, RGA5, MLO, NORK, DMI1, CASTOR, CYCLOPS, RAM1, STR, PT4, PWL2, BAS1, slp1, PMK1, MPG1, AVR9, AVR4, ECP6, CMU1, PIT2, See1, TRI5]
 ---
 
 # Plant-Fungal Interactions
 
-**Bottom line:** This project will review the GO annotations on genes from
-both sides of plant-fungal interactions. On the plant side that means chitin
-perception, penetration resistance, camalexin, NLR recognition of fungal
-effectors and arbuscular mycorrhizal symbiosis. On the fungal side it means
-secreted effectors, the appressorium machinery and toxins. The project is at
-the scoping stage. A first list of 36 new genes in 10 species is below, each
-checked against a reviewed UniProt entry. Thirteen related reviews already in
-the repo (mostly *Arabidopsis* immune signalling and legume symbiosis) are listed for cross-checking.
-No new reviews have been started yet.
+**Bottom line:** Plants and fungi meet at the cell surface and in the apoplast,
+where plant receptors detect fungal chitin, fungal effectors try to hide it or
+disarm the host, and in symbiosis the two partners exchange nutrients across a
+shared membrane. We reviewed every existing GO annotation on 36 genes from
+both sides of these interactions, in 9 species: plant chitin receptors,
+penetration-resistance and camalexin genes, rice sensor/executor immune
+receptors, the legume mycorrhizal pathway, and fungal effectors, a hydrophobin,
+a MAP kinase and a toxin enzyme. All 36 reviews are done: 652 annotations were
+assessed, with 333 accepted, 161 kept as non-core, 70 modified, 40 marked
+over-annotated, 45 removed and 3 left undecided, plus 36 new annotations
+proposed. Thirty-five reviews validate with no warnings; CYP71B15 stays at
+DRAFT only because three of its GOA rows cite a PMID that has no PubMed record.
+The main corrections were separating genes that do the work of a defence
+process from genes that are only needed for it, replacing `protein binding`
+rows with specific terms, and giving each partner in a receptor pair, and
+each of two chitin-binding effectors, its own distinct function.
 
 The main reason to group these genes is that GO describes the interaction from
 two directions. Plant genes carry terms such as `defense response to fungus`,
@@ -76,6 +83,106 @@ to fungal interactions.
    integrated HMA domain) and RGA4 (executor) should not end up with identical
    annotations.
 
+## Results
+
+Counts are taken from the review files. "Rows" is the number of GOA
+annotations reviewed; NEW annotations are counted separately.
+
+| Gene | Rows | Accept | Non-core | Modify | Over-annot. | Remove | Undecided | New | Main correction |
+|------|-----:|-------:|---------:|-------:|------------:|-------:|----------:|----:|-----------------|
+| ARATH/LYK5 | 17 | 10 | 1 | 0 | 3 | 3 | 0 | 2 | Kinase domain is inactive, so ATP binding is over-annotated; added pattern recognition receptor activity |
+| ARATH/LYM2 | 10 | 7 | 2 | 0 | 0 | 1 | 0 | 1 | Mitochondrion (HDA) removed; added cellular response to chitin |
+| ORYSJ/CEBIP | 3 | 2 | 0 | 1 | 0 | 0 | 0 | 2 | `protein binding` to pattern recognition receptor activity |
+| ORYSJ/CERK1 | 20 | 16 | 0 | 2 | 0 | 2 | 0 | 1 | Chitin binding removed (OsCEBiP binds chitin, not OsCERK1); added arbuscular mycorrhizal association |
+| ARATH/SYP121 | 58 | 28 | 18 | 8 | 1 | 3 | 0 | 1 | `protein binding` to SNARE / transporter binding; added potassium channel regulator activity |
+| ARATH/BGLU26 | 21 | 8 | 8 | 2 | 2 | 1 | 0 | 1 | Core activity is thioglucosidase (myrosinase); generic beta-glucosidase kept as non-core |
+| ARATH/ABCG36 | 108 | 40 | 39 | 9 | 18 | 2 | 0 | 0 | `protein binding` to calmodulin binding; processes inferred only from mutant phenotypes marked over-annotated |
+| ARATH/MLO2 | 12 | 4 | 3 | 3 | 0 | 2 | 0 | 2 | Defense rows to negative regulation of defense response; added calcium channel activity |
+| HORVU/MLO | 2 | 0 | 0 | 2 | 0 | 0 | 0 | 1 | `defense response` had the wrong sign; changed to negative regulation |
+| ARATH/CYP79B2 | 30 | 6 | 17 | 5 | 1 | 1 | 0 | 0 | Sulfur compound biosynthesis to indole glucosinolate biosynthesis; membrane to ER membrane |
+| ARATH/CYP71B15 | 32 | 13 | 8 | 2 | 4 | 2 | 3 | 0 | Membrane to ER membrane; 3 rows undecided (cited PMID does not exist) |
+| ARATH/WRKY33 | 40 | 20 | 11 | 2 | 0 | 7 | 0 | 0 | Camalexin biosynthesis to positive regulation of camalexin biosynthesis |
+| ARATH/MPK3 | 65 | 24 | 20 | 2 | 1 | 18 | 0 | 0 | Camalexin biosynthesis to positive regulation; 18 `protein binding` rows removed |
+| ARATH/ERF094 | 19 | 14 | 2 | 3 | 0 | 0 | 0 | 2 | Systemic resistance to defense response to fungus; added transcription activator activity |
+| ORYSJ/RGA5 | 16 | 7 | 4 | 2 | 2 | 1 | 0 | 0 | Metal ion binding removed (broken HMA motif); RGA4 binding to inhibitor activity |
+| ORYSJ/RGA4 | 14 | 9 | 0 | 2 | 3 | 0 | 0 | 1 | PRR-signalling term replaced; kept as the cell-death executor |
+| ORYSJ/PIKM1-TS | 4 | 1 | 1 | 1 | 0 | 1 | 0 | 2 | Metal ion binding removed; added innate immune receptor activity |
+| MEDTR/NORK | 9 | 8 | 0 | 1 | 0 | 0 | 0 | 3 | Added nodulation and arbuscular mycorrhizal association as separate terms |
+| MEDTR/DMI1 | 7 | 3 | 0 | 4 | 0 | 0 | 0 | 3 | CNGC15 `protein binding` to ion channel regulator activity |
+| LOTJA/CASTOR | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 3 | Added cation channel activity (kept general: K+ vs Ca2+ is disputed) |
+| LOTJA/CYCLOPS | 14 | 10 | 1 | 3 | 0 | 0 | 0 | 0 | Transcription factor activity narrowed to activator; CCaMK binding to protein kinase binding |
+| MEDTR/RAM1 | 20 | 11 | 4 | 4 | 1 | 0 | 0 | 0 | Detection of phosphate over-annotated; partner binding to heterodimerization |
+| MEDTR/STR | 16 | 10 | 5 | 1 | 0 | 0 | 0 | 0 | Transporter kept at ABC-type level (lipid cargo not proven) |
+| MEDTR/PT4 | 27 | 11 | 8 | 5 | 2 | 1 | 0 | 0 | Plasma membrane to periarbuscular membrane; phosphate:proton symporter activity |
+| PYRO7/slp1 | 3 | 2 | 0 | 1 | 0 | 0 | 0 | 1 | Added chitin binding; reference behind the PHI-base row was miscited |
+| PYRO7/PWL2 | 15 | 15 | 0 | 0 | 0 | 0 | 0 | 1 | Added effector-mediated suppression of host pattern-triggered immunity |
+| PYRO7/BAS1 | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 0 | No change; molecular function unknown |
+| PYRO7/PMK1 | 13 | 10 | 3 | 0 | 0 | 0 | 0 | 0 | No change needed |
+| PYRO7/MPG1 | 5 | 5 | 0 | 0 | 0 | 0 | 0 | 2 | Added spore wall and asexual spore wall assembly |
+| FULFL/ECP6 | 4 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | No change needed |
+| FULFL/AVR4 | 10 | 3 | 5 | 1 | 1 | 0 | 0 | 2 | PAMP receptor decoy activity over-annotated (that is ECP6's mechanism) |
+| FULFL/AVR9 | 5 | 2 | 0 | 3 | 0 | 0 | 0 | 1 | Perturbation of host immunity to activation of plant hypersensitive response |
+| MYCMD/CMU1 | 11 | 9 | 1 | 0 | 1 | 0 | 0 | 0 | Aromatic amino acid biosynthesis over-annotated (it acts in the host) |
+| MYCMD/PIT2 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 3 | Added cysteine-type endopeptidase inhibitor activity |
+| MYCMD/See1 | 7 | 7 | 0 | 0 | 0 | 0 | 0 | 0 | No change needed |
+| GIBZE/TRI5 | 4 | 3 | 0 | 1 | 0 | 0 | 0 | 1 | Sesquiterpenoid biosynthesis to vomitoxin (deoxynivalenol) biosynthesis |
+| **Total** | **652** | **333** | **161** | **70** | **40** | **45** | **3** | **36** | |
+
+### Findings by curation question
+
+1. **Process terms on effectors.** The effector annotations already use the
+   pathogen-side terms rather than plant-side `defense response` terms, and
+   most rest on experiments on the effector itself. The gaps ran the other
+   way: several effectors had no function or process term at all. Slp1 lacked
+   chitin binding, PIT2 lacked its protease inhibitor activity, and PWL2 had
+   locations only. GO also has no term for the biotrophic interfacial complex,
+   the structure where blast cytoplasmic effectors collect. So cytoplasmic
+   effectors (PWL2, BAS1) and apoplastic ones end up on the same
+   `extracellular region` term.
+2. **LysM effectors vs LysM receptors.** No receptor terms reached the
+   effectors through InterPro2GO. The leaks found were different. OsCERK1 had
+   chitin binding copied from *Arabidopsis* CERK1, although in rice CEBiP binds
+   the chitin. AVR4 carried the PAMP-decoy (sequestration) term, which
+   describes ECP6. Each of the four chitin-binding proteins now has its own
+   mechanism.
+3. **Necessity vs participation.** This was the most common correction. It is
+   applied consistently: a gene keeps `defense response to fungus` when it
+   does part of the work. Examples are SYP121 doing the vesicle fusion,
+   BGLU26 and CYP71B15 making the antifungal compounds, ABCG36 exporting them,
+   and WRKY33 and ERF094 switching on defence genes. Genes known only from
+   mutant phenotypes (LYM2, CYP79B2, TRI5) did not get the term. Two
+   regulators had a biosynthesis term changed to "positive regulation of
+   camalexin biosynthesis", which leaves the biosynthesis term on the enzyme
+   (MPK3, WRKY33). The two MLO reviews changed `defense response` to its
+   opposite, negative regulation of defense response, because MLO is a
+   susceptibility factor.
+4. **Symbiosis vs defense.** GOA had no symbiosis term on rice CERK1.
+   Arbuscular mycorrhizal association was added as a separate core function
+   from chitin immunity. The common symbiosis genes (NORK, DMI1, CASTOR,
+   CYCLOPS) carry no defence terms and now have nodulation and mycorrhizal
+   association as separate entries. A kinase-dead NORK allele blocks
+   nodulation but not mycorrhization.
+5. **Sensor/executor receptor pairs.** GOA gave RGA4 and RGA5 almost the same
+   annotations, drawn from the same two papers. RGA5 now carries receptor
+   activity, inhibitor activity (it holds RGA4 in check) and regulation of
+   the hypersensitive response. RGA4 carries execution of the hypersensitive
+   response and ADP binding. The Pikm-1 sensor follows the RGA5 pattern.
+
+### Suggested GO ontology changes
+
+- `GO:0080185` (effector-mediated activation of plant hypersensitive response)
+  sits under a term defined as suppressing host immunity. Every avirulence
+  effector annotated to it therefore also gets a suppression claim (AVR4,
+  AVR9).
+- No GO term for the biotrophic interfacial complex.
+- No pathogen-side term for suppressing host salicylic acid biosynthesis
+  (CMU1), and no camalexin-export activity (ABCG36).
+- Proposed new terms: dihydrocamalexate synthase activity (CYP71B15), and
+  negative regulation of plasmodesmata-mediated intercellular transport
+  (LYM2).
+- The periarbuscular membrane is not under plasma membrane, so plant-side
+  annotations to it do not count as plasma membrane annotations (PT4, STR).
+
 ---
 
 # STATUS
@@ -103,54 +210,54 @@ entries) on 2026-10-02. Species codes are UniProt mnemonics.
 
 ### Tier 1: Chitin perception and penetration resistance (plant)
 
-- [ ] ARATH/LYK5 (O22808): main chitin-binding LysM receptor kinase, partners CERK1
-- [ ] ARATH/LYM2 (O23006): GPI-anchored CEBiP homologue, plasmodesmal chitin response
-- [ ] ORYSJ/CEBIP (Q8H8C7): rice chitin elicitor-binding protein
-- [ ] ORYSJ/CERK1 (A0A0P0XII1): rice chitin receptor kinase, also needed for AM symbiosis
-- [ ] ARATH/SYP121 (Q9ZSD4): PEN1 syntaxin, focal secretion at penetration sites
-- [ ] ARATH/BGLU26 (O64883): PEN2 myrosinase, indole glucosinolate hydrolysis
-- [ ] ARATH/ABCG36 (Q9XIE2): PEN3 ABC transporter
-- [ ] ARATH/MLO2 (Q9SXB6): powdery mildew susceptibility gene
-- [ ] HORVU/MLO (P93766): barley *Mlo*, the original powdery mildew susceptibility gene
+- [x] ARATH/LYK5 (O22808): main chitin-binding LysM receptor kinase, partners CERK1
+- [x] ARATH/LYM2 (O23006): GPI-anchored CEBiP homologue, plasmodesmal chitin response
+- [x] ORYSJ/CEBIP (Q8H8C7): rice chitin elicitor-binding protein
+- [x] ORYSJ/CERK1 (A0A0P0XII1): rice chitin receptor kinase, also needed for AM symbiosis
+- [x] ARATH/SYP121 (Q9ZSD4): PEN1 syntaxin, focal secretion at penetration sites
+- [x] ARATH/BGLU26 (O64883): PEN2 myrosinase, indole glucosinolate hydrolysis
+- [x] ARATH/ABCG36 (Q9XIE2): PEN3 ABC transporter
+- [x] ARATH/MLO2 (Q9SXB6): powdery mildew susceptibility gene
+- [x] HORVU/MLO (P93766): barley *Mlo*, the original powdery mildew susceptibility gene
 
 ### Tier 2: Defense outputs (plant)
 
-- [ ] ARATH/CYP79B2 (O81346): tryptophan N-monooxygenase, entry step to camalexin and indole glucosinolates
-- [ ] ARATH/CYP71B15 (Q9LW27): PAD3 camalexin synthase
-- [ ] ARATH/WRKY33 (Q8S8P5): transcription factor for camalexin and anti-*Botrytis* defense
-- [ ] ARATH/MPK3 (Q39023): MAPK that phosphorylates WRKY33
-- [ ] ARATH/ERF094 (Q9LND1): ORA59, JA/ET integrator for necrotroph defense
+- [x] ARATH/CYP79B2 (O81346): tryptophan N-monooxygenase, entry step to camalexin and indole glucosinolates
+- [x] ARATH/CYP71B15 (Q9LW27): PAD3 camalexin synthase
+- [x] ARATH/WRKY33 (Q8S8P5): transcription factor for camalexin and anti-*Botrytis* defense
+- [x] ARATH/MPK3 (Q39023): MAPK that phosphorylates WRKY33
+- [x] ARATH/ERF094 (Q9LND1): ORA59, JA/ET integrator for necrotroph defense
 
 ### Tier 3: Recognition of fungal effectors (plant NLRs)
 
-- [ ] ORYSJ/RGA5 (F7J0N2): sensor NLR with integrated HMA domain, recognises AVR-Pia and AVR1-CO39
-- [ ] ORYSJ/RGA4 (F7J0M4): executor NLR paired with RGA5
-- [ ] ORYSJ/PIKM1-TS (B5UBC1): Pikm sensor NLR, recognises AVR-Pik through its HMA domain
+- [x] ORYSJ/RGA5 (F7J0N2): sensor NLR with integrated HMA domain, recognises AVR-Pia and AVR1-CO39
+- [x] ORYSJ/RGA4 (F7J0M4): executor NLR paired with RGA5
+- [x] ORYSJ/PIKM1-TS (B5UBC1): Pikm sensor NLR, recognises AVR-Pik through its HMA domain
 
 ### Tier 4: Arbuscular mycorrhizal symbiosis (plant)
 
-- [ ] MEDTR/NORK (Q8L4H4): SYMRK/DMI2 symbiosis receptor kinase
-- [ ] MEDTR/DMI1 (Q6RHR6): nuclear-envelope ion channel for calcium spiking
-- [ ] LOTJA/CASTOR (Q5H8A6): DMI1-related nuclear-envelope ion channel
-- [ ] LOTJA/CYCLOPS (A9XMT3): CCaMK substrate, transcriptional activator
-- [ ] MEDTR/RAM1 (G7L166): GRAS transcription factor for arbuscule development
-- [ ] MEDTR/STR (D3GE74): periarbuscular ABC transporter
-- [ ] MEDTR/PT4 (Q8GSG4): periarbuscular phosphate transporter
+- [x] MEDTR/NORK (Q8L4H4): SYMRK/DMI2 symbiosis receptor kinase
+- [x] MEDTR/DMI1 (Q6RHR6): nuclear-envelope ion channel for calcium spiking
+- [x] LOTJA/CASTOR (Q5H8A6): DMI1-related nuclear-envelope ion channel
+- [x] LOTJA/CYCLOPS (A9XMT3): CCaMK substrate, transcriptional activator
+- [x] MEDTR/RAM1 (G7L166): GRAS transcription factor for arbuscule development
+- [x] MEDTR/STR (D3GE74): periarbuscular ABC transporter
+- [x] MEDTR/PT4 (Q8GSG4): periarbuscular phosphate transporter
 
 ### Tier 5: Fungal effectors and virulence factors
 
-- [ ] PYRO7/slp1 (G4N906): LysM effector that sequesters chitin oligomers
-- [ ] PYRO7/PWL2 (G5EI71): host-specificity effector
-- [ ] PYRO7/BAS1 (G5EHI7): biotrophy-associated secreted protein
-- [ ] PYRO7/PMK1 (G4N0Z0): MAPK needed for appressorium formation and invasive growth
-- [ ] PYRO7/MPG1 (P52751): class I hydrophobin
-- [ ] FULFL/ECP6 (B3VBK9): LysM effector, the reference chitin-masking effector
-- [ ] FULFL/AVR4 (Q00363): chitin-binding effector that protects hyphae from plant chitinases
-- [ ] FULFL/AVR9 (P22287): avirulence protein recognised through Cf-9
-- [ ] MYCMD/CMU1 (A0A0D1DWQ2): secreted chorismate mutase that redirects host salicylic acid synthesis
-- [ ] MYCMD/PIT2 (A0A0D1EAR7): inhibitor of host apoplastic cysteine proteases
-- [ ] MYCMD/See1 (A0A0D1C8C8): effector that drives leaf tumour formation
-- [ ] GIBZE/TRI5 (Q00909): trichodiene synthase, first step in deoxynivalenol synthesis
+- [x] PYRO7/slp1 (G4N906): LysM effector that sequesters chitin oligomers
+- [x] PYRO7/PWL2 (G5EI71): host-specificity effector
+- [x] PYRO7/BAS1 (G5EHI7): biotrophy-associated secreted protein
+- [x] PYRO7/PMK1 (G4N0Z0): MAPK needed for appressorium formation and invasive growth
+- [x] PYRO7/MPG1 (P52751): class I hydrophobin
+- [x] FULFL/ECP6 (B3VBK9): LysM effector, the reference chitin-masking effector
+- [x] FULFL/AVR4 (Q00363): chitin-binding effector that protects hyphae from plant chitinases
+- [x] FULFL/AVR9 (P22287): avirulence protein recognised through Cf-9
+- [x] MYCMD/CMU1 (A0A0D1DWQ2): secreted chorismate mutase that redirects host salicylic acid synthesis
+- [x] MYCMD/PIT2 (A0A0D1EAR7): inhibitor of host apoplastic cysteine proteases
+- [x] MYCMD/See1 (A0A0D1C8C8): effector that drives leaf tumour formation
+- [x] GIBZE/TRI5 (Q00909): trichodiene synthase, first step in deoxynivalenol synthesis
 
 ### Candidates without a reviewed UniProt entry (need an accession before fetch)
 
@@ -177,7 +284,25 @@ running `fetch-gene`; do not guess one.
 
 # NOTES
 
-## 2026-10-02
+## 2026-10-02 (reviews)
+
+- Fetched UniProt/GOA data for all 36 genes and ran falcon deep research for
+  each (about 20-40 minutes per gene, all 36 succeeded).
+- Reviewed each gene with the annotation-reviewer workflow, one agent per gene,
+  and checked each against `just validate` and `just validate-history`.
+- One agent proposal was dropped after checking it against the `NEW` rules in
+  `CLAUDE.md`. MPK3: "pattern recognition receptor signaling pathway" was
+  removed because the other MAP kinases in the same cascade (MPK6, MKK4,
+  MKK5) do not carry it. It is now a suggested question.
+- Consistency was checked across pairs reviewed at the same time: RGA4/RGA5,
+  CASTOR/DMI1, MLO/MLO2, slp1/ECP6, and MPK3/WRKY33/CYP71B15.
+- PMID:33831160 (cited by three TAIR rows on CYP71B15) has no PubMed record
+  (checked with NCBI eutils), so those rows are undecided.
+- Many key papers are cached as abstract only. Agents deferred to curators
+  where the full text was needed, rather than removing experimental
+  annotations.
+
+## 2026-10-02 (setup)
 
 - Project created. Looked for existing plant immunity and symbiosis reviews in
   `genes/` and listed the overlapping ones above.
