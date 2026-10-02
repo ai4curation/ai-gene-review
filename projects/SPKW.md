@@ -70,6 +70,7 @@ This project reviews genes that have GO annotations derived **solely** from UniP
 | [PLANTS](SPKW/SPKW-PLANTS.md) | Non-ARATH plants | 4,117 | 38 | 15% Tier-A | Term-tiering; GOA retired SPKW |
 | [BPT4](SPKW/SPKW-BPT4.md) | Phage T4 | ~300 | 3 | 100% | Eukaryote-centric terms |
 | [ECO57](SPKW/SPKW-ECO57.md) | E. coli O157 | ~74,000 | 2 | 50% | Toxin vs effector |
+| [ViralZone](SPKW/SPKW-VIRALZONE.md) | Upstream source | 152 GO terms | 0 of 22 queued | n/a | Definition+keyword dual path |
 
 ## Methods
 
@@ -127,6 +128,7 @@ Not all SPKW-unique annotations are over-annotations:
 - [x] [PLANTS](SPKW/SPKW-PLANTS.md) - Non-Arabidopsis crops (38 genes, 14 species); term-tier classification + retrospective validation + full Tier-A keyword-watch-list sweep (methylation, developmental, defense, nodulation, hormone-signaling x6, long-tail) + verbatim-quote integrity audit
 - [x] [BPT4](SPKW/SPKW-BPT4.md) - Phage semantics
 - [x] [ECO57](SPKW/SPKW-ECO57.md) - Toxin/effector
+- [ ] [ViralZone](SPKW/SPKW-VIRALZONE.md) - Upstream-source audit: ViralZone feeds GO twice (152 definition xrefs, 147 primary keywords, 107 pages on both routes); measures definition text reuse, found 4 dead xrefs + 1 label typo; per-definition literature audit not yet started
 
 ## Curation Recommendations
 

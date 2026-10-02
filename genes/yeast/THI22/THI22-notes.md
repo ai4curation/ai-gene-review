@@ -175,6 +175,20 @@ no domain/pseudoenzyme-based REMOVE was applied to the kinase/thiaminase MF term
   THI20/THI21/THI22 thiamine-kinase family. The search did not find newer
   peer-reviewed evidence that resolves THI22's activity or localization.
 
+## 2026-09-30 — IBA rereview confirmation
+
+- Re-reviewed all 12 THI22 GOA-derived rows in the batch context, with emphasis on the
+  four IBA annotations from `PTHR20858`. The 2026-09-29 alignment remains consistent with
+  current PAINT: all four inherited THI22 assertions originate from `PTN000466159`, and
+  the review records that node rather than an extant donor list.
+- Confirmed the IBA decisions still match the combined evidence from PMID:10383756,
+  UniProt, and the local THI22-vs-THI20 alignment: HMP kinase is plausible but unproven
+  for THI22, HMP-P kinase and thiamine biosynthesis remain over-specific for THI22, and
+  cytosol remains a non-core inferred location that is plausible but unresolved because of
+  the THI22-specific N-terminal signal peptide and ER/vacuole localization leads.
+- Rechecked the 2025-2026 literature search from the previous pass. No newer direct THI22
+  biochemical or localization paper was found that would change the review actions.
+
 ## 2026-08-08 — OpenScientist blinded run on GO:0005576 (pre-registration)
 
 Launched a neutral function-assignment hypothesis job before looking at any result, so the

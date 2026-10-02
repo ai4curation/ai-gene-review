@@ -148,3 +148,32 @@ GO:0033309 SBF row is also stale because that term is now absent from
 PTHR24198. The review therefore resolves the GO:0045944 and GO:0030907 rows to
 REMOVE with `PROPAGATION_BAD`, and the stale GO:0033309 row to REMOVE with
 `SOURCE_STALE_OR_MISSING`, all anchored on `PANTHER:PTN000917496`.
+
+## Current GOA refresh and 2026 PAINT additions (2026-10-01)
+
+Re-fetched YAR1 with `--force` to update the local GOA from the older 19-row
+snapshot to the current 22-row QuickGO snapshot. The review now carries those
+22 current GOA assertions; the obsolete/stale rows that were explicitly reviewed
+earlier (`GO:0033309` SBF and the two pre-obsoletion `GO:0051082` rows) are
+absent from the live GOA and were dropped from `existing_annotations` after the
+current refresh.
+
+The three newly visible IBA rows are all from `PANTHER:PTN000917496`, matching
+the 2026 additions already seen in the cached PTHR24198 PAINT table. The
+sequence-specific Pol II cis-regulatory DNA-binding row (`GO:0000978`) and the
+G1/S transition row (`GO:0000082`) are removed for the same
+`PROPAGATION_BAD` reason as the older transcription/MBF rows: the assertions
+fit Swi4/Mbp1/Swi6-like cell-cycle transcription regulators, not the small
+Yar1/Rps3 holdase branch. The new cytoplasm IBA is accepted because the
+compartment itself is inherited plausibly and agrees with direct cytoplasmic
+Yar1 evidence.
+
+The forced refresh also added SGD's replacements for obsolete unfolded-protein
+binding: `GO:0044183` from PMID:22570489 and `GO:0140309` from PMID:26112308.
+The live `GO:0140309` definition now exactly captures Yar1's activity as an
+unfolded Rps3 carrier that prevents aggregation during delivery. The core
+function was tightened from the broader GO:0140597 parent to `GO:0140309`.
+The broad `GO:0044183` direct row is
+modified to `GO:0140309`, and the dependent GO_REF:0000108 `GO:0006457`
+logical inference is removed because Yar1's process context is Rps3 delivery
+for 40S biogenesis rather than generic client folding.
