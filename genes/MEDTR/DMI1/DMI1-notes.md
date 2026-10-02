@@ -65,6 +65,7 @@
 - monoatomic ion transport (IEA) -> MODIFY to monoatomic cation transmembrane transport.
 - potassium ion transport (IEA) -> ACCEPT (supported by bilayer, Charpentier 2016, TVGYG).
 - nuclear membrane (EXP, IEA) -> ACCEPT.
+- NEW: monoatomic cation channel activity (GO:0005261, IDA PMID:22706284), kept generic to match Lotus CASTOR review.
 - NEW: nodulation (GO:0009877) and arbuscular mycorrhizal association (GO:0036377).
   Comparator check: CNGC15A and CNGC15B (the partner channels in the same oscillator,
   same paper) carry IMP nodulation and IMP AM association; CCAMK and CYCLOPS carry
