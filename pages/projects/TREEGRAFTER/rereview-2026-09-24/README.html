@@ -538,17 +538,59 @@ confined to notes files, which is the tempting generalisation. Of the five<br />
 (<code>SALSP/mcr-4</code>, <code>candidate_new_annotations.tsv</code>). Deep-research-sourced quotes<br />
 are <em>usually</em> real copies, markdown emphasis included — spot-checks on <code>flgG</code> and<br />
 <code>PP_1084</code> are verbatim — but <code>merA</code> shows the habit is not source-specific.</p>
-<p>Of the 34 raw flags the sweep produced, only those 7 are real. The other 27 are<br />
-two classes that a naive substring test miscounts, and the distinction is the<br />
-spec any future <code>file:</code> gate has to implement:</p>
+<p>A naive substring test over-reports, and the way it does so differs <strong>per slot</strong> —<br />
+which matters because the breakdown below is the spec a future <code>file:</code> gate would<br />
+be built against. Raw flags, classified, with each denominator named:</p>
+<table>
+<thead>
+<tr>
+<th>class</th>
+<th><code>supported_by</code> (of 945)</th>
+<th><code>references[].findings[]</code> (of 261)</th>
+<th>both (of 1206)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt line-wrap artifact</td>
+<td>25</td>
+<td>2</td>
+<td>27</td>
+</tr>
+<tr>
+<td>marked <code>...</code> elision</td>
+<td>2</td>
+<td>0</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>real composition</strong></td>
+<td><strong>7</strong></td>
+<td><strong>5</strong></td>
+<td><strong>12</strong></td>
+</tr>
+<tr>
+<td>raw flags</td>
+<td>34</td>
+<td>7</td>
+<td>41</td>
+</tr>
+</tbody>
+</table>
 <ul>
-<li><strong>25 UniProt line-wrap artifacts.</strong> The quote <em>is</em> present, split across <code>CC</code><br />
-  continuation lines — <code>secD</code>'s <code>Part of the essential Sec protein translocation
-  apparatus</code> straddles <code>secD-uniprot.txt:47–48</code>. A gate must unwrap <code>CC</code>/<code>DR</code><br />
-  continuations or it will report mostly false positives.</li>
-<li><strong>2 marked elisions.</strong> <code>zwf</code> joins two fragments with a literal <code>...</code>, which<br />
-  is visible to a reader. A gate has to decide whether that is a supported<br />
-  convention.</li>
+<li><strong>Wrap artifacts.</strong> The quote <em>is</em> present, split across <code>CC</code> continuation<br />
+  lines — <code>secD</code>'s <code>Part of the essential Sec protein translocation apparatus</code><br />
+  straddles <code>secD-uniprot.txt:47–48</code>. A gate must unwrap <code>CC</code>/<code>DR</code> continuations.<br />
+<strong>But do not size that work from the <code>supported_by</code> rate</strong>: it is 25/34 (74%)<br />
+  there and 2/7 (29%) in the findings slot, because the two slots cut quotes<br />
+  differently — findings-slot quotes are short and tend to stop <em>at</em> a wrap<br />
+  boundary rather than run across one (<code>flgG:106</code> ends exactly where<br />
+<code>flgG-uniprot.txt:45</code> ends, which is why it passes). The same slot asymmetry<br />
+  that made the first sweep measure half the corpus also makes its artifact rate<br />
+  non-transferable.</li>
+<li><strong>Marked elisions.</strong> <code>zwf</code> joins two fragments with a literal <code>...</code>, visible<br />
+  to a reader. Both are in <code>supported_by</code>; the findings slot has none. A gate has<br />
+  to decide whether that is a supported convention.</li>
 <li><strong>The slot set</strong>, per the table above: <code>supported_by[]</code> <em>and</em><br />
 <code>references[].findings[]</code>. The two existing code paths each read one, so a gate<br />
   inheriting either one's scope measures half the corpus.</li>
@@ -559,15 +601,52 @@ invisibly, fusing two clauses three sentences apart and changing <code>when</cod
 <code>When</code>; <code>groES</code> splices across two source sentences. <strong>Silent splices are the<br />
 class that needs the gate</strong>; marked elisions are a convention question.</p>
 <p>Two independent measurements of the same blind spot now exist — ~48% of 550<br />
-(SPKW) and ~0.7% of 945 (here) — which differ by corpus, not by method.</p>
-<p>One more thing a gate would have to settle: <code>file:</code> references resolve against<br />
-two different bases. <code>reference_base_dir: genes</code> makes <code>file:PSEPK/accD/accD-uniprot.txt</code><br />
-resolve, but the repo-root-relative form used by the PAINT citations here and by<br />
-dozens of existing reviews (<code>file:interpro/panther/.../*-paint.tsv</code>) would resolve<br />
-to a nonexistent <code>genes/interpro/…</code>. Nothing breaks today only because <code>file</code> is<br />
-skipped entirely — meaning that form has never been resolvable by any tool, only<br />
-by a human with <code>grep</code>. This is pre-existing convention drift, not something this<br />
-audit introduced.</p>
+(SPKW) and 12/1206 ≈ 1.0% (here, both slots) — which differ by corpus, not by<br />
+method. Every rate in this section carries its denominator in the same sentence,<br />
+deliberately: three findings running on PR #3165 were "the measurement is sound,<br />
+the sentence around it is wider than the measurement" (166-vs-165, 7/945,<br />
+945-of-1206), and naming the scope at the point of use is the one habit that<br />
+would have caught all three.</p>
+<p>One more thing a gate would have to settle: <code>file:</code> references use <strong>three</strong><br />
+different base conventions, and under <code>reference_base_dir: genes</code> only one<br />
+resolves.</p>
+<table>
+<thead>
+<tr>
+<th>form</th>
+<th>example</th>
+<th>resolves to</th>
+<th>ok?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>genes</code>-relative</td>
+<td><code>file:PSEPK/accD/accD-uniprot.txt</code></td>
+<td><code>genes/PSEPK/…</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>repo-root-relative</td>
+<td><code>file:interpro/panther/…/*-paint.tsv</code></td>
+<td><code>genes/interpro/…</code></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>repo-root incl. <code>genes/</code></td>
+<td><code>file:genes/SALSP/mcr-4/mcr-4-uniprot.txt</code></td>
+<td><code>genes/genes/SALSP/…</code></td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<p>The second is what the PAINT citations here and dozens of existing reviews use;<br />
+the third appears in <strong>50 reviews</strong> repo-wide (<code>SALSP/mcr-4</code> uses it at ten sites,<br />
+alongside <code>file:projects/…</code> paths). So a gate cannot pick one base and treat the<br />
+others as the error case — it has to recognise all three. Nothing breaks today<br />
+only because <code>file</code> is skipped entirely, which means two of the three forms have<br />
+never been resolvable by any tool, only by a human with <code>grep</code>. This is<br />
+pre-existing convention drift, not something this audit introduced.</p>
 <p>So: when reading a rationale here, treat a <code>file:</code> quote as a reviewer's<br />
 transcription rather than a gated fact.</p>
 <h2 id="what-the-counts-count">What the counts count</h2>

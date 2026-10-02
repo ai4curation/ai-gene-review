@@ -145,17 +145,30 @@ confined to notes files, which is the tempting generalisation. Of the five
 are *usually* real copies, markdown emphasis included — spot-checks on `flgG` and
 `PP_1084` are verbatim — but `merA` shows the habit is not source-specific.
 
-Of the 34 raw flags the sweep produced, only those 7 are real. The other 27 are
-two classes that a naive substring test miscounts, and the distinction is the
-spec any future `file:` gate has to implement:
+A naive substring test over-reports, and the way it does so differs **per slot** —
+which matters because the breakdown below is the spec a future `file:` gate would
+be built against. Raw flags, classified, with each denominator named:
 
-- **25 UniProt line-wrap artifacts.** The quote *is* present, split across `CC`
-  continuation lines — `secD`'s `Part of the essential Sec protein translocation
-  apparatus` straddles `secD-uniprot.txt:47–48`. A gate must unwrap `CC`/`DR`
-  continuations or it will report mostly false positives.
-- **2 marked elisions.** `zwf` joins two fragments with a literal ` ... `, which
-  is visible to a reader. A gate has to decide whether that is a supported
-  convention.
+| class | `supported_by` (of 945) | `references[].findings[]` (of 261) | both (of 1206) |
+|---|---|---|---|
+| UniProt line-wrap artifact | 25 | 2 | 27 |
+| marked ` ... ` elision | 2 | 0 | 2 |
+| **real composition** | **7** | **5** | **12** |
+| raw flags | 34 | 7 | 41 |
+
+- **Wrap artifacts.** The quote *is* present, split across `CC` continuation
+  lines — `secD`'s `Part of the essential Sec protein translocation apparatus`
+  straddles `secD-uniprot.txt:47–48`. A gate must unwrap `CC`/`DR` continuations.
+  **But do not size that work from the `supported_by` rate**: it is 25/34 (74%)
+  there and 2/7 (29%) in the findings slot, because the two slots cut quotes
+  differently — findings-slot quotes are short and tend to stop *at* a wrap
+  boundary rather than run across one (`flgG:106` ends exactly where
+  `flgG-uniprot.txt:45` ends, which is why it passes). The same slot asymmetry
+  that made the first sweep measure half the corpus also makes its artifact rate
+  non-transferable.
+- **Marked elisions.** `zwf` joins two fragments with a literal ` ... `, visible
+  to a reader. Both are in `supported_by`; the findings slot has none. A gate has
+  to decide whether that is a supported convention.
 - **The slot set**, per the table above: `supported_by[]` *and*
   `references[].findings[]`. The two existing code paths each read one, so a gate
   inheriting either one's scope measures half the corpus.
@@ -167,16 +180,30 @@ invisibly, fusing two clauses three sentences apart and changing `when` to
 class that needs the gate**; marked elisions are a convention question.
 
 Two independent measurements of the same blind spot now exist — ~48% of 550
-(SPKW) and ~0.7% of 945 (here) — which differ by corpus, not by method.
+(SPKW) and 12/1206 ≈ 1.0% (here, both slots) — which differ by corpus, not by
+method. Every rate in this section carries its denominator in the same sentence,
+deliberately: three findings running on PR #3165 were "the measurement is sound,
+the sentence around it is wider than the measurement" (166-vs-165, 7/945,
+945-of-1206), and naming the scope at the point of use is the one habit that
+would have caught all three.
 
-One more thing a gate would have to settle: `file:` references resolve against
-two different bases. `reference_base_dir: genes` makes `file:PSEPK/accD/accD-uniprot.txt`
-resolve, but the repo-root-relative form used by the PAINT citations here and by
-dozens of existing reviews (`file:interpro/panther/.../*-paint.tsv`) would resolve
-to a nonexistent `genes/interpro/…`. Nothing breaks today only because `file` is
-skipped entirely — meaning that form has never been resolvable by any tool, only
-by a human with `grep`. This is pre-existing convention drift, not something this
-audit introduced.
+One more thing a gate would have to settle: `file:` references use **three**
+different base conventions, and under `reference_base_dir: genes` only one
+resolves.
+
+| form | example | resolves to | ok? |
+|---|---|---|---|
+| `genes`-relative | `file:PSEPK/accD/accD-uniprot.txt` | `genes/PSEPK/…` | ✅ |
+| repo-root-relative | `file:interpro/panther/…/*-paint.tsv` | `genes/interpro/…` | ❌ |
+| repo-root incl. `genes/` | `file:genes/SALSP/mcr-4/mcr-4-uniprot.txt` | `genes/genes/SALSP/…` | ❌ |
+
+The second is what the PAINT citations here and dozens of existing reviews use;
+the third appears in **50 reviews** repo-wide (`SALSP/mcr-4` uses it at ten sites,
+alongside `file:projects/…` paths). So a gate cannot pick one base and treat the
+others as the error case — it has to recognise all three. Nothing breaks today
+only because `file` is skipped entirely, which means two of the three forms have
+never been resolvable by any tool, only by a human with `grep`. This is
+pre-existing convention drift, not something this audit introduced.
 
 So: when reading a rationale here, treat a `file:` quote as a reviewer's
 transcription rather than a gated fact.
