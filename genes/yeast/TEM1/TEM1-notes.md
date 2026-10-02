@@ -132,3 +132,19 @@ local cache and are therefore not cited in `supported_by`.
   nucleotide selectivity of Cdc15 for Tem1-GTP?
 - Is Lte1 a GEF at all? Biochemistry says probably not.
 - Direct measurement of endogenous Tem1 nucleotide state across the cell cycle is still lacking.
+
+## 2026-09-29 IBA alignment
+
+- Rechecked the four TEM1 IBA rows against the current `PTHR47978` PAINT snapshot.
+  `PTN004662974` still carries `GO:0003924` GTPase activity and `GO:0005525` GTP
+  binding on the conserved Tem1/Spg1 and related small-GTPase branch.
+  `PTN000634389` still carries `GO:0005816` spindle pole body and `GO:0140281`
+  positive regulation of mitotic division septum assembly on the Tem1/Spg1 clade.
+- Added PTN-level `propagation_review` blocks to those IBA rows. The
+  small-GTPase activity and spindle-pole-body localization are core for budding-yeast
+  Tem1; the septum-assembly process remains a defensible but non-core MEN/SIN output
+  that is several kinase steps downstream of Tem1 in S. cerevisiae.
+- Searched 2025-2026 PubMed and the broader web for yeast TEM1, YML064C, Tem1, Cdc15,
+  and mitotic exit network literature. The search turned up Zhou et al. 2024 PNAS as
+  the newest mechanistic Tem1 study already synthesized in the existing deep-research
+  report; no newer peer-reviewed S. cerevisiae TEM1 paper changes the GO decisions.

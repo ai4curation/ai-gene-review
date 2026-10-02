@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
 genes: [GCN5, ESA1, SAS2, SAS3, RPD3, HDA1, HST1, HST2, SIR2, SIR3, SIR4, ORC1, SET1, DOT1, SPT16, POB3, ASF1, RTT109, SWI1, SWI2, SWI3, SNF5, CHD1, RCO1, PHD1]
+manifest:
+  slides:
+    - href: YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LzuMfM7j89Dimy9hz3Kg2U
+      title: Project brief
 ---
 
 # Yeast Epigenetics & Histone Inheritance
@@ -327,7 +334,3 @@ Last updated: 2026-08-12
 - Selected 29 genes spanning HATs, HDACs, SIR proteins, histone methyltransferases, and histone chaperones
 - Emphasis on FACT complex dynamics and structural biology of histone inheritance
 - Ready to begin gene review workflow
-
-## Slides
-
-- [Slides](YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.html) (Marp source: [YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.md](YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.md)) — AI generated

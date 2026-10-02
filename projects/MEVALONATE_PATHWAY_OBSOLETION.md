@@ -8,6 +8,13 @@ sidecars:
   slide_assets:
     - MEVALONATE_PATHWAY_OBSOLETION/slides/pathway-split.svg
     - MEVALONATE_PATHWAY_OBSOLETION/slides/term-map.svg
+manifest:
+  slides:
+    - href: MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/RK6KkhfjZSxgQTA1pScaVR
+      title: Project brief
 ---
 
 # Mevalonate Pathway Term Cleanup — Obsoletion & Replacement
@@ -199,7 +206,3 @@ HMGCS1/MVK/MVD/PMVK/FDPS/HMGCR enter the review cycle.
   RCA row is `REMOVE`, because its only applicable replacement
   (GO:0019287) is already an `ACCEPT`ed row. No other review carries a
   GO:0010142 GOA row.
-
-## Slides
-
-- [Slides](MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.html) (Marp source: [MEVALONATE_PATHWAY_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/MEVALONATE_PATHWAY_OBSOLETION/slides/MEVALONATE_PATHWAY_OBSOLETION-slides.md)) — AI generated

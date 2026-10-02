@@ -3,6 +3,13 @@ title: "Yeast DNA Repair & Chromatin Dynamics"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+manifest:
+  slides:
+    - href: YEAST_DNA_REPAIR_CHROMATIN/slides/YEAST_DNA_REPAIR_CHROMATIN-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Lxg43GSyUuGs8J3X1tAvBr
+      title: Project brief
 ---
 
 # Yeast DNA Repair & Chromatin Dynamics
@@ -125,7 +132,3 @@ Last updated: 2025-12-30
 - Selected 28 genes spanning DNA sensing, HR machinery, FACT complex, BER, and MMR
 - Emphasis on structural biology insights (FACT-replisome, histone recycling, chromatin reconfiguration)
 - Ready to begin gene review workflow
-
-## Slides
-
-- [Slides](YEAST_DNA_REPAIR_CHROMATIN/slides/YEAST_DNA_REPAIR_CHROMATIN-slides.html) (Marp source: [YEAST_DNA_REPAIR_CHROMATIN-slides.md](YEAST_DNA_REPAIR_CHROMATIN/slides/YEAST_DNA_REPAIR_CHROMATIN-slides.md)) — AI generated
