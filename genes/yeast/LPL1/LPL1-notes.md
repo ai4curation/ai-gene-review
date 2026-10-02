@@ -55,3 +55,10 @@ LPL1 encodes a lipid droplet phospholipase B with dual roles in lipid metabolism
 - Selvaraju et al. 2014 (PMID:25014274) - Biochemical characterization
 - Weisshaar et al. 2017 (PMID:28100635) - Proteostasis role
 - Athenstaedt et al. 1999 (PMID:10515935) - Early lipid droplet localization
+
+## 2026-09-28 IBA re-review
+
+- Re-reviewed the GOA IBAs against `projects/IBA_REVIEW.md`. The `GO:0004622` IBA should remain `MODIFY`: `PANTHER:PTN000280739` plus the LPL1 self-source support conserved phospholipase biology; the failure is only that phosphatidylcholine lysophospholipase is too narrow for the experimentally shown B-type glycerophospholipase activity, and the self-source is legitimate rather than circular.
+- The `GO:0047372` IBA should remain `REMOVE`. The GOA trace `PANTHER:PTN000773837|SGD:S000003112` is the ROG1 monoacylglycerol-lipase branch called out in the IBA project; Selvaraju et al. showed Lpl1 acts on glycerophospholipids, and I found no direct monoacylglycerol lipase evidence for Lpl1.
+- Re-read Weisshaar et al. 2017. Lpl1 is Rpn4-induced and hac1delta lpl1delta cells have protein-degradation defects, but lpl1delta alone did not stabilize CPY* or Delta2-GFP in the assays, so I removed proposed `NEW` rows for `GO:0043161` and `GO:0071218`; the paper supports a lipid-droplet/proteostasis link rather than direct execution of proteasome-mediated catabolism.
+- A newer-paper search did not find primary LPL1 studies after Weisshaar et al. that change the phospholipase/lipid-droplet model; recent hits were reviews or database pages.

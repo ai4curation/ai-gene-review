@@ -1519,7 +1519,7 @@ stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
 # Build the complete disposable publication tree used by the Pages migration.
-build-pages: render-all render-projects render-prediction-eval render-modules deploy-browser deploy-predictions-browser deploy-propagation-browser stage-pages
+build-pages: render-all render-projects render-prediction-eval render-modules render-dashboard deploy-browser deploy-predictions-browser deploy-propagation-browser stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
@@ -1590,6 +1590,10 @@ render-project project:
 # Render module YAML files to HTML with an inline tree browser
 render-modules:
     uv run ai-gene-review render-modules --all
+
+# Regenerate the gene review status dashboard (pages/dashboard.html)
+render-dashboard:
+    uv run python scripts/generate_dashboard.py
 
 # Render a specific module YAML to HTML
 render-module module:
