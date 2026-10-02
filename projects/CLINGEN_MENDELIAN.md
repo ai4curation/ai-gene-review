@@ -2961,9 +2961,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**157 of 2,876 genes are complete; 2,719 remain.** The verified BMPR1A merge
-adds one completed gene to the preceding completion update.
-The 158 original gene PR merges include AKR1D1, whose required source follow-up
+**159 of 2,876 genes are complete; 2,717 remain.** Verified BMP6 and BOLA3 merges
+add two completed genes to the preceding completion update.
+The 160 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3236,7 +3236,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BMP4** — HGNC:1071; [BMP4-related ocular growth disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5e7832a8-8a0b-4719-aaf9-1cbdcc392776-2025-02-20T200000.000Z) (MONDO:0100613; AD; Definitive).
 - [x] **BMPR1A** — HGNC:1076; [juvenile polyposis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7004b10e-0eb6-4517-8deb-2d4b7264d2f8-2022-12-30T180000.000Z) (MONDO:0017380; AD; Definitive).
 - [ ] **BMPR2** — HGNC:1078; [congenital heart disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b4322da-10a2-46c4-be0c-b5163ab5f401-2023-09-18T160000.000Z) (MONDO:0005453; AD; Limited); [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a20ce78b-18ba-436c-877e-a08d092ac7c7-2020-12-07T172318.621Z) (MONDO:0015924; AD; Definitive).
-- [ ] **BOLA3** — HGNC:24415; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e6c6964-bbb5-4101-abbb-782eb01b0f33-2023-07-24T040000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **BOLA3** — HGNC:24415; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e6c6964-bbb5-4101-abbb-782eb01b0f33-2023-07-24T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **BPTF** — HGNC:3581; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_08521bf8-a5a2-4a44-941b-12d9eae7aa4f-2022-07-06T160000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **BRAF** — HGNC:1097; [Noonan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_47cf08d5-efc6-4d42-b031-a06619873161-2018-07-24T160000.000Z) (MONDO:0018997; AD; Moderate); [Noonan syndrome with multiple lentigines](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_888875a8-5654-486b-8e64-e1382ccc6650-2018-07-24T160000.000Z) (MONDO:0007893; AD; Limited); [cardiofaciocutaneous syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a53e5a92-126f-4b00-a89b-af55d4f342ca-2018-07-24T160000.000Z) (MONDO:0015280; AD; Definitive).
 - [ ] **BRAT1** — HGNC:21701; [neonatal-onset encephalopathy with rigidity and seizures](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_698a4cb3-df52-432b-9d3e-d3d76111db25-2022-09-13T170000.000Z) (MONDO:0013784; AR; Definitive); [neurodevelopmental disorder with cerebellar atrophy and with or without seizures](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_93a7b6f1-75e5-4f97-be9d-62fb5770b8cb-2022-09-06T170000.000Z) (MONDO:0020841; AR; Definitive).
@@ -5515,7 +5515,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BCORL1** — HGNC:25657; [Shukla-Vernon syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7cc118e0-37b5-408c-9c91-ed0828997a1d-2024-03-05T070000.000Z) (MONDO:0026727; XL; Limited).
 - [ ] **BDP1** — HGNC:13652; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d300a54b-171c-4445-a138-a24409e99aae-2021-03-26T160000.000Z) (MONDO:0019497; AR; Limited).
 - [ ] **BMP10** — HGNC:20869; [congenital heart disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d1da0a68-cf08-4de9-8461-0808826679bd-2023-09-11T160000.000Z) (MONDO:0005453; AD; Limited); [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_98be8b85-16ad-46d3-9736-2b240803da21-2022-10-18T160000.000Z) (MONDO:0015924; AD; Limited).
-- [ ] **BMP6** — HGNC:1073; [iron overload, susceptibility to](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_61e1d5f4-7b1a-4abc-89e7-9ce04b34e2a9-2025-06-06T170000.000Z) (MONDO:0859316; AD; Limited).
+- [x] **BMP6** — HGNC:1073; [iron overload, susceptibility to](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_61e1d5f4-7b1a-4abc-89e7-9ce04b34e2a9-2025-06-06T170000.000Z) (MONDO:0859316; AD; Limited).
 - [ ] **BRWD1** — HGNC:12760; [agammaglobulinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a44471f3-0951-4456-955d-916b691e59f5-2022-12-08T170000.000Z) (MONDO:0015977; AD; Limited).
 - [ ] **BUB1** — HGNC:1148; [colorectal cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_018019f0-2a13-42e7-9a03-b7eac3a4c483-2023-12-20T180000.000Z) (MONDO:0005575; AD; Limited).
 - [ ] **C1GALT1C1** — HGNC:24338; [hemolytic uremic syndrome, atypical, 8, with rhizomelic short stature](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5a5ca158-bc76-49f8-84a0-fc60e6b13fdb-2025-01-28T050000.000Z) (MONDO:0957495; XL; Limited).
