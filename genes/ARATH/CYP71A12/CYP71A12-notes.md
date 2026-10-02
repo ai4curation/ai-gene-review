@@ -112,3 +112,9 @@
   CYP71A12-deep-research-asta.md, but the retrieved papers are entirely off-topic (IgAN
   subtypes, avian immunome, LIPID MAPS, etc. - retrieval keyed on template boilerplate, not
   on CYP71A12). That file contributed nothing, was not used as evidence, and was deleted rather than committed.
+
+## Update: late falcon deep research (2026-10-02)
+
+The falcon job reported as timed out above kept running server-side and later wrote
+`CYP71A12-deep-research-falcon.md`. The review was completed before it arrived and does not
+rely on it; it is kept as a provenance record and a source of leads for future re-review.

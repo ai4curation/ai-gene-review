@@ -75,3 +75,9 @@
   not available. Available: falcon, asta, openscientist"). No deep-research file exists; the
   review is based on the cached primary literature listed above (PubMed-verified PMIDs),
   UniProt O49782, and the Tang et al. 2023 full text supplied by the user.
+
+## Update: late falcon deep research (2026-10-02)
+
+The falcon job reported as timed out above kept running server-side and later wrote
+`MYB51-deep-research-falcon.md`. The review was completed before it arrived and does not
+rely on it; it is kept as a provenance record and a source of leads for future re-review.
