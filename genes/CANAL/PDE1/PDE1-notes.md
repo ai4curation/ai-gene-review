@@ -39,3 +39,10 @@ There is no evidence of a physical Pde1-Gpa2 interaction; the "regulatory module
 
 ## Locus identifiers
 Falcon flagged that some literature labels PDE1 as orf19.4235 whereas UniProt Q5AGE4 lists orf19.11710. CGD's own PDE1 locus (CAL0000177603) cross-references Q5AGE4 and is the source of the IDA/IMP annotations, so the gene-to-accession mapping is CGD's. (Assembly 19 assigned separate orf19 numbers to allelic ORFs, which likely explains the two numbers; not independently verified here.)
+
+## OpenScientist run on the glucose-activated component (2026-10-02)
+- Hypothesis (free-text, function-assignment): the cAMP rise Pde1 terminates after glucose addition is generated through Gpr1/Gpa2. References given: PMID:20558315, 15302825, 15673611. The review's verdict was withheld. 3 iterations, 827 s. Report: `PDE1-hypotheses/pde1-glucose-gpcr-pathway/openscientist.md`.
+- Verdict: "Partially supported but over-annotated". It agrees that Pde1 terminates glucose-induced cAMP, and that the glucose-activated GPCR source is contradicted by PMID:15673611 and the Gpr1 ligand is ambiguous [PMID:15667329 "it remains unclear whether Gpr1 senses sugars, as in Saccharomyces cerevisiae, or specific amino acids like methionine"].
+- It recommended the parent GO:1902660 (negative regulation of glucose mediated signaling pathway). Verified via OLS that GO:1902660 is a direct parent of GO:0110034, and that GO:0010255 glucose mediated signaling pathway does not require a GPCR. Adopted: GO:0110034 changed from MARK_AS_OVER_ANNOTATED to MODIFY -> GO:1902660.
+- Errors in the report, not imported: it calls the S. cerevisiae paradigm the source of the IBA (the PAINT donor is S. pombe cgs2, where Git3 is a genuine glucose receptor), and it treats Miwa 2004 as superseded rather than disputed. Its QuickGO evidence-code counts were not re-checked.
+- No local bioinformatics holdout existed for PDE1, so there was nothing to compare against.
