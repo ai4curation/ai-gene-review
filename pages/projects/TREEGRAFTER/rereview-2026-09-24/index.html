@@ -453,18 +453,76 @@ quote:</p>
   runs on <code>LITERATURE_PREFIXES</code> only, and a non-verbatim snippet fails.</li>
 <li><strong><code>file:</code> quotes are not gated at all.</strong> <code>conf/reference_validator_config.yaml</code><br />
   lists <code>file</code> in <code>skip_prefixes</code>, so <code>file:</code> references are exempt from snippet<br />
-  checking. Every <code>file:</code> quote in this audit is <strong>hand-verified</strong> (by <code>grep -cF</code><br />
-  against the cited file), not machine-checked, and a composed one passes<br />
-  validation silently.</li>
+  checking, and a composed one passes validation silently. Every <code>file:</code> quote<br />
+  this audit <strong>added</strong> was checked by hand (<code>grep -cF</code> against the cited file);<br />
+  the ones it inherited were swept once, with the result recorded below rather<br />
+  than left implicit.</li>
 </ul>
 <p>This is a known repo-wide blind spot, documented in<br />
 <a href="../../MISCITATIONS.html"><code>MISCITATIONS.md</code></a>, <a href="../../SPKW.html"><code>SPKW.md</code></a> and<br />
 <a href="../../FUNCTION_KNOWLEDGE_GAPS.html"><code>FUNCTION_KNOWLEDGE_GAPS.md</code></a>; the SPKW audit<br />
-measured ~48% of <code>file:</code> quotes non-verbatim while passing validation. Two<br />
-instances surfaced inside this audit's own changed set (PR #3165 round 10:<br />
-<code>THLAR/TFP</code>, both <code>file:</code> quotes, plus one on the <code>PSEPK/retS</code> row this audit<br />
-relaxed) and were fixed by substring swap. So: when reading a rationale here,<br />
-treat a <code>file:</code> quote as a reviewer's transcription rather than a gated fact.</p>
+measured ~48% of <code>file:</code> quotes non-verbatim while passing validation.</p>
+<h3 id="what-the-sweep-of-this-audits-changed-set-found">What the sweep of this audit's changed set found</h3>
+<p><strong>945 <code>file:</code> quotes across the 104 changed reviews</strong>, compared against their<br />
+cited files using the repo validator's own <code>normalize_text</code>. <strong>Three were fixed<br />
+and seven were left.</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fixed</td>
+<td>3</td>
+<td><code>THLAR/TFP</code> both <code>file:</code> quotes, and one on the <code>PSEPK/retS</code> <code>GO:0071474</code> row this audit relaxed to <code>UNDECIDED</code></td>
+</tr>
+<tr>
+<td>left, inherited</td>
+<td>7</td>
+<td><code>PSEAI/merA</code> 1, <code>PSEPK/groES</code> 1, <code>PSEPK/retS</code> 5</td>
+</tr>
+</tbody>
+</table>
+<p>The seven are <strong>not</strong> clean. Each is non-verbatim, each is byte-identical on<br />
+<code>main</code>, and each sits on a row this audit did not move — so they were reported<br />
+rather than fixed, to keep the audit's diff from becoming a cleanup of inherited<br />
+quote problems. <strong>Do not read this section as "the changed set is verbatim": it<br />
+is 7/945 short, deliberately and with the genes named.</strong> (<code>merA</code> and <code>groES</code><br />
+carry a <code>no_change</code> history record for this reason — nothing else in the audit<br />
+would otherwise say they were looked at.)</p>
+<p>Of the 34 raw flags the sweep produced, only those 7 are real. The other 27 are<br />
+two classes that a naive substring test miscounts, and the distinction is the<br />
+spec any future <code>file:</code> gate has to implement:</p>
+<ul>
+<li><strong>25 UniProt line-wrap artifacts.</strong> The quote <em>is</em> present, split across <code>CC</code><br />
+  continuation lines — <code>secD</code>'s <code>Part of the essential Sec protein translocation
+  apparatus</code> straddles <code>secD-uniprot.txt:47–48</code>. A gate must unwrap <code>CC</code>/<code>DR</code><br />
+  continuations or it will report mostly false positives.</li>
+<li><strong>2 marked elisions.</strong> <code>zwf</code> joins two fragments with a literal <code>...</code>, which<br />
+  is visible to a reader. A gate has to decide whether that is a supported<br />
+  convention.</li>
+</ul>
+<p>The difference between a marked and a silent elision is why only some of these<br />
+read as quotes at all: <code>zwf</code> shows the join; <code>merA</code> performs the same operation<br />
+invisibly, fusing two clauses three sentences apart and changing <code>when</code> to<br />
+<code>When</code>; <code>groES</code> splices across two source sentences. <strong>Silent splices are the<br />
+class that needs the gate</strong>; marked elisions are a convention question.</p>
+<p>Two independent measurements of the same blind spot now exist — ~48% of 550<br />
+(SPKW) and ~0.7% of 945 (here) — which differ by corpus, not by method.</p>
+<p>One more thing a gate would have to settle: <code>file:</code> references resolve against<br />
+two different bases. <code>reference_base_dir: genes</code> makes <code>file:PSEPK/accD/accD-uniprot.txt</code><br />
+resolve, but the repo-root-relative form used by the PAINT citations here and by<br />
+dozens of existing reviews (<code>file:interpro/panther/.../*-paint.tsv</code>) would resolve<br />
+to a nonexistent <code>genes/interpro/…</code>. Nothing breaks today only because <code>file</code> is<br />
+skipped entirely — meaning that form has never been resolvable by any tool, only<br />
+by a human with <code>grep</code>. This is pre-existing convention drift, not something this<br />
+audit introduced.</p>
+<p>So: when reading a rationale here, treat a <code>file:</code> quote as a reviewer's<br />
+transcription rather than a gated fact.</p>
 <h2 id="what-the-counts-count">What the counts count</h2>
 <p><code>192</code>, <code>117</code> and <code>75</code> are counts of <strong>recorded rows</strong>, and the gene figures need<br />
 the same care, because one protein in this audit has two records. <code>PSEPK/aroQ</code><br />

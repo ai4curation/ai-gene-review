@@ -89,18 +89,67 @@ quote:
   runs on `LITERATURE_PREFIXES` only, and a non-verbatim snippet fails.
 - **`file:` quotes are not gated at all.** `conf/reference_validator_config.yaml`
   lists `file` in `skip_prefixes`, so `file:` references are exempt from snippet
-  checking. Every `file:` quote in this audit is **hand-verified** (by `grep -cF`
-  against the cited file), not machine-checked, and a composed one passes
-  validation silently.
+  checking, and a composed one passes validation silently. Every `file:` quote
+  this audit **added** was checked by hand (`grep -cF` against the cited file);
+  the ones it inherited were swept once, with the result recorded below rather
+  than left implicit.
 
 This is a known repo-wide blind spot, documented in
 [`MISCITATIONS.md`](../../MISCITATIONS.md), [`SPKW.md`](../../SPKW.md) and
 [`FUNCTION_KNOWLEDGE_GAPS.md`](../../FUNCTION_KNOWLEDGE_GAPS.md); the SPKW audit
-measured ~48% of `file:` quotes non-verbatim while passing validation. Two
-instances surfaced inside this audit's own changed set (PR #3165 round 10:
-`THLAR/TFP`, both `file:` quotes, plus one on the `PSEPK/retS` row this audit
-relaxed) and were fixed by substring swap. So: when reading a rationale here,
-treat a `file:` quote as a reviewer's transcription rather than a gated fact.
+measured ~48% of `file:` quotes non-verbatim while passing validation.
+
+### What the sweep of this audit's changed set found
+
+**945 `file:` quotes across the 104 changed reviews**, compared against their
+cited files using the repo validator's own `normalize_text`. **Three were fixed
+and seven were left.**
+
+| | | |
+|---|---|---|
+| fixed | 3 | `THLAR/TFP` both `file:` quotes, and one on the `PSEPK/retS` `GO:0071474` row this audit relaxed to `UNDECIDED` |
+| left, inherited | 7 | `PSEAI/merA` 1, `PSEPK/groES` 1, `PSEPK/retS` 5 |
+
+The seven are **not** clean. Each is non-verbatim, each is byte-identical on
+`main`, and each sits on a row this audit did not move — so they were reported
+rather than fixed, to keep the audit's diff from becoming a cleanup of inherited
+quote problems. **Do not read this section as "the changed set is verbatim": it
+is 7/945 short, deliberately and with the genes named.** (`merA` and `groES`
+carry a `no_change` history record for this reason — nothing else in the audit
+would otherwise say they were looked at.)
+
+Of the 34 raw flags the sweep produced, only those 7 are real. The other 27 are
+two classes that a naive substring test miscounts, and the distinction is the
+spec any future `file:` gate has to implement:
+
+- **25 UniProt line-wrap artifacts.** The quote *is* present, split across `CC`
+  continuation lines — `secD`'s `Part of the essential Sec protein translocation
+  apparatus` straddles `secD-uniprot.txt:47–48`. A gate must unwrap `CC`/`DR`
+  continuations or it will report mostly false positives.
+- **2 marked elisions.** `zwf` joins two fragments with a literal ` ... `, which
+  is visible to a reader. A gate has to decide whether that is a supported
+  convention.
+
+The difference between a marked and a silent elision is why only some of these
+read as quotes at all: `zwf` shows the join; `merA` performs the same operation
+invisibly, fusing two clauses three sentences apart and changing `when` to
+`When`; `groES` splices across two source sentences. **Silent splices are the
+class that needs the gate**; marked elisions are a convention question.
+
+Two independent measurements of the same blind spot now exist — ~48% of 550
+(SPKW) and ~0.7% of 945 (here) — which differ by corpus, not by method.
+
+One more thing a gate would have to settle: `file:` references resolve against
+two different bases. `reference_base_dir: genes` makes `file:PSEPK/accD/accD-uniprot.txt`
+resolve, but the repo-root-relative form used by the PAINT citations here and by
+dozens of existing reviews (`file:interpro/panther/.../*-paint.tsv`) would resolve
+to a nonexistent `genes/interpro/…`. Nothing breaks today only because `file` is
+skipped entirely — meaning that form has never been resolvable by any tool, only
+by a human with `grep`. This is pre-existing convention drift, not something this
+audit introduced.
+
+So: when reading a rationale here, treat a `file:` quote as a reviewer's
+transcription rather than a gated fact.
 
 ## What the counts count
 
