@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [BBS1, BBS2, ARL6, BBS4, BBS5, MKKS, BBS7, TTC8, BBS9, BBS10, BBS12, LZTFL1, BBIP1, CCDC28B]
+manifest:
+  slides:
+    - href: HUMAN_BBSOME/slides/HUMAN_BBSOME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LHycMPW3frEEecc1J3b1Yr
+      title: Project brief
 ---
 
 # Human BBSome Project
@@ -141,7 +148,3 @@ blocks, and a `<GENE>-notes.md` research journal with cited provenance.
 - Klink BU et al. (2020) eLife / Singh SK et al. (2020) — Cryo-EM architecture of the BBSome.
 - Seo S et al. (2010) PNAS — BBS chaperonins (MKKS/BBS6, BBS10, BBS12) + CCT mediate BBSome assembly.
 - Nachury MV (2018) Phil Trans R Soc B — BBSome trafficking and ciliary GPCR retrieval.
-
-## Slides
-
-- [Slides](HUMAN_BBSOME/slides/HUMAN_BBSOME-slides.html) (Marp source: [HUMAN_BBSOME-slides.md](HUMAN_BBSOME/slides/HUMAN_BBSOME-slides.md)) — AI generated

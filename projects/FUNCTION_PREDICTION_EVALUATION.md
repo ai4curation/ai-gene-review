@@ -8,6 +8,13 @@ sidecars:
   slide_images:
     - FUNCTION_PREDICTION_EVALUATION/slides/evaluation-loop.svg
     - FUNCTION_PREDICTION_EVALUATION/slides/prediction-results.svg
+manifest:
+  slides:
+    - href: FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/FWa7DRJiqJvUFZNxGvrErV
+      title: Project brief
 ---
 # Function Prediction Evaluation
 
@@ -78,7 +85,3 @@ For the shared approach to term-level review, see the
 [evidence standards](PROTNLM_EVALUATION.md#evidence-standards). For narrative
 correctness and completeness, see the
 [BioReason evaluation rubric](BIOREASON_COMPARISON.md#evaluation-rubric).
-
-## Slides
-
-- [Slides](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html) (Marp source: [FUNCTION_PREDICTION_EVALUATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.md)) — AI generated

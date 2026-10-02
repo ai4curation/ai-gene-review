@@ -4,6 +4,13 @@ maturity: COMPLETE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
 genes: [SIR2, SIR3, SIR4, HST2, HST3, PNC1, HAP4, SOD2, CAT2, CYC1, LSM1, DBP5, NMD3, SUI2, RAS2, TOR1, RIM15, SPA2, UBP3, ATG7]
+manifest:
+  slides:
+    - href: YEAST_REPLICATIVE_AGING/slides/YEAST_REPLICATIVE_AGING-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/QC3jFS9mYFP8PCGoCDApTg
+      title: Project brief
 ---
 
 # Yeast Replicative Aging & mRNA Processing
@@ -428,7 +435,3 @@ Comprehensive systematic review of all components of the SIR2-SIR3-SIR4 silent c
 - **Phase 2**: mRNA processing/translation genes (LSM1, DBP5, NMD3, EIF2)
 - **Phase 3**: Growth control and nutrient sensing (RAS2, TOR1, RIM15, SPA2)
 - **Phase 4**: Autophagy and protein degradation (UBP3, ATG7)
-
-## Slides
-
-- [Slides](YEAST_REPLICATIVE_AGING/slides/YEAST_REPLICATIVE_AGING-slides.html) (Marp source: [YEAST_REPLICATIVE_AGING-slides.md](YEAST_REPLICATIVE_AGING/slides/YEAST_REPLICATIVE_AGING-slides.md)) — AI generated

@@ -105,12 +105,17 @@ the description and suggested questions, never as `supporting_by` evidence.
   budding-yeast reconstitution (PMID:22940250) supports an informative MF; the ND
   placeholder is no longer accurate. Consistent with the human MAD2L1 review, which uses
   GO:1990948 as a core function.
-- **Twelve bare GO:0005515 IPI rows -> MODIFY**, per repository policy (never
-  MARK_AS_OVER_ANNOTATED on protein binding): Mad1 partners -> GO:1990728 MAD1-MAD2
-  complex; Cdc20 partners -> GO:1990333 CDC20-MAD2 subcomplex; Mad3 and Bub3 partners ->
-  GO:0033597 MCC. The two HTP rows (Uetz Y2H, Gavin TAP/MS) and the 2023 interactome row
-  (no Mad2 in the cached main text) are supported by the targeted papers via
+- **Twelve bare GO:0005515 IPI rows -> REMOVE**, per repository policy: generic
+  protein binding should be removed unless a cited paper supports a better molecular-function
+  term. Here the interaction evidence supports complex membership, not a more specific MF.
+  The Mad1 interactions point to the MAD1-MAD2 complex; Cdc20 to the CDC20-MAD2 subcomplex;
+  and Mad3/Bub3 to the MCC. The two HTP rows (Uetz Y2H, Gavin TAP/MS) and the 2023
+  interactome row (no Mad2 in the cached main text) are supported by the targeted papers via
   `additional_reference_ids`; the interactions themselves are not disputed.
+- **GO:1990728 MAD1-MAD2 complex -> NEW.** The core Mad1-Mad2 complex was previously used
+  only as a proposed replacement for Mad1-targeted `GO:0005515` rows and in `core_functions`.
+  Added a dedicated proposed complex annotation from PMID:10436016 so the specific CC assertion
+  is explicit and the bare protein-binding rows can be removed cleanly.
 - **GO:0000727 BIR IMP -> MARK_AS_OVER_ANNOTATED.** The paper shows necessity (SAC
   prolongs arrest so BIR can finish), not participation of Mad2 in repair; the CLAUDE.md
   substrate/necessity test applies. The checkpoint contribution is already captured by
@@ -140,3 +145,24 @@ the description and suggested questions, never as `supporting_by` evidence.
 `just validate yeast MAD2`: valid, 1 warning (core-function MF GO:0042803 protein
 homodimerization activity not among existing annotations; retained for consistency with
 the human MAD2L1 review's Mad1-templated O/C-Mad2 dimerization core function).
+
+## 2026-09-28 IBA and protein-binding follow-up
+
+Re-reviewed the two GOA IBA rows against current PTHR11842 PAINT. The accepted placement
+remains correct: PTN000217420 carries both `GO:0000776 kinetochore` and `GO:0007094
+mitotic spindle assembly checkpoint signaling` for the MAD2A subfamily, and the current
+PAINT cache keeps MAD2 on the MAD2A branch, separate from the MAD2B/REV7 branch that
+carries nucleus, translesion synthesis, and DNA repair functions. MAD2's own SGD
+experimental annotations in the WITH/FROM set are legitimate PAINT descendant evidence,
+not circular support.
+
+Searched for post-2024 primary budding-yeast MAD2 literature. The search mainly found
+checkpoint reviews/modeling papers and the cached 2024 primary yeast work already noted
+in the Falcon report, so no newer PMID was added.
+
+Aligned all twelve generic IntAct `GO:0005515 protein binding` rows with current policy:
+they are now `REMOVE`, not `MODIFY`, because the evidence supports specific
+cellular-component complex membership rather than a replacement molecular-function term.
+Added a single explicit `NEW` annotation for `GO:1990728 mitotic spindle assembly checkpoint
+MAD1-MAD2 complex` from Chen et al. 1999 so the Mad1-Mad2 complex used in `core_functions`
+is represented directly instead of only as an invalid replacement for protein binding.

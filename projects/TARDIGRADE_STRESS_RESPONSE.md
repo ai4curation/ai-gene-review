@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [RAMVA]
 genes: [Dsup, CAHS1, CAHS2, CAHS3, SAHS1, SAHS2, MAHS, RvLEAM, RvY_00650, RvY_00651, RvY_01767, RvY_03754, RvY_03757, RvY_09480, RvY_10893, RvY_13070, RvY_15948, RvY_17310]
+manifest:
+  slides:
+    - href: TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NioQYK8PTKAbsCS2daEeYq
+      title: Project brief
 ---
 
 # Tardigrade Stress Response Protein Curation Project
@@ -172,10 +179,6 @@ The original GO:0003677 (DNA binding) annotation was initially proposed for MODI
 
 ### SAHS proteins have FABP-like folds
 SAHS1 and SAHS2 adopt beta-barrel folds homologous to fatty acid-binding proteins, with crystal structures available. Lipid binding was annotated for SAHS1 but not SAHS2 - proposed to add for SAHS2.
-
-## Slides
-
-- [Slides](TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.html) (Marp source: [TARDIGRADE_STRESS_RESPONSE-slides.md](TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.md)) — AI generated
 
 ## Key References
 

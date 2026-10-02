@@ -3,6 +3,13 @@ title: "Rare Earth Element (REE) Extraction Pathways (Biological Systems)"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [METEA]
+manifest:
+  slides:
+    - href: REE/slides/REE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/DsVBv7tjfvaSfEkmp45HNM
+      title: Project brief
 ---
 
 # Rare Earth Element (REE) Extraction Pathways (Biological Systems)
@@ -26,10 +33,6 @@ are tracked by the METEA_MLL_CLUSTER project.
 The chassis comparison is the practical output so far: AM1 wins on REE
 selectivity and loses on acid tolerance, which is why the blueprint separates
 leaching from uptake rather than asking one organism to do both.
-
-## Slides
-
-- [Slides](REE/slides/REE-slides.html) (Marp source: [REE-slides.md](REE/slides/REE-slides.md)) — AI generated
 
 ## Scope
 

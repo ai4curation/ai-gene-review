@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [human]
 genes: [TMF1, TRAPPC1, TRAPPC3, TRAPPC4, TRAPPC5, TRAPPC8, TRAPPC11, TRAPPC12, TRAPPC13]
+manifest:
+  slides:
+    - href: VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/4gpN5w7vVbudek27XV5L7C
+      title: Project brief
 ---
 
 # Vesicle Tethering BP Subtree — Obsoletion & MF Refactor (GO:0099022)
@@ -280,7 +287,3 @@ trackers.
   new reviews not started, so maturity stays IN_PROGRESS.
 - 2026-09-27 — #3237 merged, so the TMF1 and USO1 refreshes are on
   `main`. Tier 2 new reviews not started; maturity stays IN_PROGRESS.
-
-## Slides
-
-- [Slides](VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.html) (Marp source: [VESICLE_TETHERING_OBSOLETION-slides.md](VESICLE_TETHERING_OBSOLETION/slides/VESICLE_TETHERING_OBSOLETION-slides.md)) — AI generated

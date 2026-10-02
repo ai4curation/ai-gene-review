@@ -92,8 +92,8 @@ Family biology (established for the *characterized* members, NOT MNT4):
 
 From `MNT4-goa.tsv`:
 - GO:0000033 alpha-1,3-mannosyltransferase activity — **IBA** (GO_REF:0000033; PANTHER PTN001264810,
-  with SGD:S000000803/…001276/…003226 = MNN1/MNT2/MNT3). Family phylogenetic inference.
-- GO:0000033 — **ISS** ×3 (PMID:10521541; with SGD:S000000803/001276/003226 = MNN1/MNT2/MNT3). Sequence
+  with SGD:S000000803/…001276/…003226 = MNN1/MNT3/MNT2). Family phylogenetic inference.
+- GO:0000033 — **ISS** ×3 (PMID:10521541; with SGD:S000000803/001276/003226 = MNN1/MNT3/MNT2). Sequence
   similarity to the characterized paralogs, from the very paper whose genetics say MNT4 is not needed
   for O-glycan synthesis.
 - GO:0006493 protein O-linked glycosylation — **IBA** (GO_REF:0000033) and **IC** (PMID:10521541, from
@@ -162,3 +162,25 @@ primary sources; no web-only claim is used as a supporting_text quote.
 - UniProt P53745: RecName *"Probable alpha-1,3-mannosyltransferase MNT4"*; EC 2.4.1.-; PE 3;
   SIMILARITY *"Belongs to the MNN1/MNT family."*; TRANSMEM 11–29 *"Signal-anchor for type II membrane
   protein"*.
+
+## 2026-09-28 — IBA re-review
+
+Current PAINT still places three IBDs at `PTHR31392 / PTN001264810`, seeded by
+`SGD:S000000803` (MNN1), `SGD:S000001276` (MNT3) and `SGD:S000003226` (MNT2):
+
+```text
+GO:0005794  Golgi apparatus
+GO:0000033  alpha-1,3-mannosyltransferase activity
+GO:0006493  protein O-linked glycosylation
+```
+
+The molecular-function IBA is sound and should be treated as the probable core function:
+MNT4 is still in the PTHR31392:SF1 clade and retains the candidate catalytic D300-S-D302
+motif. The caveat is substrate resolution, not a bad node placement. The Golgi IBA is
+also defensible but non-core because MNT4-specific localization is unsettled.
+
+The O-linked-glycosylation IBA remains the failure case. Its source is sound for
+MNN1/MNT2/MNT3, but the same 1999 family paper reported that MNT4 does not appear to be
+required for O-glycan synthesis, so the process should not be transferred to MNT4 without
+a new MNT4-specific assay. Newer literature and database searches found no direct post-1999
+paper that changes this boundary.

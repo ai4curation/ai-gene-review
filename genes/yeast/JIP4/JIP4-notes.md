@@ -65,8 +65,12 @@ This family assignment is the sole basis for the **IBA** annotations in GOA:
   PANTHER:PTN000567596, UniProtKB:Q8IYB3 (human SRRM1). [file:yeast/JIP4/JIP4-goa.tsv]
 - `involved_in regulation of mRNA splicing, via spliceosome` (GO:0048024) — with/from
   FB:FBgn0036340 (Drosophila), PANTHER:PTN000567596. [file:yeast/JIP4/JIP4-goa.tsv]
-- (UniProt DR also lists an IBA `RNA binding` GO:0003723 from GO_Central, not currently in
-  the GOA TSV row set.) [file:yeast/JIP4/JIP4-uniprot.txt]
+- UniProt DR and current PAINT also list an IBA `RNA binding` GO:0003723 from the
+  same `PTN000567596` node. The QuickGO TSV row set still omits this 2026-08-28
+  PAINT assertion, and validation rejects non-GOA rows unless they are proposed NEW
+  annotations; keep the review DRAFT until the GOA cache contains the live row.
+  [file:yeast/JIP4/JIP4-uniprot.txt;
+  file:interpro/panther/PTHR23148/PTHR23148-paint.tsv]
 
 ### Caveat on the IBA splicing propagation (KEY reasoning)
 
@@ -76,10 +80,9 @@ biological reasons that are worth stating:
 1. **JIP4 lacks the PWI domain.** The defining folded, nucleic-acid-binding module of the
    SRm160/SRRM1 and RED120 (PWI-motif) splicing proteins is the PWI domain. JIP4's UniProt
    record annotates only disorder and low-complexity bias — no PWI, no RRM. The S. pombe
-   family member (Q9USH5) is explicitly a "PWI domain-containing protein" and is only 301 aa,
-   suggesting the true PWI-splicing ortholog in fission yeast is a different, shorter protein,
-   and that JIP4's placement rests on shared RS/low-complexity composition rather than the
-   catalytic/binding domain. [file:yeast/JIP4/JIP4-uniprot.txt; PANTHER entries csv]
+   family member (Q9USH5) is explicitly a "PWI domain-containing protein" and is only 301 aa;
+   the PANTHER node still reaches budding-yeast Jip4, but the target has diverged from these
+   PWI-containing splicing proteins. [file:yeast/JIP4/JIP4-uniprot.txt; PANTHER entries csv]
 2. **The budding-yeast splicing machinery is exhaustively characterized.** The S. cerevisiae
    spliceosome has been purified and defined in great biochemical/structural detail. The
    established yeast counterparts of the human SR-related nuclear-matrix splicing proteins are
@@ -87,9 +90,8 @@ biological reasons that are worth stating:
    — *not* JIP4. JIP4 has never been reported as a spliceosome or EJC component in yeast
    spliceosome proteomics. [web: RNA journal / genesdev PWI-motif and Cwc21 characterization —
    background, not gene-specific experimental evidence for JIP4.]
-3. **Yeast introns are few and simple** — there is no minor (U12) spliceosome and essentially
-   no exon-junction-complex-style splicing coactivation of the metazoan kind; the specific
-   ESE-dependent activation role of SRm160 has no clear yeast equivalent.
+3. The specific ESE-dependent splicing-coactivation role of metazoan SRm160 has not been
+   demonstrated for budding-yeast Jip4.
 
 Conclusion: the IBA MF/BP splicing terms are **plausible-by-homology but unverified and
 biologically questionable** for yeast. They should be treated as low-confidence
@@ -172,3 +174,20 @@ gene name:
 - CAVEAT: the report states a "165 aa" size for a "merged gene model/extension" — this is
   inconsistent with the authoritative UniProt length of **876 aa** (Q03361) and is not used;
   it appears to be a confused artifact from the ORF-merge re-annotation history.
+
+## 2026-09-30 IBA re-review
+
+- Rechecked the PTHR23148 IBA rows against the cached PAINT export. `GO:0005681`
+  spliceosomal complex, `GO:0048024` regulation of mRNA splicing, via spliceosome, and
+  `GO:0003723` RNA binding all trace to the all-eukaryote `PTN000567596` node.
+  `GO:0003723` is already present in UniProt's GO_Central rows for JIP4, but QuickGO
+  still omits the 2026-08-28 PAINT assertion.
+- Retained the two GOA IBA rows as `MARK_AS_OVER_ANNOTATED`, left the live RNA-binding IBA
+  as a draft-blocking follow-up, and confirmed that Jip4/Q03361 is in the same cached
+  SRRM1 subfamily as human and mouse SRRM1, so the PANTHER family placement itself reaches
+  the target. The problem is target-specific functional divergence: S. cerevisiae Jip4 has
+  only low-complexity/disordered features, no annotated PWI or RRM domain, no demonstrated
+  RNA binding, and no experimental spliceosome or splicing-regulator role.
+- Searched for newer direct JIP4/YDR475C papers through 2026; no primary study defining a
+  yeast Jip4 molecular function, RNA-binding activity, localization, or spliceosome role was
+  found. Public hits were database/interaction summaries or passing dataset mentions.
