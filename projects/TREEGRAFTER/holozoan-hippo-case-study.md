@@ -15,9 +15,10 @@ autolink_gene_symbols: false
 
 **Bottom line:** choanoflagellates (*Salpingoeca rosetta*), *Capsaspora* and
 sponges are not PANTHER reference genomes, so every tree-based GO annotation
-they carry is a TreeGrafter IEA (`GO_REF:0000118`). Across 11 reviewed
-proteins, 7 of 36 propagated rows were down-graded, all of them TreeGrafter
-rows. They show the main page's failure modes in a new setting: genes from
+they carry is a TreeGrafter IEA (`GO_REF:0000118`). Across the 16
+literature-based reviews, 11 of 53 propagated rows were down-graded, all of
+them TreeGrafter rows. Five more reviews, of proteins chosen because they
+carry the terms below, add 38 down-graded rows out of 48. They show the main page's failure modes in a new setting: genes from
 lineages that the reference trees sample thinly.
 
 | Case | Protein | Graft | Failure mode (main page numbering) | Rows down-graded |

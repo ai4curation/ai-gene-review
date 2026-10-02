@@ -367,13 +367,18 @@ fixes:
   rows and mark the other 4 as over-annotations.
 - **[Unicellular holozoans: Hippo pathway case study](TREEGRAFTER/holozoan-hippo-case-study.md)**
   — TreeGrafter on choanoflagellate, *Capsaspora* and sponge proteins, which
-  have no IBA rows because none of them is a PANTHER reference genome. Two
-  cross-family mis-placements: *Capsaspora* Warts grafted with the
-  citron/ROCK kinases (PTHR22988:SF71), and the *S. rosetta* protein knocked out
-  as yorkie grafted with the MAGI-related family. One correct graft still
-  inherits animal-tissue IBDs from LATS node PTN002390470, including
-  `regulation of organ growth` on a unicellular organism. Not part of the
-  frozen snapshot.
+  have no IBA rows because none of them is a PANTHER reference genome. The
+  commonest failure is grafting onto animal-only nodes:
+  - choanoflagellate cadherins onto a Bilateria node;
+  - *Capsaspora* integrin betas onto the vertebrate ITGBL1 node;
+  - *Capsaspora* T-box factors onto an all-animal node carrying "cell fate
+    specification".
+
+  There are also two cross-family mis-placements: *Capsaspora* Warts with the
+  citron/ROCK kinases, and the *S. rosetta* yorkie candidate with the MAGI
+  family. One correct graft still inherits animal-tissue IBDs from LATS node
+  PTN002390470, including `regulation of organ growth` on a unicellular
+  organism. Not part of the frozen snapshot.
 - **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
@@ -388,15 +393,55 @@ fixes:
 
 ## 2026-10-01
 
-- Added the [unicellular holozoan Hippo case study](TREEGRAFTER/holozoan-hippo-case-study.md)
-  from the ORIGINS_OF_MULTICELLULARITY reviews (11 proteins; 7 of 36
-  propagated rows down-graded, all `GO_REF:0000118`). New relative to the
-  frozen set: mis-placements that cross PANTHER family boundaries (Warts into
-  PTHR22988, Yorkie candidate into PTHR10316). Also a working hypothesis that
-  reference proteomes escape this because their tree position, not the HMM
-  call, sets their IBAs: fly wts is in PTHR22988 by UniProt's classification
-  but takes its IBAs from the LATS node. None of these rows are in the frozen
-  2026-09-06 tables.
+- Added the [unicellular holozoan case study](TREEGRAFTER/holozoan-hippo-case-study.md)
+  from the ORIGINS_OF_MULTICELLULARITY reviews. Across the 16 literature-based
+  reviews, 11 of 53 propagated rows were down-graded, all `GO_REF:0000118`.
+  - **Cross-family mis-placements.** Warts went into PTHR22988, and the
+    Yorkie candidate into PTHR10316.
+  - **Grafts onto animal-only nodes, three times.** These are choanoflagellate
+    cadherins on a node PAINT records at Bilateria, *Capsaspora* integrin betas
+    on the Euteleostomi ITGBL1 node, and *Capsaspora* T-box factors on an
+    all-animal node carrying "cell fate specification".
+  - **Working hypothesis.** Reference proteomes escape this because their tree
+    position, not the HMM call, sets their IBAs. Fly wts is in PTHR22988 by
+    UniProt's classification but takes its IBAs from the LATS node.
+  - None of these rows are in the frozen 2026-09-06 tables.
+- This complements the 2026-09-29 note below. Viral sequences outside the
+  trees' taxonomic scope have stopped receiving TreeGrafter terms, but
+  unicellular eukaryotes outside a node's PAINT taxon still receive them.
+
+## 2026-09-29
+
+- **Viral proteins appear to have dropped out of TreeGrafter.** Prompted by
+  the `GO:0006302` double-strand break repair row on the phiR8-01 family-A
+  DNA polymerase (`9CAUD/g022`, I7J3R9). Of all the reviewed proteins in the
+  corpus with a phage or virus taxon, only two had `GO_REF:0000118` rows: g022
+  (one row, graft node `PTN000015309`, PTHR10133:SF27) and phiNIT1
+  `9CAUD/dfrP` (D0VXF2, two rows from `PTN000167324`, PTHR48069).
+  In the 2026-07-27 GOA release (QuickGO) **neither protein has any
+  TreeGrafter annotation**, and `PANTHER:PTN…` is also gone from the with/from
+  of their `GO_REF:0000120` rows. Their UniProt entries still carry the
+  `DR PANTHER` family lines, so the protein is still classified in the family;
+  only the GO propagation stopped. We have not found a release note that says
+  so, and two proteins are too few to call it policy. It fits PANTHER trees
+  being built from cellular-organism reference proteomes, which would make a
+  graft of a viral sequence an extrapolation outside the tree's taxonomic scope.
+- **The change cuts both ways.** The g022 row was one of our down-grades
+  (`REMOVE`; it is the `I7J3R9` mode-0 row in the heuristic queue under Next
+  steps). But the two dfrP rows had been reviewed as correct:
+  `GO:0046452` dihydrofolate metabolic process (`ACCEPT`) and `GO:0046655`
+  folic acid metabolic process (`KEEP_AS_NON_CORE`). So excluding viruses
+  removes true positives as well as the false one. The DHFR keeps its MF and
+  `GO:0046654` THF-biosynthesis terms through InterPro2GO and UniRule. But
+  `GO:0046654` is a *sibling* of `GO:0046452` under `GO:0006760`, not an
+  ancestor, so the dihydrofolate statement had no surviving replacement. It is
+  re-asserted in the review as a NEW ISS row, grounded in the PAINT IBD on
+  `PTN000167322` (PTHR48069), which dfrP shares with *E. coli* folA (SF3).
+- Refreshed both genes' GOA and marked the vanished rows `retired: true`, which
+  keeps their reviews for provenance. The frozen 2026-09-06 tables still count
+  the three rows; they will drop out at the next snapshot refresh.
+- **Follow-up:** confirm with the PANTHER/GOA side whether viral sequences are
+  now deliberately excluded from TreeGrafter.
 
 ## 2026-09-27
 
