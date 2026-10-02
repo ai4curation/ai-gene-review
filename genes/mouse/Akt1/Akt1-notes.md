@@ -65,3 +65,13 @@ of the normal PH-domain AKT1 recruitment cycle. The mouse Aatf anti-apoptosis
 GO-CAM already places Akt1 upstream of `GO:2001243 negative regulation of
 intrinsic apoptotic signaling pathway`, so this refresh did not invent a new
 apoptosis annotation from broad pro-survival phenotypes.
+
+## 2026-10-02 PR follow-up
+
+Reclassified the remaining generic `GO:0005515 protein binding` IPI rows from
+`MARK_AS_OVER_ANNOTATED` to `REMOVE`, matching the review stance that these
+physical-interaction rows do not identify an AKT1 molecular function when a
+specific kinase activity or pathway context is available. Added
+`propagation_review` blocks to the non-accepted propagated AKT1 rows so broad
+or redundant IEA/ISO/IBA transfers explicitly record a scoping problem rather
+than implying unsupported human or rat source annotations.
