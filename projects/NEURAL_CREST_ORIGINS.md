@@ -143,7 +143,7 @@ Last updated: 2026-10-01
 - [x] `XENLA/sox9-a` (B7ZR65) — SoxE; NC specifier + crest-derived chondrogenesis. Reviewed 2026-10-01: 45 GOA rows (22 ACCEPT, 16 non-core, 5 MODIFY, 1 REMOVE, 1 over-annotated) + 1 NEW (GO:0001228)
 - [x] `XENLA/twist1` (P13903) — Twist; late, head-only NC specifier / ectomesenchyme driver. Reviewed 2026-10-01: 12 GOA rows (9 ACCEPT, 3 MODIFY) + 2 NEW (GO:0140416 Snail2 inhibition, GO:0048701 cranial skeleton morphogenesis)
 - [x] `XENLA/ets1-a` (P18755) — Ets1; late NC specifier / cranial-identity factor. Reviewed 2026-10-01: 21 GOA rows (12 ACCEPT, 1 MODIFY, 6 non-core, 1 over-annotated) + 4 NEW incl. NC delamination and migration
-- [x] `XENLA/myc-a` (P06171) — c-Myc; competence factor carried from the blastula. Reviewed 2026-10-01: 11 GOA rows (10 ACCEPT, 1 non-core) + 1 NEW (GO:0014029, IMP PMID:12791268 — **flagged for curator check**, see notes)
+- [x] `XENLA/myc-a` (P06171) — c-Myc; competence factor carried from the blastula. Reviewed 2026-10-01: 11 GOA rows (10 ACCEPT, 1 non-core) + 1 NEW (GO:0014029, IMP PMID:12791268; comparator check passed, see notes)
 - [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (20 ACCEPT, 5 MODIFY, 2 REMOVE, 1 non-core)
 - [x] `XENLA/sox8` (Q6VVD7) — SoxE; first-wave NC specifier. Reviewed 2026-10-01: 19 GOA rows (9 ACCEPT, 8 non-core, 2 MODIFY)
 
@@ -267,11 +267,13 @@ Last updated: 2026-10-01
   [PMID:15772131]. The crest requirement does not depend on proliferation
   [PMID:12791268], so the proliferation IBA is non-core. NEW `GO:0014029`
   (IMP, PMID:12791268) was added at the broad level, matching id3-a.
-  **Flag:** no Myc ortholog in any species carries a neural crest process
-  term. Under CLAUDE.md a systematic absence should be read as a possible
-  convention. We judge it a coverage gap: Myc is a DNA-binding transcription
-  factor that directly drives Id3 in the crest, so it does part of the work.
-  This needs a curator decision. Open: the c-myc I/II naming conflicts
+  **Comparator check (corrected 2026-10-02).** The review first said that
+  no Myc in any species carries a crest term. That was wrong: zebrafish *mych*
+  carries `GO:0014032` neural crest cell development by IMP [PMID:18446220]. So
+  this is not a systematic family-wide absence. Mammalian and frog c-Myc simply
+  lack curation of the crest papers. The NEW term stands as an ordinary
+  coverage gap. Myc is a DNA-binding transcription factor that directly drives
+  Id3 in the crest, so it does part of the work. Open: the c-myc I/II naming conflicts
   between Vriz 1989 and UniProt. The morpholino hits both homeologs, so the
   same evidence applies to myc-b (P15171). Evolution: frog uses c-Myc at the
   border, while chick uses N-Myc there and c-Myc later, so the crest needs
@@ -335,7 +337,7 @@ Last updated: 2026-10-01
 | twist1 | Late, head-only specifier; ectomesenchyme | `GO:0014036` | *Ciona* Twist mesoderm-only, sufficient for ectomesenchyme: co-option |
 | ets1-a | Late cranial-identity specifier, delamination | `GO:0036032`, `GO:0001755` (NEW) | Absent from lamprey crest, present in skate: a gnathostome addition |
 | id3-a | Progenitor maintenance / competence | `GO:0014029` (kept broad) | Border expression from lamprey; a change in where it is expressed |
-| myc-a | Competence factor from the blastula | `GO:0014029` (NEW, flagged) | Frog c-Myc vs chick N-Myc at the border |
+| myc-a | Competence factor from the blastula | `GO:0014029` (NEW) | Frog c-Myc vs chick N-Myc at the border |
 
 Cross-cutting findings:
 - **Three evolutionary modes appear in Tier 1.** (i) Ancestral border
@@ -353,7 +355,7 @@ Cross-cutting findings:
 - **Homeologs.** In every case, experimental rows sit on one homeolog only
   (foxd3-b, sox9-b, id3-b, myc-b and snai2.S lack them), while knockdown
   reagents typically hit both.
-- **Flags for curator review:** the myc-a NEW `GO:0014029`; the twist1
+- **Flags for curator review:** the twist1
   "developmental process" IBA rows MODIFIED to `GO:0014036`; and the
   convention below.
 

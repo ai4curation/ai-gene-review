@@ -65,9 +65,11 @@ at the neural plate border and is required, upstream of slug and Id3, for NC pre
 form. The best-supported GO process is therefore GO:0014029 neural crest formation (the
 broader term), not GO:0014036 neural crest cell fate specification. Comparator check:
 X. laevis id3-a (Q91399, Myc's target, same layer) carries GO:0014029 by IMP (5 papers) and
-zic1 carries GO:0014029 IMP; no Myc ortholog (human P01106, mouse P01108, X. laevis
-P06171/P15171) carries any NC term, which reflects the Bellmeyer paper never having been
-curated rather than a convention, since Myc is a TF acting in the NC-forming cells.
+zic1 carries GO:0014029 IMP. Human P01106, mouse P01108 and X. laevis P06171/P15171 c-Myc
+carry no NC term, but the Myc family is not systematically absent: zebrafish mych carries
+GO:0014032 neural crest cell development by IMP [PMID:18446220, "The mych gene is required
+for neural crest survival during zebrafish development"; QuickGO check 2026-10-02]. So the
+c-Myc gap reflects the Bellmeyer paper never having been curated, not a convention.
 Stem cell population maintenance (GO:0019827) for the NC pool is supported in chick only;
 left as a suggested question.
 
