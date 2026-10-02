@@ -65,3 +65,14 @@ The 21 old findings and 72 old quotes are not restored mechanically: evidence st
 ## Second response validation — 2026-09-29
 
 The preceding section records the earlier proposal state. Independent finite scientific review passed, and the reviewed proposal was applied. Focused validation passed with two advisories: the retained verified generic-binding association and the unlinked manual research document. Rendering passed. A new history record was scaffolded for this response; earlier histories and cached sources are preserved. PR publication and review of the new head remain separate steps; no new repository-wide validation pass is claimed.
+
+
+## ClinGen task instruction and generic-binding retention, 2026-10-02
+
+The retained GO:0005515 decisions implement the user's explicit instruction for this ClinGen task: keep a supported, biologically correct interaction as KEEP_AS_NON_CORE when no defensible, more specific replacement has been established, rather than remove it solely for lacking functional information. This deliberately departs from the annotation-reviewer skill's informational-exclusion recommendation. That recommendation can remove an uninformative annotation without declaring the interaction false; the latest review is correct about that distinction. Earlier references here to the supplied ActionEnum are incomplete as an explanation of authority: the basis is the explicit instruction for this task, not the enum alone, a repository-wide policy change, an exemption granted by the agent, or an observed maintainer sign-off. No external approval comment is claimed.
+
+The one retained generic row is the a2–ARNO/PSCD2 association from PMID:16415858. The existing reason and source-access record distinguish the a2–ARNO association from Arf6 binding to subunit c. The normal cache remains abstract-only; the earlier selected primary-paper consultation did not resolve the recombinant a2-tail donor species. The open question about a more specific molecular role is retained, not treated as proof of a GEF, scaffold or adaptor activity. Thus this is an intentional retention under the task instruction despite the repository's informational-exclusion criterion, not an assertion that the criterion requires biological falsity.
+
+All 31 review objects (30 original source assertions and one existing NEW PI4P-binding proposal), both core functions, all 20 existing evidence excerpts and the prior source records remain unchanged. The unavailable PMID:17295899 remains outside the review YAML; its prior failed retrieval is not represented as successful access.
+
+This addendum clarifies the authority and exclusion criterion for the existing decisions. It adds no primary-source reading, biological assertion or new annotation adjudication. Earlier journal entries and validation results remain historical; this clarification does not claim reviewer approval or PR completion.
