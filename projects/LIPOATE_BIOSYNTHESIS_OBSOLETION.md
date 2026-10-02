@@ -7,6 +7,13 @@ sidecars:
   slide_assets:
     - LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/lipoylation-routes.svg
     - LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/term-map.svg
+manifest:
+  slides:
+    - href: LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/PXWTPryxRQnYCr1b89XoEc
+      title: Project brief
 ---
 
 # Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoylation
@@ -305,7 +312,3 @@ and only MGI has marked its annotations done upstream.
   experimental annotations and the `GO:0016992` `part_of` child confirmed via
   QuickGO; all five InterPro entries confirmed via the InterPro REST API.
   Upstream, only MGI has marked its annotation done.
-
-## Slides
-
-- [Slides](LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.html) (Marp source: [LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/LIPOATE_BIOSYNTHESIS_OBSOLETION/slides/LIPOATE_BIOSYNTHESIS_OBSOLETION-slides.md)) — AI generated

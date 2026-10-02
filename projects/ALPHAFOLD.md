@@ -6,6 +6,13 @@ sidecars:
   slide_charts:
     - ALPHAFOLD/slides/afdb-workflow.svg
     - ALPHAFOLD/slides/bgc-iptm.svg
+manifest:
+  slides:
+    - href: ALPHAFOLD/slides/ALPHAFOLD-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/HZk3XAMM2N7tXrZpBvsb1H
+      title: Project brief
 ---
 
 # AlphaFold Database Integration for Gene Annotation Review
@@ -135,7 +142,3 @@ AFDB-derived evidence would be classified as:
 - [ ] Explore using AFDB quaternary structures for complex membership validation
 - [ ] Evaluate whether pLDDT-based disorder prediction adds value for flagging incorrect domain annotations
 - [ ] Consider adding structural evidence as a field in the gene review YAML schema
-
-## Slides
-
-- [Slides](ALPHAFOLD/slides/ALPHAFOLD-slides.html) (Marp source: [ALPHAFOLD-slides.md](ALPHAFOLD/slides/ALPHAFOLD-slides.md)) — AI generated

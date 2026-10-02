@@ -7,3 +7,11 @@
 - Both GatABC outputs are represented at the complex level. The indirect
   Asn-tRNA(Asn) route is supported by the exact Q88PB8 reaction and comparative
   Pseudomonas experiments [PMID:14729703, "The essential role of AdT in the formation of Asn-tRNA in P. aeruginosa"].
+
+## 2026-09-27 retired process term
+
+- GO:0070680 was retired in GO release 2026-05-19, so the NEW proposal and the
+  authored core process now use GO:0043039 (tRNA aminoacylation), the
+  bacterial_aminoacyl_trna_charging module's root concept; the module
+  carries the transamidation step itself without a term id. GO's own replaced_by for it, GO:0070981 L-asparagine biosynthetic process, is not used: the
+  transamidation route ends at Asn-tRNA(Asn), not free asparagine. The evidence and reasoning are unchanged.

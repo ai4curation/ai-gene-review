@@ -7,6 +7,13 @@ sidecars:
   slide_images:
     - PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/defense-go-flow.svg
     - PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/defense-go-why.svg
+manifest:
+  slides:
+    - href: PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/14vNKPzXp8HCF7zFRx11VH
+      title: Project brief
 ---
 
 # Prokaryotic Immunity Term Prediction
@@ -145,7 +152,3 @@ Deferred:
 - export of wrapper output into `PredictionReview` YAML
 - expansion of the registry to more defense families and GO policies
 - support for evidence-code policy and provenance payloads
-
-## Slides
-
-- [Slides](PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.html) (Marp source: [PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/PROKARYOTIC_IMMUNITY_TERM_PREDICTION/slides/PROKARYOTIC_IMMUNITY_TERM_PREDICTION-slides.md)) — AI generated

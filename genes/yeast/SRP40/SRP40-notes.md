@@ -139,3 +139,30 @@ nucleolar dynamics.
   proposal, box H/ACA link, Nopp140 complementation).
 - PMID:8516295 (Lalo et al. 1993) — MEDIUM, VERIFIED (gene-naming / AC40 suppressor origin).
 - GO_REF:0000015, GO_REF:0000033, GO_REF:0000117 — annotation-method refs.
+
+## 2026-09-29 IBA re-review
+
+GOA traces both SRP40 IBA rows, `GO:0005730` nucleolus and `GO:0005654`
+nucleoplasm, to `PANTHER:PTN001144152`. SRP40 has no `DR   PANTHER` line in the
+UniProt cache, and neither P32583 nor human NOLC1 Q14978 appears in any current
+local `interpro/panther/*-entries.csv`, so the family assignment is asserted
+from external GOA/PAINT knowledge rather than corroborable here.
+
+The actions stayed unchanged, but the node is not stale: the cached upstream
+PANTHER `IBD.gaf` still places the 2020 GO:0005654 IBD and the 2025 GO:0005730
+IBD at PTN001144152. Nucleolus remains `ACCEPT` and `NO_FAILURE_CORE` because
+the GOA WITH/FROM list includes SRP40 itself (`SGD:S000001800`), the direct
+yeast IDA donor from Meier 1996
+[PMID:8702624 "SRP40 localizes to the yeast nucleolus"]. Nucleoplasm remains
+`KEEP_AS_NON_CORE` and `NO_FAILURE_NON_CORE`: it is plausible from the
+Nopp140-family shuttling context, but its PAINT donor set is mouse, rat, and
+worm only, with no yeast self-seed or human NOLC1 donor.
+
+PubMed/web searches for newer SRP40/Nopp140-family papers found Zhang et al.
+2024, an abstract-only Srp40p/isobutanol strain-engineering paper; because that
+work tests srp40 overexpression in engineered W303-1A derivatives, it was added
+as a low-relevance direct SRP40 reference but did not support a new native yeast
+GO assertion. The search also found Meznad et al. 2026, a mammalian Nopp140
+study that demonstrates phosphorylation-dependent multivalent contacts with
+snoRNP-core IDRs and the RNA polymerase I-associated factor PAF49
+[PMID:41298079 "Here we demonstrate that Nopp140 concentrates intrinsically disordered and nuclear localization signal (NLS)-rich protein regions (IDRs), including a newly identified RNA polymerase I C-terminal domain (CTD) of the RNA polymerase I-associated factor PAF49."]. The paper reinforces the family model for IDR/charge-driven snoRNP concentration, but it is not yeast-specific and did not justify a new yeast GO assertion.

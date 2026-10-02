@@ -8,6 +8,13 @@ sidecars:
   slide_figures:
     - PROTEOME_REMOVAL/slides/removal-flow.svg
     - PROTEOME_REMOVAL/slides/removal-status.svg
+manifest:
+  slides:
+    - href: PROTEOME_REMOVAL/slides/PROTEOME_REMOVAL-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/8bAohnAviZzF1wzvBwfR6f
+      title: Project brief
 ---
 
 # UniProt Proteome Removal Impact Assessment
@@ -141,7 +148,3 @@ Entries being removed from UniProtKB:
 
 Summary: 15 will be removed, 881 safe
 ```
-
-## Slides
-
-- [Slides](PROTEOME_REMOVAL/slides/PROTEOME_REMOVAL-slides.html) (Marp source: [PROTEOME_REMOVAL-slides.md](PROTEOME_REMOVAL/slides/PROTEOME_REMOVAL-slides.md)) — AI generated

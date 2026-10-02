@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION, FLAGSHIP]
 species: [mouse, worm]
 genes: [Camk2a, Septin5, tom-1]
+manifest:
+  slides:
+    - href: SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/S1zALM2bz3sWnCmAk4ucMa
+      title: Project brief
 ---
 
 # Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor
@@ -223,7 +230,3 @@ required.
 - 2026-09-27 — #3237 merged, so the Camk2a refresh is on `main`.
   Maturity moves to IN_PROGRESS: the one affected review is done and
   only the Septin5 and tom-1 new reviews remain.
-
-## Slides
-
-- [Slides](SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.html) (Marp source: [SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.md](SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.md)) — AI generated

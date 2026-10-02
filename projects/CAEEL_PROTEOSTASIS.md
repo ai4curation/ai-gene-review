@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [hsf-1, hsp-1, hsp-16.2, hsp-90, hsp-4, cdc-48, bec-1, lgg-1, rpn-10, ufd-1, atg-18, daf-16, daf-2, skn-1, sir-2.1, aak-2, hlh-30]
+manifest:
+  slides:
+    - href: CAEEL_PROTEOSTASIS/slides/CAEEL_PROTEOSTASIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NzeqEauDrdbesCvTHPj76c
+      title: Project brief
 ---
 
 # C. elegans Proteostasis Network Project
@@ -388,7 +395,3 @@ Completed comprehensive review of all 18 C. elegans proteostasis genes across 3 
 - Annotation review: 8-10 hours (using annotation-reviewer agent)
 - Pathway integration: 3-4 hours
 - Total: 13-16 hours for comprehensive systematic review
-
-## Slides
-
-- [Slides](CAEEL_PROTEOSTASIS/slides/CAEEL_PROTEOSTASIS-slides.html) (Marp source: [CAEEL_PROTEOSTASIS-slides.md](CAEEL_PROTEOSTASIS/slides/CAEEL_PROTEOSTASIS-slides.md)) — AI generated

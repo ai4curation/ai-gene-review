@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [ACET2, CLOCL]
 genes: [cipA, Q01866, ancA, sdbA, celA, celC, celD, celK, celS, P10477, P55742, P15329, Q70DK5, Q84C00, P38535, P51584, P10478, P38058, Q9RGE8, Q9RGE6, Q6DTY2, Q9RGE7]
+manifest:
+  slides:
+    - href: CELLULOSOME/slides/CELLULOSOME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/VHttoJK4pkrUE9GQEEFGYM
+      title: Project brief
 ---
 
 # Cellulosome Project
@@ -149,10 +156,6 @@ or have only TrEMBL entries with incorrect/unverified taxonomy. Focus on the 5 g
 - [Global View of the C. thermocellum Cellulosome](https://jb.asm.org/content/189/19/6787.full)
 - [Enzymatic diversity of the C. thermocellum cellulosome](https://www.nature.com/articles/srep35709)
 - [Cellulosome Wikipedia](https://en.wikipedia.org/wiki/Cellulosome)
-
-## Slides
-
-- [Slides](CELLULOSOME/slides/CELLULOSOME-slides.html) (Marp source: [CELLULOSOME-slides.md](CELLULOSOME/slides/CELLULOSOME-slides.md)) — AI generated
 
 ---
 # STATUS
