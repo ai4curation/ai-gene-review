@@ -4,6 +4,13 @@ maturity: COMPLETE
 tags: [OBSOLETION]
 species: [human]
 genes: [PEX5, PEX7, PEX19]
+manifest:
+  slides:
+    - href: PEROXISOME_TARGETING_SIGNAL_OBSOLETION/slides/PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/5Qm2i3acmFHbD9o18jmd9W
+      title: Project brief
 ---
 
 # Peroxisome Targeting Signal Binding — Obsoletion & Replacement
@@ -159,7 +166,3 @@ mechanical (term ID/label refresh) rather than scientific.
   GO:0000268, and two peroxin–peroxin protein-binding rows dropped their
   replacement (PEX5 → MARK_AS_OVER_ANNOTATED, PEX7 → REMOVE).
   With #3233 merged, maturity is COMPLETE; the yeast/Aspergillus orthologs remain optional.
-
-## Slides
-
-- [Slides](PEROXISOME_TARGETING_SIGNAL_OBSOLETION/slides/PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.html) (Marp source: [PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.md](PEROXISOME_TARGETING_SIGNAL_OBSOLETION/slides/PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.md)) — AI generated

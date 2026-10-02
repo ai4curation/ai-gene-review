@@ -1872,6 +1872,7 @@ def validate_module_file(
     # warning. Resolution touches the GO/RHEA ontology DBs, so it degrades to
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
+    warnings.extend(validate_feedback_loops(doc))
     warnings.extend(symbol_label_warnings(doc))
 
     # Compare actual role assertions, not just protein/family membership.
@@ -2159,6 +2160,24 @@ def validate_chaining(doc: object) -> List[str]:
     return [
         f"Reaction chaining: {f['message']}"
         for f in reaction_chaining_findings(doc)
+        if f.get("severity") == "warning"
+    ]
+
+
+def validate_feedback_loops(doc: object) -> List[str]:
+    """Advisory: negative regulators described as feedback must have an upstream edge.
+
+    A ``NEGATIVELY_REGULATES`` source whose prose says "feedback"/"induced" but
+    which has no incoming activating connection is reported as a warning (the
+    loop is cut). This check NEVER produces errors.
+    """
+    from ai_gene_review.module_qc import feedback_loop_findings
+
+    if not isinstance(doc, dict):
+        return []
+    return [
+        f"Feedback loop: {f['message']}"
+        for f in feedback_loop_findings(doc)
         if f.get("severity") == "warning"
     ]
 

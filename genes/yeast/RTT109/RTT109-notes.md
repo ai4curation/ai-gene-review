@@ -41,3 +41,40 @@ No other issues found in this review during this audit pass. The bulk of the
 70 `existing_annotations` entries (H3K56/K9/K27/K14/K23 acetyltransferase
 activity, chromatin assembly, DNA damage response, etc.) are well-supported
 by the cited literature and internally consistent.
+
+## 2026-09-29 IBA propagation re-review and recent-literature check
+
+Rechecked the three RTT109 IBA rows against the cached PAINT export for
+PTHR31571. All three propagate from the same fungal RTT109 ancestor,
+`PANTHER:PTN001586545`: `GO:0032931` is seeded by budding yeast RTT109, fission
+yeast SPBC342.06c, and Candida CAL0000176178; `GO:0006974` is seeded by budding
+and fission yeast; `GO:0005634` is seeded by budding yeast. The target appearing
+among the descendant seeds is expected for PAINT and is positive support, not a
+circular donor. The H3K56 acetyltransferase activity, nuclear localization, and
+DNA damage response annotations are therefore all retained with
+`NO_FAILURE_CORE`.
+
+Updated the legacy generic `GO:0005515 protein binding` calls during the same
+pass. The cited Vps75 and Asf1 interactions are real and mechanistically
+important, but `protein binding` is not an informative molecular-function
+annotation for the Rtt109 histone-chaperone acetyltransferase system. Those
+rows now use `REMOVE`, while the catalytic and H3 histone acetyltransferase
+complex rows continue to capture the relevant biology.
+
+Searched PubMed and the web for 2023-2026 RTT109/Rtt109 papers in budding
+yeast. Three new PMIDs were worth caching:
+
+- PMID:37937370: full-text Mol Cell Biol study showing H4K16 deacetylation
+  promotes Rtt109 recruitment and H3K56 acetylation at constitutively
+  transcribed loci.
+- PMID:38382924: abstract-only Genes Genet Syst study that places Rtt109 among
+  histone acetyltransferase-related factors contributing to IMD2 right
+  subtelomeric boundary regulation.
+- PMID:39631395: full-text Mol Cell study showing the RCNA pathway, including
+  RTT109 and H3K56 acetylation, is specifically required for efficient repair
+  of leading-strand replication-dependent double-strand breaks.
+
+These newer papers extend the transcription and replication-associated repair
+contexts but do not require new GO actions beyond the existing accepted
+chromatin organization, DNA damage response, and H3 acetyltransferase activity
+annotations.

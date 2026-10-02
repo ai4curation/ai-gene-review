@@ -93,6 +93,14 @@ The module index (`pages/modules/index.html`) surfaces the headline figures
 (reviewed-gene count, leaf-grounding gaps, module deep-research presence) as
 sortable columns.
 
+Translate a module's `connections` graph into a Boolean network (BoolNet `.bnet`;
+SBML-qual via biodivine-aeon) and calibrate its signed wiring against external
+Boolean models and SIGNOR (see `projects/BOOLEAN_MODELS.md`, `models/boolean/`):
+
+```bash
+uv run ai-gene-review module-to-bnet modules/erk_cascade.yaml
+```
+
 ### Function compliance
 
 Both an annoton's explicit `function` and its participant's `required_function`
