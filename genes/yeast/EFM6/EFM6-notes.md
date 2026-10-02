@@ -168,6 +168,10 @@ methylation", DOI:10.1080/15476286.2018.1440875). Extra context NOT added to the
   and ISS rows. The IBA row still points at `PANTHER:PTN000378681`, the broad
   protein-methyltransferase-family node whose descendant evidence mixes lysine,
   histidine, and related protein methyltransferases.
+- Identified the SGD ISS donor `SGD:S000000238` as HMT1/P38074, the major yeast
+  protein-arginine methyltransferase in PTHR11006. That cross-family seven-beta-strand
+  Class I methyltransferase match supports only the broad SAM-dependent methyltransferase
+  parent `GO:0008757`, not a substrate-specific EFM6 term.
 - Refetched PTHR14614 PAINT and confirmed the all-family `GO:0008276` assertion remains at
   `PTN000378681`; the narrower `GO:0016279` IBD assertions are still on other subclades,
   so the existing `MODIFY` to the more specific EFM6 activity remains appropriate.
