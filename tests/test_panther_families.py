@@ -16,7 +16,9 @@ from ai_gene_review.etl.panther_families import (
     emit_yaml_scalar,
     label_drift,
     rewrite_panther_labels,
+    MemberIndexConflict,
     build_member_index,
+    incremental_member_index,
     load_member_index,
     load_member_index_gaps,
     parse_hmm_classifications,
@@ -324,3 +326,79 @@ def test_rewrite_panther_labels_still_defers_a_real_divergence():
     assert applied == []
     assert len(deferred) == 1
     assert new == text
+
+
+def test_member_index_footer_has_no_count(tmp_path):
+    """A count line changes with every PR and turns each merge into a conflict."""
+    text = write_member_index({"P1": "PTHR1"}, tmp_path / "m.tsv", {"P8", "P9"}).read_text()
+    assert "accession(s)" not in text
+    assert "# unresolved: P8" in text and "# unresolved: P9" in text
+
+
+def test_load_member_index_rejects_conflicting_families(tmp_path):
+    path = tmp_path / "m.tsv"
+    path.write_text("uniprot_accession\tpanther_family_sf\nP1\tPTHR1\nP1\tPTHR2\n")
+    with pytest.raises(MemberIndexConflict):
+        load_member_index(path)
+
+
+def test_incremental_refresh_keeps_existing_rows():
+    """The default refresh must not re-resolve or rewrite rows it already has."""
+    asked = []
+
+    def resolve(acc):
+        asked.append(set(acc))
+        return {a: "PTHR_NEW" for a in acc}
+
+    out = incremental_member_index({"P1": "PTHR_OLD"}, {"P1", "P2"}, resolve)
+    assert out == {"P1": "PTHR_OLD", "P2": "PTHR_NEW"}
+    assert asked == [{"P2"}]
+    assert incremental_member_index({"P1": "PTHR_OLD"}, {"P1"}, resolve) == {"P1": "PTHR_OLD"}
+    assert len(asked) == 1, "nothing missing, so nothing to resolve"
+
+
+def test_member_index_union_merges_cleanly(tmp_path):
+    """Two branches that each add accessions (and change the unresolved block)
+    must merge without conflict under the repo's .gitattributes."""
+    import shutil
+    import subprocess
+
+    if shutil.which("git") is None:
+        pytest.skip("git not available")
+    repo_root = Path(__file__).resolve().parents[1]
+    attrs = (repo_root / ".gitattributes").read_text()
+    assert "interpro/panther/panther-members.tsv merge=union" in attrs
+
+    work = tmp_path / "repo"
+    work.mkdir()
+    members = work / "interpro" / "panther" / "panther-members.tsv"
+
+    def git(*args):
+        subprocess.run(
+            ["git", "-c", "user.email=t@example.org", "-c", "user.name=t", *args],
+            cwd=work, check=True, capture_output=True,
+        )
+
+    git("init", "-q", "-b", "main")
+    (work / ".gitattributes").write_text(attrs)
+    write_member_index({"A1": "PTHR1", "M1": "PTHR5", "Z1": "PTHR9"}, members, {"U1"})
+    git("add", ".")
+    git("commit", "-q", "-m", "base")
+
+    git("checkout", "-q", "-b", "left")
+    write_member_index(
+        {"A1": "PTHR1", "B1": "PTHR2", "M1": "PTHR5", "Z1": "PTHR9"}, members, {"U1", "U2"}
+    )
+    git("commit", "-q", "-am", "left adds B1")
+
+    git("checkout", "-q", "main")
+    write_member_index(
+        {"A1": "PTHR1", "C1": "PTHR3", "M1": "PTHR5", "Z1": "PTHR9"}, members, {"U3"}
+    )
+    git("commit", "-q", "-am", "main adds C1, resolves U1")
+
+    git("merge", "-q", "--no-edit", "left")
+    merged = load_member_index(members)
+    assert merged == {"A1": "PTHR1", "B1": "PTHR2", "C1": "PTHR3", "M1": "PTHR5", "Z1": "PTHR9"}
+    gaps = load_member_index_gaps(members)
+    assert {"U2", "U3"} <= gaps.absent

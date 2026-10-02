@@ -37,7 +37,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
 
 import requests
 import yaml
@@ -359,9 +359,13 @@ def render_member_index(
     uniprot_accession	panther_family_sf
     P1	PTHR1
     <BLANKLINE>
-    # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
+    # Accessions cited in modules/ with no PANTHER family in PANTHER's
     # per-organism classifications or in UniProt's xref_panther:
     # unresolved: P9
+
+    The footer carries no count: a count line changes whenever any PR adds or
+    resolves an accession, so it would make every concurrent PR conflict on the
+    same line. Consumers count the marker lines instead.
 
     With the fallback skipped, the block says only what was actually checked:
 
@@ -370,7 +374,7 @@ def render_member_index(
     uniprot_accession	panther_family_sf
     P1	PTHR1
     <BLANKLINE>
-    # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
+    # Accessions cited in modules/ with no PANTHER family in PANTHER's
     # per-organism classifications. UniProt was NOT consulted
     # (--no-uniprot-fallback), so these are unchecked rather than absent:
     # unchecked: P9
@@ -383,10 +387,7 @@ def render_member_index(
         yield f"{accession}\t{index[accession]}"
     if unresolved:
         yield ""
-        yield (
-            f"# {len(unresolved)} accession(s) cited in modules/ with no PANTHER "
-            "family in PANTHER's"
-        )
+        yield "# Accessions cited in modules/ with no PANTHER family in PANTHER's"
         if consulted_uniprot:
             yield "# per-organism classifications or in UniProt's xref_panther:"
             marker = UNRESOLVED_MARKER
@@ -418,6 +419,15 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
     >>> gaps = load_member_index_gaps(d / "skipped.tsv")
     >>> sorted(gaps.absent), sorted(gaps.unchecked)
     ([], ['P9'])
+
+    An accession that has a family row is not a gap, even if a marker for it
+    survived a union merge:
+
+    >>> _ = (d / "merged.tsv").write_text(
+    ...     "uniprot_accession\\tpanther_family_sf\\nP9\\tPTHR9\\n\\n# unresolved: P9\\n"
+    ... )
+    >>> load_member_index_gaps(d / "merged.tsv").absent
+    set()
     """
     path = Path(path)
     if not path.exists():
@@ -429,7 +439,10 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
             absent.add(line[len(UNRESOLVED_MARKER) :].strip())
         elif line.startswith(UNCHECKED_MARKER):
             unchecked.add(line[len(UNCHECKED_MARKER) :].strip())
-    return MemberIndexGaps(absent, unchecked)
+    # After a union merge, one side may have resolved an accession that the
+    # other still lists as a gap; the row wins.
+    resolved = set(load_member_index(path))
+    return MemberIndexGaps(absent - resolved, unchecked - resolved)
 
 
 def write_member_index(
@@ -447,11 +460,38 @@ def write_member_index(
     return out_path
 
 
+class MemberIndexConflict(ValueError):
+    """An accession is assigned to two different PANTHER families in one index."""
+
+
 def load_member_index(path: Path) -> Dict[str, str]:
     """Load a member index TSV written by :func:`write_member_index`.
 
     Returns an empty mapping when the artifact is absent, so validation degrades
     to "not checkable" rather than failing on a fresh checkout.
+
+    The file is merged with git's ``union`` driver (see ``.gitattributes``), which
+    keeps the rows from both sides of a merge. Rows need not be sorted and an
+    identical row may repeat; both are harmless. Two rows giving one accession
+    different families are not: a union merge can produce that when both
+    branches re-resolved the same protein, so it raises rather than silently
+    keeping whichever row came last.
+
+    >>> import tempfile, pathlib
+    >>> d = pathlib.Path(tempfile.mkdtemp())
+    >>> _ = (d / "m.tsv").write_text(
+    ...     "uniprot_accession\\tpanther_family_sf\\nP2\\tPTHR2\\nP1\\tPTHR1\\nP2\\tPTHR2\\n"
+    ... )
+    >>> load_member_index(d / "m.tsv")
+    {'P2': 'PTHR2', 'P1': 'PTHR1'}
+    >>> _ = (d / "bad.tsv").write_text(
+    ...     "uniprot_accession\\tpanther_family_sf\\nP1\\tPTHR1\\nP1\\tPTHR9\\n"
+    ... )
+    >>> try:
+    ...     load_member_index(d / "bad.tsv")
+    ... except MemberIndexConflict as err:
+    ...     print(err)
+    P1 is assigned to both PTHR1 and PTHR9 in bad.tsv; run `just refresh-panther-members --rebuild` to re-resolve it
     """
     path = Path(path)
     if not path.exists():
@@ -461,8 +501,47 @@ def load_member_index(path: Path) -> Dict[str, str]:
         if line_number == 0 or not line.strip() or line.startswith("#"):
             continue
         accession, _, family_sf = line.partition("\t")
-        if family_sf:
-            index[accession.strip()] = family_sf.strip()
+        accession, family_sf = accession.strip(), family_sf.strip()
+        if not family_sf:
+            continue
+        previous = index.get(accession)
+        if previous is not None and previous != family_sf:
+            raise MemberIndexConflict(
+                f"{accession} is assigned to both {previous} and {family_sf} in "
+                f"{path.name}; run `just refresh-panther-members --rebuild` to "
+                "re-resolve it"
+            )
+        index[accession] = family_sf
+    return index
+
+
+def incremental_member_index(
+    existing: Dict[str, str],
+    accessions: Set[str],
+    resolve: Callable[[Set[str]], Dict[str, str]],
+) -> Dict[str, str]:
+    """Extend ``existing`` with families for cited accessions it does not hold.
+
+    The default refresh mode. Existing rows are kept as they are, so a refresh
+    adds only the rows a PR actually needs and cannot rewrite rows that other
+    open PRs depend on (a full rebuild of this shared file changed ~70 unrelated
+    rows in one run). ``resolve`` is called once, with only the missing
+    accessions; previously unresolved accessions are retried, since PANTHER
+    may have classified them since.
+
+    >>> calls = []
+    >>> def fake(acc):
+    ...     calls.append(sorted(acc))
+    ...     return {a: "PTHR9" for a in acc if a != "P4"}
+    >>> incremental_member_index({"P1": "PTHR1"}, {"P1", "P2", "P4"}, fake)
+    {'P1': 'PTHR1', 'P2': 'PTHR9'}
+    >>> calls
+    [['P2', 'P4']]
+    """
+    index = dict(existing)
+    missing = set(accessions) - set(index)
+    if missing:
+        index.update(resolve(missing))
     return index
 
 

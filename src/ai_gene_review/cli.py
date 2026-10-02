@@ -4224,6 +4224,16 @@ def refresh_panther_members(
             "files do not cover (offline / faster, but lower coverage).",
         ),
     ] = False,
+    rebuild: Annotated[
+        bool,
+        typer.Option(
+            "--rebuild",
+            help="Regenerate every row from scratch, re-resolving accessions "
+            "already indexed and dropping ones no longer cited. By default the "
+            "refresh only adds rows for newly cited accessions, so it does not "
+            "rewrite rows other open PRs depend on.",
+        ),
+    ] = False,
 ):
     """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
 
@@ -4243,6 +4253,8 @@ def refresh_panther_members(
         build_member_index,
         fetch_panther_from_uniprot,
         fetch_sequence_classification,
+        incremental_member_index,
+        load_member_index,
         write_member_index,
     )
     import yaml
@@ -4296,36 +4308,47 @@ def refresh_panther_members(
         )
     accessions.update(family_accessions)
 
-    paths = []
-    for slug in organisms:
-        classification = fetch_sequence_classification(slug, cache)
-        if classification is None:
-            typer.echo(f"  ⚠ no PANTHER classification for organism '{slug}'")
-            continue
-        paths.append(classification)
+    members_path = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    existing = {} if rebuild else load_member_index(members_path)
+    counts = {"files": 0, "uniprot": 0, "classifications": 0}
 
-    index = build_member_index(accessions, paths)
-    from_files = len(index)
+    def resolve(needed: set[str]) -> dict[str, str]:
+        typer.echo(f"resolving {len(needed)} accession(s) not yet indexed...")
+        paths = []
+        for slug in organisms:
+            classification = fetch_sequence_classification(slug, cache)
+            if classification is None:
+                typer.echo(f"  ⚠ no PANTHER classification for organism '{slug}'")
+                continue
+            paths.append(classification)
+        counts["classifications"] = len(paths)
+        found = build_member_index(needed, paths)
+        counts["files"] = len(found)
+        if not no_uniprot_fallback:
+            remaining = needed - set(found)
+            if remaining:
+                typer.echo(
+                    f"resolving {len(remaining)} remaining accession(s) via UniProt..."
+                )
+                from_uniprot = fetch_panther_from_uniprot(remaining)
+                counts["uniprot"] = len(from_uniprot)
+                found.update(from_uniprot)
+        return found
 
-    if not no_uniprot_fallback:
-        unresolved = accessions - set(index)
-        if unresolved:
-            typer.echo(
-                f"resolving {len(unresolved)} remaining accession(s) via UniProt..."
-            )
-            index.update(fetch_panther_from_uniprot(unresolved))
-
+    index = incremental_member_index(existing, accessions, resolve)
     unresolved = accessions - set(index)
     out_path = write_member_index(
         index,
-        repo_root / "interpro" / "panther" / "panther-members.tsv",
+        members_path,
         unresolved,
         consulted_uniprot=not no_uniprot_fallback,
     )
+    mode = "rebuilt" if rebuild else f"kept {len(existing)} existing row(s)"
     typer.echo(
-        f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "
-        f"({from_files} from {len(paths)} organism classification(s), "
-        f"{len(index) - from_files} from UniProt); "
+        f"✓ Wrote {out_path} ({mode}): {len(set(index) & accessions)}/"
+        f"{len(accessions)} cited accessions resolved; added "
+        f"{counts['files']} from {counts['classifications']} organism "
+        f"classification(s) and {counts['uniprot']} from UniProt; "
         f"{len(unresolved)} unresolved, recorded in the file."
     )
 
