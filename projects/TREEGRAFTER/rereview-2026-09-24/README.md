@@ -97,7 +97,7 @@ quote:
 This is a known repo-wide blind spot, documented in
 [`MISCITATIONS.md`](../../MISCITATIONS.md), [`SPKW.md`](../../SPKW.md) and
 [`FUNCTION_KNOWLEDGE_GAPS.md`](../../FUNCTION_KNOWLEDGE_GAPS.md); the SPKW audit
-measured ~48% of `file:` quotes non-verbatim while passing validation.
+measured ~48% of 550 `file:` quotes non-verbatim while passing validation.
 
 ### What the sweep of this audit's changed set found
 
@@ -159,6 +159,11 @@ be built against. Raw flags, classified, with each denominator named:
 - **Wrap artifacts.** The quote *is* present, split across `CC` continuation
   lines — `secD`'s `Part of the essential Sec protein translocation apparatus`
   straddles `secD-uniprot.txt:47–48`. A gate must unwrap `CC`/`DR` continuations.
+  The findings slot's two are `PSEPK/infC:182` (straddling
+  `infC-uniprot.txt:29–30`, the IF-3 30S-binding sentence) and `PSEPK/mraY:192`
+  (straddling `mraY-uniprot.txt:33–34`, the phospho-MurNAc-pentapeptide transfer)
+  — named because they are the evidence for the rate difference below, and the
+  one row in this table that `grep` could not otherwise check.
   **But do not size that work from the `supported_by` rate**: it is 25/34 (74%)
   there and 2/7 (29%) in the findings slot, because the two slots cut quotes
   differently — findings-slot quotes are short and tend to stop *at* a wrap
@@ -172,6 +177,12 @@ be built against. Raw flags, classified, with each denominator named:
 - **The slot set**, per the table above: `supported_by[]` *and*
   `references[].findings[]`. The two existing code paths each read one, so a gate
   inheriting either one's scope measures half the corpus.
+- **Test the passes, not only the flags.** Every round of PR #3165 audited the
+  quotes this sweep *reported*; a classifier checked only on its output can be
+  wrong in the direction nobody looks. Round 14 sampled two quotes it had
+  *cleared* (`NICAT/NaPMT1.1`, neither previously named) and both are verbatim at
+  count 1. A gate needs that check in its own tests, or a silent false-negative
+  rate stays invisible.
 
 The difference between a marked and a silent elision is why only some of these
 read as quotes at all: `zwf` shows the join; `merA` performs the same operation
