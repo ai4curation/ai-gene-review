@@ -1,7 +1,7 @@
 # IFT74 notes (human, Q96LB3)
 
 ## Deep research status
-DRSTATUS
+Falcon deep research succeeded on the second attempt (IFT74-deep-research-falcon.md; first run timed out at 600 s with no available fallback; rerun with --timeout 2400). It agrees that IFT74's direct molecular role is tubulin binding with IFT81 plus IFT-B organization, and adds 2023 patient studies (Bakey et al., Fassad et al.; not cached) showing an exon-2 (first 40 residues) deletion that separates IFT-B association from tubulin/microtubule binding [file:human/IFT74/IFT74-deep-research-falcon.md "Selected IFT-B subunits, including IFT81, still co-precipitated with exon-2-deleted IFT74, whereas the deleted protein bound microtubules much less effectively in vitro."], with very short motile airway cilia and skeletal ciliopathy. This strengthens beta-tubulin binding as the core MF and supports keeping motile cilium as a correct location.
 
 ## Summary
 - IFT74 = CMG-1; GFP fusion vesicular [PMID:11683410 "A CMG-1-green fluorescent protein (GFP) chimera was observed to target to an intracellular vesicular compartment."]

@@ -1,7 +1,7 @@
 # IFT172 notes (human, Q9UG01)
 
 ## Deep research status
-DRSTATUS
+Falcon deep research failed twice (falcon 600 s timeout with unavailable perplexity-lite fallback; then exit 137 at --timeout 2400) and succeeded on the third attempt (IFT172-deep-research-falcon.md). Additions (primary papers not cached): endogenous IFT172 at ciliary base and along the axoneme in human fibroblasts; purified IFT172 binds and remodels phospholipid membranes (Wang 2018), with membrane binding and IFT57 binding mutually exclusive [file:human/IFT172/IFT172-deep-research-falcon.md "Membrane association and binding of IFT57 to IFT172 appear mutually exclusive, suggesting a possible way to regulate when IFT172 associates with membranes versus an assembling IFT complex."]; Chlamydomonas ift172 ts mutant accumulates IFT material at the tip (turnaround role); a C-terminal U-box-like ubiquitin-binding domain (Zacharia, eLife) with no established E3 activity. None is asserted as a GO MF here; membrane binding raised as a suggested question.
 
 ## Summary
 - Peripheral IFT-B (IFT-B2) subunit [PMID:15955805 "This result demonstrates that the complex B subunits, IFT172, IFT80, IFT57, and IFT20 are not required for the core subunits to stay associated."]; human VIP architecture [PMID:26980730 "we determined the overall architecture of the IFT-B complex, which can be divided into core and peripheral subcomplexes composed of 10 and 6 subunits, respectively."]
