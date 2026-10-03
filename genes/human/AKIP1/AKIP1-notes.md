@@ -51,3 +51,23 @@ Rac1 (PMID:17227220) and β-catenin (PMID:30936461) binding: single studies each
   **old-format** files (`reference_id:` header) from an earlier session. Re-fetched with
   `force=True` rather than committing stale-format records.
 - Quotes checked whitespace-collapsed and otherwise character-exact: 14 distinct, 0 failures.
+
+## Round 2 (review feedback)
+
+1. **The NF-κB MODIFY rested on uncited InterPro paraphrases.** It now quotes PMID:23319652, which
+   states the isoform dependence directly: AKIP1b recruits SIRT1 and represses; AKIP1a enhances.
+   (The reviewer pointed to line 101; the statement is a few sentences on — I checked rather than
+   quoting the line number.)
+2. **So `GO:0043123` positive regulation, not the neutral `GO:0043122`.** UniProt's canonical isoform
+   (Q9NQ31-1) is AKIP1a, which enhances. The repression belongs to AKIP1b, a different product.
+3. **PMID:18178962 was missing** — the paper UniProt cites with ECO:0000269 for exactly this function,
+   cited by no GO annotation. AKIP1 binds **p65 directly**, PKAc is in the AKIP1·p65 complex, knockdown
+   abolishes the response.
+
+That third point changed the core function. AKIP1 binds **both** the kinase and its substrate, so it
+gets `GO:0035591` signaling adaptor activity as NEW and as the core MF — the same treatment as AKAP7's
+PKA-to-channel bridge — with `GO:0034236` kept as a second core function. No IPI partner accession,
+because the abstract doesn't say which species the co-IP used.
+
+Not added: a nuclear-retention process term. Both results behind it are overexpression, and whether
+AKIP1 anchors or blocks export isn't shown. Recorded as a question.
