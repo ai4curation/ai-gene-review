@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-03 16:43:30 UTC
+## Campaign status — completion evidence through 2026-10-03 18:25:30 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -272,6 +272,8 @@ are therefore expected; existing human reviews still link normally.
 | C1QTNF5 | Definitive | INITIALIZED normal seed | PR #3911 merged at 2026-10-03 16:21:15 UTC; final-head approval and CI success verified; 13 exact changed paths verified at the merge commit. Biological DRAFT retains 23 source assertions, three UNDECIDED assessments and one core; no structured products slot. Collagen-stalk inference is distinguished from directly observed globular trimers, and receptor inhibition from chronic perturbation phenotypes. | `cmungall/clingen-c1qtnf5` | [#3911](https://github.com/ai4curation/ai-gene-review/pull/3911) |
 | C2CD3 | Definitive | INITIALIZED normal seed | PR #3917 merged at 2026-10-03 16:41:31 UTC; final-head approval and CI success verified; 10 exact changed paths verified at the merge commit. Biological DRAFT retains 30 source assertions plus one NEW structural-function assertion, five products and one core. Human spatial/depletion evidence is separated from mouse cryo-ET context; direct microtubule affinity, ring-node composition and catalytic activity remain unestablished. | `cmungall/clingen-c2cd3` | [#3917](https://github.com/ai4curation/ai-gene-review/pull/3917) |
 | C1QBP | Definitive | Existing review audited | PR #3914 merged at 2026-10-03 16:43:30 UTC; final-head approval and CI success verified; 9 exact changed paths verified at the merge commit. Biological DRAFT retains 125 source assertions, five UNDECIDED assessments and four cores; no structured products slot. Reconciled partner/donor distinctions and source-specific screen limits remain; precursor/mature localization is described without manufacturing product fields. | `cmungall/clingen-c1qbp` | [#3914](https://github.com/ai4curation/ai-gene-review/pull/3914) |
+| C3 | Definitive | INITIALIZED normal seed | PR #3925 merged at 2026-10-03 18:15:29 UTC; final-head approval and CI success verified; 72 exact changed paths verified at the merge commit. Biological DRAFT retains 142 source assertions, nine UNDECIDED assessments and three cores. Four authored processed-product classes are distinct from alternative splice products. C3a versus ASP/C5L2 context and exact source access limits remain; no new annotation is introduced. | `cmungall/clingen-c3` | [#3925](https://github.com/ai4curation/ai-gene-review/pull/3925) |
+| C9orf72 | Definitive | INITIALIZED normal seed | PR #3927 merged at 2026-10-03 18:25:30 UTC; final-head approval and CI success verified; 18 exact changed paths verified at the merge commit. Biological DRAFT retains 110 source assertions, 23 UNDECIDED assessments, two alternative products and three cores. Reagent-specific localization and GEF/GAP context limits remain; campaign closure does not resolve those biological uncertainties. | `cmungall/clingen-c9orf72` | [#3927](https://github.com/ai4curation/ai-gene-review/pull/3927) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -283,8 +285,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **201 of 2,876 genes
-are complete**; 202 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **203 of 2,876 genes
+are complete**; 204 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -395,7 +397,22 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
 
 
+### Evidence scope for completion 203
+
+[Checkpoint 203 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T192552Z-codex-582548.yaml).
+
+The fixed **2026-10-03 18:25:30 UTC** cutoff adds **C3 and C9orf72** to published checkpoint 201: **203 complete / 2,673 remaining**, with 204 original gene PR merges. AKR1D1 remains excluded pending its required source follow-up. Tracker, generated-page and source-workflow PRs add no gene completions. CA5A and CA8 remain unchecked in this checkpoint.
+
+| Gene | Verified merge | Exact changed paths verified at merge | Biological assessment retained |
+|---|---|---|---|
+| C3 | [`6b0ca24ae70c`](https://github.com/ai4curation/ai-gene-review/commit/6b0ca24ae70c1c9f49ba8afbed42a286a2b76c2d), 18:15:29 UTC | 72; every path/blob pair is in the queue | Biological DRAFT retains 142 source assertions, nine UNDECIDED assessments and three cores. Four authored processed-product classes are distinct from alternative splice products. C3a versus ASP/C5L2 context and exact source access limits remain; no new annotation is introduced. |
+| C9orf72 | [`46872d06c54e`](https://github.com/ai4curation/ai-gene-review/commit/46872d06c54e3f42443900481ff697c8c9b3d6e8), 18:25:30 UTC | 18; every path/blob pair is in the queue | Biological DRAFT retains 110 source assertions, 23 UNDECIDED assessments, two alternative products and three cores. Reagent-specific localization and GEF/GAP context limits remain; campaign closure does not resolve those biological uncertainties. |
+
+Both final PR heads have verified approval and successful required checks. Signed merge records match **90 changed path/blob pairs**. This is the checked merge scope, not a new audit of reused sources outside those diffs. Both biological reviews remain DRAFT with **32 UNDECIDED assessments** in total. All **196 existing `genes[]` queue entries** are preserved, followed by these two entries; that entry count is distinct from the 201 completed-gene baseline. All 2,876 inventory rows and association text, prior dated records, and the checkpoint 95 audit/import boundary remain intact.
+
 ### Evidence scope for completion 201
+
+[Checkpoint 201 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T165841Z-codex-6975d9.yaml).
 
 The fixed **2026-10-03 16:43:30 UTC** cutoff adds **C1QA, C1QB, C1QTNF5, C2CD3 and C1QBP** to the completion ledger published at checkpoint 196: **201 complete / 2,675 remaining**, with 202 original gene PR merges. AKR1D1 remains excluded while its required source follow-up is outstanding. Tracker, generated-page and source-workflow PRs add no gene completions.
 
@@ -993,3 +1010,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-03 14:49:33 UTC fixed completion cutoff: BSND #3903, BTD #3904, BTK #3905, C19orf12 #3906 and BUB1B #3908 advance checkpoint 191 → 196 complete, 197 original gene merges and 2,680 remaining. Exact final-head approval/check success, signed merges and all 87 changed-path blobs were verified. All 2,876 inventory rows, 186 earlier queue entries, dated checkpoints and prior histories remain. AKR1D1 and other pending work stay excluded.
 
 - 2026-10-03 16:43:30 UTC fixed completion cutoff: C1QA #3909, C1QB #3916, C1QTNF5 #3911, C2CD3 #3917 and C1QBP #3914 advance checkpoint 196 → 201 complete, 202 original gene merges and 2,675 remaining. Final-head approval/check success, signed merges and all 74 changed-path blobs were verified. All 2,876 inventory rows, 191 earlier queue entries, dated checkpoints and prior histories remain. Biological DRAFT statuses, 20 UNDECIDED assessments and C2CD3’s one reviewed NEW assertion remain as merged; AKR1D1 and pending work stay excluded.
+
+- 2026-10-03 18:25:30 UTC fixed completion cutoff: C3 #3925 and C9orf72 #3927 advance checkpoint 201 → 203 complete, 204 original gene merges and 2,673 remaining. Signed merge identities and 90 changed-path blobs are verified with final-head approval and required-check success. Preserve 196 prior queue entries, all 2,876 inventory associations, both biological DRAFT statuses and 32 UNDECIDED assessments. CA5A, CA8 and other pending work contribute no completion. The prior checkpoint 201 history cross-link is now explicit.
