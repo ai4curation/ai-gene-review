@@ -80,3 +80,79 @@ Actions taken in this review update:
   removed in favour of translocon-associated chaperone framing.
 - `description` and several annotation `reason` fields reworded to drop the
   "cargo receptor" characterization.
+## Source-complete BCAP31 reassessment
+
+The normal projection contains 61 distinct source assertions from 64 raw rows, including eight previously omitted partner records and three exact duplicate raw records. All source identities, qualifiers and partners are retained. Three old authored NEW entries are assessed separately; their proposed withdrawal removes no GOA assertion.
+
+This reassessment supersedes the earlier substrate-only apoptosis rationale. Intact BCAP31 helps assemble the FIS1/procaspase-8 signaling platform, and a cleavage product can transmit a signal. The carrier role is grounded in client binding/delivery, while an intrinsic ATP-dependent ratchet has not been established by the available evidence. The two disputed PAINT trafficking assertions remain unresolved; the real curator issue and positive MHC-I experiments must both be represented.
+
+The rat clathrin transfer is contradicted by the cited donor fractionation experiment. In contrast, the experimental cell-surface and lipid-droplet annotations are retained as secondary contexts without speculative artifact explanations. Mouse spermatogenesis remains unresolved because the traced evidence is an expression survey whose BCAP31-specific body evidence was not inspected.
+
+Reactome's cytosolic cleavage entity is the terminal 238–246 fragment, not p20. The two machine-derived UniProt alternative products are a separate splicing record and do not imply RefSeq-numbering equivalence or isoform-specific function.
+
+Supported generic interactions are kept as non-core under the user-supplied ActionEnum. The CFTR client and the separate FIS1/CASP8 platform rows receive evidence-specific refinements; machinery, combined-partner and high-throughput records are not indiscriminately relabeled. No NEW process assertion or new direct quotation is proposed.
+
+The existing Falcon report and all raw/cached sources are preserved. Normal cache availability and selected external primary reading are recorded separately. Full-paper, figure-pixel, supplemental-pair and PAINT-node reconstruction are not claimed where not performed. Five of six additional normal sources were subsequently imported through Source92 and reassessed before this integrated proposal. PMID:19342655 remained unrecovered; its provisional extra citations are omitted, while its earlier bounded web-reading evidence and the actual normal-fetch failure remain recorded. The precise recovered-source read scopes are recorded in each reference review.
+
+The integrated proposal retains 61 source annotations: 18 ACCEPT, 36 KEEP_AS_NON_CORE, three MODIFY, three UNDECIDED and one REMOVE. Three old authored NEW entries are withdrawn separately. It incorporates the two machine-derived UniProt alternative products and three reviewed core functions, without assigning function by isoform number. No new direct quotation is added.
+
+The revised authored pathway supersedes the earlier substrate-only exclusion of apoptosis, an intrinsic ATP-translocation mechanism, and universal cytoplasmic coiled-coil client recognition. ER-associated p20 is distinguished from the cytosolic terminal fragment. HACD2 is stabilized in its reported client context; it is not described as a BAP31-promoted degradation target. TOMM40-associated localization and turnover remain bounded to the experiments. The provider report and all raw or cached sources are unchanged.
+
+Source92 recovered five normal records: PMID:9396746, PMID:14581517, PMID:15187134, PMID:17056546 and PMID:23967155. Their canonical bytes match the staged bytes used for the bounded reading recorded here. PMID:19342655 returned exit1 without a timeout or quarantined output and remains absent; this establishes a failed normal retrieval only, not retraction, inaccessibility or absence of biological evidence. Earlier official abstract/selected web reading is preserved in the original consultation. Its provisional extra citations are removed from rows1,2,9 and the revised pathway; no original GOA source assertion is removed. The two detailed trafficking inferences remain UNDECIDED and the broad vesicle-transport context remains non-core, supported by the available15187134/17056546 material. New sources do not alter the reviewed annotation actions or three core functions. The human MHC-I experiment is context dependent; the isolated-domain coiled-coil study does not disprove full-length BAP29/BAP31 association.
+
+
+## Final validation and source boundary
+
+The applied review retains all 61 distinct source assertions from 64 raw GOA rows, restores eight omitted assertions and 32 supporting-entity lists, and withdraws only three old authored NEW entries. The two alternative products are derived from the unchanged UniProt record without assigning RefSeq or functional equivalence. The pathway now reflects the reviewed client-handling, signaling-platform and selective mitochondrial-localization evidence.
+
+Focused validation and pathway PMID checks passed. The 23 advisories comprise 18 supported generic protein-binding annotations retained as non-core under the supplied ActionEnum; two UNDECIDED IBA annotations whose ancestral nodes were not reconstructed; one unchanged Falcon report not used as direct annotation evidence; one ERAD core process absent from the source annotation block; and one ontology-label version discrepancy. GO:0140597 retains the current official label protein carrier activity verified during the review, whereas the local validator expected protein carrier chaperone. No additional NEW assertion is introduced to silence these advisories. Rendering and generated Codex EDIT history validation are recorded separately.
+
+Five of six requested additional normal references were recovered and reviewed within the documented reading limits. PMID:19342655 remains absent after the recorded normal retrieval failure; this is neither a retraction claim nor a claim that its publication is inaccessible. Its provisional extra citations were omitted without changing the associated decisions. No repository-wide validation result is claimed.
+
+## 2026-09-30: curator discussion and evidence clarification
+
+This entry supersedes the earlier counts and the statement that both trafficking IBAs remain unresolved. All 61 source assertions and both UniProt alternative products remain intact. The current decisions are 18 ACCEPT, 37 KEEP_AS_NON_CORE, three MODIFY, two UNDECIDED and one REMOVE. No NEW annotation is added. Older notes above are retained as a journal of prior interpretations.
+
+[GO issue 6385](https://github.com/geneontology/go-annotation/issues/6385#issuecomment-4507045781) contains a genuine recommendation from M. Feuermann on 21 May and his completion message on 3 June. The previous reasons incorrectly dismissed the whole discussion as copied AI text. His proposed GO:0140388 is considered explicitly: its [current definition](https://amigo.geneontology.org/amigo/term/GO:0140388) requires an ATP-dependent translocation ratchet. The CFTR study supports client delivery to the Derlin-1 degradation pathway but does not establish that motor mechanism [PMID:18555783]. GO:0140597 retains the [current official label](https://amigo.geneontology.org/amigo/term/GO:0140597), protein carrier activity; protein carrier chaperone is an official synonym and the label expected by the older validator ontology.
+
+Mouse MHC-I association and reduced mSec31 colocalization after combined Bap29/Bap31 loss support exit-site localization as a non-core function [PMID:15187134]. The vesicle-transport IBA remains UNDECIDED because direct participation in that step and the revised ancestral assertion were not resolved here. Conditional or redundant human export effects are positive evidence with limits; lack of a surface-MHC-I decrease after depletion does not prove absence of function [PMID:17056546].
+
+The ERAD core now uses the accepted positive-regulation term GO:1904294. The mitochondrial-localization core records an explicit molecular-function knowledge gap: crosslinked association with TOMM40 and precursor proteins, together with fractionation and turnover effects, does not by itself isolate the proposed capture-and-handoff reaction [PMID:31206022]. This gap is preserved rather than filled with an unsupported carrier or motor assertion.
+
+The clathrin donor is rat/RGD; MGI supplies the cross-species comparison display. The primary rat-liver fractionation result remains decisive: [PMID:9396746 "virtually no BAP31 was detected in the coated vesicle fraction."]. Reference assessments now emphasize each paper's contribution and reading limits, without internal recovery identifiers or repeated procedural sentences.
+
+### Follow-up validation
+
+The final independent science peer passed before applying this follow-up. `just validate human BCAP31` exited 0 with 21 warnings: 18 retained non-core protein-binding records, one unresolved IBA lacking an independently inspected PAINT node, one uncited provider-output warning, and one ontology-version label warning. The current official label for GO:0140597 is protein carrier activity; the local validator expects its older synonym protein carrier chaperone. Supported interaction records remain non-core under the supplied action definitions; no unsupported replacement activity or propagation diagnosis was invented to suppress warnings. The separate `pkg_resources` deprecation notice is an environment warning. The pathway PMID check passed. No repository-wide validation is claimed.
+
+`just render human BCAP31` succeeded. A new Codex/gpt-6 history session was scaffolded for PR #3605, with its validation recorded separately. The prior history and pathway, immutable source files, and all 30 publication/Reactome dependencies are preserved unchanged. This entry supersedes the earlier 23-warning validation count.
+
+
+## 2026-09-30: PAINT node inspection and official ontology evidence
+
+This entry supersedes the earlier statement that the revised PAINT node was not inspected. The [cached PAINT table](../../../interpro/panther/PTHR12701/PTHR12701-paint.tsv) contains four IBDs at PTN000294723: GO:0005789 (20260528), GO:0140388 (20260603), GO:0030970 and GO:2000060 (both 20260521). Neither GO:0006888 nor GO:0070973 remains. The two historical GOA IBAs, both dated 20170228, are now MARK_AS_OVER_ANNOTATED. Their source node and mouse donors are retained unchanged as historical provenance. The client-specific mouse and human results remain valid; this change follows the retired phylogenetic assertions rather than interpreting an incomplete phenotype as absence of function [PMID:15187134; PMID:17056546].
+
+The GO:0140388 IBD is seeded by UniProtKB:P51572, BCAP31 itself. This is expected when target experimental evidence grounds a PAINT ancestral assertion; it is not circular. The new node has been considered explicitly. The broader GO:0140597 carrier description is retained while a specific knowledge gap records how the narrower ATP-dependent ratchet assignment maps to the client-delivery experiments. The review neither removes that current IBD nor claims to have inspected its originating experimental annotation. Reconciliation with the curator requires the underlying assay, not a donor-count argument [PMID:18555783].
+
+The official [AmiGO record for GO:0140597](https://amigo.geneontology.org/amigo/term/GO:0140597), read on 2026-09-30, displays these fields:
+
+```text
+Accession: GO:0140597
+Name: protein carrier activity
+Synonyms: protein carrier chaperone, protein chaperone
+Last file loaded: 2026-08-06
+```
+
+Thus the local validator's alternative label reflects a different ontology version. The [GO:0140657 parent page](https://amigo.geneontology.org/amigo/term/GO:0140657) lists GO:0140388 under ATP-dependent activity, and the [FlyBase GO record](https://flybase.org/cgi-bin/cvreport.pl?id=GO:0140388) describes ATP-dependent binding cycles that drive membrane translocation. These sources make the label and mechanistic distinction checkable without changing source-derived IDs.
+
+Short verbatim anchors now support the signaling and mitochondrial-localization cores [PMID:21183955; PMID:31206022]. PMID21183955's retained normal cache is abstract-only, contrary to the PR comment's full-text characterization; the previously documented selected external Results remain separate. The mitochondrial quote supports the reported localization phenotype and does not establish an autonomous import motor. No NEW annotation is added, and supported generic interactions retain their existing non-core decisions under the supplied action definitions.
+
+
+### Structured record of the retired PAINT assertions
+
+The two historical trafficking IBAs now record `SOURCE_STALE_OR_MISSING` for PANTHER:PTN000294723. This classification means that their respective transferred terms no longer appear on the inspected node. It does not infer the reason for the historical source withdrawal or a target-specific loss of function. No biological failure subtype is assigned. The current BCAP31-seeded translocation-chaperone IBD remains explicitly acknowledged above.
+
+
+## Second follow-up validation, 2026-10-01 UTC
+
+The independently reviewed follow-up and narrowly reviewed propagation metadata pass focused validation (20 warnings), history validation, and rendering. Eighteen warnings concern supported generic binding retained as non-core under the supplied action definitions; one records reliance on direct primary/database sources rather than the unchanged generated report. The remaining warning reflects the older local label for GO:0140597; the current official name, protein carrier activity, was checked against AmiGO. The two prior missing-propagation warnings are resolved with an explicit retired-source classification, without inferring a biological cause. All 61 source objects and two products are preserved. No new global validation pass is claimed.
