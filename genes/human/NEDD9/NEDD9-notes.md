@@ -56,3 +56,11 @@
   independent localization data.
 - Module caution: NEDD9 is primarily a focal-adhesion Cas scaffold; its ciliary role is real but non-dominant. The
   module's "kinase activator" function maps to GO:0043539 (proposed here as NEW).
+
+## Deep research outcome
+
+- Falcon succeeded on the second run (`--timeout 2400`): `NEDD9-deep-research-falcon.md`. Its conclusion agrees
+  with this review: NEDD9 is primarily a phosphorylation-regulated Cas-family adaptor/scaffold for integrin and
+  receptor signalling at focal adhesions, with basal-body AURKA-HDAC6 cilium resorption, centrosomal AURKA
+  regulation at mitotic entry, and T-cell signalling as experimentally supported additional, context-dependent
+  functions [file:human/NEDD9/NEDD9-deep-research-falcon.md "assign human NEDD9 primarily as a **phosphorylation-regulated CAS-family intracellular adaptor/scaffold for integrin- and receptor-initiated signaling at focal adhesions**"].

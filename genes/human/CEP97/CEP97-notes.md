@@ -21,3 +21,6 @@
 - Module: stage 1 CP110-CEP97 cap component ("distal centriole cap partner"), process negative regulation of cilium assembly.
 - HPA v25: Basal body (A), Centrosome (S), Centriolar satellite (A); main locations centriolar satellite, centrosome, cytosol. GOA carries the HPA centrosome row (GO_REF:0000052), accepted.
 - Assessment: consistent with the module role. The basal body call (Approved) is compatible with residual or daughter-centriole/basal-body signal in ciliated cells; the satellite pool is not explained by the module and is raised as a question. core_functions are consistent with the module (adaptor activity in negative regulation of cilium assembly at the centriole).
+
+## Deep research outcome
+- Falcon succeeded on the third attempt (`--timeout 2400`, after an exit-137 kill): `CEP97-deep-research-falcon.md`. Consistent with the review: CEP97-CP110 mutual dependence at distal centrioles; CEP97 has no direct microtubule activity (Iyer 2025). Additional roles noted in the description but not annotated: CP110-CEP97-CEP290 module in centrosomal aggresome assembly (Prosser 2022), DYRK1A-CEP97-PLK1 centriole disengagement in Xenopus multiciliated cells (Lee 2021), CEP97 recapping of mother centrioles in maturing mouse granule neurons (Constable 2024), and EHD1-HERC2-dependent CP110 ubiquitination during cap removal (Xie 2023).

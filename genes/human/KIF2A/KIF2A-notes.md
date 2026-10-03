@@ -3,8 +3,10 @@
 ## Deep research status
 
 - First run (`--fallback perplexity-lite`) stopped (falcon 600 s default timeout; perplexity-lite
-  unavailable). Re-run with `--timeout 2400`; outcome recorded at the end. Review based on cached
-  literature.
+  unavailable). The 2400 s rerun was killed (exit 137); a second rerun SUCCEEDED
+  (KIF2A-deep-research-falcon.md). It added Trofimova 2018 (PMID:29980677) and Vysloužil 2025
+  (PMID:39930500), both cached and used, and noted cell-line variability of the spindle phenotype
+  (largely normal bipolar spindles in RPE1).
 
 ## Identity
 
@@ -26,6 +28,9 @@
   polyester depolymerases; MCAK itself is annotated only with motor activity / MT binding). I
   propose an NTR "ATP-dependent microtubule depolymerase activity".
 
+- Structure: [PMID:29980677 "Kinesin-13 proteins are major microtubule (MT) regulatory factors that catalyze removal of tubulin subunits from MT ends"];
+  [PMID:29980677 "AMPPNP-bound Kif2A can form stable complexes with tubulin in solution and trigger MT depolymerization."].
+
 ## Mitosis
 
 - Required for bipolar spindle assembly; localizes to centrosomes/spindle poles
@@ -45,6 +50,9 @@
 
 - [PMID:25660017 "we report that kinesin superfamily protein 2A (KIF2A), phosphorylated at T554 by PLK1, exhibits microtubule-depolymerizing activity at the mother centriole to disassemble the primary cilium in a growth-signal-dependent manner."]
 - [PMID:25660017 "KIF2A-deficient hTERT-RPE1 cells showed the impairment of primary cilia disassembly following growth stimulation."]
+- TTBK2 restrains KIF2A at the mother centriole during cilium growth
+  [PMID:39930500 "we link the defects in cilia growth to aberrant turnover of a microtubule-depolymerizing kinesin KIF2A, which we find restrained by TTBK2 phosphorylation"].
+  KIF2A is therefore a negative regulator of cilium length/maintenance as well as the disassembly enzyme.
 - PCS syndrome: constitutively active PLK1-KIF2A pathway impairs ciliogenesis [PMID:25660017].
 - Localization consistent with mother centriole: GOA has centriole and centriolar subdistal
   appendage IDA (PMID:23213374, 3D-SIM). KIF2A is not named in the cached text (probably supplementary
