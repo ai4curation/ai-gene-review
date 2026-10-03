@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-09-30T13:34:58.891219'
-end_time: '2026-09-30T13:59:42.698965'
-duration_seconds: 1483.81
+start_time: '2026-09-30T05:46:57.224041'
+end_time: '2026-09-30T06:04:01.958823'
+duration_seconds: 1024.73
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -27,11 +27,10 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 28
-artifact_count: 3
+citation_count: 30
+artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 2
-  edison_message_content: 1
 artifacts:
 - filename: artifact-00.md
   path: PLCG1-deep-research-falcon_artifacts/artifact-00.md
@@ -45,14 +44,6 @@ artifacts:
   source: edison_answer_artifacts
   data_storage_id: null
   description: Edison artifact artifact-01
-- filename: image-1.png
-  path: PLCG1-deep-research-falcon_artifacts/image-1.png
-  media_type: image/png
-  source: edison_message_content
-  data_storage_id: null
-  description: "## Context ID: pqac-00000053 The requested figures illustrating the\
-    \ domain structure and autoinhibition mechanism of PLC\u03B31 are found in Figure\
-    \ 1 of the document"
 ---
 
 ## Question
@@ -163,317 +154,204 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Comprehensive Research Report: PLCG1 (Phospholipase C-gamma-1)
+# Comprehensive Research Report: PLCG1 (Phospholipase C Gamma-1)
 
-## Gene Identity Verification
+## Gene and Protein Identity
 
-The gene PLCG1 (UniProt P19174) encodes phospholipase C-gamma-1 (PLCγ1), a 1290-amino-acid phosphoinositide-specific phospholipase that serves as a critical signal transducer in mammalian cells. This report confirms that the target protein matches the UniProt annotation for 1-phosphatidylinositol 4,5-bisphosphate phosphodiesterase gamma-1 (EC 3.1.4.11) in *Homo sapiens* (hajicek2019structuralbasisfor pages 1-2).
+PLCG1 (UniProt: P19174) encodes phospholipase C-gamma-1 (PLCγ1), also known as 1-phosphatidylinositol 4,5-bisphosphate phosphodiesterase gamma-1 (EC 3.1.4.11), in humans. This protein belongs to the phospholipase C family of signaling enzymes and is widely expressed across tissues (joel2020dynamicsofallosteric pages 28-32).
 
 ## Primary Enzymatic Function and Substrate Specificity
 
-### Catalyzed Reaction
+PLCγ1 is a phosphoinositide-specific phospholipase that catalyzes the hydrolysis of phosphatidylinositol 4,5-bisphosphate (PIP2), a phospholipid located at the inner leaflet of the plasma membrane (siralievperez2022dynamicsofallosteric pages 1-3, joel2020dynamicsofallosteric pages 12-19). The catalytic reaction cleaves the phosphodiester bond between the inositol head group and the glycerol backbone of PIP2, proceeding through a cyclic phosphate intermediate before generating the final products (singh2023phospholipasecunderrated pages 2-3).
 
-PLCγ1 catalyzes the hydrolysis of the membrane phospholipid **phosphatidylinositol 4,5-bisphosphate (PIP2)** to generate two critical second messengers: **inositol 1,4,5-trisphosphate (IP3)** and **diacylglycerol (DAG)** (duarte2023multiplerolesof pages 22-26, hajicek2019structuralbasisfor pages 1-2, kanemaru2023activationmechanismsand pages 2-4). This phosphodiesterase reaction cleaves the phosphoester bond between the inositol headgroup and the diacylglycerol backbone of PIP2, with the substrate specifically being the 4,5-bisphosphate form of phosphatidylinositol (hajicek2019structuralbasisfor pages 1-2, hajicek2019structuralbasisfor pages 5-6).
+This enzymatic reaction produces two critical second messengers that propagate distinct signaling pathways: inositol 1,4,5-trisphosphate (IP3) and diacylglycerol (DAG) (duarte2023multiplerolesof pages 22-26, siralievperez2022dynamicsofallosteric pages 1-3). IP3 is a soluble messenger that diffuses through the cytosol to bind IP3 receptors on the endoplasmic reticulum, triggering the release of stored Ca²⁺ into the cytoplasm and initiating calcium-dependent signaling cascades (chen2021emergingrolesof pages 9-11, joel2020dynamicsofallosteric pages 12-19). DAG, being hydrophobic, remains embedded in the plasma membrane where it recruits and activates conventional protein kinase C (PKC) isoforms, particularly in conjunction with the elevated calcium signal (joel2020dynamicsofallosteric pages 12-19, kanemaru2023activationmechanismsand pages 1-2, singh2023phospholipasecunderrated pages 2-3). Together, these products link receptor activation to coordinated calcium mobilization and PKC-dependent phosphorylation pathways (duarte2023multiplerolesof pages 26-30).
 
-### Substrate Localization and Mechanism
+## Structural Architecture and Domain Organization
 
-The substrate PIP2 is embedded in cellular membranes, primarily the plasma membrane. For productive catalysis, PLCγ1 must insert its catalytic TIM-barrel hydrophobic ridge into the lipid bilayer to access the membrane-resident substrate (duarte2023multiplerolesof pages 26-30, hajicek2019structuralbasisfor pages 5-6). The reaction requires calcium as a cofactor and proceeds through the enzyme's active site located within the TIM barrel catalytic domain (hajicek2019structuralbasisfor pages 1-2, hajicek2019structuralbasisfor pages 12-13).
+PLCγ1 possesses a complex modular architecture that distinguishes it from other phospholipase C family members. The protein contains a conserved catalytic core comprising an N-terminal pleckstrin homology (PH) domain, four EF-hand motifs, catalytic X and Y domains that form a TIM-barrel-like structure, and a C-terminal C2 domain (chen2021emergingrolesof pages 19-22, singh2023phospholipasecunderrated pages 3-5, singh2023phospholipasecunderrated pages 2-3).
 
-### Second Messenger Products and Their Functions
+The defining feature of PLCγ1 is a large regulatory insertion, termed the γ-specific array (γSA), located between the X and Y catalytic domains (duarte2023multiplerolesof pages 26-30). This insertion contains a split PH (sPH) domain flanking tandem Src homology 2 (SH2) domains—designated nSH2 and cSH2—followed by an SH3 domain (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 24-28, chen2021emergingrolesof pages 19-22). Each regulatory domain serves distinct functions in PLCγ1 regulation and signaling:
 
-The two products of PIP2 hydrolysis have distinct cellular fates and functions:
-
-- **IP3 (inositol 1,4,5-trisphosphate)**: This soluble messenger diffuses through the cytosol and binds to IP3 receptors on the endoplasmic reticulum, triggering the release of stored Ca²⁺ into the cytoplasm (duarte2023multiplerolesof pages 22-26, hajicek2019structuralbasisfor pages 1-2, chen2021emergingrolesof pages 1-3).
-
-- **DAG (diacylglycerol)**: This lipophilic messenger remains associated with the plasma membrane, where it recruits and activates protein kinase C (PKC) isoforms and other C1-domain-containing proteins (duarte2023multiplerolesof pages 22-26, hajicek2019structuralbasisfor pages 1-2, kanemaru2023activationmechanismsand pages 2-4).
-
-## Domain Structure and Regulatory Architecture
-
-PLCγ1 possesses a unique multidomain architecture that integrates enzymatic activity with sophisticated regulatory control. A detailed breakdown of domain organization is presented below (hajicek2019structuralbasisfor pages 6-7, hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor media 3971c106, hajicek2019structuralbasisfor media de6c7e57, hajicek2019structuralbasisfor media 0de8fa16, hajicek2019structuralbasisfor media 08d5d936).
-
-| Domain name | Location in human PLCγ1 (approx.) | Structure/fold | Primary function | Key features |
-|---|---:|---|---|---|
-| N-terminal pleckstrin-homology (PH) domain | aa 18–142 | PH-domain β-sandwich capped by a C-terminal α-helix | Supports phosphoinositide-dependent membrane targeting and orientation of the catalytic core | Part of the conserved PLC core; membrane recruitment can also be enhanced by binding PI3K-generated PIP3. Boundaries are approximate and may differ among annotation resources. (hajicek2019structuralbasisfor pages 3-5, chen2021emergingrolesof pages 9-11) |
-| EF-hand region | aa 147–302; four EF-hand-like motifs arranged as two pairs | Paired helix–loop–helix EF-hand folds | Stabilizes the catalytic core and contributes to Ca²⁺-sensitive regulation and membrane engagement | Corresponds to the EF-hand and EF-hand-pair annotations reported for P19174. These motifs are integral to the conserved PLC architecture, although not every PLCγ1 EF hand necessarily functions as an independently occupied high-affinity Ca²⁺ site. (hajicek2019structuralbasisfor pages 3-5, nanna2026understandingtheactivation pages 13-19) |
-| Catalytic X-box | aa 342–465 | N-terminal portion of the split triosephosphate-isomerase-like catalytic TIM barrel | Combines with the Y-box to form the phosphodiesterase active site that hydrolyzes membrane PI(4,5)P2 | The X and Y regions are separated by the large γ-specific regulatory insertion. Productive catalysis requires the catalytic surface and hydrophobic ridge to approach the lipid bilayer. (hajicek2019structuralbasisfor pages 5-6, hajicek2019structuralbasisfor pages 3-5) |
-| Split PH domain, N-terminal segment (sPH-N) | aa 484–537 | First portion of a PH-like fold interrupted by the SH2–SH2–SH3 module | Regulatory membrane- and protein-interaction module; forms part of the autoinhibitory interface | In basal PLCγ1, the reconstituted sPH domain covers the TIM-barrel hydrophobic membrane-binding ridge, sterically preventing productive access to membrane PI(4,5)P2. (hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor pages 5-6) |
-| N-terminal Src-homology-2 domain (nSH2) | aa 545–659 | Canonical phosphotyrosine-binding SH2 fold | Recruits PLCγ1 to phosphorylated receptor or adaptor proteins at signaling membranes | Its phosphotyrosine-binding pocket remains solvent-accessible in autoinhibited PLCγ1. It recognizes activated RTKs, including FGFR1 pTyr766; receptor engagement positions PLCγ1 for phosphorylation and activation. In T cells it also contributes to binding phosphorylated LAT. (hajicek2019structuralbasisfor pages 6-7, hajicek2019structuralbasisfor pages 12-13, zeng2020plcγ1promotesphase pages 15-22) |
-| C-terminal Src-homology-2 domain (cSH2) | aa 667–767 | Canonical SH2 fold with phosphotyrosine-recognition loops | Acts as the principal phosphorylation-sensitive autoinhibitory latch and also participates in phosphoprotein docking | In the resting enzyme, cSH2 contacts the C2/catalytic core and its ligand-binding surface is partly buried. Phosphorylated PLCγ1 Tyr783 binds cSH2 intramolecularly, displacing the inhibitory interface and initiating a large conformational rearrangement. It can also contribute to binding VEGFR2 pTyr1175 and phosphorylated LAT. (hajicek2019structuralbasisfor pages 6-7, hajicek2019structuralbasisfor pages 5-6, hajicek2019structuralbasisfor pages 12-13, chen2021emergingrolesof pages 4-6, zeng2020plcγ1promotesphase pages 15-22) |
-| Src-homology-3 domain (SH3) | aa 790–851 | SH3 β-barrel recognizing proline-rich motifs | Provides catalytic-independent scaffolding and adaptor functions | Binds proline-rich partners and helps assemble signaling complexes. Its C-terminal extension acts as a structural brace or “keystone” linking the sPH and cSH2 autoinhibitory contacts; SH3 interactions also contribute to LAT clustering, motility, and associations with proteins such as dynamin and SOS. (hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor pages 5-6, duarte2023multiplerolesof pages 26-30, zeng2020plcγ1promotesphase pages 15-22) |
-| Split PH domain, C-terminal segment (sPH-C) | aa 852–932 | Completes the PH-like fold initiated by sPH-N | Cooperates with sPH-N in regulation, protein interactions, and occlusion of the membrane-binding catalytic surface | The two separated sPH segments flank the tandem SH2–SH3 cassette and fold together within the γ-specific array. Release or repositioning of this array is necessary for membrane engagement and PI(4,5)P2 hydrolysis; the sPH region can also participate in TRPC3-associated signaling. (hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor pages 12-13, chen2021emergingrolesof pages 1-3) |
-| Catalytic Y-box | aa 933–1030 | C-terminal portion of the split TIM-barrel phosphodiesterase fold | Completes the active site with the X-box and confers phosphoinositide phosphodiesterase activity | Catalyzes Ca²⁺-dependent hydrolysis of membrane PI(4,5)P2 to soluble IP3 and membrane-retained DAG after autoinhibition is relieved. The catalytic core must insert its hydrophobic ridge into the bilayer to access substrate. (hajicek2019structuralbasisfor pages 1-2, kanemaru2023activationmechanismsand pages 2-4, hajicek2019structuralbasisfor pages 5-6) |
-| C2 domain | aa 1038–1190 | Eight-stranded C2-domain β-sandwich | Supports membrane association, catalytic-core organization, and regulation by the γ-specific array | Forms an important basal inhibitory interface with cSH2. Tyr783 phosphorylation and intramolecular pTyr783–cSH2 binding release this cSH2–C2 latch, allowing the catalytic core to approach the membrane. The P19174 InterPro annotations specifically include a C2 domain and C2-domain superfamily assignment. (hajicek2019structuralbasisfor pages 5-6, hajicek2019structuralbasisfor pages 12-13) |
-| C-terminal tail | aa 1191–1290 | Predominantly non-globular regulatory extension adjoining the C2 domain | Provides additional regulatory and phosphorylation sites and helps coordinate signaling interactions | Includes reported regulatory tyrosines toward the C terminus, but it is not the primary phospholipase active site. Its functions are less structurally resolved than those of the catalytic core and γ-specific array. (nanna2026understandingtheactivation pages 22-25, duarte2023multiplerolesof pages 26-30) |
+| Domain | Location in PLCγ1 | Key structural features | Primary function in regulation and signaling |
+|---|---|---|---|
+| Pleckstrin homology (PH) domain | N-terminal region, before the EF hands and catalytic core | Conserved PLC-core module with phosphoinositide- and membrane-interacting properties | Supports membrane targeting and interaction with phosphoinositides, helping position PLCγ1 near membrane-embedded PI(4,5)P₂; distinct from the split PH domain in the γ-specific insert. (singh2023phospholipasecunderrated pages 3-5, singh2023phospholipasecunderrated pages 2-3) |
+| EF-hand motifs | Between the N-terminal PH domain and catalytic X region | Four EF-hand repeats arranged as paired helix–loop–helix modules; part of the conserved PLC core | Contribute to catalytic-core architecture and Ca²⁺-responsive regulation; Ca²⁺-dependent conformational changes can stabilize or expose interaction surfaces. (singh2023phospholipasecunderrated pages 3-5, joel2020dynamicsofallosteric pages 36-41) |
+| X catalytic domain | First half of the catalytic core; precedes the γ-specific regulatory insertion | Combines with the Y region to form a TIM-barrel-like catalytic structure; contains conserved catalytic residues, including functionally important histidines | Participates directly in phosphodiester-bond cleavage during PI(4,5)P₂ hydrolysis and cyclic inositol-phosphate intermediate formation. (mariano2024intronretentionin pages 8-8, singh2023phospholipasecunderrated pages 2-3) |
+| Split PH (sPH) domain | Two discontinuous segments flanking the SH2–SH2–SH3 modules within the insertion between X and Y | Reassembles into a stable PH-like fold; lies over the catalytic TIM barrel in the inactive structure and forms part of the γ-specific array | Helps maintain autoinhibition by obstructing catalytic-core access to the membrane; also mediates regulatory interactions, including coupling to TRPC3 and reported small-GTPase binding. (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 24-28) |
+| N-terminal SH2 (nSH2) domain | Within the γ-specific insertion, after the N-terminal portion of the sPH domain | Phosphotyrosine-recognition module exposed for receptor engagement | Recruits cytosolic PLCγ1 to phosphorylated receptor tyrosine kinases or adaptor proteins, positioning it for Tyr783 phosphorylation and membrane-proximal activation; also participates in LAT binding in T-cell signaling. (joel2020dynamicsofallosteric pages 24-28, zeng2020plcγ1promotesphase pages 11-15) |
+| C-terminal SH2 (cSH2) domain | Within the γ-specific insertion, immediately following nSH2 | Phosphotyrosine-binding module whose electropositive loops contact the catalytic-core C2 domain in resting PLCγ1 | Principal autoinhibitory switch: clasps the C2 domain in the closed state; after Tyr783 phosphorylation, intramolecular pTyr783 binding displaces these contacts and promotes catalytic-core exposure. It can also contribute to phosphotyrosine-dependent signal-complex assembly. (joel2020dynamicsofallosteric pages 24-28, joel2020dynamicsofallosteric pages 28-32) |
+| SH3 domain | Within the γ-specific insertion, after the tandem SH2 domains and before the C-terminal sPH segment | Proline-rich-sequence-binding module that helps stabilize the regulatory-domain arrangement | Provides noncatalytic scaffolding by binding proteins such as SLP-76, Vav1, SOS and dynamin; supports LAT signalosome organization and can help stabilize the autoinhibited γ-specific array. (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 28-32, joel2020dynamicsofallosteric pages 24-28) |
+| Y catalytic domain | Second half of the catalytic core; follows the γ-specific insertion | Completes the TIM-barrel-like active site with the X region and contributes to substrate-recognition surfaces | Cooperates with the X domain to recognize and hydrolyze membrane PI(4,5)P₂, generating IP₃ and diacylglycerol after autoinhibition is relieved. (singh2023phospholipasecunderrated pages 3-5, mariano2024intronretentionin pages 8-8, singh2023phospholipasecunderrated pages 2-3) |
+| C2 domain | C-terminal portion of the conserved catalytic core, after the Y region | β-sandwich module; provides membrane- and protein-interaction surfaces and forms a major interface with cSH2 in inactive PLCγ1 | Contributes to membrane engagement and catalytic-core organization; in the resting enzyme, its interaction with cSH2 stabilizes autoinhibition, whereas disruption of that interface permits productive membrane binding and catalysis. (duarte2023multiplerolesof pages 26-30, singh2023phospholipasecunderrated pages 3-5, joel2020dynamicsofallosteric pages 96-99, joel2020dynamicsofallosteric pages 28-32) |
 
 
-*Table: Domain-by-domain map of human PLCγ1 (UniProt P19174), connecting its conserved catalytic core and γ-specific regulatory array to membrane recruitment, autoinhibition, receptor docking, and PI(4,5)P2 hydrolysis. Amino-acid boundaries are approximate because domain definitions vary slightly among structural and annotation resources.*
+*Table: This table maps the principal catalytic and regulatory domains of human PLCγ1 and summarizes how each contributes to membrane recruitment, autoinhibition, activation, catalysis, or signaling-complex assembly.*
 
-### Key Structural Features
+The nSH2 domain mediates recruitment of cytosolic PLCγ1 to phosphorylated receptor tyrosine kinases (RTKs) and adaptor proteins such as LAT in T-cell signaling (joel2020dynamicsofallosteric pages 24-28, zeng2020plcγ1promotesphase pages 11-15). The cSH2 domain functions as the principal autoinhibitory element, maintaining PLCγ1 in an inactive state through interactions with the catalytic core (joel2020dynamicsofallosteric pages 24-28). The SH3 domain provides scaffolding functions, binding proline-rich sequences in proteins including SLP-76, Vav1, and SOS (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 28-32).
 
-The enzyme consists of a conserved catalytic core and a PLCγ-specific regulatory array (γSA). The catalytic core includes an N-terminal pleckstrin homology (PH) domain, four EF-hand motifs, a split TIM-barrel catalytic domain (X-box and Y-box), and a C2 domain (hajicek2019structuralbasisfor pages 3-5, nanna2026understandingtheactivation pages 13-19). The γSA is uniquely inserted between the X and Y boxes of the TIM barrel and comprises a split PH domain (sPH), two Src homology 2 (SH2) domains (nSH2 and cSH2), and an SH3 domain (hajicek2019structuralbasisfor pages 6-7, duarte2023multiplerolesof pages 26-30, nanna2026understandingtheactivation pages 19-22).
+## Autoinhibition and Activation Mechanisms
 
-## Autoinhibition and Activation Mechanism
+### Structural Basis of Autoinhibition
 
-### Basal Autoinhibition
+In resting cells, PLCγ1 exists in an autoinhibited conformation maintained by intramolecular interactions between the regulatory domains and the catalytic core (joel2020dynamicsofallosteric pages 96-99, joel2020dynamicsofallosteric pages 28-32). The cSH2 domain plays a critical role by clasping the C2 domain through electrostatic contacts, burying the cSH2 phosphotyrosine-binding surface and preventing productive activation (joel2020dynamicsofallosteric pages 28-32, joel2020dynamicsofallosteric pages 24-28). Additionally, the split PH domain lies directly over the catalytic TIM barrel, sterically blocking access to the active site and preventing membrane engagement (joel2020dynamicsofallosteric pages 24-28, siralievperez2022dynamicsofallosteric pages 11-12). This regulatory architecture ensures that PLCγ1 cannot access its membrane-embedded PIP2 substrate in the absence of appropriate upstream signals (joel2020dynamicsofallosteric pages 76-80, siralievperez2022dynamicsofallosteric pages 1-3).
 
-In its unstimulated state, PLCγ1 exists in an autoinhibited conformation where the γ-specific regulatory array is positioned over the catalytic core, preventing productive membrane engagement (hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor pages 2-3, hajicek2019structuralbasisfor pages 5-6). High-resolution crystal structures reveal two principal autoinhibitory interfaces:
+### Tyrosine Phosphorylation-Dependent Activation
 
-1. The **sPH domain occludes the TIM-barrel hydrophobic ridge**, which normally must insert into the membrane for substrate access (hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor pages 5-6).
+Unlike other PLC isoforms, PLCγ1 requires tyrosine phosphorylation for activation (joel2020dynamicsofallosteric pages 71-76, joel2020dynamicsofallosteric pages 124-128). The activation process follows a coordinated sequence initiated by receptor stimulation. Upon ligand binding, receptor tyrosine kinases such as EGFR, VEGFR, FGFR, and PDGFR undergo dimerization and autophosphorylation, creating phosphotyrosine docking sites (joel2020dynamicsofallosteric pages 24-28, duarte2023multiplerolesof pages 26-30, chen2021emergingrolesof pages 8-9). The nSH2 domain of PLCγ1 recognizes these phosphorylated receptor sites and recruits the enzyme from the cytoplasm to the plasma membrane, positioning it near active kinases and membrane-embedded substrate (joel2020dynamicsofallosteric pages 24-28, joel2020dynamicsofallosteric pages 28-32).
 
-2. The **cSH2 domain interacts with the C2 domain**, with its phosphotyrosine-binding pocket buried against the catalytic core (hajicek2019structuralbasisfor pages 6-7, hajicek2019structuralbasisfor pages 2-3, hajicek2019structuralbasisfor pages 5-6).
+Following membrane recruitment, receptor-associated kinases phosphorylate PLCγ1 at multiple regulatory tyrosines, most critically at Tyr783 (joel2020dynamicsofallosteric pages 24-28, siralievperez2022dynamicsofallosteric pages 1-3). Phosphorylation of Tyr783 is essential for lipase activation: the phosphorylated tyrosine binds intramolecularly to the cSH2 domain, disrupting its inhibitory interaction with the C2 domain and triggering a conformational rearrangement that exposes the catalytic core (joel2020dynamicsofallosteric pages 28-32, duarte2023multiplerolesof pages 26-30). This release from autoinhibition allows the catalytic domains to productively engage the membrane and hydrolyze PIP2 (siralievperez2022dynamicsofallosteric pages 1-3).
 
-The SH3 domain's C-terminal extension acts as a structural "brace" or "keystone" that reinforces these inhibitory contacts (hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor pages 5-6).
+Recent structural studies using hydrogen-deuterium exchange mass spectrometry (HDX-MS) have revealed that receptor engagement also allosterically primes PLCγ1 for activation (siralievperez2022dynamicsofallosteric pages 1-3). Binding to the FGFR1 kinase domain shifts PLCγ1 toward an activation-competent conformational state even before complete phosphorylation, demonstrating cooperativity between receptor engagement, phosphorylation, and membrane proximity in promoting full activation (siralievperez2022dynamicsofallosteric pages 1-3).
 
-### Phosphorylation-Dependent Activation
+## Subcellular Localization and Functional Sites
 
-Activation proceeds through a sequential mechanism involving receptor recruitment, priming, and phosphorylation-triggered conformational rearrangement (hajicek2019structuralbasisfor pages 12-13, hajicek2019structuralbasisfor pages 11-12, hajicek2019structuralbasisfor pages 2-3):
+PLCγ1 exhibits dynamic subcellular localization that is tightly coupled to its activation state. In the resting, autoinhibited state, PLCγ1 resides primarily in the cytoplasm, sequestered from its membrane-associated substrate (duarte2023multiplerolesof pages 26-30, kanemaru2023activationmechanismsand pages 4-6, joel2020dynamicsofallosteric pages 28-32). The regulatory domain architecture prevents spontaneous membrane association and maintains the enzyme in a soluble, inactive form (joel2020dynamicsofallosteric pages 124-128).
 
-1. **Receptor Recruitment**: The nSH2 domain, which remains solvent-accessible in the autoinhibited enzyme, binds phosphotyrosine sites on activated receptor tyrosine kinases (RTKs), recruiting PLCγ1 to the plasma membrane (hajicek2019structuralbasisfor pages 6-7, nanna2026understandingtheactivation pages 22-25).
+Upon receptor activation, PLCγ1 is actively recruited to the plasma membrane through SH2-domain-mediated interactions with phosphorylated receptors (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 28-32). The plasma membrane serves as the principal functional site where activated PLCγ1 hydrolyzes PIP2 to generate IP3 and DAG (chen2021emergingrolesof pages 1-3, joel2020dynamicsofallosteric pages 12-19). Following activation and signaling, PLCγ1 can dissociate from receptors and return to the cytosol in its autoinhibited conformation (duarte2023multiplerolesof pages 26-30).
 
-2. **Priming**: The bound RTK kinase domain acts as a mechanical lever to destabilize the cSH2-C2 autoinhibitory interface, priming the enzyme for activation (hajicek2019structuralbasisfor pages 12-13, hajicek2019structuralbasisfor pages 11-12).
+Beyond plasma membrane signaling, PLCγ1 has been reported to function in additional cellular compartments. The SH3 domain mediates interactions with dynamin-1 during receptor endocytosis, suggesting roles at endocytic membrane compartments (chen2021emergingrolesof pages 1-3, chen2021emergingrolesof pages 13-14). Nuclear functions have also been described, including interaction with the nuclear GTPase PIKE and potential roles in nuclear phosphoinositide signaling, although the plasma membrane remains the best-characterized site of PLCγ1 catalytic activity (chen2021emergingrolesof pages 1-3, chen2021emergingrolesof pages 9-11, chen2021emergingrolesof pages 13-14).
 
-3. **Phosphorylation**: The RTK phosphorylates **PLCγ1 at Tyr783**, the critical activating site located in the linker between the cSH2 and SH3 domains (nanna2026understandingtheactivation pages 22-25, hajicek2019structuralbasisfor pages 12-13, duarte2023multiplerolesof pages 26-30, hajicek2019structuralbasisfor pages 1-2, hajicek2019structuralbasisfor pages 5-6). Additional phosphorylation sites include Tyr771 (between X and Y boxes), Tyr775, and Tyr1253 (C-terminal region) (nanna2026understandingtheactivation pages 22-25, duarte2023multiplerolesof pages 26-30).
+## Signaling Pathways and Biological Processes
 
-4. **Conformational Release**: Phosphorylated Tyr783 (pTyr783) binds intramolecularly to the cSH2 domain, competing for the same binding surface that contacts the C2 domain (hajicek2019structuralbasisfor pages 12-13, hajicek2019structuralbasisfor pages 2-3, hajicek2019structuralbasisfor pages 5-6). This disrupts the cSH2-C2 latch and triggers a large-scale rearrangement of the regulatory array relative to the catalytic core (hajicek2019structuralbasisfor pages 2-3, hajicek2019structuralbasisfor pages 12-13, hajicek2019structuralbasisfor pages 11-12).
+PLCγ1 functions as a critical node linking extracellular receptor activation to multiple intracellular signaling pathways. Its versatile domain architecture enables both catalytic lipase activity and noncatalytic scaffolding functions that organize signaling complexes.
 
-5. **Membrane Engagement and Catalysis**: The conformational rearrangement exposes the catalytic core, allowing the TIM-barrel hydrophobic ridge to insert into the membrane and enabling PIP2 hydrolysis (hajicek2019structuralbasisfor pages 5-6, hajicek2019structuralbasisfor pages 12-13, duarte2023multiplerolesof pages 26-30).
-
-## Subcellular Localization and Trafficking
-
-### Basal Localization
-
-In unstimulated cells, PLCγ1 is primarily **cytosolic** and autoinhibited, with its catalytic activity suppressed by the folded γ-specific array (duarte2023multiplerolesof pages 26-30).
-
-### Stimulus-Induced Translocation
-
-Upon activation of receptor tyrosine kinases (RTKs) or other upstream signals, PLCγ1 undergoes dynamic relocalization:
-
-- **Plasma Membrane**: Following RTK activation (e.g., EGFR, VEGFR, PDGFR, FGFR), PLCγ1 translocates from the cytosol to the plasma membrane through SH2-domain-mediated binding to phosphorylated receptor tails (duarte2023multiplerolesof pages 26-30, duarte2023multiplerolesof pages 30-33, nanna2026understandingtheactivation pages 22-25). The PH domain can also contribute to membrane recruitment by binding PI3K-generated PIP3 (chen2021emergingrolesof pages 9-11, kanemaru2023activationmechanismsand pages 10-11).
-
-- **Focal Adhesions**: In response to integrin-mediated cell adhesion, PLCγ1 localizes to focal adhesion complexes, where it associates with GIT1, β-Pix, and focal adhesion kinase (FAK) (chen2021emergingrolesof pages 9-11).
-
-- **Leading Edge**: During cell migration, PLCγ1 accumulates at the leading edge through PI3K-dependent mechanisms, contributing to cytoskeletal remodeling and directional motility (duarte2023multiplerolesof pages 30-33).
-
-- **Nucleus**: A 120-kDa PLCγ1 fragment has been detected in the nucleus, where it can participate in nuclear EGFR signaling and potentially regulate gene transcription (kanemaru2023activationmechanismsand pages 10-11).
-
-After receptor dissociation and dephosphorylation, PLCγ1 returns to its autoinhibited cytosolic state (duarte2023multiplerolesof pages 26-30).
-
-## Signaling Pathways and Biochemical Functions
-
-PLCγ1 functions as a central hub integrating multiple receptor systems with downstream signaling cascades. A comprehensive overview of its signaling roles is provided below.
-
-| Pathway | Upstream activators (receptors/kinases) | PLCγ1 role | Downstream effectors | Biological outcomes |
+| Pathway name | Upstream activators (receptors/kinases) | PLCG1 activation mechanism | Downstream effectors | Biological outcomes |
 |---|---|---|---|---|
-| VEGFR2 signaling | VEGF-A–activated VEGFR2; PLCγ1 docks principally at human VEGFR2 pTyr1175 (mouse Tyr1173) and is tyrosine-phosphorylated | Direct VEGFR2 effector that couples receptor activation to PI(4,5)P2 hydrolysis; especially important for the noncanonical, weakly Ras-dependent route from VEGFR2 to ERK | IP3, Ca²⁺, DAG, PKCα/PKCβ, Raf1–MEK–ERK, calcineurin–NFAT | Endothelial proliferation and migration, tip/stalk-cell signaling, angiogenic sprouting, vascular development, and permeability (chen2021emergingrolesof pages 4-6, chen2021emergingrolesof pages 9-11) |
-| FGFR signaling | FGF-activated FGFR1; PLCγ1 nSH2 recognizes FGFR1 pTyr766, followed by phosphorylation of PLCγ1 Tyr783 | Provides a PLC branch parallel and additive to the principal FRS2α–GRB2–SOS–Ras pathway; receptor engagement primes release of PLCγ1 autoinhibition | DAG–PKC, Ras, MEK–ERK/MAPK; context-dependent Ca²⁺ signaling | Mitogenesis, cell-cycle progression, migration, vascular development, and angiogenesis (hajicek2019structuralbasisfor pages 12-13, nanna2026understandingtheactivation pages 25-29, chen2021emergingrolesof pages 8-9, nanna2026understandingtheactivation pages 22-25) |
-| EGFR signaling | EGF-family ligands acting through EGFR; EGFR pTyr992 is a reported PLCγ1 docking site | Recruited to activated EGFR and activated through Tyr783 phosphorylation; acts both as a PI(4,5)P2 lipase and as an SH2/SH3-containing scaffold. It can also facilitate dynamin-dependent EGFR endocytosis | IP3–Ca²⁺, DAG–PKC, ERK/MAPK, AKT, SOS–Ras, dynamin-1, Rac1 | Proliferation, receptor feedback and trafficking, membrane ruffling, cytoskeletal remodeling, migration, and invasion (duarte2023multiplerolesof pages 30-33, duarte2023multiplerolesof pages 26-30, duarte2023multiplerolesof pages 55-59, nanna2026understandingtheactivation pages 22-25) |
-| PDGFR signaling | PDGF-activated PDGFR; PDGFR pTyr1021 is a reported PLCγ1 docking site | SH2-dependent recruitment to the phosphorylated receptor enables Tyr783 phosphorylation, membrane engagement, and phosphoinositide hydrolysis | IP3–Ca²⁺, DAG–PKC, Ras/MAPK, and cell-cycle regulators | DNA synthesis, growth-factor-induced cell-cycle progression, proliferation, migration, and cytoskeletal responses (nanna2026understandingtheactivation pages 22-25, duarte2023multiplerolesof pages 26-30) |
-| T-cell receptor signaling | TCR-associated Src and Tec-family kinases, including Lck and ITK; phosphorylated LAT and SLP-76 signaling complexes | PLCγ1 is recruited and phosphorylated within LAT signalosomes, hydrolyzes PI(4,5)P2, and also crosslinks LAT through its SH2 domains. This multivalent scaffolding promotes LAT microclusters and protects LAT phosphotyrosines from CD45-mediated dephosphorylation | IP3–Ca²⁺–calmodulin–calcineurin–NFAT; DAG–PKCθ–NF-κB; RasGRP–Ras–ERK/AP-1 | Thymocyte maturation, sustained Ca²⁺ signaling, T-cell proliferation, cytokine production, effector activation, and regulatory-T-cell development and function (chen2021emergingrolesof pages 4-6, zeng2020plcγ1promotesphase pages 15-22, duarte2023multiplerolesof pages 26-30, hajicek2019structuralbasisfor pages 21-22) |
-| Integrin and focal-adhesion signaling | Integrin ligation to extracellular matrix/fibronectin; focal-adhesion kinase (FAK), GIT1, β-Pix, and PI3K-dependent inputs | Localizes to focal adhesions and signaling complexes; combines lipase activity with SH-domain scaffolding to regulate adhesion-linked GTPases and cytoskeletal machinery | Ca²⁺, PKC, FAK, β-Pix, Cdc42, Rac1, AKT, myosin, and profilin | Cell adhesion, spreading, polarity, focal-adhesion turnover, membrane ruffling, migration, and invasion (chen2021emergingrolesof pages 9-11, duarte2023multiplerolesof pages 30-33) |
-| IP3–Ca²⁺–calcineurin–NFAT arm | Activated PLCγ1 downstream of RTKs, TCR, or adhesion-associated signaling | Hydrolyzes plasma-membrane PI(4,5)P2 to produce soluble IP3; IP3 binds endoplasmic-reticulum IP3 receptors and mobilizes stored Ca²⁺, with possible amplification by Ca²⁺ influx | IP3 receptor, cytosolic Ca²⁺, calmodulin, calcineurin, NFAT; CaM–MLCK for actomyosin control | Ca²⁺-dependent transcription, immune activation, endothelial proliferation and sprouting, motility, actomyosin remodeling, and permeability (duarte2023multiplerolesof pages 22-26, nanna2026understandingtheactivation pages 25-29, chen2021emergingrolesof pages 9-11, chen2021emergingrolesof pages 1-3) |
-| DAG–PKC–MAPK arm | The same receptor-driven activation of PLCγ1 that generates IP3 | Produces membrane-retained DAG; DAG, often together with Ca²⁺, recruits and activates conventional or novel PKC isoforms | DAG, PKCα/PKCβ or context-specific PKCs, Raf1, MEK, ERK; EGFR Thr654 phosphorylation can provide negative feedback | Proliferation, differentiation, endothelial migration and angiogenesis, permeability, cytoskeletal regulation, and receptor-feedback control (duarte2023multiplerolesof pages 22-26, nanna2026understandingtheactivation pages 25-29, chen2021emergingrolesof pages 9-11, chen2021emergingrolesof pages 8-9) |
+| Receptor tyrosine kinase signaling | EGFR, VEGFR1/2, FGFR1, PDGFR and Trk receptors; receptor-associated tyrosine kinases | Ligand-induced receptor autophosphorylation creates phosphotyrosine docking sites for PLCγ1 SH2 domains. Membrane recruitment, receptor engagement and phosphorylation—especially at Tyr783—disrupt cSH2–C2 autoinhibitory contacts, expose membrane-binding surfaces and permit hydrolysis of PI(4,5)P2 (PIP2). (joel2020dynamicsofallosteric pages 24-28, siralievperez2022dynamicsofallosteric pages 1-3, chen2021emergingrolesof pages 8-9) | IP3–IP3 receptor–Ca²⁺ signaling; DAG–PKC; Raf–MEK–ERK; context-dependent CaMK and CREB signaling | Growth-factor responses including proliferation, differentiation, survival and migration; VEGFR2–PLCγ1 signaling is particularly important for endothelial sprouting, vascular development and permeability. (joel2020dynamicsofallosteric pages 32-36, chen2021emergingrolesof pages 8-9, chen2021emergingrolesof pages 9-11) |
+| T-cell receptor signaling | TCR–CD3 complex; Lck and ZAP-70; phosphorylated LAT; SLP-76/GADS signalosome; ITK | TCR ligation triggers ITAM phosphorylation and ZAP-70-dependent LAT phosphorylation. PLCγ1 binds phosphorylated LAT, participates in multivalent LAT–SLP-76 signaling assemblies, and is phosphorylated by ITK at Tyr783, relieving autoinhibition and activating PIP2 hydrolysis. Its SH2/SH3 modules also crosslink and stabilize LAT clusters and protect LAT phosphosites from CD45-mediated dephosphorylation. (zeng2020plcγ1promotesphase pages 15-22, zeng2020plcγ1promotesphase pages 11-15, joel2020dynamicsofallosteric pages 32-36, joel2020dynamicsofallosteric pages 28-32) | IP3–Ca²⁺–calcineurin–NFAT; DAG–PKCθ–NF-κB; DAG–RasGRP–Ras–ERK–AP-1; SLP-76 and LAT microcluster signaling | Thymocyte development and selection, mature T-cell activation, proliferation, cytokine production and regulatory T-cell development/function; excessive activation contributes to T-cell lymphomagenesis. (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 32-36) |
+| Calcium–calcineurin–NFAT signaling | PLCγ1-activating RTKs or antigen receptors; IP3 receptors on the endoplasmic reticulum; store-operated Ca²⁺-entry machinery | Activated PLCγ1 cleaves plasma-membrane PIP2 into soluble IP3 and membrane-retained DAG. IP3 opens ER IP3-receptor channels; ER-store depletion promotes sustained extracellular Ca²⁺ entry. (chen2021emergingrolesof pages 1-3, chen2021emergingrolesof pages 9-11, kanemaru2023activationmechanismsand pages 1-2) | Cytosolic Ca²⁺, calmodulin, calcineurin and NFAT; Ca²⁺ plus DAG also activates conventional PKC isoforms, while DAG can activate TRPC3/6/7 channels. (chen2021emergingrolesof pages 9-11, kanemaru2023activationmechanismsand pages 1-2) | Nuclear NFAT-dependent transcription; receptor- and cell-context-dependent control of immune activation, endothelial proliferation and migration, angiogenic sprouting and vascular permeability. (chen2021emergingrolesof pages 9-11) |
 
 
-*Table: Major receptor-proximal pathways and second-messenger branches mediated by human PLCγ1. The table distinguishes its catalytic PI(4,5)P2-lipase activity from its SH2/SH3-dependent scaffolding functions.*
+*Table: This table maps major PLCG1 pathways from receptor-proximal activation through IP3/DAG effectors to biological outcomes. It highlights the shared Tyr783-dependent activation mechanism and pathway-specific roles in growth-factor, T-cell and calcium/NFAT signaling.*
 
-### Receptor Tyrosine Kinase (RTK) Signaling
+### Receptor Tyrosine Kinase Signaling
 
-PLCγ1 serves as a direct effector of multiple growth factor receptors:
+PLCγ1 serves as a direct effector downstream of multiple RTK families, including EGFR, VEGFR1/2, FGFR1, PDGFR, and Trk receptors (duarte2023multiplerolesof pages 26-30, chen2021emergingrolesof pages 8-9, joel2020dynamicsofallosteric pages 32-36). In VEGFR2 signaling, particularly important in endothelial cells, PLCγ1 binds to phosphorylated Tyr1175 and mediates calcium mobilization and PKC activation (chen2021emergingrolesof pages 8-9). The resulting Ca²⁺-calcineurin-NFAT pathway drives endothelial proliferation, migration, angiogenic sprouting, and vascular permeability (chen2021emergingrolesof pages 9-11). DAG produced by PLCγ1 activates PKCβ, which contributes to VEGFR2-dependent Raf/MEK/ERK signaling and endothelial function (chen2021emergingrolesof pages 9-11).
 
-- **VEGFR2 (VEGF Receptor 2)**: PLCγ1 docks at phosphorylated **Tyr1175** (human) or **Tyr1173** (mouse) on VEGFR2 and represents a major, potentially primary, route from VEGFR2 to MAPK/ERK activation in endothelial cells (chen2021emergingrolesof pages 4-6, chen2021emergingrolesof pages 8-9). This pathway supports endothelial proliferation, migration, angiogenic sprouting, and vascular development (chen2021emergingrolesof pages 9-11, chen2021emergingrolesof pages 1-3).
+In FGFR1 signaling, PLCγ1 is recruited through its cSH2 domain to phosphorylated Tyr766 and provides an additive contribution to ERK activation alongside the primary Frs2α-Grb2-SOS-Ras-MAPK cascade (chen2021emergingrolesof pages 8-9). The DAG produced by PLCγ1 can also generate intracellular gradients that regulate cytoskeletal dynamics and cell migration (joel2020dynamicsofallosteric pages 32-36).
 
-- **FGFR1 (Fibroblast Growth Factor Receptor 1)**: PLCγ1 nSH2 recognizes FGFR1 **pTyr766**, operating in parallel to the canonical FRS2α-GRB2-SOS-Ras pathway (hajicek2019structuralbasisfor pages 12-13, nanna2026understandingtheactivation pages 22-25, chen2021emergingrolesof pages 8-9). The PLCγ1 branch contributes additively to ERK activation and angiogenic signaling (chen2021emergingrolesof pages 8-9).
+### T Cell Receptor Signaling and Immune Function
 
-- **EGFR (Epidermal Growth Factor Receptor)**: PLCγ1 binds EGFR **pTyr992** and functions as both a lipase and a scaffolding protein (nanna2026understandingtheactivation pages 22-25, hajicek2019structuralbasisfor pages 12-13). PLCγ1 can also act as a guanine nucleotide exchange factor for dynamin-1, facilitating EGFR endocytosis and receptor trafficking (chen2021emergingrolesof pages 1-3, duarte2023multiplerolesof pages 55-59).
+PLCγ1 plays an essential, nonredundant role in T-cell development and function (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 32-36). Upon TCR engagement, the Src-family kinase Lck phosphorylates immunoreceptor tyrosine-based activation motifs (ITAMs) on CD3 and ζ-chain components, recruiting ZAP-70 kinase (joel2020dynamicsofallosteric pages 32-36). ZAP-70 then phosphorylates the adaptor protein LAT, creating docking sites for PLCγ1's SH2 domains (zeng2020plcγ1promotesphase pages 11-15, joel2020dynamicsofallosteric pages 32-36).
 
-- **PDGFR (Platelet-Derived Growth Factor Receptor)**: PLCγ1 associates with PDGFR **pTyr1021**, promoting proliferation, DNA synthesis, and cell-cycle progression (duarte2023multiplerolesof pages 26-30, nanna2026understandingtheactivation pages 22-25).
+Recent studies have revealed that PLCγ1 functions not merely as a downstream effector but as an active organizer of TCR signaling complexes (zeng2020plcγ1promotesphase pages 15-22, zeng2020plcγ1promotesphase pages 44-48, zeng2020plcγ1promotesphase pages 11-15, zeng2020plcγ1promotesphase pages 1-6). PLCγ1 directly crosslinks phosphorylated LAT molecules through its tandem SH2 domains, with nSH2 binding LAT Tyr132 and cSH2 engaging Tyr171 (zeng2020plcγ1promotesphase pages 11-15). This multivalent binding promotes LAT microcluster formation and phase separation of signaling condensates at the plasma membrane (zeng2020plcγ1promotesphase pages 15-22, zeng2020plcγ1promotesphase pages 1-6). PLCγ1 also protects LAT phosphorylation sites from dephosphorylation by the phosphatase CD45, thereby stabilizing the signaling complex (zeng2020plcγ1promotesphase pages 15-22, zeng2020plcγ1promotesphase pages 11-15).
 
-### T-Cell Receptor (TCR) Signaling
+The SH3 domain of PLCγ1 scaffolds additional signaling proteins, including SLP-76, which is required for PLCγ1 activation by the Tec-family kinase ITK (zeng2020plcγ1promotesphase pages 44-48, joel2020dynamicsofallosteric pages 28-32). Following ITK-mediated phosphorylation at Tyr783, activated PLCγ1 generates IP3 and DAG, initiating multiple downstream pathways: IP3-Ca²⁺-calcineurin-NFAT, DAG-PKCθ-NF-κB, and DAG-RasGRP-Ras-ERK-AP-1 (duarte2023multiplerolesof pages 26-30, joel2020dynamicsofallosteric pages 32-36). These pathways collectively drive the transcriptional programs required for thymocyte maturation, positive and negative selection, and mature T-cell activation, proliferation, and cytokine production (joel2020dynamicsofallosteric pages 32-36, duarte2023multiplerolesof pages 26-30).
 
-In T lymphocytes, PLCγ1 plays essential roles in immune activation (chen2021emergingrolesof pages 4-6, duarte2023multiplerolesof pages 26-30, chen2021emergingrolesof pages 13-14):
+Genetic studies confirm PLCγ1's critical role: T-cell-specific deletion impairs thymocyte development, TCR-induced responses, and regulatory T-cell function (duarte2023multiplerolesof pages 26-30). Conversely, gain-of-function mutations that disrupt autoinhibition drive excessive signaling and contribute to T-cell lymphomagenesis (duarte2023multiplerolesof pages 26-30).
 
-- **LAT Microcluster Formation**: PLCγ1 uses its tandem SH2 domains to crosslink phosphorylated LAT (linker for activation of T cells) at Tyr132 and Tyr171, promoting phase separation and formation of LAT-containing signaling microclusters (zeng2020plcγ1promotesphase pages 15-22).
+### Calcium-Calcineurin-NFAT Signaling
 
-- **Signaling Protection**: PLCγ1 protects phosphorylated LAT from dephosphorylation by the phosphatase CD45, thereby sustaining TCR signaling (zeng2020plcγ1promotesphase pages 15-22).
+The IP3 generated by activated PLCγ1 serves as the primary trigger for intracellular calcium signaling (chen2021emergingrolesof pages 1-3, chen2021emergingrolesof pages 9-11, kanemaru2023activationmechanismsand pages 1-2). IP3 opens ER-localized IP3 receptor channels, releasing stored Ca²⁺ into the cytosol (chen2021emergingrolesof pages 9-11, kanemaru2023activationmechanismsand pages 1-2). This initial ER-mediated calcium release can be sustained through store-operated calcium entry (SOCE) and other plasma membrane calcium channels (chen2021emergingrolesof pages 9-11).
 
-- **Downstream Effectors**: PLCγ1-generated IP3 and Ca²⁺ activate calcineurin-NFAT pathways, while DAG activates PKCθ and NF-κB, driving T-cell proliferation, cytokine production, and regulatory T-cell development (nanna2026understandingtheactivation pages 25-29, chen2021emergingrolesof pages 9-11, duarte2023multiplerolesof pages 26-30, hajicek2019structuralbasisfor pages 23-24, hajicek2019structuralbasisfor pages 21-22).
+The resulting elevation in cytosolic Ca²⁺ activates calmodulin and the calcium-dependent phosphatase calcineurin (chen2021emergingrolesof pages 9-11). Calcineurin dephosphorylates the transcription factor NFAT, enabling its nuclear translocation and transcriptional activation (chen2021emergingrolesof pages 9-11). This Ca²⁺-calcineurin-NFAT pathway is critical in both immune and endothelial contexts, regulating T-cell activation, endothelial proliferation and migration, and angiogenic responses (chen2021emergingrolesof pages 9-11).
 
-### Integrin and Focal Adhesion Signaling
+PLCγ1's split PH domain also directly couples to calcium signaling through interaction with TRPC3 channels, further linking PLCγ1 to agonist-induced calcium entry (duarte2023multiplerolesof pages 26-30). Additionally, DAG can activate TRPC3/6/7 channels, which are calcium-permeable and amplify the calcium signal (kanemaru2023activationmechanismsand pages 1-2, kanemaru2023activationmechanismsand pages 2-4).
 
-PLCγ1 integrates adhesion-dependent signals with motility and cytoskeletal dynamics (duarte2023multiplerolesof pages 26-30, duarte2023multiplerolesof pages 30-33, chen2021emergingrolesof pages 9-11):
+## Experimental and Structural Evidence
 
-- Associates with GIT1, β-Pix, and FAK in focal adhesions
-- Activates Cdc42 and Rac1 GTPases, promoting cell spreading and migration
-- Generates Ca²⁺ and PKC signals that regulate myosin, focal adhesions, and cytoskeletal proteins like FAK and profilin
+The understanding of PLCγ1 function is supported by diverse experimental approaches. Crystal structures and cryo-electron microscopy have revealed the autoinhibitory architecture, showing how the cSH2 domain clasps the C2 domain and the split PH domain occludes the catalytic site in the inactive state (joel2020dynamicsofallosteric pages 96-99, joel2020dynamicsofallosteric pages 28-32, joel2020dynamicsofallosteric pages 24-28). These structural studies have been complemented by hydrogen-deuterium exchange mass spectrometry (HDX-MS), which demonstrated that PLCγ1 undergoes extensive conformational changes upon receptor binding, shifting toward an activation-competent ensemble (siralievperez2022dynamicsofallosteric pages 1-3).
 
-### Downstream Second Messenger Pathways
+Reconstituted membrane systems have been instrumental in defining activation requirements (siralievperez2022dynamicsofallosteric pages 1-3, zeng2020plcγ1promotesphase pages 15-22). These studies showed that PLCγ1 is relatively inert toward PIP2-containing vesicles unless first engaged by receptor kinase domains, demonstrating the importance of receptor priming (siralievperez2022dynamicsofallosteric pages 1-3). Live-cell and reconstituted membrane experiments have also revealed PLCγ1's role in promoting phase separation of LAT signaling condensates, establishing a structural function beyond catalytic activity (zeng2020plcγ1promotesphase pages 15-22, zeng2020plcγ1promotesphase pages 1-6).
 
-The two products of PLCγ1 activity drive parallel signaling cascades:
-
-**IP3-Ca²⁺-Calcineurin-NFAT Pathway**:
-IP3 releases Ca²⁺ from ER stores, which activates calmodulin (CaM), calcineurin (CaN), and myosin light-chain kinase (MLCK) (nanna2026understandingtheactivation pages 25-29, chen2021emergingrolesof pages 9-11). Activated calcineurin dephosphorylates NFAT transcription factors, enabling their nuclear translocation and gene transcription (nanna2026understandingtheactivation pages 25-29, chen2021emergingrolesof pages 1-3, chen2021emergingrolesof pages 4-6).
-
-**DAG-PKC-MAPK Pathway**:
-DAG, together with Ca²⁺, recruits and activates conventional PKC isoforms (particularly PKCα and PKCβ in endothelial cells) (chen2021emergingrolesof pages 9-11). PKC activation can lead to Raf1-MEK-ERK/MAPK cascade activation, supporting proliferation, migration, and angiogenesis (duarte2023multiplerolesof pages 26-30, nanna2026understandingtheactivation pages 25-29, chen2021emergingrolesof pages 9-11). PKC can also phosphorylate EGFR at Thr654, providing negative feedback regulation (nanna2026understandingtheactivation pages 25-29).
-
-## Biological Functions and Cellular Processes
-
-### Proliferation and Cell-Cycle Regulation
-
-PLCγ1 promotes cell proliferation through multiple mechanisms (duarte2023multiplerolesof pages 30-33, nanna2026understandingtheactivation pages 25-29, duarte2023multiplerolesof pages 26-30):
-- Induces expression of cell-cycle regulators including Cdk4, cyclin D1, and cyclin A/B1
-- Promotes nuclear export of the Cdk inhibitor p27
-- Activates Ras-mediated DNA synthesis
-- Supports growth factor-induced cell-cycle progression
-
-### Migration, Invasion, and Cytoskeletal Remodeling
-
-PLCγ1 is a master regulator of cell motility (duarte2023multiplerolesof pages 30-33, nanna2026understandingtheactivation pages 25-29, duarte2023multiplerolesof pages 26-30):
-- Controls EGFR- and integrin-dependent migration
-- Regulates membrane ruffling, lamellipodia formation, and focal adhesion dynamics
-- Activates Rac1 through SH3-domain interactions
-- Generates Ca²⁺ signals that activate myosin and cytoskeletal regulators
-- PKC-mediated phosphorylation of FAK and profilin modulates cytoskeletal organization
-
-### Angiogenesis and Vascular Development
-
-PLCγ1 is essential for blood vessel formation and endothelial function (nanna2026understandingtheactivation pages 25-29, duarte2023multiplerolesof pages 26-30, chen2021emergingrolesof pages 9-11, chen2021emergingrolesof pages 13-14):
-- Required for VEGF-A-induced endothelial proliferation and migration
-- Controls tip/stalk cell selection through Ca²⁺ oscillations and DLL4/Notch signaling
-- Supports angiogenic sprouting and artery formation
-- Genetic loss of *Plcg1* disrupts vasculogenesis in mouse development
-
-### Immune Function
-
-PLCγ1 is critical for T-cell development and activation (duarte2023multiplerolesof pages 26-30, chen2021emergingrolesof pages 13-14, duarte2023multiplerolesof pages 55-59):
-- Essential for thymocyte maturation
-- Required for TCR-induced T-cell proliferation and cytokine production
-- Supports regulatory T-cell (Treg) development and function
-- Loss of PLCγ1 in T cells causes T-cell lymphopenia
-
-## Non-Catalytic Scaffolding Functions
-
-Beyond its phospholipase activity, PLCγ1's SH2 and SH3 domains mediate important protein-interaction functions (duarte2023multiplerolesof pages 26-30, chen2021emergingrolesof pages 1-3, duarte2023multiplerolesof pages 55-59):
-
-- **SH2 Domains**: Interact with phosphorylated receptors (VEGFR2, FGFR1, EGFR, PDGFR), LAT, GRB2, JAK2, and FAK
-- **SH3 Domain**: Binds proline-rich partners including AKT, SOS, dynamin-1, Rac1, and SLP-76
-- These interactions support signal amplification, receptor trafficking, cytoskeletal regulation, and assembly of signaling complexes
-
-## Recent Developments (2023-2024 Sources)
-
-### Structural and Mechanistic Insights
-
-Recent high-resolution structural studies have elucidated the autoinhibition mechanism in unprecedented detail. Hajicek et al. (2019, 107 citations) determined the first full-length crystal structure of autoinhibited PLCγ1 at 2.5 Å resolution, revealing how the regulatory domains occlude the catalytic site and how phosphorylation at Tyr783 triggers activation (hajicek2019structuralbasisfor pages 6-7, hajicek2019structuralbasisfor pages 3-5, hajicek2019structuralbasisfor pages 1-2). These structures explain how cancer-associated mutations disrupt autoinhibition and cause constitutive activity.
-
-### Phase Separation and Signal Organization
-
-Zeng et al. (2020) discovered that PLCγ1 promotes phase separation of LAT-containing signaling microclusters in T cells through multivalent SH2-domain interactions, representing a novel mechanism for organizing receptor-proximal signaling (zeng2020plcγ1promotesphase pages 15-22). This finding extends beyond classical enzyme catalysis to demonstrate scaffolding and signal-amplification roles.
-
-### Pathway-Specific Roles in Disease
-
-Recent reviews (Kanemaru & Nakamura 2023, Chen & Simons 2021) have synthesized current understanding of PLCγ1 in endothelial biology and vascular diseases, highlighting its unique role as a non-Ras-dependent route from VEGFR2 to ERK activation (chen2021emergingrolesof pages 9-11, chen2021emergingrolesof pages 1-3). These insights inform therapeutic strategies targeting angiogenesis in cancer and vascular disorders.
+Phosphorylation studies using site-directed mutagenesis have confirmed Tyr783 as the critical regulatory site: mutation to phenylalanine prevents activation, while phosphomimetic substitutions or mutations disrupting cSH2-C2 interactions cause constitutive activation (joel2020dynamicsofallosteric pages 24-28, siralievperez2022dynamicsofallosteric pages 1-3). Disease-associated mutations that disrupt autoinhibitory interfaces similarly result in hyperactive PLCγ1 and drive pathological signaling in immune disorders and cancer (joel2020dynamicsofallosteric pages 96-99).
 
 ## Summary
 
-PLCG1 encodes a 1290-amino-acid phosphoinositide-specific phospholipase that hydrolyzes plasma membrane PIP2 to generate the second messengers IP3 and DAG. The enzyme comprises a conserved catalytic core and a unique γ-specific regulatory array containing tandem SH2 domains, an SH3 domain, and a split PH domain. In its basal state, PLCγ1 is autoinhibited by intramolecular interactions that prevent membrane engagement. Activation occurs through receptor tyrosine kinase-mediated recruitment and phosphorylation at Tyr783, which triggers a conformational rearrangement that exposes the catalytic site.
-
-PLCγ1 functions primarily at the plasma membrane, focal adhesions, and the leading edge of migrating cells, with additional nuclear localization. It serves as a direct effector of multiple RTKs (VEGFR2, FGFR1, EGFR, PDGFR), the T-cell receptor, and integrin signaling pathways. The IP3 and DAG products drive parallel Ca²⁺-calcineurin-NFAT and PKC-MAPK cascades that control proliferation, migration, angiogenesis, and immune activation. Beyond its catalytic activity, PLCγ1's SH2 and SH3 domains mediate scaffolding functions that organize signaling complexes, protect phosphorylated adaptors, and regulate GTPases and receptor trafficking.
-
-PLCγ1 is essential for mammalian development, particularly vasculogenesis, erythropoiesis, and T-cell maturation, and its dysregulation contributes to cancer, vascular disorders, and immune diseases.
+PLCG1 encodes a sophisticated signaling enzyme that couples receptor activation to coordinated calcium and lipid signaling. Through its unique domain architecture, PLCγ1 integrates tyrosine kinase signals, organizes signaling complexes, and catalyzes PIP2 hydrolysis to generate IP3 and DAG. These second messengers activate distinct but complementary pathways—IP3-mediated ER calcium release and DAG-dependent PKC activation—that drive diverse cellular responses including T-cell activation, vascular development, cell proliferation, and migration. The enzyme's regulation through autoinhibition and phosphorylation-dependent activation ensures precise spatiotemporal control of these critical signaling events.
 
 References
 
-1. (hajicek2019structuralbasisfor pages 1-2): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+1. (joel2020dynamicsofallosteric pages 28-32): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-2. (duarte2023multiplerolesof pages 22-26): RSC Duarte. Multiple roles of plcγ1 in mediating target therapy resistance across different tumor types. Unknown journal, 2023.
+2. (siralievperez2022dynamicsofallosteric pages 1-3): Edhriz Siraliev-Perez, Jordan T.B. Stariha, Reece M. Hoffmann, Brenda R. Temple, Qisheng Zhang, Nicole Hajicek, Meredith L Jenkins, John E. Burke, and John Sondek. Dynamics of allosteric regulation of the phospholipase c-γ isozymes upon recruitment to membranes. BioRxiv, Feb 2022. URL: https://doi.org/10.1101/2022.02.23.481568, doi:10.1101/2022.02.23.481568. This article has 19 citations.
 
-3. (kanemaru2023activationmechanismsand pages 2-4): Kaori Kanemaru and Yoshikazu Nakamura. Activation mechanisms and diverse functions of mammalian phospholipase c. Biomolecules, 13:915, May 2023. URL: https://doi.org/10.3390/biom13060915, doi:10.3390/biom13060915. This article has 56 citations.
+3. (joel2020dynamicsofallosteric pages 12-19): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-4. (hajicek2019structuralbasisfor pages 5-6): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+4. (singh2023phospholipasecunderrated pages 2-3): Vinayak Singh, Rupal Rai, Bijina J. Mathew, Rashmi Chourasia, Anirudh K. Singh, Awanish Kumar, and Shivendra K. Chaurasiya. Phospholipase c: underrated players in microbial infections. Frontiers in Cellular and Infection Microbiology, Apr 2023. URL: https://doi.org/10.3389/fcimb.2023.1089374, doi:10.3389/fcimb.2023.1089374. This article has 31 citations.
 
-5. (duarte2023multiplerolesof pages 26-30): RSC Duarte. Multiple roles of plcγ1 in mediating target therapy resistance across different tumor types. Unknown journal, 2023.
+5. (duarte2023multiplerolesof pages 22-26): RSC Duarte. Multiple roles of plcγ1 in mediating target therapy resistance across different tumor types. Unknown journal, 2023.
 
-6. (hajicek2019structuralbasisfor pages 12-13): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+6. (chen2021emergingrolesof pages 9-11): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
 
-7. (chen2021emergingrolesof pages 1-3): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
+7. (kanemaru2023activationmechanismsand pages 1-2): Kaori Kanemaru and Yoshikazu Nakamura. Activation mechanisms and diverse functions of mammalian phospholipase c. Biomolecules, 13:915, May 2023. URL: https://doi.org/10.3390/biom13060915, doi:10.3390/biom13060915. This article has 56 citations.
 
-8. (hajicek2019structuralbasisfor pages 6-7): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+8. (duarte2023multiplerolesof pages 26-30): RSC Duarte. Multiple roles of plcγ1 in mediating target therapy resistance across different tumor types. Unknown journal, 2023.
 
-9. (hajicek2019structuralbasisfor pages 3-5): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+9. (chen2021emergingrolesof pages 19-22): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
 
-10. (hajicek2019structuralbasisfor media 3971c106): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+10. (singh2023phospholipasecunderrated pages 3-5): Vinayak Singh, Rupal Rai, Bijina J. Mathew, Rashmi Chourasia, Anirudh K. Singh, Awanish Kumar, and Shivendra K. Chaurasiya. Phospholipase c: underrated players in microbial infections. Frontiers in Cellular and Infection Microbiology, Apr 2023. URL: https://doi.org/10.3389/fcimb.2023.1089374, doi:10.3389/fcimb.2023.1089374. This article has 31 citations.
 
-11. (hajicek2019structuralbasisfor media de6c7e57): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+11. (joel2020dynamicsofallosteric pages 24-28): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-12. (hajicek2019structuralbasisfor media 0de8fa16): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+12. (joel2020dynamicsofallosteric pages 36-41): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-13. (hajicek2019structuralbasisfor media 08d5d936): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+13. (mariano2024intronretentionin pages 8-8): Alessia Mariano, Sergio Ammendola, Arianna Migliorini, Martina Leopizzi, Domenico Raimondo, and Anna Scotto d'Abusco. Intron retention in pi‐plc γ1 mrna as a key mechanism affecting mmp expression in human primary fibroblast‐like synovial cells. Cell Biochemistry and Function, Jul 2024. URL: https://doi.org/10.1002/cbf.4091, doi:10.1002/cbf.4091. This article has 4 citations and is from a peer-reviewed journal.
 
-14. (chen2021emergingrolesof pages 9-11): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
+14. (zeng2020plcγ1promotesphase pages 11-15): Longhui Zeng, Ivan Palaia, Anđela Šarić, and Xiaolei Su. Plcγ1 promotes phase separation of the t cell signaling clusters. bioRxiv, Jul 2020. URL: https://doi.org/10.1101/2020.06.30.179630, doi:10.1101/2020.06.30.179630. This article has 2 citations.
 
-15. (nanna2026understandingtheactivation pages 13-19): V Nanna. Understanding the activation of plcγ1 by k15 in healthy cells and in kaposi's sarcoma herpesvirus infections. Unknown journal, 2026.
+15. (joel2020dynamicsofallosteric pages 96-99): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-16. (zeng2020plcγ1promotesphase pages 15-22): Longhui Zeng, Ivan Palaia, Anđela Šarić, and Xiaolei Su. Plcγ1 promotes phase separation of the t cell signaling clusters. bioRxiv, Jul 2020. URL: https://doi.org/10.1101/2020.06.30.179630, doi:10.1101/2020.06.30.179630. This article has 2 citations.
+16. (siralievperez2022dynamicsofallosteric pages 11-12): Edhriz Siraliev-Perez, Jordan T.B. Stariha, Reece M. Hoffmann, Brenda R. Temple, Qisheng Zhang, Nicole Hajicek, Meredith L Jenkins, John E. Burke, and John Sondek. Dynamics of allosteric regulation of the phospholipase c-γ isozymes upon recruitment to membranes. BioRxiv, Feb 2022. URL: https://doi.org/10.1101/2022.02.23.481568, doi:10.1101/2022.02.23.481568. This article has 19 citations.
 
-17. (chen2021emergingrolesof pages 4-6): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
+17. (joel2020dynamicsofallosteric pages 76-80): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-18. (nanna2026understandingtheactivation pages 22-25): V Nanna. Understanding the activation of plcγ1 by k15 in healthy cells and in kaposi's sarcoma herpesvirus infections. Unknown journal, 2026.
+18. (joel2020dynamicsofallosteric pages 71-76): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-19. (nanna2026understandingtheactivation pages 19-22): V Nanna. Understanding the activation of plcγ1 by k15 in healthy cells and in kaposi's sarcoma herpesvirus infections. Unknown journal, 2026.
+19. (joel2020dynamicsofallosteric pages 124-128): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-20. (hajicek2019structuralbasisfor pages 2-3): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+20. (chen2021emergingrolesof pages 8-9): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
 
-21. (hajicek2019structuralbasisfor pages 11-12): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+21. (kanemaru2023activationmechanismsand pages 4-6): Kaori Kanemaru and Yoshikazu Nakamura. Activation mechanisms and diverse functions of mammalian phospholipase c. Biomolecules, 13:915, May 2023. URL: https://doi.org/10.3390/biom13060915, doi:10.3390/biom13060915. This article has 56 citations.
 
-22. (duarte2023multiplerolesof pages 30-33): RSC Duarte. Multiple roles of plcγ1 in mediating target therapy resistance across different tumor types. Unknown journal, 2023.
+22. (chen2021emergingrolesof pages 1-3): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
 
-23. (kanemaru2023activationmechanismsand pages 10-11): Kaori Kanemaru and Yoshikazu Nakamura. Activation mechanisms and diverse functions of mammalian phospholipase c. Biomolecules, 13:915, May 2023. URL: https://doi.org/10.3390/biom13060915, doi:10.3390/biom13060915. This article has 56 citations.
+23. (chen2021emergingrolesof pages 13-14): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
 
-24. (nanna2026understandingtheactivation pages 25-29): V Nanna. Understanding the activation of plcγ1 by k15 in healthy cells and in kaposi's sarcoma herpesvirus infections. Unknown journal, 2026.
+24. (joel2020dynamicsofallosteric pages 32-36): Dynamics of allosteric regulation of the phospholipase C-gamma isozymes This article has 0 citations and is from a peer-reviewed journal.
 
-25. (chen2021emergingrolesof pages 8-9): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
+25. (zeng2020plcγ1promotesphase pages 15-22): Longhui Zeng, Ivan Palaia, Anđela Šarić, and Xiaolei Su. Plcγ1 promotes phase separation of the t cell signaling clusters. bioRxiv, Jul 2020. URL: https://doi.org/10.1101/2020.06.30.179630, doi:10.1101/2020.06.30.179630. This article has 2 citations.
 
-26. (duarte2023multiplerolesof pages 55-59): RSC Duarte. Multiple roles of plcγ1 in mediating target therapy resistance across different tumor types. Unknown journal, 2023.
+26. (zeng2020plcγ1promotesphase pages 44-48): Longhui Zeng, Ivan Palaia, Anđela Šarić, and Xiaolei Su. Plcγ1 promotes phase separation of the t cell signaling clusters. bioRxiv, Jul 2020. URL: https://doi.org/10.1101/2020.06.30.179630, doi:10.1101/2020.06.30.179630. This article has 2 citations.
 
-27. (hajicek2019structuralbasisfor pages 21-22): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+27. (zeng2020plcγ1promotesphase pages 1-6): Longhui Zeng, Ivan Palaia, Anđela Šarić, and Xiaolei Su. Plcγ1 promotes phase separation of the t cell signaling clusters. bioRxiv, Jul 2020. URL: https://doi.org/10.1101/2020.06.30.179630, doi:10.1101/2020.06.30.179630. This article has 2 citations.
 
-28. (chen2021emergingrolesof pages 13-14): Dongying Chen and Michael Simons. Emerging roles of plcγ1 in endothelial biology. Science Signaling, Aug 2021. URL: https://doi.org/10.1126/scisignal.abc6612, doi:10.1126/scisignal.abc6612. This article has 51 citations and is from a domain leading peer-reviewed journal.
-
-29. (hajicek2019structuralbasisfor pages 23-24): Nicole Hajicek, Nicholas C Keith, Edhriz Siraliev-Perez, Brenda RS Temple, Weigang Huang, Qisheng Zhang, T Kendall Harden, and John Sondek. Structural basis for the activation of plc-γ isozymes by phosphorylation and cancer-associated mutations. eLife, Dec 2019. URL: https://doi.org/10.7554/elife.51700, doi:10.7554/elife.51700. This article has 107 citations and is from a domain leading peer-reviewed journal.
+28. (kanemaru2023activationmechanismsand pages 2-4): Kaori Kanemaru and Yoshikazu Nakamura. Activation mechanisms and diverse functions of mammalian phospholipase c. Biomolecules, 13:915, May 2023. URL: https://doi.org/10.3390/biom13060915, doi:10.3390/biom13060915. This article has 56 citations.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](PLCG1-deep-research-falcon_artifacts/artifact-00.md)
 - [Edison artifact artifact-01](PLCG1-deep-research-falcon_artifacts/artifact-01.md)
-![## Context ID: pqac-00000053 The requested figures illustrating the domain structure and autoinhibition mechanism of PLCγ1 are found in Figure 1 of the document](PLCG1-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. hajicek2019structuralbasisfor pages 1-2
-2. duarte2023multiplerolesof pages 26-30
-3. chen2021emergingrolesof pages 9-11
-4. duarte2023multiplerolesof pages 30-33
-5. kanemaru2023activationmechanismsand pages 10-11
-6. chen2021emergingrolesof pages 8-9
-7. nanna2026understandingtheactivation pages 25-29
-8. duarte2023multiplerolesof pages 22-26
-9. kanemaru2023activationmechanismsand pages 2-4
-10. hajicek2019structuralbasisfor pages 5-6
-11. hajicek2019structuralbasisfor pages 12-13
-12. chen2021emergingrolesof pages 1-3
-13. hajicek2019structuralbasisfor pages 6-7
-14. hajicek2019structuralbasisfor pages 3-5
-15. nanna2026understandingtheactivation pages 13-19
-16. chen2021emergingrolesof pages 4-6
-17. nanna2026understandingtheactivation pages 22-25
-18. nanna2026understandingtheactivation pages 19-22
-19. hajicek2019structuralbasisfor pages 2-3
-20. hajicek2019structuralbasisfor pages 11-12
-21. duarte2023multiplerolesof pages 55-59
-22. hajicek2019structuralbasisfor pages 21-22
+1. joel2020dynamicsofallosteric pages 28-32
+2. singh2023phospholipasecunderrated pages 2-3
+3. duarte2023multiplerolesof pages 26-30
+4. joel2020dynamicsofallosteric pages 24-28
+5. siralievperez2022dynamicsofallosteric pages 1-3
+6. joel2020dynamicsofallosteric pages 124-128
+7. chen2021emergingrolesof pages 9-11
+8. chen2021emergingrolesof pages 8-9
+9. joel2020dynamicsofallosteric pages 32-36
+10. joel2020dynamicsofallosteric pages 96-99
+11. joel2020dynamicsofallosteric pages 12-19
+12. duarte2023multiplerolesof pages 22-26
+13. kanemaru2023activationmechanismsand pages 1-2
+14. chen2021emergingrolesof pages 19-22
+15. singh2023phospholipasecunderrated pages 3-5
+16. joel2020dynamicsofallosteric pages 36-41
+17. mariano2024intronretentionin pages 8-8
+18. siralievperez2022dynamicsofallosteric pages 11-12
+19. joel2020dynamicsofallosteric pages 76-80
+20. joel2020dynamicsofallosteric pages 71-76
+21. kanemaru2023activationmechanismsand pages 4-6
+22. chen2021emergingrolesof pages 1-3
 23. chen2021emergingrolesof pages 13-14
-24. hajicek2019structuralbasisfor pages 23-24
-25. https://doi.org/10.7554/elife.51700,
-26. https://doi.org/10.3390/biom13060915,
+24. kanemaru2023activationmechanismsand pages 2-4
+25. https://doi.org/10.1101/2022.02.23.481568,
+26. https://doi.org/10.3389/fcimb.2023.1089374,
 27. https://doi.org/10.1126/scisignal.abc6612,
-28. https://doi.org/10.1101/2020.06.30.179630,
+28. https://doi.org/10.3390/biom13060915,
+29. https://doi.org/10.1002/cbf.4091,
+30. https://doi.org/10.1101/2020.06.30.179630,

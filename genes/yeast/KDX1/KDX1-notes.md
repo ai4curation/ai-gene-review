@@ -25,7 +25,7 @@ the two align residue-for-residue at each anchor (both HRD-loop at position 151,
 | Catalytic element (subdomain) | SLT2/MPK1 (active) | KDX1/Mlp1 | Interpretation |
 |---|---|---|---|
 | Gly-rich P-loop (I) | GHGAYGIV (G30…) | GRGSHS (G30, G32) | Gly-rich loop present |
-| β3 VAIK lysine (II) | VAIK**K** (K54/55) | VAIR**K** (R54, **K55**) | The invariant ATP-anchoring Lys is present (UniProt BINDING K55) |
+| β3 VAIK lysine (II) | VAIK**K** (K54/55) | VAIR**K** (R54, **K55**) | SLT2 Lys54 maps to Arg54 in Kdx1; the adjacent Lys55 is retained, but it is not the aligned canonical beta3 lysine |
 | **HRD catalytic loop (VIb)** | **H**R**D**LKPGN (H151-R152-D153) | **H**C**D**LKPKN (H151-**C152**-D153) | **HRD→HCD**: the catalytic-loop Arg is lost; the catalytic Asp **D153 is retained** (UniProt ACT_SITE 153 "Proton acceptor") |
 | **DFG Mg²⁺-binding (VII)** | C**D**FGLAR (**D171**-F172-G173) | C**N**FGLSC (**N171**-F172-G173) | **DFG→NFG**: the Mg²⁺-chelating Asp is replaced by Asn — a canonical pseudokinase-defining substitution |
 | MAPK activation-loop T-x-Y | LT**E**Y (Thr-Glu-Tyr dual phosphoacceptor) | *absent* (no TxY at the aligned position) | The MAPK-defining TEY dual-phosphorylation motif is **not present** in KDX1 |
@@ -41,10 +41,11 @@ literature**, which repeatedly and explicitly calls Mlp1 a "catalytically inacti
 (see below). UniProt still carries EC 2.7.11.1 and Ser/Thr-kinase MF terms by family homology
 (PROSITE PRU00159), but these are family-propagated, not KDX1-specific evidence.
 
-NB: UniProt annotates K55, not K54, as the ATP-binding Lys; the alignment above shows SLT2 has
-the classic "VAIKK" (two lysines) whereas KDX1 has "VAIRK", but the functionally invariant β3
-lysine is conserved in both. So the ATP-binding lysine is not the degenerate element; the DFG
-Asp and HRD Arg are.
+NB: UniProt annotates K55, not K54, as the ATP-binding Lys, but the reproducible SLT2/KDX1
+comparison in KDX1-bioinformatics/ shows that canonical SLT2 Lys54 maps to Arg54 in KDX1.
+The adjacent K55 is neither proof nor disproof of ATP binding; ATP binding remains an open
+biochemical question, whereas the DFG Asp and HRD Arg substitutions support loss of
+Mg-ATP-dependent phosphotransfer.
 
 ## What is KNOWN about KDX1/Mlp1 (with provenance)
 
@@ -91,8 +92,9 @@ Asp and HRD Arg are.
   (pseudokinase; DFG→NFG; the community name is "kinase dead"). No study demonstrates
   Mlp1-catalyzed phosphotransfer on a physiological substrate. The UniProt EC 2.7.11.1 /
   Ser-Thr-kinase / ATP-binding annotations are family-homology propagations. (Whether it even
-  binds ATP/nucleotide is untested; the β3 Lys is present, so ATP binding is not excluded, but
-  Mg-ATP catalysis is predicted lost.)
+  binds ATP/nucleotide is untested; the adjacent Lys55 is present but the SLT2 beta3
+  Lys54-aligned residue is Arg, so ATP binding is not settled and Mg-ATP catalysis is
+  predicted lost.)
 - **What are Mlp1's direct partners/substrates beyond Swi4 and Rlm1?** Its non-catalytic role
   is a scaffold/adaptor at SBF-dependent promoters, but a complete interaction/target set is
   unknown.
@@ -106,21 +108,23 @@ Asp and HRD Arg are.
 
 ## Annotation-review reasoning summary
 
-- MF kinase terms (protein kinase activity, protein Ser/Thr kinase activity ×2, protein serine
+- MF kinase terms (protein kinase activity, protein Ser/Thr kinase activity x2, protein serine
   kinase activity, cyclin-dependent kinase activity): all propagated (IEA InterPro/ARBA/RHEA/EC,
-  ISS from Slt2, IBA). Given the pseudokinase evidence, these are over-annotations →
-  MARK_AS_OVER_ANNOTATED (or MODIFY toward a non-catalytic MF). Not REMOVE outright for the
-  family-level ones since the fold is real, but the catalytic claim is not KDX1-supported.
-- ATP binding (IEA): the β3 Lys is intact so ATP binding is plausible, but untested and
-  family-propagated → KEEP_AS_NON_CORE / MARK_AS_OVER_ANNOTATED (not a core function).
-- CDK holoenzyme / G1/S / G2/M / regulation of cell cycle / CDK activity (IBA): wrong-branch
-  phylogenetic over-propagation from the MAPK/CDK superfamily; no yeast KDX1 evidence →
-  MARK_AS_OVER_ANNOTATED.
-- nucleus (IBA), cytoplasm (IBA): plausible; Mlp1 acts at promoters (nucleus) with SBF and is a
-  cytoplasmic-then-nuclear MAPK-like protein. KEEP_AS_NON_CORE (localization, not core function).
-- signal transduction (IBA, IEA) / fungal-type cell wall biogenesis (IEA ARBA): correct in
-  spirit but general; KDX1 acts in the cell-integrity MAPK cascade / CWI transcriptional output
-  → KEEP_AS_NON_CORE or MODIFY toward cell integrity MAPK cascade (GO:0000196).
+  ISS from Slt2, IBA), and all now REMOVE because the target-specific pseudokinase evidence
+  contradicts conventional phosphotransfer.
+- ATP binding (IEA): UNDECIDED. KDX1 residues 51-55 are VAIRK; adjacent K55 is retained, but the
+  canonical SLT2 beta3 Lys54 aligns to KDX1 Arg54, and ATP/nucleotide binding has not been
+  directly tested.
+- CDK holoenzyme / G1/S / G2/M / regulation of cell cycle (IBA): UNDECIDED. Kdx1's CWI/SBF role
+  and kinase inactivity do not settle the inherited noncatalytic process and complex claims, so
+  they are preserved pending focused PAINT/topology review.
+- nucleus (IBA), cytoplasm (IBA): ACCEPT; the inherited locations are compatible with the
+  characterized CWI/SBF transcriptional mechanism, including an Mlp1-Swi4/Swi6 complex at the
+  FKS2 promoter.
+- signal transduction (IBA, IEA): ACCEPT; Kdx1 directly contributes to CWI signal transmission
+  through a noncatalytic transcription-factor complex.
+- fungal-type cell wall biogenesis (IEA ARBA): KEEP_AS_NON_CORE as a broader physiological
+  output of Kdx1's CWI transcriptional role.
 - ND placeholders (GO:0008150, GO:0005575): uninformative root placeholders → REMOVE per
   standard handling (superseded by specific annotations).
 
