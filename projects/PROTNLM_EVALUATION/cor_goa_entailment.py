@@ -78,13 +78,13 @@ def main() -> None:
         if doc["id"] not in targets:
             continue
         goa = target_goa(tree, path.rsplit("/", 1)[0])
+        goa_ids = {r["GO TERM"]: r for r in goa}
         for prediction in doc.get("predictions") or []:
             if prediction["review"]["assessment"] != "COR":
                 continue
             pred = prediction["predicted_term"]["id"]
             aspect = ASPECT[prediction["predicted_term_type"]]
             relation, evidence = "NONE", ""
-            goa_ids = {r["GO TERM"]: r for r in goa}
             if pred in goa_ids:
                 relation, evidence = "EXACT", pred
             else:

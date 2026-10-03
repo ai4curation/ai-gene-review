@@ -635,7 +635,7 @@ uv run python projects/BIOREASON_COMPARISON/sft-rl-matched/compare_sft_rl.py
 | RL rater B vs RL first rater (calibration) | 4.05 vs 3.95 | 13 / 5 / 92 | 0.041 | 2.75 vs 2.87 | 12 / 27 / 71 | 0.031 |
 | SFT (B) vs RL (first rater), confounded | 3.96 vs 3.96 | 27 / 33 / 50 | 0.74 | 3.88 vs 2.87 | 74 / 2 / 34 | 3.9e-14 |
 
-**Rater calibration.** On the same RL text, rater B agreed with the first rater exactly on 92/110 correctness scores (quadratic-weighted kappa 0.93) and 71/110 completeness scores (kappa 0.78). On the 85 genes whose first-rater score rater B had not seen, kappa was 0.92 and 0.78. The two raters are similar enough that the SFT-RL difference is not a rater artifact.
+**Rater calibration.** On the same RL text, rater B agreed with the first rater exactly on 92/110 correctness scores (quadratic-weighted kappa 0.93) and 71/110 completeness scores (kappa 0.78). On the 85 genes whose first-rater score rater B had not seen, kappa was 0.92 and 0.78. Rater B scored slightly differently from the first rater on the same text (mean difference +0.09 for correctness, Wilcoxon p=0.041; −0.13 for completeness, p=0.031). Those shifts are statistically detectable but small beside the 1.14-point SFT-RL completeness gap, so that gap is not a rater artifact.
 
 **Findings.**
 
