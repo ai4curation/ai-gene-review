@@ -39,3 +39,15 @@
   `PANTHER:PTN004172926` and the fungal NuA3a node
   `PANTHER:PTN008308138`, so the existing PTN-only propagation reviews remain
   aligned with the IBA project.
+
+## PR #3790 H3K14 follow-up
+
+- Replaced the false proposed-new-term entry for "histone H3K14 acetyltransferase
+  activity" with a `NEW` annotation to the existing GO term
+  `GO:0036408 histone H3K14 acetyltransferase activity`.
+- Tightened the core molecular function from generic
+  `GO:0004402 histone acetyltransferase activity` to `GO:0036408`, supported by
+  direct NuA3 H3K14 enzymology in PMID:41318527 and earlier Yng1-dependent
+  NuA3 K14 acetylation evidence in PMID:17157260.
+- Corrected the SAS3 current-GOA audit counts from 30 pre-refresh rows to the
+  actual 38 rows.
