@@ -37,3 +37,8 @@ The legacy PMID:16148006 row with supporting entity `UniProtKB:Q62132` was
 narrowed from generic protein binding to `GO:0019902 phosphatase binding`
 because Q62132 is Ptprr/PTP-SL, one of the ERK2 phosphatases whose docking
 interface is distinguished from DUSP6/MKP-3 in that paper.
+
+The PMID:10419510 row with the same `UniProtKB:Q62132` PTP-SL supporting
+entity was also narrowed to `GO:0019902 phosphatase binding` because the
+abstract directly states that ERK1/2 associate with the PTP-SL kinase
+interaction motif.
