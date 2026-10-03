@@ -105,3 +105,5 @@ Report errors:
 No annotation action changed because of the report.
 
 - Coordinator follow-up: the two GO:0070886 positive regulation of calcineurin-NFAT signaling cascade (NAS) rows were changed from MARK_AS_OVER_ANNOTATED to MODIFY -> GO:0033173, matching the PPP3CB review.
+
+- Coordinator follow-up: the GO:1905665 positive regulation of calcium ion import (NAS, PMID:17640527) row was changed from MARK_AS_OVER_ANNOTATED to REMOVE, since the cited study contradicts the direction; this matches PPP3R1.
