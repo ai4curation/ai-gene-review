@@ -2988,10 +2988,12 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**184 of 2,876 genes are complete; 2,692 remain.** This update records
-two further independently confirmed gene PR merges since the published checkpoint of 182.
-The 185 original gene PR merges include AKR1D1, whose required source follow-up
+**185 of 2,876 genes are complete; 2,691 remain.** This update records
+BRCA2, one further verified gene PR merge since published checkpoint 184.
+The 186 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
+Completion evidence cutoff: **2026-10-03 09:08:30 UTC**. See the
+[checkpoint history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml) for this update.
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3268,7 +3270,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **BRAF** — HGNC:1097; [Noonan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_47cf08d5-efc6-4d42-b031-a06619873161-2018-07-24T160000.000Z) (MONDO:0018997; AD; Moderate); [Noonan syndrome with multiple lentigines](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_888875a8-5654-486b-8e64-e1382ccc6650-2018-07-24T160000.000Z) (MONDO:0007893; AD; Limited); [cardiofaciocutaneous syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a53e5a92-126f-4b00-a89b-af55d4f342ca-2018-07-24T160000.000Z) (MONDO:0015280; AD; Definitive).
 - [x] **BRAT1** — HGNC:21701; [neonatal-onset encephalopathy with rigidity and seizures](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_698a4cb3-df52-432b-9d3e-d3d76111db25-2022-09-13T170000.000Z) (MONDO:0013784; AR; Definitive); [neurodevelopmental disorder with cerebellar atrophy and with or without seizures](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_93a7b6f1-75e5-4f97-be9d-62fb5770b8cb-2022-09-06T170000.000Z) (MONDO:0020841; AR; Definitive).
 - [x] **BRCA1** — HGNC:1100; [BRCA1-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0f31f200-3b65-4cfd-80c8-bd7d3cc216b8-2024-08-29T170000.000Z) (MONDO:0700268; AD; Definitive); [Fanconi anemia, complementation group S](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_aa39798d-9b6e-430d-8bc1-2a01f81f1f72-2020-05-14T003137.538Z) (MONDO:0054748; AR; Definitive).
-- [ ] **BRCA2** — HGNC:1101; [BRCA2-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4e504fdc-d8b1-474e-8f01-d1b1f8267c79-2024-08-29T170000.000Z) (MONDO:0700269; AD; Definitive); [Fanconi anemia complementation group D1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_48faf04b-ffc4-4163-8570-22f5c29c4064-2019-04-19T160000.000Z) (MONDO:0011584; AR; Definitive).
+- [x] **BRCA2** — HGNC:1101; [BRCA2-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4e504fdc-d8b1-474e-8f01-d1b1f8267c79-2024-08-29T170000.000Z) (MONDO:0700269; AD; Definitive); [Fanconi anemia complementation group D1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_48faf04b-ffc4-4163-8570-22f5c29c4064-2019-04-19T160000.000Z) (MONDO:0011584; AR; Definitive).
 - [ ] **BRD4** — HGNC:13575; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8b28cda3-bce6-4a8f-b359-0ab398a1111d-2025-08-08T160000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **BRIP1** — HGNC:20473; [Fanconi anemia complementation group J](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_40aae4ea-8c9b-42a7-9d02-0f52a184712f-2019-08-18T160442.255Z) (MONDO:0012187; AR; Definitive); [familial ovarian cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b1224a6d-5676-4109-b844-a577bd0bff62-2023-12-20T180000.000Z) (MONDO:0016248; AD; Definitive).
 - [ ] **BRPF1** — HGNC:14255; [syndromic complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ca6ab404-7df4-475b-bb61-b056716dce7b-2025-04-15T160000.000Z) (MONDO:0800439; AD; Definitive).
