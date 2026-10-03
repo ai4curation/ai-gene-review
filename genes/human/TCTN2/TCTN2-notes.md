@@ -28,3 +28,6 @@
 - HPA (member_evidence.md): TCTN2 "Primary cilium transition zone (A)" (Approved); HPA main locations Golgi apparatus; Microtubules. The Hansen et al. 2025 atlas [PMID:41005307 "Our analysis identified the subciliary locations of 715 proteins across three cell lines, examining 128,156 individual cilia."] thus places TCTN2 at the TZ with an Approved grade. It is one of the few MKS-module members whose HPA call names the TZ sub-compartment specifically.
 - Module role: MKS module component (ciliary diffusion barrier; process ciliary transition zone assembly; location ciliary transition zone). The HPA call agrees with the module role and with the literature. The Golgi pool is expected for a glycosylated single-pass membrane protein in transit. GOA has no HPA (GO_REF:0000052) row for TCTN2; the TZ IDA from HPA could be added by GOA.
 - core_functions agree with the module (MKS complex, TZ, TZ assembly, protein localization to TZ).
+
+## Deep research outcome
+- Falcon succeeded on the `--timeout 2400` rerun (`TCTN2-deep-research-falcon.md`). Its synthesis (MKS/NPHP-module transition-zone organizer; non-enzymatic; ciliary gate/composition role) matches the conclusions above. No annotation decisions changed after reading it.

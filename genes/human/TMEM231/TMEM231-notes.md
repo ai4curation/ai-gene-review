@@ -24,3 +24,6 @@
 ## HPA cilium atlas vs module role
 - HPA (member_evidence.md): no cilium/centrosome call; HPA main location "Vesicles". Hansen et al. 2025 [PMID:41005307 "We found that 69% of the ciliary proteome is cell-type specific, and 78% exhibited single-cilia heterogeneity."]. The atlas did not detect TMEM231 at cilia in its three cell lines. A vesicular signal is compatible with trafficking of a membrane protein (it is septin-dependent and reaches the basal body via vesicles), but it is not evidence against TZ localization: the TZ pool is small, and the literature (mouse tissues, worms) is strong.
 - Module role: MKS module component, ciliary diffusion barrier, TZ assembly. Fully consistent with the literature. TMEM231 is one of the best-supported MKS members for the TZ assembly role, and core_functions follow the module.
+
+## Deep research outcome
+- Falcon succeeded on the `--timeout 2400` rerun (`TMEM231-deep-research-falcon.md`). Its synthesis (MKS/NPHP-module transition-zone organizer; non-enzymatic; ciliary gate/composition role) matches the conclusions above. No annotation decisions changed after reading it.

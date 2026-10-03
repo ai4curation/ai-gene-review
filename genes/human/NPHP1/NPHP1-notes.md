@@ -28,3 +28,6 @@
 ## HPA cilium atlas vs module role
 - HPA (member_evidence.md): no cilium/centrosome call; "not in HPA" (no subcellular data). The Hansen et al. 2025 atlas [PMID:41005307 "Our analysis identified the subciliary locations of 715 proteins across three cell lines, examining 128,156 individual cilia."] gives no information on NPHP1.
 - Module role: NPHP module component; module function "transition zone scaffold", process ciliary transition zone assembly. The literature supports NPHP module membership and TZ localization. It does not show that NPHP1 is a scaffold: within the module NPHP4 is the bridging scaffold and RPGRIP1L/MKS5 the foundational assembly factor, with NPHP1 recruited downstream. NPHP1 is also dispensable for ciliogenesis on its own. I therefore **argue against assigning the scaffold/TZ-assembly role to NPHP1 individually**: core_functions give it NPHP-complex membership, TZ location and protein localization to TZ, but not GO:1905349. At the complex level the module statement is fine.
+
+## Deep research outcome
+- Falcon succeeded on the `--timeout 2400` rerun (`NPHP1-deep-research-falcon.md`). Its synthesis (MKS/NPHP-module transition-zone organizer; non-enzymatic; ciliary gate/composition role) matches the conclusions above. No annotation decisions changed after reading it.

@@ -4,8 +4,9 @@
 
 - First attempt `just deep-research-falcon human CIMAP3 --fallback perplexity-lite` was stopped
   (falcon default 600 s timeout; perplexity-lite fallback unavailable in this environment).
-- Re-run with `--timeout 2400`; see the end of this file for the outcome. This review is
-  based primarily on the cached primary literature (PMID:20643351, full text) and UniProt Q8TCI5.
+- Re-run with `--timeout 2400`: SUCCEEDED (CIMAP3-deep-research-falcon.md). It surfaced two
+  additional primary papers, now cached and used: Jung et al. 2016 (PMID:26901434) and Leung et al.
+  2025 (PMID:39743588).
 
 ## Identity
 
@@ -44,8 +45,23 @@
   say Pifo "cannot be part of a general regulatory mechanism for cilia disassembly" [PMID:20643351].
 - Human genetics: heterozygous R80K in a fetus with situs inversus/cystic liver and kidney and a
   DORV patient; causality not established.
-- No evidence for nuclear localization in the literature I can access (GOA has an Ensembl-Compara
-  IEA from mouse for nucleus).
+- Nuclear signal: [PMID:20643351 "The ultrastructural analysis revealed that the protein is localized in the nucleus, Golgi apparatus, and in vesicles of the TGN"];
+  testis fractionation put the long (coiled-coil) isoform in the nuclear fraction. No nuclear
+  function is known.
+
+## Smoothened ciliary targeting (Jung et al. 2016; via deep research, verified in cache)
+
+- [PMID:26901434 "Here we show that Pitchfork (Pifo) and the G protein-coupled receptor associated sorting protein 2 (Gprasp2) are essential components of an Hh induced ciliary targeting complex able to regulate Smo translocation to the PC"].
+- Conditional deletion after ciliogenesis abolishes SAG-induced Smo entry; Venus-Pifo rescues
+  [PMID:26901434 "PifoFD/FD PLCs with normally formed PC barely responded to SAG induced pathway activation, which can be sufficiently rescued by stable Venus-Pifo expression"].
+- PIFO does not bind SMO directly; GPRASP2 bridges them
+  [PMID:26901434 "suggesting that a heterotrimeric ciliary targeting complex can be formed in which Gprasp2 bridges between Smo and Pifo"].
+
+## Motile axoneme (Leung et al. 2025)
+
+- [PMID:39743588 "For example, CIMAP3 is present in all mammalian axonemes hitherto studied, yet CIMAP2, which binds the same protofilament cleft, is found only in sperm"].
+  CIMAP3 sits at the external surface of doublet microtubules, a structural axonemal MAP role
+  consistent with its SHIPPO repeats and current name.
 
 ## Curation decisions summary
 
@@ -56,6 +72,8 @@
   activator NEDD9 (and AURKA, HDAC6) carry GO:0061523 involved_in in human GOA (IMP,
   PMID:17604723), so a regulator-activator of the AurA-HDAC6 disassembly module legitimately
   carries this term under current practice.
+- NEW GO:0061512 protein localization to cilium (ISS from mouse, PMID:26901434) and GO:0097545
+  axonemal doublet microtubule (IDA, PMID:39743588). Nucleus row kept as non-core (mouse IDA).
 - Binding terms from TAP pull-downs (kinesin, small GTPase, beta-/gamma-tubulin): keep as non-core
   (association, possibly indirect). Generic protein binding: remove (CETN1); ARL13B row modified to
   small GTPase binding to match the RAB6A/RAB8A rows from the same experiment.
@@ -71,3 +89,8 @@
   organizer/embryonic ciliated cells (and testis), so CIMAP3 is a context-specific rather than
   general component of the disassembly machinery. The absence of an HPA call is consistent with
   restricted expression rather than evidence against the role.
+- Disagreement/extension: the module assigns only the disassembly role. The literature also
+  supports (i) Smoothened ciliary targeting (Hedgehog; mouse) and (ii) a structural CIMAP role on
+  motile-cilium doublet microtubules. core_functions lists disassembly first (the module role) and
+  Smo targeting second. The axonemal location is recorded as a NEW CC annotation but not as a core
+  function, since no activity is known. CIMAP3 could also be cross-listed in the Hedgehog module.
