@@ -1,7 +1,7 @@
 # CILK1 / ICK (Q9UPZ9) curation notes
 
 ## Deep research status
-DR_STATUS_PLACEHOLDER
+`just deep-research-falcon human CILK1` first failed (falcon timed out at 600 s; perplexity-lite fallback unavailable in this environment). Re-run with `--timeout 2400` succeeded: see CILK1-deep-research-falcon.md.
 
 ## Summary of function
 - Serine/threonine kinase with MAPK-like TDY motif [PMID:10699974 "harbors a dual phosphorylation site found in mitogen-activating protein (MAP) kinases that is important for kinase activity"]; activation by dual TDY phosphorylation [PMID:15988018 "Our studies establish ICK as the prototype for a new group of MAPK-like kinases requiring dual phosphorylation at TDY motifs."].
@@ -19,3 +19,9 @@ DR_STATUS_PLACEHOLDER
 - Module (stage 6 length control): RCK kinase, protein serine/threonine kinase activity, regulation of cilium assembly (GO:1902017), ciliary tip.
 - HPA v25: Primary cilium (Supported) and Primary cilium tip (Supported); main locations Golgi apparatus; Vesicles. GOA HPA rows: cilium, ciliary tip.
 - Interpretation: strong agreement; the HPA ciliary-tip call independently corroborates the tip localization central to the IFT-turnaround model. core_functions agree with the module and use the more specific descendant GO:1902856 (negative regulation of non-motile cilium assembly) rather than GO:1902017; the Golgi/vesicle calls are not explained by current literature.
+
+## Additional points from deep research (falcon)
+- Nakamura et al. 2020 (not cached): CILK1 C-terminus binds IFT-B and is carried anterogradely; CILK1-KO cells have impaired retrograde trafficking of IFT and ciliary GPCRs, with kinase activity and TDY phosphorylation needed for rescue.
+- KIF3A Thr672/674 phosphorylation is direct but its mutation causes only ~8% cilium lengthening in mice, so the substrate(s) that execute turnaround remain unidentified [deep research: "It is a kinase and transport regulator—not itself an IFT motor or structural axoneme protein."]. core_functions wording reflects this.
+- Upstream regulators: CCRK/CDK20 (Thr157), BROMI/TBC1D32, FAM149B1, KATNIP; Raptor Thr908 phosphorylation links CILK1 to mTORC1 outside the cilium.
+- MAK and CILK1 cooperate downstream of CCRK in photoreceptors (PMID:39293864).
