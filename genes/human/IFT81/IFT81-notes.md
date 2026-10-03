@@ -1,7 +1,7 @@
 # IFT81 notes (human, Q8WYA0)
 
 ## Deep research status
-DRSTATUS
+Falcon deep research succeeded on the second attempt (IFT81-deep-research-falcon.md; first run failed with falcon 429/timeout and an unavailable perplexity-lite fallback; rerun with --timeout 2400). It concurs with the tubulin-module model [file:human/IFT81/IFT81-deep-research-falcon.md "Depleting IFT81 in human RPE-1 cells strongly reduced primary-cilium formation; siRNA-resistant wild-type IFT81 restored it, whereas a mutant disrupting the full tubulin-binding patch failed to rescue."] and adds Boegholm et al. 2023 (not cached): the IFT81-IFT74 coiled coil stimulates RabL2 GTP hydrolysis [file:human/IFT81/IFT81-deep-research-falcon.md "The activity explains RabL2 inactivation and release shortly after IFT initiation."]. This supports MODIFY of RABL2B 'protein binding' rows to small GTPase binding; a GTPase activator annotation is raised as a question rather than asserted (data mainly from Chlamydomonas proteins). It also cites Perrault 2015 (NPHP with polydactyly, IFT81 variants).
 
 ## Summary
 - IFT81/IFT74 tubulin module [PMID:23990561 "Here, we found that the two core IFT proteins IFT74 and IFT81 form a tubulin-binding module and mapped the interaction to a calponin homology domain of IFT81 and a highly basic domain in IFT74."]; affinity [PMID:23990561 "HsIFT81N bound tubulin with a dissociation constant (Kd) of 16 μM via a highly conserved, positively charged surface patch, which was enhanced 18-fold by IFT74N (Fig. 1G and fig. S3)."]; required for ciliogenesis [PMID:23990561 "Knockdown of IFT81 and rescue experiments with point mutants showed that tubulin binding by IFT81 was required for ciliogenesis in human cells."]
