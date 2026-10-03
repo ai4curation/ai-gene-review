@@ -22,6 +22,7 @@ from ai_gene_review.etl.panther_families import (
     load_member_index,
     load_member_index_alternates,
     load_member_index_gaps,
+    member_index_path,
     panther_assignments_conflict,
     parse_hmm_classifications,
     parse_sequence_classification,
@@ -389,3 +390,63 @@ def test_load_member_index_alternates_reads_two_column_files(tmp_path):
 )
 def test_panther_assignments_conflict(first, second, expected):
     assert panther_assignments_conflict(first, second) is expected
+
+
+def test_load_member_overrides_requires_a_reason(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text("uniprot_accession\tpanther_family_sf\treason\nP1\tPTHR1:SF2\t\n")
+    with pytest.raises(ValueError, match="non-empty"):
+        load_member_overrides(path)
+
+
+def test_load_member_overrides_rejects_duplicate_accessions(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tfirst\n"
+        "P1\tPTHR9\tsecond\n"
+    )
+
+    with pytest.raises(ValueError) as exc:
+        load_member_overrides(path)
+
+    message = str(exc.value)
+    assert "duplicate override for 'P1'" in message
+    assert ":3:" in message
+    assert "line 2" in message
+
+
+def test_apply_member_overrides_wins_over_classification(tmp_path):
+    from ai_gene_review.etl.panther_families import (
+        apply_member_overrides,
+        load_member_overrides,
+    )
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tcurated\n"
+        "P9\tPTHR9\tno longer cited\n"
+    )
+    merged = apply_member_overrides(
+        {"P1": "PTHR5:SF1", "P2": "PTHR2"}, load_member_overrides(path), {"P1", "P2"}
+    )
+    assert merged == {"P1": "PTHR1:SF2", "P2": "PTHR2"}
+
+
+def test_repo_member_overrides_are_reflected_in_index():
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    panther_dir = PROJECT_ROOT / "interpro" / "panther"
+    overrides = load_member_overrides(panther_dir / "panther-members-overrides.tsv")
+    members_path = member_index_path(PROJECT_ROOT)
+    if not members_path.exists():
+        pytest.skip("member index not built (run just refresh-panther-members)")
+    index = load_member_index(members_path)
+    for accession, (family_sf, _reason) in overrides.items():
+        if accession in index:
+            assert index[accession] == family_sf, accession

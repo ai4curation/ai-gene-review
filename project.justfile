@@ -229,6 +229,8 @@ build-panther-obo *args="":
 # build artifact in the git-ignored .cache/panther/ (not committed), built from
 # release-pinned PANTHER classifications plus a UniProt fallback. By default it
 # only adds newly cited accessions; pass --rebuild to regenerate everything.
+# Rows in interpro/panther/panther-members-overrides.tsv are applied last, so a
+# curated assignment (each with its reason) survives regeneration.
 [group('QC')]
 refresh-panther-members *args="":
     uv run ai-gene-review refresh-panther-members --output-dir . {{args}}

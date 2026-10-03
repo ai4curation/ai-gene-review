@@ -15,7 +15,7 @@ Two constraints, both learned by getting them wrong first:
 * **Match ids exactly.** A fixed-width lookahead window truncates ids
   mid-number (``PTHR11157`` -> ``PTHR111``), which manufactures false positives.
   Find complete ids, then test proximity.
-* **Report what could not be checked.** ``panther-members.tsv`` indexes
+* **Report what could not be checked.** the PANTHER member index indexes
   accessions cited in ``representative_members``; prose-only accessions may be
   absent. Skipping those silently reports a clean sweep over a set that was
   partly unexamined. They are counted and listed, and ``--online`` resolves them

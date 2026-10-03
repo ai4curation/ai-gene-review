@@ -385,7 +385,7 @@ def check_panther_ids(
     PTN node ids are skipped -- they are not in panther.obo and are checked separately
     against PAINT.
 
-    Membership is checked where ``panther-members.tsv`` covers the protein. Coverage is
+    Membership is checked where the PANTHER member index covers the protein. Coverage is
     partial (it indexes cited proteins), so an absent accession is UNRESOLVED rather than
     a failure, matching the convention documented in CLAUDE.md. Where PANTHER's
     classification files and UniProt disagree (``alternates``), a member matching

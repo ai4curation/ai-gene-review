@@ -4334,12 +4334,14 @@ def refresh_panther_members(
         build_member_index,
         fetch_panther_from_uniprot,
         fetch_sequence_classification,
+        apply_member_overrides,
         incremental_member_index,
         load_member_index,
         load_member_index_alternates,
         load_member_index_gaps,
         member_index_path,
         panther_assignments_conflict,
+        load_member_overrides,
         write_member_index,
     )
     import yaml
@@ -4431,6 +4433,28 @@ def refresh_panther_members(
         return found
 
     index = incremental_member_index(existing, accessions, resolve, known_absent)
+    overrides_path = repo_root / "interpro" / "panther" / "panther-members-overrides.tsv"
+    overrides = load_member_overrides(overrides_path)
+    if overrides:
+        index = apply_member_overrides(index, overrides, accessions)
+        applied = len(set(overrides) & accessions)
+        typer.echo(
+            f"applied {applied} of {len(overrides)} curated override(s) from "
+            f"{overrides_path.relative_to(repo_root)}"
+        )
+        if applied < len(overrides):
+            typer.echo(
+                "  ⚠ overrides for accessions no longer cited: "
+                + ", ".join(sorted(set(overrides) - accessions))
+            )
+        # An override that adopts UniProt's value settles that disagreement.
+        alternates = {
+            accession: family_sf
+            for accession, family_sf in alternates.items()
+            if accession not in index
+            or panther_assignments_conflict(index[accession], family_sf)
+        }
+
     unresolved = accessions - set(index)
     out_path = write_member_index(
         index,
