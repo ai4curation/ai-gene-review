@@ -175,9 +175,10 @@ review files.
 | ORYSJ/RLCK185 | chitin | 9 | 8 | 0 | 1 | 0 | 0 | 0 | 1 | Added positive regulation of MAPK cascade |
 | **Total** | | **266** | **102** | **76** | **16** | **19** | **48** | **5** | **5** | |
 
-Both modules list their open questions as knowledge gaps. One
-example is that MPK6's review lacks the "positive regulation of camalexin
-biosynthetic process" term that MPK3 carries.
+Both modules list their open questions as knowledge gaps. The MPK6 review
+(previously DRAFT) was updated to match MPK3: its camalexin biosynthesis row now
+reads "positive regulation of camalexin biosynthetic process", and the review is
+COMPLETE.
 
 ### Findings by curation question
 
@@ -336,6 +337,14 @@ running `fetch-gene`; do not guess one.
 # NOTES
 
 ## 2026-10-03
+
+- MPK6: changed the camalexin biosynthesis row (IMP, PMID:18378893) to
+  positive regulation of camalexin biosynthetic process (GO:1901183), matching
+  MPK3 and WRKY33. Fixed the two warnings that kept it at DRAFT, both from core
+  functions that used terms the review marks non-core: defense response to
+  bacterium was replaced by GO:1901183, and cell cortex was dropped from the
+  developmental core function. Now COMPLETE. Closed the matching knowledge gap
+  in the camalexin module.
 
 - Reviewed the 11 module members that had no gene review (falcon deep research
   for each; all COMPLETE). CYP71A13 and CYP71A12 also cited the deleted
