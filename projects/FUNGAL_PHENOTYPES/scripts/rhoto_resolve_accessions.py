@@ -54,7 +54,7 @@ def query_fasta(accs: list[str], cache: Path) -> Path:
     path = cache / "rhoto_query_seqs.fasta"
     have = set()
     if path.exists():
-        have = {l[1:].split()[0] for l in path.read_text().splitlines() if l.startswith(">")}
+        have = {ln[1:].split()[0] for ln in path.read_text().splitlines() if ln.startswith(">")}
     todo = [a for a in accs if a not in have]
     with path.open("a") as out:
         for i in range(0, len(todo), 50):
