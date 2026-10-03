@@ -51,3 +51,10 @@
   promotes caspase-3 activation, and accelerates XIAP autoubiquitination and
   destruction; unlike canonical SMAC, it lacks exon 4 and therefore residues
   62-105 of the full-length sequence [PMID:14523016].
+
+## 2026-10-03
+
+- Replaced the local `inhibitor-of-apoptosis protein antagonist activity` NTR
+  with `GO:1990525 BIR domain binding` after the Drosophila overannotation
+  reviews landed on the same branch and exposed the exact same BIR-surface
+  antagonism already using `GO:1990525` in `hid` and `grim`.
