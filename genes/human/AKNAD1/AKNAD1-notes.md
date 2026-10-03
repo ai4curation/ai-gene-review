@@ -14,5 +14,5 @@ GOA has one row, a microtubule IBA:
 
 ## Round 1 (PR #3946 review)
 
-- `projects/paint/human-no-IBA.tsv` lists human AKNA as having no IBA rows. That fits the reading above. PAINT does not emit IBAs to the gene that supplies the experimental evidence, and AKNA's experimental grounding is its mouse ortholog's IDA rows plus HPA. Human AKNA's centrosomal rows therefore arrive as ISS/IEA rather than IBA.
+- `projects/paint/human-no-IBA.tsv` lists both paralogs, AKNA (Q7Z591) and AKNAD1 (Q5T1N1), on adjacent rows. That file is the campaign worklist snapshot and predates the current GOA. In current GOA, AKNAD1 carries the one IBA reviewed here, and human AKNA also carries IBA rows from both PTN000487658 and PTN002726534 (see the AKNA review, PR #3945). The earlier version of this bullet claimed that PAINT does not emit IBAs to the gene supplying the experimental evidence. That was wrong: a gene with its own experimental annotation still receives the IBA and appears in its own with/from, and here the donor is mouse Akna in any case.
 - The QuickGO withFrom listing for PTN000487658 includes AKNA and AKNAD1 orthologs from fish (8090), frogs (8355, 8364), birds (9031, 9258) and mammals, plus amphioxus and sea urchin. This listing is the basis for saying the family is present across vertebrates.
