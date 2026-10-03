@@ -1,7 +1,7 @@
 # RP2 (O75695) curation notes
 
 ## Deep research status
-DR_STATUS_PLACEHOLDER
+`just deep-research-falcon human RP2` first failed (falcon timed out at 600 s; perplexity-lite fallback unavailable in this environment). Re-run with `--timeout 2400` succeeded: see RP2-deep-research-falcon.md.
 
 ## Summary of function
 - XLRP gene; homologous to tubulin cofactor C [PMID:9697692 "The predicted gene product shows homology with human cofactor C, a protein involved in the ultimate step of beta-tubulin folding."]
@@ -23,3 +23,7 @@ DR_STATUS_PLACEHOLDER
 - Module (stage 5): ARL3 GTPase-activating protein (GO:0005096), process protein localization to cilium; connection "RP2 negatively regulates ARL3 cargo release".
 - HPA v25: no primary cilium/basal body call; main locations End piece; Mid piece; Plasma membrane; Principal piece. GOA HPA row: plasma membrane (GO_REF:0000052).
 - Interpretation: the HPA plasma membrane call matches the known acylation-dependent plasma membrane localization; the sperm flagellar calls are consistent with ciliary-type compartments. Lack of a primary-cilium call agrees with the model that RP2 acts at the ciliary base/periciliary membrane and outside cilia to keep ARL3-GTP confined inside the cilium, rather than inside the axoneme. core_functions agree with the module (GAP activity; locations plasma membrane, basal body, periciliary membrane compartment). The module's GO:0061512 is represented by the more specific NEW GO:1903441.
+
+## Additional points from deep research (falcon)
+- Deep research states "RP2 is selective for ARL3 over the closely related ARL2." and stresses that RP2 is not itself a lipid-cargo carrier; its task is terminating ARL3-GTP so the trafficking machinery can cycle. This is the basis for flagging the NEW GO:1903441 annotation as debatable.
+- Rp2-null mouse photoreceptors mislocalize PDE6 and GRK1 (prenylated cargo), with transducin largely preserved (Zhang et al. 2015; not cached). Mouse immuno-EM found RP2 at the basal-body region but not in the connecting cilium itself (Evans et al. 2010).

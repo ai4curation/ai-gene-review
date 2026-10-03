@@ -1,7 +1,7 @@
 # INPP5E (Q9NRR6) curation notes
 
 ## Deep research status
-DR_STATUS_PLACEHOLDER
+`just deep-research-falcon human INPP5E` first failed (falcon timed out at 600 s; perplexity-lite fallback unavailable in this environment). Re-run with `--timeout 2400` succeeded: see INPP5E-deep-research-falcon.md.
 
 ## Summary of function
 - Type IV 5-phosphatase specific for lipid substrates [PMID:10764818 "This enzyme hydrolyzes only lipid substrates, phosphatidylinositol 3,4,5-trisphosphate and phosphatidylinositol 4,5-bisphosphate."] with the highest PI(3,4,5)P3 affinity of known 5-phosphatases (Km 0.65 uM).
@@ -22,3 +22,8 @@ DR_STATUS_PLACEHOLDER
 - Module (stage 5): ciliary PI(4,5)P2 5-phosphatase (GO:0004439) located in ciliary membrane.
 - HPA v25: no cilium/basal body call; main location Golgi apparatus. No HPA-sourced GOA rows.
 - Interpretation: the Golgi call agrees with the documented Golgi-stack pool (UniProt, by similarity). The absence of an HPA primary-cilium call conflicts with robust ciliary localization of INPP5E in human and mouse literature; it may reflect antibody performance in the HPA cell lines or cell-type heterogeneity of the ciliary proteome reported by the atlas [PMID:41005307 "We found that 69% of the ciliary proteome is cell-type specific, and 78% exhibited single-cilia heterogeneity."]. core_functions agree with the module (PI(4,5)P2 5-phosphatase in the ciliary membrane), adding PI(3,4,5)P3 5-phosphatase activity.
+
+## Additional points from deep research (falcon)
+- Cellular evidence for a third reaction, PI(3,5)P2 -> PI(3)P, comes from a neuronal lysosomal INPP5E pool needed for autophagosome-lysosome fusion (Hasegawa et al. 2016; not cached) [deep research: "In neuronal lysosomes, experimental evidence supports a third reaction"]. PI3P biosynthetic process and PI(3,5)P2 5-phosphatase rows were therefore kept as non-core rather than marked over-annotated.
+- Dyson et al. 2017 (not cached): PI(4,5)P2 and PI(3,4,5)P3 accumulate at the transition zone of Inpp5e-null cells after Hh stimulation; catalytic activity is needed to restore transition-zone organization.
+- Ciliary targeting signals include LLxPIR, W383, FDRxLYL and CaaX.

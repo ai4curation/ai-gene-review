@@ -4,7 +4,7 @@
 
 - GOA snapshot 65 rows; UniProt Q6IQ55. All GOA PMIDs cached (PMID:23141541 abstract-only).
 - Additional papers: PMID:31455668 (CEP83 substrate), PMID:24982133, PMID:25297623, PMID:30532139 (SCA11 alleles, cilia stability), PMID:36322399 and PMID:31934864 (cilium stability, Purkinje neurons; cached, not cited in YAML).
-- Deep research: first falcon run (600 s) timed out; second run with `--timeout 2400` was killed (exit 137); third run started (status recorded below).
+- Deep research: first falcon run (600 s) timed out; second run with `--timeout 2400` was killed (exit 137); third run succeeded (`TTBK2-deep-research-falcon.md`).
 
 ## Functional synthesis
 
@@ -15,6 +15,8 @@
 - Post-initiation roles in cilium length, SMO trafficking and stability [PMID:30532139 "Our studies have also revealed new functions for TTBK2 after cilia initiation in the control of cilia length, trafficking of a subset of SHH pathway components, including Smoothened (SMO), and cilia stability."]
 - Non-ciliary: EB1/3-dependent +TIP that phosphorylates KIF2A [PMID:26323690 "These findings indicate that TTBK2 with EB1/3 phosphorylates KIF2A and antagonizes KIF2A-induced depolymerization at MT plus ends for cell migration."]
 - Tau: kinase named for in vitro tau phosphorylation; physiological relevance unknown [PMID:21548880 "Whether endogenous TTBK1 and/or TTBK2 regulate phosphorylation of endogenous tau has not been established."]
+
+- Deep research adds: CP110 itself is not an established TTBK2 substrate [file:human/TTBK2/TTBK2-deep-research-falcon.md "CP110 removal is a TTBK2-dependent outcome, not evidence that CP110 itself is a confirmed direct TTBK2 substrate."]; Bernatik et al. 2020 mapped TTBK2 sites on CEP164 (T1309, S1317, S1346, S1347, S1443) and biochemically on CEP89, CCDC92, Rabin8 and DVL3, and found that the +2 phosphotyrosine preference seen with truncated kinase is not the dominant motif in physiological substrates; HUWE1 ubiquitinates TTBK2 to promote cilium disassembly (Lin 2024); neuronal tau S422 is phosphorylated mainly by TTBK1 [file:human/TTBK2/TTBK2-deep-research-falcon.md "phosphorylation is driven principally by TTBK1, not TTBK2"], which supports keeping tau kinase activity non-core. These extra papers were not cached or annotated.
 
 ## Annotation decisions
 

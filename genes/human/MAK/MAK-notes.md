@@ -1,7 +1,7 @@
 # MAK (P20794) curation notes
 
 ## Deep research status
-DR_STATUS_PLACEHOLDER
+`just deep-research-falcon human MAK` first failed (falcon timed out at 600 s; perplexity-lite fallback unavailable in this environment). Re-run with `--timeout 2400` succeeded: see MAK-deep-research-falcon.md.
 
 ## Summary of function
 - RCK kinase; testis-enriched expression [PMID:2183027 "These results suggest that the mak gene plays an important role in spermatogenesis."] (expression-based inference only).
@@ -19,4 +19,8 @@ DR_STATUS_PLACEHOLDER
 ## HPA cilium atlas vs module role
 - Module (stage 6 length control): RCK kinase restricting length at the ciliary tip (protein serine/threonine kinase activity; regulation of cilium assembly; ciliary tip).
 - HPA v25: Basal body (Approved); main locations Basal body; Connecting piece; Cytosol; Nucleoplasm. GOA HPA rows: nucleoplasm, nucleolus.
-- Interpretation: partial agreement. HPA places MAK at the basal body (and sperm connecting piece) rather than at the ciliary tip; in photoreceptors MAK is in the connecting cilium/axoneme (mouse) or inner segment (human), and no study has shown MAK at the primary-cilium tip in cultured cells. I therefore argue against the module's ciliary tip location for MAK: core_functions use photoreceptor connecting cilium and axoneme, not ciliary tip. The length-control role itself is supported (GO:1902856, a descendant of the module's GO:1902017), but evidence is essentially photoreceptor-specific.
+- Interpretation: partial agreement. HPA places MAK at the basal body (and sperm connecting piece) in cultured cells, whereas the module assigns it to the ciliary tip. Mouse photoreceptor and cultured-cell data (Chaya et al. 2024, PMID:39293864) do place Mak at ciliary tips, so I keep ciliary tip in core_functions (as a NEW ISS location) together with the photoreceptor connecting cilium and axoneme. The HPA basal-body call may reflect a base pool or cell-type differences; human retina immunostaining placed MAK mainly in inner segments. The length-control role is supported (GO:1902856, a descendant of the module's GO:1902017), but the evidence is essentially photoreceptor-specific, and in non-retinal cells CILK1 is the better-supported length-control kinase.
+
+## Additional points from deep research (falcon) and follow-up
+- Chaya et al. 2024 (PMID:39293864, cached full text) show that mouse Mak localizes to ciliary tips and regulates IFT together with Ick [PMID:39293864 "Here, we identified that the ciliopathy kinase Mak is a ciliary tip-localized IFT regulator that cooperatively acts with the ciliopathy kinase Ick, an IFT regulator."]; Mak/Ick double loss abolishes photoreceptor axonemes, and Ccrk (CDK20) activates both. IFT components concentrate at connecting-cilium tips in Mak-/- retina.
+- Added NEW ciliary tip (ISS) and ciliary tip in core_functions based on this paper.
