@@ -86,3 +86,31 @@
 - ACCEPT (informative self-association, homodimer, structurally verified): GO:0042802 x2.
 </content>
 </invoke>
+
+## 2026-09-28 — re-review against the current GOA snapshot (claude4go, from outside the repo)
+
+- Deep research not run (no provider keys); this section is the manual synthesis for the new rows.
+- GOA now has 28 rows vs the 21 reviewed above. `seed-goa` added 9 rows; two earlier rows
+  (deoxyuridine phosphorylase IEA under GO_REF:0000116, UMP salvage IEA under GO_REF:0000041)
+  are no longer in GOA and were dropped, their reviews carried onto the replacement rows
+  under GO_REF:0000120.
+- **Species divergence caught in the Ensembl transfers.** The new IEAs for `GO:0009032 thymidine
+  phosphorylase activity` and `GO:0046074 dTMP catabolic process` come from mouse Upp1, and the
+  donor paper says the opposite for human: [PMID:12077348 "Murine uridine phosphorylase (UP),
+  unlike human UP, cleaves thymidine, as well as uridine."]. Mouse GOA also carries NOT rows for
+  both terms from the Upp1 knockout study (PMID:15772079). Both human IEAs are REMOVED with a
+  `propagation_review` (PROPAGATION_BAD; FUNCTIONAL_DIVERGENCE + LINEAGE_OR_TAXON_MISMATCH).
+- The other Ensembl transfers (`UMP`, `CMP`, `dCMP`, `dUMP catabolic process`) are kept as
+  non-core: UPP1 performs the nucleoside-cleaving step of those pathways, the mouse rows are
+  IDA, and knockout mice accumulate uridine ribonucleotides [PMID:15772079 "total uridine
+  ribonucleotide concentrations increased 2-3 times as compared with control mice"].
+- **Earlier decision revised.** `GO:0009166 nucleotide catabolic process` (InterPro IEA) was
+  REMOVE with a "nucleoside not nucleotide, wrong branch" argument. That argument is contradicted
+  by the specific nucleotide catabolic rows above, so it is now MARK_AS_OVER_ANNOTATED
+  (granularity only).
+- `GO:0042149 cellular response to glucose starvation` stays non-core; the rat donor row is IEP
+  [PMID:18457515 "UPase expression was up-regulated by glucose deprivation in mRNA as well as
+  protein levels."].
+- Cytosol (Ensembl IEA), UMP salvage and deoxyuridine phosphorylase (combined IEA) ACCEPT.
+- Status set to COMPLETE. Final tally over 28 rows: 15 ACCEPT, 5 KEEP_AS_NON_CORE,
+  6 MARK_AS_OVER_ANNOTATED, 2 REMOVE.
