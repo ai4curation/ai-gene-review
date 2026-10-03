@@ -38,3 +38,13 @@ Normal candidate validation passed with zero review warnings. COMPLETE describes
 ## 2026-10-03 — canonical application
 
 The exact YAML and notes approved by the distinct internal ROOT whole-science peer were applied after preimage checks. Normal canonical validation and status checks passed without warnings, retaining COMPLETE; targeted HTML rendering and a standard codex/gpt-6 CREATE history validation passed. All 20 machine source objects and 16 original references remain intact, with 14 ACCEPT, five MODIFY and one KEEP_AS_NON_CORE, one catalytic core and no NEW assertions. Source caches and family exports remain unchanged. Remote publication remains a separate ROOT-owned step.
+
+## 2026-10-03 — mitochondrial annotation resolution follow-up
+
+The first external review of [PR #3928](https://github.com/ai4curation/ai-gene-review/pull/3928#pullrequestreview-5402200804) requested retention of the four correct `GO:0005739 mitochondrion` assertions at their original resolution. Their HTP, IBA, IDA and IEA decisions are now ACCEPT, without replacement terms. The distinct NAS and TAS assertions already record mitochondrial matrix localization, which remains the location of the unchanged catalytic core. The broader cytoplasm assertion retains its MODIFY recommendation. This decision does not imply that PAINT or ortholog inference can never support a submitochondrial compartment; the exact ancestral node remains uninspected.
+
+The resulting tally is 18 ACCEPT, one MODIFY and one KEEP_AS_NON_CORE. All 20 machine source objects, original qualifiers and supporting entities, 16 references, ten quoted fields and the single core are unchanged. No NEW assertion or source retrieval is introduced. Earlier journal entries retain the original assessment tally as historical provenance.
+
+### Follow-up application checks
+
+The focused candidate passed distinct internal science review and was applied exactly. Normal canonical validation and status checks passed without review warnings, retaining COMPLETE. Targeted HTML rendering and validation of the newly scaffolded EDIT history also passed. The prior CREATE history and every source cache remain unchanged. This entry records local application, not publication or merge.
