@@ -30,3 +30,10 @@ over-annotations of narrow human crosstalk contexts, `GO:0070371 ERK1 and ERK2
 cascade` is an accepted core cascade term, and three new `GO:0106310 protein
 serine kinase activity` rows were narrowed to the more informative
 `GO:0004707 MAP kinase activity`.
+
+## 2026-10-03 PR follow-up
+
+The legacy PMID:16148006 row with supporting entity `UniProtKB:Q62132` was
+narrowed from generic protein binding to `GO:0019902 phosphatase binding`
+because Q62132 is Ptprr/PTP-SL, one of the ERK2 phosphatases whose docking
+interface is distinguished from DUSP6/MKP-3 in that paper.
