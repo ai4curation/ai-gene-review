@@ -62,11 +62,11 @@ def main():
         status, path = review_status(m["gene"])
         rows.append({**m, "review": status, "hpa_reliability": hpa_rel,
                      "hpa_cilia_calls": "; ".join(calls), "hpa_main": hpa_main,
-                     "review_file": path})
+                     "review_file": path or "-"})
 
     fields = list(rows[0])
     with (WORK / "member_evidence.tsv").open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 

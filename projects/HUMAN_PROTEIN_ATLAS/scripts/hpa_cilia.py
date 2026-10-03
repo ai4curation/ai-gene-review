@@ -103,7 +103,7 @@ def main():
 
     out = PROJECT / "data"
     with (out / "hpa_cilia_calls.tsv").open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 

@@ -56,6 +56,24 @@ GO = {
     "GO:0097542": "ciliary tip",
     "GO:0097730": "non-motile cilium",
     "GO:0034451": "centriolar satellite",
+    "GO:0003925": "G protein activity",
+    "GO:0001918": "farnesylated protein binding",
+    "GO:0043539": "protein serine/threonine kinase activator activity",
+    "GO:0030295": "protein kinase activator activity",
+    "GO:0008289": "lipid binding",
+    "GO:1903441": "protein localization to ciliary membrane",
+    "GO:0030674": "protein-macromolecule adaptor activity",
+    "GO:0015631": "tubulin binding",
+    "GO:0140597": "protein carrier activity",
+    "GO:0051010": "microtubule plus-end binding",
+    "GO:0019894": "kinesin binding",
+    "GO:0005814": "centriole",
+    "GO:0030050": "vesicle transport along actin filament",
+    "GO:0000146": "microfilament motor activity",
+    "GO:0016887": "ATP hydrolysis activity",
+    "GO:0031115": "negative regulation of microtubule polymerization",
+    "GO:1902856": "negative regulation of non-motile cilium assembly",
+    "GO:0005868": "cytoplasmic dynein complex",
 }
 
 HPA_ATLAS = {
@@ -190,6 +208,23 @@ TCTEX = ev("PMID:21394082", "Phosphorylated Tctex-1 (DYNLT1) at the transition z
            "Ciliary transition zone activation of phosphorylated Tctex-1 controls ciliary resorption, S-phase entry and "
            "fate of neural progenitors.")
 
+KANIE = ev("PMID:39882855", "CEP89 positions myristoylated NCS1 at the distal appendages, where it captures preciliary "
+           "vesicles for ciliary vesicle formation.")
+TTBK2_KIF2A = ev("PMID:39930500", "TTBK2 restrains the microtubule depolymerizer KIF2A at the mother centriole to "
+                 "support primary cilia growth.")
+HEF1_AURA = ev("PMID:16184168", "HEF1/NEDD9 activates Aurora A in vitro and is required for its activation at the "
+               "centrosome.")
+ISMAIL = ev("PMID:22002721", "PDE6D is a GDI-like carrier for farnesylated cargo whose release is triggered by "
+            "ARL2-GTP or ARL3-GTP.")
+WRIGHT = ev("PMID:22085962", "An ARL3-UNC119-RP2 GTPase cycle targets myristoylated NPHP3 to the primary cilium.")
+KIF7_TIP = ev("PMID:24952464", "KIF7 organizes the cilium tip compartment by limiting microtubule growth at the tip.")
+MAK_RET = ev("PMID:39293864", "Ccrk-Mak/Ick signaling regulates ciliary transport and is essential for retinal "
+             "photoreceptor survival.")
+RPGRIP1L_TZ = ev("PMID:26392567", "Mks5/RPGRIP1L is required to form the transition zone and its ciliary zone of "
+                 "exclusion.")
+MKS_NPHP = ev("PMID:21422230", "MKS and NPHP modules cooperate to establish basal body/transition zone membrane "
+              "associations and ciliary gate function.")
+
 
 def part(order, role, node):
     return {"order": order, "role": role, "node": node}
@@ -203,9 +238,14 @@ parts = [
         "concepts": [concept("GO:1905515")],
         "description": (
             "The mother centriole becomes competent to template a cilium. Distal appendages, assembled in the order "
-            "CEP83 then SCLT1 and CEP89 then FBF1 and CEP164, dock the centriole to membrane and recruit TTBK2. TTBK2 "
-            "removes the CP110-CEP97 cap, which together with KIF24 otherwise suppresses axoneme growth."),
-        "evidence": [TANOS, GOETZ, KOBAYASHI],
+            "CEP83 then SCLT1 and CEP89 then FBF1 and CEP164, dock the centriole to membrane. CEP164 recruits TTBK2, "
+            "which triggers removal of the CP110-CEP97 cap by phosphorylating cap-anchoring proteins (MPHOSPH9, "
+            "CEP83); CP110 itself is not a known TTBK2 substrate. KIF24 recruits the cap and depolymerizes centriolar "
+            "microtubules, restraining ciliogenesis in cycling cells. CEP89 also positions NCS1 to capture "
+            "preciliary vesicles, linking this stage to ciliary vesicle formation. FBF1 is not needed for licensing "
+            "itself (cap removal and TTBK2 recruitment are normal without it) but gates IFT and membrane-protein entry "
+            "at the ciliary base."),
+        "evidence": [TANOS, GOETZ, KOBAYASHI, KANIE],
         "annotons": [
             annoton("distal_appendage_assembly", "Distal appendage (transition fiber) complex",
                     complex_sel("centriole distal appendage complex",
@@ -213,25 +253,36 @@ parts = [
                                 ["CEP83", "SCLT1", "CEP89", "FBF1", "CEP164"], "distal appendage component"),
                     "Docks the mother centriole to vesicles and membrane and recruits TTBK2.",
                     fn_label="distal appendage scaffold",
-                    fn_desc="Structural scaffold role; no specific GO molecular-function term is asserted.",
-                    processes=["GO:1905515"], locations=["GO:0036064"], evidence=[TANOS]),
-            annoton("ttbk2_cap_removal", "TTBK2 removes the CP110 cap", gp("TTBK2"),
-                    "Kinase recruited by CEP164 that triggers CP110-CEP97 removal and IFT recruitment.",
-                    fn="GO:0004674", processes=["GO:1905515"], locations=["GO:0036064"], evidence=[GOETZ]),
+                    fn_desc=("Structural scaffold role; no specific GO molecular-function term is asserted. CEP89 "
+                             "additionally acts as an adaptor for NCS1-mediated vesicle capture."),
+                    processes=["GO:1905515"], locations=["GO:0036064"], evidence=[TANOS, KANIE]),
+            annoton("ttbk2_cap_removal", "TTBK2 triggers CP110 cap removal", gp("TTBK2"),
+                    "Kinase recruited by CEP164 that triggers CP110-CEP97 cap removal and IFT recruitment, and "
+                    "restrains KIF2A during cilium growth.",
+                    fn="GO:0004674", processes=["GO:1905515"], locations=["GO:0036064"],
+                    evidence=[GOETZ, TTBK2_KIF2A]),
             annoton("cp110_cep97_cap", "CP110-CEP97 distal cap suppresses ciliogenesis",
                     complex_sel("CP110-CEP97 distal centriole cap",
                                 "Cap on the distal end of the mother centriole that blocks axoneme extension until removed.",
-                                ["CCP110", "CEP97", "KIF24"], "distal cap component"),
-                    "Inhibitory cap; its removal licenses axoneme growth.",
+                                ["CCP110", "CEP97"], "distal cap component"),
+                    "Inhibitory cap; its removal licenses axoneme growth. CEP97 is the adaptor that stabilizes CP110.",
                     fn_label="ciliogenesis suppressor cap",
-                    fn_desc="KIF24 contributes microtubule-depolymerizing activity; no single MF term covers the cap.",
-                    processes=["GO:1902018"], locations=["GO:0036064"], evidence=[KOBAYASHI, GOETZ]),
+                    fn_desc="CP110 caps microtubule plus ends; CEP97 acts as a protein-macromolecule adaptor.",
+                    processes=["GO:1902018"], locations=["GO:0005814"], evidence=[KOBAYASHI, GOETZ]),
+            annoton("kif24_cap_recruitment", "KIF24 recruits the cap and remodels centriolar microtubules", gp("KIF24"),
+                    "Kinesin-13 that recruits MPHOSPH9 and the CP110-CEP97 cap to the mother centriole and "
+                    "depolymerizes centriolar microtubules, suppressing ciliogenesis in cycling cells.",
+                    fn_label="microtubule depolymerase",
+                    fn_desc="No GO MF term for microtubule depolymerase activity.",
+                    processes=["GO:1902018"], locations=["GO:0005814"], evidence=[KOBAYASHI]),
         ],
         "connections": [
             {"source": "distal_appendage_assembly", "target": "ttbk2_cap_removal", "connection_type": "PROVIDES_INPUT_FOR",
              "description": "CEP164 at the distal appendages recruits TTBK2 to the mother centriole."},
             {"source": "ttbk2_cap_removal", "target": "cp110_cep97_cap", "connection_type": "NEGATIVELY_REGULATES",
-             "description": "TTBK2 promotes removal of the CP110-CEP97 cap."},
+             "description": "TTBK2 triggers removal of the CP110-CEP97 cap."},
+            {"source": "kif24_cap_recruitment", "target": "cp110_cep97_cap", "connection_type": "POSITIVELY_REGULATES",
+             "description": "KIF24 recruits and maintains the cap at the mother centriole."},
         ],
     }),
     part(2, "ciliary vesicle formation", {
@@ -240,49 +291,70 @@ parts = [
         "module_type": "BIOLOGICAL_PROCESS",
         "concepts": [concept("GO:1905556")],
         "description": (
-            "Myosin-Va delivers preciliary vesicles to the distal appendages. EHD1 and EHD3 tubulate the docked "
-            "distal appendage vesicles so they fuse into a single ciliary vesicle. The Rab11-Rabin8-Rab8 cascade then "
-            "supplies membrane for ciliary growth."),
-        "evidence": [WU, LU, NACHURY],
+            "Myosin-Va delivers preciliary vesicles to the distal appendages, upstream of ciliary vesicle formation. "
+            "EHD1 and EHD3 tubulate the docked distal appendage vesicles so they fuse into a single ciliary vesicle; "
+            "EHD1 is the dominant paralog in RPE1 cells. CEP290 also acts here, at centriolar satellites, in ciliary "
+            "vesicle maturation and RAB8A recruitment."),
+        "evidence": [WU, LU],
         "annotons": [
             annoton("myo5a_vesicle_delivery", "Myosin-Va preciliary vesicle delivery", gp("MYO5A"),
-                    "Actin-based motor that carries preciliary vesicles to the mother centriole.",
-                    fn_label="actin-based vesicle transport motor",
-                    fn_desc="Motor role; MF term not asserted pending review of MYO5A.",
-                    processes=["GO:1905556"], evidence=[WU]),
+                    "Processive actin motor that carries preciliary vesicles to the mother centriole; its dominant "
+                    "roles (melanosome and secretory vesicle transport) lie outside cilia.",
+                    fn="GO:0000146", processes=["GO:0030050", "GO:0060271"], evidence=[WU]),
             annoton("ehd_vesicle_tubulation", "EHD1/EHD3 membrane tubulation",
                     complex_sel("EHD1/EHD3 membrane-shaping proteins",
                                 "Membrane-tubulating EH-domain ATPases acting on distal appendage vesicles.",
                                 ["EHD1", "EHD3"], "membrane-shaping ATPase"),
                     "Tubulate distal appendage vesicles to form the ciliary vesicle.",
-                    fn_label="membrane tubulation",
-                    fn_desc="Membrane-shaping role; no GO MF term asserted.",
+                    fn="GO:0016887", fn_label="ATP hydrolysis activity",
                     processes=["GO:1905556"], locations=["GO:0097721"], evidence=[LU]),
+        ],
+        "connections": [
+            {"source": "myo5a_vesicle_delivery", "target": "ehd_vesicle_tubulation", "connection_type": "PRECEDES",
+             "description": "Delivered vesicles are remodeled by EHD1/EHD3 into the ciliary vesicle."},
+        ],
+    }),
+    part(3, "ciliary membrane extension", {
+        "id": "ciliary_membrane_extension",
+        "label": "Ciliary membrane supply and extension",
+        "module_type": "BIOLOGICAL_PROCESS",
+        "concepts": [concept("GO:0060271")],
+        "description": (
+            "Once the ciliary vesicle has formed, the RAB11-Rabin8-RAB8 cascade supplies membrane for the growing "
+            "ciliary sheath; RAB8 is activated only after ciliary vesicle assembly. RAB8A is pleiotropic and also acts "
+            "in exocytosis and endocytic recycling."),
+        "evidence": [NACHURY, LU],
+        "annotons": [
             annoton("rabin8_rab8_gef", "Rabin8 activates Rab8", gp("RAB3IP"),
-                    "RAB8 guanine nucleotide exchange factor, recruited downstream of RAB11.",
+                    "RAB8 guanine nucleotide exchange factor, delivered to the mother centriole downstream of RAB11.",
                     fn="GO:0005085", processes=["GO:0060271"], evidence=[NACHURY]),
             annoton("rab8_membrane_supply", "Rab8 ciliary membrane delivery", gp("RAB8A"),
                     "GTP-bound RAB8A enters the cilium and promotes ciliary membrane extension.",
                     fn="GO:0003924", processes=["GO:0060271"], locations=["GO:0060170"], evidence=[NACHURY, LU]),
         ],
         "connections": [
-            {"source": "myo5a_vesicle_delivery", "target": "ehd_vesicle_tubulation", "connection_type": "PRECEDES",
-             "description": "Delivered vesicles are remodeled by EHD1/EHD3 into the ciliary vesicle."},
             {"source": "rabin8_rab8_gef", "target": "rab8_membrane_supply", "connection_type": "POSITIVELY_REGULATES",
              "description": "Rabin8 loads RAB8A with GTP."},
         ],
     }),
-    part(3, "transition zone assembly", {
+    part(4, "transition zone assembly", {
         "id": "transition_zone_assembly",
         "label": "Transition zone assembly",
         "module_type": "BIOLOGICAL_PROCESS",
         "concepts": [concept("GO:1905349")],
         "description": (
             "The transition zone forms between basal body and axoneme and gates ciliary membrane composition. "
-            "It is built from the MKS module, the NPHP module and CEP290. GO has merged the former basal body-plasma "
-            "membrane docking and transition fiber assembly terms into this process."),
-        "evidence": [GARCIA],
+            "RPGRIP1L acts upstream as the foundational assembly factor for both the MKS and NPHP modules and CEP290. "
+            "In the NPHP module, NPHP4 is the adaptor hub bridging RPGRIP1L and NPHP1; NPHP1 depends on both to reach "
+            "the transition zone. MKS1-B9D2-B9D1 form a linear core of the MKS module. CEP290 is its own transition "
+            "zone component, not an MKS subunit. GO has merged the former basal body-plasma membrane docking and "
+            "transition fiber assembly terms into this process."),
+        "evidence": [GARCIA, RPGRIP1L_TZ, MKS_NPHP],
         "annotons": [
+            annoton("rpgrip1l_tz_foundation", "RPGRIP1L founds the transition zone", gp("RPGRIP1L"),
+                    "Foundational transition zone assembly factor upstream of the MKS and NPHP modules and CEP290.",
+                    fn_label="transition zone scaffold",
+                    processes=["GO:1905349"], locations=["GO:0035869"], evidence=[RPGRIP1L_TZ]),
             annoton("mks_module", "MKS module",
                     complex_sel("MKS complex", "Tectonic/MKS ciliopathy protein complex at the transition zone.",
                                 ["MKS1", "TMEM67", "CC2D2A", "B9D1", "B9D2", "TCTN1", "TCTN2", "TMEM216", "TMEM231"],
@@ -292,140 +364,178 @@ parts = [
                     fn_desc="Barrier/gating role; no GO MF term asserted.",
                     processes=["GO:1905349"], locations=["GO:0035869"], evidence=[GARCIA]),
             annoton("nphp_module", "NPHP module",
-                    complex_sel("NPHP module", "Nephronophthisis proteins at the transition zone.",
-                                ["NPHP1", "NPHP4", "RPGRIP1L"], "NPHP module component"),
+                    complex_sel("NPHP module", "Nephronophthisis proteins at the transition zone; NPHP4 is the hub.",
+                                ["NPHP4", "NPHP1"], "NPHP module component"),
                     "Second transition zone module, partly redundant with the MKS module.",
-                    fn_label="transition zone scaffold",
-                    processes=["GO:1905349"], locations=["GO:0035869"]),
+                    fn="GO:0030674",
+                    processes=["GO:1905349"], locations=["GO:0035869"], evidence=[MKS_NPHP]),
             annoton("cep290_tz_scaffold", "CEP290 transition zone scaffold", gp("CEP290"),
-                    "Links the transition zone to the axoneme and membrane; part of the TCTN1 complex.",
+                    "Builds the microtubule-to-membrane Y-links of the transition zone; also acts at centriolar "
+                    "satellites in ciliary vesicle maturation.",
                     fn_label="transition zone scaffold",
                     processes=["GO:1905349"], locations=["GO:0035869"], evidence=[GARCIA]),
         ],
+        "connections": [
+            {"source": "rpgrip1l_tz_foundation", "target": "mks_module", "connection_type": "PRECEDES",
+             "description": "RPGRIP1L is required to assemble the MKS module."},
+            {"source": "rpgrip1l_tz_foundation", "target": "nphp_module", "connection_type": "PRECEDES",
+             "description": "RPGRIP1L is required to recruit the NPHP module."},
+            {"source": "rpgrip1l_tz_foundation", "target": "cep290_tz_scaffold", "connection_type": "PRECEDES",
+             "description": "RPGRIP1L is required for CEP290 localization."},
+        ],
     }),
-    part(4, "axoneme extension by IFT", {
+    part(5, "axoneme extension by IFT", {
         "id": "axoneme_extension_ift",
         "label": "Axoneme extension by intraflagellar transport",
         "module_type": "BIOLOGICAL_PROCESS",
         "concepts": [concept("GO:0042073")],
         "description": (
-            "IFT trains carry axoneme precursors and membrane proteins to the ciliary tip and back. Kinesin-2 drives "
-            "anterograde trains carrying IFT-B; dynein-2 drives retrograde trains, with IFT-A required for retrograde "
-            "transport and membrane-protein entry."),
+            "IFT trains carry axoneme precursors and membrane proteins to the ciliary tip and back. Kinesin-2 "
+            "(KIF3A/KIF3B motors with the KIFAP3 cargo adaptor) drives anterograde trains carrying IFT-B. Within "
+            "IFT-B, IFT81-IFT74 bind tubulin cargo, and IFT88, IFT52 and IFT172 are scaffolds. Dynein-2 drives "
+            "retrograde trains. IFT-A acts in retrograde transport and, with TULP3, imports membrane proteins; loss "
+            "of IFT-A subunits other than IFT122 has only mild effects on ciliogenesis."),
         "evidence": [PAZOUR, TASCHNER, IFTA, TOROPOVA],
         "annotons": [
-            annoton("ift_b_complex", "IFT-B complex",
-                    complex_sel("IFT-B complex", "Anterograde IFT adaptor complex.",
-                                ["IFT88", "IFT52", "IFT81", "IFT74", "IFT172"], "IFT-B subunit", "GO:0030992"),
-                    "Anterograde train adaptor; IFT81-IFT74 bind tubulin cargo.",
-                    fn_label="IFT cargo adaptor",
+            annoton("ift_b_scaffold", "IFT-B scaffold subunits",
+                    complex_sel("IFT-B complex (scaffold subunits)", "Structural core and peripheral IFT-B subunits.",
+                                ["IFT88", "IFT52", "IFT172"], "IFT-B subunit", "GO:0030992"),
+                    "Backbone of anterograde IFT trains.",
+                    fn_label="IFT-B structural scaffold",
+                    fn_desc="No GO MF term asserted; cargo binding is shown only for IFT81-IFT74.",
                     processes=["GO:0035720", "GO:0060271"], locations=["GO:0097730"], evidence=[PAZOUR, TASCHNER]),
+            annoton("ift81_ift74_tubulin", "IFT81-IFT74 tubulin module",
+                    complex_sel("IFT81-IFT74 tubulin-binding module", "IFT-B subcomplex that binds tubulin cargo.",
+                                ["IFT81", "IFT74"], "tubulin-binding IFT-B subunit", "GO:0030992"),
+                    "Binds tubulin for delivery to the growing axoneme tip.",
+                    fn="GO:0015631", processes=["GO:0035720", "GO:0060271"], locations=["GO:0097730"],
+                    evidence=[TASCHNER]),
             annoton("ift_a_complex", "IFT-A complex",
                     complex_sel("IFT-A complex", "Retrograde IFT and membrane-protein import complex.",
                                 ["IFT140", "IFT122", "WDR35", "TTC21B"], "IFT-A subunit", "GO:0030991"),
-                    "Retrograde train component and adaptor for membrane-protein entry with TULP3.",
-                    fn_label="IFT cargo adaptor",
-                    processes=["GO:0035721"], locations=["GO:0097730"], evidence=[IFTA]),
-            annoton("kinesin2_anterograde", "Heterotrimeric kinesin-2",
-                    complex_sel("kinesin-2 (KIF3A/KIF3B/KAP3)", "Heterotrimeric kinesin II motor.",
-                                ["KIF3A", "KIF3B", "KIFAP3"], "kinesin-2 subunit", "GO:0016939"),
+                    "Retrograde train component and, with TULP3, carrier for membrane-protein entry into cilia.",
+                    fn="GO:0140597", processes=["GO:0035721", "GO:0061512"], locations=["GO:0097730"],
+                    evidence=[IFTA, TULP3]),
+            annoton("kinesin2_anterograde", "Kinesin-2 motor subunits",
+                    complex_sel("kinesin-2 (KIF3A/KIF3B)", "Motor subunits of heterotrimeric kinesin II.",
+                                ["KIF3A", "KIF3B"], "kinesin-2 motor subunit", "GO:0016939"),
                     "Anterograde IFT motor.",
                     fn="GO:0008574", processes=["GO:0035720"], locations=["GO:0005930"]),
+            annoton("kifap3_cargo_adaptor", "KIFAP3 kinesin-2 cargo adaptor", gp("KIFAP3"),
+                    "Non-motor subunit of kinesin II that binds the KIF3A/KIF3B motor and links it to cargo.",
+                    fn="GO:0019894", processes=["GO:0035720"]),
             annoton("dynein2_retrograde", "Dynein-2",
-                    complex_sel("cytoplasmic dynein-2", "Retrograde IFT motor complex.",
-                                ["DYNC2H1", "DYNC2LI1", "DYNC2I1", "DYNC2I2"], "dynein-2 subunit"),
+                    complex_sel("cytoplasmic dynein-2", "Retrograde IFT motor complex; DYNC2H1 is the motor, the "
+                                "intermediate and light intermediate chains contribute.",
+                                ["DYNC2H1", "DYNC2LI1", "DYNC2I1", "DYNC2I2"], "dynein-2 subunit", "GO:0005868"),
                     "Retrograde IFT motor, carried to the tip in an autoinhibited state on anterograde trains.",
                     fn="GO:0008569", processes=["GO:0035721"], locations=["GO:0005930"], evidence=[TOROPOVA]),
         ],
         "connections": [
-            {"source": "kinesin2_anterograde", "target": "ift_b_complex", "connection_type": "PROVIDES_INPUT_FOR",
+            {"source": "kinesin2_anterograde", "target": "ift_b_scaffold", "connection_type": "PROVIDES_INPUT_FOR",
              "description": "Kinesin-2 moves IFT-B trains toward the ciliary tip."},
+            {"source": "kifap3_cargo_adaptor", "target": "kinesin2_anterograde", "connection_type": "PROVIDES_INPUT_FOR",
+             "description": "KIFAP3 links cargo to the kinesin-2 motor."},
             {"source": "dynein2_retrograde", "target": "ift_a_complex", "connection_type": "PROVIDES_INPUT_FOR",
              "description": "Dynein-2 returns IFT-A trains to the base."},
         ],
     }),
-    part(5, "ciliary membrane composition", {
+    part(6, "ciliary membrane composition", {
         "id": "ciliary_membrane_composition",
         "label": "Ciliary membrane identity and protein targeting",
         "module_type": "BIOLOGICAL_PROCESS",
         "concepts": [concept("GO:0061512")],
         "description": (
-            "Mature cilia keep a distinct membrane. ARL13B activates ARL3, which releases lipidated cargo from PDE6D "
-            "and UNC119B inside the cilium; RP2 inactivates ARL3. INPP5E keeps PI(4,5)P2 low in the ciliary membrane, "
-            "and TULP3 couples IFT-A to phosphoinositides to import GPCRs. BBSome-mediated export is modeled in "
-            "modules/bbsome.yaml."),
-        "evidence": [GOTTHARDT, TULP3, INPP5E_EV],
+            "Mature cilia keep a distinct membrane. ARL13B activates ARL3, a GTP-dependent switch whose GTP-bound form "
+            "releases lipidated cargo from PDE6D (farnesylated/prenylated cargo) and UNC119B (myristoylated cargo) "
+            "inside the cilium; RP2 inactivates ARL3. INPP5E keeps PI(4,5)P2 low in the ciliary membrane, and TULP3 "
+            "couples IFT-A to phosphoinositides to import GPCRs. PDE6D also solubilizes farnesylated RAS outside "
+            "cilia. BBSome-mediated export is modeled in modules/bbsome.yaml."),
+        "evidence": [GOTTHARDT, TULP3, INPP5E_EV, ISMAIL, WRIGHT],
         "annotons": [
             annoton("arl13b_arl3_gef", "ARL13B activates ARL3", gp("ARL13B"),
                     "Ciliary membrane GTPase that acts as GEF for ARL3.",
                     fn="GO:0005085", processes=["GO:0061512"], locations=["GO:0060170"], evidence=[GOTTHARDT]),
             annoton("arl3_cargo_release", "ARL3 releases lipidated cargo", gp("ARL3"),
-                    "ARL3-GTP displaces lipidated cargo from PDE6D and UNC119B inside the cilium.",
-                    fn="GO:0003924", processes=["GO:0061512"], evidence=[GOTTHARDT]),
-            annoton("lipid_cargo_carriers", "Lipidated cargo carriers",
-                    complex_sel("lipid-binding cargo carriers", "Solubilizing carriers for prenylated and myristoylated cargo.",
-                                ["PDE6D", "UNC119B"], "lipidated-cargo carrier"),
-                    "Carry lipidated proteins to the cilium for ARL3-dependent release.",
-                    fn_label="lipidated protein carrier", processes=["GO:0061512"], evidence=[GOTTHARDT]),
+                    "ARL3-GTP binds PDE6D and UNC119B and displaces their lipidated cargo inside the cilium; its intrinsic "
+                    "GTP hydrolysis is negligible without RP2.",
+                    fn="GO:0003925", processes=["GO:0061512"], evidence=[GOTTHARDT]),
+            annoton("pde6d_prenyl_carrier", "PDE6D carries farnesylated cargo", gp("PDE6D"),
+                    "GDI-like carrier for farnesylated and prenylated cargo such as INPP5E and PDE6 subunits.",
+                    fn="GO:0001918", processes=["GO:0061512"], evidence=[ISMAIL]),
+            annoton("unc119b_myristoyl_carrier", "UNC119B carries myristoylated cargo", gp("UNC119B"),
+                    "Binds the myristoyl group of cargo such as NPHP3 and delivers it to the ciliary membrane.",
+                    fn="GO:0008289", processes=["GO:1903441"], evidence=[WRIGHT]),
             annoton("rp2_arl3_gap", "RP2 inactivates ARL3", gp("RP2"),
-                    "GTPase-activating protein for ARL3.", fn="GO:0005096", processes=["GO:0061512"]),
+                    "GTPase-activating protein for ARL3; a regulator, not a cargo carrier.",
+                    fn="GO:0005096", processes=["GO:1903441"], evidence=[WRIGHT]),
             annoton("inpp5e_pip2_hydrolysis", "INPP5E sets ciliary phosphoinositides", gp("INPP5E"),
-                    "Hydrolyzes PI(4,5)P2 in the ciliary membrane.",
+                    "Hydrolyzes PI(4,5)P2 (and PI(3,4,5)P3) in the ciliary membrane.",
                     fn="GO:0004439", locations=["GO:0060170"], evidence=[INPP5E_EV]),
             annoton("tulp3_gpcr_import", "TULP3 links IFT-A to membrane cargo", gp("TULP3"),
                     "Adaptor bridging IFT-A and phosphoinositides for GPCR import.",
-                    fn_label="IFT-A membrane cargo adaptor", processes=["GO:0061512"], evidence=[TULP3]),
+                    fn="GO:0030674", processes=["GO:0061512"], evidence=[TULP3]),
         ],
         "connections": [
             {"source": "arl13b_arl3_gef", "target": "arl3_cargo_release", "connection_type": "POSITIVELY_REGULATES",
              "description": "ARL13B loads ARL3 with GTP."},
             {"source": "rp2_arl3_gap", "target": "arl3_cargo_release", "connection_type": "NEGATIVELY_REGULATES",
              "description": "RP2 stimulates ARL3 GTP hydrolysis."},
-            {"source": "lipid_cargo_carriers", "target": "arl3_cargo_release", "connection_type": "PROVIDES_INPUT_FOR",
-             "description": "Carrier-bound cargo is released by ARL3-GTP."},
+            {"source": "pde6d_prenyl_carrier", "target": "arl3_cargo_release", "connection_type": "PROVIDES_INPUT_FOR",
+             "description": "PDE6D-bound cargo is released by ARL3-GTP."},
+            {"source": "unc119b_myristoyl_carrier", "target": "arl3_cargo_release", "connection_type": "PROVIDES_INPUT_FOR",
+             "description": "UNC119B-bound cargo is released by ARL3-GTP."},
         ],
     }),
-    part(6, "length control", {
+    part(7, "length control", {
         "id": "cilium_length_control",
         "label": "Cilium length control",
         "module_type": "REGULATORY_STEP",
-        "concepts": [concept("GO:1902017")],
+        "concepts": [concept("GO:1902856")],
         "description": (
             "Steady-state length reflects the balance of assembly and turnover at the tip. The RCK kinases CILK1 and "
-            "MAK limit length by regulating IFT turnaround; KIF7 organizes the ciliary tip. GO has no specific "
-            "cilium-length term, so the regulation-of-assembly term is used."),
-        "evidence": [ICK, ICK_MOK],
+            "MAK limit length by regulating IFT turnaround; CILK1 is the better-supported length kinase in most cells, "
+            "while MAK evidence comes mainly from the photoreceptor connecting cilium. KIF7, a non-motile kinesin-4, "
+            "binds growing microtubule plus ends and slows their growth at the tip. GO has no cilium-length term, so "
+            "negative regulation of non-motile cilium assembly is used."),
+        "evidence": [ICK, ICK_MOK, MAK_RET, KIF7_TIP],
         "annotons": [
             annoton("rck_kinases", "RCK kinases restrict cilium length",
                     complex_sel("RCK kinases", "Ciliary length-control kinases (not a stable complex).",
                                 ["CILK1", "MAK"], "length-control kinase"),
                     "Phosphorylate kinesin-2 and IFT components to control IFT turnaround and length.",
-                    fn="GO:0004674", processes=["GO:1902017"], locations=["GO:0097542"], evidence=[ICK, ICK_MOK]),
-            annoton("kif7_tip_organizer", "KIF7 ciliary tip organizer", gp("KIF7"),
-                    "Kinesin that organizes the ciliary tip compartment and limits axoneme length.",
-                    fn_label="ciliary tip organization", processes=["GO:1902017"], locations=["GO:0097542"]),
+                    fn="GO:0004674", processes=["GO:1902856"], locations=["GO:0097542"],
+                    evidence=[ICK, ICK_MOK, MAK_RET]),
+            annoton("kif7_tip_organizer", "KIF7 limits microtubule growth at the tip", gp("KIF7"),
+                    "Non-motile kinesin-4 that binds microtubule plus ends at the ciliary tip and slows their growth; "
+                    "also a core Hedgehog-pathway regulator.",
+                    fn="GO:0051010", processes=["GO:0031115", "GO:1902856"], locations=["GO:0097542"],
+                    evidence=[KIF7_TIP]),
         ],
     }),
-    part(7, "cilium disassembly", {
+    part(8, "cilium disassembly", {
         "id": "cilium_disassembly",
         "label": "Cilium disassembly before cell-cycle re-entry",
         "module_type": "BIOLOGICAL_PROCESS",
         "concepts": [concept("GO:0061523")],
         "description": (
             "On cell-cycle re-entry the cilium is resorbed so the centrioles can act at the spindle poles. NEDD9 and "
-            "Pitchfork activate Aurora A at the basal body; Aurora A activates the tubulin deacetylase HDAC6. PLK1 "
-            "activates KIF2A, which depolymerizes microtubules at the base. Phosphorylated Tctex-1 at the transition "
-            "zone also promotes resorption."),
-        "evidence": [PUGACHEVA, MIYAMOTO, KINZEL, TCTEX],
+            "Pitchfork (CIMAP3) activate Aurora A at the basal body; Aurora A activates the tubulin deacetylase "
+            "HDAC6. PLK1 activates KIF2A, which depolymerizes microtubules at the base and is held back by TTBK2 "
+            "while the cilium grows. Phosphorylated Tctex-1 (DYNLT1) at the transition zone promotes resorption "
+            "independently of dynein. AURKA, PLK1, KIF2A and NEDD9 are pleiotropic: their dominant roles are mitotic "
+            "or adhesion-related, and ciliary disassembly is a secondary function."),
+        "evidence": [PUGACHEVA, MIYAMOTO, KINZEL, TCTEX, HEF1_AURA, TTBK2_KIF2A],
         "annotons": [
             annoton("aurka_disassembly_kinase", "Aurora A drives disassembly", gp("AURKA"),
                     "Basal body kinase activated by NEDD9 and Pitchfork; phosphorylates HDAC6.",
                     fn="GO:0004674", processes=["GO:0061523"], locations=["GO:0036064"], evidence=[PUGACHEVA]),
-            annoton("aurka_activators", "Aurora A activators",
-                    complex_sel("Aurora A activators", "Basal-body activators of Aurora A (not a stable complex).",
-                                ["NEDD9", "CIMAP3"], "Aurora A activator"),
-                    "Scaffold and activator proteins that switch on Aurora A at the basal body.",
-                    fn_label="kinase activator", processes=["GO:0061523"], evidence=[PUGACHEVA, KINZEL]),
+            annoton("nedd9_aurka_activation", "NEDD9 activates Aurora A", gp("NEDD9"),
+                    "Cas-family scaffold that activates Aurora A at the basal body.",
+                    fn="GO:0043539", processes=["GO:0061523"], evidence=[PUGACHEVA, HEF1_AURA]),
+            annoton("pitchfork_aurka_activation", "Pitchfork activates Aurora A", gp("CIMAP3"),
+                    "Activates Aurora A at the basal body to drive cilium disassembly.",
+                    fn="GO:0030295", processes=["GO:0061523"], evidence=[KINZEL]),
             annoton("hdac6_deacetylation", "HDAC6 deacetylates axonemal tubulin", gp("HDAC6"),
                     "Tubulin deacetylase activated by Aurora A.",
                     fn="GO:0042903", processes=["GO:0061523"], evidence=[PUGACHEVA]),
@@ -433,18 +543,21 @@ parts = [
                     "Kinase that activates KIF2A at the basal body.",
                     fn="GO:0004674", processes=["GO:0061523"], evidence=[MIYAMOTO]),
             annoton("kif2a_depolymerization", "KIF2A depolymerizes microtubules", gp("KIF2A"),
-                    "Kinesin-13 microtubule depolymerase acting at the base of the cilium.",
-                    fn_label="microtubule depolymerase",
-                    fn_desc="No GO MF term for microtubule depolymerase activity; process asserted instead.",
-                    processes=["GO:0007019", "GO:0061523"], locations=["GO:0036064"], evidence=[MIYAMOTO]),
+                    "Kinesin-13 ATP-dependent microtubule depolymerase acting at the mother centriole.",
+                    fn_label="ATP-dependent microtubule depolymerase activity",
+                    fn_desc="No GO MF term exists; proposed as a new term in the KIF2A review.",
+                    processes=["GO:0007019", "GO:0061523"], locations=["GO:0036064"],
+                    evidence=[MIYAMOTO, TTBK2_KIF2A]),
             annoton("tctex1_resorption", "Phosphorylated Tctex-1 promotes resorption", gp("DYNLT1"),
-                    "Phospho-Tctex-1 at the transition zone promotes ciliary resorption.",
+                    "Phospho-Tctex-1 at the transition zone promotes ciliary resorption, independently of dynein.",
                     fn_label="resorption promoter", processes=["GO:0061523"], locations=["GO:0035869"],
                     evidence=[TCTEX]),
         ],
         "connections": [
-            {"source": "aurka_activators", "target": "aurka_disassembly_kinase", "connection_type": "POSITIVELY_REGULATES",
-             "description": "NEDD9 and Pitchfork activate Aurora A."},
+            {"source": "nedd9_aurka_activation", "target": "aurka_disassembly_kinase", "connection_type": "POSITIVELY_REGULATES",
+             "description": "NEDD9 activates Aurora A."},
+            {"source": "pitchfork_aurka_activation", "target": "aurka_disassembly_kinase", "connection_type": "POSITIVELY_REGULATES",
+             "description": "Pitchfork activates Aurora A."},
             {"source": "aurka_disassembly_kinase", "target": "hdac6_deacetylation", "connection_type": "POSITIVELY_REGULATES",
              "description": "Aurora A phosphorylates and activates HDAC6."},
             {"source": "plk1_kinase", "target": "kif2a_depolymerization", "connection_type": "POSITIVELY_REGULATES",
@@ -471,6 +584,7 @@ doc = {
         TANOS, GOETZ, LU, GARCIA, TOROPOVA, PUGACHEVA, MIYAMOTO,
     ],
     "notes": (
+        "Revised 2026-10-03 after gene reviews of all 60 members (genes/human/<GENE>/). "
         "Draft built in the HUMAN_PROTEIN_ATLAS project. Members and UniProt accessions come from "
         "projects/HUMAN_PROTEIN_ATLAS/cilium_life_cycle/candidate_members.tsv (UniProt REST). Several roles have no "
         "GO molecular-function term (distal appendage scaffold, transition zone barrier, IFT adaptor, microtubule "
@@ -492,6 +606,8 @@ doc = {
         "parts": parts,
         "connections": [
             {"source": "mother_centriole_licensing", "target": "ciliary_vesicle_formation", "connection_type": "PRECEDES"},
+            {"source": "ciliary_vesicle_formation", "target": "ciliary_membrane_extension", "connection_type": "PRECEDES",
+             "description": "RAB8 is activated only after the ciliary vesicle has formed."},
             {"source": "ciliary_vesicle_formation", "target": "transition_zone_assembly", "connection_type": "PRECEDES"},
             {"source": "transition_zone_assembly", "target": "axoneme_extension_ift", "connection_type": "PRECEDES"},
             {"source": "axoneme_extension_ift", "target": "ciliary_membrane_composition", "connection_type": "PRECEDES"},
@@ -503,11 +619,13 @@ doc = {
     },
     "knowledge_gaps": [
         {"gap_statement": "GO has no term for regulation of cilium length or for a cytoplasmic dynein-2 complex.",
-         "boundary": "Length control is modeled with regulation of cilium assembly; dynein-2 is located to the axoneme.",
+         "boundary": ("Length control is modeled with negative regulation of non-motile cilium assembly; dynein-2 uses "
+                      "the generic cytoplasmic dynein complex term."),
          "gap_kind": ["ONTOLOGY"], "status": "OPEN",
          "significance": "Length-control kinases and the retrograde motor cannot be annotated precisely.",
          "resolution": "Propose 'regulation of cilium length' and 'cytoplasmic dynein-2 complex' to GO."},
-        {"gap_statement": "Distal appendage, transition zone and IFT adaptor proteins lack a molecular-function term.",
+        {"gap_statement": ("Distal appendage, transition zone, IFT-B scaffold and microtubule depolymerase (KIF2A, "
+                           "KIF24) roles lack a molecular-function term."),
          "boundary": "These annotons carry preferred_term functions without GO ids.",
          "gap_kind": ["ONTOLOGY", "BIOLOGY"], "status": "OPEN",
          "significance": "Most structural ciliogenesis proteins are MF-dark.",

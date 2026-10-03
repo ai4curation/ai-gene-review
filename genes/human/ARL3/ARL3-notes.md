@@ -3,7 +3,12 @@
 ADP-ribosylation factor-like protein 3, human. Small Arf-family GTPase; cargo-release factor for lipidated ciliary proteins.
 
 ## Deep research status
-Falcon deep research FAILED: the 600 s default timed out (the perplexity-lite fallback is unavailable in this environment), and the rerun with --timeout 2400 also timed out ("Provider falcon timed out after 2400s"). The review was done directly from the cached publications and the UniProt record. No deep-research file exists for ARL3.
+The first falcon run timed out at the 600 s default (the perplexity-lite fallback is unavailable). The rerun with --timeout 2400 was reported as timed out, but the falcon job eventually completed and wrote `ARL3-deep-research-falcon.md` at 22:29, after the initial review. I then read it and checked it against the review. It changes no actions:
+- It supports the switch/release-factor framing (G protein activity rather than GTPase activity as the core MF): ["The best-supported functional annotation remains: **a GTP-dependent, spatially regulated allosteric release factor** ... with ARL13B/BART-dependent activation and RP2-dependent termination"] and ["ARL3-GTP binds these carriers allosterically and promotes cargo release at the cilium; it is neither the lipid-modifying enzyme nor the cargo’s membrane transporter."]
+- It supports removing the NOT cilium row: ["ARL3 is a soluble, cilia-associated protein that can occur in the cell body as well as the ciliary compartment."]
+- It supports marking small GTPase-mediated signal transduction as over-annotated: ["Ciliary signaling is chiefly a consequence of cargo composition, not a demonstrated direct receptor pathway for ARL3."]
+- Correction: early retina-wide Arl3 deletion in mouse prevents connecting cilium and outer segment formation (Hanke-Gogokhia 2016, via the deep research). The cilium assembly reasons were reworded, since cilia are not universally independent of ARL3; both rows stay KEEP_AS_NON_CORE.
+- New items not annotated: BART/ARL2BP acts as a co-GEF with ARL13B (ElMaghloob 2021). ARL3-GTP displaces DNAAF9/Shulin from outer dynein arms (2024 preprint, 2025 NSMB). Neither is cached here, so no new annotations were made.
 
 ## Summary of function
 - Nucleotide binding with unusual biochemistry. [PMID:8034651 "Purified recombinant human Arl3 was shown to bind guanine nucleotides but lacks ARF activity and intrinsic or ARF GTPase-activating protein-stimulated GTPase activity."]
@@ -16,7 +21,7 @@ Falcon deep research FAILED: the 600 s default timed out (the perplexity-lite fa
 - Core MF: G protein activity (GO:0003925), which covers small GTPase switches. GTPase activity (IEA) is accepted but is RP2-dependent. GTP-dependent protein binding (GO:0030742; verified in OLS) is used as the replacement for effector protein-binding rows (PDE6D, UNC119, ARL2BP). GTPase activating protein binding (GO:0032794) replaces the RP2 row. TBL1X and Q5TEA3 rows REMOVE.
 - NOT cilium (IDA, PMID:17646400) REMOVE. It is contradicted by endogenous (PMID:16525022, PMID:12417528), HPA and functional (PMID:30269812) evidence, and the cached text mentions Arl3 only by analogy.
 - Small GTPase-mediated signal transduction (IDA, PMID:22085962): MARK_AS_OVER_ANNOTATED. The paper describes a protein-targeting GTPase cycle, not signal transduction.
-- Cilium assembly (IBA, IMP zebrafish): KEEP_AS_NON_CORE. Mammalian cilia form without ARL3; the defect is in membrane composition.
+- Cilium assembly (IBA, IMP zebrafish): KEEP_AS_NON_CORE. Patient fibroblasts form normal cilia, but early Arl3 deletion blocks photoreceptor ciliogenesis in mouse (per the deep research); the core defect is in membrane composition.
 - Cytokinesis, midbody, spindle, Golgi, nucleus and microtubule binding: KEEP_AS_NON_CORE.
 
 ## HPA cilium atlas vs module role

@@ -146,7 +146,7 @@ def main():
               "hpa_gene_reliability", "hpa_location", "hpa_location_grade",
               "hpa_status", "hpa_main", "file"]
     with (out_dir / "hpa_review_join.tsv").open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t", extrasaction="ignore")
+        w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t", extrasaction="ignore", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 
@@ -163,7 +163,7 @@ def main():
             work.append({**r, "tier": ",".join(tiers)})
     work.sort(key=lambda r: (r["tier"], r["gene"], r["go_id"]))
     with (out_dir / "hpa_worklist.tsv").open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["tier"] + fields, delimiter="\t",
+        w = csv.DictWriter(fh, fieldnames=["tier"] + fields, delimiter="\t", lineterminator="\n",
                            extrasaction="ignore")
         w.writeheader()
         w.writerows(work)
