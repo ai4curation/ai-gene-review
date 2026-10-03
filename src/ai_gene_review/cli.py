@@ -4300,8 +4300,9 @@ def refresh_panther_members(
         bool,
         typer.Option(
             "--no-uniprot-fallback",
-            help="Skip the UniProt lookup for accessions PANTHER's per-organism "
-            "files do not cover (offline / faster, but lower coverage).",
+            help="Skip the UniProt lookup, both for accessions PANTHER's "
+            "per-organism files do not cover and for recording where UniProt "
+            "disagrees with them (offline / faster, but lower coverage).",
         ),
     ] = False,
     rebuild: Annotated[
@@ -4335,8 +4336,10 @@ def refresh_panther_members(
         fetch_sequence_classification,
         incremental_member_index,
         load_member_index,
+        load_member_index_alternates,
         load_member_index_gaps,
         member_index_path,
+        panther_assignments_conflict,
         write_member_index,
     )
     import yaml
@@ -4397,6 +4400,7 @@ def refresh_panther_members(
     # on every run (that re-parse of ~300 MB of classifications is what made an
     # otherwise no-op refresh take a minute); --rebuild re-checks them.
     known_absent = set() if rebuild else load_member_index_gaps(members_path).absent
+    alternates = {} if rebuild else load_member_index_alternates(members_path)
     counts = {"files": 0, "uniprot": 0, "classifications": 0}
 
     def resolve(needed: set[str]) -> dict[str, str]:
@@ -4412,14 +4416,18 @@ def refresh_panther_members(
         found = build_member_index(needed, paths)
         counts["files"] = len(found)
         if not no_uniprot_fallback:
-            remaining = needed - set(found)
-            if remaining:
-                typer.echo(
-                    f"resolving {len(remaining)} remaining accession(s) via UniProt..."
-                )
-                from_uniprot = fetch_panther_from_uniprot(remaining)
-                counts["uniprot"] = len(from_uniprot)
-                found.update(from_uniprot)
+            # Ask UniProt about every newly needed accession, not only the ones the
+            # files miss: for some proteins the two sources disagree, and neither
+            # is privileged, so the UniProt value is recorded as an alternate that
+            # membership checks also accept (reporting the disagreement).
+            typer.echo(f"checking {len(needed)} accession(s) against UniProt...")
+            from_uniprot = fetch_panther_from_uniprot(needed)
+            for accession, family_sf in from_uniprot.items():
+                if accession not in found:
+                    found[accession] = family_sf
+                    counts["uniprot"] += 1
+                elif panther_assignments_conflict(found[accession], family_sf):
+                    alternates[accession] = family_sf
         return found
 
     index = incremental_member_index(existing, accessions, resolve, known_absent)
@@ -4429,6 +4437,7 @@ def refresh_panther_members(
         members_path,
         unresolved,
         consulted_uniprot=not no_uniprot_fallback,
+        alternates={a: f for a, f in alternates.items() if a in index},
     )
     mode = "rebuilt" if rebuild else f"kept {len(existing)} existing row(s)"
     typer.echo(
@@ -4436,7 +4445,9 @@ def refresh_panther_members(
         f"{len(accessions)} cited accessions resolved; added "
         f"{counts['files']} from {counts['classifications']} organism "
         f"classification(s) and {counts['uniprot']} from UniProt; "
-        f"{len(unresolved)} unresolved, recorded in the file."
+        f"{len(unresolved)} unresolved, recorded in the file; "
+        f"{len([a for a in alternates if a in index])} where PANTHER's files and "
+        "UniProt disagree (both accepted, reported as warnings)."
     )
 
 
@@ -4575,7 +4586,10 @@ def fix_panther_labels(
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
     from ai_gene_review.etl.panther_families import member_index_path
 
+    from ai_gene_review.etl.panther_families import load_member_index_alternates
+
     member_index = load_member_index(member_index_path(repo_root))
+    member_alternates = load_member_index_alternates(member_index_path(repo_root))
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -4589,7 +4603,9 @@ def fix_panther_labels(
         skip: set[str] = set()
         corroborated: set[str] = set()
         for use in iter_family_member_uses(doc):
-            errors, _ = validate_family_members([use], member_index, paint_index)
+            errors, _ = validate_family_members(
+                [use], member_index, paint_index, alternates=member_alternates
+            )
             if errors:
                 skip.update(use.declared_family_curies)
             elif any(a in member_index for a in use.representative_accessions):

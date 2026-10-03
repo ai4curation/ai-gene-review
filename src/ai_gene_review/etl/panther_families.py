@@ -313,7 +313,11 @@ DEFAULT_ORGANISMS: Tuple[str, ...] = (
     "x_laevis",
 )
 
-MEMBER_INDEX_HEADER = ["uniprot_accession", "panther_family_sf"]
+MEMBER_INDEX_HEADER = [
+    "uniprot_accession",
+    "panther_family_sf",
+    "uniprot_panther_family_sf",
+]
 
 # The member index is a derived build artifact, not committed source: every row
 # can be rebuilt from PANTHER's release-pinned sequence classifications plus the
@@ -360,8 +364,9 @@ def render_member_index(
     index: Dict[str, str],
     unresolved: Optional[Set[str]] = None,
     consulted_uniprot: bool = True,
+    alternates: Optional[Dict[str, str]] = None,
 ) -> Iterator[str]:
-    """Render a member index as a sorted two-column TSV.
+    """Render a member index as a sorted TSV.
 
     ``unresolved`` accessions are recorded as a trailing comment block. Without
     it the file holds only successes, so it cannot distinguish "asked PANTHER
@@ -370,18 +375,18 @@ def render_member_index(
 
     ``consulted_uniprot`` must say whether the UniProt fallback actually ran.
     Recording "not found in UniProt" when ``--no-uniprot-fallback`` skipped that
-    lookup writes a false claim into a committed artifact, which is worse than
+    lookup writes a false claim into the artifact, which is worse than
     the omission this block replaced: a reader can recover from silence, not
     from a confident wrong statement.
 
     >>> print("\\n".join(render_member_index({"P2": "PTHR2", "P1": "PTHR1:SF3"})))
-    uniprot_accession	panther_family_sf
+    uniprot_accession	panther_family_sf	uniprot_panther_family_sf
     P1	PTHR1:SF3
     P2	PTHR2
 
     >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}):
     ...     print(line)
-    uniprot_accession	panther_family_sf
+    uniprot_accession	panther_family_sf	uniprot_panther_family_sf
     P1	PTHR1
     <BLANKLINE>
     # Accessions cited in modules/ with no PANTHER family in PANTHER's
@@ -396,7 +401,7 @@ def render_member_index(
 
     >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, False):
     ...     print(line)
-    uniprot_accession	panther_family_sf
+    uniprot_accession	panther_family_sf	uniprot_panther_family_sf
     P1	PTHR1
     <BLANKLINE>
     # Accessions cited in modules/ with no PANTHER family in PANTHER's
@@ -408,8 +413,13 @@ def render_member_index(
     consumer read a skipped lookup as a completed one.
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
+    alternates = alternates or {}
     for accession in sorted(index):
-        yield f"{accession}\t{index[accession]}"
+        alternate = alternates.get(accession)
+        if alternate and alternate != index[accession]:
+            yield f"{accession}\t{index[accession]}\t{alternate}"
+        else:
+            yield f"{accession}\t{index[accession]}"
     if unresolved:
         yield ""
         yield "# Accessions cited in modules/ with no PANTHER family in PANTHER's"
@@ -474,14 +484,73 @@ def write_member_index(
     out_path: Path,
     unresolved: Optional[Set[str]] = None,
     consulted_uniprot: bool = True,
+    alternates: Optional[Dict[str, str]] = None,
 ) -> Path:
     """Write the pruned accession -> family index, returning the path written."""
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
-        "\n".join(render_member_index(index, unresolved, consulted_uniprot)) + "\n"
+        "\n".join(render_member_index(index, unresolved, consulted_uniprot, alternates))
+        + "\n"
     )
     return out_path
+
+
+def panther_assignments_conflict(first: str, second: str) -> bool:
+    """Whether two PANTHER assignments for one protein actually disagree.
+
+    A bare family is compatible with any of its own subfamilies: one source simply
+    reports less detail. Only different families, or different subfamilies of one
+    family, are a disagreement worth recording.
+
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR1")
+    False
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR1:SF2")
+    False
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR1:SF3")
+    True
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR9")
+    True
+    """
+    if first == second:
+        return False
+    first_base, _, first_sf = first.partition(":")
+    second_base, _, second_sf = second.partition(":")
+    if first_base != second_base:
+        return True
+    return bool(first_sf and second_sf)
+
+
+def load_member_index_alternates(path: Path) -> Dict[str, str]:
+    """Load UniProt's family for accessions where it disagrees with PANTHER's files.
+
+    The member index's primary family comes from PANTHER's release-pinned sequence
+    classification files, falling back to UniProt's ``xref_panther`` only when the
+    files do not cover a protein. For some proteins both sources answer and they
+    disagree; neither is privileged, so the UniProt value is kept as a third column
+    and membership checks accept either, reporting the disagreement instead of
+    failing on it.
+
+    >>> import tempfile, pathlib
+    >>> d = pathlib.Path(tempfile.mkdtemp())
+    >>> _ = write_member_index({"P1": "PTHR1:SF1", "P2": "PTHR2"}, d / "m.tsv",
+    ...                        alternates={"P1": "PTHR9:SF3", "P2": "PTHR2"})
+    >>> load_member_index(d / "m.tsv")
+    {'P1': 'PTHR1:SF1', 'P2': 'PTHR2'}
+    >>> load_member_index_alternates(d / "m.tsv")
+    {'P1': 'PTHR9:SF3'}
+    """
+    path = Path(path)
+    if not path.exists():
+        return {}
+    alternates: Dict[str, str] = {}
+    for line_number, line in enumerate(path.read_text().splitlines()):
+        if line_number == 0 or not line.strip() or line.startswith("#"):
+            continue
+        columns = [c.strip() for c in line.split("\t")]
+        if len(columns) >= 3 and columns[2] and columns[2] != columns[1]:
+            alternates[columns[0]] = columns[2]
+    return alternates
 
 
 class MemberIndexConflict(ValueError):
@@ -522,10 +591,10 @@ def load_member_index(path: Path) -> Dict[str, str]:
     for line_number, line in enumerate(path.read_text().splitlines()):
         if line_number == 0 or not line.strip() or line.startswith("#"):
             continue
-        accession, _, family_sf = line.partition("\t")
-        accession, family_sf = accession.strip(), family_sf.strip()
-        if not family_sf:
+        columns = [c.strip() for c in line.split("\t")]
+        if len(columns) < 2 or not columns[1]:
             continue
+        accession, family_sf = columns[0], columns[1]
         previous = index.get(accession)
         if previous is not None and previous != family_sf:
             raise MemberIndexConflict(

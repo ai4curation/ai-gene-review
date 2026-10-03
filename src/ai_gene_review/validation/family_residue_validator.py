@@ -292,7 +292,7 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
 @lru_cache(maxsize=None)
 def _panther_index(
     panther_dir: Path,
-) -> "tuple[dict[str, str], dict[str, str], MemberIndexGaps]":
+) -> "tuple[dict[str, str], dict[str, str], MemberIndexGaps, dict[str, str]]":
     """Load the PANTHER artifacts once per directory.
 
     Reuses ``etl.panther_families`` rather than reimplementing: those loaders are
@@ -307,6 +307,7 @@ def _panther_index(
     """
     from ai_gene_review.etl.panther_families import (
         load_member_index,
+        load_member_index_alternates,
         load_member_index_gaps,
         load_obo_names,
         member_index_path,
@@ -319,6 +320,7 @@ def _panther_index(
         load_obo_names(panther_dir / "panther.obo"),
         load_member_index(members),
         load_member_index_gaps(members),
+        load_member_index_alternates(members),
     )
 
 
@@ -372,6 +374,7 @@ def check_panther_ids(
     labels: dict[str, str],
     members: dict[str, str],
     gaps: "MemberIndexGaps | None" = None,
+    alternates: "dict[str, str] | None" = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
 
@@ -384,8 +387,11 @@ def check_panther_ids(
 
     Membership is checked where ``panther-members.tsv`` covers the protein. Coverage is
     partial (it indexes cited proteins), so an absent accession is UNRESOLVED rather than
-    a failure, matching the convention documented in CLAUDE.md.
+    a failure, matching the convention documented in CLAUDE.md. Where PANTHER's
+    classification files and UniProt disagree (``alternates``), a member matching
+    either is accepted, and the disagreement is reported as UNRESOLVED.
     """
+    alternates = alternates or {}
     family = review.get("family_id", "?")
     results: list[ResidueCheck] = []
 
@@ -486,6 +492,16 @@ def check_panther_ids(
                     ResidueCheck(
                         family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
                         f"membership not checked: {detail}",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+            elif members[acc] != bare and alternates.get(acc) == bare:
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
+                        f"sources disagree: PANTHER's classification files put it in "
+                        f"{members[acc]}, UniProt's cross-reference in the declared "
+                        f"{bare}; both are accepted",
                         kind="PANTHER_MEMBERSHIP",
                     )
                 )
@@ -789,13 +805,13 @@ def validate_family_review(
     review = yaml.safe_load(path.read_text())
     cache = SequenceCache(cache_dir)
     paint_index = load_paint_index(panther_dir)
-    labels, members, gaps = _panther_index(panther_dir)
+    labels, members, gaps, alternates = _panther_index(panther_dir)
     return (
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
         + check_term_assessment_site_refs(review)
-        + check_panther_ids(review, labels, members, gaps)
+        + check_panther_ids(review, labels, members, gaps, alternates)
     )
 
 

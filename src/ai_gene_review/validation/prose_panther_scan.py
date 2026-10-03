@@ -55,6 +55,7 @@ import yaml
 from ai_gene_review.etl.panther_families import (
     fetch_panther_from_uniprot,
     load_member_index,
+    load_member_index_alternates,
     load_member_index_gaps,
     member_index_path,
 )
@@ -166,12 +167,16 @@ def main(argv: List[str] | None = None) -> int:
     # rerunning the refresh is a real remedy -- which is why it routes with
     # "never seen" rather than with "absent".
     gaps = load_member_index_gaps(members_path)
+    # UniProt's family where it disagrees with PANTHER's own files; a prose claim
+    # matching either source is not a contradiction.
+    alternates = load_member_index_alternates(members_path)
 
     contradicted = [
         c
         for c in claims
         if c.accession in index
         and index[c.accession].split(":")[0] != c.claimed_family
+        and alternates.get(c.accession, "").split(":")[0] != c.claimed_family
     ]
     # Every claim lands in exactly one bucket. `absent` needs the not-in-index
     # guard because --online can resolve an accession the file recorded as

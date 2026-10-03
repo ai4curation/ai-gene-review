@@ -20,7 +20,9 @@ from ai_gene_review.etl.panther_families import (
     build_member_index,
     incremental_member_index,
     load_member_index,
+    load_member_index_alternates,
     load_member_index_gaps,
+    panther_assignments_conflict,
     parse_hmm_classifications,
     parse_sequence_classification,
     render_obo,
@@ -356,3 +358,34 @@ def test_incremental_refresh_keeps_existing_rows():
     assert incremental_member_index({"P1": "PTHR_OLD"}, {"P1"}, resolve) == {"P1": "PTHR_OLD"}
     assert len(asked) == 1, "nothing missing, so nothing to resolve"
 
+
+
+def test_member_index_round_trips_alternates(tmp_path):
+    """UniProt's disagreeing family is a third column the primary loader ignores."""
+    index = {"O14521": "PTHR13337:SF6", "P00001": "PTHR1"}
+    path = write_member_index(
+        index, tmp_path / "members.tsv", alternates={"O14521": "PTHR11375:SF2"}
+    )
+
+    assert load_member_index(path) == index
+    assert load_member_index_alternates(path) == {"O14521": "PTHR11375:SF2"}
+    assert "O14521\tPTHR13337:SF6\tPTHR11375:SF2" in path.read_text()
+
+
+def test_load_member_index_alternates_reads_two_column_files(tmp_path):
+    path = write_member_index({"O14521": "PTHR13337:SF6"}, tmp_path / "members.tsv")
+    assert load_member_index_alternates(path) == {}
+    assert load_member_index_alternates(tmp_path / "missing.tsv") == {}
+
+
+@pytest.mark.parametrize(
+    "first, second, expected",
+    [
+        ("PTHR1:SF2", "PTHR1", False),
+        ("PTHR1", "PTHR1:SF2", False),
+        ("PTHR1:SF2", "PTHR1:SF3", True),
+        ("PTHR1", "PTHR9", True),
+    ],
+)
+def test_panther_assignments_conflict(first, second, expected):
+    assert panther_assignments_conflict(first, second) is expected

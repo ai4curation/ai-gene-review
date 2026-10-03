@@ -358,7 +358,10 @@ PANTHER's own HMM classifications. Two rules follow:
   / `just validate-families` build it automatically (incrementally, from release-pinned
   PANTHER classifications plus UniProt). Do not commit it or cite it as a `file:` source;
   cite PANTHER's classification files or UniProt instead. Accessions the index cannot
-  resolve only warn. `just refresh-panther-members --rebuild` regenerates it from scratch.
+  resolve only warn. Where PANTHER's own files and UniProt's PANTHER cross-reference
+  disagree (different families, or different subfamilies), the index keeps both and a member
+  matching either passes with a warning; do not "fix" such a family id to the other source
+  without checking which placement is right. `just refresh-panther-members --rebuild` regenerates it from scratch.
 - **If a label mismatch names a *different protein*, fix the ID, not the label.** A
   wildly-wrong label is weak evidence of a typo and strong evidence that the id was
   guessed. An id invented at random is still a hallucination when it happens to resolve

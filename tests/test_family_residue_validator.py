@@ -780,3 +780,25 @@ def test_own_family_subfamily_in_a_subfamily_slot_is_accepted():
         r for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS)
         if r.outcome is Outcome.FAIL
     ]
+
+
+def test_member_matching_only_uniprot_family_is_unresolved_not_failed():
+    """PANTHER's files and UniProt can disagree; either is accepted, with a report."""
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+
+    review = _panther_review(members=("P00002",))
+    failing = [
+        r for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS)
+        if r.kind == "PANTHER_MEMBERSHIP"
+    ]
+    assert [r.outcome for r in failing] == [Outcome.FAIL]
+
+    results = [
+        r for r in check_panther_ids(
+            review, PANTHER_LABELS, PANTHER_MEMBERS,
+            alternates={"P00002": "PTHR00001:SF1"},
+        )
+        if r.kind == "PANTHER_MEMBERSHIP"
+    ]
+    assert [r.outcome for r in results] == [Outcome.UNRESOLVED]
+    assert "sources disagree" in results[0].message
