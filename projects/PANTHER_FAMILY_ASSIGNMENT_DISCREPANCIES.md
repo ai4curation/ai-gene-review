@@ -31,12 +31,17 @@ modules.
 - **Orthology claims.** Family ids are used as evidence of orthology between
   representative members. Two sources that disagree make that evidence
   ambiguous.
+- **Gene fetching.** `fetch-gene` picks the PANTHER family to download from
+  the UniProt cross-reference (`_extract_panther_family_id` in
+  `src/ai_gene_review/etl/gene.py`). For a discrepant gene it caches family
+  data for the wrong family, and `fetch-panther-paint` then cannot build the
+  PAINT slice for the right one, because that needs `<FAMILY>-entries.csv`.
 
 ## Case log
 
 | # | Proteins | UniProt / InterPro family | PANTHER 19.0 classification | PAINT | Status | Found in |
 |---|---|---|---|---|---|---|
-| 1 | C. elegans ced-1 (UniProtKB:Q9XWD6), human MEGF10 (UniProtKB:Q96KG7) | ced-1 → PTHR24043:SF8 (SCAVENGER RECEPTOR CLASS F / EGF-LIKE DOMAIN-CONTAINING PROTEIN); MEGF10 → PTHR24052:SF13 (DELTA-RELATED / MULTIPLE EGF LIKE DOMAINS 11) | Both in PTHR24035 (MULTIPLE EPIDERMAL GROWTH FACTOR-LIKE DOMAINS PROTEIN): ced-1 → SF109 PROTEIN DRAPER; MEGF10 → SF136 | MEGF10 IBAs come from PTN002372116 and PTN009076277, nodes whose seeds include ced-1, Draper and mouse Megf10 | Open: PANTHER classification preferred; family not yet asserted in the module | [phagocytic engulfment module](../modules/phagocytic_engulfment.yaml) |
+| 1 | C. elegans ced-1 (UniProtKB:Q9XWD6), human MEGF10 (UniProtKB:Q96KG7) | ced-1 → PTHR24043:SF8 (SCAVENGER RECEPTOR CLASS F / EGF-LIKE DOMAIN-CONTAINING PROTEIN); MEGF10 → PTHR24052:SF13 (DELTA-RELATED / MULTIPLE EGF LIKE DOMAINS 11) | Both in PTHR24035 (MULTIPLE EPIDERMAL GROWTH FACTOR-LIKE DOMAINS PROTEIN): ced-1 → SF109 PROTEIN DRAPER; MEGF10 → SF136 | MEGF10 IBAs come from PTN002372116 and PTN009076277, nodes whose seeds include ced-1, Draper and mouse Megf10 | Resolved in module: grounded on PTHR24035 with PAINT nodes; upstream discrepancy still open | [phagocytic engulfment module](../modules/phagocytic_engulfment.yaml) |
 
 ### Case 1: CED-1 / Draper / MEGF10 engulfment receptors
 
@@ -76,6 +81,14 @@ PAINT therefore treats CED-1, Draper and MEGF10 as a single clade inside
 PANTHER's tree. This agrees with the PANTHER classification and the
 literature, and disagrees with the UniProt cross-references.
 
+**InterPro's own family membership is consistent with its cross-references.**
+The member list InterPro returns for PTHR24052
+(`interpro/panther/PTHR24052/PTHR24052-entries.csv`, fetched by `fetch-gene`)
+places human, mouse and zebrafish MEGF10 in `PTHR24052:SF13`, together with
+human MEGF11. The PTHR24035 member list contains no MEGF10. The disagreement
+therefore covers MEGF10 across vertebrates, not just one entry, and it lies
+between the InterPro and PANTHER assignment pipelines.
+
 **Caveats.**
 
 - PTHR24035 is a broad family. Of its 11 human members, 9 sit in a
@@ -94,11 +107,21 @@ literature, and disagrees with the UniProt cross-references.
   example by comparing full HMM score tables or asking the PANTHER and
   InterPro teams.
 
-**Current handling.** In `modules/phagocytic_engulfment.yaml` the CED-1/MEGF10
-annoton lists both proteins as `representative_members` and asserts no
-PANTHER id. Planned resolution: once a MEGF10 gene review exists and its GOA
-file carries the IBA row with PTN002372116 in WITH/FROM, ground the annoton on
-`PTHR24035` and declare PTN002372116 as its ancestral node.
+**Current handling (resolved locally, 2026-10-03).**
+
+- `fetch-gene human MEGF10` followed the UniProt cross-reference and cached
+  `interpro/panther/PTHR24052/`.
+- The PTHR24035 family data was fetched explicitly with the same helper
+  (`_fetch_panther_family_data`). `fetch-panther-paint PTHR24035` then produced
+  `interpro/panther/PTHR24035/PTHR24035-paint.tsv`. That slice contains
+  PTN002372116 (P:GO:0043652, seeds drpr, Megf10 and ced-1) and PTN009076277
+  (F:GO:0005044 scavenger receptor activity, seeds MEGF10 and ced-1;
+  C:GO:0005886).
+- `modules/phagocytic_engulfment.yaml` now grounds the CED-1/MEGF10 annoton on
+  `PTHR24035`, with both nodes as ancestral nodes and scavenger receptor
+  activity as its function.
+- The new MEGF10 gene review (`genes/human/MEGF10/`) accepts the IBAs from
+  both nodes and records the family question under `suggested_questions`.
 
 ## Reproduce
 
@@ -116,12 +139,15 @@ curl -s -H 'Accept: application/json' \
 
 ## Next steps
 
-- [ ] MEGF10 and ced-1 gene reviews (these unblock case 1 in the module).
+- [x] MEGF10 gene review.
+- [ ] ced-1 gene review.
 - [ ] Check MEGF11 (possible case 2).
 - [ ] Scope a systematic scan: for every accession cited in `modules/`,
       compare the UniProt `DR PANTHER` family with the PANTHER classification
       row and flag disagreements. Tooling question: should
       `refresh-panther-members` record the source of each row (classification
-      or UniProt fallback) so such disagreements are visible?
+      or UniProt fallback) so such disagreements are visible? Should
+      `fetch-gene` prefer the PANTHER classification over the UniProt
+      cross-reference when choosing which family to cache?
 - [ ] Decide whether disagreements of this kind should be reported to
       PANTHER/InterPro.
