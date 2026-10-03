@@ -23,7 +23,8 @@ respiratory-assembly mutants failing on alternative carbon sources). They are
 evidence of necessity, not participation, so they can support or question an
 annotation but should not create one. Beyond the two model yeasts, the only
 fungal genome-wide fitness data across many carbon sources is RB-TDNAseq in
-the basidiomycete yeast *Rhodotorula toruloides* (downloadable; 8,344 genes).
+the basidiomycete yeast *Rhodotorula toruloides* (downloadable; 6,409 genes with
+data); our analysis of it is in [FUNGAL_PHENOTYPES/RHOTO.md](FUNGAL_PHENOTYPES/RHOTO.md).
 No filamentous-fungus knockout collection has been screened across carbon or
 plant-biomass sources; there, carbon phenotypes survive only as hit lists and
 figures in individual papers.
@@ -108,7 +109,7 @@ nitrogen sources flagged.
 
 | Dataset | Organism | Mutants × conditions | Carbon / nitrogen sources | Download |
 |---|---|---|---|---|
-| Kim et al. 2021, PMID:33585414 (RB-TDNAseq; includes Coradetti 2018 data) | *Rhodotorula toruloides* | 8,344 genes × 61 condition columns | Glucose, cellobiose, xylose, arabinose, galactose, mannose, acetate, lactate, oleic acid, p-coumarate, ferulate, benzoate, sugar alcohols, pentuloses; amino acids as N sources | **Yes.** Frontiers supplement Table_2.XLSX, sheet "RB-TDNA Seq" (ids `RTO4_<n>`), CC BY |
+| Kim et al. 2021, PMID:33585414 (RB-TDNAseq; includes Coradetti 2018 data) | *Rhodotorula toruloides* | 6,409 genes with data × 27 conditions | Glucose, cellobiose, xylose, arabinose, galactose, mannose, acetate, lactate, oleic acid, p-coumarate, ferulate, benzoate, sugar alcohols, pentuloses; valine, leucine and phenylalanine as carbon sources | **Yes.** Frontiers supplement Table_2.XLSX, sheet "RB-TDNA Seq" (ids `RTO4_<n>`), CC BY |
 | Coradetti et al. 2018, PMID:29521624 | *R. toruloides* | 6,558 genes | Glucose, oleic and ricinoleic acid; auxotrophy media | **Yes.** eLife supp2 xlsx, CC BY |
 | Rodríguez-López et al. 2023, PMID:37787768 | *S. pombe* | 3,509 deletions × 131 conditions (450,844 rows, with p-values) | Glycerol, galactose, fructose, maltose, sucrose, mannitol, xylose, ethanol; glutamate, proline, lysine, serine | **Yes.** eLife supp1 xlsx (39 MB), CC BY. The curated subset is already in PomBase (above) |
 | Yeast Phenome, Turco et al. 2023, PMID:37235661 | *S. cerevisiae* | 4,554 genes × 14,484 harmonised screens (includes Hillenmeyer 2008, Dudley 2005, Qian 2012) | YPG, YPL, YPE, galactose, raffinose, maltose and others | **Yes.** `yp_haphom_20221025.tar.gz` (637 MB) from the project's Google Cloud bucket; licence not stated |
@@ -154,12 +155,12 @@ reviews (EMENI brlA) appears in PHI-base, as expected for a pathogen database.
 
 ## Suggested next steps
 
-1. *R. toruloides* is the best fungal test bed: genome-wide fitness on about
-   20 carbon sources, the same kind of data as the bacterial Fitness Browser,
-   and the closest match to FUNG-GROWTH's substrate panel. It has no reviews
-   in this repository yet; mapping `RTO4_` ids to UniProt (the Coradetti 2023
-   proteomics supplement, PMID:37537586, has a mapping sheet) would let us
-   pick specifically-fit genes on xylose, arabinose or p-coumarate for review.
+1. *R. toruloides* is the best fungal test bed: genome-wide fitness on 20
+   carbon sources, the same kind of data as the bacterial Fitness Browser,
+   and the closest match to FUNG-GROWTH's substrate panel. The analysis in
+   [FUNGAL_PHENOTYPES/RHOTO.md](FUNGAL_PHENOTYPES/RHOTO.md) maps it to UniProt,
+   finds 137 genes with strong carbon-source-specific defects and lists
+   candidates for the first *R. toruloides* gene reviews.
 2. Extend `phenotype_overlap.py` to Candida (CGD file) and to the
    Rodríguez-López quantitative table, so reviews can quote fitness values,
    not just curated labels.
@@ -169,5 +170,8 @@ reviews (EMENI brlA) appears in PHI-base, as expected for a pathogen database.
 ## Reproducing
 
     uv run python projects/FUNGAL_PHENOTYPES/scripts/phenotype_overlap.py
+
+The *R. toruloides* scripts and their order are listed on
+[FUNGAL_PHENOTYPES/RHOTO.md](FUNGAL_PHENOTYPES/RHOTO.md).
 
 Downloads are cached in `tmp/fungal_phenotypes/` (gitignored).
