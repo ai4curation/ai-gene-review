@@ -8,8 +8,8 @@
 # so we pre-process the YAML to remove supporting_text from those entries.
 #
 # Accepts one OR many data files. With many files it strips them in a single
-# pass and makes a single `linkml-reference-validator validate data F1 F2 ...`
-# call (the validator builds/parses the schema once), which is dramatically
+# pass and makes a single `validate data F1 F2 ...` call through the version-gated
+# ai_gene_review.validation.reference_cli compatibility entry point (the validator builds/parses the schema once), which is dramatically
 # faster than one process per file. Requires linkml-reference-validator >= 0.2.1
 # (multi-file `validate data`).
 #

@@ -3,9 +3,14 @@
 import os
 from pathlib import Path
 import subprocess
+import runpy
+import sys
+from types import SimpleNamespace
 
 import pytest
 import yaml
+
+pytest.importorskip("linkml_reference_validator")
 
 from ai_gene_review.validation import reference_cache_compat as compat
 from ai_gene_review.validation.supporting_text import build_supporting_text_validator
@@ -14,6 +19,19 @@ from linkml_reference_validator.etl.reference_fetcher import ReferenceFetcher
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TITLE = "Carbonic anhydrase His----Tyr: structural comparison"
 QUOTE = "Controlled fixture passage."
+
+
+@pytest.fixture(autouse=True)
+def isolate_reference_loader(monkeypatch):
+    # Register restoration before any real installer or later monkeypatch runs.
+    # MonkeyPatch undoes registrations in reverse order, restoring this original
+    # method last even when the version-gate test temporarily installs a sentinel.
+    monkeypatch.setattr(
+        ReferenceFetcher, "_load_markdown_format", ReferenceFetcher._load_markdown_format
+    )
+    build_supporting_text_validator.cache_clear()
+    yield
+    build_supporting_text_validator.cache_clear()
 
 
 @pytest.fixture
@@ -127,3 +145,75 @@ def test_normal_reference_wrapper_preserves_strict_validation(cache, tmp_path, b
     if bad == "quote":
         assert "[ERROR]" in r.stdout
     assert (cache / "PMID_1.md").read_bytes() == before
+
+
+@pytest.mark.parametrize("metadata", ["", "plain scalar", "- item", "true"])
+def test_non_mapping_frontmatter_is_rejected_without_fetch(metadata):
+    fetcher = object.__new__(ReferenceFetcher)
+    assert compat._load_markdown_format_021(
+        fetcher, f"---\n{metadata}\n---\nBody", "PMID:1"
+    ) is None
+
+
+def test_version_gate_reports_inactive_backport(monkeypatch, caplog):
+    monkeypatch.setattr(compat, "version", lambda name: "0.2.2")
+    original = ReferenceFetcher._load_markdown_format
+    assert not compat.install_reference_cache_compatibility()
+    assert ReferenceFetcher._load_markdown_format is original
+    assert "inactive for LRV 0.2.2" in caplog.text
+
+
+def test_warming_uses_compatible_cli_without_running_it(monkeypatch):
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts/warm_reference_cache.py"))
+    monkeypatch.setattr(module["glob"], "glob", lambda pattern: ["fixture.yaml"])
+    calls = []
+    monkeypatch.setattr(module["subprocess"], "run", lambda *a, **kw: calls.append((a, kw)))
+    assert module["main"]() == 0
+    assert calls[0][0][0][:7] == [
+        "uv", "run", "python", "-m", "ai_gene_review.validation.reference_cli",
+        "validate", "data",
+    ]
+    assert "--no-full-text" not in calls[0][0][0]
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+def test_full_text_metadata_survives_title_delimiters(tmp_path, newline):
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts/mark_full_text_unavailable.py"))
+    p = tmp_path / "PMID_1.md"
+    p.write_bytes((
+        f"---\ntitle: '{TITLE}'\ncontent_type: full_text_xml\n"
+        "full_text_available: true\n---\nBody\n---\nTail\n"
+    ).replace("\n", newline).encode())
+    before = p.read_bytes()
+    assert module["load_pub_metadata"](p)["title"] == TITLE
+    assert module["pub_has_full_text"](p)
+    assert p.read_bytes() == before
+
+
+@pytest.mark.parametrize("metadata", ["", "plain scalar", "- item", "title: 'unfinished"])
+def test_full_text_utility_rejects_invalid_metadata(tmp_path, metadata):
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts/mark_full_text_unavailable.py"))
+    p = tmp_path / "PMID_1.md"
+    p.write_text(f"---\n{metadata}\n---\nBody")
+    assert module["load_pub_metadata"](p) is None
+
+
+@pytest.mark.parametrize("script", ["mark_full_text_unavailable.py", "extract_supporting_text_fixes.py"])
+def test_direct_utilities_install_before_validator_construction(monkeypatch, tmp_path, script):
+    import linkml_reference_validator.validation.supporting_text_validator as upstream
+
+    calls = []
+    def constructor(config):
+        assert ReferenceFetcher._load_markdown_format is compat._load_markdown_format_021
+        calls.append(config)
+        return SimpleNamespace()
+
+    monkeypatch.setattr(upstream, "SupportingTextValidator", constructor)
+    monkeypatch.setattr(compat, "version", lambda name: "0.2.1")
+    monkeypatch.setattr(ReferenceFetcher, "_load_markdown_format", lambda *a: None)
+    monkeypatch.chdir(tmp_path)  # No real gene files or publication caches are visited.
+    monkeypatch.setattr(sys, "argv", [script, "--dry-run"])
+    module = runpy.run_path(str(PROJECT_ROOT / "scripts" / script))
+    if script == "mark_full_text_unavailable.py":
+        module["main"]()
+    assert len(calls) == 1
