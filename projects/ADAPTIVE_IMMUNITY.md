@@ -19,8 +19,8 @@ receptor trunk (CD3D, CD3E, CD3G, LCK, ZAP70, LAT, LCP2, PLCG1, NFATC1;
 pathway members (CD4, CD8B, PTPRC, GRAP2, ITK and the calcineurin subunits
 PPP3CA, PPP3CB, PPP3R1), with CD8A brought into line. The curated T cell
 receptor signaling module now contains all 19 proteins in five steps, from
-antigen recognition to NFAT-driven transcription. Across the project, 36 of the
-110 genes have a review (29 COMPLETE). The main calls were to replace generic
+antigen recognition to NFAT-driven transcription. Across the project, 38 of the
+110 genes have a review (30 COMPLETE). The main calls were to replace generic
 `protein binding` rows with the activity each paper shows, to record
 coreceptors and the CD3 chains as contributors to the receptor complex rather
 than its subunits or bearers of its activity, and to keep knockout-phenotype
@@ -59,7 +59,7 @@ Reviewed / anchor genes per area, from [coverage.md](ADAPTIVE_IMMUNITY/coverage.
 | IL-2 and common gamma-chain cytokine signaling | GO:0038110 | [jak_stat_signaling](../modules/jak_stat_signaling.html) | 5/11 |
 | Helper and regulatory T cell differentiation | GO:0046632 | none | 5/9 |
 | T cell mediated cytotoxicity | GO:0001913 | none | 0/7 |
-| B cell receptor signaling | GO:0050853 | [b_cell_receptor_signaling](../modules/b_cell_receptor_signaling.html) | 3/12 |
+| B cell receptor signaling | GO:0050853 | [b_cell_receptor_signaling](../modules/b_cell_receptor_signaling.html) | 5/12 |
 | B cell differentiation and germinal center | GO:0030183, GO:0002467 | none | 1/10 |
 | Class switch recombination and somatic hypermutation | GO:0045190, GO:0016446 | none | 1/6 |
 | Antibody transport and Fc receptor effector signaling | GO:0006959 | [Fc-gamma](../modules/fc_gamma_receptor_signaling.html), [Fc-epsilon](../modules/fc_epsilon_receptor_signaling.html) | 0/7 |
@@ -69,15 +69,16 @@ twice), so the per-area gene counts add up to 112, not 110.
 
 ## Existing resources
 
-- **Gene reviews.** COMPLETE reviews exist for the T cell receptor trunk
-  reviewed here (CD3D, CD3E, CD3G, LCK, ZAP70, LAT, LCP2, PLCG1, NFATC1) and,
-  from earlier work, CD247 (the TCR zeta chain), CD8A, CD28, CTLA4, GATA3, LYN,
-  PIK3CD, PLCG2, JAK1, STAT3, STAT5A and STAT5B.
-  AICDA, BACH2, IL2RA, IRF4 and STAT4 are DRAFT; IL7R and PTPN22 are
-  IN_PROGRESS.
+- **Gene reviews.** COMPLETE reviews exist for all 19 T cell receptor
+  pathway genes reviewed here: the receptor trunk (CD3D, CD3E, CD3G, LCK,
+  ZAP70, LAT, LCP2, PLCG1, NFATC1) and the remaining members (CD4, CD8B,
+  PTPRC, GRAP2, ITK, PPP3CA, PPP3CB, PPP3R1), with CD8A and CD247 from earlier
+  work. Other COMPLETE reviews from earlier work cover BLNK, CD28, CTLA4,
+  GATA3, LYN, PIK3CD, PLCG2, JAK1, STAT3, STAT5A and STAT5B. AICDA, BACH2, BTK,
+  IL2RA, IRF4 and STAT4 are DRAFT; IL7R and PTPN22 are IN_PROGRESS.
 - **Modules.** Four adaptive modules, all DRAFT: T cell receptor signaling
-  (7 of 7 grounded proteins reviewed), B cell receptor signaling (1 of 7),
-  Fc-gamma and Fc-epsilon receptor signaling (1 of 7 each). The JAK-STAT module
+  (19 of 19 grounded proteins reviewed), B cell receptor signaling (3 of 7),
+  Fc-gamma and Fc-epsilon receptor signaling (2 of 7 each). The JAK-STAT module
   (8 of 10) covers the signaling half of the IL-2 area.
 - **GO-CAM models.** 55 of the 110 anchor genes appear in at least one human
   GO-CAM activity. Relevant cached models include MHC class I peptide loading,
@@ -223,11 +224,14 @@ twice), so the per-area gene counts add up to 112, not 110.
 - [x] Update the T cell receptor module to the new reviews: five parts
       (TCR-CD3 recognition, LCK/ZAP70 relay, LAT/SLP-76 signalosome, PLCG1,
       calcineurin-NFAT output), leaf functions from the reviews, and links to
-      the production GO-CAM "T cell receptor signaling (Human)". The module is
-      still DRAFT until CD4/CD8, PTPRC, GRAP2, ITK and calcineurin are added.
+      the production GO-CAM "T cell receptor signaling (Human)". All 19
+      members are now modelled and reviewed; the module stays DRAFT pending
+      curator sign-off on promoting it, and its GO-CAM links cover only the
+      receptor-proximal activities in the production model.
 - [ ] Review the MHC class I pathway: HLA-A, B2M, TAP1, TAP2, TAPBP, ERAP1,
       and check them against the MHC class I peptide loading GO-CAM.
-- [ ] Review the B cell receptor trunk (CD79A, CD79B, SYK, BTK, BLNK, CD19) and
+- [ ] Review the B cell receptor trunk (CD79A, CD79B, SYK, CD19; BLNK is COMPLETE
+      and BTK DRAFT from other work) and
       V(D)J recombination (RAG1, RAG2, DCLRE1C, DNTT).
 - [ ] Finish the co-stimulation and checkpoint area (CD80, CD86, ICOS, PDCD1,
       CD274, LAG3) and the MHC class II and cytotoxicity areas.

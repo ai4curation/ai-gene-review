@@ -22,11 +22,11 @@ Back to the [project page](../ADAPTIVE_IMMUNITY.md).
 | IL-2 and common gamma-chain cytokine signaling | 11 | 5 | 3 | 10 | `jak_stat_signaling` |
 | Helper and regulatory T cell differentiation | 9 | 5 | 2 | 4 | none |
 | T cell mediated cytotoxicity | 7 | 0 | 0 | 4 | none |
-| B cell receptor signaling | 12 | 3 | 3 | 6 | `b_cell_receptor_signaling` |
+| B cell receptor signaling | 12 | 5 | 4 | 6 | `b_cell_receptor_signaling` |
 | B cell differentiation and germinal center | 10 | 1 | 0 | 3 | none |
 | Class switch recombination and somatic hypermutation | 6 | 1 | 0 | 2 | none |
 | Antibody transport and Fc receptor effector signaling | 7 | 0 | 0 | 1 | `fc_gamma_receptor_signaling`, `fc_epsilon_receptor_signaling` |
-| **Unique genes** | 110 | 36 | 29 | 55 | |
+| **Unique genes** | 110 | 38 | 30 | 55 | |
 
 ## Module grounding
 
@@ -36,9 +36,9 @@ UniProtKB accessions grounded in each module and how many have a human review.
 |---|---|---:|---:|
 | [`t_cell_receptor_signaling`](../../modules/t_cell_receptor_signaling.html) | DRAFT | 19 | 19 |
 | [`jak_stat_signaling`](../../modules/jak_stat_signaling.html) | DRAFT | 10 | 8 |
-| [`b_cell_receptor_signaling`](../../modules/b_cell_receptor_signaling.html) | DRAFT | 7 | 1 |
-| [`fc_gamma_receptor_signaling`](../../modules/fc_gamma_receptor_signaling.html) | DRAFT | 7 | 1 |
-| [`fc_epsilon_receptor_signaling`](../../modules/fc_epsilon_receptor_signaling.html) | DRAFT | 7 | 1 |
+| [`b_cell_receptor_signaling`](../../modules/b_cell_receptor_signaling.html) | DRAFT | 7 | 3 |
+| [`fc_gamma_receptor_signaling`](../../modules/fc_gamma_receptor_signaling.html) | DRAFT | 7 | 2 |
+| [`fc_epsilon_receptor_signaling`](../../modules/fc_epsilon_receptor_signaling.html) | DRAFT | 7 | 2 |
 
 ## Anchor genes by area
 
@@ -190,8 +190,8 @@ Grounding terms: GO:0050853 B cell receptor signaling pathway.
 | `CR2` | no review | 3 |
 | human/LYN | COMPLETE | 7 |
 | `SYK` | no review | 14 |
-| `BTK` | no review | 2 |
-| `BLNK` | no review | 0 |
+| human/BTK | DRAFT | 2 |
+| human/BLNK | COMPLETE | 0 |
 | human/PLCG2 | COMPLETE | 1 |
 | human/PIK3CD | COMPLETE | 0 |
 | `CD22` | no review | 0 |
