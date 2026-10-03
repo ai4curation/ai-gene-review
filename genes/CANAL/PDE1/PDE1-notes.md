@@ -18,7 +18,7 @@
 
 ## Review decisions
 - MF: cAMP PDE (core), cGMP PDE (accept; physiological relevance unclear), general PDE terms accepted.
-- BP: negative regulation of cAMP/PKA signalling and of glucose-activated GPCR pathway accepted (Pde1 directly destroys the second messenger); cAMP catabolism accepted.
+- BP: negative regulation of cAMP/PKA signalling and of glucose-activated GPCR pathway accepted (Pde1 directly destroys the second messenger); cAMP catabolism accepted. (superseded for GO:0110034; see the Gpa2 and OpenScientist sections below)
 - Filamentous growth IMPs kept as non-core (indirect, largely synthetic with gpa2; full text not cached).
 - CC: no localisation data; ND accepted.
 - Full text of PMID:20558315 and PMID:8075796 not available in cache (abstract only).
