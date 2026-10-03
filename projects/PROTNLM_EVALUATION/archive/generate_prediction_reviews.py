@@ -1,4 +1,10 @@
-"""Generate GENE-protnlm-predictions-review.yaml files from bench50 evaluation data.
+"""ARCHIVED -- superseded; do not run. See archive/README.md.
+
+This one-time bootstrap script hardcodes per-accession verdicts that no longer match the curated
+``*-protnlm-predictions-review.yaml`` files and, when run, overwrites them. It is kept only as a
+provenance record of how the first ARGO-50 YAMLs were seeded.
+
+Generate GENE-protnlm-predictions-review.yaml files from bench50 evaluation data.
 
 Reads bench50_evaluation_results.csv and bench50_novel_review.csv,
 maps assessments to the PredictionReview schema (COR/CNN/LSP/UNC/PLI/NPI/REP),
@@ -417,4 +423,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(
+        "generate_prediction_reviews.py is archived and superseded: it would overwrite curated "
+        "prediction reviews with stale hardcoded verdicts. See archive/README.md."
+    )
