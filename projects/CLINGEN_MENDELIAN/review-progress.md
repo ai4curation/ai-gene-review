@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — 2026-09-27 UTC
+## Campaign status — updated through 2026-10-03 04:40:38 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -172,7 +172,7 @@ are therefore expected; existing human reviews still link normally.
 | ARG1 | Definitive | COMPLETE | Review #3361 merged; current-head approval and required CI passed; all 22 scoped merged blobs verified | `cmungall/clingen-arg1` | [#3361](https://github.com/ai4curation/ai-gene-review/pull/3361) |
 | APOL1 | Definitive | INITIALIZED | Review #3363 merged; current-head approval and required CI passed; all 18 scoped merged blobs verified | `cmungall/clingen-apol1` | [#3363](https://github.com/ai4curation/ai-gene-review/pull/3363) |
 | ARHGAP29 | Definitive | INITIALIZED | Review #3362 merged; current-head approval and required CI passed; all 17 scoped merged blobs verified | `cmungall/clingen-arhgap29` | [#3362](https://github.com/ai4curation/ai-gene-review/pull/3362) |
-| APOB | Definitive | INITIALIZED | Ready #3365; audit published; 0 PMID and 0 Reactome cache gates; current-head review, CI and merge remain separate | `cmungall/clingen-apob` | [#3365](https://github.com/ai4curation/ai-gene-review/pull/3365) |
+| APOB | Definitive | INITIALIZED | Review #3365 merged at 2026-10-03 02:24:02 UTC; final-head approval and required CI passed; 107 explicitly scoped files and 52 complete PR diff paths verified. Biological YAML remains COMPLETE, with 158 annotations and 33 UNDECIDED judgments. | `cmungall/clingen-apob` | [#3365](https://github.com/ai4curation/ai-gene-review/pull/3365) |
 | AR | Definitive | INITIALIZED | Review #3364 merged; current-head approval and required CI passed; all 114 scoped merged blobs verified | `cmungall/clingen-ar` | [#3364](https://github.com/ai4curation/ai-gene-review/pull/3364) |
 | ARHGEF9 | Definitive | INITIALIZED | Review #3366 merged; current-head approval and required CI passed; all 19 scoped merged blobs verified | `cmungall/clingen-arhgef9` | [#3366](https://github.com/ai4curation/ai-gene-review/pull/3366) |
 | ARID1A | Definitive | INITIALIZED | Review #3367 merged; current-head approval and required CI passed; all 53 scoped merged blobs verified | `cmungall/clingen-arid1a` | [#3367](https://github.com/ai4curation/ai-gene-review/pull/3367) |
@@ -214,7 +214,7 @@ are therefore expected; existing human reviews still link normally.
 | ATP7B | Definitive | Existing review audited | Review #3560 merged at 2026-10-02 23:37:41 UTC; final-head approval and required CI passed; 35 explicitly scoped merged blobs and 9 complete PR diff paths verified. Biological YAML remains DRAFT, with 3 UNDECIDED judgments preserved. | `cmungall/clingen-atp7b` | [#3560](https://github.com/ai4curation/ai-gene-review/pull/3560) |
 | ATP7A | Definitive | Newly seeded | Review #3561 merged at 2026-10-02 22:18:02 UTC; final-head approval and required CI passed; 35 explicitly scoped merged blobs and 31 complete PR diff paths verified. Biological YAML remains DRAFT, with 8 UNDECIDED judgments preserved. | `cmungall/clingen-atp7a` | [#3561](https://github.com/ai4curation/ai-gene-review/pull/3561) |
 | ATP8A2 | Definitive | Newly seeded | Review #3562 merged; current-head approval and required CI passed; all 17 scoped merged blobs verified | `cmungall/clingen-atp8a2` | [#3562](https://github.com/ai4curation/ai-gene-review/pull/3562) |
-| B3GALNT2 | Definitive | Existing review | Ready #3563; exact-head changes requested; required tests and automated review job succeeded. Biological follow-up remains pending; no merge or completion. | `cmungall/clingen-b3galnt2` | [#3563](https://github.com/ai4curation/ai-gene-review/pull/3563) |
+| B3GALNT2 | Definitive | Existing review | Review #3563 merged at 2026-10-03 01:55:18 UTC; final-head approval and required CI passed; 16 explicitly scoped files and 6 complete PR diff paths verified. Biological YAML remains DRAFT, with 16 annotations and 1 UNDECIDED judgments. | `cmungall/clingen-b3galnt2` | [#3563](https://github.com/ai4curation/ai-gene-review/pull/3563) |
 | ATRX | Definitive | Not started | Review #3564 merged; current-head approval and required CI passed; all 41 scoped merged blobs verified | `cmungall/clingen-atrx` | [#3564](https://github.com/ai4curation/ai-gene-review/pull/3564) |
 | ATXN2 | Definitive | Not started | Review #3566 merged at 2026-10-02 22:21:54 UTC; final-head approval and required CI passed; 34 explicitly scoped merged blobs and 21 complete PR diff paths verified. Biological YAML remains DRAFT, with 9 UNDECIDED judgments preserved. | `cmungall/clingen-atxn2` | [#3566](https://github.com/ai4curation/ai-gene-review/pull/3566) |
 | AUH | Definitive | Existing review | Review #3565 merged; current-head approval and required CI passed; all 17 scoped merged blobs verified | `cmungall/clingen-auh` | [#3565](https://github.com/ai4curation/ai-gene-review/pull/3565) |
@@ -252,6 +252,7 @@ are therefore expected; existing human reviews still link normally.
 | BMP10 | Limited | INITIALIZED seed | Review #3818 merged at 2026-10-02 21:41:37 UTC; final-head approval and required CI passed; all 22 scoped merged blobs and 21 PR paths verified. Biological YAML remains DRAFT independently of campaign completion. | `cmungall/clingen-bmp10` | [#3818](https://github.com/ai4curation/ai-gene-review/pull/3818) |
 | BMP4 | Definitive | INITIALIZED seed | Review #3851 merged at 2026-10-02 21:43:03 UTC; final-head approval and required CI passed; all 62 scoped merged blobs and 44 PR paths verified. Biological YAML remains DRAFT independently of campaign completion. | `cmungall/clingen-bmp4` | [#3851](https://github.com/ai4curation/ai-gene-review/pull/3851) |
 | BMPR2 | Definitive | INITIALIZED seed | Review #3878 merged at 2026-10-03 01:13:18 UTC; final-head approval and required CI passed; 43 explicitly scoped merged files and 15 complete PR diff paths verified. Biological YAML is COMPLETE, with 152 annotations and 38 UNDECIDED judgments preserved. | `cmungall/clingen-bmpr2` | [#3878](https://github.com/ai4curation/ai-gene-review/pull/3878) |
+| BPTF | Definitive | INITIALIZED seed | Review #3880 merged at 2026-10-03 04:40:38 UTC; final-head approval and required CI passed; 28 explicitly scoped files and 24 complete PR diff paths verified. Biological YAML remains DRAFT: 45 source assertions plus one NEW H3K4me3-reader assertion, with three UNDECIDED judgments preserved. | `cmungall/clingen-bptf` | [#3880](https://github.com/ai4curation/ai-gene-review/pull/3880) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -263,8 +264,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **179 of 2,876 genes
-are complete**; 180 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **182 of 2,876 genes
+are complete**; 183 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -307,6 +308,8 @@ Completion update through 2026-10-02 23:37:41 UTC adds ATP7A #3561, ATP6V0A2 #35
 
 Completion update through 2026-10-03 01:13:18 UTC adds BMPR2 #3878, independently confirmed by the coordinating ROOT agent after exact-head approval and required CI success. This internal verification is not external maintainer sign-off. The count is now 179 completed genes and 180 original gene PR merges, with 2,697 genes remaining and AKR1D1 still requiring its source follow-up. BMPR2 biological YAML is COMPLETE and preserves all 152 annotations, including 38 UNDECIDED judgments. The four earlier additions in checkpoint 178 retain their own DRAFT states and dated evidence. Campaign completion does not resolve annotation uncertainty; infrastructure PRs contribute no gene completions.
 
+Completion update through 2026-10-03 04:40:38 UTC adds B3GALNT2 #3563, APOB #3365 and BPTF #3880. Exact-head approvals, required CI success and the enumerated merged blobs were independently confirmed by the coordinating ROOT agent; this internal verification is not external maintainer sign-off. The count is now 182 completed genes and 183 original gene PR merges, with 2,694 genes remaining and AKR1D1 still requiring its source follow-up. B3GALNT2 and BPTF retain biological YAML DRAFT status; APOB retains COMPLETE. Their 1, 3 and 33 UNDECIDED judgments, respectively, remain unchanged. BPTF has 45 source assertions plus one NEW H3K4me3-reader assertion and three alternative_products. BRAT1 remains unchecked pending a verified merge. Infrastructure PRs contribute no gene completions; earlier completion and checkpoint95 audit/import observations remain dated historical records.
+
 Source-limited UNDECIDED judgments remain valid. AKT1's completed Limited-tier audit
 remains a scheduling exception. Project setup merged in
 [#3126](https://github.com/ai4curation/ai-gene-review/pull/3126).
@@ -333,6 +336,18 @@ The following durable merge evidence extends the preceding checkpoint; its sessi
 | BMPR2 | [`ecd8e02fac9c`](https://github.com/ai4curation/ai-gene-review/commit/ecd8e02fac9c236bad1d822a421d3069a8c3a465) | 43: 5 gene files, 2 history records, 27 publication caches, 9 Reactome caches | 15 |
 
 No source, annotation, core function, product or negation was changed by this tracker update. The prior checkpoint 178 evidence, all 175 earlier queue entries and the existing checkpoint 178 history remain unchanged.
+
+### Evidence scope for completion 182
+
+The exact checked path/blob maps and durable merge links are recorded in the three queue entries. Session-local TMP receipts are verification records, not promised repository artifacts. Checked file counts include only their enumerated paths, and differ from complete PR diff counts and annotation counts.
+
+| Gene | Published merge | Explicitly checked paths | Complete PR diff paths |
+|---|---|---|---:|
+| B3GALNT2 | [`709497a019bd`](https://github.com/ai4curation/ai-gene-review/commit/709497a019bdf6d60d31b96c42468c789cffc801) | 16: 6 gene files, 3 history records, 5 publication caches, 2 Reactome caches | 6 |
+| APOB | [`e5820bd78bf5`](https://github.com/ai4curation/ai-gene-review/commit/e5820bd78bf536be8855e1acad10e02714801236) | 107: 5 gene files, 4 history records, 31 publication caches, 67 Reactome caches | 52 |
+| BPTF | [`2014c5cc32fa`](https://github.com/ai4curation/ai-gene-review/commit/2014c5cc32fa60b0bd96426fc30e16132b99d49b) | 28: 5 gene files, 3 history records, 20 publication caches | 24 |
+
+BPTF has no Reactome path in its checked map. No biological review, source, product or existing history changes in this tracker update. Earlier checkpoint records, including the unresolved AKR1D1 source follow-up, are preserved.
 
 ## Verification log
 
@@ -858,3 +873,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-03 UTC: Recorded four confirmed gene merges through 2026-10-02 23:37:41 UTC: ATP7A #3561, ATP6V0A2 #3551, ATXN2 #3566, ATP7B #3560. Completion 174 → 178; original merges 175 → 179; remaining genes 2,698. All 175 queue entries, their historical fields, the ClinGen associations and unresolved AKR1D1 follow-up are preserved. The introductory 14-gene snapshot is explicitly historical. Session-local receipts are distinguished from durable merge/path/blob evidence, with precise per-gene checked scope. Biological DRAFT/UNDECIDED states are unchanged.
 
 - 2026-10-03 UTC: Added confirmed BMPR2 #3878 merge ecd8e02fac9c through 2026-10-03 01:13:18 UTC. Completion 178 → 179; original merges 179 → 180; remaining 2,697. Added the 176th queue entry while preserving all 175 prior entries and the prior checkpoint 178 history. The exact 43-file merged scope, 15-path PR diff and actual biological COMPLETE/152 annotations/38 UNDECIDED are recorded separately. All 2,876 association rows, published task policy and the unresolved AKR1D1 follow-up remain unchanged except the BMPR2 completion checkbox. Checkpoints 178 and 179 are prepared for one combined tracker publication.
+
+- 2026-10-03 UTC: Recorded the three independently confirmed B3GALNT2 #3563, APOB #3365 and BPTF #3880 merges through 04:40:38 UTC. Completion 179 → 182; original gene merges 180 → 183; 2,694 remain. Preserved all 2,876 association rows except these three checkboxes, all 176 existing queue entries with two superseded current statuses retained as historical observations, and all prior history. Added the 177th queue entry for BPTF. Biological statuses and unresolved assertions remain unchanged; BRAT1 is not counted. Updated the current table heading and the two stale APOB/B3GALNT2 pending rows, while preserving all dated verification log entries.
