@@ -1,7 +1,7 @@
 # IFT88 notes (human, Q13099)
 
 ## Deep research status
-DRSTATUS
+Falcon deep research succeeded on the second attempt (IFT88-deep-research-falcon.md; first run hit falcon HTTP 429 and the perplexity-lite fallback is unavailable; rerun with --timeout 2400). Key additions (primary papers not cached here): Kobayashi et al. 2021 (human RPE1 VIP/co-IP) implicate the IFT88-IFT52 unit of IFT-B and IFT144-IFT122 of IFT-A as the main IFT-A/IFT-B interface; deleting IFT88's C-terminal 28-residue helix weakened IFT-A association and impaired ciliary entry of GPR161, SSTR3 and SMO. This supports IFT88 as an IFT-B scaffold/intercomplex coupling factor, and explains (without justifying) the IFT-A IDA: contacting IFT-A within trains is not IFT-A membership. Overall: [file:human/IFT88/IFT88-deep-research-falcon.md "It is required for robust ciliogenesis and helps coordinate IFT-A entry, retrograde recycling and receptor composition; more specific claims of direct receptor or tubulin binding must be evaluated cargo by cargo and organism by organism."] It also notes human IFT88 variants in non-syndromic retinal degeneration (Chekuri 2018) and cleft lip/palate (Tian 2017).
 
 ## Summary
 IFT88 (Tg737/polaris) is a TPR-repeat IFT-B1 core subunit. Discovery: Chlamydomonas IFT88 mutant lacks flagella [PMID:11062270 "The phenotype of this mutant is normal except for the complete absence of flagella."]; mouse Tg737 mutants have short kidney cilia and PKD [PMID:11062270 "We show that the primary cilia in the kidney of Tg737 mutant mice are shorter than normal."]
