@@ -346,6 +346,13 @@ Expanded review to 15 additional genes using the strict over-annotation criteria
 
 ## Related pattern outside keyword scope: clearance defects annotated as apoptosis
 
+> **To move:** this section belongs in the APOPTOSIS project's readout
+> over-annotation page (`projects/APOPTOSIS/ASSAY_READOUT_OVERANNOTATION.md`,
+> added in ai4curation/ai-gene-review#3839). That page is currently only on
+> the `codex/apoptosis-mouse-casp8-casp9` branch. Move this section there once
+> that branch reaches `main`, and update the links in the Megf10/MEGF10
+> reviews.
+
 This subproject is about keyword-only annotations (GO_REF:0000043). Gene
 review has also turned up a second route to the same over-annotation: an
 **experimental IMP that reads an apoptotic-cell clearance defect as
