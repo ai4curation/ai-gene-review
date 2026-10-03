@@ -71,6 +71,8 @@ perturbation.
      paper connects the gene product to a proximal apoptotic step.
    - Use the [ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md) readout rubric for
      evidence from cell-death assays.
+   - Track APOPTOSIS-specific cases in
+     [apoptosis readout over-annotation](APOPTOSIS/ASSAY_READOUT_OVERANNOTATION.md).
    - Add recurring failure modes to [OVER_ANNOTATION_PATTERNS](OVER_ANNOTATION_PATTERNS.md)
      when a mouse or mammalian genetics paper licenses only a non-core survival
      phenotype but GOA asserts generic apoptosis.
