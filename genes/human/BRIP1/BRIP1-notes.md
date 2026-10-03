@@ -113,3 +113,62 @@ not NER → MARK_AS_OVER_ANNOTATED.
   (PMID:20639400, PMID:16973432; UniProt COFACTOR/BINDING).
 </content>
 </invoke>
+
+
+## 2026-10-03 complete annotation reassessment (TMP candidate)
+
+All 92 machine-seeded annotation objects were assessed, preserving their exact source fields and all 99 joined GOA rows. The two older author-proposed NEW rows are omitted with the reasons below. The two UniProt products, Q9BX63-1 and Q9BX63-2, remain unchanged; no isoform-specific functional difference is inferred from the sequence notes alone. This candidate is pending independent science review and current ownership/source checks before application.
+
+The decisions are 65 ACCEPT, 16 KEEP_AS_NON_CORE, 10 UNDECIDED and one REMOVE. DRAFT is the schema status because validation warnings remain; it does not mean any source row remains PENDING. Normal schema, ontology, GOA, reference-title and verbatim-snippet validation passed with 14 warnings: eleven generic-binding policy warnings, one cytoplasm action-consistency warning, one optional uncited-provider warning, and one ICL core-coverage warning. No validation check was disabled. The cytoplasm split reflects the distinct evidence being assessed, and the core warning does not justify a redundant NEW annotation.
+
+The earlier notes above are preserved as a historical record. Their blanket protein-binding over-annotation policy, confident XPD-to-FANCJ NER story, unqualified breast-risk statement, claims of complete publication access, and IOP1-based localization rationale are superseded by this assessment. The immutable publication, UniProt, GOA and Affinage files were not altered.
+
+### Motor activities and repair mechanisms
+
+The complete cached abstract and actual Methods/Results of PMID:14983014 establish purified human BRIP1 DNA-stimulated ATPase activity, ATP-dependent strand separation and 5'-to-3' polarity. WT/K52R preparations, ATP removal, and two directionality substrates provide direct mechanistic evidence. No figure image or supplement image was independently inspected. PMID:15878853 is abstract-only but explicitly describes human forked-DNA binding, substrate-tail requirements, D-loop displacement and failure to unwind its synthetic Holliday-junction substrate. The complete PMID:18426915 abstract and selected Discussion support ATP-dependent G4 unwinding, RPA stimulation, MSH2/MSH6 inhibition and cellular telomestatin-response effects; the cache does not expose a complete Results/Methods record.
+
+The three retained cores distinguish duplex-DNA motor activity in repair, G4 unwinding, and motor-dependent protein-adduct unfolding in DPC repair. They do not assign a new biochemical activity inferred from generic binding. PMID:17581638 reports direct MLH1 binding and helicase/MLH1-dependent correction of FA-J crosslink responses, while BRCA1 binding is dispensable in that assay. Its Discussion explicitly leaves alternative repair and checkpoint-recovery mechanisms open. The HR and ICL contexts therefore remain bounded by that mechanistic uncertainty; BRIP1 is not described as a BRCA2-like RAD51 mediator or a crosslink-cleaving nuclease.
+
+For PMID:36608669, the complete abstract, source-relevant Results/captions and selected Discussion/Methods were read. Purified human FANCJ, HMCES and SPRTN establish the protein-adduct unfolding/proteolysis mechanism. Xenopus egg extract and addback experiments address replication-coupled events. Human K52R was aggregation-prone, and the corresponding frog K52R was used for those comparisons; human A349P is a different force-generation mutant. The source distinguishes human Pol-eta approach from yeast Pol-zeta/Rev1 bypass and FANCJ's backup role alongside RTEL1 in some CMG-bypass events. SPRTN cleaves the protein adduct; it does not proteolyze DNA. The former prose saying DNA was exposed for cleavage by SPRTN was wrong.
+
+The production GO-CAM `65c57c3400000100` represents BRIP1's GO:0043139 activity in GO:0106300 at GO:0005657 and causally upstream of SPRTN metalloendopeptidase activity. This directly supports the division of labor. It does not provide an independent BRIP1 interstrand-crosslink activity node. No new DPC process annotation is needed because the process is already sourced.
+
+### Source-specific decisions and access limits
+
+The 17 generic-binding rows are now eleven non-core and six unresolved. The evidence was assessed against exact GOA partners, including both partners in collapsed rows. BRCA1 phosphopeptide recognition, MLH1 binding, BLM interaction and MMS19 binding are distinguished from screen-level associations. BRIP1 is the phosphorylated ligand of BRCA1 BRCT, not the phosphoprotein receptor. In the purified CIA assay, FANCJ binds MMS19 but not CIAO1; larger complex association must not be converted into binary binding to every member. The unresolved screen rows remain source-specific gaps even where a partner has independent targeted evidence. These actions follow the campaign's explicit supported-binding policy rather than treating a general MF term as evidence that the interaction is false.
+
+For NER row 2, GOA and the cached PAINT IBD both identify `PANTHER:PTN000158307` with `WB:WBGene00001049` (dog-1). The XPD/P18074 assertion lies at a different node, `PTN000158239`. The old propagation_review was factually incorrect. Official indexed donor records retain experimental NER IGI/IMP annotations, but their precise publication provenance and full ancestral placement were not recovered. The row is UNDECIDED with an explicit unresolved node record. Neither a short donor list nor the absence of a direct human assay establishes bad propagation. The meiotic IBA uses the mouse donor MGI:2442836; the complete mouse PMID:26490168 abstract supports a specific crossover-control phenotype, with fertile mutants and mostly normal early meiotic events, rather than a blanket meiotic repair failure.
+
+The HPA nuclear-membrane row is UNDECIDED because its images and antibody controls were not inspected. The earlier claim of an antibody artifact was unsupported. Nucleoplasmic and nuclear localization are independently supported. In PMID:23585563, ROOT recovered actual Results and the Figure2 caption describing predominantly nuclear FANCJ in WT and MMS19-depleted HeLa cells; the fractionation image itself was inaccessible. A minor cytoplasmic signal therefore cannot be verified or excluded. The IEA cytoplasm mapping is retained as non-core based on explicit UniProt curation, while the two experimental source rows retain their specific unresolved evidence boundaries. An IOP1 pathway statement is not a FANCJ localization assay.
+
+The 34 Reactome TAS rows assert nucleoplasm, not performance of every named reaction. Their reaction summaries were read for compartment and repair context, including the explicit BRIP1 recruitment/resection entries R-HSA-5685985 and R-HSA-5685994. The long individual BRCA1/PALB2 variant enumerations in disease-reaction pages were not exhaustively inspected; they do not become evidence for a BRIP1 catalytic step. Independent nuclear-foci evidence supports the retained compartment assertions.
+
+### Bach1 identity and transcription annotation
+
+The PMID:14504288 cache is abstract-only. Additional actual [publisher-indexed Methods/Results and figure captions](https://www.sciencedirect.com/science/article/pii/S0021925820756991) describe FLAG Bach1 BTB/CLS/bZIP and leucine-zipper constructs, MafK, HO-1 reporters, and 293/293T and GM02063 cell systems. This positively identifies the separate transcription-factor Bach1 protein. The entire paper was not read, and the former global assertion that it contains no BRIP1 data is withdrawn.
+
+GO:0006357 covers modulation of RNA-polymerase-II transcription; it does not require sequence-specific DNA binding. Row 84 retains REMOVE because the inspected constructs and transcription assays identify the other protein, not because of a blanket assertion that BRIP1 cannot affect transcription. The reference assessment is MISCITED, not WRONG_IDENTIFIER: the PMID and title themselves are correct. Row 82 retains the independently established nuclear term with a clear citation caveat, while row 83 is unresolved because the independent FANCJ cytoplasmic fraction also remains uninspected. These source distinctions require explicit independent peer attention.
+
+### Prior NEW proposals and cofactor interpretation
+
+Prior row 92, GO:0036297 interstrand cross-link repair, is omitted because its verified parent is the already-carried GO:0006281 DNA repair. The user rule prohibits a redundant ancestor/descendant NEW process proposal. The specific ICL context remains in core synthesis with the mechanistic limit described above. The omission is not a claim that BRIP1 has no ICL role. No complete three-product comparator study is claimed, and no replacement NEW process is proposed.
+
+Prior row 93, GO:0051539 4 iron, 4 sulfur cluster binding, is also omitted. The immutable UniProt record curates a [4Fe-4S] cofactor, and that biological context is retained. The inspected human [primary Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC2981534/) report atomic-absorption iron content of approximately three Fe per WT polypeptide versus one for A349P, together with motor uncoupling. These measurements establish iron association but do not directly measure intact four-iron/four-sulfur cluster composition. They also do not establish a stable three-iron cluster. The old NEW IDA's precise composition claim is stronger than the inspected experiment. No new cofactor annotation is manufactured to fill an apparent GOA omission. A targeted question records this gap.
+
+### Disease association and evidence anchors
+
+The unqualified hereditary breast-cancer susceptibility claim is removed from the biological description. The current official [ClinGen breast-carcinoma curation](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_87aa8181-721b-4583-98cf-0dead1827e27-2023-12-21T180000.000Z) is Refuted, dated 2023-12-21, and is distinct from dominant ovarian-cancer susceptibility and recessive Fanconi anemia. The consulted [Easton primary abstract](https://pubmed.ncbi.nlm.nih.gov/26921362/) reports no substantial association for truncating BRIP1 variants. The later BCAC/CARRIERS estimates were inspected through ClinGen's extraction, not independently reconstructed from their primary tables. This does not establish zero risk for every variant and context and does not change BRIP1's molecular functions.
+
+The Affinage provider record was read as a secondary research aid, not imported as experimental authority. Its cluster-coordination and transcription/repair suggestions require their own primary checks; no adaptor MF or additional process term was inferred from its labels.
+
+The old YAML contained 52 supporting-text occurrences. The candidate retains 36 focused occurrences with a per-source ledger of short verbatim excerpts; relevant anchors are preserved or shortened, overlapping excerpts consolidated, and misleading IOP1 snippets removed. It does not delete all quotations. Normal reference validation confirms their correspondence to the immutable caches. The older notes, including their historical quotations, remain an exact byte prefix. No new publication or research cache was fetched, created or edited.
+
+
+### Final evidence-list correction
+
+The final candidate removes PMID:14504288 from the positive supporting evidence for the accepted nuclear-localization annotation (source row 82). Its original reference identifier remains unchanged for provenance. Positive nuclear evidence now cites only PMID:17596542; the transcription-factor assay and citation problem remain documented in the reason and reference assessment. No annotation action, source field, quote, core function, or product changed in this correction.
+
+
+### Canonical application
+
+The completed 92-annotation review was applied after independent scientific review and verification of the current source files and task ownership. Earlier TMP-stage wording above records preparation history. The applied review retains 10 UNDECIDED annotations and DRAFT status, with the documented evidence limits and validation warnings. The application also regenerates the gene page and adds a curation history record.
