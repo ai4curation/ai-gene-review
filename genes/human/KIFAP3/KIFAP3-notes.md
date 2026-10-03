@@ -20,3 +20,8 @@
 
 ## Deep research
 See below.
+Falcon deep research succeeded (genes/human/KIFAP3/KIFAP3-deep-research-falcon.md). Key points (not independently re-verified against primary papers unless cached):
+- [file:human/KIFAP3/KIFAP3-deep-research-falcon.md "KAP3 couples kinesin-2 to cargo-associated proteins and helps organize interactions between the motor’s C-terminal tails and transport machinery."]
+- No catalytic activity: [file:human/KIFAP3/KIFAP3-deep-research-falcon.md "no catalytic reaction or small-molecule transport substrate should be assigned to KAP3 itself"] — this supports the decision not to give KIFAP3 motor activity.
+- Chlamydomonas FLA3/KAP ortholog: [file:human/KIFAP3/KIFAP3-deep-research-falcon.md "its mutation dispersed KAP and the FLA10 motor from the basal-body/flagellar region"]; anterograde IFT frequency was reduced. This is ortholog evidence for a ciliary role.
+- APC-mediated mRNA cargo and KAP3-dependent activation of KIF3A/B by APC (Webb et al. 2025, reported in the deep research; not cached) would be a candidate non-ciliary cargo-adaptor role. Not used for annotations.

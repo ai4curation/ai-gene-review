@@ -22,3 +22,6 @@
 - Module: stage 2_ciliary_vesicle, "ciliary vesicle formation", membrane-shaping ATPase with EHD1.
 - HPA v25: Primary cilium (S), Primary cilium transition zone (S); main location plasma membrane. GOA HPA rows (cilium, ciliary transition zone, plasma membrane) accepted.
 - Assessment: consistent with the module, with a caveat: EHD3's contribution is partly redundant with EHD1 and cell-type dependent (dispensable in RPE1, where EHD1 is >5-fold more abundant). core_functions keep ciliary vesicle assembly but list it alongside the non-ciliary recycling/endosome-to-Golgi and cardiac targeting roles. Unlike EHD1, I did not assert an ATP hydrolysis MF for EHD3 because direct EHD3 ATPase data were not available in the cache.
+
+## Deep research outcome
+- Falcon succeeded on retry (`--timeout 2400`): `EHD3-deep-research-falcon.md`. Consistent with the review: EHD3 favors tubulation/stabilization (EHD1 and EHD4 favor vesiculation), early endosome -> ERC and endosome-to-Golgi transport, preciliary membrane/ciliary pocket role with EHD1, cardiac NCX1/CaV1.2/CaV3 targeting via ankyrin-B, glomerular endothelial VEGFR2 trafficking (with EHD4 compensation). It flags that no EHD3-specific ATP-hydrolysis data were retrieved, supporting the decision not to assert an ATPase MF for EHD3 in core_functions.
