@@ -20,7 +20,7 @@
     that all 12 genes were dispensable for male fertility."]. The Smim8 line was mated under a different
     caging scheme [PMID:34290169 "(except for Smim8)"]. The paper also notes
     [PMID:34290169 "Smim8 and Smim9 each containing one transmembrane domain"].
-  - PMID:29986096 (NAR 2018): SMIM8 adipose/muscle mRNA is among 16 "CORE-IS" genes positively
+  - PMID:29986096 (NAR 2018): SMIM8 skeletal muscle mRNA is among 16 "CORE-IS" genes positively
     correlated with improvement in insulin sensitivity [PMID:29986096 "These 16 genes segregated into two
     clusters, one positively (DHTKD1, SLC43A1, PCYT2, MCCC1, SGCG, ECHDC3, ALDH6A1, SMIM8 and OARD1)"].
     Correlative only. Most of the co-clustering genes are mitochondrial enzymes, which is at least
