@@ -87,3 +87,17 @@ indirectly regulating protein catabolism.
 Repeated the PubMed/web search for newer yeast SAN1/San1 papers. PMID:42300961
 is the newest cached direct hit; it uses `ubr1`/`san1` deletion to stabilize
 DHFR indel variants, but does not change the core San1 curation.
+
+## PR #3789 follow-up
+
+- Dropped `GO:0006511` from the first core function because it is an ancestor of
+  `GO:0071630` already listed on the same activity.
+- Rewrote the `GO:0005737` cytoplasm IBA to keep the row conservatively on the
+  strength of SGD/PAINT localization rather than with quotes that only locate
+  cytoplasmic substrates.
+- Recast the `GO:0036503` ERAD IBA as a compartment-specific PAINT mismatch
+  rather than a parent/child granularity problem.
+- Clarified that the `GO:0036503` and `GO:0045732` MODIFY replacements are
+  already present as live SAN1 annotations, cross-cited PMID:15078868 on the
+  broad `GO:0004842` transferase row, and reframed the proposed sensor term
+  against GO's usual has-input modeling pattern.
