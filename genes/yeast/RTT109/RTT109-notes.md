@@ -103,3 +103,20 @@ yeast replication-repair paper PMID:39631395 was already cached in the prior
 pass; newer PubMed hits were either non-Saccharomyces, human EP300, model
 systems that only mention yeast RTT109, or a 2026 bioRxiv Candida albicans
 Rtt109 preprint, and did not require new RTT109 curation.
+
+## PR #3788 follow-up
+
+- Replaced title-only support on the H3K9 and H3K23 PMID:19172748 rows with
+  a full-text Rtt109-Vps75 H3-tail acetylation quote.
+- Kept the three residue-specific PMID:31194870 rows but stopped using the
+  abstract-only K14/K56 title as support for K9, K23, and K27; the rows now
+  defer to SGD's full-text read and cross-cite PMID:21256037 or PMID:19172748
+  for cached residue-specific support.
+- Changed broad downstream transcription, stress, and double-strand break
+  repair rows to `KEEP_AS_NON_CORE` and changed the retired
+  `GO:0006351` keyword row to `MODIFY` toward regulation of transcription.
+- Collapsed the `core_functions` ancestor chain by dropping the broad
+  `GO:0061733` parent activity, retaining the H3K56-specific activity and the
+  H3-tail acetyltransferase activity.
+- Softened the top-level description to avoid implying that RTT109 is essential
+  or that it acts exclusively during S phase.
