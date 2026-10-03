@@ -335,6 +335,25 @@ def test_load_member_overrides_requires_a_reason(tmp_path):
         load_member_overrides(path)
 
 
+def test_load_member_overrides_rejects_duplicate_accessions(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tfirst\n"
+        "P1\tPTHR9\tsecond\n"
+    )
+
+    with pytest.raises(ValueError) as exc:
+        load_member_overrides(path)
+
+    message = str(exc.value)
+    assert "duplicate override for 'P1'" in message
+    assert ":3:" in message
+    assert "line 2" in message
+
+
 def test_apply_member_overrides_wins_over_classification(tmp_path):
     from ai_gene_review.etl.panther_families import (
         apply_member_overrides,

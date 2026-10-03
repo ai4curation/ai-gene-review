@@ -499,6 +499,7 @@ def load_member_overrides(path: Path) -> Dict[str, Tuple[str, str]]:
     if not path.exists():
         return {}
     overrides: Dict[str, Tuple[str, str]] = {}
+    override_lines: Dict[str, int] = {}
     for line_number, line in enumerate(path.read_text().splitlines(), start=1):
         if not line.strip() or line.startswith("#"):
             continue
@@ -511,7 +512,14 @@ def load_member_overrides(path: Path) -> Dict[str, Tuple[str, str]]:
                 f"reason (tab-separated), got {line!r}"
             )
         accession, family_sf, reason = fields
+        if accession in overrides:
+            first_line = override_lines[accession]
+            raise ValueError(
+                f"{path}:{line_number}: duplicate override for {accession!r}; "
+                f"first defined on line {first_line}"
+            )
         overrides[accession] = (family_sf, reason)
+        override_lines[accession] = line_number
     return overrides
 
 
