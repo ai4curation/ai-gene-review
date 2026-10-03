@@ -357,7 +357,10 @@ PANTHER's own HMM classifications. Two rules follow:
   only warn; run `just refresh-panther-members` to add newly cited proteins. It only adds
   rows, so it does not touch rows other PRs depend on; use `--rebuild` only for a deliberate
   full regeneration. The file merges with git's union driver, so concurrent additions do not
-  conflict.
+  conflict. If a curated disagreement between PANTHER's per-organism files and
+  UniProt/family-review evidence must survive regeneration, add a reasoned row to
+  `interpro/panther/panther-members-overrides.tsv` rather than hand-editing the generated
+  `interpro/panther/panther-members.tsv`.
 - **If a label mismatch names a *different protein*, fix the ID, not the label.** A
   wildly-wrong label is weak evidence of a typo and strong evidence that the id was
   guessed. An id invented at random is still a hallucination when it happens to resolve

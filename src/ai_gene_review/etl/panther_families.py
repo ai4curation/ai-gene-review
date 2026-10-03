@@ -545,6 +545,87 @@ def incremental_member_index(
     return index
 
 
+MEMBER_OVERRIDES_HEADER = ["uniprot_accession", "panther_family_sf", "reason"]
+
+
+def load_member_overrides(path: Path) -> Dict[str, Tuple[str, str]]:
+    r"""Load curated member-index overrides as ``accession -> (family_sf, reason)``.
+
+    ``build_member_index`` deliberately prefers PANTHER's per-organism
+    classifications over UniProt's ``xref_panther``. Where the two disagree and
+    a curator has established which is right, a regeneration would silently
+    revert a hand edit to the derived index. The overrides file is the durable,
+    reviewable home for those decisions: one row per accession, each with the
+    reason it is pinned, applied after every regeneration.
+
+    A missing file means no overrides. Blank lines and ``#`` comments are
+    ignored; every data row must carry a non-empty reason, because an override
+    without provenance is indistinguishable from a stale value.
+
+    >>> import tempfile, pathlib
+    >>> d = pathlib.Path(tempfile.mkdtemp())
+    >>> _ = (d / "o.tsv").write_text(
+    ...     "uniprot_accession\tpanther_family_sf\treason\n"
+    ...     "# comment\n"
+    ...     "P1\tPTHR1:SF2\tUniProt xref and family review agree\n"
+    ... )
+    >>> load_member_overrides(d / "o.tsv")
+    {'P1': ('PTHR1:SF2', 'UniProt xref and family review agree')}
+    >>> load_member_overrides(d / "absent.tsv")
+    {}
+    """
+    path = Path(path)
+    if not path.exists():
+        return {}
+    overrides: Dict[str, Tuple[str, str]] = {}
+    override_lines: Dict[str, int] = {}
+    for line_number, line in enumerate(path.read_text().splitlines(), start=1):
+        if not line.strip() or line.startswith("#"):
+            continue
+        fields = [field.strip() for field in line.split("\t")]
+        if fields == MEMBER_OVERRIDES_HEADER:
+            continue
+        if len(fields) != 3 or not all(fields):
+            raise ValueError(
+                f"{path}:{line_number}: expected accession, family, non-empty "
+                f"reason (tab-separated), got {line!r}"
+            )
+        accession, family_sf, reason = fields
+        if accession in overrides:
+            first_line = override_lines[accession]
+            raise ValueError(
+                f"{path}:{line_number}: duplicate override for {accession!r}; "
+                f"first defined on line {first_line}"
+            )
+        overrides[accession] = (family_sf, reason)
+        override_lines[accession] = line_number
+    return overrides
+
+
+def apply_member_overrides(
+    index: Dict[str, str],
+    overrides: Dict[str, Tuple[str, str]],
+    accessions: Set[str],
+) -> Dict[str, str]:
+    """Return ``index`` with curated overrides applied to the cited accessions.
+
+    Overrides for accessions no longer cited are skipped, so the index stays
+    pruned to what the repository actually uses.
+
+    >>> apply_member_overrides(
+    ...     {"P1": "PTHR9:SF9", "P2": "PTHR2"},
+    ...     {"P1": ("PTHR1:SF2", "why"), "P3": ("PTHR3", "not cited")},
+    ...     {"P1", "P2"},
+    ... )
+    {'P1': 'PTHR1:SF2', 'P2': 'PTHR2'}
+    """
+    merged = dict(index)
+    for accession, (family_sf, _reason) in overrides.items():
+        if accession in accessions:
+            merged[accession] = family_sf
+    return merged
+
+
 def build_member_index(
     accessions: Set[str],
     classification_paths: Iterable[Path],

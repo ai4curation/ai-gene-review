@@ -402,3 +402,60 @@ def test_member_index_union_merges_cleanly(tmp_path):
     assert merged == {"A1": "PTHR1", "B1": "PTHR2", "C1": "PTHR3", "M1": "PTHR5", "Z1": "PTHR9"}
     gaps = load_member_index_gaps(members)
     assert {"U2", "U3"} <= gaps.absent
+
+
+def test_load_member_overrides_requires_a_reason(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text("uniprot_accession\tpanther_family_sf\treason\nP1\tPTHR1:SF2\t\n")
+    with pytest.raises(ValueError, match="non-empty"):
+        load_member_overrides(path)
+
+
+def test_load_member_overrides_rejects_duplicate_accessions(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tfirst\n"
+        "P1\tPTHR9\tsecond\n"
+    )
+
+    with pytest.raises(ValueError) as exc:
+        load_member_overrides(path)
+
+    message = str(exc.value)
+    assert "duplicate override for 'P1'" in message
+    assert ":3:" in message
+    assert "line 2" in message
+
+
+def test_apply_member_overrides_wins_over_classification(tmp_path):
+    from ai_gene_review.etl.panther_families import (
+        apply_member_overrides,
+        load_member_overrides,
+    )
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tcurated\n"
+        "P9\tPTHR9\tno longer cited\n"
+    )
+    merged = apply_member_overrides(
+        {"P1": "PTHR5:SF1", "P2": "PTHR2"}, load_member_overrides(path), {"P1", "P2"}
+    )
+    assert merged == {"P1": "PTHR1:SF2", "P2": "PTHR2"}
+
+
+def test_repo_member_overrides_are_reflected_in_index():
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    panther_dir = PROJECT_ROOT / "interpro" / "panther"
+    overrides = load_member_overrides(panther_dir / "panther-members-overrides.tsv")
+    index = load_member_index(panther_dir / "panther-members.tsv")
+    for accession, (family_sf, _reason) in overrides.items():
+        if accession in index:
+            assert index[accession] == family_sf, accession
