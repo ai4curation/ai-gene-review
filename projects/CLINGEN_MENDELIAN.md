@@ -2901,9 +2901,10 @@ links preserved in the checklist below. Each review assesses the gene product's
 molecular function and GO annotations; a disease link alone does not establish
 a function. Reviews run one gene per PR in evidence-priority order, and existing
 reviews get a fresh audit (747 of the 2,876 genes had a human review in the
-repo on 2026-09-27, mostly from earlier projects). The 2026-09-26 progress log records 14
-merged gene PRs (A4GALT through ACADVL; 607 annotations reviewed), each ticked
-in the checklist below; later merges are added there as they are recorded.
+repo on 2026-09-27, mostly from earlier projects). The historical progress snapshot dated
+2026-09-26 recorded 14 merged gene PRs (A4GALT through ACADVL; 607 annotations
+reviewed). Those are historical counts; the Status section and checklist below
+record subsequent independently confirmed completions.
 
 ## Overview
 
@@ -2987,9 +2988,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**174 of 2,876 genes are complete; 2,702 remain.** This update records
-13 further independently confirmed gene PR merges.
-The 175 original gene PR merges include AKR1D1, whose required source follow-up
+**179 of 2,876 genes are complete; 2,697 remain.** This update records
+five further independently confirmed gene PR merges since the published checkpoint of 174.
+The 180 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3211,13 +3212,13 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ATP2B2** — HGNC:815; [autosomal dominant nonsyndromic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_193d07d0-5e1a-4ea1-84d6-377eb8fb5e7f-2025-07-22T160000.000Z) (MONDO:0019587; AD; Definitive).
 - [x] **ATP6AP1** — HGNC:868; [congenital disorder of glycosylation type II](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c6bfce2b-c20c-40f9-b2f5-d81f76a328f7-2024-05-15T160000.000Z) (MONDO:0005501; XL; Definitive).
 - [x] **ATP6AP2** — HGNC:18305; [ATP6AP2-related disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ac33652a-dd98-46f4-ba4e-d3d5a482a22e-2020-09-14T160000.000Z) (MONDO:0100146; XL; Definitive).
-- [ ] **ATP6V0A2** — HGNC:18481; [autosomal recessive cutis laxa type 2A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_67eb6244-012c-48c0-a409-874636825d85-2024-04-03T160000.000Z) (MONDO:0018163; AR; Definitive).
+- [x] **ATP6V0A2** — HGNC:18481; [autosomal recessive cutis laxa type 2A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_67eb6244-012c-48c0-a409-874636825d85-2024-04-03T160000.000Z) (MONDO:0018163; AR; Definitive).
 - [x] **ATP6V1B1** — HGNC:853; [renal tubular acidosis, distal, 2, with progressive sensorineural hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c74d3789-9cfc-4be3-b23d-baf610620e6c-2026-02-18T050000.000Z) (MONDO:0009968; AR; Definitive).
-- [ ] **ATP7A** — HGNC:869; [Menkes disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9bc50734-316b-47db-ba10-61f3fde46cca-2018-02-07T110000.000Z) (MONDO:0010651; XL; Definitive); [X-linked distal spinal muscular atrophy type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec7c42f3-3cad-4020-aa75-cf103c5381ba-2026-07-29T160000.000Z) (MONDO:0010338; XL; Moderate).
-- [ ] **ATP7B** — HGNC:870; [Wilson disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f0ac0a41-d7d5-4377-a622-1ee9bc4ed9f3-2019-03-27T160000.000Z) (MONDO:0010200; AR; Definitive).
+- [x] **ATP7A** — HGNC:869; [Menkes disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9bc50734-316b-47db-ba10-61f3fde46cca-2018-02-07T110000.000Z) (MONDO:0010651; XL; Definitive); [X-linked distal spinal muscular atrophy type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec7c42f3-3cad-4020-aa75-cf103c5381ba-2026-07-29T160000.000Z) (MONDO:0010338; XL; Moderate).
+- [x] **ATP7B** — HGNC:870; [Wilson disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f0ac0a41-d7d5-4377-a622-1ee9bc4ed9f3-2019-03-27T160000.000Z) (MONDO:0010200; AR; Definitive).
 - [x] **ATP8A2** — HGNC:13533; [cerebellar ataxia, intellectual disability, and dysequilibrium](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6919cb8-703a-4f80-932b-2238f7bc08d6-2025-04-03T160000.000Z) (MONDO:0009133; AR; Definitive).
 - [x] **ATRX** — HGNC:886; [ATR-X-related syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5296ecdf-b709-47bd-9032-daec8b91e300-2021-09-28T220000.000Z) (MONDO:0016980; XL; Definitive).
-- [ ] **ATXN2** — HGNC:10555; [spinocerebellar ataxia type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5f9701f-a9a7-4689-9aec-27b3cbb06129-2024-02-13T170000.000Z) (MONDO:0008458; AD; Definitive).
+- [x] **ATXN2** — HGNC:10555; [spinocerebellar ataxia type 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5f9701f-a9a7-4689-9aec-27b3cbb06129-2024-02-13T170000.000Z) (MONDO:0008458; AD; Definitive).
 - [x] **AUH** — HGNC:890; [3-methylglutaconic aciduria type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_681f6747-37ce-498e-8bb1-eddd55a90e2c-2020-06-29T174231.569Z) (MONDO:0009610; AR; Definitive).
 - [x] **AURKC** — HGNC:11391; [spermatogenic failure 5](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e733c514-fe87-452e-a1e5-c6483fcc117d-2026-01-07T170000.000Z) (MONDO:0009461; AR; Definitive).
 - [x] **AUTS2** — HGNC:14262; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_582999f6-b3b4-46de-90a0-8f44e22df469-2020-09-01T160000.000Z) (MONDO:0000508; AD; Definitive).
@@ -3261,7 +3262,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BLTP1** — HGNC:26953; [Alkuraya-Kucinskas syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4b92cd4c-7db0-40fe-b404-08f17f778c35-2026-01-21T170000.000Z) (MONDO:0060631; AR; Definitive).
 - [x] **BMP4** — HGNC:1071; [BMP4-related ocular growth disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5e7832a8-8a0b-4719-aaf9-1cbdcc392776-2025-02-20T200000.000Z) (MONDO:0100613; AD; Definitive).
 - [x] **BMPR1A** — HGNC:1076; [juvenile polyposis syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7004b10e-0eb6-4517-8deb-2d4b7264d2f8-2022-12-30T180000.000Z) (MONDO:0017380; AD; Definitive).
-- [ ] **BMPR2** — HGNC:1078; [congenital heart disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b4322da-10a2-46c4-be0c-b5163ab5f401-2023-09-18T160000.000Z) (MONDO:0005453; AD; Limited); [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a20ce78b-18ba-436c-877e-a08d092ac7c7-2020-12-07T172318.621Z) (MONDO:0015924; AD; Definitive).
+- [x] **BMPR2** — HGNC:1078; [congenital heart disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b4322da-10a2-46c4-be0c-b5163ab5f401-2023-09-18T160000.000Z) (MONDO:0005453; AD; Limited); [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a20ce78b-18ba-436c-877e-a08d092ac7c7-2020-12-07T172318.621Z) (MONDO:0015924; AD; Definitive).
 - [x] **BOLA3** — HGNC:24415; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e6c6964-bbb5-4101-abbb-782eb01b0f33-2023-07-24T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [ ] **BPTF** — HGNC:3581; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_08521bf8-a5a2-4a44-941b-12d9eae7aa4f-2022-07-06T160000.000Z) (MONDO:0000508; AD; Definitive).
 - [ ] **BRAF** — HGNC:1097; [Noonan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_47cf08d5-efc6-4d42-b031-a06619873161-2018-07-24T160000.000Z) (MONDO:0018997; AD; Moderate); [Noonan syndrome with multiple lentigines](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_888875a8-5654-486b-8e64-e1382ccc6650-2018-07-24T160000.000Z) (MONDO:0007893; AD; Limited); [cardiofaciocutaneous syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a53e5a92-126f-4b00-a89b-af55d4f342ca-2018-07-24T160000.000Z) (MONDO:0015280; AD; Definitive).
