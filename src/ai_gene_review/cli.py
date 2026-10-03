@@ -4417,7 +4417,6 @@ def refresh_panther_members(
                 found.update(from_uniprot)
         return found
 
-        apply_member_overrides,
     index = incremental_member_index(existing, accessions, resolve)
     overrides_path = repo_root / "interpro" / "panther" / "panther-members-overrides.tsv"
     overrides = load_member_overrides(overrides_path)
