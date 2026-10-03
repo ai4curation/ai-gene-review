@@ -51,3 +51,5 @@
   NuA3 K14 acetylation evidence in PMID:17157260.
 - Corrected the SAS3 current-GOA audit counts from 30 pre-refresh rows to the
   actual 38 rows.
+- Corrected the audit summary's final row/action totals after the new
+  `GO:0036408` row: `final_rows: 45` and `final_actions.NEW: 1`.
