@@ -97,8 +97,11 @@ def rate_row(label: str, rows) -> list:
 
 
 def annotations(doc: dict):
+    """Live existing annotations only: rows marked ``retired: true`` (dropped
+    from GOA at a later refresh, kept in the review as a record) are skipped,
+    since they are no longer TreeGrafter (or contrast-set) output."""
     for ann in doc.get("existing_annotations") or []:
-        if isinstance(ann, dict):
+        if isinstance(ann, dict) and not ann.get("retired"):
             yield ann
 
 

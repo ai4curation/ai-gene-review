@@ -119,8 +119,8 @@ def load_reasons() -> dict:
         except Exception:  # noqa: BLE001
             continue
         for ann in (doc or {}).get("existing_annotations") or []:
-            if not isinstance(ann, dict):
-                continue
+            if not isinstance(ann, dict) or ann.get("retired"):
+                continue  # retired rows (dropped from GOA) are not live annotations
             tid = (ann.get("term") or {}).get("id", "")
             if tid in terms and ann.get("original_reference_id") == "GO_REF:0000118":
                 rv = ann.get("review") or {}

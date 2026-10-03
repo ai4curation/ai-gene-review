@@ -57,6 +57,8 @@ def main() -> None:
                     if isinstance(r, dict) and AGENT_REF.search(r.get("id", ""))]
         action, cited = "ANNOTATION_NOT_FOUND", []
         for ann in doc.get("existing_annotations") or []:
+            if ann.get("retired"):
+                continue  # dropped from GOA at a later refresh; not a live annotation
             if ((ann.get("term") or {}).get("id") == term_id
                     and ann.get("original_reference_id") == "GO_REF:0000118"):
                 rv = ann.get("review") or {}
@@ -98,7 +100,8 @@ def main() -> None:
         with open(os.path.join(ROOT, rel)) as fh:
             doc = yaml.load(fh, Loader=LOADER) or {}
         for ann in doc.get("existing_annotations") or []:
-            if (ann.get("original_reference_id") != "GO_REF:0000118"
+            if (ann.get("retired")
+                    or ann.get("original_reference_id") != "GO_REF:0000118"
                     or (ann.get("term") or {}).get("id") not in terms):
                 continue
             rv = ann.get("review") or {}

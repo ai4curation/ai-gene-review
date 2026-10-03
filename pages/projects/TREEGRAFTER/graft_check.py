@@ -152,9 +152,16 @@ def main() -> None:
     if args.refresh_actions:
         with open(os.path.join(HERE, "treegrafter_graft_check.tsv")) as fh:
             rows = list(csv.DictReader(fh, delimiter="\t"))
+        kept = []
         for r in rows:
+            if r["uniprot"] not in by_acc:
+                print(f"WARN: {r['uniprot']} is no longer in EXEMPLARS; dropping its row",
+                      file=sys.stderr)
+                continue
             gene, org, term_id = by_acc[r["uniprot"]]
             r["review_action"] = action_for(actions, gene, org, r["uniprot"], term_id)
+            kept.append(r)
+        rows = kept
     else:
         rows = []
         for gene, org, acc, term, term_id, expected in EXEMPLARS:

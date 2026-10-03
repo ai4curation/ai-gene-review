@@ -7,12 +7,15 @@ autolink_gene_symbols: false
 [← back to TreeGrafter Inference Evaluation](../TREEGRAFTER.md)
 
 > **Provenance.** Every count on this page comes from the sidecars
-> regenerated on 2026-10-01 at commit **`943b98815`** (see
-> [Results](../TREEGRAFTER.md#results-computed-at-commit-943b98815-2026-10-01)
+> regenerated on 2026-10-03 at commit **`f81b9f300`** (see
+> [Results](../TREEGRAFTER.md#results-computed-at-commit-f81b9f300-2026-10-03)
 > on the main page for the reproduce commands and the drift since the earlier
-> 2026-09-06 snapshot, which had 306 down-grades).
+> 2026-09-06 snapshot, which had 306 down-grades, and the 2026-10-01 refresh,
+> which had 299). Since 2026-10-03 the population includes the
+> [rejection re-review](../TREEGRAFTER.md#rejection-re-review-2026-09-24)
+> outcomes and the [holozoan](holozoan-hippo-case-study.md) rows.
 
-This sub-page drills into the **299 down-graded** TreeGrafter annotations
+This sub-page drills into the **283 down-graded** TreeGrafter annotations
 (`REMOVE` / `MARK_AS_OVER_ANNOTATED` / `MODIFY` from the
 [main evaluation](../TREEGRAFTER.md)) and asks the question directly: **does it
 make sense where TreeGrafter placed the protein on the PANTHER tree?**
@@ -27,23 +30,25 @@ recorded for every protein:
 
 The join (graft node + family + subfamily + propagated term + reviewer action)
 is computed by [`analyze_placement.py`](analyze_placement.py) into
-[`treegrafter_placement.tsv`](treegrafter_placement.tsv). 298 of the 299
-cases recover a subfamily; all 299 recover a graft node.
+[`treegrafter_placement.tsv`](treegrafter_placement.tsv). 282 of the 283
+cases recover a subfamily; all 283 recover a graft node.
 
-Every one of the 299 is then assigned to one of the four failure modes below
+Every one of the 283 is then assigned to one of the four failure modes below
 by [`classify_failure_modes.py`](classify_failure_modes.py) →
 [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv). The
 assignment has two layers: a per-row curated table,
-[`failure_mode_curated.tsv`](failure_mode_curated.tsv) (160 `current` rows,
+[`failure_mode_curated.tsv`](failure_mode_curated.tsv) (163 `current` rows,
 each with a one-line justification), which always wins; and a keyword
 heuristic over the GO aspect and the reviewer's `review.reason` for the rest
-(123 rows), with 16 rows left unclassified. The curated table also keeps **19
+(87 rows), with 33 rows left unclassified. The curated table also keeps **38
 `superseded` rows** — earlier calls on annotations that are no longer
-down-graded at `943b98815` (e.g. `ilvA-I`/`ilvA-II`, `K9IMD0` GO:0019731,
-`mdr`, `aprA` electron transfer), each annotated with its current action —
-which the classifier ignores. Six rows superseded at the 2026-09-27 refresh
-(`fogD` ×4, `IRE1` GO:0070059, `K9IJK6` GO:0014909) have since re-entered the
-down-graded set after follow-up reviews and are `current` again. The operational rule that separates modes 1 and 4: **if
+down-graded at `f81b9f300` (e.g. `ilvA-I`/`ilvA-II`, `K9IMD0` GO:0019731,
+`mdr`, `aprA` electron transfer, and the 19 rows the rejection re-review
+relaxed, such as `nuoG`/`nuoL`/`nuoM` GO:0003954, `mobA` GO:1902758 and
+`ptxD` ×2), each annotated with its current action — which the classifier
+ignores. Six rows superseded at the 2026-09-27 refresh (`fogD` ×4, `IRE1`
+GO:0070059, `K9IJK6` GO:0014909) re-entered the down-graded set after
+follow-up reviews and are `current` again. The operational rule that separates modes 1 and 4: **if
 the PANTHER *subfamily* name already describes the protein correctly and the
 bad term came from a higher node, it is mode 1; if the subfamily itself is the
 wrong enzyme, it is mode 4.**
@@ -53,43 +58,61 @@ are not unique across the corpus (`mdh` in METEA and PSEPK, `ALB` in CANLF and
 FELCA, the two PSEPK `dapF` paralogs), and a symbol-keyed join silently pulled
 one organism's `review.reason` onto another's row.
 
-**Fifty-eight of the 123 heuristic rows are decided by construction rather than
-by reading the reviewer:** 51 cellular-component terms (mode 3 by aspect alone)
-and 7 rows whose term is on an explicit low-information binding allowlist
+**Thirty-four of the 87 heuristic rows are decided by construction rather than
+by reading the reviewer:** 33 cellular-component terms (mode 3 by aspect alone)
+and 1 row whose term is on an explicit low-information binding allowlist
 (`binding`, `protein binding`, `identical protein binding`, `small molecule
 binding` — mode 3 whatever the reason says). Terms that name a real ligand
 (`ubiquinone binding`, `double-stranded DNA binding`, `metal ion binding`) are
 *not* on that list and are decided from the reviewer's reason like any other
-row. That leaves **65 rows genuinely placed by keyword**, which is the tier the
-second-pass curation should target.
+row. That leaves **53 rows genuinely placed by keyword**, which is the tier the
+second-pass curation should target. The keywords read the reviewer's current
+wording, so a rewritten reason can move a row: the rejection re-review's
+strengthened reasons took `PP_0312` and `scpC` from mode 1 to mode 0 and
+`benB` from mode 0 to mode 4, and made `flgE` `cytosol` match the pseudo-enzyme
+keywords (it is curated back to mode 3).
 
 | Mode | annotations | share | proteins | MF | BP | CC |
 |---|---:|---:|---:|---:|---:|---:|
-| 1 Granularity (family / node-level or sibling term) | 149 | 50% | 122 | 81 | 68 | 0 |
-| 3 Generic / out-of-context localization, binding or process *(informativeness policy)* | 93 | 31% | 85 | 18 | 24 | 51 |
-| 4 Within-superfamily mis-placement | 37 | 12% | 24 | 23 | 13 | 1 |
-| 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 | 1 | 3 | 0 |
-| 0 Unclassified (heuristic declines; curation queue) | 16 | 5% | 14 | 10 | 6 | 0 |
+| 1 Granularity (family / node-level or sibling term) | 133 | 47% | 107 | 70 | 63 | 0 |
+| 3 Generic / out-of-context localization, binding or process *(informativeness policy)* | 70 | 25% | 55 | 9 | 27 | 34 |
+| 4 Mis-placement (within a superfamily, or onto the wrong family) | 42 | 15% | 29 | 24 | 16 | 2 |
+| 2 Pseudo-enzyme / co-opted fold | 5 | 2% | 3 | 2 | 3 | 0 |
+| 0 Unclassified (heuristic declines; curation queue) | 33 | 12% | 18 | 12 | 21 | 0 |
 
 The `proteins` column counts distinct **review files**, not gene symbols: a
 symbol-keyed count merges the two `mdh` proteins and other cross-organism or
-paralogous symbol collisions, and reads modes 3 and 4 as 83 and 23.
+paralogous symbol collisions, and reads modes 1 and 4 as 104 and 28.
 
-The 16 unclassified rows are deliberate: the reviewer's reason states a real
-problem but not in words the heuristic can safely map to a mode (`acoA`,
-`ahpC`, `benB`, `cbcW` ×2, `Cgas`, `davA`, `flgG`, `groES`, `I7J3R9`, `mfd`,
-`nuoM`, `PP_0094`, `PP_0301`, `PP_2608` ×2). Some do not fit any of the four modes cleanly —
-`Cgas` is a lineage-specific loss of function with direct species evidence,
-`cbcW` a complex-level activity on a single subunit — and are left as mode 0
-rather than pushed into the nearest bucket.
+The 33 unclassified rows are deliberate: the reviewer's reason states a real
+problem but not in words the heuristic can safely map to a mode. Seventeen
+are holozoan: the five over-annotations on each of the three *S. rosetta*
+cadherins (`cell morphogenesis`, `calcium-dependent cell-cell adhesion`,
+`cell migration`, `cell-cell adhesion mediated by cadherin`, `cadherin
+binding`), which the reviews call untested rather than impossible, and
+*S. rosetta* `warts` `GO:0000082` and `GO:0043065`. The other 16 are `ahpC`,
+`carB`, `cbcW` ×2, `Cgas`, `groES`, `mfd`, `nuoM`, `PP_0094`, `PP_0301`,
+`PP_0312`, `PP_2608` ×2, `pyrC'` `GO:0006145`, `pyrE` `GO:0046132` and
+`scpC`. (`pyrC'` `GO:0006145` is a case for the mode-1/mode-4 rule: the
+reviewer calls it a broad-family propagation, but the subfamily it landed in,
+*ALLANTOINASE*, is itself the wrong enzyme for a PyrC-like protein.) Some do not fit any
+of the four modes cleanly — `Cgas` is a lineage-specific loss of function
+with direct species evidence, `cbcW` and `nuoM` a complex-level activity or
+property on a single subunit — and are left as mode 0 rather than pushed
+into the nearest bucket. Two of the previous refresh's mode-0 rows (`davA`,
+`acoA`), and `hutF`, which the heuristic had put in mode 1, are now curated as
+mode 4 from the substrate-mismatch rationales in the
+[rejection re-review records](rereview-2026-09-24/README.md); `I7J3R9` left
+the queue because its row is retired, and `flgG` because it is no longer
+down-graded.
 
 ## Headline: placement is usually fine — the *term* is the problem
 
 Reading the propagated GO term against the PANTHER **subfamily name** shows that
 TreeGrafter rarely puts a protein in a grossly wrong part of the tree. The
 fold/family assignment is usually reasonable. What fails is the GO term
-that rides along with the graft. Four failure modes account for 95% of the
-down-grades (the remaining 5% are mode 0):
+that rides along with the graft. Four failure modes account for 88% of the
+down-grades (the remaining 12% are mode 0):
 
 ### 1. Family-level over-generalisation (term granularity)
 
@@ -127,9 +150,10 @@ co-opted to a non-enzymatic role — something a tree graft cannot detect.
 |---|---|---|---|
 | OCTS1 | `glutathione transferase activity`, `glutathione metabolic process` (OVER) | GLUTATHIONE S-TRANSFERASE | Octopus **S-crystallin**: GST fold, ~1/700–1/6000 of authentic GST activity; a structural eye-lens protein (PMID:7639695, PMID:27499004, PMID:8587103) |
 | A0A8B6GS20 (MTMR9) | `phosphatidylinositol dephosphorylation` (MODIFY), `negative regulation of autophagy` (OVER) | myotubularin-related | **Pseudophosphatase**: lacks the catalytic cysteine; regulates active MTMR partners |
+| pyrC' (*P. putida*) | `allantoinase activity` (REMOVE) | ALLANTOINASE (PTHR43668:SF2) | The reviewer cites direct work on the *P. putida* complex identifying it as a **catalytically inactive PyrC-like partner of PyrB** (heuristic mode 2) |
 
-Genuine pseudo-enzymes turn out to be **rare** in this corpus — four
-annotations on two genes. The two rows the previous snapshot flagged as
+Genuine pseudo-enzymes turn out to be **rare** in this corpus — five
+annotations on three genes. The two rows the previous snapshot flagged as
 contested mode-4 calls, `K9IMD0` (draculin) `GO:0019731` and `mdr`
 `GO:0015421`, are no longer down-graded (`K9IMD0` is now `KEEP_AS_NON_CORE`
 after a follow-up review, `mdr` `UNDECIDED` after the 2026-09-20 re-review;
@@ -145,14 +169,20 @@ sensor (mode 3).
 This mode is **not a grafting error**: it records the review standard's
 preference for specific, core terms. Low-information CC terms (`cytoplasm`, `cytosol`, `plasma membrane`, `nucleus`)
 or organism-context BP terms inherited from a distant ancestor, correct-ish but
-non-core or absent from the host. Examples: `relA` → `plasma membrane`, `dinB`
-→ `cytosol`, `fbp` → `sucrose biosynthetic process` (a pathway the host does
-not run), and several *Pseudomonas putida* genes. Note that `zwf` →
-`pentose-phosphate shunt` and the `mcr` LPS-core process call are **mode 1**,
-not mode 3 — both reasons state family/node-level propagation explicitly, and
-they are mode 1 in the sidecar. 51 of the 93 mode-3 rows are CC terms placed
-by aspect alone; under a less strict review policy most of them would be
-*retained* rather than down-graded.
+non-core or absent from the host. Examples: `relA` → `plasma membrane`, `flgE`
+→ `cytosol` (an exported hook subunit), `fbp` → `sucrose biosynthetic
+process` (a pathway the host does not run), and, new at this refresh,
+animal-only processes on unicellular holozoans: adherens-junction
+organization and cell-cell junction assembly on the three *S. rosetta*
+cadherins, `regulation of organ growth` on *S. rosetta* `warts`, `cell fate
+specification` on *Capsaspora* `CoBra` and fungal/plant mannan biosynthesis on
+`couscous` (see the [case study](holozoan-hippo-case-study.md)). Note that the
+`mcr` LPS-core process call is **mode 1**, not mode 3 — its reason states
+node-level propagation explicitly. 33 of the 70 mode-3 rows are CC terms
+placed by aspect alone (34 CC rows in all). Mode 3 is the mode the rejection
+re-review shrank most: 40 of the 66 rows that left the down-graded set at
+this refresh were mode 3, mostly redundant `cytosol`/`cytoplasm` rows now kept
+as non-core.
 
 ### 4. **True within-superfamily mis-placement** (the cases a re-run would change)
 
@@ -169,10 +199,11 @@ bioinformatic/structural check) would change the call.
 | **mqo1 / mqo2 / mqo3** | `(S)-2-hydroxyglutarate dehydrogenase activity` (REMOVE) | L-2-HYDROXYGLUTARATE DEHYDROGENASE, MITOCHONDRIAL | **Malate:quinone oxidoreductase** |
 | **dapE**, **pepV** | `acetylornithine deacetylase activity`, `L-arginine biosynthetic process` (REMOVE) | N-ACETYL-L-CITRULLINE DEACETYLASE (PTHR43808:SF31, M20A) | **DapE** succinyl-DAP desuccinylase / **PepV** dipeptidase — ArgE branch of a mixed M20A family ‡ |
 | **Q53353, lsdB, Saro_0802, Saro_2809** | `carotenoid dioxygenase activity`, `carotene catabolic process` (REMOVE/MODIFY) | CAROTENOID 9,10(9',10')-CLEAVAGE DIOXYGENASE (PTHR10543) | **Lignostilbene / resveratrol dioxygenases** (EC 1.13.11.43) — no stilbene subfamily exists |
-| **ptxD** | `glyoxylate reductase (NADPH)`, `hydroxypyruvate reductase` (REMOVE) | GLYOXYLATE/HYDROXYPYRUVATE REDUCTASE B | **Phosphonate dehydrogenase** (D-2-hydroxyacid DH superfamily) |
 | **mupP** | `phosphoglycolate phosphatase activity`, `DNA repair` (REMOVE) | PHOSPHOGLYCOLATE PHOSPHATASE (PTHR43434) | **MurNAc-6-phosphate phosphatase** (HAD superfamily) |
 | **quiA** | `quinoprotein glucose dehydrogenase activity` (OVER) | QUINOPROTEIN GLUCOSE DEHYDROGENASE | **Quinate dehydrogenase (quinone)** |
-| **kdsC**, **lytN**, **pvdD**, **davD**, **lpdV**, **ech**, **galB**, **PP_1257** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; an amidase in a lytic-transglycosylase subfamily; a pyoverdine NRPS module carrying EntF terms; LPD-val vs LPD-glc across *P. putida* E3 paralogs; … |
+| **coWts** (*Capsaspora*) | `actomyosin structure organization` (REMOVE), `cytoskeleton` (OVER) | CITRON RHO-INTERACTING KINASE (PTHR22988:SF71) | **Warts/LATS kinase** — a mis-placement *across* families, not within one ([case study](holozoan-hippo-case-study.md)) |
+| **coITGB2** (*Capsaspora*) | `cell-cell adhesion` (OVER) | INTEGRIN BETA-LIKE PROTEIN 1 (PTHR10082:SF3, vertebrate ITGBL1 node) | **Integrin beta** of a unicellular holozoan; the reviewer attributes the term to the wrong graft node |
+| **kdsC**, **lytN**, **pvdD**, **davD**, **davA**, **acoA**, **hutF**, **benB**, **lpdV**, **ech**, **galB**, **PP_1257** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; an amidase in a lytic-transglycosylase subfamily; a pyoverdine NRPS module carrying EntF terms; LPD-val vs LPD-glc across *P. putida* E3 paralogs; N-carbamoylputrescine amidase on the 5-aminopentanamide amidase DavA; … |
 
 ‡ **dapE discrepancy, unresolved.** The `dapE` reviewer's reason for
 `GO:0008777` says Q88MP5 "is assigned to the proteobacterial DapE
@@ -182,8 +213,11 @@ refer to the NCBIfam `TIGR01246` DapE signature it cites for `GO:0006526`, not
 to PANTHER. The mode-4 call rests on the PANTHER subfamily and stands; the
 review's wording is noted here and not changed.
 
-Mis-placements are **12% of the down-grades (37 annotations, 24 proteins)** —
-still the minority. This share was previously reported as 19% (58 annotations)
+Mis-placements are **15% of the down-grades (42 annotations, 29 proteins)** —
+still the minority. `ptxD`, listed here before, left the set when the
+rejection re-review moved its two rows to `UNDECIDED` (substrate genuinely
+unknown); the `coWts` and `coITGB2` rows are new, and `davA`, `acoA`,
+`hutF` and `benB` moved in from modes 0 and 1. This share was previously reported as 19% (58 annotations)
 from a looser heuristic that filed any reason containing `paralog` or `rather
 than` as mode 4; reasons that explicitly say *family-level propagation*
 (`zwf`, `scpC`, `paaF`/`paaH`/`paaJ`, the four `aroQ` rows) now correctly land
@@ -202,7 +236,7 @@ independent, signature-based opinion). Computed live by
 [`graft_check.py`](graft_check.py) →
 [`treegrafter_graft_check.tsv`](treegrafter_graft_check.tsv) (UniProt
 fetched 2026-09-27; the `review_action` column was refreshed offline at
-`943b98815` with `--refresh-actions` and reads from `treegrafter_review.tsv`,
+`f81b9f300` with `--refresh-actions` and reads from `treegrafter_review.tsv`,
 so it shows the current action — `aceK` `ACCEPT`, `NaUGT1` `UNDECIDED`, the
 other eight as at selection). The first five exemplars:
 
@@ -325,12 +359,12 @@ reasonable hypothesis to test on a larger, independent sample.
 
 ## What this means for the "re-run TreeGrafter" question
 
-For the **bulk** of failures (modes 1–3, **82%** of the down-grades; modes 1
-and 2 alone are 51% if mode 3's informativeness calls are set aside), re-running TreeGrafter would
+For the **bulk** of failures (modes 1–3, **73%** of the down-grades; modes 1
+and 2 alone are 49% if mode 3's informativeness calls are set aside), re-running TreeGrafter would
 reproduce the *same, sensible* placement — the fix belongs at the
 **annotation** level (propagate the subfamily-specific term, gate
 catalysis-implying MF behind active-site checks, suppress generic CC), not at
-the placement level. For the **12%** in mode 4 (`aprA`, `fcs`, `mdh`,
+the placement level. For the **15%** in mode 4 (`aprA`, `fcs`, `mdh`,
 `mqo1–3`, `dapE`/`pepV`, the stilbene dioxygenases, `pvdD`, …), the placement
 itself is the suspect — and because they cluster in a handful of mixed
 families (see the
@@ -342,7 +376,7 @@ The main page's [corroboration analysis](../TREEGRAFTER.md#corroboration-treegra
 adds the operational lever: every annotation on this page is by construction an
 *uncorroborated* TreeGrafter call (`GO_REF:0000118`); the TreeGrafter calls
 that another pipeline reproduced surface under `GO_REF:0000120` and are
-accepted 78% of the time (an upper bound — reviewers could see the label).
+accepted 77% of the time (an upper bound — reviewers could see the label).
 
 ## Suggested follow-ups
 
@@ -351,10 +385,10 @@ accepted 78% of the time (an upper bound — reviewers could see the label).
   note above); with ten down-graded rows and no controls, this is
   illustrative. Next: a fresh sample that includes accepted TreeGrafter rows
   as controls, with review actions recorded before the reports are read.
-- **Classify every down-grade**: done for the current 299
-  (`classify_failure_modes.py`; 160 hand-curated, 123 heuristic, 16 mode 0).
-  Remaining: second-pass the **65 keyword-placed MF/BP heuristic rows** and
-  the 16 mode-0 rows.
+- **Classify every down-grade**: done for the current 283
+  (`classify_failure_modes.py`; 163 hand-curated, 87 heuristic, 33 mode 0).
+  Remaining: second-pass the **53 keyword-placed MF/BP heuristic rows** and
+  the 33 mode-0 rows.
 - **Active-site / pseudo-enzyme check** on mode-2 candidates (catalytic-residue
   conservation) — an upstream signal TreeGrafter lacks.
 - **Feed errors upstream**: family-vs-subfamily granularity cases (mode 1) as
