@@ -1720,6 +1720,12 @@ export-annotations-tsv output_file="exports/exported_annotations.tsv":
     @mkdir -p exports
     uv run python -c "from ai_gene_review.export import TabularExporter; from pathlib import Path; exporter = TabularExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); exporter.export_to_tsv(files, '{{output_file}}'); print(f'Exported to {{output_file}}')"
 
+# Export reviews as a GOA change set (one row per reviewed annotation + NEW rows),
+# consumed by the genesets enrichment eval (evals/aigr_changeset in monarch-initiative/genesets)
+export-goa-changeset organism="human" output_file="exports/goa_changeset_human.tsv":
+    @mkdir -p exports
+    uv run python scripts/export_goa_changeset.py --organism {{organism}} -o {{output_file}}
+
 # Export existing_annotations to JSON format (for linkml-browser)
 export-annotations-json output_file="exports/exported_annotations.json":
     @mkdir -p exports
