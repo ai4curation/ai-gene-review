@@ -131,7 +131,7 @@ Across the characterized sORF-class set, recurring themes are:
 | theme | examples | typical mechanism |
 |---|---|---|
 | Regulators of membrane pumps and transporters | `SLN`, `PLN`, `MRLN`, `ERLN`, `STRIT1` (SERCA); `TUNAR`; `SMIM43`/NEMEP (glucose transporters) | single TM helix binds the pump and changes its kinetics — an *enzyme regulator* role |
-| Mitochondrial assembly factors and complex subunits | `UQCC6` (BRAWNIN, complex III), AltMIEF1, `MTLN`, `PIGBOS1`, `SMIM26`, `CEBPZOS`, `MLDHR` | assembly/stabilisation of respiratory complexes or mitoribosome; organelle contact |
+| Mitochondrial assembly factors and complex subunits | `UQCC6` (BRAWNIN, complex III), AltMIEF1 (mitoribosome large subunit), `MTLN`, `PIGBOS1`, `SMIM26`, `MLDHR` (LDH inhibitor) | assembly/stabilisation of respiratory complexes or mitoribosome; organelle contact (`CEBPZOS` was listed here originally; its review found only localization evidence) |
 | Membrane fusion | `MYMX` (myomixer, with myomaker) | fusogen partner |
 | RNA-decay and translation control | `NBDY` (decapping), PRKCH-uORF2, `ASDURF` | scaffolding RNP complexes; *cis* uORF regulation |
 | Signalling scaffolds / nuclear regulators | `SPAAR` (TORC1), `MARCHF6-DT`, PINT87aa, `HOXB-AS3` peptide, SEHBP | adaptor/binding partner of a larger protein |
@@ -228,6 +228,66 @@ cached publications plus targeted PubMed retrieval.
      cardiac line, from a paper whose main topic is Wnt signalling. This is the weakest of
      the six and is a candidate to drop.
 
+## Tier 2 results (2026-10-03)
+
+Tier 2 covered 43 gene products, each reviewed and validated. They are 9 named emerging
+microproteins, 13 SMIMs, 6 alternative-ORF or uORF peptides, humanin with SHLP1–6, MOTS-c,
+and MTRNR2L1–7. **MTRNR2L8–13 are not reviewed**: a safety classifier stopped the agent
+working on them before any file was written; see notes. Across the 43, the 302 existing GOA
+rows came out as: 145 ACCEPT, 24 KEEP_AS_NON_CORE, 44 MARK_AS_OVER_ANNOTATED, 32 MODIFY,
+54 REMOVE and 3 UNDECIDED. There were 9 NEW proposals.
+
+| group | genes | main outcome |
+|---|---|---|
+| named emerging microproteins | `ASDURF`, `MLDHR`, `MARCHF6-DT`, `CLMB`, `TZMP1`, `SMIM22`, `CEBPZOS`, `HOXB-AS3`, `LINC-PINT` | mostly sound but single-lab, often abstract-only; generic binding rows turned into informative MFs (`MLDHR` LDH inhibitor GO:0160193; `CLMB` calcineurin binding GO:0030346 plus NEW protein-membrane adaptor GO:0043495; `MARCHF6-DT` PAR binding GO:0072572); `TZMP1` NEW MKS complex membership |
+| alt-ORF / uORF peptides | AltMIEF1 (`MIEF1__L0R8F8`), DDIT3 uORF (`DDIT3__P0DPQ6`), PRKCH uORF2 (`PRKCH__C0HM02`), SEHBP (`ZNF689__C0HLU2`), miPEP155 (`MIR155HG__C0HMA1`), SHMOOSE (`C0HM83`) | the first reviews made under the `<HOST>__<ACC>` convention; see hazard 1 below |
+| SMIM series | `SMIM2`, 5, 8, 10, 11, 12, 13, 14, 15, 18, 36, 40, 41 | no function known for any; 22 bare `protein binding` rows from yeast two-hybrid screens removed; what remains is accurate and almost empty |
+| mtDNA-rRNA-encoded peptides | humanin (`MT-RNR2__Q8IVG9`), SHLP1–6 (`MT-RNR2__*`), MOTS-c (`MT-RNR1__A0A0C5B5G6`) | humanin keeps a sound core (receptor ligand GO:0048018, BH3 domain binding GO:0051434, amyloid-beta binding GO:0001540) once 12 binding rows are triaged; SHLP2 gets its first MFs (NEW); MOTS-c: two GOA errors fixed, three NEW antimicrobial terms |
+| nuclear humanin-like loci | `MTRNR2L1`–`MTRNR2L7` | every row inherited from humanin; 33 of 45 marked over-annotated and 8 removed where the locus substitutes residues known to abolish humanin activity |
+
+### What Tier 2 adds
+
+1. **The mRNA's cis effect is being annotated to the peptide (uORF peptides).** In `PRKCH__C0HM02`,
+   5 of 10 GOA rows describe how uORF2 controls PKC-eta translation. That is a property of the
+   mRNA and the scanning ribosome, not of the released 26-aa peptide. The 2009 source paper never
+   detected the peptide. The rows were removed. The peptide's own function, PKC inhibitor
+   activity GO:0008426, is what remains. `DDIT3__P0DPQ6` shows the same split: the well-known
+   repression of CHOP translation was deliberately *not* annotated to the peptide. This is
+   probably systematic across uORF-peptide entries and is worth raising with GOA/UniProt.
+2. **Signature-based IEA on peptides shorter than the signature.** SHLP5, a 24-aa peptide,
+   carries an InterPro2GO aromatic-amino-acid hydroxylase activity from IPR019774. That entry
+   describes a catalytic domain several hundred residues long. Removed. A length guard in
+   InterPro2GO would prevent this whole class of error.
+3. **Annotations inherited from a peptide that may not exist.** MTRNR2L1–13 are HGNC-classified
+   pseudogenes. Every row on them traces back to humanin: through ISS, through IEA copies of
+   UniProt's own by-similarity location lines (so one claim is counted twice), or through IBA
+   from PANTHER node PTN002141596. That node spans MT-RNR2 plus 13 nuclear copies, so 13 gene
+   products are annotated as receptor antagonists on the evidence of one mitochondrial peptide.
+   Only `MTRNR2L5` has a peptide-level assay of its own, which used synthetic HN5.
+4. **Interaction screens are still the largest source of removals.** That held in the SMIMs and
+   again in humanin. Several partners, such as UBQLN1/2 and SGTA, are chaperones that catch any
+   exposed transmembrane helix.
+5. **Synthetic-peptide evidence and single labs dominate.** miPEP155, MOTS-c, humanin, SHMOOSE
+   and the SHLPs are known almost entirely from exogenous peptide, often at µM doses or as an
+   analogue. `MLDHR`, `MARCHF6-DT`, `LINC-PINT`, `SEHBP` and `MIR155HG__C0HMA1` each rest on
+   one lab. Two cases are odd: for miPEP155 the ORF is not in the mouse genome, yet the disease
+   models used mice; for SHMOOSE the reviewer's sequence check puts the start codon inside
+   tRNA-Ser.
+6. **GOA errors found and fixed** (each a candidate report to the source):
+   - MOTS-c GO:2001145 names a PIP3 *5*-phosphatase, but the evidence concerns PTEN, a
+     3-phosphatase. Modified to the parent term.
+   - MOTS-c "involved in purine biosynthesis" has the wrong sign: the peptide blocks it.
+   - HOXB-AS3 "protein stabilization" comes from a paper whose claim is about stabilising
+     c-Myc *mRNA*.
+   - Humanin "iron ion homeostasis" (NAS) rests only on co-occurrence with iron deposits.
+7. **Evidence strength of the 9 new annotations (NEW):**
+   - `CLMB`: IDA, calcineurin recruitment to membranes.
+   - `TZMP1`: IDA, MKS complex by co-purification.
+   - `MIR155HG__C0HMA1`: IDA, HSPA8 ATPase inhibition in a cell-free assay with the human protein.
+   - SHLP2: 3 terms, receptor ligand for ACKR3 and misfolded-IAPP binding.
+   - MOTS-c: 3 antimicrobial terms, resting mainly on one 2026 eLife paper. This is the most
+     recent and least replicated evidence in the set.
+
 ## Naming alternative-ORF peptides (vs isoforms and polyproteins)
 
 The repo already has two ways to handle several products from one gene. Neither fits
@@ -313,10 +373,12 @@ Last updated: 2026-09-30
 - [x] APELA (Elabela) — removed ISS transferred from the receptor Aplnr
 
 ## Tier 2 — sORF-class, emerging / thin evidence
-- [ ] ASDURF, MLDHR, MARCHF6-DT, CLMB, TZMP1, SMIM22, CEBPZOS, HOXB-AS3, LINC-PINT
-- [ ] SMIM series with IEA-only `membrane` (SMIM2, 5, 10, 11, 13, 15, 18, 36, 40, 41) and HTP/IDA localization only (SMIM8, 12, 14)
-- [ ] Alt-ORF entries (`<HOST>__<ACC>` folders): AltMIEF1 (L0R8F8), DDIT3 uORF (P0DPQ6), PRKCH uORF2 (C0HM02), SEHBP (C0HLU2), miPEP155 (C0HMA1), SHMOOSE (C0HM83)
-- [ ] mtDNA-rRNA peptides: humanin, MOTS-c, SHLPs; MTRNR2L1–13
+- [x] ASDURF, MLDHR, MARCHF6-DT, CLMB, TZMP1, SMIM22, CEBPZOS, HOXB-AS3, LINC-PINT
+- [x] SMIM series: SMIM2, 5, 8, 10, 11, 12, 13, 14, 15, 18, 36, 40, 41
+- [x] Alt-ORF entries (`<HOST>__<ACC>` folders): AltMIEF1 (L0R8F8), DDIT3 uORF (P0DPQ6), PRKCH uORF2 (C0HM02), SEHBP (C0HLU2), miPEP155 (C0HMA1), SHMOOSE (C0HM83)
+- [x] mtDNA-rRNA peptides: humanin, SHLP1–6, MOTS-c
+- [x] MTRNR2L1–7
+- [ ] MTRNR2L8–13: data fetched, reviews not written (agent stopped by a safety classifier; awaiting decision whether to retry)
 
 ## Tier 3 — over-annotation audit (PE4–5 with IBA/ISS function)
 - [ ] SNRPGP15, PMCHL1, PMCHL2, DPH3P1, GNG5B, LITAFD, ZNF788P
@@ -328,6 +390,22 @@ Last updated: 2026-09-30
 - [x] SMIM26, P3R3URF, ADIG (plus canonical small proteins such as TOMM5/6/7, PIGY, UQCC3)
 
 # NOTES
+
+## 2026-10-03
+
+- Tier 2 (43 gene products) reviewed, one agent per gene or per small family batch; each
+  committed once it passed validation. These were the first reviews in the `<HOST>__<ACC>`
+  and bare-accession folders.
+- MTRNR2L8–13: the agent was stopped by a safety classifier while writing the review files, and
+  no gene files were changed. Its findings, recorded here only:
+  - HGNC reclassified all six as pseudogenes in 2021.
+  - No study detects a peptide from any of them.
+  - Every row is inherited from humanin, or from synthetic HN5 for the apoptosis IBA.
+  - MTRNR2L12 has the same sequence as MTRNR2L8 but lacks its IBA rows.
+  - Its planned actions match MTRNR2L1–7: IBA and extracellular rows over-annotated,
+    cytoplasm kept as non-core, no core functions.
+  - Not retried pending a decision.
+- Corrected the theme table: `CEBPZOS` has no evidence of an assembly role.
 
 ## 2026-09-30
 
