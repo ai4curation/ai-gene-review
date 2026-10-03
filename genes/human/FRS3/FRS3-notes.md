@@ -70,7 +70,8 @@ dominance. The module's paralog-variant modelling is appropriate.
   of EGFR signalling process is from one lab; left as a suggested question rather than NEW.
 - Microtubule binding in neurons: [PMID:19943849 "we demonstrate that neuronal Frs3 binds
   microtubules comparable to the microtubule-associated protein, MAP2, while Frs2 does not"].
-  -> proposed NEW GO:0008017 microtubule binding (abstract-only; relevance to function unclear).
+  -> GO:0008017 microtubule binding not proposed: rodent material (human would be ISO at best),
+  abstract-only, and directness unverified; kept as a suggested question (PR #3886 review).
 - Rnd1/Rnd2 binding to the C-terminal tail [PMID:15738000].
 - ULK2 binds the PTB domain [PMID:16887332].
 
