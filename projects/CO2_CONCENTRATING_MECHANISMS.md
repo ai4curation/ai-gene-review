@@ -17,8 +17,8 @@ candidate for engineering into C3 crops. The first deliverable is the
 [pyrenoid CCM module](../modules/pyrenoid_ccm.html) (`modules/pyrenoid_ccm.yaml`,
 status DRAFT). It follows the six-step minimal-pyrenoid plan of Fei et al.
 (2022) and Adler et al. (2022), and grounds each step on Chlamydomonas proteins
-with UniProt ids. All 12 Chlamydomonas proteins in the module now have gene
-reviews. The reviews changed the module in four places:
+with UniProt ids. All 14 Chlamydomonas proteins in the module (12 named participants plus
+BST2 and BST3) now have gene reviews. The reviews changed the module in four places:
 
 - **LCI5 is EPYC1**, the Rubisco linker that forms the pyrenoid matrix. The
   old LCI5 review called it a protein of unknown function; it has been redone.
@@ -94,6 +94,8 @@ says so in its notes file.
 | RBMP1 = BST4 (A0A2K3DMS8) | 5 | monoatomic ion channel activity; pyrenoid tubule | yes, after update (not a tether) |
 | CAH3 (Q39588) | 2 | carbonate dehydratase activity; thylakoid lumen and pyrenoid tubule | yes, after update |
 | `BST1` (A0A2K3CTN0) | 5 | monoatomic anion channel activity; thylakoid membrane | yes, after update |
+| BST2 (A0A2K3CTQ2) | 5 | monoatomic anion channel activity; thylakoid membrane | yes |
+| BST3 / LCI11 (A0A2K3CTP3) | 5 | monoatomic anion channel activity; thylakoid membrane (native-promoter imaging) | yes |
 | LCIB (Q75NZ2) | 0 | carbonate dehydratase activity; chloroplast stroma | yes |
 | LCIC (Q75NZ1) | 0 | no molecular function; zinc binding, LCIB/LCIC complex, stroma | yes, after update (no CA activity) |
 | HLA3 (A0A2K3E226) | 9 | bicarbonate transmembrane transporter activity; plasma membrane | yes |
@@ -102,13 +104,13 @@ says so in its notes file.
 
 Patterns worth noting for GO curation:
 
-- Four of the twelve proteins had **no GOA annotations at all** (EPYC1, LCIB,
+- Four of the fourteen proteins had **no GOA annotations at all** (EPYC1, LCIB,
   LCIC, CIA5), despite decades of genetic and structural work.
 - Several electronic annotations were wrong in the same way:
   - **Location:** the UniProt ARBA rule placed HLA3 in the vacuole membrane, and
     BST1 and BST4 in the plasma membrane.
   - **IBA from other family members:** the VCCN1 chloride-channel IBA was
-    applied to the thylakoid bestrophins, and the formate-transport IBA from
+    applied to all four thylakoid bestrophins (BST1-4), and the formate-transport IBA from
     bacterial FNT channels to LCIA.
 - **Ontology gaps:** there is no GO process term for a CO2-concentrating
   mechanism or for pyrenoid assembly, and no complex term for LCIB/LCIC.
@@ -116,8 +118,6 @@ Patterns worth noting for GO curation:
 
 Still to do:
 
-- [ ] BST2 (A0A2K3CTQ2) and BST3 (A0A2K3CTP3), the other two module BST
-  family members.
 - [ ] Ground MITH1, RBMP2 and SAGA2 accessions from the cached papers' `Cre`
   loci, then review them.
 - [ ] Regenerate `genes/CHLRE/LCI5/LCI5-pathway.md`, which predates the EPYC1
