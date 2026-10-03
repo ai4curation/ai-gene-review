@@ -2,9 +2,42 @@
 title: "UniProt CAUTION Note Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
+species: [human]
+genes: [RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2, DPYSL2, DPYSL3, DPYSL4, CRMP1, ILK, ROR1, CASP12, AZIN2]
+manifest:
+  slides:
+    - href: UNIPROT_CAUTION_NOTE/slides/UNIPROT_CAUTION_NOTE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/MXs2GAexVfUiJm199ytbVq
+      title: Project brief
 ---
 
 # UniProt CAUTION Note Project
+
+**Bottom line:** UniProt curators attach free-text CAUTION comments when a
+function is contested, was reclassified, rests on a retracted paper, or belongs
+to a domain that has lost its catalytic residues. Those are the cases where
+automated GO annotation is most likely to be wrong, so we used CAUTION notes as
+a worklist. A survey of reviewed UniProt found 14,830 CAUTION notes on 14,513
+entries, and two queries turned them into over-annotation flags: a positive
+parent MF term sitting above a `NOT`-ed child (Query A), and a CAUTION-cited
+paper used for a positive annotation that is never negated (Query B). Run
+against genes already curated here, the strong Query A flags matched the
+curators' decisions in 8 of 11 cases. Run across all of UniProt, they
+rediscovered known pseudoenzyme families (the CRMP/DPYSL proteins, ILK, ROR1,
+CASP12, AZIN2) that still carry electronic catalytic terms. We reviewed 13
+human genes from this worklist. Nine are pseudoenzymes that kept an inferred (IEA or IBA)
+catalytic term (DPYSL5, DPYSL2, DPYSL3, DPYSL4, CRMP1, ILK, ROR1, CASP12,
+AZIN2); each review removes at least one of these catalytic rows, while
+DPYSL4 leaves its broad hydrolase row UNDECIDED because of a reported
+deacetylation activity in mouse CRMP3. The Pending list below
+still names UniProt-wide scaling, which is done.
+
+We did this because a curator's written warning is a cheap, precise pointer to
+annotations that deserve scrutiny, and because the GO `NOT` qualifier turns out
+to be its curated counterpart: the highest-value targets are CAUTIONs with no
+matching `NOT`.
 
 ## Overview
 
@@ -287,7 +320,7 @@ gitignored but regenerable. Rerun after fetching new genes.
 | Step | Command | Outputs |
 |------|---------|---------|
 | Local extraction | [`extract_caution_notes.py`](UNIPROT_CAUTION_NOTE/extract_caution_notes.py) | [`caution_notes.tsv`](UNIPROT_CAUTION_NOTE/caution_notes.tsv), [`caution_notes.md`](UNIPROT_CAUTION_NOTE/caution_notes.md) |
-| DB-wide survey (REST API `cc_caution`) | [`uniprot_api_survey.py`](UNIPROT_CAUTION_NOTE/uniprot_api_survey.py) (`--organism 9606` for human) | [`caution_uniprot_reviewed.tsv`](UNIPROT_CAUTION_NOTE/caution_uniprot_reviewed.tsv), [`api_survey.md`](UNIPROT_CAUTION_NOTE/api_survey.md) |
+| DB-wide survey (REST API `cc_caution`) | [`uniprot_api_survey.py`](UNIPROT_CAUTION_NOTE/uniprot_api_survey.py) (`--organism 9606` for human) | `caution_uniprot_reviewed.tsv` (generated locally; not archived), [`api_survey.md`](UNIPROT_CAUTION_NOTE/api_survey.md) |
 | Prioritized worklist | [`shortlist_candidates.py`](UNIPROT_CAUTION_NOTE/shortlist_candidates.py) | [`candidates_high_value.tsv`](UNIPROT_CAUTION_NOTE/candidates_high_value.tsv), [`candidates.md`](UNIPROT_CAUTION_NOTE/candidates.md) |
 | Local over-annotation queries (A/B) | [`caution_conjunction_queries.py`](UNIPROT_CAUTION_NOTE/caution_conjunction_queries.py) | [`caution_conjunction.md`](UNIPROT_CAUTION_NOTE/caution_conjunction.md), `conjunction_hits.tsv`, `caution_pmid_unnegated.tsv` |
 | Validate queries vs reviews | [`audit_queries_vs_reviews.py`](UNIPROT_CAUTION_NOTE/audit_queries_vs_reviews.py) | [`audit_queries_vs_reviews.md`](UNIPROT_CAUTION_NOTE/audit_queries_vs_reviews.md) |

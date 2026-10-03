@@ -56,3 +56,12 @@ metabolic process (BP) + GO:0005765 lysosomal membrane (CC); ATP binding / ATP
 hydrolysis secondary.
 
 Deep research: falcon out of credits (HTTP 402); grounded in UniProt + GOA + cached PMIDs.
+
+
+## Full annotation re-review — 2026-09-20
+
+Re-read all 51 annotation rows against the UniProt record, all cited primary abstracts, the full localization/transport papers (PMID:27456980 and PMID:33845046), and the five cached Reactome events. Traced the challenged inherited functions to PTHR11384/PTN004256010. Broad membrane, transport and ABC transporter assertions are true core properties and were restored; no donor-count objection is used.
+
+Direct ER sorting and negative peroxisome localization justify rejecting native peroxisomal location/import, but they do not separately refute all lipid metabolism or peroxisome-organization processes. Those independent claims remain UNDECIDED pending the coordinated hypothesis report. PMID:14533738 explicitly reports GFP-labelled human PMP69 fragments targeting peroxisomes, so that positive experimental row is UNDECIDED for construct-context reconciliation, not dismissed because the title emphasizes ABCD1. The earlier general native peroxisome assignment from PMID:9302272 remains rejected in light of direct later contradictory localization, while its rat-antibody versus human-full-length experimental context is explicitly acknowledged.
+
+Evidence excerpts: PMID:27456980, "ABCD4 does not localize to peroxisomes"; PMID:19010322, "only P70R lacks the region and is translated with NH(2)-terminal hydrophobic TMS1."; PMID:33845046, "ABCD4 transports cobalamin from the inside to the outside of liposomes in a manner that is dependent on ATPase activity". The description now identifies the specific N-terminal targeting difference rather than claiming absence of every organelle-targeting signal.

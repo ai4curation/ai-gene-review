@@ -1,11 +1,29 @@
 ---
 title: "Surveillance Immunity Gene Curation: Implementation Checklist"
-maturity: MATURE
+maturity: ARCHIVED
 tags: [BIOLOGY_DOMAIN]
 species: [worm]
+genes: [daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
+      title: Project brief (C. elegans surveillance immunity)
 ---
 
 # Surveillance Immunity Gene Curation: Implementation Checklist
+
+**Bottom line:** this is the implementation checklist for the six
+Priority 3 genes of the [CAEEL_SURVEILLANCE_IMMUNITY](CAEEL_SURVEILLANCE_IMMUNITY.md) project (daf-16, dbl-1, sta-2, nipi-3, lys-7,
+clec-60), written on 2025-12-29. It walks gene by gene, simplest first,
+through the 238 GOA rows the Priority 3 review counted, with tick boxes for
+each ACCEPT, NON-CORE, MODIFY and NEW decision and an effort estimate of
+40-60 hours. Its critical items were the LYS-7 lysozyme activity rows, the
+NIPI-3 pseudokinase *protein kinase activity* row, the generic DAF-16
+protein-binding rows and three NEW rows for CLEC-60. The final reviews
+removed the NIPI-3 kinase row, marked the LYS-7 enzymatic rows
+over-annotated, converted the DAF-16 protein-binding rows to MODIFY and
+added the three CLEC-60 NEW rows. The tick boxes were never updated, so
+read the gene YAML files for the outcome.
 
 ## Overview
 This document provides a line-by-line implementation checklist for updating the 6 surveillance immunity gene reviews based on the comprehensive curation summary.

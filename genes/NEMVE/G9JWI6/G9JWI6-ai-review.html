@@ -1,0 +1,3374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>delta - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>delta</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G9JWI6" target="_blank" class="term-link">
+                        G9JWI6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Nematostella vectensis</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "delta";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">9</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">2</span> Core Functions</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">9</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">3</span> Questions</a>
+
+
+
+        <a href="#review-experiments" title="Suggested experiments"><span class="nav-count">2</span> Experiments</a>
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G9JWI6" data-a="DESCRIPTION: NvDelta is the single canonical Delta-type DSL lig..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NvDelta is the single canonical Delta-type DSL ligand of the starlet sea anemone Nematostella vectensis (Cnidaria, Anthozoa). It is a single-pass type I membrane protein with an N-terminal MNNL (Notch ligand N-terminal) domain, a DSL domain and EGF-like repeats in the extracellular region, a transmembrane segment and a short cytoplasmic tail, i.e. the full bilaterian Delta/Serrate receptor-binding module. It is expressed in scattered &#34;salt-and-pepper&#34; ectodermal cells during gastrulation (overlapping neural and cnidocyte progenitors), later in tentacle ectoderm and mesenteries, and in the early mesoderm abutting Notch-expressing ectoderm. Morpholino knockdown of NvDelta, like knockdown of NvNotch, derepresses the proneural gene NvashA, while NvDelta overexpression suppresses NvashA in a gamma-secretase (DAPT)-sensitive manner, indicating that NvDelta acts as a juxtacrine ligand that activates NvNotch to restrain neural differentiation (lateral inhibition). Delta-Notch signalling at the mesoderm/ectoderm interface also induces endodermal fate. Whether NvDelta-triggered signalling acts through the canonical Su(H)/Hes transcriptional route is debated; NvDelta overexpression did not induce Nvhes genes, and a non-canonical mechanism has been proposed.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0005509" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro mapping from calcium-binding EGF-like domain signatures (IPR001881, IPR018097) present among the EGF repeats of NvDelta.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Calcium-binding EGF repeats are a structural feature of DSL ligands and the mapping is plausible, but calcium binding is a structural property rather than the signalling function of the ligand. Kept as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Derived from an ARBA-predicted &#34;Secreted&#34; subcellular location in the UniProt entry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NvDelta has a signal peptide, a single hydrophobic transmembrane segment (residues 442-463) and a cytoplasmic tail, and was characterised as a transmembrane DSL ligand. There is no evidence for a secreted or shed form in Nematostella; the &#34;Secreted&#34; location is an automated prediction inconsistent with the domain architecture. The membrane annotation captures the correct location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22155407" target="_blank" class="term-link">
+                                        PMID:22155407
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NvDelta possessed all characteristic domains of bilaterian Delta or Serrate notch ligands: a DSL domain, EGF repeats and a transmembrane domain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007154" target="_blank" class="term-link">
+                                    GO:0007154
+                                </a>
+                            </span>
+                            <span class="term-label">cell communication</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0007154" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from the DSL domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but very general; the specific process is captured by the Notch signaling pathway annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007219" target="_blank" class="term-link">
+                                    GO:0007219
+                                </a>
+                            </span>
+                            <span class="term-label">Notch signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0007219" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from the MNNL (Notch ligand N-terminal) domain. Supported in Nematostella by gene-specific perturbation: NvDelta knockdown phenocopies NvNotch knockdown, and NvDelta gain-of-function effects require gamma-secretase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NvDelta is the DSL ligand that initiates Notch signalling in Nematostella; the ligand performs the first step of the pathway (receptor engagement), so the process annotation is appropriate and core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                        PMID:25705370
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This demonstrates that NvNotch and NvDelta are both required to repress NvashA in the embryonic ectoderm.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                        PMID:25705370
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">To determine if the suppression of NvashA by Nvdelta required NvNotch, we treated Nvdelta:venus injected animals with DAPT.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0007399" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning prediction. In Nematostella, Delta-Notch signalling restrains neural differentiation (NvashA and downstream neural markers).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the Layden and Martindale data showing NvDelta is required to repress NvashA-dependent neural differentiation; this is a developmental consequence of the core ligand activity rather than the core function itself.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                        PMID:25705370
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This demonstrates that NvNotch and NvDelta are both required to repress NvashA in the embryonic ectoderm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated annotation; NvDelta is a single-pass type I membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the signal peptide plus single transmembrane segment and with the characterised domain structure. Plasma membrane localisation is expected for a juxtacrine DSL ligand but has not been shown directly in Nematostella, so the general term is retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22155407" target="_blank" class="term-link">
+                                        PMID:22155407
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NvDelta possessed all characteristic domains of bilaterian Delta or Serrate notch ligands: a DSL domain, EGF repeats and a transmembrane domain</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0030154" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA prediction; Delta-Notch signalling regulates neural, cnidocyte and endodermal fate decisions in Nematostella.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Broadly correct as a developmental outcome of Notch pathway activation, but general and not the core ligand activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40858588" target="_blank" class="term-link">
+                                        PMID:40858588
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Finally, we show that endodermal fate is induced in a single row of cells at the interface between the Notch-expressing ectoderm and the Delta-expressing mesoderm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005112" target="_blank" class="term-link">
+                                    GO:0005112
+                                </a>
+                            </span>
+                            <span class="term-label">Notch binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22155407" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22155407
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional roles of Notch signaling in the cnidarian Nematos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0005112" data-r="PMID:22155407" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed MF for the NvDelta ligand. NvDelta carries the conserved MNNL+DSL receptor-binding module, and its gain-of-function effect (NvashA suppression) requires gamma-secretase activity and phenocopies NvNotch intracellular-domain overexpression, while its loss phenocopies NvNotch loss.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Notch binding is the defining molecular function of DSL ligands and is annotated to Delta orthologs across bilaterians. The Nematostella evidence is genetic (ligand and receptor perturbations give matching, epistatic phenotypes) plus domain architecture, not a direct binding assay. Binding itself rests on the conserved MNNL/DSL receptor-binding module, so it is asserted by sequence similarity (ISS, PMID:22155407); the perturbation evidence is recorded separately under receptor ligand activity (GO:0048018), which it supports more directly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                        PMID:25705370
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This demonstrates that NvNotch and NvDelta are both required to repress NvashA in the embryonic ectoderm.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22155407" target="_blank" class="term-link">
+                                        PMID:22155407
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NvDelta possessed all characteristic domains of bilaterian Delta or Serrate notch ligands: a DSL domain, EGF repeats and a transmembrane domain</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:NEMVE/G9JWI6/G9JWI6-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Conserved Delta/Serrate/LAG-2 ligand module required for binding the extracellular region of Notch.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048018" target="_blank" class="term-link">
+                                    GO:0048018
+                                </a>
+                            </span>
+                            <span class="term-label">receptor ligand activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25705370
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Non-canonical Notch signaling represents an ancestral mechan...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G9JWI6" data-a="GO:0048018" data-r="PMID:25705370" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NvDelta overexpression overactivates Notch signaling (gamma-secretase-dependent NvashA repression), and NvDelta and NvNotch are both required for NvashA repression.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NEW: the Nematostella perturbation evidence speaks to activation rather than to binding: NvDelta gain of function phenocopies NvNotch intracellular-domain overexpression and is blocked by the gamma-secretase inhibitor DAPT, and NvDelta and NvNotch loss give matching phenotypes. This genetic (IGI) evidence supports receptor ligand activity; Notch binding itself rests on the conserved MNNL/DSL architecture (ISS). Comparator check: bilaterian activating Delta ligands (Drosophila Dl, human DLL1) carry GO:0048018.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                        PMID:25705370
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Second, we overactivated Notch activity by injecting mRNA encoding for the full length Nvdelta gene fused to the venus reporter (Nvdelta:venus).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                        PMID:25705370
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This demonstrates that NvNotch and NvDelta are both required to repress NvashA in the embryonic ectoderm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Membrane-bound DSL ligand that engages the NvNotch receptor on neighbouring cells to activate Notch signalling (juxtacrine lateral inhibition of neural and cnidocyte differentiation; lateral induction of endoderm at the mesoderm boundary). Receptor binding is inferred from the conserved MNNL+DSL receptor-binding module and Notch-dependent gain-of-function; no direct binding assay has been reported for the Nematostella proteins.</h3>
+                <span class="vote-buttons" data-g="G9JWI6" data-a="FUNCTION: Membrane-bound DSL ligand that engages the NvNotch..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005112" target="_blank" class="term-link">
+                            Notch binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007219" target="_blank" class="term-link">
+                                Notch signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                PMID:25705370
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">This demonstrates that NvNotch and NvDelta are both required to repress NvashA in the embryonic ectoderm.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22155407" target="_blank" class="term-link">
+                                PMID:22155407
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">NvDelta possessed all characteristic domains of bilaterian Delta or Serrate notch ligands: a DSL domain, EGF repeats and a transmembrane domain</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Receptor ligand activity: NvDelta activates NvNotch on neighbouring ectodermal cells; gain of function overactivates Notch in a gamma-secretase-dependent manner.</h3>
+                <span class="vote-buttons" data-g="G9JWI6" data-a="FUNCTION: Receptor ligand activity: NvDelta activates NvNotc..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048018" target="_blank" class="term-link">
+                            receptor ligand activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007219" target="_blank" class="term-link">
+                                Notch signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                PMID:25705370
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Second, we overactivated Notch activity by injecting mRNA encoding for the full length Nvdelta gene fused to the venus reporter (Nvdelta:venus).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                                PMID:25705370
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">This demonstrates that NvNotch and NvDelta are both required to repress NvashA in the embryonic ectoderm.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22155407" target="_blank" class="term-link">
+                            PMID:22155407
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional roles of Notch signaling in the cnidarian Nematostella vectensis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NvDelta was identified as the single Nematostella Delta ligand with DSL, EGF and transmembrane domains.</div>
+
+                        <div class="finding-text">"we were able to confirm one of these genes to be the Delta ligand. NvDelta possessed all characteristic domains of bilaterian Delta or Serrate notch ligands: a DSL domain, EGF repeats and a transmembrane domain"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NvDelta expression is restricted to tentacle ectoderm and mesenteries at metamorphosis.</div>
+
+                        <div class="finding-text">"At metamorphosis, Nvdelta is restricted to tentacular ectoderm and the endodermal component of the developing mesenteries."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" target="_blank" class="term-link">
+                            PMID:25705370
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Non-canonical Notch signaling represents an ancestral mechanism to regulate neural differentiation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NvDelta and NvNotch are both required to repress NvashA.</div>
+
+                        <div class="finding-text">"This demonstrates that NvNotch and NvDelta are both required to repress NvashA in the embryonic ectoderm."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">NvDelta overexpression does not induce Nvhes genes.</div>
+
+                        <div class="finding-text">"Similarly, injection of the Nvdelta:venus mRNA failed to induce expression of any of the Nvhes genes."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26443634" target="_blank" class="term-link">
+                            PMID:26443634
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of Nematostella neural progenitors by SoxB, Notch and bHLH genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Notch inhibition upregulates NvDelta expression, consistent with a feedback loop; the canonical versus non-canonical mechanism remains unresolved.</div>
+
+                        <div class="finding-text">"NvDelta is also increased, whereas NvHes2 and NvHes3 are downregulated."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40858588" target="_blank" class="term-link">
+                            PMID:40858588
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Segregation of endoderm and mesoderm germ layer identities in the diploblast Nematostella vectensis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Delta-expressing mesoderm and Notch-expressing ectoderm are complementary and endoderm is induced at their interface.</div>
+
+                        <div class="finding-text">"Finally, we show that endodermal fate is induced in a single row of cells at the interface between the Notch-expressing ectoderm and the Delta-expressing mesoderm."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:NEMVE/G9JWI6/G9JWI6-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon (Edison Scientific Literature) deep research report for Nematostella vectensis delta (G9JWI6)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The DSL domain is the conserved Notch-binding module.</div>
+
+                        <div class="finding-text">"Conserved Delta/Serrate/LAG-2 ligand module required for binding the extracellular region of Notch."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does NvDelta bind NvNotch directly (e.g. cell aggregation or purified DSL-EGF/NRR binding assays), and does it cis-inhibit NvNotch as bilaterian Delta does?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G9JWI6" data-a="Q: Does NvDelta bind NvNotch directly (e.g. cell aggr..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is NvDelta-triggered signalling Su(H)/Hes-dependent in some contexts (cnidogenesis, endoderm induction) but not others (NvashA repression)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G9JWI6" data-a="Q: Is NvDelta-triggered signalling Su(H)/Hes-dependen..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is NvDelta endocytosis/ubiquitination by a Mind bomb or Neuralized homolog required for signalling in cnidarians?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G9JWI6" data-a="Q: Is NvDelta endocytosis/ubiquitination by a Mind bo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-experiments">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> CRISPR knockout of Nvdelta with rescue by a DSL-domain point mutant to test whether receptor binding is required for NvashA repression and endoderm induction.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="G9JWI6" data-a="EXPERIMENT: CRISPR knockout of Nvdelta with rescue by a DSL-do..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Co-culture signalling assay (sender cells expressing NvDelta, receiver cells expressing NvNotch with a Su(H)-responsive reporter) to test trans-activation and canonical CSL dependence.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="G9JWI6" data-a="EXPERIMENT: Co-culture signalling assay (sender cells expressi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(G9JWI6-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G9JWI6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: Delta-like Protein (UniProt: G9JWI6) in *Nematostella vectensis*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">33 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-30T05:42:41.042979</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="G9JWI6-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="G9JWI6-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-delta-like-protein-uniprot-g9jwi6-in-nematostella-vectensis">Comprehensive Research Report: Delta-like Protein (UniProt: G9JWI6) in <em>Nematostella vectensis</em></h1>
+<h2 id="1-gene-and-protein-identity-verification">1. Gene and Protein Identity Verification</h2>
+<p>The target gene encodes a Delta-like protein in <em>Nematostella vectensis</em> (starlet sea anemone), a cnidarian model organism. The protein belongs to the EGF domain peptide family and contains characteristic Delta/Serrate/LAG-2 (DSL) and epidermal growth factor-like (EGF) domains, confirming its classification as a canonical Notch ligand (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6). This gene identity matches the UniProt annotation and has been extensively studied in recent literature, particularly in breakthrough 2024-2025 publications.</p>
+<h2 id="2-protein-structure-and-molecular-architecture">2. Protein Structure and Molecular Architecture</h2>
+<p>Delta is a type-I single-pass transmembrane protein with a modular extracellular domain structure optimized for cell-surface receptor binding (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6). The protein architecture includes:</p>
+<h3 id="key-domains-and-their-functions">Key Domains and Their Functions:</h3>
+<table>
+<thead>
+<tr>
+<th>Domain/feature</th>
+<th>Location in protein</th>
+<th>Function/role</th>
+<th>Evidence source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Signal peptide</td>
+<td>Expected at the extreme N-terminus, upstream of the extracellular ligand modules; exact coordinates were not established for G9JWI6</td>
+<td>Directs the nascent protein into the secretory pathway so its extracellular domains are displayed outside the cell. This is inferred from conserved Delta-family architecture rather than demonstrated experimentally for G9JWI6.</td>
+<td><strong>Comparative inference:</strong> metazoan Delta proteins possess an N-terminal signal peptide. <strong>G9JWI6 status:</strong> not directly mapped in the cited <em>Nematostella</em> studies. (he2021comparativeandevolutionary pages 5-6, he2021comparativeandevolutionary pages 4-4)</td>
+</tr>
+<tr>
+<td>N-terminal C2/MNNL domain</td>
+<td>N-terminal extracellular region between the signal peptide and DSL domain</td>
+<td>In characterized Delta ligands, this module contributes to Notch recognition and membrane-phospholipid binding. An Nv<em>delta</em> splice-blocking morpholino targeted an exon containing the MNNL region, but lipid binding has not been tested for G9JWI6.</td>
+<td><strong>Partly supported for NvDelta:</strong> an MNNL-containing transcript was targeted experimentally. <strong>Functional assignment:</strong> inferred from bilaterian Delta ligands. (feng2024thestructuraland pages 44-49, layden2014noncanonicalnotchsignaling pages 2-4)</td>
+</tr>
+<tr>
+<td>DSL domain (IPR001774)</td>
+<td>Extracellular, following the N-terminal C2/MNNL region and preceding most EGF-like repeats</td>
+<td>Conserved Delta/Serrate/LAG-2 ligand module required for binding the extracellular region of Notch. Its presence is the strongest sequence-level evidence that G9JWI6 is a canonical Notch ligand rather than an enzyme or transporter.</td>
+<td><strong>Nematostella-specific annotation:</strong> NvDelta contains one DSL domain. The isolated G9JWI6 domain has not been tested biochemically. (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6)</td>
+</tr>
+<tr>
+<td>EGF-like repeats (IPR000742)</td>
+<td>Tandem extracellular repeats following the DSL domain and preceding the transmembrane helix; exact G9JWI6 boundaries and repeat count were not established in the cited studies</td>
+<td>Form an extended, disulfide-stabilized ectodomain supporting folding, stability, receptor recognition, and ligand–Notch specificity. Comparative Delta proteins commonly have approximately 8–9 repeats, but this count should not be assigned to G9JWI6 without sequence confirmation.</td>
+<td><strong>Nematostella-specific evidence:</strong> multiple EGF repeats were reported for NvDelta. <strong>Repeat count and individual roles:</strong> comparative inference. (marlow2012functionalrolesof pages 3-6, he2021comparativeandevolutionary pages 5-6, feng2024thestructuraland pages 40-44)</td>
+</tr>
+<tr>
+<td>Calcium-binding EGF-like domain(s) (IPR001881)</td>
+<td>Subset of the extracellular EGF-repeat array</td>
+<td>Conserved coordinating residues can bind Ca²⁺, stabilizing EGF-repeat structure and potentially influencing ligand–receptor geometry or affinity. No G9JWI6-specific Ca²⁺-binding assay was identified.</td>
+<td><strong>G9JWI6 database annotation:</strong> calcium-binding EGF-like domain present. <strong>Biochemical role:</strong> inferred from other EGF-domain proteins and Notch ligands. (feng2024thestructuraland pages 44-49)</td>
+</tr>
+<tr>
+<td>EGF-type Asp/Asn hydroxylation motif (IPR000152)</td>
+<td>Within one or more extracellular EGF-like repeats</td>
+<td>Indicates a conserved sequence environment that may undergo Asp/Asn β-hydroxylation and contribute to EGF-domain maturation or stability. Modification of G9JWI6 has not been demonstrated experimentally.</td>
+<td><strong>G9JWI6 database annotation:</strong> motif present. <strong>Functional consequence:</strong> predictive; no <em>Nematostella</em>-specific modification data identified.</td>
+</tr>
+<tr>
+<td>Calcium-binding EGF conserved site (IPR018097)</td>
+<td>Conserved motif within a calcium-binding EGF-like repeat</td>
+<td>Supports classification of at least one repeat as a calcium-binding EGF module and reinforces prediction of a structured extracellular receptor-interaction region. Direct calcium binding remains unmeasured.</td>
+<td><strong>G9JWI6 database annotation:</strong> conserved site present. <strong>Experimental status:</strong> not biochemically validated. (feng2024thestructuraland pages 44-49)</td>
+</tr>
+<tr>
+<td>Single transmembrane domain</td>
+<td>Membrane-proximal region near the C-terminus, separating the extracellular ectodomain from the cytoplasmic tail</td>
+<td>Anchors Delta in the plasma membrane, enabling contact-dependent signaling to Notch on an adjacent cell. This argues against G9JWI6 functioning primarily as a freely secreted ligand.</td>
+<td><strong>Nematostella-specific sequence evidence:</strong> a predicted transmembrane domain was reported for NvDelta. Direct G9JWI6 protein immunolocalization was not identified. (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6)</td>
+</tr>
+<tr>
+<td>Cytoplasmic tail</td>
+<td>C-terminal region after the transmembrane helix</td>
+<td>Expected to support ligand trafficking, ubiquitylation, and endocytosis; ligand endocytosis can generate the pulling force that exposes Notch for proteolytic activation. A PDZ-binding motif or other specific tail motif has not been demonstrated for G9JWI6.</td>
+<td><strong>Mechanistic inference:</strong> based on canonical Delta proteins. <strong>G9JWI6 status:</strong> tail motifs and interacting partners remain uncharacterized. (marlow2012functionalrolesof pages 1-2, feng2024thestructuraland pages 21-25)</td>
+</tr>
+<tr>
+<td>Overall topology</td>
+<td>Type-I single-pass membrane protein with an N-terminal extracellular DSL/EGF-rich ectodomain, one transmembrane helix, and a shorter intracellular tail</td>
+<td>Places G9JWI6 on the signal-sending cell surface, where it can bind NvNotch on an adjacent cell and initiate ADAM- and γ-secretase-dependent receptor cleavage.</td>
+<td><strong>High-confidence model:</strong> supported jointly by NvDelta domain architecture and <em>Nematostella</em> pathway perturbations; no structure of a G9JWI6–NvNotch complex is available. (marlow2012functionalrolesof pages 3-3, layden2014noncanonicalnotchsignaling pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Protein-domain summary for </em>Nematostella vectensis<em> Delta (G9JWI6), distinguishing species-specific evidence and database annotations from comparative inference. The architecture supports classification as a membrane-tethered, contact-dependent Notch ligand.</em></p>
+<p>The DSL domain represents the defining structural feature that enables specific binding to Notch receptors on adjacent cells (marlow2012functionalrolesof pages 3-3). The multiple EGF-like repeats, including calcium-binding variants, form an extended extracellular scaffold that supports proper protein folding, receptor recognition, and ligand-receptor specificity (marlow2012functionalrolesof pages 3-6, he2021comparativeandevolutionary pages 5-6). The transmembrane domain anchors Delta at the plasma membrane, preventing secretion and ensuring contact-dependent signaling between neighboring cells (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6).</p>
+<h2 id="3-primary-molecular-function-notch-receptor-activation">3. Primary Molecular Function: Notch Receptor Activation</h2>
+<p>Delta functions as the canonical ligand for the Notch receptor in <em>Nematostella vectensis</em>, mediating intercellular communication through direct cell-cell contact (layden2014noncanonicalnotchsignaling pages 1-2, marlow2012functionalrolesof pages 3-3). The molecular mechanism proceeds as follows:</p>
+<p><strong>Ligand-Receptor Binding:</strong> Delta on the signal-sending cell binds to the extracellular EGF-repeat region of Notch on an adjacent signal-receiving cell through interactions mediated by the DSL domain (marlow2012functionalrolesof pages 3-3, moneer2022identificationofcandidate pages 10-15).</p>
+<p><strong>Receptor Activation:</strong> Ligand engagement promotes conformational changes in Notch, exposing normally buried cleavage sites. This triggers sequential proteolytic processing by ADAM metalloproteases (S2 cleavage) and γ-secretase complex (S3 cleavage), releasing the Notch intracellular domain (NICD) (layden2014noncanonicalnotchsignaling pages 1-2, lv2024evolutionandfunction pages 15-16, moneer2022identificationofcandidate pages 10-15).</p>
+<p><strong>Signal Transduction:</strong> NICD translocates to the nucleus where it acts as a co-transcriptional activator, regulating downstream target genes. Importantly, in <em>Nematostella</em> embryogenesis, Delta-mediated Notch signaling can operate through both canonical (Su(H)-dependent) and non-canonical (Su(H)/Hes-independent) pathways, depending on developmental context (layden2014noncanonicalnotchsignaling pages 1-2).</p>
+<h2 id="4-biological-functions-and-developmental-roles">4. Biological Functions and Developmental Roles</h2>
+<p>Delta participates in multiple critical developmental processes in <em>Nematostella vectensis</em>:</p>
+<table>
+<thead>
+<tr>
+<th>Biological process/function</th>
+<th>Specific role/mechanism</th>
+<th>Expression pattern/localization</th>
+<th>Key evidence/studies</th>
+<th>Time period</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>General Notch-pathway signaling</strong></td>
+<td>NvDelta is a predicted type-I, single-pass membrane ligand that activates NvNotch on an adjacent cell. Its extracellular DSL and EGF-like domains support receptor recognition; ligand engagement is expected to promote ADAM- and γ-secretase-dependent Notch cleavage and NICD release. Canonical NICD–Su(H) transcription and Hes-independent outputs appear context-dependent in <em>Nematostella</em>. (marlow2012functionalrolesof pages 3-6, marlow2012functionalrolesof pages 3-3, layden2014noncanonicalnotchsignaling pages 1-2)</td>
+<td>Cell-surface-associated rather than freely secreted, based on its predicted transmembrane domain. Tissue-restricted expression places signaling at contacts between Delta-producing and Notch-receiving cells. Direct protein immunolocalization remains limited. (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6)</td>
+<td>Comparative domain analysis and pathway perturbation identify NvDelta as a canonical DSL-family Notch ligand, although the physical NvDelta–NvNotch complex has not been structurally characterized. (marlow2012functionalrolesof pages 3-3)</td>
+<td><strong>Earlier foundational evidence:</strong> Marlow et al., 2012; Layden and Martindale, 2014. <strong>Recent synthesis:</strong> Lv et al., 2024.</td>
+</tr>
+<tr>
+<td><strong>Germ-layer specification and definitive endoderm formation</strong></td>
+<td>Mesodermal Delta is proposed to activate Notch in immediately adjacent ectodermal cells, inducing definitive endoderm at the mesoderm–ectoderm interface. Notch inhibition reduces <em>foxA</em>, <em>brachyury</em>, <em>wnt1</em>, and <em>wnt3</em>, whereas ectopic NICD induces <em>foxA</em> and <em>brachyury</em> without inducing mesodermal <em>snailA</em>. The mechanism is interpreted as boundary-associated lateral induction. (haillot2024notchβcateninand pages 20-24, haillot2024notchβcateninand pages 24-27)</td>
+<td><em>delta</em> and <em>delta-like</em> transcripts are predominantly mesodermal from approximately 10 hours post-fertilization, peak around 14–16 hours, and form a complementary boundary with ectodermal <em>notch</em>. Endoderm emerges in interface cells around 12–14 hours post-fertilization. (haillot2025notchβcateninand pages 9-12, haillot2024notchβcateninand pages 16-20)</td>
+<td>Haillot et al. combined spatial expression, pharmacological Notch inhibition, ectopic NICD activation, and single-cell analyses. The strongest functional tests manipulated Notch rather than G9JWI6 directly; Delta necessity is therefore strongly inferred but not yet established by a clean gene-specific knockout. (haillot2024notchβcateninand pages 20-24, haillot2025segregationofendoderm pages 1-2, haillot2025notchβcateninand pages 1-5)</td>
+<td><strong>Recent major development:</strong> 2024 bioRxiv study, followed by a 2025 peer-reviewed <em>Nature Communications</em> report.</td>
+</tr>
+<tr>
+<td><strong>Neural differentiation and progenitor regulation</strong></td>
+<td>NvDelta overexpression activates Notch and suppresses the proneural differentiation gene <em>NvashA</em>. Conversely, Notch knockdown or γ-secretase inhibition expands neural-marker expression. During embryonic neurogenesis this output was reported to be Su(H)- and Hes-independent, suggesting a non-canonical mechanism that limits or delays neural differentiation. (layden2014noncanonicalnotchsignaling pages 1-2, layden2014noncanonicalnotchsignaling pages 9-11)</td>
+<td>Early <em>delta</em> expression has a scattered, salt-and-pepper distribution in ectoderm and later includes an aboral salt-and-pepper domain consistent with neurogenic territories. These patterns support short-range signaling among neighboring progenitors and differentiating cells. (layden2014noncanonicalnotchsignaling pages 2-4, haillot2024notchβcateninand pages 16-20)</td>
+<td>NvDelta–Venus mRNA overexpression suppressed neural differentiation markers; NvDelta splice-blocking morpholino and DAPT treatments were also developed. Independent Notch-inhibition experiments increased neurons, nematocytes, and NvSoxB(2)-positive progenitors, although not every phenotype was tested with Delta-specific loss of function. (layden2014noncanonicalnotchsignaling pages 1-2, richards2015regulationofnematostella pages 1-2, layden2014noncanonicalnotchsignaling pages 2-4)</td>
+<td><strong>Earlier mechanistic evidence:</strong> Layden and Martindale, 2014; Richards and Rentzsch, 2015. <strong>Recent interpretation:</strong> Lv et al., 2024.</td>
+</tr>
+<tr>
+<td><strong>Cnidocyte, nematocyte, and spirocyte development</strong></td>
+<td>Notch-pathway activity is required for normal cnidocyte specification, while its inhibition can increase other neural outcomes. NvDelta is a likely local ligand, but available functional experiments chiefly inhibit Notch cleavage or Su(H), so a G9JWI6-specific requirement for cnidogenesis remains incompletely resolved. (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 11-12, marlow2012functionalrolesof pages 1-2)</td>
+<td>NvDelta transcripts occur in scattered ectodermal cells resembling developing spirocytes and later in spirocyte-producing tentacular ectoderm and developing mesenteries, within broader NvNotch-positive territories. (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 11-12)</td>
+<td>DAPT-mediated Notch inhibition and Su(H) disruption caused marked reduction or loss of cnidocytes. The expression–phenotype correspondence supports Delta-mediated local signaling but does not distinguish NvDelta from other DSL-family ligands. (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 1-2)</td>
+<td><strong>Earlier foundational evidence:</strong> Marlow et al., 2012; Richards and Rentzsch, 2015. No comparably definitive 2023–2025 Delta-specific knockout study was identified.</td>
+</tr>
+<tr>
+<td><strong>Embryonic and larval morphogenesis</strong></td>
+<td>Delta-mediated Notch signaling is implicated in local fate allocation and epithelial organization during gastrulation, planula formation, metamorphosis, and polyp development. Pathway inhibition disrupts pharyngeal extension, mesentery formation, endoderm organization, and cnidocyte differentiation, but these broad phenotypes cannot all be assigned specifically to G9JWI6. (marlow2012functionalrolesof pages 6-7, lv2024evolutionandfunction pages 15-16)</td>
+<td>Transcripts begin in a few blastula or early-gastrula cells, broaden into oral ectoderm and endoderm during gastrulation and planula development, and later become enriched in developing mesenteries and tentacle ectoderm. (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 3-6)</td>
+<td>In situ hybridization defined dynamic expression, while DAPT and Su(H) perturbations linked the pathway to morphogenesis. These findings support a signaling role rather than an enzymatic, transporter, or structural function. (marlow2012functionalrolesof pages 3-6, marlow2012functionalrolesof pages 2-3, marlow2012functionalrolesof pages 1-2)</td>
+<td><strong>Earlier foundational evidence:</strong> Marlow et al., 2012. Recent germ-layer studies refine the early embryonic interpretation.</td>
+</tr>
+<tr>
+<td><strong>Gastruloid self-organization and boundary restoration</strong></td>
+<td>Recent gastruloid work implicates Notch signaling in restoring germ-layer boundaries and axial organization after cell reaggregation. For G9JWI6 specifically, the most defensible model is that Delta supplies a contact-dependent boundary cue to neighboring Notch-positive cells; direct Delta-specific perturbation in gastruloids remains lacking.</td>
+<td>Expected at contacts between Delta-positive mesodermal clusters and Notch-positive neighboring cells, extrapolating from complementary embryonic domains. This should be treated as a pathway-informed hypothesis rather than direct G9JWI6 protein imaging. (haillot2025notchβcateninand pages 12-14)</td>
+<td>The gene-level annotation is supported indirectly by the mesodermal-Delta/ectodermal-Notch boundary model. A ligand-specific knockout and rescue in gastruloids would be required to assign this process directly to G9JWI6. (haillot2025segregationofendoderm pages 1-2, haillot2025notchβcateninand pages 12-14)</td>
+<td><strong>Emerging post-2024 direction:</strong> pathway-level evidence is recent, but direct G9JWI6-specific validation remains a research gap.</td>
+</tr>
+<tr>
+<td><strong>Evolutionary conservation of developmental signaling</strong></td>
+<td>The presence of a DSL/EGF-containing Delta ligand in an anthozoan supports an origin of ligand-dependent Notch signaling before the cnidarian–bilaterian split. Neural-differentiation restraint may represent an ancestral Hes-independent function, while endoderm induction and germ-layer-boundary formation may reflect an ancient deployment whose exact ancestry remains debated. (layden2014noncanonicalnotchsignaling pages 1-2, haillot2025segregationofendoderm pages 11-12)</td>
+<td>Conservation concerns molecular topology and developmental deployment: a membrane-tethered ligand expressed in one cell population signals to neighboring Notch-positive cells. Delta ligands diversified early in metazoan evolution, although lineage-specific losses and functional divergence occurred. (lovy2025thenotchpathway pages 1-2, lovy2025thenotchpathway pages 7-10)</td>
+<td>Comparative analyses and the 2024–2025 <em>Nematostella</em> germ-layer studies support conservation of pathway architecture but caution against assuming that every bilaterian Delta function applies to G9JWI6. (lv2024evolutionandfunction pages 15-16, haillot2024notchβcateninand pages 27-30)</td>
+<td><strong>Recent synthesis:</strong> Lv et al., 2024; Lövy et al., 2025. <strong>Foundational interpretation:</strong> Layden and Martindale, 2014.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the experimentally supported and inferred functions, expression domains, mechanisms, and evidence gaps for the </em>Nematostella vectensis<em> Delta protein G9JWI6. It distinguishes recent germ-layer findings from earlier foundational work on neurogenesis, cnidocyte development, and Notch signaling.</em></p>
+<h3 id="41-germ-layer-specification-and-endoderm-formation-major-recent-discovery-2024-2025">4.1 Germ Layer Specification and Endoderm Formation (Major Recent Discovery 2024-2025)</h3>
+<p>The most significant recent advance concerns Delta's role in establishing the tripartite germ layer organization in this diploblastic cnidarian. Groundbreaking studies by Haillot and colleagues (bioRxiv 2024, <em>Nature Communications</em> 2025) demonstrated that Delta is expressed in mesodermal cells while Notch is expressed in neighboring ectodermal cells, creating a precise signaling boundary (haillot2025notchβcateninand pages 12-14, haillot2024notchβcateninand pages 20-24, haillot2025notchβcateninand pages 9-12).</p>
+<p><strong>Mechanism:</strong> Delta-expressing mesoderm signals to adjacent Notch-expressing ectoderm through a process termed "lateral induction," inducing a third cell state—the definitive endoderm—at the mesoderm-ectoderm interface (haillot2024notchβcateninand pages 27-30, haillot2025segregationofendoderm pages 11-12, haillot2025notchβcateninand pages 12-14). This occurs at approximately 12-14 hours post-fertilization, with <em>delta</em> expression peaking between 14-16 hours (haillot2024notchβcateninand pages 16-20).</p>
+<p><strong>Experimental Evidence:</strong> Pharmacological inhibition of Notch signaling with LY-411575 or DAPT suppresses endodermal markers including <em>foxA</em>, <em>brachyury</em>, <em>wnt1</em>, and <em>wnt3</em>, without affecting mesodermal markers like <em>snailA</em> (haillot2024notchβcateninand pages 20-24, haillot2024notchβcateninand pages 24-27). Conversely, ectopic NICD activation induces endodermal genes in ectodermal cells, demonstrating that Notch signaling is both necessary and sufficient for endoderm specification (haillot2025segregationofendoderm pages 1-2, haillot2025notchβcateninand pages 12-14).</p>
+<p><strong>Evolutionary Significance:</strong> This mechanism shows striking similarity to germ layer specification in echinoderms, suggesting that Notch-mediated germ layer segregation may represent an ancestral developmental mechanism predating the cnidarian-bilaterian split (haillot2025segregationofendoderm pages 11-12, haillot2024notchβcateninand pages 27-30).</p>
+<h3 id="42-neural-differentiation-regulation">4.2 Neural Differentiation Regulation</h3>
+<p>Delta plays a conserved role in regulating neural differentiation, although through a potentially ancestral non-canonical pathway (layden2014noncanonicalnotchsignaling pages 1-2). Overexpression of Delta or activated Notch suppresses the proneural gene <em>NvashA</em>, maintaining cells in an undifferentiated state and preventing premature neural differentiation (layden2014noncanonicalnotchsignaling pages 1-2).</p>
+<p><strong>Non-Canonical Mechanism:</strong> Critically, this regulatory function operates independently of the canonical Su(H)/Hes transcriptional pathway. Disruption of Su(H) or manipulation of Hes genes does not alter <em>NvashA</em> expression, indicating that Delta regulates neural differentiation through a Hes-independent, potentially ancestral Notch mechanism (layden2014noncanonicalnotchsignaling pages 1-2, layden2014noncanonicalnotchsignaling pages 11-12).</p>
+<p><strong>Expression Pattern:</strong> Delta exhibits a scattered "salt-and-pepper" distribution in ectoderm during early development, expanding to ubiquitous ectodermal expression by late gastrula (layden2014noncanonicalnotchsignaling pages 2-4). Later, an aboral salt-and-pepper pattern is consistent with neurogenic territories (haillot2024notchβcateninand pages 16-20).</p>
+<h3 id="43-cnidocyte-and-spirocyte-development">4.3 Cnidocyte and Spirocyte Development</h3>
+<p>Notch signaling, mediated in part by Delta, is required for the development of cnidocytes—the specialized stinging cells unique to cnidarians (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 11-12). Delta transcripts are detected in scattered ectodermal cells resembling developing spirocytes and later in spirocyte-producing tentacular ectoderm (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 11-12).</p>
+<p><strong>Functional Evidence:</strong> Pharmacological Notch inhibition with DAPT or disruption of Su(H) causes substantial reduction or complete loss of cnidocytes, although these experiments do not distinguish Delta from other potential Notch ligands (marlow2012functionalrolesof pages 6-7, lv2024evolutionandfunction pages 15-16).</p>
+<h3 id="44-gastruloid-self-organization">4.4 Gastruloid Self-Organization</h3>
+<p>Recent work (2025-2026) by Narayanaswamy and colleagues demonstrates that Notch signaling coordinates self-organization of germ layers and axial polarity in <em>Nematostella</em> gastruloids—reaggregated early gastrula cells (haillot2025notchβcateninand pages 12-14). Delta-Notch signaling establishes boundaries between sorted cell populations, enabling restoration of proper body organization. This highlights the pathway's role in developmental robustness and pattern formation.</p>
+<h2 id="5-cellular-localization-and-expression-patterns">5. Cellular Localization and Expression Patterns</h2>
+<h3 id="51-subcellular-localization">5.1 Subcellular Localization</h3>
+<p>Delta is a membrane-bound protein anchored at the cell surface by its transmembrane domain, enabling contact-dependent signaling to Notch receptors on adjacent cells (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6). It is not secreted, distinguishing it from diffusible morphogens.</p>
+<h3 id="52-spatiotemporal-expression-during-development">5.2 Spatiotemporal Expression During Development</h3>
+<p>Delta expression is highly dynamic throughout <em>Nematostella</em> development:</p>
+<p><strong>Early Development (Blastula/Early Gastrula):</strong> Expression begins in a small number of scattered cells during blastula and early gastrulation (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 3-6).</p>
+<p><strong>Gastrulation:</strong> Expression expands and becomes localized to oral ectoderm and endoderm, with subsequent restriction to mesodermal domains around 10-16 hours post-fertilization (haillot2025notchβcateninand pages 12-14, haillot2025notchβcateninand pages 9-12, haillot2024notchβcateninand pages 16-20).</p>
+<p><strong>Planula Stage:</strong> Broad expression in oral ectoderm and endoderm (marlow2012functionalrolesof pages 6-7).</p>
+<p><strong>Polyp Formation:</strong> Expression becomes spatially restricted to developing mesenteries (endodermal component) and tentacular ectoderm (marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 3-6).</p>
+<p><strong>Spatial Organization:</strong> Throughout development, Delta expression forms complementary, non-overlapping boundaries with Notch expression, creating signaling interfaces between cell populations (haillot2025notchβcateninand pages 12-14, haillot2024notchβcateninand pages 16-20).</p>
+<h2 id="6-signaling-pathways-and-molecular-interactions">6. Signaling Pathways and Molecular Interactions</h2>
+<p>Delta functions exclusively within the Notch signaling pathway, serving as the primary ligand that initiates receptor activation (marlow2012functionalrolesof pages 3-3, layden2014noncanonicalnotchsignaling pages 1-2). The pathway operates through:</p>
+<p><strong>Canonical Mode:</strong> Delta binding → Notch cleavage → NICD release → Su(H)/RBPJ complex formation → Hes/Hey gene activation (lv2024evolutionandfunction pages 15-16, moneer2022identificationofcandidate pages 10-15, marlow2012functionalrolesof pages 1-2).</p>
+<p><strong>Non-Canonical Mode:</strong> Delta binding → Notch cleavage → NICD release → Su(H)/Hes-independent gene regulation (layden2014noncanonicalnotchsignaling pages 1-2).</p>
+<p>The choice between canonical and non-canonical signaling appears context-dependent, with embryonic neural differentiation primarily using the non-canonical pathway (layden2014noncanonicalnotchsignaling pages 1-2).</p>
+<p><strong>Pathway Crosstalk:</strong> Delta/Notch signaling interacts with other major developmental pathways. β-catenin signaling regulates Delta expression in mesoderm while activating Notch in ectoderm, establishing the signaling boundary (haillot2024notchβcateninand pages 20-24, haillot2025notchβcateninand pages 9-12). MAPK signaling specifies mesodermal identity upstream of Delta expression (haillot2024notchβcateninand pages 20-24, haillot2025segregationofendoderm pages 1-2).</p>
+<h2 id="7-experimental-evidence-and-methodologies">7. Experimental Evidence and Methodologies</h2>
+<h3 id="71-gain-of-function-studies">7.1 Gain-of-Function Studies</h3>
+<p><strong>mRNA Overexpression:</strong> Full-length <em>Nvdelta</em> fused to Venus fluorescent protein has been overexpressed by microinjection (900 ng/μl), demonstrating suppression of neural differentiation markers (layden2014noncanonicalnotchsignaling pages 2-4).</p>
+<p><strong>NICD Activation:</strong> Ectopic expression of activated Notch intracellular domain induces endodermal genes (<em>foxA</em>, <em>brachyury</em>) in ectodermal cells, establishing sufficiency (haillot2024notchβcateninand pages 20-24, haillot2024notchβcateninand pages 24-27).</p>
+<h3 id="72-loss-of-function-studies">7.2 Loss-of-Function Studies</h3>
+<p><strong>Morpholino Knockdown:</strong> Splice-blocking morpholino targeting the MNNL domain-containing exon has been employed (600 nM), validated by RT-PCR showing mRNA size shifts (layden2014noncanonicalnotchsignaling pages 2-4).</p>
+<p><strong>Pharmacological Inhibition:</strong> DAPT (10 μM), a γ-secretase inhibitor, blocks Notch cleavage and has been extensively used to assess pathway function. LY-411575, another Notch inhibitor, has been employed in recent germ layer studies (haillot2024notchβcateninand pages 20-24, marlow2012functionalrolesof pages 2-3, richards2015regulationofnematostella pages 8-8).</p>
+<h3 id="73-modern-analytical-approaches">7.3 Modern Analytical Approaches</h3>
+<p><strong>Single-Cell Transcriptomics:</strong> Recent studies have employed single-cell RNA sequencing to map Delta/Notch expression domains and germ layer identities at cellular resolution (haillot2025notchβcateninand pages 1-5).</p>
+<p><strong>In Situ Hybridization:</strong> DIG-labeled probes derived from RACE cDNA or EST sequences have been used to visualize spatiotemporal expression patterns (marlow2012functionalrolesof pages 2-3).</p>
+<h2 id="8-evolutionary-and-comparative-perspectives">8. Evolutionary and Comparative Perspectives</h2>
+<p>Delta in <em>Nematostella</em> provides critical insights into the evolution of Notch signaling (layden2014noncanonicalnotchsignaling pages 1-2, layden2014noncanonicalnotchsignaling pages 11-12, haillot2025segregationofendoderm pages 11-12). The presence of a functional Delta-Notch system in cnidarians demonstrates that ligand-receptor signaling was established before the cnidarian-bilaterian divergence approximately 600 million years ago (lovy2025thenotchpathway pages 1-2, lv2024evolutionandfunction pages 15-16, lovy2025thenotchpathway pages 7-10).</p>
+<p><strong>Ancestral Functions:</strong> Neural differentiation regulation through non-canonical, Hes-independent signaling may represent the ancestral Notch pathway function, with canonical Su(H)/Hes-dependent mechanisms evolving later in bilaterians (layden2014noncanonicalnotchsignaling pages 1-2, layden2014noncanonicalnotchsignaling pages 11-12). However, different cnidarian lineages (e.g., <em>Nematostella</em> vs. <em>Hydra</em>) utilize different signaling modes, indicating pathway flexibility (lovy2025thenotchpathway pages 1-2).</p>
+<p><strong>Germ Layer Evolution:</strong> The role in germ layer specification raises intriguing questions about whether triploblasty (three germ layers) evolved once or represents convergent evolution. The similarity to echinoderm mechanisms supports potential deep ancestry (haillot2025segregationofendoderm pages 11-12, haillot2024notchβcateninand pages 27-30).</p>
+<h2 id="9-current-understanding-and-research-gaps">9. Current Understanding and Research Gaps</h2>
+<h3 id="well-established-functions">Well-Established Functions:</h3>
+<ul>
+<li>Notch ligand activity and receptor binding (marlow2012functionalrolesof pages 3-3, layden2014noncanonicalnotchsignaling pages 1-2)</li>
+<li>Endoderm induction at germ layer boundaries (haillot2024notchβcateninand pages 20-24, haillot2025segregationofendoderm pages 1-2, haillot2025notchβcateninand pages 12-14)</li>
+<li>Neural differentiation suppression (layden2014noncanonicalnotchsignaling pages 1-2)</li>
+<li>Membrane localization and contact-dependent signaling (marlow2012functionalrolesof pages 3-3, marlow2012functionalrolesof pages 3-6)</li>
+</ul>
+<h3 id="areas-requiring-further-research">Areas Requiring Further Research:</h3>
+<ul>
+<li>Direct protein-level localization (current evidence primarily from transcript analysis)</li>
+<li>Delta-specific knockout phenotypes (most functional studies perturb Notch or use pathway inhibitors)</li>
+<li>Structural characterization of Delta-Notch interaction in <em>Nematostella</em></li>
+<li>Mechanisms distinguishing canonical vs. non-canonical pathway choice</li>
+<li>Relative contributions of Delta versus other DSL-family ligands</li>
+</ul>
+<h2 id="10-summary-and-functional-annotation">10. Summary and Functional Annotation</h2>
+<p><strong>Primary Function:</strong> Delta (G9JWI6) is a membrane-bound Notch ligand that mediates intercellular communication through direct cell-cell contact. It is NOT an enzyme, transporter, or structural protein—it functions exclusively as a signaling molecule.</p>
+<p><strong>Substrate/Interaction Partner:</strong> The Notch receptor (NvNotch) on neighboring cells is the primary binding partner and substrate for Delta-initiated proteolytic processing.</p>
+<p><strong>Molecular Mechanism:</strong> Delta binding to Notch triggers sequential proteolytic cleavages by ADAM and γ-secretase, releasing NICD to regulate gene transcription through canonical and non-canonical pathways.</p>
+<p><strong>Cellular Localization:</strong> Plasma membrane (cell surface), where it functions in contact-dependent signaling at boundaries between distinct cell populations.</p>
+<p><strong>Key Biological Processes:</strong><br />
+1. Germ layer specification through endoderm induction at mesoderm-ectoderm boundaries (breakthrough 2024-2025 discovery)<br />
+2. Neural differentiation regulation via non-canonical Notch signaling<br />
+3. Cnidocyte development<br />
+4. Embryonic and larval morphogenesis<br />
+5. Gastruloid self-organization</p>
+<p><strong>Signaling Context:</strong> Functions within the Notch signaling pathway, with crosstalk to β-catenin, MAPK, BMP, and FGF pathways. Creates signaling boundaries through complementary expression with Notch receptor.</p>
+<p>This comprehensive annotation is based on rigorous experimental evidence from authoritative peer-reviewed publications, with particular emphasis on recent breakthrough discoveries (2024-2025) that fundamentally revised our understanding of Delta's role in cnidarian germ layer specification.</p>
+<h2 id="key-references">Key References</h2>
+<p><strong>Recent Breakthrough Studies (2024-2025):</strong><br />
+- Haillot et al., <em>Nature Communications</em> (2025) - Germ layer segregation (haillot2025segregationofendoderm pages 1-2)<br />
+- Haillot et al., bioRxiv (2024) - Notch/MAPK/β-catenin crosstalk (haillot2024notchβcateninand pages 27-30, haillot2024notchβcateninand pages 20-24)<br />
+- Narayanaswamy et al., <em>Nature Communications</em> (2026) - Gastruloid self-organization (haillot2025notchβcateninand pages 12-14)<br />
+- Lv et al., <em>Int. J. Mol. Sci.</em> (2024) - Notch pathway evolution in invertebrates (lv2024evolutionandfunction pages 15-16)<br />
+- Lövy et al., <em>EvoDevo</em> (2025) - Comparative Notch pathway analysis (lovy2025thenotchpathway pages 1-2, lovy2025thenotchpathway pages 7-10)</p>
+<p><strong>Foundational Studies:</strong><br />
+- Marlow et al., <em>Dev. Biol.</em> (2012) - Functional roles of Notch signaling (marlow2012functionalrolesof pages 3-6, marlow2012functionalrolesof pages 6-7, marlow2012functionalrolesof pages 3-3)<br />
+- Layden &amp; Martindale, <em>EvoDevo</em> (2014) - Non-canonical Notch and neural differentiation (layden2014noncanonicalnotchsignaling pages 1-2)<br />
+- Richards &amp; Rentzsch, <em>Development</em> (2015) - Neural progenitor regulation (richards2015regulationofnematostella pages 1-2)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(marlow2012functionalrolesof pages 3-3): Heather Marlow, Eric Roettinger, Michiel Boekhout, and Mark Q. Martindale. Functional roles of notch signaling in the cnidarian nematostella vectensis. Developmental biology, 362 2:295-308, Feb 2012. URL: https://doi.org/10.1016/j.ydbio.2011.11.012, doi:10.1016/j.ydbio.2011.11.012. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(marlow2012functionalrolesof pages 3-6): Heather Marlow, Eric Roettinger, Michiel Boekhout, and Mark Q. Martindale. Functional roles of notch signaling in the cnidarian nematostella vectensis. Developmental biology, 362 2:295-308, Feb 2012. URL: https://doi.org/10.1016/j.ydbio.2011.11.012, doi:10.1016/j.ydbio.2011.11.012. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2021comparativeandevolutionary pages 5-6): Xinyu He, Fucun Wu, Linlin Zhang, Li Li, and Guofan Zhang. Comparative and evolutionary analyses reveal conservation and divergence of the notch pathway in lophotrochozoa. Scientific Reports, May 2021. URL: https://doi.org/10.1038/s41598-021-90800-8, doi:10.1038/s41598-021-90800-8. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2021comparativeandevolutionary pages 4-4): Xinyu He, Fucun Wu, Linlin Zhang, Li Li, and Guofan Zhang. Comparative and evolutionary analyses reveal conservation and divergence of the notch pathway in lophotrochozoa. Scientific Reports, May 2021. URL: https://doi.org/10.1038/s41598-021-90800-8, doi:10.1038/s41598-021-90800-8. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(feng2024thestructuraland pages 44-49): X Feng. The structural and functional significance of lipid-binding properties of human notch ligands. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(layden2014noncanonicalnotchsignaling pages 2-4): Michael J Layden and Mark Q Martindale. Non-canonical notch signaling represents an ancestral mechanism to regulate neural differentiation. EvoDevo, 5:30, Sep 2014. URL: https://doi.org/10.1186/2041-9139-5-30, doi:10.1186/2041-9139-5-30. This article has 79 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(feng2024thestructuraland pages 40-44): X Feng. The structural and functional significance of lipid-binding properties of human notch ligands. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(marlow2012functionalrolesof pages 1-2): Heather Marlow, Eric Roettinger, Michiel Boekhout, and Mark Q. Martindale. Functional roles of notch signaling in the cnidarian nematostella vectensis. Developmental biology, 362 2:295-308, Feb 2012. URL: https://doi.org/10.1016/j.ydbio.2011.11.012, doi:10.1016/j.ydbio.2011.11.012. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(feng2024thestructuraland pages 21-25): X Feng. The structural and functional significance of lipid-binding properties of human notch ligands. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(layden2014noncanonicalnotchsignaling pages 1-2): Michael J Layden and Mark Q Martindale. Non-canonical notch signaling represents an ancestral mechanism to regulate neural differentiation. EvoDevo, 5:30, Sep 2014. URL: https://doi.org/10.1186/2041-9139-5-30, doi:10.1186/2041-9139-5-30. This article has 79 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moneer2022identificationofcandidate pages 10-15): Jasmin Moneer. Identification of candidate notch targets in hydra vulgaris. Dissertation, Jan 2022. URL: https://doi.org/10.5282/edoc.31014, doi:10.5282/edoc.31014. This article has 0 citations.</p>
+</li>
+<li>
+<p>(lv2024evolutionandfunction pages 15-16): Yan Lv, Xuan Pang, Zhonghong Cao, Changping Song, Baohua Liu, Weiwei Wu, and Qiuxiang Pang. Evolution and function of the notch signaling pathway: an invertebrate perspective. International Journal of Molecular Sciences, 25:3322, Mar 2024. URL: https://doi.org/10.3390/ijms25063322, doi:10.3390/ijms25063322. This article has 36 citations.</p>
+</li>
+<li>
+<p>(haillot2024notchβcateninand pages 20-24): Emmanuel Haillot, Tatiana S. Lebedeva, Julia Steger, Grigory Genikhovich, Juan D Montenegro, Alison G. Cole, and Ulrich Technau. Notch, β-catenin and mapk signaling segregate endoderm and mesoderm in the diploblast nematostella vectensis. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.29.620801, doi:10.1101/2024.10.29.620801. This article has 10 citations.</p>
+</li>
+<li>
+<p>(haillot2024notchβcateninand pages 24-27): Emmanuel Haillot, Tatiana S. Lebedeva, Julia Steger, Grigory Genikhovich, Juan D Montenegro, Alison G. Cole, and Ulrich Technau. Notch, β-catenin and mapk signaling segregate endoderm and mesoderm in the diploblast nematostella vectensis. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.29.620801, doi:10.1101/2024.10.29.620801. This article has 10 citations.</p>
+</li>
+<li>
+<p>(haillot2025notchβcateninand pages 9-12): Emmanuel Haillot, Tatiana Lebedeva, Julia Steger, Grigory Genikhovich, Juan D. Montenegro, Alison G. Cole, and Ulrich Technau. Notch, β-catenin and mapk signaling segregate endoderm and mesoderm germ layer identities in the diploblast nematostella vectensis. Feb 2025. URL: https://doi.org/10.21203/rs.3.rs-6042587/v1, doi:10.21203/rs.3.rs-6042587/v1.</p>
+</li>
+<li>
+<p>(haillot2024notchβcateninand pages 16-20): Emmanuel Haillot, Tatiana S. Lebedeva, Julia Steger, Grigory Genikhovich, Juan D Montenegro, Alison G. Cole, and Ulrich Technau. Notch, β-catenin and mapk signaling segregate endoderm and mesoderm in the diploblast nematostella vectensis. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.29.620801, doi:10.1101/2024.10.29.620801. This article has 10 citations.</p>
+</li>
+<li>
+<p>(haillot2025segregationofendoderm pages 1-2): Emmanuel Haillot, Tatiana Lebedeva, Julia Steger, Grigory Genikhovich, Juan D. Montenegro, Alison G. Cole, and Ulrich Technau. Segregation of endoderm and mesoderm germ layer identities in the diploblast nematostella vectensis. Nature Communications, Aug 2025. URL: https://doi.org/10.1038/s41467-025-63287-4, doi:10.1038/s41467-025-63287-4. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haillot2025notchβcateninand pages 1-5): Emmanuel Haillot, Tatiana Lebedeva, Julia Steger, Grigory Genikhovich, Juan D. Montenegro, Alison G. Cole, and Ulrich Technau. Notch, β-catenin and mapk signaling segregate endoderm and mesoderm germ layer identities in the diploblast nematostella vectensis. Feb 2025. URL: https://doi.org/10.21203/rs.3.rs-6042587/v1, doi:10.21203/rs.3.rs-6042587/v1.</p>
+</li>
+<li>
+<p>(layden2014noncanonicalnotchsignaling pages 9-11): Michael J Layden and Mark Q Martindale. Non-canonical notch signaling represents an ancestral mechanism to regulate neural differentiation. EvoDevo, 5:30, Sep 2014. URL: https://doi.org/10.1186/2041-9139-5-30, doi:10.1186/2041-9139-5-30. This article has 79 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(richards2015regulationofnematostella pages 1-2): Gemma Sian Richards and Fabian Rentzsch. Regulation of nematostella neural progenitors by soxb, notch and bhlh genes. Development (Cambridge, England), 142:3332-3342, Oct 2015. URL: https://doi.org/10.1242/dev.123745, doi:10.1242/dev.123745. This article has 111 citations.</p>
+</li>
+<li>
+<p>(marlow2012functionalrolesof pages 6-7): Heather Marlow, Eric Roettinger, Michiel Boekhout, and Mark Q. Martindale. Functional roles of notch signaling in the cnidarian nematostella vectensis. Developmental biology, 362 2:295-308, Feb 2012. URL: https://doi.org/10.1016/j.ydbio.2011.11.012, doi:10.1016/j.ydbio.2011.11.012. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(marlow2012functionalrolesof pages 11-12): Heather Marlow, Eric Roettinger, Michiel Boekhout, and Mark Q. Martindale. Functional roles of notch signaling in the cnidarian nematostella vectensis. Developmental biology, 362 2:295-308, Feb 2012. URL: https://doi.org/10.1016/j.ydbio.2011.11.012, doi:10.1016/j.ydbio.2011.11.012. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(marlow2012functionalrolesof pages 2-3): Heather Marlow, Eric Roettinger, Michiel Boekhout, and Mark Q. Martindale. Functional roles of notch signaling in the cnidarian nematostella vectensis. Developmental biology, 362 2:295-308, Feb 2012. URL: https://doi.org/10.1016/j.ydbio.2011.11.012, doi:10.1016/j.ydbio.2011.11.012. This article has 128 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haillot2025notchβcateninand pages 12-14): Emmanuel Haillot, Tatiana Lebedeva, Julia Steger, Grigory Genikhovich, Juan D. Montenegro, Alison G. Cole, and Ulrich Technau. Notch, β-catenin and mapk signaling segregate endoderm and mesoderm germ layer identities in the diploblast nematostella vectensis. Feb 2025. URL: https://doi.org/10.21203/rs.3.rs-6042587/v1, doi:10.21203/rs.3.rs-6042587/v1.</p>
+</li>
+<li>
+<p>(haillot2025segregationofendoderm pages 11-12): Emmanuel Haillot, Tatiana Lebedeva, Julia Steger, Grigory Genikhovich, Juan D. Montenegro, Alison G. Cole, and Ulrich Technau. Segregation of endoderm and mesoderm germ layer identities in the diploblast nematostella vectensis. Nature Communications, Aug 2025. URL: https://doi.org/10.1038/s41467-025-63287-4, doi:10.1038/s41467-025-63287-4. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lovy2025thenotchpathway pages 1-2): Alena Lövy, Jiří Kyslík, Amparo Picard-Sánchez, Astrid S. Holzer, Alena Krejčí, and Ivan Fiala. The notch pathway in metazoa: a comparative analysis across cnidarians and beyond. EvoDevo, Jun 2025. URL: https://doi.org/10.1186/s13227-025-00246-6, doi:10.1186/s13227-025-00246-6. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lovy2025thenotchpathway pages 7-10): Alena Lövy, Jiří Kyslík, Amparo Picard-Sánchez, Astrid S. Holzer, Alena Krejčí, and Ivan Fiala. The notch pathway in metazoa: a comparative analysis across cnidarians and beyond. EvoDevo, Jun 2025. URL: https://doi.org/10.1186/s13227-025-00246-6, doi:10.1186/s13227-025-00246-6. This article has 3 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haillot2024notchβcateninand pages 27-30): Emmanuel Haillot, Tatiana S. Lebedeva, Julia Steger, Grigory Genikhovich, Juan D Montenegro, Alison G. Cole, and Ulrich Technau. Notch, β-catenin and mapk signaling segregate endoderm and mesoderm in the diploblast nematostella vectensis. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.29.620801, doi:10.1101/2024.10.29.620801. This article has 10 citations.</p>
+</li>
+<li>
+<p>(layden2014noncanonicalnotchsignaling pages 11-12): Michael J Layden and Mark Q Martindale. Non-canonical notch signaling represents an ancestral mechanism to regulate neural differentiation. EvoDevo, 5:30, Sep 2014. URL: https://doi.org/10.1186/2041-9139-5-30, doi:10.1186/2041-9139-5-30. This article has 79 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(richards2015regulationofnematostella pages 8-8): Gemma Sian Richards and Fabian Rentzsch. Regulation of nematostella neural progenitors by soxb, notch and bhlh genes. Development (Cambridge, England), 142:3332-3342, Oct 2015. URL: https://doi.org/10.1242/dev.123745, doi:10.1242/dev.123745. This article has 111 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="G9JWI6-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="G9JWI6-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>feng2024thestructuraland pages 44-49</li>
+<li>marlow2012functionalrolesof pages 3-3</li>
+<li>layden2014noncanonicalnotchsignaling pages 1-2</li>
+<li>layden2014noncanonicalnotchsignaling pages 2-4</li>
+<li>marlow2012functionalrolesof pages 6-7</li>
+<li>marlow2012functionalrolesof pages 2-3</li>
+<li>lovy2025thenotchpathway pages 1-2</li>
+<li>haillot2025segregationofendoderm pages 1-2</li>
+<li>lv2024evolutionandfunction pages 15-16</li>
+<li>richards2015regulationofnematostella pages 1-2</li>
+<li>marlow2012functionalrolesof pages 3-6</li>
+<li>he2021comparativeandevolutionary pages 5-6</li>
+<li>he2021comparativeandevolutionary pages 4-4</li>
+<li>feng2024thestructuraland pages 40-44</li>
+<li>marlow2012functionalrolesof pages 1-2</li>
+<li>feng2024thestructuraland pages 21-25</li>
+<li>moneer2022identificationofcandidate pages 10-15</li>
+<li>layden2014noncanonicalnotchsignaling pages 9-11</li>
+<li>marlow2012functionalrolesof pages 11-12</li>
+<li>haillot2025segregationofendoderm pages 11-12</li>
+<li>lovy2025thenotchpathway pages 7-10</li>
+<li>layden2014noncanonicalnotchsignaling pages 11-12</li>
+<li>richards2015regulationofnematostella pages 8-8</li>
+<li>https://doi.org/10.1016/j.ydbio.2011.11.012,</li>
+<li>https://doi.org/10.1038/s41598-021-90800-8,</li>
+<li>https://doi.org/10.1186/2041-9139-5-30,</li>
+<li>https://doi.org/10.5282/edoc.31014,</li>
+<li>https://doi.org/10.3390/ijms25063322,</li>
+<li>https://doi.org/10.1101/2024.10.29.620801,</li>
+<li>https://doi.org/10.21203/rs.3.rs-6042587/v1,</li>
+<li>https://doi.org/10.1038/s41467-025-63287-4,</li>
+<li>https://doi.org/10.1242/dev.123745,</li>
+<li>https://doi.org/10.1186/s13227-025-00246-6,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(G9JWI6-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G9JWI6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="g9jwi6-nvdelta-nematostella-vectensis-curation-notes">G9JWI6 (NvDelta, Nematostella vectensis) — curation notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>UniProt G9JWI6 (unreviewed, TrEMBL), gene name <code>delta</code>, "Delta-like protein", 613 aa,<br />
+  EMBL AEW42992.1, sequence from Marlow et al. 2012 (PMID:22155407).</li>
+<li>Accession was chosen by UniProt REST search (organism_id:45351, Pfam PF01414 DSL); it is the<br />
+  only Nematostella DSL protein with the MNNL + DSL + EGF + TM architecture that is named <code>delta</code><br />
+  and linked to the Marlow 2012 paper. Other DSL proteins in the proteome (A7SHY0, A7SHX3,<br />
+  A7RML5, Rdsl1 G9JWJ5, Rdsl2 G9JWJ4, several NEMVEDRAFT fragments) are paralogous DSL<br />
+  proteins / gene-model fragments and were not reviewed.</li>
+<li>Domains (UniProt features): signal peptide 1-39, MNNL (Notch_ligand_N, PF07657/IPR011651),<br />
+  DSL 179-223, EGF-like repeats 225-404, TM 442-463, cytoplasmic tail 464-613.</li>
+<li>PANTHER: PTHR24049 (CRUMBS FAMILY MEMBER) / PTHR24049:SF30 (no subfamily name).</li>
+</ul>
+<h2 id="literature">Literature</h2>
+<ul>
+<li>Marlow et al. 2012 identified the single Delta gene: <a href="https://pubmed.ncbi.nlm.nih.gov/22155407" title="we were able to confirm   one of these genes to be the Delta ligand. NvDelta possessed all characteristic domains of   bilaterian Delta or Serrate notch ligands: a DSL domain, EGF repeats and a transmembrane domain">PMID:22155407</a></li>
+<li>Expression: salt-and-pepper ectodermal cells, then tentacle ectoderm and mesenteries<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22155407" title="At metamorphosis, Nvdelta is restricted to tentacular ectoderm and the   endodermal component of the developing mesenteries.">PMID:22155407</a></li>
+<li>Layden &amp; Martindale 2014 (EvoDevo): Delta overexpression suppresses NvashA, and the suppression<br />
+  is DAPT-sensitive (Notch-dependent); Delta MO phenocopies Notch MO.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/25705370" title="This demonstrates that NvNotch and NvDelta are both required to repress NvashA in   the embryonic ectoderm.">PMID:25705370</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" title="To determine if the suppression of NvashA by Nvdelta   required NvNotch, we treated Nvdelta:venus injected animals with DAPT.">PMID:25705370</a><br />
+  Delta overexpression did not induce Nvhes genes <a href="https://pubmed.ncbi.nlm.nih.gov/25705370" title="Similarly, injection of the   Nvdelta:venus mRNA failed to induce expression of any of the Nvhes genes.">PMID:25705370</a> — this is the basis<br />
+  for the "non-canonical (Su(H)/Hes-independent)" interpretation, which Richards &amp; Rentzsch 2015<br />
+  partly dispute <a href="https://pubmed.ncbi.nlm.nih.gov/26443634" title="current data do not allow for a definitive conclusion on the   mechanism of signalling in Nematostella neurogenesis.">PMID:26443634</a></li>
+<li>Feedback: DAPT increases NvDelta expression <a href="https://pubmed.ncbi.nlm.nih.gov/26443634" title="NvDelta is also increased, whereas   NvHes2 and NvHes3 are downregulated.">PMID:26443634</a></li>
+<li>Germ-layer boundary role (2025): delta in mesoderm vs notch in ectoderm; endoderm induced at the<br />
+  interface <a href="https://pubmed.ncbi.nlm.nih.gov/40858588" title="Finally, we show that endodermal fate is induced in a single row of   cells at the interface between the Notch-expressing ectoderm and the Delta-expressing mesoderm.">PMID:40858588</a></li>
+</ul>
+<h2 id="assessment">Assessment</h2>
+<ul>
+<li>Core role: membrane-bound DSL ligand that activates NvNotch in trans (lateral inhibition of<br />
+  neural/cnidocyte differentiation; lateral induction of endoderm at the mesoderm boundary).</li>
+<li>No direct biochemical binding assay exists for NvDelta–NvNotch; <code>Notch binding</code> rests on<br />
+  domain architecture (MNNL + DSL = receptor-binding module) plus Notch-dependent gain-of-function.</li>
+<li>"Secreted"/extracellular region IEA is inconsistent with the single-pass TM architecture.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<ul>
+<li>First run with --alias failed (template variables missing); rerun without alias produced<br />
+  G9JWI6-deep-research-falcon.md (falcon), cited in the review. Review based primarily on cached<br />
+  full-text publications.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G9JWI6
+gene_symbol: delta
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:45351
+  label: Nematostella vectensis
+description: &gt;-
+  NvDelta is the single canonical Delta-type DSL ligand of the starlet sea anemone
+  Nematostella vectensis (Cnidaria, Anthozoa). It is a single-pass type I membrane
+  protein with an N-terminal MNNL (Notch ligand N-terminal) domain, a DSL domain and
+  EGF-like repeats in the extracellular region, a transmembrane segment and a short
+  cytoplasmic tail, i.e. the full bilaterian Delta/Serrate receptor-binding module.
+  It is expressed in scattered &#34;salt-and-pepper&#34; ectodermal cells during gastrulation
+  (overlapping neural and cnidocyte progenitors), later in tentacle ectoderm and
+  mesenteries, and in the early mesoderm abutting Notch-expressing ectoderm.
+  Morpholino knockdown of NvDelta, like knockdown of NvNotch, derepresses the
+  proneural gene NvashA, while NvDelta overexpression suppresses NvashA in a
+  gamma-secretase (DAPT)-sensitive manner, indicating that NvDelta acts as a
+  juxtacrine ligand that activates NvNotch to restrain neural differentiation
+  (lateral inhibition). Delta-Notch signalling at the mesoderm/ectoderm interface
+  also induces endodermal fate. Whether NvDelta-triggered signalling acts through the
+  canonical Su(H)/Hes transcriptional route is debated; NvDelta overexpression did not
+  induce Nvhes genes, and a non-canonical mechanism has been proposed.
+existing_annotations:
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001881
+  - InterPro:IPR018097
+  review:
+    summary: &gt;-
+      InterPro mapping from calcium-binding EGF-like domain signatures
+      (IPR001881, IPR018097) present among the EGF repeats of NvDelta.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Calcium-binding EGF repeats are a structural feature of DSL ligands and the
+      mapping is plausible, but calcium binding is a structural property rather than
+      the signalling function of the ligand. Kept as non-core.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0243
+  review:
+    summary: &gt;-
+      Derived from an ARBA-predicted &#34;Secreted&#34; subcellular location in the
+      UniProt entry.
+    action: REMOVE
+    reason: &gt;-
+      NvDelta has a signal peptide, a single hydrophobic transmembrane segment
+      (residues 442-463) and a cytoplasmic tail, and was characterised as a
+      transmembrane DSL ligand. There is no evidence for a secreted or shed form in
+      Nematostella; the &#34;Secreted&#34; location is an automated prediction inconsistent
+      with the domain architecture. The membrane annotation captures the correct
+      location.
+    supported_by:
+    - reference_id: PMID:22155407
+      supporting_text: &gt;-
+        NvDelta possessed all characteristic domains of bilaterian Delta or Serrate
+        notch ligands: a DSL domain, EGF repeats and a transmembrane domain
+- term:
+    id: GO:0007154
+    label: cell communication
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR001774
+  review:
+    summary: &gt;-
+      InterPro2GO mapping from the DSL domain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but very general; the specific process is captured by the Notch
+      signaling pathway annotation.
+- term:
+    id: GO:0007219
+    label: Notch signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR011651
+  review:
+    summary: &gt;-
+      InterPro2GO mapping from the MNNL (Notch ligand N-terminal) domain. Supported
+      in Nematostella by gene-specific perturbation: NvDelta knockdown phenocopies
+      NvNotch knockdown, and NvDelta gain-of-function effects require
+      gamma-secretase activity.
+    action: ACCEPT
+    reason: &gt;-
+      NvDelta is the DSL ligand that initiates Notch signalling in Nematostella; the
+      ligand performs the first step of the pathway (receptor engagement), so the
+      process annotation is appropriate and core.
+    supported_by:
+    - reference_id: PMID:25705370
+      supporting_text: &gt;-
+        This demonstrates that NvNotch and NvDelta are both required to repress
+        NvashA in the embryonic ectoderm.
+    - reference_id: PMID:25705370
+      supporting_text: &gt;-
+        To determine if the suppression of NvashA by Nvdelta required NvNotch, we
+        treated Nvdelta:venus injected animals with DAPT.
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00027428
+  review:
+    summary: &gt;-
+      ARBA machine-learning prediction. In Nematostella, Delta-Notch signalling
+      restrains neural differentiation (NvashA and downstream neural markers).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the Layden and Martindale data showing NvDelta is required to
+      repress NvashA-dependent neural differentiation; this is a developmental
+      consequence of the core ligand activity rather than the core function itself.
+    supported_by:
+    - reference_id: PMID:25705370
+      supporting_text: &gt;-
+        This demonstrates that NvNotch and NvDelta are both required to repress
+        NvashA in the embryonic ectoderm.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  supporting_entities:
+  - InterPro:IPR001774
+  - InterPro:IPR011651
+  - UniProtKB-SubCell:SL-0162
+  review:
+    summary: &gt;-
+      Combined automated annotation; NvDelta is a single-pass type I membrane
+      protein.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the signal peptide plus single transmembrane segment and
+      with the characterised domain structure. Plasma membrane localisation is
+      expected for a juxtacrine DSL ligand but has not been shown directly in
+      Nematostella, so the general term is retained.
+    supported_by:
+    - reference_id: PMID:22155407
+      supporting_text: &gt;-
+        NvDelta possessed all characteristic domains of bilaterian Delta or Serrate
+        notch ligands: a DSL domain, EGF repeats and a transmembrane domain
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00027429
+  review:
+    summary: &gt;-
+      ARBA prediction; Delta-Notch signalling regulates neural, cnidocyte and
+      endodermal fate decisions in Nematostella.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Broadly correct as a developmental outcome of Notch pathway activation, but
+      general and not the core ligand activity.
+    supported_by:
+    - reference_id: PMID:40858588
+      supporting_text: &gt;-
+        Finally, we show that endodermal fate is induced in a single row of cells at
+        the interface between the Notch-expressing ectoderm and the Delta-expressing
+        mesoderm.
+- term:
+    id: GO:0005112
+    label: Notch binding
+  evidence_type: ISS
+  original_reference_id: PMID:22155407
+  review:
+    summary: &gt;-
+      Proposed MF for the NvDelta ligand. NvDelta carries the conserved MNNL+DSL
+      receptor-binding module, and its gain-of-function effect (NvashA
+      suppression) requires gamma-secretase activity and phenocopies NvNotch
+      intracellular-domain overexpression, while its loss phenocopies NvNotch loss.
+    action: NEW
+    reason: &gt;-
+      Notch binding is the defining molecular function of DSL ligands and is
+      annotated to Delta orthologs across bilaterians. The Nematostella evidence is
+      genetic (ligand and receptor perturbations give matching, epistatic
+      phenotypes) plus domain architecture, not a direct binding assay. Binding
+      itself rests on the conserved MNNL/DSL receptor-binding module, so it is
+      asserted by sequence similarity (ISS, PMID:22155407); the perturbation
+      evidence is recorded separately under receptor ligand activity
+      (GO:0048018), which it supports more directly.
+    supported_by:
+    - reference_id: PMID:25705370
+      supporting_text: &gt;-
+        This demonstrates that NvNotch and NvDelta are both required to repress
+        NvashA in the embryonic ectoderm.
+    - reference_id: PMID:22155407
+      supporting_text: &gt;-
+        NvDelta possessed all characteristic domains of bilaterian Delta or Serrate
+        notch ligands: a DSL domain, EGF repeats and a transmembrane domain
+    - reference_id: file:NEMVE/G9JWI6/G9JWI6-deep-research-falcon.md
+      supporting_text: Conserved Delta/Serrate/LAG-2 ligand module required for binding the extracellular region of Notch.
+- term:
+    id: GO:0048018
+    label: receptor ligand activity
+  evidence_type: IGI
+  original_reference_id: PMID:25705370
+  review:
+    summary: NvDelta overexpression overactivates Notch signaling (gamma-secretase-dependent NvashA repression),
+      and NvDelta and NvNotch are both required for NvashA repression.
+    action: NEW
+    reason: &#39;NEW: the Nematostella perturbation evidence speaks to activation rather than to binding:
+      NvDelta gain of function phenocopies NvNotch intracellular-domain overexpression and is blocked
+      by the gamma-secretase inhibitor DAPT, and NvDelta and NvNotch loss give matching phenotypes. This
+      genetic (IGI) evidence supports receptor ligand activity; Notch binding itself rests on the conserved
+      MNNL/DSL architecture (ISS). Comparator check: bilaterian activating Delta ligands (Drosophila Dl,
+      human DLL1) carry GO:0048018.&#39;
+    supported_by:
+    - reference_id: PMID:25705370
+      supporting_text: Second, we overactivated Notch activity by injecting mRNA encoding for the full
+        length Nvdelta gene fused to the venus reporter (Nvdelta:venus).
+    - reference_id: PMID:25705370
+      supporting_text: This demonstrates that NvNotch and NvDelta are both required to repress NvashA
+        in the embryonic ectoderm.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22155407
+  title: Functional roles of Notch signaling in the cnidarian Nematostella vectensis.
+  findings:
+  - statement: &gt;-
+      NvDelta was identified as the single Nematostella Delta ligand with DSL, EGF
+      and transmembrane domains.
+    supporting_text: &gt;-
+      we were able to confirm one of these genes to be the Delta ligand. NvDelta
+      possessed all characteristic domains of bilaterian Delta or Serrate notch
+      ligands: a DSL domain, EGF repeats and a transmembrane domain
+  - statement: NvDelta expression is restricted to tentacle ectoderm and mesenteries at metamorphosis.
+    supporting_text: &gt;-
+      At metamorphosis, Nvdelta is restricted to tentacular ectoderm and the
+      endodermal component of the developing mesenteries.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source paper for the G9JWI6 sequence (UniProt RX line, EMBL AEW42992.1);
+      full text cached.
+- id: PMID:25705370
+  title: Non-canonical Notch signaling represents an ancestral mechanism to regulate
+    neural differentiation.
+  findings:
+  - statement: NvDelta and NvNotch are both required to repress NvashA.
+    supporting_text: &gt;-
+      This demonstrates that NvNotch and NvDelta are both required to repress
+      NvashA in the embryonic ectoderm.
+  - statement: NvDelta overexpression does not induce Nvhes genes.
+    supporting_text: &gt;-
+      Similarly, injection of the Nvdelta:venus mRNA failed to induce expression of
+      any of the Nvhes genes.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Gene-specific morpholino and overexpression evidence for NvDelta as a Notch
+      ligand; full text cached.
+- id: PMID:26443634
+  title: Regulation of Nematostella neural progenitors by SoxB, Notch and bHLH genes.
+  findings:
+  - statement: &gt;-
+      Notch inhibition upregulates NvDelta expression, consistent with a feedback
+      loop; the canonical versus non-canonical mechanism remains unresolved.
+    supporting_text: &gt;-
+      NvDelta is also increased, whereas NvHes2 and NvHes3 are downregulated.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full text cached; partly disputes the non-canonical interpretation.
+- id: PMID:40858588
+  title: Segregation of endoderm and mesoderm germ layer identities in the diploblast
+    Nematostella vectensis.
+  findings:
+  - statement: &gt;-
+      Delta-expressing mesoderm and Notch-expressing ectoderm are complementary and
+      endoderm is induced at their interface.
+    supporting_text: &gt;-
+      Finally, we show that endodermal fate is induced in a single row of cells at
+      the interface between the Notch-expressing ectoderm and the Delta-expressing
+      mesoderm.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Full text cached.
+- id: file:NEMVE/G9JWI6/G9JWI6-deep-research-falcon.md
+  title: Falcon (Edison Scientific Literature) deep research report for Nematostella vectensis delta (G9JWI6)
+  findings:
+  - statement: The DSL domain is the conserved Notch-binding module.
+    supporting_text: Conserved Delta/Serrate/LAG-2 ligand module required for binding the extracellular region of Notch.
+core_functions:
+- description: &gt;-
+    Membrane-bound DSL ligand that engages the NvNotch receptor on neighbouring
+    cells to activate Notch signalling (juxtacrine lateral inhibition of neural and
+    cnidocyte differentiation; lateral induction of endoderm at the mesoderm
+    boundary). Receptor binding is inferred from the conserved MNNL+DSL
+    receptor-binding module and Notch-dependent gain-of-function; no direct binding
+    assay has been reported for the Nematostella proteins.
+  molecular_function:
+    id: GO:0005112
+    label: Notch binding
+  directly_involved_in:
+  - id: GO:0007219
+    label: Notch signaling pathway
+  locations:
+  - id: GO:0016020
+    label: membrane
+  supported_by:
+  - reference_id: PMID:25705370
+    supporting_text: &gt;-
+      This demonstrates that NvNotch and NvDelta are both required to repress NvashA
+      in the embryonic ectoderm.
+  - reference_id: PMID:22155407
+    supporting_text: &gt;-
+      NvDelta possessed all characteristic domains of bilaterian Delta or Serrate
+      notch ligands: a DSL domain, EGF repeats and a transmembrane domain
+- description: &#39;Receptor ligand activity: NvDelta activates NvNotch on neighbouring ectodermal cells;
+    gain of function overactivates Notch in a gamma-secretase-dependent manner.&#39;
+  molecular_function:
+    id: GO:0048018
+    label: receptor ligand activity
+  directly_involved_in:
+  - id: GO:0007219
+    label: Notch signaling pathway
+  locations:
+  - id: GO:0016020
+    label: membrane
+  supported_by:
+  - reference_id: PMID:25705370
+    supporting_text: Second, we overactivated Notch activity by injecting mRNA encoding for the full length
+      Nvdelta gene fused to the venus reporter (Nvdelta:venus).
+  - reference_id: PMID:25705370
+    supporting_text: This demonstrates that NvNotch and NvDelta are both required to repress NvashA in
+      the embryonic ectoderm.
+suggested_questions:
+- question: &gt;-
+    Does NvDelta bind NvNotch directly (e.g. cell aggregation or purified
+    DSL-EGF/NRR binding assays), and does it cis-inhibit NvNotch as bilaterian Delta
+    does?
+- question: &gt;-
+    Is NvDelta-triggered signalling Su(H)/Hes-dependent in some contexts
+    (cnidogenesis, endoderm induction) but not others (NvashA repression)?
+- question: &gt;-
+    Is NvDelta endocytosis/ubiquitination by a Mind bomb or Neuralized homolog
+    required for signalling in cnidarians?
+suggested_experiments:
+- description: &gt;-
+    CRISPR knockout of Nvdelta with rescue by a DSL-domain point mutant to test
+    whether receptor binding is required for NvashA repression and endoderm induction.
+- description: &gt;-
+    Co-culture signalling assay (sender cells expressing NvDelta, receiver cells
+    expressing NvNotch with a Su(H)-responsive reporter) to test trans-activation and
+    canonical CSL dependence.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

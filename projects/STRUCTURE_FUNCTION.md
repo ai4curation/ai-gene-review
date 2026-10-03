@@ -1,12 +1,41 @@
 ---
 title: "Structure-Based Function Prediction for Gene Review"
-maturity: MATURE
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+manifest:
+  slides:
+    - href: STRUCTURE_FUNCTION/slides/STRUCTURE_FUNCTION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/9LtNVgeV5JyNbBwHNAtzYt
+      title: Project brief
 ---
 
 # Structure-Based Function Prediction for Gene Review
 
-How can protein structure help with function prediction, especially for distant homologs where sequence-based HMMs fail?
+**Bottom line:** sequence HMMs lose their signal below about 20–30% identity,
+while fold and active-site geometry often persist, so we asked how protein
+structure can help function prediction for distant homologs. This page
+surveys the tools at three levels (global fold, local catalytic motifs,
+learned structure-aware models) and tests them against cases from our own
+reviews. The answer is split. For lanmodulin (METEA/lanM), structure adds
+nothing: every method still says "EF-hand, calcium", and only
+lanthanide-bound crystal structures and mutagenesis reveal its lanthanide
+selectivity; the IEA `calcium ion binding` row stays as KEEP_AS_NON_CORE. For
+a DUF4246 protein (A0A2N3VF44) with no sequence-detectable homolog, a
+Foldseek search of its AlphaFold model returned 2OG-Fe(II) oxygenases as all
+top 20 PDB hits at 8–15% identity, reproducing Holm's 2023 DALI assignment.
+Local catalytic-residue checks already decide calls in the pipeline
+(PSEAE/pqsC versus PSEAE/pqsB, SACEN/eryCII, MYCTU/cds1, human/PHYKPL). The planned pipeline work has not
+started: the `scripts/structural_search.py` prototype and
+`projects/quantum-sensing-bioinformatics/` referenced below do not exist,
+the Foldseek run was not saved, and the MYCTU/cds1 and human/PHYKPL structural checks
+are still to do.
+
+We did this to know when to reach for structure during review: it pays off
+when there is no sequence homology at all or the active site is conserved
+under a divergent fold, and it does not help when the functional difference
+is subtle chemistry inside one fold.
 
 ## The Problem
 

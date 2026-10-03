@@ -173,7 +173,7 @@ RHEA, CAZy, and SPKW projects learned: **naive counts overstate the signal.**
 
 - Everything is fetched live: `go.py` from TCDB, the MF closure from QuickGO, the
   gap counts from UniProt REST. The go.py dump is cached to
-  [`data/tcdb_go.tsv`](data/tcdb_go.tsv) for offline re-analysis; delete it (or
+  `data/tcdb_go.tsv` for offline re-analysis (a local cache, not archived in this repository); delete it (or
   pass a refresh) to re-fetch.
 - No `~/repos/go-db` DuckDBs are required (unlike the RHEA forward
   cross-organism scan) — the whole probe runs anywhere with network access.
