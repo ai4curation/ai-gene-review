@@ -324,3 +324,41 @@ def test_rewrite_panther_labels_still_defers_a_real_divergence():
     assert applied == []
     assert len(deferred) == 1
     assert new == text
+
+
+def test_load_member_overrides_requires_a_reason(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text("uniprot_accession\tpanther_family_sf\treason\nP1\tPTHR1:SF2\t\n")
+    with pytest.raises(ValueError, match="non-empty"):
+        load_member_overrides(path)
+
+
+def test_apply_member_overrides_wins_over_classification(tmp_path):
+    from ai_gene_review.etl.panther_families import (
+        apply_member_overrides,
+        load_member_overrides,
+    )
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tcurated\n"
+        "P9\tPTHR9\tno longer cited\n"
+    )
+    merged = apply_member_overrides(
+        {"P1": "PTHR5:SF1", "P2": "PTHR2"}, load_member_overrides(path), {"P1", "P2"}
+    )
+    assert merged == {"P1": "PTHR1:SF2", "P2": "PTHR2"}
+
+
+def test_repo_member_overrides_are_reflected_in_index():
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    panther_dir = PROJECT_ROOT / "interpro" / "panther"
+    overrides = load_member_overrides(panther_dir / "panther-members-overrides.tsv")
+    index = load_member_index(panther_dir / "panther-members.tsv")
+    for accession, (family_sf, _reason) in overrides.items():
+        if accession in index:
+            assert index[accession] == family_sf, accession
