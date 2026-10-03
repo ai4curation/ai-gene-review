@@ -32,3 +32,6 @@ PubMed and web searches on 2026-09-28 for `Rpd3`, `Rpd3L`, `RPD3`, `Saccharomyce
   Rpd3L paper.
 - Normalized the RPD3 gene and IBA_REVIEW history actors from `claude-code` to
   `codex` to match the agent and commit provenance.
+- Corrected `rpd3-current-goa.yaml` after those two action flips: final action
+  totals are now ACCEPT 95 and KEEP_AS_NON_CORE 7, and both changed rows record
+  `after: KEEP_AS_NON_CORE`.
