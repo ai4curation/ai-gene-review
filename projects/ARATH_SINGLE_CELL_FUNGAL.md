@@ -162,7 +162,8 @@ activity is annotated consistently across the TNLs.
   `defense response to bacterium` row was changed to `response to bacterium`. The
   TAIR IDA row for the same term (He et al. 2006) was left undecided, because that
   paper's full text is not available and the curator may have seen an FRK1-specific
-  experiment. One flg22-only row to `response to molecule of bacterial origin`. A motif
+  experiment. One flg22-only row was changed to `response to molecule of bacterial
+  origin`. A motif
   scan shows FRK1 has an intact kinase domain, but no activity, substrate or mutant
   phenotype has been published.
 - **Induced systemic resistance does not fit its source.** MYB51, CYP71A12 and
@@ -170,7 +171,8 @@ activity is annotated consistently across the TNLs.
   cytochromes also inherit it by IBA from a PAINT node grounded only in those rows.
   That paper states the resistance is salicylic-acid-dependent, while `GO:0009682`
   is defined as salicylic-acid-independent. All five rows are marked over-annotated,
-  and the mutant phenotypes are covered by `defense response to bacterium`. This is
+  and the mutant phenotypes are covered by `defense response to bacterium` for the
+  two cytochromes and by `response to bacterium` for MYB51. This is
   worth raising with PAINT and the TAIR curators.
 - **Open hypotheses for single-cell reanalysis.** Whether MYB122 levels track its
   indole glucosinolate targets cell by cell in epidermis, and whether CYP71A12-high
