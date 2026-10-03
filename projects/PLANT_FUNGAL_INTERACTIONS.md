@@ -127,6 +127,35 @@ annotations reviewed; NEW annotations are counted separately.
 | GIBZE/TRI5 | 4 | 3 | 0 | 1 | 0 | 0 | 0 | 1 | Sesquiterpenoid biosynthesis to vomitoxin (deoxynivalenol) biosynthesis |
 | **Total** | **652** | **333** | **161** | **70** | **40** | **47** | **1** | **36** | |
 
+## Modules
+
+Two pathway modules tie the gene reviews together:
+
+- [Camalexin biosynthesis](../modules/camalexin_biosynthesis.html)
+  (`modules/camalexin_biosynthesis.yaml`). Tryptophan is converted to IAOx
+  (CYP79B2/B3), then to IAN (CYP71A13, with a minor role for CYP71A12). The
+  intermediate is conjugated to glutathione (GSTF6, implicated) and trimmed by
+  GGP1, and PAD3 makes dihydrocamalexic acid and then camalexin. MPK3/MPK6 and
+  WRKY33 are modelled as a separate regulatory part that positively regulates
+  the CYP71A13 and PAD3 steps, matching the enzyme-versus-regulator split in
+  the gene reviews. GSTU4 binds the enzyme complex but is not a pathway enzyme,
+  so it is left out.
+- [Chitin perception](../modules/chitin_perception.html)
+  (`modules/chitin_perception.yaml`). The receptor complex is modelled as two
+  variants: rice CEBiP binds chitin and OsCERK1 is the kinase, while in
+  *Arabidopsis* the LYK5/LYK4 pseudokinases bind chitin and CERK1 is the
+  kinase. Two branches follow. In one, PBL27/OsRLCK185 feeds a
+  MAPKKK5-MKK4/5-MPK3/6 relay (reusing `mapk_relay`). In the other, BIK1/PBL1
+  activates RBOHD for the ROS burst. LYM2's plasmodesmal branch does not need
+  CERK1, and the fungal chitin-masking effectors act from outside the plant,
+  so both are recorded as notes rather than parts.
+
+Members without a gene review yet: CYP79B3, CYP71A13, CYP71A12, GSTF6
+(camalexin); LYK4, PBL27, OsRLCK185, PBL1, MAPKKK5, MKK4, MKK5 (chitin
+perception). Both modules list their open questions as knowledge gaps. One
+example is that MPK6's review lacks the "positive regulation of camalexin
+biosynthetic process" term that MPK3 carries.
+
 ### Findings by curation question
 
 1. **Process terms on effectors.** The effector annotations already use the
@@ -284,6 +313,13 @@ running `fetch-gene`; do not guess one.
 # NOTES
 
 ## 2026-10-03
+
+- Built two modules, `camalexin_biosynthesis` (concrete, Arabidopsis) and
+  `chitin_perception` (abstract, flowering plants), each with falcon module
+  deep research. Both pass `linkml-validate` and `module_validator` and are
+  rendered. No other module covered this biology: `nlr_signaling` is
+  animal-only, and `aliphatic_glucosinolate_myrosinase_defense` excludes the
+  indole branch.
 
 - PubMed's redirection notice shows PMID:33831160 was deleted as a duplicate
   of PMID:31511315 (Mucha et al. 2019, camalexin metabolon). Recorded the
