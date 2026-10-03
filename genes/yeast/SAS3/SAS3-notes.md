@@ -18,3 +18,38 @@
 - Other 2023-2026 PubMed hits were not direct SAS3 evidence: PMID:39299382 is a
   review of H3K36 methylation, PMID:39082211 studies a NuA3 ortholog subunit in
   Beauveria bassiana, and PMID:36864781 focuses on Gcn5 and NuA4 HAT activities.
+
+## 2026-10-01 current GOA refresh
+
+- Refreshed SAS3 from current UniProt/GOA. GOA now carries 36 live rows; six
+  newly materialized rows were reviewed: three additional IntAct `GO:0005515`
+  rows, two direct UniProt `GO:0061733` rows, and the ComplexPortal
+  `GO:1990467` NuA3a row.
+- Re-read the newly needed cached abstracts for PMID:10600516 and the relevant
+  cached NuA3 publications for PMID:10817755, PMID:12077334, PMID:17157260,
+  PMID:25104842, and PMID:25473596. The three new generic protein-binding rows
+  report real NuA3 interaction/co-complex evidence but remain uninformative GO
+  molecular-function assertions and were removed consistently with the existing
+  SAS3 protein-binding rows.
+- Retained eight source assertions that are no longer in current GOA with
+  `retired: true`: the six old UniProt keyword rows from GO_REF:0000043 and the
+  two old generic IntAct rows from PMID:16554755 and PMID:21179020.
+- Rechecked the PTHR10615 PAINT export refreshed on 2026-10-01. The current
+  IBA rows still resolve to the eukaryotic MYST node
+  `PANTHER:PTN004172926` and the fungal NuA3a node
+  `PANTHER:PTN008308138`, so the existing PTN-only propagation reviews remain
+  aligned with the IBA project.
+
+## PR #3790 H3K14 follow-up
+
+- Replaced the false proposed-new-term entry for "histone H3K14 acetyltransferase
+  activity" with a `NEW` annotation to the existing GO term
+  `GO:0036408 histone H3K14 acetyltransferase activity`.
+- Tightened the core molecular function from generic
+  `GO:0004402 histone acetyltransferase activity` to `GO:0036408`, supported by
+  direct NuA3 H3K14 enzymology in PMID:41318527 and earlier Yng1-dependent
+  NuA3 K14 acetylation evidence in PMID:17157260.
+- Corrected the SAS3 current-GOA audit counts from 30 pre-refresh rows to the
+  actual 38 rows.
+- Corrected the audit summary's final row/action totals after the new
+  `GO:0036408` row: `final_rows: 45` and `final_actions.NEW: 1`.
