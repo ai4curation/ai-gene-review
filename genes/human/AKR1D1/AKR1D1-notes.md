@@ -221,3 +221,45 @@ link targets. Exact current-main cache metadata and blob checks distinguish
 the six new source5 records from already published sources. These checks do
 not resolve the remaining Reactome cache gate or the source-specific biological
 uncertainties retained in the annotations.
+
+
+## 2026-10-03 — AKR1C1 association evidence
+
+The BioPlex 2.0 and 3.0 experimental annotations report AKR1D1 association with
+AKR1C1 (UniProt Q04828; PMID:28514442 and PMID:33961781). Both associations are
+retained as non-core. BioPlex 2.0 used tagged human proteins and affinity-purification
+mass spectrometry in HEK293T cells; BioPlex 3.0 profiled 293T and HCT116 networks.
+The latter study's general two-cell-line design does not establish that the exact
+AKR1D1 pair was observed in both lines.
+
+The experimental GOA partner and UniProt interaction record corroborate the pair.
+The assay framework was inspected, but the individual supplementary target records
+were not independently inspected. These data support co-complex association without
+establishing purified binary affinity, a native liver interaction or a specific
+effect on steroid metabolism. They provide no basis for assigning AKR1C1 catalytic
+activity to AKR1D1. The earlier removal rationale addressed only the annotation's
+breadth; it did not identify evidence contradicting the association.
+
+This correction changes only the two association judgments and their accompanying
+reference explanations. The steroid-reductase core, the remaining source-specific
+uncertainties and the missing R-HSA-193755 cache remain as previously recorded.
+The separately planned normal-fetch diagnostic has no outcome incorporated here.
+
+## 2026-10-03 — Reactome diagnostic outcome (20:16 UTC)
+
+The previously pending diagnostic is now complete. One invocation of the unchanged
+normal Reactome fetcher requested
+[R-HSA-193755](https://reactome.org/ContentService/data/query/R-HSA-193755)
+at 20:16:04–05 UTC. The request returned HTTP 404 without redirects. Its complete
+180-byte JSON response reports that the requested identifier was not found. The
+normal fetch failed and produced no Reactome cache file; no substitute source was
+created. The diagnostic is recorded in the
+[source run](https://github.com/ai4curation/ai-gene-review/actions/runs/37149949648).
+
+The indexed official [human reaction page](https://reactome.org/content/detail/R-HSA-193755)
+still describes AKR1D1-catalyzed reduction of the steroid double bond. Current direct
+access to that detail page returned 404, and access to its schema-browser page
+returned 403. These access results do not establish that the event was retired,
+renamed or biologically incorrect. The existing reaction-specific assessment is
+unchanged; the required normal-cache source remains unavailable and campaign
+completion remains pending. No further fetch was attempted.
