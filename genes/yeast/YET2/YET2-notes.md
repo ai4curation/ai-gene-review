@@ -176,7 +176,9 @@ BP (all IBA from mammalian BAP31, or IEA InterPro — family inferences, no YET2
 MF/BP root:
 - GO:0003674 molecular_function ND (SGD, GO_REF:0000015) → this is the honest "MF unknown"
   placeholder. Keep as the dark-gene signal; action ACCEPT (it correctly records ignorance).
-- GO:0008150 biological_process ND (SGD) → likewise ACCEPT (records that BP is uncurated/unknown).
+- GO:0008150 biological_process ND (SGD) → REMOVE. The 2013 root BP placeholder is
+  now stale because GOA carries specific family-level BP rows; the primary-data
+  BP gap is recorded in `knowledge_gaps` instead.
 
 I will NOT REMOVE any experimental annotation on paralog grounds. The IBA BP terms are
 family-level inferences from BAP31; I mark them KEEP_AS_NON_CORE rather than REMOVE because they
