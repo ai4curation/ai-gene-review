@@ -3,7 +3,7 @@ title: "Plant-Fungal Interactions"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [ARATH, ORYSJ, HORVU, MEDTR, LOTJA, PYRO7, FULFL, MYCMD, GIBZE]
-genes: [CERK1, LYK5, LYM2, SYP121, BGLU26, ABCG36, CYP71B15, CYP79B2, MLO2, WRKY33, ERF094, MPK3, CEBIP, PIKM1-TS, RGA4, RGA5, MLO, NORK, DMI1, CASTOR, CYCLOPS, RAM1, STR, PT4, PWL2, BAS1, slp1, PMK1, MPG1, AVR9, AVR4, ECP6, CMU1, PIT2, See1, TRI5]
+genes: [CERK1, LYK5, LYM2, SYP121, BGLU26, ABCG36, CYP71B15, CYP79B2, MLO2, WRKY33, ERF094, MPK3, CEBIP, PIKM1-TS, RGA4, RGA5, MLO, NORK, DMI1, CASTOR, CYCLOPS, RAM1, STR, PT4, PWL2, BAS1, slp1, PMK1, MPG1, AVR9, AVR4, ECP6, CMU1, PIT2, See1, TRI5, CYP79B3, CYP71A13, CYP71A12, GSTF6, LYK4, PBL27, PBL1, MAPKKK5, MKK4, MKK5, RLCK185]
 ---
 
 # Plant-Fungal Interactions
@@ -133,9 +133,11 @@ Two pathway modules tie the gene reviews together:
 
 - [Camalexin biosynthesis](../modules/camalexin_biosynthesis.html)
   (`modules/camalexin_biosynthesis.yaml`). Tryptophan is converted to IAOx
-  (CYP79B2/B3), then to IAN (CYP71A13, with a minor role for CYP71A12). The
-  intermediate is conjugated to glutathione (GSTF6, implicated) and trimmed by
-  GGP1, and PAD3 makes dihydrocamalexic acid and then camalexin. MPK3/MPK6 and
+  (CYP79B2/B3). CYP71A13 (with a minor role for CYP71A12) then oxygenates
+  IAOx to a cyanohydrin and dehydrates it to a reactive intermediate; IAN may
+  be a side product (Klein et al. 2013). The intermediate is conjugated to
+  glutathione (GSTF6, implicated; many GSTs can do it and it also happens
+  without an enzyme) and trimmed by GGP1, and PAD3 makes dihydrocamalexic acid and then camalexin. MPK3/MPK6 and
   WRKY33 are modelled as a separate regulatory part that positively regulates
   the CYP71A13 and PAD3 steps, matching the enzyme-versus-regulator split in
   the gene reviews. GSTU4 binds the enzyme complex but is not a pathway enzyme,
@@ -143,16 +145,37 @@ Two pathway modules tie the gene reviews together:
 - [Chitin perception](../modules/chitin_perception.html)
   (`modules/chitin_perception.yaml`). The receptor complex is modelled as two
   variants: rice CEBiP binds chitin and OsCERK1 is the kinase, while in
-  *Arabidopsis* the LYK5/LYK4 pseudokinases bind chitin and CERK1 is the
-  kinase. Two branches follow. In one, PBL27/OsRLCK185 feeds a
-  MAPKKK5-MKK4/5-MPK3/6 relay (reusing `mapk_relay`). In the other, BIK1/PBL1
-  activates RBOHD for the ROS burst. LYM2's plasmodesmal branch does not need
+  *Arabidopsis* the LYK5 pseudokinase binds chitin, LYK4 acts as a co-receptor
+  and CERK1 is the kinase. Two branches follow. In one, PBL27 (OsRLCK185 in
+  rice) feeds a MAPKKK5-MKK4/5-MPK3/6 relay (reusing `mapk_relay`). The PBL27
+  step is disputed in *Arabidopsis*, where other RLCKs may phosphorylate
+  MAPKKK5, but it is well supported in rice, where OsRLCK185 phosphorylates
+  OsMAPKKKε and OsMAPKKK18. In the other branch, BIK1 activates RBOHD for the
+  ROS burst. PBL1 was dropped from this step because nothing shows it acting
+  alone there. LYM2's plasmodesmal branch does not need
   CERK1, and the fungal chitin-masking effectors act from outside the plant,
   so both are recorded as notes rather than parts.
 
-Members without a gene review yet: CYP79B3, CYP71A13, CYP71A12, GSTF6
-(camalexin); LYK4, PBL27, OsRLCK185, PBL1, MAPKKK5, MKK4, MKK5 (chitin
-perception). Both modules list their open questions as knowledge gaps. One
+Every protein member of both modules now has a completed gene review. The 11
+members added for the modules are summarised below; counts are taken from the
+review files.
+
+| Gene | Module | Rows | Accept | Non-core | Modify | Over-annot. | Remove | Undecided | New | Main correction |
+|------|--------|-----:|-------:|---------:|-------:|------------:|-------:|----------:|----:|-----------------|
+| ARATH/CYP79B3 | camalexin | 25 | 4 | 14 | 5 | 2 | 0 | 0 | 0 | Same fixes as CYP79B2: indole glucosinolate biosynthesis, ER membrane |
+| ARATH/CYP71A13 | camalexin | 24 | 8 | 8 | 2 | 1 | 4 | 1 | 0 | Membrane to ER membrane; ER lumen left undecided |
+| ARATH/CYP71A12 | camalexin | 17 | 5 | 5 | 2 | 3 | 1 | 1 | 1 | Induced systemic resistance over-annotated (the response depends on salicylic acid) |
+| ARATH/GSTF6 | camalexin | 26 | 9 | 6 | 0 | 8 | 1 | 2 | 0 | Metal binding and proteomics locations over-annotated; no camalexin term added |
+| ARATH/LYK4 | chitin | 19 | 11 | 0 | 0 | 4 | 4 | 0 | 2 | Kinase activity removed (pseudokinase); added coreceptor activity |
+| ARATH/PBL27 | chitin | 25 | 14 | 4 | 1 | 0 | 6 | 0 | 1 | Added regulation of stomatal closure (phosphorylates SLAH3) |
+| ARATH/PBL1 | chitin | 15 | 9 | 1 | 1 | 1 | 3 | 0 | 0 | Bacterial defence regulation over-annotated |
+| ARATH/MAPKKK5 | chitin | 27 | 13 | 7 | 1 | 0 | 6 | 0 | 0 | PRR signalling refined to cell surface PRR signalling |
+| ARATH/MKK4 | chitin | 40 | 11 | 14 | 1 | 0 | 13 | 1 | 0 | Serine kinase row to MAP kinase kinase activity |
+| ARATH/MKK5 | chitin | 39 | 10 | 17 | 2 | 0 | 10 | 0 | 0 | Serine kinase rows to MAP kinase kinase activity |
+| ORYSJ/RLCK185 | chitin | 9 | 8 | 0 | 1 | 0 | 0 | 0 | 1 | Added positive regulation of MAPK cascade |
+| **Total** | | **266** | **102** | **76** | **16** | **19** | **48** | **5** | **5** | |
+
+Both modules list their open questions as knowledge gaps. One
 example is that MPK6's review lacks the "positive regulation of camalexin
 biosynthetic process" term that MPK3 carries.
 
@@ -313,6 +336,17 @@ running `fetch-gene`; do not guess one.
 # NOTES
 
 ## 2026-10-03
+
+- Reviewed the 11 module members that had no gene review (falcon deep research
+  for each; all COMPLETE). CYP71A13 and CYP71A12 also cited the deleted
+  duplicate PMID:33831160 and were remapped the same way as CYP71B15. Then
+  updated both modules to match: Klein et al. 2013 chemistry for the CYP71A
+  step, LYK4 as co-receptor, BIK1 alone in the ROS branch, and the disputed
+  PBL27 step.
+- Kept the MAPK-cascade members consistent. MKK4, MKK5 and MPK3 carry no new
+  cell surface PRR signalling term, because the same-role comparators lack it
+  (MAPKKK5 has it only from an existing curator IGI row). An MKK5 proposal for
+  this term was dropped on those grounds and raised as a question.
 
 - Built two modules, `camalexin_biosynthesis` (concrete, Arabidopsis) and
   `chitin_perception` (abstract, flowering plants), each with falcon module
