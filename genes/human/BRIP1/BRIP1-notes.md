@@ -172,3 +172,18 @@ The final candidate removes PMID:14504288 from the positive supporting evidence 
 ### Canonical application
 
 The completed 92-annotation review was applied after independent scientific review and verification of the current source files and task ownership. Earlier TMP-stage wording above records preparation history. The applied review retains 10 UNDECIDED annotations and DRAFT status, with the documented evidence limits and validation warnings. The application also regenerates the gene page and adds a curation history record.
+
+
+### 2026-10-03 PR #3895 review follow-up
+
+Resolve the three required consistency issues from review 5399956246. Retain the PMID:23585563 cytoplasm IDA on explicit deference to the curator who assessed the experiment, consistently with its UniProt-derived IEA; the fractionation image remains uninspected and the compartment is secondary. Apply the same independently supported localization judgment to the row originally citing PMID:14504288, preserving its original identifier and MISCITED assessment while removing that unrelated BACH1 paper from positive support.
+
+Retain five screen-derived generic binding rows as non-core on independently established BRCA1/MLH1 interactions (PMID:11301010, PMID:15125843, PMID:17581638), without claiming that their individual screen measurements were checked. The mixed BioPlex row includes HSD17B14 as well as MLH1: only the independently established MLH1 edge supports retention here. The HSD17B14-only row remains UNDECIDED. Original source fields and references are preserved.
+
+Remove GO:0036297 from the first core's structured directly_involved_in list. The narrative retains the experimentally supported helicase/MLH1-dependent crosslink response and its unresolved mechanistic step; no NEW process assertion is manufactured from correction of crosslink sensitivity alone. PMID:17581638 Discussion considers repair, checkpoint and protein-displacement explanations rather than settling the exact step. Homologous recombination remains in the first core, and the separately supported protein–DNA-adduct repair core is unchanged. This resolves the structural assertion mismatch without changing the standing redundancy rule.
+
+Normalize prose PMID separators in the changed review. All 92 machine source objects, 68 reference identities, two products, existing exact quotations and the original notes prefix are preserved. Seven judgments move from UNDECIDED to KEEP_AS_NON_CORE; three remain UNDECIDED. No source cache or earlier history is edited. Normal validation, rendering and new history are still pending at this candidate stage.
+
+### 2026-10-03 follow-up application
+
+Applied the independently reviewed follow-up after checking the exact canonical preimages. Normal canonical validation passed with 17 warnings, recorded in the application receipt; these remain warnings rather than unresolved schema errors. The review stays DRAFT with 65 ACCEPT, 23 KEEP_AS_NON_CORE, 3 UNDECIDED and 1 REMOVE. A new standard codex/gpt-6 EDIT history for PR #3895 was scaffolded and validated. All 92 source objects, 68 reference objects, two products and existing quotations remain unchanged; raw sources, cached publications and earlier history records were preserved. The preceding candidate-stage note records the earlier stage and is superseded by this application entry.
