@@ -70,4 +70,4 @@ Scoping cryptochromes and engineered flavoproteins as magnetic sensors
 - ⬜ Decide the goal, then review human CRY2 and the fly and plant CRYs against the chemical-stimulus term.
 - Side note in the folder: `LIGHT_SOURCE_OPEN_DATASETS.md` (open X-ray datasets), unrelated to the review.
 
-**Read more:** `projects/QUANTUM_SENSING/QUANTUM_SENSING.md`
+**Read more:** `projects/QUANTUM_SENSING.md`

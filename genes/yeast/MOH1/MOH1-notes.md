@@ -207,3 +207,32 @@ quotes are verbatim substrings of the cached abstracts (grep-verified). The 2025
 bioRxiv preprint has no PMID and no cached full text; it is cited as context only in
 prose, with no fabricated quotes. file: quotes (bioinformatics RESULTS.md, falcon
 report) were grep-verified as verbatim substrings before use.
+
+## 2026-10-01 - current GOA and IBA refresh
+
+- Forced a current `just fetch-gene yeast MOH1 --force` refresh. Live GOA still
+  has four MOH1 rows: `GO:0000151` ubiquitin ligase complex by IBA,
+  `GO:0008270` zinc ion binding by RCA, and the standard SGD `GO:0005575` and
+  `GO:0008150` ND placeholders. No newly seeded `PENDING` rows or stale retired
+  rows were introduced.
+- Rechecked the single IBA. `GO:0000151` still comes from `PANTHER:PTN002302768`
+  in the PTHR13848 Yippee family with human YPEL5 (`UniProtKB:P62699`) as the
+  extant donor. The existing `KEEP_AS_NON_CORE` action remains appropriate:
+  current evidence supports a plausible accessory/conditional Moh1 association
+  with the yeast GID ubiquitin ligase complex, not a structurally defined core
+  GID subunit role. Lampert et al. 2018 (`PMID:29911972`) directly support both
+  sides of that boundary: YPEL5 clusters as a human GID subunit, whereas yeast
+  Moh1 is dispensable for Fbp1 turnover in the canonical GID-substrate assay.
+- The IBA `propagation_review` already traced the transfer to the PAINT ancestral
+  node rather than treating YPEL5 as a source node. The forced fetch only
+  backfilled `supporting_entities` so the live GOA PTN and donor accession are
+  preserved explicitly.
+- Refreshed UniProt to entry version 149. The live UniProt record no longer
+  carries the older keyword-derived IEA GO cross-references to generic metal ion
+  binding or apoptotic process; current GOA likewise has no live apoptotic-process
+  assertion for MOH1.
+- Re-read the cached 2026 Olgun et al. full text (`PMID:42404825`) and searched
+  for newer direct MOH1/Moh1/YBL049W papers. No paper newer than Olgun et al. was
+  found that changes the current curation boundary: Moh1 has strong stress and
+  cell-envelope phenotypes but still lacks a direct ligand, biochemical output,
+  and reliable subcellular localization.
