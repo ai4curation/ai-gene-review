@@ -99,3 +99,18 @@ I changed the new ARBA `GO:0070013` intracellular organelle lumen row to
 `MODIFY` with `GO:0005758` mitochondrial intermembrane space as the replacement,
 because direct and UniProt evidence resolve the location to IMS and make the
 ARBA term an unhelpful parent.
+
+## PR #3800 GO:0140318 follow-up
+
+The three retired `GO:0140318 protein transporter activity` rows were changed
+from ACCEPT to MODIFY with `GO:0140309 unfolded protein holdase activity` as the
+replacement. This resolves the contradiction between the stale transporter rows
+and the current single GO:0140309 core activity: current PAINT no longer places
+GO:0140318 at PTN004407763, and current SGD has substituted the two 2019
+PMID:9822593 GO:0140318 rows with direct GO:0140309 rows. The GO:0140309 term
+now covers Tim9-Tim10's binding, anti-aggregation, and escort of unfolded
+hydrophobic clients across the IMS to downstream translocases.
+
+I also replaced the `GO:7770063` beta-barrel-process support quote from the
+2018 full text with the paper's result statement that TIM chaperone binding-site
+mutations impair both carrier and beta-barrel biogenesis.
