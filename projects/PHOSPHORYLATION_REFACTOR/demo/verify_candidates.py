@@ -46,7 +46,7 @@ def descendants(term):
 
 def fetch_product(candidate):
     accession = candidate["uniprot_id"]
-    params = {"geneProductId": "UniProtKB:" + accession, "limit": 200}
+    params = {"geneProductId": "UniProtKB:" + accession, "limit": 100}
     page = get_json(API + "annotation/search?" + urllib.parse.urlencode(params))
     rows = list(page["results"])
     for number in range(2, page["pageInfo"]["total"] + 1):
