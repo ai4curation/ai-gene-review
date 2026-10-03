@@ -3,14 +3,44 @@ title: "Function Prediction Evaluation"
 maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE, FLAGSHIP]
 autolink_gene_symbols: false
+sidecars:
+  # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
+  slide_images:
+    - FUNCTION_PREDICTION_EVALUATION/slides/evaluation-loop.svg
+    - FUNCTION_PREDICTION_EVALUATION/slides/prediction-results.svg
+manifest:
+  slides:
+    - href: FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/FWa7DRJiqJvUFZNxGvrErV
+      title: Project brief
 ---
 # Function Prediction Evaluation
 
-An index to evaluations of computational protein-function predictions, functional
-summaries, and annotation-transfer methods in AI Gene Review. Each project provides
-its own evidence, review criteria, datasets, and results.
+**Bottom line:** new protein-function predictors appear faster than curators can
+judge them, and aggregate benchmarks do not say whether a given method's
+predictions are safe to import. This page indexes the AI Gene Review projects
+that test such predictions claim by claim against agent-adjudicated gene
+reviews, scoring GO terms with the COR/CNN/LSP/UNC/PLI/NPI/REP taxonomy from de
+Crécy-Lagard et al. 2025 (PMID:40703034). Across projects the errors concentrate
+in specificity, paralogs, pseudoenzymes and organism context. In the largest
+model benchmark most correct predictions were already known: as of the review
+snapshot (2026-09-27, commit `c7551cb3db`), 682 of 955 BioReason-Pro SFT terms
+were correct but not novel and 23 were correct and novel. ProtNLM2's purposive
+cohorts invert that balance because they were selected for likely-novel targets.
+Affinage's GO layer rarely reached the specific curated function, and reviewers
+accepted uncorroborated TreeGrafter inferences much less often than curated
+PAINT/IBA ones. Each project below has its own cohorts, methods and denominators.
 
 **[Browse all predictions](../app/predictions/index.html)** — a shared faceted catalog of prediction sets and GO/EC claims, including narrative reviews and assessed empty outputs. Filter by method, species, project, cohort, or assessment; share the resulting URL. [Browser guide](../docs/prediction_browser.md).
+
+The project pages keep their prose to findings and methods; per-category counts
+are facet counts in the browser. Useful starting views:
+[ARGO95 SFT claims](../app/predictions/index.html?dataset=claims&cohorts=argo95_sft_terms),
+[ProtNLM2 GO claims](../app/predictions/index.html?dataset=claims&source_method=ProtNLM2),
+[DeepECTF claims](../app/predictions/index.html?dataset=claims&source_method=DeepECTF), and the
+[GO-GPT three-level overlap](../app/predictions/index.html?dataset=overlap), which is fixed at the review snapshot.
 
 ## Model and agent evaluations
 

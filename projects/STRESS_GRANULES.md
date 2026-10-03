@@ -4,6 +4,13 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [TIA1, TIAL1, USP10, TARDBP, HNRNPA2B1, VCP]   # reviewed genes only; full candidate list is in the table below
+manifest:
+  slides:
+    - href: STRESS_GRANULES/slides/STRESS_GRANULES-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/U63wVz7VQDZJSrarka9GZY
+      title: Project brief
 ---
 
 # Stress Granule Assembly Project
@@ -103,7 +110,3 @@ Mutated in ALS/FTD:
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
-
-## Slides
-
-- [Slides](STRESS_GRANULES/slides/STRESS_GRANULES-slides.html) (Marp source: [STRESS_GRANULES-slides.md](STRESS_GRANULES/slides/STRESS_GRANULES-slides.md)) — AI generated

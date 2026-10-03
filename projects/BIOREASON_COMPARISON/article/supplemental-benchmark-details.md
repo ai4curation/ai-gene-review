@@ -90,21 +90,21 @@ The all-source union is the broadest source-availability view, but it combines A
 
 ## S3. CAFA-style retrospective GOA agreement
 
-We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term predictions using current local GOA as the reference. This is not a true CAFA benchmark: ARGO95 is retrospective, there is no temporal holdout, and the BioReason-Pro SFT files do not contain model confidence scores. The score therefore treats predictions as an unranked single-threshold set and reports propagated precision/recall/F1 rather than \(F_{\max}\). Both predictions and reference GOA annotations are propagated over `is_a` and `part_of` ancestors from the frozen 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots. The archived file's SHA-256 is pinned in `benchmark-policy.yaml`; load-time sentinels verify release-specific active and obsolete terms. The reproducible `verify_ontology_authority.py` check independently downloads the official archive and queries QuickGO and OLS; on 2026-07-12 the remote checksum matched and both live services reported the five disputed sentinels as obsolete. GOA can retain identifiers after ontology obsoletion, so the mixed-date legacy `cache/ontologies/go.tsv` status flag is not used as the ontology authority. Ontology status is recorded separately from assessment: a status-only label mismatch retains its biological `CNN`, `COR`, or `UNC` call, while `LSP` remains reserved for a canonical concept that is more generic than the supported annotation. The mixed-source ARGO139 rows are retained only as diagnostics.
+We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term predictions using local GOA at the review snapshot as the reference. This is not a true CAFA benchmark: ARGO95 is retrospective, there is no temporal holdout, and the BioReason-Pro SFT files do not contain model confidence scores. The score therefore treats predictions as an unranked single-threshold set and reports propagated precision/recall/F1 rather than \(F_{\max}\). Both predictions and reference GOA annotations are propagated over `is_a` and `part_of` ancestors from the frozen 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots. The archived file's SHA-256 is pinned in `benchmark-policy.yaml`; load-time sentinels verify release-specific active and obsolete terms. The reproducible `verify_ontology_authority.py` check independently downloads the official archive and queries QuickGO and OLS; on 2026-07-12 the remote checksum matched and both live services reported the five disputed sentinels as obsolete. GOA can retain identifiers after ontology obsoletion, so the mixed-date legacy `cache/ontologies/go.tsv` status flag is not used as the ontology authority. Ontology status is recorded separately from assessment: a status-only label mismatch retains its biological `CNN`, `COR`, or `UNC` call, while `LSP` remains reserved for a canonical concept that is more generic than the supported annotation. The mixed-source ARGO139 rows are retained only as diagnostics.
 
-**Table S7.** Propagated all-aspect agreement against current GOA.
+**Table S7.** Propagated all-aspect agreement against GOA at the review snapshot.
 
 | Source | Genes | Scored direct predictions | Direct GOA terms | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
 | ARGO95 / HF catalogue | 95 | 952 | 2,369 | 0.862 | 0.479 | 0.615 |
-| Web export | 44 | 9,730 | 3,885 | 0.780 | 0.533 | 0.633 |
-| Mixed-source ARGO139 total | 139 | 10,682 | 6,254 | 0.809 | 0.511 | 0.626 |
+| Web export | 44 | 9,730 | 3,888 | 0.780 | 0.531 | 0.632 |
+| Mixed-source ARGO139 total | 139 | 10,682 | 6,257 | 0.809 | 0.510 | 0.625 |
 
-The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 47/147 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 119/147 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
+The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 47/147 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to snapshot GOA, and 119/147 have propagated overlap with snapshot GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
 
 ![CAFA-style propagated F1 by aspect for ARGO95 SFT terms, with mixed-source diagnostics.](figures/cafa_style_argo139_sft.png)
 
-This diagnostic uses current local GOA, whereas the primary non-novelty counts use the frozen baseline. Consequently, 630 CNN terms are exact current-GOA matches here, compared with 635 exact frozen-GOA matches in the primary benchmark. Regeneration incorporates GOA refreshes already present in the repository as well as assessment changes.
+This diagnostic uses the local GOA and SFT assessments at the review snapshot (2026-09-27, commit `c7551cb3db`; see S6), whereas the primary non-novelty counts use the frozen baseline. Consequently, 630 CNN terms are exact snapshot-GOA matches here, compared with 635 exact frozen-GOA matches in the primary benchmark. Later GOA refreshes and assessment changes enter only when the snapshot is deliberately refreshed.
 
 Full derived tables are in `../cafa-style/`.
 
@@ -120,11 +120,9 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,897 `CNN`, 124 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
-A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,806 GO-GPT predictions across 296 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed, to 298 after the duplicate `ARATH/AAU94417` review was merged into `ARATH/AT1G06680` (both PSBP1, Q42029), to 297 after the duplicate `ARATH/P14713` review was merged into `ARATH/PHYB` (both P14713), and to 296 after the duplicate `ARATH/P93002` review was merged into `ARATH/NPR1` (both P93002). It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
+A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,806 GO-GPT predictions across 296 canonical genes (the historical cohort identifier is retained after duplicate reviews were merged). It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
-The recovered IBA/TreeGrafter reviews are reflected in the current counts below; the JSON, benchmark sidecars and figure are regenerated together from the same reference files.
-
-The final TreeGrafter consistency review refined K9IMD0 metal ion binding to ferric iron binding and NCGR_LOCUS1270 carbohydrate metabolism to the Calvin cycle. Only K9IMD0 is in this 296-gene comparison: that refinement changed its retained set from 22 to 21 terms, with four overlaps unchanged, and left the raw-GOA and core counts unchanged. The later OpenScientist follow-up review (#3198, described below) reduced it further, to 14.
+The overlap analysis is a dated snapshot: the numbers below are as of 2026-09-27 (commit `c7551cb3db`), computed from the GOA files and AIGR reviews at that commit rather than the working tree, so later curation does not change them until the snapshot is deliberately refreshed (`just refresh-benchmark-snapshot`).
 
 **Table S8.** GO-GPT prediction overlap at three reference levels (296 canonical genes).
 
@@ -141,84 +139,6 @@ SlyD instead leaves its holdase molecular-function slot term-less while the same
 is pending. This is an explicitly temporary cross-review difference: HdeB's obsolete
 term is retained only as an interim benchmark representation and should migrate to the
 general holdase term once that term is available.
-The subsequent HdeA comprehensive review increased the post-review denominator by
-one term and the core-function denominator by two terms without changing either
-exact-overlap count. The Spy comprehensive review likewise added two terms to each
-denominator without changing either exact-overlap count. The CpxP comprehensive
-review added one post-review term and two core-function terms, again without changing
-either exact-overlap count. The DnaJ comprehensive review
-then removed two net post-review terms and three exact GO-GPT overlaps after identifying
-five CAFA rows miscited to a GrpE-DnaK structure paper. Its synthesized core-function
-term count and overlap were unchanged: evidence-backed ATPase activator activity
-replaced an overclaimed protein-unfolding process term in the core set.
-The subsequent DnaK comprehensive review changed annotation classifications and
-advanced the reference to `COMPLETE` without changing any of the three overlap totals.
-The GroEL comprehensive review then removed two net post-review terms and one exact
-GO-GPT overlap by narrowing broad cytoplasm to the directly supported cytosol term;
-its synthesized core-function term count and overlap were unchanged.
-The RidA comprehensive review subsequently removed one net post-review term and one
-exact overlap by narrowing broad annotations and replacing obsolete terms with the
-specific L-isoleucine process or the general holdase NTR; its GO-valued core-function
-count and overlap were unchanged.
-The Skp comprehensive review retained the experimentally supported protein-folding
-process term, added it to the synthesized core process set, and treated
-homotrimerization as non-core. These changes added one reference term and one exact
-GO-GPT overlap at both the post-review and core-function levels; raw GOA was unaffected
-by these curation-only updates. SlyD is the exception: its committed GOA snapshot was
-refetched, removing exact matches to obsolete `GO:0051082` and the active broad parents
-`GO:0016853` and `GO:0046872`. This reduced the raw and post-review reference totals and
-overlaps by three, while its term-less holdase core reduced the GO-valued core total and
-overlap by one. The CnoX comprehensive review likewise refetched its committed GOA
-snapshot, removing obsolete `GO:0051082` and two stale process rows, which reduced the
-raw reference total by three and the exact overlaps by two; its completed review added
-evidence-backed `GO:0009408` to the post-review set and dropped general redox homeostasis
-from the core, leaving `GO:0051087` as an evidence-backed core activity that GO-GPT did
-not predict.
-`BACSU/lipA` then followed the obsoletion of `GO:0009107`: both lipoate
-biosynthesis rows now resolve to the replacement `GO:0009249`, which the review already
-carried, so the post-review reference total fell by one distinct term, and the
-core-function slot keyed on the obsolete term was dropped, reducing the GO-valued core
-total by one. Neither exact-overlap count moved, because `GO:0009107` was never in the
-GO-GPT prediction set.
-
-The `ARATH/AT1G06680` (PSBP1) re-review then synthesized a core_functions
-block for the first time, adding four GO-valued core slots of which one
-(`GO:0019684`) is a predicted overlap, and stopped retaining `GO:0009535`
-post-review in favour of the narrower thylakoid-lumen term, dropping one predicted
-post-review overlap without changing the post-review total.
-
-Later, OpenScientist follow-up reviews of four benchmark genes removed 14
-post-review terms without changing any post-review overlap: `DESRO/K9IMD0` 21 to 14
-and `DESRO/K9IJK6` 12 to 8 (#3198), `HYPJE/IRE1` 17 to 15 (#3199) and
-`ANOGA/PGRPLB` 11 to 10 (#3201). K9IMD0 also lost its antimicrobial core function,
-which had been inferred from the lactotransferrin family, taking its core slots from
-6 to 3 and its core overlaps from 3 to 2, so the core totals fell to 1,227 terms and
-353 overlaps. Two further curation merges then moved ten genes: #3240 replaced the
-obsolete `GO:0005615` extracellular space with `GO:0005576` extracellular region, which
-GO-GPT predicted for several `DESRO` salivary proteins, and #3226 restored
-`DESVH/Q72DT0` and `Q72DT1` as QmoA/QmoB, removing Flx–Hdr core terms. Together they
-took the post-review reference to 2,769 terms and 854 overlaps, and the core reference
-to 1,226 terms and 357 overlaps. Finally, #3246 merged the duplicate `ARATH/AAU94417`
-review into `ARATH/AT1G06680`, removing one gene (36 predictions; 21 GOA, 12
-post-review and 5 core terms) while the merged AT1G06680 gained two post-review terms
-and one overlap (the merged record again retains `GO:0009535`, a predicted term), and #3239 repointed obsolete author-supplied ids, removing one
-post-review term each from `ANOGA/PGRPLD` and `ECOLX/SNIPE` and one core term each
-from `ECOLI/SecB` and `ECOLI/surA` without changing any overlap. #3251 then merged the
-duplicate `ARATH/P14713` review into `ARATH/PHYB` (both P14713), removing one gene (13
-predictions; 53 GOA terms with 3 overlaps, 52 post-review with 3, and 12 core with 1),
-while the merged PHYB, on a refreshed GOA snapshot, went from 52 to 51 GOA terms, 49 to
-46 post-review terms and 4 to 7 core terms with all three of its overlap counts unchanged
-(3, 1 and 1). #3253 then merged the duplicate `ARATH/P93002` review into `ARATH/NPR1`
-(both P93002), removing one gene (16 predictions; 32 GOA terms with 3 overlaps, 28
-post-review with 1, and 4 core with 0), while the merged NPR1, on a refreshed GOA
-snapshot, went from 32 to 29 GOA terms and 29 to 27 post-review terms, gaining one
-post-review overlap (1 to 2; `GO:0031348` is now retained alongside `GO:0031347`),
-with its GOA overlaps (3) and core counts (4 terms, 0 overlaps) unchanged. The current
-totals are 2,844 GOA terms with 1,020 overlaps, 2,672 post-review terms with 849
-overlaps, and 1,206 core terms with 355 overlaps. Thus the recorded
-denominator changes combine upstream reference
-curation with four committed-GOA-snapshot refreshes that moved GOA counts (SlyD, CnoX, PHYB and NPR1); the GO-GPT prediction set itself
-did not change apart from the removal of the duplicate genes.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 

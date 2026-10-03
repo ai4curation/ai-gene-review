@@ -4,6 +4,10 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 collections: [HOMOLOGY_PROPAGATION]
 autolink_gene_symbols: false
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/FaLey8iR7RmW4B56haRQ5C
+      title: Project brief
 ---
 # Propagation by Homology
 

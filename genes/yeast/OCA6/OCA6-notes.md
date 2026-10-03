@@ -41,15 +41,19 @@ NASEKVARVS SVSNSLPKLK FHSM                               (201-224)
   This is my own sequence-level analysis; it should be treated as strong but not laboratory-confirmed.
 
 - Independent literature corroboration of a degenerate motif in OCA6:
-  the fungal pseudophosphatome analysis reports that "the **Oca1, Oca2, and Oca6 contain residue substitutions
-  at the core catalytic motif**, while Oca4 appears to lose the entire catalytic motif."
-  [ACS Omega "Pseudophosphatase Scanner for Genome-Wide Fungal Pseudophosphatome Analysis",
-   https://pubs.acs.org/doi/10.1021/acsomega.6c00759 — abstract/summary via web search 2026-07-05]
-  NOTE: full text 403-gated; recorded as web evidence, not a cached PMID quote.
-- CAVEAT / conflicting signal: one secondary web summary states "Oca1, Siw14/Oca3, and Oca6 are supposed to be
-  active enzymes." This is a secondary assertion; it conflicts with (a) my motif analysis and (b) the
-  pseudophosphatase-scanner classification. **No paper in the cache directly measures OCA6 catalytic activity.**
-  Therefore catalytic status is treated as UNRESOLVED, leaning inactive, in the review.
+  the 2026 fungal pseudophosphatome analysis reports that the Oca family is a CC1/DUSP-type
+  fungal pseudophosphatase group, and specifically that Oca1, Oca2 and Oca6 have substitutions
+  in the core catalytic motif.
+  [PMID:42222812 "CC1-Oca family showed that the Oca1, Oca2 and Oca6 contain residue substitution
+  at the core catalytic motif"]
+- CAVEAT: active-site substitutions do not prove inactivity in every PFA-DSP-family enzyme.
+  PMID:42222812 notes that fungal pseudophosphatase active-site mutations can produce
+  "loss of activity, retained activity, or lineage-specific functional divergence". The
+  Oca-family evidence nevertheless weighs against a positive phosphatase annotation for
+  OCA6: Oca1, from the same Oca1/Oca2/Oca6 substitution group, was experimentally inactive
+  in PMID:21409566; PMID:42222812 and the newer PP-InsP review PMID:42347707 both classify
+  Oca proteins with active-site substitutions as predicted pseudophosphatases; and no paper
+  in the cache directly measures OCA6 catalytic activity.
 - MOD_RES: Thr2 phosphorylated (large-scale phosphoproteomics) [PMID:18407956]. Peripheral to function.
 
 ## What is KNOWN about OCA6 specifically (with attribution)
@@ -141,6 +145,21 @@ Automated deep research could not be produced for OCA6:
 
 Per repository policy I did NOT fabricate a `-deep-research-{provider}.md` file. All findings in this review are
 grounded directly in: the cached UniProt record (Q12454), the GOA TSV, cached PMIDs
-(14562095, 14671320, 21409566, 18407956, 11408586), SGD (S000002474), CDD (cd17663 / PFA-DSP family),
+(14562095, 14671320, 21409566, 42222812, 18407956, 11408586), SGD (S000002474), CDD (cd17663 / PFA-DSP family),
 PANTHER (PTHR31126 / SF14), and the reviewer's own inline CX5R catalytic-motif analysis of the UniProt sequence.
 The review therefore does not depend on an automated deep-research file.
+
+## 2026-09-28 IBA/new-literature re-review
+
+- OCA6 has one current IBA: broad `GO:0016791 phosphatase activity` transferred from
+  `PANTHER:PTN001258896`.
+- The current PTHR31126 PAINT cache shows that `PTN001258896` is the IBD node for the broad
+  phosphatase activity assertion across bacterial, plant, protozoan, and fungal family members.
+- New 2026 paper PMID:42222812 is now cached with PMC full text. It independently supports the
+  pseudophosphatase interpretation by placing Oca1/Oca2/Oca6 in the CC1-Oca pseudophosphatase
+  group with core catalytic-motif substitutions.
+- The September 2026 FEBS Letters review PMID:42347707 is also cached with PMC full text.
+  It independently frames the S. cerevisiae OCA clade as PFA-DSP-related predicted
+  pseudophosphatases, including Oca6, due to active-site substitutions.
+- The IBA should therefore be treated as a pseudoenzyme propagation failure for OCA6, not as a
+  weak-source or short-donor-list problem.

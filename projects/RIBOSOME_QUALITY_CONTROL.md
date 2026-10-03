@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [ZNF598, EDF1, GIGYF2, PELO, HBS1L, ABCE1, NEMF, LTN1, TCF25, ANKZF1, ASCC3, ASCC2, VCP]
+manifest:
+  slides:
+    - href: RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/UbYWkzMVw26ir7qryZGAgu
+      title: Project brief
 ---
 
 # Ribosome Quality Control (RQC) Project
@@ -96,7 +103,3 @@ Targets problematic mRNAs:
 ## Project Status
 
 - [ ] Stub - needs gene folder setup
-
-## Slides
-
-- [Slides](RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.html) (Marp source: [RIBOSOME_QUALITY_CONTROL-slides.md](RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.md)) — AI generated

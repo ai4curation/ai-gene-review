@@ -1,10 +1,36 @@
 ---
 title: "Nuclear Localization Sequence Binding — Obsoletion & Replacement"
-maturity: MATURE
+maturity: SCOPING
 tags: [OBSOLETION]
+species: [human, yeast, rat, DROME, worm, ARATH]
+sidecars:
+  slide_assets:
+    - NLS_BINDING_OBSOLETION/slides/carrier-vs-binder.svg
+    - NLS_BINDING_OBSOLETION/slides/term-map.svg
+manifest:
+  slides:
+    - href: NLS_BINDING_OBSOLETION/slides/NLS_BINDING_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/F9qBEY55uKnCdC2Rd3Cvav
+      title: Project brief
 ---
 
 # Nuclear Localization Sequence Binding — Obsoletion & Replacement
+
+**Bottom line:** Importins and other karyopherins recognise nuclear
+localization sequences and carry their cargo through the nuclear pore. GO has
+obsoleted GO:0008139 *nuclear localization sequence binding* as the same
+activity as GO:0140142 *nucleocytoplasmic carrier activity* (OLS, checked
+2026-09-26). We tallied the 34 curated annotations on the old term by
+source (33 open, 1 PomBase row done), checked them against QuickGO, and sorted the genes into four review tiers:
+the karyopherins (KPNA2, KPNA4, KPNB1, IPO4 and five yeast importins) move
+cleanly to GO:0140142, while nucleoporins, NLS-masking proteins (IκBα, Su(fu),
+BRAP) and nucleolar proteins (NSR1, Nolc1) bind an NLS without carrying it and
+need case-by-case calls. Scoped, not yet started: none of the roughly 25
+affected gene products has a review in this repo, and no review uses
+GO:0008139. The page was previously marked MATURE; the analysis is thorough,
+but no curation has followed it yet.
 
 ## Overview
 
@@ -382,6 +408,11 @@ reviews) are also good candidates for evidence-code modernization.
 
 ## Status
 
+- 2026-09-26 — OLS lists GO:0008139 as obsolete ("represents the same
+  activity as nucleocytoplasmic carrier activity ; GO:0140142"). Still no
+  affected gene under `genes/`, and no review uses GO:0008139. The only
+  review using GO:0140142 is human NPM1 (a core function), which is not in
+  the affected set.
 - 2026-06-02 — Review follow-up: spot-checked Q96321 (IMPA1_ARATH) and
   F4JL11 against UniProt REST, added an explanatory note for the
   MGI/Q7Z569 (human BRAP) curation pattern, added KAP120 to Tier 2,

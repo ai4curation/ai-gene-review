@@ -180,3 +180,24 @@ Papini-based interpretation.
 - PMID:14562095 — Huh et al. 2003, global localization (supports cytoplasm; MEDIUM).
 - PMID:14562106 — Ghaemmaghami et al. 2003, global expression (supports the ~3730 molecules/cell abundance; MEDIUM).
 - file:yeast/GPM3/GPM3-uniprot.txt — domain/active-site features and expression/localization summary.
+
+## 2026-09-30 IBA rereview
+
+Rechecked the three GPM3 IBA rows against the current cached PTHR11931 PAINT export:
+
+- `PTN002630707` still carries the `GO:0004619 phosphoglycerate mutase
+  activity`, `GO:0005829 cytosol`, and `GO:0061621 canonical glycolysis` rows
+  inherited by GPM3.
+- The `GO:0004619` activity and `GO:0061621` process rows remain genuine
+  PGAM-family calls that over-propagate to the probable non-functional `GPM3`
+  paralog. The functional yeast source for this node is `GPM1`, and the direct
+  GPM3 paper still reports no detectable phosphoglycerate mutase activity even
+  when GPM3 was strongly overexpressed.
+- The `GO:0005829 cytosol` row remains a plausible soluble-enzyme localization
+  transfer corroborated by the `GO:0005737 cytoplasm` HDA row. It stays
+  non-core because GPM3 has no demonstrated catalytic activity that can be
+  localized more specifically than this.
+- The 2026 public-literature search for `GPM3`/`YOL056W` found current database,
+  metabolic-model, and incidental high-throughput mentions but no newer primary
+  study assigning a direct substrate, molecular function, or biological process
+  to GPM3.

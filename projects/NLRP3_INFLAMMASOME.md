@@ -3,9 +3,35 @@ title: "NLRP3 Inflammasome Assembly Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+manifest:
+  slides:
+    - href: NLRP3_INFLAMMASOME/slides/NLRP3_INFLAMMASOME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NjmYtfwPS1nDE8WcAWGBDN
+      title: Project brief
 ---
 
 # NLRP3 Inflammasome Assembly Project
+
+**Bottom line:** the NLRP3 inflammasome is a danger-sensing complex in which
+the sensor NLRP3 recruits the adaptor PYCARD (ASC) to activate caspase-1, which
+matures IL-1β and IL-18 and cleaves gasdermin D to open pyroptotic pores.
+Scoped, not yet started as a project: this page lists ten candidate human genes
+and the pathway architecture, but no project-specific review work has been
+done. Three candidates already have complete reviews from other work (NLRP3,
+CASP4 and GSDMD, 364 annotations between them; most removals are generic
+`protein binding` rows, 24 of 25 on NLRP3), and the NLRP3 review proposes a
+new GO term, *inflammasome sensor activity*, because GO:0140299 molecular
+sensor activity requires binding the sensed molecule. The adaptor PYCARD, the effector
+CASP1, CASP5, IL1B, IL18, NEK7 and BRCC3 have no gene folder. A draft
+[NLR signaling module](../modules/nlr_signaling.html) already includes NLRP3,
+PYCARD and CASP1 and is the natural home for an inflammasome model.
+
+We scoped this because NLRP3 is a major therapeutic target and drives
+autoinflammatory disease (CAPS) and inflammation in gout, atherosclerosis and
+Alzheimer disease, and recent work on activation sites, post-translational
+control and structure is likely to be under-represented in GO.
 
 ## Overview
 

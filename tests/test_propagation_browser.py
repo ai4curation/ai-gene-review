@@ -185,3 +185,16 @@ def test_stats_count_annotations_not_donor_lines(repo: Path) -> None:
     assert units[0]["donor_species"] == ["Rattus norvegicus"]
     text = render(rows, {"generated": "2026-01-01"})
     assert "2 GOA lines → 1 annotations" in text
+
+
+def test_unchanged_propagation_inputs_produce_identical_artifacts(repo: Path):
+    output = repo / 'app/propagation'
+    metadata = repo / 'projects/HOMOLOGY_PROPAGATION/data/refresh-metadata.json'
+    metadata.write_text(json.dumps({'refreshed': '2026-09-20'}))
+    build_propagation_browser(repo, output)
+    before = {p.name: p.read_bytes() for p in output.iterdir()}
+    payload = json.loads((output / 'data.js').read_text().removeprefix('window.propagationPayload=').removesuffix(';\n'))
+    assert 'built' not in payload['metadata']
+    assert payload['metadata']['donor_cache']['refreshed'] == '2026-09-20'
+    build_propagation_browser(repo, output)
+    assert {p.name: p.read_bytes() for p in output.iterdir()} == before
