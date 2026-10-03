@@ -263,3 +263,34 @@ returned 403. These access results do not establish that the event was retired,
 renamed or biologically incorrect. The existing reaction-specific assessment is
 unchanged; the required normal-cache source remains unavailable and campaign
 completion remains pending. No further fetch was attempted.
+
+
+## 2026-10-03 — Association evidence and current source access
+
+The two experimental BioPlex annotations remain non-core associations with AKR1C1
+(Q04828). Each raw GOA row records IPI evidence and that partner; the UniProt IntAct
+entry lists the same pair with three experiments. The revised rationales put these
+positive observations first. Short, complete primary excerpts now anchor the
+coassociation result in PMID:28514442 and the AP-MS interaction-network context in
+PMID:33961781. Neither excerpt is presented as a read of the exact pair's
+supplementary record. That record remains uninspected, and no observation in both
+cell lines, direct binary affinity, native liver association or specific steroid
+metabolic consequence is asserted.
+
+The [ClinGen curation instructions](https://github.com/ai4curation/ai-gene-review/blob/main/projects/CLINGEN_MENDELIAN.md#curation-instructions)
+record the user's explicit direction to retain supported generic binding as
+KEEP_AS_NON_CORE when an evidence-backed finer term is unavailable. That instruction
+takes precedence for this task over the annotation-reviewer skill's general
+informational-exclusion recommendation. It does not turn an uninspected target
+table into verified evidence or authorize a new molecular activity. The two
+decisions rely on the experimental curator records and the corroborating UniProt
+association, with the primary assay context and access limits stated above.
+
+The Reactome reference assessment is now UNVERIFIED. Earlier wording about the
+reaction came from an indexed official snippet, not successful access to the
+current complete event. The already recorded single normal-fetch diagnostic
+returned HTTP 404 and no cache; direct page and schema-browser access returned 404
+and 403. No identifier replacement or retirement is established. The normal-cache
+source gate remains unresolved, and this follow-up does not complete AKR1D1 in the
+campaign. No additional fetch was performed. All annotation actions, machine
+source fields, products and the steroid-reductase core remain unchanged.
