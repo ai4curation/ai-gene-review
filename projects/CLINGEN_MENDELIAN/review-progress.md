@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-03 09:08:30 UTC
+## Campaign status — completion evidence through 2026-10-03 10:42:33 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -256,9 +256,12 @@ are therefore expected; existing human reviews still link normally.
 | BRAT1 | Definitive | INITIALIZED seed | Review #3884 merged at 2026-10-03 05:43:10 UTC after final-head approval and required CI success; 17 paths verified at that merge commit, 10 PR diff paths. Status-only #3892 merged at 07:20:29 UTC, correcting COMPLETE to DRAFT with 18 paths verified and four PR diff paths; zero additional gene completion. All 41 source assertions, three alternative_products and six UNDECIDED judgments remain; contextual mitochondrial-localization over-annotation is unchanged. | `cmungall/clingen-brat1` | [#3884](https://github.com/ai4curation/ai-gene-review/pull/3884), [#3892](https://github.com/ai4curation/ai-gene-review/pull/3892) |
 | BRCA1 | Definitive | COMPLETE existing review | Review #3888 merged at 2026-10-03 07:14:38 UTC after final-head approval and required CI success; 177 paths verified at that merge commit, five PR diff paths. Biological YAML is DRAFT with all 275 source assertions assessed, 26 UNDECIDED, no NEW and three cores. Eight named UniProt products are discussed in notes; the structured alternative_products slot remains absent. | `cmungall/clingen-brca1` | [#3888](https://github.com/ai4curation/ai-gene-review/pull/3888) |
 | BRCA2 | Definitive | Existing review audited | PR #3893 merged at 2026-10-03 09:08:30 UTC after exact-head approval and required CI success. Six paths verified at the merge commit: three gene outputs and three histories. Biological DRAFT, 149 source assertions, 27 UNDECIDED, no NEW and two cores remain; campaign closure does not resolve evidence gaps. | `cmungall/clingen-brca2` | [#3893](https://github.com/ai4curation/ai-gene-review/pull/3893) |
-| BRIP1 | Definitive | Existing review audited | Four-file review published; PR remains open at `c1b2eee9b95c`. DRAFT with 92 source assertions and ten UNDECIDED; no current-head approval, CI success or merge claimed here. | `cmungall/clingen-brip1` | [#3895](https://github.com/ai4curation/ai-gene-review/pull/3895) |
-| BRD4 | Definitive | INITIALIZED normal seed | Whole-gene scientific proposal passed independent peer; 81 source assertions and 21 disclosed validation warnings. Application/publication/merge are not claimed at this observation. | Not yet published | — |
-| BRPF1 | Definitive | No review | Ordinary local fetch failed DNS. Hosted source job succeeded at `bff4761bf58f`; artifact 11269894302 (101,690 bytes) was authenticated. Scientific review is pending; this observation makes no later import or merge claim. | Existing isolated source branch | [Source run 37112156681](https://github.com/ai4curation/ai-gene-review/actions/runs/37112156681) |
+| BRIP1 | Definitive | Existing review audited | PR #3895 merged at 2026-10-03 10:26:05 UTC after exact-head approval and required CI success. Six gene/history paths verified. Biological DRAFT, 92 source assertions, three UNDECIDED, three cores and two alternative products remain; campaign closure does not resolve the open crosslink-response step. | `cmungall/clingen-brip1` | [#3895](https://github.com/ai4curation/ai-gene-review/pull/3895) |
+| BRD4 | Definitive | INITIALIZED normal seed | PR #3896 merged at 2026-10-03 10:42:33 UTC after exact-head approval and required CI success; 31 added paths verified. Biological DRAFT with 81 source assertions, 13 UNDECIDED, 40 references, three products, two cores and 21 warnings remains. Catalytic and individual-mark uncertainties are not resolved by campaign closure. | `cmungall/clingen-brd4` | [#3896](https://github.com/ai4curation/ai-gene-review/pull/3896) |
+| BRPF1 | Definitive | No review | Specific-reader and remodeling clarification follow-up is published at `65de87d62ce2`; approval was not yet verified in this checkpoint and required CI is pending. No merge or completion is claimed. | `cmungall/clingen-brpf1` | [#3898](https://github.com/ai4curation/ai-gene-review/pull/3898) |
+| BRSK2 | Definitive | INITIALIZED normal seed | PR #3899 at `a0810843021c` received core-coverage requests. Follow-up is applied and normally validated locally, but not yet published at this cutoff. No completion increment. | `cmungall/clingen-brsk2` | [#3899](https://github.com/ai4curation/ai-gene-review/pull/3899) |
+| BRWD3 | Definitive | No review | Normal seed imported. Six functional-publication fetches succeeded in run 37117104447; artifact recovery/source review remain pending at this cutoff. | Isolated source workflow | [Source run 37117104447](https://github.com/ai4curation/ai-gene-review/actions/runs/37117104447) |
+| BSCL2 | Definitive | No review | Normal sources imported as 12 exclusive creates; scientific review is underway. No review publication or completion is claimed. | Isolated source workflow | — |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -270,8 +273,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **185 of 2,876 genes
-are complete**; 186 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **187 of 2,876 genes
+are complete**; 188 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -380,6 +383,20 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 | BRCA2 | [`cb7f1f3d8d7e`](https://github.com/ai4curation/ai-gene-review/commit/cb7f1f3d8d7e9745fd1d498503c9ff4af71c67e4) | Six: three gene outputs and three project-independent gene histories | 6 |
 
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
+
+
+### Evidence scope for completion 187
+
+This checkpoint uses the fixed **2026-10-03 10:42:33 UTC** completion cutoff and adds **BRIP1 and BRD4** to published checkpoint 185. It reaches **187 complete / 2,689 remaining**, with 188 original gene PR merges including the unresolved AKR1D1 source follow-up. Both genes had exact-head approval and passing required CI before their signed merges.
+
+| Gene | Verified merge | Exact paths verified at merge | Biological review retained |
+|---|---|---|---|
+| BRIP1 | [`8156c9b7b58c`](https://github.com/ai4curation/ai-gene-review/commit/8156c9b7b58cc0526b41b6613bf6fe6718f2d054), 10:26:05 UTC | Six: three gene outputs and three histories | DRAFT; 92 source assertions; 65 ACCEPT, 23 KEEP_AS_NON_CORE, three UNDECIDED, one REMOVE; three cores; two alternative products |
+| BRD4 | [`82005fc0057b`](https://github.com/ai4curation/ai-gene-review/commit/82005fc0057b32f30e23d061d62c8860753451bd), 10:42:33 UTC | 31 added paths: five gene files, two histories, 22 normal publication caches, two Reactome caches | DRAFT; 81 source assertions; 38 ACCEPT, 24 KEEP_AS_NON_CORE, six MODIFY, 13 UNDECIDED; 40 references; three products; two cores; 21 disclosed validation warnings |
+
+The durable queue enumerates all 37 merge-specific path/blob pairs. Campaign completion does not settle BRIP1's precise interstrand-crosslink-response step or BRD4's catalytic and individual-mark uncertainties. All 180 earlier queue entries, all 2,876 association rows and earlier dated observations are preserved. The unpublished intermediate 186 proposal is superseded by this combined checkpoint and contributes no extra completion or history.
+
+At this cutoff, BRPF1's follow-up is published, with approval not yet verified in this checkpoint and required CI pending; BRSK2's core-coverage follow-up is applied and validated but unpublished; BRWD3's seed is imported and its six-paper fetch succeeded with artifact recovery pending; BSCL2's normal sources are imported and scientific review is underway. These four work observations add no completions. Later events are outside this fixed checkpoint. BRAF's previously observed mixed 725-path PR #3381 and AKR1D1's source follow-up remain excluded; no fresh BRAF ownership/lifecycle audit is claimed. PANTHER family/index work does not count as a gene completion. Historical checkpoint 95 audit/import totals remain unchanged.
 
 ## Verification log
 
@@ -911,3 +928,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-03 UTC: Recorded BRAT1 #3884 and BRCA1 #3888 at the fixed 07:20:29 UTC evidence cutoff, including BRAT1 status correction #3892 with zero additional completion. Completion 182 → 184; original gene merges 183 → 185; 2,692 remain. Preserved all 2,876 association rows except the two checkboxes, all 177 prior queue entries and dated observations; appended BRAT1 and BRCA1 as entries 178–179. Both current biological statuses are DRAFT; uncertainty is preserved.
 
 - 2026-10-03 09:08:30 UTC completion cut: BRCA2 #3893 advances checkpoint 184 → 185 complete, 186 original gene merges and 2,691 remaining. Preserve all 2,876 association rows except its checkbox and all 179 earlier queue entries. Add one completion entry plus separate BRIP1, BRD4 and BRPF1 work observations; their publication/review/source-run states do not constitute completion. [History](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml).
+
+- 2026-10-03 10:42:33 UTC fixed completion cutoff: BRIP1 #3895 and BRD4 #3896 advance published checkpoint 185 → 187 complete, 188 original gene merges and 2,689 remaining. Exact approved heads, required CI, signed merges and 37 enumerated merged paths checked. All 2,876 associations and 180 prior queue entries preserved; only the two gene checkboxes change. Four pending-work observations add no completions. Unpublished 186 is superseded without a separate history or publication.
