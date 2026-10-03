@@ -222,16 +222,32 @@ refresh-panther-iba-project: refresh-panther-iba-propagation refresh-panther-iba
 build-panther-obo *args="":
     uv run ai-gene-review build-panther-obo --output-dir . {{args}}
 
-# Refresh interpro/panther/panther-members.tsv (UniProt accession -> PANTHER
-# family) for the accessions cited as representative_members in modules/.
-# This backs the check that a declared family really contains its own member,
-# which is what distinguishes a mis-grounded family from a mislabelled one.
-# Run after adding modules that cite new representative proteins.
+# Build or extend the PANTHER member index (UniProt accession -> PANTHER family)
+# for the accessions cited in modules/ and family reviews. This backs the check
+# that a declared family really contains its own member, which is what
+# distinguishes a mis-grounded family from a mislabelled one. The index is a
+# build artifact in the git-ignored .cache/panther/ (not committed), built from
+# release-pinned PANTHER classifications plus a UniProt fallback. By default it
+# only adds newly cited accessions; pass --rebuild to regenerate everything.
 # Rows in interpro/panther/panther-members-overrides.tsv are applied last, so a
 # curated assignment (each with its reason) survives regeneration.
 [group('QC')]
 refresh-panther-members *args="":
     uv run ai-gene-review refresh-panther-members --output-dir . {{args}}
+
+# Make sure the member index covers everything currently cited. Cheap and offline
+# when .cache/panther is warm; downloads PANTHER classifications on a cold cache.
+# A failure (e.g. offline with an empty cache) warns rather than aborting, because
+# validators then report unindexed members as "not checked" instead of guessing.
+ensure-panther-members:
+    #!/usr/bin/env bash
+    mkdir -p .cache/panther
+    if ! uv run ai-gene-review refresh-panther-members --output-dir . >.cache/panther/refresh.log 2>&1; then
+        echo "::warning::Could not build the PANTHER member index (see .cache/panther/refresh.log); family-membership checks will report 'not checked'."
+        tail -5 .cache/panther/refresh.log
+    else
+        tail -1 .cache/panther/refresh.log
+    fi
 
 # Verify every committed interpro/panther/*/*-paint.tsv row against PANTHER's
 # upstream IBD.gaf. PTN claims are validated against slices that curation PRs
@@ -1003,7 +1019,7 @@ check-retractions *ARGS:
 # conformance. The external linkml-term-validator only checks enum-bound slots,
 # which ModuleReview lacks, so module semantics are checked by the project's
 # module_validator instead.
-validate-modules:
+validate-modules: ensure-panther-members
     #!/usr/bin/env bash
     set -uo pipefail
     files=$(find modules -type f \( -name "*.yaml" -o -name "*.yml" \) 2>/dev/null | sort)
@@ -2536,23 +2552,23 @@ cron-profile name:
 # skipped -- relabelling those would hide a wrong family id. Fix the id first.
 # Example: just fix-panther-labels --apply
 [group('QC')]
-fix-panther-labels *args="":
+fix-panther-labels *args="": ensure-panther-members
     uv run ai-gene-review fix-panther-labels --output-dir . {{args}}
 
 # Check PANTHER family ids written into module PROSE (notes/description/statement)
-# against interpro/panther/panther-members.tsv. Module validation only reads
+# against the PANTHER member index (.cache/panther). Module validation only reads
 # term.id/label pairs, so a PANTHER id in free text is invisible to it -- nine
 # such claims were contradicted by the repo's own data. Catches 7 of those 9;
 # symbol-phrased and first-of-a-shared-pair claims are documented misses.
 [group('QC')]
-scan-prose-panther *args="":
+scan-prose-panther *args="": ensure-panther-members
     uv run python -m ai_gene_review.validation.prose_panther_scan {{args}}
 
 # Print every row of the PANTHER review report's scope table.
 # That table went stale four times because its rows had no committed
 # derivation; paste this output over the table after a merge.
 [group('QC')]
-panther-report-stats *args="":
+panther-report-stats *args="": ensure-panther-members
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
 
 # ============ History records (ported from dismech) ============
@@ -2617,7 +2633,7 @@ backfill-history *ARGS:
 #      PANTHER id/label/membership;
 #   4. cross-checks against the gene corpus, and gene-level residue claims.
 # Sequences are cached under .cache/uniprot_seq (restored in CI by actions/cache).
-validate-families:
+validate-families: ensure-panther-members
     #!/usr/bin/env bash
     set -uo pipefail
     files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
