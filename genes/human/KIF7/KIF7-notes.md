@@ -2,9 +2,10 @@
 
 ## Deep research status
 
-- First run (`--fallback perplexity-lite`) was stopped because falcon times out at the default 600 s
-  and perplexity-lite is unavailable here. Re-run with `--timeout 2400`; outcome recorded at the end.
-  The review relies on cached primary literature.
+- First run (`--fallback perplexity-lite`) was stopped (falcon default 600 s timeout; perplexity-lite
+  unavailable). The 2400 s rerun was killed (exit 137); a second rerun SUCCEEDED
+  (KIF7-deep-research-falcon.md). It added Haque et al. 2022 (PMID:35725768) and Yue et al. 2022
+  (PMID:34705483), both cached and used below.
 
 ## Identity
 
@@ -35,6 +36,16 @@
 - Not required for IFT or Smo entry
   [PMID:24952464 "Kif7 is not required for normal intraflagellar transport or for trafficking of Hh pathway proteins into cilia."].
 
+## GLI binding and ciliary delivery (from deep research, verified in cache)
+
+- Direct binding by DNA mimicry: [PMID:35725768 "the coiled-coil dimerization domain of KIF7, characterized by its striking shape, size and charge similarity to DNA, forms a complex with the DNA-binding zinc fingers in GLI, thus revealing a mode of tethering a DNA-binding protein to the cytoskeleton"];
+  [PMID:35725768 "showed that the Kif7-CC:Gli2-ZF complex has a Kd of 48 ± 5 nM"].
+- KIF7 is carried by IFT kinesin-2; MT binding not required for induced GLI tip accumulation:
+  [PMID:34705483 "we demonstrate that kinesin-2 KIF3A/KIF3B/KAP mediates the translocation of KIF7 to the cilium tip in response to Hedgehog pathway activation"];
+  [PMID:34705483 "we show that the immotile behavior of KIF7 is required to prevent ciliary localization of Gli transcription factors in the absence of Hedgehog signaling"].
+  This qualifies the He 2014 model: the length-control output plausibly needs plus-end binding,
+  while GLI tip accumulation can occur without it.
+
 ## Hedgehog signaling
 
 - Mouse Kif7 acts downstream of Smo, upstream of Gli2, both negative and positive roles
@@ -60,8 +71,8 @@
   ciliary tip, basal body, and positive/negative regulation of smoothened signaling.
 - NEW GO:0031115 negative regulation of microtubule polymerization (IDA, PMID:24952464). Purified
   KIF7 itself slows plus-end growth and raises catastrophe frequency, so KIF7 does the work.
-- Generic protein binding rows removed (GLI1/GLI2/SMO/SUFU, NPHP1, P4HA2); the Gli/Sufu scaffold
-  role is captured by the Hh regulation process terms.
+- GLI co-IP rows (GLI3, mouse Gli1) MODIFIED to GO:0140297 DNA-binding transcription factor binding
+  (direct binding shown by Haque 2022). Other protein binding rows removed (SMO, SUFU, NPHP1, P4HA2).
 
 ## HPA cilium atlas vs module role
 
