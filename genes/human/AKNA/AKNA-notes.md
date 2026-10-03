@@ -14,7 +14,7 @@ Decisions:
 - **No NEW rows. AKNA has no informative MF in any species.**
   - Mouse Akna (Q80VW7) experimental GO comes only from PMID:30787442 and PMID:21606955, and contains no DNA-binding or nucleation term. PAINT propagates only the centrosomal functions.
   - DNA-binding/TF activity and microtubule-nucleation activity are both recorded as MF_DARK knowledge gaps.
-  - Comparator check for GO:0090063 positive regulation of microtubule nucleation: NIN, CEP170 and ODF2 lack it (they carry GO:0120103 instead), and CDK5RAP2 has only GO:0031023.
+  - GO:0090063 positive regulation of microtubule nucleation is withheld on evidential grounds, not by convention. Round 1 of PR #3945 showed that my original comparator argument (NIN, CEP170 and ODF2 lack it) was wrong. AKNA's interactor DCTN1 carries both GO:0120103 and GO:0090063 by IDA, the latter from direct in vitro nucleation [PMID:23874158 "dimeric p150 Nt-GCN4 catalyzes microtubule nucleation in contrast to monomeric p150 Nt."]. AKNA's evidence is cellular necessity and sufficiency plus recruitment of nucleation factors, from an abstract-only cached record, so the term is raised as a suggested question rather than added.
 - **Centriole rows are ACCEPTed.** The refinement to GO:0120103 centriolar subdistal appendage is raised as a question, because the mouse curator chose centriole.
 - **Neuroblast division in SVZ is KEEP_AS_NON_CORE.** The abstract describes delamination and exit, not division, but the full text is not cached.
 - **Protein binding:** CD2BP2 (GYF-motif screen) and LMO1 (HuRI) rows are REMOVEd per policy.
