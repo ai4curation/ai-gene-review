@@ -42,3 +42,29 @@ All map to uninformative "protein binding" (GO:0005515). Per curation guidelines
 2. CC: structural part of the BBSome (GO:0034464); acts at ciliary membrane (GO:0060170) and basal body (GO:0036064).
 3. BP: BBSome-mediated cilium assembly / ciliary membrane protein trafficking (GO:0060271).
 </content>
+
+
+## Source-complete BBS5 reassessment — 2026-09-30
+
+The normal GOA projection preserves all 45 distinct source assertions from 45 raw rows, restores the previously omitted KLC3 interaction, and backfills 29 supporting-entity lists. The two alternative products and raw source files remain unchanged. The judgments are 18 ACCEPT, 26 KEEP_AS_NON_CORE and 1 MODIFY, with no new annotation. Supported generic interactions remain non-core under the supplied ActionEnum; lack of a more informative activity does not establish that an interaction is wrong.
+
+The original BBS5 lipid experiment uses recombinant protein–lipid overlays, including full BBS5 and its N-terminal PH-like domain. It supports PI3P binding, but not exclusive physiological membrane anchoring or the positive binding of both domains independently. Native BBSome liposome specificity differs from isolated BBS5 overlays, and a BBS4/8/9/18 subcomplex also binds lipids without BBS5. These observations limit the inherited membrane-anchor narrative without removing the experimental binding assertion [PMID:17574030; PMID:20603001; PMID:31951201]. BBS5 RNAi reduces ciliation in human RPE cells; separate experiments show impaired BBSome ciliary entry while much of the remaining complex stays assembled. BBS5 is not assigned the scaffold mechanism of BBS2/BBS9 or direct cargo/ARL6/RAB3IP recognition [PMID:17574030; PMID:22072986].
+
+The RNF2 source does assay BBS5 by tagged co-immunoprecipitation; its inherited MISCITED judgment based on the BBS7-focused title is superseded. The proposed change is to ubiquitin protein ligase binding because of RNF2's molecular function, not rejection of the assay [PMID:22302990]. The DLEC1 interaction is measured in human HEK293F cells, separately from the mouse Dlec1 knockout phenotype [PMID:33144677]. Exact GOA partners are DISC1 for PMID:18762586 and TTC8/BBS8 for PMID:24939912; previous PCM1/PKD1 descriptions must not replace those source identities. The PC1 paper reports that BBS5 depletion does not impair PC1 ciliary trafficking in its assay [PMID:18762586; PMID:24939912].
+
+Zebrafish heart-looping and retrograde melanosome phenotypes remain transferred non-core contexts, not direct human assays or intrinsic motor functions [PMID:16399798; PMID:24559376]. Mouse photoreceptor axonemal/basal-body localization is treated as compartment evidence with its organism scope [PMID:31690665]. Read limits are recorded per annotation: several normal sources are abstract-only; selected primary Results/captions supply the specific corrections, and no image or complete supplemental reanalysis is claimed. Original PDF image requests failed. The configured provider environment's prior dependency-resolution failure is retained; no provider report was authored by hand. At the consultation stage, the two additional source caches were pending and primary reading used separately recorded official and indexed material. Their normal-source import has now closed; the completed reading below supersedes that earlier access limit.
+
+The two additional normal sources were imported through Source89 without editing publication caches. The two core roles retain the directly measured PI3P-binding activity and the BBSome contribution to cilium assembly while separating lipid-overlay results, ciliary entry and complex assembly. The original PMID:17574030 PDF was inspected separately from its abstract-only normal cache; the YAML cites that source without an unvalidated quotation or an inability-to-share claim. No new process annotation was manufactured.
+
+Normal-source primary reading confirms the zebrafish Bbs5 looping phenotype and context-specific rescue observations, and distinct BBS5 pools in mouse rod cilia. The principal STORM mutant comparisons are Bbs2/Bbs4/Bbs7, while Bbs5-null tissue validates antibody specificity. These findings retain the existing decisions without assigning autonomous motor activity or a universal ciliary transport requirement. The zebrafish rescue text reports absence of situs inversus among the rescued phenotypes; it does not provide a separately quantified cardiac-looping rescue series. No images or supplementary controls were independently reanalyzed.
+
+## Validation of the 2026-09-30 revision
+
+Focused validation passed with 14 advisories for generic protein-binding assertions retained as non-core under the supplied ActionEnum. Source-supported associations remain non-core when a more specific activity has not been established. No errors or source-projection mismatches were reported.
+
+
+## Event-specific cytosol explanations — 2026-09-30
+
+The five cytosol annotations refer to distinct events involving the BBSome: formation of the complex, association with RAB3IP, cargo recognition, targeting to the primary cilium, and regulation by LZTFL1. Their reasons now explain those individual contexts instead of repeating a general list of activities performed by other proteins. BBS5 remains a component of the complex; these location annotations do not establish a separate exchange-factor, motor, cargo-recognition or assembly-scaffold activity for BBS5 [Reactome:R-HSA-5617815; Reactome:R-HSA-5624125; Reactome:R-HSA-5624126; Reactome:R-HSA-5624127; Reactome:R-HSA-5624129].
+
+All 45 annotation decisions and source assertions, the two core functions and both alternative products are unchanged. The five complete cached event summaries were read for this clarification. No new quotation or full-text access claim is introduced.
