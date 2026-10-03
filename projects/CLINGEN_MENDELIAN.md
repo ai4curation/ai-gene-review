@@ -2988,14 +2988,14 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**187 of 2,876 genes are complete; 2,689 remain.** This update records
-BRIP1 and BRD4, two further verified gene PR merges since published checkpoint 185.
-The 188 original gene PR merges include AKR1D1, whose required source follow-up
+**191 of 2,876 genes are complete; 2,685 remain.** This update records
+BRPF1, BRSK2, BRWD3 and BSCL2, four verified gene PR merges since published checkpoint 187.
+The 192 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
-Completion evidence cutoff: **2026-10-03 10:42:33 UTC**. See the
-[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-187)
+Completion evidence cutoff: **2026-10-03 12:33:32 UTC**. See the
+[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-191)
 for the verified merge and retained biological uncertainty. See also the
-[checkpoint history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T105722Z-codex-aeb9aa.yaml).
+[checkpoint history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T125438Z-codex-ce3948.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3275,10 +3275,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BRCA2** — HGNC:1101; [BRCA2-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4e504fdc-d8b1-474e-8f01-d1b1f8267c79-2024-08-29T170000.000Z) (MONDO:0700269; AD; Definitive); [Fanconi anemia complementation group D1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_48faf04b-ffc4-4163-8570-22f5c29c4064-2019-04-19T160000.000Z) (MONDO:0011584; AR; Definitive).
 - [x] **BRD4** — HGNC:13575; [syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8b28cda3-bce6-4a8f-b359-0ab398a1111d-2025-08-08T160000.000Z) (MONDO:0000508; AD; Definitive).
 - [x] **BRIP1** — HGNC:20473; [Fanconi anemia complementation group J](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_40aae4ea-8c9b-42a7-9d02-0f52a184712f-2019-08-18T160442.255Z) (MONDO:0012187; AR; Definitive); [familial ovarian cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b1224a6d-5676-4109-b844-a577bd0bff62-2023-12-20T180000.000Z) (MONDO:0016248; AD; Definitive).
-- [ ] **BRPF1** — HGNC:14255; [syndromic complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ca6ab404-7df4-475b-bb61-b056716dce7b-2025-04-15T160000.000Z) (MONDO:0800439; AD; Definitive).
-- [ ] **BRSK2** — HGNC:11405; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_327881a5-52fd-42bd-a500-c94514a7aed3-2021-02-03T170000.000Z) (MONDO:0100038; AD; Definitive).
-- [ ] **BRWD3** — HGNC:17342; [X-linked syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b8a924e2-e76b-4363-bf38-d95fd53d6141-2018-07-18T100000.000Z) (MONDO:0020119; XL; Definitive).
-- [ ] **BSCL2** — HGNC:15832; [distal hereditary motor neuropathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_02472719-c26d-40ff-8ad4-897ef7a6800a-2022-09-23T160000.000Z) (MONDO:0018894; AD; Definitive); [lipodystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6b2f631-aedd-4396-8170-a1878ccac459-2024-11-13T170000.000Z) (MONDO:0006573; AR; Definitive).
+- [x] **BRPF1** — HGNC:14255; [syndromic complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ca6ab404-7df4-475b-bb61-b056716dce7b-2025-04-15T160000.000Z) (MONDO:0800439; AD; Definitive).
+- [x] **BRSK2** — HGNC:11405; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_327881a5-52fd-42bd-a500-c94514a7aed3-2021-02-03T170000.000Z) (MONDO:0100038; AD; Definitive).
+- [x] **BRWD3** — HGNC:17342; [X-linked syndromic intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b8a924e2-e76b-4363-bf38-d95fd53d6141-2018-07-18T100000.000Z) (MONDO:0020119; XL; Definitive).
+- [x] **BSCL2** — HGNC:15832; [distal hereditary motor neuropathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_02472719-c26d-40ff-8ad4-897ef7a6800a-2022-09-23T160000.000Z) (MONDO:0018894; AD; Definitive); [lipodystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6b2f631-aedd-4396-8170-a1878ccac459-2024-11-13T170000.000Z) (MONDO:0006573; AR; Definitive).
 - [ ] **BSND** — HGNC:16512; [Bartter disease type 4A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9b69acb1-93bc-4bc0-8a33-77bf64179c32-2018-07-10T160000.000Z) (MONDO:0011242; AR; Definitive).
 - [ ] **BTD** — HGNC:1122; [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_74599afe-02f9-4225-9e50-63306f04a552-2021-06-14T140327.018Z) (MONDO:0009723; AR; Moderate); [biotinidase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_847f7f2b-575f-4a90-bf02-179d464e4841-2020-02-10T180000.000Z) (MONDO:0009665; AR; Definitive).
 - [ ] **BTK** — HGNC:1133; [Bruton-type agammaglobulinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8dc4d594-2103-46ad-a786-f4bda9b95995-2020-10-20T160000.000Z) (MONDO:0010421; XL; Definitive).

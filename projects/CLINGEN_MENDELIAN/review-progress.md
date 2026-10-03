@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-03 10:42:33 UTC
+## Campaign status — completion evidence through 2026-10-03 12:33:32 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -258,10 +258,10 @@ are therefore expected; existing human reviews still link normally.
 | BRCA2 | Definitive | Existing review audited | PR #3893 merged at 2026-10-03 09:08:30 UTC after exact-head approval and required CI success. Six paths verified at the merge commit: three gene outputs and three histories. Biological DRAFT, 149 source assertions, 27 UNDECIDED, no NEW and two cores remain; campaign closure does not resolve evidence gaps. | `cmungall/clingen-brca2` | [#3893](https://github.com/ai4curation/ai-gene-review/pull/3893) |
 | BRIP1 | Definitive | Existing review audited | PR #3895 merged at 2026-10-03 10:26:05 UTC after exact-head approval and required CI success. Six gene/history paths verified. Biological DRAFT, 92 source assertions, three UNDECIDED, three cores and two alternative products remain; campaign closure does not resolve the open crosslink-response step. | `cmungall/clingen-brip1` | [#3895](https://github.com/ai4curation/ai-gene-review/pull/3895) |
 | BRD4 | Definitive | INITIALIZED normal seed | PR #3896 merged at 2026-10-03 10:42:33 UTC after exact-head approval and required CI success; 31 added paths verified. Biological DRAFT with 81 source assertions, 13 UNDECIDED, 40 references, three products, two cores and 21 warnings remains. Catalytic and individual-mark uncertainties are not resolved by campaign closure. | `cmungall/clingen-brd4` | [#3896](https://github.com/ai4curation/ai-gene-review/pull/3896) |
-| BRPF1 | Definitive | No review | As observed at fixed 2026-10-03 10:42:33 UTC, the specific-reader and remodeling clarification follow-up was published at `65de87d62ce2`; approval had not yet been verified in this checkpoint and required CI was pending. No merge or completion is claimed at this cutoff. | `cmungall/clingen-brpf1` | [#3898](https://github.com/ai4curation/ai-gene-review/pull/3898) |
-| BRSK2 | Definitive | INITIALIZED normal seed | PR #3899 at `a0810843021c` received core-coverage requests. Follow-up is applied and normally validated locally, but not yet published at this cutoff. No completion increment. | `cmungall/clingen-brsk2` | [#3899](https://github.com/ai4curation/ai-gene-review/pull/3899) |
-| BRWD3 | Definitive | No review | Normal seed imported. Six functional-publication fetches succeeded in run 37117104447; artifact recovery/source review remain pending at this cutoff. | Isolated source workflow | [Source run 37117104447](https://github.com/ai4curation/ai-gene-review/actions/runs/37117104447) |
-| BSCL2 | Definitive | No review | Normal sources imported as 12 exclusive creates; scientific review is underway. No review publication or completion is claimed. | Isolated source workflow | — |
+| BRPF1 | Definitive | No review | PR #3898 merged at 2026-10-03 10:55:34 UTC; 9 exact changed paths verified at the merge commit. Biological COMPLETE retains four UNDECIDED source assessments, 36 source assertions, four alternative products and two cores; no uncertainty is resolved merely by campaign closure. | `cmungall/clingen-brpf1` | [#3898](https://github.com/ai4curation/ai-gene-review/pull/3898) |
+| BRSK2 | Definitive | INITIALIZED normal seed | PR #3899 merged at 2026-10-03 11:10:19 UTC; 14 exact changed paths verified at the merge commit. Biological DRAFT retains nine UNDECIDED assessments, 48 source assertions, six alternative products and one catalytic core. Combined SAD A/B experimental limits remain. | `cmungall/clingen-brsk2` | [#3899](https://github.com/ai4curation/ai-gene-review/pull/3899) |
+| BRWD3 | Definitive | No review | PR #3901 merged at 2026-10-03 12:32:23 UTC; 13 exact changed paths verified at the merge commit. Biological COMPLETE retains the two supplied source assertions, five alternative products and one core. The documented UniProt/normal-GOA discrepancy and species limits remain explicit. | `cmungall/clingen-brwd3` | [#3901](https://github.com/ai4curation/ai-gene-review/pull/3901) |
+| BSCL2 | Definitive | No review | PR #3902 merged at 2026-10-03 12:33:32 UTC; 17 exact changed paths verified at the merge commit. Biological DRAFT retains 30 original source assertions plus one NEW tether activity, seven UNDECIDED assessments, three alternative products and two cores. Thermogenesis and human/fly assay limits remain. | `cmungall/clingen-bscl2` | [#3902](https://github.com/ai4curation/ai-gene-review/pull/3902) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -273,8 +273,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **187 of 2,876 genes
-are complete**; 188 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **191 of 2,876 genes
+are complete**; 192 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -384,6 +384,21 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
 
+
+### Evidence scope for completion 191
+
+The fixed **2026-10-03 12:33:32 UTC** cutoff adds **BRPF1, BRSK2, BRWD3 and BSCL2** to published checkpoint 187: **191 complete / 2,685 remaining**, with 192 original gene PR merges and AKR1D1’s one required source follow-up still outstanding. These are four gene completions; shared tracking and source-workflow changes contribute none.
+
+| Gene | Verified merge | Exact changed paths verified at merge | Biological assessment retained |
+|---|---|---|---|
+| BRPF1 | [`d221bee44a92`](https://github.com/ai4curation/ai-gene-review/commit/d221bee44a92497c85b2daed08350e6eac0a0bf8), 10:55:34 UTC | 9; the queue enumerates every path/blob pair | Biological COMPLETE retains four UNDECIDED source assessments, 36 source assertions, four alternative products and two cores; no uncertainty is resolved merely by campaign closure. |
+| BRSK2 | [`a23171822631`](https://github.com/ai4curation/ai-gene-review/commit/a23171822631d413dd046408b064f512f69fc406), 11:10:19 UTC | 14; the queue enumerates every path/blob pair | Biological DRAFT retains nine UNDECIDED assessments, 48 source assertions, six alternative products and one catalytic core. Combined SAD A/B experimental limits remain. |
+| BRWD3 | [`78cc3cc0e4d1`](https://github.com/ai4curation/ai-gene-review/commit/78cc3cc0e4d19a5470df7d355646f03be2c566e3), 12:32:23 UTC | 13; the queue enumerates every path/blob pair | Biological COMPLETE retains the two supplied source assertions, five alternative products and one core. The documented UniProt/normal-GOA discrepancy and species limits remain explicit. |
+| BSCL2 | [`20c0b77ea607`](https://github.com/ai4curation/ai-gene-review/commit/20c0b77ea607b3160826d8c29c7e55c030ac9c0a), 12:33:32 UTC | 17; the queue enumerates every path/blob pair | Biological DRAFT retains 30 original source assertions plus one NEW tether activity, seven UNDECIDED assessments, three alternative products and two cores. Thermogenesis and human/fly assay limits remain. |
+
+The durable queue records 53 merge-specific path/blob pairs, not a universal gene/publication/Reactome inventory. All 182 earlier queue entries, all 2,876 ClinGen association rows, prior dated observations and the checkpoint 95 audit/import boundary remain intact. The four former pending table rows are updated; their earlier dated evidence sections remain historical. Other genes remain unchecked, and no pending approval, source import or local review is counted as a merge.
+
+[Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T125438Z-codex-ce3948.yaml).
 
 ### Evidence scope for completion 187
 
@@ -932,3 +947,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-03 09:08:30 UTC completion cut: BRCA2 #3893 advances checkpoint 184 → 185 complete, 186 original gene merges and 2,691 remaining. Preserve all 2,876 association rows except its checkbox and all 179 earlier queue entries. Add one completion entry plus separate BRIP1, BRD4 and BRPF1 work observations; their publication/review/source-run states do not constitute completion. [History](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml).
 
 - 2026-10-03 10:42:33 UTC fixed completion cutoff: BRIP1 #3895 and BRD4 #3896 advance published checkpoint 185 → 187 complete, 188 original gene merges and 2,689 remaining. Exact approved heads, required CI, signed merges and 37 enumerated merged paths checked. All 2,876 associations and 180 prior queue entries preserved; only the two gene checkboxes change. Four pending-work observations add no completions. Unpublished 186 is superseded without a separate history or publication. [History](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T105722Z-codex-aeb9aa.yaml).
+
+- 2026-10-03 12:33:32 UTC fixed completion cutoff: BRPF1 #3898, BRSK2 #3899, BRWD3 #3901 and BSCL2 #3902 advance checkpoint 187 → 191 complete, 192 original gene merges and 2,685 remaining. All 53 changed merge-path blobs, four source review projections and the durable merge identities were checked. All 2,876 associations, 182 earlier queue entries and old histories remain; pending genes stay unchecked. [History](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T125438Z-codex-ce3948.yaml).
