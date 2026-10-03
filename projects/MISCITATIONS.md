@@ -3,7 +3,7 @@ title: "Miscitation Review Project"
 maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [human, ARATH]
-genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1]
+genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1, ITGB1]
 manifest:
   slides:
     - href: MISCITATIONS/slides/MISCITATIONS-slides.html
@@ -223,6 +223,41 @@ records `correctness: WRONG_IDENTIFIER` without a `replacement`. This is the fir
 IntAct-sourced `WRONG_IDENTIFIER` in the project, and the error sits in the
 publication identifier of the IMEx record, not in a GO curation step.
 
+### ITGB1 and FLNB — a transposed digit, one pair of a curation batch
+
+Found on 2026-10-01 while reviewing human ITGB1 for the
+[ORIGINS_OF_MULTICELLULARITY](ORIGINS_OF_MULTICELLULARITY.md) project. A live
+QuickGO query returns **2 annotations** citing `PMID:10676904`. They are the
+reciprocal `GO:0005515` IPI pair ITGB1 (P05556) with FLNB (O75369), both
+`assigned_by` UniProt on **2006-03-16**. PubMed resolves `10676904` to *"Effect of
+medium change on the development of in vitro matured and fertilized bovine
+oocytes cultured in medium containing amino acids"* (J Vet Med Sci, 2000).
+
+The intended paper is almost certainly **`PMID:16076904`**, *"The Z-disc proteins
+myotilin and FATZ-1 interact with each other and are connected to the sarcolemma
+via muscle-specific filamins"* (2005). The two numbers differ by a transposition
+of the second and third digits (1**06**76904 versus 1**60**76904). Three
+independent checks point the same way:
+
+- The paper's abstract reports filamin "binding activity with the beta1A integrin
+  subunit".
+- The UniProt entries cite it for "INTERACTION WITH FLNB AND FLNC" (P05556) and
+  "INTERACTION WITH ITGB1" (O75369).
+- GOA's ITGB1–**FLNC** IPI row, assigned by UniProt on the **same date**, cites
+  `PMID:16076904` correctly.
+
+So one curation session recorded two partners from one paper, and only the
+FLNB pair received the mistyped number. ITGB1's review records
+`correctness: WRONG_IDENTIFIER` with
+`replacement: {reference_id: PMID:16076904, reason: WRONG_IDENTIFIER}`, and
+changes the row to `GO:0031005` filamin binding supported by the right paper.
+
+This is the third digit-level identifier error in the project, after NLRP3 and
+MYH9, and the first **transposition** rather than a dropped digit. Like MYH9, it
+comes from UniProt. Unlike MYH9, it has not spread beyond the reciprocal pair:
+the same batch's FLNC row is correct. The upstream fix is a single UniProt
+correction to the FLNB pair.
+
 ### ZBP1 and GRID1 — the interactor, not the paper
 
 `ZBP1` `GO:0005515` IPI from `PMID:19590578` lists `UniProtKB:Q13601` in `WITH/FROM`.
@@ -423,14 +458,29 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
 - [x] ARATH/WIP1 `PMID:20579133` (dental paper) on the WIP1-RANGAP1 IntAct pair
       recorded; the intended paper is probably `PMID:17600715`, but that is
       unconfirmed (IMEx IM-19345)
+- [x] ITGB1/FLNB `PMID:10676904` (bovine oocyte paper) → `PMID:16076904` (digit
+      transposition) recorded with a `replacement`; the same-date ITGB1–FLNC row
+      cites the right paper. FLNB has no review yet; record the O75369 row when it
+      is reviewed
 - [ ] Decide what, if anything, to report upstream to GOA / UniProt / IntAct, and in
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
       may simply omit it, which is indistinguishable from "no problem found")
 
-Last updated: 2026-09-27
+Last updated: 2026-10-01
 
 # NOTES
+
+## 2026-10-01
+
+**ITGB1/FLNB transposed digit.** Found while reviewing ITGB1 for
+ORIGINS_OF_MULTICELLULARITY. `PMID:10676904` (a 2000 bovine oocyte culture paper)
+stands in for `PMID:16076904` (myotilin/FATZ-1 and muscle filamins, 2005) on the
+reciprocal ITGB1–FLNB IPI pair, assigned by UniProt on 2006-03-16. Checked at NCBI
+E-utilities, UniProt REST (both entries cite 16076904 for the interaction) and live
+QuickGO (2 rows). The decisive evidence is that GOA's ITGB1–FLNC row from the same
+date and paper is cited correctly. This is the first transposition case; the
+earlier digit errors were drops.
 
 ## 2026-09-27
 
