@@ -19,3 +19,4 @@ Reviewed for the ADAPTIVE_IMMUNITY project (TCR signaling; calcineurin-NFAT bran
 - Positive regulation of Ca2+ import (NAS, PMID:17640527): REMOVE, the abstract attributes the enhancement to PKA and the suppression to anchored CaN; the negative-regulation row kept as non-core.
 - Calcineurin complex rows ACCEPT, consistent with PPP3CA and PPP3CB reviews (both ACCEPT GO:0005955).
 - No NEW terms. Comparator: PPP3CA and PPP3CB carry only TAS T cell activation, not GO:0050852 TCR signaling pathway; calcineurin's TCR role is captured by GO:0033173.
+- Consistency with PPP3CB (finished): catalytic MF GO:0033192 in GO:0005955; PPP3R1 core function carries contributes_to GO:0033192 and in_complex GO:0005955; Ca2+ binding is PPP3R1's own MF. GO:0030346 (PP2B binding) not used, as self-referential for a calcineurin subunit.
