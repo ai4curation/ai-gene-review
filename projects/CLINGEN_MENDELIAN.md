@@ -2988,14 +2988,14 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**196 of 2,876 genes are complete; 2,680 remain.** This update adds
-BSND, BTD, BTK, C19orf12 and BUB1B, five verified gene completions beyond checkpoint 191.
-The 197 original gene PR merges include AKR1D1, whose required source follow-up
+**201 of 2,876 genes are complete; 2,675 remain.** This update adds
+C1QA, C1QB, C1QTNF5, C2CD3 and C1QBP, five verified gene completions beyond checkpoint 196.
+The 202 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
-Completion evidence cutoff: **2026-10-03 14:49:33 UTC**. See the
-[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-196)
+Completion evidence cutoff: **2026-10-03 16:43:30 UTC**. See the
+[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-201)
 for the verified merge and retained biological uncertainty. See also the
-[checkpoint 196 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T152007Z-codex-77f6db.yaml).
+[published checkpoint 196 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T152007Z-codex-77f6db.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3284,11 +3284,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BTK** — HGNC:1133; [Bruton-type agammaglobulinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8dc4d594-2103-46ad-a786-f4bda9b95995-2020-10-20T160000.000Z) (MONDO:0010421; XL; Definitive).
 - [x] **BUB1B** — HGNC:1149; [mosaic variegated aneuploidy syndrome 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_59147f27-d5a3-4760-ba8d-0429bae3c906-2019-11-22T145326.352Z) (MONDO:0009759; AR; Definitive).
 - [x] **C19orf12** — HGNC:25443; [neurodegeneration with brain iron accumulation 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c78e8a8a-49db-40f5-96a3-d126a3834976-2023-02-28T170000.000Z) (MONDO:0013674; AD; Moderate); [neurodegeneration with brain iron accumulation 4](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_20b64ab8-0b48-40d4-8ef5-b3d251e4bec0-2023-02-28T170000.000Z) (MONDO:0013674; AR; Definitive).
-- [ ] **C1QA** — HGNC:1241; [systemic lupus erythematosus related to C1QA](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e3e3709-6ee5-4439-a8b8-9838133ca7f2-2025-03-12T190000.000Z) (MONDO:1060174; AR; Definitive).
-- [ ] **C1QB** — HGNC:1242; [C1Q deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_3216) (MONDO:0013343; AR; Definitive).
-- [ ] **C1QBP** — HGNC:1243; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e98e3a8-77f2-4011-96cb-6bcc54f36a8b-2022-08-15T160000.000Z) (MONDO:0044970; AR; Definitive).
-- [ ] **C1QTNF5** — HGNC:14344; [inherited retinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ac4ac55-5f45-4ca8-ab83-7065e31f4efc-2024-09-05T160000.000Z) (MONDO:0019118; AD; Definitive).
-- [ ] **C2CD3** — HGNC:24564; [orofaciodigital syndrome type 14](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ca993ab8-029f-46f6-9fc5-ffc1f54cb120-2023-05-24T160000.000Z) (MONDO:0014413; AR; Definitive).
+- [x] **C1QA** — HGNC:1241; [systemic lupus erythematosus related to C1QA](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7e3e3709-6ee5-4439-a8b8-9838133ca7f2-2025-03-12T190000.000Z) (MONDO:1060174; AR; Definitive).
+- [x] **C1QB** — HGNC:1242; [C1Q deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGCIEX:assertion_3216) (MONDO:0013343; AR; Definitive).
+- [x] **C1QBP** — HGNC:1243; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8e98e3a8-77f2-4011-96cb-6bcc54f36a8b-2022-08-15T160000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **C1QTNF5** — HGNC:14344; [inherited retinal dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6ac4ac55-5f45-4ca8-ab83-7065e31f4efc-2024-09-05T160000.000Z) (MONDO:0019118; AD; Definitive).
+- [x] **C2CD3** — HGNC:24564; [orofaciodigital syndrome type 14](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ca993ab8-029f-46f6-9fc5-ffc1f54cb120-2023-05-24T160000.000Z) (MONDO:0014413; AR; Definitive).
 - [ ] **C3** — HGNC:1318; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e000b88-9487-46a6-830a-7a613152853d-2024-03-29T160000.000Z) (MONDO:0013892; AD; Moderate); [atypical hemolytic-uremic syndrome with C3 anomaly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_78a4d83e-8fb0-4b47-9dfc-5dfe618e1aa3-2023-09-29T160000.000Z) (MONDO:0013043; AD; Definitive).
 - [ ] **C9orf72** — HGNC:28337; [frontotemporal dementia and/or amyotrophic lateral sclerosis 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afd5a267-72c8-4a04-8404-4c819efe61c5-2021-09-21T030209.665Z) (MONDO:0007105; AD; Definitive).
 - [ ] **CA2** — HGNC:1373; [autosomal recessive osteopetrosis 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_55a34937-7d48-45b0-a6c8-8d799f0d5934-2024-06-10T160000.000Z) (MONDO:0009818; AR; Definitive).
