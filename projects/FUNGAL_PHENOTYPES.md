@@ -21,7 +21,12 @@ all of those come from two high-throughput screens that GO curators have not
 turned into annotations, and most hits are indirect (spindle checkpoint and
 respiratory-assembly mutants failing on alternative carbon sources). They are
 evidence of necessity, not participation, so they can support or question an
-annotation but should not create one.
+annotation but should not create one. Beyond the two model yeasts, the only
+fungal genome-wide fitness data across many carbon sources is RB-TDNAseq in
+the basidiomycete yeast *Rhodotorula toruloides* (downloadable; 8,344 genes).
+No filamentous-fungus knockout collection has been screened across carbon or
+plant-biomass sources; there, carbon phenotypes survive only as hit lists and
+figures in individual papers.
 
 ## Species-level growth: FUNG-GROWTH
 
@@ -92,13 +97,74 @@ Suggested use in reviews:
   on that substrate.
 - Do not propose `NEW` process terms from these phenotypes alone.
 
-## Other fungal knockout datasets
+## Other fungal knockout and fitness datasets
 
-A survey of knockout and transposon fitness datasets in filamentous fungi
-and other yeasts, and of which can be downloaded, is in progress. The
-bacterial Fitness Browser (Price et al. 2018, PMID:29769716), the closest
-model for this kind of data, could not be fetched from our environment
-(Cloudflare challenge).
+We checked whether each dataset's phenotype table can actually be
+downloaded. PMIDs were verified in PubMed. "Yes" means a test download
+succeeded and the file opened. Conditions are summarised with carbon and
+nitrogen sources flagged.
+
+### Genome-wide fitness with many carbon sources
+
+| Dataset | Organism | Mutants × conditions | Carbon / nitrogen sources | Download |
+|---|---|---|---|---|
+| Kim et al. 2021, PMID:33585414 (RB-TDNAseq; includes Coradetti 2018 data) | *Rhodotorula toruloides* | 8,344 genes × 61 condition columns | Glucose, cellobiose, xylose, arabinose, galactose, mannose, acetate, lactate, oleic acid, p-coumarate, ferulate, benzoate, sugar alcohols, pentuloses; amino acids as N sources | **Yes.** Frontiers supplement Table_2.XLSX, sheet "RB-TDNA Seq" (ids `RTO4_<n>`), CC BY |
+| Coradetti et al. 2018, PMID:29521624 | *R. toruloides* | 6,558 genes | Glucose, oleic and ricinoleic acid; auxotrophy media | **Yes.** eLife supp2 xlsx, CC BY |
+| Rodríguez-López et al. 2023, PMID:37787768 | *S. pombe* | 3,509 deletions × 131 conditions (450,844 rows, with p-values) | Glycerol, galactose, fructose, maltose, sucrose, mannitol, xylose, ethanol; glutamate, proline, lysine, serine | **Yes.** eLife supp1 xlsx (39 MB), CC BY. The curated subset is already in PomBase (above) |
+| Yeast Phenome, Turco et al. 2023, PMID:37235661 | *S. cerevisiae* | 4,554 genes × 14,484 harmonised screens (includes Hillenmeyer 2008, Dudley 2005, Qian 2012) | YPG, YPL, YPE, galactose, raffinose, maltose and others | **Yes.** `yp_haphom_20221025.tar.gz` (637 MB) from the project's Google Cloud bucket; licence not stated |
+
+The bacterial Fitness Browser (Price et al. 2018, PMID:29769716) is the model
+for this kind of data, but its 2026 figshare archive lists only bacteria and
+archaea; there is no fungal organism in it. Its site sits behind a Cloudflare
+challenge and could not be fetched from our environment.
+
+### Pathogenic yeasts
+
+| Dataset | Organism | Scope | Download |
+|---|---|---|---|
+| Homann et al. 2009, PMID:20041210 | *Candida albicans* | ~160 TF knockouts × ~107 conditions, incl. no carbon source, galactose, glycerol, GABA/proline nitrogen | **Yes.** PLoS supplement s007.xls, CC BY |
+| CGD phenotype file | *C. albicans* and other Candida | 27,890 curated rows, incl. Homann, Noble 2010 (PMID:20543849) and Segal 2018 transposon essentiality (PMID:30377286); ~200 carbon-source rows | **Yes.** `candidagenome.org/download/phenotype/`, updated weekly |
+| Jung 2015 (PMID:25849373), Lee 2016 (PMID:27677328), Jin 2020 (PMID:32839469) | *Cryptococcus neoformans* | TF, kinase and phosphatase knockout phenomes, about 30 conditions each; mostly stress, drug and virulence; galactose only | **Yes.** Nature Communications supplements, CC BY |
+| Billmyre et al. 2025, PMID:40402997 | *C. neoformans* | Transposon essentiality and fluconazole fitness for 6,975 genes; no carbon conditions | **Yes.** PLoS Biol supplement |
+
+Other transposon sets (Grech 2019 *S. pombe* Hermes, PMID:31077324; SATAY,
+PMID:28481201) cover essentiality and drugs, not nutrients.
+
+### Filamentous fungi
+
+No filamentous-fungus knockout collection has been screened across a panel of
+carbon or plant-biomass sources. Carbon phenotypes exist only as short hit
+lists or figures.
+
+| Dataset | Organism | Scope | Download |
+|---|---|---|---|
+| Carrillo et al. 2020, PMID:33138786 | *Neurospora crassa* | 1,168 knockouts × 10 growth and development traits; no carbon sources | **Yes.** BMC supplement xlsx (NCU ids), CC BY |
+| Son et al. 2011, PMID:22028654 | *Fusarium graminearum* | 657 TF knockouts × 17 traits, incl. minimal versus rich medium; CMC conidiation in a separate table | **Yes.** PLoS supplement, ordinal scores, CC BY |
+| PHI-base (v4 CSV, PHI-base 5 export, GAF) | Pathogens, incl. *F. graminearum*, *M. oryzae*, *A. fumigatus* | 24,123 interaction rows; virulence plus an in vitro growth field; PHI-base 5 uses PHIPO, which has carbon-source terms | **Yes.** GitHub `PHI-base/data`. Licence statements conflict (CC BY vs CC BY-ND) |
+| Coradetti et al. 2012, PMID:22532664 | *N. crassa* | TF knockout screen on Avicel, xylan, sucrose | Hits in text; no per-strain table found |
+| Brown et al. 2013, PMID:23800192 | *Aspergillus nidulans* | Non-essential kinases and phosphatases screened for cellulase production | Results in figures only |
+| Wu et al. 2020, PMID:32111691 | *N. crassa* | RNA-seq on 40 carbon sources; growth for ~8 TF mutants | Supplement xlsx not opened |
+| Lu et al. 2014, PMID:25299517 | *Magnaporthe oryzae* | 104 Zn2Cys6 TF knockouts; olive oil as carbon source | Phenotypes in PDF only |
+| Kun et al. 2021, PMID:34114741, and other de Vries lab papers | *Aspergillus niger* | Regulator knockouts (XlnR, AraR, ClrA/B, AmyR) on wheat bran and polysaccharides | Per-paper figures; no consolidated table |
+| Furukawa et al. 2020, PMID:31969561 | *Aspergillus fumigatus* | COFUN library, 484 TF knockouts; antifungal screens, no carbon sources | Supplement not retrieved |
+
+FungiDB's search service now needs a registered API key, so its phenotype
+tracks could not be pulled. Only 1 of our 73 filamentous-fungus and *Candida*
+reviews (EMENI brlA) appears in PHI-base, as expected for a pathogen database.
+
+## Suggested next steps
+
+1. *R. toruloides* is the best fungal test bed: genome-wide fitness on about
+   20 carbon sources, the same kind of data as the bacterial Fitness Browser,
+   and the closest match to FUNG-GROWTH's substrate panel. It has no reviews
+   in this repository yet; mapping `RTO4_` ids to UniProt (the Coradetti 2023
+   proteomics supplement, PMID:37537586, has a mapping sheet) would let us
+   pick specifically-fit genes on xylose, arabinose or p-coumarate for review.
+2. Extend `phenotype_overlap.py` to Candida (CGD file) and to the
+   Rodríguez-López quantitative table, so reviews can quote fitness values,
+   not just curated labels.
+3. For *A. niger* and *T. reesei* CAZyme reviews, pair FUNG-GROWTH species
+   profiles with the de Vries lab regulator knockouts, curated by hand.
 
 ## Reproducing
 
