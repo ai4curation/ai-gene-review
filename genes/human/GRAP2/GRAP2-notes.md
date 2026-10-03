@@ -35,3 +35,31 @@
   signalosome (GO:0036398). Comparator: LAT and LCP2 (same-complex adaptors) carry all three; GADS does part of the work
   (physical bridging), so the participation test is met.
 - GPVI/CLEC-2 and M-CSF receptor roles left as suggested questions (partial/redundant phenotypes or overexpression only).
+
+## Deep research integration (falcon)
+
+Report: `GRAP2-deep-research-falcon.md` (Edison/Falcon, completed 2026-10-03 after ~21 min). It arrived after the
+annotation review was drafted; every substantive claim was checked against primary literature before use.
+
+Adopted (traced to primary papers, cached and quoted in the review):
+- Human HuT78 GADS knockdown: reduced SLP-76/PLCG1 recruitment to LAT, calcium and IL-2/IFN-g, with preserved SLP-76/PLCG1
+  phosphorylation and adhesion [PMID:25636200 "The defect in cytokine production occurred because of impaired calcium mobilization due to reduced recruitment of SLP-76 and PLC-γ1 to the LAT complex"].
+  Added to the NEW TCR signaling row and core function 1.
+- Full-length GADS-SLP-76 Kd 9 nM and the circular LAT-GADS-SLP-76-PLCG1 quaternary complex
+  [PMID:30510001 "The K d for SLP-76 FL /Gads FL binding was 9 nM"]. Added to core function 1.
+- Jurkat GRB2-family knockouts / AP-MS: [PMID:37006259 "our analysis showed that 100% of the SLP76 molecules are constitutively associated with GADS"];
+  GADS loss remodels the SLP76 interactome but minimally affects proximal events. Added to core function 1 and a suggested question.
+- FLT3 pY955/pY969 binding (PMID:26895103): recorded as a suggested question only (overexpression/xenograft); explains the
+  Reactome "Active FLT3 binds to GRAP2" cytosol row.
+
+Not adopted / limitations:
+- CD28 binding (Ellis et al. 2000, J Immunol, DOI 10.4049/jimmunol.164.11.5805): no PMID resolved for the DOI via the ID
+  converter; not cited. It is consistent with the Reactome "Gads binds CD28" row (cytosol, accepted) and with PMID:31402911.
+- HPK1-mediated phosphorylation of GADS T262: not traced to a cached primary paper; PMID:25452106 reports the T262 site by MS
+  only. Not used.
+- Microcluster dynamics drawn from a 2000 thesis (liu2000) cited by the report: not used.
+
+Report errors / caveats:
+- LAT Y171/Y191 given in short-isoform numbering without the canonical O43561-1 equivalents (Y200/Y220).
+- Mast-cell phenotype attributed to the Yablonski review; the primary Gads-/- mast cell paper is PMID:18664516 (used instead).
+- No outright factual errors found in the claims checked.
