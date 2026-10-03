@@ -239,18 +239,36 @@ Running the project's `NEW` discipline over the candidates:
   transcription factors. A systematic absence across species and MODs is a convention, not
   a gap. The claim belongs in the module, where a developmental program is the right unit.
 - **`GO:0009952 anterior/posterior pattern specification`.** Proposed, then withdrawn. The
-  comparator evidence was good — mouse Otx2 carries it by both IMP and IGI, as do Hoxa1
-  (IMP, IGI) and, via descendants, Gbx2 (`GO:0030917`) and Six3 (`GO:0021797`), while the
-  human orthologues GBX2, SIX3, EN1 and HOXA1 have none, which reads as a species artefact
-  rather than a convention. The redundancy check is what killed it: human OTX2 already
-  carries `GO:0090009 primitive streak formation` by ISS, and `GO:0090009` is a
-  **descendant** of `GO:0009952`. Proposing it would have added an ancestor of an existing
-  annotation, which the project rules reject outright. Worth recording because the
-  justification was otherwise complete and read as convincing — the ancestry check was the
-  only thing standing between it and a redundant assertion.
+  comparator evidence was good — mouse Otx2 carries it by both IMP and IGI, as does Hoxa1
+  (IMP, IGI), and Gbx2 (`GO:0030917`) and Six3 (`GO:0021797`) carry terms that entail it,
+  while the human orthologues GBX2, SIX3, EN1 and HOXA1 have none, which reads as a species
+  artefact rather than a convention. The redundancy check is what killed it: human OTX2
+  already carries `GO:0090009 primitive streak formation` by ISS, and an annotation to
+  `GO:0090009` already entails `GO:0009952`, so proposing the latter would have added an
+  ancestor of an existing annotation — which the project rules reject outright.
+- **The `GO:0090009` → `GO:0009952` edge, stated precisely.** An earlier draft of the bullet
+  above (and of the YAML `reason`, and of the `2026-09-20T163726Z` history record) called
+  `GO:0090009` a *descendant* of `GO:0009952` without qualifying the relation. That wording
+  was retracted on 2026-10-03, because the whole withdrawal rests on this single edge and
+  the unqualified word is wrong for it. Queried against the local oaklib `sqlite:obo:go`
+  `entailed_edge` closure — the same artefact the module validator resolves labels through,
+  GO release 2026-07-26:
+  - `GO:0090009` has exactly **one** `is_a` parent, `GO:0048646 anatomical structure
+    formation involved in morphogenesis`, and its `is_a` closure contains no term in the
+    regionalization branch. There is no `is_a` path to `GO:0009952`.
+  - `GO:0009952` is reached from `GO:0090009` only through `BFO:0000050 part_of` (and
+    `RO:0002131 overlaps`).
+  - The same holds for `GO:0030917`, the term that *did* survive: it reaches `GO:0009952`
+    through `BFO:0000050`, not `is_a`. `GO:0021797` is the one genuine `rdfs:subClassOf`
+    descendant of the four checked.
+  The conclusion is unchanged, because GO's true-path rule propagates annotations over
+  `part_of` as well as `is_a`: an annotation to `GO:0090009` entails `GO:0009952` either
+  way. Recorded because an `is_a`-only reading of the closure would make `GO:0009952` look
+  proposable, and that reading was argued four times across review passes before the
+  closure was actually queried.
 - **`GO:0021978 telencephalon regionalization`.** Mouse Otx2 carries it by IMP. Rejected on
-  the same ground: it is a descendant of `GO:0030900 forebrain development`, which human
-  OTX2 already has.
+  the same ground: it reaches `GO:0030900 forebrain development`, which human OTX2 already
+  has, by `BFO:0000050` (it is not under `GO:0009952` at all).
 - **`GO:0030917 midbrain-hindbrain boundary development` — this one survived, and is
   proposed.** The claim is narrower and better grounded than the AP-patterning one: the
   organizer forms *at* the OTX2 caudal border, and moving that border with ectopic GBX2
