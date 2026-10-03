@@ -21,3 +21,14 @@ PubMed and web searches on 2026-09-28 for `Rpd3`, `Rpd3L`, `RPD3`, `Saccharomyce
 - Forced the RPD3 UniProt/GOA refresh and accepted all seven newly seeded rows: an SGD IMP row for `GO:0000727` break-induced replication from a 2025 genome-wide BIR screen; InterPro `GO:0004407`; `GO:0032221 Rpd3S complex` from the Rpd3/Sin3 small-complex proteomics reanalysis; `GO:0033698 Rpd3L complex` from the 2023 Rpd3L cryo-EM structure; the broad ARBA `GO:0051052 regulation of DNA metabolic process` row; `GO:0070211 Snt2C complex`; and the direct `GO:0141221 histone deacetylase activity, hydrolytic mechanism` row from the Rpd3 ER-motif mutagenesis paper.
 - Marked 56 old rows as `retired: true` because their exact source assertions are absent from current GOA. These are five stale automatic parent rows, nine old unqualified duplicate transcription-regulation rows from `PMID:20398213`/`PMID:24358376`, and 42 stale generic protein-binding rows from older proteomics snapshots.
 - Left the three current IBA rows unchanged biologically: `GO:0004407` and `GO:0070210` remain sound `NO_FAILURE_CORE` transfers from `PTN008143312` and `PTN000835673`, while the `PTN000743059` `GO:0031507 heterochromatin formation` row remains a `MODIFY` to heterochromatin boundary formation because the PAINT node crosses a regulatory-sign boundary in budding yeast.
+
+## PR #3787 follow-up
+
+- Rewrote the `GO:0000727` break-induced replication IMP row to cite the
+  cached RPD3/Rpd3L-specific BIR prose from PMID:41398407 and changed its
+  action to `KEEP_AS_NON_CORE`.
+- Changed the broad ARBA `GO:0051052 regulation of DNA metabolic process` row
+  to `KEEP_AS_NON_CORE` and trimmed its evidence back to the TRC/replication-fork
+  Rpd3L paper.
+- Normalized the RPD3 gene and IBA_REVIEW history actors from `claude-code` to
+  `codex` to match the agent and commit provenance.
