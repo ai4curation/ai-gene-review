@@ -22,7 +22,7 @@ The collections, focused family projects and related mapping reviews below give 
 | Collection | Explore |
 |------------|---------|
 | [ProtNLM benchmark families](PROTNLM_EVALUATION/family-curation/family-index.html) | Family assessments and supporting evidence across the ProtNLM benchmark, with a companion [gene index](PROTNLM_EVALUATION/family-curation/gene-index.html). |
-| [PANTHER / IBA family reviews](PANTHER_IBA_REVIEW/README.md) | Family-level review of phylogenetic annotation propagation for a set of fission yeast genes. |
+| [PANTHER / IBA family reviews](PANTHER_IBA_REVIEW.md) | Family-level review of phylogenetic annotation propagation for a set of fission yeast genes. |
 
 ## Focused family projects and reports
 

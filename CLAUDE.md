@@ -354,7 +354,11 @@ PANTHER's own HMM classifications. Two rules follow:
   against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
   the representative protein is usually right and the family id is wrong — look up the
   member's real family rather than deleting the member. Accessions missing from the index
-  only warn; run `just refresh-panther-members` to add newly cited proteins.
+  only warn; run `just refresh-panther-members` to add newly cited proteins. If a curated
+  disagreement between PANTHER's per-organism files and UniProt/family-review evidence
+  must survive regeneration, add a reasoned row to
+  `interpro/panther/panther-members-overrides.tsv` rather than hand-editing the generated
+  `interpro/panther/panther-members.tsv`.
 - **If a label mismatch names a *different protein*, fix the ID, not the label.** A
   wildly-wrong label is weak evidence of a typo and strong evidence that the id was
   guessed. An id invented at random is still a hallucination when it happens to resolve
