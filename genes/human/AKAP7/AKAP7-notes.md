@@ -70,3 +70,26 @@ recorded as a CURATION gap, consistent with how I treated the analogous AKAIN1 c
 - GO_REF entries copied from the seeder.
 - PR #3932's review bot failed on its usage quota ("session limit, resets 8pm UTC"), not on the
   PR; re-run after the reset.
+
+## Round 2 (review feedback)
+
+All three IMPORTANT items were right.
+
+1. **`GO:0060090` was the adaptor root.** Both clients are proteins in one cAMP-PKA pathway, so
+   `GO:0035591` signaling adaptor activity (`GO:0060090` > `GO:0030674` > `GO:0035591`), matching
+   the AKAP12 sibling. Added `qualifier: enables` and the IPI partner — **rat** CaV1.2 (P22002,
+   verified via API), because that is the channel PMID:14569017 used. A human accession would have
+   misstated what was tested.
+2. **Three cited records were never committed** (9545239, 10613906, 11299204) — I read them locally
+   and never `git add`ed them. Worse, the same gap reached **main** via AKAIN1 (PMID:25653177);
+   fixed separately in #3939. Cause: my guard checked only staged ⊆ cited. It now also checks
+   cited ⊆ (HEAD ∪ staged). Its first fix used `origin/main` and wrongly flagged records committed
+   earlier on this branch; corrected to `HEAD`.
+3. **`core_functions` had dropped `GO:0034237`** when the adaptor took the single MF slot, despite
+   three MODIFYs to it on crystallographic evidence. Added as a second core function.
+
+Suggestions taken: ion-transport replacement → `GO:1901385` regulation of voltage-gated calcium
+channel activity (names the potentiation mechanism); description no longer describes database
+structure. On `GO:0071320`, kept as non-core but answered the participation point explicitly — the
+cAMP response is PKA phosphorylating the channel, and the AKAP supplies the positioning that step
+depends on (the scaffold case), whereas for ion transport the AKAP does none of the work.
