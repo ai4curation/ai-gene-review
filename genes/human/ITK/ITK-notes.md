@@ -29,7 +29,7 @@ Disease: LPFS1, R335W in the SH2 domain destabilizes ITK; patients lack NKT cell
 ## Decisions
 
 - MF: GO:0004715 (consistent with LCK/ZAP70); all four rows accepted.
-- 27 `protein binding` rows: 2 SLP-76 rows MODIFY to GO:0001784 phosphotyrosine residue binding (SH2 docking);
+- 25 `protein binding` rows: 2 SLP-76 rows MODIFY to GO:0001784 phosphotyrosine residue binding (SH2 docking);
   rest REMOVED (substrate pairs LAT/PLCG1; SH2 array ERBB2; isolated SH3 hits FASLG/WAS; HSP90/14-3-3 client
   screens; PDZ fragmentomics; XL-MS AHNAK).
 - B cell receptor signaling IBA REMOVED: ITK is not expressed in B cells; node PTN000700360 assertion fits BTK/TEC.
