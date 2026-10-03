@@ -187,3 +187,7 @@ Normalize prose PMID separators in the changed review. All 92 machine source obj
 ### 2026-10-03 follow-up application
 
 Applied the independently reviewed follow-up after checking the exact canonical preimages. Normal canonical validation passed with 17 warnings, recorded in the application receipt; these remain warnings rather than unresolved schema errors. The review stays DRAFT with 65 ACCEPT, 23 KEEP_AS_NON_CORE, 3 UNDECIDED and 1 REMOVE. A new standard codex/gpt-6 EDIT history for PR #3895 was scaffolded and validated. All 92 source objects, 68 reference objects, two products and existing quotations remain unchanged; raw sources, cached publications and earlier history records were preserved. The preceding candidate-stage note records the earlier stage and is superseded by this application entry.
+
+### 2026-10-03 DNA-repair rationale wording follow-up
+
+Corrected the broad GO:0006281 rationale after re-review of PR #3895: it no longer claims interstrand-crosslink repair is annotated elsewhere. The broad DNA-repair judgment rests on established BRIP1 repair functions; the specific helicase-controlled crosslink-response step remains an open mechanistic question. This wording correction changes no annotation action, core function, reference, quotation or source field. Normal canonical validation passed with 17 nonblocking warnings.
