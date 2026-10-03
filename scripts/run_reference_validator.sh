@@ -19,7 +19,7 @@ set -euo pipefail
 
 run_lrv() {
     set +e
-    output="$(uv run linkml-reference-validator "$@" 2>&1)"
+    output="$(uv run python -m ai_gene_review.validation.reference_cli "$@" 2>&1)"
     exit_code=$?
     set -e
 
