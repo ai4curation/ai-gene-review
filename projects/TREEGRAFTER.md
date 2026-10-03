@@ -444,6 +444,20 @@ cached substrate-panel quotes) rather than left on family-level doubt.
   (FliI in *Caulobacter*, *H. pylori*, *P. putida*, *E. coli* and *Salmonella*;
   SctN in *Salmonella* ×2, *Yersinia* and *Shigella*) remove 31 of the 35 affected
   rows and mark the other 4 as over-annotations.
+- **[Unicellular holozoans: Hippo pathway case study](TREEGRAFTER/holozoan-hippo-case-study.md)**
+  — TreeGrafter on choanoflagellate, *Capsaspora* and sponge proteins, which
+  have no IBA rows because none of them is a PANTHER reference genome. The
+  commonest failure is grafting onto animal-only nodes:
+  - choanoflagellate cadherins onto a Bilateria node;
+  - *Capsaspora* integrin betas onto the vertebrate ITGBL1 node;
+  - *Capsaspora* T-box factors onto an all-animal node carrying "cell fate
+    specification".
+
+  There are also two cross-family mis-placements: *Capsaspora* Warts with the
+  citron/ROCK kinases, and the *S. rosetta* yorkie candidate with the MAGI
+  family. One correct graft still inherits animal-tissue IBDs from LATS node
+  PTN002390470, including `regulation of organ growth` on a unicellular
+  organism. Not part of the frozen snapshot.
 - **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
@@ -457,6 +471,23 @@ cached substrate-panel quotes) rather than left on family-level doubt.
 # NOTES
 
 ## 2026-10-01
+
+- Added the [unicellular holozoan case study](TREEGRAFTER/holozoan-hippo-case-study.md)
+  from the ORIGINS_OF_MULTICELLULARITY reviews. Across the 16 literature-based
+  reviews, 11 of 53 propagated rows were down-graded, all `GO_REF:0000118`.
+  - **Cross-family mis-placements.** Warts went into PTHR22988, and the
+    Yorkie candidate into PTHR10316.
+  - **Grafts onto animal-only nodes, three times.** These are choanoflagellate
+    cadherins on a node PAINT records at Bilateria, *Capsaspora* integrin betas
+    on the Euteleostomi ITGBL1 node, and *Capsaspora* T-box factors on an
+    all-animal node carrying "cell fate specification".
+  - **Working hypothesis.** Reference proteomes escape this because their tree
+    position, not the HMM call, sets their IBAs. Fly wts is in PTHR22988 by
+    UniProt's classification but takes its IBAs from the LATS node.
+  - None of these rows are in the frozen 2026-09-06 tables.
+- This complements the 2026-09-28 note below. Viral sequences outside the
+  trees' taxonomic scope have stopped receiving TreeGrafter terms, but
+  unicellular eukaryotes outside a node's PAINT taxon still receive them.
 
 - Second review round on PR #3165. **Withdrew two of the previous round's
   relaxations**: PSEPK `benB` `GO:0019380` (3-phenylpropionate catabolic

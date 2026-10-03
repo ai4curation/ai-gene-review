@@ -227,6 +227,8 @@ build-panther-obo *args="":
 # This backs the check that a declared family really contains its own member,
 # which is what distinguishes a mis-grounded family from a mislabelled one.
 # Run after adding modules that cite new representative proteins.
+# Rows in interpro/panther/panther-members-overrides.tsv are applied last, so a
+# curated assignment (each with its reason) survives regeneration.
 [group('QC')]
 refresh-panther-members *args="":
     uv run ai-gene-review refresh-panther-members --output-dir . {{args}}
