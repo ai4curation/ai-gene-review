@@ -53,3 +53,26 @@ Normal schema, best-practice, GO term/label, GOA and reference validation passed
 ## Canonical application and validation (2026-10-03)
 
 The exact independently reviewed candidate and manual notes were applied after ROOT’s whole-science PASS. Normal canonical validation passed with four documented generic-binding warnings; a standard codex/gpt-6 CREATE history and targeted HTML rendering passed. All 149 machine-sourced assertions, two alternative products, 79 original reference identities and immutable normal source files are preserved. PMID:31431692 is the sole added reference (80 total); there are no NEW assertions. DRAFT and the 33 UNDECIDED source assessments remain. Remote publication is a separate ROOT-owned step.
+
+
+## 2026-10-03 — First PR review follow-up
+
+The phospholipase-activator assertion is refined to GO:0004715 non-membrane spanning protein tyrosine kinase activity. Official AmiGO shows GO:0016004 under lipase activator, enzyme activator and molecular function regulator activity. The regulator definition excludes covalent target modification, so phosphorylation-mediated activation does not establish that MF. This definition applies independently of the standing project exception for generic protein binding ([GO:0016004](https://amigo.geneontology.org/amigo/term/GO:0016004), [GO:0098772](https://amigo.geneontology.org/amigo/term/GO:0098772)).
+
+Both GO:0043274 assertions retain their original PLCG2 accession and are now ACCEPT. The earlier requirement to identify a stable isolated complex was stronger than the GO binding definition. The established direct enzyme–substrate relationship, together with expert-curated IPI evidence, supports phospholipase binding; it does not require a separate independent allosteric function. This is curator deference with explicit access limits, not a claim to have independently verified both original physical-interaction experiments.
+
+Additional primary access: the [institutional author PDF of PMID:11606584](https://www2.mrc-lmb.cam.ac.uk/groups/rlw/download/publications/11606584.pdf) identifies human BTK constructs and documents purified-protein phosphorylation. Its separate complex-separation experiment concerns PLCgamma2–BLNK. Selected Methods, Results, captions and Discussion text were inspected, not all images or supplementary material. The canonical normal cache remains unchanged and abstract-only; the reference finding's availability flag now reflects actual external full-text access. PMID:14656219 remains abstract-only in the inspected evidence; the direct PMC page presented a browser challenge. Neither full-paper absence nor a high-affinity BTK–PLCG2 complex is inferred.
+
+The two kinase-row explanations now reflect the resolved human construct provenance. A short exact cached kinase anchor is reused once in the relevant row and once in the kinase core, totaling 22 words from PMID:11606584 across both uses. The prior PIP3-binding anchor is preserved. No source cache or existing history changed.
+
+The advisory SH3 suggestions were considered without reversing binding direction. The inspected ADAM15 source identifies BTK SH3 binding and describes the peptide-array method, but its exact target-level motif map was not newly examined here. The WASP abstract establishes SH3-domain association but does not independently map the precise BTK-recognized motif in the inspected text. Both existing bounded non-core decisions remain. The Sab source explicitly lacks a proline-rich sequence, so no proline-region function is transferred to that interaction.
+
+The proteoglycan-catabolism orthology row remains UNDECIDED. Its reason identifies why signaling necessity alone would be insufficient; it does not establish that the uninspected donor experiment lacks a participating BTK mechanism. No new assertion or categorical source error is inferred from that limitation.
+
+All 149 machine-sourced objects, two alternative products, reference identities, descriptions of the two core mechanisms and prior notes are preserved. Actions are now 96 ACCEPT, 16 KEEP_AS_NON_CORE, 31 UNDECIDED and six MODIFY. No NEW or REMOVE rows are added. This focused candidate awaits independent peer review and canonical application; validation results are recorded below after the normal checks.
+
+Normal full candidate validation, including ontology terms, references and GOA consistency, passed with zero errors and the same four documented generic-binding warnings. DRAFT is unchanged and no decisions are PENDING.
+
+## 2026-10-03 — Focused review follow-up applied
+
+The independently reviewed follow-up was applied after checking the original file bytes. The 149 machine-source assertions and two products are preserved. The phospholipase-regulator assertion is refined to the established kinase activity, and the two PLCG2-binding assertions are accepted with direct substrate-recognition evidence and explicit source-access limits. The resulting decisions are 96 ACCEPT, 16 KEEP_AS_NON_CORE, 31 UNDECIDED and six MODIFY. The original notes, source caches and prior history records are preserved.
