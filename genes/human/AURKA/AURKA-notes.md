@@ -62,3 +62,11 @@
 - No disagreement with the module's GO terms (GO:0004674 kinase, GO:0061523 cilium disassembly, GO:0036064
   basal body). Caveat for the module: AURKA should not be read as a cilium-dedicated protein; its disassembly role
   is a redeployment of the mitotic kinase.
+
+## Deep research outcome
+
+- Falcon succeeded on the second run (`--timeout 2400`; the run took about 2410 s and the wrapper log reported a
+  timeout, but a complete report was written): `AURKA-deep-research-falcon.md`. Its conclusion matches this review:
+  AURKA is primarily a spatially regulated Ser/Thr kinase for mitotic entry and bipolar spindle assembly, with
+  basal-body AURKA-HDAC6 cilium resorption as a validated non-mitotic function
+  [file:human/AURKA/AURKA-deep-research-falcon.md "Its basal-body AURKA–HDAC6 activity regulates cilium resorption"].
