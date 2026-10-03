@@ -1,7 +1,7 @@
 # IFT140 notes (human, Q96RY7)
 
 ## Deep research status
-DRSTATUS
+Falcon deep research succeeded on the second attempt (IFT140-deep-research-falcon.md; first run timed out at 600 s with no available perplexity-lite fallback; rerun with --timeout 2400). It concurs: IFT140 is a non-enzymatic IFT-A core (head) scaffold; the human IFT-A-TULP3 cryo-EM structure places the TULP3 N-terminus against IFT140 TPR and IFT122 TPR/zinc-finger regions, giving a direct structural basis for the contributes_to protein carrier and membrane-protein-import annotations. Patient renal cells with IFT140 variants show IFT88 trapped at ciliary tips (retrograde defect) [file:human/IFT140/IFT140-deep-research-falcon.md "Re-expressing the patient’s IFT140 p.Tyr923Asp variant in Ift140-knockout cells produced significantly more tip accumulation than wild-type IFT140."]. It also reports that many patient missense variants reduce IFT140-TULP3 interaction while still rescuing ciliogenesis, consistent with keeping cilium-assembly roles accepted but emphasizing retrograde transport and import as core.
 
 ## Summary
 - IFT-A core subunit [PMID:27932497 "we show that the IFT-A complex is divided into a core subcomplex, composed of IFT122/IFT140/IFT144, which is associated with TULP3, and a peripheral subcomplex, composed of IFT43/IFT121/IFT139, where IFT139 is most distally located."]; human IFT-A cryo-EM [PMID:36775821 "Here we report cryo-EM structures of human IFT-A complexes in the presence and absence of TULP3 at overall resolutions of 3.0-3.9 Å."]
