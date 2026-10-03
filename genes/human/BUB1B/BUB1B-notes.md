@@ -191,3 +191,38 @@ Normal candidate validation, including terms, references and GOA checks, passed 
 ## 2026-10-03 — Canonical application
 
 The independently reviewed candidate was applied after ROOT whole-science approval. Normal canonical validation passed with 23 warnings: the 22 documented candidate warnings plus one canonical-context advisory that the existing Falcon file is not cited by an annotation, and the standard EDIT history passed validation. All 119 source assertions, three alternative products, existing source caches, generated provider files and previous history were preserved. The 50 ACCEPT, 21 KEEP_AS_NON_CORE, seven MODIFY and 41 UNDECIDED decisions remain; DRAFT correctly records the remaining warnings. Remote publication is a separate step.
+
+
+## 2026-10-03 — First published-review follow-up
+
+This entry supersedes the earlier overly strict source-record judgments while preserving the earlier notes as historical provenance. All 119 machine assertions, three named alternative products, 85 reference identities, both core functions and source/cache bytes are preserved. The revised decisions are 50 ACCEPT, 39 KEEP_AS_NON_CORE, 19 MODIFY and 11 UNDECIDED, with no new annotations. DRAFT continues to record the remaining advisories and uncertainty.
+
+### Standing instruction and established interactions
+
+The [immutable published project instruction](https://github.com/ai4curation/ai-gene-review/blob/3eb5f8979787f246e82ecaadcb5fc6e49507ff4c/projects/CLINGEN_MENDELIAN.md#curation-instructions) explicitly records the user's standing direction to retain supported generic binding as non-core when no evidence-backed finer MF is established. It also expressly identifies the task-specific departure from the skill's informational-exclusion recommendation. That published instruction supplies the authority; this follow-up changes no repository-wide skill or validator and claims no maintainer sign-off.
+
+The broad binding claim can be supported by independent target experiments while the original screen/table remains uninspected. Twenty-nine former UNDECIDED rows are resolved on that basis: twelve CDC20 rows refine to GO:1990948, consistently with the six earlier CDC20 refinements; seventeen BUB1, BUB3, MAD2 and PCAF rows retain supported association as non-core. The BioPlex rows contain four partners, including BUB1. Human BUBR1–BUB1 two-hybrid Results distinguish heterodimerization from homodimerization; human BUB3 constructs show deletion-sensitive copurification in BHK cells; human HeLa MCC purification/reciprocal IP supports MAD2 coassociation; human HeLa IP supports PCAF association. This does not claim that every screen edge, image or purified binary interaction was independently verified. Original identifiers and partner fields remain unchanged.
+
+The UBC row remains unresolved because covalent ubiquitin conjugation does not itself establish noncovalent binding. RIPK3 and YWHAE rows retain their source-access uncertainty; no rejection is inferred from the paper title.
+
+### Separate localization and evolutionary judgments
+
+The centrosome assertion is retained as non-core using the preserved UniProt location and curator deference. The [official original primary abstract](https://pubmed.ncbi.nlm.nih.gov/19503101/) was independently read and explicitly reports centrosomal localization separately from amplification phenotypes. Its normal cache is absent, so it is supplementary notes-only corroboration; no YAML publication quote, full-paper or localization-image inspection is claimed. The specific meiotic centromeric-cohesion IBA remains UNDECIDED: actual fly BubR1/fission-yeast Bub1 donor identities are established, but complete donor experiments and ancestral placement remain uninspected. That limitation is not a claim of a wrong node, inadequate donor count or a requirement for human-specific experiments.
+
+### Catalytic evidence and access
+
+All seven catalytic assertions remain UNDECIDED after separate reassessment. The positive [2019 study](https://pubmed.ncbi.nlm.nih.gov/31201382/) uses human Sf9-derived preparations, active-site mutants, a CENP-E Ser2639 substrate test and BRT-1-binding-site rescue controls. D882N explicitly addresses protein stability. Those controls are substantive evidence; a hypothetical contaminant is not treated as a demonstrated explanation. The crystal structure is Drosophila, whereas the human structural representation is a model. The negative [2012 primary PDF](https://www.hubrecht.eu/app/uploads/2017/11/Kops_Research_2012_Suijkerbuijk_The-vertebrate-mitotic-checkpoint-protein-BUBR1-is-an-unusual-psuedokinase.pdf) was inspected as text at PDF Results pages 4–5 and Methods page 8: bacterial human-domain assays with active BUB1 controls and cellular IP activity persisting after catalytic changes/domain removal challenge intrinsic attribution under different conditions. Neither negative preparation results nor catalytic dispensability prove absence under every condition. The conflict remains unresolved, and no catalytic core is added.
+
+The normal 2012 cache remains abstract-only. The [2020 published Braga paper](https://www.sciencedirect.com/science/article/pii/S2211124720313863) was read through its cached abstract plus indexed publisher passages; direct full-page access failed. No complete institutional PDF is claimed for that paper or for [the KARD study](https://pubmed.ncbi.nlm.nih.gov/23079597/), whose complete normal abstract was read. Preprint/thesis versions are not independent experiments. The existing core's detailed PP2A evidence remains grounded in the separately inspected normal 2013 and 2016 sources.
+
+The five spindle-checkpoint rows retain source-specific explanations: human perturbation for the IDA, direct MCC purification for the NAS, family mapping corroborated by direct target evidence for the IEA, the inspected IBD plus target evidence for the IBA, and curator deference with independent checkpoint evidence for the IMP whose exact source assay remains uninspected.
+
+### Evidence anchors and validation
+
+Annotation-level anchors now include positive catalytic/substrate observations, partner coassociation, checkpoint interference and cytoplasmic localization. Two existing finding quotes were moved to the corresponding annotation to avoid duplication. The revised YAML contains 25 exact quote instances; aggregate repeated words never exceed 22 for one source. The earlier 18-word maximum described that earlier file and was not a repository convention or a reason to discard biologically useful evidence. Unchanged legacy notes remain historical; this appendix adds no publication quotations.
+
+Normal full candidate validation is recorded in the accompanying check result before independent peer review. This candidate has not yet been applied to canonical gene files.
+
+### First follow-up application
+
+The independently approved correction was applied and the targeted review page rendered. Full normal candidate and canonical validation passed with 40 warnings: 34 standing-policy binding advisories, two unresolved-propagation metadata advisories, one unused generated-research advisory and three core-coverage advisories. DRAFT remains appropriate. A new standard codex/gpt-6 EDIT history for PR3908 was scaffolded and validated; previous history, all source/cache bytes, 119 machine assertions, three products, 85 reference identities and both cores were preserved. The interphase-cytoplasm anchor is attached to the matching cytoplasm assertion.
