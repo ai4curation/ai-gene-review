@@ -116,6 +116,102 @@ Early observations:
 - Joining on gene symbol misses renamed genes, such as AIRIM and ATP5MD. The
   join should move to Ensembl or UniProt identifiers.
 
+## Cilium atlas and sperm locations
+
+HPA v24 and v25 added two cilia-related datasets to the Subcellular Section:
+
+- **Primary cilium atlas** ([Hansen et al. 2025, *Cell*, PMID:41005307](https://doi.org/10.1016/j.cell.2025.08.039)).
+  Antibody IF of primary cilia in three cell lines located 715 proteins to
+  four sub-ciliary classes. The paper reports that 69% of the ciliary
+  proteome is cell-type specific and that 78% of proteins vary between
+  individual cilia.
+- **Sperm flagellum and acrosome** locations from IF of human sperm.
+  Related motile-cilia mapping in fallopian tube is in
+  [Hikmet et al. 2026, PMID:42010243](https://doi.org/10.1038/s41467-026-71692-6).
+
+HPA maps these classes to GO as follows:
+
+| HPA class | GO term | Note |
+|---|---|---|
+| Primary cilium | GO:0005929 cilium | `primary cilium` (GO:0072372) is obsolete and replaced by `cilium`. `non-motile cilium` (GO:0097730) is the specific alternative |
+| Primary cilium tip | GO:0097542 ciliary tip | |
+| Primary cilium transition zone | GO:0035869 ciliary transition zone | |
+| Basal body | GO:0036064 ciliary basal body | |
+| Mid / Principal / End piece | GO:0097225 / GO:0097228 / GO:0097229 sperm midpiece / principal piece / end piece | |
+| Connecting piece | GO:0120212 sperm head-tail coupling apparatus | |
+| Flagellar centriole | GO:0005814 centriole | Generic. The sperm centrioles sit inside GO:0120212 |
+| Acrosome | GO:0001669 acrosomal vesicle | |
+
+Script: [HUMAN_PROTEIN_ATLAS/scripts/hpa_cilia.py](HUMAN_PROTEIN_ATLAS/scripts/hpa_cilia.py).
+Outputs: `data/hpa_cilia_calls.tsv` (one row per gene and location) and
+`data/hpa_cilia_summary.md`.
+
+### Findings (2026-10-03)
+
+| | Primary cilium | Sperm |
+|---|---|---|
+| Calls / genes | 1,144 / 757 | 1,238 / 596 |
+| Enhanced | 0 | 6 |
+| Supported | 178 (16%) | 119 (10%) |
+| Approved | 524 (46%) | 1,087 (88%) |
+| Uncertain | 442 (39%) | 26 (2%) |
+| Calls on reviewed genes / already in GOA from HPA | 171 / 27 | 186 / 13 |
+
+- **The cilium atlas is mostly invisible to GO.** None of its calls are
+  Enhanced, and about 85% are Approved or Uncertain, so they are not
+  exported. Only 27 of the 171 calls on genes we have reviewed are in GOA.
+  This is a different situation from the main project. We are not
+  re-evaluating annotations that already exist. We are deciding whether
+  evidence that was never exported should become annotations.
+- **Rough calibration by grade.** We counted reviewed genes whose review
+  already has non-HPA ciliary or sperm support (a text match on cilia
+  vocabulary in accepted annotations, core functions or description):
+
+  | Best HPA grade | Primary cilium | Sperm |
+  |---|---|---|
+  | Supported | 18/19 (95%) | 5/6 (83%) |
+  | Approved | 13/37 (35%) | 31/87 (36%) |
+  | Uncertain | 12/53 (23%) | 0/4 (0%) |
+
+  Supported calls agree with existing knowledge by definition. For Approved
+  and Uncertain calls, two thirds of the genes have no other ciliary
+  evidence in our reviews. These are either new ciliary proteins, which is
+  the atlas's claim, or false positives.
+- **Approved calls include both kinds.** Genuine ciliary genes include
+  AHI1, CFAP300, CFAP418, ANKS6, DNAJB13, DYNLT2B, INTU and ADGRV1.
+  Implausible ones include PHGDH, MAPK1, IDO1, TDO2, DDC, MTHFR and LRAT,
+  metabolic enzymes and kinases with no ciliary literature in our reviews.
+  A cilium IDA from one antibody in one cell line should not be accepted on
+  its own.
+- **Uncertain calls can still be right.** LZTFL1 (a BBSome regulator), NEK1
+  and LRRK2 have Uncertain cilium calls but well-established ciliary
+  biology. HPA's "Uncertain" grade reflects disagreement with UniProt or low
+  RNA, not a failed antibody.
+- **Sperm midpiece calls are often trivial.** The midpiece is packed with
+  mitochondria, so Approved midpiece and principal-piece calls on
+  respiratory-chain and TCA enzymes (NDUFB11, NDUFS2, ATP5F1D, DLAT, AIFM1,
+  CPS1) are probably real. They add nothing beyond `mitochondrion`, and as
+  annotations they would be over-annotations.
+- **Some mappings are too generic.** `Flagellar centriole` → `centriole` loses
+  the sperm context. `Primary cilium` → `cilium` loses the non-motile context
+  that `non-motile cilium` would keep.
+
+### Proposed handling
+
+1. Do not treat Approved or Uncertain cilium-atlas calls as annotation
+   evidence by themselves. Use them as **leads**: when a review has
+   independent support (literature, IFT/BBSome interactions, ciliopathy
+   genetics, CiliaCarta/SYSCILIA membership), cite PMID:41005307 as
+   corroborating IDA.
+2. For reviewed genes with ciliary biology but no cilium annotation, add
+   `NEW` cilium terms citing the atlas plus the independent evidence, per the
+   `NEW` rules in CLAUDE.md.
+3. Treat the atlas's cell-type and single-cilium heterogeneity as context, not
+   as a reason to reject. A protein seen in the cilia of one of three cell
+   lines can still be a genuine ciliary component.
+4. For sperm midpiece calls on mitochondrial proteins, do not propose
+   annotations. `mitochondrion` already covers them.
+
 ## Approach
 
 For each worklist annotation:
@@ -180,6 +276,15 @@ Possible artifacts or non-functional sites:
 - [ ] UNDECIDED (needs a decision): human/APC, human/ARL13B, human/CDK7, human/COPS2, human/CRY2, human/DNAJB2, human/PTPN11, human/SERINC5, human/SIRT1, human/SYNE2, human/WEE1
 - [ ] MODIFY (confirm replacement): human/AP1B1, human/CRY1, human/FLG, human/MORC3, human/TRAPPC12
 
+## Cilium atlas (PMID:41005307) and sperm locations
+- [x] Characterize cilia/sperm calls by grade, GOA export and independent support (`hpa_cilia.py`)
+- [ ] Fetch PMID:41005307 into `publications/` (`just fetch-gene` will not pull it; use the publication fetcher) so reviews can quote it
+- [ ] Get the per-protein supplementary table (cell line, sub-ciliary class, heterogeneity) and add it to the join
+- [ ] Build a positive and negative control set (CiliaCarta / SYSCILIA gold standard vs non-ciliary housekeeping proteins) to calibrate Approved and Uncertain precision properly, replacing the text match
+- [ ] Ciliary genes in our reviews with Approved/Uncertain atlas calls and no cilium annotation: decide on `NEW` with corroborating evidence (start with human/AHI1, human/ANKS6, human/LZTFL1, human/NEK1, human/DYNLT2B, human/DNAJB13, human/CFAP418)
+- [ ] Implausible Approved calls: record as atlas false-positive candidates (human/PHGDH, human/MAPK1, human/IDO1, human/TDO2, human/DDC, human/MTHFR, human/LRAT)
+- [ ] Raise with GO/HPA: `Flagellar centriole` → `centriole` and `Primary cilium` → `cilium` lose context
+
 ## Tier 3: not yet reviewed
 - [ ] Scope new reviews of genes with Enhanced main-location calls that have no review yet
 
@@ -196,9 +301,18 @@ Possible artifacts or non-functional sites:
   artifacts. Before marking an HPA call over-annotated, consider whether
   MODIFY to the specific term is more accurate.
 
+- Added the cilium atlas analysis (`hpa_cilia.py`). The atlas is
+  PMID:41005307. Almost none of it reaches GOA because about 85% of calls are
+  Approved or Uncertain. Calibrated against our reviews, about a third of
+  Approved calls have independent ciliary support. Use the atlas as leads and
+  corroboration, not as standalone IDA evidence.
+
 ## HPA / GOA feedback (to collect)
 
 - `GO_REF:0000052` describes literature-gated export, but Enhanced
   (orthogonally validated) calls are exported as well. The description should
   be updated.
 - Stale exports that HPA itself has downgraded (see Tier 2).
+- The cilium atlas mappings `Flagellar centriole` → `centriole` and
+  `Primary cilium` → `cilium` could use `sperm head-tail coupling apparatus`
+  and `non-motile cilium`.
