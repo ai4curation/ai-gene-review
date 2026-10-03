@@ -39,29 +39,11 @@ annotation-reviewer sidecar for a systematic pass over mouse-specific GO rows.
   processing.
 - Cysteine endopeptidase, DISC/CD95-DISC, cytosol, death-receptor, ripoptosome,
   and negative-necroptosis rows were retained. Generic peptidase rows were
-  tightened to `GO:0004197`, while `GO:0097194 execution phase of apoptosis` and
-  `GO:1900119 positive regulation of execution phase of apoptosis` were replaced
-  by `GO:0051604 protein maturation` because Casp8 is an initiator that matures
-  effector substrates rather than an executioner-caspase participant.
+  tightened to `GO:0004197`, `GO:0097194 execution phase of apoptosis` rows were
+  narrowed to `GO:1900119 positive regulation of execution phase of apoptosis`,
+  and existing `GO:1900119` rows were retained because Casp8 directly activates
+  effector caspases but is not itself an executioner-caspase participant.
 - Generic `GO:0005515 protein binding` rows were removed unless the local cache
   could not expose the exact interactor. `PMID:11684016`, `PMID:21382479`,
   `PMID:24113711`, `PMID:24557836`, and `PMID:26649818` are still
   `UNDECIDED` pending full-text checks.
-
-## 2026-10-02 PR follow-up
-
-- Cytoplasm and cytosol rows reflect soluble procaspase-8 plus recruitment to
-  cytosolic or receptor-proximal signaling complexes, while the isolated
-  mitochondrion HDA row remains over-annotated relative to DISC and ripoptosome
-  localization.
-- Broad apoptotic-process, apoptosis-regulation, apoptotic-signaling, TRAIL,
-  DISC, and CD95-DISC transfers were reviewed against the direct Casp8
-  death-receptor initiator role and narrowed when they named a parent rather
-  than a direct death-receptor or DISC term.
-- Macrophage-differentiation and hepatocyte-apoptosis rows from PMID:15322156
-  were kept as non-core cell-type and tissue contexts; the abstract separately
-  reports macrophage differentiation arrest and hepatocyte hypersensitivity
-  after Casp8 deletion.
-- Neuron-, thymocyte-, and other cell-type-specific apoptosis rows were kept
-  non-core because they are contextual branches of Casp8 death signaling, while
-  the direct work remains receptor recruitment and substrate cleavage.
