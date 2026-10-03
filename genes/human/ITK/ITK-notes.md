@@ -40,3 +40,29 @@ Disease: LPFS1, R335W in the SH2 domain destabilizes ITK; patients lack NKT cell
   is well known but the cached evidence (PMID:17060314) shows PH-dependent membrane recruitment, not direct
   lipid binding; not added.
 - IntAct flags the P10686 PLCG1 interaction as Xeno (cross-species); recorded as a suggested question.
+
+## Deep research integration (falcon)
+
+Report: `ITK-deep-research-falcon.md` (completed in this session, ~20 min). Used as leads only.
+
+Adopted (traced to primary papers, cached and quoted):
+- PLCG1 substrate selection by phosphotyrosine-independent docking of PLCG1 SH2C onto the ITK kinase domain.
+  The report cites a 2008 PhD thesis (Min); the peer-reviewed papers are PMID:17439160, PMID:19955438
+  ["phosphorylation of PLC-gamma1 by Itk requires a direct, phosphotyrosine-independent interaction between the Src homology 2 (SH2) domain of PLC-gamma1 and the kinase domain of Itk"]
+  and PMID:23219468 (docking surface = acidic G-helix patch on ITK). Added to core function 1.
+- Human ITK p.Q17X with CD4 lymphopenia and absent iNKT cells: PMID:25061172
+  ["illustrating that the absence of iNKT-cells is a primary phenotype of ITK deficiency"]. Added to NKT row (still non-core) and description.
+- ITK-Ca2+ switch between Th17 and Treg-like cells (mouse): PMID:39042726. Added as support on the cytokine
+  production row, kept non-core (necessity, mouse).
+
+Rejected / not used:
+- Drug development content (soquelitinib/CPI-818 Cys442 binding, BSJ-05-037 degrader, NCT trials, ibrutinib): not
+  relevant to GO annotation.
+- Candidate substrates T-bet, TIM-3, TFII-I: the report itself flags evidence as weak; not added (T-bet left as a
+  suggested question).
+- 2024 single-patient case report (Di Filippo): confounded, not used.
+
+Report errors / caveats:
+- Uses mouse numbering Tyr511 for the LCK-phosphorylated activation-loop tyrosine; human Q08881 is Tyr512.
+- Cites a thesis instead of the published papers for the docking mechanism.
+- Nothing in the report changed any annotation action; it confirmed the core MF (GO:0004715) and the TCR pathway placement.

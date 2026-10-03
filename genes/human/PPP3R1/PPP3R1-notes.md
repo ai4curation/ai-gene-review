@@ -20,3 +20,20 @@ Reviewed for the ADAPTIVE_IMMUNITY project (TCR signaling; calcineurin-NFAT bran
 - Calcineurin complex rows ACCEPT, consistent with PPP3CA and PPP3CB reviews (both ACCEPT GO:0005955).
 - No NEW terms. Comparator: PPP3CA and PPP3CB carry only TAS T cell activation, not GO:0050852 TCR signaling pathway; calcineurin's TCR role is captured by GO:0033173.
 - Consistency with PPP3CB (finished): catalytic MF GO:0033192 in GO:0005955; PPP3R1 core function carries contributes_to GO:0033192 and in_complex GO:0005955; Ca2+ binding is PPP3R1's own MF. GO:0030346 (PP2B binding) not used, as self-referential for a calcineurin subunit.
+
+## Deep research integration (falcon)
+
+The Falcon report (`PPP3R1-deep-research-falcon.md`, finished 2026-10-03 after about 15 minutes) arrived after the annotation review. Every substantive claim was sorted as follows. **No annotation action or core function changed.**
+
+Adopted (confirming; already supported by cached primary papers):
+- CnB is the non-catalytic EF-hand Ca2+ sensor/regulatory subunit and CnA supplies catalysis. This matches PMID:11123943, PMID:26794871 and PMID:23468591, and supports MODIFY of the phosphatase-activity rows to GO:0008597 and the contributes_to GO:0033192 core function.
+- Calcineurin holoenzyme dephosphorylates NFAT (PMID:8631904) → GO:0033173.
+- CIB1-dependent sarcolemmal targeting in cardiomyocytes (PMID:20639889) → CIB1 binding and sarcolemma kept as non-core.
+
+Not adopted (not traced to cached primary text; would not change annotations):
+- Li et al. 2009 (doi:10.1002/prot.22474): Ca2+-free CnB still binds CnA. Consistent with the obligate heterodimer but not needed.
+- Xia et al. 2024 (Autophagy): PPP3R1 recruited to damaged lysosomes with Gal3 and binds TFEB. A possible lysosome location and TFEB-related process, but it is a single cell-culture study and was not cached or verified here. Left as a lead.
+- Mencarelli et al. 2018: Cd4-Cre Cnb1 deletion in mouse causes colitis with enhanced JAK2-STAT4 signaling. This is a knockout phenotype (necessity, not participation), so no process term was proposed, per ADAPTIVE_IMMUNITY rule 3.
+- Reed et al. 2020: Schwann-cell Cnb1 deletion and TFEB/autophagy after nerve injury. Knockout phenotype, not adopted.
+
+Report errors or caveats: the report states that myristoylation "should not be interpreted as proof" of membrane binding. This is a fair caution, but PMID:22343722 explicitly describes membrane tethering of CNB via its myristoyl group, so the plasma membrane rows were kept. No wrong-paper citations were found; most sources are reviews (Roy & Cyert 2020, Nolze 2023, Fonodi 2024, Masaki 2022, Thiel 2021).
