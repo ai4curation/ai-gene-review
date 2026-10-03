@@ -47,3 +47,17 @@ Normal validation, including references, GOA consistency and authored GO terms, 
 ## 2026-10-03: reviewed record
 
 The independently approved review passed full normal canonical validation and status reporting, retaining DRAFT and 33 standing-policy binding advisories. All 49 source assertions, both named products and source-cache bytes are preserved. The standard [CREATE history record](../../../history/genes/human/CABP2/2026-10-03T201721Z-codex-22ff89.yaml) passed history validation.
+
+## 2026-10-03: retinal evidence follow-up
+
+The source-access statements in the initial review above describe the earlier checkpoint. A subsequently recovered normal full-text cache for [PMID:27822497](https://pubmed.ncbi.nlm.nih.gov/27822497/) now supersedes the earlier abstract-only, external-access limitation for that paper. Its exact bibliographic identity and complete abstract were checked, and selected unique Methods, Results and Discussion were read. Figure images and supplements were not inspected.
+
+The experiments used mouse retinal whole mounts and cone-dominated light stimulation. Cabp2 loss reduced excitatory light-response amplitude and modestly slowed ON-alpha ganglion-cell responses; tested OFF-transient responses were not significantly altered. The study also reports preserved gross retinal/ribbon morphology. Its antibody cross-reactivity was investigated using Cabp1/Cabp2 knockout controls; that boundary matters when interpreting localization. These data support the existing broad visual-perception annotations through mouse ortholog evidence and curator judgment. They do not establish human retinal physiology or identify a particular native retinal channel target for CaBP2.
+
+Both visual-perception rows now cite PMID:27822497 as positive evidence. PMID:28183797 is removed from their positive support, while its apparently intact scotopic ERG remains a contextual caveat in the reasons. PMID:27822497 itself reports unchanged ERG b-waves in Discussion as data not shown. Ganglion-cell synaptic currents and ERG provide different circuit readouts, so the preserved ERG does not erase the observed ganglion phenotype. The description now explicitly attributes the retinal evidence to mouse ortholog studies. The exact phototransduction step and PAINT node placement remain unresolved.
+
+All 49 machine-sourced assertions, their actions, both named products, the auditory channel-regulator core and the 10 prior reference entries are preserved. One additional reference and one 14-word Results quotation are added; all 10 earlier quotation entries are unchanged. Calcium sensing remains within the integrated regulatory core. No additional annotation or change to the unresolved phototransduction decision is introduced.
+
+### Retinal follow-up application
+
+The independently approved candidate passed full normal canonical validation, status reporting, targeted rendering and standard EDIT history validation. DRAFT retains 33 expected standing-policy binding advisories. All 49 source assertions and actions, both products, the core, earlier sources and history are preserved. See the [retinal follow-up history](https://github.com/ai4curation/ai-gene-review/blob/main/history/genes/human/CABP2/2026-10-03T232702Z-codex-1f111a.yaml).
