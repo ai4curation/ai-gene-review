@@ -38,3 +38,34 @@ Key primary evidence:
 - Early endosome membrane (Reactome, Nef pathway): non-core.
 - NEW: plasma membrane raft (GO:0044853), ISS from mouse palmitoylation data; CD8A has IDA raft.
 - Curation gap (not a knowledge gap): no GO CC for the CD8 alpha-beta heterodimer.
+
+## Deep research integration (falcon)
+
+Report: `CD8B-deep-research-falcon.md` (Edison/falcon, finished 2026-10-03, ~23 min). Used as leads only.
+
+Adopted (each traced to a cached primary paper):
+- Human primary-T-cell evidence that CD8 alpha-beta (not alpha-alpha) is needed for optimal HLA class I
+  coreceptor function, and that the extracellular domains suffice
+  [PMID:23738014 "for optimal antigen-specific HLA class I restricted CD4(+) T-cell reactivity the extracellular domains of the CD8α and ß subunits are sufficient"].
+  Added as support for coreceptor activity and core function 1.
+- Human CD8B membrane isoforms M-1 to M-4; M-1 naive, M-4 effector memory; M-4 tail internalization motif
+  [PMID:23533620 "The M-1 isoform which is the equivalent of murine CD8β, is predominantly expressed in naïve T cells, whereas, the M-4 isoform is predominantly expressed in effector memory T cells."].
+  Added to description only (no GO change).
+- Mouse CD8 beta CDR2/CDR3 loops required for coreceptor activity
+  [PMID:16356863 "mutations in CD8beta CDR2 and CDR3 loops abolish CD8alphabeta coreceptor activity"].
+  Added as support for MHC class I protein binding.
+- Confirms CxC LCK-binding motif is on CD8 alpha, not CD8 beta (agrees with my reading; cited on the GO:0007169 MODIFY row).
+
+Not adopted:
+- Nanobody radiotracer imaging (De Groof 2024), transcriptomics (Akula 2024), CD8ab gamma-delta T cells in T-ALL
+  (Sumaria 2024): applications/expression context, no bearing on GO terms.
+- Stalk sialylation tuning MHC affinity: from the Srinivasan 2024 review, mostly mouse; not traced to a primary
+  human paper, so not used.
+- Kd range 10-500 uM: review-level range across CD8 complexes, not a CD8B measurement.
+
+Report errors/caveats:
+- Table says the membrane-proximal cysteine of the TM "contributes to disulfide stabilization"; the
+  primary literature (Arcaro 2000/2001) assigns the membrane-proximal tail cysteine to palmitoylation, and the
+  interchain disulfide is in the stalk region. Not used.
+- No other factual errors found; the report correctly flags that the bound structures are mouse and that
+  familial CD8 deficiency is a CD8A, not CD8B, defect.
