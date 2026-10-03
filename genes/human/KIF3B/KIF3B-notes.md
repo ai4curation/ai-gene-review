@@ -22,4 +22,6 @@
 
 ## Deep research
 See below.
-Deep research FAILED for KIF3B. `just deep-research-falcon human KIF3B --fallback perplexity-lite` timed out at 600 s, and the perplexity fallback is unavailable in this environment. A rerun with `--timeout 2400` also timed out ("Provider falcon timed out after 2400s"). The review was done from the cached publications (PMID:7559760, 9865700, 16298999, 19635168, 32386558) and the UniProt record. No *-deep-research-*.md file exists for KIF3B.
+Falcon deep research: the first run (600 s timeout, perplexity fallback unavailable) was stopped. The rerun with a 2400 s timeout was reported by the wrapper as a timeout ("Provider falcon timed out after 2400s"), but falcon still wrote a complete report (KIF3B-deep-research-falcon.md, duration 2284 s). Points used:
+- [file:human/KIF3B/KIF3B-deep-research-falcon.md "In *human* hTERT-RPE1 cells, KIF3B knockout prevented cilium formation, while IFT-A and IFT-B components could still assemble and reach the mother centriole."] (Tasaki et al. 2025, not cached.) This supports KIF3B being required for ciliogenesis downstream of IFT assembly.
+- Non-ciliary: Rab11-FIP5 binds the KIF3B tail, and KIF3B controls endosome positioning/transferrin receptor recycling (Schonteich 2008, as reported in the deep research). This is consistent with treating vesicle transport as a non-ciliary use of the motor.

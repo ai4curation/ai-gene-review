@@ -53,5 +53,5 @@ listed below.
 
 The re-run `just deep-research-falcon human TCTN1 --timeout 2400` succeeded and produced
 `TCTN1-deep-research-falcon.md` (2026-10-03). I read it after drafting the review. Its summary agrees with the
-cached primary literature used here and changes none of the curation decisions. The review's supporting quotes come
-from the cached publications, not from the deep-research file.
+cached primary literature used here and changes none of the curation decisions. Annotation-level supporting quotes come
+from the cached publications. The first core function also cites one sentence from the deep-research file.
