@@ -21,11 +21,11 @@ on an honest `knowledge_gaps` section grounded in domain composition, orthology,
   These RS/RD-rich low-complexity tracts are the reason PANTHER places it in the
   SR-repetitive-matrix family (below). [file:yeast/JIP4/JIP4-uniprot.txt]
 - **No PWI/RRM or catalytic domain** is annotated in UniProt. The 2026-09 UniProt record now
-  lists two JIP4-family Pfam/InterPro entries, `JIP4_N` and `JIP4_helical`, in addition to
-  disorder + compositional bias, but these domains do not establish a nucleic-acid-binding or
-  enzymatic activity. This is important: the human family members that carry the splicing
-  function have a folded **PWI** nucleic-acid-binding domain; JIP4 does not have one
-  annotated. [file:yeast/JIP4/JIP4-uniprot.txt]
+  lists two newly defined yeast JIP4 Pfam/InterPro entries, `JIP4_N` and `JIP4_helical`,
+  in addition to disorder + compositional bias, but these domains do not establish
+  a nucleic-acid-binding or enzymatic activity. This is important: the human family
+  members that carry the splicing function have a folded **PWI** nucleic-acid-binding
+  domain; JIP4 does not have one annotated. [file:yeast/JIP4/JIP4-uniprot.txt]
 - **Phosphoprotein** (KW: Phosphoprotein). Eight phosphoserines mapped by MS:
   - Ser-48, Ser-51, Ser-510, Ser-552, Ser-775 [PMID:19779198 — Cdk1 substrate global analysis]
   - Ser-48, Ser-360, Ser-552 [PMID:18407956 — multidimensional chromatography phosphoproteome]
@@ -68,10 +68,15 @@ This family assignment is the sole basis for the **IBA** annotations in GOA:
 - `involved_in regulation of mRNA splicing, via spliceosome` (GO:0048024) — with/from
   FB:FBgn0036340 (Drosophila), PANTHER:PTN000567596. [file:yeast/JIP4/JIP4-goa.tsv]
 - Current PAINT also lists an IBA `RNA binding` GO:0003723 from the same `PTN000567596`
-  node. The QuickGO TSV row set still omits this 2026-08-28 PAINT assertion, and the
-  2026-09 UniProt record no longer exposes it as a GO cross-reference either; validation
-  rejects non-GOA rows unless they are proposed NEW annotations, so keep the review DRAFT
-  unless and until the GOA cache contains the live row. [file:yeast/JIP4/JIP4-uniprot.txt;
+  node, but unlike the animal-seeded splicing rows this 2026-08-28 RNA-binding IBD
+  is seeded only by Arabidopsis `AGI_LocusCode:AT2G29210`. A plant-seeded eukaryote-root
+  RNA-binding assertion is a distinct claim from the metazoan SRm160-style splicing
+  transfers; without target-specific biochemical evidence it remains an unverified
+  PAINT-internal assertion for yeast JIP4, but it should not be dismissed as the
+  same animal-splicing innovation. The QuickGO TSV row set still omits this PAINT
+  assertion, and the 2026-09 UniProt record no longer exposes it as a GO cross-reference
+  either; validation rejects non-GOA rows unless they are proposed NEW annotations,
+  so no non-GOA RNA-binding review row was added. [file:yeast/JIP4/JIP4-uniprot.txt;
   file:interpro/panther/PTHR23148/PTHR23148-paint.tsv]
 
 ### Caveat on the IBA splicing propagation (KEY reasoning)
@@ -201,11 +206,15 @@ gene name:
   mRNA-splicing regulation row records the Drosophila seed and the same PANTHER node.
 - Refetched the PTHR23148 PAINT cache and confirmed the same root node still carries three
   node-level assertions: `GO:0005681`, `GO:0048024`, and the 2026-08-28 `GO:0003723` RNA
-  binding assertion. The RNA-binding assertion remains absent from QuickGO and has now also
+  binding assertion. The RNA-binding assertion is the only plant-seeded assertion at
+  that node (`AGI_LocusCode:AT2G29210`), remains absent from QuickGO, and has now also
   disappeared from UniProt's GO cross-references, so no non-GOA RNA-binding row was added.
 - Updated the domain caveat for UniProt entry version 149: the record now lists Pfam/InterPro
-  `JIP4_N` and `JIP4_helical`, but still no PWI/RRM or catalytic domain. These new
-  JIP4-family domains do not rescue the SRRM1 splicing-function transfer.
+  `JIP4_N` and `JIP4_helical`, but still no PWI/RRM or catalytic domain. The InterPro/Pfam
+  API descriptions and seed alignments show these are newly defined domains in yeast
+  JIP4 and related proteins, not metazoan JIP4/SPAG9/JLP kinesin-adaptor domains;
+  their functions remain undetermined, so they do not rescue the SRRM1 splicing-function
+  transfer.
 - Searched again for recent direct JIP4/YDR475C literature. No newer paper assigning a
   target-specific yeast molecular function, RNA-binding activity, localization, or
   spliceosome role was found.
