@@ -3,7 +3,7 @@
 Cytoplasmic dynein 2 intermediate chain 1 (WDR60; FAP163 homolog), human.
 
 ## Deep research status
-DEEP_RESEARCH_STATUS_PLACEHOLDER
+Falcon deep research succeeded (`DYNC2I1-deep-research-falcon.md`; the first attempt with the 600 s default timed out, and the rerun with --timeout 2400 succeeded). Its summary agrees with the publication-based review below. The review's supporting quotes come from the cached publications.
 
 ## Summary of function
 - A bona fide dynein-2 intermediate chain. [PMID:25205765 "We show that the proteins encoded by the ciliopathy genes WDR34 and WDR60 are bona fide dynein-2 intermediate chains and are both required for dynein-2 function."]

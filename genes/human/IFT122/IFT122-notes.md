@@ -23,3 +23,6 @@ IFT122 is a core-subcomplex subunit of IFT-A (IFT122/IFT140/IFT144 core; IFT43/I
 
 ## Deep research
 See below.
+Falcon deep research succeeded (IFT122-deep-research-falcon.md). It is consistent with the review:
+- [file:human/IFT122/IFT122-deep-research-falcon.md "It joins IFT-A subassemblies, helps incorporate IFT-A into intraflagellar transport trains and provides part of the binding surface for the membrane-cargo adaptor TULP3."]
+- It also reports IFT-A/IFT-B coupling via IFT122-IFT144 and IFT88-IFT52 (Kobayashi 2021, not cached), and that IFT122 CED mutants mislocalize ARL13B and INPP5E (not used for annotations).

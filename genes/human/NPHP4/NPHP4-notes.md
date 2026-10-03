@@ -25,3 +25,6 @@
 ## HPA cilium atlas vs module role
 - HPA (member_evidence.md): no cilium/centrosome call; HPA main location "Nucleoplasm". Hansen et al. 2025 atlas [PMID:41005307 "We found that 69% of the ciliary proteome is cell-type specific, and 78% exhibited single-cilia heterogeneity."]. The HPA antibody did not detect NPHP4 at cilia in the three atlas cell lines. The nucleoplasm call is interesting given the reported nuclear pool (JADE1, TAZ; PMID:22654112, PMID:21555462), but it may also be antibody background. Absence of a ciliary call does not contradict the strong TZ evidence across species (low-abundance TZ proteins are often missed).
 - Module role: NPHP module component; "transition zone scaffold"; TZ assembly. Among the NPHP-module genes NPHP4 fits the scaffold label best (adaptor that bridges NPHP1 and RPGRIP1L; needed for NPHP1 TZ recruitment; with the MKS module needed for Y-links). core_functions follow the module, with protein-macromolecule adaptor activity as the MF and GO:1905349 as the process.
+
+## Deep research outcome
+- Falcon succeeded on the `--timeout 2400` rerun (`NPHP4-deep-research-falcon.md`; TMEM216 needed a second 2400 s attempt after the first was killed with exit 137). Its synthesis matches the conclusions above (non-enzymatic transition-zone organizer/adaptor). No annotation decisions changed after reading it.

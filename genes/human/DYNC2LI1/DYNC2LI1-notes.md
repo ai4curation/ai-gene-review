@@ -3,7 +3,7 @@
 Cytoplasmic dynein 2 light intermediate chain 1 (D2LIC, LIC3), human.
 
 ## Deep research status
-DEEP_RESEARCH_STATUS_PLACEHOLDER
+Falcon deep research succeeded (`DYNC2LI1-deep-research-falcon.md`; the first attempt with the 600 s default timed out, and the rerun with --timeout 2400 succeeded). Its summary agrees with the publication-based review below. The review's supporting quotes come from the cached publications.
 
 ## Summary of function
 - Identified as a D2LIC that binds DHC2. [PMID:11907264 "D2LIC subunit interacts specifically with DHC2 (or cDhc1b) in both reciprocal immunoprecipitations and sedimentation assays."] It was originally seen at the Golgi [PMID:11907264 "D2LIC colocalizes with DHC2 at the Golgi apparatus throughout the cell cycle."].

@@ -3,7 +3,7 @@
 Cytoplasmic dynein 2 heavy chain 1 (DHC2, DHC1b), human. Catalytic AAA+ motor subunit of cytoplasmic dynein-2.
 
 ## Deep research status
-DEEP_RESEARCH_STATUS_PLACEHOLDER
+Falcon deep research succeeded (`DYNC2H1-deep-research-falcon.md`; the first attempt with the 600 s default timed out, and the rerun with --timeout 2400 succeeded). Its summary agrees with the publication-based review below. The review's supporting quotes come from the cached publications.
 
 ## Summary of function
 - Dynein-2 is the retrograde IFT motor. [PMID:31451806 "Dynein-2, the ubiquitous motor for retrograde IFT, is crucial for cilia biogenesis"]

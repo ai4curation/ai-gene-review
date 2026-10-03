@@ -50,3 +50,10 @@ The first `just deep-research-falcon human MKS1 --fallback perplexity-lite` run 
   basal body, and the literature places MKS1 at the TZ. The nucleolar/nucleoplasmic signal has no literature support and
   is not represented in GOA.
 - core_functions follow the module role (MKS complex; TZ and basal body; cilium assembly; protein localization to TZ).
+
+## Deep research outcome
+
+The re-run `just deep-research-falcon human MKS1 --timeout 2400` succeeded and produced
+`MKS1-deep-research-falcon.md` (2026-10-03). I read it after drafting the review. Its summary agrees with the
+cached primary literature used here and changes none of the curation decisions. The review's supporting quotes come
+from the cached publications, not from the deep-research file.

@@ -3,7 +3,7 @@
 ADP-ribosylation factor-like protein 3, human. Small Arf-family GTPase; cargo-release factor for lipidated ciliary proteins.
 
 ## Deep research status
-DEEP_RESEARCH_STATUS_PLACEHOLDER
+Falcon deep research FAILED: the 600 s default timed out (the perplexity-lite fallback is unavailable in this environment), and the rerun with --timeout 2400 also timed out ("Provider falcon timed out after 2400s"). The review was done directly from the cached publications and the UniProt record. No deep-research file exists for ARL3.
 
 ## Summary of function
 - Nucleotide binding with unusual biochemistry. [PMID:8034651 "Purified recombinant human Arl3 was shown to bind guanine nucleotides but lacks ARF activity and intrinsic or ARF GTPase-activating protein-stimulated GTPase activity."]

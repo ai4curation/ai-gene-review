@@ -22,3 +22,6 @@
 
 ## Deep research
 See below.
+Falcon deep research succeeded (KIF3A-deep-research-falcon.md). Points used:
+- [file:human/KIF3A/KIF3A-deep-research-falcon.md "it moves IFT assemblies along ciliary axonemal microtubules from the basal body/ciliary base toward the tip."]
+- The deep research reports acute inhibition of engineered kinesin-II (Engelke 2019, not cached), which stops IFT and causes cilium loss. It also reports that KIF3A-KIF3B-KAP3 co-immunoprecipitates with the IFT-B connecting tetramer. Both support the core anterograde IFT role.

@@ -19,3 +19,6 @@
 
 ## Deep research
 See below.
+Falcon deep research succeeded (WDR35-deep-research-falcon.md). Points used:
+- [file:human/WDR35/WDR35-deep-research-falcon.md "Reintroducing wild-type WDR35 rescued IFT88 retrograde transport and ARL13B entry."]
+- WDR35-dependent periciliary vesicle coat (Quidwai et al. 2021, mouse; not cached): the IFT139-IFT121-IFT43 trimer binds phosphatidic acid. This supports the COPI-like-coat question in suggested_questions; no annotation proposed.

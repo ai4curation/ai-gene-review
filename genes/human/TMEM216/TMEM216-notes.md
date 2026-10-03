@@ -32,3 +32,6 @@
 ## HPA cilium atlas vs module role
 - HPA (member_evidence.md): no cilium/centrosome call; "not in HPA" (no HPA v25 subcellular data). The Hansen et al. 2025 cilium atlas [PMID:41005307 "We employed antibody-based spatial proteomics to expand the Human Protein Atlas to primary cilia."] therefore gives no evidence either way. A small tetraspan protein may lack a validated antibody.
 - Module role: MKS module component (diffusion barrier; TZ assembly). Literature supports MKS module membership and TZ/ciliary-base localization. Direct evidence that TMEM216 itself builds the TZ is weaker than for TMEM231/TCTN2. core_functions therefore list MKS complex, TZ location, protein localization to TZ and cilium assembly, but not TZ assembly itself. This is a mild divergence from the module, which assigns TZ assembly to the whole MKS complex. Holding it at the complex level is fine.
+
+## Deep research outcome
+- Falcon succeeded on the `--timeout 2400` rerun (`TMEM216-deep-research-falcon.md`; TMEM216 needed a second 2400 s attempt after the first was killed with exit 137). Its synthesis matches the conclusions above (non-enzymatic transition-zone organizer/adaptor). No annotation decisions changed after reading it.

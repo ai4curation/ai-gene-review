@@ -3,7 +3,7 @@
 Retinal rod rhodopsin-sensitive cGMP 3',5'-cyclic phosphodiesterase subunit delta (PDEdelta, PrBP/delta), human. A prenyl-binding, GDI-like carrier.
 
 ## Deep research status
-DEEP_RESEARCH_STATUS_PLACEHOLDER
+Falcon deep research succeeded (`PDE6D-deep-research-falcon.md`; the first attempt with the 600 s default timed out, and the rerun with --timeout 2400 succeeded). Its summary agrees with the publication-based review below. The review's supporting quotes come from the cached publications.
 
 ## Summary of function
 - Original description: [PMID:9570951 "A novel subunit, termed PDE delta (HGMW-approved symbol, PDE6D; MW 17 kDa), is able to detach PDE partially from bovine rod outer segment membranes under physiological conditions."]

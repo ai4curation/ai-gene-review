@@ -3,7 +3,7 @@
 Cytoplasmic dynein 2 intermediate chain 2 (WDR34; FAP133 homolog), human.
 
 ## Deep research status
-DEEP_RESEARCH_STATUS_PLACEHOLDER
+Falcon deep research succeeded (`DYNC2I2-deep-research-falcon.md`; the first attempt with the 600 s default timed out, and the rerun with --timeout 2400 succeeded). Its summary agrees with the publication-based review below. The review's supporting quotes come from the cached publications.
 
 ## Summary of function
 - A dynein-2 intermediate chain. [PMID:25205765 "The above data indicate that both WDR34 and WDR60 are intermediate chains of the dynein-2 complex."] Localization: [PMID:25205765 "mGFP–WDR34 localizes to centrosomes and primary cilia in serum-starved cells as well as showing a diffuse cytoplasmic distribution."]

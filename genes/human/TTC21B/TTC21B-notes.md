@@ -21,3 +21,6 @@
 
 ## Deep research
 See below.
+Falcon deep research succeeded (TTC21B-deep-research-falcon.md). Points used:
+- [file:human/TTC21B/TTC21B-deep-research-falcon.md "IFT-A can still be purified without IFT139"]. This is consistent with Hirano 2017.
+- The deep research reports that TULP3 contacts IFT-A through IFT122/IFT140 and that IFT139 is not required for that interface. This supports treating TTC21B as a retrograde/train-organizing subunit rather than a direct cargo adaptor.

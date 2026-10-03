@@ -22,3 +22,4 @@
 
 ## Deep research
 See below.
+Deep research FAILED for KIF3B. `just deep-research-falcon human KIF3B --fallback perplexity-lite` timed out at 600 s, and the perplexity fallback is unavailable in this environment. A rerun with `--timeout 2400` also timed out ("Provider falcon timed out after 2400s"). The review was done from the cached publications (PMID:7559760, 9865700, 16298999, 19635168, 32386558) and the UniProt record. No *-deep-research-*.md file exists for KIF3B.

@@ -41,3 +41,10 @@ The first falcon run failed with HTTP 429 (rate limit), perplexity fallback unav
 - Module role: MKS-module TZ component (stage 3). Consistent (basal body call = TZ at confocal resolution). The Golgi
   and nucleolar main-location calls are not supported by the ciliary literature and are not used for core functions.
 - core_functions follow the module role.
+
+## Deep research outcome
+
+The re-run `just deep-research-falcon human B9D2 --timeout 2400` succeeded and produced
+`B9D2-deep-research-falcon.md` (2026-10-03). I read it after drafting the review. Its summary agrees with the
+cached primary literature used here and changes none of the curation decisions. The review's supporting quotes come
+from the cached publications, not from the deep-research file.

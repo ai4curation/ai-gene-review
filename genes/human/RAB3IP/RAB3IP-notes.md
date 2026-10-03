@@ -59,3 +59,10 @@ First falcon run (600 s timeout; perplexity fallback unavailable) did not comple
   "ciliary membrane supply/extension" part of stage 2 rather than CV formation per se. core_functions state this
   explicitly (GEF activity; cilium assembly; centrosome/vesicle). No NEW GO:1905556 (ciliary vesicle assembly)
   annotation is proposed.
+
+## Deep research outcome
+
+The re-run `just deep-research-falcon human RAB3IP --timeout 2400` succeeded and produced
+`RAB3IP-deep-research-falcon.md` (2026-10-03). I read it after drafting the review. Its summary agrees with the
+cached primary literature used here and changes none of the curation decisions. The review's supporting quotes come
+from the cached publications, not from the deep-research file.
