@@ -344,7 +344,51 @@ Expanded review to 15 additional genes using the strict over-annotation criteria
 
 ---
 
+## Related pattern outside keyword scope: clearance defects annotated as apoptosis
+
+This subproject is about keyword-only annotations (GO_REF:0000043). Gene
+review has also turned up a second route to the same over-annotation: an
+**experimental IMP that reads an apoptotic-cell clearance defect as
+participation in apoptosis**. When an engulfment receptor is knocked out,
+apoptotic cells are not cleared and pile up, so TUNEL or cleaved-caspase-3
+counts go up. A curator can annotate that readout to an apoptotic-process
+term. But the gene acts in the engulfing cell and does none of the work of the
+apoptotic program, as the first Key Findings criterion above requires. The
+correct term is engulfment of apoptotic cell (GO:0043652), which GO's usage
+note keeps separate from events inside the dying cell. Orthology transfer
+(ISS/ISO) then spreads the error to other species.
+
+| Gene | Term | Evidence | Source | Action | Review |
+|---|---|---|---|---|---|
+| mouse Megf10 (Q6DIB5) | GO:1902742 apoptotic process involved in development | IMP (MGI) | PMID:27170117 | REMOVE | [Megf10](../../genes/mouse/Megf10/Megf10-ai-review.yaml) |
+| human MEGF10 (Q96KG7) | GO:1902742 apoptotic process involved in development | ISS from mouse Megf10 | GO_REF:0000024 | REMOVE (source bad) | [MEGF10](../../genes/human/MEGF10/MEGF10-ai-review.yaml) |
+
+**Megf10 evidence.** Iram et al. 2016 (PMID:27170117) report more TUNEL- and
+cleaved-caspase-3-positive cells in the P7 cerebellum of Megf10-/- and
+Megf10+/- mice. The same paper shows impaired astrocyte phagocytosis of
+apoptotic cells ex vivo, and that Megf10 expression confers phagocytosis. The
+full text (PMC4863057) titles Figure 1 "Megf10 is necessary for apoptotic cell
+uptake by astrocytes, and its deficiency results in accumulation of apoptotic
+cells in the developing CB". The authors therefore interpret the phenotype as
+clearance failure, not extra death.
+
+**Detection idea.** Look for genes that carry both GO:0043652 (or another
+apoptotic-cell-clearance term) and an apoptotic-process term from the same
+PMID, or an apoptotic-process term on a known engulfment receptor or bridging
+molecule (MERTK, AXL, TIMD4, GAS6, MFGE8, ITGB5, ELMO1, DOCK1, GULP1, CD36,
+ADGRB1, STAB2, LRP1). This has not been run yet.
+
+---
+
 ## Notes
+### 2026-10-03
+
+**Clearance-defect pattern logged (Megf10).** Reviewing mouse Megf10 and human
+MEGF10 showed that GO:1902742 apoptotic process involved in development comes
+from an MGI IMP whose phenotype is an accumulation of uncleared apoptotic cells
+(PMID:27170117). Both rows are REMOVE. This is a non-keyword route to apoptosis
+over-annotation; see "Related pattern outside keyword scope" above.
+
 
 ### 2026-01-31
 
