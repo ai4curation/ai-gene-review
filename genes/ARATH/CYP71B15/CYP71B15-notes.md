@@ -51,3 +51,24 @@ accepted as the physiological role, because the gene product makes the defensive
 "Defense response" and "response to bacterium" are kept as non-core. IEP rows (drought, ABA, SAR
 regulation) are marked over-annotated: a transcript change does not show the gene takes part in the
 process, and IEP cannot support a "regulation of" term.
+
+## 2026-10-03: PMID:33831160 resolved
+
+PubMed's redirection notice (supplied by the reviewer) says PMID:33831160 was
+deleted as a duplicate of PMID:31511315 (Mucha et al. 2019, "The Formation of a
+Camalexin Biosynthetic Metabolon", Plant Cell). E-utilities only returns
+"cannot get document summary" for the old PMID, so the mapping was not visible
+before. Recorded as `reference_review.replacement` (DUPLICATE_RECORD) on the
+old reference; the GOA `original_reference_id` is unchanged.
+
+Effect on the four rows citing it:
+- protein binding with GSTU4 (IPI): UNDECIDED to REMOVE. Supported by the paper
+  [PMID:31511315 "FRET-FLIM and co-IP demonstrated that the glutathione
+  transferase GSTU4 ... is physically recruited to the complex"], but protein
+  binding is uninformative and GSTU4 is not a camalexin enzyme.
+- protein binding with CYP71A12 (IPI): UNDECIDED to REMOVE, same as the direct
+  PMID:31511315 row.
+- endoplasmic reticulum (IDA): still ACCEPT.
+- endoplasmic reticulum lumen (IDA): still UNDECIDED. Full text is not
+  retrievable (PMC6881122 returns abstract only), and the luminal location
+  conflicts with the cytosol-facing P450 topology.

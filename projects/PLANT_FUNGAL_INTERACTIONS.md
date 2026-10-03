@@ -17,9 +17,8 @@ penetration-resistance and camalexin genes, rice sensor/executor immune
 receptors, the legume mycorrhizal pathway, and fungal effectors, a hydrophobin,
 a MAP kinase and a toxin enzyme. All 36 reviews are done: 652 annotations were
 assessed, with 333 accepted, 161 kept as non-core, 70 modified, 40 marked
-over-annotated, 45 removed and 3 left undecided, plus 36 new annotations
-proposed. Thirty-five reviews validate with no warnings; CYP71B15 stays at
-DRAFT only because three of its GOA rows cite a PMID that has no PubMed record.
+over-annotated, 47 removed and 1 left undecided, plus 36 new annotations
+proposed. All 36 reviews validate and are marked COMPLETE.
 The main corrections were separating genes that do the work of a defence
 process from genes that are only needed for it, replacing `protein binding`
 rows with specific terms, and giving each partner in a receptor pair, and
@@ -100,7 +99,7 @@ annotations reviewed; NEW annotations are counted separately.
 | ARATH/MLO2 | 12 | 4 | 3 | 3 | 0 | 2 | 0 | 2 | Defense rows to negative regulation of defense response; added calcium channel activity |
 | HORVU/MLO | 2 | 0 | 0 | 2 | 0 | 0 | 0 | 1 | `defense response` had the wrong sign; changed to negative regulation |
 | ARATH/CYP79B2 | 30 | 6 | 17 | 5 | 1 | 1 | 0 | 0 | Sulfur compound biosynthesis to indole glucosinolate biosynthesis; membrane to ER membrane |
-| ARATH/CYP71B15 | 32 | 13 | 8 | 2 | 4 | 2 | 3 | 0 | Membrane to ER membrane; 3 rows undecided (cited PMID does not exist) |
+| ARATH/CYP71B15 | 32 | 13 | 8 | 2 | 4 | 4 | 1 | 0 | Membrane to ER membrane; ER lumen left undecided (conflicts with P450 topology, full text unavailable) |
 | ARATH/WRKY33 | 40 | 20 | 11 | 2 | 0 | 7 | 0 | 0 | Camalexin biosynthesis to positive regulation of camalexin biosynthesis |
 | ARATH/MPK3 | 65 | 24 | 20 | 2 | 1 | 18 | 0 | 0 | Camalexin biosynthesis to positive regulation; 18 `protein binding` rows removed |
 | ARATH/ERF094 | 19 | 14 | 2 | 3 | 0 | 0 | 0 | 2 | Systemic resistance to defense response to fungus; added transcription activator activity |
@@ -126,7 +125,7 @@ annotations reviewed; NEW annotations are counted separately.
 | MYCMD/PIT2 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 3 | Added cysteine-type endopeptidase inhibitor activity |
 | MYCMD/See1 | 7 | 7 | 0 | 0 | 0 | 0 | 0 | 0 | No change needed |
 | GIBZE/TRI5 | 4 | 3 | 0 | 1 | 0 | 0 | 0 | 1 | Sesquiterpenoid biosynthesis to vomitoxin (deoxynivalenol) biosynthesis |
-| **Total** | **652** | **333** | **161** | **70** | **40** | **45** | **3** | **36** | |
+| **Total** | **652** | **333** | **161** | **70** | **40** | **47** | **1** | **36** | |
 
 ### Findings by curation question
 
@@ -284,6 +283,18 @@ running `fetch-gene`; do not guess one.
 
 # NOTES
 
+## 2026-10-03
+
+- PubMed's redirection notice shows PMID:33831160 was deleted as a duplicate
+  of PMID:31511315 (Mucha et al. 2019, camalexin metabolon). Recorded the
+  mapping on the CYP71B15 reference (`replacement`, DUPLICATE_RECORD) and kept
+  the GOA identifier. The two protein binding rows went from undecided to
+  removed, and the ER row stays accepted. The ER lumen row stays undecided
+  because the full text is not retrievable and the location conflicts with
+  the enzyme's cytosol-facing topology. CYP71B15 is now COMPLETE. The
+  remaining fetch warning for the old PMID is the advisory one described in
+  `docs/reference_curation.md`.
+
 ## 2026-10-02 (reviews)
 
 - Fetched UniProt/GOA data for all 36 genes and ran falcon deep research for
@@ -296,8 +307,8 @@ running `fetch-gene`; do not guess one.
   MKK5) do not carry it. It is now a suggested question.
 - Consistency was checked across pairs reviewed at the same time: RGA4/RGA5,
   CASTOR/DMI1, MLO/MLO2, slp1/ECP6, and MPK3/WRKY33/CYP71B15.
-- PMID:33831160 (cited by three TAIR rows on CYP71B15) has no PubMed record
-  (checked with NCBI eutils), so those rows are undecided.
+- PMID:33831160 (cited by four TAIR rows on CYP71B15) returns no record from
+  NCBI eutils. These rows were left undecided until the 2026-10-03 fix below.
 - Many key papers are cached as abstract only. Agents deferred to curators
   where the full text was needed, rather than removing experimental
   annotations.
