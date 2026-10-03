@@ -67,3 +67,45 @@ mitochondrial claim is less well established than secretion; keep as non-core.
 - MF: GO:0047708 biotinidase activity
 - BP (directly_involved_in): GO:0006768 biotin metabolic process (biotin recycling/salvage)
 - location: GO:0005576 extracellular region (secreted)
+
+
+## 2026-10-03 source-specific reassessment (TMP proposal)
+
+This section supersedes the earlier dispositions and access claims above; the original notes are preserved verbatim. The whole 20-row source projection and all four alternative products are retained. Proposed decisions are 14 ACCEPT and 6 UNDECIDED, with one extracellular biotinidase/biotin-metabolism core. No NEW assertion is proposed: the established chemistry and metabolic participation already have coverage, and incomplete localization or histone-function evidence is not a reason to manufacture an additional function.
+
+The two BioPlex interaction rows are unresolved because the publication-specific BTD–MYO1D records were not inspected. Generic protein-binding wording and absent biological interpretation do not justify the prior over-annotation flags. The prostatic-exosome article has genuine Methods/Results in its cache, but its target-specific supplementary table was not inspected. Colostrum's broad extracellular assertion is retained on independent serum enzyme support, with its uninspected target table disclosed.
+
+The matrix and CNS-development claims remain unresolved; neither is treated as disproven. Human organelle immunofluorescence, rat fractionation and secretion predictions must not be conflated into a demonstrated active human mitochondrial pool. The core enzyme activity remains valid independently of those compartment claims. The prior categorical CNS-role denial and reference MISCITED judgment are withdrawn because mutation-associated neurological injury does not settle developmental participation and the full source is unavailable.
+
+The 2026 UniProt displayed product is isoform4 (523 residues), while the historical cloned sequence is the longer product (543 residues). The products' identities and sequence notes remain unchanged; old D444H numbering should not be silently transferred to the displayed product's Asp424 position. The source's RHEA:13081 is biotin-amide hydrolysis; biocytin hydrolysis is separately RHEA:77171.
+
+### Access and provenance
+
+The initial fixed-main audit matches all 11 local gene/source files at a23171822631d413dd046408b064f512f69fc406. Four cited Reactome reaction caches were absent both locally and at that main; the standard hosted fetch was requested for those records plus five relevant publications. No source was written by hand or overwritten. This baseline is not a future publication clearance.
+
+The normal repository deep-research wrapper attempted falcon with perplexity-lite fallback in isolated TMP output and failed dependency resolution. The documented installed-client fallback then failed DNS. No provider research file was produced. The assessment is saved in provider-attempt-assessment.json; credential-bearing rich tracebacks were not stored or exposed. This reassessment instead uses actual cached records, bounded official primary access and two targeted independent consultations.
+
+Source access before arrival of the normal batch: complete canonical abstracts for 16502470 and 7550325, complete cached main article for 23533145; binding source limits are recorded by the annotation consultant (28514442 general methods with target table unread, 33961781 Abstract/Introduction/Discussion only). Official publisher 7550325 access returned a subscription preview, not the complete paper. The official 7509806 abstract identifies the human serum enzyme; official 15059618/16150625 abstracts and limited indexed 16150625 sections establish the localization caveats. No figure image or localization supplement was inspected. All four official Reactome reaction summaries were inspected and distinguished from their primary supporting evidence. The local GO ontology definitions for the molecular function, metabolic process, matrix and CNS-development term were checked. No local GO-CAM index match for P43251/BTD was found; that is not a claim of global absence.
+
+The annotation consultation checked exact PAINT node/term/donor tuples for all three IBAs and the human PTHR10609:SF14 member, without claiming a full phylogenetic tree/MSA reconstruction. PTHR10609's vanin family members have a distinct pantetheinase IBD; family breadth is not a reason to reject biotinidase inheritance. The source fields and snapshot differences are preserved.
+
+Useful short evidence anchors are retained, repeated long reaction excerpts are shortened, and misleading mitochondrial and target-nonspecific binding excerpts are removed. The candidate quote ledger will record exact substrings and per-source budgets after the normal sources are imported. No fresh science or validation completion is claimed at this provisional stage.
+
+
+### Completed normal-source recovery and final proposal
+
+The five publication and four Reactome caches were subsequently fetched by the unchanged normal fetchers, authenticated from the hosted artifact, and exclusively imported by ROOT after a fresh absence check (import actual 1050db; receipt `tmp/BTD-reference-artifact-transport/import-receipt.json`). All nine complete cache bodies were read: the five publications are genuinely abstract-only, while the four Reactome records contain their complete normal reaction summaries. No cached body or metadata was edited.
+
+PMID:7509806 identifies purified human serum biotinidase using protein sequence, liver cDNA and antibody recognition, providing an independent primary anchor for enzyme activity and extracellular localization. PMID:9099842 concerns an R538C-associated enzyme defect and does not establish a histone-transferase function. PMID:9654207 concerns partial deficiency; official PubMed lists an erratum (Hum Genet 1998;102(6):712) whose substantive content could not be recovered. Its reference assessment remains UNVERIFIED, and no quantitative allele-effect claim depends on it. The original notes' transferase variant percentages are not independently validated or carried into the final description/core.
+
+The complete PMID:15059618 abstract distinguishes human nonspecific organelle immunofluorescence from rat fractionation. Its 48-kDa mitochondrial anti-BTD-reactive species lacked hydrolase/transferase activity and had unresolved identity. PMID:16150625 supports secretion predictions while leaving mitochondrial/nuclear targeting uncertain. These are reasons for explicit uncertainty about the human matrix claim, not proof of absence. Reactome's mitochondrial summaries are faithfully identified as database assertions; the unnegated broad molecular-function rows remain valid from independent human enzymology.
+
+All 20 decisions are now written: 14 ACCEPT and six UNDECIDED (the two source-specific MYO1D interaction records, two matrix locations, exosome association and CNS development). The original source projection and four alternative products are unchanged. No additional annotation or MF core is proposed. The extracellular biotinidase core states the direct catalytic salvage step; no intrinsic histone biotinylation, mitochondrial catalysis, therapeutic mechanism or direct neural-development function is inferred.
+
+Two independent consultations informed the proposal: `tmp/BTD-annotation-consultation/consultation.json` for rows 0–7 and exact PAINT/GOA joins, and `localization-core-consultation-bicra.json` for matrix/CNS/core distinctions. These are bounded consultations rather than whole-gene peer approval. The quote ledger records 16 exact instances versus 24 previously, with all per-source unique quoted totals at or below 25 words; the new primary core anchor is five words. The old notes remain verbatim as historical context, superseded by this source-specific reassessment.
+
+Final normal update-status and full validation passed with zero curation warnings and computed COMPLETE. This records completion of all 20 review decisions, including the six explicit UNDECIDED outcomes; it does not imply that those biological uncertainties are resolved. The candidate remains TMP-only pending independent whole-gene review and application authorization.
+
+## 2026-10-03 — application
+
+ROOT independently reviewed and authorized this exact candidate. The reviewed YAML and notes were applied after preserving all three authored preimages. The prior notes remain as chronology. All 20 source assertions and four products are preserved. Fourteen decisions are ACCEPT and six UNDECIDED; the explicit evidence gaps remain. Nine normally fetched reference caches were previously imported by ROOT without overwrites. Normal canonical validation, rendering and a new standard EDIT history record are recorded in the adjacent application receipt. Existing source caches and histories were preserved.
