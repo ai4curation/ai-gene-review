@@ -35,6 +35,13 @@ def make_signature(term_id, term_label, evidence_type, original_reference_id, qu
 # Explicit current-GOA source refreshes. Keep these as narrow signature-level
 # exceptions so unrelated source loss still fails loudly.
 EXPECTED_RETIREMENTS = {
+    "genes/yeast/APJ1/APJ1-ai-review.yaml": Counter([
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0008270", "zinc ion binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0046872", "metal ion binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000002"),
+        make_signature("GO:0051082", "unfolded protein binding", "IMP", "PMID:11923285"),
+    ]),
     "genes/yeast/CPS1/CPS1-ai-review.yaml": Counter([
         make_signature(
             "GO:0051603", "proteolysis involved in protein catabolic process",
