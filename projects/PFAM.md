@@ -263,7 +263,7 @@ entry level is more plausibly found by:
 3. **Per-protein curation** (UniProt, GOA experimental) — outside the scope of
    domain→GO mappings entirely.
 
-See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW/) and
+See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW.md) and
 [IBA_REVIEW.md](IBA_REVIEW.md) for the subfamily-level direction.
 
 ## Reproducing
