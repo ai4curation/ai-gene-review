@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION, FLAGSHIP]
 species: [human, yeast]
 genes: [LRRK2, BCAP31, YET2]
+manifest:
+  slides:
+    - href: ER_EXIT_SITE_LOCALIZATION_OBSOLETION/slides/ER_EXIT_SITE_LOCALIZATION_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/7CCaYcKNiv414UEVhwVRFX
+      title: Project brief
 ---
 
 # Protein Localization to ER Exit Site — Obsoletion
@@ -234,7 +241,3 @@ suggests.
   `MARK_AS_OVER_ANNOTATED`. With #3241 merged, no review in this repo relies on
   GO:0070973; remaining optional work is seeding SEC16A / MIA3 / GBF1 and
   flagging `UR001349783`.
-
-## Slides
-
-- [Slides](ER_EXIT_SITE_LOCALIZATION_OBSOLETION/slides/ER_EXIT_SITE_LOCALIZATION_OBSOLETION-slides.html) (Marp source: [ER_EXIT_SITE_LOCALIZATION_OBSOLETION-slides.md](ER_EXIT_SITE_LOCALIZATION_OBSOLETION/slides/ER_EXIT_SITE_LOCALIZATION_OBSOLETION-slides.md)) — AI generated

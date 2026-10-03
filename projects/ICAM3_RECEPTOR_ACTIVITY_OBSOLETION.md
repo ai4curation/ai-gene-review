@@ -3,6 +3,13 @@ title: "ICAM-3 Receptor Activity — Obsoletion & Replacement"
 maturity: SCOPING
 tags: [OBSOLETION]
 species: [human]
+manifest:
+  slides:
+    - href: ICAM3_RECEPTOR_ACTIVITY_OBSOLETION/slides/ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/4Uucr6PiddSxk9TztWyqsp
+      title: Project brief
 ---
 
 # ICAM-3 Receptor Activity — Obsoletion & Replacement
@@ -239,7 +246,3 @@ may not match the literal "ICAM-3 receptor" framing.
   No gene reviews started yet in this repo; none of the affected genes
   (ITGAL, ITGB2, CLEC4M, CD209, ICAM3, ITGAD) are present under
   `genes/`.
-
-## Slides
-
-- [Slides](ICAM3_RECEPTOR_ACTIVITY_OBSOLETION/slides/ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.html) (Marp source: [ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.md](ICAM3_RECEPTOR_ACTIVITY_OBSOLETION/slides/ICAM3_RECEPTOR_ACTIVITY_OBSOLETION-slides.md)) — AI generated

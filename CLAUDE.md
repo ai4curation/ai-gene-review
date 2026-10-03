@@ -612,6 +612,37 @@ Reviews render as a block on the project page, and the **latest** review's statu
 (most recent `date`) surfaces as a filterable "Review" column in the all-projects
 table.
 
+**Manifest (slides, briefs).** A project page lists its companion resources in
+frontmatter under `manifest`, a mapping of typed lists. Allowed lists are `slides`
+and `artifacts` (defined once in `MANIFEST_KINDS` in
+`src/ai_gene_review/render_projects.py`; adding e.g. `data` is one entry there).
+Each entry needs `href` and may carry `title` and `description`; unknown keys are
+rejected. A `slides` href is either an `https://` URL or a path **relative to
+`projects/`** to a rendered deck `.html` whose Marp `.md` source sits beside it
+(e.g. `FOO/slides/FOO-slides.html`); an `artifacts` href must be `https://`.
+
+```yaml
+manifest:
+  slides:
+    - href: UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html
+      title: Project deck        # optional; default label "Slides"
+      description: AI generated  # optional; shown on the pill and as its tooltip
+  artifacts:
+    - href: https://claude.ai/artifact/XXXX
+      title: Project brief       # optional; default label "Brief"
+```
+
+Entries render as a pill bar directly under the page title (a `description`
+appears as small text after the pill label, e.g. "Slides" then "AI generated"; artifacts open
+in a new tab) and as Slides/Brief columns in the all-projects table. Machine-made
+decks carry `description: AI generated`. The same `validate_manifest()` backs the
+pytest check and the renderer: at render time an invalid entry is left out and
+reported as a page warning, so one bad page never stops the site render. Manifest-linked
+decks are published with their images, so do **not** also add an in-body
+`## Slides` section with the deck link. `scripts/populate_project_manifest.py`
+fills `manifest` from the deck folders plus a `stem<TAB>url[<TAB>title]` brief
+list, editing only the `manifest` block of the frontmatter.
+
 **Gene-symbol auto-linking.** Project pages auto-link prose gene symbols to their
 review pages — never hardcode `genes/...` URLs. Linking is convention + metadata
 driven:

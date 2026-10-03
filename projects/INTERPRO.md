@@ -7,6 +7,13 @@ sidecars:
   slide_charts:
     - INTERPRO/slides/interpro-pipeline.svg
     - INTERPRO/slides/interpro-review-actions.svg
+manifest:
+  slides:
+    - href: INTERPRO/slides/INTERPRO-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NaAEVgdB1TnJUKnBWWt69N
+      title: Project brief
 ---
 
 # InterPro Mapping Review Project

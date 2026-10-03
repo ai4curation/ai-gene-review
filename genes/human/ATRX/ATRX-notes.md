@@ -1,0 +1,123 @@
+# ATRX review notes
+
+2026-09-29. Human ATRX/P46100/HGNC:886. The normal seed contains 79 distinct annotation source objects, reconciled with 80 raw GOA rows: a telomeric-region ISS assertion occurs twice with different assignment metadata. The raw GOA file and all six alternative-product objects are preserved. The draft contains no NEW annotation.
+
+## Biological synthesis
+
+Full-length ATRX combines a SNF2-family ATP-dependent remodeling motor with an ADD histone-recognition domain. The two proposed core functions are ATP-dependent chromatin remodeling and H3K9me2/3 recognition. DAXX supplies the directly demonstrated isolated H3.3 chaperone activity; cooperation in a deposition complex does not establish every DAXX activity on ATRX itself. ATP binding, ATP hydrolysis, chromatin binding and targeting interactions describe this mechanism rather than additional independent cores.
+
+The [Xue et al. study, PMID:12953102](https://pmc.ncbi.nlm.nih.gov/articles/PMC196856/) shows ATP-dependent triplex displacement and altered nucleosomal accessibility. Its selected Results and Figure 4 caption distinguish translocation from conventional duplex unwinding: the latter was not detected with the tested substrates and a BLM positive control. Salt-washed ATRX retained triplex-displacement activity after DAXX removal. This is a substrate-specific assay boundary, not proof that all possible helicase substrates have been excluded. The seed contains no separate duplex-helicase annotation to remove.
+
+[Lewis et al., PMID:20651253](https://pmc.ncbi.nlm.nih.gov/articles/PMC2922592/) distinguishes recombinant DAXX H3.3/H4 chaperoning from ATP-dependent nucleosome mobilization by ATRX–DAXX. Full-length ATRX alone could not be purified for the assembly comparison. Mouse ESC experiments connect ATRX to telomeric DAXX recruitment and H3.3 deposition. Complete normal abstract and selected original Results/Figure 1–5 captions were read; complete Methods, supplements and figure pixels were not inspected.
+
+[PMID:21421568](https://pmc.ncbi.nlm.nih.gov/articles/PMC3090196/) supports recognition of H3K9me3 in the context of unmodified H3K4. H3K4 di-/trimethylation and tested disease-associated ADD variants impair recognition. This is a histone-reader activity, not methyltransferase catalysis. The complete normal abstract and selected original Discussion were read; the whole experimental paper was not inspected.
+
+## Interactions and evidence resolution
+
+[PMID:15882967](https://pubmed.ncbi.nlm.nih.gov/15882967/) directly supports a variant PxVxL motif binding the HP1 chromoshadow domain. This permits the specific GO:0070087 refinement of the corresponding generic protein-binding row. The complete preserved canonical abstract was read.
+
+[PMID:17296936](https://pmc.ncbi.nlm.nih.gov/articles/PMC1796997/) combines a human fetal-brain ATRX prey with rat MeCP2 bait, alongside mouse-cell targeting experiments. Q00566 is rat MeCP2, not a wrong-human-gene attribution. Selected original Results and construct Methods support the species assignment. Generic binding is retained as non-core without asserting a purified human–human interface.
+
+[PMID:20211137](https://pmc.ncbi.nlm.nih.gov/articles/PMC2885838/) includes HeLa H3.3/H3.1 oligonucleosome immunoprecipitation and mouse ESC telomere experiments. Those are different assay contexts. The selected Results support ATRX/DAXX association with H3.3 chromatin; they do not establish that ATRX alone chaperones H3.3 or that all H3.3 deposition at every locus uses ATRX.
+
+[PMID:22391447](https://pubmed.ncbi.nlm.nih.gov/22391447/) reports ATRX-dependent restriction of macroH2A chromatin accumulation, including human erythroleukemic alpha-globin loci. The normal cache is abstract-only, and the original full text was not obtained for this assessment. Its macroH2A association supports a histone-binding refinement, without assigning macroH2A deposition activity.
+
+[PMID:24651726](https://pmc.ncbi.nlm.nih.gov/articles/PMC3961441/) principally studies mouse ESC replication phenotypes but also contains human HeLa ATRX/MRN coimmunoprecipitation. Selected Results, Figure 5 caption and Methods were inspected. Reciprocal recovery and ethidium resistance support association; they do not prove an isolated binary ATRX–RAD50 interface. The mouse-focused title is not evidence that the human experiment was misattributed.
+
+[PMID:25417162](https://pmc.ncbi.nlm.nih.gov/articles/PMC4379047/) supports ATRX association with PRC2 and Xist in selected original Results. Purified-reagent species and isolated EZH2 contact were not fully resolved. The official index links two errata whose contents remain unadjudicated; the reference is UNVERIFIED for the precise claim, without a retraction or invalidity finding.
+
+[PMID:26373281](https://pmc.ncbi.nlm.nih.gov/articles/PMC4573400/) links ATRX, macroH2A1.1 and tankyrase availability to sister-telomere cohesion resolution. Selected original Results and captions were read from a separately retrieved normal full-text artifact. The pre-existing canonical abstract-only cache is preserved. This interaction supports the histone-binding refinement but does not identify the ADD domain as the interface on the strength of this paper alone.
+
+[PMID:27029610](https://pmc.ncbi.nlm.nih.gov/articles/PMC4939920/) uses human K562 chromatin coimmunoprecipitation for ATRX associations with TRIM28, SETDB1 and ZNF274. Selected Results and Methods were read. Recovery from solubilized chromatin is not the same as purified binary binding, and SETDB1-associated H3K9 methylation is not ATRX methyltransferase activity.
+
+For [PMID:24981860](https://pubmed.ncbi.nlm.nih.gov/24981860/), [PMID:26496610](https://pubmed.ncbi.nlm.nih.gov/26496610/) and [PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/), the available abstracts and immutable interaction metadata were read, but the precise ATRX–DAXX matrix entries and scores were not independently inspected. Independent targeted DAXX evidence supports retaining the association as non-core. This is not a claim that the full high-throughput supplements were verified.
+
+Generic protein-binding rows are refined when the actual evidence supports a more informative molecular function. Otherwise the supplied ActionEnum is applied to retain supported non-core associations. The repository's generic-binding policy may warn on those decisions. This is a disclosed policy conflict, not maintainer approval or a reason to claim that an experimental interaction is false. DAXX being a histone chaperone does not automatically justify GO:0051087, whose current definition concerns protein-folding chaperone binding.
+
+## Telomere, replication and localization context
+
+[PMID:10570185](https://pmc.ncbi.nlm.nih.gov/articles/PMC24177/) supports pericentric and acrocentric chromosome localization. [PMID:10699177](https://pubmed.ncbi.nlm.nih.gov/10699177/) links cell-cycle phosphorylation with nuclear-matrix/chromatin association; correlation does not establish a complete causal phosphorylation mechanism. Complete normal abstracts were read.
+
+[PMID:26055325](https://pmc.ncbi.nlm.nih.gov/articles/PMC4508314/) concerns human telomerase-positive glioma cells, with ATRX at subtelomeric chromatin rather than detectable terminal telomere binding in that setting. Loss reduces subtelomeric cohesin, TERRA and RNA polymerase II occupancy and is insufficient alone to trigger ALT. Its context differs from increased TERRA after Atrx loss in mouse ESCs in PMID:20211137. Cohesin occupancy is also a different endpoint from sister-telomere cohesion resolution in PMID:26373281. The source assertions are retained with those limits; ATRX is not labeled a telomerase or a universally sufficient ALT switch.
+
+[PMID:26340527](https://pmc.ncbi.nlm.nih.gov/articles/PMC4571182/) concerns repeat protection in hypomethylated mouse ESCs through DAXX/ATRX-associated chromatin and Suv39h recruitment. [PMID:10742099](https://pubmed.ncbi.nlm.nih.gov/10742099/) relates ATRX disease variants to altered DNA methylation patterns. Neither result turns ATRX into a histone or DNA methyltransferase. Complete normal abstracts were read.
+
+The PML-body refinement uses the explicit localization in PMID:12953102. A broad nuclear-body term can be made more informative here without inventing a new localization experiment. Broad nuclear, chromatin and telomeric location assertions are otherwise assessed at their original evidence resolution.
+
+The two p53-pathway annotations remain UNDECIDED pending resolution of the exact donor assay. The historical MGI comparative table provides a route to the mouse citation; the independent consultation records its identity and limits. Replication damage, 53BP1 foci and secondary p53 activation after ATRX loss must not be conflated with one another or treated automatically as ATRX participation in a p53-signaling step. No curator-error claim is made.
+
+PAINT annotations are treated as ancestral-node judgments. Short donor lists and self-inclusion are not circularity. This assessment does not claim to have reconstructed the complete family phylogeny or independently inspected every ancestral placement. No unverified PANTHER family ID is introduced. The local GO-CAM index had no ATRX/P46100 hit at the time of inspection.
+
+## Reactome and remaining source scope
+
+The five normal human Reactome records distinguish [ATRX–DAXX assembly](https://reactome.org/content/detail/R-HSA-9007926), [subtelomeric binding](https://reactome.org/content/detail/R-HSA-9670101), [telomeric H3.3 deposition](https://reactome.org/content/detail/R-HSA-9670114), [defective ATRX](https://reactome.org/content/detail/R-HSA-9670619) and [defective DAXX](https://reactome.org/content/detail/R-HSA-9670620). The latter two are disease-variant events, not universal wild-type negations. Complete displayed summaries and variant lists were independently read, without separately validating every allele or primary experiment.
+
+[PMID:22102817](https://pmc.ncbi.nlm.nih.gov/articles/PMC3213115/) reports EBV BNRF1 disruption of the DAXX–ATRX restriction system. Its complete abstract was read; no direct binary BNRF1–ATRX interaction or broad viral core is inferred. [PMID:7697714](https://pubmed.ncbi.nlm.nih.gov/7697714/) establishes the human disease-gene relationship, and [PMID:7874112](https://pubmed.ncbi.nlm.nih.gov/7874112/) is the historical XH2 cloning report. Their mechanistic predictions and historical sequence lengths do not replace current sequence identity or direct enzymatic evidence.
+
+## Alternative products and research limits
+
+The displayed full-length sequence is P46100-1, named isoform 4, with 2492 residues. P46100-2 lacks residues 1–204; P46100-3 lacks 1–117; P46100-4 lacks 124–161; P46100-5 combines the latter two changes. P46100-6 has several deletions including residues 1419–2492, removing the annotated motor domains. Several alternatives alter the ADD region as well. Domain loss is not an assay of expression, stability or residual activity. No result is assigned to a specific product without a sequence match.
+
+The [ATRXt report, PMID:14729260](https://pubmed.ncbi.nlm.nih.gov/14729260/) describes intron-11 retention, an intronic polyadenylation site and loss of SWI/SNF motifs. Its complete official abstract was read. It must not be equated automatically with P46100-6. Other preliminary leads include human fork-restart experiments (PMID:23329831), mouse damage/p53 phenotypes (PMID:23563309), separable replication/telomere functions (PMID:42380617) and ADD–macroH2A recognition (PMID:40443347). Their selected original readings and limits are recorded in the manual research log; normal cache recovery precedes any final evidence integration.
+
+The normal Perplexity research command failed before a provider request because the required client version was unavailable in the offline tool cache. No provider report was produced or manually fabricated. A separate once-only five-PMID fetch failed on DNS and cached zero records; normal recovery is tracked separately. This document records manual research. Focused validation and history results will be appended after canonical application.
+
+## Integrated initial assessment
+
+All 79 source rows have been assessed: 48 ACCEPT, 25 KEEP_AS_NON_CORE, 4 MODIFY and 2 UNDECIDED. All six alternative products remain unchanged. Independent binding, non-binding and core consultations support the two core functions; a separate findings check corrected the Reactome ATRX-mutant statement to distinguish fragment experiments from inferred candidate loss of function. There are 27 concise reference findings and no NEW assertions.
+
+The [official historical MGI table](https://www.informatics.jax.org/homology/GOGraph/Atrx), generated 10 March 2023, identifies PMID:24651726 for a mouse GO:0030330 IMP annotation. Root independently checked this table. The exact p53-specific experimental basis and current donor-to-transfer edge remain unresolved, so both human transfers stay UNDECIDED. The reasons now identify the available donor citation rather than suggesting that no citation was found.
+
+## Focused validation
+
+2026-09-29. `just validate human ATRX` passed schema, authored-term, reference and best-practice checks with 15 advisories. Thirteen concern retained generic protein-binding rows; the supplied action definitions and evidence limits are explained above. Two concern differing actions for the same location term: disease-event nucleoplasm rows remain non-core, and only the nuclear-body source explicitly establishing PML localization is refined. Those are deliberate source-specific distinctions, not evidence that the term changes meaning. `just render human ATRX` passed. Additional-source integration and PR review remain separate; no global-validation pass or external approval is claimed.
+
+
+## Additional primary evidence integrated — 2026-09-29
+
+The five additional normal references have now been recovered, independently checked and integrated. The canonical caches preserve their fetched bytes: PMID:14729260 is abstract-only; PMID:23329831 and PMID:23563309 contain HTML-derived full text; PMID:40443347 and PMID:42380617 contain XML-derived full text. Source availability and the portions actually read are distinct.
+
+### Additional ATRX primary reading, 2026-09-29
+
+The input was the exact Source73 ZIP (SHA256 c1570f5d175c27dbef67a70dd4a32702e5d50c45ccfc55202c51efd8038eefd2), read without extraction or cache editing. Complete frontmatter and abstracts of all five publications were read in b45a8f. This note records scientific reading separately from the artifact peer.
+
+- PMID:14729260 is abstract-only. ATRXt retains intron 11 and uses an intronic polyadenylation signal, lacks SWI/SNF motifs, and differs in PML-body localization. Both human and mouse are explicit. No sequence mapping to P46100-6 is established; do not assign the abstract's results automatically to that product.
+- PMID:23329831: all cached Experimental Procedures and Results were read (full-text-relative lines 31–78, e3be79). HCT116 exon-5 knockout, human HeLa imaging and HEK293T purification are explicit. DNA-fiber experiments show impaired restart after shorter HU treatments and no detectable elongation-rate difference in the tested recovery assay. MRN copurifies with ATRX, while the cotransfection pull-down specifically recovers NBS1 rather than MRE11A/RAD50. This does not negate the separate HeLa MRN co-IP in PMID:24651726 and does not establish a purified binary interface. No figure pixels or supplementary data were inspected.
+- PMID:23563309: selected Results 19–47 and Methods 93–121 were read (9187ce). Forebrain Atrx deletion and Atrx/p53 compound mutants establish mouse neural-progenitor damage with downstream ATM/p53-dependent cell death. It is a different publication from the historical MGI donor PMID:24651726. It cannot silently replace that donor or settle the two original p53 GO transfers. The G4-ligand phenotype is not a purified G4-unwinding assay. Other endocrine/whole-body experiments remain abstract-level in this new reading.
+- PMID:40443347: selected protein expression/purification, pull-down, ITC, AP-MS and immunoblot Methods (153–232, 57f7c0), structural-modeling Methods and Results 233–292/375–413 (9ef9df) were read. Human ATRX P46100 fragments expressed in bacteria map macroH2A-H2B recognition to the ADD domain; bacterial expression does not make the construct bacterial ATRX. The histone-fold region is shared between macroH2A1.1 and 1.2. Structural models are AlphaFold predictions, not solved structures. CHD4 (not the abstract typo CDH4) peptide binding is measured by ITC, while NuRD enrichment and cellular co-IP do not make every NuRD component an intrinsic ATRX complex member. No new GO term/complex claim is proposed from those associations. The normal year 2025 is preserved, distinct from the later issue year.
+- PMID:42380617: selected Results paragraphs at 98/100/102/108/116/118/120 and Methods at 146/148/152/176 were read in 16bd31/657001. Oversized duplicated container paragraphs truncated in those tool outputs are not counted as complete reads; no whole-paper claim is made. Human stable diploid eHAP cells and NCI-H460 cells are explicit. Poor ectopic K1600R expression prompted an endogenous knock-in with sequencing/expression validation. PIP mutation recapitulates genome-wide replication-stress sensitivity; ATPase loss promotes telomeric ssDNA in the tested conditions. DAXX-binding mutation reduces H3.3 occupancy without reproducing all ssDNA endpoints. DAXX deletion and ATRX–DAXX double deletion are distinct from the binding-motif mutant. These observations qualify dependence on DAXX and ATPase by endpoint and context; they do not abolish the established ATRX–DAXX nucleosome-remodeling core. No figure pixels, raw data or complete supplemental mutant table were inspected.
+
+Proposed integration: add five source-specific findings and reading limits, qualify the biological description with PIP-dependent replication protection, and strengthen macroH2A-domain context. Preserve all 79 source records, six products, 48 ACCEPT / 25 KEEP_AS_NON_CORE / 4 MODIFY / 2 UNDECIDED decisions and both established core terms. Do not manufacture NEW process assertions or automatically resolve the p53 transfers.
+
+
+Independent scientific review supported all five findings and the limited description/histone-binding supplements. All 79 original annotation objects, all six products, both cores and all decisions remain unchanged: 48 ACCEPT, 25 KEEP_AS_NON_CORE, 4 MODIFY and 2 UNDECIDED. There are now 32 reference findings and no NEW assertions. The original p53 donor remains unresolved; the later mouse paper is corroboration rather than a replacement for that source. Prior notes and generated history remain intact. Final focused validation and rendering follow this integration.
+
+
+Final integration checks (2026-09-29): `just validate human ATRX` passed with the same 15 disclosed advisories (13 generic-binding policy and two source-specific term-action differences); rendering and the newly scaffolded EDIT history validation passed. The new history retains the helper-generated filename/session identifier and records codex as its actual actor. No global validation result, external approval or merge is claimed.
+
+
+## Bounded response to the first ATRX review
+
+Retain evidence-supported generic binding as non-core and partner-specific MF refinements under the user's ActionEnum. A repeated evidence route to an already represented term does not establish that the original experimental interaction is false. No high-throughput matrix is newly claimed to have been inspected. The two unresolved p53 transfers remain UNDECIDED: the historical MGI donor citation was identified, but the exact p53 assay underlying that transfer remains unresolved.
+
+Accept the two source-specific nucleoplasm assertions consistently with normal ATRX chromatin activity. The defective-ATRX and defective-DAXX Reactome events describe mutant behavior, while the normal ATRX–DAXX assembly event and human nuclear-body evidence independently support the gene-level compartment. Neither mutant event is relabeled as a direct wild-type localization experiment.
+
+Retain both positive-regulation-of-nuclear-replication annotations with narrower mechanistic reasons. The current GO:0010571 definition encompasses frequency, rate **or extent**, so fork protection/restart is not excluded merely because one assay found unchanged fork speed. Mouse ES-cell S-phase/DNA-fiber results in PMID:24651726 and human HCT116/HeLa replication-stress experiments in PMID:23329831 support the vulnerable-chromatin context. The negative fork-speed result refers to the tested hydroxyurea-recovery assay; no general global acceleration or DNA-polymerase activity is claimed. This is a proposed biological disagreement with the reviewer's optional non-core suggestion, for root adjudication.
+
+The description is rewritten as standalone biology and the mechanical source-byte provenance sentence is moved here. Selected PMID:26373281 Results were read from the exact recovered artifact; the existing canonical record remains abstract-only and byte-distinct, and neither cache has been overwritten. That provenance does not change the macroH2A-binding conclusion. Other access limits remain in the relevant reasons where they affect confidence.
+
+Reading boundary: the full saved review comment and prior source-specific consultations were consumed. This follow-up read the complete normal PMID:12953102 abstract and selected Methods/Results in the normal 23329831 and24651726 records, alongside complete Reactome9670619/9670620 summaries. Existing primary-reading notes for42380617 and26373281 are reused without pretending to have re-read whole papers or supplementary target tables. No new quotes or source findings are added; all existing quotes remain literal and within25words per source across the document. All79 original source objects, six products, references and two cores are preserved. No canonical mutation or approval/CI claim is made by this proposal.
+
+
+### Applied independent adjudication
+
+The independent biological consultation accepted this proposal, including the replication decisions and the two nucleoplasm changes. Mouse delayed S phase was measured after aphidicolin release; unchallenged asynchronous profiles were previously unchanged. Fork stalling also increased without HU. Human unchanged elongation speed does not refute restart/extent regulation. Preserve these assay boundaries. No annotation source objects, products, core functions or cached source bytes were changed.
+
+
+## Second PR review follow-up (2026-09-30)
+
+Rechecked the replication-recovery interpretation in PMID:23329831 against Results paragraph 46 and Discussion paragraph 50. The authors explicitly conclude that ATRX does not regulate replication rate from their post-hydroxyurea fiber-length result. Their reduced origin-firing readout also carries an inefficient CldU-incorporation/recovery caveat. Both points are now explicit in annotations 44 and 45 (zero-based indices) and the reference finding. Retention uses the combined contextual recovery and mouse fork-maintenance evidence, not an assertion of direct origin-initiation control or faster elongation. Earlier journal statements must be read with this correction.
+
+Retained the supported HP1alpha and macroH2A interactions as non-core rather than duplicating existing more specific binding annotations. Condensed three DAXX interaction reasons while retaining independent targeted support and curator deference; their original high-throughput pair matrices were not newly inspected. No experimental assertion was removed on abstract-only evidence. The generic-binding policy question remains unresolved under the user-defined action meanings.
+
+Independent biological consultation passed after the CldU caveat correction. All 79 original source objects, six alternative products and two core functions remain unchanged; actions are 50 ACCEPT, 25 KEEP_AS_NON_CORE, two MODIFY and two UNDECIDED, with no NEW assertions. Original source caches and earlier history records remain unchanged. Focused validation and rendering are recorded separately after application.

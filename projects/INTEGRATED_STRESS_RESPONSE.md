@@ -3,6 +3,13 @@ title: "Integrated Stress Response (ISR) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+manifest:
+  slides:
+    - href: INTEGRATED_STRESS_RESPONSE/slides/INTEGRATED_STRESS_RESPONSE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Lfky9QLttPtNhYWCDnYQyx
+      title: Project brief
 ---
 
 # Integrated Stress Response (ISR) Project
@@ -97,7 +104,3 @@ Four kinases sense different stresses:
   already-accepted GO:0036499 *PERK-mediated unfolded protein response*, and
   the cited 1999 cloning paper (PMID:9930704) does not show ISR signalling.
   With #3219 merged, EIF2AK3 has 95 annotation rows, down from 96.
-
-## Slides
-
-- [Slides](INTEGRATED_STRESS_RESPONSE/slides/INTEGRATED_STRESS_RESPONSE-slides.html) (Marp source: [INTEGRATED_STRESS_RESPONSE-slides.md](INTEGRATED_STRESS_RESPONSE/slides/INTEGRATED_STRESS_RESPONSE-slides.md)) — AI generated

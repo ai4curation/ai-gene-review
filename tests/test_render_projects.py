@@ -17,6 +17,8 @@ from ai_gene_review.render_projects import (
     replace_species_qualified_symbols,
     render_project,
     render_project_bundle,
+    render_all_projects,
+    render_projects_table,
     resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
 )
@@ -1267,6 +1269,139 @@ def test_linked_deck_pulls_in_its_images(tmp_path):
     ]
     assert (out / "diagram.svg").read_text() == "<svg/>"
     assert not (tmp_path / "pages" / "outside.png").exists()
+
+
+MANIFEST_PAGE = """---
+title: Foo project
+manifest:
+  slides:
+    - href: FOO/slides/FOO-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/abc123
+      title: Project brief
+---
+# Foo project
+
+**Bottom line:** foo.
+"""
+
+
+@pytest.fixture
+def manifest_projects(tmp_path: Path) -> Path:
+    """projects/FOO.md whose deck is linked only from ``manifest`` frontmatter."""
+    projects_dir = tmp_path / "projects"
+    slides = projects_dir / "FOO" / "slides"
+    slides.mkdir(parents=True)
+    (projects_dir / "FOO.md").write_text(MANIFEST_PAGE)
+    (slides / "FOO-slides.md").write_text("---\nmarp: true\n---\n")
+    (slides / "FOO-slides.html").write_text('<img src="diagram.svg">')
+    (slides / "diagram.svg").write_text("<svg/>")
+    (tmp_path / "genes").mkdir()
+    return projects_dir
+
+
+def test_manifest_linked_deck_is_copied_with_its_images(manifest_projects):
+    """A deck named only in ``manifest.slides`` deploys, figures included."""
+    output_dir = manifest_projects.parent / "pages" / "projects"
+    copied = copy_referenced_assets(
+        [manifest_projects / "FOO.md"], output_dir, manifest_projects
+    )
+    assert sorted(p.relative_to(output_dir).as_posix() for p in copied) == [
+        "FOO/slides/FOO-slides.html",
+        "FOO/slides/diagram.svg",
+    ]
+
+
+def test_manifest_renders_resource_bar_under_title(manifest_projects):
+    """Manifest entries render as pills right after the page H1.
+
+    The slide href must resolve from pages/projects/FOO.html to the mirrored
+    deck; the artifact opens externally and uses its title.
+    """
+    root = manifest_projects.parent
+    output_dir = root / "pages" / "projects"
+    outputs, _ = render_project_bundle(
+        manifest_projects / "FOO.md",
+        output_dir=output_dir,
+        genes_dir=root / "genes",
+        projects_dir=manifest_projects,
+    )
+    html = (output_dir / "FOO.html").read_text()
+    h1 = html.index("<h1>Foo project</h1>")
+    bar = html.index('class="resource-bar"')
+    assert h1 < bar < html.index("Bottom line")
+    assert '<a class="rk-slides" href="FOO/slides/FOO-slides.html"' in html
+    assert (output_dir / "FOO" / "slides" / "FOO-slides.html").is_file()
+    assert (
+        '<a class="rk-artifacts" href="https://claude.ai/artifact/abc123" '
+        'target="_blank" rel="noopener"'
+    ) in html
+    assert '>Slides <span class="note">AI generated</span></a>' in html
+    assert 'title="Slides (AI generated)"' in html
+    assert "Project brief <span class=\"ext\"" in html
+
+
+def test_malformed_manifest_warns_and_does_not_block_other_pages(manifest_projects):
+    """A bad manifest entry is reported as a page warning and skipped.
+
+    The whole-site render must still finish: the bad page renders (keeping its
+    valid entries), the sibling page's deck is copied, and the table is written.
+    """
+    (manifest_projects / "BAD.md").write_text(
+        "---\ntitle: Bad\nmanifest:\n  slides:\n    - title: no href\n"
+        "    - href: BAD/slides/missing.html\n  artifacts:\n"
+        "    - href: https://claude.ai/artifact/ok\n  decks: []\n---\n# Bad\n"
+    )
+    root = manifest_projects.parent
+    output_dir = root / "pages" / "projects"
+    _, warnings = render_all_projects(
+        projects_dir=manifest_projects, output_dir=output_dir, genes_dir=root / "genes"
+    )
+    bad = [w for w in warnings if "Invalid manifest in BAD.md" in w]
+    assert any("manifest.slides[0] needs a non-empty string 'href'" in w for w in bad)
+    assert any("manifest.slides[1] href 'BAD/slides/missing.html' does not exist" in w for w in bad)
+    assert any("unknown key(s) ['decks']" in w for w in bad)
+    assert len(bad) == 3
+
+    html = (output_dir / "BAD.html").read_text()
+    assert "Invalid manifest in BAD.md" in html
+    assert 'class="rk-slides"' not in html
+    assert 'href="https://claude.ai/artifact/ok"' in html
+
+    assert (output_dir / "FOO" / "slides" / "FOO-slides.html").is_file()
+    assert (output_dir / "FOO" / "slides" / "diagram.svg").is_file()
+    assert (output_dir / "all-projects.html").is_file()
+
+
+def test_page_without_manifest_has_no_resource_bar(tmp_path):
+    projects_dir = tmp_path / "projects"
+    projects_dir.mkdir()
+    (projects_dir / "BAR.md").write_text("---\ntitle: Bar\n---\n# Bar\n")
+    (tmp_path / "genes").mkdir()
+    out, _ = render_project(
+        projects_dir / "BAR.md",
+        output_dir=tmp_path / "pages" / "projects",
+        genes_dir=tmp_path / "genes",
+        projects_dir=projects_dir,
+    )
+    assert 'class="resource-bar"' not in out.read_text()
+
+
+def test_projects_table_links_slides_and_brief(manifest_projects):
+    (manifest_projects / "BAR.md").write_text("---\ntitle: Bar\n---\n# Bar\n")
+    html = render_projects_table(
+        projects_dir=manifest_projects,
+        output_dir=manifest_projects.parent / "out",
+    ).read_text()
+    assert "<th>Slides</th><th>Brief</th>" in html
+    foo_row = html[html.index('data-slug="foo"'):].split("</tr>")[0]
+    assert (
+        '<a href="FOO/slides/FOO-slides.html" title="Slides (AI generated)">slides</a>'
+    ) in foo_row
+    assert 'href="https://claude.ai/artifact/abc123" target="_blank"' in foo_row
+    bar_row = html[html.index('data-slug="bar"'):].split("</tr>")[0]
+    assert bar_row.count('class="res"><span class="muted">') == 2
 
 
 def test_project_provider_artifacts_distinguish_unarchived_from_broken_links(tmp_path):
