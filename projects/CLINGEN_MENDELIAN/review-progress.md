@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-03 12:33:32 UTC
+## Campaign status — completion evidence through 2026-10-03 14:49:33 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -262,6 +262,11 @@ are therefore expected; existing human reviews still link normally.
 | BRSK2 | Definitive | INITIALIZED normal seed | PR #3899 merged at 2026-10-03 11:10:19 UTC; 14 exact changed paths verified at the merge commit. Biological DRAFT retains nine UNDECIDED assessments, 48 source assertions, six alternative products and one catalytic core. Combined SAD A/B experimental limits remain. | `cmungall/clingen-brsk2` | [#3899](https://github.com/ai4curation/ai-gene-review/pull/3899) |
 | BRWD3 | Definitive | No review | PR #3901 merged at 2026-10-03 12:32:23 UTC; 13 exact changed paths verified at the merge commit. Biological COMPLETE retains the two supplied source assertions, five alternative products and one core. The documented UniProt/normal-GOA discrepancy and species limits remain explicit. | `cmungall/clingen-brwd3` | [#3901](https://github.com/ai4curation/ai-gene-review/pull/3901) |
 | BSCL2 | Definitive | No review | PR #3902 merged at 2026-10-03 12:33:32 UTC; 17 exact changed paths verified at the merge commit. Biological DRAFT retains 30 original source assertions plus one NEW tether activity, seven UNDECIDED assessments, three alternative products and two cores. Thermogenesis and human/fly assay limits remain. | `cmungall/clingen-bscl2` | [#3902](https://github.com/ai4curation/ai-gene-review/pull/3902) |
+| BSND | Definitive | INITIALIZED normal seed | PR #3903 merged at 2026-10-03 13:08:02 UTC; final-head approval and CI success verified; 16 exact changed paths verified at the merge commit. Biological DRAFT retains 52 source assertions and one channel-regulatory core; no structured products slot. Thirty-one screen-binding decisions retain explicit curator-deference and uninspected target-assay limits. Barttin is the auxiliary subunit, not the channel pore. | `cmungall/clingen-bsnd` | [#3903](https://github.com/ai4curation/ai-gene-review/pull/3903) |
+| BTD | Definitive | Existing review audited (INITIALIZED) | PR #3904 merged at 2026-10-03 13:08:19 UTC; final-head approval and CI success verified; 14 exact changed paths verified at the merge commit. Biological COMPLETE retains 20 source assertions, six UNDECIDED assessments, four products and one extracellular biotin-recycling core. Fine mitochondrial localization, screen-binding and CNS-development evidence remain unresolved. | `cmungall/clingen-btd` | [#3904](https://github.com/ai4curation/ai-gene-review/pull/3904) |
+| BTK | Definitive | INITIALIZED normal seed | PR #3905 merged at 2026-10-03 14:20:21 UTC; final-head approval and CI success verified; 35 exact changed paths verified at the merge commit. Biological DRAFT retains 149 source assertions, 31 UNDECIDED assessments, two products and two cores. PLC regulation is distinguished from covalent substrate phosphorylation; remaining interaction and source-access limits persist. | `cmungall/clingen-btk` | [#3905](https://github.com/ai4curation/ai-gene-review/pull/3905) |
+| C19orf12 | Definitive | INITIALIZED normal seed | PR #3906 merged at 2026-10-03 14:31:06 UTC; final-head approval and CI success verified; 12 exact changed paths verified at the merge commit. Biological COMPLETE retains 22 source assertions, four products and one process core. The molecular activity remains unresolved; positive autophagy regulation and contextual apoptosis over-annotation are preserved. | `cmungall/clingen-c19orf12` | [#3906](https://github.com/ai4curation/ai-gene-review/pull/3906) |
+| BUB1B | Definitive | COMPLETE existing review | PR #3908 merged at 2026-10-03 14:49:33 UTC; final-head approval and CI success verified; 10 exact changed paths verified at the merge commit. Biological DRAFT retains 119 source assertions, 11 UNDECIDED assessments, three products and two cores. Seven catalytic assertions remain disputed; supported CDC20 inhibition and kinetochore adaptor functions do not settle the kinase controversy. | `cmungall/clingen-bub1b` | [#3908](https://github.com/ai4curation/ai-gene-review/pull/3908) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -273,8 +278,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **191 of 2,876 genes
-are complete**; 192 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **196 of 2,876 genes
+are complete**; 197 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -384,6 +389,22 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
 
+
+### Evidence scope for completion 196
+
+[Checkpoint 196 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T152007Z-codex-77f6db.yaml).
+
+The fixed **2026-10-03 14:49:33 UTC** cutoff adds **BSND, BTD, BTK, C19orf12 and BUB1B** to the completion ledger published at checkpoint 191: **196 complete / 2,680 remaining**, with 197 original gene PR merges. AKR1D1 remains excluded from completion while its required source follow-up is outstanding. Shared tracker, generated-page and source-workflow PRs add no gene completions.
+
+| Gene | Verified merge | Exact changed paths verified at merge | Biological assessment retained |
+|---|---|---|---|
+| BSND | [`66aae0854d61`](https://github.com/ai4curation/ai-gene-review/commit/66aae0854d610012825991d1fbad54e66686ba5e), 13:08:02 UTC | 16; every path/blob pair is in the queue | Biological DRAFT retains 52 source assertions and one channel-regulatory core; no structured products slot. Thirty-one screen-binding decisions retain explicit curator-deference and uninspected target-assay limits. Barttin is the auxiliary subunit, not the channel pore. |
+| BTD | [`56b1fad8f80c`](https://github.com/ai4curation/ai-gene-review/commit/56b1fad8f80caf615b5b8d67e80e90001c53b355), 13:08:19 UTC | 14; every path/blob pair is in the queue | Biological COMPLETE retains 20 source assertions, six UNDECIDED assessments, four products and one extracellular biotin-recycling core. Fine mitochondrial localization, screen-binding and CNS-development evidence remain unresolved. |
+| BTK | [`a5d697b6e4af`](https://github.com/ai4curation/ai-gene-review/commit/a5d697b6e4afe4355dc921758af2319aacc79d78), 14:20:21 UTC | 35; every path/blob pair is in the queue | Biological DRAFT retains 149 source assertions, 31 UNDECIDED assessments, two products and two cores. PLC regulation is distinguished from covalent substrate phosphorylation; remaining interaction and source-access limits persist. |
+| C19orf12 | [`76ce56c2cfc3`](https://github.com/ai4curation/ai-gene-review/commit/76ce56c2cfc38b6a4082ed00b545feedaf037438), 14:31:06 UTC | 12; every path/blob pair is in the queue | Biological COMPLETE retains 22 source assertions, four products and one process core. The molecular activity remains unresolved; positive autophagy regulation and contextual apoptosis over-annotation are preserved. |
+| BUB1B | [`847ce08c9bc1`](https://github.com/ai4curation/ai-gene-review/commit/847ce08c9bc1313a25f8798507752c5ce2dd0984), 14:49:33 UTC | 10; every path/blob pair is in the queue | Biological DRAFT retains 119 source assertions, 11 UNDECIDED assessments, three products and two cores. Seven catalytic assertions remain disputed; supported CDC20 inhibition and kinetochore adaptor functions do not settle the kinase controversy. |
+
+All five final PR heads have verified approval and successful checks. The signed merge records and complete PR file lists match **87 changed path/blob pairs**; this does not claim a new audit of every reused publication or Reactome cache. All 186 earlier queue entries, all 2,876 gene rows and their ClinGen association text, old dated checkpoints, the checkpoint 95 audit/import boundary and earlier histories remain unchanged. Biological review statuses and unresolved source assessments remain as merged. C1QA, C1QB, C1QBP and other pending work contribute no completion here.
 
 ### Evidence scope for completion 191
 
@@ -949,3 +970,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-03 10:42:33 UTC fixed completion cutoff: BRIP1 #3895 and BRD4 #3896 advance published checkpoint 185 → 187 complete, 188 original gene merges and 2,689 remaining. Exact approved heads, required CI, signed merges and 37 enumerated merged paths checked. All 2,876 associations and 180 prior queue entries preserved; only the two gene checkboxes change. Four pending-work observations add no completions. Unpublished 186 is superseded without a separate history or publication. [History](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T105722Z-codex-aeb9aa.yaml).
 
 - 2026-10-03 12:33:32 UTC fixed completion cutoff: BRPF1 #3898, BRSK2 #3899, BRWD3 #3901 and BSCL2 #3902 advance checkpoint 187 → 191 complete, 192 original gene merges and 2,685 remaining. All 53 changed merge-path blobs, four source review projections and the durable merge identities were checked. All 2,876 associations, 182 earlier queue entries and old histories remain; pending genes stay unchecked. [History](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T125438Z-codex-ce3948.yaml).
+
+- 2026-10-03 14:49:33 UTC fixed completion cutoff: BSND #3903, BTD #3904, BTK #3905, C19orf12 #3906 and BUB1B #3908 advance checkpoint 191 → 196 complete, 197 original gene merges and 2,680 remaining. Exact final-head approval/check success, signed merges and all 87 changed-path blobs were verified. All 2,876 inventory rows, 186 earlier queue entries, dated checkpoints and prior histories remain. AKR1D1 and other pending work stay excluded.
