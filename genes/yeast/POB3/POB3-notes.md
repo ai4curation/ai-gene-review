@@ -66,9 +66,11 @@ associations with epigenetic, transcription, and repair factors [PMID:39855624].
 
 - Retained the IBA `GO:0035101 FACT complex` as a sound conserved complex
   inference from `PANTHER:PTN002492356`.
-- Switched the UniProt-keyword `GO:0006351 DNA-templated transcription` row to
-  `ACCEPT`, because the broad process is a core FACT role and is already used in
-  the transcription core function.
+- Left the retired UniProt-keyword `GO:0006351 DNA-templated transcription`
+  row as `ACCEPT`, because the broad process was a real FACT role while the
+  keyword-derived row was live; the transcription core function is now anchored
+  to the more specific proposed `GO:0140673 transcription elongation-coupled
+  chromatin remodeling` term.
 - Changed the generic `GO:0005515 protein binding` IPI rows without a histone
   WITH/FROM partner to `REMOVE` and the HHT2-backed rows to `MODIFY` toward
   `GO:0042393 histone binding`. The AP-MS and targeted interaction evidence is
@@ -100,7 +102,11 @@ associations with epigenetic, transcription, and repair factors [PMID:39855624].
   `REMOVE`.
 - Clarified that the retired ComplexPortal `GO:1902275 regulation of chromatin
   organization` row is now superseded by current `GO:0006335
-  DNA replication-dependent chromatin assembly`, and tightened the two broad SGD
+  DNA replication-dependent chromatin assembly`, and pointed its MODIFY
+  replacement at the current ComplexPortal term. Tightened the two broad SGD
   `GO:0006325 chromatin organization` rows so they describe the generic
   biochemical nucleosome-reorganization evidence rather than the narrower
   transcription or replication contexts.
+- Updated the IBA sidecar totals and action-change ledger after the PR follow-up
+  so the audit records all 43 rows and the final `NEW`, `MODIFY`, and
+  `KEEP_AS_NON_CORE` calls.
