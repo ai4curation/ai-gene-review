@@ -103,3 +103,5 @@ Report errors:
   but they are irrelevant to function.
 
 No annotation action changed because of the report.
+
+- Coordinator follow-up: the two GO:0070886 positive regulation of calcineurin-NFAT signaling cascade (NAS) rows were changed from MARK_AS_OVER_ANNOTATED to MODIFY -> GO:0033173, matching the PPP3CB review.
