@@ -122,4 +122,59 @@ trunk). 161 existing GOA rows plus one proposed new row.
 
 ## Deep research integration (falcon)
 
-Pending at the time the annotation review was written; see the section appended below.
+The Falcon report (`file:human/CD4/CD4-deep-research-falcon.md`, Edison Scientific, 40
+citations) arrived after the annotation review was written and was then sorted claim by claim.
+
+**Adopted (traced to primary papers, now cached and quoted):**
+
+- *Compact TCR-CD3-pMHCII-CD4 macrocomplex.* FRET between the CD4 and CD3-delta cytosolic
+  juxtamembrane regions increases on concurrent engagement of the same agonist pMHC
+  [PMID:27183595 "indicating that concurrent TCR and CD4 engagement of agonist pMHC positions
+  CD3delta and CD4 in a cl"], and notably the clasp domain was replaced by the FRET probe, so
+  the proximity is not an artefact of LCK-ITAM binding [PMID:27183595]. This strengthens the
+  reasoning behind marking the `part_of` T cell receptor complex row over-annotated: ligand-
+  induced proximity is not subunit membership.
+- *Microvillar-tip localization.* [PMID:31001252 "CD4 accumulates at the tips of T-cell
+  microvilli."] and the LCK dependence of that accumulation; added to the core coreceptor
+  function and raised as a suggested question, since no GO term covers this sub-compartment.
+- *Short isoform 2.* It retains D4, the TM segment and the LCK-binding tail but lacks the
+  distal domains, so it binds LCK and enhances ZAP70 phosphorylation in vitro while being
+  unable to bind HLA class II [PMID:38557723 "From a structural perspective, the lack of D1 and
+  D2 domains prevents isoform 2 from directly binding HLA class II"]. Recorded in the
+  description and as a suggested question about isoform-specific annotation.
+- *Human inherited CD4 deficiency, 2024 cohort.* Seven patients from five families, no
+  detectable CD4+ T cells, expanded helper-like double-negative TCR alpha-beta cells with
+  reduced but real HLA-II-restricted responses [PMID:38557723]. This is a better primary source
+  than the single-case report PMID:31781092 and both are now cited.
+- *Macrophage recycling.* CD4 recycles constitutively in primary macrophages with roughly
+  40-50% intracellular at steady state; added as support for keeping the early endosome rows
+  non-core, with the proteomic source cached (PMID:21533244).
+- *Framing checks the report gets right and that the review follows:* LCK is the kinase and CD4
+  has no catalytic activity; CD4 is the primary HIV receptor while CCR5/CXCR4 are the entry
+  coreceptors.
+
+**Noted but not adopted as asserted:**
+
+- The report cautions that stable CD4 oligomers and discrete lipid-raft localization "should
+  not be treated as established universal requirements" in living cells. The review keeps both,
+  because the raft claim rests on direct human-cell mutagenesis [PMID:12517957] and the
+  dimerization claim on mapped point mutants plus structures [PMID:12444132, PMID:9168119,
+  PMID:7604010]; the caveat is recorded here rather than weakening the annotations. It is a
+  fair caution about mechanism, not a contradiction of the data.
+- A mouse result quoted second-hand inside PMID:38557723 (that the CD4-LCK interaction was not
+  required for commitment of class II-restricted thymocytes to the CD4 lineage) was not used:
+  it is a secondary citation and would need the primary paper before it could bear on the
+  lineage-commitment rows, which are non-core in any case.
+- Clinical material (ibalizumab, UB-421, CD4 counts in advanced HIV disease, trial
+  NCT02475629) is accurate but irrelevant to GO annotation and was left out.
+
+**Report errors / weaknesses:** none that affect the review. The report gives no PMIDs, only
+author-year keys and DOIs, so every adopted claim had to be resolved to a PMID by hand
+(Guérin 2024 = PMID:38557723, Glassman 2016 = PMID:27183595, Glatzová 2019 = PMID:31001252,
+Raposo 2011 = PMID:21533244, Jönsson 2016 = PMID:27114505, already cited by GOA). It leans
+heavily on two sources (the Guérin cohort and the Glatzová review) and does not mention the
+zinc clasp, the Phe43 contact, the D4 dimerization site, the IL-16 controversy or the human
+monocyte/macrophage differentiation role -- all of which the GOA rows required and which were
+sourced independently. Its statement that CD4 is "458 amino acids" is correct for the
+precursor (UniProt P01730: 458 AA, signal peptide 1-25, mature chain 26-458). It also prints a sentence fragment
+in one table cell (a truncated "in a cl..."), which is why the quote used here ends mid-word.

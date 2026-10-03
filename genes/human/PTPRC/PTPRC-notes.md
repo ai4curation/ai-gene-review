@@ -24,3 +24,23 @@ Review created 2026-10-03 for the ADAPTIVE_IMMUNITY project (T cell receptor are
 ## Additional publications cached
 
 - PMID:17719247 (McNeill 2007, LCK rheostat), PMID:11201744 (Irie-Sasaki 2001, JAK phosphatase), PMID:10700239 (Kung 2000, human SCID).
+
+## Deep research integration (falcon)
+
+Report: `PTPRC-deep-research-falcon.md` (Edison/falcon, completed in ~20 min). Used as leads only; every adopted claim was traced to a cached primary paper.
+
+Adopted (verified and cached):
+- CD45 as a "gatekeeper": maintains a regulatable pool of active LCK while suppressing zeta-chain phosphorylation [PMID:31641081 "Acute inhibition of Csk revealed that CD45 suppressed ζ-chain phosphorylation and was necessary for a regulatable pool of active Lck"]. Added to core function 1 and to the regulation of TCR signaling rows.
+- Size-based ectodomain segregation (kinetic segregation) [PMID:23580664 "the large ectodomains of CD45 and CD148 modulate their inhibitory effect by enabling their passive, size-based segregation from ligated TCR"]. Added to core function 1 and the description.
+- No known ligand, but extracellular dimerizing ligands inhibit CD45 [PMID:39454026 "despite a lack of a known ligand, CD45 activity can be modulated by extracellular dimerizing ligands"]. Used in the GO:0005001 rows, description, suggested question and a suggested experiment.
+- Second human SCID case [PMID:11145714 "provides direct evidence for the importance of CD45 in immune function in humans"].
+
+Rejected / not used:
+- JAK phosphatase role described by the report as "less securely established". Kept as a separate core function because the primary mouse paper shows direct in vitro dephosphorylation and binding of JAKs (PMID:11201744) and human anti-CD45 data agree (PMID:12574355); recorded as moderate confidence.
+- UBR4/IKZF1 IgG4-related disease and circulating-tumor-cell CD45 (2024): context effects, not PTPRC functions; not used.
+- Therapeutic sections (base editing, CAR T, 131I-BC8 radioimmunotherapy): outside GO scope.
+- Roberts 2012 uniparental-disomy SCID case: not needed beyond the two cached SCID reports.
+
+Report errors / caveats:
+- No factual errors found in the claims checked. Citations are by internal keys (e.g. "hermiston2009cd45cd148and pages 4-5") rather than PMIDs, and several statements rely on reviews (Hermiston 2009, Al Barashdi 2021) rather than primary data.
+- It describes the D2 domain as supporting "folding, substrate recruitment, and regulation"; only the substrate-binding role is supported in the papers cached here (PMID:14625311).
