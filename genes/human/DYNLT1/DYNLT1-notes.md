@@ -3,8 +3,10 @@
 ## Deep research status
 
 - First run (`--fallback perplexity-lite`) stopped (falcon 600 s default timeout; perplexity-lite
-  unavailable). Re-run with `--timeout 2400`; outcome recorded at the end. Review based on cached
-  literature.
+  unavailable). Re-run with `--timeout 2400`: SUCCEEDED (falcon; DYNLT1-deep-research-falcon.md).
+  It added Saito et al. 2017 (PMID:28607034), the 2024 DYNLT1-DYNLT2B heterodimer structure, OX1R
+  and KIM-1 interactions, and a sperm/infertility association. These are integrated below where
+  relevant.
 
 ## Identity
 
@@ -48,6 +50,15 @@
   the term fits the existing convention for regulators that execute part of the resorption
   programme. Evidence is the 2011 abstract (cached abstract-only) plus Yeh et al. 2013 (full text).
 
+## Mechanism of resorption (Saito et al. 2017; from deep research, verified in cached full text)
+
+- [PMID:28607034 "Tctex-1, originally identified as a cytoplasmic dynein light chain, has a dynein-independent role in ciliary resorption upon phosphorylation at Thr94."]
+- [PMID:28607034 "Phospho(T94)Tctex-1 is required for Cdc42 activation before the onset of ciliary resorption."]
+- [PMID:28607034 "our results support a model in which phospho(T94)Tctex-1-regulated actin polymerization and periciliary endocytosis play an active role in orchestrating the initial phase of ciliary resorption."]
+- Deep research also reports the purified DYNLT1-DYNLT2B heterodimer (SEC-MALS 28.1 kDa, 2 Å
+  crystal structure; Mukhopadhyay et al. 2024, not cached here), plus OX1R and KIM-1 interactions
+  (not curated: no GOA rows, cell-model evidence).
+
 ## Curation decisions summary
 
 - ACCEPT core: cytoplasmic dynein complex, dynein complex, dynein intermediate chain binding,
@@ -63,7 +74,8 @@
 - KEEP_AS_NON_CORE: spindle orientation, GPCR signaling regulation, negative regulation of
   neurogenesis, viral protein transport, Rab3D/secretory vesicle, Golgi, spindle, cytoplasmic
   microtubule, positive regulation of intracellular transport.
-- NEW: GO:0061523 cilium disassembly (IMP, PMID:21394082).
+- NEW: GO:0061523 cilium disassembly (IMP, PMID:21394082; mechanism PMID:28607034) and
+  GO:0035869 ciliary transition zone (IDA, PMID:21394082).
 
 ## HPA cilium atlas vs module role
 
@@ -75,5 +87,5 @@
   sub-population detected with a phospho-T94 antibody, while total Tctex-1 is mostly cytosolic.
 - core_functions lists the dynein light chain role (dynein-1 and dynein-2) first, because it is the
   constitutive, best-supported function, and the resorption role second. The module should treat
-  DYNLT1 as pleiotropic: the resorption function is a regulated activity (possibly dynein-independent, not established) of a
+  DYNLT1 as pleiotropic: the resorption function is a regulated, dynein-independent activity (PMID:28607034) of a
   phospho-pool, and dynein-2 membership also links it to retrograde IFT and length control.
