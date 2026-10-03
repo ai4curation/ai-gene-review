@@ -1,0 +1,35 @@
+# BSND curation notes
+
+## 2026-10-03 — barttin channel-regulator review
+
+The reviewed human UniProt record is Q8WZ55 (secondary accession Q6NT28), BSND/BART, HGNC:16512, 320 amino acids. The imported record contains no named alternative-products section and the 52-object seed has no `alternative_products` slot. The frameshift caution on BC069510 is not a named functional isoform. Partner accessions with isoform suffixes remain partner identifiers; they are not converted into BSND isoform annotations.
+
+The normal source run 37117972985 at immutable commit `944f6386ed0a51d64c91daf95b372b625afe22cb` produced the complete 52-row GOA projection. ROOT imported three primary files, two absent publication caches and one Reactome cache after authenticated artifact recovery. The two pre-existing publication variants were retained unchanged. The PANTHER exports remain quarantined. No source file was rewritten during this review.
+
+### Molecular mechanism and annotation decisions
+
+Barttin is an accessory regulator of ClC-Ka/ClC-Kb channels. The [2002 primary abstract](https://pubmed.ncbi.nlm.nih.gov/12111250/) reports channel coexpression, altered currents, increased surface abundance and co-immunoprecipitation. These observations support both association and a functional regulatory role. They do not demonstrate that barttin supplies the conducting pore, or a purified binary interaction. The two targeted generic-binding rows are refined to chloride channel regulator activity, overlapping an already annotated function rather than manufacturing a new annotation.
+
+The two chloride-channel annotations already have `contributes_to`. They are retained on that complex-subunit interpretation. The two general complex annotations are refined to chloride channel complex. Official GO defines [GO:0017081](https://amigo.geneontology.org/amigo/term/GO:0017081) by channel binding and modulation and [GO:0034707](https://amigo.geneontology.org/amigo/term/GO:0034707) by chloride passage through the assembled complex. A single core connects the own regulator activity, contribution to channel activity and [chloride transmembrane transport](https://amigo.geneontology.org/amigo/term/GO:1902476). This specific process subsumes the broad transport ancestor in the synthesis. No NEW annotation, independent pore activity, exact complex stoichiometry or separate chaperone activity is asserted.
+
+The inner-ear physiological role is retained as non-core sensory context. The [official abstract of PMID:11734858](https://pubmed.ncbi.nlm.nih.gov/11734858/) independently describes ClC-K/barttin heteromers in renal and inner-ear basolateral membranes. It was read as external context; it is not yet a normal cached YAML reference or quoted support. The YAML hearing rationale cites the imported curated UniProt record and does not claim an independent audit of the original mouse inference.
+
+### Localization discrepancy resolved from primary text
+
+The normal cache for [PMID:18776122](https://pmc.ncbi.nlm.nih.gov/articles/PMC2615720/) is abstract-only despite its PMCID. Its abstract calls WT insertion preferentially apical. In contrast, the accessible official indexed Results and Figure 5 caption explicitly place WT predominantly basolaterally and describe increased apical/equalized distribution with E88X. Selected Methods identify human barttin/ClC-K constructs, polarized MDCK filter cultures, confocal localization and sided surface biotinylation. The basolateral IDA assertion is therefore accepted. This is human protein in a model epithelium, not direct native-human kidney imaging. Direct PMC opening returned a challenge; the successful indexed passages and consultation are saved in `tmp/BSND-localization-consultation/`. No figure images or complete-paper access are claimed, and the canonical cache remains unchanged.
+
+### Interaction-screen boundaries and reference access
+
+The 26 HuRI and five neurodegeneration-map rows retain their exact source partner accessions and remain UNDECIDED. The canonical HuRI entry includes an XML-derived body, but the BSND-specific pair records and validation tables were not inspected. The other map is abstract-only. UniProt interaction listings corroborate that these are curated reported edges; they do not independently establish each original screen result or its physiological function. No wrong-gene accusation, partner-function transfer or removal for low informativeness is made. The standing [project curation instruction](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions) retains supported correct generic binding as KEEP_AS_NON_CORE when a specific replacement is not established; unresolved evidence remains UNDECIDED.
+
+All four canonical publication abstracts, the complete UniProt record and complete Reactome entry were read. Reactome includes CLCN1/2 as well as CLCNKA/B; only its BSND-associated channel passage informs this review. Other channels' oligomeric properties are not transferred. GO method references remain machine-sourced; no complete PAINT tree or ortholog-donor audit is claimed, and the human target appearing among PAINT evidence is not treated as circular. The local GO-CAM index search returned no BSND/Q8WZ55 hit; no NEW inference depends on that absence.
+
+### Research and review record
+
+The standard Falcon research attempt with perplexity-lite fallback failed DNS and produced no provider output. Its filtered, credential-safe outcome is saved in `tmp/BSND-scientific-proposal/provider-attempt-assessment.json`; these notes are manual research and are not provider-branded output. All 52 decisions were authored in TMP, preserving every machine annotation field and all ten original reference identities. One UniProt file reference was added. Four canonical-cache-exact quote entries total 20 words from PMID:12111250 and eight from PMID:18776122, counting repeats. Bloc supplied a bounded localization/core consultation; ROOT remains the independent final science reviewer.
+
+All 52 annotations have been assessed, with 31 explicit UNDECIDED screen assertions. Normal full candidate validation including terms, references and GOA completed with zero curation warnings or errors. The final review status is COMPLETE under the repository no-PENDING/no-warning rule; it does not resolve those evidence limits. The external pkg_resources deprecation message is a tooling advisory. Independent science approval and canonical application follow separately.
+
+## 2026-10-03 — canonical application
+
+The independently reviewed candidate was applied after checking the exact seeded preimage. Normal canonical validation passed without errors or curation warnings, and the standard codex/gpt-6 CREATE history was scaffolded and validated. COMPLETE records assessment of all 52 assertions; 31 source-specific screen edges remain UNDECIDED. The original source fields, raw GOA and UniProt records, normal publication caches, Reactome entry and quarantined family exports were preserved. Earlier candidate-stage statements above describe the prior stage and are superseded by this application entry.
