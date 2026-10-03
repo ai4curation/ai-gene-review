@@ -1,0 +1,41 @@
+# C19orf12 functional review
+
+## Evidence and scope — 2026-10-03
+
+This review assesses all 22 normal seeded GO assertions for human C19orf12 (UniProtKB Q9NSK7; HGNC:25443). The source annotation objects, original evidence and references, and four `alternative_products` records are preserved. The normal source run was 37122400122, and its authenticated artifact supplied the new seed and five publication caches. The existing PMID:34800366 cache was preserved byte for byte; its archive variant and the two PANTHER family exports remain supplemental or quarantined material. No family-level annotation is substituted for a gene assertion.
+
+The product names require care: named isoform **1** is Q9NSK7-4 (the displayed sequence), named isoform **4** is Q9NSK7-1, and names **2** and **3** map to Q9NSK7-2 and Q9NSK7-3. Older papers use historical long/short constructs and variant numbers. Those labels are not assumed to equal modern accession suffixes. The gene-level GOA rows do not establish identical function or localization for every product.
+
+The ordinary Falcon/fallback wrapper initially failed at its uvx launcher before provider execution because it could not create a temporary tool directory. The documented installed-client override then invoked the exact installed deep-research-client 0.2.7rc1 with Falcon and the normal perplexity-lite fallback once. Both failed with DNS errors, and neither created a provider output. The assessment therefore uses manually read primary sources and the preserved UniProt record; no manually authored provider-branded file was created.
+
+## Primary functional synthesis
+
+[PMID:38565923](https://pubmed.ncbi.nlm.nih.gov/38565923/) provides the strongest current functional evidence. Its human adipocyte experiments combine organellar proteomics, targeted immunofluorescence, GFP-tagged co-IP proteomics, and early versus late siRNA depletion. C19orf12 is detected around lipid droplets and near mitochondria; TOM40, TOM22 and TOM5 occur in the co-IP results. Late depletion impairs lipid turnover and fatty-acid-dependent respiratory capacity. The palmitate and etomoxir comparisons distinguish this phenotype from simple substrate scarcity or a general respiratory defect. These results support the existing lipid metabolic process annotation as the core biological role.
+
+The paper explicitly leaves the molecular mechanism unresolved. Association with TOM proteins does not establish a stable TOM subunit, pore activity, direct lipid transfer, enzymatic activity, or a demonstrated tethering reaction. Accordingly, the single core uses the existing lipid metabolic process and lipid-droplet/mitochondrial-membrane locations while omitting an unestablished molecular-function term and `in_complex`. No new process or molecular-function annotation is proposed. Mechanistic alternatives belong in the expert questions rather than being inferred from a membrane domain or depletion phenotype. Complete C19orf12-specific Results and Discussion paragraphs, the Figure 6 caption, and relevant knockdown, immunofluorescence and co-IP Methods were read; the images and supplementary datasets were not independently analyzed.
+
+[PMID:21981780](https://pubmed.ncbi.nlm.nih.gov/21981780/) establishes human mitochondrial localization through tagged protein, antibodies and fractionation. Its separate mitochondrial-import experiment uses mouse mitochondria. Selected complete localization Methods, functional Results and Discussion were read. The clinical iron-accumulation phenotype does not itself establish iron transport, binding or metabolism. [PMID:23857908](https://pubmed.ncbi.nlm.nih.gov/23857908/) provides explicit ER and mitochondrial localization of wild-type recombinant protein, with altered distributions of pathogenic variants and comparable effects from different tag placements. Its complete cached narrative was read; its supplementary images were not.
+
+## Context-dependent cellular effects
+
+[PMID:26136767](https://pubmed.ncbi.nlm.nih.gov/26136767/) combines endogenous HEK293 fractionation, recombinant HeLa localization/live imaging, overexpression experiments and G58S patient-fibroblast measurements. These are distinct evidence types. Native fractionation supports mitochondrial, ER and mitochondria-associated membrane pools. Wild-type tagged protein redistributes during peroxide exposure; mutant redistribution is different and is not copied into wild-type localization claims.
+
+The autophagy evidence includes LC3 puncta/conversion, reduced p62 and an NH4Cl flux control. It supports a contextual regulatory association, without establishing that C19orf12 is an autophagosome component or a selective mitophagy executor. Patient fibroblasts show greater stress-induced cell death and mitochondrial calcium responses than controls. These existing process assertions are retained as non-core effects, not converted into apoptotic catalysis or calcium transport. The MgtE-like regulatory model remains computational/speculative. Complete relevant Results, captions and selected Methods were read, plus the interpretive Discussion; no supplementary-image analysis is claimed.
+
+## Access limits and curator deference
+
+[PMID:22508347](https://pubmed.ncbi.nlm.nih.gov/22508347/) is a normal abstract-only clinical cache. Its complete abstract was read, but its original localization assays were not available in that text. The mitochondrial and ER assertions remain accepted because they are independently substantiated by targeted wild-type experiments in other cited papers and curated in UniProt. This does not pretend that the clinical abstract supplies those assay results.
+
+[PMID:34800366](https://pubmed.ncbi.nlm.nih.gov/34800366/) describes MitoCoP, a human mitochondrial proteome framework. Its complete abstract was read, but the preserved cached body does not contain a C19orf12-specific table entry. The target HTP assertion is retained with explicit experimental-curator deference and independent mitochondrial-localization support. A full-text flag is not treated as target-table verification. Likewise, the original GO_REF:0000052 Human Protein Atlas image was not inspected; the cytosolic assertion is independently corroborated by primary fractionation and stress-response observations.
+
+All six publication identities and titles were checked against the normal cached records. Short YAML anchors are exact cache substrings, with aggregate quotation use kept below 25 words per publication including repeated use. Reference-only support is used elsewhere. Source caches remain immutable.
+
+## Decisions and completion
+
+All 22 source assertions are assessed: 16 ACCEPT and 6 KEEP_AS_NON_CORE; no NEW assertions are introduced. The non-core group comprises the two cytosolic rows and the autophagy, apoptosis, oxidative-stress and mitochondrial-calcium process rows. Accepted locations are not claims of exclusive residence, and retention of an experimental assertion with independent corroboration is not a claim to have inspected its unavailable original assay.
+
+The project’s [standing curation instruction](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions) retains supported generic binding as non-core when no evidence-backed replacement is established. This seed has no generic protein-binding rows. The review does not invent an MF to fill that absence. Full normal candidate validation passed with zero review warnings, consistent with COMPLETE status; the absence of a resolved molecular mechanism is recorded explicitly in the core and expert questions. Independent whole-review approval and subsequent canonical application are tracked in session provenance.
+
+## 2026-10-03 — reviewed application
+
+The exact candidate was applied after independent ROOT whole-science approval and source-preimage checks. Candidate and canonical normal validation passed with zero review warnings; COMPLETE records that all 22 assertions are assessed (16 ACCEPT and 6 KEEP_AS_NON_CORE), while the unresolved molecular mechanism remains explicit. A standard codex/gpt-6 CREATE history was scaffolded and validated. All four product records, raw source files, publication caches and any pre-existing histories were preserved. The targeted HTML page was rendered from the reviewed YAML.
