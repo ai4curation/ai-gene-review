@@ -2994,7 +2994,8 @@ The 188 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
 Completion evidence cutoff: **2026-10-03 10:42:33 UTC**. See the
 [checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-187)
-for the verified merge and retained biological uncertainty.
+for the verified merge and retained biological uncertainty. See also the
+[checkpoint history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T105722Z-codex-aeb9aa.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
