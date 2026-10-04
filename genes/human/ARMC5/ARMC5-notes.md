@@ -17,7 +17,6 @@
   - Ubiquitin-like ligase-substrate adaptor activity, Cul3-RING complex, proteasomal degradation, Pol II transcription initiation surveillance.
   - Nucleus and cytoplasm.
 - KEEP_AS_NON_CORE:
-  - Chromatin and chromosome (transient).
   - Protein ubiquitination (broad IEA).
   - Anatomical structure morphogenesis (IBA).
 - MODIFY:
@@ -25,3 +24,11 @@
   - CUL3 binding → cullin family protein binding.
 - UNDECIDED: membrane (IEA from mouse).
 - REMOVE: 25 other protein-binding rows (policy). The POLR2A substrate relationship is captured by the adaptor rows.
+
+## Review round 1 (PR #4188)
+- Chromatin and chromosome are now ACCEPT, and chromatin is a core-function location. PMID:39854452 (SPT5/CUL3-ARMC5, full text) shows GFP ChIP-seq occupancy of ARMC5 at promoter-proximal regions that is CDK9-dependent, and identifies ARMC5 as the adaptor for chromatin-bound, SPT5-depleted Pol II. PMID:39667934's "mostly soluble" result is still noted.
+- The CUL3 binding MODIFY now cites PMID:32023208 (BTB-dependent CUL3 binding).
+- The GO:0061630 MODIFY is noted as merging into the GO:1990756 IEA row.
+- Two truncated sentence-splitter quotes were replaced, and the duplicate supported_by entries removed.
+- The GO:0009653 reason is reframed as a non-core developmental role.
+- NRF1 (PMID:36040830) and USP7 (PMID:33544460) are cached but not used for annotations: NRF1 turnover is a single adrenal study, and USP7 regulates ARMC5 rather than being an ARMC5 activity.
