@@ -7,3 +7,14 @@
 - Human: heterozygous POI variants weaken REC114 binding [PMID:34257419].
 - Epididymis [PMID:34820371]: reports junction-protein interactions and a BEB defect, which sits uneasily with "no somatic defects" in PMID:31003867. Noted; no GO drawn.
 - No IBAs; PAN-GO 0.
+
+## Round 2 (reviewer, PR #4114)
+
+- NEW GO:0030674 protein-macromolecule adaptor activity (ISS from mouse), now the core MF. Basis: direct REC114 PH binding (crystal), several partners (including IHO1 per UniProt), and separation-of-function alleles that lose only the REC114 contact and phenocopy the null.
+- Cited three papers that had been uncited:
+  - PMID:32461690: PAR hyperaccumulation requires ANKRD31 and is linked to mo-2 arrays.
+  - PMID:37431931: IHO1, TOPOVIBL and ANKRD31 share a REC114 PH surface.
+  - PMID:38580643: ANKRD31 is a complementary route to IHO1-HORMAD1 seeding.
+- The question and experiment are reworded so they build on PMID:32461690 instead of re-asking what it answered.
+- Core locations now include chromatin. The GO:0007129 reason names acts_upstream_of_or_within as the accurate qualifier.
+- Affinage reference_review: verification is scoped to the rows used. Its PMID:41706353 row lists 2023, but the record is 2026.
