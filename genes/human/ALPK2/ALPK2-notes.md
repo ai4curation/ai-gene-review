@@ -26,3 +26,11 @@ Decisions:
 - **GO:0010468** (siRNA lowering DNA repair mRNA in one cell line): MARK_AS_OVER_ANNOTATED.
 - **Epicardium morphogenesis:** verified as a zebrafish tcf21:DsRed assay in the full text.
 
+
+## Follow-up after merge (PR #3986 approving review)
+
+Applied the reviewer's non-blocking items, two of which were factual errors:
+- **Retained-row count:** the boundary said "11 retained process rows". Recounted from the file after this change: seven BP rows are KEEP_AS_NON_CORE.
+- **Phosphosite count:** the question now says "14 other phosphosites" beyond TPM1.
+- **Human constructs:** the TPM1 Ser283 reconstitution used human ALPK2 catalytic domain and human TPM1 (Methods), and the description now says so.
+- **GO:0030010** now matches its reason: MARK_AS_OVER_ANNOTATED.
