@@ -10,9 +10,17 @@
 - **The 3 IBAs (spindle orientation, spindle, bipolar cell polarity):** KEEP_AS_NON_CORE with NO_FAILURE_NON_CORE.
   - These are plausibly ancestral: the Bnd authors note the mammalian Bnd-Dlg interaction is conserved.
   - No vertebrate counter-evidence, but untested in vertebrates in the studies reviewed. Single donor, but per CLAUDE.md donor count is not weakness.
-- **NEW: GO:1904326 negative regulation of circadian sleep/wake cycle, wakefulness** (ISS from mouse PMID:37821426).
+- **NEW (round 1, withdrawn in round 2): GO:1904326 negative regulation of circadian sleep/wake cycle, wakefulness** (ISS from mouse PMID:37821426). See round 2: the paper's Results show total wake time unchanged.
   - Participation: mWAKE lowers the excitability of the neurons it sits in.
   - Comparator: fly WAKE carries GO:0045938, positive regulation of circadian sleep/wake cycle, sleep.
   - Mouse Ankfn1 (F6X7B3) has no GO annotations at all, so this is an uncurated gap, not a convention.
 - **MF_DARK gap:** the molecular target is unknown.
 - **Not used:** the HCC/MEK-ERK claim (PMID:35725908), a single cancer study.
+
+## 2026-10-04 round 2 (reviewer comments on #4072)
+
+- **Withdrew GO:1904326.** I quoted the abstract's "brake on arousal" framing, but the Results of PMID:37821426 say "mWake mutants exhibit changes in the quality, but not quantity, of wakefulness at night". Total wake time is unchanged, so a negative-regulation-of-wakefulness term overstates it.
+- **NEW is now GO:1902608** positive regulation of large conductance calcium-activated potassium channel activity (ISS, PMID:39303704; mouse F6X7B3 in supporting_entities). The measured effect is "mWAKE promotes BK channel activity at night to inhibit neuronal excitability", and conditional knockouts in the DMH and CeA raise excitability (PMID:37821426, PMID:40835437). It is also the core function.
+- **Spindle IBA (is_active_in):** now has its own CC reasoning. FlyBase records spindle and centrosome IDA for Banderuola from the full text, while the cached abstract stresses cortical domains. Kept non-core rather than adopted.
+- **Affinage accounting:** PMID:40835437 is used. PMID:36533556 (crispant cilia screen) and PMID:33140455 (expression atlas) are declined, with reasons.
+- **No vestibular term:** zebrafish double mutants and the mouse nmf9 allele show that ANKFN1 is needed for vestibular function, but not what it does there, so no vestibular process term is proposed (necessity, not participation).
