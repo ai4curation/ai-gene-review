@@ -7,3 +7,11 @@
 - **ENTREP1 (FAM189A2) IPIs ×3** (BioPlex 2.0, BioPlex 3.0, ENTREP Y2H; UniProt NbExp=3). Reproducible and coherent with ITCH/RNF11 links (PMID:31985874, abstract), but GO:0005515 is uninformative → REMOVE, raised as a question.
 - Affinage: gates clear, but it cites only PMID:31985874 and attributes the ANKRD13A-RNF11-EGFR transient complex to ANKRD13D. Nothing taken from it.
 - No NEW terms.
+
+## Round 2 (reviewer, PR #4100)
+
+- Late endosome IEA (GO_REF:0000044) comes from UniProt SubCell, which records late endosome as experimental (ECO:0000269, PMID:22298428), not from PAINT. Reason rewritten to cite that line; still KEEP_AS_NON_CORE because the paper calls the colocalization marginal.
+- Late endosome IBA: the source entities are now SUPPORTS_TRANSFER, with the "13D not a seed; minor pool" caveat in the node comment. The previous SUPPORTS_SOURCE_BUT_NOT_TARGET contradicted NO_FAILURE_NON_CORE.
+- Duplicate reference entries (UniProt, affinage) removed. The stub already seeds them; the builder now de-duplicates, and qcheck now flags duplicate reference ids.
+- NEW GO:0070530 K63-linked polyubiquitin modification-dependent protein binding (IDA, PMID:22298428). This is not redundant with GO:0140036; the two are siblings under modification-dependent protein binding.
+- GO:0002091 reason now says why GO:0002092 (positive) is not proposed: it is the authors' interpretation, and no loss-of-function experiment has tested it.
