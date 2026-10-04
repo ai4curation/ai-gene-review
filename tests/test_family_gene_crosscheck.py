@@ -252,6 +252,15 @@ def test_exception_for_member_outside_scope_is_vacuous(tmp_path):
     assert result.verdict is Verdict.CONFLICT
 
 
+def test_exception_for_member_without_subfamily_is_unresolved_not_conflict(tmp_path):
+    """A missing PANTHER SF cross-reference is a gap, as in check_scope_violations."""
+    gene = _write_gene(tmp_path, "PGRPLB", None, "REMOVE")
+    results = check_member_exceptions(_review_with_exception(), {FAMILY: [gene]})
+    verdicts = {r.kind: r.verdict for r in results}
+    assert verdicts["EXCEPTION_OUTSIDE_SCOPE"] is Verdict.UNRESOLVED
+    assert Verdict.CONFLICT not in {r.verdict for r in results}
+
+
 def test_exception_on_not_applicable_term_is_rejected(tmp_path):
     gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
     review = _review_with_exception(scope="NOT_APPLICABLE")

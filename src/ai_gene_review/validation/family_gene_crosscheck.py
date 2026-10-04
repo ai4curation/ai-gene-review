@@ -383,7 +383,18 @@ def check_member_exceptions(
                 # the family review's own evidence.
                 continue
 
-            if scope == "SUBFAMILY_ONLY" and gene.subfamily not in allowed:
+            if scope == "SUBFAMILY_ONLY" and gene.subfamily is None:
+                # As in check_scope_violations: no PANTHER subfamily cross-reference
+                # means we cannot place the member, which is a gap, not a contradiction.
+                results.append(
+                    CrossCheck(
+                        "EXCEPTION_OUTSIDE_SCOPE", family, label, None, term, "-",
+                        Verdict.UNRESOLVED,
+                        "member has no PANTHER subfamily cross-reference, so it cannot be "
+                        "placed inside or outside the term's applicable subfamilies",
+                    )
+                )
+            elif scope == "SUBFAMILY_ONLY" and gene.subfamily not in allowed:
                 results.append(
                     CrossCheck(
                         "EXCEPTION_OUTSIDE_SCOPE", family, label, subfamily, term, "-",
