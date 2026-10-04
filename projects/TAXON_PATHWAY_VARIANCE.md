@@ -30,8 +30,8 @@ This project does two things:
 1. **Documents lineage-specific pathway variants** — where a pathway runs without a
    component its GO term presupposes, how the lineage does it instead, and which
    modules and gene reviews capture that.
-2. **Captures proposed new taxon constraints** in a machine-readable table
-   ([proposed_taxon_constraints.tsv](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.tsv)),
+2. **Captures proposed new taxon constraints** in a machine-readable YAML file
+   ([proposed_taxon_constraints.yaml](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.yaml)),
    each with the evidence for the absence and the annotations it would block, ready to
    hand to GO.
 
@@ -95,12 +95,11 @@ regulator) and worm GEI-17, so no subfamily-level scope can separate them. See
 
 ## Proposed taxon constraints
 
-See [proposed_taxon_constraints.tsv](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.tsv).
-Columns: `go_id`, `go_label`, `constraint` (never_in_taxon / only_in_taxon),
-`taxon_id`, `taxon_label`, `existing_go_constraint` (what GO already has, if
-anything), `evidence` (PMID), `evidence_quote`, `blocks` (annotations it would remove),
-`would_wrongly_block`, `status` (PROPOSED / SUBMITTED / ACCEPTED / REJECTED),
-`source` (where in this repo the case was found).
+See [proposed_taxon_constraints.yaml](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.yaml).
+Each proposal records the GO term, the constraint (`never_in_taxon` / `only_in_taxon`),
+the taxon, any constraint GO already has, verbatim evidence, the annotations it would
+block, any it would wrongly block, a status (PROPOSED / SUBMITTED / ACCEPTED /
+REJECTED), and where in this repo the case was found.
 
 ## Candidate cases to scope next
 
