@@ -232,3 +232,29 @@ cores; no new annotation or structured isoform field was manufactured. The twent
 unresolved assertions record biological or source-access limits despite completion
 of the review. Canonical authored application and publication require the separate
 independent review step; existing source files and earlier notes remain unchanged.
+
+## 2026-10-04: response and pathway follow-up
+
+This focused reassessment preserves all 84 machine assertions, their rat donor identifiers, the biological description and the three catalytic cores. The historical MGI/RGD graph remains a March 2023 view, not a verified reconstruction of the current Ensembl transfer. An IEP label does not establish that an experiment measured only transcripts or passive expression; the newly inspected amine and caffeine abstracts report enzyme activities.
+
+The citrulline annotation is changed to MARK_AS_OVER_ANNOTATED. The normal CPS II abstract (PMID:7053379) separates the enzyme from CPS I. The inspected primary indexed Methods passage describes an added bacterial ornithine carbamoyltransferase in the activity assay. Producing citrulline through that coupling reaction does not establish physiological CAD participation in L-citrulline biosynthesis. Human CAD channels cytosolic carbamoyl phosphate to its own ATCase, whereas physiological ornithine-to-citrulline synthesis uses mitochondrial OTC. This interpretation combines the assay context and compartmentalized reactions; it neither disputes measured CPS II activity nor claims that pathological metabolite exchange is impossible. The full original assay protocol and the curator's original reasoning remain uninspected. The [official GO definition and parents](https://amigo.geneontology.org/amigo/term/GO:0019240) describe amino-acid formation, distinct from the laboratory detection of CPS activity.
+
+The pyrimidine-nucleoside biosynthesis annotation is refined to the already represented de novo UMP pathway, GO:0044205. CAD contributes its initial catalytic steps; DHODH and UMPS then act through orotate and OMP to UMP. Free nucleoside production is a different metabolic branch. The replacement does not assign the terminal UMPS reaction to CAD and is not a NEW annotation.
+
+Eight other donor-context decisions remain UNDECIDED after individual source checks. Their limits are recorded below; none is dismissed merely because it was transferred from rat or assigned with IEP.
+
+| Context | Historical donor source | Inspected evidence and remaining limit |
+| --- | --- | --- |
+| Liver and heart development | PMID:14160653 | Official record has no abstract; publisher preview describes ATCase tissue distribution but does not expose the developmental experiment. Adult-heart activity does not settle heart development. Independent CPS II activity in differentiating liver (PMID:7053379) does not resolve the exact developmental contribution. |
+| Pregnancy | PMID:6020217 | Verified mammary-gland ATCase/nucleic-acid bibliographic identity; abstract/body unavailable, so the relationship between enzyme activity and the pregnancy process remains unresolved. |
+| Lactation | PMID:1476792 | Historical graph attaches both lactation IEP and pyrimidine-biosynthesis IDA to this source. The abstract/body was not recovered; assay tissue and functional coupling remain unverified. |
+| Regeneration | PMID:13671431 | Primary record has no abstract and the donor experiment was not inspected. Independent elevated rat liver CPS II activity (PMID:7053379) is compatible with growth but does not resolve regeneration-specific participation. |
+| Testosterone response | PMID:6030068 | Official mammary-tumour bibliographic indexing includes testosterone. Exact hormone treatment and CAD-associated activity results remain inaccessible. |
+| Cortisol response | PMID:2353918 | The primary abstract/body was not recovered, leaving the treatment, tissue and CAD readout unresolved. |
+| Xenobiotic response | PMID:8548770 | Complete official indexed abstract reports cyclin-D1-associated CAD gene amplification in rat liver epithelial cells. The uninspected selection protocol does not distinguish functional dosage-mediated adaptation from CAD as a selected genomic marker. |
+
+Those uncached donor identifiers are access/provenance pointers in this notes table, not positive reference anchors in the YAML. No whole-paper reading, original figure inspection or exact current donor-snapshot reconstruction is claimed.
+
+The two additional normal abstracts resolve the amine and caffeine decisions to KEEP_AS_NON_CORE. PMID:2864015 measures rat hepatic enzyme activities after dimethylnitrosamine exposure, including the CPS II/ATCase/DHO pathway; PMID:6149265 reports increased rat-brain ATCase and DHO activities following high caffeine intake. These are activity responses, not proof of CAD-mediated drug degradation, and neither is presented as a measured human treatment response. The original Ensembl donor fields remain unchanged. Full protocols, individual data and figures were not inspected.
+
+The final 84-source decisions are 28 ACCEPT, 28 KEEP_AS_NON_CORE, 11 MODIFY, 16 UNDECIDED and 1 MARK_AS_OVER_ANNOTATED. Twelve reviews changed, with four action changes; all other decisions, description, three cores and machine fields remain exact. Two new reference assessments bring the bibliography to 33. The two new verbatim anchors contain 14 and 24 words respectively, each used once. No existing quotation was removed or changed.
