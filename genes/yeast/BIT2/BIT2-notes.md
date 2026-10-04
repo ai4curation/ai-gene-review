@@ -145,3 +145,10 @@ literature (PMID:15689497, PMID:11283351, PMID:29170376), the PANTHER/InterPro f
 - SGD locus page S000000474 — phenotype/paralog summary (viable null; oxidative-stress &
   farnesyltransferase-inhibitor sensitivities; WGD paralog BIT61).
 - GO_REF:0000015 (ND policy), GO_REF:0000033 (phylogenetic IBA) — method references.
+
+## 2026-10-01 Update: PTHR32428 IBA source review
+
+- Refreshed BIT2 from QuickGO and UniProt. The live GOA set still has seven rows; the refresh backfilled exact `supporting_entities` on the four IBA rows and the IC row without creating stale or new source assertions.
+- Re-read the cached PTHR32428 PAINT export. `PANTHER:PTN001286149` is the current IBD source node for `GO:0031932 TORC2 complex`, `GO:0019887 protein kinase regulator activity`, and `GO:0038203 TORC2 signaling`; `PANTHER:PTN001286169` is the current fungal Bit61/Bit2 source node for `GO:0007163 establishment or maintenance of cell polarity`.
+- Kept the action calls unchanged: TORC2 complex and TORC2 signaling are core for BIT2, while the broader cell-polarity and kinase-regulator IBAs remain non-core because the direct BIT2 molecular contribution is unresolved. Also kept SGD's `GO:0003674 molecular_function` ND row as a truthful MF-dark marker.
+- Searched for newer BIT2/TORC2 literature and cached PMID:41997113, the 2026 endogenous yeast TORC2 structure. Its abstract describes refined positions and interactions for TORC2-specific subunits and Avo1/Avo3-mediated activation, but it does not mention BIT2 or assign a BIT2-specific function, so it does not change the curation.
