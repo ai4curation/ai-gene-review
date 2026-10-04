@@ -14,6 +14,9 @@ Decisions:
   - Before this, ALCAM had no adhesion MF.
 - **CD6 interaction rows: MODIFY to GO:0005102 signaling receptor binding.**
 - **Galectin interaction rows: REMOVE.** The binding is carbohydrate-dependent lectin activity of the galectin, and there is no galectin-ligand term.
-- **Signal transduction (TAS): MARK_AS_OVER_ANNOTATED.** CD6 signals; ALCAM is the ligand.
+- **Signal transduction (TAS): MODIFY to GO:0042102 positive regulation of T cell proliferation** (changed in round 1 of PR #3969).
+  - Originally marked over-annotated on the grounds that it was "CD6's work, not the ligand's". That was wrong: GO's T cell costimulation definition includes the surface-bound ligand.
+  - Costimulatory ligands do carry descendants of positive regulation of T cell proliferation or activation (ICOSLG, CD70, CD47).
+  - Evidence: [PMID:16352806 "the presence of CD6-blocking antibodies or recombinant ALCAM-Fc proteins results in a strong and sustained inhibition of T-cell proliferation"]
 - **Neural rows: kept as non-core.** They are ISS from chicken BEN/DM-GRASP (P42292), IEA, or IBA.
 - **Also kept as non-core:** exosome and focal adhesion HDA rows, the secreted-isoform extracellular region rows, and TCR complex colocalization.
