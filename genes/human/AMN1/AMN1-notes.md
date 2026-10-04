@@ -18,11 +18,4 @@ Decisions:
 ## Round 1 (PR #4034 review)
 
 - **GO-CAM confirms the source-side mix-up.** `gocams/index.tsv` lists MGI:MGI:2442933 "Amn1 Mmus" in model 62900b6400002552, "Cobalamin transport, into enterocytes (Mouse)", as cargo receptor activity in the microvillus membrane, citing PMID:14321840 alongside Cubn and Cblif and with no Amn. That cargo-receptor role is amnionless's, the cubilin partner.
-- **All IBA donors verified as F-box proteins (UniProt F-box DOMAIN features):**
-  - FBXL5, FBXL7 and FBXL15 (human)
-  - Fbxl7 and Fbxl2 (mouse)
-  - Fbxl7 (fly)
-  - fbxl14a and fbxl14b (zebrafish)
-  - SKP2A, FBL17, FBL3 and EBF2 (Arabidopsis)
-  - D3 (rice)
-  - YDR306C and YLR352W (yeast; neither is yeast AMN1, P38285)
+- **IBA donors:** all verified as F-box proteins. Per-row donor IDs, UniProt accessions and F-box spans are in `AMN1-bioinformatics/RESULTS.md` (round 2).
