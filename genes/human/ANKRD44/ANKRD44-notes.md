@@ -8,3 +8,11 @@
   - WWP2 ×2, HSPB1, RNF11, WFS1 → REMOVE (Y2H screens).
 - Affinage attributes the IkBe knockdown in PMID:18186651 to ANKRD44, but that experiment tested ANKRD28 and PP6R1, so the record is marked LOW_QUALITY.
 - Trastuzumab-resistance phenotype [PMID:31297336]: one cell line; no GO term drawn.
+
+## Round 2 (reviewer, PR #4131)
+
+- "interchangeable" is replaced by "alternative". PMID:18186651 says the three ankyrin subunits "segregate into separate branches ... suggesting individual biological functions", and PMID:21187329 shows ANKRD52 lacks the mitotic role. The wrong word came from the affinage record.
+- Paralog provenance corrected: ANKRD28's GO:0008287 (IDA) and GO:0019888 (IMP) come from PMID:35512830, not PMID:18186651.
+- GO:0008287 now also cites the reciprocal FLAG-PPP6C mitotic purification in PMID:21187329.
+- The GO:0019888 reason states the evidence is phenotype-level. The four AP-MS sources of the PPP6R1 association are now relevance MEDIUM.
+- PMID:16555005 correctness is left unset because of the LOC91256 identifier caveat. The miR-133a paper (PMID:34350837) is now listed (LOW; no GO term).
