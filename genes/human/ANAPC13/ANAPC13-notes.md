@@ -8,3 +8,14 @@
   - All APC/C complex, catabolism, chain-type and cell-cycle regulation rows are accepted.
   - The 7 protein-binding IPIs are removed: 6 are proteome-scale CDC23 hits, already captured by the APC/C complex rows, and 1 is a WFS1 hit from a disease interactome.
 - **Not used from affinage:** the SF3B1-K700E/Treg paper (PMID:39303038). It concerns ANAPC13 expression levels, not ANAPC13 function.
+
+## 2026-10-04 round 2 (reviewer comments on #4056)
+
+- **Arc Lamp/TPR-lobe framing:** now cited to PMID:25490258.
+- **Nucleus row: ACCEPT changed to KEEP_AS_NON_CORE.** UniProt's basis is ECO:0000305. Yeast Swm1p is nuclear (PMID:10022899), but PMID:40238067 found overexpressed wild-type human APC13 "primarily found in the cytoplasm" in HEK293T cells. OpenCell (PMID:35271311) has no ANAPC13-specific localization sentence in the cached text.
+- **Meiosis:** added PMID:40238067 as a second infertility cohort. It carries the same p.D2E variant as PMID:41997520, so it is a second family, not an independent allele.
+- **Other fixes:**
+  - The CDC23 REMOVE reasons no longer cite yeast.
+  - The affinage reference_review now accounts for every affinage citation; the yeast sporulation and cell-wall roles are explicitly not propagated.
+  - Added a question on an adaptor/scaffold MF for TPR-lobe subunits.
+  - Fixed a typo.
