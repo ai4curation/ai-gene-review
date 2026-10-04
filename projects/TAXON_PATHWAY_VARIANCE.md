@@ -143,14 +143,12 @@ REJECTED), and where in this repo the case was found.
 |---|---|---|---|---|---|
 | TPV-001 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | worm STAT IBAs from PTN000927860 | direct evidence is for *C. elegans* |
 | TPV-002 | GO:0046425 regulation of receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | gei-17 and nematode PIAS/PTPN2 IBAs, ~100 IEAs | stated separately in case constraints do not propagate over regulates |
-| TPV-003 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | only_in_taxon | Metazoa (fallback: never in Dictyostelia) | Dictyostelium STAT IBAs; non-animal IEAs | needs GO:0007260 re-parented first (see below) |
+| TPV-003 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | only_in_taxon | Metazoa (fallback: never in Dictyostelia) | Dictyostelium STAT IBAs; non-animal IEAs | ontology prerequisite (see YAML) |
 
 GO has no taxon constraint on any of these terms today (checked in QuickGO and OLS).
 
-**Prerequisite for TPV-003.** `GO:0007260` tyrosine phosphorylation of STAT protein
-is part_of `GO:0007259`, but Dictyostelium STATc is tyrosine phosphorylated without a
-JAK. A constraint on GO:0007259 would forbid that correct annotation if it propagates
-over part_of. GO should first re-parent GO:0007260 under `GO:0097696` only.
+TPV-003 has an ontology prerequisite (re-parenting GO:0007260), recorded in its
+`prerequisites` entry in the YAML; not yet requested.
 
 ## Candidate cases to scope next
 
