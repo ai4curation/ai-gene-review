@@ -48,7 +48,8 @@ sufficient:
   machine-fetched ``*-goa.tsv``), since IRD/IKR nodes are legitimate provenance.
 * **Family membership**: a descriptor's declared family must actually contain the
   protein it names in ``representative_members``, per PANTHER's sequence
-  classification (``interpro/panther/panther-members.tsv``). This is the only
+  classification (the member index built into ``.cache/panther/panther-members-<release>.tsv``
+  by ``just refresh-panther-members``). This is the only
   check that separates a *mis-grounded* family from a merely *mislabelled* one --
   label checking alone cannot tell an invented label on the right family from a
   plausible label on the wrong one.
@@ -91,7 +92,9 @@ from ai_gene_review.etl.panther_families import (
     is_placeholder_label,
     label_drift,
     load_member_index,
+    load_member_index_alternates,
     load_subfamily_counts,
+    member_index_path,
 )
 from ai_gene_review.validation.supporting_text import (
     LITERATURE_PREFIXES,
@@ -1073,7 +1076,7 @@ def subfamily_precision_case(
     member_subfamilies = set(subfamilied.values())
     if not member_subfamilies:
         # No member has a subfamily recorded, so there is nothing to narrow to
-        # -- 20 rows in panther-members.tsv carry a bare family.
+        # -- 20 rows in the member index carry a bare family.
         return verdict(SubfamilyPrecision.NO_SUBFAMILY_RECORDED)
     if len(member_subfamilies) > 1:
         # Tested before the unplaced check so a descriptor whose placeable
@@ -1117,6 +1120,7 @@ def validate_family_members(
     member_index: Dict[str, str],
     paint_index: Optional[PaintIndex] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
+    alternates: Optional[Dict[str, str]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
 
@@ -1130,9 +1134,14 @@ def validate_family_members(
 
     Accessions absent from the (pruned) index are not checkable and degrade to a
     warning, so a newly cited protein never fails the build spuriously.
+
+    ``alternates`` holds UniProt's family for accessions where it disagrees with
+    PANTHER's classification files. Either source is accepted: a declared family
+    that matches only the UniProt value is reported as a warning, not an error.
     """
     errors: List[str] = []
     warnings: List[str] = []
+    alternates = alternates or {}
 
     for use in uses:
         declared_bases = {
@@ -1149,12 +1158,34 @@ def validate_family_members(
             warnings.append(
                 f"{use.path}: none of the representative members "
                 f"({_format_limited(set(use.representative_accessions))}) are in "
-                "interpro/panther/panther-members.tsv, so family membership was "
+                "the PANTHER member index (.cache/panther/panther-members-<release>.tsv), so "
+                "family membership was "
                 "not checked; refresh with `just refresh-panther-members`"
             )
             continue
 
         member_bases = {family_sf.split(":", 1)[0] for family_sf in known.values()}
+        alternate_bases = {
+            accession: alternates[accession].split(":", 1)[0]
+            for accession in known
+            if accession in alternates
+        }
+        if not declared_bases & member_bases and declared_bases & set(
+            alternate_bases.values()
+        ):
+            disagreeing = ", ".join(
+                f"{accession} is in PANTHER:{known[accession]} per PANTHER's "
+                f"classification files but PANTHER:{alternates[accession]} per UniProt"
+                for accession in sorted(alternate_bases)
+                if alternate_bases[accession] in declared_bases
+            )
+            warnings.append(
+                f"{use.path}: the declared family matches UniProt's PANTHER "
+                f"cross-reference but not PANTHER's own classification files -- "
+                f"{disagreeing}. The two sources disagree for this protein; both "
+                "are accepted."
+            )
+            continue
         if declared_bases & member_bases:
             # Precision advisory: the id is right, but if every member resolves
             # to one subfamily of a large family, the subfamily is the sharper
@@ -1179,6 +1210,7 @@ def validate_family_members(
                 accession: family_sf
                 for accession, family_sf in known.items()
                 if family_sf.split(":", 1)[0] not in declared_bases
+                and alternate_bases.get(accession) not in declared_bases
             }
             if outside:
                 listed = ", ".join(
@@ -1768,6 +1800,7 @@ def validate_module_file(
     paint_index: Optional[PaintIndex] = None,
     panther_dir: Optional[Path] = None,
     member_index: Optional[Dict[str, str]] = None,
+    member_alternates: Optional[Dict[str, str]] = None,
     gene_index: Optional[Dict[str, Path]] = None,
     genes_dir: Optional[Path] = None,
     family_reviews_dir: Optional[Path] = None,
@@ -1800,9 +1833,12 @@ def validate_module_file(
         resolver = _build_oak_resolver(adapter_map)
 
     if member_index is None:
-        member_index = load_member_index(
-            project_root / "interpro" / "panther" / "panther-members.tsv"
-        )
+        member_index = load_member_index(member_index_path(project_root))
+        if member_alternates is None:
+            member_alternates = load_member_index_alternates(
+                member_index_path(project_root)
+            )
+    alternates = member_alternates or {}
     if paint_index is None:
         if panther_dir is None:
             panther_dir = project_root / "interpro" / "panther"
@@ -1812,6 +1848,7 @@ def validate_module_file(
         list(iter_family_member_uses(doc)),
         member_index,
         paint_index,
+        alternates=alternates,
         subfamily_counts=load_subfamily_counts(
             project_root / "interpro" / "panther" / "panther.obo"
         ),
