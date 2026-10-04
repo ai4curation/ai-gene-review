@@ -38,25 +38,64 @@ STRUCT = HERE / "structures"
 KEEP_LIGANDS = {"NA", "CHO"}
 
 
-def ntcp_reference() -> tuple[gemmi.Structure, str]:
-    """7ZYI with only the NTCP chain and the two functional ligand types."""
+def _load_7zyi() -> gemmi.Structure:
     st = gemmi.read_structure(str(STRUCT / "7ZYI.cif"))
     st.setup_entities()
     st.remove_alternative_conformations()
     st.remove_hydrogens()
+    st.remove_waters()
+    return st
+
+
+def ntcp_reference() -> tuple[gemmi.Structure, str]:
+    """7ZYI reduced to the NTCP chain plus the sodium and bile salt.
+
+    The entry is a complex: NTCP is solved with a Fab and a nanobody, which are
+    crystallographic chaperones and have nothing to do with the transport site.
+    An earlier version of this function removed the other chains inside a loop
+    over the model while mutating it, and chain L (the Fab light chain, 1626
+    atoms) survived into the published viewer, where it read as part of the
+    transporter. The names are now collected first and removed afterwards, and
+    the result is asserted.
+    """
+    st = _load_7zyi()
     ntcp_seq = pc.uniprot_sequence("Q14973")
     chain = pc.find_ntcp_chain(st, ntcp_seq)
     model = st[0]
-    for ch in list(model):
-        if ch.name != chain.label:
-            model.remove_chain(ch.name)
-    # Drop the ligands we do not want to show.
+    drop = [c.name for c in model if c.name != chain.label]
+    for name in drop:
+        while any(c.name == name for c in model):
+            model.remove_chain(name)
+    remaining = [c.name for c in model]
+    assert remaining == [chain.label], f"chain pruning failed: {remaining}"
+
     ch = model[0]
     for i in range(len(ch) - 1, -1, -1):
         name = ch[i].name
         if name not in pc.AA3to1 and name not in KEEP_LIGANDS:
             del ch[i]
     return st, chain.label
+
+
+def ntcp_full() -> gemmi.Structure:
+    """The whole 7ZYI assembly, for the optional all-chains debugging view."""
+    return _load_7zyi()
+
+
+def aligned_core(accession: str, ntcp_seq: str, solved: set[int]) -> list[int]:
+    """Target residues corresponding to the part of NTCP that was solved.
+
+    SLC10A4 is 437 aa against NTCP's 349 and carries extra N-terminal material
+    (NTCP Q68 maps to SLC10A4 Q146). AlphaFold places that somewhere, but its
+    position after a superposition on the transporter core is not evidence of
+    anything, so the viewer hides it.
+
+    Filtering by `solved` -- the NTCP residues present in the experimental chain
+    -- rather than by the alignment alone matters: a global alignment also pairs
+    scattered residues in the extensions, which would drag the tails back in.
+    """
+    pairing = pc.seq_pairing(ntcp_seq, pc.uniprot_sequence(accession))
+    return sorted({int(v) for k, v in pairing.items() if int(k) in solved})
 
 
 def model_chain(accession: str) -> gemmi.Structure:
@@ -155,14 +194,21 @@ def main() -> None:
     )
     print(f"  kept {len(ref_chain.seq)} residues and {n_lig} ligand copies")
 
-    payload: dict[str, object] = {"pdb": {}, "sites": {}}
+    payload: dict[str, object] = {"pdb": {}, "sites": {}, "core": {}}
     payload["pdb"]["ntcp"] = to_pdb_string(ref_st)
+    payload["pdb"]["ntcp_full"] = to_pdb_string(ntcp_full())
 
+    ntcp_seq = pc.uniprot_sequence("Q14973")
+    solved = set(ref_chain.numbers)
+    payload["core"]["ntcp_solved"] = sorted(int(n) for n in solved)
     for key, acc in [("a4", "Q96EP9"), ("a7", "Q0GE19")]:
         print(f"  superposing AlphaFold model {acc}")
         st = model_chain(acc)
         superpose(st, ref_chain)
         payload["pdb"][key] = to_pdb_string(st)
+        core = aligned_core(acc, ntcp_seq, solved)
+        payload["core"][key] = core
+        print(f"    aligned core: {len(core)} residues, {core[0]}-{core[-1]}")
 
     # Geometry for the viewer's per-position trust column: how far each
     # paralogue's aligned residue sits from its NTCP counterpart (CA-CA) and
