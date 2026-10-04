@@ -23,3 +23,26 @@ Added two reviews (full text cached) to the review YAML:
 - No actions changed.
 
 Cross-gene briefing for GO editors and PAINT curators: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
+
+## OpenScientist: does STA-2 keep a functional STAT DNA-binding domain? (2026-10-04)
+
+Report: `sta-2-hypotheses/sta2-dbd-dna-binding/openscientist.md` (hypothesis framed neutrally;
+the review's ACCEPT on GO:0000978 was withheld from the run).
+
+- Verdict: the STAT DNA-binding-domain fold is retained (AlphaFold model confident over the
+  region), but sequence-specific DNA binding is not supported.
+- Checked against repo data before wiring: STA-2's UniProt entry has only the fold-level
+  superfamilies IPR008967 and IPR012345 and no STAT DNA-binding-domain signature, whereas
+  STA-1's entry has Pfam PF02864 (STAT_bind), InterPro IPR013801 and CDD cd14801. STA-2 is
+  567 aa against STA-1's 706 aa.
+- Also from the run (not independently re-derived): none of the three base-contacting
+  residues of DNA-bound STAT1 (PDB 1BF5) is conserved in STA-2, and STA-2 lacks the
+  activating tyrosine.
+- Consistent with Wang & Levy 2012 [PMID:24058748 "co-expression of F58E6.1 with a tyrosine
+  kinase in mammalian tissue culture system failed to show any DNA binding activities using a
+  STAT consensus DNA sequence motif"].
+- Changes: GO:0000978 ACCEPT -> MARK_AS_OVER_ANNOTATED; GO:0000981 and GO:0003700 ACCEPT ->
+  MODIFY to GO:0140110 transcription regulator activity; GO:0003677 ACCEPT -> UNDECIDED;
+  core function MF GO:0000981 -> GO:0140110. The worm STAT module's STA-2 annoton follows.
+- Decisive experiment: STA-2 ChIP-seq in the epidermis (with and without SNF-12), or EMSA of
+  recombinant STA-2 DNA-binding domain on AMP promoter elements.
