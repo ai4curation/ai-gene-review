@@ -15,7 +15,7 @@
 
 ## GOA calls
 - **Cytosol:** 21 Reactome TAS rows, plus IBA, IEA and HPA IDA → ACCEPT.
-- **Other locations accepted:** plasma membrane, focal adhesion, lamellipodium, cytoskeleton.
+- **Other locations accepted:** plasma membrane, focal adhesion, lamellipodium. Cytoskeleton (IEA) → MODIFY to actin cytoskeleton (review round).
 - **IBA rows:**
   - Location rows come from MRL node PTN000133590 (mouse Apbb1ip, human RAPH1, human APBB1IP).
   - Adaptor and intracellular signal transduction come from deep node PTN001343226, seeded by Grb10/Grb14. Both accepted.
@@ -25,3 +25,4 @@
   - TRIM9 (PMID:22084112, abstract-only Drosophila Asap paper) → UNDECIDED.
 - **NEW:** small GTPase binding (IDA), talin binding (IDA), positive regulation of integrin activation (IMP).
   - The comparator check for the last: RAP1B carries GO:0033625 (IMP), and FERMT3 carries GO:0033622. RIAM performs the talin recruitment and unmasking itself.
+- Review round (PR #4154): signal transduction (IEA) → MODIFY to GO:0033625 positive regulation of integrin activation (it was redundant with the IBA).
