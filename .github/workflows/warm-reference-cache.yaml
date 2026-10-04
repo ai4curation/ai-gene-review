@@ -1,206 +1,61 @@
-name: Read-only UniProt availability diagnostic
-run-name: O43497 availability probe at ${{ github.sha }}
+name: Normal CAD reference publication fetch
+run-name: CAD reference publications at ${{ github.sha }}
 'on':
-  workflow_dispatch:
+  workflow_dispatch: null
 permissions:
   contents: read
 concurrency:
-  group: uniprot-availability-O43497
+  group: normal-cad-reference-publications
   cancel-in-progress: false
 jobs:
-  probe:
+  fetch:
     if: github.event_name == 'workflow_dispatch' && github.repository == 'ai4curation/ai-gene-review' && github.ref == 'refs/heads/cmungall/clingen-source-seed-fetch65-20261003'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 40
     env:
       PYTHONUNBUFFERED: '1'
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
-      - name: Probe three fixed anonymous raw-record routes once
-        timeout-minutes: 2
-        run: |
-          python3 - <<'PY'
-          """One hosted diagnostic, three fixed anonymous GETs; no source import."""
-          from pathlib import Path
-          import datetime, hashlib, json, os, subprocess, sys, time
-          
-          ROUTES = (
-              ('entry', 'https://rest.uniprot.org/uniprotkb/O43497.txt'),
-              ('stream', 'https://rest.uniprot.org/uniprotkb/stream?format=txt&query=accession%3AO43497'),
-              ('search', 'https://rest.uniprot.org/uniprotkb/search?format=txt&query=accession%3AO43497&size=1'),
-          )
-          BODY_LIMIT = 512 * 1024
-          WALL_SECONDS = 30
-          
-          WORKER = r'''
-          from pathlib import Path
-          import json, sys, time, urllib.request, urllib.error
-          LIMIT = 512 * 1024
-          EXPECTED = {
-           'entry': 'https://rest.uniprot.org/uniprotkb/O43497.txt',
-           'stream': 'https://rest.uniprot.org/uniprotkb/stream?format=txt&query=accession%3AO43497',
-           'search': 'https://rest.uniprot.org/uniprotkb/search?format=txt&query=accession%3AO43497&size=1',
-          }
-          root, name, url = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
-          assert name in EXPECTED and url == EXPECTED[name]
-          target = root / name
-          target.mkdir(exist_ok=False)
-          body_path = target / 'body.bin'
-          with body_path.open('xb'):
-           pass
-          report = {'route': name, 'url': url, 'method': 'GET', 'http_status': None,
-                    'content_type': None, 'response_complete': False, 'truncated': False,
-                    'error_type': None, 'error_text': None, 'body_limit': LIMIT,
-                    'redirect_followed': False, 'import_authorized': False}
-          def save_report():
-           p = target / 'response.json'
-           tmp = target / 'response.json.tmp'
-           tmp.write_text(json.dumps(report, indent=2) + '\n')
-           tmp.replace(p)
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-           def redirect_request(self, req, fp, code, msg, headers, newurl):
-            return None
-          save_report()
-          response = None
-          try:
-           opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-           request = urllib.request.Request(url, method='GET', headers={
-            'Accept': 'text/plain', 'Accept-Encoding': 'identity',
-            'User-Agent': 'ai-gene-review-read-only-availability-probe/1'})
-           try:
-            response = opener.open(request, timeout=30)
-           except urllib.error.HTTPError as exc:
-            response = exc
-           report['http_status'] = response.code
-           report['content_type'] = response.headers.get('Content-Type')
-           report['declared_content_length'] = response.headers.get('Content-Length')
-           report['content_encoding'] = response.headers.get('Content-Encoding')
-           report['location_header'] = response.headers.get('Location')
-           (target / 'headers.json').write_text(json.dumps(list(response.headers.items()), indent=2) + '\n')
-           save_report()
-           remaining = LIMIT
-           with body_path.open('ab') as output:
-            while remaining:
-             chunk = response.read(min(16384, remaining))
-             if not chunk:
-              report['response_complete'] = True
-              break
-             assert len(chunk) <= remaining
-             output.write(chunk)
-             output.flush()
-             remaining -= len(chunk)
-            if remaining == 0:
-             report['truncated'] = True
-             report['truncation_note'] = 'Capture cap reached; no extra byte was requested to inspect the tail.'
-          except Exception as exc:
-           report['error_type'] = type(exc).__name__
-           report['error_text'] = str(exc)[:512]
-          finally:
-           if response is not None:
-            response.close()
-           save_report()
-          '''
-          
-          def write_json(path, value):
-              path.write_text(json.dumps(value, indent=2) + '\n')
-          
-          def one_route(root, name, url):
-              start = time.monotonic()
-              timeout = False
-              code = None
-              try:
-                  result = subprocess.run(
-                      [sys.executable, '-c', WORKER, str(root), name, url],
-                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                      stderr=subprocess.PIPE, timeout=WALL_SECONDS, check=False)
-                  code = result.returncode
-                  worker_error = result.stderr[:512].decode('utf-8', 'replace')
-              except subprocess.TimeoutExpired:
-                  # subprocess.run kills and waits for this sole child before returning.
-                  timeout = True
-                  worker_error = 'Parent enforced the 30-second wall-clock deadline.'
-              elapsed = time.monotonic() - start
-              target = root / name
-              target.mkdir(exist_ok=True)
-              p = target / 'response.json'
-              report = json.loads(p.read_text()) if p.exists() else {
-                  'route': name, 'url': url, 'method': 'GET', 'http_status': None,
-                  'content_type': None, 'response_complete': False, 'truncated': False,
-                  'error_type': 'WorkerDidNotWriteMetadata', 'error_text': None}
-              body_path = target / 'body.bin'
-              if not body_path.exists():
-                  with body_path.open('xb'):
-                      pass
-              body = body_path.read_bytes()
-              assert len(body) <= BODY_LIMIT
-              report.update(bytes=len(body), sha256=hashlib.sha256(body).hexdigest(),
-                            wall_timeout=timeout, elapsed_seconds=elapsed,
-                            worker_returncode=code, import_authorized=False)
-              if timeout:
-                  report.update(response_complete=False, error_type='WallClockTimeout',
-                                error_text=worker_error)
-              elif code:
-                  report.update(response_complete=False, error_type='WorkerFailure',
-                                error_text=worker_error)
-              error_excerpt = report.get('error_text') or ''
-              if report.get('http_status') != 200 and body:
-                  error_excerpt = body[:256].decode('utf-8', 'replace')
-              # Compact errors only; successful record bytes are never printed to logs.
-              error_excerpt = ''.join(c if c.isprintable() else ' ' for c in error_excerpt)[:256]
-              report['bounded_error_excerpt'] = error_excerpt
-              write_json(p, report)
-              keys = ('route', 'url', 'http_status', 'content_type', 'bytes', 'sha256',
-                      'response_complete', 'truncated', 'wall_timeout', 'elapsed_seconds',
-                      'error_type', 'bounded_error_excerpt')
-              print(json.dumps({k: report.get(k) for k in keys}), flush=True)
-              return report
-          
-          def main():
-              root = Path(os.environ['RUNNER_TEMP']) / 'uniprot-availability-O43497' / 'artifact'
-              root.mkdir(parents=True, exist_ok=False)
-              receipt = {k: os.environ[k] for k in (
-                  'GITHUB_REPOSITORY', 'GITHUB_REF', 'GITHUB_SHA',
-                  'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT')}
-              assert receipt['GITHUB_REPOSITORY'] == 'ai4curation/ai-gene-review'
-              assert receipt['GITHUB_REF'] == 'refs/heads/cmungall/clingen-source-seed-fetch65-20261003'
-              receipt.update(purpose='Read-only UniProt availability diagnostic, not normal source fetching',
-                             accession='O43497', maximum_get_requests=3,
-                             redirects_followed=0, retries=0, body_cap_bytes=BODY_LIMIT,
-                             wall_seconds_per_route=WALL_SECONDS, import_authorized=False,
-                             started_utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
-              write_json(root / 'run-receipt.json', receipt)
-              reports = [one_route(root, name, url) for name, url in ROUTES]
-              write_json(root / 'summary.json', {
-                  'status': 'DIAGNOSTIC_COMPLETED_RESULTS_REQUIRE_INSPECTION',
-                  'routes': reports, 'import_authorized': False,
-                  'finished_utc': datetime.datetime.now(datetime.timezone.utc).isoformat()})
-          
-          if __name__ == '__main__':
-              main()
-          PY
-      - name: Inventory diagnostic bytes and controls
-        if: ${{ always() }}
-        run: |
-          python3 - <<'PY'
-          import hashlib, json, os, pathlib
-          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'uniprot-availability-O43497' / 'artifact'
-          root.mkdir(parents=True, exist_ok=True)
-          entries = []
-          for p in sorted(root.rglob('*')):
-              assert not p.is_symlink()
-              if p.is_file():
-                  b = p.read_bytes()
-                  if p.name == 'body.bin':
-                      assert len(b) <= 512 * 1024
-                  entries.append({'path': p.relative_to(root).as_posix(), 'bytes': len(b), 'sha256': hashlib.sha256(b).hexdigest()})
-          (root / 'manifest.json').write_text(json.dumps({'files': entries, 'purpose': 'availability diagnostic only', 'import_authorized': False}, indent=2) + '\n')
-          PY
-      - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
-        with:
-          name: uniprot-availability-O43497-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/uniprot-availability-O43497/artifact/
-          if-no-files-found: error
-          retention-days: 7
-          include-hidden-files: false
-          overwrite: false
+    - uses: actions/checkout@v7
+      with:
+        ref: ${{ github.sha }}
+        fetch-depth: 1
+        persist-credentials: false
+    - name: Initialize isolated outputs and exact runtime identity
+      run: "python - <<'PY'\nimport hashlib, json, os, pathlib, subprocess\nroot = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cad-reference-fetch'\nartifact = root / 'artifact'\nartifact.mkdir(parents=True, exist_ok=False)\n(artifact / 'raw').mkdir()\nexpected = {\n    'src': 'b6437edffc6d0f26c93fd72c8c1cbd62aaae0256',\n    'pyproject.toml': 'aedefcdb55d98c43bb2bf7fb6ff527c8edfeeff6',\n    'uv.lock': '311083db700f38b31e9c31d22cb3a9a4f31788fa',\n}\nobserved = {p: subprocess.check_output(['git', 'rev-parse', 'HEAD:' + p], text=True).strip() for p in expected}\nreceipt = {k: os.environ[k] for k in ('GITHUB_REPOSITORY', 'GITHUB_REF', 'GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT')}\nreceipt.update(gene='CAD', pmids=['28007989', '32461667', '23429703', '31997698', '11986331'],\n               normal_source_base='09476b15e3443092dfcf2a51037779d3d9ab1c8c',\n               expected_runtime_objects=expected, observed_runtime_objects=observed,\n               status='initialized', import_authorized=False)\n\
+        (artifact / 'run-receipt.json').write_text(json.dumps(receipt, indent=2) + '\\n')\nassert observed == expected, 'Normal source code or dependency input changed'\nassert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == receipt['GITHUB_SHA']\nwith open(os.environ['GITHUB_ENV'], 'a') as out:\n    out.write('CAD_FETCH_ROOT=' + str(root) + '\\n')\n    out.write('UV_CACHE_DIR=' + str(root / 'uv-cache') + '\\n')\n    out.write('UV_PROJECT_ENVIRONMENT=' + str(root / 'venv') + '\\n')\nPY\n"
+    - uses: actions/setup-python@v7
+      with:
+        python-version: '3.12'
+    - uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: false
+    - name: Install unchanged locked normal fetcher
+      timeout-minutes: 15
+      run: uv sync --frozen --no-dev --no-editable
+    - name: Run one normal fetch in isolated storage
+      timeout-minutes: 22
+      run: "\"$UV_PROJECT_ENVIRONMENT/bin/python\" - <<'PY'\nimport datetime, importlib.metadata, json, os, pathlib, signal, subprocess, sys\nimport yaml\nartifact = pathlib.Path(os.environ['CAD_FETCH_ROOT']) / 'artifact'\nwork = artifact / 'raw'\nreport_path = artifact / 'fetch-report.json'\ncommand = [str(pathlib.Path(os.environ['UV_PROJECT_ENVIRONMENT']) / 'bin/ai-gene-review'),\n           'fetch-pmid', '28007989', '32461667', '23429703', '31997698', '11986331', '--output-dir', str(work / 'publications')]\nreport = {'command': command, 'cwd': str(work), 'attempts': 1,\n          'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n          'python': sys.version, 'package_version': importlib.metadata.version('ai_gene_review'),\n          'status': 'started', 'import_authorized': False}\nreport_path.write_text(json.dumps(report, indent=2) + '\\n')\nwith (artifact / 'normal-fetch.log').open('wb') as log:\n    proc = subprocess.Popen(command, cwd=work, stdout=log, stderr=subprocess.STDOUT,\
+        \ start_new_session=True)\n    try:\n        report['returncode'] = proc.wait(timeout=1200)\n    except subprocess.TimeoutExpired:\n        os.killpg(proc.pid, signal.SIGKILL)\n        report['returncode'] = proc.wait()\n        report['timed_out'] = True\ntry:\n    assert report['returncode'] == 0, 'Normal fetch did not complete successfully'\n    expected = [work / 'publications' / ('PMID_' + p + '.md') for p in ('28007989', '32461667', '23429703', '31997698', '11986331')]\n    assert all(p.is_file() and not p.is_symlink() for p in expected)\n    sources = []\n    for p in expected:\n        source = p.read_text()\n        assert source.startswith('---')\n        metadata = yaml.safe_load(source.split('---', 2)[1])\n        sources.append({'path': p.relative_to(work).as_posix(), 'metadata': metadata})\n    report.update(status='candidate_requires_source_and_import_review', publications=sources)\nexcept Exception as exc:\n    report.update(status='needs_inspection', issue=str(exc))\nreport['finished_utc']\
+        \ = datetime.datetime.now(datetime.timezone.utc).isoformat()\nreport_path.write_text(json.dumps(report, indent=2) + '\\n')\nraise SystemExit(0 if report['status'] == 'candidate_requires_source_and_import_review' else 1)\nPY\n"
+    - name: Verify checkout unchanged
+      if: ${{ always() }}
+      run: 'git diff --exit-code
+
+        git diff --cached --exit-code
+
+        test -z "$(git ls-files --others --exclude-standard)"
+
+        '
+    - name: Inventory exact raw outputs and controls
+      if: ${{ always() }}
+      run: "python - <<'PY'\nimport hashlib, json, os, pathlib\nartifact = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cad-reference-fetch/artifact'\nentries = []\nfor p in sorted(artifact.rglob('*')):\n    assert not p.is_symlink(), 'Unexpected symlink in output'\n    if p.is_file():\n        raw = p.read_bytes()\n        entries.append({'path': p.relative_to(artifact).as_posix(), 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()})\n(artifact / 'manifest.json').write_text(json.dumps({'files': entries, 'import_authorized': False,\n    'family_outputs': 'quarantined; not eligible for gene or source import'}, indent=2) + '\\n')\nPY\n"
+    - uses: actions/upload-artifact@v4
+      if: ${{ always() }}
+      with:
+        name: normal-cad-reference-sources-${{ github.run_id }}-${{ github.run_attempt }}
+        path: ${{ runner.temp }}/normal-cad-reference-fetch/artifact/
+        if-no-files-found: error
+        retention-days: 7
+        include-hidden-files: false
+        overwrite: false
