@@ -19,3 +19,8 @@ Decisions:
 
 - **GO-CAM confirms the source-side mix-up.** `gocams/index.tsv` lists MGI:MGI:2442933 "Amn1 Mmus" in model 62900b6400002552, "Cobalamin transport, into enterocytes (Mouse)", as cargo receptor activity in the microvillus membrane, citing PMID:14321840 alongside Cubn and Cblif and with no Amn. That cargo-receptor role is amnionless's, the cubilin partner.
 - **IBA donors:** all verified as F-box proteins. Per-row donor IDs, UniProt accessions and F-box spans are in `AMN1-bioinformatics/RESULTS.md` (round 2).
+
+## Round 3 (PR #4034 review)
+
+- **The GO-CAM names the right gene outright.** The Amn1 node's enabled_by evidence is ECO:0000266 orthology to UniProtKB:Q9BXJ7, human AMN, from PMID:14576052, the cubilin-amnionless paper. Human AMN carries the same location, cargo-receptor and cobalamin-transport triple by IDA from that paper. So the error is in the gene-product assignment, and is no longer circumstantial. The location row also projects from intrinsic factor (P27352). Cited, and named in the MGI question.
+- **PANTHER separates AMN1 from every donor.** AMN1 is in PTHR13318:SF254 (PROTEIN AMN1 HOMOLOG); none of the 14 donors is. The donors are 300-807 aa, against AMN1's 258. fbox_check.py now reports PANTHER subfamily and length per donor.

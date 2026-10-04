@@ -48,6 +48,12 @@ def fbox(e: dict):
     return None
 
 
+def panther_sf(e: dict) -> str:
+    ids = [x["id"] for x in e.get("uniProtKBCrossReferences", []) if x["database"] == "PANTHER"]
+    sf = [i for i in ids if ":SF" in i]
+    return sf[0] if sf else (ids[0] + " (no subfamily)" if ids else "none")
+
+
 def gene(e: dict) -> str:
     g = e.get("genes") or [{}]
     return (g[0].get("geneName") or {}).get("value", "-")
@@ -59,20 +65,20 @@ for row in rows:
     term, label = row[4], row[5]
     donors = [d for d in row[10].split("|") if not d.startswith("PANTHER:")]
     print(f"\n## {term} {label}: {len(donors)} donors\n")
-    print("| donor | UniProt | gene | organism | F-box |")
-    print("|---|---|---|---|---|")
+    print("| donor | UniProt | gene | organism | length | PANTHER | F-box |")
+    print("|---|---|---|---|---|---|---|")
     for d in donors:
         acc = resolve(d)
         if acc is None:
-            print(f"| {d} | unresolved | - | - | - |")
+            print(f"| {d} | unresolved | - | - | - | - | - |")
             continue
         e = entry(acc)
         fb = fbox(e)
-        print(f"| {d} | {acc} | {gene(e)} | {e['organism']['scientificName']} | {f'{fb[0]}-{fb[1]}' if fb else 'none'} |")
+        print(f"| {d} | {acc} | {gene(e)} | {e['organism']['scientificName']} | {e['sequence']['length']} | {panther_sf(e)} | {f'{fb[0]}-{fb[1]}' if fb else 'none'} |")
 
 t = entry(TARGET)
 tseq = t["sequence"]["value"]
-print(f"\n## AMN1 alignment\n\nAMN1 {TARGET}: length {len(tseq)}; UniProt F-box feature: {fbox(t)}\n")
+print(f"\n## AMN1 alignment\n\nAMN1 {TARGET}: length {len(tseq)}; PANTHER {panther_sf(t)}; UniProt F-box feature: {fbox(t)}\n")
 print("| donor | accession | donor F-box | AMN1 residues aligned to it | identical | aligned (non-gap) |")
 print("|---|---|---|---|---|---|")
 for name, acc in ALIGN_TO.items():
