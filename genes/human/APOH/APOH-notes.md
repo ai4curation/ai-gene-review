@@ -22,3 +22,8 @@
 - **Triglyceride transport (IDA/ISS) → over-annotated:** the evidence is clearance and LPL activation.
 - **Lipid binding → MODIFY** to lipoprotein particle binding.
 - **Non-core:** LPL rows, lipoprotein particle CC rows, fibrinolysis, plasminogen activation, anti-angiogenic, anti-apoptotic.
+- Review round (PR #4160):
+  - GO:0030195 → MODIFY to GO:2000267 (its is_a descendant, same finding).
+  - Platelet dense granule → UNDECIDED.
+  - Lrp8 → GO:0070325.
+  - PMID:25081279 (thrombosis variant with less anticoagulant capacity) added as support.
