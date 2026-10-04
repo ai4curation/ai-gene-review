@@ -22,6 +22,15 @@ genes:
   - Gcm
   - GataC
   - Bra
+  - Brn124
+  - Lim1
+  - Hex
+  - FoxB
+  - Hnf6
+  - Snail
+  - Twist
+  - FoxN23
+  - Six12
 ---
 
 # Sea Urchin Endomesoderm GRN
@@ -83,6 +92,10 @@ Echinobase usage; each links to its review.
   state.
 - **Eve** (Q8MMJ3). Even-skipped homeodomain factor of the veg2/veg1 endoderm
   ring, driven by beta-catenin/Tcf and Blimp1.
+- **Brn1/2/4** (STRPU/Brn124, A0A7M7GMA5). Class III POU homeodomain factor of
+  the veg2 endoderm regulatory state, the predicted midgut regulator of endo16.
+- **Lim1** (Q7YT18). LIM-homeodomain factor of the anterior (foregut and midgut)
+  endoderm regulatory state downstream of the Blimp1, Otx and GataE circuitry.
 
 ### The skeletogenic micromere lineage and the double-negative gate
 
@@ -102,6 +115,19 @@ Echinobase usage; each links to its review.
   and later a key oral-ectoderm regulator.
 - **Delta** (Q8T4N9). The Notch ligand expressed by the micromeres that induces
   non-skeletogenic mesoderm in the adjacent veg2 cells.
+- **Hex** (A0A7M7R9J9). HHEX-class homeodomain factor of the erg/hex/tgif
+  feedback subcircuit that locks down the skeletogenic regulatory state.
+- **FoxB** (fkh1, Q9XZM6). Forkhead box B factor activated downstream of the gate
+  and required as a driver of the skeletogenic differentiation genes.
+- **Hnf6** (Q6UAY6). ONECUT-class factor that boosts the primary mesenchyme
+  differentiation battery and later maintains the oral ectoderm and ciliated band
+  regulatory state.
+- **Snail** (Q6UCK0). Snail-family zinc-finger repressor of the primary mesenchyme
+  epithelial-to-mesenchymal transition, where it silences cadherin.
+- **Twist** (A7Z0B7). bHLH factor in a positive feedback loop with Alx1 that
+  maintains the skeletogenic specification state through ingression.
+- **FoxN2/3** (STRPU/FoxN23, Q2V887). Forkhead box N2/3 factor expressed
+  transiently in the primary mesenchyme and required for skeletogenesis.
 
 ### Non-skeletogenic mesoderm
 
@@ -110,14 +136,23 @@ Echinobase usage; each links to its review.
   specification.
 - **GataC** (O77156). GATA1/2/3-class factor of the oral non-skeletogenic
   mesoderm (blastocoelar cell) lineage.
+- **Six1/2** (STRPU/Six12, H6WNA5). SIX-class homeodomain factor in a positive
+  feedback loop with Gcm in the pigment cell lineage.
 - **Bra** (brachyury, A0A7M7PDZ1). T-box factor expressed in the endoderm ring and
   in the oral ectoderm around the stomodeum.
 
 ## Nodes not yet covered
 
-Several canonical nodes have no resolvable UniProt entry under a recognisable
-name (Tbr, Hox11/13b, Hex, Tgif, FoxB) and were not reviewed. They can be added
-once an accession is established from Echinobase or from a primary sequence.
+Several canonical nodes have no resolvable UniProt or NCBI Gene entry under a
+recognisable name (Tbr, Hox11/13b, Tgif, Tel) and were not reviewed. They can be
+added once an accession is established from Echinobase or from a primary sequence.
+
+Several of the primary mesenchyme regulators (Snail, Twist, FoxN2/3, and parts
+of the Hex and FoxB evidence) were characterised functionally in *Lytechinus
+variegatus* by the McClay laboratory rather than in *S. purpuratus*. Those
+reviews say so explicitly, code the transferred evidence as sequence
+similarity rather than mutant phenotype where no *S. purpuratus* experiment
+exists, and keep the proposed terms minimal.
 
 ## Curation conventions applied
 
