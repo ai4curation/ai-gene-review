@@ -272,13 +272,45 @@ Running the project's `NEW` discipline over the candidates:
 - **`GO:0030917 midbrain-hindbrain boundary development` — this one survived, and is
   proposed.** The claim is narrower and better grounded than the AP-patterning one: the
   organizer forms *at* the OTX2 caudal border, and moving that border with ectopic GBX2
-  moves the organizer [PMID:10490024]. So OTX2 does part of the work of positioning the
-  boundary rather than being merely required nearby. Comparator check is favourable rather
-  than merely neutral — GO:0030917 is annotated across the whole MHB gene set (mouse Gbx2,
-  Fgf8, Wnt1 all by IMP) *and* to an OTX orthologue, zebrafish `otx2a`, by IGI, so GO does
-  not withhold it from this class of gene. Redundancy check passes: GO:0030900 and
-  GO:0030901 are siblings of GO:0030917 under GO:0007420 brain development, not ancestors
-  of it.
+  moves the organizer [PMID:10490024 "we transiently expressed Gbx2 in the caudal Otx2
+  domain and found that the Otx2 caudal border was indeed shifted rostrally and a normal
+  appearing organizer formed at this new Otx2 border"]. Comparator check is favourable
+  rather than merely neutral — queried against QuickGO, `GO:0030917` has 8 experimental
+  annotations in mouse (Gbx2, Fgf8, Wnt1, En1, Lrp6, all IMP) and 138 in zebrafish, so GO
+  does not withhold it from this class of gene. Redundancy check passes: checked against all
+  37 OTX2 annotations in the `part_of`-inclusive closure, only the self-match comes back;
+  `GO:0030900` and `GO:0030901` are siblings of `GO:0030917` under `GO:0007420 brain
+  development`, which OTX2 does not itself carry.
+- **The `GO:0030917` ISS donor was wrong, and the qualifier was too strong.** Both found on
+  2026-10-04 after a reviewer asked whether the `ISS WITH` actually pointed at a holder of
+  the term. It did not.
+  - **Donor.** The row cited `UniProtKB:P80206` (mouse Otx2). QuickGO returns **zero**
+    `GO:0030917` annotations for P80206 — and zero for human P32243 — so the `WITH` named a
+    gene that does not carry the term, which is not a transfer at all. The actual holders
+    among the orthologues are zebrafish: `otx2` (`UniProtKB:Q91981`, Swiss-Prot), `otx2a`
+    and `otx2b`, all IGI from [PMID:16611693]. The donor is now Q91981, the reviewed entry.
+    My earlier note said "zebrafish `otx2a`, by IGI" — the right species and evidence code,
+    but the paralog I named is a TrEMBL entry when a reviewed one carrying the same
+    annotation exists.
+  - **Qualifier.** The row said `involved_in`. All 146 experimental `GO:0030917` rows in
+    mouse and zebrafish use `acts_upstream_of_or_within`; every `involved_in` row on the term
+    is IEA/ARBA. An ISS must not strengthen what it transfers, and this one was doing exactly
+    that. Now `acts_upstream_of_or_within`, which is also what the project's own `NEW` rule
+    requires: the boundary structure is built by the isthmic organizer genes, and what OTX2
+    contributes is *where* it forms. The zebrafish paper puts it well — loss of Otx function
+    turns the presumptive midbrain into extended r1 [PMID:16611693 "lack of Otx function in
+    zebrafish leads to transformation of the presumptive mesencephalon into an extended
+    rhombomere 1 (r1)"], and Fgf8 only *maintains* the boundary that the Otx domain defines
+    [PMID:16611693 "Fgf8 is required to maintain, rather than induce, the posterior boundary
+    of Otx expression."].
+  - Consequence for `core_functions`: `GO:0030917` is deliberately **not** in
+    `directly_involved_in`, since listing it there would re-assert the participation the
+    annotation now declines to claim. The border-positioning role stays in the prose.
+  - Worth recording because the error was invisible to every check that ran. The term id and
+    label were right, the comparator argument was right, the mechanism was right, and the
+    donor accession was a real mouse Otx2 entry — so schema validation, label validation and
+    the redundancy check all passed. Only asking "does the `WITH` gene actually carry this
+    term?" catches it, and nothing in the pipeline asks that.
 - **Anything medulloblastoma.** Oncogenic re-expression (PMID:21964830, PMID:28213356,
   PMID:32686664, PMID:39025928) is disease biology, not normal gene function. The
   chromatin/enhancer work (PMID:28213356) and the LASR/splicing work (PMID:39025928) are
