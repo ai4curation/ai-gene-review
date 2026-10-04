@@ -24,3 +24,11 @@
   - Core MF ordering fixed.
   - The description mentions receptor signaling.
   - Added a question on how the receptor and LPL roles relate.
+
+## 2026-10-04 round 3 (reviewer comments on #4065)
+
+- **PMID:35851270 erratum** (PMID:40480993, read via Europe PMC PMC12144219): it corrects duplicated DAPI images (Fig. 1F) and duplicated beta-MHC bands (Figs. 4I, 7G), and the authors say the conclusions are unchanged. The LILRB3 binding result is not among the corrected figures. `correctness` is now unset rather than VERIFIED, with the erratum described in review_notes.
+- **Other fixes:**
+  - The PMID:39095838 quote is now the PirB-/- resistance result, not the title.
+  - The description qualifies the receptor signaling as rodent data.
+  - The core-function description explains why hormone activity is the primary MF and lipase inhibition is contributes_to.
