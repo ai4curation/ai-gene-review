@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-04 14:10:18 UTC
+## Campaign status — completion evidence through 2026-10-04 15:17:41 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -296,6 +296,9 @@ are therefore expected; existing human reviews still link normally.
 | CAPN5 | Definitive | INITIALIZED normal seed | PR #4099 merged at 2026-10-04 12:13:23 UTC; final-head approval and CI success verified; 16 exact changed paths verified at the merge commit. Biological DRAFT retains 14 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-capn5` | [#4099](https://github.com/ai4curation/ai-gene-review/pull/4099) |
 | CARD11 | Definitive | INITIALIZED normal seed | PR #4116 merged at 2026-10-04 12:47:21 UTC; final-head approval and CI success verified; 20 exact changed paths verified at the merge commit. Biological DRAFT retains 88 source assertions, 3 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-card11` | [#4116](https://github.com/ai4curation/ai-gene-review/pull/4116) |
 | CARMIL2 | Definitive | INITIALIZED normal seed | PR #4121 merged at 2026-10-04 14:10:18 UTC; final-head approval and CI success verified; 16 exact changed paths verified at the merge commit. Biological DRAFT retains 45 source assertions plus 1 NEW molecular-function assertion, 3 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-carmil2` | [#4121](https://github.com/ai4curation/ai-gene-review/pull/4121) |
+| CASK | Definitive | INITIALIZED normal seed | PR #4132 merged at 2026-10-04T14:29:51Z; final-head approval and CI success verified; 23 changed paths and 20 reused scoped paths verified. Biological DRAFT retains 118 source assertions, 31 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-cask` | [#4132](https://github.com/ai4curation/ai-gene-review/pull/4132) |
+| CASP8 | Definitive | Existing review from PR #3672 | PR #4139 merged at 2026-10-04T15:11:44Z; final-head approval and CI success verified; 6 changed paths and 128 reused scoped paths verified. Biological DRAFT retains 264 source assertions, 21 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. This is the first campaign completion of the existing review, not a second original review. | `cmungall/clingen-casp8-whole-review` | [#4139](https://github.com/ai4curation/ai-gene-review/pull/4139) |
+| CASQ2 | Definitive | INITIALIZED normal seed | PR #4142 merged at 2026-10-04T15:17:41Z; final-head approval and CI success verified; 22 changed paths and 1 reused scoped path verified. Biological DRAFT retains 57 source assertions, 12 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-casq2` | [#4142](https://github.com/ai4curation/ai-gene-review/pull/4142) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -307,8 +310,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **225 of 2,876 genes
-are complete**; 226 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **228 of 2,876 genes
+are complete**; 229 gene-level original reviews have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -418,6 +421,26 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
 
+
+### Evidence scope for completion 228
+
+[Checkpoint 228 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T161209Z-codex-6c9ecc.yaml).
+
+The fixed **2026-10-04 15:17:41 UTC** cutoff adds **CASK, CASP8 and CASQ2** to published checkpoint 225: **228 complete / 2,648 remaining**, with **229 gene-level original review merges** and one required source follow-up outstanding for AKR1D1. Tracker, generated-page and source-workflow PRs add no gene completions. Other pending reviews contribute none at this cutoff.
+
+The planned total of 227 omitted CASP8 because its earlier repository review was mistaken for an already recorded campaign completion. The published checkpoint 225 inventory leaves CASP8 unchecked, and its queue and progress ledger contain no CASP8 entry. Original multi-gene apoptosis PR [#3672](https://github.com/ai4curation/ai-gene-review/pull/3672) merged as `6202dafbf7a64866df30e2a500bf3c8a80427870` on 2026-10-03 at 21:22:04 UTC. The substantive campaign revision [#4139](https://github.com/ai4curation/ai-gene-review/pull/4139) is now its first verified campaign completion. Thus **225 + 3 = 228**; CASP8 original #3672 contributes one newly recognized gene-level original review, and #4139 is not counted as a second original. No prior published checkpoint count is rewritten.
+
+| Gene | Verified merge | Changed / reused scoped paths | Biological assessment retained |
+|---|---|---|---|
+| CASK | [`72e64874c80b`](https://github.com/ai4curation/ai-gene-review/commit/72e64874c80b5ea68cac52b36b802595c83d5ea0), 2026-10-04T14:29:51Z | 23 / 20; every path/blob pair is in the queue | Biological DRAFT retains 118 source assertions, 31 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. |
+| CASP8 | [`91b5ea418917`](https://github.com/ai4curation/ai-gene-review/commit/91b5ea4189172fa75f9fe54b4786fc6eb5c9849c), 2026-10-04T15:11:44Z | 6 / 128; every path/blob pair is in the queue | Biological DRAFT retains 264 source assertions, 21 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. This is the first campaign completion of the existing review, not a second original review. |
+| CASQ2 | [`b4fb9e72ca0a`](https://github.com/ai4curation/ai-gene-review/commit/b4fb9e72ca0a090d2b726560d4925f375b70f313), 2026-10-04T15:17:41Z | 22 / 1; every path/blob pair is in the queue | Biological DRAFT retains 57 source assertions, 12 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. |
+
+All three final PR heads have verified approval and successful required checks. Their signed merges account for **51 changed path/blob pairs** and **149 unchanged reused scope objects**, totaling **200 verified scoped objects** across the three reviews. These are per-review counts; a shared source may occur in more than one scope. The durable queue enumerates both changed and reused blobs. All three biological reviews remain **DRAFT**, retaining **439 source assertions and 64 UNDECIDED assessments**, with no NEW assertions. CASK retains six alternative products, CASP8 nine, and CASQ2 two; each has two core functions. Campaign completion records finished review and publication while preserving biological uncertainty.
+
+All **220 existing `genes[]` queue entries** are preserved, followed by three entries; this entry count is distinct from the 225 completed-gene baseline. The corrected CARMIL2 reuse maps for PMID:19946888 and PMID:23793062 remain exact in both durable locations. All 2,876 gene inventory entries and their frozen associations, all prior completion records and dated history, and the checkpoint 95 audit/import boundary remain unchanged.
+
+[Published checkpoint 225 correction history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T145323Z-codex-9c8b76.yaml).
 
 ### Evidence scope for completion 225
 
@@ -1131,3 +1154,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-04 12:47:21 UTC fixed completion cutoff: CAPN5 #4099 and CARD11 #4116 advance checkpoint 222 → 224 complete, 225 original gene merges and 2,652 remaining. Signed merge identities and 36 changed-path blobs are verified with final-head approval and required-check success. Preserve 217 prior queue entries, all 2,876 inventory associations, two DRAFT biological review states, 102 source assertions and 7 UNDECIDED assessments; no NEW assertions are introduced. AKR1D1 remains excluded pending its required source follow-up. Other pending work contributes no completion at this cutoff.
 
 - 2026-10-04 14:10:18 UTC fixed completion cutoff: CARMIL2 #4121 advances checkpoint 224 → 225 complete, 226 original gene merges and 2,651 remaining. The signed merge identity and 16 changed-path blobs are verified with final-head approval and required-check success; all 18 scoped paths, including two reused sources, are verified. Preserve 219 prior queue entries, all 2,876 inventory associations, the DRAFT biological review state, 45 source assertions and 3 UNDECIDED assessments. One NEW molecular-function assertion (GO:0035591 signaling adaptor activity) brings the review to 46 annotations; no new biological-process assertion is introduced. AKR1D1 remains excluded pending its required source follow-up. Other pending work contributes no completion at this cutoff.
+
+- 2026-10-04 15:17:41 UTC fixed completion cutoff: CASK #4132, CASP8 #4139 and CASQ2 #4142 advance checkpoint 225 → 228 complete, 229 gene-level original reviews and 2,648 remaining. The planned 227 total omitted CASP8, whose original #3672 was never campaign-complete in the published inventory or queue; accepted revision #4139 counts once, not as a second original review. All 51 changed and 149 reused scope objects are enumerated and verified against signed merges, current-head approval and successful required CI. Preserve 220 prior queue entries, all 2,876 gene inventory entries and their frozen associations, the exact corrected CARMIL2 reuse maps, all prior histories, three DRAFT states, 439 source assertions, 64 UNDECIDED assessments and no NEW assertions. AKR1D1 remains excluded pending its required source follow-up.
