@@ -323,7 +323,7 @@ def validate_gene_review(
         check_goa: Whether to validate against GOA file (enabled by default)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
-        publications_dir: Optional publication-cache directory for quote validation
+        publications_dir: Optional publication-cache directory for quote and availability checks
 
     Returns:
         ValidationReport with detailed validation results
@@ -446,7 +446,7 @@ def check_best_practices_rules(
         yaml_file: Path to YAML file for GOA validation (if enabled)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
-        publications_dir: Optional publication-cache directory for quote validation
+        publications_dir: Optional publication-cache directory for quote and availability checks
     """
     if progress_callback:
         progress_callback("Running best-practices checks")
@@ -1112,22 +1112,15 @@ def check_best_practices_rules(
                         supported_by = review.get("supported_by", [])
                         if not supported_by:
                             pmid_number = ref_id.replace("PMID:", "")
-                            if yaml_file is not None:
-                                project_root = yaml_file.parent
-                                while (
-                                    project_root.parent != project_root
-                                    and not (project_root / "publications").exists()
-                                ):
-                                    project_root = project_root.parent
-                                pub_file = (
-                                    project_root
-                                    / "publications"
-                                    / f"PMID_{pmid_number}.md"
-                                )
-                            else:
-                                pub_file = (
-                                    Path("publications") / f"PMID_{pmid_number}.md"
-                                )
+                            # Use the same cache root as reference quote checks.
+                            # A nested publications/ directory beside a review
+                            # must not shadow the repository's publication cache.
+                            cache_dir = (
+                                publications_dir
+                                if publications_dir is not None
+                                else get_project_root() / "publications"
+                            )
+                            pub_file = cache_dir / f"PMID_{pmid_number}.md"
 
                             full_text_available = False
                             if pub_file.exists():
