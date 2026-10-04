@@ -16,9 +16,14 @@ from ai_gene_review.etl.panther_families import (
     emit_yaml_scalar,
     label_drift,
     rewrite_panther_labels,
+    MemberIndexConflict,
     build_member_index,
+    incremental_member_index,
     load_member_index,
+    load_member_index_alternates,
     load_member_index_gaps,
+    member_index_path,
+    panther_assignments_conflict,
     parse_hmm_classifications,
     parse_sequence_classification,
     render_obo,
@@ -326,6 +331,67 @@ def test_rewrite_panther_labels_still_defers_a_real_divergence():
     assert new == text
 
 
+def test_member_index_footer_has_no_count(tmp_path):
+    """A count line changes with every PR and turns each merge into a conflict."""
+    text = write_member_index({"P1": "PTHR1"}, tmp_path / "m.tsv", {"P8", "P9"}).read_text()
+    assert "accession(s)" not in text
+    assert "# unresolved: P8" in text and "# unresolved: P9" in text
+
+
+def test_load_member_index_rejects_conflicting_families(tmp_path):
+    path = tmp_path / "m.tsv"
+    path.write_text("uniprot_accession\tpanther_family_sf\nP1\tPTHR1\nP1\tPTHR2\n")
+    with pytest.raises(MemberIndexConflict):
+        load_member_index(path)
+
+
+def test_incremental_refresh_keeps_existing_rows():
+    """The default refresh must not re-resolve or rewrite rows it already has."""
+    asked = []
+
+    def resolve(acc):
+        asked.append(set(acc))
+        return {a: "PTHR_NEW" for a in acc}
+
+    out = incremental_member_index({"P1": "PTHR_OLD"}, {"P1", "P2"}, resolve)
+    assert out == {"P1": "PTHR_OLD", "P2": "PTHR_NEW"}
+    assert asked == [{"P2"}]
+    assert incremental_member_index({"P1": "PTHR_OLD"}, {"P1"}, resolve) == {"P1": "PTHR_OLD"}
+    assert len(asked) == 1, "nothing missing, so nothing to resolve"
+
+
+
+def test_member_index_round_trips_alternates(tmp_path):
+    """UniProt's disagreeing family is a third column the primary loader ignores."""
+    index = {"O14521": "PTHR13337:SF6", "P00001": "PTHR1"}
+    path = write_member_index(
+        index, tmp_path / "members.tsv", alternates={"O14521": "PTHR11375:SF2"}
+    )
+
+    assert load_member_index(path) == index
+    assert load_member_index_alternates(path) == {"O14521": "PTHR11375:SF2"}
+    assert "O14521\tPTHR13337:SF6\tPTHR11375:SF2" in path.read_text()
+
+
+def test_load_member_index_alternates_reads_two_column_files(tmp_path):
+    path = write_member_index({"O14521": "PTHR13337:SF6"}, tmp_path / "members.tsv")
+    assert load_member_index_alternates(path) == {}
+    assert load_member_index_alternates(tmp_path / "missing.tsv") == {}
+
+
+@pytest.mark.parametrize(
+    "first, second, expected",
+    [
+        ("PTHR1:SF2", "PTHR1", False),
+        ("PTHR1", "PTHR1:SF2", False),
+        ("PTHR1:SF2", "PTHR1:SF3", True),
+        ("PTHR1", "PTHR9", True),
+    ],
+)
+def test_panther_assignments_conflict(first, second, expected):
+    assert panther_assignments_conflict(first, second) is expected
+
+
 def test_load_member_overrides_requires_a_reason(tmp_path):
     from ai_gene_review.etl.panther_families import load_member_overrides
 
@@ -377,7 +443,10 @@ def test_repo_member_overrides_are_reflected_in_index():
 
     panther_dir = PROJECT_ROOT / "interpro" / "panther"
     overrides = load_member_overrides(panther_dir / "panther-members-overrides.tsv")
-    index = load_member_index(panther_dir / "panther-members.tsv")
+    members_path = member_index_path(PROJECT_ROOT)
+    if not members_path.exists():
+        pytest.skip("member index not built (run just refresh-panther-members)")
+    index = load_member_index(members_path)
     for accession, (family_sf, _reason) in overrides.items():
         if accession in index:
             assert index[accession] == family_sf, accession
