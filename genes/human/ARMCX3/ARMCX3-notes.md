@@ -16,3 +16,8 @@
 - KEEP_AS_NON_CORE: nucleus, cytoplasm, cytosol and axon cytoplasm.
 - REMOVE: MAF1, EHHADH and FAM25A protein binding (policy).
 - No NEW adaptor MF. The Galpha-q paper is abstract-only and says only that Galpha-q "interacted with" Alex3 and Miro1/Trak2, so this is raised as a question.
+
+## Review round 1 (PR #4195)
+- The non-core nucleus, cytoplasm and cytosol rows are now supported by UniProt's by-similarity location line, with the mouse donor source named. The Wnt/PKC quote was removed from them, since that paper shows mitochondrial localization.
+- Sox10 coactivation decision: ARMCX3 has no intrinsic transcriptional activity and sits on the mitochondrial outer membrane. It enhances Sox10 transactivation, plausibly by controlling Sox10's mitochondrial association, rather than acting as a promoter-bound coactivator. No transcription coregulator MF is assigned; the point is raised as a suggested question. The PMID:19304657 finding is recorded.
+- No core MF is assigned, because no direct activity is established. The redundant mitochondrion location was dropped from core_functions, and the truncated Wnt/PKC quote was completed.
