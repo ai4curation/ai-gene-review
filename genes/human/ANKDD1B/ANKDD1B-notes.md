@@ -8,12 +8,12 @@
 
 ## 2026-10-04 round 2 (reviewer comments on #4068): PAINT and family analysis
 
-- **Why there is no IBA.** ANKDD1B is in PANTHER PTHR24125 (subfamily SF1, ANKDD1B; ANKDD1A is SF0). I checked QuickGO for every reviewed family member in `interpro/panther/PTHR24125/PTHR24125-entries.csv`:
+- **Why there is no IBA.** ANKDD1B is in PANTHER PTHR24125 (subfamily SF1, ANKDD1B; ANKDD1A is SF0). (Round 4 correction: the entries CSV lists 4 representative proteins, not every member, and human ANKDD1A is not among them; see round 4 below.) I checked QuickGO for these proteins:
   - human ANKDD1B (A6NHY2): one IEA
   - mouse Ankdd1b (Q14DN9): IEA plus MGI ND rows
   - macaque ANKDD1A (Q9GKW8): one IEA
   - mimivirus L371 (Q5UQV3): none
-  - human ANKDD1A (Q495B1): one IEA and a BioPlex protein-binding IPI
+  - human ANKDD1A (Q495B1): one IEA and a BioPlex protein-binding IPI. Q495B1 is assigned to PTHR24125 by the PAINT worklist (`projects/paint/human-no-IBA.tsv`), not by the entries CSV.
   - So no family member has an experimental functional annotation. "No IBA" means there is no donor evidence for PAINT to propagate, not that evidence was placed on another subtree. UniProt's PAN-GO line agrees: 0 phylogenetic annotations.
 - **Negative claim now anchored on UniProt** (PE 4: Predicted; Pharos Tdark; PAN-GO 0) rather than only on the affinage null. The affinage reference_review now calls that record a null result.
 - **Other fixes:**
@@ -30,3 +30,15 @@
 - **PMID:30082910 quote:** the round-2 quote was verbatim from the paper's abstract (a different, longer sentence appears in the Results), and it validates after whitespace normalization. It is replaced anyway by the more mechanistic verbatim clause "the ankyrin repeat domain of ANKDD1A directly binds to the N-terminal domain of FIH1".
 - **Provenance:** the family finding now carries its own provenance, a file: reference to the entries CSV.
 - **Affinage reference_review:** `correctness` stays unset. The record is a null result with no citations, and no enum value fits a record that asserts nothing.
+
+## 2026-10-04 round 4 (reviewer comments on #4068)
+
+- **The entries CSV is a representative slice.** `PTHR24125-entries.csv` has 4 rows (human and mouse ANKDD1B, macaque ANKDD1A, mimivirus L371), but `PTHR24125-metadata.yaml` reports `proteins: 1495`. My member survey covers those four proteins plus human ANKDD1A via QuickGO and the worklist. It is not a complete enumeration.
+- **PANTHER-source disagreement.** The repo's older PTHR24198 snapshot (`interpro/panther/PTHR24198/PTHR24198-entries.csv`, fetched 2026-05-04) places human ANKDD1A (Q495B1) in `PTHR24198:SF195 DEATH DOMAIN-CONTAINING PROTEIN`, and PTHR24198 has 49 PAINT IBD rows.
+  - My reading is that the PTHR24125 placement is current:
+    - the PTHR24125 snapshot is five months newer (2026-10-04);
+    - the PAINT worklist assigns Q495B1 to PTHR24125;
+    - `panther.obo` names PTHR24125:SF0 "ANKYRIN REPEAT AND DEATH DOMAIN-CONTAINING PROTEIN 1A";
+    - the PTHR24198 IBD seeds are RAF/RIPK/MAP3K-type kinases, not ankyrin-death-domain proteins.
+  - That is inference, not a check of the PTHR24198 tree. Per CLAUDE.md I keep both placements on record rather than re-point anything.
+- **The no-donor claim now rests on the empty PAINT slice.** `just fetch-panther-paint PTHR24125` reports 0 annotated PTN nodes, and correspondingly there is no `PTHR24125-paint.tsv`. That file is only written when the slice is non-empty: about 2,900 committed families have one. The knowledge-gap boundary now says this rather than implying a complete member enumeration.
