@@ -18,3 +18,10 @@
   - Retina homeostasis (genetic association only).
 - MODIFY: properdin binding → complement binding; HMCN1 binding → extracellular matrix binding.
 - NEW: extracellular matrix (IDA, PMID:19696174); positive regulation of complement activation (IDA, PMID:28086806).
+
+## Review round 1 (PR #4202)
+- Photoreceptor inner segment → UNDECIDED, matching the mitochondrion row. PMID:19255159 (full text) calls the retinal co-localization image unconvincing and could not replicate mitochondrial targeting; this is now quoted in both rows and in the finding_review.
+- Cytoplasm (IEA) → MODIFY to cytosol (PMID:19255159, "cytosol, not mitochondria").
+- The NEW process is now GO:0045958 positive regulation of complement activation, alternative pathway. Properdin is recruited from EGTA-treated serum with the alternative pathway intact. The reconstitution caveat is noted.
+- The ECM NEW row now quotes the choroid-pillar sentence. A second core function was added for extracellular matrix binding.
+- Added PMID:17884985 (the original mitochondrial report) and PMID:23959158 (knockdown lowers C3/C5 in ARPE-19).
