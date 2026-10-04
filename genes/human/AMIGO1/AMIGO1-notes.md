@@ -18,4 +18,12 @@ Decisions:
   - cellular response to L-glutamate (rat IDA; really Kv2.1 relocalization);
   - pericellular basket (rat staining).
 - **38 HuRI protein-binding rows: REMOVE.**
-- **No NEW.** The adhesion-mediator MF has only rat/zebrafish evidence.
+- **NEW GO:0098631 cell adhesion mediator activity (ISS from rat Q80ZD7)**, added in round 1 as the MF counterpart of the accepted adhesion BP rows.
+
+## Round 1 (PR #4000 review)
+
+- **Zebrafish evidence cited.** PMID:24904058: knockdown disrupts fasciculated tracts.
+- **Dendrite rows** now cite "primarily present on the cell bodies and proximal dendrites" (PMID:29403353) and PMID:21938721.
+- **GO:0015459 rows (IBA, IEA, ISS): MODIFY to GO:0099104 potassium channel activator activity**, since all the evidence is an increase in conductance. The IBA row carries propagation_review NO_FAILURE_CORE / GRANULARITY_MISMATCH.
+- **core_functions** now has GO:0099104 with in_complex GO:0008076, plus an adhesion core with GO:0098631.
+- **Neurite-growth rows** now cite in vivo evidence: horizontal-cell axons are smaller in the knockout (PMID:35169021). They stay non-core as cell-type-specific effects.
