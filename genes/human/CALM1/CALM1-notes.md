@@ -1,3 +1,42 @@
+# CALM1 — biological evidence notes
+
+## Calcium sensing and distinct target activities
+
+Human CALM1, CALM2 and CALM3 share the canonical calmodulin protein sequence. Experiments on that protein establish biochemical capabilities but do not by themselves identify which gene supplies it in a cell. Calmodulin binds calcium through EF-hand sites; the KCNQ-associated structure reports [PMID:27564677 "four Ca(2+) ions are bound"]. Calcium sensing enables several distinct target-regulatory activities rather than making calmodulin the target enzyme or channel pore.
+
+The CaMKII structural study explains activation through the regulatory segment and active-site configuration: [PMID:20668654 "mechanism of CaMKII activation by calmodulin"]. Its complete available Results and Methods were read; experimental construct numbering is not evidence for an additional human product. Calmodulin activates the kinase, which performs phosphate transfer. A separate human-calmodulin disulfide-mutant study reports [PMID:8631777 "loss of ability to activate 
+target enzymes, phosphodiesterase and calcineurin"]; reduction restores regulatory activity. That abstract supports phosphatase activation without assigning calcineurin's dephosphorylation chemistry to calmodulin.
+
+Channel regulation is target dependent. The CaV1.2 study reports [PMID:26969752 "dominant loss of inactivation in CaV1.2"] for disease-associated variants. RyR2 studies independently support modulation of cardiac calcium release, whereas the complete human Reactome R-HSA-9865670 narrative describes TRPV4 potentiation. These results support a broad calcium-channel-regulator activity, not universal channel inhibition. The three functional units remain kinase activation, phosphatase activation and channel regulation, with calcium binding as their enabling sensing mechanism.
+
+## Nuclear location and reaction-specific uncertainty
+
+The complete cached human Reactome R-HSA-2730867 and R-HSA-4551465 records explicitly name CaM-containing calcineurin:NFAT complexes translocating to the nucleus. They corroborate a nucleoplasmic calmodulin pool. All six existing nucleoplasm assertions are therefore retained as ACCEPT. The three CaMKK-linked records require separate caveats: R-HSA-442749 leaves the kinase reaction compartment unresolved; R-NUL-9618916 combines mouse Camkk1 with human calmodulin; R-NUL-9619177 combines rat Camkk2 with human CAMK4 and assumes recombinant-calmodulin species identity from sequence conservation. Those experiments do not independently locate the particular reaction in a human nucleus. Their uncertainty does not negate the independently supported target-location assertion. The underlying primary localization experiments and structured Reactome participant graphs were not inspected.
+
+## Gene-specific disease attribution and residue numbering
+
+The CALM1 arrhythmia study directly reports [PMID:23040497 "Both CALM1 substitutions demonstrated compromised calcium 
+binding"]. Its N53I/N97S names use mature-protein numbering. UniProt P0DP23 records initiator-methionine removal from the 149-residue precursor and a chain spanning residues 2–149, so the corresponding precursor names are N54I/N98S. Three paralog genes must not be interpreted as three CALM1 alternative products.
+
+The later calmodulinopathy report explicitly separates [PMID:31454269 "CALM3-E141K in 2 
+cases; CALM1-E141V"]. CALM1-E141V must be distinguished from CALM3-E141K and CALM3-D130G; the two mosaic pedigrees concern CALM3. Its cardiomyocyte experiments overexpress mutant or wild-type calmodulin, and detailed Methods reside in an unavailable supplement. The CALM3-A103V study (PMID:27516456) also compares known CALM1 variants, so its title alone does not invalidate CALM1 biochemical evidence. The PMID:26969752 abstract and cached author narrative give differing cohort counts; no prevalence or cohort-size claim is made here.
+
+## Contextual functions and limits of the available evidence
+
+Anthrax edema factor is a real calmodulin-activated target: calmodulin [PMID:11807546 "stabilizes a 
+disordered loop and leads to enzyme activation"]. This pathogen context does not establish a mammalian GPCR-linked cyclase core. The mu-opioid-receptor work supplies a separate GPCR regulatory context. CP110 binding-defective experiments and bacterial OspC/CaMKII signaling experiments support their specific cellular contexts without establishing universal cell-cycle or CALM1-gene-specific mechanisms.
+
+Supported generic interactions are retained as non-core when no finer activity is justified. Directly supported refinements include IDH1 enzyme binding, KIF1A kinesin binding, EPB41 cytoskeletal binding and channel/transporter binding. Association alone does not transfer a partner's catalysis or establish its activation. LYST and tau target-interaction assertions remain unresolved because the relevant original target evidence was not recovered; the tau abstract is truncated. Other remaining uncertainties concern G2/M transition, sperm midpiece, calyx of Held, presynaptic endocytosis, calcium export and substantia nigra development.
+
+The primary reading comprises complete cached abstracts and the specifically identified available Methods, Results or narrative sections. A full-text metadata flag does not establish that target tables, images or supplements are present. The PMID:19855925 erratum corrects Figure 5 panels and an axis unit; correction prose, not images, was inspected. PAINT node evidence supports conserved activities, without a claim to have reanalyzed every donor or the complete alignment. These access boundaries remain recorded per reference.
+
+## Current follow-up assessment
+
+The focused follow-up changes only the three nucleoplasm decisions and the question that distinguished their reaction compartments: 106 ACCEPT, 48 KEEP_AS_NON_CORE, 14 MODIFY and 8 UNDECIDED across the same 176 source assertions. All references, source fields, existing evidence quotations and three functional cores remain unchanged; no new annotation or product is introduced. The original dated journal below is preserved verbatim as historical provenance. Its earlier action counts and nuclear uncertainty classification are superseded by this section.
+
+<details>
+<summary>Original dated journal — historical assessment and provenance</summary>
+
 # CALM1 scientific review — 2026-10-04
 
 This review distinguishes CALM1 gene-specific evidence from experiments on the canonical calmodulin sequence shared by human CALM1, CALM2 and CALM3. The primary accession is UniProt P0DP23, human taxon 9606, HGNC:1442. The record describes a 149-residue precursor with the initiator methionine removed and a chain spanning residues 2–149. The N53I/N97S names in PMID:23040497 use mature-protein numbering; the corresponding UniProt precursor names are N54I/N98S. Three paralog genes are not three alternative products of CALM1. No alternative-product slot or unverified product inventory was added.
@@ -49,3 +88,5 @@ Eleven short exact primary anchors are attached to load-bearing reviews or cores
 The bounded core consultation found no synthesis defect. Its historical candidate pin is preserved; a later description wording improvement says the three human genes share the canonical calmodulin sequence, avoiding an implication that their wider transcript/product inventories are identical. Two existing sarcomere review actions were aligned with the channel core as described above. Full normal candidate validation and exact source-projection checks are recorded in the accompanying proposal packet; canonical application and publication require ROOT's distinct whole-science peer.
 
 Normal candidate validation completed successfully with 12 warnings: ten standing-policy generic-binding advisories, the source-specific nucleoplasm action difference, and the optional unused provider-file support advisory. Schema, authored term validation and reference validation passed. Initial runs stopped because the sandbox could not write the default uv cache; the final run used the installed environment without synchronization and an isolated writable uv cache. An intermediate propagation-root-cause enum typo introduced while aligning the sarcomere row was corrected to the defined NO_FAILURE_CORE value. Those failed results are retained. No validator rule was weakened and no source bytes were changed to obtain the passing result.
+
+</details>
