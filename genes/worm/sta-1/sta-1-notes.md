@@ -54,3 +54,21 @@ claims checked against primary papers below), cached publications.
 - For the PTHR11801 family review: removed GO:0007259 IBA derives from PAINT node PTN000927860
   (paint.tsv row GO:0007259 IBD, seeds vertebrate STATs + fly Stat92E). The nematode branch needs
   an IRD / member exception, as for sta-2.
+
+## Literature review integration (2026-10-04)
+
+Added two evolutionary reviews (both full text cached):
+
+- Wang & Levy 2012 (PMID:24058748): STA-1 domain content and STAT-motif binding. STA-1 has SH2, DNA-binding
+  and coiled-coil domains [PMID:24058748 "A similar search with STA-1 produced three domains, SH2 (E-value 7.2e-31), DNA binding (E-value 1.9e-60) and STAT coiled-coil domain (E-value 8.8e-38)"]
+  and binds a STAT consensus motif in EMSA [PMID:24058748 "although many other STAT proteins, including STA-1, score positive in this assay"].
+  Added as support for GO:0000978 (IBA), GO:0003677 (IEA) and GO:0043565 (IDA). The nematode STAT lacks the
+  N-terminal domain, probably the ancestral state [PMID:24058748 "Prior to nematode divergence, the ancestral STAT likely had the same domain structure as the nematode STAT, lacking the N-terminal domain"].
+- Liongue & Ward 2013 (PMID:24058787): the canonical JAK-STAT pathway was assembled before protostomes
+  diverged [PMID:24058787 "These came together to form the canonical JAK-STAT signaling pathway prior to the divergence of protostomia"],
+  so nematode JAK absence is a lineage-specific loss. Added to the GO:0007259 REMOVE: the PTN000927860 IBD
+  placement is sound for the seeds, and the fix is an IRD on the nematode branch. The review does not itself
+  discuss nematode JAK loss; that comes from PMID:28874466.
+- No actions changed.
+
+Cross-gene briefing for GO editors and PAINT curators: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM

@@ -108,3 +108,13 @@ binding MODIFY, and the NEW NF-kB annotation (now also supported by PMID:1754017
 - Is PIAS1 inhibition of STAT1/p65 DNA binding dependent on its E3 activity? (Evidence
   suggests not for STAT1; PMID:12356736 discussion notes this is unclear.)
 - Extent of redundancy with PIAS4 in the DDR and SUMO paralog selectivity in vivo.
+
+## Literature review integration (2026-10-04)
+
+- Palvimo 2007 (PMID:18031232, abstract only) added as family-level support for the GO:0140416 IBA ACCEPT
+  [PMID:18031232 "PIAS proteins do not operate merely as SUMO E3s, since their co-regulator effects are often independent of their RING finger"]
+  and for the transcription-regulator-inhibitor core function [PMID:18031232 "PIAS proteins were initially named for their ability to interact with STAT proteins and inhibit their activity"].
+  This bears on the open question above: E3-independent co-regulator activity is a recognised PIAS-family property.
+- No actions changed.
+
+Cross-gene briefing for GO editors and PAINT curators: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
