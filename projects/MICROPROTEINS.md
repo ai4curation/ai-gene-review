@@ -114,8 +114,9 @@ Mostly not, and when they do it is usually thin:
 - **IBA reaches proteins that may not exist.** Several PE5 ("uncertain") products
   of pseudogenes inherit full sets of phylogenetic annotations: `SNRPGP15`
   (13 IBA spliceosome terms), `PMCHL1`/`PMCHL2` (neuropeptide signalling),
-  `DPH3P1`, `GNG5B`. These are candidates for an over-annotation audit (see
-  [IBA_REVIEW](IBA_REVIEW.md)).
+  `DPH3P1`, `GNG5B`. The Tier 3 audit confirmed this and removed 37 of 52 such rows
+  (see [Tier 3 results](#tier-3-results-2026-10-04) and [IBA_REVIEW](IBA_REVIEW.md)).
+  `GNG5B` itself turned out to be HGNC protein-coding now.
 - **Where experimental annotation exists it is recent and good.** The best-annotated sORF
   products are `MIEF1`-altORF (AltMIEF1, 13 experimental: mitoribosome
   large-subunit assembly, complex I assembly), the PRKCH uORF2 peptide (10
@@ -288,6 +289,43 @@ rows came out as: 145 ACCEPT, 24 KEEP_AS_NON_CORE, 70 MARK_AS_OVER_ANNOTATED, 32
    - MOTS-c: 3 antimicrobial terms, resting mainly on one 2026 eLife paper. This is the most
      recent and least replicated evidence in the set.
 
+## Tier 3 results (2026-10-04)
+
+Tier 3 audited 7 entries that the census flagged as uncertain products of pseudogene-like loci
+carrying function annotations. Across the 52 GOA rows: 37 REMOVE, 10 MARK_AS_OVER_ANNOTATED,
+2 ACCEPT, 2 KEEP_AS_NON_CORE and 1 UNDECIDED. No NEW proposals. Each gene has a reproducible
+`-bioinformatics/` folder comparing it with its parent protein.
+
+| entry | HGNC locus type | product exists? | rows | outcome | how function reached it |
+|---|---|---|---:|---|---|
+| `SNRPGP15` | pseudogene | **no**: GRCh38 has a TGA stop at codon 75 (independently re-checked); the 16 MS peptides assigned to it are all shared with SNRPG | 18 | 18 REMOVE | IBA from PTHR10553 nodes (snRNP, spliceosome, P granule); InterPro2GO; ARBA |
+| `PMCHL1` | pseudogene | no: 5'-truncated PMCH copy with no signal peptide; antiserum found nothing in testis or brain; the authors propose a noncoding RNA | 7 | 7 REMOVE | IBA from PTN002636265 (seeded by rat Pmch); InterPro2GO prepro-MCH; GOC inference; NAS from a 1993 paper |
+| `PMCHL2` | pseudogene | no: hominid duplicate of PMCHL1, testis-only transcript | 6 | 6 REMOVE | same routes as PMCHL1 |
+| `DPH3P1` | pseudogene | probably not: processed pseudogene, no GTEx expression; residues intact, so the removal rests on locus status | 5 | 5 REMOVE | IBA from PTN000485452 (DPH3 orthologs); InterPro2GO |
+| `GNG5B` | gene with protein product (formerly GNG5P2; MANE) | possibly: intact ORF, CaaX kept, but ≤0.29 TPM and no peptide | 8 | 8 MARK_AS_OVER_ANNOTATED | IBA (node placement sound); InterPro2GO; ISS from bovine GNG2 |
+| `LITAFD` | gene with protein product (MANE, conserved to fish) | **yes**: a real gene, misfiled into this tier by the census | 6 | 2 ACCEPT, 2 non-core, 2 over-annotated | IBA; LITAF-specific nucleus and cytokine terms placed at deep nodes |
+| `ZNF788P` | pseudogene | no: truncated KRAB-A only, no zinc fingers, stop codon between exons | 2 | 1 REMOVE, 1 UNDECIDED | InterPro2GO from the KRAB signature; the nucleus row came from a YFP-tagging screen against an older 615-aa UniProt sequence |
+
+### What Tier 3 shows
+
+1. **Pipelines do not check whether a product exists.** IBA (PAINT), InterPro2GO, ARBA and GOC
+   inference all annotate UniProt entries regardless of PE5 status, a "Could be the product of a
+   pseudogene" CAUTION, or HGNC `locus_type: pseudogene`. The node placements were mostly
+   correct. The failure is at the leaf. The upstream fix is a filter: skip entries that are PE5,
+   carry a pseudogene CAUTION, or are HGNC pseudogenes. Excluding the specific PANTHER
+   subfamilies (PTHR12091:SF1 for PMCHL1/2, PTHR21454:SF23 for DPH3P1) would also work. The same
+   mechanism produced the MTRNR2L findings in Tier 2.
+2. **UniProt entries can drift away from the genome.** SNRPGP15's 76-aa sequence is not
+   encoded by GRCh38, which has a stop at codon 75. ZNF788P's nucleus annotation was made against
+   a 615-aa sequence that UniProt has since replaced with an 82-aa one. Annotations are not
+   re-checked when the sequence changes.
+3. **Shared peptides inflate proteomic evidence.** SNRPGP15's "proteomics identification"
+   rests entirely on peptides identical to SNRPG. The two peptides that would tell them apart
+   have never been observed.
+4. **Census caveat.** The rule-based census was wrong for two of the seven: `LITAFD` is a
+   real conserved gene, and `GNG5B` has been promoted to protein-coding. Tier assignments from
+   the census should be read as leads to check, not conclusions.
+
 ## Naming alternative-ORF peptides (vs isoforms and polyproteins)
 
 The repo already has two ways to handle several products from one gene. Neither fits
@@ -381,7 +419,7 @@ Last updated: 2026-09-30
 - [x] MTRNR2L8–13 (retried with fresh agents on 2026-10-04 after the first attempt was stopped)
 
 ## Tier 3 — over-annotation audit (PE4–5 with IBA/ISS function)
-- [ ] SNRPGP15, PMCHL1, PMCHL2, DPH3P1, GNG5B, LITAFD, ZNF788P
+- [x] SNRPGP15, PMCHL1, PMCHL2, DPH3P1, GNG5B, LITAFD, ZNF788P (see [Tier 3 results](#tier-3-results-2026-10-04))
 
 ## Comparators (classic small proteins)
 - [ ] SLN, PLN (SERCA regulators; well annotated — the template for MRLN/STRIT1/ERLN)
@@ -406,6 +444,11 @@ Last updated: 2026-09-30
   - Serum "humanin-like N" ELISAs cannot be locus-specific.
   - Recurring recommendation: restrict PTN002141596 to MT-RNR2 plus MTRNR2L5, the only two
     sequences with functional data.
+
+- Tier 3 audit complete (7 entries, 52 rows; 37 removed). Two corrections to earlier work:
+  - The census tier placed `LITAFD` here, but it is a real conserved gene.
+  - My brief to the GNG5B agent claimed an experimental GOA row. That came from misreading a
+    census column; the row is an ISS transfer from bovine GNG2.
 
 ## 2026-10-03
 
