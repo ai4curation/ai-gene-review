@@ -54,3 +54,16 @@ protein and states the effect on activity "is not known".
 - Core function: glutathione S-transferase alpha-2 (glutathione transferase activity, GO:0004364).
 - Specific catalytic activities and direct metabolic processes were accepted.
 - Broad parent, localization, binding, and stimulus-response annotations were modified, kept non-core, or marked over-annotated according to support.
+
+## Re-review 2026-10-04
+
+**GOA changes.** Eight new seeded rows. Five are donor splits from mouse Gsta2 (MGI:MGI:95863) of terms previously reviewed with mouse Gsta1 (MGI:MGI:1095417) as donor: glutathione transferase activity, mitochondrion, cytosol, response to bacterium, response to stilbenoid (all ISO, GO_REF:0000121). One is a further cytosol ISO split from human GSTA2 (UniProtKB:P09210). Two are new terms: phospholipid-hydroperoxide glutathione peroxidase activity (GO:0047066, ISS from human GSTA2) and cellular oxidant detoxification (GO:0098869, IEA GO_REF:0000108, inferred from GO:0047066). No retired rows. Total 27 rows.
+
+**Actions.**
+- Mouse Gsta2-donor rows: PENDING -> same action as their mouse Gsta1-donor siblings (GST activity ACCEPT; cytosol KEEP_AS_NON_CORE; mitochondrion, response to bacterium, response to stilbenoid MARK_AS_OVER_ANNOTATED). The MGI:MGI:95863 `propagation_review.source_entities` entries that had been written on the sibling rows were moved to the new rows, so each row now carries only its own donor.
+- Cytosol ISO from human GSTA2: PENDING -> KEEP_AS_NON_CORE (location confirmed for rat GSTA2 [PMID:17112229 "site-specific modification of Cys-111 in cytosolic glutathione transferase subunits A1 and A2 by bromobenzoquinone"]).
+- GO:0047066 ISS from human GSTA2: PENDING -> KEEP_AS_NON_CORE. Donor activity is measured [PMID:10395737 "the catalytic efficiency of hGSTA2-2 for PC-hydroperoxide and PE-hydroperoxide was 317.5 and 353 s-1 mM-1, respectively"]; not measured on rat GSTA2, and secondary to conjugation. PMID:10395737 was fetched and added to references.
+- GO:0098869 IEA: PENDING -> KEEP_AS_NON_CORE, following GO:0047066 [PMID:10395737 "the alpha-class GSTs contribute a major portion of GPx activity toward lipid hydroperoxides in human liver"].
+- No action changed on existing rows. Donors are now named on the cytosol, GST ISO and GST ISS (mouse Gsta2, P10648) siblings; IDA rows from PMID:17112229 now quote the Cys-111/cytosolic A1/A2 sentence rather than a background sentence; UniProt FUNCTION / SUBCELLULAR LOCATION lines added as positive support.
+
+**Open questions.** Has selenium-independent peroxidase activity toward phospholipid hydroperoxides been measured for purified rat GST A2-2 (Ya2 homodimer)? Which mouse alpha-class gene is the true one-to-one orthologue of rat Gsta2 (both mouse Gsta1 and Gsta2 donate ISO rows)?
