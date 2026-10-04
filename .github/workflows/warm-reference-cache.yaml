@@ -1,11 +1,11 @@
-name: Normal CARMIL2 reference publication fetch
-run-name: CARMIL2 reference publications at ${{ github.sha }}
+name: Normal CASK source fetch
+run-name: CASK normal fetch at ${{ github.sha }}
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: normal-carmil2-reference-publications
+  group: normal-cask-source-fetch
   cancel-in-progress: false
 jobs:
   fetch:
@@ -16,46 +16,119 @@ jobs:
       PYTHONUNBUFFERED: '1'
       PYTHONDONTWRITEBYTECODE: '1'
     steps:
-    - uses: actions/checkout@v7
-      with:
-        ref: ${{ github.sha }}
-        fetch-depth: 1
-        persist-credentials: false
-    - name: Initialize isolated outputs and exact runtime identity
-      run: "python - <<'PY'\nimport hashlib, json, os, pathlib, subprocess\nroot = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-carmil2-reference-fetch'\nartifact = root / 'artifact'\nartifact.mkdir(parents=True, exist_ok=False)\n(artifact / 'raw').mkdir()\nexpected = {\n    'src': 'b6437edffc6d0f26c93fd72c8c1cbd62aaae0256',\n    'pyproject.toml': 'aedefcdb55d98c43bb2bf7fb6ff527c8edfeeff6',\n    'uv.lock': '311083db700f38b31e9c31d22cb3a9a4f31788fa',\n}\nobserved = {p: subprocess.check_output(['git', 'rev-parse', 'HEAD:' + p], text=True).strip() for p in expected}\nreceipt = {k: os.environ[k] for k in ('GITHUB_REPOSITORY', 'GITHUB_REF', 'GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT')}\nreceipt.update(gene='CARMIL2', pmids=['27647348', '27647349', '28112205', '36515678'],\n               normal_source_base='09476b15e3443092dfcf2a51037779d3d9ab1c8c',\n               expected_runtime_objects=expected, observed_runtime_objects=observed,\n               status='initialized', import_authorized=False)\n\
-        (artifact / 'run-receipt.json').write_text(json.dumps(receipt, indent=2) + '\\n')\nassert observed == expected, 'Normal source code or dependency input changed'\nassert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == receipt['GITHUB_SHA']\nwith open(os.environ['GITHUB_ENV'], 'a') as out:\n    out.write('CARMIL2_REFERENCE_FETCH_ROOT=' + str(root) + '\\n')\n    out.write('UV_CACHE_DIR=' + str(root / 'uv-cache') + '\\n')\n    out.write('UV_PROJECT_ENVIRONMENT=' + str(root / 'venv') + '\\n')\nPY\n"
-    - uses: actions/setup-python@v7
-      with:
-        python-version: '3.12'
-    - uses: astral-sh/setup-uv@v7
-      with:
-        enable-cache: false
-    - name: Install unchanged locked normal fetcher
-      timeout-minutes: 15
-      run: uv sync --frozen --no-dev --no-editable
-    - name: Run one normal fetch in isolated storage
-      timeout-minutes: 22
-      run: "\"$UV_PROJECT_ENVIRONMENT/bin/python\" - <<'PY'\nimport datetime, importlib.metadata, json, os, pathlib, signal, subprocess, sys\nimport yaml\nartifact = pathlib.Path(os.environ['CARMIL2_REFERENCE_FETCH_ROOT']) / 'artifact'\nwork = artifact / 'raw'\nreport_path = artifact / 'fetch-report.json'\ncommand = [str(pathlib.Path(os.environ['UV_PROJECT_ENVIRONMENT']) / 'bin/ai-gene-review'),\n           'fetch-pmid', '27647348', '27647349', '28112205', '36515678', '--output-dir', str(work / 'publications')]\nreport = {'command': command, 'cwd': str(work), 'attempts': 1,\n          'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),\n          'python': sys.version, 'package_version': importlib.metadata.version('ai_gene_review'),\n          'status': 'started', 'import_authorized': False}\nreport_path.write_text(json.dumps(report, indent=2) + '\\n')\nwith (artifact / 'normal-fetch.log').open('wb') as log:\n    proc = subprocess.Popen(command, cwd=work, stdout=log, stderr=subprocess.STDOUT,\
-        \ start_new_session=True)\n    try:\n        report['returncode'] = proc.wait(timeout=1200)\n    except subprocess.TimeoutExpired:\n        os.killpg(proc.pid, signal.SIGKILL)\n        report['returncode'] = proc.wait()\n        report['timed_out'] = True\ntry:\n    assert report['returncode'] == 0, 'Normal fetch did not complete successfully'\n    expected = [work / 'publications' / ('PMID_' + p + '.md') for p in ('27647348', '27647349', '28112205', '36515678')]\n    assert all(p.is_file() and not p.is_symlink() for p in expected)\n    sources = []\n    for p in expected:\n        source = p.read_text()\n        assert source.startswith('---')\n        metadata = yaml.safe_load(source.split('---', 2)[1])\n        sources.append({'path': p.relative_to(work).as_posix(), 'metadata': metadata})\n    report.update(status='candidate_requires_source_and_import_review', publications=sources)\nexcept Exception as exc:\n    report.update(status='needs_inspection', issue=str(exc))\nreport['finished_utc']\
-        \ = datetime.datetime.now(datetime.timezone.utc).isoformat()\nreport_path.write_text(json.dumps(report, indent=2) + '\\n')\nraise SystemExit(0 if report['status'] == 'candidate_requires_source_and_import_review' else 1)\nPY\n"
-    - name: Verify checkout unchanged
-      if: ${{ always() }}
-      run: 'git diff --exit-code
-
-        git diff --cached --exit-code
-
-        test -z "$(git ls-files --others --exclude-standard)"
-
-        '
-    - name: Inventory exact raw outputs and controls
-      if: ${{ always() }}
-      run: "python - <<'PY'\nimport hashlib, json, os, pathlib\nartifact = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-carmil2-reference-fetch/artifact'\nentries = []\nfor p in sorted(artifact.rglob('*')):\n    assert not p.is_symlink(), 'Unexpected symlink in output'\n    if p.is_file():\n        raw = p.read_bytes()\n        entries.append({'path': p.relative_to(artifact).as_posix(), 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()})\n(artifact / 'manifest.json').write_text(json.dumps({'files': entries, 'import_authorized': False,\n    'family_outputs': 'quarantined; not eligible for gene or source import'}, indent=2) + '\\n')\nPY\n"
-    - uses: actions/upload-artifact@v4
-      if: ${{ always() }}
-      with:
-        name: normal-carmil2-reference-sources-${{ github.run_id }}-${{ github.run_attempt }}
-        path: ${{ runner.temp }}/normal-carmil2-reference-fetch/artifact/
-        if-no-files-found: error
-        retention-days: 7
-        include-hidden-files: false
-        overwrite: false
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Initialize isolated outputs and exact runtime identity
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cask-fetch'
+          artifact = root / 'artifact'
+          artifact.mkdir(parents=True, exist_ok=False)
+          (artifact / 'raw').mkdir()
+          expected = {
+              'src': 'b6437edffc6d0f26c93fd72c8c1cbd62aaae0256',
+              'pyproject.toml': 'aedefcdb55d98c43bb2bf7fb6ff527c8edfeeff6',
+              'uv.lock': '311083db700f38b31e9c31d22cb3a9a4f31788fa',
+          }
+          observed = {p: subprocess.check_output(['git', 'rev-parse', 'HEAD:' + p], text=True).strip() for p in expected}
+          receipt = {k: os.environ[k] for k in ('GITHUB_REPOSITORY', 'GITHUB_REF', 'GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT')}
+          receipt.update(gene='CASK', organism='human', uniprot_id='O14936', hgnc_id='HGNC:1497',
+                         normal_source_base='09476b15e3443092dfcf2a51037779d3d9ab1c8c',
+                         expected_runtime_objects=expected, observed_runtime_objects=observed,
+                         status='initialized', import_authorized=False)
+          (artifact / 'run-receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+          assert observed == expected, 'Normal source code or dependency input changed'
+          assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == receipt['GITHUB_SHA']
+          with open(os.environ['GITHUB_ENV'], 'a') as out:
+              out.write('CASK_ROOT=' + str(root) + '\n')
+              out.write('UV_CACHE_DIR=' + str(root / 'uv-cache') + '\n')
+              out.write('UV_PROJECT_ENVIRONMENT=' + str(root / 'venv') + '\n')
+          PY
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: false
+      - name: Install unchanged locked normal fetcher
+        timeout-minutes: 15
+        run: uv sync --frozen --no-dev --no-editable
+      - name: Run one normal fetch in isolated storage
+        timeout-minutes: 22
+        run: |
+          "$UV_PROJECT_ENVIRONMENT/bin/python" - <<'PY'
+          import datetime, importlib.metadata, json, os, pathlib, signal, subprocess, sys
+          import yaml
+          artifact = pathlib.Path(os.environ['CASK_ROOT']) / 'artifact'
+          work = artifact / 'raw'
+          report_path = artifact / 'fetch-report.json'
+          command = [str(pathlib.Path(os.environ['UV_PROJECT_ENVIRONMENT']) / 'bin/ai-gene-review'),
+                     'fetch-gene', 'human', 'CASK', '--uniprot-id', 'O14936', '--output-dir', str(work)]
+          report = {'command': command, 'cwd': str(work), 'attempts': 1,
+                    'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    'python': sys.version, 'package_version': importlib.metadata.version('ai_gene_review'),
+                    'status': 'started', 'import_authorized': False}
+          report_path.write_text(json.dumps(report, indent=2) + '\n')
+          with (artifact / 'normal-fetch.log').open('wb') as log:
+              proc = subprocess.Popen(command, cwd=work, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+              try:
+                  report['returncode'] = proc.wait(timeout=1200)
+              except subprocess.TimeoutExpired:
+                  os.killpg(proc.pid, signal.SIGKILL)
+                  report['returncode'] = proc.wait()
+                  report['timed_out'] = True
+          try:
+              assert report['returncode'] == 0, 'Normal fetch did not complete successfully'
+              gene = work / 'genes/human/CASK'
+              expected = [gene / ('CASK-' + suffix) for suffix in ('uniprot.txt', 'goa.tsv', 'ai-review.yaml')]
+              assert all(p.is_file() and not p.is_symlink() for p in expected)
+              uni = expected[0].read_text()
+              primary = next(line for line in uni.splitlines() if line.startswith('AC   ')).split()[1].rstrip(';')
+              assert primary == 'O14936' and 'NCBI_TaxID=9606' in uni
+              seed = yaml.safe_load(expected[2].read_text())
+              assert seed['id'] == 'O14936' and seed['gene_symbol'] == 'CASK'
+              assert seed['taxon']['id'] == 'NCBITaxon:9606'
+              rows = seed.get('existing_annotations', [])
+              assert rows and all(a['review']['action'] == 'PENDING' for a in rows)
+              report.update(status='candidate_requires_source_and_import_review', annotations=len(rows),
+                            alternative_products=len(seed.get('alternative_products', [])))
+          except Exception as exc:
+              report.update(status='needs_inspection', issue=str(exc))
+          report['finished_utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+          report_path.write_text(json.dumps(report, indent=2) + '\n')
+          raise SystemExit(0 if report['status'] == 'candidate_requires_source_and_import_review' else 1)
+          PY
+      - name: Verify checkout unchanged
+        if: ${{ always() }}
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"
+      - name: Inventory exact raw outputs and controls
+        if: ${{ always() }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib
+          artifact = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cask-fetch/artifact'
+          entries = []
+          for p in sorted(artifact.rglob('*')):
+              assert not p.is_symlink(), 'Unexpected symlink in output'
+              if p.is_file():
+                  raw = p.read_bytes()
+                  entries.append({'path': p.relative_to(artifact).as_posix(), 'bytes': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()})
+          (artifact / 'manifest.json').write_text(json.dumps({'files': entries, 'import_authorized': False,
+              'family_outputs': 'quarantined; not eligible for gene or source import'}, indent=2) + '\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: normal-cask-sources-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/normal-cask-fetch/artifact/
+          if-no-files-found: error
+          retention-days: 7
+          include-hidden-files: false
+          overwrite: false
