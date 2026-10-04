@@ -16,3 +16,12 @@
 - **ACCEPT:** GEF activity (all rows; substrate RHOA), positive regulation of Rho signal transduction, regulation of actin cytoskeleton organization, cytoplasm/cytosol.
 - **IBA nodes:** PTN002656129 (ephexin) and PTN002656143 (ARHGEF5, seeded by ARHGEF5 itself).
 - **Non-core:** nucleus/nucleoplasm, plasma membrane and cell periphery, podosome, general signalling parents.
+- Review round (PR #4171):
+  - GO:0043087 → MODIFY to GO:0090630 activation of GTPase activity (exchange-defined; follows the ARHGEF16 precedent).
+  - Wang et al. 2009 [PMID:19713215] is now cited:
+    - Mouse Arhgef5 substrate panel (RhoA/RhoB strong, RhoC/RhoG weak, not Rac1/RhoQ/RhoD/RhoV). This is the source of UniProt's by-similarity panel and Reactome's RHOB/RHOC entries.
+    - Gbetagamma binding and stimulation.
+    - Immature dendritic cell migration in knockout mice.
+  - SH3 autoinhibition relieved by SH3-binding peptides [PMID:25645980]; Src-PI3K ternary complex [PMID:21525037].
+  - GO:0005085 is the only GEF term because GO:0005089 was merged into it.
+  - No podosome assembly process row was added. Podosome evidence is from Arhgef5 RNAi in Src-transformed cells; the podosome location row is kept non-core.
