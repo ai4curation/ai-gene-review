@@ -16,3 +16,9 @@
   - Molecular adaptor activity (IBA) → protein-macromolecule adaptor activity.
   - Spermatogenesis (ISS) → spermatid development.
 - KEEP_AS_NON_CORE: cytoplasm (IBA); endosome and plasma membrane (IBA from ARRDC3).
+
+## 2026-10-04 review round (PR #4211)
+
+- ARRDC5 lacks PY motifs [PMID:23236378 "With the exception of ARRDC5, all mammalian aArrs have a pair of PY motifs."]. Location IBAs seeded only by ARRDC3 are UNDECIDED.
+- Mouse Arrdc5 membrane (UniProt IDA PMID:37069147, EXP PMID:37997706): the full text of 37069147 has no ARRDC5 membrane statement, and 37997706 is abstract-only. UNDECIDED.
+- ZDHHC19 S-palmitoylates ARRDC5 (PMID:40030029, not cached). This is ZDHHC19 activity, so there is no ARRDC5 annotation.
