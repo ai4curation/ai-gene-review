@@ -11,3 +11,8 @@
 - Heart looping / embryonic heart tube elongation (IGI, PMID:28285006, abstract-only cache) and definitive hemopoiesis (IGI, PMID:25757417, full text) stay KEEP_AS_NON_CORE: the enzyme's work is SUMOylating Gata5 and C/ebpa; the morphogenetic and haematopoietic phenotypes are downstream [PMID:28285006 "in SUMOylation-deficient ubc9 mutants, the abnormal expression pattern displayed by the early markers of cardiac development (nkx2.5 and mef2cb) could be restored using a sumo-gata5 fusion, but not with a WT gata5."] [PMID:25757417 "Expression of the myeloid lineage marker lysozyme C and erythroid lineage marker hbae1 were drastically decreased in both SUMOs and Ubc9 morphants"]. ARBA IEAs for the same terms mirror these rows and get the same action.
 - Nucleus: UniProt location is inferred (ECO:0000305); no zebrafish immunolocalisation is cached, so a localisation experiment is suggested. Paralog identity caveat: functional papers use ubc9.1/ubc9.2 naming; ZFIN's MO/genotype entities on the GOA rows tie them to ube2ib.
 - Description rewritten as standalone biology; reference_review added to every PMID; validation: 0 errors.
+
+### Quote cleanup (2026-10-04)
+
+- Removed stray UniProt `CC` line prefixes from the 'Accepts the ubiquitin-like proteins sumo1, sumo2 and sumo3 ...' UniProt quote, used in 2 supported_by entries (GO:0061656 row and core_functions).
+- No action, reason or term changed; `just validate DANRE ube2ib` passes with zero errors.

@@ -52,3 +52,8 @@ Action changes and arguments:
   profile, phenotypes) and the core function, and filled the empty questions and experiments.
 
 Validation after edits: zero errors, zero warnings.
+
+### Quote cleanup (2026-10-04)
+
+- Removed stray UniProt `CC` line prefixes from the 'Catalyzes the formation of GDP-mannose ...' UniProt quote, used in 3 supported_by entries (GO:0009101 x2, GO:0005737).
+- No action, reason or term changed; `just validate DANRE gmppb` passes with zero errors.

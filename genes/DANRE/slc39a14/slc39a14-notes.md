@@ -35,3 +35,8 @@ blank lines and the metal:bicarbonate colon-in-scalar issue).
   GO:0016020, GO:0046873, GO:0055085 KEEP_AS_NON_CORE; GO:0030001 metal ion transport ACCEPT.
 - Description rewritten; core_functions and suggested questions/experiments updated.
 - Validation: zero errors, zero warnings.
+
+### Quote cleanup (2026-10-04)
+
+- Fixed the falcon deep-research quote on the GO:0055071 row ('In zebrafish embryos/larvae, **slc39a14** is expressed ...'): the leading 'in' was lower-cased relative to the source sentence, so it was not a verbatim substring.
+- No action, reason or term changed; `just validate DANRE slc39a14` passes with zero errors.

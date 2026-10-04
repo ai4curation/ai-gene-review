@@ -51,3 +51,8 @@ The prior review was already literature-grounded; this pass completed it rather 
 - Two ellipsis-containing `supporting_text` quotes (PMID:30626644, PMID:38383785) were replaced with verbatim passages from the cached abstracts.
 - Added `core_functions` (deUFMylase activity GO:0071567 at the ER, feeding GO:0070646 and GO:0032790), `reference_review` for all 8 PMIDs, and suggested questions/experiments. All zebrafish annotations remain similarity-based; no zebrafish-specific experiment exists for ufsp2.
 - Validation: 0 errors, 0 warnings.
+
+### Quote cleanup (2026-10-04)
+
+- Removed stray UniProt `CC` line prefixes from the SUBCELLULAR LOCATION UniProt quote, used in 5 supported_by entries (GO:0005634, GO:0005737, GO:0005783 x2, core_functions).
+- No action, reason or term changed; `just validate DANRE ufsp2` passes with zero errors.

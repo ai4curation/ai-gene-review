@@ -17,3 +17,9 @@ This gene's GOA record is on the TrEMBL accession Q563W7. The refreshed GOA reta
 ### Follow-up after PR review (2026-10-04)
 
 The nucleus (GO:0005634, IEA GO_REF:0000044) REMOVE reason previously claimed that no evidence supports nuclear localization, which contradicted the UniProt record's own ARBA prediction (`Nucleus {ECO:0000256|ARBA:ARBA00004123}`). The reason now states accurately that the only support is a statistical ARBA prediction and that the nuclear M7CK kinase fragment reported in mammalian cells is not evidence for full-length channel localization. The spliced deep-research quote reused under four localization rows was replaced with the verbatim sentence [file:DANRE/trpm7/trpm7-deep-research.md "Trpm7 is an **integral membrane protein** that primarily localizes to the **plasma membrane** of cells"].
+
+### Quote cleanup (2026-10-04)
+
+- Fixed 12 supporting_text entries attributed to trpm7-deep-research.md that were ellipsis-spliced or not contiguous in the file: 8 were replaced with the contiguous source sentence/clause (restoring `**`/`*` markdown and the curly apostrophe where the source has them).
+- The other 4 (GO:0098655, GO:0030001 IEA and IDA, GO:0010960, GO:0007346 rows: 'Mouse TRPM7 (mTRPM7) has been shown to best permeate ...' and 'Based on this profile ... primary mechanism for cellular Mg2+ homeostasis ...') were verbatim text from PMID:27628598, not from the deep-research file, so their reference_id was re-pointed to PMID:27628598 (already in references). Nothing dropped.
+- No action, reason or term changed; `just validate DANRE trpm7` passes with zero errors.

@@ -62,3 +62,8 @@ in zebrafish). Validation ends with zero errors and no warnings.
 ### Follow-up after PR review (2026-10-04)
 
 core_functions now names ATPase activator activity (GO:0001671) as the molecular function instead of Hsp70 protein binding (GO:0030544), matching the core-function prose (auxilin recruits Hsc70 and stimulates its ATPase) and the guidance to prefer an informative activity over a binding term; the binding row remains in existing_annotations as the mechanistic basis. clathrin-dependent endocytosis (GO:0072583) was dropped from directly_involved_in because clathrin coat disassembly (GO:0072318), which remains, is the precise step auxilin performs and the broader term is its ancestor.
+
+### Quote cleanup (2026-10-04)
+
+- Replaced the core_functions falcon deep-research quote ('The primary molecular function is not enzymatic in itself ...') with the contiguous source text, restoring the `**` emphasis that had been stripped.
+- No action, reason or term changed; `just validate DANRE A0A8M9QG43` passes with zero errors.

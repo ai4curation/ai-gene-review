@@ -86,3 +86,9 @@ Validation after edits: zero errors; one expected warning (the GO:0090560 qualif
 ### Follow-up after PR review (2026-10-04)
 
 The NEW cellular-component row was moved from cytoplasm (GO:0005737) to cytosol (GO:0005829), and core_functions.locations with it. Human DPH2 (Q9BQC3) carries cytosol, the client eEF2 is a cytosolic translation factor, and the batch elsewhere treats cytoplasm as a true-but-uninformative parent, so the more specific term is the one the argument supports.
+
+### Quote cleanup (2026-10-04)
+
+- Removed stray UniProt `CC` line prefixes from the two UniProt quotes (iron-sulfur cluster reduction; synthase complex composition), used in 6 supported_by entries across existing_annotations and core_functions.
+- Restored the 5 falcon deep-research quotes (GO:0005829 row and references findings) to the contiguous source text, with the `**` emphasis that had been replaced by `...` splices.
+- No action, reason or term changed; `just validate DANRE dph2` passes with zero errors.

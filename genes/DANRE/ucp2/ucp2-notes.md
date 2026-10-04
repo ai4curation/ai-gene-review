@@ -17,3 +17,8 @@ The previous review cited no primary literature. Four papers were located and ca
 - GO:0005743 (IEA/ISS/IBA, the IBA was PENDING) all ACCEPT with one consistent rationale; GO:0055085 stays MODIFY -> GO:1990542.
 - A stale row (GO:1902600 IEA GO_REF:0000108) was absent from the refreshed GOA and duplicated the GO_REF:0000120 row, so it was dropped. 13 rows remain (12 GOA + 1 NEW).
 - Description rewritten as standalone biology; reference_review added to all four PMIDs; validation: 0 errors, 0 warnings.
+
+### Quote cleanup (2026-10-04)
+
+- Replaced 3 ellipsis-spliced falcon deep-research quotes in the references findings (mitochondrial carrier family architecture; mild-uncoupling proton leak model; UCP2-5 cold-acclimatization induction) with the contiguous source sentences, keeping the source's `**` emphasis and non-breaking hyphens.
+- No action, reason or term changed; `just validate DANRE ucp2` passes with zero errors.
