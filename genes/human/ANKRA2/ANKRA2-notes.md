@@ -13,3 +13,13 @@
 - **Kept as non-core:** NEK6 kinase binding, ubiquitin ligase binding and 3M complex (via CCDC8), complex assembly, generic protein-containing complex, plasma membrane (HPA), cytoskeleton (SubCell).
 - **Accepted:** HDAC binding, megalin (LDL receptor) binding, regulation of gene expression (IBA), and nucleus, cytoplasm, cytosol and membrane locations.
 - **PAINT:** PTHR24124 has 2 annotated PTN nodes. The nucleus and regulation-of-gene-expression IBAs come from PTN001538048 (Eukaryota), seeded by RFXANK and mouse genes. Family files committed.
+
+## 2026-10-04 round 2 (reviewer comments on #4081)
+
+- **Human coactivator evidence added** (PMID:39181888, full text): ANKRA2 binds the PDCD4 X-box with RFX7, and its knockdown impairs p53-RFX7 activation of PDCD4 and PIK3IP1 in U2OS and HCT116 cells.
+  - Added NEW GO:0003713 transcription coactivator activity (IMP, human).
+  - The corepressor row is now ISO from mouse Ankra2 (Q99PE2, named in supporting_entities).
+  - The two rows are siblings. The core MF is their parent, GO:0003712 transcription coregulator activity; the validator warns that it is not an existing row, which is intended.
+  - The RFX7 MODIFY now has functional support.
+- **Affinage miscitation:** affinage says ANKRA2 can substitute for RFXANK in BLS complementation, citing PMID:15655668, but that abstract says ANKRA2 could *not* complement. The affinage reference_review is now MISCITED, and PMID:15655668 is cited with the refuting sentence.
+- The core-function description now covers the megalin arm.
