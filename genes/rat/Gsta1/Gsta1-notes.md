@@ -35,3 +35,14 @@
   is not role conflation; the real objection is that the induction was shown for a mouse
   paralog and never for rat Gsta1. ROLE_CONFLATION is retained on GO:0030855 epithelial
   cell differentiation, where `involved_in` genuinely does claim participation.
+
+## Re-review 2026-10-04
+
+**GOA changes.** Two new seeded rows, both donor splits: cytosol (GO:0005829, ISO, GO_REF:0000121) from human GSTA2 (UniProtKB:P09210) alongside the existing mouse Gsta2 (MGI:MGI:95863) row; and phospholipid-hydroperoxide glutathione peroxidase activity (GO:0047066, ISS, GO_REF:0000024) from human GSTA1 (UniProtKB:P08263) alongside the existing IEA row. No retired rows. Total 31 rows.
+
+**Actions.**
+- Cytosol ISO (human GSTA2 donor): PENDING -> KEEP_AS_NON_CORE, consistent with its sibling; location independently shown for rat GSTA1 [PMID:17112229 "was isolated from liver cytosol of rats treated with 14C-BB"]. Sibling reason now names the mouse Gsta2 donor.
+- GO:0047066 ISS (human GSTA1 donor): PENDING -> KEEP_AS_NON_CORE. Matches the UniProt by-similarity reaction [UniProtKB:P00502 "Through its glutathione-dependent peroxidase activity toward the fatty acid hydroperoxide (13S)-hydroperoxy-(9Z,11E)-octadecadienoate/13-HPODE it is also involved in the metabolism of oxidized linoleic acid (By similarity)."]; not measured on purified rat enzyme.
+- No existing action changed. Supporting quotes on experimental rows that cited only background sentences were replaced with assay-specific ones: PMID:17112229 (liver-cytosol GST purification on GSH-agarose), PMID:15152091 (specific activities of A1-1 homo/heterodimers), PMID:10751412 (Y9F effects on glutathione-conjugate binding in rat GST A1-1), PMID:11119643 (title: rat GST A1-1), PMID:17197701 (dinitrosyl-diglutathionyl-iron complex "binds tightly to Alpha class GSTs in rat hepatocytes").
+
+**Open questions.** The existing questions on rodent alpha-class orthology (which mouse gene is the true Gsta1 counterpart) and on whether the secondary activities have been measured on rat A1-1 remain open.
