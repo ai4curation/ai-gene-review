@@ -13,3 +13,4 @@
 - **Calcium ion binding IEA (EF-hand):** MARK_AS_OVER_ANNOTATED. The motif check (`ANKEF1-bioinformatics/`) finds a non-canonical loop with no Glu12, and UniProt marks no Ca sites.
 - **8 protein-binding IPIs** (neurodegeneration interactome, PMID:32814053): removed.
 - **Knowledge gap:** MF_DARK; its activity within the N-DRC is unknown.
+- Self-check (absence_check.py): the knockout proteomics shows N-DRC levels unchanged; the suggested question is reframed accordingly.
