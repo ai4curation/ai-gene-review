@@ -8,3 +8,12 @@
 - No GO MF fits a protein that accepts a misactivated amino acid, so I proposed the new term "misactivated amino acid acceptor activity" (parent enzyme regulator activity) and used it in core_functions.
 - Nucleus: kept as non-core; cytoplasm: accepted.
 - Affinage: gates clear, accurate summary of the single paper.
+
+## Round 2 (reviewer, PR #4101)
+
+- Proposed-term justification now rules out GO:0140313 molecular sequestering activity (Affinage's grounding). The seryl group is covalently transferred, so this is not binding that withholds a molecule. It also rules out GO:0008047 enzyme activator activity, because ANKRD16 raises serine-dependent ATP use but blocks serine transfer to tRNA. GO:0030234 is kept as the parent.
+- Added the 3xArg result ("ANKRD163xArg had no effect on AlaRSA734E pre-transfer editing"): the lysines are required, not just modified.
+- The UniProt rebuttal now quotes the abstract sentence on "stimulating serine-dependent ATP hydrolysis prior to tRNA aminoacylation".
+- Cytoplasm ISS now cites the 82% identity line, not the lysine-conservation line.
+- **Upstream fix:** every human row is regenerated from the mouse A2AS55 annotations. The durable change is to the mouse GO:0006400 IDA and the UniProt function text; this is raised as a suggested question.
+- Row count: the GOA TSV has 8 rows; the review has 6 after the seed collapsed two date-duplicate ISS rows (nucleus, cytoplasm).
