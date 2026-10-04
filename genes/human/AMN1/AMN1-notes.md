@@ -12,5 +12,17 @@ Human-specific checks:
 
 Decisions:
 - **SCF complex and SCF-dependent catabolism (IBA, node PTN002547163, F-box-containing FBXL donors): MARK_AS_OVER_ANNOTATED**, with propagation_review. These are a sequence inference, not a negative experiment.
-- **Microvillus membrane (IEA from mouse): REMOVE**, on biological grounds. The likely Amn/Amn1 mix-up at MGI is raised as a suggested question, not asserted.
+- **Microvillus membrane (IEA from mouse): REMOVE.** The source is a homonym mix-up, confirmed in round 1 by MGI's own GO-CAM (see below). This is recorded as propagation_review SOURCE_BAD and raised as a question for MGI.
 - **Gene recorded as WHOLLY_DARK.**
+
+## Round 1 (PR #4034 review)
+
+- **GO-CAM confirms the source-side mix-up.** `gocams/index.tsv` lists MGI:MGI:2442933 "Amn1 Mmus" in model 62900b6400002552, "Cobalamin transport, into enterocytes (Mouse)", as cargo receptor activity in the microvillus membrane, citing PMID:14321840 alongside Cubn and Cblif and with no Amn. That cargo-receptor role is amnionless's, the cubilin partner.
+- **All IBA donors verified as F-box proteins (UniProt F-box DOMAIN features):**
+  - FBXL5, FBXL7 and FBXL15 (human)
+  - Fbxl7 and Fbxl2 (mouse)
+  - Fbxl7 (fly)
+  - fbxl14a and fbxl14b (zebrafish)
+  - SKP2A, FBL17, FBL3 and EBF2 (Arabidopsis)
+  - D3 (rice)
+  - YDR306C and YLR352W (yeast; neither is yeast AMN1, P38285)
