@@ -10,7 +10,7 @@
 ## Round 2 (reviewer, PR #4130)
 
 - **New finding from the reviewer's OpenCell suggestion.** OpenCell did tag ANKRD40 (cell line 1389, N-terminal, HEK293T): golgi_3, cytoplasmic_1, vesicles_1. The OpenCell legend defines grade 3 as "Prominent signal" (read from the site bundle by ANKRD40-bioinformatics/opencell_localization.py). Changes:
-  - NEW GO:0005794 Golgi apparatus (IDA, PMID:35271311).
+  - NEW GO:0005794 Golgi apparatus (HDA, PMID:35271311; changed from IDA in round 3).
   - The CC ND row becomes REMOVE, as superseded.
   - The gap becomes MF_DARK, since a location is now known.
   - AHCY in OpenCell is cytoplasmic and nucleoplasmic (grade 3), not Golgi. Where the two proteins meet is a question.
