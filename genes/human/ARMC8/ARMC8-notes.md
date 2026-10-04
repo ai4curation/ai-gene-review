@@ -15,3 +15,10 @@
   - Nucleus, nucleoplasm, cytoplasm and cytosol (IDA, IEA, TAS).
 - KEEP_AS_NON_CORE: extracellular region and neutrophil granule lumens (Reactome degranulation proteomics).
 - REMOVE: RMND5A and TCF12 protein binding (policy).
+
+## Review round 1 (PR #4192)
+- PMID:29911972 (Lampert 2018, full text) is now cited. It used ARMC8 as the AP-MS bait that defined the human GID/CTLH complex, and showed that the recombinant complex ubiquitinates HBP1 in vitro with UBE2H.
+- NEW ubiquitin protein ligase activity (GO:0061630), qualifier contributes_to (IDA). It is also the core function's contributes_to_molecular_function.
+- The nucleus and cytoplasm rows now quote the complex's nucleus-and-cytoplasm localization, replacing a content-free sentence.
+- The GID complex row quotes the alpha-isoform GID4 binding (PMID:35682545). HBP1 in suggested_experiments now has provenance.
+- The EMT/Wnt cancer literature in the affinage record yields no GO terms, because it consists of knockdown or overexpression phenotypes in cancer cell lines without a mechanism tied to the CTLH activity.
