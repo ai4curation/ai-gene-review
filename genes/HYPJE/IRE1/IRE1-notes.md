@@ -1,5 +1,23 @@
 # IRE1 evidence notes
 
+## 2026-09-30 APOPTOSIS completion pass
+
+Marked the review `COMPLETE` after revalidating the fungal IRE1 death-branch
+calls. The existing focused OpenScientist follow-up had already resolved the
+two mammalian over-propagations in the right direction: `GO:0070059 intrinsic
+apoptotic signaling pathway in response to endoplasmic reticulum stress` stays
+`MARK_AS_OVER_ANNOTATED` as a mammalian ERN apoptosis branch imported onto a
+fungal SF6 IRE1 protein, and `GO:1990604 IRE1-TRAF2-ASK1 complex` stays
+`REMOVE` because Trichoderma lacks TRAF2 and ASK1/MAP3K5.
+
+The obsolete `GO:0051082 unfolded protein binding` rows still `MODIFY` to
+`GO:0002235 detection of unfolded protein`: that keeps the sensor biology in
+BP space without asserting chaperone/holdase activity or direct Trichoderma
+ligand-binding kinetics. Broad molecular-function ancestors were also tightened
+to the more informative terms already supported in the review: ATP binding,
+RNA endonuclease activity, protein Ser/Thr kinase activity, and magnesium ion
+binding.
+
 ## 2026-09-20 full-gene re-review
 
 All 21 source assertions reviewed and preserved. Primary PMID:15480788 remains abstract-only after official refetch; the full target Falcon report was read but does not replace direct access to all experimental details. Accessible primary directly establishes kinase autophosphorylation, yeast complementation, HAC1 processing and bip1/pdi1 induction. The description and core functions now distinguish biochemical kinase proof, genetic support for conserved RNase/sensing and inferred topology/cofactors. Provider paraphrases were replaced with exact primary excerpts. No new annotation rows were manufactured.
