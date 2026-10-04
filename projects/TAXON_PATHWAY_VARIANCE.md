@@ -164,6 +164,19 @@ GO has no taxon constraint on any of these terms today (checked in QuickGO and O
 TPV-003 has an ontology prerequisite (re-parenting GO:0007260), recorded in its
 `prerequisites` entry in the YAML; not yet requested.
 
+## To do
+
+- [ ] Gene reviews for the six members of
+  [dicty_jak_independent_stat_signaling](../modules/dicty_jak_independent_stat_signaling.yaml)
+  that have none yet: Pyk2 (`splB`, UniProtKB:P18161), Pyk3 (UniProtKB:Q54I36),
+  PTP3 (`ptpC`, UniProtKB:P54637), Phg2 (UniProtKB:Q54QQ1), DrkA (UniProtKB:Q54H46)
+  and GskA (UniProtKB:P51136). These complete the module's gene-review coverage; Pyk3
+  needs particular care because its effect on STATc is disputed between strains
+  (PMID:18657170 vs PMID:25143406).
+- [ ] Wire in the OpenScientist results for sta-2 (does it keep a functional STAT
+  DNA-binding domain?) and gei-17 (does it keep the SAP domain and SIMs that let PIAS
+  proteins repress independently of the ligase?).
+
 ## Candidate cases to scope next
 
 - **TYK2 IRD.** PAINT records TYK2 as having *lost* JAK-STAT signaling (a negated IRD
