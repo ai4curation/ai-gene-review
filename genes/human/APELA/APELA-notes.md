@@ -22,3 +22,8 @@
   - Trophoblast migration (IMP); angiogenesis (IMP); GPCR internalization (IMP).
   - Rat heart contraction and ERK (ISS).
 - No IBA rows; no NEW rows.
+- Review round (PR #4156):
+  - Coronary vasculature now cites PMID:28890073 (Ela/Apj coronary migration defect).
+  - GO:1903589 (sprouting-angiogenesis EC proliferation) → MARK_AS_OVER_ANNOTATED. The donor paper reports a migration defect, and "proliferation" appears only twice in its text, both in background statements.
+  - Each mouse ISS row is adjudicated on its own donor evidence (found via QuickGO on P0DMC4).
+  - All 17 ISS rows carry propagation_review. The Q9WV08 row is PROPAGATION_BAD: the receptor's own adult heart IMP comes from PMID:28663440.
