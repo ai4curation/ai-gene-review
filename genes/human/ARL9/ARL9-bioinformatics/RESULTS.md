@@ -28,4 +28,5 @@ G4 D129        -> D188
 
 - **Retained:** ARL9 keeps the P-loop lysine and threonine, the switch I threonine and the G4 NKxD guanine-specificity motif. Its nucleotide-binding residues are intact.
 - **Catalytic glutamine:** At ARF1's catalytic Gln71, ARL9 has a serine (S73), as ARL10 does. Intrinsic GTP hydrolysis by such G proteins is expected to be impaired, but nobody has measured ARL9 hydrolysis.
-- **Switch I threonine:** ARL9 retains it (T50). PMID:15033445 says an Asn replaces Thr35 in "all orthologues newly identified here". Its abstract does not make clear whether that applies to the Arl9/Arl10 subfamily or only to Rasl11, and for human ARL9 the alignment does not support it.
+- **Switch I threonine:** ARL9 retains it (T50). PMID:15033445 cloned ARL9 and reported that "all orthologues newly identified here" have an Asn in place of Thr35. The human ARL9 sequence contradicts this.
+- **Published data:** PMID:38606629 independently lists ARL9 among the ARF-family GTPases that lack the conserved glutamine.

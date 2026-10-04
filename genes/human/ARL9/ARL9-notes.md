@@ -10,3 +10,11 @@
 - GTP binding (IEA) → ACCEPT, based on the conserved nucleotide-binding motifs.
 - GTPase activity (IEA) → UNDECIDED: the catalytic Gln is replaced by Ser, and hydrolysis has not been measured. This matches the ARL10 review.
 - No NEW terms. The knowledge gap is wholly dark.
+
+## Review round 1 (PR #4183)
+- PMID:38606629 (ARF-family BioID, already cached for ARL10) is now cited:
+  - It independently lists ARL9 among the GTPases lacking the catalytic Gln.
+  - Its BioID data "suggest" a mitochondrial and cytoskeletal role for ARL9, without imaging validation. The description and gap boundary are corrected.
+  - ARL10's targeting sequence is 76 residues, per that paper, not "roughly 60"; the suggested question is fixed.
+- PMID:15033445's Thr35-to-Asn claim is recorded as a finding_review OVERTURNED by the alignment (ARL9 T50).
+- core_functions support for GTP binding now uses only binding-motif snippets.
