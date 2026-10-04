@@ -2,12 +2,15 @@
 
 ## Deep research status
 
-Automated deep research could not be generated for this gene: the falcon provider
-returned HTTP 402, perplexity was unavailable, and openai returned HTTP 401. No
-`-deep-research-*.md` file was created. The synthesis below is my own, built from the
-UniProt record (`PIAS1-uniprot.txt`), the cached publications for every PMID in the
-GOA annotation set, and five additional papers fetched with `just fetch-pmid`
-(PMID:11583632, PMID:11867732, PMID:15311277, PMID:15657437, PMID:20016603).
+Deep research was attempted with several providers: falcon returned HTTP 402, perplexity
+was unavailable, and openai returned HTTP 401. The openscientist provider succeeded and
+produced `PIAS1-deep-research-openscientist.md` (not edited). Its key claims were checked
+against cached primary sources before use (see "Integration of openscientist report"
+below). The synthesis below is my own, built from the UniProt record
+(`PIAS1-uniprot.txt`), the cached publications for every PMID in the GOA annotation set,
+and additional papers fetched with `just fetch-pmid` (PMID:11583632, PMID:11867732,
+PMID:15311277, PMID:15657437, PMID:20016603, PMID:12764129, PMID:17540171, PMID:27099310,
+PMID:32348746).
 
 ## Domain architecture (UniProt)
 
@@ -80,6 +83,25 @@ Nuclear; nuclear speckles and PML bodies (UniProt; [PMID:27068747 "Most of hDREF
 - NEW: negative regulation of canonical NF-kappaB signal transduction (GO:0043124),
   passes participation (PIAS1 itself binds p65 and blocks its DNA binding) and comparator
   (NFKBIA, TNFAIP3 and PIAS4 carry the term in QuickGO, 2026-10).
+
+## Integration of openscientist report
+
+Verified against cached primary sources:
+- SUMO-independent STAT1 inhibition [PMID:12764129 "inhibition of STAT1 by PIAS proteins does not require SUMO modification of STAT1"]. Notably this paper also shows that PIAS1 is not the STAT1 E3 [PMID:12764129 "PIASx-alpha, but not PIAS1, functions as an E3 ligase"], which the report does not emphasise.
+- Inflammation-induced switch [PMID:17540171 "IKKalpha, but not IKKbeta, interacts"]; Ser90 phosphorylation is required for repression and for TNF-induced promoter association, and itself requires PIAS1 SUMO ligase activity.
+- PML nuclear bodies [PMID:27099310 "PIAS1 is a constituent PML-NB protein."]; PIAS1 enhances SUMO1 accumulation in domains containing infecting HSV-1 genomes but is not essential for PML-NB formation.
+- SIM2 [PMID:32348746 "we demonstrate PIAS-SIM2 binds to SUMO1"], supporting the SUMO binding MODIFY for the SUMO5 IPI row.
+- STAT1/p65 blockade and DSB role match PMID:9724754, PMID:10805787, PMID:15657437, PMID:15311277 and PMID:20016603 (already used).
+
+Not verified (not cached) and therefore not used for annotations: substrate claims for
+Smad4, PPARG, HMGN2, mGluR8b and EBNA1, AR ChIP-seq coregulation (PMID:25552417,
+PMID:26219822), and disease-model papers. AR coregulation is consistent with the existing
+KEEP_AS_NON_CORE call on positive regulation of DNA-templated transcription.
+
+Effect on decisions: no action changed. The report reinforced the MODIFY of
+"transcription corepressor activity" to "transcription regulator inhibitor activity"
+(the inhibition is SUMO-independent, binding-based), the PML body ACCEPTs, the SUMO
+binding MODIFY, and the NEW NF-kB annotation (now also supported by PMID:17540171).
 
 ## Open questions
 
