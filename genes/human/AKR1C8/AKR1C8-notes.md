@@ -11,5 +11,7 @@ AKR1C8 (formerly the pseudogene AKR1C8P, alias AKR1CL1) is an AKR1C-family aldo-
   - Generic oxidoreductase activity (InterPro): ACCEPT.
   - Cytoplasm: ACCEPT.
   - ARBA alcohol dehydrogenase (NADP+): KEEP_AS_NON_CORE.
-  - ARBA androsterone dehydrogenase and the three ARBA process terms (steroid, monocarboxylic acid and hormone metabolism): MARK_AS_OVER_ANNOTATED. These are substrate claims inherited from rules, and AKR1C substrate preferences diverge between close paralogs.
+  - ARBA androsterone dehydrogenase: MODIFY to GO:0016616 (CH-OH donor, NAD or NADP acceptor). It keeps the chemistry without a substrate claim, and it is the OLS-verified common ancestor of GO:0008106 and GO:0047023. This changed in round 1 of PR #3958 (it was MARK_AS_OVER_ANNOTATED). GO:0016616 is also the core MF.
+  - The three ARBA process terms (steroid, monocarboxylic acid and hormone metabolism): MARK_AS_OVER_ANNOTATED. These are substrate claims inherited from rules, and AKR1C substrate preferences diverge between close paralogs.
+- **Protein evidence:** UniProt gives PE 1 (evidence at protein level, from proteomics), so the former pseudogene is translated.
   - Five protein-binding rows from the neurodegeneration Y2H screen: REMOVE, per policy.

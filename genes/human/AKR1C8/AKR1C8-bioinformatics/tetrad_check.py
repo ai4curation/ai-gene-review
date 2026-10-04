@@ -2,7 +2,7 @@
 
 The AKR1C tetrad is Asp50, Tyr55, Lys84, His117 in AKR1C1-4 numbering. AKR1C8 is
 aligned to AKR1C1 with a global pairwise alignment (Biopython) and the residues at
-the aligned positions are reported. Run: uv run python tetrad_check.py
+the aligned positions are reported. Run: uv run --with biopython python tetrad_check.py
 """
 import urllib.request
 from Bio import Align
