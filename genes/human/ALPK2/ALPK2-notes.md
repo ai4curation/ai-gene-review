@@ -13,4 +13,16 @@ Decisions:
 - **Kinase, Ser kinase and ATP binding (IEA): ACCEPT.**
 - **All cardiac IMP and IEA rows: KEEP_AS_NON_CORE.** The curator's hESC evidence is not overruled, but the role is not established for the mammalian organism.
 - **Colon 3D-culture rows** (apoptosis, gene expression; PMID:22641666) and **variant-study rows** (polarity, basolateral membrane; PMID:28668886): KEEP_AS_NON_CORE.
-- **No NEW.** Tropomyosin 1 phosphorylation is indirect (overexpression; PMID:39556326).
+- **No NEW.** No GO row covers the TPM1/diastolic role, but it rests on a single mouse study.
+
+## Round 1 (PR #3986 review)
+
+- **TPM1 was understated as "indirect".** PMID:39556326 has four converging lines:
+  - phosphoproteomics (15 ALPK2-dependent sites);
+  - dose-dependent Ser283 phosphorylation by the catalytic domain in NIH3T3 cells;
+  - loss of endogenous Ser283 phosphorylation in Alpk2-null cardiomyocytes;
+  - gain with overexpression.
+  The core MF is now GO:0106310 protein serine kinase activity. The caveat is that no purified-component assay exists.
+- **GO:0010468** (siRNA lowering DNA repair mRNA in one cell line): MARK_AS_OVER_ANNOTATED.
+- **Epicardium morphogenesis:** verified as a zebrafish tcf21:DsRed assay in the full text.
+
