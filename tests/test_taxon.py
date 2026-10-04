@@ -82,3 +82,42 @@ def test_resolve_taxon_term_refuses_placeholder():
 
     with pytest.raises(ValueError):
         resolve_taxon_term("unknown-organism")
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SCHEMA = REPO_ROOT / "src/ai_gene_review/schema/gene_review.yaml"
+
+
+def _term_validate_offline(path: Path):
+    """Run linkml-term-validator on ``path`` against the committed caches only."""
+    import subprocess
+
+    return subprocess.run(
+        [
+            "uv", "run", "linkml-term-validator", "validate-data", str(path),
+            "-s", str(SCHEMA), "-t", "GeneReview", "--labels",
+            "-c", str(REPO_ROOT / "conf/oak_config.yaml"), "--offline",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+
+@pytest.mark.parametrize(
+    "fixture,expected",
+    [
+        ("GeneReview-placeholder_taxon_id.yaml", "NCBITaxon:DESVH"),
+        ("GeneReview-taxon_label_mismatch.yaml", "Label mismatch for 'NCBITaxon:3055'"),
+    ],
+)
+def test_taxon_binding_rejects_invalid_fixture(fixture: str, expected: str):
+    """The NCBITaxonEnum binding rejects a placeholder id and a wrong label."""
+    result = _term_validate_offline(REPO_ROOT / "tests/data/invalid" / fixture)
+    assert result.returncode != 0
+    assert expected in result.stdout + result.stderr
+
+
+def test_taxon_binding_accepts_valid_fixture():
+    result = _term_validate_offline(REPO_ROOT / "tests/data/valid/GeneReview-minimal.yaml")
+    assert result.returncode == 0, result.stdout + result.stderr

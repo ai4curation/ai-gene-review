@@ -107,9 +107,18 @@ def sibling_review_taxon(path: Path) -> dict[str, str] | None:
 
 
 def replace_taxon(path: Path, curie: str, label: str) -> None:
-    """Rewrite the id and label lines of the top-level taxon block of ``path``."""
+    """Rewrite the id and label of the top-level taxon (block or flow style) of ``path``."""
     text = path.read_text()
-    start, end, _, id_m, label_m = find_taxon_block(text)
+    hit = find_taxon_block(text)
+    if hit is None:
+        flow = find_flow_taxon(text)
+        if flow is None:
+            raise ValueError(f"No top-level taxon in {path}")
+        q = flow.group("q") or '"'
+        line = f"taxon: {{id: {q}{curie}{q}, label: {json.dumps(label, ensure_ascii=False)}}}"
+        path.write_text(text[: flow.start()] + line + text[flow.end():])
+        return
+    start, end, _, id_m, label_m = hit
     body = text[start:end]
     edits = sorted(
         [
@@ -144,7 +153,8 @@ def resolve_labels(curies: set[str], adapter_spec: str, cache: dict[str, str | N
                 except Exception as exc:  # network/OLS failure: leave unresolved
                     print(f"WARN: lookup failed for {curie}: {exc}", file=sys.stderr)
                     continue
-            cache[curie] = label
+            if label:  # never cache a miss, so a later run can retry it
+                cache[curie] = label
     return {c: cache.get(c) for c in curies}
 
 

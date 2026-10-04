@@ -1198,14 +1198,18 @@ validate-all:
     echo "Schema validation (batch)..."
     uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
-    echo "Term validation (batch, errors block; label-mismatch warnings advisory)..."
-    # Enum-membership / not-found errors (❌ ERROR) are fatal; ontology label-mismatch
+    echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
+    # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
     # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
-    # bidirectional. Use just validate-terms for a fully strict (warnings-too) check.
+    # bidirectional. NCBITaxon label mismatches on the bound taxon slot are fatal:
+    # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
     term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
     printf '%s\n' "$term_out"
     if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
         echo "✗ Term validation found errors (see above)"
+        exit_code=1
+    elif printf '%s\n' "$term_out" | grep -qE "Label mismatch for '?NCBITaxon:"; then
+        echo "✗ Term validation found taxon labels that do not match NCBITaxon (see above)"
         exit_code=1
     else
         echo "✓ Term validation: no errors (label warnings, if any, are advisory)"
