@@ -18,3 +18,8 @@
 - **Missed contrary claim.** Affinage's HLA-I finding (PMID:34694569, full text) says upregulated ANKRD13A *promotes* HLA class I internalization in AML cells, the opposite direction to the EGFR result. It is now recorded on the internalization rows and as a cargo-dependence question. The core function keeps the direction-neutral GO:0048259 for this reason.
 - **Mitophagy:** no process term is proposed from the single 2025 study; this is now stated in the affinage reference_review.
 - The cytoplasm row reason now uses the plasma-membrane anchoring quote.
+
+## Follow-up after merge: direction of regulation
+
+- The reviewer on ANKRD13B (#4092) showed that PMID:22298428 does not support a negative sign. Dominant-negative truncations inhibit like wild type, and the authors write "we propose that Ankrd 13A, 13B, and 13D positively regulate the internalization of ligand-activated EGFR". The ANKRD13A review had ACCEPTed GO:0002091 on the overexpression phenotype.
+- Changes: GO:0002091 ×2 → MODIFY to GO:0002090; GO:1905667 (IDA) → MODIFY to GO:1905666. Description, core function and the cargo-dependence question no longer say "restrains". For ANKRD13A, the HLA-I report (PMID:34694569, promotion) points the same way.
