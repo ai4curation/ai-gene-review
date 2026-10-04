@@ -14,3 +14,5 @@ Metzincins coordinate the catalytic zinc with three histidines in HEXXHXXGXXH, f
 Conclusion: human AMZ2 keeps all three zinc-binding histidines and the catalytic glutamate (Glu255), as the structurally characterized archaeal enzymes do. Its paralog AMZ1 has lost the third histidine.
 
 An intact motif makes metallopeptidase activity plausible but does not demonstrate it. No valid activity measurement exists for AMZ2.
+
+To reproduce: `uv run python zinc_motif_check.py > results.tsv`
