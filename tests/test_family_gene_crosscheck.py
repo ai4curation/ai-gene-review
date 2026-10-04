@@ -16,6 +16,7 @@ from ai_gene_review.validation.family_gene_crosscheck import (
     GeneRef,
     Verdict,
     check_family_gene_disagreement,
+    check_member_exceptions,
     check_pruning_conflicts,
     check_scope_violations,
     crosscheck_family_review,
@@ -177,6 +178,94 @@ def test_gene_actions_for_term_collects_multiple_rows(tmp_path):
 
 
 # --------------------------------------------------------------------------
+# Member exceptions
+# --------------------------------------------------------------------------
+
+PRUNED_NODE = "PANTHER:PTN002475783"
+
+
+def _review_with_exception(*, node_verdict="NEEDS_PRUNING", pruned=PRUNED_NODE,
+                           scope="SUBFAMILY_ONLY", member="PGRPLBACC"):
+    """CATALYTIC_SF is in scope, but the family excepts one of its members."""
+    review = _family_review(scope=scope)
+    exc = {
+        "member": {"id": f"UniProtKB:{member}", "label": "x"},
+        "exception_reason": "function lost on this branch",
+        "supported_by": [{"reference_id": "PMID:1", "supporting_text": "x"}],
+    }
+    if pruned:
+        exc["pruned_node_id"] = pruned
+    review["term_assessments"][0]["member_exceptions"] = [exc]
+    review["node_assessments"] = [{
+        "node_id": PRUNED_NODE,
+        "asserted_term": {"id": TERM, "label": "amidase"},
+        "assessment": node_verdict,
+        "assessment_reason": "test",
+    }]
+    return review
+
+
+def test_excepted_member_may_remove_without_disagreement(tmp_path):
+    """The gei-17 case: in-scope subfamily, but the family itself excepts the member."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
+    review = _review_with_exception()
+    assert check_family_gene_disagreement(review, {FAMILY: [gene]}) == []
+    (result,) = check_member_exceptions(review, {FAMILY: [gene]})
+    assert result.verdict is Verdict.OK
+
+
+def test_unexcepted_sibling_removing_still_disagrees(tmp_path):
+    """An exception covers only the member it names, not its whole subfamily."""
+    gene = _write_gene(tmp_path, "PGRPLA", CATALYTIC_SF, "REMOVE")
+    (result,) = check_family_gene_disagreement(_review_with_exception(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.CONFLICT
+
+
+@pytest.mark.parametrize("action", ["ACCEPT", "KEEP_AS_NON_CORE"])
+def test_excepted_member_keeping_the_term_conflicts(tmp_path, action):
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, action)
+    (result,) = check_member_exceptions(_review_with_exception(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.CONFLICT
+    assert result.kind == "EXCEPTION_RETAINED"
+
+
+def test_exception_must_be_anchored_in_a_negative_node_assessment(tmp_path):
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
+    review = _review_with_exception(node_verdict="SOUND")
+    kinds = {r.kind: r.verdict for r in check_member_exceptions(review, {FAMILY: [gene]})}
+    assert kinds["EXCEPTION_UNANCHORED"] is Verdict.CONFLICT
+
+
+def test_exception_without_pruned_node_needs_no_anchor(tmp_path):
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
+    review = _review_with_exception(node_verdict="SOUND", pruned=None)
+    assert [r.verdict for r in check_member_exceptions(review, {FAMILY: [gene]})] == [
+        Verdict.OK
+    ]
+
+
+def test_exception_for_member_outside_scope_is_vacuous(tmp_path):
+    gene = _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "REMOVE")
+    review = _review_with_exception(member="PGRPLCACC")
+    (result,) = check_member_exceptions(review, {FAMILY: [gene]})
+    assert result.kind == "EXCEPTION_OUTSIDE_SCOPE"
+    assert result.verdict is Verdict.CONFLICT
+
+
+def test_exception_on_not_applicable_term_is_rejected(tmp_path):
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "REMOVE")
+    review = _review_with_exception(scope="NOT_APPLICABLE")
+    (result,) = check_member_exceptions(review, {FAMILY: [gene]})
+    assert result.kind == "EXCEPTION_OUTSIDE_SCOPE"
+
+
+def test_exception_for_member_without_gene_review_is_only_anchor_checked():
+    """No gene review to compare: the exception stands on the family's own evidence."""
+    review = _review_with_exception(member="NOREVIEW1")
+    assert check_member_exceptions(review, {FAMILY: []}) == []
+
+
+# --------------------------------------------------------------------------
 # Against the real corpus
 # --------------------------------------------------------------------------
 
@@ -221,3 +310,20 @@ def test_flipping_a_real_gene_to_accept_produces_a_conflict(tmp_path):
     conflicts = [r for r in results if r.verdict is Verdict.CONFLICT]
     assert len(conflicts) == 2, [str(r) for r in results]
     assert {c.kind for c in conflicts} == {"SCOPE_VIOLATION", "PRUNING_CONFLICT"}
+
+
+@pytest.mark.integration
+def test_real_pias_family_excepts_gei17_jak_stat():
+    """PTHR10782 excepts C. elegans GEI-17 from the SF94 JAK-STAT scope, and the
+    gei-17 review's REMOVE agrees with it rather than conflicting."""
+    results = crosscheck_family_review(
+        Path("interpro/panther/PTHR10782/PTHR10782-review.yaml")
+    )
+    conflicts = [r for r in results if r.verdict is Verdict.CONFLICT]
+    assert not conflicts, [str(c) for c in conflicts]
+    honoured = [
+        r for r in results
+        if r.kind == "EXCEPTION_RETAINED" and r.gene == "gei-17" and r.term == "GO:0046426"
+    ]
+    assert [r.verdict for r in honoured] == [Verdict.OK]
+

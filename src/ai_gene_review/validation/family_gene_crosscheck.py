@@ -28,6 +28,15 @@ Three checks, all deterministic joins over data already in the repo:
     for this gene's subfamily, but the gene review removes it. One of the two is wrong and
     a human should decide which.
 
+``check_member_exceptions``
+    Scope is per subfamily, but a function can be lost on a branch a subfamily does not
+    separate. A ``term_assessment`` may list ``member_exceptions``: covered members for
+    which the family itself judges the term does not hold. An excepted member that keeps
+    the term is a conflict; one that removes it is agreement (and is exempt from the
+    disagreement check above). An exception for a member outside the term's scope is
+    vacuous, and one naming a ``pruned_node_id`` must be anchored in a negative
+    ``node_assessment`` for that node and term -- both are conflicts.
+
 The join keys are already present: a gene's subfamily comes from its UniProt
 ``DR PANTHER`` cross-reference, and its actions come from its ``-ai-review.yaml``. Around
 2,800 genes in this repo carry both a subfamily and a PANTHER-propagated annotation, so
@@ -153,6 +162,21 @@ def _term_ids(entries) -> list[tuple[str, str]]:
     return out
 
 
+def _bare_accession(curie: str) -> str:
+    """``UniProtKB:Q94361`` -> ``Q94361`` (GeneRef carries the bare primary accession)."""
+    return curie.split(":", 1)[1] if ":" in curie else curie
+
+
+def _excepted_accessions(assessment: dict) -> set[str]:
+    """Accessions a term assessment explicitly excepts from its scope."""
+    out = set()
+    for exc in assessment.get("member_exceptions") or []:
+        member_id = ((exc or {}).get("member") or {}).get("id")
+        if member_id:
+            out.add(_bare_accession(member_id))
+    return out
+
+
 def check_scope_violations(
     review: dict, gene_index: dict[str, list[GeneRef]]
 ) -> list[CrossCheck]:
@@ -272,12 +296,14 @@ def check_family_gene_disagreement(
         scope = assessment.get("scope")
         term = (assessment.get("assessed_term") or {}).get("id", "?")
         allowed = {sf for sf, _ in _term_ids(assessment.get("applicable_subfamilies"))}
+        excepted = _excepted_accessions(assessment)
 
         for gene in gene_index.get(family, []):
             covered = scope == "FAMILY_WIDE" or (
                 scope == "SUBFAMILY_ONLY" and gene.subfamily in allowed
             )
-            if not covered:
+            if not covered or gene.accession in excepted:
+                # Excepted members are adjudicated by check_member_exceptions.
                 continue
             actions = gene_actions_for_term(gene.review_path).get(term)
             if not actions:
@@ -295,6 +321,103 @@ def check_family_gene_disagreement(
     return results
 
 
+def check_member_exceptions(
+    review: dict, gene_index: dict[str, list[GeneRef]]
+) -> list[CrossCheck]:
+    """Hold each ``member_exceptions`` entry to account, against both review files.
+
+    An exception is the family review's own judgement that a covered member lacks the
+    function, so it has to be (a) anchored -- inside the term's scope, and tied to a
+    negative node assessment when it names a pruned node -- and (b) agreed with by the
+    member's gene review, which must not keep the term.
+    """
+    family = review.get("family_id", "?")
+    negative = {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE"}
+    pruned_nodes = {
+        (a.get("node_id"), (a.get("asserted_term") or {}).get("id"))
+        for a in review.get("node_assessments") or []
+        if a.get("assessment") in negative
+    }
+    genes_by_acc = {g.accession: g for g in gene_index.get(family, [])}
+    results: list[CrossCheck] = []
+
+    for assessment in review.get("term_assessments") or []:
+        exceptions = assessment.get("member_exceptions") or []
+        if not exceptions:
+            continue
+        scope = assessment.get("scope")
+        term = (assessment.get("assessed_term") or {}).get("id", "?")
+        allowed = {sf for sf, _ in _term_ids(assessment.get("applicable_subfamilies"))}
+
+        for exc in exceptions:
+            member_id = ((exc or {}).get("member") or {}).get("id", "?")
+            acc = _bare_accession(member_id)
+            gene = genes_by_acc.get(acc)
+            label = gene.symbol if gene else member_id
+            subfamily = gene.subfamily if gene else None
+
+            if scope not in ("FAMILY_WIDE", "SUBFAMILY_ONLY"):
+                results.append(
+                    CrossCheck(
+                        "EXCEPTION_OUTSIDE_SCOPE", family, label, subfamily, term, "-",
+                        Verdict.CONFLICT,
+                        f"member exception on a {scope} term: exceptions only carve "
+                        f"members out of a FAMILY_WIDE or SUBFAMILY_ONLY scope",
+                    )
+                )
+                continue
+
+            pruned = exc.get("pruned_node_id")
+            if pruned and (pruned, term) not in pruned_nodes:
+                results.append(
+                    CrossCheck(
+                        "EXCEPTION_UNANCHORED", family, label, subfamily, term, "-",
+                        Verdict.CONFLICT,
+                        f"exception names pruned node {pruned}, but the review has no "
+                        f"negative node_assessment for {pruned} and {term}",
+                    )
+                )
+
+            if gene is None:
+                # No in-repo gene review to compare against; the exception stands on
+                # the family review's own evidence.
+                continue
+
+            if scope == "SUBFAMILY_ONLY" and gene.subfamily not in allowed:
+                results.append(
+                    CrossCheck(
+                        "EXCEPTION_OUTSIDE_SCOPE", family, label, subfamily, term, "-",
+                        Verdict.CONFLICT,
+                        f"member is in {subfamily or 'no subfamily'}, outside the term's "
+                        f"applicable subfamilies, so the exception is vacuous",
+                    )
+                )
+                continue
+
+            actions = gene_actions_for_term(gene.review_path).get(term)
+            if not actions:
+                continue
+            retained = actions & RETAINING_ACTIONS
+            if retained:
+                results.append(
+                    CrossCheck(
+                        "EXCEPTION_RETAINED", family, label, subfamily, term,
+                        "/".join(sorted(retained)), Verdict.CONFLICT,
+                        "family review excepts this member from the term, but the gene "
+                        "review keeps it",
+                    )
+                )
+            else:
+                results.append(
+                    CrossCheck(
+                        "EXCEPTION_RETAINED", family, label, subfamily, term,
+                        "/".join(sorted(actions)), Verdict.OK,
+                        "gene review flags the term, consistent with the family exception",
+                    )
+                )
+    return results
+
+
 def crosscheck_family_review(
     path: Path, genes_dir: Path = Path("genes")
 ) -> list[CrossCheck]:
@@ -305,6 +428,7 @@ def crosscheck_family_review(
         check_scope_violations(review, gene_index)
         + check_pruning_conflicts(review, gene_index)
         + check_family_gene_disagreement(review, gene_index)
+        + check_member_exceptions(review, gene_index)
     )
 
 
@@ -333,6 +457,7 @@ def main(argv: list[str] | None = None) -> int:
             check_scope_violations(review, gene_index)
             + check_pruning_conflicts(review, gene_index)
             + check_family_gene_disagreement(review, gene_index)
+            + check_member_exceptions(review, gene_index)
         )
         for r in results:
             if r.verdict is Verdict.CONFLICT:
