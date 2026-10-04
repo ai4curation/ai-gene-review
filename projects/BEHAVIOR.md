@@ -4,6 +4,13 @@ maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
 species: [mouse, human, rat, worm, yeast, DANRE, DROME, DAPPU]
 genes: [App, STAT3, nphp-1, Casp3, Drd1, CRY, lov-1, pkd-2, GCG, daf-2, trpm7, Tuba1a, Agtr1a, Mtor, Fyn]
+manifest:
+  slides:
+    - href: BEHAVIOR/slides/BEHAVIOR-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/YLcccJMkX5QNmHL4d5pWez
+      title: Project brief
 ---
 
 # Behaviour Annotation Project
@@ -305,7 +312,3 @@ is only the modality) — confirming that fix from the assay side.
   process").
 - [CONTESTED_FUNCTION](CONTESTED_FUNCTION.md) — for cases where the behaviour
   annotation is genuinely contradicted rather than merely distal.
-
-## Slides
-
-- [Slides](BEHAVIOR/slides/BEHAVIOR-slides.html) (Marp source: [BEHAVIOR-slides.md](BEHAVIOR/slides/BEHAVIOR-slides.md)) — AI generated

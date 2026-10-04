@@ -262,6 +262,8 @@ class ModuleValidationResult:
     # the result rather than recomputed by the caller, so there is only one
     # place the definition can live and it cannot drift from the validator's.
     ungrounded_families: int = 0
+    # Structured functional coverage accompanies the blocking/advisory messages.
+    function_conformance: Dict = field(default_factory=dict)
 
     @property
     def is_valid(self) -> bool:
@@ -1291,11 +1293,21 @@ def validate_cited_ptn_sources(
 
 
 def compare_label(
-    curie: str, provided: str, primary: Optional[str], aliases: Set[str]
+    curie: str,
+    provided: str,
+    primary: Optional[str],
+    aliases: Set[str],
+    where: str = "module",
 ) -> Optional[str]:
     """Return an error message if ``provided`` does not match the ontology.
 
     A match is exact or case-insensitive against the primary label or any alias.
+    ``where`` names the field the label came from, so the message says which
+    text to fix:
+
+    >>> compare_label("X:1", "wrong", "root", set(), where="evidence title").startswith(
+    ...     "Label mismatch for X:1: evidence title says 'wrong' but ontology label is 'root'")
+    True
 
     >>> compare_label("X:1", "root", "root", set()) is None
     True
@@ -1325,7 +1337,7 @@ def compare_label(
         return None
     shown = primary if primary is not None else "<no label>"
     message = (
-        f"Label mismatch for {curie}: module says '{provided}' "
+        f"Label mismatch for {curie}: {where} says '{provided}' "
         f"but ontology label is '{shown}'"
     )
     # A label that merely restates its own id names no entity, so the
@@ -1366,6 +1378,8 @@ def validate_terms(
     adapter_map: Dict[str, Optional[str]],
     resolver: Resolver,
     label_aliases: Optional[Dict[str, Set[str]]] = None,
+    where: str = "module",
+    allow_obsolete_citation: bool = False,
 ) -> Tuple[List[str], List[str]]:
     """Validate a list of ``(id, label)`` terms, returning (errors, warnings).
 
@@ -1373,7 +1387,19 @@ def validate_terms(
     silently), or omits it (skip with a warning). ``resolver`` performs the
     actual ontology lookup for configured prefixes. ``label_aliases`` adds
     explicitly reviewed labels when the configured ontology snapshot lags the
-    authoritative source.
+    authoritative source; an alias is consulted only when the ontology's own
+    label and synonyms fail.
+
+    A term whose ontology label carries GO's ``obsolete `` prefix is an error
+    whatever the provided label says -- a reviewed alias cannot bridge it (this
+    is how GO:0006535 sat in a module for months after GO retired it), and
+    pasting the ``obsolete ...`` label in verbatim does not make a retired
+    grounding valid. The one exception is ``allow_obsolete_citation``, used for
+    ``evidence[].source_id`` citations: an evidence entry may quote a retired
+    label verbatim to document the retirement, but a mismatched title on an
+    obsolete id is still reported as an obsoletion. ``where`` names the field
+    the labels came from in messages (``module`` for ``term`` blocks,
+    ``evidence title`` for citations).
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -1407,14 +1433,85 @@ def validate_terms(
         if status == "not_found":
             errors.append(f"Term id {curie} not found in configured ontology")
             continue
-        accepted_aliases = set(aliases)
-        if label_aliases:
-            accepted_aliases.update(label_aliases.get(curie, set()))
-        err = compare_label(curie, label, primary, accepted_aliases)
+        reviewed = label_aliases.get(curie, set()) if label_aliases else set()
+        obsolete = is_obsolete_label(primary)
+        err = compare_label(curie, label, primary, set(aliases), where=where)
+        if err and reviewed and not obsolete:
+            err = compare_label(
+                curie, label, primary, set(aliases) | reviewed, where=where
+            )
+        if obsolete and (err or not allow_obsolete_citation):
+            errors.append(
+                obsolete_term_message(
+                    curie, primary, where, bool(reviewed), allow_obsolete_citation
+                )
+            )
+            continue
+        if obsolete:
+            # The carve-out fired benignly: say so, so a retired citation is
+            # visible in the log rather than passing in silence.
+            warnings.append(
+                f"{curie} is obsolete in the configured ontology ('{primary}'); "
+                f"the {where} quotes the retired label verbatim, which is "
+                f"allowed when the entry documents the retirement"
+            )
         if err:
             errors.append(err)
 
     return errors, warnings
+
+
+def is_obsolete_label(primary: Optional[str]) -> bool:
+    """True when an ontology's primary label marks the term as retired.
+
+    The GO sqlite build prefixes the label of an obsoleted term with
+    ``obsolete ``, which is the only obsoletion signal the label resolver
+    exposes. The OLS-backed adapters used for the other prefixes (CHEBI,
+    NCBITaxon, ...) return labels without that prefix, so this check reaches
+    GO only; an obsoletion elsewhere is a missed detection, not a false alarm.
+
+    >>> is_obsolete_label("obsolete L-cysteine biosynthetic process from L-serine")
+    True
+    >>> is_obsolete_label("L-cysteine biosynthetic process")
+    False
+    >>> is_obsolete_label(None)
+    False
+    """
+    return primary is not None and primary.lower().startswith("obsolete ")
+
+
+def obsolete_term_message(
+    curie: str,
+    primary: Optional[str],
+    where: str,
+    has_alias: bool,
+    citation_allowed: bool,
+) -> str:
+    """Explain an obsolete-term error and name the remedy.
+
+    >>> obsolete_term_message("GO:1", "obsolete x", "module", False, False)
+    "GO:1 is obsolete in the configured ontology ('obsolete x'); a module cannot be grounded on a retired term -- repoint to its replaced_by term"
+    >>> obsolete_term_message("GO:1", "obsolete x", "evidence title", True, True).endswith(
+    ...     "cannot bridge an obsoletion and should be dropped")
+    True
+    """
+    message = f"{curie} is obsolete in the configured ontology ('{primary}'); "
+    if citation_allowed:
+        message += (
+            "cite its replaced_by term, or quote the retired label verbatim "
+            "if the entry documents the retirement"
+        )
+    else:
+        message += (
+            f"a {where} cannot be grounded on a retired term -- repoint to its "
+            "replaced_by term"
+        )
+    if has_alias:
+        message += (
+            "; the reviewed label alias for it in oak_config.yaml cannot bridge "
+            "an obsoletion and should be dropped"
+        )
+    return message
 
 
 def validate_go_branches(
@@ -1569,7 +1666,9 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     def get(adapter_string: str):
         return _get_cached_adapter(adapter_string)
 
-    def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
+    lookups: Dict[str, Tuple[str, Optional[str], Set[str]]] = {}
+
+    def lookup(curie: str) -> Tuple[str, Optional[str], Set[str]]:
         prefix = curie.split(":", 1)[0]
         adapter_string = adapter_map[prefix]
         assert adapter_string is not None  # routed only for configured prefixes
@@ -1588,6 +1687,15 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
             return ("ok", primary, aliases)
         except Exception:  # noqa: BLE001 - external system
             return ("unavailable", None, set())
+
+    def resolve(curie: str) -> Tuple[str, Optional[str], Set[str]]:
+        # One lookup per CURIE per resolver (i.e. per validated file, since
+        # validate_module_file builds one): a term cited as evidence and
+        # asserted as a grounding would otherwise hit the adapter twice and
+        # double any "ontology unavailable" warning.
+        if curie not in lookups:
+            lookups[curie] = lookup(curie)
+        return lookups[curie]
 
     return resolve
 
@@ -1660,14 +1768,21 @@ def validate_module_file(
     paint_index: Optional[PaintIndex] = None,
     panther_dir: Optional[Path] = None,
     member_index: Optional[Dict[str, str]] = None,
+    gene_index: Optional[Dict[str, Path]] = None,
+    genes_dir: Optional[Path] = None,
+    family_reviews_dir: Optional[Path] = None,
+    pfam_reviews_dir: Optional[Path] = None,
 ) -> ModuleValidationResult:
-    """Validate term labels in a single module YAML file.
+    """Validate module grounding, structure, evidence, and functional agreement.
 
     ``resolver`` may be injected for testing; otherwise a real OAK-backed
     resolver is built from ``config_path`` (defaults to ``conf/oak_config.yaml``
     relative to the repository root). ``paint_index`` may also be injected for
     PTN tests; otherwise local ``interpro/panther`` TSVs are loaded lazily only
     when a module declares ancestral nodes.
+    ``gene_index`` and review directories select the local curation corpus for
+    function compliance. Missing coverage warns; applicable retained gene NOTs
+    and explicit family exclusions block. Results include structured findings.
     """
     path = Path(path)
     project_root = Path(__file__).resolve().parents[3]
@@ -1704,6 +1819,16 @@ def validate_module_file(
 
     terms = list(iter_terms(doc))
     errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
+    evidence_errors, evidence_warnings = validate_terms(
+        list(iter_evidence_go_terms(doc)),
+        adapter_map,
+        resolver,
+        label_aliases,
+        where="evidence title",
+        allow_obsolete_citation=True,
+    )
+    errors.extend(evidence_errors)
+    warnings.extend(evidence_warnings)
     errors.extend(member_errors)
     warnings.extend(member_warnings)
     errors.extend(validate_taxon_context(doc))
@@ -1747,7 +1872,42 @@ def validate_module_file(
     # warning. Resolution touches the GO/RHEA ontology DBs, so it degrades to
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
+    warnings.extend(validate_feedback_loops(doc))
     warnings.extend(symbol_label_warnings(doc))
+
+    # Compare actual role assertions, not just protein/family membership.
+    # Coverage gaps remain advisory; explicit compatible contradictions block.
+    from ai_gene_review.module_function_conformance import (
+        go_subclass_predicate,
+        module_function_conformance,
+    )
+
+    function_conformance = module_function_conformance(
+        doc,
+        gene_index=gene_index,
+        genes_dir=genes_dir if genes_dir is not None else project_root / "genes",
+        family_reviews_dir=(
+            family_reviews_dir if family_reviews_dir is not None
+            else project_root / "interpro" / "panther"
+        ),
+        pfam_reviews_dir=(
+            pfam_reviews_dir if pfam_reviews_dir is not None
+            else project_root / "interpro" / "pfam"
+        ),
+        subclass_of=go_subclass_predicate(
+            None if resolver_was_injected else adapter_map.get("GO")
+        ),
+    )
+    for finding in function_conformance["rows"]:
+        message = (
+            f"Function conformance [{finding['status']}] {finding['annoton_id']} "
+            f"({finding['participant_id'] or finding['participant_label']}; "
+            f"{finding['function_id'] or 'no GO id'}): {finding['message']}"
+        )
+        if finding["severity"] == "error":
+            errors.append(message)
+        elif finding["severity"] == "warning":
+            warnings.append(message)
 
     # Reference titles: every literature reference (PMID/DOI ``id``/``source_id``
     # paired with a ``title``) must match the fetched/cached publication title
@@ -1769,6 +1929,7 @@ def validate_module_file(
         errors=errors,
         warnings=warnings,
         ungrounded_families=count_ungrounded_families(doc),
+        function_conformance=function_conformance,
     )
 
 
@@ -1801,6 +1962,43 @@ def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
     elif isinstance(obj, list):
         for item in obj:
             yield from iter_evidence_snippets(item)
+
+
+def iter_evidence_go_terms(obj: object) -> Iterator[Tuple[str, str]]:
+    """Yield ``(source_id, title)`` for every GO-cited ``EvidenceItem`` with a title.
+
+    Module-level and nested ``evidence:`` entries may cite a GO term as their
+    ``source_id`` with the term's name as ``title``. Those are ontology labels
+    like any ``term`` block and drift the same way, but they are not reached
+    by :func:`iter_terms` (which only follows ``term`` keys) nor by
+    :func:`iter_reference_titles` (literature only) -- so a refresh that
+    repoints the ``term`` blocks can leave an evidence entry citing the
+    retired id under its pre-obsoletion name. Untitled citations are skipped:
+    there is nothing to compare.
+
+    >>> doc = {"evidence": [{"source_id": "GO:1", "title": "grounding"},
+    ...                     {"source_id": "PMID:1", "title": "A paper"},
+    ...                     {"source_id": "GO:2"}],
+    ...        "module": {"parts": [{"node": {"evidence": [
+    ...            {"source_id": "GO:3", "title": "nested"}]}}]}}
+    >>> list(iter_evidence_go_terms(doc))
+    [('GO:1', 'grounding'), ('GO:3', 'nested')]
+    """
+    if isinstance(obj, dict):
+        source_id = obj.get("source_id")
+        title = obj.get("title")
+        if (
+            isinstance(source_id, str)
+            and source_id.startswith("GO:")
+            and isinstance(title, str)
+            and title.strip()
+        ):
+            yield (source_id, title.strip())
+        for value in obj.values():
+            yield from iter_evidence_go_terms(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from iter_evidence_go_terms(item)
 
 
 def iter_reference_titles(obj: object) -> Iterator[Tuple[str, str]]:
@@ -1966,6 +2164,24 @@ def validate_chaining(doc: object) -> List[str]:
     ]
 
 
+def validate_feedback_loops(doc: object) -> List[str]:
+    """Advisory: negative regulators described as feedback must have an upstream edge.
+
+    A ``NEGATIVELY_REGULATES`` source whose prose says "feedback"/"induced" but
+    which has no incoming activating connection is reported as a warning (the
+    loop is cut). This check NEVER produces errors.
+    """
+    from ai_gene_review.module_qc import feedback_loop_findings
+
+    if not isinstance(doc, dict):
+        return []
+    return [
+        f"Feedback loop: {f['message']}"
+        for f in feedback_loop_findings(doc)
+        if f.get("severity") == "warning"
+    ]
+
+
 def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:
     """Check every ``conforms_to`` bundle against its template motif.
 
@@ -2013,15 +2229,18 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     exit_code = 0
     ungrounded = 0
+    from ai_gene_review.module_qc import index_gene_reviews
+
+    gene_index = index_gene_reviews(Path(__file__).resolve().parents[3] / "genes")
     for path in args.files:
-        result = validate_module_file(path, config_path=args.config)
+        result = validate_module_file(path, config_path=args.config, gene_index=gene_index)
         ungrounded += result.ungrounded_families
         for w in result.warnings:
             print(f"⚠️  WARN  {path}: {w}")
         for e in result.errors:
             print(f"❌ ERROR {path}: {e}")
         if result.is_valid:
-            print(f"✅ {path}: term labels OK ({len(result.warnings)} warnings)")
+            print(f"✅ {path}: module checks passed ({len(result.warnings)} warnings)")
         else:
             exit_code = 1
 

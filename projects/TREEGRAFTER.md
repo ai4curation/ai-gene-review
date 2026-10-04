@@ -15,10 +15,18 @@ sidecars:
   family_hotspots: TREEGRAFTER/treegrafter_family_hotspots.tsv
   failure_modes: TREEGRAFTER/treegrafter_failure_modes.tsv
   failure_mode_curated: TREEGRAFTER/failure_mode_curated.tsv
+  rejection_rereview: TREEGRAFTER/rereview-2026-09-24/summary.tsv
   # Deck images: copied beside the rendered deck so its relative <img> paths resolve.
   slide_images:
     - TREEGRAFTER/slides/treegrafter-graft.svg
     - TREEGRAFTER/slides/treegrafter-results.svg
+manifest:
+  slides:
+    - href: TREEGRAFTER/slides/TREEGRAFTER-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Wi9WbyuGcFMPSKNmXX1UoP
+      title: Project brief
 ---
 
 # TreeGrafter Inference Evaluation
@@ -341,6 +349,84 @@ fixes:
 - A few annotations are still `PENDING`/`UNREVIEWED` in partially-reviewed
   genes.
 
+## Rejection re-review (2026-09-24) — post-snapshot, not in the tables above
+
+The rejection rate is only meaningful if the rejections themselves hold up, so
+every TreeGrafter row then marked `REMOVE` or `MARK_AS_OVER_ANNOTATED` was
+re-examined against a fixed rule set: `REMOVE` requires positive contrary
+evidence, broad-but-true terms are not over-annotations, a too-coarse ancestor
+is `MODIFY` rather than `REMOVE`, and every term definition is checked in
+QuickGO. A term that is true but is a redundant ancestor of a carried term, or
+a redundant generic compartment, is `KEEP_AS_NON_CORE` rather than `ACCEPT`:
+the enum reserves `ACCEPT` for terms "representing the core function of the
+gene", so restoring a bare ancestor as core would assert something the evidence
+does not. Rules, per-batch records and a generated summary are in
+[`TREEGRAFTER/rereview-2026-09-24/`](TREEGRAFTER/rereview-2026-09-24/README.md).
+The nine genes already re-audited on 2026-09-20 were left as recorded there.
+
+**192 rejected rows across 166 gene entries — 165 proteins, since one protein
+had two review folders that this audit merged — of which 117 (61%) stand and
+75 (39%) were relaxed** —
+56 to `KEEP_AS_NON_CORE`, 7 `REMOVE` → `MARK_AS_OVER_ANNOTATED`, 5 to `ACCEPT`,
+4 to `MODIFY`, 3 `REMOVE` → `UNDECIDED`. Only five rows are restored as core
+functions, each one a term the protein itself performs: the MurJ flippase
+reaction (`GO:0034204`), the AccA/AccD carboxyltransferase complex
+(`GO:0009329`), bis-MGD biosynthesis on MobA (`GO:1902758`), and the two
+lymphotoxin-alpha signalling processes on `K9IWR0`.
+
+**This is the largest post-snapshot change to the down-graded population**, and
+the frozen tables and the failure-mode analysis built on them predate it. The
+relaxations say more about the first-pass reviews than about TreeGrafter, and
+they cut unevenly across the four failure modes:
+
+- **Redundant locations (34 rows).** `cytosol`/`cytoplasm` on soluble bacterial
+  enzymes had been down-graded purely because a sibling location row existed. A
+  broad true term is not an error, but a redundant compartment is not a core
+  function either, so these are `KEEP_AS_NON_CORE`. Mode 3 (generic/context, 36% of the frozen
+  classification) is therefore the mode that shrinks most: it is a real failure
+  only where the location is *incompatible* with the protein — secreted
+  cystatin `cpi-2`, exported flagellar hook `flgE`, periplasmic `alr` — and
+  those rejections stand.
+- **True ancestors of a carried specific term (~20 rows).** `oxidoreductase
+  activity` on `betA`, `glycosyltransferase activity` on `murG`, `protein
+  transport` on `secD`/`secF`, `deaminase activity` on `guaD`; each verified by
+  QuickGO ancestry and kept as non-core. The six complex I subunits carrying
+  `NADH dehydrogenase activity` are a granularity (mode 1) case the
+  classification did not separate out — a whole-complex activity on a single
+  subunit that lacks the NADH site. On `nuoE`/`nuoH`/`nuoI`, where GOA carries
+  no `GO:0008137` row, that becomes `MODIFY` → `GO:0008137` with
+  `contributes_to`; on `nuoG`/`nuoL`/`nuoM`, which already carry a separate
+  `GO:0008137` row taking the same qualifier correction, proposing it again
+  would be redundancy, so the ancestor is kept as non-core instead.
+- **Rejections resting only on "no target-specific assay" (~12 rows).** Absence
+  of a target experiment does not refute a supported phylogenetic inference;
+  these became `MARK_AS_OVER_ANNOTATED`, or `UNDECIDED` in the three cases where
+  the substrate itself is genuinely unknown (`ptxD` ×2, `retS`).
+- **Label read instead of definition (1 row, but instructive).** `GO:0009329
+  "acetate CoA-transferase complex"` on PSEPK `accD` was removed as a different
+  enzyme; the term's *definition* is the AccA/AccD carboxyltransferase
+  component of acetyl-CoA carboxylase, so the propagation was *more* specific
+  than the term the gene already carried. The term's label and its `capable_of`
+  axiom to `GO:0008775` contradict its own definition — worth raising with GO.
+  Confirmed against the live QuickGO ontology API on 2026-10-02 rather than only
+  against the cached label: the definition returns verbatim (xrefs
+  `PMID:2719476`, `PMID:8423010`), `GO:0009317` is a current ancestry relation,
+  `GO:0032283` (the plastid `accD` subcomplex) is still the sole child, and the
+  `capable_of GO:0008775` relation is present with a 2015-06-18 addition date.
+  The term is not obsolete and its aspect is `cellular_component`, so the
+  mismatch really is label-and-axiom versus definition.
+
+What survives scrutiny intact is **mode 4, the paralog / wrong-subfamily
+catalytic transfer**: spermidine synthase on the PMT methyltransferases,
+carotenoid dioxygenase on the lignostilbene dioxygenases, LDH on malate
+dehydrogenases, cysteine synthase vs. O-acetylhomoserine sulfhydrylase. The
+hotspot list is built on exactly these, so it is the part of the analysis the
+re-review leaves standing — and the right input to the upstream tickets.
+
+About a third of the 117 retained rejections had their `reason` strengthened
+with the specific evidence (EC numbers, PANTHER subfamily vs. graft node,
+cached substrate-panel quotes) rather than left on family-level doubt.
+
 ## Deeper analyses
 
 - **[Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)** — joins all
@@ -358,6 +444,20 @@ fixes:
   (FliI in *Caulobacter*, *H. pylori*, *P. putida*, *E. coli* and *Salmonella*;
   SctN in *Salmonella* ×2, *Yersinia* and *Shigella*) remove 31 of the 35 affected
   rows and mark the other 4 as over-annotations.
+- **[Unicellular holozoans: Hippo pathway case study](TREEGRAFTER/holozoan-hippo-case-study.md)**
+  — TreeGrafter on choanoflagellate, *Capsaspora* and sponge proteins, which
+  have no IBA rows because none of them is a PANTHER reference genome. The
+  commonest failure is grafting onto animal-only nodes:
+  - choanoflagellate cadherins onto a Bilateria node;
+  - *Capsaspora* integrin betas onto the vertebrate ITGBL1 node;
+  - *Capsaspora* T-box factors onto an all-animal node carrying "cell fate
+    specification".
+
+  There are also two cross-family mis-placements: *Capsaspora* Warts with the
+  citron/ROCK kinases, and the *S. rosetta* yorkie candidate with the MAGI
+  family. One correct graft still inherits animal-tissue IBDs from LATS node
+  PTN002390470, including `regulation of organ growth` on a unicellular
+  organism. Not part of the frozen snapshot.
 - **OpenScientist blinded verification** uses a dedicated TreeGrafter prompt
   template,
   [`templates/treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md),
@@ -369,6 +469,151 @@ fixes:
 
 ---
 # NOTES
+
+## 2026-10-01
+
+- Added the [unicellular holozoan case study](TREEGRAFTER/holozoan-hippo-case-study.md)
+  from the ORIGINS_OF_MULTICELLULARITY reviews. Across the 16 literature-based
+  reviews, 11 of 53 propagated rows were down-graded, all `GO_REF:0000118`.
+  - **Cross-family mis-placements.** Warts went into PTHR22988, and the
+    Yorkie candidate into PTHR10316.
+  - **Grafts onto animal-only nodes, three times.** These are choanoflagellate
+    cadherins on a node PAINT records at Bilateria, *Capsaspora* integrin betas
+    on the Euteleostomi ITGBL1 node, and *Capsaspora* T-box factors on an
+    all-animal node carrying "cell fate specification".
+  - **Working hypothesis.** Reference proteomes escape this because their tree
+    position, not the HMM call, sets their IBAs. Fly wts is in PTHR22988 by
+    UniProt's classification but takes its IBAs from the LATS node.
+  - None of these rows are in the frozen 2026-09-06 tables.
+- This complements the 2026-09-28 note below. Viral sequences outside the
+  trees' taxonomic scope have stopped receiving TreeGrafter terms, but
+  unicellular eukaryotes outside a node's PAINT taxon still receive them.
+
+- Second review round on PR #3165. **Withdrew two of the previous round's
+  relaxations**: PSEPK `benB` `GO:0019380` (3-phenylpropionate catabolic
+  process) and `prpC` `GO:0005975` (carbohydrate metabolic process) had been
+  moved `REMOVE` → `MODIFY` on the premise that the term was merely too coarse.
+  It is not: `GO:0019380` names a different substrate, and propanoate is an
+  organic acid rather than a carbohydrate, so both are wrong-substrate or
+  wrong-branch propagations — the class this audit retains elsewhere (`quiA`
+  `GO:0008876`). Both are `REMOVE` again, which also removes a duplication the
+  review caught: each `MODIFY` proposed a term the same review already asserts
+  on its own `IC`/`NEW` row (`GO:0043639`, `GO:0019543`). Split is now 117 stand
+  / 75 relaxed. One further row, the g022 double-strand break repair call, was
+  relaxed by this audit and then overtaken by main's finding that it is absent
+  from GOA entirely; the batch record keeps the reasoning and records that there
+  is no live annotation left to relax.
+- **Corrected a claim this branch had invented and then propagated.** The
+  2026-09-24 pass wrote that `benB` "still carries an `IC` annotation to the
+  obsolete `GO:0043640`". It does not, and never did: `GO:0043640` appears
+  nowhere in `benB-ai-review.yaml` on this branch or on `main`, whose
+  `proposed_replacement_terms` was already `GO:0043639`. `GO:0043640` *is*
+  obsolete (replaced_by `GO:0043639`, GO release 2026-07-26), which is how it
+  reached the sibling `benA`/`benC`/`benD` reviews legitimately and this one by
+  mistake. Removed from the review prose, the batch-03 record, this page's
+  next-steps (where it would have sent a curator after a row that does not
+  exist) and, per `docs/history.md`, corrected in place in the benB history
+  record since the statement was never true.
+- `accD`'s `core_functions.in_complex` now names `GO:0009329`, the
+  carboxyltransferase subcomplex the `GO:0009329` row argues for, rather than
+  the coarser `GO:0009317` it previously kept alongside that argument.
+- Smaller fixes: `murB`/`ubiK` prose no longer calls the broader cytoplasm row
+  "accepted" while the narrower cytosol row is non-core (the underlying
+  inversion is now named in the next-steps); a vestigial "Re-review." opener
+  removed from `pdxJ`; `summarize.py` records how many terms its capped table
+  leaves out, so `summary.tsv` is self-describing.
+
+## 2026-09-29
+
+- Review round on the rejection re-review (PR #3165). Corrected three
+  mis-transcribed UniProt accessions in shipped reason text (`guaD` cited
+  gshB's `Q88D35` instead of `Q88F18`; `tyrB` `Q88NM1` for `Q88LG1`; `davA`
+  `Q88RC2` for `Q88QV2`) and the same errors in three batch records — six sites,
+  each re-checked against the gene's own `AC` line.
+- **Settled the `ACCEPT` / `KEEP_AS_NON_CORE` convention**, which the first pass
+  had applied inconsistently (some `cytosol` rows went each way). `ACCEPT` is
+  defined as retaining a term as the gene's *core function*, so a redundant
+  ancestor of a carried term, or a redundant generic compartment, is
+  `KEEP_AS_NON_CORE`. 26 rows moved, leaving five `ACCEPT`s, each a term the
+  protein itself performs. The prose in every moved row was rewritten to match.
+- `nuoG`/`nuoL`/`nuoM` had been given `MODIFY` → `GO:0008137` while already
+  carrying a separate `GO:0008137` row, which is the redundancy `CLAUDE.md`
+  rules out; they are now `KEEP_AS_NON_CORE`, with the qualifier correction left
+  on the one row that needs it. `nuoE`/`nuoH`/`nuoI` keep the `MODIFY` because
+  GOA carries no such row for them.
+- `aroQ-III`'s `core_functions` cited a synthesized summary as `supporting_text`
+  against `GO_REF:0000120`, which has no cached text, so the verbatim validator
+  could not catch it. Re-pointed at the UniProt file with four verbatim quotes,
+  and `PMID:41029715` now carries a `reference_review` recording that it
+  establishes the `aroQ` step in KT2440 but does not say which of the three
+  paralogs it used.
+- Also removed the audit-bookkeeping sentences that had crept into
+  `review.reason` across 21 files (batch-file pointers belong in the notes and
+  audit records, per #3100), and dropped a duplicate `GO:0008812` row this
+  branch had added to `cache/go/terms.csv`.
+
+## 2026-09-28
+
+- Re-reviewed every TreeGrafter row marked `REMOVE` or
+  `MARK_AS_OVER_ANNOTATED` (192 rows / 165 genes, excluding the nine genes
+  re-audited on 2026-09-20): 114 stand, 78 relaxed. Added the section above;
+  records in `TREEGRAFTER/rereview-2026-09-24/`. **The frozen tables were
+  deliberately left alone** — the re-review is a post-snapshot event, and
+  refreshing the sidecars without the matching `failure_mode_curated.tsv` pass
+  would leave the failure-mode analysis describing a population that no longer
+  exists. For whoever does the refresh: re-running `analyze_treegrafter.py`
+  alone gave 968 annotations / 540 proteins with `REMOVE` 88 and
+  `MARK_AS_OVER_ANNOTATED` 47 (against 120 and 113 frozen), i.e. the
+  down-graded set shrinks by roughly a third and ~24 of the removed rows are
+  mode-3 cellular-component rows that were assigned *by construction*. The
+  `PTHR21272` hotspot row's member list is also now three proteins, not four:
+  `genes/PSEPK/aroQ` and `genes/PSEPK/aroQ-III` were duplicate folders for the
+  same protein (Q88IJ6 / PP_3003) and have been merged into `aroQ-III`, the
+  name UniProt gives the locus.
+- Nine of the 306 down-grades that `classify_failure_modes.py` declines to
+  guess (mode 0) were in scope here: `acoA`, `benB`, `davA`, `groES`, `nuoM`,
+  `PP_0094`, `I7J3R9` and `NCGR_LOCUS1270` ×2. Their re-review rationales in
+  the batch records are written from the evidence and should make the
+  hand-classification of that queue easier.
+- Independent corroboration of one retained row: the re-review kept the
+  `REMOVE` on PSEPK `fliI` `GO:0046933` (proton-transporting ATP synthase
+  activity, rotational mechanism) on the grounds that phylogenetic transfer
+  across homologous ATPase families produced a contradicted molecular
+  function. The [rotary-ATPase leak](TREEGRAFTER/rotary-atpase-leak.md) case
+  study added the following day reaches the same conclusion from the opposite
+  direction — a proteome-wide completeness test whose false positives were
+  FliI/SctN export ATPases — and locates the error upstream, in a PAINT IBD on
+  a duplication node rather than in the graft.
+- **Viral proteins appear to have dropped out of TreeGrafter.** Prompted by
+  the `GO:0006302` double-strand break repair row on the phiR8-01 family-A
+  DNA polymerase (`9CAUD/g022`, I7J3R9). Of all the reviewed proteins in the
+  corpus with a phage or virus taxon, only two had `GO_REF:0000118` rows: g022
+  (one row, graft node `PTN000015309`, PTHR10133:SF27) and phiNIT1
+  `9CAUD/dfrP` (D0VXF2, two rows from `PTN000167324`, PTHR48069).
+  In the 2026-07-27 GOA release (QuickGO) **neither protein has any
+  TreeGrafter annotation**, and `PANTHER:PTN…` is also gone from the with/from
+  of their `GO_REF:0000120` rows. Their UniProt entries still carry the
+  `DR PANTHER` family lines, so the protein is still classified in the family;
+  only the GO propagation stopped. We have not found a release note that says
+  so, and two proteins are too few to call it policy. It fits PANTHER trees
+  being built from cellular-organism reference proteomes, which would make a
+  graft of a viral sequence an extrapolation outside the tree's taxonomic scope.
+- **The change cuts both ways.** The g022 row was one of our down-grades
+  (`REMOVE`; it is the `I7J3R9` mode-0 row in the heuristic queue under Next
+  steps). But the two dfrP rows had been reviewed as correct:
+  `GO:0046452` dihydrofolate metabolic process (`ACCEPT`) and `GO:0046655`
+  folic acid metabolic process (`KEEP_AS_NON_CORE`). So excluding viruses
+  removes true positives as well as the false one. The DHFR keeps its MF and
+  `GO:0046654` THF-biosynthesis terms through InterPro2GO and UniRule. But
+  `GO:0046654` is a *sibling* of `GO:0046452` under `GO:0006760`, not an
+  ancestor, so the dihydrofolate statement had no surviving replacement. It is
+  re-asserted in the review as a NEW ISS row, grounded in the PAINT IBD on
+  `PTN000167322` (PTHR48069), which dfrP shares with *E. coli* folA (SF3).
+- Refreshed both genes' GOA and marked the vanished rows `retired: true`, which
+  keeps their reviews for provenance. The frozen 2026-09-06 tables still count
+  the three rows; they will drop out at the next snapshot refresh.
+- **Follow-up:** confirm with the PANTHER/GOA side whether viral sequences are
+  now deliberately excluded from TreeGrafter.
 
 ## 2026-09-27
 
@@ -468,9 +713,38 @@ fixes:
   snapshot are *P. putida* KT2440; a batch of eukaryotic or archaeal non-model
   genes would tell whether the 41% accept rate travels. The 29 HETGA rows
   already in the tree (not yet in the tables) are a first such batch.
+- **File the `GO:0009329` label/axiom defect with GO.** This is the one item the
+  2026-09-24 re-review turned from a suspicion into a verified finding (see the
+  label-vs-definition bullet above): the term's definition is the AccA/AccD
+  carboxyltransferase component of acetyl-CoA carboxylase, but its label says
+  "acetate CoA-transferase complex" and it carries a `capable_of` axiom to
+  `GO:0008775 acetate CoA-transferase activity` — EC 2.8.3.8, different
+  chemistry. Both contradict the definition. `interpro/panther/PTHR42995/
+  PTHR42995-paint.tsv` shows GO curators themselves use the term for bacterial
+  AccD (an IBD seeded by *E. coli* `P0A9Q5`), and QuickGO's own blacklist for the
+  term is ~80 `NOT`-qualified annotations on eukaryotic proteins (QuickGO,
+  2026-10-02, the same query as the verification above) — which is what a
+  misleading label looks like downstream. Proposed fix: rename to name the
+  carboxyltransferase component and drop or re-point the `capable_of` axiom.
 - **Refresh the snapshot** when the next batch lands: re-run the three scripts,
   classify the new down-grades in `failure_mode_curated.tsv`, and re-pin the
-  date and commit in the Results header.
+  date and commit in the Results header. Note that the 2026-09-24 rejection
+  re-review (above) has already moved 75 rows *out* of the down-graded set, so
+  this refresh is a re-classification of a shrunken population, not only an
+  addition of new rows; the figures it would produce are recorded in the
+  2026-09-28 note. The refresh is also where to de-collide the member labels:
+  `treegrafter_family_hotspots.tsv` gives `PTHR31689` two PSEPK proteins under
+  the single label `dapF`, which the audit records now distinguish as
+  `dapF__Q88CF3` / `dapF__Q88GD4` after that collision silently undercounted
+  the audit's own gene total. The frozen table keeps the ambiguous label, so
+  the fix otherwise lives only in the audit folder.
+- **Harmonize the rows the rejection re-review left out of scope.** Some sibling
+  rows now sit beside a relaxed parent (PSEPK `ubiA` `GO:0004659` /
+  `GO:0016765`, `zwf` `GO:0006098`). PSEPK `murB` and `ubiK` carry a sharper
+  version: their `GO:0005737` cytoplasm row is `ACCEPT` (a `GO_REF:0000120` row,
+  outside this audit's scope) while the more specific `GO:0005829` cytosol is
+  `KEEP_AS_NON_CORE`, so the less specific term currently reads as the core one.
+  `pdxB` and `pdxJ` have the consistent pairing.
 
 ## Slides
 

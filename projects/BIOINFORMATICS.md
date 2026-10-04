@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [SCHPO]
 genes: [pmp20, Epe1, tpx1]
+manifest:
+  slides:
+    - href: BIOINFORMATICS/slides/BIOINFORMATICS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/L3hzbPCFcEKXqgeSBKoLZz
+      title: Project brief
 ---
 
 # BIOINFORMATICS Case Studies
@@ -208,7 +215,3 @@ For each new case, add:
 5. Validation status after integrating results into `*-ai-review.yaml`.
 6. If applicable, the `gene-hypothesis-research` command and output path for the
    OpenScientist hypothesis report.
-
-## Slides
-
-- [Slides](BIOINFORMATICS/slides/BIOINFORMATICS-slides.html) (Marp source: [BIOINFORMATICS-slides.md](BIOINFORMATICS/slides/BIOINFORMATICS-slides.md)) — AI generated
