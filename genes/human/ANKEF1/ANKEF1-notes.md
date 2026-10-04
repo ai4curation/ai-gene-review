@@ -14,3 +14,11 @@
 - **8 protein-binding IPIs** (neurodegeneration interactome, PMID:32814053): removed.
 - **Knowledge gap:** MF_DARK; its activity within the N-DRC is unknown.
 - Self-check (absence_check.py): the knockout proteomics shows N-DRC levels unchanged; the suggested question is reframed accordingly.
+
+## PAINT / family analysis (added before first review)
+
+- ANKEF1 is on the no-IBA worklist (`projects/paint/human-no-IBA.tsv`, family PTHR24127, subfamily SF1). `just fetch-panther-paint PTHR24127` reports "0 node(s), no node-level annotations".
+- Reviewed members (`interpro/panther/PTHR24127/PTHR24127-entries.csv`, now committed): human ANKEF1, mouse Ankef1 (Q9D2J7), and two viral proteins (mimivirus R835, fowlpox FPV012).
+  - QuickGO non-IEA annotations: human ANKEF1 has only the interactome IPIs; mouse Ankef1 has MGI ND rows only; the viral proteins have none.
+  - So no IBA exists because no family member has experimental donor evidence in GO.
+- The 2025 mouse knockout paper (PMID:41460250) has not yet been curated into MGI. Once it is, it would be a natural donor for axoneme and sperm-motility IBAs at a vertebrate node.
