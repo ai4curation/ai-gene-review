@@ -23,3 +23,10 @@
   - Lysosome, cytoplasm.
   - Hippo regulation, positive regulation of ubiquitin-protein transferase activity.
   - Cold-induced thermogenesis (mouse ISS/IEA).
+
+## 2026-10-04 review round (PR #4208)
+
+- Deep-research coverage: cached and cited nine papers (see history). AXL and insulin-receptor cargo claims are not checked (papers not cached).
+- Thermogenesis: [PMID:28291835 "Additionally, canonical β-adrenergic receptor signaling was not different in Arrdc3-null adipocytes."] disputes the PMID:21982743 mechanism; the phenotype stands.
+- beta2AR: [PMID:27226565 "Although ARRDC3 has no effect on β2AR endocytosis or degradation, it negatively regulates β2AR entry into SNX27-occupied endosomal tubules."] contrasts with PMID:20559325.
+- Receptor-downregulation BP: no NEW process. ARRDC3 ubiquitinates the sorting factor ALIX rather than PAR1, and β2AR degradation data conflict. Added GO:0016567 instead, after a comparator check: ARRDC1, ARRDC4, ARRB1 and ARRB2 all carry it.
