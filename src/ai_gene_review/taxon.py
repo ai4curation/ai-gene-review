@@ -68,6 +68,6 @@ def review_taxon(review_file: Path) -> dict[str, str]:
     data = yaml.safe_load(review_file.read_text()) or {}
     taxon = data.get("taxon") or {}
     curie, label = taxon.get("id"), taxon.get("label")
-    if not is_ncbitaxon_curie(curie) or not label:
+    if not isinstance(curie, str) or not is_ncbitaxon_curie(curie) or not isinstance(label, str) or not label:
         raise ValueError(f"{review_file} has no NCBITaxon taxon: {taxon!r}")
     return {"id": curie, "label": label}
