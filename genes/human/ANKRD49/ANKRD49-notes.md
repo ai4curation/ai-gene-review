@@ -12,7 +12,13 @@
 
 ## Round 2 (reviewer, PR #4136)
 
-- The coactivator row now quotes both decisive PKNOX1 results. In support: Flag-PKNOX1 ChIP enrichment is higher in ANKRD49-overexpressing cells ("ANKRD49 strengthens the interaction"). Against: ANKRD49 overexpression also raises PKNOX1 mRNA and protein, so the effect could be abundance rather than coactivation. The reporter did not test ANKRD49 enhancement of PKNOX1 activity. The description and core function are softened accordingly, and the experiment now separates the two models.
+- The coactivator row now quotes both decisive PKNOX1 results. In support: Flag-PKNOX1 ChIP enrichment is higher in ANKRD49-overexpressing cells ("ANKRD49 strengthens the interaction"). Against: ANKRD49 overexpression also raises PKNOX1 mRNA and protein, so the effect could be abundance rather than coactivation. (Superseded in round 3: the reporter did test this, see below.) The description and core function are softened accordingly, and the experiment now separates the two models.
 - The HIF1AN rows have per-row provenance: one FIH screen plus four AP-MS studies, so 5 rows, not 4.
 - GO:0008536 is now described as merged into GO:0031267.
 - Cited PMID:37964204 and PMID:35775112 (LOW; signaling phenotypes). Added a SMARCD1/SWI-SNF suggested question.
+
+## Round 3 (reviewer, PR #4136)
+
+- Correction: Fig. 7B of PMID:41821002 does test ANKRD49 on PKNOX1-driven reporter activity. With PKNOX1 from a plasmid, "co-expression of ANKRD49 further amplified this effect". The round-2 claim that it was untested came from the incomplete Methods; the reviewer withdrew it, and the sentence is removed.
+- The limit is restated as nuclear PKNOX1 abundance (Fig. 8E, increased nuclear accumulation) versus activity. The description and core function now present ANKRD49 as a coactivator of PKNOX1.
+- PMID:30798416 is cited (LOW), and the SMARCD1 removal reason is reworded.
