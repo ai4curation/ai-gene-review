@@ -36,6 +36,8 @@ AFDB_TARGETS = {
     "Q96EP9": "SLC10A4 - orphan carrier, primary question",
     "Q3KNW5": "SLC10A6 (SOAT) - sulfated steroid transporter",
     "Q0GE19": "SLC10A7 - Golgi, orphan, secondary question",
+    "P26435": "Slc10a1/Ntcp (rat) - rodent orthologue",
+    "O08705": "Slc10a1/Ntcp (mouse) - rodent orthologue, NOT an HBV receptor",
 }
 
 OUT = Path(__file__).parent / "structures"

@@ -68,6 +68,8 @@ TARGETS = {
     "Q96EP9": "SLC10A4",
     "Q3KNW5": "SLC10A6 (SOAT)",
     "Q0GE19": "SLC10A7",
+    "P26435": "Slc10a1/Ntcp (rat)",
+    "O08705": "Slc10a1/Ntcp (mouse) - transports bile salts, not an HBV receptor",
 }
 
 # Dayhoff-style groups for a coarse conservative/non-conservative call.
@@ -170,6 +172,8 @@ def uniprot_sequence(accession: str) -> str:
         "Q96EP9": "human/SLC10A4/SLC10A4",
         "Q3KNW5": "human/SLC10A6/SLC10A6",
         "Q0GE19": "human/SLC10A7/SLC10A7",
+        "P26435": "rat/Slc10a1/Slc10a1",
+        "O08705": "mouse/Slc10a1/Slc10a1",
     }
     path = HERE.parents[2] / gene_dirs[accession]
     text = Path(f"{path}-uniprot.txt").read_text()
