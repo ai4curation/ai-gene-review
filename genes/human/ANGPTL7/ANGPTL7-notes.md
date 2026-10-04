@@ -12,7 +12,16 @@
   - The only ANGPTL7 oxidative-stress paper (PMID:32525822) has ANGPTL7 mediating oxidative stress, not responding to it.
 - **Blood coagulation IEA (fibrinogen/angiopoietin-like domain):** removed.
 - **ACTN2 protein-binding IPI:** removed.
-- **Kept as non-core:**
+- **Kept as non-core** (round 2: the ECM IBA moved to ACCEPT):
   - ECM IBA (is_active_in), since matrix deposition is not shown.
   - Identical protein binding (homotetramer).
 - **Knowledge gap:** the receptor is unknown (MF_DARK).
+
+## 2026-10-04 round 2 (reviewer comments on #4063)
+
+- **ECM IBA (is_active_in):** KEEP_AS_NON_CORE changed to ACCEPT. My earlier argument (no matrix incorporation shown) rebutted a located_in claim that the row doesn't make. is_active_in asserts where ANGPTL7 acts, and it acts on the trabecular meshwork matrix (fibronectin fibril assembly). Added to core locations.
+- **Affinage reference_review:** now explicitly declines PMID:35136015 (SP1 / RhoA-ROCK cross-linked actin networks), a single study downstream of an unknown receptor.
+- **Other fixes:**
+  - Core function now cites the hydraulic-conductivity and KO results (PMID:38497513).
+  - Replaced the PMID:32369491 fragment quote with the title sentence.
+  - The description notes the elevated baseline IOP of the KO mice.
