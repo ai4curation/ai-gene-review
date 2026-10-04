@@ -1,8 +1,11 @@
 # Are the NTCP sodium sites and substrate pocket conserved across the human SLC10 family?
 
-**Headline:** SLC10A4 **retains the sodium-coordinating machinery intact** — all
-12 side-chain ligands conserved — so its orphan status is **not** explained by
-degeneration of the ion-coupling site. Its bile-salt pocket is a split result:
+**Headline:** SLC10A4 **retains every side-chain residue NTCP uses to coordinate
+sodium**, so its orphan status is **not** explained by degeneration of the
+ion-coupling site. This is the falsification of one hypothesis, not a positive
+demonstration that SLC10A4 binds sodium or transports anything: the paralogue
+models are apo and protein-only, and the ions are NTCP's, carried onto them by
+superposition. Its bile-salt pocket is a split result:
 the three polar anchors (N103, N262, Q264) are conserved while the hydrophobic
 lining diverges, including T203→F281, which introduces a bulky aromatic.
 SLC10A7 is the opposite: the sodium site is degenerate (3 of 12 conserved, the
@@ -110,6 +113,12 @@ phenylalanine**, **N106 becomes alanine**, **Q68 becomes threonine**.
 | SLC10A6 (SOAT) | 6 | 7 | 7 | — |
 | SLC10A7 | 5 | 5 | 9 | **all three lost** (N103→V, N262→T, Q264→A) |
 
+The three polar anchors are the defensible reduced set. The remaining 18
+positions are an amphipathic hydrophobic wall where L/I/V/M/F interchanges carry
+little interpretable meaning, and the bile salt itself is a model fitted into
+sterol-shaped density, so the shell as a whole is a weaker diagnostic than the
+ion site.
+
 SLC10A4: `L31→V109~ V32→G110* M34→A112* L35→L113 I38→T116* N103→N181 L104→L182
 I195→L273~ S199→L277* V202→L280~ T203→F281* S206→T284~ N262→N340 V263→V341
 Q264→Q342 S267→T345~ T268→A346~ L287→L365 M290→A368* I291→L369~ L294→S372*`
@@ -160,9 +169,18 @@ an experimental SLC10A7 structure can settle.
 ## Interpretation, and what this does not show
 
 **For SLC10A4 the hypothesis is refuted.** The proposition was that loss of the
-sodium and bile-acid machinery explains why no substrate has been found. The ion
-site is intact and the polar substrate anchors are intact. Two readings remain
-open: a genuine sodium-coupled carrier whose cargo has not been offered to it,
+sodium and bile-acid machinery explains why no substrate has been found. The
+side-chain ion ligands are retained and the polar substrate anchors are
+retained. What that licenses is narrow, and the distinction is the whole point:
+
+- Supported: *SLC10A4's orphan status should not be explained by loss of the
+  NTCP sodium-coordinating residues.*
+- Not supported: *SLC10A4 has a working sodium site or bile-salt pocket.* A
+  protein can keep the ligand set and still fail to transport, through the
+  pocket, substrate access, gating, localization, regulation, oligomerization,
+  or the coupling between ion and substrate movement.
+
+Two readings remain open: a genuine sodium-coupled carrier whose cargo has not been offered to it,
 or a remodelled pocket (T203→F281 and the polarity reversals) with a different
 or narrower specificity. The structural argument the SLC10A4 review already
 makes — that `GO:0022857` is the honest level and should not be deepened on the
@@ -175,7 +193,11 @@ anchors is unlikely to run NTCP-type symport, which fits a Golgi protein whose
 only reported transport assay was negative for bile acids and steroid sulfates.
 
 **Hard limits.** (i) Every paralogue here is a predicted model; only NTCP has
-experimental coordinates. (ii) A conserved site is not activity and a degenerate
+experimental coordinates, and those models are apo — AlphaFold predicted no ion
+or ligand for any of them, so every ion and bile salt shown or measured against
+is NTCP's own, projected by superposition. A distance from a paralogue side
+chain to "the sodium" is therefore a statement about geometric plausibility
+after superposition, never a predicted interaction. (ii) A conserved site is not activity and a degenerate
 site is not proof of its absence — ASBT's own pocket divergence makes the first
 point concretely, and coordination could be rebuilt by residues that do not
 align to NTCP's contacts, which is all this inspects. (iii) Contact sets depend

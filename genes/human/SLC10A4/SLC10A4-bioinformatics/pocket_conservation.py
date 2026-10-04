@@ -236,7 +236,7 @@ def list_het_components(path: Path) -> dict[str, int]:
 
 def ligand_contacts(
     path: Path, ligand: str, ntcp_seq: str
-) -> tuple[Chain, dict[int, str], int, dict[int, set[str]]]:
+) -> tuple[Chain, dict[int, str], int, dict[int, set[str]], dict[int, dict]]:
     """NTCP residues within CUTOFF of any atom of `ligand`."""
     structure = gemmi.read_structure(str(path))
     structure.setup_entities()
@@ -263,6 +263,9 @@ def ligand_contacts(
     backbone = {"N", "CA", "C", "O", "OXT"}
     contacts: dict[int, str] = {}
     contact_via: dict[int, set[str]] = {}
+    # Closest approach per residue, so the curated record can say which atom
+    # makes the contact and how far away it is, rather than only "near sodium".
+    closest: dict[int, dict] = {}
     model = structure[0]
     for chain in model:
         if chain.name != ntcp.label:
@@ -271,11 +274,20 @@ def ligand_contacts(
             if residue.name not in AA3to1:
                 continue
             for atom in residue:
-                if any(atom.pos.dist(lp) <= CUTOFF for lp in ligand_atoms):
-                    contacts[residue.seqid.num] = AA3to1[residue.name]
+                d = min(atom.pos.dist(lp) for lp in ligand_atoms)
+                if d <= CUTOFF:
+                    num = residue.seqid.num
+                    contacts[num] = AA3to1[residue.name]
                     kind = "main-chain" if atom.name in backbone else "side-chain"
-                    contact_via.setdefault(residue.seqid.num, set()).add(kind)
-    return ntcp, contacts, n_copies, contact_via
+                    contact_via.setdefault(num, set()).add(kind)
+                    prev = closest.get(num)
+                    if prev is None or d < prev["distance"]:
+                        closest[num] = {
+                            "atom": atom.name,
+                            "via": kind,
+                            "distance": round(float(d), 2),
+                        }
+    return ntcp, contacts, n_copies, contact_via, closest
 
 
 def main() -> None:
@@ -299,7 +311,7 @@ def main() -> None:
         het = list_het_components(path)
         interesting = {k: v for k, v in het.items() if k not in NON_SITE_LIGANDS}
         print(f"    components present: {het} (candidate sites: {sorted(interesting)})")
-        ntcp, contacts, n_copies, contact_via = ligand_contacts(path, ligand, ntcp_seq)
+        ntcp, contacts, n_copies, contact_via, closest = ligand_contacts(path, ligand, ntcp_seq)
         matched, total = verify_numbering(ntcp, ntcp_seq)
         if matched / total < 0.95:
             raise SystemExit(
@@ -318,6 +330,13 @@ def main() -> None:
             "contacts": {str(k): v for k, v in ordered.items()},
             "contact_atoms": {
                 str(k): sorted(contact_via.get(k, [])) for k in ordered
+            },
+            # Per-residue closest approach: the atom that makes the contact, how
+            # it contacts (side chain or backbone), and the distance, so a
+            # curated site can carry atom-level provenance instead of "near X".
+            "closest_contact": {
+                str(k): dict(closest[k], ligand=ligand, structure="PDB:" + pdb_id)
+                for k in ordered if k in closest
             },
         }
 

@@ -3,7 +3,11 @@
 **Headline:** of the 12 residues that contact bound sodium in the human
 NTCP/SLC10A1 cryo-EM structure 9QZQ, only **3** are conserved in SLC10A7, with
 four non-conservative substitutions — including replacement of the NTCP
-carboxylate **E257 by phenylalanine** and of **N106 by alanine**. Separately,
+carboxylate **E257 by phenylalanine** and of **N106 by alanine**. The C-terminal
+register is the weak point and the residue identities, not the superposition
+distances, carry the argument there: the equivalents of 257 and 261 sit 19-23 Å
+from their counterparts, which is alignment uncertainty rather than a measured
+displacement. Separately,
 all three polar anchors of the NTCP bile-salt pocket are lost (N103→V118,
 N262→T268, Q264→A270). The SLC10 fold is still recognisable (TM-score 0.766
 against the experimental NTCP chain), but neither the ion-binding chemistry nor
@@ -50,7 +54,7 @@ non-conservative out of 12):
 | SLC10A1 (NTCP) | 12 | 0 | 0 | 0.973 | method control (AFDB vs its own structure) |
 | SLC10A2 (ASBT) | 10 | 1 | 1 | 0.877 | positive control, Na⁺-coupled |
 | SLC10A6 (SOAT) | 11 | 0 | 1 | 0.879 | positive control, Na⁺-coupled |
-| SLC10A4 | 11 | 0 | 1 | 0.876 | orphan, site intact (its one change is a main-chain contact) |
+| SLC10A4 | 11 | 0 | 1 | 0.876 | orphan, ligands retained (its one change is a main-chain contact) |
 | **SLC10A7** | **3** | 5 | 4 | 0.766 | **site degenerate** |
 
 SLC10A7 is the only human family member whose sodium site is not conserved. The
