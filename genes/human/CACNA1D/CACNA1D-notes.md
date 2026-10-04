@@ -31,3 +31,15 @@ Full normal validation, including references, GOA consistency and authored ontol
 ## 2026-10-03: reviewed record
 
 The independently approved review passed full normal canonical validation and status reporting without warnings. COMPLETE retains all six explicit UNDECIDED decisions. All 78 source assertions, four named products and source-cache bytes are preserved. The standard [CREATE history record](../../../history/genes/human/CACNA1D/2026-10-03T225312Z-codex-731d66.yaml) passed history validation.
+
+## 2026-10-03: positive calcium-transport regulation clarification
+
+The GO:0051928 IDA assertion from [PMID:1309651](https://pubmed.ncbi.nlm.nih.gov/1309651/) remains ACCEPT. Its reason now states the basis for retaining the curator's positive-regulation interpretation and the limits of the independently inspected evidence. The complete cached abstract establishes functional reconstitution of human alpha1D with beta2 and alpha2b in Xenopus oocytes. Alpha1D alone, or with alpha2b alone, did not produce functional channel activity. These data support the channel assembly's control of calcium entry; the exact comparison that led the curator to use the regulation term was not independently inspected in full text. Direct PubMed access returned an empty page and the publisher DOI request was inaccessible, so neither the original figures nor the full experiment is claimed as read.
+
+The current [GO:0051928 definition and parents](https://amigo.geneontology.org/amigo/term/GO:0051928) describe enhancement of calcium transport and place the term under positive ion-transport regulation and calcium-transport regulation, with a positively-regulates relation to calcium transport. Regulation is distinct from executing calcium import. Retention here therefore rests on the experimental annotation and compatible channel-function evidence, rather than treating every calcium-conducting pore as automatically carrying a regulation assertion. A separate molecular channel-activator function is not inferred.
+
+The broader experimental calcium-transport annotations are retained on their source-specific experimental or phylogenetic evidence. The two generic InterPro transport mappings are refined to the already represented calcium-import term because they offer less process specificity. This distinction does not equate the regulation and import terms. The existing one-core synthesis, ribbon-localization uncertainty, all other 77 annotation reviews, all 78 source objects, four products, 20 references and 14 quotation entries remain unchanged. No new annotations, sources or quotation words are introduced.
+
+### Regulation clarification application
+
+The independently approved reason-only follow-up passed full normal canonical validation, status reporting, targeted rendering and standard EDIT history validation. COMPLETE remains unchanged. All source objects, products, references, earlier sources and history are preserved. See the [follow-up history](https://github.com/ai4curation/ai-gene-review/blob/main/history/genes/human/CACNA1D/2026-10-03T235624Z-codex-91dc0e.yaml).
