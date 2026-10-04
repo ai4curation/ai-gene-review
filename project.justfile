@@ -980,11 +980,13 @@ validate-predictions +files:
     just validate-prediction-terms {{files}}
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
-# Schema and term validation (taxon binding, GO ids) for prediction files.
-# Covers BioReason/GO-GPT sidecars (*-sft-predictions.yaml,
-# *-gogpt*-predictions.yaml), which have no excerpts for validate-predictions'
-# source-evidence check. Same label policy as validate-all: ERRORs and NCBITaxon
-# label mismatches block; GO label lag stays advisory.
+# Schema and term validation for prediction files. In a PredictionReview the only
+# bound slot is `taxon`, so the term phase checks the taxon id and label only;
+# predicted GO terms are deliberately unbound (a model may predict an obsolete or
+# nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
+# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which have no
+# excerpts for validate-predictions' source-evidence check. Same blocking policy
+# as validate-all.
 [group('QC')]
 validate-prediction-terms +files:
     #!/usr/bin/env bash
@@ -993,7 +995,7 @@ validate-prediction-terms +files:
     out=$(uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
     rc=$?
     echo "$out"
-    if [ $rc -ne 0 ] && echo "$out" | grep -qE "ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
+    if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
         exit 1
     fi
 
@@ -1222,7 +1224,8 @@ validate-all:
     # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
     term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
     printf '%s\n' "$term_out"
-    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
+    # "Unable to validate" is LTV's ontology-service-unavailable message: every check was skipped.
+    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate"; then
         echo "✗ Term validation found errors (see above)"
         exit_code=1
     elif printf '%s\n' "$term_out" | grep -qE "Label mismatch for '?NCBITaxon:"; then

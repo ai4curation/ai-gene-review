@@ -57,6 +57,25 @@ FLOW_RE = re.compile(
 )
 
 
+# Never rewritten: invalid fixtures carry deliberately wrong taxa (e.g. a CHLRE
+# label), and the BioReason recapitulation experiment is a frozen snapshot.
+PROTECTED_PATHS = ("tests/data/invalid/", "tests/data/predictions/invalid/", "projects/BIOREASON_COMPARISON/recapitulation-experiment/")
+
+
+def is_protected(path: Path) -> bool:
+    """Return True for files this script must never rewrite.
+
+    >>> is_protected(Path("tests/data/invalid/GeneReview-taxon_label_mismatch.yaml"))
+    True
+    >>> is_protected(Path("projects/BIOREASON_COMPARISON/recapitulation-experiment/x/y.yaml"))
+    True
+    >>> is_protected(Path("genes/human/TP53/TP53-ai-review.yaml"))
+    False
+    """
+    posix = path.as_posix()
+    return any(part in posix for part in PROTECTED_PATHS)
+
+
 def find_flow_taxon(text: str) -> re.Match | None:
     """Locate a one-line flow-style top-level taxon mapping."""
     return FLOW_RE.search(text)
@@ -171,10 +190,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    # tests/data/invalid holds deliberately wrong taxa (e.g. a CHLRE label); never "fix" them.
-    files = sorted(
-        p for root in args.roots for p in Path(root).rglob("*.yaml") if "tests/data/invalid" not in p.as_posix()
-    )
+    files = sorted(p for root in args.roots for p in Path(root).rglob("*.yaml") if not is_protected(p))
     found: list[tuple[Path, str, str]] = []
     for path in files:
         text = path.read_text()

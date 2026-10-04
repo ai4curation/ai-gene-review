@@ -88,14 +88,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCHEMA = REPO_ROOT / "src/ai_gene_review/schema/gene_review.yaml"
 
 
-def _term_validate_offline(path: Path):
+def _term_validate_offline(path: Path, target_class: str = "GeneReview"):
     """Run linkml-term-validator on ``path`` against the committed caches only."""
     import subprocess
 
     return subprocess.run(
         [
             "uv", "run", "linkml-term-validator", "validate-data", str(path),
-            "-s", str(SCHEMA), "-t", "GeneReview", "--labels",
+            "-s", str(SCHEMA), "-t", target_class, "--labels",
             "-c", str(REPO_ROOT / "conf/oak_config.yaml"), "--offline",
         ],
         cwd=REPO_ROOT,
@@ -105,19 +105,32 @@ def _term_validate_offline(path: Path):
 
 
 @pytest.mark.parametrize(
-    "fixture,expected",
+    "fixture,target_class,expected",
     [
-        ("GeneReview-placeholder_taxon_id.yaml", "NCBITaxon:DESVH"),
-        ("GeneReview-taxon_label_mismatch.yaml", "Label mismatch for 'NCBITaxon:3055'"),
+        ("invalid/GeneReview-placeholder_taxon_id.yaml", "GeneReview", "NCBITaxon:DESVH"),
+        ("invalid/GeneReview-taxon_label_mismatch.yaml", "GeneReview", "Label mismatch for 'NCBITaxon:3055'"),
+        ("predictions/invalid/PredictionReview-placeholder_taxon_id.yaml", "PredictionReview", "uniprot:YEAST"),
+        (
+            "predictions/invalid/PredictionReview-taxon_label_mismatch.yaml",
+            "PredictionReview",
+            "Label mismatch for 'NCBITaxon:559292'",
+        ),
     ],
 )
-def test_taxon_binding_rejects_invalid_fixture(fixture: str, expected: str):
-    """The NCBITaxonEnum binding rejects a placeholder id and a wrong label."""
-    result = _term_validate_offline(REPO_ROOT / "tests/data/invalid" / fixture)
+def test_taxon_binding_rejects_invalid_fixture(fixture: str, target_class: str, expected: str):
+    """The NCBITaxonEnum binding rejects a placeholder id and a wrong label, for both review classes."""
+    result = _term_validate_offline(REPO_ROOT / "tests/data" / fixture, target_class)
     assert result.returncode != 0
     assert expected in result.stdout + result.stderr
 
 
-def test_taxon_binding_accepts_valid_fixture():
-    result = _term_validate_offline(REPO_ROOT / "tests/data/valid/GeneReview-minimal.yaml")
+@pytest.mark.parametrize(
+    "fixture,target_class",
+    [
+        ("valid/GeneReview-minimal.yaml", "GeneReview"),
+        ("predictions/valid/PredictionReview-minimal.yaml", "PredictionReview"),
+    ],
+)
+def test_taxon_binding_accepts_valid_fixture(fixture: str, target_class: str):
+    result = _term_validate_offline(REPO_ROOT / "tests/data" / fixture, target_class)
     assert result.returncode == 0, result.stdout + result.stderr
