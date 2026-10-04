@@ -9,6 +9,8 @@ ALKBH3 is a well-characterized AlkB-family dioxygenase that reverses m1A and m3C
 
 Decisions:
 - **Accepted:** all MF, DNA-repair, nucleus and cytoplasm rows.
-- **Kept as non-core:** proliferation (IMP, cell-type specific) and negative regulation of cytoplasmic translation (inferred from an m1A-translation correlation).
+- **Kept as non-core:** proliferation (IMP, cell-type specific).
+- **Negative regulation of cytoplasmic translation: MARK_AS_OVER_ANNOTATED** (changed in round 1 of PR #3977). ALKBH3 was never perturbed with translation as the readout; the link is a correlation.
+- **No in_complex for the ASCC complex:** GO has no CC term for it (OLS search, 2026-10-04).
 - **ASCC3 interaction row:** MODIFY to GO:0044877 protein-containing complex binding, since ALKBH3 co-purifies with the whole ASCC complex.
 - **Nine yeast two-hybrid protein-binding rows** (GLRX3, GOLGA2, IKZF1, LNX1, AK8): REMOVE.
