@@ -5,3 +5,19 @@
 - ANKDD1B (A6NHY2) is a 528-residue paralog of ANKDD1A, with 10 ankyrin repeats and a death domain. There is no functional literature, and affinage found none.
 - **The single GOA row is signal transduction (InterPro IEA from the death domain):** MARK_AS_OVER_ANNOTATED, as for ANKDD1A (#4067). It is a domain-level inference with no data.
 - No core function; WHOLLY_DARK gap. I added a question on whether it shares ANKDD1A's reported FIH1 interaction.
+
+## 2026-10-04 round 2 (reviewer comments on #4068): PAINT and family analysis
+
+- **Why there is no IBA.** ANKDD1B is in PANTHER PTHR24125 (subfamily SF1, ANKDD1B; ANKDD1A is SF0). I checked QuickGO for every reviewed family member in `interpro/panther/PTHR24125/PTHR24125-entries.csv`:
+  - human ANKDD1B (A6NHY2): one IEA
+  - mouse Ankdd1b (Q14DN9): IEA plus MGI ND rows
+  - macaque ANKDD1A (Q9GKW8): one IEA
+  - mimivirus L371 (Q5UQV3): none
+  - human ANKDD1A (Q495B1): one IEA and a BioPlex protein-binding IPI
+  - So no family member has an experimental functional annotation. "No IBA" means there is no donor evidence for PAINT to propagate, not that evidence was placed on another subtree. UniProt's PAN-GO line agrees: 0 phylogenetic annotations.
+- **Negative claim now anchored on UniProt** (PE 4: Predicted; Pharos Tdark; PAN-GO 0) rather than only on the affinage null. The affinage reference_review now calls that record a null result.
+- **Other fixes:**
+  - HPA "Tissue enhanced (fallopian)" is added to the description.
+  - The FIH1 question now cites PMID:30082910.
+  - The reason states that MARK_AS_OVER_ANNOTATED is a gene-level judgment, not a challenge to the IPR000488 → GO:0007165 mapping (accepted for FAS/TNFRSF1A in projects/INTERPRO/suspect_interpro_mappings.tsv).
+- **Caveat:** the InterPro PTHR24125 description mentions immune-regulatory roles, but it is LLM-generated and unchecked (`llm: true, checked: false` in the metadata), so it is not used.
