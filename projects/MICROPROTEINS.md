@@ -230,12 +230,12 @@ cached publications plus targeted PubMed retrieval.
 
 ## Tier 2 results (2026-10-03)
 
-Tier 2 covered 43 gene products, each reviewed and validated. They are 9 named emerging
+Tier 2 covered 49 gene products, each reviewed and validated. They are 9 named emerging
 microproteins, 13 SMIMs, 6 alternative-ORF or uORF peptides, humanin with SHLP1–6, MOTS-c,
-and MTRNR2L1–7. **MTRNR2L8–13 are not reviewed**: a safety classifier stopped the agent
-working on them before any file was written; see notes. Across the 43, the 302 existing GOA
-rows came out as: 145 ACCEPT, 24 KEEP_AS_NON_CORE, 44 MARK_AS_OVER_ANNOTATED, 32 MODIFY,
-54 REMOVE and 3 UNDECIDED. There were 9 NEW proposals.
+and MTRNR2L1–13. MTRNR2L8–13 were finished on 2026-10-04 by fresh agents, after the first
+attempt was stopped by a safety classifier (see notes). Across the 49, the 336 existing GOA
+rows came out as: 145 ACCEPT, 24 KEEP_AS_NON_CORE, 70 MARK_AS_OVER_ANNOTATED, 32 MODIFY,
+62 REMOVE and 3 UNDECIDED. There were 9 NEW proposals.
 
 | group | genes | main outcome |
 |---|---|---|
@@ -243,7 +243,7 @@ rows came out as: 145 ACCEPT, 24 KEEP_AS_NON_CORE, 44 MARK_AS_OVER_ANNOTATED, 32
 | alt-ORF / uORF peptides | AltMIEF1 (`MIEF1__L0R8F8`), DDIT3 uORF (`DDIT3__P0DPQ6`), PRKCH uORF2 (`PRKCH__C0HM02`), SEHBP (`ZNF689__C0HLU2`), miPEP155 (`MIR155HG__C0HMA1`), SHMOOSE (`C0HM83`) | the first reviews made under the `<HOST>__<ACC>` convention; see hazard 1 below |
 | SMIM series | `SMIM2`, 5, 8, 10, 11, 12, 13, 14, 15, 18, 36, 40, 41 | no function known for any; 22 bare `protein binding` rows from yeast two-hybrid screens removed; what remains is accurate and almost empty |
 | mtDNA-rRNA-encoded peptides | humanin (`MT-RNR2__Q8IVG9`), SHLP1–6 (`MT-RNR2__*`), MOTS-c (`MT-RNR1__A0A0C5B5G6`) | humanin keeps a sound core (receptor ligand GO:0048018, BH3 domain binding GO:0051434, amyloid-beta binding GO:0001540) once 12 binding rows are triaged; SHLP2 gets its first MFs (NEW); MOTS-c: two GOA errors fixed, three NEW antimicrobial terms |
-| nuclear humanin-like loci | `MTRNR2L1`–`MTRNR2L7` | every row inherited from humanin; 33 of 45 marked over-annotated and 8 removed where the locus substitutes residues known to abolish humanin activity |
+| nuclear humanin-like loci | `MTRNR2L1`–`MTRNR2L13` | every row inherited from humanin; 59 of 79 marked over-annotated and 16 removed where the locus substitutes residues known to abolish humanin activity or to block secretion |
 
 ### What Tier 2 adds
 
@@ -378,7 +378,7 @@ Last updated: 2026-09-30
 - [x] Alt-ORF entries (`<HOST>__<ACC>` folders): AltMIEF1 (L0R8F8), DDIT3 uORF (P0DPQ6), PRKCH uORF2 (C0HM02), SEHBP (C0HLU2), miPEP155 (C0HMA1), SHMOOSE (C0HM83)
 - [x] mtDNA-rRNA peptides: humanin, SHLP1–6, MOTS-c
 - [x] MTRNR2L1–7
-- [ ] MTRNR2L8–13: data fetched, reviews not written (agent stopped by a safety classifier; awaiting decision whether to retry)
+- [x] MTRNR2L8–13 (retried with fresh agents on 2026-10-04 after the first attempt was stopped)
 
 ## Tier 3 — over-annotation audit (PE4–5 with IBA/ISS function)
 - [ ] SNRPGP15, PMCHL1, PMCHL2, DPH3P1, GNG5B, LITAFD, ZNF788P
@@ -390,6 +390,22 @@ Last updated: 2026-09-30
 - [x] SMIM26, P3R3URF, ADIG (plus canonical small proteins such as TOMM5/6/7, PIGY, UQCC3)
 
 # NOTES
+
+## 2026-10-04
+
+- MTRNR2L8–13 reviewed by two fresh agents, each editing one gene at a time. All six validate.
+  Results: 26 rows marked over-annotated and 8 removed, with no core functions and no NEW
+  proposals. MTRNR2L10 lost both IBA rows and both extracellular rows: it changes Ser14→Arg,
+  a substitution known to abolish humanin activity, and both residues of the Pro19–Val20
+  secretion segment.
+- New family-level findings:
+  - PANTHER IBA coverage follows subfamily assignment, not sequence. MTRNR2L12 lacks the IBA
+    rows that its identical twin MTRNR2L8 carries.
+  - Papers are now selecting MTRNR2L3/L10 via the propagated GO:1900118 term, so a propagated
+    annotation is generating its own apparent confirmation.
+  - Serum "humanin-like N" ELISAs cannot be locus-specific.
+  - Recurring recommendation: restrict PTN002141596 to MT-RNR2 plus MTRNR2L5, the only two
+    sequences with functional data.
 
 ## 2026-10-03
 
