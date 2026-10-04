@@ -7,7 +7,7 @@
   cellular bud tip, cellular bud neck, bipolar bud site selection, pseudohyphal
   growth, and invasive filamentous growth.
 - Two 2017 rows now have stale GOA PTNs but matching current PAINT assertions. The
-  MAP-kinase scaffold row points to old `PTN000492368` in GOA and mating projection
+  MAP kinase scaffold row points to old `PTN000492368` in GOA and mating projection
   tip points to old `PTN001091461`; current PAINT now places both at the broad
   Eukaryota node `PTN004550576` with a 2026-06-03 date.
 - Two 2017 rows point to `PANTHER:PTN001091460`, which is absent from the current
@@ -32,6 +32,18 @@
   focusing role and emphasizes species-specific Spa2 interaction networks, which
   reinforces caution around old cross-species CC propagation from PomBase Spa2 to
   S. cerevisiae-specific polarisome locations.
+- Re-fetched `PTHR21601` on 2026-10-01. GOA now reports the live S. pombe-derived
+  `GO:0120105` row from `PANTHER:PTN001091459`, while the current local PAINT TSV
+  has the same PomBase-only IBD on `PTN004550576`; the GOA source was preserved
+  exactly and the PAINT node drift was recorded in the row-level `propagation_review`.
 - Searched 2025-2026 PubMed and broader web results for newer S. cerevisiae SPA2
-  papers; no direct budding-yeast paper newer than the cached 2024 ADP-actin study
-  changed the review.
+  papers. The newly indexed PMID:41527849 full text identifies a Spa2 SHD1-binding
+  short linear motif in Msb3, Msb4, Ste7 and Mkk1 and identifies Dse3 as a new
+  Spa2-binding partner, which refines the scaffold mechanism without changing the
+  GO surface.
+- During PR review, cached and read PMID:31699995 from the refreshed UniProt
+  record and PMID:29601579 for Foltman et al.'s budding-yeast division-site
+  counterexample. The Spa2/Aip5 papers support a second core Spa2 adaptor activity
+  in polarisome actin assembly, while Foltman supports a budding-yeast Chs2/IPCs
+  role that still does not rescue the fission-yeast GO:0120105 contractile-ring
+  intermediate-layer IBA.
