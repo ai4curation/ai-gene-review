@@ -306,8 +306,13 @@ compares with the role the module assigns.
   contradicted claims. (1) IFT-A membership (IDA, PMID:26980730, abstract
   only) on five IFT-B subunits: IFT88, IFT52, IFT81, IFT74, IFT172. All five
   are canonical IFT-B subunits, and the same paper supports their IFT-B
-  annotations. (2) The ARL3 NOT-located-in-cilium row, contradicted by
-  native-protein staining, HPA and functional data.
+  annotations. (2) The ARL3 NOT-located-in-cilium row (PMID:17646400). Checked
+  against the full text on 2026-10-04: the NOT rests on overexpressed EGFP-Arl
+  constructs not targeting primary cilia in an RPE1 screen (Fig. S2 A). That
+  is a negative enrichment result, not evidence that the function lies outside
+  the cilium. ARL3-GTP is generated and acts inside the cilium (ARL13B, its
+  GEF, is confined there; PMID:26551564), so REMOVE stands. The reason now
+  quotes the paper directly.
 - HPA: the HPA atlas paper (PMID:41005307) is cached as abstract only, so the
   reviews used the grades in `member_evidence.md`. Reviewers repeatedly found
   canonical ciliary proteins with weak or missing HPA calls: CCP110 is seen
