@@ -802,3 +802,42 @@ def test_member_matching_only_uniprot_family_is_unresolved_not_failed():
     ]
     assert [r.outcome for r in results] == [Outcome.UNRESOLVED]
     assert "sources disagree" in results[0].message
+
+
+# --- site_source: STRUCTURE -------------------------------------------------
+#
+# Added with the STRUCTURE enum value, for sites whose positions are read from
+# ligand contacts in deposited coordinates rather than from a feature table.
+
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "src"
+    / "ai_gene_review"
+    / "schema"
+    / "family_review.yaml"
+)
+
+
+def test_site_source_enum_offers_structure():
+    """A site read off deposited coordinates has a source value of its own.
+
+    Without it, such sites have to be filed as LITERATURE, which conflates "a paper
+    says these residues matter" with "these are the residues contacting the ligand in
+    this PDB entry" -- the latter being recomputable from the entry and the cutoff.
+    """
+    schema = yaml.safe_load(SCHEMA_PATH.read_text())
+    values = schema["enums"]["SiteSourceEnum"]["permissible_values"]
+    assert "STRUCTURE" in values
+    assert values["STRUCTURE"]["description"].strip()
+
+
+@pytest.mark.parametrize(
+    "source",
+    ["UNIPROT_FEATURE", "MCSA", "LITERATURE", "STRUCTURE", "ALIGNMENT_INFERENCE"],
+)
+def test_every_site_source_validates_the_same_residues(source):
+    """site_source records provenance only; it must not change residue checking."""
+    review = _review([{"position": 3, "expected": ["C"]}])
+    review["residue_sites"][0]["site_source"] = source
+    results = check_anchor_residues(review, CACHE)
+    assert [r.outcome for r in results] == [Outcome.PASS]
