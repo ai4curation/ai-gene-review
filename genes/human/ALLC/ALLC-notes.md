@@ -13,3 +13,10 @@ Decisions:
   - The pathway and substrate are absent from humans.
   - The mouse ortholog used as a source is also "probably inactive".
 - **The gene is recorded as WHOLLY_DARK** (top-level gap), with core_functions empty.
+
+## Round 1 (PR #3984 review)
+
+- **Corrected "allantoin is not produced".** Humans lack urate oxidase, but allantoin still forms non-enzymatically from oxidized urate and is excreted, not degraded. The REMOVE of the catabolic-process row stands on "no catabolic pathway".
+- **Corrected the species range.** Plants use allantoate amidohydrolase rather than allantoicase. The pathway was lost in amniotes, not in all vertebrates.
+- **Added protein-level evidence:** PE 1 / proteomics. Also cited PANTHER's independent "INACTIVE ALLANTOICASE-RELATED" subfamily (PTHR12045:SF3).
+- **Fixed a misused quote.** The affinage support quote now cites the record's own "no mechanism known for the human protein" sentence.
