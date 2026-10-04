@@ -15,6 +15,8 @@ from typing import Any, Mapping, Sequence
 
 import yaml
 
+from ai_gene_review.utils.research_process import run_research_process
+
 
 DEFAULT_GENES_ROOT = Path("genes")
 DEFAULT_TEMPLATE = Path("templates/gene_hypothesis_deep_research.md")
@@ -1294,11 +1296,9 @@ def run_record(
     output_file.parent.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
     try:
-        result = subprocess.run(
+        result = run_research_process(
             command,
-            check=False,
             capture_output=True,
-            text=True,
             timeout=timeout_seconds,
         )
         duration = time.monotonic() - started

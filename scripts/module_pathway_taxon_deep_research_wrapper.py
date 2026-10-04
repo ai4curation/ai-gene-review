@@ -15,6 +15,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from ai_gene_review.utils.research_process import run_research_process
+
 from module_deep_research_wrapper import (
     command_for_log,
     deep_research_client_command,
@@ -458,7 +460,7 @@ def main() -> int:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        result = subprocess.run(cmd, timeout=effective_timeout)
+        result = run_research_process(cmd, timeout=effective_timeout)
     except subprocess.TimeoutExpired:
         print(
             f"Error: deep-research-client timed out after {effective_timeout}s",
