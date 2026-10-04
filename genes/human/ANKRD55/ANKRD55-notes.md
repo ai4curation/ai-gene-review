@@ -6,7 +6,7 @@
   - PMID:40932625: ANKRD55 is mitochondria-associated (IF and fractionation), supports respiration and restrains LKB1. TH17 IL-17 production is impaired; colitis protection.
 - NEW terms:
   - GO:0005634 nucleus (IDA, human cells, PMID:27183579).
-  - GO:0005739 mitochondrion (ISO from mouse Q8BLD6, PMID:40932625).
+  - GO:0005739 mitochondrion (IDA, PMID:40932625; corrected from ISO in round 4, because the imaging was done on endogenous human ANKRD55 in human TH17 cells).
   - GO:2000321 positive regulation of Th17 differentiation (ISO, PMID:41090353).
   - The localization conflict (nuclear in human cells vs mitochondrial and perinuclear in mouse T cells) is stated in both rows and raised as a question.
 - OpenCell has no ANKRD55 line. PAN-GO 0; PTHR24198:SF188 has no node reaching ANKRD55.
