@@ -1,11 +1,11 @@
-name: Normal CASR source fetch
-run-name: CASR normal fetch at ${{ github.sha }}
+name: Normal CAV1 source fetch
+run-name: CAV1 normal fetch at ${{ github.sha }}
 'on':
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: normal-casr-source-fetch
+  group: normal-cav1-source-fetch
   cancel-in-progress: false
 jobs:
   fetch:
@@ -25,7 +25,7 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib, json, os, pathlib, subprocess
-          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-casr-fetch'
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cav1-fetch'
           artifact = root / 'artifact'
           artifact.mkdir(parents=True, exist_ok=False)
           (artifact / 'raw').mkdir()
@@ -36,7 +36,7 @@ jobs:
           }
           observed = {p: subprocess.check_output(['git', 'rev-parse', 'HEAD:' + p], text=True).strip() for p in expected}
           receipt = {k: os.environ[k] for k in ('GITHUB_REPOSITORY', 'GITHUB_REF', 'GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT')}
-          receipt.update(gene='CASR', organism='human', uniprot_id='P41180', hgnc_id='HGNC:1514',
+          receipt.update(gene='CAV1', organism='human', uniprot_id='Q03135', hgnc_id='HGNC:1527',
                          normal_source_base='09476b15e3443092dfcf2a51037779d3d9ab1c8c',
                          expected_runtime_objects=expected, observed_runtime_objects=observed,
                          status='initialized', import_authorized=False)
@@ -44,7 +44,7 @@ jobs:
           assert observed == expected, 'Normal source code or dependency input changed'
           assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == receipt['GITHUB_SHA']
           with open(os.environ['GITHUB_ENV'], 'a') as out:
-              out.write('CASR_ROOT=' + str(root) + '\n')
+              out.write('CAV1_ROOT=' + str(root) + '\n')
               out.write('UV_CACHE_DIR=' + str(root / 'uv-cache') + '\n')
               out.write('UV_PROJECT_ENVIRONMENT=' + str(root / 'venv') + '\n')
           PY
@@ -63,11 +63,11 @@ jobs:
           "$UV_PROJECT_ENVIRONMENT/bin/python" - <<'PY'
           import datetime, importlib.metadata, json, os, pathlib, signal, subprocess, sys
           import yaml
-          artifact = pathlib.Path(os.environ['CASR_ROOT']) / 'artifact'
+          artifact = pathlib.Path(os.environ['CAV1_ROOT']) / 'artifact'
           work = artifact / 'raw'
           report_path = artifact / 'fetch-report.json'
           command = [str(pathlib.Path(os.environ['UV_PROJECT_ENVIRONMENT']) / 'bin/ai-gene-review'),
-                     'fetch-gene', 'human', 'CASR', '--uniprot-id', 'P41180', '--output-dir', str(work)]
+                     'fetch-gene', 'human', 'CAV1', '--uniprot-id', 'Q03135', '--output-dir', str(work)]
           report = {'command': command, 'cwd': str(work), 'attempts': 1,
                     'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     'python': sys.version, 'package_version': importlib.metadata.version('ai_gene_review'),
@@ -83,14 +83,14 @@ jobs:
                   report['timed_out'] = True
           try:
               assert report['returncode'] == 0, 'Normal fetch did not complete successfully'
-              gene = work / 'genes/human/CASR'
-              expected = [gene / ('CASR-' + suffix) for suffix in ('uniprot.txt', 'goa.tsv', 'ai-review.yaml')]
+              gene = work / 'genes/human/CAV1'
+              expected = [gene / ('CAV1-' + suffix) for suffix in ('uniprot.txt', 'goa.tsv', 'ai-review.yaml')]
               assert all(p.is_file() and not p.is_symlink() for p in expected)
               uni = expected[0].read_text()
               primary = next(line for line in uni.splitlines() if line.startswith('AC   ')).split()[1].rstrip(';')
-              assert primary == 'P41180' and 'NCBI_TaxID=9606' in uni
+              assert primary == 'Q03135' and 'NCBI_TaxID=9606' in uni
               seed = yaml.safe_load(expected[2].read_text())
-              assert seed['id'] == 'P41180' and seed['gene_symbol'] == 'CASR'
+              assert seed['id'] == 'Q03135' and seed['gene_symbol'] == 'CAV1'
               assert seed['taxon']['id'] == 'NCBITaxon:9606'
               rows = seed.get('existing_annotations', [])
               assert rows and all(a['review']['action'] == 'PENDING' for a in rows)
@@ -113,7 +113,7 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib, json, os, pathlib
-          artifact = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-casr-fetch/artifact'
+          artifact = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cav1-fetch/artifact'
           entries = []
           for p in sorted(artifact.rglob('*')):
               assert not p.is_symlink(), 'Unexpected symlink in output'
@@ -126,8 +126,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: normal-casr-sources-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/normal-casr-fetch/artifact/
+          name: normal-cav1-sources-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/normal-cav1-fetch/artifact/
           if-no-files-found: error
           retention-days: 7
           include-hidden-files: false
