@@ -327,3 +327,31 @@ Carried into `suggested_questions` / `suggested_experiments`:
   five look unsupported by the cited paper.
 - Does human OTX2 have a demonstrable role at the aNE stage that could be annotated
   directly, now that PMID:42760324 provides a human in-vitro system?
+
+## 9. A deep-research summary that compressed its source wrongly
+
+Recorded here because it is a reusable warning about the `-deep-research-*.md` files, not
+an OTX2 fact. Added 2026-10-04.
+
+The companion module asserted that in chick the Otx2 and Gbx2 domains "are separate at
+HH4–HH8, overlap slightly around HH9, and are contiguous and mutually exclusive by HH10".
+That came from the falcon deep-research file, which says "separated at HH4–8". Fetching the
+cited primary (Hidalgo-Sánchez et al. 2022, [PMID:35401126], full text in PMC) shows the
+HH4 half is wrong:
+
+- At HH4 the genes are simply expressed at opposite ends — *"At stage HH4, Otx2 and Gbx2
+  expressions are observed in the rostral and caudal portion of the chick embryo,
+  respectively"*. Nothing about a gap.
+- The non-contiguity is specific to HH8 — [PMID:35401126 "While the expressing domains of
+  both genes are not contiguous at stage HH8, with a small gap of expression between them,
+  a slight overlap is observed at stage HH9"].
+- [PMID:35401126 "At stage HH10, the Otx2-expressing domain and the Gbx2-expressing domain
+  are contiguous and exclusive"].
+
+So "HH4–HH8" silently extended a stage-specific observation backwards across four stages.
+The lesson: a deep-research file's **citations** are reliable enough to resolve and fetch —
+every primary it named for the module's four comparative claims turned out to be real and
+on point — but its **compressions** of those primaries are not quotable and should not be
+restated as fact without reading the source. This one survived because no validator can
+check a claim in a prose `description`; it was caught only when a reviewer asked for
+`source_id` on exactly those claims, which forced the primaries to be read.
