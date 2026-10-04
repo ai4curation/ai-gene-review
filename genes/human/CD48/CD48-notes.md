@@ -25,5 +25,10 @@ literature listed below, with two additional key papers cached for this review
 - All five `protein binding` IPIs were changed (MODIFY): the four with CD244 to signaling receptor
   binding, and the one with CD2 to cell adhesion molecule binding.
 - `defense response` (TAS, cloning paper) was marked as over-annotated; the paper does not support it.
-- NEW annotations: molecular adaptor activity and positive regulation of T cell receptor signaling
-  pathway, both from PMID:19494291. Both rest on a single study.
+- NEW annotation: positive regulation of T cell receptor signaling pathway, from PMID:19494291
+  (single abstract-only study). A NEW molecular adaptor activity annotation was dropped after PR
+  review: CD48 is GPI-anchored with no cytoplasmic domain, so its effect on LAT is most likely
+  raft co-recruitment rather than a binding activity.
+- Activation-direction claims are anchored to PMID:16002700 ("In human NK cells, 2B4/CD48
+  interaction induces activation signals"), not to the Introduction of PMID:27249817. That paper's
+  own CD48 result is that cis CD48 reduces trans engagement of 2B4.
