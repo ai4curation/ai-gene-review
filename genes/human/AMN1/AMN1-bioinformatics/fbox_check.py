@@ -65,6 +65,7 @@ for row in rows:
     term, label = row[4], row[5]
     donors = [d for d in row[10].split("|") if not d.startswith("PANTHER:")]
     print(f"\n## {term} {label}: {len(donors)} donors\n")
+    lens, outside = [], []
     print("| donor | UniProt | gene | organism | length | PANTHER | F-box |")
     print("|---|---|---|---|---|---|---|")
     for d in donors:
@@ -74,7 +75,21 @@ for row in rows:
             continue
         e = entry(acc)
         fb = fbox(e)
+        lens.append(e["sequence"]["length"])
+        if not panther_sf(e).startswith("PTHR13318"):
+            outside.append(f"{d} ({acc}, {panther_sf(e)})")
         print(f"| {d} | {acc} | {gene(e)} | {e['organism']['scientificName']} | {e['sequence']['length']} | {panther_sf(e)} | {f'{fb[0]}-{fb[1]}' if fb else 'none'} |")
+    print(f"\nSummary for {term}: donor lengths {min(lens)}-{max(lens)} residues; donors currently outside PTHR13318 in UniProt: {', '.join(outside) if outside else 'none'}.")
+
+entries = Path(__file__).resolve().parents[4] / "interpro/panther/PTHR13318/PTHR13318-entries.csv"
+sf254 = [ln.split(",")[0] for ln in entries.read_text().splitlines()[1:] if ",PTHR13318:SF254," in ln]
+print(f"\n## PTHR13318:SF254 (PROTEIN AMN1 HOMOLOG) members in PTHR13318-entries.csv: {len(sf254)}\n")
+print("| UniProt | organism | length | F-box |")
+print("|---|---|---|---|")
+for acc in sf254:
+    e = entry(acc)
+    fb = fbox(e)
+    print(f"| {acc} | {e['organism']['scientificName']} | {e['sequence']['length']} | {f'{fb[0]}-{fb[1]}' if fb else 'none'} |")
 
 t = entry(TARGET)
 tseq = t["sequence"]["value"]

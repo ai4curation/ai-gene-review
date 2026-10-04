@@ -24,3 +24,12 @@ Decisions:
 
 - **The GO-CAM names the right gene outright.** The Amn1 node's enabled_by evidence is ECO:0000266 orthology to UniProtKB:Q9BXJ7, human AMN, from PMID:14576052, the cubilin-amnionless paper. Human AMN carries the same location, cargo-receptor and cobalamin-transport triple by IDA from that paper. So the error is in the gene-product assignment, and is no longer circumstantial. The location row also projects from intrinsic factor (P27352). Cited, and named in the MGI question.
 - **PANTHER separates AMN1 from every donor.** AMN1 is in PTHR13318:SF254 (PROTEIN AMN1 HOMOLOG); none of the 14 donors is. The donors are 300-807 aa, against AMN1's 258. fbox_check.py now reports PANTHER subfamily and length per donor.
+
+## Round 4 (PR #4034 review)
+
+- **The structural clause is now cited.** Human AMN carries microvillus membrane, cargo receptor activity and cobalamin transport by IDA from PMID:14576052, including is_active_in GO:0031528 (`genes/human/AMN/AMN-goa.tsv`). These are exactly the terms MGI's GO-CAM hangs on Amn1.
+- **fbox_check.py additions:**
+  - Per-row donor length ranges: 300-720 for GO:0031146, 300-807 for GO:0019005.
+  - Donors now outside PTHR13318: Q8W104 and Q8BH16 are in PTHR13382, and Q06640 is unassigned. This is version drift since the 2023 IBD.
+  - All six SF254 members from PTHR13318-entries.csv (human, mouse, rat, cow, orangutan, zebrafish; 249-258 aa) lack an F-box.
+- **propagation_review:** failure_modes now include WRONG_ORTHOLOG_OR_PARALOG, and residue_claims_not_applicable explains the absent-domain case.
