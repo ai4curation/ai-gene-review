@@ -15,3 +15,17 @@
 ## 2026-10-04 core MF update
 
 - **Core MF:** GO:0140378 protein complex scaffold activity ("serves to hold the complex together") added to core_functions alongside contributes_to GO:0061630. This follows the ANAPC16 review (#4058). No NEW GOA row is proposed: no small APC/C subunit carries a scaffold MF in QuickGO, which reads as a convention.
+
+## 2026-10-04 round 2 (reviewer comments on #4060)
+
+- **Core MF changed to GO:0160072** ubiquitin ligase complex scaffold activity. This replaces the GO:0140378 added minutes earlier, and follows the in-repo convention for APC/C scaffold subunits: nuc2/APC1 (also platform), cut9, CDC27, CDC16 and ANAPC2.
+  - The platform positions the catalytic module relative to the TPR lobe that recruits the coactivator (substrate adaptor) (PMID:21307936, PMID:27601667), which is what GO:0160072 describes.
+  - APC13 and APC16 keep GO:0140378, because they hold TPR subunits in place rather than link the catalytic module to the coactivator.
+- **GO:0045842 IBA:** the reason now gives the human securin/cyclin B rationale. The contrary fly ida quote is moved out of supported_by into prose.
+- **GO:0007346:** now notes that GO:0045842 subsumes it (verified in OLS: GO:0045842 → GO:1901990 → GO:0030071 → GO:0007346).
+- **Meiotic NAS:** now cites worm such-1/gfi-3 co-depletion meiotic arrest (PMID:20944012). Still non-core for human.
+- **Other fixes:**
+  - Dropped the phosphatase-independence non-sequitur from the PTEN row.
+  - Per-aspect reasons for the BP rows.
+  - Core locations.
+  - Stronger structural anchors (PMID:21307936, PMID:27601667).
