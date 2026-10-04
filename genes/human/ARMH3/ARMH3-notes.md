@@ -19,3 +19,12 @@
   - Small GTPase binding (IDA, ARL5).
   - Positive regulation of cGAS/STING signaling pathway (IMP).
 - No PI4K activator MF: activation is shown only in cells, with no purified-component assay.
+
+## Review round 1 (PR #4200)
+- PI4KB row: MODIFY target changed from kinase binding to protein-membrane adaptor activity (GO:0043495), matching the identical row in ACBD3. The reason now gives both interface mappings (kinase linker by HDX-MS; N-terminal QE65AA helix, PMID:23572552) and the mutual-recruitment directionality.
+- NEW positive regulation of lipid kinase activity (GO:0090218, IMP, PMID:39580461): ARMH3 knockout sharply reduces Golgi PI4P. The activator MF is still not asserted, because there is no purified-component assay.
+- Added a second core function: PI4KB adaptor activity, with the lipid-kinase regulation BP.
+- The perinuclear row now has its own reasoning.
+- Findings were added for PMID:23572552 and PMID:37195633.
+- New suggested questions: CERT pool specificity; recruitment directionality.
+- New suggested experiment: PI4KB-binding-deficient rescue.
