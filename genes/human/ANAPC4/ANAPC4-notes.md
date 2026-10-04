@@ -10,3 +10,7 @@
 - **15 protein-binding IPIs:** removed. Partners are CDC27, CDC20, NEK2 and KIF18A, all APC/C subunits, coactivators or substrates.
 - **Meiotic NAS:** kept as non-core; there is no APC4-specific evidence.
 - **Other rows:** location, complex, catabolism, chain-type and mitotic-regulation rows are accepted.
+
+## 2026-10-04 core MF update
+
+- **Core MF:** GO:0140378 protein complex scaffold activity ("serves to hold the complex together") added to core_functions alongside contributes_to GO:0061630. This follows the ANAPC16 review (#4058). No NEW GOA row is proposed: no small APC/C subunit carries a scaffold MF in QuickGO, which reads as a convention.
