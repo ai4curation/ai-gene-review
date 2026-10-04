@@ -23,3 +23,9 @@
 - **Protein-binding REMOVE reasons:** they no longer claim "no informative MF term describes it". They now explain that a proteome-scale co-purification does not show the direct contact GO:0160072 needs.
 - **Miscitation:** the WRONG_IDENTIFIER reference_review is the complete action, since MISCITATIONS.md is generated from it. I corrected the earlier "not added" wording above.
 - **Core locations added.**
+
+## 2026-10-04 round 3 (reviewer comments on #4059)
+
+- **Correction:** my round-2 reason and notes cited "APC1/nuc2 in the same platform" as a GO:0160072 precedent. That is wrong: S. pombe nuc2 is APC3, a TPR subunit, and APC1 (cut4) has no review here. Every current GO:0160072 holder among APC/C subunits is a TPR subunit or the cullin. APC4 (with APC5) is the first platform subunit to carry it, an extension the reason now states as such.
+- **Evidence:** GO:0160072 is now grounded on APC4 itself. PMID:27120157 says the APC1-APC4-APC5 platform shifts on activation to move the catalytic module for E2 access. The PMID:27601667 sentence naming APC4 among the platform subunits is added.
+- **Locations:** removed the redundant nucleus from core locations; nucleoplasm, its child, is kept.
