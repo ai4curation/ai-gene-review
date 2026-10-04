@@ -136,6 +136,10 @@ regulator) and worm GEI-17, so no subfamily-level scope can separate them. See
 
 ## Proposed taxon constraints
 
+The case for TPV-001 to TPV-003, with node-level PAINT recommendations, is written up
+for GO editors and PAINT curators in the public briefing
+[JAK-STAT Without JAK](https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM).
+
 See [proposed_taxon_constraints.yaml](TAXON_PATHWAY_VARIANCE/proposed_taxon_constraints.yaml).
 Each proposal records the GO term, the constraint (`never_in_taxon` / `only_in_taxon`),
 the taxon, any constraint GO already has, verbatim evidence, the annotations it would
