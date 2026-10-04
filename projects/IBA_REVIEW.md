@@ -79,6 +79,7 @@ genes:
   - yakA
   - statA
   - statC
+  - gei-17
 manifest:
   slides:
     - href: IBA_REVIEW/slides/IBA_REVIEW-slides.html
@@ -1061,6 +1062,7 @@ as a secondary function.
 - **che-3 (worm)** — `GO:0060294` (cilium movement involved in cell motility): che-3 is cytoplasmic **dynein-2** (retrograde IFT motor); *C. elegans* sensory cilia are **non-motile**. The motility term comes from axonemal-dynein orthologs in organisms with motile cilia.
 - **D7 salivary proteins (mosquito, ANOGA: D7r2/D7r4/D7r5/D7L1)** — `GO:0007608` (sensory perception of smell): UniProt calls D7r4 a *"salivary protein… modulates blood feeding,"* female-saliva-specific. The OBP/PBP-GOBP fold was repurposed for binding biogenic amines/eicosanoids in saliva — these proteins are not expressed in antennae and have no olfactory role.
 - **sta-2 (worm)** — `GO:0007259` (JAK-STAT signaling): transferred from fly/mammalian STATs, but *C. elegans* has **no JAK kinases**; STA-2 is activated via SNF-12/hemidesmosomes.
+- **gei-17 (worm, PTHR10782)** — `GO:0046426` (negative regulation of receptor signaling pathway via JAK-STAT): the IBD sits on the eumetazoan PIAS node **PTN000845825**, seeded by human PIAS1 (STAT1 inhibition) and fly Su(var)2-10 — sound for both. GEI-17 inherits it through the ecdysozoan branch, but *C. elegans* has **no conserved JAK homolog** and its STAT STA-1 acts JAK-independently (PMID:28874466). Same nematode gap as sta-2 below it, but reached from the *regulator* side: the inherited term regulates a pathway the organism lacks. The fix is an IRD on the nematode branch (the [PTHR10782 FamilyReview](../interpro/panther/PTHR10782/PTHR10782-review.yaml) rates the node `NEEDS_PRUNING`), not removal from the node, since the node also carries the valid fly seed. The sibling IBD on the same node, `GO:0140416` transcription regulator inhibitor activity, is kept but marked over-annotated on GEI-17: worm transcriptional effects are SUMOylation-dependent, not ligase-independent inhibition.
 - **fshr-1 (worm)** — `GO:0009755` (hormone-mediated signaling): *C. elegans* lacks gonadotropins (FSH/LH/TSH); FSHR-1 functions in innate immunity/stress.
 - **HEN1 (Arabidopsis)** — `GO:0034587` (piRNA processing): piRNAs are metazoan; plant HEN1 methylates miRNA/siRNA duplexes. Over-transfer from the metazoan HEN1/HENMT1 context.
 - **Lesson**: check **taxon appropriateness** — does the process even occur in this lineage? GO taxon constraints catch some of these; the WITH/FROM naming a vertebrate/insect source is the tell. Watch especially for organelle-system swaps (plastid↔mitochondrion; cytoplasmic↔axonemal dynein).
@@ -1358,6 +1360,7 @@ and a representative seed) in the corresponding
 | che-3 | worm | Cross-lineage: cilium motility on non-motile sensory cilia (IFT dynein) | MEDIUM | COMPLETE |
 | D7r2/D7r4/D7r5/D7L1 | ANOGA | Cross-function: smell perception on repurposed salivary OBP-fold | MEDIUM | COMPLETE |
 | sta-2, fshr-1 | worm | Cross-kingdom: JAK-STAT / hormone signaling absent in nematodes | MEDIUM | COMPLETE |
+| gei-17 | worm | Lineage gap: neg. reg. of JAK-STAT inherited from PIAS node PTN000845825; no JAK in nematodes (IRD needed) | MEDIUM | DRAFT |
 | opa1, eat-3 | DANRE, worm | Mis-grouping: peroxisome fission on mito-fusion OPA1 | MEDIUM | COMPLETE |
 | hsp-12.3/hsp-12.6 | worm | Pseudo-sHSP: refolding, but "no chaperone-like activity" (PMID:9744800) | HIGH | COMPLETE |
 | YAR1, ACL4 | yeast | Family over-transfer (Rps3 biogenesis factor; Rpl4 chaperone) | LOW | COMPLETE |
