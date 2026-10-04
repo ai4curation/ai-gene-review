@@ -164,6 +164,24 @@ TPV-003 has an ontology prerequisite (re-parenting GO:0007260), recorded in its
 - Other pathways named for a component with a patchy distribution, collected as they
   surface in IBA and family reviews.
 
+## Key literature
+
+Reviews that frame the JAK-STAT case:
+
+- Liongue et al. 2013, *Evolution of the JAK-STAT pathway* (PMID:24058787). Where
+  JAKs and STATs arose; the main source for TPV-003.
+- Wang & Levy 2012, *Comparative evolutionary genomics of the STAT family of
+  transcription factors* (PMID:24058748). STATs across eukaryotes, including amoebae
+  and nematodes.
+- Kawata 2011, *STAT signaling in Dictyostelium development* (PMID:21534947). STAT
+  activation in a lineage without JAK.
+- Taffoni & Pujol 2015, *Mechanisms of innate immunity in C. elegans epidermis*
+  (PMID:26716073). Context for the STA-2 pathway.
+
+Primary evidence of JAK absence: Tanguy et al. 2017 (PMID:28874466) for *C. elegans*;
+Goldberg et al. 2006 (PMID:16596165) and Araki et al. 2012 (PMID:22699506) for
+*Dictyostelium*.
+
 ## Related
 
 - [IBA_REVIEW](IBA_REVIEW.md) — section 14, lineage-inappropriate transfer
