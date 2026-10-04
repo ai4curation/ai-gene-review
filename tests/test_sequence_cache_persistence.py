@@ -130,6 +130,8 @@ def test_cli_does_not_write_save_outputs_on_invalid_data(tmp_path):
     (cache / "P12345.seq").write_text("error503")
     failed = subprocess.run([sys.executable, str(script), "after", *common, "--output", str(output)], capture_output=True)
     assert failed.returncode != 0 and not output.exists()
+    assert b"::warning::Sequence cache saving disabled:" in failed.stdout
+    assert (cache / "P12345.seq").read_text() == "error503"
 
 
 def test_workflow_retains_failure_and_saves_only_valid_growth_before_tests():
@@ -149,5 +151,32 @@ def test_workflow_retains_failure_and_saves_only_valid_growth_before_tests():
     assert steps.index(family) < steps.index(after) < steps.index(save) < steps.index(by_name["Run test suite"])
     restore = by_name["Restore UniProt sequences"]
     assert restore["uses"] == "actions/cache/restore@v6"
+    assert restore["if"] == "github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'"
+    # Cold full passes still snapshot an empty directory and save valid progress.
+    assert "if" not in by_name["Snapshot restored UniProt sequences"]
+    assert "event_name" not in after["if"] and "event_name" not in save["if"]
     assert restore["with"]["path"] == save["with"]["path"] == ".cache/uniprot_seq"
     assert "uniprot-seq-${{ runner.os }}-" in restore["with"]["restore-keys"]
+
+
+@pytest.mark.parametrize("name", ["P12345.seq", "unexpected%file\r\n::error::injected.txt"])
+def test_before_refusal_warns_without_changing_files_or_outputs(tmp_path, name):
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    invalid = cache / name
+    invalid.write_bytes(b"")
+    snapshot = tmp_path / "before.json"
+    output = tmp_path / "output"
+    script = ROOT / ".github/scripts/sequence_cache_manifest.py"
+    failed = subprocess.run([
+        sys.executable, str(script), "before", "--cache-dir", str(cache),
+        "--snapshot", str(snapshot), "--output", str(output),
+    ], capture_output=True, text=True)
+    assert failed.returncode != 0
+    assert not snapshot.exists() and not output.exists()
+    assert list(cache.iterdir()) == [invalid] and invalid.read_bytes() == b""
+    assert failed.stdout.startswith("::warning::Sequence cache saving disabled:")
+    assert len(failed.stdout.splitlines()) == 1
+    assert failed.stderr == ""  # no unescaped filename in a traceback
+    if "%" in name:
+        assert "unexpected%25file%0D%0A::error::injected.txt" in failed.stdout

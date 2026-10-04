@@ -64,4 +64,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (OSError, ValueError) as exc:
+        # Annotation data must not let malformed filenames inject workflow commands.
+        message = str(exc).replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::warning::Sequence cache saving disabled: {message}", flush=True)
+        raise SystemExit(1) from exc
