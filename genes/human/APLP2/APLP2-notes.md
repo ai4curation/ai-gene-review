@@ -13,10 +13,14 @@
 
 ## GOA calls
 - **Protein binding (24 rows):**
-  - APP and APLP1 → MODIFY to cell adhesion molecule binding.
-  - Fe65-family and Mint3 → MODIFY to PTB domain binding.
+  - APP and APLP1 → MODIFY to protein dimerization activity (matching the APLP1 review) plus cell adhesion molecule binding.
+  - Fe65-family → MODIFY to PTB domain binding. Mint3 → REMOVE (review round): the APLP2-Mint3 interface is not mapped.
   - MED12 (abstract-only AICD paper) → UNDECIDED.
   - ITM2B, a reproducible retina IP-MS hit → REMOVE, since there is no informative term (the validator rejects KEEP on bare protein binding).
   - Y2H/AP-MS screen hits → REMOVE.
 - **DNA binding (NAS, homology to mouse CDEBP) and GPCR signaling (NAS, predicted G(o) motif) → MARK_AS_OVER_ANNOTATED.**
 - **Non-core:** nucleus; secretory compartments (ER lumen, platelet alpha granule, exosome); heparin and metal binding IEA; axonogenesis IBA.
+- Review round (PR #4158):
+  - CNS development IBA → KEEP_AS_NON_CORE, consistent with axonogenesis: the phenotypes appear only in APP/APLP2 double knockouts and concern synaptic function.
+  - Identical protein binding added as a core function.
+  - Correctness left unset on PMID:16193067 because its erratum content is unknown.
