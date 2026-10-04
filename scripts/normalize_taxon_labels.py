@@ -49,6 +49,19 @@ LABEL_RE = re.compile(
 )
 
 
+# Flow-style mapping on one line: ``taxon: {id: "NCBITaxon:1", label: Foo}``.
+FLOW_RE = re.compile(
+    r"^taxon:[ \t]*\{[ \t]*id:[ \t]*(?P<q>['\"]?)(?P<id>[^'\",}\s]+)(?P=q)[ \t]*,"
+    r"[ \t]*label:[ \t]*(?P<label>.*?)[ \t]*\}[ \t]*$",
+    re.MULTILINE,
+)
+
+
+def find_flow_taxon(text: str) -> re.Match | None:
+    """Locate a one-line flow-style top-level taxon mapping."""
+    return FLOW_RE.search(text)
+
+
 def yaml_scalar(text: str) -> str:
     """Return a safe single-line YAML plain or quoted scalar for ``text``."""
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 .,/()'_+=-]*[A-Za-z0-9.)']", text) and ": " not in text and " #" not in text:
@@ -156,6 +169,10 @@ def main() -> int:
         if hit:
             _, _, curie, _, label_m = hit
             found.append((path, curie, current_label(label_m)))
+            continue
+        flow = find_flow_taxon(text)
+        if flow:
+            found.append((path, flow.group("id"), flow.group("label").strip("'\"")))
 
     cache_path = Path(args.cache)
     cache = load_cache(cache_path)
@@ -184,6 +201,12 @@ def main() -> int:
         print(f"RELABEL\t{path}\t{curie}\t{old!r} -> {new!r}")
         if args.apply:
             text = path.read_text()
+            flow = None if find_taxon_block(text) else find_flow_taxon(text)
+            if flow:
+                q = flow.group("q") or '"'
+                line = f"taxon: {{id: {q}{flow.group('id')}{q}, label: {json.dumps(new, ensure_ascii=False)}}}"
+                path.write_text(text[: flow.start()] + line + text[flow.end():])
+                continue
             start, end, _, _, label_m = find_taxon_block(text)
             body = text[start:end]
             indent = label_m.group("indent")
