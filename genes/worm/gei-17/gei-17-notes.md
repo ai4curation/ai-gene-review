@@ -108,3 +108,25 @@ SUMOylation by GEI-17 (only Y2H + RNAi). Omission: PIE-1/HDA-1 germline silencin
 - No actions changed.
 
 Cross-gene briefing for GO editors and PAINT curators: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
+
+## OpenScientist: ligase-independent repression via SAP/SIMs? (2026-10-04)
+
+Report: `gei-17-hypotheses/gei17-sap-sim-coregulator/openscientist.md` (neutral framing; the
+review's MARK_AS_OVER_ANNOTATED on GO:0140416 was withheld from the run).
+
+- Verdict: refuted as a mechanism for GO:0140416; the over-annotation call stands.
+- Checked against repo data before wiring: GEI-17's UniProt entry lists PINIT and the SP-RING
+  zinc finger but no SAP domain; human PIAS1's lists IPR003034 SAP_dom and PS50800.
+- Human PIAS1 ligase-independent inhibition is SAP-independent [PMID:24036127 "PIAS1 with a
+  mutation in the SAP domain retained the inhibitory function in virus-induced IFN
+  transcription"] and ligase-independent [PMID:24036127 "SUMO E3 ligase activity dead mutant
+  PIAS1/C350S still had the comparable inhibitory function with WT PIAS1"]; for PIASy and Oct4
+  [PMID:17991485 "These modes of PIASy action are uncoupled from its sumoylation activity"].
+- Worm repression is ligase-dependent [PMID:40316696 "isolated the SUMO E3 ligase GEI-17 as
+  inhibiting and the SUMO protease TOFU-3 as promoting piRNA transcription foci formation"].
+- From the run, not re-derived: a cryptic SAP-like fold may remain in the N-terminus (AlphaFold),
+  but the DNA-binding helix is not conserved. This resolves the Palvimo 2007 caveat recorded
+  earlier: RING-independent co-regulation by PIAS proteins does not run through the SAP domain.
+- Lead, not acted on: GEI-17's repression of piRNA transcription could be captured as a process
+  term downstream of its ligase activity (PMID:40316696, abstract only). Decisive experiment: a
+  ligase-dead GEI-17 rescue in the piRNA transcription assay.

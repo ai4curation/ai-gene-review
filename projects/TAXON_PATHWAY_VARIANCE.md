@@ -176,8 +176,9 @@ TPV-003 has an ontology prerequisite (re-parenting GO:0007260), recorded in its
 - [x] sta-2 OpenScientist result wired in: STAT DNA-binding-domain fold kept, sequence-reading
   features not; GO:0000978 marked over-annotated, DNA-binding TF terms generalised to
   GO:0140110 transcription regulator activity.
-- [ ] Wire in the OpenScientist result for gei-17 (does it keep the SAP domain and SIMs that let PIAS
-  proteins repress independently of the ligase?).
+- [x] gei-17 OpenScientist result wired in: no detectable SAP domain, human PIAS1's
+  ligase-independent inhibition is SAP-independent, and worm repression is ligase-dependent;
+  GO:0140416 stays marked over-annotated with stronger support.
 
 ## Candidate cases to scope next
 
