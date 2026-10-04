@@ -13,6 +13,11 @@ genes:
   - statA
   - statC
   - JAK1
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
+      title: Brief for GO and PAINT
+      description: AI generated
 ---
 
 # Taxon Pathway Variance
