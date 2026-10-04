@@ -2988,14 +2988,14 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**220 of 2,876 genes are complete; 2,656 remain.** This update adds
-CACNA1F, CAMK2A, CA2 and CAMTA1, four verified gene completions beyond checkpoint 216.
-The 221 original gene PR merges include AKR1D1, whose required source follow-up
+**222 of 2,876 genes are complete; 2,654 remain.** This update adds
+CANT1 and CAPN3, two verified gene completions beyond checkpoint 220.
+The 223 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
-Completion evidence cutoff: **2026-10-04 08:47:19 UTC**. See the
-[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-220)
+Completion evidence cutoff: **2026-10-04 11:36:42 UTC**. See the
+[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-222)
 for the verified merge and retained biological uncertainty. See also the
-[checkpoint 220 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T090853Z-codex-9e7abf.yaml).
+[checkpoint 222 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T120639Z-codex-9a92c4.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3306,8 +3306,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CALM3** — HGNC:1449; [catecholaminergic polymorphic ventricular tachycardia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b7fc965-a109-4448-94a0-00a9b078b484-2021-06-17T160000.000Z) (MONDO:0017990; AD; Moderate); [long QT syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3cc2a1ae-5f3d-445c-b124-f3d38fdd070a-2018-09-25T160000.000Z) (MONDO:0002442; AD; Definitive).
 - [x] **CAMK2A** — HGNC:1460; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82e77410-49d7-41b8-a5b8-278afac7dc26-2024-10-15T100000.000Z) (MONDO:0100038; AD; Definitive).
 - [x] **CAMTA1** — HGNC:18806; [cerebellar dysfunction with variable cognitive and behavioral abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c099ca83-11be-4d06-b8d7-f2cd8efca1a5-2023-05-16T060000.000Z) (MONDO:0013886; AD; Definitive).
-- [ ] **CANT1** — HGNC:19721; [Desbuquois dysplasia 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_30c64852-60e0-44ce-bf10-cf7af11b1fa9-2024-11-20T050000.000Z) (MONDO:0009629; AR; Definitive).
-- [ ] **CAPN3** — HGNC:1480; [autosomal recessive limb-girdle muscular dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86925075-3fea-401c-90b3-6b40b2b045ca-2024-08-29T190000.000Z) (MONDO:0015152; AR; Definitive); [muscular dystrophy, limb-girdle, autosomal dominant](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6c9eee52-920c-47e4-99f9-a5afb97d49f2-2025-05-13T160000.000Z) (MONDO:0015151; AD; Definitive).
+- [x] **CANT1** — HGNC:19721; [Desbuquois dysplasia 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_30c64852-60e0-44ce-bf10-cf7af11b1fa9-2024-11-20T050000.000Z) (MONDO:0009629; AR; Definitive).
+- [x] **CAPN3** — HGNC:1480; [autosomal recessive limb-girdle muscular dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86925075-3fea-401c-90b3-6b40b2b045ca-2024-08-29T190000.000Z) (MONDO:0015152; AR; Definitive); [muscular dystrophy, limb-girdle, autosomal dominant](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6c9eee52-920c-47e4-99f9-a5afb97d49f2-2025-05-13T160000.000Z) (MONDO:0015151; AD; Definitive).
 - [ ] **CAPN5** — HGNC:1482; [CAPN5-related vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7d39e430-b1fc-43f1-957b-1c02eb66a69c-2021-08-05T160000.000Z) (MONDO:0100450; AD; Definitive).
 - [ ] **CARD11** — HGNC:16393; [BENTA disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_23dd1a19-585b-46bb-9241-682b200bfd7d-2022-03-15T131318.170Z) (MONDO:0014645; AD; Definitive); [immunodeficiency 11b with atopic dermatitis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_603e8c98-82b7-41b5-8174-1fdbfc724a7d-2022-03-15T131220.080Z) (MONDO:0054697; AD; Definitive); [severe combined immunodeficiency due to CARD11 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3ce06b6f-cf7f-43f3-bf9c-5d3978f1db61-2022-03-15T131409.712Z) (MONDO:0014081; AR; Definitive).
 - [ ] **CARMIL2** — HGNC:27089; [severe combined immunodeficiency due to CARMIL2 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0055cbc0-64df-4f38-9074-495f4ac74e1c-2024-03-12T160000.000Z) (MONDO:0029134; AR; Definitive).
