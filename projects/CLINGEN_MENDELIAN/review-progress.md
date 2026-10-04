@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-04 11:36:42 UTC
+## Campaign status — completion evidence through 2026-10-04 12:47:21 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -293,6 +293,8 @@ are therefore expected; existing human reviews still link normally.
 | CAMTA1 | Definitive | INITIALIZED normal seed | PR #4049 merged at 2026-10-04 08:47:19 UTC; final-head approval and CI success verified; 12 exact changed paths verified at the merge commit. Biological COMPLETE retains 10 source assertions, 2 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-camta1` | [#4049](https://github.com/ai4curation/ai-gene-review/pull/4049) |
 | CANT1 | Definitive | INITIALIZED normal seed | PR #4071 merged at 2026-10-04 10:34:22 UTC; final-head approval and CI success verified; 13 exact changed paths verified at the merge commit. Biological DRAFT retains 37 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-cant1` | [#4071](https://github.com/ai4curation/ai-gene-review/pull/4071) |
 | CAPN3 | Definitive | INITIALIZED normal seed | PR #4093 merged at 2026-10-04 11:36:42 UTC; final-head approval and CI success verified; 25 exact changed paths verified at the merge commit. Biological DRAFT retains 96 source assertions, 16 UNDECIDED assessments and 2 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-capn3` | [#4093](https://github.com/ai4curation/ai-gene-review/pull/4093) |
+| CAPN5 | Definitive | INITIALIZED normal seed | PR #4099 merged at 2026-10-04 12:13:23 UTC; final-head approval and CI success verified; 16 exact changed paths verified at the merge commit. Biological DRAFT retains 14 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-capn5` | [#4099](https://github.com/ai4curation/ai-gene-review/pull/4099) |
+| CARD11 | Definitive | INITIALIZED normal seed | PR #4116 merged at 2026-10-04 12:47:21 UTC; final-head approval and CI success verified; 20 exact changed paths verified at the merge commit. Biological DRAFT retains 88 source assertions, 3 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-card11` | [#4116](https://github.com/ai4curation/ai-gene-review/pull/4116) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -304,8 +306,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **222 of 2,876 genes
-are complete**; 223 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **224 of 2,876 genes
+are complete**; 225 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -415,6 +417,21 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
 
+
+### Evidence scope for completion 224
+
+[Checkpoint 224 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T130936Z-codex-a08be8.yaml).
+
+The fixed **2026-10-04 12:47:21 UTC** cutoff adds **CAPN5 and CARD11** to published checkpoint 222: **224 complete / 2,652 remaining**, with 225 original gene PR merges. AKR1D1 remains excluded pending its required source follow-up. Tracker, generated-page and source-workflow PRs add no gene completions. Other pending gene reviews contribute no completion in this checkpoint.
+
+| Gene | Verified merge | Exact changed paths verified at merge | Biological assessment retained |
+|---|---|---|---|
+| CAPN5 | [`33a9b5b4b20c`](https://github.com/ai4curation/ai-gene-review/commit/33a9b5b4b20cc7907b845f3fa2720d82cc88af1b), 2026-10-04 12:13:23 UTC | 16; every path/blob pair is in the queue | Biological DRAFT retains 14 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. |
+| CARD11 | [`47548efbbc18`](https://github.com/ai4curation/ai-gene-review/commit/47548efbbc186b23b745125e3611b16e511c9c5f), 2026-10-04 12:47:21 UTC | 20; every path/blob pair is in the queue | Biological DRAFT retains 88 source assertions, 3 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. |
+
+Both final PR heads have verified approval and successful required checks. Signed merge records match **36 changed path/blob pairs**. This is the checked merge scope, not a new audit of reused sources outside those diffs. Both merged biological states remain **DRAFT**, retaining **102 source assertions and 7 UNDECIDED assessments**, with no NEW assertions. Both reviews began with normal initialized seeds. Campaign completion records the finished review and verified publication, without implying that every biological assertion is certain. All **217 existing `genes[]` queue entries** are preserved, followed by these two entries; that entry count is distinct from the 222 completed-gene baseline. All 2,876 inventory rows and association text, prior dated records, the fixed checkpoint 222 cutoff and history, and the checkpoint 95 audit/import boundary remain intact.
+
+[Published checkpoint 222 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T120639Z-codex-9a92c4.yaml).
 
 ### Evidence scope for completion 222
 
@@ -1095,3 +1112,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-04 08:47:19 UTC fixed completion cutoff: CACNA1F #4024, CAMK2A #4043, CA2 #4042, CAMTA1 #4049 advance checkpoint 216 → 220 complete, 221 original gene merges and 2,656 remaining. Signed merge identities and 100 changed-path blobs are verified with final-head approval and required-check success. Preserve 211 prior queue entries, all 2,876 inventory associations, two DRAFT and two COMPLETE biological review states, 294 source assertions and 21 UNDECIDED assessments; no NEW assertions are introduced. AKR1D1 remains excluded pending its required source follow-up. Other pending work contributes no completion at this cutoff.
 
 - 2026-10-04 11:36:42 UTC fixed completion cutoff: CANT1 #4071 and CAPN3 #4093 advance checkpoint 220 → 222 complete, 223 original gene merges and 2,654 remaining. Signed merge identities and 38 changed-path blobs are verified with final-head approval and required-check success. Preserve 215 prior queue entries, all 2,876 inventory associations, two DRAFT biological review states, 133 source assertions and 20 UNDECIDED assessments; no NEW assertions are introduced. AKR1D1 remains excluded pending its required source follow-up. Other pending work contributes no completion at this cutoff.
+
+- 2026-10-04 12:47:21 UTC fixed completion cutoff: CAPN5 #4099 and CARD11 #4116 advance checkpoint 222 → 224 complete, 225 original gene merges and 2,652 remaining. Signed merge identities and 36 changed-path blobs are verified with final-head approval and required-check success. Preserve 217 prior queue entries, all 2,876 inventory associations, two DRAFT biological review states, 102 source assertions and 7 UNDECIDED assessments; no NEW assertions are introduced. AKR1D1 remains excluded pending its required source follow-up. Other pending work contributes no completion at this cutoff.
