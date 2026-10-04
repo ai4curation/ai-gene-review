@@ -16,3 +16,8 @@
 - KEEP_AS_NON_CORE: directional locomotion. Arpin steers persistence; the negative regulation of migration row covers the core.
 - REMOVE: 3 generic protein-binding rows.
 - NEW: Arp2/3 complex binding (IDA, cryo-EM, PMID:35110533), the core MF.
+
+## 2026-10-04 review round (PR #4205)
+
+- GO:0051126 rows changed to GO:0034316. The comparators GMFG, GMFB and PICK1 carry GO:0034316.
+- In endothelium, Arpin acts independently of Arp2/3 [PMID:39298260 "Arpin depletion in Human Umbilical Vein Endothelial Cells causes the formation of actomyosin stress fibers leading to increased permeability in an Arp2/3-independent manner."].
