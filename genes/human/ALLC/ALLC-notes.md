@@ -20,3 +20,9 @@ Decisions:
 - **Corrected the species range.** Plants use allantoate amidohydrolase rather than allantoicase. The pathway was lost in amniotes, not in all vertebrates.
 - **Added protein-level evidence:** PE 1 / proteomics. Also cited PANTHER's independent "INACTIVE ALLANTOICASE-RELATED" subfamily (PTHR12045:SF3).
 - **Fixed a misused quote.** The affinage support quote now cites the record's own "no mechanism known for the human protein" sentence.
+
+## Round 2 (PR #3984 review)
+
+- **Withdrew the PTHR12045:SF3 citation added in round 1.** All 41 family members are in SF3, including active amphibian allantoicases, so the subfamily is not discriminating.
+- **Replaced it with the PAINT placement.** In `interpro/panther/PTHR12045/PTHR12045-paint.tsv`, PAINT puts both GO:0004037 and GO:0000256 at node PTN001738928, taxon:4751 (Fungi), so human ALLC receives no IBA for either term.
+- **Split the affinage findings** so that each statement matches its quote.
