@@ -24,3 +24,9 @@
   - Nucleus/DSB (nuclear actin is ARPC5L-type in T cells).
   - Focal adhesion, neutrophil granule/extracellular rows, exosome.
 - REMOVE: ARPC4 protein binding (intra-complex; policy).
+
+## 2026-10-04 review round (PR #4204)
+
+- The ARPC5/ARPC5L split in nuclear actin depends on the stimulus, not the compartment [PMID:37162507 "Interestingly, nuclear actin polymerization triggered by a different stimulus, DNA replication stress, specifically requires ARPC5 but not ARPC5L."]. Nucleus rows are now ACCEPT; the DSB-site ISS row is non-core because the isoform at breaks is untested.
+- Autoinhibitory tail: [PMID:40042350 "The structures reveal that NPF binding to Arp2 is allosterically linked to the release of ArpC5's N-terminal tail from Arp2 ..."].
+- PMID:22447776 (mouse Arpc5 as a germ-cell translational suppressor) is set aside. It is a single mouse study of a non-cytoskeletal role in spermatids, it has no human data, and it has no GOA row. It is recorded as LOW relevance.
