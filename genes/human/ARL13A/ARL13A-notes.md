@@ -11,3 +11,9 @@
   - Process IBAs (non-motile cilium assembly, receptor localization to non-motile cilium) → UNDECIDED (paralog transfer, untested), with propagation root cause UNRESOLVED.
   - GTP binding → ACCEPT; GTPase activity → UNDECIDED.
 - WHOLLY_DARK gap.
+- Review round (PR #4174):
+  - Motile cilium (IBA) → MODIFY to GO:0005929 cilium (TERM_SCOPING_PROBLEM): nothing shows motility.
+  - Ciliary membrane (IBA) → UNDECIDED: membrane association untested.
+  - Non-motile cilium (IBA) and 9+0 cilium (IEA) → non-core, each with its own reasoning.
+  - The gap boundary now says "not directly measured for ARL13A".
+  - Overexpressed zebrafish Arl13a also marks spindle and midbody microtubules; noted in the description.
