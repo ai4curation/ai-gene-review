@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-04 07:13:11 UTC
+## Campaign status — completion evidence through 2026-10-04 08:47:19 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -287,6 +287,10 @@ are therefore expected; existing human reviews still link normally.
 | CALM3 | Definitive | Existing review | PR #4016 merged at 2026-10-04 07:07:22 UTC; final-head approval and CI success verified; 12 exact changed paths verified at the merge commit. Biological DRAFT retains 115 source assertions, 10 UNDECIDED assessments and 5 core functions. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-calm3` | [#4016](https://github.com/ai4curation/ai-gene-review/pull/4016) |
 | CACNA2D4 | Definitive | INITIALIZED normal seed | PR #4022 merged at 2026-10-04 07:08:57 UTC; final-head approval and CI success verified; 11 exact changed paths verified at the merge commit. Biological COMPLETE retains 7 source assertions plus 1 NEW assertion, 1 UNDECIDED assessment and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-cacna2d4` | [#4022](https://github.com/ai4curation/ai-gene-review/pull/4022) |
 | CACNA1C | Definitive | INITIALIZED normal seed | PR #3948 merged at 2026-10-04 07:13:11 UTC; final-head approval and CI success verified; 36 exact changed paths verified at the merge commit. Biological DRAFT retains 136 source assertions, 8 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-cacna1c` | [#3948](https://github.com/ai4curation/ai-gene-review/pull/3948) |
+| CACNA1F | Definitive | INITIALIZED normal seed | PR #4024 merged at 2026-10-04 07:22:48 UTC; final-head approval and CI success verified; 15 exact changed paths verified at the merge commit. Biological COMPLETE retains 24 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-cacna1f` | [#4024](https://github.com/ai4curation/ai-gene-review/pull/4024) |
+| CAMK2A | Definitive | Existing review | PR #4043 merged at 2026-10-04 08:21:48 UTC; final-head approval and CI success verified; 5 exact changed paths verified at the merge commit. Biological DRAFT retains 171 source assertions, 11 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-camk2a` | [#4043](https://github.com/ai4curation/ai-gene-review/pull/4043) |
+| CA2 | Definitive | INITIALIZED normal seed | PR #4042 merged at 2026-10-04 08:23:31 UTC; final-head approval and CI success verified; 68 exact changed paths verified at the merge commit. Biological DRAFT retains 89 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-ca2` | [#4042](https://github.com/ai4curation/ai-gene-review/pull/4042) |
+| CAMTA1 | Definitive | INITIALIZED normal seed | PR #4049 merged at 2026-10-04 08:47:19 UTC; final-head approval and CI success verified; 12 exact changed paths verified at the merge commit. Biological COMPLETE retains 10 source assertions, 2 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. | `cmungall/clingen-camta1` | [#4049](https://github.com/ai4curation/ai-gene-review/pull/4049) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -298,8 +302,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **216 of 2,876 genes
-are complete**; 217 original gene PRs have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **220 of 2,876 genes
+are complete**; 221 original gene PRs have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -409,6 +413,23 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
 
+
+### Evidence scope for completion 220
+
+[Checkpoint 220 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T090853Z-codex-9e7abf.yaml).
+
+The fixed **2026-10-04 08:47:19 UTC** cutoff adds **CACNA1F, CAMK2A, CA2 and CAMTA1** to published checkpoint 216: **220 complete / 2,656 remaining**, with 221 original gene PR merges. AKR1D1 remains excluded pending its required source follow-up. Tracker, generated-page and source-workflow PRs add no gene completions. Other pending gene reviews contribute no completion in this checkpoint.
+
+| Gene | Verified merge | Exact changed paths verified at merge | Biological assessment retained |
+|---|---|---|---|
+| CACNA1F | [`7f72807cfe3b`](https://github.com/ai4curation/ai-gene-review/commit/7f72807cfe3b7406ed4a90ed55ca7a1d9e9ff3e3), 2026-10-04 07:22:48 UTC | 15; every path/blob pair is in the queue | Biological COMPLETE retains 24 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. |
+| CAMK2A | [`ab4c372c9a04`](https://github.com/ai4curation/ai-gene-review/commit/ab4c372c9a04f5700ab9a6da9ad36b4d599661dc), 2026-10-04 08:21:48 UTC | 5; every path/blob pair is in the queue | Biological DRAFT retains 171 source assertions, 11 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. |
+| CA2 | [`798fb7343e8f`](https://github.com/ai4curation/ai-gene-review/commit/798fb7343e8f3fa8708c7d483d72d4559d2a33d8), 2026-10-04 08:23:31 UTC | 68; every path/blob pair is in the queue | Biological DRAFT retains 89 source assertions, 4 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. |
+| CAMTA1 | [`938e8bc2b648`](https://github.com/ai4curation/ai-gene-review/commit/938e8bc2b64862ff2d337c38c044695a7cf281c8), 2026-10-04 08:47:19 UTC | 12; every path/blob pair is in the queue | Biological COMPLETE retains 10 source assertions, 2 UNDECIDED assessments and 1 core function. Campaign completion preserves the merged biological assessment and its evidence limits. |
+
+All four final PR heads have verified approval and successful required checks. Signed merge records match **100 changed path/blob pairs**. This is the checked merge scope, not a new audit of reused sources outside those diffs. The merged biological states remain **two DRAFT and two COMPLETE**, retaining **294 source assertions and 21 UNDECIDED assessments**, with no NEW assertions. CAMK2A updates an existing review; the other three reviews began with normal initialized seeds. Campaign completion records the finished review and verified publication, without implying that every biological assertion is certain. All **211 existing `genes[]` queue entries** are preserved, followed by these four entries; that entry count is distinct from the 216 completed-gene baseline. All 2,876 inventory rows and association text, prior dated records, the fixed checkpoint 216 cutoff and history, and the checkpoint 95 audit/import boundary remain intact.
+
+[Published checkpoint 216 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T072125Z-codex-7b57bd.yaml).
 
 ### Evidence scope for completion 216
 
@@ -1053,3 +1074,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-03 18:25:30 UTC fixed completion cutoff: C3 #3925 and C9orf72 #3927 advance checkpoint 201 → 203 complete, 204 original gene merges and 2,673 remaining. Signed merge identities and 90 changed-path blobs are verified with final-head approval and required-check success. Preserve 196 prior queue entries, all 2,876 inventory associations, both biological DRAFT statuses and 32 UNDECIDED assessments. CA5A, CA8 and other pending work contribute no completion. The prior checkpoint 201 history cross-link is now explicit.
 
 - 2026-10-04 07:13:11 UTC fixed completion cutoff: CA5A #3928, CA8 #3929, CABP2 #3938, CACNA1B #3947, CACNA1D #3949, CAD #3980, CALM1 #3989, CACNA1E #4020, CACNA1G #4011, CALM2 #4018, CALM3 #4016, CACNA2D4 #4022, CACNA1C #3948 advance checkpoint 203 → 216 complete, 217 original gene merges and 2,660 remaining. Signed merge identities and 181 changed-path blobs are verified with final-head approval and required-check success. Preserve 198 prior queue entries, all 2,876 inventory associations, ten DRAFT and three COMPLETE biological review states, 60 UNDECIDED assessments and CA8’s two and CACNA2D4’s one NEW assertions. AKR1D1 remains excluded pending its required source follow-up. Other pending work contributes no completion at this cutoff.
+
+- 2026-10-04 08:47:19 UTC fixed completion cutoff: CACNA1F #4024, CAMK2A #4043, CA2 #4042, CAMTA1 #4049 advance checkpoint 216 → 220 complete, 221 original gene merges and 2,656 remaining. Signed merge identities and 100 changed-path blobs are verified with final-head approval and required-check success. Preserve 211 prior queue entries, all 2,876 inventory associations, two DRAFT and two COMPLETE biological review states, 294 source assertions and 21 UNDECIDED assessments; no NEW assertions are introduced. AKR1D1 remains excluded pending its required source follow-up. Other pending work contributes no completion at this cutoff.

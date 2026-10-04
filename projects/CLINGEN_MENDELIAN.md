@@ -2988,15 +2988,14 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**216 of 2,876 genes are complete; 2,660 remain.** This update adds
-CA5A, CA8, CABP2, CACNA1B, CACNA1D, CAD, CALM1, CACNA1E, CACNA1G, CALM2, CALM3, CACNA2D4 and CACNA1C,
-thirteen verified gene completions beyond checkpoint 203.
-The 217 original gene PR merges include AKR1D1, whose required source follow-up
+**220 of 2,876 genes are complete; 2,656 remain.** This update adds
+CACNA1F, CAMK2A, CA2 and CAMTA1, four verified gene completions beyond checkpoint 216.
+The 221 original gene PR merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
-Completion evidence cutoff: **2026-10-04 07:13:11 UTC**. See the
-[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-216)
+Completion evidence cutoff: **2026-10-04 08:47:19 UTC**. See the
+[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-220)
 for the verified merge and retained biological uncertainty. See also the
-[checkpoint 216 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T072125Z-codex-7b57bd.yaml).
+[checkpoint 220 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T090853Z-codex-9e7abf.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3292,21 +3291,21 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **C2CD3** — HGNC:24564; [orofaciodigital syndrome type 14](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ca993ab8-029f-46f6-9fc5-ffc1f54cb120-2023-05-24T160000.000Z) (MONDO:0014413; AR; Definitive).
 - [x] **C3** — HGNC:1318; [C3 glomerulonephritis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e000b88-9487-46a6-830a-7a613152853d-2024-03-29T160000.000Z) (MONDO:0013892; AD; Moderate); [atypical hemolytic-uremic syndrome with C3 anomaly](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_78a4d83e-8fb0-4b47-9dfc-5dfe618e1aa3-2023-09-29T160000.000Z) (MONDO:0013043; AD; Definitive).
 - [x] **C9orf72** — HGNC:28337; [frontotemporal dementia and/or amyotrophic lateral sclerosis 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_afd5a267-72c8-4a04-8404-4c819efe61c5-2021-09-21T030209.665Z) (MONDO:0007105; AD; Definitive).
-- [ ] **CA2** — HGNC:1373; [autosomal recessive osteopetrosis 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_55a34937-7d48-45b0-a6c8-8d799f0d5934-2024-06-10T160000.000Z) (MONDO:0009818; AR; Definitive).
+- [x] **CA2** — HGNC:1373; [autosomal recessive osteopetrosis 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_55a34937-7d48-45b0-a6c8-8d799f0d5934-2024-06-10T160000.000Z) (MONDO:0009818; AR; Definitive).
 - [x] **CA5A** — HGNC:1377; [hyperammonemic encephalopathy due to carbonic anhydrase VA deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f7c5731a-866e-4a96-abb0-f0747f89280b-2018-09-10T160000.000Z) (MONDO:0014332; AR; Definitive).
 - [x] **CABP2** — HGNC:1385; [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_20de88d2-6681-4522-9e11-26cdf66a2c15-2020-02-06T170000.000Z) (MONDO:0019497; AR; Definitive).
 - [x] **CACNA1C** — HGNC:1390; [Timothy syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a1fc2dfc-d200-40d0-9cd6-421276578e6e-2023-04-14T020000.000Z) (MONDO:0010979; AD; Definitive); [long QT syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c496551d-c7a7-4e49-ad41-8cfd49840dc1-2020-04-24T040000.000Z) (MONDO:0002442; AD; Moderate).
 - [x] **CACNA1D** — HGNC:1391; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9eb44537-f403-45ce-b89e-83363918f986-2024-09-04T160000.000Z) (MONDO:0100038; AD; Definitive); [sinoatrial node dysfunction and deafness](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8249f2c1-ff59-4ea2-8e7e-11256c73433e-2024-04-17T160000.000Z) (MONDO:0013960; AR; Moderate).
 - [x] **CACNA1E** — HGNC:1392; [genetic developmental and epileptic encephalopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0cf0db0a-4af2-4e60-ab64-ce0115241caf-2023-12-06T200000.000Z) (MONDO:0100062; AD; Definitive).
-- [ ] **CACNA1F** — HGNC:1393; [CACNA1F-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7800cd0-11d8-4e50-85f0-04574c8798f4-2023-01-05T170000.000Z) (MONDO:0700243; XL; Definitive).
+- [x] **CACNA1F** — HGNC:1393; [CACNA1F-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7800cd0-11d8-4e50-85f0-04574c8798f4-2023-01-05T170000.000Z) (MONDO:0700243; XL; Definitive).
 - [x] **CACNA1G** — HGNC:1394; [spinocerebellar ataxia type 42](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b5e57bac-5985-4f39-a35e-ae2f3db0a5bf-2024-12-04T170000.000Z) (MONDO:0014776; AD; Definitive).
 - [x] **CACNA2D4** — HGNC:20202; [CACNA2D4-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f413ef18-b8cf-44c3-abde-b7533e1dd54f-2023-03-02T170000.000Z) (MONDO:0700244; AR; Definitive).
 - [x] **CAD** — HGNC:1424; [developmental and epileptic encephalopathy, 50](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e4a828c0-e00b-4756-aec7-b83e529ec8e4-2024-04-03T160000.000Z) (MONDO:0014647; AR; Definitive).
 - [x] **CALM1** — HGNC:1442; [catecholaminergic polymorphic ventricular tachycardia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1ca1d8df-10fa-48ef-aea4-fb4dc6564dd0-2021-06-17T160000.000Z) (MONDO:0017990; AD; Moderate); [long QT syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4a150cd9-e16b-4992-8cc7-5ccec44b4d6b-2018-09-25T160000.000Z) (MONDO:0002442; AD; Definitive).
 - [x] **CALM2** — HGNC:1445; [catecholaminergic polymorphic ventricular tachycardia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_42d280da-accc-46f2-8832-47d5a3eeeba7-2021-06-17T160000.000Z) (MONDO:0017990; AD; Moderate); [long QT syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86e4b783-3b60-4a1d-ab34-e61d27751ca6-2018-09-25T160000.000Z) (MONDO:0002442; AD; Definitive).
 - [x] **CALM3** — HGNC:1449; [catecholaminergic polymorphic ventricular tachycardia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1b7fc965-a109-4448-94a0-00a9b078b484-2021-06-17T160000.000Z) (MONDO:0017990; AD; Moderate); [long QT syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3cc2a1ae-5f3d-445c-b124-f3d38fdd070a-2018-09-25T160000.000Z) (MONDO:0002442; AD; Definitive).
-- [ ] **CAMK2A** — HGNC:1460; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82e77410-49d7-41b8-a5b8-278afac7dc26-2024-10-15T100000.000Z) (MONDO:0100038; AD; Definitive).
-- [ ] **CAMTA1** — HGNC:18806; [cerebellar dysfunction with variable cognitive and behavioral abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c099ca83-11be-4d06-b8d7-f2cd8efca1a5-2023-05-16T060000.000Z) (MONDO:0013886; AD; Definitive).
+- [x] **CAMK2A** — HGNC:1460; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_82e77410-49d7-41b8-a5b8-278afac7dc26-2024-10-15T100000.000Z) (MONDO:0100038; AD; Definitive).
+- [x] **CAMTA1** — HGNC:18806; [cerebellar dysfunction with variable cognitive and behavioral abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c099ca83-11be-4d06-b8d7-f2cd8efca1a5-2023-05-16T060000.000Z) (MONDO:0013886; AD; Definitive).
 - [ ] **CANT1** — HGNC:19721; [Desbuquois dysplasia 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_30c64852-60e0-44ce-bf10-cf7af11b1fa9-2024-11-20T050000.000Z) (MONDO:0009629; AR; Definitive).
 - [ ] **CAPN3** — HGNC:1480; [autosomal recessive limb-girdle muscular dystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_86925075-3fea-401c-90b3-6b40b2b045ca-2024-08-29T190000.000Z) (MONDO:0015152; AR; Definitive); [muscular dystrophy, limb-girdle, autosomal dominant](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6c9eee52-920c-47e4-99f9-a5afb97d49f2-2025-05-13T160000.000Z) (MONDO:0015151; AD; Definitive).
 - [ ] **CAPN5** — HGNC:1482; [CAPN5-related vitreoretinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7d39e430-b1fc-43f1-957b-1c02eb66a69c-2021-08-05T160000.000Z) (MONDO:0100450; AD; Definitive).
