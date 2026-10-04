@@ -11,3 +11,7 @@
   - Not in OpenCell.
 - Disease: biallelic loss-of-function variants cause recessive dystonia [PMID:34596301]; many later case series.
 - The GWAS hits (atrial fibrillation, PCOS) are not used.
+- Review round (PR #4153):
+  - UniProt also asserts aminopeptidase function by similarity to ANPEP (P15144).
+  - A motif scan (AOPEP-bioinformatics/gxmen_motif.py) shows AOPEP lacks the M1 GXMEN exopeptidase motif. ANPEP (GAMEN), LTA4H and RNPEP (GGMEN) each have it 27-36 residues upstream of HEXXH. This is the sequence argument for leaving metalloaminopeptidase activity UNDECIDED.
+  - Isoforms 2 and 4 (VSP_013161, residues 455-553 missing) lack the whole catalytic site.
