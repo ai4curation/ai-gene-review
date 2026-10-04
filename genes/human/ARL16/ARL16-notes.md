@@ -17,3 +17,10 @@
 - **NEW:**
   - Negative regulation of RIG-I signaling pathway (IMP, human).
   - Protein localization to cilium (ISO from mouse Arl16, MGI:1917567).
+
+## Review round 1 (PR #4178)
+- NEW ciliary basal body (IDA, PMID:35196065), from the photoreceptor centrin 3 co-staining; UniProt records this location but GOA lacks it. Added as a core-function location.
+- GTP binding now quotes the radiolabelled-GTP binding assay and the T37N / delta45-54 GTP-free mutants (PMID:21233210).
+- Cytoplasm rows now quote only the diffuse cytosolic staining.
+- Mitochondrion row notes the authors' attribution to a longer ARL16 variant.
+- ISO donor MGI:1917567 verified as mouse Arl16 (UniProt B1ATY8).
