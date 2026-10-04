@@ -29,3 +29,8 @@
   - Per-aspect reasons for the BP rows.
   - Core locations.
   - Stronger structural anchors (PMID:21307936, PMID:27601667).
+
+## 2026-10-04 correction
+
+- **Correction to round 2:** I wrote that GO:0160072 "follows the in-repo convention for APC/C scaffold subunits: nuc2/APC1 (also platform)". That is wrong. S. pombe nuc2 is APC3, a TPR subunit, and the S. pombe APC1 ortholog is cut4, which has no review here. Every current GO:0160072 holder among APC/C subunits is a TPR subunit (CDC27, CDC16, cut9, nuc2) or the cullin (ANAPC2). ANAPC5 and ANAPC4 are the first platform subunits to carry it.
+  - This is an extension of the convention, not a precedent. It is justified by the structure: the platform positions the catalytic module relative to the TPR lobe that recruits the coactivator (PMID:21307936, PMID:27601667). The curated YAML never made the nuc2 claim.
