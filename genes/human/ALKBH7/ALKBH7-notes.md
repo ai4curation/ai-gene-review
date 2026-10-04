@@ -15,3 +15,9 @@ Other decisions:
 - **Accepted:** dioxygenase (IBA, IEA), RNA and tRNA demethylase, RNA demethylation, mitochondrion and matrix rows.
 - **Kept as non-core:** DNA damage response, necrosis-associated membrane permeability, and the mouse lipid/fatty-acid rows.
 - **Five generic protein-binding rows** (HuRI, CFTR screen): REMOVE.
+
+## Round 1 (PR #3979 review)
+
+- **Removed a false claim.** I had written "No study places human ALKBH7 in the nucleus". PMID:17979886 reported tagged ALKBH7 in nucleus and cytoplasm. UniProt's CAUTION adjudicates that report as an N-terminal-tag artifact superseded by PMID:23666923. The IBA removals now cite both.
+- **Machine-readable provenance.** propagation_review now has source_entities: the node, the yeast donor, and the trypanosome member on the nucleus row only (the chromatin row's with/from lacks Q383D9).
+- **Corrected the InterPro premise.** IPR032870 is "ALKBH7-like", an ALKBH7-specific entry rather than the AlkB family signature, and the DNA damage response IEA reason now says so.
