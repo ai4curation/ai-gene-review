@@ -58,3 +58,7 @@ locations), references (added the zebrafish and human uniprot.txt files with
 findings; reference_review on PMID:20082716 verified against the cached title),
 suggested questions/experiments (phosphatase activity, clathrin binding, dnajc6 loss
 in zebrafish). Validation ends with zero errors and no warnings.
+
+### Follow-up after PR review (2026-10-04)
+
+core_functions now names ATPase activator activity (GO:0001671) as the molecular function instead of Hsp70 protein binding (GO:0030544), matching the core-function prose (auxilin recruits Hsc70 and stimulates its ATPase) and the guidance to prefer an informative activity over a binding term; the binding row remains in existing_annotations as the mechanistic basis. clathrin-dependent endocytosis (GO:0072583) was dropped from directly_involved_in because clathrin coat disassembly (GO:0072318), which remains, is the precise step auxilin performs and the broader term is its ancestor.

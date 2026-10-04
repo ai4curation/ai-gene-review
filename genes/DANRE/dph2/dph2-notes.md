@@ -82,3 +82,7 @@ blocks had empty `reason` fields and leaned on deep-research quotes.
   direct functional characterization.
 
 Validation after edits: zero errors; one expected warning (the GO:0090560 qualifier split).
+
+### Follow-up after PR review (2026-10-04)
+
+The NEW cellular-component row was moved from cytoplasm (GO:0005737) to cytosol (GO:0005829), and core_functions.locations with it. Human DPH2 (Q9BQC3) carries cytosol, the client eEF2 is a cytosolic translation factor, and the batch elsewhere treats cytoplasm as a true-but-uninformative parent, so the more specific term is the one the argument supports.
