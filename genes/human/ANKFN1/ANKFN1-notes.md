@@ -24,3 +24,10 @@
 - **Spindle IBA (is_active_in):** now has its own CC reasoning. FlyBase records spindle and centrosome IDA for Banderuola from the full text, while the cached abstract stresses cortical domains. Kept non-core rather than adopted.
 - **Affinage accounting:** PMID:40835437 is used. PMID:36533556 (crispant cilia screen) and PMID:33140455 (expression atlas) are declined, with reasons.
 - **No vestibular term:** zebrafish double mutants and the mouse nmf9 allele show that ANKFN1 is needed for vestibular function, but not what it does there, so no vestibular process term is proposed (necessity, not participation).
+
+## 2026-10-04 round 3 (reviewer comments on #4072)
+
+- **Citation fix:** the spindle row's cortical-domain claim now quotes the abstract sentence that says it ("Bnd acts together with ... Dlg to establish antagonistic cortical domains during ACD"). It previously quoted the polarity/spindle sentence.
+- **NEW row:** evidence code ISS changed to ISO (orthology to mouse F6X7B3). The reason acknowledges that the authors leave open whether mWAKE changes BK levels or gating ("How might mWAKE modulate BK levels or function?").
+- **Knowledge gap:** now names BK (KCNMA1).
+- **Not adopted:** GO:0042391 regulation of membrane potential (suggested). GO:1902608 already names the measured mechanism, and adding a broad parent-level effect term would duplicate it.
