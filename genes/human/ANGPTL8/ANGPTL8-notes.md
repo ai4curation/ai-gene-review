@@ -12,4 +12,15 @@
   - Comparators: ANGPTL3 and ANGPTL4 carry GO:0055102. No ANGPTL8 ancestor/descendant conflict.
 - **Kept as non-core:** positive regulation of protein processing (ANGPTL3 N-terminal fragment release) and signal transduction (auto-inferred from hormone activity).
 - **Removed:** the RCHY1 protein-binding IPI (liver Y2H screen).
-- **Not used from affinage:** the NF-kB/autophagy and receptor-signaling claims, which are single studies.
+- **Not used from affinage:** the NF-kB/autophagy claim (single study). (Round 2 correction: the receptor-signaling claims are multi-group; see below.)
+
+## 2026-10-04 round 2 (reviewer comments on #4065)
+
+- **Correction:** I had called affinage's receptor-signaling claims "single-study" without reading those rows. They come from four independent groups: PirB in the liver clock (PMID:31388006), LILRB3 in cardiomyocytes (PMID:35851270), LILRB2 in stellate cells (PMID:36031141) and hepatocellular carcinoma (PMID:37188659), and PirB in hippocampus (PMID:39095838).
+  - The signal transduction IEA stays KEEP_AS_NON_CORE, now reasoned and cited on that evidence.
+  - The receptor axis is tissue- and disease-specific and secondary to the LPL role.
+- **Other fixes:**
+  - The GO:0010954 row adds the R59W/cleaved-ANGPTL3 association (PMID:27117576).
+  - Core MF ordering fixed.
+  - The description mentions receptor signaling.
+  - Added a question on how the receptor and LPL roles relate.
