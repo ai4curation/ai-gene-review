@@ -132,13 +132,13 @@ def replace_taxon(path: Path, curie: str, label: str) -> None:
     path.write_text(text[:start] + body + text[end:])
 
 
-def load_cache(path: Path) -> dict[str, str | None]:
+def load_cache(path: Path) -> dict[str, str]:
     if path.exists():
         return json.loads(path.read_text())
     return {}
 
 
-def resolve_labels(curies: set[str], adapter_spec: str, cache: dict[str, str | None]) -> dict[str, str | None]:
+def resolve_labels(curies: set[str], adapter_spec: str, cache: dict[str, str]) -> dict[str, str | None]:
     """Resolve NCBITaxon CURIEs to labels via OAK, using and filling ``cache``."""
     todo = sorted(c for c in curies if c not in cache)
     if todo:
@@ -146,7 +146,7 @@ def resolve_labels(curies: set[str], adapter_spec: str, cache: dict[str, str | N
 
         adapter = get_adapter(adapter_spec)
         for curie in todo:
-            label = None
+            label: str | None = None
             if re.fullmatch(r"NCBITaxon:\d+", curie):
                 try:
                     label = adapter.label(curie)
@@ -171,7 +171,10 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    files = sorted(p for root in args.roots for p in Path(root).rglob("*.yaml"))
+    # tests/data/invalid holds deliberately wrong taxa (e.g. a CHLRE label); never "fix" them.
+    files = sorted(
+        p for root in args.roots for p in Path(root).rglob("*.yaml") if "tests/data/invalid" not in p.as_posix()
+    )
     found: list[tuple[Path, str, str]] = []
     for path in files:
         text = path.read_text()
@@ -210,19 +213,7 @@ def main() -> int:
         changed += 1
         print(f"RELABEL\t{path}\t{curie}\t{old!r} -> {new!r}")
         if args.apply:
-            text = path.read_text()
-            flow = None if find_taxon_block(text) else find_flow_taxon(text)
-            if flow:
-                q = flow.group("q") or '"'
-                line = f"taxon: {{id: {q}{flow.group('id')}{q}, label: {json.dumps(new, ensure_ascii=False)}}}"
-                path.write_text(text[: flow.start()] + line + text[flow.end():])
-                continue
-            start, end, _, _, label_m = find_taxon_block(text)
-            body = text[start:end]
-            indent = label_m.group("indent")
-            replacement = f"{indent}label: {yaml_scalar(new)}\n"
-            body = body[: label_m.start()] + replacement + body[label_m.end():]
-            path.write_text(text[:start] + body + text[end:])
+            replace_taxon(path, curie, new)
 
     print(
         f"files with taxon: {len(found)}; to relabel: {changed}; replaced from gene review: {replaced}; "

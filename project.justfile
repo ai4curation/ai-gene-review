@@ -977,8 +977,25 @@ validate-references file:
 # silently certifying an unchecked quotation. Caches remain regenerable context.
 [group('QC')]
 validate-predictions +files:
-    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    just validate-prediction-terms {{files}}
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
+
+# Schema and term validation (taxon binding, GO ids) for prediction files.
+# Covers BioReason/GO-GPT sidecars (*-sft-predictions.yaml,
+# *-gogpt*-predictions.yaml), which have no excerpts for validate-predictions'
+# source-evidence check. Same label policy as validate-all: ERRORs and NCBITaxon
+# label mismatches block; GO label lag stays advisory.
+[group('QC')]
+validate-prediction-terms +files:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}} || exit 1
+    out=$(uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
+    rc=$?
+    echo "$out"
+    if [ $rc -ne 0 ] && echo "$out" | grep -qE "ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
+        exit 1
+    fi
 
 # Reference validation for all gene review files
 [group('QC')]
