@@ -25,3 +25,7 @@
 - **Correction:** I had said PMID:40238067 adds "a second family, not an independent allele". In fact its case 3 is compound heterozygous for p.D2E and p.P39QfsTer25. The frameshift is absent from PMID:41997520, the two papers come from unrelated groups, and PMID:40238067 is the earlier report. The meiosis row now quotes the case-3 sentence directly.
 - **Nucleus caveat:** the reason now spells out that the cytoplasmic wild-type result is an overexpression readout; the same assay scores the mutant as nuclear.
 - **References:** PMID:10022899 raised to MEDIUM relevance, since it is the sole positive citation on the retained nucleus row.
+
+## 2026-10-04 core MF update
+
+- **Core MF:** GO:0140378 protein complex scaffold activity ("serves to hold the complex together") added to core_functions alongside contributes_to GO:0061630. This follows the ANAPC16 review (#4058). No NEW GOA row is proposed: no small APC/C subunit carries a scaffold MF in QuickGO, which reads as a convention.
