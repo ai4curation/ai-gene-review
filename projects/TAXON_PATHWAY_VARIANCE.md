@@ -83,10 +83,12 @@ JAK-presupposing terms nevertheless reach worm genes by IBA from two families:
 |---|---|---|---|---|
 | PIAS (PTHR10782) | PTN000845825 (Eumetazoa) | GO:0046426 negative regulation of receptor signaling pathway via JAK-STAT | gei-17 | REMOVE; family review records a member exception |
 | STAT (PTHR11801) | PTN000927860 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | sta-2 | REMOVE |
+| STAT (PTHR11801) | PTN000927860 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | sta-1 | REMOVE |
 
 The STAT and JAK family reviews (`interpro/panther/PTHR11801/`,
-`interpro/panther/PTHR45807/`) and the sta-1 gene review are in progress and will
-extend this table.
+`interpro/panther/PTHR45807/`) are in progress and will extend this table. The same
+STAT node also carries `GO:0006952` defense response, which reaches STA-1 with the
+wrong sign: STA-1 represses antiviral genes (IBA_REVIEW section 9).
 
 The PIAS case is also where the repository gained **member exceptions** in family
 reviews: PANTHER subfamily PTHR10782:SF94 holds both the fly PIAS (a genuine JAK-STAT
