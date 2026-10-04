@@ -67,3 +67,18 @@ The final source check corrected the added UniProt entry title to its immutable 
 
 The exact three-field source correction passed normal validation again (actual 36d32f, exit 0, the same 72 warnings). The completed tool-result envelope is saved as root-source-correction-validation-tool-result.json. The earlier sealed packet is preserved in before-root-source-corrections; all actions, source objects, products, core and quotations are unchanged.
 The final serialization preserves the original 100-column YAML style. It is semantically identical to the corrected candidate and passed the final normal check again (actual 03ad5d, exit 0, unchanged 72 warnings); its full tool-result envelope is retained as final-root-correction-validation-tool-result.json.
+
+
+## Required follow-up (2026-10-04): proposal withdrawal and propagation provenance
+
+This entry supersedes the earlier journal statements that retained three withdrawn author proposals as retired annotation rows. The original entries remain above as the chronological record; their temporary-file references and pending-check statements describe earlier checkpoints, not current evidence or outstanding scientific work.
+
+The [immutable earlier main review](https://github.com/ai4curation/ai-gene-review/blob/29f1c1286631b850512b14cb6d4083529982e136/genes/human/CAMK2A/CAMK2A-ai-review.yaml) identifies GO:0048167 (regulation of synaptic plasticity), GO:0007611 (learning or memory) and GO:0097106 (postsynaptic density organization) as author-proposed NEW assertions. They are absent from the current GOA. The first two inherited IMP fields and a generated-research-file reference; the third inherited an IEA field without an original reference. Those were proposal metadata, not verified experimental or electronic GOA provenance. The three rows are removed from the annotation list rather than represented as retired source annotations. Their withdrawal reasoning remains:
+
+- GO:0048167 was withdrawn because the existing GO:0048168 child assertion already covers neuronal synaptic plasticity. This does not deny CAMK2A's role in plasticity.
+- GO:0007611 remains an unresolved potential additional annotation. The previous review distinguished learning from recall effects, direct kinase/target-association work from necessity evidence, and a bounded comparator assessment from an exhaustive absence claim. The learning/memory question now preserves this issue explicitly.
+- GO:0097106 remains unresolved: biochemical complex formation and abundance do not independently establish organization of the native postsynaptic density. The existing suggested question retains that distinction.
+
+The separate GO:0007259 JAK-STAT record was already a non-NEW retired historical annotation in the earlier main file. It is retained exactly, including its reviewed evidence and context. The resulting list has 171 records: all 170 current machine assertions and this one historical source record. The retained decisions are 30 ACCEPT, 31 MODIFY, 99 KEEP_AS_NON_CORE and 11 UNDECIDED. All source fields, two products, 50 references and the single kinase core remain unchanged.
+
+Ninety-eight identical propagation-source comments were omitted. Every source identifier, source status, root-cause judgment and annotation rationale is preserved. The seven comments that state a particular PAINT-table observation remain. Omitting repeated prose does not claim new donor, tree or alignment inspection. The description's final sentence now states variant-dependent effects directly; no biological decision changed. All ten existing quotations remain exact and no quotation words were added.
