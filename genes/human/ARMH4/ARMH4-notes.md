@@ -15,4 +15,11 @@
   - Regulation of inflammatory response → negative regulation (GO:0050728).
   - Regulation of TORC2 signaling → negative regulation (GO:1903940).
 - REMOVE: ELAPOR2 binding (policy).
-- No NEW STAT3 process term: the species of the PMID:26927669 experiments is not stated in the cached abstract. It is raised as a suggested experiment.
+- STAT3 axis: see round 1 below.
+
+## Review round 1 (PR #4201)
+- The STAT3-axis decline was wrong. UniProt curates the IL6ST interaction and the STAT3 down-modulation on the human entry as experimental (ECO:0000269, PMID:26927669), not by similarity, and the abstract includes human myeloma samples. Added:
+  - NEW cytokine receptor binding (IPI, with IL6ST).
+  - NEW negative regulation of receptor signaling pathway via JAK-STAT (IDA).
+  - A second core function.
+- Added NEW protein serine/threonine kinase inhibitor activity (ISO from mouse UT2, PMID:25418727) as the mTORC2 core MF. TORC2 complex binding is kept as the binding step.
