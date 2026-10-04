@@ -9,5 +9,14 @@
 ## Decisions
 - Cytosol (IBA, IDA) → ACCEPT.
 - Hematopoietic progenitor cell differentiation (IBA) → UNDECIDED.
-- No NEW terms. The G-quadruplex binding claim is "appears to" in an abstract-only paper, so it is a suggested experiment instead.
-- core_functions is left empty because no molecular function is established. The knowledge gap is MF_DARK.
+- No NEW terms. The in vitro G-quadruplex binding (PMID:39029558, abstract: "The protein binds G-quadruplex structures and does so preferentially to RNA over DNA") is declined as an MF pending in-cell evidence.
+- core_functions records the cytosolic location only (no MF). The knowledge gap is MF_DARK.
+
+## Review round 1 (PR #4189)
+- The GO:0002244 reason now states the reasoning, and its SAMD9L-only supported_by is dropped.
+- PMID:24029230 reference_review no longer says VERIFIED. Correctness is left unset, because no enum value fits: the identifier is right, but its support could not be checked. UNVERIFIED means "not yet manually checked".
+- Added a location-only core function (cytosol).
+- The cytosol IBA summary notes the is_active_in caveat.
+- The two PTN nodes are labelled distinctly.
+- The G4 MF is now framed as "declined pending in-cell evidence".
+- MGI:1924063 = mouse Armc6 (UniProt Q8BNU0) and its IGI to PMID:24029230 were confirmed in QuickGO during the original review.
