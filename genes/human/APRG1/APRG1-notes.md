@@ -5,5 +5,5 @@
   - Gene identification: eIF6-like N-terminal part, RGD motif, splice variants [PMID:12543795].
   - Breast-tumour transcript correlation [PMID:16187228].
 - UniProt Q8IVJ8: PE2 (transcript level), with a C-terminal TM helix 150-170.
-- GOA: membrane (IEA, SubCell) only → KEEP_AS_NON_CORE (prediction only; no core function can be stated).
+- GOA: membrane (IEA, SubCell) only → UNDECIDED (review round): the prediction is uncorroborated, and the helix exists only in isoform B.
 - WHOLLY_DARK knowledge gap.
