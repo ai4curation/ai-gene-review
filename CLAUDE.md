@@ -351,10 +351,20 @@ PANTHER's own HMM classifications. Two rules follow:
   name up:
   `grep -A1 "^id: PANTHER:PTHR12345$" interpro/panther/panther.obo`
 - **The declared family must contain its own `representative_members`.** This is checked
-  against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
-  the representative protein is usually right and the family id is wrong — look up the
-  member's real family rather than deleting the member. Accessions missing from the index
-  only warn; run `just refresh-panther-members` to add newly cited proteins.
+  against the PANTHER member index and is a blocking error. If it fires, the representative
+  protein is usually right and the family id is wrong — look up the member's real family
+  rather than deleting the member. The index is a build artifact, not committed: it lives in
+  the git-ignored `.cache/panther/panther-members-<release>.tsv`, and `just validate-modules`
+  / `just validate-families` build it automatically (incrementally, from release-pinned
+  PANTHER classifications plus UniProt). Do not commit it or cite it as a `file:` source;
+  cite PANTHER's classification files or UniProt instead. Accessions the index cannot
+  resolve only warn. Where PANTHER's own files and UniProt's PANTHER cross-reference
+  disagree (different families, or different subfamilies), the index keeps both and a member
+  matching either passes with a warning; do not "fix" such a family id to the other source
+  without checking which placement is right. Where a curator has decided which
+  assignment is right, add a reasoned row to the committed
+  `interpro/panther/panther-members-overrides.tsv`; overrides are applied after both sources
+  on every build. `just refresh-panther-members --rebuild` regenerates the index from scratch.
 - **If a label mismatch names a *different protein*, fix the ID, not the label.** A
   wildly-wrong label is weak evidence of a typo and strong evidence that the id was
   guessed. An id invented at random is still a hallucination when it happens to resolve
@@ -441,6 +451,29 @@ Use the OLS MCP to find relevant ontology terms, if the terms you need are not i
 Avoid the term `protein binding`, this doesn't tell us anything about the actual function. Instead find a more
 informative MF term (e.g for adapter function)
 
+### A curation gap is not a knowledge gap
+
+`knowledge_gaps` (on gene reviews, core functions and modules) are for things
+**nobody knows**: an unknown activity, substrate, partner, mechanism or role
+that could only be resolved by **new wet-lab experiments**. A good knowledge gap
+reads like the motivation for an experiment, and usually pairs with a
+`suggested_experiments` entry.
+
+Work that is merely **not done yet** is not a knowledge gap, even though the
+schema's `KnowledgeGapKindEnum` offers `CURATION` and `ONTOLOGY`:
+
+- **Curation gaps** — a member gene not yet reviewed, an annotation that exists
+  in the literature but not in GOA, a module part not yet modelled. Record these
+  in the project page's plan, a module's `notes`, or the gene's notes file.
+- **Ontology gaps** — a missing or ill-fitting GO term. Record these as
+  `proposed_new_terms`, in `notes`, or as a `suggested_questions` entry.
+
+Do not create a `knowledge_gaps` entry whose only `gap_kind` is `CURATION`
+and/or `ONTOLOGY`. Those values may appear only alongside `BIOLOGY`, on a gap
+whose core is a genuine biological unknown. Test before writing one: *would a
+wet-lab experiment close this gap?* If the answer is "no, a curator could close
+it by reading or annotating", it belongs in the plan or notes instead.
+
 ## Isoform and Negation Tracking
 
 The system tracks isoform-specific GO annotations and NOT (negated) annotations:
@@ -509,7 +542,7 @@ main review file.
 Use the `PredictionReview` class (validated with `-C PredictionReview`):
 
 ```bash
-uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C PredictionReview genes/ECOLI/yciO/yciO-predictions-review.yaml
+uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C PredictionReview genes/ECOLI/yciO/yciO-det-predictions-review.yaml
 ```
 
 ### Prediction sources
@@ -540,6 +573,8 @@ other computational method that produces GO or EC predictions.
 - `LOCALIZATION_DEFAULT` - Defaults to cytosol/cytoplasm when no TM/signal features, mislocalizing secreted/organellar/membrane proteins
 - `TAXON_CONSTRAINT_VIOLATION` - Term valid only in another lineage/kingdom (e.g. animal terms for a plant protein)
 - `WRONG_INPUT_SEQUENCE` - Pipeline fed the wrong protein sequence (data error, not model error)
+- `DOMAIN_ARCHITECTURE_MISMATCH` - Predicted activity needs a domain or catalytic region the selected protein lacks
+- `COMPLEX_ACTIVITY_TRANSFER` - Catalytic activity of a complex assigned to a noncatalytic accessory subunit
 - See schema for full list
 
 ## Page rendering and deployment
