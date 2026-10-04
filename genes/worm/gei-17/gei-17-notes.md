@@ -92,15 +92,15 @@ SUMOylation by GEI-17 (only Y2H + RNAi). Omission: PIE-1/HDA-1 germline silencin
 
 - JAK-STAT (GO:0046426) and transcription regulator inhibitor activity (GO:0140416) IBAs
   come from a PIAS1/Su(var)2-10 node (PTN000845825). No gei-17 evidence for STAT
-  inhibition; worm STAT signalling is non-canonical. Marked over-annotated, not removed.
+  inhibition. GO:0046426 is REMOVED (C. elegans has no JAK, PMID:28874466; recorded as a member
+  exception in the PTHR10782 family review); GO:0140416 is marked over-annotated.
 
 ## Literature review integration (2026-10-04)
 
 - Liongue & Ward 2013 (PMID:24058787) added to the GO:0046426 IBA REMOVE. The canonical JAK-STAT pathway was
   assembled in the bilaterian ancestor [PMID:24058787 "These came together to form the canonical JAK-STAT signaling pathway prior to the divergence of protostomia"],
   so the eumetazoan PIAS node (PTN000845825) is a sound IBD placement, and nematode JAK absence is a
-  lineage-specific loss that needs an IRD. (The YAML action is REMOVE; the "IBA notes" section above says
-  "Marked over-annotated, not removed", which is out of date.)
+  lineage-specific loss that needs an IRD.
 - Palvimo 2007 (PMID:18031232, abstract only) added for PIAS-family background [PMID:18031232 "PIAS proteins were initially named for their ability to interact with STAT proteins and inhibit their activity, but their interactions and functions are not restricted to the STATs."].
   It also says [PMID:18031232 "their co-regulator effects are often independent of their RING finger but dependent on their SIM (SUMO-interacting motif) or SAP (scaffold attachment factor-A/B/acinus/PIAS) domain"].
   This qualifies the GO:0140416 MARK_AS_OVER_ANNOTATED reasoning, which rests on GEI-17 transcriptional
