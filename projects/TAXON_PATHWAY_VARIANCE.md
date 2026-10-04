@@ -129,6 +129,11 @@ The statA and statC reviews already MODIFY the inherited `GO:0007259` IBA to
 `GO:0097696` cell surface receptor signaling pathway via STAT, which presupposes no
 JAK and is the right term for both the slime-mould and the worm STATs.
 
+Both *Dictyostelium* STAT arms (STATc downstream of DIF-1 and hyperosmotic stress via
+the TKL kinases Pyk2/Pyk3 and the PTP3 phosphatase gate; STATa downstream of cAR1 in
+the prestalk tip) are modelled in
+[dicty_jak_independent_stat_signaling](../modules/dicty_jak_independent_stat_signaling.yaml).
+
 The PIAS case is also where the repository gained **member exceptions** in family
 reviews: PANTHER subfamily PTHR10782:SF94 holds both the fly PIAS (a genuine JAK-STAT
 regulator) and worm GEI-17, so no subfamily-level scope can separate them. See
