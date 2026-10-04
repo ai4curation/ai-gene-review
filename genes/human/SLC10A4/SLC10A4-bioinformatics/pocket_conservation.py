@@ -47,8 +47,20 @@ CUTOFF = 4.5  # Angstrom, heavy-atom distance to a ligand atom
 REFERENCES = [
     ("7ZYI", "NA", "sodium site(s), 2.88 A"),
     ("9QZQ", "NA", "sodium site(s), 3.11 A"),
+    # The substrate pocket. CHO is glycochenodeoxycholic acid, a conjugated
+    # bile salt and a genuine NTCP substrate, resolved in 7ZYI. This site was
+    # missed in the first version of this analysis, which took the ligand list
+    # from the RCSB entry summary field `nonpolymer_bound_components` -- that
+    # reported only NA for 7ZYI. The script now enumerates the HETATM
+    # components itself (see list_het_components) so a bound ligand cannot be
+    # missed this way again.
+    ("7ZYI", "CHO", "bile salt (glycochenodeoxycholate) pocket, 2.88 A"),
     ("8RQF", "BJU", "myristoyl-glycine (preS1 anchor) pocket, 3.41 A"),
 ]
+
+# Ligands present in the reference entries that are not functional sites:
+# CLR is cholesterol (membrane/annular lipid), HOH is water.
+NON_SITE_LIGANDS = {"CLR", "HOH"}
 
 TARGETS = {
     "Q14973": "SLC10A1 (NTCP) AFDB model - METHOD CONTROL",
@@ -200,7 +212,27 @@ def find_ntcp_chain(structure: gemmi.Structure, ntcp_seq: str) -> Chain:
     return best
 
 
-def ligand_contacts(path: Path, ligand: str, ntcp_seq: str) -> tuple[Chain, dict[int, str], int]:
+def list_het_components(path: Path) -> dict[str, int]:
+    """Enumerate non-amino-acid components actually present in the file.
+
+    Done from the coordinates rather than from an RCSB summary field, because
+    the summary's `nonpolymer_bound_components` omitted the bound bile salt in
+    7ZYI and that omission cost this analysis its substrate pocket on the
+    first pass.
+    """
+    structure = gemmi.read_structure(str(path))
+    structure.setup_entities()
+    counts: dict[str, int] = {}
+    for chain in structure[0]:
+        for residue in chain:
+            if residue.name not in AA3to1:
+                counts[residue.name] = counts.get(residue.name, 0) + 1
+    return counts
+
+
+def ligand_contacts(
+    path: Path, ligand: str, ntcp_seq: str
+) -> tuple[Chain, dict[int, str], int, dict[int, set[str]]]:
     """NTCP residues within CUTOFF of any atom of `ligand`."""
     structure = gemmi.read_structure(str(path))
     structure.setup_entities()
@@ -219,8 +251,14 @@ def ligand_contacts(path: Path, ligand: str, ntcp_seq: str) -> tuple[Chain, dict
     if not ligand_atoms:
         raise RuntimeError(f"{path.name}: no {ligand} found")
 
-    # Which NTCP residues (by author seqid) contact the ligand?
+    # Which NTCP residues (by author seqid) contact the ligand, and do they do
+    # so through their side chain or only through main-chain atoms? The
+    # distinction matters for interpretation: a substitution at a position that
+    # only contributes a backbone carbonyl is largely immaterial, because the
+    # contact is sequence-independent.
+    backbone = {"N", "CA", "C", "O", "OXT"}
     contacts: dict[int, str] = {}
+    contact_via: dict[int, set[str]] = {}
     model = structure[0]
     for chain in model:
         if chain.name != ntcp.label:
@@ -231,8 +269,9 @@ def ligand_contacts(path: Path, ligand: str, ntcp_seq: str) -> tuple[Chain, dict
             for atom in residue:
                 if any(atom.pos.dist(lp) <= CUTOFF for lp in ligand_atoms):
                     contacts[residue.seqid.num] = AA3to1[residue.name]
-                    break
-    return ntcp, contacts, n_copies
+                    kind = "main-chain" if atom.name in backbone else "side-chain"
+                    contact_via.setdefault(residue.seqid.num, set()).add(kind)
+    return ntcp, contacts, n_copies, contact_via
 
 
 def main() -> None:
@@ -253,7 +292,10 @@ def main() -> None:
             print(f"  {pdb_id}: MISSING, skipped")
             continue
         print(f"  {pdb_id} ({note}), ligand {ligand}:")
-        ntcp, contacts, n_copies = ligand_contacts(path, ligand, ntcp_seq)
+        het = list_het_components(path)
+        interesting = {k: v for k, v in het.items() if k not in NON_SITE_LIGANDS}
+        print(f"    components present: {het} (candidate sites: {sorted(interesting)})")
+        ntcp, contacts, n_copies, contact_via = ligand_contacts(path, ligand, ntcp_seq)
         matched, total = verify_numbering(ntcp, ntcp_seq)
         if matched / total < 0.95:
             raise SystemExit(
@@ -265,11 +307,14 @@ def main() -> None:
         ordered = dict(sorted(contacts.items()))
         print(f"    {n_copies} copy/copies of {ligand}; {len(ordered)} contacting residues: "
               + ", ".join(f"{aa}{num}" for num, aa in ordered.items()))
-        site_defs.append((pdb_id, ligand, note, ntcp, ordered))
+        site_defs.append((pdb_id, ligand, note, ntcp, ordered, contact_via))
         results["sites"][f"{pdb_id}:{ligand}"] = {
             "note": note,
             "ligand_copies": n_copies,
             "contacts": {str(k): v for k, v in ordered.items()},
+            "contact_atoms": {
+                str(k): sorted(contact_via.get(k, [])) for k in ordered
+            },
         }
 
     if not site_defs:
@@ -294,7 +339,7 @@ def main() -> None:
         print(f"\n  {acc} - {label}")
         results["conservation"][acc] = {"label": label, "sites": {}}
 
-        for pdb_id, ligand, note, ntcp, contacts in site_defs:
+        for pdb_id, ligand, note, ntcp, contacts, contact_via in site_defs:
             # TM-align gives the independent fold comparison (score + RMSD).
             res = tm_align(ntcp.coords, target.coords, ntcp.seq, target.seq)
 
@@ -311,10 +356,17 @@ def main() -> None:
             for num, ref_aa in contacts.items():
                 tgt_num = pairing.get(num)
                 tgt_aa = target_full_seq[tgt_num - 1] if tgt_num else "-"
+                via = sorted(contact_via.get(num, []))
+                call = classify(ref_aa, tgt_aa)
+                # A substitution at a position whose only ligand contact is a
+                # backbone atom does not change the contact chemistry.
+                if call in {"conservative", "non-conservative"} and via == ["main-chain"]:
+                    call = f"{call} (main-chain contact only)"
                 rows.append({
                     "ntcp_residue": f"{ref_aa}{num}",
                     "target_residue": f"{tgt_aa}{tgt_num}" if tgt_num else "-",
-                    "call": classify(ref_aa, tgt_aa),
+                    "contact_via": via,
+                    "call": call,
                 })
             counts: dict[str, int] = {}
             for row in rows:
