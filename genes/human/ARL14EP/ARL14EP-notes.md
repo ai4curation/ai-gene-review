@@ -11,7 +11,13 @@
 - **Protein binding:**
   - ARL14 → small GTPase binding.
   - MYO1E → myosin binding.
-  - SETDB1 (5 screen rows) → histone methyltransferase binding.
+  - SETDB2 (Q96T68; 5 screen rows) → histone methyltransferase binding. Note: these rows are SETDB2, not SETDB1 (the SETDB1 association comes from co-IP, PMID:31511512).
   - ATF7IP and KANK2 → REMOVE.
 - **Cytosol/cytoplasm → non-core.**
 - **NEW:** nucleus (IDA, PMID:31511512).
+
+## Review round 1 (PR #4176)
+- Corrected partner identity: Q96T68 is SETDB2; summaries now lead with the SETDB2 MBD/CRD crystal structure (PMID:38159574).
+- NEW histone binding (IDA, PMID:31511512): recombinant C11orf46 recognizes modified H3 tails on a peptide array and binds H3 independently of its CRD.
+- NEW adaptor activity (IMP, PMID:21458045) for the ARL14-to-myosin 1E bridge.
+- Nucleus row now quotes the immunohistochemistry result.
