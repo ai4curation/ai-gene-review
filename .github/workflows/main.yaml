@@ -177,17 +177,24 @@ jobs:
           restore-keys: |
             oaklib-${{ runner.os }}-
 
-      # Residue validation resolves UniProt sequences. Caching them keeps
-      # validate-families from depending on UniProt being reachable on every run,
-      # which is what lets it stay scoped to gene changes as well as family ones.
-      # Same weekly rotation as above; sequences change far less often than that.
-      - name: Cache UniProt sequences
-        uses: actions/cache@v6
+      # Restore the newest compatible generation; keep the legacy cache as fallback.
+      # Saving separately below preserves valid downloads even if validation fails.
+      - name: Restore UniProt sequences
+        uses: actions/cache/restore@v6
         with:
           path: .cache/uniprot_seq
-          key: uniprot-seq-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          key: uniprot-seq-v2-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}-
           restore-keys: |
+            uniprot-seq-v2-${{ runner.os }}-
             uniprot-seq-${{ runner.os }}-
+
+      - name: Snapshot restored UniProt sequences
+        id: sequence_cache_before
+        continue-on-error: true
+        run: >-
+          python .github/scripts/sequence_cache_manifest.py before
+          --cache-dir .cache/uniprot_seq
+          --snapshot "$RUNNER_TEMP/uniprot-sequence-before.json"
 
       # The PANTHER member index (accession -> family) is a build artifact, not
       # committed: validate-modules / validate-families run
@@ -320,6 +327,26 @@ jobs:
           steps.changes.outputs.genes == 'true'
         run: just validate-families
 
+      # Cache maintenance is advisory; every validation keeps its normal exit status.
+      # Save before the test suite, so synthetic test fixtures cannot enter this cache.
+      - name: Inspect downloaded UniProt sequences
+        id: sequence_cache_after
+        if: ${{ !cancelled() && steps.sequence_cache_before.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          python .github/scripts/sequence_cache_manifest.py after
+          --cache-dir .cache/uniprot_seq
+          --snapshot "$RUNNER_TEMP/uniprot-sequence-before.json"
+          --output "$GITHUB_OUTPUT"
+
+      - name: Save downloaded UniProt sequences
+        if: ${{ !cancelled() && steps.sequence_cache_after.outcome == 'success' && steps.sequence_cache_after.outputs.changed == 'true' }}
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: .cache/uniprot_seq
+          key: uniprot-seq-v2-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}-${{ steps.sequence_cache_after.outputs.digest }}
+
       # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
       # that curation PRs commit alongside the claim they justify, so per-PR CI
       # cannot tell a genuine slice from an authored one. Re-deriving them from
@@ -344,8 +371,10 @@ jobs:
         run: |
           uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
             tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
-            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py -q
+            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
+            tests/test_sequence_cache_persistence.py -q
           uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
             scripts/retry_failed_reviews.py tests/test_auto_merge_ready_prs.py \
-            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py
+            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
+            .github/scripts/sequence_cache_manifest.py tests/test_sequence_cache_persistence.py
           just test-js
