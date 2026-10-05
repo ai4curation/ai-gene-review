@@ -12,8 +12,9 @@ and by later domain, genome-wide and structural papers.
 
 ### Source refresh
 
-- The old review had **65** rows; live GOA now has **66** rows. The refreshed review
-  has **82** rows: 65 active, 17 explicitly `retired: true`.
+- The old review had **65** rows; live GOA now has **66** rows. The extra live
+  row is a duplicate `GO:0140658`/`IDA`/`PMID:10811623` assertion in GOA, so
+  the refreshed review has **82** rows: 65 active, 17 explicitly `retired: true`.
 - `just fetch-gene yeast CHD1 --force` backfilled qualifiers and exact IBA donor
   sets for the live rows, added 17 live GOA rows that were missing from the old
   review, and left 17 historical source rows no longer present as exact current GOA
@@ -82,14 +83,9 @@ Cached primary references read during the pass included:
 - PMID:34520455 for the non-core but valid role at sites of double-strand breaks.
 
 The newer PubMed search for 2024-2026 Chd1/yeast papers found several mechanistic
-or structural studies. The most curation-relevant hit was the peer-reviewed 2025
-Nucleic Acids Research paper showing a direct interaction between the Chd1 CHCT
-domain and the Paf1C subunit Rtf1 (PMID:40867051), updating the 2024 bioRxiv
-preprint already summarized in the Falcon report. Also found but not action
-changing were the 2025 abstract-only Chd1 exit-DNA unwrapping cryo-EM paper
-(PMID:40453884) and a 2025 structural paper on Chd1 remodeling intermediates
-(PMID:41439750). All reinforce the ATP-dependent chromatin-remodeler/nucleosome
-spacing model and did not motivate additional GO assertions.
+or structural studies. They reinforced the ATP-dependent
+chromatin-remodeler/nucleosome-spacing model and did not motivate additional GO
+assertions.
 
 ### Remaining uncertainty
 
