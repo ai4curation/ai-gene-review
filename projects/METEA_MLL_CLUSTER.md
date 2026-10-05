@@ -34,16 +34,16 @@ Annotation rows include proposed NEW annotations, not just imported GOA rows.
 
 | Gene | UniProt | Review Status | Annotation Rows | Supported Or Predicted Role |
 |------|---------|---------------|-----------------|-----------------------------|
-| [mllA](../genes/METEA/mllA/mllA-ai-review.yaml) | C5B1I4 | DRAFT | 2 | AsbA-like NIS synthetase |
-| [mllBC](../genes/METEA/mllBC/mllBC-ai-review.yaml) | C5B1I5 | DRAFT | 4 | AsbB-like NIS synthetase plus AsbC-like adenylation domain |
-| [mllDE](../genes/METEA/mllDE/mllDE-ai-review.yaml) | C5B1I6 | COMPLETE | 3 | AsbD-like aryl carrier protein plus AsbE-like ligase |
-| [mllF](../genes/METEA/mllF/mllF-ai-review.yaml) | C5B1I7 | INITIALIZED | 2 | AsbF-like biosynthetic protein; precise product assignment needs care |
-| [mllG](../genes/METEA/mllG/mllG-ai-review.yaml) | C5B1I8 | DRAFT | 0 | DUF2218 protein; no established molecular function |
-| [mllH](../genes/METEA/mllH/mllH-ai-review.yaml) | C5B1I9 | DRAFT | 2 | Putative acetyltransferase |
-| [mllJ](../genes/METEA/mllJ/mllJ-ai-review.yaml) | C5B1J0 | INITIALIZED | 1 | Ferritin-like DUF4142 protein, putatively periplasmic |
-| [mluA](../genes/METEA/mluA/mluA-ai-review.yaml) | C5B1I1 | DRAFT | 8 | Predicted TonB-dependent receptor; exact ligand unresolved |
-| [mluI](../genes/METEA/mluI/mluI-ai-review.yaml) | C5B1I3 | DRAFT | 6 | Predicted ECF sigma factor, META1p4131 |
-| [mluR](../genes/METEA/mluR/mluR-ai-review.yaml) | C5B1I2 | DRAFT | 2 | Putative sigma-factor regulator |
+| mllA | C5B1I4 | DRAFT | 2 | AsbA-like NIS synthetase |
+| mllBC | C5B1I5 | DRAFT | 4 | AsbB-like NIS synthetase plus AsbC-like adenylation domain |
+| mllDE | C5B1I6 | COMPLETE | 3 | AsbD-like aryl carrier protein plus AsbE-like ligase |
+| mllF | C5B1I7 | INITIALIZED | 2 | AsbF-like biosynthetic protein; precise product assignment needs care |
+| mllG | C5B1I8 | DRAFT | 0 | DUF2218 protein; no established molecular function |
+| mllH | C5B1I9 | DRAFT | 2 | Putative acetyltransferase |
+| mllJ | C5B1J0 | INITIALIZED | 1 | Ferritin-like DUF4142 protein, putatively periplasmic |
+| mluA | C5B1I1 | DRAFT | 8 | Predicted TonB-dependent receptor; exact ligand unresolved |
+| mluI | C5B1I3 | DRAFT | 6 | Predicted ECF sigma factor, META1p4131 |
+| mluR | C5B1I2 | DRAFT | 2 | Putative sigma-factor regulator |
 
 The primary paper's Table 1 distinguishes the MllBC and MllDE fusions and maps
 mluI to META1p4131. These identities do not establish every reaction or regulatory
