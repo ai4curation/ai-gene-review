@@ -103,7 +103,7 @@ characterized SMYD enzyme Set5.
 | 1 | GO:0016279 protein-lysine N-methyltransferase activity | IBA | GO_REF:0000033 | ACCEPT | Best-supported MF: intact SET/SMYD active site + literature calling Set6 the most-likely genuine protein KMT. Putative, but this is the safest core-function call. |
 | 2 | GO:0042054 histone methyltransferase activity | IBA | GO_REF:0000033 | MARK_AS_OVER_ANNOTATED | Over-specific substrate class. Set5 supports the source-side histone call, but no histone substrate has been shown for Set6. The lysine-KMT MF (#1) is the defensible level. |
 | 3 | GO:0005634 nucleus | IBA | GO_REF:0000033 | KEEP_AS_NON_CORE | Plausible by SMYD family transfer, but Set6 localization is explicitly unmeasured; keep as non-core, low confidence. |
-| 4 | GO:0006338 chromatin remodeling | IEA (from GO:0042054) | GO_REF:0000108 | REMOVE | Inter-ontology inference chained off the over-annotated histone-MTase term (#2); no evidence Set6 remodels chromatin. Falls with its parent term. |
+| 4 | GO:0006338 chromatin remodeling | IEA (from GO:0042054) | GO_REF:0000108 | REMOVE | Inter-ontology inference chained off the over-annotated histone-MTase term (#2); no evidence Set6 remodels chromatin. Falls with its MF premise. |
 | 5 | GO:0008270 zinc ion binding | RCA | PMID:30358795 | KEEP_AS_NON_CORE | Computational (zinc-proteome) prediction, corroborated by the Cys-rich SMYD zinc-knot/post-SET architecture in the bioinformatics analysis. Structural, non-core. |
 | 6 | GO:0005575 cellular_component (root) | ND | GO_REF:0000015 | ACCEPT | Root/ND placeholder; accept as-is per GO convention. |
 | 7 | GO:0008150 biological_process (root) | ND | GO_REF:0000015 | ACCEPT | Root/ND placeholder; accept as-is per GO convention. |
@@ -160,5 +160,16 @@ These notes are the manual research journal instead.
   `SET6`/`YPL165C`/`Set6`; no newer direct SET6 activity, substrate, or localization paper
   superseded the 2023 Hamey/Wilkins synthesis.
 - Kept the existing biological calls intact, added current `supporting_entities` from live
-  GOA, and normalized IBA `source_entities` to the PTN node while leaving extant Set5 and
-  SMYD donors in `supporting_entities`.
+  GOA, normalized the accepted broad-KMT and non-core nucleus IBA `source_entities` to the
+  PTN node, and kept extant Set5 and SMYD donors in `supporting_entities`.
+
+## 2026-10-05 reviewer follow-up
+
+- Restored Set5/YHR207C as an explicit `SUPPORTS_SOURCE_BUT_NOT_TARGET` source for
+  the over-specific `GO:0042054 histone methyltransferase activity` IBA, and relabeled
+  the PTN008534456 histone source the same way rather than `NOT_RELEVANT`.
+- Reworded the histone-MTase rationale away from "parent" terminology because
+  `GO:0016279 protein-lysine N-methyltransferase activity` is the broader lysine-KMT
+  term, not a strict parent of every histone methyltransferase.
+- Reclassified the `GO:0006338 chromatin remodeling` IEA propagation failure as a
+  circular/redundant evidence chain from the over-specific `GO:0042054` MF premise.
