@@ -119,10 +119,12 @@ Klp2 mechanism. The high-throughput localization study used YFP, not GFP.
 
 The serine-kinase annotation now cites the substrate-specific original assay:
 [PMID:18951025 "Phosphoamino acid analysis of in vitro phosphorylated Clp1 showed that it was phosphorylated exclusively on serine residues (Figure 1C)."].
-The Mob1 and Pab1 IPI interactions remain biologically supported and are now
-KEEP_AS_NON_CORE rather than REMOVE merely because protein binding is uninformative.
-The broad regulation-of-cell-cycle-process annotation is ACCEPT; its breadth alone
-does not make it false. For PMID:25501814, the abstract's SPB statement names Cdc7,
+The Mob1 and Pab1 IPI interactions remain biologically supported, but the Mob1
+protein-binding row is removed as too generic and the Pab1 row is modified to
+the more informative protein phosphatase 2A binding term. The broad
+regulation-of-cell-cycle-process annotation is KEEP_AS_NON_CORE; its breadth
+alone does not make it false, but more specific terms capture Sid2's core
+outputs. For PMID:25501814, the abstract's SPB statement names Cdc7,
 so it is no longer presented as a Sid2 imaging experiment; retain the curated Sid2
 locations with independent localization evidence and explicit assay-level limits.
 
@@ -155,4 +157,4 @@ preserved unmodified, with these corrections recorded here.
 
 Final validation passes with one advisory: annotation decisions cite primary studies
 rather than the available generated research file. Status is DRAFT to reflect this
-warning; all48annotations are reviewed.
+warning; all 48 annotations are reviewed.
