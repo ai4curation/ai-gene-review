@@ -195,6 +195,10 @@ matter. In mouse alone, `Mapk1 GO:0035556` has 53 donors, `Ccnb1 GO:0005634` has
 `Egfr GO:0005886` has 67 — listing all of them is noise, not rigour, and it buries the
 two or three that carry the reasoning.
 
+Restrict `source_entities` to actual donors in the propagated row's `WITH/FROM`.
+Put non-donor orthologs, experimental analogs, or literature corroborators in
+`reason` prose instead of presenting them as transfer sources.
+
 The rule that does bind: **no sentence may claim more than the enumeration shows.**
 A block that names one seed and calls it *"the* IBD seed" asserts a sole-donor fact the
 `WITH/FROM` may contradict, and that is a defect regardless of how many sources are

@@ -653,7 +653,7 @@ targets" that #31711 wants annotated instead.
    gap: Q08176 has no GO:7770059 annotation although the term's definition is written around
    the Mim1–Mim2 complex. Of ~286 annotations to the term only seven are manual — PomBase IMPs
    on *S. pombe* mim1 (Q9C1W7) and mim2 (G2TRP0) from PMID:33138913, and FlyBase IMPs on
-   Drosophila Mtch and human MTCH1/MTCH2 — the rest Ensembl orthology IEA. The budding-yeast
+   Drosophila Mtch and human MTCH1 — the rest Ensembl orthology IEA. The budding-yeast
    protein the definition describes is the conspicuous absence.
 4. **`core_functions.directly_involved_in`**: GO:0070096 dropped (demoted to non-core).
 
@@ -698,10 +698,10 @@ assertion, not the underlying Mim1-Mim2 interaction record.
 
 ## 2026-10-01 — current GOA refresh
 
-Forced a current GOA/UniProt refresh for the IBA campaign. The refreshed snapshot
-has 15 live GOA rows and seeded one row that the prior review had deliberately
-collapsed into the ComplexPortal MIM-complex review: the SGD IPI
-`GO:0140595 MIM complex` row from PMID:22467864 with Mim2
+Forced a current GOA/UniProt refresh for the IBA campaign. The 15-row GOA
+snapshot was unchanged, but reseeding emitted a stub for one row that the prior
+review had deliberately collapsed into the ComplexPortal MIM-complex review:
+the SGD IPI `GO:0140595 MIM complex` row from PMID:22467864 with Mim2
 (`SGD:S000007618`) in `WITH/FROM`.
 
 The duplicate SGD row is still a live, exact GOA assertion, so it now has its
