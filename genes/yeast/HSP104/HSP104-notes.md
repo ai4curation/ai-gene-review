@@ -7,7 +7,7 @@
   and the current PTHR11638 PAINT export. PTN007521008 now emits cytosol,
   protein-folding chaperone binding, protein refolding, protein unfolding and
   cellular heat acclimation, but not obsolete GO:0051082. The row was retained
-  as `retired: true` and as `UNDECIDED` rather than mechanically mapped to
+  as `retired: true` and as `REMOVE` rather than mechanically mapped to
   GO:0044183 or GO:0140309, because the old bare unfolded-client binding claim
   is not equivalent to either folding-chaperone or holdase activity.
 
@@ -80,8 +80,8 @@
   assay folding, aggregation prevention/escort, or disaggregation. Live QuickGO
   records GO:0051082 as obsolete and offers GO:0044183 protein folding chaperone
   and GO:0140309 unfolded protein holdase activity as `consider` targets. Neither
-  is evidence-matched to this assay, so the row is UNDECIDED rather than ACCEPT
-  on an obsolete term or MODIFY to an activity that this paper did not test. The
+  is evidence-matched to this assay, so the row is marked REMOVE rather than
+  ACCEPT on an obsolete term or MODIFY to an activity that this paper did not test. The
   separate NEW GO:0140545 annotation retains direct disaggregation evidence.
 
 - Generic protein-binding annotations from the global TAP and chaperone-network
@@ -112,7 +112,8 @@
 
 - Prion fibril fragmentation is a major yeast-specific function described by
   UniProt and the literature, but a current QuickGO ontology search did not find
-  a GO term specifically representing prion propagation or fibril fragmentation.
-  A term request for “prion fibril fragmentation activity” is therefore captured
-  under `proposed_new_terms` without guessing an identifier; PMID:18312264 states
-  that Hsp104-dependent fibril fragmentation creates infectious seeds.
+  a GO biological-process term specifically representing prion propagation or
+  fibril fragmentation. GO:0140545 already captures HSP104's ATP-dependent
+  threading/disaggregase molecular activity on ordered aggregates, so a seed-producing
+  prion outcome is retained as a biological-process ontology question rather than
+  asserted as a separate molecular-function request.
