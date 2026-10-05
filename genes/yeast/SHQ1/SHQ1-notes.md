@@ -12,15 +12,12 @@ subfamily. I added explicit `propagation_review` blocks treating the nucleoplasm
 and box H/ACA snoRNP assembly IBAs as core transfers and the cytoplasm IBA as a
 defensible but secondary localization transfer.
 
-The fourth IBA, `GO:0051082 unfolded protein binding`, is still present in the
-local GOA file as a 2017 row from `PTN000311574`, but the current
-`PTHR12967-paint.tsv` cache no longer lists the molecular-function assertion.
-The existing MODIFY call remains right biologically: the source biology is
-Cbf5/dyskerin carrier-chaperone activity, not a generic unfolded-protein-binding
-claim. I added `TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH` propagation
-metadata and marked the ancestral node source as `SOURCE_STALE_OR_MISSING`
-because the exact MF assertion cannot be recovered from the current cached PAINT
-table.
+The fourth historical IBA, `GO:0051082 unfolded protein binding`, used a broad
+term that is now formally obsolete; see cluster 12 of
+`projects/UNFOLDED_PROTEIN_BINDING.md`. The current `PTHR12967-paint.tsv` cache
+no longer lists that molecular-function assertion. The existing MODIFY call
+remains right biologically: the source biology is Cbf5/dyskerin
+carrier-chaperone activity, not a generic unfolded-protein-binding claim.
 
 The cached experimental papers support the existing action set. Yang et al.
 identified `Yil104c/Shq1p` as essential for stable box H/ACA snoRNP accumulation
@@ -51,16 +48,27 @@ model but does not require a new GO term for the yeast protein.
   carries either `GO:0051082 unfolded protein binding` source assertion; both historical
   rows were preserved as retired and still point to the more specific
   `GO:0140597 protein carrier chaperone`.
-- Reviewed three live rows backfilled from current GOA: two additional PMID:12228251 IPI
-  rows for `GO:0000493 box H/ACA snoRNP assembly` through H/ACA assembly interactors were
-  accepted, and the generic `GO:0005515 protein binding` row for the same paper/with-from
-  set was removed as an uninformative interaction placeholder.
-- Downgraded the pre-existing `GO:0000493` IPI row with `SGD:S000002569` to
-  `UNDECIDED`: the cached Yang et al. abstract does not expose the NBP2-linked
-  full-text evidence behind that row, so it should be revisited from the full paper
-  before making a stronger call.
+- Reviewed the live PMID:12228251 IPI set after the current-GOA refresh: accepted
+  the H/ACA assembly rows through Cbf5 and Naf1, and removed the newly observed
+  generic `GO:0005515 protein binding` row for the same paper/with-from set as
+  an uninformative interaction placeholder.
+- Rechecked the pre-existing `GO:0000493` IPI row with `SGD:S000002569`, which
+  resolves to NBP2/YDR162C in the live SGD backend, and accepted it as a valid
+  but unusual source-split H/ACA assembly row backed by SGD full-text curation.
 - Re-read the current `PTHR12967` PAINT cache: `PTN000311574` still carries nucleoplasm,
   cytoplasm, and box H/ACA snoRNP assembly for the SHQ1 homolog family, but not the
   obsolete unfolded-protein-binding assertion. Newer literature searches found no
   yeast SHQ1 paper after the cached 2023 human-SHQ1 complementation study that would
   change the GO calls.
+
+## 2026-10-05 reviewer follow-up
+
+- Reworded both retired `GO:0051082 unfolded protein binding` rows around the
+  term's formal obsoletion and cluster 12 of `projects/UNFOLDED_PROTEIN_BINDING.md`,
+  with the retired PAINT IBA recorded as an obsolete broad-term cleanup rather than
+  a target-specific SHQ1 propagation failure.
+- Kept the `GO:0005737 cytoplasm` IBA as non-core while making explicit that the
+  hypoxia IDA paper shows contextual localization rather than independently proving
+  the stronger `is_active_in` qualifier.
+- Removed the redundant `GO:0005634 nucleus` parent from `core_functions`, leaving
+  the more informative `GO:0005654 nucleoplasm` location.
