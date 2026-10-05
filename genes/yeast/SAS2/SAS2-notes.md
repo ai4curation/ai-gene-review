@@ -43,3 +43,16 @@
   IMD2 subtelomeric heterochromatin fluctuations that mentions Sas2-mediated
   H4K16 acetylation as boundary context, but it does not provide new direct
   Sas2 evidence or force a GO annotation change here.
+
+## 2026-10-05 reviewer follow-up
+
+- Re-read `interpro/panther/PTHR10615/PTHR10615-entries.csv` after PR review
+  and refined the NuA4 diagnosis: PANTHER places P40963/Sas2 in
+  `PTHR10615:SF219` with KAT5/TIP60 proteins and the three `GO:0035267` IBD
+  seeds, while Q08649/Esa1 is in `PTHR10615:SF218` and gets its own IBAs from
+  `PTN004172926`.
+- Kept the `GO:0035267 NuA4 histone acetyltransferase complex` IBA as
+  `REMOVE`, but reworded the propagation record to say the remedy is re-placing
+  Sas2 toward the KAT8/MOF subfamily or adding an IRD/NOT on the yeast Sas2
+  branch for NuA4 complex membership, not merely constraining the existing
+  `PTN007449682` KAT5/TIP60 node.
