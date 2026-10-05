@@ -173,3 +173,35 @@
       supporting_text: "FAD (Subject of Investigation/LOI)"
       reference_section_type: RESULTS
       full_text_unavailable: false
+
+## 2026-09-28 DROME/IBA re-review
+
+I refreshed GOA with `just fetch-gene DROME CRY`; the refresh backfilled
+qualifiers/supporting entities on the existing rows and added six current GOA
+rows, all of which were adjudicated. The duplicate TIM IPI row from PMID:10417378
+is real but generic, so it is marked `REMOVE`; the added
+PMID:9845370 circadian-rhythm genetic interaction and the four PMID:22306971
+Rh5/Rh6/norpA photoperiod-entrainment rows are valid broad assertions that
+describe CRY-dependent light synchronization.
+
+I re-read `interpro/panther/PTHR11455/PTHR11455-paint.tsv` for all seven IBA
+rows. PTN002479144 supports the nucleus, cytoplasm, circadian gene expression,
+and photoperiod entrainment rows for the CRY-containing cryptochrome ancestor;
+PTN000894457 supports non-core negative regulation of transcription in the
+animal-cryptochrome branch; PTN000155848 supports FAD binding at the family
+root. The PTN000155848 DNA-binding IBD remains unresolved for Drosophila CRY:
+its source set mixes photolyases with animal cryptochromes, and PAINT explicitly
+prunes GO:0003904 photolyase activity at PTN000894457 without pruning
+GO:0003677.
+
+I searched PubMed with `((Drosophila[Title/Abstract]) AND
+(cryptochrome[Title/Abstract] OR DmCRY[Title/Abstract])) AND 2023:2026[pdat]`.
+The most direct new mechanistic hits reinforce existing core annotations:
+PMID:38294880 showed that "TIM recognition is indeed sensitive to the nature of
+the N-terminus", supporting the specific CRY-TIM interaction behind light input,
+and PMID:36828841 showed that "FAD binds to largely unfolded intermediates",
+supporting the direct FAD-binding/folding role. New metabolism, odor-sensation,
+magnetic-field, respiratory-chain, and tissue-interactome papers were cached and
+read where full text was available, but they were not strong enough to justify
+new GO terms beyond the existing CRY light-sensing and tissue-dependent
+photoreceptor functions.

@@ -39,6 +39,26 @@ Note that there should be an entry under `existing_annotations` for every line i
 
 The exception is if you think there are key annotations missing. In this case you should add entries, completing the `term` portion yourself, with `action: NEW`. Only do this for annotations not covered or with `proposed_replacement_terms` in existing annotations.
 
+Before adding a `NEW` process term, satisfy two tests that evidence alone does not
+cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md):
+
+- **Participation.** The gene product must do some of the work: catalyse a step, or
+  contribute the structure or cofactor activity a step depends on. Being required for
+  the process, being consumed by it, or being what it acts on is not participation.
+  (Thyroglobulin passes as the scaffold case, not as the catalyst — TPO catalyses,
+  while thyroglobulin supplies and positions the residues; CLAUDE.md works the three
+  shapes through: scaffold, cofactor, chemistry.) Knockout/rescue data establishes
+  necessity, which is precisely what being a substrate means — so it cannot settle
+  this question on its own. Ask which entity performs the step, and if it is not your
+  gene, whether your gene supplies structure or cofactor activity the step depends on.
+- **Comparator check.** If your argument is "every other participant carries this term
+  and my gene does not", name two or three other gene products in the **same role**
+  relative to the same kind of process and query whether they carry it. A systematic
+  absence across species and MODs is a convention you have not identified yet, not a
+  curation lapse. Check the term's parents too: a process under `GO:0006508 proteolysis`
+  names whatever does the cleaving, which is the substrate itself in the autoprocessing
+  case (`GO:0016540`) and otherwise is not.
+
 2. **Critical Evaluation**: You must not accept existing annotations as gospel, regardless of whether they are marked as experimental (EXP, IDA, IPI, etc.) or computational (IEA, ISS, etc.). Many GO terms represent over-annotations that need correction.
 
 However, in general IBA annotations have undergone extensive review as well as making phylogenetic sense, they often frequently represent the term at the right level of specificity. However, they can be conservative and missing functions.
@@ -66,6 +86,17 @@ Two things this implies, both easy to get backwards:
   duplicating support. Reserve `CIRCULAR_OR_REDUNDANT` for a propagation whose source is
   itself a propagated annotation with no experimental grounding anywhere in the chain, or a
   source that adds nothing because the target already has stronger direct evidence.
+
+**Removing an IBA that a family review scopes onto your gene.** If the gene's PANTHER
+family has a FamilyReview (`interpro/panther/<PTHR>/<PTHR>-review.yaml`) whose term
+assessment covers your gene's subfamily, a gene-level `REMOVE` is reported as a
+family/gene disagreement by `just validate-families`. When the loss is real but on a branch
+the subfamily does not split (e.g. C. elegans GEI-17 in PTHR10782:SF94, no JAK), record it
+in the family review as a `member_exceptions` entry on that term assessment, with
+evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a negative
+`node_assessment`. The exception is the family's judgement on that member, so the gene
+review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
+`MARK_AS_OVER_ANNOTATED` just to silence the check.
 
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
@@ -133,7 +164,7 @@ You should make use of:
    - **MODIFY**: Essence is sound but better terms exist (provide proposed_replacement_terms). Use this if the term is too deep or too shallow
    - **MARK_AS_OVER_ANNOTATED**: Not wrong but likely over-annotation
    - **UNDECIDED**: Unclear annotation requiring more evidence (always use if unable to access relevant publications)
-   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference
+   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference. Also apply the participation and comparator tests above — a gene product is `involved_in` a process only if it does some of the work of it (catalysing a step, or contributing structure or cofactor activity a step depends on), and not merely because it is required for, consumed by, or acted on by it
 
 Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need to favor one evidence code over another.
 

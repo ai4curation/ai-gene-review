@@ -1814,6 +1814,89 @@ def refresh_publications(
 
 
 @app.command()
+def warm_publications(
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum records to attempt this run"),
+    ] = None,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between records in seconds")
+    ] = 0.3,
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="List candidates without network or file changes"),
+    ] = False,
+    providers: Annotated[
+        Optional[str],
+        typer.Option(
+            "--providers",
+            help="Comma-separated full-text provider chain override "
+            "(default: pmc,epmc_preprint,unpaywall,openalex)",
+        ),
+    ] = None,
+    retry_attempted: Annotated[
+        bool,
+        typer.Option(
+            "--retry-attempted",
+            help="Also re-attempt records already tagged full_text_attempted "
+            "(use after the provider chain or acceptance guards improve)",
+        ),
+    ] = False,
+):
+    """Warm the publications cache via the linkml-reference-validator full-text chain.
+
+    Attempts full text for cached publications that lack it, using LRV's
+    provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Unlike
+    refresh-publications, this also covers DOI-only records without a PMC ID,
+    and follows the monarch-initiative/dismech warm-reference-cache tagging
+    convention: every cleanly concluded attempt is durably recorded as
+    ``full_text_attempted: true``, so bounded --limit sweeps drain the backlog
+    incrementally and never re-query the same record.
+
+    Only open-access full text is merged into the shared cache; non-public
+    locations are ignored.
+
+    Examples:
+        ai-gene-review warm-publications --dry-run --limit 20
+        ai-gene-review warm-publications --limit 200
+        ai-gene-review warm-publications --limit 50 --providers unpaywall,openalex
+    """
+    from ai_gene_review.etl.publication_warm import warm_publications as run_warm
+
+    provider_list = (
+        [p.strip() for p in providers.split(",") if p.strip()] if providers else None
+    )
+    stats = run_warm(
+        publications_dir=publications_dir,
+        limit=limit,
+        delay=delay,
+        providers=provider_list,
+        dry_run=dry_run,
+        retry_attempted=retry_attempted,
+    )
+    if dry_run:
+        would_attempt = (
+            stats["candidates"] if limit is None else min(limit, stats["candidates"])
+        )
+        typer.echo(
+            f"Dry run: would attempt {would_attempt} of {stats['candidates']} "
+            "candidates in the backlog"
+        )
+        return
+    typer.echo("=" * 60)
+    typer.echo("WARM SWEEP SUMMARY")
+    typer.echo("=" * 60)
+    typer.echo(f"Candidates in backlog: {stats['candidates']}")
+    typer.echo(f"Processed this run: {stats['processed']}")
+    typer.echo(f"Full text retrieved: {stats['full_text']}")
+    typer.echo(f"Durably attempted (no text found): {stats['attempted']}")
+    typer.echo(f"Transient errors (will retry next run): {stats['transient_error']}")
+
+
+@app.command()
 def convert_doi_publications(
     publications_dir: Annotated[
         Path, typer.Option("--dir", help="Publications directory")
@@ -1938,11 +2021,19 @@ def refresh_publications_active(
             elif force:
                 stubs.append(pmid)
             else:
-                content = pub_file.read_text()
-                if "full_text_available: false" in content or "full_text_available: true" not in content:
-                    stubs.append(pmid)
-                else:
+                # Use the shared predicate rather than substring-matching the whole file.
+                # The old test classed any record without an explicit
+                # `full_text_available: true` as a stub, which is 905 records -- 242 of them
+                # carrying full text under a `content_type` key -- and it matched the string
+                # anywhere in the file, including inside quoted full text.
+                from ai_gene_review.validation.supporting_text import (
+                    cached_full_text_available,
+                )
+
+                if cached_full_text_available(f"PMID:{pmid}", publications_dir):
                     cached.append(pmid)
+                else:
+                    stubs.append(pmid)
 
         typer.echo(f"\n  Missing (need fetch): {len(missing)}")
         typer.echo(f"  Stubs (need refresh): {len(stubs)}")
@@ -3001,6 +3092,14 @@ def render_projects(
         Path,
         typer.Option("--genes-dir", "-g", help="Genes directory for symbol index"),
     ] = Path("genes"),
+    source_ref: Annotated[
+        str,
+        typer.Option(
+            "--source-ref",
+            help="Git branch or commit for family catalog source links",
+            envvar="AI_GENE_REVIEW_SOURCE_REF",
+        ),
+    ] = "main",
     all_projects: Annotated[
         bool,
         typer.Option("--all", "-a", help="Render all project files in projects/"),
@@ -3050,6 +3149,7 @@ def render_projects(
             projects_dir=Path("projects"),
             output_dir=output_dir,
             genes_dir=genes_dir,
+            source_ref=source_ref,
         )
 
         if verbose and warnings:
@@ -3071,6 +3171,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    source_ref=source_ref,
                     projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
@@ -3259,6 +3360,86 @@ def render_module_notation(
             output_dir.mkdir(parents=True, exist_ok=True)
             out_path = output_dir / f"{module_file.stem}-notation.txt"
             out_path.write_text(notation)
+            typer.echo(f"Wrote {module_file} -> {out_path}")
+
+
+@app.command()
+def module_to_bnet(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to translate into a Boolean network"),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Write <stem>.bnet per module here; if omitted, print to stdout",
+        ),
+    ] = None,
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Translate all module YAML files in modules/"),
+    ] = False,
+    input_mode: Annotated[
+        str,
+        typer.Option(
+            "--input-mode",
+            help="How to write inputs: 'identity' (x, x; BoolNet convention) or 'free' (omitted)",
+        ),
+    ] = "identity",
+    logic: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--logic",
+            help="YAML mapping variable -> bnet expression overriding the default rule",
+        ),
+    ] = None,
+):
+    """Translate module YAML into a Boolean network (BoolNet .bnet format).
+
+    Every connection endpoint becomes a variable; container nodes are flattened
+    to their entry/exit tiers; the default update rule is the CaSQ convention
+    (OR of activators AND NOT the inhibitors). Elements with no incoming edge are
+    inputs. See projects/BOOLEAN_MODELS.md.
+
+    Examples:
+        ai-gene-review module-to-bnet modules/erk_cascade.yaml
+        ai-gene-review module-to-bnet --all -o projects/BOOLEAN_MODELS/out
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.module_boolean import module_file_to_boolean
+
+    if all_modules:
+        targets = sorted(modules_dir.glob("*.yaml"))
+    elif files:
+        targets = list(files)
+    else:
+        typer.echo("Please specify file(s) or use --all", err=True)
+        raise typer.Exit(code=1)
+
+    overrides = _yaml.safe_load(logic.read_text()) if logic else None
+    for module_file in targets:
+        if not module_file.exists():
+            typer.echo(f"Error: File not found: {module_file}", err=True)
+            continue
+        model = module_file_to_boolean(module_file, overrides)
+        if not model.variables:
+            typer.echo(f"# {module_file}: no connections; nothing to translate", err=True)
+            continue
+        text = model.to_bnet(input_mode=input_mode)
+        if output_dir is None:
+            typer.echo(f"# {module_file} ({len(model.variables)} variables, inputs: {', '.join(model.inputs)})")
+            typer.echo(text)
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            out_path = output_dir / f"{module_file.stem}.bnet"
+            out_path.write_text(text + "\n")
             typer.echo(f"Wrote {module_file} -> {out_path}")
 
 
@@ -4119,12 +4300,23 @@ def refresh_panther_members(
         bool,
         typer.Option(
             "--no-uniprot-fallback",
-            help="Skip the UniProt lookup for accessions PANTHER's per-organism "
-            "files do not cover (offline / faster, but lower coverage).",
+            help="Skip the UniProt lookup, both for accessions PANTHER's "
+            "per-organism files do not cover and for recording where UniProt "
+            "disagrees with them (offline / faster, but lower coverage).",
+        ),
+    ] = False,
+    rebuild: Annotated[
+        bool,
+        typer.Option(
+            "--rebuild",
+            help="Regenerate every row from scratch, re-resolving accessions "
+            "already indexed and dropping ones no longer cited. By default the "
+            "refresh only adds rows for newly cited accessions, so it does not "
+            "rewrite rows other open PRs depend on.",
         ),
     ] = False,
 ):
-    """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
+    """Build or extend the PANTHER member index (.cache/panther/panther-members-<release>.tsv).
 
     Builds a pruned UniProt-accession -> PANTHER-family index covering every
     accession cited in modules/: all ``representative_members`` whether or not
@@ -4142,6 +4334,14 @@ def refresh_panther_members(
         build_member_index,
         fetch_panther_from_uniprot,
         fetch_sequence_classification,
+        apply_member_overrides,
+        incremental_member_index,
+        load_member_index,
+        load_member_index_alternates,
+        load_member_index_gaps,
+        member_index_path,
+        panther_assignments_conflict,
+        load_member_overrides,
         write_member_index,
     )
     import yaml
@@ -4159,8 +4359,9 @@ def refresh_panther_members(
     # members are the ones whose real family most needs resolving -- plus the
     # accessions cited only in prose, which the prose scan checks.
     accessions: set[str] = set()
+    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)  # ~10x faster when present
     for path in sorted((repo_root / "modules").rglob("*.yaml")):
-        doc = yaml.safe_load(path.read_text())
+        doc = yaml.load(path.read_text(), Loader=loader)
         accessions.update(iter_all_representative_accessions(doc))
     prose = {c.accession for c in collect_claims(repo_root / "modules")}
     accessions.update(prose)
@@ -4175,7 +4376,7 @@ def refresh_panther_members(
     # check, so they must be indexed too or the check reports UNRESOLVED forever.
     family_accessions: set[str] = set()
     for path in sorted((repo_root / "interpro" / "panther").glob("PTHR*/PTHR*-review.yaml")):
-        doc = yaml.safe_load(path.read_text()) or {}
+        doc = yaml.load(path.read_text(), Loader=loader) or {}
         for sub in doc.get("subfamilies") or []:
             for member in sub.get("representative_members") or []:
                 if isinstance(member, dict) and member.get("id"):
@@ -4195,37 +4396,82 @@ def refresh_panther_members(
         )
     accessions.update(family_accessions)
 
-    paths = []
-    for slug in organisms:
-        classification = fetch_sequence_classification(slug, cache)
-        if classification is None:
-            typer.echo(f"  ⚠ no PANTHER classification for organism '{slug}'")
-            continue
-        paths.append(classification)
+    members_path = member_index_path(repo_root)
+    existing = {} if rebuild else load_member_index(members_path)
+    # Accessions already confirmed absent from both sources are not re-queried
+    # on every run (that re-parse of ~300 MB of classifications is what made an
+    # otherwise no-op refresh take a minute); --rebuild re-checks them.
+    known_absent = set() if rebuild else load_member_index_gaps(members_path).absent
+    alternates = {} if rebuild else load_member_index_alternates(members_path)
+    counts = {"files": 0, "uniprot": 0, "classifications": 0}
 
-    index = build_member_index(accessions, paths)
-    from_files = len(index)
+    def resolve(needed: set[str]) -> dict[str, str]:
+        typer.echo(f"resolving {len(needed)} accession(s) not yet indexed...")
+        paths = []
+        for slug in organisms:
+            classification = fetch_sequence_classification(slug, cache)
+            if classification is None:
+                typer.echo(f"  ⚠ no PANTHER classification for organism '{slug}'")
+                continue
+            paths.append(classification)
+        counts["classifications"] = len(paths)
+        found = build_member_index(needed, paths)
+        counts["files"] = len(found)
+        if not no_uniprot_fallback:
+            # Ask UniProt about every newly needed accession, not only the ones the
+            # files miss: for some proteins the two sources disagree, and neither
+            # is privileged, so the UniProt value is recorded as an alternate that
+            # membership checks also accept (reporting the disagreement).
+            typer.echo(f"checking {len(needed)} accession(s) against UniProt...")
+            from_uniprot = fetch_panther_from_uniprot(needed)
+            for accession, family_sf in from_uniprot.items():
+                if accession not in found:
+                    found[accession] = family_sf
+                    counts["uniprot"] += 1
+                elif panther_assignments_conflict(found[accession], family_sf):
+                    alternates[accession] = family_sf
+        return found
 
-    if not no_uniprot_fallback:
-        unresolved = accessions - set(index)
-        if unresolved:
+    index = incremental_member_index(existing, accessions, resolve, known_absent)
+    overrides_path = repo_root / "interpro" / "panther" / "panther-members-overrides.tsv"
+    overrides = load_member_overrides(overrides_path)
+    if overrides:
+        index = apply_member_overrides(index, overrides, accessions)
+        applied = len(set(overrides) & accessions)
+        typer.echo(
+            f"applied {applied} of {len(overrides)} curated override(s) from "
+            f"{overrides_path.relative_to(repo_root)}"
+        )
+        if applied < len(overrides):
             typer.echo(
-                f"resolving {len(unresolved)} remaining accession(s) via UniProt..."
+                "  ⚠ overrides for accessions no longer cited: "
+                + ", ".join(sorted(set(overrides) - accessions))
             )
-            index.update(fetch_panther_from_uniprot(unresolved))
+        # An override that adopts UniProt's value settles that disagreement.
+        alternates = {
+            accession: family_sf
+            for accession, family_sf in alternates.items()
+            if accession not in index
+            or panther_assignments_conflict(index[accession], family_sf)
+        }
 
     unresolved = accessions - set(index)
     out_path = write_member_index(
         index,
-        repo_root / "interpro" / "panther" / "panther-members.tsv",
+        members_path,
         unresolved,
         consulted_uniprot=not no_uniprot_fallback,
+        alternates={a: f for a, f in alternates.items() if a in index},
     )
+    mode = "rebuilt" if rebuild else f"kept {len(existing)} existing row(s)"
     typer.echo(
-        f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "
-        f"({from_files} from {len(paths)} organism classification(s), "
-        f"{len(index) - from_files} from UniProt); "
-        f"{len(unresolved)} unresolved, recorded in the file."
+        f"✓ Wrote {out_path} ({mode}): {len(set(index) & accessions)}/"
+        f"{len(accessions)} cited accessions resolved; added "
+        f"{counts['files']} from {counts['classifications']} organism "
+        f"classification(s) and {counts['uniprot']} from UniProt; "
+        f"{len(unresolved)} unresolved, recorded in the file; "
+        f"{len([a for a in alternates if a in index])} where PANTHER's files and "
+        "UniProt disagree (both accepted, reported as warnings)."
     )
 
 
@@ -4362,9 +4608,12 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
-    member_index = load_member_index(
-        repo_root / "interpro" / "panther" / "panther-members.tsv"
-    )
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    from ai_gene_review.etl.panther_families import load_member_index_alternates
+
+    member_index = load_member_index(member_index_path(repo_root))
+    member_alternates = load_member_index_alternates(member_index_path(repo_root))
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -4378,7 +4627,9 @@ def fix_panther_labels(
         skip: set[str] = set()
         corroborated: set[str] = set()
         for use in iter_family_member_uses(doc):
-            errors, _ = validate_family_members([use], member_index, paint_index)
+            errors, _ = validate_family_members(
+                [use], member_index, paint_index, alternates=member_alternates
+            )
             if errors:
                 skip.update(use.declared_family_curies)
             elif any(a in member_index for a in use.representative_accessions):
@@ -4555,7 +4806,9 @@ def panther_report_stats(
                 family_level += 1
             family_uses.append((use, declared_at_subfamily))
 
-    members = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    members = member_index_path(repo_root)
     index = load_member_index(members)
     subfamily_counts = load_subfamily_counts(
         repo_root / "interpro" / "panther" / "panther.obo"

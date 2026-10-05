@@ -8,6 +8,8 @@ committed nicotine module.
 
 from pathlib import Path
 
+from types import SimpleNamespace
+
 import pytest
 import yaml
 
@@ -31,6 +33,7 @@ from ai_gene_review.validation.module_validator import (
     validate_terms,
     validate_module_file,
     load_oak_adapter_map,
+    iter_evidence_go_terms,
     load_term_label_aliases,
 )
 
@@ -496,6 +499,145 @@ def test_validate_terms_accepts_reviewed_label_alias():
     assert warnings == []
 
 
+def test_validate_terms_reviewed_alias_cannot_bridge_obsoletion():
+    # GO:0006535 sat in a module for months because oak_config.yaml carried its
+    # pre-obsoletion label as a reviewed alias: the alias matched, so the
+    # 'obsolete ' prefix on the ontology label never surfaced.
+    terms = [("GO:0006535", "L-cysteine biosynthetic process from L-serine")]
+    resolver = _resolver_factory(
+        {
+            "GO:0006535": (
+                "obsolete L-cysteine biosynthetic process from L-serine",
+                set(),
+            )
+        }
+    )
+    aliases = {"GO:0006535": {"L-cysteine biosynthetic process from L-serine"}}
+    errors, warnings = validate_terms(
+        terms, {"GO": "real"}, resolver, label_aliases=aliases
+    )
+    assert len(errors) == 1
+    assert "is obsolete" in errors[0]
+    assert "alias" in errors[0] and "dropped" in errors[0]
+    assert warnings == []
+
+
+def test_validate_terms_reports_obsoletion_without_an_alias():
+    # No alias involved: the message still names the obsoletion, not just a
+    # label mismatch, so the remedy is to repoint rather than to relabel.
+    terms = [("GO:0006535", "L-cysteine biosynthetic process from L-serine")]
+    resolver = _resolver_factory(
+        {
+            "GO:0006535": (
+                "obsolete L-cysteine biosynthetic process from L-serine",
+                set(),
+            )
+        }
+    )
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver)
+    assert len(errors) == 1
+    assert "is obsolete" in errors[0] and "replaced_by" in errors[0]
+    assert "alias" not in errors[0]
+
+
+def test_validate_terms_rejects_verbatim_obsolete_label_as_grounding():
+    # Pasting the ontology's 'obsolete X' label into a term block matches the
+    # primary label exactly, but a module still cannot be grounded on it.
+    terms = [
+        ("GO:0046537", "obsolete 2,3-bisphosphoglycerate-independent PGM activity")
+    ]
+    resolver = _resolver_factory(
+        {
+            "GO:0046537": (
+                "obsolete 2,3-bisphosphoglycerate-independent PGM activity",
+                set(),
+            )
+        }
+    )
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver)
+    assert len(errors) == 1
+    assert "cannot be grounded on a retired term" in errors[0]
+
+
+def test_validate_terms_lets_evidence_quote_a_retired_label_verbatim():
+    # emp_glycolysis cites GO:0046537 as evidence with its retired label to
+    # explain why the dPGM/iPGM distinction cannot be grounded; that is allowed.
+    terms = [
+        ("GO:0046537", "obsolete 2,3-bisphosphoglycerate-independent PGM activity")
+    ]
+    resolver = _resolver_factory(
+        {
+            "GO:0046537": (
+                "obsolete 2,3-bisphosphoglycerate-independent PGM activity",
+                set(),
+            )
+        }
+    )
+    errors, warnings = validate_terms(
+        terms,
+        {"GO": "real"},
+        resolver,
+        where="evidence title",
+        allow_obsolete_citation=True,
+    )
+    assert errors == []
+    # ...and the benign carve-out is visible rather than silent.
+    assert len(warnings) == 1 and "quotes the retired label verbatim" in warnings[0]
+    # ...but a stale pre-obsoletion title on the same id is still an obsoletion.
+    stale = [("GO:0046537", "2,3-bisphosphoglycerate-independent PGM activity")]
+    errors, _ = validate_terms(
+        stale,
+        {"GO": "real"},
+        resolver,
+        where="evidence title",
+        allow_obsolete_citation=True,
+    )
+    assert len(errors) == 1
+    assert (
+        "is obsolete" in errors[0] and "quote the retired label verbatim" in errors[0]
+    )
+
+
+def test_validate_terms_names_the_field_in_mismatch_messages():
+    terms = [("GO:0019288", "stale evidence title")]
+    resolver = _resolver_factory({"GO:0019288": ("current label", set())})
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver, where="evidence title")
+    assert len(errors) == 1
+    assert errors[0].startswith(
+        "Label mismatch for GO:0019288: evidence title says "
+        "'stale evidence title' but ontology label is 'current label'"
+    )
+
+
+def test_iter_evidence_go_terms_collects_titled_go_citations_at_any_depth():
+    doc = {
+        "evidence": [
+            {"source_id": "GO:0019344", "title": "L-cysteine biosynthetic process"},
+            {"source_id": "PMID:1", "title": "a paper"},
+            {"source_id": "GO:0000001"},  # untitled: nothing to compare
+            {"source_id": "file:x.md", "title": "GO:0000002 is not a source_id"},
+        ],
+        "module": {
+            "parts": [
+                {
+                    "node": {
+                        "evidence": [
+                            {
+                                "source_id": "GO:0061678",
+                                "title": " Entner-Doudoroff pathway ",
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+    }
+    assert list(iter_evidence_go_terms(doc)) == [
+        ("GO:0019344", "L-cysteine biosynthetic process"),
+        ("GO:0061678", "Entner-Doudoroff pathway"),
+    ]
+
+
 def test_validate_terms_flags_unresolvable_id():
     terms = [("GO:9999999", "nonexistent")]
     resolver = _resolver_factory({})  # nothing known -> not_found
@@ -596,9 +738,7 @@ def test_load_oak_adapter_map():
 
 def test_load_term_label_aliases():
     aliases = load_term_label_aliases(PROJECT_ROOT / "conf" / "oak_config.yaml")
-    assert aliases["GO:0008883"] == {
-        "glutamyl-tRNA reductase (NADP+) activity"
-    }
+    assert aliases["GO:0008883"] == {"glutamyl-tRNA reductase (NADP+) activity"}
 
 
 # --------------------------------------------------------------------------- #
@@ -634,6 +774,27 @@ def test_validate_module_file_passes_conformant_module():
         MODULES_DIR / "erk_cascade.yaml", resolver=_skip_label_resolver
     )
     assert result.errors == [], "\n".join(result.errors)
+
+
+def test_validate_module_file_checks_evidence_titles(tmp_path):
+    # The evidence-title check is wired through validate_module_file: a stale
+    # title on a GO id cited as evidence surfaces as an error, and the same id
+    # asserted as a grounding resolves through one cached lookup.
+    doc = {
+        "id": "MODULE:evidence_titles",
+        "title": "evidence titles",
+        "evidence": [{"source_id": "GO:0019344", "title": "stale title"}],
+        "module": {"id": "m", "label": "m"},
+    }
+    path = tmp_path / "evidence_titles.yaml"
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+    resolver = _resolver_factory(
+        {"GO:0019344": ("L-cysteine biosynthetic process", set())}
+    )
+    result = validate_module_file(path, resolver=resolver)
+    assert [e for e in result.errors if "evidence title says 'stale title'" in e], (
+        result.errors
+    )
 
 
 def test_validate_module_file_flags_bad_conformance(tmp_path):
@@ -702,7 +863,16 @@ def test_validate_supporting_text_no_literature_is_noop():
     assert errors == [] and warnings == []
 
 
-def test_validate_supporting_text_fetch_exception_is_warning(monkeypatch):
+def test_validate_supporting_text_fetch_exception_is_an_error(monkeypatch):
+    """A crash while checking a snippet is an error, not a pass.
+
+    This reverses the previous assertion, which required a WARNING and named the failure
+    "transient". Downgrading here skips validation for a reason that has nothing to do
+    with whether the quote is correct, which leaves an unverified snippet looking exactly
+    like a verified one. The gene-review validator made the same change; this is the
+    module-document half of it.
+    """
+
     class RaisingValidator:
         def validate(self, supporting_text, source_id):
             raise RuntimeError("transient fetch failure")
@@ -713,14 +883,41 @@ def test_validate_supporting_text_fetch_exception_is_warning(monkeypatch):
     )
     doc = {
         "module": {
-            "evidence": [
-                {"source_id": "PMID:123", "supporting_text": "a real quote"}
-            ]
+            "evidence": [{"source_id": "PMID:123", "supporting_text": "a real quote"}]
         }
     }
     errors, warnings = validate_supporting_text(doc)
-    assert errors == []
-    assert any("transient fetch failure" in warning for warning in warnings)
+    assert warnings == []
+    assert any("transient fetch failure" in error for error in errors)
+    assert any("could not be checked" in error for error in errors)
+
+
+def test_validate_supporting_text_uncached_reference_is_an_error(monkeypatch):
+    """An uncheckable-because-uncached snippet is an error too.
+
+    The unfetchable branch was the other downgrade path in this function, and it is the
+    common one: an author can add a quote for a reference that was never cached and, under
+    the old rule, see only an advisory warning.
+    """
+
+    class Unfetchable:
+        def validate(self, supporting_text, source_id):
+            return SimpleNamespace(
+                is_valid=False, message="Could not fetch publication PMID:123"
+            )
+
+    monkeypatch.setattr(
+        "ai_gene_review.validation.module_validator.build_supporting_text_validator",
+        lambda publications_dir: (Unfetchable(), None),
+    )
+    doc = {
+        "module": {
+            "evidence": [{"source_id": "PMID:123", "supporting_text": "a real quote"}]
+        }
+    }
+    errors, warnings = validate_supporting_text(doc)
+    assert warnings == []
+    assert any("could not be checked" in error for error in errors)
 
 
 @pytest.mark.integration
@@ -837,11 +1034,7 @@ def test_validate_reference_titles_wrong_title_errors():
     pytest.importorskip("linkml_reference_validator")
     if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
         pytest.skip("cached publication PMID_10049358 not present")
-    doc = {
-        "references": [
-            {"id": "PMID:10049358", "title": "An unrelated wrong title"}
-        ]
-    }
+    doc = {"references": [{"id": "PMID:10049358", "title": "An unrelated wrong title"}]}
     errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
     assert any("title mismatch" in e.lower() for e in errors), errors
 
@@ -871,7 +1064,9 @@ def test_iter_family_member_uses_requires_both_family_and_member():
 
     no_family = {
         "family": {
-            "representative_members": [{"term": {"id": "UniProtKB:O14521", "label": "r"}}]
+            "representative_members": [
+                {"term": {"id": "UniProtKB:O14521", "label": "r"}}
+            ]
         }
     }
     assert list(iter_family_member_uses(no_family)) == []
@@ -969,9 +1164,7 @@ def test_validate_cited_ptn_sources_accepts_goa_attested_node():
     current PAINT snapshot no longer carries it (release skew)."""
     cited = [("$.evidence[0].source_id", "PANTHER:PTN002225929")]
 
-    assert (
-        validate_cited_ptn_sources(cited, {}, {"PANTHER:PTN002225929"}) == []
-    )
+    assert validate_cited_ptn_sources(cited, {}, {"PANTHER:PTN002225929"}) == []
 
 
 def test_load_goa_attested_ptns_reads_with_from_column(tmp_path):
@@ -1012,7 +1205,10 @@ def test_validate_family_members_defers_to_paint_corroboration():
     is corroborated by a second machine source, so it warns rather than fails."""
     doc = {
         "family": {
-            "term": {"id": "PANTHER:PTHR16515", "label": "PR DOMAIN ZINC FINGER PROTEIN"},
+            "term": {
+                "id": "PANTHER:PTHR16515",
+                "label": "PR DOMAIN ZINC FINGER PROTEIN",
+            },
             "representative_members": [
                 {"term": {"id": "UniProtKB:P10069", "label": "BrlA"}}
             ],
@@ -1116,9 +1312,7 @@ def test_count_ungrounded_families_sees_family_terms_only_grounding():
     doc = {
         "family": {
             "family_terms": [{"id": "PANTHER:PTHR38761:SF1", "label": "x"}],
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
 
@@ -1130,9 +1324,7 @@ def test_count_ungrounded_families_treats_non_panther_term_as_grounded():
     doc = {
         "family": {
             "term": {"id": "InterPro:IPR000719", "label": "x"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
 
@@ -1205,7 +1397,10 @@ def test_validate_family_members_advises_subfamily_for_heterogeneous_family():
     """PTHR24416 grounds 13 different receptor kinases; the family says little."""
     doc = {
         "family": {
-            "term": {"id": "PANTHER:PTHR24416", "label": "TYROSINE-PROTEIN KINASE RECEPTOR"},
+            "term": {
+                "id": "PANTHER:PTHR24416",
+                "label": "TYROSINE-PROTEIN KINASE RECEPTOR",
+            },
             "representative_members": [
                 {"term": {"id": "UniProtKB:P00533", "label": "EGFR"}}
             ],
@@ -1227,9 +1422,7 @@ def test_validate_family_members_no_subfamily_advice_for_small_family():
     doc = {
         "family": {
             "term": {"id": "PANTHER:PTHR1", "label": "f"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
     errors, warnings = validate_family_members(
@@ -1274,11 +1467,7 @@ def test_validate_paint_ptns_seed_overlap_is_vacuous_without_uniprot_seeds():
             ],
         },
     }
-    index = {
-        "PANTHER:PTN000000001": [
-            _paint_row(seeds="MGI:MGI:88314|SGD:S000003865")
-        ]
-    }
+    index = {"PANTHER:PTN000000001": [_paint_row(seeds="MGI:MGI:88314|SGD:S000003865")]}
 
     errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
 
@@ -1450,3 +1639,31 @@ def test_compare_label_diagnoses_a_placeholder_under_any_prefix(curie):
     assert "asserts nothing about the entity" in message
     assert "usually means the ID is wrong" not in message
     assert "fix-panther-labels" not in message
+
+
+def test_validate_family_members_accepts_uniprot_alternate_with_warning():
+    """When PANTHER's files and UniProt disagree, either family is accepted."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, warnings = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR11375:SF2"},
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "UniProt" in warnings[0]
+    assert "PTHR11375:SF2" in warnings[0]
+
+
+def test_validate_family_members_alternate_for_other_family_still_fails():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, _ = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR99999"},
+    )
+
+    assert len(errors) == 1

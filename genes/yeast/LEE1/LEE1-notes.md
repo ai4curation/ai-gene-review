@@ -40,7 +40,9 @@ orthology, and the (sparse) literature. No invented function.
   against it.** See "Makorin/E3-ligase over-propagation" below.
 - **Biological process is unknown.** SGD/GO: biological_process = ND. Deletion phenotypes are
   pleiotropic HTP-screen readouts, not a defined pathway.
-- **Subcellular localization is unknown** (GO cellular_component = ND).
+- **No GO-curated cellular component is known** (GO cellular_component = ND). SGD reports a
+  cytoplasmic localization from the Huh et al. 2003 global GFP survey, but the gene-specific
+  localization table was not re-read directly from the abstract-only cached record.
 - **What (if anything) it binds** (RNA? DNA? which targets?) is unknown.
 
 ## Makorin / E3-ligase over-propagation analysis (the central curation issue)
@@ -83,7 +85,8 @@ Curation consequence:
   **ACCEPT** (zinc binding is real per CCCH fingers; keep zinc as the more specific term). Metal ion
   binding is the generic parent; keep but note zinc is more precise.
 - GO:0005575 (cellular_component ND), GO:0008150 (biological_process ND) -> **ACCEPT** as
-  root/ND placeholders (correctly signal "unknown"; standard practice to keep ND roots).
+  root/ND placeholders. The CC root says "no GO-curated localization assertion", not that
+  the Huh 2003 global GFP cytoplasmic call in SGD does not exist.
 
 ## References checked
 - PMID:30358795 — Wang et al. 2018 Metallomics, yeast zinc proteome. Abstract-only cached; supports
@@ -92,6 +95,11 @@ Curation consequence:
 - PMID:19779198 — Holt et al. 2009 Science, Cdk1 substrate phosphosites (UniProt ref for phosphosites).
 - SGD YPL054W (yeastgenome.org) — "Zinc-finger protein of unknown function"; phenotype summary.
 - BioGRID 36126 — 74 interactors, HTP only, 0 curated GO.
+- PMID:14562095 — Huh et al. 2003 Nature, global GFP protein-localization survey. SGD reports
+  LEE1/YPL054W as cytoplasmic from this study; cached PubMed record is abstract-only and does not
+  expose the gene-specific table.
+- PMID:23550123 — Alver et al. 2013 G3, stationary-phase minisatellite SGA screen. Full text is
+  cached; lee1Δ/ypl054wΔ is a high-throughput ade2-h7.5 screen hit, not direct pathway evidence.
 - InterPro Q02799 (EBI API) — domain complement; confirms NO RING.
 - PANTHER PTHR11224 (cached) — MAKORIN-RELATED family; SF10; IBA seeds are RING makorins.
 
@@ -133,3 +141,32 @@ Provenance policy: I do NOT add falcon-sourced supporting_text quotes to support
 with correctness UNVERIFIED because the LEE1-specific claim is not verifiable in the cached
 abstract-only record. These findings inform the description prose and knowledge_gap boundaries
 (reviewer synthesis), not verbatim-quoted supporting_text.
+
+## 2026-09-30 IBA re-review
+
+- Rechecked the two GO_Central PTHR11224 IBA rows against the cached PAINT export.
+  `GO:0061630` ubiquitin protein ligase activity and `GO:0016567` protein ubiquitination
+  both remain at `PTN000131854`, a eukaryote-wide MAKORIN-related node seeded by
+  RING-containing human and mouse makorins.
+- Retained both rows as `MARK_AS_OVER_ANNOTATED`. This is not a donor-count issue:
+  the human and mouse makorin source annotations support their own RING-dependent E3
+  ligase biology, but LEE1/Q02799 has only CCCH zinc-finger signatures plus MKRN-like
+  family membership and lacks the C3HC4/RING domain that carries makorin ubiquitin
+  transfer.
+- Searched for newer direct LEE1/YPL054W papers through 2026; no primary paper
+  establishing Lee1 RNA binding, ubiquitin ligase activity, localization, or pathway
+  participation was found. Public hits were database pages, the old nitrogen-response
+  paper, or large-scale expression/interaction datasets with only passing LEE1 mentions.
+
+### PR #3600 follow-up
+
+- Removed `PSEUDO_OR_SUBACTIVITY_LOSS` from the makorin/RING propagation reviews. The LEE1
+  counterargument is not a pseudoenzyme residue substitution: Q02799 lacks the entire C3HC4/RING
+  domain, has only eight cysteines in 301 aa, uses six of them for the two CCCH zinc fingers
+  (C93/C101/C107 and C124/C132/C138), and leaves only C55 and C299 outside those fingers.
+- Added explicit `residue_claims_not_applicable` notes to the GOA review and IBA project rows so
+  the whole-domain nature of the claim is machine-visible.
+- Promoted Huh 2003 (PMID:14562095) and Alver 2013 (PMID:23550123) into the top-level
+  references, then narrowed the GO:0005575 ND row to the GO-specific fact: LEE1 has no curated
+  cellular-component GO assertion even though SGD reports cytoplasmic localization from the global
+  GFP survey.

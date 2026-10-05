@@ -119,3 +119,15 @@ This is a clear case of paralog confusion.
 
 ### identical protein binding (GO:0042802)
 ISS/ISO from human P54868. Not informative about specific function.
+
+
+## Evidence re-review, 2026-09-20
+
+Reviewed all 55 rows against the 29 existing references, available primary abstracts, UniProt and PTHR43323. Newly retrieved PMID:7961793 shows mitochondrial HMG-CoA synthase restoring growth and acetate-to-cholesterol labeling in engineered mevalonate-auxotrophic CHO cells. This disproves an absolute compartment barrier but does not establish physiological rat isoprenoid flux; the mevalonate/FPP and isoprenoid rows are UNDECIDED pending adjudication. The GOA source PTN000222418 remains in the current PAINT slice for synthase/acetyl-CoA functions, but its FPP assertion is absent; this version discrepancy cannot prove why PAINT changed. Acetyl-CoA metabolism, acyltransferase activity and mitochondrial parent terms are valid core properties, and homodimer-based identical-protein binding is retained as non-core. Lung-development, adipose-development and amino-acid-response judgments are UNDECIDED because abstract-only coverage cannot overrule the curated specific experimental claims. The temperature-response challenge is retained in the conditions explicitly reported as showing no effect. New source: [PMID:7961793](https://pubmed.ncbi.nlm.nih.gov/7961793/).
+
+
+## 2026-09-21: focused OpenScientist report incorporated
+
+Read the entire `mevalonate-and-isoprenoid-synthesis/openscientist.md` report and both delivered CSV artifacts. The report supports the established ketogenic core and emphasizes the HMGCR/mitochondrial compartment distinction. It also acknowledges absence of native compartment-resolved isotope tracing. Those findings do not establish universal exclusion from the pathway. Its recommended removal/NOT rests partly on a failed literature search: PMID:7961793, independently checked against PubMed, explicitly reports cholesterol labeling after mitochondrial HMG-CoA synthase complementation and mitochondrial immunolocalization. The cached paper is abstract-only; no unobserved transport mechanism, rat construct identity or physiological in-vivo flux is inferred. The engineered system is evidence of capacity, not a new core rat pathway assertion.
+
+Live QuickGO returned 55 P22791 annotations, including GO:0008299 IEA (InterPro IPR000590/IPR010122), contrary to the report and its CSV. The earlier GO:0010142 rows are absent from that current release, matching the previously observed PAINT-slice drift, but the original source rows remain intact. Snapshot: `projects/IBA_REVIEW/rereview-2026-09-20/hmgcs2-live-annotations.json`. The report's evidence-code hierarchy is not a substitute for an ancestral-node argument. All three reviewed pathway rows remain UNDECIDED; no NOT assertion is added. Native flux and curator clarification remain follow-up questions.

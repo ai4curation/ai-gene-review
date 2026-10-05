@@ -124,3 +124,20 @@ PMID:18407956, PMID:19779198), supplemented by targeted web/PubMed lookups recor
 - PMID:18407956 — phosphoproteome (Thr194/Ser207/Ser211).
 - PMID:19779198 — Cdk1 substrate phosphosites (Ser207).
 - file: PANTHER PTHR12374 family/subfamily data (interpro/panther/PTHR12374) for subfamily reasoning.
+
+
+## 2026-09-21: full-gene re-review with actual tree and term definitions
+
+All eleven original rows reviewed. Actual PTHR12374 treeinfo lineage places Fun19/P28003 leaf PTN000271934 below both PTN000271860 ancestral nuclear/chromatin/regulatory assertions and fungal PTN000271931 Rpd3L-Expanded assertion. The latter has a separate IRD loss of GO:0070461 SAGA-type complex; there is no corresponding negation of chromatin binding, coactivation or broad Pol-II regulation. Treat that selective loss as a specific evolutionary judgment, not permission to erase every ancestor function.
+
+Current GO:0070210 explicitly describes an S. cerevisiae complex, so the old fission-yeast-only exclusion is false. GO:0006338 describes chromatin reorganization and does not require every participant to contain an ATPase. A SWIRM-bearing structural/regulatory subunit can contribute to a deacetylase/remodeling complex. Restore nucleus, chromatin binding, remodeling, Pol-II regulation, Rpd3L-Expanded membership and the compatible broad gene-expression assertion. Restore coactivator and derived positive-regulation assertions as inherited functions because Ada2 ZZ/SANT/SAGA divergence does not demonstrate loss of every activation mechanism. A neutral focused report is queued to examine directionality and functional interfaces; it does not treat absent target assays or sibling-subfamily donors as refutation.
+
+The 1992 gene-discovery abstract (PMID:1583694) establishes nonessentiality; PMID:16461455 assays Swi3/Rsc8 SWIRM domains, not Fun19; phosphoproteomics establishes expression/modification rather than this regulatory mechanism. All source fields and ND rows are preserved. Core functions explicitly distinguish phylogenetic inference from direct target experimentation. No NEW annotation was needed. Existing notes' categorical rejection statements are superseded by this assessment.
+
+Repository and global OpenScientist cache searches for FUN19, P28003 and YAL034C found no prior report. Tree path, node assertions and current definitions are retained in `projects/IBA_REVIEW/rereview-2026-09-20/ecm30-fun19-paint-and-terms.json`. Independent reviewer reasoning check confirmed that SAGA loss cannot by itself negate coactivation.
+
+## 2026-10-01: focused Ada2/SAGA coactivation report incorporated
+
+The focused OpenScientist report in `FUN19-hypotheses/transcription-coactivation-after-ada2-saga-divergence/openscientist.md` found no direct Fun19 activation assay and made a more specific mechanistic argument against retaining the directional coactivator calls. Its key new support is PMID:36965704: in canonical Ada2, the SWIRM domain tethers the Ada2/Gcn5/Ada3/Sgf29 HAT module to SAGA, whereas Fun19 retains only SWIRM and sits in the SF21 branch with explicit IRD loss of SAGA-type complex membership. That is enough target-specific divergence to generalize the activation-specific GO:0003713 IBA to sign-neutral GO:0003712 transcription coregulator activity and remove the GO:0045893 inter-ontology derivative even though the broader PTN000271860 chromatin-binding/chromatin-remodeling/Pol-II-regulation inferences remain plausible.
+
+I retained the neutral chromatin and Rpd3L rows. The report recommended keeping GO:0070210, GO:0003682, GO:0006338 and GO:0006357 as IBA-level neutral terms pending direct assays; it did not show that the PTN000271860 or PTN000271931 placements for those rows are misplaced. Web searches for FUN19, P28003 and YAL034C did not surface a newer direct Fun19 functional paper.

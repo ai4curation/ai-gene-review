@@ -16,8 +16,9 @@ The exact IBA WITH/FROM traces are:
 
 Neither PTN is recoverable in the current local PAINT snapshot, and the UniProt
 PANTHER family PTHR31996 has no local PAINT table. Both PTNs are therefore
-recorded with bare PTN labels and `SOURCE_STALE_OR_MISSING`. The target's own SGD
-identifier in WITH/FROM is expected experimental grounding, not circularity.
+recorded with bare PTN labels and `SOURCE_STALE_OR_MISSING`; the target's own
+SGD identifier in WITH/FROM is expected experimental grounding behind the IBD,
+not a separate propagation source or circularity.
 
 ## Biological synthesis
 
@@ -55,12 +56,32 @@ review does not replace GO:0051082 with GO:0044183 protein folding chaperone:
 stabilization is demonstrated, but assistance of client protein folding is not.
 It instead proposes a dedicated V-ATPase V0-sector assembly-factor activity term.
 
-For the IBA GO:0051082 row, the PTN source cannot be recovered. The VMA22 source
-seed is classified `SOURCE_WEAK_OR_INFERRED` because the experimental mutant and
-assembly evidence does not establish unfolded-protein binding; this reflects
-over-scoping rather than a wrong experiment. This is a
-term-scoping/role-conflation problem, not a claim that target self-evidence is
-circular.
+For the IBA GO:0051082 row, the PTN source cannot be recovered. VMA22's own
+experimental mutant and assembly evidence in the descendant evidence set does
+not establish unfolded-protein binding; this reflects over-scoping rather than a
+wrong experiment. This is a term-scoping/role-conflation problem, not a claim
+that target self-evidence is circular.
+
+### 2026-09-29 IBA project alignment
+
+This pass rechecked the two VMA22 IBA rows against the current IBA project
+convention. Both rows still point to PTNs that are present in GOA WITH/FROM but
+absent from a current local `PTHR31996` PAINT export, so the stale-PTN
+classification remains the right level of certainty. Their `source_entities`
+were tightened to the PAINT nodes only; the `SGD:S000001102` self-entry in
+WITH/FROM marks target-descendant experimental support behind the PAINT placement
+and is expected, but it is not the source entity to curate.
+
+The newly cached Wang et al. 2023 cryo-EM study (PMID:36724250) directly
+resolved yeast V0 assembly intermediates bound by Vma12p and Vma22p and supports
+the dedicated V-ATPase assembly-factor mechanism. Its Vma22p-specific section
+shows that Vma22p occupies the V0 subunit-d site otherwise used by V1 subunit D,
+so Vma22p can both connect Vma12p to subunit d and prevent premature V1 binding
+to the partially assembled V0 sector. The structure reinforces the core
+V-ATPase assembly call and the proposed dedicated assembly-factor term, but it
+does not rescue `GO:0051082 unfolded protein binding`; the remaining structural
+question is what the 35-residue disordered loop C-terminal to Vma22p's folded
+subunit-D-like core contributes.
 
 ## Localization and evidence limitations
 

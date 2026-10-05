@@ -2,9 +2,36 @@
 title: "Metabolomics Interpretation with GO and GO-CAM"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+manifest:
+  slides:
+    - href: METABOLOMICS/slides/METABOLOMICS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/1n4HSQCXjJ6ogACVmJMQGu
+      title: Project brief
 ---
 
 # Metabolomics Interpretation with GO and GO-CAM
+
+**Bottom line:** Metabolomics studies are interpreted with KEGG or SMPDB
+pathway sets, and GO is not used because it annotates gene products, not
+metabolites. We built a working bridge from a study's metabolites to GO:
+metabolite (ChEBI) → Rhea reaction → GO molecular function via `rhea2go` →
+human enzymes → GO biological process, followed by closure-aware enrichment.
+The main obstacle was identifiers, not biology. Rhea records the charged form
+at pH 7.3 (`citrate(3-)`) while repositories record the neutral or generic form
+(`citric acid`, `isoleucine`), so exact ChEBI matching connected only 8 of 64
+metabolites in MetaboLights study MTBLS1; normalizing over ChEBI protonation
+and structure relations raised that to 58 of 64. Across four MetaboLights
+studies, coverage after normalization is 53 to 91%, and GO enrichment picks up
+each study's own chemistry (amino-acid metabolism in urine, lipid metabolism in
+serum). Complex lipids are the main gap, the GO-CAM causal-network approach and
+the Reactome cross-check have not been started, and an interactive demo is
+planned.
+
+We are doing this to show that GO can give metabolomics analysts specific
+activities and processes, closure-aware enrichment and a vocabulary shared with
+gene-level data, rather than only broad pathway buckets.
 
 ## Overview
 
