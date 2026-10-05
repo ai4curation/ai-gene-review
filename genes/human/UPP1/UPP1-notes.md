@@ -84,8 +84,6 @@
   catabolism).
 - KEEP_AS_NON_CORE: GO:0042149 (cellular response to glucose starvation, IEA from rat ortholog).
 - ACCEPT (informative self-association, homodimer, structurally verified): GO:0042802 x2.
-</content>
-</invoke>
 
 ## 2026-09-28 — re-review against the current GOA snapshot (claude4go, from outside the repo)
 
