@@ -218,10 +218,12 @@ Refreshed the UniProt/QuickGO seed from the 2026-10-01 current GOA:
   the `PMID:36164978` peroxisome IDA, and the two SGD/ND root placeholders.
 - No new `PENDING` rows were seeded and no historical rows needed `retired: true`.
 - `GO:0005634 nucleus`, `GO:0005737 cytoplasm`, and `GO:0016787 hydrolase activity`
-  keep the 2026-09-30 IBA decisions. Their `propagation_review.source_entities`
-  now record the PAINT node alone, matching the IBA project convention; the
-  self-seeded FSH3 descendant evidence on the cytoplasmic IBD is valid and not
-  circular.
+  keep the 2026-09-30 IBA decisions. Their `propagation_review.source_entities` retain
+  the PAINT node and the donor records needed to support the node comments; the
+  self-seeded FSH3 descendant evidence on the cytoplasmic IBD is valid and not circular.
+- The refreshed UniProt record no longer carries the `GO:0005737 cytoplasm` IBA or
+  `GO:0052689 carboxylic ester hydrolase activity` keyword cross-reference, although
+  the current GOA still retains the cytoplasm IBA dated 2025-12-21.
 - No `GO:0005515 protein binding` rows were present.
 - PMID:41686312, found in the 2026 search, was added to the review as a LOW-relevance
   quantitative peroxisomal-proteome reference. It contextualizes Fsh3 abundance in
