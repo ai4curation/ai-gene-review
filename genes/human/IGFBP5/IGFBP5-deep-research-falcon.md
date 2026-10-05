@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-10-05T01:01:47.312019'
-end_time: '2026-10-05T01:24:22.183445'
-duration_seconds: 1354.87
+start_time: '2026-10-05T01:11:09.374596'
+end_time: '2026-10-05T01:41:56.775210'
+duration_seconds: 1847.4
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: human
@@ -25,7 +25,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 51
+citation_count: 65
 artifact_count: 2
 artifact_sources:
   edison_answer_artifacts: 1
@@ -42,9 +42,9 @@ artifacts:
   media_type: image/png
   source: edison_message_content
   data_storage_id: null
-  description: '## Context ID: pqac-00000029 Figure 1 provides a schematic representation
-    of the structure of IGFBP-5, illustrating its three main protein domains: the
-    highly c'
+  description: '## Context ID: pqac-00000020 I have extracted Figure 2 from page 4,
+    which illustrates the proposed modes of IGFBP-5 actions across four panels: (A)
+    the IGF:IGFB'
 ---
 
 ## Question
@@ -155,162 +155,195 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Human IGFBP5: functional annotation and research report
+# Human IGFBP5 (UniProt P24593): functional annotation research report
 
-## Identity and primary function
+**Identity verified.** The supplied UniProt accession **P24593** identifies *Homo sapiens* IGFBP5, encoding insulin-like growth factor-binding protein 5 (IGFBP-5; synonym IBP5). Human-protein studies describe a 272-amino-acid precursor and a 252-amino-acid mature protein after removal of its secretion signal. IGFBP-5 is one of the six **high-affinity IGF-binding proteins**, not the distinct proteins IGFBP-3 or IGFBP-7. Its conserved, disulfide-stabilized, cysteine-rich N- and C-terminal regions—12 and six cysteines, respectively—flank a more flexible linker. These features agree with the IGFBP-like and cysteine-rich domain annotations supplied for P24593. IGFBP-5 is a **ligand-binding regulator, not an enzyme or transporter**. (beattie2006insulinlikegrowthfactorbinding pages 2-4, baxter2023signalingpathwaysof pages 2-3, duan2020insulinlikegrowthfactor pages 2-3)
 
-**Identity verified.** Human **IGFBP5** encodes insulin-like growth factor-binding protein 5 (IGFBP-5, also called IBP-5), **UniProt P24593**; a human follicular-fluid proteomics study explicitly maps P24593 to that protein. It is a member of the six high-affinity IGF-binding proteins, not the distinct paralogs IGFBP-3 or IGFBP-6. Its cysteine-rich IGFBP-like regions and IGFBP-5-specific domain annotations are consistent with the experimentally described protein architecture. (yin2025proteomicanalysisof pages 6-8, baxter2023signalingpathwaysof pages 2-3, duan2020insulinlikegrowthfactor pages 2-3)
+## Primary function, pathway and site of action
 
-**The principal molecular function is reversible binding of IGF-I and IGF-II to regulate their distribution and access to IGF1R.** IGFBP-5 is a secreted ligand-binding regulator—not an enzyme or an IGF receptor. Soluble, intact IGFBP-5 can sequester either growth factor and suppress IGF1R activation; matrix association or proteolysis can instead favor local IGF availability. Thus, *inhibition versus potentiation* describes different physical and physiological states of the same protein, rather than conflicting identities. In circulation, over half of IGFBP-5 is found in complexes containing an IGF and the acid-labile subunit (ALS), which contribute to the circulating IGF reservoir. (baxter2023signalingpathwaysof pages 2-3, kalus1998structureofthe pages 1-2, jones1993extracellularmatrixcontains pages 1-2, baxter2023signalingpathwaysof pages 4-5)
+IGFBP-5’s best-established function is to control **where and when IGF-1 and IGF-2 can activate IGF1R**. One IGFBP molecule binds one IGF molecule through contributions from both terminal domains. When soluble intact IGFBP-5 sequesters an IGF, it can prevent ligand access to IGF1R and diminish downstream growth and survival signaling; when IGFBP-5 concentrates IGF near a cell or releases it, the same protein can instead enhance signaling. IGF1R-linked PI3K–AKT and MAPK responses are therefore *downstream consequences of altered ligand availability*, not reactions catalyzed by IGFBP-5. This conditional behavior is more informative than labeling the protein simply an IGF inhibitor or activator. (baxter2023signalingpathwaysof pages 2-3, duan2020insulinlikegrowthfactor pages 3-5, sechrist2025pathologicsignalingand pages 2-4)
 
-## Structure, binding specificity and location of action
+**Blood.** IGF-bound IGFBP-5 can associate with acid-labile subunit (ALS) to form a roughly 150-kDa ternary complex retained in the circulation. More than half of circulating human IGFBP-5 is reported in these complexes. Separately, approximately **75–80% of circulating IGF** is in ALS complexes containing **either IGFBP-3 or IGFBP-5**—that percentage must not be interpreted as the fraction carried by IGFBP-5 alone. Complex formation extends IGF residence and provides a circulating reservoir; reported free IGF is approximately 1% or less of circulating IGF. (duan2020insulinlikegrowthfactor pages 2-3, baxter2023signalingpathwaysof pages 2-3)
 
-The human precursor has **272 amino acids**, including a secretion signal; the mature protein has **252 amino acids**. It comprises disulfide-stabilized, cysteine-rich **N- and C-terminal domains** separated by a less-conserved linker. The N-terminal domain contains a hydrophobic IGF-binding surface; the C-terminal basic region contributes to IGF and ALS interactions, binding to heparin-like molecules and extracellular matrix (ECM), and nuclear localization. The linker contains sites for regulatory proteolysis and other modifications. This architecture aligns with the supplied IGFBP-like, cysteine-rich and IGFBP-5 domain annotations; a domain annotation alone does not establish a signaling mechanism. The reviewed domain schematic is available as **Figure 1** of [Duan and Allard, March 2020](https://doi.org/10.3389/fendo.2020.00100). (kalus1998structureofthe pages 1-2, duan2020insulinlikegrowthfactor pages 2-3, duan2020insulinlikegrowthfactor media 8b2d90c7)
+**Extracellular matrix and cell surface.** Secreted IGFBP-5 associates with matrix constituents including collagen, laminin, fibronectin and vitronectin, and with heparin-like glycosaminoglycans; bone-matrix association includes hydroxyapatite. Its basic C-terminal region contributes to these interactions. Matrix binding can protect IGFBP-5 from degradation, retain local IGF, or facilitate IGF delivery near IGF1R. The direction is not invariant: fibronectin suppressed IGFBP-5-mediated potentiation of IGF-1-dependent migration in one cell system. The linker is susceptible to **PAPP-A and PAPP-A2 proteolysis**, which weakens sequestration and can increase receptor access; unlike PAPP-A cleavage of IGFBP-4, cleavage of IGFBP-5 need not require IGF occupancy. These observations locate much of IGFBP-5’s primary action **outside the cell**, in blood and tissue microenvironments. (duan2020insulinlikegrowthfactor pages 2-3, duan2020insulinlikegrowthfactor pages 3-5, baxter2023signalingpathwaysof pages 2-3, baxter2023signalingpathwaysof pages 5-6)
 
-Direct structural and biochemical evidence comes from [Kalus et al., *EMBO Journal*, November 1998](https://doi.org/10.1093/emboj/17.22.6558). NMR resolved the **Ala40–Ile92** N-terminal IGF-binding fragment as a compact, disulfide-stabilized fold with a three-stranded antiparallel β-sheet. In that study’s surface-binding assay, full-length IGFBP-5 had measured dissociation constants of **3.7 nM for IGF-I** and **0.08 nM for IGF-II**; these are assay-specific measurements, not a universal fixed selectivity ratio. The isolated N-terminal fragments bound IGFs but were less effective than full-length protein at preventing IGF binding to IGF1R and receptor autophosphorylation, consistent with contributions from the intact protein and both terminal regions. IGFBP-5 binds **both** IGFs; unlike IGFBP-6, it should not be annotated as exclusively IGF-II-specific. (kalus1998structureofthe pages 1-2, kalus1998structureofthe pages 3-6, baxter2023signalingpathwaysof pages 2-3, coda2025redoxbiologyand pages 7-9)
+The following evidence matrix separates established compartment-level functions from human observational and preclinical results. (duan2020insulinlikegrowthfactor pages 2-3, sureshbabu2012igfbp5inducescell pages 2-4, nimptsch2024pregnancyassociatedplasma pages 6-7, zhu2024igfbp5affectscardiomyocyte pages 2-6)
 
-**The main functional compartment is extracellular:** blood and other extracellular fluids, cell-adjacent matrix, and tissue ECM. In cultured human fetal fibroblasts, intact IGFBP-5 accumulated in ECM and bound collagen III/IV, laminin and fibronectin; matrix-associated IGFBP-5 had approximately **sevenfold lower IGF-I affinity** than soluble protein and *potentiated*, rather than blocked, IGF-I-stimulated fibroblast growth. Protein remaining in medium was more susceptible to cleavage. These experiments directly establish that localization can change the direction of its effect on IGF signaling. IGFBP-5 is also found intracellularly, including in nuclei, but nuclear residence must not be presumed necessary for every phenotype. (jones1993extracellularmatrixcontains pages 1-2, sun2017importinαimportinβ pages 11-13, su2015igfbp5promotesfibrosis pages 6-9)
-
-## Pathways and biological processes
-
-**Canonical IGF pathway.** By binding IGF-I/II, IGFBP-5 controls ligand engagement of **IGF1R** and thereby downstream growth and survival signaling, including **PI3K–AKT** in tested settings. Proteolysis provides a release mechanism: the extracellular metalloproteinase **PAPP-A2** cleaves IGFBP-5 without requiring bound IGF; PAPP-A also has activity against it. Cleavage can lower IGF-binding capacity and increase ligand access to IGF1R. IGFBP-5 is the *substrate* in these reactions, not the protease. [Baxter’s *Endocrine Reviews* synthesis, March 2023](https://doi.org/10.1210/endrev/bnad008), identifies this sequestration–ECM–proteolysis balance as central to interpreting IGFBP actions. A zebrafish *igfbp5a* model supports a conditional switch under low-calcium stress through Papp-aa-dependent IGF release, but that organism-specific experiment should not be presented as direct evidence for the same physiological response in humans. (baxter2023signalingpathwaysof pages 2-3, duan2020insulinlikegrowthfactor pages 2-3, duan2020insulinlikegrowthfactor pages 7-8)
-
-**IGF-independent matrix remodeling.** In primary human fibroblasts, an IGFBP-5 variant with impaired IGF binding still induced collagen and fibronectin. A nuclear-localization-signal mutant also retained fibrotic activity in cells and **ex-vivo human skin**, despite reduced nuclear accumulation; the overlapping mutation impaired its own ECM localization without preventing increased matrix production. Nucleolin knockdown reduced IGFBP-5 nuclear translocation but did not abolish the matrix response. These controlled experiments show that the tested profibrotic response **does not require IGF binding, nuclear entry or stable ECM association by IGFBP-5**. They do *not* identify a definitive initiating cell-surface receptor for that response. [Su et al., *PLOS ONE*, June 2015](https://doi.org/10.1371/journal.pone.0130546). (su2015igfbp5promotesfibrosis pages 6-9, su2015igfbp5promotesfibrosis pages 2-4)
-
-Complementary experiments in primary **human lung fibroblasts** and maintained human lung tissue found that recombinant or expressed IGFBP-5 increased ECM-associated gene expression, **CTGF** and **lysyl oxidase (LOX)**, as well as its **own expression**, indicating a potential profibrotic positive-feedback circuit. Responses to IGFBP-5 silencing differed among fibroblasts from healthy donors and those with systemic sclerosis or idiopathic pulmonary fibrosis; this is evidence for context dependence, not proof that IGFBP-5 alone causes either human disease. [Nguyen et al., *Frontiers in Endocrinology*, October 2018](https://doi.org/10.3389/fendo.2018.00601). (nguyen2018igfbp5promotesfibrosis pages 1-2)
-
-**Nuclear localization is a demonstrated but separate property.** A C-terminal bipartite nuclear-localization region is recognized by an importin-α/importin-β pathway; cultured-cell perturbation implicated importin-α5 and importin-β in trafficking. Nucleolin also associates with IGFBP-5 in primary human fibroblasts. However, the mutant and knockdown results above show that nuclear import is *dispensable for the particular fibrotic phenotype tested*. Proposed broader nuclear regulatory functions should therefore be distinguished from the well-established extracellular IGF-binding function. [Sun et al., *Endocrine Journal*, August 2017](https://doi.org/10.1507/endocrj.ej17-0156). (sun2017importinαimportinβ pages 11-13, su2015igfbp5promotesfibrosis pages 6-9, duan2020insulinlikegrowthfactor pages 7-8)
-
-In vivo genetics reinforce that IGFBP-5 is a **conditional regulator**, not an indispensable universal growth factor: individual *Igfbp5*-null mice have broadly normal growth and body composition, although mammary-gland involution is delayed. Redundancy within the IGFBP system and dependence on tissue, concentration and processing help explain why excess expression can produce pronounced effects while single-gene deletion has a relatively limited baseline phenotype. [Duan and Allard, March 2020](https://doi.org/10.3389/fendo.2020.00100). (duan2020insulinlikegrowthfactor pages 5-7, duan2020insulinlikegrowthfactor pages 8-9, duan2020insulinlikegrowthfactor pages 3-5)
-
-The following primary studies separate direct biochemical function from tissue-specific experimental outcomes:
-
-| Study | System | Direct evidence | Inference / limitations |
+| Compartment/context | Direct molecular role or observation | Evidentiary tier | Precise source (year) |
 |---|---|---|---|
-| [Kalus et al., 1998](https://doi.org/10.1093/emboj/17.22.6558) | Recombinant full-length and N-terminal human IGFBP-5 fragments; NMR, BIAcore, and IGF1R assays | NMR resolved a disulfide-stabilized N-terminal IGF-binding domain. BIAcore measured full-length IGFBP-5 K~D~ values of **3.7 nM for IGF-I** and **0.08 nM for IGF-II**; full-length protein inhibited ligand binding to IGF1R and receptor autophosphorylation. (kalus1998structureofthe pages 1-2, kalus1998structureofthe pages 3-6) | Establishes direct high-affinity ligand binding and canonical inhibition of IGF1R access. Affinities are assay-dependent, and the isolated fragments inhibited receptor activation less effectively than full-length IGFBP-5. |
-| [Jones et al., 1993](https://doi.org/10.1083/jcb.121.3.679) | Cultured human fetal fibroblasts and their extracellular matrix (ECM) | Intact IGFBP-5 preferentially entered ECM and bound collagen III/IV, laminin, and fibronectin. ECM-associated protein had approximately **sevenfold lower IGF-I affinity** than soluble IGFBP-5 yet potentiated IGF-I-stimulated fibroblast growth; medium-localized protein was cleaved to an inactive 22-kDa fragment. (jones1993extracellularmatrixcontains pages 1-2) | Demonstrates that localization converts IGFBP-5 from a soluble sequestrant into a protected local IGF reservoir. It is an in-vitro fibroblast system rather than an in-vivo human intervention. |
-| [Su et al., 2015](https://doi.org/10.1371/journal.pone.0130546) | Primary human fibroblasts and ex-vivo human skin from four donors; wild-type, IGF-binding-site-mutant, and NLS-mutant IGFBP-5 | Mutants defective in IGF binding or nuclear localization still increased collagen and fibronectin. Both mutants increased dermal thickness and hydroxyproline; nucleolin silencing reduced nuclear import but not ECM induction. (su2015igfbp5promotesfibrosis pages 6-9, su2015igfbp5promotesfibrosis pages 2-4) | Strong evidence that the tested profibrotic phenotype does **not** require IGF binding or nuclear entry. Adenoviral expression and ex-vivo tissue do not establish the unidentified initiating receptor or clinical causality. |
-| [Nguyen et al., 2018](https://doi.org/10.3389/fendo.2018.00601) | Primary human lung fibroblasts, including normal, systemic-sclerosis, and idiopathic-pulmonary-fibrosis donors; human lung organ culture | Recombinant or adenovirally expressed IGFBP-5 increased ECM genes, **CTGF**, and **LOX** in fibroblasts and lung tissue; IGFBP-5 also increased its own expression, creating positive feedback. (nguyen2018igfbp5promotesfibrosis pages 1-2) | Supports a direct profibrotic and matrix-crosslinking program in human tissue. Responses to silencing differed by donor disease state, emphasizing context dependence; this was not a clinical treatment study. |
-| [Zhu et al., 2024](https://doi.org/10.1038/s42003-024-07304-0) | AAV9-cTnT-shIGFBP5 cardiac knockdown in a mouse myocardial-infarction model; neonatal rat cardiomyocytes under oxygen–glucose deprivation | Cardiac IGFBP5 knockdown reduced apoptosis, increased proliferation, and lowered fibrosis to approximately **10% versus 18%** in MI controls. Knockdown increased IGF1R and AKT activation; IGF1R inhibition reversed its benefits. (zhu2024igfbp5affectscardiomyocyte pages 6-6, zhu2024igfbp5affectscardiomyocyte pages 1-2, zhu2024igfbp5affectscardiomyocyte pages 6-10) | Supports an adverse, IGF1–IGF1R–AKT-dependent role for excess IGFBP5 after ischemia. Evidence is preclinical, uses knockdown rather than a germline knockout, and may depend on injury stage and cellular context. |
+| Plasma: IGF–IGFBP5–ALS transport | IGFBP5 binds one IGF-1 or IGF-2 molecule and, when IGF-occupied, can bind acid-labile subunit (ALS) to form a ~150-kDa circulating reservoir. **75–80% of circulating IGF** is in ALS ternary complexes containing either IGFBP3 or IGFBP5; viewed from the protein side, **more than half of circulating IGFBP5** is in such complexes. These statistics are related but not interchangeable. (duan2020insulinlikegrowthfactor pages 2-3, baxter2023signalingpathwaysof pages 2-3) | Established biochemical/endocrine function; human circulation plus supporting model evidence | [Baxter, *Endocrine Reviews*](https://doi.org/10.1210/endrev/bnad008) (2023); [Duan & Allard, *Frontiers in Endocrinology*](https://doi.org/10.3389/fendo.2020.00100) (2020) |
+| Extracellular matrix and proteolytic release | IGFBP5 binds collagen, laminin, fibronectin, vitronectin, proteoglycans and hydroxyapatite, concentrating or storing IGF near cells. Matrix association can lower effective IGF affinity or alter proteolysis, permitting IGF delivery to IGF1R, although fibronectin can inhibit potentiation in some systems. PAPP-A and PAPP-A2 cleave the linker region; PAPP-A2 cleavage is IGF-independent and relatively selective for IGFBP5, reducing IGF sequestration and increasing receptor access. (duan2020insulinlikegrowthfactor pages 3-5, duan2020insulinlikegrowthfactor pages 2-3, baxter2023signalingpathwaysof pages 2-3, baxter2023signalingpathwaysof pages 5-6) | Strong biochemical and cell-model evidence; physiological direction is matrix- and cell-context dependent | [Baxter, *Endocrine Reviews*](https://doi.org/10.1210/endrev/bnad008) (2023); [Duan & Allard](https://doi.org/10.3389/fendo.2020.00100) (2020) |
+| Cell surface: α2β1 integrin | In human MCF-7 cells, an IGF-binding-deficient IGFBP5 mutant retained adhesion activity, whereas α2- or β1-integrin-blocking antibodies inhibited it. Biosensor analysis showed direct, slowly dissociating IGFBP5–α2β1 binding with an equilibrium constant of approximately **0.5 nM**; IGFBP5 increased ILK and Akt-S473 signaling. This supports IGF-independent adhesion/survival signaling. (sureshbabu2012igfbp5inducescell pages 2-4, sureshbabu2012igfbp5inducescell pages 4-5) | Direct mechanistic human-cell evidence with mutant, blocking-antibody and biophysical-binding controls | [Sureshbabu et al., *Journal of Cell Science*](https://doi.org/10.1242/jcs.092882) (2012) |
+| Nucleus | IGFBP5 has a C-terminal nuclear-localization sequence and can undergo importin-β-dependent nuclear import. Cell studies report transactivation and interactions with FHL2 or vitamin-D receptor, but target genes and physiological nuclear functions remain incompletely established; nuclear localization is not required for every reported phenotype, including fibrosis. IGFBP3-specific RXR and NLS-mutant findings must not be assigned to IGFBP5. (bach201840yearsof pages 9-10, duan2020insulinlikegrowthfactor pages 7-8, firth2002cellularactionsof pages 15-16, baxter2023signalingpathwaysof pages 10-11) | Demonstrated transport and in-vitro interactions; limited causal in-vivo validation | [Baxter, *Endocrine Reviews*](https://doi.org/10.1210/endrev/bnad008) (2023); [Bach, *Journal of Molecular Endocrinology*](https://doi.org/10.1530/JME-17-0254) (2018) |
+| Adult human plasma | Cross-sectional German cohort: **394 adults**, but usable IGFBP5 analyses involved **125** because **68% of measurements were below the detection limit**. Among available values, median IGFBP5 was **22.6 ng/mL** (IQR 6.2–73.7). PAPP-A was positively associated with IGFBP5, whereas PAPP-A2 was not (0.97-fold per 0.05-ng/mL increment; 95% CI 0.85–1.11). Assay censoring and cross-sectional design preclude causal inference. (nimptsch2024pregnancyassociatedplasma pages 6-7, nimptsch2024pregnancyassociatedplasma pages 5-6, nimptsch2024pregnancyassociatedplasma pages 3-4, nimptsch2024pregnancyassociatedplasma pages 4-5, nimptsch2024pregnancyassociatedplasma pages 2-3) | Human quantitative observational evidence; substantial detection-limit limitation | [Nimptsch et al., *Scientific Reports*](https://doi.org/10.1038/s41598-024-52074-8) (2024) |
+| Primary human fibrotic-lung fibroblasts and lung organ culture | Recombinant or adenovirally expressed IGFBP5 increased collagen-I/fibronectin deposition, CTGF, LOX and IGFBP5 itself in primary human lung fibroblasts. Human lung-tissue cores from 7–9 donors treated with 500 ng/mL IGFBP5 reproduced ECM/profibrotic responses. IGFBP5 siRNA achieved ~57%, 72% and 69% knockdown in normal, IPF and systemic-sclerosis fibroblasts, respectively, but downstream effects varied by disease and donor. (nguyen2018igfbp5promotesfibrosis pages 7-9, nguyen2018igfbp5promotesfibrosis pages 4-7, nguyen2018igfbp5promotesfibrosis pages 3-4, nguyen2018igfbp5promotesfibrosis pages 2-3) | Direct human-cell and ex-vivo-organ evidence; donor heterogeneity and short exposure limit translation | [Nguyen et al., *Frontiers in Endocrinology*](https://doi.org/10.3389/fendo.2018.00601) (2018) |
+| Myocardial infarction model | Cardiomyocyte-targeted Igfbp5 knockdown increased IGF1R/AKT signaling, reduced apoptosis and increased proliferation after ischemic injury. At 21 days after mouse MI, fibrosis was approximately **10% with knockdown versus 18% in controls**; echocardiographic function also improved. Human evidence was limited to IGFBP5-expression measurements in blood from five AMI patients and five controls, so therapeutic efficacy remains preclinical. (zhu2024igfbp5affectscardiomyocyte pages 2-6, zhu2024igfbp5affectscardiomyocyte pages 1-2, zhu2024igfbp5affectscardiomyocyte pages 6-6, zhu2024igfbp5affectscardiomyocyte pages 10-11) | Causal rodent and rat-cell evidence; minimal human observational evidence; **no demonstrated clinical approval** | [Zhu et al., *Communications Biology*](https://doi.org/10.1038/s42003-024-07304-0) (2024) |
 
 
-*Table: Five mechanistic studies establish IGFBP5 ligand binding, ECM-dependent IGF presentation, IGF-independent fibrotic activity, and context-specific signaling after myocardial injury. The limitations column distinguishes direct findings from conclusions that remain model-dependent.*
+*Table: Compartment-resolved evidence for human IGFBP5/P24593, separating established molecular functions, human observational findings and preclinical disease models. No row represents an approved IGFBP5-directed clinical intervention.*
 
-## Developments in 2023–2024 and translational status
+Figure 2 of Duan and Allard’s [March 2020 IGFBP-5 review](https://doi.org/10.3389/fendo.2020.00100) illustrates the proposed progression from circulating IGF–IGFBP-5–ALS transport to IGF sequestration, matrix- or protease-enabled delivery, and possible IGF-independent actions. Its membrane-receptor and nuclear panels are **models**, not proof that every depicted route is physiologically required. (duan2020insulinlikegrowthfactor media 295916b3, duan2020insulinlikegrowthfactor pages 3-5)
 
-The **2023 authoritative review** emphasizes that IGFBPs can regulate signaling beyond simple IGF sequestration, but also that many proposed interactions are context-dependent; IGFBP-5-specific claims are strongest where ligand binding, matrix localization, proteolysis or perturbation has been directly measured. (baxter2023signalingpathwaysof pages 2-3, baxter2023signalingpathwaysof pages 4-5)
+## Additional experimentally supported actions
 
-A **November 2024** myocardial-infarction study provides a recent causal test, though in **mice and cultured rat cardiomyocytes**, not patients. Cardiac-directed IGFBP5 knockdown reduced apoptosis and fibrosis and increased proliferation after injury; reported fibrosis was approximately **10% versus 18%** in infarcted controls. IGF1R/AKT phosphorylation and IGF1 or IGF1R-inhibitor experiments supported an IGF-dependent mechanism in that injury model. These findings cannot be generalized to imply that reducing IGFBP-5 benefits every tissue: its effect depends on which compartment and biological process is being measured. [Zhu et al., *Communications Biology*, November 2024](https://doi.org/10.1038/s42003-024-07304-0). (zhu2024igfbp5affectscardiomyocyte pages 6-6, zhu2024igfbp5affectscardiomyocyte pages 1-2, zhu2024igfbp5affectscardiomyocyte pages 6-10)
+**IGF-independent cell-surface signaling.** In human MCF-7 cells, an IGFBP-5 mutant unable to bind IGFs still promoted adhesion, whereas disruption of its C-terminal heparin-binding region removed that adhesion response. Blocking α2 or β1 integrin inhibited adhesion; direct binding of purified α2β1 integrin to IGFBP-5 was measured with an estimated equilibrium dissociation constant of approximately **0.5 nM**. Increased integrin-linked kinase expression and Akt Ser473 phosphorylation accompanied the response. These are relatively strong controls for an IGF-independent **IGFBP-5–α2β1-integrin-associated** mechanism in this cell model, not evidence that integrin signaling replaces IGF binding as the protein’s general function. ([Sureshbabu et al., *Journal of Cell Science*, April 2012](https://doi.org/10.1242/jcs.092882).) (sureshbabu2012igfbp5inducescell pages 2-4, sureshbabu2012igfbp5inducescell pages 4-5)
 
-**Human 2024 data are principally associative.** Anterior vaginal-wall specimens from **28 women with advanced pelvic organ prolapse** and **20 controls** showed lower IGFBP5, collagen I and collagen III, and higher MMP2 in the prolapse group; lower IGFBP5 was also associated with age and greater prolapse severity. This opposite-looking tissue pattern illustrates why fibroblast- or disease-specific findings cannot be converted into a universal rule that more IGFBP-5 always means more fibrosis. It does not establish whether loss of IGFBP-5 causes prolapse. [Duan et al., *Scientific Reports*, August 2024](https://doi.org/10.1038/s41598-024-69098-9). (duan2024expressionofinsulinlike pages 1-2)
+**Nuclear localization: demonstrated entry, less certain physiological role.** IGFBP-5 has a basic C-terminal nuclear-localization region and has been observed entering nuclei through an importin-dependent route. In human osteosarcoma cells, knockdown increased apoptosis; an IGF-binding-competent rescue construct with reduced nuclear localization restored survival, whereas an IGF-binding-deficient construct retaining nuclear localization did not. That experiment supports **IGF binding rather than nuclear entry** as necessary for that particular survival phenotype. Interactions with candidate nuclear partners, including FHL2 or the vitamin-D-receptor pathway, have been reported in experimental systems, but in-vivo target genes and the general importance of nuclear IGFBP-5 remain unresolved. RXR-dependent nuclear mechanisms established for **IGFBP-3** should not be assigned to IGFBP-5. ([Duan and Allard, March 2020](https://doi.org/10.3389/fendo.2020.00100); [Baxter, *Endocrine Reviews*, March 2023](https://doi.org/10.1210/endrev/bnad008).) (duan2020insulinlikegrowthfactor pages 5-7, duan2020insulinlikegrowthfactor pages 7-8, firth2002cellularactionsof pages 15-16, baxter2023signalingpathwaysof pages 10-11)
 
-In a separate cross-sectional study of **394 adults**, plasma PAPP-A was positively associated with IGFBP-5, while PAPP-A2 was associated with total—but **not free**—IGF-I. These measurements support investigation of the circulating protease–IGFBP–IGF axis; they neither show direct IGFBP-5 cleavage in those participants nor establish clinical utility of an IGFBP-5 assay. [Nimptsch et al., *Scientific Reports*, January 2024](https://doi.org/10.1038/s41598-024-52074-8). (nimptsch2024pregnancyassociatedplasma pages 1-2)
+**Tissue remodeling and senescence.** Recombinant or adenovirally expressed IGFBP-5 increased extracellular-matrix proteins and profibrotic mediators, including CTGF and lysyl oxidase, in primary human lung fibroblasts; human lung tissue maintained in organ culture also responded. In fibroblasts from idiopathic pulmonary fibrosis, IGFBP5 silencing reduced COL1A1 and CTGF, but effects in normal and systemic-sclerosis donor cells differed, and some gene responses were nonsignificant. This supports a context-dependent contribution to a fibrotic program, not a universal fibrosis pathway. In older human endothelial-cell cultures, reducing IGFBP-5 partially reversed senescence markers, whereas adding or expressing it induced senescence in young cultures; the reported mechanism involves p53. These secondary actions matter biologically but should not obscure the established IGF-regulatory function. ([Nguyen et al., *Frontiers in Endocrinology*, October 2018](https://doi.org/10.3389/fendo.2018.00601); [Kim et al., *Molecular Biology of the Cell*, November 2007](https://doi.org/10.1091/mbc.e07-03-0280).) (nguyen2018igfbp5promotesfibrosis pages 4-7, nguyen2018igfbp5promotesfibrosis pages 3-4, kim2007inductionofcellular pages 2-3, kim2007inductionofcellular pages 3-4)
 
-**Current implementation and assessment.** IGFBP-5 is an experimentally useful marker and perturbation target in studies of IGF bioavailability, ECM biology and fibrotic remodeling. Its measurement in research tissues and fluids, and preclinical knockdown approaches, are **not equivalent to a validated stand-alone diagnostic test or an established IGFBP5-directed treatment**. The strongest functional annotation remains **secreted IGF-I/IGF-II-binding modulator acting in blood and especially local ECM**, with a separately demonstrated, context-dependent **IGF-independent profibrotic activity** in human fibroblast and tissue experiments. (jones1993extracellularmatrixcontains pages 1-2, su2015igfbp5promotesfibrosis pages 6-9, nguyen2018igfbp5promotesfibrosis pages 1-2, duan2024expressionofinsulinlike pages 9-10, zhu2024igfbp5affectscardiomyocyte pages 6-6)
+## Developments and quantitative evidence, emphasizing 2023–2024
+
+* **Mechanistic reassessment (2023).** Baxter’s authoritative [March 2023 review](https://doi.org/10.1210/endrev/bnad008) places IGFBP-5 within a framework of ligand sequestration, regulated proteolysis, matrix-dependent potentiation and selected IGF-independent signaling. It cautions against transferring mechanisms demonstrated for other IGFBPs to IGFBP-5. (baxter2023signalingpathwaysof pages 2-3, baxter2023signalingpathwaysof pages 5-6)
+* **Human circulating measurements (2024).** A [January 2024 cross-sectional study](https://doi.org/10.1038/s41598-024-52074-8) included **394 adults**, but IGFBP-5 analyses used **125** because **68% of measurements were below the assay detection limit**. In the analyzable subset, median IGFBP-5 was **22.6 ng/mL** (interquartile range 6.2–73.7). PAPP-A was positively associated with IGFBP-5, whereas the estimated IGFBP-5 association with PAPP-A2 was **0.97-fold per 0.05 ng/mL** higher PAPP-A2 (95% CI 0.85–1.11). The censoring and cross-sectional design preclude an inference that the measured protease caused an individual’s circulating IGFBP-5 level. (nimptsch2024pregnancyassociatedplasma pages 5-6, nimptsch2024pregnancyassociatedplasma pages 6-7, nimptsch2024pregnancyassociatedplasma pages 3-4, nimptsch2024pregnancyassociatedplasma pages 4-5)
+* **Human tissue association (2024).** In [August 2024 pelvic-organ-prolapse tissue work](https://doi.org/10.1038/s41598-024-69098-9), IGFBP-5 protein and transcript abundance were lower in affected vaginal-wall samples; reported relative Western-blot expression was **0.45 ± 0.2333 versus 1.00 ± 0.8160** in controls (*P* < 0.01). Lower expression also tracked older age and greater prolapse severity. The authors could not establish whether reduced IGFBP-5 was a cause or consequence of prolapse. (duan2024expressionofinsulinlike pages 9-10, duan2024expressionofinsulinlike pages 4-6)
+* **Ischemic injury model (2024).** In [November 2024 mouse myocardial-infarction experiments](https://doi.org/10.1038/s42003-024-07304-0), cardiomyocyte-directed *Igfbp5* knockdown increased IGF1R/AKT signaling and reduced apoptosis; measured fibrosis at 21 days was approximately **10% versus 18%** in infarcted controls. An IGF1R inhibitor countered protective knockdown effects in cultured rat cardiomyocytes. Human observations in that study were limited to blood-expression measurements from **five infarction patients and five controls**: the efficacy result is **preclinical**, not a human treatment outcome. (zhu2024igfbp5affectscardiomyocyte pages 2-6, zhu2024igfbp5affectscardiomyocyte pages 6-6, zhu2024igfbp5affectscardiomyocyte pages 10-11)
+
+## Applications and assessment
+
+**Current implementation is chiefly research use:** measuring IGFBP-5 in human blood or tissues, studying IGF availability and protease activity, and perturbing IGFBP5 in cell, organ-culture and animal disease models. The retrieved evidence does **not** establish a validated stand-alone IGFBP-5 clinical diagnostic, an approved IGFBP-5-directed treatment, or a demonstrated human therapeutic benefit from increasing or decreasing the protein. Because IGFBP-5 can either restrict or support IGF1R signaling and has context-specific matrix and integrin actions, any therapeutic strategy requires tissue-specific mechanism and safety assessment; ordinary systemic expression measurements alone cannot determine the direction of local signaling. ([Baxter, March 2023](https://doi.org/10.1210/endrev/bnad008); [Mancarella et al., May 2024](https://doi.org/10.3390/ijms25115915).) (duan2020insulinlikegrowthfactor pages 3-5, mancarella2024extracellularinteractorsof pages 3-5, duan2024expressionofinsulinlike pages 1-2, nimptsch2024pregnancyassociatedplasma pages 1-2)
+
+**Bottom line:** Annotate human IGFBP5/P24593 principally as a **secreted, extracellular high-affinity IGF-1/IGF-2-binding regulator** that transports and stores IGFs, restricts receptor access when intact and soluble, and can promote local IGF signaling following matrix-dependent presentation or proteolysis. Annotate α2β1-integrin-associated signaling, nuclear localization, senescence and fibrotic remodeling as **experimentally observed but context-dependent additional functions**, with the nuclear pathway’s physiological contribution less securely established. (baxter2023signalingpathwaysof pages 2-3, duan2020insulinlikegrowthfactor pages 2-3, sureshbabu2012igfbp5inducescell pages 2-4, duan2020insulinlikegrowthfactor pages 5-7, nguyen2018igfbp5promotesfibrosis pages 7-9)
 
 References
 
-1. (yin2025proteomicanalysisof pages 6-8): Qianqian Yin, Jianhua Zheng, Yijuan Cao, Xiaonan Yan, and Hong Zhang. Proteomic analysis of human follicular fluid based on the 4d label free method to identify proteins that may affect oocyte quality in hyperandrogenic pcos patients. Frontiers in Endocrinology, May 2025. URL: https://doi.org/10.3389/fendo.2025.1579469, doi:10.3389/fendo.2025.1579469. This article has 3 citations.
+1. (beattie2006insulinlikegrowthfactorbinding pages 2-4): James Beattie, Gordon J. Allan, Jennifer D. Lochrie, and David J. Flint. Insulin-like growth factor-binding protein-5 (igfbp-5): a critical member of the igf axis. The Biochemical journal, 395 1:1-19, Apr 2006. URL: https://doi.org/10.1042/bj20060086, doi:10.1042/bj20060086. This article has 296 citations.
 
 2. (baxter2023signalingpathwaysof pages 2-3): Robert C Baxter. Signaling pathways of the insulin-like growth factor binding proteins. Endocrine Reviews, 44:753-778, Mar 2023. URL: https://doi.org/10.1210/endrev/bnad008, doi:10.1210/endrev/bnad008. This article has 193 citations and is from a domain leading peer-reviewed journal.
 
 3. (duan2020insulinlikegrowthfactor pages 2-3): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
 
-4. (kalus1998structureofthe pages 1-2): Wenzel Kalus, M. Zweckstetter, C. Renner, Yolanda Sanchez, Julia Georgescu, M. Grol, Dirk Demuth, R. Schumacher, C. Dony, K. Lang, and T. Holak. Structure of the igf‐binding domain of the insulin‐like growth factor‐binding protein‐5 (igfbp‐5): implications for igf and igf‐i receptor interactions. The EMBO Journal, 17:6558-6572, Nov 1998. URL: https://doi.org/10.1093/emboj/17.22.6558, doi:10.1093/emboj/17.22.6558. This article has 251 citations.
+4. (duan2020insulinlikegrowthfactor pages 3-5): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
 
-5. (jones1993extracellularmatrixcontains pages 1-2): J. I. Jones, Amy Gockerman, W. Busby, C. Camacho‐Hübner, and D. Clemmons. Extracellular matrix contains insulin-like growth factor binding protein-5: potentiation of the effects of igf-i. The Journal of Cell Biology, 121:679-687, May 1993. URL: https://doi.org/10.1083/jcb.121.3.679, doi:10.1083/jcb.121.3.679. This article has 659 citations.
+5. (sechrist2025pathologicsignalingand pages 2-4): Zachary R. Sechrist, Jaeden S. Cortés, Nidhi R. Patel, Zoe J. Pittman, Gayathri Guru Murthy, Guangzhen Zhu, Calvin L. Cole, and Benjamin D. Korman. Pathologic signaling and disease implications of insulin-like growth factor binding proteins in cancer, cardiovascular disease, and fibrosis. International Journal of Molecular Sciences, 26:10248, Oct 2025. URL: https://doi.org/10.3390/ijms262110248, doi:10.3390/ijms262110248. This article has 10 citations.
 
-6. (baxter2023signalingpathwaysof pages 4-5): Robert C Baxter. Signaling pathways of the insulin-like growth factor binding proteins. Endocrine Reviews, 44:753-778, Mar 2023. URL: https://doi.org/10.1210/endrev/bnad008, doi:10.1210/endrev/bnad008. This article has 193 citations and is from a domain leading peer-reviewed journal.
+6. (baxter2023signalingpathwaysof pages 5-6): Robert C Baxter. Signaling pathways of the insulin-like growth factor binding proteins. Endocrine Reviews, 44:753-778, Mar 2023. URL: https://doi.org/10.1210/endrev/bnad008, doi:10.1210/endrev/bnad008. This article has 193 citations and is from a domain leading peer-reviewed journal.
 
-7. (duan2020insulinlikegrowthfactor media 8b2d90c7): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
+7. (sureshbabu2012igfbp5inducescell pages 2-4): A. Sureshbabu, H. Okajima, D. Yamanaka, E. Tonner, Surya Shastri, Joanna Maycock, M. Szymanowska, J. Shand, Shin-ichiro Takahashi, J. Beattie, G. Allan, and D. Flint. Igfbp5 induces cell adhesion, increases cell survival and inhibits cell migration in mcf-7 human breast cancer cells. Journal of Cell Science, 125:1693-1705, Apr 2012. URL: https://doi.org/10.1242/jcs.092882, doi:10.1242/jcs.092882. This article has 123 citations and is from a domain leading peer-reviewed journal.
 
-8. (kalus1998structureofthe pages 3-6): Wenzel Kalus, M. Zweckstetter, C. Renner, Yolanda Sanchez, Julia Georgescu, M. Grol, Dirk Demuth, R. Schumacher, C. Dony, K. Lang, and T. Holak. Structure of the igf‐binding domain of the insulin‐like growth factor‐binding protein‐5 (igfbp‐5): implications for igf and igf‐i receptor interactions. The EMBO Journal, 17:6558-6572, Nov 1998. URL: https://doi.org/10.1093/emboj/17.22.6558, doi:10.1093/emboj/17.22.6558. This article has 251 citations.
+8. (nimptsch2024pregnancyassociatedplasma pages 6-7): Katharina Nimptsch, Elif Ece Aydin, Rafael Francisco Rios Chavarria, Jürgen Janke, Matthew N. Poy, Claus Oxvig, Astrid Steinbrecher, and Tobias Pischon. Pregnancy associated plasma protein-a2 (papp-a2) and stanniocalcin-2 (stc2) but not papp-a are associated with circulating total igf-1 in a human adult population. Scientific Reports, Jan 2024. URL: https://doi.org/10.1038/s41598-024-52074-8, doi:10.1038/s41598-024-52074-8. This article has 4 citations and is from a peer-reviewed journal.
 
-9. (coda2025redoxbiologyand pages 7-9): Anna Rita Daniela Coda, Arcangelo Liso, and Francesco Bellanti. Redox biology and insulin-like growth factor-binding protein-6: a potential relationship. Biology, 14:747, Jun 2025. URL: https://doi.org/10.3390/biology14070747, doi:10.3390/biology14070747. This article has 3 citations.
+9. (zhu2024igfbp5affectscardiomyocyte pages 2-6): Qingqing Zhu, Xinyi Lu, Mengli Chen, Ting Zhang, Mengsha Shi, Wenming Yao, Haifeng Zhang, Rongrong Gao, Xinli Li, Yanli Zhou, and Shengen Liao. Igfbp5 affects cardiomyocyte survival and functional recovery in mice following myocardial ischemia. Communications Biology, Nov 2024. URL: https://doi.org/10.1038/s42003-024-07304-0, doi:10.1038/s42003-024-07304-0. This article has 7 citations and is from a peer-reviewed journal.
 
-10. (sun2017importinαimportinβ pages 11-13): Min Sun, Juan Long, Yuxin Yi, and Wei Xia. Importin α-importin β complex mediated nuclear translocation of insulin-like growth factor binding protein-5. Endocrine journal, 64 10:963-975, Aug 2017. URL: https://doi.org/10.1507/endocrj.ej17-0156, doi:10.1507/endocrj.ej17-0156. This article has 16 citations and is from a peer-reviewed journal.
+10. (sureshbabu2012igfbp5inducescell pages 4-5): A. Sureshbabu, H. Okajima, D. Yamanaka, E. Tonner, Surya Shastri, Joanna Maycock, M. Szymanowska, J. Shand, Shin-ichiro Takahashi, J. Beattie, G. Allan, and D. Flint. Igfbp5 induces cell adhesion, increases cell survival and inhibits cell migration in mcf-7 human breast cancer cells. Journal of Cell Science, 125:1693-1705, Apr 2012. URL: https://doi.org/10.1242/jcs.092882, doi:10.1242/jcs.092882. This article has 123 citations and is from a domain leading peer-reviewed journal.
 
-11. (su2015igfbp5promotesfibrosis pages 6-9): Yunyun Su, Tetsuya Nishimoto, and Carol Feghali-Bostwick. Igfbp-5 promotes fibrosis independently of its translocation to the nucleus and its interaction with nucleolin and igf. PLoS ONE, 10:e0130546, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0130546, doi:10.1371/journal.pone.0130546. This article has 33 citations and is from a peer-reviewed journal.
+11. (bach201840yearsof pages 9-10): Leon A. Bach. 40 years of igf1: igf-binding proteins. Journal of Molecular Endocrinology, 61:T11-T28, Jul 2018. URL: https://doi.org/10.1530/jme-17-0254, doi:10.1530/jme-17-0254. This article has 329 citations and is from a peer-reviewed journal.
 
 12. (duan2020insulinlikegrowthfactor pages 7-8): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
 
-13. (su2015igfbp5promotesfibrosis pages 2-4): Yunyun Su, Tetsuya Nishimoto, and Carol Feghali-Bostwick. Igfbp-5 promotes fibrosis independently of its translocation to the nucleus and its interaction with nucleolin and igf. PLoS ONE, 10:e0130546, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0130546, doi:10.1371/journal.pone.0130546. This article has 33 citations and is from a peer-reviewed journal.
+13. (firth2002cellularactionsof pages 15-16): SM Firth and RC Baxter. Cellular actions of the insulin-like growth factor binding proteins. Endocrine reviews, 23 6:824-54, Dec 2002. URL: https://doi.org/10.1210/er.2001-0033, doi:10.1210/er.2001-0033. This article has 2359 citations and is from a domain leading peer-reviewed journal.
 
-14. (nguyen2018igfbp5promotesfibrosis pages 1-2): Xinh-Xinh Nguyen, Lutfiyya Muhammad, Paul J. Nietert, and Carol Feghali-Bostwick. Igfbp-5 promotes fibrosis via increasing its own expression and that of other pro-fibrotic mediators. Frontiers in Endocrinology, Oct 2018. URL: https://doi.org/10.3389/fendo.2018.00601, doi:10.3389/fendo.2018.00601. This article has 88 citations.
+14. (baxter2023signalingpathwaysof pages 10-11): Robert C Baxter. Signaling pathways of the insulin-like growth factor binding proteins. Endocrine Reviews, 44:753-778, Mar 2023. URL: https://doi.org/10.1210/endrev/bnad008, doi:10.1210/endrev/bnad008. This article has 193 citations and is from a domain leading peer-reviewed journal.
 
-15. (duan2020insulinlikegrowthfactor pages 5-7): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
+15. (nimptsch2024pregnancyassociatedplasma pages 5-6): Katharina Nimptsch, Elif Ece Aydin, Rafael Francisco Rios Chavarria, Jürgen Janke, Matthew N. Poy, Claus Oxvig, Astrid Steinbrecher, and Tobias Pischon. Pregnancy associated plasma protein-a2 (papp-a2) and stanniocalcin-2 (stc2) but not papp-a are associated with circulating total igf-1 in a human adult population. Scientific Reports, Jan 2024. URL: https://doi.org/10.1038/s41598-024-52074-8, doi:10.1038/s41598-024-52074-8. This article has 4 citations and is from a peer-reviewed journal.
 
-16. (duan2020insulinlikegrowthfactor pages 8-9): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
+16. (nimptsch2024pregnancyassociatedplasma pages 3-4): Katharina Nimptsch, Elif Ece Aydin, Rafael Francisco Rios Chavarria, Jürgen Janke, Matthew N. Poy, Claus Oxvig, Astrid Steinbrecher, and Tobias Pischon. Pregnancy associated plasma protein-a2 (papp-a2) and stanniocalcin-2 (stc2) but not papp-a are associated with circulating total igf-1 in a human adult population. Scientific Reports, Jan 2024. URL: https://doi.org/10.1038/s41598-024-52074-8, doi:10.1038/s41598-024-52074-8. This article has 4 citations and is from a peer-reviewed journal.
 
-17. (duan2020insulinlikegrowthfactor pages 3-5): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
+17. (nimptsch2024pregnancyassociatedplasma pages 4-5): Katharina Nimptsch, Elif Ece Aydin, Rafael Francisco Rios Chavarria, Jürgen Janke, Matthew N. Poy, Claus Oxvig, Astrid Steinbrecher, and Tobias Pischon. Pregnancy associated plasma protein-a2 (papp-a2) and stanniocalcin-2 (stc2) but not papp-a are associated with circulating total igf-1 in a human adult population. Scientific Reports, Jan 2024. URL: https://doi.org/10.1038/s41598-024-52074-8, doi:10.1038/s41598-024-52074-8. This article has 4 citations and is from a peer-reviewed journal.
 
-18. (zhu2024igfbp5affectscardiomyocyte pages 6-6): Qingqing Zhu, Xinyi Lu, Mengli Chen, Ting Zhang, Mengsha Shi, Wenming Yao, Haifeng Zhang, Rongrong Gao, Xinli Li, Yanli Zhou, and Shengen Liao. Igfbp5 affects cardiomyocyte survival and functional recovery in mice following myocardial ischemia. Communications Biology, Nov 2024. URL: https://doi.org/10.1038/s42003-024-07304-0, doi:10.1038/s42003-024-07304-0. This article has 7 citations and is from a peer-reviewed journal.
+18. (nimptsch2024pregnancyassociatedplasma pages 2-3): Katharina Nimptsch, Elif Ece Aydin, Rafael Francisco Rios Chavarria, Jürgen Janke, Matthew N. Poy, Claus Oxvig, Astrid Steinbrecher, and Tobias Pischon. Pregnancy associated plasma protein-a2 (papp-a2) and stanniocalcin-2 (stc2) but not papp-a are associated with circulating total igf-1 in a human adult population. Scientific Reports, Jan 2024. URL: https://doi.org/10.1038/s41598-024-52074-8, doi:10.1038/s41598-024-52074-8. This article has 4 citations and is from a peer-reviewed journal.
 
-19. (zhu2024igfbp5affectscardiomyocyte pages 1-2): Qingqing Zhu, Xinyi Lu, Mengli Chen, Ting Zhang, Mengsha Shi, Wenming Yao, Haifeng Zhang, Rongrong Gao, Xinli Li, Yanli Zhou, and Shengen Liao. Igfbp5 affects cardiomyocyte survival and functional recovery in mice following myocardial ischemia. Communications Biology, Nov 2024. URL: https://doi.org/10.1038/s42003-024-07304-0, doi:10.1038/s42003-024-07304-0. This article has 7 citations and is from a peer-reviewed journal.
+19. (nguyen2018igfbp5promotesfibrosis pages 7-9): Xinh-Xinh Nguyen, Lutfiyya Muhammad, Paul J. Nietert, and Carol Feghali-Bostwick. Igfbp-5 promotes fibrosis via increasing its own expression and that of other pro-fibrotic mediators. Frontiers in Endocrinology, Oct 2018. URL: https://doi.org/10.3389/fendo.2018.00601, doi:10.3389/fendo.2018.00601. This article has 88 citations.
 
-20. (zhu2024igfbp5affectscardiomyocyte pages 6-10): Qingqing Zhu, Xinyi Lu, Mengli Chen, Ting Zhang, Mengsha Shi, Wenming Yao, Haifeng Zhang, Rongrong Gao, Xinli Li, Yanli Zhou, and Shengen Liao. Igfbp5 affects cardiomyocyte survival and functional recovery in mice following myocardial ischemia. Communications Biology, Nov 2024. URL: https://doi.org/10.1038/s42003-024-07304-0, doi:10.1038/s42003-024-07304-0. This article has 7 citations and is from a peer-reviewed journal.
+20. (nguyen2018igfbp5promotesfibrosis pages 4-7): Xinh-Xinh Nguyen, Lutfiyya Muhammad, Paul J. Nietert, and Carol Feghali-Bostwick. Igfbp-5 promotes fibrosis via increasing its own expression and that of other pro-fibrotic mediators. Frontiers in Endocrinology, Oct 2018. URL: https://doi.org/10.3389/fendo.2018.00601, doi:10.3389/fendo.2018.00601. This article has 88 citations.
 
-21. (duan2024expressionofinsulinlike pages 1-2): Yinan Duan, Yifei Chen, Yan He, Runqi Gong, and Zhijun Xia. Expression of insulin-like growth factor binding protein 5 in the vaginal wall tissues of older women with pelvic organ prolapse. Aug 2024. URL: https://doi.org/10.1038/s41598-024-69098-9, doi:10.1038/s41598-024-69098-9. This article has 7 citations and is from a peer-reviewed journal.
+21. (nguyen2018igfbp5promotesfibrosis pages 3-4): Xinh-Xinh Nguyen, Lutfiyya Muhammad, Paul J. Nietert, and Carol Feghali-Bostwick. Igfbp-5 promotes fibrosis via increasing its own expression and that of other pro-fibrotic mediators. Frontiers in Endocrinology, Oct 2018. URL: https://doi.org/10.3389/fendo.2018.00601, doi:10.3389/fendo.2018.00601. This article has 88 citations.
 
-22. (nimptsch2024pregnancyassociatedplasma pages 1-2): Katharina Nimptsch, Elif Ece Aydin, Rafael Francisco Rios Chavarria, Jürgen Janke, Matthew N. Poy, Claus Oxvig, Astrid Steinbrecher, and Tobias Pischon. Pregnancy associated plasma protein-a2 (papp-a2) and stanniocalcin-2 (stc2) but not papp-a are associated with circulating total igf-1 in a human adult population. Scientific Reports, Jan 2024. URL: https://doi.org/10.1038/s41598-024-52074-8, doi:10.1038/s41598-024-52074-8. This article has 4 citations and is from a peer-reviewed journal.
+22. (nguyen2018igfbp5promotesfibrosis pages 2-3): Xinh-Xinh Nguyen, Lutfiyya Muhammad, Paul J. Nietert, and Carol Feghali-Bostwick. Igfbp-5 promotes fibrosis via increasing its own expression and that of other pro-fibrotic mediators. Frontiers in Endocrinology, Oct 2018. URL: https://doi.org/10.3389/fendo.2018.00601, doi:10.3389/fendo.2018.00601. This article has 88 citations.
 
-23. (duan2024expressionofinsulinlike pages 9-10): Yinan Duan, Yifei Chen, Yan He, Runqi Gong, and Zhijun Xia. Expression of insulin-like growth factor binding protein 5 in the vaginal wall tissues of older women with pelvic organ prolapse. Aug 2024. URL: https://doi.org/10.1038/s41598-024-69098-9, doi:10.1038/s41598-024-69098-9. This article has 7 citations and is from a peer-reviewed journal.
+23. (zhu2024igfbp5affectscardiomyocyte pages 1-2): Qingqing Zhu, Xinyi Lu, Mengli Chen, Ting Zhang, Mengsha Shi, Wenming Yao, Haifeng Zhang, Rongrong Gao, Xinli Li, Yanli Zhou, and Shengen Liao. Igfbp5 affects cardiomyocyte survival and functional recovery in mice following myocardial ischemia. Communications Biology, Nov 2024. URL: https://doi.org/10.1038/s42003-024-07304-0, doi:10.1038/s42003-024-07304-0. This article has 7 citations and is from a peer-reviewed journal.
+
+24. (zhu2024igfbp5affectscardiomyocyte pages 6-6): Qingqing Zhu, Xinyi Lu, Mengli Chen, Ting Zhang, Mengsha Shi, Wenming Yao, Haifeng Zhang, Rongrong Gao, Xinli Li, Yanli Zhou, and Shengen Liao. Igfbp5 affects cardiomyocyte survival and functional recovery in mice following myocardial ischemia. Communications Biology, Nov 2024. URL: https://doi.org/10.1038/s42003-024-07304-0, doi:10.1038/s42003-024-07304-0. This article has 7 citations and is from a peer-reviewed journal.
+
+25. (zhu2024igfbp5affectscardiomyocyte pages 10-11): Qingqing Zhu, Xinyi Lu, Mengli Chen, Ting Zhang, Mengsha Shi, Wenming Yao, Haifeng Zhang, Rongrong Gao, Xinli Li, Yanli Zhou, and Shengen Liao. Igfbp5 affects cardiomyocyte survival and functional recovery in mice following myocardial ischemia. Communications Biology, Nov 2024. URL: https://doi.org/10.1038/s42003-024-07304-0, doi:10.1038/s42003-024-07304-0. This article has 7 citations and is from a peer-reviewed journal.
+
+26. (duan2020insulinlikegrowthfactor media 295916b3): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
+
+27. (duan2020insulinlikegrowthfactor pages 5-7): Cunming Duan and John B. Allard. Insulin-like growth factor binding protein-5 in physiology and disease. Frontiers in Endocrinology, Mar 2020. URL: https://doi.org/10.3389/fendo.2020.00100, doi:10.3389/fendo.2020.00100. This article has 122 citations.
+
+28. (kim2007inductionofcellular pages 2-3): Kwang Seok Kim, Young Bae Seu, Suk-Hwan Baek, Mi Jin Kim, Keuk Jun Kim, Jung Hye Kim, and Jae-Ryong Kim. Induction of cellular senescence by insulin-like growth factor binding protein-5 through a p53-dependent mechanism. Molecular biology of the cell, 18 11:4543-52, Nov 2007. URL: https://doi.org/10.1091/mbc.e07-03-0280, doi:10.1091/mbc.e07-03-0280. This article has 255 citations and is from a domain leading peer-reviewed journal.
+
+29. (kim2007inductionofcellular pages 3-4): Kwang Seok Kim, Young Bae Seu, Suk-Hwan Baek, Mi Jin Kim, Keuk Jun Kim, Jung Hye Kim, and Jae-Ryong Kim. Induction of cellular senescence by insulin-like growth factor binding protein-5 through a p53-dependent mechanism. Molecular biology of the cell, 18 11:4543-52, Nov 2007. URL: https://doi.org/10.1091/mbc.e07-03-0280, doi:10.1091/mbc.e07-03-0280. This article has 255 citations and is from a domain leading peer-reviewed journal.
+
+30. (duan2024expressionofinsulinlike pages 9-10): Yinan Duan, Yifei Chen, Yan He, Runqi Gong, and Zhijun Xia. Expression of insulin-like growth factor binding protein 5 in the vaginal wall tissues of older women with pelvic organ prolapse. Aug 2024. URL: https://doi.org/10.1038/s41598-024-69098-9, doi:10.1038/s41598-024-69098-9. This article has 7 citations and is from a peer-reviewed journal.
+
+31. (duan2024expressionofinsulinlike pages 4-6): Yinan Duan, Yifei Chen, Yan He, Runqi Gong, and Zhijun Xia. Expression of insulin-like growth factor binding protein 5 in the vaginal wall tissues of older women with pelvic organ prolapse. Aug 2024. URL: https://doi.org/10.1038/s41598-024-69098-9, doi:10.1038/s41598-024-69098-9. This article has 7 citations and is from a peer-reviewed journal.
+
+32. (mancarella2024extracellularinteractorsof pages 3-5): Caterina Mancarella, Andrea Morrione, and Katia Scotlandi. Extracellular interactors of the igf system: impact on cancer hallmarks and therapeutic approaches. International Journal of Molecular Sciences, 25:5915, May 2024. URL: https://doi.org/10.3390/ijms25115915, doi:10.3390/ijms25115915. This article has 7 citations.
+
+33. (duan2024expressionofinsulinlike pages 1-2): Yinan Duan, Yifei Chen, Yan He, Runqi Gong, and Zhijun Xia. Expression of insulin-like growth factor binding protein 5 in the vaginal wall tissues of older women with pelvic organ prolapse. Aug 2024. URL: https://doi.org/10.1038/s41598-024-69098-9, doi:10.1038/s41598-024-69098-9. This article has 7 citations and is from a peer-reviewed journal.
+
+34. (nimptsch2024pregnancyassociatedplasma pages 1-2): Katharina Nimptsch, Elif Ece Aydin, Rafael Francisco Rios Chavarria, Jürgen Janke, Matthew N. Poy, Claus Oxvig, Astrid Steinbrecher, and Tobias Pischon. Pregnancy associated plasma protein-a2 (papp-a2) and stanniocalcin-2 (stc2) but not papp-a are associated with circulating total igf-1 in a human adult population. Scientific Reports, Jan 2024. URL: https://doi.org/10.1038/s41598-024-52074-8, doi:10.1038/s41598-024-52074-8. This article has 4 citations and is from a peer-reviewed journal.
 
 ## Artifacts
 
 - [Edison artifact artifact-00](IGFBP5-deep-research-falcon_artifacts/artifact-00.md)
-![## Context ID: pqac-00000029 Figure 1 provides a schematic representation of the structure of IGFBP-5, illustrating its three main protein domains: the highly c](IGFBP5-deep-research-falcon_artifacts/image-1.png)
+![## Context ID: pqac-00000020 I have extracted Figure 2 from page 4, which illustrates the proposed modes of IGFBP-5 actions across four panels: (A) the IGF:IGFB](IGFBP5-deep-research-falcon_artifacts/image-1.png)
 
 ## Citations
 
-1. jones1993extracellularmatrixcontains pages 1-2
-2. duan2024expressionofinsulinlike pages 1-2
-3. nimptsch2024pregnancyassociatedplasma pages 1-2
-4. yin2025proteomicanalysisof pages 6-8
-5. baxter2023signalingpathwaysof pages 2-3
-6. duan2020insulinlikegrowthfactor pages 2-3
-7. kalus1998structureofthe pages 1-2
-8. baxter2023signalingpathwaysof pages 4-5
-9. kalus1998structureofthe pages 3-6
-10. coda2025redoxbiologyand pages 7-9
-11. duan2020insulinlikegrowthfactor pages 7-8
-12. duan2020insulinlikegrowthfactor pages 5-7
-13. duan2020insulinlikegrowthfactor pages 8-9
-14. duan2020insulinlikegrowthfactor pages 3-5
-15. duan2024expressionofinsulinlike pages 9-10
-16. Duan and Allard, March 2020
-17. Kalus et al., *EMBO Journal*, November 1998
-18. Baxter’s *Endocrine Reviews* synthesis, March 2023
-19. Su et al., *PLOS ONE*, June 2015
-20. Nguyen et al., *Frontiers in Endocrinology*, October 2018
-21. Sun et al., *Endocrine Journal*, August 2017
-22. Kalus et al., 1998
-23. Jones et al., 1993
-24. Su et al., 2015
-25. Nguyen et al., 2018
-26. Zhu et al., 2024
-27. Zhu et al., *Communications Biology*, November 2024
-28. Duan et al., *Scientific Reports*, August 2024
-29. Nimptsch et al., *Scientific Reports*, January 2024
-30. https://doi.org/10.3389/fendo.2020.00100
-31. https://doi.org/10.1093/emboj/17.22.6558
-32. https://doi.org/10.1210/endrev/bnad008
-33. https://doi.org/10.1371/journal.pone.0130546
-34. https://doi.org/10.3389/fendo.2018.00601
-35. https://doi.org/10.1507/endocrj.ej17-0156
-36. https://doi.org/10.1083/jcb.121.3.679
-37. https://doi.org/10.1038/s42003-024-07304-0
-38. https://doi.org/10.1038/s41598-024-69098-9
-39. https://doi.org/10.1038/s41598-024-52074-8
-40. https://doi.org/10.3389/fendo.2025.1579469,
-41. https://doi.org/10.1210/endrev/bnad008,
-42. https://doi.org/10.3389/fendo.2020.00100,
-43. https://doi.org/10.1093/emboj/17.22.6558,
-44. https://doi.org/10.1083/jcb.121.3.679,
-45. https://doi.org/10.3390/biology14070747,
-46. https://doi.org/10.1507/endocrj.ej17-0156,
-47. https://doi.org/10.1371/journal.pone.0130546,
-48. https://doi.org/10.3389/fendo.2018.00601,
-49. https://doi.org/10.1038/s42003-024-07304-0,
-50. https://doi.org/10.1038/s41598-024-69098-9,
-51. https://doi.org/10.1038/s41598-024-52074-8,
+1. beattie2006insulinlikegrowthfactorbinding pages 2-4
+2. baxter2023signalingpathwaysof pages 2-3
+3. duan2020insulinlikegrowthfactor pages 2-3
+4. duan2020insulinlikegrowthfactor pages 3-5
+5. sechrist2025pathologicsignalingand pages 2-4
+6. baxter2023signalingpathwaysof pages 5-6
+7. nimptsch2024pregnancyassociatedplasma pages 6-7
+8. duan2020insulinlikegrowthfactor pages 7-8
+9. firth2002cellularactionsof pages 15-16
+10. baxter2023signalingpathwaysof pages 10-11
+11. nimptsch2024pregnancyassociatedplasma pages 5-6
+12. nimptsch2024pregnancyassociatedplasma pages 3-4
+13. nimptsch2024pregnancyassociatedplasma pages 4-5
+14. nimptsch2024pregnancyassociatedplasma pages 2-3
+15. duan2020insulinlikegrowthfactor pages 5-7
+16. kim2007inductionofcellular pages 2-3
+17. kim2007inductionofcellular pages 3-4
+18. duan2024expressionofinsulinlike pages 9-10
+19. duan2024expressionofinsulinlike pages 4-6
+20. mancarella2024extracellularinteractorsof pages 3-5
+21. duan2024expressionofinsulinlike pages 1-2
+22. nimptsch2024pregnancyassociatedplasma pages 1-2
+23. Baxter, *Endocrine Reviews*
+24. Duan & Allard, *Frontiers in Endocrinology*
+25. Duan & Allard
+26. Sureshbabu et al., *Journal of Cell Science*
+27. Bach, *Journal of Molecular Endocrinology*
+28. Nimptsch et al., *Scientific Reports*
+29. Nguyen et al., *Frontiers in Endocrinology*
+30. Zhu et al., *Communications Biology*
+31. March 2020 IGFBP-5 review
+32. Sureshbabu et al., *Journal of Cell Science*, April 2012
+33. Duan and Allard, March 2020
+34. Baxter, *Endocrine Reviews*, March 2023
+35. Nguyen et al., *Frontiers in Endocrinology*, October 2018
+36. Kim et al., *Molecular Biology of the Cell*, November 2007
+37. March 2023 review
+38. January 2024 cross-sectional study
+39. August 2024 pelvic-organ-prolapse tissue work
+40. November 2024 mouse myocardial-infarction experiments
+41. Baxter, March 2023
+42. Mancarella et al., May 2024
+43. https://doi.org/10.1210/endrev/bnad008
+44. https://doi.org/10.3389/fendo.2020.00100
+45. https://doi.org/10.1242/jcs.092882
+46. https://doi.org/10.1530/JME-17-0254
+47. https://doi.org/10.1038/s41598-024-52074-8
+48. https://doi.org/10.3389/fendo.2018.00601
+49. https://doi.org/10.1038/s42003-024-07304-0
+50. https://doi.org/10.1091/mbc.e07-03-0280
+51. https://doi.org/10.1038/s41598-024-69098-9
+52. https://doi.org/10.3390/ijms25115915
+53. https://doi.org/10.1042/bj20060086,
+54. https://doi.org/10.1210/endrev/bnad008,
+55. https://doi.org/10.3389/fendo.2020.00100,
+56. https://doi.org/10.3390/ijms262110248,
+57. https://doi.org/10.1242/jcs.092882,
+58. https://doi.org/10.1038/s41598-024-52074-8,
+59. https://doi.org/10.1038/s42003-024-07304-0,
+60. https://doi.org/10.1530/jme-17-0254,
+61. https://doi.org/10.1210/er.2001-0033,
+62. https://doi.org/10.3389/fendo.2018.00601,
+63. https://doi.org/10.1091/mbc.e07-03-0280,
+64. https://doi.org/10.1038/s41598-024-69098-9,
+65. https://doi.org/10.3390/ijms25115915,

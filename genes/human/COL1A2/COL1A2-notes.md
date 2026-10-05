@@ -7,6 +7,9 @@
   All providers failed"). No perplexity key is available. A single retry also failed (falcon timed out after 600s);
   the review below was written from the UniProt record and the cached publications in
   `publications/` (PubMed abstracts / full texts), not from a deep-research report.
+- UPDATE 2026-10-05: the failure statement above is superseded. The falcon job completed
+  late (end_time 01:34) and `COL1A2-deep-research-falcon.md` now exists; it has been
+  reconciled with the review (see "Falcon deep research reconciliation" below).
 
 ## Identity and structure
 
@@ -83,3 +86,20 @@
 - PDGF binding: "All radiolabeled PDGF isoforms specifically interacted with type I, II,
   III, IV, V, and VI collagens" [PMID:8900172]; in vitro ECM-growth factor sequestration,
   non-core.
+
+## Falcon deep research reconciliation (2026-10-05)
+
+- `COL1A2-deep-research-falcon.md` completed after the review was written. It is fully
+  consistent with the review: alpha2(I) chain of the [alpha1(I)]2alpha2(I) heterotrimer,
+  C-propeptide-driven chain assembly in the ER, extracellular load-bearing fibril function,
+  ADAMTS2/BMP1 propeptide processing acting on (not by) COL1A2, and TGF-beta/SMAD as
+  upstream drivers of COL1A2 expression (supports the REMOVE of the TGF-beta and Rho
+  signalling IDA annotations from PMID:17217948).
+- Additions noted but not acted on: Malfait 2006 J Med Genet (homozygous COL1A2 frameshift,
+  complete alpha2(I) absence, valvular EDS; already reflected in the description via UniProt);
+  Lee 2022 DMM (Col1a2-null vs oim mice; already reflected in a suggested question on
+  homotrimers); Mariano 2023 bioRxiv preprint (BMP1 site FYRA|DQPR at residue 1120);
+  Ling 2024 (DDR2 signalling by type I collagen, not chain-resolved). None changes an
+  annotation decision.
+- Deep-research file added to references and cited as supporting text on the GO:0007179
+  REMOVE. No annotation actions changed. Status set to COMPLETE.

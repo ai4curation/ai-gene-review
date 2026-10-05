@@ -6,7 +6,9 @@ UniProt: P04083. Human, NCBITaxon:9606. PANTHER PTHR10502:SF17 (ANNEXIN A1).
 
 - 2026-10-05: `just deep-research-falcon human ANXA1` failed with Edison API
   `429 Too Many Requests` (no perplexity key available for fallback). Retried once; the retry timed out after 600 s.
-  No deep-research file exists for ANXA1.
+  No deep-research file existed for ANXA1 at review time. **Update:** the falcon run in
+  fact completed late (end 01:34) and `ANXA1-deep-research-falcon.md` is now present; see
+  "Reconciliation with late falcon deep research" below.
   Review proceeds from cached GOA-cited publications, the UniProt record and a few
   additional PubMed-retrieved papers (PMID:19104500, PMID:12475898, PMID:32272059,
   PMID:10673436, PMID:8425544, PMID:9425121), fetched with `just fetch-pmid`.
@@ -90,3 +92,28 @@ UniProt: P04083. Human, NCBITaxon:9606. PANTHER PTHR10502:SF17 (ANNEXIN A1).
 - GO:0007187 (GPCR signalling coupled to cyclic nucleotide second messenger): FPR signalling
   is Gi/Ca2+/MAPK; generalise to GO:0007186.
 - No GO-CAM model in gocams/index.tsv contains P04083.
+
+## Reconciliation with late falcon deep research (2026-10-05)
+
+`ANXA1-deep-research-falcon.md` (Edison, 58 citations) arrived after the review was
+drafted. Compared against the review:
+
+- **Consistent:** Ca2+-dependent anionic phospholipid binding; extracellular FPR2/ALX
+  (and FPR1 for Ac2-26) agonist driving resolution of inflammation; S100A11 binding via
+  N-terminus; nonclassical secretion (granules, EVs); PLA2 "inhibition" is regulatory, not
+  catalytic. No contradiction of any review action.
+- **Material addition, verified and acted on:** ANXA1 with ER-associated S100A11 tethers
+  ER-multivesicular body membrane contact sites in HeLa cells; depletion reduces contacts,
+  prolongs EGFR phosphorylation and impairs ILV formation and ER-to-MVB cholesterol supply
+  [PMID:27270042 "showed that annexin A1 was present at MCSs between the ER and EGFR-MVBs"].
+  PubMed-verified, full text cached. Added as a NEW `located_in` GO:0140284
+  (endoplasmic reticulum-endosome membrane contact site, IDA). Sterol transfer itself is by
+  ORP1L/VAP, so no lipid-transport term was proposed for ANXA1.
+- **Not adopted:** deep research cites a 2007 review for direct ANXA1-cPLA2 interaction;
+  this conflicts with the substrate-depletion consensus already recorded above and was not
+  verified against primary data; the PLA2-inhibitor decisions stand.
+- **Noted only (not annotated):** Cooray 2013 PNAS (FPR2 homodimer, p38-MAPKAPK-HSP27,
+  IL-10 in monocytes); PDLIM7 binding in adipogenesis (Fang 2024); platelet activation by
+  Ac2-26 via Fpr2/3 in mouse (2023); 2024 clinical association studies. These are
+  context-specific or unverified here and would not change core functions.
+- Deep-research file added to `references` as `file:human/ANXA1/ANXA1-deep-research-falcon.md`.

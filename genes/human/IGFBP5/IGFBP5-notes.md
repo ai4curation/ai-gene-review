@@ -68,7 +68,8 @@
 
 - `just deep-research-falcon human IGFBP5` was run twice (2026-10-05); both runs failed with
   "Provider falcon timed out after 600s" / "All providers failed" (no perplexity key for fallback).
-  No deep-research file exists; the review is based on cached publications (fetched via
+  No deep-research file existed at review time (**update:** the falcon run in fact completed
+  late and `IGFBP5-deep-research-falcon.md` is now present; see reconciliation below); the review is based on cached publications (fetched via
   `just fetch-gene-pmids` / `just fetch-pmid`), PubMed searches and the UniProt record.
 
 ## Interactome rows
@@ -76,3 +77,22 @@
 - 71 IPI protein-binding rows from HuRI (PMID:32296183) and 2 from CREB3 variant Y2H screens
   (PMID:25910212, PMID:31515488): partners are mostly membrane proteins (claudins, connexins,
   GPCRs, SLCs, TMEMs) — a secreted protein is unlikely to engage these physiologically; uninformative, REMOVE.
+
+## Reconciliation with late falcon deep research (2026-10-05)
+
+`IGFBP5-deep-research-falcon.md` arrived after the review was drafted. It is fully
+consistent with the review and contains no claim that contradicts an existing action:
+
+- Core function: secreted IGF-I/IGF-II binding regulator of IGF1R access; ECM-bound state
+  potentiates, soluble state sequesters; ternary complexes with ALS; PAPP-A/PAPP-A2
+  proteolysis releases IGF. Matches core_functions.
+- Primary papers it leans on (Kalus 1998, PMID:9822601; Jones 1993, PMID:7683690; Su 2015,
+  PMID:26103640) were already cited and quoted in the review.
+- IGF-independent profibrotic activity not requiring nuclear entry, and nuclear import via
+  importin-alpha/beta and nucleolin, agree with the existing non-core treatment of nucleus rows.
+- Additional items noted only (not acted on, would not change annotations): Nguyen 2018
+  (lung fibroblast CTGF/LOX induction), Sun 2017 (importin-alpha5/beta NLS import), Zhu 2024
+  (cardiac knockdown in mouse MI), Igfbp5-null delayed mammary involution, 2024 human
+  association studies.
+- Changes: deep-research file added to `references` and cited on the IBA IGF-I binding row;
+  status set to COMPLETE.

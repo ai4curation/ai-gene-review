@@ -6,6 +6,9 @@
   repeated `429 Too Many Requests` errors and the recipe exited with "All providers failed".
   No perplexity key is available, so no fallback was run. The review below is based on the
   UniProt record and on primary literature found via PubMed and cached in `publications/`.
+- UPDATE 2026-10-05: the failure statement above is superseded. The falcon job completed
+  late (end_time 01:31) and `CD5-deep-research-falcon.md` now exists; it has been reconciled
+  with the review (see "Falcon deep research reconciliation" below).
 
 ## Protein
 
@@ -60,3 +63,21 @@
   its phosphorylated cytoplasmic tail, so it does part of the work. Mouse Cd5 in QuickGO has no
   GO:0050860 annotation despite the knockout data, which looks like a curation gap rather than
   a convention, because the parallel BCR term is annotated.
+
+## Falcon deep research reconciliation (2026-10-05)
+
+- `CD5-deep-research-falcon.md` completed after the review was written. It agrees with the
+  review: CD5 is a non-catalytic, TCR/BCR-associated inhibitory signalling scaffold at the
+  plasma membrane/immunological synapse; CD72 as ligand is unresolved; the ectodomain binds
+  fungal (1->3)-beta-glucan (Kd 3.7 nM, PMID:19141631); the CD5-TRPC1-ERK-IL-10 pathway in
+  B cells (PMID:27499044). It also stresses that SHP-1 dependence is disputed, consistent with
+  the review restricting SHP-1 to B-1 cells. No contradictions found.
+- Material addition verified and acted on: human CRISPR CD5 knockout in CAR/TCR-engineered
+  T cells enhances activation and effector function [PMID:39028827 "In this study, we found
+  that CD5 inhibits CAR T cell activation and that knockout (KO) of CD5 using CRISPR-Cas9
+  enhances the antitumor effect of CAR T cells"]. Added as reference and as supporting
+  evidence for the NEW GO:0050860 (negative regulation of TCR signalling) annotation; action
+  unchanged.
+- Not acted on: clinical/translational items (anti-CD5 CAR-T trials, lymphoma prevalence,
+  CD5-derived antifungal peptides, BTLA regulating CD5 levels in mouse) - no GO impact.
+- Deep-research file added to references. Status set to COMPLETE.

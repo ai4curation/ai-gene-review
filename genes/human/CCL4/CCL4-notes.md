@@ -80,6 +80,9 @@
 - See bottom of file (updated after falcon job completion).
 
 ### Deep research outcome (falcon)
+**Superseded (see 2026-10-05 reconciliation below): the falcon job did eventually complete late and
+`CCL4-deep-research-falcon.md` now exists.** Original status note follows.
+
 `just deep-research-falcon human CCL4` was launched in parallel with publication caching at the
 start of the session and **failed**: the Edison/falcon API returned `429 Too Many Requests` and the
 provider then timed out after 600 s ("Provider falcon exited with code 1 / All providers failed").
@@ -88,3 +91,25 @@ possible. The review was therefore built from the UniProt record, the cached pub
 above (several fetched during this session with `just fetch-pmid`), the PubMed MCP (PMC full text
 for PMID:10841574 returned empty), OLS/QuickGO term lookups, and a QuickGO comparator check against
 CCL3 and CCL5.
+
+## Reconciliation with late falcon deep research (2026-10-05)
+
+The falcon job completed after the review had been drafted (report end time 2026-10-05T01:31,
+~30 min run), producing `CCL4-deep-research-falcon.md`. It was read in full and compared with the
+review and these notes.
+
+- **No contradictions.** The report's central claims - secreted CC chemokine acting extracellularly
+  as a CCR5 agonist; natural MIP-1-beta(3-69) proteoform retaining CCR5 activity and gaining CCR1 and
+  CCR2b responses; CCR5 down-modulation and blockade of R5 HIV-1 entry; one of three CD8+ T-cell
+  HIV-suppressive factors; MIP-1 rod-shaped polymers - all match what the review already asserts
+  from cached primary papers (PMID:12070155, PMID:8525373, PMID:20959807, PMID:8699119).
+- **Additional material, not acted on:** (i) CD26/DPP4 identified as the protease generating
+  MIP-1-beta(3-69) (Guan et al. 2004, J Cell Biochem; not cached, not independently verified here) -
+  this is a property of DPP4 (the enzyme performs the step), so it does not change any CCL4
+  annotation; (ii) rapid CCL4 secretion by target-activated NK cells (Fauriat 2010) - expression
+  context only; (iii) mouse tumour (CD103+ DC recruitment) and cutaneous leishmaniasis/CCR5 models
+  and 2024 disease-association studies - the report itself notes these do not isolate CCL4 from
+  CCL3/CCL5 and are not grounds for new process annotations.
+- The report does not address the PMID:10841574 GO:0043922 / GO:0009636 rows, so they stay UNDECIDED.
+- Actions: added the falcon report to `references` (reference_review UNVERIFIED, not used as sole
+  evidence) and set review `status: COMPLETE`. No annotation actions changed.

@@ -4,6 +4,9 @@ UniProt: P03973 (ANTIL / antileukoproteinase; synonyms HUSI-I, MPI, BLPI, WFDC4,
 
 ## Deep research status
 
+- **Update 2026-10-05:** the falcon job did complete late (report end time
+  2026-10-05T01:25) and `SLPI-deep-research-falcon.md` now exists; see the
+  reconciliation section at the end of this file. Original status note:
 - `just deep-research-falcon human SLPI` was launched at the start of this review
   (no perplexity key available, so no fallback). At the time the review was written
   the falcon job had not yet returned (other concurrent falcon jobs in this session
@@ -116,3 +119,25 @@ UniProt: P03973 (ANTIL / antileukoproteinase; synonyms HUSI-I, MPI, BLPI, WFDC4,
   DNA binding, mRNA binding and host-mediated perturbation of symbiont process.
 - PMID:16352738 (not in GOA) is the better support for any sequence-specific
   nuclear DNA/NF-kB binding.
+
+## Reconciliation with late falcon deep research (2026-10-05)
+
+`SLPI-deep-research-falcon.md` arrived after the review was written and was read in full and
+compared with the review and these notes.
+
+- **No contradictions.** Its evidence-weighted conclusion - SLPI is chiefly a secreted
+  C-terminal-WAP-domain serine protease inhibitor protecting mucosal extracellular environments
+  from neutrophil elastase and cathepsin G, with context-dependent nuclear NF-kB-site competition
+  and antimicrobial host defence - matches the review's core functions and actions.
+- **Agrees with existing caveats:** it explicitly warns against annotating SLPI as an enzyme or as
+  a direct PR3 or MMP-9 inhibitor (PR3 cleaves SLPI; no such GOA rows exist), and treats
+  anti-HIV activity as variable/secondary, consistent with the review's handling of GO:0045071.
+- **Additional material, not acted on:** Eisenberg et al. 1990 (JBC) Leu72 site-directed
+  mutagenesis (reinforces the P1 Leu72 assignment already supported by PMID:3366116 and
+  PMID:18421166); Weldon et al. 2009 NE cleavage of SLPI at Ser15-Ala16/Ala16-Glu17 in CF
+  airways, removing LPS and NF-kB-site binding while retaining cathepsin G inhibition (a
+  regulation-of-SLPI finding, not a new SLPI activity); Brown et al. 2024 Slpi-null x ENaC-Tg mouse
+  airway phenotype (indirect); clinical registry entries. None of these was independently
+  fetched, since none changes an annotation.
+- Actions: added the falcon report to `references` (reference_review UNVERIFIED). No annotation
+  actions changed; review status already COMPLETE.

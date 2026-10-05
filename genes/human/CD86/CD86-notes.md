@@ -10,6 +10,9 @@
   Reactome entries. If a `CD86-deep-research-falcon.md` file appears later, it was
   not used for this review. Final outcome: the falcon job exited without producing
   an output file (Edison API 429 rate limiting); no deep-research file exists.
+- UPDATE 2026-10-05: the statement above is superseded. The falcon job did complete
+  late (end_time 01:34) and `CD86-deep-research-falcon.md` now exists; it has been
+  reconciled with the review (see "Falcon deep research reconciliation" below).
 
 ## Identity
 
@@ -81,3 +84,25 @@
 - protein binding IPI rows with CTLA4/CD28 -> MODIFY to signaling receptor binding.
 - coreceptor activity / signaling receptor activity -> MODIFY to receptor ligand
   activity (CD86 is the ligand; CD28 is the (co)receptor).
+
+## Falcon deep research reconciliation (2026-10-05)
+
+- `CD86-deep-research-falcon.md` completed after the review was written. It agrees with
+  the review's core picture (CD86 = APC-surface ligand for CD28 and CTLA4, not an enzyme;
+  signalling is downstream of CD28 in the T cell) and found no contradictions.
+- Material additions verified against primary literature and acted on:
+  - MARCH1 (not only MARCH8/c-MIR, which UniProt cites) ubiquitinates CD86 via a
+    TMD recognition surface centred on Pro254 [PMID:34157285 "We identified a highly
+    specific recognition surface in the hydrophobic core of the CD86 transmembrane (TM)
+    domain (TMD) that is required for recognition by MARCH1"]. Description updated to
+    "MARCH-family E3 ligase (MARCH1 in APCs, also MARCH8)"; reference added.
+  - CTLA4-mediated transendocytosis of CD86, with CTLA4 recycling after CD86 release
+    [PMID:35999394 "in the presence of CD86, CTLA-4 detached in a pH-dependent manner and
+    recycled back to the cell surface to permit further transendocytosis"]. Reference
+    added; this is a CTLA4 process (CD86 is its input), so no new CD86 annotation.
+- Not acted on: soluble CD86 splice variant costimulation (Jeannin 2000; no PMID
+  resolved, already covered by an existing suggested question), 2023-2024 mouse/
+  translational studies (context-specific, no GO impact), mouse B-cell reverse
+  signalling (already kept as non-core ISS).
+- Deep-research file added to references and cited as support on the IBA receptor
+  ligand activity annotation. No annotation actions changed.
