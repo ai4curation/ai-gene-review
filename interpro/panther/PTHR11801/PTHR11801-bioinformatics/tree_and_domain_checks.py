@@ -68,8 +68,8 @@ def main():
                 continue
             seen.add(node)
             species, event, sf, leaves = nodes.get(node, (None, None, None, []))
-            sfs = collections.Counter(l[3] for l in leaves)
-            orgs = sorted({l[1] for l in leaves if l[1]})
+            sfs = collections.Counter(leaf[3] for leaf in leaves)
+            orgs = sorted({leaf[1] for leaf in leaves if leaf[1]})
             print(f"{node}\ttaxon={species}\tevent={event}\tnode_SF={sf}\tleaves={len(leaves)}")
             print("   descendant SFs:", dict(sorted(sfs.items(), key=lambda x: str(x[0]))))
             print("   has Dictyostelium:", any("Dictyostelium" in o for o in orgs),
@@ -81,8 +81,8 @@ def main():
           f"({root.get('species')})")
     orgs = collections.Counter()
     all_leaves = jak[root.get("persistent_id")][3]
-    for l in all_leaves:
-        orgs[l[1]] += 1
+    for leaf in all_leaves:
+        orgs[leaf[1]] += 1
     for o, c in sorted(orgs.items(), key=lambda x: str(x[0])):
         print(f"   {c}\t{o}")
     for probe in ["Caenorhabditis elegans", "Caenorhabditis briggsae", "Pristionchus pacificus",
