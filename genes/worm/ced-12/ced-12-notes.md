@@ -50,8 +50,9 @@ publications (most are abstract-only; PMID:20126385 and PMID:24225442 are full t
 - Support for engulfment genes promoting death: [PMID:11449278 "requires the genes ced-1, ced-2, ced-5, ced-6, ced-7, ced-10 and ced-12"],
   [PMID:11449278 "mutations in engulfment genes enhance the frequency of this cell survival"],
   [PMID:11449279 "genes that mediate corpse removal can also function to actively kill cells"].
-  Both abstracts are cached only as abstracts and do not say which engulfment mutants were tested, so a ced-12-specific
-  result is not confirmed.
+  Reddien's abstract defines its engulfment genes as an enumerated set that includes ced-12, and states
+  [PMID:11449278 "mutations in engulfment genes alone allow the survival and differentiation of some cells that would normally die"].
+  The GO:1904747 rows rest on that reading.
 
 ## Not read / limits
 

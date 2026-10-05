@@ -54,8 +54,9 @@ PMID:22801495 and PMID:24225442 have full text cached).
   1998), function redundantly in C. elegans gastrulation"]; ced-5 alone gastrulates normally. Non-core.
 - Promotion of cell death by engulfment: [PMID:11449278 "mutations in engulfment genes enhance the frequency of
   this cell survival"]; [PMID:11449279 "genes that mediate corpse removal can also function to actively kill
-  cells"]. Reddien's abstract lists ced-5 among engulfment genes, but neither abstract says which mutants were
-  tested; ced-5-specific support is unconfirmed (both papers abstract-only).
+  cells"]. Reddien's abstract defines its engulfment genes as an enumerated set that includes ced-5, and states
+  [PMID:11449278 "mutations in engulfment genes alone allow the survival and differentiation of some cells that
+  would normally die"]. The GO:1904747 rows rest on that reading (both papers abstract-only).
 
 ## Clearance-defect / background-genotype rows
 

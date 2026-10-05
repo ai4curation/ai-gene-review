@@ -39,8 +39,9 @@ UniProt record (`ced-2-uniprot.txt`).
 - Engulfment genes promote death of weakly signalled cells
   [PMID:11449278 "mutations in engulfment genes enhance the frequency of this cell survival"];
   [PMID:11449279 "genes that mediate corpse removal can also function to actively kill cells"].
-  Both cached records are abstract-only; Reddien's abstract lists ced-2 among the engulfment
-  genes but neither abstract names which mutants were tested for the killing defect.
+  Both cached records are abstract-only. Reddien's abstract defines its engulfment genes as an enumerated set
+  that includes ced-2, and states [PMID:11449278 "mutations in engulfment genes alone allow the survival and
+  differentiation of some cells that would normally die"]. The GO:1904747 rows rest on that reading.
 
 ## Curation decisions (summary)
 
