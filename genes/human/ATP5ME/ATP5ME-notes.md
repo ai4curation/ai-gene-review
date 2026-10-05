@@ -6,3 +6,11 @@
 - Proton transmembrane transporter activity (IEA, InterPro) is marked over-annotated, because subunit e is not in the proton path. Its role is captured by contributes_to GO:0046933. Proton transmembrane transport (IEA) and protein-containing complex binding (IEA, rat) are kept as non-core.
 - No NEW cristae-formation or assembly term. Comparator check: QuickGO shows none of the dimer-associated F(o) subunits (ATP5MG/g, ATP5MK/k, ATP5MF/f, ATP5PD/d) carries GO:0042407, GO:0033615 or GO:0065003. Raised as a suggested question.
 - Four Y2H/pull-down IPIs (FOS twice, SPG21, CIDEB) removed under policy.
+
+## 2026-10-05 revision (reviewer round 1)
+
+- The location rows now cite the UniProt SUBCELLULAR LOCATION line instead of a wrap fragment.
+- The GO:0015078 reason now rests on UniProt's composition statement (the F(o) proton channel is the assembled c, a, 8, e, f, g, k, j sector) and on the evidence being about dimer stability, not conduction. The derived GO:1902600 row (GO_REF:0000108 from GO:0015078) is now also over-annotated, for consistency.
+- GO:0044877 (rat IEA) is now over-annotated, matching its reasoning.
+- Added NEW GO:0033615 complex assembly (IMP, PMID:42138716): knockout loses subunit g, dimers and monomers become scarce, and intermediates accumulate. This follows the ATP5MD (subunit k) review.
+- core_functions now has molecular_function GO:0005198 structural molecule activity (ATP5MD precedent) alongside contributes_to GO:0046933.
