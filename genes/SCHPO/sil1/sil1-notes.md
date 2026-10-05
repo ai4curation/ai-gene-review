@@ -94,8 +94,11 @@ QuickGO donor evidence is IMP / PMID:10958688. `just fetch-pmid 10958688` retrie
 the abstract; the wrapper could not cache the full text. The abstract explicitly
 includes S. cerevisiae experiments despite the Sls1/Yarrowia context:
 [PMID:10958688 "Synthetic lethality was observed between DeltaScsls1 and translocation-deficient kar2 or sec63-1 mutants, providing in vivo evidence for a role of ScSls1p in protein translocation."]
-Retain the process as non-core with curator deference for precise SRP-dependent
-specificity; the term is not simply broader than the available evidence.
+It also shows that ScSls1p function is not restricted to translocation:
+[PMID:10958688 "Synthetic lethality was also observed with ER-associated degradation and folding-deficient kar2 mutants, strongly suggesting that Sls1p functions are not restricted to the translocation process."]
+Retain the process as non-core with curator deference, but the donor evidence's
+`sec63-1` genetic interaction points to the post-translational SEC-complex route;
+GO:0031204 is the concrete alternative for PomBase follow-up.
 
 Gene-specific phenotype provenance was checked against the live PomBase API on
 2026-09-05: https://www.pombase.org/api/v1/dataset/latest/data/gene/SPAC1071.03c.
