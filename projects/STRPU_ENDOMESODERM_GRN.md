@@ -72,6 +72,9 @@ Echinobase usage; each links to its review.
   obligatory input to almost every early node below.
 - **SoxB1** (Q9Y0D7). The ectoderm-side antagonist of the vegetal program,
   cleared from vegetal cells by beta-catenin-dependent degradation.
+- **Lim1** (Q7YT18). LIM-homeodomain factor of the veg1 oral ectoderm, the ring
+  of ectoderm abutting the endomesoderm, activated by short-range signals from
+  the vegetal plate and independent of Nodal.
 
 ### Endoderm and the outward-moving torus
 
@@ -94,8 +97,6 @@ Echinobase usage; each links to its review.
   ring, driven by beta-catenin/Tcf and Blimp1.
 - **Brn1/2/4** (STRPU/Brn124, A0A7M7GMA5). Class III POU homeodomain factor of
   the veg2 endoderm regulatory state, the predicted midgut regulator of endo16.
-- **Lim1** (Q7YT18). LIM-homeodomain factor of the anterior (foregut and midgut)
-  endoderm regulatory state downstream of the Blimp1, Otx and GataE circuitry.
 
 ### The skeletogenic micromere lineage and the double-negative gate
 
