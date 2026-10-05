@@ -48,3 +48,10 @@ Independent science review passed for this focused follow-up (2026-10-01). The e
 
 
 Focused canonical validation, HTML rendering and history validation passed (2026-10-01). The rendered page embeds the exact approved YAML. The canonical validator reports 21 generic protein-binding advisories; the temporary proposal check additionally disclosed nine remaining short-evidence-anchor advisories. No full-repository validation is claimed. All normal sources and previous history remain unchanged.
+
+
+## Generic protein-binding policy migration, 2026-10-05 UTC
+
+The 21 `GO:0005515 protein binding` rows retained as non-core were migrated to policy-compliant actions. Eleven curated PRC1.1/BCOR-complex partner associations were changed to `REMOVE` because the generic term carries no functional information beyond the accepted BCOR complex and PRC1 complex annotations. Ten proteome-scale rows whose exact supplementary pair records were not re-audited were changed to `UNDECIDED`, preserving the original supporting partners and the three Q6W2J9-4 isoform scopes until their pair-level evidence can be checked. The AKT1 row remains `UNDECIDED`.
+
+The current action tally is ACCEPT=23, KEEP_AS_NON_CORE=7, MARK_AS_OVER_ANNOTATED=1, REMOVE=11, UNDECIDED=13. No bare `GO:0005515` row remains `KEEP_AS_NON_CORE`; removing the low-resolution term does not assert that the reported interactions are false.
