@@ -1,11 +1,11 @@
-name: Normal CD40 source fetch
-run-name: CD40 normal fetch at ${{ github.sha }}
+name: Normal CD40LG source fetch
+run-name: CD40LG normal fetch at ${{ github.sha }}
 'on':
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: normal-cd40-source-fetch
+  group: normal-cd40lg-source-fetch
   cancel-in-progress: false
 jobs:
   fetch:
@@ -25,7 +25,7 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib, json, os, pathlib, subprocess
-          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cd40-fetch'
+          root = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cd40lg-fetch'
           artifact = root / 'artifact'
           artifact.mkdir(parents=True, exist_ok=False)
           (artifact / 'raw').mkdir()
@@ -36,7 +36,7 @@ jobs:
           }
           observed = {p: subprocess.check_output(['git', 'rev-parse', 'HEAD:' + p], text=True).strip() for p in expected}
           receipt = {k: os.environ[k] for k in ('GITHUB_REPOSITORY', 'GITHUB_REF', 'GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT')}
-          receipt.update(gene='CD40', organism='human', uniprot_id='P25942', hgnc_id='HGNC:11919',
+          receipt.update(gene='CD40LG', organism='human', uniprot_id='P29965', hgnc_id='HGNC:11935',
                          normal_source_base='09476b15e3443092dfcf2a51037779d3d9ab1c8c',
                          expected_runtime_objects=expected, observed_runtime_objects=observed,
                          status='initialized', import_authorized=False)
@@ -44,7 +44,7 @@ jobs:
           assert observed == expected, 'Normal source code or dependency input changed'
           assert subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip() == receipt['GITHUB_SHA']
           with open(os.environ['GITHUB_ENV'], 'a') as out:
-              out.write('CD40_ROOT=' + str(root) + '\n')
+              out.write('CD40LG_ROOT=' + str(root) + '\n')
               out.write('UV_CACHE_DIR=' + str(root / 'uv-cache') + '\n')
               out.write('UV_PROJECT_ENVIRONMENT=' + str(root / 'venv') + '\n')
           PY
@@ -63,11 +63,11 @@ jobs:
           "$UV_PROJECT_ENVIRONMENT/bin/python" - <<'PY'
           import datetime, importlib.metadata, json, os, pathlib, signal, subprocess, sys
           import yaml
-          artifact = pathlib.Path(os.environ['CD40_ROOT']) / 'artifact'
+          artifact = pathlib.Path(os.environ['CD40LG_ROOT']) / 'artifact'
           work = artifact / 'raw'
           report_path = artifact / 'fetch-report.json'
           command = [str(pathlib.Path(os.environ['UV_PROJECT_ENVIRONMENT']) / 'bin/ai-gene-review'),
-                     'fetch-gene', 'human', 'CD40', '--uniprot-id', 'P25942', '--output-dir', str(work)]
+                     'fetch-gene', 'human', 'CD40LG', '--uniprot-id', 'P29965', '--output-dir', str(work)]
           report = {'command': command, 'cwd': str(work), 'attempts': 1,
                     'started_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     'python': sys.version, 'package_version': importlib.metadata.version('ai_gene_review'),
@@ -83,14 +83,14 @@ jobs:
                   report['timed_out'] = True
           try:
               assert report['returncode'] == 0, 'Normal fetch did not complete successfully'
-              gene = work / 'genes/human/CD40'
-              expected = [gene / ('CD40-' + suffix) for suffix in ('uniprot.txt', 'goa.tsv', 'ai-review.yaml')]
+              gene = work / 'genes/human/CD40LG'
+              expected = [gene / ('CD40LG-' + suffix) for suffix in ('uniprot.txt', 'goa.tsv', 'ai-review.yaml')]
               assert all(p.is_file() and not p.is_symlink() for p in expected)
               uni = expected[0].read_text()
               primary = next(line for line in uni.splitlines() if line.startswith('AC   ')).split()[1].rstrip(';')
-              assert primary == 'P25942' and 'NCBI_TaxID=9606' in uni
+              assert primary == 'P29965' and 'NCBI_TaxID=9606' in uni
               seed = yaml.safe_load(expected[2].read_text())
-              assert seed['id'] == 'P25942' and seed['gene_symbol'] == 'CD40'
+              assert seed['id'] == 'P29965' and seed['gene_symbol'] == 'CD40LG'
               assert seed['taxon']['id'] == 'NCBITaxon:9606'
               rows = seed.get('existing_annotations', [])
               assert rows and all(a['review']['action'] == 'PENDING' for a in rows)
@@ -113,7 +113,7 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib, json, os, pathlib
-          artifact = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cd40-fetch/artifact'
+          artifact = pathlib.Path(os.environ['RUNNER_TEMP']) / 'normal-cd40lg-fetch/artifact'
           entries = []
           for p in sorted(artifact.rglob('*')):
               assert not p.is_symlink(), 'Unexpected symlink in output'
@@ -126,8 +126,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: normal-cd40-sources-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/normal-cd40-fetch/artifact/
+          name: normal-cd40lg-sources-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/normal-cd40lg-fetch/artifact/
           if-no-files-found: error
           retention-days: 7
           include-hidden-files: false
