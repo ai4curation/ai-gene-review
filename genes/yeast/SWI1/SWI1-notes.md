@@ -51,3 +51,14 @@ action calls therefore remain unchanged.
 PMID:39235627 was checked as a newer direct 2024 publication. Its Ino2
 activation-domain mapping strengthens the core activator-binding interpretation
 for Swi1 without changing the GO term selection.
+
+## 2026-10-05 - PR review follow-up
+
+PR review flagged residual title-as-evidence anchors and an over-strong
+`enables` qualifier on the proposed nucleosome-binding row. The three
+PMID:3143101 nucleus rows, the PMID:28249159 chromatin/SWI-SNF rows and the
+PMID:3542227 HO transcription row now use exact evidential abstract sentences
+instead of titles. The proposed `GO:0031491` nucleosome-binding row and the
+first core function now assert `contributes_to`: the structures place Swi1 in
+the SWI/SNF DNA-binding lobe near extranucleosomal DNA, but they do not prove
+that isolated Swi1 directly binds nucleosomes independently of the complex.
