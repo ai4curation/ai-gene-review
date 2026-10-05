@@ -58,7 +58,10 @@ inherited prostaglandin metabolism, GO:0047086 oxygen-insertion chemistry, and
 historical bile-acid-binder/transport carry-over from DD2 versus DD4 clone
 nomenclature.
 
-I did not adopt its removal recommendations wholesale. The report did not locate
-a direct AKR1C4 aldose-reduction null assay, did not close the full-text gap for
-the monooxygenase source PMID:21232532, and did not obtain the scanned full text
-of PMID:8172617 behind the legacy bile-acid transport assertions.
+I did not adopt its removal recommendations wholesale, but the report sharpened
+two access-independent removals: GO:0047086 asserts oxygen-insertion chemistry
+that an AKR hydride-transfer enzyme cannot support, and GO:0015125 asserts
+intrinsic transmembrane-transporter activity for a soluble cytosolic bile-acid
+binder. A direct AKR1C4 aldose-reduction null assay remains absent, PMID:21232532
+still needs full-text review on the donor side, and the scanned full text of
+PMID:8172617 is still required to judge the broad bile-acid transport process.
