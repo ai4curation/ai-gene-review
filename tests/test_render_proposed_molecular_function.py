@@ -11,18 +11,17 @@ TEMPLATE = (
 )
 
 
-def _mf_rows(core_function: dict) -> list[str]:
+def _core_function_term_rows(core_function: dict) -> list[str]:
     data = enrich_gene_data({"gene_symbol": "TEST", "core_functions": [core_function]})
     soup = BeautifulSoup(render_html(data, TEMPLATE), "html.parser")
     return [
         group.get_text(" ", strip=True)
         for group in soup.select(".core-function-terms .function-term-group")
-        if "Molecular Function:" in group.get_text()
     ]
 
 
 def test_proposed_molecular_function_is_rendered_as_proposed() -> None:
-    rows = _mf_rows(
+    rows = _core_function_term_rows(
         {
             "description": "Holds unfolded clients",
             "proposed_molecular_function": "holdase chaperone activity",
@@ -32,10 +31,23 @@ def test_proposed_molecular_function_is_rendered_as_proposed() -> None:
 
 
 def test_go_molecular_function_still_rendered() -> None:
-    rows = _mf_rows(
+    rows = _core_function_term_rows(
         {
             "description": "Folds clients",
             "molecular_function": {"id": "GO:0044183", "label": "protein folding chaperone"},
         }
     )
     assert rows == ["Molecular Function: protein folding chaperone"]
+
+
+def test_contributes_to_molecular_function_is_rendered() -> None:
+    rows = _core_function_term_rows(
+        {
+            "description": "Positions a complex",
+            "contributes_to_molecular_function": {
+                "id": "GO:0044183",
+                "label": "protein folding chaperone",
+            },
+        }
+    )
+    assert rows == ["Contributes To MF: protein folding chaperone"]
