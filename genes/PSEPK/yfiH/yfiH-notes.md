@@ -22,3 +22,10 @@ The copper-binding GOA row is removed as a historical family/domain overcall.
 The review transfers the broad amidase and peptidoglycan-biosynthesis roles by
 ISS and proposes a substrate-specific GO molecular-function term. Direct assay
 of Q88Q72 is still needed.
+
+## 2026-10-05 review follow-up
+
+The copper-binding row is left `UNDECIDED`, not removed. Structural and
+biochemical work identifies YfiH/PgeF as a cytoplasmic peptidoglycan-precursor
+amidase rather than a copper-dependent oxidase, but the available experiments do
+not directly test whether Q88Q72 can bind copper.

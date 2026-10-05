@@ -17,3 +17,13 @@
   "No direct enzymology on the *P. putida* protein."]. The Q88F51 assignment
   therefore remains a strong family inference rather than organism-specific
   experimental evidence.
+
+## 2026-10-05 review follow-up
+
+The pyrimidine half of PpnP's broad substrate range is now explicitly linked to
+`GO:0008655 pyrimidine-containing compound salvage`. The earlier
+purine-module-boundary rationale was too narrow for the standalone gene review:
+Q88F51 can phosphorolyze uridine, cytidine, and thymidine, releasing free
+pyrimidine bases for salvage [file:PSEPK/ppnP/ppnP-uniprot.txt "Can use
+uridine,"; file:PSEPK/ppnP/ppnP-deep-research-falcon.md "downstream of
+nucleoside uptake, producing bases and ribose-1-phosphate for reuse"].

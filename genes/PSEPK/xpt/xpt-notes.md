@@ -12,3 +12,10 @@ pentosyltransferase annotation is marked over-annotated because the exact
 substrate-specific term is already present; cytoplasm and broader metabolic
 processes remain non-core. PTHR43864:SF1 plus the exact Q88CB6 exemplar defines
 the Xpt branch.
+
+## 2026-10-05 review follow-up
+
+The broad `GO:0016763 pentosyltransferase activity` row is recorded as
+`MODIFY`, not `MARK_AS_OVER_ANNOTATED`, because Xpt's InterPro-derived parent
+term should be replaced by the exact substrate-specific
+`GO:0000310 xanthine phosphoribosyltransferase activity`.
