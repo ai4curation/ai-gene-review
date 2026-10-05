@@ -45,3 +45,13 @@
   `TIF5` protein-binding rows were removed as generic, the InterPro `GO:0003743`
   row was accepted as redundant but correct, and the ComplexPortal PMID:8947054
   `GO:0005850` eIF2-complex row was accepted.
+
+## 2026-10-05 reviewer follow-up
+
+- Resolved PR review blockers by fetching Thakur et al. 2020 as PMID:32955564
+  and using it as the primary support for `GO:0043022 ribosome binding` and the
+  R53/R55/R57 start-codon-fidelity claims; by changing the broad PMID:12008673
+  `GO:0005840` ribosome row to `KEEP_AS_NON_CORE` because `GO:0033290` captures
+  the 48S preinitiation complex more precisely; and by replacing the duplicated
+  `core_functions` entries with contributions to the eIF2 complex's Met-tRNAi
+  and GTP binding plus Sui2's direct 40S contact.
