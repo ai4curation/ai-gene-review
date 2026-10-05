@@ -153,7 +153,7 @@ Last updated: 2026-10-01
 - [ ] `XENLA/zic1` (O73689) — Zic1; border specifier together with Pax3
 - [ ] `human/MSX1` (P28360) — Msx (no reviewed *X. laevis* entry)
 - [ ] `human/TFAP2A` (P05549) — AP-2; early NPB/NC; amphioxus/lamprey AP-2
-- [ ] `XENLA/hes4-a` (Q90Z12) — Hairy2; border maintenance
+- [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (20 ACCEPT, 5 non-core, 3 MODIFY, 1 UNDECIDED) + 1 NEW (GO:0001227)
 - [ ] `XENLA/gbx2` (Q91907) — Gbx2; posterior border (cross-check `human/GBX2`)
 
 ## Tier 3 — Blastula pluripotency programme retained in the crest
@@ -358,6 +358,22 @@ Cross-cutting findings:
 - **Flags for curator review:** the twist1
   "developmental process" IBA rows MODIFIED to `GO:0014036`; and the
   convention below.
+
+### Tier 2 reviews (in progress)
+
+- **hes4-a (Hairy2a).** Border and progenitor-maintenance repressor, not a
+  crest specifier. Notch/Delta1 (downstream of Xiro1), BMP and FGF induce it.
+  It represses Bmp4, and early overexpression represses crest markers. With
+  Id3 and Stat3 it keeps progenitors dividing and undifferentiated.
+  `GO:0014029` was kept at the broad level, as for id3-a and myc-a. NEW
+  `GO:0001227`; the comparator was checked in QuickGO (human HES1, HEY1/2 and
+  BHLHE40/41 carry it). The BMP signalling row was MODIFIED to `GO:0030514`
+  negative regulation. **Conflict for curators:** Q90Z12 carries both positive
+  `GO:0014029` rows and a NOT `GO:0014029` row. The NOT comes from Murato 2007,
+  a hairy2a-specific knockdown with no crest phenotype, which conflicts with
+  Vega-López 2015 [PMID:25997789]; it was marked UNDECIDED. Across the HES/HEY
+  family only *Xenopus* hes4 carries any NC term, and Hes4 is absent from
+  rodents. No outgroup (amphioxus/lamprey) border data on hairy were found.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
