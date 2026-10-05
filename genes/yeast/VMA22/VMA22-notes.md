@@ -152,6 +152,20 @@ effect on polyP is an indirect consequence of impaired vacuolar V-ATPase
 assembly rather than evidence that Vma22 performs VTC-mediated polyphosphate
 synthesis.
 
+## 2026-10-05 PR 3717 follow-up
+
+- Corrected the current `GO:0007035 vacuolar acidification` IBA summary:
+  `SGD:S000001102` is VMA22 itself, not Vph1. The target in its own
+  `WITH/FROM` is expected for a self-seeded IBA and marks direct experimental
+  grounding on VMA22.
+- Strengthened the proposed V-ATPase V0 sector assembly-factor MF by comparing
+  it explicitly with `GO:0030674 protein-macromolecule adaptor activity`.
+  Vma22's Vma12/subunit-d bridging is adaptor-like, but the resolved steric
+  checkpoint that occupies the V0 subunit-d surface and prevents premature V1
+  attachment is not captured by the existing adaptor term.
+- Added the cached 2025 polyphosphate screen to `references` with LOW relevance
+  to make the rejected downstream polyP phenotype visible in the review.
+
 The refreshed review now has 14 total rows: nine current GOA rows, four
 retired rows, and the existing proposed ER membrane annotation. The final action
 counts are five ACCEPT, two KEEP_AS_NON_CORE, three MARK_AS_OVER_ANNOTATED, two
