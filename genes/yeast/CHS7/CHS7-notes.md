@@ -18,6 +18,11 @@
 - Cached and cited the 2023 Sanchez et al. ER quality-control paper,
   PMID:37819693, to support the proposed Chs7-specific chitin synthase export
   chaperone activity.
+- Retained the SGD `GO:0006457 protein folding` IMP row rather than replacing
+  it with `GO:0061077 chaperone-mediated protein folding`, which is obsolete;
+  the mechanism-level specificity for Chs7 is represented by the molecular-function
+  `GO:0044183 protein folding chaperone` assertion instead of a narrower
+  biological-process replacement.
 - Newer-literature search found the cached 2025 Chs3/Chs7 orphan-subunit
   trafficking paper, PMID:40137259, as the newest CHS7-focused budding-yeast
   primary paper. A 2025 Neurospora CSE-8/Chs7-family paper and a 2026
