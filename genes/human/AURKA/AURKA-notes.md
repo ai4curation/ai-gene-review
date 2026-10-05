@@ -16,3 +16,8 @@
 - The meiotic rows are kept as non-core on mouse oocyte evidence [PMID:31895686 "Taken together, our current data reveal a critical role for AURKA activity in regulating microtubule dynamics, spindle pole focusing, and the maintenance of oocyte aMTOC organization at assembled meiotic spindles."].
 - Cytosol is now non-core and centriole is accepted. The nuclear pool has a kinase-independent hnRNP K/MYC role (PMID:26782714).
 - The IKBKB and MYCN IPIs stay removed: N-Myc stabilization is carried by GO:0031647.
+
+## 2026-10-05 revision (reviewer round 2)
+
+- Each row quote now addresses its own term. Where a cached abstract does not speak to a row, the row carries only UniProt support, and the reference note says so.
+- MYCN IPIs were changed to GO:0008134 transcription factor binding [PMID:25175806 "Proteolytic degradation of MYCN protein is regulated in part by a kinase-independent function of Aurora A."]. IKBKB was changed to GO:0019901 [PMID:17939994 "These data support a function for IKK2 as an antagonist of Aurora A signaling during mitosis."].
