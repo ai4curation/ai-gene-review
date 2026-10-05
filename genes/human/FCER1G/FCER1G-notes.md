@@ -33,3 +33,6 @@
 
 ### Deep research status
 - Falcon deep research was launched in parallel; see final section for outcome.
+- Falcon deep research SUCCEEDED (`FCER1G-deep-research-falcon.md`, ~27 min). Consistent with the review:
+  FcRgamma is a ligand-free receptor-assembly/ITAM adaptor [file:human/FCER1G/FCER1G-deep-research-falcon.md "Its partner receptor recognizes the extracellular ligand."];
+  notes that human adaptive NK cells can use CD247 instead of FcRgamma for CD16A signaling, so mouse KO ADCC phenotypes do not fully transfer to human.

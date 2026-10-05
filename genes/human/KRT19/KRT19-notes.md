@@ -64,3 +64,14 @@ UniProt: P08727; HGNC:6436; 400 aa; type I (acidic) keratin of the intermediate 
 - protein binding: REMOVE for uninformative non-keratin hits; MODIFY to protein heterodimerization
   activity (GO:0046982) for type II keratin partners; MODIFY to protein-macromolecule adaptor
   activity (GO:0030674) for the TGM2 bridging report.
+
+## Deep research status (update)
+
+- Falcon deep research completed successfully: `KRT19-deep-research-falcon.md`. Its synthesis agrees
+  with this review: K19 is structural (not an enzyme), pairs with type II keratins (especially K8),
+  and CK19 positivity is a lineage readout rather than evidence that K19 drives differentiation
+  [file:human/KRT19/KRT19-deep-research-falcon.md "a CK19-positive stain does not by itself show that K19 caused the observed differentiation"].
+- Additional leads from the falcon report (not yet cached/verified, so not used for annotation):
+  K8/K19 filaments scaffold cytoplasmic HNRNPK in MDA-MB-231 cells (Fallatah et al. 2023,
+  doi:10.1186/s12860-023-00488-z); extracellular K19-CXCL12 coat formed by TG2 in pancreatic cancer
+  mediating immune exclusion (Yan et al. 2023); Krt18/Krt19 complementary roles in muscle injury (Muriel et al.).
