@@ -147,11 +147,11 @@ Last updated: 2026-10-01
 - [x] `XENLA/id3-a` (Q91399) — Id3; NC progenitor maintenance/competence factor (not a specifier). Reviewed 2026-10-01: 28 GOA rows (20 ACCEPT, 5 MODIFY, 2 REMOVE, 1 non-core)
 - [x] `XENLA/sox8` (Q6VVD7) — SoxE; first-wave NC specifier. Reviewed 2026-10-01: 19 GOA rows (9 ACCEPT, 8 non-core, 2 MODIFY)
 
-## Tier 2 — Neural plate border specifiers (ancestral chordate layer)
+## Tier 2 — Neural plate border specifiers (ancestral chordate layer) — COMPLETE 2026-10-05
 
 - [x] `XENLA/pax3-a` (Q645N4) — Pax3/7; neural plate border specifier. Reviewed 2026-10-05: 25 GOA rows (17 ACCEPT, 3 non-core, 4 over-annotated, 1 MODIFY) + 1 NEW (GO:0001228)
 - [x] `XENLA/zic1` (O73689) — Zic1; border specifier (with Pax3), also preplacodal. Reviewed 2026-10-05: 33 GOA rows (25 ACCEPT, 6 non-core, 1 MODIFY, 1 over-annotated) + 2 NEW (GO:0001228, GO:0060788)
-- [ ] `human/MSX1` (P28360) — Msx (no reviewed *X. laevis* entry)
+- [x] `human/MSX1` (P28360) — Msx1; border specifier upstream of Pax3/Zic. Reviewed 2026-10-05: 64 GOA rows (38 ACCEPT, 17 non-core, 5 over-annotated, 2 REMOVE, 2 UNDECIDED) + 1 NEW (GO:0014029, ISS)
 - [x] `human/TFAP2A` (P05549) — AP-2α; spans border and NC layers. Reviewed 2026-10-05: 114 GOA rows (73 ACCEPT, 19 non-core, 10 REMOVE, 6 MODIFY, 6 over-annotated) + 1 NEW (GO:0014029, ISS)
 - [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (20 ACCEPT, 5 non-core, 3 MODIFY, 1 UNDECIDED) + 1 NEW (GO:0001227)
 - [x] `XENLA/gbx2` (Q91907) — Gbx2; border specifier, upstream of pax3/msx1. Reviewed 2026-10-05: 13 GOA rows (9 ACCEPT, 2 MODIFY, 2 non-core) + 4 NEW (GO:0014029, GO:0001227, GO:0030917, GO:0043049)
@@ -453,6 +453,56 @@ Cross-cutting findings:
   TFAP2 paralog expansion. Open: genes that act in *both* layers, AP-2α the
   clearest case, test whether the convention should let them carry
   `GO:0014036` too.
+
+- **MSX1 (human).** Border specifier, one step above Pax3/Zic1: intermediate
+  BMP induces msx1, msx1 induces pax3 and zic, and those induce snail2 and
+  foxd3; gbx2 sits upstream. Gain of function induces crest markers
+  [PMID:14627721, PMID:15691759]. A dominant negative or Msx1/2 morpholinos
+  remove them [PMID:16586351]. Mouse Msx1/2 double mutants still form crest
+  but mispattern cranial and cardiac crest [PMID:16221730]. NEW `GO:0014029`
+  (ISS) was added. `GO:0014034` was not added, because Msx1 has no shown
+  binding at specifier enhancers. Core functions: repressor `GO:0001227`;
+  tooth and palate development. The six p53 rows from one overexpression study
+  were split between non-core and over-annotated. The inner-ear rows were
+  marked UNDECIDED: the source reports malleus (middle ear) defects. The EMT
+  IEA was removed because its source studies epithelial–mesenchymal
+  *interaction*. Comparator verified in QuickGO: no Msx protein in any species
+  carries any crest term; the same-layer peers do by IMP. Evolution: amphioxus
+  Msx reaches the neural plate edge and responds to BMP [PMID:18562679], so
+  the border role is ancestral. Lamprey msx-A lacks the frog-like border
+  dynamics [PMID:39060477].
+
+### Tier 2 synthesis (2026-10-05)
+
+| Gene | Layer | NC terms kept | Outgroup / evolution |
+|---|---|---|---|
+| gbx2 | Border specifier (posterior; upstream of pax3/msx1) | `GO:0014029` (NEW) | Gbx/Otx positioning ancestral (amphioxus); lost in *Ciona* |
+| MSX1 | Border specifier (BMP-responsive; upstream of pax3/zic) | `GO:0014029` (NEW, ISS) | Border expression ancestral (amphioxus) |
+| pax3-a | Border specifier; with Zic1, necessary and sufficient for crest | `GO:0014029`, `GO:0014034` | Border expression ancestral (amphioxus) |
+| zic1 | Border specifier; also preplacodal | `GO:0014029`, `GO:0014034` | Border expression ancestral (amphioxus) |
+| hes4-a | Border / progenitor maintenance | `GO:0014029` (one NOT row UNDECIDED) | No outgroup data found |
+| TFAP2A | Spans border and crest | `GO:0014029` (NEW, ISS) | Amphioxus AP-2 is non-neural only: **co-opted** |
+
+Cross-cutting findings:
+- **The border layer is ancestral, and the wiring is new.** Pax3/7, Zic, Msx
+  and Gbx already mark the chordate neural plate border (amphioxus). What
+  vertebrates added is direct activation of the crest specifiers by the
+  Pax3/Zic1 pair, plus co-option of AP-2 into the border. This matches Tier 1:
+  most specifiers were co-opted by a change in where they are expressed.
+- **The convention held up without strain.** Every border gene sits naturally
+  at `GO:0014029`, with `GO:0014034` where it directly induces crest fate
+  (Pax3, Zic1), and none needed `GO:0014036`. The one tension is TFAP2A,
+  which genuinely acts in both layers, and zebrafish tfap2a sits at
+  `GO:0014036`.
+- **Coverage gaps, not conventions.** Every border gene's comparator check
+  (verified in QuickGO) found crest terms on at least one ortholog
+  (mouse Pax3, mouse Gbx2, mouse/zebrafish Tfap2a) or on same-layer peers
+  (Msx). Uncurated frog papers account for most of the missing annotations:
+  gbx2 had no experimental rows at all.
+- **The case for a "neural plate border formation" term** is now made by
+  six genes. Raise it with GO as a `proposed_new_terms` / NTR. The
+  definition should cover the border as a competence territory that gives
+  rise to crest, placode and dorsal neural tube.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
