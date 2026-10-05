@@ -118,13 +118,13 @@ individually; none remains PENDING. UniProt's live Q10428 record maps `par1` to
 The existing PMID:18716626 / PomBase:SPCC188.02 row therefore incorrectly described
 Swi6; it now describes Par1. Both identifier namespaces are preserved as seeded.
 
-The Swi6/P40381 record is directly supported by the PMID:18716626 abstract. For
-Par1-source records from that paper, retain the curated interaction with explicit
-curator deference and independent PP2A evidence from PMID:16541024; the Swi6 abstract
-statement is not evidence for a Par1-specific assay. PMID:16541025 directly supports
-meiotic fission-yeast shugoshin association with PP2A, while its abstract alone does
-not identify individual subunit assays. These protein-binding records remain
-KEEP_AS_NON_CORE; the adaptor function remains the informative core function.
+The Swi6/P40381 record is directly supported by the PMID:18716626 abstract and
+the PMID:16541025 PP2A records support Sgo1-associated PP2A, so these rows are
+modified from generic protein binding to the more informative chromatin-protein
+adaptor activity. For Par1-source records from PMID:18716626 and PMID:20739936,
+leave the curated interactions UNDECIDED pending full-text confirmation; the
+Swi6 abstract statement and the Survivin/CPC abstract statement are not evidence
+for Par1-specific assays.
 
 Checked the linked author correction PMID:30275479 against PubMed and the publisher:
 https://www.nature.com/articles/s41586-018-0529-9. It replaces quantification graphs
