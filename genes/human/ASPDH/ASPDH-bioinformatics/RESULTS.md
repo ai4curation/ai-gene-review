@@ -18,7 +18,16 @@ Human ASPDH (A6ND91, 283 aa) was aligned globally to two structurally characteri
 
 ASPDH's "DMHVV" segment corresponds to the reference "NIHIV"/"NIHEI" motif, so the catalytic histidine is most likely retained as H223.
 
-**NAD(+)-binding residues.** Several Rossmann-fold contacts are conserved in both comparisons: A75, S97, A127 and N192 (and N248/P249 against O28440). However, the acidic residue that binds the adenine ribose of NAD(+) is not conserved: Q9X1X6 D28 aligns to ASPDH N41 and O28440 D31 to ASPDH V37. The N-terminal glycine-rich positions are also substituted (ASPDH R16/L17). Loss of that aspartate, with a basic residue nearby, is the usual signature of a Rossmann fold that prefers a 2'-phosphorylated dinucleotide (NADP(H)) over NAD(H). This is consistent with the InterPro-derived "NADP binding" and with the reported binding of NAADP (PMID:35841763), but it is a sequence inference only.
+**NAD(+)-binding residues.** Several Rossmann-fold contacts are conserved in both comparisons: A75, S97, A127 and N192, plus N248/P249 against O28440. About half of the annotated NAD(+) contacts are substituted in each comparison (see `results.txt`), including the N-terminal glycine-rich positions (ASPDH R16/L17).
+
+The global alignment maps the ribose-binding aspartate of the references (Q9X1X6 D28, O28440 D31) to ASPDH N41 and V37 respectively. Those placements are four residues apart, so the region is not well resolved. The local windows show ASPDH carries an aspartate two residues downstream:
+
+    Q9X1X6 20-36: NFEKIYAYDRISKDIPG
+    ASPDH aligned : -LELVFVWNRMAGSVPP
+    O28440 23-39: GFEIAAILDVRGEHEKM
+    ASPDH aligned : GPELGLELVFVWNRDRM
+
+ASPDH residues 41-44 are N-R-D-P, so D43 is a plausible counterpart of the reference aspartate, which is followed by Arg in Q9X1X6 ("YAYDR"), with a gap-placement offset like the one seen for the catalytic histidine. The alignment therefore does not establish whether ASPDH prefers NAD(H) or NADP(H).
 
 ## Pathway context
 
@@ -26,4 +35,4 @@ The bacterial NadX route to NAD(+) produces iminoaspartate, which quinolinate sy
 
 ## Conclusion
 
-The catalytic histidine is probably retained, but the NAD-specific ribose contact is lost, and the downstream pathway enzyme is absent in mammals. These results do not show whether human ASPDH has L-aspartate dehydrogenase activity; they argue against a role in NAD(+) biosynthesis.
+The catalytic histidine is probably retained, the cofactor preference cannot be called from the alignment, and the downstream pathway enzyme is absent in mammals. These results do not show whether human ASPDH has L-aspartate dehydrogenase activity; they argue against a role in NAD(+) biosynthesis.

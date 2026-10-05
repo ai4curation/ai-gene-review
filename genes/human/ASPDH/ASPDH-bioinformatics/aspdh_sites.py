@@ -102,3 +102,6 @@ if __name__ == "__main__":
     print("\nWindows around the annotated catalytic histidine:")
     window("Q9X1X6", 193)
     window("O28440", 189)
+    print("\nWindows around the NAD(+) ribose-binding aspartate:")
+    window("Q9X1X6", 28)
+    window("O28440", 31)
