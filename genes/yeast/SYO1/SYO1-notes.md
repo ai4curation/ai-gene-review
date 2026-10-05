@@ -35,3 +35,14 @@
 - Searched for newer 2025-2026 Syo1/HEATR3 and 5S RNP papers. A 2026 review
   reiterates the conserved Syo1/HEATR3 role but does not change the direct
   yeast calls already supported by the cached 2012, 2015, and 2023 papers.
+
+## 2026-10-05 PR 3715 follow-up
+
+- Accepted the newly live SGD `GO:0140309 unfolded protein holdase activity` row.
+  `GO:0140309` is the carrier-specific child of `GO:0140597`, and Syo1 fits it
+  because it captures nascent Rpl5/Rpl11 and escorts the cargo pair toward
+  Kap104-mediated nuclear import and handoff to 5S-rRNA/Rpf2/Rrs1 assembly
+  intermediates.
+- Repointed the two retired obsolete `GO:0051082 unfolded protein binding`
+  replacements to `GO:0140309` for the same reason.
+- Removed curation commentary from the top-level biological description.
