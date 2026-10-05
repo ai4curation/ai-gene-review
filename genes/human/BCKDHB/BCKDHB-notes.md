@@ -168,3 +168,9 @@ The biological summary restores the supported EC1.2.4.4 designation and the 24-s
 ## Follow-up validation, 2026-09-30
 
 The independently reviewed follow-up passes focused validation (six warnings), history validation, and rendering. Five warnings concern supported generic binding retained as non-core under the supplied action definitions; the other records that direct primary/database sources, rather than the unchanged generated report, support annotation decisions. All 41 source assertions, two inherited NEW assertions and two products are preserved. No new global validation pass is claimed.
+
+## Generic binding policy cleanup, 2026-10-05 UTC
+
+The five bare BCKDHA GO:0005515 interaction rows are now REMOVE under the codified generic-binding policy. This removes an uninformative generic term rather than the E1 alpha/beta partnership itself: each row preserves its original reference, IPI qualifier and P12694 supporting entity, and the BCKDHA partnership remains captured by the E1 heterotetramer rows and the contributes_to GO:0003863 rows.
+
+No replacement molecular function is introduced for the physical association alone. Existing-annotation totals after this cleanup are 34 ACCEPT, 1 KEEP_AS_NON_CORE, 1 MODIFY, 5 REMOVE and 2 NEW across 43 rows; the only remaining KEEP_AS_NON_CORE row is the structural potassium-binding proposal.
