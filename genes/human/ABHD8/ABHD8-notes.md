@@ -207,3 +207,8 @@ over-annotated. Absence of direct ABHD8 substrate assays does not by itself
 refute a PAINT ancestral-function placement, and the current review already
 separates hydrolase source evidence from the unresolved ABHD5, plant CGI-58 and
 yeast Ict1 source conflicts behind LPAAT and phosphatidic-acid biosynthesis.
+
+The IBA batch record now treats the focused lipid-catalysis report as assessed:
+GO:0004620, GO:0052689 and GO:0003824 are closed as non-core rather than core
+catalytic functions, GO:0055088 remains non-core, and the specific LPAAT/PA
+biosynthesis assertions remain unresolved pending yeast Ict1 adjudication.
