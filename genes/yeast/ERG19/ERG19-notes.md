@@ -92,16 +92,16 @@ UniPathway: UPA00057 / UER00100 (IPP from (R)-mevalonate, step 3/3).
 - **carboxy-lyase activity (GO:0016831)** — correct parent of GO:0004163, but a
   generalization; MODIFY/redundant relative to the specific term.
 - **BP terms**: isopentenyl diphosphate biosynthetic process, mevalonate pathway
-  (GO:0019287) is the most precise direct-process term → core. Ergosterol
+  (GO:0019287) is the most precise direct-process term -> core. Ergosterol
   biosynthetic process (GO:0006696), sterol biosynthetic process (GO:0016126),
-  isoprenoid biosynthetic process (GO:0008299), FPP biosynthetic process,
-  mevalonate pathway (GO:0010142) are broader / downstream pathway memberships —
-  keep but assess core vs non-core (the enzyme's *direct* product is IPP, not FPP
-  or ergosterol; downstream-process terms are pathway-context, candidates for
-  KEEP_AS_NON_CORE rather than as the molecular role).
+  and isoprenoid biosynthetic process (GO:0008299) are broader pathway-context
+  terms. FPP biosynthetic process, mevalonate pathway (GO:0010142) is a
+  downstream process to remove: the enzyme's *direct* product is IPP, not FPP.
 - **CC**: cytosol/cytoplasm well supported; vacuole is weak (NAS from a review).
-- ATP binding (GO:0005524, UniProtKB-KW) is correct biochemically (ATP is a
-  co-substrate) though not in the GOA stub list — present in UniProt DR lines.
+- ATP binding (GO:0005524) is correct biochemically (ATP is a co-substrate),
+  but current UniProt v203 dropped the GO:0005524 cross-reference present in
+  v202. The current entry still carries the broad `KW   ATP-binding` keyword;
+  its FT BINDING features are all for (R)-5-diphosphomevalonate rather than ATP.
 
 ## Provenance note
 
@@ -122,17 +122,21 @@ The falcon report independently confirms the core review and contradicts nothing
 - **Reaction / cofactors:** confirms the ATP-dependent decarboxylation of
   mevalonate-5-diphosphate to IPP, and additionally states the reaction **requires
   Mg2+** and is coupled to ATP hydrolysis (products IPP + CO2 + ADP)
-  [Cordier 1999, doi:10.1023/a:1006181720100; Garay 2026 preprint,
-  doi:10.20944/preprints202605.0182.v1]. This reinforces the added ATP-binding
+  [Cordier 1999, doi:10.1023/a:1006181720100; PMID:42506259 "In the lower
+  segment of the pathway, mevalonate undergoes sequential phosphorylation
+  reactions catalyzed by mevalonate kinase and phosphomevalonate kinase, followed
+  by an ATP-dependent decarboxylation step mediated by mevalonate diphosphate
+  decarboxylase"]. This reinforces the added ATP-binding
   molecular function; Mg2+ dependence is family/review-level here (flagged as inferred
   by the report) and is not annotated as metal binding in UniProt P32377, so no
   metal-ion GO term was added.
 - **Mechanism:** GHMP-kinase-superfamily mechanism via ATP-dependent phosphorylation of
   the substrate C3-hydroxyl (transient 3-phospho-MVAPP) then decarboxylation/elimination
-  — consistent with the Asp302/Lys18 active-site biochemistry [Garay 2026].
+  is consistent with the Asp302/Lys18 active-site biochemistry.
 - **Localization:** independently described as a **cytosolic homodimer** / cytoplasmic
-  precursor-module enzyme [Johnston 2020 Yeast, doi:10.1002/yea.3452; Garay 2026]. This
-  further supports flagging the NAS vacuole annotation (GO:0005773) as over-annotated.
+  precursor-module enzyme [Johnston 2020 Yeast, doi:10.1002/yea.3452;
+  PMID:42506259]. This further supports flagging the NAS vacuole annotation
+  (GO:0005773) as over-annotated.
 - **Essentiality:** an Arabidopsis MVD cDNA complements a yeast thermosensitive
   MVD-deficient strain and rescues the lethal **ERG19 deletion** [Cordier 1999] —
   additional support for essentiality alongside PMID:9244250.
@@ -163,6 +167,9 @@ and the vacuole over-annotation flag.
 - Preserved the existing `NEW` ATP-binding proposal. The refreshed GOA still
   lacks an ATP-binding row despite the direct TNP-ATP and ATP K_m data in
   PMID:15169949 and the ATP-dependent GHMP fold described by PMID:11698677.
+  The refresh also moved the UniProt entry from v202 to v203 and removed the
+  old `DR   GO; GO:0005524; F:ATP binding; IEA:UniProtKB-KW.` cross-reference;
+  only the broader `ATP-binding` keyword remains.
 - Rechecked newer literature. The 2024 isopentenol-utilization paper replaces
   the native mevalonate pathway in an engineered yeast chassis, and the 2026
   J. Fungi review updates the Garay preprint mentioned in the falcon report;
