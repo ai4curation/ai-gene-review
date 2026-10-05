@@ -9,4 +9,5 @@
 ## 2026-10-04 review round (PR #4251)
 
 - The nucleus IBA is removed: it comes from the same taxon:2759 ankyrin node type as the capping IBA. Nuclear substrates (E2A, and MLL per the deep research) leave nuclear activity possible but unshown.
-- FLNC and MLL substrates appear in the deep research but are not cached, so they are not added as core substrates.
+- FLNC and MLL appear in the cached PMID:22916308 paper only as the authors' secondary summary of prior
+  substrate work whose primary papers are not cached, so they are not added as core substrates here.
