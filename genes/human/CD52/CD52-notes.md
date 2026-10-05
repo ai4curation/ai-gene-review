@@ -5,7 +5,8 @@ UniProt: P31358 (CD52_HUMAN), 61 aa precursor; HGNC:1804.
 ## Deep research status
 
 - `just deep-research-falcon human CD52` was launched in parallel with publication caching.
-  See the end of this file for the outcome. Literature for this review was gathered with the
+  Falcon succeeded (CD52-deep-research-falcon.md); its conclusions agree with the primary literature
+  reviewed here. Literature for this review was gathered with the
   PubMed MCP tools and cached via `ai-gene-review fetch-pmid` (PMIDs 29997173, 29244050,
   33658999, 31507595, 8418821, 7688956) in addition to the GOA-cited PMIDs.
 
@@ -69,3 +70,13 @@ UniProt: P31358 (CD52_HUMAN), 61 aa precursor; HGNC:1804.
 - sperm midpiece (IBA from mouse Cd52) -> KEEP_AS_NON_CORE (CD52 is acquired by sperm from epididymal fluid).
 - NEW: negative regulation of T cell activation (GO:0050868), negative regulation of toll-like receptor
   signaling pathway (GO:0034122), external side of plasma membrane (GO:0009897).
+
+## Deep research (falcon) additions
+
+- Falcon run completed successfully. Additional points (from the falcon report, not independently cached):
+  mouse Cd52 knockout is fertile ("CD52, known as a major maturation-associated sperm membrane antigen
+  secreted from the epididymis, is not required for fertilization in the mouse", Yamaguchi et al. 2008,
+  doi:10.1111/j.1365-2443.2008.01210.x); human sperm CD52 is part of the glycocalyx and anti-CD52 modestly
+  reduces motility (Yeung et al. 1997); CLL cells use CD52 and CD24 as Siglec-10 ligands to suppress T cells
+  (van Bruggen et al. 2024); N- and O-glycans both contribute to HMGB1 Box B binding (DeBono et al. 2025).
+  These support keeping the sperm location non-core and the Siglec-10 ligand role as core.
