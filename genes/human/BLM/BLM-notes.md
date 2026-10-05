@@ -62,3 +62,10 @@ Independent science review passed for this focused follow-up on 2026-10-01 UTC. 
 
 
 Focused canonical validation, HTML rendering and history validation passed on 2026-10-01 UTC. The rendered page embeds the approved YAML. Fifteen generic-binding policy advisories remain for supported non-core associations under the supplied ActionEnum. Those advisories do not change the bounded evidence decisions or create a new annotation. No full-repository validation is claimed. All normal sources and previous history remain unchanged.
+
+
+## Generic protein-binding policy migration, 2026-10-05 UTC
+
+Fifteen `GO:0005515 protein binding` rows were migrated from `KEEP_AS_NON_CORE` to `REMOVE` to follow the repository policy for new and re-reviewed generic binding annotations. Their partner evidence remains recorded in `review.reason`, but no retained GO annotation now keeps the literal generic term solely because the interaction itself is source-supported.
+
+The RPA1, RMI1, shelterin, RAD51D, SPIDR, UIMC1/RAP80 and NABP2/hSSB1 rows still deliberately avoid unsupported partner-class refinements. RPA1 is a DNA-binding cofactor rather than an ATPase or kinase. RMI1 is represented through BTR complex membership rather than an invented BLM adaptor function. TRF1, TRF2, POT1 and SPIDR regulate or recruit BLM in the cited assays rather than showing that BLM activates those nonenzymatic partners. UIMC1/RAP80 binds ubiquitylated BLM via RAP80 UIMs, and the BLM-NABP2 association is cellular but not detectably direct with the purified proteins tested. Removing `GO:0005515` is therefore a specificity decision; it does not assert that those interactions are false.
