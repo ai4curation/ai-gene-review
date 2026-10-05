@@ -38,13 +38,21 @@ annotations can be assigned to highly divergent sequences using the code IRD
 records IRD as a NOT on a node, but that NOT is not propagated to the genes below the node.
 
 The GO wiki page on IRD
-([Inferred from Rapid Divergence (IRD)](https://wiki.geneontology.org/index.php/Inferred_from_Rapid_Divergence(IRD)))
-says that annotating with IRD implies a NOT. Its worked example is a gene-level TAIR
-row: CPuORF7 (`TAIR:AT2G31280`), `NOT` GO:0004674 protein serine/threonine kinase
-activity, IRD, with/from `TAIR:Communication:501741973` and `PANTHER:PTN000357291`.
-The wiki blocks automated access, so these details come from a search-engine
-summary of the page. They have not been read on the page itself, and should be
-checked by hand before they are quoted.
+([Inferred from Rapid Divergence (IRD)](https://wiki.geneontology.org/index.php/Inferred_from_Rapid_Divergence(IRD)),
+last reviewed January 30, 2018) is short. Its overview says: "IRD is a type of
+phylogenetic evidence characterized by rapid divergence from ancestral sequence.
+Annotating with this evidence code implies a NOT annotation." It maps IRD to
+ECO:0000321 and points to Gaudet et al., 2011, "Phylogenetic-based propagation of
+functional annotations within the Gene Ontology consortium". The sections "Use of the
+With/From Field for IRD", "When IRD Should NOT be Used" and "Quality Control Checks" are
+empty. Its one example is a gene-level TAIR GAF row:
+
+| DB Object ID | DB Object Symbol | Qualifier | GO ID | DB:Reference | Evidence Code | With/From |
+|---|---|---|---|---|---|---|
+| TAIR:AT2G31280 | CPUORF7 | NOT | GO:0004674 | TAIR:Communication:501741973 | IRD | PANTHER:PTN000357291 |
+
+The row puts the NOT on a named gene. It cites a TAIR communication rather than PAINT's
+`GO_REF:0000033`, and it puts the PTN node in with/from.
 
 The example no longer matches the data (checked 2026-10-05):
 
@@ -57,10 +65,14 @@ The example no longer matches the data (checked 2026-10-05):
 - No current PAINT output contains a gene-level IRD row of this kind. The leaf file has
   no IRD evidence at all, and no IRD-only NOT|IBA rows.
 
-So the documented example shows IRD the way it was once exported, as a NOT on a named
-gene. Current PAINT keeps IRD on internal nodes and exports nothing for the genes below.
-Before quoting the wiki example as current practice, it should be updated, or the
-change in practice should be confirmed with the PAINT team.
+So the wiki documents IRD as it was once submitted: a NOT on a named gene, with the
+divergent node as with/from. Current PAINT keeps IRD on internal nodes and exports
+nothing for the genes below. The statement "implies a NOT annotation" is therefore true
+of the node in `IBD.gaf`, but not of any gene annotation a user can see. The wiki page
+should be updated: a current example, the with/from convention (the ancestral IBD node),
+and a note that IRD blocks propagation instead of creating NOT|IBA rows. Its three empty
+sections could be filled from this project. The change in practice should be confirmed
+with the PAINT team first.
 
 ## Methods
 
@@ -204,7 +216,9 @@ Updated 2026-10-05.
 - [ ] Inspect the 14 stale overrides and the 20 fully re-annotated IRD rows
 - [ ] Report probable IRD errors to PAINT
 - [ ] Confirm with PAINT that gene-level IRD rows (the TAIR CPuORF7 wiki example) are
-      no longer exported, and ask for the wiki example to be updated
+      no longer exported, and propose an update to the IRD wiki page (current example,
+      with/from convention, propagation behaviour, the empty "When IRD should NOT be used"
+      and QC sections)
 
 # NOTES
 
