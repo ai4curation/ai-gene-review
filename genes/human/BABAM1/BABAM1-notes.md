@@ -6,7 +6,7 @@
 - Both complexes: [PMID:21282113 "Both BRCC36-containing complexes contain common components including BRE and NBA1/MERIT40."]
 - Accepted the complex, DSB repair, G2 checkpoint, IR response, DNA repair regulation and location rows.
 - Response to vitamin B6 (NAS) is marked as an over-annotation: PLP sensing is done by SHMT2 (PMID:31142841).
-- Identical protein binding, chromatin remodeling, G2/M checkpoint NAS and nuclear body are kept as non-core.
+- Identical protein binding, chromatin remodeling and nuclear body are kept as non-core. G2/M checkpoint NAS was accepted in revision 1 (parent of the core GO:0007095).
 - Removed 17 GO:0005515 rows. BABAM2 and ABRAXAS1 are captured by the complex rows.
 
 ## 2026-10-05 revision (reviewer round 1)
