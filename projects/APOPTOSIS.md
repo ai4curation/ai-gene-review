@@ -2,7 +2,7 @@
 title: "Apoptosis Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
-species: [human, mouse]
+species: [human, mouse, zebrafish]
 ---
 
 # Apoptosis Project
@@ -79,9 +79,12 @@ perturbation.
 
 ## Scope
 
-**Primary:** human and mouse. Review human and mouse orthologs together for
-the first mammalian slice so MGI phenotypes, GOA propagation, and human
-biochemistry can be compared rather than curated in isolation.
+**Primary:** human and mouse, with a zebrafish exact-term audit as a first
+non-mammalian vertebrate extension. Review human and mouse orthologs together
+for the first mammalian slice so MGI phenotypes, GOA propagation, and human
+biochemistry can be compared rather than curated in isolation; use the ZFIN
+slice to find DANRE rows where embryonic cell-death assays have been lifted to
+generic apoptosis.
 
 **Comparators:** Drosophila, Caenorhabditis, budding/fission yeasts, and other
 opisthokonts. Use these to understand conserved caspase/metacaspase,
@@ -165,6 +168,7 @@ regulation descendants.
 - [x] Review the Priority 1 mammalian core genes
 - [x] Review a first mouse over-annotation slice
 - [x] Compare worm, fly, and fungal conserved components
+- [x] Query GOA for `GO:0006915` rows in zebrafish and triage the ZFIN-authored exact rows
 
 ---
 
@@ -218,6 +222,7 @@ regulation descendants.
 - [x] Worm ced-9 reviewed as the conserved CED BCL2-family apoptosis inhibitor comparator
 - [x] Worm egl-1 reviewed as the conserved CED BH3-only apoptosis activator comparator
 - [x] Worm <gene species="worm" symbol="cep-1">CEP-1</gene> reviewed as the conserved p53-family DNA-damage apoptosis comparator
+- [x] Zebrafish exact `GO:0006915` rows fetched from QuickGO and ZFIN-authored rows triaged for assay-readout over-annotation
 - [x] Drosophila <gene species="DROME" symbol="Dronc">Dronc</gene> reviewed as the conserved Dark-apoptosome initiator-caspase comparator
 - [x] Drosophila <gene species="DROME" symbol="Dark">Dark</gene> reviewed as the conserved Apaf-1/CED-4 apoptosome adaptor comparator
 - [x] Drosophila <gene species="DROME" symbol="DrICE">DrICE</gene> reviewed as the conserved effector-caspase execution comparator

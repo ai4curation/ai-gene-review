@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Fetch exact GO:0006915 human/mouse annotations from QuickGO."""
+"""Fetch exact GO:0006915 annotations from QuickGO."""
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import time
@@ -20,6 +21,7 @@ LIMIT = 200
 TAXA = {
     "human": 9606,
     "mouse": 10090,
+    "zebrafish": 7955,
 }
 
 ROW_FIELDS = [
@@ -176,7 +178,24 @@ def rollup(label: str, rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return sorted(rolled, key=lambda row: (-int(row["row_count"]), row["symbol"]))
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=f"Fetch exact {GO_ID} annotations from QuickGO."
+    )
+    parser.add_argument(
+        "--taxon",
+        action="append",
+        choices=sorted(TAXA),
+        dest="taxa",
+        help="Taxon label to fetch. Repeat to fetch several taxa; default: all.",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
+    selected_labels = args.taxa or list(TAXA)
+
     outdir = Path(__file__).resolve().parent / "go0006915"
     outdir.mkdir(parents=True, exist_ok=True)
 
@@ -189,7 +208,8 @@ def main() -> None:
         "limit": LIMIT,
         "taxa": {},
     }
-    for label, taxon_id in TAXA.items():
+    for label in selected_labels:
+        taxon_id = TAXA[label]
         raw_rows = fetch_exact_annotations(taxon_id)
         rows = [normalize_row(row) for row in raw_rows]
         metadata["taxa"][label] = {
@@ -208,8 +228,13 @@ def main() -> None:
 
         print(f"{label}: {len(rows)} exact {GO_ID} rows across {len(rolled)} symbols")
 
-    write_tsv(outdir / "human-mouse-go0006915-symbol-rollup.tsv", combined_rollup, ROLLUP_FIELDS)
-    (outdir / "metadata.json").write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
+    stem = "-".join(selected_labels)
+    if len(selected_labels) > 1:
+        write_tsv(outdir / f"{stem}-go0006915-symbol-rollup.tsv", combined_rollup, ROLLUP_FIELDS)
+    metadata_name = "metadata.json" if selected_labels == list(TAXA) else f"{stem}-metadata.json"
+    (outdir / metadata_name).write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n"
+    )
 
 
 if __name__ == "__main__":
