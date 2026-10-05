@@ -8,7 +8,8 @@
   no fallback was used. The review below was built from UniProt P42081, the cached
   GOA-cited publications (`publications/PMID_*.md`, mostly abstract-only) and cached
   Reactome entries. If a `CD86-deep-research-falcon.md` file appears later, it was
-  not used for this review.
+  not used for this review. Final outcome: the falcon job exited without producing
+  an output file (Edison API 429 rate limiting); no deep-research file exists.
 
 ## Identity
 
