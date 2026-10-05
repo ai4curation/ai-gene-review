@@ -60,9 +60,9 @@
   in fission yeast, if any, have not been identified.
 - **Loss-of-function phenotype in S. pombe is uncharacterized** — no reported growth, oxidative-
   stress-sensitivity, or metabolic phenotype for a pombe sel0 deletion in the cached literature.
-- **The biological role (oxidant detoxification vs metabolic regulation vs other) in S. pombe is
-  inferred, not established.** The GO:0098869 "cellular oxidant detoxification" annotation is an
-  IC (Inferred by Curator) call built on the ISS AMPylase inference, not on a pombe phenotype.
+- **The biological role (oxidative-stress response vs metabolic regulation vs other) in S. pombe is
+  inferred, not established.** The oxidant-stress process annotation is an IC (Inferred
+  by Curator) call built on the ISS AMPylase inference, not on a pombe phenotype.
 
 ## Reference adjudication notes
 
@@ -91,9 +91,10 @@
   peptide + ortholog localization. Core location.
 - GO:0005524 ATP binding — not in GOA rows list but present as UniProt DR (IEA-KW). (Only GOA rows
   are reviewed; ATP/metal binding appear in core_functions as supporting MFs.)
-- GO:0098869 cellular oxidant detoxification (IC) — biological process; supported by ortholog
-  phenotype (oxidative-stress response). KEEP_AS_NON_CORE / ACCEPT as a reasonable curator
-  inference, but note it is inferred, not demonstrated in pombe.
+- GO:0098869 cellular oxidant detoxification (IC) — biological process; supported by
+  ortholog oxidative-stress-response evidence. MODIFY to GO:0034599 cellular
+  response to oxidative stress because direct oxidant detoxification overshoots the
+  mixed-direction pombe stress phenotypes.
 
 ## Falcon deep research
 - `just deep-research-falcon SCHPO sel0` via `python3` (system 3.9.5) fails: wrapper uses
@@ -144,9 +145,11 @@ was checked via its gene-data API on 2026-09-05. Its curated, high-throughput
 
 These phenotype directions and assay conditions must remain distinct. They
 support condition-dependent stress/viability effects, but do not identify the
-AMPylated substrates or demonstrate direct oxidant detoxification. The remaining
-question is the mechanism connecting the inferred enzyme activity to these
-phenotypes, rather than whether a phenotype exists at all.
+AMPylated substrates or demonstrate direct oxidant detoxification. GO:0034599
+cellular response to oxidative stress better fits the family evidence and the PomBase
+phenotype pattern than GO:0098869 cellular oxidant detoxification. The remaining
+question is the mechanism connecting the inferred enzyme activity to these phenotypes,
+rather than whether a phenotype exists at all.
 
 The title of PMID:34984977 foregrounds lincRNAs, but its abstract explicitly
 includes "diverse coding-gene mutants for functional context". Thus the title
