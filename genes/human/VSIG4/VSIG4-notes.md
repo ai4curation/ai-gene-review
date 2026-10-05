@@ -75,3 +75,18 @@ tissue macrophages, especially liver Kupffer cells.
   (GO:0001852), phagocytosis, recognition (GO:0006910), plasma membrane (GO:0005886).
   Comparator check: CR1 (P17927) carries GO:0004877 by IDA, so the receptor term is used for
   C3b-binding phagocytic receptors.
+
+## Deep research final status
+
+- Falcon deep research completed successfully (`VSIG4-deep-research-falcon.md`, about 54 KB) after the
+  annotation review had been drafted from primary literature. It agrees with the curation decisions:
+  - C3b/iC3b recognition by the IgV domain is a high-confidence human biochemical function (human CRIg IgV
+    SPR data, Duan et al. 2023, ImmunoHorizons, doi:10.4049/immunohorizons.2300064, not cached here).
+  - Constitutive recycling through transferrin-positive endosomes and phagocytic cups (Helmy 2006; seen
+    in human monocyte-derived macrophages). A candidate recycling endosome CC annotation was not added
+    because the cached abstract does not contain the localization data.
+  - Heparan sulfate binding that competes with C3b (Ebstein et al. 2023, doi:10.1093/glycob/cwad050), not
+    cached and not annotated.
+  - T cell counter-receptor still unidentified; macrophage anti-inflammatory signaling is mostly murine.
+  - Lebegge et al. 2025 (doi:10.3390/cancers17193207): mouse Vsig4 knockout had little effect on mouse tumor growth/metastasis;
+    a translational/model caveat, not relevant to GO annotation.
