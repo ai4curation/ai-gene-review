@@ -132,7 +132,7 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 - **139 proteins**, 14 species labels
 - Spanning model-organism genes **and** non-MOD / less-specialized contexts: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
 - For each gene: BioReason-Pro RL summary + trace, ARGO95 SFT GO terms for the HF subset, **agent-adjudicated local AIGR reference**
-- References are not independent expert ground truth: 64 `COMPLETE`, 48 `DRAFT`, 23 `IN_PROGRESS`, 4 `INITIALIZED`
+- References are not independent expert ground truth: 79 `COMPLETE`, 45 `DRAFT`, 11 `IN_PROGRESS`, 4 `INITIALIZED`
 - ARGO139 is the collected cohort; performance excludes the wrong-input `csr-1` case (n=138) and flags seven 2,000-aa truncations
 - A dedicated **comparison agent** scores two axes (1–5), each with required supporting quotes:
   - **Correctness** — are the claims accurate?
@@ -168,7 +168,7 @@ Mouse has the highest selected-case mean (4.7), followed by ***B. subtilis*** (4
 
 ---
 
-## Eight reproducible model failure modes
+## Eight recurrent model failure modes
 
 Immediately diagnostic to a reader of the narrative.
 
@@ -180,10 +180,10 @@ Immediately diagnostic to a reader of the narrative.
 | 4 | **Organism-specific biology absent** | daf-16 generic FoxO, no IIS/dauer/longevity |
 | 5 | **Neo-functionalisation / moonlighting missed** | Nmnat NAD⁺ enzyme; chaperone role lost |
 | 6 | **Narrative–GO disconnect** | RidA: `protein binding` not deaminase activity |
-| 7 | **Cross-kingdom fold bias** | aprE subtilisin → "human blood coagulation" |
+| 7 | **Cross-kingdom fold bias** | PGRPLB (*Anopheles*) → "fruit fly" protein |
 | 8 | **Generated UniProt-style fabrication** | Slc5a1 → steroid-sulfate transporter |
 
-**The biases are architectural — they predict *where* the model will fail on deployment.**
+**The biases are architectural — they predict *where* the model will fail on deployment.** (Modes are illustrated by selected cases; counts with denominators are on the project page. As presented at ISMB 2026 on 14 July 2026, row 7 cited aprE, but aprE's coagulation terms come from GO-GPT/SFT, not the RL narrative. Corrected on 2026-09-27.)
 
 ---
 
@@ -193,7 +193,7 @@ Immediately diagnostic to a reader of the narrative.
 > <span class="bad">✗</span> Actually the primary activator of the **cAMP/PKA** pathway.
 
 > **Epe1** *(S. pombe, 1/5)* — "a nuclear **histone demethylase** … JmjC oxygenase core"
-> <span class="bad">✗</span> A **pseudoenzyme** (HVD not HXD); anti-silencing factor via HP1/Swi6.
+> <span class="bad">✗</span> A **pseudoenzyme** (Fe(II) triad H297-E299-Y370: Tyr in place of the third His); anti-silencing factor via HP1/Swi6.
 
 > **TOR1** *(yeast, 4/4)* — "PIKK serine/threonine kinase … HEAT repeats scaffold regulatory assemblies … integrates nutrient & stress cues"
 > <span class="good">✓</span> Correct — the **FRB + multi-domain architecture** enabled pathway-level inference.
@@ -213,11 +213,11 @@ TOR1 · NOTCH1 · PTEN · EGFR · spo0A · (informative family names: Uggt1, KAR
 
 ## Supplemental review: GOA agreement ≠ biological validity
 
-GO-GPT run directly on 299 canonical genes; overlap measured against three progressively stricter references:
+GO-GPT run directly on 296 canonical genes (as of 2026-09-27, commit c7551cb3db); overlap measured against three progressively stricter references:
 
 ![h:380](figures/three_level_overlap.png)
 
-The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-function agreement (3.9%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
+The **3-fold gap** between raw-GOA agreement (11.6%) and agent-adjudicated core-function agreement (4.0%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
 
 ---
 
@@ -227,9 +227,9 @@ The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-
 
 ![h:360](figures/sft_assessment_distribution.png)
 
-**71.0% CNN** (correct/non-novel; 631 exact GOA) · **15.9% NPI/PLI/REP** · **2.5% COR** · 4.6% LSP · 6.0% UNC
+**71.4% CNN** (correct/non-novel; 635 exact GOA) · **15.4% NPI/PLI/REP** · **2.4% COR** · 4.5% LSP · 6.3% UNC
 
-The 2.5% COR are known-literature gaps, not discoveries of previously unknown biology.
+The 2.4% COR are known-literature gaps, not discoveries of previously unknown biology.
 
 ---
 
@@ -302,10 +302,10 @@ A separate literature/bioinformatics-assisted run excluded the de Crécy-Lagard 
 
 ## Conclusions
 
-**BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA has not recorded, and assigns **15.9% of ARGO95 terms to incorrect classes** in predictable, diagnosable ways.
+**BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA has not recorded, and assigns **15.4% of ARGO95 terms to incorrect classes** in predictable, diagnosable ways.
 
 - Narratives restate InterPro labels; **eight recurrent model-output failure modes**
-- GO terms: 71.0% not novel, 15.9% NPI/PLI/REP, 2.5% correct and absent from frozen GOA in ARGO95
+- GO terms: 71.4% not novel, 15.4% NPI/PLI/REP, 2.4% correct and absent from frozen GOA in ARGO95
 - Narrative and term arms **fail independently** → not ready for unsupervised import
 
 **The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be reviewed, corrected, combined. Naked GO terms cannot.

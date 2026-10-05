@@ -19,6 +19,7 @@ import yaml
 DEFAULT_GENES_ROOT = Path("genes")
 DEFAULT_TEMPLATE = Path("templates/gene_hypothesis_deep_research.md")
 DEFAULT_FUNCTION_SUPPORT_TEMPLATE = Path("templates/function_support_deep_research.md")
+UNSPECIFIED_SOURCE = "Not supplied."
 LOCAL_EVIDENCE_MAX_CHARS_PER_FILE = 12000
 LOCAL_EVIDENCE_MAX_CHARS_TOTAL = 24000
 FOCUS_TYPES = {
@@ -1185,8 +1186,11 @@ def template_vars(record: GeneHypothesisRecord, *, genes_root: Path) -> dict[str
         "hypothesis_text": record.hypothesis_text,
         "term_context": record.term_context,
         "reference_context": format_reference_context(provider_reference_ids),
-        "source_file": str(record.source_file or ""),
-        "source_selector": record.source_selector,
+        # Empty substitutions leave trailing spaces in Markdown template lines such as
+        # ``- **Source file:** {source_file}``, which then propagate into every saved
+        # provider report. Use an explicit value for free-text hypotheses instead.
+        "source_file": str(record.source_file) if record.source_file else UNSPECIFIED_SOURCE,
+        "source_selector": record.source_selector or UNSPECIFIED_SOURCE,
         "source_context_yaml": dump_context_yaml(provider_source_context),
     }
 
@@ -1465,6 +1469,7 @@ def direct_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
     elif predictions_path.exists():
         metadata = load_yaml(predictions_path)
     gene_symbol, taxon_id, taxon_label = gene_metadata(metadata, args.gene)
+    source_file = review_path if review_path.exists() else None
 
     term_context_lines = []
     if args.term_id or args.term_label:
@@ -1484,6 +1489,8 @@ def direct_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
         hypothesis_text=args.hypothesis,
         term_context="\n".join(term_context_lines),
         reference_ids=args.reference_id,
+        source_file=source_file,
+        source_selector="free-text",
         source_context={
             "hypothesis": args.hypothesis,
             "focus_type": normalize_focus_type(args.focus_type),

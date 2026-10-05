@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-05-05T06:54:58.242173'
-end_time: '2026-05-05T07:02:41.112482'
-duration_seconds: 462.87
+start_time: '2026-09-11T20:49:00.329259'
+end_time: '2026-09-11T20:57:37.012125'
+duration_seconds: 516.68
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: ARATH
@@ -23,12 +23,23 @@ template_variables:
   protein_family: Belongs to the NRAMP (TC 2.A.55) family. .
   protein_domains: EIN2. (IPR017187); NRAMP_fam. (IPR001046); Nramp (PF01566)
 provider_config:
-  timeout: 600
+  timeout: null
   max_retries: 3
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 32
+    max_embedded_images: 8
+citation_count: 42
+artifact_count: 1
+artifact_sources:
+  edison_answer_artifacts: 1
+artifacts:
+- filename: artifact-00.md
+  path: EIN2-deep-research-falcon_artifacts/artifact-00.md
+  media_type: text/markdown
+  source: edison_answer_artifacts
+  data_storage_id: null
+  description: Edison artifact artifact-00
 ---
 
 ## Question
@@ -139,183 +150,247 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Research Report: Arabidopsis thaliana **EIN2** (UniProt Q9S814; At5g03280) — Functional Annotation and Recent Advances
+# Functional Annotation Report: *Arabidopsis thaliana* EIN2
 
-## 0. Target verification / disambiguation
-The literature synthesized here is explicitly for **Arabidopsis thaliana EIN2** (At5g03280; protein length ~1294 aa), described as **Ethylene-insensitive protein 2 (EIN2)**, an ER-membrane–localized central ethylene signal transducer whose N-terminus has **NRAMP/Nramp-like** similarity and whose C-terminal cytosolic region (often termed **EIN2-CEND/EIN2-C**) is proteolytically released upon ethylene signaling to act in the nucleus and processing bodies (P-bodies). This identity and architecture are consistent across authoritative reviews and mechanistic literature (wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 3-5).
+## Executive conclusion
 
-## 1. Key concepts and definitions (current understanding)
+The research target is correctly identified as ***Arabidopsis thaliana* ETHYLENE INSENSITIVE 2 (EIN2)**, locus **At5g03280**, UniProt **Q9S814**, with the aliases **ORE3** and **CKR1** supplied in the query. The literature consistently describes this protein—not EIN3/EIL transcription factors or EIN2 homologs from other plants—as a **1,294-amino-acid, endoplasmic-reticulum-associated positive regulator of ethylene signaling**. Its N-terminal half is a predicted 12-pass, NRAMP-like membrane domain, whereas its large plant-specific C-terminal region, EIN2-CEND/EIN2-C, transduces the signal into cytoplasmic RNA regulation and nuclear transcriptional/chromatin responses (shemansky2016exploringthefunction pages 43-49, zhao2021ethylenesignalingin pages 17-20).
 
-### 1.1 Ethylene signaling “ER-to-nucleus bridge”
-Ethylene perception in plants occurs at ER-associated receptors. In the **absence of ethylene**, the receptor-associated Raf-like kinase **CTR1** maintains pathway repression by phosphorylating EIN2’s cytosolic C-terminus. In the **presence of ethylene**, receptor/CTR1 inhibition leads to **EIN2 dephosphorylation**, **proteolytic cleavage** of the C-terminus, and translocation of the released EIN2 C-terminal fragment to downstream sites where it activates the ethylene response (merchante2013ethylenesignalingsimple pages 6-7, wen2015regulatorycomponentsof pages 9-12).
+Despite its NRAMP-family sequence and topology, **AtEIN2 has no experimentally established transported substrate**. It should therefore be annotated primarily as a **membrane-tethered signaling transducer**, not as a proven metal-ion transporter. The NRAMP designation is a homology/domain inference; assigning Fe²⁺, Mn²⁺, Cd²⁺, or another substrate to EIN2 would be unsupported (zhao2021ethylenesignalingin pages 17-20).
 
-### 1.2 EIN2 protein regions (domain architecture)
-EIN2 is commonly described as having:
-- An **N-terminal membrane-intrinsic region** (residues ~1–461) with predicted multi-pass transmembrane helices and limited similarity to **NRAMP** metal transporter proteins (transport activity has not been demonstrated for EIN2) (wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 3-5).
-- A **C-terminal cytosolic signaling domain** (CEND; residues ~462–1294) containing an **NLS** and regulatory phosphorylation sites; upon ethylene signaling this region is released (EIN2-CEND/EIN2-C) to execute downstream functions (wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 3-5).
-
-### 1.3 Post-translational control: phosphorylation, cleavage, and turnover
-Key regulatory concepts include:
-- **CTR1-mediated phosphorylation** of EIN2 at **Ser645 and Ser924** (with Ser924 often emphasized as dominant in some summaries) to keep EIN2 inactive without ethylene (vidhyasekaran2015ethylenesignalingsystem pages 17-19, wen2015regulatorycomponentsof pages 9-12).
-- **Ethylene-triggered dephosphorylation and proteolytic cleavage** of EIN2’s C-terminal region to generate EIN2-CEND, which is a major “active” signaling output of EIN2 (merchante2013ethylenesignalingsimple pages 6-7, wen2015regulatorycomponentsof pages 9-12, poel2015ethylenesignalingfrom pages 10-12).
-- **Ubiquitin–proteasome control of EIN2 abundance**, mediated by F-box proteins **ETP1/ETP2**, acting as negative regulators that promote EIN2 degradation (vidhyasekaran2015ethylenesignalingsystem pages 17-19, wen2015regulatorycomponentsof pages 9-12).
-
-## 2. Mechanistic function of EIN2 in signaling pathways
-
-### 2.1 Primary function: central signal transducer (not an enzyme/transport reaction)
-EIN2’s primary annotated function is **signal transduction** in the ethylene pathway, rather than catalysis of a biochemical reaction. Mechanistically, EIN2 operates as the essential node downstream of receptors/CTR1 and upstream of transcriptional regulators EIN3/EIL1 (merchante2013ethylenesignalingsimple pages 6-7, wen2015regulatorycomponentsof pages 9-12).
-
-### 2.2 Subcellular localization and functional sites
-**Baseline:** Full-length EIN2 is **ER-membrane associated** as part of ER signaling complexes. 
-
-**After ethylene perception:** Cleaved **EIN2-CEND** localizes to both:
-- **Nucleus**, where it promotes ethylene-responsive transcriptional reprogramming (wen2015regulatorycomponentsof pages 9-12, poel2015ethylenesignalingfrom pages 10-12).
-- **Processing bodies (P-bodies)** as cytoplasmic foci, where it contributes to mRNA-level regulation (wen2015regulatorycomponentsof pages 9-12, yan2024endoribonucleasedne1promotes pages 3-6).
-
-A visual summary model integrating ER, nucleus, and P-body outputs of EIN2-CEND (and CTR1 relocalization) is provided by Park et al. (2023) (park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605).
-
-### 2.3 Downstream signaling logic: EIN2 → EBF1/2 → EIN3/EIL1
-A central mechanistic axis is that EIN2 activation increases EIN3/EIL1 activity by limiting negative regulators **EBF1/EBF2** (EIN3-binding F-box proteins), thereby allowing EIN3/EIL1 accumulation and ethylene-responsive transcription (merchante2013ethylenesignalingsimple pages 2-3, poel2015ethylenesignalingfrom pages 10-12).
-
-## 3. Recent developments (prioritizing 2023–2024)
-
-### 3.1 2023: Spatiotemporal dynamics—CTR1 nuclear translocation adds a parallel layer to EIN2-centered control
-Park et al. (Nature Communications, **publication date: Jan 2023**; https://doi.org/10.1038/s41467-023-35975-6) reported that ethylene can trigger **CTR1 movement from ER to nucleus**, where nuclear CTR1 stabilizes EIN3 by inhibiting EBF proteins, enhancing ethylene responses and delaying growth recovery (park2023ethylenetriggeredsubcellulartrafficking pages 1-2). In the same mechanistic framing, the paper reiterates the canonical EIN2 steps: EIN2-CEND is produced by cleavage upon ethylene signaling and can enter the nucleus rapidly, with a reported **~10 min** time scale for EIN2-CEND nuclear entry following ethylene (park2023ethylenetriggeredsubcellulartrafficking pages 1-2).
-
-### 3.2 2024: EIN2-C–directed chromatin regulation is coupled to nuclear acetyl-CoA production by PDC
-Shao et al. (Science Advances, **publication date: Jul 2024**; https://doi.org/10.1126/sciadv.ado2825) identify the **pyruvate dehydrogenase complex (PDC)** as an **EIN2-C nuclear partner** that supplies nuclear **acetyl-CoA** needed for EIN2-C–directed histone acetylation and transcriptional activation in ethylene responses (shao2024nuclearpyruvatedehydrogenase pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 2-3). The study’s model emphasizes that EIN2-C operates in both **P-bodies** (translational repression) and the **nucleus** (histone acetylation, notably H3K14/H3K23) (shao2024nuclearpyruvatedehydrogenase pages 1-2).
-
-Quantitative kinetics from the reported fractionation time courses include that PDC subunits **E2 and E3** are not detected in nuclei without ethylene but accumulate in nuclear fractions after approximately **~4 h ethylene** and increase with treatment duration; E1 shows basal nuclear presence that increases with ethylene, while total E1/E2 protein levels are unchanged (with E3 slightly increasing after extended treatment) (shao2024nuclearpyruvatedehydrogenase pages 2-3).
-
-### 3.3 2024: P-body RNA processing adds new regulators that modulate the EIN2→EBF translational repression module
-Yan et al. (International Journal of Molecular Sciences, **publication date: Feb 2024**; https://doi.org/10.3390/ijms25042138) report that the ethylene-induced NYN endoribonuclease **DNE1** is a positive regulator of ethylene response that **colocalizes with EIN2 in P-bodies** and modulates **EBF1/2 mRNA processing** (yan2024endoribonucleasedne1promotes pages 1-2, yan2024endoribonucleasedne1promotes pages 3-6). The work supports a model where P-body components and mRNA processing/decay shape the extent of EIN2-mediated repression of EBF1/2 mRNAs, impacting EIN3/EIL1 accumulation (yan2024endoribonucleasedne1promotes pages 3-6, yan2024endoribonucleasedne1promotes pages 10-11).
-
-Quantitative results reported for RNA fragment dynamics include that in an **ein5-1 dne1-2** double mutant compared to **ein5-1**, **EBF1 3′ fragments decrease to ~30%** and **EBF2 3′ fragments to ~50%**, consistent with DNE1 contributing to 3′UTR cleavage and EIN5/XRN-mediated fragment turnover (yan2024endoribonucleasedne1promotes pages 10-11).
-
-### 3.4 2024: Upstream RNA maturation—LOS4 affects EIN2 pre-mRNA splicing
-Hou et al. (Plant Cell Reports, **publication date: Oct 2024**; https://doi.org/10.1007/s00299-024-03340-6) describe the RNA helicase **LOS4** as regulating **EIN2 pre-mRNA splicing** (as well as CTR1 and ERS2), linking RNA processing to ethylene signaling output; LOS4 perturbation is reported to increase ethylene sensitivity and causes EIN2 splicing errors (hou2024thernahelicase pages 1-5).
-
-## 4. Current applications / real-world implementations
-
-### 4.1 Engineering ethylene response via pathway nodes that include EIN2 outputs
-While EIN2 itself is a core signaling hub (making direct manipulation potentially pleiotropic), recent mechanistic work points to actionable pathway features:
-- **Nuclear CTR1 localization**: Park et al. report that Arabidopsis plants engineered/selected for **enhanced nuclear-localized CTR1** exhibit **improved drought and salinity tolerance** (a stress-resilience–linked phenotype arising from altered ethylene signaling dynamics) (park2023ethylenetriggeredsubcellulartrafficking pages 1-2). This provides a concrete example of how manipulating signaling spatial dynamics in the EIN2/CTR1/EIN3 module can produce stress-tolerance traits.
-- **Chromatin/acetyl-CoA coupling**: The identification of a requirement for **nuclear PDC-derived acetyl-CoA** for EIN2-C–directed histone acetylation suggests potential interventions at the level of nuclear metabolism–epigenetics coupling for ethylene responses (shao2024nuclearpyruvatedehydrogenase pages 2-3).
-
-## 5. Expert opinions and authoritative synthesis
-
-### 5.1 Consensus model from highly cited reviews
-Reviews emphasize EIN2 as the pivotal component converting ER receptor status into nuclear transcriptional outcomes via a cleavage/translocation mechanism, while being constrained by CTR1 phosphorylation and proteasome-mediated turnover (merchante2013ethylenesignalingsimple pages 6-7, wen2015regulatorycomponentsof pages 9-12). A consistent expert-level framing is that EIN2 provides a direct, non-MAPK “bridge” from ER-localized receptors to nuclear response programs (merchante2013ethylenesignalingsimple pages 6-7, poel2015ethylenesignalingfrom pages 10-12).
-
-### 5.2 Current expert-level expansion: multi-compartment outputs (nucleus + P-bodies)
-Recent primary literature consolidates the view that ethylene signaling outputs downstream of EIN2 are multi-layered: **rapid post-translational activation (cleavage/translocation), translational control in P-bodies, and chromatin-level transcriptional priming** (park2023ethylenetriggeredsubcellulartrafficking pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 1-2).
-
-## 6. Statistics and data highlights (from the retrieved 2023–2024 studies)
-- **EIN2-CEND nuclear entry timing:** reported within **~10 min** after ethylene treatment (Park et al., 2023) (park2023ethylenetriggeredsubcellulartrafficking pages 1-2).
-- **CTR1 nuclear dynamics (parallel regulator of EIN3 stability):** nuclear CTR1 detectable ~**30 min** after ACC, increased by **60 min**, and largely gone by ~**60 min** after ethylene removal; growth recovery to basal rate within ~**90 min** after ethylene withdrawal (Park et al., 2023) (park2023ethylenetriggeredsubcellulartrafficking pages 1-2).
-- **P-body assay conditions used for EIN2-associated RNA regulation:** ACC triple-response assays reported across **0–10 µM ACC** for **3 d in darkness**, and colocalization assays using **10 µM ACC for 16 h**, plus ethylene gas time courses at **10 µL/L for 0–24 h** (Yan et al., 2024) (yan2024endoribonucleasedne1promotes pages 3-6).
-- **EBF 3′UTR fragment dependence on DNE1:** in **ein5-1 dne1-2** vs **ein5-1**, EBF1 3′ fragments ~**30%** and EBF2 3′ fragments ~**50%** (Yan et al., 2024) (yan2024endoribonucleasedne1promotes pages 10-11).
-- **PDC nuclear accumulation timing linked to EIN2-C:** PDC E2/E3 accumulation in nuclear fractions after **~4 h** ethylene and increasing with time (Shao et al., 2024) (shao2024nuclearpyruvatedehydrogenase pages 2-3).
-
-## 7. Summary table (functional annotation at a glance)
-
-| Functional role in pathway | Domain/region | Key post-translational regulation | Subcellular localization | Key interaction partners / regulators | Representative phenotypes / assays / quantitative details | Key references (year; DOI URL) |
-|---|---|---|---|---|---|---|
-| Central positive transducer linking ER-localized ethylene perception to downstream transcriptional and translational responses; required for essentially all examined ethylene responses in Arabidopsis (wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 2-3, yan2024endoribonucleasedne1promotes pages 1-2) | Full-length EIN2 is a 1,294-aa protein with an ER-tethered N-terminal membrane-intrinsic, NRAMP-like region (residues 1–461; ~12 predicted TMs) and a cytosolic C-terminal signaling region/CEND (residues 462–1294) containing an NLS (wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 3-5) | In the absence of ethylene, CTR1 phosphorylates EIN2 C-terminus, notably Ser645 and Ser924, maintaining inactivity; ethylene suppresses receptor/CTR1 signaling, enabling EIN2 dephosphorylation, proteolytic cleavage, and release of EIN2-CEND (vidhyasekaran2015ethylenesignalingsystem pages 17-19, wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 6-7, poel2015ethylenesignalingfrom pages 10-12) | ER membrane as part of receptor complex; cleaved EIN2-CEND relocalizes to nucleus and cytoplasmic foci/P-bodies after ethylene (wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 3-5, shao2024nuclearpyruvatedehydrogenase pages 1-2, park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605) | Ethylene receptors, CTR1, EIN3/EIL1 axis; ETP1/ETP2 as negative regulators of EIN2 abundance (vidhyasekaran2015ethylenesignalingsystem pages 17-19, wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 3-5) | Ectopic EIN2-CEND expression constitutively activates downstream ethylene responses; ein2 loss-of-function mutants are ethylene-insensitive, with one 2024 review stating they are “completely insensitive to ethylene” (wen2015regulatorycomponentsof pages 9-12, yan2024endoribonucleasedne1promotes pages 1-2) | Wen et al. 2015 https://doi.org/10.1007/978-94-017-9484-8_5; Merchante et al. 2013 https://doi.org/10.1016/j.pbi.2013.08.001; Yan et al. 2024 https://doi.org/10.3390/ijms25042138 |
-| ER-to-nucleus signaling bridge downstream of receptors/CTR1 and upstream of EIN3/EIL1 transcription factors (merchante2013ethylenesignalingsimple pages 6-7, poel2015ethylenesignalingfrom pages 10-12) | CEND / EIN2-C / EIN2-CEND | Cleavage site/mechanism remained debated in earlier literature, but cleavage of the C-terminus upon ethylene perception is consistently supported; phosphorylation prevents cleavage/signaling (merchante2013ethylenesignalingsimple pages 6-7, poel2015ethylenesignalingfrom pages 10-12, poel2015ethylenesignalingfrom pages 4-7) | ER to nucleus | CTR1 directly phosphorylates EIN2; EIN2-CEND promotes stabilization of EIN3/EIL1 by suppressing EBF1/2 function (merchante2013ethylenesignalingsimple pages 6-7, merchante2013ethylenesignalingsimple pages 2-3, poel2015ethylenesignalingfrom pages 10-12) | In 2023 work, EIN2-CEND was reported to migrate into the nucleus within ~10 min after ethylene treatment (park2023ethylenetriggeredsubcellulartrafficking pages 1-2) | Park et al. 2023 https://doi.org/10.1038/s41467-023-35975-6; de Poel & Chang 2015 https://doi.org/10.1007/978-94-017-9484-8_6 |
-| Translational repression arm of ethylene signaling: EIN2-CEND suppresses EBF1/2 mRNA translation, allowing EIN3/EIL1 accumulation (yan2024endoribonucleasedne1promotes pages 1-2, yan2024endoribonucleasedne1promotes pages 3-6, shao2024nuclearpyruvatedehydrogenase pages 1-2, park2023ethylenetriggeredsubcellulartrafficking pages 1-2) | CEND / EIN2-C in P-bodies | Ethylene-induced cleavage releases EIN2-CEND, which associates with P-bodies and targets EBF1/2 mRNAs for translational repression; EIN2 action is integrated with mRNA processing/decay factors (yan2024endoribonucleasedne1promotes pages 3-6, shao2024nuclearpyruvatedehydrogenase pages 1-2, yan2024endoribonucleasedne1promotes pages 2-3) | Cytoplasmic processing bodies (P-bodies) after ACC/ethylene treatment (yan2024endoribonucleasedne1promotes pages 3-6, shao2024nuclearpyruvatedehydrogenase pages 1-2, park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605) | EBF1/2 mRNAs, EIN5/XRN4, UPF1 (and prior UPF/NMD-associated machinery), PABPs; DNE1 colocalizes with EIN2-CEND in P-bodies (yan2024endoribonucleasedne1promotes pages 3-6, yan2024endoribonucleasedne1promotes pages 10-11, yan2024endoribonucleasedne1promotes pages 2-3) | DNE1 study used ACC triple-response assays on 0–10 µM ACC for 3 d in darkness; EIN2-CEND cytoplasmic foci colocalization observed after 10 µM ACC for 16 h; ethylene treatment time courses included 10 µL/L ethylene for 0–24 h (yan2024endoribonucleasedne1promotes pages 3-6) | Yan et al. 2024 https://doi.org/10.3390/ijms25042138; Shao et al. 2024 https://doi.org/10.1126/sciadv.ado2825 |
-| Chromatin/epigenetic arm of ethylene signaling: EIN2-C directs histone acetylation at ethylene-responsive loci to enable transcriptional reprogramming (yan2024endoribonucleasedne1promotes pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 2-3) | Nuclear EIN2-C / CEND | Cleaved EIN2-C translocates to nucleus and recruits/acts with histone-associated factors to promote H3K14 and H3K23 acetylation; 2024 work connects this to nuclear acetyl-CoA production by PDC (yan2024endoribonucleasedne1promotes pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 2-3) | Nucleus (shao2024nuclearpyruvatedehydrogenase pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 2-3, park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605) | ENAP1/2; nuclear pyruvate dehydrogenase complex (PDC: E1/E2/E3) as EIN2-C nuclear partner (yan2024endoribonucleasedne1promotes pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 2-3) | In etiolated seedlings, assays included ±4 h ethylene treatment; PDC mutants showed ethylene hyposensitivity with reduced histone acetylation/transcriptional activation; E2/E3 accumulated in nuclear fractions after ~4 h ethylene, increasing with treatment duration, while total E1/E2 protein amounts were unchanged and E3 rose slightly by 12 h (shao2024nuclearpyruvatedehydrogenase pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 2-3) | Shao et al. 2024 https://doi.org/10.1126/sciadv.ado2825; Yan et al. 2024 https://doi.org/10.3390/ijms25042138 |
-| Protein abundance control of EIN2 itself, tuning pathway sensitivity (vidhyasekaran2015ethylenesignalingsystem pages 17-19, wen2015regulatorycomponentsof pages 9-12, hou2024thernahelicase pages 1-5) | Full-length EIN2, especially C-terminal regulatory region | ETP1/ETP2 F-box proteins promote ubiquitin/26S proteasome-mediated EIN2 degradation in the absence of ethylene; ethylene and ctr1 conditions promote EIN2 accumulation (vidhyasekaran2015ethylenesignalingsystem pages 17-19, wen2015regulatorycomponentsof pages 9-12, poel2015ethylenesignalingfrom pages 4-7, hou2024thernahelicase pages 1-5) | ER-associated full-length protein before activation (wen2015regulatorycomponentsof pages 9-12, poel2015ethylenesignalingfrom pages 4-7) | ETP1/ETP2; COP9 signalosome mentioned in review context; CTR1/receptors modulate phosphorylation state and accumulation (vidhyasekaran2015ethylenesignalingsystem pages 17-19, wen2015regulatorycomponentsof pages 9-12, merchante2013ethylenesignalingsimple pages 6-7) | Reviews summarize that EIN2 accumulation is promoted by ethylene and ctr1-1 but not by etr1-1 (wen2015regulatorycomponentsof pages 9-12) | Wen et al. 2015 https://doi.org/10.1007/978-94-017-9484-8_5; Vidhyasekaran 2015 https://doi.org/10.1007/978-94-017-9285-1_4 |
-| Newly described 2024 upstream RNA-processing regulation of EIN2 transcript maturation (hou2024thernahelicase pages 1-5) | EIN2 pre-mRNA | LOS4 RNA helicase regulates pre-mRNA splicing of EIN2 (and CTR1, ERS2); LOS4 perturbation causes EIN2 splicing defects and altered ethylene sensitivity (hou2024thernahelicase pages 1-5) | Nuclear/cotranscriptional RNA-processing context inferred from splicing role; protein-level EIN2 localization not reassigned in this study (hou2024thernahelicase pages 1-5) | LOS4 (RNA helicase) (hou2024thernahelicase pages 1-5) | LOS4 silencing/knockdown significantly enhanced ethylene sensitivity in etiolated seedlings; los4-2 showed increased ATP binding/hydrolysis, whereas los4-1 showed reduced RNA substrate binding and lower ATP binding (hou2024thernahelicase pages 1-5) | Hou et al. 2024 https://doi.org/10.1007/s00299-024-03340-6 |
-| Newly described 2024 P-body-associated regulator acting with the EIN2→EBF module (yan2024endoribonucleasedne1promotes pages 1-2, yan2024endoribonucleasedne1promotes pages 3-6, yan2024endoribonucleasedne1promotes pages 10-11, yan2024endoribonucleasedne1promotes pages 2-3) | EIN2-CEND-associated P-body pathway | DNE1 cleaves EBF1/2 3′UTRs and represses their translation; this acts in the same regulatory space as EIN2-mediated translational repression and EBF-controlled EIN3 turnover (yan2024endoribonucleasedne1promotes pages 1-2, yan2024endoribonucleasedne1promotes pages 10-11, yan2024endoribonucleasedne1promotes pages 2-3) | P-bodies; DNE1 colocalizes with EIN2-CEND in cytoplasmic foci (yan2024endoribonucleasedne1promotes pages 3-6, yan2024endoribonucleasedne1promotes pages 2-3) | DNE1, EIN5/XRN4, UPF1, DCP1, DCP2; indirect consequence for EIN3/EIL1 stability via EBF1/2 (yan2024endoribonucleasedne1promotes pages 3-6, yan2024endoribonucleasedne1promotes pages 10-11, yan2024endoribonucleasedne1promotes pages 2-3) | In ein5-1 dne1-2 versus ein5-1, EBF1 3′ fragments decreased to ~30% and EBF2 3′ fragments to ~50%; dne1-2 showed mild ethylene insensitivity, while ein5-1 dne1-2 showed stronger ethylene insensitivity than ein5-1 (yan2024endoribonucleasedne1promotes pages 10-11, yan2024endoribonucleasedne1promotes pages 2-3) | Yan et al. 2024 https://doi.org/10.3390/ijms25042138 |
-| Pathway context updated by 2023 work showing additional control of EIN3 stability downstream/parallel to EIN2 activation (park2023ethylenetriggeredsubcellulartrafficking pages 1-2) | Not a distinct EIN2 domain; relevant after EIN2 activation | EIN2-CEND represses EBF1/2 translation, while ethylene also triggers CTR1 translocation to nucleus where CTR1 inhibits EBF proteins, reinforcing EIN3 stability (park2023ethylenetriggeredsubcellulartrafficking pages 1-2) | EIN2: ER→nucleus/P-bodies; CTR1: ER→nucleus under ethylene (park2023ethylenetriggeredsubcellulartrafficking pages 1-2, park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605) | CTR1, EBF proteins, EIN3/EIL proteins (park2023ethylenetriggeredsubcellulartrafficking pages 1-2) | GFP-CTR1 became nuclear ~30 min after ACC, increased further by 60 min, largely disappeared by ~60 min after ethylene removal; seedlings returned to basal growth within ~90 min after ethylene withdrawal (park2023ethylenetriggeredsubcellulartrafficking pages 1-2) | Park et al. 2023 https://doi.org/10.1038/s41467-023-35975-6 |
+| Annotation aspect | Current conclusion | Key evidence or method | Confidence and caveat |
+|---|---|---|---|
+| Identity and aliases | *Arabidopsis thaliana* **EIN2**, locus **At5g03280**, UniProt **Q9S814**; aliases **ORE3** and **CKR1**. It is ETHYLENE INSENSITIVE 2, not the EIN3 or EIL transcription factor. | Classical ethylene-response genetics, cloning, complementation, and mechanistic studies identify EIN2 as a central positive regulator (shemansky2016exploringthefunction pages 16-23, qiao2012processingandsubcellular pages 1-2). | **High.** Accession and aliases come from the supplied UniProt record; the literature matches the organism and protein description. |
+| Protein architecture | **1,294-aa** protein with an N-terminal NRAMP-like integral-membrane region containing **12 predicted transmembrane helices** and a hydrophilic, plant-specific C-terminal signaling region; an NLS maps near residues **1261–1268** (shemansky2016exploringthefunction pages 43-49, zhao2021ethylenesignalingin pages 17-20). | Sequence and topology prediction, microsomal fractionation, domain constructs, and fluorescent-fusion localization (shemansky2016exploringthefunction pages 43-49, zhao2021ethylenesignalingin pages 17-20). | **High** for length and bipartite architecture; **moderate** for exact helix boundaries because topology is substantially prediction-based. |
+| Primary localization | Full-length EIN2 is principally associated with the **endoplasmic-reticulum membrane**; its signaling C terminus is cytosol-facing and can redistribute to the nucleus and cytoplasmic processing bodies (zhao2024embracinguncertaintyreshapes pages 24-28, zhao2021ethylenesignalingin pages 17-20). | Microsomal and sucrose-gradient fractionation, ER-marker comparisons, immunofluorescence, confocal imaging, co-localization, and co-immunoprecipitation (zhao2024embracinguncertaintyreshapes pages 24-28, qiao2012processingandsubcellular pages 7-9). | **High** for ER association. Granular versus network-like localization varies with tissue and expression system. |
+| Transporter status and substrate | Despite NRAMP-family homology, EIN2 is established as a **signaling protein**, not a demonstrated metal transporter. No ion or other transported substrate has been experimentally established for AtEIN2 (zhao2021ethylenesignalingin pages 17-20). | Sequence similarity predicts an NRAMP-like fold, whereas genetic and molecular studies establish ethylene signaling; no direct substrate-transport result was identified. | **Moderate–high.** Lack of a demonstrated substrate does not prove that the membrane region lacks transport-related biochemical activity. |
+| Receptor–CTR1 phosphorylation control | In the canonical model, active ER-associated receptors maintain **CTR1** kinase activity without ethylene; CTR1 phosphorylates EIN2 and suppresses signaling. **S645** and **S924** are prominent regulatory sites, with additional phosphosites reported (zhao2024embracinguncertaintyreshapes pages 1-4, ju2012ctr1phosphorylatesthe pages 4-4). | Kinase assays, phosphoproteomics, interaction assays, phosphosite mutants, microsomal immunoblotting, and seedling-response phenotyping (zhao2024embracinguncertaintyreshapes pages 1-4, ju2012ctr1phosphorylatesthe pages 4-4). | **High** that phosphorylation regulates EIN2; **moderate** for a simple two-site switch because S645-mutant effects differed between studies. |
+| C-terminal processing and nuclear trafficking | Loss of CTR1 output after ethylene exposure is associated with C-terminal processing and nuclear import. Nuclear EIN2 signal appeared within **10 minutes** and increased over the following **30 minutes** (qiao2012processingandsubcellular pages 7-9, qiao2012processingandsubcellular pages 1-2). | Complementing EIN2-YFP constructs, NLS mutation, time-lapse imaging, immunofluorescence, subcellular fractionation, immunoblotting, and targeted peptide analysis (qiao2012processingandsubcellular pages 7-9, qiao2012processingandsubcellular pages 1-2). | **High** for ethylene-responsive C-terminal nuclear accumulation; **moderate** for obligatory cleavage precisely at S645. The responsible protease remains unidentified. |
+| P-bodies, EBF1/2, and EIN3/EIL1 | Cytosolic EIN2-CEND associates with **EBF1/EBF2 mRNA 3′ UTRs** and promotes translational repression in processing bodies. Lower EBF output limits EIN3/EIL1 degradation, permitting transcription-factor accumulation (zhao2021ethylenesignalingin pages 20-23). | Reporter and 3′-UTR analyses, translation measurements, RNA association, P-body co-localization, genetics, and protein-turnover assays (zhao2021ethylenesignalingin pages 20-23, zhao2021ethylenesignalingin pages 17-20). | **High** for EIN2-dependent EBF and EIN3 control; RNA recruitment, condensate formation, and the relative contribution of EBF degradation remain under study. |
+| Chromatin regulation | Nuclear EIN2-CEND associates with **ENAP1** and is required for ethylene-induced **H3K14ac** and noncanonical **H3K23ac**, facilitating EIN3 occupancy and rapid target-gene activation (zhang2017ein2mediatesdirect pages 6-6, zhang2016ein2dependentregulationof pages 1-2). | Immunoblotting and ChIP after four-hour ethylene treatment, interaction assays, ENAP1 genetics, ChIP-seq or re-ChIP, and locus-targeted dCas9–EIN2-C rescue (zhang2017ein2mediatesdirect pages 1-2, zhang2016ein2dependentregulationof pages 1-2). | **High** that these acetylation changes depend on EIN2; **moderate** regarding the complete acetyltransferase machinery and direct versus partner-mediated chromatin contact. |
+| 2024 update: DNE1 | The endoribonuclease **DNE1** co-localizes with EIN2 in ethylene-induced P-bodies, recognizes and cleaves EBF1/2 3′ UTRs, represses their translation, and positively modulates signaling (yan2024endoribonucleasedne1promotes pages 13-14). | Confocal imaging after **10 µM ACC**, mutant phenotyping, 3′-UTR and RNA-processing assays, and endogenous EIN3 immunoblotting (yan2024endoribonucleasedne1promotes pages 13-14). | **Moderate–high.** Peer-reviewed 2024 evidence extends the EIN2–EBF RNA-control module, although the *dne1* ethylene-insensitive phenotype is mild. |
+| 2024 update: LOS4 | The RNA helicase **LOS4** regulates pre-mRNA splicing of **EIN2**, **ERS2**, and **CTR1**, adding transcript maturation as an upstream regulatory layer. | Arabidopsis mutant and pre-mRNA-splicing analyses reported in *Plant Cell Reports* in October 2024. | **Moderate.** Peer-reviewed finding about EIN2 transcript processing, not a newly identified biochemical activity of EIN2 protein. |
+| 2024 challenges | A 2024 preprint questions whether ETP1/2 turnover, MHL1/2-dependent cleavage, S645 processing, and exclusive signaling by released EIN2-C fully explain activation; it reports predominantly uncleaved, receptor-associated EIN2 and no CTR1–EIN2 co-immunoprecipitation under its conditions (zhao2024embracinguncertaintyreshapes pages 1-4, zhao2024embracinguncertaintyreshapes pages 24-28). | Genetics, membrane and nuclear fractionation, Mg²⁺-dependent rough-ER gradients, fluorescence localization, and co-immunoprecipitation (zhao2024embracinguncertaintyreshapes pages 24-28, zhao2024embracinguncertaintyreshapes pages 47-53). | **Provisional.** This is a **bioRxiv preprint**, not peer-reviewed; it motivates refinement rather than overturning established EIN2-dependent signaling. |
 
 
-*Table: This table condenses experimentally supported information on Arabidopsis thaliana EIN2/Q9S814, including domains, regulation, localization, partners, phenotypes, and recent 2023-2024 mechanistic advances. It is useful as a compact functional-annotation reference grounded in the cited evidence contexts.*
+*Table: Evidence matrix for the identity, molecular role, localization, and current mechanistic model of Arabidopsis EIN2. It separates strongly supported annotation from topology-based inference and provisional 2024 findings.*
 
-## 8. Mechanistic model figure (visual evidence)
-A schematic integrating ER receptor complexes, EIN2 cleavage (EIN2-CEND), P-body translational repression of EBF1/2 mRNA, nuclear EIN3 regulation, and CTR1 nuclear trafficking is shown in Park et al. (2023) (park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605).
+## 1. Identity verification and molecular architecture
 
-## 9. Key takeaways for functional annotation
-1. **Primary molecular function:** EIN2 is a **signal transducer** (not a demonstrated transporter/enzyme) converting ethylene perception into **post-translational, translational, and transcriptional/epigenetic outputs**, chiefly via its cleaved C-terminal domain (wen2015regulatorycomponentsof pages 9-12, shao2024nuclearpyruvatedehydrogenase pages 1-2).
-2. **Core biochemical control points:** CTR1 phosphorylation (Ser645/Ser924), ethylene-triggered dephosphorylation and cleavage, and ETP1/ETP2-mediated proteasomal turnover (wen2015regulatorycomponentsof pages 9-12, vidhyasekaran2015ethylenesignalingsystem pages 17-19).
-3. **Where it acts:** full-length protein at the **ER**; activated EIN2-CEND in **nucleus** and **P-bodies** (wen2015regulatorycomponentsof pages 9-12, shao2024nuclearpyruvatedehydrogenase pages 1-2).
-4. **Major pathway role:** promotion of EIN3/EIL1 activity by repressing EBF1/2 at both mRNA-translation and protein-stability levels, thereby enabling ethylene-responsive transcriptional cascades (merchante2013ethylenesignalingsimple pages 2-3, park2023ethylenetriggeredsubcellulartrafficking pages 1-2).
+### 1.1 Required identity checks
 
-## 10. URLs and publication dates (for the most central cited sources)
-- Park HL et al. **Jan 2023**. *Nature Communications*. “Ethylene-triggered subcellular trafficking of CTR1 enhances the response to ethylene gas.” https://doi.org/10.1038/s41467-023-35975-6 (park2023ethylenetriggeredsubcellulartrafficking pages 1-2, park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605)
-- Shao Z et al. **Jul 2024**. *Science Advances*. “Nuclear pyruvate dehydrogenase complex regulates histone acetylation and transcriptional regulation in the ethylene response.” https://doi.org/10.1126/sciadv.ado2825 (shao2024nuclearpyruvatedehydrogenase pages 1-2, shao2024nuclearpyruvatedehydrogenase pages 2-3)
-- Yan Y et al. **Feb 2024**. *International Journal of Molecular Sciences*. “Endoribonuclease DNE1 Promotes Ethylene Response by Modulating EBF1/2 mRNA Processing in Arabidopsis.” https://doi.org/10.3390/ijms25042138 (yan2024endoribonucleasedne1promotes pages 1-2, yan2024endoribonucleasedne1promotes pages 10-11)
-- Hou X et al. **Oct 2024**. *Plant Cell Reports*. “The RNA helicase LOS4 regulates pre-mRNA splicing of key genes (EIN2, ERS2, CTR1) in the ethylene signaling pathway.” https://doi.org/10.1007/s00299-024-03340-6 (hou2024thernahelicase pages 1-5)
-- Merchante C et al. **Oct 2013**. *Current Opinion in Plant Biology*. “Ethylene signaling: simple ligand, complex regulation.” https://doi.org/10.1016/j.pbi.2013.08.001 (merchante2013ethylenesignalingsimple pages 6-7)
-- Wen C-K et al. **Oct 2015**. *Regulatory Components of Ethylene Signal Transduction* (book chapter). https://doi.org/10.1007/978-94-017-9484-8_5 (wen2015regulatorycomponentsof pages 9-12)
+1. **Gene-symbol match:** The target symbol **EIN2** matches “ethylene-insensitive protein 2,” the central positive regulator identified genetically in Arabidopsis ethylene responses. It is distinct from **EIN3**, **EIL1**, and EIN3/EIL-family transcription factors.
+2. **Organism match:** The mechanistic literature reviewed here concerns ***Arabidopsis thaliana***. Findings about rice MHZ7/OsEIN2 or other crop homologs are labeled separately and are not treated as direct evidence for Q9S814.
+3. **Protein-family/domain match:** The literature reports an N-terminal region with **12 predicted transmembrane helices and NRAMP-family similarity**, followed by a hydrophilic, plant-specific C-terminal signaling region. This agrees with the supplied InterPro/Pfam annotations IPR001046, PF01566, and EIN2-specific IPR017187 (zhao2021ethylenesignalingin pages 17-20, zhao2024embracinguncertaintyreshapes pages 47-53).
+4. **Ambiguity outcome:** No conflicting same-symbol protein was substituted. Papers centered on EIN3/EIL factors were excluded unless they directly established an EIN2-dependent mechanism.
 
+The protein is 1,294 residues long. A nuclear-localization sequence has been mapped near residues **1261–1268**. Literature uses somewhat different construct boundaries, but the active C-terminal signaling region is commonly called **EIN2-CEND**, **EIN2-C**, or EIN2-C′; one recent framework defines EIN2-C as residues **646–1294** (zhao2024embracinguncertaintyreshapes pages 1-4, shemansky2016exploringthefunction pages 43-49).
+
+### 1.2 Is EIN2 an enzyme or transporter?
+
+No catalytic reaction has been demonstrated, and no substrate specificity can be assigned. Although the membrane domain resembles NRAMP divalent-metal transporters, published functional work instead establishes EIN2 as a signaling component. Accordingly, its best-supported primary molecular function is:
+
+> **An ER-membrane signal transducer that couples inhibition of the ethylene receptor–CTR1 module to stabilization of EIN3/EIL1 and reprogramming of translation and chromatin.**
+
+The membrane domain may provide ER anchoring, receptor association, conformational control, or an unidentified biochemical activity. It remains possible that this domain retains transport-related properties, but no direct flux, uptake, electrophysiological, or substrate-binding evidence presently justifies a transporter substrate annotation (zhao2021ethylenesignalingin pages 17-20).
+
+## 2. Cellular localization
+
+### 2.1 Endoplasmic reticulum
+
+Full-length EIN2 is principally associated with the **ER membrane**. Evidence includes microsomal fractionation, sucrose-density gradients, ER-marker comparisons, confocal microscopy, and co-localization or association with ER-localized ethylene receptors. EIN2 and receptor proteins were enriched in rough-ER fractions, while full-length or predominantly uncleaved EIN2 associated with ETR1 in co-immunoprecipitation experiments (zhao2024embracinguncertaintyreshapes pages 24-28).
+
+The prevailing topology places the N-terminal NRAMP-like region in the membrane and exposes the hydrophilic C-terminal domain to the **cytosol**, where CTR1-dependent phosphorylation and downstream processing can occur (zhao2021ethylenesignalingin pages 17-20).
+
+### 2.2 Stimulus-dependent redistribution
+
+Upon ethylene or its precursor ACC, C-terminal EIN2 signal appears in the **nucleus** and in cytoplasmic **processing bodies (P-bodies)**. In the 2012 *Science* study, nuclear accumulation was detectable within **10 minutes** of ethylene exposure and increased through the next **30 minutes**. Mutation of the C-terminal NLS prevented nuclear localization and failed to complement an *ein2* mutant, supporting the functional necessity of nuclear import (published 19 October 2012; DOI: [10.1126/science.1225974](https://doi.org/10.1126/science.1225974)) (qiao2012processingandsubcellular pages 1-2).
+
+Localization patterns can differ by expression system: stable plants often show an ER network, whereas transiently transformed protoplasts can display granular structures. These differences warrant caution when inferring endogenous organelle organization from overexpressed fluorescent fusions (zhao2024embracinguncertaintyreshapes pages 24-28).
+
+## 3. Position and mechanism in the ethylene pathway
+
+### 3.1 Upstream receptor–CTR1 module
+
+Arabidopsis has five principal ER-associated ethylene receptors: ETR1, ERS1, ETR2, ERS2, and EIN4. In the absence of ethylene, receptors maintain the Raf-like serine/threonine kinase **CTR1** in an active signaling state. CTR1 negatively regulates ethylene responses and phosphorylates the EIN2 C-terminal region (shemansky2016exploringthefunction pages 16-23, ju2012ctr1phosphorylatesthe pages 4-4).
+
+Reported EIN2 phosphosites include **S645, S739, T742, S743, S744, S747, S757, S923/S924, S1283**, and others depending on assay and phosphopeptide assignment. In-vivo phosphoproteomic or kinase evidence supports at least S645, S757, S924, and S1283. S645 and S924 became the best-studied regulatory sites (zhao2024embracinguncertaintyreshapes pages 1-4).
+
+The 2012 PNAS study used kinase assays, protein-interaction assays, phosphosite mutants, microsomal immunoblotting, and confocal microscopy to support a model in which CTR1 phosphorylation keeps EIN2 inactive at the ER. Nonphosphorylatable EIN2 variants displayed nuclear localization and constitutive ethylene-response behavior. Published November 2012; DOI: [10.1073/pnas.1214848109](https://doi.org/10.1073/pnas.1214848109) (ju2012ctr1phosphorylatesthe pages 4-4).
+
+### 3.2 EIN2 stability and processing
+
+ETP1 and ETP2 are F-box proteins implicated in targeting EIN2 for ubiquitin/26S-proteasome-dependent turnover. Ethylene positively regulates EIN2 accumulation, providing one mechanism through which receptor inhibition increases pathway output. The canonical synthesis is that ethylene inactivates receptor-supported CTR1 kinase output, decreases inhibitory EIN2 phosphorylation, promotes EIN2 stabilization, and permits processing of its C-terminal signaling region (zhao2021ethylenesignalingin pages 17-20, yu2022dynamicrolesand pages 5-5).
+
+The 2012 *Science* study used subcellular fractionation, C-terminal antibodies, immunofluorescence, targeted peptide analysis, and phosphosite mutants to connect **S645 phosphorylation** with EIN2 processing and nuclear trafficking. S645A produced constitutive cleavage, nuclear localization, transcriptional activation, and ethylene-response phenotypes (DOI: [10.1126/science.1225974](https://doi.org/10.1126/science.1225974)) (qiao2012processingandsubcellular pages 7-9).
+
+The responsible protease remains unidentified. Consequently, “cleavage at or around S645” is a mechanistic model rather than a fully resolved enzymatic reaction. Moreover, the strength of S645A phenotypes differed between studies, possibly because of transgene-expression differences, and S924 was not examined in every experimental system (ju2012ctr1phosphorylatesthe pages 4-4, qiao2012processingandsubcellular pages 7-9).
+
+### 3.3 Cytoplasmic output: EBF1/EBF2 translation and P-bodies
+
+EIN3 and EIL1 are nuclear transcription factors that execute much of the primary ethylene transcriptional response. Without ethylene, the F-box proteins **EBF1 and EBF2** promote their proteasomal degradation. EIN2 reverses this repression.
+
+Two independent 2015 *Cell* studies established a post-transcriptional mechanism: EIN2-CEND associates with regulatory information in the **3′ untranslated regions of EBF1 and EBF2 mRNAs**, promotes their localization to P-bodies, and suppresses their translation. Reduced EBF1/2 output allows EIN3/EIL1 to accumulate. Reporter assays, 3′-UTR mapping, translation measurements, RNA association, P-body markers, and genetics support this model; one accessible primary citation is Merchante et al., October 2015, DOI: [10.1016/j.cell.2015.09.036](https://doi.org/10.1016/j.cell.2015.09.036) (zhao2021ethylenesignalingin pages 20-23).
+
+This mechanism complements earlier evidence that EIN2 is indispensable for ethylene-induced EBF1/2 downregulation and EIN3/EIL1 stabilization. EIN3 and EIL1 overlap but are not identical in function: EIN3 has especially broad seedling roles, whereas EIL1 contributes strongly to adult leaf expansion and stem elongation.
+
+### 3.4 Nuclear output: chromatin and transcription
+
+Nuclear EIN2-CEND does not act as a conventional sequence-specific transcription factor. Instead, it interacts with chromatin-associated partners, especially **ENAP1**, to facilitate transcriptional responses.
+
+In 3-day-old etiolated seedlings, a **4-hour ethylene treatment** selectively increased **H3K14 acetylation** and the noncanonical **H3K23 acetylation**, without comparable changes in H3K9ac, H3K18ac, H3K27ac, or global H3/H4 acetylation. ChIP-qPCR showed enrichment of H3K14ac and H3K23ac at promoter or 5′-UTR regions of ethylene-upregulated EIN3 targets; these changes required EIN2. Both EIN2 and EIN3 interact with the SANT-domain protein ENAP1, and ENAP1 overexpression enhanced ethylene-inducible expression in an EIN2-dependent manner. Published October 2016; DOI: [10.1038/ncomms13018](https://doi.org/10.1038/ncomms13018) (zhang2016ein2dependentregulationof pages 1-2).
+
+A 2017 PNAS study strengthened direct causality. H3K14ac/H3K23ac correlated with EIN2 abundance; locus-targeted **dCas9–EIN2-C** restored these marks at target loci in *ein2-5*; and ChIP-seq/re-ChIP supported EIN2-C association with chromatin through ENAP1. The resulting model is that EIN2–ENAP1 increases local accessibility and facilitates EIN3 recruitment. Published September 2017; DOI: [10.1073/pnas.1707937114](https://doi.org/10.1073/pnas.1707937114) (zhang2017ein2mediatesdirect pages 6-6, zhang2017ein2mediatesdirect pages 1-2).
+
+Thus EIN2 has at least two spatially distinct outputs: **cytoplasmic repression of EBF translation** and **nuclear promotion of rapid chromatin/transcriptional responses**.
+
+## 4. Biological processes and phenotypic evidence
+
+Classical *ein2* loss-of-function mutants are broadly insensitive to ethylene, demonstrating that EIN2 is required for most canonical ethylene responses rather than one specialized branch. The diagnostic seedling “triple response” comprises reduced hypocotyl and root elongation, radial thickening, and an exaggerated apical hook; disruption of EIN2 prevents normal execution of this response (shemansky2016exploringthefunction pages 16-23).
+
+EIN2 consequently participates in germination, root and root-hair development, hypocotyl and stem growth, leaf expansion, senescence, abscission, reproductive development, and biotic or abiotic stress responses. These broad phenotypes are best understood as downstream consequences of its central signaling position, not separate biochemical functions. The **ORE3** senescence and **CKR1** cytokinin-resistance aliases reflect pathway crosstalk and pleiotropy rather than evidence that EIN2 is a cytokinin receptor or senescence-specific enzyme (yu2022dynamicrolesand pages 5-5).
+
+## 5. Developments in 2023–2024
+
+### 5.1 DNE1 extends the P-body RNA-regulation mechanism
+
+Yan, Guo, and Li reported in February 2024 that the endoribonuclease **DNE1** is a positive regulator of ethylene signaling. DNE1 co-localizes with EIN2 in ethylene-induced P-bodies, recognizes and cleaves EBF1/2 3′ UTRs, lowers EBF1/2 mRNA abundance, and represses their translation. The *dne1-2* mutant showed mild ethylene insensitivity. Imaging used **10 μM ACC**, and endogenous EIN3 was assessed by immunoblotting. This peer-reviewed work adds RNA cleavage/processing to EIN2-mediated translational control rather than changing EIN2’s primary annotation. Published February 2024; DOI: [10.3390/ijms25042138](https://doi.org/10.3390/ijms25042138) (yan2024endoribonucleasedne1promotes pages 13-14).
+
+### 5.2 LOS4 adds pre-mRNA splicing as an upstream regulatory layer
+
+A 2024 *Plant Cell Reports* study found that the RNA helicase **LOS4** regulates pre-mRNA splicing of **EIN2, ERS2, and CTR1**. This indicates that correct maturation of transcripts encoding several core pathway components helps set ethylene responsiveness. It concerns regulation of EIN2 expression, not a newly discovered catalytic activity of the EIN2 protein. Published October 2024; DOI: [10.1007/s00299-024-03340-6](https://doi.org/10.1007/s00299-024-03340-6).
+
+### 5.3 Updated spatial model and chromatin machinery
+
+A 2024 peer-reviewed BioEssays review emphasizes that ethylene signaling is spatially distributed among the ER, nucleus, and P-bodies rather than being a simple linear relay. This framing is consistent with EIN2 serving as the pivotal compartment-switching component. Published April 2024; DOI: [10.1002/bies.202400043](https://doi.org/10.1002/bies.202400043) (chien2024subcellulardynamicsof pages 9-10).
+
+A January 2024 **bioRxiv preprint** investigated HAF2 as a candidate histone acetyltransferase in the EIN2-dependent H3K14ac/H3K23ac pathway. The study used EIN2-C pull-downs, co-localization in seedlings treated with **10 μM ACC**, recombinant nucleosome HAT assays, and plants exposed to **10 ppm ethylene**. Because the accessible evidence was methodological and the report was a preprint, HAF2 should be considered a candidate mechanistic extension, not yet part of the highest-confidence EIN2 annotation. DOI: [10.1101/2023.12.31.573642](https://doi.org/10.1101/2023.12.31.573642) (chen2024histoneacetyltransferasehaf2 pages 17-21).
+
+### 5.4 Reassessment of the canonical cleavage model
+
+A June 2024 **bioRxiv preprint** explicitly challenges parts of the standard model. It reported context-dependent rather than uniform *mhl1 mhl2* phenotypes, wild-type-like responses of *etp1 etp2* under some conditions, predominantly uncleaved receptor-associated EIN2 in protoplasts, and failure to detect CTR1–EIN2 co-immunoprecipitation in tested transgenic material. It also questioned whether S645 cleavage and exclusive signaling by released EIN2-C can explain all observations. DOI: [10.1101/2024.06.13.598799](https://doi.org/10.1101/2024.06.13.598799) (zhao2024embracinguncertaintyreshapes pages 1-4, zhao2024embracinguncertaintyreshapes pages 24-28, zhao2024embracinguncertaintyreshapes pages 47-53).
+
+These results do **not** negate the extensive genetic evidence that EIN2 is indispensable for ethylene signaling or the replicated observation of ethylene-responsive C-terminal nuclear accumulation. They indicate that receptor–CTR1–EIN2 physical organization, the requirement for cleavage, and relative contributions of full-length versus processed EIN2 remain active questions. As a non-peer-reviewed preprint, this work should be weighted below established primary studies until independently reproduced.
+
+## 6. Applications and real-world implementation
+
+### 6.1 Current practical relevance
+
+EIN2 itself is primarily a research and biotechnology target rather than a deployed Arabidopsis product. Its value lies in controlling a pathway governing ripening, senescence, abscission, germination, root architecture, flooding responses, and stress acclimation. Commercial agriculture already manipulates the same pathway with ethylene, ethephon, the biosynthesis inhibitor AVG, and the receptor antagonist 1-MCP; EIN2 defines the central intracellular node through which receptor-level interventions ultimately alter transcription.
+
+Recent reviews identify manipulation of ethylene signaling as a route to modify fruit ripening and shelf life, sex determination, fruit set and growth, secondary-metabolite production, stress resilience, and fiber/root development. However, these are **pathway-level applications**; they should not be presented as direct field deployment of *Arabidopsis* Q9S814.
+
+### 6.2 Crop-engineering interpretation
+
+Ortholog studies support translational relevance. In rice, OsEIN2/MHZ7 loss causes ethylene insensitivity, overexpression causes constitutive responses, and approximately **95% of identified rice ethylene-responsive genes** in one analysis depended on MHZ7/OsEIN2. This demonstrates strong conservation of the central signaling role, but it is evidence about a rice ortholog—not AtEIN2 itself (zhao2021ethylenesignalingin pages 20-23).
+
+Because complete EIN2 disruption affects numerous traits, authoritative analyses favor **tissue-specific, developmental-stage-specific, inducible, or allele-strength-tuned manipulation** over constitutive knockout or overexpression. Such strategies could alter ripening, senescence, root hairs, stress responses, or cotton-fiber traits while limiting growth penalties. This remains largely a breeding/engineering opportunity rather than a mature commercial implementation directly targeting EIN2 (yu2022dynamicrolesand pages 5-5).
+
+## 7. Evidence assessment and unresolved questions
+
+### High-confidence conclusions
+
+- Q9S814/At5g03280 is the Arabidopsis EIN2 central ethylene-signaling protein.
+- Full-length EIN2 is a 1,294-aa ER-associated integral membrane protein with a 12-pass NRAMP-like N terminus and cytosolic signaling C terminus.
+- EIN2 acts downstream of ethylene receptors and CTR1 and upstream of EIN3/EIL1.
+- Ethylene induces C-terminal nuclear accumulation; the NLS is functionally required.
+- EIN2 regulates EBF1/2 and consequently EIN3/EIL1 stability.
+- EIN2 participates in P-body translational repression and ENAP1-associated H3K14/H3K23 acetylation.
+
+### Important limitations
+
+- **No transport substrate is known.** NRAMP homology must not be converted into a metal-transporter functional claim.
+- The cleavage protease is unknown, and obligatory cleavage exactly at S645 is not fully settled.
+- Different studies report unequal strengths of S645-mutant and protein-turnover phenotypes.
+- The receptor–CTR1–EIN2 physical complex and roles of full-length nuclear EIN2 require clarification.
+- Many 2024 mechanistic refinements are recent or preprint-stage and lack broad independent replication.
+- Published accessible summaries provide relatively few standardized effect sizes; the strongest numerical observations are the 1,294-aa length, 12 predicted helices, residues 646–1294 for EIN2-C in one framework, NLS residues 1261–1268, nuclear signal within 10 minutes, 4-hour chromatin treatment, and recent 10 μM ACC/10 ppm ethylene experimental conditions.
+
+## Final functional annotation
+
+**EIN2 is an ER-embedded, NRAMP-like but substrate-unassigned ethylene-signaling transducer.** In the canonical pathway, ethylene suppresses receptor-supported CTR1 activity, changing EIN2 phosphorylation, stability, and C-terminal availability. EIN2-CEND then acts in cytoplasmic P-bodies to inhibit EBF1/2 production and in the nucleus with ENAP1-associated chromatin machinery to facilitate EIN3/EIL1-dependent gene regulation. Its functional sites are therefore the **ER membrane, cytoplasmic P-bodies, and nucleus**. The membrane region should not presently be annotated as transporting a specific ion, while the C-terminal region has strong experimental support as the pathway’s principal signaling effector (zhao2021ethylenesignalingin pages 20-23, zhao2021ethylenesignalingin pages 17-20, qiao2012processingandsubcellular pages 1-2, zhang2017ein2mediatesdirect pages 1-2).
 
 References
 
-1. (wen2015regulatorycomponentsof pages 9-12): Chi-Kuang Wen, Wenyang Li, and Hongwei Guo. Regulatory components of ethylene signal transduction. ArXiv, pages 73-92, Oct 2015. URL: https://doi.org/10.1007/978-94-017-9484-8\_5, doi:10.1007/978-94-017-9484-8\_5. This article has 5 citations.
+1. (shemansky2016exploringthefunction pages 43-49): Jennifer Marie Shemansky. Exploring the function and regulation of arabidopsis ein2 in ethylene signaling. ArXiv, Jan 2016. URL: https://doi.org/10.13016/m2v51h, doi:10.13016/m2v51h. This article has 2 citations.
 
-2. (merchante2013ethylenesignalingsimple pages 3-5): Catharina Merchante, Jose M Alonso, and Anna N Stepanova. Ethylene signaling: simple ligand, complex regulation. Current opinion in plant biology, 16 5:554-60, Oct 2013. URL: https://doi.org/10.1016/j.pbi.2013.08.001, doi:10.1016/j.pbi.2013.08.001. This article has 353 citations and is from a peer-reviewed journal.
+2. (zhao2021ethylenesignalingin pages 17-20): He Zhao, Cui‐Cui Yin, Biao Ma, Shou‐Yi Chen, and Jin‐Song Zhang. Ethylene signaling in rice and <i>arabidopsis</i>: new regulators and mechanisms. Jan 2021. URL: https://doi.org/10.1111/jipb.13028, doi:10.1111/jipb.13028. This article has 260 citations and is from a peer-reviewed journal.
 
-3. (merchante2013ethylenesignalingsimple pages 6-7): Catharina Merchante, Jose M Alonso, and Anna N Stepanova. Ethylene signaling: simple ligand, complex regulation. Current opinion in plant biology, 16 5:554-60, Oct 2013. URL: https://doi.org/10.1016/j.pbi.2013.08.001, doi:10.1016/j.pbi.2013.08.001. This article has 353 citations and is from a peer-reviewed journal.
+3. (shemansky2016exploringthefunction pages 16-23): Jennifer Marie Shemansky. Exploring the function and regulation of arabidopsis ein2 in ethylene signaling. ArXiv, Jan 2016. URL: https://doi.org/10.13016/m2v51h, doi:10.13016/m2v51h. This article has 2 citations.
 
-4. (vidhyasekaran2015ethylenesignalingsystem pages 17-19): P. Vidhyasekaran. Ethylene signaling system in plant innate immunity. ArXiv, pages 195-244, Aug 2015. URL: https://doi.org/10.1007/978-94-017-9285-1\_4, doi:10.1007/978-94-017-9285-1\_4. This article has 6 citations.
+4. (qiao2012processingandsubcellular pages 1-2): Hong Qiao, Zhouxin Shen, Shao-shan Carol Huang, Robert J. Schmitz, Mark A. Urich, Steven P. Briggs, and Joseph R. Ecker. Processing and subcellular trafficking of er-tethered ein2 control response to ethylene gas. Science, 338:390-393, Oct 2012. URL: https://doi.org/10.1126/science.1225974, doi:10.1126/science.1225974. This article has 637 citations and is from a highest quality peer-reviewed journal.
 
-5. (poel2015ethylenesignalingfrom pages 10-12): Bram Van de Poel and Caren Chang. Ethylene signaling from the endoplasmic reticulum membrane to the nucleus. ArXiv, pages 93-108, Oct 2015. URL: https://doi.org/10.1007/978-94-017-9484-8\_6, doi:10.1007/978-94-017-9484-8\_6. This article has 2 citations.
+5. (zhao2024embracinguncertaintyreshapes pages 24-28): Hangwei Zhao, Ying Zhang, Yuying Chen, Chenrunshu Wang, Qian Liu, Jingyi Zhang, and Chi-Kuang Wen. Embracing uncertainty reshapes the ethylene insensitive2-activated ethylene signaling framework. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.13.598799, doi:10.1101/2024.06.13.598799. This article has 1 citations.
 
-6. (yan2024endoribonucleasedne1promotes pages 3-6): Yan Yan, Hongwei Guo, and Wenyang Li. Endoribonuclease dne1 promotes ethylene response by modulating ebf1/2 mrna processing in arabidopsis. International Journal of Molecular Sciences, 25:2138, Feb 2024. URL: https://doi.org/10.3390/ijms25042138, doi:10.3390/ijms25042138. This article has 4 citations.
+6. (qiao2012processingandsubcellular pages 7-9): Hong Qiao, Zhouxin Shen, Shao-shan Carol Huang, Robert J. Schmitz, Mark A. Urich, Steven P. Briggs, and Joseph R. Ecker. Processing and subcellular trafficking of er-tethered ein2 control response to ethylene gas. Science, 338:390-393, Oct 2012. URL: https://doi.org/10.1126/science.1225974, doi:10.1126/science.1225974. This article has 637 citations and is from a highest quality peer-reviewed journal.
 
-7. (park2023ethylenetriggeredsubcellulartrafficking media 9bf9b605): Hye Lin Park, Dong Hye Seo, Han Yong Lee, Arkadipta Bakshi, Chanung Park, Yuan-Chi Chien, Joseph J. Kieber, Brad M. Binder, and Gyeong Mee Yoon. Ethylene-triggered subcellular trafficking of ctr1 enhances the response to ethylene gas. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35975-6, doi:10.1038/s41467-023-35975-6. This article has 64 citations and is from a highest quality peer-reviewed journal.
+7. (zhao2024embracinguncertaintyreshapes pages 1-4): Hangwei Zhao, Ying Zhang, Yuying Chen, Chenrunshu Wang, Qian Liu, Jingyi Zhang, and Chi-Kuang Wen. Embracing uncertainty reshapes the ethylene insensitive2-activated ethylene signaling framework. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.13.598799, doi:10.1101/2024.06.13.598799. This article has 1 citations.
 
-8. (merchante2013ethylenesignalingsimple pages 2-3): Catharina Merchante, Jose M Alonso, and Anna N Stepanova. Ethylene signaling: simple ligand, complex regulation. Current opinion in plant biology, 16 5:554-60, Oct 2013. URL: https://doi.org/10.1016/j.pbi.2013.08.001, doi:10.1016/j.pbi.2013.08.001. This article has 353 citations and is from a peer-reviewed journal.
+8. (ju2012ctr1phosphorylatesthe pages 4-4): Chuanli Ju, Gyeong Mee Yoon, Jennifer Marie Shemansky, David Y. Lin, Z. Irene Ying, Jianhong Chang, Wesley M. Garrett, Mareike Kessenbrock, Georg Groth, Mark L. Tucker, Bret Cooper, Joseph J. Kieber, and Caren Chang. Ctr1 phosphorylates the central regulator ein2 to control ethylene hormone signaling from the er membrane to the nucleus in arabidopsis. Proceedings of the National Academy of Sciences, 109:19486-19491, Nov 2012. URL: https://doi.org/10.1073/pnas.1214848109, doi:10.1073/pnas.1214848109. This article has 767 citations and is from a highest quality peer-reviewed journal.
 
-9. (park2023ethylenetriggeredsubcellulartrafficking pages 1-2): Hye Lin Park, Dong Hye Seo, Han Yong Lee, Arkadipta Bakshi, Chanung Park, Yuan-Chi Chien, Joseph J. Kieber, Brad M. Binder, and Gyeong Mee Yoon. Ethylene-triggered subcellular trafficking of ctr1 enhances the response to ethylene gas. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-023-35975-6, doi:10.1038/s41467-023-35975-6. This article has 64 citations and is from a highest quality peer-reviewed journal.
+9. (zhao2021ethylenesignalingin pages 20-23): He Zhao, Cui‐Cui Yin, Biao Ma, Shou‐Yi Chen, and Jin‐Song Zhang. Ethylene signaling in rice and <i>arabidopsis</i>: new regulators and mechanisms. Jan 2021. URL: https://doi.org/10.1111/jipb.13028, doi:10.1111/jipb.13028. This article has 260 citations and is from a peer-reviewed journal.
 
-10. (shao2024nuclearpyruvatedehydrogenase pages 1-2): Zhengyao Shao, Liangqiao Bian, Shyon K. Ahmadi, Tyler J. Daniel, Miguel A. Belmonte, Jackson G. Burns, Prashanth Kotla, Yang Bi, Zhouxin Shen, Shou-Ling Xu, Zhi-Yong Wang, Steven P. Briggs, and Hong Qiao. Nuclear pyruvate dehydrogenase complex regulates histone acetylation and transcriptional regulation in the ethylene response. Science Advances, Jul 2024. URL: https://doi.org/10.1126/sciadv.ado2825, doi:10.1126/sciadv.ado2825. This article has 27 citations and is from a highest quality peer-reviewed journal.
+10. (zhang2017ein2mediatesdirect pages 6-6): Fan Zhang, Likai Wang, Bin Qi, Bo Zhao, Eun Esther Ko, Nathaniel D. Riggan, Kevin Chin, and Hong Qiao. Ein2 mediates direct regulation of histone acetylation in the ethylene response. Proceedings of the National Academy of Sciences, 114:10274-10279, Sep 2017. URL: https://doi.org/10.1073/pnas.1707937114, doi:10.1073/pnas.1707937114. This article has 191 citations and is from a highest quality peer-reviewed journal.
 
-11. (shao2024nuclearpyruvatedehydrogenase pages 2-3): Zhengyao Shao, Liangqiao Bian, Shyon K. Ahmadi, Tyler J. Daniel, Miguel A. Belmonte, Jackson G. Burns, Prashanth Kotla, Yang Bi, Zhouxin Shen, Shou-Ling Xu, Zhi-Yong Wang, Steven P. Briggs, and Hong Qiao. Nuclear pyruvate dehydrogenase complex regulates histone acetylation and transcriptional regulation in the ethylene response. Science Advances, Jul 2024. URL: https://doi.org/10.1126/sciadv.ado2825, doi:10.1126/sciadv.ado2825. This article has 27 citations and is from a highest quality peer-reviewed journal.
+11. (zhang2016ein2dependentregulationof pages 1-2): Fan Zhang, Bin Qi, Likai Wang, Bo Zhao, Siddharth Rode, Nathaniel D. Riggan, Joseph R. Ecker, and Hong Qiao. Ein2-dependent regulation of acetylation of histone h3k14 and non-canonical histone h3k23 in ethylene signalling. Nature Communications, Oct 2016. URL: https://doi.org/10.1038/ncomms13018, doi:10.1038/ncomms13018. This article has 167 citations and is from a highest quality peer-reviewed journal.
 
-12. (yan2024endoribonucleasedne1promotes pages 1-2): Yan Yan, Hongwei Guo, and Wenyang Li. Endoribonuclease dne1 promotes ethylene response by modulating ebf1/2 mrna processing in arabidopsis. International Journal of Molecular Sciences, 25:2138, Feb 2024. URL: https://doi.org/10.3390/ijms25042138, doi:10.3390/ijms25042138. This article has 4 citations.
+12. (zhang2017ein2mediatesdirect pages 1-2): Fan Zhang, Likai Wang, Bin Qi, Bo Zhao, Eun Esther Ko, Nathaniel D. Riggan, Kevin Chin, and Hong Qiao. Ein2 mediates direct regulation of histone acetylation in the ethylene response. Proceedings of the National Academy of Sciences, 114:10274-10279, Sep 2017. URL: https://doi.org/10.1073/pnas.1707937114, doi:10.1073/pnas.1707937114. This article has 191 citations and is from a highest quality peer-reviewed journal.
 
-13. (yan2024endoribonucleasedne1promotes pages 10-11): Yan Yan, Hongwei Guo, and Wenyang Li. Endoribonuclease dne1 promotes ethylene response by modulating ebf1/2 mrna processing in arabidopsis. International Journal of Molecular Sciences, 25:2138, Feb 2024. URL: https://doi.org/10.3390/ijms25042138, doi:10.3390/ijms25042138. This article has 4 citations.
+13. (yan2024endoribonucleasedne1promotes pages 13-14): Yan Yan, Hongwei Guo, and Wenyang Li. Endoribonuclease dne1 promotes ethylene response by modulating ebf1/2 mrna processing in arabidopsis. Feb 2024. URL: https://doi.org/10.3390/ijms25042138, doi:10.3390/ijms25042138. This article has 5 citations.
 
-14. (hou2024thernahelicase pages 1-5): Xiaomin Hou, Jingli Yang, Yanhua Xie, Binran Ma, Kun Wang, Wenqiang Pan, Shaoqi Ma, Lijuan Wang, and Chun-Hai Dong. The rna helicase los4 regulates pre-mrna splicing of key genes (ein2, ers2, ctr1) in the ethylene signaling pathway. Plant cell reports, 43 10:252, Oct 2024. URL: https://doi.org/10.1007/s00299-024-03340-6, doi:10.1007/s00299-024-03340-6. This article has 0 citations and is from a peer-reviewed journal.
+14. (zhao2024embracinguncertaintyreshapes pages 47-53): Hangwei Zhao, Ying Zhang, Yuying Chen, Chenrunshu Wang, Qian Liu, Jingyi Zhang, and Chi-Kuang Wen. Embracing uncertainty reshapes the ethylene insensitive2-activated ethylene signaling framework. bioRxiv, Jun 2024. URL: https://doi.org/10.1101/2024.06.13.598799, doi:10.1101/2024.06.13.598799. This article has 1 citations.
 
-15. (poel2015ethylenesignalingfrom pages 4-7): Bram Van de Poel and Caren Chang. Ethylene signaling from the endoplasmic reticulum membrane to the nucleus. ArXiv, pages 93-108, Oct 2015. URL: https://doi.org/10.1007/978-94-017-9484-8\_6, doi:10.1007/978-94-017-9484-8\_6. This article has 2 citations.
+15. (yu2022dynamicrolesand pages 5-5): Daoqian Yu, Xiaona Li, Yonghui Li, Faiza Ali, Fuguang Li, and Zhi Wang. Dynamic roles and intricate mechanisms of ethylene in epidermal hair development in arabidopsis and cotton. Dec 2022. URL: https://doi.org/10.1111/nph.17901, doi:10.1111/nph.17901. This article has 53 citations and is from a highest quality peer-reviewed journal.
 
-16. (yan2024endoribonucleasedne1promotes pages 2-3): Yan Yan, Hongwei Guo, and Wenyang Li. Endoribonuclease dne1 promotes ethylene response by modulating ebf1/2 mrna processing in arabidopsis. International Journal of Molecular Sciences, 25:2138, Feb 2024. URL: https://doi.org/10.3390/ijms25042138, doi:10.3390/ijms25042138. This article has 4 citations.
+16. (chien2024subcellulardynamicsof pages 9-10): Yuan‐Chi Chien and Gyeong Mee Yoon. Subcellular dynamics of ethylene signaling drive plant plasticity to growth and stress. BioEssays, Apr 2024. URL: https://doi.org/10.1002/bies.202400043, doi:10.1002/bies.202400043. This article has 13 citations and is from a peer-reviewed journal.
+
+17. (chen2024histoneacetyltransferasehaf2 pages 17-21): Chia-Yang Chen, Zhengyao Shao, Guihua Wang, Bo Zhao, Haley A. Hardtke, Josh Leong, Tiffany Zhou, Y.Jessie Zhang, and Hong Qiao. Histone acetyltransferase haf2 associates with pdc to control h3k14ac and h3k23ac in ethylene response. bioRxiv, Jan 2024. URL: https://doi.org/10.1101/2023.12.31.573642, doi:10.1101/2023.12.31.573642. This article has 4 citations.
+
+## Artifacts
+
+- [Edison artifact artifact-00](EIN2-deep-research-falcon_artifacts/artifact-00.md)
 
 ## Citations
 
-1. park2023ethylenetriggeredsubcellulartrafficking pages 1-2
-2. shao2024nuclearpyruvatedehydrogenase pages 1-2
-3. shao2024nuclearpyruvatedehydrogenase pages 2-3
-4. hou2024thernahelicase pages 1-5
-5. wen2015regulatorycomponentsof pages 9-12
-6. merchante2013ethylenesignalingsimple pages 6-7
-7. merchante2013ethylenesignalingsimple pages 3-5
-8. vidhyasekaran2015ethylenesignalingsystem pages 17-19
-9. poel2015ethylenesignalingfrom pages 10-12
-10. merchante2013ethylenesignalingsimple pages 2-3
-11. poel2015ethylenesignalingfrom pages 4-7
-12. https://doi.org/10.1038/s41467-023-35975-6
-13. https://doi.org/10.1126/sciadv.ado2825
-14. https://doi.org/10.3390/ijms25042138
-15. https://doi.org/10.1007/s00299-024-03340-6
-16. https://doi.org/10.1007/978-94-017-9484-8_5;
-17. https://doi.org/10.1016/j.pbi.2013.08.001;
-18. https://doi.org/10.1038/s41467-023-35975-6;
-19. https://doi.org/10.1007/978-94-017-9484-8_6
-20. https://doi.org/10.3390/ijms25042138;
-21. https://doi.org/10.1126/sciadv.ado2825;
-22. https://doi.org/10.1007/978-94-017-9285-1_4
-23. https://doi.org/10.1016/j.pbi.2013.08.001
-24. https://doi.org/10.1007/978-94-017-9484-8_5
-25. https://doi.org/10.1007/978-94-017-9484-8\_5,
-26. https://doi.org/10.1016/j.pbi.2013.08.001,
-27. https://doi.org/10.1007/978-94-017-9285-1\_4,
-28. https://doi.org/10.1007/978-94-017-9484-8\_6,
-29. https://doi.org/10.3390/ijms25042138,
-30. https://doi.org/10.1038/s41467-023-35975-6,
-31. https://doi.org/10.1126/sciadv.ado2825,
-32. https://doi.org/10.1007/s00299-024-03340-6,
+1. zhao2021ethylenesignalingin pages 17-20
+2. zhao2021ethylenesignalingin pages 20-23
+3. zhao2024embracinguncertaintyreshapes pages 24-28
+4. qiao2012processingandsubcellular pages 1-2
+5. zhao2024embracinguncertaintyreshapes pages 1-4
+6. qiao2012processingandsubcellular pages 7-9
+7. shemansky2016exploringthefunction pages 16-23
+8. yu2022dynamicrolesand pages 5-5
+9. chien2024subcellulardynamicsof pages 9-10
+10. shemansky2016exploringthefunction pages 43-49
+11. zhao2024embracinguncertaintyreshapes pages 47-53
+12. 10.1126/science.1225974
+13. 10.1073/pnas.1214848109
+14. 10.1016/j.cell.2015.09.036
+15. 10.1038/ncomms13018
+16. 10.1073/pnas.1707937114
+17. 10.3390/ijms25042138
+18. 10.1007/s00299-024-03340-6
+19. 10.1002/bies.202400043
+20. 10.1101/2023.12.31.573642
+21. 10.1101/2024.06.13.598799
+22. https://doi.org/10.1126/science.1225974
+23. https://doi.org/10.1073/pnas.1214848109
+24. https://doi.org/10.1016/j.cell.2015.09.036
+25. https://doi.org/10.1038/ncomms13018
+26. https://doi.org/10.1073/pnas.1707937114
+27. https://doi.org/10.3390/ijms25042138
+28. https://doi.org/10.1007/s00299-024-03340-6
+29. https://doi.org/10.1002/bies.202400043
+30. https://doi.org/10.1101/2023.12.31.573642
+31. https://doi.org/10.1101/2024.06.13.598799
+32. https://doi.org/10.13016/m2v51h,
+33. https://doi.org/10.1111/jipb.13028,
+34. https://doi.org/10.1126/science.1225974,
+35. https://doi.org/10.1101/2024.06.13.598799,
+36. https://doi.org/10.1073/pnas.1214848109,
+37. https://doi.org/10.1073/pnas.1707937114,
+38. https://doi.org/10.1038/ncomms13018,
+39. https://doi.org/10.3390/ijms25042138,
+40. https://doi.org/10.1111/nph.17901,
+41. https://doi.org/10.1002/bies.202400043,
+42. https://doi.org/10.1101/2023.12.31.573642,

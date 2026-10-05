@@ -51,3 +51,17 @@ binding (HHARI/ARIH1). Real interaction.
   repressor; cap binding underlies repression.
 - BP: GO:0045947 negative regulation of translational initiation (ACCEPT, core);
   GO:0072344 rescue of stalled cytosolic ribosome (ACCEPT, RQC); GO:0035278 miRNA silencing.
+
+
+## Evidence re-review, 2026-09-20
+
+Reviewed all 44 annotation rows against available primary interaction, cap-binding, translation, localization and quality-control studies and PAINT PTHR11960/PTN000238660. The earlier notes' assertion that EIF4E2 cannot recruit eIF4G was too broad. PMID:22678294 and full-text PMID:26854219 establish hypoxic translation and an EIF4E2/eIF4A/eIF4G3 complex. Restored translation-initiation factor, initiation process and eIF4F-complex rows; updated description and core functions. These roles coexist with GIGYF/4E-T-mediated repression. Current GO:0072344 requires release of an already stalled ribosome, whereas PMID:32726578 demonstrates suppressing additional rounds of initiation alongside RQC; its annotation was modified to negative regulation of initiation. The generated PN notes are historical context and were not rewritten. A neutral independent adjudication of the dual initiation/repression roles was requested through the coordinator; no duplicate report was launched. New primary source: [PMID:26854219](https://pubmed.ncbi.nlm.nih.gov/26854219/).
+
+
+## 2026-09-21: focused eIF4F report incorporated; older categorical statements superseded
+
+The earlier statements that EIF4E2 cannot form a productive eIF4F complex or cannot associate with any eIF4G paralog are too broad. PMID:26854219 full-text Results and Fig2C/S2D report endogenous human EIF4E2/eIF4A/eIF4G3 pull-downs, with eIF4G3 depletion impairing hypoxic translation and polysome recruitment. PMID:22678294 explicitly reports eIF4A recruitment. These primary observations support the retained GO:0016281 complex annotation and hypoxic initiation function alongside GIGYF-mediated repression; no new ribosome-binding claim is inferred from polysome association.
+
+Read the entire `eif4f-complex-under-hypoxia/openscientist.md` report and its plot provenance JSON. It supports context-dependent initiation and repression but incorrectly treats complex composition as untested. Lack of a separately curated Complex Portal entry or experimental GO row is not a negative assay. PMID:28698298 analyzes GIGYF/4E-BP interfaces and cites earlier work for lack of eIF4G interaction; it does not test hypoxic EIF4G3 complex assembly. Its dorsal partner-binding surface lies opposite the cap pocket, contrary to the report's conflation of cap-stacking Trp/Tyr with a proposed dorsal binding defect. Binary binding and complex membership are separate questions.
+
+Delivered plot code hard-codes claimed alignment identities and labels IBA/ISS 'weak'; it supplies no reproducible alignment supporting those numerical claims. They are not adopted as independently verified sequence results. The report is marked DISPUTED, while its supported dual-function findings are incorporated. The complex annotation stays ACCEPT; no new broad or redundant process annotation is added.

@@ -15,11 +15,40 @@ Example:
           CFAP300-goa.csv
 """
 
+from io import StringIO
 from pathlib import Path
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
+from ruamel.yaml.tokens import ScalarToken
 from typing import Tuple, Optional, List, Dict, Any
 import requests
 import yaml
 import re
+
+
+# Official UniProtKB accession syntax (6 or 10 characters). Used to decide
+# whether a value is an accession or a gene symbol, so that all-uppercase gene
+# symbols 6-10 chars long (e.g. ATP6AP1, ATP6V1H, CCDC47) are not misclassified.
+# https://www.uniprot.org/help/accession_numbers
+_UNIPROT_ACCESSION_RE = re.compile(
+    r"^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$"
+)
+
+
+def is_uniprot_accession(value: str) -> bool:
+    """Return whether ``value`` has the shape of a UniProtKB accession.
+
+    Examples:
+        >>> is_uniprot_accession("Q9H2V7")
+        True
+        >>> is_uniprot_accession("A0A024R161")
+        True
+        >>> is_uniprot_accession("ATP6AP1")
+        False
+        >>> is_uniprot_accession("SPNS1")
+        False
+    """
+    return bool(_UNIPROT_ACCESSION_RE.fullmatch(value))
 
 
 def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Dict[str, str]]:
@@ -83,54 +112,154 @@ def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Di
     if not alt_products_lines:
         return []
 
-    # Parse the isoforms
-    current_isoform: Dict[str, str] = {}
+    # CC lines wrap fields at arbitrary positions. Parse complete semicolon-delimited
+    # records after joining their physical lines, so Sequence and Synonyms survive
+    # continuation lines and IsoId/Sequence may be on separate lines.
+    content = " ".join(line[2:].strip() for line in alt_products_lines)
+    count = re.search(r"(?:^|;)\s*Named isoforms=(\d+)", content)
+    if count and int(count.group(1)) <= 1:
+        return []
 
-    for line in alt_products_lines:
-        # Remove CC prefix and clean up
-        content = line[2:].strip() if line.startswith("CC") else line.strip()
-
-        # Check for Named isoforms count
-        if "Named isoforms=" in content:
-            match = re.search(r'Named isoforms=(\d+)', content)
-            if match:
-                num_isoforms = int(match.group(1))
-                if num_isoforms <= 1:
-                    return []  # Don't return data for single isoform genes
-
-        # Match Name line: "Name=Bcl-X(L); Synonyms=Bcl-xL;"
-        name_match = re.match(r'Name=([^;]+)(?:;\s*Synonyms=([^;]+))?', content)
-        if name_match:
-            # Save previous isoform if exists
-            if current_isoform and 'id' in current_isoform:
-                isoforms.append(current_isoform)
-
-            current_isoform = {'name': name_match.group(1).strip()}
-            # Add synonym as alternate name if present
-            if name_match.group(2):
-                synonyms = name_match.group(2).strip()
-                # Use first synonym if multiple, append others to name
-                current_isoform['name'] = f"{current_isoform['name']} ({synonyms})"
+    for record in re.split(r"(?:^|;)\s*Name=", content)[1:]:
+        name = re.match(r"([^;]+);", record)
+        isoid = re.search(r"(?:^|;)\s*IsoId=([^;]+);", record)
+        sequence = re.search(r"(?:^|;)\s*Sequence=([^;]+)", record)
+        if not (name and isoid and sequence):
             continue
-
-        # Match IsoId line: "IsoId=Q07817-1; Sequence=Displayed;"
-        isoid_match = re.match(r'IsoId=([^;]+);\s*Sequence=([^;]+)', content)
-        if isoid_match and current_isoform:
-            current_isoform['id'] = isoid_match.group(1).strip()
-            seq_info = isoid_match.group(2).strip()
-            if seq_info != "Displayed":
-                current_isoform['sequence_note'] = seq_info
-            continue
-
-    # Don't forget the last isoform
-    if current_isoform and 'id' in current_isoform:
-        isoforms.append(current_isoform)
+        # Evidence belongs to the source record, not the common isoform name.
+        clean_name = re.sub(r"\s*\{ECO:[^}]*\}", "", name.group(1)).strip()
+        isoform = {"name": clean_name, "id": isoid.group(1).strip()}
+        synonyms = re.search(r"(?:^|;)\s*Synonyms=([^;]+);", record)
+        if synonyms:
+            clean_synonyms = re.sub(r"\s*\{ECO:[^}]*\}", "", synonyms.group(1)).strip()
+            if clean_synonyms:
+                isoform["name"] += f" ({clean_synonyms})"
+        seq_info = sequence.group(1).strip()
+        if seq_info != "Displayed":
+            isoform["sequence_note"] = seq_info
+        isoforms.append(isoform)
 
     # Only return if there are multiple isoforms
     if len(isoforms) <= 1:
         return []
 
     return isoforms
+
+
+def _repair_truncated_product_sequences(
+    existing_products: Any, fresh_products: List[Dict[str, str]]
+) -> int:
+    """Repair only legacy VSP-only notes ending in a dangling comma.
+
+    Require a unique matching isoform ID and a complete fresh VSP list that
+    strictly extends the old list in the same order. Names, descriptions,
+    arbitrary prose, product order and all other fields remain untouched.
+
+    Examples:
+        >>> old = [{"id": "P46379-4", "name": "curated", "sequence_note": "VSP_015695,"}]
+        >>> fresh = [{"id": "P46379-4", "sequence_note": "VSP_015695, VSP_045913"}]
+        >>> _repair_truncated_product_sequences(old, fresh)
+        1
+        >>> old[0]["name"]
+        'curated'
+        >>> _repair_truncated_product_sequences(old, fresh)
+        0
+    """
+    if not isinstance(existing_products, list):
+        return 0
+
+    def unique_by_id(products: List[Any]) -> Dict[str, Dict[str, Any]]:
+        by_id: Dict[str, Dict[str, Any]] = {}
+        duplicates = set()
+        for product in products:
+            if not isinstance(product, dict):
+                continue
+            product_id = product.get("id")
+            if not isinstance(product_id, str) or not re.fullmatch(
+                r"[A-Z0-9]+-[1-9][0-9]*", product_id
+            ):
+                continue
+            if product_id in by_id:
+                duplicates.add(product_id)
+            by_id[product_id] = product
+        return {key: value for key, value in by_id.items() if key not in duplicates}
+
+    existing_by_id = unique_by_id(existing_products)
+    fresh_by_id = unique_by_id(fresh_products)
+    repaired = 0
+    for product in existing_products:
+        if not isinstance(product, dict):
+            continue
+        old_note = product.get("sequence_note")
+        # A bare trailing comma is the old physical-line parser's signature.
+        if not isinstance(old_note, str) or not re.fullmatch(
+            r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*,\s*", old_note
+        ):
+            continue
+        product_id = product.get("id")
+        if not isinstance(product_id, str) or product_id not in existing_by_id:
+            print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+                  "unsupported or ambiguous existing isoform ID")
+            continue
+        if product_id not in fresh_by_id:
+            print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+                  "isoform ID is absent or ambiguous in the current UniProt record")
+            continue
+        new_note = fresh_by_id[product_id].get("sequence_note")
+        if isinstance(new_note, str) and re.fullmatch(
+            r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*", new_note
+        ):
+            old_ids = re.findall(r"VSP_[0-9]{6}", old_note)
+            new_ids = re.findall(r"VSP_[0-9]{6}", new_note)
+            if len(new_ids) > len(old_ids) and new_ids[:len(old_ids)] == old_ids:
+                product["sequence_note"] = new_note
+                repaired += 1
+                continue
+        print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+              "the current sequence is not a complete ordered extension")
+    return repaired
+
+
+def _replace_repaired_sequence_scalars(
+    original: str, products: List[Any], old_notes: List[Any], round_trip: YAML
+) -> str:
+    """Emit repaired scalars with ruamel, retaining all other source bytes.
+
+    A whole-document round trip retains block styles but can still rewrap plain
+    strings and normalize indentation. Use ruamel's source marks to splice only
+    changed sequence-note tokens, leaving comments and unrelated formatting intact.
+    """
+    tokens = {
+        (token.start_mark.line, token.start_mark.column): token
+        for token in round_trip.scan(original)
+        if isinstance(token, ScalarToken)
+    }
+    replacements = []
+    for product, old_note in zip(products, old_notes):
+        if not isinstance(product, CommentedMap) or product.get("sequence_note") == old_note:
+            continue
+        position = product.lc.value("sequence_note")
+        token = tokens.get(position)
+        if token is None:
+            # Aliases do not have independent scalar spans; do not rewrite one.
+            raise ValueError("Cannot surgically replace an aliased sequence_note")
+        stream = StringIO()
+        fragment_data = CommentedMap(sequence_note=product["sequence_note"])
+        if "sequence_note" in product.ca.items:
+            fragment_data.ca.items["sequence_note"] = product.ca.items["sequence_note"]
+        round_trip.dump(fragment_data, stream)
+        fragment = stream.getvalue()
+        value_token = [t for t in round_trip.scan(fragment) if isinstance(t, ScalarToken)][1]
+        replacement = fragment[value_token.start_mark.index:value_token.end_mark.index]
+        key_column = product.lc.key("sequence_note")[1]
+        replacement = "".join(
+            (" " * key_column if index else "") + line
+            for index, line in enumerate(replacement.splitlines(keepends=True))
+        )
+        replacements.append((token.start_mark.index, token.end_mark.index, replacement))
+    for start, end, replacement in sorted(replacements, reverse=True):
+        original = original[:start] + replacement + original[end:]
+    return original
 
 
 def _extract_panther_family_id(uniprot_data: str) -> Optional[str]:
@@ -206,6 +335,63 @@ def _compare_file_content(file_path: Path, new_content: str) -> bool:
         return True
 
 
+def _report_seed_updates(
+    file_prefix: str,
+    added_count: int,
+    refs_added: int,
+    qualifiers_backfilled: int,
+    supporting_entities_backfilled: int,
+    yaml_existed: bool,
+) -> None:
+    """Report every mutation performed while seeding a gene review."""
+    if added_count > 0:
+        print(
+            f"  ✓ Seeded {added_count} GOA annotations in "
+            f"{file_prefix}-ai-review.yaml"
+        )
+    if qualifiers_backfilled > 0:
+        print(
+            f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
+            f"in {file_prefix}-ai-review.yaml"
+        )
+    if supporting_entities_backfilled > 0:
+        print(
+            "  ✓ Backfilled supporting entities on "
+            f"{supporting_entities_backfilled} annotations in "
+            f"{file_prefix}-ai-review.yaml"
+        )
+    if (
+        added_count == 0
+        and refs_added == 0
+        and qualifiers_backfilled == 0
+        and supporting_entities_backfilled == 0
+        and yaml_existed
+    ):
+        print(
+            f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
+        )
+
+
+def _primary_gene_name(uniprot_data: str) -> Optional[str]:
+    r"""Return the primary gene name from a UniProt flat-file record, if any.
+
+    Used when ``fetch-gene`` is given an accession rather than a symbol, so the
+    stub's ``gene_symbol`` records the UniProt gene name (for an alternative-ORF
+    peptide, its host gene) instead of the accession.
+
+    >>> _primary_gene_name("ID   X\nGN   Name=MIEF1 {ECO:0000312|HGNC:HGNC:25979};\n")
+    'MIEF1'
+    >>> _primary_gene_name("GN   Name=hglS; OrderedLocusNames=PP_1234;\n")
+    'hglS'
+    >>> _primary_gene_name("ID   X\nDE   RecName: Full=Protein SHMOOSE;\n") is None
+    True
+    """
+    match = re.search(r"^GN   Name=([^;{]+)", uniprot_data, re.MULTILINE)
+    if not match:
+        return None
+    return match.group(1).strip() or None
+
+
 def fetch_gene_data(
     gene_info: Tuple[str, str],
     uniprot_id: Optional[str] = None,
@@ -222,7 +408,8 @@ def fetch_gene_data(
 
     Args:
         gene_info: Tuple of (organism, gene_name) e.g. ("human", "CFAP300")
-        uniprot_id: Optional UniProt accession ID. If not provided, will attempt to resolve.
+        uniprot_id: Optional UniProt accession ID. Precedence is explicit ID, then the
+            accession in an existing review, then gene-symbol resolution.
         base_path: Base directory for output files. Defaults to current directory.
         seed_annotations: If True, creates/seeds ai-review.yaml with GOA annotations.
         fetch_titles: If True, fetch actual titles from PubMed when seeding (default: True).
@@ -235,6 +422,11 @@ def fetch_gene_data(
             - yaml_existed: bool - True if ai-review.yaml already existed
             - annotations_added: int - Number of annotations added
             - references_added: int - Number of references added
+            - qualifiers_backfilled: int - Number of existing annotations enriched
+            - supporting_entities_backfilled: int - Number of existing annotations
+              enriched with WITH/FROM entities
+            - alternative_product_sequences_repaired: int - Number of legacy truncated
+                VSP-only sequence notes extended from the current UniProt record
             - uniprot_updated: bool - True if UniProt file was updated
             - goa_updated: bool - True if GOA file was updated
             - uniprot_differences: bool - True if UniProt content differs from existing
@@ -266,16 +458,62 @@ def fetch_gene_data(
     gene_dir = base_path / "genes" / organism / dir_name
     gene_dir.mkdir(parents=True, exist_ok=True)
 
-    # Resolve UniProt ID if not provided
+    # Existing reviews already record the accession that owns their machine-derived
+    # UniProt and GOA snapshots. Reuse it before querying by symbol: MOD-standard
+    # symbols are not always present in UniProt's gene_exact index (for example,
+    # S. pombe dca7 is stored under systematic locus SPBC17D11.08).
+    reused_review_accession: Optional[str] = None
     if uniprot_id is None:
-        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+        yaml_file = gene_dir / f"{file_prefix}-ai-review.yaml"
+        reused_review_accession = _existing_review_uniprot_id(yaml_file)
+        if reused_review_accession:
+            uniprot_id = reused_review_accession
+            print(
+                f"  - Reusing UniProt ID {uniprot_id} from "
+                f"{file_prefix}-ai-review.yaml"
+            )
+        else:
+            uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
 
     # Determine file paths
     uniprot_file = gene_dir / f"{file_prefix}-uniprot.txt"
     goa_file = gene_dir / f"{file_prefix}-goa.tsv"
 
-    # Fetch UniProt and GOA data
-    uniprot_data = fetch_uniprot_data(uniprot_id)
+    # Fetch UniProt data first so a reused secondary/demerged accession cannot be
+    # sent to QuickGO, which returns a header-only response for such accessions.
+    try:
+        uniprot_data = fetch_uniprot_data(uniprot_id)
+    except ValueError:
+        if not reused_review_accession:
+            raise
+        print(
+            f"  ⚠ Review accession {reused_review_accession} no longer resolves; "
+            f"resolving {gene_name} again"
+        )
+        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+        uniprot_data = fetch_uniprot_data(uniprot_id)
+
+    primary_accession = _primary_uniprot_accession(uniprot_data)
+    if reused_review_accession and primary_accession != reused_review_accession:
+        if primary_accession:
+            print(
+                f"  ⚠ Review accession {reused_review_accession} resolves to UniProt "
+                f"primary accession {primary_accession}; using the primary accession "
+                "for GOA"
+            )
+            uniprot_id = primary_accession
+        else:
+            print(
+                f"  ⚠ Could not confirm review accession {reused_review_accession} "
+                f"against the fetched UniProt entry; resolving {gene_name} again "
+                "before fetching GOA"
+            )
+            uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+            uniprot_data = fetch_uniprot_data(uniprot_id)
+            resolved_primary = _primary_uniprot_accession(uniprot_data)
+            if resolved_primary:
+                uniprot_id = resolved_primary
+
     goa_data = fetch_goa_data(uniprot_id)
 
     # Check for differences
@@ -288,6 +526,9 @@ def fetch_gene_data(
         "yaml_existed": False,
         "annotations_added": 0,
         "references_added": 0,
+        "qualifiers_backfilled": 0,
+        "supporting_entities_backfilled": 0,
+        "alternative_product_sequences_repaired": 0,
         "uniprot_updated": False,
         "goa_updated": False,
         "uniprot_differences": uniprot_differs,
@@ -366,13 +607,18 @@ def fetch_gene_data(
 
         # Create minimal YAML structure if file doesn't exist
         if not yaml_existed:
+            # Given an accession (e.g. an alternative-ORF peptide fetched with
+            # --alias HOST__ACC), record UniProt's gene name, not the accession.
+            gene_symbol = gene_name
+            if gene_name.upper() == str(uniprot_id).upper():
+                gene_symbol = _primary_gene_name(uniprot_data) or gene_name
             yaml_data: Dict[str, Any] = {
                 "id": uniprot_id,
-                "gene_symbol": gene_name,
+                "gene_symbol": gene_symbol,
                 "product_type": "PROTEIN",
                 "status": "INITIALIZED",
                 "taxon": {"id": taxon_id, "label": taxon_label},
-                "description": f"TODO: Add description for {gene_name}",
+                "description": f"TODO: Add description for {gene_symbol}",
             }
 
             # Extract alternative products (isoforms) if present
@@ -393,41 +639,63 @@ def fetch_gene_data(
 
         # Now seed missing GOA annotations
         validator = GOAValidator()
-        added_count, _, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, fetch_titles=fetch_titles
+        (
+            added_count,
+            _,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, fetch_titles=fetch_titles
+            )
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
+        result["qualifiers_backfilled"] = qualifiers_backfilled
+        result["supporting_entities_backfilled"] = supporting_entities_backfilled
 
-        if added_count > 0:
-            print(
-                f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
-            )
-        else:
-            if yaml_existed:
-                print(
-                    f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-                )
+        _report_seed_updates(
+            file_prefix,
+            added_count,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+            yaml_existed,
+        )
 
-        # Add alternative_products to existing files if missing
+        # Fill missing products, or narrowly repair legacy truncated VSP lists.
         if yaml_existed:
-            with open(yaml_file, "r") as f:
-                existing_data = yaml.safe_load(f)
+            round_trip = YAML()
+            round_trip.preserve_quotes = True
+            round_trip.width = 1000
+            original_text = yaml_file.read_bytes().decode("utf-8")
+            if "\r\n" in original_text:
+                round_trip.line_break = "\r\n"  # type: ignore[assignment]  # ruamel infers None
+            existing_data = round_trip.load(original_text)
 
-            if existing_data and "alternative_products" not in existing_data:
+            if isinstance(existing_data, dict) and existing_data:
                 alt_products = _extract_alternative_products(uniprot_data, uniprot_id)
-                if alt_products:
+                if "alternative_products" not in existing_data and alt_products:
                     existing_data["alternative_products"] = alt_products
-                    with open(yaml_file, "w") as f:
-                        yaml.dump(
-                            existing_data,
-                            f,
-                            default_flow_style=False,
-                            sort_keys=False,
-                            allow_unicode=True,
-                        )
+                    with open(yaml_file, "w", encoding="utf-8") as f:
+                        round_trip.dump(existing_data, f)
                     print(f"  ✓ Added {len(alt_products)} isoforms to alternative_products")
                     result["alternative_products_added"] = len(alt_products)
+                elif "alternative_products" in existing_data:
+                    products = existing_data["alternative_products"]
+                    old_notes = [
+                        p.get("sequence_note") if isinstance(p, dict) else None
+                        for p in products
+                    ] if isinstance(products, list) else []
+                    repaired = _repair_truncated_product_sequences(products, alt_products)
+                    if repaired:
+                        updated_text = _replace_repaired_sequence_scalars(
+                            original_text, products, old_notes, round_trip
+                        )
+                        yaml_file.write_bytes(updated_text.encode("utf-8"))
+                        print(f"  ✓ Repaired {repaired} truncated isoform sequence notes")
+                    result["alternative_product_sequences_repaired"] = repaired
 
     # Auto-fetch PANTHER family data if found in UniProt data
     panther_family_id = _extract_panther_family_id(uniprot_data)
@@ -452,6 +720,42 @@ def fetch_gene_data(
         result["panther_family_id"] = None
 
     return result
+
+
+def _existing_review_uniprot_id(review_file: Path) -> Optional[str]:
+    """Return the accession recorded by an existing gene review, if present.
+
+    The review ID is the repository's grounding for an already-seeded gene. It is
+    preferable to a fresh symbol lookup when a model-organism database symbol is
+    absent from UniProt's gene_exact index. The fetched UniProt request still
+    validates that the accession resolves.
+    """
+    if not review_file.exists():
+        return None
+
+    try:
+        review = yaml.safe_load(review_file.read_text()) or {}
+    except (OSError, yaml.YAMLError):
+        return None
+
+    accession = review.get("id")
+    if not isinstance(accession, str) or not accession.strip():
+        return None
+
+    accession = accession.strip()
+    if accession.startswith("UniProtKB:"):
+        accession = accession.split(":", 1)[1]
+    return accession if is_uniprot_accession(accession) else None
+
+
+def _primary_uniprot_accession(uniprot_data: str) -> Optional[str]:
+    """Extract the primary accession from a UniProt flat-file entry."""
+    for line in uniprot_data.splitlines():
+        if not line.startswith("AC   "):
+            continue
+        accession = line[5:].split(";", 1)[0].strip()
+        return accession if is_uniprot_accession(accession) else None
+    return None
 
 
 def expand_organism_name(organism: str) -> str:
@@ -823,7 +1127,9 @@ def fetch_uniprot_data(uniprot_id: str) -> str:
 def fetch_goa_data(uniprot_id: str) -> str:
     """Fetch Gene Ontology Annotation (GOA) data from QuickGO API.
 
-    Fetches ALL annotations using pagination if necessary.
+    Fetches ALL annotations using pagination if necessary. Byte-identical TSV rows
+    are deduplicated after projection, so annotations that differ only in fields the
+    TSV does not represent (such as annotation extensions) collapse to one row.
 
     Args:
         uniprot_id: UniProt accession ID
@@ -922,6 +1228,9 @@ def fetch_goa_data(uniprot_id: str) -> str:
     tsv_lines = [
         "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
     ]
+    # Extensions are not represented in the TSV; collapse rows that become identical
+    # after projection while retaining annotations that differ in any exported field.
+    seen_tsv_rows: set[str] = set()
 
     for result in sorted_results:
         # Extract database and ID from geneProductId
@@ -962,7 +1271,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
             result.get("date", ""),  # DATE
         ]
 
-        tsv_lines.append("\t".join(row))
+        tsv_row = "\t".join(row)
+        if tsv_row in seen_tsv_rows:
+            continue
+        seen_tsv_rows.add(tsv_row)
+        tsv_lines.append(tsv_row)
 
     return "\n".join(tsv_lines) + "\n"
 
@@ -1375,6 +1688,8 @@ def fetch_gene_data_ncRNA(
         "yaml_existed": False,
         "annotations_added": 0,
         "references_added": 0,
+        "qualifiers_backfilled": 0,
+        "supporting_entities_backfilled": 0,
         "rnacentral_updated": False,
         "goa_updated": False,
         "rnacentral_differences": rnacentral_differs,
@@ -1471,20 +1786,29 @@ def fetch_gene_data_ncRNA(
         # Now seed missing GOA annotations (same as for protein-coding genes)
         from ai_gene_review.validation.goa_validator import GOAValidator
         validator = GOAValidator()
-        added_count, _, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, fetch_titles=True
+        (
+            added_count,
+            _,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, fetch_titles=True
+            )
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
+        result["qualifiers_backfilled"] = qualifiers_backfilled
+        result["supporting_entities_backfilled"] = supporting_entities_backfilled
 
-        if added_count > 0:
-            print(
-                f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
-            )
-        else:
-            if yaml_existed:
-                print(
-                    f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-                )
+        _report_seed_updates(
+            file_prefix,
+            added_count,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+            yaml_existed,
+        )
 
     return result

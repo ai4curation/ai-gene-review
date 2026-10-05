@@ -79,9 +79,11 @@
 ## Annotation-specific cautions
 
 - The seven `protein binding` annotations are uninformative generic outputs of
-  interaction screens or complex studies. They are marked over-annotated even
-  where the interaction itself is informative (for example Sse1 as an Ssb
-  nucleotide-exchange factor in PMID:16688211).
+  interaction screens or complex studies. They are removed even where the
+  interaction itself is informative, because GO:0005515 does not capture the
+  Sse1 nucleotide-exchange-factor relationship in PMID:16688211, the
+  Bmh/SNF1/Glc7 regulatory context, or Ssb's cotranslational chaperone
+  mechanism.
 - The plasma-membrane HDA annotation comes from a detergent-solubilized plasma
   membrane fraction containing many identified proteins; no specific membrane
   residence or membrane function for this abundant soluble Hsp70 is shown in
@@ -128,3 +130,74 @@
 - Provider-output caveats: its GO table says 39 current annotations although the
   fetched/collapsed review has 36, and it recommends obsolete GO:0051082. Those
   claims were not adopted. The curated replacement remains GO:0140662.
+
+## Completion audit (2026-08-28)
+
+- Row-by-row reconciliation found 39 fetched GOA rows representing 36 distinct
+  review assertions. The three extra rows are duplicate assertion keys that
+  differ only in `WITH/FROM`: three PMID:16429126 protein-binding rows collapse
+  to one review entry, and two PMID:1394434 cytoplasmic-translation IPI rows
+  collapse to one. No GO term/evidence/reference/qualifier assertion is absent.
+- All seven IBA rows were re-read against their GOA `WITH/FROM` fields and PAINT
+  nodes. The cytoplasm, ATPase, generic chaperone, nucleus, heat-shock-protein
+  binding, and cytosol transfers are biologically defensible; broad or secondary
+  assertions are distinguished from the core ATP-dependent cotranslational
+  chaperone function. The broad protein-refolding IBA was narrowed to directly
+  demonstrated de novo cotranslational folding rather than being accepted as a
+  generic refolding program.
+- The plasma-membrane HDA was initially changed from `REMOVE` to `UNDECIDED`
+  because PMID:16622836 is abstract-only in the cache and describes a stripped
+  plasma-membrane fraction, while direct evidence places Ssb1 in the cytosol.
+- Translation, frameshifting, termination, and fidelity phenotypes were retained
+  as genuine but non-core. This brings row actions into agreement with the core
+  function synthesis, which identifies ATP-dependent nascent-chain folding as
+  primary and the translation phenotypes as downstream/contextual.
+
+## PR review follow-up (2026-08-28)
+
+- The missing ribosome-associated annotations are now explicit `action: NEW`
+  rows: GO:0043022 `ribosome binding` and GO:0022626 `cytosolic ribosome`.
+  PMID:9670014 directly characterizes Ssb-ribosome interaction, and PMID:1394434
+  identifies Ssb1/2 as cytosolic Hsp70s associated with translating ribosomes.
+  Because both are existing GO terms rather than ontology gaps, they belong in
+  `existing_annotations`, not `proposed_new_terms`. GO:0022626 was also added
+  to the core-function locations.
+- The GO:0042026 IBA is now classified as `PROPAGATION_BAD` with
+  `FUNCTIONAL_DIVERGENCE`, rather than a parent/child granularity problem.
+  Protein refolding and de novo cotranslational folding are sibling processes;
+  GO:0051083 is already present with direct IDA evidence from PMID:9670014, so
+  MODIFY here effectively rejects the unsupported propagated refolding claim.
+- The plasma-membrane HDA is now `MARK_AS_OVER_ANNOTATED`, harmonizing the call
+  with the nearly identical Ssb2 paralog. This retains the bulk high-throughput
+  fraction observation without treating plasma membrane as a demonstrated
+  functional compartment for the soluble cytosolic chaperone.
+
+## IBA follow-up (2026-09-29)
+
+- Re-read the seven SSB1 IBA rows against `projects/IBA_REVIEW.md` and the
+  current `interpro/panther/PTHR19375/PTHR19375-paint.tsv` cache. The cytoplasm,
+  ATP hydrolysis, generic protein-folding chaperone, nucleus,
+  heat-shock-protein binding, and cytosol transfers remain biologically sound
+  at their PAINT nodes; their `source_entities` blocks now record curated
+  extant donors rather than the PTN alone.
+- Updated the `GO:0042026 protein refolding` IBA to match current PAINT and the
+  SSB2 review. Current PAINT records a NOT/IRD for `GO:0042026` at fungal node
+  PTN001065099, sourced from PTN000452648 on 2026-06-16, and carries the broader
+  `GO:0006457 protein folding` assertion down that branch. The pinned GOA row
+  therefore traces to a still-sound source node whose refolding assertion should
+  no longer propagate to ribosome-associated fungal Ssb; modifying it to
+  `GO:0006457` follows the PAINT revision without claiming every possible
+  refolding activity is absent.
+- Exact PubMed searches for `(SSB1/Ssb1/YDL229W) AND Saccharomyces cerevisiae`
+  in 2025+ found two direct Ssb1/2 papers. PMID:41078542 links Ssb1/2 to ABC
+  transporter gene expression and quorum-sensing-molecule release at the
+  diauxic shift, and PMID:42538864 reports that Ssb1/2 support cotranslational
+  mitochondrial precursor handling and association of translating ribosomes
+  with the mitochondrial outer membrane. Both refine secondary physiology of the
+  Ssb1/2 system; neither changes the core ATP-dependent cotranslational folding
+  function or justifies a broad new downstream process annotation from the
+  abstract alone.
+- Converted all seven legacy bare `GO:0005515 protein binding` rows from
+  `MARK_AS_OVER_ANNOTATED` to `REMOVE` under the current generic-binding policy.
+  This withdraws only the unqualified protein-binding GO term; it does not
+  reject the Sse1, Bmh, Uri1, or other observed physical interactions.

@@ -107,3 +107,37 @@ deafness, thrombasthenia. Overexpression in mouse increases atherogenic potentia
 - Reactome R-HSA-429798 / R-HSA-1660661: MEDIUM — pathway representation of the SM synthase reaction.
 </content>
 </invoke>
+
+
+## 2026-09-21: complete source review and primary localization checks
+
+All 41 original annotation objects were reviewed, preserving source identifiers,
+evidence, qualifiers and both alternative-product records. Detailed evidence and
+the shared SGMS1/SGMS2 ER question are recorded in
+[the project audit](../../../../projects/IBA_REVIEW/rereview-2026-09-20/sphingomyelin-synthase-1.yaml).
+
+The Human Protein Atlas SGMS1 subcellular page lists Nucleoplasm as the main location,
+with Nucleoli fibrillar center, Golgi apparatus and Cytosol as additional locations.
+The retrieved dataset uses antibody HPA045191 in A-431, U-251MG and U2OS cells.
+Its immunocytochemistry score is Approved, not Enhanced. The antibody page reports
+a predicted-size Western-blot band with additional bands. This is positive nuclear
+staining evidence, with antibody-specificity limitations; it does not identify the
+responsible isoform or establish a nuclear catalytic function. The previous claim
+that membrane topology rules out all nuclear association was unjustified.
+Sources accessed 2026-09-21:
+[subcellular data](https://www.proteinatlas.org/ENSG00000198964-SGMS1/subcellular) and
+[antibody validation](https://www.proteinatlas.org/ENSG00000198964-SGMS1/summary/antibody).
+
+PMID:14976195 used lysenin-based microscopy to detect the lipid product SM, not
+the SGMS1 protein. Its Discussion discusses enzyme-class ER/nuclear activity.
+PMID:38026182 Fig. 3A instead detects a C-terminally tagged SGMS1 protein at the
+cell surface; the tag and expression context limit extrapolation to endogenous
+location. Neither observation warrants an exclusive Golgi assertion.
+
+GO:0002950 specifies a CDP-ethanolamine donor, whereas the measured SGMS1 CPE
+reaction uses PE. The three source rows are modified to the valid broader
+phosphotransferase class; a donor-correct ontology term is proposed without an
+invented identifier. No new GO annotation is added. PMID:25605874 calls its Sf9
+constructs human in Results but mouse in the figure caption/abstract; the 2023
+purified human enzyme study independently establishes the activity. Do not infer
+that the human IDA is wrong merely from the 2015 abstract's mouse framing.

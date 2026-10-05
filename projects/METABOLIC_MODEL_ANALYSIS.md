@@ -1,10 +1,42 @@
 ---
 title: "Metabolic Model Analysis Project"
-maturity: COMPLETE
-tags: [PIPELINE, FLAGSHIP]
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP, EVALUATION]
+species: [METEA, ECOLI, human]
+genes: [ecm, sucB, mdcD, gcvP, rbsD, glgX, HADHB, CPT1C]
+manifest:
+  slides:
+    - href: METABOLIC_MODEL_ANALYSIS/slides/METABOLIC_MODEL_ANALYSIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/JcAT9tMrYkugHrVWdvf4jf
+      title: Project brief
 ---
 
 # Metabolic Model Analysis Project
+
+**Bottom line:** Genome-scale metabolic models (GEMs) link genes to reactions
+and EC numbers through curated gene-protein-reaction rules, so they can act as
+an independent check on GO molecular-function annotations. We compared the EC
+numbers in three models with UniProt: iRP911 for *Methylorubrum extorquens*
+AM1, iML1515 for *E. coli* K-12 and human Recon3D. Disagreement is common: 42%,
+51% and 61% of aligned genes respectively. Much of it is expected (EC class 7
+was created after the models, and GEMs attach every EC of a complex to every
+subunit), but reviewing eight flagged genes found real errors on both sides.
+UniProt and GO were wrong for mdcD, a decarboxylase annotated as a carboxylase
+(7 GO rows removed), for ecm's methylmalonyl-CoA mutase term, and for HADHB,
+whose hydratase and dehydrogenase rows belong to HADHA. The models were wrong
+for rbsD, glgX, HADHB (mapped only to histidase in Recon3D) and CPT1C (a
+thioesterase included in 92 carnitine palmitoyltransferase reactions). Flux
+balance analysis showed that correcting rbsD turns a no-effect knockout on
+ribose into a lethal one, and that a HADHB knockout in Recon3D blocks only
+histidase. The model files and FBA scripts listed below under
+`models/metabolic/` are not in this repository, and three flagged
+*M. extorquens* genes (mdcB, ilvC, purK) are still unreviewed.
+
+We did this to test whether curated metabolic models can catch GO annotation
+errors that sequence-based pipelines propagate, and the answer is yes, provided
+the complex-subunit EC convention is filtered out first.
 
 ## Overview
 

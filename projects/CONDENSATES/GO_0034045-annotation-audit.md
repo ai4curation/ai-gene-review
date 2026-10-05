@@ -6,6 +6,12 @@ species: [human, mouse, yeast, SCHPO, worm, DICDI]
 autolink_gene_symbols: false
 ---
 
+## Subsequent IBA recovery reassessment (2026-09-22)
+
+The decisions below record the earlier audit. PR #3114 subsequently reconsidered ATG14, ULK1, WIPI2 and ATG12 using live ontology responses and additional primary evidence. GO:7770114 phagophore membrane now exists, and GO:0034045 is obsolete. GO:0097632 survives with the name extrinsic component of phagophore membrane and a part_of relation to GO:7770114; GO:0097629 remains valid. Thus the earlier R3 term request has been overtaken by an ontology change, and the earlier ATG14 MODIFY statements are superseded by the current gene review. ULK1 membrane association is supported by the studies of membrane binding and palmitoylation cited in its review (PMID:22885598; PMID:39169022). The current ULK1/WIPI2/ATG12 replacements use GO:7770114 where their evidence supports phagophore membrane. This is not a blanket replacement for every GO:0034045 row: the RAB1B caution and other genes still require their own evidence assessment. See [recovery tracking](../IBA_REVIEW/rereview-2026-09-20/recovery-prs.md) and the current gene YAML for final actions; the older tables below are retained as session provenance.
+
+
+
 # GO:0034045 — corpus slice audit
 
 Supporting page for [Biomolecular Condensates](../CONDENSATES.md), and the first subproject of

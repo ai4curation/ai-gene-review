@@ -1,11 +1,41 @@
 ---
 title: "Dictyostelium Development Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [DICDI]
+manifest:
+  slides:
+    - href: DICTYOSTELIUM_DEVELOPMENT/slides/DICTYOSTELIUM_DEVELOPMENT-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/FJvHoxwCfnrbDz9JcYwAiJ
+      title: Project brief
 ---
 
 # Dictyostelium Development Project
+
+**Bottom line:** starving *Dictyostelium discoideum* amoebae aggregate by
+relayed cAMP signalling and build a fruiting body of stalk and spores, which
+makes this organism the standard model for the step from single cells to
+multicellular development. We split development into 14 functional modules,
+then reviewed 52 genes across all of them (32 priority genes, 8 direct paralogs
+and 12 module-gap genes) and authored 8 Dictyostelium `ModuleReview` documents,
+all status DRAFT. We did this to get a curation-grade picture of a whole
+developmental program, and to test how IBA and IEA propagation behaves inside
+the organism's large paralog families. The 52 reviews cover 1,478 existing
+annotations: 797 accepted, 546 kept as non-core, 42 modified, 37 marked
+over-annotated, 19 removed and 37 left undecided. The paralog batch showed
+propagation inside families: an aggregation-stage adenylyl-cyclase-activator row
+was marked over-annotated on the cAR3 receptor (the paralog notes below say
+cAR4), a purinergic-receptor IEA was removed from cAR1, cAR2 and cAR3, and
+phosphorelay IEAs were removed from the ACR adenylyl cyclase. The page began as
+a scoping enumeration; the status section below records how far it has gone.
+Still open are per-gene notes, an expert second pass and the deeper paralog
+families. A further completed review, rdeA (the DhkA-to-RegA phosphotransfer
+protein), is in `genes/DICDI/` but is not yet counted here or grounded in the
+SDF-2 module. The other three DICDI reviews in the repo are also outside the
+52: mlcD (reviewed before this project) and nip7 and tlcd4b (not
+development-specific).
 
 ## Overview
 

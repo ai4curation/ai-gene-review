@@ -30,9 +30,12 @@ The YAML `description` field was revised to keep it as a standalone biological s
   mitochondrial phenotype is not encoded by that replacement. [PMID:8754838 "These results are
   consistent with SSA proteins and Ydj1p acting together in the translocation
   process."]
-- The plasma-membrane IBA is removed as a compartment-mismatched family
-  propagation. UniProt and the SSA3-focused literature consistently identify
-  Ssa3 as cytosolic; no target-specific plasma-membrane evidence was found. A
+- The plasma-membrane IBA is removed as a stale PAINT transfer. The pinned 2025
+  GOA row points to PTN002500132, but the current local PTHR19375 PAINT snapshot
+  carries nucleus and cytosol at that node and no longer carries GO:0005886.
+  This is a current-node comparison, not an inference from donor count. UniProt
+  and the SSA3-focused literature consistently identify Ssa3 as cytosolic; no
+  target-specific plasma-membrane evidence was found. A
   targeted OpenScientist hypothesis run independently preferred `REMOVE` because
   it found no SSA3-specific experimental support. Its live QuickGO claims that
   the P09435 IBA had been retired and that Ssa4 lacked the same IBA conflict with
@@ -46,3 +49,32 @@ The YAML `description` field was revised to keep it as a standalone biological s
   had access to more evidence than the cached abstract.
 - The UNFOLDED_PROTEIN_BINDING project row now uses GO:0140662 for SSA3, aligning
   the project decision with the review's ATP-dependent Hsp70 mechanism.
+
+## 2026-08-27 row-completeness follow-up
+
+- The review was promoted from `DRAFT` to `COMPLETE` after restoring one review
+  record for every one of the 55 pinned GOA rows. Repeated IPI and IGI rows are retained
+  separately by reference and `WITH/FROM` partner rather than collapsed.
+- Generic nucleotide binding is now `MODIFY` to the existing specific ATP-binding
+  term GO:0005524, matching the treatment of the same parent term in SSA4.
+
+## 2026-09-29 IBA follow-up
+
+- Rechecked all eight GO_REF:0000033 IBA rows against
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv`. The accepted nucleus,
+  cytoplasm, cytosol, ATPase, heat-shock-protein-binding, protein-folding
+  chaperone, and protein-refolding transfers all still trace to current PAINT
+  rows; the pinned plasma-membrane IBA remains stale because current
+  PTN002500132 carries only `GO:0005634 nucleus` and `GO:0005829 cytosol`.
+- Recorded the 2026 fungal PTN001065099 `GO:0042026 protein refolding` NOT/IRD
+  and retained the SSA3 transfer because the pinned row still descends from the
+  PTN000452648 refolding IBD and has no `GO:0006457 protein folding`
+  replacement IBA.
+- Added missing `propagation_review.source_entities` blocks for the accepted
+  IBA rows and expanded the PTN-only chaperone IBA with representative current
+  donors from PTN000452648.
+- Searched PubMed for exact `SSA3`/`Ssa3`/`YBL075C` mentions in 2025-2026 and
+  found no new exact-match papers that change the Ssa3 curation.
+- Converted the legacy bare `GO:0005515 protein binding` rows from generic
+  high-throughput interaction datasets to `REMOVE`; the two Hsp70-paralog
+  interaction rows remain `MODIFY` to `GO:0030544 Hsp70 protein binding`.

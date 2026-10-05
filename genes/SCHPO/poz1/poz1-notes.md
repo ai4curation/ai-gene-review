@@ -39,6 +39,32 @@ Poz1 (Protection of telomeres protein 1, UniProt O13852) is a core component of 
 - Shelterin complex (IDA, IPI) [PMID:18535244, PMID:29149597]
 - Cytoplasm (IEA from UniProt subcellular location)
 
+## 2026-09-01 — current GOA refresh
+
+- Refreshed with `just fetch-gene SCHPO poz1 --force`; current GOA contains 21 rows.
+- Accepted the new shelterin NAS assertion as redundant with direct IDA evidence and
+  retained the new nuclear and cytoplasmic EXP localizations as non-core parent/secondary
+  compartments.
+- Revised the cytoplasm IEA from over-annotated to non-core because the refreshed GOA
+  now supplies target-specific high-throughput experimental support (PMID:16823372).
+- Removed the discontinued generic PMID:18535244 protein-binding tuple from
+  `existing_annotations`; the underlying Tpz1/Rap1 bridging interactions remain captured
+  by current rows and the synthesized molecular-adaptor function.
+- Added subtelomeric heterochromatin formation (GO:0031509) to the core-process synthesis:
+  loss or disruption of the Tpz1-Poz1 bridge causes a telomeric heterochromatin defect,
+  and structural mutational analysis likewise links the bridge to heterochromatin
+  maintenance [PMID:25330395 "loss of Poz1 from telomeres leads to increases in Ccq1
+  Thr93 phosphorylation and telomerase recruitment, and telomeric heterochromatin
+  formation defect"; PMID:29160296 "proper interactions between Tpz1, Poz1, and Rap1
+  in the shelterin core complex are required for telomere length homeostasis and
+  heterochromatin structure maintenance at telomeres"].
+  These loss-of-function data establish involvement and requirement, but do not fully
+  exclude an indirect contribution through the accompanying telomere-length defect.
+- UniProt calls Poz1 a "Telomeric DNA-binding protein", but the reviewed experimental
+  evidence establishes Poz1 principally as a protein-interaction bridge between Tpz1
+  and Rap1; direct Poz1-DNA binding is not established here and should not be inferred
+  from the descriptor alone [PMID:18535244 "Poz1 bridges Pot1-Tpz1 and Taz1-Rap1"].
+
 ### Telomere Organization
 - Required for heterochromatin formation at telomeres [PMID:27253066, PMID:29160296]
 - The tpz1-R81E/poz1Δ double mutant shows EST (Ever Shorter Telomere) phenotype [PMID:27253066]

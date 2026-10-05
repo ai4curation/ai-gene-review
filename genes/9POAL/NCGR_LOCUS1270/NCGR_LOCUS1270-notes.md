@@ -204,3 +204,28 @@ Based on articles retrieved from PubMed:
 - PMID:38305687 [DOI](https://doi.org/10.1093/pcp/pcae013) - Yoshida & Hisabori 2024. FBPase redox and electron transport.
 - PMID:38028645 [DOI](https://doi.org/10.1002/pld3.542) - Li et al. 2023. CBSX2 and dark oxidation of cpFBPase.
 - PMID:40485148 [DOI](https://doi.org/10.1111/pce.15667) - Gamez-Arcas et al. 2025. Cys95 and pH-driven cpFBPase structure.
+
+
+## 2026-09-20 TreeGrafter re-review
+
+The defining FBPase reaction hydrolyzes fructose 1,6-bisphosphate to fructose 6-phosphate and inorganic phosphate. The reaction directly supports FBP metabolism, F6P metabolism, carbohydrate metabolism, phosphatase activity and phosphoric ester hydrolase activity. These broad terms are compatible with the Calvin-cycle function.
+
+GO:0005737 cytoplasm includes other subcellular structures; a chloroplast is therefore compatible with cytoplasm, although it is distinct from cytosol. Definition verified via [QuickGO](https://www.ebi.ac.uk/QuickGO/term/GO:0005737) on 2026-09-20: "The contents of a cell excluding the plasma membrane and nucleus, but including other subcellular structures." GO:0006002 explicitly covers reactions involving F6P; it does not impose a cytosolic compartment. GO:0006000 instead names free fructose; its scope for a fructose-bisphosphatase is left UNDECIDED pending an ontology-aware second opinion.
+
+All 13 annotation rows were re-reviewed. Retained the chloroplast-to-stroma refinement and challenges to cytosol, sucrose processes and gluconeogenesis on the chloroplast-targeting/domain evidence and the distinct plant FBPase paralogs. Those functional disagreements do not establish an incorrect graft position. No prior OpenScientist hypothesis for this target was found. The earlier notes above are historical and their claim that chloroplast excludes cytoplasm is superseded by this entry.
+
+
+## 2026-09-20 OpenScientist incorporation and source-identity correction
+
+The full focused report supports chloroplast FBPase identity but overstates a negative chemical rule. GO:0006000 has no is_a relation above the two phosphorylated-fructose process terms, yet absence of that relation is not disjointness: the term includes pathways. Its use on human FBP1 (P09467, TAS PMID:7558035), human FBP2 (O00757, TAS PMID:9678974), and Dictyostelium fbp (Q6RYT0, IDA PMID:4308724) contradicts a blanket requirement for direct free-fructose substrate turnover. GO:0006002 itself describes F6P as an intermediate in fructose metabolism. This does not automatically establish every pathway role in Miscanthus. Fructose metabolism remains UNDECIDED.
+
+Actual PANTHER topology resolves the original WITH/FROM PTN004269459 to Sorghum bicolor A0A1B6QP66/SORBI_3001G425400, a terminal reference leaf. UniProt independently calls that protein chloroplast/Calvin-cycle associated. Independent global sequence comparisons give 400/413 identical positions to this reference, 317/421 to Arabidopsis chloroplast CFBP1 and 171/418 to Arabidopsis cytosolic CYFBP. The original claim of a cytosolic-paralog misgraft is therefore unproven; the full query insertion edge was not reconstructed. See NCGR_LOCUS1270-bioinformatics/RESULTS.md and reproducible script/raw records.
+
+The earlier notes and initial re-review's categorical exclusions of cytosol, gluconeogenesis and sucrose pathways are superseded here by UNDECIDED. Targeting/regulation support the primary chloroplast specialization without establishing exclusive localization or loss of every ancestral contribution. Conversely, merely exporting carbon does not prove this enzyme performs a sucrose-biosynthetic step. The accurate catalytic, substrate-specific and Calvin-cycle core remains intact, with no NEW processes. The OpenScientist report is retained as DISPUTED; no duplicate was launched.
+
+
+## Final evidence and annotation-action reconciliation (2026-09-23)
+
+Removed limitation/tool-access statements from positive support where applicable and retained the actual lineage or sequence evidence. Historical uncertainties remain in the rationale rather than being treated as proof of function.
+
+The broad GO:0005975 row is now MODIFY to its descendant GO:0019253, rather than a redundant NEW assertion. The enzyme itself catalyzes the Calvin-cycle hydrolysis step. This makes the process already in core_functions explicit in the action audit; other conditional pathway roles remain separately unresolved.

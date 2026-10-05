@@ -89,3 +89,7 @@ ER membrane is the accurate compartment.
 
 Two candidate-gene association studies found LACK of association with Alzheimer's disease
 (PMID:15465627, PMID:16157450 per UniProt RN[6]/RN[7]); not a disease gene by these data.
+
+## Paired horse benchmark evidence review
+
+The human reference supplies mechanistic evidence for the corresponding selected horse protein; the human conclusion alone is not validation of the horse sequence. The exact horse comparison is in `genes/HORSE/CH25H/CH25H-bioinformatics/RESULTS.md`. Research reports are source leads; annotation decisions cite the underlying publication or experimentally supported UniProt passages. Unresolved source-specific results retain UNDECIDED.

@@ -1,0 +1,7 @@
+# TRAF2 curation notes
+
+The primary-source investigation is in [TRAF2-deep-research-manual.md](TRAF2-deep-research-manual.md). Falcon and Perplexity-lite failed; no provider-generated research is claimed. Receptor/cIAP adaptor function is well grounded. Intrinsic E3 and autoubiquitination are UNDECIDED because primary negative E2-interface evidence conflicts with positive S1P-dependent reconstitution. Complex membership and ubiquitination-process participation are not rejected because of that catalytic uncertainty.
+
+All 708 GOA rows have decisions. Generic interaction rows preserve their individual PMID and partner identifiers, with UNDECIDED where bait/prey evidence was not traced. The full texts of PMID:26458771 and PMID:40097387 explicitly assay TRAF2 despite emphasizing another TRAF in their abstracts; they were read before judging NF-kappaB/TLR and pyroptosis annotations. TNF cytokine binding is distinguished from receptor-complex recovery using the verified GO:0043120 definition. Supporting excerpts in YAML are copied from cached publications.
+
+Remaining follow-up includes the many untraced interaction-map records; the specific TNF ligand-binding annotation; uncommon locations and process contexts; and reconciliation of lipid-cofactor-dependent versus cIAP-mediated ubiquitin transfer. COMPLETE denotes completion of this review pass, not elimination of explicit biological uncertainty.

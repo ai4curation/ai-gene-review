@@ -3,13 +3,39 @@ title: "MicroRNA Degradation / TDMD Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 genes: [ZSWIM8, CUL3, ARIH1, ELOB, ELOC, AGO2, AGO1, AGO3, AGO4]
-species: [human, mouse, DROME, worm]
+species: [human]
 sidecars:
   genes: MIRNA_DEGRADATION/genes.csv
   fetch_queue: MIRNA_DEGRADATION/fetch_queue.csv
   sources: MIRNA_DEGRADATION/sources.md
+  slide_figures:
+    - MIRNA_DEGRADATION/slides/actions-per-gene.svg
+    - MIRNA_DEGRADATION/slides/tdmd-ligase.svg
+    - MIRNA_DEGRADATION/slides/zswim8-review-table.jpg
+manifest:
+  slides:
+    - href: MIRNA_DEGRADATION/slides/MIRNA_DEGRADATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/XL9eBPWsypGXtYqjeLMxwJ
+      title: Project brief
 ---
 # MicroRNA Degradation / TDMD Project
+
+**Bottom line:** in target-directed microRNA degradation (TDMD), the ZSWIM8 Cullin-RING
+ligase recognizes AGO-miRNA complexes engaged with a highly complementary trigger RNA and
+ubiquitylates AGO for proteasomal turnover, which leads to loss of the miRNA. Anchored on Farnung
+et al. 2026 (Nature), we scoped the project to the dedicated protein layer (the ZSWIM8, CUL3,
+ARIH1, ELOB, ELOC ligase axis and its AGO1-4 substrates) and kept trigger RNAs, biogenesis
+and generic RNA decay out, so that the reviews separate core TDMD function from generic
+silencing and ubiquitin biology. All nine human reviews now exist, well past the status
+checklist below, which predates them: 1,106 annotations assessed (660 ACCEPT, 145
+KEEP_AS_NON_CORE, 194 MARK_AS_OVER_ANNOTATED, 90 REMOVE, 14 MODIFY, 3 UNDECIDED), eight files
+marked COMPLETE and CUL3 fully actioned but still marked INITIALIZED. The key TDMD corrections
+are on ZSWIM8, where `positive regulation of miRNA catabolic process` becomes
+`GO:0140958` target-directed miRNA degradation and a Cul2-RING complex row becomes Cul3-RING;
+83 of the 90 removals are bare `protein binding` rows on ELOB, ELOC, AGO1 and AGO4. The
+comparative fly, worm and mouse layers and the TUT4/7-DIS3L2 branch have not started.
 
 ## Overview
 

@@ -1,11 +1,42 @@
 ---
 title: "UniProt Subcellular Locations (SL) Unique Terms Project"
 maturity: IN_PROGRESS
-tags: [PIPELINE]
+tags: [PIPELINE, EVALUATION]
 species: [human, mouse, yeast, SCHPO, worm, DICDI]
+sidecars:
+  slide_figures:
+    - SL/slides/mito-granularity.svg
+    - SL/slides/sl-issue-rates.svg
+manifest:
+  slides:
+    - href: SL/slides/SL-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/U1DVKXZnKCDpdWahMw1JTy
+      title: Project brief
 ---
 
 # UniProt Subcellular Locations (SL) Unique Terms Project
+
+**Bottom line:** GOA turns UniProt subcellular-location lines (SL-xxxx) into
+cellular-component annotations through the still-running `GO_REF:0000044`
+pipeline, and many genes get a location from that source alone. We scanned
+every such SL-unique annotation in the repo, compared them with the reviewers'
+verdicts, and re-reviewed 22 genes where the pattern pointed. The main result
+is that the failures are about granularity, not truth: bare `membrane`,
+`cytoskeleton` and `mitochondrial membrane` fail at 23–36%, while every precise
+membrane term fails at 0%, and the obvious fix (drop an SL term when a more
+specific one is present) was tested and refuted. The tables below were measured
+on 1,297 reviewed annotations; a re-run of `scan_sl_unique.py` on 2026-09-26
+over the grown corpus (1,565 reviewed, 1,179 gene folders) gives the same
+picture, with 40% downgraded or worse and a 9% hard-issue rate. So far 27
+annotations have been moved, 18 of them for the defective SL-0221 →
+GO:0034045 mapping.
+
+We did this because `GO_REF:0000044` is one of the largest single sources of
+CC annotation in GOA and, unlike the retired keyword pipeline, it records the
+source SL identifier in every row, so problems can be traced to the location
+that caused them.
 
 ## Overview
 

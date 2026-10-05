@@ -1,0 +1,5 @@
+# CG31606 evidence assessment
+
+The selected 197-residue protein has a SignalP-derived signal peptide at residues 1–18, followed by a 179-residue mature chain. The source record has no annotated transmembrane segment or recognized protein-family domain. The C-terminal sequence is EEIASRILALKDNYQCA, without a hydrophobic anchor or canonical KDEL/HDEL retention terminus. Secretion is therefore a reasonable sequence-based localization inference, not an experimentally measured location.
+
+The lipid-function donor P0DTS2 is a 367-residue northern elephant seal apolipoprotein A-V. The two supplied TM scores are 0.50614 and 0.30402. The extracellular-location donor Q55286 is a 538-residue Shigella effector IpgD, with scores 0.50003 and 0.22171. These partial structural similarities are not evidence of target lipid binding, lipoprotein metabolism, or mammalian apolipoprotein orthology. Donor records and original raw prediction metadata are retained for inspection; no target biochemical experiment or new structural alignment is claimed.

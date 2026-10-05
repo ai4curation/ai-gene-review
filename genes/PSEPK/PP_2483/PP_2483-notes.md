@@ -13,14 +13,12 @@ MoaA-family paralog in this batch, and the KT2440 client pairing has not been
 tested directly.
 
 The report also gives target alignment percentages and residue or structure
-interpretations without saving a reproducible analysis artifact. Those paralog,
-client, residue, structure, and alignment claims are not used in the review.
+interpretations that differ from the saved local comparison. Those paralog,
+client, residue, and structure claims are not used in the review.
 
-PP_2483 remains a predicted MocA-type molybdenum-cofactor
-cytidylyltransferase. This assignment is grounded in the saved Q88K10-to-K07141
-mapping, local PANTHER representative file, target UniProt record, and
-reproducible local comparison
-[file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md, "supports a predicted MocA
-assignment while leaving CTP specificity and client delivery to direct
-experimental testing"]. Direct CTP specificity and dedication to the
-neighboring molybdoenzyme remain untested.
+PP_2483 remains an unresolved MobA-like NTP-transferase-domain protein. KEGG
+maps Q88K10 to K07141, but the checked local comparison places it closer to the
+E. coli MobA control than MocA, and the broad PANTHER family does not establish
+nucleotide specificity [file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md,
+"PP_2483 is more similar to the E. coli MobA control (39.29%)"]. Neither MobA nor MocA activity is asserted without
+a direct substrate-specificity assay.

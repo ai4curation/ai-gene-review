@@ -12,6 +12,7 @@ import pytest
 import yaml
 
 from ai_gene_review.etl.panther_families import (
+    member_index_path,
     UniProtPantherLookup,
     write_member_index,
 )
@@ -103,8 +104,9 @@ def _run(
         "ai_gene_review.validation.prose_panther_scan.REPO_ROOT",
         modules_dir.parent,
     )
-    (modules_dir.parent / "interpro" / "panther").mkdir(parents=True, exist_ok=True)
-    members.replace(modules_dir.parent / "interpro" / "panther" / "panther-members.tsv")
+    target = member_index_path(modules_dir.parent)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    members.replace(target)
     return main(["--modules-dir", str(modules_dir)])
 
 
@@ -196,9 +198,7 @@ def test_main_does_not_double_count_an_online_resolved_accession(
         "ai_gene_review.validation.prose_panther_scan.fetch_panther_from_uniprot",
         lambda accessions: UniProtPantherLookup({"Q88ND1": "PTHR11908:SF1"}, {"Q88ND1"}),
     )
-    members = modules_dir.parent / "interpro" / "panther"
-    members.mkdir(parents=True, exist_ok=True)
-    write_member_index({}, members / "panther-members.tsv", {"Q88ND1"})
+    write_member_index({}, member_index_path(modules_dir.parent), {"Q88ND1"})
     monkeypatch.setattr(
         "ai_gene_review.validation.prose_panther_scan.REPO_ROOT", modules_dir.parent
     )

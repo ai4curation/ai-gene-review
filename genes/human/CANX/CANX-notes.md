@@ -81,3 +81,7 @@ folding, retains misfolded glycoproteins for ER quality control, and binds calci
 3. BP: protein folding in the ER / glycoprotein quality control (calnexin/calreticulin cycle).
 4. BP: ERAD pathway (retention/triage of terminally misfolded clients).
 5. CC: ER membrane (lumenal-facing lectin domain).
+
+## GO:0051082 migration (2026-09-27)
+
+The quality-control retention/triage core function carries no molecular-function term. GO:0051082 unfolded protein binding is obsolete; the glycan-recognition and folding-chaperone activities that underlie retention are captured in the lectin and protein-folding-chaperone core functions, and no GO term describes the retention decision itself.

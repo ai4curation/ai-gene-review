@@ -19,20 +19,21 @@ slot into the existing validation stack:
     ``linkml-term-validator`` existence checking, label checking, and
     family/subfamily hierarchy with no bespoke resolver code.
 
-``PANTHER<REL>_<organism>`` sequence classifications -> ``panther-members.tsv``
-    A ``UniProt accession -> PTHR family:SF`` index covering every accession
-    these organisms classify, plus any cited accession resolved through the
-    UniProt cross-reference fallback. It is deliberately NOT pruned to what is
-    currently cited: pruning made the artifact lag the repository, so a PR citing
-    a new protein found the index silent about the protein under review. This is
-    what catches a *wrong grounding* as opposed to a wrong label: a family descriptor whose declared
+``PANTHER<REL>_<organism>`` sequence classifications -> ``panther-members-<REL>.tsv``
+    A pruned ``UniProt accession -> PTHR family:SF`` index covering the
+    accessions actually cited in the repository. This is what catches a *wrong
+    grounding* as opposed to a wrong label: a family descriptor whose declared
     family provably does not contain the very protein it names as its
     representative member.
 
-Both artifacts are committed. Validation then needs no network access, and the
-pinned release makes results reproducible. Regenerate with
-``just build-panther-obo`` / ``just refresh-panther-members`` after a PANTHER
-release bump.
+``panther.obo`` is committed. The member index is a build artifact in the
+git-ignored ``.cache/panther/`` (see ``MEMBER_INDEX_RELPATH``): every module PR
+used to edit one committed copy, so concurrent PRs conflicted on it. It is built
+incrementally by ``just refresh-panther-members`` (run automatically by the
+validate-modules and validate-families recipes) from the release-pinned
+classification files, which are cached alongside it, so a warm cache needs no
+network. Regenerate with ``just build-panther-obo`` /
+``just refresh-panther-members --rebuild`` after a PANTHER release bump.
 """
 
 from __future__ import annotations
@@ -40,16 +41,18 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
 
 import requests
 import yaml
 
 PANTHER_RELEASE = "19.0"
-HMM_BASE = "https://data.pantherdb.org/ftp/hmm_classifications/current_release"
+# Release-pinned paths, not current_release/: the file names embed the release,
+# so current_release/ would 404 (or silently change) when PANTHER moves on.
+HMM_BASE = f"https://data.pantherdb.org/ftp/hmm_classifications/{PANTHER_RELEASE}"
 HMM_URL = f"{HMM_BASE}/PANTHER{PANTHER_RELEASE}_HMM_classifications"
 SEQ_BASE = (
-    "https://data.pantherdb.org/ftp/sequence_classifications/current_release/"
+    f"https://data.pantherdb.org/ftp/sequence_classifications/{PANTHER_RELEASE}/"
     "PANTHER_Sequence_Classification_files"
 )
 
@@ -310,16 +313,38 @@ DEFAULT_ORGANISMS: Tuple[str, ...] = (
     "x_laevis",
 )
 
-MEMBER_INDEX_HEADER = ["uniprot_accession", "panther_family_sf"]
+MEMBER_INDEX_HEADER = [
+    "uniprot_accession",
+    "panther_family_sf",
+    "uniprot_panther_family_sf",
+]
+
+# The member index is a derived build artifact, not committed source: every row
+# can be rebuilt from PANTHER's release-pinned sequence classifications plus the
+# UniProt fallback, and a single committed file that every module PR edited made
+# concurrent PRs conflict. It lives in the git-ignored cache next to the
+# downloaded classification files, and `just refresh-panther-members` (run by
+# the validate-modules / validate-families recipes) builds it incrementally.
+# The release is in the file name so that bumping PANTHER_RELEASE starts a fresh
+# index instead of incrementally extending rows resolved against the old release.
+MEMBER_INDEX_RELPATH = Path(".cache") / "panther" / f"panther-members-{PANTHER_RELEASE}.tsv"
 
 
-# Two distinct markers, because the two states have different remedies and a
+def member_index_path(repo_root: Path) -> Path:
+    """Where the PANTHER member index lives for a repository checkout.
+
+    >>> member_index_path(Path("/repo")).as_posix()  # doctest: +ELLIPSIS
+    '/repo/.cache/panther/panther-members-....tsv'
+    """
+    return Path(repo_root) / MEMBER_INDEX_RELPATH
+
+
+# Three distinct markers, because the states have different remedies and a
 # shared marker silently conflates them. "unresolved" means both PANTHER's
 # per-organism files and UniProt were consulted and neither has a family -- a
 # permanent fact, nothing to do. "unchecked" means the UniProt fallback was
-# skipped, so the status is simply unknown -- rerun without the flag. Using one
-# marker for both lets a --no-uniprot-fallback refresh be read as "no family
-# exists", which is a false claim in the tool's output rather than in the file.
+# skipped, so the status is simply unknown -- rerun without the flag. "unknown"
+# means UniProt was asked and returned no record at all -- verify the accession.
 UNRESOLVED_MARKER = "# unresolved:"
 UNCHECKED_MARKER = "# unchecked:"
 UNKNOWN_MARKER = "# unknown-to-uniprot:"
@@ -373,15 +398,16 @@ def render_member_index(
     absent: Optional[Set[str]] = None,
     unchecked: Optional[Set[str]] = None,
     unknown: Optional[Set[str]] = None,
+    alternates: Optional[Dict[str, str]] = None,
 ) -> Iterator[str]:
-    """Render a member index as a sorted two-column TSV.
+    """Render a member index as a sorted TSV.
 
     Accessions with no family are recorded as trailing comment blocks. Without
     them the file holds only successes, so it cannot distinguish "asked PANTHER
     and UniProt, no family exists" from "never asked" -- and any resolution rate
     read off the artifact is over an unknown denominator.
 
-    The two kinds are separate parameters rather than one set plus a
+    The three kinds are separate parameters rather than one set plus a
     "did we consult UniProt" flag. A single flag picks one marker for the whole
     set, so a run that skips the fallback while citing one new accession
     relabels every previously-absent protein as unchecked -- emptying the set
@@ -389,61 +415,69 @@ def render_member_index(
     that 35 proteins were never looked up when they were.
 
     >>> print("\\n".join(render_member_index({"P2": "PTHR2", "P1": "PTHR1:SF3"})))
-    uniprot_accession	panther_family_sf
+    uniprot_accession	panther_family_sf	uniprot_panther_family_sf
     P1	PTHR1:SF3
     P2	PTHR2
 
     >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}):
     ...     print(line)
-    uniprot_accession	panther_family_sf
+    uniprot_accession	panther_family_sf	uniprot_panther_family_sf
     P1	PTHR1
     <BLANKLINE>
-    # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
+    # Accessions cited in modules/ with no PANTHER family in PANTHER's
     # per-organism classifications or in UniProt's xref_panther:
     # unresolved: P9
 
     Skipped lookups are recorded as unchecked, and the two can coexist -- which
     is the case a single flag could not represent:
 
+    The footer carries no count: a count line changes whenever any PR adds or
+    resolves an accession, so it would make every concurrent PR conflict on the
+    same line. Consumers count the marker lines instead.
+
     >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, {"P8"}, {"P7"}):
     ...     print(line)
-    uniprot_accession	panther_family_sf
+    uniprot_accession	panther_family_sf	uniprot_panther_family_sf
     P1	PTHR1
     <BLANKLINE>
-    # 1 accession(s) cited in modules/ with no PANTHER family in PANTHER's
+    # Accessions cited in modules/ with no PANTHER family in PANTHER's
     # per-organism classifications or in UniProt's xref_panther:
     # unresolved: P9
     <BLANKLINE>
-    # 1 accession(s) whose UniProt lookup was NOT run
+    # Accessions cited in modules/ with no PANTHER family in PANTHER's
+    # per-organism classifications. UniProt was NOT consulted
     # (--no-uniprot-fallback), so these are unchecked rather than absent:
     # unchecked: P8
     <BLANKLINE>
-    # 1 accession(s) UniProt was asked about and returned no record for.
+    # Accessions cited in modules/ that UniProt was asked about and returned no record for.
     # Likely a typo, an obsolete id, or a secondary/demerged accession:
     # unknown-to-uniprot: P7
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
+    alternates = alternates or {}
     for accession in sorted(index):
-        yield f"{accession}\t{index[accession]}"
+        alternate = alternates.get(accession)
+        if alternate and alternate != index[accession]:
+            yield f"{accession}\t{index[accession]}\t{alternate}"
+        else:
+            yield f"{accession}\t{index[accession]}"
     if absent:
         yield ""
-        yield (
-            f"# {len(absent)} accession(s) cited in modules/ with no PANTHER "
-            "family in PANTHER's"
-        )
+        yield "# Accessions cited in modules/ with no PANTHER family in PANTHER's"
         yield "# per-organism classifications or in UniProt's xref_panther:"
         for accession in sorted(absent):
             yield f"{UNRESOLVED_MARKER} {accession}"
     if unchecked:
         yield ""
-        yield f"# {len(unchecked)} accession(s) whose UniProt lookup was NOT run"
+        yield "# Accessions cited in modules/ with no PANTHER family in PANTHER's"
+        yield "# per-organism classifications. UniProt was NOT consulted"
         yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
         for accession in sorted(unchecked):
             yield f"{UNCHECKED_MARKER} {accession}"
     if unknown:
         yield ""
         yield (
-            f"# {len(unknown)} accession(s) UniProt was asked about and "
+            "# Accessions cited in modules/ that UniProt was asked about and "
             "returned no record for."
         )
         yield "# Likely a typo, an obsolete id, or a secondary/demerged accession:"
@@ -468,6 +502,15 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
     >>> gaps = load_member_index_gaps(d / "gaps.tsv")
     >>> sorted(gaps.absent), sorted(gaps.unchecked), sorted(gaps.unknown)
     (['P9'], ['P8'], ['P7'])
+
+    An accession that has a family row is not a gap, even if a stale marker for
+    it remains (e.g. in a hand-edited or seeded index):
+
+    >>> _ = (d / "merged.tsv").write_text(
+    ...     "uniprot_accession\\tpanther_family_sf\\nP9\\tPTHR9\\n\\n# unresolved: P9\\n"
+    ... )
+    >>> load_member_index_gaps(d / "merged.tsv").absent
+    set()
     """
     path = Path(path)
     if not path.exists():
@@ -484,7 +527,9 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
             absent.add(line[len(UNRESOLVED_MARKER) :].strip())
         elif line.startswith(UNCHECKED_MARKER):
             unchecked.add(line[len(UNCHECKED_MARKER) :].strip())
-    return MemberIndexGaps(absent, unchecked, unknown)
+    # A stale gap marker for an accession that now has a row: the row wins.
+    resolved = set(load_member_index(path))
+    return MemberIndexGaps(absent - resolved, unchecked - resolved, unknown - resolved)
 
 
 def write_member_index(
@@ -493,6 +538,7 @@ def write_member_index(
     absent: Optional[Set[str]] = None,
     unchecked: Optional[Set[str]] = None,
     unknown: Optional[Set[str]] = None,
+    alternates: Optional[Dict[str, str]] = None,
 ) -> Path:
     """Write the accession -> family index, returning the path written.
 
@@ -504,9 +550,71 @@ def write_member_index(
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
-        "\n".join(render_member_index(index, absent, unchecked, unknown)) + "\n"
+        "\n".join(render_member_index(index, absent, unchecked, unknown, alternates))
+        + "\n"
     )
     return out_path
+
+
+def panther_assignments_conflict(first: str, second: str) -> bool:
+    """Whether two PANTHER assignments for one protein actually disagree.
+
+    A bare family is compatible with any of its own subfamilies: one source simply
+    reports less detail. Only different families, or different subfamilies of one
+    family, are a disagreement worth recording.
+
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR1")
+    False
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR1:SF2")
+    False
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR1:SF3")
+    True
+    >>> panther_assignments_conflict("PTHR1:SF2", "PTHR9")
+    True
+    """
+    if first == second:
+        return False
+    first_base, _, first_sf = first.partition(":")
+    second_base, _, second_sf = second.partition(":")
+    if first_base != second_base:
+        return True
+    return bool(first_sf and second_sf)
+
+
+def load_member_index_alternates(path: Path) -> Dict[str, str]:
+    """Load UniProt's family for accessions where it disagrees with PANTHER's files.
+
+    The member index's primary family comes from PANTHER's release-pinned sequence
+    classification files, falling back to UniProt's ``xref_panther`` only when the
+    files do not cover a protein. For some proteins both sources answer and they
+    disagree; neither is privileged, so the UniProt value is kept as a third column
+    and membership checks accept either, reporting the disagreement instead of
+    failing on it.
+
+    >>> import tempfile, pathlib
+    >>> d = pathlib.Path(tempfile.mkdtemp())
+    >>> _ = write_member_index({"P1": "PTHR1:SF1", "P2": "PTHR2"}, d / "m.tsv",
+    ...                        alternates={"P1": "PTHR9:SF3", "P2": "PTHR2"})
+    >>> load_member_index(d / "m.tsv")
+    {'P1': 'PTHR1:SF1', 'P2': 'PTHR2'}
+    >>> load_member_index_alternates(d / "m.tsv")
+    {'P1': 'PTHR9:SF3'}
+    """
+    path = Path(path)
+    if not path.exists():
+        return {}
+    alternates: Dict[str, str] = {}
+    for line_number, line in enumerate(path.read_text().splitlines()):
+        if line_number == 0 or not line.strip() or line.startswith("#"):
+            continue
+        columns = [c.strip() for c in line.split("\t")]
+        if len(columns) >= 3 and columns[2] and columns[2] != columns[1]:
+            alternates[columns[0]] = columns[2]
+    return alternates
+
+
+class MemberIndexConflict(ValueError):
+    """An accession is assigned to two different PANTHER families in one index."""
 
 
 def load_member_index(path: Path) -> Dict[str, str]:
@@ -514,8 +622,29 @@ def load_member_index(path: Path) -> Dict[str, str]:
 
     Returns an empty mapping when the artifact is absent. That no longer means
     validation degrades to "not checkable": an unindexed member is now an error,
-    so a checkout without the artifact fails every grounded descriptor rather
-    than silently passing it. Regenerate with ``just refresh-panther-members``.
+    so callers must build the cache with ``just refresh-panther-members`` before
+    checking grounded descriptors.
+
+    Rows need not be sorted and an identical row may repeat; both are harmless.
+    Two rows giving one accession different families are not (a hand-edited or
+    concatenated index can contain them), so it raises rather than silently
+    keeping whichever row came last.
+
+    >>> import tempfile, pathlib
+    >>> d = pathlib.Path(tempfile.mkdtemp())
+    >>> _ = (d / "m.tsv").write_text(
+    ...     "uniprot_accession\\tpanther_family_sf\\nP2\\tPTHR2\\nP1\\tPTHR1\\nP2\\tPTHR2\\n"
+    ... )
+    >>> load_member_index(d / "m.tsv")
+    {'P2': 'PTHR2', 'P1': 'PTHR1'}
+    >>> _ = (d / "bad.tsv").write_text(
+    ...     "uniprot_accession\\tpanther_family_sf\\nP1\\tPTHR1\\nP1\\tPTHR9\\n"
+    ... )
+    >>> try:
+    ...     load_member_index(d / "bad.tsv")
+    ... except MemberIndexConflict as err:
+    ...     print(err)
+    P1 is assigned to both PTHR1 and PTHR9 in bad.tsv; run `just refresh-panther-members --rebuild` to re-resolve it
     """
     path = Path(path)
     if not path.exists():
@@ -524,10 +653,137 @@ def load_member_index(path: Path) -> Dict[str, str]:
     for line_number, line in enumerate(path.read_text().splitlines()):
         if line_number == 0 or not line.strip() or line.startswith("#"):
             continue
-        accession, _, family_sf = line.partition("\t")
-        if family_sf:
-            index[accession.strip()] = family_sf.strip()
+        columns = [c.strip() for c in line.split("\t")]
+        if len(columns) < 2 or not columns[1]:
+            continue
+        accession, family_sf = columns[0], columns[1]
+        previous = index.get(accession)
+        if previous is not None and previous != family_sf:
+            raise MemberIndexConflict(
+                f"{accession} is assigned to both {previous} and {family_sf} in "
+                f"{path.name}; run `just refresh-panther-members --rebuild` to "
+                "re-resolve it"
+            )
+        index[accession] = family_sf
     return index
+
+
+def incremental_member_index(
+    existing: Dict[str, str],
+    accessions: Set[str],
+    resolve: Callable[[Set[str]], Dict[str, str]],
+    known_absent: Optional[Set[str]] = None,
+) -> Dict[str, str]:
+    """Extend ``existing`` with families for cited accessions it does not hold.
+
+    The default refresh mode. Existing rows are kept as they are, so a refresh
+    adds only the rows a PR actually needs and cannot rewrite rows that other
+    open PRs depend on (a full rebuild of this shared file changed ~70 unrelated
+    rows in one run). ``resolve`` is called once, with only the missing
+    accessions, and not at all when nothing is missing, so a warm cache needs
+    no network. ``known_absent`` accessions (both PANTHER and UniProt were
+    already consulted and had no family) are not retried; a ``--rebuild``
+    re-checks them.
+
+    >>> calls = []
+    >>> def fake(acc):
+    ...     calls.append(sorted(acc))
+    ...     return {a: "PTHR9" for a in acc if a != "P4"}
+    >>> incremental_member_index({"P1": "PTHR1"}, {"P1", "P2", "P4"}, fake)
+    {'P1': 'PTHR1', 'P2': 'PTHR9'}
+    >>> calls
+    [['P2', 'P4']]
+    >>> incremental_member_index({"P1": "PTHR1"}, {"P1", "P4"}, fake, {"P4"})
+    {'P1': 'PTHR1'}
+    >>> len(calls)
+    1
+    """
+    index = dict(existing)
+    missing = set(accessions) - set(index) - set(known_absent or ())
+    if missing:
+        index.update(resolve(missing))
+    return index
+
+
+MEMBER_OVERRIDES_HEADER = ["uniprot_accession", "panther_family_sf", "reason"]
+
+
+def load_member_overrides(path: Path) -> Dict[str, Tuple[str, str]]:
+    r"""Load curated member-index overrides as ``accession -> (family_sf, reason)``.
+
+    ``build_member_index`` deliberately prefers PANTHER's per-organism
+    classifications over UniProt's ``xref_panther``. Where the two disagree and
+    a curator has established which is right, a regeneration would silently
+    revert a hand edit to the derived index. The overrides file is the durable,
+    reviewable home for those decisions: one row per accession, each with the
+    reason it is pinned, applied after every regeneration.
+
+    A missing file means no overrides. Blank lines and ``#`` comments are
+    ignored; every data row must carry a non-empty reason, because an override
+    without provenance is indistinguishable from a stale value.
+
+    >>> import tempfile, pathlib
+    >>> d = pathlib.Path(tempfile.mkdtemp())
+    >>> _ = (d / "o.tsv").write_text(
+    ...     "uniprot_accession\tpanther_family_sf\treason\n"
+    ...     "# comment\n"
+    ...     "P1\tPTHR1:SF2\tUniProt xref and family review agree\n"
+    ... )
+    >>> load_member_overrides(d / "o.tsv")
+    {'P1': ('PTHR1:SF2', 'UniProt xref and family review agree')}
+    >>> load_member_overrides(d / "absent.tsv")
+    {}
+    """
+    path = Path(path)
+    if not path.exists():
+        return {}
+    overrides: Dict[str, Tuple[str, str]] = {}
+    override_lines: Dict[str, int] = {}
+    for line_number, line in enumerate(path.read_text().splitlines(), start=1):
+        if not line.strip() or line.startswith("#"):
+            continue
+        fields = [field.strip() for field in line.split("\t")]
+        if fields == MEMBER_OVERRIDES_HEADER:
+            continue
+        if len(fields) != 3 or not all(fields):
+            raise ValueError(
+                f"{path}:{line_number}: expected accession, family, non-empty "
+                f"reason (tab-separated), got {line!r}"
+            )
+        accession, family_sf, reason = fields
+        if accession in overrides:
+            first_line = override_lines[accession]
+            raise ValueError(
+                f"{path}:{line_number}: duplicate override for {accession!r}; "
+                f"first defined on line {first_line}"
+            )
+        overrides[accession] = (family_sf, reason)
+        override_lines[accession] = line_number
+    return overrides
+
+
+def apply_member_overrides(
+    index: Dict[str, str],
+    overrides: Dict[str, Tuple[str, str]],
+    accessions: Set[str],
+) -> Dict[str, str]:
+    """Return ``index`` with curated overrides applied to the cited accessions.
+
+    Overrides for accessions no longer cited are skipped, so the index stays
+    pruned to what the repository actually uses.
+
+    >>> apply_member_overrides(
+    ...     {"P1": "PTHR9:SF9", "P2": "PTHR2"},
+    ...     {"P1": ("PTHR1:SF2", "why"), "P3": ("PTHR3", "not cited")},
+    ...     {"P1", "P2"},
+    ... )
+    {'P1': 'PTHR1:SF2', 'P2': 'PTHR2'}
+    """
+    merged = dict(index)
+    for accession, (family_sf, _reason) in overrides.items():
+        if accession in accessions:
+            merged[accession] = family_sf
+    return merged
 
 
 def build_member_index(

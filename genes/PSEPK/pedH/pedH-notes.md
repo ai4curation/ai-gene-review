@@ -42,7 +42,11 @@ PedH encodes a lanthanide-dependent pyrroloquinoline quinone (PQQ)-dependent alc
 - Octanal → Octanoate
 
 ### Electron Transfer
-PedH uses cytochrome c550 as its natural electron acceptor. The enzyme follows the typical PQQ-dependent mechanism:
+PedH carries a cytochrome-c alcohol dehydrogenase reaction assignment, but the
+specific physiological cytochrome partner in KT2440 has not been directly
+established. UniProt assigns the adjacent cytochrome c550 by similarity, while
+the purified-enzyme kinetics in PMID:28655819 used an artificial electron
+acceptor. The expected PQQ-dependent mechanism is:
 1. Two-electron oxidation of substrate by PQQ
 2. Two sequential one-electron transfers to cytochrome c via PQQ semiquinone radical
 3. Reoxidation of PQQ for next catalytic cycle
@@ -59,7 +63,9 @@ PedH uses cytochrome c550 as its natural electron acceptor. The enzyme follows t
 - **Induction**: Presence of lanthanides
 - **Repression**: Absence of lanthanides (pedE is induced instead)  
 - **REE-switch**: Inverse regulation with pedE (calcium-dependent counterpart)
-- **Sensory Function**: PedH itself acts as lanthanide sensory module for transcriptional regulation
+- **Feedback phenotype**: PedH affects pedE/pedH promoter output genetically,
+  but no DNA-binding or transcription-regulator molecular function has been
+  established; the mechanism remains unresolved.
 
 ### Two-Component System
 - **Regulatory System**: PedS2/PedR2 two-component system
@@ -105,4 +111,15 @@ Based on this research, key functional aspects for GO annotation include:
 - Lanthanide metal ion binding (NOT calcium!)
 - Periplasmic localization
 - Role in volatile organic compound catabolism
-- Transcriptional regulatory function
+- No direct transcription-regulator molecular function; retain the feedback
+  phenotype as a mechanistic knowledge gap
+
+## OpenScientist adjudication
+
+The OpenScientist report correctly retrieves PedH's lanthanide-dependent PQQ
+alcohol dehydrogenase activity, periplasmic localization, and PedS2/PedR2
+context. Its direct sensor/regulator framing is too strong and is not used for
+GO molecular-function curation. The report also states that no experimental
+PedH structure was found, but UniProt Q88JH0 lists the PedH crystal structures
+6ZCV and 6ZCW; that generated claim is rejected. Its explicit caveat that the
+physiological cytochrome partner remains unresolved is retained.

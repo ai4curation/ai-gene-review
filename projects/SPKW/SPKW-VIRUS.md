@@ -101,6 +101,13 @@ Top ViralZone-primary naive SPKW-unique terms show the contrast:
 | VZ-883 Inhibition of host interferon signaling pathway by virus | KW-1114 | GO:0039502 type I interferon signaling suppression | 254 | Better than broad innate immune suppression; still requires protein/mechanism review |
 | VZ-3966 Restriction-modification system evasion by virus | KW-1258 | GO:0099018 symbiont-mediated evasion of host restriction-modification system | 125 | Good phage-specific replacement target for antirestriction proteins |
 
+**Upstream audit:** the editorial quality this flag assumes is now measured in
+[SPKW-VIRALZONE.md](SPKW-VIRALZONE.md), which finds that ViralZone also supplies
+GO's *definitions* for 152 terms and that 107 pages sit on both routes. Where an
+annotated term is one of the 22 whose definition is close ViralZone text, the
+`VZ-primary` flag and the term definition are the same evidence and must not be
+counted twice.
+
 **Working rule:** mark ViralZone-primary KW rows as `VZ-primary` in review notes. This should raise the prior that the term is a deliberate viral biology term, especially for entry, tail, genome-ejection, immune-pathway-specific, and restriction-modification terms. It should not override gene-level review: polyprotein granularity, wrong host context, TrEMBL keyword assignment, and multi-GO fanout can still produce over-annotations.
 
 ## Top Naive SPKW-Unique Terms

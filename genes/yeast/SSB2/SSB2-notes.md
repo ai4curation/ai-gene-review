@@ -27,3 +27,58 @@
 - Roughly half of cellular Ssb is ribosome-associated, but this is dynamic rather
   than stable complex membership, so the core function uses cytosol as location
   and describes the 60S tunnel-exit position in prose instead of `in_complex`.
+
+## 2026-08-28 completion audit
+
+- Reconciled every distinct GOA assertion and added the original qualifiers.
+- Audited all eight IBA rows against their actual GOA PAINT nodes:
+  PTN002500132 for nucleus, plasma membrane, and cytosol; PTN002321897 for
+  cytoplasm; and PTN000452648 for ATP hydrolysis, heat-shock-protein binding,
+  protein-folding chaperone activity, and protein refolding.
+- The plasma-membrane IBA is a compartment-mismatch propagation failure. The
+  independent HDA row from PMID:16622836 is instead retained as an
+  over-annotated bulk-fraction observation, using the paper's exact abstract
+  description of a stripped plasma-membrane fraction.
+- GO:0042026 protein refolding restores activity to an already unfolded or
+  misfolded protein; GO:0051083 describes folding a ribosome-bound nascent chain.
+  Because the direct Ssb evidence establishes the latter rather than the former,
+  the IBA refolding row is modified to GO:0051083 rather than retained as a
+  generic Hsp70 capability. [PMID:9670014 "preventing the misfolding of newly
+  synthesized proteins"]
+- Added machine-readable NEW proposals for GO:0043022 ribosome binding and
+  GO:0022626 cytosolic ribosome, both directly supported by PMID:9670014 and
+  consistent with PMID:1394434. These are missing from the current SSB2 GOA set.
+
+
+## Full annotation re-review — 2026-09-20
+
+Re-read all 41 annotation rows, the cited primary literature, UniProt and the Falcon report. Restored broad cytoplasm, nucleotide-binding, hydrolase and protein-folding-chaperone assertions; retained translation and experimentally recorded plasma-membrane association as non-core. The main cytosolic/ribosomal pool does not disprove a smaller peripheral membrane-associated pool. PMID:16622836 explicitly analyzed proteins from a stripped plasma membrane fraction; there is no basis to assert contamination from the abstract alone.
+
+Traced PAINT PTN002500132 (compartments), PTN002321897 (cytoplasm) and PTN000452648 (Hsp70 functions). Current raw IBD.gaf explicitly records NOT/IRD GO:0042026 at fungal PTN001065099, sourced from PTN000452648 and dated 2026-06-16. The same node records generalized GO:0006457, and current SSB2 leaf PTN000453235 carries that protein-folding descent. Therefore the older refolding IBA is generalized to protein folding; this does not establish zero in-vitro refolding capacity. Current PAINT lacks the older plasma-membrane IBD, but this version discrepancy is not biological refutation of the independent HDA annotation.
+
+Read the complete existing SSB1-versus-SSB2 OpenScientist hypothesis report and reused its substantive finding that paralog-specific substrate/mechanistic differences have not been demonstrated. Its caveat is "absence of evidence for divergence is not the same as proof of perfect functional identity". Primary shared nascent-chain/folding studies support the common function; the report does not investigate refolding and is not treated as an adjudication of that term. Root agreed the explicit current fungal IRD supports the broader-process update without a duplicate SSB2 report.
+
+## IBA follow-up (2026-09-29)
+
+- Re-read the SSB2 IBA rows against `projects/IBA_REVIEW.md` and the current
+  `interpro/panther/PTHR19375/PTHR19375-paint.tsv` cache. Added missing
+  `propagation_review` detail for the broad cytoplasm transfer and expanded
+  PTN-only nucleus, ATP hydrolysis, heat-shock-protein binding,
+  protein-folding chaperone, and cytosol blocks with representative curated
+  extant donors. The PTN entries are the inherited PAINT nodes that support
+  those transfers, not irrelevant donor rows.
+- Corrected `UniProtKB:P0A6Z1` from E. coli DnaK to HscA and relabeled
+  `PomBase:SPBC1709.05` neutrally after rechecking the local PTHR19375 member
+  table and the cached fission-yeast sks2+/hsc1+ text in PMID:16040599.
+- Left the existing plasma-membrane IBA diagnosis unchanged: the GOA row is
+  pinned to PTN002500132, but current PAINT no longer carries a plasma-membrane
+  assertion from that node, and the independent Ssb2 HDA row is retained only as
+  a non-core fractionation observation.
+- Exact PubMed searches for `(SSB2/Ssb2/Ssb1/2/YNL209W) AND Saccharomyces
+  cerevisiae` in 2025+ found PMID:41078542 and PMID:42538864. The first links
+  Ssb1/2 to ABC transporter expression during the diauxic shift; the second
+  reports that Ssb1/2 support cotranslational handling of mitochondrial
+  precursors and translating-ribosome association with the mitochondrial outer
+  membrane. Both refine secondary physiology for Ssb1/2, but neither changes the
+  core ATP-dependent cotranslational folding model or supports a broad new
+  downstream process annotation from the abstract alone.

@@ -1,16 +1,38 @@
 ---
 title: "Rare Earth Element (REE) Extraction Pathways (Biological Systems)"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
+species: [METEA]
+manifest:
+  slides:
+    - href: REE/slides/REE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/DsVBv7tjfvaSfEkmp45HNM
+      title: Project brief
 ---
 
 # Rare Earth Element (REE) Extraction Pathways (Biological Systems)
 
-Concepts for engineered pathways to sense, mobilize, capture, concentrate, and release rare earth elements (REEs) and associated strategic metals (Co, Ni, Mn) using microbial or plant chassis.
+**Bottom line:** rare earth elements are recovered today by mineral processing
+that is chemically harsh and poorly selective, while some bacteria already
+solubilize, import and store lanthanides as part of normal metabolism. This
+page is a design document for an engineered biological pipeline built from
+four modules: metal sensing and controlled leaching, selective binding and
+uptake, intracellular sequestration, and triggered export into a recovery
+solution. It names candidate genes for each module (the `mll` lanthanophore
+cluster, the `lut` uptake cluster with `lanM`, the `xoxF`/`xoxG`/`xoxJ`
+methanol dehydrogenase module, `czc`/`cnr`/`rcnA` efflux systems, `smtA`,
+`ppk`), maps the *Methylorubrum extorquens* AM1 loci where they are known, and
+scores four candidate chassis on selectivity, leaching strength and metal
+tolerance. It is scoped, not started: no experiments, no curation batch, and
+the storage and export loci in AM1 are explicitly unmapped. Related gene
+reviews for the AM1 `mll`, `lut` and `xox` genes live under `genes/METEA/` and
+are tracked by the METEA_MLL_CLUSTER project.
 
-## Slides
-
-- [Slides](REE/slides/REE-slides.html) (Marp source: [REE-slides.md](REE/slides/REE-slides.md)) — AI generated
+The chassis comparison is the practical output so far: AM1 wins on REE
+selectivity and loses on acid tolerance, which is why the blueprint separates
+leaching from uptake rather than asking one organism to do both.
 
 ## Scope
 
@@ -35,7 +57,7 @@ System goals:
 ## Chassis Focus: Methylorubrum extorquens AM1 (METEA)
 
 Mapping below uses locus tags from the METEA gene set. Locus tag format: `MexAM1_META1p####`.
-See METEA-specific notes: [projects/METEA_MLL_CLUSTER.md](projects/METEA_MLL_CLUSTER.md).
+See METEA-specific notes: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 
 ## High-Level Pipeline (Conceptual)
 
@@ -105,7 +127,7 @@ Gene system candidates (examples to validate in chassis):
 - Fe(II) oxidation module for bioleaching: rus operon (cyc2, cyc1, coxBACD, rus)
 
 M. extorquens AM1 locus map (lanthanophore-driven mobilization):
-- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](projects/METEA_MLL_CLUSTER.md).
+- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 - mluA: MexAM1_META1p4129 (mll/lut regulatory/auxiliary system)
 - mluR: MexAM1_META1p4130 (regulatory; mll/lanthanide response)
 - mluI: MexAM1_META1p4131 (auxiliary; mll cluster)
@@ -156,7 +178,7 @@ Gene system candidates (examples to validate in chassis):
 - Manganese uptake: mntH (NRAMP-family importer)
 
 M. extorquens AM1 locus map (lanthanide uptake):
-- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](projects/METEA_MLL_CLUSTER.md).
+- METEA pathway context: [projects/METEA_MLL_CLUSTER.md](METEA_MLL_CLUSTER.md).
 - lut cluster: META1_1778 to META1_1787 (lanthanide utilization/transport region)
 - lanM: MexAM1_META1p1786 (lanmodulin; REE-binding protein within lut region)
 - xoxF1: MexAM1_META1p1740 (lanthanide-dependent MDH)

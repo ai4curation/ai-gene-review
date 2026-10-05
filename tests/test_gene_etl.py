@@ -2,7 +2,10 @@
 
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
+
 import pytest
+import yaml
 from ai_gene_review.etl.gene import fetch_gene_data
 
 
@@ -127,3 +130,189 @@ def test_fetch_gene_data_different_organisms(organism, gene):
         uniprot_file = gene_dir / f"{gene}-uniprot.txt"
         assert uniprot_file.exists()
         assert uniprot_file.read_text()  # Should have content
+
+
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+def test_fetch_gene_data_reuses_existing_review_accession(
+    mock_fetch_uniprot, mock_fetch_goa, mock_resolve, tmp_path
+):
+    """Existing reviews must not depend on a fresh UniProt symbol lookup."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "dca7-ai-review.yaml").write_text(
+        "id: O74763\ngene_symbol: dca7\n"
+    )
+    mock_fetch_uniprot.return_value = (
+        "ID   DCA7_SCHPO Reviewed; 500 AA.\n"
+        "AC   O74763;\n"
+        "OS   Schizosaccharomyces pombe.\n"
+    )
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_not_called()
+    mock_fetch_uniprot.assert_called_once_with("O74763")
+    mock_fetch_goa.assert_called_once_with("O74763")
+
+
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+def test_explicit_accession_overrides_existing_review_accession(
+    mock_fetch_uniprot, mock_fetch_goa, mock_resolve, tmp_path
+):
+    """An explicit --uniprot-id remains authoritative over the local review."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "dca7-ai-review.yaml").write_text(
+        "id: O74763\ngene_symbol: dca7\n"
+    )
+    mock_fetch_uniprot.return_value = (
+        "ID   EXPLICIT Reviewed; 100 AA.\n"
+        "AC   P12345;\n"
+    )
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        uniprot_id="P12345",
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_not_called()
+    mock_fetch_uniprot.assert_called_once_with("P12345")
+    mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@pytest.mark.parametrize(
+    "review_content",
+    [
+        None,
+        "gene_symbol: dca7\n",
+        "id: '  '\ngene_symbol: dca7\n",
+        "id: URS000075D95B_9606\ngene_symbol: XIST\n",
+        "id: [\n",
+    ],
+)
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+def test_fetch_gene_data_falls_back_when_review_has_no_protein_accession(
+    mock_resolve, mock_fetch_uniprot, mock_fetch_goa, review_content, tmp_path
+):
+    """Missing, invalid, ncRNA, and malformed review IDs use symbol resolution."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    if review_content is not None:
+        (gene_dir / "dca7-ai-review.yaml").write_text(review_content)
+    mock_resolve.return_value = "P12345"
+    mock_fetch_uniprot.return_value = "AC   P12345;\n"
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_called_once_with("dca7", "SCHPO")
+    mock_fetch_uniprot.assert_called_once_with("P12345")
+    mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+def test_stale_review_accession_is_resolved_before_fetching_goa(
+    mock_resolve, mock_fetch_uniprot, mock_fetch_goa, tmp_path
+):
+    """QuickGO must receive the current primary accession, not a stale review ID."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "dca7-ai-review.yaml").write_text(
+        "id: O74763\ngene_symbol: dca7\n"
+    )
+    mock_fetch_uniprot.return_value = "AC   P12345; O74763;\n"
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_not_called()
+    mock_fetch_uniprot.assert_called_once_with("O74763")
+    mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+@patch("ai_gene_review.etl.gene.resolve_gene_to_uniprot")
+def test_dead_review_accession_falls_back_to_symbol_resolution(
+    mock_resolve, mock_fetch_uniprot, mock_fetch_goa, tmp_path
+):
+    """A deleted review accession must not prevent a self-healing refresh."""
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "dca7-ai-review.yaml").write_text(
+        "id: O74763\ngene_symbol: dca7\n"
+    )
+    mock_resolve.return_value = "P12345"
+    mock_fetch_uniprot.side_effect = [
+        ValueError("deleted accession"),
+        "AC   P12345;\n",
+    ]
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("SCHPO", "dca7"),
+        base_path=tmp_path,
+        seed_annotations=False,
+    )
+
+    mock_resolve.assert_called_once_with("dca7", "SCHPO")
+    assert [call.args[0] for call in mock_fetch_uniprot.call_args_list] == [
+        "O74763",
+        "P12345",
+    ]
+    mock_fetch_goa.assert_called_once_with("P12345")
+
+
+@patch("ai_gene_review.etl.gene.fetch_goa_data")
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+def test_accession_fetch_records_uniprot_gene_name(mock_fetch_uniprot, mock_fetch_goa, tmp_path):
+    """Fetching an alt-ORF peptide by accession records its host gene symbol.
+
+    Alternative-ORF peptides live in ``<HOST>__<ACC>`` folders; the stub's
+    gene_symbol should be UniProt's gene name, not the accession or folder name.
+    """
+    mock_fetch_uniprot.return_value = (
+        "ID   ALTMF_HUMAN Reviewed; 70 AA.\n"
+        "AC   L0R8F8;\n"
+        "GN   Name=MIEF1 {ECO:0000312|HGNC:HGNC:25979};\n"
+        "OS   Homo sapiens (Human).\n"
+    )
+    mock_fetch_goa.return_value = "GO TERM\tGO NAME\n"
+
+    fetch_gene_data(
+        ("human", "L0R8F8"),
+        uniprot_id="L0R8F8",
+        base_path=tmp_path,
+        alias="MIEF1__L0R8F8",
+        fetch_titles=False,
+    )
+
+    review = yaml.safe_load(
+        (tmp_path / "genes" / "human" / "MIEF1__L0R8F8" / "MIEF1__L0R8F8-ai-review.yaml").read_text()
+    )
+    assert review["id"] == "L0R8F8"
+    assert review["gene_symbol"] == "MIEF1"

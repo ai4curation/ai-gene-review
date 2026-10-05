@@ -1,10 +1,39 @@
 ---
 title: "Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)"
-maturity: IN_PROGRESS
+maturity: SCOPING
 tags: [OBSOLETION, FLAGSHIP]
+species: [human, mouse]
+genes: [VMP1, CALM1, Calm1, Calm2, Calm3]
+sidecars:
+  slide_assets:
+    - MITO_ER_TETHERING_OBSOLETION/slides/term-map.svg
+    - MITO_ER_TETHERING_OBSOLETION/slides/tethers.svg
+manifest:
+  slides:
+    - href: MITO_ER_TETHERING_OBSOLETION/slides/MITO_ER_TETHERING_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/732CHnKMbyydt26H9ByLRQ
+      title: Project brief
 ---
 
 # Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)
+
+**Bottom line:** Mitochondria and the ER are held together at contact sites by
+tether proteins such as the yeast ERMES complex and mammalian PDZD8. GO has
+obsoleted the process term GO:1990456 *mitochondrion-endoplasmic reticulum
+membrane tethering* because it describes a molecular function, and points
+curators to GO:0140474 *mitochondrion-endoplasmic reticulum membrane tether
+activity* (OLS, checked 2026-09-26). We listed the 30 upstream annotations
+by group (SGD, UniProt and FlyBase done; CACAO, ComplexPortal, MGI
+and dictyBase pending) and the three mappings to re-point, and found five
+reviews in this repo that carry the old term: human VMP1 and CALM1 (one IDA
+row each from PMID:28890335, both ACCEPT) and mouse Calm1, Calm2 and Calm3
+(electronic or similarity rows, KEEP_AS_NON_CORE). Scoped, not yet started:
+none of those rows has been revisited since the obsoletion, and none of the
+canonical tethers (PDZD8, MFN2, VAPB, RMDN3, ERMES subunits) is reviewed here.
+The impact table below reports the mouse calmodulin actions loosely; the
+reviews mark them KEEP_AS_NON_CORE.
 
 ## Overview
 
@@ -148,3 +177,11 @@ than to fix outstanding GOA rows.
 - Recommend starting with **PDZD8** as the anchor review, since it is both
   the InterPro2GO mapping target and the most recently mechanistically
   characterized mammalian mito–ER tether.
+- 2026-09-26 — OLS lists GO:1990456 as obsolete ("this term represents a
+  molecular function"), pointing to GO:0140474. The five affected reviews
+  still carry their pre-obsoletion actions (human VMP1 and CALM1 ACCEPT;
+  mouse Calm1/2/3 KEEP_AS_NON_CORE). The CALM1 row is an IDA from
+  PMID:28890335, but its review text is generic Reactome/TAS boilerplate, so
+  it needs a real assessment when refreshed. The local
+  `cache/ontologies/go.tsv` still records GO:1990456 as live, so validation
+  does not flag these five reviews yet.

@@ -1,11 +1,43 @@
 ---
 title: "Tardigrade Stress Response Protein Curation Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [RAMVA]
+genes: [Dsup, CAHS1, CAHS2, CAHS3, SAHS1, SAHS2, MAHS, RvLEAM, RvY_00650, RvY_00651, RvY_01767, RvY_03754, RvY_03757, RvY_09480, RvY_10893, RvY_13070, RvY_15948, RvY_17310]
+manifest:
+  slides:
+    - href: TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/NioQYK8PTKAbsCS2daEeYq
+      title: Project brief
 ---
 
 # Tardigrade Stress Response Protein Curation Project
+
+**Bottom line:** *Ramazzottius varieornatus* survives near-total desiccation,
+and with it radiation, vacuum and extreme temperature, using a set of
+intrinsically disordered proteins that each protect a different cellular
+compartment, plus a much-expanded superoxide dismutase family. We reviewed all
+18 of its curated proteins: the chromatin shield Dsup, the cytosolic CAHS,
+secretory SAHS and mitochondrial MAHS families, the LEA protein RvLEAM, the Mn-SOD
+RvY_01767, and all 9 Cu/Zn-SOD paralogs. Across 84 annotation rows the actions
+were 38 ACCEPT, 18 NEW, 11 KEEP_AS_NON_CORE, 10 MARK_AS_OVER_ANNOTATED, 3 MODIFY,
+3 UNDECIDED and 1 REMOVE. Two results stand out: `GO:0009269` response to
+desiccation was missing from every disordered protectant and was proposed as
+NEW on seven genes, and a sequence plus PROSITE analysis of the SOD family
+(`genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/`) found one pseudoenzyme
+(RvSOD15, whose Val87 in place of a copper-ligand histidine is confirmed by
+crystal structure, PMID:37358501; the cached record, which holds only the
+abstract and introduction, reports no activity measurement), three
+probably impaired paralogs, one copper chaperone and four likely functional
+enzymes.
+
+We did this because the organism is both biologically unusual and almost
+entirely electronically annotated, which makes it a good place to see what
+family-based propagation gets wrong. The SOD result is the sharp case: about
+half of an expanded antioxidant family may not be catalytic, so "more gene
+copies means more antioxidant capacity" does not hold as stated.
 
 **Project Start Date:** 2026-04-09
 **Organism:** *Ramazzottius varieornatus* (RAMVA)
@@ -55,11 +87,11 @@ The TDP families partition by cellular compartment:
 
 ### ROS Scavenging - Cu/Zn Superoxide Dismutase Paralog Family
 
-R. varieornatus has an expanded family of ~10 Cu/Zn SOD paralogs in UniProt
+R. varieornatus has an expanded family of 9 Cu/Zn SOD paralogs in UniProt
 (plus 1 Mn/Fe-SOD, RvY_01767). Sim & Inoue (2023) identified RvSOD15 as a
 likely pseudoenzyme and noted that "some other RvSODs" may also have lost
 function. We applied bioinformatic analysis (sequence conservation + PROSITE
-motif matching + Pfam membership) to all 10 paralogs to assess catalytic
+motif matching + Pfam membership) to all 9 Cu/Zn paralogs plus the Mn/Fe-SOD to assess catalytic
 capability. Details: `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/RESULTS.md`
 
 | Gene Symbol | UniProt | Status | Verdict | Notes |
@@ -103,7 +135,7 @@ The most consistent gap is the absence of **GO:0009269 (response to desiccation)
 
 ### RvSOD15 is a confirmed pseudoenzyme - and it's not alone
 The crystal structure (PMID:37358501) revealed that Val87 replaces a critical
-histidine copper ligand in RvSOD15. We extended this analysis to all 10
+histidine copper ligand in RvSOD15. We extended this analysis to all 9
 Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
 (see `genes/RAMVA/RvY_13070/RvY_13070-bioinformatics/RESULTS.md`):
 
@@ -112,8 +144,9 @@ Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
   All four catalytic Cu histidines preserved at the residue level, BUT all three
   fail PROSITE PS00087 (the N-terminal Cu coordination signature), indicating
   divergence in flanking residues that maintain the structural geometry of the
-  Cu site. By analogy with the V87H rescue failure in RvSOD15 (where restoring
-  the missing histidine did NOT restore activity due to loop dynamics), these
+  Cu site. By analogy with the V87H mutant structure of RvSOD15 (where a
+  nearby flexible loop can destabilize coordination of the restored His87 to
+  the Cu atom; PMID:37358501), these
   paralogs likely have impaired catalytic function.
 - **1 copper chaperone** (RvY_15948, CCS homolog): correctly lacks SOD activity
   annotation in GOA - automated pipelines got this one right
@@ -122,7 +155,7 @@ Cu/Zn-SOD paralogs in *R. varieornatus* using sequence + PROSITE motif analysis
 
 This validates Sim & Inoue's claim that "some other RvSODs are also unusual
 SODs" and provides a more precise count: at least 4 of 9 Cu/Zn-SOD-family
-paralogs (excluding the chaperone) appear to have lost or impaired canonical
+paralogs appear to have lost or impaired canonical
 SOD activity. The picture of "gene duplication = more antioxidant capacity"
 is only partially correct - roughly half the expanded SOD repertoire may be
 non-catalytic.
@@ -146,10 +179,6 @@ The original GO:0003677 (DNA binding) annotation was initially proposed for MODI
 
 ### SAHS proteins have FABP-like folds
 SAHS1 and SAHS2 adopt beta-barrel folds homologous to fatty acid-binding proteins, with crystal structures available. Lipid binding was annotated for SAHS1 but not SAHS2 - proposed to add for SAHS2.
-
-## Slides
-
-- [Slides](TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.html) (Marp source: [TARDIGRADE_STRESS_RESPONSE-slides.md](TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.md)) — AI generated
 
 ## Key References
 

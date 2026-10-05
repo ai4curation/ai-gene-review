@@ -11,23 +11,28 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ai_gene_review.validation.module_validator import validate_family_members
 from ai_gene_review.etl.panther_families import (
     PantherEntry,
+    UniProtPantherLookup,
     emit_yaml_scalar,
     label_drift,
-    rewrite_panther_labels,
-    build_member_index,
-    load_member_index,
-    load_member_index_gaps,
-    UniProtPantherLookup,
     lookup_from_uniprot_payload,
+    MemberIndexConflict,
+    build_member_index,
+    incremental_member_index,
+    load_member_index,
+    load_member_index_alternates,
+    load_member_index_gaps,
+    member_index_path,
+    panther_assignments_conflict,
     parse_hmm_classifications,
     parse_sequence_classification,
     render_obo,
+    rewrite_panther_labels,
     write_member_index,
     write_panther_obo,
 )
+from ai_gene_review.validation.module_validator import validate_family_members
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -125,16 +130,14 @@ def test_member_index_records_that_uniprot_was_not_consulted(tmp_path):
     statement into a committed artifact -- worse than the omission the block
     replaced, because silence is recoverable and a confident wrong claim is not.
     """
-    checked = write_member_index(
-        {"P1": "PTHR1"}, tmp_path / "a.tsv", {"P9"}
-    ).read_text()
+    checked = write_member_index({"P1": "PTHR1"}, tmp_path / "a.tsv", {"P9"}).read_text()
     skipped = write_member_index(
-        {"P1": "PTHR1"}, tmp_path / "b.tsv", None, {"P9"}
+        {"P1": "PTHR1"}, tmp_path / "b.tsv", unchecked={"P9"}
     ).read_text()
 
     assert "UniProt's xref_panther" in checked
-    assert "NOT run" not in checked
-    assert "NOT run" in skipped
+    assert "NOT consulted" not in checked
+    assert "NOT consulted" in skipped
     assert "unchecked rather than absent" in skipped
 
     # The MARKER must differ too, not only the prose. A shared marker lets a
@@ -143,8 +146,25 @@ def test_member_index_records_that_uniprot_was_not_consulted(tmp_path):
     # claim out of the artifact and into the tool's output.
     asked = load_member_index_gaps(tmp_path / "a.tsv")
     skipped_gaps = load_member_index_gaps(tmp_path / "b.tsv")
-    assert (asked.absent, asked.unchecked) == ({"P9"}, set())
-    assert (skipped_gaps.absent, skipped_gaps.unchecked) == (set(), {"P9"})
+    assert (asked.absent, asked.unchecked, asked.unknown) == ({"P9"}, set(), set())
+    assert (skipped_gaps.absent, skipped_gaps.unchecked, skipped_gaps.unknown) == (
+        set(),
+        {"P9"},
+        set(),
+    )
+
+
+def test_an_unknown_accession_is_not_labelled_as_a_skipped_lookup(tmp_path):
+    """The artifact must not claim a flag was passed that never was."""
+    path = write_member_index(
+        {"P1": "PTHR1"}, tmp_path / "m.tsv", unknown={"TYPO"}
+    )
+    text = path.read_text()
+
+    assert "no-uniprot-fallback" not in text
+    assert "returned no record for" in text
+    gaps = load_member_index_gaps(path)
+    assert (gaps.absent, gaps.unchecked, gaps.unknown) == (set(), set(), {"TYPO"})
 
 
 def test_load_member_index_missing_file_is_empty(tmp_path):
@@ -152,15 +172,7 @@ def test_load_member_index_missing_file_is_empty(tmp_path):
     assert load_member_index(tmp_path / "absent.tsv") == {}
 
 
-def test_build_member_index_retains_uncited_accessions(tmp_path):
-    """The index must not be pruned to what is currently cited.
-
-    Pruning made the artifact lag the repository by construction: a PR citing a
-    new protein found the index silent about exactly the protein under review,
-    so the member-consistency check -- the only one that can catch a guessed
-    family id -- was skipped rather than run. Across the open-PR backlog that
-    silently disabled 78% of those checks.
-    """
+def test_build_member_index_retains_uncited_classified_accessions(tmp_path):
     source = tmp_path / "org"
     source.write_text(
         "HUMAN|UniProtKB=O14521\tO14521\tSDHD\tPTHR13337:SF6\tSDH\n"
@@ -340,270 +352,88 @@ def test_rewrite_panther_labels_still_defers_a_real_divergence():
     assert new == text
 
 
-def test_refresh_merges_rather_than_replaces(tmp_path, monkeypatch):
-    """`--no-uniprot-fallback` must not delete UniProt-resolved rows.
+def test_member_index_footer_has_no_count(tmp_path):
+    """A count line changes with every PR and turns each merge into a conflict."""
+    text = write_member_index({"P1": "PTHR1"}, tmp_path / "m.tsv", {"P8", "P9"}).read_text()
+    assert "accession(s)" not in text
+    assert "# unresolved: P8" in text and "# unresolved: P9" in text
 
-    A UniProt xref row can only be produced by asking UniProt, so a run that
-    skips the fallback rebuilds the index without them. Before this, that
-    dropped 436 of the 1,457 cited accessions -- and since a missing accession
-    is now an error, the command documented as the remedy would have been the
-    thing that turned the repository red.
-    """
-    from typer.testing import CliRunner
 
-    from ai_gene_review.cli import app
+def test_load_member_index_rejects_conflicting_families(tmp_path):
+    path = tmp_path / "m.tsv"
+    path.write_text("uniprot_accession\tpanther_family_sf\nP1\tPTHR1\nP1\tPTHR2\n")
+    with pytest.raises(MemberIndexConflict):
+        load_member_index(path)
 
-    repo = tmp_path
-    (repo / "modules").mkdir()
-    panther = repo / "interpro" / "panther"
-    panther.mkdir(parents=True)
-    # Q00000 could only have come from a previous UniProt lookup: it is in no
-    # organism classification here.
-    (panther / "panther-members.tsv").write_text(
-        "uniprot_accession\tpanther_family_sf\nQ00000\tPTHR9:SF1\n"
+
+def test_incremental_refresh_keeps_existing_rows():
+    """The default refresh must not re-resolve or rewrite rows it already has."""
+    asked = []
+
+    def resolve(acc):
+        asked.append(set(acc))
+        return {a: "PTHR_NEW" for a in acc}
+
+    out = incremental_member_index({"P1": "PTHR_OLD"}, {"P1", "P2"}, resolve)
+    assert out == {"P1": "PTHR_OLD", "P2": "PTHR_NEW"}
+    assert asked == [{"P2"}]
+    assert incremental_member_index({"P1": "PTHR_OLD"}, {"P1"}, resolve) == {"P1": "PTHR_OLD"}
+    assert len(asked) == 1, "nothing missing, so nothing to resolve"
+
+
+
+def test_member_index_round_trips_alternates(tmp_path):
+    """UniProt's disagreeing family is a third column the primary loader ignores."""
+    index = {"O14521": "PTHR13337:SF6", "P00001": "PTHR1"}
+    path = write_member_index(
+        index, tmp_path / "members.tsv", alternates={"O14521": "PTHR11375:SF2"}
     )
-    (repo / "modules" / "m.yaml").write_text(
-        yaml.safe_dump(
+
+    assert load_member_index(path) == index
+    assert load_member_index_alternates(path) == {"O14521": "PTHR11375:SF2"}
+    assert "O14521\tPTHR13337:SF6\tPTHR11375:SF2" in path.read_text()
+
+
+def test_load_member_index_alternates_reads_two_column_files(tmp_path):
+    path = write_member_index({"O14521": "PTHR13337:SF6"}, tmp_path / "members.tsv")
+    assert load_member_index_alternates(path) == {}
+    assert load_member_index_alternates(tmp_path / "missing.tsv") == {}
+
+
+def test_a_record_without_a_panther_xref_is_still_seen():
+    """A UniProt hit without xref_panther is not the same as no UniProt hit."""
+    payload = {
+        "results": [
             {
-                "module": {
-                    "id": "m",
-                    "parts": [
-                        {
-                            "node": {
-                                "annotons": [
-                                    {
-                                        "participant": {
-                                            "family": {
-                                                "term": {
-                                                    "id": "PANTHER:PTHR9",
-                                                    "label": "f",
-                                                },
-                                                "representative_members": [
-                                                    {
-                                                        "term": {
-                                                            "id": "UniProtKB:Q00000",
-                                                            "label": "r",
-                                                        }
-                                                    }
-                                                ],
-                                            }
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    ],
-                }
-            }
-        )
-    )
-    monkeypatch.setattr(
-        "ai_gene_review.etl.panther_families.fetch_sequence_classification",
-        lambda slug, cache: None,
-    )
-
-    result = CliRunner().invoke(
-        app,
-        [
-            "refresh-panther-members",
-            "--output-dir",
-            str(repo),
-            "--no-uniprot-fallback",
-        ],
-    )
-
-    assert result.exit_code == 0, result.output
-    assert load_member_index(panther / "panther-members.tsv") == {"Q00000": "PTHR9:SF1"}
-
-
-def test_a_skipped_refresh_preserves_absence_for_the_others(tmp_path, monkeypatch):
-    """One newly-cited accession must not relabel every absent one as unchecked.
-
-    The old guard was all-or-nothing: it kept the `# unresolved` markers only if
-    EVERY still-unresolved accession was already absent. Cite one new protein
-    and a `--no-uniprot-fallback` run rewrote all 35 absent lines as
-    `# unchecked`, emptying the set the validator uses to exempt them --
-    restoring the permanent-error bug via the command documented as its remedy,
-    and asserting in a committed artifact that 35 proteins were never looked up
-    when they were.
-    """
-    from typer.testing import CliRunner
-
-    from ai_gene_review.cli import app
-
-    repo = tmp_path
-    (repo / "modules").mkdir()
-    panther = repo / "interpro" / "panther"
-    panther.mkdir(parents=True)
-    # OLD is known to have no PANTHER family; NEW has never been looked up.
-    write_member_index({}, panther / "panther-members.tsv", {"OLD"}, None)
-
-    def _member(accession: str) -> dict:
-        return {"term": {"id": f"UniProtKB:{accession}", "label": accession}}
-
-    (repo / "modules" / "m.yaml").write_text(
-        yaml.safe_dump(
+                "primaryAccession": "HASXREF",
+                "uniProtKBCrossReferences": [
+                    {"database": "PANTHER", "id": "PTHR1:SF2"}
+                ],
+            },
             {
-                "module": {
-                    "id": "m",
-                    "parts": [
-                        {
-                            "node": {
-                                "annotons": [
-                                    {
-                                        "participant": {
-                                            "family": {
-                                                "term": {
-                                                    "id": "PANTHER:PTHR9",
-                                                    "label": "f",
-                                                },
-                                                "representative_members": [
-                                                    _member("OLD"),
-                                                    _member("NEW"),
-                                                ],
-                                            }
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    ],
-                }
-            }
-        )
-    )
-    monkeypatch.setattr(
-        "ai_gene_review.etl.panther_families.fetch_sequence_classification",
-        lambda slug, cache: None,
-    )
+                "primaryAccession": "NOXREF",
+                "uniProtKBCrossReferences": [{"database": "Pfam", "id": "PF00001"}],
+            },
+        ]
+    }
 
-    result = CliRunner().invoke(
-        app,
-        ["refresh-panther-members", "--output-dir", str(repo), "--no-uniprot-fallback"],
-    )
+    lookup = lookup_from_uniprot_payload(payload)
 
-    assert result.exit_code == 0, result.output
-    gaps = load_member_index_gaps(panther / "panther-members.tsv")
-    assert gaps.absent == {"OLD"}, "a prior verdict must survive a skipped run"
-    assert gaps.unchecked == {"NEW"}
+    assert lookup.families == {"HASXREF": "PTHR1:SF2"}
+    assert lookup.seen == {"HASXREF", "NOXREF"}
+    assert "NEVERASKED" not in lookup.seen
 
 
-def test_fix_panther_labels_is_not_deadlocked_by_an_absent_member(tmp_path):
-    """A provably-absent member must not freeze its label mismatch forever.
-
-    Escalating "unindexed" to an error puts the descriptor in `skip`, which is
-    right for a stale index -- a disputed grounding should not have its label
-    rewritten. But for an accession PANTHER has no family for, no refresh can
-    ever clear it, so the validator reports the label mismatch as a blocking
-    error while this tool permanently refuses to touch the label.
-    """
-    from typer.testing import CliRunner
-
-    from ai_gene_review.cli import app
-
-    repo = tmp_path
-    (repo / "modules").mkdir()
-    panther = repo / "interpro" / "panther"
-    panther.mkdir(parents=True)
-    write_panther_obo([PantherEntry("PTHR9", "OFFICIAL NAME")], panther / "panther.obo")
-    write_member_index({}, panther / "panther-members.tsv", {"ABSENT"}, None)
-    module = repo / "modules" / "m.yaml"
-    module.write_text(
-        "module:\n"
-        "  id: m\n"
-        "  parts:\n"
-        "  - node:\n"
-        "      annotons:\n"
-        "      - participant:\n"
-        "          family:\n"
-        "            term:\n"
-        "              id: PANTHER:PTHR9\n"
-        "              label: official name\n"
-        "            representative_members:\n"
-        "            - term:\n"
-        "                id: UniProtKB:ABSENT\n"
-        "                label: rep\n"
-    )
-
-    result = CliRunner().invoke(
-        app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"]
-    )
-
-    assert result.exit_code == 0, result.output
-    assert "OFFICIAL NAME" in module.read_text(), result.output
-
-
-def test_fix_panther_labels_passes_unknown_accessions_to_the_validator(
+def test_refresh_records_accessions_uniprot_never_returned_separately(
     tmp_path, monkeypatch
 ):
-    """The label fixer should feed all member-index gaps to the shared check."""
+    """A typo'd or invented member must not be called "PANTHER has no family"."""
     from typer.testing import CliRunner
 
     from ai_gene_review.cli import app
 
     repo = tmp_path
     (repo / "modules").mkdir()
-    panther = repo / "interpro" / "panther"
-    panther.mkdir(parents=True)
-    write_panther_obo([PantherEntry("PTHR9", "OFFICIAL NAME")], panther / "panther.obo")
-    write_member_index({}, panther / "panther-members.tsv", unknown={"TYPO"})
-    module = repo / "modules" / "m.yaml"
-    module.write_text(
-        "module:\n"
-        "  id: m\n"
-        "  parts:\n"
-        "  - node:\n"
-        "      annotons:\n"
-        "      - participant:\n"
-        "          family:\n"
-        "            term:\n"
-        "              id: PANTHER:PTHR9\n"
-        "              label: OFFICIAL NAME\n"
-        "            representative_members:\n"
-        "            - term:\n"
-        "                id: UniProtKB:TYPO\n"
-        "                label: rep\n"
-    )
-
-    seen: list[set[str]] = []
-
-    def _validate(*args, unknown_to_uniprot=None, **kwargs):
-        seen.append(unknown_to_uniprot)
-        return ["unindexed"], []
-
-    monkeypatch.setattr(
-        "ai_gene_review.validation.module_validator.validate_family_members",
-        _validate,
-    )
-
-    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo)])
-
-    assert result.exit_code == 0, result.output
-    assert seen == [{"TYPO"}]
-
-
-def test_an_accession_uniprot_never_returned_is_not_recorded_as_absent(
-    tmp_path, monkeypatch
-):
-    """A typo'd or invented member must not be called "PANTHER has no family".
-
-    fetch_panther_from_uniprot used to return only successes, so a record that
-    came back without an xref_panther and an accession UniProt has never heard of
-    were indistinguishable. Both landed under `# unresolved:`, which feeds
-    permanently_absent, which downgrades the grounding check to a warning saying
-    "PANTHER has no family for (...)" -- committing a positive claim about a
-    protein that may not exist, and silencing the check on the permissive side of
-    a distinction nobody drew.
-    """
-    from typer.testing import CliRunner
-
-    from ai_gene_review.cli import app
-
-    repo = tmp_path
-    (repo / "modules").mkdir()
-    panther = repo / "interpro" / "panther"
-    panther.mkdir(parents=True)
-    write_member_index({}, panther / "panther-members.tsv")
 
     def _member(accession: str) -> dict:
         return {"term": {"id": f"UniProtKB:{accession}", "label": accession}}
@@ -654,48 +484,63 @@ def test_an_accession_uniprot_never_returned_is_not_recorded_as_absent(
     )
 
     assert result.exit_code == 0, result.output
-    gaps = load_member_index_gaps(panther / "panther-members.tsv")
-    assert gaps.absent == {"REAL"}, "a returned record with no xref is genuinely absent"
-    # Not `unchecked`: the lookup DID run, so labelling these as skipped by
-    # --no-uniprot-fallback would put a false provenance claim in the artifact
-    # and advise a refresh that can never resolve a typo.
+    gaps = load_member_index_gaps(member_index_path(repo))
+    assert gaps.absent == {"REAL"}, "a returned record with no xref is absent"
     assert gaps.unknown == {"TYPO"}, "asked-and-not-returned is its own state"
     assert gaps.unchecked == set()
 
 
-def test_a_record_without_a_panther_xref_is_still_seen():
-    """The distinction the whole exemption rests on, at its source.
+def test_fix_panther_labels_passes_unknown_accessions_to_the_validator(
+    tmp_path, monkeypatch
+):
+    """The label fixer should feed all member-index gaps to the shared check."""
+    from typer.testing import CliRunner
 
-    Returning only successes discarded the fact that UniProt had answered at
-    all, so "real protein, PANTHER does not classify it" and "no such accession"
-    became the same thing one layer up.
-    """
-    payload = {
-        "results": [
-            {"primaryAccession": "HASXREF", "uniProtKBCrossReferences": [
-                {"database": "PANTHER", "id": "PTHR1:SF2"}
-            ]},
-            {"primaryAccession": "NOXREF", "uniProtKBCrossReferences": [
-                {"database": "Pfam", "id": "PF00001"}
-            ]},
-        ]
-    }
+    from ai_gene_review.cli import app
 
-    lookup = lookup_from_uniprot_payload(payload)
+    repo = tmp_path
+    (repo / "modules").mkdir()
+    panther = repo / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    write_panther_obo([PantherEntry("PTHR9", "OFFICIAL NAME")], panther / "panther.obo")
+    write_member_index({}, member_index_path(repo), unknown={"TYPO"})
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "module:\n"
+        "  id: m\n"
+        "  parts:\n"
+        "  - node:\n"
+        "      annotons:\n"
+        "      - participant:\n"
+        "          family:\n"
+        "            term:\n"
+        "              id: PANTHER:PTHR9\n"
+        "              label: OFFICIAL NAME\n"
+        "            representative_members:\n"
+        "            - term:\n"
+        "                id: UniProtKB:TYPO\n"
+        "                label: rep\n"
+    )
 
-    assert lookup.families == {"HASXREF": "PTHR1:SF2"}
-    assert lookup.seen == {"HASXREF", "NOXREF"}
-    # An accession never returned appears in neither.
-    assert "NEVERASKED" not in lookup.seen
+    seen: list[set[str]] = []
+
+    def _validate(*args, unknown_to_uniprot=None, **kwargs):
+        seen.append(unknown_to_uniprot)
+        return ["unindexed"], []
+
+    monkeypatch.setattr(
+        "ai_gene_review.validation.module_validator.validate_family_members",
+        _validate,
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo)])
+
+    assert result.exit_code == 0, result.output
+    assert seen == [{"TYPO"}]
 
 
 def test_validate_family_members_does_not_exempt_a_memberless_descriptor():
-    """An empty set is a subset of anything, so the guard must test emptiness.
-
-    Unreachable through iter_family_member_uses, which requires a member -- but
-    validate_family_members is public, and an exemption firing for a descriptor
-    naming no members would silently pass the one case with nothing to check.
-    """
+    """An empty set is a subset of anything, so the guard must test emptiness."""
     from ai_gene_review.validation.module_validator import FamilyMemberUse
 
     use = FamilyMemberUse(
@@ -707,38 +552,12 @@ def test_validate_family_members_does_not_exempt_a_memberless_descriptor():
     errors, warnings = validate_family_members([use], {}, permanently_absent={"X"})
 
     assert not any("PANTHER has no family for" in w for w in warnings)
-    # And it falls through to the error, rather than passing silently: a
-    # descriptor naming no members is the one case with nothing to check.
     assert len(errors) == 1
     assert "none of the representative members" in errors[0]
 
 
-def test_an_unknown_accession_is_not_labelled_as_a_skipped_lookup(tmp_path):
-    """The artifact must not claim a flag was passed that never was.
-
-    Filing "UniProt was asked and returned nothing" under `# unchecked:` wrote a
-    header saying the lookup was NOT run due to --no-uniprot-fallback -- a false
-    statement about how the file was produced, and the mirror image of the
-    failure this module's own header comment warns against.
-    """
-    path = write_member_index(
-        {"P1": "PTHR1"}, tmp_path / "m.tsv", None, None, {"TYPO"}
-    )
-    text = path.read_text()
-
-    assert "no-uniprot-fallback" not in text
-    assert "returned no record for" in text
-    gaps = load_member_index_gaps(path)
-    assert (gaps.absent, gaps.unchecked, gaps.unknown) == (set(), set(), {"TYPO"})
-
-
 def test_the_error_for_an_unknown_accession_does_not_advise_a_refresh():
-    """A refresh can never resolve a typo, so advising one is a loop.
-
-    A curator who writes Q88ND9 for Q88ND1 otherwise gets a permanent error
-    telling them to rerun a command that has already run and will change
-    nothing.
-    """
+    """A refresh can never resolve a typo, so advising one is a loop."""
     from ai_gene_review.validation.module_validator import iter_family_member_uses
 
     doc = {
@@ -759,3 +578,76 @@ def test_the_error_for_an_unknown_accession_does_not_advise_a_refresh():
     assert "refresh-panther-members" not in errors[0]
     assert "verify the accession exists" in errors[0]
     assert "Q88ND9" in errors[0]
+
+
+@pytest.mark.parametrize(
+    "first, second, expected",
+    [
+        ("PTHR1:SF2", "PTHR1", False),
+        ("PTHR1", "PTHR1:SF2", False),
+        ("PTHR1:SF2", "PTHR1:SF3", True),
+        ("PTHR1", "PTHR9", True),
+    ],
+)
+def test_panther_assignments_conflict(first, second, expected):
+    assert panther_assignments_conflict(first, second) is expected
+
+
+def test_load_member_overrides_requires_a_reason(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text("uniprot_accession\tpanther_family_sf\treason\nP1\tPTHR1:SF2\t\n")
+    with pytest.raises(ValueError, match="non-empty"):
+        load_member_overrides(path)
+
+
+def test_load_member_overrides_rejects_duplicate_accessions(tmp_path):
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tfirst\n"
+        "P1\tPTHR9\tsecond\n"
+    )
+
+    with pytest.raises(ValueError) as exc:
+        load_member_overrides(path)
+
+    message = str(exc.value)
+    assert "duplicate override for 'P1'" in message
+    assert ":3:" in message
+    assert "line 2" in message
+
+
+def test_apply_member_overrides_wins_over_classification(tmp_path):
+    from ai_gene_review.etl.panther_families import (
+        apply_member_overrides,
+        load_member_overrides,
+    )
+
+    path = tmp_path / "overrides.tsv"
+    path.write_text(
+        "uniprot_accession\tpanther_family_sf\treason\n"
+        "P1\tPTHR1:SF2\tcurated\n"
+        "P9\tPTHR9\tno longer cited\n"
+    )
+    merged = apply_member_overrides(
+        {"P1": "PTHR5:SF1", "P2": "PTHR2"}, load_member_overrides(path), {"P1", "P2"}
+    )
+    assert merged == {"P1": "PTHR1:SF2", "P2": "PTHR2"}
+
+
+def test_repo_member_overrides_are_reflected_in_index():
+    from ai_gene_review.etl.panther_families import load_member_overrides
+
+    panther_dir = PROJECT_ROOT / "interpro" / "panther"
+    overrides = load_member_overrides(panther_dir / "panther-members-overrides.tsv")
+    members_path = member_index_path(PROJECT_ROOT)
+    if not members_path.exists():
+        pytest.skip("member index not built (run just refresh-panther-members)")
+    index = load_member_index(members_path)
+    for accession, (family_sf, _reason) in overrides.items():
+        if accession in index:
+            assert index[accession] == family_sf, accession

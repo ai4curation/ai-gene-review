@@ -45,6 +45,10 @@
    2-oxo (keto) acids, pre-empting metabolite damage.
    [PMID:29487232 "RidA family proteins are deaminases that hydrolyze the reactive enamine 2-aminoacrylate (2AA), and other enamine/imine substrates, to ketoacids"]
    [PMID:25975565 "The Rid1, Rid2, and Rid3 subfamilies retain the conserved arginine and glutamate residues found in RidA"]
+   Direct work on human RIDA confirms that a eukaryotic ortholog deaminates reactive
+   enamine-imine intermediates [PMID:33916919 "We found that hRIDA was able to deaminate reactive enamine-imine intermediates"].
+   A duplicated salmon RidA pair retained imine-deaminase activity but diverged in
+   substrate preference [PMID:32576850 "Both proteins exhibited in vitro imine deaminase activity, but markedly different substrate specificity."], supporting the activity class while preserving the mmf2 substrate-specificity caveat.
 2. **Mitochondrial (matrix) localization** — UniProt has a predicted N-terminal
    mitochondrial transit peptide (Flags: Precursor; KW Transit peptide) and
    SUBCELLULAR LOCATION Mitochondrion + Cytoplasm. PomBase/GOA: mitochondrial matrix
@@ -80,17 +84,21 @@
   (ISO from cerevisiae + transit-peptide prediction). The dual mito/cytoplasm
   annotation may reflect a fraction in the cytosol (as for the cerevisiae paralog Hmf1p)
   or simply pre-import protein; not experimentally resolved for pombe.
-- The pombe genome may encode more than one RidA paralog; whether mmf2 is the sole
-  mitochondrial RidA and which serine/threonine dehydratases generate its substrate
-  in pombe are open questions.
+- **Paralog boundary:** S. pombe encodes Pmf1p/mmf1 and Hpm1p/mmf2. PMID:12185840
+  names both proteins but reports mitochondrial/cytoplasmic localization and
+  S. cerevisiae complementation only for Pmf1p [PMID:12185840 "In this organism two
+  p14.5 homologous proteins are present: Pmf1p (pombe mitochondrial factor 1) and Hpm1p
+  (homologous Pmf1p factor 1)."]. Those experiments must not be presented as direct
+  evidence for mmf2. Functional redundancy or division of labor between the paralogs,
+  and which serine/threonine dehydratases generate mmf2's substrate, remain open.
 
 ## Annotation-by-annotation reasoning (GOA)
 
 | term | ev | ref | decision |
 |------|----|-----|----------|
-| GO:0019239 deaminase activity (MF, enables) | IBA | GO_REF:0000033 | MODIFY → GO:0016838 carbon-nitrogen lyase, or keep general; family MF is the core. Actually deaminase activity is defensible but non-specific; propose more specific RidA activity via core_functions. Decision: ACCEPT (domain-defensible, catalytic Arg present) but note it is general. |
+| GO:0019239 deaminase activity (MF, enables) | IBA | GO_REF:0000033 | MODIFY → GO:0120241 2-iminobutanoate/2-iminopropanoate deaminase activity. The generic term is defensible but non-specific; the replacement is supported only as an orthology/family inference, not as direct evidence on mmf2. |
 | GO:0005739 mitochondrion (CC, is_active_in) | IBA | GO_REF:0000033 | ACCEPT (redundant with matrix) |
-| GO:0005829 cytosol (CC, is_active_in) | IBA | GO_REF:0000033 | KEEP_AS_NON_CORE — RidA paralogs are partly cytosolic; but for a matrix-targeted protein this is likely IBA tree noise / pre-import pool. Keep, non-core. |
+| GO:0005829 cytosol (CC, is_active_in) | IBA | GO_REF:0000033 | KEEP_AS_NON_CORE — positive support comes from the dual UniProt assignment, the cytosolic eukaryotic RidA default, and a PAINT node distinct from the mitochondrial IBA node. Retain as a plausible secondary pool pending direct localization. |
 | GO:0005737 cytoplasm (CC, located_in) | IEA | GO_REF:0000044 | KEEP_AS_NON_CORE (SubCell mapping; parent of cytosol) |
 | GO:0005739 mitochondrion (CC, located_in) | IEA | GO_REF:0000044 | ACCEPT (SubCell mapping consistent with transit peptide) |
 | GO:0008150 biological_process (ND) | ND | GO_REF:0000015 | KEEP_AS_NON_CORE (root ND placeholder; leave) |
@@ -109,3 +117,16 @@ ortholog Mmf1p and human UK114, its likely physiological role is protecting
 mitochondrial PLP-dependent enzymes (and thereby indirectly mitochondrial genome
 integrity) from enamine/imine damage arising from serine/threonine catabolism. The
 specific in-vivo substrate and phenotype in pombe are not experimentally established.
+
+The orthology/localization inference remains asymmetric: UniProt assigns mmf2 to
+PANTHER PTHR11803:SF58 **PROTEIN HMF1-RELATED**, named after the cytosolic budding-yeast
+paralog, whereas the matrix ISO and much of the physiological analogy use mitochondrial
+Mmf1p. A subfamily name alone does not settle orthology, but the PAINT/PANTHER tree
+placement must be reconciled before treating either branch as definitive.
+[mmf2-uniprot.txt "DR   PANTHER; PTHR11803:SF58; PROTEIN HMF1-RELATED; 1."]
+
+An OpenScientist hypothesis review independently reached the same bounded conclusion:
+GO:0120241 is supported for mmf2 as an inferred ISS/ISO annotation, not as IDA, and
+the direct S. pombe Pmf1p experiments must not be transferred across the paralog
+boundary. [file:SCHPO/mmf2/mmf2-hypotheses/core-function-schizosaccharomyces-pombe-mmf2-is-a-mitochondrial-rid-family-enzyme-whose-specific/openscientist.md
+"The seed hypothesis is **supported**"]

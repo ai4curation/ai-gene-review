@@ -11,7 +11,7 @@ This supplement documents analyses that are useful for reproducibility but are n
 
 The main RL benchmark is ARGO139, a fixed 139-gene set listed in `../genes.csv`. The main SFT term benchmark is ARGO95, the 95-gene ARGO139 subset present in the HuggingFace `wanglab/protein_catalogue` SFT download.
 
-ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: 64 are `COMPLETE`, 48 `DRAFT`, 23 `IN_PROGRESS`, and 4 `INITIALIZED` at the frozen audit baseline. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
+ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 79 are `COMPLETE`, 45 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
 
 **Table S1.** Cohorts emitted by `write_benchmark_sidecars.py`.
 
@@ -24,7 +24,7 @@ ARGO139 uses agent-adjudicated local AIGR references, not independently expert-s
 | `supplement_sft_narrative_hf` | 45 | - | SFT narrative cross-check |
 | `supplement_sft_terms_hf_catalogue_all` | 154 | 1,358 | Full HF catalogue view |
 | `supplement_sft_terms_union_all` | 198 | 11,100 | ARGO139 plus 59 HF-only genes |
-| `supplement_gogpt_overlap_300` | 299 | 8,871 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
+| `supplement_gogpt_overlap_300` | 296 | 8,806 | Separate GO-GPT overlap review; historical cohort ID retained after alias deduplication |
 
 The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue` SFT download contained 95/139 ARGO139 genes. The remaining 44 ARGO139 genes were not present in that download. We do **not** fill those 44 into the primary SFT analysis, because the BioReason-Pro SFT web exports expose a much larger ancestor-rich term panel and are not comparable to the HF catalogue source.
 
@@ -34,7 +34,7 @@ The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue
 
 | Benchmark | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO95 (HF catalogue) | 95 | 955 | 678 (71.0%) | 118 (12.4%) | 5 (0.5%) | 24 (2.5%) | 44 (4.6%) | 29 (3.0%) | 57 (6.0%) |
+| ARGO95 (HF catalogue) | 95 | 955 | 682 (71.4%) | 113 (11.8%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 
 For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic table, not as a primary SFT benchmark.
 
@@ -42,9 +42,15 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| HF catalogue / ARGO95 | 95 | 955 | 678 (71.0%) | 118 (12.4%) | 5 (0.5%) | 24 (2.5%) | 44 (4.6%) | 29 (3.0%) | 57 (6.0%) |
+| HF catalogue / ARGO95 | 95 | 955 | 682 (71.4%) | 113 (11.8%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 | Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 2,999 (28.0%) | 160 (1.5%) | 5 (0.0%) | 31 (0.3%) | 432 (4.0%) | 30 (0.3%) | 7,040 (65.8%) |
+| Mixed-source ARGO139 total | 139 | 10,697 | 3,003 (28.1%) | 155 (1.4%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,043 (65.8%) |
+
+The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
+`NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
+Zn(II)-binding screen, and the term was already represented by a GOA IDA
+annotation. The binding remains non-core because its physiological relevance,
+specificity, affinity, and binding site are unresolved.
 
 **Table S4.** Terms per gene in the SFT source views.
 
@@ -60,11 +66,11 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 
 | Assessment | Count | % |
 |---|---:|---:|
-| CNN | 917 | 67.5 |
-| NPI | 172 | 12.7 |
-| UNC | 143 | 10.5 |
-| LSP | 57 | 4.2 |
-| COR | 31 | 2.3 |
+| CNN | 921 | 67.8 |
+| NPI | 167 | 12.3 |
+| UNC | 146 | 10.8 |
+| LSP | 56 | 4.1 |
+| COR | 30 | 2.2 |
 | REP | 33 | 2.4 |
 | PLI | 5 | 0.4 |
 
@@ -74,29 +80,31 @@ The all-source union is the broadest source-availability view, but it combines A
 
 | Assessment | Count | % |
 |---|---:|---:|
-| UNC | 7,126 | 64.2 |
-| CNN | 3,238 | 29.2 |
-| LSP | 445 | 4.0 |
-| NPI | 214 | 1.9 |
-| COR | 38 | 0.3 |
+| UNC | 7,129 | 64.2 |
+| CNN | 3,242 | 29.2 |
+| LSP | 444 | 4.0 |
+| NPI | 209 | 1.9 |
+| COR | 37 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |
 
 ## S3. CAFA-style retrospective GOA agreement
 
-We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term predictions using current local GOA as the reference. This is not a true CAFA benchmark: ARGO95 is retrospective, there is no temporal holdout, and the BioReason-Pro SFT files do not contain model confidence scores. The score therefore treats predictions as an unranked single-threshold set and reports propagated precision/recall/F1 rather than \(F_{\max}\). Both predictions and reference GOA annotations are propagated over `is_a` and `part_of` ancestors from the frozen 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots. The archived file's SHA-256 is pinned in `benchmark-policy.yaml`; load-time sentinels verify release-specific active and obsolete terms. The reproducible `verify_ontology_authority.py` check independently downloads the official archive and queries QuickGO and OLS; on 2026-07-12 the remote checksum matched and both live services reported the five disputed sentinels as obsolete. GOA can retain identifiers after ontology obsoletion, so the mixed-date legacy `cache/ontologies/go.tsv` status flag is not used as the ontology authority. Ontology status is recorded separately from assessment: a status-only label mismatch retains its biological `CNN`, `COR`, or `UNC` call, while `LSP` remains reserved for a canonical concept that is more generic than the supported annotation. The mixed-source ARGO139 rows are retained only as diagnostics.
+We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term predictions using local GOA at the review snapshot as the reference. This is not a true CAFA benchmark: ARGO95 is retrospective, there is no temporal holdout, and the BioReason-Pro SFT files do not contain model confidence scores. The score therefore treats predictions as an unranked single-threshold set and reports propagated precision/recall/F1 rather than \(F_{\max}\). Both predictions and reference GOA annotations are propagated over `is_a` and `part_of` ancestors from the frozen 2026-03-25 `go-basic.obo`, excluding the three GO aspect roots. The archived file's SHA-256 is pinned in `benchmark-policy.yaml`; load-time sentinels verify release-specific active and obsolete terms. The reproducible `verify_ontology_authority.py` check independently downloads the official archive and queries QuickGO and OLS; on 2026-07-12 the remote checksum matched and both live services reported the five disputed sentinels as obsolete. GOA can retain identifiers after ontology obsoletion, so the mixed-date legacy `cache/ontologies/go.tsv` status flag is not used as the ontology authority. Ontology status is recorded separately from assessment: a status-only label mismatch retains its biological `CNN`, `COR`, or `UNC` call, while `LSP` remains reserved for a canonical concept that is more generic than the supported annotation. The mixed-source ARGO139 rows are retained only as diagnostics.
 
-**Table S7.** Propagated all-aspect agreement against current GOA.
+**Table S7.** Propagated all-aspect agreement against GOA at the review snapshot.
 
 | Source | Genes | Scored direct predictions | Direct GOA terms | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
-| ARGO95 / HF catalogue | 95 | 952 | 2,382 | 0.865 | 0.479 | 0.617 |
-| Web export | 44 | 9,730 | 3,885 | 0.780 | 0.533 | 0.633 |
-| Mixed-source ARGO139 total | 139 | 10,682 | 6,267 | 0.810 | 0.511 | 0.627 |
+| ARGO95 / HF catalogue | 95 | 952 | 2,369 | 0.862 | 0.479 | 0.615 |
+| Web export | 44 | 9,730 | 3,888 | 0.780 | 0.531 | 0.632 |
+| Mixed-source ARGO139 total | 139 | 10,682 | 6,257 | 0.809 | 0.510 | 0.625 |
 
-The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 53/152 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 124/152 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
+The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 47/147 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to snapshot GOA, and 119/147 have propagated overlap with snapshot GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
 
 ![CAFA-style propagated F1 by aspect for ARGO95 SFT terms, with mixed-source diagnostics.](figures/cafa_style_argo139_sft.png)
+
+This diagnostic uses the local GOA and SFT assessments at the review snapshot (2026-09-27, commit `c7551cb3db`; see S6), whereas the primary non-novelty counts use the frozen baseline. Consequently, 630 CNN terms are exact snapshot-GOA matches here, compared with 635 exact frozen-GOA matches in the primary benchmark. Later GOA refreshes and assessment changes enter only when the snapshot is deliberately refreshed.
 
 Full derived tables are in `../cafa-style/`.
 
@@ -104,27 +112,46 @@ Full derived tables are in `../cafa-style/`.
 
 The HuggingFace SFT narrative sample contains 45 proteins, all with parseable 1-5 correctness/completeness scores. It is not paired to ARGO139 and is not used as a main result. It remains a useful cross-check: mean SFT scores are 3.0/5 correctness and 2.7/5 completeness, and 7/45 SFT outputs contained generated "UniProt Summary" prose for proteins that UniProt describes only as uncharacterized.
 
+The 45-protein sample shares no genes with ARGO139, so its means must not be compared with the RL means. A matched comparison was added on 2026-09-27 (`../sft-rl-matched/`). It uses the Functional Summaries of the 110 ARGO139 accessions present in the HF catalogue.
+
+- **Rater.** One LLM agent scored both SFT and RL summaries, not blinded to model identity.
+- **Correctness.** SFT and RL did not differ: 3.96 vs 4.05, Wilcoxon p=0.62.
+- **Completeness.** SFT was higher: 3.88 vs 2.75, SFT ahead on 80/110 genes, p=2.5e-15.
+- **Calibration.** The same rater's RL re-scores agreed with the first-rater RL scores with quadratic-weighted kappa 0.93 for correctness and 0.78 for completeness.
+
+Protocol, ratings and statistics are in `../sft-rl-matched/` and on the project page.
+
 ## S5. Blinded RL second review
 
-A second rater scored 20 RL Functional Summaries without access to the first-rater reviews or project metrics. The deterministic sample contains four genes from each first-rater correctness stratum. Correctness agreement was 80% exact, 100% within one point, and quadratic-weighted kappa 0.950. Completeness agreement was 55% exact, 95% within one point, and kappa 0.744. The full protocol, raw ratings, and generated metrics are in `../second-review-protocol.md`, `../second-review-ratings.csv`, and `../second-review-agreement.json`.
+A second rater scored 20 RL Functional Summaries without access to the first-rater reviews or project metrics. The deterministic sample contains four genes from each first-rater correctness stratum. Correctness agreement was 80% exact, 100% within one point, and quadratic-weighted kappa 0.950. Completeness agreement was 55% exact, 95% within one point, and kappa 0.744. The full protocol, raw ratings, and generated metrics are in `../second-review-protocol.md`, `../second-review-ratings.csv`, and `../second-review-agreement.json`. Both raters are LLM agents. The balanced sample inflates quadratic-weighted kappa relative to a prevalence-weighted sample. Reweighted to first-rater prevalence, exact agreement is 88% for correctness and 71% for completeness; this is highly uncertain, with n=4 per stratum (`../audit-followup.json`).
 
 ## S6. GO-GPT reviews
 
-The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 129 exact rejected/over-annotated matches (`NPI`), and 3,894 unresolved terms (`UNC`). Accordingly, 138 documents are `DRAFT` and only the fully deterministic `BACSU/ftsZ` file is `COMPLETE`.
+The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,897 `CNN`, 124 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
-A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
+A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,806 GO-GPT predictions across 296 canonical genes (the historical cohort identifier is retained after duplicate reviews were merged). It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
-**Table S8.** GO-GPT prediction overlap at three reference levels (299 canonical genes).
+The overlap analysis is a dated snapshot: the numbers below are as of 2026-09-27 (commit `c7551cb3db`), computed from the GOA files and AIGR reviews at that commit rather than the working tree, so later curation does not change them until the snapshot is deliberately refreshed (`just refresh-benchmark-snapshot`).
 
-| Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
+**Table S8.** GO-GPT prediction overlap at three reference levels (296 canonical genes).
+
+| Reference level | Terms in reference | Predictions overlapping | % of 8,806 predictions |
 |---|---:|---:|---:|
-| Raw GOA | 2,960 | 1,040 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,766 | 858 | 9.7 |
-| All GO-valued AIGR core-function slots | 1,224 | 349 | 3.9 |
+| Raw GOA | 2,844 | 1,020 | 11.6 |
+| Retained/replacement/proposed-new AIGR annotations | 2,672 | 849 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,206 | 355 | 4.0 |
+
+The core-function comparison includes HdeB's GO:0051082 match as an explicitly
+interim representation of in-situ holdase activity pending creation of the general
+holdase chaperone activity NTR; it is not treated as the preferred long-term term.
+SlyD instead leaves its holdase molecular-function slot term-less while the same NTR
+is pending. This is an explicitly temporary cross-review difference: HdeB's obsolete
+term is retained only as an interim benchmark representation and should migrate to the
+general holdase term once that term is available.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Five of the 11 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005737`, `GO:0005829`, and `GO:0005576`), so the 9.7% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,806 predictions across 296 canonical genes (mean 29.8 per gene). Raw GOA agreement was 11.6%; exact agreement with all GO-valued AIGR core-function slots was 4.0%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 
@@ -133,7 +160,7 @@ GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene)
 - `../argo139-curation-context-counts.csv`: ARGO139 curation-context summary.
 - `../benchmark-cohorts.csv`: cohort-level provenance and sizes.
 - `../benchmark-genes.csv`: gene-level benchmark/source provenance.
-- `../benchmark-quality.csv`: per-gene source presence, dates, and checksums.
+- `../benchmark-quality.csv`: per-gene source presence plus separately named current-GOA and frozen-baseline paths, dates, and checksums.
 - `../benchmark-metrics.json`: generated authoritative aggregate metrics.
 - `../argo95-ontology-pair-adjudication.tsv`: independent adjudication of every ARGO95 ID-label mismatch that was nonnegative either at the audit baseline or after manual biological reclassification.
 - `../cafa_style_argo139.py`: retrospective CAFA-style SFT scorer; ARGO95 is the primary HF-catalogue row.

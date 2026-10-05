@@ -1,11 +1,33 @@
 ---
 title: "Extracellular Matrix (ECM) Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [AGRN, HSPG2, EPYC, SPOCK1, SPOCK2, SPOCK3, NID1, FN1, DCN, SPARC]
+manifest:
+  slides:
+    - href: ECM/slides/ECM-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/GsehR2DwujN5p72k3Y33K4
+      title: Project brief
 ---
 
 # Extracellular Matrix (ECM) Project
+
+**Bottom line:** the extracellular matrix is the protein and proteoglycan
+network that holds tissues together and signals to the cells within it. We
+reviewed ten human ECM genes in three phases: the basement-membrane
+proteoglycans AGRN and HSPG2 plus EPYC, the testican family SPOCK1-3, and a
+diverse set (NID1, FN1, DCN, SPARC). All ten reviews are complete, although
+the task list below still shows Phase 3 as open and AGRN/HSPG2 as in progress.
+They assess 639 GOA rows: 284 ACCEPT, 193 KEEP_AS_NON_CORE, 73 REMOVE, 63
+MODIFY, 17 NEW, 7 MARK_AS_OVER_ANNOTATED and 2 UNDECIDED. FN1 accounts for most
+of the corrections: 52 generic `protein binding` rows removed and 38
+`extracellular region` rows modified to `extracellular matrix`. The SPOCK2
+metalloendopeptidase-inhibitor rows were modified to reflect its role as a
+counter-inhibitor of SPOCK1/3, and EPYC gained NEW collagen-binding and matrix
+terms. DCN still has no `core_functions` block, and no ECM module exists.
 
 ## Overview
 
@@ -53,4 +75,3 @@ Started: 2025-11-10
 - **FN1**: Cell adhesion, migration, wound healing
 - **DCN**: Collagen fibrillogenesis, TGF-β regulation
 - **SPARC**: Parent family member, Ca²⁺ binding, collagen binding, anti-adhesive
-

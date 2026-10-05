@@ -15,7 +15,7 @@ import yaml
 from typer.testing import CliRunner
 
 from ai_gene_review.cli import app
-from ai_gene_review.etl.panther_families import write_member_index
+from ai_gene_review.etl.panther_families import member_index_path, write_member_index
 
 runner = CliRunner()
 
@@ -25,7 +25,8 @@ def repo(tmp_path: Path) -> Path:
     """A minimal repo skeleton the command can be pointed at."""
     (tmp_path / "modules").mkdir()
     (tmp_path / "interpro" / "panther").mkdir(parents=True)
-    (tmp_path / "interpro" / "panther" / "panther-members.tsv").write_text(
+    member_index_path(tmp_path).parent.mkdir(parents=True)
+    member_index_path(tmp_path).write_text(
         "uniprot_accession\tpanther_family_sf\nP1\tPTHR1:SF1\n"
     )
     (tmp_path / "interpro" / "panther" / "panther.obo").write_text(
@@ -100,9 +101,7 @@ def write_members(repo: Path, members: dict[str, str]) -> None:
     """Write the accession -> family:subfamily index."""
     rows = ["uniprot_accession\tpanther_family_sf"]
     rows += [f"{accession}\t{family}" for accession, family in members.items()]
-    (repo / "interpro" / "panther" / "panther-members.tsv").write_text(
-        "\n".join(rows) + "\n"
-    )
+    member_index_path(repo).write_text("\n".join(rows) + "\n")
 
 
 def write_family_module(
@@ -431,10 +430,9 @@ def test_a_member_with_no_subfamily_is_not_checkable(repo):
 
 def test_member_index_coverage_counts_unknown_uniprot_accessions(repo):
     """The resolution denominator must include all three recorded gap states."""
-    members = repo / "interpro" / "panther" / "panther-members.tsv"
     write_member_index(
         {"P1": "PTHR1:SF1"},
-        members,
+        member_index_path(repo),
         absent={"ABSENT"},
         unchecked={"UNCHECKED"},
         unknown={"TYPO"},

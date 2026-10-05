@@ -3,9 +3,43 @@ title: "P. putida Gene Annotation Review Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [PSEPK]
+sidecars:
+  slide_assets:
+    - P_PUTIDA/slides/actions-bar.svg
+    - P_PUTIDA/slides/d-ala-hole.svg
+    - P_PUTIDA/slides/module-first-workflow.svg
+    - P_PUTIDA/slides/ppu00470-batch-page.jpg
+manifest:
+  slides:
+    - href: P_PUTIDA/slides/P_PUTIDA-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
+      title: Project brief
 ---
 
 # P. putida Gene Annotation Review Project
+
+**Bottom line:** *Pseudomonas putida* KT2440 is a metabolically versatile soil
+bacterium used for bioremediation and biotechnology, and almost all of its GO
+annotation comes from automated pipelines. The project started with selected
+genes (18, then batches of 50 and 16) and in July 2026 became a genome-wide,
+pathway-by-pathway review of the 5,527-protein reference proteome: each batch
+starts from a curated module, asks which steps KT2440 can satisfy, and reviews
+only the genes needed to fill or resolve those steps. In a September 2026 snapshot
+the repo held 921 PSEPK gene reviews (5,324 annotation rows: 2,288 accepted,
+990 kept as non-core, 857 marked over-annotated, 391 modified, 243 removed,
+470 proposed as `NEW`, 85 undecided) and 138 pathway batch pages under
+`P_PUTIDA/batches/`, from about 200 PRs; both counts grow as
+batches land. Batches record unresolved steps as explicit holes rather than forcing a
+paralog into them (for example, the cytoplasmic D-alanine source for cell-wall
+synthesis). The "Completed Reviews" tables below list only the first 84 genes,
+and the status columns in `data/psepk_pathway_worklist.tsv` have not been
+updated since the pilot.
+
+We did this because a module-first pass spends review effort where a pathway
+has a missing, ambiguous or over-propagated step, which scales to a whole
+bacterial genome where gene-by-gene review would not.
 
 ## Overview
 
@@ -33,6 +67,12 @@ the module order, triage rules, module-editing expectations, and the first-pass
 metadata snapshot. This phase deliberately separates metadata discovery from
 full gene-review seeding: the first pass uses UniProt REST TSV metadata only,
 not full UniProt flat files, GOA downloads, PMID caches, or review YAML stubs.
+
+The current focused batch is
+[phosphatidylglycerol and cardiolipin biosynthesis](P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.md).
+It curates the connected route from CDP-diacylglycerol through
+phosphatidylglycerol to alternative bacterial cardiolipin synthase reactions,
+with uncertain PSEPK PLD-family paralogs kept as explicit knowledge gaps.
 
 Lightweight data products:
 
@@ -68,6 +108,9 @@ Lightweight data products:
   checklist from KEGG/UniPathway membership.
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md` is the first
   pilot pathway checklist.
+- [Gallate catabolism batch](P_PUTIDA/batches/ppu00362_bacterial_gallate_catabolism.md)
+  curates the optional GalP entry context and the required GalA-D-B-C reaction
+  sequence represented by the reusable bacterial module.
 
 While the Edison-backed Falcon route is unavailable, use OpenScientist for
 gene-level research with a full two-hour provider allowance:
@@ -345,10 +388,40 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 - [x] Complete Falcon module + pathway + PSEPK research for `ppu00400`.
 - [x] Fetch, run Asta, curate, and validate the first pilot gene batch: 28/28 KEGG `ppu00400` members.
 - [x] Open the first module/pathway PR for `ppu00400` / `tryptophan_biosynthesis`: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
+- [x] Curate the `ppu00470` D-amino-acid cell-wall precursor-supply boundary,
+  preserving the unresolved cytoplasmic D-alanine source as a real hole.
 - [ ] For each later module batch, full `fetch-gene` only the genes selected by module review.
 - [ ] Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.
+- [x] Curate the PP_2842-PP_2849 UreA-G urease biogenesis and urea-hydrolysis batch as a separate three-stage module.
 
 # NOTES
+
+## 2026-08-11
+
+Created the urease-biogenesis and urea-hydrolysis batch from the complete
+reviewed PP_2842-PP_2849 `ureDABCEFG` locus. This corrects the first-pass
+partition, which split `ureABC` into the broad KEGG arginine map and the four
+activation proteins into a generic folding/turnover bucket. The reusable module
+now separates apo-UreABC assembly, UreDEFG-dependent nickel/GTP activation, and
+mature urea hydrolysis. General nickel uptake, urea transport, `ureJ`, and
+downstream ammonia assimilation are recorded as context or follow-up rather
+than core parts. Historical artifacts from `86cf4fd8e9` were inspected only
+path-by-path; no giant commit was rebased or cherry-picked.
+
+Curated the focused D-amino-acid cell-wall precursor-supply batch from broad
+KEGG pathway `ppu00470`. The reusable module has three substantive parts:
+MurI-dependent D-glutamate production, cytoplasmic D-alanine production, and
+D-Ala-D-Ala ligation. The Ddl step uses DdlA-like and DdlB-like PANTHER
+subfamilies as potentially redundant variants rather than inventing distinct
+reactions for each KT2440 paralog.
+
+The pathway is not fully satisfiable from current evidence. Q88GJ9 Alr/BSR has
+a signal peptide, experimentally detected periplasmic activity, strong
+lysine/arginine preference, and no detectable peptidoglycan effect under the
+tested conditions. Q88CB2 DadX is cytoplasmic and alanine-specific, but its
+direct contribution to cell-wall D-alanine has not been tested. The batch
+therefore records DadX as `candidate_uncertain` and does not force either
+racemase into the species-specific module assignment.
 
 ## 2026-07-05
 

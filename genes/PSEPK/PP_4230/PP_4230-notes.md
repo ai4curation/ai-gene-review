@@ -14,10 +14,8 @@ The report also places PP_2482 rather than PP_2483 in its second MocA-cluster ta
 and presents residue-level nucleotide-specificity and AlphaFold analyses that were
 not saved as reproducible local artifacts. Those claims are not used in the review.
 
-PP_4230 remains a predicted MocA-type molybdenum-cofactor cytidylyltransferase. This
-assignment is grounded in the saved Q88F68-to-K07141 mapping, the local PANTHER
-representative file, the target UniProt record, and the reproducible local comparison
-[file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md, "supports a predicted MocA
-assignment while leaving CTP specificity and client delivery to direct experimental
-testing"]. Direct CTP specificity and dedication to the neighboring molybdoenzyme
-remain untested.
+PP_4230 remains an unresolved MobA-like NTP-transferase-domain protein. KEGG
+K07141 and the saved comparison favor a MocA-like interpretation, but neither
+the broad PANTHER family nor modest sequence similarity establishes CTP
+specificity [file:PSEPK/moaA/moaA-bioinformatics/RESULTS.md, "PP_4230 is more similar to MocA (39.62%)"]. No specific MobA or MocA
+reaction is asserted without a direct substrate-specificity assay.

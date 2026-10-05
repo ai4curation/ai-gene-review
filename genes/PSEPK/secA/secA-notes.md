@@ -22,3 +22,12 @@ residues, monomer/homodimer states, and an approximately 50:50 distribution
 between cytoplasm and the cytoplasmic face of the inner membrane. Cytosol is the
 more specific term for the soluble pool; retaining both cytoplasm and cytosol
 would be redundant.
+
+## Annotation-reviewer pass (2026-09-01)
+
+Reviewed all 12 GOA-derived rows against the local UniProt record, GOA evidence,
+SecA literature, and the module-aware OpenScientist report. Outcome: 6 ACCEPT,
+2 KEEP_AS_NON_CORE, 3 MARK_AS_OVER_ANNOTATED, and 1 REMOVE; no row remains
+PENDING or UNDECIDED. The directional `protein import` IEA remains REMOVE,
+while the exact Sec ATPase, Sec-process, translocon-membership, cytosol, and
+plasma-membrane assertions remain core.
