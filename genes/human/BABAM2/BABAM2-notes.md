@@ -13,4 +13,4 @@
 - NEW GO:0030674 adaptor activity (IDA, PMID:19261748) is the core MF of both complexes. It is supported by the BABAM1 bridging and by USP7 recruitment [PMID:29416040 "We show that BRE facilitates deubiquitylation of CDC25A by recruiting ubiquitin-specific-processing protease 7 (USP7) in the presence of DNA damage."].
 - Fas: an earlier Y2H found no Fas binding (PMID:9737713), and the later PMID:15465831 reports binding. The MODIFY to GO:0005123 follows the later direct data, and the discrepancy is noted in the row.
 - Signal transduction is marked as an over-annotation. GO:0044818 is accepted because it is a parent of the core GO:0007095.
-- GOA has 70 lines. Two GO:0000152/IDA/PMID:14636569 lines are identical and the stub collapses them to one row; 69 rows were reviewed.
+- GOA has 70 lines. The two GO:0000152/IDA/PMID:14636569 lines differ only in assigned_by (ComplexPortal vs UniProt) and date, and the stub collapses them to one row; 69 rows were reviewed.
