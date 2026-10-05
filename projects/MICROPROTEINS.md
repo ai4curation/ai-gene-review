@@ -168,8 +168,11 @@ a new microprotein-specific branch. This needs to be tested gene by gene.
 ## Tier 1 results (2026-09-30)
 
 All 12 Tier 1 genes are reviewed; each review passes `just validate` with no annotation
-left PENDING. Falcon deep research timed out (600 s, tried on STRIT1), so the reviews rest on
-cached publications plus targeted PubMed retrieval.
+left PENDING. Falcon deep research was run only for STRIT1, as a test. The wrapper reported
+a 600 s timeout, but the run actually completed in 855 s and wrote
+`genes/human/STRIT1/STRIT1-deep-research-falcon.md` (22 citations). The STRIT1 review was
+written from the primary literature and does not cite that output. No deep research was run for
+the other 11 genes. All 12 reviews rest on cached publications plus targeted PubMed retrieval.
 
 | gene | existing rows | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW | core MF |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
@@ -224,10 +227,11 @@ cached publications plus targeted PubMed retrieval.
    - `MYMX`: IDA, fusogenic activity with purified ectodomain.
    - `APELA`: IDA, Gi-coupled signalling.
    - `MTLN`: ISS from mouse (cardiolipin binding).
-   - `SMIM43`: moderate confidence (co-IP plus binding-deficient mutants).
-   - `MRLN`: IMP. The only human-cell evidence is shRNA knockdown in the AC16 transformed
-     cardiac line, from a paper whose main topic is Wnt signalling. This is the weakest of
-     the six and is a candidate to drop.
+   - `SMIM43`: ISS from mouse NEMEP. The direction-giving mutant experiments are mouse; the
+     human data are binding and flux only. Moderate confidence.
+   - `MRLN`: ISS from mouse Q9CV60 (IDA, PMID:27923914). It was originally coded as IMP from
+     an AC16 knockdown graded LOW_QUALITY, and was re-coded after PR review; the AC16 data are
+     kept as corroboration only.
 
 ## Tier 2 results (2026-10-03)
 
@@ -398,7 +402,7 @@ Last updated: 2026-09-30
 
 ## Tier 1 — sORF-class, well characterized, GO gap/problem (human)
 - [x] STRIT1 (DWORF) — 45 IPI protein binding removed; human-peptide evidence exists but GOA uses ISS
-- [x] MRLN (myoregulin) — MODIFY to ATPase inhibitor activity; NEW IMP is weak (see results)
+- [x] MRLN (myoregulin) — MODIFY to ATPase inhibitor activity; NEW re-coded as ISS from mouse after PR review
 - [x] ERLN (endoregulin) — NEW IDA from human reconstitution
 - [x] MTLN (mitoregulin)
 - [x] UQCC6 (BRAWNIN)
@@ -428,6 +432,20 @@ Last updated: 2026-09-30
 - [x] SMIM26, P3R3URF, ADIG (plus canonical small proteins such as TOMM5/6/7, PIGY, UQCC3)
 
 # NOTES
+
+## 2026-10-05
+
+- PR #3680: merged `main` into the branch. APELA conflicted with the review merged in
+  #4156, and main's version was kept; both reach the same conclusions, including the
+  Aplnr-sourced ISS removal. This branch's extra proposal is a follow-up for that review:
+  GO:0007193 adenylate cyclase-inhibiting GPCR signalling pathway (IDA, PMID:28137936 and
+  PMID:25639753), which APLN carries.
+- Changes from the review bot:
+  - SMIM43 NEW re-coded from IDA to ISS (mouse A0A286YD83).
+  - MRLN NEW re-coded from IMP to ISS (mouse Q9CV60).
+  - Falcon wording corrected.
+  - MTLN cardiolipin ISS given its mouse source (Q8BT35).
+  - The census median is now a true median.
 
 ## 2026-10-04
 
@@ -488,10 +506,12 @@ Last updated: 2026-09-30
 - Convention agreed: `<HOST>__<ACC>` (double underscore). Added it to `CLAUDE.md`.
   `fetch-gene` now sets `gene_symbol` from the UniProt `GN Name=` line when it is given an accession.
 - Tier 1 (12 genes) reviewed with one agent per gene, following the annotation-reviewer
-  instructions; each was committed as it passed validation. Falcon deep research timed out
-  after 600 s (tested on STRIT1), so no `-deep-research-falcon.md` files exist for these genes.
+  instructions; each was committed as it passed validation. Falcon deep research was tried
+  only on STRIT1: the wrapper reported a 600 s timeout, but the run completed (855 s) and wrote
+  `STRIT1-deep-research-falcon.md`. The review does not cite it. *(Corrected 2026-10-05 after
+  PR review; the original note wrongly said no Falcon file existed.)*
 - Corrected the census claim: human experimental evidence *does* exist for STRIT1, MRLN and
   ERLN, but GOA carries only ISS transfers from mouse for them.
 - To check: the MRLN NEW (IMP, PMID:41348974) is weak. The reconstitution paper
   PMID:34445594 used synthetic MLN without stating its species, so it cannot replace that
-  evidence as a human IDA.
+  evidence as a human IDA. *(Resolved 2026-10-05: re-coded as ISS from mouse Q9CV60.)*

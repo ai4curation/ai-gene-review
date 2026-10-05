@@ -29,6 +29,7 @@ import csv
 import gzip
 import json
 import re
+import statistics
 import sys
 import urllib.parse
 import urllib.request
@@ -210,7 +211,7 @@ def coverage(rows: list[dict]) -> dict:
         "pct_BP": pct("has_BP"),
         "pct_CC": pct("has_CC"),
         "pct_only_protein_binding": pct("only_protein_binding_or_root"),
-        "median_informative": sorted(r["n_informative"] for r in rows)[n // 2] if n else 0,
+        "median_informative": statistics.median(r["n_informative"] for r in rows) if n else 0,
     }
 
 
