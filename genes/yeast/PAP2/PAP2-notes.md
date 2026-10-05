@@ -41,7 +41,8 @@ Three landmark 2005 papers established PAP2/Trf4 as the catalytic poly(A) polyme
 - PAP2 "contributes_to" the helicase activity at the complex level, not independently
 
 ### mRNA binding
-- High-throughput identification via HDA evidence [PMID:23222640]
+- High-throughput poly(A)-mRNP association via HDA evidence from the global yeast
+  mRNP capture screen [PMID:23222640]
 
 ## Biological Processes
 
@@ -63,9 +64,12 @@ Three landmark 2005 papers established PAP2/Trf4 as the catalytic poly(A) polyme
 
 ## Localization
 
-- **Nucleus**: Direct evidence [PMID:10066793, PMID:22932476]; confirmed by large-scale study [PMID:14562095]
+- **Nucleus**: Direct evidence [PMID:10066793]; condition-dependent nuclear recovery
+  after reoxygenation [PMID:22932476]; confirmed by large-scale study [PMID:14562095]
 - **Nucleolus**: Direct evidence [PMID:16541108] -- surveillance of nuclear-restricted pre-ribosomes in subnucleolar region
-- **Cytosol**: [PMID:22932476] -- large-scale GFP localization study (SWI/SNF oxygen regulation study also detected Trf4 in cytosol); likely minor pool
+- **Cytosol**: [PMID:22932476] -- condition-dependent relocalization from the
+  nucleus to cytosol during hypoxia that reverses on reoxygenation, not a constitutive
+  core pool
 
 ## Trf4 vs Trf5 (PAP2 vs TRF5)
 
@@ -114,6 +118,9 @@ The BioReason deep-research file provides a generally accurate functional summar
   complex membership, `poly(A) RNA polymerase activity`, `RNA 3'-end processing`, and
   `polyadenylation-dependent ncRNA catabolic process`; the Schizosaccharomyces
   PTN008590285 branch retains only the lineage-specific nucleus gain and IRD losses.
+  The review preserves the donor-level `source_entities` from the current GOA
+  `WITH/FROM` sets, including PAP2 self-references that mark legitimate IBD seeds
+  rather than circular propagation.
 - Eleven newly split `GO:0005515` IntAct rows from PMID:11805837, PMID:15828860,
   PMID:15935758, PMID:15935759, PMID:21663793, and PMID:37968396 were removed as
   generic interaction assertions. The direct TRAMP interactions are represented by
@@ -122,3 +129,17 @@ The BioReason deep-research file provides a generally accurate functional summar
   non-core, matching the existing secondary dRP lyase/base-excision-repair assessment.
   The new ComplexPortal `GO:0031499` row from PMID:15828860 and two new PMID:17410208
   nuclear mRNA-surveillance exact-source rows were accepted.
+
+## 2026-10-05 PR #3780 reviewer follow-up
+
+- Restored the five IBA rows' donor-level `propagation_review.source_entities`,
+  including the not-circular PAP2 self-reference notes.
+- Replaced title-only supporting quotes for PMID:17410208, PMID:22932476, and
+  PMID:37968396 with exact content-bearing snippets.
+- Downgraded the PMID:23222640 `GO:0003729 mRNA binding` HDA row to non-core because
+  the cached full text supports a high-throughput poly(A)-mRNP capture screen, while
+  structural and biochemical evidence indicate Pap2/Trf4 relies on Air proteins for
+  RNA substrate engagement.
+- Captured the PMID:17410208 observation that a polyadenylation-defective Trf4p
+  variant remains active in THO/sub2 mRNA surveillance as an unresolved mechanistic
+  question for follow-up.
