@@ -372,6 +372,26 @@ def _report_seed_updates(
         )
 
 
+def _primary_gene_name(uniprot_data: str) -> Optional[str]:
+    r"""Return the primary gene name from a UniProt flat-file record, if any.
+
+    Used when ``fetch-gene`` is given an accession rather than a symbol, so the
+    stub's ``gene_symbol`` records the UniProt gene name (for an alternative-ORF
+    peptide, its host gene) instead of the accession.
+
+    >>> _primary_gene_name("ID   X\nGN   Name=MIEF1 {ECO:0000312|HGNC:HGNC:25979};\n")
+    'MIEF1'
+    >>> _primary_gene_name("GN   Name=hglS; OrderedLocusNames=PP_1234;\n")
+    'hglS'
+    >>> _primary_gene_name("ID   X\nDE   RecName: Full=Protein SHMOOSE;\n") is None
+    True
+    """
+    match = re.search(r"^GN   Name=([^;{]+)", uniprot_data, re.MULTILINE)
+    if not match:
+        return None
+    return match.group(1).strip() or None
+
+
 def fetch_gene_data(
     gene_info: Tuple[str, str],
     uniprot_id: Optional[str] = None,
@@ -563,13 +583,18 @@ def fetch_gene_data(
 
         # Create minimal YAML structure if file doesn't exist
         if not yaml_existed:
+            # Given an accession (e.g. an alternative-ORF peptide fetched with
+            # --alias HOST__ACC), record UniProt's gene name, not the accession.
+            gene_symbol = gene_name
+            if gene_name.upper() == str(uniprot_id).upper():
+                gene_symbol = _primary_gene_name(uniprot_data) or gene_name
             yaml_data: Dict[str, Any] = {
                 "id": uniprot_id,
-                "gene_symbol": gene_name,
+                "gene_symbol": gene_symbol,
                 "product_type": "PROTEIN",
                 "status": "INITIALIZED",
                 "taxon": {"id": taxon_id, "label": taxon_label},
-                "description": f"TODO: Add description for {gene_name}",
+                "description": f"TODO: Add description for {gene_symbol}",
             }
 
             # Extract alternative products (isoforms) if present

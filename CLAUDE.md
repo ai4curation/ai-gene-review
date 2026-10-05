@@ -516,6 +516,24 @@ just backfill-isoforms-organism human  # all genes in organism
 
 See `docs/isoform_tracking.md` for full documentation and `projects/ISOFORMS.md` for genes with notable isoform-specific functions.
 
+### Alternative-ORF peptides: one folder per UniProt accession
+
+Isoforms and polyprotein cleavage products share the host's UniProt accession, so they
+stay in the host folder: use `isoform:` on annotations and `functional_isoforms`
+(`SPLICE_VARIANT`, or `CLEAVAGE_PRODUCT` mapped to `PRO_` chains, as in `POMC`).
+A peptide from an alternative ORF, a uORF or an overlapping frame is a **separate UniProt
+entry** with its own GOA rows. UniProt nevertheless often files it under the host
+gene's symbol (for example, L0R8F8 AltMIEF1 is gene `MIEF1`). Such a peptide gets its own folder:
+
+- It has its own HGNC symbol (`ASDURF`, `MLDHR`, `NBDY`): use the symbol as usual.
+- It shares the host symbol: use `genes/<org>/<HOST>__<ACC>/` with `id: <ACC>` and
+  `gene_symbol: <HOST>`, fetched with `just fetch-gene human <ACC> --alias <HOST>__<ACC>`
+  (the stub then takes `gene_symbol` from UniProt). The double underscore follows the
+  `genes/PSEPK/aroE__Q88K85` paralog precedent and never collides with hyphenated symbols.
+- It has no gene symbol at all: use the accession as the folder name.
+
+Never model such a peptide as a `functional_isoform` of its host. See `projects/MICROPROTEINS.md`.
+
 ## Bioinformatics analyses
 
 In some cases, it may be useful to do additional bioinformatics analyses. To validate gene function. Here are some guidelines:
@@ -713,6 +731,7 @@ gh-pages branch needed for the static content.
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
+* Use YAML, not TSV, for any structured data file you author (project tables, proposal lists, curated records). TSVs produced by deterministic pipelines (e.g. `GENE-goa.tsv`, PAINT `*-paint.tsv`) are inputs and stay as they are.
 * For files `<GENE>-notes.md`, use literature deep search, and always record provenance for assertions, e.g `[PMID:12345 "<supporting text>"]`
 
 ## Support code

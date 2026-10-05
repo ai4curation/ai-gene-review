@@ -2679,6 +2679,11 @@ validate-families: ensure-panther-members
             -s src/ai_gene_review/schema/family_review.yaml \
             -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
     done <<< "$files"
+    echo "Validating supporting_text quotes against cached publications..."
+    # One multi-file call (schema parsed once); same wrapper and config as gene reviews.
+    scripts/run_reference_validator.sh validate data $files \
+        --schema src/ai_gene_review/schema/family_review.yaml \
+        --target-class FamilyReview --config conf/reference_validator_config.yaml || rc=1
     echo "Validating curated residue sites against UniProt sequences..."
     uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
     echo "Cross-checking family reviews against the gene corpus..."
