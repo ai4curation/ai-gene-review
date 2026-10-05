@@ -7,6 +7,13 @@ sidecars:
   slide_charts:
     - TCDB/slides/tcdb-missing-pipeline.svg
     - TCDB/slides/tcdb-propagation-verdicts.svg
+manifest:
+  slides:
+    - href: TCDB/slides/TCDB-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/GkjzVVmT2aQTCNc4j7ktpJ
+      title: Project brief
 ---
 
 # TCDB → GO Transporter-Activity Mapping & Gap Project
@@ -414,7 +421,3 @@ over-generality problem (prefer the subfamily-specific child term).
   transport MF term. The high-value deliverable is a **`tc2go` pipeline built on
   per-entry propagation curation** (which TC level safely inherits which GO term),
   seeded by GO's xrefs plus reviewed extensions.
-
-## Slides
-
-- [Slides](TCDB/slides/TCDB-slides.html) (Marp source: [TCDB-slides.md](TCDB/slides/TCDB-slides.md)) — AI generated

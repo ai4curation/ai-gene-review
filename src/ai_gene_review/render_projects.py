@@ -5,8 +5,10 @@ This module converts project markdown files (from projects/) to HTML,
 automatically linking gene symbols to their corresponding gene review pages.
 """
 
+import os
 import re
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote, unquote, urlparse
@@ -15,6 +17,7 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.render import normalize_artifact_metadata, resolve_research_artifacts
 from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
 
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
@@ -83,6 +86,27 @@ def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
     return index
 
 
+def frontmatter_end_line(content: str) -> Optional[int]:
+    """Index of the closing ``---`` line of a leading frontmatter block, or None.
+
+    This is the single definition of where project frontmatter ends, shared by
+    :func:`parse_frontmatter` and :func:`set_frontmatter_key`.
+
+    >>> frontmatter_end_line("---\\ntitle: x\\n---\\n# Body")
+    2
+    >>> frontmatter_end_line("# Body") is None
+    True
+    >>> frontmatter_end_line("---\\ntitle: x\\n") is None
+    True
+    """
+    if not content.startswith("---"):
+        return None
+    for i, line in enumerate(content.split("\n")[1:], start=1):
+        if line.strip() == "---":
+            return i
+    return None
+
+
 def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     """Parse YAML frontmatter from markdown content.
 
@@ -108,22 +132,10 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     >>> body
     '# No frontmatter here'
     """
-    # Check if content starts with frontmatter delimiter
-    if not content.startswith("---"):
-        return {}, content
-
-    # Find the closing delimiter
-    lines = content.split("\n")
-    end_idx = None
-
-    for i, line in enumerate(lines[1:], start=1):
-        if line.strip() == "---":
-            end_idx = i
-            break
-
+    end_idx = frontmatter_end_line(content)
     if end_idx is None:
-        # No closing delimiter found
         return {}, content
+    lines = content.split("\n")
 
     # Extract and parse frontmatter
     frontmatter_lines = lines[1:end_idx]
@@ -138,6 +150,87 @@ def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     remaining = "\n".join(lines[end_idx + 1 :])
 
     return frontmatter, remaining
+
+
+class _IndentedListDumper(yaml.SafeDumper):
+    """SafeDumper that indents block sequences under their parent key."""
+
+    def increase_indent(self, flow: bool = False, indentless: bool = False) -> None:
+        return super().increase_indent(flow, False)
+
+
+def set_frontmatter_key(content: str, key: str, value: Any) -> str:
+    """Set one top-level frontmatter key, leaving every other line untouched.
+
+    The key's block is replaced in place if present, otherwise appended at the
+    end of the frontmatter. Only the new block is serialized, so existing key
+    order, quoting, comments and flow style elsewhere are preserved.
+
+    >>> page = '---\\ntitle: "Foo"\\ntags: [A, B]\\n---\\n# Foo\\n'
+    >>> out = set_frontmatter_key(page, "manifest", {"slides": [{"href": "FOO/s.html"}]})
+    >>> print(out, end="")
+    ---
+    title: "Foo"
+    tags: [A, B]
+    manifest:
+      slides:
+        - href: FOO/s.html
+    ---
+    # Foo
+    >>> print(set_frontmatter_key(out, "manifest", {"artifacts": []}), end="")
+    ---
+    title: "Foo"
+    tags: [A, B]
+    manifest:
+      artifacts: []
+    ---
+    # Foo
+    >>> print(set_frontmatter_key(out, "tags", ["C"]), end="")
+    ---
+    title: "Foo"
+    tags:
+      - C
+    manifest:
+      slides:
+        - href: FOO/s.html
+    ---
+    # Foo
+    >>> set_frontmatter_key("# no frontmatter", "x", 1)
+    Traceback (most recent call last):
+    ...
+    ValueError: content has no YAML frontmatter block
+    """
+    end_idx = frontmatter_end_line(content)
+    if end_idx is None:
+        raise ValueError("content has no YAML frontmatter block")
+    lines = content.split("\n")
+    block = yaml.dump(
+        {key: value},
+        Dumper=_IndentedListDumper,
+        sort_keys=False,
+        allow_unicode=True,
+        default_flow_style=False,
+        width=10_000,
+    ).rstrip("\n").split("\n")
+    # Locate the key's lines with the YAML parser, not a text heuristic: the
+    # block runs from the key to the next top-level key (or the closing ---).
+    root = yaml.compose("\n".join(lines[1:end_idx]))
+    if root is not None and not isinstance(root, yaml.MappingNode):
+        raise ValueError("frontmatter is not a YAML mapping")
+    key_lines = [1 + k.start_mark.line for k, _ in (root.value if root else [])]
+    keys = [k.value for k, _ in (root.value if root else [])]
+    if key in keys:
+        n = keys.index(key)
+        start = key_lines[n]
+        stop = key_lines[n + 1] if n + 1 < len(key_lines) else end_idx
+        # Trailing blank/comment lines before the next key stay where they are.
+        while stop > start + 1 and (
+            not lines[stop - 1].strip() or lines[stop - 1].lstrip().startswith("#")
+        ):
+            stop -= 1
+    else:
+        start = stop = end_idx
+    return "\n".join(lines[:start] + block + lines[stop:])
 
 
 def _frontmatter_bool(value: Any, default: bool) -> bool:
@@ -164,6 +257,226 @@ def _as_string_list(value: Any) -> List[str]:
     if isinstance(value, (list, tuple, set)):
         return [str(v) for v in value]
     return [str(value)]
+
+
+@dataclass(frozen=True)
+class ManifestKind:
+    """How one resource list under project ``manifest`` frontmatter behaves.
+
+    Attributes:
+        label: Pill/link text used when an entry has no ``title``.
+        allow_local: Whether ``href`` may be a path relative to ``projects/``
+            (otherwise it must be an ``https://`` URL).
+        local_source_suffix: For local targets, a sibling file with this
+            suffix must also exist (e.g. the Marp ``.md`` source of a deck).
+    """
+
+    label: str
+    allow_local: bool
+    local_source_suffix: Optional[str] = None
+
+
+#: Resource lists allowed under project frontmatter ``manifest``, in render
+#: order. Adding a new kind (e.g. ``data``, ``reports``) is one entry here.
+MANIFEST_KINDS: Dict[str, ManifestKind] = {
+    "slides": ManifestKind(label="Slides", allow_local=True, local_source_suffix=".md"),
+    "artifacts": ManifestKind(label="Brief", allow_local=False),
+}
+
+#: Allowed keys inside a single manifest entry.
+MANIFEST_ENTRY_KEYS = {"href", "title", "description"}
+
+
+def _is_https_url(href: str) -> bool:
+    """Return True for an absolute ``https://`` URL.
+
+    >>> _is_https_url("https://claude.ai/artifact/abc")
+    True
+    >>> _is_https_url("http://example.org/x")
+    False
+    >>> _is_https_url("FOO/slides/FOO-slides.html")
+    False
+    """
+    parsed = urlparse(href)
+    return parsed.scheme == "https" and bool(parsed.netloc)
+
+
+def validate_manifest(
+    manifest: Any, projects_dir: Path
+) -> Tuple[Dict[str, List[Dict[str, Any]]], List[str]]:
+    """Split a project's ``manifest`` frontmatter into valid entries and errors.
+
+    Returns ``(valid, errors)``: ``valid`` maps each kind in
+    :data:`MANIFEST_KINDS` to the entries that passed every check, and
+    ``errors`` describes each rejected key or entry. This is the one
+    implementation of the manifest rules; tests, rendering and asset copying
+    all consume it, so an invalid entry is excluded everywhere and reported.
+
+    >>> valid, errors = validate_manifest(
+    ...     {"artifacts": [{"href": "https://claude.ai/artifact/X"}, {"title": "no href"}]},
+    ...     Path("projects"))
+    >>> valid["artifacts"], valid["slides"]
+    ([{'href': 'https://claude.ai/artifact/X'}], [])
+    >>> errors
+    ["manifest.artifacts[1] needs a non-empty string 'href'"]
+    >>> validate_manifest("oops", Path("projects"))[1]
+    ['manifest must be a mapping']
+    """
+    valid: Dict[str, List[Dict[str, Any]]] = {kind: [] for kind in MANIFEST_KINDS}
+    if not isinstance(manifest, dict):
+        return valid, ["manifest must be a mapping"]
+    errors: List[str] = []
+    unknown = sorted(set(manifest) - set(MANIFEST_KINDS))
+    if unknown:
+        errors.append(
+            f"manifest has unknown key(s) {unknown}; "
+            f"allowed keys are {sorted(MANIFEST_KINDS)}"
+        )
+    for kind, spec in MANIFEST_KINDS.items():
+        entries = manifest.get(kind)
+        if entries is None:
+            continue
+        if not isinstance(entries, list):
+            errors.append(f"manifest.{kind} must be a list")
+            continue
+        for i, entry in enumerate(entries):
+            entry_errors = _manifest_entry_errors(entry, spec, projects_dir)
+            errors.extend(f"manifest.{kind}[{i}] {e}" for e in entry_errors)
+            if not entry_errors:
+                valid[kind].append(entry)
+    return valid, errors
+
+
+def _manifest_entry_errors(entry: Any, spec: ManifestKind, projects_dir: Path) -> List[str]:
+    """Problems with one manifest entry (empty if valid)."""
+    if not isinstance(entry, dict):
+        return ["must be a mapping"]
+    errors: List[str] = []
+    extra = sorted(set(entry) - MANIFEST_ENTRY_KEYS)
+    if extra:
+        errors.append(
+            f"has unknown key(s) {extra}; allowed keys are {sorted(MANIFEST_ENTRY_KEYS)}"
+        )
+    for key in ("title", "description"):
+        if key in entry and not isinstance(entry[key], str):
+            errors.append(f"'{key}' must be a string")
+    href = entry.get("href")
+    if not isinstance(href, str) or not href.strip():
+        return errors + ["needs a non-empty string 'href'"]
+    if _is_https_url(href):
+        return errors
+    if not spec.allow_local:
+        return errors + [f"href {href!r} must be an https URL"]
+    target = (projects_dir / href).resolve()
+    if urlparse(href).scheme or not target.is_relative_to(projects_dir.resolve()):
+        errors.append(f"href {href!r} must be an https URL or a path under projects/")
+    elif not target.is_file():
+        errors.append(f"href {href!r} does not exist under projects/")
+    elif spec.local_source_suffix and not target.with_suffix(spec.local_source_suffix).is_file():
+        errors.append(
+            f"href {href!r} has no sibling "
+            f"{target.with_suffix(spec.local_source_suffix).name} source"
+        )
+    return errors
+
+
+def manifest_errors(manifest: Any, projects_dir: Path) -> List[str]:
+    """Return problems with a project's ``manifest`` frontmatter (empty if valid).
+
+    ``manifest`` maps each kind in :data:`MANIFEST_KINDS` to a list of entries
+    with a required ``href`` and optional ``title``/``description``. Local
+    ``href`` values are paths relative to ``projects_dir``.
+
+    >>> ok = {"artifacts": [{"href": "https://claude.ai/artifact/X", "title": "Brief"}]}
+    >>> manifest_errors(ok, Path("projects"))
+    []
+    >>> manifest_errors({"decks": []}, Path("projects"))
+    ["manifest has unknown key(s) ['decks']; allowed keys are ['artifacts', 'slides']"]
+    >>> manifest_errors({"artifacts": [{"href": "FOO/brief.html"}]}, Path("projects"))
+    ["manifest.artifacts[0] href 'FOO/brief.html' must be an https URL"]
+    >>> manifest_errors({"artifacts": [{"url": "https://x.org"}]}, Path("projects"))[0]
+    "manifest.artifacts[0] has unknown key(s) ['url']; allowed keys are ['description', 'href', 'title']"
+    """
+    return validate_manifest(manifest, projects_dir)[1]
+
+
+def manifest_resources(
+    frontmatter: Dict[str, Any], md_path: Path, projects_dir: Path
+) -> List[Dict[str, Any]]:
+    """Flatten the *valid* ``manifest`` entries into render-ready resource links.
+
+    Entries rejected by :func:`validate_manifest` are excluded (the renderer
+    reports them as page warnings). Local hrefs (relative to ``projects_dir``)
+    are re-expressed relative to ``md_path``'s folder, so the link works from
+    the page's rendered location.
+
+    >>> fm = {"manifest": {
+    ...     "artifacts": [{"href": "https://claude.ai/artifact/X"}, {"title": "bad"}],
+    ...     "slides": [{"href": "https://example.org/deck.html", "title": "Deck",
+    ...                 "description": "AI generated"}]}}
+    >>> for r in manifest_resources(fm, Path("projects/FOO.md"), Path("projects")):
+    ...     print(r["kind"], r["label"], r["href"], r["external"], r["description"])
+    slides Deck https://example.org/deck.html True AI generated
+    artifacts Brief https://claude.ai/artifact/X True None
+    >>> manifest_resources({}, Path("projects/FOO.md"), Path("projects"))
+    []
+    """
+    if "manifest" not in frontmatter:
+        return []
+    valid, _ = validate_manifest(frontmatter["manifest"], projects_dir)
+    resources: List[Dict[str, Any]] = []
+    for kind, spec in MANIFEST_KINDS.items():
+        for entry in valid[kind]:
+            href = entry["href"]
+            external = _is_https_url(href)
+            if not external:
+                href = Path(
+                    os.path.relpath(projects_dir / href, md_path.parent)
+                ).as_posix()
+            resources.append(
+                {
+                    "kind": kind,
+                    "label": entry.get("title") or spec.label,
+                    "href": href,
+                    "description": entry.get("description"),
+                    "external": external,
+                }
+            )
+    return resources
+
+
+def referenced_manifest_files(md_path: Path, projects_dir: Path) -> List[Path]:
+    """Local files under ``projects_dir`` named by *valid* ``manifest`` hrefs."""
+    frontmatter, _ = parse_frontmatter(md_path.read_text())
+    if "manifest" not in frontmatter:
+        return []
+    valid, _ = validate_manifest(frontmatter["manifest"], projects_dir)
+    files: List[Path] = []
+    for kind in MANIFEST_KINDS:
+        for entry in valid[kind]:
+            if _is_https_url(entry["href"]):
+                continue
+            candidate = (projects_dir / entry["href"]).resolve()
+            if candidate not in files:
+                files.append(candidate)
+    return files
+
+
+def manifest_warnings(
+    frontmatter: Dict[str, Any], md_path: Path, projects_dir: Path
+) -> List[str]:
+    """Page warnings for every manifest entry the renderer had to exclude.
+
+    >>> manifest_warnings({"manifest": {"slides": [{"title": "x"}]}},
+    ...                   Path("projects/FOO.md"), Path("projects"))
+    ["Invalid manifest in FOO.md, entry not rendered: manifest.slides[0] needs a non-empty string 'href'"]
+    """
+    if "manifest" not in frontmatter:
+        return []
+    return [
+        f"Invalid manifest in {md_path.name}, entry not rendered: {error}"
+        for error in manifest_errors(frontmatter["manifest"], projects_dir)
+    ]
 
 
 def should_autolink_gene_symbols(frontmatter: Dict[str, Any]) -> bool:
@@ -1096,6 +1409,7 @@ def copy_referenced_assets(
         pending.extend(
             referenced_local_assets(md_file, projects_dir)
             + referenced_frontmatter_sidecars(md_file, projects_dir)
+            + referenced_manifest_files(md_file, projects_dir)
         )
     while pending:
         asset_path = pending.pop(0)
@@ -1218,8 +1532,13 @@ def render_project(
         )
     else:
         linked_content, symbol_warnings = content, []
+    manifest_root = projects_dir if projects_dir is not None else md_path.parent
     warnings = (
-        frontmatter_gene_warnings + tag_warnings + qualified_warnings + symbol_warnings
+        frontmatter_gene_warnings
+        + tag_warnings
+        + qualified_warnings
+        + symbol_warnings
+        + manifest_warnings(frontmatter, md_path, manifest_root)
     )
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
@@ -1305,6 +1624,7 @@ def render_project(
         warnings=warnings,
         frontmatter=frontmatter,
         collections=collections,
+        resources=manifest_resources(frontmatter, md_path, manifest_root),
         projects_base_path="../" * subdir_depth,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
@@ -1314,7 +1634,20 @@ def render_project(
     repo_root = projects_dir.resolve().parent if projects_dir is not None else genes_dir.resolve().parent
     # Bundle assets are copied after rendering; retain their mirrored URLs even
     # on a clean build where those output files do not exist yet.
-    mirrored_assets = set(referenced_local_assets(md_path, projects_dir)) if projects_dir is not None else set()
+    mirrored_assets = (
+        set(referenced_local_assets(md_path, projects_dir))
+        | set(referenced_manifest_files(md_path, projects_dir))
+        if projects_dir is not None
+        else set()
+    )
+    # Provider report exports may list artifacts that were never archived.
+    # Render the same explicit notices as gene research panels, while leaving
+    # undeclared broken links visible to the publication audit.
+    # Keep artifact URLs relative to the source here; the publication rewriter
+    # below maps archived files into their mirrored output locations.
+    html = resolve_research_artifacts(
+        normalize_artifact_metadata(frontmatter), html, md_path, md_path.parent,
+    )
     html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
@@ -1485,6 +1818,7 @@ def collect_project_rows(projects_dir: Path) -> List[Dict[str, Any]]:
         review_count = len(manual_reviews) if isinstance(manual_reviews, list) else 0
 
         collections = _as_string_list(frontmatter.get("collections"))
+        resources = manifest_resources(frontmatter, md_path, projects_dir)
         rows.append(
             {
                 "slug": md_path.stem,
@@ -1498,6 +1832,10 @@ def collect_project_rows(projects_dir: Path) -> List[Dict[str, Any]]:
                 "support_count": support_count,
                 "review_status": review_status,
                 "review_count": review_count,
+                "manifest": {
+                    kind: [r for r in resources if r["kind"] == kind]
+                    for kind in MANIFEST_KINDS
+                },
             }
         )
 
@@ -1567,7 +1905,14 @@ def render_projects_table(
     # Stable, meaningful ordering for the controlled vocabularies so the
     # template can render filter chips deterministically.
     maturity_order = ["SCOPING", "IN_PROGRESS", "MATURE", "COMPLETE", "ARCHIVED"]
-    tag_order = ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "OBSOLETION"]
+    tag_order = [
+        "FLAGSHIP",
+        "BIOLOGY_DOMAIN",
+        "PIPELINE",
+        "EVALUATION",
+        "ML_PREDICTIONS",
+        "OBSOLETION",
+    ]
     review_status_order = ["READY", "CHANGES_REQUESTED"]
     all_maturities = [
         m for m in maturity_order if any(r["maturity"] == m for r in rows)
@@ -1596,6 +1941,7 @@ def render_projects_table(
         all_species=all_species,
         all_collections=all_collections,
         all_review_statuses=all_review_statuses,
+        manifest_kinds=MANIFEST_KINDS,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 

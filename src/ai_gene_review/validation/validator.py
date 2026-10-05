@@ -323,7 +323,7 @@ def validate_gene_review(
         check_goa: Whether to validate against GOA file (enabled by default)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
-        publications_dir: Optional publication-cache directory for quote validation
+        publications_dir: Optional publication-cache directory for quote and availability checks
 
     Returns:
         ValidationReport with detailed validation results
@@ -378,6 +378,54 @@ def validate_gene_review(
     return report
 
 
+def _check_proposed_molecular_function(
+    core_func: dict, i: int, proposed_terms_by_name: dict, report: ValidationReport
+) -> None:
+    """Check a core function's proposed_molecular_function.
+
+    It must be a string naming a top-level proposed_new_terms entry, must not be
+    combined with molecular_function (the point of the slot is to stop carrying an
+    obsolete or ill-fitting id), and must be grounded: supported_by on the core
+    function or on the proposed term, since it can never trace to an existing
+    annotation.
+    """
+    path = f"core_functions[{i}].proposed_molecular_function"
+    proposed_mf = core_func.get("proposed_molecular_function")
+    if not isinstance(proposed_mf, str):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"proposed_molecular_function must be a proposed_new_terms name (a string), got {type(proposed_mf).__name__}",
+            path=path,
+            suggestion="Use the proposed_name string, not a {id, label} term",
+        )
+        return
+    if core_func.get("molecular_function"):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Core function sets both molecular_function and proposed_molecular_function '{proposed_mf}'",
+            path=path,
+            suggestion="Drop molecular_function; the proposed term replaces it until GO creates one",
+        )
+    proposed = proposed_terms_by_name.get(proposed_mf)
+    if proposed is None:
+        names = sorted(n for n in proposed_terms_by_name if isinstance(n, str))
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Core function proposed_molecular_function '{proposed_mf}' does not match any proposed_new_terms entry"
+            + (f" (available: {', '.join(repr(n) for n in names)})" if names else " (there are none)"),
+            path=path,
+            suggestion="Add a proposed_new_terms entry whose proposed_name matches exactly, with a definition and justification",
+        )
+        return
+    if not core_func.get("supported_by") and not proposed.get("supported_by"):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"Proposed molecular function '{proposed_mf}' has no supported_by on the core function or the proposed term",
+            path=path,
+            suggestion="A proposed activity can never trace to an existing annotation, so it needs its own evidence",
+        )
+
+
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
@@ -398,7 +446,7 @@ def check_best_practices_rules(
         yaml_file: Path to YAML file for GOA validation (if enabled)
         check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
-        publications_dir: Optional publication-cache directory for quote validation
+        publications_dir: Optional publication-cache directory for quote and availability checks
     """
     if progress_callback:
         progress_callback("Running best-practices checks")
@@ -853,6 +901,29 @@ def check_best_practices_rules(
                                     modified_terms.add(term_id)
 
         core_function_terms = set()
+        proposed_terms_by_name = {
+            term.get("proposed_name"): term
+            for term in data.get("proposed_new_terms") or []
+            if isinstance(term, dict)
+        }
+
+        # An NTR replacement in a MODIFY should name the same proposed term, so the
+        # MODIFY side and the core-function side point at one proposal.
+        for k, ann in enumerate(data.get("existing_annotations") or []):
+            review = ann.get("review") if isinstance(ann, dict) else None
+            for rt in (review or {}).get("proposed_replacement_terms") or []:
+                if not (isinstance(rt, dict) and rt.get("id") == "NTR"):
+                    continue
+                label = str(rt.get("label") or "")
+                if not any(label.startswith(n) for n in proposed_terms_by_name if isinstance(n, str) and n):
+                    report.add_issue(
+                        ValidationSeverity.WARNING,
+                        f"NTR replacement '{label}' does not start with any proposed_new_terms name",
+                        path=f"existing_annotations[{k}].review.proposed_replacement_terms",
+                        suggestion="Start the NTR label with the proposed_name of a proposed_new_terms entry",
+                        validation_category="BestPractices",
+                        check_type="ntr_replacement_not_in_proposed_new_terms",
+                    )
 
         for i, core_func in enumerate(data["core_functions"]):
             if isinstance(core_func, dict):
@@ -897,6 +968,12 @@ def check_best_practices_rules(
                             validation_category="BestPractices",
                             check_type="core_function_molecular_function_not_in_annotations",
                         )
+
+                # proposed_molecular_function: the core activity when GO has no term yet
+                if "proposed_molecular_function" in core_func:
+                    _check_proposed_molecular_function(
+                        core_func, i, proposed_terms_by_name, report
+                    )
 
                 # Check locations field (should be CC terms)
                 locations = core_func.get("locations", [])
@@ -1023,8 +1100,10 @@ def check_best_practices_rules(
                                 f"existing_annotations[{i}].review.supported_by[{j}].reference_id",
                             )
 
-    # Check for ACCEPT annotations with PMIDs lacking supported_by
-    # Only warn if the publication file exists (full text is available)
+    # Match quote validation's cache root and full-text availability semantics.
+    # Nested publication directories must not shadow the repository cache.
+    cache_dir = publications_dir if publications_dir is not None else get_project_root() / "publications"
+    # Check for ACCEPT annotations with PMIDs lacking supported_by.
     if "existing_annotations" in data and data["existing_annotations"]:
         for i, annotation in enumerate(data["existing_annotations"]):
             if isinstance(annotation, dict):
@@ -1034,40 +1113,9 @@ def check_best_practices_rules(
                     if ref_id and ref_id.startswith("PMID:"):
                         supported_by = review.get("supported_by", [])
                         if not supported_by:
-                            pmid_number = ref_id.replace("PMID:", "")
-                            if yaml_file is not None:
-                                project_root = yaml_file.parent
-                                while (
-                                    project_root.parent != project_root
-                                    and not (project_root / "publications").exists()
-                                ):
-                                    project_root = project_root.parent
-                                pub_file = (
-                                    project_root
-                                    / "publications"
-                                    / f"PMID_{pmid_number}.md"
-                                )
-                            else:
-                                pub_file = (
-                                    Path("publications") / f"PMID_{pmid_number}.md"
-                                )
-
-                            full_text_available = False
-                            if pub_file.exists():
-                                import yaml as yaml_lib
-
-                                with open(pub_file, "r") as f:
-                                    content = f.read()
-                                    if content.startswith("---"):
-                                        end_marker = content.find("---", 3)
-                                        if end_marker != -1:
-                                            frontmatter = content[3:end_marker]
-                                            pub_data = yaml_lib.safe_load(
-                                                frontmatter
-                                            )
-                                            full_text_available = pub_data.get(
-                                                "full_text_available", False
-                                            )
+                            full_text_available = cached_full_text_available(
+                                ref_id, cache_dir
+                            )
 
                             if full_text_available:
                                 report.add_issue(

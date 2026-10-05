@@ -9,6 +9,13 @@ sidecars:
     - BACSU/slides/actions-bar.svg
     - BACSU/slides/sigG-review-table.jpg
     - BACSU/slides/sporulation-cascade.svg
+manifest:
+  slides:
+    - href: BACSU/slides/BACSU-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/AuQCDtu8bJ3pAjSXuMRzAB
+      title: Project brief
 ---
 
 # Bacillus subtilis project
@@ -243,7 +250,3 @@ Starting BACSU project review. fliW was already reviewed and validated - it has 
 1. PMID:25313396 erroneously cited for swrD (and fliH, fliY, fliW) - paper doesn't mention these genes
 2. spoVAD incorrectly annotated as acyltransferase based on thiolase-like fold
 3. yddE is well-characterized as ConE but labeled "uncharacterized" in UniProt
-
-## Slides
-
-- [Slides](BACSU/slides/BACSU-slides.html) (Marp source: [BACSU-slides.md](BACSU/slides/BACSU-slides.md)) — AI generated
