@@ -5,7 +5,8 @@ UniProt: P04083. Human, NCBITaxon:9606. PANTHER PTHR10502:SF17 (ANNEXIN A1).
 ## Deep research status
 
 - 2026-10-05: `just deep-research-falcon human ANXA1` failed with Edison API
-  `429 Too Many Requests` (no perplexity key available for fallback). Retried once.
+  `429 Too Many Requests` (no perplexity key available for fallback). Retried once; the retry timed out after 600 s.
+  No deep-research file exists for ANXA1.
   Review proceeds from cached GOA-cited publications, the UniProt record and a few
   additional PubMed-retrieved papers (PMID:19104500, PMID:12475898, PMID:32272059,
   PMID:10673436, PMID:8425544, PMID:9425121), fetched with `just fetch-pmid`.

@@ -4,7 +4,7 @@
 
 - 2026-10-05: `just deep-research-falcon human COL1A2` failed on the first attempt
   (Edison API returned `429 Too Many Requests`; "Provider falcon exited with code 1 /
-  All providers failed"). No perplexity key is available. A single retry was launched;
+  All providers failed"). No perplexity key is available. A single retry also failed (falcon timed out after 600s);
   the review below was written from the UniProt record and the cached publications in
   `publications/` (PubMed abstracts / full texts), not from a deep-research report.
 
