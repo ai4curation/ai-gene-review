@@ -17,7 +17,7 @@
   acetyl-CoA and carnitine. The RCA `GO:0005829 cytosol` row was removed as an
   import artifact from an aggregate carnitine O-acetyltransferase reaction:
   endogenous Cat2 is mitochondrial/peroxisomal, while the cytosolic arm of the
-  yeast shuttle is better represented by Yat proteins in the pathway model.
+  yeast shuttle is better represented by Yat2 in the pathway model.
 - The UniProt/QuickGO refresh also restored a 1995 primary peroxisome-localization
   annotation from PMID:7628448. The paper is abstract-only in the cache, but the
   abstract directly states that yeast carnitine acetyltransferase is present in
