@@ -219,9 +219,13 @@ research; the honest `knowledge_gaps` section captures exactly what remains unkn
 ## 2026-10-01 current-GOA / IBA review
 
 - Refreshed ERR1 from current UniProt/GOA before editing. Current GOA has 11
-  live rows after the header; the refresh split the old SGD `GO:0004634`/`ISA`
-  assertion into separate ENO1 (`SGD:S000001217`) and ENO2 (`SGD:S000003486`)
-  source rows and advanced InterPro/UniProt IEA dates.
+  live rows after the header, matching the pre-refresh GOA row count. Both SGD
+  `GO:0004634`/`ISA` rows were already present in GOA; the old review had merged
+  the ENO1 (`SGD:S000001217`) and ENO2 (`SGD:S000003486`) sources into one row,
+  so this pass split the legacy merged review row to match GOA. The refresh itself
+  advanced InterPro/UniProt IEA dates and renamed `GO:0006096` from `glycolytic
+  process` to `glycolysis`.
+
 - Checked `interpro/panther/PTHR11902/PTHR11902-paint.tsv`; all three ERR1
   IBA assertions (`GO:0004634`, `GO:0006096`, `GO:0000015`) trace to
   `PANTHER:PTN000224401`. The node is the enolase ancestral node and supports
@@ -238,3 +242,12 @@ research; the honest `knowledge_gaps` section captures exactly what remains unkn
   Later hits either cite the ERR proteins as putative enolases in pathway
   models or report high-throughput context for ERR2/ERR3; none supersede
   Kornblatt et al. or add direct ERR1-locus assays.
+
+## 2026-10-05 PR #3751 reviewer follow-up
+
+- Corrected the `GO:0000015 phosphopyruvate hydratase complex` IBA
+  `root_cause` from `NO_FAILURE_CORE` to `NO_FAILURE_NON_CORE` to match its
+  non-core action.
+- Corrected the current-GOA sidecar and notes so the ENO2 ISA row is described
+  as a pre-existing GOA source split out of a legacy merged review row rather
+  than as a newly added GOA row.
