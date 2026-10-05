@@ -76,6 +76,33 @@
 
 - Falcon attempt 1: Edison API `429 Too Many Requests`.
 - Falcon attempt 2: `Provider falcon timed out after 600s` / "All providers failed".
-- No deep-research file was produced; the review relies on the cached GOA publications,
+- No deep-research file was produced at review time (**update:** the falcon run in fact
+  completed late and `MS4A1-deep-research-falcon.md` is now present; see reconciliation below); the review relies on the cached GOA publications,
   the UniProt record, and additional PubMed papers listed above (PMID:20038800,
   PMID:14688067, PMID:32079680, PMID:22615937).
+
+## Reconciliation with late falcon deep research (2026-10-05)
+
+`MS4A1-deep-research-falcon.md` arrived after the review was drafted. Comparison:
+
+- **Consistent:** B-cell-restricted four-pass plasma-membrane MS4A protein; cryo-EM dimer;
+  CD20 deficiency (CVID5) with impaired T-independent antibody responses; no established
+  channel/enzyme/ligand activity; calcium-channel pore status unresolved (matches the
+  existing knowledge gap and the decision not to assert a channel MF).
+- **Material addition, verified and acted on:** CD20 as a "gatekeeper" of the resting
+  state. CRISPR ablation in Ramos B cells (with rescue by re-expression) and rituximab
+  treatment of naive human B cells cause IgM-BCR/CD19 relocalization and transient
+  activation [PMID:33563755 "we show that CD20 controls the proper nanoscale receptor organization on resting B cells and prevents uncontrolled IgM-BCR/CD19 signaling"].
+  PubMed-verified, full text cached via `just fetch-pmid 33563755`. Changes: one sentence
+  added to `description`; PMID:33563755 added to references and to the GO:0050853 (B cell
+  receptor signaling pathway) review support, with the reason noting the restraining role.
+  Action unchanged (ACCEPT).
+- **Not acted on (unverifiable here):** (i) that the Rouge 2020 structure (PMID:32079680)
+  shows no plausible ion-permeation pathway; (ii) that CD20-deficient patient B-cell lines
+  retain BCR-induced Ca2+ flux (Kuijpers 2010, PMID:20038800). Both cached papers are
+  abstract-only and the abstracts do not state these points. If confirmed they would weaken
+  the "required for SOC entry" framing of GO:0002115 / GO:1902656 (currently ACCEPT, based on
+  siRNA and mouse KO data); flagged for future follow-up rather than changed.
+- **Noted only:** CD20 on a subset (~3-5%) of human T cells (von Essen 2024); mouse
+  olfactory CD20 (not transferable to human); therapeutic/clinical material.
+- Deep-research file added to `references` as `file:human/MS4A1/MS4A1-deep-research-falcon.md`.
