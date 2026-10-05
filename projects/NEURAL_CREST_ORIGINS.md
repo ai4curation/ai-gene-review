@@ -154,7 +154,7 @@ Last updated: 2026-10-01
 - [ ] `human/MSX1` (P28360) — Msx (no reviewed *X. laevis* entry)
 - [ ] `human/TFAP2A` (P05549) — AP-2; early NPB/NC; amphioxus/lamprey AP-2
 - [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (20 ACCEPT, 5 non-core, 3 MODIFY, 1 UNDECIDED) + 1 NEW (GO:0001227)
-- [ ] `XENLA/gbx2` (Q91907) — Gbx2; posterior border (cross-check `human/GBX2`)
+- [x] `XENLA/gbx2` (Q91907) — Gbx2; border specifier, upstream of pax3/msx1. Reviewed 2026-10-05: 13 GOA rows (9 ACCEPT, 2 MODIFY, 2 non-core) + 4 NEW (GO:0014029, GO:0001227, GO:0030917, GO:0043049)
 
 ## Tier 3 — Blastula pluripotency programme retained in the crest
 
@@ -394,6 +394,23 @@ Cross-cutting findings:
   absent there [PMID:18562679]. Pax3 is an ancestral border gene; its link to
   the specifiers is what vertebrates added. The experimental rows sit on
   both homeologs identically, but the reagents did not distinguish them.
+
+- **gbx2.** Border specifier. Wnt activates it directly (ChIP, enhancer
+  test). Knockdown removes crest markers and expands the placode domain, with
+  rescue. It acts upstream of pax3 and msx1, needs Zic1 to induce crest, and
+  represses six1 [PMID:19736322, PMID:22564795]. No *Xenopus* Gbx entry had any
+  experimental annotation, so four NEW IMP terms were added from uncurated
+  papers: `GO:0014029`, `GO:0001227`, `GO:0030917` (midbrain–hindbrain
+  boundary) and `GO:0043049` (otic placode formation). `GO:0014029` rather than
+  `GO:0014036`, because Gbx2 alone cannot make crest. The comparator check was
+  verified in QuickGO: the border peers pax3-a, zic1 and hes4-a carry
+  `GO:0014029` by IMP and none carries `GO:0014036`, and mouse Gbx2 (P48031)
+  carries `GO:0001755` migration by IMP from three papers. So the frog gap is
+  uncurated literature. Evolution: amphioxus Gbx abuts Otx, so the Gbx/Otx
+  positioning machinery is ancestral to chordates. *Ciona* has lost Gbx, and
+  lamprey gbx2 shows the frog-like border expression. Gbx2 is an ancestral
+  positional gene put to work at the border in vertebrates. Open: *X. laevis*
+  has four gbx2 copies, so which one the morpholinos target is unclear.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
