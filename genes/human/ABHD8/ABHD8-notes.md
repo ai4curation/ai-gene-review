@@ -195,3 +195,15 @@ No direct target assay alone does not refute an IBD, and an adaptor function can
 PAINT: {'family': 'PTHR42886', 'node': 'PTN008676419', 'finding': 'Fetched actual family membership and PAINT slice. Current hydrolase, LPAAT, PA-biosynthesis and homeostasis IBDs were checked. Human ABHD5/yeast Ict1/plant CGI-58 evidence is distinguished from mouse Abhd4/yeast Cld1 hydrolase evidence.'}
 
 All 16 rows were assessed, including experimental, electronic, negated and old proposed entries. All actual GOA rows and source fields remain unchanged. One redundant old reviewer-authored NEW proposal was deleted; the original reviewed-row count includes that proposal. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.
+
+## 2026-10-05 - OpenScientist lipid-catalysis follow-up
+
+Evaluated `ABHD8-hypotheses/lipid-catalysis-versus-inflammasome-adaptor/openscientist.md`.
+The report agrees with the narrow current position that ABHD8 has a predicted
+Ser/Asp/His catalytic triad but no demonstrated lipid substrate.
+
+I did not adopt the stronger recommendation to mark the specific hydrolase IBAs
+over-annotated. Absence of direct ABHD8 substrate assays does not by itself
+refute a PAINT ancestral-function placement, and the current review already
+separates hydrolase source evidence from the unresolved ABHD5, plant CGI-58 and
+yeast Ict1 source conflicts behind LPAAT and phosphatidic-acid biosynthesis.
