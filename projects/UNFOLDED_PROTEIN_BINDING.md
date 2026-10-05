@@ -392,7 +392,7 @@ All 148 genes organized by mechanism class (human + non-human combined):
 |---|----------|-------|------------------|
 | 1 | **HSP70 foldase/holdase** | HSPA1A/B, HSPA2, HSPA6, HSPA8, HSPA1L (human); SSA1-4, SSB1-2, SSQ1, KAR2, LHS1 (yeast); DnaK (E. coli); Hspa8 (mouse, rat); Hspa5/BiP (rat). SSZ1 is an atypical RAC regulator rather than an autonomous foldase. | ATP-dependent foldases: MODIFY → GO:0140662; holdase NTR pending; SSZ1 retains GO:0044183 under the pragmatic co-chaperone convention |
 | 2 | **HSP90 system** | AHSA1, PTGES3, AIP (human); HSP82, HSC82, CPR6, CPR7, CDC37 (yeast); CDC37 (C. albicans); Hsp83 (fly) | MODIFY or OVER_ANNOTATED |
-| 3 | **J-domain co-chaperones** | DNAJB1, DNAJB2, DNAJA2, DNAJA4 (human); DNAJB6, DNAJB8 (human, holdase-type); YDJ1, MDJ1, APJ1 (yeast); JEM1 (yeast, C. albicans); DnaJ (E. coli); Dnaja3, Dnajb11 (mouse) | MODIFY → GO:0044183 (interim); holdase-type → holdase NTR |
+| 3 | **J-domain co-chaperones** | DNAJB1, DNAJB2, DNAJA2, DNAJA4 (human); DNAJB6, DNAJB8 (human, holdase-type); YDJ1, MDJ1 (yeast); APJ1 (yeast, retired upstream); JEM1 (yeast, C. albicans); DnaJ (E. coli); Dnaja3, Dnajb11 (mouse) | MODIFY → GO:0044183 for retained non-holdase rows; APJ1 was not converted to a NEW assertion after upstream GO:0051082 retirement; holdase-type → holdase NTR |
 | 4 | **sHSPs/holdases** | CRYAA, CRYAB, HSPB6 (human); CLU, SCG5 (human); CRYAA (bovine); cryaa/cryaba/cryabb (zebrafish); HSP26 (yeast); Hsp22/23/26/27 (fly); HSP17.7 (Arabidopsis); HSPH1 (hamster) | MODIFY → holdase NTR; retain GO:0051082 until NTR created |
 | 5 | **Chaperonin/TRiC/CCT** | TCP1, CCT2-8 (yeast); GroEL (E. coli); HSP60, HSP10 (yeast) | MODIFY → GO:0044183 |
 | 6 | **Prefoldin** | PFDN1-6, VBP1 (human); PFD1, EGD1, EGD2 (yeast) | MODIFY → GO:0044183 |
@@ -400,8 +400,8 @@ All 148 genes organized by mechanism class (human + non-human combined):
 | 8 | **ER quality control** | UGGT1, ERLEC1, SYVN1 (human); Uggt1 (rat); CNE1, EPS1, PDI1, EUG1, ROT1, IRE1 (yeast); IRE1 (T. reesei); CSH3 (C. albicans); Edem2 (fly) | OVER_ANNOTATED or REMOVE (sensors, not chaperones) |
 | 9 | **Mito import/assembly** | TOMM20, GRPEL1 (human); TIM9, TIM10, COX20, PET100, SHY1, ATP10, ATP11 (yeast); Grpel2 (mouse); cia30 (N. crassa) | OVER_ANNOTATED (assembly factors) or MODIFY (TIMs → GO:0140309) |
 | 10 | **Ubiquitin/QC sensor** | SYVN1 (human); SAN1 (yeast); Fbxo2 (mouse); slrP (Salmonella) | REMOVE or MODIFY to GO:0051787 |
-| 11 | **Envelope/secretion chaperone systems** | SurA, Skp, Spy, SecB, HdeA, HdeB, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; SecB is a cytosolic secretion-coupled holdase, whereas the others act in the periplasm or envelope stress pathway. HdeA/HdeB/Spy await the general holdase NTR; CpxP is over-annotated and instead has NEW GO:0140767/GO:0070298 plus MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
-| 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | MODIFY → GO:0044183 or OVER_ANNOTATED |
+| 11 | **Envelope/secretion chaperone systems** | SurA, Skp, Spy, SecB, HdeA, HdeB, CpxP (E. coli) | Carrier-holdases SurA, SecB, and Skp: MODIFY → GO:0140309; SecB is a cytosolic secretion-coupled holdase, whereas the others act in the periplasm or envelope stress pathway. HdeA/HdeB/Spy await the general holdase NTR; CpxP has REMOVE x2 for obsolete GO:0051082 rows, MODIFY → GO:0140767, NEW GO:0140767/GO:0070298, and MODIFY → GO:0030547/GO:0045862. HdeA, HdeB, and Spy re-reviews found no defined acceptor or delivery destination and added GO:0050821 protein stabilization |
+| 12 | **Ribosome assembly** | SQT1, SYO1, YAR1, RRB1, TSR4, PNO1, ACL4, SHQ1, BTT1 (yeast) | Dedicated carrier chaperones with a defined acceptor, such as YAR1, may warrant MODIFY → GO:0140309; remaining older GO:0044183 sibling decisions need re-review |
 | 13 | **Peroxiredoxin/redox chaperones** | TSA1 (yeast); pmp20, tpx1 (S. pombe); CnoX (E. coli); PP_1084/PpPrx (*P. putida*, direct literature gap case) | MODIFY → holdase NTR when evidence shows in-situ aggregation prevention without refolding; older GO:0044183 sibling decisions require re-review |
 | 14 | **Conditional moonlighting holdase** | RidA (E. coli) | MODIFY GO:0051082 → holdase NTR for reversible N-chlorination-dependent ATP-independent holdase activity; primary function is 2-iminoacid deaminase activity |
 | 15 | **Membrane protein chaperones** | SHR3, PHO86, GSF2, CHS7, NSG1, NSG2, VMA22, VPS45 (yeast) | MODIFY or OVER_ANNOTATED |
@@ -544,7 +544,7 @@ established:
 | Nmnat | *D. melanogaster* | Q9VC03 | 32 | MODIFY | Neuroprotective chaperone |
 | Edem2 | *D. melanogaster* | Q9VK27 | 23 | OVER_ANNOTATED | ERAD sensor, not chaperone |
 | CnoX | *E. coli* | P77395 | 12 | MODIFY → GO:0044183 | Redox-activated holdase |
-| CpxP | *E. coli* | P0AE85 | 11 | MARK_AS_OVER_ANNOTATED; NEW GO:0140767, GO:0070298; MODIFY → GO:0030547, GO:0045862 | DegP substrate adaptor and CpxA inhibitor; weak in-vitro chaperone activity does not establish a general holdase function |
+| CpxP | *E. coli* | P0AE85 | 11 | REMOVE x2; MODIFY → GO:0140767; NEW GO:0140767, GO:0070298; MODIFY → GO:0030547, GO:0045862 | DegP substrate adaptor and CpxA inhibitor; weak in-vitro chaperone activity does not establish a general holdase function |
 | DnaJ | *E. coli* | P08622 | 49 | MODIFY → GO:0044183 (3 rows); MARK_AS_OVER_ANNOTATED (1 miscited CAFA row); NEW GO:0001671 | J-domain co-chaperone and DnaK ATPase activator; comprehensive review complete |
 | DnaK | *E. coli* | P0A6Y8 | 61 | MODIFY → GO:0044183/GO:0140662; NEW holdase chaperone activity NTR | ATP-dependent HSP70 foldase with directly demonstrated ATP-independent holdase activity; comprehensive review complete |
 | GroEL | *E. coli* | P0A6F5 | 62 | MODIFY → GO:0140662 (4 obsolete GO:0051082 rows); MODIFY → GO:0051087 (GroES-only protein-binding rows); MARK_AS_OVER_ANNOTATED (1 scaffold artifact) | ATP-dependent GroEL-GroES chaperonin foldase; comprehensive review complete |
@@ -572,7 +572,7 @@ established:
 | IRE1 | *T. reesei* | G0RBE3 | 21 | OVER_ANNOTATED | UPR sensor, not chaperone |
 | slrP | *S. typhimurium* | Q8ZQQ2 | 16 | REMOVE | T3SS effector E3 ligase (misannotation) |
 | ACL4 | *S. cerevisiae* | Q03771 | 18 | MODIFY | Ribosome assembly |
-| APJ1 | *S. cerevisiae* | P53940 | 26 | MODIFY → GO:0044183 | Nuclear J-domain co-chaperone; routes aggregated clients to proteasomal turnover |
+| APJ1 | *S. cerevisiae* | P53940 | 22 | GO:0051082 retired upstream; no NEW GO:0044183 | Nuclear J-domain co-chaperone; demonstrated output is aggregate turnover rather than refolding |
 | ATP10 | *S. cerevisiae* | P18496 | 14 | OVER_ANNOTATED | Atp6p assembly factor |
 | ATP11 | *S. cerevisiae* | P32453 | 16 | NON_CORE | Atp12p assembly factor |
 | BTT1 | *S. cerevisiae* | P40314 | 15 | MODIFY | Ribosome assembly |
@@ -595,7 +595,7 @@ established:
 | EUG1 | *S. cerevisiae* | P32474 | 24 | UNDECIDED | CXXS PDI-family redox/folding factor; the cached evidence does not resolve generic unfolded-protein binding |
 | GET3 | *S. cerevisiae* | Q12154 | 64 | MODIFY | TA protein chaperone |
 | GSF2 | *S. cerevisiae* | Q04697 | 9 | MODIFY | Glucose transporter chaperone |
-| HSC82 | *S. cerevisiae* | P15108 | 47 | MODIFY → GO:0140662 | HSP90 |
+| HSC82 | *S. cerevisiae* | P15108 | 53 | GO:0051082 absent from refreshed GOA; GO:0140662 retained | Constitutive HSP90 with an ATP-dependent chaperone cycle and an ATP-independent C-terminal partial-client-binding site |
 | HSP10 | *S. cerevisiae* | P38910 | 21 | OVER_ANNOTATED | GroES co-chaperonin |
 | HSP104 | *S. cerevisiae* | P31539 | 46 | MODIFY → GO:0044183 | Disaggregase |
 | HSP26 | *S. cerevisiae* | P15992 | 16 | MODIFY (holdase NTR) | sHSP holdase |
@@ -627,7 +627,7 @@ established:
 | SSA4 | *S. cerevisiae* | P22202 | 33 | MODIFY → GO:0140662 | Stress-inducible cytosolic HSP70; ATP-driven folding/refolding |
 | SSB1 | *S. cerevisiae* | P11484 | 36 | MODIFY → GO:0140662 | Ribosome-associated HSP70; ATP-driven nascent-chain folding at the tunnel exit |
 | SSB2 | *S. cerevisiae* | P40150 | 39 | MODIFY → GO:0140662 | Ribosome-associated HSP70 paralog of SSB1; ATP-driven nascent-chain folding |
-| SSQ1 | *S. cerevisiae* | Q05931 | 29 | MODIFY → GO:0140662 | Specialized mitochondrial HSP70 for ATP-driven Fe-S cluster transfer from Isu to Grx5 |
+| SSQ1 | *S. cerevisiae* | Q05931 | 28 | GO:0140662 rejected; proposed iron-sulfur cluster transfer chaperone activity | Specialized mitochondrial HSP70 for ATP-driven Fe-S cluster transfer from Isu to Grx5; broad GO:0044183 retained as non-core pending an Fe-S cluster chaperone term |
 | SSZ1 | *S. cerevisiae* | P38788 | 30 | ACCEPT GO:0044183 | Atypical RAC HSP70-like regulator; pragmatic co-chaperone term, not an ATPase claim |
 | SYO1 | *S. cerevisiae* | Q07395 | 12 | MODIFY | Ribosome assembly |
 | TCP1 | *S. cerevisiae* | P12612 | 23 | MODIFY → GO:0044183 | TRiC subunit |
@@ -637,7 +637,7 @@ established:
 | TSR4 | *S. cerevisiae* | P25040 | 15 | MODIFY → GO:0044183 | Ribosome assembly chaperone |
 | VMA22 | *S. cerevisiae* | P38784 | 9 | NON_CORE | V-ATPase assembly |
 | VPS45 | *S. cerevisiae* | P38932 | 35 | OVER_ANNOTATED | SNARE regulator |
-| YAR1 | *S. cerevisiae* | P46683 | 19 | MODIFY | Rps3 chaperone |
+| YAR1 | *S. cerevisiae* | P46683 | 22 | MODIFY → GO:0140309 | Rps3 carrier chaperone; older ribosome-assembly sibling decisions need re-review |
 | YDJ1 | *S. cerevisiae* | P25491 | 49 | MODIFY → GO:0044183 | J-domain co-chaperone |
 
 </details>
