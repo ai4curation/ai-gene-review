@@ -130,7 +130,7 @@ between ESL1 and ESL2. ESL1-specific single-mutant results are called out below.
 ## Existing GOA annotations — assessment summary
 | GO term | aspect | evidence | verdict |
 |---|---|---|---|
-| GO:0000184 NMD | BP | IBA | REMOVE — directly refuted for this yeast gene (PMID:23893744) |
+| GO:0000184 NMD | BP | IBA | REMOVE — scoped target-specific conflict from two NMD-substrate assays vs an upf1 control (PMID:23893744) |
 | GO:0005697 telomerase holoenzyme complex | CC | IBA | UNDECIDED — maintenance phenotypes do not assay physical holoenzyme incorporation |
 | GO:0042162 telomeric repeat DNA binding | MF | IBA | UNDECIDED — maintenance phenotypes do not directly assay Esl1 DNA binding |
 | GO:0070034 telomerase RNA binding | MF | IBA | UNDECIDED — maintenance phenotypes do not directly assay Esl1 RNA binding |
@@ -138,13 +138,15 @@ between ESL1 and ESL2. ESL1-specific single-mutant results are called out below.
 | GO:0005575 cellular_component (root) | CC | ND | KEEP_AS_NON_CORE (ND placeholder) |
 | GO:0008150 biological_process (root) | BP | ND | ACCEPT — retained while the direct step underlying the double-mutant phenotypes remains unresolved |
 
-The four IBA annotations are phylogenetic propagations from the metazoan SMG5/6 / EST1A
-clade. Lai et al. 2013 experimentally tested two NMD substrates in the yeast mutants and
-found them negative, making the NMD IBA a target-specific conflict. Note that the NMD IBA
-even lists SGD:S000002614 (EBS1) among the with/from set — EBS1, not ESL1, is the yeast
-SMG7 ortholog with NMD links; ESL1's inclusion in the tree does not reflect yeast NMD
-function. The same paper also tested telomere-length, senescence, subtelomeric-silencing
-and telomeric-transcript phenotypes; those are relevant negatives, but they do not directly
+The four IBA annotations are phylogenetic propagations from PTN000403280. The cached PAINT
+export seeds the NMD IBD from seven descendants across plants, flies, human, nematode,
+zebrafish and yeast, so `SGD:S000002614` (EBS1) is not a single-donor reason to distrust
+the ancestral placement, and the Esl1/Ebs1 subfamily split is not a validity test of that
+IBD. ESL1 descends from the positive PTN000403280 node; the NMD `REMOVE` rests only on the
+target-specific Lai et al. 2013 result that single and double esl mutants do not accumulate
+the two tested NMD substrates (`ade2-1`, `pre-CYH2`) relative to an `upf1` control. The same
+paper also tested telomere-length, senescence, subtelomeric-silencing and
+telomeric-transcript phenotypes; those are relevant negatives, but they do not directly
 measure Esl1-TLC1 RNA binding, Esl1-telomeric DNA binding or Esl1 telomerase-holoenzyme
 association.
 
@@ -200,6 +202,10 @@ The report explicitly did not read primary full texts. Newly fetched [PMID:22544
   IBA rows. The extra donor accessions do not change the IBA assessment: the
   review is about PTN000403280's placement above P40456, not the extant donor
   count.
+- UniProt v157 no longer carries the `GO:0000184` NMD cross-reference, but the
+  row remains live in GOA and the cached PAINT export re-dated the NMD IBD to
+  2026-08-28, so this was recorded as a UniProt-side xref difference rather
+  than a retired source assertion.
 - Searched recent literature for exact yeast ESL1/YIL151C/Est1-SMG updates and
   found no newer ESL1-specific primary paper after Lai et al. A newer broad
   paralog-abundance/localization resource lists the ESL1-ESL2 pair, but does
