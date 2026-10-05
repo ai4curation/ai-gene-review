@@ -80,3 +80,10 @@ Independent science review passed for this focused follow-up on 2026-10-01 UTC. 
 
 
 Focused canonical validation, HTML rendering and history validation passed on 2026-10-01 UTC. The rendered page embeds the approved YAML. Seven advisories remain: four generic-binding non-core assignments, source-dependent nucleus decisions, no generated-provider citation, and the membrane-bending core term lacking a matching existing-annotation row. Those advisories do not change the bounded evidence decisions or create a new annotation. No full-repository validation is claimed. All normal sources and previous history remain unchanged.
+
+
+## Generic protein-binding policy migration, 2026-10-05 UTC
+
+Four positively adjudicated `GO:0005515 protein binding` rows were migrated from `KEEP_AS_NON_CORE` to `REMOVE` to follow the repository policy for generic binding in re-reviewed annotations. BIN2, SNX4, the proteome-array partners and RIN3 remain supported as reported interactions, but GO:0005515 does not record a specific BIN1 function and no narrower molecular-function term is justified by the accessed evidence. Removal therefore reflects term specificity only and does not assert that the interactions are false.
+
+The four high-throughput interactome-screen rows that lack recovered pair-level evidence remain `UNDECIDED`, matching the evidence-access carve-out in the same policy.
