@@ -145,6 +145,20 @@ def test_converse_disagreement_family_says_safe_gene_removes(tmp_path):
     assert "removes it" in result.message
 
 
+def test_converse_disagreement_over_annotated_is_unresolved_not_conflict(tmp_path):
+    """A gene that only marks the term over-annotated is surfaced, but does not fail."""
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "MARK_AS_OVER_ANNOTATED")
+    (result,) = check_family_gene_disagreement(_family_review(), {FAMILY: [gene]})
+    assert result.verdict is Verdict.UNRESOLVED
+    assert result.gene_action == "MARK_AS_OVER_ANNOTATED"
+
+
+@pytest.mark.parametrize("action", ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "UNDECIDED"])
+def test_converse_disagreement_ignores_non_disputing_actions(tmp_path, action):
+    gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, action)
+    assert check_family_gene_disagreement(_family_review(), {FAMILY: [gene]}) == []
+
+
 def test_index_genes_by_family_extracts_join_keys(tmp_path):
     _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "ACCEPT")
     _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, "ACCEPT")
@@ -212,7 +226,7 @@ def test_excepted_member_may_remove_without_disagreement(tmp_path):
     assert check_family_gene_disagreement(review, {FAMILY: [gene]}) == []
     (result,) = check_member_exceptions(review, {FAMILY: [gene]})
     assert result.verdict is Verdict.OK
-    assert result.kind == "EXCEPTION_AGREED"
+    assert result.kind == "EXCEPTION_AGREEMENT"
 
 
 def test_unexcepted_sibling_removing_still_disagrees(tmp_path):
@@ -227,7 +241,7 @@ def test_excepted_member_keeping_the_term_conflicts(tmp_path, action):
     gene = _write_gene(tmp_path, "PGRPLB", CATALYTIC_SF, action)
     (result,) = check_member_exceptions(_review_with_exception(), {FAMILY: [gene]})
     assert result.verdict is Verdict.CONFLICT
-    assert result.kind == "EXCEPTION_RETAINED"
+    assert result.kind == "EXCEPTION_AGREEMENT"
 
 
 def test_exception_must_be_anchored_in_a_negative_node_assessment(tmp_path):
@@ -333,7 +347,7 @@ def test_real_pias_family_excepts_gei17_jak_stat():
     assert not conflicts, [str(c) for c in conflicts]
     honoured = [
         r for r in results
-        if r.kind == "EXCEPTION_AGREED" and r.gene == "gei-17" and r.term == "GO:0046426"
+        if r.kind == "EXCEPTION_AGREEMENT" and r.gene == "gei-17" and r.term == "GO:0046426"
     ]
     assert [r.verdict for r in honoured] == [Verdict.OK]
 

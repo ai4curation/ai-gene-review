@@ -26,14 +26,15 @@ Three checks, all deterministic joins over data already in the repo:
 ``check_family_gene_disagreement``
     The converse direction, which is just as informative: the family says a term IS safe
     for this gene's subfamily, but the gene review removes it. One of the two is wrong and
-    a human should decide which.
+    a human should decide which. A gene that only marks the term over-annotated is
+    reported as UNRESOLVED (to adjudicate) rather than as a conflict.
 
 ``check_member_exceptions``
     Scope is per subfamily, but a function can be lost on a branch a subfamily does not
     separate. A ``term_assessment`` may list ``member_exceptions``: covered members for
     which the family itself judges the term does not hold. An excepted member that keeps
-    the term is a conflict (EXCEPTION_RETAINED); one that removes it is agreement
-    (EXCEPTION_AGREED, and exempt from the disagreement check above). An exception
+    the term is a conflict and one that removes it is agreement (EXCEPTION_AGREEMENT, CONFLICT
+    or OK; agreeing members are exempt from the disagreement check above). An exception
     for a member outside the term's scope is
     vacuous, and one naming a ``pruned_node_id`` must be anchored in a negative
     ``node_assessment`` for that node and term -- both are conflicts.
@@ -60,8 +61,9 @@ ACCESSION_RE = re.compile(r"^AC   (\S+?);", re.M)
 
 #: Actions where the gene review keeps the annotation in place.
 RETAINING_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
-#: Actions where the gene review is already pushing back on the annotation.
-FLAGGING_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
+#: Actions short of REMOVE that still dispute a term the family calls safe. MODIFY is
+#: not among them: it keeps the essence of the annotation and only changes the term.
+SOFT_DISAGREEING_ACTIONS = {"MARK_AS_OVER_ANNOTATED"}
 
 
 class Verdict(str, Enum):
@@ -284,7 +286,7 @@ def check_pruning_conflicts(
 def check_family_gene_disagreement(
     review: dict, gene_index: dict[str, list[GeneRef]]
 ) -> list[CrossCheck]:
-    """The converse: the family says a term is safe here, but the gene removes it.
+    """The converse: the family says a term is safe here, but the gene disputes it.
 
     Reported because it is a genuine disagreement someone should adjudicate, not because
     the gene is presumed wrong -- a gene reviewer with target-specific experimental
@@ -309,14 +311,26 @@ def check_family_gene_disagreement(
             actions = gene_actions_for_term(gene.review_path).get(term)
             if not actions:
                 continue
-            removing = actions & {"REMOVE"}
-            if removing:
+            if "REMOVE" in actions:
                 results.append(
                     CrossCheck(
                         "FAMILY_GENE_DISAGREEMENT", family, gene.symbol, gene.subfamily,
                         term, "REMOVE", Verdict.CONFLICT,
                         f"family scopes this term {scope} covering this gene, "
                         f"but the gene review removes it",
+                    )
+                )
+            elif actions & SOFT_DISAGREEING_ACTIONS:
+                # A softer push-back still disagrees with a family that calls the term
+                # safe here, but it does not assert the term is wrong, so it is surfaced
+                # for adjudication rather than failing validation.
+                results.append(
+                    CrossCheck(
+                        "FAMILY_GENE_DISAGREEMENT", family, gene.symbol, gene.subfamily,
+                        term, "/".join(sorted(actions & SOFT_DISAGREEING_ACTIONS)),
+                        Verdict.UNRESOLVED,
+                        f"family scopes this term {scope} covering this gene, "
+                        f"but the gene review marks it as over-annotated",
                     )
                 )
     return results
@@ -413,7 +427,7 @@ def check_member_exceptions(
             if retained:
                 results.append(
                     CrossCheck(
-                        "EXCEPTION_RETAINED", family, label, subfamily, term,
+                        "EXCEPTION_AGREEMENT", family, label, subfamily, term,
                         "/".join(sorted(retained)), Verdict.CONFLICT,
                         "family review excepts this member from the term, but the gene "
                         "review keeps it",
@@ -422,7 +436,7 @@ def check_member_exceptions(
             else:
                 results.append(
                     CrossCheck(
-                        "EXCEPTION_AGREED", family, label, subfamily, term,
+                        "EXCEPTION_AGREEMENT", family, label, subfamily, term,
                         "/".join(sorted(actions)), Verdict.OK,
                         "gene review flags the term, consistent with the family exception",
                     )
@@ -462,7 +476,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     gene_index = index_genes_by_family(args.genes_dir)
-    conflicts, ok = 0, 0
+    conflicts, unresolved, ok = 0, 0, 0
     for path in paths:
         review = yaml.load(path.read_text(), Loader=_Loader)
         results = (
@@ -475,12 +489,16 @@ def main(argv: list[str] | None = None) -> int:
             if r.verdict is Verdict.CONFLICT:
                 conflicts += 1
                 print(r, file=sys.stderr)
+            elif r.verdict is Verdict.UNRESOLVED:
+                unresolved += 1
+                if r.kind == "FAMILY_GENE_DISAGREEMENT":
+                    print(r)
             else:
                 ok += 1
 
     print(
         f"family/gene cross-check over {len(paths)} family review(s): "
-        f"{conflicts} conflict(s), {ok} consistent"
+        f"{conflicts} conflict(s), {unresolved} to adjudicate, {ok} consistent"
     )
     return 1 if conflicts else 0
 
