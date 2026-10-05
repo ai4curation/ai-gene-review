@@ -133,5 +133,4 @@ There is a genuine, notable discrepancy:
 - Checked cached PTHR22950 PAINT. The generic `GO:0015179 L-amino acid transmembrane transporter activity`, `GO:0003333 amino acid transmembrane transport`, and `GO:0016020 membrane` IBA rows all trace to the broad AAAP-family node `PANTHER:PTN000535793`. These transfers are sound only at their generic level; they do not resolve AVT2's unknown substrate, direction, or physiological compartment.
 - Checked the ER IBA row separately. `GO:0005783 endoplasmic reticulum` traces to the narrower `PANTHER:PTN001119002` node seeded by yeast AVT2 itself. That is valid target grounding rather than circularity, and the IBA agrees with SGD's direct ER localization from PMID:11274162.
 - Re-read the abstract-only cached PMID:11274162 and searched for newer AVT2/Avt2p literature. No 2025-2026 primary paper was found that assigns AVT2 a substrate or transport direction, so the knowledge gaps around substrate, direction, and ER-versus-vacuole localization remain open.
-</content>
-</invoke>
+- Follow-up on PR 3724 changed the `GO:0016020 membrane` IBA root cause to `NO_FAILURE_NON_CORE`, removed title-only PMID:11274162 support from ER/vacuole localization rows, and used UniProt's experimental PubMed attribution for the vacuole-membrane row plus its unknown-specificity function statement for the generic transporter rows.
