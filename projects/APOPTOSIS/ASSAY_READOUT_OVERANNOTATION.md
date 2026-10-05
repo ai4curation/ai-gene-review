@@ -141,9 +141,10 @@ positive-regulation term needs its own evidence that the gene promotes death
 (Reddien 2001 and Hoeppner 2001 cover the classic engulfment genes). ttr-52,
 identified later, has none, so its rows are removed rather than modified.
 All seven genes are now reviewed. For ced-2, ced-5 and ced-12 the
-`GO:1904747` replacement rests on the Reddien and Hoeppner abstracts, which
-list these genes among the engulfment genes but do not say which mutants
-were tested for the killing defect; each review says so.
+`GO:1904747` replacement rests on Reddien 2001, whose abstract defines the
+engulfment genes it studies as ced-1, ced-2, ced-5, ced-6, ced-7, ced-10 and
+ced-12 and states that "mutations in engulfment genes alone allow the
+survival and differentiation of some cells that would normally die".
 
 **Detection idea (not yet run):** genes carrying both an apoptotic-cell
 clearance term (`GO:0043652`, `GO:0043277`) and an apoptotic-process term from
