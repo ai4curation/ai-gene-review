@@ -83,7 +83,7 @@ PR.
   `GO:0051082` unfolded protein binding, or `GO:0051087` protein-folding
   chaperone binding assertions.
 - Accepted the new `GO:1990565` complex-membership IBA and the live SGD
-  `PMID:9242486` `GO:0140597` protein carrier chaperone row. The latter is now
+  `PMID:9242486` `GO:0140597` protein carrier activity row. The latter is now
   the best replacement for both stale `GO:0051082` rows.
 - Marked the old UniProt keyword `GO:0051301`, stale IntAct
   `PMID:16554755` and `PMID:19536198` `GO:0005515` rows, and the three
