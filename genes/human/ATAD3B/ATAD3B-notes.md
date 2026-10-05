@@ -8,3 +8,11 @@
 - Walker A (352-359) is present (UniProt BINDING). No ATPase assay is reported in the cited sources, so ATP hydrolysis (IEA) is kept as non-core.
 - The four Reactome neutrophil-degranulation rows (plasma membrane, secretory granule membrane, ficolin-1-rich granule membrane) are proteomics-derived, and the cached Reactome text does not name ATAD3B. Marked as over-annotated: ATAD3B is an inner-membrane mitochondrial protein, and ATAD3A peptides are near-identical.
 - Not used: the 2026 SEC62/MASH paper (PMID:42001994), which is uncached.
+
+## 2026-10-05 revision (reviewer round 1)
+
+- Added NEW mitochondrial outer membrane (IDA, PMID:33665835) and made it the location of the mitophagy-receptor core function. The LC3-recruiting activity occurs where the C-terminus is exposed on the OMM under stress, not in the inner membrane. BNIP3L carries GO:0005741 (IMP).
+- Added a second core function for the basal ATAD3A-modulator role, located in the inner membrane.
+- Dropped the uninformative "Reactome text does not name ATAD3B" clause: cached Reactome files carry no participant lists. Also noted that ATAD3A carries none of those Reactome rows (QuickGO).
+- The HTP row no longer quotes boilerplate. The MitoCoP per-protein data are in supplementary tables I have not checked.
+- Walker A is noted as a UniProt prediction (ECO:0000255).
