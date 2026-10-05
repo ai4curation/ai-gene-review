@@ -89,8 +89,20 @@ def main() -> None:
                 if lo + m.start() < s
             ]
             for pos, core in cores:
-                annotated = any(f[1] <= pos + 3 and pos <= f[2] for f in sims)
-                source = "UniProt SUMO-binding region" if annotated else "motif only, not annotated"
+                # Report how far the core reaches into any annotated SUMO-binding region,
+                # so a one-residue contact is not presented as full coverage.
+                overlaps = [
+                    (f, min(pos + 3, f[2]) - max(pos, f[1]) + 1)
+                    for f in sims
+                    if f[1] <= pos + 3 and pos <= f[2]
+                ]
+                if overlaps:
+                    f, n = overlaps[0]
+                    source = (
+                        f"overlaps UniProt SUMO-binding region {f[1]}-{f[2]} by {n} of 4 aa"
+                    )
+                else:
+                    source = "motif only, not annotated"
                 print(f"    SIM-like core {pos}-{pos + 3} {core} ({source})")
             if not cores:
                 print(f"    no SIM-like core within {SIM_LOOKBACK} aa upstream")
