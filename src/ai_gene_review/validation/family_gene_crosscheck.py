@@ -32,8 +32,9 @@ Three checks, all deterministic joins over data already in the repo:
     Scope is per subfamily, but a function can be lost on a branch a subfamily does not
     separate. A ``term_assessment`` may list ``member_exceptions``: covered members for
     which the family itself judges the term does not hold. An excepted member that keeps
-    the term is a conflict; one that removes it is agreement (and is exempt from the
-    disagreement check above). An exception for a member outside the term's scope is
+    the term is a conflict (EXCEPTION_RETAINED); one that removes it is agreement
+    (EXCEPTION_AGREED, and exempt from the disagreement check above). An exception
+    for a member outside the term's scope is
     vacuous, and one naming a ``pruned_node_id`` must be anchored in a negative
     ``node_assessment`` for that node and term -- both are conflicts.
 
@@ -421,7 +422,7 @@ def check_member_exceptions(
             else:
                 results.append(
                     CrossCheck(
-                        "EXCEPTION_RETAINED", family, label, subfamily, term,
+                        "EXCEPTION_AGREED", family, label, subfamily, term,
                         "/".join(sorted(actions)), Verdict.OK,
                         "gene review flags the term, consistent with the family exception",
                     )

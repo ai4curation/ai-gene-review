@@ -130,3 +130,26 @@ review's MARK_AS_OVER_ANNOTATED on GO:0140416 was withheld from the run).
 - Lead, not acted on: GEI-17's repression of piRNA transcription could be captured as a process
   term downstream of its ligase activity (PMID:40316696, abstract only). Decisive experiment: a
   ligase-dead GEI-17 rescue in the piRNA transcription assay.
+
+## Correction: GO:0140416 is UNDECIDED, not over-annotated (2026-10-05)
+
+The previous section, and the MARK_AS_OVER_ANNOTATED action it supported, misread the term.
+GO:0140416 transcription regulator inhibitor activity is defined as inhibiting a transcription
+regulator "via direct binding and/or post-translational modification", so inhibition through
+GEI-17's SUMO ligase activity is within the term. The OpenScientist run tested a narrower claim,
+ligase-independent repression through the SAP domain and SIMs, and its refutation applies only
+to that route. It does not refute the term.
+
+- Binding route through the SAP domain: not supported (no SAP domain in GEI-17; PIAS1's
+  ligase-independent inhibition does not need it, PMID:24036127).
+- Modification route: plausible. GEI-17 inhibits piRNA transcription condensates built by the
+  USTC complex (PRDE-1, SNPC-4, TOFU-4, TOFU-5) in a SUMOylation-dependent way [PMID:40316696
+  "isolated the SUMO E3 ligase GEI-17 as inhibiting and the SUMO protease TOFU-3 as promoting
+  piRNA transcription foci formation"], but the cached abstract does not show direct SUMOylation
+  of a USTC component, and the full text is unavailable.
+- Action changed to UNDECIDED; propagation_review root cause back to UNRESOLVED. The PTHR10782
+  family review's node text was updated to match. Prompted by the ai4c-reviewer finding on
+  ai4curation/ai-gene-review#4199, whose suggested fix (a member exception or REMOVE) would
+  have hardened the misreading.
+- Decisive test: whether GEI-17 SUMOylates PRDE-1 or SNPC-4 directly, and whether that SUMOylation
+  is what blocks condensate formation.

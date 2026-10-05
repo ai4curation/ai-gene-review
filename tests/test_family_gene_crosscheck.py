@@ -212,6 +212,7 @@ def test_excepted_member_may_remove_without_disagreement(tmp_path):
     assert check_family_gene_disagreement(review, {FAMILY: [gene]}) == []
     (result,) = check_member_exceptions(review, {FAMILY: [gene]})
     assert result.verdict is Verdict.OK
+    assert result.kind == "EXCEPTION_AGREED"
 
 
 def test_unexcepted_sibling_removing_still_disagrees(tmp_path):
@@ -332,7 +333,7 @@ def test_real_pias_family_excepts_gei17_jak_stat():
     assert not conflicts, [str(c) for c in conflicts]
     honoured = [
         r for r in results
-        if r.kind == "EXCEPTION_RETAINED" and r.gene == "gei-17" and r.term == "GO:0046426"
+        if r.kind == "EXCEPTION_AGREED" and r.gene == "gei-17" and r.term == "GO:0046426"
     ]
     assert [r.verdict for r in honoured] == [Verdict.OK]
 
