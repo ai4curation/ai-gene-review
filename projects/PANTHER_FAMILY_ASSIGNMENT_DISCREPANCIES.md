@@ -141,7 +141,7 @@ curl -s -H 'Accept: application/json' \
 ## Next steps
 
 - [x] MEGF10 gene review.
-- [ ] ced-1 gene review.
+- [x] ced-1 gene review (`genes/worm/ced-1/`). Note that `fetch-gene` cached PTHR24043, the UniProt-assigned family, for ced-1 as well.
 - [ ] Check MEGF11 (possible case 2).
 - [ ] Triage the systematic scan. Since the member index moved to
       `.cache/panther/`, `refresh-panther-members` records UniProt's family

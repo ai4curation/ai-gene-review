@@ -98,6 +98,26 @@ expression, and the full text (PMC4863057) titles Figure 1 "Megf10 is necessary
 for apoptotic cell uptake by astrocytes, and its deficiency results in
 accumulation of apoptotic cells in the developing CB".
 
+A second shape of the same error appears in *C. elegans*. There, engulfment
+mutants such as ced-1(e1735) are routinely used as a **background** that makes
+corpses persist so they can be counted. Papers about other genes (CED-8,
+PMID:24225442; CSP-1, PMID:23505386) were annotated to ced-1 itself: ced-1 got
+`GO:1902742` apoptotic process involved in development and `GO:1904747`
+positive regulation of apoptotic process involved in development, although
+those papers attribute the extra corpses to the engulfment defect.
+
+*C. elegans* also shows where the line sits. Engulfing cells genuinely promote
+the death of cells that receive weak death signals, and ced-1 expressed in
+engulfing cells rescues this (PMID:11449278, PMID:11449279). So for ced-1 the
+*positive regulation* term is right (kept, but sourced to the right papers),
+while the process term is not (changed to positive regulation).
+
+| Species/gene | Term | Evidence | Source | Action |
+|---|---|---|---|---|
+| worm ced-1 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-1 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
+| worm ced-1 | `GO:0012501` programmed cell death | IMP | PMID:6857247 | `MARK_AS_OVER_ANNOTATED` (the paper finds cells still die) |
+
 **Detection idea (not yet run):** genes carrying both an apoptotic-cell
 clearance term (`GO:0043652`, `GO:0043277`) and an apoptotic-process term from
 the same PMID, or an apoptotic-process term on a known engulfment receptor or
