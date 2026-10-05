@@ -114,7 +114,7 @@ Mostly not, and when they do it is usually thin:
 - **IBA reaches proteins that may not exist.** Several PE5 ("uncertain") products
   of pseudogenes inherit full sets of phylogenetic annotations: `SNRPGP15`
   (13 IBA spliceosome terms), `PMCHL1`/`PMCHL2` (neuropeptide signalling),
-  `DPH3P1`, `GNG5B`. The Tier 3 audit confirmed this and removed 35 of 52 such rows
+  `DPH3P1`, `GNG5B`. The Tier 3 audit confirmed this and removed 33 of 52 such rows
   (see [Tier 3 results](#tier-3-results-2026-10-04) and [IBA_REVIEW](IBA_REVIEW.md)).
   `GNG5B` itself turned out to be HGNC protein-coding now.
 - **Where experimental annotation exists it is recent and good.** The best-annotated sORF
@@ -296,7 +296,7 @@ rows came out as: 145 ACCEPT, 24 KEEP_AS_NON_CORE, 70 MARK_AS_OVER_ANNOTATED, 32
 ## Tier 3 results (2026-10-04)
 
 Tier 3 audited 7 entries that the census flagged as uncertain products of pseudogene-like loci
-carrying function annotations. Across the 52 GOA rows: 35 REMOVE, 12 MARK_AS_OVER_ANNOTATED,
+carrying function annotations. Across the 52 GOA rows: 33 REMOVE, 14 MARK_AS_OVER_ANNOTATED,
 2 ACCEPT, 2 KEEP_AS_NON_CORE and 1 UNDECIDED. No NEW proposals. Each gene has a reproducible
 `-bioinformatics/` folder comparing it with its parent protein.
 
@@ -305,12 +305,28 @@ carrying function annotations. Across the 52 GOA rows: 35 REMOVE, 12 MARK_AS_OVE
 | `SNRPGP15` | pseudogene | **no**: GRCh38 has a TGA stop at codon 75 (independently re-checked); the 16 MS peptides assigned to it are all shared with SNRPG | 18 | 16 REMOVE, 2 over-annotated (RNA binding, whose residues are intact and which the PTHR10553 family review scopes family-wide) | IBA from PTHR10553 nodes (snRNP, spliceosome, P granule); InterPro2GO; ARBA |
 | `PMCHL1` | pseudogene | no: 5'-truncated PMCH copy with no signal peptide; antiserum found nothing in testis or brain; the authors propose a noncoding RNA | 7 | 7 REMOVE | IBA from PTN002636265 (seeded by rat Pmch); InterPro2GO prepro-MCH; GOC inference; NAS from a 1993 paper |
 | `PMCHL2` | pseudogene | no: hominid duplicate of PMCHL1, testis-only transcript | 6 | 6 REMOVE | same routes as PMCHL1 |
-| `DPH3P1` | pseudogene | probably not: processed pseudogene, no GTEx expression; residues intact, so the removal rests on locus status | 5 | 5 REMOVE | IBA from PTN000485452 (DPH3 orthologs); InterPro2GO |
+| `DPH3P1` | pseudogene | probably not: processed pseudogene, no GTEx expression; residues intact | 5 | 3 REMOVE, 2 over-annotated (iron and metal ion binding, residues intact) | IBA from PTN000485452 (DPH3 orthologs); InterPro2GO |
 | `GNG5B` | gene with protein product (formerly GNG5P2; MANE) | possibly: intact ORF, CaaX kept, but ≤0.29 TPM and no peptide | 8 | 8 MARK_AS_OVER_ANNOTATED | IBA (node placement sound); InterPro2GO; ISS from bovine GNG2 |
 | `LITAFD` | gene with protein product (MANE, conserved to fish) | **yes**: a real gene, misfiled into this tier by the census | 6 | 2 ACCEPT, 2 non-core, 2 over-annotated | IBA; LITAF-specific nucleus and cytokine terms placed at deep nodes |
 | `ZNF788P` | pseudogene | no: truncated KRAB-A only, no zinc fingers, stop codon between exons | 2 | 1 REMOVE, 1 UNDECIDED | InterPro2GO from the KRAB signature; the nucleus row came from a YFP-tagging screen against an older 615-aa UniProt sequence |
 
 ### What Tier 3 shows
+
+**Action rule used for products of doubtful existence.** For each annotation, ask whether the
+sequence still supports the specific activity or location:
+- **MARK_AS_OVER_ANNOTATED** for a molecular activity whose residue basis is intact, e.g. RNA
+  binding on `SNRPGP15` (Sm-site RNA contacts kept), or iron and metal binding on `DPH3P1` (all
+  four CSL cysteines kept). The sequence does not contradict the activity; only the existence
+  of a product is in doubt.
+- **REMOVE** for terms that need more than the intact site, or whose basis is lost:
+  - complex membership and processes that depend on altered interfaces (SNRPGP15 ring contacts);
+  - secretion-dependent hormone activity without a signal peptide (`PMCHL1`, `PMCHL2`);
+  - transcription regulation without DNA-binding zinc fingers (`ZNF788P`);
+  - process and location terms with nothing locus-specific behind them.
+- The rule was written down after PR review found it had been applied inconsistently. SNRPGP15's
+  RNA binding had been changed to over-annotated, which also resolved a CI conflict with the
+  PTHR10553 family review (which scopes RNA binding family-wide), while DPH3P1's equivalent rows
+  were still removed. Both now follow the same rule.
 
 1. **Pipelines do not check whether a product exists.** IBA (PAINT), InterPro2GO, ARBA and GOC
    inference all annotate UniProt entries regardless of PE5 status, a "Could be the product of a
@@ -390,6 +406,16 @@ What this does not solve:
 4. Collect patterns → GO recommendations (e.g. how to annotate pump-regulatory
    peptides; whether HTP localization should count as characterisation).
 5. Later: mouse orthologs (where most discovery was done), and the non-Swiss-Prot Ribo-seq ORFs.
+6. Follow-up PR: file new-term requests (NTRs) for the activities GO cannot yet express. There
+   are five so far:
+   - BRAWNIN (`UQCC6`): cytochrome b stabilisation in the complex III assembly intermediate;
+   - NoBody (`NBDY`): EDC4/decapping-complex modulation;
+   - `SPAAR`: V-ATPase–Ragulator supercomplex stabilisation that limits mTORC1 recruitment;
+   - `MTLN`: its regulatory role in respiratory supercomplex assembly;
+   - SHMOOSE (`C0HM83`): MICOS complex binding.
+   Each should become a `proposed_new_terms` entry with a scoped definition.
+7. Follow-up: settle the regulin MF pattern (ATPase vs transporter inhibitor/activator terms)
+   across PLN, SLN, MRLN, ERLN and STRIT1, and review SLN and PLN as comparators.
 
 ---
 # STATUS
@@ -451,6 +477,15 @@ Last updated: 2026-09-30
   scopes RNA binding (GO:0003723) family-wide, but the SNRPGP15 review removed it. Both RNA-binding
   rows were changed to MARK_AS_OVER_ANNOTATED, because the Sm-site RNA-contact residues are intact
   and only the product's existence is in doubt. Tier 3 totals updated (35 removed, 12 over-annotated).
+
+- Second PR review round: the reviewer found the Tier 3 actions inconsistent (SNRPGP15 RNA
+  binding over-annotated, DPH3P1 metal binding removed, on the same argument). DPH3P1's two
+  residue-intact binding rows are now over-annotated as well, and the action rule is written
+  out under "What Tier 3 shows". Tier 3 totals are now 33 removed and 14 over-annotated.
+- Optional review items also fixed:
+  - the MTLN cardiolipin ISS now uses GO_REF:0000024, like the other ISS rows;
+  - the TZMP1 NEW reason now leads with its direct evidence rather than the comparator gap;
+  - the five-item NTR follow-up is added to the Plan.
 
 ## 2026-10-04
 
