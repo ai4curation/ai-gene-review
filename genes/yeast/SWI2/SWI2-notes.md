@@ -49,3 +49,10 @@
   Snf2 in transcriptional reprogramming and DSB formation; it did not have a cached
   PMID in this review and does not change the existing core chromatin-remodeler,
   Pol-II transcription, or DSB-repair calls.
+
+## 2026-10-05 PR 3714 follow-up
+
+- Changed the PMID:32188938 `GO:0005515 protein binding` row from `MODIFY` to
+  `REMOVE`. Its `WITH/FROM` partner is Swi3, so the row records redundant
+  intracomplex Snf2-Swi3 binding rather than the Snf2-nucleosome contact that
+  remains represented by the separate PMID:28424519 protein-binding row.
