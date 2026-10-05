@@ -25,12 +25,14 @@ function and localization are experimentally established on the target, and
 the PAINT assertions additionally record that these calls are inherited in the
 COA4 family.
 
-As in the CMC2 review, I changed both genome-wide C-terminal GFP localization
-rows from `PMID:14562095` to `REMOVE`. The nuclear and cytoplasmic calls are
-best explained as impaired import of a bulky C-terminal GFP fusion: Vögtle et
-al. explicitly warned that IMS proteins lack the matrix import motor force that
-can unfold GFP on import, and that many known IMS proteins in the Huh et al.
-yeast GFP library were scored in the cytosol and/or nucleus.
+For `PMID:14562095`, I left the two genome-wide C-terminal GFP rows asymmetric.
+The nuclear row moves to `REMOVE` as an unsupported compartment for Coa4. The
+cytoplasm row moves to `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`: cytoplasm
+is an entailed parent of mitochondrion/IMS localization, but the Huh et al.
+C-terminal GFP row adds no independent evidence for a stable cytoplasmic pool.
+CMC2 still needs equivalent follow-up; COX23 is the intentional contrast, where
+the Huh cytoplasm row agrees with direct fractionation evidence and can remain
+non-core.
 
 The 2024-2026 literature search found no new yeast COA4 primary paper that
 changes the 2022/2026 placement of Coa4 upstream of Cox11 in the mitochondrial
@@ -107,7 +109,7 @@ the human review not to assert a molecular function term.
 to that paper, which assayed respiratory chain function generally, but superseded by the
 complex IV–specific IMP rows from focused studies. MODIFY → `GO:0033617`.
 
-**`GO:0005634 nucleus` (HDA, PMID:14562095) — flagged.** From the genome-wide C-terminal GFP
+**`GO:0005634 nucleus` (HDA, PMID:14562095) — removed.** From the genome-wide C-terminal GFP
 library. Flagged on conflict grounds, not because the underlying images are unavailable:
 - Coa4 is a twin CX9C substrate of the MIA40-ERV1 relay, and there is no described route by which
   such a protein reaches the nucleus — import commits it to the IMS, where its disulfides are
@@ -116,15 +118,14 @@ library. Flagged on conflict grounds, not because the underlying images are unav
   source of any kind placing Coa4 in the nucleus.
 - Most likely a C-terminal GFP fusion that blocked import and was scored outside mitochondria.
 
-Marked `MARK_AS_OVER_ANNOTATED` rather than `REMOVE` so a curator with the original images makes
-the final call. `REMOVE` would be defensible.
+Marked `REMOVE` because all independent sources place Coa4 in the mitochondrion or IMS, and no
+source beyond the artifact-prone C-terminal GFP screen supports a nuclear pool.
 
-**`GO:0005737 cytoplasm` (HDA, PMID:14562095) — accepted, non-core.** Deliberately treated
-differently from the nucleus row. Mia40 substrates genuinely dwell in the cytosol before import —
-"substrates of Mia40 remain in the cytosol for several minutes" [PMID:23676665, human study of the
-same pathway] — so a cytosolic signal here is *expected*, not anomalous. The GFP tag may
-additionally inflate it, but nothing known about Coa4 contradicts a real cytosolic pool, so the
-annotation stands as a correct compartment. Kept non-core because the functional pool is the IMS one.
+**`GO:0005737 cytoplasm` (HDA, PMID:14562095) — over-annotated.** Deliberately treated
+differently from the nucleus row. `GO:0005737` is an entailed parent of mitochondrial
+localization, so the row is not false in the ontology closure. It is still too broad to
+describe Coa4's functional compartment, and its only direct GOA provenance is the same
+C-terminal GFP library that likely artifactually inflated the nuclear and cytosolic signal.
 
 **`GO:0005743 mitochondrial inner membrane` (IEA).** Consistent with UniProt and with Bestwick's
 "associated with the inner membrane", but in slight tension with the Bax-release IMS proteomics
