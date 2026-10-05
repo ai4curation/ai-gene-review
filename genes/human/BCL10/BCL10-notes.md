@@ -129,3 +129,9 @@ Independent scientific review passed for this focused follow-up (2026-10-01). Th
 
 
 Focused canonical validation, HTML rendering and history validation passed (2026-10-01). The rendered page embeds the exact approved YAML. The canonical validator reports seven retained generic-binding advisories and one unchanged IBA propagation-metadata advisory; the temporary proposal check also disclosed eight unchanged ACCEPT records without short evidence anchors. All normal sources and prior history remain unchanged. No full-repository validation is claimed.
+
+## Generic-binding policy cleanup, 2026-10-05 UTC
+
+This cleanup supersedes the earlier retention rationale for the final seven GO:0005515 rows. The corrected TRADD and BCL3 interactions and both COG6 screen associations are now REMOVE: they preserve the original source object and partner accession but remove the uninformative generic term when no evidence-backed replacement molecular function is available. The three NEMO rows are now UNDECIDED because the inspected experiments detect CARMA1-dependent coassociation or NEMO recognition of ubiquitinated BCL10, but they do not establish a direct unmodified-polypeptide BCL10-NEMO binding activity.
+
+No source assertion, qualifier, evidence code, product, or supporting entity was removed. The final existing-annotation action totals are 80 ACCEPT, 48 MODIFY, 36 KEEP_AS_NON_CORE, 10 UNDECIDED and 4 REMOVE across 178 source rows; no GO:0005515 row remains at KEEP_AS_NON_CORE. The short TRADD and BCL3 anchors were extended to the surrounding cached abstract clauses so the rendered evidence snippets identify their subjects.
