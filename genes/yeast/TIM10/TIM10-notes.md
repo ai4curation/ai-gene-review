@@ -107,3 +107,18 @@
 - Checked the 2026 Yme1/Tim10 paper, PMID:41556501, after finding its 2025
   bioRxiv precursor. The final article adds direct biochemical detail to Tim10
   quality-control context but does not justify a new TIM10 GO assertion.
+
+## 2026-10-05 PR 3716 follow-up
+
+- Marked the new `GO:7770063 beta barrel protein insertion into mitochondrial
+  outer membrane` row as `KEEP_AS_NON_CORE`. PMID:30445040 supports a direct
+  Por1/VDAC-route TIM9-TIM10 activity with peptide binding and in-organello Por1
+  assembly defects in TIM chaperone mutants, but the beta-barrel route is
+  secondary relative to TIM10's canonical TOM-TIM22 carrier pathway.
+- Collapsed the stale standalone `GO:0140318 protein transporter activity` core
+  function into the `GO:0140309 unfolded protein holdase activity` core
+  function. The directed TOM-to-TIM22 carrier-delivery activity remains
+  described there, and the new specific `GO:7770061` route is now listed
+  alongside its `GO:0045039` parent.
+- Reworded the retired `GO:0032977 membrane insertase activity` propagation
+  comment so it no longer says the exact row is still live in GOA.
