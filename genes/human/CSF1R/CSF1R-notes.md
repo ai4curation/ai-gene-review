@@ -69,4 +69,16 @@
 
 ## Deep research status
 
-See bottom of file (updated after the falcon job finished).
+- `just deep-research-falcon human CSF1R` SUCCEEDED (~21 min; 60 citations) ->
+  `CSF1R-deep-research-falcon.md`. Consistent with this review: CSF1/IL-34-activated cell-surface
+  receptor tyrosine kinase driving myeloid trophic/differentiation signaling.
+- Additional points from falcon (not independently verified, not cached as publications):
+  - Yu et al. 2008 (doi:10.1189/jlb.0308171): in Csf1r-/- macrophages, WT receptor rescues survival,
+    proliferation, differentiation and morphology; receptor lacking all eight intracellular tyrosines does not;
+    Y559F and Y807F (mouse numbering) strongly impair responses.
+  - Dorion et al. 2024 (doi:10.1186/s13024-024-00723-x): ALSP p.V784M iPSC-microglia show reduced surface
+    CSF1R and autophosphorylation, impaired migration; knockdown/isogenic data support haploinsufficiency.
+  - Chadarevian et al. 2024 (Neuron; doi:10.1016/j.neuron.2024.05.023): p.L786S microglia proliferate poorly;
+    isogenic correction restores engraftment in a chimeric mouse model.
+  - Clinical: CSF1R inhibitors pexidartinib (ENLIVEN) and vimseltinib (MOTION) treat tenosynovial giant cell tumor.
+- These support the suggested question on haploinsufficiency vs dominant-negative mechanisms in ALSP.
