@@ -39,7 +39,7 @@ or substrate has ever been reported for ABHD8. UniProt's own EC number is the ma
 uninformative one — [file:human/ABHD8/ABHD8-uniprot.txt "DE            EC=3.-.-.-;"] — which is
 the signature of a protein placed in an enzyme family with nothing measured.
 
-All six are `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`, and it took a bioinformatics check
+None of these six rows is removed outright, and it took a bioinformatics check
 to establish that this is the right call rather than a hedge. `ABHD8-bioinformatics/`
 resolves all seven distinct WITH/FROM accessions against UniProt and queries each one's own GO
 evidence via QuickGO, at run time
@@ -67,7 +67,7 @@ Two counts, at two scopes, and they must not be conflated:
 | all five IBA rows | 6 of 7 (only the PANTHER node lacks it) | 5 of 6 protein sources are reviewed |
 | the two **hydrolase** rows (`GO:0004620`, `GO:0052689`) | 4 of 4 protein sources | **3** — the fourth is the unreviewed fly entry |
 
-The 3 is what matters for the hydrolase rows' `MARK_AS_OVER_ANNOTATED` reasoning, since those are
+The 3 is what matters for the hydrolase rows' `KEEP_AS_NON_CORE` reasoning, since those are
 the rows whose sources include the fly entry. Stated globally it would be wrong.
 
 That ambiguity was found only because the resolver was changed to fetch more than one hit and
