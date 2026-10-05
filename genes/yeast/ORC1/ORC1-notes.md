@@ -49,3 +49,14 @@
   ISM-related region that restrains ORC-ssDNA binding and helps maintain origin specificity;
   this refines the core `GO:0003688 DNA replication origin binding` model but does not justify
   adding a separate ssDNA-binding function.
+
+## 2026-10-05 PR #3779 reviewer follow-up
+
+- Updated `status` from `IN_PROGRESS` to `COMPLETE` after confirming the status
+  manager computes `COMPLETE` for the fully adjudicated 53-row review.
+- Strengthened the new InterPro2GO `GO:0005524 ATP binding` row with primary
+  support from PMID:17825064 and PMID:9038340, and replaced the ComplexPortal
+  `GO:0005664` introduction quote from PMID:27148210 with the result-level
+  co-pulldown quote.
+- Reworded the top-level description to avoid treating the historical "120 kDa"
+  apparent mass as the literal UniProt mass.
