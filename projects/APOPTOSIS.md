@@ -84,7 +84,8 @@ non-mammalian vertebrate extension. Review human and mouse orthologs together
 for the first mammalian slice so MGI phenotypes, GOA propagation, and human
 biochemistry can be compared rather than curated in isolation; use the ZFIN
 slice to find DANRE rows where embryonic cell-death assays have been lifted to
-generic apoptosis.
+generic apoptosis, and use the InterPro slice to find broad domain-to-GO
+mappings that should be challenged upstream.
 
 **Comparators:** Drosophila, Caenorhabditis, budding/fission yeasts, and other
 opisthokonts. Use these to understand conserved caspase/metacaspase,

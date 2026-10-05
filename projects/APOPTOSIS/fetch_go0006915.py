@@ -18,6 +18,7 @@ import requests
 QUICKGO_SEARCH = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
 GO_ID = "GO:0006915"
 LIMIT = 200
+DEFAULT_TAXA = ("human", "mouse")
 TAXA = {
     "human": 9606,
     "mouse": 10090,
@@ -187,14 +188,19 @@ def parse_args() -> argparse.Namespace:
         action="append",
         choices=sorted(TAXA),
         dest="taxa",
-        help="Taxon label to fetch. Repeat to fetch several taxa; default: all.",
+        help="Taxon label to fetch. Repeat to fetch several taxa; default: human, mouse.",
     )
     return parser.parse_args()
 
 
+def selected_taxa(labels: list[str] | None) -> list[str]:
+    requested = set(labels or DEFAULT_TAXA)
+    return [label for label in TAXA if label in requested]
+
+
 def main() -> None:
     args = parse_args()
-    selected_labels = args.taxa or list(TAXA)
+    selected_labels = selected_taxa(args.taxa)
 
     outdir = Path(__file__).resolve().parent / "go0006915"
     outdir.mkdir(parents=True, exist_ok=True)
@@ -231,7 +237,9 @@ def main() -> None:
     stem = "-".join(selected_labels)
     if len(selected_labels) > 1:
         write_tsv(outdir / f"{stem}-go0006915-symbol-rollup.tsv", combined_rollup, ROLLUP_FIELDS)
-    metadata_name = "metadata.json" if selected_labels == list(TAXA) else f"{stem}-metadata.json"
+    metadata_name = (
+        "metadata.json" if selected_labels == list(DEFAULT_TAXA) else f"{stem}-metadata.json"
+    )
     (outdir / metadata_name).write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n"
     )
