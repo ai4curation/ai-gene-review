@@ -10,3 +10,11 @@
 - GO:0007158 neuron cell-cell adhesion is defined as attachment of a neuron to "another cell", so neuron-glia binding fits.
 - No MF term is proposed: the glial counter-receptor is unknown. This is recorded as an MF_DARK knowledge gap.
 - Not used: the affinage-listed miR-sc3 nerve-injury (PMID:26786955) and liver-cancer overexpression (PMID:32945491) papers.
+
+## 2026-10-05 revision (reviewer round 1)
+
+- Added NEW GO:0098632 cell-cell adhesion mediator activity (ISO from mouse) and set it as the core MF. The 3T3 gain-of-function and knockout loss-of-binding data support the activity without the counter-receptor being known. The knowledge gap is narrowed to the counter-receptor, and its dark_aspect was dropped. GOA has no MF row for ASTN1.
+- Both endosome rows (IBA is_active_in and IEA) are now non-core, consistent with the clathrin-coated vesicle row. Endosomes are trafficking compartments, and the adhesion activity is at the surface.
+- PMID:20573900 was re-fetched with full text (PMC2905051). Quotes now come from its Results: RhoB-positive endosomes, clathrin light chain colocalization, and C-terminus exposure on the cell surface. The C-terminus result supports external side of plasma membrane.
+- The 1996 abstract says "two fibronectin type III repeats"; current UniProt annotates one FN3 domain (1030-1145), and the description follows UniProt.
+- BP specificity: GO:0021932 hindbrain radial glia guided cell migration fits the cerebellar evidence. ASTN1 is also expressed in cortex, hippocampus and olfactory bulb, and human variants cause cortical malformations, so the general neuron migration term is kept.
