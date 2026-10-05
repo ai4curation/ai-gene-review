@@ -124,6 +124,11 @@ while the process term is not (changed to positive regulation).
 | worm ced-7 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
 | worm ced-7 | `GO:0012501` programmed cell death | IMP | PMID:9635425 | `MARK_AS_OVER_ANNOTATED` (the phenotype is persistent corpses) |
 | worm ttr-52 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `REMOVE` (no evidence that ttr-52 promotes death, so no positive-regulation fallback) |
+| worm ced-2 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-2 | `GO:0006915` apoptotic process; `GO:0012501` programmed cell death | IMP | PMID:6857247, PMID:10707082 | `MARK_AS_OVER_ANNOTATED` (cells still die; corpses persist) |
+| worm ced-5 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-5 | `GO:1902742` apoptotic process involved in development | IMP | PMID:22801495 (engulfment-defective comparison; unengulfed cells still die by CED-3-mediated apoptosis) | `REMOVE` |
+| worm ced-12 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
 
 **The background-genotype rows come in batches.** A QuickGO query by reference
 (2026-10-05) shows that the CED-8 paper (PMID:24225442) gave `GO:1902742`
@@ -135,7 +140,10 @@ ced-7 and ttr-52 are reviewed. The replacement depends on the gene: the
 positive-regulation term needs its own evidence that the gene promotes death
 (Reddien 2001 and Hoeppner 2001 cover the classic engulfment genes). ttr-52,
 identified later, has none, so its rows are removed rather than modified.
-ced-2, ced-5 and ced-12 remain.
+All seven genes are now reviewed. For ced-2, ced-5 and ced-12 the
+`GO:1904747` replacement rests on the Reddien and Hoeppner abstracts, which
+list these genes among the engulfment genes but do not say which mutants
+were tested for the killing defect; each review says so.
 
 **Detection idea (not yet run):** genes carrying both an apoptotic-cell
 clearance term (`GO:0043652`, `GO:0043277`) and an apoptotic-process term from
