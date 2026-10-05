@@ -476,7 +476,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     gene_index = index_genes_by_family(args.genes_dir)
-    conflicts, unresolved, ok = 0, 0, 0
+    conflicts, to_adjudicate, unresolved, ok = 0, 0, 0, 0
     for path in paths:
         review = yaml.load(path.read_text(), Loader=_Loader)
         results = (
@@ -489,16 +489,20 @@ def main(argv: list[str] | None = None) -> int:
             if r.verdict is Verdict.CONFLICT:
                 conflicts += 1
                 print(r, file=sys.stderr)
+            elif r.verdict is Verdict.UNRESOLVED and r.kind == "FAMILY_GENE_DISAGREEMENT":
+                # Listed, because a curator should decide which review is right.
+                to_adjudicate += 1
+                print(r)
             elif r.verdict is Verdict.UNRESOLVED:
+                # Missing information (e.g. no PANTHER subfamily), counted but not listed.
                 unresolved += 1
-                if r.kind == "FAMILY_GENE_DISAGREEMENT":
-                    print(r)
             else:
                 ok += 1
 
     print(
         f"family/gene cross-check over {len(paths)} family review(s): "
-        f"{conflicts} conflict(s), {unresolved} to adjudicate, {ok} consistent"
+        f"{conflicts} conflict(s), {to_adjudicate} to adjudicate (listed), "
+        f"{unresolved} unresolved for missing information, {ok} consistent"
     )
     return 1 if conflicts else 0
 

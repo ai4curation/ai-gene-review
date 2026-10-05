@@ -165,13 +165,13 @@ modification."
 
 - A positional scan (`gei-17-bioinformatics/acidic_clusters.py`, `RESULTS.md`) finds PIAS1 has
   one acidic cluster (467-476, SSDEEEEEPS, next to its SIM VIDL), 62 aa past the SP-RING. GEI-17
-  has a SIM-like core followed by an acidic run (IITLSDDDDEEL, 545-557) 63 aa past its SP-RING.
+  has a SIM-like core followed by an acidic run (IITLSDDDDEEL, 545-556) 63 aa past its SP-RING.
   The module is positionally conserved; an earlier eyeball reading that it sat elsewhere compared
   it with GEI-17's extreme C-terminus, which PIAS1's cluster is not at either.
 - So neither route is excluded. Decisive tests: (1) whether GEI-17 SUMOylates PRDE-1 or SNPC-4
   directly and that blocks condensate formation; (2) whether a ligase-dead GEI-17 (e.g. the
   L417A SP-RING mutant) still binds and inhibits a transcription regulator, and whether that
-  needs the 545-557 SIM-acidic module.
+  needs the 545-556 SIM-acidic module.
 - The stale ROLE_CONFLATION failure mode, left over from the retracted argument, was removed
   from the GO:0140416 propagation review.
 
