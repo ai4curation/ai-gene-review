@@ -241,6 +241,8 @@ def test_artifact_publication_does_not_depend_on_generated_git_commits():
     assert "'pages'" in job['env']['BROWSER_TARGET']
     assert "'git'" in job['env']['BROWSER_TARGET']
     assert browser['run'] == 'just deploy-browser "$BROWSER_TARGET"'
+    assert steps['Build shared predictions browser']['run'] == 'just deploy-predictions-browser "$BROWSER_TARGET"'
+    assert steps['Build homology propagation browser']['run'] == 'just deploy-propagation-browser "$BROWSER_TARGET"'
     assert steps['Check for changes']['if'] == "vars.PAGES_ARTIFACT_DEPLOY_ENABLED != 'true'"
     assert steps['Generate ai4c-agent token']['if'] == "steps.check-changes.outputs.has_changes == 'true'"
     for name in ('Create or update regeneration PR', 'Approve exact generated commit',

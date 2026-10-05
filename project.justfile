@@ -1934,7 +1934,7 @@ serve-browser:
     @cd app && python3 -m http.server 8080
 
 # Update browser data without regenerating HTML
-update-browser-data: export-annotations-json
+update-browser-data target=env_var_or_default("BROWSER_TARGET", "git"): export-annotations-json
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Updating browser data..."
@@ -1947,7 +1947,7 @@ update-browser-data: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js
