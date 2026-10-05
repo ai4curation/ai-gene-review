@@ -12,3 +12,7 @@
 ## Conclusion
 
 ATAD3C keeps the nucleotide-binding Walker A and B motifs but has lost the trans-acting arginine finger of the AAA+ module, so an ATAD3C subunit cannot complete the ATP site of its neighbour.
+
+## Cross-check against the fusion junction
+
+PMID:32004445 defines the ATAD3A-C fusion as ATAD3A (Q9NVI7-2) residues 1-405 joined to ATAD3C (Q5T2N8-1) residues 231-411, and reports that it carries a cysteine at the ATAD3A arginine-finger position Arg466. Fusion position 466 lies 61 residues past the junction, which is ATAD3C residue 230 + 61 = 291. That matches the C291 found by the independent local alignment above.
