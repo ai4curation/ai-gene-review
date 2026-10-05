@@ -78,3 +78,13 @@
 
 ### Deep research status
 - See bottom of file (updated after falcon job completion).
+
+### Deep research outcome (falcon)
+`just deep-research-falcon human CCL4` was launched in parallel with publication caching at the
+start of the session and **failed**: the Edison/falcon API returned `429 Too Many Requests` and the
+provider then timed out after 600 s ("Provider falcon exited with code 1 / All providers failed").
+No `CCL4-deep-research-falcon.md` was produced. No perplexity key is configured, so no fallback was
+possible. The review was therefore built from the UniProt record, the cached publications listed
+above (several fetched during this session with `just fetch-pmid`), the PubMed MCP (PMC full text
+for PMID:10841574 returned empty), OLS/QuickGO term lookups, and a QuickGO comparator check against
+CCL3 and CCL5.
