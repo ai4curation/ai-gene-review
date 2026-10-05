@@ -451,6 +451,29 @@ Use the OLS MCP to find relevant ontology terms, if the terms you need are not i
 Avoid the term `protein binding`, this doesn't tell us anything about the actual function. Instead find a more
 informative MF term (e.g for adapter function)
 
+### A curation gap is not a knowledge gap
+
+`knowledge_gaps` (on gene reviews, core functions and modules) are for things
+**nobody knows**: an unknown activity, substrate, partner, mechanism or role
+that could only be resolved by **new wet-lab experiments**. A good knowledge gap
+reads like the motivation for an experiment, and usually pairs with a
+`suggested_experiments` entry.
+
+Work that is merely **not done yet** is not a knowledge gap, even though the
+schema's `KnowledgeGapKindEnum` offers `CURATION` and `ONTOLOGY`:
+
+- **Curation gaps** — a member gene not yet reviewed, an annotation that exists
+  in the literature but not in GOA, a module part not yet modelled. Record these
+  in the project page's plan, a module's `notes`, or the gene's notes file.
+- **Ontology gaps** — a missing or ill-fitting GO term. Record these as
+  `proposed_new_terms`, in `notes`, or as a `suggested_questions` entry.
+
+Do not create a `knowledge_gaps` entry whose only `gap_kind` is `CURATION`
+and/or `ONTOLOGY`. Those values may appear only alongside `BIOLOGY`, on a gap
+whose core is a genuine biological unknown. Test before writing one: *would a
+wet-lab experiment close this gap?* If the answer is "no, a curator could close
+it by reading or annotating", it belongs in the plan or notes instead.
+
 ## Isoform and Negation Tracking
 
 The system tracks isoform-specific GO annotations and NOT (negated) annotations:

@@ -99,8 +99,8 @@ class SequenceCache:
     coming from the checkout -- on a cold key the first run still resolves every
     sequence over the network.
 
-    No try/except around the fetch: a network failure should surface, not be silently
-    converted into an UNRESOLVED result that looks like curation uncertainty.
+    Retrieval failures retain accession/URL context and propagate with their cause;
+    they are never converted into UNRESOLVED curation results.
     """
 
     cache_dir: Path
@@ -111,8 +111,13 @@ class SequenceCache:
         req = urllib.request.Request(
             UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
         )
-        with urllib.request.urlopen(req, timeout=60) as fh:
-            return json.load(fh)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as fh:
+                return json.load(fh)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise RuntimeError(
+                f"Could not retrieve UniProt record {acc} from {req.full_url}"
+            ) from exc
 
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
