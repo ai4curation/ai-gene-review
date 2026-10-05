@@ -14,10 +14,12 @@ understudied ("dark") gene. Provenance is recorded inline as
 
 ## Domain / topology reasoning (inline, from `GTT3-uniprot.txt`)
 
-- Family/domain signatures are **GTT3-specific and named "putative"**: Pfam
-  **PF27945 (GTT3_N)**, PANTHER **PTHR41807** ("GLUTATHIONE TRANSFERASE 3"),
-  InterPro **IPR038872** — whose InterPro name is **"Put_GTT3"** = *putative* GTT3
-  [`GTT3-uniprot.txt` "InterPro; IPR038872; Put_GTT3." / "Pfam; PF27945; GTT3_N; 1."].
+- Family/domain signatures are **GTT3-specific and named "putative"**: InterPro
+  **IPR060437 (GTT3_N)** / **IPR063760 (GTT3_C)**, Pfam **PF27945 (GTT3_N)** /
+  **PF30540 (GTT3_C)**, PANTHER **PTHR41807** ("GLUTATHIONE TRANSFERASE 3"),
+  and the broader InterPro **IPR038872** "Put_GTT3" family
+  [`GTT3-uniprot.txt` "InterPro; IPR063760; GTT3_C." / "InterPro; IPR060437; GTT3_N." /
+  "Pfam; PF30540; GTT3_C; 1." / "Pfam; PF27945; GTT3_N; 1."].
   These are **not** the canonical soluble-GST signatures (no thioredoxin/GST N-
   and C-terminal domain PROSITE/Pfam hits, no PF00043/PF02798). So the "glutathione
   transferase" name is an **annotation-by-name**, not a domain-supported catalytic call.
@@ -86,7 +88,8 @@ understudied ("dark") gene. Provenance is recorded inline as
 
 ## Curation decisions (summary)
 
-- **GO:0016020 membrane (IBA)** — ACCEPT (broad but correct; multi-pass TM helices).
+- **GO:0016020 membrane (IBA)** — KEEP_AS_NON_CORE (broad but correct; multi-pass TM
+  helices; `is_active_in` over-claims activity for an MF-dark protein).
 - **GO:0031965 nuclear membrane (IEA, SubCell)** — ACCEPT (Huh GFP + SubCell mapping;
   agrees with nuclear-periphery HDA). Core location.
 - **GO:0034399 nuclear periphery (HDA, PMID:26928762)** — ACCEPT (experimental HT
