@@ -50,6 +50,33 @@ mluI to META1p4131. These identities do not establish every reaction or regulato
 edge assigned by homology. In particular, MllG must not be described as an
 experimentally characterized aldolase.
 
+## Pathway Context
+
+The established cluster-level sequence is biosynthesis of methylolanthanin,
+secretion, and binding of lanthanides. The candidate receptor and regulatory
+connections remain predictions; the diagram does not assign every reaction
+to an individual Mll protein.
+
+```mermaid
+flowchart LR
+  B["mll biosynthetic cluster"] --> M["Secreted methylolanthanin"]
+  M --> L["Lanthanide complex"]
+  L -. "candidate substrate" .-> A["MluA outer-membrane receptor"]
+  A -. "proposed signaling" .-> R["MluR / MluI"]
+  R -. "regulatory hypothesis" .-> B
+```
+
+| Property | Siderophore Homologues | AM1 Methylolanthanin System |
+|----------|------------------------|----------------------------|
+| Metal relationship | Characterized examples support iron acquisition | Lanthanide binding is demonstrated; an additional iron role remains unresolved |
+| Biosynthetic machinery | NRPS-independent synthetases and related domains | Homologous Mll proteins support pathway assignment, not every individual reaction |
+| Uptake and signaling | TonB-dependent receptors can couple uptake to cell-surface signaling | MluA/MluR/MluI are candidate counterparts; exact ligand and interactions require testing |
+| Metal-responsive regulation | Iron limitation commonly regulates siderophore systems | The mll promoter responds to iron and neodymium under the tested conditions |
+
+This comparison follows the primary study's homology analysis and experiments,
+not an assumption that lanthanide binding excludes iron biology.
+[PMID:39078674](https://pmc.ncbi.nlm.nih.gov/articles/PMC11317620/).
+
 ## Annotation Decisions
 
 The ten reviews contain 30 annotation rows:
