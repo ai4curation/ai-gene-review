@@ -2229,7 +2229,10 @@ def validate_leaf_grounding_completeness(doc: object) -> List[str]:
     marked ``status: COMPLETE``, every terminal node should name at least one
     concrete UniProtKB representative through its annoton participant.
     Reusable templates with ``scope: ABSTRACT`` are skipped by the shared QC
-    helper because they are intentionally gene-free.
+    helper because they are intentionally gene-free. A terminal node marked
+    ``intentionally_ungrounded`` is skipped too when the curator has explicitly
+    recorded that the role is distributed/open-ended rather than awaiting a
+    representative.
     """
     if not isinstance(doc, dict):
         return []

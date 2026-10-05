@@ -237,6 +237,38 @@ def test_abstract_scope_skips_leaf_representative_grounding():
     assert leaf_nodes_missing_representatives(data) == []
 
 
+def test_intentionally_ungrounded_leaf_skips_representative_grounding():
+    data = {
+        "module": {
+            "id": "cycle",
+            "parts": [
+                {
+                    "node": {
+                        "id": "distributed_step",
+                        "label": "Distributed step",
+                        "intentionally_ungrounded": True,
+                        "annotons": [
+                            {
+                                "participant": {
+                                    "selector_type": "ANY_WITH_FUNCTION",
+                                    "required_function": {
+                                        "term": {
+                                            "id": "GO:0008757",
+                                            "label": "S-adenosylmethionine-dependent methyltransferase activity",
+                                        }
+                                    },
+                                }
+                            }
+                        ],
+                    }
+                }
+            ],
+        }
+    }
+
+    assert leaf_nodes_missing_representatives(data) == []
+
+
 # ---------------------------------------------------------------------------
 # UniProt grounding collection
 # ---------------------------------------------------------------------------

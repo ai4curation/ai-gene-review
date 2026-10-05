@@ -890,6 +890,33 @@ def test_validate_leaf_grounding_completeness_allows_draft_or_abstract(patch):
     assert validate_leaf_grounding_completeness(doc) == []
 
 
+def test_validate_leaf_grounding_completeness_allows_intentionally_ungrounded_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0008757",
+                                "label": "S-adenosylmethionine-dependent methyltransferase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+            "intentionally_ungrounded": True,
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
 # --------------------------------------------------------------------------- #
 # supporting_text snippet validation
 # --------------------------------------------------------------------------- #
