@@ -150,7 +150,7 @@ Last updated: 2026-10-01
 ## Tier 2 — Neural plate border specifiers (ancestral chordate layer)
 
 - [x] `XENLA/pax3-a` (Q645N4) — Pax3/7; neural plate border specifier. Reviewed 2026-10-05: 25 GOA rows (17 ACCEPT, 3 non-core, 4 over-annotated, 1 MODIFY) + 1 NEW (GO:0001228)
-- [ ] `XENLA/zic1` (O73689) — Zic1; border specifier together with Pax3
+- [x] `XENLA/zic1` (O73689) — Zic1; border specifier (with Pax3), also preplacodal. Reviewed 2026-10-05: 33 GOA rows (25 ACCEPT, 6 non-core, 1 MODIFY, 1 over-annotated) + 2 NEW (GO:0001228, GO:0060788)
 - [ ] `human/MSX1` (P28360) — Msx (no reviewed *X. laevis* entry)
 - [ ] `human/TFAP2A` (P05549) — AP-2; early NPB/NC; amphioxus/lamprey AP-2
 - [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (20 ACCEPT, 5 non-core, 3 MODIFY, 1 UNDECIDED) + 1 NEW (GO:0001227)
@@ -411,6 +411,24 @@ Cross-cutting findings:
   lamprey gbx2 shows the frog-like border expression. Gbx2 is an ancestral
   positional gene put to work at the border in vertebrates. Open: *X. laevis*
   has four gbx2 copies, so which one the morpholinos target is unclear.
+
+- **zic1.** Border specifier. It is expressed before foxd3/slug and directly
+  activates snail1. With Pax3 it activates snail2, foxd3, twist1, tfap2b and
+  sox8. Alone it gives neural or preplacodal tissue, not crest. All five
+  `GO:0014029` and three `GO:0014034` rows were accepted, matching pax3-a; the
+  `GO:0014033` differentiation row was MODIFIED to `GO:0014034`. NEW:
+  - `GO:0001228` activator activity (EMSA on a snail1 element;
+    cycloheximide-resistant activation [PMID:24360906]).
+  - `GO:0060788` ectodermal placode formation [PMID:17409353, full text].
+
+  The comparator checks were verified in QuickGO: no Zic in any species
+  carries `GO:0014036`, while zebrafish foxi1, gata3 and tfap2a and frog tbx1
+  carry `GO:0060788` by IMP/IGI. Evolution: amphioxus Zic and Pax3/7 already
+  mark the border without the crest specifiers [PMID:18562679], the same
+  pattern as pax3-a. Open: PMID:9435279 sources a `GO:0014029` IMP row
+  although its abstract does not mention crest (accepted, deferring to the
+  curator). Only zic1.S has experimental rows. Zebrafish tfap2a sits at
+  `GO:0014036`, which is relevant to the TFAP2A review.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
