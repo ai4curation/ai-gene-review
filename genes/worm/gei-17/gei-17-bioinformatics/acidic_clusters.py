@@ -10,8 +10,8 @@ A cluster is a maximal run of overlapping windows of WINDOW residues holding
 at least MIN_ACIDIC D/E. For each cluster the script also looks, within
 SIM_LOOKBACK residues upstream, for a SIM-like hydrophobic core matching
 SIM_CORE (the psi-psi-x-psi / psi-x-psi-psi class of SUMO-interacting motifs,
-psi = V/I/L), and says whether UniProt annotates a SUMO-binding region there or
-whether the call is by motif alone. Output is a positional description, not an
+psi = V/I/L), and reports how many of the core's residues overlap each
+UniProt-annotated SUMO-binding region, or that the call is by motif alone. Output is a positional description, not an
 alignment, and says nothing about function.
 
 Run from the repo root: python genes/worm/gei-17/gei-17-bioinformatics/acidic_clusters.py
@@ -91,15 +91,17 @@ def main() -> None:
             for pos, core in cores:
                 # Report how far the core reaches into any annotated SUMO-binding region,
                 # so a one-residue contact is not presented as full coverage.
+                end = pos + len(core) - 1
                 overlaps = [
-                    (f, min(pos + 3, f[2]) - max(pos, f[1]) + 1)
-                    for f in sims
-                    if f[1] <= pos + 3 and pos <= f[2]
+                    (region, min(end, region[2]) - max(pos, region[1]) + 1)
+                    for region in sims
+                    if region[1] <= end and pos <= region[2]
                 ]
                 if overlaps:
-                    f, n = overlaps[0]
-                    source = (
-                        f"overlaps UniProt SUMO-binding region {f[1]}-{f[2]} by {n} of 4 aa"
+                    source = "; ".join(
+                        f"overlaps UniProt SUMO-binding region {region[1]}-{region[2]} "
+                        f"by {n} of {len(core)} aa"
+                        for region, n in overlaps
                     )
                 else:
                     source = "motif only, not annotated"
