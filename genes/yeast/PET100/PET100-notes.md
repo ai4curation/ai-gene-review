@@ -52,8 +52,9 @@
   rows. Current PAINT now emits four PET100-family IBAs from
   `PANTHER:PTN002143768`: accepted `GO:0005743` mitochondrial inner membrane
   and `GO:0033617` mitochondrial respiratory chain complex IV assembly, the
-  overbroad live `GO:0044183` protein folding chaperone replacement, and
-  accepted `GO:0051131` chaperone-mediated protein complex assembly.
+  overbroad live `GO:0044183` protein folding chaperone replacement modified
+  to `GO:0140597`, and accepted `GO:0051131` chaperone-mediated protein complex
+  assembly.
 - The historical `GO:0051082` unfolded protein binding IBA and IDA rows are no
   longer in live GOA and are marked `retired: true`; they remain reviewed so
   the obsolete source assertions are preserved for the IBA/chaperone audit.
@@ -67,4 +68,9 @@
   Complex A with those subunits and concludes that Pet100 facilitates
   interaction between the Pet100-lacking Complex A' and other COX
   subassemblies: [PMID:15507444 "facilitate the interaction(s) between Complex
-  A' and other cytochrome c oxidase subassemblies and subunits"].
+  A' and other cytochrome c oxidase subassemblies and subunits"]. This supersedes
+  the older `projects/UNFOLDED_PROTEIN_BINDING.md` PET100 row that marked the
+  gene `OVER_ANNOTATED` and floated `GO:0140777 protein-containing complex
+  stabilizing activity` for respiratory-chain assembly factors; GO:0140777 remains
+  a useful question if Pet100 primarily stabilizes the Complex A module rather
+  than directly carrying it to another assembly intermediate.

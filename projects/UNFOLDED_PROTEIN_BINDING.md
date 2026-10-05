@@ -502,8 +502,11 @@ established:
 
 5. **Assembly factors (ATP10, PET100, COX20, SHY1, cia30)** — Single-client assembly
    chaperones for respiratory chain complexes. These bind specific subunits during complex
-   assembly, not unfolded proteins generally. All MARK_AS_OVER_ANNOTATED. GO:0140777
-   (protein-containing complex stabilizing activity) proposed as replacement for some.
+   assembly, not unfolded proteins generally. PET100 was re-reviewed after SGD's 2026
+   recuration and the live GO:0140597 carrier term is accepted for its Cox7/Cox8/Cox9
+   subassembly role; GO:0140777 (protein-containing complex stabilizing activity) remains
+   a plausible narrower alternative for cases whose evidence supports stabilization more
+   directly than carrier/adaptor activity.
 
 6. **IRE1 (yeast + T. reesei)** — UPR sensor kinase/endoribonuclease. Detects unfolded
    proteins in the ER lumen as a signaling sensor, not a chaperone. Cross-kingdom confirmation
@@ -610,7 +613,7 @@ established:
 | NSG1 | *S. cerevisiae* | P38837 | 16 | OVER_ANNOTATED | Sterol-binding |
 | NSG2 | *S. cerevisiae* | P53898 | 8 | OVER_ANNOTATED | Sterol-binding |
 | PDI1 | *S. cerevisiae* | P17967 | 32 | OVER_ANNOTATED | Protein disulfide isomerase |
-| PET100 | *S. cerevisiae* | P38958 | 12 | OVER_ANNOTATED | Cox assembly factor |
+| PET100 | *S. cerevisiae* | P38958 | 15 | GO:0044183 MODIFY → GO:0140597 | Cox7/Cox8/Cox9 carrier/adaptor for complex IV assembly; GO:0140777 remains a stabilization question |
 | PFD1 | *S. cerevisiae* | P46988 | 20 | MODIFY → GO:0044183 | Prefoldin subunit |
 | PHO86 | *S. cerevisiae* | P46956 | 12 | MODIFY | Phosphate transporter chaperone |
 | PNO1 | *S. cerevisiae* | Q99216 | 18 | OVER_ANNOTATED | Ribosome biogenesis |
