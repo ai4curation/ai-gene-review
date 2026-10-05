@@ -223,10 +223,15 @@ def summarize_metabolites(maf: pd.DataFrame, groups: dict[str, list[str]]) -> pd
             out[f"{condition}_n"] = int(values.notna().sum())
             out[f"{condition}_mean"] = float(values.mean()) if values.notna().any() else None
             out[f"{condition}_sd"] = float(values.std()) if values.notna().sum() > 1 else None
-        if out.get("FeInt_T1_mean") and out.get("FeLim_T1_mean"):
-            out["FeLim_T1_vs_FeInt_T1_log2"] = math.log2(
-                out["FeLim_T1_mean"] / out["FeInt_T1_mean"]
-            )
+        fe_int_t1 = out.get("FeInt_T1_mean")
+        fe_lim_t1 = out.get("FeLim_T1_mean")
+        if (
+            fe_int_t1 is not None
+            and fe_lim_t1 is not None
+            and fe_int_t1 > 0
+            and fe_lim_t1 > 0
+        ):
+            out["FeLim_T1_vs_FeInt_T1_log2"] = math.log2(fe_lim_t1 / fe_int_t1)
         else:
             out["FeLim_T1_vs_FeInt_T1_log2"] = None
         rows.append(out)
@@ -239,6 +244,11 @@ def load_gene_reviews(manifest: dict[str, Any], repo_root: Path) -> dict[str, di
         path = repo_root / relative
         data = load_yaml(path)
         symbol = str(data.get("gene_symbol", path.parent.name))
+        if symbol != path.parent.name:
+            raise ValueError(
+                f"{relative} loads {symbol}; anchor path directories must match "
+                "gene_symbol exactly on case-sensitive and case-insensitive filesystems"
+            )
         reviews[symbol] = {
             "gene_symbol": symbol,
             "uniprot_id": data.get("id", ""),
@@ -278,6 +288,7 @@ def reaction_status(
     reaction: dict[str, Any],
     measured: set[str],
     sample_context: set[str],
+    not_targeted: set[str],
 ) -> tuple[str, str]:
     participants = [
         compound
@@ -287,19 +298,24 @@ def reaction_status(
     unique = set(participants)
     measured_hits = sorted(unique & measured)
     sample_hits = sorted((unique - measured) & sample_context)
+    not_targeted_hits = sorted((unique - measured - sample_context) & not_targeted)
+    topology_only = sorted(unique - measured - sample_context - not_targeted)
     if unique and unique <= measured:
         status = "measured_complete"
     elif measured_hits:
         status = "measured_partial"
     elif sample_hits:
         status = "sample_context_only"
+    elif not_targeted_hits and not topology_only:
+        status = "not_targeted_by_assay"
     else:
         status = "kegg_topology_only"
     detail = "; ".join(
         [
             f"measured={','.join(measured_hits) if measured_hits else '-'}",
             f"sample_context={','.join(sample_hits) if sample_hits else '-'}",
-            f"unmeasured={','.join(sorted(unique - measured - sample_context)) or '-'}",
+            f"not_targeted={','.join(not_targeted_hits) if not_targeted_hits else '-'}",
+            f"topology_only={','.join(topology_only) if topology_only else '-'}",
         ]
     )
     return status, detail
@@ -310,6 +326,7 @@ def reaction_rows(
     kegg_records: dict[str, dict[str, Any]],
     measured: set[str],
     sample_context: set[str],
+    not_targeted: set[str],
 ) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     for manifest_reaction in reactions:
@@ -317,7 +334,7 @@ def reaction_rows(
         record = kegg_records.get(reaction_id)
         if not record:
             raise ValueError(f"Missing cached KEGG reaction record for {reaction_id}")
-        status, detail = reaction_status(record, measured, sample_context)
+        status, detail = reaction_status(record, measured, sample_context, not_targeted)
         rows.append(
             {
                 "Reaction": reaction_id,
@@ -340,6 +357,7 @@ def matched_rows(
     kegg_records: dict[str, dict[str, Any]],
     measured: set[str],
     sample_context: set[str],
+    not_targeted: set[str],
 ) -> pd.DataFrame:
     rows: list[dict[str, Any]] = []
     for _, reaction in reaction_table.iterrows():
@@ -352,6 +370,8 @@ def matched_rows(
                     origin = "metabolomics"
                 elif compound in sample_context:
                     origin = "sample_metadata"
+                elif compound in not_targeted:
+                    origin = "not_targeted_by_assay"
                 else:
                     origin = "kegg_topology"
                 rows.append(
@@ -414,16 +434,10 @@ def build_graph(
         for gene_symbol in [item.strip() for item in str(row["aigr_genes"]).split(",") if item.strip()]:
             review = gene_reviews.get(gene_symbol)
             gene_id = f"gene:{gene_symbol}"
-            if review:
-                nodes.append(
-                    {
-                        "id": gene_id,
-                        "label": gene_symbol,
-                        "kind": "gene_review",
-                        "uniprot_id": review["uniprot_id"],
-                        "review_status": review["status"],
-                        "review_path": review["path"],
-                    }
+            if not review:
+                raise ValueError(
+                    f"{reaction_id} references {gene_symbol}, but anchor_gene_reviews "
+                    "does not load that gene"
                 )
             edges.append(
                 {
@@ -431,6 +445,16 @@ def build_graph(
                     "target": reaction_id,
                     "label": "reviewed_gene_context",
                     "origin": "aigr_review",
+                }
+            )
+            nodes.append(
+                {
+                    "id": gene_id,
+                    "label": gene_symbol,
+                    "kind": "gene_review",
+                    "uniprot_id": review["uniprot_id"],
+                    "review_status": review["status"],
+                    "review_path": review["path"],
                 }
             )
 
@@ -461,6 +485,7 @@ def build_graph(
         "evidence_model": {
             "metabolomics": "Measured MTBLS1715 processed MAF abundance row",
             "sample_metadata": "Substrate named in MTBLS1715 sample factor value",
+            "not_targeted_by_assay": "Compound outside the MTBLS1715 targeted LC-MS panel",
             "aigr_review": "Existing AI Gene Review gene-function anchor",
             "kegg_topology": "Unmeasured KEGG connector needed to state the reaction equation",
         },
@@ -532,6 +557,27 @@ def report_markdown(
         "C00846",
     }
     measured_aromatic = sorted(measured_compounds & aromatic_compounds)
+    not_targeted = {
+        item["id"]: item["label"]
+        for item in manifest.get("assay_not_targeted_compounds", [])
+    }
+    not_targeted_aromatic = sorted(
+        f"{label} (`{compound_id}`)"
+        for compound_id, label in not_targeted.items()
+        if compound_id in aromatic_compounds
+    )
+    measured_in_graph = set(matched.loc[matched["Origin"] == "metabolomics", "Compound"])
+    unmapped_measured = metabolite_summary.loc[
+        ~metabolite_summary["KEGG_C_number"].isin(measured_in_graph),
+        ["metabolite_identification", "database_identifier", "KEGG_C_number", "kegg_lookup_status"],
+    ].copy()
+    unmapped_measured["selected_graph_status"] = "not_in_selected_manifest_reactions"
+
+    reaction_genes: dict[str, list[str]] = {}
+    for _, reaction in pd.concat([central_reactions, aromatic_reactions]).iterrows():
+        for gene in [item.strip() for item in str(reaction["aigr_genes"]).split(",") if item.strip()]:
+            reaction_genes.setdefault(gene, []).append(str(reaction["Reaction"]))
+
     sample_context = ", ".join(
         f"{item['label']} (`{item['id']}`)" for item in manifest["sample_context_compounds"]
     )
@@ -542,6 +588,8 @@ def report_markdown(
         f"  - {manifest['organism']}",
         f"title: {manifest['title']}",
         "---",
+        "",
+        "<!-- GENERATED FILE. Do not edit by hand. Regenerate with scripts/pathwayseeker_psepk_benzoate_real_pilot.py. -->",
         "",
         f"# {manifest['title']}",
         "",
@@ -564,7 +612,11 @@ def report_markdown(
         f"- Publication `{manifest['source_data']['publication']['id']}` / DOI `{manifest['source_data']['publication']['doi']}`: {manifest['source_data']['publication']['title']}",
         f"- Sample carbon-source context: {sample_context}.",
         "",
-        "The MAF contains 14 measured metabolites across 16 KT2440 glucose-plus-benzoate sample columns. No processed MAF row maps to benzoate, catechol, cis,cis-muconate, muconolactone, or 3-oxoadipate.",
+        "The MAF contains 14 measured central-carbon metabolites across 16 KT2440 glucose-plus-benzoate sample columns. The cached MetaboLights protocol identifies these as a targeted LC-MS panel, so the absence of processed rows for catechol, cis,cis-muconate, muconolactone, 3-oxoadipate, and related aromatic-ring-cleavage intermediates means those compounds were not targeted by the assay, not that they were assayed and undetected.",
+        "",
+        f"Aromatic branch compounds recorded as outside the targeted panel: {', '.join(not_targeted_aromatic)}.",
+        "",
+        "The abundance values below are raw processed MAF values summarized by condition. This pilot does not normalize them to biomass, OD, or an internal standard, and it does not subtract the `Blank_1` through `Blank_3` background columns.",
         "",
         "The cached PRIDE project metadata documents the matched proteomics accession, but this pilot does not parse raw PRIDE spectra or treat the PRIDE record as a protein-abundance matrix.",
         "",
@@ -574,7 +626,9 @@ def report_markdown(
     summary_for_md = metabolite_summary.copy()
     for column in [
         "FeInt_T1_mean",
+        "FeInt_T1_sd",
         "FeLim_T1_mean",
+        "FeLim_T1_sd",
         "FeLim_T2_mean",
         "FeLim_T3_mean",
         "FeLim_T1_vs_FeInt_T1_log2",
@@ -588,7 +642,11 @@ def report_markdown(
                 "database_identifier",
                 "KEGG_C_number",
                 "FeInt_T1_mean",
+                "FeInt_T1_n",
+                "FeInt_T1_sd",
                 "FeLim_T1_mean",
+                "FeLim_T1_n",
+                "FeLim_T1_sd",
                 "FeLim_T2_mean",
                 "FeLim_T3_mean",
                 "FeLim_T1_vs_FeInt_T1_log2",
@@ -599,7 +657,11 @@ def report_markdown(
                 "Source ID",
                 "KEGG",
                 "FeInt T1 mean",
+                "FeInt T1 n",
+                "FeInt T1 sd",
                 "FeLim T1 mean",
+                "FeLim T1 n",
+                "FeLim T1 sd",
                 "FeLim T2 mean",
                 "FeLim T3 mean",
                 "log2 FeLim T1 / FeInt T1",
@@ -625,6 +687,29 @@ def report_markdown(
             ["Reaction", "Step", "AIGR genes", "Coverage", "Detail", "Equation"],
         )
     )
+    lines.extend(
+        [
+            "",
+            "## Measured Rows Outside the Selected Graph",
+            "",
+        ]
+    )
+    if unmapped_measured.empty:
+        lines.append("All measured metabolites map to at least one selected manifest reaction.")
+    else:
+        lines.extend(
+            markdown_table(
+                unmapped_measured,
+                [
+                    "metabolite_identification",
+                    "database_identifier",
+                    "KEGG_C_number",
+                    "kegg_lookup_status",
+                    "selected_graph_status",
+                ],
+                ["Metabolite", "Source ID", "KEGG", "Mapping", "Selected graph status"],
+            )
+        )
     lines.extend(
         [
             "",
@@ -663,12 +748,35 @@ def report_markdown(
         if not review or review["gene_symbol"] in seen:
             continue
         seen.add(review["gene_symbol"])
-        gene_rows.append(review)
+        row = dict(review)
+        row["graph_reactions"] = ", ".join(sorted(reaction_genes.get(row["gene_symbol"], [])))
+        row["graph_status"] = (
+            "linked_to_selected_reaction"
+            if row["graph_reactions"]
+            else "not_linked_to_selected_reaction"
+        )
+        gene_rows.append(row)
     lines.extend(
         markdown_table(
             pd.DataFrame(gene_rows),
-            ["gene_symbol", "uniprot_id", "status", "core_terms", "path"],
-            ["Gene", "UniProt", "Review status", "Core reviewed terms", "Review file"],
+            [
+                "gene_symbol",
+                "uniprot_id",
+                "status",
+                "graph_reactions",
+                "graph_status",
+                "core_terms",
+                "path",
+            ],
+            [
+                "Gene",
+                "UniProt",
+                "Review status",
+                "Graph reactions",
+                "Graph status",
+                "Core reviewed terms",
+                "Review file",
+            ],
         )
     )
     lines.extend(
@@ -694,15 +802,15 @@ def report_markdown(
             "Specific implications:",
             "",
             "- The real metabolomics supports central-carbon coverage around gluconate, glucose-6-phosphate, 6-phosphogluconate, pyruvate/PEP, and TCA nodes during glucose-plus-benzoate growth.",
-            "- The aromatic benzoate-to-catechol branch is not directly observed in the processed metabolomics table; its reviewed genes should stay supported by literature/review evidence, not by this MAF.",
-            "- `gcd`, `zwf`, `edd`, and `eda` can be linked as reviewed anchors to the pathway graph, but the graph edge itself should be tagged as context unless both protein abundance and metabolite evidence are present.",
+            "- The aromatic benzoate-to-catechol branch is not targeted by the processed metabolomics table; its reviewed genes should stay supported by literature/review evidence, not by this MAF.",
+            "- `gcd`, `glk`, `zwf`, `edd`, and `eda` can be linked as reviewed anchors to the central-carbon pathway graph, but the graph edge itself should be tagged as context unless both protein abundance and metabolite evidence are present.",
             "- A proteomics-enabled second pass needs a parsed KT2440 protein-abundance table from PXD013605 or supplementary data with stable locus/UniProt mapping.",
             "",
             "## Reproduce",
             "",
             "```bash",
-            ".venv/bin/python scripts/pathwayseeker_psepk_benzoate_real_pilot.py projects/PATHWAYSEEKER/PSEPK_BENZOATE_REAL/manifest.yaml",
-            ".venv/bin/ai-gene-review render-projects projects/PATHWAYSEEKER/PSEPK_BENZOATE_REAL/README.md -o projects/PATHWAYSEEKER/PSEPK_BENZOATE_REAL",
+            "uv run python scripts/pathwayseeker_psepk_benzoate_real_pilot.py projects/PATHWAYSEEKER/PSEPK_BENZOATE_REAL/manifest.yaml",
+            "uv run ai-gene-review render-projects projects/PATHWAYSEEKER/PSEPK_BENZOATE_REAL/README.md -o projects",
             "```",
             "",
         ]
@@ -710,14 +818,21 @@ def report_markdown(
     return "\n".join(lines)
 
 
+def find_repo_root(path: Path) -> Path:
+    for candidate in [path, *path.parents]:
+        if (candidate / "genes").is_dir() and (candidate / "scripts").is_dir():
+            return candidate
+    raise ValueError(f"Could not find repository root from {path}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("manifest", type=Path)
     args = parser.parse_args()
 
-    repo_root = Path.cwd()
-    manifest_path = args.manifest
+    manifest_path = args.manifest.resolve()
     project_dir = manifest_path.parent
+    repo_root = find_repo_root(project_dir)
     manifest = load_yaml(manifest_path)
     artifact_dir = project_dir
 
@@ -731,20 +846,23 @@ def main() -> None:
 
     measured = set(summary["KEGG_C_number"])
     sample_context = {item["id"] for item in manifest["sample_context_compounds"]}
+    not_targeted = {item["id"] for item in manifest.get("assay_not_targeted_compounds", [])}
     central = reaction_rows(
         manifest["target_pathway"]["central_reactions"],
         kegg_records,
         measured,
         sample_context,
+        not_targeted,
     )
     aromatic = reaction_rows(
         manifest["target_pathway"]["aromatic_coverage_reactions"],
         kegg_records,
         measured,
         sample_context,
+        not_targeted,
     )
     all_reactions = pd.concat([central, aromatic], ignore_index=True)
-    matched = matched_rows(all_reactions, kegg_records, measured, sample_context)
+    matched = matched_rows(all_reactions, kegg_records, measured, sample_context, not_targeted)
     graph = build_graph(all_reactions, matched, summary, gene_reviews)
 
     maf.to_csv(artifact_dir / "metabolomics_with_C_numbers.csv", index=False)
