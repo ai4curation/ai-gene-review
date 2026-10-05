@@ -27,6 +27,7 @@ from ai_gene_review.etl.publication_refresh import (
     find_active_review_pmids,
 )
 from ai_gene_review.evaluation.cafa import (
+    CafaInputError,
     evaluate_cafa_predictions,
     format_cafa_rows_tsv,
 )
@@ -762,7 +763,11 @@ def cafa_evaluate(
     prediction_file: Annotated[
         Path,
         typer.Argument(
-            help="Prediction TSV with columns: gene_id, go_id, label, aspect, score, rank. .gz is supported."
+            help=(
+                "Prediction TSV with columns: gene_id, go_id, label, aspect, "
+                "score, rank. score is ignored; rank must be a precomputed "
+                "integer bin. .gz is supported."
+            )
         ),
     ],
     training_annotations: Annotated[
@@ -805,7 +810,10 @@ def cafa_evaluate(
         int,
         typer.Option(
             "--max-rank",
-            help="Evaluate threshold pools 1..MAX_RANK. PAN-GO uses 10 deciles.",
+            help=(
+                "Evaluate threshold pools 1..MAX_RANK from precomputed "
+                "PAN-GO decile ranks."
+            ),
         ),
     ] = 10,
     no_header: Annotated[
@@ -818,7 +826,8 @@ def cafa_evaluate(
     This reimplements the Human Functionome supplementary evaluation on prepared
     files: training annotations are excluded, post-cutoff experimental
     annotations are used as the proxy test set, and precision/recall are
-    macro-averaged per protein.
+    macro-averaged per protein. Prediction scores are ignored; rank must be a
+    precomputed integer decile.
     """
 
     if max_rank < 1:
@@ -841,6 +850,7 @@ def cafa_evaluate(
             curated_genes,
             go_parents,
             thresholds=tuple(range(1, max_rank + 1)),
+            threshold_fraction_denominator=10,
         )
         tsv = format_cafa_rows_tsv(rows, include_header=not no_header)
         if output:
@@ -848,7 +858,7 @@ def cafa_evaluate(
             typer.echo(f"CAFA metrics written to: {output}")
         else:
             typer.echo(tsv, nl=False)
-    except ValueError as e:
+    except CafaInputError as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)
 

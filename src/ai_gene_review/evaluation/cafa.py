@@ -1,10 +1,15 @@
 """CAFA-style protein-centric precision/recall metrics.
 
 This module reimplements the PAN-GO Human Functionome supplementary evaluation
-workflow for prepared annotation files. It intentionally follows the bundled
-PAN-GO Perl scripts' semantics: post-cutoff experimental annotations are used as
-the proxy test set, pre-cutoff experimental annotations are excluded, and
-precision/recall are macro-averaged over proteins.
+workflow for prepared annotation files. The supporting PAN-GO evaluation code is
+linked from the supplement at
+https://github.com/geneontology/PAN-GO_CAFA_evaluation.
+
+Post-cutoff experimental annotations are used as the proxy test set, pre-cutoff
+experimental annotations are excluded, and precision/recall are macro-averaged
+over proteins. Optional GO parent closure is used only to remove post-cutoff
+test terms whose descendants were already present before the cutoff; predictions
+and remaining test terms are compared as exact GO IDs.
 """
 
 from __future__ import annotations
@@ -51,6 +56,10 @@ AspectGeneTermMap = dict[str, GeneTermMap]
 ThresholdPredictionMap = dict[int, AspectGeneTermMap]
 
 
+class CafaInputError(ValueError):
+    """Raised when a CAFA input file or option is malformed."""
+
+
 @dataclass(frozen=True)
 class CafaMetricRow:
     """Protein-centric metric row for one threshold and ontology aspect."""
@@ -77,12 +86,14 @@ def evaluate_cafa_predictions(
     thresholds: Sequence[int] = tuple(range(1, 11)),
     aspects: Sequence[str] = DEFAULT_ASPECTS,
     excluded_terms: Iterable[str] = DEFAULT_EXCLUDED_TERMS,
+    threshold_fraction_denominator: int | None = None,
 ) -> list[CafaMetricRow]:
     """Evaluate predictions with the PAN-GO CAFA-style metric.
 
     Args:
         prediction_file: Prediction TSV. Gzip-compressed files are supported.
             Expected columns are gene ID, GO ID, label, aspect, score, rank.
+            Score is ignored; rank must be a precomputed positive integer bin.
         training_annotations_file: Pre-cutoff experimental annotations. Expected
             columns are UniProt ID, GO ID, aspect, evidence, direct/parent type.
         new_annotations_file: Post-cutoff experimental annotations in the same
@@ -91,12 +102,16 @@ def evaluate_cafa_predictions(
             per line, e.g. ``HUMAN|HGNC=10741|UniProtKB=O75326``.
         go_parents_file: Optional all-parent lookup. Expected columns include a
             child term containing a GO ID and a parent term containing a GO ID.
-            All listed parents are used, matching the PAN-GO Perl script.
+            All listed parents are used to expand the training exclusion set.
         thresholds: Integer rank thresholds. Rank 1 predictions are included at
             every threshold; rank N predictions are included for thresholds >= N.
+            Ranks above the highest threshold are treated as below the evaluated
+            range and ignored.
         aspects: Ontology aspects to report. Defaults to all, MF, BP, and CC.
         excluded_terms: GO IDs to remove from training, test, parent closure,
             and prediction files.
+        threshold_fraction_denominator: Optional denominator for reporting
+            ``threshold_fraction``. Defaults to the maximum threshold.
 
     Returns:
         Metric rows ordered by threshold, then aspect.
@@ -106,7 +121,15 @@ def evaluate_cafa_predictions(
     threshold_values = tuple(sorted(set(thresholds)))
     if not threshold_values:
         msg = "At least one threshold is required"
-        raise ValueError(msg)
+        raise CafaInputError(msg)
+    fraction_denominator = (
+        threshold_fraction_denominator
+        if threshold_fraction_denominator is not None
+        else threshold_values[-1]
+    )
+    if fraction_denominator <= 0:
+        msg = "threshold_fraction_denominator must be at least 1"
+        raise CafaInputError(msg)
 
     genes, uniprot_to_gene = load_curated_genes(curated_genes_file)
     go_parents = load_go_parent_map(go_parents_file) if go_parents_file else {}
@@ -146,6 +169,7 @@ def evaluate_cafa_predictions(
         filtered_new_annotations,
         threshold_values,
         aspects,
+        threshold_fraction_denominator=fraction_denominator,
     )
 
 
@@ -163,7 +187,7 @@ def load_curated_genes(path: str | Path) -> tuple[set[str], dict[str, str]]:
             match = UNIPROT_IN_LONG_ID_PATTERN.search(line)
             if not match:
                 msg = f"{path}:{line_number}: could not find UniProtKB= in {line!r}"
-                raise ValueError(msg)
+                raise CafaInputError(msg)
             uniprot_to_gene[match.group(1)] = line
     return genes, uniprot_to_gene
 
@@ -180,7 +204,7 @@ def load_go_parent_map(path: str | Path) -> dict[str, set[str]]:
             fields = line.split("\t")
             if len(fields) < 2:
                 msg = f"{path}:{line_number}: expected at least 2 tab-separated fields"
-                raise ValueError(msg)
+                raise CafaInputError(msg)
             child_match = GO_ID_PATTERN.search(fields[0])
             parent_match = GO_ID_PATTERN.search(fields[1])
             if not child_match or not parent_match:
@@ -270,29 +294,29 @@ def load_predictions(
             if gene is None:
                 continue
             go_id = fields[1]
-            if go_id in excluded_terms:
-                continue
             aspect = normalize_aspect(fields[3], path, line_number)
             if gene not in new_annotations.get(aspect, {}):
                 continue
             try:
                 rank = int(fields[5])
             except ValueError as e:
-                if line_number == 1:
-                    continue
                 msg = f"{path}:{line_number}: prediction rank must be an integer"
-                raise ValueError(msg) from e
-            if rank < min_threshold or rank > max_threshold:
+                raise CafaInputError(msg) from e
+            if rank < 1:
                 msg = (
                     f"{path}:{line_number}: prediction rank {rank} is outside "
                     f"the configured threshold range {min_threshold}-{max_threshold}"
                 )
-                raise ValueError(msg)
+                raise CafaInputError(msg)
 
             predicted_gene_ids.setdefault(aspect, set()).add(gene)
+            predicted_gene_ids.setdefault("all", set()).add(gene)
+            if go_id in excluded_terms or rank > max_threshold:
+                continue
             for threshold in threshold_values:
                 if threshold >= rank:
                     add_term(predictions.setdefault(threshold, {}), aspect, gene, go_id)
+                    add_term(predictions.setdefault(threshold, {}), "all", gene, go_id)
 
     return predictions, predicted_gene_ids
 
@@ -302,10 +326,13 @@ def calculate_protein_centric_rows(
     new_annotations: AspectGeneTermMap,
     thresholds: Sequence[int],
     aspects: Sequence[str] = DEFAULT_ASPECTS,
+    *,
+    threshold_fraction_denominator: int | None = None,
 ) -> list[CafaMetricRow]:
     """Calculate macro-averaged protein-centric precision, recall, and F score."""
 
     max_threshold = max(thresholds)
+    fraction_denominator = threshold_fraction_denominator or max_threshold
     rows: list[CafaMetricRow] = []
     for threshold in sorted(thresholds):
         threshold_predictions = predictions.get(threshold, {})
@@ -317,8 +344,6 @@ def calculate_protein_centric_rows(
             precision_total = 0.0
             precision_count = 0
             for gene, predicted_terms in aspect_predictions.items():
-                if not predicted_terms:
-                    continue
                 true_terms = aspect_truth.get(gene, set())
                 common_count = len(predicted_terms & true_terms)
                 precision_total += common_count / len(predicted_terms)
@@ -342,7 +367,7 @@ def calculate_protein_centric_rows(
             rows.append(
                 CafaMetricRow(
                     threshold_rank=threshold,
-                    threshold_fraction=threshold / max_threshold,
+                    threshold_fraction=threshold / fraction_denominator,
                     aspect=normalized_aspect,
                     precision_total=precision_total,
                     precision_count=precision_count,
@@ -433,7 +458,7 @@ def normalize_aspect(
     if path is not None and line_number is not None:
         location = f"{path}:{line_number}: "
     msg = f"{location}unknown GO aspect {aspect!r}"
-    raise ValueError(msg)
+    raise CafaInputError(msg)
 
 
 def parse_tsv_fields(
@@ -451,7 +476,7 @@ def parse_tsv_fields(
     fields = line.split("\t")
     if len(fields) < min_fields:
         msg = f"{path}:{line_number}: expected at least {min_fields} tab-separated fields"
-        raise ValueError(msg)
+        raise CafaInputError(msg)
     return fields
 
 
@@ -479,5 +504,5 @@ def open_text(path: str | Path) -> TextIO:
 
     path = Path(path)
     if path.suffix == ".gz":
-        return gzip.open(path, "rt")
-    return path.open()
+        return gzip.open(path, "rt", encoding="utf-8")
+    return path.open(encoding="utf-8")
