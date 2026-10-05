@@ -78,3 +78,7 @@ Restore full forskolin context in the quotation, distinguish external full-text 
 ## OpenScientist synapse/gene-expression follow-up (2026-10-05)
 
 The focused OpenScientist report resolved three previously undecided rows. The `GO:0007268` TAS row was removed because full PMID:10488122 covers LPAR3 cloning plus calcium/cAMP/PC12 assays, not chemical synaptic transmission. The dependent `GO:0045202` IEA row was removed because it is inferred from GO:0007268 rather than from independent synaptic localization. The `GO:0010467` IEA row was removed because the mouse Lpar3 source is a downstream uterine extracellular-matrix expression phenotype; an LPA receptor can act upstream of gene-expression regulation but does not do the work of gene-product production. Mouse axon branching from PMID:22465231 remains distinct supported neural biology.
+
+## Conditional adenylate-cyclase propagation follow-up (2026-10-05)
+
+The shared `GO:0007189` IBA uses the same PTN002733616 melanocortin/GPR3 source set for LPAR3 as for LPAR2. Keep the LPAR3 row as non-core because PMID:10488122 directly reports conditional, forskolin-primed cAMP enhancement in EDG7/LPAR3-expressing Sf9 cells, but mark the PAINT transfer itself as bad target-specific support rather than treating melanocortin and GPR3 donors as LPA-receptor evidence.
