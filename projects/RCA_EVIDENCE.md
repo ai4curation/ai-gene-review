@@ -1,8 +1,8 @@
 ---
-title: "Inferred from Reviewed Computational Analysis (RCA) Evidence Code Review"
-maturity: SCOPING
+title: "RCA Evidence Code Review: Omics-Derived Annotations"
+maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
-species: [human, yeast, ECOLI, mouse, ARATH, ACIBA, ACIBZ, AERER, AERME, BACAN, BACFG, BACSP, BACSU, ECOLX, ENTCL, KLEPN, MYCSM, PRORE, PSEAI, SALSP, STAAU, STAHA, STAWA]
+species: [human, ARATH, yeast]
 genes:
   - ABI3BP
   - ACAN
@@ -23,86 +23,20 @@ genes:
   - THBS1
   - THBS2
   - THBS3
-  - SLC7A11
-  - ATP6V0B
-  - Casp3
-  - Casp9
-  - APC11
-  - APJ1
-  - ATG7
-  - CPS1
-  - ESA1
-  - GAT2
-  - GET3
-  - HDA1
-  - HRT1
-  - HST1
-  - HST2
-  - HST3
-  - LEE1
-  - MAL33
-  - MDJ1
-  - MOH1
-  - PNC1
-  - RCO1
-  - RPD3
-  - SAN1
-  - SAS2
-  - SAS3
-  - SDD3
-  - SET1
-  - SET6
-  - SIR2
-  - SIZ1
-  - SWI1
-  - TIM10
-  - TIM9
-  - UBP11
-  - YDJ1
-  - ERG19
-  - SOD2
   - AT5G02500
   - BCAT3
   - OST1
-  - HdeA
-  - Skp
-  - fruA
-  - ftsI
-  - ftsW
-  - pstA
-  - pstC
-  - blaOXA-400
-  - blaOXA-480
-  - blaOXA-418
-  - ermA
-  - ermJ
-  - ermF
-  - mcr-3
-  - mcr2
-  - mcr-4
-  - knt
-  - aadK
-  - ereB
-  - hph
-  - strB
-  - rmtD
-  - rmtE
-  - rmtF
-  - fosA3
-  - fosA5
-  - arr
-  - apmA
-  - lnuA
-  - cfr
+  - ERG19
+  - SOD2
 ---
 
-# Inferred from Reviewed Computational Analysis (RCA) Evidence Code Review
+# RCA Evidence Code Review: Omics-Derived Annotations
 
 ## Overview
 
-RCA (ECO:0000245, "automatically integrated combinatorial evidence used in manual
-assertion") is the GO evidence code for a curator-reviewed conclusion drawn from a
-computational analysis. The GO Handbook defines its scope as
+RCA (*Inferred from Reviewed Computational Analysis*, ECO:0000245) is the GO evidence
+code for a curator-reviewed conclusion drawn from a computational analysis of
+large-scale data. The GO Handbook defines it as follows:
 
 > predictions based on computational analyses of large-scale experimental data sets,
 > or based on computational analyses that integrate datasets of several types,
@@ -111,312 +45,336 @@ computational analysis. The GO Handbook defines its scope as
 > structural predictions), or mathematical models.
 > — *The Gene Ontology Handbook*, Chapter 3 (`docs/paper/literature/Gene_Ontology_Handbook_Full.md`)
 
-RCA sits between the experimental codes and the sequence-similarity codes (ISS/ISO/ISM,
-IBA). In principle a curator has looked at the result. In practice the
-"computational analysis" is often one paper or pipeline that is applied to hundreds of
-genes in one batch, and the review step happens once, for the method, not per gene. So
-the questions for this project are:
+**This project focuses on RCA annotations derived from omics data**: proteomics,
+interactomics and other high-throughput experimental datasets. These are the
+annotations where the "computational analysis" in RCA is a step that turns an omics
+measurement into a GO claim. The questions are:
 
-1. **Which analyses produce RCA rows**, and how much of GOA does each one account for?
-2. **What kind of claim does each analysis support?** For example, presence in a
-   proteome is evidence about location. It is not evidence of a molecular function.
-3. **How do RCA rows hold up** when a reviewer looks at each gene individually?
-4. **Is this repository using RCA correctly** on the `NEW` annotations its own
-   reviewers write?
+1. How much RCA is omics-derived, and from which groups and papers?
+2. **What does each use assert, and does that match what the data can show?** An
+   enrichment proteome shows where a protein was found. It does not show what the
+   protein does there, and leaving a protein out of one fraction's protein list does
+   not show that it is absent from that compartment.
+3. How well do these annotations hold up, either when reviewed gene by gene or when
+   checked against the rest of GOA?
 
-This is a sibling of the [IEP](IEP.md) and [NOT annotation](NOT_ANNOTATION_USAGE.md)
-evidence-code projects, and it uses the same approach: every figure is produced by a
-script, and the predicate behind it is stated.
+Two other large uses of RCA are outside this scope and are covered briefly under
+[Out of scope](#out-of-scope-quirks-noted-not-studied): the YeastPathways import, which
+is half of all RCA and probably carries the wrong code, and RCA on this repository's
+own `NEW` rows.
+
+Related projects: [IEP](IEP.md) (another evidence-code audit) and
+[NOT annotation usage](NOT_ANNOTATION_USAGE.md).
 
 ## Methods and reproducibility
 
-| Script | What it does | Output |
+Every figure on this page comes from a script in [`RCA_EVIDENCE/`](RCA_EVIDENCE/), and
+each script's docstring states the predicates it uses. Downloads are cached under
+`RCA_EVIDENCE/data/`, so reruns work offline. `--refresh` re-fetches the data.
+
+| Script | Question | Output |
 |---|---|---|
-| [`RCA_EVIDENCE/rca_inventory.py`](RCA_EVIDENCE/rca_inventory.py) | Scans every `genes/*/*/*-goa.tsv` (column 9 == `RCA`) and every `*-ai-review.yaml` (`evidence_type: RCA`). Joins the two, checks that each GOA row is covered by a review, and tabulates actions by cluster, term and reference. | [`data/rca_inventory_report.txt`](RCA_EVIDENCE/data/rca_inventory_report.txt), [`data/rca_reviewed_rows.yaml`](RCA_EVIDENCE/data/rca_reviewed_rows.yaml) |
-| [`RCA_EVIDENCE/rca_quickgo_global.py`](RCA_EVIDENCE/rca_quickgo_global.py) | Gets global RCA counts from QuickGO, by group, aspect, reference and ECO code, for the denominator. | [`data/rca_quickgo_global_2026-10-05.txt`](RCA_EVIDENCE/data/rca_quickgo_global_2026-10-05.txt) |
+| [`rca_source_catalog.py`](RCA_EVIDENCE/rca_source_catalog.py) | Which references lie behind all RCA in GOA, and what kind of analysis is each? | [`rca_reference_catalog.yaml`](RCA_EVIDENCE/data/rca_reference_catalog.yaml), [report](RCA_EVIDENCE/data/rca_source_catalog_report.txt) |
+| [`rca_reference_classes.yaml`](RCA_EVIDENCE/rca_reference_classes.yaml) | Curated analysis-type call for every reference with ≥5 rows, judged from its abstract | (input to the catalog) |
+| [`rca_matrisome_crosswalk.py`](RCA_EVIDENCE/rca_matrisome_crosswalk.py) | Do BHF-UCL's ECM terms follow the Naba matrisome categories? | [report](RCA_EVIDENCE/data/rca_matrisome_crosswalk_report.txt) |
+| [`rca_not_contradictions.py`](RCA_EVIDENCE/rca_not_contradictions.py) | Are proteomics-derived NOT rows contradicted by positive annotations? | [`rca_not_contradictions.tsv`](RCA_EVIDENCE/data/rca_not_contradictions.tsv), [report](RCA_EVIDENCE/data/rca_not_contradictions_report.txt) |
+| [`rca_inventory.py`](RCA_EVIDENCE/rca_inventory.py) | Which RCA rows have been reviewed in this repository, and with what action? | [`rca_reviewed_rows.yaml`](RCA_EVIDENCE/data/rca_reviewed_rows.yaml), [report](RCA_EVIDENCE/data/rca_inventory_report.txt) |
+| [`rca_quickgo_global.py`](RCA_EVIDENCE/rca_quickgo_global.py) | Global counts by group, aspect and reference | [report](RCA_EVIDENCE/data/rca_quickgo_global_2026-10-05.txt) |
 
 ```bash
+python3 projects/RCA_EVIDENCE/rca_source_catalog.py          # first: downloads all RCA rows
+python3 projects/RCA_EVIDENCE/rca_matrisome_crosswalk.py
+python3 projects/RCA_EVIDENCE/rca_not_contradictions.py
 uv run python projects/RCA_EVIDENCE/rca_inventory.py --yaml projects/RCA_EVIDENCE/data/rca_reviewed_rows.yaml --list
-python3 projects/RCA_EVIDENCE/rca_quickgo_global.py
 ```
 
-Two traps, both handled in the scripts:
+Pitfalls the scripts handle:
 
-- **Do not grep `\tRCA\t`.** Arabidopsis *RCA* (Rubisco activase) is a gene symbol.
-  A whole-line match adds about 30 false rows from `genes/ARATH/RCA/RCA-goa.tsv`. The
-  inventory matches column 9 only.
-- **RCA is more than one ECO code.** BHF-UCL submits RCA as ECO:0007666 ("automatically
-  integrated combinatorial computational and experimental evidence used in manual
-  assertion"), which is a descendant of ECO:0000245. An exact query for ECO:0000245
-  returns **0** BHF-UCL rows. The global script therefore uses
-  `evidenceCodeUsage=descendants`.
+- **RCA spans more than one ECO code.** BHF-UCL submits RCA as ECO:0007666 ("automatically
+  integrated combinatorial *computational and experimental* evidence used in manual
+  assertion"), which is a child of ECO:0000245. A query for exactly ECO:0000245 returns
+  0 BHF-UCL rows, so all queries include descendant codes.
+- **Arabidopsis *RCA* is a gene symbol** (Rubisco activase). A line-wise grep for `RCA`
+  picks up about 30 false rows, so the scripts match the evidence-code column only.
+- **Title keywords misclassify papers.** "Membranome" is a computational database, not
+  proteomics. The zinc-proteome paper's GO terms come from a bioinformatic scan, not from
+  its mass spectrometry. All 57 references with ≥5 rows (96% of RCA rows), plus 3 smaller ones the
+  title rules got wrong, are therefore classified by hand in `rca_reference_classes.yaml`. Title rules cover only the tail,
+  and each catalog entry records which method classified it.
 
-## Corpus snapshot
+## Where RCA comes from (all of GOA, 2026-10-05)
 
-### Global denominator (QuickGO, 2026-10-05)
+8,610 RCA rows in total, classified by the analysis behind each reference:
 
-| | Rows |
-|---|---:|
-| All RCA rows in GOA | **8,610** |
-| ECO:0000245 exact / ECO:0007666 exact | 7,922 / 688 |
-| CC / MF / BP | 3,943 / 3,119 / 1,548 |
-| `NOT\|located_in` | 627 |
+| Analysis class | Rows | % | Main contributors |
+|---|---:|---:|---|
+| Pathway / metabolic model | 4,159 | 48.3 | SGD YeastPathways (4,133) — *out of scope* |
+| Proteome-scale **computational** prediction | 2,029 | 23.6 | T. brucei MitoCarta SVM (1,039), yeast zinc proteome (580), PATS apicoplast predictor (275), Membranome (119) |
+| **Proteomics** | 1,465 | 17.0 | BHF-UCL (688), TAIR (627), GeneDB (79), FlyBase (70) |
+| **Interactomics** | 72 | 0.8 | GeneDB, T. brucei complex map and editosome |
+| **Other omics** (reporter-fusion screen) | 17 | 0.2 | EcoCyc, E. coli inner-membrane topology |
+| **Genetic screen** | 3 | 0.0 | EcoCyc |
+| Single-gene / operon study | 387 | 4.5 | EcoCyc, AgBase (cotton and maize gene papers) |
+| Gene-family / genome survey | 237 | 2.8 | MGI (98), GeneDB, EcoCyc |
+| Unclassified tail and unresolved | 241 | 2.8 | 101 references with 1–4 rows; PAMGO GO_REF:0000028 |
 
-| Assigned by | Rows | | Reference (cluster) | Rows |
-|---|---:|---|---|---:|
-| SGD | 4,713 | | GO_REF:0000123 (YeastPathways to GO-CAM) | **4,133** |
-| GeneDB | 1,586 | | PMID:30358795 (yeast zinc proteome) | 580 |
-| BHF-UCL | 688 | | PMID:21166475 (Arabidopsis cytosolic proteome) | 436 |
-| TAIR | 659 | | PMID:28675934 (one matrisome proteomics paper) | 84 |
-| EcoCyc | 448 | | PMID:12819136 (mouse–human apoptosis gene comparison) | 57 |
-| AgBase | 204 | | | |
-| MGI | 99 | | | |
-| FlyBase / ARUK-UCL / WB / AspGD / UniProt | 70 / 15 / 15 / 14 / 3 | | | |
-| groups not probed | 96 | | | |
+**Omics-derived RCA is 1,557 rows (18.1%) from 24 references and 5 groups.** No
+transcriptomics papers appear: expression data enter GO through IEP/HEP, not RCA.
+The proteome-scale predictions are related but different. Each is a sequence classifier
+applied to a whole proteome, and some of those papers also contain proteomics data,
+but the GO term comes from the classifier. They are noted below rather than studied.
 
-RCA is used at scale by very few groups. **Nearly half of all RCA in GOA (4,133 rows,
-48%) comes from one pipeline**: SGD's conversion of YeastPathways into pathway GO-CAMs
-(GO_REF:0000123, `WITH/FROM` = `SGD_PWY:*`). Two proteome-scale papers add another
-1,016 rows between them. GeneDB, the second-largest submitter, has no genes in this
-corpus.
+## How omics data are turned into GO annotations
 
-### This repository (`rca_inventory.py`)
+Grouping the 1,557 omics rows by aspect and polarity (`rca_source_catalog.py`) shows
+three distinct uses:
 
-- **130 GOA RCA rows in 66 gene folders.** Every one is covered by a reviewed row in the
-  gene's review, so 0 GOA rows are unreviewed.
-- **156 reviewed RCA rows in 90 gene folders.** 118 of them audit GOA rows. The
-  difference from 130 is GOA duplicates, such as the same term and reference with
-  different `WITH/FROM` pathway ids, which the reviews collapse into one row. The
-  other **38 are `NEW` rows that our reviewers wrote and coded as RCA** (see Pattern 6).
-- The corpus covers about 1.5% of global RCA, and it is heavily skewed. It contains 62
-  rows from BHF-UCL's matrisome papers but only 8 rows from the GO_REF:0000123 pipeline,
-  which is about half of all RCA.
+| Use | Rows | Groups (years annotated) | What the data show | What the row asserts |
+|---|---:|---|---|---|
+| **A. Location → function** | 731 (47%) | BHF-UCL 688 (2018–2025), FlyBase 35 (2019), GeneDB/EcoCyc 8 | Protein detected in an ECM or cuticle fraction | MF: *ECM structural constituent* and its children; *structural constituent of chitin-based cuticle* |
+| **B. Exclusion → NOT location** | 627 (40%) | TAIR (2011–2012) | Protein excluded from a fraction's reported protein set (cytosol), or called a contaminant (Golgi) | `NOT located_in` cytosol / Golgi apparatus |
+| **C. Location → location** | 199 (13%) | GeneDB 145, FlyBase 35, EcoCyc 19 | Protein in an organelle fraction, complex or topology screen | CC: mitochondrial inner membrane, food vacuole, editing complex, plasma membrane… |
 
-## Dispositions by cluster
+Use C is the straightforward case: the aspect matches the data. Since the 2019 GO
+guidance on high-throughput annotation (PMID:30715275; see *Evidence code* below),
+however, a localization from a proteome is usually coded **HDA**, not RCA. Uses A and B
+both claim more than the data can show, and the rest of this section examines them.
 
-Each row is assigned to a cluster by its reference, because review rows have no
-`assigned_by` field.
+### A. Location → function: the matrisome category mapping (BHF-UCL)
 
-| Cluster | Reviewed | ACCEPT | KEEP_AS_NON_CORE | OVER_ANNOT. | MODIFY | REMOVE | UNDECIDED | Not accepted |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| BHF-UCL matrisome proteomics (7 PMIDs) | 62 | 35 | 0 | 13 | 10 | 4 | 0 | **44%** |
-| SGD zinc proteome (PMID:30358795) | 32 | 19 | 10 | 2 | 0 | 0 | 1 | 41%¹ |
-| SGD YeastPathways import (GO_REF:0000123) | 8 | 6 | 0 | 0 | 0 | 2 | 0 | 25% |
-| Single-paper RCA (EcoCyc, UniProt) | 9 | 7 | 2 | 0 | 0 | 0 | 0 | 22%¹ |
-| MGI comparative genomics (PMID:12819136) | 4 | 1 | 2 | 0 | 1 | 0 | 0 | 75%¹ |
-| TAIR proteome absence (NOT cytosol) | 3 | 1 | 0 | 0 | 0 | 2 | 0 | 67% |
-| *Reviewer-authored NEW* | 38 | — | — | — | — | — | — | — |
+BHF-UCL annotated proteins from ten ECM-enrichment proteomics papers (human, mouse and
+pig, all annotated 2018 or later) with four molecular-function terms:
 
-¹ Most of these are KEEP_AS_NON_CORE. The term is true but peripheral, not wrong.
+- `GO:0005201` extracellular matrix structural constituent
+- `GO:0030020` …conferring tensile strength
+- `GO:0030021` …conferring compression resistance
+- `GO:0030023` extracellular matrix constituent conferring elasticity
 
-Across the 118 audited GOA rows, **68 were accepted (58%)**. The low acceptance does not
-mean RCA is unreliable in general. It is driven by **two clusters with a specific,
-nameable inference error**, described below as Patterns 1 and 4. The zinc, pathway and
-EcoCyc clusters are mostly correct. When reviewers do not accept those rows, it is
-usually because the term is not core rather than wrong.
+**The term each protein received follows its category in the Naba in-silico matrisome**
+(the classification published in PMID:22159717, one of the ten papers).
+`rca_matrisome_crosswalk.py` joins all 164 distinct gene × term pairs to the human
+matrisome masterlist:
 
-## Failure patterns
+| GO term | Collagens | ECM Glycoproteins | Proteoglycans | not in masterlist¹ |
+|---|---:|---:|---:|---:|
+| tensile strength (GO:0030020) | **42** | 0 | 0 | 1 |
+| compression resistance (GO:0030021) | 0 | 0 | **17** | 0 |
+| elasticity (GO:0030023) | 0 | **9** | 0 | 0 |
+| ECM structural constituent (GO:0005201) | 0 | **89** | 0 | 6 |
 
-### 1. Location read as function: matrisome proteomics → "ECM structural constituent"
+¹ Non-human symbols with no human match (mouse *Col6a4*, *Mfap1a/b*; pig *TNX* and three
+unnamed pig accessions).
 
-BHF-UCL annotated matrisome proteins from seven ECM-enrichment proteomics papers
-(PMID:20551380, 23979707, 25037231, 27068509, 27559042, 28327460, 28675934) to
-`GO:0005201 extracellular matrix structural constituent` and its children
-`GO:0030021 …conferring compression resistance` and `GO:0030020 …conferring tensile
-strength`. Detecting a protein in a decellularised matrix fraction is **cellular
-component** evidence. A structural-constituent molecular function is a different
-claim, that the protein contributes to the integrity of the matrix, and the proteomics
-data cannot show it. The ABI3BP review states this directly:
+Every matched gene is in the **core matrisome**. No "matrisome-associated" protein
+(regulators, secreted factors, ECM-affiliated proteins) received any of these terms.
+Each category maps to exactly one term: *every* collagen gets tensile strength, *every*
+proteoglycan gets compression resistance, and every glycoprotein gets the generic
+structural-constituent term. The one refinement is nine elastic-fibre glycoproteins
+(ELN, EMILIN1–3, FBLN2, FBLN5, EFEMP2, MFAP5, LAMC1), which get elasticity, most of
+them in addition to the generic term. The
+GO term is therefore decided by the protein's **category**. The proteomics paper only
+decides which proteins are in scope. This explains the ECO choice: ECO:0007666
+explicitly combines computational evidence (the categorisation) with experimental
+evidence (detection in the matrix). The 2019 GO high-throughput guidance mentions this
+work:
+
+> the Functional Gene Annotation team at University College London is currently
+> undertaking, working with leaders in the field to develop a common set of standards
+> for the annotation of extracellular matrix components from high-throughput proteomics
+> studies.
+> — PMID:30715275
+
+**Where the mapping goes wrong.** A matrisome category is defined by domain
+architecture and naming, not by mechanical role, so whole kinds of protein fall into
+the wrong term:
+
+| Category | What the mapping misses | Examples |
+|---|---|---|
+| ECM Glycoproteins → *structural constituent* | Matricellular and signalling proteins that sit in the matrix without holding it together | THBS1–4, SPARC, ABI3BP, MGP, CCN1, IGFBP6/7, VWF, SLIT2, NTN1, RELN, ADIPOQ |
+| Proteoglycans → *compression resistance* | Small leucine-rich proteoglycans that bind collagen with one or two GAG chains; proteins that are proteoglycans **in name only** | DCN, ASPN, BGN, FMOD, LUM, OGN, PRELP; PRG2 and PRG3 (eosinophil granule proteins) |
+| Collagens → *tensile strength* | Transmembrane and multiplexin collagens | COL13A1, COL17A1, COL23A1, COL25A1 (MACIT transmembrane collagens), COL18A1 |
+
+**Reviewed outcomes by category** (this repository's gene reviews, 62 rows):
+
+| Category | Reviewed rows | Accepted | Not accepted, by gene |
+|---|---:|---:|---|
+| Collagens | 6 | **6 (100%)** | — (only COL4A1 reviewed) |
+| ECM Glycoproteins | 36 | 21 (58%) | ABI3BP, MGP, THBS3 (over-annotated); THBS1, THBS2 (modified); SPARC, ADIPOQ (removed) |
+| Proteoglycans | 20 | 8 (40%) | ASPN (over-annotated); DCN (modified to `collagen binding`); PRG2, PRG3 (removed) |
+
+The proteins accepted are the true load-bearing components: COL4A1, HSPG2 (perlecan),
+ACAN, FN1, AGRN, NID1, DPT and COMP. Every rejection fits one of the three rows of the
+"misses" table. The ABI3BP review puts the general point in one sentence:
 
 > Detection in an ECM-enriched proteome supports the co-annotated cellular-component
 > terms, not a molecular function asserting a contribution to structural integrity.
 
-The outcome splits cleanly along known protein biology:
+Two consequences follow:
 
-| Accepted (35 rows) | Not accepted (27 rows) |
-|---|---|
-| COL4A1 (tensile), HSPG2, ACAN (compression), FN1, AGRN, NID1, DPT, COMP | **Matricellular:** THBS1, THBS2, THBS3, SPARC, ABI3BP · **regulatory:** MGP · **SLRPs given "compression resistance":** DCN, ASPN · **not ECM proteins:** PRG2, PRG3 (eosinophil granule), ADIPOQ (secreted hormone) |
+- **The error rate is predictable from the category and the protein class**, so the
+  unreviewed BHF-UCL rows can be triaged without re-reading the ten papers. All
+  matricellular glycoproteins, all SLRPs, PRG2/PRG3 and the transmembrane collagens are
+  the candidates (Action Items).
+- **Our own reviews were inconsistent** about the replacement for matricellular
+  proteins. THBS1 was MODIFIED to a CC term, THBS2 MODIFIED to a BP term, THBS3 marked
+  over-annotated and SPARC REMOVED, all for the same reason. GO has no MF term for the
+  matricellular class (ABI3BP's `proposed_new_terms` raises this), and that gap is why
+  reviewers reach for different substitutes.
 
-Two subtypes are worth separating:
+FlyBase's 35 MF rows from the *Bombyx mori* cuticle proteome (PMID:21761556, 2019)
+take the same step from location to function (`structural constituent of chitin-based
+cuticle`). Cuticular-protein families are defined by a chitin-binding motif, so the
+same step is probably more defensible here, but none of these rows has been reviewed.
 
-- **Wrong class of protein.** Matricellular proteins and calcification inhibitors sit in
-  the matrix but do not hold it together. Proteomics cannot tell them apart from
-  collagens.
-- **Wrong child term.** DCN and ASPN are single-GAG small leucine-rich proteoglycans
-  (SLRPs) that bind collagen and regulate fibril assembly. They were given the
-  *compression resistance* child term, which suits large aggrecan-type proteoglycans
-  and probably reflects the "proteoglycan" label. The DCN review proposes
-  `GO:0005518 collagen binding`.
+### B. Exclusion from a fraction proteome → NOT location (TAIR)
 
-**Consistency problem in our own reviews.** The matricellular proteins reached four
-different actions for the same reason: THBS1 MODIFY→`GO:0031012` (a CC term), THBS2
-MODIFY→`GO:0030198` (a BP term), THBS3 MARK_AS_OVER_ANNOTATED, and SPARC REMOVE. GO has
-no molecular-function term for the matricellular class (the ABI3BP review raises this
-as a `proposed_new_terms` entry). That gap is why reviewers keep using different
-substitutes. The project should pick one disposition for this pattern (see
-Recommendations).
+TAIR made 627 `NOT|located_in` rows from two Arabidopsis fraction proteomes (2011–2012,
+before the high-throughput evidence codes existed):
 
-### 2. Proteome-scale cofactor prediction: generic but mostly true
+- **PMID:21166475** (436 rows, NOT cytosol). The paper reports a "robust set of 1071
+  cytosolic proteins". The 436 NOT rows are a specific list, not every protein missing
+  from that set, so they are presumably proteins the authors excluded from the cytosol.
+  The abstract does not say on what basis, and the full text is not openly available.
+- **PMID:22430844** (191 rows, NOT Golgi apparatus). The paper's composition analysis
+  assigned about 19% of identifications to "contaminating compartments and ribosomes",
+  and the NOT rows presumably correspond to these.
 
-PMID:30358795, the *S. cerevisiae* zinc proteome (580 rows globally), assigns
-`GO:0008270 zinc ion binding`. Of the 32 reviewed rows, 19 were accepted and 10 kept as
-non-core. Where it fails, the failure is subtle:
+`rca_not_contradictions.py` checks each NOT row against GOA for a positive annotation
+of the same gene product to the same term or an `is_a`/`part_of` descendant:
 
-- **The zinc site is not in the mature functional form.** In TIM9, the CX3C motifs are
-  disulfide-bonded in the intermembrane space, so zinc binding happens only before
-  import, if it happens at all (MARK_AS_OVER_ANNOTATED).
-- **No residue-level support.** UBP11 has no zinc site in UniProt, so the only support
-  is the proteome-wide prediction (MARK_AS_OVER_ANNOTATED).
-- **The zinc is structural.** In ESA1 (MYST zinc finger), HDA1 and SET1, zinc binding is
-  real but structural or catalytic-support, which is why these are KEEP_AS_NON_CORE
-  rather than ACCEPT.
+| NOT row source | Rows | Contradicted (any code) | by experimental/HTP | by low-throughput IDA/EXP |
+|---|---:|---:|---:|---:|
+| Cytosol: absent from the robust set | 436 | **188 (43.1%)** | 172 (39.4%) | 28 (6.4%) |
+| Golgi: called a contaminant | 191 | **5 (2.6%)** | 4 (2.1%) | 1 (0.5%) |
 
-The cluster is mostly right but low in information. `zinc ion binding` is the kind of
-term reviewers routinely move to non-core whatever its evidence code.
+The contradiction rates of the two sets differ by more than tenfold. **The Golgi
+contaminant calls hold up. The cytosol exclusions largely do not.** Why they differ
+depends on how the cytosol paper chose its exclusions, which cannot be read from the
+abstract (Action Items). Whatever the method, a protein excluded from one cell-culture
+fraction is not evidence that it is absent from the cytosol, and the GAF row records
+neither the tissue nor the criterion. The cytosol NOT rows include:
 
-### 3. Pathway import: the model's location and pathway boundaries pass to every enzyme
+- **37 cytosolic ribosomal proteins** (RPL\*/RPS\* paralogs such as RPL11B, RPS18A and
+  RPL24B). 36 of them are contradicted in GOA, mostly by three cytosolic-ribosome
+  proteomes (PMID:17934214, 15821981, 15734919), and all 37 by ribosome biology.
+- Proteins with direct low-throughput cytosolic localization, including OST1/SRK2E,
+  SRK2B, the PP2A A and C subunits, the exocyst subunits SEC3A/SEC10a/SEC15B, UPF1 and
+  HSP70-1. Two of these were reviewed in this repository (OST1 and HSP70-1/AT5G02500),
+  and both reviews REMOVED the row. The third reviewed row, BCAT3 (plastid-targeted),
+  was ACCEPTED: the NOT is true there, but for reasons the proteome did not test.
 
-GO_REF:0000123 rows are generated from SGD YeastPathways GO-CAMs. Every enzyme in a
-pathway model gets the model's molecular function, its biological process and an
-`is_active_in` location. We have reviewed only 8 of 4,133 rows, and 2 were removed:
+Most contradictions come from other high-throughput datasets (153 rows by HDA, mainly
+the PMID:28887381 membrane-oligomerization profiling and the PMID:25293756 complex
+proteome). GOA therefore contains direct conflicts between proteomes, unresolved and
+both curator-made. This links directly to the [NOT annotation](NOT_ANNOTATION_USAGE.md)
+project.
 
-- **Default location.** SOD2 (mitochondrial MnSOD) received `is_active_in cytosol` from
-  DETOX1-PWY. The activity and process rows are correct. Only the location is wrong.
-- **Pathway-level process given to an upstream enzyme.** ERG19 (diphosphomevalonate
-  decarboxylase) received `farnesyl diphosphate biosynthetic process, mevalonate
-  pathway`. ERG19 makes IPP. FPP is made downstream by IDI1 and ERG20. (The term is now
-  obsolete as well.) This is the same "who performs the step" question as the
-  substrate rule in `CLAUDE.md`, applied to an enzyme upstream of the step rather than
-  to a substrate.
+### Evidence code: HDA, and the Use C question
 
-Both errors come from the pipeline, not from the individual genes. With 4,133 rows,
-even a few-percent rate of default-cytosol or pathway-boundary errors would be one of
-the largest correctable error sources in yeast GO. **This is the highest-priority
-sampling target** (Action Items).
+The GO consortium's 2019 framework (PMID:30715275) introduced the high-throughput codes
+HTP/HDA/HMP/HGI/HEP so that users can separate screen-derived annotations from
+hypothesis-driven ones. Measured against it:
 
-### 4. NOT from absence in a proteome
+- **Use C (location → location)** is the case HDA was designed for. GeneDB's
+  organelle-proteome rows (2009–2014) and EcoCyc's topology-screen rows predate or
+  overlap its introduction. Re-coding them would be the expected clean-up. They are
+  not otherwise wrong in kind.
+- **Use A (location → function)** cannot simply be re-coded as HDA. The MF does not come
+  from an assay, so the honest code really is a computational one. The problem is the
+  inference, not the label.
+- **Use B (NOT from exclusion)** is a negative claim built on high-throughput data. The
+  guidance is about controlling false positives in positive calls (e.g. "proteins should
+  be identified by a minimum of two unique peptides"). It offers nothing that would
+  license a NOT from leaving a protein out of one fraction, and the 43% contradiction
+  rate shows why.
 
-TAIR's PMID:21166475, a cytosolic proteome of Arabidopsis cell cultures, supports 436
-`NOT|located_in cytosol` rows globally. Not being detected in one fractionation dataset
-is weak negative evidence. It also depends on the tissue and growth condition, which
-the GAF row does not record. Of the three reviewed rows:
+## Reviewer checklist for omics-derived RCA
 
-- **OST1/SRK2E and AT5G02500 (HSP70-1) were REMOVED.** Experimental evidence of
-  cytosolic localization exists (for OST1, IDA cytosol and cytoplasm, PMID:41417897 and
-  PMID:19880399), so the NOT row contradicts direct observation.
-- **BCAT3 was ACCEPTED.** It has a plastid transit peptide and experimentally
-  determined chloroplast localization, so "not in cytosol" is correct.
-
-This is the only cluster where a reviewed RCA row was removed for contradicting direct
-experimental evidence. It belongs with the [NOT annotation](NOT_ANNOTATION_USAGE.md)
-project. At 436 rows, an automated check is worth building: flag any NOT|cytosol RCA
-row for a gene that also has a positive IDA/HDA cytosol or cytoplasm annotation.
-
-### 5. Comparative genomics coded as RCA
-
-MGI's Casp3 and Casp9 rows (PMID:12819136, a mouse–human comparison of apoptosis genes,
-57 rows globally) assign `peptidase activity` and `proteolysis`. The underlying
-inference is orthology, which ISO is meant to capture, and the terms are generic
-parents of `cysteine-type endopeptidase activity`. The rows are not wrong. Reviewers
-kept 2 as non-core, modified 1 to the specific term and accepted 1. The issue is
-evidence-code choice and term granularity, not truth.
-
-### 6. Our own NEW rows: RCA used as a catch-all
-
-38 reviewed RCA rows are not from GOA. Our reviewers wrote them as `NEW`:
-
-| Source cited | Rows | What the inference actually is |
-|---|---:|---|
-| `file:projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml` | 31 | A curated ARO→GO **mapping** applied through the CARD cross-reference: a family-membership transfer |
-| `file:genes/<ORG>/<gene>/<gene>-uniprot.txt` | 3 | A GO cross-reference copied from the UniProt record |
-| PMID (arr, cfr, lnuA) | 3 | Two of these cite gene-disruption or biochemical papers |
-| `file:projects/PROTEOSTASIS/…/pn_projected_annotations.tsv` | 1 | A projection from proteostasis-network placement to a GO term (ATP6V0B) |
-
-None of these is an "integrated analysis of large-scale data sets". The ARO→GO rows
-are a mapping-based family transfer, nearer to ISM or IEA-style mapping evidence. The
-UniProt cross-reference rows repeat someone else's assertion. Where a paper reports a
-knockout or an enzyme assay (Arr disruption increases rifampin susceptibility), IMP or
-IDA describes the evidence and RCA hides it. RCA is being used to mean "a computational
-step that a curator looked at". That describes almost every row in this repository, so
-it carries no information.
-
-This is a convention gap in this repository, not an error in GOA. It should be settled
-before more batch projects (AMR, PN projection) add RCA-coded NEW rows.
-
-## Where RCA is legitimate
-
-- **Validated integrative analyses** that combine several data types, as the Handbook
-  intends. The YeastPathways import qualifies as a method: its MF and BP rows are
-  usually correct (6/8 accepted). Its problems come from pathway granularity, not from
-  the evidence code.
-- **Proteome-scale cofactor surveys with residue-level support.** The zinc proteome is
-  accepted wherever UniProt or structure confirms a site.
-- **Matrisome proteomics for CC terms.** The same papers would support
-  `located_in extracellular matrix` with no objection. The error is the aspect, not the
-  data.
-
-## Reviewer checklist
-
-1. **Identify the analysis.** Look at the reference and `WITH/FROM`. GO_REF:0000123 +
-   `SGD_PWY:*`, a matrisome PMID, the zinc proteome and PMID:21166475 each fail in their
-   own way (Patterns 1–4).
-2. **Ask which aspect the data can support.** Proteomics → location. Pathway membership
-   → process, but only for the step the enzyme performs. Cofactor prediction → binding,
-   and usually not core.
-3. **For pathway imports, check location and step separately.** Reject the
-   `is_active_in` row on its own if the enzyme is in another compartment. Reject a
-   process row that names a product the enzyme does not make.
-4. **For NOT rows from proteome absence**, look for any positive IDA/HDA localization.
-   A direct observation outranks a non-detection.
-5. **Do not treat RCA as stronger than the analysis behind it.** "Reviewed" means the
-   method was reviewed, usually once and for a whole batch.
-6. **When you write a NEW row, choose the code for the actual inference** (see
-   Recommendations). Do not default to RCA.
+1. **Find the reference's use** (A, B or C) from the table above or in
+   [`rca_reference_catalog.yaml`](RCA_EVIDENCE/data/rca_reference_catalog.yaml).
+2. **Use A, an ECM "structural constituent" term from a matrisome paper:** ask whether
+   the protein is load-bearing. Collagens of the fibrillar and network types,
+   perlecan, aggrecan, fibronectin, laminins and nidogens usually are. Matricellular
+   proteins, SLRPs, growth-factor binders, PRG2/PRG3 and transmembrane collagens are not.
+   Check that the CC (`located_in extracellular matrix`) is present, because that is
+   what the data actually support.
+3. **Use B, NOT located_in from a fraction proteome:** look for any positive annotation to
+   the same compartment, including HDA from another proteome. For PMID:21166475, treat
+   the NOT row as suspect until it is confirmed. For PMID:22430844, it is usually right.
+4. **Use C:** accept the location if the term is at the right granularity, and note that
+   HDA would be the current code.
+5. **Do not read "Reviewed" as protein-level review.** In every use, the review was of
+   a method or mapping, applied once to a whole list.
 
 ## Recommendations
 
-1. **Repository convention for NEW-row evidence codes.** Add guidance to `CLAUDE.md`
-   (or `docs/`). Mapping or family transfers (ARO→GO, PN projection) should use the
-   code for the inference (ISM/ISS, or IEA for a pure mapping). Rows backed by a
-   knockout or assay paper should use IMP/IDA. RCA should be kept for a genuinely
-   integrative analysis. Then re-code the 38 existing rows in one pass, after
-   agreement with the AMR and PROTEOSTASIS project owners.
-2. **One disposition for "matricellular protein → ECM structural constituent".** The
-   proposal is MARK_AS_OVER_ANNOTATED, together with a `located_in extracellular matrix`
-   NEW row where one is missing and a reference to the matricellular-MF
-   `proposed_new_terms` entry. Then reconcile THBS1, THBS2 and SPARC.
-3. **Report Pattern 1 upstream.** Send BHF-UCL a short list: SLRPs given compression
-   resistance (DCN, ASPN) and non-ECM proteins (PRG2, PRG3, ADIPOQ). The review rationales
-   are already written.
-4. **Report the two YeastPathways errors to SGD** (SOD2 cytosol, ERG19 FPP-process) as
-   examples of a pipeline-level failure, after the sampling below shows how often it
-   occurs.
+1. **One disposition for "matricellular → ECM structural constituent".** The proposal is
+   MARK_AS_OVER_ANNOTATED, together with a `located_in extracellular matrix` NEW row
+   where one is missing and a reference to the matricellular-MF `proposed_new_terms`
+   entry. Then reconcile THBS1, THBS2 and SPARC.
+2. **Report the mapping to BHF-UCL** as category-level findings rather than gene-level
+   ones: SLRPs should not receive compression resistance, PRG2/PRG3 are not
+   proteoglycans of the matrix, and transmembrane collagens should not receive tensile
+   strength. The review rationales for DCN, ASPN, PRG2/PRG3, SPARC and THBS1–3 already
+   provide worked examples.
+3. **Report the cytosol NOT rows to TAIR**, starting with the 37 ribosomal-protein rows and the
+   28 rows contradicted by low-throughput IDA. The Golgi set is sound and needs no action.
 
 ## Action items
 
-- [ ] **Sample GO_REF:0000123.** Pick about 30 yeast genes with GO_REF:0000123 rows,
-      stratified over organellar enzymes (mitochondrial, peroxisomal, vacuolar) and
-      multi-step pathways. Estimate the default-cytosol and pathway-boundary error
-      rates. This cluster is 48% of all RCA, and we have reviewed 8 rows.
-- [ ] **Automated NOT|cytosol contradiction check** across the 436 PMID:21166475 rows,
-      against positive IDA/HDA cytosol or cytoplasm annotations for the same gene in
-      QuickGO.
-- [ ] **Sample GeneDB RCA** (1,586 rows, none in the corpus) to see which analyses GeneDB
-      codes as RCA.
-- [ ] Write the NEW-row evidence-code convention (Recommendation 1) and re-code the 38
-      rows.
-- [ ] Reconcile the matricellular dispositions (Recommendation 2).
-- [ ] Add a regression test so that `rca_inventory.py` keeps reporting 0 uncovered GOA
-      RCA rows as genes are added.
+- [ ] Triage the **unreviewed BHF-UCL rows** using the misses table. List every gene ×
+      term pair whose protein is matricellular, an SLRP, PRG2/PRG3 or a transmembrane
+      collagen, and spot-check about 10 that have gene reviews or are easy to review.
+- [ ] Review a sample of the **FlyBase *Bombyx* cuticle MF rows** (Use A, outside the
+      matrisome) to see whether the same step from location to function holds there.
+- [ ] Get the full text of PMID:21166475 to find how the 436 cytosol exclusions were
+      chosen, and whether that criterion explains the 43% vs 2.6% contrast.
+- [ ] Turn `rca_not_contradictions.py` output into a submission-ready list for TAIR:
+      ribosomal proteins plus IDA-contradicted rows.
+- [ ] Sample **GeneDB Use C rows** (organelle proteomes, complex map) for correct granularity,
+      e.g. 64 trypanosomatid gene products all placed in `mitochondrial mRNA editing
+      complex` from one complex map.
+- [ ] Add a regression test that `rca_matrisome_crosswalk.py` stays fully on its category
+      diagonal for matched human genes. Any deviation would mean BHF-UCL has started
+      annotating gene by gene.
+
+## Out of scope: quirks noted, not studied
+
+**YeastPathways import (GO_REF:0000123), 4,133 rows (48% of all RCA).** SGD exports its
+curated YeastPathways GO-CAMs to the GAF with RCA (`WITH/FROM` = `SGD_PWY:*`). A curated
+pathway model is not "a computational analysis of large-scale data", so **RCA is
+probably the wrong evidence code here**. The rows are curated pathway assertions, which
+are closer to IC or TAS than to RCA. They also share the usual pathway-to-gene failure
+modes. The two reviewed in this repository illustrate them: SOD2 received the pathway's
+default `is_active_in cytosol`, although SOD2 is mitochondrial, and ERG19 received an
+FPP-biosynthesis process for a product made downstream of it. Both rows were REMOVED.
+A full treatment belongs with GO-CAM review, not here.
+
+**Proteome-scale computational predictions (2,029 rows).** Examples are the T. brucei
+MitoCarta SVM, the PATS apicoplast predictor, Membranome and the yeast zinc-proteome
+domain/motif scan. These are sequence-model predictions, the use ISM was created for.
+The zinc rows are the only ones reviewed here: 32 rows, 19 ACCEPT and 10 KEEP_AS_NON_CORE.
+
+**RCA on this repository's `NEW` rows.** 38 reviewer-authored rows use RCA for ARO→GO
+mappings, UniProt cross-references and PN projections. RCA is probably not the right
+code for these. Changing it is deferred.
 
 ## Session notes
 
+### 2026-10-05 (second pass: refocus on omics)
+
+Refocused the project on omics-derived RCA, as requested. Added `rca_source_catalog.py`,
+which downloads all 8,610 RCA rows, fetches titles and classifies every reference, with
+hand calls for 60 references (all 57 with ≥5 rows, plus 3) in `rca_reference_classes.yaml`. Found that
+omics accounts for 1,557 rows in three uses (A/B/C). Added `rca_matrisome_crosswalk.py`,
+which shows that BHF-UCL's ECM MF terms follow the Naba matrisome category for every
+matched gene. Added `rca_not_contradictions.py`, which shows that 43% of TAIR's
+cytosol-proteome NOT rows are contradicted, against 2.6% of its Golgi-contaminant
+NOT rows. Cached PMID:30715275 (GO HTP guidance). Moved
+YeastPathways and the NEW-row question to "Out of scope".
+
 ### 2026-10-05 (first pass: inventory and scoping)
 
-Created the project. Inventoried all GOA and reviewed RCA rows with
-`rca_inventory.py` and fetched global QuickGO denominators with
-`rca_quickgo_global.py`. Found that BHF-UCL's RCA uses ECO:0007666 (invisible to an
-exact ECO:0000245 query), that GO_REF:0000123 is 48% of all RCA, and that 38 of our
-reviewed RCA rows are reviewer-authored NEW rows from mappings and projections. The
-pattern write-ups are based on reading the review rationales for each cluster. No gene
-reviews were edited in this pass.
+Created the project. Inventoried GOA and reviewed RCA rows in the gene corpus
+(`rca_inventory.py`: 130 GOA rows, all reviewed; 156 reviewed rows including 38 NEW)
+and global denominators (`rca_quickgo_global.py`).
