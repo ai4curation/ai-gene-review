@@ -260,6 +260,11 @@ off-topic quote about the right complex beats an on-topic quote about the wrong 
   changes the curated core H3-H4 chaperone model. Recent ASF1 papers instead
   covered human ASF1A/B regulation or mirrored older yeast histone-chaperone
   work.
+- Follow-up on PR 3720 corrected the CPX-1322 Complex Portal provenance pointer
+  after the UniProt refresh moved the line to `ASF1-uniprot.txt:606`, added
+  `GO:0010698 acetyltransferase activator activity` as a distinct structured
+  core function for Rtt109 activation, and included the accepted checkpoint
+  recovery process in the histone-chaperone core entry.
 
 The refreshed review has 61 total rows: 56 current GOA rows and 5 retired
 historical rows. Final action counts are 30 ACCEPT, 26 REMOVE,
