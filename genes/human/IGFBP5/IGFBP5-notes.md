@@ -66,7 +66,10 @@
 
 ## Deep research
 
-- `just deep-research-falcon human IGFBP5` launched in background; status recorded below.
+- `just deep-research-falcon human IGFBP5` was run twice (2026-10-05); both runs failed with
+  "Provider falcon timed out after 600s" / "All providers failed" (no perplexity key for fallback).
+  No deep-research file exists; the review is based on cached publications (fetched via
+  `just fetch-gene-pmids` / `just fetch-pmid`), PubMed searches and the UniProt record.
 
 ## Interactome rows
 
