@@ -40,7 +40,7 @@ D'D3-A1-A2-A3-D4-C1..C6-CTCK).
 
 ## Curation decisions summary
 
-- Core MF: collagen binding; cell adhesion molecule binding (GPIbα — replaces protein binding rows); integrin binding; protein carrier activity for FVIII (replaces protein binding rows with F8); identical protein binding (multimerization).
+- Core MF: collagen binding; cell adhesion molecule binding (GPIbα — replaces protein binding rows); integrin binding; protein carrier chaperone for FVIII (replaces protein binding rows with F8); identical protein binding (multimerization).
 - Core BP: hemostasis / blood coagulation; cell-substrate adhesion (platelet adhesion to injured vessel); NEW platelet aggregation (comparator: fibrinogen FGA/FGB/FGG carry GO:0070527 as bridging ligands; VWF performs the bridging); NEW protein stabilization (VWF itself protects FVIII from clearance).
 - Core CC: extracellular region, Weibel-Palade body, platelet alpha granule, extracellular matrix.
 - ECM structural constituent: over-annotation (VWF is adhesive bridge, not a structural-integrity component).
