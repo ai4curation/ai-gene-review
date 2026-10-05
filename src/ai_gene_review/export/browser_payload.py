@@ -188,8 +188,10 @@ def validate_browser_data_js_size(
 ) -> None:
     """Enforce a destination's byte budget; None means no per-file budget.
 
-    Artifact builds check the complete staged site and archive separately,
-    after compression, rather than applying Git's blob limit to intermediates.
+    Artifact builds check the complete staged site and archive separately.
+    Staging gzips the main annotation browser payload; prediction and propagation
+    payloads remain uncompressed. These hosting budgets are not browser memory
+    or load-time guarantees, and Git's blob cap is not a browser performance budget.
     """
     if max_bytes is not None and size >= max_bytes:
         raise ValueError(
