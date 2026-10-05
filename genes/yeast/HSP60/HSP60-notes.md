@@ -30,9 +30,9 @@
   and `SGD:S000000248` is TCM62. Its `GO:0005743 mitochondrial inner membrane`
   transfer is compatible with Hsp60's import-associated context, but it stays
   non-core because Hsp60's resident active compartment is the matrix. The same
-  node's `GO:0007005 mitochondrion organization` row is accepted because Hsp60
-  directly assists mitochondrial protein assembly and mtDNA nucleoid
-  maintenance.
+  node's broad `GO:0007005 mitochondrion organization` row is retained as non-core
+  because Hsp60 directly assists mitochondrial matrix protein folding and complex
+  assembly, while organelle-organization phenotypes are downstream.
 - `PANTHER:PTN000143510` supports the two secondary process IBAs,
   `GO:0034514 mitochondrial unfolded protein response` and `GO:0045041
   protein import into mitochondrial intermembrane space`. Both stay
@@ -46,7 +46,15 @@
   MIF4 papers did not identify a newer study that changes the GO review.
   Recent hits were mostly organism-general HSP60 papers or yeast engineering
   studies that mention Hsp60 as a stress marker.
-- PMID:37585488 tested Hsp60p as a model mitochondrial targeting sequence in a
-  2023 N-terminal mutagenesis study. The result supports Hsp60's established
-  mitochondrial import route but does not require a new GO assertion beyond
-  mitochondrial matrix localization.
+- PMID:37585488 includes systematic position-2 mutagenesis of a prototypal yeast
+  mitochondrial protein in a 2023 NatC/MTS study. The abstract does not name the
+  assayed substrate, and the result does not require a new Hsp60 GO assertion
+  beyond mitochondrial matrix localization.
+
+## 2026-10-05 PR #3762 reviewer follow-up
+
+- Demoted the broad `GO:0007005 mitochondrion organization` IBA row to non-core
+  in the review and IBA current-GOA sidecar.
+- Replaced title-backed PMID:7902576 ATPase support with the cached abstract's
+  actual yeast cpn60 ATPase sentence and recorded the later PMID:9256426 Hsp10
+  inhibition result as a finding-level dispute.
