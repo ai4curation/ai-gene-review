@@ -2,7 +2,7 @@
 
 ## 2026-10-01 current-GOA and IBA re-review
 
-Reviewed *Saccharomyces cerevisiae* **COX19/YLL009C-A** after a current GOA/UniProt
+Reviewed *Saccharomyces cerevisiae* **COX19/YLL018C-A** after a current GOA/UniProt
 refresh. Cox19 is a twin-CX9C protein that partitions between the cytosol and the
 mitochondrial intermembrane space, where it binds the IMS-facing domain of Cox11
 and supports Cox11 copper coordination during cytochrome c oxidase assembly.
@@ -37,8 +37,13 @@ Cached publications were sufficient for the existing rows:
   subunit synthesis in cytochrome oxidase assembly and is both cytosolic and
   mitochondrial.
 - PMID:17237235: in vitro Cu(I) binding by recombinant Cox19, a true biochemical
-  property that is not enough to make Cox19 a copper metallochaperone.
+  property that is not enough to make Cox19 a copper metallochaperone. PMID:25926683
+  later noted that the four cysteines critical for in vitro metal binding are
+  oxidized in vivo and that direct mitochondrial copper binding is questionable.
 - PMID:22984289: Bax-release IMS proteomics supporting IMS localization.
+- PMID:35666203: Coa4 genetic suppressor work that places Coa4 in the Cox1/CuB
+  branch upstream of Cox11 but explicitly did not detect a Coa4-Cox11 physical
+  interaction by co-IP/MS.
 
 A 2024-2026 PubMed search found human COX19 papers and broader redox/copper
 pathway studies but no newer yeast COX19 primary paper that changes these calls.
@@ -49,3 +54,9 @@ The SGD `GO:0030001 metal ion transport` row remains `MARK_AS_OVER_ANNOTATED`.
 It was inferred from Cox19 resemblance to Cox17 in the original paper; later
 mechanistic evidence instead supports Cox19 as a Cox11 chaperone, not as a
 demonstrated metal transporter.
+
+Followed up on PR #3734 by distinguishing the direct Cox19-Cox11 physical
+interaction from the Coa4-Cox11 genetic connection, tightening the copper-binding
+row around the in vivo cysteine-oxidation caveat from PMID:25926683, and reframing
+the Coa4 and copper-binding open questions so they ask what remains unresolved
+after PMID:17237235, PMID:25926683, and PMID:35666203.
