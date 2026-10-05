@@ -97,7 +97,8 @@ def main() -> int:
     by_aspect = Counter(ASPECT[r["aspect"]] for r in ird)
     md += ["## 1. IRD node annotations in PAINT", ""]
     md.append(f"{n} IRD rows on {len({r['ird_node'] for r in ird})} nodes in {len({r['family'] for r in ird})} PANTHER families. "
-              f"All carry the NOT qualifier: {sum(r['qualifier'] == 'NOT' for r in ird)}.")
+              f"All are negated: {sum(r['qualifier'].startswith('NOT') for r in ird)} "
+              f"({dict(Counter(r['qualifier'] for r in ird))}).")
     md += ["", md_table(["Aspect", "IRD rows"], [[k, v] for k, v in by_aspect.most_common()]), ""]
     stale = [r for r in ird if r["ancestral_has_ibd_for_term"] != "true"]
     both = [r for r in ird if r["ikr_on_same_ancestor_term"] == "true"]
@@ -140,25 +141,9 @@ def main() -> int:
            md_table(["Leaves under the IRD node", "IRD rows"],
                     [[k, size_bins[k]] for k in ("1 (leaf)", "2-10", "11-100", ">100")]), ""]
 
-    blocked_pairs = {(m["uniprot"], m["go_id"]) for m in members if m["uniprot"]}
-    blocked_terms = {g for _, g in blocked_pairs}
-    leaked: Counter[str] = Counter()
-    leaked_rows = []
-    with open_text(LEAF_GAF) as fh:
-        for line in fh:
-            if line.startswith("!"):
-                continue
-            c = line.split("\t")
-            if len(c) < 9 or c[4] not in blocked_terms or "NOT" in c[3]:
-                continue
-            if (c[1], c[4]) in blocked_pairs:
-                leaked[c[8]] += 1
-                leaked_rows.append((c[1], c[2], c[4], c[7]))
-    md.append(f"Positive leaf IBAs to the exact blocked term on proteins inside the IRD clade: "
-              f"{sum(leaked.values())} (re-annotated below the IRD node, or duplicate tree placement).")
-    md.append("")
-
-    # ---- 4. experimental conflicts
+    # Leaf positive IBAs on clade members. PAINT can re-annotate a sub-clade below
+    # the IRD node, so a member that still receives the blocked term (or a GO
+    # descendant) by IBA is outside the effective block.
     desc_cache: dict[str, set[str]] = {}
 
     def desc(t: str) -> set[str]:
@@ -166,6 +151,31 @@ def main() -> int:
             desc_cache[t] = set(go.descendants(t, predicates=PREDS, reflexive=True))
         return desc_cache[t]
 
+    clade_accs = {m["uniprot"] for m in members if m["uniprot"]}
+    leaf_pos: dict[str, set[str]] = defaultdict(set)
+    with open_text(LEAF_GAF) as fh:
+        for line in fh:
+            if line.startswith("!"):
+                continue
+            c = line.split("\t")
+            if len(c) < 9 or c[1] not in clade_accs or "NOT" in c[3]:
+                continue
+            leaf_pos[c[1]].add(c[4])
+    reannotated: set[tuple[str, str, str]] = set()
+    for (node, gid), mems in clade.items():
+        d = desc(gid)
+        for m in mems:
+            if leaf_pos.get(m["uniprot"], set()) & d:
+                reannotated.add((node, gid, m["uniprot"]))
+    eff = {k: [m for m in v if (k[0], k[1], m["uniprot"]) not in reannotated] for k, v in clade.items()}
+    fully = sum(1 for k, v in clade.items() if v and not eff[k])
+    md.append(f"PAINT re-annotates part of the clade below the IRD node: {len(reannotated)} (IRD row, protein) pairs "
+              f"still receive a positive IBA for the blocked term or a descendant. "
+              f"{sum(1 for k in clade if len(eff[k]) < len(clade[k]))} IRD rows are partly re-annotated, "
+              f"{fully} fully (the IRD then blocks nothing on these leaves).")
+    md.append("")
+
+    # ---- 4. experimental conflicts
     exp_by_acc: dict[str, list[dict]] = defaultdict(list)
     for e in exp:
         exp_by_acc[e["GENE PRODUCT ID"]].append(e)
@@ -194,20 +204,26 @@ def main() -> int:
                     "qualifier": e["QUALIFIER"], "exp_go_id": e["GO TERM"], "exp_label": label(e["GO TERM"]),
                     "evidence": e["GO EVIDENCE CODE"], "reference": e["REFERENCE"],
                     "assigned_by": e["ASSIGNED BY"], "date": e["DATE"],
+                    "paint_reannotated_below": str((node, gid, m["uniprot"]) in reannotated).lower(),
                 }
                 (confirms if e["QUALIFIER"].startswith("NOT") else conflicts).append(row)
     conflicts.sort(key=lambda x: (x["family"], x["ird_node"], x["blocked_go_id"], x["uniprot"], x["exp_go_id"]))
-    if conflicts:
+    all_conflicts = conflicts
+    if all_conflicts:
         with OUT_CONFLICTS.open("w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(conflicts[0]), delimiter="\t", lineterminator="\n")
+            w = csv.DictWriter(fh, fieldnames=list(all_conflicts[0]), delimiter="\t", lineterminator="\n")
             w.writeheader()
-            w.writerows(conflicts)
+            w.writerows(all_conflicts)
+    n_reann = sum(1 for c in conflicts if c["paint_reannotated_below"] == "true")
+    conflicts = [c for c in conflicts if c["paint_reannotated_below"] == "false"]
     conf_ird = {(c["ird_node"], c["blocked_go_id"]) for c in conflicts}
     conf_ird_lt = {(c["ird_node"], c["blocked_go_id"]) for c in conflicts if c["evidence"] not in HTP}
     conf_pairs = {(c["ird_node"], c["blocked_go_id"], c["uniprot"]) for c in conflicts}
     md += ["## 4. Experimental annotations inside IRD clades", "",
            f"Experimental GOA annotations downloaded for clade members: {len(exp)} rows on {len(exp_by_acc)} proteins.", "",
-           f"- Positive experimental annotations to the blocked term or a GO descendant: **{len(conflicts)} rows**, "
+           f"- Positive experimental annotations to the blocked term or a GO descendant: {len(all_conflicts)} rows; "
+           f"{n_reann} of them are on proteins PAINT re-annotates below the IRD node, and are not conflicts.",
+           f"- Inside the effective block: **{len(conflicts)} rows**, "
            f"{len(conf_pairs)} (IRD, protein) pairs, touching **{len(conf_ird)} of {n} IRD rows** "
            f"({pct(len(conf_ird), n)}); {len(conf_ird_lt)} IRD rows have at least one low-throughput conflict.",
            f"- NOT experimental annotations agreeing with the block: {len(confirms)} rows on "
@@ -263,6 +279,7 @@ def main() -> int:
                     "review_mentions_term_or_descendant": "|".join(hits),
                     "review_use": "; ".join(actions),
                     "experimental_positive_in_goa": str((node, gid, m["uniprot"]) in conf_pairs).lower(),
+                    "paint_reannotated_below": str((node, gid, m["uniprot"]) in reannotated).lower(),
                 })
     overlaps.sort(key=lambda x: (x["review"], x["blocked_go_id"]))
     if overlaps:
@@ -271,17 +288,19 @@ def main() -> int:
             w.writeheader()
             w.writerows(overlaps)
     used = [o for o in overlaps if o["review_use"]]
+    used_eff = [o for o in used if o["paint_reannotated_below"] == "false"]
     core = [o for o in used if "CORE_FUNCTION" in o["review_use"]]
     md += ["## 5. Our gene reviews inside IRD clades", "",
            f"- {len({o['review'] for o in overlaps})} reviews cover a protein inside an IRD clade "
            f"({len(overlaps)} (review, blocked term) pairs).",
            f"- {len(used)} pairs: the review annotates the blocked term or a descendant "
-           f"({len(core)} as a core function).", ""]
+           f"({len(core)} as a core function); {len(used_eff)} of these are inside the effective block "
+           f"(not re-annotated below the IRD by PAINT).", ""]
     if used:
-        md += [md_table(["Review", "Blocked term", "Aspect", "Clade", "Review use", "Exp. positive in GOA"],
+        md += [md_table(["Review", "Blocked term", "Aspect", "Clade", "Review use", "Exp. positive in GOA", "PAINT re-annotates below"],
                         [[o["review"].split("/")[-1].replace("-ai-review.yaml", "") + f" ({o['review'].split('/')[1]})",
                           f"{o['blocked_go_id']} {o['blocked_label']}", o["aspect"], o["clade_size"],
-                          o["review_use"], o["experimental_positive_in_goa"]] for o in used]), ""]
+                          o["review_use"], o["experimental_positive_in_goa"], o["paint_reannotated_below"]] for o in used]), ""]
 
     OUT_MD.write_text("\n".join(md) + "\n")
     print(f"wrote {OUT_MD}", file=sys.stderr)
