@@ -71,3 +71,11 @@
 
 - Target of rituximab, ofatumumab, obinutuzumab; type I vs II mAb mechanisms
   [PMID:32792392 "type II mAbs form terminal complexes that preclude recruitment of additional mAbs and complement components"].
+
+## Deep research outcome
+
+- Falcon attempt 1: Edison API `429 Too Many Requests`.
+- Falcon attempt 2: `Provider falcon timed out after 600s` / "All providers failed".
+- No deep-research file was produced; the review relies on the cached GOA publications,
+  the UniProt record, and additional PubMed papers listed above (PMID:20038800,
+  PMID:14688067, PMID:32079680, PMID:22615937).
