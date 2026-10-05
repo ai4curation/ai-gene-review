@@ -46,3 +46,14 @@ D'D3-A1-A2-A3-D4-C1..C6-CTCK).
 - ECM structural constituent: over-annotation (VWF is adhesive bridge, not a structural-integrity component).
 - Immunoglobulin binding: MODIFY to protein-folding chaperone binding (BiP).
 - Note: GO:0005615 extracellular space is obsolete in current GO (verified via QuickGO 2026-10), so not proposed.
+
+## Deep research outcome
+
+- Falcon deep research succeeded: `VWF-deep-research-falcon.md` (2026-10-05). Its synthesis
+  agrees with the decisions above (adhesive scaffold + FVIII carrier, not an enzyme; TIL/CK
+  modules are structural folds, no protease-inhibitor activity; A1 also contributes to WPB tubule
+  geometry; angiogenic roles via WPB/Ang-2 are secondary and mechanistically unresolved).
+  It reports ~0.5 nM FVIII Kd and >95% of plasma FVIII VWF-bound (citing Lenting et al. 2024 Blood,
+  doi:10.1182/blood.2023023277 — not cached here, so not used as supporting text).
+- No new GO annotations proposed from the angiogenesis literature (indirect, mechanism unresolved);
+  raised as a suggested question instead.
