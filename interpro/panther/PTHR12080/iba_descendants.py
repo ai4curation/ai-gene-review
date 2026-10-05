@@ -1,7 +1,9 @@
 """List human/mouse/rat IBA recipients of each PTHR12080 PAINT node (QuickGO)
 and their current UniProt PANTHER family, to check which proteins actually
 inherit each node's assertions. Writes PTHR12080-iba-descendants.tsv."""
-import csv, json, urllib.request
+import csv
+import json
+import urllib.request
 
 QG = ("https://www.ebi.ac.uk/QuickGO/services/annotation/search?withFrom=PANTHER:{n}"
       "&evidenceCode=ECO:0000318&evidenceCodeUsage=descendants&taxonId=9606,10090,10116&limit=200")
