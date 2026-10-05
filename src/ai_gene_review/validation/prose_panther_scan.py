@@ -155,12 +155,12 @@ def main(argv: List[str] | None = None) -> int:
     if missing and args.online:
         index.update(fetch_panther_from_uniprot(missing).families)
 
-    # The index records two distinct kinds of gap. ``gaps.absent``: both sources
-    # were consulted and PANTHER has no family, so the claim can never be
-    # adjudicated -- informational, not a failure. ``gaps.unchecked``: the
-    # UniProt fallback was skipped, so the status is simply unknown and
-    # rerunning the refresh is a real remedy -- which is why it routes with
-    # "never seen" rather than with "absent".
+    # The index records three distinct kinds of gap. ``gaps.absent``: both
+    # sources were consulted and PANTHER has no family, so the claim can never
+    # be adjudicated -- informational, not a failure. ``gaps.unchecked``: the
+    # UniProt fallback was skipped, so rerunning the refresh is a real remedy.
+    # ``gaps.unknown``: UniProt was asked and returned no record, so the
+    # accession itself needs verification.
     gaps = load_member_index_gaps(members_path)
 
     contradicted = [
@@ -179,25 +179,36 @@ def main(argv: List[str] | None = None) -> int:
             if c.accession not in index and c.accession in gaps.absent
         }
     )
-    unresolvable = sorted(
+    unknown_to_uniprot = sorted(
         {
             c.accession
             for c in claims
-            if c.accession not in index and c.accession not in gaps.absent
+            if c.accession not in index and c.accession in gaps.unknown
         }
     )
-    unchecked = sorted(set(unresolvable) & gaps.unchecked)
+    not_looked_up = sorted(
+        {
+            c.accession
+            for c in claims
+            if c.accession not in index
+            and c.accession not in gaps.absent
+            and c.accession not in gaps.unknown
+        }
+    )
+    unchecked = sorted(set(not_looked_up) & gaps.unchecked)
 
     # Counted in claims throughout, not a mix of claims and unique accessions,
-    # so the four figures partition len(claims) and can be read as a total.
+    # so checked / absent / unknown / not-looked-up partition len(claims).
     checked = sum(1 for c in claims if c.accession in index)
     absent_claims = sum(1 for c in claims if c.accession in set(absent))
-    unresolvable_claims = sum(1 for c in claims if c.accession in set(unresolvable))
+    unknown_claims = sum(1 for c in claims if c.accession in set(unknown_to_uniprot))
+    not_looked_up_claims = sum(1 for c in claims if c.accession in set(not_looked_up))
     print(f"prose accession/PANTHER claims : {len(claims)}")
     print(f"checked                        : {checked}")
     print(f"contradicted                   : {len(contradicted)}")
     print(f"no PANTHER family exists       : {absent_claims}")
-    print(f"unresolvable (not looked up)   : {unresolvable_claims}")
+    print(f"unknown to UniProt             : {unknown_claims}")
+    print(f"not looked up                  : {not_looked_up_claims}")
 
     for claim in contradicted:
         print(
@@ -216,16 +227,22 @@ def main(argv: List[str] | None = None) -> int:
             "(--no-uniprot-fallback), so these were never looked up: "
             f"{', '.join(unchecked)}"
         )
-    if unresolvable:
+    if unknown_to_uniprot:
+        print(
+            "⚠️  UniProt returned no record for these accessions, so verify "
+            "they exist and are current: "
+            f"{', '.join(unknown_to_uniprot)}"
+        )
+    if not_looked_up:
         print(
             "⚠️  not in panther-members.tsv, so NOT checked "
             f"(run `just refresh-panther-members`, or --online): "
-            f"{', '.join(unresolvable)}"
+            f"{', '.join(not_looked_up)}"
         )
-    # Non-zero for unresolvable too: a partial sweep reported as a pass is the
+    # Non-zero for unindexed too: a partial sweep reported as a pass is the
     # failure mode this whole branch kept hitting. If it ever gates CI, "could
     # not check" must not read as "checked and clean".
-    return 1 if (contradicted or unresolvable) else 0
+    return 1 if (contradicted or unknown_to_uniprot or not_looked_up) else 0
 
 
 if __name__ == "__main__":

@@ -533,6 +533,55 @@ def test_fix_panther_labels_is_not_deadlocked_by_an_absent_member(tmp_path):
     assert "OFFICIAL NAME" in module.read_text(), result.output
 
 
+def test_fix_panther_labels_passes_unknown_accessions_to_the_validator(
+    tmp_path, monkeypatch
+):
+    """The label fixer should feed all member-index gaps to the shared check."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = tmp_path
+    (repo / "modules").mkdir()
+    panther = repo / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    write_panther_obo([PantherEntry("PTHR9", "OFFICIAL NAME")], panther / "panther.obo")
+    write_member_index({}, panther / "panther-members.tsv", unknown={"TYPO"})
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "module:\n"
+        "  id: m\n"
+        "  parts:\n"
+        "  - node:\n"
+        "      annotons:\n"
+        "      - participant:\n"
+        "          family:\n"
+        "            term:\n"
+        "              id: PANTHER:PTHR9\n"
+        "              label: OFFICIAL NAME\n"
+        "            representative_members:\n"
+        "            - term:\n"
+        "                id: UniProtKB:TYPO\n"
+        "                label: rep\n"
+    )
+
+    seen: list[set[str]] = []
+
+    def _validate(*args, unknown_to_uniprot=None, **kwargs):
+        seen.append(unknown_to_uniprot)
+        return ["unindexed"], []
+
+    monkeypatch.setattr(
+        "ai_gene_review.validation.module_validator.validate_family_members",
+        _validate,
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo)])
+
+    assert result.exit_code == 0, result.output
+    assert seen == [{"TYPO"}]
+
+
 def test_an_accession_uniprot_never_returned_is_not_recorded_as_absent(
     tmp_path, monkeypatch
 ):

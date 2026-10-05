@@ -15,6 +15,7 @@ import yaml
 from typer.testing import CliRunner
 
 from ai_gene_review.cli import app
+from ai_gene_review.etl.panther_families import write_member_index
 
 runner = CliRunner()
 
@@ -426,6 +427,20 @@ def test_a_member_with_no_subfamily_is_not_checkable(repo):
         "with all members in one subfamily | 0 / 0 checkable (of 1 declared) |"
         in run(repo)
     )
+
+
+def test_member_index_coverage_counts_unknown_uniprot_accessions(repo):
+    """The resolution denominator must include all three recorded gap states."""
+    members = repo / "interpro" / "panther" / "panther-members.tsv"
+    write_member_index(
+        {"P1": "PTHR1:SF1"},
+        members,
+        absent={"ABSENT"},
+        unchecked={"UNCHECKED"},
+        unknown={"TYPO"},
+    )
+
+    assert "| cited accessions resolved to a PANTHER family | 1 / 4 |" in run(repo)
 
 
 def test_members_spread_is_checkable_but_not_a_finding(repo):

@@ -4293,7 +4293,9 @@ def fix_panther_labels(
     # validator reports its label mismatch as a blocking error while this tool,
     # seeing an unindexed member, files it under `skip` and refuses to touch the
     # label forever. Right for a stale index, wrong when no refresh can help.
-    permanently_absent = load_member_index_gaps(members_path).absent
+    gaps = load_member_index_gaps(members_path)
+    permanently_absent = gaps.absent
+    unknown_to_uniprot = gaps.unknown
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -4308,7 +4310,11 @@ def fix_panther_labels(
         corroborated: set[str] = set()
         for use in iter_family_member_uses(doc):
             errors, _ = validate_family_members(
-                [use], member_index, paint_index, permanently_absent=permanently_absent
+                [use],
+                member_index,
+                paint_index,
+                permanently_absent=permanently_absent,
+                unknown_to_uniprot=unknown_to_uniprot,
             )
             if errors:
                 skip.update(use.declared_family_curies)
@@ -4546,7 +4552,7 @@ def panther_report_stats(
             heterogeneous += 1
     ambiguous = {b: p for b, p in proteins_by_family.items() if len(p) > 1}
     gaps = load_member_index_gaps(members)
-    collected = len(index) + len(gaps.absent) + len(gaps.unchecked)
+    collected = len(index) + len(gaps.absent) + len(gaps.unchecked) + len(gaps.unknown)
     claims = collect_claims(repo_root / "modules")
     checked = sum(1 for c in claims if c.accession in index)
 

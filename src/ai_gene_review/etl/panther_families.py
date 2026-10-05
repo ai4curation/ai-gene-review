@@ -462,15 +462,12 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
 
     >>> import tempfile, pathlib
     >>> d = pathlib.Path(tempfile.mkdtemp())
-    >>> _ = write_member_index({"P1": "PTHR1"}, d / "asked.tsv", {"P9"})
-    >>> gaps = load_member_index_gaps(d / "asked.tsv")
-    >>> sorted(gaps.absent), sorted(gaps.unchecked)
-    (['P9'], [])
-
-    >>> _ = write_member_index({"P1": "PTHR1"}, d / "skipped.tsv", None, {"P9"})
-    >>> gaps = load_member_index_gaps(d / "skipped.tsv")
-    >>> sorted(gaps.absent), sorted(gaps.unchecked)
-    ([], ['P9'])
+    >>> _ = write_member_index(
+    ...     {"P1": "PTHR1"}, d / "gaps.tsv", {"P9"}, {"P8"}, {"P7"}
+    ... )
+    >>> gaps = load_member_index_gaps(d / "gaps.tsv")
+    >>> sorted(gaps.absent), sorted(gaps.unchecked), sorted(gaps.unknown)
+    (['P9'], ['P8'], ['P7'])
     """
     path = Path(path)
     if not path.exists():
