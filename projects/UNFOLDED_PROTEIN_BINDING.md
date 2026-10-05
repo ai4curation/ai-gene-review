@@ -618,7 +618,7 @@ established:
 | RRB1 | *S. cerevisiae* | Q04225 | 11 | MODIFY | Ribosome assembly |
 | SAN1 | *S. cerevisiae* | P22470 | 20 | MODIFY (GO:0051787) | E3 ligase QC sensor (GO:0031249) |
 | SHQ1 | *S. cerevisiae* | P40486 | 12 | MODIFY | H/ACA snoRNP assembly |
-| SHR3 | *S. cerevisiae* | Q02774 | 18 | MODIFY | Amino acid permease chaperone |
+| SHR3 | *S. cerevisiae* | Q02774 | 18 | GO:0051082 absent from refreshed GOA; GO:0140597 accepted and GO:0044183 retained | Amino acid permease ER folding/packaging chaperone |
 | SHY1 | *S. cerevisiae* | P53266 | 14 | OVER_ANNOTATED | Cox assembly factor |
 | SQT1 | *S. cerevisiae* | P35184 | 9 | MODIFY | Ribosome assembly |
 | SSA1 | *S. cerevisiae* | P10591 | 242 | MODIFY → GO:0140662 | Constitutive cytosolic HSP70; ATP-driven folding/refolding and proteostasis |

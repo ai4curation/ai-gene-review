@@ -54,3 +54,23 @@ did not alter the GO action calls.
   and removed each as uninformative `GO:0005515` interaction curation rather than a
   Shr3 molecular activity. The no-longer-live PMID:27107014 xeno-interaction row was
   retained as retired.
+
+## 2026-10-05 reviewer follow-up
+
+- Clarified that all three retired `GO:0051082 unfolded protein binding` rows
+  disappeared because `GO:0051082` is obsolete, not because the PTHR28228 PAINT
+  node independently lost a granular chaperone assertion. The IBA
+  `propagation_review` now records this as a term-obsoletion replacement rather
+  than a target-specific PAINT failure, and both stale SGD IMP rows name
+  obsoletion as their retirement cause.
+- Considered `GO:0140309 unfolded protein holdase activity` and did not propose
+  it for Shr3: the aggregation evidence supports `GO:0044183 protein folding
+  chaperone` during ER membrane biogenesis, whereas the COPII-packaging evidence
+  concerns export-competent permease clients and is already represented by SGD's
+  live `GO:0140597 protein carrier activity` IDA row from PMID:10564255.
+- Rechecked `GO:0090114 COPII-coated vesicle budding` against the local GO
+  graph. OAK reports it as `part_of GO:0006888 endoplasmic reticulum to Golgi
+  vesicle-mediated transport`, so the carrier core function now keeps only the
+  more specific, live `GO:0090114` process. The retired `GO:0006888` IBA remains
+  acceptable historical curation supported by COPII packaging evidence; UniProt
+  entry version 184 still lists the old IBA even though current GOA/PAINT do not.
