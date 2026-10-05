@@ -22,8 +22,8 @@ undetectable"].
 - The review had no `PENDING` rows, no `GO:0005515 protein binding` rows, and no
   unsupported proposed replacements. The direct edits were setting the status to
   `COMPLETE`, adding a structured `propagation_review` for the IBA row, and
-  removing the old C-terminal GFP nuclear/cytoplasmic calls as likely
-  import-disrupted IMS-fusion artifacts.
+  removing the old C-terminal GFP nuclear call while marking the companion
+  cytoplasm row as an overbroad parent of Cmc2's mitochondrial localization.
 
 ### IBA / PAINT review
 
