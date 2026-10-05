@@ -103,7 +103,7 @@ annotations. Three PI4KB rows are `MODIFY`ed to `GO:0043495`.
 | Picornaviral 3A (Aichi O91464, polio P03300, …) | 2 | the same adaptor activity, hijacked |
 | **PRKAR1A** (P10644) | 1 | already informatively annotated |
 | TBC1D22A/B | 3 | bind the **same Q domain**, mutually exclusively with PI4KB → MODIFY |
-| PPM1L | 1 | topically coherent, no replacement term → REMOVE bare binding |
+| PPM1L | 1 | GOLD-mediated recruitment to ER-Golgi contact sites → MODIFY |
 
 ## Core/non-core consistency
 
@@ -470,7 +470,8 @@ the habit is not conservative, it is just wrong in whichever direction the summa
 - Re-ran `uv run python genes/human/ACBD3/ACBD3-bioinformatics/audit_acbd3_claims.py`;
   the hand-maintained regression audit still reports 29 retracted phrasings checked,
   9 required claims checked, and 0 problems.
-- Cleared the remaining `GO:0005515` policy warning by changing the PPM1L
-  `protein binding` row from `MARK_AS_OVER_ANNOTATED` to `REMOVE`. The interaction
-  itself remains reported from PMID:22796112, but no evidence-backed replacement
-  molecular-function term was available for this single partner.
+- Changed the PPM1L `protein binding` row from `MARK_AS_OVER_ANNOTATED` to
+  `MODIFY` with `GO:0043495 protein-membrane adaptor activity`. PMID:22796112
+  reports that ACBD3 recruits PPM1L to ER-Golgi membrane contact sites through
+  its GOLD domain, so the same adaptor term used for the other membrane-recruited
+  ACBD3 partners is the more informative molecular-function target for this row.
