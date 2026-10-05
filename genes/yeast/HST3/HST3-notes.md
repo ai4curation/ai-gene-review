@@ -22,9 +22,9 @@
   asserts a biologically true parent term while HST3's direct yeast evidence
   supports the H3K56-specific child. Marked the GO:0000183 rDNA heterochromatin
   IBA as a bad transfer because PTN000119247 is seeded by the S. cerevisiae
-  paralog HST2 and a PomBase Sir2-family source, while the cached HST3 literature
+  paralog HST2 and its S. pombe hst2 ortholog, while the cached HST3 literature
   supports H3K56 deacetylation and telomeric/2-micron silencing rather than
-  HST3-specific rDNA heterochromatin formation.
+  direct HST3-specific rDNA heterochromatin formation.
 
 - Searched for 2025-2026 HST3/YOR025W literature. The only specific new hit
   was a 2026 bioRxiv preprint on H3K56ac and origin licensing; it further uses
