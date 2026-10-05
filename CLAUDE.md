@@ -731,6 +731,7 @@ gh-pages branch needed for the static content.
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
+* Use YAML, not TSV, for any structured data file you author (project tables, proposal lists, curated records). TSVs produced by deterministic pipelines (e.g. `GENE-goa.tsv`, PAINT `*-paint.tsv`) are inputs and stay as they are.
 * For files `<GENE>-notes.md`, use literature deep search, and always record provenance for assertions, e.g `[PMID:12345 "<supporting text>"]`
 
 ## Support code
