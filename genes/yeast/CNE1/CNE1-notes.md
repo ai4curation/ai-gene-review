@@ -46,7 +46,7 @@ GOA and is removed for the same target-specific divergence.
 The UniProt keyword `carbohydrate binding` row has disappeared from GOA, but the
 underlying lectin biology is solid and is retained as a core
 `GO:0070492 oligosaccharide binding` function plus the proposed
-`monoglucosylated glycoprotein binding` term. PMID:15173200 showed that G1M9
+`monoglucosylated oligosaccharide binding` term. PMID:15173200 showed that G1M9
 competes with recombinant Cne1p chaperone activity, and the FEBS Letters
 follow-up directly tested P-domain and lectin-site mutants; its abstract reports
 that "The binding of monoglucosylated oligosaccharide (G1M9) with Cne1p was
