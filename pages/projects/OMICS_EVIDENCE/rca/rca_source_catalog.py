@@ -27,8 +27,8 @@ Predicates:
     integrate sequence/structure data, not measurements.
 
 Usage:
-  python3 projects/RCA_EVIDENCE/rca_source_catalog.py            # use caches
-  python3 projects/RCA_EVIDENCE/rca_source_catalog.py --refresh  # re-download everything
+  python3 projects/OMICS_EVIDENCE/rca/rca_source_catalog.py            # use caches
+  python3 projects/OMICS_EVIDENCE/rca/rca_source_catalog.py --refresh  # re-download everything
 """
 
 from __future__ import annotations

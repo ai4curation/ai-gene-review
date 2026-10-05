@@ -1,6 +1,6 @@
 """Test whether BHF-UCL's RCA matrisome annotations are a category-to-term mapping.
 
-Hypothesis (from projects/RCA_EVIDENCE.md, Pattern 1): BHF-UCL's RCA molecular-function
+Hypothesis (from projects/OMICS_EVIDENCE/rca.md, Pattern 1): BHF-UCL's RCA molecular-function
 rows from ECM proteomics papers do not reflect protein-by-protein judgement of what the
 protein does in the matrix. They reflect the protein's *category* in the Naba in-silico
 matrisome (Collagens / Proteoglycans / ECM Glycoproteins), mapped to one GO term per
@@ -16,7 +16,7 @@ Input: the Naba lab's human matrisome masterlist (Google Sheet linked from
 https://sites.google.com/uic.edu/matrisome/matrisome-annotations/homo-sapiens), cached
 as data/matrisome_hs_masterlist.tsv.
 
-Usage:  python3 projects/RCA_EVIDENCE/rca_matrisome_crosswalk.py [--refresh]
+Usage:  python3 projects/OMICS_EVIDENCE/rca/rca_matrisome_crosswalk.py [--refresh]
 """
 
 from __future__ import annotations

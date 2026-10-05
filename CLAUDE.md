@@ -714,6 +714,8 @@ driven:
   text differs from the symbol (e.g. `E/P00720`).
 - Set `autolink_gene_symbols: false` in frontmatter for paper-like pages where prose
   symbols should not become links.
+- List symbols that are ordinary words on the page under `autolink_exclude: [...]`
+  (e.g. `RCA`, the evidence code, vs the Arabidopsis gene *RCA*); the rest still link.
 
 ### Browser app
 ```bash

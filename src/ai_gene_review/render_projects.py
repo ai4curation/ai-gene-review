@@ -1524,9 +1524,13 @@ def render_project(
     # Replace prose gene symbols with links unless the page opts out. Explicit
     # <gene> tags above still link because they are intentional, not automatic.
     if should_autolink_gene_symbols(frontmatter):
+        # ``autolink_exclude`` lists symbols that are ordinary words on this page
+        # (e.g. the evidence code RCA vs the Arabidopsis gene RCA); they stay plain
+        # text, while every other symbol still links.
+        excluded = set(_as_string_list(frontmatter.get("autolink_exclude")))
         linked_content, symbol_warnings = replace_gene_symbols(
             content,
-            symbol_index,
+            {s: sp for s, sp in symbol_index.items() if s not in excluded},
             species_hints=species_hints,
             base_path=genes_base_path,
         )

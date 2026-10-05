@@ -1,36 +1,14 @@
 ---
-title: "RCA Evidence Code Review: Omics-Derived Annotations"
-maturity: IN_PROGRESS
-tags: [PIPELINE, EVALUATION]
+title: "RCA: Omics-Derived Annotations"
+autolink_exclude: [RCA, UPF1]
 species: [human, ARATH, yeast]
-genes:
-  - ABI3BP
-  - ACAN
-  - ADIPOQ
-  - AGRN
-  - ASPN
-  - COL4A1
-  - COMP
-  - DCN
-  - DPT
-  - FN1
-  - HSPG2
-  - MGP
-  - NID1
-  - PRG2
-  - PRG3
-  - SPARC
-  - THBS1
-  - THBS2
-  - THBS3
-  - AT5G02500
-  - BCAT3
-  - OST1
-  - ERG19
-  - SOD2
 ---
 
-# RCA Evidence Code Review: Omics-Derived Annotations
+# RCA: Omics-Derived Annotations
+
+Part of [Omics and High-Throughput Evidence](../OMICS_EVIDENCE.md). This page covers the
+RCA evidence code. The parent page covers the high-throughput codes (HDA/HTP/HMP/HGI)
+and compares the two.
 
 ## Overview
 
@@ -63,29 +41,29 @@ Two other large uses of RCA are outside this scope and are covered briefly under
 is half of all RCA and probably carries the wrong code, and RCA on this repository's
 own `NEW` rows.
 
-Related projects: [IEP](IEP.md) (another evidence-code audit) and
-[NOT annotation usage](NOT_ANNOTATION_USAGE.md).
+Related projects: [IEP](../IEP.md) (another evidence-code audit) and
+[NOT annotation usage](../NOT_ANNOTATION_USAGE.md).
 
 ## Methods and reproducibility
 
-Every figure on this page comes from a script in [`RCA_EVIDENCE/`](RCA_EVIDENCE/), and
+Every figure on this page comes from a script in [`rca/`](rca/), and
 each script's docstring states the predicates it uses. Downloads are cached under
-`RCA_EVIDENCE/data/`, so reruns work offline. `--refresh` re-fetches the data.
+`rca/data/`, so reruns work offline. `--refresh` re-fetches the data.
 
 | Script | Question | Output |
 |---|---|---|
-| [`rca_source_catalog.py`](RCA_EVIDENCE/rca_source_catalog.py) | Which references lie behind all RCA in GOA, and what kind of analysis is each? | [`rca_reference_catalog.yaml`](RCA_EVIDENCE/data/rca_reference_catalog.yaml), [report](RCA_EVIDENCE/data/rca_source_catalog_report.txt) |
-| [`rca_reference_classes.yaml`](RCA_EVIDENCE/rca_reference_classes.yaml) | Curated analysis-type call for every reference with ≥5 rows, judged from its abstract | (input to the catalog) |
-| [`rca_matrisome_crosswalk.py`](RCA_EVIDENCE/rca_matrisome_crosswalk.py) | Do BHF-UCL's ECM terms follow the Naba matrisome categories? | [report](RCA_EVIDENCE/data/rca_matrisome_crosswalk_report.txt) |
-| [`rca_not_contradictions.py`](RCA_EVIDENCE/rca_not_contradictions.py) | Are proteomics-derived NOT rows contradicted by positive annotations? | [`rca_not_contradictions.tsv`](RCA_EVIDENCE/data/rca_not_contradictions.tsv), [report](RCA_EVIDENCE/data/rca_not_contradictions_report.txt) |
-| [`rca_inventory.py`](RCA_EVIDENCE/rca_inventory.py) | Which RCA rows have been reviewed in this repository, and with what action? | [`rca_reviewed_rows.yaml`](RCA_EVIDENCE/data/rca_reviewed_rows.yaml), [report](RCA_EVIDENCE/data/rca_inventory_report.txt) |
-| [`rca_quickgo_global.py`](RCA_EVIDENCE/rca_quickgo_global.py) | Global counts by group, aspect and reference | [report](RCA_EVIDENCE/data/rca_quickgo_global_2026-10-05.txt) |
+| [`rca_source_catalog.py`](rca/rca_source_catalog.py) | Which references lie behind all RCA in GOA, and what kind of analysis is each? | [`rca_reference_catalog.yaml`](rca/data/rca_reference_catalog.yaml), [report](rca/data/rca_source_catalog_report.txt) |
+| [`rca_reference_classes.yaml`](rca/rca_reference_classes.yaml) | Curated analysis-type call for every reference with ≥5 rows, judged from its abstract | (input to the catalog) |
+| [`rca_matrisome_crosswalk.py`](rca/rca_matrisome_crosswalk.py) | Do BHF-UCL's ECM terms follow the Naba matrisome categories? | [report](rca/data/rca_matrisome_crosswalk_report.txt) |
+| [`rca_not_contradictions.py`](rca/rca_not_contradictions.py) | Are proteomics-derived NOT rows contradicted by positive annotations? | [`rca_not_contradictions.tsv`](rca/data/rca_not_contradictions.tsv), [report](rca/data/rca_not_contradictions_report.txt) |
+| [`rca_inventory.py`](rca/rca_inventory.py) | Which RCA rows have been reviewed in this repository, and with what action? | [`rca_reviewed_rows.yaml`](rca/data/rca_reviewed_rows.yaml), [report](rca/data/rca_inventory_report.txt) |
+| [`rca_quickgo_global.py`](rca/rca_quickgo_global.py) | Global counts by group, aspect and reference | [report](rca/data/rca_quickgo_global_2026-10-05.txt) |
 
 ```bash
-python3 projects/RCA_EVIDENCE/rca_source_catalog.py          # first: downloads all RCA rows
-python3 projects/RCA_EVIDENCE/rca_matrisome_crosswalk.py
-python3 projects/RCA_EVIDENCE/rca_not_contradictions.py
-uv run python projects/RCA_EVIDENCE/rca_inventory.py --yaml projects/RCA_EVIDENCE/data/rca_reviewed_rows.yaml --list
+python3 projects/OMICS_EVIDENCE/rca/rca_source_catalog.py          # first: downloads all RCA rows
+python3 projects/OMICS_EVIDENCE/rca/rca_matrisome_crosswalk.py
+python3 projects/OMICS_EVIDENCE/rca/rca_not_contradictions.py
+uv run python projects/OMICS_EVIDENCE/rca/rca_inventory.py --yaml projects/OMICS_EVIDENCE/rca/data/rca_reviewed_rows.yaml --list
 ```
 
 Pitfalls the scripts handle:
@@ -266,7 +244,7 @@ neither the tissue nor the criterion. The cytosol NOT rows include:
 Most contradictions come from other high-throughput datasets (153 rows by HDA, mainly
 the PMID:28887381 membrane-oligomerization profiling and the PMID:25293756 complex
 proteome). GOA therefore contains direct conflicts between proteomes, unresolved and
-both curator-made. This links directly to the [NOT annotation](NOT_ANNOTATION_USAGE.md)
+both curator-made. This links directly to the [NOT annotation](../NOT_ANNOTATION_USAGE.md)
 project.
 
 ### Evidence code: HDA, and the Use C question
@@ -291,7 +269,7 @@ hypothesis-driven ones. Measured against it:
 ## Reviewer checklist for omics-derived RCA
 
 1. **Find the reference's use** (A, B or C) from the table above or in
-   [`rca_reference_catalog.yaml`](RCA_EVIDENCE/data/rca_reference_catalog.yaml).
+   [`rca_reference_catalog.yaml`](rca/data/rca_reference_catalog.yaml).
 2. **Use A, an ECM "structural constituent" term from a matrisome paper:** ask whether
    the protein is load-bearing. Collagens of the fibrillar and network types,
    perlecan, aggrecan, fibronectin, laminins and nidogens usually are. Matricellular

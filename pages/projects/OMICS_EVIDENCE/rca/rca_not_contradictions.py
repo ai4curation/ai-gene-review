@@ -16,7 +16,7 @@ Predicates:
 
 Output: data/rca_not_contradictions.tsv (one line per NOT row) and a summary on stdout.
 
-Usage:  python3 projects/RCA_EVIDENCE/rca_not_contradictions.py [--refresh]
+Usage:  python3 projects/OMICS_EVIDENCE/rca/rca_not_contradictions.py [--refresh]
 """
 
 from __future__ import annotations

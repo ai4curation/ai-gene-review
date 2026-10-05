@@ -6,9 +6,9 @@ experimental evidence used in manual assertion"), so counts use
 evidenceCodeUsage=descendants; an exact ECO:0000245 query reports BHF-UCL as 0.
 
 Counts are QuickGO `numberOfHits` (annotation rows) on the day the script is run; they
-move with every GOA release, so projects/RCA_EVIDENCE.md quotes them with a date.
+move with every GOA release, so projects/OMICS_EVIDENCE/rca.md quotes them with a date.
 
-Usage:  python3 projects/RCA_EVIDENCE/rca_quickgo_global.py
+Usage:  python3 projects/OMICS_EVIDENCE/rca/rca_quickgo_global.py
 """
 
 from __future__ import annotations
