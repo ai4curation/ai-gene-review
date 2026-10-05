@@ -152,7 +152,7 @@ Last updated: 2026-10-01
 - [x] `XENLA/pax3-a` (Q645N4) — Pax3/7; neural plate border specifier. Reviewed 2026-10-05: 25 GOA rows (17 ACCEPT, 3 non-core, 4 over-annotated, 1 MODIFY) + 1 NEW (GO:0001228)
 - [x] `XENLA/zic1` (O73689) — Zic1; border specifier (with Pax3), also preplacodal. Reviewed 2026-10-05: 33 GOA rows (25 ACCEPT, 6 non-core, 1 MODIFY, 1 over-annotated) + 2 NEW (GO:0001228, GO:0060788)
 - [ ] `human/MSX1` (P28360) — Msx (no reviewed *X. laevis* entry)
-- [ ] `human/TFAP2A` (P05549) — AP-2; early NPB/NC; amphioxus/lamprey AP-2
+- [x] `human/TFAP2A` (P05549) — AP-2α; spans border and NC layers. Reviewed 2026-10-05: 114 GOA rows (73 ACCEPT, 19 non-core, 10 REMOVE, 6 MODIFY, 6 over-annotated) + 1 NEW (GO:0014029, ISS)
 - [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (20 ACCEPT, 5 non-core, 3 MODIFY, 1 UNDECIDED) + 1 NEW (GO:0001227)
 - [x] `XENLA/gbx2` (Q91907) — Gbx2; border specifier, upstream of pax3/msx1. Reviewed 2026-10-05: 13 GOA rows (9 ACCEPT, 2 MODIFY, 2 non-core) + 4 NEW (GO:0014029, GO:0001227, GO:0030917, GO:0043049)
 
@@ -429,6 +429,30 @@ Cross-cutting findings:
   although its abstract does not mention crest (accepted, deferring to the
   curator). Only zic1.S has experimental rows. Zebrafish tfap2a sits at
   `GO:0014036`, which is relevant to the TFAP2A review.
+
+- **TFAP2A (human).** Spans two layers. In frog it is the earliest border
+  specifier: Wnt-induced, upstream of pax3, and alone enough to impose a
+  border-like pattern [PMID:21169220]. It then acts again in the crest as a
+  specifier [PMID:12511599]. In chick it opens chromatin at border enhancers
+  with TFAP2C, then at crest enhancers with TFAP2B [PMID:31848212]. Zebrafish
+  needs tfap2a and tfap2c together for crest induction [PMID:17258188]. Human
+  TFAP2A had no crest term at all, so NEW `GO:0014029` (ISS) was added; adding
+  `GO:0014036` as well was judged redundant. The comparator check was verified
+  in QuickGO: mouse Tfap2a (P34056) carries `GO:0014032` by IMP [PMID:8622766]
+  and zebrafish tfap2a carries `GO:0014036` (IMP). Protein binding rows:
+  - CITED2/EP300 rows changed to `GO:0001223` coactivator binding.
+  - NPM1 and KCTD1 rows changed to `GO:0001222` corepressor binding.
+  - Uninformative rows removed.
+  - The MYO6 IPI row (PMID:11447109) was removed as name confusion, verified
+    from the cached text: the paper's "AP-2" is the clathrin adaptor complex.
+
+  Hearing, retina, iron-response, ROS and retinoblastoma-overexpression rows
+  were marked over-annotated. Evolution: amphioxus AP-2 is expressed in
+  non-neural ectoderm only [PMID:12397104]. So, *unlike* Pax3/7 and Zic, AP-2's
+  border and crest roles are a vertebrate co-option, probably elaborated by the
+  TFAP2 paralog expansion. Open: genes that act in *both* layers, AP-2α the
+  clearest case, test whether the convention should let them carry
+  `GO:0014036` too.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
