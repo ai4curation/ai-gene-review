@@ -53,6 +53,11 @@ def build_supporting_text_validator(publications_dir: Optional[Path] = None):
     if reference_base_dir is not None and not Path(reference_base_dir).is_absolute():
         config_data["reference_base_dir"] = project_root / reference_base_dir
 
+    from ai_gene_review.validation.reference_cache_compat import (
+        install_reference_cache_compatibility,
+    )
+
+    install_reference_cache_compatibility()
     config = ReferenceValidationConfig(**config_data)
     return SupportingTextValidator(config), publications_dir
 
