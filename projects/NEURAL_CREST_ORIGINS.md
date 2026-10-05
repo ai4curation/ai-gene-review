@@ -168,10 +168,23 @@ Last updated: 2026-10-01
 - [ ] `CIOIN` Ci-Twist-like-2 (Q4H2N6) — the Twist used in the a9.49 reprogramming experiment [PMID:23135395]
 - [ ] Lamprey SoxE paralogs (TrEMBL; e.g. soxe2 A0A5P9Q4B1) — decide whether reviewable
 
+## Module
+
+- [x] `modules/neural_crest_gene_regulatory_network.yaml` (2026-10-05) — the
+  network as a five-part developmental module: border specification;
+  competence maintenance; crest fate specification (with a SoxE paralog
+  variant set); delamination and migration; cranial ectomesenchyme. Genes with
+  roles in several layers (AP-2α, Snai2, Twist1, Sox9) get one annoton per
+  role, so roles that are non-core at gene level become explicit parts. Twist1
+  appears twice: restraining Snai2 during specification, and driving cranial
+  ectomesenchyme. Regenerate it with
+  `uv run python projects/NEURAL_CREST_ORIGINS/build_nc_module.py`; evidence
+  quotes are copied from the validated gene reviews.
+
 ## Synthesis deliverables
 
 - [ ] Layer table: for each gene, its GRN layer, the outgroup expression data, and the GO process terms kept after review
-- [ ] Decide whether to propose a "neural plate border formation/specification" term
+- [ ] Decide whether to propose a "neural plate border formation/specification" term (drafted as a `proposed_terms` entry in the module's knowledge gaps)
 - [ ] Cross-check against GO-CAM (`gocams/index.tsv`) for NC models
 
 # NOTES
