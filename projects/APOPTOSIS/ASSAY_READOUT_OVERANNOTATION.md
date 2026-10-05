@@ -61,6 +61,8 @@ function.
 | mouse `Hdac1` | PMID:21093383 | `GO:0043066` negative regulation of apoptotic process | `KEEP_AS_NON_CORE` | HDAC1/2 epidermal loss derepresses p53 targets and increases apoptosis. That is closer than a pure endpoint assay because HDAC1 is a chromatin repressor of the p53 program, but the generic apoptosis parent is still a downstream non-core outcome. |
 | mouse `Casp8` | PMID:16183742 | `GO:0006915` apoptotic process, `GO:0097190` apoptotic signaling pathway, `GO:2001238` positive regulation of extrinsic apoptotic signaling pathway | `MARK_AS_OVER_ANNOTATED` | PIDD expression activated caspase-2 and effector caspases, but the paper explicitly failed to detect procaspase-8 processing in PIDD-expressing MEFs. The PIDD arm observed a RAIDD/caspase-2 cascade, so these generic Casp8 apoptosis annotations overstate that assay. |
 | yeast <gene species="yeast" symbol="COX20">COX20</gene> | PMID:31752220 | `GO:0043069` negative regulation of programmed cell death | `KEEP_AS_NON_CORE` | The protein is a respiratory-chain assembly factor. Its deletion promotes acetic-acid-dependent death, making programmed-cell-death resistance a downstream respiratory-fitness phenotype rather than its core role. |
+| mouse `Megf10` | PMID:27170117 | `GO:1902742` apoptotic process involved in development (IMP, MGI) | `REMOVE` | Clearance-defect variant (see below). Megf10-/- cerebellum has more TUNEL/cleaved-caspase-3 cells because astrocytes fail to engulf apoptotic cells; the paper's Figure 1 title reads the excess as "accumulation of apoptotic cells". Megf10 is the engulfment receptor and does none of the work of apoptosis. |
+| human `MEGF10` | GO_REF:0000024 | `GO:1902742` apoptotic process involved in development (ISS from mouse Megf10) | `REMOVE` | Orthology transfer of the mouse row above; the source annotation is bad, so the inferred one is too. |
 
 ## Pending Or Worth Rechecking
 
@@ -80,12 +82,38 @@ that block are:
 | mouse `Casp3` | PMID:12847083 | `GO:0006915` apoptotic process | `ACCEPT` | Likely valid but broad: top-level apoptosis is acceptable for the core effector caspase, though the APOPTOSIS project generally prefers execution-phase descendants where evidence permits. |
 | mouse `Hdac1` | PMID:21093383 | `GO:2001243` negative regulation of intrinsic apoptotic signaling pathway | `ACCEPT` | Boundary case: p53 deacetylation puts HDAC1 nearer to the apoptotic transcriptional program than a generic survival kinase, but it should be spot-checked against the broader HDAC1/HDAC2 double-knockout phenotype. |
 
+## Clearance-Defect Variant
+
+A related but distinct failure: the perturbed gene acts in the **engulfing**
+cell, not the dying one. Knocking out an apoptotic-cell receptor stops corpses
+from being cleared, they accumulate, and TUNEL or cleaved-caspase-3 counts go
+up. Read naively, that looks like "more apoptosis", and the gene gets an
+apoptotic-process term. The correct term is `GO:0043652` engulfment of apoptotic
+cell, whose usage note keeps it separate from processes in the dying cell.
+Orthology transfer (ISS/ISO) then copies the error to other species.
+
+The Megf10 pair above is the first case. Iram et al. 2016 (PMID:27170117)
+show impaired astrocyte phagocytosis ex vivo and gain of phagocytosis on Megf10
+expression, and the full text (PMC4863057) titles Figure 1 "Megf10 is necessary
+for apoptotic cell uptake by astrocytes, and its deficiency results in
+accumulation of apoptotic cells in the developing CB".
+
+**Detection idea (not yet run):** genes carrying both an apoptotic-cell
+clearance term (`GO:0043652`, `GO:0043277`) and an apoptotic-process term from
+the same PMID, or an apoptotic-process term on a known engulfment receptor or
+bridging molecule (MERTK, AXL, TIMD4, GAS6, MFGE8, ITGB5, ELMO1, DOCK1, GULP1,
+CD36, ADGRB1, STAB2, LRP1).
+
 ## Triage Rules
 
 - **Ask what entity performs the apoptotic step.** If a caspase, BAX/BAK pore,
   BCL2-family inhibitor, APAF1 apoptosome, FADD/DISC protein, or IAP is the
   acting entity, the apoptosis term may belong there. If the tested gene only
   changes whether those entities fire, default to non-core or over-annotated.
+- **Ask which cell the gene acts in.** If the gene works in the phagocyte
+  (an engulfment receptor, bridging ligand or engulfment signalling protein),
+  extra TUNEL/caspase-positive cells after loss of function usually mean
+  uncleared corpses, not extra death. Annotate clearance, not apoptosis.
 - **Treat late markers as convergent.** TUNEL, Annexin V, cleaved caspase-3,
   PARP cleavage, DEVDase reporters, mitochondrial depolarization, and viability
   assays are endpoints. They prove that the perturbation moved cells toward or

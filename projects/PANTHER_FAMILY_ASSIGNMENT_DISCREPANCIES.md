@@ -20,11 +20,12 @@ modules.
 
 ## Why this matters here
 
-- **Module grounding.** `FamilyDescriptor.term` ids are checked against
-  `interpro/panther/panther-members.tsv`, which mixes PANTHER classification
-  rows with UniProt fallback rows (`ai-gene-review refresh-panther-members`). A
-  curator who copies the family id from a UniProt entry may get an error, or
-  may get a family that differs from the one the validator checks against.
+- **Module grounding.** `FamilyDescriptor.term` ids are checked against the
+  PANTHER member index (`.cache/panther/panther-members-<release>.tsv`, built by
+  `just refresh-panther-members`), which uses PANTHER's own classification first
+  and falls back to UniProt. A curator who copies the family id from a UniProt
+  entry may therefore get a family that differs from the one the validator
+  checks against.
 - **IBA interpretation.** PAINT nodes (PTNs) belong to PANTHER's own trees. If
   the UniProt cross-reference names another family, the IBAs a protein carries
   appear to come from a family it does not belong to.
@@ -142,11 +143,13 @@ curl -s -H 'Accept: application/json' \
 - [x] MEGF10 gene review.
 - [ ] ced-1 gene review.
 - [ ] Check MEGF11 (possible case 2).
-- [ ] Scope a systematic scan: for every accession cited in `modules/`,
-      compare the UniProt `DR PANTHER` family with the PANTHER classification
-      row and flag disagreements. Tooling question: should
-      `refresh-panther-members` record the source of each row (classification
-      or UniProt fallback) so such disagreements are visible? Should
+- [ ] Triage the systematic scan. Since the member index moved to
+      `.cache/panther/`, `refresh-panther-members` records UniProt's family
+      next to PANTHER's (`uniprot_panther_family_sf` column) and reports
+      disagreements. A run on 2026-10-05 over every accession cited in
+      `modules/` and family reviews found 137 disagreements: 119 at the
+      family level and 18 at the subfamily level only. MEGF10 (Q96KG7) and
+      ced-1 (Q9XWD6) are among them. Remaining tooling question: should
       `fetch-gene` prefer the PANTHER classification over the UniProt
       cross-reference when choosing which family to cache?
 - [ ] Decide whether disagreements of this kind should be reported to
