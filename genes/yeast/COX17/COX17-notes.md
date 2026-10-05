@@ -42,3 +42,8 @@ Cached publications were sufficient for the existing rows:
 A 2024-2026 search found newer papers that mention COX17 in human disease or
 other copper-pathway contexts, plus a 2025 characterization of Trypanosoma Cox17,
 but no newer yeast COX17 primary study that changes these calls.
+
+Followed up on PR #3733 by changing the PMID:8078902-backed `GO:0005739
+mitochondrion` row from `KEEP_AS_NON_CORE` to `REMOVE`: the term is true for
+Cox17, but the row's COX10 reference makes the evidence chain invalid, and
+GO:0005739 is independently retained through the two HDA rows.
