@@ -1532,12 +1532,12 @@ render-all:
     uv run python -m ai_gene_review.render --all genes/
 
 # Assemble the already-rendered public site without changing the active Pages source.
-# This transitional artifact preserves the URLs currently served from main:/.
+# Preserve public URLs in the disposable artifact.
 stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
-# Build the complete disposable publication tree used by the Pages migration.
-build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-dashboard deploy-browser deploy-predictions-browser deploy-propagation-browser stage-pages
+# Build the complete disposable publication tree without Git blob limits.
+build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-dashboard (deploy-browser "pages") (deploy-predictions-browser "pages") (deploy-propagation-browser "pages") stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
@@ -1889,7 +1889,7 @@ pydantic:
 gen-all: gen-project pydantic
 
 # Deploy linkml-browser app for viewing exported annotations
-deploy-browser: export-annotations-json
+deploy-browser target=env_var_or_default("BROWSER_TARGET", "git"): export-annotations-json
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Deploying linkml-browser to app/ directory..."
@@ -1902,7 +1902,7 @@ deploy-browser: export-annotations-json
         --title "Gene Annotation Review Browser" \
         --description "Browse and filter gene annotation reviews" \
         --force
-    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js"
+    uv run python src/ai_gene_review/tools/minify_linkml_browser_data.py "$tmp_dir/data.js" --target "{{target}}"
     mkdir -p app
     cp "$tmp_dir/data.js" app/data.js
     cp "$tmp_dir/schema.js" app/schema.js
@@ -1911,8 +1911,8 @@ deploy-browser: export-annotations-json
     echo "To view: open app/index.html or run 'just serve-browser'"
 
 # Build the shared prediction-set and claim browser, including narrative reviews.
-deploy-predictions-browser:
-    uv run python -m ai_gene_review.tools.build_prediction_browser
+deploy-predictions-browser target=env_var_or_default("BROWSER_TARGET", "git"):
+    uv run python -m ai_gene_review.tools.build_prediction_browser --target "{{target}}"
 
 # Refresh the donor cache for the homology-propagation browser (network:
 # UniProt donor identities, QuickGO donor annotations, GO is_a/part_of closure).
@@ -1921,8 +1921,8 @@ refresh-propagation-sources *ARGS:
     uv run python -m ai_gene_review.tools.refresh_propagation_sources "$@"
 
 # Build the homology-propagation browser (app/propagation/) from cached files.
-deploy-propagation-browser:
-    uv run python -m ai_gene_review.tools.build_propagation_browser
+deploy-propagation-browser target=env_var_or_default("BROWSER_TARGET", "git"):
+    uv run python -m ai_gene_review.tools.build_propagation_browser --target "{{target}}"
 
 # Regenerate projects/HOMOLOGY_PROPAGATION/propagation-stats.md.
 propagation-stats:
