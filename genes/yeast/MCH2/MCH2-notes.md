@@ -183,8 +183,11 @@ the current GOA `WITH/FROM` values.
 
 Re-checked PANTHER PTHR11360 after the refresh. PTN002260587 still carries only the
 broad `GO:0022857` transmembrane transporter activity and `GO:0005886` plasma membrane
-IBDs inherited by MCH2, while the substrate-specific lactate, quinate, thyroid-hormone,
-and creatine transport functions are assigned on narrower descendant nodes outside the
-MCH2 branch. No new literature from the MCH2/Mch2/YKL221W search identified a substrate,
-localization, or single-mutant process for MCH2, so the action set remains unchanged:
-generic transport ACCEPT, plasma membrane KEEP_AS_NON_CORE, and ND roots REMOVE.
+IBDs inherited by MCH2, while the substrate-specific riboflavin (`GO:0032218` on
+`PTN000888807`), thyroid-hormone (`GO:0015349`/`GO:0070327` on `PTN002603511`), lactate
+(`GO:0015129`/`GO:0035879` on `PTN002603597` and `GO:0015650`/`GO:0035879` on
+`PTN002603626`), and creatine (`GO:0015881` on `PTN008516712`) transport functions are
+assigned on narrower descendant nodes outside the MCH2 branch. No new literature from
+the MCH2/Mch2/YKL221W search identified a substrate, localization, or single-mutant
+process for MCH2, so the action set remains unchanged: generic transport ACCEPT,
+plasma membrane KEEP_AS_NON_CORE, and ND roots REMOVE.
