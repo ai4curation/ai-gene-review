@@ -114,7 +114,7 @@ Mostly not, and when they do it is usually thin:
 - **IBA reaches proteins that may not exist.** Several PE5 ("uncertain") products
   of pseudogenes inherit full sets of phylogenetic annotations: `SNRPGP15`
   (13 IBA spliceosome terms), `PMCHL1`/`PMCHL2` (neuropeptide signalling),
-  `DPH3P1`, `GNG5B`. The Tier 3 audit confirmed this and removed 37 of 52 such rows
+  `DPH3P1`, `GNG5B`. The Tier 3 audit confirmed this and removed 35 of 52 such rows
   (see [Tier 3 results](#tier-3-results-2026-10-04) and [IBA_REVIEW](IBA_REVIEW.md)).
   `GNG5B` itself turned out to be HGNC protein-coding now.
 - **Where experimental annotation exists it is recent and good.** The best-annotated sORF
@@ -296,13 +296,13 @@ rows came out as: 145 ACCEPT, 24 KEEP_AS_NON_CORE, 70 MARK_AS_OVER_ANNOTATED, 32
 ## Tier 3 results (2026-10-04)
 
 Tier 3 audited 7 entries that the census flagged as uncertain products of pseudogene-like loci
-carrying function annotations. Across the 52 GOA rows: 37 REMOVE, 10 MARK_AS_OVER_ANNOTATED,
+carrying function annotations. Across the 52 GOA rows: 35 REMOVE, 12 MARK_AS_OVER_ANNOTATED,
 2 ACCEPT, 2 KEEP_AS_NON_CORE and 1 UNDECIDED. No NEW proposals. Each gene has a reproducible
 `-bioinformatics/` folder comparing it with its parent protein.
 
 | entry | HGNC locus type | product exists? | rows | outcome | how function reached it |
 |---|---|---|---:|---|---|
-| `SNRPGP15` | pseudogene | **no**: GRCh38 has a TGA stop at codon 75 (independently re-checked); the 16 MS peptides assigned to it are all shared with SNRPG | 18 | 18 REMOVE | IBA from PTHR10553 nodes (snRNP, spliceosome, P granule); InterPro2GO; ARBA |
+| `SNRPGP15` | pseudogene | **no**: GRCh38 has a TGA stop at codon 75 (independently re-checked); the 16 MS peptides assigned to it are all shared with SNRPG | 18 | 16 REMOVE, 2 over-annotated (RNA binding, whose residues are intact and which the PTHR10553 family review scopes family-wide) | IBA from PTHR10553 nodes (snRNP, spliceosome, P granule); InterPro2GO; ARBA |
 | `PMCHL1` | pseudogene | no: 5'-truncated PMCH copy with no signal peptide; antiserum found nothing in testis or brain; the authors propose a noncoding RNA | 7 | 7 REMOVE | IBA from PTN002636265 (seeded by rat Pmch); InterPro2GO prepro-MCH; GOC inference; NAS from a 1993 paper |
 | `PMCHL2` | pseudogene | no: hominid duplicate of PMCHL1, testis-only transcript | 6 | 6 REMOVE | same routes as PMCHL1 |
 | `DPH3P1` | pseudogene | probably not: processed pseudogene, no GTEx expression; residues intact, so the removal rests on locus status | 5 | 5 REMOVE | IBA from PTN000485452 (DPH3 orthologs); InterPro2GO |
@@ -446,6 +446,11 @@ Last updated: 2026-09-30
   - Falcon wording corrected.
   - MTLN cardiolipin ISS given its mouse source (Q8BT35).
   - The census median is now a true median.
+
+- PR #3680 CI (`validate-families`) flagged a family/gene disagreement: the PTHR10553 family review
+  scopes RNA binding (GO:0003723) family-wide, but the SNRPGP15 review removed it. Both RNA-binding
+  rows were changed to MARK_AS_OVER_ANNOTATED, because the Sm-site RNA-contact residues are intact
+  and only the product's existence is in doubt. Tier 3 totals updated (35 removed, 12 over-annotated).
 
 ## 2026-10-04
 
