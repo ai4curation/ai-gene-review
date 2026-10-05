@@ -802,3 +802,86 @@ def test_member_matching_only_uniprot_family_is_unresolved_not_failed():
     ]
     assert [r.outcome for r in results] == [Outcome.UNRESOLVED]
     assert "sources disagree" in results[0].message
+
+
+# --- site_source: STRUCTURE -------------------------------------------------
+#
+# Added with the STRUCTURE enum value, for sites whose positions are read from
+# ligand contacts in deposited coordinates rather than from a feature table.
+
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "src"
+    / "ai_gene_review"
+    / "schema"
+    / "family_review.yaml"
+)
+
+
+def test_site_source_enum_offers_structure():
+    """A site read off deposited coordinates has a source value of its own.
+
+    Without it, such sites have to be filed as LITERATURE, which conflates "a paper
+    says these residues matter" with "these are the residues contacting the ligand in
+    this PDB entry" -- the latter being recomputable from the entry and the cutoff.
+    """
+    schema = yaml.safe_load(SCHEMA_PATH.read_text())
+    values = schema["enums"]["SiteSourceEnum"]["permissible_values"]
+    assert "STRUCTURE" in values
+    assert values["STRUCTURE"]["description"].strip()
+
+
+@pytest.mark.parametrize(
+    "source",
+    ["UNIPROT_FEATURE", "MCSA", "LITERATURE", "STRUCTURE", "ALIGNMENT_INFERENCE"],
+)
+def test_every_site_source_validates_the_same_residues(source):
+    """site_source records provenance only; it must not change residue checking."""
+    review = _review([{"position": 3, "expected": ["C"]}])
+    review["residue_sites"][0]["site_source"] = source
+    results = check_anchor_residues(review, CACHE)
+    assert [r.outcome for r in results] == [Outcome.PASS]
+
+
+# --- atom-level contact provenance on a residue ----------------------------
+#
+# A STRUCTURE-sourced site should remember WHICH atom makes the contact. The
+# motivating case: NTCP E257 coordinates sodium through its carboxylate (OE2,
+# 2.76 A) in PDB 7ZYI, while in 9QZQ the nearest atom is the backbone O at
+# 2.94 A. Residue-level provenance cannot tell those apart, and a backbone-only
+# contact is sequence-independent -- the distinction that stops a substitution
+# being scored as loss of a ligand.
+
+
+def test_residue_carries_atom_level_contact_provenance():
+    schema = yaml.safe_load(SCHEMA_PATH.read_text())
+    residue_slots = schema["classes"]["Residue"]["slots"]
+    for slot in (
+        "contact_atom",
+        "contact_via",
+        "contact_distance",
+        "contact_ligand",
+        "contact_structure",
+    ):
+        assert slot in residue_slots, f"Residue should accept {slot}"
+        assert schema["slots"][slot].get("description")
+    assert set(schema["enums"]["ContactViaEnum"]["permissible_values"]) == {
+        "SIDE_CHAIN",
+        "MAIN_CHAIN",
+    }
+
+
+def test_atom_provenance_is_optional_and_does_not_affect_checking():
+    """Provenance is recorded, not enforced: residue checking is unchanged."""
+    plain = _review([{"position": 3, "expected": ["C"]}])
+    annotated = _review([{
+        "position": 3,
+        "expected": ["C"],
+        "contact_atom": "SG",
+        "contact_via": "SIDE_CHAIN",
+        "contact_distance": 2.76,
+        "contact_ligand": "NA",
+        "contact_structure": "PDB:7ZYI",
+    }])
+    assert [r.outcome for r in check_anchor_residues(plain, CACHE)] == [Outcome.PASS]
+    assert [r.outcome for r in check_anchor_residues(annotated, CACHE)] == [Outcome.PASS]
