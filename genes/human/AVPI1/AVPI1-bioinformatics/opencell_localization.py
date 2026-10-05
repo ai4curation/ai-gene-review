@@ -29,11 +29,14 @@ def main() -> None:
             print(f"{t}\tcell_line_id={m['cell_line_id']}\tterminus={m['target_terminus']}\tcategories={found[t]['annotation']['categories']}")
         else:
             print(f"{t}\tnot in OpenCell")
-    html = get(BASE + "/")
-    bundle = re.search(r'src="(/[^"]+-bundle\.js)"', html).group(1)
-    js = get(BASE + bundle)
-    for name, grade in re.findall(r'name:"([^"]+)",grade:"([123])"', js):
-        print(f"grade {grade} = {name}")
+    if found:
+        html = get(BASE + "/")
+        m = re.search(r'src="(/[^"]+-bundle\.js)"', html)
+        if m is None:
+            print("WARNING: OpenCell bundle not found; grade legend unavailable")
+        else:
+            for name, grade in re.findall(r'name:"([^"]+)",grade:"([123])"', get(BASE + m.group(1))):
+                print(f"grade {grade} = {name}")
     for t in TARGETS:
         for row in json.loads(get(HPA.format(g=t))):
             if row["Gene"] == t:
