@@ -65,8 +65,9 @@ annotation is descendant evidence used to place the ancestral IBD. The GO:000573
 cytoplasm row remains the sole over-annotated IBA, and the overreach is specifically the
 `is_active_in` qualifier rather than the PAINT node.
 
-GOA now also exposes HDA2-specific IntAct rows alongside the existing HDA3 rows:
-`Q06629` is Hda2 and `Q06623` is Hda3 in the current UniProt record. PMID:11287668
+The previous live GOA already exposed HDA2-specific IntAct rows alongside the HDA3
+rows, but the earlier review had omitted the Q06629/HDA2 rows. `Q06629` is Hda2
+and `Q06623` is Hda3 in the current UniProt record. PMID:11287668
 directly establishes both HDA1-HDA2/HDA3 complex membership and HDA1 self-interaction:
 the cached abstract states that HDA2 and HDA3 are in the HDA1 complex, that HDA1
 interacts with itself and with the HDA2-HDA3 subcomplex, and that mutations in any of
