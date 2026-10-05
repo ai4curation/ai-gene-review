@@ -65,3 +65,17 @@ while others can use both NAD+ and NADP+"].
 ### Outcome
 - Status set to COMPLETE. Two references added (PMID:34065948, PMID:35234135, both
   verified via PubMed) plus the bioinformatics RESULTS file.
+
+## 2026-10-01 re-review after GOA refresh
+
+GOA was refreshed from remote. Two previously reviewed UniProt-keyword (GO_REF:0000043) rows are no
+longer present in the current GOA snapshot and were marked `retired: true` (reviews kept for
+provenance; retirement is not a biological REMOVE judgment):
+
+- GO:0016491 oxidoreductase activity | IEA | GO_REF:0000043 (was MARK_AS_OVER_ANNOTATED)
+- GO:0019521 D-gluconate metabolic process | IEA | GO_REF:0000043 (was MARK_AS_OVER_ANNOTATED; the
+  "Gluconate utilization" keyword mapping no longer yields this GO row)
+
+New GOA row reviewed: GO:0016614 oxidoreductase activity, acting on CH-OH group of donors (IEA,
+ARBA:ARBA00028437) -> MARK_AS_OVER_ANNOTATED, a generic ancestor of the annotated GO:0004616.
+Other judgments unchanged.
