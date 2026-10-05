@@ -114,6 +114,9 @@ CD36, ADGRB1, STAB2, LRP1).
   (an engulfment receptor, bridging ligand or engulfment signalling protein),
   extra TUNEL/caspase-positive cells after loss of function usually mean
   uncleared corpses, not extra death. Annotate clearance, not apoptosis.
+  This also applies to rows qualified `acts_upstream_of_or_within`: when the
+  measured change is in clearance, the gene is neither upstream of nor within
+  the apoptotic process.
 - **Treat late markers as convergent.** TUNEL, Annexin V, cleaved caspase-3,
   PARP cleavage, DEVDase reporters, mitochondrial depolarization, and viability
   assays are endpoints. They prove that the perturbation moved cells toward or
