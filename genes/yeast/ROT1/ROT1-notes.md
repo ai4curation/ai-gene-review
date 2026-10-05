@@ -20,11 +20,13 @@ carries `NO_FAILURE_NON_CORE`.
 The unfolded-protein binding IBA needed a different PAINT review. GOA used to
 report the row with `PANTHER:PTN001999053`, but the 2026-10-01 live GOA no
 longer contains any `GO:0051082` row and the current `PTHR28090` PAINT cache no
-longer contains `GO:0051082` at that node; it retains ER membrane and de novo
-protein folding instead. The underlying biology remains Rot1's antiaggregation
-and ER folding-support activity [PMID:18508919], so the action stays `MODIFY`
-to `GO:0044183 protein folding chaperone` on a retired historical row, while
-the structured IBA root cause is `SOURCE_STALE_OR_MISSING`.
+longer contains `GO:0051082` at that node because the term is now formally
+obsolete. `projects/UNFOLDED_PROTEIN_BINDING.md` tracks go-ontology#30962 and
+records `GO:0044183 protein folding chaperone` as one of the obsoletion
+comment's two named replacements. The underlying biology remains Rot1's
+antiaggregation and ER folding-support activity [PMID:18508919], so the action
+stays `MODIFY` to `GO:0044183` on a retired historical row, while the structured
+IBA root cause is `SOURCE_STALE_OR_MISSING`.
 
 The newer-paper search found a 2025 peer-reviewed version of the 2024 UPR
 preprint discussed in the Falcon report. Bartolutti et al. used inducible Rot1
@@ -36,14 +38,16 @@ change any of the four IBA decisions.
 
 `just fetch-gene yeast ROT1 --force` refreshed the live source to 22 GOA rows.
 It backfilled qualifiers and current `WITH/FROM` entities on the 20 matching
-historical rows, seeded two SGD rows from PMID:18508919, and left three
-historical `GO:0051082 unfolded protein binding` rows unmatched by live GOA.
+historical rows, split the pre-existing PMID:18508919 `GO:0006458` IPI row via
+`SGD:S000006363` into its own review entry, seeded the newly live `GO:0044183`
+IPI row from the same paper, and left three formally obsolete historical
+`GO:0051082 unfolded protein binding` rows unmatched by live GOA.
 
-- Accepted the newly seeded `GO:0006458 'de novo' protein folding` IPI row for
-  the KRE6 client (`SGD:S000006363`).
+- Accepted the coverage-repaired `GO:0006458 'de novo' protein folding` IPI row
+  via `SGD:S000006363`.
 - Accepted the newly seeded `GO:0044183 protein folding chaperone` IPI row.
   This is the live SGD replacement for the older, generic `GO:0051082` molecular
-  function rows.
+  function rows after GO:0051082 obsoletion.
 - Marked the old `GO:0051082` IBA, IDA, and IMP rows `retired: true` rather
   than silently dropping their historical source assertions.
 
