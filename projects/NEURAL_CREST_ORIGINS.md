@@ -149,7 +149,7 @@ Last updated: 2026-10-01
 
 ## Tier 2 — Neural plate border specifiers (ancestral chordate layer)
 
-- [ ] `XENLA/pax3-a` (Q645N4) — Pax3/7; border expression conserved in amphioxus
+- [x] `XENLA/pax3-a` (Q645N4) — Pax3/7; neural plate border specifier. Reviewed 2026-10-05: 25 GOA rows (17 ACCEPT, 3 non-core, 4 over-annotated, 1 MODIFY) + 1 NEW (GO:0001228)
 - [ ] `XENLA/zic1` (O73689) — Zic1; border specifier together with Pax3
 - [ ] `human/MSX1` (P28360) — Msx (no reviewed *X. laevis* entry)
 - [ ] `human/TFAP2A` (P05549) — AP-2; early NPB/NC; amphioxus/lamprey AP-2
@@ -374,6 +374,26 @@ Cross-cutting findings:
   Vega-López 2015 [PMID:25997789]; it was marked UNDECIDED. Across the HES/HEY
   family only *Xenopus* hes4 carries any NC term, and Hes4 is absent from
   rodents. No outgroup (amphioxus/lamprey) border data on hairy were found.
+
+- **pax3-a.** Neural plate border specifier. It is expressed at the border
+  before foxd3 and slug, and Wnt/FGF induce it via Msx1. With Zic1 it directly
+  activates snai1/2, foxd3, twist1 and tfap2b, and the pair is necessary and
+  sufficient for crest determination [PMID:23509273]. NEW `GO:0001228`
+  activator activity (IDA, PMID:24360906): Pax3 binds the snail2 promoter and
+  its own upstream element, and activates both without new protein synthesis.
+  Both `GO:0014029` formation and `GO:0014034` commitment were kept as core, and
+  `GO:0014036` was not added. That fits the convention: border genes keep the
+  broad term, and the specification term goes to the Tier 1 specifiers. The
+  FGF and Wnt signalling rows were marked over-annotated: Pax3 is a target of
+  these signals, not a transducer [PMID:10433827]. Hatching gland development
+  (Pax3 alone, without Zic1) is non-core. The comparator check was verified
+  in QuickGO: experimental crest formation/commitment terms sit only on frog
+  Pax3, while mouse Pax3 (P24610) carries `GO:0001755` migration by IMP
+  [PMID:15384171]. So this is a coverage gap, not a convention. Evolution:
+  amphioxus expresses Pax3/7 at the border while most crest specifiers are
+  absent there [PMID:18562679]. Pax3 is an ancestral border gene; its link to
+  the specifiers is what vertebrates added. The experimental rows sit on
+  both homeologs identically, but the reagents did not distinguish them.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
