@@ -113,9 +113,8 @@ Planned but not run:
 
 **Done:** three-way set comparison (GOA, UniProt KW-0805, GREEKC); seven gene reviews; the PTHR10574 family review; a synthesized guideline document.
 
-**Files** in `projects/TRANSCRIPTION_FACTORS/`:
+**Files:** `projects/TRANSCRIPTION_FACTORS.md` (objective, workflow, tooling plan) and, in `projects/TRANSCRIPTION_FACTORS/`:
 
-- `README.md` — objective, workflow, tooling plan
 - `dbTF-discrepancy-analysis.md` — the set comparisons and evidence-code breakdown
 - `greekc-goa-comparison.md` · `PANTHER-IBA-error-report.md`
 - `tf-synthesized-guidelines.md` · `human-dbTF-list.tsv` and the diff files

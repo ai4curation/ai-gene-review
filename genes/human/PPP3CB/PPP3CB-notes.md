@@ -141,3 +141,45 @@ This study goes beyond the canonical MCOLN1/Ca2+ activation of calcineurin-TFEB 
 | PSD-95 Ser295 substrate | Yes — new specific substrate | Not PPP3CB-specific |
 | PD/psychosis biomarker | Yes — new clinical association | No annotation impact |
 | Ca2+/CaM activation, NFAT signaling | No — well established | Already annotated |
+
+## Deep research integration (falcon)
+
+Session 2026-10-03 (completion pass, ADAPTIVE_IMMUNITY project). The falcon report
+(`PPP3CB-deep-research-falcon.md`) was used as leads only; claims were traced to primary papers.
+
+**Adopted (verified in primary literature)**
+- CnA/CnB heterodimer, Ca2+/CaM-dependent Ser/Thr phosphatase, Fe/Zn catalytic centre
+  [PMID:26794871 "a heterodimer composed of a catalytic subunit A and an essential regulatory subunit B";
+  PMID:8524402 "the Zn/Fe-containing active site"].
+- Lysosome-damage recruitment of a LGALS3-SMURF1-PPP3CB-PPP3R1 assembly, SMURF1 relief of AID
+  autoinhibition, PPP3CB AID binding TFEB 444-476 [PMID:37909662 "SMURF1 controlled the phosphatase
+  activity of the PPP3CB by promoting the dissociation of its autoinhibitory domain (AID) from its
+  catalytic domain (CD)."; "Additionally, it revealed that the AID domain of PPP3CB interacted with
+  444–476 amino acids of TFEB"]. Used as support for the TFEB core function and the NEW
+  positive regulation of autophagy row; lysosomal membrane localization was NOT added (conditional,
+  recruitment depends on anchoring proteins) and is raised as a suggested question.
+
+**Rejected / not used**
+- K63-linked ubiquitination of PPP3CB at K146 by SMURF1: not found in the cached full text of
+  PMID:37909662 (no "K146" or "K63" string); not adopted.
+- "Ca2+/calmodulin displaces the AID": canonical model, but the CnA-beta structure reports that
+  calmodulin only reorients the AID [PMID:26794871 "calmodulin does not remove AID from the active
+  site, but only regulates the orientation of AID"]; description reworded accordingly.
+- EGFR-TKI resistance via calcineurin/KSR2/MEK/ERK (Gazzeri 2024), Parkinson plasma proteomics and
+  psychosis blood-expression biomarkers: overexpression or association data, no GO consequence.
+- PSD-95 S295 dephosphorylation: not isoform-resolved, not attributed to PPP3CB.
+
+**Report / notes errors**
+- The Xia et al. 2024 paper was cited in these notes as PMID:37846590; that PMID is an unrelated
+  editorial ("Antiplatelet treatment after PCI"). Correct PMID is 37909662 (resolved from
+  DOI 10.1080/15548627.2023.2267413 via Europe PMC).
+- Report gives no PMIDs and nothing on TCR signaling specifically.
+
+**Other changes this pass**
+- 8 GO:0005515 rows (IRF2, mouse IRAK1, RCAN1 x3, SPATA33, PPP3R1, NHE1) -> REMOVE; earlier
+  MODIFY -> GO:0030346 proposals withdrawn (that term describes the partner binding calcineurin).
+- GO:0070886 positive regulation of calcineurin-NFAT cascade (2 NAS) -> MODIFY to GO:0033173.
+- GO:0005509 calcium ion binding (IDA, PMID:8524402) -> MARK_AS_OVER_ANNOTATED (Ca2+ sites are on CnB).
+- T cell activation (TAS), protein dimerization, protein phosphatase 2B binding, hydrolase activity
+  -> KEEP_AS_NON_CORE.
+- Core functions split into NFAT phosphatase (calcineurin-NFAT cascade) and TFEB phosphatase.
