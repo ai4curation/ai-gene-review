@@ -108,3 +108,26 @@ chaperone binding` as the replacement. The two URA2 rows and the RPD3 row were
 changed to `REMOVE`: those physical associations are not being disputed, but
 generic `protein binding` does not add useful molecular-function information for
 CPR6.
+
+## 2026-10-05 PR #3738 review follow-up
+
+Addressed the reviewer's point that the four exact HSP82 rows should resolve to the
+partner-specific Hsp90 binding term. QuickGO verifies that `GO:0051879` is live
+(`Hsp90 protein binding`; molecular_function; unrestricted usage). It is not modeled
+as a child of `GO:0051087 protein-folding chaperone binding` -- its ancestors are
+`GO:0031072 heat shock protein binding`, `GO:0005515 protein binding`,
+`GO:0005488 binding`, and `GO:0003674 molecular_function` -- but it is still the
+precise term for these four rows because the current IntAct `WITH` entity is the
+Hsp90 isoform HSP82 (`UniProtKB:P02829`).
+
+The review now records this as a second core function, limited to `GO:0051879` rather
+than also elevating `GO:0044183 protein folding chaperone`: CPR6's Hsp90-binding role
+is directly supported by exact HSP82 rows and by the cached abstracts for
+`PMID:21170051` and `PMID:23396352`, while the stronger foldase-vs-holdase reading of
+Mayr et al. remains deferred to the existing suggested question.
+
+Also tightened the stale PAINT comments to cite the checked cache path
+(`interpro/panther/PTHR11071/PTHR11071-paint.tsv`), softened the top-level description
+from "HSP82/HSC82" to cytosolic Hsp90 because the refreshed exact rows name HSP82 but
+not HSC82, and grounded the RPD3 `REMOVE` row with the exact `PMID:8873448` abstract
+snippet that says Cpr6 and Cpr7 were identified through interaction with Rpd3.
