@@ -120,14 +120,17 @@ while the process term is not (changed to positive regulation).
 | worm ced-6 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
 | worm ced-6 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
 | worm ced-6 | `GO:0012501` programmed cell death | IMP | PMID:9635426 | `MARK_AS_OVER_ANNOTATED` (the phenotype is persistent corpses) |
+| worm ced-7 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-7 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
+| worm ced-7 | `GO:0012501` programmed cell death | IMP | PMID:9635425 | `MARK_AS_OVER_ANNOTATED` (the phenotype is persistent corpses) |
 
 **The background-genotype rows come in batches.** A QuickGO query by reference
 (2026-10-05) shows that the CED-8 paper (PMID:24225442) gave `GO:1902742`
 (IMP and IGI) to all seven engulfment genes it used as backgrounds: ced-1,
 ced-2, ced-5, ced-6, ced-7, ced-12 and ttr-52. The CSP-1 paper
 (PMID:23505386) gave `GO:1904747` to ced-1, ced-6 and ced-7 alongside the
-genuine death genes (ced-3, ced-4, egl-1, csp-1/2/3). ced-1 and ced-6 are
-reviewed. ced-2, ced-5, ced-7, ced-12 and ttr-52 carry the same rows and
+genuine death genes (ced-3, ced-4, egl-1, csp-1/2/3). ced-1, ced-6 and
+ced-7 are reviewed. ced-2, ced-5, ced-12 and ttr-52 carry the same rows and
 should get the same `MODIFY` to `GO:1904747`.
 
 **Detection idea (not yet run):** genes carrying both an apoptotic-cell
