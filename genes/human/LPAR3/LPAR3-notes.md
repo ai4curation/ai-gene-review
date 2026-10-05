@@ -74,3 +74,7 @@ assertions and supporting evidence are preserved.
 ## Recovery PR signaling follow-up (2026-09-22)
 
 Restore full forskolin context in the quotation, distinguish external full-text access from the abstract-only cache, and retain branch-specific LPAR2 core terms without redundant NEW assertions beneath existing GPCR signaling.
+
+## OpenScientist synapse/gene-expression follow-up (2026-10-05)
+
+The focused OpenScientist report resolved three previously undecided rows. The `GO:0007268` TAS row was removed because full PMID:10488122 covers LPAR3 cloning plus calcium/cAMP/PC12 assays, not chemical synaptic transmission. The dependent `GO:0045202` IEA row was removed because it is inferred from GO:0007268 rather than from independent synaptic localization. The `GO:0010467` IEA row was removed because the mouse Lpar3 source is a downstream uterine extracellular-matrix expression phenotype; an LPA receptor can act upstream of gene-expression regulation but does not do the work of gene-product production. Mouse axon branching from PMID:22465231 remains distinct supported neural biology.
