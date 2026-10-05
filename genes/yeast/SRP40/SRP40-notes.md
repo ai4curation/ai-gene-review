@@ -193,3 +193,12 @@ The 2024-2026 PubMed refresh did not find a newer direct S. cerevisiae SRP40
 functional paper than the Zhang et al. 2024 isobutanol overexpression study,
 and the 2026 mammalian Nopp140 IDR-condensate paper remains useful family
 context rather than direct yeast evidence.
+
+## 2026-10-05 post-merge review follow-up
+
+Post-merge Claude review caught that the intentional `GO:0042254 ribosome
+biogenesis` NEW proposal was encoded as `IGI` without `WITH` interactors. Because
+the supporting claim is the SRP40-depletion phenotype - box H/ACA snoRNAs are
+destabilized after SRP40 loss - rather than a curated interaction with `SHM2` or
+`ADE3`, the row now uses `IMP`, matching the RRB1 `GO:0042254` comparator for a
+similar chaperone-depletion phenotype.
