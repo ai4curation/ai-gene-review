@@ -1100,8 +1100,10 @@ def check_best_practices_rules(
                                 f"existing_annotations[{i}].review.supported_by[{j}].reference_id",
                             )
 
-    # Check for ACCEPT annotations with PMIDs lacking supported_by
-    # Only warn if the publication file exists (full text is available)
+    # Match quote validation's cache root and full-text availability semantics.
+    # Nested publication directories must not shadow the repository cache.
+    cache_dir = publications_dir if publications_dir is not None else get_project_root() / "publications"
+    # Check for ACCEPT annotations with PMIDs lacking supported_by.
     if "existing_annotations" in data and data["existing_annotations"]:
         for i, annotation in enumerate(data["existing_annotations"]):
             if isinstance(annotation, dict):
@@ -1111,33 +1113,9 @@ def check_best_practices_rules(
                     if ref_id and ref_id.startswith("PMID:"):
                         supported_by = review.get("supported_by", [])
                         if not supported_by:
-                            pmid_number = ref_id.replace("PMID:", "")
-                            # Use the same cache root as reference quote checks.
-                            # A nested publications/ directory beside a review
-                            # must not shadow the repository's publication cache.
-                            cache_dir = (
-                                publications_dir
-                                if publications_dir is not None
-                                else get_project_root() / "publications"
+                            full_text_available = cached_full_text_available(
+                                ref_id, cache_dir
                             )
-                            pub_file = cache_dir / f"PMID_{pmid_number}.md"
-
-                            full_text_available = False
-                            if pub_file.exists():
-                                import yaml as yaml_lib
-
-                                with open(pub_file, "r") as f:
-                                    content = f.read()
-                                    if content.startswith("---"):
-                                        end_marker = content.find("---", 3)
-                                        if end_marker != -1:
-                                            frontmatter = content[3:end_marker]
-                                            pub_data = yaml_lib.safe_load(
-                                                frontmatter
-                                            )
-                                            full_text_available = pub_data.get(
-                                                "full_text_available", False
-                                            )
 
                             if full_text_available:
                                 report.add_issue(

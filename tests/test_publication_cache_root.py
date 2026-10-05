@@ -57,13 +57,15 @@ def test_nested_cache_cannot_change_canonical_vs_staged_status(tmp_path, monkeyp
     monkeypatch.setattr(validator, "get_project_root", lambda: root)
     canonical = root / "genes/human/TEST/TEST-ai-review.yaml"
     staged = root / "tmp/proposal/TEST-ai-review.yaml"
+    reports = []
     for path in (canonical, staged):
         _write_review(path)
         status, report = compute_status_from_file(path)
         assert report.is_valid
-        assert report.warning_count == 1
         assert len(_missing_support(report)) == 1
         assert status == "DRAFT"
+        reports.append(report)
+    assert reports[0].issues == reports[1].issues
 
 
 @pytest.mark.parametrize("available", [True, False])
@@ -99,3 +101,47 @@ def test_default_cache_does_not_follow_working_directory(tmp_path, monkeypatch, 
     _write_review(path)
     report = validate_gene_review(path, check_goa=check_goa, check_supporting_text=False)
     assert len(_missing_support(report)) == 1
+
+
+@pytest.mark.parametrize("check_goa", [True, False])
+@pytest.mark.parametrize("metadata,available", [
+    ("content_type: full_text_xml", True),
+    ("content_type: full_text_html", True),
+    ("content_type: full_text_pdf", True),
+    ("content_type: url", True),
+    ("content_type: abstract_only", False),
+    ("content_type: unavailable", False),
+    ("full_text_available: false\ncontent_type: full_text_xml", False),
+    ("full_text_available: true\ncontent_type: abstract_only", True),
+    ("content_type: null", False),
+    ("- not a mapping", False),
+    ("", False),
+])
+def test_missing_support_uses_shared_cache_availability(
+    tmp_path, metadata, available, check_goa
+):
+    """The warning must follow the same availability metadata as quote checks."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    (cache / "PMID_987654321.md").write_text(f"---\n{metadata}\n---\n")
+    path = tmp_path / "TEST/TEST-ai-review.yaml"
+    _write_review(path)
+    report = validate_gene_review(
+        path, check_goa=check_goa, check_supporting_text=False,
+        publications_dir=cache,
+    )
+    assert len(_missing_support(report)) == int(available)
+
+
+def test_unterminated_cache_metadata_does_not_claim_full_text(tmp_path):
+    """A missing front-matter delimiter supplies no availability assertion."""
+    cache = tmp_path / "cache"
+    cache.mkdir()
+    (cache / "PMID_987654321.md").write_text("---\ncontent_type: full_text_xml\n")
+    path = tmp_path / "TEST/TEST-ai-review.yaml"
+    _write_review(path)
+    report = validate_gene_review(
+        path, check_goa=False, check_supporting_text=False,
+        publications_dir=cache,
+    )
+    assert not _missing_support(report)
