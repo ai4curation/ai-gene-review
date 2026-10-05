@@ -12,9 +12,12 @@ is a ``PTN`` node. Most rows carry one of three PAINT evidence codes:
 * ``IBD`` - Inferred from Biological aspect of Descendant: a function annotated
   *at* the node (seeded by experimental annotations on descendants). Source of
   positive IBAs.
-* ``IRD`` - Inferred from Reviewed Descendant: a function *lost / diverged* at
-  the node (a ``NOT`` annotation). Source of negated IBAs.
+* ``IRD`` - Inferred from Rapid Divergence (ECO:0000321): a function *diverged*
+  at the node (a ``NOT`` annotation). It only stops the ancestral IBD from
+  descending; it produces no leaf IBA, negated or otherwise
+  (see ``projects/IRD_EVIDENCE.md``).
 * ``IKR`` - Inferred from Key Residues: loss inferred from key-residue change.
+  Source of negated (``NOT``) leaf IBAs.
 
 A *loss* is therefore any ``NOT`` annotation: usually ``IRD``/``IKR``, but
 occasionally a rare ``NOT|IBD``. A small number of rows also carry plain ``IBA``
