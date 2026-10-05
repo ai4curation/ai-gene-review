@@ -15,3 +15,15 @@ Searches on 2026-09-28 for `Rrb1`, `RRB1`, `YMR131C`, `Saccharomyces`, and `yeas
 - The old `PMID:26112308` `GO:0051082` SGD row has been superseded by a live `PMID:26112308` row for `GO:0140309 unfolded protein holdase activity`. I accepted the new row and updated the stale predecessor's replacement to the same live holdase term.
 - Re-reading Pausch et al. 2015 and Pillet et al. 2022 supports a focused holdase/chaperone model for Rrb1: Pausch et al. showed that "both Rrb1 and Sqt1 interact with the very N-terminal residues of Rpl3 and Rpl10, respectively" and that these dedicated chaperones can recognize nascent ribosomal-protein clients co-translationally [PMID:26112308]; Pillet et al. showed the downstream RPL3/RPL4 mRNA-control consequences of whether nascent Rpl3 and Rpl4 are captured by Rrb1 and Acl4 [PMID:35357307].
 - A fresh 2026-10-01 web/PubMed search for exact yeast `RRB1` / `Rrb1` / `YMR131C` papers did not find a newer direct Saccharomyces Rrb1 study that changes the 60S/Rpl3 holdase interpretation.
+
+## 2026-10-05 reviewer follow-up
+
+- Changed the retired `GO:0006364 rRNA processing` row from `ACCEPT` to
+  `MODIFY` with `GO:0042273 ribosomal large subunit biogenesis` as its
+  replacement. Rrb1 is necessary for 25S rRNA maturation because failed Rpl3
+  chaperoning blocks early 60S assembly; the gene product itself does not
+  process rRNA.
+- Reworded both `GO:0140309 unfolded protein holdase activity` rationales to
+  rest on the carrier/delivery part of the term: Pausch et al. support Rrb1 as
+  a dedicated Rpl3 holdase that can promote nuclear import and/or assembly into
+  pre-ribosomal particles, not merely prevent aggregation.
