@@ -8,7 +8,7 @@ autolink_gene_symbols: false
 
 **Eight focused investigations: seven unresolved hypotheses and one supported comparison.** The first four are the strongest starting set for structure/sequence-driven investigation. The remaining four test mechanisms, process specificity and whether the review applies uncertainty proportionately.
 
-**All eight investigations have been submitted to OpenScientist; reports are pending.** Each investigation has one central claim. A result may support, refute, narrow or leave the claim unresolved.
+**All eight investigations were submitted to OpenScientist, and all eight reports have been downloaded.** As of 2026-10-01 the horse reviews of MTMR9, OLFML2A, SHLD2, SIRT5 and WDPCP cite them; CTDSP2, PTPRN2 and WEE1 do not yet. The [collector status](mammal-benchmark/openscientist-selection/run-status.json) marks each job `REPORT_DOWNLOADED`, and each report is at `genes/HORSE/<GENE>/<GENE>-hypotheses/horse40-*/openscientist.md`. The comparison described under "Comparing the results" has not been written up as a table. Each investigation has one central claim. A result may support, refute, narrow or leave the claim unresolved.
 
 [Horse40 reviews](horse40.md) · [Review findings](horse40-review-findings.md) · [Selection manifest and invocation arguments](mammal-benchmark/openscientist-selection/selection.json)
 

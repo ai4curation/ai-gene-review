@@ -14,3 +14,16 @@ activator. Upstream-activation tier of the module.
   (GO:1902584) response regulation. MARK_AS_OVER_ANNOTATED: post-embryonic/tissue/
   system development, endoreduplication & G1/S cell-cycle regulation, response to
   lipid/alcohol, mitotic cell cycle (IBA).
+
+## Re-review 2026-10-01 (GOA refresh)
+
+- Retired (no longer in the current GOA snapshot): the ARBA (GO_REF:0000117) IEA rows
+  GO:0009888 tissue development and GO:0030154 cell differentiation. Their reviews
+  (MARK_AS_OVER_ANNOTATED and KEEP_AS_NON_CORE) are kept as history; retirement records
+  disappearance from GOA, not a biological judgment.
+- New ARBA row GO:0048869 cellular developmental process (IEA, GO_REF:0000117) reviewed:
+  KEEP_AS_NON_CORE - a broad, correct-but-uninformative parent of conidium formation and
+  peridium differentiation; the specific conidiation/cleistothecium terms carry the core.
+- Added a propagation_review to the IBA GO:0000278 mitotic cell cycle row
+  (MARK_AS_OVER_ANNOTATED; PTN000067791 carries metazoan Myb cell-cycle roles not shown
+  for the fungal FlbD lineage), and a supporting quote for the nitrogen-starvation row.
