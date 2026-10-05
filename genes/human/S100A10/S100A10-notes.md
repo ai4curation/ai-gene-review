@@ -87,3 +87,17 @@ UniProt: P60903 (human). 97 aa S100 family protein. PANTHER PTHR11639:SF74.
 - Generic protein binding: MODIFY where the cited paper supports adaptor activity
   (AHNAK/SMARCA3 recruitment), transmembrane transporter binding (TRPM4), GPCR binding (CCR10);
   REMOVE otherwise (interactions captured by GO:1990665 complex membership).
+
+## Additional literature (from falcon deep research, verified against PubMed abstracts)
+- WPB exocytosis: [PMID:28450451 "We also identify the S100A10 subunit of the annexin A2 (AnxA2)-S100A10
+  protein complex as a novel Munc13-4 interactor and show that AnxA2-S100A10 participates in recruiting
+  Munc13-4 to WPB fusion sites."] -> supports positive regulation of exocytosis (non-core).
+- Lipid interaction: [PMID:34339205 "In the presence of a lipid monolayer, S100A10 preferentially interacts
+  with unsaturated phospholipids."] -> weak model-membrane binding; NOT lipid binding (PMID:23861394)
+  accepted with caveat.
+
+## Deep research outcome
+- `just deep-research-falcon human S100A10` succeeded (S100A10-deep-research-falcon.md), although it ran
+  past the wrapper's 600 s timeout before the file was written. The review was drafted from primary
+  literature first and then cross-checked against the falcon report; no conflicts with the annotation
+  decisions apart from the two additions above.
