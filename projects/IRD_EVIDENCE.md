@@ -37,6 +37,31 @@ annotations can be assigned to highly divergent sequences using the code IRD
 ([handbook](../docs/paper/literature/Gene_Ontology_Handbook_Full.md)). In practice PAINT
 records IRD as a NOT on a node, but that NOT is not propagated to the genes below the node.
 
+The GO wiki page on IRD
+([Inferred from Rapid Divergence (IRD)](https://wiki.geneontology.org/index.php/Inferred_from_Rapid_Divergence(IRD)))
+says that annotating with IRD implies a NOT. Its worked example is a gene-level TAIR
+row: CPuORF7 (`TAIR:AT2G31280`), `NOT` GO:0004674 protein serine/threonine kinase
+activity, IRD, with/from `TAIR:Communication:501741973` and `PANTHER:PTN000357291`.
+The wiki blocks automated access, so these details come from a search-engine
+summary of the page. They have not been read on the page itself, and should be
+checked by hand before they are quoted.
+
+The example no longer matches the data (checked 2026-10-05):
+
+- `PTN000357291` is absent from the current `IBD.gaf`. The only IRD on GO:0004674 in
+  the WNK-related family PTHR13902 sits on a Drosophila node (`PTN000357107`), and no
+  Arabidopsis protein is under it.
+- AT2G31280 now maps to UniProt Q58G01, bHLH155 (PTHR46196), a transcription factor.
+  CPuORF7 is a conserved upstream-ORF peptide named after that locus. Q58G01 has no
+  NOT annotation in GOA, and nothing for GO:0004674.
+- No current PAINT output contains a gene-level IRD row of this kind. The leaf file has
+  no IRD evidence at all, and no IRD-only NOT|IBA rows.
+
+So the documented example shows IRD the way it was once exported, as a NOT on a named
+gene. Current PAINT keeps IRD on internal nodes and exports nothing for the genes below.
+Before quoting the wiki example as current practice, it should be updated, or the
+change in practice should be confirmed with the PAINT team.
+
 ## Methods
 
 All code and data are in [IRD_EVIDENCE/](IRD_EVIDENCE/). Run the scripts in order
@@ -178,6 +203,8 @@ Updated 2026-10-05.
       reported when a gene is reviewed
 - [ ] Inspect the 14 stale overrides and the 20 fully re-annotated IRD rows
 - [ ] Report probable IRD errors to PAINT
+- [ ] Confirm with PAINT that gene-level IRD rows (the TAIR CPuORF7 wiki example) are
+      no longer exported, and ask for the wiki example to be updated
 
 # NOTES
 
