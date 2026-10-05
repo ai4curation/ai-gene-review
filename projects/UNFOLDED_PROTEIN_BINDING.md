@@ -442,8 +442,9 @@ apply consistently across species.
 > carry mixed actions across their rows, and the rule for collapsing those to one count is not
 > recorded here). The numbers above are therefore left as-is rather than adjusted by hand.
 > Anyone refreshing this table should first state the counting basis, then regenerate it from
-> the YAMLs. Note the four `OVER_ANNOTATED` → `MODIFY → GO:0044183` corrections to CNE1,
-> COX20, CPR6 and CPR7 below are not yet reflected in these counts.
+> the YAMLs. COX20 has now landed upstream: SGD replaced its obsolete `GO:0051082` row with
+> a direct `GO:0044183` IDA. The three `OVER_ANNOTATED` → `MODIFY → GO:0044183` corrections
+> to CNE1, CPR6 and CPR7 below are not yet reflected in these counts.
 
 ### Species breakdown
 
@@ -500,10 +501,14 @@ established:
    ATP-independent aggregation prevention, supporting the holdase NTR while keeping the
    chaperone activity distinct from RidA's core metabolic function.
 
-5. **Assembly factors (ATP10, PET100, COX20, SHY1, cia30)** — Single-client assembly
-   chaperones for respiratory chain complexes. These bind specific subunits during complex
-   assembly, not unfolded proteins generally. All MARK_AS_OVER_ANNOTATED. GO:0140777
-   (protein-containing complex stabilizing activity) proposed as replacement for some.
+5. **Assembly factors (ATP10, PET100, SHY1, cia30; COX20 as a revised exception)** —
+   Most single-client assembly chaperones for respiratory chain complexes bind specific
+   subunits during complex assembly, not unfolded proteins generally. Those cases remain
+   MARK_AS_OVER_ANNOTATED, with GO:0140777 (protein-containing complex stabilizing activity)
+   proposed as replacement for some. COX20 is now the exception: SGD retired its GO:0051082
+   row and replaced it with a direct GO:0044183 IDA for the same Cox2 membrane-bound
+   chaperone evidence, so the yeast review follows the curator-selected term while noting
+   that Cox20 is not a GroEL/TRiC-like general foldase.
 
 6. **IRE1 (yeast + T. reesei)** — UPR sensor kinase/endoribonuclease. Detects unfolded
    proteins in the ER lumen as a signaling sensor, not a chaperone. Cross-kingdom confirmation
@@ -586,7 +591,7 @@ established:
 | CDC37 | *S. cerevisiae* | P06101 | 23 | OVER_ANNOTATED | HSP90 co-chaperone |
 | CHS7 | *S. cerevisiae* | P38843 | 20 | MODIFY | Chitin synthase chaperone |
 | CNE1 | *S. cerevisiae* | P27825 | 17 | MODIFY → GO:0044183 | ER lectin |
-| COX20 | *S. cerevisiae* | Q04935 | 12 | MODIFY → GO:0044183 | Cox2p assembly factor |
+| COX20 | *S. cerevisiae* | Q04935 | 12 | MODIFY → GO:0044183 | Cox2p assembly factor; GOA now carries SGD's direct GO:0044183 IDA after retiring GO:0051082 |
 | CPR6 | *S. cerevisiae* | P53691 | 28 | MODIFY → GO:0044183 | HSP90 co-chaperone with direct chaperone-activity IDA (PMID:10942767); see [HSP90 co-chaperone carve-out](#decision-rules) |
 | CPR7 | *S. cerevisiae* | P47103 | 21 | MODIFY → GO:0044183 | HSP90 co-chaperone with direct chaperone-activity IDA (PMID:10942767); see [HSP90 co-chaperone carve-out](#decision-rules) |
 | EGD1 | *S. cerevisiae* | Q02642 | 19 | MODIFY → GO:0044183 | NAC complex |
