@@ -127,16 +127,12 @@ modules/nlr_signaling.yaml RIPK2 adaptor annoton (ripk2_ripk2_kinase_adaptor):
   for the NF-kB output, and with asserting the scaffold (GO:0035591) role as the
   module function. The module's position is consistent with (b)/(c) here.
 - Two minor points to report (NOT edit):
-  1. The annoton id/label "ripk2_ripk2_kinase_adaptor" / "RIPK2 kinase/adaptor"
-     and family preferred_term "RIPK2 kinase/adaptor family/ortholog group" still
-     foreground "kinase". Given the module deliberately asserts no kinase function,
-     "adaptor/scaffold" would be clearer, but this is cosmetic.
-  2. PANTHER family on the annoton is PTHR44329 "SERINE/THREONINE-PROTEIN KINASE
-     TNNI3K-RELATED". RIPK2's GOA IBA anchors (PTN001908418, PTN002892787,
-     PTN002892800) and its cytoplasm/NF-kB/innate IBAs come from PTHR24100-family
-     PAINT nodes in GOA; the module cites PTHR44329. I did not verify which PANTHER
-     family is correct for O43353 (out of scope; representative-member check needed).
-     Flag for module curators to confirm PTHR44329 vs the family carrying RIPK2's
-     actual PTN nodes. The deep research "contributes" wording for kinase activity
-     is superseded by PMID:30026309/29452636 (dispensable); the module's current
+  1. The annoton label has been relabelled "RIPK2 adaptor/scaffold" in the module (the annoton id
+     is unchanged to keep edges stable), since the module asserts no kinase function.
+  2. PANTHER family: the module's PTHR44329 grounding is correct. RIPK2's UniProt record gives
+     PTHR44329:SF9 (RECEPTOR-INTERACTING SERINE_THREONINE-PROTEIN KINASE 2), and its IBA anchors
+     PTN001908418, PTN002892787 and PTN002892800 are all PTHR44329 nodes
+     (interpro/panther/PTHR44329/PTHR44329-paint.tsv). An earlier draft of this note wrongly
+     placed those nodes in another family. The deep research "contributes" wording for kinase
+     activity is superseded by PMID:30026309/29452636 (dispensable); the module's current
      edit is the better-supported position.
