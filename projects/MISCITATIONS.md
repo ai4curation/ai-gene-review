@@ -91,7 +91,9 @@ human reading them, because no automated check was ever going to look.
 (Since 2026-10-06 `file:` and `Reactome:` quotes are checked against the local
 file and the `reactome/` cache by `validation/local_source_text.py`; quotes that
 already failed are listed in `conf/local_quote_baseline.yaml` and reported as
-warnings, new failures as errors. `GO_REF` and the other prefixes remain unchecked.)
+warnings, new failures as errors. This covers gene reviews only: `GO_REF` and the
+other prefixes remain unchecked, as do `file:`/`Reactome:` quotes in module and
+GO-CAM evidence.)
 
 So the flag is, and has to be, a **manual** judgment. `reference_review` is where it
 goes.

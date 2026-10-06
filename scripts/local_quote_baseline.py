@@ -14,7 +14,9 @@ Usage:
 
 ``--prune`` only ever removes entries. ``--write`` lists every current failure,
 including new ones, so use it only to (re)initialise the baseline, never to
-make a new failure pass.
+make a new failure pass. If a regenerated source (``just fetch-gene``, a re-run
+deep-research file) breaks quotes that used to pass, re-quote the new source;
+if a review file is renamed, move its key in the baseline unchanged.
 """
 
 from __future__ import annotations
@@ -56,7 +58,8 @@ def scan(path: Path) -> Tuple[str, List[Tuple[str, str, str, str]]]:
     """Return the baseline key and local-quote failures for one review."""
     data = yaml.load(path.read_text(encoding="utf-8"), Loader=Loader)
     key = baseline_key(path)
-    assert key is not None
+    if key is None:
+        raise ValueError(f"{path} is not under {PROJECT_ROOT}")
     return key, find_local_quote_failures(data)
 
 

@@ -109,10 +109,18 @@ def test_edited_source_is_reread(tmp_path):
     assert find_local_quote_failures(data, tmp_path) == []
 
 
-def test_baselined_failures_are_warnings():
-    """Every failing quote in a baselined review is reported, but only as a warning."""
+@pytest.mark.parametrize(
+    "review_path",
+    ["genes/human/TP53/TP53-ai-review.yaml", "genes/human/AATF/AATF-ai-review.yaml"],
+)
+def test_baselined_failures_are_warnings(review_path):
+    """Every failing quote in a baselined review is reported, but only as a warning.
+
+    If a pinned review's quotes are fixed and pruned, pin another baselined review.
+    """
     baseline = yaml.safe_load((PROJECT_ROOT / "conf" / "local_quote_baseline.yaml").read_text())
-    review = PROJECT_ROOT / sorted(baseline["entries"])[0]
+    assert review_path in baseline["entries"], f"{review_path} is no longer baselined"
+    review = PROJECT_ROOT / review_path
     report = validate_gene_review(review, check_goa=False, check_supporting_text=False)
     issues = [i for i in report.issues if i.check_type == CHECK_TYPE]
     assert issues, f"{review} is baselined but reported no local-quote failures"

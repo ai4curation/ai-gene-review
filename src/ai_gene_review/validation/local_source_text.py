@@ -24,6 +24,12 @@ Quotes that already failed when this check was introduced are listed in
 ``conf/local_quote_baseline.yaml`` and reported as warnings; any other failure
 is an error. Fix a listed quote, then drop it with
 ``just local-quote-baseline --prune``.
+
+The baseline only ever shrinks. When a regenerated source (``just fetch-gene``
+rewriting a ``-uniprot.txt``, a re-run deep-research file) no longer contains
+text that a review quotes, re-quote the new source in the same change; do not
+rebuild the baseline with ``--write`` to make the errors go away. When a review
+file is renamed, move its baseline key to the new path unchanged.
 """
 
 from __future__ import annotations
@@ -118,6 +124,9 @@ def source_renderings(path: Path, raw: str) -> Tuple[str, ...]:
     return tuple(renderings)
 
 
+# Bounded on purpose: a review's quotes are checked together, so a small cache
+# catches the repeats, and an unbounded one would hold every normalised UniProt
+# file in the corpus during validate-all.
 @lru_cache(maxsize=256)
 def _normalized_renderings(path: Path, mtime_ns: int, size: int) -> Tuple[str, ...]:
     """Normalised renderings of *path*, keyed on its mtime and size so edits are seen."""
@@ -126,7 +135,8 @@ def _normalized_renderings(path: Path, mtime_ns: int, size: int) -> Tuple[str, .
     return tuple(validator.normalize_text(r) for r in source_renderings(path, raw))
 
 
-def _validator():
+def _validator() -> Any:
+    """The shared supporting-text validator (memoised by its builder)."""
     validator, _ = build_supporting_text_validator()
     if validator is None:
         raise RuntimeError("linkml_reference_validator is not installed")
@@ -235,6 +245,16 @@ def _baseline(path: Path = BASELINE_PATH) -> Dict[str, Set[str]]:
     loaded = yaml.safe_load(path.read_text()) or {}
     entries = loaded.get("entries") or {}
     return {str(k): set(v or []) for k, v in entries.items()}
+
+
+def clear_local_quote_caches() -> None:
+    """Drop the memoised baseline and source renderings.
+
+    Call after rewriting ``conf/local_quote_baseline.yaml`` (e.g. a prune) and
+    re-validating in the same process; sources are already keyed on mtime/size.
+    """
+    _baseline.cache_clear()
+    _normalized_renderings.cache_clear()
 
 
 def baseline_key(yaml_file: Path, project_root: Path = PROJECT_ROOT) -> Optional[str]:
