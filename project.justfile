@@ -977,8 +977,27 @@ validate-references file:
 # silently certifying an unchecked quotation. Caches remain regenerable context.
 [group('QC')]
 validate-predictions +files:
-    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    just validate-prediction-terms {{files}}
     uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
+
+# Schema and term validation for prediction files. In a PredictionReview the only
+# bound slot is `taxon`, so the term phase checks the taxon id and label only;
+# predicted GO terms are deliberately unbound (a model may predict an obsolete or
+# nonexistent id, and the file must record it faithfully). Covers BioReason/GO-GPT
+# sidecars (*-sft-predictions.yaml, *-gogpt*-predictions.yaml), which have no
+# excerpts for validate-predictions' source-evidence check. Same blocking policy
+# as validate-all.
+[group('QC')]
+validate-prediction-terms +files:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}} || exit 1
+    out=$(uv run linkml-term-validator validate-data {{files}} -s {{schema_path}} -t PredictionReview --labels -c {{oak_config}} 2>&1)
+    rc=$?
+    echo "$out"
+    if [ $rc -ne 0 ] && echo "$out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate|Label mismatch for '?NCBITaxon:"; then
+        exit 1
+    fi
 
 # Reference validation for all gene review files
 [group('QC')]
@@ -1207,14 +1226,19 @@ validate-all:
     echo "Schema validation (batch)..."
     uv run linkml-validate --schema {{schema_path}} --target-class GeneReview genes/*/*/*-ai-review.yaml || exit_code=1
     echo ""
-    echo "Term validation (batch, errors block; label-mismatch warnings advisory)..."
-    # Enum-membership / not-found errors (❌ ERROR) are fatal; ontology label-mismatch
+    echo "Term validation (batch, errors block; GO label-mismatch warnings advisory)..."
+    # Enum-membership / not-found errors (❌ ERROR) are fatal; GO label-mismatch
     # warnings (⚠️ WARN) are advisory because GOA/release label lag is expected and
-    # bidirectional. Use just validate-terms for a fully strict (warnings-too) check.
+    # bidirectional. NCBITaxon label mismatches on the bound taxon slot are fatal:
+    # NCBITaxon labels have no such lag. Use just validate-terms for a fully strict check.
     term_out="$(uv run linkml-term-validator validate-data genes/*/*/*-ai-review.yaml -s {{schema_path}} -t GeneReview --labels -c {{oak_config}} 2>&1)" || true
     printf '%s\n' "$term_out"
-    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback"; then
+    # "Unable to validate" is LTV's ontology-service-unavailable message: every check was skipped.
+    if printf '%s\n' "$term_out" | grep -qE "❌[[:space:]]*ERROR|Traceback|Unable to validate"; then
         echo "✗ Term validation found errors (see above)"
+        exit_code=1
+    elif printf '%s\n' "$term_out" | grep -qE "Label mismatch for '?NCBITaxon:"; then
+        echo "✗ Term validation found taxon labels that do not match NCBITaxon (see above)"
         exit_code=1
     else
         echo "✓ Term validation: no errors (label warnings, if any, are advisory)"

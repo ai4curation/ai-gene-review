@@ -439,6 +439,24 @@ def _warning_lines(output: str) -> list[str]:
     ]
 
 
+# NCBITaxon label mismatches block, unlike GO label drift: the advisory policy
+# exists for GOA/GO release lag, which does not apply to NCBITaxon labels.
+BLOCKING_LABEL_MISMATCH = re.compile(r"Label mismatch for '?NCBITaxon:")
+
+
+def _split_blocking_label_warnings(warnings: list[str]) -> tuple[list[str], list[str]]:
+    """Split term-validator warnings into (blocking, advisory).
+
+    >>> _split_blocking_label_warnings([
+    ...     "WARN: Label mismatch for 'NCBITaxon:3055': expected 'X', got 'CHLRE'",
+    ...     "WARN: Label mismatch for 'GO:0140597': expected 'a', got 'b'",
+    ... ])
+    (["WARN: Label mismatch for 'NCBITaxon:3055': expected 'X', got 'CHLRE'"], ["WARN: Label mismatch for 'GO:0140597': expected 'a', got 'b'"])
+    """
+    blocking = [w for w in warnings if BLOCKING_LABEL_MISMATCH.search(w)]
+    return blocking, [w for w in warnings if not BLOCKING_LABEL_MISMATCH.search(w)]
+
+
 def _has_error_output(output: str) -> bool:
     # "❌ ERROR" is the linkml-term-validator error marker; the "❌ ... issue(s):"
     # header (also emitted for warning-only results) intentionally does not match.
@@ -512,6 +530,18 @@ def _run_validation_command(
             check_type=check_type,
         )
     else:
+        if check_type == "linkml_term_validator":
+            blocking, warnings = _split_blocking_label_warnings(warnings)
+            if blocking:
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    f"{phase}: taxon label does not match NCBITaxon: "
+                    f"{_summarize_validator_output(chr(10).join(blocking))}",
+                    path=str(report.file_path) if report.file_path else None,
+                    details=details,
+                    validation_category=validation_category,
+                    check_type=check_type,
+                )
         if warnings:
             report.add_issue(
                 ValidationSeverity.WARNING,
