@@ -66,11 +66,47 @@ associations with epigenetic, transcription, and repair factors [PMID:39855624].
 
 - Retained the IBA `GO:0035101 FACT complex` as a sound conserved complex
   inference from `PANTHER:PTN002492356`.
-- Switched the UniProt-keyword `GO:0006351 DNA-templated transcription` row to
-  `ACCEPT`, because the broad process is a core FACT role and is already used in
-  the transcription core function.
-- Changed all ten `GO:0005515 protein binding` IPI rows to `REMOVE`. The AP-MS
-  and targeted interaction evidence is real, but the bare parent term is
-  uninformative; the review already captures the biologically interpretable
-  interactions as FACT complex membership, nucleosome binding, histone binding,
-  replication, and transcription/chromatin organization.
+- Left the retired UniProt-keyword `GO:0006351 DNA-templated transcription`
+  row as `ACCEPT`, because the broad process was a real FACT role while the
+  keyword-derived row was live; the transcription core function is now anchored
+  to the more specific proposed `GO:0140673 transcription elongation-coupled
+  chromatin remodeling` term.
+- Changed the generic `GO:0005515 protein binding` IPI rows without a histone
+  WITH/FROM partner to `REMOVE` and the HHT2-backed rows to `MODIFY` toward
+  `GO:0042393 histone binding`. The AP-MS and targeted interaction evidence is
+  real, but the bare parent term is uninformative; the review captures the
+  interpretable interactions as FACT complex membership, nucleosome binding,
+  histone binding, replication, and transcription/chromatin organization.
+
+## 2026-10-01 current-GOA refresh
+
+- Forced `just fetch-gene yeast POB3 --force`. Current GOA has 33 rows. Ten rows were newly seeded from current IntAct, UniProt, ComplexPortal, and SGD data; nine older source rows disappeared from GOA and were retained as `retired: true`.
+- Re-fetched the PTHR45849 PAINT cache. Current PAINT still has the `GO:0035101` FACT-complex IBD at `PANTHER:PTN002492356` with `taxon:2759`; no IBA action change was needed, and the `propagation_review.source_entities` entry now traces that PTN node per the IBA campaign convention.
+- Reviewed newly seeded rows as one `REMOVE` and two `MODIFY` calls for generic `GO:0005515` protein-binding IntAct assertions and seven `ACCEPT` calls for current nucleus, chromosome, DNA-templated-replication, DNA replication-dependent chromatin assembly, and FACT-complex rows.
+- Preserved nine no-longer-live source rows as retired: four old UniProt-keyword IEAs, four old generic protein-binding IPI rows, and the old ComplexPortal `GO:1902275` regulation of chromatin organization row.
+- `just fetch-gene-pmids yeast POB3` confirmed all 28 PMID-backed references are cached, fetching full text for `PMID:32701054`. Web/PubMed searches for 2025-2026 `POB3`/`Pob3`/`FACT` found no newer direct yeast POB3 paper that changes the review beyond the already cached 2025 FACT TAP-MS paper.
+
+## 2026-10-03 PR review follow-up
+
+- Replaced the transcription core function's retired `GO:0006351
+  DNA-templated transcription` process with `GO:0140673 transcription
+  elongation-coupled chromatin remodeling`, and proposed a matching `NEW` row
+  supported by Mason/Struhl, Martin/Howe, and Pathak/Govind.
+- Removed the DNA-repair core function and demoted the retired UniProt-keyword
+  `GO:0006281 DNA repair` row to `KEEP_AS_NON_CORE`; UniProt links FACT to
+  repair-related chromatin transactions, but the cached yeast POB3 literature
+  does not directly establish a separable DNA-repair core function.
+- Changed the three `GO:0005515 protein binding` IPI rows with
+  `UniProtKB:P61830`/HHT2 in WITH/FROM to `MODIFY` with `GO:0042393 histone
+  binding` as the replacement, while leaving SPT16/RFA1 generic-binding rows as
+  `REMOVE`.
+- Clarified that the retired ComplexPortal `GO:1902275 regulation of chromatin
+  organization` row is now superseded by current `GO:0006335
+  DNA replication-dependent chromatin assembly`, and pointed its MODIFY
+  replacement at the current ComplexPortal term. Tightened the two broad SGD
+  `GO:0006325 chromatin organization` rows so they describe the generic
+  biochemical nucleosome-reorganization evidence rather than the narrower
+  transcription or replication contexts.
+- Updated the IBA sidecar totals and action-change ledger after the PR follow-up
+  so the audit records all 43 rows and the final `NEW`, `MODIFY`, and
+  `KEEP_AS_NON_CORE` calls.
