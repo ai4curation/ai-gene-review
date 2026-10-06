@@ -425,3 +425,13 @@ The older audit_claims.py H check requires now-removed historical count sentence
 ## Recovery PR signaling follow-up (2026-09-22)
 
 Keep the biological description independent of propagation-review workflow.
+
+## OpenScientist follow-up (2026-10-05)
+
+Evaluated `AGFG2-hypotheses/arfgap-catalysis-versus-trafficking-cofactor/openscientist.md`.
+The report independently reached the same narrow conclusion as the 2026-09-20 full-gene
+re-review: no direct purified AGFG2 assay establishes ARF GAP activity, but Arg75
+retention plus the active Asp-lacking GIT counterexample mean the InterPro-derived
+`GO:0005096 GTPase activator activity` row should stay `UNDECIDED`, not flip to
+`REMOVE`. The only YAML change needed is to cite that focused adjudication and replace
+the stale "will distinguish" wording on the row.

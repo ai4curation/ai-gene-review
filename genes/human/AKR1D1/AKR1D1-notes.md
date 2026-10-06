@@ -221,3 +221,92 @@ link targets. Exact current-main cache metadata and blob checks distinguish
 the six new source5 records from already published sources. These checks do
 not resolve the remaining Reactome cache gate or the source-specific biological
 uncertainties retained in the annotations.
+
+
+## 2026-10-03 — AKR1C1 association evidence
+
+The BioPlex 2.0 and 3.0 experimental annotations report AKR1D1 association with
+AKR1C1 (UniProt Q04828; PMID:28514442 and PMID:33961781). Both associations are
+retained as non-core. BioPlex 2.0 used tagged human proteins and affinity-purification
+mass spectrometry in HEK293T cells; BioPlex 3.0 profiled 293T and HCT116 networks.
+The latter study's general two-cell-line design does not establish that the exact
+AKR1D1 pair was observed in both lines.
+
+The experimental GOA partner and UniProt interaction record corroborate the pair.
+The assay framework was inspected, but the individual supplementary target records
+were not independently inspected. These data support co-complex association without
+establishing purified binary affinity, a native liver interaction or a specific
+effect on steroid metabolism. They provide no basis for assigning AKR1C1 catalytic
+activity to AKR1D1. The earlier removal rationale addressed only the annotation's
+breadth; it did not identify evidence contradicting the association.
+
+This correction changes only the two association judgments and their accompanying
+reference explanations. The steroid-reductase core, the remaining source-specific
+uncertainties and the missing R-HSA-193755 cache remain as previously recorded.
+The separately planned normal-fetch diagnostic has no outcome incorporated here.
+
+## 2026-10-03 — Reactome diagnostic outcome (20:16 UTC)
+
+The previously pending diagnostic is now complete. One invocation of the unchanged
+normal Reactome fetcher requested
+[R-HSA-193755](https://reactome.org/ContentService/data/query/R-HSA-193755)
+at 20:16:04–05 UTC. The request returned HTTP 404 without redirects. Its complete
+180-byte JSON response reports that the requested identifier was not found. The
+normal fetch failed and produced no Reactome cache file; no substitute source was
+created. The diagnostic is recorded in the
+[source run](https://github.com/ai4curation/ai-gene-review/actions/runs/37149949648).
+
+The indexed official [human reaction page](https://reactome.org/content/detail/R-HSA-193755)
+still describes AKR1D1-catalyzed reduction of the steroid double bond. Current direct
+access to that detail page returned 404, and access to its schema-browser page
+returned 403. These access results do not establish that the event was retired,
+renamed or biologically incorrect. The existing reaction-specific assessment is
+unchanged; the required normal-cache source remains unavailable and campaign
+completion remains pending. No further fetch was attempted.
+
+
+## 2026-10-03 — Association evidence and current source access
+
+The two experimental BioPlex annotations remain non-core associations with AKR1C1
+(Q04828). Each raw GOA row records IPI evidence and that partner; the UniProt IntAct
+entry lists the same pair with three experiments. The revised rationales put these
+positive observations first. Short, complete primary excerpts now anchor the
+coassociation result in PMID:28514442 and the AP-MS interaction-network context in
+PMID:33961781. Neither excerpt is presented as a read of the exact pair's
+supplementary record. That record remains uninspected, and no observation in both
+cell lines, direct binary affinity, native liver association or specific steroid
+metabolic consequence is asserted.
+
+The [ClinGen curation instructions](https://github.com/ai4curation/ai-gene-review/blob/main/projects/CLINGEN_MENDELIAN.md#curation-instructions)
+record the user's explicit direction to retain supported generic binding as
+KEEP_AS_NON_CORE when an evidence-backed finer term is unavailable. That instruction
+takes precedence for this task over the annotation-reviewer skill's general
+informational-exclusion recommendation. It does not turn an uninspected target
+table into verified evidence or authorize a new molecular activity. The two
+decisions rely on the experimental curator records and the corroborating UniProt
+association, with the primary assay context and access limits stated above.
+
+The Reactome reference assessment is now UNVERIFIED. Earlier wording about the
+reaction came from an indexed official snippet, not successful access to the
+current complete event. The already recorded single normal-fetch diagnostic
+returned HTTP 404 and no cache; direct page and schema-browser access returned 404
+and 403. No identifier replacement or retirement is established. The normal-cache
+source gate remains unresolved, and this follow-up does not complete AKR1D1 in the
+campaign. No additional fetch was performed. All annotation actions, machine
+source fields, products and the steroid-reductase core remain unchanged.
+
+## 2026-10-05 - OpenScientist redox follow-up
+
+Evaluated `AKR1D1-hypotheses/aldose-monooxygenase-and-alcohol-reduction-specificity/openscientist.md`.
+The focused report usefully highlighted residue-level specialization and AKR
+reaction-class constraints, but its broad removal posture still goes beyond
+directly checked target evidence for weak side activities.
+
+PMID:22437839 was fetched and registered as target-specific support that the
+Glu120/His120 switch distinguishes AKR1D1 5-beta-reductase chemistry from the
+AKR1C hydroxysteroid dehydrogenase reaction geometry. GO:0047086 was removed
+because AKR1D1 transfers hydride to the C4-C5 double bond and offers no
+oxygen-insertion mechanism for ketosteroid monooxygenase activity, even though
+the exact AKR1C1/C2/C3 donor assays from PMID:21232532 still need full-text
+review. Ancestral aldose reduction remains unresolved because purified AKR1D1
+negative aldose assays were not located.
