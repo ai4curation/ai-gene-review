@@ -97,3 +97,35 @@ Note: UniProt DR lines also list GO:0009881 (photoreceptor activity), GO:0009908
 development), GO:0048511 (rhythmic process) as KW-derived, but these are NOT in the GOA TSV /
 review stub, so they are not reviewed as existing_annotations. Photoreceptor activity
 (GO:0009881) is captured in core_functions as the molecular function.
+
+## 2026-10-06: Accession issue (Q94BT6 vs F4KAN2)
+
+This review, and its uniprot/goa files, is grounded on **F4KAN2** (F4KAN2_ARATH, unreviewed
+TrEMBL, 626 aa, "Galactose oxidase/kelch repeat superfamily protein"). F4KAN2 is an alternative
+gene model of At5g57360 (TAIR: ZTL). The canonical Swiss-Prot entry for ZEITLUPE is **Q94BT6**
+(ADO1_ARATH, reviewed, 609 aa; GN ADO1, synonyms FKL2, LKP1, ZTL; At5g57360). Checked on UniProt
+REST, 2026-10-06.
+
+Consequences:
+- GOA for F4KAN2 has only 5 electronic rows. GOA for Q94BT6 has about 38 distinct rows
+  (QuickGO, 2026-10-06), including the experimental TAIR/UniProt annotations behind the
+  photoreceptor, SCF-ZTL and TOC1/PRR5-degradation biology. Those rows are currently not
+  reviewed at all; they appear in this file only as reviewer NEW proposals.
+- Recommendation: re-ground the review on Q94BT6 (`just fetch-gene ARATH Q94BT6 --alias ZTL`,
+  keeping the folder name ZTL), carry the existing reviews and core_functions over, and review
+  the experimental Q94BT6 GOA rows. An attempt to do this in the module-curation session was
+  blocked by the session's permission policy, because it requires replacing the existing
+  uniprot/goa/review files. It is left for a follow-up with explicit approval.
+- Until then, modules ground ZTL as F4KAN2 (`plant_circadian_clock_oscillator`, photoperiodic
+  flowering) so that they stay consistent with this review.
+
+## 2026-10-06: Nucleus IEA resolved as KEEP_AS_NON_CORE
+The Swiss-Prot ZEITLUPE entry Q94BT6 (UniProt REST, checked 2026-10-06) gives SUBCELLULAR
+LOCATION "Nucleus. Cytoplasm. Note=Nuclear after 9 hours of illumination (afternoon of long
+days). Cytoplasmic when plant have been subsequently grown 16 hours in light and 5 hours in dark
+(early morning of long days)", citing PubMed 10998191, 17704763 and 21518052. So ZTL has a
+time-of-day-dependent nuclear pool, as well as its predominant cytosolic localization, where it
+binds GI [PMID:24004949 "the levels of ZTL, a cytosolic protein, help govern the abundance and
+distribution of GI in the cytosol and nucleus"]. Its substrates TOC1 and PRR5 are nuclear clock
+proteins. The nucleus row is therefore correct but not the principal site of ZTL activity:
+KEEP_AS_NON_CORE. Cytoplasm stays the core location, and is proposed as a NEW row.
