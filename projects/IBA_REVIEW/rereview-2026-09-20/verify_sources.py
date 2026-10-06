@@ -35,6 +35,13 @@ def make_signature(term_id, term_label, evidence_type, original_reference_id, qu
 # Explicit current-GOA source refreshes. Keep these as narrow signature-level
 # exceptions so unrelated source loss still fails loudly.
 EXPECTED_RETIREMENTS = {
+    "genes/yeast/APJ1/APJ1-ai-review.yaml": Counter([
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0008270", "zinc ion binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0046872", "metal ion binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000002"),
+        make_signature("GO:0051082", "unfolded protein binding", "IMP", "PMID:11923285"),
+    ]),
     "genes/yeast/CPS1/CPS1-ai-review.yaml": Counter([
         make_signature(
             "GO:0051603", "proteolysis involved in protein catabolic process",
@@ -95,6 +102,21 @@ EXPECTED_RETIREMENTS = {
 }
 
 
+EXPECTED_LABEL_REFRESHES = {
+    "genes/yeast/NAP1/NAP1-ai-review.yaml": Counter([
+        (
+            make_signature(
+                "GO:0140597", "protein carrier chaperone", "IDA", "PMID:31062022"
+            ),
+            make_signature(
+                "GO:0140597", "protein carrier activity", "IDA", "PMID:31062022",
+                qualifier="enables",
+            ),
+        ),
+    ]),
+}
+
+
 def source_assertions(review):
     return Counter(signature(a) for a in review.get("existing_annotations") or []
                    if (a.get("review") or {}).get("action") != "NEW")
@@ -125,6 +147,18 @@ def qualifier_backfill_matches(missing, current):
         if matched:
             matches[encoded] = matched
             current_by_unqualified[encoded] -= matched
+    return matches
+
+
+def label_refresh_matches(path, missing, current):
+    """Find explicitly registered same-term label refreshes."""
+    expected = EXPECTED_LABEL_REFRESHES.get(path, Counter())
+    matches = Counter()
+    for pair, count in expected.items():
+        before, after = pair
+        matched = min(count, missing[before], current[after])
+        if matched:
+            matches[before] = matched
     return matches
 
 
@@ -227,6 +261,10 @@ def main():
         if qualifier_backfills:
             result["qualifier_backfills"] = dict(qualifier_backfills)
             missing -= qualifier_backfills
+        label_refreshes = label_refresh_matches(path, missing, current)
+        if label_refreshes:
+            result["label_refreshes"] = dict(label_refreshes)
+            missing -= label_refreshes
         retirements = EXPECTED_RETIREMENTS.get(path, Counter())
         applied = missing & retirements
         unexpected_retirements = retirements - missing
