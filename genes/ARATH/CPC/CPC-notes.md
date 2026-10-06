@@ -18,3 +18,6 @@
 - cell differentiation (IBA/TAS) -> MODIFY to plant epidermal cell differentiation.
 - NEW: GO:1900032 regulation of trichome patterning (IMP, PMID:12356720); comparator TRY carries this term by IMP in GOA.
 - Falcon deep research generated (CPC-deep-research-falcon.md).
+
+## 2026-10-06 PR #4395 review follow-up
+- PMID:15361138 protein-binding row: supporting_text now quotes the abstract's statement that the conserved R3 signature is "the structural basis for interaction between MYB and R/B-like BHLH proteins" (was a motif tally naming no protein). Cache is abstract-only; per-pair data deferred to the curator.

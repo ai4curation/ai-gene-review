@@ -19,3 +19,7 @@
 - GO:0010154 fruit development cites PMID:3793867, a Campylobacter paper (same erroneous PMID used on a GL1 row) -> MARK_AS_OVER_ANNOTATED (reference_review WRONG_IDENTIFIER); only fruit-related biology is R3 MYB suppression of silique trichomes [PMID:18644155]; no replacement guessed.
 - Core: GO:0140416 + GO:1900032 regulation of trichome patterning (matching the GOA IMP convention).
 - Falcon deep research generated (TRY-deep-research-falcon.md).
+
+## 2026-10-06 PR #4395 review follow-up
+- GO:0010154 fruit development (PMID:3793867, wrong identifier) changed to UNDECIDED, matching the existing GL1 decision for the same erroneous PMID: a citation error does not refute a phenotype and the intended source cannot be recovered. Silique trichome suppression [PMID:18644155] recorded in the reason as epidermal patterning for whoever recovers the source.
+- Added a propagation_review (PTN000067606) to the GO:0000976 IBA row so it reads alongside the CPC row on the same node.
