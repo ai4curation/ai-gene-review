@@ -69,3 +69,9 @@ The Falcon deep-research report (`GID1A-deep-research-falcon.md`) corroborates a
 - **New mechanistic detail (2025)**: GA–GID1A binding to the DELLA GRAS region can compete with IDD transcription-factor binding (Y3H attenuation of IDD1–RGA), extending DELLA neutralization beyond degradation. Captured as context; no new GO ID added.
 
 No `UNDECIDED` annotations were present, so none required resolution. No new GO annotation could be added with a verifiable GOA/UniProt ID (a dedicated "gibberellin receptor activity" MF still does not exist in GO and remains in `proposed_new_terms`). The report does not contradict the negated `response to gibberellin` annotation (redundancy masking) or the hypoxia HEP over-annotation call. New references: Shani et al. 2024 (Plant Physiol), Alabadí & Sun 2025 (Annu Rev Plant Biol), Dahal et al. 2025 (PNAS) — cited within the falcon report rather than added as standalone PMIDs.
+
+## 2026-10-06 re-review (consistency with GID1B/GID1C)
+- Fixed the PMID:18827182 IGI row: the WITH locus AT4G02780 is GA1 (ent-copalyl diphosphate synthase, ga1-3 background), not SLY1.
+- Fixed the PMID:17194763 protein-binding summary: Q9STX3 is SLY1/GID2, not RGL2.
+- The NOT|involved_in response to gibberellin row (IGI with GID1B, PMID:24961590) is now REMOVE, as on GID1B/GID1C. It is contradicted by receptor biochemistry [PMID:16709201 "These results demonstrate that all three AtGID1s functioned as GA receptors in Arabidopsis"] and by the same paper [PMID:24961590 "the gid1a gid1c pistils displayed little or no GA response"].
+- All GO:0005515 rows changed from KEEP_AS_NON_CORE to REMOVE under the protein-binding policy. No informative MF exists for receptor-DELLA binding, and being a GARU substrate is not a GID1A molecular function.
