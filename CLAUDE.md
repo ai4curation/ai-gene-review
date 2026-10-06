@@ -516,6 +516,24 @@ just backfill-isoforms-organism human  # all genes in organism
 
 See `docs/isoform_tracking.md` for full documentation and `projects/ISOFORMS.md` for genes with notable isoform-specific functions.
 
+### Alternative-ORF peptides: one folder per UniProt accession
+
+Isoforms and polyprotein cleavage products share the host's UniProt accession, so they
+stay in the host folder: use `isoform:` on annotations and `functional_isoforms`
+(`SPLICE_VARIANT`, or `CLEAVAGE_PRODUCT` mapped to `PRO_` chains, as in `POMC`).
+A peptide from an alternative ORF, a uORF or an overlapping frame is a **separate UniProt
+entry** with its own GOA rows. UniProt nevertheless often files it under the host
+gene's symbol (for example, L0R8F8 AltMIEF1 is gene `MIEF1`). Such a peptide gets its own folder:
+
+- It has its own HGNC symbol (`ASDURF`, `MLDHR`, `NBDY`): use the symbol as usual.
+- It shares the host symbol: use `genes/<org>/<HOST>__<ACC>/` with `id: <ACC>` and
+  `gene_symbol: <HOST>`, fetched with `just fetch-gene human <ACC> --alias <HOST>__<ACC>`
+  (the stub then takes `gene_symbol` from UniProt). The double underscore follows the
+  `genes/PSEPK/aroE__Q88K85` paralog precedent and never collides with hyphenated symbols.
+- It has no gene symbol at all: use the accession as the folder name.
+
+Never model such a peptide as a `functional_isoform` of its host. See `projects/MICROPROTEINS.md`.
+
 ## Bioinformatics analyses
 
 In some cases, it may be useful to do additional bioinformatics analyses. To validate gene function. Here are some guidelines:
@@ -579,7 +597,10 @@ other computational method that produces GO or EC predictions.
 
 ## Page rendering and deployment
 
-The site is deployed from `main` branch at root via GitHub Pages to https://ai4curation.io/ai-gene-review/.
+With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, the site is built from `main` and
+deployed as an Actions artifact via GitHub Pages to
+https://ai4curation.io/ai-gene-review/. In this mode, generated files in Git are
+not the live site. The Pages source setting must separately be `GitHub Actions`.
 
 ### Gene review HTML
 ```bash
@@ -700,19 +721,39 @@ driven:
 ### Browser app
 ```bash
 just deploy-browser    # update data.js + index.html for the interactive browser
+just deploy-browser pages  # disposable artifact build, without Git's blob cap
 ```
 Output: `app/`
 
 ### CI automation
 The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
-through GitHub Actions. It renders everything and creates a PR. Its publication
-schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
-and by the weekly full validation workflow. Pages deploy directly from main — no
-gh-pages branch needed for the static content.
+through GitHub Actions. With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, it renders,
+stages, compresses, checks and uploads the site, then deploys the artifact. It
+skips generated-file commits and PRs entirely; publication needs no App token,
+review or merge. Disabling that variable retains the legacy regeneration PR code
+path, but it cannot build a browser payload at or above Git's 100 MiB blob limit.
+The current corpus already exceeds that limit: flag-off is not a working rollback.
+It also does not change the repository's Pages source setting.
+Its publication schedule is exempt from agent cron profiles. Gene reviews are
+validated in PR CI and by the weekly full validation workflow.
+
+`just build-pages` builds the disposable artifact locally. All three browser
+builders accept the `pages` target (or `BROWSER_TARGET=pages`); their default
+`git` target retains GitHub's 100 MiB Git blob limit. The artifact target has no
+per-file Git limit: staging compresses the main annotation browser data and checks
+total site and tar sizes. Prediction and propagation browser payloads are currently
+staged uncompressed; these checks do not guarantee browser memory or load-time
+performance. Never commit generated output just because the artifact build passed.
+
+GitHub Pages officially supports a 1 GB site. Our existing temporary policy
+allows larger deployments below the 10 GB absolute artifact cutoff; that is not
+a hosting-capacity guarantee. A completed upload can be redeployed without
+rendering via `deploy-existing-pages.yaml`, while the artifact is retained.
 
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
+* Use YAML, not TSV, for any structured data file you author (project tables, proposal lists, curated records). TSVs produced by deterministic pipelines (e.g. `GENE-goa.tsv`, PAINT `*-paint.tsv`) are inputs and stay as they are.
 * For files `<GENE>-notes.md`, use literature deep search, and always record provenance for assertions, e.g `[PMID:12345 "<supporting text>"]`
 
 ## Support code

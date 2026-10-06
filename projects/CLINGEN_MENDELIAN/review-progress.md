@@ -66,7 +66,7 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
-## Campaign status — completion evidence through 2026-10-04 23:39:16 UTC
+## Campaign status — completion evidence through 2026-10-05 01:02:15 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
 |---|---|---|---|---|---|
@@ -308,6 +308,9 @@ are therefore expected; existing human reviews still link normally.
 | CBL | Definitive | Existing review | PR #4210 merged at 2026-10-04T22:36:18Z; final-head approval and required CI success verified; 7 changed and 162 reused scoped paths verified. Biological DRAFT retains 305 source assertions plus 1 historical NEW proposal, 16 UNDECIDED assessments and 3 core functions. Campaign completion preserves the merged scientific evidence limits. The retained NEW-labelled FGFR-regulation row predates this campaign revision. | `cmungall/clingen-cbl-whole-review` | [#4210](https://github.com/ai4curation/ai-gene-review/pull/4210) |
 | CCDC39 | Definitive | INITIALIZED normal seed | PR #4228 merged at 2026-10-04T23:22:31Z; final-head approval and required CI success verified; 12 changed and 2 reused scoped paths verified. Biological COMPLETE retains 30 source assertions plus 1 NEW molecular-function assertion, 5 UNDECIDED assessments and 1 core function. COMPLETE is the normal validation status and does not resolve its five UNDECIDED assessments. | `cmungall/clingen-ccdc39` | [#4228](https://github.com/ai4curation/ai-gene-review/pull/4228) |
 | CC2D2A | Definitive | Existing review | PR #4209 merged at 2026-10-04T23:39:16Z; final-head approval and required CI success verified; 6 changed and 10 reused scoped paths verified. Biological DRAFT retains 19 source assertions, 0 UNDECIDED assessments and 1 core function. Its DRAFT status reflects an unused-research advisory; no annotation remains UNDECIDED. | `cmungall/clingen-cc2d2a-whole-review` | [#4209](https://github.com/ai4curation/ai-gene-review/pull/4209) |
+| CC2D1A | Definitive | INITIALIZED normal seed | PR #4222 merged at 2026-10-04T23:54:43Z; final-head approval and required CI success verified; 13 changed and 8 reused scoped paths verified. Biological DRAFT retains 21 source assertions plus one NEW signaling-adaptor molecular-function assertion, 4 UNDECIDED assessments and 2 core functions. DRAFT is the validation-advisory status; campaign completion preserves the merged evidence limits. | `cmungall/clingen-cc2d1a` | [#4222](https://github.com/ai4curation/ai-gene-review/pull/4222) |
+| CCDC40 | Definitive | INITIALIZED normal seed | PR #4235 merged at 2026-10-05T00:59:13Z; final-head approval and required CI success verified; 7 changed and 7 reused scoped paths verified. Biological DRAFT retains 33 source assertions, 2 UNDECIDED assessments and 1 core function. DRAFT is the validation-advisory status; campaign completion preserves the merged evidence limits. | `cmungall/clingen-ccdc40` | [#4235](https://github.com/ai4curation/ai-gene-review/pull/4235) |
+| CCND2 | Definitive | INITIALIZED normal seed | PR #4244 merged at 2026-10-05T01:02:15Z; final-head approval and required CI success verified; 7 changed and 29 reused scoped paths verified. Biological DRAFT retains 77 source assertions, 3 UNDECIDED assessments and 1 core function. DRAFT is the validation-advisory status; campaign completion preserves the merged evidence limits. | `cmungall/clingen-ccnd2` | [#4244](https://github.com/ai4curation/ai-gene-review/pull/4244) |
 
 Branches for work without a PR may exist only in a local isolated checkout.
 Published check and approval states are the last verified states from this session,
@@ -319,8 +322,8 @@ Direct Git transport and normal publication-source downloads still encounter DNS
 failures. No local or published draft is counted as merged or complete.
 
 The [publication queue](publication-queue.json) retains immutable publication hashes,
-signed publication/file checks and append-only receipt chains. **237 of 2,876 genes
-are complete**; 238 gene-level original reviews have merged, with 1 requiring a source
+signed publication/file checks and append-only receipt chains. **240 of 2,876 genes
+are complete**; 241 gene-level original reviews have merged, with 1 requiring a source
 follow-up. The 161 dedicated full-audit PRs are the historical total at checkpoint 95;
 this completion update does not refresh audit or import totals.
 
@@ -430,6 +433,28 @@ This checkpoint adds **one completion queue entry**, for BRCA2, plus three separ
 
 [Standard project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-03T091329Z-codex-9a4324.yaml). The durable queue enumerates these six path/blob pairs. This scope does not assert that all BRCA2 publication or Reactome caches were newly checked.
 
+
+### Evidence scope for completion 240
+
+[Checkpoint 240 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-05T014551Z-codex-fd1fdc.yaml).
+
+The fixed **2026-10-05 01:02:15 UTC** cutoff adds **CC2D1A, CCDC40 and CCND2** to published checkpoint 237: **240 complete / 2,636 remaining**, with **241 gene-level original review merges** and one required source follow-up outstanding for AKR1D1. Tracker, source-workflow and validator PRs add no gene completions. CCM2, CCN6, CCNO and CD19 contribute none at this cutoff. External CD48 work is outside the verified campaign completion ledger.
+
+| Gene | Verified merge | Changed / reused scoped paths | Biological assessment retained |
+|---|---|---|---|
+| CC2D1A | [`19c410fb456a`](https://github.com/ai4curation/ai-gene-review/commit/19c410fb456a6ba6cc2e562dace8b4c3fba93340), 2026-10-04T23:54:43Z | 13 / 8; every path/blob pair is in the queue | Biological DRAFT retains 21 source assertions plus one NEW signaling-adaptor molecular-function assertion, 4 UNDECIDED assessments and 2 core functions. DRAFT is the validation-advisory status; campaign completion preserves the merged evidence limits. |
+| CCDC40 | [`91bf7fd651da`](https://github.com/ai4curation/ai-gene-review/commit/91bf7fd651da695a591326c3aa3a65cc76a16d7f), 2026-10-05T00:59:13Z | 7 / 7; every path/blob pair is in the queue | Biological DRAFT retains 33 source assertions, 2 UNDECIDED assessments and 1 core function. DRAFT is the validation-advisory status; campaign completion preserves the merged evidence limits. |
+| CCND2 | [`450f063da90c`](https://github.com/ai4curation/ai-gene-review/commit/450f063da90cdfc8de24965e6974140f16d0991a), 2026-10-05T01:02:15Z | 7 / 29; every path/blob pair is in the queue | Biological DRAFT retains 77 source assertions, 3 UNDECIDED assessments and 1 core function. DRAFT is the validation-advisory status; campaign completion preserves the merged evidence limits. |
+
+The three final PR heads have verified approval and successful required checks. Their signed merges account for **27 changed path/blob pairs** and **44 unchanged reused scope objects**, totaling **71 verified scoped objects**. These are per-review counts; shared sources can occur in several scopes. The queue enumerates both maps, identically in each new gene entry and the matching completion update.
+
+The merged reviews retain **131 original source assertions and nine UNDECIDED assessments**, with 132 total reviewed assertions. CC2D1A adds one reviewed GO:0035591 signaling-adaptor molecular-function assertion; CCDC40 and CCND2 add no annotations. All three retain DRAFT validation status because advisories remain, independently of their retained uncertainties. Alternative-product counts are 2, 5 and 2, and core counts are 2, 1 and 1, respectively.
+
+The published checkpoint 237 merge [`1c7db872ce45`](https://github.com/ai4curation/ai-gene-review/commit/1c7db872ce453bb8b07318df110ec4c49cce434d) remains the baseline. Its original post-merge guard stopped after an independent CD48 merge advanced main between readiness and merge. A separate signed proof verified the actual intervening parent [`edc890c57e8d`](https://github.com/ai4curation/ai-gene-review/commit/edc890c57e8d129021224a2316143165859ba687), all seven unchanged tracker preimages, all seven tracker outputs and all five source trees preserved from that actual parent. The original readiness assessment and failed guard are retained; the supplemental proof adds no gene completion and does not certify CD48 campaign completion.
+
+All **232 existing `genes[]` queue entries** are preserved, followed by three entries. Queue-entry count is distinct from the completed-gene baseline. All 2,876 gene inventory entries and their frozen associations, the checkpoint 228 CASP8 correction, both corrected CARMIL2 reuse maps, earlier completion records and history, and the checkpoint 95 audit/import boundary remain exact.
+
+[Published checkpoint 237 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-05T000032Z-codex-52d5fe.yaml).
 
 ### Evidence scope for completion 237
 
@@ -1212,3 +1237,5 @@ These dated observations add no completion and do not revise checkpoint95 totals
 - 2026-10-04 19:58:03 UTC fixed completion cutoff: CASR #4147, CAV1 #4165 and CAVIN1 #4180 advance checkpoint 228 → 231 complete, 232 gene-level original reviews and 2,645 remaining. All 111 changed and 70 reused scoped objects are enumerated and verified against signed merges, final-head approval and successful required CI. CAVIN1’s 15-path PR has 12 actual merge changes after three exact source reuses; these remain explicit. Preserve 223 prior queue entries, all 2,876 gene inventory entries and their frozen associations, the CASP8 count correction, both corrected CARMIL2 reuse maps and all prior histories. Retain three DRAFT states, 473 original source assertions, 82 UNDECIDED assessments and CAVIN1’s one reviewed NEW caveola-assembly assertion. AKR1D1 and all open work remain excluded.
 
 - 2026-10-04 23:39:16 UTC fixed cutoff: CAV3 #4175, CBS #4191, CBFB #4215, CBL #4210, CCDC39 #4228 and CC2D2A #4209 advance checkpoint 231 → 237 complete, 238 gene-level original reviews and 2,639 remaining. All 144 changed and 244 reused scoped objects are enumerated and verified against signed merges, final-head approval and successful required CI. Preserve 226 prior queue entries, all 2,876 gene inventory entries and their frozen associations, the CASP8 correction, both CARMIL2 reuse maps and all earlier histories. The merged reviews retain 707 original source assertions, 64 UNDECIDED assessments, five DRAFT states and one COMPLETE state; the two NEW-labelled rows comprise CBL’s historical proposal and CCDC39’s structural molecular-function addition. AKR1D1 and work outside this fixed cutoff remain excluded.
+
+- 2026-10-05 01:02:15 UTC fixed cutoff: CC2D1A #4222, CCDC40 #4235 and CCND2 #4244 advance checkpoint 237 → 240 complete, 241 gene-level original reviews and 2,636 remaining. All 27 changed and 44 reused scoped objects are enumerated and verified against signed merges, final-head approval and successful required CI. Preserve 232 prior queue entries, all 2,876 gene inventory entries and their frozen associations, the CASP8 correction, both CARMIL2 reuse maps and all earlier histories. The three DRAFT reviews retain 131 source assertions and nine UNDECIDED assessments; CC2D1A contributes one reviewed NEW signaling-adaptor molecular function, giving 132 total assertions. Preserve the checkpoint 237 post-merge-race supplemental proof and original failed guard without counting external CD48 work. AKR1D1 and work outside this cutoff remain excluded.
