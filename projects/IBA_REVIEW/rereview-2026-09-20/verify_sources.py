@@ -35,6 +35,13 @@ def make_signature(term_id, term_label, evidence_type, original_reference_id, qu
 # Explicit current-GOA source refreshes. Keep these as narrow signature-level
 # exceptions so unrelated source loss still fails loudly.
 EXPECTED_RETIREMENTS = {
+    "genes/yeast/APJ1/APJ1-ai-review.yaml": Counter([
+        make_signature("GO:0051082", "unfolded protein binding", "IBA", "GO_REF:0000033"),
+        make_signature("GO:0008270", "zinc ion binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0046872", "metal ion binding", "IEA", "GO_REF:0000043"),
+        make_signature("GO:0051082", "unfolded protein binding", "IEA", "GO_REF:0000002"),
+        make_signature("GO:0051082", "unfolded protein binding", "IMP", "PMID:11923285"),
+    ]),
     "genes/yeast/CPS1/CPS1-ai-review.yaml": Counter([
         make_signature(
             "GO:0051603", "proteolysis involved in protein catabolic process",
@@ -95,6 +102,21 @@ EXPECTED_RETIREMENTS = {
 }
 
 
+EXPECTED_LABEL_REFRESHES = {
+    "genes/yeast/NAP1/NAP1-ai-review.yaml": Counter([
+        (
+            make_signature(
+                "GO:0140597", "protein carrier chaperone", "IDA", "PMID:31062022"
+            ),
+            make_signature(
+                "GO:0140597", "protein carrier activity", "IDA", "PMID:31062022",
+                qualifier="enables",
+            ),
+        ),
+    ]),
+}
+
+
 def source_assertions(review):
     return Counter(signature(a) for a in review.get("existing_annotations") or []
                    if (a.get("review") or {}).get("action") != "NEW")
@@ -128,33 +150,15 @@ def qualifier_backfill_matches(missing, current):
     return matches
 
 
-def label_rename_matches(missing, current):
-    """Find missing frozen signatures preserved with only a GO label change."""
-    def without_term_label(encoded, drop_qualifier=False):
-        data = json.loads(encoded)
-        term = data.get("term")
-        if isinstance(term, dict):
-            term.pop("label", None)
-        if drop_qualifier:
-            data.pop("qualifier", None)
-        return json.dumps(data, sort_keys=True)
-
-    current_by_unlabeled = Counter()
-    for encoded, count in current.items():
-        data = json.loads(encoded)
-        term = data.get("term")
-        if not isinstance(term, dict) or "label" not in term:
-            continue
-        current_by_unlabeled[without_term_label(encoded)] += count
-        if "qualifier" in data:
-            current_by_unlabeled[without_term_label(encoded, drop_qualifier=True)] += count
-
+def label_refresh_matches(path, missing, current):
+    """Find explicitly registered same-term label refreshes."""
+    expected = EXPECTED_LABEL_REFRESHES.get(path, Counter())
     matches = Counter()
-    for encoded, count in missing.items():
-        matched = min(count, current_by_unlabeled[without_term_label(encoded)])
+    for pair, count in expected.items():
+        before, after = pair
+        matched = min(count, missing[before], current[after])
         if matched:
-            matches[encoded] = matched
-            current_by_unlabeled[without_term_label(encoded)] -= matched
+            matches[before] = matched
     return matches
 
 
@@ -257,10 +261,10 @@ def main():
         if qualifier_backfills:
             result["qualifier_backfills"] = dict(qualifier_backfills)
             missing -= qualifier_backfills
-        label_renames = label_rename_matches(missing, current)
-        if label_renames:
-            result["label_renames"] = dict(label_renames)
-            missing -= label_renames
+        label_refreshes = label_refresh_matches(path, missing, current)
+        if label_refreshes:
+            result["label_refreshes"] = dict(label_refreshes)
+            missing -= label_refreshes
         retirements = EXPECTED_RETIREMENTS.get(path, Counter())
         applied = missing & retirements
         unexpected_retirements = retirements - missing
