@@ -26,8 +26,11 @@ failed, so these notes are built from cached publications.
 
 ## Curation decisions
 - GO:1901601 strigolactone biosynthetic process: IBA REMOVE (receptor clade, d14 is SL-insensitive);
-  IMP (PMID:22422982, abstract-only, does not mention D14) MARK_AS_OVER_ANNOTATED, not removed
-  because the full text was not seen.
+  IMP (PMID:22422982) also REMOVE on the same biology. Full text is not open access (Europe PMC: no PMC
+  copy; science.org returns 403), so the assay could not be read; the same paper's IMP secondary shoot
+  formation row suggests it was a branching phenotype, which reflects SL insensitivity, not biosynthesis.
+  D14 does none of the work of SL formation (D27/CCD7/CCD8/MAX1 do), so the term is contradicted
+  regardless of evidence code. (Changed from MARK_AS_OVER_ANNOTATED after PR #4383 review.)
 - GO:0010223 secondary shoot formation -> MODIFY to GO:2000032 regulation of secondary shoot formation.
 - protein binding to SMXLs/MAX2 -> MODIFY to GO:0038023 signaling receptor activity; HT HIPP26 -> REMOVE.
 - NEW: GO:0038023 signaling receptor activity; GO:0052689 carboxylic ester hydrolase activity.

@@ -1,6 +1,7 @@
 # BRC1 (TCP18, At3g18550, UniProt A1YKT1) curation notes
 
-Folder/symbol uses the standard Arabidopsis name BRC1 (UniProt primary name TCP18); fetched by accession
+Folder uses the standard TAIR/Arabidopsis name BRC1; the review's `gene_symbol` follows the UniProt
+primary gene name TCP18 (BRC1 is a UniProt synonym); fetched by accession
 (`just fetch-gene ARATH A1YKT1 --alias BRC1`). Context: `strigolactone_signaling_shoot_branching`
 module. Falcon deep research failed; notes from cached publications.
 
