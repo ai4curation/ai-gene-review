@@ -57,3 +57,5 @@ Rules:
   Judge each against what the gene product actually does.
 - YeastCyc sometimes attaches paralogs/promiscuous enzymes to reactions
   without yeast evidence (e.g. HIS5 as an aromatic aminotransferase). Flag these.
+- The scratchpad is shared by parallel agents: put any helper scripts in a
+  uniquely named subfolder (e.g. `scratchpad/<first-gene>_batch/`).

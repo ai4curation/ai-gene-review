@@ -89,3 +89,6 @@ Per module: action taken, boundary/generalisation decision, parts and
 variant sets, YeastCyc corrections (missing/wrong enzymes, compartments),
 GO-CAM disagreements, validation status, and counts of S. cerevisiae /
 S. pombe exemplars.
+
+Note: the scratchpad is shared by parallel agents; use a uniquely named
+subfolder for any helper scripts.
