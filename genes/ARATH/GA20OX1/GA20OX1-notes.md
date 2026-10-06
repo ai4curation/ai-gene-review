@@ -13,5 +13,5 @@
 - Long-day/far-red induction [PMID:7604047; PMID:15923331].
 
 ## Curation decisions
-- short-day photoperiodism, flowering (IEP) -> MODIFY to long-day photoperiodism, flowering (induction on transfer to long days; Arabidopsis is LD plant).
+- short-day photoperiodism, flowering (IEP) -> KEEP_AS_NON_CORE. Evidence is transcript induction on SD->LD transfer, which does not place GA20ox1 in either SD or LD photoperiodic flowering; GA is classically required for Arabidopsis flowering under short days (ga1 fails to flower in SD; Wilson et al. 1992 Plant Physiol, not cached), consistent with the curator's SD term. GA20ox1/GA20ox2 redundantly promote flowering time [PMID:18069939]. The SD-only ga5-3 phenotype in PMID:15923331 is for EOD-FR petiole elongation, not flowering. (Earlier draft MODIFYed to long-day; reverted after PR review.)
 - GA signaling TAS over-annotated; leaf development (overexpression) non-core.
