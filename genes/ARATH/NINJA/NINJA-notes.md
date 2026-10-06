@@ -17,3 +17,9 @@
 - 41 protein-binding IPI rows resolved by supporting_entities: JAZ, PPD/TIFY8, TPL/TPR2/TPR3 partners -> MODIFY to GO:0001222 transcription corepressor binding; PAT1H1 and GID1A partners -> REMOVE (uninformative, not a rejection of the interaction).
 - NEW: GO:0003714 transcription corepressor activity (IDA, PMID:20360743) as the core MF. GO has no "corepressor adaptor" MF; raised as a suggested question.
 - signal transduction (IEA) marked over-annotated (uninformative parent).
+
+## 2026-10-06 — PR review follow-up (JAZ partner rows vs. published exclusions)
+
+- The TAIR IPI protein-binding row with partner AGI_LocusCode:AT1G30135 is JAZ8/TIFY5A. PMID:20360743 reports Y2H interactions "with most JAZ proteins, except JAZ7 and JAZ8" [PMID:20360743 "Systematic Y2H analysis of the specificity of NINJA for JAZ proteins revealed interactions with most JAZ proteins, except JAZ7 and JAZ8"], and UniProt's curated NINJA interactors omit TIFY5A. The earlier MODIFY to GO:0001222 quoted that very sentence, so the quote refuted the row.
+- The pull-down exceptions in the same paper are different: [PMID:20360743 "NINJA was pulled-down by all JAZ-MBP fusion proteins, except JAZ7, JAZ11 and JAZ12"]. Taken literally, JAZ8 was Y2H-negative but pull-down-positive, so the curator may have based the IPI on the in vitro pull-down (Supplementary Fig. 3b), or read Supplementary Fig. 3a differently. The supplement is not cached. The row is now UNDECIDED, not REMOVE.
+- Every other JAZ partner row was checked against the exclusion list. No row names JAZ7 (AT2G34600). The rows for JAZ12 (UniProtKB:Q9C5K8 and AGI_LocusCode:AT5G20900) are Y2H-positive but pull-down-negative. They stay as MODIFY because the Y2H result and the TAP of NINJA, which recovered JAZ12 ("the group-II TIFY proteins JAZ12 and PPD2 and MYC3 were identified as well"), support them. No row names JAZ11.

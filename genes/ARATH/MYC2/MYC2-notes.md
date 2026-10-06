@@ -31,3 +31,6 @@ Considered the request for a homotetramerization molecular function. GO:0046983 
 - GO:0009611 response to wounding (IEP, PMID:17675405): UNDECIDED -> KEEP_AS_NON_CORE, consistent with the TAS row (removes the inconsistent-action warning). The paper defines 814 JA-dependent wound-inducible transcripts by microarray.
 - protein binding IPI rows from PMID:21737749, 28650476, 32490347, 32612234: UNDECIDED -> REMOVE, matching the treatment of the other MYC2 protein-binding rows (uninformative term; the interactions are not disputed).
 - GO:0019900 kinase binding (IPI, PMID:24890857, AKIN10): UNDECIDED -> KEEP_AS_NON_CORE; regulatory input on MYC2 stability (MYC2 is the substrate).
+
+## 2026-10-06 — PR review follow-up
+- GO:0009611 response to wounding (IEP, PMID:17675405): dropped the pathway-level supported_by snippet (814 wound-inducible, AOS-dependent transcripts), because the cached paper never names MYC2/At1g32640. The row stays KEEP_AS_NON_CORE in deference to the curator. The reason states that the MYC2-specific evidence is not in the cached text and points to the PMID:9680973 TAS row.
