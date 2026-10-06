@@ -1639,3 +1639,31 @@ def test_compare_label_diagnoses_a_placeholder_under_any_prefix(curie):
     assert "asserts nothing about the entity" in message
     assert "usually means the ID is wrong" not in message
     assert "fix-panther-labels" not in message
+
+
+def test_validate_family_members_accepts_uniprot_alternate_with_warning():
+    """When PANTHER's files and UniProt disagree, either family is accepted."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, warnings = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR11375:SF2"},
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "UniProt" in warnings[0]
+    assert "PTHR11375:SF2" in warnings[0]
+
+
+def test_validate_family_members_alternate_for_other_family_still_fails():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, _ = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR99999"},
+    )
+
+    assert len(errors) == 1

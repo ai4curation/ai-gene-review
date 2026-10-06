@@ -87,6 +87,17 @@ Two things this implies, both easy to get backwards:
   itself a propagated annotation with no experimental grounding anywhere in the chain, or a
   source that adds nothing because the target already has stronger direct evidence.
 
+**Removing an IBA that a family review scopes onto your gene.** If the gene's PANTHER
+family has a FamilyReview (`interpro/panther/<PTHR>/<PTHR>-review.yaml`) whose term
+assessment covers your gene's subfamily, a gene-level `REMOVE` is reported as a
+family/gene disagreement by `just validate-families`. When the loss is real but on a branch
+the subfamily does not split (e.g. C. elegans GEI-17 in PTHR10782:SF94, no JAK), record it
+in the family review as a `member_exceptions` entry on that term assessment, with
+evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a negative
+`node_assessment`. The exception is the family's judgement on that member, so the gene
+review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
+`MARK_AS_OVER_ANNOTATED` just to silence the check.
+
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
 
