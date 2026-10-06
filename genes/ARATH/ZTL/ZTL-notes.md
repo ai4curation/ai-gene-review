@@ -129,3 +129,52 @@ binds GI [PMID:24004949 "the levels of ZTL, a cytosolic protein, help govern the
 distribution of GI in the cytosol and nucleus"]. Its substrates TOC1 and PRR5 are nuclear clock
 proteins. The nucleus row is therefore correct but not the principal site of ZTL activity:
 KEEP_AS_NON_CORE. Cytoplasm stays the core location, and is proposed as a NEW row.
+
+## 2026-10-06: Re-grounded on Swiss-Prot Q94BT6 (ADO1_ARATH)
+
+With explicit user approval, the review was moved from the unreviewed TrEMBL entry F4KAN2 to the
+canonical Swiss-Prot entry **Q94BT6** (ADO1_ARATH, 609 aa; GN ADO1, synonyms FKL2, LKP1, ZTL;
+At5g57360). The ZTL-uniprot.txt, ZTL-goa.tsv and ZTL-ai-review.yaml files were removed and
+re-fetched with `just fetch-gene ARATH Q94BT6 --alias ZTL`; the folder name stays ZTL and
+`gene_symbol` stays ZTL.
+
+Why: F4KAN2 is an alternative gene model of the same locus (At5g57360), not a different gene.
+Q94BT6 is the reviewed entry, matches the cloned 609-aa ZEITLUPE polypeptide
+[PMID:10847686 "Map-based cloning of ZTL identified a novel 609 amino acid polypeptide"], and
+carries all of the experimental GOA annotations (46 rows from QuickGO on 2026-10-06, against 5
+electronic rows for F4KAN2).
+
+Sequence comparison (UniProt flat files; F4KAN2 copy from git HEAD before re-grounding):
+- F4KAN2: 626 aa, CRC64 CA1703FF4C0CF96D; RefSeq NP_001154783.1 (NM_001161311.1).
+- Q94BT6: 609 aa, CRC64 B25192FCBE019093; RefSeq NP_568855.1 (NM_125119.4), isoform Q94BT6-1.
+- Residues 1-596 are identical. The two differ only at the C-terminus: Q94BT6 ends
+  ...EEWML**SELHELSLASYLT** (13 more residues), F4KAN2 ends ...EEWML**RYWSFRGERLSGGTLVLLIFFKSFFFFLPH**
+  (30 more residues). The LOV, F-box and Kelch domains all lie in the shared region, so no
+  domain-level biology changes.
+
+Carried over: the decisions on the 5 F4KAN2 GOA rows (all of which are also Q94BT6 rows with the
+same term, evidence and reference: nucleus IEA SubCell KEEP_AS_NON_CORE; ubiquitin-dependent
+protein catabolic process, circadian rhythm, response to blue light ARBA IEA ACCEPT; protein
+ubiquitination UniPathway IEA ACCEPT), the description, and the reference reviews. The three
+former reviewer NEW rows are no longer needed, because Q94BT6 GOA already has them in better form:
+- photoreceptor activity (GO:0009881) NEW -> GOA blue light photoreceptor activity (GO:0009882,
+  IDA PMID:17704763 and IBA), now the core MF.
+- cytoplasm NEW -> GOA cytoplasm IEA and cytosol IDA (PMID:10998191) / IBA; cytosol is the core
+  location.
+- ubiquitin-like ligase-substrate adaptor activity (GO:1990756) NEW -> proposed instead as the
+  MODIFY replacement for the 14 protein-binding rows with ASK1/ASK2/ASK11 (F-box partners) and
+  TOC1 (substrate).
+
+New decisions on Q94BT6 rows:
+- Protein binding with GIGANTEA (PMID:17704763) and CRY1 (PMID:11260718): REMOVE as
+  uninformative; the GI interaction's functional content is captured by the GO:0009882 IDA row
+  from the same paper [PMID:17704763 "These data establish ZTL as a blue-light photoreceptor,
+  which facilitates its own stability through a blue-light-enhanced GI interaction"].
+- SCF ubiquitin ligase complex (IPI, IBA) ACCEPT [PMID:15447654 "demonstrates that ZTL can
+  assemble into an SCF complex in vivo"].
+- SCF-dependent proteasomal ubiquitin-dependent protein catabolic process (IC PMID:14654842)
+  ACCEPT and used in core_functions.
+- flower development (IMP), response to red light (IMP), entrainment of circadian clock by
+  photoperiod (IMP): KEEP_AS_NON_CORE (indirect, clock-mediated effects)
+  [PMID:16428597 "ztl mutations affect both circadian and developmental responses to red light,
+  possibly through ZTL interaction with PHYTOCHROME B (PHYB)"].
