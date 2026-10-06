@@ -46,3 +46,14 @@ Rules:
   action counts, core MF term(s), validation status, and any family-level or
   pathway-level observations useful to the module curator (e.g. paralog
   specialisation, mis-annotated EC, compartment, moonlighting).
+
+## Lessons from the pilot batch
+- Scripting the YAML scaffolding is fine, but every `summary`/`reason` must be
+  specific to that gene and that annotation row (what the cited evidence shows
+  for THIS protein). Avoid boilerplate such as "Electronic annotation consistent
+  with ..."; say which mapping produced it and whether it is right for this protein.
+- YeastPathways RCA rows (`SGD_PWY:` with/from) inherit superpathway BPs
+  (e.g. PRPP-PWY-1 -> "nucleotide biosynthetic process" on histidine enzymes).
+  Judge each against what the gene product actually does.
+- YeastCyc sometimes attaches paralogs/promiscuous enzymes to reactions
+  without yeast evidence (e.g. HIS5 as an aromatic aminotransferase). Flag these.
