@@ -50,5 +50,5 @@
 
 - Chloroplast organization IMP (PMID:22383539): the publication was re-fetched with full text from PMC
   (`just fetch-pmid 22383539 --force`). The full text names CDF1 as an END (enhanced deetiolation) gene
-  [PMID:22383539 "Three of these END genes encode transcription factors: SMZ , CDF1 , and RAP2."].
+  [PMID:22383539 "Three of these END genes encode transcription factors: SMZ , CDF1 , and RAP2.6 ."].
   Changed UNDECIDED -> KEEP_AS_NON_CORE.
