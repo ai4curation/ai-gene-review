@@ -187,3 +187,4 @@ New decisions on Q94BT6 rows:
   - GO:0010498 IMP (PMID:14654842).
 - ZTL carries GO:0031146 by IC from PMID:14654842 and uses it as its core process. QuickGO confirms GO:0031146 is_a descendant of both GO:0006511 and GO:0010498.
 - This matches the TIR1 and COI1 reviews, which MODIFY the identical PMID:11019805 row.
+- Correction (later on 2026-10-06): the GO:0010498 IMP row (PMID:14654842) is restored to ACCEPT. That paper shows proteasome-dependent, ZTL-dependent TOC1 degradation but not SCF dependence; TAIR coded GO:0031146 from it as IC. SCF-ZTL assembly comes from PMID:15447654. The two GO:0006511 rows remain MODIFY → GO:0031146.
