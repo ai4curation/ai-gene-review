@@ -11,7 +11,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ai_gene_review.etl.panther_families import member_index_path, write_member_index
+from ai_gene_review.etl.panther_families import (
+    member_index_path,
+    UniProtPantherLookup,
+    write_member_index,
+)
 from ai_gene_review.validation.prose_panther_scan import (
     Claim,
     collect_claims,
@@ -85,10 +89,17 @@ def test_collect_claims_walks_a_directory(modules_dir):
 # --------------------------------------------------------------------------- #
 
 
-def _run(monkeypatch, modules_dir, index, unresolved=None, consulted_uniprot=True):
+def _run(
+    monkeypatch,
+    modules_dir,
+    index,
+    absent=None,
+    unchecked=None,
+    unknown=None,
+):
     """Point the scan at a temporary members file and modules directory."""
     members = modules_dir.parent / "panther-members.tsv"
-    write_member_index(index, members, unresolved, consulted_uniprot)
+    write_member_index(index, members, absent, unchecked, unknown)
     monkeypatch.setattr(
         "ai_gene_review.validation.prose_panther_scan.REPO_ROOT",
         modules_dir.parent,
@@ -132,7 +143,7 @@ def test_main_does_not_fail_when_no_panther_family_exists(
     refresh that has already been run.
     """
     write_module(modules_dir, "a.yaml", "orphan Q88ND1 PTHR11908")
-    code = _run(monkeypatch, modules_dir, {}, unresolved={"Q88ND1"})
+    code = _run(monkeypatch, modules_dir, {}, absent={"Q88ND1"})
     out = capsys.readouterr().out
     assert code == 0
     assert "no PANTHER family exists       : 1" in out
@@ -150,15 +161,27 @@ def test_main_fails_when_uniprot_was_never_consulted(monkeypatch, modules_dir, c
     that pair of fixes.
     """
     write_module(modules_dir, "a.yaml", "orphan Q88ND1 PTHR11908")
-    code = _run(
-        monkeypatch, modules_dir, {}, unresolved={"Q88ND1"}, consulted_uniprot=False
-    )
+    code = _run(monkeypatch, modules_dir, {}, unchecked={"Q88ND1"})
     out = capsys.readouterr().out
 
     assert code == 1, "an unchecked accession must not pass"
     assert "no PANTHER family exists       : 0" in out
-    assert "unresolvable (not looked up)   : 1" in out
+    assert "not looked up                  : 1" in out
     assert "cannot be adjudicated" not in out
+
+
+def test_main_fails_unknown_uniprot_accessions_with_a_real_remedy(
+    monkeypatch, modules_dir, capsys
+):
+    """A typo cannot be refreshed into existence."""
+    write_module(modules_dir, "a.yaml", "orphan Q88ND9 PTHR11908")
+    code = _run(monkeypatch, modules_dir, {}, unknown={"Q88ND9"})
+    out = capsys.readouterr().out
+
+    assert code == 1
+    assert "unknown to UniProt             : 1" in out
+    assert "verify they exist and are current" in out
+    assert "run `just refresh-panther-members`" not in out
 
 
 def test_main_does_not_double_count_an_online_resolved_accession(
@@ -173,7 +196,7 @@ def test_main_does_not_double_count_an_online_resolved_accession(
     write_module(modules_dir, "a.yaml", "orphan Q88ND1 PTHR11908")
     monkeypatch.setattr(
         "ai_gene_review.validation.prose_panther_scan.fetch_panther_from_uniprot",
-        lambda accessions: {"Q88ND1": "PTHR11908:SF1"},
+        lambda accessions: UniProtPantherLookup({"Q88ND1": "PTHR11908:SF1"}, {"Q88ND1"}),
     )
     write_member_index({}, member_index_path(modules_dir.parent), {"Q88ND1"})
     monkeypatch.setattr(
@@ -186,4 +209,4 @@ def test_main_does_not_double_count_an_online_resolved_accession(
     assert code == 0
     assert "checked                        : 1" in out
     assert "no PANTHER family exists       : 0" in out, "must not be counted twice"
-    assert "unresolvable (not looked up)   : 0" in out
+    assert "not looked up                  : 0" in out

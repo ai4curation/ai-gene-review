@@ -4458,8 +4458,11 @@ def refresh_panther_members(
 ):
     """Build or extend the PANTHER member index (.cache/panther/panther-members-<release>.tsv).
 
-    Builds a pruned UniProt-accession -> PANTHER-family index covering every
-    accession cited in modules/: all ``representative_members`` whether or not
+    Builds a UniProt-accession -> PANTHER-family index. It carries every
+    accession the organism classifications cover, not only the cited ones, and
+    merges into whatever is already committed so no previously resolved row is
+    ever dropped. On top of that it resolves every accession cited in
+    modules/: all ``representative_members`` whether or not
     their descriptor carries a family id (an ungrounded descriptor is precisely
     the one whose members need resolving), plus accessions appearing only in
     prose. Accessions that resolve nowhere are recorded in the file. This is what
@@ -4471,17 +4474,17 @@ def refresh_panther_members(
     """
     from ai_gene_review.etl.panther_families import (
         DEFAULT_ORGANISMS,
+        apply_member_overrides,
         build_member_index,
         fetch_panther_from_uniprot,
         fetch_sequence_classification,
-        apply_member_overrides,
         incremental_member_index,
         load_member_index,
         load_member_index_alternates,
         load_member_index_gaps,
+        load_member_overrides,
         member_index_path,
         panther_assignments_conflict,
-        load_member_overrides,
         write_member_index,
     )
     import yaml
@@ -4538,12 +4541,14 @@ def refresh_panther_members(
 
     members_path = member_index_path(repo_root)
     existing = {} if rebuild else load_member_index(members_path)
+    prior_gaps = load_member_index_gaps(members_path)
     # Accessions already confirmed absent from both sources are not re-queried
     # on every run (that re-parse of ~300 MB of classifications is what made an
     # otherwise no-op refresh take a minute); --rebuild re-checks them.
-    known_absent = set() if rebuild else load_member_index_gaps(members_path).absent
+    known_absent = set() if rebuild else prior_gaps.absent
     alternates = {} if rebuild else load_member_index_alternates(members_path)
     counts = {"files": 0, "uniprot": 0, "classifications": 0}
+    seen_by_uniprot: set[str] = set()
 
     def resolve(needed: set[str]) -> dict[str, str]:
         typer.echo(f"resolving {len(needed)} accession(s) not yet indexed...")
@@ -4564,7 +4569,8 @@ def refresh_panther_members(
             # membership checks also accept (reporting the disagreement).
             typer.echo(f"checking {len(needed)} accession(s) against UniProt...")
             from_uniprot = fetch_panther_from_uniprot(needed)
-            for accession, family_sf in from_uniprot.items():
+            seen_by_uniprot.update(from_uniprot.seen)
+            for accession, family_sf in from_uniprot.families.items():
                 if accession not in found:
                     found[accession] = family_sf
                     counts["uniprot"] += 1
@@ -4596,11 +4602,38 @@ def refresh_panther_members(
         }
 
     unresolved = accessions - set(index)
+    # Split per accession, not for the batch. A skipped fallback must not
+    # relabel "PANTHER has no family for this" as "we never looked": the
+    # validator exempts the former and errors on the latter, so collapsing them
+    # fails the build on accessions no refresh can resolve. Deciding it for the
+    # whole set meant a single newly-cited accession defeated the guard for
+    # every previously-absent one.
+    if no_uniprot_fallback:
+        absent = unresolved & prior_gaps.absent
+        # A prior run's "UniProt returned no record" verdict is also a real
+        # answer, and rerunning without the fallback does not revisit it.
+        unknown = unresolved & prior_gaps.unknown
+        unchecked = unresolved - prior_gaps.absent - prior_gaps.unknown
+    else:
+        # Only accessions UniProt actually returned a record for can be called
+        # absent: that is "a real protein PANTHER does not classify". One UniProt
+        # never returned is a typo, an obsolete id, or invented -- calling it
+        # absent would commit the positive claim that a protein which may not
+        # exist has no PANTHER family, and downgrade its descriptor's grounding
+        # check from error to warning.
+        absent = unresolved & (known_absent | seen_by_uniprot)
+        # Asked and got nothing back. That is a third state, not "we never
+        # asked": the artifact would otherwise claim these were skipped by
+        # --no-uniprot-fallback, a flag the caller never passed, and point the
+        # curator at a refresh that can never resolve a typo.
+        unknown = unresolved - known_absent - seen_by_uniprot
+        unchecked = set()
     out_path = write_member_index(
         index,
         members_path,
-        unresolved,
-        consulted_uniprot=not no_uniprot_fallback,
+        absent,
+        unchecked,
+        unknown,
         alternates={a: f for a, f in alternates.items() if a in index},
     )
     mode = "rebuilt" if rebuild else f"kept {len(existing)} existing row(s)"
@@ -4736,7 +4769,10 @@ def fix_panther_labels(
     import yaml
 
     from ai_gene_review.etl.panther_families import (
+        load_member_index_alternates,
+        load_member_index_gaps,
         load_obo_names,
+        member_index_path,
         rewrite_panther_labels,
     )
     from ai_gene_review.validation.module_validator import (
@@ -4748,12 +4784,16 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
-    from ai_gene_review.etl.panther_families import member_index_path
-
-    from ai_gene_review.etl.panther_families import load_member_index_alternates
-
-    member_index = load_member_index(member_index_path(repo_root))
-    member_alternates = load_member_index_alternates(member_index_path(repo_root))
+    members_path = member_index_path(repo_root)
+    member_index = load_member_index(members_path)
+    # Without this the two tools deadlock on a provably-absent accession: the
+    # validator reports its label mismatch as a blocking error while this tool,
+    # seeing an unindexed member, files it under `skip` and refuses to touch the
+    # label forever. Right for a stale index, wrong when no refresh can help.
+    gaps = load_member_index_gaps(members_path)
+    permanently_absent = gaps.absent
+    unknown_to_uniprot = gaps.unknown
+    member_alternates = load_member_index_alternates(members_path)
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -4768,7 +4808,12 @@ def fix_panther_labels(
         corroborated: set[str] = set()
         for use in iter_family_member_uses(doc):
             errors, _ = validate_family_members(
-                [use], member_index, paint_index, alternates=member_alternates
+                [use],
+                member_index,
+                paint_index,
+                permanently_absent=permanently_absent,
+                unknown_to_uniprot=unknown_to_uniprot,
+                alternates=member_alternates,
             )
             if errors:
                 skip.update(use.declared_family_curies)
@@ -5008,7 +5053,7 @@ def panther_report_stats(
             heterogeneous += 1
     ambiguous = {b: p for b, p in proteins_by_family.items() if len(p) > 1}
     gaps = load_member_index_gaps(members)
-    collected = len(index) + len(gaps.absent) + len(gaps.unchecked)
+    collected = len(index) + len(gaps.absent) + len(gaps.unchecked) + len(gaps.unknown)
     claims = collect_claims(repo_root / "modules")
     checked = sum(1 for c in claims if c.accession in index)
 

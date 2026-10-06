@@ -339,19 +339,23 @@ def member_index_path(repo_root: Path) -> Path:
     return Path(repo_root) / MEMBER_INDEX_RELPATH
 
 
-# Two distinct markers, because the two states have different remedies and a
+# Three distinct markers, because the states have different remedies and a
 # shared marker silently conflates them. "unresolved" means both PANTHER's
 # per-organism files and UniProt were consulted and neither has a family -- a
 # permanent fact, nothing to do. "unchecked" means the UniProt fallback was
-# skipped, so the status is simply unknown -- rerun without the flag. Using one
-# marker for both lets a --no-uniprot-fallback refresh be read as "no family
-# exists", which is a false claim in the tool's output rather than in the file.
+# skipped, so the status is simply unknown -- rerun without the flag. "unknown"
+# means UniProt was asked and returned no record at all -- verify the accession.
 UNRESOLVED_MARKER = "# unresolved:"
 UNCHECKED_MARKER = "# unchecked:"
+UNKNOWN_MARKER = "# unknown-to-uniprot:"
 
 
 class MemberIndexGaps(NamedTuple):
-    """Accessions a member index holds no family for, split by why."""
+    """Accessions a member index holds no family for, split by why.
+
+    Three states, not two, because they take three different remedies and
+    collapsing any pair sends a curator somewhere useless.
+    """
 
     absent: Set[str]
     """Both sources consulted; PANTHER has no family. Permanent."""
@@ -359,25 +363,56 @@ class MemberIndexGaps(NamedTuple):
     unchecked: Set[str]
     """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
 
+    unknown: Set[str]
+    """UniProt WAS consulted and returned no record at all.
+
+    Almost always a typo, an obsolete id, or a secondary/demerged accession --
+    not a protein PANTHER declines to classify. Rerunning the refresh can never
+    resolve it, so filing these under ``unchecked`` both wrote a false claim
+    about how the artifact was produced and pointed the fix at a flag the
+    curator never passed. The remedy is to verify the accession.
+    """
+
+
+class UniProtPantherLookup(NamedTuple):
+    """What a UniProt xref lookup found, and what it merely saw.
+
+    ``seen`` is the point. Without it, "UniProt returned this protein and it has
+    no PANTHER cross-reference" is indistinguishable from "UniProt has never
+    heard of this accession" -- so a typo'd, obsolete, or invented accession gets
+    recorded as a protein PANTHER has no family for. That is a positive claim
+    about something that may not exist, and downstream it downgrades the
+    grounding check from error to warning: the exact shape of failure this
+    validation exists to prevent, reached through its own remedy command.
+    """
+
+    families: Dict[str, str]
+    """Accession -> ``PTHR…``/``PTHR…:SF…`` for those carrying an xref."""
+
+    seen: Set[str]
+    """Accessions UniProt returned a record for, xref or not."""
+
 
 def render_member_index(
     index: Dict[str, str],
-    unresolved: Optional[Set[str]] = None,
-    consulted_uniprot: bool = True,
+    absent: Optional[Set[str]] = None,
+    unchecked: Optional[Set[str]] = None,
+    unknown: Optional[Set[str]] = None,
     alternates: Optional[Dict[str, str]] = None,
 ) -> Iterator[str]:
     """Render a member index as a sorted TSV.
 
-    ``unresolved`` accessions are recorded as a trailing comment block. Without
-    it the file holds only successes, so it cannot distinguish "asked PANTHER
+    Accessions with no family are recorded as trailing comment blocks. Without
+    them the file holds only successes, so it cannot distinguish "asked PANTHER
     and UniProt, no family exists" from "never asked" -- and any resolution rate
     read off the artifact is over an unknown denominator.
 
-    ``consulted_uniprot`` must say whether the UniProt fallback actually ran.
-    Recording "not found in UniProt" when ``--no-uniprot-fallback`` skipped that
-    lookup writes a false claim into the artifact, which is worse than
-    the omission this block replaced: a reader can recover from silence, not
-    from a confident wrong statement.
+    The three kinds are separate parameters rather than one set plus a
+    "did we consult UniProt" flag. A single flag picks one marker for the whole
+    set, so a run that skips the fallback while citing one new accession
+    relabels every previously-absent protein as unchecked -- emptying the set
+    the validator uses to exempt them, and asserting in a committed artifact
+    that 35 proteins were never looked up when they were.
 
     >>> print("\\n".join(render_member_index({"P2": "PTHR2", "P1": "PTHR1:SF3"})))
     uniprot_accession	panther_family_sf	uniprot_panther_family_sf
@@ -393,24 +428,30 @@ def render_member_index(
     # per-organism classifications or in UniProt's xref_panther:
     # unresolved: P9
 
+    Skipped lookups are recorded as unchecked, and the two can coexist -- which
+    is the case a single flag could not represent:
+
     The footer carries no count: a count line changes whenever any PR adds or
     resolves an accession, so it would make every concurrent PR conflict on the
     same line. Consumers count the marker lines instead.
 
-    With the fallback skipped, the block says only what was actually checked:
-
-    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, False):
+    >>> for line in render_member_index({"P1": "PTHR1"}, {"P9"}, {"P8"}, {"P7"}):
     ...     print(line)
     uniprot_accession	panther_family_sf	uniprot_panther_family_sf
     P1	PTHR1
     <BLANKLINE>
     # Accessions cited in modules/ with no PANTHER family in PANTHER's
+    # per-organism classifications or in UniProt's xref_panther:
+    # unresolved: P9
+    <BLANKLINE>
+    # Accessions cited in modules/ with no PANTHER family in PANTHER's
     # per-organism classifications. UniProt was NOT consulted
     # (--no-uniprot-fallback), so these are unchecked rather than absent:
-    # unchecked: P9
-
-    The marker differs, not just the prose: a shared marker would let a
-    consumer read a skipped lookup as a completed one.
+    # unchecked: P8
+    <BLANKLINE>
+    # Accessions cited in modules/ that UniProt was asked about and returned no record for.
+    # Likely a typo, an obsolete id, or a secondary/demerged accession:
+    # unknown-to-uniprot: P7
     """
     yield "\t".join(MEMBER_INDEX_HEADER)
     alternates = alternates or {}
@@ -420,18 +461,28 @@ def render_member_index(
             yield f"{accession}\t{index[accession]}\t{alternate}"
         else:
             yield f"{accession}\t{index[accession]}"
-    if unresolved:
+    if absent:
         yield ""
         yield "# Accessions cited in modules/ with no PANTHER family in PANTHER's"
-        if consulted_uniprot:
-            yield "# per-organism classifications or in UniProt's xref_panther:"
-            marker = UNRESOLVED_MARKER
-        else:
-            yield "# per-organism classifications. UniProt was NOT consulted"
-            yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
-            marker = UNCHECKED_MARKER
-        for accession in sorted(unresolved):
-            yield f"{marker} {accession}"
+        yield "# per-organism classifications or in UniProt's xref_panther:"
+        for accession in sorted(absent):
+            yield f"{UNRESOLVED_MARKER} {accession}"
+    if unchecked:
+        yield ""
+        yield "# Accessions cited in modules/ with no PANTHER family in PANTHER's"
+        yield "# per-organism classifications. UniProt was NOT consulted"
+        yield "# (--no-uniprot-fallback), so these are unchecked rather than absent:"
+        for accession in sorted(unchecked):
+            yield f"{UNCHECKED_MARKER} {accession}"
+    if unknown:
+        yield ""
+        yield (
+            "# Accessions cited in modules/ that UniProt was asked about and "
+            "returned no record for."
+        )
+        yield "# Likely a typo, an obsolete id, or a secondary/demerged accession:"
+        for accession in sorted(unknown):
+            yield f"{UNKNOWN_MARKER} {accession}"
 
 
 def load_member_index_gaps(path: Path) -> MemberIndexGaps:
@@ -445,15 +496,12 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
 
     >>> import tempfile, pathlib
     >>> d = pathlib.Path(tempfile.mkdtemp())
-    >>> _ = write_member_index({"P1": "PTHR1"}, d / "asked.tsv", {"P9"})
-    >>> gaps = load_member_index_gaps(d / "asked.tsv")
-    >>> sorted(gaps.absent), sorted(gaps.unchecked)
-    (['P9'], [])
-
-    >>> _ = write_member_index({"P1": "PTHR1"}, d / "skipped.tsv", {"P9"}, False)
-    >>> gaps = load_member_index_gaps(d / "skipped.tsv")
-    >>> sorted(gaps.absent), sorted(gaps.unchecked)
-    ([], ['P9'])
+    >>> _ = write_member_index(
+    ...     {"P1": "PTHR1"}, d / "gaps.tsv", {"P9"}, {"P8"}, {"P7"}
+    ... )
+    >>> gaps = load_member_index_gaps(d / "gaps.tsv")
+    >>> sorted(gaps.absent), sorted(gaps.unchecked), sorted(gaps.unknown)
+    (['P9'], ['P8'], ['P7'])
 
     An accession that has a family row is not a gap, even if a stale marker for
     it remains (e.g. in a hand-edited or seeded index):
@@ -466,31 +514,43 @@ def load_member_index_gaps(path: Path) -> MemberIndexGaps:
     """
     path = Path(path)
     if not path.exists():
-        return MemberIndexGaps(set(), set())
+        return MemberIndexGaps(set(), set(), set())
     absent: Set[str] = set()
     unchecked: Set[str] = set()
+    unknown: Set[str] = set()
     for line in path.read_text().splitlines():
-        if line.startswith(UNRESOLVED_MARKER):
+        # UNKNOWN first: its marker is not a prefix of the others, but ordering
+        # by specificity keeps this robust if a marker is ever renamed.
+        if line.startswith(UNKNOWN_MARKER):
+            unknown.add(line[len(UNKNOWN_MARKER) :].strip())
+        elif line.startswith(UNRESOLVED_MARKER):
             absent.add(line[len(UNRESOLVED_MARKER) :].strip())
         elif line.startswith(UNCHECKED_MARKER):
             unchecked.add(line[len(UNCHECKED_MARKER) :].strip())
     # A stale gap marker for an accession that now has a row: the row wins.
     resolved = set(load_member_index(path))
-    return MemberIndexGaps(absent - resolved, unchecked - resolved)
+    return MemberIndexGaps(absent - resolved, unchecked - resolved, unknown - resolved)
 
 
 def write_member_index(
     index: Dict[str, str],
     out_path: Path,
-    unresolved: Optional[Set[str]] = None,
-    consulted_uniprot: bool = True,
+    absent: Optional[Set[str]] = None,
+    unchecked: Optional[Set[str]] = None,
+    unknown: Optional[Set[str]] = None,
     alternates: Optional[Dict[str, str]] = None,
 ) -> Path:
-    """Write the pruned accession -> family index, returning the path written."""
+    """Write the accession -> family index, returning the path written.
+
+    Accessions with no family are recorded in the file rather than dropped, so a
+    later reader can tell "no PANTHER family exists for this protein" from "we
+    never looked it up" -- a distinction the validator depends on to avoid
+    demanding a refresh that cannot help.
+    """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(
-        "\n".join(render_member_index(index, unresolved, consulted_uniprot, alternates))
+        "\n".join(render_member_index(index, absent, unchecked, unknown, alternates))
         + "\n"
     )
     return out_path
@@ -560,8 +620,10 @@ class MemberIndexConflict(ValueError):
 def load_member_index(path: Path) -> Dict[str, str]:
     """Load a member index TSV written by :func:`write_member_index`.
 
-    Returns an empty mapping when the artifact is absent, so validation degrades
-    to "not checkable" rather than failing on a fresh checkout.
+    Returns an empty mapping when the artifact is absent. That no longer means
+    validation degrades to "not checkable": an unindexed member is now an error,
+    so callers must build the cache with ``just refresh-panther-members`` before
+    checking grounded descriptors.
 
     Rows need not be sorted and an identical row may repeat; both are harmless.
     Two rows giving one accession different families are not (a hand-edited or
@@ -728,11 +790,22 @@ def build_member_index(
     accessions: Set[str],
     classification_paths: Iterable[Path],
 ) -> Dict[str, str]:
-    """Build a pruned accession -> family index from organism classifications.
+    """Build an accession -> family index from organism classifications.
 
-    Only ``accessions`` actually cited in the repository are retained, keeping
-    the committed artifact small (a few thousand rows rather than the ~1.5M
-    proteins PANTHER classifies).
+    Every accession PANTHER classifies for these organisms is retained, not just
+    the ones currently cited. Pruning to cited accessions kept the artifact small
+    but made it lag the repository by construction: a PR citing a new protein
+    found the index silent about exactly the protein under review, so the
+    member-consistency check -- the only one that can catch a guessed family id --
+    was skipped. The full 21-organism index is ~300k rows and under 7 MB, against
+    a 14 MB ``panther.obo`` already committed beside it.
+
+    ``accessions`` no longer filters the result; it is retained so callers can
+    report which cited accessions the organism files do not cover and must be
+    resolved through the UniProt fallback instead. That set is not small or
+    exotic: PANTHER publishes no *P. putida* sequence classification at all
+    (its ``pseudomonas`` file is *P. aeruginosa*), and P. putida is the most
+    heavily curated organism in this repository.
 
     >>> import tempfile, pathlib
     >>> d = pathlib.Path(tempfile.mkdtemp())
@@ -740,8 +813,11 @@ def build_member_index(
     ...     "HUMAN|UniProtKB=O14521\\tO14521\\tSDHD\\tPTHR13337:SF6\\tSDH\\n"
     ...     "HUMAN|UniProtKB=P99999\\tP99999\\tOTHER\\tPTHR1:SF1\\tX\\n"
     ... )
-    >>> build_member_index({"O14521"}, [d / "org"])
-    {'O14521': 'PTHR13337:SF6'}
+    >>> index = build_member_index({"O14521"}, [d / "org"])
+    >>> index["O14521"]
+    'PTHR13337:SF6'
+    >>> index["P99999"]  # retained although never cited
+    'PTHR1:SF1'
     """
     index: Dict[str, str] = {}
     for path in classification_paths:
@@ -751,8 +827,7 @@ def build_member_index(
         for accession, family_sf in parse_sequence_classification(
             path.read_text(errors="replace").splitlines()
         ).items():
-            if accession in accessions:
-                index.setdefault(accession, family_sf)
+            index.setdefault(accession, family_sf)
     return index
 
 
@@ -1120,7 +1195,7 @@ def _best_panther_xref(cross_references: Iterable[dict]) -> Optional[str]:
     return sorted(families)[0] if families else None
 
 
-def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
+def fetch_panther_from_uniprot(accessions: Iterable[str]) -> UniProtPantherLookup:
     """Resolve accession -> PANTHER family/subfamily via the UniProt REST API.
 
     PANTHER's per-organism classification files cover only its ~140 reference
@@ -1134,6 +1209,7 @@ def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
 
     pending = sorted(set(accessions))
     resolved: Dict[str, str] = {}
+    seen: Set[str] = set()
     for start in range(0, len(pending), UNIPROT_BATCH_SIZE):
         batch = pending[start : start + UNIPROT_BATCH_SIZE]
         query = urllib.parse.urlencode(
@@ -1147,9 +1223,43 @@ def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
             f"{UNIPROT_ACCESSIONS_URL}?{query}", timeout=120
         ) as handle:
             payload = json.load(handle)
-        for record in payload.get("results", []):
-            accession = record.get("primaryAccession")
-            best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
-            if accession and best:
-                resolved[accession] = best
-    return resolved
+        batch_lookup = lookup_from_uniprot_payload(payload)
+        resolved.update(batch_lookup.families)
+        seen |= batch_lookup.seen
+    return UniProtPantherLookup(resolved, seen)
+
+
+def lookup_from_uniprot_payload(payload: dict) -> UniProtPantherLookup:
+    """Split one UniProt accessions response into resolved and merely seen.
+
+    Separated from the HTTP call so the distinction can be tested against a real
+    payload shape rather than a mocked transport.
+
+    A record that came back without a PANTHER cross-reference is a real protein
+    PANTHER does not classify -- genuinely absent. An accession missing from
+    ``results`` entirely is one UniProt does not know, which is a typo, an
+    obsolete id, or invented; calling that absent would assert that a protein
+    which may not exist has no PANTHER family.
+
+    >>> payload = {"results": [
+    ...     {"primaryAccession": "P1", "uniProtKBCrossReferences": [
+    ...         {"database": "PANTHER", "id": "PTHR1:SF2"}]},
+    ...     {"primaryAccession": "P2", "uniProtKBCrossReferences": []},
+    ... ]}
+    >>> lookup = lookup_from_uniprot_payload(payload)
+    >>> lookup.families
+    {'P1': 'PTHR1:SF2'}
+    >>> sorted(lookup.seen)
+    ['P1', 'P2']
+    """
+    resolved: Dict[str, str] = {}
+    seen: Set[str] = set()
+    for record in payload.get("results", []):
+        accession = record.get("primaryAccession")
+        if not accession:
+            continue
+        seen.add(accession)
+        best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
+        if best:
+            resolved[accession] = best
+    return UniProtPantherLookup(resolved, seen)
