@@ -53,6 +53,8 @@ import requests
 PAINT_BASE = "https://data.pantherdb.org/ftp/downloads/paint/current"
 IBD_GAF_URL = f"{PAINT_BASE}/IBD.gaf"
 LEAF_GAF_URL = f"{PAINT_BASE}/gene_association.paint_uniprot.gaf.gz"
+# PANTHER's own node -> family table (``PTHRnnnnn:ANn`` ... ``PTN...`` per line).
+TREEGRAFTER_URL = f"{PAINT_BASE}/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz"
 
 # GAF column indices (0-based), per the GAF 2.x spec.
 _COL_OBJECT_ID = 1
@@ -225,6 +227,69 @@ def iter_losses(
                 yield rec, parse_ptn_nodes("|".join(rec.seeds))
 
 
+def loss_nodes_by_ancestor(
+    ibd_index: Dict[str, List[IBDRecord]],
+) -> Dict[str, Set[str]]:
+    """Map each ancestral (gain) node to the loss nodes that name it in with/from.
+
+    >>> data = [
+    ...     "PANTHER\\tPTNa\\tPTNa\\tNOT\\tGO:1\\tGO_REF:0000033\\tIRD\\t"
+    ...     "PANTHER:PTNb\\tF\\t\\t\\tprotein\\ttaxon:1\\t20250101\\tGO_Central\\t\\t",
+    ... ]
+    >>> loss_nodes_by_ancestor(parse_ibd_gaf(data))
+    {'PTNb': {'PTNa'}}
+    """
+    by_ancestor: Dict[str, Set[str]] = {}
+    for rec, ancestors in iter_losses(ibd_index):
+        for anc in ancestors:
+            by_ancestor.setdefault(anc, set()).add(rec.node)
+    return by_ancestor
+
+
+def add_loss_nodes(nodes: Set[str], by_ancestor: Dict[str, Set[str]]) -> Set[str]:
+    """Extend a family's node set with the loss nodes that override its gains.
+
+    Family nodes are discovered from leaf IBA with/from fields, but an IRD node
+    produces no leaf annotation at all (it only stops the ancestral IBD from
+    descending), so it never appears there. Without this step most IRD rows were
+    missing from the per-family slices. A loss node is added when its with/from
+    names a node already in the set; this repeats until nothing new is added, in
+    case a loss overrides a gain placed on another loss node.
+
+    >>> sorted(add_loss_nodes({"PTNb"}, {"PTNb": {"PTNa"}, "PTNa": {"PTNz"}}))
+    ['PTNa', 'PTNb', 'PTNz']
+    >>> sorted(add_loss_nodes({"PTNc"}, {"PTNb": {"PTNa"}}))
+    ['PTNc']
+    """
+    out = set(nodes)
+    frontier = set(nodes)
+    while frontier:
+        new = set().union(*(by_ancestor.get(n, set()) for n in frontier)) - out
+        out |= new
+        frontier = new
+    return out
+
+
+def treegrafter_family_nodes(lines: Iterable[str]) -> Dict[str, Set[str]]:
+    """Parse PANTHER's TreeGrafter annotation table into ``family -> {PTN nodes}``.
+
+    Each line starts with ``PTHRnnnnn:ANn`` and ends with the node's PTN id. This
+    is PANTHER's own node-to-family mapping, so it also covers nodes that no leaf
+    IBA cites: a gain whose whole clade is blocked by a loss, and the loss itself.
+
+    >>> tg = treegrafter_family_nodes(["PTHR1:AN0\\tPTHR1:SF8  GO:1;  PC1;\\tPTN000000084",
+    ...                                "PTHR1:AN1\\tPTHR1:SF8\\tPTN004118867", "junk"])
+    >>> {fam: sorted(nodes) for fam, nodes in tg.items()}
+    {'PTHR1': ['PTN000000084', 'PTN004118867']}
+    """
+    out: Dict[str, Set[str]] = {}
+    for line in lines:
+        cols = line.rstrip("\n").split("\t")
+        if len(cols) >= 2 and cols[-1].startswith("PTN") and cols[0].startswith("PTHR"):
+            out.setdefault(cols[0].split(":", 1)[0], set()).add(cols[-1])
+    return out
+
+
 def iter_leaf_rows(
     lines: Iterable[str],
 ) -> Iterable[Tuple[str, str, List[str]]]:
@@ -377,11 +442,16 @@ def fetch_family_paint(
     leaf_path = download_cached(LEAF_GAF_URL, cache_dir, force=force_download)
     ibd_path = download_cached(IBD_GAF_URL, cache_dir, force=force_download)
 
+    tg_path = download_cached(TREEGRAFTER_URL, cache_dir, force=force_download)
+
     with open_text(leaf_path) as fh:
         nodes = leaf_nodes_for_members(fh, members)
+    with open_text(tg_path) as fh:
+        nodes |= treegrafter_family_nodes(fh).get(family, set())
 
     with open_text(ibd_path) as fh:
         ibd_index = parse_ibd_gaf(fh)
+    nodes = add_loss_nodes(nodes, loss_nodes_by_ancestor(ibd_index))
 
     out_dir.mkdir(parents=True, exist_ok=True)
     tsv_path = write_family_paint(family, nodes, ibd_index, out_dir)
@@ -453,15 +523,22 @@ def fetch_all_family_paint(
     leaf_path = download_cached(LEAF_GAF_URL, cache_dir, force=force_download)
     ibd_path = download_cached(IBD_GAF_URL, cache_dir, force=force_download)
 
+    tg_path = download_cached(TREEGRAFTER_URL, cache_dir, force=force_download)
+
     with open_text(leaf_path) as fh:
         family_nodes = family_nodes_from_leaf(fh, member_to_families)
+    with open_text(tg_path) as fh:
+        for family, tg_nodes in treegrafter_family_nodes(fh).items():
+            if family in family_dirs:
+                family_nodes.setdefault(family, set()).update(tg_nodes)
     with open_text(ibd_path) as fh:
         ibd_index = parse_ibd_gaf(fh)
 
+    by_ancestor = loss_nodes_by_ancestor(ibd_index)
     counts: Dict[str, int] = {}
     removed: List[str] = []
     for family, fdir in family_dirs.items():
-        nodes = family_nodes.get(family, set())
+        nodes = add_loss_nodes(family_nodes.get(family, set()), by_ancestor)
         n_annotations = sum(len(ibd_index.get(n, [])) for n in nodes)
         if skip_empty and n_annotations == 0:
             stale_slice = fdir / f"{family}-paint.tsv"

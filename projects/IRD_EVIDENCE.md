@@ -171,6 +171,59 @@ Full tables are in [RESULTS.md](IRD_EVIDENCE/RESULTS.md).
     matrix (IDA, NEW). These have direct experimental support, so they are not invalid.
     However, each one now argues against a deliberate PAINT decision and should say so.
 
+### Adjudicated IRD rows (family reviews)
+
+Family reviews can now record a PAINT loss directly: a node assessment carries
+`evidence: IRD` (or IKR) and `negated: true`, and takes one of the loss verdicts
+LOSS_SUPPORTED, LOSS_CONTRADICTED, LOSS_TOO_BROAD or LOSS_STALE. The validator checks
+these against the family's `paint.tsv`. [ird_seed_assessments.yaml](IRD_EVIDENCE/ird_seed_assessments.yaml)
+pre-fills an entry for each of the 170 contested IRD rows, leaving only the verdict to
+decide. The 18 rows that fall in families with a review have been adjudicated (one more,
+TYK2, was already done), each with verbatim supporting quotes:
+
+| Family | IRD node | Blocked term | Verdict | Why, in short |
+|---|---|---|---|---|
+| PTHR45807 | PTN002910252 | JAK-STAT signalling (TYK2) | LOSS_CONTRADICTED | TYK2 is required for type I IFN, IL-12 and IL-23 signalling |
+| PTHR11588 | PTN000172659 | microtubule (gamma-tubulin) | LOSS_CONTRADICTED | gamma-TuRC caps minus ends and is recruited along microtubules; the location stays |
+| PTHR11588 | PTN000172659 | structural constituent of cytoskeleton | LOSS_SUPPORTED | gamma-tubulin nucleates, it is not built into the lattice |
+| PTHR11588 | PTN000172725 | cytoplasm (plant gamma-tubulin) | LOSS_CONTRADICTED | plant gamma-tubulin works at cytoplasmic sites |
+| PTHR24056 | PTN000756102 | protein Ser/Thr kinase activity (CDKL5) | LOSS_CONTRADICTED | CDKL5 phosphorylates serines lost in the kinase-dead mutant |
+| PTHR24056 | PTN000623095 | mediator complex (CDK8/19) | LOSS_CONTRADICTED | term-scope change to CKM complex, not divergence; yeast Ssn3 keeps the term |
+| PTHR10638 | PTN000067358 | primary methylamine oxidase (AOC3) | LOSS_CONTRADICTED | direct assays in human, mouse and rat; topaquinone mutant is dead |
+| PTHR45618 | PTN000642212 | oxidative phosphorylation uncoupler (UCP3) | LOSS_CONTRADICTED | knockouts and overexpression change proton leak; contested, moderate confidence |
+| PTHR12210 | PTN002639282 | phosphoprotein phosphatase (TIMM50 clade) | LOSS_SUPPORTED | clade lacks the DxDx(T/V) motif; the outside T. brucei Tim50 keeps it |
+| PTHR24068 | PTN000629507 | ubiquitin conjugating enzyme (UEV clade) | LOSS_SUPPORTED | UBE2V1/2 and Mms2 lack the active-site cysteine |
+| PTHR21646 | PTN001922764 | cysteine-type deubiquitinase (USP39) | LOSS_SUPPORTED | USP39 lacks the catalytic Cys/His and is inactive in vitro |
+| PTHR19375 | PTN001065099 | protein refolding (fungal Hsp70) | LOSS_TOO_BROAD | right for SSB/SSZ1, wrong for SSA (SSA1 seeds the blocked IBD) |
+| PTHR11972 | PTN001379754 | ferric-chelate reductase (FRO6) | LOSS_CONTRADICTED | FRO6 has reductase activity in yeast; it differs from FRO7 in location only |
+| PTHR11972 | PTN002279285 | superoxide-generating NADPH oxidase | LOSS_TOO_BROAD | blocks the only seed, yeast Yno1/AIM14; plausible for the FRE branches |
+| PTHR10196 | PTN000023394 | cytosol (glycerol kinase) | LOSS_CONTRADICTED | the IRD clade contains the human and mouse seeds of the blocked IBD |
+| PTHR10648 | PTN000068762 | cytosol (Arabidopsis PP2AA3) | LOSS_CONTRADICTED | PP2AA3 is itself a seed of the blocked IBD |
+| PTHR11610 | PTN000176957 | extracellular region (PNLIPRP1) | LOSS_CONTRADICTED | PLRP1 is secreted; the activity IRDs on the same node stand |
+| PTHR42884 | PTN001647685 | trans-Golgi network (PCSK1) | LOSS_CONTRADICTED | PC1/3 is seen in the TGN; rat Pcsk1 seeds the blocked IBD; partly term scope |
+| PTHR11706 | PTN007528568 | plasma membrane (yeast SMF3) | LOSS_SUPPORTED | Smf3p is vacuolar; the conflicting row is a high-throughput membrane proteome |
+
+So 12 of the 19 contested IRDs look wrong, 5 right, and 2 placed too deep. That is a
+sample biased towards conflicts, not an error rate for IRD. Two patterns recur:
+
+- **The IRD clade contains a seed of the IBD it blocks.** This happens for glycerol
+  kinase, PP2AA3, PNLIPRP1, PCSK1, Yno1/AIM14 and fungal SSA1. A seed was used as
+  evidence that the ancestor had the function, and the IRD then denies it to that same
+  protein. This is a mechanical check that could run over all 2,538 IRD rows.
+- **A localization IRD that followed an activity change.** PNLIPRP1 lost lipase activity,
+  not secretion. CDK8 moved to a more specific complex term rather than leaving Mediator.
+
+### PAINT slices were missing most IRD rows
+
+While adjudicating these rows we found that `interpro/panther/*/*-paint.tsv`, the
+per-family PAINT slices the validator checks against, were missing 1,005 of 1,448 IRD
+rows. The slicer found a family's nodes only through leaf IBA rows, and an IRD node
+never has any. It now also adds loss nodes whose with/from names a family node, and
+uses PANTHER's own node-to-family table (`PAINT_TreeGrafter_Annotations_TOTAL`). The
+second source catches a gain whose whole clade is blocked, such as the Yno1 oxidase
+IBD. Refreshing the 545 affected slices added 1,340 IRD, 410 IKR and 829 IBD rows and
+removed 3 IBD rows.
+
 ## Proposed guidance (draft, for discussion)
 
 1. **An IRD is a curator's decision not to annotate. It is not a missing annotation.**
@@ -202,15 +255,21 @@ Full tables are in [RESULTS.md](IRD_EVIDENCE/RESULTS.md).
 ---
 # STATUS
 
-Updated 2026-10-05.
+Updated 2026-10-06.
 
 - [x] Extract all IRD rows from PAINT `IBD.gaf` (2,538 rows, 894 families)
 - [x] Show that IRD produces no leaf IBA (0 IRD-only NOT|IBA rows)
 - [x] Resolve IRD clades from PANTHER trees (52,660 protein rows)
 - [x] Cross-check against experimental GOA annotations and our reviews
 - [x] Correct the IRD description in `src/ai_gene_review/etl/panther_paint.py`
-- [ ] Read the top of the experimental-conflict worklist and classify each case as IRD
-      wrong, experimental annotation wrong, or term-scope mismatch
+- [x] Family-review schema and validator support for IRD/IKR loss assessments
+- [x] Pre-filled seed assessments for the 170 contested IRD rows (`ird_seed_assessments.yaml`)
+- [x] Adjudicate the 18 contested IRD rows in families that already have a review
+- [x] Fix the PAINT slicer so IRD nodes are not dropped; refresh the 545 affected slices
+- [ ] Adjudicate the remaining 151 seeded IRD rows (their families have no review yet)
+- [ ] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows
+- [ ] Revisit gene reviews affected by the verdicts (SSA1–4 refolding, TIMM50 phosphatase,
+      CDKL5, AOC3, UCP3)
 - [ ] Revisit the 24 stale IBAs in 15 reviews (SSA/SSB/SSZ1, pmp20, CFLAR, SLC52A1, cia30,
       CACNA1G, CASP14, Drd1, Acot1)
 - [ ] Add an IRD check to the annotation-reviewer skill, so that IRD clade membership is
@@ -233,3 +292,10 @@ descendants of the blocked term, so gamma-tubulin "located_in polar microtubule"
 counts as a conflict with a blocked "microtubule". Some conflicts are
 therefore term-scope rather than real disagreement, and the worklist needs reading
 before anything is sent upstream.
+
+## 2026-10-06
+
+Added loss verdicts to family reviews and adjudicated the 18 contested IRD rows that
+fall in reviewed families; the results are above. The adjudication exposed the slicer
+bug. The reference validator's "Total checks: 0" on family reviews is not a gap: the
+count covers only reported problems, and a fabricated quote is caught.
