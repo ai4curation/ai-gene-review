@@ -9,14 +9,25 @@ Two rules, agreed on projects/OMICS_EVIDENCE.md (Recommendations, 2026-10-06):
      listed in the audit for follow-up), KEEP_AS_NON_CORE (already compliant), MODIFY, NEW.
 
   M. Generic `membrane` (GO:0016020) from a membrane-fraction proteome, for a protein
-     with no membrane anchor.
-     Rows: evidence_type HDA or HTP, not negated, term GO:0016020, and the gene's
-     *-uniprot.txt records no membrane anchor (see has_membrane_anchor).
+     with no documented membrane anchor or membrane association.
+     Rows: evidence_type HDA or HTP, not negated, term GO:0016020, and
+     membrane_association() finds nothing. That test uses identifiers only, never label
+     text: (a) structured UniProt anchor features (FT TRANSMEM / INTRAMEM / LIPID), or
+     (b) any row in the gene's *-goa.tsv, other than NOT rows and high-throughput codes
+     (the kind of evidence under review), to GO:0016020 or any of its is_a/part_of
+     descendants in GO (e.g. plasma membrane, extrinsic component of membrane,
+     organelle membranes). UniProt subcellular-location and keyword mappings reach
+     GOA as GO ids, so they are covered by (b) without matching their labels.
      Change: action KEEP_AS_NON_CORE / UNDECIDED / PENDING / unset
      -> MARK_AS_OVER_ANNOTATED.
      Left alone: ACCEPT (explicit judgement; listed in the audit), REMOVE, MODIFY (a
      replacement was chosen), NEW, and every row of a protein with a documented membrane
-     anchor or association, or with no UniProt file to check.
+     anchor or association, or with no UniProt or GOA file to check.
+
+  Revision: the first run of 2026-10-06 tested association by searching UniProt's
+  SUBCELLULAR LOCATION free text for the word "membrane". Rows carrying that run's
+  note (OLD_NOTE_M_RE) are first restored to their pre-disposition action and reason,
+  then rule M is applied afresh, so rerunning the script corrects them.
 
 Edits are textual and minimal: only the row's `action:` line changes, and its `reason:`
 value is rewritten to the original text plus a disposition note. Each edited file is
@@ -70,55 +81,53 @@ NOTE_V = (
     "non-core by default (previous action: {old}). See projects/OMICS_EVIDENCE.md."
 )
 NOTE_M = (
-    "OMICS_EVIDENCE disposition (2026-10-06): UniProt records no transmembrane segment, "
-    "lipid anchor or membrane-protein topology for this protein, so the generic "
-    "located_in membrane from a membrane-fraction proteome is treated as "
-    "over-annotation (previous action: {old}). See projects/OMICS_EVIDENCE.md."
+    "OMICS_EVIDENCE disposition (2026-10-06): the protein has no membrane anchor among "
+    "its UniProt features (transmembrane, intramembrane or lipidation) and no annotation "
+    "outside high-throughput studies to membrane (GO:0016020) or any is_a/part_of "
+    "descendant, so the generic located_in membrane from a membrane-fraction proteome is "
+    "treated as over-annotation (previous action: {old}). See projects/OMICS_EVIDENCE.md."
 )
+# note written by the first, label-text-based run of rule M (see Revision above)
+OLD_NOTE_M_RE = re.compile(
+    r"\s*OMICS_EVIDENCE disposition \(2026-10-06\): UniProt records no transmembrane "
+    r"segment.*?\(previous action: (\w+)\)\. See projects/OMICS_EVIDENCE\.md\.",
+    re.S,
+)
+HTP_FAMILY = {"HDA", "HTP", "HMP", "HGI", "HEP"}
+GO_ADAPTER = os.environ.get("OMICS_GO_ADAPTER", "sqlite:obo:go")
 
 
-def subcellular_location_text(uniprot_text: str) -> str:
-    """The CC SUBCELLULAR LOCATION block(s) of a UniProt flat file, joined into one string.
+def has_anchor_feature(uniprot_text: str) -> bool:
+    """True if a UniProt flat file has a structured membrane-anchor feature.
 
-    >>> subcellular_location_text("CC   -!- SUBCELLULAR LOCATION: Cell membrane;\\nCC       Single-pass.\\nCC   -!- PTM: x\\n")
-    'Cell membrane; Single-pass.'
-    """
-    out, inside = [], False
-    for line in uniprot_text.split("\n"):
-        if line.startswith("CC   -!- "):
-            inside = line.startswith("CC   -!- SUBCELLULAR LOCATION:")
-            if inside:
-                out.append(line[len("CC   -!- SUBCELLULAR LOCATION:"):].strip())
-        elif inside and line.startswith("CC       "):
-            out.append(line[9:].strip())
-        else:
-            inside = False
-    return " ".join(out)
-
-
-def has_membrane_anchor(uniprot_text: str) -> bool:
-    """True if a UniProt flat file records any membrane anchor or membrane association.
-
-    Anchors: FT TRANSMEM / INTRAMEM / LIPID features; KW Transmembrane, Lipoprotein,
-    GPI-anchor. Association: any membrane named in the SUBCELLULAR LOCATION block
-    ("Cell membrane", "Endoplasmic reticulum membrane", "Peripheral membrane protein").
-    The rule only targets proteins with no documented membrane association at all.
-
-    >>> has_membrane_anchor("FT   TRANSMEM        10..30\\n")
+    >>> has_anchor_feature("FT   TRANSMEM        10..30\\n")
     True
-    >>> has_membrane_anchor("CC   -!- SUBCELLULAR LOCATION: Cytoplasm.\\n")
-    False
-    >>> has_membrane_anchor("CC   -!- SUBCELLULAR LOCATION: Peroxisome membrane.\\n")
-    True
-    >>> has_membrane_anchor("CC   -!- FUNCTION: Binds membrane proteins.\\nCC   -!- SUBCELLULAR LOCATION: Nucleus.\\n")
+    >>> has_anchor_feature("CC   -!- SUBCELLULAR LOCATION: Cell membrane.\\n")
     False
     """
-    if re.search(r"^FT   (TRANSMEM|INTRAMEM|LIPID) ", uniprot_text, re.M):
-        return True
-    kw = " ".join(re.findall(r"^KW   (.*)$", uniprot_text, re.M))
-    if re.search(r"\b(Transmembrane|Lipoprotein|GPI-anchor)\b", kw):
-        return True
-    return "membrane" in subcellular_location_text(uniprot_text).lower()
+    return bool(re.search(r"^FT   (TRANSMEM|INTRAMEM|LIPID) ", uniprot_text, re.M))
+
+
+def membrane_closure() -> set[str]:
+    """GO:0016020 and all its is_a/part_of descendants, from the GO ontology (OAK)."""
+    from oaklib import get_adapter
+
+    adapter = get_adapter(GO_ADAPTER)
+    return set(adapter.descendants(MEMBRANE, predicates=["rdfs:subClassOf", "BFO:0000050"],
+                                   reflexive=True))
+
+
+def membrane_annotations(goa_path: str, closure: set[str]) -> list[str]:
+    """Non-NOT, non-high-throughput GOA rows to a term in `closure`, as 'GO:id CODE ref'."""
+    import csv
+
+    out = []
+    with open(goa_path, newline="") as fh:
+        for r in csv.DictReader(fh, delimiter="\t"):
+            if (r.get("GO TERM") in closure and not (r.get("QUALIFIER") or "").startswith("NOT")
+                    and r.get("GO EVIDENCE CODE") not in HTP_FAMILY):
+                out.append(f'{r["GO TERM"]} {r["GO EVIDENCE CODE"]} {r["REFERENCE"]}')
+    return sorted(set(out))
 
 
 def block_end(lines: list[str], start: int, indent: int) -> int:
@@ -196,9 +205,12 @@ def edit_file(path: str, changes: list[tuple[int, str, str]]) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help="edit files (default: dry run)")
+    ap.add_argument("--audit", default=AUDIT, help="audit file to write with --write")
     args = ap.parse_args()
+    closure = membrane_closure()
 
     changed_rows, accepted_vesicle, accepted_membrane, skipped, failed = [], [], [], [], []
+    reverted: list[dict] = []
     files_changed = 0
     for path in sorted(glob.glob(os.path.join(ROOT, "genes", "*", "*", "*-ai-review.yaml"))):
         text = open(path).read()
@@ -207,7 +219,15 @@ def main() -> int:
         doc = yaml.load(text, Loader=LOADER) or {}
         org, gene = path.split(os.sep)[-3], path.split(os.sep)[-2]
         uni_path = os.path.join(os.path.dirname(path), f"{gene}-uniprot.txt")
-        anchor = has_membrane_anchor(open(uni_path).read()) if os.path.exists(uni_path) else None
+        goa_path = os.path.join(os.path.dirname(path), f"{gene}-goa.tsv")
+        evidence: list[str] = []
+        if os.path.exists(uni_path) and os.path.exists(goa_path):
+            if has_anchor_feature(open(uni_path).read()):
+                evidence.append("UniProt anchor feature")
+            evidence += membrane_annotations(goa_path, closure)
+            anchor = bool(evidence)
+        else:
+            anchor = None
         changes = []
         for idx, a in enumerate(doc.get("existing_annotations") or []):
             if a.get("evidence_type") not in CODES or a.get("negated"):
@@ -225,23 +245,39 @@ def main() -> int:
                 else:
                     continue
             elif tid == MEMBRANE:
+                reason0 = str(rv.get("reason") or "")
+                m = OLD_NOTE_M_RE.search(reason0)
+                if m:  # undo the label-text run, then decide afresh
+                    old = None if m.group(1) == "unset" else m.group(1)
+                    rv = {**rv, "reason": OLD_NOTE_M_RE.sub("", reason0).strip()}
                 if anchor is None:
-                    skipped.append({**base, "why": "no UniProt file"})
+                    skipped.append({**base, "why": "no UniProt or GOA file"})
+                    if m:
+                        raise SystemExit(f"cannot re-decide {gene}: no UniProt/GOA file")
                     continue
-                if anchor:
-                    continue
-                if old == "ACCEPT":
-                    accepted_membrane.append(base)
-                if old not in RULE_M_FROM:
-                    continue
-                new, note = "MARK_AS_OVER_ANNOTATED", NOTE_M
+                if anchor or old not in RULE_M_FROM:
+                    if old == "ACCEPT" and not anchor:
+                        accepted_membrane.append(base)
+                    if not m:
+                        continue
+                    # previously changed by the label-text run: restore the original
+                    new, note = old, None
+                    reverted.append({**base, "restored_action": old, "association": evidence})
+                else:
+                    new, note = "MARK_AS_OVER_ANNOTATED", NOTE_M
             else:
                 continue
             reason = (str(rv.get("reason") or "").strip())
-            new_reason = (reason + " " if reason else "") + note.format(old=old or "unset")
+            if note is None:
+                new_reason = reason
+            else:
+                new_reason = (reason + " " if reason else "") + note.format(old=old or "unset")
+            if new == a["review"].get("action") and new_reason == str(a["review"].get("reason") or "").strip():
+                continue
             changes.append((idx, new, new_reason))
-            changed_rows.append({**base, "rule": "V" if tid in VESICLE_TERMS else "M",
-                                 "old_action": old or "unset", "new_action": new})
+            if note is not None:
+                changed_rows.append({**base, "rule": "V" if tid in VESICLE_TERMS else "M",
+                                     "old_action": old or "unset", "new_action": new})
         if not changes:
             continue
         try:
@@ -267,6 +303,9 @@ def main() -> int:
     print(f"{'WROTE' if args.write else 'DRY RUN'}: {len(changed_rows)} rows in {files_changed} files")
     for (rule, old, new), n in sorted(summary.items()):
         print(f"  rule {rule}: {old:24s} -> {new:24s} {n}")
+    print(f"rows restored (label-text run reversed): {len(reverted)}")
+    for r in reverted:
+        print(f"  {r['gene']}: -> {r['restored_action']}  via {r['association'][:3]}")
     print(f"vesicle rows left as ACCEPT: {len(accepted_vesicle)}")
     print(f"no-anchor membrane rows left as ACCEPT: {len(accepted_membrane)}")
     print(f"membrane rows skipped (no UniProt file): {len(skipped)}")
@@ -274,10 +313,11 @@ def main() -> int:
     for f in failed:
         print(f"  {f}")
     if args.write:
-        with open(AUDIT, "w") as fh:
+        with open(args.audit, "w") as fh:
             fh.write("# Generated by apply_dispositions.py -- audit of the 2026-10-06 batch\n")
             yaml.safe_dump({"rules": {"V": NOTE_V.format(old="X"), "M": NOTE_M.format(old="X")},
                             "changed_rows": changed_rows,
+                            "restored_rows": reverted,
                             "vesicle_rows_left_as_accept": accepted_vesicle,
                             "no_anchor_membrane_rows_left_as_accept": accepted_membrane,
                             "membrane_rows_skipped_no_uniprot": skipped,
