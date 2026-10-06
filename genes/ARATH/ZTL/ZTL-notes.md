@@ -178,3 +178,12 @@ New decisions on Q94BT6 rows:
   photoperiod (IMP): KEEP_AS_NON_CORE (indirect, clock-mediated effects)
   [PMID:16428597 "ztl mutations affect both circadian and developmental responses to red light,
   possibly through ZTL interaction with PHYTOCHROME B (PHYB)"].
+
+## 2026-10-06 — Catabolism rows narrowed to GO:0031146
+
+- Three rows that ACCEPTed over-general parent terms are now MODIFY → GO:0031146 (SCF-dependent proteasomal ubiquitin-dependent protein catabolic process):
+  - GO:0006511 IEA (ARBA);
+  - GO:0006511 TAS (PMID:11019805);
+  - GO:0010498 IMP (PMID:14654842).
+- ZTL carries GO:0031146 by IC from PMID:14654842 and uses it as its core process. QuickGO confirms GO:0031146 is_a descendant of both GO:0006511 and GO:0010498.
+- This matches the TIR1 and COI1 reviews, which MODIFY the identical PMID:11019805 row.
