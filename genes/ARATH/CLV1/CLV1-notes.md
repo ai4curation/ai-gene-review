@@ -43,3 +43,7 @@ trafficking of CLV1 to lytic vacuoles"]. Plasmodesma is kept as non-core for
 root meristem context [PMID:23394827 "Both CLV1 and ACR4 overlap in their
 expression domains in the distal root meristem and localize to the plasma
 membrane (PM) and plasmodesmata (PDs)"].
+
+## 2026-10 update (shoot_meristem_clv_wus_feedback module)
+- The remaining UNDECIDED row (protein binding IPI, PMID:29320478 CSI-LRR high-throughput ectodomain screen) is changed to REMOVE. A bare protein binding row from a HTS screen carries no functional information, and the functionally relevant partners are captured elsewhere.
+- Added NEW GO:0004675 transmembrane receptor protein serine/threonine kinase activity, based on direct CLV3 binding to the CLV1 ectodomain [PMID:18202283 "the CLV3 peptide directly binds the CLV1 ectodomain with a dissociation constant of 17.5 nM"] together with kinase activity on PBL34/35/36 [PMID:34935965]. The core MF is updated from GO:0004674 to GO:0004675, which keeps it consistent with BAM1 in the module.
