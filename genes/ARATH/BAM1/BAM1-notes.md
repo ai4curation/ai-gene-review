@@ -14,8 +14,12 @@
 - BAM1/BAM2 are needed for early anther cell layers [PMID:16751349].
 
 ## Decisions
-- Core MF is GO:0004675 transmembrane receptor protein serine/threonine kinase activity, proposed as NEW (IDA, PMID:25754504). The process GO:0007178 is also proposed as NEW.
+- Core MF is GO:0004675 transmembrane receptor protein serine/threonine kinase activity, reached by MODIFYing the GOA IDA GO:0004674 row (PMID:34651321) to it, with support from PMID:25754504 and PMID:20626648 (direct CLV3 binding). The process GO:0007178 is also proposed as NEW.
 - The CLE peptide IPI rows are MODIFIED to peptide hormone binding (GO:0017046, as in the CLV1 review). The RLCK IPI rows are MODIFIED to protein kinase binding.
 - The CSI-LRR high-throughput ectodomain protein binding rows are REMOVED (bare protein binding, no functional information).
 - The IBA hormone-mediated signaling row (a node seeded by BRI1/BRL) is kept as non-core.
 - Deep research (falcon) attempted 2026-10-05 and failed with HTTP 402 Payment Required. No deep-research file exists for BAM1.
+
+
+## PR #4384 review follow-up (2026-10-06)
+- Dropped the NEW GO:0004675 row (redundant with its direct parent GO:0004674); instead the GO:0004674 IDA row is MODIFIED to GO:0004675. The IEA GO:0004674 (EC mapping) row and the InterPro IEA GO:0004672 row are also MODIFIED to GO:0004675 so that all kinase rows are consistent. The NEW GO:0007178 row is unchanged.
