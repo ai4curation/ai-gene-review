@@ -597,7 +597,10 @@ other computational method that produces GO or EC predictions.
 
 ## Page rendering and deployment
 
-The site is deployed from `main` branch at root via GitHub Pages to https://ai4curation.io/ai-gene-review/.
+With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, the site is built from `main` and
+deployed as an Actions artifact via GitHub Pages to
+https://ai4curation.io/ai-gene-review/. In this mode, generated files in Git are
+not the live site. The Pages source setting must separately be `GitHub Actions`.
 
 ### Gene review HTML
 ```bash
@@ -718,19 +721,39 @@ driven:
 ### Browser app
 ```bash
 just deploy-browser    # update data.js + index.html for the interactive browser
+just deploy-browser pages  # disposable artifact build, without Git's blob cap
 ```
 Output: `app/`
 
 ### CI automation
 The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
-through GitHub Actions. It renders everything and creates a PR. Its publication
-schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
-and by the weekly full validation workflow. Pages deploy directly from main — no
-gh-pages branch needed for the static content.
+through GitHub Actions. With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, it renders,
+stages, compresses, checks and uploads the site, then deploys the artifact. It
+skips generated-file commits and PRs entirely; publication needs no App token,
+review or merge. Disabling that variable retains the legacy regeneration PR code
+path, but it cannot build a browser payload at or above Git's 100 MiB blob limit.
+The current corpus already exceeds that limit: flag-off is not a working rollback.
+It also does not change the repository's Pages source setting.
+Its publication schedule is exempt from agent cron profiles. Gene reviews are
+validated in PR CI and by the weekly full validation workflow.
+
+`just build-pages` builds the disposable artifact locally. All three browser
+builders accept the `pages` target (or `BROWSER_TARGET=pages`); their default
+`git` target retains GitHub's 100 MiB Git blob limit. The artifact target has no
+per-file Git limit: staging compresses the main annotation browser data and checks
+total site and tar sizes. Prediction and propagation browser payloads are currently
+staged uncompressed; these checks do not guarantee browser memory or load-time
+performance. Never commit generated output just because the artifact build passed.
+
+GitHub Pages officially supports a 1 GB site. Our existing temporary policy
+allows larger deployments below the 10 GB absolute artifact cutoff; that is not
+a hosting-capacity guarantee. A completed upload can be redeployed without
+rendering via `deploy-existing-pages.yaml`, while the artifact is retained.
 
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
+* Use YAML, not TSV, for any structured data file you author (project tables, proposal lists, curated records). TSVs produced by deterministic pipelines (e.g. `GENE-goa.tsv`, PAINT `*-paint.tsv`) are inputs and stay as they are.
 * For files `<GENE>-notes.md`, use literature deep search, and always record provenance for assertions, e.g `[PMID:12345 "<supporting text>"]`
 
 ## Support code
