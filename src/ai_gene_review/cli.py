@@ -4342,6 +4342,7 @@ def refresh_panther_members(
         member_index_path,
         panther_assignments_conflict,
         load_member_overrides,
+        settle_member_alternates,
         write_member_index,
     )
     import yaml
@@ -4447,13 +4448,8 @@ def refresh_panther_members(
                 "  ⚠ overrides for accessions no longer cited: "
                 + ", ".join(sorted(set(overrides) - accessions))
             )
-        # An override that adopts UniProt's value settles that disagreement.
-        alternates = {
-            accession: family_sf
-            for accession, family_sf in alternates.items()
-            if accession not in index
-            or panther_assignments_conflict(index[accession], family_sf)
-        }
+        # A curated override settles the disagreement, in either direction.
+        alternates = settle_member_alternates(alternates, index, overrides)
 
     unresolved = accessions - set(index)
     out_path = write_member_index(
