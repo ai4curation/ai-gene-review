@@ -1188,6 +1188,15 @@ validate-changed *files:
     fi
     echo "✓ All changed files passed validation."
 
+# conf/local_quote_baseline.yaml lists known non-verbatim file:/Reactome: quotes
+# (reported as warnings; any other failing quote is an error).
+# Example: just local-quote-baseline --prune
+#          just local-quote-baseline --report reports/local-quote-failures.yaml
+# Measure or shrink the baseline of known non-verbatim file:/Reactome: quotes
+[group('QC')]
+local-quote-baseline *args:
+    uv run python scripts/local_quote_baseline.py {{args}}
+
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
 # per-file reference and best-practices checks.

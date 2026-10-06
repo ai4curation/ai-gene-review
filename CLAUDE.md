@@ -402,6 +402,11 @@ The reference validator already catches the *mechanical* citation failures autom
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
 cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+Quotes citing `file:` or `Reactome:` sources are checked the same way, against
+the local file (resolved under `genes/`, then the repository root) or the cached
+`reactome/R-*.md` entry; a UniProt flat-file quote may run across the file's line
+wraps. Failures that predate this check are listed in `conf/local_quote_baseline.yaml`
+and only warn; fix them and run `just local-quote-baseline --prune`, never add to it.
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
 simply the wrong choice for this gene.
