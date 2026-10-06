@@ -67,3 +67,18 @@ Human RAD51C / RAD51L2 / R51H3 / FANCO. RAD51 paralog. 376 aa, chr17q. RecA fami
 - crossover junction DNA endonuclease activity (GO:0008821, contributes_to, IBA+IMP): MARK_AS_OVER_ANNOTATED — RAD51C is a RecA-fold ATPase mediator, not a nuclease; resolvase activity reassigned to GEN1.
 - Meiotic terms (GO:0000707, GO:0007131), telomere (GO:0000722), sister chromatid cohesion (GO:0007062), G2/M (GO:0010971), mitochondrion, perinuclear: KEEP_AS_NON_CORE.
 - Core: HR mediator / RAD51 filament assembly (BCDX2), fork protection/restart, junction binding + late HR (CX3).
+
+## 2026-10-06 update: BCDX2 vs CX3 (trigger PMID:42682019)
+Targeted update alongside the new XRCC3 review (`genes/human/XRCC3/`).
+- Correction: core function 2 previously attributed ATP-hydrolysis-dependent fork restart to a
+  BCDX2-scoped core function. The review states fork protection involves both complexes
+  [PMID:42682019 "both the BCDX2 and CX3 complexes participate in fork protection during replication stress"],
+  while restart is CX3-specific [PMID:42682019 "only the CX3 complex participates in restarting stalled/collapsed replication forks"],
+  consistent with the primary data [PMID:26354865 "Interestingly, unlike RAD51C and XRCC3, XRCC2 was dispensable for replication restart"].
+  Restart moved to the CX3 core function (added GO:0031297 there); description edited accordingly.
+- New assemblies: RAD51C bridges XRCC3 and RAD51D-XRCC2 in X3CDX2, which caps RAD51 filaments
+  [PMID:41196948 "the XRCC3 complex stably caps the 5' termini of RAD51 filaments to promote"];
+  independently DX2-CX3 / BCDX2-CX3 supercomplex [PMID:41772053]. No GO complex term exists for
+  X3CDX2 (added as a suggested question).
+- No annotation actions were changed. The legacy MARK_AS_OVER_ANNOTATED actions on GO:0005515 were
+  left as-is (outside the scope of this targeted update).
