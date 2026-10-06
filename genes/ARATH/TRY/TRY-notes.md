@@ -1,0 +1,29 @@
+# TRY (TRIPTYCHON; At5g53200; UniProt Q8GV05) curation notes
+
+## Identity
+- Q8GV05 TRY_ARATH, 106 aa single-repeat R3 MYB, locus AT5G53200. Paralogs: CPC, ETC1, ETC2, ETC3, TCL1 (six R3 MYBs; [PMID:18644155]).
+
+## Key findings (with provenance)
+- TRY lacks an activation domain and functions in lateral inhibition [PMID:12356720 "We show that the TRIPTYCHON gene that functions in lateral inhibition encodes a single-repeat MYB-related transcription factor that lacks a recognizable activation domain."]
+- TRY and CPC act together in trichome lateral inhibition and redundantly in root epidermis [PMID:12356720 "Both genes are expressed in trichomes and act together during lateral inhibition."]; try cpc: all cells contacting a trichome become trichomes [PMID:12356720].
+- TRY blocks GL1-GL3 interaction; GFP-TRY nuclear in trichomes [PMID:14561633 "TRY has the ability to prevent the GL1 GL3 interaction"].
+- TRY is transcriptionally activated by GL1/GL3 and moves between cells [PMID:18766177 "TRIPTYCHON and CAPRICE but not GLABRA1 and GLABRA3 can move between cells"].
+- Negative autoregulation: TRY/CPC suppress TRY promoter; TRY protein-specific properties needed for cluster suppression [PMID:21951724].
+- Quantitative pull-downs: R3 MYB inhibitors bind GL3 more weakly than GL1 [PMID:38504903].
+- All R3 MYBs interact with GL3; GL1/WER + GL3/EGL3 activate TRY transcription in protoplasts [PMID:18644155].
+
+## Curation decisions
+- GO:0003700 ISS -> MODIFY to GO:0140416 transcription regulator inhibitor activity (competitive sequestration of bHLH partner).
+- GO:0000976 IBA and Y1H IPI kept as non-core: TRY DNA binding in planta is not established, but HT Y1H [PMID:25533953] recorded a promoter interaction.
+- CrY2H-seq protein binding rows -> REMOVE (uninformative, HT, no follow-up).
+- GO:0010154 fruit development cites PMID:3793867, a Campylobacter paper (same erroneous PMID used on a GL1 row) -> MARK_AS_OVER_ANNOTATED (reference_review WRONG_IDENTIFIER); only fruit-related biology is R3 MYB suppression of silique trichomes [PMID:18644155]; no replacement guessed.
+- Core: GO:0140416 + GO:1900032 regulation of trichome patterning (matching the GOA IMP convention).
+- Falcon deep research generated (TRY-deep-research-falcon.md).
+
+## 2026-10-06 PR #4395 review follow-up
+- GO:0010154 fruit development (PMID:3793867, wrong identifier) changed to UNDECIDED, matching the existing GL1 decision for the same erroneous PMID: a citation error does not refute a phenotype and the intended source cannot be recovered. Silique trichome suppression [PMID:18644155] recorded in the reason as epidermal patterning for whoever recovers the source.
+- Added a propagation_review (PTN000067606) to the GO:0000976 IBA row so it reads alongside the CPC row on the same node.
+
+## 2026-10-06 PR #4395 fruit-development reference recovery
+- GO:0010154 fruit development (IMP, TAIR, 20210127, cited to the wrong PMID:3793867): QuickGO shows TAIR used PMID:3793867 for GO:0010154 only on TCL1 (D3GKW6), GL1 (P27900) and TRY (Q8GV05), all 20210127. The intended source is very probably PMID:33955486 (Arteaga et al. 2021, Plant Cell) [PMID:33955486, "Functional characterization of these three loci revealed cis-regulatory mutations in TRICHOMELESS1 and TRIPTYCHON, as well as a structural mutation in GLABRA1."]. Strong inference (gene set, topic, date), not TAIR-confirmed. Recorded as `reference_review.replacement` (WRONG_IDENTIFIER) on PMID:3793867; `original_reference_id` kept.
+- Phenotype is fruit/pedicel trichome formation from reduced TRY expression in reproductive organs [PMID:33955486, "Thus, Don-0 allele at SNP-701, and/or other Iberian relict polymorphisms in LD, likely reduce TRY expression in the reproductive organs, leading to trichome development in fruits."], i.e. fruit-surface trichome patterning, not fruit development proper. Row changed UNDECIDED -> MARK_AS_OVER_ANNOTATED; biology already captured by TRY trichome patterning terms.
