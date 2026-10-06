@@ -2,7 +2,7 @@
 
 ## Session 2026-10-05 (vernalization_flc_silencing module)
 
-- Q9LHF5, At3g24440. The UniProt primary name is VIL1 (synonym VRN5); the folder is `VRN5` as assigned by the module plan, and the review `gene_symbol` is VIL1 (from UniProt).
+- Q9LHF5, At3g24440. The UniProt primary name is VIL1 (synonym VRN5); the folder is `VRN5` as assigned by the module plan, and the review `gene_symbol` is VRN5 (TAIR name; a UniProt synonym), matching the folder.
 - Falcon deep research failed.
 - Identification: [PMID:17174094 "VRN5 and VIN3 form a heterodimer"]; [PMID:17114575 "VIL1, along with VERNALIZATION INSENSITIVE 3 (VIN3), is necessary for the modifications to FLC and FLM chromatin"].
 - FLC binding dynamics: [PMID:18854416 "The vernalization-induced silencing is triggered by the cold-dependent association of the PHD finger protein VRN5 to a specific domain in FLC intron 1, and this association is dependent on the cold-induced PHD protein VIN3."]
