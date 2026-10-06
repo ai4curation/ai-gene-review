@@ -89,10 +89,12 @@ written manually from the UniProt record (Q8NB16) and the cached publications in
 ## Curation conclusions
 
 - Core: executioner of necroptosis (GO:0097528 execution phase of necroptosis);
-  binds phosphatidylinositol phosphates (GO:1901981) to target and disrupt the plasma
-  membrane; binds IP6 (GO:0000822) as an obligate activation cofactor.
+  disrupts the plasma membrane (GO:0140912 membrane destabilizing activity) after
+  binding phosphatidylinositol phosphates (GO:1901981) to target it; binds IP6 (GO:0000822) as an obligate activation cofactor.
 - Kinase NOT annotations: accept.
 - protein binding (RIPK3, IPI x3): MODIFY to protein kinase binding (GO:0019901).
-- No GO MF term describes "permeabilizes own plasma membrane" without the
-  "membrane of another cell" restriction of GO:0140911 pore-forming activity; raised
-  as a suggested question rather than forced.
+- GO:0140911 pore-forming activity is restricted to the membrane of another cell and
+  does not fit, but GO:0140912 membrane destabilizing activity ("binding to a membrane
+  and increasing its permeability") does, and is the core activity used for NINJ1. It is
+  now MLKL's core molecular function (NEW, IDA, PMID:24813885 liposome leakage), with
+  phosphatidylinositol phosphate binding kept as the membrane-targeting activity.

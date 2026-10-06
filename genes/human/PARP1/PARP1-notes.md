@@ -108,10 +108,19 @@ PMID:17116882, PMID:21467298, PMID:27846469), and the GOA annotation set.
   damage, cells undergo PARP-1-dependent ATP depletion" [PMID:24289924]; "persistent
   PARP-1 hyperactivation during severe genotoxic stress is associated with cell
   death." [PMID:26626480]
-- GO convention: AIFM1 (O95831) carries GO:0060545 positive regulation of
-  necroptotic process (ISS), as does PARP1. The GO:0097527 definition notes that
-  PARP1-dependent death (parthanatos) is filed under necroptotic signalling. There is
-  no dedicated parthanatos term.
+- GO representation: GO has no parthanatos term. It lists "parthanatos" as a synonym
+  of GO:0070266 necroptotic process, and the GO:0097527 comment says whether it is an
+  independent modality "is still being debated". That filing is mechanistically wrong:
+  necroptosis is defined by RIPK1/RIPK3 and MLKL, and parthanatos needs neither. The
+  ISS row to GO:0060545 positive regulation of necroptotic process is therefore
+  MODIFIED to GO:0097300 programmed necrotic cell death, whose usage note covers
+  regulated necrosis without shown RIPK1/RIPK3 involvement. AIFM1's GO:0060545 row is
+  UNDECIDED in its own review, so it is not a convention to follow.
+- Programmed or not: parthanatos is regulated (blocked by PARP1 inhibition or by
+  disrupting PAR binding to AIF) but not programmed in the NCCD sense. It arises from
+  PARP1 hyperactivation under severe genotoxic or excitotoxic stress, has no known
+  developmental or homeostatic role, and its downstream effectors have other primary
+  functions. It is kept out of core_functions; PARP1's core role is DNA repair.
 
 ## Mitochondria
 
