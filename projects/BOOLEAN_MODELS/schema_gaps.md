@@ -82,6 +82,13 @@ update_rule: "ras_active & !erk_mapk" # explicit bnet-syntax rule over element i
                                       # overrides the default entirely
 ```
 
+**Status (2026-10-05): implemented, declaratively.** Instead of a rule string, a
+node or annoton carries `activation_logic`, a tree of `all_of` / `any_of` / `none_of`
+over `element` references, validated against the declared connections (see
+[EXECUTABLE_MODELS](../EXECUTABLE_MODELS.md)). The first curated use is the Pst
+phosphate transporter, whose translocation step needs substrate capture AND ATP
+hydrolysis. The original proposal follows.
+
 `update_rule` is what `BooleanModel.with_logic()` already accepts; the demo's
 "calibrated" ERK network is exactly a module with two `update_rule` values set.
 Validation: every identifier in `update_rule` must be an element id of the document
@@ -123,6 +130,11 @@ model_associations:
     title: "MAPK cancer cell fate (Grieco 2013)"
     evidence: [{source_id: "PMID:24250280"}]
 ```
+
+**Status (2026-10-05): half done.** `executable_models` now attaches an external
+model to a module as a whole (BBM-070 on `erk_cascade`, the Maud model on
+`methionine_cycle`), with files and evidence. The variable-level association
+proposed here is still open.
 
 With this in place the sidecar mapping becomes a derived view, the module page can
 render "this tier is calibrated against N models", and the calibration diff can run in

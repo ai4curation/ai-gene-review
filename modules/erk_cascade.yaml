@@ -768,3 +768,171 @@ module:
           supporting_text: a major mitogen activated kinase for SOS is p90 Rsk-2, a downstream target of MAP kinase
         - source_id: file:models/boolean/bbm-070-mapk-cancer-cell-fate/model.bnet
           statement: The published MAPK logical model (Grieco 2013, PMID:24250280) carries RSK as an inhibitor in the SOS update rule.
+executable_models:
+  - id: erk_cascade_boolean
+    title: ERK cascade as a Boolean network
+    model_type: BOOLEAN
+    derivation: DERIVED_FROM_MODULE
+    description: >-
+      The module's connections read as a signed regulatory graph, translated by
+      ai-gene-review module-to-bnet with the default rule (active when any
+      activator is active and no inhibitor is). Every rule comes from the
+      module's connections; nothing is edited in the network itself. The scenarios
+      are checked by exhaustive asynchronous attractor enumeration in
+      validation, so a change to the wiring that alters any of these behaviours
+      fails loudly.
+    scenarios:
+      - id: unstimulated
+        label: No stimulus
+        description: >-
+          No receptor-adaptor recruitment. The cascade rests with every tier
+          off.
+        settings:
+          - element: adaptor_recruitment
+            active: false
+          - element: rasgap_step
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - ras_active
+          - erk_mapk
+      - id: sustained_stimulus
+        label: Sustained stimulus
+        description: >-
+          Adaptor recruitment held on, as under a persistent growth-factor
+          signal. Because ERK inhibits RAF and SOS directly and induces DUSP
+          phosphatases and Sprouty, there is no steady state with ERK on: the
+          single attractor is cyclic, which in a Boolean model reads as
+          transient (pulsed or adapting) ERK activity rather than literal
+          oscillation.
+        settings:
+          - element: adaptor_recruitment
+            active: true
+          - element: rasgap_step
+            active: false
+        expected_attractor_kind: CYCLIC
+        expected_attractor_count: 1
+        expected_oscillating:
+          - raf_map3k
+          - erk_mapk
+          - mapk_negative_regulation
+        evidence:
+          - source_id: PMID:24250280
+            statement: >-
+              The published MAPK logical model reads its cyclic ERK attractor
+              under growth-factor input as transient ERK activation.
+            supporting_text: >-
+              In other words, ERK oscillations in our state transition graph
+              correspond to the transient ERK activation in the ODE-based model
+              from Orton et al.
+      - id: feedback_cut
+        label: Feedback loops cut
+        description: >-
+          Counterfactual: the module's wiring before its negative feedback was
+          curated in. The five feedback connections are removed and the DUSP
+          and Sprouty steps are held at their uninduced (off) state. ERK then
+          locks on, which is the behaviour the external models and the
+          literature contradict.
+        settings:
+          - element: adaptor_recruitment
+            active: true
+          - element: rasgap_step
+            active: false
+          - element: mapk_negative_regulation
+            active: false
+          - element: sprouty_spred_feedback
+            active: false
+        removed_connections:
+          - source: erk_mapk
+            target: raf_map3k
+          - source: erk_mapk
+            target: ras_gef_step
+          - source: erk_output
+            target: ras_gef_step
+          - source: erk_output
+            target: mapk_negative_regulation
+          - source: erk_output
+            target: sprouty_spred_feedback
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - erk_mapk
+          - erk_output
+      - id: transcriptional_feedback_lost
+        label: DUSP and Sprouty knocked out
+        description: >-
+          Both induced feedbacks removed, as by knockout of the inducible
+          phosphatases and Sprouty/Spred. The direct ERK phosphorylation of RAF
+          and SOS still prevents a locked-on state: the feedbacks are
+          redundant, and the post-translational ones alone suffice to keep
+          signalling transient in this model.
+        settings:
+          - element: adaptor_recruitment
+            active: true
+          - element: rasgap_step
+            active: false
+          - element: mapk_negative_regulation
+            active: false
+          - element: sprouty_spred_feedback
+            active: false
+        expected_attractor_kind: CYCLIC
+        expected_attractor_count: 1
+        expected_oscillating:
+          - erk_mapk
+      - id: mek_inhibited
+        label: MEK inhibited
+        description: >-
+          MEK held off, as by a MEK inhibitor. ERK cannot be activated whatever
+          the upstream input; RAS and RAF stay on because nothing downstream
+          feeds back.
+        settings:
+          - element: adaptor_recruitment
+            active: true
+          - element: rasgap_step
+            active: false
+          - element: mek_map2k
+            active: false
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_active:
+          - ras_active
+          - raf_map3k
+        expected_inactive:
+          - erk_mapk
+      - id: rasgap_dominant
+        label: RasGAP active
+        description: >-
+          RasGAP (e.g. NF1) held on. RAS-GTP cannot accumulate, so the cascade
+          stays off despite the stimulus.
+        settings:
+          - element: adaptor_recruitment
+            active: true
+          - element: rasgap_step
+            active: true
+        expected_attractor_kind: FIXED_POINT
+        expected_attractor_count: 1
+        expected_inactive:
+          - ras_active
+          - erk_mapk
+  - id: bbm_070_mapk_cancer_cell_fate
+    title: MAPK network and cancer cell fate decisions (Grieco 2013)
+    model_type: BOOLEAN
+    derivation: EXTERNAL
+    description: >-
+      Published logical model of the MAPK network (BBM-070 in the Biodivine
+      Boolean Models corpus). Used as a calibration source for this module's
+      wiring through a reviewed id-mapping; its ERK ⊣ RAF and RSK ⊣ SOS
+      feedbacks prompted the feedback connections curated into this module.
+      Its cyclic attractor under growth-factor input is the behaviour the
+      derived model's sustained-stimulus scenario reproduces.
+    files:
+      - models/boolean/bbm-070-mapk-cancer-cell-fate/model.bnet
+      - models/boolean/bbm-070-mapk-cancer-cell-fate/mapping_to_modules.yaml
+    evidence:
+      - source_id: PMID:24250280
+        statement: Published logical model of the MAPK network whose ERK oscillations are read as transient ERK activation.
+        supporting_text: >-
+          In other words, ERK oscillations in our state transition graph
+          correspond to the transient ERK activation in the ODE-based model
+          from Orton et al.

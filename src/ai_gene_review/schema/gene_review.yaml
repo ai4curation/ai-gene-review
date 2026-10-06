@@ -799,12 +799,159 @@ classes:
         range: ModuleNode
         inlined: true
         required: true
+      executable_models:
+        range: ExecutableModel
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Executable models (Boolean, kinetic, constraint-based, agent-based)
+          that realize this module, either derived from its own `connections`
+          or associated external models. List a model only once its behaviour
+          has been checked: each entry carries the scenarios it was run under
+          and what the module predicts in each, so the expectation is a
+          regression test on the curated wiring.
       evidence:
         range: EvidenceItem
         multivalued: true
         inlined_as_list: true
       notes:
         range: string
+
+  LogicExpression:
+    description: >-
+      A Boolean expression over module element ids, written declaratively as a
+      tree. Exactly one of `element`, `all_of`, `any_of` or `none_of` is set.
+      `none_of: [x]` is NOT x; `none_of: [x, y]` is NOT (x OR y).
+    attributes:
+      element:
+        range: string
+        description: >-
+          Id of a module node or annoton (a regulator of the element that owns
+          this expression).
+      all_of:
+        range: LogicExpression
+        multivalued: true
+        inlined_as_list: true
+        description: Conjunction (AND) of the sub-expressions.
+      any_of:
+        range: LogicExpression
+        multivalued: true
+        inlined_as_list: true
+        description: Disjunction (OR) of the sub-expressions.
+      none_of:
+        range: LogicExpression
+        multivalued: true
+        inlined_as_list: true
+        description: Negated disjunction (NOT (a OR b ...)) of the sub-expressions.
+
+  ExecutableModel:
+    description: >-
+      An executable model of a module: a Boolean network, kinetic (ODE) model,
+      constraint-based (FBA/genome-scale) model or agent-based model, with the
+      scenarios it has been run under. A model DERIVED_FROM_MODULE is generated
+      from the module's own `connections` (and any `activation_logic`) and is
+      never edited by hand; corrections go into the module. An EXTERNAL model
+      is a published model associated with the module through a reviewed
+      mapping, and is evidence for the module's wiring, not a replacement.
+    attributes:
+      id:
+        range: string
+        required: true
+      title:
+        range: string
+      model_type:
+        range: ExecutableModelTypeEnum
+        required: true
+      derivation:
+        range: ModelDerivationEnum
+        required: true
+      description:
+        range: string
+      files:
+        range: string
+        multivalued: true
+        description: >-
+          Repository-relative paths of model files (e.g. an external `.bnet` or
+          SBML snapshot, or a committed export of a derived model).
+      scenarios:
+        range: ModelScenario
+        multivalued: true
+        inlined_as_list: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModelScenario:
+    description: >-
+      A named run of an executable model: which elements are held fixed (a
+      stimulus, a knockout, a constitutively active mutant), which connections
+      are removed (a counterfactual), and the behaviour the curated wiring is
+      expected to produce. For Boolean models the expectation is checked
+      against the asynchronous attractors.
+    attributes:
+      id:
+        range: string
+        required: true
+      label:
+        range: string
+      description:
+        range: string
+      settings:
+        range: ScenarioSetting
+        multivalued: true
+        inlined_as_list: true
+      removed_connections:
+        range: ConnectionReference
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Connections dropped for this scenario, e.g. to show what the module
+          predicted before a feedback loop was curated in.
+      expected_attractor_kind:
+        range: AttractorKindEnum
+        description: The kind of every attractor the scenario is expected to reach.
+      expected_attractor_count:
+        range: integer
+        description: The expected number of attractors (1 = no multistability).
+      expected_active:
+        range: string
+        multivalued: true
+        description: Elements expected to be active in every state of every attractor.
+      expected_inactive:
+        range: string
+        multivalued: true
+        description: Elements expected to be inactive in every state of every attractor.
+      expected_oscillating:
+        range: string
+        multivalued: true
+        description: Elements expected to change value within an attractor.
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+
+  ScenarioSetting:
+    description: An element held at a fixed value for a scenario.
+    attributes:
+      element:
+        range: string
+        required: true
+      active:
+        range: boolean
+        required: true
+
+  ConnectionReference:
+    description: A reference to a module connection by its endpoints.
+    attributes:
+      source:
+        range: string
+        required: true
+      target:
+        range: string
+        required: true
 
   ModuleNode:
     description: >-
@@ -858,6 +1005,20 @@ classes:
           bundle-scoped consistency check: a concrete cascade may freely extend
           its start and end, while an inner sub-bundle node declares that its
           parts match a generic motif (e.g. the three-tier MAP kinase relay).
+      activation_logic:
+        range: LogicExpression
+        inlined: true
+        description: >-
+          Declarative Boolean logic stating when this element is active, as a
+          function of the elements that regulate it through `connections`.
+          Omit it to use the default (active when any activating regulator is
+          active and no inhibiting regulator is; the CaSQ convention). State it
+          only where that default is wrong, e.g. a step that needs ALL of
+          several inputs, or an activator that overrides an inhibitor. Every
+          element named must be the source of a signed connection into this
+          element: an activating connection in a positive position, an
+          inhibiting one inside `none_of`. Read by the Boolean translator
+          (`ai-gene-review module-to-bnet`), which exports it as the update rule.
       gocam_associations:
         range: GoCamAssociation
         multivalued: true
@@ -981,6 +1142,20 @@ classes:
         inlined_as_list: true
       role_description:
         range: string
+      activation_logic:
+        range: LogicExpression
+        inlined: true
+        description: >-
+          Declarative Boolean logic stating when this element is active, as a
+          function of the elements that regulate it through `connections`.
+          Omit it to use the default (active when any activating regulator is
+          active and no inhibiting regulator is; the CaSQ convention). State it
+          only where that default is wrong, e.g. a step that needs ALL of
+          several inputs, or an activator that overrides an inhibitor. Every
+          element named must be the source of a signed connection into this
+          element: an activating connection in a positive position, an
+          inhibiting one inside `none_of`. Read by the Boolean translator
+          (`ai-gene-review module-to-bnet`), which exports it as the update rule.
       gocam_associations:
         range: GoCamAssociation
         multivalued: true
@@ -2326,6 +2501,40 @@ classes:
 
 
 enums:
+  ExecutableModelTypeEnum:
+    description: The modelling formalism of an executable model.
+    permissible_values:
+      BOOLEAN:
+        description: Logical (Boolean or multi-valued) network.
+      KINETIC:
+        description: Kinetic model of reaction rates (ODE or stochastic).
+      CONSTRAINT_BASED:
+        description: Constraint-based / flux-balance model, including genome-scale metabolic models.
+      AGENT_BASED:
+        description: Agent-based model of cells or molecules.
+      OTHER:
+        description: Any other executable formalism.
+
+  ModelDerivationEnum:
+    description: Where an executable model comes from.
+    permissible_values:
+      DERIVED_FROM_MODULE:
+        description: Generated deterministically from the module document; never edited by hand.
+      EXTERNAL:
+        description: A published or third-party model associated with the module through a reviewed mapping.
+
+  AttractorKindEnum:
+    description: Long-term behaviour of a dynamical model under a scenario.
+    permissible_values:
+      FIXED_POINT:
+        description: A stable steady state in which no element changes.
+      CYCLIC:
+        description: >-
+          A complex attractor in which some elements keep changing. In a Boolean
+          model under negative feedback this reads as "no sustained steady
+          state" (a pulse, adaptation or oscillation), not as a claim that cells
+          oscillate.
+
   ModuleScopeEnum:
     description: How concrete the module document is expected to be.
     permissible_values:

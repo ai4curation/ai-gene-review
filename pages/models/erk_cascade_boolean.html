@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERK cascade as a Boolean network - AI Gene Review</title>
+    <style>
+        :root {
+            --bg-page: #f7f8fb;
+            --bg-panel: #ffffff;
+            --bg-soft: #f2f6f8;
+            --border: #d9e1e7;
+            --text: #17212b;
+            --muted: #637282;
+            --accent: #0f766e;
+            --accent-soft: #dff4f0;
+            --on: #0f766e;
+            --on-text: #ffffff;
+            --off: #ffffff;
+            --act: #5b6b7a;
+            --inh: #c2410c;
+            --blue: #2563eb;
+            --ok: #15803d;
+            --bad: #b91c1c;
+            --cell-off: #eef2f5;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text);
+            background: var(--bg-page);
+            line-height: 1.5;
+        }
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .page { max-width: 1280px; margin: 0 auto; padding: 24px 16px; }
+        .breadcrumb { font-size: 0.9rem; color: var(--muted); margin-bottom: 10px; }
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+        }
+        h1 { margin: 0 0 6px; font-size: 1.7rem; }
+        h2 { margin: 0 0 10px; font-size: 1.1rem; }
+        .muted { color: var(--muted); }
+        .small { font-size: 0.88rem; }
+        .pill {
+            display: inline-block; padding: 2px 9px; border-radius: 999px;
+            border: 1px solid var(--border); background: var(--bg-soft);
+            font-size: 0.8rem; margin: 2px 4px 2px 0;
+        }
+        .pill.type { background: var(--accent-soft); border-color: #a7ddd3; color: var(--accent); }
+        .lede { max-width: 860px; }
+        .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 12px; }
+        .how div { background: var(--bg-soft); border-radius: 6px; padding: 10px 12px; font-size: 0.9rem; }
+        .how b { display: block; margin-bottom: 2px; }
+        .scenarios { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .scenario-btn {
+            font: inherit; font-size: 0.9rem; cursor: pointer;
+            border: 1px solid var(--border); background: var(--bg-panel);
+            border-radius: 6px; padding: 6px 12px;
+        }
+        .scenario-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+        .scenario-text { min-height: 3em; }
+        .layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+        @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+        .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .controls button {
+            font: inherit; font-size: 0.9rem; cursor: pointer; border-radius: 6px;
+            border: 1px solid var(--border); background: var(--bg-panel); padding: 5px 12px;
+        }
+        .controls button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .controls label { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+        svg { display: block; width: 100%; height: auto; }
+        .node rect { stroke: #8fa1b0; stroke-width: 1.2; fill: var(--off); transition: fill 0.15s; }
+        .node text { font-size: 12px; fill: var(--text); pointer-events: none; }
+        .node.on rect { fill: var(--on); stroke: var(--on); }
+        .node.on text { fill: var(--on-text); }
+        .node.locked rect { stroke-width: 2.4; stroke-dasharray: 5 3; stroke: #17212b; }
+        .node.input rect { stroke-width: 2; }
+        .node { cursor: pointer; }
+        .node .lock { font-size: 10px; font-weight: 700; fill: #17212b; letter-spacing: 0.04em; }
+        .edge { fill: none; stroke-width: 1.6; }
+        .edge.act { stroke: var(--act); }
+        .edge.inh { stroke: var(--inh); }
+        .edge.removed { stroke: #b5c0ca; stroke-dasharray: 4 4; }
+        .verdict { border-left: 4px solid var(--accent); background: var(--bg-soft); padding: 10px 12px; border-radius: 4px; }
+        .verdict.cyclic { border-left-color: #7c3aed; }
+        .verdict strong { display: block; margin-bottom: 4px; }
+        .check-ok { color: var(--ok); font-weight: 600; }
+        .check-bad { color: var(--bad); font-weight: 600; }
+        .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+        .legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #8fa1b0; display: inline-block; }
+        table.rules { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+        table.rules td, table.rules th { border-bottom: 1px solid var(--border); padding: 5px 6px; text-align: left; vertical-align: top; }
+        code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.85em; }
+        .tag { font-size: 0.72rem; border-radius: 4px; padding: 1px 5px; background: var(--bg-soft); color: var(--muted); }
+        .tag.declared { background: #ede9fe; color: #5b21b6; }
+        .status-line { font-size: 0.85rem; color: var(--muted); min-height: 1.3em; }
+        details summary { cursor: pointer; color: var(--muted); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+<main class="page">
+    <nav class="breadcrumb">
+        <a href="../modules/index.html">Module KB</a> /
+        <a href="../modules/erk_cascade.html">ERK1/2 (Ras-RAF-MEK-ERK) MAPK cascade module</a> /
+        <a href="index.html">Executable models</a>
+    </nav>
+
+    <section class="panel">
+        <h1>ERK cascade as a Boolean network</h1>
+        <div>
+            <span class="pill type">Boolean network</span>
+            <span class="pill">derived from module</span>
+            <span class="pill">10 variables &middot; 15 signed edges</span>
+            <a class="pill" href="https://github.com/ai4curation/ai-gene-review/blob/main/modules/erk_cascade.yaml">modules/erk_cascade.yaml</a>
+        </div>
+        <p class="lede">The module&#39;s connections read as a signed regulatory graph, translated by ai-gene-review module-to-bnet with the default rule (active when any activator is active and no inhibitor is). Every rule comes from the module&#39;s connections; nothing is edited in the network itself. The scenarios are checked by exhaustive asynchronous attractor enumeration in validation, so a change to the wiring that alters any of these behaviours fails loudly.</p>
+        <div class="how">
+            <div><b>Boxes are steps of the module</b>Each is either ON (filled) or OFF. Grey arrows activate; orange flat-headed lines inhibit.</div>
+            <div><b>Pick a scenario, press Run</b>Steps switch one at a time, at random, whenever their inputs say they should: the asynchronous update.</div>
+            <div><b>Click a box to lock it</b>Cycle free &rarr; locked ON &rarr; locked OFF, to knock a step out or force it on. The read-out updates at once.</div>
+            <div><b>Where it ends up</b>Every possible end state is computed exhaustively. One steady state, or a cycle that never settles: in a Boolean model, a transient pulse.</div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>Scenarios <span class="muted small">curated in the module, checked in validation</span></h2>
+        <div class="scenarios" id="scenario-buttons"></div>
+        <p class="scenario-text small" id="scenario-text"></p>
+    </section>
+
+    <div class="layout">
+        <section class="panel">
+            <h2>Wiring</h2>
+            <div class="controls">
+                <button class="primary" id="run">Run</button>
+                <button id="step">Step</button>
+                <button id="reset">Reset</button>
+                <label>speed <input type="range" id="speed" min="1" max="20" value="6"></label>
+            </div>
+            <div class="status-line" id="status"></div>
+            <svg id="graph" role="img" aria-label="Regulatory graph of the module"></svg>
+            <div class="legend">
+                <span><span class="sw" style="background: var(--on); border-color: var(--on)"></span>ON</span>
+                <span><span class="sw"></span>OFF</span>
+                <span><span class="sw" style="border: 2px dashed #17212b"></span>locked</span>
+                <span><span class="sw" style="border-width: 2px"></span>input</span>
+                <span><svg width="26" height="10"><line x1="1" y1="5" x2="20" y2="5" stroke="#5b6b7a" stroke-width="1.6"/><path d="M20,1 L25,5 L20,9 z" fill="#5b6b7a"/></svg>activates</span>
+                <span><svg width="26" height="10"><line x1="1" y1="5" x2="22" y2="5" stroke="#c2410c" stroke-width="1.6"/><line x1="23" y1="0" x2="23" y2="10" stroke="#c2410c" stroke-width="2.4"/></svg>inhibits</span>
+                <span><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="#9aa8b4" stroke-width="1.6" stroke-dasharray="4 4"/></svg>removed&nbsp;in&nbsp;scenario</span>
+            </div>
+        </section>
+
+        <div>
+            <section class="panel">
+                <h2>Where it ends up</h2>
+                <div id="verdict"></div>
+            </section>
+            <section class="panel">
+                <h2>Timeline <span class="muted small">one column per update, newest on the right</span></h2>
+                <svg id="timeline" role="img" aria-label="Timeline of variable states"></svg>
+            </section>
+        </div>
+    </div>
+
+    <section class="panel">
+        <h2>Update rules</h2>
+        <p class="small muted">Generated from the module's <code>connections</code>. A step is ON when any activator is ON and no inhibitor is (the default), unless the module declares <code>activation_logic</code> for it.</p>
+        <table class="rules" id="rules"></table>
+        <details style="margin-top: 10px">
+            <summary>BoolNet (.bnet) export</summary>
+            <pre class="small"><code id="bnet"></code></pre>
+            <a id="bnet-download" class="small" download="erk_cascade_boolean.bnet">Download .bnet</a>
+        </details>
+    </section>
+</main>
+
+<script type="application/json" id="model-data">{"bnet": "targets, factors\nadaptor_recruitment, adaptor_recruitment\nras_gef_step, adaptor_recruitment & !(erk_mapk | erk_output | sprouty_spred_feedback)\nras_active, ras_gef_step & !rasgap_step\nrasgap_step, rasgap_step\nraf_map3k, ras_active & !(erk_mapk | sprouty_spred_feedback)\nmek_map2k, raf_map3k\nerk_mapk, mek_map2k & !mapk_negative_regulation\nerk_output, erk_mapk\nmapk_negative_regulation, erk_output\nsprouty_spred_feedback, erk_output", "declared_logic": [], "description": "The module's connections read as a signed regulatory graph, translated by ai-gene-review module-to-bnet with the default rule (active when any activator is active and no inhibitor is). Every rule comes from the module's connections; nothing is edited in the network itself. The scenarios are checked by exhaustive asynchronous attractor enumeration in validation, so a change to the wiring that alters any of these behaviours fails loudly.", "edges": [["adaptor_recruitment", "ras_gef_step", "+"], ["erk_mapk", "erk_output", "+"], ["erk_mapk", "raf_map3k", "-"], ["erk_mapk", "ras_gef_step", "-"], ["erk_output", "mapk_negative_regulation", "+"], ["erk_output", "ras_gef_step", "-"], ["erk_output", "sprouty_spred_feedback", "+"], ["mapk_negative_regulation", "erk_mapk", "-"], ["mek_map2k", "erk_mapk", "+"], ["raf_map3k", "mek_map2k", "+"], ["ras_active", "raf_map3k", "+"], ["ras_gef_step", "ras_active", "+"], ["rasgap_step", "ras_active", "-"], ["sprouty_spred_feedback", "raf_map3k", "-"], ["sprouty_spred_feedback", "ras_gef_step", "-"]], "layout": {"adaptor_recruitment": [0, 0], "erk_mapk": [5, 0], "erk_output": [6, 0], "mapk_negative_regulation": [7, 0], "mek_map2k": [4, 0], "raf_map3k": [3, 0], "ras_active": [2, 0], "ras_gef_step": [1, 0], "rasgap_step": [1, 1], "sprouty_spred_feedback": [7, 1]}, "model_id": "erk_cascade_boolean", "model_title": "ERK cascade as a Boolean network", "module_id": "MODULE:erk_cascade", "rules": {"erk_mapk": {"text": "mek_map2k & !mapk_negative_regulation", "tree": ["and", ["mek_map2k", ["not", "mapk_negative_regulation"]]]}, "erk_output": {"text": "erk_mapk", "tree": "erk_mapk"}, "mapk_negative_regulation": {"text": "erk_output", "tree": "erk_output"}, "mek_map2k": {"text": "raf_map3k", "tree": "raf_map3k"}, "raf_map3k": {"text": "ras_active & !(erk_mapk | sprouty_spred_feedback)", "tree": ["and", ["ras_active", ["not", ["or", ["erk_mapk", "sprouty_spred_feedback"]]]]]}, "ras_active": {"text": "ras_gef_step & !rasgap_step", "tree": ["and", ["ras_gef_step", ["not", "rasgap_step"]]]}, "ras_gef_step": {"text": "adaptor_recruitment & !(erk_mapk | erk_output | sprouty_spred_feedback)", "tree": ["and", ["adaptor_recruitment", ["not", ["or", ["erk_mapk", "erk_output", "sprouty_spred_feedback"]]]]]}, "sprouty_spred_feedback": {"text": "erk_output", "tree": "erk_output"}}, "scenarios": [{"attractors": [{"always_off": ["adaptor_recruitment", "ras_gef_step", "ras_active", "rasgap_step", "raf_map3k", "mek_map2k", "erk_mapk", "erk_output", "mapk_negative_regulation", "sprouty_spred_feedback"], "always_on": [], "kind": "FIXED_POINT", "oscillating": [], "size": 1}], "description": "No receptor-adaptor recruitment. The cascade rests with every tier off.", "failures": [], "id": "unstimulated", "label": "No stimulus", "removed": [], "removed_edges": [], "rule_overrides": {}, "settings": {"adaptor_recruitment": false, "rasgap_step": false}}, {"attractors": [{"always_off": ["rasgap_step"], "always_on": ["adaptor_recruitment"], "kind": "CYCLIC", "oscillating": ["ras_gef_step", "ras_active", "raf_map3k", "mek_map2k", "erk_mapk", "erk_output", "mapk_negative_regulation", "sprouty_spred_feedback"], "size": 188}], "description": "Adaptor recruitment held on, as under a persistent growth-factor signal. Because ERK inhibits RAF and SOS directly and induces DUSP phosphatases and Sprouty, there is no steady state with ERK on: the single attractor is cyclic, which in a Boolean model reads as transient (pulsed or adapting) ERK activity rather than literal oscillation.", "failures": [], "id": "sustained_stimulus", "label": "Sustained stimulus", "removed": [], "removed_edges": [], "rule_overrides": {}, "settings": {"adaptor_recruitment": true, "rasgap_step": false}}, {"attractors": [{"always_off": ["rasgap_step", "mapk_negative_regulation", "sprouty_spred_feedback"], "always_on": ["adaptor_recruitment", "ras_gef_step", "ras_active", "raf_map3k", "mek_map2k", "erk_mapk", "erk_output"], "kind": "FIXED_POINT", "oscillating": [], "size": 1}], "description": "Counterfactual: the module's wiring before its negative feedback was curated in. The five feedback connections are removed and the DUSP and Sprouty steps are held at their uninduced (off) state. ERK then locks on, which is the behaviour the external models and the literature contradict.", "failures": [], "id": "feedback_cut", "label": "Feedback loops cut", "removed": [["erk_mapk", "raf_map3k"], ["erk_mapk", "ras_gef_step"], ["erk_output", "mapk_negative_regulation"], ["erk_output", "ras_gef_step"], ["erk_output", "sprouty_spred_feedback"]], "removed_edges": [["erk_mapk", "raf_map3k", "-"], ["erk_mapk", "ras_gef_step", "-"], ["erk_output", "mapk_negative_regulation", "+"], ["erk_output", "ras_gef_step", "-"], ["erk_output", "sprouty_spred_feedback", "+"]], "rule_overrides": {"mapk_negative_regulation": null, "raf_map3k": {"text": "ras_active & !sprouty_spred_feedback", "tree": ["and", ["ras_active", ["not", "sprouty_spred_feedback"]]]}, "ras_gef_step": {"text": "adaptor_recruitment & !sprouty_spred_feedback", "tree": ["and", ["adaptor_recruitment", ["not", "sprouty_spred_feedback"]]]}, "sprouty_spred_feedback": null}, "settings": {"adaptor_recruitment": true, "mapk_negative_regulation": false, "rasgap_step": false, "sprouty_spred_feedback": false}}, {"attractors": [{"always_off": ["rasgap_step", "mapk_negative_regulation", "sprouty_spred_feedback"], "always_on": ["adaptor_recruitment"], "kind": "CYCLIC", "oscillating": ["ras_gef_step", "ras_active", "raf_map3k", "mek_map2k", "erk_mapk", "erk_output"], "size": 50}], "description": "Both induced feedbacks removed, as by knockout of the inducible phosphatases and Sprouty/Spred. The direct ERK phosphorylation of RAF and SOS still prevents a locked-on state: the feedbacks are redundant, and the post-translational ones alone suffice to keep signalling transient in this model.", "failures": [], "id": "transcriptional_feedback_lost", "label": "DUSP and Sprouty knocked out", "removed": [], "removed_edges": [], "rule_overrides": {}, "settings": {"adaptor_recruitment": true, "mapk_negative_regulation": false, "rasgap_step": false, "sprouty_spred_feedback": false}}, {"attractors": [{"always_off": ["rasgap_step", "mek_map2k", "erk_mapk", "erk_output", "mapk_negative_regulation", "sprouty_spred_feedback"], "always_on": ["adaptor_recruitment", "ras_gef_step", "ras_active", "raf_map3k"], "kind": "FIXED_POINT", "oscillating": [], "size": 1}], "description": "MEK held off, as by a MEK inhibitor. ERK cannot be activated whatever the upstream input; RAS and RAF stay on because nothing downstream feeds back.", "failures": [], "id": "mek_inhibited", "label": "MEK inhibited", "removed": [], "removed_edges": [], "rule_overrides": {}, "settings": {"adaptor_recruitment": true, "mek_map2k": false, "rasgap_step": false}}, {"attractors": [{"always_off": ["ras_active", "raf_map3k", "mek_map2k", "erk_mapk", "erk_output", "mapk_negative_regulation", "sprouty_spred_feedback"], "always_on": ["adaptor_recruitment", "ras_gef_step", "rasgap_step"], "kind": "FIXED_POINT", "oscillating": [], "size": 1}], "description": "RasGAP (e.g. NF1) held on. RAS-GTP cannot accumulate, so the cascade stays off despite the stimulus.", "failures": [], "id": "rasgap_dominant", "label": "RasGAP active", "removed": [], "removed_edges": [], "rule_overrides": {}, "settings": {"adaptor_recruitment": true, "rasgap_step": true}}], "title": "ERK1/2 (Ras-RAF-MEK-ERK) MAPK cascade module", "variables": [{"id": "adaptor_recruitment", "input": true, "label": "GRB2/SHC adaptor recruitment to receptor phosphotyrosine"}, {"id": "ras_gef_step", "input": false, "label": "SOS guanine nucleotide exchange on Ras"}, {"id": "ras_active", "input": false, "label": "Active GTP-bound Ras"}, {"id": "rasgap_step", "input": true, "label": "RasGAP acceleration of Ras GTP hydrolysis"}, {"id": "raf_map3k", "input": false, "label": "RAF MAP kinase kinase kinase activation"}, {"id": "mek_map2k", "input": false, "label": "MEK1/MEK2 MAP kinase kinase activation"}, {"id": "erk_mapk", "input": false, "label": "ERK1/ERK2 MAP kinase activation"}, {"id": "erk_output", "input": false, "label": "ERK effector and transcriptional output"}, {"id": "mapk_negative_regulation", "input": false, "label": "DUSP/MKP dephosphorylation of ERK"}, {"id": "sprouty_spred_feedback", "input": false, "label": "Sprouty/SPRED feedback inhibition of Ras-RAF activation"}]}</script>
+<script>
+(function () {
+    "use strict";
+    const data = JSON.parse(document.getElementById("model-data").textContent);
+    const vars = data.variables.map(v => v.id);
+    const index = Object.fromEntries(vars.map((v, i) => [v, i]));
+    const label = Object.fromEntries(data.variables.map(v => [v.id, v.label]));
+    const isInput = Object.fromEntries(data.variables.map(v => [v.id, v.input]));
+    const declared = new Set(data.declared_logic || []);
+    const NS = "http://www.w3.org/2000/svg";
+    const MAX_COLS = 70;
+
+    let scenario = null;
+    let rules = {};          // var -> {text, tree} (null = input)
+    let removed = new Set(); // "s|t|sign"
+    let locks = {};          // var -> true/false
+    let state = {};
+    let history = [];
+    let timer = null;
+
+    function evaluate(tree, env) {
+        if (typeof tree === "boolean") return tree;
+        if (typeof tree === "string") return env[tree];
+        if (tree[0] === "not") return !evaluate(tree[1], env);
+        if (tree[0] === "and") return tree[1].every(t => evaluate(t, env));
+        return tree[1].some(t => evaluate(t, env));
+    }
+
+    function target(v, env) {
+        if (v in locks) return locks[v];
+        const r = rules[v];
+        if (!r) return env[v];
+        return evaluate(r.tree, env);
+    }
+
+    // ---------- attractors: exhaustive asynchronous state-transition graph ----------
+    function attractors() {
+        const n = vars.length;
+        const N = 1 << n;
+        const succ = new Array(N);
+        for (let s = 0; s < N; s++) {
+            const env = {};
+            vars.forEach((v, i) => { env[v] = !!(s >> i & 1); });
+            const out = [];
+            vars.forEach((v, i) => {
+                if (target(v, env) !== env[v]) out.push(s ^ (1 << i));
+            });
+            succ[s] = out;
+        }
+        const idx = new Int32Array(N).fill(-1), low = new Int32Array(N), onStack = new Uint8Array(N);
+        const stack = [], result = [];
+        let counter = 0;
+        for (let root = 0; root < N; root++) {
+            if (idx[root] !== -1) continue;
+            const work = [[root, 0]];
+            while (work.length) {
+                const top = work.pop();
+                const v = top[0];
+                let i = top[1];
+                if (i === 0) { idx[v] = low[v] = counter++; stack.push(v); onStack[v] = 1; }
+                let recurse = false;
+                while (i < succ[v].length) {
+                    const w = succ[v][i++];
+                    if (idx[w] === -1) { work.push([v, i]); work.push([w, 0]); recurse = true; break; }
+                    if (onStack[w]) low[v] = Math.min(low[v], idx[w]);
+                }
+                if (recurse) continue;
+                if (low[v] === idx[v]) {
+                    const comp = [];
+                    let w;
+                    do { w = stack.pop(); onStack[w] = 0; comp.push(w); } while (w !== v);
+                    const members = new Set(comp);
+                    if (comp.every(u => succ[u].every(x => members.has(x)))) result.push(comp);
+                }
+                if (work.length) { const p = work[work.length - 1][0]; low[p] = Math.min(low[p], low[v]); }
+            }
+        }
+        return result.map(comp => {
+            const on = [], off = [], osc = [];
+            vars.forEach((v, i) => {
+                const vals = new Set(comp.map(s => !!(s >> i & 1)));
+                if (vals.size === 2) osc.push(v); else if (vals.has(true)) on.push(v); else off.push(v);
+            });
+            return { kind: comp.length === 1 ? "FIXED_POINT" : "CYCLIC", size: comp.length, on, off, osc };
+        });
+    }
+
+    function names(list) {
+        return list.length ? list.map(v => label[v]).join(", ") : "none";
+    }
+
+    function renderVerdict() {
+        const found = attractors();
+        const box = document.getElementById("verdict");
+        box.innerHTML = "";
+        const intro = document.createElement("p");
+        intro.className = "small muted";
+        intro.textContent = found.length === 1
+            ? "From any starting state, the network ends up in:"
+            : `The network can end up in ${found.length} different places, depending on where it starts:`;
+        box.appendChild(intro);
+        found.forEach(a => {
+            const div = document.createElement("div");
+            div.className = "verdict" + (a.kind === "CYCLIC" ? " cyclic" : "");
+            div.style.marginBottom = "8px";
+            const head = document.createElement("strong");
+            const body = document.createElement("div");
+            body.className = "small";
+            if (a.kind === "FIXED_POINT") {
+                head.textContent = "A steady state";
+                body.textContent = `ON: ${names(a.on)}. Everything else OFF.`;
+            } else {
+                head.textContent = `No steady state: a cycle of ${a.size} states`;
+                body.textContent = `Keep switching: ${names(a.osc)}. Always ON: ${names(a.on)}. `
+                    + "In a Boolean model this means the response cannot stay on: a pulse or adaptation, not necessarily literal oscillation.";
+            }
+            div.append(head, body);
+            box.appendChild(div);
+        });
+        if (scenario) {
+            const p = document.createElement("p");
+            p.className = "small";
+            const pristine = JSON.stringify(locks) === JSON.stringify(scenario.settings);
+            if (!pristine) {
+                p.innerHTML = "<span class='muted'>Locks changed from the curated scenario; the check below refers to the scenario as curated.</span><br>";
+            }
+            const ok = scenario.failures.length === 0;
+            const span = document.createElement("span");
+            span.className = ok ? "check-ok" : "check-bad";
+            span.textContent = ok ? "✓ Curated expectation holds" : "✗ Curated expectation fails: " + scenario.failures.join("; ");
+            p.appendChild(span);
+            box.appendChild(p);
+        }
+    }
+
+    // ---------- drawing ----------
+    const W = 232, H = 34, GX = 34, GY = 40;
+    const maxRank = Math.max(...Object.values(data.layout).map(p => p[0]));
+    const maxSlot = Math.max(...Object.values(data.layout).map(p => p[1]));
+    const width = 20 + (maxSlot + 1) * (W + GX) + 130;
+    const height = 24 + (maxRank + 1) * (H + GY);
+    const pos = {};
+    vars.forEach(v => {
+        const [r, s] = data.layout[v];
+        pos[v] = { x: 20 + s * (W + GX), y: 18 + r * (H + GY) };
+    });
+
+    const graph = document.getElementById("graph");
+    graph.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+    function el(name, attrs, parent) {
+        const e = document.createElementNS(NS, name);
+        Object.entries(attrs || {}).forEach(([k, v]) => e.setAttribute(k, v));
+        if (parent) parent.appendChild(e);
+        return e;
+    }
+
+    const defs = el("defs", {}, graph);
+    const arrow = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" }, defs);
+    el("path", { d: "M0,0 L10,5 L0,10 z", fill: "#5b6b7a" }, arrow);
+    const bar = el("marker", { id: "bar", viewBox: "0 0 4 12", refX: "2", refY: "6", markerWidth: "4", markerHeight: "12", orient: "auto" }, defs);
+    el("rect", { x: "0", y: "0", width: "3", height: "12", fill: "#c2410c" }, bar);
+    const edgeLayer = el("g", {}, graph);
+    const nodeLayer = el("g", {}, graph);
+
+    // spread the feedback edges arriving at (and leaving) a node along its right side
+    const backIn = {}, backOut = {};
+    data.edges.forEach(([s, t]) => {
+        if (data.layout[t][0] <= data.layout[s][0]) {
+            (backIn[t] = backIn[t] || []).push(s);
+            (backOut[s] = backOut[s] || []).push(t);
+        }
+    });
+    const spread = (list, item) => {
+        const i = list.indexOf(item), n = list.length;
+        return n === 1 ? 0 : -11 + 22 * i / (n - 1);
+    };
+    let backCount = 0;
+    const edgeEls = data.edges.map(([s, t, sign]) => {
+        const a = pos[s], b = pos[t];
+        const forward = data.layout[t][0] > data.layout[s][0];
+        let d;
+        if (forward) {
+            const x1 = a.x + W / 2, y1 = a.y + H, x2 = b.x + W / 2, y2 = b.y;
+            d = `M${x1},${y1} C${x1},${y1 + GY / 2} ${x2},${y2 - GY / 2} ${x2},${y2 - 2}`;
+        } else {
+            // feedback: leave from the right side, loop out and come back in on the right
+            backCount += 1;
+            const off = 22 + 14 * backCount;
+            const x1 = a.x + W, y1 = a.y + H / 2 + spread(backOut[s], t);
+            const x2 = b.x + W, y2 = b.y + H / 2 + spread(backIn[t], s);
+            const cx = Math.max(x1, x2) + off;
+            d = `M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2 + 3},${y2}`;
+        }
+        const path = el("path", { d, class: "edge " + (sign === "-" ? "inh" : "act"), "marker-end": sign === "-" ? "url(#bar)" : "url(#arrow)" }, edgeLayer);
+        const title = el("title", {}, path);
+        title.textContent = `${label[s]} ${sign === "-" ? "inhibits" : "activates"} ${label[t]}`;
+        return { key: `${s}|${t}|${sign}`, path, sign };
+    });
+
+    const nodeEls = {};
+    vars.forEach(v => {
+        const g = el("g", { class: "node" + (isInput[v] ? " input" : ""), tabindex: "0", role: "button" }, nodeLayer);
+        el("rect", { x: pos[v].x, y: pos[v].y, width: W, height: H, rx: "6" }, g);
+        const text = el("text", { x: pos[v].x + 10, y: pos[v].y + H / 2 + 4 }, g);
+        const full = label[v];
+        text.textContent = full.length > 33 ? full.slice(0, 32) + "\u2026" : full;
+        const lock = el("text", { x: pos[v].x + 4, y: pos[v].y - 4, class: "lock" }, g);
+        const title = el("title", {}, g);
+        title.textContent = `${full} (${v})${isInput[v] ? " - input" : ""}. Click to lock ON / OFF / free.`;
+        const cycle = () => {
+            if (!(v in locks)) locks[v] = true;
+            else if (locks[v]) locks[v] = false;
+            else delete locks[v];
+            if (v in locks) state[v] = locks[v];
+            draw();
+            renderVerdict();
+        };
+        g.addEventListener("click", cycle);
+        g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); cycle(); } });
+        nodeEls[v] = { g, lock };
+    });
+
+    function draw() {
+        vars.forEach(v => {
+            const n = nodeEls[v];
+            n.g.classList.toggle("on", !!state[v]);
+            n.g.classList.toggle("locked", v in locks);
+            n.lock.textContent = v in locks ? (locks[v] ? "LOCK ON" : "LOCK OFF") : "";
+        });
+        edgeEls.forEach(e => {
+            const gone = removed.has(e.key);
+            e.path.classList.toggle("removed", gone);
+            e.path.setAttribute("marker-end", gone ? "" : (e.sign === "-" ? "url(#bar)" : "url(#arrow)"));
+        });
+        drawTimeline();
+    }
+
+    // ---------- timeline ----------
+    const tl = document.getElementById("timeline");
+    const LW = 170, CW = 6, RH = 16;
+    tl.setAttribute("viewBox", `0 0 ${LW + MAX_COLS * CW + 4} ${vars.length * RH + 4}`);
+    function drawTimeline() {
+        tl.innerHTML = "";
+        vars.forEach((v, r) => {
+            const t = el("text", { x: LW - 6, y: r * RH + 12, "text-anchor": "end", "font-size": "10", fill: "#637282" }, tl);
+            t.textContent = label[v].length > 26 ? label[v].slice(0, 25) + "…" : label[v];
+        });
+        const cols = history.slice(-MAX_COLS);
+        cols.forEach((snap, c) => {
+            vars.forEach((v, r) => {
+                el("rect", { x: LW + c * CW, y: r * RH + 2, width: CW - 1, height: RH - 3, fill: snap[v] ? "#0f766e" : "#eef2f5" }, tl);
+            });
+        });
+    }
+
+    // ---------- simulation ----------
+    function snapshot() { history.push(Object.assign({}, state)); }
+
+    function unstable() {
+        return vars.filter(v => target(v, state) !== state[v]);
+    }
+
+    function step() {
+        const candidates = unstable();
+        const status = document.getElementById("status");
+        if (!candidates.length) {
+            status.textContent = "Steady state reached: nothing wants to change.";
+            stop();
+            return false;
+        }
+        const v = candidates[Math.floor(Math.random() * candidates.length)];
+        state[v] = !state[v];
+        snapshot();
+        status.textContent = `Update ${history.length - 1}: ${label[v]} switched ${state[v] ? "ON" : "OFF"}.`;
+        draw();
+        return true;
+    }
+
+    function stop() {
+        if (timer) clearInterval(timer);
+        timer = null;
+        document.getElementById("run").textContent = "Run";
+    }
+
+    function run() {
+        if (timer) { stop(); return; }
+        const speed = Number(document.getElementById("speed").value);
+        document.getElementById("run").textContent = "Pause";
+        timer = setInterval(step, Math.round(1000 / speed));
+    }
+
+    function reset() {
+        stop();
+        state = Object.fromEntries(vars.map(v => [v, v in locks ? locks[v] : false]));
+        history = [];
+        snapshot();
+        document.getElementById("status").textContent = "All steps start OFF (locked steps at their locked value).";
+        draw();
+    }
+
+    function selectScenario(sc) {
+        scenario = sc;
+        rules = Object.assign({}, data.rules);
+        removed = new Set();
+        locks = {};
+        if (sc) {
+            Object.entries(sc.rule_overrides).forEach(([v, r]) => { if (r === null) delete rules[v]; else rules[v] = r; });
+            sc.removed_edges.forEach(([s, t, sign]) => removed.add(`${s}|${t}|${sign}`));
+            locks = Object.assign({}, sc.settings);
+        }
+        document.querySelectorAll(".scenario-btn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.id === (sc ? sc.id : ""))));
+        document.getElementById("scenario-text").textContent = sc ? (sc.description || "") : "The network as curated, with nothing locked.";
+        reset();
+        renderVerdict();
+        renderRules();
+    }
+
+    function renderRules() {
+        const table = document.getElementById("rules");
+        table.innerHTML = "<tr><th>Step</th><th>ON when</th><th></th></tr>";
+        vars.forEach(v => {
+            const tr = document.createElement("tr");
+            const r = rules[v];
+            const how = v in locks ? `locked ${locks[v] ? "ON" : "OFF"}` : (r ? (declared.has(v) ? "activation_logic" : "default") : "input");
+            tr.innerHTML = "<td></td><td><code></code></td><td><span class='tag'></span></td>";
+            tr.children[0].textContent = label[v];
+            tr.children[0].title = v;
+            tr.querySelector("code").textContent = r ? r.text : "(held at its starting value)";
+            const tag = tr.querySelector(".tag");
+            tag.textContent = how;
+            if (how === "activation_logic") tag.classList.add("declared");
+            table.appendChild(tr);
+        });
+    }
+
+    const buttons = document.getElementById("scenario-buttons");
+    data.scenarios.forEach(sc => {
+        const b = document.createElement("button");
+        b.className = "scenario-btn";
+        b.dataset.id = sc.id;
+        b.textContent = sc.label + (sc.failures.length ? " ✗" : "");
+        b.addEventListener("click", () => selectScenario(sc));
+        buttons.appendChild(b);
+    });
+
+    document.getElementById("run").addEventListener("click", run);
+    document.getElementById("step").addEventListener("click", () => { stop(); step(); });
+    document.getElementById("reset").addEventListener("click", reset);
+    document.getElementById("speed").addEventListener("input", () => { if (timer) { stop(); run(); } });
+    document.getElementById("bnet").textContent = data.bnet;
+    document.getElementById("bnet-download").href = URL.createObjectURL(new Blob([data.bnet + "\n"], { type: "text/plain" }));
+
+    const preferred = data.scenarios.find(s => s.id === "sustained_stimulus") || data.scenarios[0] || null;
+    selectScenario(preferred);
+})();
+</script>
+</body>
+</html>

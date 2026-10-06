@@ -4,16 +4,33 @@ maturity: SCOPING
 tags: [PIPELINE]
 species: [human]
 autolink_gene_symbols: false
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/RvU9kSUAsvoz17LfaKWAXw
+      title: Executable modules brief
+      description: AI generated
 ---
 
 # Boolean models
 
-**A curated module's `connections` graph is a signed regulatory graph, and a signed
-regulatory graph is one default rule away from a Boolean network. This project reads
-modules that way in both directions: published Boolean models and signed-interaction
-databases become a calibration source for the wiring the modules assert, and the
-modules themselves become executable models whose attractors can be checked against
-what the pathway is known to do.**
+**In one example:** the ERK cascade module said, in prose, that ERK switches off its
+own upstream activators, but its YAML never drew those edges. Treat each step as an
+on/off switch and run the module, and ERK locks permanently on under a growth-factor
+signal. That is wrong: ERK signalling is normally transient. Two published sources, a
+logical MAPK model and SIGNOR, both had the missing ERK ⊣ RAF and ERK/RSK ⊣ SOS
+feedbacks. Those edges were curated into the module from primary papers, and the
+re-run module no longer locks on. [Run it in the browser](../models/erk_cascade_boolean.html):
+pick *Sustained stimulus*, press Run, then compare *Feedback loops cut*.
+
+**In general:** a module's `connections` graph is a signed regulatory graph, one
+default rule away from a Boolean network. This project reads modules that way in both
+directions. Published Boolean models and signed-interaction databases become a
+calibration source for the wiring the modules assert, and the modules themselves
+become executable models whose attractors can be checked against what the pathway is
+known to do. The Boolean network is a view of the module, never a separately edited
+artefact: every correction goes into the module. The follow-on project
+[EXECUTABLE_MODELS](EXECUTABLE_MODELS.md) makes that a schema feature, with
+declarative `activation_logic` and curated, validated scenarios.
 
 [PATHWAY_SATISFIABILITY](PATHWAY_SATISFIABILITY.md) reads a module as a *static,
 monotone* formula over steps ("can this pathway be wired up in this context?"). This
@@ -179,7 +196,7 @@ the entry step rather than the relay.
 - [x] Reviewed mappings and calibration diff for ERK/p38/JNK vs BBM-070 and SIGNOR-EGF
 - [x] Dynamics demo: fixed points vs oscillation, with and without the calibration feedbacks
 - [x] Schema-gap analysis with proposed slots
-- [ ] Decide on and implement schema additions (`update_rule`, `sign`, `boolean_role`, `model_associations`)
+- [x] Decide on and implement schema additions: done in [EXECUTABLE_MODELS](EXECUTABLE_MODELS.md) as declarative `activation_logic` (instead of an `update_rule` string) and module-level `executable_models` with validated scenarios; `sign`, `boolean_role` and node-level `model_associations` remain open
 - [x] Close the feedback loops in the ERK, p38 and JAK-STAT modules with primary evidence; reword the JNK step as an external input (NF-κB has no feedback step to close: its module has no negative regulator yet)
 - [x] `module_qc` advisory check "feedback loop cut" + module-page card
 - [x] Address the PR review of [ai4curation/ai-gene-review#3494](https://github.com/ai4curation/ai-gene-review/pull/3494): counterfactual file matches its table, container/child double-counting fixed, SOS feedback split into its direct-ERK and RSK routes, JNK decision cited and its cross-cascade gap recorded, stale prose fixed, `path_sign` exhaustive and deterministic, bnet `0`/`1` constants, SIGNOR `direct`/taxon filters
@@ -191,6 +208,16 @@ the entry step rather than the relay.
 - [ ] CoLoMoTo notebook for a shareable, reproducible run
 
 # NOTES
+
+## 2026-10-05
+
+Follow-up in [EXECUTABLE_MODELS](EXECUTABLE_MODELS.md). The proposed `update_rule`
+became declarative `activation_logic`; the demo's counterfactual is now read from the
+ERK module's curated `feedback_cut` scenario rather than defined in the script, and
+RESULTS were regenerated. The ERK module had gained a Sprouty/Spred feedback step on
+`main` in the meantime: it now translates to 10 variables and 15 signed edges, and its
+cyclic attractor under sustained stimulus has 188 states rather than 94 (the BBM-070
+calibration is unchanged, since Sprouty is unmapped there).
 
 ## 2026-09-30
 

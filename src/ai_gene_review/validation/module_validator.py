@@ -1910,6 +1910,7 @@ def validate_module_file(
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
     warnings.extend(validate_feedback_loops(doc))
+    errors.extend(validate_executable_models(doc))
     warnings.extend(symbol_label_warnings(doc))
 
     # Compare actual role assertions, not just protein/family membership.
@@ -2217,6 +2218,31 @@ def validate_feedback_loops(doc: object) -> List[str]:
         for f in feedback_loop_findings(doc)
         if f.get("severity") == "warning"
     ]
+
+
+def validate_executable_models(doc: object) -> List[str]:
+    """Blocking: declared activation logic and model scenarios must hold.
+
+    ``activation_logic`` must agree with the declared connections (see
+    :func:`ai_gene_review.module_boolean.activation_logic_findings`), and every
+    scenario of a module-derived Boolean model in ``executable_models`` must
+    reach the attractors it states. Both are curator-authored claims about the
+    module's wiring, so a mismatch is an error, like a wrong term id.
+    """
+    from ai_gene_review.module_boolean import activation_logic_findings
+    from ai_gene_review.module_dynamics import run_declared_scenarios
+
+    if not isinstance(doc, dict):
+        return []
+    errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
+    if errors:
+        return errors
+    for result in run_declared_scenarios(doc):
+        errors.extend(
+            f"Executable model {result.model_id}, scenario {result.scenario_id}: {f}"
+            for f in result.failures
+        )
+    return errors
 
 
 def validate_conformance(doc: object, modules_dir: Path) -> Tuple[List[str], List[str]]:
