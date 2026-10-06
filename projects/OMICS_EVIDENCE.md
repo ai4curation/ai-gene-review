@@ -103,7 +103,9 @@ reduce to 50,795 distinct gene × term pairs.
 ## How omics data become GO annotations
 
 The classification below applies across evidence codes. Each row is a way of turning a
-dataset into a GO claim. Reviewed-row figures are from this repository's gene reviews.
+dataset into a GO claim. Reviewed-row figures are from this repository's gene reviews as
+of 2026-10-05, before the batch dispositions of 2026-10-06 (Recommendation 1); the
+committed `htp_inventory_report.txt` is that snapshot.
 "Rejected" means MARK_AS_OVER_ANNOTATED, REMOVE or MODIFY.
 
 | Use | Typical data | Codes seen | GOA scale | Reviewed: accepted / non-core / rejected | Verdict |
@@ -230,11 +232,32 @@ The data and the curators are the same. The difference is the inference step.
 
 ## Recommendations
 
-1. **Decide project-wide dispositions** for the two largest low-information clusters.
-   Proposals: vesicle-type locations from bulk proteomes are KEEP_AS_NON_CORE by default,
-   and `membrane` from a membrane-fraction proteome is MARK_AS_OVER_ANNOTATED for proteins
-   without a membrane anchor. This would make the 1,000 or so existing rows consistent
-   and speed up future reviews.
+1. **Project-wide dispositions (agreed and applied 2026-10-06).** For HDA/HTP rows:
+   - **Vesicle-type locations** (`extracellular exosome`, `extracellular vesicle`,
+     `blood microparticle`, `vesicle`) from bulk vesicle or body-fluid proteomes are
+     KEEP_AS_NON_CORE by default. ACCEPT stays only for a protein-specific reason, such as
+     known vesicle machinery. REMOVE stays for protein-specific contrary evidence.
+   - **Generic `membrane`** from a membrane-fraction proteome is MARK_AS_OVER_ANNOTATED
+     when UniProt records no membrane anchor (TM segment, intramembrane region, lipid
+     anchor) and names no membrane in the protein's subcellular location.
+
+   [`htp/apply_dispositions.py`](OMICS_EVIDENCE/htp/apply_dispositions.py) applied these
+   to **280 rows in 183 reviews**:
+
+   | Rule | Change | Rows |
+   |---|---|---:|
+   | Vesicle-type | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 175 |
+   | Vesicle-type | UNDECIDED → KEEP_AS_NON_CORE | 66 |
+   | Membrane | KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED | 26 |
+   | Membrane | UNDECIDED → MARK_AS_OVER_ANNOTATED | 13 |
+
+   Only the action changed. Each row's reason was kept and a dated disposition note
+   appended, and each edited file was re-parsed to confirm nothing else moved. The audit
+   file [`disposition-2026-10-06.yaml`](OMICS_EVIDENCE/htp/disposition-2026-10-06.yaml)
+   lists every changed row. It also lists the explicit ACCEPTs that the rules matched but
+   left in place, for review: 42 vesicle rows (e.g. GAPDH ×7, HSPA1A, PARK7, CLU, THBS1,
+   alongside genuine EV machinery such as PDCD6IP and CHMP3) and 6 membrane rows
+   (ABI3, ACTB, AGFG2, ANXA11, PIK3C3, RASAL3).
 2. **Report the mis-coded clusters to their groups:**
    - HDA→HEP for expression-derived process rows (PMID:16210410).
    - HDA for RCA Use C rows that are really direct localizations (see the RCA sub-page).
@@ -244,8 +267,11 @@ The data and the curators are the same. The difference is the inference step.
 
 ## Action items
 
-- [ ] Decide and document the vesicle-type and generic-`membrane` dispositions
-      (Recommendation 1), then apply them as a batch to existing reviews.
+- [x] Decide and document the vesicle-type and generic-`membrane` dispositions
+      (Recommendation 1), then apply them as a batch to existing reviews (2026-10-06).
+- [ ] Revisit the 48 ACCEPT rows the disposition rules matched but left alone (audit
+      file), keeping ACCEPT only for genuine vesicle machinery or documented membrane
+      association.
 - [ ] Review a sample of the **unreviewed MF clusters** with the use-2/use-3 test: serine
       hydrolase activity-based probes (PMID:33827210), copper/cobalt/zinc ion binding from
       plant mitochondrial metal-affinity proteomics (PMID:20018591), kinase
@@ -266,6 +292,16 @@ The data and the curators are the same. The difference is the inference step.
   (YeastPathways, proteome-scale predictions, NEW rows).
 
 ## Session notes
+
+### 2026-10-06: dispositions applied
+
+The user agreed to the two default dispositions. Added `htp/apply_dispositions.py`
+(minimal text edits, re-parse check per file, dry-run by default) and applied it: 280
+rows in 183 gene reviews, one history record per gene. A first dry run would also have
+changed proteins whose UniProt location names a membrane (e.g. AGPS peroxisome membrane,
+PICALM cell membrane), as well as explicit ACCEPTs. The membrane rule was narrowed to
+proteins with no documented membrane anchor or association, and ACCEPT rows were left in
+place and listed for follow-up.
 
 ### 2026-10-05: created from RCA_EVIDENCE; HTP-family inventory
 
