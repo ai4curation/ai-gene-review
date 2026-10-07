@@ -345,6 +345,15 @@ Expanded review to 15 additional genes using the strict over-annotation criteria
 ---
 
 ## Notes
+### 2026-10-03
+
+**Clearance-defect pattern logged (Megf10).** Reviewing mouse Megf10 and human
+MEGF10 showed that GO:1902742 apoptotic process involved in development comes
+from an MGI IMP whose phenotype is an accumulation of uncleared apoptotic cells
+(PMID:27170117). Both rows are REMOVE. This is a non-keyword route to apoptosis
+over-annotation; the case is tracked in the APOPTOSIS project's
+[readout over-annotation page](../APOPTOSIS/ASSAY_READOUT_OVERANNOTATION.md).
+
 
 ### 2026-01-31
 
