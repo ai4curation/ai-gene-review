@@ -139,6 +139,9 @@ competence = {
                 [NCF, ("GO:0045596", "negative regulation of cell differentiation")],
                 "Dominant-negative HLH protein that keeps crest progenitors cycling and undifferentiated.",
                 "GO:0014029", "Id3 maintains the cycling crest progenitor pool rather than specifying crest fate."),
+        annoton("pou5f3_competence", "Oct25 (Pou5f3) competence factor", "XENLA", "pou5f1.1", TF, [NCF],
+                "POU-V blastula pluripotency factor retained at the neural plate border; required (with its paralog) for snai2 and foxd3, and its gain expands border and crest markers.",
+                "GO:0014029", "Pou5f3 is expressed at the border and is required for crest specifier expression.", refs=["PMID:39060477"]),
         annoton("hes4_competence", "Hairy2 border repressor", "XENLA", "hes4-a", REP,
                 [NCF, ("GO:0030514", "negative regulation of BMP signaling pathway")],
                 "bHLH-Orange repressor that holds border cells undifferentiated and tunes Bmp4 levels at the border.",
@@ -186,6 +189,9 @@ specification = {
         annoton("foxd3_spec", "FoxD3 crest specifier", "XENLA", "foxd3-a", REP, [NCC],
                 "Forkhead repressor recruiting Groucho/TLE; induces crest markers when overexpressed.",
                 "GO:0014034", "FoxD3 is expressed in the presumptive crest and induces crest markers."),
+        annoton("snai1_spec", "Snail1 early crest specifier", "XENLA", "snai1", REP, [NCS],
+                "Earliest crest specifier, activated in the first wave with sox8 and myc and directly by Zic1; acts upstream of Snai2. Also expressed in pluripotent blastula cells.",
+                "GO:0014036", "Snail1 is an early, Zic1-responsive crest specifier activated with sox8 and myc."),
         annoton("snai2_spec", "Snai2 crest specifier", "XENLA", "snai2", REP, [NCS],
                 "E-box repressor required to form crest precursors; acts downstream of the border factors.",
                 "GO:0014036", "Snai2 is required to form crest precursors and acts downstream of Zic1/Pax3."),
@@ -241,8 +247,21 @@ ectomesenchyme = {
     ],
 }
 
+DR = "file:modules/neural_crest_gene_regulatory_network-deep-research-falcon.md"
+DR_EDGE_QUOTES = {
+    ("gbx2_border", "pax3_border"): "Gbx2 is positioned upstream of *msx1* and *pax3* by epistasis",
+    ("gbx2_border", "msx1_border"): "Gbx2 is positioned upstream of *msx1* and *pax3* by epistasis",
+    ("tfap2a_border", "pax3_border"): "A stronger direct edge is AP-2α → *pax3*",
+    ("twist1_snai2_inhibition", "snai2_spec"): "a permanently activating or permanently inhibiting “TWIST → SNAI2” arrow misstates the mechanism",
+}
+
+
 def conn(s, t, ct, desc):
-    return {"source": s, "target": t, "connection_type": ct, "description": desc}
+    c = {"source": s, "target": t, "connection_type": ct, "description": desc}
+    q = DR_EDGE_QUOTES.get((s, t))
+    if q:
+        c["evidence"] = [{"source_id": DR, "statement": "Module deep research (falcon) assessment of this edge.", "supporting_text": q}]
+    return c
 
 connections = [
     conn("neural_plate_border_specification", "neural_crest_fate_specification", "PRECEDES",
@@ -253,18 +272,28 @@ connections = [
          "Specified crest cells delaminate and migrate."),
     conn("neural_crest_emigration", "cranial_ectomesenchyme", "PRECEDES",
          "Migrating cranial crest populates the pharyngeal arches and forms skeletogenic ectomesenchyme."),
-    conn("gbx2_border", "pax3_border", "POSITIVELY_REGULATES", "Gbx2 acts upstream of Pax3."),
-    conn("gbx2_border", "msx1_border", "POSITIVELY_REGULATES", "Gbx2 acts upstream of Msx1."),
-    conn("tfap2a_border", "pax3_border", "POSITIVELY_REGULATES", "AP-2alpha activates pax3 at the border."),
+    conn("gbx2_border", "pax3_border", "POSITIVELY_REGULATES",
+         "Gbx2 acts upstream of Pax3, placed by epistasis; direct binding to the pax3 locus is not demonstrated."),
+    conn("gbx2_border", "msx1_border", "POSITIVELY_REGULATES",
+         "Gbx2 acts upstream of Msx1, placed by epistasis; direct binding to the msx1 locus is not demonstrated."),
+    conn("tfap2a_border", "pax3_border", "POSITIVELY_REGULATES",
+         "AP-2alpha activates pax3 directly: translation-independent induction, promoter-reporter, site mutation and EMSA/supershift (frog)."),
     conn("msx1_border", "pax3_border", "POSITIVELY_REGULATES", "Msx1 induces Pax3 cell-autonomously."),
     conn("msx1_border", "zic1_border", "POSITIVELY_REGULATES", "Msx1 induces ZicR1/Zic cell-autonomously."),
     conn("pax3_border", "snai2_spec", "POSITIVELY_REGULATES", "Pax3 binds and activates snail2 directly."),
-    conn("pax3_border", "foxd3_spec", "POSITIVELY_REGULATES", "Pax3/Zic1 directly activate foxd3."),
-    conn("zic1_border", "foxd3_spec", "POSITIVELY_REGULATES", "Pax3/Zic1 directly activate foxd3."),
+    conn("pax3_border", "foxd3_spec", "POSITIVELY_REGULATES",
+         "Pax3/Zic1 activate foxd3 without new protein synthesis (immediate-response target); enhancer occupancy in frog not shown."),
+    conn("zic1_border", "foxd3_spec", "POSITIVELY_REGULATES",
+         "Pax3/Zic1 activate foxd3 without new protein synthesis (immediate-response target); enhancer occupancy in frog not shown."),
+    conn("zic1_border", "snai1_spec", "POSITIVELY_REGULATES",
+         "Zic1 binds a snail1 element (EMSA) and activates snail1 without new protein synthesis."),
+    conn("snai1_spec", "snai2_spec", "POSITIVELY_REGULATES", "Snail1 acts upstream of Slug/Snai2 in crest specification."),
+    conn("pou5f3_competence", "pax3_border", "POSITIVELY_REGULATES",
+         "Pou5f3 gain of function expands pax3 (and zic1, snai2) expression."),
     conn("pax3_border", "sox8_spec", "POSITIVELY_REGULATES", "Pax3/Zic1 activate sox8 with snail1 and myc."),
     conn("pax3_border", "twist1_ectomesenchyme", "POSITIVELY_REGULATES", "Pax3 activates twist1 directly."),
     conn("twist1_snai2_inhibition", "snai2_spec", "NEGATIVELY_REGULATES",
-         "Twist binds Snai2 and reduces its chromatin occupancy."),
+         "Twist binds Snai2 and reduces its chromatin occupancy. Stage-specific: Twist later promotes mesenchymal outputs, so this is not a permanent inhibitory edge."),
     conn("hes4_competence", "id3_competence", "PROVIDES_INPUT_FOR",
          "Hairy2 and Id3 act together (with Stat3) to keep progenitors undifferentiated."),
 ]
@@ -292,6 +321,8 @@ doc = {
         {"source_id": "PMID:18562679", "title": title("PMID:18562679"),
          "statement": "Amphioxus has border patterning genes at the neural plate border but lacks most crest specifier expression there.",
          "supporting_text": "neural plate border patterning genes, and melanocyte differentiation genes appear conserved"},
+        {"source_id": DR, "statement": "Module deep research supports treating inducing signals as upstream inputs rather than network members.",
+         "supporting_text": "WNT, BMP and FGF signaling are upstream inputs"},
         {"source_id": "PMID:31645763", "title": title("PMID:31645763"),
          "statement": "The cranial crest circuit was assembled gradually in gnathostomes; the ancestral crest was trunk-like."},
     ],
@@ -363,13 +394,42 @@ doc["knowledge_gaps"] = [
         "status": "OPEN",
         "significance": "A pan-vertebrate module would overstate the conservation of these components; taxon-specific variants may be needed.",
         "resolution": "Model taxon variants (cyclostome vs gnathostome; anamniote vs amniote) once lamprey and amniote members are reviewed.",
-        "provenance": [{"reference_id": "PMID:31645763", "supporting_text": "lamprey lacks most components of a transcriptional circuit that is specific to"}],
+        "provenance": [
+            {"reference_id": "PMID:31645763", "supporting_text": "lamprey lacks most components of a transcriptional circuit that is specific to"},
+            {"reference_id": "file:modules/neural_crest_gene_regulatory_network-deep-research-falcon.md",
+             "supporting_text": "ETS1 is a strong cranial regulator in chick but is not a universal vertebrate delamination factor"},
+        ],
+    },
+]
+doc["knowledge_gaps"] += [
+    {
+        "gap_statement": "Several components supported by the literature are not yet reviewed members: the TFAP2A–TFAP2C to TFAP2A–TFAP2B partner switch, Hairy2 acting through an FGFR4–STAT3 complex, OCT4–SOX2 redeployed to TFAP2A-bound crest enhancers, Twist1's chromatin partners, and Pax7 as the chick border factor.",
+        "boundary": "Affects the border, competence, specification and ectomesenchyme parts; members are limited to the genes reviewed in projects/NEURAL_CREST_ORIGINS.md.",
+        "gap_kind": ["CURATION"],
+        "status": "OPEN",
+        "significance": "Without these the module under-represents protein assemblies and the chick/amniote implementation of the network.",
+        "resolution": "Review TFAP2B, TFAP2C, PAX7, SOX2/SOX3 and FGFR4/STAT3 and add annotons where supported.",
+        "provenance": [
+            {"reference_id": DR, "supporting_text": "pioneer-factor pairing changes from"},
+            {"reference_id": DR, "supporting_text": "it promotes assembly of a membrane-associated FGFR4–STAT3 complex"},
+            {"reference_id": DR, "supporting_text": "OCT4–SOX2 is redirected from NANOG toward TFAP2A-bound crest enhancers"},
+            {"reference_id": DR, "supporting_text": "TWIST1 BioID identified CHD7/CHD8/WHSC1"},
+        ],
+    },
+    {
+        "gap_statement": "Lin28 is a candidate competence factor, but its crest requirement is shown only in chick; the frog lin28a review found no frog crest evidence.",
+        "boundary": "Affects the progenitor_competence_maintenance part; Lin28 is not included as an annoton.",
+        "gap_kind": ["BIOLOGY", "CURATION"],
+        "status": "OPEN",
+        "significance": "Lin28/let-7 would link developmental timing and Myc to crest competence, but frog and chick may differ.",
+        "resolution": "Review chick LIN28A (Q45KJ5) and test lin28a/lin28b at the frog neural plate border.",
+        "provenance": [{"reference_id": "PMID:30520734", "supporting_text": "Changes in Lin28a levels impact neural crest development in vivo"}],
     },
 ]
 doc.pop("scope")
 for e in doc["evidence"]:
     if e.get("title") is None:
-        e.pop("title")
+        e.pop("title", None)
 
 out = ROOT / "modules/neural_crest_gene_regulatory_network.yaml"
 yaml.safe_dump(doc, open(out, "w"), sort_keys=False, width=110, allow_unicode=True)

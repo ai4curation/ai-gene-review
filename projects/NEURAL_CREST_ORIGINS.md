@@ -182,6 +182,18 @@ Last updated: 2026-10-01
   `uv run python projects/NEURAL_CREST_ORIGINS/build_nc_module.py`; evidence
   quotes are copied from the validated gene reviews.
 
+- [x] Module deep research (falcon, 2026-10-07) integrated. It supports the
+  boundary: Wnt/BMP/FGF are upstream inputs, and the border is ancestral while
+  the crest assembly is new. It sharpened the edges: Gbx2 → Pax3/Msx1 is
+  epistasis only; AP-2α → pax3 is the best-supported direct edge;
+  Pax3/Zic1 targets are translation-independent but enhancer occupancy in
+  frog is unshown; Twist → Snai2 is stage-specific. Snail1 (specification)
+  and Oct25/Pou5f3 (competence) were added from Tier 3. New knowledge gaps:
+  unreviewed candidate members (TFAP2A–TFAP2C → TFAP2A–TFAP2B partner switch,
+  Hairy2–FGFR4–STAT3, OCT4–SOX2–TFAP2A, Twist1–CHD7/CHD8/WHSC1, chick Pax7)
+  and Lin28 (chick-only evidence). Candidate Tier 4 reviews: TFAP2B, TFAP2C,
+  PAX7.
+
 ## Synthesis deliverables
 
 - [ ] Layer table: for each gene, its GRN layer, the outgroup expression data, and the GO process terms kept after review
