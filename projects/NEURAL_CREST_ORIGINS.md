@@ -159,7 +159,7 @@ Last updated: 2026-10-01
 
 ## Tier 3 — Blastula pluripotency programme retained in the crest
 
-- [ ] `XENLA/pou5f1.1` (Q7T103) — Oct25 (Pou5f3 class)
+- [x] `XENLA/pou5f1.1` (Q7T103) — Oct25 (Xenbase pou5f3.2.L); germ-layer timing factor + crest competence factor. Reviewed 2026-10-07: 51 GOA rows (37 ACCEPT, 7 non-core, 5 MODIFY, 2 over-annotated) + 2 NEW (GO:0003714, GO:0014029 — **flagged**, see notes)
 - [x] `XENLA/lin28a` (Q8JHC4) — Lin28; general pluripotency/timing RNA-binding factor in frog (crest role shown only in chick). Reviewed 2026-10-07: 26 GOA rows (9 ACCEPT, 12 non-core, 4 MODIFY, 1 over-annotated) + 1 NEW (GO:0070883)
 - [x] `XENLA/snai1` (P19382) — Snail1; blastula competence factor, then earliest crest specifier. Reviewed 2026-10-07: 21 GOA rows (15 ACCEPT, 5 MODIFY, 1 REMOVE) + 1 NEW (GO:0001227)
 - [ ] `XENLA/sox3-a` (P55863) / `XENLA/sox2` (O42569) — SoxB1 to SoxE transition [PMID:30144418]
@@ -558,6 +558,26 @@ Cross-cutting findings:
   for Lin28, which that paper never mentions; it now cites PMID:30520734 and
   PMID:39060477. Evolution: Lin-28/let-7 are ancient bilaterian timing genes,
   so any crest role is a co-option.
+
+- **pou5f1.1 (Oct25 = pou5f3.2.L).** The best-supported, core role is
+  germ-layer timing: a corepressor of VegT, beta-catenin and nodal targets
+  that limits the ectoderm's BMP response. NEW `GO:0003714` (IDA,
+  PMID:17541407: it still represses when its own binding site is mutated).
+  It is also a crest competence factor (module competence part, beside Myc,
+  Id3 and Hairy2). York 2024 [PMID:39060477] found it at the border; knocking
+  down pou5f3.1 and pou5f3.2 together nearly abolishes snai2 and foxd3,
+  pou5f3.2 alone rescues, and gain of function expands pax3, zic1 and snai2.
+  NEW `GO:0014029` (IMP, PMID:39060477). **Flag for curators:** I confirmed
+  in QuickGO that no POU5 protein in any species carries any crest term. The
+  agent judges this curation lag, since the papers date from 2021–2024 and
+  same-layer peers such as id3-a and zebrafish mych carry crest terms. But
+  this is a systematic absence, and no direct binding to frog crest enhancers
+  has been shown. Open: Nicetto 2013 [PMID:23382689] puts Oct25 in the
+  notoplate by mid-neurula, which conflicts with York's border expression.
+  Oct25 alone was never knocked down. Evolution: pou5 arose in vertebrates
+  from a pou3-like ancestor. Lamprey pou5 is absent from the crest yet
+  rescues frog crest, so the protein activity predates the crest expression.
+  That is the reverse of Id3, where the protein is old and the expression new.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
