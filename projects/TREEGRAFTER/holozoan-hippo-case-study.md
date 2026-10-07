@@ -6,10 +6,13 @@ autolink_gene_symbols: false
 
 [← back to TreeGrafter Inference Evaluation](../TREEGRAFTER.md)
 
-> **Not part of the frozen 2026-09-06 snapshot.** These rows come from 11
-> reviews added on 2026-09-30 and 2026-10-01 for the
+> **In the main-page tables since the 2026-10-03 refresh.** These rows come
+> from reviews added on 2026-09-30 and 2026-10-01 for the
 > [Origins of Animal Multicellularity](../ORIGINS_OF_MULTICELLULARITY.md)
-> project. They are not in the sidecar tables on the main page. The full audit,
+> project. They were not in the 2026-10-01 tables; at the 2026-10-03 refresh
+> (`f81b9f300`) the sidecars on the main page include 65 TreeGrafter rows from
+> *S. rosetta*, *Capsaspora* and *Oscarella* review files, 41 of them
+> down-graded, and the failure-mode table classifies each down-graded row. The full audit,
 > with a script that regenerates its tables, is the
 > [propagation audit](../ORIGINS_OF_MULTICELLULARITY/propagation-audit.md).
 
