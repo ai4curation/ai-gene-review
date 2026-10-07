@@ -162,7 +162,8 @@ Last updated: 2026-10-01
 - [x] `XENLA/pou5f1.1` (Q7T103) — Oct25 (Xenbase pou5f3.2.L); germ-layer timing factor + crest competence factor. Reviewed 2026-10-07: 51 GOA rows (37 ACCEPT, 7 non-core, 5 MODIFY, 2 over-annotated) + 2 NEW (GO:0003714, GO:0014029 — **flagged**, see notes)
 - [x] `XENLA/lin28a` (Q8JHC4) — Lin28; general pluripotency/timing RNA-binding factor in frog (crest role shown only in chick). Reviewed 2026-10-07: 26 GOA rows (9 ACCEPT, 12 non-core, 4 MODIFY, 1 over-annotated) + 1 NEW (GO:0070883)
 - [x] `XENLA/snai1` (P19382) — Snail1; blastula competence factor, then earliest crest specifier. Reviewed 2026-10-07: 21 GOA rows (15 ACCEPT, 5 MODIFY, 1 REMOVE) + 1 NEW (GO:0001227)
-- [ ] `XENLA/sox3-a` (P55863) / `XENLA/sox2` (O42569) — SoxB1 to SoxE transition [PMID:30144418]
+- [x] `XENLA/sox2` (O42569) — SoxB1; blastula pluripotency and neural-progenitor gene, not a crest participant. Reviewed 2026-10-07: 25 GOA rows (17 ACCEPT, 7 non-core, 1 MODIFY) + 2 NEW (GO:0045665, GO:0060041)
+- [ ] `XENLA/sox3-a` (P55863) — SoxB1 to SoxE transition [PMID:30144418]
 
 ## Tier 4 — Outgroup comparators (optional)
 
@@ -590,6 +591,23 @@ Cross-cutting findings:
   from a pou3-like ancestor. Lamprey pou5 is absent from the crest yet
   rescues frog crest, so the protein activity predates the crest expression.
   That is the reverse of Id3, where the protein is old and the expression new.
+
+- **sox2.** A blastula pluripotency and neural-plate/neural-progenitor gene,
+  *not* a crest participant. Forcing SoxB1 activity at the border lowers foxd3
+  and snail2, and Sox2 cannot replace SoxE in crest induction
+  [PMID:30144418]. A factor that must be switched off does none of the work,
+  so it fails the participation test: no crest term, positive or negative.
+  The comparator was checked in QuickGO: no SOX2 or sox3 in any species
+  carries a crest term. The Otx2 `protein binding` IPI was changed to
+  `GO:0140297` DNA-binding TF binding (Sox2 and Otx2 act together on the Rax
+  CNS1 enhancer; mouse Sox2 carries the same term by IPI, verified). NEW:
+  `GO:0045665` negative regulation of neuron differentiation and
+  `GO:0060041` retina development (both IMP). Module: not a competence member;
+  at most an upstream blastula state, or a knowledge gap on the SoxB1 → SoxE
+  hand-off. Evolution: lamprey also switches soxB1 off in premigratory crest
+  as soxE comes on [PMID:39060477], so the hand-off dates to the vertebrate
+  ancestor. Open: blastula evidence comes from combined Sox2+Sox3 knockdown,
+  and dominant-negative Sox2 cannot separate the two.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
