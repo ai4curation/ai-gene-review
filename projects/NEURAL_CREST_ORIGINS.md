@@ -160,7 +160,7 @@ Last updated: 2026-10-01
 
 - [ ] `XENLA/pou5f1.1` (Q7T103) — Oct25 (Pou5f3 class)
 - [ ] `XENLA/lin28a` (Q8JHC4) — Lin28
-- [ ] `XENLA/snai1` (P19382) — Snail1; blastula and NC
+- [x] `XENLA/snai1` (P19382) — Snail1; blastula competence factor, then earliest crest specifier. Reviewed 2026-10-07: 21 GOA rows (15 ACCEPT, 5 MODIFY, 1 REMOVE) + 1 NEW (GO:0001227)
 - [ ] `XENLA/sox3-a` (P55863) / `XENLA/sox2` (O42569) — SoxB1 to SoxE transition [PMID:30144418]
 
 ## Tier 4 — Outgroup comparators (optional)
@@ -517,6 +517,27 @@ Cross-cutting findings:
   six genes. Raise it with GO as a `proposed_new_terms` / NTR. The
   definition should cover the border as a competence territory that gives
   rise to crest, placode and dorsal neural tube.
+
+### Tier 3 reviews (in progress)
+
+- **snai1.** Sits in two layers in sequence. First, a blastula competence
+  factor, needed to keep the Oct/Sox/Vent network active [PMID:25931449]. Then
+  the earliest crest specifier: it is activated in the first wave with sox8
+  and myc [PMID:23509273], Zic1 binds and activates it directly
+  [PMID:24360906], and alone it induces all crest markers tested, upstream of
+  Slug [PMID:12490555]. Accepted at `GO:0014036` and `GO:0001755`, matching
+  snai2. Four Ajuba/LIMD1/WTIP `protein binding` IPIs were changed to
+  `GO:0001222` corepressor binding (SNAG-dependent). The TAS `GO:0014029` row
+  cites the same miscited Id2 paper, PMID:15242799 (the third gene so
+  affected). NEW `GO:0001227`; the comparator was verified in QuickGO (human
+  SNAI1 and mouse Snai1 both carry it by IDA). Evolution: Snail border
+  expression is ancestral (amphioxus). Lamprey's single snail is flat across
+  blastula and crest stages, like frog snai1, while frog snai2 rises like a
+  definitive crest factor. That suggests subfunctionalisation after the
+  gnathostome duplication. Mouse uses Snail rather than Slug in premigratory
+  crest, so which paralog leads is lineage-specific. For the module: add
+  Snail1 to the specification and competence parts, with Zic1 → Snail1 →
+  Snai2 edges.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
