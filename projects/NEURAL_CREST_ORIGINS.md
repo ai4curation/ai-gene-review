@@ -47,8 +47,9 @@ The evidence so far, from the outgroups:
 | Lamprey / jawed vertebrates | Neofunctionalisation of the endothelin pathway drove NC diversification into skeletal cell types | [PMID:32939088 "Evolution of the endothelin pathway drove neural crest cell diversification"] |
 
 A second line of work concerns *potency*. Neural crest cells share a regulatory
-programme with pluripotent blastula cells (Pou5f3/Oct25, Ventx, Sox2/3, Snail,
-Id3, Myc, Lin28). This suggests the crest kept, or reacquired, blastula-stage
+programme with pluripotent blastula cells (Pou5f3/Oct25/Oct60, Ventx, Sox2/3,
+Snail, Id3, Myc, Sox5, FoxD3 [PMID:25931449]; Lin28 is linked to the crest
+separately, from chick and lamprey work [PMID:30520734, PMID:39060477]). This suggests the crest kept, or reacquired, blastula-stage
 potential, and that this may be the true vertebrate innovation
 [PMID:25931449 "Shared regulatory programs suggest retention of blastula-stage potential in neural crest cells"],
 [PMID:33542111 "Reactivation of the pluripotency program precedes formation of the cranial neural crest"],
@@ -159,7 +160,7 @@ Last updated: 2026-10-01
 ## Tier 3 — Blastula pluripotency programme retained in the crest
 
 - [ ] `XENLA/pou5f1.1` (Q7T103) — Oct25 (Pou5f3 class)
-- [ ] `XENLA/lin28a` (Q8JHC4) — Lin28
+- [x] `XENLA/lin28a` (Q8JHC4) — Lin28; general pluripotency/timing RNA-binding factor in frog (crest role shown only in chick). Reviewed 2026-10-07: 26 GOA rows (9 ACCEPT, 12 non-core, 4 MODIFY, 1 over-annotated) + 1 NEW (GO:0070883)
 - [x] `XENLA/snai1` (P19382) — Snail1; blastula competence factor, then earliest crest specifier. Reviewed 2026-10-07: 21 GOA rows (15 ACCEPT, 5 MODIFY, 1 REMOVE) + 1 NEW (GO:0001227)
 - [ ] `XENLA/sox3-a` (P55863) / `XENLA/sox2` (O42569) — SoxB1 to SoxE transition [PMID:30144418]
 
@@ -538,6 +539,25 @@ Cross-cutting findings:
   crest, so which paralog leads is lineage-specific. For the module: add
   Snail1 to the specification and competence parts, with Zic1 → Snail1 →
   Snai2 edges.
+
+- **lin28a.** In frog, a general pluripotency and developmental-timing
+  RNA-binding factor. It lets transient blastula cells respond to FGF and
+  activin/nodal [PMID:23344711] and times metamorphosis [PMID:28359807]. NEW
+  `GO:0070883` pre-miRNA binding (ISS; *X. tropicalis* lin28a binds pre-let-7
+  loops [PMID:26447465]). The pre-miRNA processing rows were changed to
+  `GO:2000632` *negative* regulation, because Lin28 blocks Dicer processing.
+  `GO:0019827` stem cell population maintenance was marked over-annotated: the
+  frog data show competence to respond to signals, not a maintained stem cell
+  pool. No crest term was added: no frog crest experiment exists. In chick,
+  Lin28a is needed for FoxD3/Sox10 [PMID:30520734], and let-7 targets Myc,
+  which would put Lin28 in the competence layer. The comparator check
+  (QuickGO) found no Lin28 in any species carrying a crest term, so this is an
+  uncurated chick paper. `GO:0014029` would belong on chick LIN28A (Q45KJ5),
+  not frog lin28a. Module: add only as a knowledge gap or a chick-grounded
+  annoton. Correction made: the Motivation section had cited PMID:25931449
+  for Lin28, which that paper never mentions; it now cites PMID:30520734 and
+  PMID:39060477. Evolution: Lin-28/let-7 are ancient bilaterian timing genes,
+  so any crest role is a co-option.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
