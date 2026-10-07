@@ -316,8 +316,10 @@ Last updated: 2026-10-01
   The TAS `GO:0014029` row (source PMID:15242799, an Id2 cardiac-crest paper
   whose abstract never mentions Twist) was narrowed to `GO:0014036` and its
   reference flagged UNVERIFIED. The generic "developmental process" IBA/IEA
-  rows were also MODIFIED to `GO:0014036`. That is a large step from a broad
-  bHLH PAINT node and worth a second look. Evolution: in *Ciona*, Twist is
+  rows were first MODIFIED to `GO:0014036`. On 2026-10-07 they were revised to
+  KEEP_AS_NON_CORE: the term is correctly inherited at bHLH family level, and
+  Twist1's specific roles now live in its core functions and in two parts of
+  the module. Evolution: in *Ciona*, Twist is
   mesoderm-only, and forcing it into a9.49 makes migratory ectomesenchyme
   [PMID:23135395], which supports co-option. The *early* specifier role is
   absent in amniotes (Lander), so the conserved vertebrate role is
@@ -368,9 +370,8 @@ Cross-cutting findings:
 - **Homeologs.** In every case, experimental rows sit on one homeolog only
   (foxd3-b, sox9-b, id3-b, myc-b and snai2.S lack them), while knockdown
   reagents typically hit both.
-- **Flags for curator review:** the twist1
-  "developmental process" IBA rows MODIFIED to `GO:0014036`; and the
-  convention below.
+- **Flags for curator review:** the convention below. (The twist1
+  "developmental process" rows were resolved on 2026-10-07; see twist1.)
 
 ### Tier 2 reviews (in progress)
 
