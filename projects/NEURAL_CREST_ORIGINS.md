@@ -157,13 +157,13 @@ Last updated: 2026-10-01
 - [x] `XENLA/hes4-a` (Q90Z12) — Hairy2; border / progenitor-maintenance repressor. Reviewed 2026-10-05: 29 GOA rows (20 ACCEPT, 5 non-core, 3 MODIFY, 1 UNDECIDED) + 1 NEW (GO:0001227)
 - [x] `XENLA/gbx2` (Q91907) — Gbx2; border specifier, upstream of pax3/msx1. Reviewed 2026-10-05: 13 GOA rows (9 ACCEPT, 2 MODIFY, 2 non-core) + 4 NEW (GO:0014029, GO:0001227, GO:0030917, GO:0043049)
 
-## Tier 3 — Blastula pluripotency programme retained in the crest
+## Tier 3 — Blastula pluripotency programme retained in the crest — COMPLETE 2026-10-07
 
 - [x] `XENLA/pou5f1.1` (Q7T103) — Oct25 (Xenbase pou5f3.2.L); germ-layer timing factor + crest competence factor. Reviewed 2026-10-07: 51 GOA rows (37 ACCEPT, 7 non-core, 5 MODIFY, 2 over-annotated) + 2 NEW (GO:0003714, GO:0014029 — **flagged**, see notes)
 - [x] `XENLA/lin28a` (Q8JHC4) — Lin28; general pluripotency/timing RNA-binding factor in frog (crest role shown only in chick). Reviewed 2026-10-07: 26 GOA rows (9 ACCEPT, 12 non-core, 4 MODIFY, 1 over-annotated) + 1 NEW (GO:0070883)
 - [x] `XENLA/snai1` (P19382) — Snail1; blastula competence factor, then earliest crest specifier. Reviewed 2026-10-07: 21 GOA rows (15 ACCEPT, 5 MODIFY, 1 REMOVE) + 1 NEW (GO:0001227)
 - [x] `XENLA/sox2` (O42569) — SoxB1; blastula pluripotency and neural-progenitor gene, not a crest participant. Reviewed 2026-10-07: 25 GOA rows (17 ACCEPT, 7 non-core, 1 MODIFY) + 2 NEW (GO:0045665, GO:0060041)
-- [ ] `XENLA/sox3-a` (P55863) — SoxB1 to SoxE transition [PMID:30144418]
+- [x] `XENLA/sox3-a` (P55863) — SoxB1; maternal germ-layer patterning, genome activation, neural competence; not a crest participant. Reviewed 2026-10-07: 29 GOA rows (19 ACCEPT, 10 non-core) + 2 NEW (GO:0141064, GO:0021990)
 
 ## Tier 4 — Outgroup comparators (optional)
 
@@ -608,6 +608,44 @@ Cross-cutting findings:
   as soxE comes on [PMID:39060477], so the hand-off dates to the vertebrate
   ancestor. Open: blastula evidence comes from combined Sox2+Sox3 knockdown,
   and dominant-negative Sox2 cannot separate the two.
+
+- **sox3-a.** Maternal Sox3 binds and represses the Xnr5 promoter, keeping
+  nodal-related genes vegetal (`GO:0001704` accepted). NEW `GO:0141064`
+  zygotic genome activation [PMID:37787392]; comparator verified in QuickGO
+  (zebrafish pou5f3 and the SoxB1 sox19b carry it by IMP). NEW `GO:0021990`
+  neural plate formation: a Sox3 morpholino blocks Noggin-driven neural
+  induction and a resistant RNA rescues it [PMID:18992330]. No crest term
+  (same reasoning as sox2; verified that no SoxB1 protein in any species
+  carries one). Two rows cite papers whose cached abstracts never mention
+  Sox3 (PMID:17950579, PMID:17875931); full texts were unavailable, so they
+  were kept as non-core rather than removed. P55863 is sox3.S, the exact
+  construct used for the chromatin-binding maps.
+
+### Tier 3 synthesis (2026-10-07)
+
+| Gene | Layer | NC term | Module |
+|---|---|---|---|
+| snai1 | Blastula competence, then earliest crest specifier | `GO:0014036`, `GO:0001755` | Specification part (Zic1 → Snail1 → Snai2) |
+| pou5f1.1 (Oct25) | Germ-layer timing (core) + crest competence | `GO:0014029` (NEW, flagged) | Competence part |
+| lin28a | General pluripotency/timing RNA-binding factor (frog) | none (chick-only crest evidence) | Knowledge gap only |
+| sox2 | Blastula pluripotency, neural progenitor | none | Not a member; SoxB1 → SoxE hand-off gap |
+| sox3-a | Maternal germ-layer patterning, genome activation, neural competence | none | Not a member; SoxB1 → SoxE hand-off gap |
+
+Cross-cutting findings:
+- **"Shared with the blastula" does not mean "participates in the crest."**
+  Of the five pluripotency-programme genes, two keep working inside the
+  crest-forming cells (Snail1 as a specifier, Oct25 as a competence factor).
+  One has crest evidence only in chick (Lin28). Two must be switched *off*
+  for crest to form (Sox2, Sox3). The retained-potential hypothesis is
+  really about a subset of the programme, plus a required hand-off.
+- **Two evolutionary routes into the competence layer.** Oct25/pou5 is a
+  vertebrate-new protein whose crest expression varies by lineage (lamprey
+  pou5 is absent from crest but still rescues frog crest). Id3 is an old
+  protein whose crest expression is new. The SoxB1 → SoxE hand-off is
+  shared with lamprey, so it dates to the vertebrate ancestor.
+- **Miscitation pattern.** PMID:15242799 (an Id2 paper) is the cited source
+  for TAS crest rows on twist1, snai2 and snai1. Two sox3-a rows cite papers
+  about other genes. Report both to the source curators.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
