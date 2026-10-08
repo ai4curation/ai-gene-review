@@ -69,4 +69,24 @@ Abstract-only caches: PMID:7487923, 15596429, 18644867, 38141063, 37934413, 2808
 
 ## Deep research status
 
-See section below (appended when the OpenScientist run completes).
+OpenScientist completed on 2026-10-08 (~12 min): `NUDT2-deep-research-openscientist.md`.
+Falcon/perplexity are not available in this environment.
+
+Agreements with the review: core asymmetrical Ap4A hydrolase (ATP + AMP), signal
+termination in the LysRS-Ap4A-HINT1-MITF axis [PMID:18644867], 175-fold Ap4A rise on
+disruption [PMID:27144453], decapping activity and IDDPN disease [PMID:38141063], PRPP as a
+low-relevance secondary substrate [PMID:12370170], and that extracellular Ap4A hydrolysis is
+done by ecto-PDE/ENPP enzymes, not NUDT2.
+
+Additions used: human crystal structures (monomeric Nudix alpha-beta-alpha fold, E58 active site)
+[PMID:23384440 "Similar to the canonical Nudix fold, the human Ap4A hydrolase monomer shows the common αβα-sandwich architecture."].
+
+Points treated with caution:
+- It calls NUDT2 an "m7G mRNA decapping" enzyme; the Brain abstract only says "mRNA decapping",
+  and in vitro decapping data cover Ap4A-, FAD- and dpCoA-capped RNA. The cap type is left
+  unspecified (GO:0110154 RNA decapping).
+- It says direct human localisation data are sparse; it missed PMID:34824277, which reports
+  nucleus + cytoplasm immunolocalisation in human cells and the 5'-PPP RNA dephosphorylation
+  activity. Neither omission changes the decisions.
+- Ap4A as a DNA-damage replication-initiation inhibitor [PMID:26204256, per deep research] concerns
+  the substrate's role; NUDT2 does not participate in that process, so no annotation is proposed.
