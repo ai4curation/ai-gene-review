@@ -44,6 +44,27 @@ PTN000482012 IBDs for GO:0006167 and GO:0006754 cite only WB:WBGene00003581 (ndx
 These product-based process terms propagate to all SF0 members (mouse, human, ...); the
 appropriate node-level process would be GO:0015967.
 
+## Additional literature (found via deep research, verified against cached abstracts)
+
+- Mouse Nudt2 decaps m7G- and G-capped RNA in vitro, producing m7GMP and m7GDP:
+  [PMID:23353937 "Here we demonstrate that six additional mouse Nudix proteins--Nudt2, Nudt3, Nudt12, Nudt15, Nudt17, and Nudt19--have varying degrees of decapping activity in vitro on both monomethylated and unmethylated capped RNAs."]
+- Human NUDT2 knockout raises Ap4A 175-fold:
+  [PMID:27144453 "KBM-7 cells in which the NUDT2 Ap4A hydrolase gene had been disrupted (NuKO cells), causing a 175-fold increase in intracellular Ap4A"]
+- Ap4A is a 5' RNA cap; NUDT2 and DXO cleave Ap4A-RNA in vitro:
+  [PMID:37934413 "A decapping enzyme screen identifies two enzymes cleaving Ap4 A-RNA,NUDT2 and DXO, both of which also cleave other substrate RNAs in vitro."]
+- Human biallelic NUDT2 variants cause a neurodevelopmental disorder; decapping implicated:
+  [PMID:38141063 "Importantly, add-back experiments using an Ap4A hydrolase defective in mRNA decapping highlighted loss of NUDT2 decapping as the activity implicated in altered mRNA homeostasis."]
+  The deep research report reads this as a NUDT2 separation-of-function variant; the
+  abstract does not say which Ap4A hydrolase was used, so that interpretation is not adopted.
+
+Decapping GO terms considered and not proposed: GO:0140933 (m7GDP-releasing) and
+GO:0140932 (m7GMP-releasing) each capture only one of Nudt2's two products; the evidence
+for mouse is in vitro, and the physiological cap substrate (m7G vs Ap4A) is unresolved.
+Raised as a suggested question.
+
 ## Deep research status
 
-OpenScientist run started 2026-10-08 (`just deep-research-openscientist mouse Nudt2`).
+OpenScientist completed 2026-10-08 (~14 min): `Nudt2-deep-research-openscientist.md`.
+Most claims are orthologue-based (Drosophila Apf nuclear localization [PMID:17344088],
+human structure [PMID:23384440], LysRS-Ap4A-HINT1-MITF axis [PMID:14975237]); none
+change the curation decisions. It confirms no Nudt2 knockout mouse phenotype was found.
