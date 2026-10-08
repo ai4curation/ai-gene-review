@@ -323,6 +323,12 @@ sequence still supports the specific activity or location:
   - secretion-dependent hormone activity without a signal peptide (`PMCHL1`, `PMCHL2`);
   - transcription regulation without DNA-binding zinc fingers (`ZNF788P`);
   - process and location terms with nothing locus-specific behind them.
+- The locus type decides which half of the rule applies to process and location rows. On a
+  pseudogene locus with weak protein evidence (PE5, no transcript support), those rows are
+  removed and only residue-supported MF rows are flagged. On a protein-coding locus whose ORF
+  is intact but whose product is undetected (`GNG5B`: HGNC protein-coding, MANE, CaaX motif
+  kept, PE3), every row is flagged as over-annotated instead, because a real product is
+  plausible and the inherited terms are not contradicted by anything.
 - The rule was written down after PR review found it had been applied inconsistently. SNRPGP15's
   RNA binding had been changed to over-annotated, which also resolved a CI conflict with the
   PTHR10553 family review (which scopes RNA binding family-wide), while DPH3P1's equivalent rows
