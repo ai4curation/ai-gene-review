@@ -238,8 +238,8 @@ def build_node(spec: dict, res: Resolver, default_type: str, as_complex: bool) -
 
 def build_part(p: dict, order: int, res: Resolver, default_type: str, as_complex: bool) -> dict:
     part = {"order": order, "role": p.get("role", p["label"])}
-    if p.get("required") is not None:
-        part["required"] = p["required"]
+    if p.get("optional") is not None:
+        part["optional"] = p["optional"]
     part["node"] = build_node(p, res, default_type, as_complex)
     return part
 
