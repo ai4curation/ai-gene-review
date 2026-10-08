@@ -15,6 +15,11 @@
     `Datp-goa.tsv`. This looks like a transitional mapping of FlyBase annotations to the new
     accession; the ISS would be accepted (same activity as the accepted IBA) and the ND CC
     row would be superseded by the proposed nucleus IDA.
+- **PANTHER uses Q4V6M1.** The PANTHER 19.0 fruit fly classification file lists
+  `DROME|FlyBase=FBgn0287788|UniProtKB=Q4V6M1  Q4V6M1  Datp  PTHR21340:SF0`, and the
+  PTHR21340 reference tree leaf PTN000482053 is FlyBase:FBgn0287788 (resolved to Q4V6M1).
+  A0ACM8PZ70 does not appear in PANTHER. Q4V6M1 is therefore the accession used here, in the
+  PTHR21340 family review and in the Ap4A turnover module.
 - Fetched with `just fetch-gene DROME Q4V6M1 --alias Datp`.
 
 ## Summary of evidence
