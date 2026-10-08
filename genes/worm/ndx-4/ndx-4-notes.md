@@ -28,3 +28,11 @@
 ## Caveats
 
 All four cached publications are abstract-only (`full_text_available: false`).
+
+## Deep research status
+
+`just deep-research-falcon worm ndx-4 --fallback perplexity-lite` failed on 2026-10-08:
+falcon timed out after 600 s, and the perplexity fallback was unavailable in this
+environment (no API key configured). No deep-research file exists; the review rests on
+the UniProt record and the four cached (abstract-only) primary papers, which are the
+complete experimental literature cited by GOA for this gene.
