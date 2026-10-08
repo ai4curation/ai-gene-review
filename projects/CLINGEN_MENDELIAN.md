@@ -2988,15 +2988,15 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**231 of 2,876 genes are complete; 2,645 remain.** This update adds
-CASR, CAV1 and CAVIN1, three verified campaign completions beyond checkpoint 228.
-The 232 gene-level original review merges include AKR1D1, whose required source follow-up
+**240 of 2,876 genes are complete; 2,636 remain.** This update adds
+CC2D1A, CCDC40 and CCND2, three verified campaign completions beyond checkpoint 237.
+The 241 gene-level original review merges include AKR1D1, whose required source follow-up
 remains outstanding. Audit and import totals retain their dated checkpoint scope.
-Completion evidence cutoff: **2026-10-04 19:58:03 UTC**. See the
-[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-231)
+Completion evidence cutoff: **2026-10-05 01:02:15 UTC**. See the
+[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-240)
 for the verified merges and retained biological uncertainty. The prior CASP8 count
 correction remains documented at checkpoint 228; no previous count is rewritten. See also the
-[checkpoint 231 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-04T201348Z-codex-f25fc3.yaml).
+[checkpoint 240 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-05T014551Z-codex-fd1fdc.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3317,18 +3317,18 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CASQ2** — HGNC:1513; [catecholaminergic polymorphic ventricular tachycardia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c778b145-fcfc-4252-8dd8-33f982b288e8-2021-01-20T170000.000Z) (MONDO:0017990; AD; Moderate); [catecholaminergic polymorphic ventricular tachycardia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_991ee32e-280d-4bea-a638-aa1b6fa6f781-2021-01-20T170000.000Z) (MONDO:0017990; AR; Definitive).
 - [x] **CASR** — HGNC:1514; [autosomal dominant hypocalcemia 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f699475d-1482-4998-a921-939b8be1bc2c-2023-07-20T160000.000Z) (MONDO:0011013; AD; Definitive); [familial hypocalciuric hypercalcemia 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4cb3c61b-f7eb-4682-94af-5fde40c04e26-2023-07-20T160000.000Z) (MONDO:0007791; AD; Definitive); [neonatal severe primary hyperparathyroidism](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_095b6507-5537-4017-b2b9-28715cc23df7-2023-07-20T160000.000Z) (MONDO:0009397; AR; Definitive).
 - [x] **CAV1** — HGNC:1527; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_cab41529-d295-466c-8821-75a16bb12c38-2023-12-21T170000.000Z) (MONDO:0004976; AD; Limited); [congenital generalized lipodystrophy type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8c3e1365-0b20-43c6-87a5-3c15951a2acf-2025-06-11T160000.000Z) (MONDO:0012923; AR; Definitive); [lipodystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7278df5e-7003-4ff8-bcb6-f043cf2fcb60-2025-07-16T160000.000Z) (MONDO:0006573; AD; Limited); [pulmonary arterial hypertension](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1f4c3d64-7993-4196-a002-6cc9904a4360-2025-07-30T160000.000Z) (MONDO:0015924; AD; Definitive).
-- [ ] **CAV3** — HGNC:1529; [caveolinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a314687e-b35d-4bb4-8b93-efcc83d1fa9b-2022-09-13T160000.000Z) (MONDO:0016146; AD; Definitive); [long QT syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_74aabddc-3402-46de-ba1e-f66aa273cd9c-2020-12-15T002855.870Z) (MONDO:0002442; AD; Limited).
+- [x] **CAV3** — HGNC:1529; [caveolinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a314687e-b35d-4bb4-8b93-efcc83d1fa9b-2022-09-13T160000.000Z) (MONDO:0016146; AD; Definitive); [long QT syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_74aabddc-3402-46de-ba1e-f66aa273cd9c-2020-12-15T002855.870Z) (MONDO:0002442; AD; Limited).
 - [x] **CAVIN1** — HGNC:9688; [lipodystrophy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9676952d-3e95-4e05-ac04-04fc1b4ed7b3-2025-01-16T170000.000Z) (MONDO:0006573; AR; Definitive).
-- [ ] **CBFB** — HGNC:1539; [cleidocranial dysplasia 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b10fb135-8a3a-4f94-b2db-31436028f43e-2026-02-19T050000.000Z) (MONDO:0859307; AD; Definitive).
-- [ ] **CBL** — HGNC:1541; [CBL-related disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4a1a76fd-7e23-44a7-b2fc-4495bc5d5ee6-2019-04-29T160000.000Z) (MONDO:0013308; AD; Definitive).
-- [ ] **CBS** — HGNC:1550; [classic homocystinuria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9086d29-767b-4ab8-9274-1249b5480834-2019-04-12T160000.000Z) (MONDO:0009352; AR; Definitive).
-- [ ] **CC2D1A** — HGNC:30237; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_63def86b-765e-4f12-93a3-94ef911c3190-2020-01-08T110000.000Z) (MONDO:0100038; AR; Definitive).
-- [ ] **CC2D2A** — HGNC:29253; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0acbae16-a383-4345-978c-9d28dda80d02-2022-08-24T160000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **CCDC39** — HGNC:25244; [primary ciliary dyskinesia 14](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_79c47f13-dd33-45e4-a170-6ff26aa2732c-2021-11-02T204310.116Z) (MONDO:0013434; AR; Definitive).
-- [ ] **CCDC40** — HGNC:26090; [primary ciliary dyskinesia 15](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e9c192c6-9f74-4beb-85ba-a42199e9794a-2021-12-10T031508.185Z) (MONDO:0013435; AR; Definitive).
+- [x] **CBFB** — HGNC:1539; [cleidocranial dysplasia 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b10fb135-8a3a-4f94-b2db-31436028f43e-2026-02-19T050000.000Z) (MONDO:0859307; AD; Definitive).
+- [x] **CBL** — HGNC:1541; [CBL-related disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4a1a76fd-7e23-44a7-b2fc-4495bc5d5ee6-2019-04-29T160000.000Z) (MONDO:0013308; AD; Definitive).
+- [x] **CBS** — HGNC:1550; [classic homocystinuria](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a9086d29-767b-4ab8-9274-1249b5480834-2019-04-12T160000.000Z) (MONDO:0009352; AR; Definitive).
+- [x] **CC2D1A** — HGNC:30237; [complex neurodevelopmental disorder](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_63def86b-765e-4f12-93a3-94ef911c3190-2020-01-08T110000.000Z) (MONDO:0100038; AR; Definitive).
+- [x] **CC2D2A** — HGNC:29253; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0acbae16-a383-4345-978c-9d28dda80d02-2022-08-24T160000.000Z) (MONDO:0005308; AR; Definitive).
+- [x] **CCDC39** — HGNC:25244; [primary ciliary dyskinesia 14](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_79c47f13-dd33-45e4-a170-6ff26aa2732c-2021-11-02T204310.116Z) (MONDO:0013434; AR; Definitive).
+- [x] **CCDC40** — HGNC:26090; [primary ciliary dyskinesia 15](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e9c192c6-9f74-4beb-85ba-a42199e9794a-2021-12-10T031508.185Z) (MONDO:0013435; AR; Definitive).
 - [ ] **CCM2** — HGNC:21708; [cerebral cavernous malformation 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1013c58b-cea9-4e16-b68a-91a8a18bf989-2025-05-27T160000.000Z) (MONDO:0011304; AD; Definitive).
 - [ ] **CCN6** — HGNC:12771; [progressive pseudorheumatoid arthropathy of childhood](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_915a010c-e5d0-4a56-b7b7-f9c8acc4f6f0-2024-09-04T160000.000Z) (MONDO:0008827; AR; Definitive).
-- [ ] **CCND2** — HGNC:1583; [megalencephaly-polymicrogyria-polydactyly-hydrocephalus syndrome 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8657a0bf-65fa-4413-b4e8-e64193c2731e-2025-05-27T170000.000Z) (MONDO:0014408; AD; Definitive).
+- [x] **CCND2** — HGNC:1583; [megalencephaly-polymicrogyria-polydactyly-hydrocephalus syndrome 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8657a0bf-65fa-4413-b4e8-e64193c2731e-2025-05-27T170000.000Z) (MONDO:0014408; AD; Definitive).
 - [ ] **CCNO** — HGNC:18576; [primary ciliary dyskinesia 29](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_20a78ac7-91a7-44a6-b42e-22611de2d170-2022-08-19T160000.000Z) (MONDO:0014378; AR; Definitive).
 - [ ] **CD19** — HGNC:1633; [immunodeficiency, common variable, 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6576337-703e-4d76-9120-5f6800730774-2022-05-24T160000.000Z) (MONDO:0013283; AR; Definitive).
 - [ ] **CD247** — HGNC:1677; [immunodeficiency 25](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_438b6c1f-edc0-4a81-9c82-39627e5a69cd-2022-03-11T140552.812Z) (MONDO:0012426; AR; Definitive).

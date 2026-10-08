@@ -77,3 +77,7 @@ verdict on innate immune response (GO:0045087) and the REMOVE verdict on mitocho
 
 Caveat recorded in the reference_review: the report is LLM-generated; individual claims
 should be traced to primary literature before being treated as definitive.
+
+## PR #4384 review follow-up (2026-10-06)
+- The GO:0033612 / PMID:20626648 row previously mislabelled WITH/FROM UniProtKB:O80809 as BAM2. O80809 is CLV2 (CLV2_ARATH, 720 aa); BAM2 is Q9M2Z1 and CLV1 is Q9SYQ8 (UniProt). CLV2 has no kinase domain, so GO:0033612 receptor serine/threonine kinase binding is now justified on the CLV1/BAM1/BAM2 evidence only.
+- Direct CLV3 binding by CLV2 is disputed: radioligand binding [PMID:20626648] versus no binding by photoaffinity labelling [PMID:25754504 "We showed that CLV2 and RPK2 exhibited no direct binding to the CLV3 peptide."]. Recorded as a DISPUTED finding_review on the PMID:20626648 reference; description and core_functions wording softened accordingly.
