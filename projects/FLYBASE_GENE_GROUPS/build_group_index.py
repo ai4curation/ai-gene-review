@@ -54,9 +54,15 @@ def read_groups(path: Path):
             yield (line.rstrip("\n").split("\t") + [""] * 7)[:7]
 
 
-def load_uniprot(path: Path) -> dict[str, dict]:
-    """FBgn -> best UniProt entry (Swiss-Prot first, then longest TrEMBL)."""
+def load_uniprot(path: Path, naseq: Path) -> dict[str, dict]:
+    """FBgn -> best UniProt entry (Swiss-Prot first, then longest TrEMBL).
+
+    UniProt's own FlyBase cross-references are used first. Some UniProt entries
+    carry no FlyBase cross-reference, so FlyBase's fbgn_NAseq_Uniprot mapping is
+    used as a fallback for genes left unmapped.
+    """
     best: dict[str, dict] = {}
+    by_acc: dict[str, dict] = {}
     with open(path) as fh:
         next(fh)
         for line in fh:
@@ -67,11 +73,28 @@ def load_uniprot(path: Path) -> dict[str, dict]:
                 "protein_name": name.split(" (")[0],
                 "length": int(length or 0),
             }
+            by_acc[acc] = entry
             for fbgn in filter(None, fb.split(";")):
                 cur = best.get(fbgn)
                 key = (entry["reviewed"], entry["length"])
                 if cur is None or key > (cur["reviewed"], cur["length"]):
                     best[fbgn] = entry
+    fallback: dict[str, dict] = {}
+    with gzip.open(naseq, "rt") as fh:
+        for line in fh:
+            if line.startswith("#") or not line.strip():
+                continue
+            cols = line.rstrip("\n").split("\t")
+            if len(cols) < 6 or not cols[5] or cols[1] != "Dmel":
+                continue
+            fbgn, entry = cols[2], by_acc.get(cols[5])
+            if fbgn in best or entry is None:
+                continue
+            cur = fallback.get(fbgn)
+            key = (entry["reviewed"], entry["length"])
+            if cur is None or key > (cur["reviewed"], cur["length"]):
+                fallback[fbgn] = entry
+    best.update(fallback)
     return best
 
 
@@ -84,7 +107,11 @@ def main() -> None:
     args.cache.mkdir(parents=True, exist_ok=True)
     rdir = args.release.replace("fb_", "FB")
 
-    uniprot = load_uniprot(cached(UNIPROT, args.cache / "uniprot_dmel.tsv"))
+    naseq = f"fbgn_NAseq_Uniprot_{args.release}.tsv.gz"
+    uniprot = load_uniprot(
+        cached(UNIPROT, args.cache / "uniprot_dmel.tsv"),
+        cached(BASE.format(dir=rdir, name="fbgn_NAseq_Uniprot", release=args.release),
+               args.cache / naseq))
 
     groups: dict[str, dict] = {}
     for source, name in SOURCES.items():
@@ -144,7 +171,9 @@ def main() -> None:
         "groups": out,
         "genes": dict(sorted(genes.items())),
     }
-    args.output.write_text(yaml.safe_dump(doc, sort_keys=False, width=100))
+    tmp = args.output.with_suffix(".tmp")
+    tmp.write_text(yaml.safe_dump(doc, sort_keys=False, width=100))
+    tmp.replace(args.output)
     print(f"wrote {args.output}: {len(out)} groups, {len(genes)} genes")
 
 

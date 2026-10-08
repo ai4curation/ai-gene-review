@@ -203,6 +203,9 @@ def build_node(spec: dict, res: Resolver, default_type: str, as_complex: bool) -
         node["description"] = fold(spec["description"])
     if spec.get("concepts"):
         node["concepts"] = [descriptor(c) for c in spec["concepts"]]
+    elif spec.get("complex_term") and (spec.get("parts") or spec.get("variant_sets")):
+        # A decomposed complex has no single annoton to carry its complex term.
+        node["concepts"] = [descriptor(spec["complex_term"])]
     complex_here = spec.get("complex", as_complex)
     if spec.get("parts"):
         node["parts"] = [build_part(p, i + 1, res, default_type, complex_here)
@@ -243,8 +246,11 @@ def build_part(p: dict, order: int, res: Resolver, default_type: str, as_complex
 
 def build_variant_set(v: dict, res: Resolver, default_type: str, as_complex: bool) -> dict:
     out = {"id": v["id"], "label": v["label"]}
-    if v.get("description"):
-        out["description"] = fold(v["description"])
+    if v.get("axis"):
+        out["axis"] = fold(v["axis"])
+    # The schema has no description slot on a variant set; keep the text as notes.
+    if v.get("description") or v.get("notes"):
+        out["notes"] = fold(" ".join(x for x in (v.get("description"), v.get("notes")) if x))
     out["selection"] = v.get("selection", "ONE_OR_MORE")
     out["variants"] = []
     for var in v["variants"]:
