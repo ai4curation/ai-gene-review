@@ -172,7 +172,7 @@ reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
 
 - [x] `human/TFAP2B` (Q92481) — AP-2β; crest specifier (TFAP2A–TFAP2B heterodimer), cranial circuit. Reviewed 2026-10-08: 90 GOA rows (50 ACCEPT, 18 non-core, 11 over-annotated, 7 REMOVE, 4 MODIFY) + 1 NEW (GO:0014036, ISS)
 - [ ] `human/TFAP2C` (Q92754) — AP-2γ; partners TFAP2A during border induction (chick)
-- [ ] `human/PAX7` (P23759) — Pax7; the Pax3/7 border factor used in chick; FoxD3 NC1/NC2 enhancer input
+- [x] `human/PAX7` (P23759) — Pax7; border specifier (chick's lead Pax3/7 paralog); satellite cells. Reviewed 2026-10-08: 22 GOA rows (18 ACCEPT, 3 non-core, 1 UNDECIDED) + 4 NEW (GO:0014029, GO:0001228, GO:0043403, GO:0021904; all ISS)
 
 ## Tier 5 — Outgroup comparators (optional)
 
@@ -679,6 +679,22 @@ Cross-cutting findings:
   border, and lamprey Tfap2 is pan-axial. The A/B/C partner switch looks like
   post-duplication subfunctionalisation, partitioned differently in chick,
   mouse and zebrafish.
+
+- **PAX7 (human).** Border specifier, not a crest specifier. In chick it is
+  expressed at the border from gastrulation, and is required for Slug, Sox9,
+  Sox10 and HNK-1 [PMID:16688176]. It binds the FoxD3 NC1 enhancer (ChIP),
+  knockdown abolishes NC1/NC2 activity [PMID:23284303], and its effect on
+  Sox10 is indirect. NEW `GO:0014029` (ISS from chick); `GO:0014034` was not
+  added, because no sufficiency result like Pax3+Zic1 exists for Pax7 and
+  Pax7-positive border cells are not all crest-fated. Other core functions:
+  satellite (muscle stem) cells. Comparator checked (QuickGO): no Pax7 in any
+  species carries an experimental crest term. I verified that mouse Pax7's
+  crest-defect paper was curated only to `GO:0048706` (IMP,
+  PMID:8631261), so this is a coverage gap. The apoptosis TAS row was marked
+  UNDECIDED: its abstract covers PAX3 and PAX3/FKHR only. Evolution: Pax3/7
+  border expression is ancestral (amphioxus). Frog leads with Pax3, chick
+  with Pax7, and mouse uses both redundantly: another paralog split after
+  vertebrate duplication.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
