@@ -299,6 +299,47 @@ LPAAT activity that `PMID:21878620` could not find. The PNPLA3 review grades tha
 `DISPUTED`. The `EXP`/`21878620` row is a miscitation *regardless* of how the dispute
 resolves.)
 
+### TFAP2A, TFAP2B — one name, three proteins ("AP-2")
+
+Found on 2026-10-05 and 2026-10-08 during the
+[Origins of the Neural Crest](NEURAL_CREST_ORIGINS.md) reviews, and checked
+against live QuickGO on 2026-10-08. "AP-2" names two unrelated things: the
+AP-2 *transcription factor* family (TFAP2A–E) and the AP-2 *clathrin adaptor
+complex* (AP2A1, AP2B1, AP2M1, AP2S1). Within the transcription-factor family,
+the early literature also named an alternatively spliced, dominant-negative
+AP-2α product "AP-2B" [PMID:8321221]. That name is one letter from AP-2β
+(TFAP2B). Both collisions have reached GOA.
+
+- **Adaptor read as transcription factor.** `PMID:11447109`, *"Myosin VI
+  isoform localized to clathrin-coated vesicles with a role in
+  clathrin-mediated endocytosis"*, supports a reciprocal `GO:0005515` IPI pair
+  (UniProt): TFAP2A (P05549) with MYO6 (Q9UM54), and MYO6 with TFAP2A. The
+  cached full text describes myosin VI in "a protein complex containing adaptor
+  protein (AP)-2 and clathrin". The partner is the clathrin adaptor, not
+  TFAP2A. The paper is right for MYO6. The *interactor* is wrong, which is the
+  ZBP1/GRID1 pattern above. TFAP2A's review records `correctness: MISCITED`
+  and removes the row. The reciprocal MYO6 row is unreviewed here.
+- **Splice isoform read as paralog.** `PMID:7559606`, *"Transcription factor
+  AP-2 regulates human insulin-like growth factor binding protein-5 gene
+  expression"*, uses AP-2 (AP-2α) and "AP-2B, a dominant-negative inhibitor of
+  AP-2". GOA carries two IDA rows on TFAP2B (Q92481) from it:
+  `GO:0001228` (GO_Central) and `GO:0000122` (UniProt). AP-2β was never
+  tested. TFAP2B's review records `correctness: MISCITED` and removes both
+  rows. TFAP2A's review records the same paper as `VERIFIED`, because it is
+  correct for AP-2α.
+
+Both are evidence-attachment defects: the reference is genuine and supports
+*something*, but the annotation is attached to the wrong gene product.
+
+A third, unconfirmed case from the same project: `PMID:15242799`, *"Cardiac
+neural crest ablation alters Id2 gene expression in the developing heart"*.
+AgBase uses it for IEP rows on chick Id2 (O73933), the paper's subject, and as
+the only TAS source for `GO:0014029` neural crest formation on *Xenopus*
+twist1, snai1 and snai2. The abstract mentions none of the three. The full text
+is not open access and not in PMC, so the three reviews record `UNVERIFIED`
+with a "suspected miscitation" note rather than `MISCITED`. A TAS may rest on an
+introductory statement this repo cannot see.
+
 ## Current state of the evidence
 
 From the [register](MISCITATIONS/miscitation-register.md), regenerated from the YAML
@@ -423,14 +464,36 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
 - [x] ARATH/WIP1 `PMID:20579133` (dental paper) on the WIP1-RANGAP1 IntAct pair
       recorded; the intended paper is probably `PMID:17600715`, but that is
       unconfirmed (IMEx IM-19345)
+- [x] "AP-2" name collisions recorded (2026-10-08): TFAP2A–MYO6 IPI pair from
+      `PMID:11447109` (clathrin adaptor read as TFAP2A) and two TFAP2B IDA rows
+      from `PMID:7559606` (AP-2α splice isoform "AP-2B" read as AP-2β); both
+      `MISCITED`
+- [ ] Review the reciprocal MYO6 (Q9UM54) `GO:0005515` row from `PMID:11447109`
+- [ ] Obtain the full text of `PMID:15242799` to settle the AgBase TAS rows on
+      *Xenopus* twist1, snai1 and snai2 (currently `UNVERIFIED`, suspected)
 - [ ] Decide what, if anything, to report upstream to GOA / UniProt / IntAct, and in
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
       may simply omit it, which is indistinguishable from "no problem found")
 
-Last updated: 2026-09-27
+Last updated: 2026-10-08
 
 # NOTES
+
+## 2026-10-08
+
+**"AP-2" collisions from the Origins of the Neural Crest project.** Two
+evidence-attachment defects on the AP-2 transcription factors, both checked
+against live QuickGO and the cached papers. See the worked case above. A third
+suspected case, the Id2 paper used as a TAS source on three *Xenopus* crest
+genes, stays `UNVERIFIED` until the full text can be read. For consistency the
+snai1 and snai2 reviews were moved from `MISCITED` to `UNVERIFIED`, matching
+twist1. Other references flagged during that project:
+- hes4-a `PMID:17724611` is `DISPUTED`: its NOT `GO:0014029` row is contested
+  by `PMID:25997789`.
+- sox3-a `PMID:17950579` and `PMID:17875931` are `UNVERIFIED`: their
+  abstracts do not mention Sox3.
+- PAX7 `PMID:10871843` is `UNVERIFIED`: its abstract covers PAX3 only.
 
 ## 2026-09-27
 
