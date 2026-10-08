@@ -165,13 +165,13 @@ Last updated: 2026-10-01
 - [x] `XENLA/sox2` (O42569) — SoxB1; blastula pluripotency and neural-progenitor gene, not a crest participant. Reviewed 2026-10-07: 25 GOA rows (17 ACCEPT, 7 non-core, 1 MODIFY) + 2 NEW (GO:0045665, GO:0060041)
 - [x] `XENLA/sox3-a` (P55863) — SoxB1; maternal germ-layer patterning, genome activation, neural competence; not a crest participant. Reviewed 2026-10-07: 29 GOA rows (19 ACCEPT, 10 non-core) + 2 NEW (GO:0141064, GO:0021990)
 
-## Tier 4 — Missing module members (from module deep research)
+## Tier 4 — Missing module members (from module deep research) — COMPLETE 2026-10-08
 
 Human entries are used, as for TFAP2A: the key data are from chick, and no
 reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
 
 - [x] `human/TFAP2B` (Q92481) — AP-2β; crest specifier (TFAP2A–TFAP2B heterodimer), cranial circuit. Reviewed 2026-10-08: 90 GOA rows (50 ACCEPT, 18 non-core, 11 over-annotated, 7 REMOVE, 4 MODIFY) + 1 NEW (GO:0014036, ISS)
-- [ ] `human/TFAP2C` (Q92754) — AP-2γ; partners TFAP2A during border induction (chick)
+- [x] `human/TFAP2C` (Q92754) — AP-2γ; border induction (TFAP2A–TFAP2C), lost from crest; trophectoderm, germ cells. Reviewed 2026-10-08: 60 GOA rows (44 ACCEPT, 6 non-core, 5 MODIFY, 3 REMOVE, 1 over-annotated, 1 UNDECIDED) + 3 NEW (GO:0014029, GO:0007281, GO:0001829)
 - [x] `human/PAX7` (P23759) — Pax7; border specifier (chick's lead Pax3/7 paralog); satellite cells. Reviewed 2026-10-08: 22 GOA rows (18 ACCEPT, 3 non-core, 1 UNDECIDED) + 4 NEW (GO:0014029, GO:0001228, GO:0043403, GO:0021904; all ISS)
 
 ## Tier 5 — Outgroup comparators (optional)
@@ -695,6 +695,39 @@ Cross-cutting findings:
   border expression is ancestral (amphioxus). Frog leads with Pax3, chick
   with Pax7, and mouse uses both redundantly: another paralog split after
   vertebrate duplication.
+
+- **TFAP2C (human).** Border-layer factor. In chick it is at the border, then
+  lost from the crest. Knockdown lowers border genes but not specification
+  genes, and it cannot substitute for TFAP2B [PMID:31848212]. Zebrafish
+  needs tfap2a and tfap2c together for crest induction, at gastrula stage
+  only [PMID:17258188]. NEW `GO:0014029` (ISS), matching TFAP2A. Comparator
+  verified by me in QuickGO: zebrafish tfap2c carries `GO:0014036` and
+  `GO:0014032` by IGI (double knockdown); no TFAP2B/C/D/E in human, mouse,
+  rat, chicken or *Xenopus* carries a crest term. Other NEW: `GO:0007281`
+  germ cell development (IMP, human) and `GO:0001829` trophectodermal cell
+  differentiation (ISS; verified that mouse Tfap2c carries it by IMP).
+  Protein binding rows: CITED2 changed to `GO:0001223`, KCTD1 to `GO:0001222`,
+  MTA1/NuRD to `GO:0001221`; UBC9 rows removed. Open: chick puts TFAP2C
+  upstream of MSX1/PAX7/ZIC1/GBX2, while zebrafish puts tfap2a/c parallel to
+  or downstream of pax3/msxb/zic2b. Evolution: amphioxus has one AP-2,
+  non-neural only. Vertebrate paralogs split the work: TFAP2C keeps the
+  non-neural expression plus transient border induction, and TFAP2B takes
+  crest specification.
+
+### Tier 4 synthesis (2026-10-08)
+
+- **The TFAP2 partner switch is now explicit:** TFAP2A–TFAP2C at border
+  induction (TFAP2C at `GO:0014029`), then TFAP2A–TFAP2B at specification
+  (TFAP2B at `GO:0014036`). TFAP2B represses TFAP2C. Evidence is chick, with
+  zebrafish double-knockdown support; mouse redundancy masks single mutants.
+- **Pax3/7 paralog choice is lineage-specific:** frog leads with Pax3, chick
+  with Pax7, mouse uses both. PAX7 sits at `GO:0014029` only.
+- **Paralog subfunctionalisation is now a project-wide theme:** SoxE
+  (Sox8/9/10), Snail (Snai1/2), Pax3/7 and TFAP2 (A/B/C) all divide crest
+  roles differently across lineages. Module variant sets should model this
+  rather than fixing one paralog per role.
+- **Data errors to report:** the "AP-2B" name confusion on TFAP2B
+  (PMID:7559606).
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
