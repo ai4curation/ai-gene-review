@@ -27,6 +27,7 @@ from typing import Any, Callable
 import yaml
 
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
+from ai_gene_review.taxon import review_taxon
 from ai_gene_review.sft_prediction_evidence import (
     NEGATIVE_ACTIONS,
     POSITIVE_ACTIONS,
@@ -451,8 +452,15 @@ def build_prediction_review_yaml(
     go_labels: dict[str, str],
     seq_length: int,
     go_adapter: Any | None = None,
+    taxon: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Build a PredictionReview document from a local GO-GPT inference."""
+    """Build a PredictionReview document from a local GO-GPT inference.
+
+    ``taxon`` is the gene review's NCBITaxon term; it is required because the
+    bound ``taxon`` slot does not accept a UniProt species code.
+    """
+    if taxon is None:
+        raise ValueError(f"No NCBITaxon taxon supplied for {gene} ({organism})")
     del seq_length  # Retained in the API for compatibility with existing callers.
     predicted_annotations = []
     for aspect in ("MF", "BP", "CC"):
@@ -484,7 +492,7 @@ def build_prediction_review_yaml(
     return {
         "id": accession,
         "gene_symbol": gene,
-        "taxon": {"id": f"uniprot:{organism}", "label": organism},
+        "taxon": taxon,
         "status": prediction_review_status(predicted_annotations),
         "description": description,
         "references": [{"id": BIOREASON_REF, "title": BIOREASON_TITLE}],
@@ -598,9 +606,7 @@ def build_web_export_review(
     result = {
         "id": existing_document.get("id"),
         "gene_symbol": gene,
-        "taxon": existing_document.get(
-            "taxon", {"id": f"uniprot:{organism}", "label": organism}
-        ),
+        "taxon": review_taxon(review_file),
         "status": prediction_review_status(predictions),
         "description": description,
         "references": existing_document.get("references")
@@ -773,6 +779,7 @@ def run_inference(args: argparse.Namespace) -> int:
         go_labels=load_go_cache(repo_root),
         seq_length=len(sequence),
         go_adapter=go_adapter,
+        taxon=review_taxon(gene_dir / f"{args.gene}-ai-review.yaml"),
     )
 
     if args.format in ("yaml", "both"):
