@@ -28,3 +28,21 @@ C42-C141 disulfide is introduced and how Tim22 assembly is assisted, but it does
 change the core GO review: Tim22 remains the channel-forming TIM22-complex subunit
 whose conserved activity is inner-membrane insertion of hydrophobic multi-pass
 precursor proteins.
+
+## 2026-10-01 current GOA refresh
+
+- Re-fetched GOA, UniProt, cached PMIDs, and the current `PTHR14110` PAINT table.
+  Current PAINT still places `GO:0042721` TIM22 mitochondrial import inner membrane
+  insertion complex, `GO:0045039` protein insertion into mitochondrial inner
+  membrane, and `GO:0032977` membrane insertase activity on `PTN000364156`.
+- Resolved the new exact ComplexPortal `GO:0042721` IPI row from PMID:10648604
+  as `ACCEPT`; the paper directly identifies Tim22p as an integral membrane
+  subunit of the 300-kDa TIM22 complex.
+- Retired three exact assertions no longer present in current GOA: the old
+  `GO:0030943` IBA row, the broad UniProt keyword `GO:0015031` protein transport
+  row, and the old direct `GO:0030943` row from PMID:11864609. The signal-recognition
+  evidence remains relevant but is now captured by the proposed `GO:0032977`
+  membrane insertase activity annotation.
+- Searched 2025-2026 TIM22/Saccharomyces literature; newer hits were either broad
+  mitochondrial import/proteostasis work or not direct yeast TIM22 functional papers,
+  so they did not change the IBA or core-function calls.
