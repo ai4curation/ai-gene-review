@@ -85,3 +85,16 @@
 
 - Germline activating variants: cardiofaciocutaneous syndrome 3 (CFC3); somatic mosaic: melorheostosis; somatic cancer
   alleles in three RAF-dependence classes (deep research, Gao et al. 2018).
+
+## Earlier independent review on main (commit c65068660)
+
+MAP2K1 was reviewed independently on main (commit c65068660) while this review was in progress. When PR #3381 was merged with main (2026-10-08), this review was kept as canonical because it is COMPLETE and re-types bare protein-binding rows to informative terms where the other review removed them; the other review added no rows, questions or terms that this one lacked. Its notes are preserved below for provenance; its deep-research file is in git history at c65068660.
+
+### MAP2K1 curation notes
+
+#### 2026-09-30 PENDING annotation review
+
+Provider deep research was unavailable for this seeded MAP2K1 pass: Falcon required
+`agentapi` on `PATH` in the parent environment, and the Perplexity/OpenAI fallbacks
+lacked API keys. This pass relied on the UniProt record, GOA-seeded review rows,
+cached PMID records, and cached Reactome summaries where present.
