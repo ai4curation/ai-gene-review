@@ -1,12 +1,19 @@
 ---
 title: "FlyBase gene groups as review sets"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [DROME]
 genes: [Sgs1, Sgs3, Sgs4, Sgs5, Sgs5bis, Sgs7, Sgs8, Eig71Ee]
 ---
 
 # FlyBase gene groups as review sets
+
+**Modules (update):** every FlyBase group, including the 182 metabolic and
+signaling *pathway* groups, has now been triaged. 174 new fly modules
+(`modules/dmel_*.yaml`) model the groups that are complexes, pathways or
+functional systems; 68 existing modules already cover others; the remaining
+groups are sequence families or activity classes, which are not modules. See
+[Modules from gene groups](#modules-from-gene-groups).
 
 **Bottom line:** FlyBase curates 1,836 gene groups (release FB2026_03). They
 cover 8,607 *D. melanogaster* genes, and most terminal groups are small (median
@@ -135,6 +142,104 @@ Every Sgs gene also has an extracellular-region annotation (IDA, PMID:825230).
    (P40139) and ng3 (P40140) are named "new glue". They have only an
    extracellular-region annotation and are not in any FlyBase group. Whether
    they are true glue components is an open question, not an established gap.
+
+## Modules from gene groups
+
+FlyBase publishes three kinds of group in release FB2026_03: 1,836 gene groups,
+109 metabolic pathway groups and 73 signaling pathway groups (2,016 groups,
+counting the two that appear in two files once). We triaged all of them and
+built a module wherever a group describes something that works as a unit.
+
+### Triage
+
+A group is a module candidate when its members act together: a protein complex,
+a pathway, or a functional system such as the salivary glue. A group is not a
+module when its members are only related by sequence (for example peptidase
+family S1) or share a broad activity class (enzymes, transporters, receptors,
+transcription factors). The curated rules are in
+[`triage_rules.yaml`](FLYBASE_GENE_GROUPS/triage_rules.yaml);
+[`triage_groups.py`](FLYBASE_GENE_GROUPS/triage_groups.py) applies them to every
+group, letting subgroups inherit from their parents, and writes
+[`group_triage.yaml`](FLYBASE_GENE_GROUPS/group_triage.yaml).
+
+| Decision | Groups | Meaning |
+|---|---|---|
+| NEW_MODULE | 291 | realized by one of 174 new `dmel_` modules |
+| SUBSUMED | 231 | subgroup folded into its parent's module (subunits, variants, stages) |
+| EXISTING_MODULE | 110 | already covered by one of 68 existing modules (OXPHOS complexes, TCA cycle, glycolysis, GPI anchor, ...) |
+| REGULATOR_SET | 34 | "positive/negative regulators of" a signaling pathway: context, not parts |
+| UMBRELLA | 26 | category grouping several complexes or pathways |
+| NOT_A_MODULE | 1,324 | 1,067 activity classes, 182 sequence families, 68 tRNA classes, 4 gene clusters, 3 single genes |
+
+Several FlyBase groups often go into one module. For example the Polycomb module
+covers PRC1, PRC2, PhoRC, PR-DUB, dRAF, the variant PRC1 complexes and the PcG
+recruiters, and the iron-sulfur cluster module joins the FESCA metabolic pathway
+group with the four Fe-S assembly complex groups.
+
+### How the modules were built
+
+Each module is written as a short spec in
+[`module_specs/`](FLYBASE_GENE_GROUPS/module_specs/) that names participants only
+by FlyBase gene or group symbol.
+[`generate_modules.py`](FLYBASE_GENE_GROUPS/generate_modules.py) expands a spec
+into a ModuleReview file. It maps each gene to UniProtKB from
+[`group_index.yaml`](FLYBASE_GENE_GROUPS/group_index.yaml) (built by
+[`build_group_index.py`](FLYBASE_GENE_GROUPS/build_group_index.py) from UniProt
+and FlyBase's own mapping), and it adds the FlyBase groups as evidence. No
+accession was typed by hand. Genes without a protein product (snRNAs, 7SK, roX,
+RNase P and MRP RNAs, mitochondrial rRNAs) and the three Y-linked dynein heavy
+chains, which lack a UniProt entry, are grounded to FlyBase gene ids.
+
+FlyBase subgroups shape each module: subcomplexes become parts, and paralog or
+testis-specific versions become variant sets (for example the testis
+proteasome, ribosome and TOM complex variants). Signaling pathways model only
+the core components and ligand production, in order. Every GO id was checked
+against QuickGO when the spec was written, and the module validator checks the
+labels again.
+
+### Checks
+
+- All 174 modules pass the LinkML schema and `module_validator` with no errors.
+  The one routine warning is that the NCBITaxon label could not be checked
+  offline.
+- [`check_modules.py`](FLYBASE_GENE_GROUPS/check_modules.py) confirms that every
+  member of every realized and subsumed group appears in its module, and that
+  each module splits into at least two parts or variants
+  ([`module_coverage.yaml`](FLYBASE_GENE_GROUPS/module_coverage.yaml)).
+- A few non-member genes were added where a module could not be built without
+  them. Each one is stated in the module notes: Cdc6 and dup (Cdt1) in origin
+  licensing, sd in Hippo, Rheb in TORC1 nutrient sensing, y in cuticle tanning,
+  Diap1 in RHG apoptosis, and ptc, which FlyBase lists only among Hedgehog
+  regulators. The axonemal light chains ODA-Dnal1 and Dnali1 were moved from the
+  shared dynein light-chain group into the axonemal dynein module.
+
+### Caveats
+
+- Status is DRAFT. No member gene has a gene review yet, so
+  molecular-function assertions rest on conserved, well-established activities
+  and are marked as unreviewed by the validator.
+- Most modules cite no PMIDs. Their evidence is the FlyBase group and the GO
+  terms. The histamine and cardiolipin modules cite checked PMIDs, and the glue
+  module cites PMID:825230.
+- Some FlyBase data quirks are kept as FlyBase has them and noted in the modules
+  concerned. In the SMN complex, the Gem4c variant group does not list Gem4c, and
+  it was placed there from the group name. In the mitochondrial ribosome,
+  mRpS30 is listed in both subunits. In the RHG group, whether Prx4 acts as an
+  IAP antagonist is unverified.
+- Some GO gaps forced broader terms: there is no specific CC term for KPC,
+  LKB1-STRAD-MO25, the HIF heterodimer, ELBA or Nxf1-Nxt1. A citrate-malate
+  shuttle BP term (GO:7770108) exists in QuickGO but not yet in the validator's
+  ontology snapshot.
+
+### Reproduce
+
+```bash
+uv run python projects/FLYBASE_GENE_GROUPS/build_group_index.py -o projects/FLYBASE_GENE_GROUPS/group_index.yaml
+uv run python projects/FLYBASE_GENE_GROUPS/triage_groups.py
+uv run python projects/FLYBASE_GENE_GROUPS/generate_modules.py
+uv run python projects/FLYBASE_GENE_GROUPS/check_modules.py
+uv run python -m ai_gene_review.validation.module_validator modules/dmel_*.yaml
+```
 
 ## Proposed workflow
 
