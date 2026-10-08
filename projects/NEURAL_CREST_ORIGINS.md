@@ -3,7 +3,7 @@ title: Origins of the Neural Crest
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [XENLA, human, CIOIN]
-genes: [foxd3-a, sox10, snai2, sox9-a, twist1, ets1-a, myc-a, id3-a, sox8, pax3-a, zic1, MSX1, TFAP2A, hes4-a, gbx2, pou5f1.1, lin28a, snai1]
+genes: [foxd3-a, sox10, snai2, sox9-a, twist1, ets1-a, myc-a, id3-a, sox8, pax3-a, zic1, MSX1, TFAP2A, hes4-a, gbx2, pou5f1.1, lin28a, snai1, sox2, sox3-a, TFAP2B, TFAP2C, PAX7]
 ---
 # Project NEURAL_CREST_ORIGINS: the gene regulatory network that made the vertebrate head
 
@@ -165,7 +165,16 @@ Last updated: 2026-10-01
 - [x] `XENLA/sox2` (O42569) — SoxB1; blastula pluripotency and neural-progenitor gene, not a crest participant. Reviewed 2026-10-07: 25 GOA rows (17 ACCEPT, 7 non-core, 1 MODIFY) + 2 NEW (GO:0045665, GO:0060041)
 - [x] `XENLA/sox3-a` (P55863) — SoxB1; maternal germ-layer patterning, genome activation, neural competence; not a crest participant. Reviewed 2026-10-07: 29 GOA rows (19 ACCEPT, 10 non-core) + 2 NEW (GO:0141064, GO:0021990)
 
-## Tier 4 — Outgroup comparators (optional)
+## Tier 4 — Missing module members (from module deep research)
+
+Human entries are used, as for TFAP2A: the key data are from chick, and no
+reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
+
+- [ ] `human/TFAP2B` (Q92481) — AP-2β; partners TFAP2A during crest specification (chick); cranial Sox8–Tfap2b–Ets1 circuit
+- [ ] `human/TFAP2C` (Q92754) — AP-2γ; partners TFAP2A during border induction (chick)
+- [ ] `human/PAX7` (P23759) — Pax7; the Pax3/7 border factor used in chick; FoxD3 NC1/NC2 enhancer input
+
+## Tier 5 — Outgroup comparators (optional)
 
 - [ ] `CIOIN` Ci-Twist-like-2 (Q4H2N6) — the Twist used in the a9.49 reprogramming experiment [PMID:23135395]
 - [ ] Lamprey SoxE paralogs (TrEMBL; e.g. soxe2 A0A5P9Q4B1) — decide whether reviewable
