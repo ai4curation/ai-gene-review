@@ -39,6 +39,26 @@ UNIPROT = (
 )
 
 
+
+def recommended_name(full: str) -> str:
+    """UniProt 'Recommended (Alt 1) (Alt 2)' -> 'Recommended'.
+
+    Only trailing balanced parenthesised groups are removed, so names that
+    contain parentheses themselves (``tRNA (guanine-N(7)-)-methyltransferase``)
+    are kept whole.
+    """
+    name = full.strip()
+    while name.endswith(")"):
+        depth = 0
+        for i in range(len(name) - 1, -1, -1):
+            depth += {")": 1, "(": -1}.get(name[i], 0)
+            if depth == 0:
+                break
+        if i <= 0 or name[i - 1] != " ":
+            break
+        name = name[: i - 1].rstrip()
+    return name or full
+
 def cached(url: str, path: Path) -> Path:
     if not path.exists():
         with urllib.request.urlopen(url, timeout=600) as resp:
@@ -70,7 +90,7 @@ def load_uniprot(path: Path, naseq: Path) -> dict[str, dict]:
             entry = {
                 "accession": acc,
                 "reviewed": reviewed == "reviewed",
-                "protein_name": name.split(" (")[0],
+                "protein_name": recommended_name(name),
                 "length": int(length or 0),
             }
             by_acc[acc] = entry

@@ -41,6 +41,26 @@ class Folded(str):
     """String emitted as a YAML folded block scalar."""
 
 
+
+def recommended_name(full: str) -> str:
+    """UniProt 'Recommended (Alt 1) (Alt 2)' -> 'Recommended'.
+
+    Only trailing balanced parenthesised groups are removed, so names that
+    contain parentheses themselves (``tRNA (guanine-N(7)-)-methyltransferase``)
+    are kept whole.
+    """
+    name = full.strip()
+    while name.endswith(")"):
+        depth = 0
+        for i in range(len(name) - 1, -1, -1):
+            depth += {")": 1, "(": -1}.get(name[i], 0)
+            if depth == 0:
+                break
+        if i <= 0 or name[i - 1] != " ":
+            break
+        name = name[: i - 1].rstrip()
+    return name or full
+
 def _folded(dumper: yaml.Dumper, data: Folded):
     return dumper.represent_scalar("tag:yaml.org,2002:str", str(data), style=">")
 
@@ -88,7 +108,7 @@ class Resolver:
                 if gene and (cur is None or key > cur["key"]):
                     self.uniprot[gene] = {
                         "key": key, "accession": acc,
-                        "protein_name": name.split(" (")[0],
+                        "protein_name": recommended_name(name),
                         "fbgn": fb.split(";")[0] or None,
                     }
 
@@ -206,6 +226,14 @@ def build_node(spec: dict, res: Resolver, default_type: str, as_complex: bool) -
     elif spec.get("complex_term") and (spec.get("parts") or spec.get("variant_sets")):
         # A decomposed complex has no single annoton to carry its complex term.
         node["concepts"] = [descriptor(spec["complex_term"])]
+    decomposed = bool(spec.get("parts") or spec.get("variant_sets")
+                      or (spec.get("_root") and spec.get("subunit_parts", True)))
+    if decomposed and spec.get("processes"):
+        # Processes of a decomposed node have no annoton to sit on; keep them as
+        # node concepts so they are not lost.
+        have = {c["term"]["id"] for c in node.get("concepts", []) if c.get("term")}
+        node.setdefault("concepts", []).extend(
+            descriptor(p) for p in spec["processes"] if p["id"] not in have)
     complex_here = spec.get("complex", as_complex)
     if spec.get("parts"):
         node["parts"] = [build_part(p, i + 1, res, default_type, complex_here)
