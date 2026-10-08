@@ -66,3 +66,18 @@ All cached publications are abstract-only (`full_text_available: false`).
 ## Deep research status
 
 OpenScientist run started 2026-10-08 (`just deep-research-openscientist DROME Datp`).
+Completed 2026-10-08 (~26 min): `Datp-deep-research-openscientist.md`. It confirmed the
+gene identity (Datp = Apf = CG31713 = Q4V6M1) and found no fly literature beyond
+PMID:17344088. Additions, none of which change a curation decision:
+
+- 48.6% full-length identity to human NUDT2 (P50583) with a conserved Nudix box
+  [file:DROME/Datp/Datp-deep-research-openscientist.md "gives **68 of 140 aligned positions identical = 48.6% identity**"];
+  Nudix box R50-E51-T52-K53-E54-E55-A56-G57 (consistent with the UniProt sequence; MOTIF 36..57).
+- AlphaFold AF-Q4V6M1-F1 high-confidence single Nudix domain (pLDDT 94.9), predicted
+  three-glutamate metal site (model-based, not experimental).
+- States no loss-of-function phenotypes are published
+  [file:DROME/Datp/Datp-deep-research-openscientist.md "There are no published loss-of-function (mutant/RNAi/CRISPR) phenotypes establishing what Datp does for the organism"];
+  note FlyBase nonetheless lists 8 alleles with "viable/fertile/partially lethal/abnormal
+  pain response" classes (likely large-scale screens), so this should be checked.
+- Ap4A signaling context (LysRS synthesis, Hint1-MITF, STING) is mammalian; not used as
+  evidence for fly process annotations.
