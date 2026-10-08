@@ -170,7 +170,7 @@ Last updated: 2026-10-01
 Human entries are used, as for TFAP2A: the key data are from chick, and no
 reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
 
-- [ ] `human/TFAP2B` (Q92481) — AP-2β; partners TFAP2A during crest specification (chick); cranial Sox8–Tfap2b–Ets1 circuit
+- [x] `human/TFAP2B` (Q92481) — AP-2β; crest specifier (TFAP2A–TFAP2B heterodimer), cranial circuit. Reviewed 2026-10-08: 90 GOA rows (50 ACCEPT, 18 non-core, 11 over-annotated, 7 REMOVE, 4 MODIFY) + 1 NEW (GO:0014036, ISS)
 - [ ] `human/TFAP2C` (Q92754) — AP-2γ; partners TFAP2A during border induction (chick)
 - [ ] `human/PAX7` (P23759) — Pax7; the Pax3/7 border factor used in chick; FoxD3 NC1/NC2 enhancer input
 
@@ -655,6 +655,30 @@ Cross-cutting findings:
 - **Miscitation pattern.** PMID:15242799 (an Id2 paper) is the cited source
   for TAS crest rows on twist1, snai2 and snai1. Two sox3-a rows cite papers
   about other genes. Report both to the source curators.
+
+### Tier 4 reviews (in progress)
+
+- **TFAP2B (human).** Crest specifier, not a border gene. In chick it comes
+  on only at the onset of specification. Knockdown leaves the border intact
+  but disrupts specification. It heterodimerises with TFAP2A and recruits it
+  to specification enhancers, represses TFAP2C, and brings specification
+  forward when introduced early [PMID:31848212, full text]. In frog,
+  Pax3/Zic1 activate tfap2b directly [PMID:24360906]. NEW `GO:0014036` (ISS
+  from chick). Comparator verified in QuickGO by the agent: no TFAP2B in any
+  species carries a crest term, while zebrafish tfap2a/tfap2c (`GO:0014036`)
+  and mouse Tfap2a (`GO:0014032`) do; redundancy masks single mutants.
+  **Name confusion removal (verified by me from the cached abstract):** the
+  two IDA rows from PMID:7559606 were removed. That abstract's "AP-2B" is "a
+  dominant-negative inhibitor of AP-2", the alternatively spliced AP-2α
+  product [PMID:8321221], not the AP-2β activator. Report this to the source
+  curator. Protein binding rows: CITED2 changed to `GO:0001223`, KCTD1 to
+  `GO:0001222`, AP-2α self/hetero to `GO:0046982`/`GO:0042803`; UBC9 and
+  high-throughput rows removed. Open: mouse Tfap2b is redundant with Tfap2a,
+  and Van Otterloo 2022 found no irreplaceable AP-2α/β heterodimer function,
+  so necessity rests on chick. Evolution: amphioxus AP-2 is not at the
+  border, and lamprey Tfap2 is pan-axial. The A/B/C partner switch looks like
+  post-duplication subfunctionalisation, partitioned differently in chick,
+  mouse and zebrafish.
 
 ### Project-level decision to confirm: GO:0014029 vs GO:0014036
 
