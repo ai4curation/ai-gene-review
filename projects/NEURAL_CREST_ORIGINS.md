@@ -204,6 +204,13 @@ reviewed chicken or frog entries exist (UniProt checked 2026-10-08).
   and Lin28 (chick-only evidence). Candidate Tier 4 reviews: TFAP2B, TFAP2C,
   PAX7.
 
+- [x] Tier 4 added to the module (2026-10-08): TFAP2C in the border part,
+  TFAP2B in the specification part, with the partner-switch edges (TFAP2C →
+  TFAP2B; TFAP2B ⊣ TFAP2C), plus Pax3/Zic1 → tfap2b. Pax3 and Pax7 are now a
+  paralog variant set in the border part, with Pax7 → FoxD3 (NC1 enhancer
+  ChIP). The module now has 27 annotons, 24 edges and 6 knowledge gaps; all
+  20 grounded genes are reviewed.
+
 ## Synthesis deliverables
 
 - [ ] Layer table: for each gene, its GRN layer, the outgroup expression data, and the GO process terms kept after review
