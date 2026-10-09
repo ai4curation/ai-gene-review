@@ -2,7 +2,7 @@
 
 Accession: Q9VLD7 (CG17009).
 
-Deep research: a falcon run (`just deep-research-falcon DROME aust`) had not finished when this review was written (falcon runs for the other CPC genes timed out). Literature below is from the cached publications.
+Deep research: `aust-deep-research-falcon.md` (falcon; completed after the review was first written). It confirms Aust as a testis-specific Borealin paralog lacking ~140 central residues of Borr, required for male meiotic cohesion, kinetochore CPC recruitment, alignment, segregation and central spindle/cytokinesis, and able to substitute for Borr in S2 cells; it notes the Borr-Shrub (ESCRT-III) interaction maps to the Borr region absent from Aust, a proposed reason for the paralog switch. No change to annotation decisions.
 
 ## Literature journal
 
