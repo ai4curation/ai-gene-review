@@ -447,3 +447,52 @@ is unidentified; (iv) whether colicin E1 threads TolC or merely plugs it is unre
 snippets were pre-checked against the cache with the repo's own
 `build_supporting_text_validator` before being written into the YAML, so every quote is
 a verbatim (whitespace-normalised) substring of the cached publication.
+
+---
+
+## 13. Revisions made when the YAML was written
+
+The sections above were drafted before the review file was filled in. Two decisions
+changed at that point, both after a check that had not been run earlier.
+
+### 13a. `GO:0019867 outer membrane` (IEA) — now MODIFY, not ACCEPT
+
+Section 10 kept this row at the pan-taxon parent on the general principle that
+electronic mappings may be broader than the curated picture. That principle is right
+but it does not apply here, because it depends on the signature actually spanning the
+broader taxa. I looked the signature up: IPR010130 is "Type I secretion outer membrane
+protein, TolC", and its members are bacterial. Nothing in its scope requires a term
+that also covers mitochondrial and plastid outer membranes.
+
+→ **MODIFY** → `GO:0009279`, which also makes the two rows for this term consistent.
+
+Worth contrasting with `genes/ECOLI/bamA`, where the opposite conclusion was correct:
+the signatures behind BamA's outer-membrane rows (IPR000184, IPR010827) do occur in
+organellar Omp85 proteins such as Sam50 and Toc75, where "cell outer membrane" would be
+false, so there the parent was kept. The asymmetry between the two reviews is deliberate
+and rests on the scope of the particular signature, not on a general preference.
+
+### 13b. The IBA porin row now carries a structured propagation review
+
+Section 9c reached the right action but recorded the reasoning only in prose. The row
+now carries `propagation_review` with `root_cause: TERM_SCOPING_PROBLEM` and
+`failure_modes: [GRANULARITY_MISMATCH]`, which is the honest classification: the
+ancestral node PTN002011530 is well placed and TolC is its own exemplar, so nothing is
+wrong with the propagation. What is wrong is the term. Both source entities are marked
+`SUPPORTS_TRANSFER`, including TolC itself, since a target appearing in its own
+WITH/FROM marks experimental grounding on the target rather than circularity.
+
+### 13c. Supporting quotes
+
+Forty-two ACCEPT rows gained a `supported_by` quote drawn from the citations verified in
+the sections above or from the cached abstract, each re-checked as a verbatim
+whitespace-normalised substring. Seven ACCEPT rows still carry none: the four
+envelope/outer-membrane proteomics surveys plus three further abstract-only records whose
+abstracts do not mention TolC by name. These are the inventory papers identified in §2;
+they place the protein in the envelope and make no functional claim, so there is no
+sentence to quote.
+
+### 13d. Final action counts
+
+54 ACCEPT, 18 REMOVE, 9 MODIFY, 6 MARK_AS_OVER_ANNOTATED, across all 87 rows.
+`just validate ECOLI tolC` is clean with no warnings.
