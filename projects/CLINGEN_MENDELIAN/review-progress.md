@@ -66,6 +66,67 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 270 — 2026-10-09 17:36:48 UTC
+
+**270 complete / 2,606 remaining in the frozen 2,876-gene catalog.** This adds
+eight completions beyond [published checkpoint 262](https://github.com/ai4curation/ai-gene-review/pull/4459).
+The fixed [main snapshot fd81ce72cba2](https://github.com/ai4curation/ai-gene-review/commit/fd81ce72cba2618655d3bc7351581ef4a6abf9f2)
+contains all eight gene merges and the preceding tracker merge. Completion
+evidence stops at the BCS1L follow-up merge at the stated cutoff.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| BCAP31 | [#3605](https://github.com/ai4curation/ai-gene-review/pull/3605) | [d0650b3fbc6c](https://github.com/ai4curation/ai-gene-review/commit/d0650b3fbc6c76dc79d8b95a90ffe3412478589b) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/3605#pullrequestreview-5472636799) | 2026-10-09T16:36:48Z | [f7911a500f1b](https://github.com/ai4curation/ai-gene-review/commit/f7911a500f1b503f735e6a551c577251c41dffff) |
+| BCOR | [#3669](https://github.com/ai4curation/ai-gene-review/pull/3669) | [326a03a22810](https://github.com/ai4curation/ai-gene-review/commit/326a03a22810c77a2b2a0731605bf2bba15b700c) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/3669#pullrequestreview-5472687886) | 2026-10-09T16:37:50Z | [34a24b719bd0](https://github.com/ai4curation/ai-gene-review/commit/34a24b719bd09f800256e5f5d5d66bef65d3fa44) |
+| CDAN1 | [#4456](https://github.com/ai4curation/ai-gene-review/pull/4456) | [316d1fe4894c](https://github.com/ai4curation/ai-gene-review/commit/316d1fe4894c0eca32372b1a1f980380e81b6c9c) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4456#pullrequestreview-5472731219) | 2026-10-09T16:47:23Z | [fe9d0eec86d1](https://github.com/ai4curation/ai-gene-review/commit/fe9d0eec86d1f5b949960c82e206f1a330bba618) |
+| BCKDHB | [#4457](https://github.com/ai4curation/ai-gene-review/pull/4457) | [49370df72373](https://github.com/ai4curation/ai-gene-review/commit/49370df723737c5d859366f69b5f195bda69e982) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4457#pullrequestreview-5472759309) | 2026-10-09T16:55:25Z | [8304d7366c63](https://github.com/ai4curation/ai-gene-review/commit/8304d7366c63e6cc673f92efe82cf2378fab23c9) |
+| CD70 | [#4446](https://github.com/ai4curation/ai-gene-review/pull/4446) | [36325439ce74](https://github.com/ai4curation/ai-gene-review/commit/36325439ce748a0e33241135aa1472fc87e552cd) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4446#pullrequestreview-5473281701) | 2026-10-09T17:34:07Z | [3c072d130a74](https://github.com/ai4curation/ai-gene-review/commit/3c072d130a74361b7b9f1a55fe453953d4d2147d) |
+| CD79A | [#4453](https://github.com/ai4curation/ai-gene-review/pull/4453) | [ed8dff6d008e](https://github.com/ai4curation/ai-gene-review/commit/ed8dff6d008e0f79e76724605198cad84cbbd4b7) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4453#pullrequestreview-5473297643) | 2026-10-09T17:34:17Z | [956eca1abfa5](https://github.com/ai4curation/ai-gene-review/commit/956eca1abfa5ca0b84b8818171b658756421073b) |
+| CD79B | [#4455](https://github.com/ai4curation/ai-gene-review/pull/4455) | [503f8b6beda9](https://github.com/ai4curation/ai-gene-review/commit/503f8b6beda9660ea4eb3193265c6616498368bb) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4455#pullrequestreview-5473305496) | 2026-10-09T17:34:28Z | [a6fbc79b744d](https://github.com/ai4curation/ai-gene-review/commit/a6fbc79b744dfe7ee59fed591f6563be5bafe651) |
+| BCS1L | [#4460](https://github.com/ai4curation/ai-gene-review/pull/4460) | [63120c89599a](https://github.com/ai4curation/ai-gene-review/commit/63120c89599aa7f23513e534585c5c9b50e3cd2c) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4460#pullrequestreview-5473289008) | 2026-10-09T17:36:48Z | [fd81ce72cba2](https://github.com/ai4curation/ai-gene-review/commit/fd81ce72cba2618655d3bc7351581ef4a6abf9f2) |
+
+Each approval belongs to the listed final head. The test (3.12) and claude-review
+checks completed successfully on that same commit before its actual merge time,
+verified using their check-suite commit IDs. All 93 changed PR paths were checked
+against their approved heads and merge commits. The 92 identical paths include
+all 35 changed gene artifacts, which also match the fixed cutoff snapshot. The
+sole shared-cache difference is BCOR: its merge retains the newer main GO cache
+rows and adds only the approved GO:0140261 BCOR complex row. This cache is not
+claimed to be byte-identical to its older PR head.
+
+**Two holds close without double-counting original reviews:**
+
+| Gene | Original review already counted | Original merge | Closing follow-up |
+|---|---|---|---|
+| BCKDHB | [#3616](https://github.com/ai4curation/ai-gene-review/pull/3616) | [c3f9ef9a3bdc](https://github.com/ai4curation/ai-gene-review/commit/c3f9ef9a3bdc8ab235a473fe15d0db7d36e88288) (2026-10-05T23:23:02Z) | [#4457](https://github.com/ai4curation/ai-gene-review/pull/4457) |
+| BCS1L | [#3658](https://github.com/ai4curation/ai-gene-review/pull/3658) | [9da157e0d2bb](https://github.com/ai4curation/ai-gene-review/commit/9da157e0d2bb032c387c6aed858e9518f94d96f4) (2026-10-05T23:23:38Z) | [#4460](https://github.com/ai4curation/ai-gene-review/pull/4460) |
+
+BCAP31, BCOR, CDAN1, CD70, CD79A and CD79B add six distinct original reviewed
+genes to the prior 268, giving **274**. BCKDHB and BCS1L were already among
+those original reviews; their follow-ups supply two further completions and
+reduce the holds from six to four. Thus 274 minus four holds gives 270 complete.
+Exactly these eight primary checkboxes change; supplementary genes and repeat
+reviews add no further completion.
+
+**Merged but incomplete at this cutoff:** AKR1D1 retains its recorded
+Reactome:R-HSA-193755 source gate; BCL10, BIN1 and BLM retain their recorded
+binding-policy follow-up requirement. Later proposed corrections do not close
+these holds at this snapshot. Biological DRAFT status and justified UNDECIDED
+annotations remain independent of campaign closure.
+
+Fresh remote evidence was read at 2026-10-09T17:42:42.558201+00:00. The recorded merge times,
+rather than the later observation time, determine inclusion. Tracker #4459
+merged at 2026-10-09T17:34:40Z and is the published baseline. Subsequent merges
+and open work are outside this checkpoint. The first unchecked gene in literal
+catalog order remains ACBD5.
+
+The project status, queue status and latest completion timestamp use this
+checkpoint. All 235 historical queue entries, 35 prior completion updates and
+earlier dated progress sections are preserved. Their older PR states and counts
+remain historical observations, superseded for current totals by this section.
+
+[Checkpoint curation history](../../history/projects/CLINGEN_MENDELIAN/2026-10-09T175417Z-codex-02c570.yaml) records this update.
+
 ## Completion checkpoint 262 — 2026-10-09 16:19:32 UTC
 
 **262 complete / 2,614 remaining in the frozen 2,876-gene catalog.** This adds
