@@ -15,3 +15,7 @@
 - Core: contributes_to GO:0061711 (complex activity), in KEOPS, cytoplasm (same pattern as other non-catalytic subunits, e.g. CG3434).
 - No NEW GO:0002949 annotation: human TP53RK and LAGE3 also lack it (comparator check via QuickGO), only OSGEP/TPRKB carry it.
 - Ser/Thr kinase rows non-core; general kinase/transferase/catalytic MODIFY to GO:0004674; tyrosine kinase and chromosome over-annotated.
+
+## Deep research (falcon) additions
+- [file:DROME/Tcs5/Tcs5-deep-research-falcon.md "Crucially, the threonylcarbamoyl group is transferred to tRNA by the **Kae1/Tcs3 subunit**, *not* by Tcs5."]
+- Supports treating Tcs5 as a non-catalytic (contributes_to) KEOPS subunit; no fly Tcs5 protein-phosphorylation substrate established. No change to decisions.
