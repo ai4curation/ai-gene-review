@@ -17,3 +17,8 @@
 - Mitochondrion rows (IBA/IDA/HDA) -> MODIFY to mitochondrial matrix (already IC) for consistency.
 - Williamson 1980 (DOI:10.1016/0305-0491(80)90023-1, "Properties of Drosophila NADP+-isocitrate
   dehydrogenase purified on Procion Brilliant Blue-Sepharose-4B") not cached; accepted on trust.
+- Falcon deep research (Idh-deep-research-falcon.md): adds Murari et al. 2022 [PMID:35544578], where Idh
+  is called dIDH2/CG7176: "CG7176 (dIDH2) is the sole Drosophila ortholog of both IDH1 and IDH2";
+  muscle knockdown raises NADP:NADPH ratio, impairs complex I assembly and triggers ferroptotic
+  signals. Added to references and as support for the NADPH regeneration replacement. Also reports
+  that ~13.5-16.4% of adult NADP-IDH activity fractionates with mitochondria (Williamson 1980 era data).
