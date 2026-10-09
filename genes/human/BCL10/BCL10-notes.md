@@ -148,3 +148,25 @@ Both COG6 source rows also return from REMOVE to KEEP_AS_NON_CORE after exact pa
 The three NEMO rows move from UNDECIDED to KEEP_AS_NON_CORE because the selected primary Results directly resolve the annotated low-resolution associations. [PMID:17363905, Figure 2C Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC1847656/) immunoprecipitate endogenous NEMO and detect BCL10/CARMA1 association in stimulated CARMA1-reconstituted cells. [PMID:18287044, Figure 2D/E and Figure 3 Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC2268578/) detect ubiquitinated BCL10 by GST-NEMO pull-down and endogenous co-IP in stimulated Jurkat cells, with loss for NEMO L329P. [PMID:27070702, Figure 4 Results](https://pmc.ncbi.nlm.nih.gov/articles/PMC6026033/) detect modified BCL10-NEMO association in ABC DLBCL and distinguish WT from L329P NEMO in HBL1 cells. These are target-specific BCL10 association assays, not isolated ubiquitin experiments or pathway membership alone. NEMO recognizes attached ubiquitin; BCL10 supplies the modified recruitment platform. No intrinsic ubiquitin-binding activity, kinase activity, E3 activity, purified binary affinity or unmodified-polypeptide interface is assigned to BCL10. The [current GO:0005515 definition](https://www.ebi.ac.uk/QuickGO/term/GO:0005515) does not impose the previous unmodified-polypeptide requirement. Access was selected Results from the unchanged full-text caches; figure pixels, complete Methods and supplements were not newly inspected.
 
 Only these seven reviews and two of their short source anchors change. The TRADD anchor is shortened from 16 to 3 words and the BCL3 anchor from 9 to 5, leaving their subjects and experimental contexts explicit in the surrounding reasons. Other duplicated occurrences are preserved; aggregate YAML quotation totals, including repeated snippets, fall from 36 to 23 words for PMID:10400625 and from 29 to 25 for PMID:16280327. No new scientific quotation is added. Current totals are 80 ACCEPT, 48 MODIFY, 43 KEEP_AS_NON_CORE and 7 UNDECIDED across 178 source rows. The 51 generic-binding rows comprise 44 evidence-specific MODIFY and seven supported KEEP_AS_NON_CORE. All original source fields, qualifiers, supporting entities, products, core functions, references and normal caches remain unchanged. This follow-up remains subject to the fresh PR's review and CI; a merged original PR alone does not complete the campaign hold.
+
+
+## 2026-10-09 — self-contained TRADD evidence excerpt
+
+The TRADD evidence now includes the complete cached sentence naming c-E10
+(BCL10), the transfection context and TRADD co-precipitation. Duplicate short
+adaptor excerpts at two other annotations are removed while their source links,
+reasons and actions are retained. The remaining NF-kappaB excerpt is unchanged.
+The earlier three-word truncation is superseded; the four source links now
+carry 23 quoted words in total. Limiting repeated quotation was an authoring
+constraint, not a repository validation rule or a scientific reason to shorten
+the subject out of the evidence. No annotation decision changes. The earlier
+history record is retained as provenance and corrected by this new entry and
+the accompanying append-only history record.
+
+The [COG6 interaction evidence](BCL10-interaction-evidence.json) preserves the
+exact five human BCL10–COG6 pair records used for the two screen assertions,
+including interaction IDs, PSI-MI methods, publication/IMEx IDs, species and
+figure/table provenance. It includes the two source-specific IntAct query URLs
+and response hashes. These records were read from the returned data, not inferred
+from accession names. They provide traceability to the curator-recorded assays,
+not independent replication of those experiments.
