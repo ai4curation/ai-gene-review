@@ -1,6 +1,6 @@
 # Cul1 (Cullin-1, lin-19) review notes
 
-Accession: Q24311. Module: dmel_scf_slimb_ubiquitin_ligase (Cul1-Roc1a catalytic core).
+Accession: Q24311. Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_scf_slimb_ubiquitin_ligase (Cul1-Roc1a catalytic core).
 
 ## Literature journal
 
