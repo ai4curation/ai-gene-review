@@ -15,3 +15,7 @@
 - Core MF GO:0061711 (own catalytic activity), BP GO:0002949, complex GO:0000408, cytoplasm.
 - acyltransferase IEA MODIFY to GO:0061711; translational fidelity and initiation kept non-core.
 - Shared KEOPS decisions applied identically across Tcs3/Tcs5/Tcs6 (complex ACCEPT, fidelity NAS non-core).
+
+## Deep research (falcon) additions
+- [file:DROME/Tcs3/Tcs3-deep-research-falcon.md "Tcs3 is the catalytic Kae1-family component of the tRNA threonylcarbamoyladenosine (t⁶A) biosynthesis pathway."]
+- Reports fly KEOPS = Tcs3/Kae1, Bud32/Prpk (CG10673), Pcc1 (CG42498, Tcs6); no conserved fly Cgi121 ortholog; strong kae1 alleles reduce bulk t6A ~40%. No change to decisions.
