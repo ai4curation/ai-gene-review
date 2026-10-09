@@ -76,3 +76,51 @@ Eight short, cache-verified abstract anchors restore direct evidence on existing
 The RNF2 assay detail comes from separately accessed [original Results and the Fig.3C caption](https://pmc.ncbi.nlm.nih.gov/articles/PMC3283873/), which enumerate tagged BBS4 among the tested proteins. The normal publication cache is abstract-only. No complete-paper, supplement or figure-pixel inspection is claimed. Endogenous HeLa co-IP and yeast bait evidence are specific to BBS7. The more specific RNF2 binding term is also justified by the partner's E3-ligase identity. The prior figure statement therefore has an external primary source; limited local cache coverage does not make it fabricated.
 
 The revised totals are 42 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and three UNDECIDED across all 130 source annotations. All three alternative products and both core functions are retained. Supported generic interactions remain non-core under the supplied ActionEnum; informativeness alone does not justify REMOVE. The PR's separate policy disagreement remains unresolved.
+
+
+## 2026-10-09 — binding instruction and source-record follow-up
+
+The standing explicit user instruction in the
+[ClinGen project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions)
+directs supported GO:0005515 annotations to KEEP_AS_NON_CORE when no finer
+evidence-backed term is established, MODIFY when a refinement is supported, and
+UNDECIDED when the relevant evidence cannot be adjudicated. This instruction
+takes precedence over the generic-binding skill default and validator advisory.
+The earlier ActionEnum-only explanation omitted that authority. No
+repository-wide policy change or new maintainer sign-off is claimed.
+
+The five PMID:18000879 associations were checked against
+[IntAct's publication-specific records](https://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/query/pubid%3A18000879%20AND%20id%3AQ96RK4?format=tab27):
+
+| BBS4 partner | Curated yeast two-hybrid record | Additional curated co-IP record |
+| --- | --- | --- |
+| ALDOB/P05062 | [EBI-1805866](https://www.ebi.ac.uk/intact/interaction/EBI-1805866) | [EBI-1995150](https://www.ebi.ac.uk/intact/interaction/EBI-1995150) |
+| EEF1A1/P68104 | [EBI-1805886](https://www.ebi.ac.uk/intact/interaction/EBI-1805886) | — |
+| DCTN1/Q14203 | [EBI-1805881](https://www.ebi.ac.uk/intact/interaction/EBI-1805881) | — |
+| PCM1/Q15154 | [EBI-1805934](https://www.ebi.ac.uk/intact/interaction/EBI-1805934) | — |
+| EPAS1/Q99814 | [EBI-1805896](https://www.ebi.ac.uk/intact/interaction/EBI-1805896) | [EBI-1994837](https://www.ebi.ac.uk/intact/interaction/EBI-1994837) |
+
+IntAct/GOA trace the same source, so this record check is not independent
+experimental replication. These records link the five pairs to Table I; further EEF1A1 and PCM1
+records link to Table II. The ALDOB and EPAS1 co-IP records identify Figure 2D and
+Figure 2C, respectively. This verifies curated pair/source/method linkage. It is
+not a new independent reading of the full article, figures or complete
+construct/control details. The source assessment is now VERIFIED within that
+scope; the publication cache remains abstract-only. The PCM1 interaction stays
+non-core, while the DCTN1 partner supports the existing dynactin-binding
+refinement. The independently established adaptor mechanism remains attached to
+PMID:15107855. Its IPI and IMP assertions are preserved with their distinct
+evidence codes.
+
+The three PMID:23943788 localization fragments are consolidated into one
+20-word cache-verbatim clause on the cilium annotation. The satellite and
+transition-zone rows retain their source citations and section labels; the
+clause covers those locations too. It appears only once and is not repeated
+in these notes. No additional scientific quotation is introduced elsewhere.
+
+All 130 source assertions, actions, three alternative products and both core
+functions are unchanged: 42 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and three
+UNDECIDED. The 39 generic-binding advisories remain disclosed under the explicit
+project instruction. Prior journal entries are retained; this entry supersedes
+their incomplete authority explanation and the earlier unverified
+PMID:18000879 pair-record status.
