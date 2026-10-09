@@ -17,3 +17,6 @@
 - GO:0046536 -> GO:0016456; GO:1902562 -> GO:0072487.
 - Protein binding (Tamo study) REMOVE.
 - Core MF: protein-macromolecule adaptor activity (scaffold), ACCEPT IBA/ISS.
+
+## Deep research (falcon, added after initial review)
+- `msl-1-deep-research-falcon.md` agrees: MSL1 is a non-catalytic scaffold ["It organizes the MSL1–MSL2 core and connects it to MSL3 and the histone acetyltransferase MOF."]; N-terminal coiled-coil binds MSL2, C-terminal PEHE region recruits MSL3 and MOF; MSL1 also binds some autosomal promoters without MSL2 (2024 MLE-CLAMP study, PMID:38471568). No annotation decisions changed.
