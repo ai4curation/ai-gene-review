@@ -22,3 +22,7 @@ Module: dmel_scf_slimb_ubiquitin_ligase (substrate-receptor part).
 ## Deep research
 
 falcon deep research was launched; see commit history for whether a file was added.
+
+## Revision (batch rule change)
+
+Correct-but-general terms are now MODIFY to the more specific term rather than KEEP_AS_NON_CORE: GO:0016567 -> GO:0000209 protein polyubiquitination; GO:0006508 proteolysis -> GO:0031146. This supersedes the generic-parent convention noted above.
