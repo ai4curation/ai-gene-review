@@ -1,7 +1,7 @@
 # slmb (Supernumerary limbs; beta-TrCP ortholog) review notes
 
 Accession: A0A0B4KHK1 (Supernumerary limbs, isoform B; the FlyBase canonical entry carrying GOA rows).
-Module: dmel_scf_slimb_ubiquitin_ligase (substrate-receptor part).
+Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_scf_slimb_ubiquitin_ligase (substrate-receptor part).
 
 ## Literature journal
 
