@@ -1,10 +1,10 @@
 ---
 title: "MitoTOL: Mitochondrial Proteomes Across the Tree of Life"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 collections: [HOMOLOGY_PROPAGATION]
 species: [human, yeast]
-genes: [ATAD3A, MICU1, TOMM40, SAMM50, SLC25A4, ATP5IF1, COQ7, SUOX, DHODH, ETFDH, GPD2, PRODH, CLPX, NFS1, ISCU, FXN, HSCB, AIFM1]
+genes: [FH, CRLS1, CLPP, NDI1, MMM1, MDM10, MDM12, MDM34, ATAD3A, MICU1, TOMM40, SAMM50, SLC25A4, ATP5IF1, COQ7, SUOX, DHODH, ETFDH, GPD2, PRODH, CLPX, NFS1, ISCU, FXN, HSCB, AIFM1]
 ---
 
 # MitoTOL: Mitochondrial Proteomes Across the Tree of Life
@@ -21,7 +21,10 @@ What it is good for is checking where an IBA "mitochondrion" (or a mitochondrial
 can and cannot be inherited: which mitochondrial systems are ancestral, which were gained in
 animals, and which were lost in human or yeast. The experimental proteomes behind it are in five
 companion MitoTOL papers, which are where any HDA-grade evidence for protist mitochondria lives.
-**No gene reviews have been done from this paper yet.**
+Eight genes chosen from the paper have now been reviewed: human **FH**, **CRLS1** and **CLPP**
+(the human halves of three of the paper's non-homologous enzyme pairs), yeast **NDI1** (NDH2), and
+the four yeast **ERMES** subunits. All eight passed the lineage-loss and same-activity checks below.
+The paper is cited in each review as evolutionary context only.
 
 ## The paper
 
@@ -189,20 +192,52 @@ Already reviewed here and discussed in the paper or its LECA model (Figure 6C):
 | DHODH, ETFDH, GPD2, PRODH | Quinone-reducing branches of the highly branched LECA ETC |
 | AIFM1 | Not named in the paper. Carries NADH dehydrogenase activity, but is not NDH2, which the paper says humans lack |
 
+### Reviewed from this paper
+
+| Gene | GOA rows | Accept | Non-core | Over-annot. | Modify | Remove | Other | MitoTOL check |
+|---|---|---|---|---|---|---|---|---|
+| human FH | 59 | 37 | 2 | 5 | 2 | 13 | 2 NEW | Class II only; no class I ([4Fe–4S]) properties inherited |
+| human CRLS1 | 30 | 27 | 0 | 0 | 0 | 2 | 1 UNDECIDED | All MF rows are the CDP-type reaction; no PLD-type (GO:0008808) leak |
+| human CLPP | 55 | 26 | 2 | 0 | 5 | 22 | — | ClpXP only; nothing from the ClpYQ (HslUV) family |
+| yeast NDI1 | 22 | 18 | 0 | 1 | 2 | 1 | 2 NEW | No proton-pumping complex I MF (GO:0008137) or CC (GO:0045271) |
+| yeast MMM1 | 43 | 28 | 7 | 3 | 0 | 5 | — | ERMES IBA stays in fungi; no human gene carries GO:0032865 |
+| yeast MDM10 | 43 | 27 | 6 | 0 | 0 | 10 | — | As MMM1 |
+| yeast MDM12 | 42 | 23 | 11 | 2 | 0 | 6 | — | As MMM1 |
+| yeast MDM34 | 24 | 17 | 7 | 0 | 0 | 0 | — | As MMM1 |
+
+Most removals are bare `protein binding` rows from high-throughput screens. The substantive calls:
+
+- **FH.** Two NEW terms from PMID:26237645: positive regulation of NHEJ (GO:2001034) and site of
+  double-strand break (GO:0035861). Nuclear FH binds H2A.Z at breaks and its local fumarate inhibits
+  KDM2B. Urea cycle kept as non-core: cytosolic FH clears fumarate released by argininosuccinate
+  lyase but does no step of the cycle.
+- **CRLS1.** Two Reactome TAS rows removed (GO:0003841, GO:0047144). They map an unreplicated
+  lysophosphatidylglycerol acyltransferase claim (Nie 2010, PMID:20025994) onto lysophosphatidic
+  acid acyltransferase terms. PG acyl-chain remodeling, which rests on the same study, is undecided.
+- **CLPP.** Endopeptidase Clp complex IDA/IPI made specific to the mitochondrial complex
+  (GO:0009841); the IBA row keeps the family-level term because that node spans bacteria and
+  plastids. No mitochondrial UPR term: mouse data show mammalian CLPP is dispensable for it.
+- **NDI1.** Cytosol RCA (from a YeastPathways GO-CAM conversion) removed, since NDI1 faces the
+  matrix and the external NDE1/NDE2 handle cytosolic NADH. Positive regulation of apoptosis
+  marked over-annotated as an overexpression/ROS effect.
+- **ERMES.** Tether activity (GO:0140474), ERMES complex and intermembrane lipid transfer accepted
+  for all four. Inheritance, morphology, mtDNA and peroxisome phenotypes kept as non-core, because
+  artificial tethers and VPS13 bypass alleles rescue them. Lipid transfer is core only for Mmm1 and
+  Mdm12. The MMM1 mitochondrial outer membrane IDA (PMID:11266455) is removed: Kornmann et al.
+  2009 (PMID:19556461, full text cached) show Mmm1 is an ER protein "misannotated as a mitochondrial
+  protein".
+
 Not yet reviewed here, and prominent in the paper: human **MCU**, **SMDT1** (EMRE), **RHOT1/2**
-(MIRO), **FH**, **CRLS1**, **CLPP**, **SFXN1–5**, **HCCS**, **SQOR**, **CIAO3** (the Nar1/NARF
-paralog of HydA), **MPC1/2**; yeast **NDI1/NDE1** (NDH2), the ERMES subunits **MMM1, MDM10,
-MDM12, MDM34**, and **GEM1** (MIRO).
+(MIRO), **SFXN1–5**, **HCCS**, **SQOR**, **CIAO3** (the Nar1/NARF paralog of HydA), **MPC1/2**;
+yeast **NDE1/NDE2** (external NDH2) and **GEM1** (MIRO).
 
 ## Possible next steps
 
 1. Cache the five companion papers and check whether GO consortium groups (TAIR, TriTrypDB,
    PlasmoDB-style resources) are ingesting them as HDA evidence.
-2. Review human **FH**, **CRLS1** and **CLPP** with section 3 in mind; these are the human halves of
-   the paper's non-homologous pairs.
-3. Review yeast **NDI1** and the **ERMES** subunits, then repeat the lineage-loss propagation
-   check in section 2 against their IBA rows.
-4. If Table S7 (per-OG gains and losses) can be obtained without the full 3.8 GB archive, join it
+2. Review the remaining genes listed above, starting with **MCU**/**SMDT1** (the uniporter lost in
+   yeast) and yeast **GEM1**, which links ERMES to the MIRO family the paper calls ancestral.
+3. If Table S7 (per-OG gains and losses) can be obtained without the full 3.8 GB archive, join it
    to `genes/human/*` to list reviewed genes whose IBA `mitochondrion` node conflicts with the
    paper's inferred origin. Without that table, nothing in this page should be used to change an
    IBA action.
