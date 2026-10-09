@@ -24,3 +24,7 @@
 - membrane MODIFY to secretory granule membrane; locomotion MODIFY to larval locomotory behavior;
   regulation of behavior MODIFY to sex discrimination; learning MODIFY to olfactory/associative learning.
 - aggressive behavior kept (both sexes affected), not narrowed to inter-male.
+
+## Deep research (falcon) additions
+- [file:DROME/Tbh/Tbh-deep-research-falcon.md "mutant has no detectable octopamine and approximately **10-fold elevated tyramine**"]
+- Deep research notes fly Tbh vesicle localization is not experimentally resolved; the secretory granule membrane location rests on the DBH-family IBA (already stated in the review). No change to decisions.
