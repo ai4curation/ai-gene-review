@@ -66,6 +66,80 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion reconciliation — 2026-10-09
+
+**251 complete / 2,625 remaining in the frozen 2,876-gene catalog.** The published
+checkpoint 240 gains the following 11 completions. The first six were already
+confirmed in the saved session checkpoint 246; the last five merged on October 6.
+
+| Gene | PR | Merged UTC | Merge commit |
+|---|---|---|---|
+| CCM2 | [#4239](https://github.com/ai4curation/ai-gene-review/pull/4239) | 2026-10-05T01:59:05Z | [`fa209203c572`](https://github.com/ai4curation/ai-gene-review/commit/fa209203c572d1587fd611fcddfc04346ffa7ca0) |
+| CCNO | [#4253](https://github.com/ai4curation/ai-gene-review/pull/4253) | 2026-10-05T03:34:33Z | [`0c68977b2022`](https://github.com/ai4curation/ai-gene-review/commit/0c68977b2022b597208b6ee258ee28e4aee78db6) |
+| CCN6 | [#4240](https://github.com/ai4curation/ai-gene-review/pull/4240) | 2026-10-05T04:53:11Z | [`68355bad3b0b`](https://github.com/ai4curation/ai-gene-review/commit/68355bad3b0b564a8147e3d03949edae5a872c9d) |
+| CD19 | [#4256](https://github.com/ai4curation/ai-gene-review/pull/4256) | 2026-10-05T05:26:51Z | [`44c0cfeaa6a6`](https://github.com/ai4curation/ai-gene-review/commit/44c0cfeaa6a64f3b0e0817b35094adf13c310d7e) |
+| CD320 | [#4273](https://github.com/ai4curation/ai-gene-review/pull/4273) | 2026-10-05T06:00:49Z | [`7df8e72f6937`](https://github.com/ai4curation/ai-gene-review/commit/7df8e72f6937e8325011bf300dbce593afbeab18) |
+| CD27 | [#4307](https://github.com/ai4curation/ai-gene-review/pull/4307) | 2026-10-05T06:48:46Z | [`866a9ea15d96`](https://github.com/ai4curation/ai-gene-review/commit/866a9ea15d966ecfc9572cd5765ce29c238cad7a) |
+| CD247 | [#4264](https://github.com/ai4curation/ai-gene-review/pull/4264) | 2026-10-06T11:39:16Z | [`a834dfb54079`](https://github.com/ai4curation/ai-gene-review/commit/a834dfb54079139ddd388d3a38c3a1878620be27) |
+| CD2AP | [#4287](https://github.com/ai4curation/ai-gene-review/pull/4287) | 2026-10-06T11:40:18Z | [`23bf11486ff1`](https://github.com/ai4curation/ai-gene-review/commit/23bf11486ff17dd82fe53773c548a70141e89c25) |
+| CD3D | [#4293](https://github.com/ai4curation/ai-gene-review/pull/4293) | 2026-10-06T11:41:17Z | [`4987e0d39b1d`](https://github.com/ai4curation/ai-gene-review/commit/4987e0d39b1d90afd30d687b8c6f75aad0cf8f5d) |
+| ASB10 | [#4308](https://github.com/ai4curation/ai-gene-review/pull/4308) | 2026-10-06T11:43:34Z | [`4fb7e051901a`](https://github.com/ai4curation/ai-gene-review/commit/4fb7e051901a4d7b71650e36d48ad2312ba314b9) |
+| CD3E | [#4313](https://github.com/ai4curation/ai-gene-review/pull/4313) | 2026-10-06T11:43:47Z | [`7c1ba7f73a84`](https://github.com/ai4curation/ai-gene-review/commit/7c1ba7f73a846f59f86506c67d95bc995ea2e253) |
+
+All 11 PRs have approval on the final head and successful `test (3.12)` and
+`claude-review` checks. For the five October 6 closures, current main retains
+DRAFT review status and the recorded evidence uncertainties; campaign closure
+does not turn these into resolved biological assertions. ASB10 is counted once
+after its required binding-policy follow-up #4308.
+
+**Merged but incomplete:** AKR1D1 #3266/#3941 retains its unresolved
+Reactome:R-HSA-193755 source gate. Five other merged PRs require project-policy
+follow-up; 29 generic-binding removals were identified for row-specific
+assessment:
+
+| Gene | Merged PR | Generic `GO:0005515` REMOVE rows requiring follow-up |
+|---|---|---:|
+| BCKDHB | [#3616](https://github.com/ai4curation/ai-gene-review/pull/3616) | 5 |
+| BCL10 | [#3649](https://github.com/ai4curation/ai-gene-review/pull/3649) | 4 |
+| BCS1L | [#3658](https://github.com/ai4curation/ai-gene-review/pull/3658) | 1 |
+| BIN1 | [#3689](https://github.com/ai4curation/ai-gene-review/pull/3689) | 4 |
+| BLM | [#3706](https://github.com/ai4curation/ai-gene-review/pull/3706) | 15 |
+
+Their approvals applied the repository-wide informational-exclusion policy,
+whereas this project explicitly retains supported generic interactions as
+KEEP_AS_NON_CORE unless a supported refinement exists. Review each row against
+its evidence; do not replace removals mechanically. These five and AKR1D1 stay
+unchecked. The 257 distinct primary genes with merged campaign PRs therefore
+comprise 251 completed genes and six required follow-ups.
+
+**Open campaign PRs:** all nine remain CHANGES_REQUESTED with required CI green.
+
+| Gene | PR | State |
+|---|---|---|
+| BBS1 | [#3586](https://github.com/ai4curation/ai-gene-review/pull/3586) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BBS10 | [#3587](https://github.com/ai4curation/ai-gene-review/pull/3587) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BBS2 | [#3590](https://github.com/ai4curation/ai-gene-review/pull/3590) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BBS4 | [#3591](https://github.com/ai4curation/ai-gene-review/pull/3591) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BBS5 | [#3592](https://github.com/ai4curation/ai-gene-review/pull/3592) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BBS7 | [#3596](https://github.com/ai4curation/ai-gene-review/pull/3596) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BBS9 | [#3604](https://github.com/ai4curation/ai-gene-review/pull/3604) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BCAP31 | [#3605](https://github.com/ai4curation/ai-gene-review/pull/3605) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+| BCOR | [#3669](https://github.com/ai4curation/ai-gene-review/pull/3669) | CHANGES_REQUESTED; test (3.12) SUCCESS |
+
+Resume the saved in-progress review at CD3G, then CD40, CD40LG, CD46 and CD70;
+keep the older open PRs and merged follow-ups visible in the queue. The literal
+first unchecked Definitive inventory gene is ACBD5, so the saved continuation
+cursor is not a claim that every earlier gene is complete.
+
+The mixed 707-path MAPK_CASCADES PR #3381 is excluded from this count; its BRAF
+changes still need a campaign assessment. Unrelated project reviews, repeated
+reviews and supplemental work do not increment the primary denominator or
+completion count. The mitochondrial, RNA, other-locus and undetermined-inheritance
+lists are already included in the frozen 2,876.
+
+The following historical status table and all earlier dated observations are
+preserved at their original cutoff.
+
 ## Campaign status — completion evidence through 2026-10-05 01:02:15 UTC
 
 | Gene | Tier | Starting review status | Current state | Branch | PR |
