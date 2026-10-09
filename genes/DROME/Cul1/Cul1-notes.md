@@ -21,3 +21,7 @@ Accession: Q24311. Module: dmel_scf_slimb_ubiquitin_ligase (Cul1-Roc1a catalytic
 ## Revision (batch rule change)
 
 Correct-but-general terms are now MODIFY: GO:0016567 -> GO:0000209; GO:0006511 and GO:0030163 -> GO:0031146; GO:0031461 -> GO:0019005. Supersedes the generic-parent convention above. Positive-regulation-of-catabolism rows remain KEEP_AS_NON_CORE (a peripheral regulatory framing, not a less-specific parent).
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `Cul1-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
