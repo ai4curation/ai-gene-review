@@ -20,3 +20,7 @@
 - proliferation, post-embryonic development, fusome, response to fungus -> KEEP_AS_NON_CORE.
 - Core: ferroxidase (GO:0004322) and iron ion sequestering activity (GO:0140315, used for human FTH1
   by IDA) within ferritin complex, Golgi and extracellular region.
+
+## Update
+- `Fer1HCH-deep-research-falcon.md` arrived after the review (first falcon run finished late); it does not
+  change the decisions above.
