@@ -31,3 +31,8 @@ confirmed zero validation errors, and completed the notes/history records).
 - PMID:20466645 is abstract-only in the cache; all quotes are from the abstract.
 - Validation: zero errors; one residual warning (no deep-research citation), left as is because
   primary literature covers every claim.
+
+### Follow-up after PR review (2026-10-09)
+
+- Decided to keep `core_functions[0].molecular_function: GO:0004169` (not `contributes_to_molecular_function`). Distinction from dph2 stated in the core description and the IGI row reason: Pomt2 is itself a GT39-fold catalytic subunit (both subunits of the obligate Pomt1-Pomt2 heteromer carry the glycosyltransferase fold), whereas dph2 is a non-catalytic electron-donor subunit. GOA qualifier on all three zebrafish GO:0004169 rows is `enables`, and QuickGO shows human POMT2 (Q9UKY4) also annotated `enables` GO:0004169 (IBA GO_REF:0000033 and IEA GO_REF:0000003), so curators do not use contributes_to for this subunit.
+- Added `in_complex: GO:0031502 dolichyl-phosphate-mannose-protein mannosyltransferase complex` (verified in QuickGO; human POMT1/POMT2 are `part_of` it by IPI on PMID:16698797). Validation: zero errors; a new warning notes GO:0031502 is not in existing_annotations (no NEW row added, per the batch instruction to report rather than add), plus the pre-existing deep-research warning.

@@ -146,3 +146,8 @@ for kita, with the zebrafish dispensability noted.
 - Fixed the one IBA MODIFY row lacking propagation_review: GO:0019838 growth factor binding (IBA, family node PANTHER:PTN004704336) MODIFY -> GO:0005020 stem cell factor receptor activity. Added propagation_review (root_cause TERM_SCOPING_PROBLEM, GRANULARITY_MISMATCH): the type-III RTK family node correctly carries generic growth-factor binding, but kita's specific ligand is the SCF ortholog kitla [PMID:17257055 "kitla is the functional ligand to kita"], so the specific child term is the informative one.
 - Added reference_review (relevance + VERIFIED correctness) to all 10 PMID references.
 - Confirmed the two other MODIFY rows (GO:0004672 -> GO:0004714 RTK activity; GO:0019955 cytokine binding -> GO:0005020) and the REMOVE of GO:0038093 Fc receptor signaling pathway (IEA mis-mapping) as sound. Validation: 0 errors.
+
+### Follow-up after PR review (2026-10-09)
+
+- The GO:0038093 Fc receptor signaling pathway REMOVE row rested on the unreferenced claim that teleosts lack IgE and an FcepsilonRI alpha subunit. Cached the teleost immunoglobulin review PMID:33439286 (Bilal, Etayo & Hordvik, Immunogenetics 2021; abstract only) and added it to `references` with a reference_review (LOW relevance, VERIFIED), and the row now carries [PMID:33439286 "In teleosts, three immunoglobulin isotypes, IgM, IgT, and IgD, are present"].
+- The abstract lists the complete teleost isotype set rather than naming IgE; the reason now says explicitly that the absence of IgE/FcepsilonRI alpha is inferred from that list and is not directly quotable from the cached abstract. No action changed. Validation: zero errors; the pre-existing deep-research warning remains.
