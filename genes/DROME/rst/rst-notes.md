@@ -1,6 +1,6 @@
 # rst (roughest / irregular chiasm C-roughest; Drosophila melanogaster, Q08180) notes
 
-Deep research may arrive after the session; notes rely on cached publications.
+The falcon deep research report (rst-deep-research-falcon.md) arrived after the review was written; it agrees with the review and notes that Rst-Rst homophilic binding is very weak by SPR compared with Rst-Hbs/Sns heterophilic binding (Kd about 1-4 uM).
 
 ## Identity
 - Neph1/KIRREL-family IgSF protein (5 Ig domains), paralog of Kirre; IRM member.

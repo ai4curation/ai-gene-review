@@ -1,6 +1,6 @@
 # cpa (Capping protein alpha; Drosophila melanogaster, Q9W2N0) notes
 
-Falcon deep research was still running when this review was written; notes rely on cached publications.
+The falcon deep research report (cpa-deep-research-falcon.md) arrived after the review was written; it agrees with the review (non-enzymatic barbed-end capping with Cpb; apical cortex, oocyte determination, nuclear envelope budding and Yorkie-linked growth control as downstream roles).
 
 ## Identity
 - Alpha subunit of the heterodimeric barbed-end F-actin capping protein (CapZ alpha ortholog); obligate partner of cpb.

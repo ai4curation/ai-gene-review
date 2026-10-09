@@ -1,6 +1,6 @@
 # kirre (Kin of irre / dumbfounded, duf; Drosophila melanogaster, Q9W4T9) notes
 
-Falcon deep research did not complete within the wrapper timeout during this session (it may arrive later); notes rely on cached publications.
+The falcon deep research report (kirre-deep-research-falcon.md) arrived after the review was written; it agrees with the review (Kirre as an adhesion/recognition receptor in myoblast fusion and the nephrocyte diaphragm, not a fusogen) and adds a repulsive Kirre-Hbs/Sns role in olfactory map formation (Li et al. 2025), not yet in GOA.
 
 ## Identity
 - Neph1/KIRREL-family single-pass IgSF protein (5 Ig domains), member of the Irre cell recognition module (IRM: Kirre, Rst [Neph-like]; Sns, Hbs [Nephrin-like]).
