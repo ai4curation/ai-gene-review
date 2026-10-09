@@ -2,9 +2,7 @@
 
 Accession used: A0A0B4LFQ2 (Incenp isoform C, TrEMBL; FBgn0260991).
 
-Deep research: `just deep-research-falcon DROME Incenp --fallback perplexity-lite` failed
-(falcon timed out after 600 s; perplexity provider not available). Literature below is from
-the cached publications.
+Deep research: `Incenp-deep-research-falcon.md` (falcon; the wrapper logged a 600 s timeout but the run completed and wrote the file). It agrees that Incenp is the non-enzymatic CPC scaffold/Aurora B activator (IN-box) and targeting subunit, adds that purified DmINCENP binds microtubules directly and recruits/activates Polo (Aurora B phosphorylates Polo T182) at centromeres, and notes that in oocytes INCENP sits on a ring around the karyosome and the central spindle rather than at CID/MEI-S332 centromeres. These points were checked against the cached primary papers where available; they do not change the annotation decisions.
 
 ## Literature journal
 
