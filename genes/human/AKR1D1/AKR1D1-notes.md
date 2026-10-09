@@ -396,3 +396,7 @@ and notes; unrelated inherited excerpts were outside this consolidation. The
 archival source directory remains a companion to the flat Reactome cache,
 containing the unaltered enclosing pathway member and machine-extracted
 provenance, with their hashes retained for integrity checks.
+
+## 2026-10-09 — per-annotation evidence anchors
+
+The broad steroid-reduction and steroid-metabolism decisions now carry complementary short anchors from the authentic [PMID:20522910 abstract](https://pubmed.ncbi.nlm.nih.gov/20522910/), which identifies human AKR1D1 and its steroid/sterol double-bond reduction. The primary product-identification excerpt from PMID:21255593 was relocated from the core evidence list to the hormone-metabolism annotation; its core citation and other core anchors remain. This preserves the exact aldosterone limitation without duplicating the excerpt. Every biological decision and reason is unchanged. The three annotations identified by the reviewer now each have a local verbatim anchor. No source cache or prior history was edited.
