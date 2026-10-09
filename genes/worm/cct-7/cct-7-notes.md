@@ -2,7 +2,7 @@
 
 ## Session 2026-10-08 (claude-code)
 
-- Accession: UniProtKB:Q9TZS5 (T10B5.5), eta subunit of CCT/TRiC; same accession as modules/c_elegans_cct_chaperonin_folding.yaml.
+- Accession: UniProtKB:Q9TZS5 (T10B5.5), eta subunit of CCT/TRiC; same accession as modules/cct_chaperonin_folding.yaml.
 - Deep research: `just deep-research-falcon worm cct-7 --fallback perplexity-lite` failed (falcon exit 137; perplexity provider not configured). No deep-research file was created; review is based on cached publications plus PubMed searches.
 - Conserved mechanism: CCT is an ATP-dependent folding machine for actin and tubulin [PMID:16762366 "The eukaryotic cytosolic chaperonin CCT is an essential ATP-dependent protein folding machine whose action is required for folding the cytoskeletal proteins actin and tubulin"]; eight distinct subunits per ring [PMID:15704212 "stoichiometric array of eight different subunits, which are denoted Cct1p-Cct8p"].
 - Nucleotide hierarchy: cct-7 is a low-ATP-affinity subunit (CCT3/6/7/8) [PMID:23041314 "However, CCT3, CCT6, CCT7, and CCT8 have very low ATP occupancy even at high ATP concentrations, and thus are classified as low-affinity subunits"]; ATP binding/hydrolysis annotations therefore KEEP_AS_NON_CORE and core MF is only contributes_to GO:0140662.
