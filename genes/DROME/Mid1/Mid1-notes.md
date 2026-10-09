@@ -23,4 +23,4 @@ UniProt Q9I7V0; NALF/FAM155 family (PTHR15819), homolog of yeast Mid1 and mammal
 
 ## Deep research
 
-`just deep-research-falcon` timed out after 600 s and the perplexity-lite fallback was unavailable (provider not configured); the review relies on the cached publications above.
+`Mid1-deep-research-falcon.md` (falcon) arrived after the review was first committed. It agrees with the review: fly Mid1/CG33988 is a NALF/FAM155-like NALCN auxiliary factor rather than a pore or enzyme. It stresses that fly localization is unresolved: nematode NLF-1 is ER-localized, while mammalian FAM155A has also been detected at the cell surface and sits on the extracellular side of NALCN in channelosome structures. This supports the plasma-membrane IBA caveat and the localization question in the review. It also notes that CG33988 RNAi did not measurably reduce CG33988 mRNA in Ghezzi et al. 2014. No annotation decision changed.
