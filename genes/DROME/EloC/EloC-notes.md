@@ -13,3 +13,7 @@ Accession: E2QCI6 (expected accession; `just fetch-gene DROME EloC` resolved to 
 - Core: GO:0160072 scaffold (BC-box adaptor, as for SkpA) contributing to GO:0061630; GO:0030891 VCB complex. Second core function: Elongin complex / Pol II elongation.
 - ARBA general complexes -> MODIFY (GO:0140535 -> GO:0030891; GO:1990234 -> GO:0031462); GO:0006511 -> MODIFY GO:0043161.
 - Viral process: MARK_AS_OVER_ANNOTATED (host ligase hijacked), same for EloB, Cul2, Roc1a.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `EloC-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
