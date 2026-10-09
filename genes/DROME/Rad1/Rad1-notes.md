@@ -8,3 +8,6 @@
 ## Curation decisions
 - All checkpoint, repair, complex, nucleus and nuclear envelope annotations accepted; cytoplasm kept as non-core.
 - Core: 9-1-1 clamp subunit (MF approximated by GO:0030674) in DNA damage checkpoint signaling.
+
+## Deep research (falcon) update
+- Consistent with the review: Rad1 is a non-enzymatic PCNA-like 9-1-1 subunit [file:DROME/Rad1/Rad1-deep-research-falcon.md "Its principal proposed role is to help form a ring that can surround DNA and organize checkpoint signaling and DNA-repair factors at damaged or incompletely replicated DNA."]; yeast two-hybrid shows a strong Hus1-Rad1 interaction (Abdu et al. 2007). Not to be confused with yeast RAD1 (fly MEI-9).
