@@ -25,3 +25,6 @@
 
 ## Deep research (falcon, added after initial review)
 - `mle-deep-research-falcon.md` agrees: MLE is an ATP-dependent roX-remodeling helicase and assembly factor, not a histone-modifying enzyme ["In this pathway, MLE is an RNA-remodeling enzyme and assembly factor"]. It reports separable ATPase and helicase outputs in separation-of-function alleles, so ATP hydrolysis rows were changed from MODIFY to KEEP_AS_NON_CORE. It also notes the napts allele disrupts para transcript processing without MLE being the editing enzyme, and a 2024 MLE-CLAMP interaction (PMID:38471568).
+
+## PR 4481 review fixes
+- Softened the GO:0016456/GO:0072487 relationship claim (neither is an ancestor of the other per QuickGO ancestor lists) and used GO:0072487 MSL complex consistently as in_complex in core functions.

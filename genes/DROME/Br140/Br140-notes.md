@@ -7,3 +7,6 @@
 
 ## Deep research (falcon, added after initial review)
 - `Br140-deep-research-falcon.md` agrees: Br140 is the non-catalytic scaffold/regulatory subunit of the Enok complex ["Br140 supports Enok abundance and activity and broadens its substrate specificity *in vitro*."], supporting the acetyltransferase activator annotation. It also reports embryonic Br140 co-purification with PRC1 and Ash1 and co-binding with Pc at >2,000 genes (Kang 2017, not in GOA), and a PWWP-domain allele with an axon-targeting phenotype; the specific histone marks Br140 reads remain unmeasured. No annotation decisions changed.
+
+## PR 4481 review fixes
+- Core function now carries GO:0010698 acetyltransferase activator activity as molecular_function alongside contributes_to GO:0043994, with the PMID:27198229 quotes.

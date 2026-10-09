@@ -25,3 +25,6 @@
 
 ## Deep research (falcon, added after initial review)
 - `msl-2-deep-research-falcon.md` agrees: MSL2 initiates and organizes the MSL complex on the male X; its CXC domain reads GA-rich MREs ["Its CXC zinc-binding domain recognizes GA-rich MSL recognition elements (MREs) at chromosomal entry or high-affinity sites (CES/HAS)."]. It notes the fly H2B acceptor is proposed to be K31 (K34 characterized mainly with mammalian MSL1-MSL2), and that MSL2 ubiquitylates MSL1, MOF, MSL3 and itself. No annotation decisions changed.
+
+## PR 4481 review fixes
+- Softened the GO:0016456/GO:0072487 relationship claim (neither is an ancestor of the other per QuickGO ancestor lists) and used GO:0072487 MSL complex consistently as in_complex in core functions.

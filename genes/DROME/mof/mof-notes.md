@@ -29,3 +29,6 @@
 
 ## Deep research (falcon, added after initial review)
 - `mof-deep-research-falcon.md` agrees with the review: H4K16 is the dominant physiological substrate; MOF acts in both MSL and NSL complexes ["MOF performs this reaction in two distinct chromatin-regulatory assemblies, MSL and NSL."]. It notes in-vitro secondary acetylation of other H4 lysines (2024 dissertation) that is not established in vivo, and a 2024 Genetics study questioning H3K36me3 as a general MSL-spreading signal (relevant to msl-3). No annotation decisions changed.
+
+## PR 4481 review fixes
+- Softened the GO:0016456/GO:0072487 relationship claim (neither is an ancestor of the other per QuickGO ancestor lists) and used GO:0072487 MSL complex consistently as in_complex in core functions.

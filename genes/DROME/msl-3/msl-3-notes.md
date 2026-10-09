@@ -21,3 +21,9 @@
 
 ## Deep research (falcon, added after initial review)
 - `msl-3-deep-research-falcon.md` agrees MSL3 is a non-catalytic reader/adaptor bound to the MSL1 C terminus via its MRG domain that stimulates MOF on nucleosomes. It flags that the H3K36me3-spreading model is contested ["A direct methyl-mark-to-spreading model is now contested."] (2021 and 2024 H3K36R histone-replacement studies), and that the fly chromo-barrel binds H4K20me1/me2 peptides more strongly than H3K36me3 peptides (weak, mM affinities). The H3K36me3 reader term is kept (direct in vitro nucleosome binding) but the core-function description now carries this caveat. It also restates that H4K16ac antagonizes chromodomain binding, consistent with leaving the H4K16ac reader rows UNDECIDED.
+
+## PR 4481 review fixes
+- Softened the GO:0016456/GO:0072487 relationship claim; MSL complex used for in_complex.
+- H4K20me1 and H4K20me1/me2 reader rows changed ACCEPT -> KEEP_AS_NON_CORE (weak mM in vitro affinities, physiological role not established), so they need not appear in core_functions.
+- GO:1990841 REMOVE reason now names the plant donors (Arabidopsis MRG1/MRG2, reported to act with CONSTANS at the FT promoter).
+- reference_review added: PMID:12683975 (Wolbachia review) relevance NONE, correctness MISCITED.
