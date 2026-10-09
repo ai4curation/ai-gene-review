@@ -703,6 +703,13 @@ class GOTermEnum(str):
     pass
 
 
+class NCBITaxonEnum(str):
+    """
+    Any taxon in the NCBI Taxonomy. Checked lazily (progressive caching), so the full taxonomy is never expanded.
+    """
+    pass
+
+
 class GOMolecularActivityEnum(str):
     """
     A molecular activity term in the GO ontology
@@ -1759,7 +1766,10 @@ class GeneReview(ConfiguredBaseModel):
                        'PredictionReview'],
          'recommended': True,
          'slot_uri': 'dcterms:description'} })
-    taxon: Term = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+    taxon: Term = Field(default=..., description="""The NCBI Taxonomy term for the organism. The id must be a real NCBITaxon id and the label must be its NCBITaxon label, verbatim (term validation checks both via the NCBITaxonEnum binding).""", json_schema_extra = { "linkml_meta": {'bindings': [{'binds_value_of': 'id',
+                       'obligation_level': 'REQUIRED',
+                       'range': 'NCBITaxonEnum'}],
+         'domain_of': ['GeneReview',
                        'GoCamReview',
                        'ParticipantSelector',
                        'PredictionReview']} })
@@ -4730,7 +4740,10 @@ class PredictionReview(ConfiguredBaseModel):
                        'RuleReviewEntry',
                        'PredictionReview']} })
     gene_symbol: str = Field(default=..., description="""Symbol of the gene""", json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview', 'PredictionReview']} })
-    taxon: Term = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
+    taxon: Term = Field(default=..., description="""The NCBI Taxonomy term for the organism. The id must be a real NCBITaxon id and the label must be its NCBITaxon label, verbatim (term validation checks both via the NCBITaxonEnum binding).""", json_schema_extra = { "linkml_meta": {'bindings': [{'binds_value_of': 'id',
+                       'obligation_level': 'REQUIRED',
+                       'range': 'NCBITaxonEnum'}],
+         'domain_of': ['GeneReview',
                        'GoCamReview',
                        'ParticipantSelector',
                        'PredictionReview']} })

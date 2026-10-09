@@ -294,3 +294,19 @@ and 403. No identifier replacement or retirement is established. The normal-cach
 source gate remains unresolved, and this follow-up does not complete AKR1D1 in the
 campaign. No additional fetch was performed. All annotation actions, machine
 source fields, products and the steroid-reductase core remain unchanged.
+
+## 2026-10-05 - OpenScientist redox follow-up
+
+Evaluated `AKR1D1-hypotheses/aldose-monooxygenase-and-alcohol-reduction-specificity/openscientist.md`.
+The focused report usefully highlighted residue-level specialization and AKR
+reaction-class constraints, but its broad removal posture still goes beyond
+directly checked target evidence for weak side activities.
+
+PMID:22437839 was fetched and registered as target-specific support that the
+Glu120/His120 switch distinguishes AKR1D1 5-beta-reductase chemistry from the
+AKR1C hydroxysteroid dehydrogenase reaction geometry. GO:0047086 was removed
+because AKR1D1 transfers hydride to the C4-C5 double bond and offers no
+oxygen-insertion mechanism for ketosteroid monooxygenase activity, even though
+the exact AKR1C1/C2/C3 donor assays from PMID:21232532 still need full-text
+review. Ancestral aldose reduction remains unresolved because purified AKR1D1
+negative aldose assays were not located.
