@@ -28,6 +28,6 @@ the cached publications.
 
 ## Decisions
 
-- All IDA localizations (centromere, kinetochore, mitotic/meiotic midzone) accepted; general chromosome and IEA cytoplasm kept as non-core.
+- All IDA localizations (centromere, kinetochore, mitotic/meiotic midzone) accepted; general chromosome IDA modified to chromosome, centromeric region; IEA cytoplasm kept as non-core.
 - Asymmetric cell division and meiotic chromosome condensation kept as non-core (downstream / secondary to the main findings).
 - Core MF given as protein serine/threonine kinase activator activity (IN-box activation of Aurora B); no GOA MF row exists for Incenp.
