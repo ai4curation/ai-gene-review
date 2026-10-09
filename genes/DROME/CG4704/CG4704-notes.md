@@ -5,6 +5,7 @@ UniProt Q9VCT5 (EF-hand domain-containing protein); MICU1 family, MICU1 subfamil
 ## Curation decisions
 
 - All rows are IEA/IBA. Calcium ion binding ACCEPTED (intact EF-hand sites). Uniporter module conventions applied (uniplex complex accepted; GO:0006851 -> GO:0036444).
+- core_functions limited to calcium ion binding (PR #4480 review); uniplex membership and calcium import remain family-level predictions.
 - Expression pattern and physical association with MCU are untested; raised as questions.
 
 ## Deep research

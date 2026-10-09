@@ -17,9 +17,11 @@ UniProt Q9I7V0; NALF/FAM155 family (PTHR15819), homolog of yeast Mid1 and mammal
 
 ## Curation decisions
 
-- IBA channel regulator activity ACCEPTED as core MF (fly gain/loss of NA current).
+- IBA channel regulator activity refined (MODIFY) to GO:0017080 sodium channel regulator activity, used as core MF (fly gain/loss of NA current; PR #4480 review).
 - Complex term -> sodium channel complex (consistent with na, unc79, unc80).
-- IBA cation import -> sodium ion transmembrane transport (consistent with na).
+- IBA cation import -> GO:0098719 sodium ion import across plasma membrane (keeps the import and plasma-membrane axes; PR #4480 review).
+- Complex membership grounded on orthology to FAM155A in the human NALCN channelosome [PMID:34929720 "UNC79 and UNC80 are massive HEAT-repeat proteins that form an intertwined anti-parallel superhelical assembly, which docks intracellularly onto the NALCN-FAM155A pore-forming subcomplex."]
+- RNAi caveat recorded as reference_review on PMID:24639627 [PMID:24639627 "the RNAi against CG33988 fails to induce CG33988 mRNA degradation"].
 
 ## Deep research
 
