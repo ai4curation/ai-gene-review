@@ -11,4 +11,7 @@
 - Protein binding (IPI, incl. DPIM2 AP-MS) removed as uninformative; covered by Mre11 complex.
 - IBA meiotic DSB formation and mitochondrial DSB repair marked over-annotated (yeast-seeded, lineage-restricted).
 - NHEJ and intra-S checkpoint (IBA) kept as non-core.
-- Deep research (falcon) failed (rate limit / timeout); retried in background.
+- Deep research (falcon) initially failed (rate limit / timeout); completed on retry (see below).
+
+## Deep research (falcon) update
+- Completed on retry. Consistent with the review: MRN as a broadly acting telomere-protection factor [file:DROME/mre11/mre11-deep-research-falcon.md "Mre11–Rad50–Nbs belongs instead to the conserved, broadly acting factors needed to establish or maintain protection"]; the mre11^158S embryonic phenotype reflects loss of chromatin-associated MRN rather than demonstrated loss of catalysis; meiotic roles should not be imported from yeast, supporting the over-annotation call on meiotic DSB formation.
