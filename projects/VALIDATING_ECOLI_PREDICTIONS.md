@@ -11,6 +11,13 @@ sidecars:
     - VALIDATING_ECOLI_PREDICTIONS/slides/ecoli-predictions.svg
     - VALIDATING_ECOLI_PREDICTIONS/slides/ecoli-review-actions.svg
     - VALIDATING_ECOLI_PREDICTIONS/slides/yciO-review-table.jpg
+manifest:
+  slides:
+    - href: VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/TgrzGMFVcJVh62Yn7CMNLU
+      title: Project brief
 ---
 
 # Validating E. coli ML Predictions
@@ -35,6 +42,11 @@ exist in GOA. The UniProt and b-number columns in the tables below were correcte
 on 2026-09-26 to match the review files.
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
+
+**[Prediction reviews table](VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html)** — this project's calls for the 7 genes, rendered from
+`genes/ECOLI/*/*-det-predictions-review.yaml`. A separate
+[blinded recapitulation](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md)
+([table](BIOREASON_COMPARISON/deepectf-eval.html)) re-reviewed the same predictions without the expert labels and matched them for only 4/7 genes.
 
 
 ## Overview
@@ -123,6 +135,19 @@ Last updated: 2026-09-26
 
 # NOTES
 
+## 2026-09-27
+
+- Several reference PMIDs in the `*-det-predictions-review.yaml` files resolved to unrelated papers, including the DeepECTF citation 37820725, a labile-iron imaging study. These were corrected on main in PR #3273 (DeepECTF is now PMID:37963869).
+- Build: `render-bioreason-eval` is now part of `build-pages` and the daily page workflow.
+
+## 2026-09-26
+
+- Corrected the UniProt accessions for all 7 genes and the b-numbers for ygfF (b2902) and yciO (b1267), taking the values from the
+  cached `*-uniprot.txt` files. Also corrected the `locus_tag` in `ygfF-det-predictions-review.yaml`.
+- The "Prediction reviews" link previously pointed to the blinded recapitulation table. Its calls differ from this project's on
+  ygfF (UNC vs COR), yegV (UNC vs PLI) and yjdM (NPI vs UNC). The link now points to a table rendered from the production reviews, and the
+  recapitulation table is labelled as such. See the [cross-project review](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md).
+
 ## 2026-03-22
 
 **All 7 reviews completed**
@@ -143,7 +168,3 @@ Also created predictions-review.yaml files for all 7 genes with structured error
 
 Created project to validate E. coli gene annotations against findings from de Crecy-Lagard et al. (2025).
 Selected 7 genes spanning all major error categories in the paper's taxonomy.
-
-## Slides
-
-- [Slides](VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html) (Marp source: [VALIDATING_ECOLI_PREDICTIONS-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.md)) — AI generated

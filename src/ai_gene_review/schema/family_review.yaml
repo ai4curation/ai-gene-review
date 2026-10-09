@@ -50,6 +50,8 @@ prefixes:
   MCSA: https://www.ebi.ac.uk/thornton-srv/m-csa/entry/
   RHEA: http://rdf.rhea-db.org/
   rdfs: http://www.w3.org/2000/01/rdf-schema#
+  oa: http://www.w3.org/ns/oa#
+  dcterms: http://purl.org/dc/terms/
 
 imports:
   - linkml:types
@@ -277,6 +279,34 @@ slots:
       The functions this site supports, and how strongly. This is what makes the site
       actionable: it turns "these residues matter" into a claim a gene review can be
       checked against.
+  contact_atom:
+    range: string
+    description: >-
+      For a STRUCTURE-sourced site, the atom of this residue that makes the closest
+      approach to the ligand, in PDB atom naming (e.g. OE2, OG1, O). Recording the atom
+      is what separates a side-chain ligand from a backbone contact at the same residue.
+  contact_via:
+    range: ContactViaEnum
+    description: >-
+      Whether that closest contact is made by a side-chain or a main-chain atom. A
+      main-chain contact is sequence-independent, so a substitution at such a position
+      does not remove the contact and must not be scored as loss of the site.
+  contact_distance:
+    range: float
+    description: >-
+      Distance in angstroms from contact_atom to the nearest ligand atom, as measured in
+      contact_structure. A number to re-measure, not a claim about affinity.
+  contact_ligand:
+    range: string
+    description: >-
+      Chemical component id of the ligand contacted (e.g. NA, CHO), so a site defined
+      against sodium is not confused with one defined against a substrate.
+  contact_structure:
+    range: string
+    description: >-
+      The entry the contact was measured in, as a CURIE (e.g. PDB:7ZYI). Different
+      entries of the same protein can disagree about which atom is closest, so the
+      measurement is only meaningful with its source attached.
   site_source:
     range: SiteSourceEnum
     required: true
@@ -368,7 +398,11 @@ slots:
     range: SupportingText
     inlined_as_list: true
     multivalued: true
-    description: Verbatim quotes from cited references supporting the requirement.
+    description: >-
+      Verbatim quotes from cited references supporting the enclosing claim: a
+      requirement, a term assessment, a member exception, a node assessment's verdict,
+      or a subfamily's description or divergence. Each quote is checked as a verbatim
+      substring of the cached publication by the reference validator.
 
   # --- TermAssessment ---
   assessed_term:
@@ -402,6 +436,43 @@ slots:
       Subfamilies the term IS safe for, when scope is SUBFAMILY_ONLY, as id/label pairs
       with PANTHER's official subfamily name verbatim.
 
+  member_exceptions:
+    range: MemberException
+    inlined_as_list: true
+    multivalued: true
+    description: >-
+      Members inside the term's scope for which the term nevertheless does not hold.
+      Scope is set per subfamily, but a function can be lost on a branch that a PANTHER
+      subfamily does not separate -- PTHR10782:SF94 holds both fly Su(var)2-10, a valid
+      JAK-STAT regulator, and C. elegans GEI-17, whose organism has no JAK. Each entry is
+      the family review's own judgement on that member, with evidence, so a gene review
+      that removes the term is agreeing with the family rather than overriding it. The
+      family/gene cross-check honours exceptions in both directions: an excepted member may
+      remove the term, and may not keep it.
+  member:
+    range: ProteinRef
+    inlined: true
+    required: true
+    description: The excepted member, as a UniProtKB CURIE with its gene review if one exists.
+  exception_reason:
+    range: string
+    required: true
+    description: Why the term does not hold for this member despite its subfamily.
+  pruned_node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    description: >-
+      The PAINT node whose propagation this exception prunes. When set, the review must
+      carry a node_assessment for this node and term with a negative verdict
+      (NEEDS_PRUNING, TOO_DEEP or WRONG_NODE); the cross-check enforces this, so an
+      exception is always anchored in an adjudicated node rather than standing alone.
+  lost_in_clade_node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    description: >-
+      Optional PTN for the branch on which the function was lost (the place a PAINT IRD
+      would go), when it is broader than the single member.
+
   # --- ProteinRef / Reference / SupportingText / ExternalRef ---
   control_position:
     range: integer
@@ -432,6 +503,8 @@ slots:
     range: string
     required: true
     description: "Reference CURIE (e.g. PMID:14506275) or a file: path."
+    implements:
+      - dcterms:references
   title:
     range: string
     description: Publication title.
@@ -441,6 +514,8 @@ slots:
     description: >-
       Verbatim quote from the reference. Must be an exact substring of the cached
       publication -- the validator checks this, so do not paraphrase.
+    implements:
+      - oa:exact
   source_db:
     range: ExternalSourceEnum
     required: true
@@ -496,6 +571,7 @@ classes:
       - representative_members
       - diverged_from_family
       - divergence_description
+      - supported_by
     rules:
       - preconditions:
           slot_conditions:
@@ -521,6 +597,7 @@ classes:
       - affected_subfamilies
       - node_taxon
       - paint_snapshot
+      - supported_by
 
   ResidueSite:
     description: >-
@@ -542,12 +619,22 @@ classes:
       - negative_controls
 
   Residue:
-    description: One functionally important position in the anchor protein.
+    description: >-
+      One functionally important position in the anchor protein. For a site whose
+      site_source is STRUCTURE, the optional contact_* slots carry the atom-level
+      provenance of the observation: which atom approaches the ligand, whether it does so
+      through the side chain or the backbone, how close, to which ligand, and in which
+      entry.
     slots:
       - position
       - expected
       - role
       - role_term
+      - contact_atom
+      - contact_via
+      - contact_distance
+      - contact_ligand
+      - contact_structure
 
   Motif:
     description: A contiguous sequence block that must match a pattern.
@@ -573,6 +660,7 @@ classes:
       - scope_reason
       - determined_by_site
       - applicable_subfamilies
+      - member_exceptions
       - supported_by
     rules:
       - preconditions:
@@ -593,6 +681,20 @@ classes:
             determined_by_site:
               required: true
         description: A residue-determined term must name the site that decides it.
+
+  MemberException:
+    description: >-
+      A family-level exception to a term assessment for one member: the term is in scope
+      for the member's subfamily but does not hold for this member.
+    slots:
+      - member
+      - exception_reason
+      - pruned_node_id
+      - lost_in_clade_node_id
+      - supported_by
+    slot_usage:
+      supported_by:
+        required: true
 
   ProteinRef:
     description: >-
@@ -696,6 +798,18 @@ enums:
       UNRESOLVED:
         description: Investigated but undecided.
 
+  ContactViaEnum:
+    permissible_values:
+      SIDE_CHAIN:
+        description: >-
+          The closest contact is made by a side-chain atom, so the contact depends on the
+          residue identity and a substitution can remove it.
+      MAIN_CHAIN:
+        description: >-
+          The closest contact is made by a backbone atom (N, CA, C, O), so it is
+          sequence-independent: any residue at this position makes the same contact, and a
+          substitution here is not loss of the site.
+
   SiteSourceEnum:
     permissible_values:
       UNIPROT_FEATURE:
@@ -709,6 +823,16 @@ enums:
           UNIPROT_FEATURE.
       LITERATURE:
         description: From a publication, with supporting_text quoting the relevant statement.
+      STRUCTURE:
+        description: >-
+          Read from deposited coordinates: the positions are the reference protein's
+          residues contacting a bound ligand, metal, or partner in a named PDB entry.
+          Stronger than LITERATURE for a site a paper describes only in prose, because the
+          contact set is recomputable from the entry and the cutoff. Record the entry (and
+          the ligand) in the description, and prefer UNIPROT_FEATURE when a curated feature
+          table already covers the same residues. Note that a contact made only through
+          main-chain atoms is sequence-independent, so such positions should normally be
+          left out of the site rather than curated as substitutable.
       ALIGNMENT_INFERENCE:
         description: >-
           Inferred from conservation in the family alignment with no external annotation.

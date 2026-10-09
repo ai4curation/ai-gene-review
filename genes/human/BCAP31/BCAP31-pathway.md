@@ -1,74 +1,34 @@
-# Pathway Summary for BCAP31
+# BCAP31: membrane-protein handling and ER–mitochondria communication
 
-## Overview
-BCAP31 (also called BAP31) is an abundant polytopic ER-resident integral membrane protein with three transmembrane segments and a cytosolic C-terminal coiled-coil ending in a KKXX ER-retrieval motif [PMID:9334338, PMID:18555783]. It functions as a cargo receptor and chaperone for selective ER-to-Golgi export of membrane proteins (including MHC class I and several tetraspanins/membrane clients), and as a participant in ER-associated degradation (ERAD) through its association with the Sec61 translocon, TRAM, and the Derlin-1 retrotranslocation complex [PMID:18555783, Reactome:R-HSA-983138, Reactome:R-HSA-983142]. A third, mechanistically distinct core function is the formation of an ER-mitochondria bridging complex with Tom40 at mitochondria-associated ER membranes (MAMs) that supports import of nuclear-encoded Complex I subunits and acts as a stress sensor for mitochondrial respiration [PMID:31206022]. BCAP31 is also a caspase-8 substrate whose cleaved p20 fragment communicates apoptotic signals from the mitochondria-ER interface, but the intact protein's role is in housekeeping ER quality control rather than apoptosis initiation [PMID:9334338, PMID:21183955].
+BCAP31 encodes BAP31, a multipass endoplasmic reticulum (ER) membrane protein. Its roles include handling selected membrane-protein clients, participating in a FIS1-associated apoptotic signaling platform, and supporting the mitochondrial localization of selected respiratory-chain proteins. These roles depend on distinct clients and experimental contexts; they do not establish BAP31 as a universal export receptor or an autonomous translocation motor.
 
-## Core Pathways
+## Client handling and ER quality control
 
-### Selective ER-to-Golgi Export of Membrane Cargo
-BCAP31 binds newly synthesized integral membrane clients via its cytosolic coiled-coil region and routes them between the peripheral ER, ER exit sites, and the ER-Golgi intermediate compartment, controlling whether each client is exported, retained, or rerouted to ERAD [PMID:18555783]. A well-characterized class of clients is MHC class I: BCAP31 contributes to the MHC-I peptide loading complex on the lumenal side of the ER membrane and to ER-exit-site trafficking of assembled MHC-I heterotrimers en route to the Golgi [Reactome:R-HSA-983138, Reactome:R-HSA-983142, Reactome:R-HSA-8951499]. The KKXX motif provides COPI-dependent ER retrieval that allows BCAP31 to cycle back from ERGIC/cis-Golgi after delivering cargo, consistent with its itinerant distribution.
+BAP31 associates with the N-terminal region of CFTR F508del and with Sec61/TRAM and Derlin-1 machinery. Depletion reduces degradation and permits some mutant CFTR to reach the cell surface. This supports client delivery and regulation of ER-associated degradation, without demonstrating that BAP31 itself forms a pore or performs an ATP-driven ratchet step [PMID:18555783]. The disposition of a bound protein is client dependent: BAP31 stabilizes PTPLB, now named HACD2, in the reported system. That interaction must not be described as promotion of HACD2 degradation [PMID:15024066].
 
-### ERAD via the Sec61/Derlin-1 Retrotranslocation Machinery
-On encountering misfolded membrane clients, BCAP31 acts at the translocon to license their retrotranslocation to the cytosol for proteasomal disposal. Co-immunoprecipitation studies show BCAP31 associates with Sec61beta and TRAM at the translocon and with the Derlin-1 retrotranslocation complex; depletion of BCAP31 reduces proteasomal degradation of the model ERAD substrate CFTR-deltaF508, demonstrating that BCAP31 is required for efficient retrotranslocation [PMID:18555783]. This places BCAP31 in the ERAD pathway proper (GO:0036503) as an early-stage substrate-handling factor, not merely as an upstream regulator.
+MHC-I studies support binding and context-dependent export or quality-control effects. Mouse Bap29/Bap31 double-loss experiments and human BAP31 overexpression or deficiency experiments answer different questions; they do not establish an obligatory, universal human export mechanism [PMID:15187134; PMID:17056546]. Cellubrevin retention/export experiments provide another client-specific context [PMID:9396746]. The cytoplasmic region contains coiled-coil structure; its historical variant death-effector-domain name does not establish a canonical death-effector fold, nor does it assign all client recognition to that region [PMID:23967155].
 
-### ER-Mitochondria Bridging at MAMs Supporting Complex I Biogenesis
-At mitochondria-associated ER membranes, BCAP31 forms a heterotypic bridging complex with the mitochondrial outer-membrane translocase subunit TOM40, generating a contact platform that stimulates translocation of Complex I subunits NDUFS4 and NDUFB11 from the cytosol into mitochondria for OXPHOS Complex I assembly [PMID:31206022]. Loss of BCAP31 lowers Complex I content and oxygen consumption, and the BCAP31-TOM40 complex itself functions as a stress sensor: under ER stress BCAP31 delocalizes from the bridge and binds BCL2, coupling ER proteostasis to mitochondrial respiratory adjustment [PMID:31206022].
+## Apoptotic signaling at the ER–mitochondria interface
 
-## Pathway Diagram
+Intact BAP31 participates with FIS1 in a platform that recruits procaspase-8. Deleting the relevant BAP31 cytoplasmic segment disrupts recruitment. BAP31 therefore does some of the signaling work as well as serving as a caspase substrate. Cleavage generates ER-associated p20, which promotes calcium release and downstream mitochondrial responses [PMID:21183955]. Earlier association and cleavage experiments support this account but should not be described as having performed all the later FIS1-platform experiments [PMID:9334338].
+
+The p20 fragment remains membrane associated. Reactome's separate cytosolic cleavage entity is the terminal residues 238–246 fragment, not p20 [Reactome:R-HSA-351894]. Proteolytic fragments are also distinct from the two alternatively spliced UniProt products P51572-1 and P51572-2; their numbering alone establishes no functional or RefSeq equivalence.
+
+## Selective mitochondrial protein localization
+
+In human U2OS cells, endogenous crosslinked co-immunoprecipitation supports association of BAP31 with TOMM40 and NDUFS4. BAP31 depletion changes mitochondrial distribution and turnover of NDUFS4 and NDUFB11. These data support a contribution to selective protein localization at ER–mitochondria contacts. They do not by themselves distinguish import rate from delivery, retention or degradation, or demonstrate a BAP31 import pore or motor. VDAC1 association does not show the same localization phenotype [PMID:31206022].
 
 ```mermaid
-graph TD
-    A["Newly Synthesized Membrane Client (e.g. MHC-I, CFTR)"] --> B["BCAP31 (ER membrane, KKXX motif)"]
-    B -->|"cargo selection"| C["ER Exit Site / ERGIC"]
-    C --> D["Cis-Golgi"]
-    B -.->|"COPI retrieval (KKXX)"| B
-
-    E["Misfolded Client (e.g. CFTR-deltaF508)"] --> B
-    B -->|"engages translocon"| F["Sec61 / TRAM"]
-    F -->|"retrotranslocation"| G["Derlin-1 Complex"]
-    G --> H["Cytosolic 26S Proteasome (ERAD)"]
-
-    I["BCAP31 at MAM"] -->|"bridges ER-mitochondria"| J["TOM40 (mitochondrial OMM)"]
-    J -->|"stimulates import"| K["NDUFS4 / NDUFB11 (Complex I assembly)"]
-    L["ER Stress"] -.->|"non-core: delocalization"| I
-    I -.->|"non-core: binds BCL2 on stress"| M["BCL2"]
-
-    N["Caspase-8 + Fis1 (apoptosis platform)"] -.->|"non-core: cleaves BCAP31"| O["p20 Fragment"]
-    O -.->|"ER Ca2+ release, mitochondrial fission"| P["Apoptotic signaling"]
-
-    style B fill:#f9f,stroke:#333,stroke-width:2px
-    style I fill:#f9f,stroke:#333,stroke-width:2px
-    style F fill:#ffd,stroke:#333,stroke-width:1px
-    style G fill:#ffd,stroke:#333,stroke-width:1px
-    style J fill:#ffd,stroke:#333,stroke-width:1px
+flowchart TD
+    B[BAP31 in the ER membrane] --> C[Selected client association and disposition]
+    C --> E[CFTR F508del delivery toward ERAD]
+    C --> H[HACD2 stabilization in the tested system]
+    B --> S[FIS1-associated signaling platform]
+    S --> R[Procaspase-8 recruitment and activation]
+    R --> P[Cleavage to ER-associated p20]
+    P --> A[Calcium-dependent mitochondrial responses]
+    B --> T[TOMM40-associated contact-site context]
+    T --> L[Selective NDUFS4 and NDUFB11 localization and turnover]
 ```
 
-## Molecular Architecture
-- **Three transmembrane segments** with a short lumenal N-terminus and a large cytosolic C-terminal region [PMID:9334338]
-- **Cytosolic coiled-coil / weak death-effector-homology region** that mediates cargo and partner binding [PMID:9334338]
-- **C-terminal KKXX ER-retrieval motif** that supports COPI-dependent return from post-ER compartments to the ER, underlying the cycling phenotype between ER, ERGIC, and cis-Golgi [PMID:18555783]
-- **Two caspase-8/-1 cleavage sites** flanking the coiled-coil, generating a membrane-anchored p20 N-terminal fragment during apoptosis [PMID:9334338, PMID:21183955]
-
-## Upstream Inputs
-- **Newly synthesized membrane clients** entering the secretory pathway (MHC-I heterotrimers, tetraspanins, CFTR) [PMID:18555783, Reactome:R-HSA-983138]
-- **Misfolded ER membrane substrates** (e.g. CFTR-deltaF508) that engage Sec61/TRAM/Derlin-1 for retrotranslocation [PMID:18555783]
-- **ER stress signals** that reorganize the BCAP31-TOM40 bridge at MAMs and shift BCAP31 to BCL2 binding [PMID:31206022]
-
-## Downstream Effects
-- **Productive ER-to-Golgi delivery of select membrane proteins**, including assembly and ER-exit of MHC-I peptide-loading complexes [Reactome:R-HSA-983138, Reactome:R-HSA-983142, Reactome:R-HSA-8951499]
-- **Proteasomal degradation of misfolded ER membrane clients** through Sec61/Derlin-1-licensed retrotranslocation [PMID:18555783]
-- **Mitochondrial Complex I assembly and respiratory capacity** via BCAP31-TOM40-mediated import of NDUFS4 and NDUFB11 [PMID:31206022]
-- **Coupling of ER proteostasis to mitochondrial function**: ER stress repositions BCAP31 from the bridge to BCL2, modulating apoptotic threshold and respiration [PMID:31206022]
-
-## Non-Core Contexts
-- **Caspase-8 substrate / Fis1-Bap31 apoptosis platform**: Fis1 on the mitochondrial outer membrane and BAP31 on the ER form a bridging complex that recruits and activates caspase-8, which cleaves BCAP31 to a membrane-anchored pro-apoptotic p20 fragment [PMID:9334338, PMID:21183955, Reactome:R-HSA-351894]. The p20 fragment triggers ER Ca2+ release and mitochondrial fragmentation, but this reflects BCAP31's role as an apoptotic substrate; the intact protein's biology is ER quality control, not apoptosis initiation, and intrinsic-apoptosis annotations on full-length BCAP31 are correctly flagged as over-annotation in the merged review.
-- **Surface-antigen (mAb 6C6) reactivity**: the original characterization detected BCAP31 at the cell surface of human breast cancer cells [PMID:8706661], but later work establishes ER/ERGIC residency as the steady-state biology; any plasma-membrane signal likely reflects trafficking intermediates or cargo-bound complexes rather than a constitutive surface pool.
-- **RSV SH protein interaction**: respiratory syncytial virus small hydrophobic protein engages BCAP31 at the ER, coupling viral biology to the host cargo-receptor machinery [PMID:25854864]; tangential to core function.
-
-## Functional Integration
-BCAP31 sits at the confluence of three secretory- and mitochondrial-quality-control axes:
-1. **Anterograde sorting** of select membrane clients out of the ER (most clearly the MHC-I trafficking and assembly route) [PMID:18555783, Reactome:R-HSA-983138]
-2. **Retrograde disposal** of misfolded ER membrane substrates through the Sec61/TRAM/Derlin-1 retrotranslocation machinery [PMID:18555783]
-3. **Inter-organelle proteostasis** at MAMs, where the BCAP31-TOM40 bridge supports Complex I biogenesis and senses ER stress to adjust mitochondrial respiration [PMID:31206022]
-
-The same protein is also exploited by the Fis1-caspase-8 apoptotic platform as a regulated ER-anchored substrate whose p20 cleavage product transmits death signals to mitochondria, but this is a downstream consequence of apoptotic signaling rather than a regulatory function of the intact protein.
+Experimental cell-surface and lipid-droplet observations are retained as secondary localization contexts; predominant ER residence alone does not make them artifacts [PMID:8706661; PMID:14741744]. The scope of each source—including normal abstract-only caches and separately read original Results—is recorded in the review and notes. The existing provider report remains an unchanged secondary synthesis.

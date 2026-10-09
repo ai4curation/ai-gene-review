@@ -8,6 +8,13 @@ sidecars:
   slide_images:
     - FUNCTION_PREDICTION_EVALUATION/slides/evaluation-loop.svg
     - FUNCTION_PREDICTION_EVALUATION/slides/prediction-results.svg
+manifest:
+  slides:
+    - href: FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/FWa7DRJiqJvUFZNxGvrErV
+      title: Project brief
 ---
 # Function Prediction Evaluation
 
@@ -35,20 +42,27 @@ are facet counts in the browser. Useful starting views:
 [DeepECTF claims](../app/predictions/index.html?dataset=claims&source_method=DeepECTF), and the
 [GO-GPT three-level overlap](../app/predictions/index.html?dataset=overlap), which is fixed at the review snapshot.
 
+**[Cross-project review (2026-09-26)](FUNCTION_PREDICTION_EVALUATION/REVIEW-2026-09-26.md)** — consistency, independence, and reproducibility audit of the evaluations below, with prioritized fixes.
+
 ## Model and agent evaluations
 
 | Project | What is evaluated | Explore |
 |---------|-------------------|---------|
 | **[ProtNLM2](PROTNLM_EVALUATION.md)** | GO predictions across a taxonomically diverse protein benchmark, assessed for biological support, specificity, and overlap with existing annotations. | [Prediction reviews](PROTNLM_EVALUATION/protnlm-eval.html) |
 | **[BioReason-Pro and GO-GPT](BIOREASON_COMPARISON.md)** | BioReason-Pro functional summaries and reasoning traces, its SFT GO predictions, and the separate upstream GO-GPT term predictions. | [SFT reviews](BIOREASON_COMPARISON/sft-eval.html) · [GO-GPT reviews](BIOREASON_COMPARISON/gogpt-eval.html) · [Manuscript](BIOREASON_COMPARISON/article/manuscript.pdf) |
-| **[DeepECTransformer / E. coli](VALIDATING_ECOLI_PREDICTIONS.md)** | Enzyme-function predictions for selected E. coli proteins, with attention to substrate specificity, paralogs, and physiological context. | [Prediction reviews](BIOREASON_COMPARISON/deepectf-eval.html) · [Recapitulation experiment](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md) |
+| **[DeepECTransformer / E. coli](VALIDATING_ECOLI_PREDICTIONS.md)** | Enzyme-function predictions for selected E. coli proteins, with attention to substrate specificity, paralogs, and physiological context. | [Prediction reviews](VALIDATING_ECOLI_PREDICTIONS/deepectf-eval.html) · [Blinded recapitulation](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/README.md) ([table](BIOREASON_COMPARISON/deepectf-eval.html); 4/7 match) |
 | **[Affinage](AFFINAGE_EVALUATION.md)** | Literature-derived functional narratives, GO grounding, and retrieval of relevant publications. | [Pilot results](AFFINAGE_EVALUATION/results/summary.md) · [Narrative versus GO analysis](AFFINAGE_EVALUATION/results/narrative-vs-go.md) · [Project findings](AFFINAGE_EVALUATION.md) |
+| **[Structure-based prediction](STRUCTURE_FUNCTION.md)** | Fold, active-site and structure-aware learned methods for distant homologs, tested against cases from existing reviews. | [Project page](STRUCTURE_FUNCTION.md) |
+| **[OpenScientist co-scientist](COSCIENTIST.md)** | An autonomous research agent used as an independent bioinformatician to test gene-function hypotheses; its verdicts also serve as adjudicators in the ProtNLM2 and TreeGrafter evaluations. | [Project page](COSCIENTIST.md) |
+| **[Prokaryotic immunity term prediction](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md)** | Scoping: translating family-level defense-system calls into review-ready GO term suggestions. | [Project page](PROKARYOTIC_IMMUNITY_TERM_PREDICTION.md) |
 
 BioReason-Pro SFT, RL narratives, and upstream GO-GPT outputs are separate
 evaluation targets. The GO-GPT review includes unresolved predictions; its table
-is a review workspace as well as a results browser. The DeepECTransformer table
-is hosted with the BioReason comparison material and is also accessible through
-the E. coli project.
+is a review workspace as well as a results browser. DeepECTransformer has two
+tables: the project's own calls (rendered from `genes/ECOLI/*/*-det-predictions-review.yaml`,
+the same records shown in the prediction browser) and a blinded recapitulation run,
+hosted with the BioReason comparison material, whose calls match the published
+expert labels for only 4 of the 7 genes.
 
 ## Annotation-transfer and rule reviews
 
@@ -64,6 +78,10 @@ orthology, phylogeny, and family membership have their own index,
 | [InterPro2GO](INTERPRO.md) | GO mappings attached to domain and family signatures, including specificity and propagation limits. |
 | [NCBIFam](NCBIFam.md) | Functional-family mappings and opportunities or risks in extending GO coverage. |
 | [PAINT / IBA](IBA_REVIEW.md) | Curator-assessed phylogenetic function inheritance and the evidence for individual transfers. |
+| [UniProt keywords (SPKW)](SPKW.md) | Annotations derived only from UniProt keyword mappings (`GO_REF:0000043`) and their over-annotation patterns. |
+| [Pfam → GO](PFAM.md) | Whether pfam2go adds specificity beyond InterPro2GO, and headroom for new family mappings. |
+| [Rhea → GO](RHEA.md) | What rhea2go contributes beyond ec2go, and reactions with no GO target. |
+| [TCDB → GO](TCDB.md) | Transporter classifications that never become GO annotations, and candidate TC-to-GO mappings. |
 | [ARBA rule reviews](https://ai4curation.io/ai-gene-review/rules/arba/index.html) | Reviews of UniProt's automated annotation rules and their biological scope. |
 
 ## Reading the evaluations
@@ -78,7 +96,3 @@ For the shared approach to term-level review, see the
 [evidence standards](PROTNLM_EVALUATION.md#evidence-standards). For narrative
 correctness and completeness, see the
 [BioReason evaluation rubric](BIOREASON_COMPARISON.md#evaluation-rubric).
-
-## Slides
-
-- [Slides](FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.html) (Marp source: [FUNCTION_PREDICTION_EVALUATION-slides.md](https://github.com/ai4curation/ai-gene-review/blob/main/projects/FUNCTION_PREDICTION_EVALUATION/slides/FUNCTION_PREDICTION_EVALUATION-slides.md)) — AI generated

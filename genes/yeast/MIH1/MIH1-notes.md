@@ -104,3 +104,15 @@
   suggested_questions/experiments instead.
 - No bare protein-binding IPI rows exist in GOA for MIH1, so the protein-binding
   policy did not need to be applied.
+
+## 2026-09-28 — IBA spot re-review
+
+- Searched for 2024-2026 MIH1/YMR036C literature. The direct new paper remains
+  the 2026 meiotic prophase I study already incorporated as PMID:41927924; no
+  newer paper was found that changes the core Cdc28-Tyr19 phosphatase model.
+- Re-checked current PTHR10828 PAINT. PTN000089071 still carries
+  `GO:0000086`, `GO:0010971`, and `GO:0110032`; PTN000850864 still carries
+  `GO:0004725`, `GO:0005634`, and `GO:0005737`.
+- The existing IBA decisions stand. All MIH1 IBA rows are either core positive
+  controls or, for meiotic G2/MI, a genuine non-core deployment of the same
+  Cdc28-activating activity.
