@@ -17,4 +17,4 @@ UniProt Q7JX57 (Essential MCU regulator, mitochondrial); PANTHER PTHR33904.
 
 ## Deep research
 
-`just deep-research-falcon` was still running or had timed out when this review was committed; any late-arriving report will be added in a follow-up commit.
+`EMRE-deep-research-falcon.md` (falcon) arrived after the review was first committed. It agrees with the review: EMRE is an essential non-pore accessory subunit of the uniporter, required for fast MCU-dependent calcium uptake (EMRE knockdown in larval muscle is not bypassed by raising MCU; three CRISPR alleles lack fast uptake). It does not discuss the innate-immunity screen rows. No annotation decision changed.
