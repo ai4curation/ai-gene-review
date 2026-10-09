@@ -49,6 +49,12 @@ looks lost" digest artefact (Hdac1, Trp53, Sox2): in each the removals are
 All 85 mouse review files were re-reviewed. Spcs2 (a 74-residue TrEMBL
 fragment, A0A140LHW5) has no GOA rows and nothing to adjudicate.
 
+Since the sweep's base commit the mouse set has grown to 104 review files;
+the 19 added afterwards (Abi2, Casp8, Casp9, Cd48, Dll1, Dll3, Hes7, Megf10,
+Nkx2-5, Nudt2, Pax6, Pcbd1, Pcbd2, Pias1, Rbpj, Slc10a1, Tlr11, Tlr12, Tlr13)
+have not had this second pass. Upstream edits made to swept genes in the same
+interval touched different rows from the ones changed here.
+
 | | |
 |---|---|
 | Review files | 85 (84 with annotations) |
