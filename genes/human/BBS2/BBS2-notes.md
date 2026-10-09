@@ -84,3 +84,44 @@ The GO hierarchy was checked again against the [official stereocilium page](http
 The RNF2 decision now rests on the BBS2/RNF2 interaction curated with IPI and on the partner's ubiquitin-ligase identity; it no longer requires a figure-level assertion unavailable in the cached abstract. Short verbatim anchors were added for mouse Bbs2 localization in microvilli/stereocilia and for the Bbs2-null brain findings (PMID:25605782; PMID:18032602). The scaffold core now includes the ciliary protein-localization process and membrane/basal-body locations, with evidence from BBS2 depletion and curated direct localization (PMID:22072986; PMID:19081074; PMID:18299575). Individual refined interaction reasons identify their own partner and source paper.
 
 The action totals and all 89 source keys remain unchanged. Generic interaction observations remain non-core under the user's explicit ActionEnum criteria; the reviewer request to remove otherwise supported interactions solely because the term is broad conflicts with those criteria. No new annotations or source records are introduced in this response.
+
+
+## 2026-10-09 — project instruction and bounded review follow-up
+
+The authority for supported generic-binding retention is the standing explicit
+user instruction in the
+[ClinGen project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions).
+It directs KEEP_AS_NON_CORE for a supported, biologically correct GO:0005515
+annotation when no evidence-backed finer term is established, MODIFY when such
+a refinement is supported, and UNDECIDED when the relevant evidence cannot be
+adjudicated. This instruction takes precedence over the generic-binding skill
+default and validator advisory. Earlier ActionEnum-only explanations were
+incomplete; no repository-wide policy change or additional maintainer sign-off
+is claimed. The repeated generic-interaction reasons now identify this authority
+and the lack of an established finer function for the particular pair.
+
+The stereocilium relationship was independently rechecked using the
+[QuickGO is_a-only ancestor API](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO%3A0032420/ancestors?relations=is_a)
+on 2026-10-09. Its GO:0032420 result explicitly includes GO:0043005 among the
+ancestors. The annotation reason now links to that checkable response rather
+than relying on interpretation of the AmiGO neighborhood display. This
+corroborates the ontology statement; the PAINT assertion and its source
+entities remain intact.
+
+The BBS7 isoform-2 suggestion was assessed separately from the policy issue.
+[UniProt Q8IWZ6](https://www.uniprot.org/uniprotkb/Q8IWZ6/entry) identifies
+Q8IWZ6-2 as lacking canonical residues 673–715. The current source assertion
+records interaction with that isoform, and it remains supported non-core
+binding. The precise structural construct and transfer of the dimerization
+mechanism to the shortened isoform were not established in this follow-up.
+This makes no claim that isoform 2 lacks the interface or cannot heterodimerize.
+A narrower annotation can follow a verified construct/interface comparison;
+uniformity with the canonical partner alone is insufficient.
+
+The previously accepted RNF2 refinement, five supporting quotations, and
+ciliary process/location synthesis remain unchanged. All 89 source assertions,
+annotation actions, core functions and reference records are preserved:
+16 ACCEPT, 56 KEEP_AS_NON_CORE, 15 MODIFY and two UNDECIDED. The 26 generic
+binding advisories remain an acknowledged consequence of the explicit project
+instruction. This entry supersedes the earlier policy-authority explanation;
+prior journal entries remain historical.
