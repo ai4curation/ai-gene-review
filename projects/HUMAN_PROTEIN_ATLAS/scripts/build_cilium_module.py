@@ -65,7 +65,6 @@ GO = {
     "GO:0015631": "tubulin binding",
     "GO:0140597": "protein carrier activity",
     "GO:0051010": "microtubule plus-end binding",
-    "GO:0019894": "kinesin binding",
     "GO:0005814": "centriole",
     "GO:0030050": "vesicle transport along actin filament",
     "GO:0000146": "microfilament motor activity",
@@ -144,6 +143,18 @@ def complex_sel(name, desc, genes, role, go_id=None):
             ],
         },
     }
+
+
+def kinesin2_sel():
+    """Heterotrimeric kinesin II: KIF3A/KIF3B motors plus the KIFAP3 cargo adaptor."""
+    sel = complex_sel("kinesin-2 (KIF3A/KIF3B/KIFAP3)", "Heterotrimeric kinesin II motor.",
+                      ["KIF3A", "KIF3B"], "kinesin-2 motor subunit", "GO:0016939")
+    sel["protein_complex"]["active_units"].append({
+        "id": "kifap3_unit", "label": "KIFAP3 subunit", "participant": gp("KIFAP3"),
+        "role": "non-motor cargo adaptor subunit",
+        "function": {"preferred_term": GO["GO:0030674"], "term": term("GO:0030674")},
+    })
+    return sel
 
 
 # ---------------------------------------------------------------- stages
@@ -415,14 +426,11 @@ parts = [
                     "Retrograde train component and, with TULP3, carrier for membrane-protein entry into cilia.",
                     fn="GO:0140597", processes=["GO:0035721", "GO:0061512"], locations=["GO:0097730"],
                     evidence=[IFTA, TULP3]),
-            annoton("kinesin2_anterograde", "Kinesin-2 motor subunits",
-                    complex_sel("kinesin-2 (KIF3A/KIF3B)", "Motor subunits of heterotrimeric kinesin II.",
-                                ["KIF3A", "KIF3B"], "kinesin-2 motor subunit", "GO:0016939"),
-                    "Anterograde IFT motor.",
+            annoton("kinesin2_anterograde", "Heterotrimeric kinesin-2",
+                    kinesin2_sel(),
+                    "Anterograde IFT motor. KIF3A and KIF3B carry the motor activity; KIFAP3 contributes to it as "
+                    "the non-motor cargo adaptor (protein-macromolecule adaptor activity).",
                     fn="GO:0008574", processes=["GO:0035720"], locations=["GO:0005930"]),
-            annoton("kifap3_cargo_adaptor", "KIFAP3 kinesin-2 cargo adaptor", gp("KIFAP3"),
-                    "Non-motor subunit of kinesin II that binds the KIF3A/KIF3B motor and links it to cargo.",
-                    fn="GO:0019894", processes=["GO:0035720"]),
             annoton("dynein2_retrograde", "Dynein-2",
                     complex_sel("cytoplasmic dynein-2", "Retrograde IFT motor complex; DYNC2H1 is the motor, the "
                                 "intermediate and light intermediate chains contribute.",
@@ -433,8 +441,6 @@ parts = [
         "connections": [
             {"source": "kinesin2_anterograde", "target": "ift_b_scaffold", "connection_type": "PROVIDES_INPUT_FOR",
              "description": "Kinesin-2 moves IFT-B trains toward the ciliary tip."},
-            {"source": "kifap3_cargo_adaptor", "target": "kinesin2_anterograde", "connection_type": "PROVIDES_INPUT_FOR",
-             "description": "KIFAP3 links cargo to the kinesin-2 motor."},
             {"source": "dynein2_retrograde", "target": "ift_a_complex", "connection_type": "PROVIDES_INPUT_FOR",
              "description": "Dynein-2 returns IFT-A trains to the base."},
         ],
@@ -458,7 +464,7 @@ parts = [
             annoton("arl3_cargo_release", "ARL3 releases lipidated cargo", gp("ARL3"),
                     "ARL3-GTP binds PDE6D and UNC119B and displaces their lipidated cargo inside the cilium; its intrinsic "
                     "GTP hydrolysis is negligible without RP2.",
-                    fn="GO:0003925", processes=["GO:0061512"], evidence=[GOTTHARDT]),
+                    fn="GO:0003925", processes=["GO:1903441"], evidence=[GOTTHARDT]),
             annoton("pde6d_prenyl_carrier", "PDE6D carries farnesylated cargo", gp("PDE6D"),
                     "GDI-like carrier for farnesylated and prenylated cargo such as INPP5E and PDE6 subunits.",
                     fn="GO:0001918", processes=["GO:0061512"], evidence=[ISMAIL]),

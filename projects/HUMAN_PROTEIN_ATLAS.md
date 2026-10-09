@@ -1,6 +1,6 @@
 ---
 title: "Human Protein Atlas: Primary Cilium Life Cycle Module"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes:
@@ -122,11 +122,12 @@ ciliary pocket are outside it.
 
 - GO has no term for regulation of cilium length and no cytoplasmic dynein-2
   complex term.
-- Distal appendage scaffolds, transition zone barrier proteins, IFT adaptors
-  and microtubule depolymerases have no molecular-function term. These
+- Distal appendage scaffolds, transition zone barrier proteins, IFT-B scaffold
+  subunits and microtubule depolymerases have no molecular-function term. These
   annotons carry a free-text function only.
-- `primary cilium` (GO:0072372) is obsolete. The module uses
-  `non-motile cilium` (GO:0097730) as context.
+
+Separately, `primary cilium` (GO:0072372) is obsolete. This is a term choice,
+not a gap: the module uses `non-motile cilium` (GO:0097730) as context.
 
 ## HPA evidence for module members
 
