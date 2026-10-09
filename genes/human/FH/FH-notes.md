@@ -12,7 +12,12 @@ only for evolutionary context, not as evidence for FH function.
 - Falcon did not return before its timeout.
 - The perplexity-lite fallback failed with "Provider 'perplexity' not available. Available:
   falcon, asta, openscientist".
-- No deep-research file was created.
+- No deep-research file was created at review time.
+- Update: the Falcon job outlived the recipe's 600 s timeout and later wrote
+  `FH-deep-research-falcon.md`. It agrees with the review: cytosolic FH removes fumarate released by
+  argininosuccinate lyase but does not catalyse a urea-cycle step, and nuclear FH (DNA-PK-phosphorylated
+  at Thr236) binds H2A.Z at double-strand breaks, where local fumarate inhibits KDM2B to promote NHEJ.
+  No annotation decisions changed.
 - Literature research was done instead from the cached publications (GOA references) and PubMed
   searches. Four papers were added: PMID:11865300, PMID:16098467, PMID:22014577 and
   PMID:24280230.
