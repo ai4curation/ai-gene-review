@@ -2,7 +2,7 @@
 
 Accession: P36179 (FBgn0260439).
 
-Deep research: falcon run still in progress at time of review (see later commits).
+Deep research: `Pp2A-29B-deep-research-falcon.md` (falcon; completed after a wrapper timeout message). It confirms Pp2A-29B as the PP2A A scaffold (not catalytic), reports Ankle2-dependent nuclear-envelope enrichment of Pp2A-29B-GFP and Ankle2-PP2A roles in nuclear reassembly, STRIPAK-PP2A restraint of Tao-1 phosphorylation, and a Pp2A-29B-Mts-Wdb complex restraining Smo surface accumulation. Consistent with the decisions below.
 
 ## Literature journal
 
