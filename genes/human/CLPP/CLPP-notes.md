@@ -110,3 +110,18 @@ Falcon also cites a 2026 Nat Commun study (Aljghami et al.; CHCHD2, ALAS1, TFAM 
 substrates, PDIP38 adaptor). I did not find or cache its PMID and did not cite it in the review.
 Falcon's report that CLPP knockdown blunts ONC201 responses and that dordaviprone received FDA
 accelerated approval (Aug 2025) is drug-response context only and was not used for annotation.
+
+## Merge with concurrent review on main (2026-10-09)
+
+An independent CLPP review landed on main at the same time (PR #4426, mitochondrial UPR module
+work). It agreed on 53 of 55 annotation actions, made the same UPRmt call (no GO:0034514 for human
+CLPP, per PMID:27154400), and had no `proposed_new_terms`. The two differences:
+
+- GO:0008233 peptidase activity (TAS, PMID:8543061): main ACCEPT as correct-but-general; this
+  review MODIFY to GO:0004252 serine-type endopeptidase activity. Kept MODIFY.
+- GO:0009368 endopeptidase Clp complex (IBA): main MODIFY to GO:0009841; this review ACCEPT,
+  because the PAINT node spans bacterial and plastid Clp complexes and the family term is the
+  right level for an inherited annotation (the IDA/IPI rows are MODIFY in both). Kept ACCEPT.
+
+This version (30 references, ATPase binding as a second core function) was kept as the merged
+review.
