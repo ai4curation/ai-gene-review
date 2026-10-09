@@ -11,4 +11,5 @@ higher than those for the human enzyme"]; Sdh-1 is the major transcript.
 - Decisions: GO:0047833 (EC 1.1.99.21, acceptor-type) modified to GO:0003939 (NAD-dependent SDH, EC 1.1.1.14);
   generic oxidoreductase terms modified; zinc binding and SORD-ortholog xylitol/glucuronate terms non-core.
 
-- Deep research: falcon run pending at time of first commit (interrupted by a container restart); will be folded in if it completes.
+- Falcon deep research (Sord1-deep-research-falcon.md) is consistent: EC 1.1.1.14 NAD-dependent sorbitol -> fructose; notes
+  that published "Sodh mutants" remove both Sodh-1 and Sodh-2, so single-gene contributions are unresolved.
