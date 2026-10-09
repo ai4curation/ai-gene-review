@@ -12,3 +12,6 @@
 - Telomere maintenance via recombination: IBA/IEA over-annotated, IMP modified to telomere capping (GO:0016233).
 - Intracellular protein localization IMP modified to protein localization to chromosome, telomeric region (GO:0070198).
 - Protein binding (IPI) removed; telomeric/G4 DNA binding IBAs kept as non-core.
+
+## Falcon deep research (added after the initial review)
+- The report agrees with the review: Rad50 is the ATP-dependent architectural MRN subunit, with nuclease activity supplied by Mre11 [file:DROME/rad50/rad50-deep-research-falcon.md "Rad50 contributes ATP-dependent structural control while Mre11 supplies nuclease activity"]. It also supports telomere capping via HOAP/HP1 recruitment [file:DROME/rad50/rad50-deep-research-falcon.md "HOAP and HP1 also failed to accumulate detectably at mutant polytene-chromosome"]. No annotation decisions changed.
