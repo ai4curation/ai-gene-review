@@ -2,7 +2,7 @@
 
 Accession: Q9VEM2 (FBgn0264291).
 
-Deep research: `just deep-research-falcon DROME Det --fallback perplexity-lite` failed (falcon timed out after 600 s; perplexity provider not available). Literature below is from the cached publications.
+Deep research: `Det-deep-research-falcon.md` (falcon; the wrapper logged a 600 s timeout but the run completed and wrote the file). It describes Deterin as the fly Survivin and CPC targeting subunit (scapolo = P86S in the BIR), notes a role in acentrosomal oocyte spindle assembly (Deterin RNAi resembles Incenp/aurB depletion), and characterizes the anti-apoptotic activity as demonstrated only in cultured-cell expression assays. This supports keeping the apoptosis rows as non-core.
 
 ## Literature journal
 
