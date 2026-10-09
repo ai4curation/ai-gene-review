@@ -142,3 +142,51 @@ CYP71A12, CYP71A13 and CYP71B15 fusions colocalizing with the ER lumenal marker 
 the catalytic centre facing the cytosol. The ER lumen IDA was therefore changed from UNDECIDED to
 MODIFY -> GO:0005789 endoplasmic reticulum membrane: the organelle call is sound, the lumen call
 over-reads a confocal colocalization.
+
+## 2026-10-09: combined with independent review
+
+An independent review of CYP71A12 (PR 4451 branch) was merged into this file. Decisions that changed
+relative to the previous version:
+
+- **GO:0005506 iron ion binding (IEA)**: ACCEPT -> KEEP_AS_NON_CORE. The independent review marked it
+  over-annotated (as for CYP71B15); CYP71A13 keeps it as non-core. The iron belongs to the heme
+  cofactor already captured by heme binding.
+- **GO:0042742 defense response to bacterium (IEP, PMID:39627368)**: ACCEPT -> KEEP_AS_NON_CORE. IEP
+  basis is induction; the mutant data are necessity downstream of biosynthesis. Consistent with the
+  defense-to-bacterium IMP rows in the CYP71A13 and CYP79B2 reviews. Removed from core_functions.
+- **NEW GO:0047720 indoleacetaldoxime dehydratase activity**: kept, re-sourced to PMID:25953104 (Müller
+  et al. 2015, full text), which assayed CYP71A12 kinetics directly: "it is clear that both enzymes are
+  efficiently dehydrating IAOx" and "CYP71A12 catalyzed two consecutive reactions, the dehydration of
+  IAOx to IAN , which is then further converted to ICHO and cyanide". Klein et al. 2013 (PMID:24151049)
+  also reports "persistent production of the dehydration product IAN alongside oxidized products from
+  IAOx" for these enzymes. The independent review had withheld this term because the 18O2 data show a
+  monooxygenation via an alpha-hydroxy-IAN intermediate. Resolution: GO:0047720 describes the net
+  conversion (and matches the CYP71A13 IDA comparator); the mechanistic caveat is kept as a proposed new
+  term (cyanohydrin-forming monooxygenase) and a suggested question. Note that
+  modules/camalexin_biosynthesis.yaml gives CYP71A12 only GO:0004497 monooxygenase activity (not edited).
+- **NEW GO:0106148 4-hydroxyindole-3-carbonyl nitrile biosynthesis (IMP, PMID:26352477)**: added. This
+  replaces the independent review's NEW GO:0042435 indole-containing compound biosynthetic process,
+  dropped because it is an ancestor of the accepted GO:0010120 camalexin biosynthetic process, and its
+  proposed new term "indole-3-carbonyl nitrile biosynthetic process", which already exists in GO as
+  GO:0106148 (created from Rajniak et al. 2015, currently with zero annotations, so no contrary
+  convention; CYP82C2 carries only the GO:0106149 MF). CYP71A12 performs the cyanohydrin-forming step,
+  shown by reconstitution with FOX1 and CYP82C2. The GO definition wrongly calls 4-OH-ICN a cyanogenic
+  glucoside (question raised).
+- **NEW GO:0050832 defense response to fungus (IMP, PMID:31411742)**: kept (independent review judged it
+  necessity-only). Comparator: CYP71A13 and CYP71B15 both carry it by IMP and are accepted as core. The
+  disagreement is recorded in suggested_questions because the CYP71A12 data are abstract-only and largely
+  in a pen2 background.
+- Unchanged from this file where the reviews differed: ER lumen IDA stays MODIFY -> ER membrane (Mucha
+  full text read on PMC; independent review had UNDECIDED); membrane IEA/NAS stay ACCEPT (independent
+  review had MODIFY -> ER membrane, sourced partly from a falcon quote not present in the repo file, which
+  was dropped); defense response NAS stays MODIFY -> defense response to bacterium; ISR IBA propagation
+  review kept as SOURCE_BAD.
+- Added PMID:21712415 (GGP1/GGP3 paper; cytosol-facing ER P450 topology statement) from the independent
+  review as additional support for the ER-membrane MODIFY, and cited the repo falcon deep research for the
+  metabolon evidence.
+
+Provenance from the independent notes: UniProt O49340 function "Converts indole-3-acetaldoxime to indole
+cyanohydrin. Involved in the biosynthetic pathway to 4-hydroxyindole-3-carbonyl nitrile (4-OH-ICN)";
+cyp71A12 ICN derivatives at ~10% of wild type [PMID:26352477 "all ICN derivatives with the exception of A6
+are at ~10% of WT levels in the cyp71A12 mutant, but unaffected in the cyp71A13 and cyp71A18 mutants"];
+ICOOH methyl ester at 12% of wild type in AgNO3-challenged cyp71a12 leaves [PMID:25953104].
