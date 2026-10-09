@@ -6,3 +6,5 @@
 - Telomere maintenance IMP (PMID:16203987) -> MODIFY to telomere capping, following mre11/rad50/nbs convention (Drosophila has no telomerase).
 - Centromeric staining faint [PMID:12417578 "we see faint HOAP staining at the centromeres of the large autosomes"] -> non-core.
 - GO:0042162 label "telomeric repeat DNA binding" fits poorly with sequence-independent binding to retrotransposon arrays; raised as a question.
+- Review-bot round (PR #4475): terminin-membership MODIFY rows now quote sentences that name this subunit's complex (terminin composition), not Ver-only text.
+- Review-bot round: GO:0042162 telomeric repeat DNA binding rows MODIFY to GO:0003691 double-stranded telomeric DNA binding (definition is sequence-agnostic: double-stranded telomere-associated DNA); core MF updated; parallels GO:0043047 for MTV subunits.
