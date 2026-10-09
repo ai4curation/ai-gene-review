@@ -3,7 +3,7 @@
 
 The spec below is the curated content (stages, roles, GO terms, citations).
 UniProt accessions and names are NOT typed here: they are read from
-cilium_life_cycle/candidate_members.tsv, which was populated from the UniProt
+cilium_life_cycle/candidate_members.yaml, which was populated from the UniProt
 REST API. GO ids in the spec were checked against OLS (2026-10-03); PMIDs were
 checked against PubMed.
 
@@ -11,7 +11,6 @@ Usage (from repo root):
     uv run python projects/HUMAN_PROTEIN_ATLAS/scripts/build_cilium_module.py
 """
 
-import csv
 import re
 from pathlib import Path
 
@@ -20,7 +19,7 @@ import yaml
 WORK = Path("projects/HUMAN_PROTEIN_ATLAS/cilium_life_cycle")
 OUT = Path("modules/primary_cilium_life_cycle.yaml")
 
-MEMBERS = {r["gene"]: r for r in csv.DictReader((WORK / "candidate_members.tsv").open(), delimiter="\t")}
+MEMBERS = {r["gene"]: r for r in yaml.safe_load((WORK / "candidate_members.yaml").read_text())["members"]}
 
 GO = {
     "GO:0044782": "cilium organization",
@@ -586,10 +585,15 @@ doc = {
     "notes": (
         "Revised 2026-10-03 after gene reviews of all 60 members (genes/human/<GENE>/). "
         "Draft built in the HUMAN_PROTEIN_ATLAS project. Members and UniProt accessions come from "
-        "projects/HUMAN_PROTEIN_ATLAS/cilium_life_cycle/candidate_members.tsv (UniProt REST). Several roles have no "
+        "projects/HUMAN_PROTEIN_ATLAS/cilium_life_cycle/candidate_members.yaml (UniProt REST). Several roles have no "
         "GO molecular-function term (distal appendage scaffold, transition zone barrier, IFT adaptor, microtubule "
         "depolymerase) and carry preferred_term only. BBSome cargo export is a separate module (modules/bbsome.yaml). "
-        "Motile cilia, centriole duplication and the ciliary pocket are outside this boundary."),
+        "Motile cilia, centriole duplication and the ciliary pocket are outside this boundary. "
+        "Ontology gaps: GO has no term for regulation of cilium length (negative regulation of non-motile cilium "
+        "assembly is used), no cytoplasmic dynein-2 complex term (the generic cytoplasmic dynein complex is used) and "
+        "no microtubule depolymerase activity term (KIF2A, KIF24); these are candidate GO term requests. Curation "
+        "note: many members have only Approved or Uncertain HPA cilium-atlas calls, which are not exported to GOA; "
+        "whether those calls should become annotations is tracked in the HUMAN_PROTEIN_ATLAS project."),
     "module": {
         "id": "primary_cilium_life_cycle",
         "label": "Primary cilium life cycle",
@@ -618,23 +622,16 @@ doc = {
         ],
     },
     "knowledge_gaps": [
-        {"gap_statement": "GO has no term for regulation of cilium length or for a cytoplasmic dynein-2 complex.",
-         "boundary": ("Length control is modeled with negative regulation of non-motile cilium assembly; dynein-2 uses "
-                      "the generic cytoplasmic dynein complex term."),
-         "gap_kind": ["ONTOLOGY"], "status": "OPEN",
-         "significance": "Length-control kinases and the retrograde motor cannot be annotated precisely.",
-         "resolution": "Propose 'regulation of cilium length' and 'cytoplasmic dynein-2 complex' to GO."},
-        {"gap_statement": ("Distal appendage, transition zone, IFT-B scaffold and microtubule depolymerase (KIF2A, "
-                           "KIF24) roles lack a molecular-function term."),
-         "boundary": "These annotons carry preferred_term functions without GO ids.",
-         "gap_kind": ["ONTOLOGY", "BIOLOGY"], "status": "OPEN",
-         "significance": "Most structural ciliogenesis proteins are MF-dark.",
-         "resolution": "Review member genes and consider structural-constituent or adaptor MF terms case by case."},
-        {"gap_statement": "Many module members have only Approved or Uncertain HPA cilium-atlas calls.",
-         "boundary": "HPA grades reflect antibody validation and literature agreement, not biological truth.",
-         "gap_kind": ["CURATION"], "status": "OPEN",
-         "significance": "HPA cilium localizations for core members are mostly absent from GOA.",
-         "resolution": "Use module membership plus literature to decide which atlas calls should become annotations."},
+        {"gap_statement": ("The molecular activities of the distal appendage proteins (CEP83, SCLT1, FBF1, CEP164), "
+                           "the transition zone MKS-module proteins and the IFT-B scaffold subunits (IFT88, IFT52, "
+                           "IFT172) are unknown beyond 'structural scaffold'."),
+         "boundary": ("Their requirement for ciliogenesis and their positions are well established; what each "
+                      "protein does mechanistically (binding partners, membrane contacts, gating chemistry) is not."),
+         "gap_kind": ["BIOLOGY"], "status": "OPEN",
+         "significance": ("Most structural ciliogenesis proteins have no defined molecular function, so the module "
+                          "can say where they act but not how."),
+         "resolution": ("Reconstitution and structure-function work, for example in vitro membrane-binding and "
+                        "barrier assays with purified MKS-module and distal appendage subcomplexes.")},
     ],
 }
 

@@ -2,7 +2,7 @@
 """Annotate cilium life-cycle module candidate members with review status and
 HPA subcellular / cilium-atlas evidence.
 
-Input:  projects/HUMAN_PROTEIN_ATLAS/cilium_life_cycle/candidate_members.tsv
+Input:  projects/HUMAN_PROTEIN_ATLAS/cilium_life_cycle/candidate_members.yaml
         (stage, gene, uniprot, protein_name, role; accessions fetched from the
         UniProt REST API, reviewed human entries)
         projects/HUMAN_PROTEIN_ATLAS/data/subcellular_location.tsv (HPA v25)
@@ -52,7 +52,7 @@ def review_status(gene):
 def main():
     hpa = load_hpa()
     rows = []
-    for m in csv.DictReader((WORK / "candidate_members.tsv").open(), delimiter="\t"):
+    for m in yaml.safe_load((WORK / "candidate_members.yaml").read_text())["members"]:
         h = hpa.get(m["gene"])
         if h:
             calls = [f"{loc} ({ABBR[h['grade'][loc]]})" for loc in CILIA_LOCS if loc in h["grade"]]
