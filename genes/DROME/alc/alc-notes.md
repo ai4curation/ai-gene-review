@@ -5,4 +5,4 @@
 - Polarity: the same abstract states photoreceptor function is "by mechanisms unrelated to polarity events that AMPK controls in epithelial tissues"; AMPK polarity phenotype later not reproduced (PMID:24337115) -> UNDECIDED.
 - Beta subunit needed for activity [PMID:12093363 "Expression of double stranded (ds) RNAs targeted at any of the putative alpha, beta or gamma subunits ablated this activity"].
 - Y2H protein binding (PMID:37061542) removed as uninformative.
-- Deep research: falcon run killed (exit 137, memory pressure); notes from cached publications.
+- Deep research: first falcon run killed (exit 137); a retry produced alc-deep-research-falcon.md [file:DROME/alc/alc-deep-research-falcon.md "Alc is a regulatory and structural component of the intracellular AMPK energy-sensing complex, not an enzyme in its own right."]
