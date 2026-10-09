@@ -17,3 +17,6 @@
 ## Curation thoughts
 - Core: RZZ subunit acting as kinetochore adaptor recruiting Spindly-dynein and Mad1-Mad2; SAC; chromosome segregation.
 - Deep research (falcon) failed (OOM) on first attempt.
+
+## Deep research (falcon) additions
+- Retry produced rod-deep-research-falcon.md: Rod is a kinetochore scaffold/adaptor ["no catalytic reaction or transported substrate is established for Rod"]; Rod is required for robust Zw10-Zwilch association and Mad1-Mad2 accumulation; Spindly links RZZ to dynein.

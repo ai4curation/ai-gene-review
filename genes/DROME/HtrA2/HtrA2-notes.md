@@ -17,3 +17,6 @@
 - Core: IMS serine endopeptidase; on release, IAP antagonist by binding/cleaving DIAP1 (shown mostly by overexpression); physiologically required for spermatogonial germ cell death.
 - "ectopic germ cell programmed cell death" does not match the paper (spontaneous testis GCD) -> MODIFY to programmed cell death.
 - No GO MF term exists for IAP binding; DIAP1-binding protein-binding rows kept as non-core.
+
+## Deep research (falcon) additions
+- Retry produced HtrA2-deep-research-falcon.md. It agrees on serine endopeptidase activity with DIAP1 as a direct substrate ["DIAP1 is a directly demonstrated fly substrate."], cleavage between DIAP1 Ile165/Gly166, catalytic Ser266 required, and the catalytic (not IAP-antagonist) role in spermatogonial germ cell death.
