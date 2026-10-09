@@ -14,4 +14,4 @@ SPC module conventions as in twr-notes.md. No developmental GO rows exist in GOA
 
 ## Deep research
 
-`just deep-research-falcon` had not produced a report when this review was committed; any late-arriving report will be added in a follow-up commit.
+`Spase12-deep-research-falcon.md` (falcon) arrived after the review was first committed. It agrees with the review: Spase12 (CG11500) is a noncatalytic, membrane-integral SPCS1/Spc1-type accessory subunit of the ER SPC and is required for fly development. Its clients and its fly-specific subcellular distribution are unknown, and its mechanism is inferred from yeast and human orthologs. No annotation decision changed.
