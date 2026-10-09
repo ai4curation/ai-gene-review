@@ -19,3 +19,7 @@ Accession: O77430. Module: dmel_scf_slimb_ubiquitin_ligase (SkpA adaptor part).
 ## Deep research
 
 falcon deep research launched; status recorded in the commit history.
+
+## Revision (batch rule change)
+
+Correct-but-general terms are now MODIFY: GO:0016567 -> GO:0000209 protein polyubiquitination; GO:0006511 -> GO:0031146. Supersedes the generic-parent convention above.
