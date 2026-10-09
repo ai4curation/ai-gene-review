@@ -16,3 +16,7 @@
   CG10814 gene was the most likely ortholog for the hγ-BBH1 gene, sharing with this the lack of a
   mitochondrial targeting sequence." Also reports age-dependent CG10814 induction and HNF4-dependent
   activation (secondary reports, not reviewed in detail). Supports cytosol ISS.
+- Falcon deep research (CG10814-deep-research-falcon.md, arrived after initial commit): reports a 2016
+  ageing study (Laranjeira et al.) in which CG10814 brain transcript rises with age and neuronal RNAi
+  improves age-dependent climbing, with reduced dHNF4/Akh/bmm transcripts; no enzyme assay. Not cached
+  or cited in the review; no change to annotation decisions (none of these rows is in GOA).
