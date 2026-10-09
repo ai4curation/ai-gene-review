@@ -29,8 +29,8 @@ representative model organisms.
 ## PANTHER grounding of family descriptors
 
 Family descriptors now carry family-level PANTHER ids, each checked against the
-local membership index (`interpro/panther/panther-members.tsv`) or the family
-entries file:
+PANTHER membership index (built into `.cache/panther/` by
+`just ensure-panther-members`) or the family entries file:
 
 | Tier | PANTHER family | Used by |
 |---|---|---|
@@ -72,7 +72,7 @@ cannot be mapped to genes offline). The p38 module previously described
 PTN000684847 as a p38 MAPK node; it is an ASK-subgroup MAP3K node (seeds ASK1,
 MAP3K6, MAP3K15) and the evidence text was corrected.
 
-`panther-members.tsv` was refreshed on 2026-09-24. The old index had MEK2 in
+The membership index was refreshed on 2026-09-24. The old index had MEK2 in
 PTHR47448; the current PANTHER classification puts MEK1 and MEK2 in PTHR48013,
 consistent with the PAINT tree (both are seeds of PTN000684494), so the MEK
 descriptor now uses PTHR48013. One PAINT/HMM mismatch remains: MEKK1/2/3 are
@@ -94,10 +94,10 @@ annotations actioned and `core_functions` filled.
 |---|---|---|
 | Adaptor | human GRB2, SHC1 (2026-09-27); mouse Grb2 | - |
 | Ras GEF | human SOS1, SOS2 (2026-09-27) | - |
-| Ras | human HRAS, KRAS, NRAS; mouse Kras, Hras | finish human HRAS, NRAS (status INITIALIZED); deep research for NRAS |
+| Ras | human HRAS, KRAS, NRAS; mouse Kras, Hras | finish human NRAS (status INITIALIZED); deep research for NRAS |
 | RasGAP | human NF1, RASA1 | - |
 | RAF (MAP3K) | human BRAF; RAF1, ARAF (2026-09-27) | - |
-| MEK (MAP2K) | human MAP2K1 (2026-09-27), MAP2K2 (IN_PROGRESS); horse MAP2K2 | finish human MAP2K2 |
+| MEK (MAP2K) | human MAP2K1 (2026-09-27), MAP2K2; horse MAP2K2 | - |
 | ERK (MAPK) | human MAPK1, MAPK3 (2026-09-27); mouse Mapk1, Mapk3; rat Mapk1 | - |
 | Invertebrates | - | fly rl, Dsor1, phl; worm mpk-1, mek-2, lin-45, let-60, sem-5 |
 

@@ -9,10 +9,10 @@ autolink_gene_symbols: false
 
 This register is rendered directly from the `references[].reference_review` blocks curated in the gene-review YAML (see the [Reference schema class](../../src/ai_gene_review/schema/gene_review.yaml)). It is the structured, queryable counterpart to the worked cases on the [parent project page](../MISCITATIONS.md).
 
-**33252 adjudicated reference(s)** across **3575** of **6254** reviewed gene files.
+**33255 adjudicated reference(s)** across **3575** of **6254** reviewed gene files.
 
 - **Flagged as a citation problem** (WRONG_IDENTIFIER / MISCITED / DISPUTED / LOW_QUALITY): **1085 (3.3%)**
-- **Not yet checked** (UNVERIFIED): 1899
+- **Not yet checked** (UNVERIFIED): 1897
 
 ## By correctness
 
@@ -22,15 +22,15 @@ This register is rendered directly from the `references[].reference_review` bloc
 | MISCITED | 417 | 1.3% |
 | DISPUTED | 380 | 1.1% |
 | LOW_QUALITY | 232 | 0.7% |
-| UNVERIFIED | 1899 | 5.7% |
-| VERIFIED | 29884 | 89.9% |
+| UNVERIFIED | 1897 | 5.7% |
+| VERIFIED | 29889 | 89.9% |
 
 ## By relevance
 
 | Relevance | Count |
 |---|---:|
-| HIGH | 16136 |
-| MEDIUM | 10735 |
+| HIGH | 16137 |
+| MEDIUM | 10737 |
 | LOW | 6219 |
 | NONE | 146 |
 
@@ -40,7 +40,7 @@ Organisms with at least one adjudicated reference, ranked by the number of flagg
 
 | Organism | Adjudicated | Flagged | WRONG_IDENTIFIER | MISCITED | DISPUTED | LOW_QUALITY | UNVERIFIED |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| human | 25370 | 803 | 42 | 306 | 280 | 175 | 1449 |
+| human | 25373 | 803 | 42 | 306 | 280 | 175 | 1447 |
 | PSEPK | 970 | 52 | 0 | 27 | 5 | 20 | 161 |
 | yeast | 1434 | 39 | 4 | 9 | 16 | 10 | 62 |
 | DICDI | 494 | 20 | 1 | 9 | 10 | 0 | 19 |
