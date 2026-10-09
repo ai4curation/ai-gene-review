@@ -2988,23 +2988,25 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**251 of 2,876 genes are complete; 2,625 remain.** This reconciliation adds
-11 verified campaign completions beyond published checkpoint 240: CCM2, CCNO,
-CCN6, CD19, CD320, CD27, CD247, CD2AP, CD3D, ASB10 and CD3E.
-The saved session had already confirmed the first six at checkpoint 246.
+**257 of 2,876 genes are complete; 2,619 remain.** This checkpoint adds six
+verified completions beyond published checkpoint 251: BBS1, BBS10, CD3G, BBS2,
+CD40 and BBS4. Each final PR head was approved and passed the required checks
+before its merge.
 
-There are 257 distinct primary genes with merged campaign reviews. Six remain
+There are 263 distinct primary genes with merged campaign reviews. Six remain
 incomplete: AKR1D1 requires its unresolved Reactome source follow-up; BCKDHB,
 BCL10, BCS1L, BIN1 and BLM require follow-up for supported generic-binding
 removals that conflict with the standing project instruction. Their checkboxes
 remain unchecked. Biological DRAFT status and justified UNDECIDED annotations
 are preserved independently of campaign completion.
 
-Reconciled 2026-10-09 against current main and complete PR observations. See the
-[completion evidence and pending work](CLINGEN_MENDELIAN/review-progress.md#completion-reconciliation-2026-10-09).
-The prior [checkpoint 240 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-05T014551Z-codex-fd1fdc.yaml)
-and earlier dated counts remain unchanged. See the
-[reconciliation history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-09T131152Z-codex-832517.yaml).
+The completion evidence cutoff is **2026-10-09 14:48:08 UTC**, through the BBS4
+merge, on [main commit de56024a5a3e](https://github.com/ai4curation/ai-gene-review/commit/de56024a5a3ed1e32ca0654ee5dc8def94e804a2).
+See [checkpoint 257 evidence and pending work](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-257-2026-10-09-144808-utc).
+Open PRs and subsequent work add no completion at this cutoff. The preceding
+[checkpoint 251 reconciliation](CLINGEN_MENDELIAN/review-progress.md#completion-reconciliation-2026-10-09)
+and its [merged tracker PR #4432](https://github.com/ai4curation/ai-gene-review/pull/4432)
+remain the historical baseline.
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3247,11 +3249,11 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BAP1** — HGNC:950; [BAP1-related tumor predisposition syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d70c33af-2e4f-4489-9c29-797655015b1d-2019-03-21T175713.803Z) (MONDO:0013692; AD; Definitive).
 - [x] **BARD1** — HGNC:952; [BARD1-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_09113d8c-ba63-40f1-9c8f-08b67c6c867c-2024-09-03T170000.000Z) (MONDO:0700267; AD; Definitive).
 - [x] **BBIP1** — HGNC:28093; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25f5e82a-06a1-4bf5-93b7-9691d3f709a5-2025-09-08T160000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **BBS1** — HGNC:966; [BBS1-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ee6e7562-927a-459b-a0f1-ccd849c7e783-2023-12-07T170000.000Z) (MONDO:1040043; AR; Definitive).
-- [ ] **BBS10** — HGNC:26291; [BBS10-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f9eb490e-1977-426e-ac7a-c507bbc38490-2023-08-03T160000.000Z) (MONDO:0700237; AR; Definitive).
+- [x] **BBS1** — HGNC:966; [BBS1-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ee6e7562-927a-459b-a0f1-ccd849c7e783-2023-12-07T170000.000Z) (MONDO:1040043; AR; Definitive).
+- [x] **BBS10** — HGNC:26291; [BBS10-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f9eb490e-1977-426e-ac7a-c507bbc38490-2023-08-03T160000.000Z) (MONDO:0700237; AR; Definitive).
 - [x] **BBS12** — HGNC:26648; [BBS12-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3aefcbae-bf06-45da-b3be-a550e997257a-2024-01-04T170000.000Z) (MONDO:1040045; AR; Definitive).
-- [ ] **BBS2** — HGNC:967; [BBS2-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be74a060-cfb3-4180-a107-cfaf0e81bfa3-2024-03-07T170000.000Z) (MONDO:1040048; AR; Definitive).
-- [ ] **BBS4** — HGNC:969; [BBS4-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_988d537d-5595-4b8f-bbc4-8e3aefc025fa-2023-12-07T170000.000Z) (MONDO:1040044; AR; Definitive).
+- [x] **BBS2** — HGNC:967; [BBS2-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be74a060-cfb3-4180-a107-cfaf0e81bfa3-2024-03-07T170000.000Z) (MONDO:1040048; AR; Definitive).
+- [x] **BBS4** — HGNC:969; [BBS4-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_988d537d-5595-4b8f-bbc4-8e3aefc025fa-2023-12-07T170000.000Z) (MONDO:1040044; AR; Definitive).
 - [ ] **BBS5** — HGNC:970; [BBS5-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdb1249e-ab95-4d34-a43f-1dbb09eb3d94-2023-12-07T170000.000Z) (MONDO:1040047; AR; Definitive).
 - [ ] **BBS7** — HGNC:18758; [BBS7-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a09e1836-927c-424d-b10c-fd93f3e6dc6b-2023-09-07T160000.000Z) (MONDO:1040042; AR; Definitive).
 - [ ] **BBS9** — HGNC:30000; [BBS9-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3fc68f9f-ed7c-453e-8c41-179a9ccad0ca-2023-08-03T160000.000Z) (MONDO:0700236; AR; Definitive).
@@ -3345,8 +3347,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CD320** — HGNC:16692; [methylmalonic acidemia due to transcobalamin receptor defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d98515f5-4296-4d41-95a9-adac90c00349-2022-09-23T160000.000Z) (MONDO:0013341; AR; Definitive).
 - [x] **CD3D** — HGNC:1673; [immunodeficiency 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d59cf46-9acb-42f7-92da-d17113d39b38-2022-05-10T185446.511Z) (MONDO:0014280; AR; Definitive).
 - [x] **CD3E** — HGNC:1674; [immunodeficiency 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_29d6bb32-65b3-4c78-9c94-da71cc591565-2021-01-26T172908.775Z) (MONDO:0014278; AR; Definitive).
-- [ ] **CD3G** — HGNC:1675; [combined immunodeficiency due to CD3gamma deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ea83aa7-473b-4670-88dd-36b1abe277f8-2021-07-15T160000.000Z) (MONDO:0014276; AR; Definitive).
-- [ ] **CD40** — HGNC:11919; [hyper-IgM syndrome type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_debbb2e7-89a7-45b8-b5e1-41ccb56a3423-2022-10-18T160000.000Z) (MONDO:0011735; AR; Definitive).
+- [x] **CD3G** — HGNC:1675; [combined immunodeficiency due to CD3gamma deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ea83aa7-473b-4670-88dd-36b1abe277f8-2021-07-15T160000.000Z) (MONDO:0014276; AR; Definitive).
+- [x] **CD40** — HGNC:11919; [hyper-IgM syndrome type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_debbb2e7-89a7-45b8-b5e1-41ccb56a3423-2022-10-18T160000.000Z) (MONDO:0011735; AR; Definitive).
 - [ ] **CD40LG** — HGNC:11935; [hyper-IgM syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4184ad10-d95f-4027-b75d-e4e11127febf-2021-03-22T154242.503Z) (MONDO:0010626; XL; Definitive).
 - [ ] **CD46** — HGNC:6953; [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bddaec4f-9f57-41b7-81a4-2f6ff3fc5e7b-2024-06-27T160000.000Z) (MONDO:0016244; SD; Definitive).
 - [ ] **CD70** — HGNC:11937; [severe combined immunodeficiency due to CD70 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_69aa819c-1f25-42fe-8469-4641fc088a57-2025-02-05T170000.000Z) (MONDO:0034054; AR; Definitive).
