@@ -11,3 +11,4 @@
 
 ## Deep research (falcon) update
 - Consistent with the review: Rad1 is a non-enzymatic PCNA-like 9-1-1 subunit [file:DROME/Rad1/Rad1-deep-research-falcon.md "Its principal proposed role is to help form a ring that can surround DNA and organize checkpoint signaling and DNA-repair factors at damaged or incompletely replicated DNA."]; yeast two-hybrid shows a strong Hus1-Rad1 interaction (Abdu et al. 2007). Not to be confused with yeast RAD1 (fly MEI-9).
+- Review follow-up: the core MF GO:0030674 is asserted with contributes_to_molecular_function, not molecular_function. Rad1 is a PCNA-like ring subunit; the recruitment-platform (adaptor) activity belongs to the assembled 9-1-1 clamp, and no experiment shows this subunit bridging macromolecules on its own (unlike Rad9, whose C-terminal extension targets the complex). This matches how RnrS models its complex-level activity.

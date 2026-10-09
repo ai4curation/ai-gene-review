@@ -10,3 +10,4 @@
 - Core: adaptor/regulatory subunit of MRN (MF approximated by GO:0030674) in G2 checkpoint signaling and SDSA/HR repair; telomere protection.
 - PML body (IEA, from human NBN location) removed: Drosophila has no PML ortholog.
 - Damaged DNA binding (IBA) marked over-annotated; apoptosis kept as non-core.
+- Review follow-up: the MRN telomere role is curated as GO:0016233 telomere capping across mre11, rad50 and nbs (IMP GO:0000723 rows MODIFY to capping; core_functions use capping), since the fly evidence is telomere fusion and loss of HOAP/HP1 at chromosome ends in a telomerase-free organism [PMID:15296753 "This suggests that the MRN complex protects Drosophila telomeres by facilitating recruitment of HOAP and HP1 at chromosome ends."].

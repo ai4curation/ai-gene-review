@@ -15,3 +15,4 @@
 
 ## Deep research (falcon) update
 - Completed on retry. Consistent with the review: MRN as a broadly acting telomere-protection factor [file:DROME/mre11/mre11-deep-research-falcon.md "Mre11–Rad50–Nbs belongs instead to the conserved, broadly acting factors needed to establish or maintain protection"]; the mre11^158S embryonic phenotype reflects loss of chromatin-associated MRN rather than demonstrated loss of catalysis; meiotic roles should not be imported from yeast, supporting the over-annotation call on meiotic DSB formation.
+- Review follow-up: the MRN telomere role is curated as GO:0016233 telomere capping across mre11, rad50 and nbs (IMP GO:0000723 rows MODIFY to capping; core_functions use capping), since the fly evidence is telomere fusion and loss of HOAP/HP1 at chromosome ends in a telomerase-free organism [PMID:15296753 "This suggests that the MRN complex protects Drosophila telomeres by facilitating recruitment of HOAP and HP1 at chromosome ends."].
