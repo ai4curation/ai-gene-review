@@ -12,4 +12,6 @@ repeats"] (abstract-only in cache).
   isoforms ground the node; animal UXS1 is luminal); Golgi membrane modified to Golgi cisterna membrane;
   D-xylose metabolic process modified to GO:0033320; NAD+ binding kept as non-core.
 
-- Deep research: the first `just deep-research-falcon` attempt timed out (600 s; perplexity-lite fallback unavailable). Review based on cached publications and UniProt.
+- Falcon deep research (Uxs-deep-research-falcon.md): Uxs/CG7979 is the sole fly UDP-xylose synthase gene; best-supported
+  model is ER/Golgi-luminal activity (mammalian UXS seen in ER and Golgi; no direct fly topology data). Supports removing the
+  IBA cytoplasm row; ER-vs-Golgi partitioning remains open.
