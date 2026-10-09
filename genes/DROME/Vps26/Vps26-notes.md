@@ -8,4 +8,4 @@ Retromer cargo-selective complex subunit (arrestin fold).
 - iPLA2-VIA binds Vps26/Vps35 [PMID:29909971 "iPLA2-VIA binds the retromer subunits Vps35 and Vps26"].
 
 Decisions: cargo receptor activity -> cargo adaptor activity (contributes_to; retromer is peripheral, not a TM receptor); obsolete endosome-to-PM transport -> endocytic recycling (GO replaced_by); retromer complex -> cargo-selective complex; protein binding -> phospholipase binding; regulation of Wnt signaling -> positive regulation of Wnt protein secretion.
-Deep research: falcon failed/timed out; notes from cached publications.
+Deep research: falcon completed (Vps26-deep-research-falcon.md) after the initial review; consistent with the review (non-enzymatic retromer cargo-sorting subunit). It adds fly epithelial cargo data not in GOA: Crumbs maintenance [file:DROME/Vps26/Vps26-deep-research-falcon.md "In wing discs, **Vps26 RNAi reduced Crumbs fluorescence by approximately 50%**, similar to Vps35 RNAi."] and Megatrachea delivery to septate junctions, plus neuronal maintenance downstream of Mtd/OXR1 (2024). No annotation actions changed.
