@@ -165,8 +165,22 @@ Supporting observations for category 1: turnover is 9–64 min⁻¹; all five pa
 indexed under "benzil reductase" in PubMed come from biotechnology groups; the
 founding paper closes by noting the enzymes "will be utilized to produce
 important chiral compounds"; and B. cereus YueD's tightest-binding substrate is
-not benzil (Km 768 µM) but 1,4-naphthoquinone (27.6 µM), which hints at quinone
-or reactive-carbonyl detoxification as the real role.
+not benzil (Km 768 µM) but 1,4-naphthoquinone (27.6 µM).
+
+**A caution against over-reading that last point**, from the OpenScientist run
+on `BACCE/yueD`. Affinity and efficiency disagree: by kcat/Km the best substrate
+is the synthetic aryl-alkyl diketone 1-phenyl-1,2-propanedione, ~15× better than
+1,4-naphthoquinone. Foldseek finds sepiapterin reductases and SDR ketoreductases
+as nearest neighbours and **no quinone reductase**. The obvious bacterial
+quinone, menaquinone, is a large lipophilic isoprenoid that would not fit the
+small soluble pocket. And in the homologous human SPR, quinone handling is
+NADPH-dependent *redox cycling at the cofactor site*, separable from sepiapterin
+reduction by an active-site mutation (PMID:23640889) — a mechanism that would
+generate reactive oxygen species rather than detoxify anything, inverting the
+biological reading. So a low Km for a quinone narrows the substrate class to
+flat compact aromatic carbonyls without naming a quinone as the function. The
+reviews record this as a knowledge gap, and `GO:0004090` remains deliberately
+general.
 
 ### Counter-example set: evolved xenobiotic degradation
 

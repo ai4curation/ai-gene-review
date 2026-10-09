@@ -45,3 +45,50 @@ class GO:0016616. Consequences visible in GOA:
 Move `xref: RHEA:25968 {source="skos:narrowMatch"}` from GO:0016616 to GO:0004090.
 More generally, flag any RHEA xref on an EC-incomplete (x.x.x.-) grouping term:
 currently 9 reactions on GO:0016616, GO:0008241 and GO:0016712.
+
+## Structural + kinetic analysis (OpenScientist, AlphaFold)
+
+The one run of the five that delivered the measurement I asked for, and it
+qualified my own quinone speculation.
+
+**What it measured.** AlphaFold model AF-Q8RJB2-F1 **v6** (the v4 URL in my
+seed context 404s), global pLDDT 96.8. SDR catalytic tetrad
+Asn86/Ser140/Tyr154/Lys158 at pLDDT 98.0-98.9, Rossmann motif TGTSQGLG at
+residues 7-14. The substrate pocket is 33 residues, mean pLDDT 97.1, and
+**enclosed** (only 7% of 400 probe rays escape). Candidate sterics from PubChem
+3D: benzil is 10.0 A across and twisted (plane-RMSD 0.39), 1,4-naphthoquinone
+is 5.3 A and perfectly flat (0.00), methylglyoxal 3.7 A. So the pocket does
+discriminate sterically, and in the direction the reported affinities predict:
+bulky twisted benzil binds worst.
+
+**Where it corrected me.** I had read the low naphthoquinone Km as hinting at
+quinone detoxification. Four arguments against making that the function:
+
+1. **Affinity is not efficiency.** By kcat/Km the best substrate is
+   1-phenyl-1,2-propanedione (3.93 min-1 uM-1), about 15x better than
+   1,4-naphthoquinone (0.268) and 47x better than benzil (0.084). The best
+   substrate is another synthetic diketone.
+2. **Family context points elsewhere.** Foldseek's nearest named neighbours are
+   B. subtilis YueD, yeast Irc24, then sepiapterin reductases and SDR
+   ketoreductases. No quinone reductase appears at all.
+3. **The real bacterial quinone does not fit.** Menaquinone is a large
+   lipophilic isoprenoid; this pocket is small and soluble.
+4. **The mechanism may be the opposite of detoxification.** In human SPR,
+   quinone handling is NADPH-dependent redox cycling at the cofactor site,
+   distinct from sepiapterin reduction and separable from it by the D257H
+   substrate-site mutation
+   [PMID:23640889 "These data indicate that SPR-mediated reduction of sepiapterin and redox cycling occur by distinct mechanisms."].
+   That generates ROS rather than clearing an electrophile.
+
+Both points are now knowledge_gaps on the core function rather than claims.
+
+**Quality signal.** The run self-corrected mid-analysis: iteration 2 misread
+UniProt's "in decreasing order" phrasing as a preference ranking; iteration 3
+fetched the actual Km/kcat table and reversed its own judgment, flagging the
+change explicitly. Its honest limitations are also stated: the model is apo, so
+pocket metrics are geometric rather than energetic, and no docking or MD was run.
+
+**Corroborations.** It independently endorses GO:0004090 as the best-supported
+general core MF, and independently flags GO:0004757 (sepiapterin reductase) and
+GO:0006729 (BH4 biosynthesis) as TreeGrafter-only inferences with no BH4 pathway
+known in B. cereus - the same calls this review makes.
