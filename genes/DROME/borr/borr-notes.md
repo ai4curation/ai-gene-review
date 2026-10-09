@@ -2,7 +2,7 @@
 
 Accession: Q9VLD6 (FBgn0032105).
 
-Deep research: `just deep-research-falcon DROME borr --fallback perplexity-lite` failed (falcon timed out after 600 s; perplexity provider not available). Literature below is from the cached publications.
+Deep research: `borr-deep-research-falcon.md` (falcon; the wrapper logged a 600 s timeout but the run completed and wrote the file). Important addition: Borr acts in acentrosomal female meiosis (oocytes): a Borr-INCENP fusion rescues bipolar and central spindle assembly after INCENP depletion, and borr RNAi increases homolog mono-orientation; 14-3-3 binding of phospho-Borr restrains CPC microtubule association. Borr is therefore absent only from male meiosis, so general spindle-midzone rows are kept general and only the male-meiosis-attributed and mitosis-specific rows are made specific.
 
 ## Literature journal
 
@@ -21,5 +21,5 @@ Deep research: `just deep-research-falcon DROME borr --fallback perplexity-lite`
 ## Decisions
 
 - Meiotic spindle midzone IDA (PMID:18268101) modified to mitotic spindle midzone: the paper states Borr is absent from the male meiotic midzone.
-- Spindle and spindle midzone rows modified to mitotic spindle midzone (Borr is mitosis-only).
+- Spindle (UniProt) modified to spindle midzone; spindle midzone IDA from the mitotic-cell paper (PMID:16224046) modified to mitotic spindle midzone; spindle midzone IBA accepted as-is because Borr also acts in oocyte meiosis.
 - Protein binding (Shrb) removed: no informative ESCRT-III binding term exists.
