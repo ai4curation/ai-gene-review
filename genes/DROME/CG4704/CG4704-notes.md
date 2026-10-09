@@ -9,4 +9,4 @@ UniProt Q9VCT5 (EF-hand domain-containing protein); MICU1 family, MICU1 subfamil
 
 ## Deep research
 
-`just deep-research-falcon` was still running or had timed out when this review was committed; any late-arriving report will be added in a follow-up commit.
+`CG4704-deep-research-falcon.md` (falcon) arrived after the review was first committed. It found no CG4704-specific functional study. CG4704 appears only in cardiac-aging GWAS/epistasis analyses of DGRP lines, including a 2024 preprint that labels FBgn0039029 as "MICU1", which conflicts with the fly uniporter genetics paper where MICU1 is CG4495. It treats the mitochondrial uniporter role as a family-based hypothesis. This matches the review, which accepts only the electronic/IBA family-level rows and raises CG4704's role as an open question. No annotation decision changed.
