@@ -1,6 +1,6 @@
 # Usp12-46 review notes
 
-Accession: Q9VCT9. Module: dmel_usp46_deubiquitinase_complex.
+Accession: Q9VCT9. Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_usp46_deubiquitinase_complex.
 
 ## Literature journal
 
