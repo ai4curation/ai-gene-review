@@ -5,3 +5,6 @@
 - Syndetin is NOT needed for retrograde endosome-to-TGN transport [PMID:25799061 "These experiments thus demonstrated that, unlike GARP, the Syndetin-containing complex is not involved in retrograde transport from endosomes to the TGN."].
 
 Decisions: GARP complex rows (IDA/NAS from PMID:25453831, which called it GARPII) MODIFY -> EARP complex; retrograde endosome-to-Golgi MARK_AS_OVER_ANNOTATED; endocytic recycling ACCEPT.
+
+Deep research: falcon completed (genes/DROME/Vps50/Vps50-deep-research-falcon.md) after the review was first committed; checked for consistency.
+- Deep research (falcon) adds fly in vivo data: CRISPR Vps50 nulls are viable and male fertile but reduce adult c4da dendrite regrowth after pruning, milder than Vps54 loss and without TGN sterol accumulation [file:DROME/Vps50/Vps50-deep-research-falcon.md "Vps50-mutant neurons did **not** show the corresponding filipin-detected sterol accumulation, and mutant males remained fertile, unlike Vps54-mutant males"] (O'Brien et al. 2022, doi:10.1083/jcb.202112108; not in GOA). Worm EARP sorts dense-core vesicle cargo.
