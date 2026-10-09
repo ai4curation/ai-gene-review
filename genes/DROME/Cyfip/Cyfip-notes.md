@@ -6,3 +6,7 @@
 - Eye morphogenesis via SCAR/Arp2/3 [PMID:21884694 "Mutations in WAVE/SCAR and in ARP2/3 complex subunits but not in WASP, another major regulator of Actin nucleation, phenocopy CYFIP defects."]
 
 Decisions: protein binding with Rac1 -> small GTPase binding; with SYG-1 (WIRS) -> signaling receptor binding; with Fmr1 and Kette (Q24150 mis-mapped Nap1) REMOVED. Cytoplasm rows MODIFIED to SCAR complex; regulation of actin filament polymerization MODIFIED to regulation of Arp2/3 complex-mediated actin nucleation.
+
+## Deep research (falcon) follow-up
+
+The falcon report describes Cyfip/Sra-1 as a non-enzymatic Rac1-coupled WRC subunit that also binds dFMR1, matching small GTPase binding as the core MF. It cites additional NMJ studies (2013, 2017) showing Cyfip mutants with short NMJs, altered synaptic vesicle size and opposing genetic interactions with dFMR1; these papers are not in GOA or the cache, so no annotations were added.
