@@ -18,3 +18,7 @@
 - Core MF: family-level GO:0016715; TBH activity rows UNDECIDED (no biochemistry; paralog).
 - dopamine beta-monooxygenase and extracellular region: over-annotations.
 - octopamine biosynthesis kept as non-core (IMP shows partial reduction; mechanism unresolved).
+
+## Deep research (falcon) additions
+- [file:DROME/olf413/olf413-deep-research-falcon.md "decreased octopamine in a mutant demonstrates a pathway association, not that purified Olf413 converts tyramine directly into octopamine"]
+- Independently supports leaving TBH activity UNDECIDED and octopamine biosynthesis non-core.
