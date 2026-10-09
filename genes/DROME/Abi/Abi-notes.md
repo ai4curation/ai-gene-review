@@ -9,3 +9,7 @@
 - Fat2 paper concerns follicle rotation, not centripetal migration [PMID:26903538 "Concomitantly, the AbiΔWIRS and fat2 mutant cells completely failed to migrate"] -> MODIFY GO:0060269 to GO:0007297.
 
 Protein binding: Abl -> protein kinase binding; PTP61F -> phosphatase binding; Hem/WASp/Ena rows removed.
+
+## Deep research (falcon) follow-up
+
+The falcon report characterises Abi as a non-enzymatic WRC adaptor that stabilises and localises SCAR (Kunda 2003) and bridges Ena/VASP (Chen 2014) and Abl, consistent with signaling adaptor activity as the core MF. It additionally reports Abl-Abi-Rac1-SCAR-dependent macropinocytosis of BMP receptors at the NMJ (Kim et al. 2019, Nat Commun) and Cip4-dependent recruitment of Abi to membrane tubules (Fricke et al. 2009); these papers are not in GOA or the publication cache, so no NEW annotations were added.
