@@ -11,3 +11,7 @@ SEPT2-class septin; subunit of the Sep1-Sep2-Pnut complex.
 - Parkin substrate [PMID:17456438 "peanut and septin1, D. melanogaster septin proteins, were also ubiquitinated by D. melanogaster Parkin"]
 
 Decisions consistent with pnut/Septin2: GTPase ACCEPT (catalytic SEPT2 class), protein binding REMOVE, photoreceptor NAS over-annotated.
+
+## Deep research (falcon) follow-up
+
+The falcon report confirms that purified Sep1 itself incorporates and hydrolyses GTP and that G-motif substitutions reduce both (Akhmetova 2015), supporting GTPase activity as Sep1's core MF and the contrast with Sep2. It also cites Sep1-GFP entering the contractile ring during planar epithelial cytokinesis (Founounou et al. 2013), not in GOA or the cache; no annotations were added.
