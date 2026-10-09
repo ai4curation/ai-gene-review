@@ -10,3 +10,8 @@
 - Core: RNA topoisomerase in siRNA-mediated heterochromatin formation; type IA DNA topoisomerase; Top3beta-TDRD3 complex.
 - DNA repair / recombination (IBA) and positive regulation of translation (IMP) kept as non-core.
 - Deep research (falcon) failed initially (rate limit); retried in background.
+
+## Falcon deep research (added after the initial review)
+- The background deep-research retry succeeded (`Top3beta-deep-research-falcon.md`). It agrees with the curated core functions: a dual DNA/RNA type IA topoisomerase [file:DROME/Top3beta/Top3beta-deep-research-falcon.md "Fly Top3β is a **dual DNA/RNA type-IA topoisomerase**."], with roles in selected long mRNAs and RNA-guided silencing [file:DROME/Top3beta/Top3beta-deep-research-falcon.md "Its best-supported cellular roles are regulation of selected long mRNAs and participation in RNA-guided transposon silencing"].
+- New fly evidence not yet in GOA: a germline piRNA-pathway role (Lee et al. 2025, Cell Reports) and covalent-capture RNA targets plus mRNA localization defects in embryos (Teimuri and Suter 2025, PLOS ONE). The report itself flags that the piRNA mechanism is inferred [file:DROME/Top3beta/Top3beta-deep-research-falcon.md "The proposal that it resolves entangled transposon RNA during processing remains a mechanistic inference."]. These papers are not cached here, so no NEW annotation was proposed; they are candidates for future curation.
+- No annotation decision was changed; DNA repair/recombination IBA rows stay non-core, consistent with the report's emphasis on RNA-centred roles.

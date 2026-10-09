@@ -9,7 +9,7 @@
 ## Curation decisions
 - Core: ATPase subunit of MRN in DSB processing/repair; telomere capping.
 - Telomere maintenance via telomerase (IBA) removed: no telomerase in Drosophila.
-- Telomere maintenance via recombination: IBA/IEA over-annotated, IMP modified to telomere capping (GO:0016233).
+- Telomere maintenance via recombination: IBA, IEA and IMP rows all modified to telomere capping (GO:0016233), a sibling term under telomere maintenance (GO:0000723). The IBA/IEA rows were initially marked over-annotated; they were aligned with the IMP row in PR review follow-up because the argument (fly telomeres are capped, not lengthened by recombination) is the same for all three.
 - Intracellular protein localization IMP modified to protein localization to chromosome, telomeric region (GO:0070198).
 - Protein binding (IPI) removed; telomeric/G4 DNA binding IBAs kept as non-core.
 
