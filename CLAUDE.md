@@ -328,6 +328,16 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
+obsoleted without a replacement), do not put an obsolete or ill-fitting id in
+`core_functions.molecular_function`. Instead set `proposed_molecular_function` to the
+`proposed_name` of a top-level `proposed_new_terms` entry, and leave `molecular_function`
+unset. Validation errors if no entry matches, if both are set, or if neither the core
+function nor the proposed term has `supported_by` (a proposed activity can never trace to an
+existing annotation). In a MODIFY, the matching replacement is `proposed_replacement_terms:
+[{id: NTR, label: ...}]` whose label starts with that same `proposed_name` (a warning
+otherwise). When GO creates the term, swap its id into `molecular_function`.
+
 ### PANTHER ids: never write a family label from memory
 
 PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in
@@ -341,10 +351,20 @@ PANTHER's own HMM classifications. Two rules follow:
   name up:
   `grep -A1 "^id: PANTHER:PTHR12345$" interpro/panther/panther.obo`
 - **The declared family must contain its own `representative_members`.** This is checked
-  against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
-  the representative protein is usually right and the family id is wrong — look up the
-  member's real family rather than deleting the member. Accessions missing from the index
-  only warn; run `just refresh-panther-members` to add newly cited proteins.
+  against the PANTHER member index and is a blocking error. If it fires, the representative
+  protein is usually right and the family id is wrong — look up the member's real family
+  rather than deleting the member. The index is a build artifact, not committed: it lives in
+  the git-ignored `.cache/panther/panther-members-<release>.tsv`, and `just validate-modules`
+  / `just validate-families` build it automatically (incrementally, from release-pinned
+  PANTHER classifications plus UniProt). Do not commit it or cite it as a `file:` source;
+  cite PANTHER's classification files or UniProt instead. Accessions the index cannot
+  resolve only warn. Where PANTHER's own files and UniProt's PANTHER cross-reference
+  disagree (different families, or different subfamilies), the index keeps both and a member
+  matching either passes with a warning; do not "fix" such a family id to the other source
+  without checking which placement is right. Where a curator has decided which
+  assignment is right, add a reasoned row to the committed
+  `interpro/panther/panther-members-overrides.tsv`; overrides are applied after both sources
+  on every build. `just refresh-panther-members --rebuild` regenerates the index from scratch.
 - **If a label mismatch names a *different protein*, fix the ID, not the label.** A
   wildly-wrong label is weak evidence of a typo and strong evidence that the id was
   guessed. An id invented at random is still a hallucination when it happens to resolve
@@ -382,6 +402,14 @@ The reference validator already catches the *mechanical* citation failures autom
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
 cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+Quotes citing `file:` or `Reactome:` sources are checked the same way, against
+the local file (resolved under `genes/`, then the repository root) or the cached
+`reactome/R-*.md` entry; a UniProt flat-file quote may run across the file's line
+wraps. Failures that predate this check are listed in `conf/local_quote_baseline.yaml`
+and only warn; fix them and run `just local-quote-baseline --prune`, never add to it.
+If `just fetch-gene` or a re-run deep-research file changes a source so that a quote
+no longer matches, re-quote the new text in the same change; if a review file is
+renamed, move its key in the baseline unchanged.
 `reference_review` is for what those checks *cannot* see — chiefly whether an internally-consistent
 citation actually **supports** the claim, or whether a well-formed id+title points to a paper that is
 simply the wrong choice for this gene.
@@ -431,6 +459,29 @@ Use the OLS MCP to find relevant ontology terms, if the terms you need are not i
 Avoid the term `protein binding`, this doesn't tell us anything about the actual function. Instead find a more
 informative MF term (e.g for adapter function)
 
+### A curation gap is not a knowledge gap
+
+`knowledge_gaps` (on gene reviews, core functions and modules) are for things
+**nobody knows**: an unknown activity, substrate, partner, mechanism or role
+that could only be resolved by **new wet-lab experiments**. A good knowledge gap
+reads like the motivation for an experiment, and usually pairs with a
+`suggested_experiments` entry.
+
+Work that is merely **not done yet** is not a knowledge gap, even though the
+schema's `KnowledgeGapKindEnum` offers `CURATION` and `ONTOLOGY`:
+
+- **Curation gaps** — a member gene not yet reviewed, an annotation that exists
+  in the literature but not in GOA, a module part not yet modelled. Record these
+  in the project page's plan, a module's `notes`, or the gene's notes file.
+- **Ontology gaps** — a missing or ill-fitting GO term. Record these as
+  `proposed_new_terms`, in `notes`, or as a `suggested_questions` entry.
+
+Do not create a `knowledge_gaps` entry whose only `gap_kind` is `CURATION`
+and/or `ONTOLOGY`. Those values may appear only alongside `BIOLOGY`, on a gap
+whose core is a genuine biological unknown. Test before writing one: *would a
+wet-lab experiment close this gap?* If the answer is "no, a curator could close
+it by reading or annotating", it belongs in the plan or notes instead.
+
 ## Isoform and Negation Tracking
 
 The system tracks isoform-specific GO annotations and NOT (negated) annotations:
@@ -473,6 +524,24 @@ just backfill-isoforms-organism human  # all genes in organism
 
 See `docs/isoform_tracking.md` for full documentation and `projects/ISOFORMS.md` for genes with notable isoform-specific functions.
 
+### Alternative-ORF peptides: one folder per UniProt accession
+
+Isoforms and polyprotein cleavage products share the host's UniProt accession, so they
+stay in the host folder: use `isoform:` on annotations and `functional_isoforms`
+(`SPLICE_VARIANT`, or `CLEAVAGE_PRODUCT` mapped to `PRO_` chains, as in `POMC`).
+A peptide from an alternative ORF, a uORF or an overlapping frame is a **separate UniProt
+entry** with its own GOA rows. UniProt nevertheless often files it under the host
+gene's symbol (for example, L0R8F8 AltMIEF1 is gene `MIEF1`). Such a peptide gets its own folder:
+
+- It has its own HGNC symbol (`ASDURF`, `MLDHR`, `NBDY`): use the symbol as usual.
+- It shares the host symbol: use `genes/<org>/<HOST>__<ACC>/` with `id: <ACC>` and
+  `gene_symbol: <HOST>`, fetched with `just fetch-gene human <ACC> --alias <HOST>__<ACC>`
+  (the stub then takes `gene_symbol` from UniProt). The double underscore follows the
+  `genes/PSEPK/aroE__Q88K85` paralog precedent and never collides with hyphenated symbols.
+- It has no gene symbol at all: use the accession as the folder name.
+
+Never model such a peptide as a `functional_isoform` of its host. See `projects/MICROPROTEINS.md`.
+
 ## Bioinformatics analyses
 
 In some cases, it may be useful to do additional bioinformatics analyses. To validate gene function. Here are some guidelines:
@@ -499,7 +568,7 @@ main review file.
 Use the `PredictionReview` class (validated with `-C PredictionReview`):
 
 ```bash
-uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C PredictionReview genes/ECOLI/yciO/yciO-predictions-review.yaml
+uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C PredictionReview genes/ECOLI/yciO/yciO-det-predictions-review.yaml
 ```
 
 ### Prediction sources
@@ -530,11 +599,16 @@ other computational method that produces GO or EC predictions.
 - `LOCALIZATION_DEFAULT` - Defaults to cytosol/cytoplasm when no TM/signal features, mislocalizing secreted/organellar/membrane proteins
 - `TAXON_CONSTRAINT_VIOLATION` - Term valid only in another lineage/kingdom (e.g. animal terms for a plant protein)
 - `WRONG_INPUT_SEQUENCE` - Pipeline fed the wrong protein sequence (data error, not model error)
+- `DOMAIN_ARCHITECTURE_MISMATCH` - Predicted activity needs a domain or catalytic region the selected protein lacks
+- `COMPLEX_ACTIVITY_TRANSFER` - Catalytic activity of a complex assigned to a noncatalytic accessory subunit
 - See schema for full list
 
 ## Page rendering and deployment
 
-The site is deployed from `main` branch at root via GitHub Pages to https://ai4curation.io/ai-gene-review/.
+With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, the site is built from `main` and
+deployed as an Actions artifact via GitHub Pages to
+https://ai4curation.io/ai-gene-review/. In this mode, generated files in Git are
+not the live site. The Pages source setting must separately be `GitHub Actions`.
 
 ### Gene review HTML
 ```bash
@@ -573,6 +647,15 @@ from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the pat
 
 **Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
 
+**Collections.** Related projects are grouped under an index page by listing a
+collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys
+are registered in `projects/collections.yaml` (title + index page slug); the
+index page gets an auto-generated member table, members get a link back to it,
+and the all-projects table gains a Collection filter. Current collections:
+`FUNCTION_PREDICTION` (index `FUNCTION_PREDICTION_EVALUATION`) and
+`HOMOLOGY_PROPAGATION` (index `HOMOLOGY_PROPAGATION`, with the propagation
+browser at `app/propagation/`).
+
 **Manual reviews.** A project page may record reviewer sign-offs in frontmatter
 under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if
 given) must be `READY` or `CHANGES_REQUESTED`; `date` is `YYYY-MM-DD`; `notes` is
@@ -592,6 +675,37 @@ manual_reviews:
 Reviews render as a block on the project page, and the **latest** review's status
 (most recent `date`) surfaces as a filterable "Review" column in the all-projects
 table.
+
+**Manifest (slides, briefs).** A project page lists its companion resources in
+frontmatter under `manifest`, a mapping of typed lists. Allowed lists are `slides`
+and `artifacts` (defined once in `MANIFEST_KINDS` in
+`src/ai_gene_review/render_projects.py`; adding e.g. `data` is one entry there).
+Each entry needs `href` and may carry `title` and `description`; unknown keys are
+rejected. A `slides` href is either an `https://` URL or a path **relative to
+`projects/`** to a rendered deck `.html` whose Marp `.md` source sits beside it
+(e.g. `FOO/slides/FOO-slides.html`); an `artifacts` href must be `https://`.
+
+```yaml
+manifest:
+  slides:
+    - href: UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html
+      title: Project deck        # optional; default label "Slides"
+      description: AI generated  # optional; shown on the pill and as its tooltip
+  artifacts:
+    - href: https://claude.ai/artifact/XXXX
+      title: Project brief       # optional; default label "Brief"
+```
+
+Entries render as a pill bar directly under the page title (a `description`
+appears as small text after the pill label, e.g. "Slides" then "AI generated"; artifacts open
+in a new tab) and as Slides/Brief columns in the all-projects table. Machine-made
+decks carry `description: AI generated`. The same `validate_manifest()` backs the
+pytest check and the renderer: at render time an invalid entry is left out and
+reported as a page warning, so one bad page never stops the site render. Manifest-linked
+decks are published with their images, so do **not** also add an in-body
+`## Slides` section with the deck link. `scripts/populate_project_manifest.py`
+fills `manifest` from the deck folders plus a `stem<TAB>url[<TAB>title]` brief
+list, editing only the `manifest` block of the frontmatter.
 
 **Gene-symbol auto-linking.** Project pages auto-link prose gene symbols to their
 review pages — never hardcode `genes/...` URLs. Linking is convention + metadata
@@ -615,19 +729,39 @@ driven:
 ### Browser app
 ```bash
 just deploy-browser    # update data.js + index.html for the interactive browser
+just deploy-browser pages  # disposable artifact build, without Git's blob cap
 ```
 Output: `app/`
 
 ### CI automation
 The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
-through GitHub Actions. It renders everything and creates a PR. Its publication
-schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
-and by the weekly full validation workflow. Pages deploy directly from main — no
-gh-pages branch needed for the static content.
+through GitHub Actions. With `PAGES_ARTIFACT_DEPLOY_ENABLED=true`, it renders,
+stages, compresses, checks and uploads the site, then deploys the artifact. It
+skips generated-file commits and PRs entirely; publication needs no App token,
+review or merge. Disabling that variable retains the legacy regeneration PR code
+path, but it cannot build a browser payload at or above Git's 100 MiB blob limit.
+The current corpus already exceeds that limit: flag-off is not a working rollback.
+It also does not change the repository's Pages source setting.
+Its publication schedule is exempt from agent cron profiles. Gene reviews are
+validated in PR CI and by the weekly full validation workflow.
+
+`just build-pages` builds the disposable artifact locally. All three browser
+builders accept the `pages` target (or `BROWSER_TARGET=pages`); their default
+`git` target retains GitHub's 100 MiB Git blob limit. The artifact target has no
+per-file Git limit: staging compresses the main annotation browser data and checks
+total site and tar sizes. Prediction and propagation browser payloads are currently
+staged uncompressed; these checks do not guarantee browser memory or load-time
+performance. Never commit generated output just because the artifact build passed.
+
+GitHub Pages officially supports a 1 GB site. Our existing temporary policy
+allows larger deployments below the 10 GB absolute artifact cutoff; that is not
+a hosting-capacity guarantee. A completed upload can be redeployed without
+rendering via `deploy-existing-pages.yaml`, while the artifact is retained.
 
 ## General guidelines
 
 * NEVER guess identifiers for terms, genes, publications. Always use the relevant tools or MCPS, or look them up in derived files.
+* Use YAML, not TSV, for any structured data file you author (project tables, proposal lists, curated records). TSVs produced by deterministic pipelines (e.g. `GENE-goa.tsv`, PAINT `*-paint.tsv`) are inputs and stay as they are.
 * For files `<GENE>-notes.md`, use literature deep search, and always record provenance for assertions, e.g `[PMID:12345 "<supporting text>"]`
 
 ## Support code

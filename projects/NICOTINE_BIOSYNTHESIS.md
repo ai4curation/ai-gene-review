@@ -1,14 +1,36 @@
 ---
 title: "Nicotine Biosynthesis Project"
-maturity: MATURE
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
-genes: [NaAO2, NaNAMNH, NaQPT2, NaODC1, NaODC2, NaPMT1.1, NaPMT1.2, NaMPO1, NaUGT1, NaA622, NaBBL1, NaBBL2, NaBGL1, NaBGL2, NaMATE1, NaNUP, NaERF1-like, NaMYC2]
+genes: [NaA622, NaA622_candidate_IFRH_0, NaAO2_candidate_AO_0, NaAO2_candidate_AO_1, NaBBL1_candidate_FOX1_0, NaBBL2_candidate_FOX1_2, NaBBL_candidate_FOX1_4, NaBBL_candidate_FOX2_2, NaBBL_candidate_FOX2_4, NaBGL1_candidate_BGLU18_6, NaBGL1_candidate_BGLU42, NaBGL2_candidate_BGLU18_1, NaMATE1_candidate_DTX40_3, NaMPO1_candidate_AMO_3, NaODC_candidate_DCOR, NaODC_candidate_ODC, NaPMT1.1, NaPMT1.2, NaPMT3, NaQPT2_candidate_QPT_0, NaQPT2_candidate_QPT_1, NaUGT1_candidate_UGT85A2_0]
 species: [NICAT]
 sidecars:
   genes: NICOTINE_BIOSYNTHESIS/genes.csv
   review_jobs: NICOTINE_BIOSYNTHESIS/review_jobs.csv
+manifest:
+  slides:
+    - href: NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/UnQ9Raqh1BixjT3CMmvgdH
+      title: Project brief
 ---
 # Nicotine Biosynthesis Project
+
+**Bottom line:** nicotine is made in tobacco roots from two branches, a
+pyridine ring from nicotinic acid and a pyrrolidine ring from putrescine, and
+2026 work in *Nicotiana attenuata* completed the pathway by adding a
+glucosylation step (UGT1), a deglucosylation step (BGL1/2) and a vacuolar MATE
+transporter. We seeded the project in *N. attenuata* (NICAT), mapped the
+paper's gene names to current UniProt accessions by sequence, and created 22
+gene reviews: the core enzymes plus the plausible paralogs where the mapping
+was ambiguous. We did this because public annotation still lags the new
+pathway, so no GO record yet connects most of these proteins to nicotine. All
+22 reviews are at DRAFT status and cover 117 existing annotations; they propose
+`GO:0042179` nicotine biosynthetic process for six genes, remove electronic
+spermidine synthase terms from the three PMT paralogs, and narrow generic
+terms to specific activities such as `GO:0050139` nicotinate-N-glucosyltransferase
+activity for UGT1. `NaNAMNH` still has no stable public accession.
 
 > **Editor Brief (2026-04-04):**
 > Seed this project in *Nicotiana attenuata* (`NICAT`), not *N. tabacum*. The April 2, 2026
@@ -200,10 +222,6 @@ Important caveats:
 - [x] Advance all currently launched NICAT aliases beyond `INITIALIZED`.
 - [ ] Resolve a stable public accession for `NaNAMNH`.
 - [ ] Revisit whether `NaNUP` belongs in the core transport batch after the minimal metabolon is reviewed.
-
-## Slides
-
-- [Slides](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html) (Marp source: [NICOTINE_BIOSYNTHESIS-slides.md](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.md)) — AI generated
 
 ## Sources
 

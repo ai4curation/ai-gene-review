@@ -238,7 +238,7 @@ def test_stage_pages_reports_linked_orphan_review_instead_of_copying(
     assert not (tmp_path / "_site/genes/human/OLD1/OLD1-ai-review.html").exists()
     assert manifest.linked_source_files_not_staged == 1
     assert manifest.linked_source_bytes_not_staged == len("fixture")
-    assert not manifest.deployable
+    assert manifest.deployable
 
 
 def test_stage_pages_removes_stale_output(tmp_path: Path) -> None:
@@ -357,24 +357,34 @@ def test_cleanup_supports_linked_git_worktrees(tmp_path: Path) -> None:
     assert (worktree / ".git").is_file()
 
 
-def test_broken_links_block_deployment(tmp_path: Path) -> None:
+def test_broken_links_are_reported_without_blocking_deployment(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
     _write(tmp_path / "index.html", '<a href="missing.pdf">Missing</a>')
     manifest = stage_pages(tmp_path, tmp_path / "_site")
     assert manifest.broken_local_links == 1
     assert manifest.broken_local_link_paths == ["missing.pdf"]
     assert manifest.linked_source_files_not_staged == 0
-    assert not manifest.deployable
+    assert manifest.deployable
 
 
 @pytest.mark.parametrize(
-    "size,deployable", [(1_000_000_001, True), (9_999_999_999, True), (10_000_000_000, False)]
+    "size,deployable", [(0, False), (1_000_000_001, True), (9_999_999_999, True), (10_000_000_000, False)]
 )
 def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
     _site_fixture(tmp_path)
     manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
     assert manifest.size_budget_bytes == 9_999_999_999
     assert manifest.deployable is deployable
+
+
+@pytest.mark.parametrize("size,supported", [(1_000_000_000, True), (1_000_000_001, False)])
+def test_supported_capacity_is_separate_from_absolute_cutoff(tmp_path, size, supported):
+    """A deployment permitted by policy can still exceed supported hosting capacity."""
+    _site_fixture(tmp_path)
+    manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
+    assert manifest.supported_size_budget_bytes == 1_000_000_000
+    assert manifest.within_supported_size is supported
+    assert manifest.deployable
 
 
 def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> None:
@@ -395,7 +405,7 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
         check=True,
     )
     manifest = json.loads((tmp_path / "manifest.json").read_text())
-    assert manifest["deployable"] is False
+    assert manifest["deployable"] is True
     assert manifest["size_budget_bytes"] == 9_999_999_999
     assert manifest["broken_local_links"] == 1
     assert manifest["off_base_path_links"] == 0
@@ -404,7 +414,7 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
     assert "Broken local Pages links" in result.stdout
 
 
-def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
+def test_off_base_link_is_advisory(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
     _write(tmp_path / "index.html", '<script>fetch("/research/report.html")</script>')
     _write(tmp_path / "research/report.md")
@@ -416,7 +426,7 @@ def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
         "https://ai4curation.io/research/report.html"
     ]
     assert manifest.broken_local_links == 0
-    assert not manifest.deployable
+    assert manifest.deployable
 
 
 def test_known_off_base_html_link_is_repaired_and_copied(tmp_path: Path) -> None:
@@ -495,3 +505,16 @@ def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
     manifest = stage_pages(tmp_path, tmp_path / '_site')
     assert replace(manifest, archive_bytes=9_999_999_999).deployable
     assert not replace(manifest, archive_bytes=10_000_000_000).deployable
+
+
+def test_stage_pages_includes_propagation_browser_rows(tmp_path: Path) -> None:
+    """The propagation browser and the review pages its rows link to are staged."""
+    _site_fixture(tmp_path)
+    for filename in ("index.html", "data.js"):
+        _write(tmp_path / "app/propagation" / filename)
+    review = "genes/mouse/Calm3/Calm3-ai-review.html"
+    _write(tmp_path / review)
+    _write(tmp_path / "app/propagation/source-files.json", json.dumps([review]))
+    stage_pages(tmp_path, tmp_path / "_site")
+    assert (tmp_path / "_site/app/propagation/data.js").is_file()
+    assert (tmp_path / "_site" / review).is_file()

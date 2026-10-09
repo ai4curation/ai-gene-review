@@ -20,6 +20,15 @@ def read_browser_payload(path: Path) -> dict:
     return json.loads(result.stdout)
 
 
+def test_prediction_browser_honors_destination_budget(tmp_path):
+    output = tmp_path / "app/predictions"
+    with pytest.raises(ValueError, match="configured limit is 1 bytes"):
+        build_prediction_browser(tmp_path, output, max_bytes=1)
+    assert not output.exists()
+    build_prediction_browser(tmp_path, output, max_bytes=None)
+    assert read_browser_payload(output / "data.js")["claims"] == []
+
+
 def test_build_preserves_empty_outputs_and_complete_evidence(tmp_path: Path) -> None:
     """Build from real sidecars, retaining zero outputs and untruncated rationale."""
     directory = tmp_path / "genes/DROME/Dic4"
@@ -69,7 +78,7 @@ def test_compact_payload_preserves_values_and_distinguishes_absent_fields(tmp_pa
         {"gene_symbol": "α-test", "claim_count": 0, "summary": 'Quoted "text"\nnext line', "optional": None},
         {"gene_symbol": "beta", "claim_count": None, "summary": "full text", "performance_included": False},
     ] * 100
-    data = {"sets": records, "claims": [], "metadata": {"schema_version": 1}}
+    data = {"sets": records, "claims": [], "overlap": [], "metadata": {"schema_version": 1}}
     encoded = encode_prediction_data_js(data)
     path = tmp_path / "data.js"
     path.write_text(encoded)

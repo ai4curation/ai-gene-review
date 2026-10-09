@@ -1,12 +1,39 @@
 ---
 title: "Miscitation Review Project"
-maturity: SCOPING
-tags: [PIPELINE]
-species: [human]
-genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39]
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
+species: [human, ARATH]
+genes: [NLRP3, ZBP1, GRID1, SULT1B1, PNPLA3, PEX39, MYH9, WIP1, ITGB1, FAS, GADD45A, TNFRSF1A, MAP3K1, MAP3K2, MAP2K4, MAPK8, MAPK3, MAP2K1, CALR, CANX]
+manifest:
+  slides:
+    - href: MISCITATIONS/slides/MISCITATIONS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/B28H55M68QGuTavmzp4QAR
+      title: Project brief
 ---
 
 # Miscitation Review Project
+
+**Bottom line:** a miscitation is a citation that passes every mechanical check and is
+still wrong: the identifier resolves, but to the wrong paper, or to the right paper used
+for a claim it does not make. We built an aggregator over every `reference_review` block
+in the gene reviews and re-verified six seed cases (NLRP3, ZBP1, GRID1, PEX39, SULT1B1,
+PNPLA3) against live QuickGO, NCBI, EuropePMC and UniProt. We did this because the
+validators check only internal consistency, and reviewer judgements about bad citations
+were buried one gene at a time. The register covers 14,559 adjudicated references in
+2,074 of 4,513 reviews and flags 559 (3.8%, an enriched sample rather than an error
+rate); all six seed cases stand. The main finding is structural: four of the six are
+defects in how a source database attached a correct paper (a wrong `WITH/FROM`
+interactor, an experimental code on a meeting report, a missing `NOT`), and the schema
+has no field for that yet. Most defects live in GOA, IntAct or UniProt rather than in
+this repo, and nothing has been reported upstream.
+
+The sibling [Miscitation Audit](MISCITATION_AUDIT.md) keys the same flags on the
+citation to find bad PMIDs copied across genes. Both count one flag per (gene,
+citation) pair; the audit's register is an earlier run over 4,467 reviews, and between
+the two runs the counts moved in both directions (`WRONG_IDENTIFIER` 28 to 26,
+`MISCITED` 257 to 274), so they do not match exactly.
 
 ## Overview
 
@@ -61,6 +88,12 @@ There is a third blind spot. The validator's `skip_prefixes`
 checking entirely. **127 of the 559 currently flagged references carry one of those
 prefixes** (72 `file:`, 28 `GO_REF:`, 27 `Reactome:`), i.e. they were found by a
 human reading them, because no automated check was ever going to look.
+(Since 2026-10-06 `file:` and `Reactome:` quotes are checked against the local
+file and the `reactome/` cache by `validation/local_source_text.py`; quotes that
+already failed are listed in `conf/local_quote_baseline.yaml` and reported as
+warnings, new failures as errors. This covers gene reviews only: `GO_REF` and the
+other prefixes remain unchecked, as do `file:`/`Reactome:` quotes in module and
+GO-CAM evidence.)
 
 So the flag is, and has to be, a **manual** judgment. `reference_review` is where it
 goes.
@@ -112,7 +145,8 @@ defect is fixed by reporting it upstream.
 Six cases surfaced during the contested-functions review. Each was re-verified here
 against the local GOA/UniProt files and, where possible, a live query (QuickGO,
 NCBI E-utilities, EuropePMC, UniProt REST). **All six are confirmed**, in the sense
-that the factual claim in the last column was checked, not taken on report.
+that the factual claim in the last column was checked, not taken on report. The last two rows are batch cases found later, during the
+[MAPK cascades](MAPK_CASCADES.md) review, and were checked the same way.
 
 | Gene | What is cited | Defect | Kind | Where the error lives |
 |---|---|---|---|---|
@@ -122,6 +156,8 @@ that the factual claim in the last column was checked, not taken on report.
 | PEX39 | UniProt `FUNCTION` for Q5I0X4 cites `PMID:37160800` with `ECO:0000269` | that PMID is a 2023 multi-author **meeting report**, not primary evidence | attachment | UniProt |
 | SULT1B1 | `PMID:23207770` IDA for `GO:0006068` ethanol catabolic process | the paper names four ethanol-sulfating SULTs and **SULT1B1 is not one of them** | `MISCITED` | GOA |
 | PNPLA3 | `PMID:21878620` as `EXP` for `GO:0003841`, no `NOT` | that paper reports **no detectable** LPAAT activity for purified PNPLA3 | attachment | GOA |
+| 36 human genes (FAS, MAPK8, MAP2K4, TLR4, CASP8, ...) | `PMID:19593445` as IEP for `GO:0071260` cellular response to mechanical stimulus | a paper on **BAD in prostate cancer**; no mechanical-stimulation experiment, none of the 36 genes mentioned | `MISCITED` (batch) | UniProt |
+| MAP2K1, CALR, CANX (+ VRK1/2/3, KSR1, DUSP3, GOLGB1) | `PMID:22572157` for 31 MGI IDA/ISO rows (ER, membrane, protein/kinase binding) | resolves to a **platelet-alloantibody biosensor** paper; `PMID:22752157` (VRK2 anchors KSR1-MEK1 to the ER) matches every row | `WRONG_IDENTIFIER` (batch, 57/75 transposition) | MGI |
 
 ### NLRP3 — a dropped digit
 
@@ -144,6 +180,92 @@ already cites `31189953` for five other NLRP3 annotations. A leading `3` was dro
 This is the cleanest possible illustration of why check 1 cannot help: the review
 records the title *"[Profanities and the profane person]"*, and that is genuinely the
 title of `PMID:1189953`. The citation is internally perfect and externally absurd.
+
+### MYH9, RAB3A, SYTL4, RAB10 — a dropped digit spread across a complex
+
+Found on 2026-09-27 while reviewing MYH9 for the
+[nucleokinesis module](../modules/nucleokinesis.yaml). It is the NLRP3 defect again,
+but spread across the members of a complex.
+
+`PMID:2732579` resolves to *"[Two sisters with pseudoidiopathic hypoparathyroidism
+presenting extensive intracranial calcification]"* (1989), a Japanese case report.
+A live QuickGO query returns **11 annotations** citing it, all `assigned_by` UniProt
+on 2019-02-19:
+
+| Gene | Rows citing `PMID:2732579` |
+|---|---|
+| MYH9 (P35579) | `GO:0005515` IPI with RAB3A; `GO:0032418` lysosome localization, `GO:0045055` regulated exocytosis, `GO:1905684` regulation of plasma membrane repair (IMP) |
+| RAB3A (P20336) | the same four, with MYH9 as the IPI partner |
+| SYTL4 (Q96C24) | `GO:0032418`, `GO:1905684` (IMP) |
+| RAB10 (P61026) | `GO:0045055` (IMP) |
+
+The intended reference is `PMID:27325790`, *"A Rab3a-dependent complex essential for
+lysosome positioning and plasma membrane repair"* (J Cell Biol, 2016): the cited number
+is `27325790` with its last digit dropped. That paper studies exactly these four
+proteins (Rab3a, its effector Slp4-a/SYTL4, nonmuscle myosin heavy chain IIA/MYH9, and
+Rab10 as a second repair regulator) and exactly these processes. UniProt also cites
+`27325790` correctly for two MYH9 rows (`GO:0005515` with RAB3A, `GO:0001778` plasma
+membrane repair) entered eight days earlier, on 2019-02-11. So the two numbers were
+used side by side for the same paper.
+
+MYH9's review records `correctness: WRONG_IDENTIFIER` with a `replacement` to
+`PMID:27325790` (`reason: WRONG_IDENTIFIER`). RAB3A, SYTL4 and RAB10 have no reviews
+in this repo yet, so their seven rows are not in the register. That is a concrete
+case where the register under-counts a complex-partner spread.
+
+### ARATH/WIP1 — an IntAct interaction citing a dental paper
+
+Found on 2026-09-27 while reviewing Arabidopsis WIP1 for the
+[LINC complex module](../modules/linc_complex.yaml). A live QuickGO query returns
+**2 annotations** citing `PMID:20579133`: the reciprocal `GO:0005515` IPI pair
+WIP1 (Q8GXA4) with RANGAP1 (Q9LE82), `assigned_by` IntAct on 2026-07-25.
+PubMed resolves `20579133` to *"A laboratory evaluation of the physical and
+mechanical properties of selected root canal sealers"* (Int Endod J, 2010).
+
+This is not a dropped digit. The IntAct record behind the rows (IMEx
+IM-19345) credits "Xu et al. (2007)", which points to `PMID:17600715`,
+*"Anchorage of plant RanGAP to the nuclear envelope involves novel
+nuclear-pore-associated proteins"* (Curr Biol, 2007). That is the paper that
+characterized the WIP1-RanGAP1 interaction. But `PMID:17600715` carries its own
+IMEx id (IM-19776), so the intended reference is not certain. WIP1's review
+records `correctness: WRONG_IDENTIFIER` without a `replacement`. This is the first
+IntAct-sourced `WRONG_IDENTIFIER` in the project, and the error sits in the
+publication identifier of the IMEx record, not in a GO curation step.
+
+### ITGB1 and FLNB — a transposed digit, one pair of a curation batch
+
+Found on 2026-10-01 while reviewing human ITGB1 for the
+[ORIGINS_OF_MULTICELLULARITY](ORIGINS_OF_MULTICELLULARITY.md) project. A live
+QuickGO query returns **2 annotations** citing `PMID:10676904`. They are the
+reciprocal `GO:0005515` IPI pair ITGB1 (P05556) with FLNB (O75369), both
+`assigned_by` UniProt on **2006-03-16**. PubMed resolves `10676904` to *"Effect of
+medium change on the development of in vitro matured and fertilized bovine
+oocytes cultured in medium containing amino acids"* (J Vet Med Sci, 2000).
+
+The intended paper is almost certainly **`PMID:16076904`**, *"The Z-disc proteins
+myotilin and FATZ-1 interact with each other and are connected to the sarcolemma
+via muscle-specific filamins"* (2005). The two numbers differ by a transposition
+of the second and third digits (1**06**76904 versus 1**60**76904). Three
+independent checks point the same way:
+
+- The paper's abstract reports filamin "binding activity with the beta1A integrin
+  subunit".
+- The UniProt entries cite it for "INTERACTION WITH FLNB AND FLNC" (P05556) and
+  "INTERACTION WITH ITGB1" (O75369).
+- GOA's ITGB1–**FLNC** IPI row, assigned by UniProt on the **same date**, cites
+  `PMID:16076904` correctly.
+
+So one curation session recorded two partners from one paper, and only the
+FLNB pair received the mistyped number. ITGB1's review records
+`correctness: WRONG_IDENTIFIER` with
+`replacement: {reference_id: PMID:16076904, reason: WRONG_IDENTIFIER}`, and
+changes the row to `GO:0031005` filamin binding supported by the right paper.
+
+This is the third digit-level identifier error in the project, after NLRP3 and
+MYH9, and the first **transposition** rather than a dropped digit. Like MYH9, it
+comes from UniProt. Unlike MYH9, it has not spread beyond the reciprocal pair:
+the same batch's FLNC row is correct. The upstream fix is a single UniProt
+correction to the FLNB pair.
 
 ### ZBP1 and GRID1 — the interactor, not the paper
 
@@ -220,6 +342,58 @@ impeccable.
 LPAAT activity that `PMID:21878620` could not find. The PNPLA3 review grades that pair
 `DISPUTED`. The `EXP`/`21878620` row is a miscitation *regardless* of how the dispute
 resolves.)
+
+### PMID:19593445 — one wrong PMID, thirty-six genes
+
+Found while reviewing the human JNK relay (MAP3K1, MAP2K4, MAPK8) for the
+[MAPK cascades project](MAPK_CASCADES.md). A live QuickGO query for
+`reference=PMID:19593445` returns 37 annotations, all `assignedBy: UniProt`, all dated
+2011-03-15. Thirty-six are the same row, `GO:0071260` cellular response to mechanical
+stimulus with evidence `IEP`, spread across 36 human genes that read like an
+apoptosis/inflammation expression panel:
+
+> TLR3, TLR4, TLR5, TLR7, TLR8, MYD88, IRF1, NFKB1, CD40, IL1B, TNFRSF1A, TNFRSF8,
+> TNFRSF10A, TNFRSF10B, TNFSF14, LTBR, FAS, FADD, CRADD, CASP1, CASP2, CASP5, CASP8,
+> CASP8AP2, BAK1, BAD, BNIP3, BCL10, GADD45A, CHEK1, MAP3K1, MAP3K2, MAP3K14, MAP2K4,
+> MAPK3, MAPK8
+
+The paper is *"Expression of the Bcl-2 protein BAD promotes prostate cancer growth"*.
+Its cached full text contains no mechanical-stimulation experiment and mentions none
+of these genes except BAD (total ERK appears only as a western-blot loading control). The one annotation that does match its content is the
+37th: BAD, `GO:0050679` positive regulation of epithelial cell proliferation, `IMP`.
+The pattern points to a batch import in which a mechanical-stretch expression dataset
+was filed under the wrong PMID. The intended paper has not been identified.
+
+This case also shows how a miscitation spreads inside the repo. Three earlier reviews
+(FAS, GADD45A, TNFRSF1A) kept the row as non-core and wrote summaries that described
+the paper as showing a mechanical-stimulus response, quoting only its title. On
+2026-09-26 those rows were changed to `UNDECIDED` and the reference was flagged
+`MISCITED` in all seven reviewed genes that carry it (FAS, GADD45A, TNFRSF1A, MAP3K1,
+MAP3K2, MAP2K4, MAPK8; MAPK3 followed on 2026-09-27). `UNDECIDED` rather than `REMOVE`, because an expression
+change under stretch is plausible and the real source may exist. The other 28 genes
+should be flagged the same way when they are reviewed; the row is a candidate for a
+report to UniProt.
+
+### PMID:22572157 — a transposed digit pair, thirty-one annotations
+
+Found while reviewing MAP2K1 for the [MAPK cascades project](MAPK_CASCADES.md). MGI
+cites `PMID:22572157` for two MAP2K1 IDA rows (protein binding, endoplasmic reticulum).
+That PMID is *"Sensitive detection of idiotypic platelet-reactive alloantibodies by an
+electrical protein chip"*. A live QuickGO query returns 31 annotations on it, all MGI,
+dated 2014-11-10 (four `GO:0032991` rows 2018-02-19): VRK1, VRK2, VRK3, KSR1, MAP2K1,
+DUSP3, CALR, CANX and GOLGB1, plus their mouse ISO projections, with terms for ER,
+membrane, Golgi, protein-containing complex and kinase/phosphatase binding.
+
+That is the content of `PMID:22752157`, *"VRK2 anchors KSR1-MEK1 to endoplasmic
+reticulum forming a macromolecular complex that compartmentalizes MAPK signaling"*,
+which differs by swapping the 5 and 7 in the middle. Calnexin, calreticulin and golgin
+fit as the compartment markers of such a study, and its abstract names VHR (DUSP3).
+The mapping is inferred, not confirmed with MGI.
+
+Flagged `WRONG_IDENTIFIER` with `replacement: PMID:22752157` in the MAP2K1, CALR and
+CANX reviews (2026-09-27). The annotation actions were left as they were: calnexin in
+the ER is right on independent grounds, and the CALR membrane row was already marked
+over-annotated. VRK1/2/3, KSR1, DUSP3 and GOLGB1 should get the same flag when reviewed.
 
 ## Current state of the evidence
 
@@ -339,14 +513,54 @@ uv run python projects/MISCITATIONS/aggregate_miscitations.py
       pattern, and split source-database defects from review defects
 - [ ] Neighbour sweep on the five recurring wrong PMIDs — check remaining ELOVL/NAA
       family members and other complex partners
+- [x] MYH9 `PMID:2732579` → `PMID:27325790` (dropped digit) recorded; live GOA shows
+      the same defect on RAB3A, SYTL4 and RAB10 (11 rows total)
+- [ ] Record the RAB3A / SYTL4 / RAB10 rows when those genes are reviewed
+- [x] ARATH/WIP1 `PMID:20579133` (dental paper) on the WIP1-RANGAP1 IntAct pair
+      recorded; the intended paper is probably `PMID:17600715`, but that is
+      unconfirmed (IMEx IM-19345)
+- [x] ITGB1/FLNB `PMID:10676904` (bovine oocyte paper) → `PMID:16076904` (digit
+      transposition) recorded with a `replacement`; the same-date ITGB1–FLNC row
+      cites the right paper. FLNB has no review yet; record the O75369 row when it
+      is reviewed
 - [ ] Decide what, if anything, to report upstream to GOA / UniProt / IntAct, and in
       what form
 - [ ] Consider whether `reference_review` should be *required* (currently a reviewer
       may simply omit it, which is indistinguishable from "no problem found")
 
-Last updated: 2026-09-17
+Last updated: 2026-10-01
 
 # NOTES
+
+## 2026-10-01
+
+**ITGB1/FLNB transposed digit.** Found while reviewing ITGB1 for
+ORIGINS_OF_MULTICELLULARITY. `PMID:10676904` (a 2000 bovine oocyte culture paper)
+stands in for `PMID:16076904` (myotilin/FATZ-1 and muscle filamins, 2005) on the
+reciprocal ITGB1–FLNB IPI pair, assigned by UniProt on 2006-03-16. Checked at NCBI
+E-utilities, UniProt REST (both entries cite 16076904 for the interaction) and live
+QuickGO (2 rows). The decisive evidence is that GOA's ITGB1–FLNC row from the same
+date and paper is cited correctly. This is the first transposition case; the
+earlier digit errors were drops.
+
+## 2026-09-27
+
+**WIP1 IntAct wrong identifier.** Found while reviewing Arabidopsis WIP1 for the
+LINC complex module. IntAct's WIP1-RANGAP1 IPI pair cites `PMID:20579133`, a
+2010 root canal sealer study. Checked at NCBI E-utilities and in live QuickGO
+(2 rows). The IMEx record credits Xu et al. 2007 (`PMID:17600715`), but no
+replacement is asserted because that paper has a separate IMEx record. This
+kind of error should be reported to IntAct rather than GOA.
+
+
+**MYH9 dropped digit, spread across a complex.** Found while reviewing MYH9 for the
+nucleokinesis module. `PMID:2732579` (a 1989 hypoparathyroidism case report) stands in
+for `PMID:27325790` (Rab3a/Slp4-a/NMHC-IIA lysosome positioning, 2016). Both titles
+were checked at NCBI E-utilities, and the rows were checked in live QuickGO, not only
+the local `-goa.tsv`. This is the second dropped-digit case after NLRP3. It is also the
+first complex-partner spread of the dropped-digit kind: 11 rows over MYH9, RAB3A, SYTL4
+and RAB10, all from one UniProt curation date. It is worth reporting to UniProt as one
+group.
 
 ## 2026-09-17
 

@@ -3,9 +3,43 @@ title: "P. putida Gene Annotation Review Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [PSEPK]
+sidecars:
+  slide_assets:
+    - P_PUTIDA/slides/actions-bar.svg
+    - P_PUTIDA/slides/d-ala-hole.svg
+    - P_PUTIDA/slides/module-first-workflow.svg
+    - P_PUTIDA/slides/ppu00470-batch-page.jpg
+manifest:
+  slides:
+    - href: P_PUTIDA/slides/P_PUTIDA-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
+      title: Project brief
 ---
 
 # P. putida Gene Annotation Review Project
+
+**Bottom line:** *Pseudomonas putida* KT2440 is a metabolically versatile soil
+bacterium used for bioremediation and biotechnology, and almost all of its GO
+annotation comes from automated pipelines. The project started with selected
+genes (18, then batches of 50 and 16) and in July 2026 became a genome-wide,
+pathway-by-pathway review of the 5,527-protein reference proteome: each batch
+starts from a curated module, asks which steps KT2440 can satisfy, and reviews
+only the genes needed to fill or resolve those steps. In a September 2026 snapshot
+the repo held 921 PSEPK gene reviews (5,324 annotation rows: 2,288 accepted,
+990 kept as non-core, 857 marked over-annotated, 391 modified, 243 removed,
+470 proposed as `NEW`, 85 undecided) and 138 pathway batch pages under
+`P_PUTIDA/batches/`, from about 200 PRs; both counts grow as
+batches land. Batches record unresolved steps as explicit holes rather than forcing a
+paralog into them (for example, the cytoplasmic D-alanine source for cell-wall
+synthesis). The "Completed Reviews" tables below list only the first 84 genes,
+and the status columns in `data/psepk_pathway_worklist.tsv` have not been
+updated since the pilot.
+
+We did this because a module-first pass spends review effort where a pathway
+has a missing, ambiguous or over-propagated step, which scales to a whole
+bacterial genome where gene-by-gene review would not.
 
 ## Overview
 

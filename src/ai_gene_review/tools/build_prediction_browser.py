@@ -9,7 +9,11 @@ from pathlib import Path
 import shutil
 from typing import Any
 
-from ai_gene_review.export.browser_payload import validate_browser_data_js_size
+from ai_gene_review.export.browser_payload import (
+    GITHUB_FILE_SIZE_LIMIT_BYTES,
+    browser_data_size_limit,
+    validate_browser_data_js_size,
+)
 from ai_gene_review.export.prediction_export import collect_prediction_data
 from ai_gene_review.tools.pages_dependencies import DependencyResolver
 
@@ -36,17 +40,22 @@ def encode_prediction_data_js(data: dict[str, Any]) -> str:
         return packed
 
     payload = {"sets": pack(data["sets"]), "claims": pack(data["claims"]),
+               "overlap": pack(data["overlap"]),
                "metadata": data["metadata"], "columns": columns}
     encoded = json.dumps(payload, ensure_ascii=True, separators=(",", ":"), allow_nan=False)
     return (
         "(()=>{const p=" + encoded + ";"
         "const unpack=rows=>rows.map(row=>Object.fromEntries("
         "p.columns[row[0]].map((key,i)=>[key,row[i+1]])));"
-        "window.predictionData={sets:unpack(p.sets),claims:unpack(p.claims),metadata:p.metadata};})();\n"
+        "window.predictionData={sets:unpack(p.sets),claims:unpack(p.claims),"
+        "overlap:unpack(p.overlap),metadata:p.metadata};})();\n"
     )
 
 
-def build_prediction_browser(root: Path, output_dir: Path) -> dict[str, Any]:
+def build_prediction_browser(
+    root: Path, output_dir: Path, *,
+    max_bytes: int | None = GITHUB_FILE_SIZE_LIMIT_BYTES,
+) -> dict[str, Any]:
     """Export canonical predictions without truncating judgments or inventing scores.
 
     Data is a classic script so both datasets work directly over ``file://``.
@@ -59,11 +68,11 @@ def build_prediction_browser(root: Path, output_dir: Path) -> dict[str, Any]:
     data = collect_prediction_data(root, output_dir)
     encoded = encode_prediction_data_js(data)
     size = len(encoded.encode("utf-8"))
-    validate_browser_data_js_size(size)
+    validate_browser_data_js_size(size, max_bytes=max_bytes)
 
     links = {
         value
-        for row in [*data["sets"], *data["claims"]]
+        for row in [*data["sets"], *data["claims"], *data["overlap"]]
         for key, value in row.items()
         if key.endswith("_link") and isinstance(value, str)
         and value and not value.startswith(("?", "#"))
@@ -84,7 +93,8 @@ def build_prediction_browser(root: Path, output_dir: Path) -> dict[str, Any]:
     templates = Path(__file__).resolve().parents[1] / "browser"
     shutil.copyfile(templates / "index.html", output_dir / "index.html")
     shutil.copyfile(templates / "predictions_schema.js", output_dir / "schema.js")
-    return {"sets": len(data["sets"]), "claims": len(data["claims"]), "data_bytes": size}
+    return {"sets": len(data["sets"]), "claims": len(data["claims"]),
+            "overlap": len(data["overlap"]), "data_bytes": size}
 
 
 def main() -> None:
@@ -92,10 +102,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--output-dir", type=Path, default=Path("app/predictions"))
+    parser.add_argument("--target", choices=("git", "pages"), default="git")
     args = parser.parse_args()
     root = args.root.resolve()
     output = args.output_dir if args.output_dir.is_absolute() else root / args.output_dir
-    result = build_prediction_browser(root, output)
+    result = build_prediction_browser(root, output, max_bytes=browser_data_size_limit(args.target))
     print(json.dumps({"output": str(output), **result}, indent=2))
 
 
