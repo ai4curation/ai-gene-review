@@ -125,22 +125,59 @@ awkward for factors that hold off differentiation. (c) is too general to say
 which population is maintained, and the lin28a review judged it unsupported for
 lin28 in frog.
 
-## The 84 experimental annotations, sorted (preliminary)
+## Remapping of every experimental annotation
 
-Grouped by the layer the gene belongs to. "Reviewed" means a review in this
-repo has already applied the rule. All others need checking against the paper
-before a replacement is asserted.
+`NEURAL_CREST_FORMATION_OBSOLETION/remapping.tsv` has one row per distinct GOA
+annotation: all 84 experimental GO:0014029 rows plus the 17 regulation-term
+rows (12 distinct). That is 94 rows and 62 distinct gene–paper decisions. Each
+row gives an action, replacement ids and labels, a rationale and a verbatim
+quote. Every quote and every replacement id passes `check_remap.py` (live GO
+terms with matching labels, quotes found in the cached papers). The table is
+assembled by `merge_remap.py` from four review batches (`remap/*.tsv`, each with
+a `.notes.md`) and from the gene reviews already in this repo.
 
-| Proposed replacement | Gene products (species) | Status |
-|---|---|---|
-| Border formation (new), + GO:0014034 where crest-inducing | pax3-a, pax3-b, zic1 (X. laevis) | pax3-a, zic1 reviewed |
-| Border formation (new) | zic2-a, zic4, zic5 (X. laevis) | to review (Zic paralogs, same papers as zic1) |
-| GO:0014036 fate specification | sox8, sox9-a, sox10 (X. laevis); sox9 (X. tropicalis); sox10 (zebrafish) | frog SoxE reviewed |
-| GO:0014036 (ubiquitin/translation control of specification) | KBTBD8, NOLC1, TCOF1 (human), kbtbd8 (X. tropicalis); KLHL12, PEF1, PDCD6 (human) | to review: CUL3 substrate-adaptor studies; check the specification claim in full text |
-| Neural crest progenitor maintenance (new) | hes4-a, hes4-b, id3-a (X. laevis) | hes4-a, id3-a reviewed; the hes4-a NOT row is disputed |
-| Signalling modulators | grem1 (X. laevis, IEP), Chrd (mouse), bmper, mdkb (zebrafish), LRP6 (human, IDA) | to review; LRP6 has a review in this repo (non-core) |
-| Case by case | chd7, cnbpa, hsbp1b, polr1b, snw1, zeb2a, zeb2b (zebrafish) | to review |
-| No replacement (expression only) | Id2 (chicken, IEP; PMID:15242799) | to review |
+| Action | Rows | Distinct decisions |
+|---|---:|---:|
+| REPLACE | 86 | 55 |
+| REMOVE (expression only) | 3 | 2 |
+| UNDECIDED | 5 | 5 |
+
+Decisions by gene (species; paper):
+
+| Replacement | Gene products |
+|---|---|
+| Neural plate border formation (new) + GO:0014034 fate commitment | pax3-a, pax3-b, zic1, zic2-a, zic4, zic5 (X. laevis) |
+| Neural plate border formation (new) | mdkb (zebrafish; its abstract says it is "responsible for establishment of the neural plate border") |
+| Neural plate border formation (new) + GO:1905297 positive regulation of NC fate specification | snw1 (zebrafish; sets BMP activity at the border) |
+| Neural crest progenitor maintenance (new) | hes4-a, hes4-b, id3-a (X. laevis) |
+| GO:0014036 fate specification | sox8 (+ GO:0001755), sox9-a, sox10 (X. laevis); sox9 (X. tropicalis); sox10 (zebrafish); KBTBD8, TCOF1, NOLC1 (human) and kbtbd8 (X. tropicalis) |
+| GO:0036032 delamination | SOX9 (chicken; replaces positive regulation of NC formation) |
+| GO:0014033 differentiation (nothing more specific supported) | zeb2a, zeb2b, cnbpa, chd7 (zebrafish) |
+| Regulation of NC fate specification (GO:1905295/6/7) | parp3; rgs2 (negative); hsbp1b (negative); bmper (positive, + GO:0030513 positive regulation of BMP signaling) |
+| Regulation of NC differentiation (GO:1905292/3/4) | hdac4; Fuz/FUZ (negative; mouse IMP plus rat/human transfers); LRP6 (human, positive) |
+| Other existing terms | TSPAN18 (chicken) → GO:0010719 negative regulation of epithelial to mesenchymal transition; polr1b (zebrafish) → GO:0006360 transcription by RNA polymerase I |
+| REMOVE (expression only) | grem1 (X. laevis, IEP); Id2 (chicken, IEP, on both GO:0014029 and GO:0090300) |
+| UNDECIDED | KLHL12, PEF1, PDCD6 (human; PMID:27716508 full text not accessible); Chrd (mouse; the cached abstract concerns vascular patterning); hes4-a NOT row (contradicted by PMID:25997789) |
+
+What the remapping shows:
+- **Only 14 of 94 rows land on a precise crest-cell term** (fate
+  specification or delamination): the SoxE genes, the ubiquitin group and SOX9.
+  The rest move to the border term (14), the progenitor term (11), a regulation
+  term (14), the general differentiation term (32, of which 28 are zeb2
+  accessions from one paper) or a non-crest term (polr1b), or are removed or left
+  undecided. The obsoleted term was carrying all of these meanings.
+- **Ribosome biogenesis is split on purpose.** polr1b knockdown makes crest
+  precursors die from a ribosome shortage, which is a requirement, not a crest
+  step. TCOF1 and NOLC1 knockdown switches cells from crest to CNS identity
+  without affecting rRNA output or survival, which is participation in
+  specification [PMID:26399832].
+- **GO lacks regulation terms for crest migration and delamination.** TSPAN18
+  therefore goes to a generic EMT term. A follow-up request for "negative
+  regulation of neural crest cell delamination" may be worth making.
+- **Weaker calls flagged in the notes:** the Zic2/4/5 evidence is mostly
+  overexpression; zeb2 and cnbpa rest on abstracts; rgs2 rests on its abstract
+  only; for KBTBD8, GO:1905297 (regulation) is a defensible alternative to
+  GO:0014036.
 
 ## Impact on this repo
 
@@ -197,13 +234,25 @@ Last updated: 2026-10-09
 - [x] Border-specifier reviews in this repo moved to the proposed term (7 reviews)
 - [x] Competence-factor replacement decided: new term *neural crest progenitor maintenance* (2026-10-09)
 - [x] Applied to hes4-a, id3-a, myc-a, pou5f1.1; module competence part updated
-- [ ] Review the remaining experimental annotations (Zic paralogs, ubiquitin/translation group, signalling modulators, zebrafish case-by-case, chick Id2)
-- [ ] Review the 17 regulation-term annotations (hdac4, parp3, SOX9, rgs2, TSPAN18, Fuz, chick Id2)
-- [ ] Produce the per-annotation remapping table for GO
+- [x] Review the remaining experimental annotations (four batches; 2026-10-09)
+- [x] Review the 17 regulation-term annotations (12 distinct)
+- [x] Per-annotation remapping table for GO (`remapping.tsv`, 94 rows, checker clean)
+- [ ] Resolve the 5 UNDECIDED rows (needs PMID:27716508 full text; Chrd full text; hes4-a NOT row)
+- [ ] Consider a request for "negative regulation of neural crest cell delamination"
 - [ ] Report ARBA00027170 to UniProt (see the rule-reviewer workflow)
 - [ ] Submit the GO request (needs sign-off)
 
 # NOTES
+
+## 2026-10-09 (remapping)
+
+Four review batches covered the remaining 72 distinct rows, and 22 more rows
+were taken from the existing gene reviews. Result: 94 rows, 62 distinct
+gene–paper decisions (55 replace, 2 remove, 5 undecided). All quotes and ids
+pass `check_remap.py`. Spot checks by the coordinator: GO:0044335 (Wnt in crest
+differentiation) is indeed obsolete, which is why LRP6 maps to GO:1905294; and
+the chicken SOX9 paper's title and text support delamination. Inventory
+coverage was checked: every experimental and regulation row is in the table.
 
 ## 2026-10-09 (later)
 
