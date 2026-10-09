@@ -157,3 +157,34 @@ The four source assertions of transmembrane signaling receptor activity retain t
 ### Authenticated sorting-motif source integration
 
 The normal PMID:9230070 record confirms DOI10.1083/jcb.138.2.271 and PMCIDPMC2138198, with full XML availability. The imported text preserves the separation between human Jurkat/JGN assays and mouse CD4 extracellular/transmembrane domains joined to the human CD3 gamma tail. Immobilized peptides bind adaptins from cell cytosol, with dileucine and spacing controls; this does not establish a purified binary interaction. The existing AP-2 core receives one exact short supporting clause. All 111 machine assertions and manual decisions, 92 reference identities, both core activities, and the explicit receptor-qualifier question remain otherwise unchanged. No new annotation is introduced.
+
+
+## 2026-10-09 — AP-2 annotation follow-up
+
+The AP-2-binding molecular function already described in the core now has its own
+GO:0035612 annotation with action NEW, qualifier enables and IPI evidence from
+[PMID:9230070](https://pmc.ncbi.nlm.nih.gov/articles/PMC2138198/). The
+[GO definition](https://www.ebi.ac.uk/QuickGO/term/GO:0035612) concerns the clathrin
+adaptor complex. The new assertion describes CD3 gamma's own motif-dependent
+association with that complex. It is supported by adaptin capture from human
+Jurkat cytosol with immobilized human CD3 gamma-tail peptides and by dileucine,
+D127 and spacing controls. The authors explicitly could not exclude another
+molecule mediating the association, so no purified binary contact or specific
+contacting AP-2 subunit is asserted.
+
+[PMID:8187769](https://pubmed.ncbi.nlm.nih.gov/8187769/) supplies intact-receptor
+context through motif mutations in human JGN transfectants; it is not described
+as a second AP-2-binding assay. AP-1 was also recovered in the peptide experiments.
+AP-2 is the selected core interaction because the accompanying biological role
+is surface TCR internalization. AP-1 motif recognition is acknowledged without
+adding an inferred TGN-trafficking process.
+
+The nine existing generic-binding assertions concern different HuRI partners,
+so none is repurposed as AP-2 evidence. All 111 source assertions and their
+decisions remain intact. The review now contains 112 entries: 88 ACCEPT,
+22 KEEP_AS_NON_CORE, one MODIFY and one NEW. The existing short PMID:9230070
+quote is moved from the core to the new annotation; the core retains its source
+citation. The answered question deferring the binding annotation is removed.
+The other questions, both core activities and all reference records are
+unchanged. No new biological-process assertion is proposed. This follow-up
+supersedes the earlier decision to defer the AP-2 annotation.
