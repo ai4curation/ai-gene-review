@@ -22,3 +22,6 @@
 - GO:0046536 MODIFY -> GO:0016456.
 - E3 ligase GO:0061630 ACCEPT on all rows (histone + non-histone substrates); H2B-specific activity captured by GO:0141054 (ACCEPT).
 - Shared MSL convention: MSL complex + GO:0016456 ACCEPT; chromosome MODIFY -> X chromosome; nuclear chromosome and nucleus ACCEPT (free nuclear MSL pool, PMID:21551218; autosomal 4th-chromosome binding, PMID:25501352); chromatin binding KEEP_AS_NON_CORE.
+
+## Deep research (falcon, added after initial review)
+- `msl-2-deep-research-falcon.md` agrees: MSL2 initiates and organizes the MSL complex on the male X; its CXC domain reads GA-rich MREs ["Its CXC zinc-binding domain recognizes GA-rich MSL recognition elements (MREs) at chromosomal entry or high-affinity sites (CES/HAS)."]. It notes the fly H2B acceptor is proposed to be K31 (K34 characterized mainly with mammalian MSL1-MSL2), and that MSL2 ubiquitylates MSL1, MOF, MSL3 and itself. No annotation decisions changed.
