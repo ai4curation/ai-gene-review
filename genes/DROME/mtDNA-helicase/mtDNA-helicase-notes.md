@@ -6,4 +6,4 @@
 - Membranes: [PMID:34950192 "We demonstrate that the NTD binds to asolectin liposomes, which mimic phospholipid membranes, through electrostatic interactions"]; inner-membrane association proposed, kept non-core.
 - 5'-3' helicase polarity is ISS from human TWINKLE; accepted as core MF.
 - Round-2 rule: DNA helicase activity -> GO:0043139; DNA replication -> GO:0006264; iron-sulfur cluster binding -> GO:0051537.
-- Deep research: falcon run pending or timed out at time of review; no file yet.
+- Falcon deep research (arrived after first commit): confirms replicative helicase role, ~90% mitochondrial fractionation, NTD primase-like but not a primase, in vitro lipid binding not proof of membrane anchoring; adult neuronal K388A depletes head mtDNA.
