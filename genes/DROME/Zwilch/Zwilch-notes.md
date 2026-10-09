@@ -8,3 +8,6 @@
 
 ## Curation thoughts
 - Zwilch is a kinetochore-specific RZZ subunit; core role is SAC/dynein and Mad1-Mad2 recruitment as part of RZZ. No independent MF known; represent as contributing to RZZ kinetochore adaptor activity.
+
+## Deep research (falcon) additions
+- Falcon report agrees Zwilch is a nonenzymatic RZZ adaptor/scaffold subunit; notes that zwilch hypomorphs fail to recruit Zw10, Rod and dynein to kinetochores, and that fly Spindly lacks the farnesylation site used by human Spindly, so human RZZ-Spindly corona mechanisms are only partly transferable ["Fly Zwilch is not itself supported as an ER–Golgi trafficking or spermatocyte-cytokinesis factor."].
