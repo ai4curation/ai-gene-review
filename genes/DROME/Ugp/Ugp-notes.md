@@ -12,4 +12,6 @@ UGP"].
   annotated; glycogen biosynthesis kept as non-core (one of several consumers of UDP-glucose); hyperoxia
   response marked as over-annotation.
 
-- Deep research: the first `just deep-research-falcon` attempt timed out (600 s; perplexity-lite fallback unavailable). Review based on cached publications and UniProt.
+- Falcon deep research (Ugp-deep-research-falcon.md) is consistent (CG4347 = UGPase, EC 2.7.7.9). It mentions a fly
+  galactosemia study suggesting Ugp may also form UDP-galactose from galactose-1-phosphate when Galt is lost (genetic, not
+  kinetic), and a 2025 kinetic study of a "DmUGP" whose cited accession (A5XCL5) differs from Q9VSW1.
