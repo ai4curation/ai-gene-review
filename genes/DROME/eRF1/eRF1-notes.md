@@ -2,8 +2,7 @@
 
 Module context: dmel_erf1_erf3_termination_complex (eRF1 with eRF3).
 
-Deep research: the first falcon run (perplexity-lite fallback) failed (falcon
-timeout / killed; perplexity provider unavailable). Notes use cached publications.
+Deep research: the first falcon attempt failed (timeout/killed; perplexity unavailable); a retry produced `eRF1-deep-research-falcon.md` after the review was drafted. It agrees with this review (class I release factor with eRF3; HemK2 GGQ methylation).
 
 - Termination complex: [PMID:14573473 "eRF1 and eRF3 comprise the translation termination complex that recognizes stop codons and catalyzes the release of nascent polypeptide chains from ribosomes"]
 - In vivo genetics: [PMID:14573473 "Mutations disrupting the Drosophila eRF1 and eRF3 show a strong maternal-effect nonsense suppression due to readthrough of stop codons and are zygotically lethal during larval stages"]

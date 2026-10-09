@@ -2,9 +2,7 @@
 
 Module context: dmel_eif4e_cup_complex (Cup with eIF4E1).
 
-Deep research: the falcon run (with perplexity-lite fallback) failed during the first
-attempt (falcon timeout / process killed; perplexity provider not available). The
-literature below comes from the cached publications.
+Deep research: the first falcon attempt failed (timeout/killed; perplexity unavailable); a retry produced `cup-deep-research-falcon.md` after the review was drafted. It agrees with this review: Cup is described as a cytoplasmic mRNP adaptor and translational repressor, not an enzyme, acting in germline P bodies; it also notes newer roles in cycA/cycB mRNA partitioning and CTLH-mediated clearance at the maternal-to-zygotic transition (not in GOA).
 
 ## Molecular function
 - Cup is an eIF4E-binding protein (4E-BP) of the 4E-T family. [PMID:14685270 "Cup is an eIF4E-binding protein that blocks the binding of eIF4G to eIF4E"]
