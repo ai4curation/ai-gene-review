@@ -21,10 +21,10 @@ independently: mutating one part gives a strong growth defect in some
 condition while mutating its neighbour has no effect. Examples include a
 3-methylcrotonyl-CoA carboxylase named "Nuclear pore complex protein Nup85"
 and a branched-chain keto acid dehydrogenase fused to an amino acid
-transporter. The repository already has one fused gene model
+transporter. The repository already had one fused gene model
 (a Miscanthus "UMP-CMP kinase") and three truncated ones, all recorded only in
-review prose; the gene review schema has no field for such problems (see
-Proposal).
+review prose. Gene reviews now have a structured `gene_model_issues` field
+for such problems, and those four reviews have been back-filled.
 
 ## Why it matters for annotation review
 
@@ -130,47 +130,61 @@ growth data, not an established assignment.
 - Genetic separation needs a condition where one part has a phenotype, so
   fusions of two unphenotyped genes cannot be confirmed this way.
 
-## Proposal: recording gene model problems
+## Recording gene model problems: `gene_model_issues`
 
-Nothing in the schema can carry this today. GeneReview has free-text `tags`
-(used once, inconsistently, as above), and the prediction-review error enum
-has `WRONG_INPUT_SEQUENCE` for pipeline errors, but neither says what is wrong
-with the entry, or distinguishes an annotation artifact from a real
-biological fusion. A structured slot on
-GeneReview would let a review say "this accession is a fusion of A and B;
-this review covers part A", for example:
+Gene reviews now have a `gene_model_issues` field (added 2026-10-09; schema
+classes `GeneModelIssue` and `GeneModelComponent`). Each entry records:
+
+- `issue_type`: `FUSED_GENE_MODEL`, `SPLIT_GENE_MODEL`, `TRUNCATED_GENE_MODEL`,
+  `WRONG_START_SITE` or `OTHER`. A genuine biological fusion, such as the
+  grass `SDH2-RPS14` locus, is not a gene model issue.
+- `status`: `SUSPECTED` (one line of evidence) or `CONFIRMED` (independent
+  lines, such as tiling plus genetic separation).
+- `description`, plus optional `components` (accession, segment and
+  description of each underlying gene) and `reviewed_segment` (the residues
+  the review's functional statements refer to).
+- `evidence_types`: `TILING`, `ADJACENT_GENES`, `GENETIC_SEPARATION`,
+  `DOMAIN_ARCHITECTURE`, `ORTHOLOG_COMPARISON`, `TRANSCRIPT_EVIDENCE` or
+  `OTHER`.
+- `supported_by`: exact quotes, checked like any other `supporting_text`.
+
+The rendered review shows the issues in a "Gene Model Issues" section under
+the description. The four existing reviews above have been back-filled, all
+as `SUSPECTED`. For a fused *R. toruloides* entry, a review would look like:
 
 ```yaml
 gene_model_issues:
-  - issue_type: FUSED_GENE_MODEL   # also SPLIT_GENE_MODEL, TRUNCATED_MODEL, WRONG_START
-    components:
-      - comparison_accession: A0A2T0ACW0   # IFO0880, archived in UniParc
-        segment: 645-1419
-        description: 3-methylcrotonyl-CoA carboxylase biotin-carboxylase subunit
-      - comparison_accession: A0A2T0ACV7
-        segment: 1-650
-        description: Nup85-like nucleoporin
-    evidence: [TILING, ADJACENT_GENES, GENETIC_SEPARATION]
-    reviewed_segment: 645-1419
-    supported_by:
-      - reference_id: file:projects/GENE_MODEL_ERRORS/data/rhoto_fusion_genetics.tsv
+- issue_type: FUSED_GENE_MODEL
+  status: CONFIRMED
+  description: >-
+    Joins the Nup85-like nucleoporin gene to the neighbouring
+    3-methylcrotonyl-CoA carboxylase biotin-carboxylase gene; named after
+    the Nup85 part. Only the carboxylase part is reviewed here.
+  components:
+  - accession: A0A2T0ACV7
+    segment: 1-650
+    description: Nup85-like nucleoporin (IFO0880 RTO4_12868)
+  - accession: A0A2T0ACW0
+    segment: 645-1419
+    description: MCC biotin-carboxylase subunit (IFO0880 RTO4_12867)
+  reviewed_segment: 645-1419
+  evidence_types: [TILING, ADJACENT_GENES, GENETIC_SEPARATION]
 ```
 
-Until then, `data/rhoto_fusion_genetics.tsv` is the structured record (one
-row per fused entry, with parts, adjacency, the separating condition and an
-evidence list), and this page's `genes` metadata lists the four existing reviews above
-and the 15 genetically separated *R. toruloides* entries.
+`data/rhoto_fusion_genetics.tsv` remains the pipeline record for the 26
+*R. toruloides* fusions until they have gene reviews; this page's `genes`
+metadata lists the four existing reviews and the 15 genetically separated
+entries.
 
 ## Next steps
 
-1. Decide on the schema slot above (or an alternative) before the first
-   *R. toruloides* gene reviews, since several candidates (BCKDH E1α, MCC α,
-   the aromatic dioxygenase) sit in fused entries.
-2. Once a field exists, back-fill the four existing reviews above.
-3. Run the tiling screen across the whole UP000199069 reference proteome
+1. Use `gene_model_issues` in the first *R. toruloides* gene reviews, since
+   several candidates (BCKDH E1α, MCC α, the aromatic dioxygenase) sit in
+   fused entries.
+2. Run the tiling screen across the whole UP000199069 reference proteome
    against IFO0880, not just phenotype-linked entries.
-4. Report the 15 genetically separated fusions to UniProt.
-5. Look for fusions in reviewed species by the same route: any organism with
+3. Report the 15 genetically separated fusions to UniProt.
+4. Look for fusions in reviewed species by the same route: any organism with
    two independent assemblies in UniParc can be screened.
 
 ## Files

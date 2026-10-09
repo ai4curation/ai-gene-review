@@ -296,6 +296,18 @@ slots:
     range: Experiment
     multivalued: true
     recommended: true
+  gene_model_issues:
+    range: GeneModelIssue
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Problems with the predicted gene model behind this entry: the protein sequence
+      does not correspond to a single real gene product, for example because two
+      neighbouring genes were joined (fused), one gene was split, or the model is
+      truncated or starts at the wrong codon. Record these when they change how the
+      entry's name, sequence features or annotations should be read. A genuine
+      biological fusion (a real chimeric gene or polyprotein) is not a gene model
+      issue. See projects/GENE_MODEL_ERRORS.md.
   knowledge_gaps:
     range: KnowledgeGap
     multivalued: true
@@ -337,6 +349,7 @@ classes:
      - taxon
      - alternative_products
      - functional_isoforms
+     - gene_model_issues
      - references
      - existing_annotations
      - core_functions
@@ -376,6 +389,68 @@ classes:
           isoform-specific functions, expression patterns, or biological activities
           that differ from other isoforms.
         recommended: true
+
+  GeneModelIssue:
+    description: >-
+      A problem with the predicted gene model of the reviewed entry, with the evidence
+      for it. For a fused model, list each underlying gene as a component and give the
+      segment of the entry that the review's functional statements apply to.
+    attributes:
+      issue_type:
+        range: GeneModelIssueTypeEnum
+        required: true
+      status:
+        range: GeneModelIssueStatusEnum
+        required: true
+        description: How well established the problem is.
+      description:
+        range: string
+        required: true
+        description: >-
+          What is wrong with the model and what it does to the entry's name and
+          annotations (e.g. "named after the Nup85-like half; the carboxylase half
+          carries the phenotype").
+      components:
+        range: GeneModelComponent
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          For fused (or split) models: the separate genes or proteins that make up the
+          entry, each with the segment of the entry it covers.
+      reviewed_segment:
+        range: string
+        pattern: "^[0-9]+-[0-9]+$"
+        description: >-
+          Residue range of this entry (start-end, 1-based) that the review's
+          functional statements refer to, when only part of a fused or extended model
+          is the gene product being reviewed.
+      evidence_types:
+        range: GeneModelEvidenceEnum
+        multivalued: true
+        description: Kinds of evidence for the issue.
+    slots:
+      - supported_by
+
+  GeneModelComponent:
+    description: >-
+      One underlying gene or protein of a fused (or split) gene model, identified in
+      an independent annotation or assembly, with the segment of the reviewed entry
+      it corresponds to.
+    attributes:
+      accession:
+        range: string
+        description: >-
+          Identifier of the separate protein or gene in the other annotation, as a
+          UniProtKB or UniParc accession or a locus tag (e.g. A0A2T0ACW0, RTO4_12867).
+      segment:
+        range: string
+        pattern: "^[0-9]+-[0-9]+$"
+        description: Residue range of the reviewed entry covered by this component (start-end, 1-based).
+      description:
+        range: string
+        description: >-
+          What this component is (e.g. "3-methylcrotonyl-CoA carboxylase biotin
+          carboxylase subunit; carries the leucine-specific fitness defect").
 
   FunctionalIsoform:
     description: >-
@@ -3178,6 +3253,70 @@ enums:
           Selected when jaccard_boosted (jaccard + 0.05) is highest among {jaccard+0.05, containment_a_in_b, containment_b_in_a}.
 
   # ============== Functional Isoform Enums ==============
+
+  GeneModelIssueTypeEnum:
+    description: Kind of gene model problem affecting a UniProt entry.
+    permissible_values:
+      FUSED_GENE_MODEL:
+        description: >-
+          The predicted protein joins two or more separate (usually neighbouring)
+          genes into one entry. Not for genuine biological fusions such as real
+          chimeric genes or polyproteins.
+      SPLIT_GENE_MODEL:
+        description: >-
+          One real gene is predicted as two or more entries; this entry is one
+          fragment.
+      TRUNCATED_GENE_MODEL:
+        description: >-
+          The model lacks part of the real protein (missing exons, early stop,
+          incomplete assembly), so features such as catalytic residues may be absent
+          from the sequence but present in the gene.
+      WRONG_START_SITE:
+        description: >-
+          The model starts at the wrong initiation codon, adding or removing an
+          N-terminal segment (e.g. a spurious or missing targeting peptide).
+      OTHER:
+        description: Another gene model problem; explain in the description.
+
+  GeneModelIssueStatusEnum:
+    description: How well established a gene model issue is.
+    permissible_values:
+      SUSPECTED:
+        description: >-
+          Indicated by one line of evidence (e.g. length or domain architecture
+          compared with orthologs) but not demonstrated.
+      CONFIRMED:
+        description: >-
+          Demonstrated by independent lines of evidence, e.g. the entry is tiled by
+          separate genes of another assembly and those genes have independent
+          phenotypes.
+
+  GeneModelEvidenceEnum:
+    description: Kinds of evidence for a gene model issue.
+    permissible_values:
+      TILING:
+        description: >-
+          Separate proteins from an independent assembly or annotation of the same
+          species align at near-identity to different, non-overlapping segments of
+          the entry.
+      ADJACENT_GENES:
+        description: The components are neighbouring genes in the independent annotation.
+      GENETIC_SEPARATION:
+        description: >-
+          Mutants in different components have different phenotypes, showing that
+          the components act independently.
+      DOMAIN_ARCHITECTURE:
+        description: >-
+          The entry combines domains from unrelated families, or lacks domains or
+          catalytic residues conserved in its orthologs.
+      ORTHOLOG_COMPARISON:
+        description: >-
+          The entry's length or sequence diverges from its orthologs in a way best
+          explained by a model error.
+      TRANSCRIPT_EVIDENCE:
+        description: cDNA, RNA-seq or proteomic evidence for a different gene structure.
+      OTHER:
+        description: Another kind of evidence; explain in the issue description.
 
   FunctionalIsoformTypeEnum:
     description: >-

@@ -542,6 +542,17 @@ gene's symbol (for example, L0R8F8 AltMIEF1 is gene `MIEF1`). Such a peptide get
 
 Never model such a peptide as a `functional_isoform` of its host. See `projects/MICROPROTEINS.md`.
 
+### Gene model problems
+
+When the entry's sequence is not a single real gene product (two neighbouring
+genes fused into one model, a split or truncated model, a wrong start site),
+record it in the top-level `gene_model_issues` list rather than only in prose:
+`issue_type`, `status` (`SUSPECTED` or `CONFIRMED`), a `description` of how it
+affects the entry's name and annotations, optional `components` and
+`reviewed_segment` for fused models, `evidence_types`, and `supported_by` quotes.
+A genuine biological fusion is not a gene model issue. See
+`projects/GENE_MODEL_ERRORS.md`.
+
 ## Bioinformatics analyses
 
 In some cases, it may be useful to do additional bioinformatics analyses. To validate gene function. Here are some guidelines:
