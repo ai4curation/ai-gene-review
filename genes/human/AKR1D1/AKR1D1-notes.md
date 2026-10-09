@@ -310,3 +310,62 @@ oxygen-insertion mechanism for ketosteroid monooxygenase activity, even though
 the exact AKR1C1/C2/C3 donor assays from PMID:21232532 still need full-text
 review. Ancestral aldose reduction remains unresolved because purified AKR1D1
 negative aldose assays were not located.
+
+
+## 2026-10-09 — R-HSA-193755 recovered from an official historical release
+
+The missing event is now available as authentic historical source material. The
+complete [Reactome release 89 human SBML archive](https://download.reactome.org/89/homo_sapiens.3.1.sbml.tgz)
+contains reaction `reaction_193755` in pathway member `R-HSA-193775.sbml`.
+Its exact title, input/output entities, AKR1D1 catalyst mapped to UniProt P51857,
+cytosol compartment, and literature links were read directly from the XML.
+The [unaltered source member](../../../reactome/R-HSA-193755-source/Reactome-v89-R-HSA-193775.sbml)
+and [machine-generated extraction/provenance](../../../reactome/R-HSA-193755-source/provenance.json)
+are retained alongside the [generated cache](../../../reactome/R-HSA-193755.md).
+The archive SHA256 is `d3c99ec42c7fcf5a582b67d6a4a4dcdadbe5e448d5c6b2c4fe81338e763bca61`;
+the member SHA256 is `4eda3a450b1b457917234329d64bf2feaf29addbc0716e569b2aa738866369fd`.
+The XML identifies itself as release 89, generated in June 2024. The cache uses
+the existing Reactome formatter with machine-extracted stable ID, title and
+summary. No current API success is implied: the release-97 ContentService and
+detail page still return 404 for this event, and no deletion or replacement
+history has been recovered.
+
+The archived equation's input is a Delta4 steroid and its output is the saturated
+5beta steroid while the 3-one remains. This supports the existing refinement to
+[GO:0047787](https://www.ebi.ac.uk/QuickGO/term/GO:0047787), rather than the alcohol/ketone
+chemistry of [GO:0008106](https://www.ebi.ac.uk/QuickGO/term/GO:0008106).
+Historical labels drifted: release 89 exports GO:0004033 and EC 1.1.1, whereas
+the later indexed event labels GO:0008106. The original GOA term, qualifier,
+TAS evidence and Reactome ID remain untouched. The source summary itself uses
+cholesten inconsistently in one product sentence; the title and explicit output
+entity identify the saturated cholestan product. The cache preserves that source
+text rather than silently repairing it.
+
+The event links [PMID:7508385](https://pubmed.ncbi.nlm.nih.gov/7508385/) and
+[PMID:12543708](https://pubmed.ncbi.nlm.nih.gov/12543708/). The former was inspected
+as an abstract: human cDNA expressed in COS cells supports reduction of related
+7alpha-hydroxy and 7alpha,12alpha-dihydroxy bile acid precursors. The latter is a
+broad 2003 review, accessed only as an abstract. Neither access scope establishes
+an independently inspected primary assay of this exact 24(S)-hydroxylated triol.
+Selected full Methods and Results of [PMID:21255593](https://pubmed.ncbi.nlm.nih.gov/21255593/)
+support the molecular-function class using purified human AKR1D1, NADPH, product
+comparison and substrate-dependent kinetics; their general substrate-range
+result is not substituted for an exact-substrate assay. Historical reaction
+identity and human enzyme activity are therefore supported, with the exact
+substrate assay limitation retained.
+
+The archived AKR1D1 species is located in cytosol (GO:0005829). Its steroid
+input starts in the ER membrane; this does not locate the enzyme there or
+establish transport by AKR1D1. The source explicitly leaves the translocation
+mechanism unresolved. Both affected annotation actions remain unchanged:
+MODIFY for the enzyme-class mapping and ACCEPT for cytosol. No NEW function,
+other annotation change, or current-event replacement is proposed.
+
+This entry supersedes the earlier search-only provenance description. It
+provides the durable, machine-derived event evidence requested by the prior
+review. The archived cache and original SBML address that historical source
+gate; successful retrieval of the current API is not claimed or required to
+verify this archived event. DRAFT remains the status calculated by the normal
+validation workflow. Campaign completion still requires this follow-up to
+receive review approval and merge. No further repeated live retrieval is
+necessary to assess the historical event supplied here.
