@@ -92,3 +92,27 @@ A bounded [RAD51D partner-class check](https://rest.uniprot.org/uniprotkb/O75771
 The newly accessed SPIDR Results also describe BLM foci after camptothecin and hydroxyurea exposure. The associated access statements are corrected. The camptothecin process row remains UNDECIDED because the inspected panels lack an untreated comparison for stimulus-induced recruitment. This is an explicit assay-interpretation limit, not an inaccessible-paper claim or a requirement for survival evidence. SPIDR perturbations are not attributed to BLM. Other source-associated actions remain unchanged. No NEW assertion is proposed.
 
 All inherited supporting quotations are unchanged and remain at most eighteen words per scientific source across the review; no new scientific quotation was added to these notes. Reference access notes for the three newly inspected papers distinguish external access from cache completeness. All normal caches remain unchanged. This is a bounded follow-up, not a whole-paper audit or a new gene-wide review.
+
+
+## 2026-10-09 — retain the documented camptothecin response
+
+The camptothecin row now follows the positive recruitment evidence in the
+selected Results and Figures 1G/2 of [PMID:23509288](https://pmc.ncbi.nlm.nih.gov/articles/PMC3696769/).
+The authors report CPT-induced BLM foci and SPIDR-dependent recruitment; the
+broad cellular-response term does not require a BLM survival endpoint or an
+untreated control in the subset of panels inspected here. The previous
+UNDECIDED rationale was an unnecessarily restrictive interpretation of that
+access boundary and is superseded. SPIDR depletion/rescue is still attributed
+to SPIDR. Hydroxyurea has additional independent support from PMID:28506294,
+but that asymmetry does not invalidate the original CPT recruitment evidence.
+No direct survival protection, new process annotation or core function is added.
+The 188 source assertions now comprise 117 ACCEPT, 31 KEEP_AS_NON_CORE, 28 MODIFY
+and 12 UNDECIDED; all other actions remain unchanged.
+
+The [interaction evidence extract](BLM-interaction-evidence.json) supplies
+16 exact curated records for the cited TRF1/TRF2, RPA1 and NABP2 contacts,
+including their IntAct/IMEx identifiers, source-specific query URLs, methods,
+species, construct features and response hashes. Colocalization-only records
+are excluded from this binding-evidence extract. These database records share
+provenance with the source publications and do not constitute independent
+replication. No new scientific excerpt is added.
