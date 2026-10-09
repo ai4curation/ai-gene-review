@@ -12,4 +12,5 @@ cha"].
   and endomembrane system modified; GDP-fucose transmembrane transport modified to ER-lumen import (GO:0036084);
   multi-substrate transporter activities and NOT specificity rows accepted.
 
-- Deep research: the first `just deep-research-falcon` attempt timed out (600 s; perplexity-lite fallback unavailable). Review based on cached publications and UniProt.
+- Falcon deep research (Efr-deep-research-falcon.md; it finished after the wrapper's 600 s timeout) is consistent:
+  multisubstrate nucleotide-sugar transporter delivering GDP-fucose, UDP-GlcNAc and UDP-xylose to the ER lumen.
