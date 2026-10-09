@@ -11,4 +11,6 @@
   activities (allyl/aryl alcohol, glycerol, retinol dehydrogenase, PGH2 reductase) non-core; AKR1A1-derived
   glucuronate terms and retinol metabolic process marked over-annotated; IDA extracellular region UNDECIDED.
 
-- Deep research: falcon run pending at time of first commit (interrupted by a container restart); will be folded in if it completes.
+- Falcon deep research (Ar1-deep-research-falcon.md) is consistent; it explains the IDA extracellular region row (Yang et al.
+  describe AR as secreted and detect reductase activity in hemolymph) but notes secretion of intact Ar1 is not demonstrated,
+  so the row stays UNDECIDED. It also mentions preprint-level evidence for a glial role.
