@@ -3,7 +3,7 @@
 Accession: Q8IN89 (TrEMBL, FBgn0042693). `just fetch-gene DROME wrd` resolved to A0A0B4KHB9 (13 GOA rows);
 the expected accession Q8IN89 has 23 GOA rows and was used, as instructed.
 
-Deep research: falcon run queued at time of review (see later commits).
+Deep research: `wrd-deep-research-falcon.md` (falcon; completed after a wrapper timeout message). It confirms Wrd as a non-catalytic B56 targeting subunit with S6K as the best-supported direct substrate, notes that Wrd (unlike Wdb) was not detected on meiotic chromosomes by immunofluorescence, and reports 2024 evidence that PP2A-Wrd stabilizes Expanded and can promote Hippo signaling, i.e. a context-dependent sign that conflicts with the negative regulation of hippo signaling IMP row; that row is therefore kept as non-core rather than accepted.
 
 ## Literature journal
 
