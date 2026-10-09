@@ -8,3 +8,6 @@
 - VPS54 KD has a weaker effect on Tf recycling than syndetin KD [PMID:25799061 "Vps54 KD also delayed Tf-Alexa568 recycling, albeit to a lesser extent"].
 
 Decisions: GARP / retrograde transport ACCEPT (core); spermatogenesis IMP rows non-core; IDA endocytic recycling (PMID:25795912) MODIFY -> GO:0042147; Golgi-to-vacuole ISS from yeast over-annotated.
+
+Deep research: falcon completed (genes/DROME/scat/scat-deep-research-falcon.md) after the review was first committed; checked for consistency.
+- Deep research (falcon) adds: scat is required in motor neurons for TGN Syx16 organization and restrains NMJ growth (genetic interaction with Rab7); GARP prevents TGN sterol accumulation during dendrite regrowth (O'Brien et al. 2022, doi:10.1083/jcb.202112108) [file:DROME/scat/scat-deep-research-falcon.md "Loss or motor-neuron RNAi of *scat* made dStx16 staining more diffuse"]. These are not in GOA and were not added as NEW annotations.
