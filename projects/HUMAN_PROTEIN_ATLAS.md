@@ -183,6 +183,7 @@ Last updated: 2026-10-03
 - [ ] Decide whether the 8 candidates left out of the module belong in a stage: OFD1, KIF17, MPHOSPH9, PACSIN1, RAB11A, AHI1, LZTFL1 (BBSome regulator) and BBS1 (covered by modules/bbsome.yaml)
 - [ ] Propose GO terms: regulation of cilium length; cytoplasmic dynein-2 complex; ATP-dependent microtubule depolymerase activity (KIF2A, KIF24)
 - [ ] Expert check of the flagged REMOVE decisions on experimental annotations (see 2026-10-03 notes)
+- [ ] Decide whether the IFT and transition-zone stages should reference `modules/intraflagellar_transport.yaml` and `modules/ciliary_transition_zone.yaml` (added on main in #4425)
 - [ ] Resolve the 14 UNDECIDED annotations across the new reviews
 
 ## Member gene reviews (all done 2026-10-03)
@@ -260,6 +261,20 @@ For each review, record how the HPA cilium call (grade, sub-ciliary class)
 compares with the role the module assigns.
 
 # NOTES
+
+## 2026-10-09 (merge with main)
+
+- While this branch was open, main merged its own reviews of 14 module
+  members: AURKA, B9D2 and KIF7 (#4350, #4358, #4404), and CEP290, CILK1,
+  DYNC2H1, IFT140, IFT88, KIF3A, MKS1, NPHP1, NPHP4, RPGRIP1L and TCTN1
+  (#4425). Main's reviewed versions are kept for those genes. This branch
+  contributes the other 40 member reviews. The module still passes its
+  checks against main's versions.
+- #4425 also added `modules/intraflagellar_transport.yaml` and
+  `modules/ciliary_transition_zone.yaml`, which cover the same ground as this
+  module's IFT and transition-zone stages (and MAK/CILK1 regulation). Open
+  question: whether those stages here should reference the dedicated modules
+  instead of restating them.
 
 ## 2026-10-03 (member reviews and module revision)
 

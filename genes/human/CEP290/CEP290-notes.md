@@ -1,69 +1,21 @@
-# CEP290 curation notes
+# CEP290 notes
 
-## 2026-10-03 — initial review (primary cilium life cycle module, stage 3 transition zone)
+Deep research: not run. In this environment falcon times out and perplexity-lite is not installed. The review
+uses cached publications (`just fetch-gene-pmids human CEP290`) and the C. elegans TZ module literature.
 
-Human CEP290 (NPHP6, BBS14) = UniProt O15078. 99 GOA annotations seeded; all reviewed.
+## Key findings (with provenance)
+- Direct microtubule binding by region M: [PMID:24051377 "Region M was found to directly and robustly bind to microtubules in a concentration-dependent manner"]
+- Direct liposome binding by the N-terminal domain: [PMID:24051377 "CEP290 aa 1–580 associated with liposomes robustly"]
+- Required for ciliogenesis; CP110 antagonizes it: [PMID:18694559 "Ablation of CEP290 prevents ciliogenesis without affecting centrosome function or cell-cycle progression"]
+- Located at the TZ, centriolar satellites and connecting cilium: [PMID:23943788 "co-localizes with CEP290 to the transition zone (TZ) of primary cilia and centriolar satellites in ciliated cells"]
+- Proximal TZ position: [PMID:28401750 "CEP290’s signal had a width close to that of the axoneme"]
+- Worm CEP-290 is the MKS-module assembly factor downstream of MKS-5: [PMID:26982032 "central assembly factor that is specific for established MKS module components and depends on the coiled coil region of MKS-5"]
+- NPHP5 partner and BBSome integrity: [PMID:25552655 "Depletion of Cep290, another transition zone protein that directly binds to NPHP5, causes additional dissociation of BBS8"]
 
-### Deep research status
-
-First falcon run (600 s timeout, perplexity fallback unavailable) did not complete; a `--timeout 2400` re-run was
-killed (exit 137) and relaunched (outcome at the end of this file). The review is based on cached primary literature.
-
-### Biology
-
-- Transition-zone Y-links: [PMID:20819941 "CEP290 is located in the flagellar transition zone in close association
-  with the prominent microtubule-membrane links there"; "CEP290 is required to form microtubule-membrane linkers that
-  tether the flagellar membrane to the transition zone microtubules, and is essential for controlling flagellar protein
-  composition"] (Chlamydomonas).
-- Membrane and microtubule binding domains [PMID:24051377 "CEP290 directly binds to cellular membranes through an
-  N-terminal domain that includes a highly conserved amphipathic helix motif and to microtubules through a domain
-  located within its myosin-tail homology domain"].
-- TZ modules and position: [PMID:28401750 "revealed the existence of three main TZ modules, MKS, NPHP and CEP290";
-  "CEP290’s signal had a width close to that of the axoneme, and occupied a proximal position close to the BB and
-  transition fiber markers centrin and CEP164 respectively"; satellites deliver TZ proteins: "These results suggest that,
-  like CEP290, other TZ components also rely on centriolar satellites for their delivery to the TZ"].
-- CP110 restrains CEP290; CEP290 needed for ciliogenesis and Rab8a recruitment [PMID:18694559 "Ablation of CEP290
-  prevents ciliogenesis without affecting centrosome function or cell-cycle progression"; "Depletion of CEP290
-  diminishes the localization of Rab8a to centrosomes and prevents its entry into the cilium"].
-- Ciliary vesicle maturation [PMID:24421332 "Talpid3 is required for centriolar satellite dispersal, which precedes the
-  formation of mature ciliary vesicles, a process requiring Cep290"].
-- BBSome binding, TZ/satellite/connecting-cilium co-localization [PMID:23943788 "co-localizes with CEP290 to the
-  transition zone (TZ) of primary cilia and centriolar satellites in ciliated cells, as well as to the connecting cilium
-  in photoreceptor cells"].
-- Nuclear pool / ATF4 [PMID:16682973 "CEP290 (also known as NPHP6) interacts with and modulates the activity of ATF4";
-  "NPHP6 is found at centrosomes and in the nucleus of renal epithelial cells in a cell cycle-dependent manner and in
-  connecting cilia of photoreceptors"].
-- Co-purifies with Tctn1 complex [PMID:21725307 "including Mks1, Tmem216, Tmem67, Cep290, B9d1, Tctn2 and Cc2d2a"].
-
-### Key decisions
-
-- 30 protein binding rows: REMOVE (policy), with partner-specific notes (CP110, NPHP5, BBS4, CEP131, CCDC66 are
-  biologically meaningful).
-- Extracellular region + specific granule lumen (Reactome neutrophil degranulation): REMOVE — granule proteomics
-  contaminant, no signal peptide.
-- MKS complex (ISS): KEEP_AS_NON_CORE — co-purifies with Tctn1 complex but is a separate TZ module.
-- Developmental terms (kidney, eye, hindbrain, otic vesicle, pronephros, photoreceptor development): KEEP_AS_NON_CORE.
-- Positive regulation of transcription (IDA, ATF4): KEEP_AS_NON_CORE (cannot verify; not overruled).
-- NOT microtubule minus-end binding: ACCEPT as stated.
-- Cilium assembly IDA (PMID:26386044, a KIAA0586 paper that only references the Cep290 phenotype): ACCEPT on the
-  strength of other evidence.
-- Centrosome, centriole, centriolar satellite, TZ, connecting cilium, TZ assembly (GO:1905349), non-motile cilium
-  assembly: ACCEPT. GO:1905349 is the replacement for obsoleted GO:0097711 (projects/CILIARY_BASAL_BODY_DOCKING_OBSOLETION.md
-  lists CEP290 as Tier 1); the human IBA already uses GO:1905349, so no NEW row needed.
-
-## HPA cilium atlas vs module role
-
-- HPA: **Primary cilium (Approved); Basal body (Uncertain); Centrosome (Approved)**; main locations "Basal body;
-  Centrosome; Mid piece". No GO_REF:0000052 row for CEP290 in GOA.
-- Module role: transition-zone scaffold (stage 3, "MKS module plus CEP290"). Consistent with HPA and literature.
-- Where I go beyond the module: CEP290 also acts before TZ assembly, at centriolar satellites and the mother centriole,
-  in ciliary vesicle maturation and RAB8A recruitment (stage 2 boundary). core_functions therefore list two units:
-  (1) TZ Y-link scaffold / TZ assembly (module role), (2) satellite/centriole scaffold for ciliary vesicle maturation and
-  RAB8A recruitment. CEP290 should not be treated as an MKS-complex subunit.
-
-## Deep research outcome
-
-The re-run `just deep-research-falcon human CEP290 --timeout 2400` succeeded and produced
-`CEP290-deep-research-falcon.md` (2026-10-03). I read it after drafting the review. Its summary agrees with the
-cached primary literature used here and changes none of the curation decisions. Annotation-level supporting quotes come
-from the cached publications. The first core function also cites one sentence from the deep-research file.
+## Curation decisions
+- All 30 GO:0005515 rows REMOVE (no informative MF). NEW: microtubule binding (GO:0008017) and lipid binding
+  (GO:0008289), both IDA from PMID:24051377.
+- Reactome neutrophil-degranulation rows (extracellular region, specific granule lumen) REMOVE: a cytoplasmic
+  coiled-coil protein with no signal peptide.
+- protein transport (ISS) MODIFY -> protein localization to cilium.
+- MKS complex (ISS) kept non-core: CEP290 is usually treated as its own TZ module.
