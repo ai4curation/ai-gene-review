@@ -62,8 +62,12 @@ interactome map of human binary protein interactions, or 'HuRI'." [PMID:32296183
 These are high-throughput binary interactions with no established functional relevance
 to ETNK2's enzymatic role; several partners (keratin-associated protein KRTAP12-2,
 cysteine-rich tail protein CYSRT1) are common Y2H "sticky"/frequent-flier-type hits.
-"protein binding" (GO:0005515) is uninformative for molecular function and these are
-marked as over-annotated (not removed, per policy for IPI).
+"protein binding" (GO:0005515) is uninformative for molecular function. As of
+2026-10-09 this row is marked **REMOVE** (previously MARK_AS_OVER_ANNOTATED): the
+generic-protein-binding policy excludes MARK_AS_OVER_ANNOTATED for GO:0005515 by
+name, and `just validate` warns on it. Removal does not assert the interactions
+are false; MODIFY is unavailable because none of the six partners is
+lipid-metabolic and HuRI assigns no function to any of them.
 
 ## Existing annotation inventory (from goa.tsv)
 
@@ -71,7 +75,7 @@ marked as over-annotated (not removed, per policy for IPI).
 2. GO:0005737 cytoplasm — IBA — GO_REF:0000033 — is_active_in — MODIFY -> cytosol (GO:0005829)
 3. GO:0006646 phosphatidylethanolamine biosynthetic process — IBA — GO_REF:0000033 — involved_in — ACCEPT (core BP)
 4. GO:0004305 ethanolamine kinase activity — IEA — GO_REF:0000120 — enables — ACCEPT (core MF; EC/Rhea-based)
-5. GO:0005515 protein binding — IPI x6 — PMID:32296183 — enables — MARK_AS_OVER_ANNOTATED
+5. GO:0005515 protein binding — IPI x6 — PMID:32296183 — enables — REMOVE (was MARK_AS_OVER_ANNOTATED until 2026-10-09)
 6. GO:0006646 phosphatidylethanolamine biosynthetic process — IEA — GO_REF:0000041 (UniPathway) — involved_in — ACCEPT
 7. GO:0005829 cytosol — TAS — Reactome:R-HSA-1483222 — located_in — ACCEPT (core CC)
 
@@ -87,5 +91,62 @@ marked as over-annotated (not removed, per policy for IPI).
 ATP binding (GO:0005524) is not in GOA's process/component set but is present as the
 UniProtKB-KW-based F:ATP binding in the UniProt DR block ("GO:0005524; F:ATP binding;
 IEA:UniProtKB-KW") and is consistent with the kinase mechanism.
-</content>
-</invoke>
+
+## 2026-10-09 — weekly compliance pass
+
+Evidence-aware compliance (`just compliance-all`) had ETNK2 at 44.23 weighted.
+The deficit was missing justification/provenance, not wrong biology. Changes:
+
+- **`review.reason` added to all 8 annotations** (only the GO:0005515 row had
+  one). The IBA reasons now argue the node placement rather than restating the
+  term: the `WITH/FROM` for GO:0004305 carries fourteen descendant evidences
+  spanning fungi, nematode, fly, rodent and human (node PANTHER:PTN000503516,
+  with SGD:S000002554/S000004123, FB:FBgn0000536, WB:WBGene00000510,
+  MGI:MGI:2443760, RGD:61944, and human ETNK1 UniProtKB:Q9Y259), so ethanolamine
+  kinase activity is ancestral to the family, not a recent acquisition that might
+  not have reached ETNK2.
+- **GO:0005515 migrated `MARK_AS_OVER_ANNOTATED` → `REMOVE`.** `just validate`
+  warned on it; the generic-protein-binding policy excludes that action for
+  GO:0005515 by name. MODIFY was checked against the actual partner list and
+  rejected: none of the six HuRI partners is lipid-metabolic (ATN1 nuclear
+  corepressor, HNRNPK RNA-binding, STX1A SNARE, MID2 E3 ligase, CYSRT1 and
+  KRTAP12-2 small cysteine-rich keratin-associated), and HuRI assigns no function
+  to any of them. Removal does not assert the interactions are false (NbExp=3 each).
+- **GO:0005737 `propagation_review` gained `source_entities`**, naming
+  PANTHER:PTN000503516 as `SUPPORTS_TRANSFER` — the compartment is right for the
+  clade, only the granularity is suboptimal for human ETNK2. Note this is a
+  granularity call, *not* a challenge to the node: the IBD was placed using
+  descendants including PomBase:SPAC13G7.12c and WB:WBGene00000509, and "cytoplasm"
+  is the most specific term assertable across that whole clade.
+- **ATP binding (GO:0005524) `NEW` row justified properly.** This row pre-existed
+  but carried no reason, and "NEW" needed defending. It is *not* a case of adding
+  what curators declined to add — **the annotation already exists upstream**:
+  Q9NVF9's UniProt DR block carries `GO:0005524; F:ATP binding; IEA:UniProtKB-KW`.
+  Comparator check run against the committed files in this repo: ETNK1, CHKA and
+  CHKB all carry the same DR line, and **none** of the four GOA/QuickGO exports
+  contains a single `GO_REF:0000043` row. So the absence is an export artefact
+  across the whole choline/ethanolamine kinase family, not a curatorial decision.
+  Evidence kept as IEA (the code the upstream annotation actually carries); no
+  residue-level claim made, since the human entry annotates no ATP-binding sites.
+- **`findings` added to all 7 references**, four of them on the UniProt entry.
+  Verbatim quotes where a source exists; the four GO_REF findings are
+  statement-only (documents not cached, so quotes would be unverifiable).
+- **`alternative_products` descriptions.** Isoform 2 (VSP_039098) replaces
+  residues 339–386 with an unrelated 56-residue tail; isoform 3 (VSP_039558)
+  carries a 41-residue in-frame deletion (173–213) *inside* the
+  choline/ethanolamine kinase domain. Both cDNA-derived (PubMed:14702039), neither
+  assayed, so neither carries an annotation.
+- **4 `suggested_questions` and 3 `suggested_experiments`** where there were none.
+  The central gap: **every** functional statement on the human entry — activity,
+  ethanolamine specificity, absence of choline kinase activity, pathway position —
+  is `ECO:0000250|UniProtKB:A7MCT6`, transferred from mouse. Only the tissue
+  specificity is backed by a human experiment (PubMed:11044454). Second real
+  question: why two dedicated ethanolamine kinases, with ETNK2 confined to
+  kidney/liver/reproductive tissue while ETNK1 is broad — and Reactome notes the
+  step is additionally shared with the choline kinases [Reactome:R-HSA-1483222].
+
+Result: 44.23 → **93.26** weighted, `just validate` clean (the policy warning is
+gone). Remaining gaps are deliberate: the four GO_REF `findings[].supporting_text`
+slots (nothing citable), and `literature_support` on the cytosol Reactome TAS row —
+no primary paper in this review measures ETNK2's subcellular fractionation, so
+there is no `PMID:`/`DOI:` quote to attach.
