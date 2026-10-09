@@ -2,9 +2,7 @@
 
 Accession: Q9VKN7 (Aurora kinase B; FBgn0024227).
 
-Deep research: `just deep-research-falcon DROME aurB --fallback perplexity-lite` failed
-(falcon timed out after 600 s; perplexity provider not available). Literature below is from
-the cached publications.
+Deep research: `aurB-deep-research-falcon.md` (falcon; the wrapper logged a 600 s timeout but the run completed and wrote the file). It confirms aurB (= ial) is distinct from the centrosomal Aurora A, and adds that the CPC activates Polo at centromeres via Aurora B phosphorylation of Polo T182. Consistent with removing the Aurora A-derived centrosome/spindle-pole IBA rows.
 
 ## Literature journal
 
