@@ -2,7 +2,7 @@
 
 Accession: P36872 (FBgn0004889).
 
-Deep research: falcon run still in progress at time of review (see later commits).
+Deep research: `tws-deep-research-falcon.md` (falcon; completed after a wrapper timeout message). It agrees that Tws selects substrates for the Mts catalytic subunit (Tws itself has no catalytic activity), describes the Greatwall-Endos inhibition switch, adds Map205 pSer283 and Otefin Ser50/54 as PP2A-Tws substrates at mitotic exit, reports Tws in both cytoplasm and nucleus (nuclear foci after irradiation), and supports positive regulation of Wingless signaling between Dsh and Sgg. Consistent with the decisions below (Wg rows kept as non-core, nucleus kept as non-core).
 
 ## Literature journal
 
