@@ -31,7 +31,6 @@ UniProt A8JUW5 (Sodium leak channel NALCN), FBgn0002917 region; sole fly NALCN-f
 - Rhythmic behavior / circadian behavior -> MODIFY to locomotor rhythm (already annotated).
 - Nematode-derived IBA synaptic transmission terms marked as over-annotation.
 
-
 ## Deep research
 
-`just deep-research-falcon` timed out after 600 s and the perplexity-lite fallback was unavailable (provider not configured); the review relies on the cached publications above.
+`na-deep-research-falcon.md` (falcon) arrived after the review was first committed (the recipe reported a 600 s timeout, but the falcon job finished and wrote its report). It agrees with the review: it recommends annotating NA as the pore-forming subunit of a neuronal background channel that conducts a depolarizing Na+ leak across the plasma membrane, acting with UNC79/UNC80 and regulated by Nlf-1, with circadian pacemaker output as the best-demonstrated process. It notes that ion selectivity (PNa ≈ PLi > PK > PCs) has been measured only for vertebrate NALCN, not fly NA. No annotation decision changed.
