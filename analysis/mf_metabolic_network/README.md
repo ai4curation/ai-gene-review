@@ -11,8 +11,13 @@ biological-process annotations?
    `contributes_to_molecular_function` / `directly_involved_in`, plus existing annotations
    with action `ACCEPT`, `KEEP_AS_NON_CORE` or `NEW`, plus MODIFY replacement terms. NOT
    annotations are skipped.
-2. **MF → reaction:** GO column of the Rhea reaction TSV (= rhea2go). Exact mappings only.
-   A general MF (e.g. *oxidoreductase activity*) is not expanded to its descendants.
+2. **MF → reaction:** GO column of the Rhea reaction TSV. This is the same content as
+   rhea2go, which is generated from the `xref: RHEA:` lines on GO terms. Those xrefs carry
+   no mapping predicate, so they are not guaranteed to be exact. Two filters reduce that:
+   - GO terms with an incomplete-EC xref (e.g. `EC:1.1.1.-`) are grouping classes, and
+     their Rhea xrefs are ignored. Four terms are affected: GO:0016616, GO:0016712,
+     GO:0004713 and GO:0008241.
+   - A general MF (e.g. *oxidoreductase activity*) is not expanded to its descendants.
    When one GO term maps to more than 5 Rhea reactions (a class reaction plus substrate
    examples, e.g. *acyl-CoA hydrolase activity*), only the generic class reactions are kept.
    Otherwise a broad hydrolase gets linked to every acyl-CoA in the cell.
@@ -50,25 +55,25 @@ uv run python analysis/mf_metabolic_network/build_network.py PSEPK --source unip
 uv run python analysis/mf_metabolic_network/compare_sources.py PSEPK human
 ```
 
-The downloads (`data/`) are git-ignored. Results were generated on 2026-10-01.
+The downloads (`data/`) are git-ignored. Results were regenerated on 2026-10-09.
 
 ## Results
 
 | Metric | PSEPK | human | yeast | SCHPO | worm | ARATH |
 |---|---:|---:|---:|---:|---:|---:|
-| Reviews | 942 | 2184 | 224 | 149 | 212 | 137 |
-| Enzymes with Rhea-mapped reviewed MF | 593 | 805 | 76 | 42 | 51 | 31 |
-| Distinct Rhea reactions | 578 | 1187 | 55 | 45 | 36 | 29 |
-| Gene–gene metabolite edges | 1981 | 3693 | 27 | 1 | 0 | 1 |
-| Giant component (genes) | 436 | 565 | 6 | 2 | 1 | 2 |
-| Isolated enzymes | 106 | 220 | 61 | 40 | 51 | 29 |
-| Linked pairs sharing a specific metabolic BP | 0.356 | 0.524 | 0.1 | 0.0 | 0.0 | 0.0 |
-| …pairs sharing ≥2 intermediates | 0.67 | 0.725 | 0.333 | 0.0 | 0.0 | 0.0 |
-| …random enzyme pairs | 0.041 | 0.065 | 0.031 | 0.051 | 0.034 | 0.02 |
-| BP terms tested (≥3 enzymes) | 389 | 739 | 39 | 26 | 18 | 37 |
-| BP terms more connected than random (p<0.05) | 306 | 567 | 3 | 0 | 0 | 15 |
-| Louvain communities | 20 | 14 | 1 | 1 | 0 | 1 |
-| Communities matching a BP term (F1≥0.5) | 10 | 6 | 0 | 1 | 0 | 1 |
+| Reviews | 944 | 2183 | 224 | 149 | 212 | 138 |
+| Enzymes with Rhea-mapped reviewed MF | 591 | 794 | 75 | 40 | 50 | 31 |
+| Distinct Rhea reactions | 577 | 1184 | 53 | 43 | 35 | 28 |
+| Gene–gene metabolite edges | 1973 | 3630 | 27 | 1 | 0 | 1 |
+| Giant component (genes) | 433 | 559 | 6 | 2 | 1 | 2 |
+| Isolated enzymes | 107 | 211 | 60 | 38 | 50 | 29 |
+| Linked pairs sharing a specific metabolic BP | 0.36 | 0.521 | 0.1 | 0.0 | 0.0 | 0.0 |
+| …pairs sharing ≥2 intermediates | 0.701 | 0.729 | 0.333 | 0.0 | 0.0 | 0.0 |
+| …random enzyme pairs | 0.041 | 0.066 | 0.034 | 0.053 | 0.033 | 0.02 |
+| BP terms tested (≥3 enzymes) | 388 | 735 | 39 | 26 | 18 | 37 |
+| BP terms more connected than random (p<0.05) | 302 | 570 | 3 | 0 | 0 | 15 |
+| Louvain communities | 20 | 15 | 1 | 1 | 0 | 1 |
+| Communities matching a BP term (F1≥0.5) | 10 | 10 | 0 | 1 | 0 | 1 |
 
 Only *P. putida* KT2440 (near whole-metabolism coverage) and human have enough reviewed
 enzymes to form a network. In the other organisms the reviewed genes are mostly
@@ -76,34 +81,40 @@ non-enzymes, so the numbers are not interpretable.
 
 ### The network does assemble
 
-- In PSEPK, 436 of 593 enzymes fall into one connected component. When every step of a
+- In PSEPK, 433 of 591 enzymes fall into one connected component. When every step of a
   pathway has been reviewed, the textbook route comes out of MF annotations alone:
 
   ```
-  benzoate -> [benA] -> 1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate -> [benD] -> catechol
+  benzoate -> [benC] -> 1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate -> [benD] -> catechol
     -> [catA] -> cis,cis-muconate -> [catB] -> (S)-muconolactone -> [catC] -> enol-lactone
-    -> [pcaD] -> 3-oxoadipate -> [pcaI] -> succinyl-CoA
+    -> [pcaD] -> 3-oxoadipate -> [pcaJ] -> succinyl-CoA
   ```
-- Louvain communities correspond to recognisable pathways: β-ketoadipate/benzoate (F1 0.57),
-  chorismate biosynthesis (0.67), ubiquinone (0.82), fatty-acid synthesis (0.57),
-  gluconate (1.0), and in human N-glycosylation (0.79), fatty-acid elongation (0.90) and
-  β-oxidation (0.67).
+
+  benA/benC (dioxygenase subunits) and pcaI/pcaJ (transferase subunits) are
+  interchangeable on this path.
+- Louvain communities correspond to recognisable pathways:
+  - P. putida: benzoate catabolism (F1 0.57), chorismate biosynthesis (0.69), isoprenoid
+    metabolism (0.70), glyoxylate metabolism (0.71), fatty-acid biosynthesis (0.62),
+    L-leucine catabolism (0.89).
+  - Human: N-linked glycosylation (0.79), ceramide metabolism (0.68), steroid metabolism
+    (0.63), polyamine metabolism (0.83).
 
 ### It agrees with BP, strongly but not completely
 
 - Metabolically linked enzymes share a specific metabolic BP **8–9× more often than random
-  pairs**: 36% vs 4% in PSEPK and 52% vs 6.5% in human. For pairs sharing at least two
-  intermediates the figure rises to 67–73%.
-- 79% (PSEPK) and 77% (human) of metabolic BP terms have gene sets that are significantly
+  pairs**: 36% vs 4% in PSEPK and 52% vs 6.6% in human. For pairs sharing at least two
+  intermediates the figure rises to 70–73%.
+- 78% (PSEPK) and 78% (human) of metabolic BP terms have gene sets that are significantly
   more connected than random.
 
 ### Where they disagree, and why
 
 1. **Network artefacts.** These are the commonest cause:
    - Generic Rhea participants ("a fatty acid", "an acyl-CoA", "a carboxylate").
-   - Promiscuous or side reactions listed under a GO term. For example, *carbonyl reductase
-     (NADPH) activity* maps to the benzil/benzoin reactions, which links five unrelated
-     PSEPK dehydrogenases.
+   - Non-exact GO→Rhea xrefs. Before the grouping-term filter, the GO:0016616 →
+     RHEA:25968 (benzil reductase) xref linked nine unrelated PSEPK dehydrogenases through
+     benzil/(S)-benzoin. With the filter, no PSEPK gene in the reviews network has a benzil
+     reaction.
    - Generic NTPase reactions (human ABCE1–ALPL).
 2. **Genuine cross-pathway links.** These are correct, but no shared BP is expected:
    - pcaIJ–sucCD through succinyl-CoA (β-ketoadipate feeding the TCA cycle).
@@ -118,8 +129,8 @@ non-enzymes, so the numbers are not interpretable.
      biosynthetic process*.
 
    Low connectivity here does **not** mean the BP is wrong.
-4. **Gaps.** Unreviewed genes, and reviewed MFs with no Rhea mapping, break chains. 220
-   human and 106 PSEPK enzymes are isolated nodes. These are candidates for missing MF
+4. **Gaps.** Unreviewed genes, and reviewed MFs with no Rhea mapping, break chains. 211
+   human and 107 PSEPK enzymes are isolated nodes. These are candidates for missing MF
    specificity, or for terms that need a rhea2go mapping (see `projects/RHEA`).
 
 ### Limits
@@ -129,8 +140,8 @@ non-enzymes, so the numbers are not interpretable.
   human mevalonate→cholesterol runs via "a fatty acid", and PSEPK lysine→glutarate runs
   via alanine racemase. A true pathway reconstruction needs Rhea directional IDs
   (`rhea-directions.tsv`) plus atom mappings or a carbon-tracing constraint.
-- **Hand-chosen settings.** The currency list and the >5-reaction trimming threshold are
-  heuristic. Results shift by a few points when they change, but the 8–9× enrichment holds.
+- **Hand-chosen settings.** The currency list, the grouping-term filter and the
+  >5-reaction trimming threshold are heuristic. Results shift by a few points when they change, but the roughly 8–9× enrichment holds.
 
 ## Would plain UniProt/GOA annotations work?
 
@@ -165,86 +176,85 @@ That gives a like-for-like comparison with `reviews`.
 
 | Metric | reviews | uniprot-rhea-reviewedset | goa-all-reviewedset | goa-exp-reviewedset | uniprot-rhea | goa-all | goa-noiea | goa-exp |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Enzymes with reactions | 595 | 488 | 615 | 19 | 917 | 1416 | 31 | 24 |
-| Distinct Rhea reactions | 578 | 477 | 652 | 31 | 843 | 1210 | 59 | 48 |
-| Edges | 2008 | 1368 | 2726 | 5 | 3545 | 10401 | 12 | 6 |
-| Giant component | 438 | 354 | 469 | 4 | 569 | 982 | 6 | 4 |
-| Isolated enzymes | 106 | 86 | 96 | 11 | 228 | 348 | 18 | 14 |
-| Enzymes with no metabolic BP | 61 | 52 | 114 | 10 | 202 | 506 | 19 | 15 |
-| Linked pairs sharing specific BP | 0.359 | 0.417 | 0.332 | 0.333 | 0.423 | 0.362 | 0.5 | 0.333 |
-| …sharing ≥2 intermediates | 0.678 | 0.675 | 0.489 | 0.0 | 0.694 | 0.59 | 0.0 | 0.0 |
-| …random pairs | 0.041 | 0.049 | 0.055 | 0.054 | 0.056 | 0.068 | 0.064 | 0.054 |
+| Enzymes with reactions | 591 | 488 | 614 | 19 | 917 | 1403 | 31 | 24 |
+| Distinct Rhea reactions | 577 | 477 | 650 | 31 | 843 | 1207 | 59 | 48 |
+| Edges | 1973 | 1368 | 2457 | 5 | 3545 | 9215 | 12 | 6 |
+| Giant component | 433 | 354 | 465 | 4 | 569 | 965 | 6 | 4 |
+| Isolated enzymes | 107 | 86 | 99 | 11 | 228 | 348 | 18 | 14 |
+| Enzymes with no metabolic BP | 58 | 52 | 113 | 10 | 202 | 496 | 19 | 15 |
+| Linked pairs sharing specific BP | 0.36 | 0.417 | 0.348 | 0.333 | 0.423 | 0.373 | 0.5 | 0.333 |
+| …sharing ≥2 intermediates | 0.701 | 0.675 | 0.694 | 0.0 | 0.694 | 0.74 | 0.0 | 0.0 |
+| …random pairs | 0.041 | 0.049 | 0.055 | 0.054 | 0.056 | 0.069 | 0.064 | 0.054 |
 | BP terms tested | 388 | 344 | 360 | 14 | 485 | 528 | 11 | 14 |
-| BP terms connected > random | 302 | 263 | 271 | 0 | 377 | 405 | 0 | 0 |
-| Communities | 21 | 18 | 17 | 2 | 21 | 19 | 2 | 2 |
-| Communities ≈ a BP term (F1≥0.5) | 10 | 11 | 4 | 1 | 8 | 2 | 2 | 1 |
-| Enrichment over random | 8.8× | 8.5× | 6.0× | 6.2× | 7.6× | 5.3× | 7.8× | 6.2× |
+| BP terms connected > random | 302 | 263 | 269 | 0 | 376 | 413 | 0 | 0 |
+| Communities | 20 | 18 | 17 | 2 | 21 | 24 | 2 | 2 |
+| Communities ≈ a BP term (F1≥0.5) | 10 | 11 | 7 | 1 | 8 | 8 | 2 | 1 |
+| Enrichment over random | 8.8× | 8.5× | 6.3× | 6.2× | 7.6× | 5.4× | 7.8× | 6.2× |
 
 #### human
 
 | Metric | reviews | uniprot-rhea-reviewedset | goa-all-reviewedset | goa-exp-reviewedset | uniprot-rhea | goa-all | goa-noiea | goa-exp |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Enzymes with reactions | 804 | 819 | 837 | 679 | 4140 | 3993 | 3502 | 2647 |
-| Distinct Rhea reactions | 1187 | 2302 | 1304 | 1021 | 6151 | 2528 | 2365 | 2164 |
-| Edges | 3654 | 5223 | 4603 | 2887 | 109281 | 79038 | 62053 | 34786 |
-| Giant component | 564 | 624 | 589 | 498 | 2623 | 2232 | 2095 | 1711 |
-| Isolated enzymes | 220 | 176 | 226 | 146 | 1481 | 1690 | 1334 | 878 |
-| Enzymes with no metabolic BP | 74 | 100 | 93 | 153 | 1258 | 1059 | 930 | 908 |
-| Linked pairs sharing specific BP | 0.52 | 0.458 | 0.478 | 0.46 | 0.436 | 0.415 | 0.435 | 0.45 |
-| …sharing ≥2 intermediates | 0.722 | 0.56 | 0.598 | 0.643 | 0.583 | 0.594 | 0.634 | 0.632 |
-| …random pairs | 0.061 | 0.07 | 0.069 | 0.065 | 0.076 | 0.071 | 0.075 | 0.078 |
-| BP terms tested | 737 | 826 | 819 | 578 | 1415 | 1426 | 1316 | 983 |
-| BP terms connected > random | 568 | 629 | 615 | 420 | 1046 | 1064 | 953 | 693 |
-| Communities | 14 | 12 | 13 | 15 | 12 | 12 | 11 | 15 |
-| Communities ≈ a BP term (F1≥0.5) | 6 | 8 | 7 | 5 | 2 | 5 | 3 | 2 |
-| Enrichment over random | 8.5× | 6.5× | 6.9× | 7.1× | 5.7× | 5.8× | 5.8× | 5.8× |
-
+| Enzymes with reactions | 794 | 819 | 827 | 671 | 4140 | 3898 | 3420 | 2586 |
+| Distinct Rhea reactions | 1184 | 2302 | 1301 | 1019 | 6151 | 2523 | 2360 | 2159 |
+| Edges | 3630 | 5223 | 4376 | 2887 | 109281 | 75663 | 60580 | 34323 |
+| Giant component | 559 | 624 | 583 | 498 | 2623 | 2219 | 2085 | 1705 |
+| Isolated enzymes | 211 | 176 | 218 | 138 | 1481 | 1608 | 1262 | 823 |
+| Enzymes with no metabolic BP | 71 | 100 | 88 | 149 | 1258 | 1030 | 910 | 887 |
+| Linked pairs sharing specific BP | 0.521 | 0.458 | 0.496 | 0.46 | 0.436 | 0.417 | 0.429 | 0.449 |
+| …sharing ≥2 intermediates | 0.729 | 0.56 | 0.668 | 0.643 | 0.583 | 0.608 | 0.626 | 0.627 |
+| …random pairs | 0.066 | 0.07 | 0.068 | 0.075 | 0.076 | 0.074 | 0.077 | 0.079 |
+| BP terms tested | 735 | 826 | 818 | 577 | 1415 | 1415 | 1309 | 983 |
+| BP terms connected > random | 570 | 629 | 620 | 419 | 1044 | 1055 | 955 | 692 |
+| Communities | 15 | 12 | 12 | 15 | 12 | 12 | 12 | 15 |
+| Communities ≈ a BP term (F1≥0.5) | 10 | 8 | 7 | 5 | 2 | 3 | 2 | 1 |
+| Enrichment over random | 7.9× | 6.5× | 7.3× | 6.1× | 5.7× | 5.6× | 5.6× | 5.7× |
 
 ### Findings
 
 - **Yes, a network assembles from plain UniProt annotations.** It is bigger and noisier
   than the one from reviewed annotations:
   - Human: whole Swiss-Prot gives a 2,623-gene giant component from the Rhea column
-    (2,232 from GOA). Linked pairs share a specific BP 5.7–5.8× more often than random.
+    (2,219 from GOA). Linked pairs share a specific BP 5.6–5.7× more often than random.
   - On the same genes, reviewed annotations give the sharpest agreement: 8.8× (P. putida)
-    and 8.5× (human), against 6.0–6.9× for GOA. Strong edges (≥2 shared intermediates)
-    share a BP 72% of the time with reviewed annotations, against 56–64% with GOA.
-- **The UniProt Rhea column beats GO→rhea2go as a bulk source.**
-  - It skips the GO-term breadth problem: a broad oxidoreductase term no longer pulls in
-    benzil reductase.
+    and 7.9× (human), against 6.3× and 7.3× for GOA (all evidence). Strong edges
+    (≥2 shared intermediates) share a BP 70–73% of the time with reviewed annotations.
+    In human, GOA on the same genes reaches 67%.
+- **The UniProt Rhea column is the more specific bulk source.** It comes from each entry's
+  CATALYTIC ACTIVITY lines, so no GO→Rhea xref is involved.
   - In P. putida it scores close to the reviews on the same genes (8.5× enrichment,
     11 BP-matching communities).
   - It is more reaction-specific. Human UniProt lists 2,302 reactions for the 819
-    reviewed enzymes, against 1,187 from the reviews.
+    reviewed enzymes, against 1,184 from the reviews.
   - Its coverage is mostly Swiss-Prot: 441 of 745 reviewed P. putida entries carry Rhea
     IDs, against 476 of 4,784 unreviewed ones. Most of the benzoate pathway (benA, benC,
     benD) is unreviewed TrEMBL with no CATALYTIC ACTIVITY line. As a result, the
     benzoate→succinyl-CoA route that the reviews reconstruct is broken in `uniprot-rhea`.
-- **GO MF→rhea2go over IEA annotations adds coverage and nonsense together.** P. putida
-  `goa-all` has 1,416 enzymes, but only 2 of its 19 communities match a BP term.
-  - Its benzoate→succinyl-CoA path runs benzoate → [benC] → diol → [benD] → *(S)-benzoin* →
-    [paaH] → "a 3-oxoacyl-CoA" → [yqeF] → succinyl-CoA.
-  - benD (Q88I37) has two IEA MF annotations in GOA:
-    - The **ec2go** annotation (GO_REF:0000003, from EC:1.3.1.25) gives *GO:0047116
-      1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate dehydrogenase activity*. This term is
-      specific and correct, and it maps to RHEA:11560 (diol → catechol).
-    - The **TreeGrafter** annotation (GO_REF:0000118, from PANTHER:PTN002460465, in family
-      PTHR42760) gives the broad *GO:0016616 oxidoreductase activity, acting on the CH-OH
-      group of donors, NAD or NADP as acceptor*. The detour comes from this one.
-  - The official rhea2go maps exactly one reaction to GO:0016616:
-    RHEA:25968, (S)-benzoin + NADP(+) = benzil + NADPH. That reaction's siblings RHEA:25960
-    and RHEA:25964 map to *carbonyl reductase (NADPH) activity*. So one rhea2go row that
-    targets a grouping term turns every gene with a GO:0016616 annotation into a benzil
-    reductase in this network. That row is worth reporting to GO/Rhea.
-  - benD's IEA BP, *fatty acid elongation* (GO:0030497), also comes from the same
-    TreeGrafter node. The review says *benzoate catabolic process*.
+- **GO MF→Rhea over IEA annotations gains coverage.** P. putida `goa-all` has 1,403
+  enzymes, against 591 from the reviews, and the benzoate→succinyl-CoA route
+  reconstructs correctly through benD's ec2go term (GO:0047116 → RHEA:11560). The cost is
+  weaker BP agreement: 5.4× enrichment, with 8 of 24 communities matching a BP term.
+- **Non-exact GO→Rhea xrefs are a real hazard.** The rhea2go file states every row as a
+  plain mapping, but xrefs on grouping terms are at best broad. Before the grouping-term
+  filter was added, one such xref drove the P. putida benD example:
+  - GO:0016616 *oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP
+    as acceptor* has `xref: EC:1.1.1.-` and `xref: RHEA:25968` (benzil reductase) in GO.
+  - TreeGrafter (GO_REF:0000118, PANTHER:PTN002460465) annotates benD to GO:0016616.
+  - Read as exact, that xref made benD a benzil reductase. The benzoate route then
+    detoured through (S)-benzoin.
+  - benD's IEA BP, *fatty acid elongation* (GO:0030497), comes from the same TreeGrafter
+    node. The review says *benzoate catabolic process*.
+  - The incomplete-EC filter catches only 4 terms. Many-to-one xrefs, where one GO term
+    has dozens of substrate-example Rhea reactions (e.g. *carbonyl reductase (NADPH)
+    activity*), are handled by the >5-reaction trimming instead. An SSSOM GO–Rhea mapping
+    with explicit exact/broad/narrow predicates would replace both heuristics.
 - **Bacteria have almost no experimental GO.** Of 25,276 P. putida GOA rows, all but 195
   are IEA (GO_REF pipelines). `goa-exp` and `goa-noiea` keep only 24–31 enzymes, so for
   bacteria the choice is between curated reviews and electronic annotation. Human
-  experimental-only still gives 2,647 enzymes with 5.8× enrichment.
+  experimental-only still gives 2,586 enzymes with 5.7× enrichment.
 - **Circularity caveat.** IEA MF and IEA BP often come from the same rule (UniRule/ARBA,
-  EC2GO, InterPro2GO), so their agreement is partly built in. The `-reviewedset` and
-  `goa-exp` columns are the fairer comparisons.
+  EC2GO, InterPro2GO, TreeGrafter), so their agreement is partly built in. The
+  `-reviewedset` and `goa-exp` columns are the fairer comparisons.
 
 ## Outputs (`results/<ORG>/<source>/`)
 

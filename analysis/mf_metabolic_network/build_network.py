@@ -92,6 +92,13 @@ MACROMOLECULE_PATTERNS = re.compile(
 MAX_SPECIFIC_RHEA_PER_GO = 5
 
 
+# GO terms carrying an incomplete-EC xref (e.g. EC:1.1.1.-) are grouping classes. Their
+# RHEA xrefs (which is what rhea2go is generated from) are at best broad/related, not
+# exact: GO:0016616 (CH-OH oxidoreductase, NAD(P)) xrefs only RHEA:25968 (benzil
+# reductase). Such GO->Rhea rows are dropped. Filled by load_go().
+GROUPING_GO: set[str] = set()
+
+
 # ---------------------------------------------------------------- GO ontology
 def load_go(path: Path):
     names, ns, parents, obsolete = {}, {}, defaultdict(set), set()
@@ -116,6 +123,8 @@ def load_go(path: Path):
                 parents[tid].add(line.split(" ")[2])
             elif line.startswith("is_obsolete: true"):
                 obsolete.add(tid)
+            elif re.match(r"xref: EC:[\d.]*-\s*$", line):
+                GROUPING_GO.add(tid)
             elif line.startswith("alt_id: "):
                 names.setdefault("ALT:" + line[8:], tid)
     alt = {k[4:]: v for k, v in names.items() if k.startswith("ALT:")}
@@ -293,6 +302,10 @@ def main():
     names, ns, parents, obsolete, alt = load_go(DATA / "go-basic.obo")
     anc = ancestors_fn(parents)
     go2rhea, rhea2chebi, chebi2name, rhea2eq, rhea2sides = load_rhea(DATA / "rhea.tsv")
+    dropped = sorted(t for t in GROUPING_GO if t in go2rhea)
+    for t in dropped:
+        del go2rhea[t]
+    print(f"Grouping GO terms whose Rhea xrefs are ignored: {dropped}")
     currency = {c for c, n in chebi2name.items() if n in CURRENCY_NAMES or CURRENCY_PATTERNS.search(n)
                 or MACROMOLECULE_PATTERNS.search(n)}
 
