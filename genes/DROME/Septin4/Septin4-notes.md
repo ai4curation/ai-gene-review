@@ -7,3 +7,7 @@ SEPT2-class septin (paralog of Sep1); subunit of the Sep4-Sep5-Pnut complex. Poo
 - F-actin binding [PMID:38728140 "Strikingly, we find that all five Drosophila Septins can bind to and bundle actin filaments"]
 
 Decisions: GTPase IBA/ISS ACCEPT (SEPT2 class is catalytic); regulation of exocytosis and synaptic vesicle IBAs (donors only mammalian SEPTIN5) MARK_AS_OVER_ANNOTATED; mitochondrion ISS from human SEPTIN4 (ARTS isoform property) REMOVE.
+
+## Deep research (falcon) follow-up
+
+The falcon report treats Sep4 GTP binding/hydrolysis as family-level inference (no Sep4-specific biochemistry), agreeing with accepting the IBA/ISS GTPase rows only as inherited. It warns that human SEPT4/ARTS is a different protein, consistent with removing the mitochondrion ISS. It cites a 2026 bioRxiv wound-recruitment screen and a 2023 dissertation (Sep4 RNAi impairs border-cell migration); neither is peer-reviewed or cached, so no annotations were added.
