@@ -10,4 +10,4 @@
 - Starvation: [PMID:20862213 "Reduced AMPK signaling leads to hypersensitivity to starvation conditions as measured by lifespan and locomotor activity."]
 - TORC1: AMPK lowers mTOR activity [PMID:36899949 "Cells expressing phospho-deficient LKB1 consequently display enhanced AMPK activation and decreased mTOR activity"]; GOA "positive regulation of TORC1 signaling" MODIFY to negative (consistent across the LKB1/AMPK module genes).
 - ARBA "nematode pharyngeal pumping" removed (taxon-inappropriate).
-- Deep research: falcon run killed (exit 137, memory pressure); notes from cached publications.
+- Deep research: the first falcon run was killed (exit 137); a retry produced AMPKalpha-deep-research-falcon.md, which agrees that AMPKalpha [file:DROME/AMPKalpha/AMPKalpha-deep-research-falcon.md "encodes the catalytic alpha subunit of the conserved heterotrimeric AMP-activated protein kinase (AMPK) complex"].

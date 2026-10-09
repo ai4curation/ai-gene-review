@@ -12,7 +12,7 @@
   -> GOA "positive regulation of TORC1 signaling" (TAS) has the wrong sign; MODIFY to negative regulation (consistent with Lkb1 review).
 
 ## Deep research
-- Falcon deep research was attempted but the run was killed (exit 137, memory pressure on the shared host); notes based on cached publications.
+- Falcon deep research: the first run was killed (exit 137); a retry produced Mo25-deep-research-falcon.md, describing Mo25 as a kinase-regulatory scaffold for both LKB1 and the GC kinase Fray: [file:DROME/Mo25/Mo25-deep-research-falcon.md "Fly Mo25 enhances the kinase activity of Fray *in vitro*"].
 
 ## Decisions
 - ND root MF -> MODIFY to protein serine/threonine kinase activator activity (GO:0043539).
