@@ -736,7 +736,22 @@ Cross-cutting findings:
 - **Data errors to report:** the "AP-2B" name confusion on TFAP2B
   (PMID:7559606).
 
-### Project-level decision to confirm: GO:0014029 vs GO:0014036
+### Decision (2026-10-09): obsolete GO:0014029
+
+Superseded by [NEURAL_CREST_FORMATION_OBSOLETION](NEURAL_CREST_FORMATION_OBSOLETION.md).
+GO:0014029's text describes forming the border *region*, but its placement in
+GO is under epithelial to mesenchymal transition. We therefore propose to
+obsolete it, together with its regulation terms, and to add a new term,
+*neural plate border formation*. Replacement rule:
+- **Border specifiers:** the new term. That covers gbx2, MSX1, PAX7, TFAP2A
+  (border role) and TFAP2C, plus pax3-a and zic1, which also keep GO:0014034.
+- **Crest specifiers:** GO:0014036. That covers the SoxE genes, snai1/2,
+  twist1, TFAP2B and TFAP2A (crest role).
+- **Competence factors:** an open decision (hes4-a, id3-a, myc-a, pou5f1.1).
+
+The seven border reviews and the module have been updated.
+
+### Earlier discussion: GO:0014029 vs GO:0014036
 
 `GO:0014029` neural crest formation is defined as forming the *region of
 ectoderm* between the neural plate and non-neural ectoderm. The chain is

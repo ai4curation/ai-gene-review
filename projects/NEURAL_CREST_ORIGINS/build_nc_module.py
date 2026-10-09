@@ -30,6 +30,24 @@ def evidence(org, gene, bp_id, statement, n=2, refs=None):
     """Pull up to n supported_by quotes from the core function carrying bp_id."""
     d = review(org, gene)
     out = []
+    if bp_id == "NPB":
+        for pt in d.get("proposed_new_terms") or []:
+            if pt.get("proposed_name") == "neural plate border formation":
+                for sb in pt.get("supported_by") or []:
+                    ref = sb["reference_id"]
+                    if refs and ref not in refs:
+                        continue
+                    item = {"source_id": ref}
+                    t = title(ref)
+                    if t:
+                        item["title"] = t
+                    item["statement"] = statement
+                    item["supporting_text"] = sb["supporting_text"]
+                    out.append(item)
+                    if len(out) >= n:
+                        return out
+        assert out, (gene, bp_id)
+        return out
     for cf in d.get("core_functions") or []:
         bps = [p.get("id") for p in cf.get("directly_involved_in") or []]
         if bp_id not in bps:
@@ -70,7 +88,7 @@ def annoton(aid, label, org, gene, mf, procs, role, ev_bp, statement, refs=None,
             },
         },
         "function": {"preferred_term": mf[1], "term": term(*mf)},
-        "processes": [{"preferred_term": p[1], "term": term(*p)} for p in procs],
+        "processes": [{"preferred_term": p[1], "term": term(*p)} if p[0] else {"preferred_term": p[1]} for p in procs],
         "locations": [{"preferred_term": "nucleus", "term": term("GO:0005634", "nucleus")}],
         "role_description": role,
         "evidence": evidence(org, gene, ev_bp, statement, n=n, refs=refs),
@@ -81,6 +99,8 @@ REP = ("GO:0001227", "DNA-binding transcription repressor activity, RNA polymera
 TF = ("GO:0000981", "DNA-binding transcription factor activity, RNA polymerase II-specific")
 INH = ("GO:0140416", "transcription regulator inhibitor activity")
 NCF = ("GO:0014029", "neural crest formation")
+# Proposed replacement for GO:0014029 in the border layer (projects/NEURAL_CREST_FORMATION_OBSOLETION.md)
+NPB = (None, "neural plate border formation (proposed new term; replaces GO:0014029, proposed for obsoletion)")
 NCC = ("GO:0014034", "neural crest cell fate commitment")
 NCS = ("GO:0014036", "neural crest cell fate specification")
 MIG = ("GO:0001755", "neural crest cell migration")
@@ -98,8 +118,8 @@ border = {
         "upstream of, and are required for, crest specifier expression, but individually do not impose crest "
         "fate; Pax3 and Zic1 together are necessary and sufficient to do so."
     ),
-    "concepts": [{"preferred_term": NCF[1], "term": term(*NCF),
-                  "description": "GO:0014029 is defined as the formation of the specialized region of ectoderm between neural and non-neural ectoderm; it is the closest existing term for border specification (no dedicated border term exists)."}],
+    "concepts": [{"preferred_term": "neural plate border formation (proposed new term)",
+                  "description": "No GO term exists. GO:0014029 neural crest formation is defined as forming this ectodermal region but is placed under epithelial to mesenchymal transition; it is proposed for obsoletion, with this new term as one replacement (projects/NEURAL_CREST_FORMATION_OBSOLETION.md)."}],
     "variant_sets": [{
         "id": "pax37_paralogs",
         "label": "Pax3/7 border specifier (paralog deployment differs by lineage)",
@@ -108,31 +128,31 @@ border = {
         "notes": "Frog leads with Pax3, chick with Pax7, and mouse uses both redundantly; amphioxus has a single Pax3/7 at the border.",
         "variants": [
             {"id": "pax3_variant", "label": "Pax3 (lead paralog in frog)", "module_type": "DEVELOPMENTAL_PROCESS",
-             "annotons": [annoton("pax3_border", "Pax3 border specifier", "XENLA", "pax3-a", ACT, [NCF, NCC],
+             "annotons": [annoton("pax3_border", "Pax3 border specifier", "XENLA", "pax3-a", ACT, [NPB, NCC],
                 "Paired-box activator at the border; with Zic1 directly activates crest specifier genes.",
                 "GO:0014034", "Pax3 and Zic1 directly activate the crest specifier genes.", refs=["PMID:24360906"])]},
             {"id": "pax7_variant", "label": "Pax7 (lead paralog in chick)", "module_type": "DEVELOPMENTAL_PROCESS",
-             "annotons": [annoton("pax7_border", "Pax7 border specifier", "human", "PAX7", ACT, [NCF],
+             "annotons": [annoton("pax7_border", "Pax7 border specifier", "human", "PAX7", ACT, [NPB],
                                   "Paired-box border factor required for crest specifier expression in chick; binds the FoxD3 NC1 enhancer with Msx1 and Ets1.",
-                                  "GO:0014029", "Pax7 is required for crest formation and binds the FoxD3 NC1 enhancer.")]},
+                                  "NPB", "Pax7 is required for crest formation and binds the FoxD3 NC1 enhancer.")]},
         ],
     }],
     "annotons": [
-        annoton("gbx2_border", "Gbx2 border specifier", "XENLA", "gbx2", REP, [NCF],
+        annoton("gbx2_border", "Gbx2 border specifier", "XENLA", "gbx2", REP, [NPB],
                 "Wnt-responsive repressor acting upstream of the border factors Pax3 and Msx1; required for crest and limits the preplacodal domain.",
-                "GO:0014029", "Gbx2 is required for neural crest and acts upstream of the border factors Pax3 and Msx1."),
-        annoton("msx1_border", "Msx1 border specifier", "human", "MSX1", TF, [NCF],
+                "NPB", "Gbx2 is required for neural crest and acts upstream of the border factors Pax3 and Msx1."),
+        annoton("msx1_border", "Msx1 border specifier", "human", "MSX1", TF, [NPB],
                 "BMP-responsive homeodomain factor at the neural fold; induces Pax3 and Zic cell-autonomously.",
-                "GO:0014029", "Intermediate BMP specifies Msx expression at the border, and Msx1 induces Pax3 and Zic."),
-        annoton("tfap2a_border", "AP-2alpha border initiator", "human", "TFAP2A", ACT, [NCF],
+                "NPB", "Intermediate BMP specifies Msx expression at the border, and Msx1 induces Pax3 and Zic."),
+        annoton("tfap2a_border", "AP-2alpha border initiator", "human", "TFAP2A", ACT, [NPB],
                 "Earliest known border specifier; mediates Wnt input to initiate the border and activate pax3.",
-                "GO:0014029", "AP-2alpha initiates neural plate border patterning and activates pax3.", refs=["PMID:21169220"]),
-        annoton("tfap2c_border", "AP-2gamma (TFAP2A–TFAP2C) border inducer", "human", "TFAP2C", ACT, [NCF],
+                "NPB", "AP-2alpha initiates neural plate border patterning and activates pax3.", refs=["PMID:21169220"]),
+        annoton("tfap2c_border", "AP-2gamma (TFAP2A–TFAP2C) border inducer", "human", "TFAP2C", ACT, [NPB],
                 "Partners TFAP2A as a heterodimer during border induction; lost from crest at specification, when TFAP2B replaces it.",
-                "GO:0014029", "TFAP2A/C heterodimers mediate neural plate border induction.", refs=["PMID:31848212"]),
-        annoton("zic1_border", "Zic1 border specifier", "XENLA", "zic1", ACT, [NCF, NCC],
+                "NPB", "TFAP2A/C heterodimers mediate neural plate border induction.", refs=["PMID:31848212"]),
+        annoton("zic1_border", "Zic1 border specifier", "XENLA", "zic1", ACT, [NPB, NCC],
                 "Zinc-finger activator at the border; with Pax3 commits cells to crest, alone promotes preplacodal or neural fates.",
-                "GO:0014029", "Pax3 and Zic1 are early border factors, necessary and sufficient to promote crest fate."),
+                "NPB", "Pax3 and Zic1 are early border factors, necessary and sufficient to promote crest fate."),
     ],
 }
 
@@ -215,9 +235,9 @@ specification = {
         annoton("tfap2b_spec", "AP-2beta (TFAP2A–TFAP2B) crest specifier", "human", "TFAP2B", ACT, [NCS],
                 "Comes on at the onset of specification, heterodimerises with TFAP2A and recruits it to specification enhancers; represses TFAP2C.",
                 "GO:0014036", "TFAP2B is required for crest specification but not the border, and recruits TFAP2A to specification enhancers.", refs=["PMID:31848212"]),
-        annoton("tfap2a_spec", "AP-2alpha crest specifier", "human", "TFAP2A", ACT, [NCF],
+        annoton("tfap2a_spec", "AP-2alpha crest specifier", "human", "TFAP2A", ACT, [NCS],
                 "Second, crest-intrinsic deployment of AP-2alpha after its border role.",
-                "GO:0014029", "AP-2alpha acts again as a crest specifier after initiating the border.", refs=["PMID:21169220"], n=1),
+                "NPB", "AP-2alpha acts again as a crest specifier after initiating the border.", refs=["PMID:21169220"], n=1),
         annoton("twist1_snai2_inhibition", "Twist1 restraint of Snai2", "XENLA", "twist1", INH, [NCS],
                 "Twist binds Snai2 directly and reduces its chromatin occupancy, restraining Snai2-driven crest expansion.",
                 "GO:0014036", "Twist binds Snai2 directly and reduces its recruitment to chromatin.", refs=["PMID:23443570"]),
@@ -358,9 +378,11 @@ doc = {
     ],
     "notes": (
         "Concrete members are the gene products reviewed in projects/NEURAL_CREST_ORIGINS.md: Xenopus laevis "
-        "proteins where reviewed Swiss-Prot entries exist, human MSX1 and TFAP2A otherwise. Process terms "
-        "follow the project convention: border genes at GO:0014029 (and GO:0014034 where they directly "
-        "induce crest fate), crest specifiers at GO:0014036, competence factors at GO:0014029. Genes with "
+        "proteins where reviewed Swiss-Prot entries exist, human proteins otherwise. Process terms follow "
+        "the replacement rule of projects/NEURAL_CREST_FORMATION_OBSOLETION.md: border genes at the proposed "
+        "'neural plate border formation' term (plus GO:0014034 where they directly induce crest fate), crest "
+        "specifiers at GO:0014036; competence factors still carry GO:0014029 pending a decision on their "
+        "replacement. Genes with "
         "roles in more than one layer (AP-2alpha, Snai2, Twist1, Sox9) have one annoton per role, which is "
         "how roles that are non-core at gene level (e.g. Twist1 in ectomesenchyme) become explicit parts here. "
         "Sox10-driven melanocyte and glial differentiation are downstream derivative programs and are out of scope."
