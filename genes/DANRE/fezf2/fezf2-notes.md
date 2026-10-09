@@ -31,7 +31,7 @@ the rest are abstract-only, and the review says so wherever it matters.
 |---|---|---|
 | GO:0007399 nervous system development (PMID:15219677) | MODIFY → GO:0021879 / GO:0071542 | Root-level term; paper is about forebrain DA/5HT subgroups |
 | GO:0021954 CNS neuron development (PMID:10191060) | MODIFY → GO:0071542 / GO:0021879 | 1999 screen paper: specific hypothalamic DA reduction |
-| GO:0071679 commissural neuron axon guidance ×2 (PMID:21471212) | MARK_AS_OVER_ANNOTATED | Transient phenotype, attributed by authors to reduced lhx2b |
+| GO:0071679 commissural neuron axon guidance ×2 (PMID:21471212) | KEEP_AS_NON_CORE | Transient phenotype, attributed by authors to reduced lhx2b; supported as an upstream `acts_upstream_of_or_within` assertion but downstream of Fezf2's core transcription-factor activity |
 | GO:0045944 positive regulation of transcription by RNAPII | NEW (IDA, PMID:21471212) | Activator function demonstrated; no existing positive-regulation row |
 | GO:0045892 negative regulation of DNA-templated transcription | ACCEPT | Abstract states eh1 motif required; could narrow to GO:0000122 with full text |
 
@@ -46,3 +46,13 @@ grounding exists in PMID:21471212).
   fezf2 to ZDB-GENE-001103-3. Not investigated; may be a paralog (fezf1?) as donor.
 - Human FEZF2 / mouse Fezf2 have no review in this repo yet; a cross-species pass would help
   settle the activator/repressor question.
+
+## 2026-10-09 - commissural axon guidance follow-up
+
+Revisited the two `GO:0071679` rows from PMID:21471212. The initial
+`MARK_AS_OVER_ANNOTATED` action was too strong: the paper explicitly observes an anterior
+and post-optic commissure crossing defect in both tof mutants and fezf2 morphants, and the
+`acts_upstream_of_or_within` qualifier covers Fezf2's transcriptional activation of `lhx2b`
+as the upstream mechanism. Changed both rows to `KEEP_AS_NON_CORE` because the defect is
+transient, downstream of the core transcription-factor activity, and attributed at least
+partly to the direct Fezf2 target `lhx2b`.

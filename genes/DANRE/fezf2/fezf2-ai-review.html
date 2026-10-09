@@ -1,0 +1,4687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fezf2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fezf2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q804Q5" target="_blank" class="term-link">
+                        Q804Q5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Danio rerio</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fezf2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">22</span> Annotations</a>
+
+
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">2</span> Core Functions</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">11</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">3</span> Questions</a>
+
+
+
+        <a href="#review-experiments" title="Suggested experiments"><span class="nav-count">2</span> Experiments</a>
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q804Q5" data-a="DESCRIPTION: Zebrafish fezf2 (Fez family zinc finger protein 2;..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Zebrafish fezf2 (Fez family zinc finger protein 2; historically fezl, and the gene disrupted in the too few (tof) mutant) encodes a forebrain-specific C2H2 zinc-finger transcription factor with six C-terminal zinc fingers and an N-terminal eh1-related repressor motif. It is one of the earliest markers of the prospective forebrain and is expressed in the telencephalon and anterior-ventral diencephalon during embryogenesis, and later in dorsal telencephalic adult neural stem cells. The protein binds DNA sequence-specifically (SELEX-derived core motif CAGCAACC), occupies genomic sites near eomesa/tbr2 and lhx2b in vivo, and activates transcription through those response elements (PMID:21471212); it also carries an eh1 repressor motif required for its in vivo function and was originally characterized as a transcriptional repressor (PMID:12469125). Genetically, fezf2 is required for regional patterning of the diencephalon (prethalamus versus zona limitans intrathalamica, via downregulation of wnt expression; PMID:17164418), for specification of hypothalamic neurons upstream of otp (PMID:18003738; PMID:23533176), and for the correct number of forebrain dopaminergic and serotonergic neurons, which it controls non-cell-autonomously downstream of canonical Wnt signalling (PMID:12469125; PMID:15219677; PMID:18799544). In adults, heterogeneous fezf2 levels among dorsal telencephalic neural stem cells pattern a Notch activity gradient that maintains stem cell quiescence (PMID:25319688).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0000978" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of sequence-specific cis-regulatory DNA binding from the C2H2 zinc-finger node PTN001803442. Directly supported on the zebrafish protein itself: genomic SELEX with the GST-fused zinc-finger domain recovered a core consensus site, fluorescence anisotropy confirmed binding, and in vivo ChIP pulled down genomic fragments upstream of eomesa/tbr2 and lhx2b (PMID:21471212).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is at the right level of specificity and has target-specific experimental grounding. PMID:21471212 shows the zebrafish Fezf2 zinc-finger domain binds a defined DNA motif in vitro and that endogenous Fezf2 occupies regulatory regions near forebrain target genes in embryos; the bound elements drive Fezf2-dependent forebrain reporter expression, so they are cis-regulatory regions of RNA polymerase II genes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Computational analyses uncovered a consensus core Fezf2 DNA binding site, which subsequently led to the identification of response elements in the selected genomic fragments.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This Fezf2 antibody was able to pull down genomic fragments near eomesa/tbr2 and lhx2b , whereas it did not pull down an unrelated genomic fragment</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                                    GO:0000981
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity, RNA polymerase II-specific</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0000981" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of RNA polymerase II-specific DNA-binding transcription factor activity. This is the core molecular function of fezf2. It is supported on the zebrafish protein by reporter transactivation through its own response elements in HEK293 cells and in embryos, and by regulation of lhx2b in loss- and gain-of-function (PMID:21471212); the eh1-related repressor motif and second zinc finger are both required for tof/fezl function in vivo (PMID:12469125).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sequence-specific DNA binding plus regulation of target-gene transcription is demonstrated directly in zebrafish (PMID:21471212), so the IBA is confirmed rather than merely inferred. Whether the dominant mode is activation (PMID:21471212) or repression (PMID:12469125; UniProt FUNCTION) is context dependent and does not affect the parent activity term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our in-depth analyses of two selected genomic fragments reveal that Fezf2 directly activates evolutionarily conserved genes eomesa/tbr2 and lhx2b .</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link">
+                                        PMID:12469125
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both the eh1-related repressor motif and the second zinc finger domain were necessary for tof function.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of nuclear localization for a C2H2 zinc-finger transcription factor. Consistent with UniProt (Nucleus, PubMed:11180958) and with in vivo chromatin immunoprecipitation of endogenous Fezf2 from embryo lysates (PMID:21471212).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is the expected and only plausible site of action for a sequence-specific transcription factor that occupies chromatin in vivo. The IBA is sound.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping from the UniProt subcellular location annotation &#34;Nucleus&#34;, which UniProt attributes to experimental evidence (PubMed:11180958).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and concordant with the IBA row and with chromatin occupancy of endogenous Fezf2 (PMID:21471212).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference of the process term paired with the transcription factor activity. Directly supported in zebrafish: fezf2 is necessary for forebrain lhx2b expression and sufficient to induce it on heat-shock overexpression (PMID:21471212).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The process is the direct consequence of the demonstrated molecular function and is shown on the target itself. The sign-neutral parent is appropriate because fezf2 both activates (eomesa, lhx2b; PMID:21471212) and, via its eh1 motif, represses (PMID:12469125) transcription.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Thus, fezf2 is necessary and sufficient in certain cellular contexts to regulate lhx2b expression in vivo .</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007399" target="_blank" class="term-link">
+                                    GO:0007399
+                                </a>
+                            </span>
+                            <span class="term-label">nervous system development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15219677" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15219677
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The too few mutant selectively affects subgroups of monoamin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0007399" data-r="PMID:15219677" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from the too few (tof) mutant. Rink and Guo (PMID:15219677) mapped forebrain dopaminergic and serotonergic neuron subgroups in larval and adult zebrafish and showed that selected subgroups are reduced in tof from the larval stage onward. The phenotype is real but the term is far broader than the evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;Nervous system development&#34; is the top-level term and conveys nothing specific about what fezf2 does. The cited paper is specifically about differentiation of forebrain monoaminergic neuron subtypes, and the sibling annotation from PMID:18799544 already uses the more informative GO:0021879 (forebrain neuron differentiation). The same reference supports GO:0071542 (dopaminergic neuron differentiation) for the DA subgroups. Abstract-only in the cache, so the more specific choice among the two is left to the curator.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021879" target="_blank" class="term-link">
+                                    forebrain neuron differentiation
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071542" target="_blank" class="term-link">
+                                    dopaminergic neuron differentiation
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15219677" target="_blank" class="term-link">
+                                        PMID:15219677
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Rather than affecting all monoaminergic neurons in the forebrain, selective subgroups of these neurons are reduced in the too few mutant, starting from the larval stage.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008593" target="_blank" class="term-link">
+                                    GO:0008593
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of Notch signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25319688" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25319688
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Heterogeneously expressed fezf2 patterns gradient Notch acti...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0008593" data-r="PMID:25319688" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from constitutive and conditional fezf2 loss of function in adult dorsal telencephalic neural stem cells. Single-cell profiling combined with genetics uncovered a fezf2-dependent gradient of Notch activity, high in quiescent and low in proliferative stem cells (PMID:25319688). Abstract-only in the cache.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The paper&#39;s central claim is that fezf2 patterns Notch activity among neighbouring stem cells, which is a regulatory relationship to the pathway rather than a downstream phenotype. Mouse Fezf2 directly represses Hes5, a Notch effector (noted in PMID:21471212), so a transcription-factor-level mechanism is plausible, though the zebrafish target has not been identified. Kept as a genuine but context-specific (adult neural stem cell) function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25319688" target="_blank" class="term-link">
+                                        PMID:25319688
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Single NSC profiling coupled with genetic analysis further uncovers a fezf2-dependent gradient Notch activity that is high in quiescent and low in proliferative NSCs.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021536" target="_blank" class="term-link">
+                                    GO:0021536
+                                </a>
+                            </span>
+                            <span class="term-label">diencephalon development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17164418" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17164418
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Patterning the zebrafish diencephalon by the conserved zinc-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021536" data-r="PMID:17164418" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from reduced fezl activity (Jeong et al., PMID:17164418): loss of prethalamus with corresponding expansion of the zona limitans intrathalamica, and Gal4-UAS overexpression expanding prethalamus, telencephalon and hypothalamus at the expense of the ZLI, preceded by downregulation of wnt expression in the prospective diencephalon.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Regional subdivision of the diencephalon is a well-supported core developmental role of fezf2, with both loss- and gain-of-function evidence and a downstream mechanism (wnt repression). Abstract-only in the cache, but the abstract states the finding explicitly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17164418" target="_blank" class="term-link">
+                                        PMID:17164418
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here, we report a new and essential role of zebrafish Fezl in establishing regional subdivisions within the diencephalon. First, reduced activity of fezl results in a deficit of the prethalamus and a corresponding expansion of the ZLI.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021536" target="_blank" class="term-link">
+                                    GO:0021536
+                                </a>
+                            </span>
+                            <span class="term-label">diencephalon development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17164418" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17164418
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Patterning the zebrafish diencephalon by the conserved zinc-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021536" data-r="PMID:17164418" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same finding as above, evidenced with a fezl morpholino rather than the genetic allele (PMID:17164418).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the mutant-based row with independent morpholino evidence; see the row above.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17164418" target="_blank" class="term-link">
+                                        PMID:17164418
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our findings reveal that Fezl is crucial for establishing regional subdivisions within the diencephalon and may also play a role in the development of the telencephalon and hypothalamus.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021536" target="_blank" class="term-link">
+                                    GO:0021536
+                                </a>
+                            </span>
+                            <span class="term-label">diencephalon development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17164418" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17164418
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Patterning the zebrafish diencephalon by the conserved zinc-...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021536" data-r="PMID:17164418" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same finding as above, evidenced with a second fezl morpholino (PMID:17164418).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate with a second independent morpholino; see the rows above.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17164418" target="_blank" class="term-link">
+                                        PMID:17164418
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our findings reveal that Fezl is crucial for establishing regional subdivisions within the diencephalon and may also play a role in the development of the telencephalon and hypothalamus.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021767" target="_blank" class="term-link">
+                                    GO:0021767
+                                </a>
+                            </span>
+                            <span class="term-label">mammillary body development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533176" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533176
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Specification of posterior hypothalamic neurons requires coo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021767" data-r="PMID:23533176" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from fezf2 morpholino knockdown. Wolf and Ryu (PMID:23533176) mapped the zebrafish posterior hypothalamic mammillary area by differential expression of Fezf2, Otp, Sim1a and Foxb1.2 and showed these factors are jointly required for its subdomains and for specification of Vip- and Uts1-positive neurons; Fezf2 is additionally important for early development of the posterior hypothalamus. Abstract-only in the cache.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The zebrafish mammillary area is the teleost counterpart of the mammalian mammillary body, and GO:0021767 is the closest available term. The evidence is directly about this region and is consistent with the hypothalamus development rows. Accepted as a specific developmental role, with GO:0021854 above as its parent.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533176" target="_blank" class="term-link">
+                                        PMID:23533176
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Coordinated activities of these factors are crucial for the establishment of the mammillary area subdomains and the specification of Vip- and Uts1-positive neurons. In addition, Fezf2 is important for early development of the posterior hypothalamus.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021854" target="_blank" class="term-link">
+                                    GO:0021854
+                                </a>
+                            </span>
+                            <span class="term-label">hypothalamus development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18003738" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18003738
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Specification of hypothalamic neurons by dual regulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021854" data-r="PMID:18003738" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from the tof mutant. Blechman et al. (PMID:18003738) place Fezl upstream of the homeodomain factor Otp, a key determinant of hypothalamic dopaminergic and oxytocinergic neuron differentiation, and show Fezl regulates otp at the transcriptional level. Abstract-only in the cache.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Transcriptional regulation of otp by a transcription factor in the developing hypothalamus is direct participation in hypothalamus development, and the finding is corroborated independently by PMID:23533176 and PMID:17164418.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18003738" target="_blank" class="term-link">
+                                        PMID:18003738
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Genetic analysis showed that the G-protein-coupled receptor PAC1 and the zinc finger-containing transcription factor Fezl act upstream to Otp. In vivo and in vitro experiments demonstrated that Fezl and PAC1 regulate Otp at the transcriptional and the post-transcriptional levels, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021854" target="_blank" class="term-link">
+                                    GO:0021854
+                                </a>
+                            </span>
+                            <span class="term-label">hypothalamus development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18003738" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18003738
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Specification of hypothalamic neurons by dual regulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021854" data-r="PMID:18003738" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same finding as above, with combined mutant plus morpholino evidence (PMID:18003738).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the row above with additional knockdown genotypes; see above.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18003738" target="_blank" class="term-link">
+                                        PMID:18003738
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our data reveal a new genetic network controlling the specification of hypothalamic neurons in vertebrates, and places Otp as a critical determinant underlying Fezl- and PAC1-mediated differentiation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021879" target="_blank" class="term-link">
+                                    GO:0021879
+                                </a>
+                            </span>
+                            <span class="term-label">forebrain neuron differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18799544" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18799544
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dopaminergic neuronal cluster size is determined during earl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021879" data-r="PMID:18799544" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from the tof m808 hypomorph. Russek-Blum et al. (PMID:18799544; full text cached) show that canonical Wnt signalling at the end of gastrulation sets the size of the diencephalic dopaminergic progenitor pool, that fezl is epistatic to Wnt in this pathway, and that fezl activity is required for the correct number of diencephalic DA neurons.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by genetic epistasis with full text available. The term is at an appropriate level: fezf2 controls forebrain neuron number and subtype non-cell-autonomously (PMID:12469125), so a term at the forebrain-neuron level is more defensible than a cell-intrinsic DA-differentiation term, although GO:0071542 would also be supportable for the DA subgroups.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18799544" target="_blank" class="term-link">
+                                        PMID:18799544
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show that an early canonical Wnt signal, acting through the transcription factor Fezl, modulates the number of DA neurons, thereby demonstrating for the first time that early neural patterning cues selectively control the size of the DA neuronal population in the vertebrate diencephalon.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021954" target="_blank" class="term-link">
+                                    GO:0021954
+                                </a>
+                            </span>
+                            <span class="term-label">central nervous system neuron development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191060" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191060
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in the zebrafish unmask shared regulatory pathways...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0021954" data-r="PMID:10191060" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from the original catecholaminergic-neuron mutagenesis screen (Guo et al. 1999, PMID:10191060), which isolated too few as a mutation causing a specific reduction in hypothalamic dopaminergic neuron number. The gene was cloned as fezl/fezf2 only later (PMID:12469125). Abstract-only in the cache.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The phenotype is specific (hypothalamic DA neuron number) but the term is generic. GO:0071542 (dopaminergic neuron differentiation) captures what the paper actually shows; GO:0021879 (forebrain neuron differentiation), already on the gene from PMID:18799544, is the conservative alternative given that fezf2 acts non-cell-autonomously on these neurons.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071542" target="_blank" class="term-link">
+                                    dopaminergic neuron differentiation
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021879" target="_blank" class="term-link">
+                                    forebrain neuron differentiation
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191060" target="_blank" class="term-link">
+                                        PMID:10191060
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The too few mutation leads to a specific reduction in the number of hypothalamic DA neurons.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030900" target="_blank" class="term-link">
+                                    GO:0030900
+                                </a>
+                            </span>
+                            <span class="term-label">forebrain development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12469125
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Zinc finger protein too few controls the development of mono...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0030900" data-r="PMID:12469125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from the tof mutant. Levkowitz et al. (PMID:12469125) cloned tof as the forebrain-specific zinc-finger repressor fezl and showed that tof mutants fail to develop hypothalamic DA and 5HT neurons while hindbrain 5HT and noradrenergic neurons form normally. Abstract-only in the cache.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Forebrain development is the umbrella under which every experimentally supported role of fezf2 falls (diencephalon, hypothalamus, forebrain neuron specification, forebrain reporter activity). An appropriate general term for a forebrain-specific patterning factor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link">
+                                        PMID:12469125
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we characterized a zebrafish mutant--too few (tof)--that develops hindbrain 5HT and noradrenergic neurons, but does not develop hypothalamic DA and 5HT neurons. tof encodes a forebrain-specific zinc finger transcription repressor that is homologous to the mammalian Fezl (forebrain embryonic zinc finger-like protein).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030900" target="_blank" class="term-link">
+                                    GO:0030900
+                                </a>
+                            </span>
+                            <span class="term-label">forebrain development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12469125
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Zinc finger protein too few controls the development of mono...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0030900" data-r="PMID:12469125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same finding as above, with the tof genotype recorded (PMID:12469125).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the row above; see above.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link">
+                                        PMID:12469125
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results indicate that tof/fezl is a key component in regulating the development of monoaminergic neurons in the vertebrate brain.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045892" target="_blank" class="term-link">
+                                    GO:0045892
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12469125
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Zinc finger protein too few controls the development of mono...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0045892" data-r="PMID:12469125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP based on Levkowitz et al. (PMID:12469125) describing tof/fezl as a transcription repressor whose eh1-related repressor motif is required for in vivo function. Abstract-only in the cache; the repressor assay itself cannot be inspected.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The eh1 motif is a Groucho-recruiting repression domain and its requirement for tof function is stated in the abstract, which is adequate support for negative regulation of transcription. Note that PMID:21471212 later showed Fezf2 also activates transcription of eomesa and lhx2b, so this row captures one of two modes rather than the whole picture. A curator with full text could consider narrowing to GO:0000122 (negative regulation of transcription by RNA polymerase II), which is how the activation side is proposed below.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link">
+                                        PMID:12469125
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both the eh1-related repressor motif and the second zinc finger domain were necessary for tof function.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071679" target="_blank" class="term-link">
+                                    GO:0071679
+                                </a>
+                            </span>
+                            <span class="term-label">commissural neuron axon guidance</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21471212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic selection identifies vertebrate transcription factor...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0071679" data-r="PMID:21471212" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from the tof mutant. In Chen et al. (PMID:21471212; full text cached) the anterior and post-optic commissures fail to cross the midline properly at 36 hpf in tof mutants and fezf2 morphants, but the defect recovers later. The authors looked for it only because fezf2 directly activates lhx2b, whose loss (belladonna) causes a midline axon guidance defect.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The commissural crossing phenotype is a supported consequence of the Fezf2 transcriptional program: Fezf2 directly activates or maintains lhx2b expression, and the cited full-text paper tests the axon phenotype because lhx2b/belladonna itself affects midline axon guidance. Kept as non-core because the phenotype is transient, recovers by 48 hpf, and is downstream of Fezf2&#39;s core cis-regulatory DNA-binding transcription factor activity rather than a separate guidance mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Immunostaining with the anti-acetylated tubulin antibody uncovered that the anterior commissure as well as the post-optic commissure failed to cross the midline in both the tof mutant and fezf2 morphant properly ( Fig. 5 G ) at 36 hpf. However, this defect did recover later</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071679" target="_blank" class="term-link">
+                                    GO:0071679
+                                </a>
+                            </span>
+                            <span class="term-label">commissural neuron axon guidance</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21471212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic selection identifies vertebrate transcription factor...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0071679" data-r="PMID:21471212" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same finding as above, from the fezf2 morphant (PMID:21471212).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the row above (morpholino evidence); the transient commissural crossing defect is supported but non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Loss of lhx2b function in the zebrafish mutant belladonna causes a midline axon guidance defect ( 34 ). Such axonal guidance defect has not been previously reported in the tof mutant.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097150" target="_blank" class="term-link">
+                                    GO:0097150
+                                </a>
+                            </span>
+                            <span class="term-label">neuronal stem cell population maintenance</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25319688" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25319688
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Heterogeneously expressed fezf2 patterns gradient Notch acti...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0097150" data-r="PMID:25319688" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP from constitutive and conditional fezf2 impairment in adult zebrafish dorsal telencephalic neural stem cells. fezf2-GFP-high cells are quiescent and fezf2-GFP-low cells proliferative; fezf2 is required to maintain quiescence, and genetic chimeras show a dose-dependent effect on stem cell activation (PMID:25319688). Abstract-only in the cache.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Maintenance of the quiescent adult neural stem cell pool is the direct claim of the paper, supported by loss of function, conditional loss of function and chimera analysis. A genuine post-embryonic function of fezf2, mechanistically linked to the Notch row above.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25319688" target="_blank" class="term-link">
+                                        PMID:25319688
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Constitutive or conditional impairment of fezf2 activity demonstrates its requirement for maintaining quiescence.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21471212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic selection identifies vertebrate transcription factor...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q804Q5" data-a="GO:0045944" data-r="PMID:21471212" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation. Chen et al. (PMID:21471212; full text cached) show that zebrafish Fezf2 transactivates a luciferase reporter through its SELEX-derived response elements in HEK293 cells, that the wild-type element drives forebrain GFP expression in embryos in a fezf2-morpholino-sensitive manner, that endogenous Fezf2 occupies genomic regions upstream of eomesa/tbr2 and lhx2b by ChIP, and that lhx2b expression is reduced in tof/morphants and induced by fezf2 overexpression.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The existing transcription rows are the sign-neutral IBA (GO:0006357) and a repression IMP (GO:0045892); the demonstrated activator function has no annotation. The participation test is met trivially (a transcription factor binding a cis-regulatory element and increasing transcription is the entity doing the work), and the paper&#39;s own conclusion is that Fezf2 is a transcription activator. IDA from the reporter and ChIP experiments; IMP would also be defensible from the lhx2b loss- and gain-of-function data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results demonstrate the feasibility of employing genomic SELEX to identify vertebrate transcription factor binding sites and target genes and reveal Fezf2 as a transcription activator and a candidate for evaluation in human microcephaly.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                        PMID:21471212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the tof mutant and fezf2 morphant, lhx2b expression was selectively reduced in the forebrain but not in the mid-hindbrain regions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Forebrain-specific C2H2 zinc-finger transcription factor. Binds a defined DNA motif through its six C-terminal zinc fingers and regulates target genes such as eomesa and lhx2b (PMID:21471212); carries an eh1 repressor motif required for in vivo function (PMID:12469125). Through this activity it establishes diencephalic subdivisions by repressing wnt expression (PMID:17164418), specifies hypothalamic neurons upstream of otp (PMID:18003738; PMID:23533176), and sets the number of forebrain dopaminergic and serotonergic neurons downstream of canonical Wnt signalling (PMID:12469125; PMID:15219677; PMID:18799544).</h3>
+                <span class="vote-buttons" data-g="Q804Q5" data-a="FUNCTION: Forebrain-specific C2H2 zinc-finger transcription ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030900" target="_blank" class="term-link">
+                                forebrain development
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021536" target="_blank" class="term-link">
+                                diencephalon development
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021854" target="_blank" class="term-link">
+                                hypothalamus development
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0021879" target="_blank" class="term-link">
+                                forebrain neuron differentiation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                                PMID:21471212
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our in-depth analyses of two selected genomic fragments reveal that Fezf2 directly activates evolutionarily conserved genes eomesa/tbr2 and lhx2b .</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In the adult dorsal telencephalon, heterogeneous fezf2 levels among neighbouring neural stem cells pattern a gradient of Notch activity; high fezf2 maintains quiescence and low fezf2 permits activation and differentiation (PMID:25319688).</h3>
+                <span class="vote-buttons" data-g="Q804Q5" data-a="FUNCTION: In the adult dorsal telencephalon, heterogeneous f..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000981" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity, RNA polymerase II-specific
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097150" target="_blank" class="term-link">
+                                neuronal stem cell population maintenance
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008593" target="_blank" class="term-link">
+                                regulation of Notch signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25319688" target="_blank" class="term-link">
+                                PMID:25319688
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our results support a model in which fezf2 heterogeneity patterns gradient Notch activity among neighbors that is critical to balance NSC fate.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10191060" target="_blank" class="term-link">
+                            PMID:10191060
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in the zebrafish unmask shared regulatory pathways controlling the development of catecholaminergic neurons.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The too few mutation, later shown to disrupt fezl/fezf2, causes a specific reduction in hypothalamic dopaminergic neuron number.</div>
+
+                        <div class="finding-text">"The too few mutation leads to a specific reduction in the number of hypothalamic DA neurons."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12469125" target="_blank" class="term-link">
+                            PMID:12469125
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Zinc finger protein too few controls the development of monoaminergic neurons.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">tof encodes the forebrain-specific zinc-finger repressor fezl; mutants lack hypothalamic DA and 5HT neurons, which fezl controls non-cell-autonomously; the eh1 repressor motif and second zinc finger are required for function.</div>
+
+                        <div class="finding-text">"Mosaic and co-staining analyses showed that fezl was not expressed in DA or 5HT neurons and instead controlled development of these neurons non-cell-autonomously. Both the eh1-related repressor motif and the second zinc finger domain were necessary for tof function."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15219677" target="_blank" class="term-link">
+                            PMID:15219677
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The too few mutant selectively affects subgroups of monoaminergic neurons in the zebrafish forebrain.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Selected forebrain DA and 5HT neuron subgroups are reduced in too few from the larval stage; the missing neurons are not restored in adults.</div>
+
+                        <div class="finding-text">"Rather than affecting all monoaminergic neurons in the forebrain, selective subgroups of these neurons are reduced in the too few mutant, starting from the larval stage."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17164418" target="_blank" class="term-link">
+                            PMID:17164418
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Patterning the zebrafish diencephalon by the conserved zinc-finger protein Fezl.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fezl is required for prethalamus formation and restricts the ZLI; overexpression expands anterior forebrain regions and downregulates wnt expression, and can rescue anterior forebrain in Tcf7l1a-deficient embryos.</div>
+
+                        <div class="finding-text">"Such altered brain regionalization is preceded by the early downregulation of wnt expression in the prospective diencephalon. Finally, fezl overexpression is able to restore the anterior forebrain and downregulate wnt expression in Headless- and/or Tcf3 (also known as Tcf7l1a)-deficient embryos."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18003738" target="_blank" class="term-link">
+                            PMID:18003738
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Specification of hypothalamic neurons by dual regulation of the homeodomain protein Orthopedia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fezl acts upstream of Otp and regulates it at the transcriptional level in hypothalamic DA and oxytocinergic neuron specification.</div>
+
+                        <div class="finding-text">"In vivo and in vitro experiments demonstrated that Fezl and PAC1 regulate Otp at the transcriptional and the post-transcriptional levels, respectively."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18799544" target="_blank" class="term-link">
+                            PMID:18799544
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dopaminergic neuronal cluster size is determined during early forebrain patterning.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">fezl is epistatic to canonical Wnt signalling in setting diencephalic DA neuron number; Fezl activity during gastrulation is crucial for DA cell number.</div>
+
+                        <div class="finding-text">"Thus, the activity of Fezl during early neural specification (gastrulation) is crucial in regulating DA cell number."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21471212" target="_blank" class="term-link">
+                            PMID:21471212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic selection identifies vertebrate transcription factor Fezf2 binding sites and target genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genomic SELEX with the Fezf2 zinc-finger domain defines a core binding motif; Fezf2 transactivates reporters through these elements in cells and embryos, occupies sites near eomesa/tbr2 and lhx2b by ChIP, and is necessary and sufficient for forebrain lhx2b expression.</div>
+
+                        <div class="finding-text">"Through loss of function, gain of function, and chromatin immunoprecipitation, we further identified and validated eomesa/tbr2 and lhx2b as biologically relevant target genes of Fezf2."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">tof mutants and fezf2 morphants show a transient failure of the anterior and post-optic commissures to cross the midline at 36 hpf.</div>
+
+                        <div class="finding-text">"However, this defect did recover later"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533176" target="_blank" class="term-link">
+                            PMID:23533176
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Specification of posterior hypothalamic neurons requires coordinated activities of Fezf2, Otp, Sim1a and Foxb1.2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fezf2, Otp, Sim1a and Foxb1.2 define mammillary-area subdomains and are jointly required for Vip and Uts1 neuron specification; Fezf2 is needed for early posterior hypothalamus development.</div>
+
+                        <div class="finding-text">"In addition, Fezf2 is important for early development of the posterior hypothalamus."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25319688" target="_blank" class="term-link">
+                            PMID:25319688
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Heterogeneously expressed fezf2 patterns gradient Notch activity in balancing the quiescence, proliferation, and differentiation of adult neural stem cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">fezf2 is required to maintain quiescence of adult dorsal telencephalic neural stem cells and patterns a fezf2-dependent Notch activity gradient among them.</div>
+
+                        <div class="finding-text">"Constitutive or conditional impairment of fezf2 activity demonstrates its requirement for maintaining quiescence."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is fezf2 primarily a repressor (eh1 motif, PMID:12469125; UniProt FUNCTION) or an activator (eomesa, lhx2b; PMID:21471212), and does the mode depend on cofactor context or target site?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q804Q5" data-a="Q: Is fezf2 primarily a repressor (eh1 motif, PMID:12..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the direct zebrafish targets through which fezf2 represses wnt expression in the prospective diencephalon (PMID:17164418) and regulates Notch activity in adult neural stem cells (PMID:25319688)? Mouse Fezf2 represses Hes5 directly; is the same true in zebrafish?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q804Q5" data-a="Q: What are the direct zebrafish targets through whic..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> The commissural axon guidance phenotype (PMID:21471212) is transient and attributed to reduced lhx2b. Is the defect mediated entirely through lhx2b, or do other direct Fezf2 targets participate in forebrain midline guidance?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q804Q5" data-a="Q: The commissural axon guidance phenotype (PMID:2147..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-experiments">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> ChIP-seq or CUT&amp;RUN for Fezf2 in 24-36 hpf forebrain and in adult telencephalic neural stem cells to define direct targets, in particular wnt genes, her/hes Notch effectors, and otp, and to resolve activator versus repressor site usage.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q804Q5" data-a="EXPERIMENT: ChIP-seq or CUT&amp;RUN for Fezf2 in 24-36 hpf forebra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Domain-swap and eh1-motif point mutants assayed on the SELEX response elements (PMID:21471212) to test whether the eh1 motif converts Fezf2 from activator to repressor in a target-dependent manner.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q804Q5" data-a="EXPERIMENT: Domain-swap and eh1-motif point mutants assayed on..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fezf2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q804Q5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fezf2-danio-rerio-q804q5-curation-notes">fezf2 (Danio rerio, Q804Q5) — curation notes</h1>
+<h2 id="2026-09-27-initial-review-claude-code-fable-51">2026-09-27 — initial review (claude-code, Fable 5.1)</h2>
+<p><strong>Deep research not available.</strong> <code>just deep-research-falcon DANRE fezf2 --fallback perplexity-lite</code><br />
+failed: no EDISON_API_KEY / ASTA_API_KEY / PERPLEXITY_API_KEY in the environment. Literature<br />
+synthesis below was done by hand from the nine GOA-cited papers in <code>publications/</code> plus the<br />
+UniProt record. Only two of the nine have full text cached (PMID:18799544, PMID:21471212);<br />
+the rest are abstract-only, and the review says so wherever it matters.</p>
+<h3 id="gene-gestalt">Gene gestalt</h3>
+<ul>
+<li>Forebrain-specific C2H2 zinc-finger TF; six C-terminal zinc fingers (aa 249–412), N-terminal<br />
+  eh1-related repressor motif (aa 27–42, UniProt MOTIF). Also known as fezl, too few (tof).</li>
+<li>Molecular function is directly shown once, in PMID:21471212: genomic SELEX with the ZF domain<br />
+  → core motif CAGCAACC; anisotropy binding; luciferase transactivation in HEK293 (1.5–4×);<br />
+  in vivo forebrain enhancer activity abolished by motif mutation or fezf2 MO; ChIP of endogenous<br />
+  Fezf2 at eomesa/tbr2 and lhx2b; lhx2b down in tof/MO, up on hs:gal4;uas:fezf2. Authors call<br />
+  Fezf2 a <em>transcription activator</em>. PMID:12469125 (abstract) calls it a <em>repressor</em> with the eh1<br />
+  motif required for function. Both are probably true; flagged in <code>suggested_questions</code>.</li>
+<li>Developmental roles (all IMP, tof m808 hypomorph and/or MOs): diencephalon subdivision<br />
+  (prethalamus vs ZLI, via wnt repression; PMID:17164418), hypothalamus / otp regulation<br />
+  (PMID:18003738, PMID:23533176), DA/5HT neuron number downstream of Wnt and<br />
+  non-cell-autonomous (PMID:12469125, PMID:15219677, PMID:18799544).</li>
+<li>Adult: fezf2-high quiescent vs fezf2-low proliferative dorsal telencephalic NSCs; patterns a<br />
+  Notch gradient; required for quiescence (PMID:25319688).</li>
+</ul>
+<h3 id="decisions-worth-a-second-look">Decisions worth a second look</h3>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Action</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0007399 nervous system development (PMID:15219677)</td>
+<td>MODIFY → GO:0021879 / GO:0071542</td>
+<td>Root-level term; paper is about forebrain DA/5HT subgroups</td>
+</tr>
+<tr>
+<td>GO:0021954 CNS neuron development (PMID:10191060)</td>
+<td>MODIFY → GO:0071542 / GO:0021879</td>
+<td>1999 screen paper: specific hypothalamic DA reduction</td>
+</tr>
+<tr>
+<td>GO:0071679 commissural neuron axon guidance ×2 (PMID:21471212)</td>
+<td>KEEP_AS_NON_CORE</td>
+<td>Transient phenotype, attributed by authors to reduced lhx2b; supported as an upstream <code>acts_upstream_of_or_within</code> assertion but downstream of Fezf2's core transcription-factor activity</td>
+</tr>
+<tr>
+<td>GO:0045944 positive regulation of transcription by RNAPII</td>
+<td>NEW (IDA, PMID:21471212)</td>
+<td>Activator function demonstrated; no existing positive-regulation row</td>
+</tr>
+<tr>
+<td>GO:0045892 negative regulation of DNA-templated transcription</td>
+<td>ACCEPT</td>
+<td>Abstract states eh1 motif required; could narrow to GO:0000122 with full text</td>
+</tr>
+</tbody>
+</table>
+<p>Everything else ACCEPTed, including all IBAs (PTN001803442 node; target-specific experimental<br />
+grounding exists in PMID:21471212).</p>
+<h3 id="not-done-follow-ups">Not done / follow-ups</h3>
+<ul>
+<li>No <code>propagation_review</code> blocks added: all IBA rows were accepted, so there is no failure to<br />
+  trace.</li>
+<li>ZFIN gene id in the nucleus IBA WITH/FROM is ZDB-GENE-020424-1, whereas UniProt cross-refs<br />
+  fezf2 to ZDB-GENE-001103-3. Not investigated; may be a paralog (fezf1?) as donor.</li>
+<li>Human FEZF2 / mouse Fezf2 have no review in this repo yet; a cross-species pass would help<br />
+  settle the activator/repressor question.</li>
+</ul>
+<h2 id="2026-10-09-commissural-axon-guidance-follow-up">2026-10-09 - commissural axon guidance follow-up</h2>
+<p>Revisited the two <code>GO:0071679</code> rows from PMID:21471212. The initial<br />
+<code>MARK_AS_OVER_ANNOTATED</code> action was too strong: the paper explicitly observes an anterior<br />
+and post-optic commissure crossing defect in both tof mutants and fezf2 morphants, and the<br />
+<code>acts_upstream_of_or_within</code> qualifier covers Fezf2's transcriptional activation of <code>lhx2b</code><br />
+as the upstream mechanism. Changed both rows to <code>KEEP_AS_NON_CORE</code> because the defect is<br />
+transient, downstream of the core transcription-factor activity, and attributed at least<br />
+partly to the direct Fezf2 target <code>lhx2b</code>.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q804Q5
+gene_symbol: fezf2
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:7955
+  label: Danio rerio
+description: &gt;-
+  Zebrafish fezf2 (Fez family zinc finger protein 2; historically fezl, and the gene
+  disrupted in the too few (tof) mutant) encodes a forebrain-specific C2H2 zinc-finger
+  transcription factor with six C-terminal zinc fingers and an N-terminal eh1-related
+  repressor motif. It is one of the earliest markers of the prospective forebrain and is
+  expressed in the telencephalon and anterior-ventral diencephalon during embryogenesis,
+  and later in dorsal telencephalic adult neural stem cells. The protein binds DNA
+  sequence-specifically (SELEX-derived core motif CAGCAACC), occupies genomic sites near
+  eomesa/tbr2 and lhx2b in vivo, and activates transcription through those response
+  elements (PMID:21471212); it also carries an eh1 repressor motif required for its
+  in vivo function and was originally characterized as a transcriptional repressor
+  (PMID:12469125). Genetically, fezf2 is required for regional patterning of the
+  diencephalon (prethalamus versus zona limitans intrathalamica, via downregulation of
+  wnt expression; PMID:17164418), for specification of hypothalamic neurons upstream of
+  otp (PMID:18003738; PMID:23533176), and for the correct number of forebrain
+  dopaminergic and serotonergic neurons, which it controls non-cell-autonomously
+  downstream of canonical Wnt signalling (PMID:12469125; PMID:15219677; PMID:18799544).
+  In adults, heterogeneous fezf2 levels among dorsal telencephalic neural stem cells
+  pattern a Notch activity gradient that maintains stem cell quiescence (PMID:25319688).
+existing_annotations:
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - FB:FBgn0003002
+  - MGI:MGI:101786
+  - MGI:MGI:106676
+  - MGI:MGI:106679
+  - MGI:MGI:106683
+  - PANTHER:PTN001803442
+  - PomBase:SPAC6G10.12c
+  - UniProtKB:O60481
+  - UniProtKB:Q14872
+  - WB:WBGene00006604
+  review:
+    summary: &gt;-
+      Phylogenetic inference of sequence-specific cis-regulatory DNA binding from the
+      C2H2 zinc-finger node PTN001803442. Directly supported on the zebrafish protein
+      itself: genomic SELEX with the GST-fused zinc-finger domain recovered a core
+      consensus site, fluorescence anisotropy confirmed binding, and in vivo ChIP
+      pulled down genomic fragments upstream of eomesa/tbr2 and lhx2b (PMID:21471212).
+    action: ACCEPT
+    reason: &gt;-
+      The IBA is at the right level of specificity and has target-specific experimental
+      grounding. PMID:21471212 shows the zebrafish Fezf2 zinc-finger domain binds a
+      defined DNA motif in vitro and that endogenous Fezf2 occupies regulatory regions
+      near forebrain target genes in embryos; the bound elements drive
+      Fezf2-dependent forebrain reporter expression, so they are cis-regulatory regions
+      of RNA polymerase II genes.
+    additional_reference_ids:
+    - PMID:21471212
+    supported_by:
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        Computational analyses uncovered a consensus core Fezf2 DNA binding site, which
+        subsequently led to the identification of response elements in the selected
+        genomic fragments.
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        This Fezf2 antibody was able to pull down genomic fragments near eomesa/tbr2 and
+        lhx2b , whereas it did not pull down an unrelated genomic fragment
+- term:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - FB:FBgn0003002
+  - FB:FBgn0039039
+  - MGI:MGI:106676
+  - MGI:MGI:106679
+  - MGI:MGI:106683
+  - MGI:MGI:1932535
+  - PANTHER:PTN001803442
+  - PomBase:SPAC6G10.12c
+  - SGD:S000002553
+  - SGD:S000003592
+  - SGD:S000004121
+  - UniProtKB:O60481
+  - UniProtKB:P36508
+  - UniProtKB:Q14872
+  review:
+    summary: &gt;-
+      Phylogenetic inference of RNA polymerase II-specific DNA-binding transcription
+      factor activity. This is the core molecular function of fezf2. It is supported on
+      the zebrafish protein by reporter transactivation through its own response
+      elements in HEK293 cells and in embryos, and by regulation of lhx2b in loss- and
+      gain-of-function (PMID:21471212); the eh1-related repressor motif and second zinc
+      finger are both required for tof/fezl function in vivo (PMID:12469125).
+    action: ACCEPT
+    reason: &gt;-
+      Sequence-specific DNA binding plus regulation of target-gene transcription is
+      demonstrated directly in zebrafish (PMID:21471212), so the IBA is confirmed rather
+      than merely inferred. Whether the dominant mode is activation (PMID:21471212) or
+      repression (PMID:12469125; UniProt FUNCTION) is context dependent and does not
+      affect the parent activity term.
+    additional_reference_ids:
+    - PMID:21471212
+    - PMID:12469125
+    supported_by:
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        Our in-depth analyses of two selected genomic fragments reveal that Fezf2
+        directly activates evolutionarily conserved genes eomesa/tbr2 and lhx2b .
+    - reference_id: PMID:12469125
+      supporting_text: &gt;-
+        Both the eh1-related repressor motif and the second zinc finger domain were
+        necessary for tof function.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - CGD:CAL0000191878
+  - FB:FBgn0003002
+  - FB:FBgn0039039
+  - MGI:MGI:101786
+  - MGI:MGI:106676
+  - MGI:MGI:106679
+  - MGI:MGI:106683
+  - MGI:MGI:107201
+  - MGI:MGI:1929518
+  - MGI:MGI:1932535
+  - PANTHER:PTN001803442
+  - PomBase:SPAC144.02
+  - PomBase:SPAC6G10.12c
+  - SGD:S000002553
+  - SGD:S000003592
+  - SGD:S000004121
+  - UniProtKB:O60481
+  - UniProtKB:O73689
+  - UniProtKB:O95409
+  - UniProtKB:P36508
+  - UniProtKB:Q14872
+  - UniProtKB:Q15915
+  - UniProtKB:Q91689
+  - WB:WBGene00004335
+  - WB:WBGene00006604
+  - ZFIN:ZDB-GENE-020424-1
+  - dictyBase:DDB_G0291342
+  review:
+    summary: &gt;-
+      Phylogenetic inference of nuclear localization for a C2H2 zinc-finger
+      transcription factor. Consistent with UniProt (Nucleus, PubMed:11180958) and with
+      in vivo chromatin immunoprecipitation of endogenous Fezf2 from embryo lysates
+      (PMID:21471212).
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is the expected and only plausible site of action for a
+      sequence-specific transcription factor that occupies chromatin in vivo. The IBA is
+      sound.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0191
+  review:
+    summary: &gt;-
+      Electronic mapping from the UniProt subcellular location annotation &#34;Nucleus&#34;,
+      which UniProt attributes to experimental evidence (PubMed:11180958).
+    action: ACCEPT
+    reason: &gt;-
+      Correct and concordant with the IBA row and with chromatin occupancy of
+      endogenous Fezf2 (PMID:21471212).
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - CGD:CAL0000185267
+  - CGD:CAL0000191878
+  - FB:FBgn0003002
+  - FB:FBgn0033782
+  - FB:FBgn0039039
+  - MGI:MGI:101786
+  - MGI:MGI:106676
+  - MGI:MGI:106679
+  - MGI:MGI:106683
+  - MGI:MGI:1932535
+  - PANTHER:PTN001803442
+  - PomBase:SPAC6G10.12c
+  - RGD:1308956
+  - SGD:S000002553
+  - SGD:S000003592
+  - SGD:S000004121
+  - UniProtKB:O60481
+  - UniProtKB:O73689
+  - UniProtKB:P36508
+  - UniProtKB:Q14872
+  - UniProtKB:Q91689
+  - UniProtKB:Q91853
+  - WB:WBGene00004335
+  - WB:WBGene00006604
+  review:
+    summary: &gt;-
+      Phylogenetic inference of the process term paired with the transcription factor
+      activity. Directly supported in zebrafish: fezf2 is necessary for forebrain lhx2b
+      expression and sufficient to induce it on heat-shock overexpression
+      (PMID:21471212).
+    action: ACCEPT
+    reason: &gt;-
+      The process is the direct consequence of the demonstrated molecular function and
+      is shown on the target itself. The sign-neutral parent is appropriate because
+      fezf2 both activates (eomesa, lhx2b; PMID:21471212) and, via its eh1 motif,
+      represses (PMID:12469125) transcription.
+    additional_reference_ids:
+    - PMID:21471212
+    supported_by:
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        Thus, fezf2 is necessary and sufficient in certain cellular contexts to
+        regulate lhx2b expression in vivo .
+- term:
+    id: GO:0007399
+    label: nervous system development
+  evidence_type: IMP
+  original_reference_id: PMID:15219677
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-070129-9
+  review:
+    summary: &gt;-
+      IMP from the too few (tof) mutant. Rink and Guo (PMID:15219677) mapped forebrain
+      dopaminergic and serotonergic neuron subgroups in larval and adult zebrafish and
+      showed that selected subgroups are reduced in tof from the larval stage onward.
+      The phenotype is real but the term is far broader than the evidence.
+    action: MODIFY
+    reason: &gt;-
+      &#34;Nervous system development&#34; is the top-level term and conveys nothing specific
+      about what fezf2 does. The cited paper is specifically about differentiation of
+      forebrain monoaminergic neuron subtypes, and the sibling annotation from
+      PMID:18799544 already uses the more informative GO:0021879 (forebrain neuron
+      differentiation). The same reference supports GO:0071542 (dopaminergic neuron
+      differentiation) for the DA subgroups. Abstract-only in the cache, so the more
+      specific choice among the two is left to the curator.
+    proposed_replacement_terms:
+    - id: GO:0021879
+      label: forebrain neuron differentiation
+    - id: GO:0071542
+      label: dopaminergic neuron differentiation
+    supported_by:
+    - reference_id: PMID:15219677
+      supporting_text: &gt;-
+        Rather than affecting all monoaminergic neurons in the forebrain, selective
+        subgroups of these neurons are reduced in the too few mutant, starting from the
+        larval stage.
+- term:
+    id: GO:0008593
+    label: regulation of Notch signaling pathway
+  evidence_type: IMP
+  original_reference_id: PMID:25319688
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-150707-6
+  review:
+    summary: &gt;-
+      IMP from constitutive and conditional fezf2 loss of function in adult dorsal
+      telencephalic neural stem cells. Single-cell profiling combined with genetics
+      uncovered a fezf2-dependent gradient of Notch activity, high in quiescent and low
+      in proliferative stem cells (PMID:25319688). Abstract-only in the cache.
+    action: ACCEPT
+    reason: &gt;-
+      The paper&#39;s central claim is that fezf2 patterns Notch activity among neighbouring
+      stem cells, which is a regulatory relationship to the pathway rather than a
+      downstream phenotype. Mouse Fezf2 directly represses Hes5, a Notch effector
+      (noted in PMID:21471212), so a transcription-factor-level mechanism is plausible,
+      though the zebrafish target has not been identified. Kept as a genuine but
+      context-specific (adult neural stem cell) function.
+    supported_by:
+    - reference_id: PMID:25319688
+      supporting_text: &gt;-
+        Single NSC profiling coupled with genetic analysis further uncovers a
+        fezf2-dependent gradient Notch activity that is high in quiescent and low in
+        proliferative NSCs.
+- term:
+    id: GO:0021536
+    label: diencephalon development
+  evidence_type: IMP
+  original_reference_id: PMID:17164418
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-070706-5
+  review:
+    summary: &gt;-
+      IMP from reduced fezl activity (Jeong et al., PMID:17164418): loss of prethalamus
+      with corresponding expansion of the zona limitans intrathalamica, and
+      Gal4-UAS overexpression expanding prethalamus, telencephalon and hypothalamus at
+      the expense of the ZLI, preceded by downregulation of wnt expression in the
+      prospective diencephalon.
+    action: ACCEPT
+    reason: &gt;-
+      Regional subdivision of the diencephalon is a well-supported core developmental
+      role of fezf2, with both loss- and gain-of-function evidence and a downstream
+      mechanism (wnt repression). Abstract-only in the cache, but the abstract states
+      the finding explicitly.
+    supported_by:
+    - reference_id: PMID:17164418
+      supporting_text: &gt;-
+        Here, we report a new and essential role of zebrafish Fezl in establishing
+        regional subdivisions within the diencephalon. First, reduced activity of fezl
+        results in a deficit of the prethalamus and a corresponding expansion of the
+        ZLI.
+- term:
+    id: GO:0021536
+    label: diencephalon development
+  evidence_type: IMP
+  original_reference_id: PMID:17164418
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-MRPHLNO-070129-6
+  review:
+    summary: &gt;-
+      Same finding as above, evidenced with a fezl morpholino rather than the genetic
+      allele (PMID:17164418).
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the mutant-based row with independent morpholino evidence; see the
+      row above.
+    supported_by:
+    - reference_id: PMID:17164418
+      supporting_text: &gt;-
+        Our findings reveal that Fezl is crucial for establishing regional subdivisions
+        within the diencephalon and may also play a role in the development of the
+        telencephalon and hypothalamus.
+- term:
+    id: GO:0021536
+    label: diencephalon development
+  evidence_type: IMP
+  original_reference_id: PMID:17164418
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-MRPHLNO-070129-7
+  review:
+    summary: &gt;-
+      Same finding as above, evidenced with a second fezl morpholino (PMID:17164418).
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate with a second independent morpholino; see the rows above.
+    supported_by:
+    - reference_id: PMID:17164418
+      supporting_text: &gt;-
+        Our findings reveal that Fezl is crucial for establishing regional subdivisions
+        within the diencephalon and may also play a role in the development of the
+        telencephalon and hypothalamus.
+- term:
+    id: GO:0021767
+    label: mammillary body development
+  evidence_type: IMP
+  original_reference_id: PMID:23533176
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-MRPHLNO-070129-7
+  review:
+    summary: &gt;-
+      IMP from fezf2 morpholino knockdown. Wolf and Ryu (PMID:23533176) mapped the
+      zebrafish posterior hypothalamic mammillary area by differential expression of
+      Fezf2, Otp, Sim1a and Foxb1.2 and showed these factors are jointly required for
+      its subdomains and for specification of Vip- and Uts1-positive neurons; Fezf2 is
+      additionally important for early development of the posterior hypothalamus.
+      Abstract-only in the cache.
+    action: ACCEPT
+    reason: &gt;-
+      The zebrafish mammillary area is the teleost counterpart of the mammalian
+      mammillary body, and GO:0021767 is the closest available term. The evidence is
+      directly about this region and is consistent with the hypothalamus development
+      rows. Accepted as a specific developmental role, with GO:0021854 above as its
+      parent.
+    supported_by:
+    - reference_id: PMID:23533176
+      supporting_text: &gt;-
+        Coordinated activities of these factors are crucial for the establishment of the
+        mammillary area subdomains and the specification of Vip- and Uts1-positive
+        neurons. In addition, Fezf2 is important for early development of the posterior
+        hypothalamus.
+- term:
+    id: GO:0021854
+    label: hypothalamus development
+  evidence_type: IMP
+  original_reference_id: PMID:18003738
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-070129-9
+  review:
+    summary: &gt;-
+      IMP from the tof mutant. Blechman et al. (PMID:18003738) place Fezl upstream of
+      the homeodomain factor Otp, a key determinant of hypothalamic dopaminergic and
+      oxytocinergic neuron differentiation, and show Fezl regulates otp at the
+      transcriptional level. Abstract-only in the cache.
+    action: ACCEPT
+    reason: &gt;-
+      Transcriptional regulation of otp by a transcription factor in the developing
+      hypothalamus is direct participation in hypothalamus development, and the
+      finding is corroborated independently by PMID:23533176 and PMID:17164418.
+    supported_by:
+    - reference_id: PMID:18003738
+      supporting_text: &gt;-
+        Genetic analysis showed that the G-protein-coupled receptor PAC1 and the zinc
+        finger-containing transcription factor Fezl act upstream to Otp. In vivo and in
+        vitro experiments demonstrated that Fezl and PAC1 regulate Otp at the
+        transcriptional and the post-transcriptional levels, respectively.
+- term:
+    id: GO:0021854
+    label: hypothalamus development
+  evidence_type: IMP
+  original_reference_id: PMID:18003738
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-070129-9
+  - ZFIN:ZDB-MRPHLNO-070129-7
+  - ZFIN:ZDB-MRPHLNO-080414-2
+  review:
+    summary: &gt;-
+      Same finding as above, with combined mutant plus morpholino evidence
+      (PMID:18003738).
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the row above with additional knockdown genotypes; see above.
+    supported_by:
+    - reference_id: PMID:18003738
+      supporting_text: &gt;-
+        Our data reveal a new genetic network controlling the specification of
+        hypothalamic neurons in vertebrates, and places Otp as a critical determinant
+        underlying Fezl- and PAC1-mediated differentiation.
+- term:
+    id: GO:0021879
+    label: forebrain neuron differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:18799544
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-070129-9
+  review:
+    summary: &gt;-
+      IMP from the tof m808 hypomorph. Russek-Blum et al. (PMID:18799544; full text
+      cached) show that canonical Wnt signalling at the end of gastrulation sets the
+      size of the diencephalic dopaminergic progenitor pool, that fezl is epistatic to
+      Wnt in this pathway, and that fezl activity is required for the correct number of
+      diencephalic DA neurons.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported by genetic epistasis with full text available. The term is at an
+      appropriate level: fezf2 controls forebrain neuron number and subtype
+      non-cell-autonomously (PMID:12469125), so a term at the forebrain-neuron level is
+      more defensible than a cell-intrinsic DA-differentiation term, although
+      GO:0071542 would also be supportable for the DA subgroups.
+    supported_by:
+    - reference_id: PMID:18799544
+      supporting_text: &gt;-
+        We show that an early canonical Wnt signal, acting through the transcription
+        factor Fezl, modulates the number of DA neurons, thereby demonstrating for the
+        first time that early neural patterning cues selectively control the size of
+        the DA neuronal population in the vertebrate diencephalon.
+- term:
+    id: GO:0021954
+    label: central nervous system neuron development
+  evidence_type: IMP
+  original_reference_id: PMID:10191060
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-070129-9
+  review:
+    summary: &gt;-
+      IMP from the original catecholaminergic-neuron mutagenesis screen (Guo et al.
+      1999, PMID:10191060), which isolated too few as a mutation causing a specific
+      reduction in hypothalamic dopaminergic neuron number. The gene was cloned as
+      fezl/fezf2 only later (PMID:12469125). Abstract-only in the cache.
+    action: MODIFY
+    reason: &gt;-
+      The phenotype is specific (hypothalamic DA neuron number) but the term is generic.
+      GO:0071542 (dopaminergic neuron differentiation) captures what the paper actually
+      shows; GO:0021879 (forebrain neuron differentiation), already on the gene from
+      PMID:18799544, is the conservative alternative given that fezf2 acts
+      non-cell-autonomously on these neurons.
+    proposed_replacement_terms:
+    - id: GO:0071542
+      label: dopaminergic neuron differentiation
+    - id: GO:0021879
+      label: forebrain neuron differentiation
+    supported_by:
+    - reference_id: PMID:10191060
+      supporting_text: &gt;-
+        The too few mutation leads to a specific reduction in the number of
+        hypothalamic DA neurons.
+- term:
+    id: GO:0030900
+    label: forebrain development
+  evidence_type: IMP
+  original_reference_id: PMID:12469125
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      IMP from the tof mutant. Levkowitz et al. (PMID:12469125) cloned tof as the
+      forebrain-specific zinc-finger repressor fezl and showed that tof mutants fail to
+      develop hypothalamic DA and 5HT neurons while hindbrain 5HT and noradrenergic
+      neurons form normally. Abstract-only in the cache.
+    action: ACCEPT
+    reason: &gt;-
+      Forebrain development is the umbrella under which every experimentally supported
+      role of fezf2 falls (diencephalon, hypothalamus, forebrain neuron specification,
+      forebrain reporter activity). An appropriate general term for a forebrain-specific
+      patterning factor.
+    supported_by:
+    - reference_id: PMID:12469125
+      supporting_text: &gt;-
+        Here we characterized a zebrafish mutant--too few (tof)--that develops
+        hindbrain 5HT and noradrenergic neurons, but does not develop hypothalamic DA
+        and 5HT neurons. tof encodes a forebrain-specific zinc finger transcription
+        repressor that is homologous to the mammalian Fezl (forebrain embryonic zinc
+        finger-like protein).
+- term:
+    id: GO:0030900
+    label: forebrain development
+  evidence_type: IMP
+  original_reference_id: PMID:12469125
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-070129-9
+  review:
+    summary: &gt;-
+      Same finding as above, with the tof genotype recorded (PMID:12469125).
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the row above; see above.
+    supported_by:
+    - reference_id: PMID:12469125
+      supporting_text: &gt;-
+        Our results indicate that tof/fezl is a key component in regulating the
+        development of monoaminergic neurons in the vertebrate brain.
+- term:
+    id: GO:0045892
+    label: negative regulation of DNA-templated transcription
+  evidence_type: IMP
+  original_reference_id: PMID:12469125
+  qualifier: acts_upstream_of_or_within
+  supporting_entities: []
+  review:
+    summary: &gt;-
+      IMP based on Levkowitz et al. (PMID:12469125) describing tof/fezl as a
+      transcription repressor whose eh1-related repressor motif is required for in vivo
+      function. Abstract-only in the cache; the repressor assay itself cannot be
+      inspected.
+    action: ACCEPT
+    reason: &gt;-
+      The eh1 motif is a Groucho-recruiting repression domain and its requirement for
+      tof function is stated in the abstract, which is adequate support for negative
+      regulation of transcription. Note that PMID:21471212 later showed Fezf2 also
+      activates transcription of eomesa and lhx2b, so this row captures one of two
+      modes rather than the whole picture. A curator with full text could consider
+      narrowing to GO:0000122 (negative regulation of transcription by RNA polymerase
+      II), which is how the activation side is proposed below.
+    supported_by:
+    - reference_id: PMID:12469125
+      supporting_text: &gt;-
+        Both the eh1-related repressor motif and the second zinc finger domain were
+        necessary for tof function.
+- term:
+    id: GO:0071679
+    label: commissural neuron axon guidance
+  evidence_type: IMP
+  original_reference_id: PMID:21471212
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-110701-16
+  review:
+    summary: &gt;-
+      IMP from the tof mutant. In Chen et al. (PMID:21471212; full text cached) the
+      anterior and post-optic commissures fail to cross the midline properly at 36 hpf
+      in tof mutants and fezf2 morphants, but the defect recovers later. The authors
+      looked for it only because fezf2 directly activates lhx2b, whose loss (belladonna)
+      causes a midline axon guidance defect.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The commissural crossing phenotype is a supported consequence of the Fezf2
+      transcriptional program: Fezf2 directly activates or maintains lhx2b expression,
+      and the cited full-text paper tests the axon phenotype because lhx2b/belladonna
+      itself affects midline axon guidance. Kept as non-core because the phenotype is
+      transient, recovers by 48 hpf, and is downstream of Fezf2&#39;s core
+      cis-regulatory DNA-binding transcription factor activity rather than a separate
+      guidance mechanism.
+    supported_by:
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        Immunostaining with the anti-acetylated tubulin antibody uncovered that the
+        anterior commissure as well as the post-optic commissure failed to cross the
+        midline in both the tof mutant and fezf2 morphant properly ( Fig. 5 G ) at 36
+        hpf. However, this defect did recover later
+- term:
+    id: GO:0071679
+    label: commissural neuron axon guidance
+  evidence_type: IMP
+  original_reference_id: PMID:21471212
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-MRPHLNO-070129-7
+  review:
+    summary: &gt;-
+      Same finding as above, from the fezf2 morphant (PMID:21471212).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Duplicate of the row above (morpholino evidence); the transient commissural
+      crossing defect is supported but non-core.
+    supported_by:
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        Loss of lhx2b function in the zebrafish mutant belladonna causes a midline axon
+        guidance defect ( 34 ). Such axonal guidance defect has not been previously
+        reported in the tof mutant.
+- term:
+    id: GO:0097150
+    label: neuronal stem cell population maintenance
+  evidence_type: IMP
+  original_reference_id: PMID:25319688
+  qualifier: acts_upstream_of_or_within
+  supporting_entities:
+  - ZFIN:ZDB-GENO-150707-6
+  review:
+    summary: &gt;-
+      IMP from constitutive and conditional fezf2 impairment in adult zebrafish dorsal
+      telencephalic neural stem cells. fezf2-GFP-high cells are quiescent and
+      fezf2-GFP-low cells proliferative; fezf2 is required to maintain quiescence, and
+      genetic chimeras show a dose-dependent effect on stem cell activation
+      (PMID:25319688). Abstract-only in the cache.
+    action: ACCEPT
+    reason: &gt;-
+      Maintenance of the quiescent adult neural stem cell pool is the direct claim of
+      the paper, supported by loss of function, conditional loss of function and
+      chimera analysis. A genuine post-embryonic function of fezf2, mechanistically
+      linked to the Notch row above.
+    supported_by:
+    - reference_id: PMID:25319688
+      supporting_text: &gt;-
+        Constitutive or conditional impairment of fezf2 activity demonstrates its
+        requirement for maintaining quiescence.
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IDA
+  original_reference_id: PMID:21471212
+  review:
+    summary: &gt;-
+      Proposed new annotation. Chen et al. (PMID:21471212; full text cached) show that
+      zebrafish Fezf2 transactivates a luciferase reporter through its SELEX-derived
+      response elements in HEK293 cells, that the wild-type element drives forebrain
+      GFP expression in embryos in a fezf2-morpholino-sensitive manner, that endogenous
+      Fezf2 occupies genomic regions upstream of eomesa/tbr2 and lhx2b by ChIP, and that
+      lhx2b expression is reduced in tof/morphants and induced by fezf2 overexpression.
+    action: NEW
+    reason: &gt;-
+      The existing transcription rows are the sign-neutral IBA (GO:0006357) and a
+      repression IMP (GO:0045892); the demonstrated activator function has no
+      annotation. The participation test is met trivially (a transcription factor
+      binding a cis-regulatory element and increasing transcription is the entity doing
+      the work), and the paper&#39;s own conclusion is that Fezf2 is a transcription
+      activator. IDA from the reporter and ChIP experiments; IMP would also be
+      defensible from the lhx2b loss- and gain-of-function data.
+    supported_by:
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        These results demonstrate the feasibility of employing genomic SELEX to identify
+        vertebrate transcription factor binding sites and target genes and reveal Fezf2
+        as a transcription activator and a candidate for evaluation in human
+        microcephaly.
+    - reference_id: PMID:21471212
+      supporting_text: &gt;-
+        In the tof mutant and fezf2 morphant, lhx2b expression was selectively reduced
+        in the forebrain but not in the mid-hindbrain regions
+core_functions:
+- molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  - id: GO:0030900
+    label: forebrain development
+  - id: GO:0021536
+    label: diencephalon development
+  - id: GO:0021854
+    label: hypothalamus development
+  - id: GO:0021879
+    label: forebrain neuron differentiation
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  description: &gt;-
+    Forebrain-specific C2H2 zinc-finger transcription factor. Binds a defined DNA motif
+    through its six C-terminal zinc fingers and regulates target genes such as eomesa
+    and lhx2b (PMID:21471212); carries an eh1 repressor motif required for in vivo
+    function (PMID:12469125). Through this activity it establishes diencephalic
+    subdivisions by repressing wnt expression (PMID:17164418), specifies hypothalamic
+    neurons upstream of otp (PMID:18003738; PMID:23533176), and sets the number of
+    forebrain dopaminergic and serotonergic neurons downstream of canonical Wnt
+    signalling (PMID:12469125; PMID:15219677; PMID:18799544).
+  supported_by:
+  - reference_id: PMID:21471212
+    supporting_text: &gt;-
+      Our in-depth analyses of two selected genomic fragments reveal that Fezf2
+      directly activates evolutionarily conserved genes eomesa/tbr2 and lhx2b .
+- molecular_function:
+    id: GO:0000981
+    label: DNA-binding transcription factor activity, RNA polymerase II-specific
+  directly_involved_in:
+  - id: GO:0097150
+    label: neuronal stem cell population maintenance
+  - id: GO:0008593
+    label: regulation of Notch signaling pathway
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  description: &gt;-
+    In the adult dorsal telencephalon, heterogeneous fezf2 levels among neighbouring
+    neural stem cells pattern a gradient of Notch activity; high fezf2 maintains
+    quiescence and low fezf2 permits activation and differentiation (PMID:25319688).
+  supported_by:
+  - reference_id: PMID:25319688
+    supporting_text: &gt;-
+      Our results support a model in which fezf2 heterogeneity patterns gradient Notch
+      activity among neighbors that is critical to balance NSC fate.
+suggested_questions:
+- question: &gt;-
+    Is fezf2 primarily a repressor (eh1 motif, PMID:12469125; UniProt FUNCTION) or an
+    activator (eomesa, lhx2b; PMID:21471212), and does the mode depend on cofactor
+    context or target site?
+- question: &gt;-
+    What are the direct zebrafish targets through which fezf2 represses wnt expression
+    in the prospective diencephalon (PMID:17164418) and regulates Notch activity in
+    adult neural stem cells (PMID:25319688)? Mouse Fezf2 represses Hes5 directly; is
+    the same true in zebrafish?
+- question: &gt;-
+    The commissural axon guidance phenotype (PMID:21471212) is transient and attributed
+    to reduced lhx2b. Is the defect mediated entirely through lhx2b, or do other direct
+    Fezf2 targets participate in forebrain midline guidance?
+suggested_experiments:
+- description: &gt;-
+    ChIP-seq or CUT&amp;RUN for Fezf2 in 24-36 hpf forebrain and in adult telencephalic
+    neural stem cells to define direct targets, in particular wnt genes, her/hes
+    Notch effectors, and otp, and to resolve activator versus repressor site usage.
+- description: &gt;-
+    Domain-swap and eh1-motif point mutants assayed on the SELEX response elements
+    (PMID:21471212) to test whether the eh1 motif converts Fezf2 from activator to
+    repressor in a target-dependent manner.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:10191060
+  title: Mutations in the zebrafish unmask shared regulatory pathways controlling
+    the development of catecholaminergic neurons.
+  findings:
+  - statement: &gt;-
+      The too few mutation, later shown to disrupt fezl/fezf2, causes a specific
+      reduction in hypothalamic dopaminergic neuron number.
+    supporting_text: &gt;-
+      The too few mutation leads to a specific reduction in the number of hypothalamic
+      DA neurons.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original screen paper; gene identity established only in PMID:12469125.
+      Abstract-only in the cache.
+- id: PMID:12469125
+  title: Zinc finger protein too few controls the development of monoaminergic neurons.
+  findings:
+  - statement: &gt;-
+      tof encodes the forebrain-specific zinc-finger repressor fezl; mutants lack
+      hypothalamic DA and 5HT neurons, which fezl controls non-cell-autonomously; the
+      eh1 repressor motif and second zinc finger are required for function.
+    supporting_text: &gt;-
+      Mosaic and co-staining analyses showed that fezl was not expressed in DA or 5HT
+      neurons and instead controlled development of these neurons
+      non-cell-autonomously. Both the eh1-related repressor motif and the second zinc
+      finger domain were necessary for tof function.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloning paper for tof/fezl. Abstract-only in the cache; repression assay
+      details not inspected.
+- id: PMID:15219677
+  title: The too few mutant selectively affects subgroups of monoaminergic neurons
+    in the zebrafish forebrain.
+  findings:
+  - statement: &gt;-
+      Selected forebrain DA and 5HT neuron subgroups are reduced in too few from the
+      larval stage; the missing neurons are not restored in adults.
+    supporting_text: &gt;-
+      Rather than affecting all monoaminergic neurons in the forebrain, selective
+      subgroups of these neurons are reduced in the too few mutant, starting from the
+      larval stage.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Abstract-only in the cache.
+- id: PMID:17164418
+  title: Patterning the zebrafish diencephalon by the conserved zinc-finger protein
+    Fezl.
+  findings:
+  - statement: &gt;-
+      Fezl is required for prethalamus formation and restricts the ZLI; overexpression
+      expands anterior forebrain regions and downregulates wnt expression, and can
+      rescue anterior forebrain in Tcf7l1a-deficient embryos.
+    supporting_text: &gt;-
+      Such altered brain regionalization is preceded by the early downregulation of wnt
+      expression in the prospective diencephalon. Finally, fezl overexpression is able
+      to restore the anterior forebrain and downregulate wnt expression in
+      Headless- and/or Tcf3 (also known as Tcf7l1a)-deficient embryos.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only in the cache.
+- id: PMID:18003738
+  title: Specification of hypothalamic neurons by dual regulation of the homeodomain
+    protein Orthopedia.
+  findings:
+  - statement: &gt;-
+      Fezl acts upstream of Otp and regulates it at the transcriptional level in
+      hypothalamic DA and oxytocinergic neuron specification.
+    supporting_text: &gt;-
+      In vivo and in vitro experiments demonstrated that Fezl and PAC1 regulate Otp at
+      the transcriptional and the post-transcriptional levels, respectively.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only in the cache.
+- id: PMID:18799544
+  title: Dopaminergic neuronal cluster size is determined during early forebrain patterning.
+  findings:
+  - statement: &gt;-
+      fezl is epistatic to canonical Wnt signalling in setting diencephalic DA neuron
+      number; Fezl activity during gastrulation is crucial for DA cell number.
+    supporting_text: &gt;-
+      Thus, the activity of Fezl during early neural specification (gastrulation) is
+      crucial in regulating DA cell number.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text cached and read.
+- id: PMID:21471212
+  title: Genomic selection identifies vertebrate transcription factor Fezf2 binding
+    sites and target genes.
+  findings:
+  - statement: &gt;-
+      Genomic SELEX with the Fezf2 zinc-finger domain defines a core binding motif;
+      Fezf2 transactivates reporters through these elements in cells and embryos,
+      occupies sites near eomesa/tbr2 and lhx2b by ChIP, and is necessary and
+      sufficient for forebrain lhx2b expression.
+    supporting_text: &gt;-
+      Through loss of function, gain of function, and chromatin immunoprecipitation, we
+      further identified and validated eomesa/tbr2 and lhx2b as biologically relevant
+      target genes of Fezf2.
+  - statement: &gt;-
+      tof mutants and fezf2 morphants show a transient failure of the anterior and
+      post-optic commissures to cross the midline at 36 hpf.
+    supporting_text: &gt;-
+      However, this defect did recover later
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text cached and read. The only paper with direct biochemical evidence for
+      the molecular function.
+- id: PMID:23533176
+  title: Specification of posterior hypothalamic neurons requires coordinated activities
+    of Fezf2, Otp, Sim1a and Foxb1.2.
+  findings:
+  - statement: &gt;-
+      Fezf2, Otp, Sim1a and Foxb1.2 define mammillary-area subdomains and are jointly
+      required for Vip and Uts1 neuron specification; Fezf2 is needed for early
+      posterior hypothalamus development.
+    supporting_text: &gt;-
+      In addition, Fezf2 is important for early development of the posterior
+      hypothalamus.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Abstract-only in the cache.
+- id: PMID:25319688
+  title: Heterogeneously expressed fezf2 patterns gradient Notch activity in balancing
+    the quiescence, proliferation, and differentiation of adult neural stem cells.
+  findings:
+  - statement: &gt;-
+      fezf2 is required to maintain quiescence of adult dorsal telencephalic neural
+      stem cells and patterns a fezf2-dependent Notch activity gradient among them.
+    supporting_text: &gt;-
+      Constitutive or conditional impairment of fezf2 activity demonstrates its
+      requirement for maintaining quiescence.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in the cache (PMC full text not retrievable by the fetcher).
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
