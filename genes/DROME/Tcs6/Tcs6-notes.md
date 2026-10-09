@@ -13,3 +13,7 @@
 - Core: contributes_to GO:0061711, in KEOPS, cytoplasm (same as Tcs5).
 - ND root MF MODIFY to GO:0061711 (contributes_to); ND CC/BP REMOVE as superseded.
 - No NEW t6A process annotation (human LAGE3 also lacks GO:0002949).
+
+## Deep research (falcon) additions
+- [file:DROME/Tcs6/Tcs6-deep-research-falcon.md "Expressing fly **Pcc1 together with fly Kae1** in *yeast kae1* mutants improved growth and recovery of t⁶A-modified tRNAs compared with fly Kae1 alone"]
+- Reports Tcs6 RNAi (Rojas-Benitez et al. 2017, Biomolecules) gives small, developmentally delayed larvae; not in GOA, not added (no fly t6A measurement for Tcs6). No change to decisions.
