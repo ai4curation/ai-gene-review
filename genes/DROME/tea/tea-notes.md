@@ -5,3 +5,4 @@
 - Same location convention as other terminin subunits.
 - Falcon deep research (late): tea RNAi/mutants give ~6.7 fusions per nucleus, rescued by a genomic transgene; recruitment hierarchy HOAP -> Tea -> Moi/Ver; MTV binds ssDNA (not dsDNA) and protects it from ExoI.
 - Review-bot round: core BP set to the carried GO:0031848 rather than adding NEW GO:0016233, since GO:0016233 is an ancestor of the carried term (CLAUDE.md: reject ancestor NEW terms).
+- Review-bot round 2: added NEW contributes_to GO:0043047 (IDA, PMID:27835648) so the core MF has a row.
