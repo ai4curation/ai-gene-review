@@ -20,6 +20,15 @@ def read_browser_payload(path: Path) -> dict:
     return json.loads(result.stdout)
 
 
+def test_prediction_browser_honors_destination_budget(tmp_path):
+    output = tmp_path / "app/predictions"
+    with pytest.raises(ValueError, match="configured limit is 1 bytes"):
+        build_prediction_browser(tmp_path, output, max_bytes=1)
+    assert not output.exists()
+    build_prediction_browser(tmp_path, output, max_bytes=None)
+    assert read_browser_payload(output / "data.js")["claims"] == []
+
+
 def test_build_preserves_empty_outputs_and_complete_evidence(tmp_path: Path) -> None:
     """Build from real sidecars, retaining zero outputs and untruncated rationale."""
     directory = tmp_path / "genes/DROME/Dic4"

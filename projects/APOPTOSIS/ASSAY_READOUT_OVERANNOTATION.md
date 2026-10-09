@@ -61,6 +61,8 @@ function.
 | mouse `Hdac1` | PMID:21093383 | `GO:0043066` negative regulation of apoptotic process | `KEEP_AS_NON_CORE` | HDAC1/2 epidermal loss derepresses p53 targets and increases apoptosis. That is closer than a pure endpoint assay because HDAC1 is a chromatin repressor of the p53 program, but the generic apoptosis parent is still a downstream non-core outcome. |
 | mouse `Casp8` | PMID:16183742 | `GO:0006915` apoptotic process, `GO:0097190` apoptotic signaling pathway, `GO:2001238` positive regulation of extrinsic apoptotic signaling pathway | `MARK_AS_OVER_ANNOTATED` | PIDD expression activated caspase-2 and effector caspases, but the paper explicitly failed to detect procaspase-8 processing in PIDD-expressing MEFs. The PIDD arm observed a RAIDD/caspase-2 cascade, so these generic Casp8 apoptosis annotations overstate that assay. |
 | yeast <gene species="yeast" symbol="COX20">COX20</gene> | PMID:31752220 | `GO:0043069` negative regulation of programmed cell death | `KEEP_AS_NON_CORE` | The protein is a respiratory-chain assembly factor. Its deletion promotes acetic-acid-dependent death, making programmed-cell-death resistance a downstream respiratory-fitness phenotype rather than its core role. |
+| mouse `Megf10` | PMID:27170117 | `GO:1902742` apoptotic process involved in development (IMP, MGI) | `REMOVE` | Clearance-defect variant (see below). Megf10-/- cerebellum has more TUNEL/cleaved-caspase-3 cells because astrocytes fail to engulf apoptotic cells; the paper's Figure 1 title reads the excess as "accumulation of apoptotic cells". Megf10 is the engulfment receptor and does none of the work of apoptosis. |
+| human `MEGF10` | GO_REF:0000024 | `GO:1902742` apoptotic process involved in development (ISS from mouse Megf10) | `REMOVE` | Orthology transfer of the mouse row above; the source annotation is bad, so the inferred one is too. |
 
 ## Pending Or Worth Rechecking
 
@@ -80,12 +82,89 @@ that block are:
 | mouse `Casp3` | PMID:12847083 | `GO:0006915` apoptotic process | `ACCEPT` | Likely valid but broad: top-level apoptosis is acceptable for the core effector caspase, though the APOPTOSIS project generally prefers execution-phase descendants where evidence permits. |
 | mouse `Hdac1` | PMID:21093383 | `GO:2001243` negative regulation of intrinsic apoptotic signaling pathway | `ACCEPT` | Boundary case: p53 deacetylation puts HDAC1 nearer to the apoptotic transcriptional program than a generic survival kinase, but it should be spot-checked against the broader HDAC1/HDAC2 double-knockout phenotype. |
 
+## Clearance-Defect Variant
+
+A related but distinct failure: the perturbed gene acts in the **engulfing**
+cell, not the dying one. Knocking out an apoptotic-cell receptor stops corpses
+from being cleared, they accumulate, and TUNEL or cleaved-caspase-3 counts go
+up. Read naively, that looks like "more apoptosis", and the gene gets an
+apoptotic-process term. The correct term is `GO:0043652` engulfment of apoptotic
+cell, whose usage note keeps it separate from processes in the dying cell.
+Orthology transfer (ISS/ISO) then copies the error to other species.
+
+The Megf10 pair above is the first case. Iram et al. 2016 (PMID:27170117)
+show impaired astrocyte phagocytosis ex vivo and gain of phagocytosis on Megf10
+expression, and the full text (PMC4863057) titles Figure 1 "Megf10 is necessary
+for apoptotic cell uptake by astrocytes, and its deficiency results in
+accumulation of apoptotic cells in the developing CB".
+
+A second shape of the same error appears in *C. elegans*. There, engulfment
+mutants such as ced-1(e1735) are routinely used as a **background** that makes
+corpses persist so they can be counted. Papers about other genes (CED-8,
+PMID:24225442; CSP-1, PMID:23505386) were annotated to ced-1 itself: ced-1 got
+`GO:1902742` apoptotic process involved in development and `GO:1904747`
+positive regulation of apoptotic process involved in development, although
+those papers attribute the extra corpses to the engulfment defect.
+
+*C. elegans* also shows where the line sits. Engulfing cells genuinely promote
+the death of cells that receive weak death signals, and ced-1 expressed in
+engulfing cells rescues this (PMID:11449278, PMID:11449279). So for ced-1 the
+*positive regulation* term is right (kept, but sourced to the right papers),
+while the process term is not (changed to positive regulation).
+
+| Species/gene | Term | Evidence | Source | Action |
+|---|---|---|---|---|
+| worm ced-1 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-1 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
+| worm ced-1 | `GO:0012501` programmed cell death | IMP | PMID:6857247 | `MARK_AS_OVER_ANNOTATED` (the paper finds cells still die) |
+| worm ced-6 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-6 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
+| worm ced-6 | `GO:0012501` programmed cell death | IMP | PMID:9635426 | `MARK_AS_OVER_ANNOTATED` (the phenotype is persistent corpses) |
+| worm ced-7 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-7 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
+| worm ced-7 | `GO:0012501` programmed cell death | IMP | PMID:9635425 | `MARK_AS_OVER_ANNOTATED` (the phenotype is persistent corpses) |
+| worm ttr-52 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `REMOVE` (no evidence that ttr-52 promotes death, so no positive-regulation fallback) |
+| worm ced-2 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-2 | `GO:0006915` apoptotic process; `GO:0012501` programmed cell death | IMP | PMID:6857247, PMID:10707082 | `MARK_AS_OVER_ANNOTATED` (cells still die; corpses persist) |
+| worm ced-5 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+| worm ced-5 | `GO:1902742` apoptotic process involved in development | IMP | PMID:22801495 (engulfment-defective comparison; unengulfed cells still die by CED-3-mediated apoptosis) | `REMOVE` |
+| worm ced-12 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:1904747` |
+
+**The background-genotype rows come in batches.** A QuickGO query by reference
+(2026-10-05) shows that the CED-8 paper (PMID:24225442) gave `GO:1902742`
+(IMP and IGI) to all seven engulfment genes it used as backgrounds: ced-1,
+ced-2, ced-5, ced-6, ced-7, ced-12 and ttr-52. The CSP-1 paper
+(PMID:23505386) gave `GO:1904747` to ced-1, ced-6 and ced-7 alongside the
+genuine death genes (ced-3, ced-4, egl-1, csp-1/2/3). ced-1, ced-6,
+ced-7 and ttr-52 are reviewed. The replacement depends on the gene: the
+positive-regulation term needs its own evidence that the gene promotes death
+(Reddien 2001 and Hoeppner 2001 cover the classic engulfment genes). ttr-52,
+identified later, has none, so its rows are removed rather than modified.
+All seven genes are now reviewed. For ced-2, ced-5 and ced-12 the
+`GO:1904747` replacement rests on Reddien 2001, whose abstract defines the
+engulfment genes it studies as ced-1, ced-2, ced-5, ced-6, ced-7, ced-10 and
+ced-12 and states that "mutations in engulfment genes alone allow the
+survival and differentiation of some cells that would normally die".
+
+**Detection idea (not yet run):** genes carrying both an apoptotic-cell
+clearance term (`GO:0043652`, `GO:0043277`) and an apoptotic-process term from
+the same PMID, or an apoptotic-process term on a known engulfment receptor or
+bridging molecule (MERTK, AXL, TIMD4, GAS6, MFGE8, ITGB5, ELMO1, DOCK1, GULP1,
+CD36, ADGRB1, STAB2, LRP1).
+
 ## Triage Rules
 
 - **Ask what entity performs the apoptotic step.** If a caspase, BAX/BAK pore,
   BCL2-family inhibitor, APAF1 apoptosome, FADD/DISC protein, or IAP is the
   acting entity, the apoptosis term may belong there. If the tested gene only
   changes whether those entities fire, default to non-core or over-annotated.
+- **Ask which cell the gene acts in.** If the gene works in the phagocyte
+  (an engulfment receptor, bridging ligand or engulfment signalling protein),
+  extra TUNEL/caspase-positive cells after loss of function usually mean
+  uncleared corpses, not extra death. Annotate clearance, not apoptosis.
+  This also applies to rows qualified `acts_upstream_of_or_within`: when the
+  measured change is in clearance, the gene is neither upstream of nor within
+  the apoptotic process.
 - **Treat late markers as convergent.** TUNEL, Annexin V, cleaved caspase-3,
   PARP cleavage, DEVDase reporters, mitochondrial depolarization, and viability
   assays are endpoints. They prove that the perturbation moved cells toward or
