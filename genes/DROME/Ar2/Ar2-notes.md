@@ -6,4 +6,7 @@
 - Decisions: aldose reductase activity (IBA/ISS/TAS), sorbitol and fructose biosynthesis (IGI), cytosol accepted;
   generic oxidoreductase modified.
 
-- Deep research: falcon run pending at time of first commit (interrupted by a container restart); will be folded in if it completes.
+- Falcon deep research (Ar2-deep-research-falcon.md) identifies Ar2/CG10638 splice products as Ninna and Nanna and reports a
+  sleep-regulation role from a 2024 bioRxiv preprint (Petzold and Gilestro) and a 2017 thesis; it states that the physiological
+  substrate is unknown and does not cite the Ar1/Ar2 double-mutant sorbitol data (PMID:35687590). Preprint-only, so no NEW
+  annotation proposed; recorded in description and a suggested question.
