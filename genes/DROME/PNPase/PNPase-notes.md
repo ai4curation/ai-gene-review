@@ -2,8 +2,7 @@
 
 Module context: dmel_mitochondrial_degradosome (PNPase with Suv3).
 
-Deep research: the first falcon run (perplexity-lite fallback) failed; a retry was still
-running when this review was written. Notes use cached publications (both full text).
+Deep research: the first falcon attempt failed; a retry produced `PNPase-deep-research-falcon.md` after the review was drafted. It agrees with this review: mitochondrial localization (TOM20 colocalization; enrichment in larval mitochondrial fractions), mitochondrial mRNA/antisense decay and dsRNA accumulation on loss; it reports no cytosolic function for the enzyme itself.
 
 - Degradosome concept: [PMID:26152302 "Studies in yeast and human cell lines have indicated that the mitochondrial helicase SUV3, together with the polynucleotide phosphorylase, PNPase, composes the mitochondrial degradosome"]
 - Fly loss of function: [PMID:26152302 "In agreement, silencing of both DmSUV3 and DmPNPase resulted in increased mitochondrial mRNA stability"]
