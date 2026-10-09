@@ -11,3 +11,7 @@ Accession note: `just fetch-gene DROME SCAR` resolved to F2FB81 (isoform entry, 
 - Localization [PMID:22275148 "SCAR is expressed uniformly in the cytoplasm of all cells throughout embryogenesis"]
 
 Decisions: general actin terms (actin binding, actin filament-based process, actin cytoskeleton organization IEA, (positive) regulation of actin nucleation) MODIFIED to the specific terms (actin monomer binding; Arp2/3 complex-mediated actin nucleation; positive regulation of Arp2/3 complex-mediated actin nucleation). Cip4 pulldown protein binding REMOVED.
+
+## Deep research (falcon) follow-up
+
+The falcon report (genes/DROME/SCAR/SCAR-deep-research-falcon.md) independently summarises SCAR as a WRC-associated Arp2/3 nucleation-promoting factor (Zallen 2002, Kunda 2003, Richardson 2007, Stephan 2011), matching the core function chosen here. It also notes Rac-independent SCAR recruitment to embryonic cell wounds (Nakamura et al. 2023, Sci Rep); that paper is not in GOA or the publication cache, so no annotation was proposed from it.
