@@ -8,3 +8,6 @@ Small N-terminal coiled-coil subunit of GARP and EARP (Ang2/Fat-free in other sp
 - No fly mutant phenotype or localization data for Vps51 itself found in the cached literature.
 
 Decisions: GARP and EARP complex ACCEPT; ND MF row MODIFY to vesicle membrane tethering activity (contributes_to); generic IBA rows (membrane, Golgi organization, vacuolar transport, Golgi vesicle transport) kept as non-core.
+
+Deep research: falcon completed (genes/DROME/Vps51/Vps51-deep-research-falcon.md) after the review was first committed; checked for consistency.
+- Deep research (falcon) agrees: fly evidence for Vps51 is limited to co-purification with the other GARP subunits on Arl5-GTP; no Vps51 mutant phenotype is reported.
