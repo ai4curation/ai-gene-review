@@ -24,5 +24,8 @@
 - GO:0004402 / GO:0061733 rows MODIFY -> GO:0046972 (already annotated).
 - NuA4 IBA (Tip60-clade donors) REMOVE; MOF is in MSL/NSL, not NuA4.
 - GO:0016456 and GO:0072487 are siblings in GO, both ACCEPT (shared MSL complex convention across msl-1/2/3, mle, mof).
-- Chromosome / nuclear chromosome ACCEPT for MOF only, because MOF binds X and autosomes; nucleus MODIFY -> nuclear chromosome.
+- Chromosome / nuclear chromosome ACCEPT for MOF only, because MOF binds X and autosomes; nucleus ACCEPT (aligned with the other MSL subunits after review of msl-2: free nuclear MSL pool, PMID:21551218).
 - Protein binding IPI rows REMOVE.
+
+## Deep research (falcon, added after initial review)
+- `mof-deep-research-falcon.md` agrees with the review: H4K16 is the dominant physiological substrate; MOF acts in both MSL and NSL complexes ["MOF performs this reaction in two distinct chromatin-regulatory assemblies, MSL and NSL."]. It notes in-vitro secondary acetylation of other H4 lysines (2024 dissertation) that is not established in vivo, and a 2024 Genetics study questioning H3K36me3 as a general MSL-spreading signal (relevant to msl-3). No annotation decisions changed.
