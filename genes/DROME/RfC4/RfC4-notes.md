@@ -9,3 +9,4 @@
 - Module-wide convention (RfC4, RfC38, RfC3, CG8142): contributes_to GO:0003689 ACCEPT; GO:0005663 and GO:0031391 ACCEPT; GO:0006261/GO:0006271/GO:0006272 ACCEPT; subunit-level DNA/ATP binding and ATPase, DNA repair, cohesion, checkpoint KEEP_AS_NON_CORE; generic parents (GO:0006260, GO:0008094, GO:0032991) MODIFY to the specific term the gene already carries (round-2 rule).
 - Deep research: falcon run launched; see deep-research file if present.
 - Deep research (falcon) arrived after first commit; confirms nuclear localization (>95% interphase cells), replication/endoreduplication defects and selective checkpoint failure in Rfc4 mutants; alternative-loader roles are conserved inference only.
+- Review-bot round: added NEW contributes_to GO:0061860 DNA clamp unloader activity (IDA, PMID:27198229) so the core-function claim has an annotation row; identical across the four small subunits.
