@@ -8,3 +8,4 @@
 - Protein binding IPI rows are with other RFC small subunits (GOA WITH/FROM); removed as uninformative.
 - Same decision table as RfC4/RfC3/RfC38/CG8142 (module consistency): contributes_to GO:0003689 and GO:0061860 (core), complexes GO:0005663 and GO:0031391.
 - Round-2 rule applied: generic parents (DNA replication, ATP-dependent activity acting on DNA, protein-containing complex) changed from KEEP_AS_NON_CORE to MODIFY toward the specific term the gene already carries; subunit-level binding/ATPase terms stay KEEP_AS_NON_CORE.
+- Falcon deep research (late): identity confirmed (CG6258); S2-cell iPOND places RfC38 on nascent DNA (network of 99 enriched proteins, 2022); alternative-loader roles plausible but untested in flies.
