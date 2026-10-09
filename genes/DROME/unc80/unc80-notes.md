@@ -13,3 +13,7 @@ UniProt Q9VB11 (Protein unc-80 homolog); unc-80 family (PTHR31781). No transmemb
 
 - Cation channel activity (IBA/ISS) -> sodium channel activity, to be expressed as contributes_to (accessory subunit, not pore).
 - Complex rows -> sodium channel complex (already IBA). Cation homeostasis IBA/ISS marked over-annotated.
+
+## Deep research
+
+`unc80-deep-research-falcon.md` (falcon) arrived after the review was first committed (the recipe was reported as terminated, but the falcon job completed). It agrees with the review: UNC80 is a non-pore auxiliary assembly and regulatory component of the NA sodium leak channel complex, with a function that cannot be replaced by raising NA or UNC79. It also states that UNC80 associates with membrane preparations without being a transmembrane protein, which supports the plasma-membrane refinement of the generic membrane row. Human cryo-EM places UNC79/UNC80 as a cytoplasmic scaffold beneath NALCN. No annotation decision changed.
