@@ -14,3 +14,7 @@ Accession: Q1LZ08. Module: dmel_usp46_deubiquitinase_complex.
 - Uaf1/Wdr20 core MF GO:0035800 deubiquitinase activator activity (own), contributes_to GO:0004843; Usp12-46 core MF GO:0004843 (own catalytic).
 - Usp12-46: GO:0101005 -> MODIFY to GO:0004843; GO:0031647 -> MODIFY to GO:0050821 protein stabilization.
 - Uaf1 ubiquitin binding (yeast-donor IBA/ISS) and DSB repair (IBA) kept as non-core.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `Uaf1-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
