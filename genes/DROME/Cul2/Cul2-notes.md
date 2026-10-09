@@ -14,3 +14,7 @@ Accession: Q9V9R2. Module: dmel_vcb_ubiquitin_ligase (Cul2-Roc1a catalytic core)
 - SCF ubiquitin ligase complex and SCF-dependent catabolism IBA rows (node PTN000231993, all Cul1 donors): REMOVE as over-propagation to the Cul2 paralog.
 - General terms MODIFY: GO:0006511/GO:0030163 -> GO:0043161; GO:0031461 -> GO:0031462.
 - GO:0016567 ACCEPT (fly evidence shows ubiquitination without chain type; as precise as warranted), same as Vhl.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `Cul2-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
