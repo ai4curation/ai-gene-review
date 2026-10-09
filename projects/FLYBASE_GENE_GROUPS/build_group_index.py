@@ -133,6 +133,16 @@ def main() -> None:
         cached(BASE.format(dir=rdir, name="fbgn_NAseq_Uniprot", release=args.release),
                args.cache / naseq))
 
+    overrides_path = Path(__file__).parent / "uniprot_overrides.yaml"
+    for ov in yaml.safe_load(overrides_path.read_text()) or []:
+        url = ("https://rest.uniprot.org/uniprotkb/" + ov["accession"]
+               + "?fields=accession,reviewed,protein_name,length&format=tsv")
+        with urllib.request.urlopen(url, timeout=120) as resp:
+            row = resp.read().decode().splitlines()[1].split("\t")
+        uniprot[ov["fbgn"]] = {"accession": row[0], "reviewed": row[1] == "reviewed",
+                               "protein_name": recommended_name(row[2]),
+                               "length": int(row[3] or 0)}
+
     groups: dict[str, dict] = {}
     for source, name in SOURCES.items():
         fname = f"{name}_{args.release}.tsv.gz"
