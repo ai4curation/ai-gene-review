@@ -22,3 +22,10 @@
 - Generic tRNA processing / wobble uridine modification / cytoplasm: kept as non-core.
 - The taurine-specific MF term assumes the mammalian chemistry; the actual U34 C5 substituent
   in fly mt-tRNAs should be verified (suggested question).
+
+## Deep research (falcon)
+- Falcon found no CG4610-specific literature; it stresses that substrate (glycine vs taurine)
+  and localization are untested in flies: [file:DROME/CG4610/CG4610-deep-research-falcon.md
+  "A mitochondrial tRNA-modification role is plausible because the characterized yeast and human eukaryotic MnmG-family systems act in mitochondria"].
+- Yeast MSS1-MTO1 makes glycine-derived cmnm5U34, whereas human mitochondrial GTPBP3-MTO1 uses
+  taurine (Maes et al. 2025 cited therein).
