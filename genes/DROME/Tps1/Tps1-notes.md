@@ -12,4 +12,5 @@ trehalose-synthesizing enzyme Tps1 failed to produce trehalose as expected"].
 - Decisions: both TPS and TPP activities core (bifunctional enzyme); trehalose biosynthesis and cytosol core;
   generic catalytic/hexosyltransferase/trehalose metabolic/cytoplasm terms modified to the specific ones.
 
-- Deep research: falcon run pending at time of first commit (interrupted by a container restart); will be folded in if it completes.
+- Falcon deep research (Tps1-deep-research-falcon.md) is consistent: bifunctional TPS/TPP, fat-body-enriched, required
+  for de novo trehalose; it notes subcellular localization in flies is inferred (cytosol accepted on ISS/family grounds).
