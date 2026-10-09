@@ -24,6 +24,7 @@ from ai_gene_review.tools.pages_assets import share_template_assets
 from ai_gene_review.tools.pages_compaction import compact_browser_data, compact_gene_page
 from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResolver
 from ai_gene_review.publication_links import rewrite_publication_links, restore_scientific_html_notation
+from ai_gene_review.site_provenance import collect_build_info, stamp_site_build
 
 
 # Temporary policy: permit unsupported >1 GB deployments, below the absolute
@@ -374,6 +375,9 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         links = published_resolver.scan(page.relative_to(output_dir), page.read_text())
         broken_links.update(links.missing)
         audit.off_base_urls.update(links.off_base)
+    # Record the build after content transformations, before final sizing and
+    # checksums. Recovery uploads the same artifact without restamping it.
+    stamp_site_build(output_dir, collect_build_info(repo_root))
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
     manifest = SiteManifest(
         shared_asset_bytes_saved=shared_asset_bytes_saved,

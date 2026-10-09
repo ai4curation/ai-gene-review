@@ -60,6 +60,21 @@ def test_stage_pages_preserves_urls_and_copies_linked_sources(tmp_path: Path) ->
     assert manifest.linked_source_bytes_not_staged == 0
 
 
+def test_staging_publishes_build_metadata_without_changing_homepage_source(tmp_path):
+    """The timestamp belongs to the artifact and is counted in its byte budget."""
+    _site_fixture(tmp_path)
+    original = '<html><body><h1>Site</h1><!-- site-build-info --></body></html>'
+    _write(tmp_path / "index.html", original)
+    output = tmp_path / "_site"
+    manifest = stage_pages(tmp_path, output)
+    info = json.loads((output / "build-info.json").read_text())
+    assert info["built_at"] in (output / "index.html").read_text()
+    assert "Site built:" in (output / "index.html").read_text()
+    assert (tmp_path / "index.html").read_text() == original
+    assert manifest.total_bytes == sum(p.stat().st_size for p in output.rglob("*") if p.is_file())
+    assert "<!-- site-build-info -->" in Path("index.html").read_text()
+
+
 def test_stage_pages_includes_prediction_browser_and_dynamic_sources(tmp_path: Path) -> None:
     """Sources linked through exported rows survive deployment, not just file://."""
     _site_fixture(tmp_path)
