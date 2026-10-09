@@ -23,3 +23,7 @@ falcon deep research launched; status recorded in the commit history.
 ## Revision (batch rule change)
 
 Correct-but-general terms are now MODIFY: GO:0016567 -> GO:0000209 protein polyubiquitination; GO:0006511 -> GO:0031146. Supersedes the generic-parent convention above.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `SkpA-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
