@@ -224,9 +224,20 @@ That gives a like-for-like comparison with `reviews`.
   `goa-all` has 1,416 enzymes, but only 2 of its 19 communities match a BP term.
   - Its benzoate→succinyl-CoA path runs benzoate → [benC] → diol → [benD] → *(S)-benzoin* →
     [paaH] → "a 3-oxoacyl-CoA" → [yqeF] → succinyl-CoA.
-  - That happens because benD's IEA MF is a broad oxidoreductase class that maps to the
-    benzil reaction. Its IEA BP is *fatty acid biosynthetic process*; the review says
-    *benzoate catabolic process*.
+  - benD (Q88I37) has two IEA MF annotations in GOA:
+    - The **ec2go** annotation (GO_REF:0000003, from EC:1.3.1.25) gives *GO:0047116
+      1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate dehydrogenase activity*. This term is
+      specific and correct, and it maps to RHEA:11560 (diol → catechol).
+    - The **TreeGrafter** annotation (GO_REF:0000118, from PANTHER:PTN002460465, in family
+      PTHR42760) gives the broad *GO:0016616 oxidoreductase activity, acting on the CH-OH
+      group of donors, NAD or NADP as acceptor*. The detour comes from this one.
+  - The official rhea2go maps exactly one reaction to GO:0016616:
+    RHEA:25968, (S)-benzoin + NADP(+) = benzil + NADPH. That reaction's siblings RHEA:25960
+    and RHEA:25964 map to *carbonyl reductase (NADPH) activity*. So one rhea2go row that
+    targets a grouping term turns every gene with a GO:0016616 annotation into a benzil
+    reductase in this network. That row is worth reporting to GO/Rhea.
+  - benD's IEA BP, *fatty acid elongation* (GO:0030497), also comes from the same
+    TreeGrafter node. The review says *benzoate catabolic process*.
 - **Bacteria have almost no experimental GO.** Of 25,276 P. putida GOA rows, all but 195
   are IEA (GO_REF pipelines). `goa-exp` and `goa-noiea` keep only 24–31 enzymes, so for
   bacteria the choice is between curated reviews and electronic annotation. Human
