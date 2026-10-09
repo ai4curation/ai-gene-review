@@ -17,3 +17,16 @@ Unresolved GOA rows were converted from PENDING to ACCEPT, KEEP_AS_NON_CORE,
 MODIFY, REMOVE, or MARK_AS_OVER_ANNOTATED according to whether they support the
 core RAF/MAPK kinase function, a peripheral regulatory context, a wrong kinase
 tier, or a mutant/cancer-specific overextension.
+
+## 2026-09-30 protein-binding backfill review
+
+Reviewed the 106 GO:0005515/IPI rows added by the qualifier/supporting-entity
+backfill. The batch was almost entirely interaction-table evidence: broad
+AP-MS/BioPlex/kinome maps, BRAF/MEK inhibitor studies, and a mutation-directed
+neoPPI screen. Generic protein-binding rows were either refined to GO:0071889
+for 14-3-3 isoforms, GO:0031267 for HRAS, or GO:0046982 for direct RAF/KSR
+heterodimerization when the supporting entity and paper justified a specific
+molecular function; otherwise they were removed as uninformative rather than
+treated as BRAF core molecular functions. All PMID caches were present; one
+mouse KSR1 row from PMID:22510884 stayed UNDECIDED because the KSR1-specific
+IntAct support was not visible in the cached article body.
