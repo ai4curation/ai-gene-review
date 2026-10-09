@@ -9,7 +9,11 @@ from pathlib import Path
 import shutil
 from typing import Any
 
-from ai_gene_review.export.browser_payload import validate_browser_data_js_size
+from ai_gene_review.export.browser_payload import (
+    GITHUB_FILE_SIZE_LIMIT_BYTES,
+    browser_data_size_limit,
+    validate_browser_data_js_size,
+)
 from ai_gene_review.export.prediction_export import collect_prediction_data
 from ai_gene_review.tools.pages_dependencies import DependencyResolver
 
@@ -48,7 +52,10 @@ def encode_prediction_data_js(data: dict[str, Any]) -> str:
     )
 
 
-def build_prediction_browser(root: Path, output_dir: Path) -> dict[str, Any]:
+def build_prediction_browser(
+    root: Path, output_dir: Path, *,
+    max_bytes: int | None = GITHUB_FILE_SIZE_LIMIT_BYTES,
+) -> dict[str, Any]:
     """Export canonical predictions without truncating judgments or inventing scores.
 
     Data is a classic script so both datasets work directly over ``file://``.
@@ -61,7 +68,7 @@ def build_prediction_browser(root: Path, output_dir: Path) -> dict[str, Any]:
     data = collect_prediction_data(root, output_dir)
     encoded = encode_prediction_data_js(data)
     size = len(encoded.encode("utf-8"))
-    validate_browser_data_js_size(size)
+    validate_browser_data_js_size(size, max_bytes=max_bytes)
 
     links = {
         value
@@ -95,10 +102,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--output-dir", type=Path, default=Path("app/predictions"))
+    parser.add_argument("--target", choices=("git", "pages"), default="git")
     args = parser.parse_args()
     root = args.root.resolve()
     output = args.output_dir if args.output_dir.is_absolute() else root / args.output_dir
-    result = build_prediction_browser(root, output)
+    result = build_prediction_browser(root, output, max_bytes=browser_data_size_limit(args.target))
     print(json.dumps({"output": str(output), **result}, indent=2))
 
 
