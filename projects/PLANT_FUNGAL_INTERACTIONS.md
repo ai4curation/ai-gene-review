@@ -16,8 +16,8 @@ both sides of these interactions, in 9 species: plant chitin receptors,
 penetration-resistance and camalexin genes, rice sensor/executor immune
 receptors, the legume mycorrhizal pathway, and fungal effectors, a hydrophobin,
 a MAP kinase and a toxin enzyme. All 36 reviews are done: 652 annotations were
-assessed, with 333 accepted, 161 kept as non-core, 70 modified, 40 marked
-over-annotated, 47 removed and 1 left undecided, plus 36 new annotations
+assessed, with 333 accepted, 161 kept as non-core, 71 modified, 40 marked
+over-annotated, 47 removed and none left undecided, plus 36 new annotations
 proposed. All 36 reviews validate and are marked COMPLETE.
 The main corrections were separating genes that do the work of a defence
 process from genes that are only needed for it, replacing `protein binding`
@@ -99,7 +99,7 @@ annotations reviewed; NEW annotations are counted separately.
 | ARATH/MLO2 | 12 | 4 | 3 | 3 | 0 | 2 | 0 | 2 | Defense rows to negative regulation of defense response; added calcium channel activity |
 | HORVU/MLO | 2 | 0 | 0 | 2 | 0 | 0 | 0 | 1 | `defense response` had the wrong sign; changed to negative regulation |
 | ARATH/CYP79B2 | 30 | 6 | 17 | 5 | 1 | 1 | 0 | 0 | Sulfur compound biosynthesis to indole glucosinolate biosynthesis; membrane to ER membrane |
-| ARATH/CYP71B15 | 32 | 13 | 8 | 2 | 4 | 4 | 1 | 0 | Membrane to ER membrane; ER lumen left undecided (conflicts with P450 topology, full text unavailable) |
+| ARATH/CYP71B15 | 32 | 13 | 8 | 3 | 4 | 4 | 0 | 0 | Membrane and ER lumen rows to ER membrane (single N-terminal anchor; cytosol-facing P450) |
 | ARATH/WRKY33 | 40 | 20 | 11 | 2 | 0 | 7 | 0 | 0 | Camalexin biosynthesis to positive regulation of camalexin biosynthesis |
 | ARATH/MPK3 | 65 | 24 | 20 | 2 | 1 | 18 | 0 | 0 | Camalexin biosynthesis to positive regulation; 18 `protein binding` rows removed |
 | ARATH/ERF094 | 19 | 14 | 2 | 3 | 0 | 0 | 0 | 2 | Systemic resistance to defense response to fungus; added transcription activator activity |
@@ -125,7 +125,7 @@ annotations reviewed; NEW annotations are counted separately.
 | MYCMD/PIT2 | 3 | 3 | 0 | 0 | 0 | 0 | 0 | 3 | Added cysteine-type endopeptidase inhibitor activity |
 | MYCMD/See1 | 7 | 7 | 0 | 0 | 0 | 0 | 0 | 0 | No change needed |
 | GIBZE/TRI5 | 4 | 3 | 0 | 1 | 0 | 0 | 0 | 1 | Sesquiterpenoid biosynthesis to vomitoxin (deoxynivalenol) biosynthesis |
-| **Total** | **652** | **333** | **161** | **70** | **40** | **47** | **1** | **36** | |
+| **Total** | **652** | **333** | **161** | **71** | **40** | **47** | **0** | **36** | |
 
 ## Modules
 
