@@ -1,6 +1,6 @@
 # boi (Brother of ihog, A8JUV7) curation notes
 
-Deep research: falcon run pending/failed at time of review (falcon timeouts this session); notes are from cached publications.
+Deep research: `boi-deep-research-falcon.md` (falcon; the wrapper reported a 600 s timeout but the run completed later). Folded in as an EDIT; its conclusions agree with the review and it is cited in the core function.
 
 ## Literature journal
 
