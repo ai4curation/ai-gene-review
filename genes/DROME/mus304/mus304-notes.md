@@ -13,6 +13,10 @@
 
 ## Curation decisions
 - Core: adaptor subunit of ATR-ATRIP complex in DNA damage checkpoint signaling (MF GO:0030674 by analogy with the human ATRIP review).
-- Nucleus (NAS, yeast paper) kept as non-core: fly data show mostly cytoplasmic tagged protein.
+- Nucleus (NAS, yeast paper): initially non-core, upgraded to ACCEPT after deep research (see below).
 - Meiotic phenotypes kept as non-core; imaginal disc development over-annotated.
 - PMID:10559981 is an S. pombe Rad3-Rad26 paper.
+
+## Deep research (falcon) update
+- Nuclear pool after damage (Chiolo et al. 2011): [file:DROME/mus304/mus304-deep-research-falcon.md "after irradiation, GFP-tagged fly ATRIP/Mus304 formed foci within the HP1a-marked heterochromatin domain"]. Nucleus is therefore upgraded to ACCEPT and used as the core-function location.
+- The deep research also notes that no direct purified Mus304-MEI-41 binding study was found; complex membership rests on UniProt's interaction record and the genetic data.
