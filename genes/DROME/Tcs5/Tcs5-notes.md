@@ -13,7 +13,7 @@
 
 ## Decisions
 - Core: contributes_to GO:0061711 (complex activity), in KEOPS, cytoplasm (same pattern as other non-catalytic subunits, e.g. CG3434).
-- No NEW GO:0002949 annotation: human TP53RK and LAGE3 also lack it (comparator check via QuickGO), only OSGEP/TPRKB carry it.
+- PR #4482 review: UniProt lists obsolete GO:0070525 IBA (replaced_by GO:0002949), absent from GOA. Yeast BUD32 carries GO:0002949; human TP53RK does not. Added NEW GO:0002949 (ISS) and put it in core_functions.
 - Ser/Thr kinase rows non-core; general kinase/transferase/catalytic MODIFY to GO:0004674; tyrosine kinase and chromosome over-annotated.
 
 ## Deep research (falcon) additions

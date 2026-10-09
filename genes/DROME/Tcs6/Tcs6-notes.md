@@ -12,7 +12,7 @@
 ## Decisions
 - Core: contributes_to GO:0061711, in KEOPS, cytoplasm (same as Tcs5).
 - ND root MF MODIFY to GO:0061711 (contributes_to); ND CC/BP REMOVE as superseded.
-- No NEW t6A process annotation (human LAGE3 also lacks GO:0002949).
+- PR #4482 review: UniProt lists obsolete GO:0070525 IBA (replaced_by GO:0002949), absent from GOA. Yeast PCC1 carries GO:0002949; human LAGE3 does not. Added NEW GO:0002949 (ISS) and put it in core_functions.
 
 ## Deep research (falcon) additions
 - [file:DROME/Tcs6/Tcs6-deep-research-falcon.md "Expressing fly **Pcc1 together with fly Kae1** in *yeast kae1* mutants improved growth and recovery of t⁶A-modified tRNAs compared with fly Kae1 alone"]
