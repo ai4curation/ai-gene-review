@@ -2988,25 +2988,25 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**270 of 2,876 genes are complete; 2,606 remain.** This checkpoint adds eight
-verified completions beyond published checkpoint 262: BCAP31, BCOR, CDAN1,
-BCKDHB, CD70, CD79A, CD79B and BCS1L. Each final PR head was approved and
-passed the required checks before its merge.
+**274 of 2,876 genes are complete; 2,602 remain.** This checkpoint adds four
+verified completions beyond published checkpoint 270: CDC14A, BIN1, BLM and
+BCL10. Each final PR head was approved and passed the required checks before
+its merge.
 
-There are 274 distinct primary genes with merged campaign reviews. The BCKDHB
-and BCS1L follow-ups close earlier holds; they do not add second original-gene
-merges. Four genes remain incomplete: AKR1D1 requires its recorded Reactome
-source follow-up, and BCL10, BIN1 and BLM require their recorded binding-policy
-follow-ups. Their checkboxes remain unchecked. Biological DRAFT status and
-justified UNDECIDED annotations remain independent of campaign completion.
+There are 275 distinct primary genes with merged campaign reviews. CDC14A adds
+one original reviewed gene; the BIN1, BLM and BCL10 follow-ups close earlier
+holds without adding second original-gene merges. AKR1D1 remains incomplete
+because its required Reactome source follow-up [#4465](https://github.com/ai4curation/ai-gene-review/pull/4465)
+had not merged at this cutoff. Its checkbox remains unchecked. Biological
+DRAFT status and justified UNDECIDED annotations remain independent of
+campaign completion.
 
-The completion evidence cutoff is **2026-10-09 17:36:48 UTC**, through the BCS1L
-follow-up merge, on [main commit fd81ce72cba2](https://github.com/ai4curation/ai-gene-review/commit/fd81ce72cba2618655d3bc7351581ef4a6abf9f2).
-See [checkpoint 270 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-270-2026-10-09-173648-utc).
-[Checkpoint curation history](../history/projects/CLINGEN_MENDELIAN/2026-10-09T175417Z-codex-02c570.yaml) records this update.
+The completion evidence cutoff is **2026-10-09 18:49:44 UTC**, through the BCL10
+follow-up merge, on [main commit db510ed9a7ef](https://github.com/ai4curation/ai-gene-review/commit/db510ed9a7efdcb0cbf24a3d98be7f9b07898eb3).
+See [checkpoint 274 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-274-2026-10-09-184944-utc).
 Open PRs and subsequent work add no completion at this cutoff. The preceding
-[checkpoint 262](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-262-2026-10-09-161932-utc)
-and its [merged tracker PR #4459](https://github.com/ai4curation/ai-gene-review/pull/4459)
+[checkpoint 270](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-270-2026-10-09-173648-utc)
+and its [merged tracker PR #4467](https://github.com/ai4curation/ai-gene-review/pull/4467)
 remain the historical baseline.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3263,15 +3263,15 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BCKDHA** — HGNC:986; [maple syrup urine disease type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5c89a6c7-751a-4a99-8a32-97cc33c5df7c-2018-09-14T160000.000Z) (MONDO:0023691; AR; Definitive).
 - [x] **BCKDHB** — HGNC:987; [maple syrup urine disease type 1B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0b0d314c-7355-441c-a357-72ba3e566c57-2019-02-08T170000.000Z) (MONDO:0023692; AR; Definitive).
 - [x] **BCKDK** — HGNC:16902; [branched-chain keto acid dehydrogenase kinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f90aaad0-b56a-41dc-8d1f-9d12fc66113f-2019-01-18T170000.000Z) (MONDO:0013970; AR; Definitive).
-- [ ] **BCL10** — HGNC:989; [immunodeficiency 37](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2826b3a9-d32b-4d91-8c5d-1a20c408d08d-2022-12-29T180000.000Z) (MONDO:0014491; AR; Definitive).
+- [x] **BCL10** — HGNC:989; [immunodeficiency 37](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2826b3a9-d32b-4d91-8c5d-1a20c408d08d-2022-12-29T180000.000Z) (MONDO:0014491; AR; Definitive).
 - [x] **BCL11A** — HGNC:13221; [Dias-Logan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9630f9a3-3f90-49c6-ae8b-6313c950b1b2-2020-09-01T100000.000Z) (MONDO:0014914; AD; Definitive).
 - [x] **BCL11B** — HGNC:13222; [intellectual developmental disorder with speech delay, dysmorphic facies, and t-cell abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ca4f24f-78dd-4dda-a50d-07dd3d1cef07-2024-12-19T170000.000Z) (MONDO:0060763; AD; Definitive).
 - [x] **BCOR** — HGNC:20893; [microphthalmia, syndromic 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3da06b77-1ed0-4197-948c-a9bbf80b6ed4-2020-12-17T171347.861Z) (MONDO:0010261; XL; Definitive).
 - [x] **BCS1L** — HGNC:1020; [Bjornstad syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7a26b6b5-e703-43fc-bcd0-eaff67ef8107-2018-07-09T160000.000Z) (MONDO:0009872; AR; Definitive); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b50d7db-1144-4187-a60c-72b45adb80bd-2019-09-19T155315.896Z) (MONDO:0009723; AR; Limited); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_103c4ff3-1304-444e-93c7-c4cc729f19e4-2024-09-19T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [x] **BEST1** — HGNC:12703; [BEST1-related dominant retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_487a42cc-7dd0-4991-ac9d-1346f59073c0-2023-08-03T160000.000Z) (MONDO:0700238; AD; Definitive).
 - [x] **BICRA** — HGNC:4332; [Coffin-Siris syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2dcc8864-4487-4c5c-b541-cfd972767269-2024-11-20T170000.000Z) (MONDO:0015452; AD; Definitive).
-- [ ] **BIN1** — HGNC:1052; [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bb963a9-ec8a-4966-93bb-4f8ef6f8f8a1-2024-06-10T160000.000Z) (MONDO:0018947; AD; Limited); [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d04cc64-0994-4579-99d5-bd2b89710173-2024-06-10T160000.000Z) (MONDO:0018947; AR; Definitive).
-- [ ] **BLM** — HGNC:1058; [Bloom syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0a20b67-5a62-462c-894b-76b60a66e979-2019-04-19T160000.000Z) (MONDO:0008876; AR; Definitive); [colorectal cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37bc882f-34c6-4aea-afea-7b6f037ed9a7-2024-11-22T180000.000Z) (MONDO:0005575; AD; Limited).
+- [x] **BIN1** — HGNC:1052; [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bb963a9-ec8a-4966-93bb-4f8ef6f8f8a1-2024-06-10T160000.000Z) (MONDO:0018947; AD; Limited); [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d04cc64-0994-4579-99d5-bd2b89710173-2024-06-10T160000.000Z) (MONDO:0018947; AR; Definitive).
+- [x] **BLM** — HGNC:1058; [Bloom syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e0a20b67-5a62-462c-894b-76b60a66e979-2019-04-19T160000.000Z) (MONDO:0008876; AR; Definitive); [colorectal cancer](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_37bc882f-34c6-4aea-afea-7b6f037ed9a7-2024-11-22T180000.000Z) (MONDO:0005575; AD; Limited).
 - [x] **BLNK** — HGNC:14211; [agammaglobulinemia 4, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2e1d2e1b-52a6-4371-9055-0e1cc74da39d-2021-03-16T132748.373Z) (MONDO:0013289; AR; Definitive).
 - [x] **BLOC1S5** — HGNC:18561; [Hermansky-Pudlak syndrome 11](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_85cca8f5-d263-42c4-b84a-2d49deeee682-2023-09-06T160000.000Z) (MONDO:0030903; AR; Definitive).
 - [x] **BLOC1S6** — HGNC:8549; [Hermansky-Pudlak syndrome 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_984682a2-afb9-48b3-afe8-20e0f633022d-2022-05-25T165516.466Z) (MONDO:0013606; AR; Definitive).
@@ -3356,7 +3356,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CD79A** — HGNC:1698; [agammaglobulinemia 3, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12a6257c-c9ca-432a-ab76-b05985283381-2020-12-15T135909.057Z) (MONDO:0013288; AR; Definitive).
 - [x] **CD79B** — HGNC:1699; [agammaglobulinemia 6, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c252b2c-2183-4e7d-8ceb-69f7a01cc1d9-2021-01-26T171006.440Z) (MONDO:0012987; AR; Definitive).
 - [x] **CDAN1** — HGNC:1713; [anemia, congenital dyserythropoietic, type 1a](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c9465f7d-4fc8-49b6-aa2c-4b92eb5f8c32-2025-01-07T170000.000Z) (MONDO:0009135; AR; Definitive).
-- [ ] **CDC14A** — HGNC:1718; [hearing impairment and infertile male syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_144089d2-83ec-4c6c-8b43-9a4cae801d51-2023-06-01T160000.000Z) (MONDO:0100069; AR; Strong); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e869e4b1-30e2-4d9b-9b69-124903d7b307-2025-02-25T170000.000Z) (MONDO:0019497; AR; Definitive).
+- [x] **CDC14A** — HGNC:1718; [hearing impairment and infertile male syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_144089d2-83ec-4c6c-8b43-9a4cae801d51-2023-06-01T160000.000Z) (MONDO:0100069; AR; Strong); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e869e4b1-30e2-4d9b-9b69-124903d7b307-2025-02-25T170000.000Z) (MONDO:0019497; AR; Definitive).
 - [ ] **CDC42** — HGNC:1736; [macrothrombocytopenia-lymphedema-developmental delay-facial dysmorphism-camptodactyly syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95177a3a-0dca-4945-8a44-f63697739cef-2021-10-27T162623.932Z) (MONDO:0014757; AD; Definitive).
 - [ ] **CDC45** — HGNC:1739; [Meier-Gorlin syndrome 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab0dc4e6-06ae-4f78-8393-05ac2bbb563f-2023-05-30T160000.000Z) (MONDO:0014894; AR; Definitive).
 - [ ] **CDC73** — HGNC:16783; [hyperparathyroidism 2 with jaw tumors](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a5bd498b-dc86-4f2d-a51b-48baf7017a02-2019-04-19T160000.000Z) (MONDO:0007768; AD; Definitive).
