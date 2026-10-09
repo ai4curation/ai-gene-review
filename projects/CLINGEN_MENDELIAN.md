@@ -2988,24 +2988,24 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**257 of 2,876 genes are complete; 2,619 remain.** This checkpoint adds six
-verified completions beyond published checkpoint 251: BBS1, BBS10, CD3G, BBS2,
-CD40 and BBS4. Each final PR head was approved and passed the required checks
+**262 of 2,876 genes are complete; 2,614 remain.** This checkpoint adds five
+verified completions beyond published checkpoint 257: CD40LG, BBS7, CD46,
+BBS9 and BBS5. Each final PR head was approved and passed the required checks
 before its merge.
 
-There are 263 distinct primary genes with merged campaign reviews. Six remain
+There are 268 distinct primary genes with merged campaign reviews. Six remain
 incomplete: AKR1D1 requires its unresolved Reactome source follow-up; BCKDHB,
-BCL10, BCS1L, BIN1 and BLM require follow-up for supported generic-binding
-removals that conflict with the standing project instruction. Their checkboxes
-remain unchecked. Biological DRAFT status and justified UNDECIDED annotations
-are preserved independently of campaign completion.
+BCL10, BCS1L, BIN1 and BLM require their recorded binding-policy follow-ups.
+Their checkboxes remain unchecked. Biological DRAFT status and justified
+UNDECIDED annotations remain independent of campaign completion.
 
-The completion evidence cutoff is **2026-10-09 14:48:08 UTC**, through the BBS4
-merge, on [main commit de56024a5a3e](https://github.com/ai4curation/ai-gene-review/commit/de56024a5a3ed1e32ca0654ee5dc8def94e804a2).
-See [checkpoint 257 evidence and pending work](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-257-2026-10-09-144808-utc).
+The completion evidence cutoff is **2026-10-09 16:19:32 UTC**, through the BBS5
+merge, on [main commit 1353583bdcc0](https://github.com/ai4curation/ai-gene-review/commit/1353583bdcc0ad7116be610523f84594bd21b9c6).
+See [checkpoint 262 evidence and pending work](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-262-2026-10-09-161932-utc).
+The [curation history](../history/projects/CLINGEN_MENDELIAN/2026-10-09T163721Z-codex-30b1ba.yaml) records this reconciliation.
 Open PRs and subsequent work add no completion at this cutoff. The preceding
-[checkpoint 251 reconciliation](CLINGEN_MENDELIAN/review-progress.md#completion-reconciliation-2026-10-09)
-and its [merged tracker PR #4432](https://github.com/ai4curation/ai-gene-review/pull/4432)
+[checkpoint 257](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-257-2026-10-09-144808-utc)
+and its [merged tracker PR #4450](https://github.com/ai4curation/ai-gene-review/pull/4450)
 remain the historical baseline.
 
 - [x] Acquire and archive ClinGen source data.
@@ -3254,9 +3254,9 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BBS12** — HGNC:26648; [BBS12-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3aefcbae-bf06-45da-b3be-a550e997257a-2024-01-04T170000.000Z) (MONDO:1040045; AR; Definitive).
 - [x] **BBS2** — HGNC:967; [BBS2-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be74a060-cfb3-4180-a107-cfaf0e81bfa3-2024-03-07T170000.000Z) (MONDO:1040048; AR; Definitive).
 - [x] **BBS4** — HGNC:969; [BBS4-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_988d537d-5595-4b8f-bbc4-8e3aefc025fa-2023-12-07T170000.000Z) (MONDO:1040044; AR; Definitive).
-- [ ] **BBS5** — HGNC:970; [BBS5-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdb1249e-ab95-4d34-a43f-1dbb09eb3d94-2023-12-07T170000.000Z) (MONDO:1040047; AR; Definitive).
-- [ ] **BBS7** — HGNC:18758; [BBS7-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a09e1836-927c-424d-b10c-fd93f3e6dc6b-2023-09-07T160000.000Z) (MONDO:1040042; AR; Definitive).
-- [ ] **BBS9** — HGNC:30000; [BBS9-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3fc68f9f-ed7c-453e-8c41-179a9ccad0ca-2023-08-03T160000.000Z) (MONDO:0700236; AR; Definitive).
+- [x] **BBS5** — HGNC:970; [BBS5-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdb1249e-ab95-4d34-a43f-1dbb09eb3d94-2023-12-07T170000.000Z) (MONDO:1040047; AR; Definitive).
+- [x] **BBS7** — HGNC:18758; [BBS7-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a09e1836-927c-424d-b10c-fd93f3e6dc6b-2023-09-07T160000.000Z) (MONDO:1040042; AR; Definitive).
+- [x] **BBS9** — HGNC:30000; [BBS9-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3fc68f9f-ed7c-453e-8c41-179a9ccad0ca-2023-08-03T160000.000Z) (MONDO:0700236; AR; Definitive).
 - [ ] **BCAP31** — HGNC:16695; [severe motor and intellectual disabilities-sensorineural deafness-dystonia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d31d5251-bedd-49e9-b0bb-5ff6923edcf7-2023-08-02T160000.000Z) (MONDO:0010334; XL; Definitive).
 - [x] **BCAT2** — HGNC:977; [hypervalinemia and hyperleucine-isoleucinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b5e16ee6-88c9-4872-8681-dd7fd0156b0f-2020-07-24T172325.905Z) (MONDO:0100058; AR; Definitive).
 - [x] **BCKDHA** — HGNC:986; [maple syrup urine disease type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5c89a6c7-751a-4a99-8a32-97cc33c5df7c-2018-09-14T160000.000Z) (MONDO:0023691; AR; Definitive).
@@ -3349,8 +3349,8 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CD3E** — HGNC:1674; [immunodeficiency 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_29d6bb32-65b3-4c78-9c94-da71cc591565-2021-01-26T172908.775Z) (MONDO:0014278; AR; Definitive).
 - [x] **CD3G** — HGNC:1675; [combined immunodeficiency due to CD3gamma deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ea83aa7-473b-4670-88dd-36b1abe277f8-2021-07-15T160000.000Z) (MONDO:0014276; AR; Definitive).
 - [x] **CD40** — HGNC:11919; [hyper-IgM syndrome type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_debbb2e7-89a7-45b8-b5e1-41ccb56a3423-2022-10-18T160000.000Z) (MONDO:0011735; AR; Definitive).
-- [ ] **CD40LG** — HGNC:11935; [hyper-IgM syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4184ad10-d95f-4027-b75d-e4e11127febf-2021-03-22T154242.503Z) (MONDO:0010626; XL; Definitive).
-- [ ] **CD46** — HGNC:6953; [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bddaec4f-9f57-41b7-81a4-2f6ff3fc5e7b-2024-06-27T160000.000Z) (MONDO:0016244; SD; Definitive).
+- [x] **CD40LG** — HGNC:11935; [hyper-IgM syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4184ad10-d95f-4027-b75d-e4e11127febf-2021-03-22T154242.503Z) (MONDO:0010626; XL; Definitive).
+- [x] **CD46** — HGNC:6953; [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bddaec4f-9f57-41b7-81a4-2f6ff3fc5e7b-2024-06-27T160000.000Z) (MONDO:0016244; SD; Definitive).
 - [ ] **CD70** — HGNC:11937; [severe combined immunodeficiency due to CD70 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_69aa819c-1f25-42fe-8469-4641fc088a57-2025-02-05T170000.000Z) (MONDO:0034054; AR; Definitive).
 - [ ] **CD79A** — HGNC:1698; [agammaglobulinemia 3, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12a6257c-c9ca-432a-ab76-b05985283381-2020-12-15T135909.057Z) (MONDO:0013288; AR; Definitive).
 - [ ] **CD79B** — HGNC:1699; [agammaglobulinemia 6, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c252b2c-2183-4e7d-8ceb-69f7a01cc1d9-2021-01-26T171006.440Z) (MONDO:0012987; AR; Definitive).
