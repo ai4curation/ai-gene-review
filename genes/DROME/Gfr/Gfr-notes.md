@@ -16,4 +16,5 @@ vitro"].
   Golgi apparatus, endomembrane system and GDP-fucose transmembrane transport modified to the more specific terms
   already annotated; antiporter activity (IBA) kept as non-core; all NOT specificity annotations accepted.
 
-- Deep research: `just deep-research-falcon` timed out (600 s) and the perplexity-lite fallback is unavailable in this environment; review based on cached publications and UniProt.
+- Falcon deep research (Gfr-deep-research-falcon.md; it finished after the wrapper's 600 s timeout) is consistent with
+  the review (Gfr = nac = CG9620, SLC35C1 ortholog).
