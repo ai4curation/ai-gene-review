@@ -17,3 +17,11 @@
 - regulation of circadian rhythm (IMP): KEEP_AS_NON_CORE (glycine-supply consequence).
 - hydroxytrimethyllysine aldolase (ISS from SHMT1) and carnitine biosynthesis (IC): KEEP_AS_NON_CORE;
   in vitro side activity of mammalian SHMT, untested in insects.
+
+## Update: deep research arrived
+- `Shmt-deep-research-falcon.md` (written after the wrapper timed out) agrees with the review.
+- Caveat: mitochondrial localization in flies is inferred from the presequence, not shown directly
+  [Shmt-deep-research-falcon.md "Mitochondrial localization is inferred from transcript structure and the predicted import sequence, not directly demonstrated by organelle colocalization."].
+  The IBA/ISS mitochondrial rows are still accepted as sound inferences.
+- Later work (per deep research; not cached): dTTP depletion by cycle 13 in Shmt embryos, and SHMT loss
+  promoting genome instability in a Ras tumor model.

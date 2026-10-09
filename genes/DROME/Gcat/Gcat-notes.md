@@ -18,3 +18,12 @@
 - All annotations accepted except generic `transferase activity` (MODIFY -> GO:0008890).
 - Core function: glycine C-acetyltransferase activity in mitochondrion, L-threonine catabolism and
   glycine biosynthesis.
+
+## Update: deep research arrived
+- The first falcon run finished after the wrapper timed out and wrote `Gcat-deep-research-falcon.md`.
+- It confirms there is no enzyme assay of fly Gcat; identity rests on orthology
+  [Gcat-deep-research-falcon.md "The publication establishes an orthology-based annotation, **not** an enzyme assay of Q9VTN9."].
+- A 2026 fly study (Yoshinari et al., per the deep research) reports Gcat expression mainly in fat body,
+  induced by starvation, and fat-body Tdh knockdown reduces threonine-derived label in glycine and serine
+  [Gcat-deep-research-falcon.md "fat-body **Tdh knockdown** reduced incorporation of threonine-derived isotope into **glycine and serine**"].
+  This supports the pathway context; no change to review decisions.

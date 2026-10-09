@@ -16,3 +16,8 @@
 ## Decisions
 - All 8 annotations accepted (MF 1.1.1.103, threonine catabolism, glycine biosynthesis step 1,
   mitochondrion). Sleep/muscle phenotypes not proposed as GO processes (downstream effects).
+
+## Cross-reference
+- Gcat deep research cites a 2026 fat-body study in which Tdh knockdown reduced threonine-derived isotope
+  incorporation into glycine and serine (see genes/DROME/Gcat/Gcat-deep-research-falcon.md), further
+  supporting Tdh as step 1 of glycine formation from threonine. Not yet cached as a publication.
