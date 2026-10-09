@@ -1,6 +1,6 @@
 # Tace (ADAM17-like protease, CG7908, Q9VAC5) curation notes
 
-Deep research: falcon runs timed out this session; notes are from cached publications.
+Deep research: `Tace-deep-research-falcon.md` (falcon; the wrapper reported a 600 s timeout but the run completed later). Folded in as an EDIT; its conclusions agree with the review and it is cited in the core function.
 
 ## Literature journal
 
