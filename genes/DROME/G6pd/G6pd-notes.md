@@ -12,3 +12,8 @@
   deference to curators.
 - Generic process rows (glucose metabolic process, PPP, G6P metabolic process) MODIFY -> oxidative
   PPP (GO:0009051); NADP+ metabolic process -> NADPH regeneration (module-wide convention).
+- Falcon deep research (G6pd-deep-research-falcon.md, arrived after initial commit): classic
+  fractionation found all G6PD activity in the 105,000 x g supernatant (supports cytosol); Zw-deficient
+  adults retain <10% activity and block the oxidative shunt; hemocyte Zw RNAi reduces lamellocyte
+  responses to parasitoids; neuronal G6PD affects sleep and is induced by JNK signalling. No
+  annotation changes (consistent with existing decisions).
