@@ -10,3 +10,10 @@
   fly Dic1 (FBgn0027610) and Dic3 (FBgn0033248).
 - Added NEW GO:0015364 dicarboxylate:phosphate antiporter activity to capture the exchange mechanism.
 - membrane IEA and mitochondrion IDA -> mitochondrial inner membrane. Gluconeogenesis NAS non-core.
+- Falcon deep research (Dic1-deep-research-falcon.md, arrived after initial commit), summarizing the
+  full text of PMID:21130726: Dic1 (CG8790) is a strict exchanger (malate/phosphate uptake needs an
+  internal counter-substrate), which supports the NEW dicarboxylate:phosphate antiporter annotation;
+  strong exchange with malate, phosphate, malonate and maleate; weaker exchange with succinate,
+  sulfate, thiosulfate and oxaloacetate; Km malate 0.81 mM, phosphate 2.35 mM. Mitochondrial
+  localization was reported as "data not shown". No annotation changes (weaker substrates kept as
+  accepted curator IDA rows).
