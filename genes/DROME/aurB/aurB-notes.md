@@ -29,3 +29,4 @@ the cached publications.
 - Centrosome and spindle pole IBA rows removed: donors are Aurora A-type kinases; fly Aurora B is a passenger.
 - Midbody abscission IMP (PMID:23948252) modified to negative regulation of mitotic cytokinesis (sign).
 - Post-translational protein modification modified to protein phosphorylation.
+- Correct-but-general rows (nuclear division, sister chromatid segregation, protein kinase activity, chromosome, spindle, cytoskeleton, chromatin organization, chromosome condensation) modified to the specific terms aurB already carries (or meiotic chromosome condensation for the oocyte screen).
