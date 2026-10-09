@@ -4,3 +4,4 @@
 - MTV: [PMID:27835648 "The Moi-Tea-Ver (MTV) complex purified in vitro binds and protects ssDNA in a sequence-independent manner"].
 - HeT-A: [PMID:24733842 "HeT-A sphere formation requires Verrocchio, a putative homolog of the conserved Stn1 telomeric protein"] -> telomere maintenance kept as non-core (transposon recruitment, not capping; no more specific term warranted).
 - IBA telomeric DNA binding (Stn1 clade) -> MODIFY to GO:0043047 single-stranded telomeric DNA binding (carried).
+- Review-bot round (PR #4475): terminin-membership MODIFY rows now quote sentences that name this subunit's complex (terminin composition), not Ver-only text.
