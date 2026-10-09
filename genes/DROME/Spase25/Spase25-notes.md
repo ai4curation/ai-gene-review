@@ -13,4 +13,4 @@ SPC module conventions as in twr-notes.md: complex and ER membrane accepted; mem
 
 ## Deep research
 
-`just deep-research-falcon` had not produced a report when this review was committed; any late-arriving report will be added in a follow-up commit.
+`Spase25-deep-research-falcon.md` (falcon) arrived after the review was first committed. It agrees with the review: Spase25 (CG1751) is the noncatalytic SPCS2/Spc2-type ER-membrane accessory subunit of the SPC. Its role in signal-peptide recognition and selectivity is inferred from human SPCS2 and yeast Spc2, not shown for the fly protein. No annotation decision changed.
