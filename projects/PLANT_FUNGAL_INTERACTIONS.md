@@ -18,7 +18,9 @@ receptors, the legume mycorrhizal pathway, and fungal effectors, a hydrophobin,
 a MAP kinase and a toxin enzyme. All 36 reviews are done: 652 annotations were
 assessed, with 333 accepted, 161 kept as non-core, 71 modified, 40 marked
 over-annotated, 47 removed and none left undecided, plus 36 new annotations
-proposed. All 36 reviews validate and are marked COMPLETE.
+proposed. All 36 reviews validate and are marked COMPLETE. (These counts cover the 36
+project genes; the 11 module members reviewed later are counted separately below and
+leave 3 rows undecided.)
 The main corrections were separating genes that do the work of a defence
 process from genes that are only needed for it, replacing `protein binding`
 rows with specific terms, and giving each partner in a receptor pair, and
@@ -129,7 +131,8 @@ annotations reviewed; NEW annotations are counted separately.
 
 ## Modules
 
-Two pathway modules tie the gene reviews together:
+Two pathway modules tie the gene reviews together. Both are still `status: DRAFT`:
+they validate, but their open biological questions are recorded as knowledge gaps.
 
 - [Camalexin biosynthesis](../modules/camalexin_biosynthesis.html)
   (`modules/camalexin_biosynthesis.yaml`). Tryptophan is converted to IAOx
@@ -338,6 +341,15 @@ running `fetch-gene`; do not guess one.
 # NOTES
 
 ## 2026-10-09
+
+- Addressed the review on PR #4451. The CYP71B15 ER lumen → ER membrane row now
+  cites the UniProt single-pass membrane line and the PAD3 microsomal activity
+  quote (PMID:16766671) instead of two quotes that did not bear on topology.
+  CASTOR's mycorrhizal-association row now quotes the abstract sentence naming
+  CASTOR, and a title-only quote was dropped from RGA5's metal ion binding row.
+  GO:0141177 was checked: its definition ("mitigates the effects of recognition
+  by a host innate immune effector") covers AVR4 shielding hyphae from plant
+  chitinases, so the AVR4 row is unchanged.
 
 - Merged main into the branch for PR #4451. Main had independently merged
   reviews of CYP71A12, CYP71A13, MKK4 and MKK5 (MKK4/MKK5 from the stomatal
