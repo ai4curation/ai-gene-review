@@ -1,0 +1,11 @@
+| Category | Evidence | Source/Strength |
+|---|---|---|
+| Gene Identity | Encodes the catalytic alpha subunit of the highly conserved, heterotrimeric AMP-activated protein kinase (AMPK) complex (*Drosophila* gene *AMPKalpha* / *Snf1A* / *CG3051*). | Bland 2010 (pqac-00000000); Lippai 2008 (pqac-00000003) / Direct genetic and sequence homology |
+| Kinase Properties | Serine/threonine kinase that acts as an intracellular energy sensor. Catalytic activity requires phosphorylation at a conserved activation-loop threonine (Thr184 in flies). | Kazgan 2010 (pqac-00000011); Stenesen 2013 (pqac-00000019) / Direct biochemical (in vivo phosphorylation assays) |
+| Upstream Regulation | Activated by high AMP/ADP:ATP ratios via allosteric changes in the gamma subunit. Phosphorylated at Thr184 by the upstream kinase LKB1, which itself is regulated by PDK1 and membrane binding. | Kazgan 2010 (pqac-00000011); Lippai 2008 (pqac-00000007); Borkowsky 2023 (pqac-00000034) / Biochemical and genetic mutant analysis |
+| Substrate Phosphorylation | Directly phosphorylates *Drosophila* Acetyl-CoA Carboxylase (dACC) at Ser93 (homologous to mammalian Ser79) to inhibit lipogenesis. Mechanistically linked to activation of Myosin Regulatory Light Chain (MRLC/Sqh) in muscle function. | Bland 2010 (pqac-00000022, pqac-00000013) / Biochemical (phospho-specific antibody) for ACC; Inferred from genetic rescue for MRLC |
+| Subcellular Localization | Exhibits nucleocytoplasmic shuttling. Contains a CRM1-dependent C-terminal Nuclear Export Signal (NES). Cytoplasmic localization promotes Thr184 phosphorylation, kinase activation, and organismal viability. | Kazgan 2010 (pqac-00000008, pqac-00000011) / Direct live-animal fluorescence imaging and transgenic mutant rescue |
+| Biological Pathways | Drives catabolic processes during energy stress: inhibits lipid biosynthesis (via ACC), restricts viral replication, induces autophagy by repressing the insulin/TOR pathway (e.g., during neuronal dendrite pruning), and mediates lifespan extension during dietary restriction. | Tan 2024 (pqac-00000026); Stenesen 2013 (pqac-00000019); Moser 2012 (pqac-00000017) / Direct genetic epistasis, physiological assays, and longevity studies |
+
+
+*Table: A summary of the biochemical, genetic, and physiological evidence defining the function of the Drosophila AMPKalpha gene.*
