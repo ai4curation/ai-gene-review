@@ -18,3 +18,6 @@
 - RNA binding (roX2 co-purification) -> lncRNA binding; lncRNA binding itself KEEP_AS_NON_CORE (MSL3 shows little roX preference [PMID:34943924 "MSL3 and MOF are reported to bind RNA but, unlike MLE and MSL2, show no great preference for roX transcripts"]).
 - TAS citing a Wolbachia review (PMID:12683975) kept (term correct) but reference is a poor fit.
 - Shared MSL conventions as in mof/mle/msl-1/msl-2.
+
+## Deep research (falcon, added after initial review)
+- `msl-3-deep-research-falcon.md` agrees MSL3 is a non-catalytic reader/adaptor bound to the MSL1 C terminus via its MRG domain that stimulates MOF on nucleosomes. It flags that the H3K36me3-spreading model is contested ["A direct methyl-mark-to-spreading model is now contested."] (2021 and 2024 H3K36R histone-replacement studies), and that the fly chromo-barrel binds H4K20me1/me2 peptides more strongly than H3K36me3 peptides (weak, mM affinities). The H3K36me3 reader term is kept (direct in vitro nucleosome binding) but the core-function description now carries this caveat. It also restates that H4K16ac antagonizes chromodomain binding, consistent with leaving the H4K16ac reader rows UNDECIDED.
