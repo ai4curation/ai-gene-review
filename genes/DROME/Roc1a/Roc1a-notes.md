@@ -18,3 +18,7 @@ Accession: Q9W5E1. Modules: dmel_scf_slimb_ubiquitin_ligase and dmel_vcb_ubiquit
 - GO:0031461 CRL complex and GO:0006511 accepted because Roc1a acts in Cul1-4 ligases (as precise as warranted).
 - GO:0016032 viral process: MARK_AS_OVER_ANNOTATED (viral hijacking of the host ligase).
 - Protein binding (Ufd1-like): REMOVE.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `Roc1a-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
