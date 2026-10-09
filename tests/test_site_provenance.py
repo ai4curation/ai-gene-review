@@ -6,7 +6,7 @@ import os
 import subprocess
 
 import pytest
-from lxml import html
+from lxml import html  # type: ignore[import-untyped]
 
 from ai_gene_review.render_projects import render_project
 from ai_gene_review.site_provenance import SourceHistory, collect_build_info, stamp_site_build
