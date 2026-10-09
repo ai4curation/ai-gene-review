@@ -1,6 +1,6 @@
 # Uaf1 review notes
 
-Accession: Q1LZ08. Module: dmel_usp46_deubiquitinase_complex.
+Accession: Q1LZ08. Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_usp46_deubiquitinase_complex.
 
 ## Literature journal
 
