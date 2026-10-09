@@ -12,3 +12,7 @@
   controls)"; cysteine-free diet rescues.
 - Mitochondrion rows (IBA/IEA/IDA) -> intermembrane space (TAS/IEA present); sulfur compound metabolic
   process -> sulfide oxidation; molybdenum ion binding -> molybdopterin cofactor binding.
+- Falcon deep research (shop-deep-research-falcon.md, arrived after initial commit): sulfite oxidase
+  activity assayed with cytochrome c as acceptor; ensheathing-glia rescue; in the 2024 metabolomics,
+  sulfate was not significantly lower in mutants (other sulfate sources exist), which further supports
+  marking intracellular sulfate ion homeostasis as over-annotated. No annotation changes.
