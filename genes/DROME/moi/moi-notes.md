@@ -5,3 +5,5 @@
 - MTV: [PMID:27835648 "The Moi-Tea-Ver (MTV) complex purified in vitro binds and protects ssDNA in a sequence-independent manner"].
 - Module convention (moi, tea, ver, HipHop, cav): telomere cap complex GO:0000782 -> MODIFY to GO:0000783 (module term); nucleus and chromosome -> MODIFY to GO:0000781 (carried); telomere capping GO:0016233 ACCEPT and core BP (as for mre11/rad50/nbs); GO:0031848 rows accepted (curated); protein binding REMOVE; MTV subunits core = contributes_to GO:0043047 in GO:0000783.
 - Falcon deep research: Moi alone does not bind ssDNA (EMSA); Ver makes the direct ssDNA contact; ORF1 alone rescues telomere fusions (Moi, not the Tat-like ORF2 product).
+- Review-bot round (PR #4475): terminin-membership MODIFY rows now quote sentences that name this subunit's complex (terminin composition), not Ver-only text.
+- Review-bot round: mei-41/ATR and tefu/ATM IGI rows now reviewed separately (ATM mutations do not suppress DTL/moi fusions).
