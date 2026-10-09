@@ -17,3 +17,7 @@
 - Core MF tyrosine decarboxylase activity; BP tyramine and octopamine biosynthesis (Tdc2 performs the first step).
 - General lyase rows MODIFY to GO:0004837; amino acid metabolic process MODIFY to GO:1901695.
 - locomotory behavior MODIFY to adult locomotory behavior (adult assay). Other behaviors non-core.
+
+## Deep research (falcon) additions
+- [file:DROME/Tdc2/Tdc2-deep-research-falcon.md "animals have *no detectable neural tyramine or octopamine*"]
+- Confirms Tdc2 performs only the tyrosine to tyramine step; the octopamine step is Tbh. No change to decisions.
