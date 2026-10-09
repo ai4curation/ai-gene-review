@@ -8,4 +8,4 @@
 - WASH complex composition [PMID:20498093 "WASH functions in cells within a 500 kDa core complex containing Strumpellin, FAM21, KIAA1033 (SWIP), and CCDC53"] (abstract only cached).
 
 Decisions: Arp2/3 nucleation, endocytic recycling, retrograde transport, WASH complex and endosomal locations ACCEPT; nuclear, cytoskeletal-bundling and developmental rows non-core; Rho1 GTPase binding -> small GTPase binding; Spire protein binding REMOVE; regulation of Arp2/3 nucleation (NAS) -> Arp2/3 complex-mediated actin nucleation for the catalytic subunit.
-Deep research: falcon timed out (600 s) and the perplexity-lite fallback is unavailable; notes from cached publications.
+Deep research: falcon completed (wash-deep-research-falcon.md) after the initial review; consistent with the review. It confirms purified fly Wash activates Arp2/3 via its VCA and bundles F-actin/microtubules, and that Wash generates F-actin patches on Rab7-positive late endosomes in macrophages for integrin recycling. [file:DROME/wash/wash-deep-research-falcon.md "Live imaging showed overlapping Wash-EGFP and F-actin patches; Wash loss or RNAi abolished these patches."]. No annotation actions changed.
