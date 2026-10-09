@@ -2988,15 +2988,26 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**240 of 2,876 genes are complete; 2,636 remain.** This update adds
-CC2D1A, CCDC40 and CCND2, three verified campaign completions beyond checkpoint 237.
-The 241 gene-level original review merges include AKR1D1, whose required source follow-up
-remains outstanding. Audit and import totals retain their dated checkpoint scope.
-Completion evidence cutoff: **2026-10-05 01:02:15 UTC**. See the
-[checkpoint evidence](CLINGEN_MENDELIAN/review-progress.md#evidence-scope-for-completion-240)
-for the verified merges and retained biological uncertainty. The prior CASP8 count
-correction remains documented at checkpoint 228; no previous count is rewritten. See also the
-[checkpoint 240 history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-05T014551Z-codex-fd1fdc.yaml).
+**270 of 2,876 genes are complete; 2,606 remain.** This checkpoint adds eight
+verified completions beyond published checkpoint 262: BCAP31, BCOR, CDAN1,
+BCKDHB, CD70, CD79A, CD79B and BCS1L. Each final PR head was approved and
+passed the required checks before its merge.
+
+There are 274 distinct primary genes with merged campaign reviews. The BCKDHB
+and BCS1L follow-ups close earlier holds; they do not add second original-gene
+merges. Four genes remain incomplete: AKR1D1 requires its recorded Reactome
+source follow-up, and BCL10, BIN1 and BLM require their recorded binding-policy
+follow-ups. Their checkboxes remain unchecked. Biological DRAFT status and
+justified UNDECIDED annotations remain independent of campaign completion.
+
+The completion evidence cutoff is **2026-10-09 17:36:48 UTC**, through the BCS1L
+follow-up merge, on [main commit fd81ce72cba2](https://github.com/ai4curation/ai-gene-review/commit/fd81ce72cba2618655d3bc7351581ef4a6abf9f2).
+See [checkpoint 270 evidence](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-270-2026-10-09-173648-utc).
+[Checkpoint curation history](../history/projects/CLINGEN_MENDELIAN/2026-10-09T175417Z-codex-02c570.yaml) records this update.
+Open PRs and subsequent work add no completion at this cutoff. The preceding
+[checkpoint 262](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-262-2026-10-09-161932-utc)
+and its [merged tracker PR #4459](https://github.com/ai4curation/ai-gene-review/pull/4459)
+remain the historical baseline.
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3239,24 +3250,24 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **BAP1** — HGNC:950; [BAP1-related tumor predisposition syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d70c33af-2e4f-4489-9c29-797655015b1d-2019-03-21T175713.803Z) (MONDO:0013692; AD; Definitive).
 - [x] **BARD1** — HGNC:952; [BARD1-related cancer predisposition](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_09113d8c-ba63-40f1-9c8f-08b67c6c867c-2024-09-03T170000.000Z) (MONDO:0700267; AD; Definitive).
 - [x] **BBIP1** — HGNC:28093; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_25f5e82a-06a1-4bf5-93b7-9691d3f709a5-2025-09-08T160000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **BBS1** — HGNC:966; [BBS1-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ee6e7562-927a-459b-a0f1-ccd849c7e783-2023-12-07T170000.000Z) (MONDO:1040043; AR; Definitive).
-- [ ] **BBS10** — HGNC:26291; [BBS10-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f9eb490e-1977-426e-ac7a-c507bbc38490-2023-08-03T160000.000Z) (MONDO:0700237; AR; Definitive).
+- [x] **BBS1** — HGNC:966; [BBS1-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ee6e7562-927a-459b-a0f1-ccd849c7e783-2023-12-07T170000.000Z) (MONDO:1040043; AR; Definitive).
+- [x] **BBS10** — HGNC:26291; [BBS10-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f9eb490e-1977-426e-ac7a-c507bbc38490-2023-08-03T160000.000Z) (MONDO:0700237; AR; Definitive).
 - [x] **BBS12** — HGNC:26648; [BBS12-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3aefcbae-bf06-45da-b3be-a550e997257a-2024-01-04T170000.000Z) (MONDO:1040045; AR; Definitive).
-- [ ] **BBS2** — HGNC:967; [BBS2-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be74a060-cfb3-4180-a107-cfaf0e81bfa3-2024-03-07T170000.000Z) (MONDO:1040048; AR; Definitive).
-- [ ] **BBS4** — HGNC:969; [BBS4-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_988d537d-5595-4b8f-bbc4-8e3aefc025fa-2023-12-07T170000.000Z) (MONDO:1040044; AR; Definitive).
-- [ ] **BBS5** — HGNC:970; [BBS5-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdb1249e-ab95-4d34-a43f-1dbb09eb3d94-2023-12-07T170000.000Z) (MONDO:1040047; AR; Definitive).
-- [ ] **BBS7** — HGNC:18758; [BBS7-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a09e1836-927c-424d-b10c-fd93f3e6dc6b-2023-09-07T160000.000Z) (MONDO:1040042; AR; Definitive).
-- [ ] **BBS9** — HGNC:30000; [BBS9-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3fc68f9f-ed7c-453e-8c41-179a9ccad0ca-2023-08-03T160000.000Z) (MONDO:0700236; AR; Definitive).
-- [ ] **BCAP31** — HGNC:16695; [severe motor and intellectual disabilities-sensorineural deafness-dystonia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d31d5251-bedd-49e9-b0bb-5ff6923edcf7-2023-08-02T160000.000Z) (MONDO:0010334; XL; Definitive).
+- [x] **BBS2** — HGNC:967; [BBS2-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_be74a060-cfb3-4180-a107-cfaf0e81bfa3-2024-03-07T170000.000Z) (MONDO:1040048; AR; Definitive).
+- [x] **BBS4** — HGNC:969; [BBS4-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_988d537d-5595-4b8f-bbc4-8e3aefc025fa-2023-12-07T170000.000Z) (MONDO:1040044; AR; Definitive).
+- [x] **BBS5** — HGNC:970; [BBS5-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bdb1249e-ab95-4d34-a43f-1dbb09eb3d94-2023-12-07T170000.000Z) (MONDO:1040047; AR; Definitive).
+- [x] **BBS7** — HGNC:18758; [BBS7-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a09e1836-927c-424d-b10c-fd93f3e6dc6b-2023-09-07T160000.000Z) (MONDO:1040042; AR; Definitive).
+- [x] **BBS9** — HGNC:30000; [BBS9-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3fc68f9f-ed7c-453e-8c41-179a9ccad0ca-2023-08-03T160000.000Z) (MONDO:0700236; AR; Definitive).
+- [x] **BCAP31** — HGNC:16695; [severe motor and intellectual disabilities-sensorineural deafness-dystonia syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d31d5251-bedd-49e9-b0bb-5ff6923edcf7-2023-08-02T160000.000Z) (MONDO:0010334; XL; Definitive).
 - [x] **BCAT2** — HGNC:977; [hypervalinemia and hyperleucine-isoleucinemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b5e16ee6-88c9-4872-8681-dd7fd0156b0f-2020-07-24T172325.905Z) (MONDO:0100058; AR; Definitive).
 - [x] **BCKDHA** — HGNC:986; [maple syrup urine disease type 1A](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5c89a6c7-751a-4a99-8a32-97cc33c5df7c-2018-09-14T160000.000Z) (MONDO:0023691; AR; Definitive).
-- [ ] **BCKDHB** — HGNC:987; [maple syrup urine disease type 1B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0b0d314c-7355-441c-a357-72ba3e566c57-2019-02-08T170000.000Z) (MONDO:0023692; AR; Definitive).
+- [x] **BCKDHB** — HGNC:987; [maple syrup urine disease type 1B](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0b0d314c-7355-441c-a357-72ba3e566c57-2019-02-08T170000.000Z) (MONDO:0023692; AR; Definitive).
 - [x] **BCKDK** — HGNC:16902; [branched-chain keto acid dehydrogenase kinase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_f90aaad0-b56a-41dc-8d1f-9d12fc66113f-2019-01-18T170000.000Z) (MONDO:0013970; AR; Definitive).
 - [ ] **BCL10** — HGNC:989; [immunodeficiency 37](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2826b3a9-d32b-4d91-8c5d-1a20c408d08d-2022-12-29T180000.000Z) (MONDO:0014491; AR; Definitive).
 - [x] **BCL11A** — HGNC:13221; [Dias-Logan syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9630f9a3-3f90-49c6-ae8b-6313c950b1b2-2020-09-01T100000.000Z) (MONDO:0014914; AD; Definitive).
 - [x] **BCL11B** — HGNC:13222; [intellectual developmental disorder with speech delay, dysmorphic facies, and t-cell abnormalities](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ca4f24f-78dd-4dda-a50d-07dd3d1cef07-2024-12-19T170000.000Z) (MONDO:0060763; AD; Definitive).
-- [ ] **BCOR** — HGNC:20893; [microphthalmia, syndromic 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3da06b77-1ed0-4197-948c-a9bbf80b6ed4-2020-12-17T171347.861Z) (MONDO:0010261; XL; Definitive).
-- [ ] **BCS1L** — HGNC:1020; [Bjornstad syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7a26b6b5-e703-43fc-bcd0-eaff67ef8107-2018-07-09T160000.000Z) (MONDO:0009872; AR; Definitive); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b50d7db-1144-4187-a60c-72b45adb80bd-2019-09-19T155315.896Z) (MONDO:0009723; AR; Limited); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_103c4ff3-1304-444e-93c7-c4cc729f19e4-2024-09-19T040000.000Z) (MONDO:0044970; AR; Definitive).
+- [x] **BCOR** — HGNC:20893; [microphthalmia, syndromic 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3da06b77-1ed0-4197-948c-a9bbf80b6ed4-2020-12-17T171347.861Z) (MONDO:0010261; XL; Definitive).
+- [x] **BCS1L** — HGNC:1020; [Bjornstad syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7a26b6b5-e703-43fc-bcd0-eaff67ef8107-2018-07-09T160000.000Z) (MONDO:0009872; AR; Definitive); [Leigh syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3b50d7db-1144-4187-a60c-72b45adb80bd-2019-09-19T155315.896Z) (MONDO:0009723; AR; Limited); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_103c4ff3-1304-444e-93c7-c4cc729f19e4-2024-09-19T040000.000Z) (MONDO:0044970; AR; Definitive).
 - [x] **BEST1** — HGNC:12703; [BEST1-related dominant retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_487a42cc-7dd0-4991-ac9d-1346f59073c0-2023-08-03T160000.000Z) (MONDO:0700238; AD; Definitive).
 - [x] **BICRA** — HGNC:4332; [Coffin-Siris syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2dcc8864-4487-4c5c-b541-cfd972767269-2024-11-20T170000.000Z) (MONDO:0015452; AD; Definitive).
 - [ ] **BIN1** — HGNC:1052; [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8bb963a9-ec8a-4966-93bb-4f8ef6f8f8a1-2024-06-10T160000.000Z) (MONDO:0018947; AD; Limited); [centronuclear myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6d04cc64-0994-4579-99d5-bd2b89710173-2024-06-10T160000.000Z) (MONDO:0018947; AR; Definitive).
@@ -3326,25 +3337,25 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CC2D2A** — HGNC:29253; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0acbae16-a383-4345-978c-9d28dda80d02-2022-08-24T160000.000Z) (MONDO:0005308; AR; Definitive).
 - [x] **CCDC39** — HGNC:25244; [primary ciliary dyskinesia 14](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_79c47f13-dd33-45e4-a170-6ff26aa2732c-2021-11-02T204310.116Z) (MONDO:0013434; AR; Definitive).
 - [x] **CCDC40** — HGNC:26090; [primary ciliary dyskinesia 15](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e9c192c6-9f74-4beb-85ba-a42199e9794a-2021-12-10T031508.185Z) (MONDO:0013435; AR; Definitive).
-- [ ] **CCM2** — HGNC:21708; [cerebral cavernous malformation 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1013c58b-cea9-4e16-b68a-91a8a18bf989-2025-05-27T160000.000Z) (MONDO:0011304; AD; Definitive).
-- [ ] **CCN6** — HGNC:12771; [progressive pseudorheumatoid arthropathy of childhood](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_915a010c-e5d0-4a56-b7b7-f9c8acc4f6f0-2024-09-04T160000.000Z) (MONDO:0008827; AR; Definitive).
+- [x] **CCM2** — HGNC:21708; [cerebral cavernous malformation 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_1013c58b-cea9-4e16-b68a-91a8a18bf989-2025-05-27T160000.000Z) (MONDO:0011304; AD; Definitive).
+- [x] **CCN6** — HGNC:12771; [progressive pseudorheumatoid arthropathy of childhood](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_915a010c-e5d0-4a56-b7b7-f9c8acc4f6f0-2024-09-04T160000.000Z) (MONDO:0008827; AR; Definitive).
 - [x] **CCND2** — HGNC:1583; [megalencephaly-polymicrogyria-polydactyly-hydrocephalus syndrome 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8657a0bf-65fa-4413-b4e8-e64193c2731e-2025-05-27T170000.000Z) (MONDO:0014408; AD; Definitive).
-- [ ] **CCNO** — HGNC:18576; [primary ciliary dyskinesia 29](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_20a78ac7-91a7-44a6-b42e-22611de2d170-2022-08-19T160000.000Z) (MONDO:0014378; AR; Definitive).
-- [ ] **CD19** — HGNC:1633; [immunodeficiency, common variable, 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6576337-703e-4d76-9120-5f6800730774-2022-05-24T160000.000Z) (MONDO:0013283; AR; Definitive).
-- [ ] **CD247** — HGNC:1677; [immunodeficiency 25](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_438b6c1f-edc0-4a81-9c82-39627e5a69cd-2022-03-11T140552.812Z) (MONDO:0012426; AR; Definitive).
-- [ ] **CD27** — HGNC:11922; [lymphoproliferative syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3798694e-9bdd-4ddd-b782-166b06dab9d8-2025-12-09T170000.000Z) (MONDO:0014054; AR; Definitive).
-- [ ] **CD2AP** — HGNC:14258; [focal segmental glomerulosclerosis 3, susceptibility to](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e4bd2904-da48-4a7d-875e-bc90d56f59da-2024-04-08T160000.000Z) (MONDO:0011917; AR; Definitive); [inherited focal segmental glomerulosclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cae2640-258f-4ba1-8510-2b4db97cf36c-2024-06-28T160000.000Z) (MONDO:0005363; AD; Moderate).
-- [ ] **CD320** — HGNC:16692; [methylmalonic acidemia due to transcobalamin receptor defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d98515f5-4296-4d41-95a9-adac90c00349-2022-09-23T160000.000Z) (MONDO:0013341; AR; Definitive).
-- [ ] **CD3D** — HGNC:1673; [immunodeficiency 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d59cf46-9acb-42f7-92da-d17113d39b38-2022-05-10T185446.511Z) (MONDO:0014280; AR; Definitive).
-- [ ] **CD3E** — HGNC:1674; [immunodeficiency 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_29d6bb32-65b3-4c78-9c94-da71cc591565-2021-01-26T172908.775Z) (MONDO:0014278; AR; Definitive).
-- [ ] **CD3G** — HGNC:1675; [combined immunodeficiency due to CD3gamma deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ea83aa7-473b-4670-88dd-36b1abe277f8-2021-07-15T160000.000Z) (MONDO:0014276; AR; Definitive).
-- [ ] **CD40** — HGNC:11919; [hyper-IgM syndrome type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_debbb2e7-89a7-45b8-b5e1-41ccb56a3423-2022-10-18T160000.000Z) (MONDO:0011735; AR; Definitive).
-- [ ] **CD40LG** — HGNC:11935; [hyper-IgM syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4184ad10-d95f-4027-b75d-e4e11127febf-2021-03-22T154242.503Z) (MONDO:0010626; XL; Definitive).
-- [ ] **CD46** — HGNC:6953; [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bddaec4f-9f57-41b7-81a4-2f6ff3fc5e7b-2024-06-27T160000.000Z) (MONDO:0016244; SD; Definitive).
-- [ ] **CD70** — HGNC:11937; [severe combined immunodeficiency due to CD70 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_69aa819c-1f25-42fe-8469-4641fc088a57-2025-02-05T170000.000Z) (MONDO:0034054; AR; Definitive).
-- [ ] **CD79A** — HGNC:1698; [agammaglobulinemia 3, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12a6257c-c9ca-432a-ab76-b05985283381-2020-12-15T135909.057Z) (MONDO:0013288; AR; Definitive).
-- [ ] **CD79B** — HGNC:1699; [agammaglobulinemia 6, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c252b2c-2183-4e7d-8ceb-69f7a01cc1d9-2021-01-26T171006.440Z) (MONDO:0012987; AR; Definitive).
-- [ ] **CDAN1** — HGNC:1713; [anemia, congenital dyserythropoietic, type 1a](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c9465f7d-4fc8-49b6-aa2c-4b92eb5f8c32-2025-01-07T170000.000Z) (MONDO:0009135; AR; Definitive).
+- [x] **CCNO** — HGNC:18576; [primary ciliary dyskinesia 29](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_20a78ac7-91a7-44a6-b42e-22611de2d170-2022-08-19T160000.000Z) (MONDO:0014378; AR; Definitive).
+- [x] **CD19** — HGNC:1633; [immunodeficiency, common variable, 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a6576337-703e-4d76-9120-5f6800730774-2022-05-24T160000.000Z) (MONDO:0013283; AR; Definitive).
+- [x] **CD247** — HGNC:1677; [immunodeficiency 25](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_438b6c1f-edc0-4a81-9c82-39627e5a69cd-2022-03-11T140552.812Z) (MONDO:0012426; AR; Definitive).
+- [x] **CD27** — HGNC:11922; [lymphoproliferative syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3798694e-9bdd-4ddd-b782-166b06dab9d8-2025-12-09T170000.000Z) (MONDO:0014054; AR; Definitive).
+- [x] **CD2AP** — HGNC:14258; [focal segmental glomerulosclerosis 3, susceptibility to](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e4bd2904-da48-4a7d-875e-bc90d56f59da-2024-04-08T160000.000Z) (MONDO:0011917; AR; Definitive); [inherited focal segmental glomerulosclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2cae2640-258f-4ba1-8510-2b4db97cf36c-2024-06-28T160000.000Z) (MONDO:0005363; AD; Moderate).
+- [x] **CD320** — HGNC:16692; [methylmalonic acidemia due to transcobalamin receptor defect](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_d98515f5-4296-4d41-95a9-adac90c00349-2022-09-23T160000.000Z) (MONDO:0013341; AR; Definitive).
+- [x] **CD3D** — HGNC:1673; [immunodeficiency 19](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3d59cf46-9acb-42f7-92da-d17113d39b38-2022-05-10T185446.511Z) (MONDO:0014280; AR; Definitive).
+- [x] **CD3E** — HGNC:1674; [immunodeficiency 18](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_29d6bb32-65b3-4c78-9c94-da71cc591565-2021-01-26T172908.775Z) (MONDO:0014278; AR; Definitive).
+- [x] **CD3G** — HGNC:1675; [combined immunodeficiency due to CD3gamma deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_8ea83aa7-473b-4670-88dd-36b1abe277f8-2021-07-15T160000.000Z) (MONDO:0014276; AR; Definitive).
+- [x] **CD40** — HGNC:11919; [hyper-IgM syndrome type 3](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_debbb2e7-89a7-45b8-b5e1-41ccb56a3423-2022-10-18T160000.000Z) (MONDO:0011735; AR; Definitive).
+- [x] **CD40LG** — HGNC:11935; [hyper-IgM syndrome type 1](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_4184ad10-d95f-4027-b75d-e4e11127febf-2021-03-22T154242.503Z) (MONDO:0010626; XL; Definitive).
+- [x] **CD46** — HGNC:6953; [atypical hemolytic-uremic syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bddaec4f-9f57-41b7-81a4-2f6ff3fc5e7b-2024-06-27T160000.000Z) (MONDO:0016244; SD; Definitive).
+- [x] **CD70** — HGNC:11937; [severe combined immunodeficiency due to CD70 deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_69aa819c-1f25-42fe-8469-4641fc088a57-2025-02-05T170000.000Z) (MONDO:0034054; AR; Definitive).
+- [x] **CD79A** — HGNC:1698; [agammaglobulinemia 3, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12a6257c-c9ca-432a-ab76-b05985283381-2020-12-15T135909.057Z) (MONDO:0013288; AR; Definitive).
+- [x] **CD79B** — HGNC:1699; [agammaglobulinemia 6, autosomal recessive](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9c252b2c-2183-4e7d-8ceb-69f7a01cc1d9-2021-01-26T171006.440Z) (MONDO:0012987; AR; Definitive).
+- [x] **CDAN1** — HGNC:1713; [anemia, congenital dyserythropoietic, type 1a](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c9465f7d-4fc8-49b6-aa2c-4b92eb5f8c32-2025-01-07T170000.000Z) (MONDO:0009135; AR; Definitive).
 - [ ] **CDC14A** — HGNC:1718; [hearing impairment and infertile male syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_144089d2-83ec-4c6c-8b43-9a4cae801d51-2023-06-01T160000.000Z) (MONDO:0100069; AR; Strong); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e869e4b1-30e2-4d9b-9b69-124903d7b307-2025-02-25T170000.000Z) (MONDO:0019497; AR; Definitive).
 - [ ] **CDC42** — HGNC:1736; [macrothrombocytopenia-lymphedema-developmental delay-facial dysmorphism-camptodactyly syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_95177a3a-0dca-4945-8a44-f63697739cef-2021-10-27T162623.932Z) (MONDO:0014757; AD; Definitive).
 - [ ] **CDC45** — HGNC:1739; [Meier-Gorlin syndrome 7](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ab0dc4e6-06ae-4f78-8393-05ac2bbb563f-2023-05-30T160000.000Z) (MONDO:0014894; AR; Definitive).
@@ -5529,7 +5540,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [ ] **ARHGEF10** — HGNC:14103; [autosomal dominant slowed nerve conduction velocity](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b23121f9-57e1-48ac-a2bc-d5a293829530-2026-08-08T160000.000Z) (MONDO:0011998; AD; Limited).
 - [ ] **ARHGEF28** — HGNC:30322; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ac27cecc-9749-4c69-88fa-fe83b2d49568-2024-03-28T190000.000Z) (MONDO:0004976; SD; Limited).
 - [ ] **ARPP21** — HGNC:16968; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_02d4089a-94dd-42b6-ab09-dc258db00ae9-2025-01-14T200000.000Z) (MONDO:0004976; AD; Limited).
-- [ ] **ASB10** — HGNC:17185; [obsolete glaucoma 1, open angle, F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ac9aa333-15d1-404d-85e1-a3d6e759dc0b-2023-03-16T160000.000Z) (MONDO:0011311; AD; Limited).
+- [x] **ASB10** — HGNC:17185; [obsolete glaucoma 1, open angle, F](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ac9aa333-15d1-404d-85e1-a3d6e759dc0b-2023-03-16T160000.000Z) (MONDO:0011311; AD; Limited).
 - [ ] **ASPNAT** — HGNC:26742 (ClinGen source symbol: NAT8L); [N-acetylaspartate deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_854ce0ef-7744-483d-87c7-b2dc436f9f0f-2024-03-29T160000.000Z) (MONDO:0013549; AR; Limited).
 - [ ] **ATG5** — HGNC:589; [spinocerebellar ataxia, autosomal recessive 25](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b47796b8-3811-4411-b0f0-5b703755f08b-2025-10-24T160000.000Z) (MONDO:0033115; AR; Limited).
 - [ ] **ATP5F1D** — HGNC:837; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_7f8e9f50-7300-47b4-9b75-9c6c525babcf-2026-02-09T050000.000Z) (MONDO:0044970; AR; Limited).
