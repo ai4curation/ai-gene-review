@@ -32,3 +32,5 @@ The nucleus (GO:0005634, IEA GO_REF:0000044) REMOVE reason previously claimed th
 ### Follow-up after third-round PR review (2026-10-09)
 
 Removed ancestor/descendant redundancy in core_functions: monoatomic cation homeostasis (GO:0055080) dropped from the Mg2+-transporter core function because magnesium ion homeostasis (GO:0010960) is its descendant (QuickGO is_a ancestors checked); calcium ion transmembrane transport (GO:0070588) moved from the Mg2+-transporter core function to the calcium-channel core function, where it replaces its own ancestors calcium ion transport (GO:0006816) and monoatomic cation transmembrane transport (GO:0098655). The GO:0005886 IDA row's bare reason was rewritten around the patch-clamp evidence in PMID:27628598. No annotation actions changed.
+
+The reasons of the three parent rows dropped from core_functions (GO:0006816, GO:0098655, GO:0055080) now say they are retained as true parents whose core claim is carried by the specific descendant, so the prose matches the core_functions tree.
