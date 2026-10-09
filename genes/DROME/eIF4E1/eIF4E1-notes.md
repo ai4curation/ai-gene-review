@@ -2,9 +2,10 @@
 
 Module context: dmel_eif4e_cup_complex (eIF4E1 bound by Cup).
 
-Deep research: the first falcon run (with perplexity-lite fallback) failed (falcon
-timeout / killed; perplexity provider unavailable). Literature below is from cached
-publications.
+Deep research: the first falcon run reported failure, but `eIF4E1-deep-research-falcon.md`
+was written afterwards (the falcon job completed late). It agrees with this review: the
+main functional compartment is the cytoplasm, with P-body localization; it reports no fly
+evidence for a nuclear role. Literature below is from cached publications.
 
 ## Molecular function
 - Cap binding: [PMID:8663200 "Eukaryotic initiation factor 4E (eIF4E) is the subunit of eIF4F that binds to the cap structure at the 5' end of messenger RNA"]; [PMID:8027064 "Only the eIF-4E subunit was able to cross-link to the m7G cap structure"]

@@ -2,10 +2,13 @@
 
 Module context: dmel_diphthamide_dph1_dph2_complex (Dph1 with Dph2).
 
-Deep research: the first falcon run (perplexity-lite fallback) failed (falcon killed /
-timed out; perplexity provider unavailable). There is no Drosophila-specific
-experimental literature on Dph1 in the cached publications; annotations rest on
-orthology (yeast/mouse/human DPH1-DPH2) and on Drosophila interactome screens.
+Deep research: `Dph1-deep-research-falcon.md` (falcon) completed after the review was
+drafted. It reports fly RNAi phenotypes not represented in GOA: Dph1 knockdown impairs
+damage-induced intestinal stem cell division (Obata et al. 2018, Dev Cell) and
+nephrocyte filtration (Cina et al. 2019, Am J Physiol Renal). These are downstream
+phenotypes of eEF2 diphthamide loss and were not used to propose NEW process terms.
+Otherwise the GOA annotations rest on orthology (yeast/mouse/human DPH1-DPH2) and on
+Drosophila interactome screens.
 
 - Drosophila interactome evidence for the Dph1-Dph2 pair: [PMID:37061542 "We apply state-of-the-art methods to identify binary protein-protein interactions (PPIs) for Drosophila melanogaster"]; also DPIM (PMID:14605208) and DPIM2 (PMID:38944040).
 - Human heterodimer model: [PMID:30877278 "We have built a homology model of the human DPH1-DPH2 heterodimer"]
