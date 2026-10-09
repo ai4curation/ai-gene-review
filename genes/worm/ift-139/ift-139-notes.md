@@ -16,3 +16,7 @@
 - 9 GOA rows: 8 ACCEPT, 1 KEEP_AS_NON_CORE (dendrite IEA).
 - 1 NEW row: ciliary basal body (IDA, PMID:27515926). UniProt records this location but GOA does not.
 - Core MF is GO:0005198 structural molecule activity, matching the che-11, daf-10 and dyf-2 reviews.
+
+## 2026-10-09: MF dropped
+
+- Removed GO:0005198 structural molecule activity from the IFT-A core function. It was a generic placeholder with no evidence for a specific structural activity; the IFT-A role is captured by in_complex GO:0030991 and the retrograde transport process.
