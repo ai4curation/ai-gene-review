@@ -12,4 +12,7 @@ of dFRC"].
 - Decisions: UDP-GlcA and UDP-GlcNAc transport are core; conflicting UDP-Gal/UDP-Glc rows UNDECIDED; UDP-xylose and
   IBA UDP-GalNAc kept as non-core; antiporter kept as non-core (consistent with Gfr); developmental phenotypes non-core.
 
-- Deep research: the first `just deep-research-falcon` attempt timed out (600 s; perplexity-lite fallback unavailable). Review based on cached publications and UniProt.
+- Falcon deep research (frc-deep-research-falcon.md): Goto et al. used yeast microsomes and saw UDP-GalNAc, UDP-GlcA, UDP-Gal,
+  UDP-Glc and UDP-GlcNAc transport; Selva et al. used Leishmania vesicles and saw UDP-GlcNAc, UDP-GlcA and UDP-Xyl but not
+  UDP-Glc/UDP-Gal. The conflict is assay-system dependent, so the UNDECIDED calls stand; the UDP-GalNAc IBA is supported by
+  the Goto data. About 30% of maternal/zygotic frc embryos are neurogenic, beyond Fringe-dependent effects.
