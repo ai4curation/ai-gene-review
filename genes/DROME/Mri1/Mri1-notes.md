@@ -7,3 +7,8 @@
 - Module-wide convention (methionine salvage): GO:0033353 "L-methionine cycle" (SAM cycle definition;
   GO's replacement for obsolete GO:0019509) MODIFY -> GO:0071267 L-methionine salvage; cytoplasm ->
   cytosol (IC present); nucleus kept non-core; metal cofactor terms kept non-core.
+- Falcon deep research (Mri1-deep-research-falcon.md, arrived after initial commit): confirms no fly
+  enzymology or mutant phenotype; activity rests on yeast/bacterial orthologs (yeast mri1 deletion
+  impairs MTA-supported growth). Notes a 2026 report that Mri1 becomes sarkosyl-insoluble in fly heads
+  after Funes overexpression (not a direct effect in vitro). eIF2B-like fold does not imply translation
+  function. No annotation changes.
