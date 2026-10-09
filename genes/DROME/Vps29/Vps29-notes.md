@@ -8,4 +8,4 @@ Retromer (and by homology retriever) subunit.
 - Baculovirus entry RNAi screen hit (PMID:30445201, abstract only).
 
 Decisions: generic locations and membrane protein complex -> MODIFY to endosome / cargo-selective complex; synaptic phenotypes non-core.
-Deep research: falcon failed/timed out; notes from cached publications.
+Deep research: falcon completed (Vps29-deep-research-falcon.md) after the initial review; consistent with the review (non-catalytic regulatory retromer subunit; no established phosphatase or retriever role in flies) and adds fat-body localization [file:DROME/Vps29/Vps29-deep-research-falcon.md "In larval fat body, mCherry-Vps29 forms Vps35-dependent puncta, associates most strongly with Rab4/Rab5 early-endosomal markers"]. No annotation actions changed.
