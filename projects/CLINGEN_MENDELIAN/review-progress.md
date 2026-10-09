@@ -66,6 +66,53 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 276 — 2026-10-09 23:33:32 UTC
+
+**276 complete / 2,600 remaining in the frozen 2,876-gene catalog.** This adds
+CDC45 and closes the AKR1D1 source hold beyond [published checkpoint 274](https://github.com/ai4curation/ai-gene-review/pull/4472).
+The fixed [main snapshot 5c3a43a48ef7](https://github.com/ai4curation/ai-gene-review/commit/5c3a43a48ef70fac4f5438c17cd2989515e50865)
+contains both contributing merges and the preceding tracker merge. Completion
+evidence stops at the AKR1D1 follow-up merge at the stated cutoff.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CDC45 | [#4470](https://github.com/ai4curation/ai-gene-review/pull/4470) | [6026f164dc69](https://github.com/ai4curation/ai-gene-review/commit/6026f164dc6914ea2c36d6a37412d75c52705e15) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4470#pullrequestreview-5474402152) | 2026-10-09T19:39:58Z | [64e6a5204644](https://github.com/ai4curation/ai-gene-review/commit/64e6a5204644adbf05385bffc595a5e696ec1a4b) |
+| AKR1D1 | [#4465](https://github.com/ai4curation/ai-gene-review/pull/4465) | [5239e0fca43d](https://github.com/ai4curation/ai-gene-review/commit/5239e0fca43d641210daa8b2fd10fdab2e9757ca) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4465#pullrequestreview-5475471749) | 2026-10-09T23:33:32Z | [5c3a43a48ef7](https://github.com/ai4curation/ai-gene-review/commit/5c3a43a48ef70fac4f5438c17cd2989515e50865) |
+
+Each approval belongs to the listed final head. The test (3.12) and claude-review
+checks completed successfully on that same commit before its actual merge time,
+verified using their check-suite commit IDs. All 35 changed PR paths have the
+same Git blob at the approved head and merge commit. All nine changed gene
+artifacts also match the fixed cutoff snapshot. These checks preserve the
+result of the accepted scientific reviews rather than reopening them.
+
+**The last hold closes without double-counting:** AKR1D1 was already among
+the 275 original reviewed genes at checkpoint 274. Its [original review #3266](https://github.com/ai4curation/ai-gene-review/pull/3266)
+and [prior follow-up #3941](https://github.com/ai4curation/ai-gene-review/pull/3941)
+had merged while the Reactome:R-HSA-193755 source gate remained open. The
+accepted archived-source recovery and supporting-evidence corrections now
+merged in [#4465](https://github.com/ai4curation/ai-gene-review/pull/4465)
+close that gate. This adds one completion and no second original-gene merge.
+
+CDC45 adds one new original reviewed gene to the prior 275, giving **276**.
+The AKR1D1 closure reduces the holds from one to zero, giving **276 complete**.
+Only the CDC45 and AKR1D1 primary checkboxes change. Supplementary genes and
+repeat reviews add no further completion. Biological DRAFT status and justified
+UNDECIDED annotations remain independent of campaign closure.
+
+Fresh remote evidence was read at 2026-10-09T23:38:49.211263+00:00. Merge times determine inclusion,
+not the later observation time. Tracker #4472 merged at 2026-10-09T23:31:07Z
+and supplies the published 274 baseline; its own earlier evidence cutoff
+excluded CDC45. Later merges and open work are outside this checkpoint. The
+first unchecked gene in literal catalog order remains ACBD5.
+
+The project status, queue status and latest completion timestamp use this
+checkpoint. All 235 historical queue entries, 37 prior completion updates and
+earlier dated progress sections are preserved. Their older states and counts
+remain dated observations, superseded for current totals by this section.
+
+[Checkpoint 276 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-09T235057Z-codex-dd0cc6.yaml).
+
 ## Completion checkpoint 274 — 2026-10-09 18:49:44 UTC
 
 [Session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-09T190426Z-codex-a50c7e.yaml).
