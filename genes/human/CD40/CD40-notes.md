@@ -78,3 +78,12 @@ The original authors' released U2OS AP-MS network contains CD40/SLC7A1 edge 6193
 ### Additional platelet evidence found during the adjacent CD40LG review
 
 Independent [PMID:12676820](https://pubmed.ncbi.nlm.nih.gov/12676820/) supports conditional platelet activation by receptor ligation. Its complete abstract was checked and cached normally; publisher full text was inaccessible. The platelet row now retains this function as non-core, while the older source mapping remains unverified. The final counts are 26 ACCEPT, 46 KEEP_AS_NON_CORE, 16 MODIFY and four UNDECIDED, with 49 references. This bounded update supersedes the earlier five-uncertainty count; all 92 original source assertions, products and core functions are unchanged.
+
+
+### Review follow-up: calcium evidence and TRAF docking
+
+The electronic calcium-homeostasis row is refined to positive regulation of cytosolic calcium ion concentration using independent human U87/HMC-1 evidence [PMID:21410936]. This agrees with the experimental row while preserving the electronic source and donor identifiers. The ARBA rule and mouse donor chain remain unverified; the refinement neither treats those sources as independently validated nor excludes homeostasis in other contexts.
+
+TRAF ubiquitin-ligase docking is now represented as a second core molecular activity within the same receptor signaling unit. Human CD40-tail structures with TRAF2 and TRAF6, tail mapping and ligand-associated recruitment support this facet [PMID:10518213; PMID:12140561; PMID:8910514; PMID:10748139]. CD40 performs docking; the recruited enzymes perform ubiquitin transfer. The existing TRAF2 binding row is ACCEPT, whereas the separate TRIM37 domain-association row remains non-core because comparable physiological-complex evidence was not established. The compact core synthesis selects informative processes without redundantly enumerating every supported parent process from the source annotations.
+
+All 92 original source assertions, both products and all 49 references are preserved. Final decisions are 27 ACCEPT, 45 KEEP_AS_NON_CORE, 17 MODIFY and three UNDECIDED, with two core molecular activities. No new annotation or source quotation is added.
