@@ -21,3 +21,9 @@ Deep research: `Lst8-deep-research-falcon.md` (falcon; the wrapper reported a 60
   signaling NAS removed as contradicted; NOT TORC1 complex (IMP) UNDECIDED because a mutant phenotype
   cannot establish absence from the complex and conflicts with the IDA row.
 - protein binding: TOR partner -> protein kinase binding; GOLPH3 partner removed.
+
+## Review-bot follow-up (PR #4478)
+
+- The TOR-binding protein binding row now MODIFYs to GO:0043539 (as in the Sin1 review), so the core MF is
+  grounded in an annotation row. The molecular_function slot is kept (not contributes_to) for consistency
+  with the Sin1 and rictor core functions, which use the same slot for kinase activator activity.
