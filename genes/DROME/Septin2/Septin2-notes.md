@@ -8,3 +8,7 @@ SEPT6-class septin; subunit of Sep1-Sep2-Pnut complex; Sep5 is its retrogene par
   -> 'regulation of cell cycle' IGI marked over-annotated (proliferation defect best explained by cytokinesis).
 - Wound repair [PMID:38728140 "Sep1 knockdown and Sep2 mutant embryos exhibit delayed wound closure, reduced recruitment of actin to the actomyosin ring, and premature actomyosin ring disassembly"]
 - UniProt spindle location is by similarity only [file:DROME/Septin2/Septin2-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm. Cytoplasm, cytoskeleton, spindle"] -> marked over-annotated.
+
+## Deep research (falcon) follow-up
+
+The falcon report independently concludes that Sep2 is a structural, GTP-bound subunit without detectable intrinsic GTPase activity (Akhmetova 2015; Field 1996), supporting the REMOVE/over-annotated decisions on GTPase rows and the accepted NOT annotation. It also cites Sep2-GFP stability at spermatocyte cleavage furrows and anillin dependence (Goldbach et al. 2010), not in GOA or the cache; no annotations were added.
