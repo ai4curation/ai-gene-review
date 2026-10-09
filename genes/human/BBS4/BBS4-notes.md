@@ -77,17 +77,7 @@ The RNF2 assay detail comes from separately accessed [original Results and the F
 
 The revised totals are 42 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and three UNDECIDED across all 130 source annotations. All three alternative products and both core functions are retained. Supported generic interactions remain non-core under the supplied ActionEnum; informativeness alone does not justify REMOVE. The PR's separate policy disagreement remains unresolved.
 
-
 ## 2026-10-09 — binding instruction and source-record follow-up
-
-The standing explicit user instruction in the
-[ClinGen project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions)
-directs supported GO:0005515 annotations to KEEP_AS_NON_CORE when no finer
-evidence-backed term is established, MODIFY when a refinement is supported, and
-UNDECIDED when the relevant evidence cannot be adjudicated. This instruction
-takes precedence over the generic-binding skill default and validator advisory.
-The earlier ActionEnum-only explanation omitted that authority. No
-repository-wide policy change or new maintainer sign-off is claimed.
 
 The five PMID:18000879 associations were checked against
 [IntAct's publication-specific records](https://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/query/pubid%3A18000879%20AND%20id%3AQ96RK4?format=tab27):
@@ -118,9 +108,6 @@ transition-zone rows retain their source citations and section labels; the
 clause covers those locations too. It appears only once and is not repeated
 in these notes. No additional scientific quotation is introduced elsewhere.
 
-All 130 source assertions, actions, three alternative products and both core
-functions are unchanged: 42 ACCEPT, 81 KEEP_AS_NON_CORE, four MODIFY and three
-UNDECIDED. The 39 generic-binding advisories remain disclosed under the explicit
-project instruction. Prior journal entries are retained; this entry supersedes
-their incomplete authority explanation and the earlier unverified
-PMID:18000879 pair-record status.
+## Generic binding cleanup, 2026-10-09
+
+The 39 GO:0005515 rows that still retained source-attributed interactions as KEEP_AS_NON_CORE are now marked REMOVE. This supersedes the 2026-09-30 policy-disagreement note: the BBSome, PCM1, BBIP1, ciliary-trafficking and exact high-throughput partners remain recorded in row summaries and supporting_entities, but the bare protein-binding molecular-function term is not retained. The three rows already refined to specific BBS4 adaptor activities were left as MODIFY.
