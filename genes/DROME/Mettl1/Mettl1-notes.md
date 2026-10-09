@@ -22,3 +22,6 @@
 - Nucleus: kept as non-core (orthology-only; no fly localization data).
 - Spermatogenesis phenotype not proposed as NEW: the defect is a downstream consequence of
   reduced tRNA abundance and translation in testis.
+
+## Deep research (falcon)
+- Summarizes Kaneko et al. 2024; catalytic-site mutant: [file:DROME/Mettl1/Mettl1-deep-research-falcon.md "Substituting L157 and D160 in Mettl1 abolished the assayed activity."]

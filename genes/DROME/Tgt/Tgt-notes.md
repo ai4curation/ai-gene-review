@@ -17,3 +17,6 @@
 ## Decisions
 - Accept transglycosylase activity, wobble guanine modification, cytoplasm, TGT complex.
 - tRNA modification (InterPro): non-core parent.
+
+## Deep research (falcon)
+- Fly studies (Zaborske et al. 2014; Guo et al. 2025) show Q-tRNA exists and is nutrient/developmentally regulated in Drosophila, but do not test Tgt itself: [file:DROME/Tgt/Tgt-deep-research-falcon.md "human and mouse studies establish the detailed chemistry of the corresponding catalytic enzyme"].

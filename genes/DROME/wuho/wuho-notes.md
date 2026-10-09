@@ -24,3 +24,6 @@
 - Spermatogenesis/oogenesis IMP: kept as non-core (phenotypes; spermatogenesis defect phenocopies Mettl1-KO).
 - Protein binding IPI rows: removed as uninformative (interaction itself is real; captured by complex).
 - Localizations (nucleus, germ-cell nuclei, cytoplasm, cytosol): accepted/kept per curator IDA/EXP.
+
+## Deep research (falcon)
+- Confirms Wh is the non-catalytic WD40 partner: [file:DROME/wuho/wuho-deep-research-falcon.md "In vitro tRNA methylation required Wh alongside Mettl1"]

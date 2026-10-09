@@ -27,3 +27,6 @@
   non-core; the eukaryotic protein is mitochondrial.
 - Open question: whether fly mt-tRNAs carry taum5U (taurine) or another C5 substituent;
   the GO MF term on the partner is "tRNA 5-taurinomethyluridine synthase activity".
+
+## Deep research (falcon)
+- No CG18528-specific literature. Notes that fly mt-tRNA Lys carries C34 rather than U34 (Tomita et al. 1999), so the fly substrate set differs from mammals: [file:DROME/CG18528/CG18528-deep-research-falcon.md "is that CG18528 is the fly counterpart of GTPBP3: a GTP-dependent factor in the pathway that modifies the anticodon"].

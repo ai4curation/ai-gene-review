@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-10-09T13:06:07.474811'
-end_time: '2026-10-09T13:21:09.472325'
-duration_seconds: 902.0
+start_time: '2026-10-09T13:17:32.904901'
+end_time: '2026-10-09T13:30:16.328932'
+duration_seconds: 763.42
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: DROME
@@ -26,7 +26,7 @@ provider_config:
     allowed_domains: []
     temperature: 0.1
     max_embedded_images: 8
-citation_count: 43
+citation_count: 36
 artifact_count: 1
 artifact_sources:
   edison_answer_artifacts: 1
@@ -147,82 +147,80 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-# Functional annotation report: *Drosophila melanogaster* CG3434 (UniProt Q9VSZ6)
+# Functional annotation of *Drosophila melanogaster* CG3434 (UniProt Q9VSZ6)
 
-## Identity and strength of the annotation
+## Identity and strength of evidence
 
-**The gene symbol ‘CG3434’ is ambiguous or literature is limited for this specific protein.** The supplied UniProt record identifies Q9VSZ6 as the *D. melanogaster* ORF **CG3434**, annotated “queuine tRNA-ribosyltransferase accessory subunit 2,” alternatively a QTRTD1-family protein. Its supplied TGT-like and queuine tRNA-ribosyltransferase domain assignments are consistent with that annotation and with experimentally studied eukaryotic **QTRT2** proteins. However, the retrieved primary studies did **not** independently identify Q9VSZ6 by accession or directly test CG3434 by purification, mutation, depletion, or localization. Accordingly, the proposed molecular function below is a **domain- and orthology-based inference**, not an experimentally established activity of the fly protein. [UniProt record: https://www.uniprot.org/uniprotkb/Q9VSZ6/entry.] (johannsson2018crystalstructureof pages 1-3, sievers2021structuralandfunctional pages 1-3)
+**The gene symbol ‘CG3434’ is ambiguous or literature is limited for this specific protein.** The identity used here is the one specified in the question: *D. melanogaster* ORF **CG3434**, UniProt **[Q9VSZ6](https://www.uniprot.org/uniprotkb/Q9VSZ6/entry)**, annotated as *queuine tRNA-ribosyltransferase accessory subunit 2* or a QTRTD1-like protein, with QTRTD1 and TGT-like domains. Those domain and family assignments are consistent with the experimentally characterized **QTRT2/QTRTD1 accessory subunit** of eukaryotic tRNA-guanine transglycosylase. However, the literature located did **not independently establish the CG3434–Q9VSZ6 mapping or directly test this fly protein**. Studies of human QTRT2, mouse QTRTD1 and trypanosome TGT2 concern homologous proteins, not CG3434; their results are identified below as inference rather than fly gene-level evidence. (sievers2021structuralandfunctional pages 1-3, kulkarni2021preferentialimportof pages 5-7, guo2025queuosineisincorporated pages 6-7)
 
-## Primary molecular function and reaction
+## Primary biochemical function and substrate specificity
 
-The best-supported annotation is **noncatalytic accessory and tRNA-recognition subunit of eukaryotic tRNA-guanine transglycosylase (TGT)**. In the characterized human and mouse enzymes, catalytic **QTRT1** forms a functional heterodimer with homologous **QTRT2**. QTRT2 has a degenerate catalytic/substrate-binding site; structural and mutational evidence instead implicates it in heterodimer assembly and positioning or binding substrate tRNA. The TGT-family fold in CG3434 therefore does **not** establish that CG3434 alone catalyzes a reaction. (sebastiani2022structuralandbiochemical pages 1-6, johannsson2018crystalstructureof pages 1-3, sievers2021structuralandfunctional pages 1-3, sebastiani2022structuralandbiochemical pages 6-9)
+**Best-supported annotation:** CG3434 is a *predicted noncatalytic, tRNA-binding accessory component* of the eukaryotic queuine-inserting transglycosylase complex. The **complex**, rather than the isolated accessory subunit, exchanges guanine at anticodon wobble position **G34** for environmentally acquired **queuine**: G34-containing tRNA + queuine → queuosine-containing tRNA + guanine. Its established eukaryotic tRNA substrate classes decode **aspartate, asparagine, histidine and tyrosine**. Queuine is the inserted *base*; queuosine (Q) is the resulting modified *nucleoside* in tRNA. This is not the bacterial TGT reaction that inserts the precursor preQ₁. Assignment of these substrate classes and this reaction to a CG3434-containing *fly complex* is an inference, not a purified-CG3434 assay. (sievers2021structuralandfunctional pages 1-3, sievers2021structuralandfunctional pages 3-4, fergus2015thequeuinemicronutrient pages 9-12)
 
-**Reaction catalyzed by the proposed complex, rather than by QTRT2 alone:**
+The division of labor is experimentally clearer in humans. An RNA-bound human QTRT1–QTRT2 crystal structure places tRNA G34 in the **QTRT1 catalytic site**, where QTRT1 Asp279 forms a covalent reaction intermediate. Human QTRT2 has a degenerate catalytic site; crosslinking and mutagenesis instead implicate its βEβF sheet as an additional RNA-binding surface, particularly relevant to full-length tRNA recognition. Thus, the TGT-like fold in CG3434 does **not** establish that CG3434 independently catalyzes base exchange. Earlier eukaryotic biochemical work, summarized in an authoritative review, found activity upon combining QTRT1 and QTRTD1 rather than from either isolated subunit. Whether the fly proteins have identical interaction requirements remains untested. (sievers2021structuralandfunctional pages 3-4, sievers2021structuralandfunctional pages 10-11, fergus2015thequeuinemicronutrient pages 9-12, sievers2021structuralandfunctional pages 6-8)
 
-> G34-containing tRNA + free queuine → queuosine-containing tRNA (Q34-tRNA) + free guanine.
+## Evidence that the pathway operates in flies
 
-QTRT1 carries out the base-exchange chemistry at anticodon wobble **position 34**. In human biochemical experiments, the covalent tRNA–enzyme intermediate is linked to **QTRT1 Asp279**, not QTRT2. The physiological eukaryotic base substrate is **queuine**, acquired from dietary or microbial sources; bacteria instead synthesize and insert the precursor **preQ1** as part of their distinct Q-biosynthetic pathway. Human enzyme assays accept several artificial 7-deazaguanine analogues, but that laboratory promiscuity does not establish their physiological use—or identical specificity—in flies. (sebastiani2022structuralandbiochemical pages 1-6, sievers2021structuralandfunctional pages 1-3, fergus2021thehumantrnaguanine pages 8-10, fergus2021thehumantrnaguanine pages 11-11)
+Fly experiments establish the **modification pathway**, though not CG3434’s necessity for it. Zaborske and colleagues directly resolved Q-modified *D. melanogaster* tRNA^Tyr, tRNA^His and tRNA^Asn using boronate-gel electrophoresis and Northern blots. Q abundance was low in third-instar larvae and rose to **roughly half of these tRNAs in adults**. Across drosophilids, adult Q abundance correlated with codon-accuracy selection favoring C-ending over U-ending synonymous codons (**Spearman r = 0.61, p < 0.05**; after centering within codon families, **r = 0.73, p < 0.01**). A developmental comparison within *D. melanogaster* gave **r = 0.61, p < 0.02**. These are Q-tRNA measurements and evolutionary associations—not CG3434 perturbations or direct measurements of its enzyme activity. Zaborske *et al.*, *PLoS Biology*, **9 December 2014**, [doi:10.1371/journal.pbio.1002015](https://doi.org/10.1371/journal.pbio.1002015). (zaborske2014anutrientdriventrna pages 1-2, zaborske2014anutrientdriventrna pages 3-5, zaborske2014anutrientdriventrna pages 5-7)
 
-The principal RNA substrates established for eukaryotic TGT are **tRNA^Asp, tRNA^Asn, tRNA^His, and tRNA^Tyr**, whose GUN anticodons decode synonymous **NAU/NAC** codons. Human capture experiments showed strong RNA-class selectivity despite base-substrate flexibility: GUN tRNAs accounted for **>99%** of mapped captured reads from the tested human cell line, **>96%** from neonatal mouse liver, and **>92%** from mouse splenocytes. These are assay-specific proportions, **not** measured substrate fractions for CG3434. Human structural work identified a QTRT2 **βEβF-sheet RNA-binding surface**; a tested QTRT2 R121E variant weakened tRNA binding and reduced complex activity to **60%** of wild type. Residue numbers must not be transferred to unaligned fly CG3434. (fergus2021thehumantrnaguanine pages 8-10, sievers2021structuralandfunctional pages 10-11)
+A newer primary study refines the likely **RNA substrate stage**. Guo and colleagues detected Q on multiple **intron-containing pre-tRNA^Tyr isodecoders** in *D. melanogaster* S2 cells; they also confirmed modification of pre-tRNA^Tyr 1-4 in adult flies. Their structural experiments with mouse QTRT1/2 showed that pre-tRNA^Tyr can bind the enzyme, supporting Q insertion **before tRNA splicing**, rather than exclusively after maturation. Neither the fly precursor-tRNA measurements nor the mouse structural experiment identifies CG3434 as the responsible fly subunit. Guo *et al.*, *Nature Communications*, **July 2025**, [doi:10.1038/s41467-025-62220-z](https://doi.org/10.1038/s41467-025-62220-z). (guo2025queuosineisincorporated pages 5-6, guo2025queuosineisincorporated pages 6-7)
 
-## Biological process and evidence in flies
-
-CG3434 is consequently a **candidate component of the queuine-salvage → tRNA queuosinylation → codon-dependent translation pathway**. The modification changes how the four tRNA classes decode synonymous codons; it should not be described as a signaling receptor or as a stand-alone queuine-synthesizing enzyme. In *D. melanogaster*, direct APB-gel/Northern measurements found relatively little Q modification in third-instar larvae and approximately **half** of the measured tRNA^His, tRNA^Tyr, and tRNA^Asn modified in adults. Across sampled drosophilids, adult modification correlated with a codon-selection measure favoring C-ending over U-ending codons (**Spearman r = 0.61, p < 0.05**); the corresponding larval correlation was **r = 0.05, p = 0.86**. Those data establish fly Q-tRNA dynamics and an association with codon usage, **not** a phenotype caused specifically by CG3434. [Zaborske *et al.*, *PLOS Biology*, **9 December 2014**: https://doi.org/10.1371/journal.pbio.1002015.] (zaborske2014anutrientdriventrna pages 1-2, zaborske2014anutrientdriventrna pages 3-5)
-
-A more recent fly-specific advance refines **when** the reaction can occur. Guo *et al.* detected Q on several **intron-containing pre-tRNA^Tyr isodecoders** in *D. melanogaster* S2 cells and confirmed modification of pre-tRNA^Tyr 1-4 in adult flies. Thus, Q installation can **precede tRNA^Tyr splicing**. Their mouse biochemical and structural experiments independently showed that the QTRT1/QTRT2 complex can bind and modify intron-bearing pre-tRNA^Tyr. The retrieved fly experiments did **not** identify or perturb CG3434 as the responsible subunit. [Guo *et al.*, *Nature Communications*, **July 2025**: https://doi.org/10.1038/s41467-025-62220-z.] (guo2025queuosineisincorporated pages 6-7, guo2025queuosineisincorporated pages 2-3, guo2025queuosineisincorporated pages 5-6)
-
-The pathway has experimentally useful implementations **outside** CG3434 research: purified human TGT has been used to characterize RNA-substrate capture and incorporation of queuine analogues, and a semisynthetic clickable Q derivative has been incorporated into tRNAs in experimental systems. These demonstrate tractable ways to probe Q-tRNA biology; neither is a validated application of fly CG3434 itself. [Fergus *et al.*, *Nucleic Acids Research*, **May 2021**: https://doi.org/10.1093/nar/gkab289; Bessler *et al.*, *Nucleic Acids Research*, **September 2022**: https://doi.org/10.1093/nar/gkac822.] (fergus2021thehumantrnaguanine pages 8-10, fergus2021thehumantrnaguanine pages 11-11)
-
-## Subcellular site and important limits
-
-**The subcellular localization of CG3434/Q9VSZ6 is not established by the retrieved evidence.** Fly pre-tRNA^Tyr modification identifies a substrate and its maturation stage, **not** whether CG3434 acts in the nucleus, cytosol, or at mitochondria. The frequently cited **outer-mitochondrial-membrane association** pertains to mammalian TGT/QTRTD1 studies and should not be entered as a directly observed fly localization. Human work also describes cytosolic and mitochondria-associated TGT, whereas localization differs in another eukaryotic lineage, *Trypanosoma brucei*; conservation of the molecular reaction is therefore insufficient to assign its compartment in *Drosophila*. [Cirzi *et al.*, *The EMBO Journal*, **23 August 2023**: https://doi.org/10.15252/embj.2022112507.] (fergus2021thehumantrnaguanine pages 10-11, kulkarni2021preferentialimportof pages 5-7, cirzi2023queuosine‐trnapromotessex‐dependent pages 1-2)
-
-**Bottom line:** Annotate CG3434/Q9VSZ6 cautiously as a **predicted QTRT2-like, noncatalytic tRNA-binding accessory subunit** in queuosine-tRNA formation. The **G34-to-Q34 exchange is the QTRT1-containing complex’s activity**, while the precise contribution and cellular location of **fly CG3434** await gene-specific experiments. Fly studies firmly establish the existence, developmental variation, and pre-splicing timing of Q-tRNA modification, but do not by themselves demonstrate that CG3434 produces those observations. (zaborske2014anutrientdriventrna pages 3-5, sievers2021structuralandfunctional pages 1-3, guo2025queuosineisincorporated pages 6-7)
-
-The following evidence map keeps the species-specific observations distinct from the CG3434 inference. (zaborske2014anutrientdriventrna pages 3-5, sievers2021structuralandfunctional pages 1-3, guo2025queuosineisincorporated pages 6-7, cirzi2023queuosine‐trnapromotessex‐dependent pages 1-2)
-
-| Annotation or claim | Evidence/source (DOI; species) | Evidence type and limitations | Inference confidence for CG3434/Q9VSZ6 |
-|---|---|---|---|
-| **CG3434/Q9VSZ6 is a queuine tRNA-ribosyltransferase accessory subunit 2 (QTRT2/QTRTD1-family protein) with a TGT-like domain.** | User-provided UniProt annotation; *Drosophila melanogaster* | Database/domain-based annotation only. The literature retrieved did not independently identify or experimentally characterize Q9VSZ6/CG3434. | **Moderate–high for orthology; low for experimentally demonstrated fly function** |
-| **QTRT2 is the noncatalytic, RNA-binding partner of catalytic QTRT1 in the eukaryotic TGT heterodimer.** | Sievers et al., 2021, DOI: [10.1080/15476286.2021.1950980](https://doi.org/10.1080/15476286.2021.1950980), human; Sebastiani et al., 2022, DOI: [10.1021/acschembio.2c00368](https://doi.org/10.1021/acschembio.2c00368), mouse (sievers2021structuralandfunctional pages 10-11, sebastiani2022structuralandbiochemical pages 6-9) | Human structures, RNA binding, crosslinking and mutagenesis identify a QTRT2 RNA-binding surface; mouse structural work confirms the functional QTRT1–QTRT2 heterodimer. These are strong mechanistic data but not direct fly experiments. | **High for conserved family function; moderate for CG3434 specifically** |
-| **Queuosine modification is developmentally regulated in flies: low in third-instar larvae and approximately 50% of measured tRNAHis, tRNATyr and tRNAAsn in adults.** | Zaborske et al., 2014, DOI: [10.1371/journal.pbio.1002015](https://doi.org/10.1371/journal.pbio.1002015); *D. melanogaster* and other drosophilids (zaborske2014anutrientdriventrna pages 3-5) | Direct APB-gel/Northern measurements of fly Q-tRNA. Adult modification correlated with codon-selection scores (Spearman *r* = 0.61, *p* < 0.05), but CG3434 was not shown to be genetically perturbed. | **High for the fly Q-tRNA process; low for assigning the phenotype specifically to CG3434** |
-| **Fly intron-containing pre-tRNATyr receives Q before splicing.** | Guo et al., 2025, DOI: [10.1038/s41467-025-62220-z](https://doi.org/10.1038/s41467-025-62220-z); *D. melanogaster* S2 cells and adult flies (guo2025queuosineisincorporated pages 6-7, guo2025queuosineisincorporated pages 2-3) | Direct APB-Northern evidence for several pre-tRNATyr isodecoders in S2 cells and confirmation for pre-tRNATyr 1-4 in adults. The study did not name, knock out or otherwise manipulate CG3434 in the retrieved evidence. | **High for reaction timing in flies; moderate–low for attributing it specifically to CG3434** |
-| **The eukaryotic TGT complex may associate with the outer mitochondrial membrane.** | Cirzi et al., 2023, DOI: [10.15252/embj.2022112507](https://doi.org/10.15252/embj.2022112507); mouse/mammalian interpretation citing 2009 localization work (cirzi2023queuosine‐trnapromotessex‐dependent pages 1-2) | Mammalian localization model, not a localization experiment on CG3434. The 2025 fly precursor-tRNA study establishes substrate timing but not the compartment in which fly Q incorporation occurs. | **Moderate for mammals; unknown/low for CG3434 in flies** |
+| Finding | Species/system | Evidence level | Interpretation for CG3434 (Q9VSZ6) | Key limitation/source |
+|---|---|---|---|---|
+| Q9VSZ6 corresponds to ORF **CG3434** and is annotated as **queuine tRNA-ribosyltransferase accessory subunit 2**, with QTRTD1/TGT-like domains | *Drosophila melanogaster* | Database annotation supplied in the query | Establishes the intended protein identity and supports assignment to the eukaryotic TGT family | Not independently verified in a CG3434-focused paper; exact-identifier literature searches found no direct study |
+| Queuosine was directly resolved in tRNA^Tyr, tRNA^His and tRNA^Asn by APB gel/Northern analysis; modification was low in third-instar larvae and reached roughly half of these tRNAs in adults | *D. melanogaster* | Direct organism-level biochemical evidence | Confirms that the predicted CG3434-associated biochemical pathway operates in flies and varies developmentally | The study measured Q-tRNA, not CG3434 activity or dependence; DOI: [10.1371/journal.pbio.1002015](https://doi.org/10.1371/journal.pbio.1002015) (zaborske2014anutrientdriventrna pages 1-2, zaborske2014anutrientdriventrna pages 3-5) |
+| Adult Q-tRNA abundance correlated with selection favoring NAC over NAU codons across drosophilids (Spearman *r* = 0.61, *p* < 0.05; family-centered *r* = 0.73, *p* < 0.01); developmental Q levels also correlated with codon-selection scores (*r* = 0.61, *p* < 0.02) | *Drosophila* species and *D. melanogaster* development | Direct Q measurement plus comparative/genomic association | Supports a pathway-level role for fly queuosinylation in codon-dependent translational fidelity | Correlation does not demonstrate that CG3434 causes the codon-usage effects (zaborske2014anutrientdriventrna pages 3-5, zaborske2014anutrientdriventrna pages 5-7) |
+| Q was detected on intron-containing pre-tRNA^Tyr isodecoders in S2 cells, and modification of abundant pre-tRNA^Tyr 1-4 was also confirmed in adult flies | *D. melanogaster* S2 cells and adults | Direct biochemical evidence, 2025 | Shows that fly TGT modifies precursor tRNA^Tyr before splicing, placing the pathway in tRNA maturation as well as translation | No CG3434 perturbation or protein localization was reported; DOI: [10.1038/s41467-025-62220-z](https://doi.org/10.1038/s41467-025-62220-z) (guo2025queuosineisincorporated pages 6-7, guo2025queuosineisincorporated pages 1-2) |
+| QTRT2 is catalytically inactive but supplies an additional tRNA-binding surface; its βEβF sheet contributes to full-tRNA recognition, whereas QTRT1 contains the catalytic center | Human recombinant QTRT1–QTRT2 | Direct structural, crosslinking and mutational evidence | Strong homolog-based support that fly CG3434 is an RNA-binding/accessory component rather than the catalytic queuine-transfer subunit | Human result, not experimentally demonstrated for fly CG3434; DOI: [10.1080/15476286.2021.1950980](https://doi.org/10.1080/15476286.2021.1950980) (sievers2021structuralandfunctional pages 1-3, sievers2021structuralandfunctional pages 10-11) |
+| Mammalian QTRT1/QTRTD1 has been reported at or near the mitochondrial membrane, including weak association with the outer mitochondrial surface | Mammalian cultured cells/proteins | Homolog localization evidence | Suggests a possible membrane-associated cytoplasmic location for CG3434 but does not establish it | Localization is species-dependent—*Trypanosoma brucei* TGT subunits are nuclear—and no fly CG3434 localization experiment was found (kulkarni2021preferentialimportof pages 5-7, fergus2015thequeuinemicronutrient pages 12-14) |
+| No CG3434-specific knockout/knockdown phenotype, QTRT1 interaction assay, subcellular-localization experiment, purified-protein catalytic assay or substrate-specificity test was found | *D. melanogaster* CG3434 | Evidence gap | The most defensible annotation is a predicted QTRT2/QTRTD1-like accessory subunit required for queuine incorporation into G34-containing tRNAs | Function remains an evolutionary/domain-based inference supported by fly pathway activity, not direct gene-level validation (stanzl2016evaluatingtherole pages 28-32, sievers2021structuralandfunctional pages 1-3, guo2025queuosineisincorporated pages 6-7) |
 
 
-*Table: Evidence supporting the functional annotation of Drosophila CG3434/Q9VSZ6, separated from findings inferred through mammalian QTRT2 orthologs. No retrieved study directly knocked out or biochemically characterized CG3434 itself.*
+*Table: This table separates direct fly pathway evidence from human or mammalian homolog-based inference. It highlights that CG3434’s accessory-subunit function and cellular localization remain untested at the individual-gene level.*
+
+## Biological process, localization and interpretation
+
+The most specific pathway assignment for CG3434 is **queuine-dependent tRNA maturation and anticodon modification**, with a downstream role in **codon-dependent translation**. Because the modified tRNAs decode synonymous codons differently, changes in Q availability or installation can affect translational fidelity and elongation without implying that CG3434 itself is a signaling enzyme. In flies, queuosinylation changes with developmental stage; the measured codon-selection associations support translational relevance, but do not prove that changing CG3434 expression causes them. (zaborske2014anutrientdriventrna pages 1-2, zaborske2014anutrientdriventrna pages 3-5, zaborske2014anutrientdriventrna pages 5-7)
+
+**CG3434’s subcellular location is not established by the retrieved fly studies.** Mammalian QTRT1/QTRTD1 has been reported associated with mitochondria or the mitochondrial membrane in cultured-cell experiments; that finding concerns a different species and does not place CG3434 on the fly outer mitochondrial membrane or inside mitochondria. Indeed, the two corresponding TGT subunits were reported in the **nucleus** of *Trypanosoma brucei*. The fly precursor-tRNA finding establishes that modification occurs before splicing, **not** where the fly enzyme performs it: pre-tRNA and enzymes can traffic between compartments. Consequently, neither a specifically nuclear nor mitochondrial localization should be asserted for CG3434. (kulkarni2021preferentialimportof pages 5-7, guo2025queuosineisincorporated pages 6-7, fergus2015thequeuinemicronutrient pages 12-14)
+
+Recent work supplies context rather than a fly-gene phenotype. In **2023**, Qtrt1-knockout mice showed codon-dependent ribosome stalling and learning/memory defects, illustrating the potential physiological importance of Q-tRNA; this is neither a QTRT2 nor a CG3434 knockout. A **February 2024 preprint** reported mitochondrial and translational changes after mammalian QTRT1 or QTRT2 knockout, but its species and preprint status preclude assigning those effects to fly CG3434. Cirzi *et al.*, *EMBO Journal*, **August 2023**, [doi:10.15252/embj.2022112507](https://doi.org/10.15252/embj.2022112507); Rashad *et al.*, *bioRxiv*, **February 2024**, [doi:10.1101/2024.02.14.580389](https://doi.org/10.1101/2024.02.14.580389). (cirzi2023queuosine‐trnapromotessex‐dependent pages 1-2, rashad2024translationalresponseto pages 1-4)
+
+**Practical status and conclusion.** Q-tRNA quantification and dietary queuine manipulation are established *research approaches* in flies; the sources reviewed provide no validated clinical or industrial application, CG3434-specific intervention, knockout phenotype, physical interaction with fly QTRT1, purified-protein substrate test, or protein-localization experiment. The defensible functional annotation is therefore **a predicted QTRT2/QTRTD1-like accessory factor supporting guanine-to-queuine exchange on G34 of specific tRNAs, potentially including pre-tRNA^Tyr**, with **fly-specific requirement and cellular site unresolved**. (sievers2021structuralandfunctional pages 1-3, zaborske2014anutrientdriventrna pages 1-2, guo2025queuosineisincorporated pages 6-7, sievers2021structuralandfunctional pages 6-8)
 
 References
 
-1. (johannsson2018crystalstructureof pages 1-3): Sven Johannsson, Piotr Neumann, and Ralf Ficner. Crystal structure of the human trna guanine transglycosylase catalytic subunit qtrt1. Biomolecules, Aug 2018. URL: https://doi.org/10.3390/biom8030081, doi:10.3390/biom8030081. This article has 38 citations.
+1. (sievers2021structuralandfunctional pages 1-3): Katharina Sievers, Luisa Welp, Henning Urlaub, and Ralf Ficner. Structural and functional insights into human trna guanine transglycosylase. RNA Biology, 18:382-396, Jul 2021. URL: https://doi.org/10.1080/15476286.2021.1950980, doi:10.1080/15476286.2021.1950980. This article has 30 citations and is from a peer-reviewed journal.
 
-2. (sievers2021structuralandfunctional pages 1-3): Katharina Sievers, Luisa Welp, Henning Urlaub, and Ralf Ficner. Structural and functional insights into human trna guanine transglycosylase. RNA Biology, 18:382-396, Jul 2021. URL: https://doi.org/10.1080/15476286.2021.1950980, doi:10.1080/15476286.2021.1950980. This article has 30 citations and is from a peer-reviewed journal.
+2. (kulkarni2021preferentialimportof pages 5-7): Sneha Kulkarni, Mary Anne T Rubio, Eva Hegedűsová, Robert L Ross, Patrick A Limbach, Juan D Alfonzo, and Zdeněk Paris. Preferential import of queuosine-modified trnas into trypanosoma brucei mitochondrion is critical for organellar protein synthesis. Nucleic Acids Research, 49:8247-8260, Jul 2021. URL: https://doi.org/10.1093/nar/gkab567, doi:10.1093/nar/gkab567. This article has 51 citations and is from a highest quality peer-reviewed journal.
 
-3. (sebastiani2022structuralandbiochemical pages 1-6): Maurice Sebastiani, Christina Behrens, Stefanie Dörr, Hans-Dieter Gerber, Rania Benazza, Oscar Hernandez-Alba, Sarah Cianférani, Gerhard Klebe, Andreas Heine, and Klaus Reuter. Structural and biochemical investigation of the heterodimeric murine trna-guanine transglycosylase. ACS chemical biology, 17:2229-2247, Jul 2022. URL: https://doi.org/10.1021/acschembio.2c00368, doi:10.1021/acschembio.2c00368. This article has 17 citations and is from a domain leading peer-reviewed journal.
+3. (guo2025queuosineisincorporated pages 6-7): Wei Guo, Igor Kaczmarczyk, Kevin Kopietz, Florian Flegler, Stefano Russo, Ege Cigirgan, Andrzej Chramiec-Głąbik, Łukasz Koziej, Cansu Cirzi, Jirka Peschek, Klaus Reuter, Mark Helm, Sebastian Glatt, and Francesca Tuorto. Queuosine is incorporated into precursor trna before splicing. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-62220-z, doi:10.1038/s41467-025-62220-z. This article has 6 citations and is from a highest quality peer-reviewed journal.
 
-4. (sebastiani2022structuralandbiochemical pages 6-9): Maurice Sebastiani, Christina Behrens, Stefanie Dörr, Hans-Dieter Gerber, Rania Benazza, Oscar Hernandez-Alba, Sarah Cianférani, Gerhard Klebe, Andreas Heine, and Klaus Reuter. Structural and biochemical investigation of the heterodimeric murine trna-guanine transglycosylase. ACS chemical biology, 17:2229-2247, Jul 2022. URL: https://doi.org/10.1021/acschembio.2c00368, doi:10.1021/acschembio.2c00368. This article has 17 citations and is from a domain leading peer-reviewed journal.
+4. (sievers2021structuralandfunctional pages 3-4): Katharina Sievers, Luisa Welp, Henning Urlaub, and Ralf Ficner. Structural and functional insights into human trna guanine transglycosylase. RNA Biology, 18:382-396, Jul 2021. URL: https://doi.org/10.1080/15476286.2021.1950980, doi:10.1080/15476286.2021.1950980. This article has 30 citations and is from a peer-reviewed journal.
 
-5. (fergus2021thehumantrnaguanine pages 8-10): Claire Fergus, Mashael Al-qasem, Michelle Cotter, Ciara M McDonnell, Emiliano Sorrentino, Franciane Chevot, Karsten Hokamp, Mathias O Senge, John M Southern, Stephen J Connon, and Vincent P Kelly. The human trna-guanine transglycosylase displays promiscuous nucleobase preference but strict trna specificity. Nucleic Acids Research, 49:4877-4890, May 2021. URL: https://doi.org/10.1093/nar/gkab289, doi:10.1093/nar/gkab289. This article has 32 citations and is from a highest quality peer-reviewed journal.
+5. (fergus2015thequeuinemicronutrient pages 9-12): Claire Fergus, Dominic Barnes, Mashael Alqasem, and Vincent Kelly. The queuine micronutrient: charting a course from microbe to man. Nutrients, 7:2897-2929, Apr 2015. URL: https://doi.org/10.3390/nu7042897, doi:10.3390/nu7042897. This article has 202 citations.
 
-6. (fergus2021thehumantrnaguanine pages 11-11): Claire Fergus, Mashael Al-qasem, Michelle Cotter, Ciara M McDonnell, Emiliano Sorrentino, Franciane Chevot, Karsten Hokamp, Mathias O Senge, John M Southern, Stephen J Connon, and Vincent P Kelly. The human trna-guanine transglycosylase displays promiscuous nucleobase preference but strict trna specificity. Nucleic Acids Research, 49:4877-4890, May 2021. URL: https://doi.org/10.1093/nar/gkab289, doi:10.1093/nar/gkab289. This article has 32 citations and is from a highest quality peer-reviewed journal.
+6. (sievers2021structuralandfunctional pages 10-11): Katharina Sievers, Luisa Welp, Henning Urlaub, and Ralf Ficner. Structural and functional insights into human trna guanine transglycosylase. RNA Biology, 18:382-396, Jul 2021. URL: https://doi.org/10.1080/15476286.2021.1950980, doi:10.1080/15476286.2021.1950980. This article has 30 citations and is from a peer-reviewed journal.
 
-7. (sievers2021structuralandfunctional pages 10-11): Katharina Sievers, Luisa Welp, Henning Urlaub, and Ralf Ficner. Structural and functional insights into human trna guanine transglycosylase. RNA Biology, 18:382-396, Jul 2021. URL: https://doi.org/10.1080/15476286.2021.1950980, doi:10.1080/15476286.2021.1950980. This article has 30 citations and is from a peer-reviewed journal.
+7. (sievers2021structuralandfunctional pages 6-8): Katharina Sievers, Luisa Welp, Henning Urlaub, and Ralf Ficner. Structural and functional insights into human trna guanine transglycosylase. RNA Biology, 18:382-396, Jul 2021. URL: https://doi.org/10.1080/15476286.2021.1950980, doi:10.1080/15476286.2021.1950980. This article has 30 citations and is from a peer-reviewed journal.
 
 8. (zaborske2014anutrientdriventrna pages 1-2): John M. Zaborske, Vanessa L. Bauer DuMont, Edward W. J. Wallace, Tao Pan, Charles F. Aquadro, and D. Allan Drummond. A nutrient-driven trna modification alters translational fidelity and genome-wide protein coding across an animal genus. PLoS Biology, 12:e1002015, Dec 2014. URL: https://doi.org/10.1371/journal.pbio.1002015, doi:10.1371/journal.pbio.1002015. This article has 151 citations and is from a highest quality peer-reviewed journal.
 
 9. (zaborske2014anutrientdriventrna pages 3-5): John M. Zaborske, Vanessa L. Bauer DuMont, Edward W. J. Wallace, Tao Pan, Charles F. Aquadro, and D. Allan Drummond. A nutrient-driven trna modification alters translational fidelity and genome-wide protein coding across an animal genus. PLoS Biology, 12:e1002015, Dec 2014. URL: https://doi.org/10.1371/journal.pbio.1002015, doi:10.1371/journal.pbio.1002015. This article has 151 citations and is from a highest quality peer-reviewed journal.
 
-10. (guo2025queuosineisincorporated pages 6-7): Wei Guo, Igor Kaczmarczyk, Kevin Kopietz, Florian Flegler, Stefano Russo, Ege Cigirgan, Andrzej Chramiec-Głąbik, Łukasz Koziej, Cansu Cirzi, Jirka Peschek, Klaus Reuter, Mark Helm, Sebastian Glatt, and Francesca Tuorto. Queuosine is incorporated into precursor trna before splicing. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-62220-z, doi:10.1038/s41467-025-62220-z. This article has 6 citations and is from a highest quality peer-reviewed journal.
+10. (zaborske2014anutrientdriventrna pages 5-7): John M. Zaborske, Vanessa L. Bauer DuMont, Edward W. J. Wallace, Tao Pan, Charles F. Aquadro, and D. Allan Drummond. A nutrient-driven trna modification alters translational fidelity and genome-wide protein coding across an animal genus. PLoS Biology, 12:e1002015, Dec 2014. URL: https://doi.org/10.1371/journal.pbio.1002015, doi:10.1371/journal.pbio.1002015. This article has 151 citations and is from a highest quality peer-reviewed journal.
 
-11. (guo2025queuosineisincorporated pages 2-3): Wei Guo, Igor Kaczmarczyk, Kevin Kopietz, Florian Flegler, Stefano Russo, Ege Cigirgan, Andrzej Chramiec-Głąbik, Łukasz Koziej, Cansu Cirzi, Jirka Peschek, Klaus Reuter, Mark Helm, Sebastian Glatt, and Francesca Tuorto. Queuosine is incorporated into precursor trna before splicing. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-62220-z, doi:10.1038/s41467-025-62220-z. This article has 6 citations and is from a highest quality peer-reviewed journal.
+11. (guo2025queuosineisincorporated pages 5-6): Wei Guo, Igor Kaczmarczyk, Kevin Kopietz, Florian Flegler, Stefano Russo, Ege Cigirgan, Andrzej Chramiec-Głąbik, Łukasz Koziej, Cansu Cirzi, Jirka Peschek, Klaus Reuter, Mark Helm, Sebastian Glatt, and Francesca Tuorto. Queuosine is incorporated into precursor trna before splicing. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-62220-z, doi:10.1038/s41467-025-62220-z. This article has 6 citations and is from a highest quality peer-reviewed journal.
 
-12. (guo2025queuosineisincorporated pages 5-6): Wei Guo, Igor Kaczmarczyk, Kevin Kopietz, Florian Flegler, Stefano Russo, Ege Cigirgan, Andrzej Chramiec-Głąbik, Łukasz Koziej, Cansu Cirzi, Jirka Peschek, Klaus Reuter, Mark Helm, Sebastian Glatt, and Francesca Tuorto. Queuosine is incorporated into precursor trna before splicing. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-62220-z, doi:10.1038/s41467-025-62220-z. This article has 6 citations and is from a highest quality peer-reviewed journal.
+12. (guo2025queuosineisincorporated pages 1-2): Wei Guo, Igor Kaczmarczyk, Kevin Kopietz, Florian Flegler, Stefano Russo, Ege Cigirgan, Andrzej Chramiec-Głąbik, Łukasz Koziej, Cansu Cirzi, Jirka Peschek, Klaus Reuter, Mark Helm, Sebastian Glatt, and Francesca Tuorto. Queuosine is incorporated into precursor trna before splicing. Nature Communications, Jul 2025. URL: https://doi.org/10.1038/s41467-025-62220-z, doi:10.1038/s41467-025-62220-z. This article has 6 citations and is from a highest quality peer-reviewed journal.
 
-13. (fergus2021thehumantrnaguanine pages 10-11): Claire Fergus, Mashael Al-qasem, Michelle Cotter, Ciara M McDonnell, Emiliano Sorrentino, Franciane Chevot, Karsten Hokamp, Mathias O Senge, John M Southern, Stephen J Connon, and Vincent P Kelly. The human trna-guanine transglycosylase displays promiscuous nucleobase preference but strict trna specificity. Nucleic Acids Research, 49:4877-4890, May 2021. URL: https://doi.org/10.1093/nar/gkab289, doi:10.1093/nar/gkab289. This article has 32 citations and is from a highest quality peer-reviewed journal.
+13. (fergus2015thequeuinemicronutrient pages 12-14): Claire Fergus, Dominic Barnes, Mashael Alqasem, and Vincent Kelly. The queuine micronutrient: charting a course from microbe to man. Nutrients, 7:2897-2929, Apr 2015. URL: https://doi.org/10.3390/nu7042897, doi:10.3390/nu7042897. This article has 202 citations.
 
-14. (kulkarni2021preferentialimportof pages 5-7): Sneha Kulkarni, Mary Anne T Rubio, Eva Hegedűsová, Robert L Ross, Patrick A Limbach, Juan D Alfonzo, and Zdeněk Paris. Preferential import of queuosine-modified trnas into trypanosoma brucei mitochondrion is critical for organellar protein synthesis. Nucleic Acids Research, 49:8247-8260, Jul 2021. URL: https://doi.org/10.1093/nar/gkab567, doi:10.1093/nar/gkab567. This article has 51 citations and is from a highest quality peer-reviewed journal.
+14. (stanzl2016evaluatingtherole pages 28-32): H Stanzl. Evaluating the role of tbtgt2 in the formation of queuosine trna modification in the bloodstream stage of trypanosomes. Unknown journal, 2016.
 
 15. (cirzi2023queuosine‐trnapromotessex‐dependent pages 1-2): Cansu Cirzi, Julia Dyckow, Carine Legrand, Johanna Schott, Wei Guo, Daniel Perez Hernandez, Miharu Hisaoka, Rosanna Parlato, Claudia Pitzer, Franciscus van der Hoeven, Gunnar Dittmar, Mark Helm, Georg Stoecklin, Lucas Schirmer, Frank Lyko, and Francesca Tuorto. Queuosine‐trna promotes sex‐dependent learning and memory formation by maintaining codon‐biased translation elongation speed. The EMBO Journal, Aug 2023. URL: https://doi.org/10.15252/embj.2022112507, doi:10.15252/embj.2022112507. This article has 53 citations.
+
+16. (rashad2024translationalresponseto pages 1-4): Sherif Rashad, Shadi Al-Mesitef, Abdulrahman Mousa, Yuan Zhou, Daisuke Ando, Guangxin Sun, Tomoko Fukuuchi, Yuko Iwasaki, Jingdong Xiang, Shane R Byrne, Jingjing Sun, Masamitsu Maekawa, Daisuke Saigusa, Thomas J Begley, Peter C Dedon, and Kuniyasu Niizuma. Translational response to mitochondrial stresses is orchestrated by trna modifications. bioRxiv, Feb 2024. URL: https://doi.org/10.1101/2024.02.14.580389, doi:10.1101/2024.02.14.580389. This article has 24 citations.
 
 ## Artifacts
 
@@ -230,46 +228,39 @@ References
 
 ## Citations
 
-1. zaborske2014anutrientdriventrna pages 3-5
-2. johannsson2018crystalstructureof pages 1-3
-3. sievers2021structuralandfunctional pages 1-3
-4. sebastiani2022structuralandbiochemical pages 1-6
-5. sebastiani2022structuralandbiochemical pages 6-9
-6. fergus2021thehumantrnaguanine pages 8-10
-7. fergus2021thehumantrnaguanine pages 11-11
-8. sievers2021structuralandfunctional pages 10-11
-9. zaborske2014anutrientdriventrna pages 1-2
-10. guo2025queuosineisincorporated pages 6-7
-11. guo2025queuosineisincorporated pages 2-3
-12. guo2025queuosineisincorporated pages 5-6
-13. fergus2021thehumantrnaguanine pages 10-11
-14. kulkarni2021preferentialimportof pages 5-7
-15. UniProt record: https://www.uniprot.org/uniprotkb/Q9VSZ6/entry.
-16. Zaborske *et al.*, *PLOS Biology*, **9 December 2014**: https://doi.org/10.1371/journal.pbio.1002015.
-17. Guo *et al.*, *Nature Communications*, **July 2025**: https://doi.org/10.1038/s41467-025-62220-z.
-18. Fergus *et al.*, *Nucleic Acids Research*, **May 2021**: https://doi.org/10.1093/nar/gkab289; Bessler *et al.*, *Nucleic Acids Research*, **September 2022**: https://doi.org/10.1093/nar/gkac822.
-19. Cirzi *et al.*, *The EMBO Journal*, **23 August 2023**: https://doi.org/10.15252/embj.2022112507.
-20. 10.1080/15476286.2021.1950980
-21. 10.1021/acschembio.2c00368
-22. 10.1371/journal.pbio.1002015
-23. 10.1038/s41467-025-62220-z
-24. 10.15252/embj.2022112507
-25. https://www.uniprot.org/uniprotkb/Q9VSZ6/entry.]
-26. https://doi.org/10.1371/journal.pbio.1002015.]
-27. https://doi.org/10.1038/s41467-025-62220-z.]
-28. https://doi.org/10.1093/nar/gkab289;
-29. https://doi.org/10.1093/nar/gkac822.]
-30. https://doi.org/10.15252/embj.2022112507.]
-31. https://doi.org/10.1080/15476286.2021.1950980
-32. https://doi.org/10.1021/acschembio.2c00368
-33. https://doi.org/10.1371/journal.pbio.1002015
-34. https://doi.org/10.1038/s41467-025-62220-z
-35. https://doi.org/10.15252/embj.2022112507
-36. https://doi.org/10.3390/biom8030081,
-37. https://doi.org/10.1080/15476286.2021.1950980,
-38. https://doi.org/10.1021/acschembio.2c00368,
-39. https://doi.org/10.1093/nar/gkab289,
-40. https://doi.org/10.1371/journal.pbio.1002015,
-41. https://doi.org/10.1038/s41467-025-62220-z,
-42. https://doi.org/10.1093/nar/gkab567,
-43. https://doi.org/10.15252/embj.2022112507,
+1. sievers2021structuralandfunctional pages 1-3
+2. kulkarni2021preferentialimportof pages 5-7
+3. guo2025queuosineisincorporated pages 6-7
+4. sievers2021structuralandfunctional pages 3-4
+5. fergus2015thequeuinemicronutrient pages 9-12
+6. sievers2021structuralandfunctional pages 10-11
+7. sievers2021structuralandfunctional pages 6-8
+8. zaborske2014anutrientdriventrna pages 1-2
+9. zaborske2014anutrientdriventrna pages 3-5
+10. zaborske2014anutrientdriventrna pages 5-7
+11. guo2025queuosineisincorporated pages 5-6
+12. guo2025queuosineisincorporated pages 1-2
+13. fergus2015thequeuinemicronutrient pages 12-14
+14. stanzl2016evaluatingtherole pages 28-32
+15. rashad2024translationalresponseto pages 1-4
+16. Q9VSZ6
+17. doi:10.1371/journal.pbio.1002015
+18. doi:10.1038/s41467-025-62220-z
+19. 10.1371/journal.pbio.1002015
+20. 10.1038/s41467-025-62220-z
+21. 10.1080/15476286.2021.1950980
+22. doi:10.15252/embj.2022112507
+23. doi:10.1101/2024.02.14.580389
+24. https://www.uniprot.org/uniprotkb/Q9VSZ6/entry
+25. https://doi.org/10.1371/journal.pbio.1002015
+26. https://doi.org/10.1038/s41467-025-62220-z
+27. https://doi.org/10.1080/15476286.2021.1950980
+28. https://doi.org/10.15252/embj.2022112507
+29. https://doi.org/10.1101/2024.02.14.580389
+30. https://doi.org/10.1080/15476286.2021.1950980,
+31. https://doi.org/10.1093/nar/gkab567,
+32. https://doi.org/10.1038/s41467-025-62220-z,
+33. https://doi.org/10.3390/nu7042897,
+34. https://doi.org/10.1371/journal.pbio.1002015,
+35. https://doi.org/10.15252/embj.2022112507,
+36. https://doi.org/10.1101/2024.02.14.580389,
