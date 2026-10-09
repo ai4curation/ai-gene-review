@@ -8,3 +8,4 @@
 - Protein binding IPI rows are with other RFC small subunits (GOA WITH/FROM); removed as uninformative.
 - Same decision table as RfC4/RfC3/RfC38/CG8142 (module consistency): contributes_to GO:0003689 and GO:0061860 (core), complexes GO:0005663 and GO:0031391.
 - Round-2 rule applied: generic parents (DNA replication, ATP-dependent activity acting on DNA, protein-containing complex) changed from KEEP_AS_NON_CORE to MODIFY toward the specific term the gene already carries; subunit-level binding/ATPase terms stay KEEP_AS_NON_CORE.
+- Falcon deep research (late): wing-disc RNAi of Rfc3 (Kohzaki 2018) gives wing phenotypes in all 158 flies; Rfc3 grouped with replication-elongation factors; complex-level functions otherwise inferred cross-species.
