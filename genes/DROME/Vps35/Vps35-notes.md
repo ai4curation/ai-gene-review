@@ -9,4 +9,4 @@ Accession: the symbol lookup returned Q7KVL7 (46 GOA rows); the expected accessi
 - Endocytosis screen in S2 cells [PMID:18057029]; synaptic vesicle recycling, LRRK2 interplay [PMID:28482024]; rotenone protection by overexpression [PMID:24915984].
 
 Decisions: cargo receptor -> cargo adaptor (contributes_to); obsolete endosome-to-PM transport -> endocytic recycling; synaptic rows non-core; response to rotenone over-annotated (overexpression modifier).
-Deep research: falcon failed/timed out; notes from cached publications.
+Deep research: falcon completed (Vps35-deep-research-falcon.md) after the initial review; consistent with the review (non-enzymatic retromer scaffold acting on endosomes) [file:DROME/Vps35/Vps35-deep-research-falcon.md "Vps35 performs its sorting function on **intracellular endosomal membranes and associated trafficking carriers**"]. It adds NMJ pre/postsynaptic localization and APP extracellular-vesicle cargo sorting (Walsh et al. 2021) and wing-epithelium trafficking-hub data, none of which is in GOA. No annotation actions changed.
