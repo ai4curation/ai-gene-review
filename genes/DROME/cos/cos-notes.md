@@ -42,3 +42,12 @@ falcon run completed later and wrote `cos-deep-research-falcon.md`, folded in as
 - protein binding rows: MODIFY to smoothened binding, protein kinase binding (Fu, Sgg, CK1) or
   Pol II TF binding (Ci); Sxl co-complex rows REMOVE.
 - negative regulation of transcription by Pol II (NAS) over-annotated: Cos2 acts in the cytoplasm upstream of Ci-75.
+
+## Review-bot follow-up (PR #4478)
+
+- Motor-activity calls are now grounded directly in Yue et al. 2018 (PMID:29351996, full text cached):
+  [PMID:29351996 "DmCos2 motors bind microtubules in a stationary manner with a long dwell time regardless of nucleotide condition."]
+  The paper also re-examines the earlier Farzan et al. motility data:
+  [PMID:29351996 "the motility of these structures was not consistent with kinesin-driven movement as it was spatially limited, not directional, and similar for full-length Cos2 and a construct lacking the motor domain"]
+- ATPase was measured only for KIF27/KIF7 in that paper, so GO:0016887 stays UNDECIDED.
+- Kinesin complex is kept non-core because the term is compositional (kinesin dimer), not motility-based.
