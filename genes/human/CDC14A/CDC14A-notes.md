@@ -30,7 +30,7 @@ The two HuRI partner accessions, Q8N5M1 and Q9NWQ9, were matched exactly to huma
 
 The standing [project curation instruction](https://github.com/ai4curation/ai-gene-review/blob/fe9d0eec86d1f5b949960c82e206f1a330bba618/projects/CLINGEN_MENDELIAN.md#curation-instructions) says to “retain a supported, biologically correct `GO:0005515` (protein binding) annotation as `KEEP_AS_NON_CORE`” when a narrower MF is unsupported. All three binding rows meet that evidence boundary. No protein-binding term is used as a core function, and no partner activity is transferred.
 
-There are 34 decisions: eight ACCEPT, 21 KEEP_AS_NON_CORE, two MODIFY and three UNDECIDED. The refinements are organizing center to centrosome, and cilium assembly to regulation of cilium assembly. The unresolved assertions concern exact human protein-tyrosine catalysis, physiological nucleolar activity and the positive cytokinesis role across differing human perturbations. All original references, evidence codes, qualifiers, partner identifiers and other source fields remain unchanged. PAINT nodes are treated as ancestral inferences: donor counts and target self-evidence are not used to reject them. The full PAINT reconstruction was not recovered, so no erroneous ancestral-node placement is asserted.
+There are 34 decisions: seven ACCEPT, 22 KEEP_AS_NON_CORE, two MODIFY and three UNDECIDED. The refinements are organizing center to centrosome, and cilium assembly to regulation of cilium assembly. The unresolved assertions concern exact human protein-tyrosine catalysis, physiological nucleolar activity and the positive cytokinesis role across differing human perturbations. All original references, evidence codes, qualifiers, partner identifiers and other source fields remain unchanged. PAINT nodes are treated as ancestral inferences: donor counts and target self-evidence are not used to reject them. The full PAINT reconstruction was not recovered, so no erroneous ancestral-node placement is asserted.
 
 ## Access and follow-up
 
@@ -39,3 +39,61 @@ Normal fetch-gene and publication caching ran in an isolated workspace. Genuine 
 The original 1997 biochemical Methods, several older cell-cycle Methods, and the exact centrosome supplement entry remain uninspected. An HTTP200 anti-bot page is recorded as a failed full-text retrieval, not article access. Selected primary text for the ciliary and localization studies was accessible through the article index. The independent annotation consultation addressed substrate specificity, nucleolar activity and conflicting mitotic evidence. No coordinate, raw image or proteomic reanalysis was performed.
 
 A focused next step is to identify endogenous hair-cell substrates while separately testing catalytic competence and targeting of the human products. Matched acute-depletion and knockout experiments could resolve the cytokinesis discrepancy. A direct human protein-phosphotyrosine assay and substrate identification would resolve the specificity boundary without inferring absence from phosphoserine preference.
+
+
+## Follow-up: microtubule core scope and biochemical specificity
+
+Microtubule cytoskeleton organization (GO:0000226) is retained as a non-core
+PAINT inference and is removed from the core process list. The inspected human
+microtubule-regrowth experiment used transient GFP-hCDC14A expression in U2OS
+cells: high expression abolished centrosomal nucleation after nocodazole washout,
+whereas low expression did not. Deregulation can disrupt an organelle without
+establishing that its organization is the protein's principal physiological
+function. The older RNAi/cell-division observations remain acknowledged; they are
+not reclassified as solely overexpression evidence. Human RPE1 knockout results
+limit an indispensable cell-cycle claim without proving absence of all regulatory
+roles. [PMID:12134069](https://pubmed.ncbi.nlm.nih.gov/12134069/),
+[PMID:11901424](https://pubmed.ncbi.nlm.nih.gov/11901424/),
+[PMID:33328327](https://pubmed.ncbi.nlm.nih.gov/33328327/).
+
+The proposed colocalization alternative does not establish a core organization
+mechanism either. The primary COS-7 transfection Methods specify GFP-tagged WT
+and mutant mouse Cdc14a constructs. This is neither endogenous human expression
+nor a demonstrated microtubule-assembly step. Those Methods were inspected through
+the official PMC article's indexed text; the current direct HTML response was a
+challenge page and the XML request failed. The preserved publication cache remains
+abstract-only. Separate endogenous human spindle localization and in-vitro INCENP
+dephosphorylation support the existing location/activity-inference rows, with their
+assay distinction retained. [PMID:29293958](https://pubmed.ncbi.nlm.nih.gov/29293958/),
+[PMID:15263015](https://pubmed.ncbi.nlm.nih.gov/15263015/).
+
+The drebrin/Arp2 result is an actin-mediated cilium-growth mechanism, not direct
+microtubule organization. Regulation of cilium assembly (GO:1902017) remains the
+single core process. GO:1902018 negative regulation of cilium assembly was
+considered because loss of CDC14A activity lengthens RPE1 cilia. The parent term
+is retained for the broader synthesis: zebrafish morphants have shortened kinocilia,
+whereas germline mouse and zebrafish mutants can have normal kinocilium lengths.
+This does not deny the negative direction in the tested human RPE1 context.
+[PMID:30467237](https://pubmed.ncbi.nlm.nih.gov/30467237/),
+[PMID:27259055](https://pubmed.ncbi.nlm.nih.gov/27259055/),
+[PMID:29293958](https://pubmed.ncbi.nlm.nih.gov/29293958/).
+
+Selected structural and kinetic Results of the newer truncation study sharpen
+the unresolved protein-Tyr question. Its phosphatase-dead mouse 1–345 construct
+binds the proline following phosphoserine in a hydrophobic pocket. Active
+truncation kinetics use pNPP and the ApSPRRR phosphopeptide. This supports pSer-Pro
+recognition in that construct, without testing human protein-phosphotyrosine
+catalysis. Neither substrate preference nor pNPP hydrolysis resolves the older
+human dual-specificity claim. No residue numbering or catalytic property is
+silently transferred to the seeded 594-residue human product.
+[PMID:41308992](https://pubmed.ncbi.nlm.nih.gov/41308992/),
+[PMID:9367992](https://pubmed.ncbi.nlm.nih.gov/9367992/).
+
+The nucleolar is_active_in assertion remains UNDECIDED for a biological reason:
+the observed centrosomal WT protein and nucleolar export mutant do not establish
+a normal nucleolar molecular role, while a state-specific role is not excluded.
+Not reconstructing the PAINT tree does not prevent a biological challenge; no
+unsupported node-placement error is claimed. Short verbatim anchors were added
+at selected annotation decisions, without duplicating them in these notes. All
+34 original source assertions, five products and 28 reference identities remain
+unchanged; the only action change is the microtubule process moving to non-core.
