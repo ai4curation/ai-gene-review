@@ -15,3 +15,7 @@ Accession: Q9V3C1. Module: dmel_vcb_ubiquitin_ligase (substrate receptor).
 - GO:1900037 -> MODIFY GO:1900038 (direction is negative).
 - Transcription corepressor / regulation of transcription IBA (single human VHL donor) and derived IEA: MARK_AS_OVER_ANNOTATED (effects indirect via Sima).
 - Protein binding: EloC row REMOVE (no informative binding term; captured by VCB complex); Trc8 row MODIFY to GO:0031625.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `Vhl-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
