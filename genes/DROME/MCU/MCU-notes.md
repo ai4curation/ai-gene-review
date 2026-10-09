@@ -20,4 +20,4 @@ UniProt Q8IQ70 (Calcium uniporter protein, mitochondrial); PANTHER PTHR13462.
 
 ## Deep research
 
-`just deep-research-falcon` was still running or had timed out when this review was committed; any late-arriving report will be added in a follow-up commit.
+`MCU-deep-research-falcon.md` (falcon) arrived after the review was first committed. It agrees with the review: MCU is the calcium-conducting channel subunit, not an enzyme or carrier, which supports replacing the carrier-type uniporter activity with calcium channel activity. It reports that the MCU52 null loses caffeine-evoked matrix calcium responses, which wild-type fly MCU restores and a DIME pore-motif mutant does not. No annotation decision changed.
