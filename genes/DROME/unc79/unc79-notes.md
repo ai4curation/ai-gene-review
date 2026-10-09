@@ -13,3 +13,7 @@ Expected accession Q9VDY5 (isoform C, TrEMBL). `just fetch-gene DROME unc79` fir
 
 - ND root MF -> sodium channel activity (contributes_to), consistent with unc80.
 - Complex -> sodium channel complex (consistent across NA complex).
+
+## Deep research
+
+`unc79-deep-research-falcon.md` (falcon) arrived after the review was first committed (the recipe was reported as terminated, but the falcon job completed). It agrees with the review: UNC79 is a large non-pore-forming HEAT-repeat auxiliary protein of the NA channel complex, co-immunoprecipitating with NA and UNC80 and required for both NA abundance and function. Human cryo-EM places UNC79/UNC80 as an intracellular superhelix beneath the channel; this is an orthology-based inference for flies. It also notes that mammalian Unc79 knockouts can retain NALCN protein, unlike flies. No annotation decision changed.
