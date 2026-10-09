@@ -102,6 +102,32 @@ No production GO-CAM in the local cache (`gocams/`) uses any of the four terms.
 | GO:0090300 positive regulation of neural crest formation | GO:1905294 positive regulation of neural crest cell differentiation |
 | GO:0090301 negative regulation of neural crest formation | GO:1905293 negative regulation of neural crest cell differentiation |
 
+### Gaps considered but not proposed
+
+All three were checked as absent from GO in OLS on 2026-10-09. None has an
+annotation that clears our own evidence bar, so none goes into the request.
+
+- **(Negative) regulation of neural crest cell delamination.** This would
+  negatively_regulate GO:0036032. It is a standard regulation term of the kind
+  GO creates on request. Its only candidate is chick TSPAN18 [PMID:23418345],
+  and that case fails the overexpression rule. Knockdown removes Cad6B protein,
+  yet "the timing of neural crest emigration, basal lamina breakdown and Cad7
+  upregulation proceed normally in Tspan18-deficient cells". That cells are
+  held back is shown only by extending Tspan18 expression. GO:0090301 is
+  currently is_a GO:0010719, so its EMT sense would naturally land on this
+  term. We will propose it once a loss-of-function case exists.
+
+- **Regulation of neural crest cell migration (general).** GO has only the
+  cardiac outflow-tract version (GO:1905310 and children), not a general
+  parent. The one candidate in scope was zebrafish hdac4 [PMID:22676467], but
+  its authors cannot tell specification from migration, so it stays on
+  GO:1905292. We will propose the term when an annotation needs it.
+- **Neural crest cell apoptotic process / survival.** polr1b knockdown kills
+  crest precursors through p53, but that is a ribosome-supply requirement
+  shared with any fast-growing tissue (→ GO:0006360). No gene in the remapping
+  does crest-specific survival work, so a term made now would only collect
+  necessity evidence.
+
 ## Replacement rule for existing annotations
 
 Decide each annotation by what the gene product *does*, using the layers worked
@@ -116,6 +142,7 @@ out in [NEURAL_CREST_ORIGINS](NEURAL_CREST_ORIGINS.md) and the
 | keeps border/crest progenitors undifferentiated and competent | neural crest progenitor maintenance (new) |
 | drives delamination | GO:0036032 delamination |
 | is only expressed there (IEP) | no process replacement; expression is not participation |
+| is shown only to *induce* crest markers when overexpressed | not carried forward (over-annotation), unless loss-of-function or other evidence independently establishes the same role for that gene |
 | modulates an inducing signal (BMP/Wnt antagonist or receptor) | regulation term on the signal, or border formation if the evidence supports it; review case by case |
 
 **Competence factors (decided 2026-10-09).** Three options were considered:
@@ -138,7 +165,8 @@ a `.notes.md`) and from the gene reviews already in this repo.
 
 | Action | Rows | Distinct decisions |
 |---|---:|---:|
-| REPLACE | 86 | 55 |
+| REPLACE | 83 | 52 |
+| OVER_ANNOTATED (overexpression only) | 3 | 3 |
 | REMOVE (expression only) | 3 | 2 |
 | UNDECIDED | 5 | 5 |
 
@@ -146,7 +174,7 @@ Decisions by gene (species; paper):
 
 | Replacement | Gene products |
 |---|---|
-| Neural plate border formation (new) + GO:0014034 fate commitment | pax3-a, pax3-b, zic1, zic2-a, zic4, zic5 (X. laevis) |
+| Neural plate border formation (new) + GO:0014034 fate commitment | pax3-a, pax3-b, zic1, zic5 (X. laevis) |
 | Neural plate border formation (new) | mdkb (zebrafish; its abstract says it is "responsible for establishment of the neural plate border") |
 | Neural plate border formation (new) + GO:1905297 positive regulation of NC fate specification | snw1 (zebrafish; sets BMP activity at the border) |
 | Neural crest progenitor maintenance (new) | hes4-a, hes4-b, id3-a (X. laevis) |
@@ -156,13 +184,14 @@ Decisions by gene (species; paper):
 | Regulation of NC fate specification (GO:1905295/6/7) | parp3; rgs2 (negative); hsbp1b (negative); bmper (positive, + GO:0030513 positive regulation of BMP signaling) |
 | Regulation of NC differentiation (GO:1905292/3/4) | hdac4; Fuz/FUZ (negative; mouse IMP plus rat/human transfers); LRP6 (human, positive) |
 | Other existing terms | TSPAN18 (chicken) → GO:0010719 negative regulation of epithelial to mesenchymal transition; polr1b (zebrafish) → GO:0006360 transcription by RNA polymerase I |
+| OVER_ANNOTATED (overexpression only) | zic2-a (PMID:9634234, PMID:9739105), zic4 (PMID:16871625) (X. laevis) |
 | REMOVE (expression only) | grem1 (X. laevis, IEP); Id2 (chicken, IEP, on both GO:0014029 and GO:0090300) |
 | UNDECIDED | KLHL12, PEF1, PDCD6 (human; PMID:27716508 full text not accessible); Chrd (mouse; the cached abstract concerns vascular patterning); hes4-a NOT row (contradicted by PMID:25997789) |
 
 What the remapping shows:
 - **Only 14 of 94 rows land on a precise crest-cell term** (fate
   specification or delamination): the SoxE genes, the ubiquitin group and SOX9.
-  The rest move to the border term (14), the progenitor term (11), a regulation
+  The rest move to the border term (11), the progenitor term (11), a regulation
   term (14), the general differentiation term (32, of which 28 are zeb2
   accessions from one paper) or a non-crest term (polr1b), or are removed or left
   undecided. The obsoleted term was carrying all of these meanings.
@@ -172,10 +201,21 @@ What the remapping shows:
   without affecting rRNA output or survival, which is participation in
   specification [PMID:26399832].
 - **GO lacks regulation terms for crest migration and delamination.** TSPAN18
-  therefore goes to a generic EMT term. A follow-up request for "negative
-  regulation of neural crest cell delamination" may be worth making.
-- **Weaker calls flagged in the notes:** the Zic2/4/5 evidence is mostly
-  overexpression; zeb2 and cnbpa rest on abstracts; rgs2 rests on its abstract
+  therefore goes to a generic EMT term. That row needs a second look under
+  the overexpression rule: knockdown shows Tspan18 keeps Cad6B protein levels
+  up, but not that it delays emigration (see *Gaps considered but not
+  proposed*).
+- **Overexpression alone is not participation (rule added 2026-10-09).** A
+  factor that induces crest markers when overexpressed shows it *can* drive the
+  program, not that it does. Rows resting only on such data are marked
+  over-annotation: zic2-a and zic4. zic1 and sox10 also have overexpression-only
+  rows (PMID:9435279, PMID:9655809, PMID:9739105; PMID:12812785), but these are
+  carried forward because each gene has its own knockdown evidence for the same
+  role (PMID:15843410; PMID:12885557). zic5 is kept because its paper includes a
+  dominant-negative construct, and bmper because its paper shows it is required.
+  These calls rest on abstracts; a loss-of-function experiment in a full text
+  would change them.
+- **Weaker calls flagged in the notes:** zeb2 and cnbpa rest on abstracts; rgs2 rests on its abstract
   only; for KBTBD8, GO:1905297 (regulation) is a defensible alternative to
   GO:0014036.
 
@@ -238,17 +278,31 @@ Last updated: 2026-10-09
 - [x] Review the 17 regulation-term annotations (12 distinct)
 - [x] Per-annotation remapping table for GO (`remapping.tsv`, 94 rows, checker clean)
 - [ ] Resolve the 5 UNDECIDED rows (needs PMID:27716508 full text; Chrd full text; hes4-a NOT row)
-- [ ] Consider a request for "negative regulation of neural crest cell delamination"
+- [x] Gap terms checked (2026-10-09): delamination regulation, migration regulation and crest apoptosis are absent from GO; none proposed yet (no annotation clears the bar)
+- [ ] Re-decide TSPAN18 (GO:0010719 rests on overexpression; knockdown supports Cad6B stabilisation only)
+- [x] Overexpression-only rule applied: zic2-a and zic4 marked over-annotated; zic1 and sox10 kept because they have loss-of-function evidence
 - [ ] Report ARBA00027170 to UniProt (see the rule-reviewer workflow)
 - [ ] Submit the GO request (needs sign-off)
 
 # NOTES
 
+## 2026-10-09 (overexpression rule, gap terms)
+
+The project lead's call: overexpression evidence alone is over-annotation. It
+is applied per gene. A row is carried forward only if the same gene has
+loss-of-function or other independent evidence for the role. zic2-a and zic4
+fail this test. zic1 (PMID:15843410) and sox10 (PMID:12885557) pass. The
+remapping now has 52 replace, 3 over-annotated, 2 remove and 5 undecided
+decisions. Gap terms were checked in OLS. The delamination regulation term looked
+needed for TSPAN18, but on rereading the paper the delay of emigration is
+shown only by overexpression, so it was not proposed and TSPAN18 is flagged
+for re-decision.
+
 ## 2026-10-09 (remapping)
 
 Four review batches covered the remaining 72 distinct rows, and 22 more rows
 were taken from the existing gene reviews. Result: 94 rows, 62 distinct
-gene–paper decisions (55 replace, 2 remove, 5 undecided). All quotes and ids
+gene–paper decisions (52 replace, 3 over-annotated, 2 remove, 5 undecided). All quotes and ids
 pass `check_remap.py`. Spot checks by the coordinator: GO:0044335 (Wnt in crest
 differentiation) is indeed obsolete, which is why LRP6 maps to GO:1905294; and
 the chicken SOX9 paper's title and text support delamination. Inventory

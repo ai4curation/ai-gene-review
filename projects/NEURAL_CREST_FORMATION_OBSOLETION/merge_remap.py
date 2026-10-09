@@ -43,7 +43,7 @@ def reviewed_rows():
             continue
         rv = match.get("review") or {}
         repl = rv.get("proposed_replacement_terms") or []
-        action = {"MODIFY": "REPLACE", "UNDECIDED": "UNDECIDED", "REMOVE": "REMOVE"}.get(rv.get("action"), "REPLACE")
+        action = {"MODIFY": "REPLACE", "UNDECIDED": "UNDECIDED", "REMOVE": "REMOVE", "MARK_AS_OVER_ANNOTATED": "OVER_ANNOTATED"}.get(rv.get("action"), "REPLACE")
         quote = next((s for s in rv.get("supported_by") or [] if str(s.get("reference_id", "")).startswith("PMID:")), {})
         out.append({
             "group": "R_reviewed_in_repo", "gene_product_id": r["GENE PRODUCT ID"], "symbol": sym,

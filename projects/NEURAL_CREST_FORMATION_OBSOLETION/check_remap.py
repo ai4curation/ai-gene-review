@@ -5,7 +5,8 @@ For each row of remap/*.tsv (excluding *.input.tsv):
     cached publications/PMID_<n>.md for supporting_reference;
   * every replacement id must be a live GO term whose label matches, or 'NTR'
     with one of the two proposed labels;
-  * proposed_action must be one of REPLACE, REMOVE, UNDECIDED.
+  * proposed_action must be one of REPLACE, REMOVE, UNDECIDED, OVER_ANNOTATED
+    (gain-of-function-only evidence: not carried forward to any replacement).
 
 Usage: uv run python projects/NEURAL_CREST_FORMATION_OBSOLETION/check_remap.py [files...]
 """
@@ -19,7 +20,7 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 NTR = {"neural plate border formation", "neural crest progenitor maintenance"}
-ACTIONS = {"REPLACE", "REMOVE", "UNDECIDED"}
+ACTIONS = {"REPLACE", "REMOVE", "UNDECIDED", "OVER_ANNOTATED"}
 _cache = {}
 
 

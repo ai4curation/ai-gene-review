@@ -750,6 +750,9 @@ obsolete it, together with its regulation terms, and to add a new term,
 - **Competence factors:** a second new term, *neural crest progenitor
   maintenance* (decided 2026-10-09). That covers hes4-a, id3-a, myc-a and
   pou5f1.1.
+- **Overexpression-only evidence** (added 2026-10-09): treated as
+  over-annotation unless the same gene has loss-of-function or other
+  independent evidence for the role. This affects zic2-a and zic4.
 
 All eleven affected reviews and the module have been updated.
 
