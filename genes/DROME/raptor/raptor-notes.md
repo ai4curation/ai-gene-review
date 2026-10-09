@@ -1,6 +1,6 @@
 # raptor (Q9W437) curation notes
 
-Deep research: falcon run reported failure by the wrapper (timeout); notes from cached publications.
+Deep research: `raptor-deep-research-falcon.md` (falcon; the wrapper reported a 600 s timeout but the run completed later). Folded in as an EDIT; its conclusions agree with the review and it is cited in the core function.
 
 ## Literature journal
 
