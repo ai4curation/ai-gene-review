@@ -1,10 +1,10 @@
 ---
 provider: falcon
 model: Edison Scientific Literature
-cached: false
-start_time: '2026-10-09T18:33:44.804040'
-end_time: '2026-10-09T18:48:46.586067'
-duration_seconds: 901.78
+cached: true
+start_time: '2026-10-09T19:36:24.802774'
+end_time: '2026-10-09T19:36:24.814741'
+duration_seconds: 0.01
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: DROME

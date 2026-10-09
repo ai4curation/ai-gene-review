@@ -23,3 +23,7 @@ Septin, SEPT7 class; shared subunit of both Drosophila septin complexes (Sep1-Se
 - protein binding (2x IPI): REMOVE (no informative replacement).
 - actin binding / microtubule binding (MMAP screen, PMID:11076973): KEEP_AS_NON_CORE.
 - photoreceptor cell development NAS: MARK_AS_OVER_ANNOTATED.
+
+## Deep research (falcon) follow-up
+
+The falcon report describes Pnut as a membrane-associated, polymerising septin scaffold in the Pnut-Sep2-Sep1 hexamer that binds and hydrolyses GTP, with the C-terminal coiled coil required for complex assembly and Orc6 binding, consistent with the accepted core functions. It adds Ran/importin/Anillin-dependent Pnut recruitment to pseudocleavage furrows and a role in planar epithelial cytokinesis and adherens-junction remodelling (Founounou et al. 2013); these papers are not in GOA or the cache, so no NEW annotations were added.
