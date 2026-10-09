@@ -15,4 +15,4 @@
 ## Curation thoughts
 - Two core roles: RZZ kinetochore adaptor (SAC, dynein/Mad1-Mad2 recruitment) and NRZ ER-Golgi trafficking (Golgi organization; membrane supply in cytokinesis).
 - IBA "ER to Golgi vesicle-mediated transport" accepted: fly data show ER-Golgi trafficking role without resolving direction (NRZ is best known for Golgi-to-ER retrograde tethering).
-- Deep research (falcon) failed (OOM/provider unavailable) at time of writing; notes based on cached publications and UniProt.
+- Deep research (falcon) failed twice (OOM/timeout, perplexity fallback unavailable) but the falcon job later completed (Zw10-deep-research-falcon.md); it agrees Zw10 is a nonenzymatic RZZ scaffold with a separable membrane role ["this membrane-associated activity is distinguishable experimentally from its canonical kinetochore role"] and cautions that fly Zw10 is not shown to tether COPI vesicles directly.
