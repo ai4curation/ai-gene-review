@@ -11,8 +11,13 @@ IPR050324 (CDP-alcohol phosphatidyltransferase class I), PANTHER PTHR14269:SF60.
   PMID:42414597 (2026 heart Crls1 KO) via `just fetch-pmid`.
 - Deep research: `just deep-research-falcon human CRLS1 --fallback perplexity-lite` FAILED.
   Falcon timed out after 600 s; the perplexity-lite fallback failed with "Provider 'perplexity'
-  not available. Available: falcon, asta, openscientist". No deep-research file was created.
-  Literature research was done directly with the PubMed MCP and the cached publications.
+  not available. Available: falcon, asta, openscientist". The review was written from direct
+  PubMed MCP research and the cached publications. The underlying falcon job nevertheless
+  completed later (15:56) and wrote CRLS1-deep-research-falcon.md (tool-generated, 69 citations).
+  On a scan it agrees with this review: CDP-DAG + PG -> CL + CMP is the core activity, and
+  disease and knockout phenotypes (COXPD57, mouse muscle, heart, macrophage complex II) are
+  downstream consequences of cardiolipin loss, not additional CRLS1 activities. It does not
+  discuss the Nie 2010 LPG acyltransferase claim. No review decisions changed.
 
 ## Molecular function: CDP-type cardiolipin synthase
 
