@@ -9,3 +9,8 @@
 - Decisions: sulfur dioxygenase and sulfide oxidation accepted by orthology; mitochondrion ->
   mitochondrial matrix; glutathione metabolic process -> sulfide oxidation; iron ion binding ->
   ferrous iron binding; nucleoplasm (from early human HSCO overexpression data) over-annotated.
+- Falcon deep research (CG30022-deep-research-falcon.md, arrived after initial commit): CG30022 =
+  dEthe1 (58% identity to human ETHE1), predicted N-terminal mitochondrial targeting sequence; a 2011
+  thesis reports an EMS P157S allele with reduced complex IV (COX) activity, mirroring sulfide
+  inhibition of COX in ETHE1 deficiency; CG30022 is upregulated in tko25t mitochondrial-translation
+  mutants. No purified-enzyme or localization data. Sources not cached (thesis); no annotation changes.
