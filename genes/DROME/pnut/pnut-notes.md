@@ -21,7 +21,7 @@ Septin, SEPT7 class; shared subunit of both Drosophila septin complexes (Sep1-Se
 ## Decisions
 - GTPase activity, GTP binding, actin filament binding, septin complex, cleavage furrow, cytokinesis, wound repair: ACCEPT (core).
 - protein binding (2x IPI): REMOVE (no informative replacement).
-- actin binding / microtubule binding (MMAP screen, PMID:11076973): KEEP_AS_NON_CORE.
+- actin binding (GO:0003779, MMAP screen PMID:11076973): MODIFY to GO:0051015 actin filament binding, which purified septins directly show [PMID:38728140 "Strikingly, we find that all five Drosophila Septins can bind to and bundle actin filaments"]. microtubule binding (same screen): KEEP_AS_NON_CORE.
 - photoreceptor cell development NAS: MARK_AS_OVER_ANNOTATED.
 
 ## Deep research (falcon) follow-up
