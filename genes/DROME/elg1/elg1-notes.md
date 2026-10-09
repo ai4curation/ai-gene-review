@@ -7,3 +7,4 @@
 - NAS row for DNA strand elongation cites PMID:24204884 (Elongin/Corto), which does not mention Elg1; MODIFY to GO:0006261 since Elg1 acts after elongation (unloading).
 - GO:0061860 IBA (donor ATAD5) accepted; core function recorded as contributes_to with GO:0031391.
 - Round-2 rule applied: generic parents (DNA replication, ATP-dependent activity acting on DNA, protein-containing complex) changed from KEEP_AS_NON_CORE to MODIFY toward the specific term the gene already carries; subunit-level binding/ATPase terms stay KEEP_AS_NON_CORE.
+- Falcon deep research (arrived late) gives an accurate orthology-based picture (Elg1-RFC/ATAD5-RFC unloader structures, Xenopus Atad5-RLC as main unloader) but overlooked PMID:27198229, so it understates direct fly evidence.
