@@ -19,3 +19,6 @@
 - "DNA strand elongation involved in DNA replication" IDA (all four subunits) MODIFY -> GO:0000082 G1/S transition of mitotic cell cycle: the paper measures a G1/S block and chromatin-bound PCNA, not strand elongation.
 - Acetyltransferase activator activity ACCEPT for the three non-catalytic subunits.
 - enok: generic HAT / H3 HAT / catalytic activity MODIFY -> GO:0043994 H3K23 acetyltransferase; H15-domain-derived nucleosome and nucleosome assembly IEA REMOVE.
+
+## Deep research (falcon, added after initial review)
+- `enok-deep-research-falcon.md` agrees: H3K23 is the best-established site ["H3K23 is the most securely established physiological site"]; Enok is a major but not exclusive H3K23 writer (CBP/nejire contributes at ecdysone genes); Br140 stimulates Enok activity. It explicitly warns the H1/H5 (H15) domain mapping should not make Enok a linker histone, supporting removal of the nucleosome / nucleosome assembly IEAs. No annotation decisions changed.
