@@ -14,3 +14,7 @@
   thesis reports an EMS P157S allele with reduced complex IV (COX) activity, mirroring sulfide
   inhibition of COX in ETHE1 deficiency; CG30022 is upregulated in tko25t mitochondrial-translation
   mutants. No purified-enzyme or localization data. Sources not cached (thesis); no annotation changes.
+- PR #4483 follow-up: checked the six QuickGO rows on the alternative accession Q86PD3 (GO:0050313 IBA/IEA,
+  GO:0006749 IBA/IEA, GO:0005739 IBA/IEA). All three terms are already reviewed here on A0ACM8PZC4 (from
+  ISS/IEA rows), so no term goes unreviewed; the IBA rows exist only on Q86PD3 and would get the same
+  actions (accept sulfur dioxygenase; mitochondrion -> matrix; glutathione metabolism -> sulfide oxidation).
