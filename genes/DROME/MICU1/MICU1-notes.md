@@ -16,4 +16,4 @@ UniProt A2VEI2 (Calcium uptake protein 1 homolog, mitochondrial); PANTHER PTHR12
 
 ## Deep research
 
-`just deep-research-falcon` was still running or had timed out when this review was committed; any late-arriving report will be added in a follow-up commit.
+`MICU1-deep-research-falcon.md` (falcon) arrived after the review was first committed. It agrees with the review: MICU1 is an EF-hand calcium-sensing regulatory subunit acting on the intermembrane-space side of the inner membrane. Fly data support functional restraint of MCU-EMRE activity (eye assay), but mouse mitoplast patch-clamp data indicate MICUs raise open probability at high calcium rather than plugging the pore at low calcium. This supports keeping the bidirectional calcium channel regulator activity rather than refining it to inhibitor activity. No annotation decision changed.
