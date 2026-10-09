@@ -14,4 +14,12 @@ Module: dmel_arginine_metabolism (with Ass, Argl).
 ## Decisions
 - urea cycle (IEA UniPathway): REMOVE (no OTC in insects). Same call on Ass.
 - ammonium excretion (ISS from Aedes): MARK_AS_OVER_ANNOTATED.
-- mitochondrion ISS: ACCEPT; cytosol IBA: UNDECIDED; cytoplasm IBA: KEEP_AS_NON_CORE.
+- mitochondrion ISS: UNDECIDED; cytosol IBA: UNDECIDED; cytoplasm IBA: ACCEPT (revised; see below).
+
+## Localization decision (revised)
+
+The mitochondrion ISS row is now UNDECIDED, matching the cytosol IBA. The
+presequence-like N-terminus was read from the sequence by eye, with no targeting
+predictor run, and the deep research finds no fly evidence that separates a
+mitochondrial from a cytosolic arginase. Cytoplasm (accepted) is used as the core
+location until localization data exist.
