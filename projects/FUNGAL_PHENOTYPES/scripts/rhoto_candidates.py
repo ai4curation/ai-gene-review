@@ -2,11 +2,13 @@
 """Group strong R. toruloides fitness defects into nutrient modules.
 
 Joins ``data/rhoto_specific_defects.tsv`` and
-``data/rhoto_accession_resolution.tsv``, keeps genes whose strongest specific
+``data/rhoto_accession_resolution.tsv`` (written by
+``projects/PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py``), keeps genes whose strongest specific
 defect is <= --strong (default -3) in at most --max-conditions carbon
 conditions (default 6), assigns each to a module by the conditions it is
 defective in, and annotates the current UniProtKB entry (protein name,
-annotation score, number of GO terms). Output:
+annotation score, number of GO terms, and whether
+``projects/GENE_MODEL_ERRORS`` found the entry to be a fused gene model). Output:
 ``data/rhoto_candidates.tsv``.
 
     uv run python projects/FUNGAL_PHENOTYPES/scripts/rhoto_candidates.py
@@ -27,6 +29,8 @@ import urllib.request
 from pathlib import Path
 
 DATA = Path("projects/FUNGAL_PHENOTYPES/data")
+# Optional: fused current entries found by projects/GENE_MODEL_ERRORS.
+FUSIONS = Path("projects/GENE_MODEL_ERRORS/data/rhoto_fusion_genetics.tsv")
 MODULES = {
     "aromatic": ["Benzoate", "p-Coumarate", "Ferulate", "Phenylalanine"],
     "branched_chain_amino_acid": ["Leucine", "Valine"],
@@ -84,14 +88,19 @@ def main() -> None:
     ap.add_argument("--max-conditions", type=int, default=6)
     args = ap.parse_args()
 
-    res = {r["rto4_id"]: r for r in csv.DictReader((DATA / "rhoto_accession_resolution.tsv").open(), delimiter="\t")}
+    res = {r["accession"]: r for r in csv.DictReader((DATA / "rhoto_accession_resolution.tsv").open(), delimiter="\t")}
+    unresolved = {"replacement": "", "call": "no_accession"}
     keep = []
     for r in csv.DictReader((DATA / "rhoto_specific_defects.tsv").open(), delimiter="\t"):
         d = parse(r["defective_conditions"])
         if min(d.values()) <= args.strong and len(d) <= args.max_conditions:
             keep.append((r, d))
 
-    accs = sorted({res[r["rto4_id"]]["reference_accession"] for r, _ in keep} - {""})
+    fused = {}
+    if FUSIONS.exists():
+        for f in csv.DictReader(FUSIONS.open(), delimiter="\t"):
+            fused[f["target"]] = f["evidence"]
+    accs = sorted({res.get(r["uniprot_2023"], unresolved)["replacement"] for r, _ in keep} - {""})
     info = uniprot_info(accs)
 
     out = DATA / "rhoto_candidates.tsv"
@@ -101,18 +110,20 @@ def main() -> None:
         w.writerow(
             ["module", "rto4_id", "strongest_fitness", "defective_conditions",
              "current_accession", "resolution", "current_protein_name",
-             "annotation_score", "n_go_terms", "kog_annotation", "sc_orthologs"]
+             "annotation_score", "n_go_terms", "current_entry_fused",
+             "kog_annotation", "sc_orthologs"]
         )
         rows = []
         for r, d in keep:
-            rr = res[r["rto4_id"]]
-            acc = rr["reference_accession"] if rr["call"] != "weak" else ""
+            rr = res.get(r["uniprot_2023"], unresolved)
+            acc = rr["replacement"] if rr["call"] != "weak" else ""
             name, score, ngo = info.get(acc, ("", "", 0))
             mod = module_of(d)
             counts[mod] += 1
             rows.append(
                 [mod, r["rto4_id"], f"{min(d.values()):.1f}", r["defective_conditions"],
-                 acc, rr["call"], name, score, ngo, r["kog_annotation"], r["sc_orthologs"]]
+                 acc, rr["call"], name, score, ngo, fused.get(acc, ""),
+                 r["kog_annotation"], r["sc_orthologs"]]
             )
         for row in sorted(rows, key=lambda x: (x[0], float(x[2]))):
             w.writerow(row)

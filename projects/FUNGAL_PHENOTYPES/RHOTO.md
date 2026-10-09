@@ -15,10 +15,12 @@ aromatic compounds (96 genes), branched-chain amino acids (22), pentoses and
 polyols (9), fatty acids and acetate (5) and galactose (1). The method
 recovers expected enzymes, such as galactokinase on galactose and
 branched-chain keto acid dehydrogenase on leucine and valine. Of the 137
-strong genes, 30 have no GO annotation in UniProt, and two current entries
-look like fused gene models named after the wrong half: a
-3-methylcrotonyl-CoA carboxylase entry called "Nup85" and an intradiol
-dioxygenase entry called "ADP-ribose pyrophosphatase".
+strong genes, 30 have no GO annotation in UniProt, and 11 map to current
+entries that are fused gene models, two or more neighbouring genes joined
+into one protein and often named after the wrong part: a
+3-methylcrotonyl-CoA carboxylase entry is called "Nup85" and an intradiol
+dioxygenase entry "ADP-ribose pyrophosphatase". The fusions are analysed in
+[GENE_MODEL_ERRORS](../GENE_MODEL_ERRORS.md).
 Joining the data to UniProt takes some work, because most accessions from the
 source strain have been deleted from UniProtKB.
 
@@ -56,9 +58,10 @@ The 2023 accessions point at the IFO0880 proteome (UP000239560), now a
 non-reference proteome. Of the 370 genes with a specific defect, 209 have a
 2023 accession that has since been **deleted** from UniProtKB; their
 sequences survive only in UniParc, with no identical active entry.
-`scripts/rhoto_resolve_accessions.py` fetches each sequence from UniParc and
-searches it with phmmer against the reference proteome (UP000199069, locus
-tags `BN2166_*`):
+The shared resolver
+[`PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py`](../PROTEOME_REMOVAL.md)
+fetches each sequence from UniParc and searches it with phmmer against the
+reference proteome (UP000199069, locus tags `BN2166_*`):
 
 | Call | Genes | Meaning |
 |---|---|---|
@@ -122,22 +125,35 @@ annotation.
 
 ## Annotation problems the fitness data exposes
 
+Tiling each entry with the IFO0880 proteome and checking the fitness of
+each part confirms the first two below as fusions, along with nine more
+entries carrying strong candidates (column `current_entry_fused` in
+`data/rhoto_candidates.tsv`; details in
+[GENE_MODEL_ERRORS](../GENE_MODEL_ERRORS.md)).
+
 - **A0A0K3CAZ0** (RTO4_12867; leucine −3.4): a 1,419-residue entry carrying
   both biotin carboxylase domains (IPR005481, IPR011764, IPR005482, biotin
   attachment IPR000089) and a Nucleoporin Nup85-like domain (IPR011502). It
   is named "Nuclear pore complex protein Nup85" and annotated to both
   methylcrotonoyl-CoA carboxylase activity and the nuclear pore. This looks
-  like a gene model that fuses two neighbouring genes. The IFO0880 protein
-  that carries the phenotype matches it at 99.7% identity over 95% of its own
-  length, and the leucine-specific defect points to the MCC α subunit, not
-  to Nup85.
+  like a gene model that fuses two neighbouring genes, and it is: residues
+  1–650 are IFO0880 RTO4_12868 (Nup85-like) and 645–1,419 are RTO4_12867
+  (MCC α), at ≥ 99.7% identity. Mutants in RTO4_12867 fail on leucine
+  (−3.4); mutants in RTO4_12868 do not (−0.1).
 - **A0A0K3C7C1** (RTO4_12623): a 781-residue entry named "ADP-ribose
   pyrophosphatase" that carries α/β-hydrolase and DUF676 domains alongside
   intradiol ring-cleavage dioxygenase domains (IPR000627, IPR015889). Its GO
-  terms are the dioxygenase's. The aromatic-specific defect fits the
-  dioxygenase; the name fits neither domain set.
+  terms are the dioxygenase's. Residues 1–368 are RTO4_12623 (dioxygenase;
+  benzoate −7.5) and 419–686 are its neighbour RTO4_12624 (lipase-like;
+  benzoate +0.3). The name fits neither part.
 - **A0A0K3CD57** (RTO4_14022): named methylisocitrate lyase; the oleate and
-  acetate phenotype fits isocitrate lyase. Both GO terms are present.
+  acetate phenotype fits isocitrate lyase. Both GO terms are present. This
+  entry is also a fusion, and the other isocitrate-lyase-family entry,
+  A0A0K3CIB4 ("Isocitrate lyase"), has a part needed on valine, as
+  methylisocitrate lyase would be: the two names may be swapped.
+- **A0A0K3CA73** ("2-oxoisovalerate dehydrogenase subunit α", RTO4_12566,
+  leucine −6.4) is the E1α fused to a neighbouring amino acid transporter
+  (RTO4_12567, leucine −0.3).
 - **30 of the 137 strong genes have no GO annotation**, mostly in the aromatic
   module (25 of 96).
 
@@ -155,11 +171,11 @@ annotation.
 ## Next steps
 
 1. Review the aromatic cluster (RTO4_12620, RTO4_12621, RTO4_12623), RTO4_9789
-   and the mis-named carboxylase A0A0K3CAZ0 as gene reviews. These would be
-   the first *R. toruloides* entries in this repository. A UniProt species
-   folder would be `genes/RHOTO/`.
-2. Report the two apparently fused gene models (A0A0K3CAZ0, A0A0K3C7C1) to
-   UniProt.
+   and MCC α (RTO4_12867) as gene reviews. These would be the first
+   *R. toruloides* entries in this repository (`genes/RHOTO/`). Several sit in
+   fused current entries, so the reviews need a way to say which part they
+   cover; see the proposal in [GENE_MODEL_ERRORS](../GENE_MODEL_ERRORS.md).
+2. Report the fused gene models to UniProt.
 3. Add t statistics if the authors' per-replicate data become available, and
    repeat with the Fitness Browser specificity criteria.
 
@@ -167,10 +183,19 @@ annotation.
 
 - `scripts/rhoto_specific_phenotypes.py` → `data/rhoto_specific_defects.tsv`
   (370 genes)
-- `scripts/rhoto_resolve_accessions.py` (needs `uv run --with pyhmmer`) →
-  `data/rhoto_accession_resolution.tsv`
-- `scripts/rhoto_candidates.py` → `data/rhoto_candidates.tsv` (137 genes)
+- `../PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py` (needs
+  `uv run --with pyhmmer`) → `data/rhoto_accession_resolution.tsv`
+- `scripts/rhoto_candidates.py` → `data/rhoto_candidates.tsv` (137 genes;
+  reads `GENE_MODEL_ERRORS/data/rhoto_fusion_genetics.tsv` if present)
 
-Run them in that order from the repository root. Downloads (supplements from
-Europe PMC and the UniProt reference proteome) are cached in
-`tmp/fungal_phenotypes/`.
+Run from the repository root:
+
+    uv run python projects/FUNGAL_PHENOTYPES/scripts/rhoto_specific_phenotypes.py
+    uv run --with pyhmmer python projects/PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py \
+        --from-tsv projects/FUNGAL_PHENOTYPES/data/rhoto_specific_defects.tsv \
+        --column uniprot_2023 --proteome UP000199069 --cache tmp/fungal_phenotypes \
+        --out projects/FUNGAL_PHENOTYPES/data/rhoto_accession_resolution.tsv
+    uv run python projects/FUNGAL_PHENOTYPES/scripts/rhoto_candidates.py
+
+Downloads (supplements from Europe PMC and the UniProt reference proteome)
+are cached in `tmp/fungal_phenotypes/`.

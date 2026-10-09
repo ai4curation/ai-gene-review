@@ -34,6 +34,11 @@ about 4,990 gene folders, so the February scan no longer covers it and
 should be re-run; the `just` targets listed under Tooling are not in the
 current justfiles and would need to be restored first.
 
+A replacement finder (`PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py`,
+added 2026-10-09) now finds a current entry for three of the five deleted
+reviews: stx2A and Q1IFG0 have identical-sequence active entries, and xdhB
+has a near-identical reference-proteome match. merB and fae1A have none.
+
 We did this because a review's primary key is its UniProt accession: when
 the entry disappears, `just fetch-gene` and the validators can no longer
 refresh the review, and the curated judgement is stranded.
@@ -81,7 +86,8 @@ We have **15 entries** that WILL BE REMOVED from UniProtKB.
 
 ### Action Required
 
-- [ ] Find alternative entries or archive affected reviews
+- [ ] Find alternative entries or archive affected reviews (replacements
+  found for 3 of the 5 deleted entries; see "Finding replacements" below)
 - [ ] Consider if UniParc references are acceptable for these use cases
 
 ## Tooling
@@ -94,6 +100,56 @@ just check-uniprot-removal ID1 ID2    # Check specific IDs
 just check-all-uniprot-removal        # Check all gene reviews
 ```
 
+## Finding replacements
+
+`scripts/resolve_deleted_accessions.py` takes any list of accessions, or a
+TSV column of them, and for each reports, in order of preference:
+
+1. `active`: still in UniProtKB.
+2. `identical_active`: UniParc lists an active UniProtKB entry with the
+   identical sequence. UniParc marks archived members with a version suffix
+   (`A0A2S9ZZK0.1`) and active ones without (`P09385`); reviewed entries are
+   preferred, then the same taxon.
+3. `same_gene` (≥ 90% identity over ≥ 80% of the query),
+   `same_gene_partial_model` (≥ 95% identity over a shorter span, because the
+   gene models differ in length) or `weak`: best phmmer hit of the archived
+   sequence against the reference proteome(s) of its species, found
+   automatically (`taxonomy_id:<species> AND reference:true`) or given with
+   `--proteome`.
+4. `no_hit`, `no_reference_proteome`, `no_sequence` or `not_found`.
+
+```bash
+uv run --with pyhmmer python projects/PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py \
+    A0A1V0M5B3 Q1IFG0 --out resolved.tsv
+```
+
+### The 15 affected reviews (2026-10-09)
+
+Output: `data/removed_review_replacements.tsv`. Ten accessions are still
+active. For the five deleted ones:
+
+| Review | Accession | Call | Replacement | Notes |
+|---|---|---|---|---|
+| ECO57/stx2A | A0A9Q6Z964 | identical_active | P09385 | Swiss-Prot Shiga-like toxin 2 subunit A, recorded under phage 933W |
+| PSEEN/Q1IFG0 | Q1IFG0 | identical_active | A0ACM9BYE4 | same strain (L48), locus PSEEN0657 |
+| ACEPA/xdhB | A0A1Y0Y121 | same_gene_partial_model | A0A401X2W7 | 98.1% identity over 74% of the 781-residue query; the replacement is 577 residues |
+| PSEAI/merB | A0A1V0M5B3 | no_hit | none | no match in the PAO1 or PA14 reference proteomes; merB is usually plasmid- or transposon-borne |
+| RUMJO/fae1A | A0A2Z5TSL2 | no_reference_proteome | none | *Ruminiclostridium josui* has no reference proteome |
+
+Re-keying stx2A, Q1IFG0 and xdhB onto these accessions is a curation
+decision (a new `id`, `just fetch-gene`, re-checking the existing
+annotations) and has not been done here. merB and fae1A can only stay keyed
+on UniParc or be archived.
+
+### Other users of the script
+
+- `projects/FUNGAL_PHENOTYPES/RHOTO.md` uses it to map 370
+  *Rhodotorula toruloides* genes whose published accessions (IFO0880,
+  UP000239560) were removed in the cleanup; 348 resolve.
+- `projects/GENE_MODEL_ERRORS.md` uses its output to find fused gene models:
+  a replacement much longer than the archived sequence is the typical
+  signature.
+
 ---
 # STATUS
 
@@ -101,7 +157,8 @@ just check-all-uniprot-removal        # Check all gene reviews
 - [x] Set up cache directory and just targets
 - [x] Comprehensive check of all 896 gene review UniProt IDs
 - [x] Identify 15 entries being removed
-- [ ] Find alternative entries or archive affected reviews
+- [x] Script to find replacement entries (`scripts/resolve_deleted_accessions.py`)
+- [ ] Find alternative entries or archive affected reviews (3 of 5 deleted have replacements)
 
 # NOTES
 

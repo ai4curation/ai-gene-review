@@ -464,6 +464,10 @@ PSEEN <a href="../../genes/PSEEN/Q1IFG0/Q1IFG0-ai-review.html">Q1IFG0</a>) and t
 about 4,990 gene folders, so the February scan no longer covers it and<br />
 should be re-run; the <code>just</code> targets listed under Tooling are not in the<br />
 current justfiles and would need to be restored first.</p>
+<p>A replacement finder (<code>PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py</code>,<br />
+added 2026-10-09) now finds a current entry for three of the five deleted<br />
+reviews: <a href="../../genes/ECO57/stx2A/stx2A-ai-review.html">stx2A</a> and <a href="../../genes/PSEEN/Q1IFG0/Q1IFG0-ai-review.html">Q1IFG0</a> have identical-sequence active entries, and <a href="../../genes/ACEPA/xdhB/xdhB-ai-review.html">xdhB</a><br />
+has a near-identical reference-proteome match. <a href="../../genes/PSEAI/merB/merB-ai-review.html">merB</a> and <a href="../../genes/RUMJO/fae1A/fae1A-ai-review.html">fae1A</a> have none.</p>
 <p>We did this because a review's primary key is its UniProt accession: when<br />
 the entry disappears, <code>just fetch-gene</code> and the validators can no longer<br />
 refresh the review, and the curated judgement is stranded.</p>
@@ -586,7 +590,8 @@ refresh the review, and the curated judgement is stranded.</p>
 </table>
 <h3 id="action-required">Action Required</h3>
 <ul>
-<li>[ ] Find alternative entries or archive affected reviews</li>
+<li>[ ] Find alternative entries or archive affected reviews (replacements<br />
+  found for 3 of the 5 deleted entries; see "Finding replacements" below)</li>
 <li>[ ] Consider if UniParc references are acceptable for these use cases</li>
 </ul>
 <h2 id="tooling">Tooling</h2>
@@ -596,6 +601,91 @@ just<span class="w"> </span>check-uniprot-removal<span class="w"> </span>ID1<spa
 just<span class="w"> </span>check-all-uniprot-removal<span class="w">        </span><span class="c1"># Check all gene reviews</span>
 </code></pre></div>
 
+<h2 id="finding-replacements">Finding replacements</h2>
+<p><code>scripts/resolve_deleted_accessions.py</code> takes any list of accessions, or a<br />
+TSV column of them, and for each reports, in order of preference:</p>
+<ol>
+<li><code>active</code>: still in UniProtKB.</li>
+<li><code>identical_active</code>: UniParc lists an active UniProtKB entry with the<br />
+   identical sequence. UniParc marks archived members with a version suffix<br />
+   (<code>A0A2S9ZZK0.1</code>) and active ones without (<a href="https://www.uniprot.org/uniprotkb/P09385/entry">P09385</a>); reviewed entries are<br />
+   preferred, then the same taxon.</li>
+<li><code>same_gene</code> (≥ 90% identity over ≥ 80% of the query),<br />
+<code>same_gene_partial_model</code> (≥ 95% identity over a shorter span, because the<br />
+   gene models differ in length) or <code>weak</code>: best phmmer hit of the archived<br />
+   sequence against the reference proteome(s) of its species, found<br />
+   automatically (<code>taxonomy_id:&lt;species&gt; AND reference:true</code>) or given with<br />
+<code>--proteome</code>.</li>
+<li><code>no_hit</code>, <code>no_reference_proteome</code>, <code>no_sequence</code> or <code>not_found</code>.</li>
+</ol>
+<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--with<span class="w"> </span>pyhmmer<span class="w"> </span>python<span class="w"> </span>projects/PROTEOME_REMOVAL/scripts/resolve_deleted_accessions.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>A0A1V0M5B3<span class="w"> </span>Q1IFG0<span class="w"> </span>--out<span class="w"> </span>resolved.tsv
+</code></pre></div>
+
+<h3 id="the-15-affected-reviews-2026-10-09">The 15 affected reviews (2026-10-09)</h3>
+<p>Output: <code>data/removed_review_replacements.tsv</code>. Ten accessions are still<br />
+active. For the five deleted ones:</p>
+<table>
+<thead>
+<tr>
+<th>Review</th>
+<th>Accession</th>
+<th>Call</th>
+<th>Replacement</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../genes/ECO57/stx2A/stx2A-ai-review.html">ECO57/stx2A</a></td>
+<td>A0A9Q6Z964</td>
+<td>identical_active</td>
+<td>P09385</td>
+<td>Swiss-Prot Shiga-like toxin 2 subunit A, recorded under phage 933W</td>
+</tr>
+<tr>
+<td><a href="../../genes/PSEEN/Q1IFG0/Q1IFG0-ai-review.html">PSEEN/Q1IFG0</a></td>
+<td><a href="../../genes/PSEEN/Q1IFG0/Q1IFG0-ai-review.html">Q1IFG0</a></td>
+<td>identical_active</td>
+<td>A0ACM9BYE4</td>
+<td>same strain (L48), locus PSEEN0657</td>
+</tr>
+<tr>
+<td><a href="../../genes/ACEPA/xdhB/xdhB-ai-review.html">ACEPA/xdhB</a></td>
+<td>A0A1Y0Y121</td>
+<td>same_gene_partial_model</td>
+<td>A0A401X2W7</td>
+<td>98.1% identity over 74% of the 781-residue query; the replacement is 577 residues</td>
+</tr>
+<tr>
+<td><a href="../../genes/PSEAI/merB/merB-ai-review.html">PSEAI/merB</a></td>
+<td>A0A1V0M5B3</td>
+<td>no_hit</td>
+<td>none</td>
+<td>no match in the PAO1 or PA14 reference proteomes; <a href="../../genes/PSEAI/merB/merB-ai-review.html">merB</a> is usually plasmid- or transposon-borne</td>
+</tr>
+<tr>
+<td><a href="../../genes/RUMJO/fae1A/fae1A-ai-review.html">RUMJO/fae1A</a></td>
+<td>A0A2Z5TSL2</td>
+<td>no_reference_proteome</td>
+<td>none</td>
+<td><em>Ruminiclostridium josui</em> has no reference proteome</td>
+</tr>
+</tbody>
+</table>
+<p>Re-keying <a href="../../genes/ECO57/stx2A/stx2A-ai-review.html">stx2A</a>, <a href="../../genes/PSEEN/Q1IFG0/Q1IFG0-ai-review.html">Q1IFG0</a> and <a href="../../genes/ACEPA/xdhB/xdhB-ai-review.html">xdhB</a> onto these accessions is a curation<br />
+decision (a new <code>id</code>, <code>just fetch-gene</code>, re-checking the existing<br />
+annotations) and has not been done here. <a href="../../genes/PSEAI/merB/merB-ai-review.html">merB</a> and <a href="../../genes/RUMJO/fae1A/fae1A-ai-review.html">fae1A</a> can only stay keyed<br />
+on UniParc or be archived.</p>
+<h3 id="other-users-of-the-script">Other users of the script</h3>
+<ul>
+<li><code>projects/FUNGAL_PHENOTYPES/RHOTO.md</code> uses it to map 370<br />
+<em>Rhodotorula toruloides</em> genes whose published accessions (IFO0880,<br />
+  UP000239560) were removed in the cleanup; 348 resolve.</li>
+<li><code>projects/GENE_MODEL_ERRORS.md</code> uses its output to find fused gene models:<br />
+  a replacement much longer than the archived sequence is the typical<br />
+  signature.</li>
+</ul>
 <hr />
 <h1 id="status">STATUS</h1>
 <ul>
@@ -603,7 +693,8 @@ just<span class="w"> </span>check-all-uniprot-removal<span class="w">        </s
 <li>[x] Set up cache directory and just targets</li>
 <li>[x] Comprehensive check of all 896 gene review UniProt IDs</li>
 <li>[x] Identify 15 entries being removed</li>
-<li>[ ] Find alternative entries or archive affected reviews</li>
+<li>[x] Script to find replacement entries (<code>scripts/resolve_deleted_accessions.py</code>)</li>
+<li>[ ] Find alternative entries or archive affected reviews (3 of 5 deleted have replacements)</li>
 </ul>
 <h1 id="notes">NOTES</h1>
 <h2 id="2026-02-03">2026-02-03</h2>
