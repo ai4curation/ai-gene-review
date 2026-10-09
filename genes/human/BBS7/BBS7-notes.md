@@ -1,5 +1,22 @@
 # BBS7 (Q8IWZ6) Gene Review Notes
 
+## Current conclusions — 2026-10-09
+
+BBS7 contributes a BBS2-binding interface to the BBSome, which supports selective membrane-protein trafficking at cilia. Direct pairwise evidence supports the BBS2 interaction, and human structural evidence resolves its coiled-coil heterodimer geometry. The six other BBS2 source records retain their association-level interpretations; a structural mechanism is not attributed to every interaction screen [PMID:22500027] [PMID:31530639].
+
+Mouse Bbs7 loss affects BBSome organization, BBS2 stability and selected ciliary receptor distributions. Zebrafish perturbation shortens Kupffer-vesicle cilia and delays retrograde melanosome transport. These contexts support the existing ciliary-process synthesis without making BBS7 an autonomous cargo receptor, transport motor or protein-folding catalyst. The adipocyte-differentiation and digestive-tract-morphogenesis transfers remain UNDECIDED because their supporting donor observations were not established [PMID:23572516] [PMID:24938409].
+
+The [standing user instruction in the CLINGEN_MENDELIAN project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions) explicitly retains supported generic protein-binding annotations as KEEP_AS_NON_CORE when a more informative molecular function is not established; supported refinements use MODIFY and unresolved evidence uses UNDECIDED. This instruction takes precedence over the general skill guidance. It is the authority for the 27 retained generic binding decisions, rather than the ActionEnum alone, warning severity, or an exemption for old reviews. The historical descriptions of a reviewer preference or unresolved policy disagreement are superseded. The single supported generic-binding refinement remains GO:0046982 for the PMID:22500027 BBS2 row; RNF2 binding separately retains its refinement to GO:0031625.
+
+The unchanged YAML contains 63 distinct source assertions covering 65 raw records, with 15 ACCEPT, 43 KEEP_AS_NON_CORE, three MODIFY and two UNDECIDED decisions. Both alternative products and the integrated core function are preserved. The core already connects heterodimerization, ciliary protein localization, cilium assembly, BBSome membership and the supported locations. No additional complex-level molecular function or new annotation is inferred here.
+
+The historical journal below preserves the earlier reasoning verbatim. Its prospective retrieval status, preliminary counts and superseded annotation decisions are not the current conclusions. PMID:23572516 is cached as an abstract and has separately documented selected external primary reads; PMID:24938409 has extracted full text. No new article reading or quotation is claimed by this presentation and policy clarification.
+
+<details style="white-space: pre-wrap">
+<summary>Historical curation journal — superseded decisions and process records preserved</summary>
+
+# BBS7 (Q8IWZ6) Gene Review Notes
+
 ## Overview
 BBS7 is a core subunit of the **BBSome** (GO:0034464), an octameric, coat/adaptor-like
 complex (BBS1, BBS2, BBS4, BBS5, BBS7, BBS8/TTC8, BBS9, BBIP10/BBIP1) that traffics
@@ -129,3 +146,5 @@ The current review contains 63 distinct source annotations, covering 65 raw reco
 Both requested publication records are now available. PMID:23572516 is cached as an abstract, supplemented by the previously recorded selected external Results and figure captions. PMID:24938409 includes extracted full text. Their current reading limits and ciliary findings are described in the preceding follow-up; the earlier pending-retrieval statement is obsolete. Figure pixels, movies and supplementary pair-level measurements were not independently audited.
 
 The scientific corrections are distinct from the remaining generic-binding policy disagreement. Supported interactions remain non-core under the supplied ActionEnum. This clarification changes no annotation, core function, product, reference, or supporting quotation. It appends to the journal rather than deleting historical paragraphs.
+
+</details>
