@@ -11,7 +11,7 @@
 - Mad2 recruitment [PMID:15886105 "Rod/Zw10 thus contributes to checkpoint activation by promoting Mad2 recruitment and to checkpoint inactivation by recruiting dynein/dynactin"].
 - rod(Z3) maternal-effect allele: RZZ not recruited in syncytial embryos, no SAC [PMID:25616898 "Consequently, the embryos have no spindle assembly checkpoint (SAC), and syncytial mitoses are profoundly perturbed"].
 - Golgi role [PMID:22685323 "Rod is concentrated at the Golgi but not at the ER"; "Rod plays a Golgi-related function that is not required for spermatocyte cytokinesis"].
-- Rab18 binding [PMID:25453831 "Blots were probed with either anti-ZW10 antibodies or anti-Rod antibodies as indicated"].
+- Rab18 binding [PMID:25453831 "Antisera against two NRZ subunits confirmed the interaction with Rab18 and showed it to be GTP specific"].
 - rod RNAi used as tool to induce CIN [PMID:26859353] - downstream consequences only.
 
 ## Curation thoughts

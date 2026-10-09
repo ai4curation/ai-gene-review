@@ -10,9 +10,10 @@
 - RZZ is required for Mad2 kinetochore recruitment [PMID:15886105 "Mad2, but not BubR1, Bub1, Bub3, or Mps1, requires Rod/Zw10 for its accumulation on unattached kinetochores"].
 - Spindly links RZZ to dynein [PMID:17576797 "cells arrest in metaphase with high levels of kinetochore-bound Mad2 and RZZ"].
 - Membrane-trafficking role in spermatocytes [PMID:22685323 "Zw10 is enriched at both the Golgi stacks and the ER of Drosophila spermatocytes"; "Loss of either Zw10 or Rint1 results in frequent failures of spermatocyte cytokinesis"; "furrow ingression halts prematurely due to defective plasma membrane addition"].
-- Rab18 affinity chromatography retrieves Zw10 and Rod [PMID:25453831 "Blots were probed with either anti-ZW10 antibodies or anti-Rod antibodies as indicated"].
+- Rab18 affinity chromatography retrieves Zw10 and Rod [PMID:25453831 "Antisera against two NRZ subunits confirmed the interaction with Rab18 and showed it to be GTP specific"].
 
 ## Curation thoughts
 - Two core roles: RZZ kinetochore adaptor (SAC, dynein/Mad1-Mad2 recruitment) and NRZ ER-Golgi trafficking (Golgi organization; membrane supply in cytokinesis).
-- IBA "ER to Golgi vesicle-mediated transport" accepted: fly data show ER-Golgi trafficking role without resolving direction (NRZ is best known for Golgi-to-ER retrograde tethering).
+- IBA "ER to Golgi vesicle-mediated transport" (anterograde) modified to the direction-neutral "Golgi vesicle transport" (GO:0048193): the Dsl1/NRZ complex tethers vesicles returning from the Golgi (retrograde), and the fly data show an ER-Golgi trafficking role without supporting the anterograde direction.
+- Generic centromeric-region location kept as non-core (kinetochore is the core location).
 - Deep research (falcon) failed twice (OOM/timeout, perplexity fallback unavailable) but the falcon job later completed (Zw10-deep-research-falcon.md); it agrees Zw10 is a nonenzymatic RZZ scaffold with a separable membrane role ["this membrane-associated activity is distinguishable experimentally from its canonical kinetochore role"] and cautions that fly Zw10 is not shown to tether COPI vesicles directly.
