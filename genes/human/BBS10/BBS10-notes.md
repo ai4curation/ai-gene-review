@@ -142,3 +142,48 @@ Short verbatim anchors now accompany the basal-body refinement, the context-spec
 The biological summary now includes TCP-1/CCT family membership and the BBS7-BBS2-BBS9 assembly intermediate. The core distinguishes participation in BBSome assembly from regulation of the machinery's formation. The molecular activity remains unresolved; no proposed catalytic term is added without direct evidence. Colonless PMID identifiers and missing spaces in the review are corrected. Earlier notes containing 'returned403' should read 'returned 403'; the original journal entries remain intact.
 
 The PMID:17980398 and PMID:33961781 caches contain full-text content. Their earlier full-text-unavailable flags were incorrect and are removed; limited reading and uninspected supplementary interaction records remain explicitly documented. Five supported generic associations remain KEEP_AS_NON_CORE under the supplied ActionEnum. In particular, independent BBS10-BBS7 co-immunoprecipitation supports the biological interaction represented by the two BioPlex rows, without claiming that the exact BioPlex records were independently audited. Neither REMOVE nor UNDECIDED is selected solely to satisfy the generic-binding advisory. No source tuple, action or alternative product is changed.
+
+
+## 2026-10-09 — BioPlex record verification and project instruction
+
+The exact publication-specific BBS10–BBS7 records are now verified. The official
+[BioPlex download page](https://bioplex.hms.harvard.edu/interactions.php) links the
+filtered directed HEK293T networks to Huttlin et al. 2017
+([PMID:28514442](https://pubmed.ncbi.nlm.nih.gov/28514442/)) and Huttlin et al. 2021
+([PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/)). Both the
+[BioPlex 2.0 directed file](https://bioplex.hms.harvard.edu/data/BioPlex_2.0_293T_DirectedEdges.tsv)
+and the
+[BioPlex 3.0 directed file](https://bioplex.hms.harvard.edu/data/BioPlex_3.0_293T_DirectedEdges.tsv)
+contain the same explicit row:
+
+| Bait GeneID | Bait Symbol | Prey GeneID | Prey Symbol |
+| --- | --- | --- | --- |
+| 55212 | BBS7 | 79738 | BBS10 |
+
+The two reference assessments now say VERIFIED for this published AP-MS
+association and cell line. This resolves the previous pair-record reading limit.
+The same edge in successive network releases is not counted as independent
+replication. The corresponding BBS7–BBS10 edge was not found in the published
+[HCT116 directed network](https://bioplex.hms.harvard.edu/data/BioPlex_3.0_HCT116_DirectedEdges.tsv);
+absence there is not evidence that the proteins cannot associate in HCT116.
+No purified binary contact, stoichiometry, stable BBSome membership, autonomous
+folding activity, or ATPase activity is inferred. Complete article controls, raw
+spectra and construct details were not independently re-assessed.
+
+The earlier references to retention "under the supplied ActionEnum" were
+incomplete statements of authority. The standing explicit user instruction in
+[the ClinGen project](https://github.com/ai4curation/ai-gene-review/blob/6b4b0fccc608746b8e6efefba54954f140da00cc/projects/CLINGEN_MENDELIAN.md#curation-instructions)
+directs KEEP_AS_NON_CORE for a supported, biologically correct GO:0005515
+annotation when no evidence-backed finer term is available, MODIFY when such a
+refinement is supported, and UNDECIDED when the relevant evidence cannot be
+adjudicated. This project instruction takes precedence over the generic-binding
+skill default and validator advisory. It does not claim a repository-wide policy
+change or a new maintainer sign-off.
+
+The three PMID:20080638 partner-specific associations and the two now-verified
+BioPlex associations therefore remain KEEP_AS_NON_CORE. Generic binding is not
+used as a core molecular function, and no finer BBS10 MF is inferred from an AP-MS
+edge. All fourteen source assertions, action decisions, core functions, raw
+records, provider artifacts and publication caches are unchanged. This entry
+supersedes the earlier source-reading limits and ActionEnum-only explanation;
+the prior journal entries are retained.
