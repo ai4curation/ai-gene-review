@@ -1,6 +1,6 @@
 # EloB (Elongin B) review notes
 
-Accession: Q7KSB2 (expected accession; `just fetch-gene DROME EloB` resolved to O44226, which also has GOA rows; refetched with `--alias EloB` on Q7KSB2). Module: dmel_vcb_ubiquitin_ligase.
+Accession: Q7KSB2 (expected accession; `just fetch-gene DROME EloB` resolved to O44226, which also has GOA rows; refetched with `--alias EloB` on Q7KSB2). Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_vcb_ubiquitin_ligase.
 
 ## Literature journal
 
@@ -17,3 +17,8 @@ Accession: Q7KSB2 (expected accession; `just fetch-gene DROME EloB` resolved to 
 ## Deep research (falcon, added after the initial review)
 
 The falcon deep-research run finished after the initial commit and is now in `EloB-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
+
+## Revision after PR #4471 review
+
+- GO:0016032 viral process is now KEEP_AS_NON_CORE rather than MARK_AS_OVER_ANNOTATED: GO uses this term for host products that take part in a viral life cycle (CrPV-1A co-opts the host Cul2-EloBC ligase), matching the precedent in genes/ECOLI/DnaJ. This replaces the earlier viral-process decision above.
+- GO:0140535 is now MODIFY to all four supported complexes (VCB, Elongin, Cul2-RING, Cul3-RING), not VCB alone.
