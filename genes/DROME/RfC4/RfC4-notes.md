@@ -6,5 +6,6 @@
 - Elg1 complex membership: [PMID:27198229 "identified peptides from all components of the Elg1 PCNA-unloader complex: Elg1, Rfc4, Rfc38, CG8142, and Rfc3"].
 - PMID:24204884 (Elongin/Corto, wing veins), cited by FlyBase NAS/IPI rows for all Elg1-complex subunits, does not mention RFC/Elg1/PCNA (full text searched); flagged MISCITED.
 - Protein binding IPI rows (14605208, 20353594, 38944040) are all with other RFC small subunits; removed as uninformative (complex membership already captured).
-- Module-wide convention (RfC4, RfC38, RfC3, CG8142): contributes_to GO:0003689 ACCEPT; GO:0005663 and GO:0031391 ACCEPT; GO:0006261/GO:0006271/GO:0006272 ACCEPT; generic DNA/ATP binding, ATPase, DNA replication parent, DNA repair, cohesion, checkpoint KEEP_AS_NON_CORE.
+- Module-wide convention (RfC4, RfC38, RfC3, CG8142): contributes_to GO:0003689 ACCEPT; GO:0005663 and GO:0031391 ACCEPT; GO:0006261/GO:0006271/GO:0006272 ACCEPT; subunit-level DNA/ATP binding and ATPase, DNA repair, cohesion, checkpoint KEEP_AS_NON_CORE; generic parents (GO:0006260, GO:0008094, GO:0032991) MODIFY to the specific term the gene already carries (round-2 rule).
 - Deep research: falcon run launched; see deep-research file if present.
+- Deep research (falcon) arrived after first commit; confirms nuclear localization (>95% interphase cells), replication/endoreduplication defects and selective checkpoint failure in Rfc4 mutants; alternative-loader roles are conserved inference only.
