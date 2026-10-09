@@ -200,7 +200,7 @@ Already reviewed here and discussed in the paper or its LECA model (Figure 6C):
 | human CRLS1 | 30 | 27 | 0 | 0 | 0 | 2 | 1 UNDECIDED | All MF rows are the CDP-type reaction; no PLD-type (GO:0008808) leak |
 | human CLPP | 55 | 26 | 2 | 0 | 5 | 22 | — | ClpXP only; nothing from the ClpYQ (HslUV) family |
 | yeast NDI1 | 22 | 18 | 0 | 1 | 2 | 1 | 2 NEW | No proton-pumping complex I MF (GO:0008137) or CC (GO:0045271) |
-| yeast MMM1 | 43 | 28 | 7 | 3 | 0 | 5 | — | ERMES IBA stays in fungi; no human gene carries GO:0032865 |
+| yeast MMM1 | 43 | 28 | 7 | 2 | 0 | 6 | — | ERMES IBA stays in fungi; no human gene carries GO:0032865 |
 | yeast MDM10 | 43 | 27 | 6 | 0 | 0 | 10 | — | As MMM1 |
 | yeast MDM12 | 42 | 23 | 11 | 2 | 0 | 6 | — | As MMM1 |
 | yeast MDM34 | 24 | 17 | 7 | 0 | 0 | 0 | — | As MMM1 |
@@ -223,7 +223,7 @@ Most removals are bare `protein binding` rows from high-throughput screens. The 
 - **ERMES.** Tether activity (GO:0140474), ERMES complex and intermembrane lipid transfer accepted
   for all four. Inheritance, morphology, mtDNA and peroxisome phenotypes kept as non-core, because
   artificial tethers and VPS13 bypass alleles rescue them. Lipid transfer is core only for Mmm1 and
-  Mdm12. The MMM1 mitochondrial outer membrane IDA (PMID:11266455) is removed: Kornmann et al.
+  Mdm12. Both MMM1 mitochondrial outer membrane rows (IDA PMID:11266455 and HDA PMID:16407407) are removed: Kornmann et al.
   2009 (PMID:19556461, full text cached) show Mmm1 is an ER protein "misannotated as a mitochondrial
   protein".
 
