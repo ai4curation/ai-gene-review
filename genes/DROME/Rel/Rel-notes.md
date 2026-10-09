@@ -26,7 +26,7 @@
 - Neural fate (ectopic bristles) [PMID:18000549], dendrite morphogenesis RNAi screen [PMID:23977298], DNA damage systemic response [PMID:21664581], amino-acid starvation induction of AMPs [PMID:17166233], neurodegeneration with Dnr1 [PMID:23613578].
 
 ## Deep research
-- Falcon deep research was attempted; the first run was killed (exit 137, memory pressure on the shared host). Literature recorded here from cached publications.
+- Falcon deep research (`Rel-deep-research-falcon.md`) arrived after the first commit; it agrees that Relish is a [file:DROME/Rel/Rel-deep-research-falcon.md "sequence-specific transcription factor, not an enzyme, transporter, or secreted antimicrobial peptide"].
 
 ## Review decisions
 - Core: RNA Pol II-specific DNA-binding transcription activator, nuclear, in PGRP (Imd) and STING pathways.

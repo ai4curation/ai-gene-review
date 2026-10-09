@@ -27,7 +27,7 @@
 - Hypoxia activates IKK-NF-kB, required for survival [PMID:24993778 "hypoxia activates the IKK-NF-κB [IκB (inhibitor of nuclear factor κB)-NF-κB] pathway and the immune response in Drosophila melanogaster"].
 
 ## Deep research
-- Falcon deep research was attempted but the run was killed (exit 137, memory pressure on shared host); literature captured here from cached publications instead.
+- Falcon deep research: the first run was killed (exit 137, memory pressure on the shared host); a retry produced `IKKbeta-deep-research-falcon.md`. It agrees with the review: Relish S528/S529 is the principal immune-inducible substrate, and [file:DROME/IKKbeta/IKKbeta-deep-research-falcon.md "DREDD is the caspase that cleaves Relish"], so IKKbeta is not the protease.
 
 ## Review decisions
 - Core MF: protein Ser/Thr kinase phosphorylating Relish within the IKK complex (with Kenny).
