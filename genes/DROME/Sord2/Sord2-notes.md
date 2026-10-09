@@ -7,4 +7,5 @@ residue identity."].
 - Redundant with Sord1 for polyol pathway flux and Mondo glucose sensing (PMID:35687590) and circulating fructose (PMID:36827377).
 - Decisions mirror Sord1: GO:0047833 modified to GO:0003939; generic terms modified; zinc binding non-core.
 
-- Deep research: falcon run pending at time of first commit (interrupted by a container restart); will be folded in if it completes.
+- Falcon deep research (Sord2-deep-research-falcon.md) is consistent: EC 1.1.1.14 sorbitol -> fructose; Sord2-specific
+  substrate range and subcellular location are not experimentally resolved (cytosol accepted on IBA/ISS grounds).
