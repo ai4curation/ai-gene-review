@@ -6,4 +6,4 @@
 - Insects are sterol auxotrophs [PMID:9632664 "This is notable, since insects are reportedly incapable of de novo sterol biosynthesis."]
   -> IBA "positive regulation of cholesterol biosynthetic process" REMOVED (taxon mismatch; propagation_review added); IEA sterol binding marked over-annotated.
 - Core MF chosen: protein carrier activity (GO:0140597; "Directly binding to a protein and delivering it either to an acceptor molecule or to a specific location") for the SREBP escort role; no existing GOA MF row.
-- Deep research: falcon run killed in the first attempt (exit 137, memory pressure on the shared host); a sequential retry was queued. Notes from cached publications.
+- Deep research: falcon run killed in the first attempt (exit 137, memory pressure on the shared host); a retry was stopped unfinished after the other genes completed. No deep-research file exists, so notes are based on cached publications.
