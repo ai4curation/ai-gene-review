@@ -68,7 +68,9 @@ Computable per Rhea-mapped GO term, before any manual curation:
   for the EC class. Benzil turnover is ~9–64 min⁻¹, roughly three orders of
   magnitude below a well-matched enzyme. But note that **low kcat does not by
   itself indicate category 1**: `pcpB` has kcat 0.024 s⁻¹ on its genuine
-  physiological substrate.
+  physiological substrate, and that slowness appears to be *selected* rather
+  than unoptimized (see below). Kinetics is the weakest of these signals and
+  should never be used alone.
 - **Evidence provenance** — a single founding paper in a biocatalysis or
   applied-microbiology journal, versus genetics in a host organism.
 - **GO footprint** — annotated only via Rhea/EC-derived IEAs, with no
@@ -175,7 +177,7 @@ tracks "not a real function". It does not.
 |---|---|---|---|
 | `atzA` (Pseudomonas sp. ADP) | atrazine (1950s) | grows on it as N source; step 1/3 | `GO:0016810` C-N hydrolase REMOVE — fold-level InterPro transfer; AtzA cleaves C-halide. The 98%-identical paralog TriA *does* belong in `GO:0016810` |
 | `tfdA` (C. pinatubonensis JMP134) | 2,4-D (1940s) | pJP4-encoded pathway; Tn5 mutants complemented | only MF annotation is a Rhea IEA, despite 1987 genetics |
-| `pcpB` (S. chlorophenolicum) | pentachlorophenol (1930s) | rate-limiting step of a patchwork pathway | kcat 0.024 s⁻¹ with heavy uncoupling to H₂O₂ — a *real* function that is badly optimized |
+| `pcpB` (S. chlorophenolicum) | pentachlorophenol (1930s) | rate-limiting step of a patchwork pathway | kcat 0.024 s⁻¹ with heavy uncoupling to H₂O₂ — yet the slowness may be a *selected* optimum, not a defect |
 | `linA` (S. indicum UT26) | lindane (1940s) | grows on it as sole C source | **no MF annotation exists**; specific term bulk-obsoleted in error (see above) |
 | `opd` (B. diminuta) | paraoxon and nerve agents (20th c.) | — | paraoxon turnover near the **diffusion limit**; progenitor identified as a quorum-sensing lactonase (PLL family) |
 | `dhlA` (X. autotrophicus GJ10) | 1,2-dichloroethane (commodity) | grows on it as sole C source; step 1/4 | `GO:0004301` epoxide hydrolase REMOVE — α/β-hydrolase fold shared with epoxide hydrolases |
@@ -188,7 +190,14 @@ Three patterns worth extracting:
 2. **Catalytic efficiency spans four orders of magnitude within category 4**
    (`opd` near-diffusion-limited, `pcpB` at 0.024 s⁻¹), so kinetics cannot
    separate categories 1 and 4 on its own. `pcpB` is the clearest refutation
-   of a kcat threshold.
+   of a kcat threshold, and an OpenScientist run strengthened it: the slow
+   turnover is plausibly **maintained by selection**, because the product TCBQ
+   is a potent alkylating agent and slow release lets the reductase PcpD
+   capture it before it escapes the active site (PMID:23676275, from the same
+   group as the "poorly functioning enzyme" paper). A low kcat can therefore be
+   evidence *of* selection rather than of its absence. Both readings fit the
+   same measured number, so the gene review records the question rather than
+   asserting either.
 3. **A second, independent failure mode surfaced repeatedly**: fold-level
    InterPro/PANTHER transfer predicting a superfamily's prevalent chemistry
    rather than the member's own reaction (`atzA` → C-N hydrolase, `dhlA` →
