@@ -14,3 +14,4 @@ trehalose-synthesizing enzyme Tps1 failed to produce trehalose as expected"].
 
 - Falcon deep research (Tps1-deep-research-falcon.md) is consistent: bifunctional TPS/TPP, fat-body-enriched, required
   for de novo trehalose; it notes subcellular localization in flies is inferred (cytosol accepted on ISS/family grounds).
+- PR #4484 review: added deep-research quotes to cytoplasm/cytosol rows.

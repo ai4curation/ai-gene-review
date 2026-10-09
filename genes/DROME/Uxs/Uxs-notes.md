@@ -8,10 +8,13 @@
   [PMID:27129198 "O-glucose
 trisaccharide (O-glucose-xylose-xylose) are added to many of the Notch EGF-like
 repeats"] (abstract-only in cache).
-- Decisions: decarboxylase activity and UDP-xylose biosynthesis accepted; IBA cytoplasm removed (plant cytosolic
-  isoforms ground the node; animal UXS1 is luminal); Golgi membrane modified to Golgi cisterna membrane;
+- Decisions: decarboxylase activity and UDP-xylose biosynthesis accepted; IBA cytoplasm modified to Golgi cisterna
+  membrane (cytoplasm includes the Golgi, so the term is true but too general; the node's WITH/FROM includes rat Uxs1
+  and human UXS1); Golgi membrane modified to Golgi cisterna membrane;
   D-xylose metabolic process modified to GO:0033320; NAD+ binding kept as non-core.
 
 - Falcon deep research (Uxs-deep-research-falcon.md): Uxs/CG7979 is the sole fly UDP-xylose synthase gene; best-supported
-  model is ER/Golgi-luminal activity (mammalian UXS seen in ER and Golgi; no direct fly topology data). Supports removing the
-  IBA cytoplasm row; ER-vs-Golgi partitioning remains open.
+  model is ER/Golgi-luminal activity (mammalian UXS seen in ER and Golgi; no direct fly topology data). Supports choosing the
+  luminal Golgi cisterna membrane term over cytoplasm; ER-vs-Golgi partitioning remains open.
+
+- PR #4484 review: cytoplasm IBA changed from REMOVE to MODIFY (GO:0032580), matching the treatment of cytoplasm IBA rows in Ugp, Tps1 and Ar1.

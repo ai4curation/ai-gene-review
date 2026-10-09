@@ -9,3 +9,4 @@ residue identity."].
 
 - Falcon deep research (Sord2-deep-research-falcon.md) is consistent: EC 1.1.1.14 sorbitol -> fructose; Sord2-specific
   substrate range and subcellular location are not experimentally resolved (cytosol accepted on IBA/ISS grounds).
+- PR #4484 review: fixed copy-paste paralog slips in reasons (Sord1/Sord2 names, evidence codes for GO:0003939); added supporting quotes to cytosol rows.

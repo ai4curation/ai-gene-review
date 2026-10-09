@@ -10,3 +10,4 @@
   sleep-regulation role from a 2024 bioRxiv preprint (Petzold and Gilestro) and a 2017 thesis; it states that the physiological
   substrate is unknown and does not cite the Ar1/Ar2 double-mutant sorbitol data (PMID:35687590). Preprint-only, so no NEW
   annotation proposed; recorded in description and a suggested question.
+- PR #4484 review: removed the preprint-only Ninna/Nanna sleep sentence from the description (no verified citation); kept as a suggested question.

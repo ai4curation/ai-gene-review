@@ -13,3 +13,4 @@ higher than those for the human enzyme"]; Sdh-1 is the major transcript.
 
 - Falcon deep research (Sord1-deep-research-falcon.md) is consistent: EC 1.1.1.14 NAD-dependent sorbitol -> fructose; notes
   that published "Sodh mutants" remove both Sodh-1 and Sodh-2, so single-gene contributions are unresolved.
+- PR #4484 review: added supporting quotes to cytosol and ortholog-transferred xylitol/uronate rows.

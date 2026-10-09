@@ -14,3 +14,4 @@
 - Falcon deep research (Ar1-deep-research-falcon.md) is consistent; it explains the IDA extracellular region row (Yang et al.
   describe AR as secreted and detect reductase activity in hemolymph) but notes secretion of intact Ar1 is not demonstrated,
   so the row stays UNDECIDED. It also mentions preprint-level evidence for a glial role.
+- PR #4484 review: GO:0046173 polyol biosynthetic process (IMP) changed from MODIFY (to sorbitol biosynthesis) to ACCEPT, because the cited experiment measured both sorbitol and galactitol; PGF2alpha-synthase MF and BP rows now share one rationale (secondary, non-core).

@@ -13,3 +13,4 @@ of trehalose transporters and trehalase (Treh)"].
 - Falcon deep research (Treh-deep-research-falcon.md) agrees: cTreh is intracellular, sTreh predicted secreted; it also notes induction of cTreh in lamellocytes during parasitoid infection.
 - Decisions: trehalase activity and trehalose catabolism accepted (all rows); cytosol accepted (cTreh);
   generic carbohydrate/trehalose metabolic IEA terms modified to trehalose catabolic process.
+- PR #4484 review: core function locations now include extracellular region (secreted sTreh) as well as cytosol (cTreh).
