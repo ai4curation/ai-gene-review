@@ -1,6 +1,6 @@
 # Wdr20 review notes
 
-Accession: Q9VBC4. Module: dmel_usp46_deubiquitinase_complex.
+Accession: Q9VBC4. Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_usp46_deubiquitinase_complex.
 
 ## Literature journal
 
