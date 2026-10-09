@@ -18,4 +18,4 @@
 - Accept wobble guanine modification, TGT complex, cytoplasm. Mito outer membrane ISS: non-core.
 
 ## Deep research (falcon)
-- Supports non-catalytic role of QTRT2 orthologs: [file:DROME/CG3434/CG3434-deep-research-falcon.md "QTRT2 has a degenerate catalytic/substrate-binding site"].
+- Supports non-catalytic role of QTRT2 orthologs: [file:DROME/CG3434/CG3434-deep-research-falcon.md "Human QTRT2 has a degenerate catalytic site"].
