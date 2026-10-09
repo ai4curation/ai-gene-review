@@ -1,6 +1,6 @@
 # wry (Weary, CG31665, Q7KU08) curation notes
 
-Deep research: falcon runs timed out this session; the only experimental paper is cached in full text.
+Deep research: `wry-deep-research-falcon.md` (falcon; the wrapper reported a 600 s timeout but the run completed later). Folded in as an EDIT; its conclusions agree with the review and it is cited in the core function.
 
 ## Literature journal
 
