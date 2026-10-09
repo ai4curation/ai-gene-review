@@ -1,7 +1,7 @@
 # cos (Costal-2, O16844) curation notes
 
-Deep research: `just deep-research-falcon DROME cos --fallback perplexity-lite` failed (falcon timed
-out after 600 s; perplexity provider not available). Notes below are from cached publications.
+Deep research: the falcon wrapper reported a 600 s timeout (perplexity fallback unavailable), but the
+falcon run completed later and wrote `cos-deep-research-falcon.md`, folded in as an EDIT.
 
 ## Literature journal
 
@@ -31,8 +31,12 @@ out after 600 s; perplexity provider not available). Notes below are from cached
 
 - Core MF: signaling adaptor activity (scaffold for kinases + Ci), molecular sequestering (Ci tethering),
   smoothened binding; complex = Hedgehog signaling complex (same as fu/ci reviews).
-- Motor activity rows kept as non-core (real but peripheral); generic cytoskeletal motor activity MODIFY
-  -> microtubule motor activity.
+- Motor activity: the deep-research report summarizes single-molecule data (Yue et al. 2018) showing
+  purified Cos2(1-743) is immotile on microtubules (static binding/diffusion, 0 nm/s)
+  [file:DROME/cos/cos-deep-research-falcon.md "Purified **DmCos2(1–743)** showed static binding or diffusion on microtubules"],
+  in contrast to an earlier motility report cited in PMID:20850429. Motor activity, MT-based movement and
+  intracellular transport rows were therefore marked over-annotated (initially kept non-core); ATP
+  hydrolysis UNDECIDED (not measured for Cos2).
 - Generic locations (cytoplasm, cytoskeleton, MT cytoskeleton) MODIFY -> cytosol / microtubule;
   microtubule associated complex MODIFY -> Hedgehog signaling complex (round-2 convention).
 - protein binding rows: MODIFY to smoothened binding, protein kinase binding (Fu, Sgg, CK1) or
