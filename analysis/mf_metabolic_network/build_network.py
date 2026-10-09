@@ -7,9 +7,9 @@ Pipeline
        - core_functions[].molecular_function / directly_involved_in
        - existing_annotations[] whose review.action is ACCEPT or KEEP_AS_NON_CORE
        - proposed_replacement_terms of MODIFY actions, and NEW annotations
-  2. Map each MF to Rhea reactions with the GO column of the Rhea TSV (= rhea2go,
-     exact mapping only; a general MF such as "oxidoreductase activity" is NOT
-     expanded to its descendants' reactions).
+  2. Map each MF to Rhea reactions using only the skos:exactMatch RHEA xrefs in
+     go-edit.obo (a general MF such as "oxidoreductase activity" is NOT expanded
+     to its descendants' reactions).
   3. Reaction -> ChEBI participants; currency metabolites (H2O, ATP, NAD(P)H ...)
      are removed so that edges reflect pathway intermediates rather than cofactors.
   4. Gene-gene edge  <=>  the two genes' reactions share a non-currency metabolite.
@@ -21,7 +21,7 @@ Pipeline
        c. community-level: Louvain communities vs best-matching BP term.
 
 Inputs are downloaded into data/ (see README.md); nothing is hard-coded.
-Outputs go to results/<ORG>/.
+Outputs go to results/<ORG>/<source>/.
 """
 from __future__ import annotations
 
@@ -86,17 +86,11 @@ MACROMOLECULE_PATTERNS = re.compile(
     r"(\[(protein|histone|collagen|[^\]]*protein\]|DNA|RNA|mRNA|tRNA|rRNA)|"
     r"\bin (DNA|RNA|mRNA|tRNA|rRNA|.*RNA)\b|^tRNA|^a tRNA|^an? \w*-?tRNA|-tRNA|tRNA\(|"
     r"\bDNA\b|\bRNA\b|^\[protein\]|-\[protein|ribonucleic|\(deoxyribonucleotide\))")
-# One GO MF can map to dozens of Rhea reactions (a class reaction plus substrate
-# examples). Above this many, only the class reactions (with "a"/"an" generic
-# participants) are kept, so a broad hydrolase does not connect to every acyl-CoA.
-MAX_SPECIFIC_RHEA_PER_GO = 5
-
-
-# GO terms carrying an incomplete-EC xref (e.g. EC:1.1.1.-) are grouping classes. Their
-# RHEA xrefs (which is what rhea2go is generated from) are at best broad/related, not
-# exact: GO:0016616 (CH-OH oxidoreductase, NAD(P)) xrefs only RHEA:25968 (benzil
-# reductase). Such GO->Rhea rows are dropped. Filled by load_go().
-GROUPING_GO: set[str] = set()
+# GO->Rhea comes from the `xref: RHEA:n {source="skos:..."}` lines of go-edit.obo, keeping
+# ONLY skos:exactMatch. go-basic.obo, rhea2go and the Rhea TSV GO column drop the predicate,
+# so narrowMatch/broadMatch xrefs there look like exact mappings (e.g. GO:0016616
+# CH-OH oxidoreductase -> RHEA:25968 benzil reductase, which is a narrowMatch).
+EXACT_XREF = re.compile(r'^xref: (RHEA:\d+) \{source="skos:exactMatch"\}')
 
 
 # ---------------------------------------------------------------- GO ontology
@@ -123,8 +117,6 @@ def load_go(path: Path):
                 parents[tid].add(line.split(" ")[2])
             elif line.startswith("is_obsolete: true"):
                 obsolete.add(tid)
-            elif re.match(r"xref: EC:[\d.]*-\s*$", line):
-                GROUPING_GO.add(tid)
             elif line.startswith("alt_id: "):
                 names.setdefault("ALT:" + line[8:], tid)
     alt = {k[4:]: v for k, v in names.items() if k.startswith("ALT:")}
@@ -151,9 +143,28 @@ def split_participants(side: str):
     return [re.sub(r"^\d+ ", "", t.strip()) for t in side.split(" + ")]
 
 
+def load_go_rhea_exact(path: Path, rhea_master: dict):
+    """go-edit.obo -> {GO id: {Rhea master id}} for skos:exactMatch xrefs of live terms."""
+    go2rhea, obsolete, tid = defaultdict(set), set(), None
+    for line in path.open():
+        if line.startswith("[Term]") or line.startswith("[Typedef]"):
+            tid = None
+        elif line.startswith("id: GO:"):
+            tid = line[4:].strip()
+        elif tid and line.startswith("is_obsolete: true"):
+            obsolete.add(tid)
+        elif tid and line.startswith("xref: RHEA:"):
+            m = EXACT_XREF.match(line)
+            if m:
+                go2rhea[tid].add(rhea_master.get(m.group(1), m.group(1)))
+    for t in obsolete:
+        go2rhea.pop(t, None)
+    print(f"GO terms with an exactMatch Rhea xref: {len(go2rhea)}")
+    return go2rhea
+
+
 def load_rhea(path: Path):
-    """Return go2rhea, rhea2chebi, chebi2name, rhea2eq, rhea2sides."""
-    go2rhea = defaultdict(set)
+    """Return rhea2chebi, chebi2name, rhea2eq, rhea2sides."""
     rhea2chebi, rhea2eq, rhea2sides, chebi_names = {}, {}, {}, defaultdict(Counter)
     for r in csv.DictReader(path.open(), delimiter="\t"):
         rid = r["Reaction identifier"]
@@ -168,18 +179,8 @@ def load_rhea(path: Path):
                 chebi_names[c][n] += 1
             k = len(sides[0])
             rhea2sides[rid] = (set(chebis[:k]), set(chebis[k:]))
-        for m in re.finditer(r"(GO:\d{7})", r["Gene Ontology"] or ""):
-            go2rhea[m.group(1)].add(rid)
     chebi2name = {c: cnt.most_common(1)[0][0] for c, cnt in chebi_names.items()}
-    n_trimmed = 0
-    for go, rxns in go2rhea.items():
-        if len(rxns) > MAX_SPECIFIC_RHEA_PER_GO:
-            generic = {r for r in rxns if re.search(r"(^|= |\+ )an? ", rhea2eq[r])}
-            if generic:
-                go2rhea[go] = generic
-                n_trimmed += 1
-    print(f"GO terms trimmed to generic Rhea reactions: {n_trimmed}")
-    return go2rhea, rhea2chebi, chebi2name, rhea2eq, rhea2sides
+    return rhea2chebi, chebi2name, rhea2eq, rhea2sides
 
 
 # ---------------------------------------------------------------- reviews
@@ -301,15 +302,12 @@ def main():
 
     names, ns, parents, obsolete, alt = load_go(DATA / "go-basic.obo")
     anc = ancestors_fn(parents)
-    go2rhea, rhea2chebi, chebi2name, rhea2eq, rhea2sides = load_rhea(DATA / "rhea.tsv")
-    dropped = sorted(t for t in GROUPING_GO if t in go2rhea)
-    for t in dropped:
-        del go2rhea[t]
-    print(f"Grouping GO terms whose Rhea xrefs are ignored: {dropped}")
+    rhea2chebi, chebi2name, rhea2eq, rhea2sides = load_rhea(DATA / "rhea.tsv")
+    rhea_master = load_rhea_master(DATA / "rhea-directions.tsv")
+    go2rhea = load_go_rhea_exact(DATA / "go-edit.obo", rhea_master)
     currency = {c for c, n in chebi2name.items() if n in CURRENCY_NAMES or CURRENCY_PATTERNS.search(n)
                 or MACROMOLECULE_PATTERNS.search(n)}
 
-    rhea_master = load_rhea_master(DATA / "rhea-directions.tsv")
     genes = load_source(args.organism, args.source, rhea_master)
     if args.reviewed_genes_only:
         keep = set(load_reviews(args.organism))

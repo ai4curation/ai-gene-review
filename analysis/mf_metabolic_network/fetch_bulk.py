@@ -6,6 +6,8 @@
                            One HTTP request returns the whole proteome.
   data/<ORG>/goa.gaf.gz    GOA GAF for the organism/proteome (carries evidence codes,
                            which the UniProt GO columns do not).
+  data/go-edit.obo         GO editors' file: the only GO release form whose RHEA xrefs keep
+                           their skos:exactMatch/narrowMatch/broadMatch predicate.
   data/rhea-directions.tsv maps directional Rhea ids (UniProt often cites LR/RL ids)
                            to the master reaction.
 
@@ -44,6 +46,9 @@ def download(url: str, dest: Path):
 def main():
     if not (DATA / "rhea-directions.tsv").exists():
         download("https://ftp.expasy.org/databases/rhea/tsv/rhea-directions.tsv", DATA / "rhea-directions.tsv")
+    if not (DATA / "go-edit.obo").exists():  # carries skos predicates on RHEA xrefs
+        download("https://raw.githubusercontent.com/geneontology/go-ontology/master/src/ontology/go-edit.obo",
+                 DATA / "go-edit.obo")
     for org in sys.argv[1:]:
         cfg = ORGANISMS[org]
         q = urllib.parse.quote(cfg["query"])
