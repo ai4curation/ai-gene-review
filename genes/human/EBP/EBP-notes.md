@@ -67,3 +67,23 @@ binding is corroborated by the documented homodimer, so ACCEPT (KEEP_AS_NON_CORE
 Downstream/indirect: the CDPX2 skeletal phenotype reflects the sterol defect, not a direct
 role of EBP in ossification machinery. The paper says sterols play "a role ... in bone
 development" -> KEEP_AS_NON_CORE (secondary developmental consequence).
+
+## Revision 2026-10-09: isomerase term choice
+
+Checked the GO definitions in OLS rather than relying on term labels:
+
+- GO:0047750 cholestenol delta-isomerase activity = "5-alpha-cholest-7-en-3-beta-ol =
+  5-alpha-cholest-8-en-3-beta-ol", which is exactly UniProt's RHEA:15281 reaction for EBP
+  ("Reaction=lathosterol = 5alpha-cholest-8-en-3beta-ol", EC 5.3.3.5) and carries three EXP
+  annotations (PMID:8798407, 9894009, 12760743). This is now the core MF.
+- GO:0000247 C-8 sterol isomerase activity = "fecosterol = episterol", the fungal ergosterol
+  pathway reaction of yeast ERG2 (structurally unrelated to EBP). Fecosterol is not an
+  intermediate in human cholesterol synthesis. IBA, ISS and IEA annotations -> MODIFY to GO:0047750.
+- GO:0004769 steroid Delta-isomerase activity = "a 3-oxo-delta(5)-steroid = a
+  3-oxo-delta(4)-steroid" (EC 5.3.3.1, steroidogenic KSI). It is NOT a parent of the sterol
+  Delta8-Delta7 reaction (both are siblings under GO:0016863). The earlier KEEP_AS_NON_CORE
+  calls treated it as a grouping term; all six (IBA, EXP x2, IDA x2, IMP) -> MODIFY to GO:0047750.
+- Bare protein binding IPIs -> REMOVE (no informative MF; interaction not disputed).
+
+Alignment: dismech X-linked_Chondrodysplasia_Punctata_2 used GO:0000247 on its molecular node;
+changed there to GO:0047750 to match. MEND_Syndrome already used GO:0047750.
