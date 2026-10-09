@@ -3,7 +3,7 @@
 Accession: A0A6F7R657 (TrEMBL, FBgn0027492). `just fetch-gene DROME wdb` resolved to Q9VB23 (21 GOA rows);
 the expected accession A0A6F7R657 also has GOA rows (12) and was used, as instructed.
 
-Deep research: falcon run queued at time of review (see later commits).
+Deep research: `wdb-deep-research-falcon.md` (falcon; completed after a wrapper timeout message). It describes Wdb as a non-catalytic B56 targeting subunit; Wdb limits cytoplasmic phospho-Akt1 (Ser505) in ovaries and co-immunoprecipitates with Akt1; in spermatocytes Wdb colocalizes with MEI-S332 at centromeres; it also regulates PERIOD abundance and circadian period. Consistent with the decisions below.
 
 ## Literature journal
 
