@@ -15,4 +15,6 @@ functions of two Drosophila fibroblast growth factor receptors"].
   biosynthesis kept as non-core (Sgl supplies the precursor; chain synthesis is done by EXT/Golgi enzymes);
   signaling/migration/patterning phenotypes kept as non-core; cytoplasm and generic oxidoreductase modified.
 
-- Deep research: the first `just deep-research-falcon` attempt timed out (600 s; perplexity-lite fallback unavailable). Review based on cached publications and UniProt.
+- Falcon deep research (sgl-deep-research-falcon.md) is consistent: sgl = kiwi = suppenkasper, UGDH (EC 1.1.1.22) with
+  UDP-glucose as physiological substrate; FGF/Wg/Hh phenotypes interpreted via heparan sulfate. No 2023-2024 direct
+  measurement of fly Sgl catalysis or localization was found.
