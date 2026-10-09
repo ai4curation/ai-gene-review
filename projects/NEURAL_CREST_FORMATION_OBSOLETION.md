@@ -286,6 +286,23 @@ Last updated: 2026-10-09
 
 # NOTES
 
+## 2026-10-09 (OpenScientist checks)
+
+Three OpenScientist jobs were run on the new terms and the module's
+regulatory links. None ran the requested data analysis; all three are
+literature reviews (issue #4469). Two of them argued the new terms are
+redundant with GO:0014029, but they did not know it is proposed for
+obsoletion. One suggested GO:0019827 with an extension instead of
+*neural crest progenitor maintenance*. **Decision: keep the new term.** Its
+definition ("kept in an undifferentiated, proliferative and multipotent
+state until neural crest specification") already says nothing about whether
+the blastula program is retained or re-activated, which is still open
+[PMID:35534333 "This suggests that neural crest cells either retain or
+re-activate a pluripotency GRN from the blastula"]. New evidence for the
+border/specifier split: pax3 and zic1 "initially promote neural crest gene
+activation but are downregulated as neural crest identity emerges"
+(Montequin & LaBonne 2026, PMID:41718037; not yet cached).
+
 ## 2026-10-09 (overexpression rule, gap terms)
 
 The project lead's call: overexpression evidence alone is over-annotation. It
