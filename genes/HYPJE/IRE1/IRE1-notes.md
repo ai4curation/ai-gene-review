@@ -37,3 +37,20 @@ Restored readable identifiers in manual prose. Where applicable, reconciled AP3M
 ## Focused OpenScientist fungal IRE1 follow-up
 
 The focused report resolves the two pending mammalian death-arm rows. G0RBE3 remains a conserved fungal IRE1 UPR sensor with kinase and RNase activities, but the IRE1-TRAF2-ASK1 complex requires TRAF2 and ASK1/MAP3K5, neither of which was found in the Trichoderma proteome; ASK1 was not recovered from Fungi at all. The apoptosis and complex evidence belongs to mammalian PTHR13954:SF17 IRE1, whereas G0RBE3 and the TreeGrafter Sclerotinia source are fungal SF6 IRE1 proteins. GO:1990604 is now REMOVE and GO:0070059 is MARK_AS_OVER_ANNOTATED as a mammalian subfamily carry-over.
+
+## 2026-10-01 re-review after GOA refresh
+
+GOA was refreshed from remote. The following previously reviewed rows are no longer present in the
+current GOA snapshot and were marked `retired: true` (reviews kept; retirement is not a biological
+REMOVE judgment):
+
+- GO:0051082 unfolded protein binding | IEA | GO_REF:0000118 and | IGI | PMID:15480788 -- GO:0051082 is obsolete
+- GO:0000166 nucleotide binding, GO:0016301 kinase activity, GO:0016740 transferase activity,
+  GO:0016787 hydrolase activity, GO:0046872 metal ion binding | IEA | GO_REF:0000043 (UniProt keyword
+  mappings no longer emitted)
+- GO:0005524 ATP binding | IEA | GO_REF:0000120 -- replaced in current GOA by an InterPro (GO_REF:0000002)
+  ATP binding row, reviewed (ACCEPT).
+
+New GOA rows reviewed: GO:0005524 ATP binding (IEA, InterPro) ACCEPT; GO:0005789 ER membrane (ISS from
+S. cerevisiae Ire1 P32361) ACCEPT; GO:0106310 protein serine kinase activity (ISS from P32361) ACCEPT.
+Other judgments unchanged.
