@@ -6,3 +6,6 @@
 - Module-wide convention (methionine salvage): GO:0033353 "L-methionine cycle" (SAM cycle definition;
   GO's replacement for obsolete GO:0019509) MODIFY -> GO:0071267 L-methionine salvage; cytoplasm ->
   cytosol (IC present); nucleus kept non-core; metal cofactor terms kept non-core.
+- Falcon deep research (Enoph-deep-research-falcon.md, arrived after initial commit): no fly
+  biochemistry, localization or phenotype; the reaction and Mg2+-dependent HAD mechanism rest on human
+  E1/MASA, yeast UTR4 and microbial orthologs. No annotation changes.
