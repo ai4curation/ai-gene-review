@@ -24,7 +24,9 @@ Deep research: `aurB-deep-research-falcon.md` (falcon; the wrapper logged a 600 
 ## Decisions
 
 - Kinase activity rows accepted; protein kinase activity, ATP binding kept as non-core.
-- Centrosome and spindle pole IBA rows removed: donors are Aurora A-type kinases; fly Aurora B is a passenger.
+- Centrosome IBA row removed: donors are Aurora A-type kinases; fly Aurora B is a passenger (spindle pole: see revision below).
 - Midbody abscission IMP (PMID:23948252) modified to negative regulation of mitotic cytokinesis (sign).
 - Post-translational protein modification modified to protein phosphorylation.
 - Correct-but-general rows (nuclear division, sister chromatid segregation, protein kinase activity, chromosome, spindle, cytoskeleton, chromatin organization, chromosome condensation) modified to the specific terms aurB already carries (or meiotic chromosome condensation for the oocyte screen).
+- Revision after PR review: spindle pole IBA changed from REMOVE to UNDECIDED. Its donors are PTN000681968 plus mouse Aurka, human/dog/bovine AURKA, Xenopus Aurora A, C. elegans air-1, Dictyostelium Aurora and mouse Aurkb (MGI:107168), so the node is not purely Aurora A; fly Aurora B has no reported spindle-pole localization, but that absence is not sufficient to remove it. The centrosome IBA REMOVE stands (all donors Aurora A-type).
+- Midbody abscission -> negative regulation of mitotic cytokinesis loses the abscission step; GO has no negative regulation of midbody abscission term.

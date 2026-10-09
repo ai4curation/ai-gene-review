@@ -28,4 +28,5 @@ Deep research: `Incenp-deep-research-falcon.md` (falcon; the wrapper logged a 60
 
 - All IDA localizations (centromere, kinetochore, mitotic/meiotic midzone) accepted; general chromosome IDA modified to chromosome, centromeric region; IEA cytoplasm kept as non-core.
 - Asymmetric cell division and meiotic chromosome condensation kept as non-core (downstream / secondary to the main findings).
-- Core MF given as protein serine/threonine kinase activator activity (IN-box activation of Aurora B); no GOA MF row exists for Incenp.
+- No core MF asserted (see revision below).
+- Revision after PR review: GO:0043539 (kinase activator activity) and GO:0000070 removed from core_functions because neither is a reviewed annotation for Incenp and the cached fly evidence for Aurora B activation is only a hedged statement; the activation claim stays in the description and suggested_questions.

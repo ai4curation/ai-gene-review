@@ -23,3 +23,9 @@ Deep research: `borr-deep-research-falcon.md` (falcon; the wrapper logged a 600 
 - Meiotic spindle midzone IDA (PMID:18268101) modified to mitotic spindle midzone: the paper states Borr is absent from the male meiotic midzone.
 - Spindle (UniProt) modified to spindle midzone; spindle midzone IDA from the mitotic-cell paper (PMID:16224046) modified to mitotic spindle midzone; spindle midzone IBA accepted as-is because Borr also acts in oocyte meiosis.
 - Protein binding (Shrb) removed: no informative ESCRT-III binding term exists.
+
+## Female meiosis provenance (from deep research; primary papers not cached)
+
+- Borr-INCENP fusion rescue in oocytes (Wang et al. 2021, J Cell Biol, as summarized) [file:DROME/borr/borr-deep-research-falcon.md "Borr–INCENP fusion** supported chromosome-dependent assembly of a bipolar spindle and central spindle in INCENP-depleted oocytes"].
+- 14-3-3 binding of phospho-Borr [file:DROME/borr/borr-deep-research-falcon.md "Purified Borr residues **113–221** bound 14-3-3ε after phosphorylation by PKD2"].
+- The meiotic spindle midzone row from PMID:18268101 was modified because that male-meiosis paper shows Borr absent from the meiotic midzone; a meiotic midzone pool in oocytes is plausible but would need an oocyte reference.
