@@ -13,4 +13,4 @@ SPC module conventions as in twr-notes.md: complex and ER membrane accepted; mem
 
 ## Deep research
 
-`just deep-research-falcon` had not produced a report when this review was committed; any late-arriving report will be added in a follow-up commit.
+`Spase22-23-deep-research-falcon.md` (falcon) arrived after the review was first committed. It agrees with the review: Spase22-23 (CG5677) is the non-proteolytic SPCS3/Spc3-type structural partner of the ER SPC. Its molecular mechanism is inferred from homologous complexes. Fly-specific data cover gene identity, transcriptional regulation and a role in West Nile virus infection; there is no viral-process GOA row, and none was proposed. No annotation decision changed.
