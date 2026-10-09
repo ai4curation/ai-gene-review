@@ -13,3 +13,7 @@ Accession: Q7KSB2 (expected accession; `just fetch-gene DROME EloB` resolved to 
 
 - Core: contributes_to GO:0061630 in GO:0030891 VCB complex (no own MF asserted; EloB is the ubiquitin-like stabilizer of EloC); second core function in the Elongin complex.
 - ARBA general complexes MODIFY to GO:0030891 / GO:0031462; viral process MARK_AS_OVER_ANNOTATED; positive regulation of catabolism non-core.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `EloB-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
