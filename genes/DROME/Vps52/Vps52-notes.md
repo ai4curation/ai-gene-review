@@ -9,3 +9,6 @@ Shared core subunit of GARP (with Vps54/scat) and EARP (with Vps50/CG4996).
 - EARP mediates transferrin recycling in human cells [PMID:25799061 "Depletion of syndetin or syntaxin 6 delays recycling of internalized transferrin to the cell surface."].
 
 Decisions: GARP complex ACCEPT; NEW EARP complex (IPI, PMID:25453831) for consistency with Vps51; contributes_to vesicle membrane tethering activity (GO:7770062) as core MF.
+
+Deep research: falcon completed (genes/DROME/Vps52/Vps52-deep-research-falcon.md) after the review was first committed; checked for consistency.
+- Deep research (falcon) agrees with the TGN localization and Arl5-dependent recruitment and adds no fly loss-of-function data for Vps52.
