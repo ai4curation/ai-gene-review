@@ -1,6 +1,6 @@
 # Cul2 (Cullin-2) review notes
 
-Accession: Q9V9R2. Module: dmel_vcb_ubiquitin_ligase (Cul2-Roc1a catalytic core).
+Accession: Q9V9R2. Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_vcb_ubiquitin_ligase (Cul2-Roc1a catalytic core).
 
 ## Literature journal
 
@@ -18,3 +18,8 @@ Accession: Q9V9R2. Module: dmel_vcb_ubiquitin_ligase (Cul2-Roc1a catalytic core)
 ## Deep research (falcon, added after the initial review)
 
 The falcon deep-research run finished after the initial commit and is now in `Cul2-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
+
+## Revision after PR #4471 review
+
+- GO:0016032 viral process is now KEEP_AS_NON_CORE rather than MARK_AS_OVER_ANNOTATED: GO uses this term for host products that take part in a viral life cycle (CrPV-1A co-opts the host Cul2-EloBC ligase), matching the precedent in genes/ECOLI/DnaJ. This replaces the earlier viral-process decision above.
+- The positive-regulation-of-catabolism reason now names GO:0043161 (not the SCF term) as the direct process; GO:0048471 no longer carries an off-topic quote; GO:0043161 added to core function.
