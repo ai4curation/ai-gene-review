@@ -80,7 +80,7 @@ Identity: the authoritative HGNC snapshot has approved AKR1D1, HGNC:388, previou
 
 ### Primary evidence and reaction boundaries
 
-Cached full human studies PMID:21255593 and PMID:18407998 were independently read. The kinetic study uses purified human recombinant enzyme, TLC product comparison with authentic standards, cofactor fluorescence titration, substrate kinetics and inhibition assays. It directly identifies 5beta products for the tested C18-C27 substrates except aldosterone; aldosterone turnover is observed but its product is inferred because an authentic standard was unavailable. Substrate inhibition varies by structure, and the authors discuss how single-concentration/cell preparations contributed to older discrepancies. These results support direct participation in androgen and C21 hormone metabolism alongside bile acid synthesis, without measuring each substrate's share of flux in vivo. [PMID:21255593](https://pmc.ncbi.nlm.nih.gov/articles/PMC3056882/), "5β-Reduced products were identified directly with all the C18-C27 steroid substrates except for aldosterone."
+Cached full human studies PMID:21255593 and PMID:18407998 were independently read. The kinetic study uses purified human recombinant enzyme, TLC product comparison with authentic standards, cofactor fluorescence titration, substrate kinetics and inhibition assays. It directly identifies 5beta products for the tested C18-C27 substrates except aldosterone; aldosterone turnover is observed but its product is inferred because an authentic standard was unavailable. Substrate inhibition varies by structure, and the authors discuss how single-concentration/cell preparations contributed to older discrepancies. These results support direct participation in androgen and C21 hormone metabolism alongside bile acid synthesis, without measuring each substrate's share of flux in vivo. [PMID:21255593](https://pmc.ncbi.nlm.nih.gov/articles/PMC3056882/). Product formation was demonstrated across the tested steroid panel apart from aldosterone; this does not establish every derivative in those carbon-number ranges.
 
 PMID:18407998 structures resolve NADP+/steroid complexes and the Tyr58/Glu120 environment; mutant assays use testosterone reduction. Steroid binding is retained as integral substrate recognition. These experiments explain double-bond reduction while retaining the 3-oxo group, not a universal negative result for every sugar or alcohol-forming substrate. [PMID:18407998](https://pmc.ncbi.nlm.nih.gov/articles/PMC2423251/), "Each steroid carbonyl accepts hydrogen bonds from catalytic residues Tyr 58 and Glu 120 ."
 
@@ -369,3 +369,30 @@ verify this archived event. DRAFT remains the status calculated by the normal
 validation workflow. Campaign completion still requires this follow-up to
 receive review approval and merge. No further repeated live retrieval is
 necessary to assess the historical event supplied here.
+
+## 2026-10-09 — focused citation follow-up to PR #4465
+
+The recovered [Reactome reaction](../../../reactome/R-HSA-193755.md) now has
+a brief direct localization excerpt on its cytosol annotation. The same source
+already supplies the reaction-catalyst excerpt on the molecular-function
+refinement. Both passages were checked against the unchanged historical cache.
+
+The molecular-function refinement also now quotes the specific double-bond
+reduction chemistry described in the abstract of
+[PMID:21255593](https://pubmed.ncbi.nlm.nih.gov/21255593/). The core-function
+evidence retains the single product-identification excerpt from that study.
+Repeated copies of that product-range excerpt elsewhere in the YAML were
+consolidated, while their citations and all biological reasons remain. The
+notes' duplicate was paraphrased above. This keeps the two complementary
+anchors available without repeating the same quotation throughout the review;
+it does not imply that the historical 24(S)-triol was directly assayed in that
+paper. The exact-substrate limitation remains in the affected reason.
+
+This is a bounded citation edit: all original source fields, products, reference
+identities, actions, reasons, replacement terms and core-function terms remain
+unchanged. No publication cache, Reactome cache, archive member or provenance
+record was edited. The two edited sources' excerpts were counted across YAML
+and notes; unrelated inherited excerpts were outside this consolidation. The
+archival source directory remains a companion to the flat Reactome cache,
+containing the unaltered enclosing pathway member and machine-extracted
+provenance, with their hashes retained for integrity checks.
