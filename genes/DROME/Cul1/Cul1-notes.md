@@ -17,3 +17,7 @@ Accession: Q24311. Module: dmel_scf_slimb_ubiquitin_ligase (Cul1-Roc1a catalytic
 - Protein binding: SkpA and Rca1 partner rows MODIFY to GO:0160072; Minus row REMOVE.
 - GO:0031461 CRL complex and GO:0006511/GO:0030163/GO:0016567 generic parents non-core; regulation-of-catabolism rows non-core; pathway outputs non-core for the shared scaffold.
 - Cytoplasm EXP (PMID:20392747) accepted without quote (no explicit Cul1 localization sentence found in the cached full text).
+
+## Revision (batch rule change)
+
+Correct-but-general terms are now MODIFY: GO:0016567 -> GO:0000209; GO:0006511 and GO:0030163 -> GO:0031146; GO:0031461 -> GO:0019005. Supersedes the generic-parent convention above. Positive-regulation-of-catabolism rows remain KEEP_AS_NON_CORE (a peripheral regulatory framing, not a less-specific parent).
