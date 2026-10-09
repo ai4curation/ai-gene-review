@@ -2,6 +2,8 @@
 
 Accession: Q9VEM2 (FBgn0264291).
 
+Deep research: `just deep-research-falcon DROME Det --fallback perplexity-lite` failed (falcon timed out after 600 s; perplexity provider not available). Literature below is from the cached publications.
+
 ## Literature journal
 
 - First described as an anti-apoptotic single-BIR protein in transfected Sf9/S2 cells
