@@ -16,6 +16,6 @@ Deep research: falcon run still in progress at time of review (see later commits
 ## Decisions
 
 - Mitotic cell cycle IMP (lagging chromosomes) -> mitotic sister chromatid segregation; NAS row kept general (statement is about overall mitotic progression).
-- Centrosome cycle -> regulation of centriole replication (already carried).
+- Centrosome cycle (centrosome maturation screen) accepted; centriole duplication captured by regulation of centriole replication.
 - Positive regulation of smoothened signaling (PMID:21730325) UNDECIDED: cached paper shows inhibitory PP2A role and does not show Tws data.
 - Meiotic spindle assembly -> regulation of spindle assembly (PP2A opposes Aurora B), consistent with wdb/mts/Pp2A-29B.
