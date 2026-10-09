@@ -17,4 +17,8 @@
 - GO:0000706 (meiotic DSB processing = resection) marked over-annotated; ATR is not a resection enzyme.
 - Developmental TAS terms from a general review (cellularization, imaginal disc development) marked over-annotated.
 - PMID:10559981 is an S. pombe Rad3-Rad26 paper used as NAS/IPI; locations/complex kept as biologically correct.
-- Deep research (falcon) was attempted; see review history for status.
+- Deep research (falcon) completed after a retry; see update below.
+
+## Deep research (falcon) update
+- [file:DROME/mei-41/mei-41-deep-research-falcon.md "Mei-41 has a specific role beyond a generic cell-cycle checkpoint in generating normally patterned female meiotic crossovers."] (Brady et al. 2018), so reciprocal meiotic recombination was upgraded from non-core to ACCEPT.
+- The deep research notes that mei-41 RNAi did not suppress DSB-induced apoptosis in Wg-compromised wing discs (2024), so MEI-41 is not needed for every damage-induced apoptotic output.
