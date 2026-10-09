@@ -190,7 +190,7 @@ Already reviewed here and discussed in the paper or its LECA model (Figure 6C):
 | COQ7 | Absent from land plants; candidate target for plant pathogens |
 | SUOX | Sulfite oxidase in the LECA model; with SQOR, sulfur oxidation proposed for the ancestral organelle |
 | DHODH, ETFDH, GPD2, PRODH | Quinone-reducing branches of the highly branched LECA ETC |
-| AIFM1 | Not named in the paper. Carries NADH dehydrogenase activity, but is not NDH2, which the paper says humans lack |
+| AIFM1 | Not named in the paper. A flavoprotein NADH oxidoreductase distantly related to NDH2 (yeast Ndi1 has been described as an AMID/AIF homologue, PMID:16436509), but not the NDH2 orthogroup the paper says humans lack |
 
 ### Reviewed from this paper
 
