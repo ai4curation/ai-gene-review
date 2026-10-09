@@ -26,3 +26,7 @@ falcon deep research was launched; see commit history for whether a file was add
 ## Revision (batch rule change)
 
 Correct-but-general terms are now MODIFY to the more specific term rather than KEEP_AS_NON_CORE: GO:0016567 -> GO:0000209 protein polyubiquitination; GO:0006508 proteolysis -> GO:0031146. This supersedes the generic-parent convention noted above.
+
+## Deep research (falcon, added after the initial review)
+
+The falcon deep-research run finished after the initial commit and is now in `slmb-deep-research-falcon.md`. Its synthesis is consistent with the annotation decisions above; no review actions were changed.
