@@ -16,3 +16,9 @@
 - NAD binding IEA -> NADP binding; generic MF IEA -> GO:0004473. Added NEW GO:0006740 NADPH
   regeneration (enzyme performs the NADPH-producing step).
 - Sleep IMP (P-element screen, abstract only) kept as non-core.
+- Falcon deep research (Men-deep-research-falcon.md, arrived after initial commit): 96.7% of adult
+  NADP-ME activity in the soluble supernatant (only 1.5% mitochondrial), supporting removal of the
+  mitochondrion IBA; Men-null larvae have NADPH/NADP+ ratio 1.3 vs 8.9 in wild type, supporting the
+  NEW NADPH regeneration annotation; Men reduction suppresses CryAB-R120G reductive-stress
+  cardiomyopathy; SREBP-driven Men expression affects head NADP+/NADPH and night sleep in Cyfip
+  mutants (relevant to the sleep IMP, which stays non-core). No annotation changes.
