@@ -1,0 +1,11 @@
+# wash (washout, CG13176) notes
+
+- WASH subclass of WASP family; VCA activates Arp2/3; lethal fly mutant with spiracle-eversion defect [PMID:18159949 "The VCA domain of human WASH promotes actin polymerization by the Arp2/3 complex in vitro."; "We demonstrate that WASH is essential in Drosophila."].
+- Oogenesis, downstream of Rho1; bundles/crosslinks F-actin and microtubules [PMID:19633175 "Wash bundles and crosslinks F-actin and microtubules, is regulated by Rho1, Spire and Arp2/3"].
+- Integrin and V-ATPase recycling, lysosome neutralization in macrophages [PMID:27884932 "WASH generates actin patches on endosomes and lysosomes, thereby mediating both aforementioned functions."]. Note this paper reports homozygous wash mutants as viable and fertile, unlike earlier alleles.
+- Serpentine retrieval with Rab9/Vps35 in trachea [PMID:23322046 "Vps35, WASH and actin filaments differentially localize at the Rab9-enriched subdomains of the endosomal membrane"].
+- Nuclear roles: lamin binding, heterochromatin, nuclear morphology [PMID:25754639 "We find that nuclear Wash interacts with B-type Lamin (Lamin Dm0)"]; NE budding with SHRC [PMID:32503943].
+- WASH complex composition [PMID:20498093 "WASH functions in cells within a 500 kDa core complex containing Strumpellin, FAM21, KIAA1033 (SWIP), and CCDC53"] (abstract only cached).
+
+Decisions: Arp2/3 nucleation, endocytic recycling, retrograde transport, WASH complex and endosomal locations ACCEPT; nuclear, cytoskeletal-bundling and developmental rows non-core; Rho1 GTPase binding -> small GTPase binding; Spire protein binding REMOVE; regulation of Arp2/3 nucleation (NAS) -> Arp2/3 complex-mediated actin nucleation for the catalytic subunit.
+Deep research: falcon timed out (600 s) and the perplexity-lite fallback is unavailable; notes from cached publications.
