@@ -1,50 +1,15 @@
-# B9D2 curation notes
+# B9D2 notes
 
-## 2026-10-03 — initial review (primary cilium life cycle module, stage 3 transition zone)
+## 2026-10-05 review (PAINT, affinage)
 
-Human B9D2 (MKSR2) = UniProt Q9BPU9. 56 GOA annotations seeded; all reviewed.
+- B9 complex: [PMID:32726168 "We here demonstrate the interaction mode of these B9D proteins to be MKS1-B9D2-B9D1 and demonstrate their interdependent localization to the TZ."]. The diffusion barrier is lost in knockouts (GPR161 absent from cilia), and ciliogenesis defects are mild.
+- Meckel syndrome: [PMID:21763481 "We identified a homozygous c.301A>C (p.Ser101Arg) B9D2 mutation that segregates with MKS, affects an evolutionarily conserved residue, and is absent from controls."]
+- 18 Reactome cytosol TAS rows are kept as non-core. Fifteen come from mitotic kinetochore events: Reactome's "Kinetochore [cytosol]" complex (R-HSA-375305) lists B9D2 without a literature reference (ContentService, checked 2026-10-05). It may be worth raising with Reactome.
+- Gamma-tubulin binding (mouse ISS/IEA) and nucleus are by similarity only, so they are kept as non-core. Membrane and axoneme are also non-core.
+- 19 GO:0005515 rows are removed under policy. The MKS1/B9D1 partners are captured by the MKS complex rows.
 
-### Deep research status
+## 2026-10-05 revision (reviewer round 1)
 
-The first falcon run failed with HTTP 429 (rate limit), perplexity fallback unavailable; re-run with
-`--timeout 2400` (outcome recorded at the end of this file). Review based on cached primary literature.
-
-### Biology
-
-- Central bridge of the MKS1–B9D2–B9D1 complex [PMID:32726168 "B9D2 interacts directly with MKS1 and B9D1, whereas the
-  latter two proteins do not directly interact with each other"; "demonstrate their interdependent localization to the
-  TZ"; "Both the MKS1-KO and the B9D2-KO cell lines were moderately compromised with respect to ciliogenesis
-  efficiency"; "formation of the B9D protein complex is crucial for creating a diffusion barrier for ciliary membrane
-  proteins"].
-- Human MKSR proteins localize to basal bodies and cilia; knockdown impairs ciliogenesis [PMID:19208769 "the human
-  orthologues also localize to basal bodies, as well as cilia"; "disrupting human MKSR1 or MKSR2 causes ciliogenesis
-  defects"].
-- Zebrafish B9d2 binds IFT components, supports inversin and opsin transport [PMID:21602787 "IFT particle components,
-  and a Meckel-Gruber syndrome 1 (MKS1)-related, B9 domain protein, B9d2, bind each other"; "B9d2, Inversin, and
-  Nephrocystin 5 support, in turn, the transport of a cargo protein, Opsin"].
-- Diseases: Meckel syndrome 10, JBTS34.
-
-### Key decisions
-
-- 19 protein binding rows: REMOVE (policy). MKS1/B9D1 rows reflect the real bridge interaction captured by MKS complex;
-  HuRI binary hits (TLX3, QARS1, P4HA3, VPS25, ALKBH7 etc.) have no functional support.
-- 18 cytosol TAS rows: KEEP_AS_NON_CORE. Many derive from Reactome kinetochore/mitosis reactions in which B9D2 is a
-  listed component; I found no ciliary-literature support for a kinetochore role (flagged as a question).
-- Gamma-tubulin binding (IEA/ISS from mouse, UniProt "by similarity"): UNDECIDED — source experiment not reviewed.
-- Nucleus (by similarity; HPA nucleoli), axoneme, centrosome, membrane: KEEP_AS_NON_CORE.
-- TZ, basal body, MKS complex, cilium, cilium assembly, protein localization to TZ: ACCEPT.
-
-## HPA cilium atlas vs module role
-
-- HPA: **Basal body (Supported); Centrosome (Uncertain)**; main locations "Golgi apparatus; Nucleoli". GOA has
-  GO:0036064 ciliary basal body IDA GO_REF:0000052 (ACCEPTED).
-- Module role: MKS-module TZ component (stage 3). Consistent (basal body call = TZ at confocal resolution). The Golgi
-  and nucleolar main-location calls are not supported by the ciliary literature and are not used for core functions.
-- core_functions follow the module role.
-
-## Deep research outcome
-
-The re-run `just deep-research-falcon human B9D2 --timeout 2400` succeeded and produced
-`B9D2-deep-research-falcon.md` (2026-10-03). I read it after drafting the review. Its summary agrees with the
-cached primary literature used here and changes none of the curation decisions. Annotation-level supporting quotes come
-from the cached publications. The first core function also cites one sentence from the deep-research file.
+- Added PMID:41165761 (J Clin Invest 2026): [PMID:41165761 "We also found that the B9 complex interacts with and anchors TMEM67 to the TZ membrane, thereby stabilizing the MKS module and maintaining the integrity of the TZ diffusion barrier."]. It also shows a pre-ciliogenesis mother-centriole role (CP110 removal), so the centrosome row is now ACCEPT.
+- NEW GO:0030674 protein-macromolecule adaptor activity (IDA, PMID:32726168). B9D2 is the middle subunit of MKS1-B9D2-B9D1. MKS1 and B9D1 carry only protein binding in GOA.
+- Corrected the GO:0005515 count to 19; the first history record said 20.
