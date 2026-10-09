@@ -7,4 +7,4 @@ SNX1/SNX2 / yeast Vps5 ortholog; SNX-BAR partner of Snx6 in the retromer tubulat
 - Snx1-Snx6 interaction in fly interactome screens (PMID:14605208, PMID:38944040; abstract-only) -> modelled as SNX-BAR heterodimer.
 
 Decisions: NOT Wnt secretion ACCEPT; protein binding -> protein heterodimerization activity; PI binding -> PI3P binding; generic location terms -> endosome; retromer complex -> retromer, tubulation complex.
-Deep research: falcon timed out (600 s) and the perplexity fallback is unavailable in this environment; literature taken from cached publications.
+Deep research: falcon completed (Snx1-deep-research-falcon.md) after the initial review; it is consistent with the review and adds direct fly genetic evidence for axon midline guidance with Snx6 (Simonetti et al. 2019) [file:DROME/Snx1/Snx1-deep-research-falcon.md "In sensitized *slit/robo* and FraΔC assays, reducing *snx1* and *snx6* dosage modified abnormal midline crossing"]; fly localization, lipid specificity and cargo remain untested. No annotation actions changed.
