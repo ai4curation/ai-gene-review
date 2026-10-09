@@ -170,3 +170,24 @@ figure/table provenance. It includes the two source-specific IntAct query URLs
 and response hashes. These records were read from the returned data, not inferred
 from accession names. They provide traceability to the curator-recorded assays,
 not independent replication of those experiments.
+
+
+## 2026-10-09 — signaling-adaptor evidence locators
+
+The two signaling-adaptor decisions now cite the mechanistic evidence directly in
+their reasons and `supported_by` lists. Selected full-text Results in
+[PMID:24074955](https://pmc.ncbi.nlm.nih.gov/articles/PMC3929958/) describe human
+CARMA1-dependent BCL10 assembly (Figure 1), MALT1 incorporation and activation
+(Figures 3A-B), and cellular complexes (Figures 3C-D). The complete cached abstract
+of [PMID:15125833](https://pubmed.ncbi.nlm.nih.gov/15125833/) independently describes
+reconstituted signaling by BCL10-MALT1 oligomers. These findings establish
+BCL10's noncatalytic organizing role; the protease, ubiquitin-ligase and kinase
+activities remain those of its partners.
+
+The earlier adaptor interpretation in PMID:10400625 remains cited as corroboration.
+The two reasons paraphrase the evidence and provide its experimental locators;
+they no longer promise a displayed abstract excerpt. The complete TRADD sentence
+and every existing excerpt remain intact. No new scientific quotation or
+annotation decision is introduced. The prior quotation accounting documents an
+authoring constraint, not a repository rule or a basis for judging biological
+validity.
