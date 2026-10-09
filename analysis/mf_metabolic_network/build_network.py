@@ -170,11 +170,13 @@ def load_go_rhea_exact(path: Path, rhea_master: dict):
 def load_rhea(path: Path):
     """Return rhea2chebi, chebi2name, rhea2eq, rhea2sides."""
     rhea2chebi, rhea2eq, rhea2sides, chebi_names = {}, {}, {}, defaultdict(Counter)
+    rhea_chebis = set()
     for r in csv.DictReader(path.open(), delimiter="\t"):
         rid = r["Reaction identifier"]
         eq = r["Equation"]
         chebis = [c for c in r["ChEBI identifier"].split(";") if c]
         rhea2chebi[rid] = set(chebis)
+        rhea_chebis.update(chebis)
         rhea2eq[rid] = eq
         sides = [split_participants(s) for s in eq.split(" = ")]
         names = [n for s in sides for n in s]
@@ -184,6 +186,15 @@ def load_rhea(path: Path):
             k = len(sides[0])
             rhea2sides[rid] = (set(chebis[:k]), set(chebis[k:]))
     chebi2name = {c: cnt.most_common(1)[0][0] for c, cnt in chebi_names.items()}
+    # Participants that only occur in transport reactions (e.g. "K(+)(out) = K(+)(in)",
+    # where one ChEBI id is listed once for two equation tokens) never get a name above,
+    # so they would escape the currency filter. Fall back to Rhea's ChEBI name table.
+    names_tsv = path.parent / "chebiId_name.tsv"
+    if names_tsv.exists():
+        for line in names_tsv.open():
+            cid, _, name = line.partition("\t")
+            if cid in rhea_chebis:
+                chebi2name.setdefault(cid, name.strip())
     return rhea2chebi, chebi2name, rhea2eq, rhea2sides
 
 
@@ -517,9 +528,15 @@ def main():
                    "rxn": [rhea2eq[r] for r in sorted(gene_rxn[g])][:4]} for g in enz if G.degree(g)],
         "links": [{"source": a, "target": b, "w": d["weight"],
                    "m": [chebi2name.get(c, c) for c in d["chems"]][:5],
-                   "bp": share_specific(a, b) if met_bp[a] and met_bp[b] else None}
+                   "bp": share_specific(a, b) if met_bp[a] and met_bp[b] else None,
+                   "k": "s" if gene_rxn[a] & gene_rxn[b] else "h",  # same-step / handoff
+                   "nh": any(len(chem_genes[c]) <= HANDOFF_HUB for c in d["chems"])}
                   for a, b, d in G.edges(data=True)],
         "communities": [{k: r[k] for k in ("community", "size", "best_bp_label", "f1", "top_metabolites")} for r in comm_rows],
+        # per-term coherence, for highlighting a BP term's genes in viewer.html
+        "bp_terms": [{"id": r["term"], "label": r["label"], "n": r["n_genes"], "lcc": r["lcc_frac"],
+                      "rnd": r["random_lcc_mean"], "p": r["p_value"],
+                      "genes": [g for g in enz if r["term"] in met_bp[g]]} for r in term_rows],
         "summary": summary,
     }, (out / "graph.json").open("w"))
     print(json.dumps(summary, indent=2))

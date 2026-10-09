@@ -8,6 +8,8 @@
                            which the UniProt GO columns do not).
   data/go-edit.obo         GO editors' file: the only GO release form whose RHEA xrefs keep
                            their skos:exactMatch/narrowMatch/broadMatch predicate.
+  data/chebiId_name.tsv    Rhea's ChEBI names (for participants that only occur in transport
+                           reactions, so the currency filter can recognise them).
   data/rhea-directions.tsv maps directional Rhea ids (UniProt often cites LR/RL ids)
                            to the master reaction.
 
@@ -46,6 +48,8 @@ def download(url: str, dest: Path):
 def main():
     if not (DATA / "rhea-directions.tsv").exists():
         download("https://ftp.expasy.org/databases/rhea/tsv/rhea-directions.tsv", DATA / "rhea-directions.tsv")
+    if not (DATA / "chebiId_name.tsv").exists():
+        download("https://ftp.expasy.org/databases/rhea/tsv/chebiId_name.tsv", DATA / "chebiId_name.tsv")
     if not (DATA / "go-edit.obo").exists():  # carries skos predicates on RHEA xrefs
         download("https://raw.githubusercontent.com/geneontology/go-ontology/master/src/ontology/go-edit.obo",
                  DATA / "go-edit.obo")

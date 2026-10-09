@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enzyme Network Viewer</title>
+<!--
+  Interactive view of the MF-derived metabolic network (build_network.py output).
+  Reads results/<ORG>/reviews/graph.json next to this file - no data is embedded here.
+  Serve over http (GitHub Pages, or `python -m http.server` in this folder); browsers
+  block fetch() from file:// URLs.
+-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --surface-0: #f4f3f0;
+  --surface-1: #fcfcfb;
+  --border: #dddcd7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #7a7974;
+  --node: #b9b8b2;
+  --node-dim: #e3e2dd;
+  --link: #8f8e88;
+  --link-faint: #d9d8d2;
+  --series-1: #2a78d6;
+  --series-1-ink: #1c5cab;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --border: #383835;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8e88;
+    --node: #6b6a65;
+    --node-dim: #2c2c2a;
+    --link: #8f8e88;
+    --link-faint: #333331;
+    --series-1: #3987e5;
+    --series-1-ink: #86b6ef;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #121211;
+  --surface-1: #1a1a19;
+  --border: #383835;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8f8e88;
+  --node: #6b6a65;
+  --node-dim: #2c2c2a;
+  --link: #8f8e88;
+  --link-faint: #333331;
+  --series-1: #3987e5;
+  --series-1-ink: #86b6ef;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--surface-0); color: var(--text-primary);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+.lede { color: var(--text-secondary); margin: 0 0 16px; max-width: 75ch; }
+.controls {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: end; margin-bottom: 12px;
+}
+.controls label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--text-secondary); }
+.controls label.check { flex-direction: row; align-items: center; gap: 6px; font-size: 13px; }
+select, input[type="search"] {
+  font: inherit; color: var(--text-primary); background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; min-width: 0;
+}
+#term { max-width: min(460px, 100%); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.tile .v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .k { font-size: 12px; color: var(--text-secondary); }
+.panel { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; position: relative; }
+#graph { width: 100%; height: min(70vh, 720px); display: block; touch-action: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 8px 12px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-secondary); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.focus { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); min-height: 40px; }
+.focus b { color: var(--text-primary); }
+#tip {
+  position: fixed; pointer-events: none; z-index: 10; max-width: 360px; display: none;
+  background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgb(0 0 0 / .15);
+}
+#tip .t { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+#tip .s { color: var(--text-secondary); }
+#tip ul { margin: 4px 0 0; padding-left: 16px; }
+details { margin-top: 12px; }
+summary { cursor: pointer; color: var(--text-secondary); }
+table { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 8px; }
+th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { color: var(--text-secondary); font-weight: 600; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; }
+.err { padding: 24px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Enzyme network from reviewed MF annotations</h1>
+  <p class="lede">Each node is an enzyme whose reviewed molecular function maps exactly to a Rhea
+    reaction. Two enzymes are linked when their reactions share a non-currency chemical.
+    Pick a biological process to see whether its enzymes form a connected route.</p>
+
+  <div class="controls">
+    <label>Organism
+      <select id="org">
+        <option value="PSEPK">P. putida KT2440</option>
+        <option value="human">Human</option>
+      </select>
+    </label>
+    <label>Highlight biological process
+      <select id="term"><option value="">— none —</option></select>
+    </label>
+    <label>Highlight cluster
+      <select id="comm"><option value="">— none —</option></select>
+    </label>
+    <label>Find gene
+      <input id="q" type="search" placeholder="e.g. benD" list="genes" autocomplete="off">
+      <datalist id="genes"></datalist>
+    </label>
+    <label class="check"><input id="hub" type="checkbox"> Show hub-only handoffs</label>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="panel">
+    <div class="focus" id="focus">Hover a node or link for details. Drag to pan, scroll to zoom.</div>
+    <svg id="graph" role="img" aria-label="Enzyme network"></svg>
+    <div class="legend">
+      <span><svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4" stroke="var(--link)" stroke-width="1.5"/></svg>handoff via a non-hub chemical (≤5 enzymes)</span>
+      <span><svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4" stroke="var(--link)" stroke-width="1.5" stroke-dasharray="3 3"/></svg>same step (shared reaction)</span>
+      <span><svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4" stroke="var(--link-faint)" stroke-width="1.5"/></svg>handoff only via a hub chemical</span>
+      <span><svg width="12" height="12"><circle cx="6" cy="6" r="5" fill="var(--series-1)"/></svg>highlighted genes (all their links are shown)</span>
+    </div>
+  </div>
+
+  <details id="tbl">
+    <summary>Table of highlighted genes</summary>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Gene</th><th>UniProt</th><th class="n">Links</th><th>Specific metabolic BP</th><th>Reactions</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </details>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const svg = d3.select("#graph");
+const tip = $("#tip");
+let state = { data: null, sim: null, sel: new Set() };
+
+const pct = x => x == null ? "–" : `${Math.round(x * 100)}%`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+function showTip(ev, html) {
+  tip.innerHTML = html; tip.style.display = "block";
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if (x + w > innerWidth - 8) x = ev.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = ev.clientY - h - pad;
+  tip.style.left = `${Math.max(8, x)}px`; tip.style.top = `${Math.max(8, y)}px`;
+}
+const hideTip = () => { tip.style.display = "none"; };
+
+function tiles(s) {
+  const r = s.random_pair_share_specific_bp;
+  const t = [
+    [s.genes_with_rhea_reactions, "enzymes with an exact Rhea reaction"],
+    [s.giant_component_size, "in the largest connected group"],
+    [pct(s.same_step_share_specific_bp), "same-step pairs sharing a specific BP"],
+    [pct(s.handoff_share_specific_bp), "handoff pairs sharing a specific BP"],
+    [pct(s.specific_handoff_share_specific_bp), "non-hub handoffs sharing a specific BP"],
+    [pct(r), "random enzyme pairs sharing one"],
+  ];
+  $("#tiles").innerHTML = t.map(([v, k]) => `<div class="tile"><div class="v">${v}</div><div class="k">${k}</div></div>`).join("");
+}
+
+function load(org) {
+  hideTip();
+  if (state.sim) state.sim.stop();
+  svg.selectAll("*").remove();
+  fetch(`results/${org}/reviews/graph.json`).then(r => {
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }).then(d => { state.data = d; build(d); }).catch(e => {
+    svg.append("text").attr("x", 20).attr("y", 40).attr("fill", "var(--text-secondary)")
+      .text(`Could not load results/${org}/reviews/graph.json (${e.message}). Serve this folder over http.`);
+  });
+}
+
+function build(d) {
+  tiles(d.summary);
+  const byId = new Map(d.nodes.map(n => [n.id, n]));
+  const links = d.links.filter(l => byId.has(l.source) && byId.has(l.target))
+    .map(l => ({...l, cls: l.k === "s" ? "same" : (l.nh ? "nonhub" : "hub")}));
+
+  // controls
+  const terms = (d.bp_terms || []).filter(t => t.genes.some(g => byId.has(g)))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  $("#term").innerHTML = `<option value="">— none —</option>` + terms.map((t, i) =>
+    `<option value="${i}">${esc(t.label)} (${t.n})</option>`).join("");
+  $("#term").onchange = () => { $("#comm").value = ""; $("#q").value = ""; focusTerm(terms[$("#term").value]); };
+  const comms = d.communities || [];
+  $("#comm").innerHTML = `<option value="">— none —</option>` + comms.map(c =>
+    `<option value="${c.community}">#${c.community + 1}: ${esc(c.best_bp_label)} (${c.size}, F1 ${c.f1})</option>`).join("");
+  $("#comm").onchange = () => { $("#term").value = ""; $("#q").value = ""; focusComm($("#comm").value); };
+  $("#genes").innerHTML = d.nodes.map(n => `<option value="${esc(n.label)}">`).join("");
+  $("#q").oninput = () => {
+    const n = d.nodes.find(n => n.label.toLowerCase() === $("#q").value.trim().toLowerCase());
+    if (n) { $("#term").value = ""; $("#comm").value = ""; focusGene(n); }
+  };
+  // hub-only handoffs are hidden unless asked for, or unless both ends are highlighted
+  // (the connectivity figures count them, so the picture must show them too)
+  const both = l => state.sel.has(l.source.id) && state.sel.has(l.target.id);
+  const showLinks = () => linkSel.attr("display", l => l.cls === "hub" && !$("#hub").checked && !both(l) ? "none" : null);
+  $("#hub").onchange = showLinks;
+
+  // graph
+  const box = svg.node().getBoundingClientRect();
+  const W = box.width, H = box.height;
+  svg.attr("viewBox", [0, 0, W, H]);
+  const g = svg.append("g");
+  const zoom = d3.zoom().scaleExtent([0.2, 8]).on("zoom", e => g.attr("transform", e.transform));
+  svg.call(zoom);
+  // zoom so the highlighted genes fill the view (back to the whole network when cleared)
+  function fit(sel) {
+    const pts = d.nodes.filter(n => !sel.size || sel.has(n.id));
+    if (!pts.length) return;
+    const [x0, x1] = d3.extent(pts, n => n.x), [y0, y1] = d3.extent(pts, n => n.y);
+    const k = Math.min(2.5, 0.8 / Math.max((x1 - x0 + 40) / W, (y1 - y0 + 40) / H));
+    svg.transition().duration(600).call(zoom.transform,
+      d3.zoomIdentity.translate(W / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
+  }
+
+  const linkSel = g.append("g").attr("stroke-linecap", "round").selectAll("line").data(links).join("line")
+    .attr("stroke", l => l.cls === "hub" ? "var(--link-faint)" : "var(--link)")
+    .attr("stroke-opacity", l => l.cls === "hub" ? 1 : 0.55)
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", l => l.cls === "same" ? "3 3" : null)
+    .attr("display", l => l.cls === "hub" ? "none" : null)
+    .on("pointerenter", (ev, l) => showTip(ev,
+      `<div class="t">${esc(l.source.label)} — ${esc(l.target.label)}</div>
+       <div class="s">${l.cls === "same" ? "same step (shared reaction)" : l.cls === "nonhub" ? "handoff via a non-hub chemical" : "handoff via a hub chemical"}
+       ${l.bp == null ? "" : l.bp ? " · share a specific BP" : " · no shared specific BP"}</div>
+       <ul>${l.m.map(m => `<li>${esc(m)}</li>`).join("")}</ul>`))
+    .on("pointermove", (ev) => { tip.style.display === "block" && showTip(ev, tip.innerHTML); })
+    .on("pointerleave", hideTip);
+  // wider invisible hit area is unnecessary at this density; the 1px line plus tooltip on hover suffices
+
+  const r = n => 3 + Math.min(5, Math.sqrt(n.deg));
+  const nodeSel = g.append("g").selectAll("circle").data(d.nodes).join("circle")
+    .attr("r", r).attr("fill", "var(--node)")
+    .attr("stroke", "var(--surface-1)").attr("stroke-width", 1.5)
+    .style("cursor", "pointer")
+    .on("pointerenter", (ev, n) => {
+      const c = comms.find(c => c.community === n.comm);
+      showTip(ev, `<div class="t">${esc(n.label)} <span class="s">${esc(n.id)}</span></div>
+        <div class="s">${n.deg} links${c ? ` · cluster #${c.community + 1} (${esc(c.best_bp_label)})` : ""}</div>
+        ${n.bp.length ? `<div style="margin-top:4px">${n.bp.map(esc).join("; ")}</div>` : ""}
+        <ul>${n.rxn.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`);
+    })
+    .on("pointerleave", hideTip)
+    .on("click", (ev, n) => { $("#term").value = ""; $("#comm").value = ""; $("#q").value = n.label; focusGene(n); })
+    .call(d3.drag()
+      .on("start", (ev, n) => { if (!ev.active) sim.alphaTarget(0.2).restart(); n.fx = n.x; n.fy = n.y; })
+      .on("drag", (ev, n) => { n.fx = ev.x; n.fy = ev.y; })
+      .on("end", (ev, n) => { if (!ev.active) sim.alphaTarget(0); n.fx = null; n.fy = null; }));
+
+  const sim = state.sim = d3.forceSimulation(d.nodes)
+    .force("link", d3.forceLink(links).id(n => n.id).distance(l => l.cls === "hub" ? 60 : 22)
+      .strength(l => l.cls === "hub" ? 0.02 : 0.5))
+    .force("charge", d3.forceManyBody().strength(-28).distanceMax(220))
+    .force("x", d3.forceX(W / 2).strength(0.04))
+    .force("y", d3.forceY(H / 2).strength(0.06))
+    .force("collide", d3.forceCollide(n => r(n) + 1))
+    .on("tick", () => {
+      linkSel.attr("x1", l => l.source.x).attr("y1", l => l.source.y)
+        .attr("x2", l => l.target.x).attr("y2", l => l.target.y);
+      nodeSel.attr("cx", n => n.x).attr("cy", n => n.y);
+    });
+
+  function paint(sel) {
+    state.sel = sel;
+    const on = sel.size > 0;
+    nodeSel.attr("fill", n => !on ? "var(--node)" : sel.has(n.id) ? "var(--series-1)" : "var(--node-dim)")
+      .filter(n => sel.has(n.id)).raise();
+    linkSel.attr("stroke", l => on && sel.has(l.source.id) && sel.has(l.target.id) ? "var(--series-1-ink)"
+                                : l.cls === "hub" ? "var(--link-faint)" : "var(--link)")
+      .attr("stroke-opacity", l => !on ? (l.cls === "hub" ? 1 : 0.55)
+                                : sel.has(l.source.id) && sel.has(l.target.id) ? (l.cls === "hub" ? 0.4 : 0.9) : 0.15)
+      .attr("stroke-width", l => on && sel.has(l.source.id) && sel.has(l.target.id) ? 1.75 : 1);
+    showLinks();
+    if (sim.alpha() < 0.1) fit(sel); else sim.on("end.fit", () => { fit(state.sel); sim.on("end.fit", null); });
+    const rows = d.nodes.filter(n => sel.has(n.id)).sort((a, b) => a.label.localeCompare(b.label));
+    $("#rows").innerHTML = rows.map(n => `<tr><td>${esc(n.label)}</td><td>${esc(n.id)}</td><td class="n">${n.deg}</td>
+      <td>${n.bp.map(esc).join("; ")}</td><td>${n.rxn.map(esc).join("<br>")}</td></tr>`).join("");
+  }
+  const within = sel => links.filter(l => l.cls !== "hub" && sel.has(l.source.id) && sel.has(l.target.id)).length;
+
+  function focusTerm(t) {
+    if (!t) { paint(new Set()); $("#focus").textContent = "Hover a node or link for details. Drag to pan, scroll to zoom."; return; }
+    const sel = new Set(t.genes.filter(g => byId.has(g)));
+    const missing = t.genes.length - sel.size;
+    paint(sel);
+    $("#focus").innerHTML = `<b>${esc(t.label)}</b> (${esc(t.id)}): ${t.n} enzymes.
+      Largest connected group (counting hub chemicals) holds <b>${pct(t.lcc)}</b> of them, against ${pct(t.rnd)} for random sets of the same size
+      (p = ${t.p}). ${within(sel)} non-hub links among them${missing ? `; ${missing} isolated enzymes not drawn` : ""}.`;
+  }
+  function focusComm(v) {
+    if (v === "") return focusTerm(null);
+    const c = comms.find(c => String(c.community) === v);
+    const sel = new Set(d.nodes.filter(n => String(n.comm) === v).map(n => n.id));
+    paint(sel);
+    $("#focus").innerHTML = `<b>Cluster #${c.community + 1}</b>: ${c.size} enzymes. Best matching BP:
+      <b>${esc(c.best_bp_label)}</b> (F1 ${c.f1}). Main chemicals: ${esc(c.top_metabolites)}.`;
+  }
+  function focusGene(n) {
+    const sel = new Set([n.id]);
+    links.forEach(l => { if (l.source.id === n.id) sel.add(l.target.id); if (l.target.id === n.id) sel.add(l.source.id); });
+    paint(sel);
+    $("#focus").innerHTML = `<b>${esc(n.label)}</b> and its ${sel.size - 1} neighbours.`;
+  }
+  focusTerm(null);
+  sim.on("end.fit", null);  // initial view: leave the whole network as laid out
+}
+
+$("#org").onchange = () => load($("#org").value);
+load($("#org").value);
+</script>
+</body>
+</html>
