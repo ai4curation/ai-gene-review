@@ -22,3 +22,10 @@ Deep research: `rasp-deep-research-falcon.md` (falcon; the wrapper reported a 60
   maturation (here correct: palmitoylation is a Hh PTM), EGFR ligand maturation.
 - palmitoyltransferase / acyltransferase activity MODIFY -> GO:0019706; Reactome cytosol MODIFY -> ER;
   membrane MODIFY -> ER membrane.
+
+## Review-bot follow-up (PR #4478)
+
+- GO:0019706 specifies an S-linked product; Rasp/HHAT form an N-linked amide (GO:0018009). Following the
+  human HHAT review, GO:0016409 rows are now ACCEPT, GO:0016746 rows MODIFY -> GO:0016409, the core MF is
+  GO:0016409, and the two experimental GO:0019706 rows are kept ACCEPT with the S- vs N-chemistry caveat.
+  Core location changed to ER membrane to match the membrane MODIFY.
