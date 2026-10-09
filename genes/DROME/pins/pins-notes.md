@@ -21,3 +21,6 @@
 - Core MF: GoLoco-mediated Galphai-GDP binding / GDI activity, and TPR-mediated scaffolding of Mud/Insc/Canoe (adaptor).
 - Generic protein binding IPIs replaced/kept as non-core; IEA GTPase regulator activity refined to GDI activity.
 - Determinant localization and tumour/proliferation terms are downstream/indirect.
+
+## Deep research (falcon) additions
+- Falcon report (pins-deep-research-falcon.md) agrees: Pins is a cortical adaptor for spindle positioning ["Pins binds Mud directly through its TPR region."]. It also notes tissue specificity: Pins-null wing-disc cells keep normal division orientation (Bergstralh et al. 2016, doi:10.1242/dev.135475; not in local cache), and an Aurora-A/Dlg/Khc73 branch from the Pins linker.
