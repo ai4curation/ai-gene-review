@@ -17,8 +17,11 @@
 - napts allele: neural phenotypes (lifespan, song, arborization) - indirect via sodium channel. [PMID:16272407 "However, the mle napts strain exhibits significantly reduced life span"]
 
 ## Curation decisions
-- RNA helicase / helicase / ATP hydrolysis / DNA-RNA helicase rows MODIFY -> GO:0034458 3'-5' RNA helicase activity (already IMP).
+- RNA helicase / helicase / DNA-RNA helicase rows MODIFY -> GO:0034458 (already IMP). ATP hydrolysis rows KEEP_AS_NON_CORE (revised after deep research: ATPase and unwinding outputs are partly separable genetically).
 - Shared MSL convention: GO:0072487 and GO:0016456 ACCEPT; chromosome rows MODIFY -> X chromosome; nuclear chromosome (25501352 4th-chromosome binding) ACCEPT.
 - Nucleus ACCEPT for MLE (female nuclear pool not X-bound).
 - DHX9-derived nucleolus IBA REMOVE; dsDNA binding, chromatin organization, cytoplasmic translation ISS MARK_AS_OVER_ANNOTATED.
 - GO:0001069 (human DHX9 Alu paper) UNDECIDED - cannot see fly data.
+
+## Deep research (falcon, added after initial review)
+- `mle-deep-research-falcon.md` agrees: MLE is an ATP-dependent roX-remodeling helicase and assembly factor, not a histone-modifying enzyme ["In this pathway, MLE is an RNA-remodeling enzyme and assembly factor"]. It reports separable ATPase and helicase outputs in separation-of-function alleles, so ATP hydrolysis rows were changed from MODIFY to KEEP_AS_NON_CORE. It also notes the napts allele disrupts para transcript processing without MLE being the editing enzyme, and a 2024 MLE-CLAMP interaction (PMID:38471568).
