@@ -1,6 +1,6 @@
 # SkpA (Skp1 ortholog) review notes
 
-Accession: O77430. Module: dmel_scf_slimb_ubiquitin_ligase (SkpA adaptor part).
+Accession: O77430. Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_scf_slimb_ubiquitin_ligase (SkpA adaptor part).
 
 ## Literature journal
 
