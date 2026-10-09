@@ -16,4 +16,5 @@ GDP-mannose through enzymatic reactions catalyzed by GDP-D-mannose
 - Decisions: catalytic MF and de novo GDP-fucose BP accepted; GDP-mannose metabolic process modified to
   GO:0042351; Notch, cell-fate and oogenesis phenotypes kept as non-core (indirect, via fucosylation of Notch).
 
-- Deep research: `just deep-research-falcon` timed out (600 s) and the perplexity-lite fallback is unavailable in this environment; review based on cached publications and UniProt.
+- Falcon deep research (Gmd-deep-research-falcon.md; it finished after the wrapper's 600 s timeout) is consistent:
+  it reports that Gmd-null animals lack detectable GDP-fucose.
