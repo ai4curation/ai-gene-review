@@ -8,3 +8,4 @@
 - GO:0042162 label "telomeric repeat DNA binding" fits poorly with sequence-independent binding to retrotransposon arrays; raised as a question.
 - Review-bot round (PR #4475): terminin-membership MODIFY rows now quote sentences that name this subunit's complex (terminin composition), not Ver-only text.
 - Review-bot round: GO:0042162 telomeric repeat DNA binding rows MODIFY to GO:0003691 double-stranded telomeric DNA binding (definition is sequence-agnostic: double-stranded telomere-associated DNA); core MF updated; parallels GO:0043047 for MTV subunits.
+- Falcon deep research (late): confirms the in vitro EMSA used double-stranded satellite repeats and a 457-bp TAS fragment, supporting GO:0003691 (double-stranded telomeric DNA binding); in vivo recruitment is sequence-independent.
