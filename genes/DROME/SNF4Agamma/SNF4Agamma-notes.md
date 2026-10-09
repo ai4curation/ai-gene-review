@@ -6,4 +6,4 @@
   [PMID:18285699 "SNF4Agamma translocates into the nuclei of fat body cells at the onset of the wandering stage concurrently with the beginning of the autophagic process."]
 - loechrig isoform: [PMID:12456644 "loe affects a specific isoform of the gamma-subunit of AMP-activated protein kinase (AMPK)"].
 - Cell cycle IGI (PMID:16326395): abstract describes AMPK-p53 driven arrest ("causes elimination of Cyclin E, resulting in cell cycle arrest") -> positive regulation of cell cycle left UNDECIDED.
-- Deep research: falcon run killed (exit 137, memory pressure); notes from cached publications.
+- Deep research: first falcon run killed (exit 137, memory pressure); a retry produced SNF4Agamma-deep-research-falcon.md, which agrees [file:DROME/SNF4Agamma/SNF4Agamma-deep-research-falcon.md "SNF4Aγ contributes the adenine-nucleotide-sensing component of an αβγ AMPK heterotrimer"].
