@@ -30,9 +30,10 @@ def evidence(org, gene, bp_id, statement, n=2, refs=None):
     """Pull up to n supported_by quotes from the core function carrying bp_id."""
     d = review(org, gene)
     out = []
-    if bp_id == "NPB":
+    if bp_id in ("NPB", "NPM"):
+        wanted = "neural plate border formation" if bp_id == "NPB" else "neural crest progenitor maintenance"
         for pt in d.get("proposed_new_terms") or []:
-            if pt.get("proposed_name") == "neural plate border formation":
+            if pt.get("proposed_name") == wanted:
                 for sb in pt.get("supported_by") or []:
                     ref = sb["reference_id"]
                     if refs and ref not in refs:
@@ -101,6 +102,7 @@ INH = ("GO:0140416", "transcription regulator inhibitor activity")
 NCF = ("GO:0014029", "neural crest formation")
 # Proposed replacement for GO:0014029 in the border layer (projects/NEURAL_CREST_FORMATION_OBSOLETION.md)
 NPB = (None, "neural plate border formation (proposed new term; replaces GO:0014029, proposed for obsoletion)")
+NPM = (None, "neural crest progenitor maintenance (proposed new term; replaces GO:0014029, proposed for obsoletion)")
 NCC = ("GO:0014034", "neural crest cell fate commitment")
 NCS = ("GO:0014036", "neural crest cell fate specification")
 MIG = ("GO:0001755", "neural crest cell migration")
@@ -165,24 +167,25 @@ competence = {
         "proliferative and undifferentiated, preserving the broad potential that crest cells later deploy. "
         "Loss causes progenitor arrest or death rather than a switch to another fate, so these factors "
         "support crest formation without specifying crest identity. No GO process term captures this role; "
-        "it is recorded with GO:0014029 at gene level and raised as a knowledge gap here."
+        "a new term, neural crest progenitor maintenance, is proposed for it."
     ),
-    "concepts": [{"preferred_term": "maintenance of neural crest progenitor competence (no GO term)"}],
+    "concepts": [{"preferred_term": "neural crest progenitor maintenance (proposed new term)",
+                  "description": "Proposed as a child of GO:0019827 stem cell population maintenance, replacing GO:0014029 for competence factors (projects/NEURAL_CREST_FORMATION_OBSOLETION.md)."}],
     "annotons": [
-        annoton("myc_competence", "c-Myc competence factor", "XENLA", "myc-a", TF, [NCF],
+        annoton("myc_competence", "c-Myc competence factor", "XENLA", "myc-a", TF, [NPM],
                 "Blastula-inherited Myc/Max E-box factor at the border before slug; required for crest precursors.",
-                "GO:0014029", "c-Myc is at the border before slug and is required for crest precursors."),
+                "NPM", "c-Myc is at the border before slug and is required for crest precursors."),
         annoton("id3_competence", "Id3 bHLH inhibitor", "XENLA", "id3-a", INH,
-                [NCF, ("GO:0045596", "negative regulation of cell differentiation")],
+                [NPM, ("GO:0045596", "negative regulation of cell differentiation")],
                 "Dominant-negative HLH protein that keeps crest progenitors cycling and undifferentiated.",
-                "GO:0014029", "Id3 maintains the cycling crest progenitor pool rather than specifying crest fate."),
-        annoton("pou5f3_competence", "Oct25 (Pou5f3) competence factor", "XENLA", "pou5f1.1", TF, [NCF],
+                "NPM", "Id3 maintains the cycling crest progenitor pool rather than specifying crest fate."),
+        annoton("pou5f3_competence", "Oct25 (Pou5f3) competence factor", "XENLA", "pou5f1.1", TF, [NPM],
                 "POU-V blastula pluripotency factor retained at the neural plate border; required (with its paralog) for snai2 and foxd3, and its gain expands border and crest markers.",
-                "GO:0014029", "Pou5f3 is expressed at the border and is required for crest specifier expression.", refs=["PMID:39060477"]),
+                "NPM", "Pou5f3 is expressed at the border and is required for crest specifier expression.", refs=["PMID:39060477"]),
         annoton("hes4_competence", "Hairy2 border repressor", "XENLA", "hes4-a", REP,
-                [NCF, ("GO:0030514", "negative regulation of BMP signaling pathway")],
+                [NPM, ("GO:0030514", "negative regulation of BMP signaling pathway")],
                 "bHLH-Orange repressor that holds border cells undifferentiated and tunes Bmp4 levels at the border.",
-                "GO:0014029", "Hairy2 keeps border cells undifferentiated and tunes Bmp4 at the border."),
+                "NPM", "Hairy2 keeps border cells undifferentiated and tunes Bmp4 at the border."),
     ],
 }
 
@@ -381,8 +384,8 @@ doc = {
         "proteins where reviewed Swiss-Prot entries exist, human proteins otherwise. Process terms follow "
         "the replacement rule of projects/NEURAL_CREST_FORMATION_OBSOLETION.md: border genes at the proposed "
         "'neural plate border formation' term (plus GO:0014034 where they directly induce crest fate), crest "
-        "specifiers at GO:0014036; competence factors still carry GO:0014029 pending a decision on their "
-        "replacement. Genes with "
+        "specifiers at GO:0014036, and competence factors at the proposed 'neural crest progenitor "
+        "maintenance' term. Genes with "
         "roles in more than one layer (AP-2alpha, Snai2, Twist1, Sox9) have one annoton per role, which is "
         "how roles that are non-core at gene level (e.g. Twist1 in ectomesenchyme) become explicit parts here. "
         "Sox10-driven melanocyte and glial differentiation are downstream derivative programs and are out of scope."
@@ -434,10 +437,17 @@ doc["knowledge_gaps"] = [
         "gap_statement": "No GO process term describes maintaining border and crest progenitors in an undifferentiated, proliferative, competent state.",
         "boundary": "Affects the progenitor_competence_maintenance part (c-Myc, Id3, Hairy2).",
         "gap_kind": ["ONTOLOGY", "CURATION"],
-        "status": "OPEN",
+        "status": "NARROWING",
         "significance": "Without such a term these factors are annotated to neural crest formation, although loss causes arrest or death rather than a change of fate.",
-        "resolution": "Decide whether GO:0019827 stem cell population maintenance applies in frog, or propose a more specific competence-maintenance term.",
+        "resolution": "Proposed: a new term 'neural crest progenitor maintenance' under GO:0019827 (decided 2026-10-09; projects/NEURAL_CREST_FORMATION_OBSOLETION.md).",
         "provenance": [{"reference_id": "PMID:15769946", "supporting_text": "rather than a cell fate switch"}],
+        "proposed_terms": [{
+            "proposed_name": "neural crest progenitor maintenance",
+            "proposed_definition": "The process by which neural plate border and premigratory neural crest progenitor cells are kept in an undifferentiated, proliferative and multipotent state until neural crest specification.",
+            "justification": "Myc, Id3, Hairy2 and Pou5f3/Oct25 are required for crest to form, but their loss causes progenitor arrest or death rather than a change of fate; neither crest cell differentiation nor fate specification describes them.",
+            "proposed_parent": {"id": "GO:0019827", "label": "stem cell population maintenance"},
+            "supported_by": [{"reference_id": "PMID:15769946", "supporting_text": "rather than a cell fate switch"}],
+        }],
     },
     {
         "gap_statement": "Parts of the network are lineage-specific: the cranial circuit (including Ets1) is absent from lamprey crest, Twist1's early specifier role is reported only in anamniotes, and the leading SoxE paralog differs by lineage.",

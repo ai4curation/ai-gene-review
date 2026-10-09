@@ -9,15 +9,15 @@ genes: [pax3-a, zic1, gbx2, MSX1, PAX7, TFAP2A, TFAP2C, hes4-a, id3-a, myc-a, po
 # Neural Crest Formation (GO:0014029) — Obsoletion Proposal
 
 **Bottom line:** we propose to obsolete GO:0014029 *neural crest formation*
-and its three regulation terms. We also propose a new term, *neural plate border
-formation*. GO:0014029 contradicts itself: its text defines forming *a region of
+and its three regulation terms. We also propose two new terms, *neural plate
+border formation* and *neural crest progenitor maintenance*. GO:0014029 contradicts itself: its text defines forming *a region of
 ectoderm* (the neural plate border), while its place in GO is under *epithelial
 to mesenchymal transition*. The 1,454 annotations to it therefore have no single
 meaning. They mix border specifiers, crest specifiers, competence factors,
 signalling modulators and ribosome-biogenesis genes. 1,322 of them (91%) are
 electronic, and one machine-learned UniProt rule (ARBA00027170) alone produces
 665. Only 84 rows are experimental (48 gene products, 36 papers). Each of these
-can be remapped to a precise existing term, or to the new border term. This
+can be remapped to a precise existing term, or to one of the two new terms. This
 project holds the case, the replacement rules, the remapping of every
 experimental annotation, and the draft GO request. It originated in the
 [Origins of the Neural Crest](NEURAL_CREST_ORIGINS.md) project. Nothing has
@@ -81,11 +81,19 @@ No production GO-CAM in the local cache (`gocams/`) uses any of the four terms.
    preplacodal ectoderm, dorsal neural tube and epidermis." Proposed `part_of`
    GO:0007398 *ectoderm development*. It should not sit under any crest or
    mesenchyme term.
-2. **Obsolete GO:0014029.** Replacements to suggest ("consider"): neural plate
-   border formation (new), GO:0014033 *neural crest cell differentiation*,
+2. **New term: neural crest progenitor maintenance.** "The process by which
+   neural plate border and premigratory neural crest progenitor cells are kept in
+   an undifferentiated, proliferative and multipotent state until neural crest
+   specification." Proposed `is_a` GO:0019827 *stem cell population
+   maintenance*. It is for competence factors such as Myc, Id3, Hairy2 and
+   Pou5f3/Oct25. These are required for crest to form, but their loss causes
+   progenitor arrest or death rather than a change of fate, and sustained Id3
+   blocks differentiation.
+3. **Obsolete GO:0014029.** Replacements to suggest ("consider"): neural plate
+   border formation (new), neural crest progenitor maintenance (new), GO:0014033 *neural crest cell differentiation*,
    GO:0014034 *fate commitment*, GO:0014036 *fate specification*, GO:0036032
    *delamination*. GO:0014034 keeps its existing `part_of` GO:0014033.
-3. **Obsolete the regulation terms**, replaced by the existing regulation
+4. **Obsolete the regulation terms**, replaced by the existing regulation
    terms for crest cell differentiation:
 
 | Obsoleted | Replaced by |
@@ -105,18 +113,17 @@ out in [NEURAL_CREST_ORIGINS](NEURAL_CREST_ORIGINS.md) and the
 | builds the border territory (border specifier) | neural plate border formation (new) |
 | … and directly drives crest fate from the border | also GO:0014034 fate commitment |
 | confers crest identity within the prospective crest | GO:0014036 fate specification |
-| is required in forming crest without conferring identity (competence) | **open decision** (see below) |
+| keeps border/crest progenitors undifferentiated and competent | neural crest progenitor maintenance (new) |
 | drives delamination | GO:0036032 delamination |
 | is only expressed there (IEP) | no process replacement; expression is not participation |
 | modulates an inducing signal (BMP/Wnt antagonist or receptor) | regulation term on the signal, or border formation if the evidence supports it; review case by case |
 
-**Open decision: competence factors** (Myc, Id3, Hairy2, Oct25/Pou5f3). Options:
-(a) GO:0014033 *neural crest cell differentiation*, which is broad but true:
-without them no crest cells arise; (b) a second new term for maintaining neural
-crest progenitor competence, already recorded as a knowledge gap in the module;
-(c) GO:0019827 *stem cell population maintenance*, which the lin28a review
-judged unsupported by frog data. Until this is decided, the four affected
-reviews keep their current rows.
+**Competence factors (decided 2026-10-09).** Three options were considered:
+(a) GO:0014033 *neural crest cell differentiation*; (b) a new term; (c)
+GO:0019827 *stem cell population maintenance*. Option (b) was chosen. (a) is
+awkward for factors that hold off differentiation. (c) is too general to say
+which population is maintained, and the lin28a review judged it unsupported for
+lin28 in frog.
 
 ## The 84 experimental annotations, sorted (preliminary)
 
@@ -130,7 +137,7 @@ before a replacement is asserted.
 | Border formation (new) | zic2-a, zic4, zic5 (X. laevis) | to review (Zic paralogs, same papers as zic1) |
 | GO:0014036 fate specification | sox8, sox9-a, sox10 (X. laevis); sox9 (X. tropicalis); sox10 (zebrafish) | frog SoxE reviewed |
 | GO:0014036 (ubiquitin/translation control of specification) | KBTBD8, NOLC1, TCOF1 (human), kbtbd8 (X. tropicalis); KLHL12, PEF1, PDCD6 (human) | to review: CUL3 substrate-adaptor studies; check the specification claim in full text |
-| Competence (open decision) | hes4-a, hes4-b, id3-a (X. laevis) | hes4-a, id3-a reviewed; the hes4-a NOT row is disputed |
+| Neural crest progenitor maintenance (new) | hes4-a, hes4-b, id3-a (X. laevis) | hes4-a, id3-a reviewed; the hes4-a NOT row is disputed |
 | Signalling modulators | grem1 (X. laevis, IEP), Chrd (mouse), bmper, mdkb (zebrafish), LRP6 (human, IDA) | to review; LRP6 has a review in this repo (non-core) |
 | Case by case | chd7, cnbpa, hsbp1b, polr1b, snw1, zeb2a, zeb2b (zebrafish) | to review |
 | No replacement (expression only) | Id2 (chicken, IEP; PMID:15242799) | to review |
@@ -146,15 +153,17 @@ before a replacement is asserted.
   `NEURAL_CREST_FORMATION_OBSOLETION/apply_border_ntr.py`.
 - **Crest specifiers, already consistent.** sox8, sox9-a, sox10, snai1, snai2
   and twist1 MODIFY their GO:0014029 rows to GO:0014036.
-- **Competence factors, waiting on the open decision.** hes4-a, id3-a, myc-a
-  and pou5f1.1.
+- **Competence factors, done.** hes4-a and id3-a: their GOA GO:0014029 rows
+  are MODIFY → NTR *neural crest progenitor maintenance*. myc-a and pou5f1.1:
+  NEW rows re-pointed to it. All four carry a `proposed_new_terms` entry.
+  Applied with `apply_border_ntr.py --competence`.
 - **Outside the crest project.** human LRP6 keeps GO:0014029 (IDA,
   PMID:11029007) as non-core. Revisit it with the signalling-modulator group.
 - lin28a, sox2, sox3-a and TFAP2B mention the term only in prose.
 
 ## Draft request to GO (not submitted)
 
-> **Obsolete GO:0014029 neural crest formation (and GO:0090299/0090300/0090301); add "neural plate border formation"**
+> **Obsolete GO:0014029 neural crest formation (and GO:0090299/0090300/0090301); add "neural plate border formation" and "neural crest progenitor maintenance"**
 >
 > GO:0014029 is defined as "the formation of the specialized region of ectoderm
 > between the neural ectoderm (neural plate) and non-neural ectoderm", but it is
@@ -168,9 +177,12 @@ before a replacement is asserted.
 > spanning unrelated families.
 >
 > Proposal: (1) new BP "neural plate border formation", part_of GO:0007398
-> ectoderm development; (2) obsolete GO:0014029 with consider: the new term,
-> GO:0014033, GO:0014034, GO:0014036, GO:0036032; (3) obsolete GO:0090299,
-> GO:0090300 and GO:0090301, replaced by GO:1905292, GO:1905294 and GO:1905293.
+> ectoderm development; (2) new BP "neural crest progenitor maintenance",
+> is_a GO:0019827 stem cell population maintenance, for factors that keep
+> border/crest progenitors undifferentiated and competent (Myc, Id3, Hairy2,
+> Pou5f3); (3) obsolete GO:0014029 with consider: the two new terms, GO:0014033,
+> GO:0014034, GO:0014036, GO:0036032; (4) obsolete GO:0090299, GO:0090300 and
+> GO:0090301, replaced by GO:1905292, GO:1905294 and GO:1905293.
 > A per-annotation remapping of the 84 experimental annotations is attached.
 
 ---
@@ -183,8 +195,8 @@ Last updated: 2026-10-09
 - [x] Source of the electronic bulk identified (ARBA00027170; Ensembl orthology)
 - [x] Replacement rule drafted; regulation-term mappings identified
 - [x] Border-specifier reviews in this repo moved to the proposed term (7 reviews)
-- [ ] **Decide the competence-factor replacement** (GO:0014033 vs a new competence term)
-- [ ] Apply the decision to hes4-a, id3-a, myc-a, pou5f1.1
+- [x] Competence-factor replacement decided: new term *neural crest progenitor maintenance* (2026-10-09)
+- [x] Applied to hes4-a, id3-a, myc-a, pou5f1.1; module competence part updated
 - [ ] Review the remaining experimental annotations (Zic paralogs, ubiquitin/translation group, signalling modulators, zebrafish case-by-case, chick Id2)
 - [ ] Review the 17 regulation-term annotations (hdac4, parp3, SOX9, rgs2, TSPAN18, Fuz, chick Id2)
 - [ ] Produce the per-annotation remapping table for GO
@@ -192,6 +204,15 @@ Last updated: 2026-10-09
 - [ ] Submit the GO request (needs sign-off)
 
 # NOTES
+
+## 2026-10-09 (later)
+
+Decided option (b) for competence factors: a second new term, *neural crest
+progenitor maintenance* (is_a GO:0019827). Applied to the four competence
+reviews and to the module. No GO:0014029 term IDs remain in the module or in
+the project's core functions. The 4 competence reviews and the 7 border
+reviews still have GOA rows on GO:0014029, now MODIFY to an NTR, which is the
+intended state until GO acts.
 
 ## 2026-10-09
 

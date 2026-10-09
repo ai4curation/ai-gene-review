@@ -1,6 +1,7 @@
-"""Re-point border-specifier reviews from GO:0014029 to the proposed
-'neural plate border formation' term (NTR), as part of the
-NEURAL_CREST_FORMATION_OBSOLETION proposal.
+"""Re-point reviews from GO:0014029 to a proposed replacement term (NTR), as part
+of the NEURAL_CREST_FORMATION_OBSOLETION proposal. Two proposed terms are
+handled: 'neural plate border formation' (border specifiers; default) and
+'neural crest progenitor maintenance' (competence factors; pass --competence).
 
 For each listed review:
   * NEW rows on GO:0014029 are re-pointed to {id: NTR, label: neural plate border formation};
@@ -39,6 +40,35 @@ REASON_SUFFIX = (
     "proposed term 'neural plate border formation' (NTR)."
 )
 
+COMPETENCE = {
+    "label": "neural crest progenitor maintenance",
+    "definition": (
+        "The process by which neural plate border and premigratory neural crest progenitor cells are kept "
+        "in an undifferentiated, proliferative and multipotent state until neural crest specification."
+    ),
+    "justification": (
+        "GO:0014029 neural crest formation, which these factors currently carry, is proposed for obsoletion "
+        "(projects/NEURAL_CREST_FORMATION_OBSOLETION.md). Competence factors (Myc, Id3, Hairy2, Pou5f3/Oct25) "
+        "are required for crest to form, but loss causes progenitor arrest or death rather than a change of "
+        "fate, and sustained activity blocks differentiation, so neither crest cell differentiation nor fate "
+        "specification describes their role. GO:0019827 stem cell population maintenance is the parent; the "
+        "new term says which progenitor population is maintained."
+    ),
+    "parent": {"id": "GO:0019827", "label": "stem cell population maintenance"},
+    "reason_suffix": (
+        " GO:0014029 is proposed for obsoletion (projects/NEURAL_CREST_FORMATION_OBSOLETION.md): its "
+        "definition describes forming the neural plate border region while its placement is under epithelial "
+        "to mesenchymal transition. This gene's role is keeping crest progenitors undifferentiated and "
+        "competent, captured by the proposed term 'neural crest progenitor maintenance' (NTR)."
+    ),
+    "genes": {
+        "genes/XENLA/hes4-a/hes4-a-ai-review.yaml": [],
+        "genes/XENLA/id3-a/id3-a-ai-review.yaml": [],
+        "genes/XENLA/myc-a/myc-a-ai-review.yaml": [],
+        "genes/XENLA/pou5f1.1/pou5f1.1-ai-review.yaml": [],
+    },
+}
+
 GENES = {
     # path: extra replacement ids for MODIFY rows
     "genes/XENLA/gbx2/gbx2-ai-review.yaml": [],
@@ -58,10 +88,17 @@ def quotes_for(doc):
     return []
 
 
-def main(root):
+def main(root, cfg=None, only=()):
+    global NTR_LABEL, DEFINITION, JUSTIFICATION, REASON_SUFFIX
+    parent = {"id": "GO:0007398", "label": "ectoderm development"}
+    genes = GENES
+    if cfg:
+        NTR_LABEL, DEFINITION, JUSTIFICATION, REASON_SUFFIX = (
+            cfg["label"], cfg["definition"], cfg["justification"], cfg["reason_suffix"])
+        parent, genes = cfg["parent"], cfg["genes"]
     root = pathlib.Path(root)
-    only = set(sys.argv[2:])
-    for rel, extra in GENES.items():
+    only = set(only)
+    for rel, extra in genes.items():
         if only and not any(o in rel for o in only):
             continue
         path = root / rel
@@ -120,7 +157,7 @@ def main(root):
             "proposed_name": NTR_LABEL,
             "proposed_definition": DEFINITION,
             "justification": JUSTIFICATION,
-            "proposed_parent": {"id": "GO:0007398", "label": "ectoderm development"},
+            "proposed_parent": parent,
             "supported_by": [{"reference_id": q["reference_id"], "supporting_text": q["supporting_text"]} for q in quotes],
         }
         dumped = yaml.safe_dump([entry], sort_keys=False, width=100, allow_unicode=True)
@@ -136,4 +173,7 @@ def main(root):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else ".")
+    args = sys.argv[1:]
+    competence = "--competence" in args
+    args = [a for a in args if a != "--competence"]
+    main(args[0] if args else ".", COMPETENCE if competence else None, args[1:])

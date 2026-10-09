@@ -747,9 +747,11 @@ obsolete it, together with its regulation terms, and to add a new term,
   (border role) and TFAP2C, plus pax3-a and zic1, which also keep GO:0014034.
 - **Crest specifiers:** GO:0014036. That covers the SoxE genes, snai1/2,
   twist1, TFAP2B and TFAP2A (crest role).
-- **Competence factors:** an open decision (hes4-a, id3-a, myc-a, pou5f1.1).
+- **Competence factors:** a second new term, *neural crest progenitor
+  maintenance* (decided 2026-10-09). That covers hes4-a, id3-a, myc-a and
+  pou5f1.1.
 
-The seven border reviews and the module have been updated.
+All eleven affected reviews and the module have been updated.
 
 ### Earlier discussion: GO:0014029 vs GO:0014036
 
