@@ -12,3 +12,7 @@
 - Module-wide convention (methionine salvage): GO:0033353 "L-methionine cycle" (SAM-cycle definition;
   GO's replacement for obsolete GO:0019509) MODIFY -> GO:0071267 L-methionine salvage (Adi1 already has
   the IMP); cytoplasm -> cytosol (IC present); nucleus kept non-core.
+- Falcon deep research (Adi1-deep-research-falcon.md, arrived after initial commit): restates Chou et
+  al. 2014 findings (about 20-30% fewer eggs under restriction; 64% lower ovarian methionine and reduced
+  SAM in mutants; human ADI1 but not the E94A mutant rescues) and the metal-dependent Fe/Ni reaction
+  split. Subcellular location of fly Adi1 untested. No annotation changes.
