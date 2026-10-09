@@ -1,5 +1,7 @@
 # disp (Dispatched, Q9VNJ5) curation notes
 
+Deep research: `disp-deep-research-falcon.md` (falcon; the wrapper reported a 600 s timeout but the run completed later). Folded in as an EDIT; its conclusions agree with the review and it is cited in the core function.
+
 ## Literature journal
 
 - disp is a segment-polarity gene required in Hh-sending cells; Disp releases cholesterol-anchored Hh
