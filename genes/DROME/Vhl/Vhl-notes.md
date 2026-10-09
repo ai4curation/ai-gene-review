@@ -1,6 +1,6 @@
 # Vhl review notes
 
-Accession: Q9V3C1. Module: dmel_vcb_ubiquitin_ligase (substrate receptor).
+Accession: Q9V3C1. Planned FlyBase gene-group module (not yet committed to modules/ on main): dmel_vcb_ubiquitin_ligase (substrate receptor).
 
 ## Literature journal
 
