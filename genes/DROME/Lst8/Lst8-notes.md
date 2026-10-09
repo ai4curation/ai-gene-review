@@ -1,7 +1,6 @@
 # Lst8 (Q9W328) curation notes
 
-Deep research: falcon run queued; earlier runs in this session took ~30 min and the wrapper reported
-timeouts. Notes from cached publications.
+Deep research: `Lst8-deep-research-falcon.md` (falcon; the wrapper reported a 600 s timeout but the run completed later). Folded in as an EDIT; its conclusions agree with the review and it is cited in the core function.
 
 ## Literature journal
 
