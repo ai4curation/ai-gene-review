@@ -18,3 +18,7 @@
 - Core MF tyrosine decarboxylase activity (GO:0004837); general lyase/carboxy-lyase rows MODIFY to it.
 - amino acid metabolic process MODIFY to tyramine biosynthetic process (GO:1901695, already IMP).
 - Ethanol behavior kept as non-core (defer to curator; full data not visible).
+
+## Deep research (falcon) additions
+- Confirms non-neural role [file:DROME/Tdc1/Tdc1-deep-research-falcon.md "Tdc1 is the fly’s predominantly non-neuronal tyrosine decarboxylase, not its neuronal paralogue Tdc2."]
+- Reports prothoracic-gland Tdc1 RNAi has only subtle effects (Tdc2 dominates there) and tracheal transcript expression (preprint); no purified-enzyme kinetics. No change to decisions.
