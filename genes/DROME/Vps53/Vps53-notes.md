@@ -7,3 +7,6 @@ Large helical-rod subunit shared by GARP and EARP.
 - EARP shares Vps53 [PMID:25799061 "The two complexes share the Ang2, Vps52 and Vps53 subunits"].
 
 Decisions: same convention as Vps51/Vps52 (GARP ACCEPT, NEW EARP complex, ND -> vesicle membrane tethering activity).
+
+Deep research: falcon completed (genes/DROME/Vps53/Vps53-deep-research-falcon.md) after the review was first committed; checked for consistency.
+- Deep research (falcon) notes that endogenous fly Vps53 has not been imaged and fly evidence is biochemical (Arl5 affinity purification).
