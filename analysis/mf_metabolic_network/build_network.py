@@ -93,6 +93,10 @@ MACROMOLECULE_PATTERNS = re.compile(
 EXACT_XREF = re.compile(r'^xref: (RHEA:\d+) \{source="skos:exactMatch"\}')
 
 
+# A handoff through a chemical touched by at most this many enzymes counts as "specific".
+HANDOFF_HUB = 5
+
+
 # ---------------------------------------------------------------- GO ontology
 def load_go(path: Path):
     names, ns, parents, obsolete = {}, {}, defaultdict(set), set()
@@ -373,9 +377,25 @@ def main():
     rnd_pairs = [tuple(random.sample(with_bp, 2)) for _ in range(20000)] if len(with_bp) > 1 else []
     rnd_share = sum(share_specific(a, b) for a, b in rnd_pairs) / max(1, len(rnd_pairs))
     rnd_jacc = sum(jacc(a, b) for a, b in rnd_pairs) / max(1, len(rnd_pairs))
-    # metabolite-weighted: strong edges (>=2 shared intermediates)
-    strong = [(a, b) for a, b in edges_bp if G[a][b]["weight"] >= 2]
-    strong_share = sum(share_specific(a, b) for a, b in strong) / max(1, len(strong))
+    # Edge classes. A pathway handoff is ONE intermediate passing from one enzyme to the
+    # next, so the number of shared chemicals is not a confidence measure: pairs sharing
+    # >=2 are mostly genes catalysing the same reaction (subunits, isozymes, paralogs).
+    #   same_step : the two genes share a Rhea reaction
+    #   handoff   : no shared reaction, linked through >=1 non-currency chemical
+    #   specific handoff : a handoff through a chemical touched by <= HANDOFF_HUB genes
+    #                      (pyruvate/acetyl-CoA-type hubs link many unrelated pathways)
+    def kind(a, b):
+        return "same_step" if gene_rxn[a] & gene_rxn[b] else "handoff"
+
+    def frac(pairs):
+        return round(sum(share_specific(a, b) for a, b in pairs) / len(pairs), 3) if pairs else None
+
+    same_step = [(a, b) for a, b in edges_bp if kind(a, b) == "same_step"]
+    handoff = [(a, b) for a, b in edges_bp if kind(a, b) == "handoff"]
+    spec_handoff = [(a, b) for a, b in handoff
+                    if any(len(chem_genes[c]) <= HANDOFF_HUB for c in G[a][b]["chems"])]
+    multi = [(a, b) for a, b in edges_bp if G[a][b]["weight"] >= 2]
+    multi_same = sum(kind(a, b) == "same_step" for a, b in multi)
 
     # ---------- term-level coherence
     term_rows = []
@@ -449,8 +469,14 @@ def main():
         "specific_bp_cutoff_genes": specific_cut,
         "edge_share_specific_bp": round(obs_share, 3),
         "random_pair_share_specific_bp": round(rnd_share, 3),
-        "strong_edge_share_specific_bp": round(strong_share, 3),
-        "n_strong_edges": len(strong),
+        "same_step_edges": len(same_step),
+        "same_step_share_specific_bp": frac(same_step),
+        "handoff_edges": len(handoff),
+        "handoff_share_specific_bp": frac(handoff),
+        "specific_handoff_edges": len(spec_handoff),
+        "specific_handoff_share_specific_bp": frac(spec_handoff),
+        "edges_sharing_2plus_chemicals": len(multi),
+        "edges_sharing_2plus_that_are_same_step": multi_same,
         "edge_mean_bp_jaccard": round(obs_jacc, 3),
         "random_pair_mean_bp_jaccard": round(rnd_jacc, 3),
         "bp_terms_tested": len(term_rows),
@@ -480,6 +506,7 @@ def main():
                                   "metabolic_bp": "; ".join(sorted(names.get(t, t) for t in spec[g])),
                                   "degree": G.degree(g)} for g in enz])
     wtsv("edges.tsv", [{"gene_a": label[a], "gene_b": label[b], "shared_metabolites": "; ".join(chebi2name.get(c, c) for c in d["chems"]),
+                        "kind": "same_step" if gene_rxn[a] & gene_rxn[b] else "handoff",
                         "share_specific_bp": share_specific(a, b) if met_bp[a] and met_bp[b] else ""}
                        for a, b, d in G.edges(data=True)])
     # graph for visualisation
