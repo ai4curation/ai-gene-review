@@ -10,3 +10,7 @@
   methylthioadenosine", so salvage enzymes inherited it. MODIFY to GO:0071267 L-methionine salvage
   for all five enzymes; cytoplasm -> cytosol (IC present); nucleus kept non-core.
 - identical protein binding IPI (Y2H, PMID:16603075) kept non-core: consistent with homotrimer.
+- Falcon deep research (Mtap-deep-research-falcon.md, arrived after initial commit): confirms embryonic
+  fat body/visceral mesoderm expression and a viable CG4802 deletion with no auditory phenotype; states
+  that no fly kinetics were found, but it missed the Shugart et al. kinetic study [PMID:6786932] that
+  underlies the FlyBase IDA. Subcellular localization untested in flies. No annotation changes.
