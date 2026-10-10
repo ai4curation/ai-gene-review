@@ -33,7 +33,7 @@ the rest are abstract-only, and the review says so wherever it matters.
 | GO:0021954 CNS neuron development (PMID:10191060) | MODIFY → GO:0071542 / GO:0021879 | 1999 screen paper: specific hypothalamic DA reduction |
 | GO:0071679 commissural neuron axon guidance ×2 (PMID:21471212) | KEEP_AS_NON_CORE | Transient phenotype, attributed by authors to reduced lhx2b; supported as an upstream `acts_upstream_of_or_within` assertion but downstream of Fezf2's core transcription-factor activity |
 | GO:0045944 positive regulation of transcription by RNAPII | NEW (IDA, PMID:21471212) | Activator function demonstrated; no existing positive-regulation row |
-| GO:0045892 negative regulation of DNA-templated transcription | ACCEPT | Abstract states eh1 motif required; could narrow to GO:0000122 with full text |
+| GO:0045892 negative regulation of DNA-templated transcription | ACCEPT | Abstract identifies tof/fezl as a transcription repressor; could narrow to GO:0000122 with full text |
 
 Everything else ACCEPTed, including all IBAs (PTN001803442 node; target-specific experimental
 grounding exists in PMID:21471212).
