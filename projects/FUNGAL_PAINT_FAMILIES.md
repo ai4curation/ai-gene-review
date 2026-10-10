@@ -27,12 +27,12 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 | Family | PAINT scope | First genes |
 | --- | --- | --- |
-| `PTHR11638` ATP-DEPENDENT CLP PROTEASE | fungal HSP104 and HSP78 nodes | HSP104/HSP78, hsp104/hsp78, HSP104/HSP78, hsp98 |
-| `PTHR24055` MITOGEN-ACTIVATED PROTEIN KINASE | fungal MAPK subtrees | HOG1/sty1/HOG1/hog-1 and pheromone MAPKs |
-| `PTHR31297` GLUCAN ENDO-1,6-BETA-GLUCOSIDASE B | fungal glucanase nodes | EXG1/SPR1/exg paralogs/XOG1/EXG2 |
-| `PTHR19370` NADH-CYTOCHROME B5 REDUCTASE | fungal reductase nodes | MCR1/CBR1/cbr1/mcr-1 |
-| `PTHR10615` HISTONE ACETYLTRANSFERASE | fungal MYST acetyltransferase nodes | ESA1/SAS paralogs/mst paralogs |
-| `PTHR43762` L-GULONOLACTONE OXIDASE | fungal ALO1 node | ALO1/alo1/ALO1/alo-1 |
+| `PTHR11638` ATP-DEPENDENT CLP PROTEASE | fungal `HSP104` and `HSP78` nodes | `HSP104`/`HSP78`, `hsp104`/`hsp78`, `HSP104`/`HSP78`, `hsp98` |
+| `PTHR24055` MITOGEN-ACTIVATED PROTEIN KINASE | fungal MAPK subtrees | `HOG1`/`sty1`/`HOG1`/`hog-1` and pheromone MAPKs |
+| `PTHR31297` GLUCAN ENDO-1,6-BETA-GLUCOSIDASE B | fungal glucanase nodes | `EXG1`/`SPR1`/`exg` paralogs/`XOG1`/`EXG2` |
+| `PTHR19370` NADH-CYTOCHROME B5 REDUCTASE | fungal reductase nodes | `MCR1`/`CBR1`/`cbr1`/`mcr-1` |
+| `PTHR10615` HISTONE ACETYLTRANSFERASE | fungal MYST acetyltransferase nodes | `ESA1`/`SAS` paralogs/`mst` paralogs |
+| `PTHR43762` L-GULONOLACTONE OXIDASE | fungal `ALO1` node | `ALO1`/`alo1`/`ALO1`/`alo-1` |
 
 ---
 
@@ -48,12 +48,12 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 
 - [ ] `yeast/HSP104` - cytosolic ATP-dependent disaggregase; existing
   curated anchor, not yet rechecked in this project
-- [ ] `yeast/HSP78` - mitochondrial Hsp104/ClpB paralog; review in PR #4519
-- [ ] `SCHPO/hsp104` - fission yeast cytosolic Hsp104 ortholog; review in PR
+- [ ] `yeast/HSP78` - mitochondrial `Hsp104`/ClpB paralog; review in PR #4519
+- [ ] `SCHPO/hsp104` - fission yeast cytosolic `Hsp104` ortholog; review in PR
   #4524
 - [ ] `SCHPO/hsp78` - fission yeast mitochondrial Hsp78 ortholog; review in
   PR #4521
-- [ ] `CANAL/HSP104` - CGD-seeded *Candida albicans* Hsp104 ortholog; review
+- [ ] `CANAL/HSP104` - CGD-seeded *Candida albicans* `Hsp104` ortholog; review
   in PR #4523
 - [ ] `CANAL/HSP78` - *Candida albicans* mitochondrial Hsp78 ortholog; review
   in PR #4522
@@ -79,17 +79,17 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
   cross-referencing `*-entries.csv` files for local *S. cerevisiae*,
   *S. pombe*, *C. albicans*, and *N. crassa* proteins.
 - Chose `PTHR11638` as the first family because the fungal PAINT split is
-  compact: Hsp104-like cytosolic disaggregases and Hsp78-like mitochondrial
-  disaggregases. The family also includes a CGD HSP104 seed and a curated
+  compact: `Hsp104`-like cytosolic disaggregases and Hsp78-like mitochondrial
+  disaggregases. The family also includes a CGD `HSP104` seed and a curated
   *S. cerevisiae* HSP104 review that already records how the current PAINT nodes
   ground the IBA rows.
-- Drafted `CANAL/HSP104` as the first CGD review. The HSP104-node IBAs were
+- Drafted `CANAL/HSP104` as the first CGD review. The `HSP104`-node IBAs were
   accepted, the direct C. albicans heat-acclimation rows were accepted, the
   Candida biofilm row was kept as a non-core phenotype, generic `protein
   folding` was redirected to `protein refolding`, and an abstract-only
   cell-surface assignment was left undecided pending full-text verification.
 - Drafted `NEUCR/hsp98` as the first filamentous-fungal review. The fungal
-  Hsp104 IBA rows were accepted from the PAINT node placements, and the
+  `Hsp104` IBA rows were accepted from the PAINT node placements, and the
   similarity-based nuclear localization row was left undecided because the
   cached Neurospora hsp98 paper does not test nuclear recruitment.
 
@@ -101,11 +101,11 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
   `intracellular organelle lumen` rows were redirected to `protein refolding`
   and `mitochondrial matrix`, and a direct `GO:0140545 ATP-dependent protein
   disaggregase activity` proposal was added from Hsp78 disaggregation assays.
-- Drafted `SCHPO/hsp104` and accepted the fungal Hsp104-node IBAs on
+- Drafted `SCHPO/hsp104` and accepted the fungal `Hsp104`-node IBAs on
   `PANTHER:PTN007521008`. Two narrow localization rows remain unresolved pending
   full-text inspection: the ORFeome-derived nuclear-envelope row and the NuR
-  row whose cached abstract shows Hsp104-dependent disaggregation but not
-  Hsp104 localization to NuRs.
+  row whose cached abstract shows `hsp104`-dependent disaggregation but not
+  `hsp104` localization to NuRs.
 - Drafted `SCHPO/hsp78` and `CANAL/HSP78` as mitochondrial Hsp78 orthologs.
   Both retain the Hsp78-node matrix/refolding/unfolding IBAs, both flag the
   broad mixed-node `cytoplasm` IBA as over-scoped, and the Candida review now
