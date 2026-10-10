@@ -2988,29 +2988,30 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**298 of 2,876 genes are complete; 2,578 remain.** CEP290 and CEP41 add
-two first primary campaign completions beyond checkpoint 296. Their exact final
-heads were approved and passed required checks before their actual merges.
-There are 298 distinct primary genes with merged campaign reviews and no
+**301 of 2,876 genes are complete; 2,575 remain.** CEP57, CEP85L and CFAP221
+add three first primary campaign completions beyond checkpoint 298. Their exact
+final heads were approved and passed required checks before their actual merges.
+There are 301 distinct primary genes with merged campaign reviews and no
 completion holds. Biological DRAFT status and justified UNDECIDED annotations
 remain independent of campaign completion.
 
-The fixed completion cutoff is **2026-10-10 07:02:47 UTC**, through CEP41 at
-[commit 3fbffb264074](https://github.com/ai4curation/ai-gene-review/commit/3fbffb26407414459e21ed806ebfa28885e8d809).
-The authenticated source snapshot is [main commit 156c3de28880](https://github.com/ai4curation/ai-gene-review/commit/156c3de288803dcf20e18b312d20f64f59f7f845),
-which contains [tracker #4515](https://github.com/ai4curation/ai-gene-review/pull/4515),
-checkpoint 296, actually merged at **2026-10-10 06:51:33 UTC**.
+The fixed completion cutoff is **2026-10-10 07:58:54 UTC**, through CFAP221 at
+[commit 8a69f3d2b551](https://github.com/ai4curation/ai-gene-review/commit/8a69f3d2b551d632a37bfeb6217a7d667db8d51b).
+The authenticated source snapshot is [main commit e49cb9becb5b](https://github.com/ai4curation/ai-gene-review/commit/e49cb9becb5bf0b3bcb307b23d8fa4a535c41536),
+which contains [tracker #4533](https://github.com/ai4curation/ai-gene-review/pull/4533),
+checkpoint 298, actually merged at **2026-10-10 07:56:46 UTC**.
 Its six project preimages are unchanged at the later completion cutoff.
 The source snapshot, completion cutoff and eventual publication branch base
 are distinct facts; publication from a later base requires matching these
-preimages and does not advance the cutoff. See [checkpoint 298 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-298-2026-10-10-070247-utc).
+preimages and does not advance the cutoff. See [checkpoint 301 evidence and counter definitions](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-301-2026-10-10-075854-utc).
 
 The explicit `campaign_audited_merged` counter and legacy compatibility semantics
-established at checkpoint 288 continue unchanged. Earlier dated records are
-preserved; later merges, supplementary products and repeated reviews add no
-count at this cutoff.
+established at checkpoint 288 continue unchanged. Literal `$.genes` contains
+235 historical queue objects and 235 distinct symbols; nested observations
+elsewhere in the JSON are separate. Earlier dated records are preserved; later
+merges, supplementary products and repeated reviews add no count at this cutoff.
 
-[Checkpoint 298 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T072443Z-codex-55f359.yaml).
+[Checkpoint 301 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T081738Z-codex-0d3c8d.yaml).
 
 - [x] Acquire and archive ClinGen source data.
 - [x] Seed the complete gene inventory and preserve association provenance.
@@ -3384,10 +3385,10 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **CEP250** — HGNC:1859; [cone-rod dystrophy and hearing loss 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0f7cc857-5ea9-474b-9c4d-8edd5c97c89a-2025-07-16T160000.000Z) (MONDO:0020780; AR; Definitive).
 - [x] **CEP290** — HGNC:29021; [CEP290-related ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ec24317e-70bc-48a0-999b-f960f951e8dd-2022-02-03T170000.000Z) (MONDO:0100451; AR; Definitive).
 - [x] **CEP41** — HGNC:12370; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_e6d51830-8bb5-416d-8006-86d50c2f4fdb-2025-12-03T170000.000Z) (MONDO:0005308; AR; Definitive).
-- [ ] **CEP57** — HGNC:30794; [mosaic variegated aneuploidy syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c44921de-14cf-4907-8bef-1525329ee89c-2019-11-22T145303.972Z) (MONDO:0013582; AR; Definitive).
-- [ ] **CEP85L** — HGNC:21638; [lissencephaly 10](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_30a3191e-5ee3-467c-afa1-27fada71f9ea-2024-09-24T170000.000Z) (MONDO:0030031; AD; Definitive).
+- [x] **CEP57** — HGNC:30794; [mosaic variegated aneuploidy syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c44921de-14cf-4907-8bef-1525329ee89c-2019-11-22T145303.972Z) (MONDO:0013582; AR; Definitive).
+- [x] **CEP85L** — HGNC:21638; [lissencephaly 10](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_30a3191e-5ee3-467c-afa1-27fada71f9ea-2024-09-24T170000.000Z) (MONDO:0030031; AD; Definitive).
 - [ ] **CERKL** — HGNC:21699; [CERKL-related retinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a3003820-dc03-4eb1-921a-6eaee749fa9f-2022-09-01T160000.000Z) (MONDO:0800401; AR; Definitive).
-- [ ] **CFAP221** — HGNC:33720; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7c841e5-2973-4f23-8603-970e9e2cbc92-2025-12-16T120000.000Z) (MONDO:0016575; AR; Definitive).
+- [x] **CFAP221** — HGNC:33720; [primary ciliary dyskinesia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_c7c841e5-2973-4f23-8603-970e9e2cbc92-2025-12-16T120000.000Z) (MONDO:0016575; AR; Definitive).
 - [ ] **CFAP300** — HGNC:28188; [ciliary dyskinesia, primary, 38](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6bcfa4e4-37a3-43a7-9b4d-60554bc7600c-2022-09-08T110000.000Z) (MONDO:0054843; AR; Definitive).
 - [ ] **CFAP410** — HGNC:1260; [amyotrophic lateral sclerosis](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_bde7edf1-ccfa-443e-a917-cf3d2dd9cba6-2023-12-12T180000.000Z) (MONDO:0004976; SD; Limited); [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_12bcd8fa-64d9-403d-a79f-911238f8b92a-2026-01-15T170000.000Z) (MONDO:0005308; AR; Definitive).
 - [ ] **CFAP418** — HGNC:27232; [ciliopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_791b95ad-3c89-436c-aa6e-c153c1c1ea61-2024-07-11T160000.000Z) (MONDO:0005308; AR; Definitive).
