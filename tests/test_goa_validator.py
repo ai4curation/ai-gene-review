@@ -851,6 +851,47 @@ def test_seed_missing_annotations_true_noop_preserves_yaml_bytes(tmp_path):
     assert yaml_path.read_text() == original
 
 
+def test_seed_missing_annotations_uses_given_publications_dir(tmp_path):
+    """Title lookups read the given cache, not the repo's publications/.
+
+    PMID:12345 is also cached in the committed publications/ with a different
+    title, so a lookup there would be visible as the wrong title.
+    """
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000353\tIPI\tPMID:12345\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "UniProt\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
+        "description: Test gene\n"
+    )
+    publications_dir = tmp_path / "publications"
+    publications_dir.mkdir()
+    (publications_dir / "PMID_12345.md").write_text(
+        "---\npmid: '12345'\n---\n\n# Fixture-only cached title\n"
+    )
+
+    _, _, references_added, _, _ = validator.seed_missing_annotations(
+        yaml_path, goa_path, fetch_titles=True, publications_dir=publications_dir
+    )
+
+    assert references_added == 1
+    document = yaml.safe_load(yaml_path.read_text())
+    assert document["references"] == [
+        {"id": "PMID:12345", "title": "Fixture-only cached title", "findings": []}
+    ]
+    assert sorted(publications_dir.iterdir()) == [publications_dir / "PMID_12345.md"]
+
+
 def test_seed_missing_annotations_noop_writes_requested_output(tmp_path):
     """A no-op seed still writes a separately requested output file."""
     validator = GOAValidator()

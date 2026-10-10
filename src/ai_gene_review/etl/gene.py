@@ -623,7 +623,10 @@ def fetch_gene_data(
             supporting_entities_backfilled,
         ) = (
             validator.seed_missing_annotations(
-                yaml_file, goa_file, fetch_titles=fetch_titles
+                yaml_file,
+                goa_file,
+                fetch_titles=fetch_titles,
+                publications_dir=base_path / "publications",
             )
         )
         result["annotations_added"] = added_count
@@ -1807,7 +1810,10 @@ def fetch_gene_data_ncRNA(
             supporting_entities_backfilled,
         ) = (
             validator.seed_missing_annotations(
-                yaml_file, goa_file, fetch_titles=True
+                yaml_file,
+                goa_file,
+                fetch_titles=True,
+                publications_dir=base_path / "publications",
             )
         )
         result["annotations_added"] = added_count
