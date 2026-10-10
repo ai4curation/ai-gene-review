@@ -60,12 +60,26 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 - [x] `NEUCR/hsp98` - *Neurospora crassa* Hsp104-family member; merged in PR
   #4520
 
+## Family 2: MYST Histone Acetyltransferases
+
+`PTHR10615` contains a broad eukaryotic MYST histone-acetyltransferase node and
+separate fungal Esa1/NuA4, Sas2/SAS-I, and Sas3/KAT7 placements that need
+paralog-aware activity and complex checks.
+
+- [ ] `yeast/ESA1` - NuA4 catalytic subunit
+- [ ] `yeast/SAS2` - SAS-I catalytic subunit
+- [ ] `yeast/SAS3` - NuA3 catalytic subunit
+- [ ] `SCHPO/mst1` - fission-yeast Esa1/NuA4-family MYST acetyltransferase
+- [x] `SCHPO/mst2` - fission-yeast Sas3/KAT7-family H3K14
+  acetyltransferase; drafted in PR
+- [ ] CGD MYST-family member
+- [ ] `NEUCR` MYST-family member
+
 ## Later Candidates
 
 - [ ] `PTHR24055` MAP kinases across HOG/p38 and pheromone pathways
 - [ ] `PTHR31297` fungal glucan exo-1,3-beta-glucosidases
 - [ ] `PTHR19370` fungal NADH-cytochrome b5 reductases
-- [ ] `PTHR10615` MYST-family histone acetyltransferases
 - [ ] `PTHR43762` fungal D-arabinono-1,4-lactone oxidases
 
 ---
@@ -118,3 +132,7 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
   (#4522), `CANAL/HSP104` (#4523), and `SCHPO/hsp104` (#4524).
 - Merged all six sibling Hsp100/ClpB reviews, bringing the mitochondrial Hsp78
   and cytosolic non-*S. cerevisiae* Hsp104/hsp98 PAINT checks onto `main`.
+- Re-reviewed `SCHPO/mst2` in the MYST family. The broad
+  `PANTHER:PTN004172926` rows fit Mst2 as a conserved chromatin MYST HAT, while
+  the fungal `PANTHER:PTN008308138` NuA3a assertion needs replacement with the
+  fission-yeast Mst2 histone acetyltransferase complex term.
