@@ -37,3 +37,7 @@
 - Kept the standing PAINT decisions: the broad `PANTHER:PTN004172926`
   MYST-family rows are safe for Sas3/NuA3, and fungal `PANTHER:PTN008308138`
   correctly places NuA3a complex membership on the Sas3 branch.
+- Addressed PR review by replacing the uncached Taverna full-text NuA3 composition
+  quote with cached primary text, adding Takechi and Nakayama zinc-finger evidence
+  to the zinc-binding row, and making the core function the residue-specific
+  H3K14 acetyltransferase activity rather than its generic HAT parent.
