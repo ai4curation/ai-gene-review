@@ -66,6 +66,52 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 292 — 2026-10-10 04:42:08 UTC
+
+**292 complete / 2,584 remaining in the frozen 2,876-gene catalog.** CEBPA and
+CEP104 add two first primary campaign completions beyond checkpoint 290. No
+required follow-up holds remain. Supplementary products and repeated reviews of
+already counted genes add no completion.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CEBPA | [#4502](https://github.com/ai4curation/ai-gene-review/pull/4502) | [8dcb615dc28f](https://github.com/ai4curation/ai-gene-review/commit/8dcb615dc28f7b2d8804048166fc8063d857f0f8) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4502#pullrequestreview-5477523334) | 2026-10-10T04:34:29Z | [074caa8e219a](https://github.com/ai4curation/ai-gene-review/commit/074caa8e219a6301d749afeb84571006f4b9d650) |
+| CEP104 | [#4503](https://github.com/ai4curation/ai-gene-review/pull/4503) | [cbd9e3d57ea9](https://github.com/ai4curation/ai-gene-review/commit/cbd9e3d57ea95efb19807ad8a8cfc64fc81d47d6) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4503#pullrequestreview-5477553863) | 2026-10-10T04:42:08Z | [04685e86ca43](https://github.com/ai4curation/ai-gene-review/commit/04685e86ca438d813fae98a3ac8e507cb32838e5) |
+
+Both final heads have successful test (3.12) and claude-review checks on those
+same commits before merge. All 50 changed PR paths match their approved-head and
+merge blobs; all 16 gene artifacts also match the frozen cutoff and source.
+The source main is [commit 2b6a4561b112](https://github.com/ai4curation/ai-gene-review/commit/2b6a4561b112799f115b70c8fdbf46494a1fb143),
+which contains both gene merges and the later baseline tracker merge.
+The published baseline [tracker #4506](https://github.com/ai4curation/ai-gene-review/pull/4506)
+merged at 2026-10-10T04:42:51Z as [2b6a4561b112](https://github.com/ai4curation/ai-gene-review/commit/2b6a4561b112799f115b70c8fdbf46494a1fb143).
+The later source snapshot does not move the biological completion cutoff.
+
+The counter definitions established at checkpoint 288 remain in force:
+`campaign_audited_merged` counts distinct frozen-catalog primary genes with a
+merged campaign review; subtracting `pending_followups` gives `completed`.
+`original_merged` remains a compatibility alias in this new snapshot. The three
+applicable values are 292, 0 and 292. Existing review-file presence, supplementary
+products and repeated reviews do not independently add campaign completions.
+
+All 2,876 catalog rows and association text, all 235 historical queue entries,
+all 44 prior completion updates and all previous progress text are preserved.
+Only the CEBPA and CEP104 checkboxes change; update 45 is appended. The queue gene
+array remains unchanged; new completion evidence is appended to the update series.
+Biological DRAFT status or justified UNDECIDED annotations alone create no hold.
+CEP120 #4505, CEP152 #4507, CEP164 #4508 and later work are outside this fixed cutoff.
+Both primary review files were added by their respective PRs. The first unchecked
+gene in literal catalog order remains ACBD5.
+
+For the previously counted CDKN2A gene, the separately rendered
+[ARF product review](https://ai4curation.io/ai-gene-review/genes/human/CDKN2A__Q8N726/CDKN2A__Q8N726-ai-review.html)
+and [p16 product review](https://ai4curation.io/ai-gene-review/genes/human/CDKN2A/CDKN2A-ai-review.html)
+are both available. These two products still contribute one CDKN2A catalog completion.
+
+Authenticated evidence was read and this proposal recorded at 2026-10-10T04:45:58.760797+00:00.
+
+[Checkpoint 292 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T044658Z-codex-7ed45f.yaml).
+
 ## Completion checkpoint 290 — 2026-10-10 04:04:04 UTC
 
 **290 complete / 2,586 remaining in the frozen 2,876-gene catalog.** CDKN2A adds
