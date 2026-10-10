@@ -32,3 +32,9 @@
 - PMID:38949302, the 2024 systematic *C. albicans* kinome library paper, was
   also cached during the live search. It is useful background for future
   kinase screens but was not direct enough for a HOG1 `supported_by` quote.
+- Follow-up after PR review: the `GO:0005737 cytoplasm` rows were left as
+  `ACCEPT`, but their evidence was tightened. The PMID:15817773 IDA row now
+  cites the paper's own Hog1-GFP "localized throughout the cell" statement,
+  while the broad PAINT, PMID:15229284, and UniProt-SubCell cytoplasm rows now
+  cite UniProt's explicit cytoplasm/nucleus location block instead of reusing a
+  nuclear-accumulation-only quote.
