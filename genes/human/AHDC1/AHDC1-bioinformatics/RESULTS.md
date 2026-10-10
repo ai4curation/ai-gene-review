@@ -1,5 +1,16 @@
 # AHDC1 — claim audit and ENCODE replication metadata
 
+## Audit Note
+
+This report is retained as a historical QA artifact. It describes guards written
+for an earlier AHDC1 review shape with standalone `NEW` rows and older literal
+prose requirements; after the 2026-09-27 ClinGen Mendelian substantive
+re-review, `AHDC1-notes.md` records that `audit_ahdc1_claims.py` no longer
+passes and was not used to preserve the obsolete assertions it expected. The
+ENCODE replication-metadata notes remain provenance for how
+`fetch_encode_ahdc1.py` derived the cached tag-status facts, but this report is
+not cited as biological evidence in `AHDC1-ai-review.yaml`.
+
 Two things, both in service of making this review's load-bearing claims re-derivable rather
 than transcribed:
 
