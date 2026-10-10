@@ -15,8 +15,10 @@ the five pending PAINT/ISO secondary-lipase calls.
 
 - GO:0004465 lipoprotein lipase activity, GO:0034375 HDL remodeling and
   GO:0006633 fatty-acid biosynthesis all trace through PTN000906454 to
-  vascular-lipase donors (LPL/LIPC/LIPG) or the same intravascular substrate
-  context, not to intestinal pancreatic-lipase evidence for Pnlip.
+  resolved vascular-lipase donors (rat Lipc `RGD:3009`, rat Lpl `RGD:3017`,
+  mouse Lpl `MGI:96820`, human LPL/LIPC/LIPG, and bovine LPL as applicable)
+  or the same intravascular substrate context, not to intestinal
+  pancreatic-lipase evidence for Pnlip.
 - GO:0008970 glycerophospholipid phospholipase A1 activity belongs chiefly to
   PLRP2/vascular-lipase paralog chemistry. PMID:8656075 still matters because
   it reports poor phospholipid hydrolysis by conventional rat PL rather than
@@ -26,4 +28,5 @@ the five pending PAINT/ISO secondary-lipase calls.
   human PNLIP self-characterization in PMID:9631512. Its bile-salt inhibition,
   colipase requirement and interfacial activation support the core lipase
   activity of PNLIP/Pnlip rather than a process in which Pnlip regulates a
-  separate triglyceride lipase.
+  separate triglyceride lipase. PMID:9631512 remains abstract-only, however,
+  so the ISO row is marked as over-annotated rather than removed outright.
