@@ -29,3 +29,22 @@
 - Module role: "distal appendage component; TTBK2 recruitment".
 - HPA v25: Primary cilium transition zone (Uncertain); Centrosome (Supported); main locations centrosome, primary cilium transition zone, and sperm principal piece.
 - Comparison: centrosome (Supported) and a transition-zone-level signal fit a distal appendage/transition fiber protein at the ciliary base. HPA does not reach the resolution of the appendage tip. The module role matches the literature exactly; core_functions (protein kinase binding/TTBK2 recruitment, plus vesicle docking) are consistent with it. The principal-piece signal in sperm is not explained by known CEP164 biology and is not used. No disagreement.
+
+
+## 2026-10-10: substantive campaign audit (supersedes earlier decisions)
+
+The published 48 assertion objects, two product records, GOA, UniProt, 41 existing reference caches and genuine older provider report are preserved. Normal fresh intake reproduced the same assertion objects/products. The new bounded Falcon/fallback attempt failed; this audit uses manually inspected primary evidence, documented in [the source ledger](CEP164-manual-evidence.md) and [bounded machine-field extract](CEP164-source-evidence.yaml).
+
+The six earlier generic-binding removals are superseded by KEEP_AS_NON_CORE for supported associations under the [standing ClinGen instruction at the authenticated baseline](https://github.com/ai4curation/ai-gene-review/blob/498c72e4bea435fe5f11cd82010fe5024c3dd791/projects/CLINGEN_MENDELIAN.md). Exact target records, tagged constructs and assay hosts are distinguished. TTBK2-specific annotations still MODIFY to protein kinase binding. The NPHP3/NPHP4 and DVL3 assays are actually present in the original full paper; the short anchor [PMID:22863007 "CEP164 with NPHP3"] identifies the relevant target passage without repeating its whole text.
+
+Tear proteomics is now KEEP_AS_NON_CORE: original full XML Table II names CE164_HUMAN/CEP164. This overturns the earlier reasoning from an omitted table and a hypothetical debris explanation. Detection is retained without claiming secretion or an extracellular function.
+
+The main core is TTBK2 binding and recruitment at the mother-centriole distal appendage. Direct Rabin8 binding and the vesicle-docking role remain in the biological synthesis, but extract-associated Rab8 is not relabeled a direct purified interaction: [PMID:23253480 "Rabin8, but not Rab8"]. Nor does kinase recruitment imply activation. Human construct/mutant/rescue scope, peptide-fusion structural limits and unresolved local Rabin8 imaging are recorded in the source ledger. A separate MF-free duplicate core is unnecessary.
+
+Centrosome/centriole/transition-fiber and cilium-assembly annotations remain core. The IBA activity qualifiers are supported by actual localized recruitment work, not location alone. Source-specific human microscopy is separated from mouse/worm experiments; the original human centrosome source describes [PMID:21399614 "appendage structures of the mature centriole"]. Reactome cytosol remains broad non-core location with authentic event identities and compartment fields, without transferring other proteins' catalytic roles.
+
+The two nuclear annotations remain UNDECIDED after inspecting positive primary/HPA evidence and the later genome-editing study. This is a substantive context/reagent conflict, not simply failed retrieval. No universal negative nuclear function or proven cross-reactivity is asserted.
+
+No NEW annotation or new product assignment is made. The existing source coverage already contains cilium assembly and the relevant locations; no missing-process claim is inferred from necessity alone. The previous notes are preserved byte-for-byte above as required by the append-only journal policy. Duplicate YAML quotations are removed; sources already over budget solely in that inherited prefix receive zero new quoted words. Current additions stay within the remaining per-source budget, with legacy excess explicitly disclosed rather than silently rewriting the old journal.
+
+A later primary study refines the docking model: [PMID:42288497 "CEP164 knockout blocks ciliogenesis at the DAV stage"]. The new reference and narrow finding dispute preserve the older binding evidence; all original annotation actions remain unchanged.
