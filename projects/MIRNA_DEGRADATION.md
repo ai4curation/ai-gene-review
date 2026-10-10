@@ -1,6 +1,7 @@
 ---
 title: "MicroRNA Degradation / TDMD Project"
 maturity: MATURE
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 genes: [ZSWIM8, CUL3, ARIH1, ELOB, ELOC, AGO2, AGO1, AGO3, AGO4]
 species: [human]
@@ -16,31 +17,26 @@ manifest:
   slides:
     - href: MIRNA_DEGRADATION/slides/MIRNA_DEGRADATION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/XL9eBPWsypGXtYqjeLMxwJ
-      title: Project brief
 ---
 # MicroRNA Degradation / TDMD Project
 
-**Bottom line:** in target-directed microRNA degradation (TDMD), the ZSWIM8 Cullin-RING
-ligase recognizes AGO-miRNA complexes engaged with a highly complementary trigger RNA and
-ubiquitylates AGO for proteasomal turnover, which leads to loss of the miRNA. Anchored on Farnung
-et al. 2026 (Nature), we scoped the project to the dedicated protein layer (the ZSWIM8, CUL3,
-ARIH1, ELOB, ELOC ligase axis and its AGO1-4 substrates) and kept trigger RNAs, biogenesis
-and generic RNA decay out, so that the reviews separate core TDMD function from generic
-silencing and ubiquitin biology. All nine human reviews now exist, well past the status
-checklist below, which predates them: 1,106 annotations assessed (660 ACCEPT, 145
-KEEP_AS_NON_CORE, 194 MARK_AS_OVER_ANNOTATED, 90 REMOVE, 14 MODIFY, 3 UNDECIDED), eight files
-marked COMPLETE and CUL3 fully actioned but still marked INITIALIZED. The key TDMD corrections
-are on ZSWIM8, where `positive regulation of miRNA catabolic process` becomes
-`GO:0140958` target-directed miRNA degradation and a Cul2-RING complex row becomes Cul3-RING;
-83 of the 90 removals are bare `protein binding` rows on ELOB, ELOC, AGO1 and AGO4. The
-comparative fly, worm and mouse layers and the TUT4/7-DIS3L2 branch have not started.
+**Bottom line:** target-directed microRNA degradation (TDMD) removes selected mature miRNAs by
+using highly complementary trigger RNAs to expose an AGO-miRNA state that is recognized by a
+ZSWIM8-CUL3 Cullin-RING ligase and handed to the ubiquitin-proteasome system. Anchored on Farnung
+et al. 2026 (Nature), this project reviews the dedicated protein layer - ZSWIM8, CUL3, ARIH1,
+ELOB, ELOC and the AGO1-4 substrate layer - without folding in miRNA biogenesis, generic CRLs,
+proteasome subunits or every transcript that can carry a TDMD trigger. As of 2026-10-04, all
+nine human phase-1 reviews exist and all 1,106 GOA rows are actioned: 686 ACCEPT, 126
+KEEP_AS_NON_CORE, 111 MARK_AS_OVER_ANNOTATED, 143 REMOVE, 18 MODIFY and 22 UNDECIDED. The most
+TDMD-specific corrections are in ZSWIM8, where broad `positive regulation of miRNA catabolic
+process` rows point to `GO:0140958` target-directed miRNA degradation and an inherited
+Cul2-RING complex row is replaced by Cul3-RING; across the cohort, 139 of 143 removals are bare
+`protein binding` rows.
 
 ## Overview
 
-This is the phase-1 scaffold for reviewing dedicated gene products in metazoan microRNA degradation.
-The first pass is intentionally centered on target-directed microRNA degradation (TDMD), not on every
+This phase-1 pass reviews dedicated gene products in metazoan microRNA degradation. It is
+intentionally centered on target-directed microRNA degradation (TDMD), not on every
 process that can influence miRNA abundance.
 
 The anchor paper from Chris, Farnung et al. 2026 in Nature,
@@ -54,6 +50,20 @@ right place to start a review project without accidentally absorbing half of RNA
 Which dedicated proteins directly execute or specify TDMD in metazoans, and how should their GO
 annotations distinguish core TDMD function from generic RNA silencing, ubiquitin ligase, or RNA
 decay biology?
+
+## 2026-10-04 Review Results
+
+| Gene | Status | Existing rows | Main curation result |
+|------|--------|---------------|----------------------|
+| ZSWIM8 | COMPLETE | 14 | TDMD is represented with `GO:0140958` target-directed miRNA degradation and Cul3-RING, not the broader miRNA catabolic-process parent or an inherited Cul2-RING complex |
+| CUL3 | INITIALIZED | 228 | Every row is actioned; CUL3 is treated as a ubiquitin ligase complex scaffold, with 78 mostly generic protein-binding, broad pathway or stray localization/proximity rows marked over-annotated; ubiquitin-ligase and transferase proxy rows are modified to `GO:0160072` |
+| ARIH1 | COMPLETE | 75 | HHARI is retained as a catalytic RBR E3 and ubiquitin-conjugating-enzyme-binding CRL partner rather than annotated specifically to TDMD |
+| ELOB | COMPLETE | 111 | Elongin B is kept as a reusable Elongin BC adaptor module; 23 bare `protein binding` rows and one RNA polymerase II initiation row are removed |
+| ELOC | COMPLETE | 120 | Elongin C is kept as the SKP1-like Elongin BC adaptor; 35 bare `protein binding` rows and one RNA polymerase II initiation row are removed |
+| AGO1 | DRAFT | 113 | The non-slicing Argonaute core is kept; 20 bare `protein binding` rows are removed and eight poorly supported rows remain undecided |
+| AGO2 | DRAFT | 267 | AGO2 remains the catalytic human slicer; 57 bare `protein binding` rows are removed and 11 rows remain undecided |
+| AGO3 | COMPLETE | 95 | AGO3 is kept as a miRNA-binding RISC component with conditional guide-dependent slicer activity; broad or processing-adjacent rows are mostly over-annotated |
+| AGO4 | COMPLETE | 83 | AGO4 is kept as a non-slicing miRNA-binding RISC component; the propagated RNA endonuclease row is removed |
 
 ## Selection Criteria
 
@@ -105,7 +115,7 @@ later subproject explicitly decides to review trigger-bearing transcripts or ncR
 - **SERPINE1**: endogenous TDMD trigger for miR-30b and miR-30c during cell-cycle re-entry.
 - **HSUR1**: viral prototype trigger for miR-27; important conceptually but better handled as context or a viral subproject.
 - **Drosophila AGO1 mRNA**: validated endogenous trigger for miR-999 and a useful comparative example.
-- **ATP6V1G1, LPAR4, PLAGL1, LRRC58**: mouse trigger-bearing transcripts from Lin et al. 2026; biologically important, but not dedicated TDMD machinery genes.
+- **`Atp6v1g1`, `Lpar4`, `Plagl1`, `Lrrc58`**: mouse trigger-bearing transcripts from Lin et al. 2026; biologically important, but not dedicated TDMD machinery genes.
 
 ## Deferred Expansion Modules
 
@@ -113,7 +123,10 @@ later subproject explicitly decides to review trigger-bearing transcripts or ncR
 - Comparative species modules for fly and worm TDMD machinery once the human core queue is underway.
 - Viral TDMD modules as a separate subproject if those examples become important for ontology work.
 
-## Review Launch Workflow
+[#4224](https://github.com/ai4curation/ai-gene-review/issues/4224) tracks those phase-2 decisions
+plus the remaining status cleanup for the fully actioned human reviews.
+
+## Fetch Workflow
 
 `projects/MIRNA_DEGRADATION/genes.csv` is the human-readable queue with rationale.
 `projects/MIRNA_DEGRADATION/fetch_queue.csv` is the headerless machine-oriented input for the CLI.
@@ -139,8 +152,11 @@ That file is the place to append new papers from Chris before the project expand
 - [x] Chris seed Nature 2026 paper integrated
 - [x] Initial TDMD core queue defined
 - [x] Batch-fetch queue prepared for review launch
-- [ ] Per-gene folders fetched
-- [ ] Per-gene reviews underway
+- [x] Per-gene folders fetched
+- [x] Every fetched phase-1 GOA row assigned an action
+- [ ] Promote CUL3, AGO1 and AGO2 out of provisional review statuses after final QA
+- [ ] Decide whether to open comparative fly, worm and mouse TDMD modules
+- [ ] Decide whether to open a TUT4/TUT7-DIS3L2 tailing-and-decay expansion module
 
 ## Notes
 

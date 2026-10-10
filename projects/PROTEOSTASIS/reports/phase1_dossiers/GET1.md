@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # PN dossier: GET1
 
 - review_batch: proteostasis-batch-2026-06-11

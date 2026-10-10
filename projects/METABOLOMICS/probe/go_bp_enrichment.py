@@ -3,7 +3,7 @@
 
 The molecular-function enrichment ([`go_enrichment.py`](go_enrichment.py)) stops
 at enzyme *activities* because `rhea2go` is an MF mapping. To reach GO biological
-**process** we go through the enzyme/gene layer — the documented next step:
+**process** we go through the enzyme/gene layer:
 
     metabolite ChEBI --normalize--> Rhea participant --in--> Rhea reaction
         --catalyzed by--> human Swiss-Prot enzyme (UniProt)

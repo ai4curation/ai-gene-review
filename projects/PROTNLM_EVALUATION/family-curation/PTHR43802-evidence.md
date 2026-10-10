@@ -1,3 +1,7 @@
+---
+autolink_gene_symbols: false
+---
+
 # PTHR43802: source excerpts
 
 Raw provenance: [family snapshot](family-sources/PTHR43802.json); [UniProt snapshot](uniprot-records.jsonl.gz), supplemented by [successful retries](uniprot-retries.jsonl.gz).
@@ -21,4 +25,3 @@ InterPro: IPR001753 [{"key": "EntryName", "value": "Enoyl-CoA_hydra/iso"}]
 PANTHER: PTHR43802 [{"key": "EntryName", "value": "ENOYL-COA HYDRATASE"}, {"key": "MatchStatus", "value": "1"}]
 PANTHER: PTHR43802:SF1 [{"key": "EntryName", "value": "IP11341P-RELATED"}, {"key": "MatchStatus", "value": "1"}]
 Pfam: PF00378 [{"key": "EntryName", "value": "ECH_1"}, {"key": "MatchStatus", "value": "1"}]
-

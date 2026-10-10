@@ -1,6 +1,7 @@
 ---
 title: "Iron-Sulfur Cluster Biogenesis Project"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [NFS1, ISCU, FXN, LYRM4, HSPA9, HSCB, GLRX5, ISCA1, ISCA2, IBA57, NFU1, BOLA3, ABCB7, CIAO1, MMS19]
@@ -19,15 +20,15 @@ manifest:
 ISC machinery (the NFS1-LYRM4-ISCU-FXN core, the HSPA9/HSCB/GLRX5 transfer
 chaperones, and late [4Fe-4S] factors), exported via ABCB7, and delivered to
 cytosolic and nuclear proteins by the CIA system. All 15 genes in the candidate
-table below now have complete reviews, not just HSCB as the status list at the
-bottom still says. Together they assess 638 GOA rows: 366 ACCEPT, 92
-KEEP_AS_NON_CORE, 92 MARK_AS_OVER_ANNOTATED, 42 MODIFY, 24 REMOVE, 19 NEW and 3
+table below now have complete reviews. Together they assess 637 review rows:
+367 ACCEPT, 93 KEEP_AS_NON_CORE, 90 MARK_AS_OVER_ANNOTATED, 38 MODIFY, 24
+REMOVE, 18 NEW and 7
 UNDECIDED. The recurring corrections are generic `protein binding` rows
 removed on HSCB and GLRX5, heme-transport rows removed from ABCB7, and NEW
 Fe-S-specific terms such as `iron-sulfur cluster chaperone activity`
 (GO:0140132) for GLRX5 and ISCA1 and `[4Fe-4S] cluster assembly` (GO:0044572)
 for ISCA1 and IBA57. FDXR, FDX2, CIAO2A, CIAO2B and CIAO3 are not yet reviewed,
-and no Fe-S module has been built.
+and no integrated human Fe-S biogenesis module has been built.
 
 ## Overview
 
@@ -36,7 +37,7 @@ Iron-sulfur (Fe-S) clusters are ancient and essential cofactors required for num
 ## Model Species
 
 **Primary: Homo sapiens (human)**
-- Already reviewed HSCB in this project
+- Current reviews cover 15 ISC, cluster-transfer, export, and CIA genes
 - Multiple rare diseases (Friedreich's ataxia, etc.)
 
 ## Core Pathway Architecture
@@ -52,7 +53,7 @@ Core machinery for de novo cluster synthesis:
 ### 2. Cluster Transfer (Chaperone System)
 Transfer from scaffold to recipients:
 - **HSPA9** - Mitochondrial Hsp70
-- **HSCB** - J-domain co-chaperone (already reviewed!)
+- **HSCB** - J-domain co-chaperone
 - **GLRX5** - Glutaredoxin 5
 
 ### 3. [4Fe-4S] Cluster Assembly
@@ -72,7 +73,7 @@ Cytosolic/nuclear Fe-S protein maturation:
 - **CIAO3** (NARFL) - CIA component
 - **MMS19** - Late-acting factor
 
-## Candidate Genes (~20)
+## Candidate Genes (15)
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -81,7 +82,7 @@ Cytosolic/nuclear Fe-S protein maturation:
 | FXN | Q16595 | Frataxin |
 | LYRM4 | Q9HD34 | NFS1 partner |
 | HSPA9 | P38646 | Hsp70 chaperone |
-| HSCB | Q8IWL3 | Co-chaperone (reviewed) |
+| HSCB | Q8IWL3 | Co-chaperone |
 | GLRX5 | Q86SX6 | Glutaredoxin |
 | ISCA1 | Q9BUE6 | [4Fe-4S] assembly |
 | ISCA2 | Q86U28 | [4Fe-4S] assembly |
@@ -101,5 +102,6 @@ Cytosolic/nuclear Fe-S protein maturation:
 
 ## Project Status
 
-- [x] HSCB reviewed
-- [ ] Remaining genes need setup
+- [x] 15/15 candidate-table genes reviewed
+- [ ] Review FDXR, FDX2, CIAO2A, CIAO2B, CIAO3
+- [ ] Build an integrated human ISC/CIA Fe-S biogenesis module

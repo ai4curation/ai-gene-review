@@ -54,10 +54,10 @@ Current [RESULTS.md](RESULTS.md), *D. discoideum* (44689) vs human (9606):
 
 | Case | Component | PANTHER ctrl/tgt | InterPro ctrl/tgt | Verdict |
 |------|-----------|:----------------:|:-----------------:|---------|
-| **jak_stat** | JAK | 56 / **0** | 56 / 0 | **ABSENT (HIGH)** — true positive; both oracles agree |
-| stat_control | STAT | 128 / **4** | 100 / 0 | **PRESENT** + ⚠divergence flag |
+| **jak_stat** | JAK | 72 / **0** | 72 / 0 | **ABSENT (HIGH)** — true positive; both oracles agree |
+| stat_control | STAT | 190 / **4** | 160 / 0 | **PRESENT** + ⚠divergence flag |
 | **gpcr_purinergic** | P2Y (GPCR) | 21 / **0** | 3 / 0 | **ABSENT (HIGH)** — P2Y GPCR truly absent |
-| p2x_control | P2X | 47 / **5** | 26 / 0 | **PRESENT** + ⚠divergence flag |
+| p2x_control | P2X | 85 / **5** | 59 / 0 | **PRESENT** + ⚠divergence flag |
 
 The two divergence controls are the payoff: an **InterPro-only** screen calls
 STAT and P2X *absent* in *Dictyostelium* (both score 0) — but they are present

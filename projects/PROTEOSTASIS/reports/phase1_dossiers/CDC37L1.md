@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 # PN dossier: CDC37L1
 
 - review_batch: proteostasis-batch-2026-06-07

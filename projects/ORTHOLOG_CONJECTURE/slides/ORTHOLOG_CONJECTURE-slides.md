@@ -20,7 +20,7 @@ Do orthologs really retain function better than paralogs? — the conjecture tha
 
 Chris Mungall | AI-Assisted Gene Review
 
-2026-06-22
+2026-10-04
 
 ---
 
@@ -146,10 +146,11 @@ These provide ground-truth signals beyond GO for benchmarking metrics.
 
 ## Conclusions, status & future directions
 
-**Status (last updated 2026-02-09):**
+**Status (last updated 2026-10-04):**
 - [x] Seed list of divergence examples with citations (v0.1)
 - [ ] Define open-world metric set and data filters
 - [ ] Select ortholog datasets and clades for pilot analysis
+- [ ] Ground seed cases and implement first GOA metric pilot
 
 **Workplan ahead:**
 1. Build ortholog sets across well-studied clades; tag dominant evidence codes (ISO/IEA vs. IBA/IBD vs. experimental).

@@ -66,7 +66,7 @@ head -1 hmm_PGAP.tsv | tr '\t' '\n' | nl   # cols 14=ec_numbers 15=go_terms 16=p
 ```
 
 `family_type` is the curation-quality signal that makes this tractable:
-**`equivalog`** (13,253 models) means *every* member has the same function, so
+**`equivalog`** (13,583 models as of 2026-10-04) means *every* member has the same function, so
 GO/EC transfer is safe — the ideal substrate for a curated `ncbifam2go` mapping,
 exactly as RHEA's reviewed enzymes back the `rhea2go` gap-fill. `domain` /
 `subfamily` models are weaker and need altitude care.
@@ -76,7 +76,7 @@ exactly as RHEA's reviewed enzymes back the `rhea2go` gap-fill. `domain` /
 A member signature that InterPro has **not** integrated has, by construction, no
 `interpro2go` row and therefore contributes **zero** GO to GOA — the
 NCBIFAM/CDD analog of RHEA's "no `rhea2go` line" reactions. Computed live from the
-InterPro API:
+InterPro API on 2026-10-04:
 
 ```bash
 for db in ncbifam cdd; do for s in "" integrated/ unintegrated/; do
@@ -84,8 +84,8 @@ for db in ncbifam cdd; do for s in "" integrated/ unintegrated/; do
     | grep -oE '"count":[0-9]+'; done; done
 ```
 
-- **NCBIFAM: 7,447 / 18,511 integrated (40%); 11,064 unintegrated.**
-- **CDD: 5,059 / 19,902 integrated (25%); 14,843 unintegrated.**
+- **NCBIFAM: 7,622 / 18,950 integrated (40%); 11,328 unintegrated.**
+- **CDD: 5,480 / 19,902 integrated (28%); 14,422 unintegrated.**
 
 The unintegrated majority is the upper bound on the coverage gap; the curation
 question is how many of those signatures carry a *real, GO-mappable* function
@@ -111,6 +111,6 @@ uv run python ncbifam_cdd_probe.py --interpro2go         # the GOA route
   these are **not present** in the web container, so that table is **staged**. The
   PGAP-metadata, InterPro-integration, and `interpro2go` numbers are computed live.
 - InterPro ingests only a curated **subset** of NCBIFAM, so the InterPro
-  "ncbifam" total (18,511) is smaller than the full PGAP HMM collection (34,351);
+  "ncbifam" total (18,950) is smaller than the full PGAP HMM collection (38,394);
   the two totals are not directly subtractable without joining on accession
   (a staged follow-up).

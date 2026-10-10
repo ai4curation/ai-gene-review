@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## FBXL20
 
 - **UniProt:** Q96IG2 (FBXL20/FBL2; mouse ortholog SCRAPPER) · **batch:** proteostasis-batch-2026-06-13 (Falcon DR) · **review status:** COMPLETE

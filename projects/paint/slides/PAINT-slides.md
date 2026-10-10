@@ -37,7 +37,7 @@ Reviewing the genes that phylogenetic annotation does not reach
 ## Bottom line
 
 - **7,593 human genes** (7,524 symbols) had no IBA annotation; each gets 2 deep-research reports and a full review of its GO rows.
-- **715 reviews complete**, **24,409 decisions**: 11,926 accepted, 2,778 over-annotated, 1,338 removed, 902 NEW proposals.
+- **756 reviews complete**, **26,506 decisions**: 12,668 accepted, 2,790 over-annotated, 1,739 removed, 896 NEW proposals.
 - Lessons: the **no-IBA list is stale**; the real gap is **families with no MF IBD**; names mislead (**PLD3/PLD4 are exonucleases**).
 
 ---
@@ -86,7 +86,7 @@ just validate human GENE
 
 ## Findings from the 2026-09-04 batch
 
-1. **Stale source list**: PEX11B, ORMDL3, CFAP61, LOXHD1, BCKDHA/B, PEX13, PEX16, MTCH2, MBL2 now receive IBAs.
+1. **Stale source list**: PEX11B, ORMDL3, CFAP61, LOXHD1, BCKDHA and BCKDHB, PEX13, PEX16, MTCH2, MBL2 now receive IBAs.
 2. **Real gap**: no molecular-function IBD for BCKDH E1, PEX13, PEX16, NDUFV1's eukaryotic node.
 3. **PTHR48178 (PEX2)**: Cdc73/Paf1 complex IBD from a PAF1 homonym → **WRONG_NODE**.
 4. **NAALADL2** descends from the carboxypeptidase IBD node yet gets no IBA; an explicit IRD recommended, with a residue check showing loss of the catalytic Glu pair.
@@ -95,7 +95,7 @@ just validate human GENE
 
 ## Status and next steps
 
-- 715 of 7,524 listed genes complete (about 9.5%); the page's status table (635, 2026-09-04) predates this count.
-- Open: re-derive the no-IBA list against current GOA; re-fetch IL10 GOA; scale deep research.
+- 756 of 7,524 listed symbols complete (about 10.0%).
+- Open: review 27 ready genes; re-derive the no-IBA list against current GOA; re-fetch IL10 GOA.
 
 **Read more:** `projects/PAINT.md` · `projects/paint/human-no-IBA-simple.csv` · `interpro/panther/<PTHR>/`

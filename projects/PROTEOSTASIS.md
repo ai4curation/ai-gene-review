@@ -5,6 +5,7 @@ tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 priority: high
 scope: Full Proteostasis Consortium workbook and manuscripts; unfolded protein binding is a sub-use case
+last_reviewed: 2026-10-05
 sidecars:
   priority_genes: PROTEOSTASIS/priority_genes.tsv
   review_batches: PROTEOSTASIS/review_batches.tsv
@@ -67,7 +68,7 @@ review_batches:
     status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
-    target_gene_count: 50
+    target_gene_count: 51
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch6_selection_notes.md
   - id: proteostasis-batch-2026-06-11
@@ -79,7 +80,7 @@ review_batches:
     sidecar: PROTEOSTASIS/review_batches.tsv
     selection_notes: PROTEOSTASIS/batch7_selection_notes.md
   - id: proteostasis-batch-2026-06-13
-    title: "Proteostasis PN candidate additions batch 8 (UPS branch: Cullin-RING ligase substrate-recognition & assembly modules — F-box SCF/CRL1 substrate receptors FBXL/FBXW/FBXO incl. lectin F-box ERAD subfamily and APC/C-inhibitor F-box members, plus CRL4 core DDB1/DDB2/DDA1/DTL and CRL assembly regulators CAND2/GLMN)"
+    title: "Proteostasis PN candidate additions batch 8 (UPS branch: Cullin-RING ligase substrate-recognition & assembly modules — F-box SCF/CRL1 substrate receptors FBXL/FBXW/FBXO incl. lectin F-box ERAD subfamily and anaphase-promoting-complex inhibitor F-box members, plus CRL4 core DDB1/DDB2/DDA1/DTL and CRL assembly regulators CAND2/GLMN)"
     status: complete
     source_report: PROTEOSTASIS/reports/pn_projection/pn_projected_candidate_additions.tsv
     species: human
@@ -98,9 +99,6 @@ manifest:
   slides:
     - href: PROTEOSTASIS/slides/PROTEOSTASIS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/X5CfsBDy2fmRP57wscyizk
-      title: Project brief
 ---
 # Human Proteostasis Network Project
 
@@ -111,7 +109,7 @@ its taxonomy overlaps GO inconsistently. We use it as a scaffold,
 prioritization layer and QA source for GO curation, not as an annotation set to
 import. We built a curated PN→GO mapping for the 2026-04-17 release in which
 every source code resolves to `mapped`, `context_only` or `no_mapping`, and
-projected it against human GOA to get 1,093 candidate GO additions. PN-guided
+projected it against human GOA to get 1,012 candidate GO additions. PN-guided
 batches have produced reviews for all 371 genes listed in
 [review_batches.tsv](PROTEOSTASIS/review_batches.tsv) across nine batches
 (chaperones, co-translational QC, ER proteostasis, UPS Cullin-RING ligases,
@@ -143,7 +141,7 @@ receptor core. Other findings worth pulling out of the batch logs:
 - ERLIN2 plasma-membrane and MMGT1 legacy magnesium-transporter annotations
   marked over-annotated.
 - FBXO21 `DNA binding` (a remote fold match) and FBXO43 `cellular response to
-  NGF` (an implausible ortholog transfer onto a meiotic APC/C inhibitor) — both
+  NGF` (an implausible ortholog transfer onto a meiotic `APC/C` inhibitor) — both
   REMOVE.
 
 **Pseudoenzyme and adaptor-vs-catalyst corrections**
@@ -157,13 +155,14 @@ receptor core. Other findings worth pulling out of the batch logs:
 - FBXO17: its ERAD/glycan term was over-annotated — experimentally it does
   **not** bind high-mannose glycans (only FBXO2/FBXO6 do), despite sitting in the
   lectin F-box subfamily.
-- FBXO5/EMI1 and FBXO43/EMI2 reframed as **APC/C inhibitors**, not productive SCF
+- FBXO5/EMI1 and FBXO43/EMI2 reframed as **`APC/C` inhibitors**, not productive SCF
   receptors; GLMN and CAND2 modeled as CRL assembly regulators with no catalytic
   activity.
 
-**Ontology gaps exposed** — receptor functions absent from GOA, added as NEW
-(QuickGO-verified): `GO:0034517` ribophagy, `GO:0160247` autophagy cargo adaptor
-activity, `GO:0035973` aggrephagy, `GO:0010508` positive regulation of autophagy.
+**GOA gaps closed** — existing GO terms absent from the relevant GOA rows, added
+as NEW after QuickGO verification: `GO:0034517` ribophagy, `GO:0160247`
+autophagy cargo adaptor activity, `GO:0035973` aggrephagy, `GO:0010508`
+positive regulation of autophagy.
 
 **Conservative rejections of over-broad PN projections** — a projection labelled
 "more specific than GOA" is not automatically a better assertion: TOMM20 (PN
@@ -172,10 +171,10 @@ activity, `GO:0035973` aggrephagy, `GO:0010508` positive regulation of autophagy
 (autophagosome-lysosome fusion rejected in favor of post-fusion maturation). More
 in [Using PN inside AIGR](#using-pn-inside-aigr-triage-qa).
 
-**Citation QA caught by review** — e.g. `PMID:23264731` (a microtubule study)
-mis-cited on both `SERP1` (removed; wrong gene) and `SRPRB` (left UNDECIDED);
-`SIAH1`'s `zinc ion binding` citation (`PMID:11863358`) flagged
-`WRONG_IDENTIFIER`.
+**Citation QA caught by review** — e.g. `PMID:23264731` (an MTR120/KIAA1383
+microtubule study) was mis-cited on `SERP1` and `SRPRB`; both cytoplasmic
+microtubule rows are now removed as wrong-gene citations. `SIAH1`'s `zinc ion
+binding` citation (`PMID:11863358`) was flagged `WRONG_IDENTIFIER`.
 
 ## Background
 
@@ -267,9 +266,9 @@ Coverage after the completion pass:
 |-------|--------------------|----------------|--------|--------------|------------|----------|-------------------|
 | Branch | 9 | 0 | 0 | 1 | 8 | 0 | 0 |
 | Class | 42 | 0 | 9 | 16 | 17 | 0 | 0 |
-| Group | 297 | 0 | 133 | 31 | 133 | 0 | 0 |
+| Group | 297 | 0 | 132 | 32 | 133 | 0 | 0 |
 | Type | 800 | 0 | 233 | 26 | 541 | 0 | 0 |
-| Subtype | 881 | 0 | 105 | 16 | 760 | 0 | 0 |
+| Subtype | 881 | 0 | 107 | 16 | 758 | 0 | 0 |
 
 Every `2026-04-17` PN source code now has exactly one `subject_curations`
 record in a branch mapping YAML. `missing_from_yaml` is now a QA failure state,
@@ -280,17 +279,17 @@ The YAML inventory contains:
 
 | Curation status | Records | Meaning |
 |-----------------|---------|---------|
-| `mapped` | 480 | Reviewed and mapped to a GO term |
-| `context_only` | 90 | GO relationship recorded, but unsafe for gene-level propagation |
-| `no_mapping` | 1459 | Reviewed and concluded that no GO mapping should be made |
+| `mapped` | 481 | Reviewed and mapped to a GO term |
+| `context_only` | 91 | GO relationship recorded, but unsafe for gene-level propagation |
+| `no_mapping` | 1457 | Reviewed and concluded that no GO mapping should be made |
 
 Mapping scopes are:
 
 | Mapping scope | Records | Use |
 |---------------|---------|-----|
 | `exact` | 3 | Direct semantic match |
-| `ok_for_propagation_to_go` | 477 | May produce candidate gene-GO propagations |
-| `too_broad_to_propagate` | 90 | Real contextual alignment, but excluded from propagation |
+| `ok_for_propagation_to_go` | 478 | May produce candidate gene-GO propagations |
+| `too_broad_to_propagate` | 91 | Real contextual alignment, but excluded from propagation |
 
 There are no remaining `pending_review`, `deferred`, or `missing_from_yaml`
 records in the current mapping set. Most source codes now resolve to
@@ -302,14 +301,14 @@ Projection against the human GOA DuckDB at
 
 | Projection status | Unique gene-GO pairs |
 |-------------------|----------------------|
-| already in GOA exactly | 1928 |
-| entailed by GOA closure | 512 |
-| more specific than existing GOA | 305 |
+| already in GOA exactly | 1930 |
+| entailed by GOA closure | 511 |
+| more specific than existing GOA | 300 |
 | supported by GOA regulation | 35 |
-| new to GOA | 753 |
-| no local GOA available | 32 |
+| new to GOA | 677 |
+| no local GOA available | 33 |
 
-Only the `1093` candidate additions (`more_specific_than_existing_goa` +
+Only the `1012` candidate additions (`more_specific_than_existing_goa` +
 `supported_by_goa_regulation` + `new_to_goa`) should enter manual AIGR
 rereview queues. The `no_local_goa` class is mostly a data-availability state,
 not biological evidence; with the DuckDB source it is now a small residual
@@ -609,7 +608,8 @@ listed genes. They are not yet represented in `review_batches.tsv` or the
 phase-1 dossier set, so the next task is bookkeeping plus bridge-outcome
 integration rather than initial fetch/review.
 
-Recommended follow-up jobs:
+Recommended follow-up jobs (tracked in
+[ai-gene-review#4004](https://github.com/ai4curation/ai-gene-review/issues/4004)):
 
 1. Add these reviewed boundary cases to PN review tracking or create a
    separate `boundary-review` batch so they appear in phase-1-style dossiers.
@@ -644,13 +644,17 @@ The PN project is broader:
 - Add the reviewed priority/boundary genes in
   [priority_genes.tsv](PROTEOSTASIS/priority_genes.tsv) to tracking and
   phase-1-style dossier generation.
-- Work through the `1093` projected candidate additions, using the unusual
+- Triage the Phase 1 MAP/YAML recommendations for CAND2, UBAC2, SIAH1, RNF185
+  and the remaining [recommended edits](PROTEOSTASIS/reports/phase1_dossiers/_recommended_edits.md)
+  ([ai-gene-review#4250](https://github.com/ai4curation/ai-gene-review/issues/4250)).
+- Work through the `1012` projected candidate additions, using the unusual
   propagation report as a blocklist for automatic review edits.
 - Promote only gene-level decisions that survive evidence review into AIGR
   YAML.
 - Convert the mapping layer into the explicit PN-GO bridge contract described
   above, including actionability status, evidence basis, directness, exceptions,
-  ontology gaps, and PN feedback.
+  ontology gaps, and PN feedback. These remaining PN-bridge tasks are tracked in
+  [ai-gene-review#4004](https://github.com/ai4curation/ai-gene-review/issues/4004).
 
 ## Resources & links
 
@@ -659,7 +663,7 @@ The PN project is broader:
 - [PN tree browser](PROTEOSTASIS/pn.html) · [report-local copy](PROTEOSTASIS/reports/pn_taxonomy_tree/pn_taxonomy_tree.html)
 - [Priority genes](PROTEOSTASIS/priority_genes.tsv) · [reviewed gene batches](PROTEOSTASIS/review_batches.tsv)
 - [Mapping export workbook](PROTEOSTASIS/reports/pn_mappings/pn_mappings.xlsx)
-- [Project-local reports](PROTEOSTASIS/reports) · [tests](PROTEOSTASIS/tests)
+- [Project-local reports](PROTEOSTASIS/reports) · tests: `projects/PROTEOSTASIS/tests`
 
 **Mapping sets** (one per branch):
 [ALP](PROTEOSTASIS/mappings/autophagy_lysosome_pathway.yaml) ·

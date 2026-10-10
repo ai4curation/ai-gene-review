@@ -1,5 +1,6 @@
 ---
 title: "H1 ledger: do structures fill annotation gaps that traditional pubs would not?"
+species: [CHLRE, BACSU]
 ---
 # H1 ledger — do structures fill annotation gaps that traditional pubs would not?
 
@@ -42,25 +43,27 @@ motivates a GO annotation that the existing curation did not have. (The function
 described in older non-structure complex work, so it is FIRST_STRUCTURAL but not strictly
 UNIQUE; still, as a curation outcome it is a structure-driven gap-fill.)
 
-## Round 2 — the correct frontier: GAP_NO_EXP_CURATION (n=63; 36 with cofactor/complex)
+## Round 2 — the correct frontier: GAP_NO_EXP_CURATION (n=116; 75 with cofactor/complex)
 
 The fair test is genes with an uncited structure paper **and no experimental annotation of
 any aspect** (`exp_total==0`). For these the structure is, *by construction*, at minimum the
 **first experimental-grade evidence** — so on this bucket H1 cannot be trivially refuted, and
 the live question becomes UNIQUE vs FIRST_EXPERIMENTAL. These are overwhelmingly
 under-curated prokaryotic / archaeal metabolic enzymes with **diagnostic cofactors** (see
-`data/h1_testset.tsv`). Top targets:
+`data/h1_testset.tsv`). Top targets after the 2026-10-04 refresh:
 
 | Gene | Org | Cofactor in structure | Diagnostic of |
 | --- | --- | --- | --- |
-| mcrA | METAC | F430 (F43), coenzyme-M (COM), SAM, [4Fe-4S] | methyl-coenzyme M reductase (methanogenesis) |
-| mxaI | METEA | PQQ, Ca | methanol dehydrogenase |
-| merA | PSEAI | FAD, NADP, (Hg) | mercuric reductase |
+| FbaB | STRPY | ADP, Mg | F-type ATPase |
+| P07598 | DESVH | FeS, heme, Zn | redox metalloenzyme |
+| psaC | CHLRE | [4Fe-4S] | photosystem I |
 | secA | BACSU | ADP | protein-translocating ATPase |
-| cbh1 | HYPJE | cellobiose/cellotetraose | cellobiohydrolase |
-| P07598 | DESVH | FeS, heme, Zn | (redox metalloenzyme) |
+| wac | BPT4 | Zn | protein-ADP-ribosylating toxin |
+| mcrA | METAC | F430 (F43), coenzyme-M (COM), SAM, [4Fe-4S] | methyl-coenzyme M reductase (methanogenesis) |
+| mxaF/mxaI | METEA | PQQ, Ca | methanol dehydrogenase large/small subunits |
 
 Retroactive frontier data points (already reviewed in earlier batches; both `exp_total==0`):
+
 - **XYL1** (PICST): D-xylose reductase MF — classic enzymology exists (Verduyn, PMID:3921014),
   so the NADPH-bound structure is **STRUCTURE_FIRST_EXPERIMENTAL** (first experimental-grade
   evidence for this protein; family function known from text).
@@ -72,12 +75,13 @@ Retroactive frontier data points (already reviewed in earlier batches; both `exp
 | Gene | Structure | NEW annotations added | Verdicts |
 | --- | --- | --- | --- |
 | **merA** (PSEAI) | FAD-bound mercuric reductase (1ZK7/1ZX9, PMID:16114877) | — | **2 STRUCTURE_UNIQUE** (Hg-ion binding GO:0045340; FAD binding GO:0050660) + 4 FIRST_EXPERIMENTAL (mercuric reductase MF, NADP binding, Hg detox/response BP) |
-| **mcrA** (METAC) | MCR cryo-EM with F430 (8GF5/8GF6, PMID:37307484) | **GO:0044674** MCR complex (IPI); **GO:0016151** nickel cation binding (IDA) | 3 FIRST_EXPERIMENTAL (catalytic MF + the 2 NEW) |
+| **mcrA** (METAC) | MCR cryo-EM with F430 (8GF5/8GF6, PMID:37307484) | **GO:0051291** protein heterooligomerization (IPI); **GO:0044674** MCR complex (IPI); **GO:0016151** nickel cation binding (IDA) | 4 FIRST_EXPERIMENTAL (catalytic MF + the 3 NEW) |
 | **secA** (BACSU) | SecA ATPase, ADP/Mg (1M74, PMID:12242434) | **GO:0016887** ATP hydrolysis activity (IDA) | 5 FIRST_EXPERIMENTAL (ATP/nucleotide binding, exporting-ATPase, Sec translocation, + the NEW) |
 | **mxaI** (METEA) | methanol dehydrogenase (1H4J, PMID:11502173) | — | **NULL** — mxaI is the small subunit; the abstract-only paper describes only the catalytic large subunit (mxaF), so no faithful mxaI-specific quote exists. Reference-only. |
 
-Round-2 tally: **2 STRUCTURE_UNIQUE** annotations, **~12 STRUCTURE_FIRST_EXPERIMENTAL**, **4 NEW**
-annotations added (incl. HSPB3's GO:0051291 from the round-1 follow-up), **1 NULL gene**.
+Round-2 tally: **2 STRUCTURE_UNIQUE** annotations, **>12 STRUCTURE_FIRST_EXPERIMENTAL**, **4 NEW**
+annotations added, **1 NULL gene**. The HSPB3 round-1 follow-up added one more
+structure-motivated `NEW` annotation, bringing the reviewed total to **5**.
 
 ## Conclusion
 
@@ -90,7 +94,7 @@ H1 has two empirically distinct forms, and the data separate them cleanly:
 
 2. **Practical H1 (STRUCTURE_FIRST_EXPERIMENTAL — structure is the first experimental-grade
    GO evidence, upgrading IBA/IEA/By-similarity):** *common and the main payoff.* It was the
-   verdict for ~every annotation across secA, mcrA, merA, and underlies the **63 GAP_NO_EXP_
+   verdict for ~every annotation across secA, mcrA, merA, and underlies the **116 GAP_NO_EXP_
    CURATION genes**: proteins with an uncited structure and zero experimental GO annotation,
    where folding in structure evidence demonstrably adds experimental support — and often
    **NEW** annotations (complex membership, cofactor/metal binding) — that traditional
@@ -100,9 +104,10 @@ H1 has two empirically distinct forms, and the data separate them cleanly:
 fills that gene's gap — for multi-subunit assemblies the available text may characterize only
 the catalytic subunit, leaving accessory subunits unsupported.
 
-**Verdict on H1:** supported in the practical form, with quantified scope (63 genes), and
-occasionally in the strong form. The decisive enabler is targeting `GAP_NO_EXP_CURATION`
-(no prior experimental annotation), not famous genes whose text already suffices.
+**Verdict on H1:** supported in the practical form, with quantified scope (116 genes; 75 with
+cofactor/complex-bearing structures), and occasionally in the strong form. The decisive enabler
+is targeting `GAP_NO_EXP_CURATION` (no prior experimental annotation), not famous genes whose
+text already suffices.
 
 ## Refinement: informativeness, and the three evidence layers of a structure paper
 
@@ -111,7 +116,7 @@ annotation classes:
 
 | Layer | What it is | GO terms it yields | Informative? | H1 status in our data |
 | --- | --- | --- | --- | --- |
-| **1. Model / coordinates** | bound cofactor, metal, fold, geometry, oligomeric state | "X binding", "metal ion binding", "ATP hydrolysis activity", "protein-containing complex", "heterooligomerization" | **No** — low information content; the same class the project guidelines tell us to avoid (cf. "protein binding") | This is where the STRUCTURE_UNIQUE / NEW wins concentrated (merA Hg & FAD binding; mcrA Ni binding; secA ATP hydrolysis; HSPB3 heterooligomerization) — i.e. structures uniquely fill the *least useful* slots |
+| **1. Model / coordinates** | bound cofactor, metal, fold, geometry, oligomeric state | "X binding", "metal ion binding", "ATP hydrolysis activity", "protein-containing complex", "heterooligomerization" | **No** — low information content; the same class the project guidelines tell us to avoid (cf. "protein binding") | This is where the STRUCTURE_UNIQUE / NEW wins concentrated (merA Hg & FAD binding; mcrA Ni binding, MCR complex and heterooligomerization; secA ATP hydrolysis; HSPB3 heterooligomerization) — i.e. structures uniquely fill the *least useful* slots |
 | **2. The paper's integrative functional hypothesis** | structure **+** assays + mutagenesis + biological context → a specific mechanism/role | informative, specific function/mechanism | **Yes** | merA: NmerA "acquisition and delivery of Hg2+ to the catalytic core" (a metallochaperone-type role); secA: ATPase "mediates extrusion … based on cycles of reversible binding to the SecYEG translocon"; mcrA: "a model for the assembly of the MCR complex and the role of McrD" |
 | **3. Specific catalytic identity (EC/family)** | rides on **sequence**, not coordinates | the defining MF (mercuric reductase, methyl-CoM reductase) | Yes | Already given by EC/Pfam/homology; structure only *confirms* it → FIRST_EXPERIMENTAL, never UNIQUE |
 

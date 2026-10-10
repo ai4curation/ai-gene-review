@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Focused function hypothesis
 
 Hypothesis: The horse protein F7A4N8 enables kinase activity.

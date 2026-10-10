@@ -1,5 +1,6 @@
 ---
 title: "Proteostasis Review Batch 9 — Gene Selection"
+species: [human]
 ---
 
 # Proteostasis Review Batch 9 — Gene Selection
@@ -111,7 +112,7 @@ best-practices validation (`uv run ai-gene-review validate --terms`). Across
 - **Disputed-direction regulatory terms left in place but flagged.** NLRX1 IBA
   `negative regulation of NF-κB` and AZI2 ortholog-IEA `negative regulation of
   canonical NF-κB` conflict with the human literature (both can be positive
-  regulators); per guardrails these mouse/IBA electronic annotations were
+  regulators); per guardrails these `mouse/IBA` electronic annotations were
   MARK_AS_OVER_ANNOTATED / kept non-core rather than removed.
 - **The single REMOVE** is NBR1 `mitochondrial intermembrane space` (GO:0005758,
   IEA/Ensembl-Compara) — biologically implausible for a cytosolic receptor with

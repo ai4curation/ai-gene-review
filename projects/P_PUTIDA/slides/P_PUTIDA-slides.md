@@ -38,7 +38,7 @@ Module-first GO review of a whole bacterial proteome
 
 - KT2440 is a versatile soil bacterium whose GO annotation is **almost entirely automated**.
 - Since July 2026 we review it **pathway by pathway**: start from a curated module, ask which steps KT2440 can satisfy, review only the genes each step needs.
-- September 2026 snapshot: **921 PSEPK reviews** (5,324 rows) and **138 batch pages**, still growing; unresolved steps are kept as **explicit holes**.
+- 2026-10-04 snapshot: **955 PSEPK reviews** (5,533 rows) and **144 batch pages**, still growing; unresolved steps are kept as **explicit holes**.
 
 ---
 
@@ -75,15 +75,15 @@ Module-first GO review of a whole bacterial proteome
 
 ![h:480](actions-bar.svg)
 
-<span class="small">857 rows marked over-annotated, 243 removed, 85 left undecided.</span>
+<span class="small">861 rows marked over-annotated, 249 removed, 90 left undecided.</span>
 
 ---
 
 ## Status and next steps
 
 - ✅ Whole-proteome metadata, gene list, 161-bucket partition, pathway worklist.
-- ✅ 138 pathway batches, from the ppu00400 tryptophan pilot (PR #1874) to the most recent, purine-base oxidation (PR #2643).
+- ✅ 144 pathway batches, from the ppu00400 tryptophan pilot to October 2026 glycogen/trehalose and secretion-system work.
 - ⬜ The status columns in `data/psepk_pathway_worklist.tsv` and the "Completed Reviews" tables predate most of this work.
-- ⬜ 777 of 921 reviews are still `status: DRAFT`. The 1,149 orphan and 825 unknown-function genes have no pathway module to seed them.
+- ⬜ 803 of 955 reviews are still `status: DRAFT`. The 1,149 orphan and 825 unknown-function genes have no pathway module to seed them.
 
 **Read more:** `projects/P_PUTIDA.md` · `projects/P_PUTIDA/P_PUTIDA_MODULE_PLAN.md` · `projects/P_PUTIDA/batches/`

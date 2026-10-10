@@ -1,5 +1,6 @@
 ---
 title: "ESMFold2 (Biohub) complex caller"
+species: [human]
 ---
 
 # ESMFold2 (Biohub) complex caller

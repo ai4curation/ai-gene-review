@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## COP1
 - **UniProt:** Q8NHY2 (RFWD2) · **batch:** proteostasis-batch-2026-06-07 · **review status:** COMPLETE (40 annotations reviewed)
 - **PN placement:** two rows — (1) `UPS|E3 ubiquitin and UBL ligases|Cul4A/Cul4B substrate adaptor|WD40|other`; (2) `UPS|E3 ubiquitin and UBL ligases|RING|RFWD|WD40` ; **PN-node mapping:** group nodes mapped — Cul4 adaptor group → GO:1990756 (substrate-adaptor MF); RING group → GO:0061630 (catalytic ligase MF); both ok_for_propagation.

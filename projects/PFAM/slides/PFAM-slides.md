@@ -38,7 +38,7 @@ Testing Pfam's GO mapping against InterPro2GO, and where new mappings could help
 
 - **No hidden precision:** of 9,871 pfam2go assertions, 9,844 match the parent InterPro entry and **0 are more specific**. pfam2go is generated from InterPro2GO.
 - **The real gap is coverage:** 24,888 of 30,134 Pfam-A families (**82.6%**) get no GO term through InterPro, including SH2 and EGF.
-- We curated **9 Pfam families** as entries: **5 proposed** mappings, **4 rejected** on same-family counter-examples.
+- We curated **9 Pfam families** as entries: **5 function-specific**, **4 rejected** on same-family counter-examples.
 
 ---
 
@@ -97,7 +97,7 @@ Testing Pfam's GO mapping against InterPro2GO, and where new mappings could help
 
 - ✅ Part 1 and Part 2 scripts, committed results (`RESULTS.md`, `HEADROOM.md`)
 - ✅ 9 curated Pfam entry reviews, validated
-- ⬜ Author mappings for the ~18k named unmapped families (curation or grounded prediction)
-- ⬜ Compare subfamily-grained sources (NCBIfam, PANTHER) against InterPro2GO
+- ⬜ Scale Pfam entry reviews to the ~18k named unmapped families (#4243)
+- ✅ Split NCBIFAM and PANTHER follow-ups into their own project pages
 
 **Read more:** `projects/PFAM.md` · `projects/PFAM/HEADROOM.md` · `projects/PFAM/PROPOSED_MAPPINGS.md`

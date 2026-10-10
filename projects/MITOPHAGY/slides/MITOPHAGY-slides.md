@@ -36,9 +36,9 @@ Selective autophagy of damaged mitochondria in human: a scoped project
 
 ## Bottom line
 
-- **Scoped, not started.** No mitophagy module; **PINK1 and PRKN are not reviewed**.
+- **Scoped; kinase/E3 center still missing.** No mitophagy module; **PINK1 and PRKN are not reviewed**.
 - **8 of 14 listed candidates** already have reviews made for other projects (mostly Proteostasis).
-- Those reviews make mitophagy **core** for OPTN, CALCOCO2 and BNIP3L and **non-core** for SQSTM1.
+- Those reviews make mitophagy **core** for OPTN, CALCOCO2, BNIP3L and VCP and **non-core** for SQSTM1.
 
 ---
 

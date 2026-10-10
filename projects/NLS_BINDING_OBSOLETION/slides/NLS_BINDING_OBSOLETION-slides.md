@@ -38,7 +38,7 @@ GO:0008139 → GO:0140142 nucleocytoplasmic carrier activity, triaged per annota
 
 - GO **obsoleted GO:0008139** as "the same activity as" **GO:0140142** nucleocytoplasmic carrier activity (OLS, 2026-09-26).
 - Of **34 curated rows**, the karyopherins move cleanly; **nucleoporins, NLS-masking and nucleolar proteins** bind an NLS without carrying it and need case-by-case calls.
-- **Scoped, not yet started:** none of the ~25 affected gene products is reviewed here. The page was marked MATURE; it is now SCOPING.
+- **Scoped, not yet started:** none of the 31 affected accessions is reviewed here. The page was marked MATURE; it is now SCOPING.
 
 ---
 

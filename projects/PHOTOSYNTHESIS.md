@@ -2,14 +2,12 @@
 title: "Photosynthesis Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
-species: [CHLRE, ARATH]
+species: [CHLRE, ARATH, SYNY3]
+last_reviewed: 2026-10-05
 manifest:
   slides:
     - href: PHOTOSYNTHESIS/slides/PHOTOSYNTHESIS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/YKYcxNMSUMYDFoTjF54wiD
-      title: Project brief
 ---
 
 # Photosynthesis Project
@@ -28,8 +26,9 @@ reaction centres, Chlamydomonas for the CBB cycle and CO2-concentrating
 mechanism, Arabidopsis for antenna and photoprotection). Gene reviews have not
 started beyond three Chlamydomonas genes that were already in the repo: psaC
 (COMPLETE; 9 annotations, 2 removed), CP12 (DRAFT; three `protein binding` rows
-modified to enzyme binding) and LCI5 (no GOA annotations; 7 proposed). The
-remaining candidates in modules A to G are open.
+modified to enzyme binding) and LCI5 (DRAFT; no GOA annotations; 7 tentative
+`NEW` rows). The remaining candidates in modules A to G are open and tracked in
+[#3998](https://github.com/ai4curation/ai-gene-review/issues/3998).
 
 ## Overview
 
@@ -72,53 +71,53 @@ wrong-organism accession pitfalls seen in earlier projects).
 ### Module A — Photosystem II (water oxidation)
 | Gene | Suggested organism | Role |
 |------|--------------------|------|
-| psbA (D1) | SYNY3 / plant chloroplast | reaction-center, binds P680 + Mn4CaO5 cluster |
-| psbD (D2) | SYNY3 | reaction-center, partners D1 |
-| psbB (CP47) / psbC (CP43) | SYNY3 | core chlorophyll antenna |
-| psbO | ARATH / SYNY3 | oxygen-evolving complex extrinsic protein (GO:0009654) |
+| `psbA` (D1) | SYNY3 / plant chloroplast | reaction-center, binds P680 + Mn4CaO5 cluster |
+| `psbD` (D2) | SYNY3 | reaction-center, partners D1 |
+| `psbB` (CP47) / `psbC` (CP43) | SYNY3 | core chlorophyll antenna |
+| `psbO` | ARATH / SYNY3 | oxygen-evolving complex extrinsic protein (GO:0009654) |
 
 ### Module B — Photosystem I
 | Gene | Suggested organism | Role |
 |------|--------------------|------|
-| psaA / psaB | SYNY3 | reaction-center heterodimer, binds P700 |
+| `psaA` / `psaB` | SYNY3 | reaction-center heterodimer, binds P700 |
 | **psaC** | **CHLRE (Q00914)** — already seeded | terminal FA/FB Fe-S clusters |
 
 ### Module C — Electron transport & coupling
 | Gene | Suggested organism | Role |
 |------|--------------------|------|
-| petA / petB / petC | SYNY3 | cytochrome b6f complex (Q-cycle, proton translocation) |
-| petE | SYNY3 / ARATH | plastocyanin (mobile Cu carrier) |
-| petF | CHLRE / ARATH | ferredoxin (mobile Fe-S carrier) |
-| petH (FNR) | ARATH | ferredoxin–NADP+ reductase (makes NADPH) |
-| atpA / atpB | SYNY3 / plant chloroplast | chloroplast ATP synthase CF1 |
+| `petA` / `petB` / `petC` | SYNY3 | cytochrome b6f complex (Q-cycle, proton translocation) |
+| `petE` | SYNY3 / ARATH | plastocyanin (mobile Cu carrier) |
+| `petF` | CHLRE / ARATH | ferredoxin (mobile Fe-S carrier) |
+| `petH` (FNR) | ARATH | ferredoxin–NADP+ reductase (makes NADPH) |
+| `atpA` / `atpB` | SYNY3 / plant chloroplast | chloroplast ATP synthase CF1 |
 
 ### Module D — Light harvesting & photoprotection
 | Gene | Suggested organism | Role |
 |------|--------------------|------|
-| LHCB1 / LHCA | ARATH / CHLRE | chlorophyll a/b-binding antenna |
-| PsbS | ARATH | non-photochemical quenching (qE) photoprotection |
+| `LHCB1` / `LHCA` | ARATH / CHLRE | chlorophyll a/b-binding antenna |
+| `PsbS` | ARATH | non-photochemical quenching (qE) photoprotection |
 
 ### Module E — Carbon fixation (Calvin–Benson–Bassham cycle)
 | Gene | Suggested organism | Role |
 |------|--------------------|------|
-| rbcL | tobacco/spinach chloroplast or SYNY3 | Rubisco large (catalytic) subunit (GO:0016984) |
-| rbcS | ARATH | Rubisco small subunit |
-| rca | ARATH | Rubisco activase |
-| prk (PRK) | CHLRE / ARATH | phosphoribulokinase (regenerates RuBP) |
-| gapA / gapB | ARATH | chloroplastic GAPDH (redox-regulated) |
-| **CP12** | **CHLRE (A6Q0K5)** — already seeded | redox switch; PRK–GAPDH–CP12 ternary complex |
+| `rbcL` | tobacco/spinach chloroplast or SYNY3 | Rubisco large (catalytic) subunit (GO:0016984) |
+| `rbcS` | ARATH | Rubisco small subunit |
+| `rca` | ARATH | Rubisco activase |
+| `prk` (PRK) | CHLRE / ARATH | phosphoribulokinase (regenerates RuBP) |
+| `gapA` / `gapB` | ARATH | chloroplastic `GAPDH` (redox-regulated) |
+| **CP12** | **CHLRE (A6Q0K5)** — already seeded | redox switch; `PRK–GAPDH–CP12` ternary complex |
 
 ### Module F — Carbon-concentrating mechanism (algae/cyano)
 | Gene | Suggested organism | Role |
 |------|--------------------|------|
 | **LCI5** | **CHLRE (Q94ET8)** — already seeded | low-CO2 inducible thylakoid protein |
-| LCIA / LCIB, CCM1/CIA5, carbonic anhydrases | CHLRE / SYNY3 | inorganic-carbon uptake/concentration |
+| `LCIA` / `LCIB`, `CCM1`/`CIA5`, carbonic anhydrases | CHLRE / SYNY3 | inorganic-carbon uptake/concentration |
 
 ### Module G — Pigment biosynthesis (supporting context)
 | Gene | Suggested organism | Role |
 |------|--------------------|------|
-| CHLH / CHLD / CHLI | ARATH | magnesium chelatase (committed chlorophyll step) |
-| POR | ARATH | protochlorophyllide oxidoreductase |
+| `CHLH` / `CHLD` / `CHLI` | ARATH | magnesium chelatase (committed chlorophyll step) |
+| `POR` | ARATH | protochlorophyllide oxidoreductase |
 
 ## Annotation watch-points (apply during review)
 
@@ -150,26 +149,30 @@ According to PubMed (verified):
 # STATUS
 
 ## Concept writeup
-- [x] `terms/photosynthesis/photosynthesis-notes.md` created (manual notes)
-- [x] GO representation verified against `cache/go/terms.csv` + GOlr
-- [x] Key references PubMed-verified
-- [x] Automated deep research `photosynthesis-deep-research-falcon.md` (falcon; generated after the template fix; machine citations not yet manually adjudicated)
-- [x] Structured module curated: `modules/photosynthesis.yaml` (validates against `ModuleReview`; light reactions + CBB cycle + photoprotection/CCM/pigment supply; GO IDs and UniProt members grounded only where verified)
+- **Done:** `terms/photosynthesis/photosynthesis-notes.md` created (manual notes)
+- **Done:** GO representation verified against `cache/go/terms.csv` + GOlr
+- **Done:** Key references PubMed-verified
+- **Done:** Automated deep research `photosynthesis-deep-research-falcon.md` (falcon; generated after the template fix; machine citations not yet manually adjudicated)
+- **Done:** Structured module curated: `modules/photosynthesis.yaml` (validates against `ModuleReview`; light reactions + CBB cycle + photoprotection/CCM/pigment supply; GO IDs and UniProt members grounded only where verified)
 
 ## Gene reviews (deferred — first pass is concept writeup only)
+
+Follow-up curation is tracked in
+[#3998](https://github.com/ai4curation/ai-gene-review/issues/3998).
+
 ### Already seeded
-- [x] CHLRE/psaC (Q00914) — pre-existing
-- [~] CHLRE/CP12 (A6Q0K5) — pre-existing (DRAFT)
-- [~] CHLRE/LCI5 (Q94ET8) — pre-existing
+- **Done:** CHLRE/psaC (Q00914) — pre-existing
+- **Draft:** CHLRE/CP12 (A6Q0K5) — pre-existing
+- **Draft:** CHLRE/LCI5 (Q94ET8) — pre-existing (no GOA rows)
 
 ### To do (candidates)
-- [ ] Module A — PSII: psbA, psbD, psbB/psbC, psbO
-- [ ] Module B — PSI: psaA, psaB
-- [ ] Module C — electron transport: petA/B/C, petE, petF, petH, atpA/atpB
-- [ ] Module D — antenna/photoprotection: LHCB1, PsbS
-- [ ] Module E — CBB cycle: rbcL, rbcS, rca, PRK, gapA/gapB
-- [ ] Module F — CCM: LCIA/B, CCM1, carbonic anhydrases
-- [ ] Module G — pigment biosynthesis: CHLH, POR
+- **Todo:** Module A — PSII: `psbA`, `psbD`, `psbB`/`psbC`, `psbO`
+- **Todo:** Module B — PSI: `psaA`, `psaB`
+- **Todo:** Module C — electron transport: `petA`/`petB`/`petC`, `petE`, `petF`, `petH`, `atpA`/`atpB`
+- **Todo:** Module D — antenna/photoprotection: `LHCB1`, `PsbS`
+- **Todo:** Module E — CBB cycle: `rbcL`, `rbcS`, `rca`, `PRK`, `gapA`/`gapB`
+- **Todo:** Module F — CCM: `LCIA`/`LCIB`, `CCM1`, carbonic anhydrases
+- **Todo:** Module G — pigment biosynthesis: `CHLH`, `POR`
 
 # NOTES
 

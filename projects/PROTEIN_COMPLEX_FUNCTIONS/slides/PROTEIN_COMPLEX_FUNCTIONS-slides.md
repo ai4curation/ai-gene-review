@@ -62,7 +62,7 @@ Which subunits should carry a complex's molecular function?
 
 ![h:440](psmb5-review.jpg)
 
-<span class="small">PSMB5 (β5): threonine-type endopeptidase activity ACCEPTed; generic endopeptidase MODIFY to the specific term. Its alpha-ring partner PSMA1 carries no peptidase rows.</span>
+<span class="small">PSMB5 (β5): threonine-type endopeptidase activity ACCEPTed; generic endopeptidase MODIFY to the specific term. PSMA1 is the alpha-ring structural contrast case.</span>
 
 ---
 
@@ -74,7 +74,7 @@ Which subunits should carry a complex's molecular function?
 | Act KS-CLF | ActI-ORF1, polyketide synthase | CLF: chain-length factor |
 | EryCII-EryCIII | EryCIII, glycosyltransferase | EryCII: `enzyme activator activity` |
 
-<span class="small">All three had the catalytic MF on the non-catalytic partner in GOA via domain-signature propagation.</span>
+<span class="small">All three remove catalytic MFs from non-catalytic partners. PqsB/CLF raise `contributes_to` boundaries; EryCII keeps its own activator MF.</span>
 
 ---
 
@@ -87,6 +87,6 @@ Which subunits should carry a complex's molecular function?
 ## Status and next steps
 
 - Done: framework, rubric, GO-CAM export position, PSMA1/PSMB5 reviews, Boltz2 and ESMFold2 pilots.
-- Open: **OXPHOS attribution matrix**; audit OXPHOS reviews for `contributes_to` and assembly-factor consistency; guidance for enrichment and ML-label users.
+- Open, tracked in ai-gene-review#4002: **OXPHOS attribution matrix**; audit OXPHOS reviews for `contributes_to` and assembly-factor consistency; guidance for enrichment and ML-label users.
 
 **Read more:** `projects/PROTEIN_COMPLEX_FUNCTIONS.md` · `projects/OXPHOS.md` · `projects/PROTEIN_COMPLEX_FUNCTIONS/esmfold2/`

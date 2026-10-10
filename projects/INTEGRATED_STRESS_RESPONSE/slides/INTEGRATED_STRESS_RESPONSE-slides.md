@@ -26,7 +26,7 @@ style: |
 
 # The integrated stress response
 
-A scoped project: about 18 candidate genes, five already reviewed
+A scoped project: 19 candidate genes, seven already reviewed
 
 <span class="small">AI Gene Review · projects/INTEGRATED_STRESS_RESPONSE · 2026</span>
 
@@ -38,7 +38,8 @@ A scoped project: about 18 candidate genes, five already reviewed
 
 - Four kinases (**HRI, PKR, PERK, GCN2**) each sense a different stress and phosphorylate **eIF2α**, which blocks **eIF2B**, dampens translation and lets **ATF4** through.
 - **Scoped, not yet started**: no project-specific review work has been done.
-- **5 of 18** candidates already have reviews from other work (EIF2AK3, ATF4, ATF3, EIF2B4 COMPLETE; OMA1 IN_PROGRESS; 489 annotations). **EIF2S1**, three kinases and DELE1 have no gene folder.
+- **7 of 19** candidates already have local reviews from other work, covering 545 current annotation rows.
+- **12 genes** still have no gene folder, including **EIF2S1**, three kinases, **DELE1**, **DDIT3**, both PPP1R15 regulators and four eIF2B subunits.
 
 ---
 
@@ -69,11 +70,11 @@ A scoped project: about 18 candidate genes, five already reviewed
 
 | Genes | State |
 |---|---|
-| EIF2AK3 (95 ann.), ATF4 (216), ATF3 (80), EIF2B4 (44) | COMPLETE |
-| OMA1 (54) | IN_PROGRESS |
-| EIF2AK1, EIF2AK2, EIF2AK4, EIF2S1, DELE1, DDIT3, PPP1R15A, PPP1R15B, EIF2B1/2/3/5, ASNS | No gene folder |
+| EIF2AK3, GCN1, ATF4, ATF3, EIF2B4, ASNS (491 rows) | COMPLETE reviews |
+| OMA1 (54 rows, no PENDING) | In-progress review |
+| EIF2AK1, EIF2AK2, EIF2AK4, EIF2S1, DELE1, DDIT3, PPP1R15A, PPP1R15B, EIF2B1/2/3/5 | No gene folder |
 
 - ⬜ `just fetch-gene human <GENE>`, starting with **EIF2S1**, the other three kinases and **DELE1**.
-- ⬜ An ISR module once the core is reviewed.
+- ⬜ A local ISR module once the core is reviewed.
 
 **Read more:** `projects/INTEGRATED_STRESS_RESPONSE.md`

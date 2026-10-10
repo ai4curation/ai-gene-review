@@ -39,7 +39,7 @@ title: "Mitochondrial Protein Import Pathways — Deep Research"
 - **Yeast**: Mim1/Mim2 complex mediates insertion; Tom70 serves as initial receptor for some substrates.
 - **Metazoan**: MTCH2 (and its paralog MTCH1) identified as the insertase (Bhatt et al., Science 2022, PMID:36264797). MTCH2 uses a diverged solute carrier fold. CRISPR screens showed MTCH2/MTCH1 are required for insertion of TA, SA, and multipass α-helical OM proteins but NOT β-barrels.
 - **Structural evolution**: The MTCH family evolved from ancestral solute transporters; structural studies reveal a conserved insertase fold (2026 preprint on structural evolution of MTCH family).
-- **MTCH1**: Can also function as an insertase (Bhatt et al., J Cell Sci 2025).
+- **MTCH1**: Can also function as an insertase by itself in yeast MIM-complementation assays (Dimogkioka, Elias & Rapaport 2025, PMID:40704594).
 
 ### 1.6 TOM-MIA/Disulfide Relay (IMS Import)
 - **Substrates**: Small IMS proteins with twin CX₃C or CX₉C motifs (e.g., small Tims, Cox17, CHCHD2/10)

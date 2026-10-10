@@ -299,6 +299,7 @@ def main() -> None:
                     "citing_but_absent", "n_absent",
                 ],
                 delimiter="\t",
+                lineterminator="\n",
             )
             w.writeheader()
             w.writerows(mismatches)
@@ -308,13 +309,14 @@ def main() -> None:
                 fh,
                 fieldnames=["citation", "species", "family_stem", "n_members", "members"],
                 delimiter="\t",
+                lineterminator="\n",
             )
             w.writeheader()
             w.writerows(clusters)
 
     if args.check_pubmed:
         with open(os.path.join(args.out_dir, "unresolvable_pmids.tsv"), "w", newline="") as fh:
-            w = csv.writer(fh, delimiter="\t")
+            w = csv.writer(fh, delimiter="\t", lineterminator="\n")
             w.writerow(["pmid", "cited_by"])
             for p in missing:
                 users = sorted(usage.get(f"PMID:{p}", set()))

@@ -38,7 +38,7 @@ Recurring ways a GO annotation can be defensible and still say nothing, or say s
 
 - Many GO rows come from **HTP screens, domain signatures, broad mappings or family propagation** and tell a reader little, or assert an activity the protein lacks.
 - We catalogued **eight recurring patterns**, each tied to worked examples in real reviews; first presented at the **GO Consortium meeting, October 2025**.
-- **Nine exemplar reviews** are complete and their recorded actions match the patterns. The catalogue is qualitative: **frequency across the repo is not yet measured**.
+- **Nine exemplar reviews** have all rows adjudicated and their recorded actions match the patterns. The catalogue is qualitative: **frequency across the repo is not yet measured**.
 
 ---
 
@@ -92,7 +92,7 @@ Recurring ways a GO annotation can be defensible and still say nothing, or say s
 
 ## Status and next steps
 
-- ✅ Eight patterns documented; nine exemplar reviews complete.
+- ✅ Eight patterns documented; nine exemplar reviews have all rows adjudicated.
 - ⬜ Measure how often each pattern occurs across the repo (e.g. share of `GO:0005515` rows demoted).
 - ⬜ Turn the most mechanical patterns (HTP `protein binding`, fold-based pathway terms) into flags a curator can filter on.
 - Related: `projects/PSEUDOENZYMES.md`, `projects/PROTEIN_COMPLEX_FUNCTIONS.md`, `projects/REVIEW_QUALITY_AUDIT.md`

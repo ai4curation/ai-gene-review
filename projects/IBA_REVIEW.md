@@ -2,6 +2,7 @@
 title: "IBA Annotation Quality Project"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: MATURE
+last_reviewed: 2026-10-04
 tags: [PIPELINE, FLAGSHIP]
 species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR]
 genes:
@@ -102,20 +103,37 @@ where those transfers go wrong and why: 14 recurring failure patterns (such as
 pseudo-enzymes that keep a catalytic term, neo-functionalized subfamilies,
 wrong-paralog and cross-kingdom transfers) plus one positive control, 53 worked cases in the
 table below, and a structured `propagation_review` vocabulary (root cause,
-failure modes, per-source status) that reviews now use; 691 gene reviews
-carried 3,580 such blocks as of 2026-09-26. We did this because an IBA error at a family node
+failure modes, per-source status) that reviews now use; as of 2026-10-04,
+1,487 gene reviews carried 7,495 such blocks across IBA, TreeGrafter, and other
+propagated or inferred rows. We did this because an IBA error at a family node
 spreads to every descendant, so one bad call can mislabel hundreds of
 proteins. The work covers both directions: in 1,015 reviewed human genes, 511
-curated core molecular functions (across 423 genes) have no IBA support at
-all. A corpus-wide re-review started on 2026-09-20 over 3,427 genes and 11,829
-propagated annotations; 81 genes are reviewed and 65 await adjudication
+curated core molecular functions (across 423 genes) had no IBA support in the
+2026-09-26 evidence-subtraction snapshot. A corpus-wide re-review started on
+2026-09-20 over 3,427 genes and 11,829 propagated annotations; 157 genes are
+reviewed, 56 await adjudication, and 3,213 remain unreviewed as of 2026-10-04
 ([rereview-2026-09-20](IBA_REVIEW/rereview-2026-09-20/README.md)).
+
+## Status and follow-ups
+
+- The 2026-09-20 IBA/TreeGrafter re-review baseline is frozen at 3,427 gene
+  reviews: 10,868 IBA annotations plus 961 TreeGrafter annotations. Running
+  `projects/IBA_REVIEW/rereview-2026-09-20/inventory.py` on 2026-10-04
+  refreshed progress to 157 `reviewed`, 56 `awaiting_adjudication`, 1
+  `incorporated_with_disagreement`, and 3,213 `unreviewed`.
+- [#4095](https://github.com/ai4curation/ai-gene-review/issues/4095) tracks the
+  remaining IBA corpus re-review from the homology-propagation umbrella.
+- [#3988](https://github.com/ai4curation/ai-gene-review/issues/3988) tracks the
+  PAINT no-IBA follow-up batch for the incompleteness side.
+- [#4089](https://github.com/ai4curation/ai-gene-review/issues/4089) tracks the
+  TreeGrafter-specific side of the same propagated-annotation campaign.
 
 ## Overview
 
 > Project log, per-pass verification narrative, and lessons learned: [IBA_REVIEW/HISTORY.md](IBA_REVIEW/HISTORY.md).
 >
-> Consistency audit of the structured `propagation_review` blocks across all 1843 rows:
+> Consistency audit of the structured `propagation_review` blocks across the
+> 2026-08-26 snapshot of 1,843 blocks:
 > [IBA_REVIEW/propagation-review-audit.md](IBA_REVIEW/propagation-review-audit.md).
 
 This project examines the quality of IBA (Inferred from Biological Aspect of Ancestor) annotations discovered through AI-assisted gene review. IBA annotations use phylogenetic trees to transfer function from characterized proteins to uncharacterized orthologs.
@@ -130,7 +148,10 @@ This project covers **both directions** of IBA quality: most of the page catalog
 where IBA is *wrong* (over-annotation, patterns 1–15), while
 [IBA Incompleteness](#iba-incompleteness-core-function-that-iba-fails-to-propagate)
 quantifies where IBA *under-calls* established biology — 511 curated human core
-molecular functions that IBA alone would miss.
+molecular functions that IBA alone would miss in the 2026-09-26 snapshot.
+The `propagation_review` structure now also records non-IBA propagation
+failures (IEA, ISS, ISO, and related inferred rows), so the vocabulary below is
+broader than PAINT even though it was developed here.
 
 ## Propagation Taxonomy and Checklist
 
@@ -936,12 +957,17 @@ as a secondary function.
 
 **The Problem**: Annotations derived from organism-specific experimental systems carry that context to orthologs where it doesn't apply.
 
-**Example - RIMBP2 (human)**:
-- IBA annotation: `GO:0007274` (neuromuscular synaptic transmission)
-- Source: Drosophila ortholog (FB:FBgn0262483) where NMJ is the primary synapse model
-- Reality: Human RIMBP2 functions mainly at CNS synapses (hippocampal, auditory)
-- **Impact**: Term implies NMJ function when actual function is at central synapses
-- **Root cause**: IBA quality limited by organism-specific biases in source annotations
+**Historical example - RIMBP2 (human)**:
+- Historical IBA annotation: `GO:0007274` (neuromuscular synaptic transmission)
+- Source trace: a historical `PANTHER:PTN002306629` node, now absent from the
+  refreshed PTHR14234 PAINT slice
+- Current curation: **UNDECIDED**. Human RIMBP2's hippocampal and auditory-ribbon
+  synapse literature does not refute a vertebrate neuromuscular-junction role,
+  and a presynaptic protein made in motor neurons need not be expressed in
+  skeletal muscle.
+- **Lesson**: apparent organism/tissue context transfer is a good lead, not an
+  automatic removal; resolve the old source node and target-specific exclusion
+  evidence before changing the annotation.
 
 ### 7. Pseudo-Enzyme Propagation Is a Recurring Human Pattern
 
@@ -986,11 +1012,11 @@ as a secondary function.
 **The Problem**: A family-level IBA asserts membership in a **specific complex, compartment, or pathway** that the target protein does not actually occupy, even though the catalytic fold or sequence homology is real. Compartment-split paralogs are the classic trap: they share a fold but route their product to different destinations.
 
 **Examples (verified across multiple lines of evidence)**:
-- **EIF4E2 (human)** — `GO:0016281` (eIF4F complex): 4EHP/EIF4E2 binds the cap but UniProt states it *"is unable to bind eIF4G"* and *"Does not interact with eIF4G"*; it is a translational repressor (4EHP-GYF2 complex), never an eIF4F subunit. A clear family-level over-transfer from EIF4E.
 - **ALDH1L1 (rat)** — `GO:0005739` (mitochondrion): UniProt names it *Cytosolic 10-formyltetrahydrofolate dehydrogenase* with `SUBCELLULAR LOCATION: Cytoplasm, cytosol` and a cytosol IDA. Mitochondrial one-carbon oxidation is the job of the distinct paralog **ALDH1L2**.
 - **HMGCS2 (rat)** — `GO:0010142` (farnesyl-PP biosynthesis, mevalonate pathway): a **paralog-pathway conflation**. The IBA comes from a PANTHER node (PTN000222418) that lumps the HMGCS paralogs. The cytosolic paralog **HMGCS1** feeds mevalonate→FPP→sterol/isoprenoid synthesis; mitochondrial HMGCS2's HMG-CoA is cleaved by HMG-CoA lyase to acetoacetate (ketogenesis). The shared HMG-CoA-synthase *reaction* is correctly classified under mevalonate biosynthesis (UniProt UniPathway tag), but assigning HMGCS2 to **FPP/isoprenoid** biosynthesis follows the wrong paralog's flux — an over-annotation. *(Nuance: the enzymatic step is real, so this is paralog over-annotation, not a fabricated activity.)*
-- **PEX2 (human)** — `GO:0016593` (Cdc73/Paf1 complex): PEX2 is a peroxisomal RING E3 ligase for PEX5 retrotranslocation (UniProt) and has no role in RNA Pol II transcription elongation, so membership in the Cdc73/Paf1 complex is clearly wrong. *(Caveat: the cause is unconfirmed — the IBA WITH/FROM is a PANTHER node, not a PAF1 gene. A legacy synonym collision — PEX2's old name "PAF1"/Peroxisome Assembly Factor 1 vs the unrelated transcription factor PAF1 — is a plausible but unverified explanation.)*
+- **PEX2 (human)** — `GO:0016593` (Cdc73/Paf1 complex): PEX2 is a peroxisomal RING E3 ligase for PEX5 retrotranslocation (UniProt) and has no role in RNA Pol II transcription elongation. The seed has now been traced to **PEX2's own bad human IDA** from PMID:18987311, a paper on the unrelated parafibromin/PAF1 transcriptional complex; the PAINT node inherits a source-miscitation caused by the historical PEX2/PAF1 homonym.
 - **CIRBP (human)** — `GO:0005681` (spliceosomal complex) + `GO:0000398` (mRNA splicing, via spliceosome): the cold-inducible RNA-binding protein CIRBP shares only the N-terminal RRM with the transformer-2/RBMX splicing factors that anchor these terms. PANTHER PAINT shows the splicing IBD sits at ancestral node **PTN000391532** (seeded by TRA2A, TRA2B, RBMX, *Drosophila* tra2, rat Tra2 — all bona fide splicing factors), while CIRBP's own subfamily node **PTN008729690** carries only `mRNA binding`. CIRBP has no experimental splicing evidence; its function is 3'-UTR binding, mRNA stabilization and translational control. A non-enzyme instance of complex-membership over-transfer across a functional-divergence boundary. *(See Featured Example and `interpro/panther/PTHR48034/PTHR48034-review.md`.)*
+- **Self-correction**: EIF4E2's eIF4F-complex IBA was accepted on re-review. The first pass incorrectly generalized "cannot recruit canonical eIF4G1" to "cannot recruit any eIF4G"; primary hypoxic-translation papers show EIF4E2 assembling with eIF4A and **eIF4G3** in eIF4FH, and the GO eIF4F definition is not restricted to the EIF4E1/EIF4G1 complex.
 - **Lesson**: complex membership, compartment, and downstream pathway are not conserved across paralogs even when the fold/reaction is; verify the protein actually occupies the annotated complex/compartment and that its product reaches the annotated pathway.
 
 ### 11. Substrate Over-Propagation From a Multi-Specificity Enzyme Family
@@ -1005,11 +1031,12 @@ as a secondary function.
   3. UniProt's own FUNCTION line states *"Does not phosphorylate sphingosine (PubMed:15939762)"*; its sole ceramide claim is a weak **"By similarity"** tag (propagated from Q9ESW4), not direct evidence.
 - The dedicated ceramide kinase is the **separate** enzyme CERK. AGK's verified activity is MAG/DAG kinase (plus a kinase-independent TIM22 structural role).
 
-**Example - SAMD8/SMSr (human)** — `GO:0033188` (sphingomyelin synthase activity):
-- SAMD8 is in the sphingomyelin-synthase PANTHER family (PTHR21290), but UniProt's experimentally-supported FUNCTION says it makes **ceramide phosphoethanolamine (CPE)**, transferring a phospho**ethanolamine** head group from PE to ceramide — explicitly *not* the phospho**choline**-from-PC reaction that defines sphingomyelin synthases SMS1/SMS2: *"The larger PC prevents an efficient fit in the enzyme's catalytic pocket."* So the family-level sphingomyelin-synthase term is the wrong product/substrate; this is also accompanied by mislocalization IBAs (Golgi, plasma membrane) that belong to SMS1/SMS2, whereas SMSr is ER-retained.
+**Focused adjudication - SAMD8/SMSr (human)** — `GO:0033188` (sphingomyelin synthase activity):
+- SAMD8 is in the sphingomyelin-synthase PANTHER family (PTHR21290), but its best-established activity is **ceramide phosphoethanolamine (CPE)** synthesis, transferring a phospho**ethanolamine** head group from PE to ceramide rather than the phospho**choline**-from-PC reaction catalyzed by SMS1/SMS2. The current review leaves the sphingomyelin-synthase IBA **UNDECIDED** rather than flatly removed, because strong CPE preference and multiple negative assays must still be reconciled with residual wild-type SM activity and PMID:38388831 controls.
 
 **Example - CPT1C (human)** — `GO:0006631` (fatty acid metabolic process), `GO:0009437` (carnitine metabolic process):
 - A **neofunctionalization** case: UniProt's RecName is literally *"Palmitoyl thioesterase CPT1C."* Although it sits in the carnitine O-acyltransferase family (PTHR22589) with CPT1A/B, experimental work shows CPT1C **lacks the canonical carnitine palmitoyltransferase activity** (it binds malonyl-CoA but does not catalyze carnitine-dependent acyl transfer). The IBA propagates the ancestral CPT1A/B fatty-acid/carnitine metabolism that CPT1C no longer performs.
+
 **Example - cao-1 / CAO-1 (*Neurospora crassa*)** — `GO:0010436` (carotenoid dioxygenase activity), `GO:0016121` (carotene catabolic process):
 - CAO-1 sits in PANTHER **PTHR10543** subfamily **SF89** (labelled *"carotenoid 9,10(9',10')-cleavage dioxygenase 1"*), a node that is functionally heterogeneous: it lumps genuine carotenoid cleavers (*Arabidopsis* CCD1, *Synechocystis* apocarotenoid oxygenase, *M. tuberculosis* Rv0654), **stilbenoid/resveratrol cleavers** (*U. maydis* RCO1, *Botrytis* rco1, and CAO-1 itself), and **phenylpropanoid cleavers** (*Pseudomonas* isoeugenol monooxygenase). The carotenoid-dioxygenase IBA propagates from node **`PTN001631894`**, whose `WITH/FROM` includes the *M. tuberculosis* carotenoid cleaver `UniProtKB:P9WPR5`.
 - Direct experimental evidence **refutes carotenoid activity**: heterologously expressed CAO-1 did not convert β-carotene or any carotenoid/apocarotenoid tested, while it cleaves the interphenyl Cα–Cβ double bond of **resveratrol and piceatannol** (PMID:23893079). GOA already carries the corrective experimental **`NOT` carotenoid metabolic process** (GO:0016116, IDA, PMID:23893079). Crystal structures show the conserved four-His non-heme Fe(II) center but a **stilbenoid-adapted substrate cleft** (PMID:28493664).
@@ -1022,23 +1049,22 @@ as a secondary function.
 - A **blinded OpenScientist** run (neutral hypothesis *"NQO2 has NAD(P)H dehydrogenase (quinone) activity"*) independently returned **over-annotated → the NAD(P)H term is substrate-incorrect**, citing Wu et al. 1997 (PMID:9367528) that NQO2 uses NRH "rather than NAD(P)H," and noting the correct term GO:0001512 is already annotated by IDA.
 - Action: **MODIFY** to the NRH-specific `GO:0001512` (dihydronicotinamide riboside quinone reductase activity; **EC 1.10.5.1**, **RHEA:12364**), already supported by IDA. `root_cause: PROPAGATION_BAD`, `failure_modes: [FUNCTIONAL_DIVERGENCE]`.
 
-- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; SAMD8 makes CPE not SM; CPT1C is a thioesterase not a transferase; CAO-1 cleaves stilbenes not carotenoids; NQO2 uses NRH not NAD(P)H), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases; carotenoid+stilbenoid+phenylpropanoid cleavage oxygenases) leaks substrate terms across specificity boundaries — and the leak can be in the **cleaved substrate** (CAO-1) or the **cofactor/co-substrate** (NQO2). Where a subfamily label itself names one specificity (`PTHR10543:SF89` = "carotenoid … cleavage dioxygenase") while spanning several, that label is the mechanical origin of the leak.
+- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; CPT1C is a thioesterase not a transferase; CAO-1 cleaves stilbenes not carotenoids; NQO2 uses NRH not NAD(P)H), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases; carotenoid+stilbenoid+phenylpropanoid cleavage oxygenases) leaks substrate terms across specificity boundaries — and the leak can be in the **cleaved substrate** (CAO-1) or the **cofactor/co-substrate** (NQO2). Cases like SAMD8 are the adjudication boundary: a strong substrate preference makes the propagated term suspect, but residual wild-type activity must be settled before using `REMOVE`. Where a subfamily label itself names one specificity (`PTHR10543:SF89` = "carotenoid … cleavage dioxygenase") while spanning several, that label is the mechanical origin of the leak.
 
 ### 12. Mis-Grouping Revealed by the WITH/FROM Column
 
 **The Problem**: The IBA `WITH/FROM` field names the exact source proteins the function was transferred *from*. Reading it frequently reveals the error directly — the source is either the **wrong family entirely** or the **wrong paralog**. This is the single most useful diagnostic in this whole catalog.
 
 **Tier A — wrong family / over-broad superfamily** (egregious; the source proteins are functionally unrelated):
-- **NTN1 / NTN3 (human)** — `GO:0000981`/`GO:0006357`/`GO:0000978` (DNA-binding transcription-factor activity, Pol II transcription regulation, cis-regulatory DNA binding): Netrins are **secreted** axon-guidance cues (UniProt: extracellular; PANTHER PTHR10574 Netrin/Laminin) with no DNA-binding domain — yet they carry nuclear **POU-domain transcription-factor** IBAs. The WITH/FROM proves it: the source list is POU-domain TFs (POU2F1 P14859, POU1F1 P28069, POU4F1 Q12837, POU4F3 Q15319, …). A secreted protein cannot be a Pol II transcription factor; this is a phylogenetic grouping error.
-- **NOTCH1 (human)** — `GO:0007411` (axon guidance): the WITH/FROM is **SLIT1/2/3** (O75093, O94813, O75094). NOTCH1 signals in neurogenesis but axon guidance is a SLIT function transferred across an over-broad node.
+- **NTN1 / NTN3 (human)** — `GO:0000981`/`GO:0000978` (DNA-binding transcription-factor activity, Pol II-specific; cis-regulatory region sequence-specific DNA binding): Netrins have laminin/EGF/NTR architecture and receptor-ligand axon-guidance biology, but these IBAs are **POU-domain transcription-factor** transfers. The WITH/FROM proves it: the source list is POU-domain TFs (POU2F1 P14859, POU1F1 P28069, POU4F1 Q12837, POU4F3 Q15319, …). That rejects the POU-seeded sequence-recognition terms without overclaiming that every generic Pol II regulation row is settled.
 - **IL23R (human)** — `GO:0004925` (prolactin receptor activity), `GO:0017046` (peptide hormone binding): the WITH/FROM is **PRLR** (P16471). IL23R is a type-I cytokine receptor that binds the cytokine IL-23, not the hormone prolactin; the superfamily node is too broad.
 
 **Tier B — wrong paralog** (subtle; the source is a close relative with a different function):
 - **ABRAXAS1 (human)** — `GO:0090307`/`GO:0008608`/`GO:0008017` (mitotic spindle assembly, spindle–kinetochore attachment, microtubule binding): every one of these IBAs traces via WITH/FROM to **`UniProtKB:Q15018` = ABRAXAS2** (ABRO1, the BRISC-complex paralog). ABRAXAS1 is a nuclear BRCA1-A DNA-damage scaffold; the spindle/MT biology belongs to ABRAXAS2.
-- **HINT2 (human)** — `GO:0005737` (cytoplasm): HINT2 has a mitochondrial targeting sequence and is mitochondrial; the cytoplasm term reflects the **HINT1** paralog.
 - **CPT1C** (above) similarly inherits CPT1A/B metabolism it no longer performs.
 - **opa1 (zebrafish) / eat-3 (worm)** — `GO:0016559` (peroxisome fission): both are UniProt *"Dynamin-like GTPase OPA1, mitochondrial"* inner-membrane **fusion** proteins. Peroxisome fission is done by the DRP1/DNM1L branch of the dynamin superfamily; the term is a within-superfamily mis-transfer (wrong organelle *and* wrong direction).
 - **YAR1 (yeast)** — `GO:0045944` (positive regulation of transcription): YAR1 is an RPS3-binding 40S-ribosome-biogenesis factor (UniProt: interacts with RPS3), not a transcription activator; **ACL4 (yeast)** likewise gets mitochondrial-import terms by TOM70-family over-transfer despite being an Rpl4 chaperone.
+- **Caution at the boundary**: **NOTCH1** has an axon-guidance IBA whose cached and fresh traces are SLIT-grounded, but Drosophila Notch axon-guidance experiments make an independent Notch guidance role biologically plausible. The current human row is **UNDECIDED**, not a settled SLIT leak.
 - **Lesson**: **always read the WITH/FROM before flagging.** It tells you whether the IBA is a defensible family-level transfer or a traceable mis-grouping — and if a single paralog or out-of-family protein is the source, that is strong, near-mechanical evidence of error.
 
 ### 13. Generic / Mutually-Exclusive Compartment Over-Propagation
@@ -1049,13 +1075,13 @@ as a secondary function.
 - **Cytoplasmic PIWI/Argonaute & germ-granule proteins given `GO:0005634` nucleus** — PIWIL1 (human), and worm prg-1, wago-1, glh-1. All are cytoplasmic nuage/P-granule/chromatoid-body proteins (UniProt: cytoplasmic granule, no nucleus). The WITH/FROM nodes include **nuclear-acting Piwi orthologs** (e.g. *Drosophila* Piwi is nuclear; nuclear PIWIL4/MIWI2), so the nuclear compartment leaks onto the cytoplasmic members.
 - **EIF2AK3/PERK → nucleus** (UniProt: ER membrane kinase) and **BIRC6 → nucleus** (UniProt: TGN/endosome/cytoskeleton/midbody — no nuclear pool).
 - **Ribosome-associated chaperones SSB2 / SSZ1 (yeast) → `GO:0005886` plasma membrane** (UniProt: cytoplasmic, ribosome-associated) — PM propagated across the HSP70 family node.
-- **BAIAP2L2 → `GO:0005654` nucleoplasm** (UniProt: plasma membrane / cell junction; I-BAR family) and **PIK3C3/VPS34 → `GO:0005777` peroxisome** (UniProt: autophagosome/endosome/midbody).
 - **Inverse** — strictly **nuclear** proteins given `GO:0005737` cytoplasm: rqh1 (RecQ helicase) and HDA1 (HDAC) are nucleus-only, and nucleus is excluded from cytoplasm, so cytoplasm is wrong. And the genuinely **extracellular** SCGB1A1 given cytoplasm (secreted = outside the cell).
 
 **Tier B — anti-pattern (do NOT flag; these reviewer REMOVEs were over-reaches).** `GO:0005737` cytoplasm **subsumes** mitochondrion, ER, Golgi, and lysosome (all `part_of` cytoplasm), so "cytoplasm" is defensible — if imprecise — for an organellar protein:
 - "cytoplasm" REMOVE on **Aga / GLA** (lysosome), **DHCR24** (ER membrane, catalytic domain faces the cytosol), **ISCA1 / ATP5IF1 / gtpbp3** (mitochondrion) — all should be UNDECIDED/KEEP, not REMOVE.
 - "membrane" (`GO:0016020`) REMOVE on **flvcr2a** is wrong — it is a multi-pass membrane transporter.
 - **Self-correction**: HINT2's "cytoplasm" flag (added in the WITH/FROM pass) belongs here too — HINT2 is mitochondrial, but mitochondrion ⊂ cytoplasm, so cytoplasm is not strictly wrong; downgraded from the findings.
+- **Unresolved after second pass**: BAIAP2L2 `GO:0005654` nucleoplasm and PIK3C3/VPS34 `GO:0005777` peroxisome now sit at **UNDECIDED**. Positive membrane/vesicle localization for BAIAP2L2 and phagophore/endosomal localization for PIK3C3 do not prove exclusion, and the PIK3C3 yeast seed was a primary Vps34 peroxisome-localization experiment rather than a simple cargo-localization error.
 
 **Lesson**: before a localization REMOVE, place both compartments in the GO hierarchy. Mutually-exclusive (nucleus vs cytoplasm; PM vs internal; one organelle vs another) → valid. A broad subsuming term over a more specific true location (cytoplasm over any organelle; membrane over a membrane protein) → leave it.
 
@@ -1138,20 +1164,20 @@ ubiquitin-biased non-IBA mappings that the IBA annotations help correct.
 | GO:0005811 lipid droplet | Correct | ACCEPT |
 | GO:0047372 monoacylglycerol lipase activity | ROG1-paralog/substrate-specificity transfer; target evidence absent | UNDECIDED |
 
-### RIMBP2 - Context-Specific Term Transfer
+### RIMBP2 - Historical Context Transfer, Now Unresolved
 
 **Species**: human
-**Status**: COMPLETE
+**Status**: UNDECIDED
 **PANTHER Family**: [PTHR14234](../interpro/panther/PTHR14234/) (RIM BINDING PROTEIN-RELATED)
 
 **IBA Annotations Flagged**:
 | Term | Issue | Action |
 |------|-------|--------|
-| GO:0007274 neuromuscular synaptic transmission | Wrong synapse type context | MODIFY |
+| GO:0007274 neuromuscular synaptic transmission | Historical node stale/missing; vertebrate NMJ context unresolved | UNDECIDED |
 
-**Lesson**: IBA transferred a term specific to *Drosophila* NMJ context to a human gene that functions primarily at CNS synapses. The IBA source (FB:FBgn0262483) is the fly ortholog where neuromuscular junctions are a major experimental system. However, human RIMBP2 functions at hippocampal (mossy fiber, CA3-CA1), auditory ribbon, and other central synapses - not primarily at neuromuscular junctions. This illustrates how IBA can propagate organism-specific or tissue-specific contexts that don't apply to the target species.
+**Lesson**: the old RIMBP2 call is now a self-correction. Human RIMBP2 functions at hippocampal and auditory ribbon synapses, but that evidence does not refute a vertebrate neuromuscular role. The historical PTN002306629 source node is absent from the refreshed PTHR14234 PAINT slice and current O15034 QuickGO annotations omit `GO:0007274`; together these facts make the old row unresolved rather than wrong.
 
-**Root Cause Analysis**: This is a case where **IBAs are only as good as the manual annotations on orthologs**. The Drosophila RIMBP ortholog is well-characterized at the NMJ because that's the major accessible synapse type in flies. When this annotation gets transferred to human via phylogenetic inference, it carries the fly-specific context with it.
+**Root Cause Analysis**: this still illustrates the risk of **source context**, because the historical trace was rooted in fly RIM-BP neuromuscular evidence. It now illustrates the equal and opposite risk in the reviewer: a mammalian CNS/ribbon literature lead is not target-specific loss evidence for a presynaptic motor-neuron protein.
 
 **Family-Level Context**: The [PANTHER family analysis](../interpro/panther/PTHR14234/PTHR14234-deep-research-falcon.md) reveals additional IBA quality concerns:
 - The representative structure (PDB 4z8a) is from *Drosophila* RIM-BP bound to Cacophony (fly NMJ Ca2+ channel)
@@ -1327,7 +1353,7 @@ and a representative seed) in the corresponding
 > HIGH confidence an `ABSENT` verdict is a strong lead for review, not an
 > automatic `REMOVE`.
 
-## Genes with IBA Issues
+## Genes with IBA Re-Review Cases
 
 | Gene | Species | IBA Issue Type | Severity | Status |
 |------|---------|----------------|----------|--------|
@@ -1335,7 +1361,7 @@ and a representative seed) in the corresponding
 | cds1 | MYCTU, VIBCH | **Neo-functionalization (opposite reaction)** | **CRITICAL** | COMPLETE |
 | LPL1 | CANAL | Substrate specificity | MEDIUM | COMPLETE |
 | UBA7 | human | Positive control: IBA corrects generic/domain propagation | N/A | COMPLETE |
-| RIMBP2 | human | Context-specific term transfer | MEDIUM | COMPLETE |
+| RIMBP2 | human | Historical NMJ context transfer; current vertebrate role unresolved | MEDIUM | UNDECIDED |
 | arnF | ECOLI | Functional divergence within SMR superfamily | MEDIUM | COMPLETE |
 | DPYSL2/CRMP1/DPYSL3 | human | Pseudo-enzyme (UniProt CAUTION: metallo-hydrolase residues absent) | HIGH | COMPLETE |
 | AGO4 | human | Pseudo-enzyme (UniProt: lacks endonuclease activity) | HIGH | COMPLETE |
@@ -1343,7 +1369,7 @@ and a representative seed) in the corresponding
 | CAPG | human | Partial sub-activity loss (caps but does not sever actin; PMID:1322908) | MEDIUM | COMPLETE |
 | CRYAA | human | Partial sub-activity loss (holdase not foldase; curated NOT(refolding)) | MEDIUM | COMPLETE |
 | BCL2 | human, mouse | Regulatory-sign inversion (anti-apoptotic; family-node mixes pro-/anti-) | MEDIUM | COMPLETE |
-| EIF4E2 | human | Complex over-transfer (UniProt: does not bind eIF4G, no eIF4F) | MEDIUM | COMPLETE |
+| EIF4E2 | human | Self-correction: eIF4G3/eIF4FH evidence supports the eIF4F-family IBA | N/A | ACCEPT |
 | ALDH1L1 | rat | Compartment conflation (UniProt cytosolic; mito is ALDH1L2) | MEDIUM | COMPLETE |
 | HMGCS2 | rat | Paralog-pathway over-annotation (ketogenic; FPP synthesis is HMGCS1) | MEDIUM | COMPLETE |
 | PEX2 | human | Complex over-transfer (peroxisomal E3, not Cdc73/Paf1 complex) | MEDIUM | COMPLETE |
@@ -1352,16 +1378,16 @@ and a representative seed) in the corresponding
 | NQO2 | human | Cofactor over-propagation (uses NRH not NAD(P)H; MODIFY to NRH:quinone reductase; blinded-confirmed) | MEDIUM | COMPLETE |
 | AKTIP | human | Pseudo-enzyme (UniProt CAUTION: lacks catalytic Cys for E2 activity) | HIGH | COMPLETE |
 | DPYSL4 | human | Pseudo-enzyme (CRMP-family metallo-hydrolase, non-catalytic) | HIGH | COMPLETE |
-| SAMD8 | human | Substrate neofunctionalization (CPE synthase, not sphingomyelin synthase) | MEDIUM | COMPLETE |
+| SAMD8 | human | CPE-vs-SM substrate specificity; residual SMS capacity unresolved | MEDIUM | UNDECIDED |
 | CPT1C | human | Neofunctionalization (palmitoyl thioesterase; lost carnitine transferase) | MEDIUM | COMPLETE |
 | NTN1/NTN3 | human | Wrong-family grouping (secreted Netrin → POU-domain TF activity) | HIGH | COMPLETE |
-| NOTCH1 | human | Wrong-source transfer (axon guidance from SLIT1-3) | MEDIUM | COMPLETE |
+| NOTCH1 | human | SLIT-grounded axon-guidance trace with independent Notch guidance evidence | MEDIUM | UNDECIDED |
 | IL23R | human | Over-broad superfamily (prolactin-receptor activity from PRLR) | MEDIUM | COMPLETE |
 | ABRAXAS1 | human | Wrong-paralog (spindle/MT terms trace to ABRAXAS2) | MEDIUM | COMPLETE |
 | PIWIL1 / prg-1 / wago-1 | human, worm | Nucleus on cytoplasmic PIWI/Argonaute (mutually-exclusive compartment) | MEDIUM | COMPLETE |
 | EIF2AK3, BIRC6 | human | Nucleus on ER-membrane / TGN-cytoskeletal protein | MEDIUM | COMPLETE |
 | SSB2 / SSZ1 | yeast | Plasma membrane on cytoplasmic ribosome-associated chaperone | LOW | COMPLETE |
-| BAIAP2L2, PIK3C3 | human | Nucleoplasm / peroxisome on membrane / autophagy protein | LOW | COMPLETE |
+| BAIAP2L2, PIK3C3 | human | Nucleoplasm / peroxisome compartment flags lacking target-specific exclusions | LOW | UNDECIDED |
 | SCGB1A1 | human | Cytoplasm on a secreted (extracellular) protein | LOW | COMPLETE |
 | rqh1, HDA1 | SCHPO, yeast | Cytoplasm on strictly nuclear proteins | LOW | COMPLETE |
 | TOLL9 | ANOGA | Cross-kingdom: inflammatory response from vertebrate TLR4 | MEDIUM | COMPLETE |
@@ -1400,10 +1426,10 @@ defined molecular function never reaches the leaf.
 We quantified this with a generic **evidence-subtraction** tool
 (`ai-gene-review subtraction-report`; see
 [docs](../docs/subtraction_report.md)). Running it in
-"keep only IBA" mode over the 1015 reviewed human genes — i.e. asking *if IBA
-were the sole evidence, what curated biology would we lose?* — and applying
-ontology closure so that an IBA call to a **more general parent still counts** as
-covering its ancestors:
+2026-09-26 "keep only IBA" mode over 1,015 reviewed human genes — i.e. asking
+*if IBA were the sole evidence, what curated biology would we lose?* — and
+applying ontology closure so that an IBA call to a **more general parent still
+counts** as covering its ancestors:
 
 - **62%** of annotation-grounded `core_functions` terms (4516 / 7278) would be
   lost if IBA were the only evidence.
@@ -1485,9 +1511,9 @@ experimentally defined activity rather than as a finished call.
 9. **Synthesize multiple lines of evidence before flagging — never a single keyword**: a UniProt keyword (especially "By similarity"), a PANTHER node label, and a review assertion are each *individually* weak. Cross-check the term definition, direct experimental papers in the target species, the IBA WITH/FROM provenance, the MSA/active-site residues, and phylogenetic placement, and reason over the whole picture. The strongest REMOVE cases pair an explicit UniProt CAUTION/NOT with direct enzymology (DPYSL2, AGO4, CRYAA, AGK)
 10. **Watch for opposite-sign family members**: When a family contains both activators and inhibitors (e.g., BCL2 family), a family-node IBA can transfer the wrong regulatory sign — inspect the WITH/FROM list for mixed members (but check whether independent non-IBA evidence also supports the term before calling it flatly wrong)
 11. **Distinguish sub-activities**: capping vs severing, holdase vs foldase, slicing vs non-slicing — family-level IBA flattens these distinctions
-12. **Don't inherit a paralog's compartment/complex**: family members share folds but not localization or complex membership — verify the protein actually occupies the annotated complex/compartment (EIF4E2, ALDH1L1, PEX2)
+12. **Don't inherit a paralog's compartment/complex/pathway**: family members share folds but not localization, complex membership, or product routing — verify the protein actually occupies the annotated complex or pathway (ALDH1L1, PEX2, HMGCS2)
 13. **Check the GO term's definition, not just its label, before calling an IBA directionally wrong**: e.g. "copper ion import" (GO:0015677) covers movement into a cell *or organelle*, so a Golgi-loading copper exporter can still satisfy it — a label that *looks* opposite may not be
-14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; NOTCH1←SLITs) or a single wrong paralog (ABRAXAS1←ABRAXAS2; HINT2←HINT1), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
+14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; IL23R←PRLR) or a single wrong paralog (ABRAXAS1←ABRAXAS2), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
 
 ## Quality Indicators
 
@@ -1501,7 +1527,7 @@ experimentally defined activity rather than as a finished call.
 - **Superfamily contains members with different transport mechanisms** (e.g., solute export vs lipid flipping in SMR family)
 - **Enzymatic terms on proteins with a UniProt-documented degenerate/absent active site** (the strongest signal; e.g. DPYSL2, AGO4)
 - **Family unites opposite-sign regulators** (activators + inhibitors of the same process; check WITH/FROM for mixed members — but confirm against non-IBA evidence)
-- **Complex-membership or compartment terms on a protein whose paralog/relative occupies it instead** (cytosolic vs mitochondrial; eIF4F vs 4EHP repressor)
+- **Complex-membership or compartment terms on a protein whose paralog/relative occupies it instead** (cytosolic vs mitochondrial; peroxisomal E3 vs PAF1 complex)
 
 **NOT reliable grounds for flagging — verify with reasoning, not a single keyword**:
 - A label that merely *looks* opposite — check the term **definition**. GO:0015677 "copper ion import" covers movement into a cell *or organelle*, so a Golgi-loading copper exporter (ATP7B) still satisfies it. (This is why ATP7B was **not** flagged.)

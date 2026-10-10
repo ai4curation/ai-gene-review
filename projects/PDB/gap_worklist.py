@@ -134,7 +134,7 @@ def write_tsv(rows: List[WorklistRow], out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     cols = [f.name for f in fields(WorklistRow)]
     with out.open("w", newline="") as f:
-        w = csv.writer(f, delimiter="\t")
+        w = csv.writer(f, delimiter="\t", lineterminator="\n")
         w.writerow(cols)
         for r in rows:
             w.writerow([getattr(r, c) for c in cols])
@@ -171,11 +171,27 @@ def _gene_rollup(rows: List[WorklistRow]) -> List[dict]:
     return out
 
 
+def _short_ligands(ligands: str, max_chars: int = 36) -> str:
+    """Shorten comma-separated ligand IDs without cutting one in half."""
+    if len(ligands) <= max_chars:
+        return ligands
+
+    kept: List[str] = []
+    for ligand in (part for part in ligands.split(",") if part):
+        candidate = ",".join([*kept, ligand])
+        if kept and len(f"{candidate},...") > max_chars:
+            break
+        kept.append(ligand)
+
+    return f"{','.join(kept)},..." if kept else ligands
+
+
 def write_md(rows: List[WorklistRow], out: Path, top: int = 30) -> str:
     genes = [g for g in _gene_rollup(rows) if not g["already_in_review"]]
     lines = [
         "---",
         'title: "PDB GAP_OPPORTUNITY review worklist"',
+        "species: [human, yeast]",
         "---",
         "# PDB GAP_OPPORTUNITY review worklist",
         "",
@@ -186,7 +202,7 @@ def write_md(rows: List[WorklistRow], out: Path, top: int = 30) -> str:
         "complex richness and number of the uncited structures. Collapsed to one row "
         "per gene (the review unit); per-paper detail is in `data/gap_worklist.tsv`.",
         "",
-        f"- Genes with >=1 uncited GAP_OPPORTUNITY structure paper: **{len(genes)}**.",
+        f"- Unreviewed genes with >=1 uncited GAP_OPPORTUNITY structure paper: **{len(genes)}**.",
         f"- Showing top **{min(top, len(genes))}**.",
         "",
         "**Caveat:** bound ligands/cofactors are taken from the whole PDB entry, so "
@@ -202,7 +218,7 @@ def write_md(rows: List[WorklistRow], out: Path, top: int = 30) -> str:
             f"| {i} | {g['gene']} | {g['organism']} | {g['score']} | "
             f"{g['candidate_reason']} | {g['exp_mf']} | {g['n_uncited_papers']} | "
             f"{g['total_structures']} | {g['best_paper']} ({g['best_paper_year']}) | "
-            f"{g['ligands'][:36]} |"
+            f"{_short_ligands(g['ligands'])} |"
         )
     text = "\n".join(lines) + "\n"
     out.write_text(text)

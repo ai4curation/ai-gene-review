@@ -1,8 +1,10 @@
 ---
 title: "Integrated Stress Response (ISR) Project"
 maturity: SCOPING
+last_reviewed: 2026-10-04
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [EIF2AK3, OMA1, GCN1, ATF4, ATF3, EIF2B4, ASNS]   # reviewed genes only; full candidate list is in the table below
 manifest:
   slides:
     - href: INTEGRATED_STRESS_RESPONSE/slides/INTEGRATED_STRESS_RESPONSE-slides.html
@@ -17,17 +19,21 @@ manifest:
 **Bottom line:** in the integrated stress response, four kinases (HRI, PKR,
 PERK and GCN2) each sense a different stress and phosphorylate eIF2α, which
 blocks the eIF2B exchange factor, dampens global translation and lets ATF4 be
-translated. Scoped, not yet started as a project: this page lists about 18
-candidate human genes, including the DELE1-OMA1 route from mitochondrial stress
-to HRI, but no project-specific review work has been done. Five candidates
-already have reviews from other work: EIF2AK3 (PERK), ATF4, ATF3 and EIF2B4 are
-COMPLETE and OMA1 is IN_PROGRESS, 489 annotations between them. Thirteen have
-no gene folder, including the hub EIF2S1 (eIF2α), three of the four kinases,
-DELE1 and four of the five eIF2B subunits. There is no ISR module yet.
+translated. Scoped, not yet started as a project: this page lists 19 candidate
+human genes, including the DELE1-OMA1 route from mitochondrial stress to HRI and
+GCN1 upstream of GCN2. Seven candidates have local review files from other work:
+six are COMPLETE (EIF2AK3, GCN1, ATF4, ATF3, EIF2B4 and ASNS), OMA1 is
+IN_PROGRESS, and together they cover 545 annotations. Twelve have no gene
+folder, including the hub EIF2S1 (eIF2α), three of the four kinases, DELE1 and
+four of the five eIF2B subunits. There is no local ai-gene-review ISR module
+yet, although cached production GO-CAMs already cover the PERK branch and
+DELE1/HRI mitochondrial, iron-deficiency and SIFI-inhibition branches.
 
 We scoped this because the ISR is a drug target (ISRIB), eIF2B mutations cause
-vanishing white matter disease, and the DELE1-HRI branch was only described in
-2020, so current GO annotation may not reflect it.
+vanishing white matter disease, the 2020 DELE1-HRI branch still lacks local
+DELE1 and EIF2AK1 reviews, and the pathway needs an end-to-end local module even
+though OMA1/ATF4 GOA rows and cached GO-CAMs already represent the mitochondrial
+DELE1-HRI route.
 
 ## Overview
 
@@ -64,7 +70,7 @@ Four kinases sense different stresses:
 - **ATF3** - Stress-responsive TF
 - **ASNS** - ATF4 target gene (asparagine synthetase)
 
-## Candidate Genes (~18)
+## Candidate genes (19 scoped)
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -72,10 +78,13 @@ Four kinases sense different stresses:
 | EIF2AK2 | P19525 | PKR kinase |
 | EIF2AK3 | Q9NZJ5 | PERK kinase |
 | EIF2AK4 | Q9P2K8 | GCN2 kinase |
+| GCN1 | Q92616 | Ribosome-associated GCN2 activator |
 | EIF2S1 | P05198 | eIF2α |
 | DELE1 | Q14154 | Mitochondrial sensor |
 | OMA1 | Q96E52 | DELE1 protease |
 | ATF4 | P18848 | Master TF |
+| ATF3 | P18847 | Stress-responsive TF |
+| ASNS | P08243 | ATF4 target gene; asparagine synthetase |
 | DDIT3 | P35638 | CHOP |
 | PPP1R15A | O75807 | GADD34 |
 | PPP1R15B | Q5SWA1 | CReP |
@@ -97,7 +106,13 @@ Four kinases sense different stresses:
 
 ## Project Status
 
-- [ ] Stub - needs gene folder setup
+- [x] Cross-project reviews checked for EIF2AK3, OMA1, GCN1, ATF4, ATF3,
+  EIF2B4 and ASNS
+- [ ] Fetch and review EIF2AK1, EIF2AK2, EIF2AK4, EIF2S1, DELE1, DDIT3,
+  PPP1R15A, PPP1R15B, EIF2B1, EIF2B2, EIF2B3 and EIF2B5
+  ([#3951](https://github.com/ai4curation/ai-gene-review/issues/3951))
+- [ ] Build a local ISR module including the OMA1-DELE1 mitochondrial branch
+  and the GCN1-GCN2 amino-acid-starvation branch
 - EIF2AK3 (PERK): the review does not add GO:0140467 *integrated stress
   response signaling*. [PR #3219](https://github.com/ai4curation/ai-gene-review/pull/3219)
   removed that proposed `NEW` row: GO:0140467 is an ancestor of the

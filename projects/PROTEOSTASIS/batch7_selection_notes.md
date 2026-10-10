@@ -1,5 +1,6 @@
 ---
 title: "Proteostasis Review Batch 7 — Gene Selection"
+species: [human]
 ---
 
 # Proteostasis Review Batch 7 — Gene Selection

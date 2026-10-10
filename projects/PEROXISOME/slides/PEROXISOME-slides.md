@@ -37,8 +37,8 @@ Reviewing GO annotations for the 16 human PEX genes
 ## Bottom line
 
 - Peroxins **insert membrane proteins, import matrix enzymes and divide the organelle**; their loss causes **Zellweger spectrum disorders**.
-- We reviewed **all 828 GO annotations** on the **16 human PEX genes**: 579 accepted, 93 over-annotated, 64 removed, 11 NEW.
-- The main problem was **generic `protein binding`**: 35 of PEX19's 37 removals and 17 of PEX5's 19 over-annotations.
+- We reviewed **all 828 GO annotations** on the **16 human PEX genes**: 561 accepted, 51 non-core, 94 over-annotated, 65 removed, 44 modified, 11 NEW, 2 undecided.
+- The main problem was **generic `protein binding`**: 35 of PEX19's 37 removals and 18 of PEX5's 20 over-annotations.
 
 ---
 
@@ -94,7 +94,7 @@ Reviewing GO annotations for the 16 human PEX genes
 
 - ✅ 16/16 peroxins reviewed in three phases.
 - ✅ Lifecycle module models the conserved peroxin roles and route variants.
-- ⬜ GO obsoleted the PTS1, PTS2 and mPTS binding terms in favour of *peroxisome signal sequence receptor activity*; PEX5, PEX7 and PEX19 reviews are tracked in `projects/PEROXISOME_TARGETING_SIGNAL_OBSOLETION.md`.
+- ✅ The PTS1, PTS2 and mPTS binding obsoletion has been folded into the PEX5, PEX7 and PEX19 reviews.
 - Candidates beyond scope: PEX5L, PEX39, the metabolic enzymes of the matrix.
 
 **Read more:** `projects/PEROXISOME.md` · `modules/peroxisome-lifecycle.yaml`

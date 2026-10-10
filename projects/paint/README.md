@@ -4,6 +4,10 @@ title: "PAINT Human No-IBA Gene Review Project"
 
 # PAINT Human No-IBA Gene Review Project
 
+> Current project status lives in `../PAINT.md`. This README is a historical
+> batch-processing log; counts below are point-in-time notes from earlier
+> automation sessions.
+
 ## Objective
 
 Review human genes that lack IBA (Inferred from Biological Ancestor) annotations. For each gene:

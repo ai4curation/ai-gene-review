@@ -2,6 +2,7 @@
 title: "Metabolomics Interpretation with GO and GO-CAM"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+last_reviewed: "2026-10-04"
 manifest:
   slides:
     - href: METABOLOMICS/slides/METABOLOMICS-slides.html
@@ -25,9 +26,9 @@ metabolites in MetaboLights study MTBLS1; normalizing over ChEBI protonation
 and structure relations raised that to 58 of 64. Across four MetaboLights
 studies, coverage after normalization is 53 to 91%, and GO enrichment picks up
 each study's own chemistry (amino-acid metabolism in urine, lipid metabolism in
-serum). Complex lipids are the main gap, the GO-CAM causal-network approach and
-the Reactome cross-check have not been started, and an interactive demo is
-planned.
+serum). Complex lipids are the main gap, the GO-CAM causal-network approach,
+the Reactome cross-check and the interactive demo are tracked in
+[#4125](https://github.com/ai4curation/ai-gene-review/issues/4125).
 
 We are doing this to show that GO can give metabolomics analysts specific
 activities and processes, closure-aware enrichment and a vocabulary shared with
@@ -98,24 +99,25 @@ A reproducible coverage probe ([`probe/`](METABOLOMICS/probe/README.md),
 nucleotide / cofactor metabolites, reported by **neutral name** as a repository
 would. Computed live from OLS4 (ChEBI), the Rhea REST API and GO `rhea2go`:
 
-| Match strategy | Metabolites reaching a Rhea reaction / GO MF |
-|---|---|
-| **Exact ChEBI id** (neutral, as reported) | **0 / 26** |
-| **Protonation-normalized** (ChEBI conjugate family) | **22 / 26** |
+| Match strategy | Metabolites reaching Rhea | Metabolites reaching GO MF |
+|---|---:|---:|
+| **Exact ChEBI id** (neutral, as reported) | **0 / 26** | **0 / 26** |
+| **+ protonation** (ChEBI conjugate family) | **22 / 26** | **22 / 26** |
+| **+ structure** (InChIKey skeleton) | **25 / 26** | **24 / 26** |
 
 So the bridge is **essentially empty without protonation normalization and
-near-complete with it** — e.g. neutral `ATP (CHEBI:15422)` matches nothing, but
+near-complete once the structure tier is added** — e.g. neutral
+`ATP (CHEBI:15422)` matches nothing, but
 its family member `ATP(4-) (CHEBI:30616)` (the form Rhea uses) reaches **492 GO
 molecular-function terms**; `NAD+` → 447, `acetyl-CoA` → 385. This both
 validates the core idea and pins down protonation normalization as a mandatory
 preprocessing step for *any* metabolite→GO bridge.
 
-The 4 residual misses (isocitric acid, L-lactic acid, D-glucose, D-glucose
-6-phosphate) are themselves informative: they are a **second, distinct**
-ID-mismatch class — **stereochemistry/anomer** and **generic-vs-structurally-
-specific** ChEBI mismatch — that protonation expansion does not fix, and which a
-follow-up must address with tautomer/enantiomer traversal or InChIKey-skeleton
-matching.
+The protonation-tier misses were a **second, distinct** ID-mismatch class:
+**stereochemistry/anomer** and **generic-vs-structurally-specific** ChEBI
+mismatch. The InChIKey-skeleton tier now recovers isocitric acid, D-glucose and
+D-glucose 6-phosphate, leaving only L-lactic acid unmatched to Rhea in this
+26-metabolite pilot.
 
 ### Confirmed on a real study (MetaboLights MTBLS1)
 
@@ -368,9 +370,9 @@ The working [`probe/`](METABOLOMICS/probe/README.md) pipeline is the engine for 
 interactive demo where a user interprets their own metabolomics data with GO
 (paste a metabolite list or a MetaboLights accession → coverage + three-way
 enrichment). Real-time arbitrary input is too heavy for the static Pages site, so
-the plan is a **precomputed static showcase here** plus a **small FastAPI app in a
-new repo** (`metabolomics-go-demo`) reusing this engine. Full design, repo
-strategy, phasing, and the KEGG-licensing caveat are in
+the plan is a **precomputed static showcase here** plus a **Streamlit app on
+Hugging Face Spaces** in a new repo (`metabolomics-go-demo`) reusing this engine.
+Full design, repo strategy, phasing, and the KEGG-licensing caveat are in
 [DEMO-PLAN.md](METABOLOMICS/DEMO-PLAN.md).
 
 ## Open questions
@@ -394,13 +396,13 @@ strategy, phasing, and the KEGG-licensing caveat are in
 | Closure-aware GO enrichment (ORA) + KEGG baseline | **DONE** (MF level) | [GO MF enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-ENRICHMENT.md) vs [KEGG baseline](METABOLOMICS/probe/studies/MTBLS1-KEGG-BASELINE.md) on MTBLS1, same test |
 | Lift the enrichment from GO MF to GO **BP** | **DONE** | [GO BP enrichment](METABOLOMICS/probe/studies/MTBLS1-GO-BP-ENRICHMENT.md) via Rhea→UniProt human enzymes→GOA BP; amino-acid metabolism/transport (FDR 9e-44) |
 | Run the pipeline over more MetaboLights studies | **DONE** (4 studies) | [Cross-study summary](METABOLOMICS/CROSS-STUDY.md): MTBLS1/90/404/19 — normalization decisive everywhere; each study recovers its own biology (urine→amino/organic acid, serum→lipid) |
-| Extend the bridge to complex lipids | TODO (next method gap) | Serum LC-MS residuals are lipids absent from Rhea as discrete participants (LIPID MAPS/SwissLipids → ChEBI) |
-| Reactome as a curated BP cross-check | TODO | Reactome maps reactions→pathways→GO-BP with human curation (and is ChEBI-grounded); validate the enzyme-layer BP route against it |
-| Metabolomics → Reactome black-box-event prioritization | TODO (high-leverage) | The bridge names the reactions a metabolite implicates; Reactome BBEs are reactions with unknown catalyst/transporter → feed the existing [Reactome gap-filling](REACTOME_GAP_FILLING.md) collaboration |
-| Approach B — GO-CAM causal trace | TODO | Locate a perturbed metabolite as a GO-CAM activity input/output and trace upstream/downstream (Reactome is the practical substrate) |
-| Interactive demo (precomputed showcase → FastAPI app) | PLANNED | See [DEMO-PLAN.md](METABOLOMICS/DEMO-PLAN.md): static gallery here + app in a new repo reusing the probe engine |
-| Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO | Feasibility of Approach B (the "full network" path) |
-| Glucose-metabolism GO-CAM perturbation worked example | TODO | Direct analogue of the Genetics 2023 precedent |
+| Extend the bridge to complex lipids | TODO ([#4125](https://github.com/ai4curation/ai-gene-review/issues/4125)) | Serum LC-MS residuals are lipids absent from Rhea as discrete participants (LIPID MAPS/SwissLipids → ChEBI) |
+| Reactome as a curated BP cross-check | TODO ([#4125](https://github.com/ai4curation/ai-gene-review/issues/4125)) | Reactome maps reactions→pathways→GO-BP with human curation (and is ChEBI-grounded); validate the enzyme-layer BP route against it |
+| Metabolomics → Reactome black-box-event prioritization | TODO ([#4125](https://github.com/ai4curation/ai-gene-review/issues/4125)) | The bridge names the reactions a metabolite implicates; Reactome BBEs are reactions with unknown catalyst/transporter → feed the existing [Reactome gap-filling](REACTOME_GAP_FILLING.md) collaboration |
+| Approach B — GO-CAM causal trace | TODO ([#4125](https://github.com/ai4curation/ai-gene-review/issues/4125)) | Locate a perturbed metabolite as a GO-CAM activity input/output and trace upstream/downstream (Reactome is the practical substrate) |
+| Interactive demo (precomputed showcase → Streamlit app) | PLANNED ([#4125](https://github.com/ai4curation/ai-gene-review/issues/4125)) | See [DEMO-PLAN.md](METABOLOMICS/DEMO-PLAN.md): static gallery here + Streamlit app on Hugging Face Spaces reusing the probe engine |
+| Inventory GO-CAM metabolic models + their ChEBI input/output compounds | TODO ([#4125](https://github.com/ai4curation/ai-gene-review/issues/4125)) | Feasibility of Approach B (the "full network" path) |
+| Glucose-metabolism GO-CAM perturbation worked example | TODO ([#4125](https://github.com/ai4curation/ai-gene-review/issues/4125)) | Direct analogue of the Genetics 2023 precedent |
 
 ## References
 

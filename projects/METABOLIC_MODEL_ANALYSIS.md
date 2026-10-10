@@ -3,6 +3,7 @@ title: "Metabolic Model Analysis Project"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [METEA, ECOLI, human]
+last_reviewed: "2026-10-04"
 genes: [ecm, sucB, mdcD, gcvP, rbsD, glgX, HADHB, CPT1C]
 manifest:
   slides:
@@ -31,8 +32,9 @@ thioesterase included in 92 carnitine palmitoyltransferase reactions). Flux
 balance analysis showed that correcting rbsD turns a no-effect knockout on
 ribose into a lethal one, and that a HADHB knockout in Recon3D blocks only
 histidase. The model files and FBA scripts listed below under
-`models/metabolic/` are not in this repository, and three flagged
-*M. extorquens* genes (mdcB, ilvC, purK) are still unreviewed.
+`models/metabolic/` are not in this repository; remaining discrepancy reviews
+and artifact restoration are tracked in
+[#4122](https://github.com/ai4curation/ai-gene-review/issues/4122).
 
 We did this to test whether curated metabolic models can catch GO annotation
 errors that sequence-based pipelines propagate, and the answer is yes, provided
@@ -73,14 +75,14 @@ EC class 7 (Translocases) was established in 2018, after iRP911 was published (2
 
 | Gene | Locus | Old EC (GEM) | New EC (UniProt) | Enzyme |
 |------|-------|--------------|------------------|--------|
-| coxA | META1_0115 | 1.9.3.1 | 7.1.1.9 | Cytochrome c oxidase |
-| coxA | META1_3473 | 1.9.3.1 | 7.1.1.9 | Cytochrome c oxidase |
-| coxB | META1_3474 | 1.9.3.1 | 7.1.1.9 | Cytochrome c oxidase |
-| atpD | META1_1359 | 3.6.3.14 | 7.1.2.2 | ATP synthase beta |
-| atpA | META1_1361 | 3.6.3.14 | 7.1.2.2 | ATP synthase alpha |
-| kdpB | META1_0130 | 3.6.3.12 | 7.2.2.6 | K+-transporting ATPase |
-| petA | META1_2509 | 1.10.2.2 | 7.1.1.8 | Cytochrome bc1 complex |
-| hppa | META1_3299 | 3.6.1.1 | 7.1.3.1 | H+-PPase |
+| `coxA` | META1_0115 | 1.9.3.1 | 7.1.1.9 | Cytochrome c oxidase |
+| `coxA` | META1_3473 | 1.9.3.1 | 7.1.1.9 | Cytochrome c oxidase |
+| `coxB` | META1_3474 | 1.9.3.1 | 7.1.1.9 | Cytochrome c oxidase |
+| `atpD` | META1_1359 | 3.6.3.14 | 7.1.2.2 | ATP synthase beta |
+| `atpA` | META1_1361 | 3.6.3.14 | 7.1.2.2 | ATP synthase alpha |
+| `kdpB` | META1_0130 | 3.6.3.12 | 7.2.2.6 | K+-transporting ATPase |
+| `petA` | META1_2509 | 1.10.2.2 | 7.1.1.8 | Cytochrome bc1 complex |
+| `hppa` | META1_3299 | 3.6.1.1 | 7.1.3.1 | H+-PPase |
 
 ### 2. GEM Missing EC Numbers (Investigate)
 
@@ -105,7 +107,7 @@ These show different EC classes that are NOT simple reclassifications:
   - GEM: 4.1.1.89 (carboxy-lyase) - **CORRECT**
   - UniProt: 6.4.1.3 (ligase) - **INCORRECT**
   - **Finding**: UniProt EC is WRONG. MdcD is a decarboxylase (lyase, EC class 4), NOT a ligase (EC class 6)
-  - **Impact**: 5 of 8 GO annotations removed as incorrect
+  - **Impact**: 7 existing GO annotations flagged for removal
   - Review: `genes/METEA/mdcD/mdcD-ai-review.yaml`
 
 - [ ] **META1_0028** (mdcB) - Malonate decarboxylase
@@ -113,12 +115,12 @@ These show different EC classes that are NOT simple reclassifications:
   - UniProt: 2.4.2.52 (glycosyltransferase)
   - Question: Different reaction mechanism?
 
-- [ ] **META1_0175** (ilvC) - Ketol-acid reductoisomerase
+- [ ] **META1_0175** (`ilvC`) - Ketol-acid reductoisomerase
   - GEM: 1.1.1.86; 4.2.1.33
   - UniProt: 1.1.1.86 only
   - Note: GEM attributes additional 3-isopropylmalate dehydratase activity
 
-- [ ] **META1_1937** (purK) - N5-CAIR synthetase
+- [ ] **META1_1937** (`purK`) - N5-CAIR synthetase
   - GEM: 4.1.1.21 (decarboxylase)
   - UniProt: 6.3.4.18 (ligase)
   - Note: Enzyme mechanism reclassification
@@ -134,7 +136,7 @@ These reflect differences in annotating multifunctional enzymes:
   - **Conclusion**: UniProt is correct; extra EC numbers belong to other GCV complex subunits
   - Review: `genes/METEA/gcvP/gcvP-ai-review.yaml` (status: COMPLETE)
 
-- [ ] **META1_1862** (tal) - Transaldolase
+- [ ] **META1_1862** (`tal`) - Transaldolase
   - GEM: 5.3.1.9; 2.2.1.2
   - UniProt: 2.2.1.2 only
   - Note: GEM adds glucose-6-phosphate isomerase activity
@@ -197,7 +199,7 @@ The original 2011 SBML file has compatibility issues with modern COBRApy:
 - [x] Review sucB - Annotations correct; GEM outdated
 - [x] Review mdcD - **MAJOR FINDING: UniProt EC wrong, GEM correct**
 - [x] Review gcvP - **Resolved: GEM over-annotated complex activities to single subunit**
-- [ ] Review mdcB, ilvC, purK (remaining potential errors)
+- [ ] Review `mdcB`, `ilvC`, `purK` (remaining potential errors; [#4122](https://github.com/ai4curation/ai-gene-review/issues/4122))
 - [ ] Cross-reference with GO annotations
 - [ ] Document findings for model curation
 - [x] Download and analyze E. coli iML1515 from BiGG
@@ -213,7 +215,7 @@ The original 2011 SBML file has compatibility issues with modern COBRApy:
 - [x] Complete HADHB GO annotation review - **2 incorrect annotations found**
 - [x] Complete CPT1C GO annotation review - **4 incorrect annotations found** (neofunctionalization case)
 - [x] Run FBA experiments on Recon3D confirming annotation errors
-- [ ] Review remaining AD-relevant genes with CLASS_CHANGE discrepancies
+- [ ] Review remaining AD-relevant genes with CLASS_CHANGE discrepancies ([#4122](https://github.com/ai4curation/ai-gene-review/issues/4122))
 
 ## 2026-02-03
 
@@ -364,7 +366,7 @@ The 59 class-change discrepancies break down into:
 
 The same pattern found in M. extorquens gcvP appears systematically in E. coli:
 
-**Pyruvate Dehydrogenase Complex** (aceE, aceF, lpd):
+**Pyruvate Dehydrogenase Complex** (`aceE`, `aceF`, lpd):
 - Model assigns EC 1.2.4.1, 1.8.1.4, 2.3.1.12 to EACH subunit
 - UniProt correctly assigns one EC per subunit
 - lpd additionally gets gcvP, sucA, sucB activities (10 total ECs!)
@@ -377,7 +379,7 @@ The same pattern found in M. extorquens gcvP appears systematically in E. coli:
 - Model: 3 ECs each (1.4.4.2; 1.8.1.4; 2.1.2.10)
 - UniProt: gcvP=1.4.4.2, gcvT=2.1.2.10
 
-**Fatty Acid Synthase Cluster** (fabZ, fabA, fabG, fabI, fabB):
+**Fatty Acid Synthase Cluster** (`fabZ`, `fabA`, `fabG`, fabI, `fabB`):
 - Model assigns 4-8 fab EC numbers to each gene
 - UniProt assigns specific activities
 
@@ -413,8 +415,8 @@ This is **not an error** but a **modeling convention**. GEMs represent reactions
 4. EC class 7 reclassifications account for 47 discrepancies (expected)
 
 **Notable CLASS_CHANGE cases worth investigating**:
-- b0185/b2316 (accA/accD): EC 6.4.1.2 → 2.1.3.15 (carboxyltransferase reclassification)
-- b2411 (ligA): EC 3.6.1.22 → 6.5.1.2 (DNA ligase mechanism update)
+- b0185/b2316 (`accA`/accD): EC 6.4.1.2 → 2.1.3.15 (carboxyltransferase reclassification)
+- b2411 (`ligA`): EC 3.6.1.22 → 6.5.1.2 (DNA ligase mechanism update)
 - b0902/b3952 (pflA/pflC): EC 2.3.1.54 → 1.97.1.4 (activating enzyme classification)
 - b3748 (rbsD): EC 3.6.3.17 → 5.4.99.62 (D-ribose pyranase - possible model error)
 
@@ -431,7 +433,9 @@ This is **not an error** but a **modeling convention**. GEMs represent reactions
 
 **Root cause**: Model uses pre-2004 annotation. Function was corrected in PMID:15060078 showing RbsD is a pyranase that converts β-D-ribopyranose ↔ β-D-ribofuranose, NOT a transport protein.
 
-**GO annotations**: All correct (GO:0062193 D-ribose pyranase activity, IDA evidence).
+**GO annotations**: The core D-ribose pyranase rows are correct (GO:0062193
+D-ribose pyranase activity, IDA evidence); the review removed one broad
+intramolecular-lyase parent propagated from UniRule.
 
 #### glgX (b3431) - Glycogen debranching enzyme
 
@@ -442,7 +446,9 @@ This is **not an error** but a **modeling convention**. GEMs represent reactions
 
 **Root cause**: Model assigned the **opposite function**. GlgX removes α-1,6 branches during glycogen catabolism; the model has it as GlgB-like (adds branches during synthesis).
 
-**GO annotations**: All correct (GO:0004135 amylo-alpha-1,6-glucosidase, IDA evidence).
+**GO annotations**: The core glycogen-catabolic context is correct, but older
+amylo-alpha-1,6-glucosidase and broad carbohydrate-metabolism rows are now
+MODIFY to the precise GO:0120549 EC 3.2.1.196 activity and glycogen catabolism.
 
 **Impact**: These errors could affect FBA predictions for ribose utilization and glycogen metabolism.
 
@@ -526,10 +532,10 @@ Focused on subsystems implicated in Alzheimer's disease metabolic dysfunction:
 
 **Error type**: HADHB (hydroxyacyl-CoA dehydrogenase beta subunit) is assigned to a **completely wrong reaction** (histidase instead of fatty acid beta-oxidation).
 
-**Expected function**: HADHB is the beta subunit of the mitochondrial trifunctional protein (MTP), catalyzing the last three steps of long-chain fatty acid beta-oxidation:
-- Long-chain enoyl-CoA hydratase
-- Long-chain 3-hydroxyacyl-CoA dehydrogenase
-- Long-chain 3-ketoacyl-CoA thiolase (EC 2.3.1.155)
+**Expected function**: HADHB is the beta subunit of the mitochondrial trifunctional protein (MTP). The MTP complex catalyzes the last three steps of long-chain fatty acid beta-oxidation:
+- Long-chain enoyl-CoA hydratase, supplied by HADHA
+- Long-chain 3-hydroxyacyl-CoA dehydrogenase, supplied by HADHA
+- Long-chain 3-ketoacyl-CoA thiolase, supplied by HADHB (EC 2.3.1.155)
 
 **Impact**: The correct thiolase reactions exist in the model but use GPRs with 3030/3032/10449 - NOT 3034 (HADHB).
 
@@ -588,7 +594,7 @@ NSDHL (NAD(P)-dependent steroid dehydrogenase-like) is assigned to a reaction ca
 
 ### Completed AD-Relevant Gene Reviews
 
-#### HADHB (Q8TCG5) - Mitochondrial Trifunctional Protein Beta Subunit
+#### HADHB (P55084) - Mitochondrial Trifunctional Protein Beta Subunit
 
 **Status**: COMPLETE
 

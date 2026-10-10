@@ -37,7 +37,7 @@ GO:0030369 → GO:0004888 + `has_input` ICAM3
 ## Bottom line
 
 - GO **obsoleted GO:0030369** because ICAM3 binds several unrelated receptors; one ligand-named term fits none of them precisely.
-- **3 human rows** move to **GO:0004888** with the ligand as an extension: ITGAL, ITGB2 (IMP) and CLEC4M (NAS); ~155 IEA rows follow.
+- **3 human rows** move to **GO:0004888** with the ligand as an extension: ITGAL, ITGB2 (IMP) and CLEC4M (NAS); the 2026-05-30 pull also found ~155 IEA rows.
 - **Scoped, not yet started:** none of these genes is reviewed here; CLEC4M's NAS row is the one to question.
 
 ---
@@ -48,7 +48,7 @@ GO:0030369 → GO:0004888 + `has_input` ICAM3
 
 ---
 
-## Old term → proposed home
+## Obsolete term → replacement
 
 ![h:480](term-map.svg)
 
@@ -65,8 +65,8 @@ GO:0030369 → GO:0004888 + `has_input` ICAM3
 
 ## Next steps
 
-1. Review **ITGAL** and **ITGB2** together (shared PMID:19029120); LFA-1's core MF is adhesion-molecule binding.
-2. Then **CLEC4M**: check whether PMID:11257134 supports an ICAM3 receptor claim; D-mannose binding (GO:0005537) is the likely core.
+1. Review **ITGAL** and **ITGB2** together (shared upstream PMID:19029120); LFA-1's core MF is adhesion-molecule binding.
+2. Then **CLEC4M**: check upstream PMID:11257134 before retaining an ICAM3 receptor claim; D-mannose binding (GO:0005537) is likely central.
 3. Optional: CD209, ITGAD, ICAM3 itself.
 
 **Upstream:** go-annotation#6442 · go-ontology#30560

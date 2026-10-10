@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## GET4
 - **UniProt:** Q7L5D6 · **batch:** proteostasis-batch-2026-06-11 · **review status:** COMPLETE
 - **PN placement:** `ER proteostasis|Protein transport|GET pathway component` ; **PN-node mapping:** group=mapped scope=ok_for_propagation_to_go→GO:0006620 (post-translational protein targeting to ER membrane); class `Protein transport`=mapped→GO:0015031 (protein transport); branch=no_mapping.

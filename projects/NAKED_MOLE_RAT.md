@@ -1,6 +1,7 @@
 ---
 title: "Naked Mole Rat (HETGA) Annotation Review"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN]
 species: [HETGA]
 genes:
@@ -21,9 +22,6 @@ manifest:
   slides:
     - href: NAKED_MOLE_RAT/slides/NAKED_MOLE_RAT-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/QZ1exte7BMGxrEdFcomwvJ
-      title: Project brief
 ---
 
 # Naked Mole Rat (HETGA) Annotation Review
@@ -38,10 +36,9 @@ because these proteins diverged. Projection turned out to be mostly correct but 
 only 4 rows were removed, while 84 were demoted to non-core or over-annotated, and 11 new
 annotations were proposed. The removals include a sign reversal (`Cgas` promotes rather than
 suppresses homologous recombination in this species) and a `Hyal2` virus-receptor term
-propagated from a donor set that contains a curated NOT for the same term. Batch 1 is
-complete; no further batches have started. The action table below predates a later
-re-review of the TreeGrafter rows, and the repo now counts 58 ACCEPT, 57 KEEP_AS_NON_CORE
-and 1 UNDECIDED.
+propagated from a donor set that contains a curated NOT for the same term. Batch 1's
+row-level audit is complete; no further batches have started, and choosing the next batch is tracked in
+[#4230](https://github.com/ai4curation/ai-gene-review/issues/4230).
 
 The naked mole rat (*Heterocephalus glaber*, UniProt code `HETGA`, NCBI taxon 10181) is one
 of the most intensively studied non-model mammals in ageing and sensory biology. It is
@@ -120,7 +117,7 @@ distributed across different points of the pathway rather than concentrated in o
 | `Tac1` | A0A0P6JY17 | substance P precursor |
 
 **`Cgas`** (A0AAX6RS70) sits on its own and is the most interesting case in the batch. All
-thirteen of its annotations come from a single PANTHER ancestral node. In humans and mice,
+thirteen original GOA annotations come from a single PANTHER ancestral node. In humans and mice,
 nuclear cGAS *suppresses* homologous recombination repair; recent work reports that the naked
 mole rat protein *promotes* it. If that holds, it is a propagated annotation set carrying a
 function reversed in sign in the target species.
@@ -136,9 +133,7 @@ function reversed in sign in the target species.
   on each **human ortholog** and stored in the gene folder under a filename that names the
   species scope (`<Gene>-deep-research-affinage-human-ortholog.md`). It is a conserved-mechanism
   baseline, never evidence about the naked mole rat protein. Falcon was run for the naked mole
-  rat itself and produced a report for all eight genes; note that several tripped the wrapper's
-  600 s timeout and returned a non-zero exit code while still writing a complete file, so check
-  for the file rather than trusting the exit status.
+  rat itself and produced a report for all eight genes.
 
 ## Results
 
@@ -146,16 +141,15 @@ function reversed in sign in the target species.
 
 | Action | n |
 |---|---|
-| ACCEPT | 54 |
-| KEEP_AS_NON_CORE | 58 |
+| ACCEPT | 58 |
+| KEEP_AS_NON_CORE | 57 |
 | MARK_AS_OVER_ANNOTATED | 27 |
-| MODIFY | 22 |
+| MODIFY | 23 |
 | NEW | 11 |
 | REMOVE | 4 |
-| UNDECIDED | 4 |
 
 The shape of that distribution is the headline. Only 4 annotations of 180 were removed, and
-85 were kept but demoted to non-core or flagged as over-annotated. Ortholog projection into
+84 were kept but demoted to non-core or flagged as over-annotated. Ortholog projection into
 this species is mostly *correct but unfocused*: it delivers the right molecular function
 together with a large tail of developmental and organ-physiology terms that no naked mole rat
 evidence supports.
@@ -178,7 +172,7 @@ and that a sensor's resting set-point is distinct from the size of its stress re
 ### A propagation bug worth naming
 
 The `Hyal2` removal of `GO:0001618` virus receptor activity is the clearest case. The
-annotation is a `GO_REF:0000120` rule transfer whose donor set contains mouse Hyal2 — and GOA
+annotation is a `GO_REF:0000120` rule transfer whose donor set contains mouse `Hyal2` — and GOA
 separately records a curated `NOT|enables GO:0001618` IDA on that very mouse protein. The
 pipeline propagated a positive assertion out of a donor set holding an explicit experimental
 negation for the identical term. A dependent annotation, `GO:0046718` symbiont entry into host
@@ -193,6 +187,14 @@ carried as ISS. There is no way to record it: the validator rejects `action: NEW
 already present in GOA, on the GO id alone, so "the term is right but the evidence code
 understates what is known" cannot be expressed. For a species where *every* annotation is
 electronic, that is the single most valuable recommendation a review could make.
+
+## Status
+
+- Batch 1 row review is complete: all 180 annotation rows across the eight landmark genes have
+  final actions, and the TreeGrafter rows were re-reviewed in September 2026.
+- No further batches have started; [#4230](https://github.com/ai4curation/ai-gene-review/issues/4230)
+  tracks choosing the next HETGA genes with species-specific literature.
+- The `Has2` evidence-code upgrade case remains a schema/review-action follow-up.
 
 ## Notes for anyone extending this
 

@@ -1,6 +1,7 @@
 ---
 title: "Peroxisome Targeting Signal Binding — Obsoletion & Replacement"
 maturity: COMPLETE
+last_reviewed: "2026-10-05"
 tags: [OBSOLETION]
 species: [human]
 genes: [PEX5, PEX7, PEX19]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: PEROXISOME_TARGETING_SIGNAL_OBSOLETION/slides/PEROXISOME_TARGETING_SIGNAL_OBSOLETION-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/5Qm2i3acmFHbD9o18jmd9W
-      title: Project brief
 ---
 
 # Peroxisome Targeting Signal Binding — Obsoletion & Replacement
@@ -30,20 +28,11 @@ GO:0033328 IPI row stays UNDECIDED, because PEX5 is not an mPTS receptor.
 Of the five author-supplied `proposed_replacement_terms` that used the
 obsolete ids, three now point to GO:0000268. The two on generic
 protein-binding rows were dropped instead, because a peroxin–peroxin
-contact is not signal-sequence recognition: PEX5 PMID:10562279 (PEX12/PEX10
-contact) becomes MARK_AS_OVER_ANNOTATED and PEX7 PMID:11546814 (PEX5L
+contact is not signal-sequence recognition: PEX5 PMID:10562279 (PEX12 and
+PEX10 contact) becomes MARK_AS_OVER_ANNOTATED and PEX7 PMID:11546814 (PEX5L
 co-receptor contact) becomes REMOVE. PEX19's `core_functions` MF
-GO:0036105 becomes GO:0000268. The Proposed approach and Priority
-sections below still describe the plan as it stood before the obsoletion
-("Wait for obsoletion to land", "Do not pre-emptively edit reviews"); the
-obsoletion, impact and refreshed-genes sections have been updated to the
-four applied terms and the #3233 outcome. The body's predictions that the
-refresh would be purely mechanical ("the underlying biology is unchanged", "The biological
-conclusion should not change", "mechanical ... rather than scientific")
-held for the 19 rows annotated to the obsoleted terms, but not for the
-two protein-binding rows whose replacements were dropped above: there
-the refresh changed the action, because the contact is not signal
-recognition.
+GO:0036105 becomes GO:0000268. The three local reviews now validate, with
+only unrelated cleanup warnings.
 
 ## Overview
 
@@ -116,9 +105,8 @@ the four obsoleted terms:
 2. PEX7 (human) — done (PR #3233). GO:0005053 rows → MODIFY to GO:0000268.
 3. PEX19 (human) — done (PR #3233). GO:0033328 rows and the GO:0036105 core_functions MF → GO:0000268.
 
-Additional candidates to consider once the obsoletion is applied (not yet in
-this repo, but flagged by the upstream tally — do not add without verifying via
-`just fetch-gene`):
+Additional upstream candidates not yet reviewed here (flagged by the upstream
+tally — do not add without verifying via `just fetch-gene`):
 
 4. SGD: Pex5p/Pex7p/Pex19p (S. cerevisiae orthologs) — the issue lists 5 SGD annotations.
 5. AspGD: Aspergillus PEX5/PEX7 orthologs — 2 annotations.
@@ -126,31 +114,28 @@ this repo, but flagged by the upstream tally — do not add without verifying vi
 
 ## Proposed approach
 
-1. **Wait for obsoletion to land.** The decision is not yet final — comment
-   thread on go-ontology#31419 should be monitored. Do not pre-emptively edit
-   reviews against terms that may still survive.
-2. **After obsoletion**, regenerate GOA files for PEX5, PEX7, PEX19 with
-   `just fetch-gene human <gene>`; the merged parent term should appear in
-   place of the obsoleted children.
-3. **Re-review the affected `existing_annotations` entries.** The biological
-   conclusion should not change (the receptors still bind their cognate
-   signals), but action codes may need updating where reviews previously
-   accepted the more specific child term as core function. Consider whether
-   the renamed parent ("peroxisome signal sequence receptor activity") is an
-   appropriate ACCEPT for core_functions, or whether a more informative MF
-   term should be proposed.
-4. **InterPro2GO mapping** — flag for upstream that IPR044536 will need
-   redirection to the merged parent (this is upstream's responsibility, not
-   ours, but worth noting in PEX7 review).
-5. **Decide on yeast/Aspergillus orthologs.** If the broader peroxisome
+1. **Use GO:0000268 for true signal-sequence receptors.** #3233 remapped the
+   PEX5 PTS1, PEX7 PTS2 and PEX19 mPTS rows that actually assert receptor
+   activity.
+2. **Keep receptor activity distinct from peroxin contacts.** The old
+   `proposed_replacement_terms` on PEX5's PEX10 and PEX12 contacts and PEX7's
+   PEX5L co-receptor contact were removed because those generic
+   protein-binding rows do not themselves assay cargo signal recognition.
+3. **Leave the stray PEX5 mPTS propagation unresolved.** The PEX5 IPI row to
+   obsolete GO:0033328 should not be mechanically redirected to GO:0000268:
+   PEX19 is the mPTS receptor, PEX5 already has direct PTS1 evidence, and the
+   old paper support was not verified.
+4. **Treat InterPro2GO redirection as upstream work.** PEX7 records the
+   obsolete IPR044536 → GO:0005053 mapping and proposes GO:0000268 locally.
+5. **Keep yeast and Aspergillus orthologs optional.** If the broader peroxisome
    project expands beyond human, add SGD/AspGD orthologs at that point rather
-   than as part of this obsoletion-tracking work.
+   than as part of this completed local refresh.
 
 ## Priority
 
-Low/medium — passive tracking until the obsoletion is approved and applied.
-The biology of the affected reviews is well-characterized and the change is
-mechanical (term ID/label refresh) rather than scientific.
+Complete locally. The human PEX5, PEX7 and PEX19 reviews cover the exact set of
+obsolete-term rows in this repo; remaining SGD, AspGD, GeneDB and ComplexPortal
+records are upstream or future expansion work.
 
 ## Status
 
@@ -165,4 +150,9 @@ mechanical (term ID/label refresh) rather than scientific.
   `proposed_replacement_terms` and PEX19's core MF repointed to
   GO:0000268, and two peroxin–peroxin protein-binding rows dropped their
   replacement (PEX5 → MARK_AS_OVER_ANNOTATED, PEX7 → REMOVE).
-  With #3233 merged, maturity is COMPLETE; the yeast/Aspergillus orthologs remain optional.
+  With #3233 merged, maturity is COMPLETE; the yeast and Aspergillus orthologs remain optional.
+- 2026-10-04 — Re-audited the local complete state. The frontmatter set PEX5,
+  PEX7 and PEX19 is the exact local set with GO:0005052, GO:0005053,
+  GO:0033328 or GO:0036105 rows. The three reviews validate; old-term row
+  counts still match the #3233 outcome: PEX5 9 MODIFY + 1 UNDECIDED, PEX7 7
+  MODIFY, and PEX19 2 MODIFY.

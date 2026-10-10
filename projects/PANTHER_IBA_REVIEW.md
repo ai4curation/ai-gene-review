@@ -1,15 +1,13 @@
 ---
 title: "PANTHER IBA family review"
 maturity: MATURE
+last_reviewed: "2026-10-04"
 tags: [EVALUATION, PIPELINE]
 species: [SCHPO]
 manifest:
   slides:
     - href: PANTHER_IBA_REVIEW/slides/PANTHER_IBA_REVIEW-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/EDHYPVzokF7aKvMNqYpdbG
-      title: Project brief
 ---
 
 # PANTHER IBA family review
@@ -17,21 +15,23 @@ manifest:
 **Bottom line:** every IBA annotation descends from a PAINT curator's IBD
 judgment placed at an ancestral node of a PANTHER tree, so the place to test
 an IBA is that node and the target's position below it. We rebuilt the
-propagation behind all 160 IBAs on the 41 reviewed *S. pombe* genes (36 of
+propagation behind all 161 IBAs on the 41 reviewed *S. pombe* genes (36 of
 which carry IBAs) from cached repo data: source node, seed genes, subfamilies,
 PAINT loss annotations, and our per-gene action. We did this to check whether
 the per-gene calls hold up at the family level, and to find the patterns that
-mark a real over-propagation. They held up. The per-gene reviews kept 148 of
-the 160 IBAs (117 ACCEPT, 31 KEEP_AS_NON_CORE); the 36 cross-subfamily flags
+mark a real over-propagation. They held up. The per-gene reviews kept 149 of
+the 161 IBAs (118 ACCEPT, 31 KEEP_AS_NON_CORE); the 38 cross-subfamily flags
 turned out to be mostly conserved functions; and the family lens confirmed the
 two localization REMOVEs (pom1 `cytoskeleton`, rqh1 `cytoplasm`) and recast the
 third REMOVE (mid1 septin ring organization) as sub-functionalization between
 the two pombe anillins. No new IBA errors were found among the accepted rows.
 
-The same tooling also extracts PAINT's own loss annotations (IRD/IKR) as a
-curation guard: 2,129 loss findings across 549 cached families (2,123 paired with a confirmed ancestral gain), of which 63 IKR losses fall on a
-reviewed member and are ready for residue-level follow-up. The written review
-is in [REVIEW.md](PANTHER_IBA_REVIEW/REVIEW.md).
+The same tooling also extracts PAINT's own loss annotations, mostly IRD/IKR, as
+a curation guard: 2,498 loss findings across 622 cached families (2,492 paired
+with a confirmed ancestral gain), of which 68 IKR losses fall on a reviewed
+member and are ready for residue-level follow-up
+([#3991](https://github.com/ai4curation/ai-gene-review/issues/3991)). The
+written review is in [REVIEW.md](PANTHER_IBA_REVIEW/REVIEW.md).
 
 The rest of this page documents the scripts and tables.
 
@@ -71,20 +71,23 @@ The rest of this page documents the scripts and tables.
   (PANTHER never publishes which residues an IKR was based on — see the IKR note
   below). Emits YAML with `seed_uniprot` (where the function + its key residues
   are characterized), `loss_clade` (members predicted to have lost it), and
-  `retaining_clade` (members that kept it). The agent fetches these sequences,
-  aligns them, and compares the functional columns. Example:
-
-  ```bash
-  uv run python projects/PANTHER_IBA_REVIEW/prepare_loss_analysis.py \
-      --family PTHR10443 --loss-node PTN000047776 --go GO:0016805
-  ```
-
-  Note: `loss_clade`/`retaining_clade` are resolved from the *reviewed* member
-  tables + leaf GAF, so a finding with `n_members_affected=0` yields an empty
-  `loss_clade` (the loss is in an unsampled subfamily); seeds are still provided.
-  Of the 403 IKR findings, 63 have ≥1 attributed reviewed member and are
-  immediately actionable.
+  `retaining_clade` (members that kept it). The agent fetches those sequences,
+  aligns them, and compares the functional columns.
 - `PANTHER_IBA_REVIEW/REVIEW.md` — the written review and findings.
+
+Example:
+
+```bash
+uv run python projects/PANTHER_IBA_REVIEW/prepare_loss_analysis.py \
+    --family PTHR10443 --loss-node PTN000047776 --go GO:0016805
+```
+
+Note: `loss_clade`/`retaining_clade` are resolved from the *reviewed* member
+tables + leaf GAF, so a finding with `n_members_affected=0` yields an empty
+`loss_clade` (the loss is in an unsampled subfamily); seeds are still provided.
+Of the 504 IKR findings, 68 have ≥1 attributed reviewed member and are
+immediately actionable
+([#3991](https://github.com/ai4curation/ai-gene-review/issues/3991)).
 
 Regenerate:
 
@@ -105,7 +108,7 @@ be materialised under `interpro/panther/<FAM>/<FAM>-paint.tsv` with:
 just fetch-panther-paint PTHR10177
 ```
 
-Scope: the 160 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
+Scope: the 161 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
 locally). Note the cross-subfamily flag is deliberately sensitive and
 over-fires on broadly conserved functions — it is triage, not a verdict.
 One well-characterized descendant can soundly ground an ancestral assertion.

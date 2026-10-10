@@ -1,6 +1,7 @@
 ---
 title: "MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial Proteome"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-04"
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human, yeast]
 genes: [COA4, COX17, COX19, COX23, CMC2, PET191, COX11, SCO1, SCO2, COX16, COA6, COQ2, COQ4, COQ5, COQ6, COQ7, COQ9, COQ8A, PDSS1, PDSS2, BOLA3, GLRX5, PMPCA, PMPCB, COX20, HSPA9]
@@ -8,9 +9,6 @@ manifest:
   slides:
     - href: MITO_INTERACTOME/slides/MITO_INTERACTOME-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/L7PBduAAKoptsd5k3tyCsi
-      title: Project brief
 ---
 
 # MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial Proteome
@@ -24,14 +22,14 @@ never enter `existing_annotations` or justify `protein binding`, and as an
 experimental paper whose co-IP, knockout, ICP-MS and BN-PAGE data place the
 orphan COA4 at a COX11-dependent step of copper delivery to cytochrome c
 oxidase. Acting on the second use, we reviewed human COA4 and the yeast copper
-delivery set (COA4, COX17, COX19, COX23, CMC2, PET191): 97 annotations, 59
+delivery set (`COA4`, `COX17`, `COX19`, `COX23`, `CMC2`, `PET191`): 97 annotations, 59
 accepted, 33 kept as non-core, 4 marked over-annotated and 1 removed. That one
-removal, COX17 `protein farnesylation` citing a paper about COX10, seeded the
-[miscitation audit](MISCITATION_AUDIT.md). The per-gene counts below differ
-slightly from the current YAMLs (yeast set 72 annotations, not 74), and human
-COA5 (the paper's "PET191") was already reviewed under the complex IV
-assembly-factor module. Still open: human COX17/COX19/CMC2, TCAIM, UQCC4 and
-the complex Q genes COQ3 and COQ10A/B.
+removal, `COX17` `protein farnesylation` citing a paper about `COX10`, seeded the
+[miscitation audit](MISCITATION_AUDIT.md). Human COA5 (the paper's `PET191`)
+was already reviewed under the complex IV assembly-factor module. Still open:
+human `COX17`, `COX19`, `CMC2`, `TCAIM`, `UQCC4`, and the complex Q genes
+`COQ3`, `COQ10A`, `COQ10B`, tracked in
+[#4229](https://github.com/ai4curation/ai-gene-review/issues/4229).
 
 ## Overview
 
@@ -45,11 +43,10 @@ reports 2895 predicted interactions and supplies at least one interacting partne
 
 > Swaminathan AB, Zulkifli M, Guerra RM, Calabrese SM, Kalafatis DT, Pagliarini DJ, Gohil VM.
 > *The predicted interactome of the human mitochondrial proteome.* Nature Communications (2026),
-> Article in Press. [doi:10.1038/s41467-026-77112-z](https://doi.org/10.1038/s41467-026-77112-z).
-> **No PMID is assigned yet** (accepted 2026-08-17), so cite it by DOI. It caches cleanly as
+> published 2026-08-25. [doi:10.1038/s41467-026-77112-z](https://doi.org/10.1038/s41467-026-77112-z);
+> PMID:42778582. The review YAMLs cite the cached DOI record
 > `publications/DOI_10.1038_s41467-026-77112-z.md` (full text via OpenAlex, CC-BY), so its
-> `supporting_text` quotes are machine-verifiable like any PMID reference — do not create a
-> `publications/PMID_*.md` stub.
+> `supporting_text` quotes are machine-verifiable like any PMID reference.
 
 For this repository the paper matters in two distinct ways, which should not be conflated:
 
@@ -130,24 +127,24 @@ CoQ-synthome) on the matrix face of the inner membrane ([PMID:36702698](https://
 
 **Co-IP/MS from DSSO-crosslinked yeast mitochondria** (endogenously tagged baits, n = 3):
 
-- Coq3, Coq4, Coq5, Coq6, Coq9 and Coq11 each reciprocally pulled down Coq3–Coq7, Coq9 and Coq11 —
+- `Coq3`, `Coq4`, `Coq5`, `Coq6`, `Coq9` and `Coq11` each reciprocally pulled down `Coq3`–`Coq7`, `Coq9` and `Coq11` —
   defining a core membership.
-- **Coq1 and Coq2 co-immunoprecipitated no other Coq protein**, consistent with the metabolon being
+- **`Coq1` and `Coq2` co-immunoprecipitated no other Coq protein**, consistent with the metabolon being
   restricted to head-group modification and excluding tail synthesis/attachment.
-- Coq8 recovered only Coq3 and itself — consistent with its ATPase activity being required for
+- `Coq8` recovered only `Coq3` and itself — consistent with its ATPase activity being required for
   metabolon formation while its own contacts stay transient.
-- Auxiliary factors Yah1 and Coq21 appeared in some pulldowns.
+- Auxiliary factors `Yah1` and `Coq21` appeared in some pulldowns.
 
 Co-IP cannot distinguish direct from indirect association, so AFM was run pairwise over the full
-Coq1–Coq11 set, yielding **nine high-confidence binary interactions among Coq3–Coq10**, notably:
+`Coq1`–`Coq11` set, yielding **nine high-confidence binary interactions among `Coq3`–`Coq10`**, notably:
 
 | Predicted binary pair | Corroboration |
 |---|---|
-| Coq7–Coq9 | Reproduces the experimentally solved human COQ7:COQ9 interface ([PMID:36306796](https://pubmed.ncbi.nlm.nih.gov/36306796/)), released **after** the AFM training cutoff — an unbiased positive control |
-| Coq3–Coq6 | Sequential steps in the pathway; independently reported in a 2025 preprint ([doi:10.1101/2025.05.24.655883](https://doi.org/10.1101/2025.05.24.655883)) |
-| Coq3–Coq5, Coq4–Coq7 | Head-group–modifying enzyme pairs |
-| Coq6–Coq8, Coq5–Coq9, Coq7–Coq8 | Enzyme–auxiliary factor; may rationalize Coq8 augmentation of the Coq6 reaction ([PMID:38425362](https://pubmed.ncbi.nlm.nih.gov/38425362/)) |
-| Coq6–Coq10 | Nominates a function for the poorly understood CoQ-binding protein Coq10 |
+| `Coq7`–`Coq9` | Reproduces the experimentally solved human COQ7:COQ9 interface ([PMID:36306796](https://pubmed.ncbi.nlm.nih.gov/36306796/)), released **after** the AFM training cutoff — an unbiased positive control |
+| `Coq3`–`Coq6` | Sequential steps in the pathway; independently reported in a 2025 preprint ([doi:10.1101/2025.05.24.655883](https://doi.org/10.1101/2025.05.24.655883)) |
+| `Coq3`–`Coq5`, `Coq4`–`Coq7` | Head-group–modifying enzyme pairs |
+| `Coq6`–`Coq8`, `Coq5`–`Coq9`, `Coq7`–`Coq8` | Enzyme–auxiliary factor; may rationalize `Coq8` augmentation of the `Coq6` reaction ([PMID:38425362](https://pubmed.ncbi.nlm.nih.gov/38425362/)) |
+| `Coq6`–`Coq10` | Nominates a function for the poorly understood CoQ-binding protein `Coq10` |
 
 The authors are explicit that complex Q is most likely a *statistical* complex with multiple
 conformations built on a small number of robust binary contacts; the predictions nominate the
@@ -195,20 +192,20 @@ graph LR
 
 *Solid arrows: copper transfer by metallochaperones. Dotted arrows: accessory/assisting
 interactions. Amber nodes are the four IMS-localized CcO assembly factors whose role was
-unresolved; PET191 and COX19 carry no edge here because none is asserted by this paper. Only the
+unresolved; `PET191` and `COX19` carry no edge here because none is asserted by this paper. Only the
 COA4–COX11 edge was taken past prediction to experimental validation.*
 
 
 AFM recovered **8 of 12** known interactions in the human copper delivery pathway, most of them
 conserved in yeast, and supplied structural models for steps that have evaded structural biology
-(COX17/SCO1/SCO2/COA6/COX16 routing copper to COX2). It then placed three of the four orphan IMS
-assembly factors: COX23–COX1, CMC2–COX2, and **COA4–COX11**.
+(`COX17`/SCO1/SCO2/COA6/COX16 routing copper to COX2). It then placed three of the four orphan IMS
+assembly factors: `COX23`–COX1, `CMC2`–COX2, and **COA4–COX11**.
 
 COA4–COX11 was followed up experimentally:
 
 | Experiment | Result |
 |---|---|
-| Co-IP/MS of yeast Coa4-V5 from crosslinked mitochondria (n = 3) | Cox11 recovered; also the IMS phosphatase Ptc5, suggesting phospho-regulation of Coa4 |
+| Co-IP/MS of yeast `Coa4`-V5 from crosslinked mitochondria (n = 3) | `Cox11` recovered; also the IMS phosphatase `Ptc5`, suggesting phospho-regulation of `Coa4` |
 | Co-IP of COX11-FLAG from 293T mitochondria (n = 3) | Recovers COA4-V5, plus COX1 (positive control) and COX2 (reproducing [PMID:35750769](https://pubmed.ncbi.nlm.nih.gov/35750769/)) |
 | Reciprocal anti-V5 IP of COA4-V5 (n = 3) | Recovers COX11-FLAG; **does not** recover COX1 or COX2 — matching the prediction of no direct COA4–COX1/COX2 contact |
 | CRISPR *COA4* KO in MCH58 fibroblasts | Two independent clones, COA4 absent |
@@ -219,8 +216,8 @@ COA4–COX11 was followed up experimentally:
 | Seahorse OCR (n = 3) | Reduced respiration in COA4-KO |
 
 Together these place COA4 at a **COX11-dependent step of copper delivery to cytochrome c oxidase**,
-and give a biochemical basis for the earlier genetic observation that Cox11 overexpression rescues
-the respiratory growth defect of yeast *coa4Δ* ([PMID:35666203](https://pubmed.ncbi.nlm.nih.gov/35666203/)).
+and give a biochemical basis for the earlier genetic observation that `Cox11` overexpression rescues
+the respiratory growth defect of yeast *`coa4Δ`* ([PMID:35666203](https://pubmed.ncbi.nlm.nih.gov/35666203/)).
 
 ## Curation implications
 
@@ -273,7 +270,8 @@ Already reviewed here, and appearing in the paper's figures or validated interac
 | SCO1, SCO2, COA6, COX16 | Copper routing to COX2; AFM structural models for steps lacking structures |
 | COX20 | Predicted COX2–COX20 assembly intermediate |
 | COQ7, COQ9 | AFM reproduces the solved human COQ7:COQ9 interface (post-training-cutoff control) |
-| COQ2, COQ4, COQ5, COQ6, COQ8A, PDSS1, PDSS2 | Complex Q membership and binary wiring (via yeast orthologs) |
+| COQ4, COQ5, COQ6, COQ8A | Complex Q membership and binary wiring (via yeast orthologs) |
+| COQ2, PDSS1, PDSS2 | Tail synthesis/attachment enzymes excluded from the core CoQ metabolon |
 | BOLA3, GLRX5 | Predicted Fe–S transfer interaction with no experimental structure |
 | PMPCA, PMPCB | Predicted mitochondrial processing peptidase complex structure |
 | HSPA9 | Predicted TCAIM–HSPA9 interaction |
@@ -283,8 +281,8 @@ Already reviewed here, and appearing in the paper's figures or validated interac
 - **COA4** — review complete (working notes in `genes/human/COA4/COA4-notes.md`).
   The paper's one fully validated orphan
   assignment. Review accepts the previously IBA/IEA-only `GO:0033617` as core on the strength
-  of the new human knockout data, and marks the BioPlex `protein binding` row over-annotated
-  while preserving COX11 as the partner. Two findings worth noting: the COA4–COX11 interaction
+  of the new human knockout data, and flags the BioPlex `protein binding` row as an
+  uninformative GO molecular-function call while preserving COX11 as the partner. Two findings worth noting: the COA4–COX11 interaction
   already had affinity-purification support in BioPlex/IntAct
   ([PMID:33961781](https://pubmed.ncbi.nlm.nih.gov/33961781/)) predating this paper, and the
   2022 *Genetics* study explicitly **failed** to detect the interaction by co-IP/MS — the 2026
@@ -293,18 +291,19 @@ Already reviewed here, and appearing in the paper's figures or validated interac
   asserts BP + CC only rather than inventing an MF term.
 
 - **yeast/COA4** — the mechanism actually lives here: two IMP calls, three IGI partners
-  (SHY1, CYC1, CMC1), EXP IMS proteomics. 13 ACCEPT / 2 over-annotated / 1 non-core / 1 MODIFY.
+  (SHY1, CYC1, CMC1), EXP IMS proteomics. 13 ACCEPT / 3 KEEP_AS_NON_CORE / 1
+  MARK_AS_OVER_ANNOTATED.
 - **The yeast copper delivery pathway** — COX17, COX19, COX23, CMC2, PET191, reviewed as a set
-  (74 annotations). Yeast rather than human because the mechanistic literature for
-  COX23/CMC2/PET191 is entirely yeast, and because the human symbols do not line up: **there is
-  no human gene named COX23**, and the paper's "PET191" is human **COA5**. Anyone mapping this
+  (72 annotations). Yeast rather than human because the mechanistic literature for
+  `COX23`/`CMC2`/`PET191` is entirely yeast, and because the human symbols do not line up: **there is
+  no human gene named `COX23`**, and the paper's `PET191` is human **COA5**. Anyone mapping this
   paper's Fig. 4b onto human gene identifiers should check that first.
 
 Three findings from the pathway set that generalize beyond it:
 
-1. **A mis-attributed annotation on COX17.** `GO:0018343 protein farnesylation` (IDA,
+1. **A mis-attributed annotation on `COX17`.** `GO:0018343 protein farnesylation` (IDA,
    [PMID:8078902](https://pubmed.ncbi.nlm.nih.gov/8078902/)) cites a paper that is entirely about
-   **COX10**, heme A:farnesyltransferase — one digit away. The term is wrong even for COX10, since
+   **`COX10`**, heme A:farnesyltransferase — one digit away. The term is wrong even for `COX10`, since
    that enzyme farnesylates *heme*, not protein; and the row was assigned by MGI against a
    *S. cerevisiae* accession. Marked REMOVE. The `GO:0005739` row from the same reference shares
    the faulty provenance but is factually correct, so it is kept non-core with the problem recorded.
@@ -312,8 +311,8 @@ Three findings from the pathway set that generalize beyond it:
    defects already flagged across the repository — 26 of them GOA-sourced.
 2. **A GFP-library artifact — but only where biology says so.** Nucleus and/or cytoplasm rows
    from the genome-wide C-terminal GFP library
-   ([PMID:14562095](https://pubmed.ncbi.nlm.nih.gov/14562095/)) appear on COA4, CMC2 and COX23.
-   Only the **nucleus** calls (COA4, CMC2) are flagged, and on conflict grounds: a twin CX9C
+   ([PMID:14562095](https://pubmed.ncbi.nlm.nih.gov/14562095/)) appear on `COA4`, `CMC2` and `COX23`.
+   Only the **nucleus** calls (`COA4`, `CMC2`) are flagged, and on conflict grounds: a twin CX9C
    MIA40 substrate has no described route to the nucleus, and every other source — EXP IMS
    proteomics, IDA, IBA, IEA, TAS, UniProt — places these proteins in the intermembrane space.
    The **cytoplasm** calls are accepted as correct-but-non-core, because Mia40 substrates
@@ -321,36 +320,37 @@ Three findings from the pathway set that generalize beyond it:
    anomalous. The governing principle: an annotation is assumed correct unless positive
    knowledge contradicts it — inability to inspect the underlying evidence is not itself grounds
    for flagging.
-3. **Four ND molecular functions in a row.** COA4, COX23, CMC2 and PET191 all carry SGD's explicit
+3. **Four ND molecular functions in a row.** `COA4`, `COX23`, `CMC2` and `PET191` all carry SGD's explicit
    `GO:0003674` "no data" placeholder, and all four are argued to *keep* it. These are accessory
    factors that support metallochaperone action without binding metal themselves, and GO has no
    term for that. This is the pathway's real annotation gap, and it is exactly what a predicted
    interaction cannot fill.
 
-Also worth recording: **COX19 is a second COX11 chaperone**, established well before this paper
+Also worth recording: **`COX19` is a second `COX11` chaperone**, established well before this paper
 ([PMID:25926683](https://pubmed.ncbi.nlm.nih.gov/25926683/)) — it binds a cysteine-containing
-sequence in COX11 via conserved tyrosine-leucine dipeptides, in a redox-regulated way. So COA4 and
-COX19 are two IMS twin CX9C proteins converging on the same target, which none of the papers
+sequence in `COX11` via conserved tyrosine-leucine dipeptides, in a redox-regulated way. So `COA4` and
+`COX19` are two IMS twin CX9C proteins converging on the same target, which none of the papers
 involved appears to have noticed.
 
 Still not in this repository:
 
-- **Human COX17, COX19, CMC2, COA5** — the human arms of the same pathway.
+- **Human `COX17`, `COX19`, `CMC2`** — the human arms of the same pathway.
 - **PET191's Mia40-independent import** is a genuine family-level exception
   ([PMID:18503002](https://pubmed.ncbi.nlm.nih.gov/18503002/)) worth carrying into any
   family-level inference about twin CX9C proteins.
-- **TCAIM**, **UQCC4** (C16orf91) — recovered blind here; primary evidence is in
+- **`TCAIM`**, **`UQCC4`** (C16orf91) — recovered blind here; primary evidence is in
   [PMID:39889707](https://pubmed.ncbi.nlm.nih.gov/39889707/) and
   [PMID:35977508](https://pubmed.ncbi.nlm.nih.gov/35977508/).
-- **COQ3**, **COQ10A**, **COQ10B** — complete the complex Q roster; Coq6–Coq10 is a novel
-  prediction bearing on COQ10A/B function.
+- **`COQ3`**, **`COQ10A`**, **`COQ10B`** — complete the complex Q roster; `Coq6`-`Coq10` is a novel
+  prediction bearing on COQ10A/B function. These follow-up reviews are tracked
+  in [#4229](https://github.com/ai4curation/ai-gene-review/issues/4229).
 
 
 ## Relationship to other projects here
 
 - [OXPHOS.md](OXPHOS.md) — the copper delivery vignette is complex IV assembly; the standing
   guidance there that *assembly factors are annotated to assembly processes, not to electron
-  transport* applies directly to COA4, COX23, CMC2 and PET191.
+  transport* applies directly to `COA4`, `COX23`, `CMC2` and `PET191`.
 - [ALPHAFOLD.md](ALPHAFOLD.md) — records how predicted structures and interfaces are used as
   evidence in this repository; MitoMatch is the largest organelle-scale instance of that pattern.
 - [BGC.md](BGC.md) — the AF3/ipTM biosynthetic-gene-cluster screen, methodologically the closest
@@ -361,11 +361,11 @@ Still not in this repository:
 
 ## Open questions
 
-- Does the Ptc5 co-enrichment with yeast Coa4 reflect real phospho-regulation of copper delivery?
+- Does the `Ptc5` co-enrichment with yeast `Coa4` reflect real phospho-regulation of copper delivery?
   Nothing beyond co-IP enrichment supports this yet.
-- Coq6–Coq10 is the most functionally suggestive novel prediction in the CoQ set. Is COQ10A/COQ10B
+- `Coq6`-`Coq10` is the most functionally suggestive novel prediction in the CoQ set. Is COQ10A/COQ10B
   a CoQ-delivery module docked on the metabolon, and does the interaction survive in human cells?
-- COX23 and CMC2 have conserved predicted partners but no experimental follow-up. What would the
+- `COX23` and `CMC2` have conserved predicted partners but no experimental follow-up. What would the
   COA4-style validation (KO, metal content, BN-PAGE) show?
 - Can the species/conservation scores be used as a routine prior in this repository — e.g. to
   down-weight IBA annotations whose implied complex membership has no conserved structural support?
@@ -374,12 +374,12 @@ Still not in this repository:
 
 | PMID / DOI | Citation |
 |---|---|
-| [doi:10.1038/s41467-026-77112-z](https://doi.org/10.1038/s41467-026-77112-z) | Swaminathan et al. *The predicted interactome of the human mitochondrial proteome.* Nat Commun 2026 (in press) — **this paper** |
+| [doi:10.1038/s41467-026-77112-z](https://doi.org/10.1038/s41467-026-77112-z) / [PMID:42778582](https://pubmed.ncbi.nlm.nih.gov/42778582/) | Swaminathan et al. *The predicted interactome of the human mitochondrial proteome.* Nat Commun 2026 — **this paper** |
 | [PMID:33174596](https://pubmed.ncbi.nlm.nih.gov/33174596/) | Rath et al. *MitoCarta3.0.* Nucleic Acids Res 2021 — the protein inventory screened |
 | [PMID:36306796](https://pubmed.ncbi.nlm.nih.gov/36306796/) | Manicki et al. *Structure and functionality of a multimeric human COQ7:COQ9 complex.* Mol Cell 2022 |
 | [PMID:36702698](https://pubmed.ncbi.nlm.nih.gov/36702698/) | Guerra & Pagliarini. *Coenzyme Q biochemistry and biosynthesis.* Trends Biochem Sci 2023 |
 | [PMID:38425362](https://pubmed.ncbi.nlm.nih.gov/38425362/) | Nicoll et al. *In vitro construction of the COQ metabolon.* Nat Catal 2024 |
-| [PMID:35666203](https://pubmed.ncbi.nlm.nih.gov/35666203/) | Swaminathan et al. *A yeast suppressor screen links Coa4 to the mitochondrial copper delivery pathway.* Genetics 2022 |
+| [PMID:35666203](https://pubmed.ncbi.nlm.nih.gov/35666203/) | Swaminathan et al. *A yeast suppressor screen links `Coa4` to the mitochondrial copper delivery pathway.* Genetics 2022 |
 | [PMID:35750769](https://pubmed.ncbi.nlm.nih.gov/35750769/) | Nývltová et al. *Coordination of metal center biogenesis in human cytochrome c oxidase.* Nat Commun 2022 |
 | [PMID:10617659](https://pubmed.ncbi.nlm.nih.gov/10617659/) | Hiser et al. *Cox11p is required for stable formation of the Cu(B) and magnesium centers.* J Biol Chem 2000 |
 | [PMID:15145942](https://pubmed.ncbi.nlm.nih.gov/15145942/) | Barros et al. *COX23, a homologue of COX17, is required for cytochrome oxidase assembly.* J Biol Chem 2004 |

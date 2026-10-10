@@ -1,3 +1,7 @@
+---
+species: [human]
+---
+
 ## FBXO15
 
 - **UniProt:** Q8NCQ5 · **batch:** proteostasis-batch-2026-06-13 (Falcon DR) · **review status:** COMPLETE

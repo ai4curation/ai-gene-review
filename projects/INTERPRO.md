@@ -2,6 +2,7 @@
 title: "InterPro Mapping Review Project"
 collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
 maturity: IN_PROGRESS
+last_reviewed: 2026-10-04
 tags: [PIPELINE]
 sidecars:
   slide_charts:
@@ -24,11 +25,12 @@ family is copied onto all of them. We harvested every InterPro2GO annotation our
 gene reviews had already judged (3,652 records on 1,706 genes, joined to 1,826
 source entries), ranked the entries by how often reviewers flagged them, and ran
 family-level deep research on the top of that list. The result so far is a set of
-36 proposed mapping edits across fifteen entries: ten removals (for example ATP
-binding and protein phosphorylation on the protein kinase domain, IPR000719), twelve
-proposals to narrow or qualify a mapping, and fourteen endorsements. These are
-proposals for InterPro curators, not changes InterPro has adopted, and the
-worklist below the first dozen entries is not yet assessed.
+36 mapping assessments across fifteen entries: ten removal proposals (for example
+ATP binding and protein phosphorylation on the protein kinase domain, IPR000719),
+twelve proposals to narrow or qualify a mapping, thirteen endorsements, and one
+proposed addition. These are recommendations for InterPro curators, not changes
+InterPro has adopted, and the worklist below the first dozen entries is not yet
+assessed.
 
 We did this because a wrong InterPro2GO mapping is a single error that repeats
 across every matched gene, so one fix at the mapping level is worth many
@@ -136,10 +138,12 @@ measure, not an estimated mapping error rate.** It includes valid but non-core
 annotations, specificity refinements, and unresolved judgments. `NEW` and `PENDING`
 records are excluded from this flag.
 
-### Entries with repeated gene-level flags
+### Selected entries with repeated gene-level flags
 
-These counts prioritize investigation; they are not family-level verdicts. A record
-can cite several entries, so counts across entries should not be summed.
+These counts prioritize investigation; they are not family-level verdicts. This
+excerpt mixes top-ranked worklist entries with already assessed families; see the
+complete worklist for strict ranking. A record can cite several entries, so counts
+across entries should not be summed.
 
 | InterPro entry | Annotation records | Flagged records |
 |----------------|-------------------:|----------------:|

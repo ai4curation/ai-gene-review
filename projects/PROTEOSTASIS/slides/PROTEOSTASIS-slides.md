@@ -15,7 +15,7 @@ backgroundImage: url('https://marp.app/assets/hero-background.svg')
 Manual PN-to-GO propagation with explicit curation status
 
 Chris Mungall | AI-Assisted Gene Review
-2026-05-03
+2026-10-05
 
 ---
 
@@ -55,9 +55,9 @@ Total nodes: 2029. Leaf nodes: 1348.
 |-------|------:|--------:|-------:|--------:|-------:|---------:|--------:|
 | Branch | 9 | 0 | 0 | 1 | 8 | 0 | 0 |
 | Class | 42 | 0 | 9 | 16 | 17 | 0 | 0 |
-| Group | 297 | 0 | 133 | 31 | 133 | 0 | 0 |
+| Group | 297 | 0 | 132 | 32 | 133 | 0 | 0 |
 | Type | 800 | 0 | 233 | 26 | 541 | 0 | 0 |
-| Subtype | 881 | 0 | 105 | 16 | 760 | 0 | 0 |
+| Subtype | 881 | 0 | 107 | 16 | 758 | 0 | 0 |
 
 Inventory: 2029 subject curation records, one per PN node.
 
@@ -75,9 +75,9 @@ Every PN node has a curator-facing status.
 
 Current curation inventory:
 
-- 480 mapped
-- 90 context only
-- 1459 no mapping
+- 481 mapped
+- 91 context only
+- 1457 no mapping
 - 0 pending review
 - 0 deferred
 
@@ -87,20 +87,20 @@ These are tracked directly in the branch mapping YAMLs.
 
 ## Projection Output
 
-Projection through current propagating mappings produced 3565 unique gene-GO pairs.
+Projection through current propagating mappings produced 3486 unique gene-GO pairs.
 
 GOA source: `~/repos/go-db/db/goa_human.ddb`
 
 | Status | Count |
 |--------|------:|
-| already in GOA exactly | 1928 |
-| entailed by GOA closure | 512 |
-| more specific than existing GOA | 305 |
+| already in GOA exactly | 1930 |
+| entailed by GOA closure | 511 |
+| more specific than existing GOA | 300 |
 | supported by GOA regulation | 35 |
-| new to GOA | 753 |
-| no local GOA | 32 |
+| new to GOA | 677 |
+| no local GOA | 33 |
 
-Only the 1093 candidate additions enter manual rereview queues.
+Only the 1012 candidate additions enter manual rereview queues.
 
 ---
 
@@ -179,13 +179,16 @@ Primary files:
 - `projects/PROTEOSTASIS/reports/pn_taxonomy_tree/`
 
 HTML page: `pages/projects/PROTEOSTASIS.html`
-Browser: `pages/projects/PROTEOSTASIS-tree.html`
+Browser: `pages/projects/PROTEOSTASIS/pn.html`
 
 ---
 
 ## Next Work
 
-1. Work the 1093 candidate additions as manual AIGR rereview tasks.
+1. Work the 1012 candidate additions as manual AIGR rereview tasks.
 2. Use unusual-propagation audit as a guardrail.
-3. Materialize the PN-GO bridge fields for every mapped/context PN row.
-4. Promote only evidence-backed gene-level decisions to review YAML.
+3. Triage Phase 1 MAP/YAML recommendations in ai-gene-review#4250.
+4. Materialize the PN-GO bridge fields for every mapped/context PN row.
+5. Promote only evidence-backed gene-level decisions to review YAML.
+
+Tracked in ai-gene-review#4004 and ai-gene-review#4250.

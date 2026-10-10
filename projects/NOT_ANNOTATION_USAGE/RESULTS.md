@@ -1,6 +1,7 @@
 ---
 title: "NOT annotation usage: results"
 species: [human, rat, ARATH, SCHPO]
+autolink_gene_symbols: false
 ---
 # NOT annotation usage: results
 
@@ -205,58 +206,63 @@ Counts are per reviewed (Swiss-Prot) protein carrying at least one NOT annotatio
 
 ## How this repo's reviews treated negated annotations
 
-270 negated rows across 174 reviewed genes.
+342 negated rows across 222 reviewed genes.
 
 | Action | rows | % |
 |---|---:|---:|
-| ACCEPT | 223 | 82.6 |
-| UNDECIDED | 20 | 7.4 |
-| KEEP_AS_NON_CORE | 16 | 5.9 |
-| REMOVE | 8 | 3.0 |
-| MARK_AS_OVER_ANNOTATED | 3 | 1.1 |
+| ACCEPT | 266 | 77.8 |
+| UNDECIDED | 28 | 8.2 |
+| KEEP_AS_NON_CORE | 24 | 7.0 |
+| REMOVE | 21 | 6.1 |
+| MARK_AS_OVER_ANNOTATED | 3 | 0.9 |
 
 | Evidence | rows | % |
 |---|---:|---:|
-| IDA | 130 | 48.1 |
-| IMP | 61 | 22.6 |
-| IBA | 17 | 6.3 |
-| IKR | 14 | 5.2 |
-| ISS | 11 | 4.1 |
-| TAS | 9 | 3.3 |
-| ISO | 8 | 3.0 |
-| IGI | 7 | 2.6 |
-| NAS | 3 | 1.1 |
-| EXP | 3 | 1.1 |
-| RCA | 2 | 0.7 |
-| IEP | 2 | 0.7 |
-| IPI | 2 | 0.7 |
-| IC | 1 | 0.4 |
+| IDA | 152 | 44.4 |
+| IMP | 84 | 24.6 |
+| ISS | 27 | 7.9 |
+| IBA | 18 | 5.3 |
+| IKR | 16 | 4.7 |
+| IGI | 12 | 3.5 |
+| TAS | 9 | 2.6 |
+| ISO | 8 | 2.3 |
+| NAS | 4 | 1.2 |
+| RCA | 3 | 0.9 |
+| IPI | 3 | 0.9 |
+| EXP | 3 | 0.9 |
+| IEP | 2 | 0.6 |
+| IC | 1 | 0.3 |
 
 ### Action by term category
 
 | Category | Rows | Actions |
 |---|---:|---|
-| catalytic activity | 74 | ACCEPT 65, UNDECIDED 5, KEEP_AS_NON_CORE 4 |
-| regulation of biological process | 45 | ACCEPT 36, UNDECIDED 6, REMOVE 2, KEEP_AS_NON_CORE 1 |
-| cellular component | 36 | ACCEPT 29, KEEP_AS_NON_CORE 4, REMOVE 3 |
-| metabolic process | 26 | ACCEPT 22, KEEP_AS_NON_CORE 2, UNDECIDED 2 |
-| binding (other) | 23 | ACCEPT 22, MARK_AS_OVER_ANNOTATED 1 |
-| other BP | 13 | ACCEPT 11, MARK_AS_OVER_ANNOTATED 1, KEEP_AS_NON_CORE 1 |
-| transporter activity | 13 | ACCEPT 9, UNDECIDED 4 |
-| localization | 11 | ACCEPT 7, UNDECIDED 2, REMOVE 1, KEEP_AS_NON_CORE 1 |
-| response to stimulus (other) | 8 | KEEP_AS_NON_CORE 3, ACCEPT 3, REMOVE 2 |
-| developmental process | 6 | ACCEPT 4, MARK_AS_OVER_ANNOTATED 1, UNDECIDED 1 |
-| signaling | 5 | ACCEPT 5 |
+| catalytic activity | 84 | ACCEPT 74, UNDECIDED 5, KEEP_AS_NON_CORE 3, REMOVE 2 |
+| regulation of biological process | 52 | ACCEPT 40, UNDECIDED 7, KEEP_AS_NON_CORE 3, REMOVE 2 |
+| cellular component | 44 | ACCEPT 34, REMOVE 5, KEEP_AS_NON_CORE 4, UNDECIDED 1 |
+| metabolic process | 28 | ACCEPT 25, UNDECIDED 2, KEEP_AS_NON_CORE 1 |
+| binding (other) | 28 | ACCEPT 25, REMOVE 2, MARK_AS_OVER_ANNOTATED 1 |
+| developmental process | 26 | ACCEPT 13, KEEP_AS_NON_CORE 7, UNDECIDED 5, MARK_AS_OVER_ANNOTATED 1 |
+| other BP | 20 | ACCEPT 16, KEEP_AS_NON_CORE 3, MARK_AS_OVER_ANNOTATED 1 |
+| transporter activity | 15 | ACCEPT 10, UNDECIDED 5 |
+| response to stimulus (other) | 13 | REMOVE 8, ACCEPT 3, KEEP_AS_NON_CORE 2 |
+| localization | 13 | ACCEPT 8, UNDECIDED 3, REMOVE 1, KEEP_AS_NON_CORE 1 |
+| signaling | 8 | ACCEPT 7, REMOVE 1 |
 | other MF | 5 | ACCEPT 5 |
 | unknown | 4 | ACCEPT 4 |
-| defense/immune response | 1 | ACCEPT 1 |
+| defense/immune response | 2 | ACCEPT 2 |
 
 ### Worklist: reviewed NOTs to non-defense 'response to' terms or with IEP evidence
 
 | Organism | Gene | GO term | Label | Evidence | Current action |
 |---|---|---|---|---|---|
 | ARATH | CLV3 | GO:0002221 | pattern recognition receptor signaling pathway | IEP | ACCEPT |
-| ARATH | GID1A | GO:0009739 | response to gibberellin | IGI | KEEP_AS_NON_CORE |
+| ARATH | GID1A | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1B | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1B | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1B | GO:0009739 | response to gibberellin | IMP | REMOVE |
+| ARATH | GID1C | GO:0009739 | response to gibberellin | IGI | REMOVE |
+| ARATH | GID1C | GO:0009739 | response to gibberellin | IMP | REMOVE |
 | SCHPO | chk1 | GO:0006281 | DNA repair | EXP | ACCEPT |
 | human | AGR2 | GO:0034976 | response to endoplasmic reticulum stress | IMP | REMOVE |
 | human | CRY2 | GO:0000719 | photoreactive repair | IDA | ACCEPT |

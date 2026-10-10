@@ -70,5 +70,6 @@ GO:0009095 → GO:0009094 L-phenylalanine and GO:0006571 L-tyrosine biosynthetic
 3. **M. tuberculosis Rv0948c (P9WIC1)**: likely REMOVE.
 
 Each starts with `just fetch-gene <organism> <gene>`.
-**Upstream:** go-annotation#6395 (open) · go-ontology#32005 (closed)
+**Upstream:** go-annotation#6395 + go-ontology#32005 (closed)
+**Local tracker:** ai-gene-review#547
 **Read more:** `projects/PREPHENATE_PATHWAY_OBSOLETION.md`

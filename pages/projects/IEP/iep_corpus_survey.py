@@ -432,6 +432,12 @@ def main() -> None:
     rev = survey_reviews(ancestors)
 
     iep_goa = goa["code_totals"]["IEP"]
+    release = go_release()
+    go_provenance = (
+        f"GO release **{release}** via OAK adapter `{GO_ADAPTER}`"
+        if release != "unknown"
+        else f"OAK adapter `{GO_ADAPTER}` (release date unavailable)"
+    )
     lines: list[str] = []
     add = lines.append
 
@@ -451,8 +457,8 @@ def main() -> None:
     )
     add("")
     add(
-        f"GO closure computed against GO release **{go_release()}** (OAK "
-        "adapter `sqlite:obo:go` by default; override with `IEP_GO_ADAPTER`). "
+        f"GO closure computed against {go_provenance}. Override the OAK "
+        "adapter with `IEP_GO_ADAPTER`. "
         "The coarse branch tallies can move by a row or two between GO "
         "releases, as terms are obsoleted or reparented; everything else is "
         "release-independent."

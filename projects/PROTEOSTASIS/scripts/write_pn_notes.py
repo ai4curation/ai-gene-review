@@ -48,6 +48,13 @@ def read_text(path: Path) -> str:
 def strip_heading(text: str, heading: str) -> str:
     """Remove the first markdown heading if it matches the expected heading."""
     lines = text.splitlines()
+    if lines and lines[0].strip() == "---":
+        for index, line in enumerate(lines[1:], start=1):
+            if line.strip() == "---":
+                lines = lines[index + 1 :]
+                while lines and not lines[0].strip():
+                    lines = lines[1:]
+                break
     if lines and lines[0].strip() == heading:
         lines = lines[1:]
         if lines and not lines[0].strip():

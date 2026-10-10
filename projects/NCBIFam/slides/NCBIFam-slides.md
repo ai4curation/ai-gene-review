@@ -37,8 +37,8 @@ What the NCBI family models add, what InterPro hides, and a proposed `ncbifam2go
 ## Bottom line
 
 - NCBIFAM/CDD reach GO **only via InterPro2GO**; 60% of NCBIFAM models are unintegrated and contribute nothing, and GOA never names the member that fired.
-- NCBIFAM backs **705 (13%)** of this repo's 5,549 InterPro2GO rows (sole signature for **250**). NCBI's own metadata gives GO to **11,228** models that GO ignores.
-- We built a validated **250-row `ncbifam2go` seed** and **2,455** EC-bridge candidates. The gain is large but mostly **TrEMBL**: 19 reviewed vs 26,578 entries in a 60-model sample.
+- NCBIFAM backed **705 (13%)** of a 2026-09 repo snapshot's 5,549 InterPro2GO rows (sole signature for **250**). NCBI's own metadata now gives GO to **11,480** models that GO ignores.
+- We built a validated **250-row `ncbifam2go` seed** and **2,497** EC-bridge candidates. The gain is large but mostly **TrEMBL**: 19 reviewed vs 26,578 entries in a 60-model sample.
 
 ---
 
@@ -50,7 +50,7 @@ What the NCBI family models add, what InterPro hides, and a proposed `ncbifam2go
 
 ## Why this resource
 
-- NCBIFAM is **prokaryote-heavy, curated per family**: 13,253 `equivalog` models where all members share one function.
+- NCBIFAM is **prokaryote-heavy, curated per family**: 13,583 `equivalog` models where all members share one function.
 - Newer microbial biology (mobile elements, secretion, anti-phage defense, encapsulins) is where **InterPro integration lags**.
 - **CDD-proper has no native GO** (FTP files and Entrez); GO seen in CDD is borrowed from bundled NCBIFAM models.
 
@@ -91,7 +91,7 @@ What the NCBI family models add, what InterPro hides, and a proposed `ncbifam2go
 
 - ✅ Member-DB attribution re-join; CDD-own-GO question resolved
 - ✅ 250-row SSSOM seed validates (`just validate-ncbifam-mappings`)
-- ⬜ Promote the 2,455 EC-bridge candidates; build the 843 "refine" class
+- ⬜ Promote the EC-bridge candidates; build the 856-model "refine" class ([#4231](https://github.com/ai4curation/ai-gene-review/issues/4231))
 - ⬜ Full-collection gain run; non-EC families need literature checks
 - ⬜ Exemplar gene reviews whose only support is an NCBIFAM equivalog
 

@@ -1,5 +1,6 @@
 ---
 title: "Proteostasis Review Batch 4 — Gene Selection"
+species: [human]
 ---
 
 # Proteostasis Review Batch 4 — Gene Selection
@@ -11,7 +12,7 @@ Branch: `claude/proteostasis-network-genes-BVKRp`
 
 The three prior batches are complete:
 - `proteostasis-pr-1217` (50 human genes, merged 2026-06-02)
-- `proteostasis-batch-2026-06-03` (50 human genes, alphabetical sweep AAAS..ATP6V0D1)
+- `proteostasis-batch-2026-06-03` (50 human genes, alphabetical sweep `AAAS..ATP6V0D1`)
 - `proteostasis-batch-2026-06-06` (20 human genes; V-ATPase core, ER folding/QC,
   autophagy/mitophagy receptors, co-chaperone/UPS regulation)
 
@@ -40,7 +41,7 @@ branches.
 8. `CLPX` — mitochondrial ClpXP AAA+ unfoldase/protease subunit
 
 ### Cytosolic chaperone / co-chaperone
-9. `CDC37L1` — Cdc37-like HSP90 co-chaperone (Cdc37 paralog)
+9. `CDC37L1` — HSP90 co-chaperone paralog
 
 ### ER proteostasis — folding, lectin chaperones, PPIases, collagen biogenesis
 10. `CLGN` — calmegin, testis-specific calnexin paralog (ER lectin chaperone)

@@ -38,7 +38,7 @@ Reviewing the ZSWIM8 ligase axis and its Argonaute substrates
 
 - In **TDMD**, the **ZSWIM8–CUL3** ligase recognizes AGO-miRNA complexes bound to a highly complementary **trigger RNA** and ubiquitylates AGO, which leads to loss of the miRNA.
 - We reviewed the **9 human proteins** of that layer (ZSWIM8, CUL3, ARIH1, ELOB, ELOC, AGO1–4): **1,106 annotations**.
-- ZSWIM8 now points at **`GO:0140958` target-directed miRNA degradation** and a **Cul3**-RING complex; 83 of 90 removals are bare `protein binding` rows.
+- ZSWIM8 now points at **`GO:0140958` target-directed miRNA degradation** and a **Cul3**-RING complex; 139 of 143 removals are bare `protein binding` rows.
 
 ---
 
@@ -76,15 +76,16 @@ Reviewing the ZSWIM8 ligase axis and its Argonaute substrates
 - **ZSWIM8**: `positive regulation of miRNA catabolic process` (IDA ×2) → **`GO:0140958`** target-directed miRNA degradation; core MF `GO:1990756` ligase-substrate adaptor.
 - **CUL3**: ligase and transferase activity rows → **`GO:0160072`** ubiquitin ligase complex scaffold activity; 78 rows over-annotated.
 - **AGO4**: IBA **RNA endonuclease activity removed**, not supported as a physiological activity.
-- **ELOB / ELOC**: 58 `protein binding` IPIs and a Pol II transcription-initiation row removed.
+- **ELOB / ELOC**: 58 `protein binding` IPIs and two Pol II transcription-initiation rows, one per gene, removed.
 
 ---
 
 ## Status and next steps
 
-- ✅ 9/9 human reviews exist; 8 marked COMPLETE, CUL3 fully actioned but still `INITIALIZED`.
-- ⬜ Set CUL3 status; update the status checklist on the project page.
+- ✅ 9/9 human reviews exist; all are fully actioned; 6 are `COMPLETE`.
+- ⬜ Finalize CUL3, AGO1 and AGO2 statuses.
 - ⬜ Comparative fly / worm / mouse TDMD machinery.
 - ⬜ Deferred: TUT4/TUT7–DIS3L2 branch; viral trigger subproject.
+- ⬜ Track phase-2 decisions in ai4curation/ai-gene-review#4224.
 
 **Read more:** `projects/MIRNA_DEGRADATION.md` · `projects/MIRNA_DEGRADATION/sources.md` · `genes/human/ZSWIM8/`

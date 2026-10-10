@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Focused function hypothesis
 
 Hypothesis: The horse protein F6S899 catalyzes NAD-dependent lysine desuccinylation.

@@ -210,9 +210,9 @@ def main():
             "exp_bp": rec.exp_bp,
             "exp_cc": rec.exp_cc,
             "exp_total": rec.exp_total,
-            "any_experimental": int(rec.any_exp),
-            "n_contested_cat_mf": len(rec.contested_cat_mf),
             "contested_cat_mf": ";".join(rec.contested_cat_mf),
+            "n_contested_cat_mf": len(rec.contested_cat_mf),
+            "any_experimental": int(rec.any_exp),
         })
 
     inv_rows.sort(key=lambda r: (r["organism"], r["gene"], r["pdb_id"]))
@@ -220,13 +220,25 @@ def main():
 
     inv_path = OUTDIR / "pdb_inventory.tsv"
     with inv_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(inv_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(
+            fh, fieldnames=list(inv_rows[0].keys()), delimiter="\t", lineterminator="\n"
+        )
         w.writeheader()
         w.writerows(inv_rows)
 
     gene_path = OUTDIR / "pdb_gene_summary.tsv"
     with gene_path.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(gene_rows[0].keys()), delimiter="\t")
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "organism", "gene", "uniprot", "is_eukaryote", "length", "n_pdb",
+                "methods", "best_resolution_A", "max_coverage_frac", "exp_mf",
+                "exp_bp", "exp_cc", "exp_total", "contested_cat_mf",
+                "n_contested_cat_mf", "any_experimental",
+            ],
+            delimiter="\t",
+            lineterminator="\n",
+        )
         w.writeheader()
         w.writerows(gene_rows)
 

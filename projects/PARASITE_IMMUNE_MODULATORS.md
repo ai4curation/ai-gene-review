@@ -1,6 +1,7 @@
 ---
 title: "Parasite Immune Modulators"
 maturity: IN_PROGRESS
+last_reviewed: "2026-10-05"
 tags: [BIOLOGY_DOMAIN]
 species: [DESRO]
 sidecars:
@@ -11,117 +12,72 @@ manifest:
   slides:
     - href: PARASITE_IMMUNE_MODULATORS/slides/PARASITE_IMMUNE_MODULATORS-slides.html
       description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/JJLDmMgBcefBkHqhR9iHiA
-      title: Project brief
 ---
 
 # Parasite Immune Modulators
 
 **Bottom line:** blood-feeders and parasites secrete proteins that blunt host
-clotting, inflammation and immunity. This project set out to curate them, starting with vampire bat
-(*Desmodus rotundus*, DESRO) saliva. So far the work has been scoping: we
-summarised the Vampirome salivary transcriptome, extracted its Table 4
-candidates, and mapped 45 transcripts to UniProt, of which 35 matched an
-accession (all unreviewed TrEMBL entries). The gene reviews themselves were
-done under the sibling [VAMPIROME](VAMPIROME.md) project, which now holds 14
-DESRO reviews (13 salivary candidates plus K9IMD0, the lactotransferrin
-entry mapped to Draculin), 11 of them with a written description and core
-functions; CALCA has a folder but no review. The checkboxes
-below were not updated to reflect that. Non-bat parasites have not been
-started here; nematode parasites are tracked under the
-[PARASITES](PARASITES.md) umbrella, which treats this project as its
-host-modulation sub-topic.
+clotting, inflammation and immunity. This project now serves as a broad
+umbrella rather than the working queue for those reviews: vampire-bat saliva is
+handled by [VAMPIROME](VAMPIROME.md), while non-bat parasites are handled by the
+[PARASITES](PARASITES.md) umbrella. The vampire-bat scoping pass extracted 45
+Vampirome salivary transcripts and mapped 35 to UniProt accessions, all
+unreviewed TrEMBL entries. The current DESRO corpus has 14 review YAMLs with
+136 reviewed annotation rows: 66 ACCEPT, 27 MODIFY, 21 MARK_AS_OVER_ANNOTATED,
+8 KEEP_AS_NON_CORE, 7 UNDECIDED, 4 NEW and 3 REMOVE. Twelve reviews already
+have core functions; K9IUF6 and K9J2R0 still need final synthesis, and the
+`CALCA/vCGRP` seed only has a mapping-analysis folder because the peptide did not
+map cleanly to a DESRO UniProt entry. [#3994](https://github.com/ai4curation/ai-gene-review/issues/3994)
+tracks the DESRO backlog.
 
 ## Overview
 
-Project to curate parasite immune modulator proteins, starting with vampire bat (Desmodus rotundus; UniProt code DESRO) salivary proteins reported to modulate host immunity.
-See `projects/VAMPIROME.md` for the Vampirome-focused project and shared candidate list.
+Blood-feeding animals and parasites repeatedly evolve secreted proteins that
+interfere with host hemostasis, inflammation, antimicrobial defense and tissue
+repair. The initial experiment was vampire-bat saliva because the Vampirome
+transcriptome/proteome study supplied a candidate list for *Desmodus rotundus*,
+a species with no Swiss-Prot entries in that set. As reviews accumulated, the
+working files were split into two more precise projects:
 
-## Background (Vampirome + host interaction)
+- [VAMPIROME](VAMPIROME.md) owns the DESRO salivary candidate list, UniProt
+  mapping files and gene reviews.
+- [PARASITES](PARASITES.md) is the umbrella for non-bat parasite genes,
+  including host-modulating nematode secreted proteins.
 
-- The Desmodus salivary gland transcriptome/proteome (“Vampirome”) catalogs secreted protein families associated with blood-feeding and host modulation, including plasminogen activators, lipocalins/secretoglobins, antigen-5/CRISP, protease inhibitors, and immune-related peptides. [PMC3685427](https://pmc.ncbi.nlm.nih.gov/articles/PMC3685427/)
-- Draculin is a purified salivary anticoagulant that inhibits activated coagulation factors IXa and Xa. [PMID:7740503](https://pubmed.ncbi.nlm.nih.gov/7740503/)
-- Vampirome transcripts include DNases implicated in disrupting neutrophil extracellular traps (NETs), as well as TSG-6/TNF-inducible gene family members, and CCL28-like proteins with immune relevance. [PMC3685427](https://pmc.ncbi.nlm.nih.gov/articles/PMC3685427/)
-- Platelet/hemostasis modulators include TFPI-like Kunitz inhibitors, apyrases (ADP degradation), and phosphatases; antimicrobial proteins and protease inhibitors (cystatin/Kazal/TIL/serpins) are also enriched. [PMC3685427](https://pmc.ncbi.nlm.nih.gov/articles/PMC3685427/)
-- Livestock repeatedly exposed to vampire bat bites show shortened clotting/bleeding times consistent with an acquired response to salivary anticoagulants, suggesting these proteins are immunogenic in prey. [J Mammal 2009](https://academic.oup.com/jmammal/article/90/5/1132/870024)
-- If we extend “symbiont-host” to the bat microbiome, vampire bat gut metagenomes show enrichment for heme/iron handling, vitamin/cofactor biosynthesis, and amino-acid metabolism pathways, offering hypotheses for host–symbiont interactions beyond saliva. [Animal Microbiome 2021](https://animalmicrobiome.biomedcentral.com/articles/10.1186/s42523-021-00139-8)
+## Vampirome scoping
 
-## Seed Genes (DESRO)
+| Step | Count | Location / status |
+|---|---:|---|
+| Salivary transcripts extracted from Vampirome Table 4 | 45 | [table4_extract.md](VAMPIROME/table4_extract.md) |
+| Transcripts mapped to UniProt | 35 | [uniprot_mapping.md](VAMPIROME/uniprot_mapping.md); all are TrEMBL |
+| DESRO review YAMLs | 14 | first hemostasis / immune shortlist plus K9IMD0 Draculin |
+| DESRO reviews with synthesized core functions | 12 | K9IUF6 and K9J2R0 remain synthesis TODOs |
+| Reviewed DESRO annotation rows | 136 | 132 imported GOA rows plus 4 NEW proposals; 66 ACCEPT, 27 MODIFY, 21 MARK_AS_OVER_ANNOTATED, 8 KEEP_AS_NON_CORE, 7 UNDECIDED, 3 REMOVE |
 
-- [ ] Draculin
-- [ ] CALCA
-- [ ] Vampirome Table 4 extract (see `projects/VAMPIROME/table4_extract.md`)
-- [ ] TODO: add remaining vampire bat modulators from user list
+The first 14 reviews cover the high-priority hemostasis and immune candidates:
+plasminogen activator K9IJK6, Kunitz inhibitor K9IZA2, C1-inhibitor-like serpin
+K9IYM3, DNase K9J287, CCL28-like chemokine K9IFY6, lymphotoxin-alpha K9IWR0,
+beta-defensin K9IFT7, lysozyme K9IWH5, TSG-6 K9IIP0, ADAMTS1-like K9IUF6,
+natriuretic peptide K9IWC0, CAP/CRISP protein K9IWX5, DPP4 K9J2R0 and
+Draculin / lactotransferrin K9IMD0.
 
-## Vampirome candidates (mapped to UniProt)
+`CALCA/vCGRP` has a `genes/DESRO/CALCA/` mapping-analysis directory but no review
+YAML: the reported peptide could not yet be tied to a DESRO UniProt accession.
 
-- Full mapping table: `projects/VAMPIROME/uniprot_mapping.md`
-- [ ] Putative serpin (UniProt: K9IJG1; entry K9IJG1_DESRO; transcript BatTrinityAbyss-25903)
-- [ ] Putative secreted protein precursor (UniProt: K9IFW5; entry K9IFW5_DESRO; transcript BatTrinityAbyss-36340)
-- [ ] Metalloproteinase inhibitor 1 (UniProt: K9IGJ9; entry K9IGJ9_DESRO; transcript BatTrinityAbyss-37180)
-- [ ] Beta-defensin 1 (UniProt: K9IFT7; entry K9IFT7_DESRO; transcript BatTrinityAbyss-401005)
-- [ ] Putative cystatin-m (UniProt: K9IWH8; entry K9IWH8_DESRO; transcript BatTrinityAbyss-41885)
-- [ ] Putative salivary lipocalin (UniProt: K9IRT4; entry K9IRT4_DESRO; transcript BatTrinityAbyss-466603)
-- [ ] Putative salivary lipocalin (UniProt: K9IHB8; entry K9IHB8_DESRO; transcript BatTrinityAbyss-495622)
-- [ ] Putative salivary lipocalin (UniProt: K9IWR5; entry K9IWR5_DESRO; transcript BatTrinityAbyss-495624)
-- [ ] Putative salivary lipocalin (UniProt: K9IQU6; entry K9IQU6_DESRO; transcript BatTrinityAbyss-495626)
-- [ ] Putative salivary lipocalin (UniProt: K9IWP0; entry K9IWP0_DESRO; transcript BatTrinityAbyss-495631)
-- [ ] Putative scp crisp: scp-like extracellular (UniProt: K9IWX5; entry K9IWX5_DESRO; transcript BatTrinityAbyss-495870)
-- [ ] Putative salivary lipocalin (UniProt: K9IYU4; entry K9IYU4_DESRO; transcript BatTrinityAbyss-496761)
-- [ ] t-plasminogen activator (UniProt: K9IJK6; entry K9IJK6_DESRO; transcript BatTrinityAbyss-499018)
-- [ ] Putative pituitary adenylate cyclase-activating (UniProt: K9IGD6; entry K9IGD6_DESRO; transcript BatTrinityAbyss-500584)
-- [ ] Lysozyme (UniProt: K9IWH5; entry K9IWH5_DESRO; transcript BatTrinityAbyss-500942; gene LYZ)
-- [ ] C-C motif chemokine (UniProt: K9IFY6; entry K9IFY6_DESRO; transcript BatTrinityAbyss-506850)
-- [ ] Epoxide hydrolase (UniProt: K9IKD6; entry K9IKD6_DESRO; transcript BatTrinityAbyss-508632)
-- [ ] 2-phosphoxylose phosphatase 1 (UniProt: K9IKM9; entry K9IKM9_DESRO; transcript BatTrinityAbyss-508800)
-- [ ] A disintegrin and metalloproteinase with thrombospondin motifs 1 (UniProt: K9IUF6; entry K9IUF6_DESRO; transcript BatTrinityAbyss-517665)
-- [ ] Putative alpha-1-antichymotrypsin (UniProt: K9IXP7; entry K9IXP7_DESRO; transcript BatTrinityAbyss-518161)
-- [ ] Putative disintegrin and metalloproteinase (UniProt: K9IZP9; entry K9IZP9_DESRO; transcript BatTrinityAbyss-521171)
-- [ ] Tumor necrosis factor-inducible gene 6 protein (UniProt: K9IIP0; entry K9IIP0_DESRO; transcript BatTrinityAbyss-527888)
-- [ ] Deoxyribonuclease-1-like 1 (UniProt: K9J287; entry K9J287_DESRO; transcript BatTrinityAbyss-532109)
-- [ ] Metalloproteinase inhibitor 3 (UniProt: K9IHC5; entry K9IHC5_DESRO; transcript BatTrinityAbyss-534229)
-- [ ] 5'-nucleotidase domain-containing protein 1 (UniProt: K9IKC7; entry K9IKC7_DESRO; transcript BatTrinityAbyss-537653)
-- [ ] Natriuretic peptides B (UniProt: K9IWC0; entry K9IWC0_DESRO; transcript BatTrinityAbyss-538594)
-- [ ] Kunitz-type protease inhibitor 2 (UniProt: K9IZA2; entry K9IZA2_DESRO; transcript BatTrinityAbyss-541822)
-- [ ] Serpin B6 (UniProt: K9J5D5; entry K9J5D5_DESRO; transcript BatTrinityAbyss-543253)
-- [ ] Putative neuroserpin is a inhibitory member of (UniProt: K9J0L7; entry K9J0L7_DESRO; transcript BatTrinityAbyss-548577)
-- [ ] Acid sphingomyelinase-like phosphodiesterase (UniProt: K9IL01; entry K9IL01_DESRO; transcript BatTrinityAbyss-549118)
-- [ ] Dipeptidyl peptidase 4 (UniProt: K9J2R0; entry K9J2R0_DESRO; transcript BatTrinityAbyss-561424)
-- [ ] Lymphotoxin-alpha (UniProt: K9IWR0; entry K9IWR0_DESRO; transcript BatTrinityAbyss-86412)
-- [ ] Putative secreted mucin (UniProt: K9IGW6; entry K9IGW6_DESRO; transcript DrSigp-SigP-36965)
-- [ ] Putative iggfc-binding protein (UniProt: K9J450; entry K9J450_DESRO; transcript DrSigp-SigP-495835)
-- [ ] Putative plasma protease c1 inhibitor (UniProt: K9IYM3; entry K9IYM3_DESRO; transcript DrSigp-SigP-532391)
+## Status / next steps
 
----
-# STATUS
+- **DESRO reviews.** Finish VAMPIROME synthesis for K9IUF6 and K9J2R0; resolve
+  `CALCA/vCGRP`; then continue through the remaining mapped lipocalin, serpin,
+  cystatin, TIMP and other TrEMBL salivary candidates. Tracked in
+  [#3994](https://github.com/ai4curation/ai-gene-review/issues/3994).
+- **Non-bat parasites.** Fold non-bat parasite host modulators into
+  [PARASITES](PARASITES.md), starting with literature-backed seed choices rather
+  than a duplicated checklist here. Tracked in
+  [#3992](https://github.com/ai4curation/ai-gene-review/issues/3992).
 
-## 2026-01-20
+## Related projects
 
-- [ ] Create gene folders and fetch UniProt/GOA data
-- [ ] Deep research (default: falcon)
-- [ ] Review existing annotations (annotation-reviewer)
-- [ ] Synthesize core functions
-- [ ] Optional: pathway summary (if requested)
-
-## 2026-01-21
-
-- [x] Add general background from Vampirome and host-response literature
-- [x] Extract Vampirome Table 4 candidate transcript seeds
-- [x] Map Vampirome transcript IDs to DESRO genes/UniProt accessions
-- [x] Expand seed gene list after mapping
-
-# NOTES
-
-## 2026-01-21
-
-- Added Vampirome background and host interaction context with citations.
-- Extracted a focused Table 4 candidate list into `projects/VAMPIROME/table4_extract.md`.
-- Mapped 45 Vampirome transcript IDs to TSA/UniProt where possible; 35 matched UniProt accessions.
-- Unmapped transcripts (no TSA/UniProt match via NCBI search): BatTrinityAbyss-321620, BatTrinityAbyss-429618, BatTrinityAbyss-489254, BatTrinityAbyss-499100, BatTrinityAbyss-499228, BatTrinityAbyss-500441, BatTrinityAbyss-509950, BatTrinityAbyss-523646, BatTrinityAbyss-8258, DrSigp-SigP-210264.
-- Vampirome artifacts moved under `projects/VAMPIROME/` and cross-linked.
-
-## 2026-01-20
-
-- Project initialized with seed DESRO proteins (Draculin, CALCA).
-- Awaiting full seed list for remaining vampire bat modulators.
+- [VAMPIROME](VAMPIROME.md) — vampire bat salivary gland proteins that modulate
+  host hemostasis and immunity.
+- [PARASITES](PARASITES.md) — parasitic nematodes and other parasite genes,
+  including non-bat secreted host modulators.

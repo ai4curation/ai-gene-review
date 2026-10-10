@@ -38,7 +38,7 @@ Scoping GO curation of secreted host-modulating proteins, starting with vampire 
 
 - Blood-feeders and parasites secrete proteins that **blunt host clotting, inflammation and immunity**.
 - We scoped the **vampire bat (DESRO) Vampirome**: 45 salivary transcripts → **35 UniProt accessions, all unreviewed TrEMBL**.
-- The reviews moved to the sibling **VAMPIROME** project: **14 DESRO reviews**, 11 complete. Non-bat parasites are **not started**.
+- The reviews moved to **VAMPIROME**: **14 DESRO reviews**, 136 reviewed rows, and 12 core-function summaries. Non-bat parasites now route through **PARASITES**.
 
 ---
 
@@ -58,22 +58,24 @@ Scoping GO curation of secreted host-modulating proteins, starting with vampire 
 
 | Action | Rows |
 |---|---|
-| ACCEPT | 64 |
-| MODIFY | 29 |
-| UNDECIDED | 21 |
-| MARK_AS_OVER_ANNOTATED | 15 |
+| ACCEPT | 66 |
+| MODIFY | 27 |
+| MARK_AS_OVER_ANNOTATED | 21 |
+| KEEP_AS_NON_CORE | 8 |
+| UNDECIDED | 7 |
 | REMOVE | 3 |
 | NEW (proposed) | 4 |
 
-<span class="small">132 GOA rows across 14 reviews in <code>genes/DESRO/</code>. UNDECIDED rows are propagated terms with no bat evidence either way: 10 on K9IMD0 (e.g. protease rows transferred from human LTF), 6 on the K9IUF6 ADAMTS1 fragment whose catalytic residues UniProt flags.</span>
+<span class="small">136 reviewed rows across 14 reviews in <code>genes/DESRO/</code>: 132 imported GOA rows plus 4 NEW proposals. UNDECIDED rows are mainly the K9IUF6 ADAMTS1 fragment; K9IUF6 and K9J2R0 still need core_functions.</span>
 
 ---
 
 ## Status and next steps
 
 - ✅ Background, Table 4 extract and UniProt mapping (`projects/VAMPIROME/`).
-- ✅ 14 DESRO reviews under [VAMPIROME](../../VAMPIROME.md); ⬜ finish K9IUF6, K9IWR0, K9J2R0; ⬜ CALCA.
+- ✅ 14 DESRO reviews under `VAMPIROME`; ⬜ synthesize K9IUF6 and K9J2R0; ⬜ resolve `CALCA/vCGRP`.
 - ⬜ Remaining ~20 mapped candidates (lipocalins, serpins, cystatin, TIMPs).
-- ⬜ Non-bat parasites: fold into the [PARASITES](../../PARASITES.md) umbrella as its host-modulation sub-topic.
+- ⬜ [#3994](https://github.com/ai4curation/ai-gene-review/issues/3994): finish the DESRO backlog.
+- ⬜ Non-bat parasites: fold into the `PARASITES` umbrella as its host-modulation sub-topic ([#3992](https://github.com/ai4curation/ai-gene-review/issues/3992)).
 
 **Read more:** `projects/PARASITE_IMMUNE_MODULATORS.md` · `projects/VAMPIROME.md` · `genes/DESRO/`

@@ -1,3 +1,7 @@
+---
+species: [HORSE]
+---
+
 # Horse benchmark review: pairs 31–40
 
 All ten pairs have human research, GOA assessments, exact-sequence comparisons and ProtNLM claim assessments. UNDECIDED/UNC identifies unresolved evidence rather than an assumed biological error.
