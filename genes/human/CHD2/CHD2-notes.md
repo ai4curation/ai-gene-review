@@ -86,3 +86,8 @@ ROOT independently checked the human biochemical motor, mouse MyoD/H3.3 experime
 ## Prepublication peer clarification
 
 The independent whole peer prompted the THAP1 binding-class refinement and reuse of the authentic Chd2 supplemental readout. The three ATPase reasons now correctly identify the preserved ISS donor Q12873 as CHD3. These bounded changes preserve all source objects, products and original reference identities. No new annotation, source-cache replacement or primary quotation was added.
+
+
+## 2026-10-10 — original Castello supplement recovered
+
+The original publisher Table S1 is now available and the CHD2 row was independently checked. Its positive ion-count result confirms the existing non-core RNA-binding decision. This supersedes the earlier table-access gap; gene-level capture does not resolve a product or RNA target. The evidence artifact preserves exact headers, row 706, source URL/hash and the earlier provenance. All decisions, core functions and Baltz evidence remain unchanged.
