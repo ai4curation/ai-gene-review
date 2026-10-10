@@ -38,7 +38,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 # STATUS
 
-Last updated: 2026-10-09
+Last updated: 2026-10-10
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -46,13 +46,19 @@ Last updated: 2026-10-09
 cytosolic Hsp104-family disaggregases at `PANTHER:PTN007521008` and
 mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 
-- [ ] `yeast/HSP104` - cytosolic ATP-dependent disaggregase
-- [x] `yeast/HSP78` - mitochondrial Hsp104/ClpB paralog
-- [x] `SCHPO/hsp104` - fission yeast cytosolic Hsp104 ortholog
-- [x] `SCHPO/hsp78` - fission yeast mitochondrial Hsp78 ortholog
-- [x] `CANAL/HSP104` - CGD-seeded *Candida albicans* Hsp104 ortholog
-- [x] `CANAL/HSP78` - *Candida albicans* mitochondrial Hsp78 ortholog
-- [x] `NEUCR/hsp98` - *Neurospora crassa* Hsp104-family member
+- [ ] `yeast/HSP104` - cytosolic ATP-dependent disaggregase; existing
+  curated anchor, not yet rechecked in this project
+- [ ] `yeast/HSP78` - mitochondrial Hsp104/ClpB paralog; review in PR #4519
+- [ ] `SCHPO/hsp104` - fission yeast cytosolic Hsp104 ortholog; review in PR
+  #4524
+- [ ] `SCHPO/hsp78` - fission yeast mitochondrial Hsp78 ortholog; review in
+  PR #4521
+- [ ] `CANAL/HSP104` - CGD-seeded *Candida albicans* Hsp104 ortholog; review
+  in PR #4523
+- [ ] `CANAL/HSP78` - *Candida albicans* mitochondrial Hsp78 ortholog; review
+  in PR #4522
+- [ ] `NEUCR/hsp98` - *Neurospora crassa* Hsp104-family member; review in PR
+  #4520
 
 ## Later Candidates
 
@@ -77,30 +83,36 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
   disaggregases. The family also includes a CGD HSP104 seed and a curated
   *S. cerevisiae* HSP104 review that already records how the current PAINT nodes
   ground the IBA rows.
-- Completed `CANAL/HSP104` as the first CGD review. The HSP104-node IBAs were
+- Drafted `CANAL/HSP104` as the first CGD review. The HSP104-node IBAs were
   accepted, the direct C. albicans heat-acclimation rows were accepted, the
   Candida biofilm row was kept as a non-core phenotype, generic `protein
   folding` was redirected to `protein refolding`, and an abstract-only
   cell-surface assignment was left undecided pending full-text verification.
-- Completed `NEUCR/hsp98` as the first filamentous-fungal review. The fungal
+- Drafted `NEUCR/hsp98` as the first filamentous-fungal review. The fungal
   Hsp104 IBA rows were accepted from the PAINT node placements, and the
   similarity-based nuclear localization row was left undecided because the
   cached Neurospora hsp98 paper does not test nuclear recruitment.
 
 ## 2026-10-09
 
-- Completed `yeast/HSP78` as the experimental mitochondrial Hsp78 anchor. The
+- Drafted `yeast/HSP78` as the experimental mitochondrial Hsp78 anchor. The
   Hsp78-specific `PANTHER:PTN000909045` IBAs were accepted, the mixed-node
   `cytoplasm` IBA was marked over-annotated, generic `protein folding` and
   `intracellular organelle lumen` rows were redirected to `protein refolding`
   and `mitochondrial matrix`, and a direct `GO:0140545 ATP-dependent protein
   disaggregase activity` proposal was added from Hsp78 disaggregation assays.
-- Completed `SCHPO/hsp104` and accepted the fungal Hsp104-node IBAs on
+- Drafted `SCHPO/hsp104` and accepted the fungal Hsp104-node IBAs on
   `PANTHER:PTN007521008`. Two narrow localization rows remain unresolved pending
   full-text inspection: the ORFeome-derived nuclear-envelope row and the NuR
   row whose cached abstract shows Hsp104-dependent disaggregation but not
   Hsp104 localization to NuRs.
-- Completed `SCHPO/hsp78` and `CANAL/HSP78` as mitochondrial Hsp78 orthologs.
+- Drafted `SCHPO/hsp78` and `CANAL/HSP78` as mitochondrial Hsp78 orthologs.
   Both retain the Hsp78-node matrix/refolding/unfolding IBAs, both flag the
   broad mixed-node `cytoplasm` IBA as over-scoped, and the Candida review now
   proposes `GO:0140545` by ISO from SGD HSP78.
+
+## 2026-10-10
+
+- Opened sibling PRs for the six drafted Hsp100/ClpB reviews: `yeast/HSP78`
+  (#4519), `NEUCR/hsp98` (#4520), `SCHPO/hsp78` (#4521), `CANAL/HSP78`
+  (#4522), `CANAL/HSP104` (#4523), and `SCHPO/hsp104` (#4524).
