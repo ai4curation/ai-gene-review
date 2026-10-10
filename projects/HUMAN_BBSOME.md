@@ -1,12 +1,36 @@
 ---
 title: "Human BBSome Project"
-maturity: IN_PROGRESS
+maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
 genes: [BBS1, BBS2, ARL6, BBS4, BBS5, MKKS, BBS7, TTC8, BBS9, BBS10, BBS12, LZTFL1, BBIP1, CCDC28B]
+manifest:
+  slides:
+    - href: HUMAN_BBSOME/slides/HUMAN_BBSOME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/LHycMPW3frEEecc1J3b1Yr
+      title: Project brief
 ---
 
 # Human BBSome Project
+
+**Bottom line:** the BBSome is the eight-subunit coat that sorts signalling
+receptors into and out of the primary cilium, and its loss causes Bardet–Biedl
+syndrome. We reviewed every existing GO annotation for the 14 BBS-associated
+human genes (the eight core subunits, the ARL6 recruiter, the LZTFL1 and
+CCDC28B regulators, and the MKKS/BBS10/BBS12 assembly chaperonins) and built a
+reusable [BBSome module](../modules/bbsome.html). All 14 reviews and the module
+validate. The main corrections were demoting the pervasive `protein binding`
+IPI rows in favour of BBSome membership (GO:0034464) or specific MF terms,
+treating the three chaperonin-like BBS proteins as assembly factors rather than
+subunits, and removing two over-propagated BBS2 IEA localizations.
+
+We did this because the BBSome is a well-bounded complex with a strong
+structural literature, which makes it a clean test of whether per-gene review
+recovers the division of labour inside a complex (cargo recognition,
+membrane recruitment, assembly) instead of copying one generic
+"cilium" story onto every subunit.
 
 ## Overview
 
@@ -60,8 +84,6 @@ reusable **cell-component module** for the BBSome under `modules/bbsome.yaml`.
 | 13 | BBIP1 | BBS18 | A8MTZ0 | Core subunit; complex stabilization |
 | 14 | CCDC28B | — | Q9BUN5 | Accessory modifier of BBSome ciliary localization |
 
-(UniProt IDs to be confirmed from fetched records.)
-
 ## Deliverables
 
 1. `modules/bbsome.yaml` — cell-component module (`ModuleReview`, `CELLULAR_COMPONENT`/
@@ -79,7 +101,7 @@ reusable **cell-component module** for the BBSome under `modules/bbsome.yaml`.
 - [x] Validate all (module + all 14 gene reviews `✓ Valid`)
 - [ ] Pathway/summary integration (optional follow-up)
 
-### Review summary (completed 2026-06-14)
+### Review summary (completed 2026-06-14; counts re-derived from the review YAMLs 2026-09-26)
 
 All 14 gene reviews are complete and validate cleanly. Each gene received a
 standalone `description`, full per-annotation review (action + summary + reason),
@@ -88,19 +110,19 @@ blocks, and a `<GENE>-notes.md` research journal with cited provenance.
 
 | Gene | Ann (+NEW) | ACCEPT | Non-core | Over-ann. | MODIFY | REMOVE |
 |------|-----------|--------|----------|-----------|--------|--------|
-| BBS1 | 60 | 30 | 18 | 7 | 5 | 0 |
+| BBS1 | 60 | 26 | 7 | 23 | 4 | 0 |
 | BBS2 | 67 | 16 | 24 | 25 | 0 | 2 |
-| ARL6 | 39 | 11 | 19 | 7 | 0 | 0 |
+| ARL6 | 38 | 11 | 21 | 6 | 0 | 0 |
 | BBS4 | 110 | 42 | 37 | 31 | 0 | 0 |
 | BBS5 | 44 | 18 | 12 | 14 | 0 | 0 |
-| MKKS | 61 (+1) | 5 | 23 | 30 | 2 | 0 |
+| MKKS | 60 (+1) | 5 | 21 | 32 | 2 | 0 |
 | BBS7 | 48 (+1) | 15 | 18 | 14 | 1 | 0 |
-| TTC8 | 47 | 23 | 10 | 14 | 0 | 0 |
+| TTC8 | 45 | 23 | 10 | 12 | 0 | 0 |
 | BBS9 | 48 (+1) | 20 | 13 | 13 | 2 | 0 |
 | BBS10 | 12 (+2) | 5 | 4 | 3 | 0 | 0 |
 | BBS12 | 12 (+1) | 3 | 3 | 6 | 0 | 0 |
-| LZTFL1 | 24 | 12 | 2 | 9 | 0 | 0 |
-| BBIP1 | 24 (+3) | 13 | 8 | 3 | 0 | 0 |
+| LZTFL1 | 24 | 13 | 2 | 9 | 0 | 0 |
+| BBIP1 | 22 (+3) | 11 | 8 | 3 | 0 | 0 |
 | CCDC28B | 6 | 4 | 0 | 2 | 0 | 0 |
 
 **Cross-cutting findings:**

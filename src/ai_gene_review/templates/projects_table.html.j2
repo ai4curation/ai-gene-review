@@ -53,6 +53,7 @@
         td a { color: var(--color-primary); text-decoration: none; }
         td a:hover { text-decoration: underline; }
         .muted { color: var(--text-muted); }
+        td.res { white-space: nowrap; font-size: 0.8rem; }
         code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; }
 
         .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
@@ -99,6 +100,14 @@
                 {% for t in all_tags %}<span class="chip" data-value="{{ t }}">{{ t }}</span>{% endfor %}
             </div>
         </div>
+        {% if all_collections %}
+        <div class="control-group">
+            <span class="label">Collection</span>
+            <div class="chips" data-filter="collection">
+                {% for c in all_collections %}<span class="chip" data-value="{{ c.key }}" title="{{ c.key }}">{{ c.title }}</span>{% endfor %}
+            </div>
+        </div>
+        {% endif %}
         <div class="control-group">
             <span class="label">Maturity</span>
             <div class="chips" data-filter="maturity">
@@ -131,6 +140,7 @@
                 <th>Species</th>
                 <th>Genes</th>
                 <th>Docs</th>
+                {% for kind, spec in manifest_kinds.items() %}<th>{{ spec.label }}</th>{% endfor %}
             </tr>
         </thead>
         <tbody>
@@ -141,6 +151,7 @@
                 data-maturity="{{ row.maturity or '' }}"
                 data-review="{{ row.review_status or '' }}"
                 data-tags="{{ row.tags | join(' ') }}"
+                data-collections="{{ row.collections | join(' ') }}"
                 data-species="{{ row.species | join(' ') }}">
                 <td><a href="{{ row.url }}">{{ row.title }}</a><br><code class="muted">{{ row.slug }}</code></td>
                 <td>{% if row.maturity %}<span class="badge m-{{ row.maturity }}">{{ row.maturity }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
@@ -149,13 +160,16 @@
                 <td>{% if row.species %}{% for s in row.species %}<span class="sp">{{ s }}</span>{% endfor %}{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
                 <td>{% if row.genes %}<span title="{{ row.genes | join(', ') }}">{{ row.genes | length }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
                 <td>{% if row.support_count %}{{ row.support_count }}{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+                {% for kind, spec in manifest_kinds.items() %}
+                <td class="res">{% for r in row.manifest[kind] %}<a href="{{ r.href }}"{% if r.external %} target="_blank" rel="noopener"{% endif %} title="{{ r.label }}{% if r.description %} ({{ r.description }}){% endif %}{% if r.external %}, opens an external page{% endif %}">{{ spec.label | lower }}{% if r.external %}&nbsp;&#8599;{% endif %}</a>{% if not loop.last %}<br>{% endif %}{% else %}<span class="muted">&mdash;</span>{% endfor %}</td>
+                {% endfor %}
             </tr>
         {% endfor %}
         </tbody>
     </table>
 
     <script>
-        const state = { tag: new Set(), maturity: new Set(), species: new Set(), review: new Set(), q: "" };
+        const state = { tag: new Set(), maturity: new Set(), species: new Set(), review: new Set(), collection: new Set(), q: "" };
         const rows = Array.from(document.querySelectorAll("tbody tr"));
         const countEl = document.getElementById("visible-count");
 
@@ -168,6 +182,8 @@
             if (state.review.size && !state.review.has(tr.dataset.review)) return false;
             const tags = tr.dataset.tags.split(" ").filter(Boolean);
             if (state.tag.size && !tags.some(t => state.tag.has(t))) return false;
+            const cols = tr.dataset.collections.split(" ").filter(Boolean);
+            if (state.collection.size && !cols.some(c => state.collection.has(c))) return false;
             const sp = tr.dataset.species.split(" ").filter(Boolean);
             if (state.species.size && !sp.some(s => state.species.has(s))) return false;
             return true;

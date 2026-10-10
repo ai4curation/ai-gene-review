@@ -32,7 +32,7 @@ jobs:
 
       # Ontology SQLite DBs (GO, CHEBI, ...) are large; free space before downloads.
       - name: Free disk space
-        uses: jlumbroso/free-disk-space@v1.3.1
+        uses: jlumbroso/free-disk-space@v2.0.0
         with:
           tool-cache: false
           large-packages: false
@@ -79,6 +79,12 @@ jobs:
               - 'genes/**/*-ai-review.yaml'
             predictions:
               - 'genes/**/*-predictions-review.yaml'
+            # BioReason/GO-GPT prediction sidecars: schema + term validation only
+            # (they carry no excerpts for the source-evidence check).
+            bioreason_predictions:
+              - 'genes/**/*-sft-predictions.yaml'
+              - 'genes/**/*-gogpt-predictions.yaml'
+              - 'genes/**/*-gogpt-leaf-predictions.yaml'
             modules:
               - 'modules/**/*.yaml'
               - 'modules/**/*.yml'
@@ -99,6 +105,11 @@ jobs:
               - 'projects/**'
             families:
               - 'interpro/panther/**/*-review.yaml'
+              # The member index (a build artifact) is the authority for
+              # family_residue_validator's PANTHER_MEMBERSHIP check, so a change to
+              # how it is built, or to its curated overrides, must re-validate.
+              - 'src/ai_gene_review/etl/panther_families.py'
+              - 'interpro/panther/panther-members-overrides.tsv'
             # Anything that can change validation behaviour for ALL genes. If any of
             # these change we cannot trust per-gene scoping, so we validate everything.
             infra:
@@ -119,17 +130,23 @@ jobs:
               - 'justfile'
               - 'project.justfile'
 
-      - name: Fetch benchmark baseline commit
+      # The benchmark tests read frozen inputs with `git cat-file` at two declared
+      # commits: baseline_commit (ARGO95/ARGO139 GOA) and review_snapshot_commit
+      # (reviews/GOA behind the GO-GPT, BioReason sidecar and ProtNLM reports).
+      - name: Fetch benchmark baseline and review snapshot commits
         if: steps.changes.outputs.src == 'true'
         shell: bash
         run: |
-          benchmark_baseline="$(sed -n 's/^baseline_commit: //p' projects/BIOREASON_COMPARISON/benchmark-policy.yaml)"
-          if [[ ! "$benchmark_baseline" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Invalid BioReason benchmark baseline_commit: $benchmark_baseline" >&2
-            exit 1
-          fi
-          # persist-credentials is disabled; this targeted fetch uses public read access.
-          git fetch --no-tags --depth=1 origin "$benchmark_baseline"
+          policy=projects/BIOREASON_COMPARISON/benchmark-policy.yaml
+          for field in baseline_commit review_snapshot_commit; do
+            commit="$(sed -n "s/^${field}: //p" "$policy")"
+            if [[ ! "$commit" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "Invalid BioReason benchmark ${field}: $commit" >&2
+              exit 1
+            fi
+            # persist-credentials is disabled; this targeted fetch uses public read access.
+            git fetch --no-tags --depth=1 origin "$commit"
+          done
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv
@@ -166,17 +183,42 @@ jobs:
           restore-keys: |
             oaklib-${{ runner.os }}-
 
-      # Residue validation resolves UniProt sequences. Caching them keeps
-      # validate-families from depending on UniProt being reachable on every run,
-      # which is what lets it stay scoped to gene changes as well as family ones.
-      # Same weekly rotation as above; sequences change far less often than that.
-      - name: Cache UniProt sequences
-        uses: actions/cache@v6
+      # PR runs reuse compatible generations, with the legacy cache as fallback.
+      # Scheduled/manual full passes resolve cold to detect upstream sequence drift.
+      # Saving separately below preserves valid downloads even if validation fails.
+      - name: Restore UniProt sequences
+        if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
+        uses: actions/cache/restore@v6
         with:
           path: .cache/uniprot_seq
-          key: uniprot-seq-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          key: uniprot-seq-v2-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}-
           restore-keys: |
+            uniprot-seq-v2-${{ runner.os }}-
             uniprot-seq-${{ runner.os }}-
+
+      - name: Snapshot restored UniProt sequences
+        id: sequence_cache_before
+        continue-on-error: true
+        run: >-
+          python .github/scripts/sequence_cache_manifest.py before
+          --cache-dir .cache/uniprot_seq
+          --snapshot "$RUNNER_TEMP/uniprot-sequence-before.json"
+
+      # The PANTHER member index (accession -> family) is a build artifact, not
+      # committed: validate-modules / validate-families run
+      # `just ensure-panther-members`, which extends it incrementally from the
+      # release-pinned PANTHER classification files cached here. A warm cache
+      # makes that a quick offline no-op; a cold one downloads ~300 MB once. The
+      # key changes when cited accessions change, so the extended index is saved,
+      # and restore-keys fall back to the nearest earlier cache.
+      - name: Cache PANTHER classifications and member index
+        uses: actions/cache@v6
+        with:
+          path: .cache/panther
+          key: panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-${{ hashFiles('modules/**/*.yaml', 'interpro/panther/**/*-review.yaml') }}
+          restore-keys: |
+            panther-${{ runner.os }}-${{ hashFiles('src/ai_gene_review/etl/panther_families.py') }}-
+            panther-${{ runner.os }}-
 
       # Scope validation to what changed: a change to schema/validators/config could
       # affect every gene (-> full validate-all); otherwise validate only changed genes.
@@ -199,6 +241,10 @@ jobs:
       - name: Validate changed prediction reviews and source evidence
         if: steps.changes.outputs.predictions == 'true'
         run: just validate-predictions ${{ steps.changes.outputs.predictions_files }}
+
+      - name: Validate changed BioReason/GO-GPT prediction files
+        if: steps.changes.outputs.bioreason_predictions == 'true'
+        run: just validate-prediction-terms ${{ steps.changes.outputs.bioreason_predictions_files }}
 
       - name: Upload prediction evidence validation
         if: always() && steps.changes.outputs.predictions == 'true'
@@ -293,6 +339,26 @@ jobs:
           steps.changes.outputs.genes == 'true'
         run: just validate-families
 
+      # Cache maintenance is advisory; every validation keeps its normal exit status.
+      # Save before the test suite, so synthetic test fixtures cannot enter this cache.
+      - name: Inspect downloaded UniProt sequences
+        id: sequence_cache_after
+        if: ${{ !cancelled() && steps.sequence_cache_before.outcome == 'success' }}
+        continue-on-error: true
+        run: >-
+          python .github/scripts/sequence_cache_manifest.py after
+          --cache-dir .cache/uniprot_seq
+          --snapshot "$RUNNER_TEMP/uniprot-sequence-before.json"
+          --output "$GITHUB_OUTPUT"
+
+      - name: Save downloaded UniProt sequences
+        if: ${{ !cancelled() && steps.sequence_cache_after.outcome == 'success' && steps.sequence_cache_after.outputs.changed == 'true' }}
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: .cache/uniprot_seq
+          key: uniprot-seq-v2-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}-${{ steps.sequence_cache_after.outputs.digest }}
+
       # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
       # that curation PRs commit alongside the claim they justify, so per-PR CI
       # cannot tell a genuine slice from an authored one. Re-deriving them from
@@ -317,8 +383,10 @@ jobs:
         run: |
           uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
             tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
-            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py -q
+            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
+            tests/test_sequence_cache_persistence.py -q
           uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
             scripts/retry_failed_reviews.py tests/test_auto_merge_ready_prs.py \
-            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py
+            tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
+            .github/scripts/sequence_cache_manifest.py tests/test_sequence_cache_persistence.py
           just test-js

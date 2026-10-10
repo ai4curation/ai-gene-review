@@ -3,9 +3,28 @@ title: "Yeast Cell Cycle & Translation Control"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [yeast]
+manifest:
+  slides:
+    - href: YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/9PwAusPtykDxdDpz1FfBMo
+      title: Project brief
 ---
 
 # Yeast Cell Cycle & Translation Control
+
+**Bottom line:** scoped, not yet started. Budding yeast commits to division at
+Start, where Cln3-Cdc28 inactivates the Whi5 repressor and the G1 cyclins, the
+CDK inhibitor Sic1 and the B-type cyclins then drive entry into S phase. This
+project plans to review the GO annotations of 23 *S. cerevisiae* genes spanning
+that circuit and the translation and ribosome-biogenesis machinery thought to
+time it. The aim is to test whether GO captures translational control of the
+cell cycle as well as it captures the transcriptional program. As of this
+update only TOR1 has a gene review in the repo (67 annotations assessed);
+the other 22 genes have no review folder, and the checklist below
+still reads 0 of 23. The list also needs a symbol check before work starts:
+yeast eIF1 is SUI1, and "EIF3" names a complex rather than a gene.
 
 ## Overview
 

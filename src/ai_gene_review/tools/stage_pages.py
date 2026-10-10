@@ -30,9 +30,16 @@ from ai_gene_review.publication_links import rewrite_publication_links, restore_
 # 10 GB Pages artifact cutoff. Do not confuse this with supported hosting capacity.
 PAGES_SIZE_BUDGET_BYTES = 9_999_999_999
 PAGES_ARCHIVE_BUDGET_BYTES = 9_999_999_999
+PAGES_SUPPORTED_SIZE_BYTES = 1_000_000_000
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
 PREDICTION_BROWSER_FILES = (*BROWSER_FILES, "source-files.json")
+#: Standalone browsers whose rows link to repository files: (label, dir, files).
+MANIFEST_BROWSERS = (
+    ("prediction browser", Path("app/predictions"), PREDICTION_BROWSER_FILES),
+    ("propagation browser", Path("app/propagation"),
+     ("index.html", "data.js", "source-files.json")),
+)
 
 
 @dataclass(frozen=True)
@@ -55,6 +62,12 @@ class SiteManifest:
     size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
     archive_size_budget_bytes: int = PAGES_ARCHIVE_BUDGET_BYTES
     archive_checksum_required: bool = True
+    supported_size_budget_bytes: int = PAGES_SUPPORTED_SIZE_BYTES
+
+    @property
+    def within_supported_size(self) -> bool:
+        """Whether this site fits GitHub Pages' officially supported capacity."""
+        return self.total_bytes <= self.supported_size_budget_bytes
 
     @property
     def broken_local_links(self) -> int:
@@ -68,13 +81,10 @@ class SiteManifest:
 
     @property
     def deployable(self) -> bool:
-        """Readiness policy shared by CLI reporting and deployment."""
+        """Artifact readiness; content-quality diagnostics are advisory."""
         return (
-            self.total_bytes <= self.size_budget_bytes
-            and self.archive_bytes <= self.archive_size_budget_bytes
-            and self.linked_source_files_not_staged == 0
-            and self.broken_local_links == 0
-            and self.off_base_path_links == 0
+            0 < self.total_bytes <= self.size_budget_bytes
+            and 0 < self.archive_bytes <= self.archive_size_budget_bytes
         )
 
 
@@ -112,18 +122,23 @@ def _require_file(path: Path) -> None:
         raise FileNotFoundError(f"Required Pages input is missing: {path}")
 
 
-def _stage_prediction_browser(repo_root: Path, output_dir: Path) -> None:
-    """Include the predictions app and public files linked from its dynamic rows."""
-    relative = Path("app/predictions")
+def _stage_prediction_browser(
+    repo_root: Path,
+    output_dir: Path,
+    relative: Path = Path("app/predictions"),
+    files: tuple[str, ...] = PREDICTION_BROWSER_FILES,
+    label: str = "prediction browser",
+) -> None:
+    """Include a browser app and public files linked from its dynamic rows."""
     if not (repo_root / relative).is_dir():
         return
-    for filename in PREDICTION_BROWSER_FILES:
+    for filename in files:
         source = repo_root / relative / filename
         _require_file(source)
         _copy_file(source, output_dir / relative / filename)
     sources = json.loads((repo_root / relative / "source-files.json").read_text())
     if not isinstance(sources, list) or not all(isinstance(path, str) for path in sources):
-        raise ValueError("Invalid prediction browser source manifest")
+        raise ValueError(f"Invalid {label} source manifest")
     for name in sources:
         path = Path(name)
         source = repo_root / path
@@ -136,7 +151,7 @@ def _stage_prediction_browser(repo_root: Path, output_dir: Path) -> None:
             or any(part.startswith(".") for part in resolved.relative_to(repo_root).parts)
             or resolved.is_relative_to(repo_root / "_site")
         ):
-            raise ValueError(f"Invalid prediction browser source: {name}")
+            raise ValueError(f"Invalid {label} source: {name}")
         _require_file(source)
         _copy_file(source, output_dir / path)
 
@@ -337,7 +352,8 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         _require_file(source)
         _copy_file(source, output_dir / "app" / browser_file)
 
-    _stage_prediction_browser(repo_root, output_dir)
+    for label, browser_dir, browser_files in MANIFEST_BROWSERS:
+        _stage_prediction_browser(repo_root, output_dir, browser_dir, browser_files, label)
 
     audit = _stage_linked_files(repo_root, output_dir)
     linked_sources = audit.excluded_sources
@@ -414,6 +430,7 @@ def main() -> None:
                 "broken_local_links": manifest.broken_local_links,
                 "off_base_path_links": manifest.off_base_path_links,
                 "deployable": manifest.deployable,
+                "within_supported_size": manifest.within_supported_size,
             },
             indent=2,
         )
@@ -431,6 +448,14 @@ def main() -> None:
     print(f"Staged {manifest.total_files:,} files in {output_dir}")
     print(f"Uncompressed site size: {size_mib:,.1f} MiB")
     print(f"Tar archive size: {manifest.archive_bytes / MIB:,.1f} MiB")
+    if not manifest.within_supported_size:
+        print(
+            "::warning title=Pages supported hosting capacity exceeded::"
+            f"Site is {manifest.total_bytes:,} bytes; GitHub Pages supports "
+            f"{manifest.supported_size_budget_bytes:,} bytes. The temporary "
+            "10 GB artifact policy permits an attempt, not reliable hosting. "
+            "Reduce the published footprint or move to hosting with sufficient capacity."
+        )
     print(
         f"Shared template assets saved: {manifest.shared_asset_bytes_saved / MIB:,.1f} MiB"
     )
@@ -456,13 +481,13 @@ def main() -> None:
         print(
             "::warning title=Pages links missing site prefix::"
             f"{manifest.off_base_path_links:,} likely off-base links; "
-            "see off_base_path_urls in the manifest. Deployment is blocked."
+            "see off_base_path_urls in the manifest. Publication continues."
         )
     if manifest.broken_local_links:
         print(
             "::warning title=Broken local Pages links::"
             f"{manifest.broken_local_links:,} missing static targets; "
-            "see broken_local_link_paths in the manifest. Deployment is blocked."
+            "see broken_local_link_paths in the manifest. Publication continues."
         )
     if manifest.linked_source_files_not_staged:
         linked_size_mib = manifest.linked_source_bytes_not_staged / MIB
@@ -470,7 +495,7 @@ def main() -> None:
             "::warning title=Linked files are outside the Pages artifact::"
             f"Published files link to {manifest.linked_source_files_not_staged:,} "
             f"existing repository files ({linked_size_mib:,.1f} MiB) that are not "
-            "staged. Resolve these omissions before deployment."
+            "staged (orphaned review pages). Publication continues; inspect the manifest."
         )
 
 

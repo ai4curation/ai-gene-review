@@ -56,3 +56,7 @@ FlyBase already updated the *D. melanogaster* TMF1 ortholog to "vesicle membrane
 ## Suggested new term
 
 A molecular-function counterpart of GO:0099022 ("vesicle tethering" — currently a BP) would let us annotate golgins like TMF1, GMAP-210, golgin-84 and the GRIP-domain golgins to a meaningful MF beyond "protein binding". ValWood (#6381) referred to a prospective "vesicle membrane tethering activity" term (not yet present in GO at time of writing — GO:7770062 returned 404 from the GO API on 2026-05-02). Until such a term is added, GO:0099041 (vesicle tethering to Golgi) is the most informative existing BP, and we record the missing MF in `proposed_new_terms`.
+
+## Update 2026-09-26: GO:7770062 minted
+
+GO:7770062 vesicle membrane tethering activity now exists in GO (it is used as the MF of GARP, exocyst and Dsl1/NZR annotons in cached production GO-CAMs, e.g. `gocams/index.tsv`), and GO:0099041 vesicle tethering to Golgi was obsoleted in the 2026-07-26 release. The review now uses GO:7770062 as TMF1's core MF and the `proposed_new_terms` entry has been retired (PR #3237). The 404 noted above is historical.

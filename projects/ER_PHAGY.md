@@ -3,9 +3,29 @@ title: "ER-phagy (Selective ER Autophagy) Project"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+genes: [SEC62, ATL3, ULK1, ATG9A, EIF2AK3]   # reviewed genes only; full candidate list is in the table below
+manifest:
+  slides:
+    - href: ER_PHAGY/slides/ER_PHAGY-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/JUWPntJaSWNzA2RferrHAX
+      title: Project brief
 ---
 
 # ER-phagy (Selective ER Autophagy) Project
+
+**Bottom line:** scoped, not yet started as a project. ER-phagy is the selective
+autophagy of endoplasmic reticulum, carried out by ER-membrane receptors
+(FAM134B/RETREG1, RTN3, SEC62, CCPG1, TEX264, ATL3) that bind ATG8-family
+proteins such as LC3B and GABARAP. The candidate table below lists 12 human genes, but
+no ER-phagy-specific work has been done: there is no module and no gene review
+made for this project. Five candidates were reviewed for other projects (SEC62
+and ATL3 for Proteostasis, ULK1 and ATG9A for the CONDENSATES phagophore audit,
+EIF2AK3 as a Proteostasis review). Of those, SEC62 keeps its IMP `reticulophagy`
+(GO:0061709) annotation as non-core, and the ATL3 review declined to add
+reticulophagy without better evidence. The receptors that define the field,
+RETREG1, RTN3, CCPG1 and TEX264, have no review yet.
 
 ## Overview
 
@@ -38,7 +58,7 @@ Proteins that bridge ER to autophagosomes via LC3-interacting regions (LIRs):
 - **ERN1** (IRE1α) - ER stress sensor
 - **EIF2AK3** (PERK) - ER stress kinase
 
-## Candidate Genes (~12-15)
+## Candidate Genes (12)
 
 | Gene | UniProt | Function |
 |------|---------|----------|
@@ -52,6 +72,8 @@ Proteins that bridge ER to autophagosomes via LC3-interacting regions (LIRs):
 | GABARAP | O95166 | ATG8 family |
 | ULK1 | O75385 | Autophagy kinase |
 | ATG9A | Q7Z3C6 | Membrane trafficking |
+| ERN1 | O75460 | IRE1α, ER stress sensor |
+| EIF2AK3 | Q9NZJ5 | PERK, ER stress kinase |
 
 ## Key Recent Discoveries (2020+)
 

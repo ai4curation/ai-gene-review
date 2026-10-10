@@ -1,10 +1,31 @@
 ---
 title: "Top-Nots: Candidate NOT Annotations from Existing Reviews"
-maturity: MATURE
-tags: [PIPELINE]
+maturity: IN_PROGRESS
+tags: [PIPELINE, EVALUATION]
 species: [human, mouse, yeast, SCHPO, DROME, ANOGA, ACET2, BACSU, DESVH, ECOLI, METEA, METTP, PSEAE, PSEPK, SALTY, CANGA, CLOCL, ARATH, worm]
+manifest:
+  slides:
+    - href: TOP_NOTS/slides/TOP_NOTS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Dcpr2BwERF8TFxPXiUiycg
+      title: Project brief
 ---
 # Top-Nots: Candidate NOT Annotations from Existing Reviews
+
+**Bottom line:** a NOT annotation states that a gene product lacks a function, and it is
+the only thing that stops automated pipelines from re-asserting a wrong activity by IEA
+or IBA. Many of the repo's ~6,319 REMOVE and MARK_AS_OVER_ANNOTATED decisions are really
+negative findings, so we mined them for the strongest NOT candidates with a keyword score
+over the review summaries ("lacks catalytic", "pseudoenzyme", "no detectable activity"
+and similar). We did this because a REMOVE only cleans one review, while a NOT, filed
+upstream, prevents the same error from propagating again. The scan (2026-03-06) found
+250 candidates across 19 species, 115 strong (score 4 or more) and 22 very strong,
+dominated by pseudo-enzymes, "is phosphorylated" misread as "does phosphorylation", and
+assembly factors given the activity of their complex; 21 of the 22 Tier 1 rows are
+REMOVE in their reviews and one is MARK_AS_OVER_ANNOTATED. No candidate has yet been
+literature-verified or proposed as a formal NOT, so the list is a worklist, not a
+submission.
 
 ## Overview
 
@@ -34,7 +55,7 @@ A keyword-based scoring system ranks candidates by confidence of negative eviden
 - NOT candidates (score >= 3): 250 across 19 species
 - Strong NOT candidates (score >= 4): 115
 - Very strong NOT candidates (score >= 6): 22
-- Already marked as `negated: true`: ~15 across all reviews
+- Already marked as `negated: true`: 295 rows in 187 reviews (2026-10-08 recount; the earlier ~15 was an undercount). See [NOT_NOTs](#not_nots-existing-not-annotations-that-do-not-hold-up)
 
 ## Tier 1: Highest Confidence NOT Candidates (score >= 6)
 
@@ -248,6 +269,94 @@ Family members that have lost the signature catalytic activity.
 - Epe1: JmjC family, lost demethylase activity
 - CG6051: Myotubularin family, lost phosphatase activity
 
+## NOT_NOTs: existing NOT annotations that do not hold up
+
+The rest of this project mines REMOVE decisions for NOT annotations that
+*should* exist. This section goes the other way: existing NOT annotations
+that reviewers overturned. One test settles both directions. A NOT is worth
+having only when the negative result rules out the function: the activity is
+absent, or the process or location is excluded. A failure to detect something
+is not enough.
+
+**Scan (2026-10-08).** [scripts/not_nots.py](TOP_NOTS/scripts/not_nots.py)
+writes [not_nots.tsv](TOP_NOTS/not_nots.tsv), one row per negated annotation
+in any review.
+
+| Review action on the NOT | Rows |
+|---|---|
+| ACCEPT | 234 |
+| KEEP_AS_NON_CORE | 25 |
+| UNDECIDED | 25 |
+| REMOVE | 8 |
+| MARK_AS_OVER_ANNOTATED | 3 |
+| **Total** | **295** (187 reviews) |
+
+Most NOTs hold up. The 11 overturned ones are below, grouped by why the
+negative result failed to support a NOT. Each was checked against the
+reviewer's reason.
+
+### Worked example: ARL3 NOT located in cilium
+
+ARL3 carried `NOT|located_in cilium` (IDA, PMID:17646400). The full text
+shows the basis was a screen of EGFP-tagged Rab and Arl GTPases
+overexpressed in serum-starved RPE1 cells. Arl family members other than
+ARL13B "were also absent from primary cilia (Fig. S2 A)". That shows only
+that tagged ARL3 is not selectively enriched in cilia under one condition.
+It says nothing about where ARL3 acts, and ARL3 acts inside the cilium:
+ARL13B, its GEF, is confined to the ciliary membrane, so ARL3-GTP is made
+there and releases lipidated cargo from PDE6D and UNC119 (PMID:26551564).
+Endogenous ARL3 also stains cilia. The NOT was removed; see
+`genes/human/ARL3/ARL3-ai-review.yaml`.
+
+### Failure types among the 11 overturned NOTs
+
+| Type | Gene: NOT term (evidence, reference) | Why the NOT fails |
+|---|---|---|
+| **Non-detection of an overexpressed tagged protein** | human ARL3: cilium (IDA, PMID:17646400) | GFP-ARL3 was not enriched in cilia. Native ARL3 is in cilia and functions there. |
+| **Absence from a fractionation proteome** | ARATH OST1: cytosol (RCA, PMID:21166475); ARATH AT5G02500 (HSC70-1): cytosol (RCA, PMID:21166475) | Not recovered in one cytosolic-proteome dataset. Direct IDA shows both are cytosolic. Missing from a proteome is not exclusion from a compartment. |
+| **One allele or condition generalized to the gene** | human DCTN1: axonal transport (IMP, PMID:18364389); human AGR2: response to ER stress (IMP, PMID:25666625) | G59S p150Glued mice showed no bulk transport defect, but dynactin is required for dynein-driven axonal transport. AGR2 was not induced in one context, but later work shows it alleviates ER stress. |
+| **Early negative assay superseded** | human AGO3: miRNA-mediated silencing by mRNA destabilization (IDA, PMID:15260970) | The 2004 assay detected no AGO3 slicing. PMID:29040713 later showed guide- and target-dependent AGO3 slicer activity. |
+| **NOT on a parent of an asserted child** | ARATH RGA: regulation of developmental vegetative growth (IMP, PMID:11606552) | RGA also carries the positive annotation *negative regulation of* vegetative growth. NOT on the unsigned parent logically contradicts the child. This is a signed/unsigned curation slip, and could be caught automatically. |
+| **Probable identity confusion** | human TOMM40: mitochondrion (IMP, PMID:11745481) | The paper studies TOMM40 under the name p38.5/Haymaker. TOMM40 is the core outer-membrane translocase pore. |
+| **Negative is real but uninformative** (marked over-annotated, not removed) | human GBA1: mitochondrion organization, neuron projection development (IMP, PMID:25456120); human CDK5: microtubule binding (TAS, PMID:17491008) | GBA1 iPSC neurons had normal mitochondrial morphology. True, but these are not processes GBA1 would be expected to act in, so the NOT prevents no plausible error. For CDK5, microtubule binding belongs to its activator p35. |
+
+### Lessons for making and trusting NOTs
+
+- **Localization NOTs need positive evidence of exclusion.** Examples are a
+  validated antibody against the native protein, or a compartment marker plus
+  a functional test. A tagged construct or a proteome list that misses the
+  protein is not enough.
+- **Process NOTs from loss-of-function need the whole gene tested.** One
+  missense allele, one cell line or one condition can show the allele is
+  dispensable. It cannot show the gene is uninvolved.
+- **Check NOTs against the ontology.** A NOT on a term whose descendant is
+  asserted positively for the same gene is a contradiction, and a query
+  could find these systematically (the RGA case).
+- **Old negative assays age badly.** AGO3's 2004 negative was overturned by
+  later work. The same 2004 paper (PMID:15260970) supplies NOTs for AGO1
+  and AGO4 that are still UNDECIDED (below), so they should be reviewed
+  together with AGO3.
+
+### Undecided NOTs (follow-up list)
+
+25 negated rows are UNDECIDED, usually because the reviewer could not see
+the full text. They cluster:
+
+- **AGO1, AGO4** (×4): NOT siRNA/miRNA silencing by mRNA destabilization,
+  PMID:15260970. These come from the same paper as the overturned AGO3 NOT.
+  AGO1 and AGO4 are generally considered slicer-deficient, so these NOTs may
+  be right where AGO3's was not.
+- **SIRT1, SIRT5** (×5): NOT ADP-ribosyltransferase activities (TAS,
+  PMID:17456799) and SIRT5 NOT protein deacetylation (IDA, PMID:22076378).
+  These reflect the debated sirtuin activities.
+- **BMPR2, BMPR1A** (×5): NOT cardiac and neural-crest developmental
+  processes, ISS (GO_REF:0000024). These are inferred negatives, which are
+  unusual.
+- **ANO5, ANO10**: NOT calcium-gated chloride channel activity (IDA).
+- **Singletons:** Epe1 heterochromatin formation; A3GALT2
+  alpha-1,3-galactosyltransferase; ABCB4 ceramide floppase and ceramide
+  translocation; RAB1B; TMEM65; VAPA; YTHDF3; rat Slc5a1 (ISO).
+
 ## Relationship to Other Projects
 
 - **CONTESTED_FUNCTION.md**: Overlaps with pseudo-enzyme cases (Epe1)
@@ -265,6 +374,9 @@ Family members that have lost the signature catalytic activity.
 - [ ] Consider building automated detection of pseudo-enzyme motifs (degenerate active sites)
 - [ ] File GO tracker issues for the "protein phosphorylation" misannotation class
 - [ ] Investigate whether DnaJ ATP-binding can be fixed at the InterPro2GO mapping level
+- [ ] NOT_NOTs: review the AGO1/AGO4 NOTs (PMID:15260970) together with the overturned AGO3 NOT
+- [ ] NOT_NOTs: query for NOTs on a parent term where a descendant is asserted positively for the same gene (RGA pattern)
+- [ ] NOT_NOTs: work through the 25 UNDECIDED negated rows
 
 ---
 
@@ -275,14 +387,26 @@ Family members that have lost the signature catalytic activity.
 - [x] Keyword-based scoring and ranking
 - [x] Pattern categorization
 - [x] Expanded keyword set and rescoring (250 candidates at score >= 3)
+- [x] NOT_NOTs scan of existing negated annotations and typing of the 11 overturned ones (2026-10-08)
 
 ## In Progress
 - [ ] Literature verification of Tier 1 candidates
 - [ ] Formal NOT annotation proposals
 
-Last updated: 2026-03-06
+Last updated: 2026-10-08
 
 # NOTES
+
+## 2026-10-08
+
+**NOT_NOTs section added.** This started from the ARL3 review in the
+HUMAN_PROTEIN_ATLAS cilium project, where `NOT|located_in cilium` turned out
+to rest on a tagged-construct screen (see the worked example). Recounted all
+negated annotations: there are 295, not ~15. Of these, 11 were overturned and
+25 are undecided. Recorded the overturned ones by failure type, plus the
+lessons and follow-ups, as a section here rather than a separate project.
+The numbers are small, and the test for a good NOT is the same in both
+directions.
 
 ## 2026-03-06
 
