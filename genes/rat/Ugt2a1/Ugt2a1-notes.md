@@ -19,3 +19,5 @@
   ciliary refinement rests on the immunogold EM summarized in the falcon deep research.
 - Open question for a human: the human UGT2A1 IDA for GO:0009608 (PMID:19858781) has no
   evident experimental basis in the cited paper and may merit review on the human side.
+
+**Stale UniProt quotes (2026-10-10):** replaced 10 `UniProtKB:P36510` supporting_text quotes (an abridged FUNCTION text no longer in the refreshed flat file) with verbatim sentences from the current FUNCTION comment in `Ugt2a1-uniprot.txt`, matched to each row (glucuronidation, xenobiotic detoxification, bile acid detoxification, olfaction).
