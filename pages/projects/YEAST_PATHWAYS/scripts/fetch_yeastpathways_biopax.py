@@ -37,10 +37,10 @@ ORF_RE = re.compile(r"^(Y[A-P][LR]\d{3}[WC](?:-[A-Z])?|Q\d{4}|R\d{4}W|[A-Z0-9]+)
 
 
 def list_pathways() -> list[str]:
-    html = urllib.request.urlopen(
+    body = urllib.request.urlopen(
         f"{BASE}/YEAST/class-instances?object=Pathways", timeout=120
     ).read().decode("utf-8", "replace")
-    ids = sorted(set(re.findall(r"object=([A-Za-z0-9+_.-]+)", html)))
+    ids = sorted(set(re.findall(r"object=([A-Za-z0-9+_.-]+)", body)))
     # the class page also links a few non-pathway browser classes
     skip = {"Pathways", "Compounds", "EC-Reactions", "Gene-Ontology-Terms"}
     return [i for i in ids if i not in skip]
@@ -54,6 +54,8 @@ def fetch(pid: str, cache: Path) -> Path:
     for attempt in range(4):
         try:
             data = urllib.request.urlopen(url, timeout=180).read()
+            if len(data) <= 1000:
+                raise RuntimeError(f"short BioPAX response for {pid}: {len(data)} bytes")
             out.write_bytes(data)
             return out
         except Exception:  # noqa: BLE001 - network retry
@@ -78,8 +80,9 @@ def xrefs(g, node):
 def clean(text):
     if text is None:
         return None
-    text = re.sub(r"<[^>]+>", "", html.unescape(text))
-    return html.unescape(text).replace("\u2192", "->").replace("\u2190", "<-").replace("\u2194", "<->")
+    text = html.unescape(text)
+    text = re.sub(r"<[^>]+>", "", text)
+    return text.replace("\u2192", "->").replace("\u2190", "<-").replace("\u2194", "<->")
 
 
 def entity_name(g, ent):
@@ -154,7 +157,12 @@ def summarize(path: Path) -> dict:
     pathways = list(g.subjects(RDF.type, BP.Pathway))
     # top pathway = one not referenced as a component of another
     comps = set(g.objects(None, BP.pathwayComponent))
-    tops = [p for p in pathways if p not in comps] or pathways
+    tops = sorted([p for p in pathways if p not in comps] or pathways, key=str)
+    if len(tops) != 1:
+        raise ValueError(
+            f"expected exactly one top-level pathway in {path.name}, found {len(tops)}: "
+            + ", ".join(map(str, tops))
+        )
     top = tops[0]
 
     def pathway_record(pw, depth=0):

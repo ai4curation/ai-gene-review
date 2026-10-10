@@ -35,8 +35,9 @@ reviewed so that modules, gene reviews and family reviews agree.
 
 ## Method
 
-1. **Crosswalk.** All 220 frames were grouped into 79 module decisions in
-   [`crosswalk.yaml`](YEAST_PATHWAYS/crosswalk.yaml): 32 NEW modules, 33 ALIGN
+1. **Crosswalk.** All 220 frames were grouped into 81 module-yielding decisions
+   and eight non-module decisions in
+   [`crosswalk.yaml`](YEAST_PATHWAYS/crosswalk.yaml): 32 NEW modules, 35 ALIGN
    (an existing module was revised and grounded in yeast), 14 GENERALIZE (an
    existing module was widened beyond its original lineage), 2 FOLD and 6 NOTE.
    Superpathway and variant frames were merged into their component modules
@@ -122,7 +123,8 @@ findings to feed back to SGD and GO.
   and family reviews: for example SPE4 from SPE3, BIO3 from the AtBIO1 fusion
   node, MET6 receiving the B12-dependent MetH activity, KCS1 receiving ARG82's
   IP3/IP4 kinase activities, AUR1 and IPT1 leaking terms through a shared node,
-  and the PTHR18968 FAD-binding node reaching the FAD-independent catabolic ALS.
+  and the PTHR18968 FAD-binding node reaching the FAD-independent catabolic
+  acetolactate synthase.
 - **Ontology issues** raised as suggested questions: the GO:0000248 definition
   describes the C-22 rather than the C-5 sterol desaturation; GO:0045140 sits
   under hexosyltransferase activity; GO has no terms for IPT1 (EC 2.7.1.228),
@@ -139,7 +141,9 @@ evidence for arg41 while the IMP evidence is on its paralog arg7).
 
 Counts are per module and include genes and families shared between modules, so
 the totals are larger than the number of distinct reviews. Only committed,
-fully reviewed files are counted.
+fully reviewed files are counted. These counts track the complete
+`claude/yeastpathways-01` through `claude/yeastpathways-12` series; links to
+NEW module pages become live as those PRs land.
 
 | Module | Action | YeastPathways frames | S. cerevisiae reviewed | S. pombe reviewed | Families reviewed |
 |---|---|---|---|---|---|
@@ -184,8 +188,10 @@ fully reviewed files are counted.
 | [fungal_chitin_chitosan_synthesis](../modules/fungal_chitin_chitosan_synthesis.html) | NEW | 2 | 7/7 | 0/0 | 0/3 |
 | [dolichol_phosphate_sugar_donor_supply](../modules/dolichol_phosphate_sugar_donor_supply.html) | ALIGN | 2 | 11/11 | 11/11 | 12/12 |
 | [n_glycan_llo_assembly_cytoplasmic](../modules/n_glycan_llo_assembly_cytoplasmic.html) | ALIGN | 1 | 6/6 | 0/6 | 0/7 |
+| [n_glycan_llo_assembly_lumenal](../modules/n_glycan_llo_assembly_lumenal.html) | ALIGN | 1 | 6/6 | 0/6 | 0/4 |
 | [methylglyoxal_detoxification](../modules/methylglyoxal_detoxification.html) | ALIGN | 1 | 3/3 | 0/3 | 0/2 |
 | [glutathione_dependent_formaldehyde_detoxification](../modules/glutathione_dependent_formaldehyde_detoxification.html) | ALIGN | 1 | 3/3 | 0/0 | 1/3 |
+| [glutathione_biosynthesis](../modules/glutathione_biosynthesis.html) | ALIGN | 1 | 2/2 | 2/2 | 0/4 |
 | [glutathione_synthesis_gamma_glutamyl_cycle](../modules/glutathione_synthesis_gamma_glutamyl_cycle.html) | ALIGN | 3 | 9/9 | 10/10 | 0/8 |
 | [glutathione_thioredoxin_redox_systems](../modules/glutathione_thioredoxin_redox_systems.html) | NEW | 4 | 18/18 | 3/8 | 1/10 |
 | [tetrahydrofolate_biosynthesis](../modules/tetrahydrofolate_biosynthesis.html) | NEW | 7 | 7/7 | 0/7 | 1/8 |
@@ -222,7 +228,7 @@ fully reviewed files are counted.
 | [oxphos](../modules/oxphos.html) | ALIGN | 1 | 3/3 | 0/2 | 0/1 |
 | [diphthamide_biosynthesis](../modules/diphthamide_biosynthesis.html) | NEW | 1 | 7/7 | 0/0 | 5/5 |
 | [erythroascorbate_biosynthesis](../modules/erythroascorbate_biosynthesis.html) | NEW | 1 | 3/3 | 0/0 | 1/3 |
-| **Total (with overlaps)** | | | 619/619 | 168/412 | 160/495 |
+| **Total (with overlaps)** | | | 627/627 | 170/420 | 160/503 |
 
 ### Remaining work
 

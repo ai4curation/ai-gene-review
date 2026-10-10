@@ -1,6 +1,6 @@
 # Brief for module-curation agents (YeastPathways module project)
 
-Repo: /home/user/ai-gene-review. You are creating or revising `modules/<slug>.yaml`
+Repo: ai-gene-review. You are creating or revising `modules/<slug>.yaml`
 documents that generalise YeastPathways (SGD YeastCyc) pathways into reusable
 biological modules. This is NOT a rote translation of YeastCyc.
 

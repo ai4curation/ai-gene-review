@@ -1,7 +1,7 @@
 # Brief for batch gene-review agents (YeastPathways module project)
 
-You are reviewing yeast metabolic genes for the ai-gene-review repo
-(/home/user/ai-gene-review). Read `CLAUDE.md` first and follow it strictly —
+You are reviewing yeast metabolic genes for the ai-gene-review repo. Read
+`CLAUDE.md` first and follow it strictly —
 especially "Do not overrule curators from incomplete evidence", "Do not add what
 curators deliberately declined to add", the IBA section, and the `protein binding`
 policy. Look at one or two complete existing yeast reviews for format
