@@ -1,0 +1,104 @@
+"""Build review dossiers for HTP-family vesicle-type location rows.
+
+Like ../membrane_review/build_dossiers.py, this decides nothing: it selects rows and
+gathers what a reviewer needs to judge each one by hand. Decisions live in
+decisions_draft.py, written after reading the dossier.
+
+Candidates: existing_annotations rows with evidence_type HDA or HTP, not negated, a
+vesicle-type term (extracellular exosome, extracellular vesicle, blood microparticle,
+vesicle, extracellular membrane-bounded organelle, extracellular organelle), and an action
+that is not already a settled non-core or removal call: MARK_AS_OVER_ANNOTATED, UNDECIDED,
+ACCEPT or unset. These are the rows the withdrawn 2026-10-06 vesicle rule changed (or
+flagged, for ACCEPT).
+
+Each dossier carries:
+  * the row: index, term, reference (+ cached title, which names the sample: urine,
+    plasma, cell line...), current action, summary and reason
+  * UniProt: SUBCELLULAR LOCATION and FUNCTION text (verbatim, trimmed), and whether the
+    entry has a signal peptide or transmembrane/lipid-anchor features
+  * how many HTP-family vesicle-type rows (and distinct references) the same gene carries
+    in its review: one survey vs repeated detection across independent EV studies
+  * leads: the gene's other location annotations from its *-goa.tsv (non-HTP codes),
+    with code and reference; pointers to evidence, not evidence in themselves
+
+Usage:  python3 projects/OMICS_EVIDENCE/htp/vesicle_review/build_dossiers.py
+Writes: projects/OMICS_EVIDENCE/htp/vesicle_review/dossiers.yaml
+"""
+
+from __future__ import annotations
+
+import csv
+import glob
+import os
+import re
+import sys
+
+import yaml
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
+sys.path.insert(0, os.path.dirname(HERE))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), "membrane_review"))
+from apply_dispositions import CODES, HTP_FAMILY, LOADER, VESICLE_TERMS  # noqa: E402
+from build_dossiers import cc_block, pub_title  # noqa: E402  (membrane_review helpers)
+
+OUT = os.path.join(HERE, "dossiers.yaml")
+OPEN_ACTIONS = {"MARK_AS_OVER_ANNOTATED", "UNDECIDED", "ACCEPT", "PENDING", None}
+
+
+def main() -> int:
+    dossiers = []
+    for path in sorted(glob.glob(os.path.join(ROOT, "genes", "*", "*", "*-ai-review.yaml"))):
+        text = open(path).read()
+        if not any(t in text for t in VESICLE_TERMS):
+            continue
+        doc = yaml.load(text, Loader=LOADER)
+        anns = doc.get("existing_annotations") or []
+        ves = [(i, a) for i, a in enumerate(anns)
+               if a.get("evidence_type") in CODES and not a.get("negated")
+               and (a.get("term") or {}).get("id") in VESICLE_TERMS]
+        rows = [(i, a) for i, a in ves if (a.get("review") or {}).get("action") in OPEN_ACTIONS]
+        if not rows:
+            continue
+        gdir = os.path.dirname(path)
+        org, gene = path.split(os.sep)[-3], path.split(os.sep)[-2]
+        uni = os.path.join(gdir, f"{gene}-uniprot.txt")
+        goa = os.path.join(gdir, f"{gene}-goa.tsv")
+        utext = open(uni).read() if os.path.exists(uni) else ""
+        features = sorted({f for f in re.findall(r"^FT   (SIGNAL|TRANSMEM|INTRAMEM|LIPID) ", utext, re.M)})
+        leads = {}
+        if os.path.exists(goa):
+            with open(goa, newline="") as fh:
+                for r in csv.DictReader(fh, delimiter="\t"):
+                    if r.get("GO ASPECT") != "cellular_component" or r.get("GO EVIDENCE CODE") in HTP_FAMILY:
+                        continue
+                    key = (r["GO TERM"], r["GO NAME"], r["QUALIFIER"])
+                    leads.setdefault(key, set()).add(f'{r["GO EVIDENCE CODE"]} {r["REFERENCE"]}')
+        lead_list = [{"term": f"{t} {n}", "qualifier": q, "evidence": sorted(ev)}
+                     for (t, n, q), ev in sorted(leads.items())]
+        for idx, a in rows:
+            rv = a.get("review") or {}
+            dossiers.append({
+                "organism": org, "gene": gene, "row_index": idx,
+                "term": f'{a["term"]["id"]} {a["term"].get("label")}',
+                "reference": a.get("original_reference_id"),
+                "reference_title": pub_title(a.get("original_reference_id")),
+                "evidence_type": a.get("evidence_type"),
+                "current_action": rv.get("action"),
+                "current_reason": " ".join(str(rv.get("reason") or "").split()),
+                "uniprot_subcellular_location": cc_block(utext, "SUBCELLULAR LOCATION", 600),
+                "uniprot_function": cc_block(utext, "FUNCTION", 300),
+                "uniprot_features": features,
+                "gene_vesicle_rows": len(ves),
+                "gene_vesicle_references": len({a2.get("original_reference_id") for _, a2 in ves}),
+                "leads": lead_list,
+            })
+    with open(OUT, "w") as fh:
+        fh.write("# Generated by build_dossiers.py -- review material only; decisions are in decisions_draft.py\n")
+        yaml.safe_dump(dossiers, fh, sort_keys=False, width=120, allow_unicode=True)
+    print(f"{len(dossiers)} dossiers for {len({(d['organism'], d['gene']) for d in dossiers})} genes -> {OUT}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

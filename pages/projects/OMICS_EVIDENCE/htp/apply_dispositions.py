@@ -1,8 +1,13 @@
-"""Apply the OMICS_EVIDENCE default dispositions to existing gene reviews.
+"""RETIRED batch-disposition script for OMICS_EVIDENCE; now a helper module.
 
-Two rules, agreed on projects/OMICS_EVIDENCE.md (Recommendations, 2026-10-06):
+Both rules below were applied on 2026-10-06 and withdrawn on 2026-10-10, and all their
+edits were undone: a rule must not make curation calls. HTP-family rows are now reviewed
+row by row from dossiers (membrane_review/, vesicle_review/). main() no longer edits
+anything; the module is kept for its helpers (edit_file, render_reason, has_anchor_feature,
+membrane_closure, membrane_annotations), which the review scripts import, and as a record
+of what the rules did (audit files disposition-2026-10-06*.yaml).
 
-  V. Vesicle-type location from a bulk vesicle/body-fluid proteome.
+  V. WITHDRAWN 2026-10-10. Vesicle-type location from a bulk vesicle/body-fluid proteome.
      Rows: evidence_type HDA or HTP, not negated, term in VESICLE_TERMS.
      Change: action UNDECIDED / MARK_AS_OVER_ANNOTATED / PENDING / unset -> KEEP_AS_NON_CORE.
      Left alone: ACCEPT and REMOVE (explicit protein-specific judgements; ACCEPT rows are
@@ -33,14 +38,10 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
-import copy
-import glob
 import os
 import re
 import sys
 import textwrap
-from collections import Counter
 
 import yaml
 
@@ -192,97 +193,9 @@ def edit_file(path: str, changes: list[tuple[int, str, str]]) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--write", action="store_true", help="edit files (default: dry run)")
-    ap.add_argument("--audit", default=AUDIT, help="audit file to write with --write")
-    args = ap.parse_args()
-
-    changed_rows, accepted_vesicle, accepted_membrane, skipped, failed = [], [], [], [], []
-    reverted: list[dict] = []
-    files_changed = 0
-    for path in sorted(glob.glob(os.path.join(ROOT, "genes", "*", "*", "*-ai-review.yaml"))):
-        text = open(path).read()
-        if not any(t in text for t in VESICLE_TERMS):
-            continue
-        doc = yaml.load(text, Loader=LOADER) or {}
-        org, gene = path.split(os.sep)[-3], path.split(os.sep)[-2]
-        changes = []
-        for idx, a in enumerate(doc.get("existing_annotations") or []):
-            if a.get("evidence_type") not in CODES or a.get("negated"):
-                continue
-            tid = (a.get("term") or {}).get("id")
-            rv = a.get("review") or {}
-            old = rv.get("action")
-            base = {"organism": org, "gene": gene, "term": f"{tid} {(a.get('term') or {}).get('label')}",
-                    "evidence_type": a.get("evidence_type"), "reference": a.get("original_reference_id")}
-            if tid in VESICLE_TERMS:
-                if old == "ACCEPT":
-                    accepted_vesicle.append(base)
-                if old in RULE_V_FROM:
-                    new, note = "KEEP_AS_NON_CORE", NOTE_V
-                else:
-                    continue
-            elif tid == MEMBRANE:
-                continue  # rule M withdrawn 2026-10-10; see module docstring
-            else:
-                continue
-            reason = (str(rv.get("reason") or "").strip())
-            if note is None:
-                new_reason = reason
-            else:
-                new_reason = (reason + " " if reason else "") + note.format(old=old or "unset")
-            if new == a["review"].get("action") and new_reason == str(a["review"].get("reason") or "").strip():
-                continue
-            changes.append((idx, new, new_reason))
-            if note is not None:
-                changed_rows.append({**base, "rule": "V" if tid in VESICLE_TERMS else "M",
-                                     "old_action": old or "unset", "new_action": new})
-        if not changes:
-            continue
-        try:
-            new_text = edit_file(path, changes)
-        except (ValueError, StopIteration):
-            new_text = None
-        # verify: parse result must equal original parse with only intended changes
-        expect = copy.deepcopy(doc)
-        for idx, new, new_reason in changes:
-            r = expect["existing_annotations"][idx].setdefault("review", {})
-            r["action"], r["reason"] = new, new_reason
-        got = yaml.load(new_text, Loader=LOADER) if new_text is not None else None
-        if got != expect:
-            failed.append(os.path.relpath(path, ROOT))
-            changed_rows = [r for r in changed_rows if not (r["organism"] == org and r["gene"] == gene)]
-            continue
-        files_changed += 1
-        if args.write:
-            with open(path, "w") as fh:
-                fh.write(new_text)
-
-    summary = Counter((r["rule"], r["old_action"], r["new_action"]) for r in changed_rows)
-    print(f"{'WROTE' if args.write else 'DRY RUN'}: {len(changed_rows)} rows in {files_changed} files")
-    for (rule, old, new), n in sorted(summary.items()):
-        print(f"  rule {rule}: {old:24s} -> {new:24s} {n}")
-    print(f"rows restored (label-text run reversed): {len(reverted)}")
-    for r in reverted:
-        print(f"  {r['gene']}: -> {r['restored_action']}  via {r['association'][:3]}")
-    print(f"vesicle rows left as ACCEPT: {len(accepted_vesicle)}")
-    print(f"no-anchor membrane rows left as ACCEPT: {len(accepted_membrane)}")
-    print(f"membrane rows skipped (no UniProt file): {len(skipped)}")
-    print(f"files failing the parse check (not edited): {len(failed)}")
-    for f in failed:
-        print(f"  {f}")
-    if args.write:
-        with open(args.audit, "w") as fh:
-            fh.write("# Generated by apply_dispositions.py -- audit of the 2026-10-06 batch\n")
-            yaml.safe_dump({"rules": {"V": NOTE_V.format(old="X"), "M": NOTE_M.format(old="X")},
-                            "changed_rows": changed_rows,
-                            "restored_rows": reverted,
-                            "vesicle_rows_left_as_accept": accepted_vesicle,
-                            "no_anchor_membrane_rows_left_as_accept": accepted_membrane,
-                            "membrane_rows_skipped_no_uniprot": skipped,
-                            "files_failing_parse_check": failed},
-                           fh, sort_keys=False, width=120, allow_unicode=True)
-    return 1 if failed else 0
+    print("apply_dispositions.py is retired: rules V and M were withdrawn on 2026-10-10 and "
+          "their edits undone. See membrane_review/ and vesicle_review/.")
+    return 0
 
 
 if __name__ == "__main__":

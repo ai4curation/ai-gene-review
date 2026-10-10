@@ -232,33 +232,63 @@ The data and the curators are the same. The difference is the inference step.
 
 ## Recommendations
 
-1. **Project-wide dispositions (agreed and applied 2026-10-06).** For HDA/HTP rows:
-   - **Vesicle-type locations** (`extracellular exosome`, `extracellular vesicle`,
-     `blood microparticle`, `vesicle`) from bulk vesicle or body-fluid proteomes are
-     KEEP_AS_NON_CORE by default. ACCEPT stays only for a protein-specific reason, such as
-     known vesicle machinery. REMOVE stays for protein-specific contrary evidence.
-   - **Generic `membrane`** from a membrane-fraction proteome: **reviewed by hand, row by
-     row** (2026-10-10). No rule decides these rows. Two rules were tried on 2026-10-06
-     and withdrawn: first a text search of UniProt's location prose, then an ID-based
-     test over existing annotations. Both treated existing annotations as authoritative
-     rather than as leads, and both let a rule make a curation call.
+1. **No rule decides HTP-family rows; both clusters are reviewed by hand (2026-10-10).**
+   Two default dispositions were agreed and applied as rules on 2026-10-06: vesicle-type
+   locations → KEEP_AS_NON_CORE, and generic `membrane` for proteins without a membrane
+   anchor → MARK_AS_OVER_ANNOTATED. Both were withdrawn and every edit undone. A rule
+   lets existing annotations (or a category) make the curation call, while the goal is
+   manual review with existing annotations used as leads. The audit files
+   (`htp/disposition-2026-10-06*.yaml`) remain as a record of what the rules did.
+   [`htp/apply_dispositions.py`](OMICS_EVIDENCE/htp/apply_dispositions.py) is retired; it
+   now only supplies helpers to the review scripts.
 
-   [`htp/apply_dispositions.py`](OMICS_EVIDENCE/htp/apply_dispositions.py) applied the
-   vesicle rule to **241 rows in 148 reviews**:
+   **Vesicle-row manual review.** Candidates are the 283 HDA/HTP vesicle-type rows (164
+   genes) whose action was not already a settled non-core or removal call. That is the
+   241 rows the withdrawn rule had changed plus the 42 ACCEPTs it flagged.
+   [`vesicle_review/build_dossiers.py`](OMICS_EVIDENCE/htp/vesicle_review/build_dossiers.py)
+   gathers material for each row and decides nothing:
+   - UniProt location, function and signal-peptide/TM features;
+   - the source sample (urine, prostatic secretion, B cells, saliva, plasma, CSF...);
+   - how many independent EV studies list the protein;
+   - the gene's other location annotations, offered as leads to check.
 
-   | Change | Rows |
-   |---|---:|
-   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 175 |
-   | UNDECIDED → KEEP_AS_NON_CORE | 66 |
+   Each protein was judged with **MISEV2018** (PMID:30637094, cached) as the guide:
+   - **Expected EV content, true but not core → KEEP_AS_NON_CORE.** This covers
+     transmembrane proteins of the plasma membrane or endosomes (category 1) and
+     cytosolic proteins, including promiscuous enzyme and cytoskeleton cargo (category 2).
+   - **Over-annotated → MARK_AS_OVER_ANNOTATED.** This covers co-isolated non-EV
+     constituents, with ALB, APOB, APOE and APOL1 as MISEV's negative markers
+     (category 3); residents of the ER, Golgi, mitochondria or nucleus (category 4); and
+     secreted or lumenal proteins with no EV receptor shown (category 5).
+   - **ACCEPT** only for ALIX/PDCD6IP, which MISEV names as an EV marker actively
+     incorporated by the biogenesis machinery.
 
-   Only the action changed. Each row's reason was kept and a dated disposition note
-   appended, and each edited file was re-parsed to confirm nothing else moved. The audit
-   file [`disposition-2026-10-06.yaml`](OMICS_EVIDENCE/htp/disposition-2026-10-06.yaml)
-   lists every changed row. Its membrane entries, and the revision file
-   `disposition-2026-10-06-membrane-revision.yaml`, are kept as a record of the
-   withdrawn rule. Those edits have been undone. The audit also lists 42 explicit vesicle
-   ACCEPTs left in place for review: GAPDH ×7, HSPA1A, PARK7, CLU, THBS1, and genuine EV
-   machinery such as PDCD6IP and CHMP3.
+   Where an earlier reason made a factual claim, it was checked. The SCAMP3 ACCEPT said
+   SCAMP3 is "required for extracellular vesicle biogenesis", but the cited papers
+   (PMID:19158374, PMID:23418353) show ESCRT-dependent MVB sorting of EGFR, so the row is
+   KEEP_AS_NON_CORE. GRID1, a CNS-restricted receptor detected in urine, is
+   over-annotated as a likely peptide misassignment.
+
+   [`decisions_draft.py`](OMICS_EVIDENCE/htp/vesicle_review/decisions_draft.py) holds one
+   decision and basis per protein, and
+   [`decisions.yaml`](OMICS_EVIDENCE/htp/vesicle_review/decisions.yaml) lists every row.
+   248 rows changed:
+
+   | Change | Rows | Typical reason |
+   |---|---:|---|
+   | MARK_AS_OVER_ANNOTATED → KEEP_AS_NON_CORE | 143 | cytosolic or PM/endosomal cargo: glycolytic enzymes, actin/myosin, V-ATPase, Na+/K+-ATPase |
+   | UNDECIDED → KEEP_AS_NON_CORE | 46 | the same categories, previously left undecided for lack of the supplementary table |
+   | ACCEPT → KEEP_AS_NON_CORE | 28 | common cargo or ESCRT components for which the exosome is a destination: GAPDH ×7, HSPA1A, PARK7, STOM, CHMP3, CRYAB, APP, GPC4, SCAMP3 |
+   | UNDECIDED → MARK_AS_OVER_ANNOTATED | 20 | albumin, AK2, AUP1, BPTF, ACSL4, complement, lysosomal enzymes, ATP6AP1 |
+   | ACCEPT → MARK_AS_OVER_ANNOTATED | 11 | secreted proteins accepted only for being secreted: CLU ×4, THBS1 ×4, THBS4, SCGB1A1; APOE in plasma microvesicles |
+
+   Final vesicle-row actions: 217 KEEP_AS_NON_CORE, 63 MARK_AS_OVER_ANNOTATED, 3 ACCEPT
+   (PDCD6IP). For most cytosolic cargo the manual outcome matches the withdrawn rule,
+   because under MISEV such proteins really are in EVs. It differs from the rule on 91
+   rows: 52 that the rule would have made non-core are over-annotated, and 39 ACCEPTs
+   that the rule left in place are changed. 138 of the 140 edited reviews
+   validate. The 2 errors (ATP6V1C1, NRAS) are unrelated findings supporting-text issues
+   that predate this work.
 
    **Membrane-row manual review.** Candidates are all 163 HDA/HTP `membrane` rows (159
    genes) for proteins without a structured UniProt anchor feature. A protein with a
@@ -320,12 +350,11 @@ The data and the curators are the same. The difference is the inference step.
 
 - [x] Decide and document the vesicle-type and generic-`membrane` dispositions
       (Recommendation 1), then apply them as a batch to existing reviews (2026-10-06).
-- [ ] Revisit the 42 vesicle ACCEPT rows the disposition rule matched but left alone
-      (audit file), keeping ACCEPT only for genuine vesicle machinery.
-- [ ] Decide whether the vesicle rule should also be replaced by row-by-row review. It
-      was applied as a rule (241 rows); the membrane experience suggests reviewing it the
-      same way, starting with the 66 UNDECIDED rows it resolved without a per-protein
-      judgement.
+- [x] Replace the vesicle rule with row-by-row review, including the 42 flagged ACCEPTs
+      (2026-10-10).
+- [ ] Extend the vesicle review to the 418 vesicle-type rows that reviewers had already
+      set to KEEP_AS_NON_CORE. They were not candidates here, but MISEV category 3–5
+      proteins among them (e.g. mitochondrial or ER residents) should be over-annotated.
 - [ ] Review a sample of the **unreviewed MF clusters** with the use-2/use-3 test: serine
       hydrolase activity-based probes (PMID:33827210), copper/cobalt/zinc ion binding from
       plant mitochondrial metal-affinity proteomics (PMID:20018591), kinase
@@ -346,6 +375,14 @@ The data and the curators are the same. The difference is the inference step.
   (YeastPathways, proteome-scale predictions, NEW rows).
 
 ## Session notes
+
+### 2026-10-10: vesicle rows reviewed by hand; vesicle rule withdrawn
+
+At the user's request ("Review"), undid all 241 rows of the vesicle rule (byte-exact for
+142 files), retired `apply_dispositions.py`, cached MISEV2018 (PMID:30637094) and
+reviewed the 283 vesicle candidate rows protein by protein from dossiers
+(`vesicle_review/`): 248 changed, 35 confirmed. 138 of 140 edited reviews validate (2
+unrelated errors that predate this work). One history record per touched gene (163).
 
 ### 2026-10-10: membrane rows reviewed by hand; rule withdrawn
 
