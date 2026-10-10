@@ -28,9 +28,10 @@
   fungal `PANTHER:PTN008308138`; that node is seeded by budding-yeast `SAS3`
   and is appropriate for Sas3 itself, but the term names a budding-yeast NuA3a
   complex rather than the PomBase Mst2 histone acetyltransferase complex.
-- Retained the ORFeome cytosol and UniProt cytoplasm localizations as non-core:
-  they are compatible with UniProt's dual cytoplasm/nucleus statement but do not
-  describe the core H3K14 acetyltransferase activity on nuclear chromatin.
+- Retained the UniProt cytoplasm localization as non-core and marked the
+  ORFeome cytosol `is_active_in` row as over-annotated: the UniProt parent
+  location is compatible with its dual cytoplasm/nucleus statement, but neither
+  row describes the core H3K14 acetyltransferase activity on nuclear chromatin.
 - Followed up on PR review by fetching full text for the two UniProt FUNCTION
   papers that were missing from the first pass. `PMID:16199868` established
   nuclear chromatin localization and Mst2's negative regulation of telomeric
