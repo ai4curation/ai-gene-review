@@ -66,6 +66,46 @@ were ambiguous without a human review, and a symbol found in only one nonhuman
 species can be linked there despite the human hint. Missing-human-review warnings
 are therefore expected; existing human reviews still link normally.
 
+## Completion checkpoint 293 — 2026-10-10 04:52:48 UTC
+
+**293 complete / 2,583 remaining in the frozen 2,876-gene catalog.** CEP120 adds
+one first primary campaign completion beyond checkpoint 292. No required
+follow-up holds remain. Supplementary products and repeated reviews of already
+counted genes add no completion.
+
+| Gene | PR | Final head | Approval | Merged UTC | Merge commit |
+|---|---|---|---|---|---|
+| CEP120 | [#4505](https://github.com/ai4curation/ai-gene-review/pull/4505) | [cef801e8b875](https://github.com/ai4curation/ai-gene-review/commit/cef801e8b8754c4bc7afc7fe63680a9e3bc97c2f) | [Approved](https://github.com/ai4curation/ai-gene-review/pull/4505#pullrequestreview-5477575495) | 2026-10-10T04:52:48Z | [6ae4685964aa](https://github.com/ai4curation/ai-gene-review/commit/6ae4685964aa1aae16bfec2647cab2ccfed750f6) |
+
+The final head has successful test (3.12) and claude-review checks on that same
+commit before merge. All 17 changed PR paths match their approved-head and merge
+blobs; all six gene artifacts also match the frozen cutoff and source.
+The source main is [commit ea02a3dc102c](https://github.com/ai4curation/ai-gene-review/commit/ea02a3dc102c093a1a5e34359f3800a4ee83195b),
+which contains the gene merge and the later baseline tracker merge.
+The published baseline [tracker #4509](https://github.com/ai4curation/ai-gene-review/pull/4509)
+merged at 2026-10-10T05:09:12Z as [ea02a3dc102c](https://github.com/ai4curation/ai-gene-review/commit/ea02a3dc102c093a1a5e34359f3800a4ee83195b).
+The later source snapshot does not move the biological completion cutoff.
+
+The counter definitions established at checkpoint 288 remain in force:
+`campaign_audited_merged` counts distinct frozen-catalog primary genes with a
+merged campaign review; subtracting `pending_followups` gives `completed`.
+`original_merged` remains a compatibility alias in this new snapshot. The three
+applicable values are 293, 0 and 293. Existing review-file presence, supplementary
+products and repeated reviews do not independently add campaign completions.
+
+All 2,876 catalog rows and association text, all 235 historical queue entries,
+all 45 prior completion updates and all previous progress text are preserved.
+Only the CEP120 checkbox changes; update 46 is appended. The queue gene array
+remains unchanged; new completion evidence is appended to the update series.
+Biological DRAFT status or justified UNDECIDED annotations alone create no hold.
+CEP152 #4507, CEP164 #4508, CEP250 #4510 and later work are outside this fixed
+cutoff. The primary CEP120 review file was added by its PR. The first unchecked
+gene in literal catalog order remains ACBD5.
+
+Authenticated evidence was read and this proposal recorded at 2026-10-10 05:14:24 UTC.
+
+[Checkpoint 293 session history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-10-10T051833Z-codex-2fb312.yaml).
+
 ## Completion checkpoint 292 — 2026-10-10 04:42:08 UTC
 
 **292 complete / 2,584 remaining in the frozen 2,876-gene catalog.** CEBPA and
