@@ -41,4 +41,8 @@
   chitin-synthesis sites.
 - Accepted `GO:0006457 protein folding` as a CHS7-family PAINT assertion. The direct N. crassa
   abstract demonstrates CHS-4 ER export and receptor biology rather than a biochemical folding
-  assay, so no separate NEW row for `GO:0044183` was added from the Neurospora abstract alone.
+  assay, and the current PAINT cache plus full-text Shr3-like family context justify a separate
+  NEW row for `GO:0044183 protein folding chaperone`.
+- Restated the yeast `CHS7` proposal for `chitin synthase export chaperone activity` because
+  csc-1 belongs to the same `PTHR35329:SF2` subfamily and has the same client-biased
+  ER export-chaperone biology with CHS-4 as its known cargo.
